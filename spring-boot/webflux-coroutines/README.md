@@ -2,22 +2,26 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+## What this example shows
 
-This example exercises **Spring WebFlux + Coroutines** as a runnable Spring Boot application feature workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+This module compares two Spring WebFlux coroutine styles that return the same `Banner` contract:
+annotation controllers under `/controller/{default|io|vt}` and functional `coRouter` endpoints at the
+root path. The interesting difference is the coroutine dispatcher and Flow strategy, not the HTTP model.
 
 ## Architecture Diagram
 
-![Spring WebFlux + Coroutines architecture diagram](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-architecture-01.png)
+![Spring WebFlux coroutine architecture](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-readme-architecture-01.png)
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springboot` as the source of truth when comparing this README with the code.
+The architecture highlights the controller families, the functional handler, the shared `WebClient` loopback
+used by flow examples, and the tuned Reactor Netty resources.
 
-## Sequence Diagram
+## Coroutine Flow
 
-![Spring WebFlux + Coroutines sequence diagram](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-sequence-01.png)
+![Spring WebFlux coroutine flow](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-readme-flow-01.png)
 
-This example uses Kotlin Coroutines in a Spring WebFlux environment.
-It uses bluetape4k `Dispatchers.VT`, `Flow<T>.async`, `Runtimex`, and related utilities to build Virtual Thread based reactive controllers.
+This example uses Kotlin coroutines in a Spring WebFlux environment. It demonstrates bluetape4k
+`Dispatchers.VT`, `Flow<T>.async`, `Runtimex`, and shared `WebClient` helpers without hiding the
+controller style that receives each request.
 
 ## Implementation Strategy Comparison
 
@@ -34,7 +38,7 @@ Three controllers show the differences between dispatcher strategies:
 
 | Feature | Artifact | Code Location | Benefit |
 |---|---|---|---|
-| `Dispatchers.VT` | `bluetape4k-coroutines` | `VTCoroutineController` | Virtual Thread based CoroutineDispatcher that runs coroutines without OS threads |
+| `Dispatchers.VT` | `bluetape4k-coroutines` | `VTCoroutineController` | Virtual-thread based `CoroutineDispatcher` for controller work |
 | `Flow<T>.async { }` | `bluetape4k-coroutines` | `VTCoroutineController.concurrentFlow()` | Operator that transforms Flow elements in parallel |
 | `KLoggingChannel` | `bluetape4k-logging` | All companion objects | Structured logging with coroutine context |
 | `Base58.randomString()` | `bluetape4k-io` | `Banner.kt` | Generates URL-safe random strings |

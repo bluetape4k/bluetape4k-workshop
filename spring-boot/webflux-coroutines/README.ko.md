@@ -2,22 +2,26 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+## 이 예제가 보여 주는 것
 
-이 예제는 **Spring WebFlux + Coroutines**를 실행 가능한 Spring Boot 애플리케이션 기능 워크샵 조각으로 다룹니다. 개발자가 먼저 확인할 흐름인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API 관찰에 초점을 둡니다.
+이 모듈은 같은 `Banner` 계약을 반환하는 두 가지 Spring WebFlux coroutine 스타일을 비교합니다.
+`/controller/{default|io|vt}` 아래의 annotation controller와 root path의 functional `coRouter` endpoint가
+나란히 있으며, 핵심 차이는 HTTP 모델이 아니라 coroutine dispatcher와 Flow 처리 방식입니다.
 
 ## 아키텍처 다이어그램
 
-![Spring WebFlux + Coroutines Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-architecture-01.png)
+![Spring WebFlux coroutine architecture](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-readme-architecture-01.png)
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제에서 사용하는 런타임 의존성을 중심으로 구성됩니다. 이 README와 코드를 비교할 때는 `io.bluetape4k.workshop.springboot` 패키지를 기준으로 삼으세요.
+아키텍처는 controller 계열, functional handler, flow 예제가 사용하는 shared `WebClient` loopback,
+그리고 튜닝된 Reactor Netty resource를 나누어 보여 줍니다.
 
-## 시퀀스 다이어그램
+## Coroutine 흐름
 
-![Spring WebFlux + Coroutines sequence diagram](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-sequence-01.png)
+![Spring WebFlux coroutine flow](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-readme-flow-01.png)
 
-이 예제는 Spring WebFlux 환경에서 Kotlin Coroutines를 사용합니다.
-bluetape4k `Dispatchers.VT`, `Flow<T>.async`, `Runtimex` 및 관련 유틸리티를 사용해 Virtual Thread 기반 리액티브 컨트롤러를 구성합니다.
+이 예제는 Spring WebFlux 환경에서 Kotlin coroutines를 사용합니다. bluetape4k `Dispatchers.VT`,
+`Flow<T>.async`, `Runtimex`, shared `WebClient` helper를 보여 주되, 각 요청을 받는 controller style을
+숨기지 않습니다.
 
 ## 구현 전략 비교
 
@@ -34,7 +38,7 @@ bluetape4k `Dispatchers.VT`, `Flow<T>.async`, `Runtimex` 및 관련 유틸리티
 
 | 기능 | Artifact | 코드 위치 | 이점 |
 |---|---|---|---|
-| `Dispatchers.VT` | `bluetape4k-coroutines` | `VTCoroutineController` | OS thread 없이 coroutine을 실행하는 Virtual Thread 기반 CoroutineDispatcher |
+| `Dispatchers.VT` | `bluetape4k-coroutines` | `VTCoroutineController` | controller work에 사용할 virtual-thread 기반 `CoroutineDispatcher` |
 | `Flow<T>.async { }` | `bluetape4k-coroutines` | `VTCoroutineController.concurrentFlow()` | Flow element를 병렬로 변환하는 operator |
 | `KLoggingChannel` | `bluetape4k-logging` | 모든 companion object | coroutine context를 포함하는 structured logging |
 | `Base58.randomString()` | `bluetape4k-io` | `Banner.kt` | URL-safe random string 생성 |
