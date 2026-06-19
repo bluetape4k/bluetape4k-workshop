@@ -1,92 +1,78 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="1180" viewBox="0 0 1640 1180" role="img" aria-label="Spring MVC virtual thread request flow">
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1078" viewBox="0 0 1680 1078" role="img" aria-labelledby="title desc">
+  <title id="title">Spring MVC Virtual Thread Sequence</title>
+  <desc id="desc">Tomcat dispatches each blocking MVC request on a virtual thread while helper APIs fan out blocking work.</desc>
   <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
     <style>
-      .bg { fill: #f8fafc; }
-      .title { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; font-size: 34px; fill: #172033; }
-      .actor { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; font-size: 27px; fill: #111827; }
-      .body { font-family: 'Comic Mono', 'Comic Sans MS', monospace; font-size: 17px; fill: #334155; }
-      .small { font-family: 'Comic Mono', 'Comic Sans MS', monospace; font-size: 15px; fill: #475569; }
-      .label { font-family: 'Comic Mono', 'Comic Sans MS', monospace; font-size: 16px; fill: #263445; }
-      .card { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 18; ry: 18; }
-      .lane { stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 8 8; }
-      .alt { stroke-width: 1.5; rx: 22; ry: 22; opacity: 0.58; }
-      .line { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:21px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:13px;fill:#546A73}.msg{font-size:14px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.call,.work,.return,.skip{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call)}.work{stroke:#6E8F4F;marker-end:url(#arrow-work)}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret)}.skip{stroke:#B86868;marker-end:url(#arrow-skip)}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.skipLabel{stroke:#D9ABAB}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.skipBadge{fill:#FFF0F0;stroke:#B86868}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.skipText,.badgeText.skipText{fill:#9D4F4F}.alt{fill:#FFF7ED;fill-opacity:.38;stroke:#D08A39;stroke-width:2.2;stroke-dasharray:12 8}.divider{stroke:#D08A39;stroke-width:1.8;stroke-dasharray:9 7;opacity:.7}
     </style>
-    <marker id="blueArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke-dasharray="none"/>
-    </marker>
-    <marker id="greenArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#16a34a" stroke-dasharray="none"/>
-    </marker>
-    <marker id="orangeArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#ea580c" stroke-dasharray="none"/>
-    </marker>
-    <marker id="grayArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#64748b" stroke-dasharray="none"/>
-    </marker>
+    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="13" markerHeight="13" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none"/></marker>
+    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="13" markerHeight="13" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none"/></marker>
+    <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="13" markerHeight="13" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none"/></marker>
+    <marker id="arrow-skip" viewBox="0 0 10 10" markerWidth="13" markerHeight="13" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none"/></marker>
   </defs>
-
-  <rect class="bg" width="1640" height="1180"/>
-  <text class="title" x="70" y="66">Spring MVC Virtual Thread Request Flow</text>
-
-  <rect class="card" x="80" y="105" width="230" height="82"/>
-  <text class="actor" x="195" y="142" text-anchor="middle">Client / Gatling</text>
-  <text class="small" x="195" y="168" text-anchor="middle">HTTP request</text>
-  <rect class="card" x="380" y="105" width="250" height="82"/>
-  <text class="actor" x="505" y="142" text-anchor="middle">Tomcat</text>
-  <text class="small" x="505" y="168" text-anchor="middle">virtual request thread</text>
-  <rect class="card" x="700" y="105" width="250" height="82"/>
-  <text class="actor" x="825" y="142" text-anchor="middle">MVC Controller</text>
-  <text class="small" x="825" y="168" text-anchor="middle">blocking handler</text>
-  <rect class="card" x="1020" y="105" width="250" height="82"/>
-  <text class="actor" x="1145" y="142" text-anchor="middle">VT Helpers</text>
-  <text class="small" x="1145" y="168" text-anchor="middle">bluetape4k APIs</text>
-  <rect class="card" x="1340" y="105" width="220" height="82"/>
-  <text class="actor" x="1450" y="142" text-anchor="middle">Blocking Target</text>
-  <text class="small" x="1450" y="168" text-anchor="middle">JPA / HTTP</text>
-
-  <line class="lane" x1="195" y1="190" x2="195" y2="1110"/>
-  <line class="lane" x1="505" y1="190" x2="505" y2="1110"/>
-  <line class="lane" x1="825" y1="190" x2="825" y2="1110"/>
-  <line class="lane" x1="1145" y1="190" x2="1145" y2="1110"/>
-  <line class="lane" x1="1450" y1="190" x2="1450" y2="1110"/>
-
-  <rect class="alt" x="62" y="235" width="1516" height="210" fill="#eff6ff" stroke="#93c5fd"/>
-  <text class="actor" x="95" y="275">Simple MVC request</text>
-  <path class="line" d="M195 315 L505 315" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="label" x="350" y="300" text-anchor="middle">GET /virtual-thread</text>
-  <path class="line" d="M505 355 L825 355" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="label" x="665" y="340" text-anchor="middle">dispatch on virtual thread</text>
-  <path class="line" d="M825 395 L1145 395" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="label" x="985" y="380" text-anchor="middle">@Async uses VT executor</text>
-  <path class="line" d="M825 430 L195 430" stroke="#64748b" marker-end="url(#grayArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="label" x="510" y="415" text-anchor="middle">return current thread name</text>
-
-  <rect class="alt" x="62" y="485" width="1516" height="250" fill="#f0fdf4" stroke="#86efac"/>
-  <text class="actor" x="95" y="525">Parallel virtual-thread helpers</text>
-  <path class="line" d="M195 570 L505 570" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="label" x="350" y="555" text-anchor="middle">GET /virtual-thread/multi</text>
-  <path class="line" d="M505 610 L825 610" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="label" x="665" y="595" text-anchor="middle">invoke controller</text>
-  <path class="line" d="M825 650 L1145 650" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="label" x="985" y="635" text-anchor="middle">structuredTaskScopeAll</text>
-  <path class="line" d="M1145 690 L1450 690" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="label" x="1298" y="675" text-anchor="middle">100 blocking subtasks</text>
-  <path class="line" d="M1145 720 L825 720" stroke="#64748b" marker-end="url(#grayArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-
-  <rect class="alt" x="62" y="775" width="1516" height="165" fill="#fff7ed" stroke="#fdba74"/>
-  <text class="actor" x="95" y="815">MVC + JPA endpoints</text>
-  <path class="line" d="M195 855 L505 855" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="label" x="350" y="840" text-anchor="middle">GET /member or /team</text>
-  <path class="line" d="M505 895 L825 895" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M825 895 L1450 895" stroke="#ea580c" marker-end="url(#orangeArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="label" x="1138" y="880" text-anchor="middle">Spring Data JPA / Querydsl</text>
-  <path class="line" d="M1450 925 L195 925" stroke="#64748b" marker-end="url(#grayArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-
-  <rect class="alt" x="62" y="980" width="1516" height="130" fill="#fef2f2" stroke="#fca5a5"/>
-  <text class="actor" x="95" y="1020">Blocking external HTTP endpoint</text>
-  <path class="line" d="M195 1060 L825 1060" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="label" x="510" y="1045" text-anchor="middle">GET /httpbin/block/{seconds}</text>
-  <path class="line" d="M825 1085 L1450 1085" stroke="#ea580c" marker-end="url(#orangeArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="label" x="1138" y="1070" text-anchor="middle">WebClient.block against Testcontainers httpbin</text>
+  <rect x="24" y="24" width="1632" height="1030" rx="20" class="frame"/>
+  <text x="840.0" y="76" text-anchor="middle" class="title">Spring MVC Virtual Thread Sequence</text>
+  <text x="840.0" y="106" text-anchor="middle" class="subtitle">Tomcat dispatches each blocking MVC request on a virtual thread while helper APIs fan out blocking work.</text>
+  <rect x="88" y="250" width="1504" height="220" rx="16" class="alt"/>
+  <rect x="88" y="470" width="1504" height="250" rx="16" class="alt"/>
+  <rect x="88" y="720" width="1504" height="190" rx="16" class="alt"/>
+  <g filter="url(#shadow)"><rect x="55.0" y="154" width="250" height="74" rx="10" class="header"/>
+    <text x="180.0" y="183" text-anchor="middle" class="participant">Client</text>
+    <text x="180.0" y="208" text-anchor="middle" class="role">HTTP caller</text></g>
+  <line x1="180.0" y1="228" x2="180.0" y2="966" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="385.0" y="154" width="250" height="74" rx="10" class="header"/>
+    <text x="510.0" y="183" text-anchor="middle" class="participant">Tomcat</text>
+    <text x="510.0" y="208" text-anchor="middle" class="role">VT request thread</text></g>
+  <line x1="510.0" y1="228" x2="510.0" y2="966" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="715.0" y="154" width="250" height="74" rx="10" class="header"/>
+    <text x="840.0" y="183" text-anchor="middle" class="participant">MVC Controller</text>
+    <text x="840.0" y="208" text-anchor="middle" class="role">blocking handler</text></g>
+  <line x1="840.0" y1="228" x2="840.0" y2="966" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1045.0" y="154" width="250" height="74" rx="10" class="header"/>
+    <text x="1170.0" y="183" text-anchor="middle" class="participant">VT Helpers</text>
+    <text x="1170.0" y="208" text-anchor="middle" class="role">structured tasks</text></g>
+  <line x1="1170.0" y1="228" x2="1170.0" y2="966" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1375.0" y="154" width="250" height="74" rx="10" class="header"/>
+    <text x="1500.0" y="183" text-anchor="middle" class="participant">Blocking Target</text>
+    <text x="1500.0" y="208" text-anchor="middle" class="role">JPA / HTTP</text></g>
+  <line x1="1500.0" y1="228" x2="1500.0" y2="966" class="lifeline"/>
+  <rect x="221.1" y="274" width="247.8" height="34" rx="17" class="label callLabel"/>
+  <circle cx="245.1" cy="291" r="13" class="badge callBadge"/><text x="245.1" y="296" text-anchor="middle" class="badgeText callText">1</text>
+  <text x="269.1" y="296" class="msg callText">GET /virtual-thread</text>
+  <path d="M 180.0 322 L 510.0 322" class="call"/>
+  <rect x="522.4" y="350" width="305.2" height="34" rx="17" class="label callLabel"/>
+  <circle cx="546.4" cy="367" r="13" class="badge callBadge"/><text x="546.4" y="372" text-anchor="middle" class="badgeText callText">2</text>
+  <text x="570.4" y="372" class="msg callText">dispatch on virtual thread</text>
+  <path d="M 510.0 398 L 840.0 398" class="call"/>
+  <rect x="890.0" y="426" width="230.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="914.0" cy="443" r="13" class="badge workBadge"/><text x="914.0" y="448" text-anchor="middle" class="badgeText workText">3</text>
+  <text x="938.0" y="448" class="msg workText">use VT executor</text>
+  <path d="M 840.0 474 L 1170.0 474" class="work"/>
+  <rect x="361.5" y="502" width="297.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="385.5" cy="519" r="13" class="badge callBadge"/><text x="385.5" y="524" text-anchor="middle" class="badgeText callText">4</text>
+  <text x="409.5" y="524" class="msg callText">GET /virtual-thread/multi</text>
+  <path d="M 180.0 550 L 840.0 550" class="call"/>
+  <rect x="868.8" y="578" width="272.4" height="34" rx="17" class="label workLabel"/>
+  <circle cx="892.8" cy="595" r="13" class="badge workBadge"/><text x="892.8" y="600" text-anchor="middle" class="badgeText workText">5</text>
+  <text x="916.8" y="600" class="msg workText">structuredTaskScopeAll</text>
+  <path d="M 840.0 626 L 1170.0 626" class="work"/>
+  <rect x="1202.9" y="654" width="264.2" height="34" rx="17" class="label workLabel"/>
+  <circle cx="1226.9" cy="671" r="13" class="badge workBadge"/><text x="1226.9" y="676" text-anchor="middle" class="badgeText workText">6</text>
+  <text x="1250.9" y="676" class="msg workText">run blocking subtasks</text>
+  <path d="M 1170.0 702 L 1500.0 702" class="work"/>
+  <rect x="382.0" y="730" width="256.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="406.0" cy="747" r="13" class="badge callBadge"/><text x="406.0" y="752" text-anchor="middle" class="badgeText callText">7</text>
+  <text x="430.0" y="752" class="msg callText">GET /member or /team</text>
+  <path d="M 180.0 778 L 840.0 778" class="call"/>
+  <rect x="1025.6" y="806" width="288.8" height="34" rx="17" class="label workLabel"/>
+  <circle cx="1049.6" cy="823" r="13" class="badge workBadge"/><text x="1049.6" y="828" text-anchor="middle" class="badgeText workText">8</text>
+  <text x="1073.6" y="828" class="msg workText">JPA / HTTP blocking call</text>
+  <path d="M 840.0 854 L 1500.0 854" class="work"/>
+  <rect x="630.0" y="882" width="420.0" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="654.0" cy="899" r="13" class="badge returnBadge"/><text x="654.0" y="904" text-anchor="middle" class="badgeText returnText">9</text>
+  <text x="678.0" y="904" class="msg returnText">response without platform-thread pinning</text>
+  <path d="M 1500.0 930 L 180.0 930" class="return"/>
+  <rect x="90" y="996" width="1500" height="38" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
+  <text x="840.0" y="1021" text-anchor="middle" class="footer">Reader contract: ordered calls, branch boundaries, and infrastructure touchpoints stay visible without label overlap.</text>
 </svg>

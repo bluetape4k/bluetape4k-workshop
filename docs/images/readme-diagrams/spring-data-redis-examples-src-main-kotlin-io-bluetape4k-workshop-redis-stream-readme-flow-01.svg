@@ -1,54 +1,57 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="900" viewBox="0 0 1680 900">
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="774" viewBox="0 0 1680 774" role="img" aria-labelledby="title desc">
+  <title id="title">Redis Stream Test Sequence</title>
+  <desc id="desc">Tests append stream entries, consume them through a consumer group, and acknowledge processed records.</desc>
   <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
     <style>
-      .bg{fill:#f8fafc}.title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:34px;fill:#18212f}
-      .card-title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:27px;fill:#101827}
-      .body{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:18px;fill:#364152}.small{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:15px;fill:#475569}
-      .card{fill:#fff;stroke:#cbd5e1;stroke-width:1.5;rx:18;ry:18}.lane{fill:#f1f5f9;stroke:#cbd5e1;stroke-width:1.3;rx:22;ry:22}
-      .line{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}.redis{fill:#dc2626}.redis2{fill:#ef4444}.redis3{fill:#f87171}
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:21px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:13px;fill:#546A73}.msg{font-size:14px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.call,.work,.return,.skip{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call)}.work{stroke:#6E8F4F;marker-end:url(#arrow-work)}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret)}.skip{stroke:#B86868;marker-end:url(#arrow-skip)}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.skipLabel{stroke:#D9ABAB}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.skipBadge{fill:#FFF0F0;stroke:#B86868}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.skipText,.badgeText.skipText{fill:#9D4F4F}.alt{fill:#FFF7ED;fill-opacity:.38;stroke:#D08A39;stroke-width:2.2;stroke-dasharray:12 8}.divider{stroke:#D08A39;stroke-width:1.8;stroke-dasharray:9 7;opacity:.7}
     </style>
-    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb" stroke-dasharray="none"/></marker>
-    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#059669" stroke-dasharray="none"/></marker>
+    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="13" markerHeight="13" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none"/></marker>
+    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="13" markerHeight="13" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none"/></marker>
+    <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="13" markerHeight="13" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none"/></marker>
+    <marker id="arrow-skip" viewBox="0 0 10 10" markerWidth="13" markerHeight="13" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none"/></marker>
   </defs>
-  <rect class="bg" width="1680" height="900"/>
-  <text class="title" x="70" y="70">Redis Stream Test Flow</text>
-
-  <rect class="lane" x="80" y="130" width="700" height="625"/>
-  <rect class="lane" x="900" y="130" width="700" height="625"/>
-  <text class="card-title" x="120" y="180">Append and offset reads</text>
-  <text class="card-title" x="940" y="180">Continuous reads</text>
-
-  <rect class="card" x="145" y="225" width="570" height="75"/>
-  <text class="card-title" x="175" y="268">XADD fixed IDs</text>
-  <text class="body" x="430" y="268">1234-0, 1234-1</text>
-  <rect class="card" x="145" y="365" width="570" height="75"/>
-  <text class="card-title" x="175" y="408">Reject older ID</text>
-  <text class="body" x="430" y="408">RecordId 0-0 fails</text>
-  <rect class="card" x="145" y="505" width="570" height="75"/>
-  <text class="card-title" x="175" y="548">XREAD offsets</text>
-  <text class="body" x="410" y="548">fromStart or after fixedId</text>
-
-  <rect class="card" x="965" y="225" width="570" height="75"/>
-  <text class="card-title" x="995" y="268">Start listener</text>
-  <text class="body" x="1250" y="268">sync container or receiver</text>
-  <rect class="card" x="965" y="365" width="570" height="75"/>
-  <text class="card-title" x="995" y="408">XADD new records</text>
-  <text class="body" x="995" y="436">listener receives records</text>
-  <rect class="card" x="965" y="505" width="570" height="75"/>
-  <text class="card-title" x="995" y="548">Assert captured count</text>
-  <text class="body" x="995" y="576">2 then 3 records</text>
-
-  <rect class="card" x="580" y="785" width="520" height="75"/>
-  <g transform="translate(625 805)">
-    <rect class="redis3" x="0" y="26" width="58" height="18" rx="5"/>
-    <rect class="redis2" x="0" y="13" width="58" height="18" rx="5"/>
-    <rect class="redis" x="0" y="0" width="58" height="18" rx="5"/>
-  </g>  <text class="card-title" x="710" y="831">Redis stream: my-stream</text>
-
-  <path class="line" d="M430 300 L430 365" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M430 440 L430 505" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M430 580 L430 660 L720 660 L720 785" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M1250 300 L1250 365" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M1250 440 L1250 505" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M1250 580 L1250 660 L960 660 L960 785" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="24" y="24" width="1632" height="726" rx="20" class="frame"/>
+  <text x="840.0" y="76" text-anchor="middle" class="title">Redis Stream Test Sequence</text>
+  <text x="840.0" y="106" text-anchor="middle" class="subtitle">Tests append stream entries, consume them through a consumer group, and acknowledge processed records.</text>
+  <rect x="88" y="250" width="1504" height="400" rx="16" class="alt"/>
+  <g filter="url(#shadow)"><rect x="55.0" y="154" width="250" height="74" rx="10" class="header"/>
+    <text x="180.0" y="183" text-anchor="middle" class="participant">JUnit Test</text>
+    <text x="180.0" y="208" text-anchor="middle" class="role">stream spec</text></g>
+  <line x1="180.0" y1="228" x2="180.0" y2="662" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="495.0" y="154" width="250" height="74" rx="10" class="header"/>
+    <text x="620.0" y="183" text-anchor="middle" class="participant">RedisTemplate</text>
+    <text x="620.0" y="208" text-anchor="middle" class="role">append</text></g>
+  <line x1="620.0" y1="228" x2="620.0" y2="662" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="935.0" y="154" width="250" height="74" rx="10" class="header"/>
+    <text x="1060.0" y="183" text-anchor="middle" class="participant">Consumer</text>
+    <text x="1060.0" y="208" text-anchor="middle" class="role">stream listener</text></g>
+  <line x1="1060.0" y1="228" x2="1060.0" y2="662" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1375.0" y="154" width="250" height="74" rx="10" class="header"/>
+    <image x="1391.0" y="177" width="24" height="24" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+CjxzdmcKICAgeG1sbnM6ZGM9Imh0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvIgogICB4bWxuczpjYz0iaHR0cDovL2NyZWF0aXZlY29tbW9ucy5vcmcvbnMjIgogICB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiCiAgIHhtbG5zOnN2Zz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgeG1sbnM6c29kaXBvZGk9Imh0dHA6Ly9zb2RpcG9kaS5zb3VyY2Vmb3JnZS5uZXQvRFREL3NvZGlwb2RpLTAuZHRkIgogICB4bWxuczppbmtzY2FwZT0iaHR0cDovL3d3dy5pbmtzY2FwZS5vcmcvbmFtZXNwYWNlcy9pbmtzY2FwZSIKICAgZW5hYmxlLWJhY2tncm91bmQ9Im5ldyAwIDAgODAwIDYwMCIKICAgeG1sOnNwYWNlPSJwcmVzZXJ2ZSIKICAgaGVpZ2h0PSIxODAiCiAgIHZpZXdCb3g9IjAgMCAxNzkuOTk4OTEgMTc5Ljk5Nzc0IgogICB3aWR0aD0iMTgwIgogICB2ZXJzaW9uPSIxLjEiCiAgIHk9IjBweCIKICAgeD0iMHB4IgogICBpZD0ic3ZnODY5IgogICBzb2RpcG9kaTpkb2NuYW1lPSJSZWRpc19Mb2dvLnN2ZyIKICAgaW5rc2NhcGU6dmVyc2lvbj0iMS4wLjEgKGM0OTdiMDNjLCAyMDIwLTA5LTEwKSIKICAgaW5rc2NhcGU6ZXhwb3J0LWZpbGVuYW1lPSIvVXNlcnMvaG9uemEvRG93bmxvYWRzL3JlZGlzLnBuZyIKICAgaW5rc2NhcGU6ZXhwb3J0LXhkcGk9IjExMi41ODk1OCIKICAgaW5rc2NhcGU6ZXhwb3J0LXlkcGk9IjExMi41ODk1OCI+PGRlZnMKICAgICBpZD0iZGVmczg3MyIgLz48c29kaXBvZGk6bmFtZWR2aWV3CiAgICAgcGFnZWNvbG9yPSIjZmZmZmZmIgogICAgIGJvcmRlcmNvbG9yPSIjNjY2NjY2IgogICAgIGJvcmRlcm9wYWNpdHk9IjEiCiAgICAgb2JqZWN0dG9sZXJhbmNlPSIxMCIKICAgICBncmlkdG9sZXJhbmNlPSIxMCIKICAgICBndWlkZXRvbGVyYW5jZT0iMTAiCiAgICAgaW5rc2NhcGU6cGFnZW9wYWNpdHk9IjAiCiAgICAgaW5rc2NhcGU6cGFnZXNoYWRvdz0iMiIKICAgICBpbmtzY2FwZTp3aW5kb3ctd2lkdGg9IjEzODIiCiAgICAgaW5rc2NhcGU6d2luZG93LWhlaWdodD0iODQ3IgogICAgIGlkPSJuYW1lZHZpZXc4NzEiCiAgICAgc2hvd2dyaWQ9ImZhbHNlIgogICAgIGZpdC1tYXJnaW4tdG9wPSIwIgogICAgIGZpdC1tYXJnaW4tbGVmdD0iMCIKICAgICBmaXQtbWFyZ2luLXJpZ2h0PSIwIgogICAgIGZpdC1tYXJnaW4tYm90dG9tPSIwIgogICAgIGlua3NjYXBlOnpvb209IjEuNTIzNDUwOSIKICAgICBpbmtzY2FwZTpjeD0iOTUuNDMzODUyIgogICAgIGlua3NjYXBlOmN5PSI4OS4zMDk1NjciCiAgICAgaW5rc2NhcGU6d2luZG93LXg9IjU4IgogICAgIGlua3NjYXBlOndpbmRvdy15PSIyNSIKICAgICBpbmtzY2FwZTp3aW5kb3ctbWF4aW1pemVkPSIxIgogICAgIGlua3NjYXBlOmN1cnJlbnQtbGF5ZXI9InN2Zzg2OSIgLz48bWV0YWRhdGEKICAgICBpZD0ibWV0YWRhdGE4MzMiPjxyZGY6UkRGPjxjYzpXb3JrCiAgICAgICAgIHJkZjphYm91dD0iIj48ZGM6Zm9ybWF0PmltYWdlL3N2Zyt4bWw8L2RjOmZvcm1hdD48ZGM6dHlwZQogICAgICAgICAgIHJkZjpyZXNvdXJjZT0iaHR0cDovL3B1cmwub3JnL2RjL2RjbWl0eXBlL1N0aWxsSW1hZ2UiIC8+PGRjOnRpdGxlPjwvZGM6dGl0bGU+PC9jYzpXb3JrPjwvcmRmOlJERj48L21ldGFkYXRhPjxnCiAgICAgaWQ9Imc5NzkiCiAgICAgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoNC45NDEyMzA2LDE3LjA5Nzg3NykiPjxwYXRoCiAgICAgICBmaWxsPSIjYTQxZTExIgogICAgICAgZD0ibSAxNjMuNDQ4MTQsMTEyLjQyNjUzIGMgLTkuMDc4LDQuNzMyIC01Ni4xMDYsMjQuMDY4IC02Ni4xMTgwMDIsMjkuMjg3IC0xMC4wMTIsNS4yMjEgLTE1LjU3NCw1LjE3IC0yMy40ODMsMS4zODkgLTcuOTA5LC0zLjc4MSAtNTcuOTU1LC0yMy45OTYgLTY2Ljk3MDAwMDMsLTI4LjMwNSAtNC41MDYsLTIuMTU0IC02Ljg3NTAwMDAzLC0zLjk3MSAtNi44NzUwMDAwMywtNS42ODggViA5MS45MTQ1MzQgYyAwLDAgNjUuMTUzMDAwMzMsLTE0LjE4NCA3NS42NzIwMDAzMywtMTcuOTU3IDEwLjUxOCwtMy43NzQgMTQuMTY3LC0zLjkxIDIzLjExOCwtMC42MzEgOC45NTIwMDIsMy4yNzkgNjIuNDc0MDAyLDEyLjkzNiA3MS4zMjEwMDIsMTYuMTc2IDAsMCAtMC4wMDQsMTUuMzU2OTk2IC0wLjAwNCwxNi45NTA5OTYgMC4wMDEsMS43IC0yLjA0LDMuNTY1IC02LjY2MSw1Ljk3MyB6IgogICAgICAgaWQ9InBhdGg4NDUiIC8+PHBhdGgKICAgICAgIGZpbGw9IiNkODJjMjAiCiAgICAgICBkPSJtIDE2My40NDgxNCw5NS4yMjY1MzQgYyAtOS4wNzgsNC43MyAtNTYuMTA2LDI0LjA2Nzk5NiAtNjYuMTE4MDAyLDI5LjI4Njk5NiAtMTAuMDEyLDUuMjIxIC0xNS41NzQsNS4xNyAtMjMuNDgzLDEuMzg5IC03LjkxLC0zLjc3OSAtNTcuOTU1LC0yMy45OTggLTY2Ljk3MDAwMDMsLTI4LjMwNDk5NiAtOS4wMTUsLTQuMzA5IC05LjIwNCwtNy4yNzUgLTAuMzQ4LC0xMC43NDIgOC44NTUwMDAzLC0zLjQ2OSA1OC42MjYwMDAzLC0yMi45OTYgNjkuMTQ2MDAwMywtMjYuNzcgMTAuNTE4LC0zLjc3MiAxNC4xNjcsLTMuOTEgMjMuMTE4LC0wLjYzIDguOTUyMDAyLDMuMjc5IDU1LjY5OTAwMiwyMS44ODYgNjQuNTQ1MDAyLDI1LjEyNiA4Ljg0OCwzLjI0MyA5LjE4OCw1LjkxMyAwLjExLDEwLjY0NSB6IgogICAgICAgaWQ9InBhdGg4NDciIC8+PHBhdGgKICAgICAgIGZpbGw9IiNhNDFlMTEiCiAgICAgICBkPSJtIDE2My40NDgxNCw4NC4zODY1MzQgYyAtOS4wNzgsNC43MzIgLTU2LjEwNiwyNC4wNjc5OTYgLTY2LjExODAwMiwyOS4yODg5OTYgLTEwLjAxMiw1LjIxOSAtMTUuNTc0LDUuMTY4IC0yMy40ODMsMS4zODcgLTcuOTEsLTMuNzc5IC01Ny45NTUsLTIzLjk5NTk5NiAtNjYuOTcwMDAwMywtMjguMzA0OTk2IC00LjUwNiwtMi4xNTQgLTYuODc1MDAwMDMsLTMuOTY5IC02Ljg3NTAwMDAzLC01LjY4NiB2IC0xNy4xOTcgYyAwLDAgNjUuMTUzMDAwMzMsLTE0LjE4MyA3NS42NzIwMDAzMywtMTcuOTU3IDEwLjUxOCwtMy43NzMgMTQuMTY3LC0zLjkxIDIzLjExOCwtMC42MzEgOC45NTIwMDIsMy4yNzkgNjIuNDc0MDAyLDEyLjkzNCA3MS4zMjEwMDIsMTYuMTc1IDAsMCAtMC4wMDQsMTUuMzU3IC0wLjAwNCwxNi45NTMgMC4wMDEsMS42OTkgLTIuMDQsMy41NjQgLTYuNjYxLDUuOTcyIHoiCiAgICAgICBpZD0icGF0aDg0OSIgLz48cGF0aAogICAgICAgZmlsbD0iI2Q4MmMyMCIKICAgICAgIGQ9Im0gMTYzLjQ0ODE0LDY3LjE4NjUzNCBjIC05LjA3OCw0LjczMiAtNTYuMTA2LDI0LjA2OCAtNjYuMTE4MDAyLDI5LjI4OSAtMTAuMDEyLDUuMjE4OTk2IC0xNS41NzQsNS4xNjc5OTYgLTIzLjQ4MywxLjM4NyAtNy45MSwtMy43NzkgLTU3Ljk1NSwtMjMuOTk3IC02Ni45NzAwMDAzLC0yOC4zMDUgLTkuMDE1LC00LjMwOCAtOS4yMDQsLTcuMjc0IC0wLjM0OCwtMTAuNzQzIDguODU1MDAwMywtMy40NjcgNTguNjI2MDAwMywtMjIuOTk1IDY5LjE0NjAwMDMsLTI2Ljc2OCAxMC41MTgsLTMuNzczIDE0LjE2NywtMy45MSAyMy4xMTgsLTAuNjMxIDguOTUyMDAyLDMuMjc5IDU1LjY5OTAwMiwyMS44ODUgNjQuNTQ1MDAyLDI1LjEyNiA4Ljg0OCwzLjI0MiA5LjE4OCw1LjkxMyAwLjExLDEwLjY0NSB6IgogICAgICAgaWQ9InBhdGg4NTEiIC8+PHBhdGgKICAgICAgIGZpbGw9IiNhNDFlMTEiCiAgICAgICBkPSJtIDE2My40NDgxNCw1NS4zMDY1MzQgYyAtOS4wNzgsNC43MzIgLTU2LjEwNiwyNC4wNjkgLTY2LjExODAwMiwyOS4yOSAtMTAuMDEyLDUuMjE5IC0xNS41NzQsNS4xNjggLTIzLjQ4MywxLjM4NyAtNy45MSwtMy43NzkgLTU3Ljk1NSwtMjMuOTk3IC02Ni45NzAwMDAzLC0yOC4zMDUgLTQuNTA2LC0yLjE1NCAtNi44NzUwMDAwMywtMy45NyAtNi44NzUwMDAwMywtNS42ODYgdiAtMTcuMTk3IGMgMCwwIDY1LjE1MzAwMDMzLC0xNC4xODMgNzUuNjcyMDAwMzMsLTE3Ljk1NiAxMC41MTgsLTMuNzc0IDE0LjE2NywtMy45MSAyMy4xMTgsLTAuNjMxIDguOTUyMDAyLDMuMjc5IDYyLjQ3NDAwMiwxMi45MzQgNzEuMzIxMDAyLDE2LjE3NSAwLDAgLTAuMDA0LDE1LjM1NyAtMC4wMDQsMTYuOTUyIDAuMDAxLDEuNjk4IC0yLjA0LDMuNTYzIC02LjY2MSw1Ljk3MSB6IgogICAgICAgaWQ9InBhdGg4NTMiIC8+PHBhdGgKICAgICAgIGZpbGw9IiNkODJjMjAiCiAgICAgICBkPSJtIDE2My40NDgxNCwzOC4xMDY1MzQgYyAtOS4wNzgsNC43MzIgLTU2LjEwNiwyNC4wNjkgLTY2LjExODAwMiwyOS4yODkgLTEwLjAxMiw1LjIxOSAtMTUuNTc0LDUuMTY4IC0yMy40ODMsMS4zODggLTcuOTA5LC0zLjc4IC01Ny45NTUsLTIzLjk5NyAtNjYuOTcwMDAwMywtMjguMzA1IC05LjAxNSwtNC4zMDggLTkuMjA0LC03LjI3NSAtMC4zNDgsLTEwLjc0MyA4Ljg1NTAwMDMsLTMuNDY4IDU4LjYyNjAwMDMsLTIyLjk5NDAwMDMgNjkuMTQ2MDAwMywtMjYuNzY4MDAwMyAxMC41MTgsLTMuNzc0IDE0LjE2NywtMy45MSAyMy4xMTgsLTAuNjMgOC45NTIwMDIsMy4yNzkgNTUuNjk5MDAyLDIxLjg4NTAwMDMgNjQuNTQ1MDAyLDI1LjEyNjAwMDMgOC44NDgsMy4yNCA5LjE4OCw1LjkxMiAwLjExLDEwLjY0MyB6IgogICAgICAgaWQ9InBhdGg4NTUiIC8+PHRleHQKICAgICAgIHhtbDpzcGFjZT0icHJlc2VydmUiCiAgICAgICBzdHlsZT0iZm9udC1zdHlsZTpub3JtYWw7Zm9udC13ZWlnaHQ6bm9ybWFsO2ZvbnQtc2l6ZTo4NS4zMzI4cHg7bGluZS1oZWlnaHQ6MS4yNTtmb250LWZhbWlseTpzYW5zLXNlcmlmO2ZpbGw6IzAwMDAwMDtmaWxsLW9wYWNpdHk6MTtzdHJva2U6bm9uZTtzdHJva2Utd2lkdGg6MC45OTk5OTQiCiAgICAgICB4PSIxNi45MTI4MTUiCiAgICAgICB5PSIxMDMuNDIxNjciCiAgICAgICBpZD0idGV4dDg5MyI+PHRzcGFuCiAgICAgICAgIHNvZGlwb2RpOnJvbGU9ImxpbmUiCiAgICAgICAgIGlkPSJ0c3Bhbjg5MSIKICAgICAgICAgeD0iMTYuOTEyODE1IgogICAgICAgICB5PSIxMDMuNDIxNjciCiAgICAgICAgIHN0eWxlPSJmb250LXN0eWxlOm5vcm1hbDtmb250LXZhcmlhbnQ6bm9ybWFsO2ZvbnQtd2VpZ2h0Om5vcm1hbDtmb250LXN0cmV0Y2g6bm9ybWFsO2ZvbnQtc2l6ZTo4NS4zMzI4cHg7Zm9udC1mYW1pbHk6J0FyaWFsIEJsYWNrJzstaW5rc2NhcGUtZm9udC1zcGVjaWZpY2F0aW9uOidBcmlhbCBCbGFjaywgJztmaWxsOiNmZmZmZmY7c3Ryb2tlLXdpZHRoOjAuOTk5OTk0Ij5SQzwvdHNwYW4+PC90ZXh0PjwvZz48L3N2Zz4K" preserveAspectRatio="xMidYMid meet"/>
+    <text x="1518.0" y="183" text-anchor="middle" class="participant">Redis Stream</text>
+    <text x="1518.0" y="208" text-anchor="middle" class="role">server</text></g>
+  <line x1="1500.0" y1="228" x2="1500.0" y2="662" class="lifeline"/>
+  <rect x="285.0" y="274" width="230.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="309.0" cy="291" r="13" class="badge callBadge"/><text x="309.0" y="296" text-anchor="middle" class="badgeText callText">1</text>
+  <text x="333.0" y="296" class="msg callText">XADD order event</text>
+  <path d="M 180.0 322 L 620.0 322" class="call"/>
+  <rect x="945.0" y="350" width="230.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="969.0" cy="367" r="13" class="badge workBadge"/><text x="969.0" y="372" text-anchor="middle" class="badgeText workText">2</text>
+  <text x="993.0" y="372" class="msg workText">append to stream</text>
+  <path d="M 620.0 398 L 1500.0 398" class="work"/>
+  <rect x="1127.4" y="426" width="305.2" height="34" rx="17" class="label workLabel"/>
+  <circle cx="1151.4" cy="443" r="13" class="badge workBadge"/><text x="1151.4" y="448" text-anchor="middle" class="badgeText workText">3</text>
+  <text x="1175.4" y="448" class="msg workText">XREADGROUP pending entries</text>
+  <path d="M 1060.0 474 L 1500.0 474" class="work"/>
+  <rect x="1147.9" y="502" width="264.2" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="1171.9" cy="519" r="13" class="badge returnBadge"/><text x="1171.9" y="524" text-anchor="middle" class="badgeText returnText">4</text>
+  <text x="1195.9" y="524" class="msg returnText">deliver stream record</text>
+  <path d="M 1500.0 550 L 1060.0 550" class="return"/>
+  <rect x="1164.3" y="578" width="231.4" height="34" rx="17" class="label workLabel"/>
+  <circle cx="1188.3" cy="595" r="13" class="badge workBadge"/><text x="1188.3" y="600" text-anchor="middle" class="badgeText workText">5</text>
+  <text x="1212.3" y="600" class="msg workText">XACK processed id</text>
+  <path d="M 1060.0 626 L 1500.0 626" class="work"/>
+  <rect x="90" y="692" width="1500" height="38" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
+  <text x="840.0" y="717" text-anchor="middle" class="footer">Reader contract: ordered calls, branch boundaries, and infrastructure touchpoints stay visible without label overlap.</text>
 </svg>
