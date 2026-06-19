@@ -13,7 +13,8 @@
     <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb"/></marker>
     <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#059669"/></marker>
     <marker id="arrow-purple" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#7c3aed"/></marker>
-  </defs>
+  <marker id="arrow-blue-64748b" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path stroke-dasharray="none" d="M1,1 L11,6 L1,11 Z" fill="#64748b"/></marker>
+</defs>
   <rect class="bg" width="1720" height="980"/>
   <text class="title" x="70" y="70">Spring Data R2DBC Examples</text>
 
@@ -62,5 +63,5 @@
   <path class="line" d="M325 590 L760 770" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
   <path class="line" d="M860 590 L860 770" stroke="#059669" marker-end="url(#arrow-green)"/>
   <path class="line" d="M1395 590 L1015 770" stroke="#7c3aed" marker-end="url(#arrow-purple)"/>
-  <path class="line" d="M1100 818 L1018 818" stroke="#64748b" marker-end="url(#arrow-blue)"/>
+  <path class="line" d="M1100 818 L1018 818" stroke="#64748b" marker-end="url(#arrow-blue-64748b)"/>
 </svg>

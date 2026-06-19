@@ -9,7 +9,8 @@
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.band{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.bandLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:29px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.label{font-family:"Comic Mono";font-size:14px;fill:#475569}.line{fill:none;stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
     </style>
-  </defs>
+  <marker id="arrowBlue-64748b" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path stroke-dasharray="none" d="M 0 0 L 14 7 L 0 14 Z" fill="#64748b"/></marker>
+</defs>
   <rect class="canvas" width="1660" height="700"/>
   <rect class="frame" x="24" y="24" width="1612" height="652" rx="24"/>
   <text class="title" x="830" y="70" text-anchor="middle">Filter decision flow</text>
@@ -63,7 +64,7 @@
   <path class="line" d="M 998 290 L 1112 290" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
   <path class="line" d="M 1356 290 L 1466 290 L 1466 586 L 1456 586" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
 
-  <path class="line soft" d="M 545 344 L 545 468 L 319 468 L 319 548" stroke="#64748B" marker-end="url(#arrowBlue)"/>
+  <path class="line soft" d="M 545 344 L 545 468 L 319 468 L 319 548" stroke="#64748B" marker-end="url(#arrowBlue-64748b)"/>
   <path class="line soft" d="M 885 344 L 885 464 L 657 464 L 657 548" stroke="#D97706" marker-end="url(#arrowAmber)"/>
   <path class="line soft" d="M 1234 344 L 1234 464 L 995 464 L 995 548" stroke="#E11D48" marker-end="url(#arrowRose)"/>
   <path class="line soft" d="M 1234 344 L 1234 464 L 1333 464 L 1333 548" stroke="#16A34A" marker-end="url(#arrowGreen)"/>

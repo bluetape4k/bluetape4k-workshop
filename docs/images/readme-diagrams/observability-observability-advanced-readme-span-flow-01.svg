@@ -9,7 +9,8 @@
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.band{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.bandLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:30px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.label{font-family:"Comic Mono";font-size:14px;fill:#475569}.line{fill:none;stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
     </style>
-  </defs>
+  <marker id="arrowBlue-0891b2" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path stroke-dasharray="none" d="M 0 0 L 14 7 L 0 14 Z" fill="#0891b2"/></marker>
+</defs>
   <rect class="canvas" width="1660" height="880"/>
   <rect class="frame" x="24" y="24" width="1612" height="832" rx="24"/>
   <text class="title" x="830" y="70" text-anchor="middle">Cache-aside span flow</text>
@@ -81,7 +82,7 @@
 
   <path class="line" d="M 352 263 L 462 263" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
   <path class="line" d="M 714 263 L 824 263" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 1076 263 L 1186 263" stroke="#0891B2" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 1076 263 L 1186 263" stroke="#0891B2" marker-end="url(#arrowBlue-0891b2)"/>
 
   <path class="line" d="M 588 318 L 588 354 L 261 354 L 261 470" stroke="#E11D48" marker-end="url(#arrowRose)"/>
   <path class="line" d="M 404 520 L 520 486" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
