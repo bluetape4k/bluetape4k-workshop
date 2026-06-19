@@ -2,10 +2,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1660" height="880" viewBox="0 0 1660 880" role="img" aria-label="Observability advanced span flow diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
-    <marker id="arrowAmber" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#D97706"/></marker>
-    <marker id="arrowRose" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#E11D48"/></marker>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowAmber" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#D97706" stroke-dasharray="none"/></marker>
+    <marker id="arrowRose" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#E11D48" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.band{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.bandLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:30px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.label{font-family:"Comic Mono";font-size:14px;fill:#475569}.line{fill:none;stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
     </style>
@@ -13,8 +13,7 @@
 </defs>
   <rect class="canvas" width="1660" height="880"/>
   <rect class="frame" x="24" y="24" width="1612" height="832" rx="24"/>
-  <text class="title" x="830" y="70" text-anchor="middle">Cache-aside span flow</text>
-  <text class="subtitle" x="830" y="102" text-anchor="middle">The same service span keeps cache hit, cache miss, DB lookup, cache write, and Redis soft-fail behavior readable.</text>
+  <text class="title" x="830" y="70" text-anchor="middle">Cache-aside span flow</text>  <text class="subtitle" x="830" y="102" text-anchor="middle">The same service span keeps cache hit, cache miss, DB lookup, cache write, and Redis soft-fail behavior readable.</text>
 
   <rect class="band" x="70" y="150" width="1520" height="182" rx="18"/>
   <text class="bandLabel" x="102" y="188">Request span</text>
@@ -49,8 +48,7 @@
     <rect x="148" y="506" width="68" height="30" rx="15" fill="#FFE4E6" stroke="#E11D48" stroke-width="2.4"/>
     <path d="M 148 521 C 148 539 216 539 216 521" fill="none" stroke="#E11D48" stroke-width="2.4"/>
     <text class="cardTitle" x="306" y="512" text-anchor="middle">user.cache</text>
-    <text class="cardTitle" x="306" y="548" text-anchor="middle">get</text>
-    <text class="cardText" x="306" y="578" text-anchor="middle">Redis read; hit or miss</text>
+    <text class="cardTitle" x="306" y="548" text-anchor="middle">get</text>  <text class="cardText" x="306" y="578" text-anchor="middle">Redis read; hit or miss</text>
   </g>
   <g filter="url(#shadow)">
     <rect x="520" y="432" width="230" height="108" rx="16" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.7"/>
@@ -76,22 +74,21 @@
     <text class="cardTitle" x="1442" y="632" text-anchor="middle">put</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="560" y="724" width="548" height="58" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
-    <text class="cardText" x="834" y="758" text-anchor="middle">Redis errors become miss/skip; cancellation is rethrown.</text>
+    <rect x="560" y="724" width="548" height="58" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>  <text class="cardText" x="834" y="758" text-anchor="middle">Redis errors become miss/skip; cancellation is rethrown.</text>
   </g>
 
-  <path class="line" d="M 352 263 L 462 263" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 714 263 L 824 263" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 1076 263 L 1186 263" stroke="#0891B2" marker-end="url(#arrowBlue-0891b2)"/>
+  <path class="line" d="M 352 263 L 462 263" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 714 263 L 824 263" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1076 263 L 1186 263" stroke="#0891B2" marker-end="url(#arrowBlue-0891b2)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line" d="M 588 318 L 588 354 L 261 354 L 261 470" stroke="#E11D48" marker-end="url(#arrowRose)"/>
-  <path class="line" d="M 404 520 L 520 486" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 404 570 L 520 615" stroke="#D97706" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 750 615 L 888 615" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 1146 615 L 1268 615" stroke="#E11D48" marker-end="url(#arrowRose)"/>
+  <path class="line" d="M 588 318 L 588 354 L 261 354 L 261 470" stroke="#E11D48" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 404 520 L 520 486" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 404 570 L 520 615" stroke="#D97706" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 750 615 L 888 615" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1146 615 L 1268 615" stroke="#E11D48" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line soft" d="M 261 606 L 261 753 L 560 753" stroke="#D97706" marker-end="url(#arrowAmber)"/>
-  <path class="line soft" d="M 1393 670 L 1393 753 L 1108 753" stroke="#D97706" marker-end="url(#arrowAmber)"/>
+  <path class="line soft" d="M 261 606 L 261 753 L 560 753" stroke="#D97706" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line soft" d="M 1393 670 L 1393 753 L 1108 753" stroke="#D97706" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="448" y="466" text-anchor="middle">hit</text>
   <text class="label" x="448" y="638" text-anchor="middle">miss</text>
   <text class="label" x="402" y="738" text-anchor="middle">read failure</text>

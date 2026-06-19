@@ -8,9 +8,9 @@
       .layer{stroke-width:1.5;rx:22;ry:22}.card{fill:#fff;stroke:#cbd5e1;stroke-width:1.5;rx:18;ry:18}
       .line{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}.db{fill:#fff;stroke:#94a3b8;stroke-width:2}.dbtop{fill:#e0f2fe;stroke:#0284c7;stroke-width:2}
     </style>
-    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb"/></marker>
-    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#059669"/></marker>
-    <marker id="arrow-purple" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#7c3aed"/></marker>
+    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb" stroke-dasharray="none"/></marker>
+    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#059669" stroke-dasharray="none"/></marker>
+    <marker id="arrow-purple" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#7c3aed" stroke-dasharray="none"/></marker>
   </defs>
   <rect class="bg" width="1800" height="1040"/>
   <text class="title" x="70" y="70">Spring Data R2DBC WebFlux Users API</text>
@@ -47,9 +47,9 @@
     <text class="card-title" x="101" y="64">H2 R2DBC</text>
   </g>
 
-  <path class="line" d="M445 305 L445 360 L840 360 L840 475" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
-  <path class="line" d="M1355 305 L1355 360 L960 360 L960 475" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
-  <path class="line" d="M900 560 L900 715" stroke="#059669" marker-end="url(#arrow-green)"/>
-  <path class="line" d="M900 785 L900 835 L515 835 L515 910" stroke="#7c3aed" marker-end="url(#arrow-purple)"/>
-  <path class="line" d="M745 935 L1110 935" stroke="#7c3aed" marker-end="url(#arrow-purple)"/>
+  <path class="line" d="M445 305 L445 360 L840 360 L840 475" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M1355 305 L1355 360 L960 360 L960 475" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M900 560 L900 715" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M900 785 L900 835 L515 835 L515 910" stroke="#7c3aed" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M745 935 L1110 935" stroke="#7c3aed" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

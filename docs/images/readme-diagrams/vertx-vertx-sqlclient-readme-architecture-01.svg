@@ -12,10 +12,10 @@
       .line { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke-dasharray="none"/>
     </marker>
     <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#059669"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#059669" stroke-dasharray="none"/>
     </marker>
   </defs>
   <rect class="bg" width="1700" height="930"/>
@@ -42,8 +42,7 @@
   <text class="body" x="1225" y="507">Generated row mapper</text>
   <text class="small" x="1225" y="532">@DataObject + @RowMapped</text>
 
-  <rect class="layer" x="70" y="670" width="1560" height="180" fill="#fefce8" stroke="#fde68a"/>
-  <text class="layer-title" x="105" y="715">Runtime databases and user mapping</text>
+  <rect class="layer" x="70" y="670" width="1560" height="180" fill="#fefce8" stroke="#fde68a"/>  <text class="layer-title" x="105" y="715">Runtime databases and user mapping</text>
   <rect class="card" x="185" y="750" width="360" height="70"/>
   <g transform="translate(215 760) scale(0.34)">
     <rect x="10" y="8" width="108" height="112" rx="18" fill="#fffaf2" stroke="#28485a" stroke-width="6"/>
@@ -62,13 +61,12 @@
     <path d="M30 36v44c0 8 15 14 34 14s34-6 34-14V36" fill="#fff0d8" stroke="#8c6f33" stroke-width="6" stroke-linejoin="round"/>
     <path d="M30 58c0 8 15 14 34 14s34-6 34-14" fill="none" stroke="#8c6f33" stroke-width="5" stroke-linecap="round"/>
     <path d="M30 80c0 8 15 14 34 14s34-6 34-14" fill="none" stroke="#8c6f33" stroke-width="5" stroke-linecap="round"/>
-  </g>
-  <text class="body" x="1250" y="790">MySQL 8 Testcontainer</text>
+  </g>  <text class="body" x="1250" y="790">MySQL 8 Testcontainer</text>
 
-  <path class="line" d="M325 280 L325 475" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
-  <path class="line" d="M850 280 L850 475" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
-  <path class="line" d="M1375 280 L1375 475" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
-  <path class="line" d="M330 553 L330 750" stroke="#059669" marker-end="url(#arrow-green)"/>
-  <path class="line" d="M850 553 L850 750" stroke="#059669" marker-end="url(#arrow-green)"/>
-  <path class="line" d="M1370 553 L1370 750" stroke="#059669" marker-end="url(#arrow-green)"/>
+  <path class="line" d="M325 280 L325 475" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M850 280 L850 475" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M1375 280 L1375 475" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M330 553 L330 750" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M850 553 L850 750" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M1370 553 L1370 750" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

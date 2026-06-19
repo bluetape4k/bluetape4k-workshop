@@ -2,9 +2,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="960" viewBox="0 0 1500 960" role="img" aria-label="graph-knowledge-graph seed topology diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/></filter>
-    <marker id="arrowMention" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
-    <marker id="arrowRelated" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
-    <marker id="arrowClassify" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
+    <marker id="arrowMention" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowRelated" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowClassify" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/></marker>
     <style>
       .canvas { fill: #F8FAFC; }
       .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
@@ -80,20 +80,20 @@
     <text class="nodeText" x="1250" y="677" text-anchor="middle">infrastructure</text>
   </g>
 
-  <path class="line" d="M 438 238 L 600 218" stroke="#16A34A" marker-end="url(#arrowMention)"/>
-  <path class="line" d="M 438 276 L 536 276 L 536 648 L 600 648" stroke="#16A34A" marker-end="url(#arrowMention)"/>
-  <path class="line" d="M 438 478 L 536 478 L 536 510 L 600 510" stroke="#16A34A" marker-end="url(#arrowMention)"/>
-  <path class="line" d="M 438 514 L 564 514 L 564 248 L 600 248" stroke="#16A34A" marker-end="url(#arrowMention)"/>
+  <path class="line" d="M 438 238 L 600 218" stroke="#16A34A" marker-end="url(#arrowMention)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 438 276 L 536 276 L 536 648 L 600 648" stroke="#16A34A" marker-end="url(#arrowMention)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 438 478 L 536 478 L 536 510 L 600 510" stroke="#16A34A" marker-end="url(#arrowMention)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 438 514 L 564 514 L 564 248 L 600 248" stroke="#16A34A" marker-end="url(#arrowMention)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line" d="M 735 262 L 735 330" stroke="#2563EB" marker-end="url(#arrowRelated)"/>
-  <path class="line" d="M 735 408 L 735 476" stroke="#2563EB" marker-end="url(#arrowRelated)"/>
-  <path class="line" d="M 870 515 L 946 515 L 946 661 L 870 661" stroke="#2563EB" marker-end="url(#arrowRelated)"/>
-  <path class="line" d="M 870 223 L 980 223 L 980 661 L 870 661" stroke="#2563EB" marker-end="url(#arrowRelated)"/>
+  <path class="line" d="M 735 262 L 735 330" stroke="#2563EB" marker-end="url(#arrowRelated)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 735 408 L 735 476" stroke="#2563EB" marker-end="url(#arrowRelated)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 870 515 L 946 515 L 946 661 L 870 661" stroke="#2563EB" marker-end="url(#arrowRelated)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 870 223 L 980 223 L 980 661 L 870 661" stroke="#2563EB" marker-end="url(#arrowRelated)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line" d="M 870 223 L 1080 223" stroke="#C47A12" marker-end="url(#arrowClassify)"/>
-  <path class="line" d="M 870 369 L 1080 369" stroke="#C47A12" marker-end="url(#arrowClassify)"/>
-  <path class="line" d="M 870 515 L 1080 515" stroke="#C47A12" marker-end="url(#arrowClassify)"/>
-  <path class="line" d="M 870 661 L 1080 661" stroke="#C47A12" marker-end="url(#arrowClassify)"/>
+  <path class="line" d="M 870 223 L 1080 223" stroke="#C47A12" marker-end="url(#arrowClassify)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 870 369 L 1080 369" stroke="#C47A12" marker-end="url(#arrowClassify)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 870 515 L 1080 515" stroke="#C47A12" marker-end="url(#arrowClassify)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 870 661 L 1080 661" stroke="#C47A12" marker-end="url(#arrowClassify)" stroke-linecap="round" stroke-linejoin="round"/>
 
   <rect x="88" y="790" width="1324" height="96" rx="16" fill="#FFFFFF" stroke="#D5E0E8" stroke-width="1.4"/>
   <circle cx="132" cy="826" r="7" fill="#16A34A"/>

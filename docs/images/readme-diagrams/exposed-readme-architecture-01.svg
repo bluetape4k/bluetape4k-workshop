@@ -6,16 +6,16 @@
       <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#22334a" flood-opacity="0.12"/>
     </filter>
     <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#386fd8"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#386fd8" stroke-dasharray="none"/>
     </marker>
     <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f8b57"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f8b57" stroke-dasharray="none"/>
     </marker>
     <marker id="arrow-purple" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#7c5bc4"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#7c5bc4" stroke-dasharray="none"/>
     </marker>
     <marker id="arrow-amber" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#c47a2c"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#c47a2c" stroke-dasharray="none"/>
     </marker>
     <g id="db-icon">
       <ellipse cx="30" cy="11" rx="23" ry="8" fill="#d7ecff" stroke="#2e6fa8" stroke-width="3"/>
@@ -72,17 +72,17 @@
   </g>
 
   <g id="edges">
-    <path class="edge" d="M 490 405 V 560" stroke="#c47a2c" marker-end="url(#arrow-amber)"/>
-    <path class="edge" d="M 490 668 V 815" stroke="#c47a2c" marker-end="url(#arrow-amber)"/>
+    <path class="edge" d="M 490 405 V 560" stroke="#c47a2c" marker-end="url(#arrow-amber)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="edge" d="M 490 668 V 815" stroke="#c47a2c" marker-end="url(#arrow-amber)" stroke-linecap="round" stroke-linejoin="round"/>
 
-    <path class="edge" d="M 870 405 V 560" stroke="#2f8b57" marker-end="url(#arrow-green)"/>
-    <path class="edge" d="M 870 668 V 815" stroke="#2f8b57" marker-end="url(#arrow-green)"/>
+    <path class="edge" d="M 870 405 V 560" stroke="#2f8b57" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="edge" d="M 870 668 V 815" stroke="#2f8b57" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
 
-    <path class="edge" d="M 1250 405 V 560" stroke="#7c5bc4" marker-end="url(#arrow-purple)"/>
-    <path class="edge" d="M 1250 668 V 815" stroke="#7c5bc4" marker-end="url(#arrow-purple)"/>
+    <path class="edge" d="M 1250 405 V 560" stroke="#7c5bc4" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="edge" d="M 1250 668 V 815" stroke="#7c5bc4" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
 
-    <path class="edge" d="M 1630 405 V 560" stroke="#386fd8" marker-end="url(#arrow-blue)"/>
-    <path class="edge" d="M 1630 668 V 815" stroke="#386fd8" marker-end="url(#arrow-blue)"/>
+    <path class="edge" d="M 1630 405 V 560" stroke="#386fd8" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="edge" d="M 1630 668 V 815" stroke="#386fd8" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 
   <g id="module-cards">
@@ -141,22 +141,18 @@
     <text class="detail" x="520" y="912" text-anchor="middle">ProductTable row state</text>
 
     <rect class="card" x="710" y="815" width="320" height="135" rx="14" fill="#f0fbf4" stroke="#62aa7a"/>
-    <use href="#postgres-icon" x="731" y="850"/>
-    <text class="smallTitle" x="900" y="846" text-anchor="middle">PostgreSQL</text>
-    <text class="smallTitle" x="900" y="876" text-anchor="middle">JDBC</text>
-    <text class="detail" x="900" y="906" text-anchor="middle">Testcontainers-backed tests</text>
+    <use href="#postgres-icon" x="731" y="850"/>  <text class="smallTitle" x="900" y="846" text-anchor="middle">PostgreSQL</text>
+    <text class="smallTitle" x="900" y="876" text-anchor="middle">JDBC</text>  <text class="detail" x="900" y="906" text-anchor="middle">Testcontainers-backed tests</text>
     <text class="detail" x="900" y="930" text-anchor="middle">schema created by initializer</text>
 
     <rect class="card" x="1090" y="815" width="320" height="135" rx="14" fill="#f8f3ff" stroke="#8b72d6"/>
-    <use href="#postgres-icon" x="1111" y="850"/>
-    <text class="smallTitle" x="1280" y="846" text-anchor="middle">PostgreSQL</text>
+    <use href="#postgres-icon" x="1111" y="850"/>  <text class="smallTitle" x="1280" y="846" text-anchor="middle">PostgreSQL</text>
     <text class="smallTitle" x="1280" y="876" text-anchor="middle">JDBC</text>
     <text class="detail" x="1280" y="906" text-anchor="middle">virtual-thread blocking work</text>
     <text class="detail" x="1280" y="930" text-anchor="middle">deadlock-safe product ordering</text>
 
     <rect class="card" x="1470" y="815" width="320" height="135" rx="14" fill="#f0f7ff" stroke="#5b8def"/>
-    <use href="#postgres-icon" x="1491" y="850"/>
-    <text class="smallTitle" x="1660" y="846" text-anchor="middle">PostgreSQL</text>
+    <use href="#postgres-icon" x="1491" y="850"/>  <text class="smallTitle" x="1660" y="846" text-anchor="middle">PostgreSQL</text>
     <text class="smallTitle" x="1660" y="876" text-anchor="middle">R2DBC</text>
     <text class="detail" x="1660" y="906" text-anchor="middle">reactive driver + pool</text>
     <text class="detail" x="1660" y="930" text-anchor="middle">JDBC initializer for schema</text>

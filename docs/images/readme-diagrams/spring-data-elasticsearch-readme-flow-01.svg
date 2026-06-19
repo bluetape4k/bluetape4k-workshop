@@ -22,23 +22,21 @@
       .line-red { fill: none; stroke: #f04438; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <marker id="arrow-blue-flow" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none"/>
     </marker>
     <marker id="arrow-green-flow" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none"/>
     </marker>
     <marker id="arrow-orange-flow" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none"/>
     </marker>
     <marker id="arrow-red-flow" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none"/>
     </marker>
   </defs>
 
   <rect class="canvas" x="0" y="0" width="1800" height="980"/>
-  <rect x="24" y="24" width="1752" height="932" rx="22" fill="#ffffff" stroke="#d7e0eb" stroke-width="2"/>
-
-  <text class="title" x="900" y="72" text-anchor="middle">Elasticsearch query paths</text>
+  <rect x="24" y="24" width="1752" height="932" rx="22" fill="#ffffff" stroke="#d7e0eb" stroke-width="2"/>  <text class="title" x="900" y="72" text-anchor="middle">Elasticsearch query paths</text>
   <text class="subtitle" x="900" y="102" text-anchor="middle">The tests compare repository methods, criteria queries, geo search, and reactive streams over one document index.</text>
 
   <rect class="lane-blue" x="80" y="150" width="1640" height="150" rx="18" stroke-width="2"/>
@@ -56,10 +54,9 @@
     <path d="M 20 47 A 18 18 0 0 0 53 45" fill="none" stroke="#f2c94c" stroke-width="8" stroke-linecap="round"/>
     <circle cx="54" cy="31" r="8" fill="#343741"/>
   </g>
-  <text class="card-title" x="1370" y="226" text-anchor="middle">conference-index</text>
-  <text class="card-small" x="1370" y="251" text-anchor="middle">Elasticsearch OSS</text>
-  <path class="line-blue" d="M 620 234 L 748 234" marker-end="url(#arrow-blue-flow)"/>
-  <path class="line-red" d="M 1050 234 L 1178 234" marker-end="url(#arrow-red-flow)"/>
+  <text class="card-title" x="1370" y="226" text-anchor="middle">conference-index</text>  <text class="card-small" x="1370" y="251" text-anchor="middle">Elasticsearch OSS</text>
+  <path class="line-blue" d="M 620 234 L 748 234" marker-end="url(#arrow-blue-flow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-red" d="M 1050 234 L 1178 234" marker-end="url(#arrow-red-flow)" stroke-linecap="round" stroke-linejoin="round"/>
 
   <rect class="lane-green" x="80" y="340" width="1640" height="150" rx="18" stroke-width="2"/>
   <text class="lane-title" x="116" y="387">Repository search</text>
@@ -72,8 +69,8 @@
   <rect class="card-green" x="1190" y="388" width="300" height="72" rx="10" stroke-width="2"/>
   <text class="card-title" x="1340" y="419" text-anchor="middle">assert documents</text>
   <text class="card-small" x="1340" y="442" text-anchor="middle">size and field mapping</text>
-  <path class="line-green" d="M 620 424 L 748 424" marker-end="url(#arrow-green-flow)"/>
-  <path class="line-green" d="M 1050 424 L 1178 424" marker-end="url(#arrow-green-flow)"/>
+  <path class="line-green" d="M 620 424 L 748 424" marker-end="url(#arrow-green-flow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 1050 424 L 1178 424" marker-end="url(#arrow-green-flow)" stroke-linecap="round" stroke-linejoin="round"/>
 
   <rect class="lane-orange" x="80" y="530" width="1640" height="150" rx="18" stroke-width="2"/>
   <text class="lane-title" x="116" y="577">Criteria search</text>
@@ -86,8 +83,8 @@
   <rect class="card-orange" x="1190" y="578" width="300" height="72" rx="10" stroke-width="2"/>
   <text class="card-title" x="1340" y="609" text-anchor="middle">SearchHits</text>
   <text class="card-small" x="1340" y="632" text-anchor="middle">content is Conference</text>
-  <path class="line-orange" d="M 620 614 L 748 614" marker-end="url(#arrow-orange-flow)"/>
-  <path class="line-orange" d="M 1050 614 L 1178 614" marker-end="url(#arrow-orange-flow)"/>
+  <path class="line-orange" d="M 620 614 L 748 614" marker-end="url(#arrow-orange-flow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 1050 614 L 1178 614" marker-end="url(#arrow-orange-flow)" stroke-linecap="round" stroke-linejoin="round"/>
 
   <rect class="lane-red" x="80" y="720" width="1640" height="150" rx="18" stroke-width="2"/>
   <text class="lane-title" x="116" y="767">Reactive comparison</text>
@@ -100,6 +97,6 @@
   <rect class="card-red" x="1190" y="768" width="300" height="72" rx="10" stroke-width="2"/>
   <text class="card-title" x="1340" y="799" text-anchor="middle">same assertions</text>
   <text class="card-small" x="1340" y="822" text-anchor="middle">disabled on Jackson mismatch</text>
-  <path class="line-red" d="M 620 804 L 748 804" marker-end="url(#arrow-red-flow)"/>
-  <path class="line-red" d="M 1050 804 L 1178 804" marker-end="url(#arrow-red-flow)"/>
+  <path class="line-red" d="M 620 804 L 748 804" marker-end="url(#arrow-red-flow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-red" d="M 1050 804 L 1178 804" marker-end="url(#arrow-red-flow)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

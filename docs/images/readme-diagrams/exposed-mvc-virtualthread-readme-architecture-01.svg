@@ -26,11 +26,11 @@
       .errorLine{fill:none;stroke:#b75c55;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:8 7;marker-end:url(#arrowError)}
       .schemaLine{fill:none;stroke:#6a8798;stroke-width:2.6;stroke-linecap:round;stroke-dasharray:7 7;marker-end:url(#arrowSchema)}
     </style>
-    <marker id="arrow" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#53738b"/></marker>
-    <marker id="arrowVt" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#667eb9"/></marker>
-    <marker id="arrowRepo" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9c6f27"/></marker>
-    <marker id="arrowError" markerUnits="userSpaceOnUse" markerWidth="13.5" markerHeight="13.5" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b75c55"/></marker>
-    <marker id="arrowSchema" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6a8798"/></marker>
+    <marker id="arrow" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#53738b" stroke-dasharray="none"/></marker>
+    <marker id="arrowVt" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#667eb9" stroke-dasharray="none"/></marker>
+    <marker id="arrowRepo" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9c6f27" stroke-dasharray="none"/></marker>
+    <marker id="arrowError" markerUnits="userSpaceOnUse" markerWidth="13.5" markerHeight="13.5" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b75c55" stroke-dasharray="none"/></marker>
+    <marker id="arrowSchema" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6a8798" stroke-dasharray="none"/></marker>
     <g id="databaseIcon">
       <rect x="0" y="0" width="70" height="70" rx="12" fill="#fffaf2" stroke="#28485a" stroke-width="3"/>
       <path d="M17 23v26c0 7 36 7 36 0V23" fill="#fff0d8" stroke="#8c6f33" stroke-width="3.2" stroke-linejoin="round"/>
@@ -87,8 +87,7 @@
   <text class="body" x="1510" y="759" text-anchor="middle">ProductTable.forUpdate</text>
   <text class="body" x="1510" y="783" text-anchor="middle">OrderLineTable.insert</text>
 
-  <rect class="layer" x="78" y="917" width="1604" height="180" rx="15"/>
-  <text class="layerTitle" x="108" y="960">PostgreSQL Tables</text>
+  <rect class="layer" x="78" y="917" width="1604" height="180" rx="15"/>  <text class="layerTitle" x="108" y="960">PostgreSQL Tables</text>
   <rect class="card db" x="280" y="985" width="440" height="96" rx="10"/>
   <use href="#databaseIcon" x="304" y="998"/>
   <text class="cardTitleSmall" x="540" y="1024" text-anchor="middle">Author / Book Tables</text>
@@ -98,8 +97,8 @@
   <text class="cardTitleSmall" x="1240" y="1024" text-anchor="middle">Order / Product Tables</text>
   <text class="body" x="1240" y="1052" text-anchor="middle">locks and rollback stay in service transaction</text>
 
-  <path class="line" d="M 395 294 V 435"/>
-  <path class="line" d="M 1390 294 V 435"/>
+  <path class="line" d="M 395 294 V 435" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1390 294 V 435" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="vtLine" d="M 650 476 H 725"/>
   <path class="vtLine" d="M 1195 476 H 1265"/>
   <path class="vtLine" d="M 960 527 V 650 H 750 V 670"/>

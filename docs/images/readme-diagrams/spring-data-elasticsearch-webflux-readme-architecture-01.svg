@@ -22,23 +22,21 @@
       .line-red { fill: none; stroke: #f04438; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <marker id="ew-arrow-blue" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none"/>
     </marker>
     <marker id="ew-arrow-green" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none"/>
     </marker>
     <marker id="ew-arrow-orange" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none"/>
     </marker>
     <marker id="ew-arrow-red" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none"/>
     </marker>
   </defs>
 
   <rect class="canvas" x="0" y="0" width="1840" height="1040"/>
-  <rect x="24" y="24" width="1792" height="992" rx="22" fill="#ffffff" stroke="#d7e0eb" stroke-width="2"/>
-
-  <text class="title" x="920" y="72" text-anchor="middle">WebFlux book API over Elasticsearch</text>
+  <rect x="24" y="24" width="1792" height="992" rx="22" fill="#ffffff" stroke="#d7e0eb" stroke-width="2"/>  <text class="title" x="920" y="72" text-anchor="middle">WebFlux book API over Elasticsearch</text>
   <text class="subtitle" x="920" y="102" text-anchor="middle">Coroutine controllers route validated book requests to repository and native query paths.</text>
 
   <rect class="layer-api" x="80" y="140" width="1680" height="185" rx="18" stroke-width="2"/>
@@ -68,8 +66,7 @@
   <text class="card-title" x="1440" y="483" text-anchor="middle">BookExceptionHandler</text>
   <text class="card-small" x="1440" y="508" text-anchor="middle">404 and 400 responses</text>
 
-  <rect class="layer-data" x="80" y="600" width="1680" height="195" rx="18" stroke-width="2"/>
-  <text class="layer-title" x="112" y="644">Spring Data Elasticsearch layer</text>
+  <rect class="layer-data" x="80" y="600" width="1680" height="195" rx="18" stroke-width="2"/>  <text class="layer-title" x="112" y="644">Spring Data Elasticsearch layer</text>
   <rect class="card-orange" x="180" y="685" width="360" height="82" rx="10" stroke-width="2"/>
   <text class="card-title" x="360" y="718" text-anchor="middle">BookRepository</text>
   <text class="card-small" x="360" y="743" text-anchor="middle">CoroutineCrudRepository</text>
@@ -88,22 +85,20 @@
     <path d="M 17 36 A 18 18 0 0 1 52 30" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
     <path d="M 20 47 A 18 18 0 0 0 53 45" fill="none" stroke="#f2c94c" stroke-width="8" stroke-linecap="round"/>
     <circle cx="54" cy="31" r="8" fill="#343741"/>
-  </g>
-  <text class="card-title" x="950" y="895" text-anchor="middle">Elasticsearch OSS</text>
-  <text class="card-small" x="950" y="918" text-anchor="middle">Testcontainers books index</text>
+  </g>  <text class="card-title" x="950" y="895" text-anchor="middle">Elasticsearch OSS</text>  <text class="card-small" x="950" y="918" text-anchor="middle">Testcontainers books index</text>
   <rect class="card-red" x="1260" y="866" width="260" height="70" rx="10" stroke-width="2"/>
   <text class="card-title" x="1390" y="895" text-anchor="middle">NettyConfig</text>
   <text class="card-small" x="1390" y="918" text-anchor="middle">reactive resources</text>
 
-  <path class="line-blue" d="M 450 258 L 578 258" marker-end="url(#ew-arrow-blue)"/>
-  <path class="line-blue" d="M 890 258 L 1018 258" marker-end="url(#ew-arrow-blue)"/>
-  <path class="line-green" d="M 740 296 L 740 344 L 400 344 L 400 438" marker-end="url(#ew-arrow-green)"/>
-  <path class="line-green" d="M 1180 296 L 1180 344 L 920 344 L 920 438" marker-end="url(#ew-arrow-green)"/>
-  <path class="line-green" d="M 740 296 L 740 344 L 1440 344 L 1440 438" marker-end="url(#ew-arrow-green)"/>
+  <path class="line-blue" d="M 450 258 L 578 258" marker-end="url(#ew-arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-blue" d="M 890 258 L 1018 258" marker-end="url(#ew-arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 740 296 L 740 344 L 400 344 L 400 438" marker-end="url(#ew-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 1180 296 L 1180 344 L 920 344 L 920 438" marker-end="url(#ew-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 740 296 L 740 344 L 1440 344 L 1440 438" marker-end="url(#ew-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line-orange" d="M 400 532 L 400 673" marker-end="url(#ew-arrow-orange)"/>
-  <path class="line-orange" d="M 920 532 L 920 673" marker-end="url(#ew-arrow-orange)"/>
-  <path class="line-orange" d="M 1365 767 L 1365 820 L 1040 820 L 1040 854" marker-end="url(#ew-arrow-orange)"/>
-  <path class="line-red" d="M 360 767 L 360 820 L 820 820 L 820 854" marker-end="url(#ew-arrow-red)"/>
-  <path class="line-red" d="M 855 767 L 855 854" marker-end="url(#ew-arrow-red)"/>
+  <path class="line-orange" d="M 400 532 L 400 673" marker-end="url(#ew-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 920 532 L 920 673" marker-end="url(#ew-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 1365 767 L 1365 820 L 1040 820 L 1040 854" marker-end="url(#ew-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-red" d="M 360 767 L 360 820 L 820 820 L 820 854" marker-end="url(#ew-arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-red" d="M 855 767 L 855 854" marker-end="url(#ew-arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

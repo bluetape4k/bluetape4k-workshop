@@ -2,8 +2,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1720" height="920" viewBox="0 0 1720 920" role="img" aria-label="Spring application event demo architecture">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
-    <marker id="arrowTeal" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#0891B2"/></marker>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowTeal" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#0891B2" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}
       .title{font-family:"Architects Daughter";font-size:40px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}
@@ -36,12 +36,12 @@
   <g filter="url(#shadow)"><rect x="850" y="738" width="270" height="62" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="985" y="777" text-anchor="middle">Coroutine listener</text></g>
   <g filter="url(#shadow)"><rect x="1200" y="738" width="270" height="62" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1335" y="777" text-anchor="middle">Aspect listeners</text></g>
 
-  <path class="line" d="M 360 296 L 360 460" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 840 296 L 840 450" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 530 500 L 600 500 L 600 432 L 1320 432 L 1320 460" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
-  <path class="line" d="M 1010 515 L 1160 515" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
-  <path class="line" d="M 1320 570 L 1320 640 L 1335 640 L 1335 738" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
-  <path class="line" d="M 1320 640 L 985 640 L 985 738" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
-  <path class="line" d="M 1320 640 L 645 640 L 645 738" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
-  <path class="line" d="M 1320 640 L 315 640 L 315 738" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
+  <path class="line" d="M 360 296 L 360 460" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 840 296 L 840 450" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 530 500 L 600 500 L 600 432 L 1320 432 L 1320 460" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1010 515 L 1160 515" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1320 570 L 1320 640 L 1335 640 L 1335 738" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1320 640 L 985 640 L 985 738" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1320 640 L 645 640 L 645 738" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1320 640 L 315 640 L 315 738" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

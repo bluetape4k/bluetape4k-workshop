@@ -2,9 +2,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="760" viewBox="0 0 1500 760" role="img" aria-label="Micrometer observation architecture diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:23px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.label{font-family:"Comic Mono";font-size:13px;fill:#334155}.line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
     </style>
@@ -60,8 +60,7 @@
   </g>
   <g filter="url(#shadow)">
     <rect x="1156" y="366" width="240" height="106" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
-    <text class="cardTitle" x="1276" y="406" text-anchor="middle">Actuator metrics</text>
-    <text class="cardText" x="1276" y="436" text-anchor="middle">Prometheus endpoint</text>
+    <text class="cardTitle" x="1276" y="406" text-anchor="middle">Actuator metrics</text>  <text class="cardText" x="1276" y="436" text-anchor="middle">Prometheus endpoint</text>
   </g>
   <g filter="url(#shadow)">
     <rect x="1156" y="518" width="240" height="84" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
@@ -69,12 +68,12 @@
     <text class="cardText" x="1276" y="580" text-anchor="middle">integration assertions</text>
   </g>
 
-  <path class="line" d="M 316 294 L 448 315" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 316 485 L 360 485 L 360 572 L 760 572 L 760 370 L 812 370" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 680 315 L 748 315 L 748 340 L 812 340" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 680 485 L 748 485 L 748 400 L 812 400" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 1024 338 L 1156 266" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 1024 374 L 1156 419" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 918 422 L 918 560 L 1156 560" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 316 294 L 448 315" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 316 485 L 360 485 L 360 572 L 760 572 L 760 370 L 812 370" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 680 315 L 748 315 L 748 340 L 812 340" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 680 485 L 748 485 L 748 400 L 812 400" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1024 338 L 1156 266" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1024 374 L 1156 419" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 918 422 L 918 560 L 1156 560" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="382" y="552">HTTP observation</text>
 </svg>

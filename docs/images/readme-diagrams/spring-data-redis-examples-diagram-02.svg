@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="960" height="440" viewBox="0 0 960 440" role="img" aria-label="Spring Data Redis Data Structures and Operations">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/></marker>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L8,4.5 L1,8 Z" fill="#758297" stroke-dasharray="none"/></marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
     .title{font-family:"Architects Daughter";font-size:38px;font-weight:400;fill:#102033}
@@ -9,7 +9,7 @@
     .smallLabel{font-family:"Architects Daughter";font-size:21px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Mono";font-size:12px;font-weight:400;fill:#536273}
     .card{stroke-width:2.1;filter:url(#shadow)}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow);stroke-linecap:round;stroke-linejoin:round}
     .zoneBox{stroke-width:1.5;fill-opacity:0.4}
   </style>
 </defs>
@@ -44,8 +44,7 @@
 <text class="small" x="859" y="157" text-anchor="middle">SensorData</text>
 
 <!-- Center: Redis Server -->
-<rect class="card" x="300" y="220" width="360" height="60" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="480" y="250" text-anchor="middle">Redis Server (Testcontainers)</text>
+<rect class="card" x="300" y="220" width="360" height="60" rx="10" fill="#FFF3D9" stroke="#D6A441"/>  <text class="smallLabel" x="480" y="250" text-anchor="middle">Redis Server (Testcontainers)</text>
 <text class="small" x="480" y="268" text-anchor="middle">keyspace notifications  -  MULTI/EXEC  -  Lua scripting</text>
 
 <!-- Bottom: Reactive + Repository access -->
@@ -62,14 +61,14 @@
 <text class="small" x="780" y="394" text-anchor="middle">expiry  -  del  -  set events</text>
 
 <!-- Arrows: Data types -> Redis -->
-<path class="line" d="M109 166 L400 220"/>
-<path class="line" d="M259 166 L440 220"/>
-<path class="line" d="M409 166 L470 220"/>
-<path class="line" d="M559 166 L510 220"/>
-<path class="line" d="M709 166 L560 220"/>
-<path class="line" d="M859 166 L620 220"/>
+<path class="line" d="M109 166 L400 220" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M259 166 L440 220" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M409 166 L470 220" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M559 166 L510 220" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M709 166 L560 220" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M859 166 L620 220" stroke-linecap="round" stroke-linejoin="round"/>
 <!-- Redis -> Bottom -->
-<path class="line" d="M390 280 L250 350"/>
-<path class="line" d="M480 280 L500 350"/>
-<path class="line" d="M590 280 L750 350"/>
+<path class="line" d="M390 280 L250 350" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M480 280 L500 350" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M590 280 L750 350" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

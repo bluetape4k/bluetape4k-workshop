@@ -2,9 +2,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1760" height="900" viewBox="0 0 1760 900" role="img" aria-label="Spring WebFlux coroutine flow">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.15"/></filter>
-    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
-    <marker id="arrowOrange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#EA580C"/></marker>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowOrange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#EA580C" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.region{fill-opacity:.58;stroke-width:1.6;rx:18}
       .title{font-family:"Architects Daughter";font-size:42px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}
@@ -29,11 +29,11 @@
 
   <rect class="region" x="72" y="318" width="1616" height="156" fill="#EFF6FF" stroke="#93C5FD"/>
   <text class="noteTitle" x="112" y="360">Single suspend request</text>
-  <path class="line" d="M 205 408 L 620 408" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 205 408 L 620 408" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="412" y="390" text-anchor="middle">GET /suspend or /controller/*/suspend</text>
-  <path class="line" d="M 620 408 L 1065 408" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 620 408 L 1065 408" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="842" y="390" text-anchor="middle">delay and build Banner</text>
-  <path class="line" d="M 1065 408 L 1505 408" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
+  <path class="line" d="M 1065 408 L 1505 408" stroke="#EA580C" marker-end="url(#arrowOrange)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="1285" y="390" text-anchor="middle">bodyValueAndAwait or return value</text>
 
   <rect class="region" x="72" y="542" width="1616" height="214" fill="#ECFDF5" stroke="#86EFAC"/>
@@ -41,10 +41,10 @@
   <g filter="url(#shadow)"><rect x="420" y="624" width="260" height="70" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="550" y="656" text-anchor="middle">Flow builder</text><text class="cardText" x="550" y="680" text-anchor="middle">sequential or async</text></g>
   <g filter="url(#shadow)"><rect x="815" y="624" width="280" height="70" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="955" y="656" text-anchor="middle">WebClient loopback</text><text class="cardText" x="955" y="680" text-anchor="middle">httpGet("/suspend")</text></g>
   <g filter="url(#shadow)"><rect x="1235" y="624" width="250" height="70" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1360" y="656" text-anchor="middle">Flow response</text><text class="cardText" x="1360" y="680" text-anchor="middle">4 Banner items</text></g>
-  <path class="line" d="M 205 659 L 420 659" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 205 659 L 420 659" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="312" y="640" text-anchor="middle">GET /concurrent-flow</text>
-  <path class="line" d="M 680 659 L 815 659" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 680 659 L 815 659" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="748" y="640" text-anchor="middle">retrieveBanner()</text>
-  <path class="line" d="M 1095 659 L 1235 659" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
+  <path class="line" d="M 1095 659 L 1235 659" stroke="#EA580C" marker-end="url(#arrowOrange)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="1165" y="640" text-anchor="middle">emit item</text>
 </svg>

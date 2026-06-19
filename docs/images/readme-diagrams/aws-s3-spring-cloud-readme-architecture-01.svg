@@ -5,19 +5,19 @@
       <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
     </filter>
     <marker id="arrow-api" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4F7DB5"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4F7DB5" stroke-dasharray="none"/>
     </marker>
     <marker id="arrow-service" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4A9667"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4A9667" stroke-dasharray="none"/>
     </marker>
     <marker id="arrow-infra" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#B18435"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#B18435" stroke-dasharray="none"/>
     </marker>
     <marker id="arrow-bt" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#3E927D"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#3E927D" stroke-dasharray="none"/>
     </marker>
     <marker id="arrow-runtime" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#B85E63"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#B85E63" stroke-dasharray="none"/>
     </marker>
     <style>
       .canvas { fill: #F8FBFD; }
@@ -32,9 +32,7 @@
     </style>
   </defs>
   <rect class="canvas" width="1320" height="868"/>
-  <rect class="frame" x="16" y="16" width="1288" height="836" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring Cloud AWS S3 Demo</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Cloud AWS calls against a local Floci S3 endpoint</text>
+  <rect class="frame" x="16" y="16" width="1288" height="836" rx="22"/>  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring Cloud AWS S3 Demo</text>  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Cloud AWS calls against a local Floci S3 endpoint</text>
   <g>
     <g class="layer" data-layer="surface">
       <rect x="46.0" y="114.0" width="1228.0" height="146.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>

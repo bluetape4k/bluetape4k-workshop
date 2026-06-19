@@ -2,7 +2,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1640" height="720" viewBox="0 0 1640 720" role="img" aria-label="Redisson examples catalog">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
     </style>
@@ -15,8 +15,7 @@
     <rect x="620" y="148" width="400" height="94" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
     <circle cx="666" cy="194" r="23" fill="#FEE2E2" stroke="#DC2626" stroke-width="2.2"/>
     <text x="666" y="203" text-anchor="middle" font-family="Comic Mono" font-size="16" fill="#B91C1C">R</text>
-    <text class="cardTitle" x="850" y="188" text-anchor="middle">RedissonClient</text>
-    <text class="cardText" x="850" y="216" text-anchor="middle">shared Testcontainers Redis backend</text>
+    <text class="cardTitle" x="850" y="188" text-anchor="middle">RedissonClient</text>  <text class="cardText" x="850" y="216" text-anchor="middle">shared Testcontainers Redis backend</text>
   </g>
   <rect class="layer" x="72" y="306" width="338" height="250" rx="18"/>
   <text class="layerLabel" x="100" y="344">Locks and semaphores</text>
@@ -26,7 +25,7 @@
   <g filter="url(#shadow)"><rect x="500" y="392" width="262" height="102" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="631" y="430" text-anchor="middle">Distributed objects</text><text class="cardText" x="631" y="462" text-anchor="middle">Bucket, AtomicLong, HLL</text><text class="cardText" x="631" y="488" text-anchor="middle">Topic and ReliableTopic</text></g>
   <rect class="layer" x="852" y="306" width="338" height="250" rx="18"/>
   <text class="layerLabel" x="880" y="344">Collections and streams</text>
-  <g filter="url(#shadow)"><rect x="890" y="392" width="262" height="102" rx="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="1.7"/><text class="cardTitle" x="1021" y="430" text-anchor="middle">Redis structures</text><text class="cardText" x="1021" y="462" text-anchor="middle">LocalCachedMap, Stream</text><text class="cardText" x="1021" y="488" text-anchor="middle">Queue, SortedSet, RingBuffer</text></g>
+  <g filter="url(#shadow)"><rect x="890" y="392" width="262" height="102" rx="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="1.7"/>  <text class="cardTitle" x="1021" y="430" text-anchor="middle">Redis structures</text><text class="cardText" x="1021" y="462" text-anchor="middle">LocalCachedMap, Stream</text><text class="cardText" x="1021" y="488" text-anchor="middle">Queue, SortedSet, RingBuffer</text></g>
   <rect class="layer" x="1242" y="306" width="326" height="250" rx="18"/>
   <text class="layerLabel" x="1270" y="344">Read/write-through</text>
   <g filter="url(#shadow)"><rect x="1280" y="392" width="250" height="102" rx="16" fill="#FFFBEB" stroke="#D97706" stroke-width="1.7"/><text class="cardTitle" x="1405" y="430" text-anchor="middle">Cache as SOR</text><text class="cardText" x="1405" y="462" text-anchor="middle">ReadWriteThrough</text><text class="cardText" x="1405" y="488" text-anchor="middle">JDBC-backed Actor table</text></g>

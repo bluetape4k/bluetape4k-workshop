@@ -24,12 +24,12 @@
       .scopeLine{fill:none;stroke:#667eb9;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:7 7;marker-end:url(#arrowScope)}
       .schemaLine{fill:none;stroke:#6a8798;stroke-width:2.6;stroke-linecap:round;stroke-dasharray:7 7;marker-end:url(#arrowSchema)}
     </style>
-    <marker id="arrow" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#53738b"/></marker>
-    <marker id="arrowTx" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#667eb9"/></marker>
-    <marker id="arrowRepo" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9c6f27"/></marker>
-    <marker id="arrowJdbc" markerUnits="userSpaceOnUse" markerWidth="13.5" markerHeight="13.5" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b75c55"/></marker>
-    <marker id="arrowScope" markerUnits="userSpaceOnUse" markerWidth="13.5" markerHeight="13.5" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#667eb9"/></marker>
-    <marker id="arrowSchema" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6a8798"/></marker>
+    <marker id="arrow" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#53738b" stroke-dasharray="none"/></marker>
+    <marker id="arrowTx" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#667eb9" stroke-dasharray="none"/></marker>
+    <marker id="arrowRepo" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9c6f27" stroke-dasharray="none"/></marker>
+    <marker id="arrowJdbc" markerUnits="userSpaceOnUse" markerWidth="13.5" markerHeight="13.5" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b75c55" stroke-dasharray="none"/></marker>
+    <marker id="arrowScope" markerUnits="userSpaceOnUse" markerWidth="13.5" markerHeight="13.5" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#667eb9" stroke-dasharray="none"/></marker>
+    <marker id="arrowSchema" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6a8798" stroke-dasharray="none"/></marker>
     <g id="databaseIcon">
       <rect x="0" y="0" width="70" height="70" rx="12" fill="#fffaf2" stroke="#28485a" stroke-width="3"/>
       <path d="M17 23v26c0 7 36 7 36 0V23" fill="#fff0d8" stroke="#8c6f33" stroke-width="3.2" stroke-linejoin="round"/>
@@ -62,8 +62,7 @@
   <text class="cardTitle" x="1430" y="493" text-anchor="middle">OrderService</text>
   <text class="body" x="1430" y="520" text-anchor="middle">one order transaction</text>
   <text class="body" x="1430" y="544" text-anchor="middle">sorts, locks, writes, decrements</text>
-  <rect class="card r2dbc" x="610" y="435" width="520" height="124" rx="10"/>
-  <text class="cardTitle" x="870" y="472" text-anchor="middle">R2dbcDatabase</text>
+  <rect class="card r2dbc" x="610" y="435" width="520" height="124" rx="10"/>  <text class="cardTitle" x="870" y="472" text-anchor="middle">R2dbcDatabase</text>
   <text class="body" x="870" y="500" text-anchor="middle">ConnectionPool + ConnectionFactoryOptions</text>
   <text class="body" x="870" y="524" text-anchor="middle">dispatcher = Dispatchers.IO</text>
 
@@ -76,13 +75,10 @@
   <text class="cardTitleSmall" x="1275" y="777" text-anchor="middle">Order / Product Repositories</text>
   <text class="body" x="1275" y="805" text-anchor="middle">FOR UPDATE product lock and stock update</text>
 
-  <rect class="layer" x="78" y="920" width="1604" height="238" rx="15"/>
-  <text class="layerTitle" x="108" y="962">PostgreSQL Runtime</text>
-  <rect class="card jdbc" x="150" y="1000" width="400" height="74" rx="10"/>
-  <text class="cardTitleSmall" x="350" y="1032" text-anchor="middle">DatabaseInitializer</text>
+  <rect class="layer" x="78" y="920" width="1604" height="238" rx="15"/>  <text class="layerTitle" x="108" y="962">PostgreSQL Runtime</text>
+  <rect class="card jdbc" x="150" y="1000" width="400" height="74" rx="10"/>  <text class="cardTitleSmall" x="350" y="1032" text-anchor="middle">DatabaseInitializer</text>
   <text class="body" x="350" y="1058" text-anchor="middle">JDBC/Hikari schema creation only</text>
-  <rect class="innerLayer" x="680" y="980" width="960" height="150" rx="13"/>
-  <text class="cardTitleSmall" x="710" y="1014">Database Tables</text>
+  <rect class="innerLayer" x="680" y="980" width="960" height="150" rx="13"/>  <text class="cardTitleSmall" x="710" y="1014">Database Tables</text>
   <rect class="card db" x="710" y="1026" width="380" height="88" rx="10"/>
   <use href="#databaseIcon" x="734" y="1035"/>
   <text class="cardTitleSmall" x="955" y="1061" text-anchor="middle">Author / Book Tables</text>
@@ -92,8 +88,8 @@
   <text class="cardTitleSmall" x="1470" y="1061" text-anchor="middle">Order / Product Tables</text>
   <text class="body" x="1470" y="1088" text-anchor="middle">row locks protect stock mutation</text>
 
-  <path class="line" d="M 395 294 V 455"/>
-  <path class="line" d="M 1390 294 V 420 H 1430 V 455"/>
+  <path class="line" d="M 395 294 V 455" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1390 294 V 420 H 1430 V 455" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="txLine" d="M 500 507 H 610"/>
   <path class="txLine" d="M 1265 507 H 1130"/>
   <path class="repoLine" d="M 335 559 V 742"/>

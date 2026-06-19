@@ -8,12 +8,11 @@
       .layer{stroke-width:1.5;rx:22;ry:22}.card{fill:#fff;stroke:#cbd5e1;stroke-width:1.5;rx:18;ry:18}
       .line{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}.redis{fill:#dc2626}.redis2{fill:#ef4444}.redis3{fill:#f87171}
     </style>
-    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb"/></marker>
-    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#059669"/></marker>
-    <marker id="arrow-purple" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#7c3aed"/></marker>
+    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb" stroke-dasharray="none"/></marker>
+    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#059669" stroke-dasharray="none"/></marker>
+    <marker id="arrow-purple" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#7c3aed" stroke-dasharray="none"/></marker>
   </defs>
-  <rect class="bg" width="1760" height="980"/>
-  <text class="title" x="70" y="70">Spring Data Redis Examples</text>
+  <rect class="bg" width="1760" height="980"/>  <text class="title" x="70" y="70">Spring Data Redis Examples</text>
 
   <rect class="layer" x="70" y="120" width="1620" height="250" fill="#eff6ff" stroke="#bfdbfe"/>
   <text class="layer-title" x="105" y="165">Example areas</text>
@@ -49,15 +48,13 @@
     <rect class="redis3" x="0" y="26" width="58" height="18" rx="5"/>
     <rect class="redis2" x="0" y="13" width="58" height="18" rx="5"/>
     <rect class="redis" x="0" y="0" width="58" height="18" rx="5"/>
-  </g>
-  <text class="card-title" x="775" y="810">Redis Testcontainer</text>
-  <text class="body" x="775" y="837">host/port from spring.data.redis</text>
+  </g>  <text class="card-title" x="775" y="810">Redis Testcontainer</text>  <text class="body" x="775" y="837">host/port from spring.data.redis</text>
 
-  <path class="line" d="M290 310 L290 515" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
-  <path class="line" d="M680 310 L680 390 L395 390 L395 515" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
-  <path class="line" d="M1070 310 L1070 390 L880 390 L880 515" stroke="#059669" marker-end="url(#arrow-green)"/>
-  <path class="line" d="M1460 310 L1460 515" stroke="#7c3aed" marker-end="url(#arrow-purple)"/>
-  <path class="line" d="M395 600 L395 680 L770 680 L770 765" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
-  <path class="line" d="M880 600 L880 765" stroke="#059669" marker-end="url(#arrow-green)"/>
-  <path class="line" d="M1365 600 L1365 680 L990 680 L990 765" stroke="#7c3aed" marker-end="url(#arrow-purple)"/>
+  <path class="line" d="M290 310 L290 515" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M680 310 L680 390 L395 390 L395 515" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M1070 310 L1070 390 L880 390 L880 515" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M1460 310 L1460 515" stroke="#7c3aed" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M395 600 L395 680 L770 680 L770 765" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M880 600 L880 765" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M1365 600 L1365 680 L990 680 L990 765" stroke="#7c3aed" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

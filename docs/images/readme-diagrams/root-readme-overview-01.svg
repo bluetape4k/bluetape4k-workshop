@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1260" viewBox="0 0 1920 1260">
 <defs>
-<marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f6feb"/></marker>
-<marker id="arrow-green" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#169b6b"/></marker>
-<marker id="arrow-amber" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#d47400"/></marker>
-<marker id="arrow-purple" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#805ad5"/></marker>
+<marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f6feb" stroke-dasharray="none"/></marker>
+<marker id="arrow-green" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#169b6b" stroke-dasharray="none"/></marker>
+<marker id="arrow-amber" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#d47400" stroke-dasharray="none"/></marker>
+<marker id="arrow-purple" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#805ad5" stroke-dasharray="none"/></marker>
 <style><![CDATA[
 
 @font-face { font-family:'Architects Daughter'; src:local('Architects Daughter'); }
@@ -47,8 +47,7 @@ svg { background:#f6f9fc; }
 <text x="871.0" y="390" class="pill-title" text-anchor="middle">Spring Boot</text>
 <text x="871.0" y="422" class="pill-sub" text-anchor="middle">cache / web / resilience</text>
 <rect x="1020" y="352" width="222" height="86" rx="14" class="pill-blue"/>
-<text x="1131.0" y="390" class="pill-title" text-anchor="middle">Messaging</text>
-<text x="1131.0" y="422" class="pill-sub" text-anchor="middle">Kafka / outbox</text>
+<text x="1131.0" y="390" class="pill-title" text-anchor="middle">Messaging</text>  <text x="1131.0" y="422" class="pill-sub" text-anchor="middle">Kafka / outbox</text>
 <rect x="1280" y="352" width="222" height="86" rx="14" class="pill-blue"/>
 <text x="1391.0" y="390" class="pill-title" text-anchor="middle">Ops patterns</text>
 <text x="1391.0" y="422" class="pill-sub" text-anchor="middle">observability / security</text>
@@ -62,11 +61,9 @@ svg { background:#f6f9fc; }
 <text x="716.0" y="694" class="pill-title" text-anchor="middle">Advanced path</text>
 <text x="716.0" y="726" class="pill-sub" text-anchor="middle">multi-layer examples</text>
 <rect x="900" y="656" width="252" height="88" rx="14" class="pill-green"/>
-<text x="1026.0" y="694" class="pill-title" text-anchor="middle">Container proof</text>
-<text x="1026.0" y="726" class="pill-sub" text-anchor="middle">PostgreSQL / Redis / Kafka</text>
+<text x="1026.0" y="694" class="pill-title" text-anchor="middle">Container proof</text>  <text x="1026.0" y="726" class="pill-sub" text-anchor="middle">PostgreSQL / Redis / Kafka</text>
 <rect x="1210" y="656" width="252" height="88" rx="14" class="pill-green"/>
-<text x="1336.0" y="694" class="pill-title" text-anchor="middle">Local cloud</text>
-<text x="1336.0" y="726" class="pill-sub" text-anchor="middle">LocalStack / S3 / SQS</text>
+<text x="1336.0" y="694" class="pill-title" text-anchor="middle">Local cloud</text>  <text x="1336.0" y="726" class="pill-sub" text-anchor="middle">LocalStack / S3 / SQS</text>
 <rect x="122" y="882" width="780" height="194" rx="22" class="layer-amber"/>
 <text x="164" y="940" class="layer-title" text-anchor="start">Framework and runtime choices</text>
 <text x="164" y="974" class="small" text-anchor="start">Pick the runtime lane after the example proves the core behavior.</text>
@@ -91,15 +88,15 @@ svg { background:#f6f9fc; }
 <rect x="1540" y="986" width="210" height="66" rx="14" class="pill-purple"/>
 <text x="1645.0" y="1024" class="pill-title" text-anchor="middle">Leader / Graph</text>
 <text x="1645.0" y="1042" class="pill-sub" text-anchor="middle">system pattern</text>
-<path d="M 960 468 L 960 548" class="flow-blue" marker-end="url(#arrow-blue)"/>
+<path d="M 960 468 L 960 548" class="flow-blue" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="990" y="512" class="label" text-anchor="start">select module</text>
-<path d="M 520 790 L 520 882" class="flow-green" marker-end="url(#arrow-green)"/>
+<path d="M 520 790 L 520 882" class="flow-green" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="548" y="842" class="label" text-anchor="start">wire runtime</text>
-<path d="M 1410 790 L 1410 882" class="flow-purple" marker-end="url(#arrow-purple)"/>
+<path d="M 1410 790 L 1410 882" class="flow-purple" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="1438" y="842" class="label" text-anchor="start">add concerns</text>
-<path d="M 532 700 L 590 700" class="flow-green" marker-end="url(#arrow-green)"/>
-<path d="M 842 700 L 900 700" class="flow-green" marker-end="url(#arrow-green)"/>
-<path d="M 1152 700 L 1210 700" class="flow-green" marker-end="url(#arrow-green)"/>
+<path d="M 532 700 L 590 700" class="flow-green" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 842 700 L 900 700" class="flow-green" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 1152 700 L 1210 700" class="flow-green" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
 <rect x="150" y="1140" width="1620" height="54" rx="16" class="footer"/>
 <text x="960.0" y="1174" class="note" text-anchor="middle">Source code is the authority; README diagrams show what to run, what it proves, and when to move deeper.</text>
 </svg>

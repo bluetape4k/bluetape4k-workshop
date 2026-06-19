@@ -1,143 +1,62 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
-  <title id="title">Spring Cloud AWS S3 local sequence</title>
-  <desc id="desc">Sequence showing bucket creation, object storage, object listing, and ResourceLoader reads through Spring Cloud AWS and a local Floci S3 endpoint.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1670" height="1134" viewBox="0 0 1670 1134" role="img" aria-labelledby="title desc">
+  <title id="title">Spring Cloud AWS S3 Flow</title>
+  <desc id="desc">Local Floci S3 receives the same bucket, object, list, and ResourceLoader calls used by the sample.</desc>
   <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
     <style>
-      .title { font-family: "Architects Daughter"; font-size: 40px; fill: #263238; }
-      .subtitle, .msg, .note, .footer { font-family: "Comic Mono"; fill: #36464f; }
-      .subtitle { font-size: 18px; }
-      .participant { font-family: "Architects Daughter"; font-size: 20px; fill: #1f3138; }
-      .role { font-family: "Comic Mono"; font-size: 13px; fill: #546a73; }
-      .msg { font-size: 14px; }
-      .note { font-size: 13px; }
-      .footer { font-size: 14px; fill: #60727d; }
-      .frame { fill: #fbfcf8; stroke: #41545d; stroke-width: 3; }
-      .header { fill: #ffffff; stroke: #546e7a; stroke-width: 2; }
-      .lifeline { stroke: #9aaab1; stroke-width: 2; stroke-dasharray: 7 8; }
-      .activation { fill: #e6f2ec; stroke: #5b7e67; stroke-width: 1.5; }
-      .call { fill: none; stroke: #3f7d9c; stroke-width: 3; marker-end: url(#arrowCall); }
-      .work { fill: none; stroke: #6e8f4f; stroke-width: 3; marker-end: url(#arrowWork); }
-      .return { fill: none; stroke: #9b7d54; stroke-width: 2.5; stroke-dasharray: 8 6; marker-end: url(#arrowReturn); }
-      .skip { fill: none; stroke: #b86868; stroke-width: 3; marker-end: url(#arrowSkip); }
-      .alt { fill: none; stroke: #78909c; stroke-width: 3; stroke-dasharray: 12 7; }
-      .branchDivider { stroke: #78909c; stroke-width: 3; stroke-dasharray: 12 8; }
-      .label { fill: #ffffff; stroke: #d7e0e4; stroke-width: 1.5; }
-      .label.callLabel { stroke: #9cc2d1; }
-      .label.workLabel { stroke: #b6c9a4; }
-      .label.returnLabel { stroke: #c8b38f; }
-      .label.skipLabel { stroke: #d9abab; }
-      .branchSetup { fill: #eef7f0; stroke: #6e8f4f; stroke-width: 1.8; }
-      .branchRead { fill: #fff5f5; stroke: #b86868; stroke-width: 1.8; }
-      .badge { stroke-width: 1.8; }
-      .badge.callBadge { fill: #eaf4f8; stroke: #3f7d9c; }
-      .badge.workBadge { fill: #eef7f0; stroke: #6e8f4f; }
-      .badge.returnBadge { fill: #fff7e8; stroke: #9b7d54; }
-      .badge.skipBadge { fill: #fff0f0; stroke: #b86868; }
-      .badgeText { font-family: "Comic Mono"; font-size: 12px; font-weight: 700; }
-      .msg.callText, .badgeText.callText { fill: #2f6f8e; }
-      .msg.workText, .badgeText.workText { fill: #55783f; }
-      .msg.returnText, .badgeText.returnText { fill: #7f6038; }
-      .msg.skipText, .badgeText.skipText { fill: #9d4f4f; }
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:21px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:13px;fill:#546A73}.msg{font-size:14px}.note{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.return,.skip{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call);stroke-linecap:round;stroke-linejoin:round}.work{stroke:#6E8F4F;marker-end:url(#arrow-work);stroke-linecap:round;stroke-linejoin:round}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret);stroke-linecap:round;stroke-linejoin:round}.skip{stroke:#B86868;marker-end:url(#arrow-skip);stroke-linecap:round;stroke-linejoin:round}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.skipLabel{stroke:#D9ABAB}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.skipBadge{fill:#FFF0F0;stroke:#B86868}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.skipText,.badgeText.skipText{fill:#9D4F4F}.alt{fill:#FFF7ED;fill-opacity:.42;stroke:#D08A39;stroke-width:2.4;stroke-dasharray:12 8}.branch{fill:#FFFFFF;fill-opacity:.82;stroke:#E6C68C;stroke-width:1.5}
     </style>
-    <marker id="arrowCall" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3f7d9c" stroke-dasharray="none"/></marker>
-    <marker id="arrowWork" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6e8f4f" stroke-dasharray="none"/></marker>
-    <marker id="arrowReturn" viewBox="0 0 10 10" markerWidth="13.5" markerHeight="13.5" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9b7d54" stroke-dasharray="none"/></marker>
-    <marker id="arrowSkip" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b86868" stroke-dasharray="none"/></marker>
+    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none"/></marker>
+    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none"/></marker>
+    <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none"/></marker>
+    <marker id="arrow-skip" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none"/></marker>
   </defs>
-
-  <rect x="24" y="24" width="1552" height="1072" rx="20" class="frame"/>
-  <text x="800" y="78" text-anchor="middle" class="title">Spring Cloud AWS S3 Flow</text>
-  <text x="800" y="108" text-anchor="middle" class="subtitle">The sample creates buckets, stores objects, lists keys, and reads content through a local Floci S3 endpoint.</text>
-
-  <g>
-    <rect x="70" y="150" width="170" height="68" rx="10" class="header"/>
-    <text x="155" y="179" text-anchor="middle" class="participant">Runner</text>
-    <text x="155" y="201" text-anchor="middle" class="role">ApplicationRunner</text>
-
-    <rect x="315" y="150" width="190" height="68" rx="10" class="header"/>
-    <text x="410" y="179" text-anchor="middle" class="participant">S3Client</text>
-    <text x="410" y="201" text-anchor="middle" class="role">AWS SDK v2</text>
-
-    <rect x="584" y="150" width="210" height="68" rx="10" class="header"/>
-    <image x="607" y="168" width="34" height="34" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNjRweCIgaGVpZ2h0PSI2NHB4IiB2aWV3Qm94PSIwIDAgNjQgNjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+SWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BbWF6b24tU2ltcGxlLVN0b3JhZ2UtU2VydmljZV80ODwvdGl0bGU+CiAgICA8ZyBpZD0iSWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BbWF6b24tU2ltcGxlLVN0b3JhZ2UtU2VydmljZV80OCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPGcgaWQ9Ikljb24tQXJjaGl0ZWN0dXJlLUJHLzQ4L1N0b3JhZ2UiIGZpbGw9IiM3QUExMTYiPgogICAgICAgICAgICA8cmVjdCBpZD0iUmVjdGFuZ2xlIiB4PSIwIiB5PSIwIiB3aWR0aD0iNjQiIGhlaWdodD0iNjQiPjwvcmVjdD4KICAgICAgICA8L2c+CiAgICAgICAgPGcgaWQ9Ikljb24tU2VydmljZS80OC9BbWF6b24tU2ltcGxlLVN0b3JhZ2UtU2VydmljZV80OCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAuOTk5ODAwLCAxMC4wMDAyMDApIiBmaWxsPSIjRkZGRkZGIj4KICAgICAgICAgICAgPHBhdGggZD0iTTM2Ljc1OSwyMy45NDggTDM2Ljk5MywyMi4xMzEgQzM5LjE2NiwyMy4zODUgMzkuODQyLDI0LjEyMSA0MC4wMzcsMjQuNDI0IEMzOS43MTMsMjQuNDg1IDM4LjgzMiwyNC41MDkgMzYuNzU5LDIzLjk0OCBMMzYuNzU5LDIzLjk0OCBaIE0xOS41LDExIEM5LjEyNSwxMSAyLjM4Miw4LjQ4OCAyLDYuNjk2IEwyLDYuNTExIEMyLjM0OSw1LjM5MiA4LjE0LDIgMTkuNSwyIEMzMC44NCwyIDM2LjYzMiw1LjM4MSAzNyw2LjUwNSBMMzcsNi42MTYgQzM2LjcyNCw4LjQ0NiAyOS45NjEsMTEgMTkuNSwxMSBMMTkuNSwxMSBaIE0zNC44MTgsMjMuMzYyIEMzMC4wNTMsMjEuNzk3IDIzLjkxMiwxOC45NzkgMjEuNTk0LDE3Ljg4OCBDMjEuNTM1LDE2Ljc4NiAyMC42MjgsMTUuOTA2IDE5LjUxMiwxNS45MDYgQzE4LjM1OCwxNS45MDYgMTcuNDE4LDE2Ljg0NSAxNy40MTgsMTggQzE3LjQxOCwxOS4xNTQgMTguMzU4LDIwLjA5NCAxOS41MTIsMjAuMDk0IEMxOS45NjksMjAuMDk0IDIwLjM4OSwxOS45NDIgMjAuNzMzLDE5LjY5MyBDMjMuMTMyLDIwLjgyMiAyOS42MTksMjMuNzk4IDM0LjU1OCwyNS4zOCBMMzIuODM3LDM4LjcyNCBDMzIuNTgzLDQwLjM1MiAyNy45MTksNDIgMTkuNDk3LDQyIEMxMS4wNzIsNDIgNi40MDUsNDAuMzUyIDYuMTU1LDM4Ljc1MSBMMi40MzUsOS44MTQgQzUuOTQ1LDExLjkxNSAxMi43NDksMTMgMTkuNSwxMyBDMjYuMjUsMTMgMzMuMDU0LDExLjkxNSAzNi41NjUsOS44MTUgTDM0LjgxOCwyMy4zNjIgWiBNMzksNi41IEMzOSwzLjQzMSAzMC42NjEsMCAxOS41LDAgQzguMzM5LDAgLTMuNTUyNzEzNjhlLTE1LDMuNDMxIC0zLjU1MjcxMzY4ZS0xNSw2LjUgTC0zLjU1MjcxMzY4ZS0xNSw3LjA0MyBMNC4xNzQsMzkuMDMzIEM0Ljg3NSw0My41MTYgMTUuMTIzLDQ0IDE5LjQ5Nyw0NCBDMjMuODY5LDQ0IDM0LjExMyw0My41MTYgMzQuODE4LDM5LjAwNyBMMzYuNTAxLDI1Ljk0NyBDMzcuNzc4LDI2LjI3OSAzOC44MTIsMjYuNDU2IDM5LjYxNiwyNi40NTUgQzQwLjYwNiwyNi40NTUgNDEuMjczLDI2LjIwMyA0MS42OTcsMjUuNjk3IEM0Mi4wNDcsMjUuMjgxIDQyLjE4NSwyNC43NTYgNDIuMDg1LDI0LjIyMSBDNDEuODU3LDIzIDQwLjQwMywyMS43MTIgMzcuMzcsMjAuMDQ0IEwzNy4yNywxOS45ODkgTDM5LDcuMDQ0IEwzOSw2LjUgWiIgaWQ9IkFtYXpvbi1TaW1wbGUtU3RvcmFnZS1TZXJ2aWNlLUljb25fNDhfU3F1aWQiPjwvcGF0aD4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPg==" preserveAspectRatio="xMidYMid meet"/>
-    <text x="706" y="179" text-anchor="middle" class="participant">S3Template</text>
-    <text x="706" y="201" text-anchor="middle" class="role">Spring Cloud AWS</text>
-
-    <rect x="860" y="150" width="200" height="68" rx="10" class="header"/>
-    <image x="881" y="168" width="34" height="34" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNjRweCIgaGVpZ2h0PSI2NHB4IiB2aWV3Qm94PSIwIDAgNjQgNjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+SWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BbWF6b24tU2ltcGxlLVN0b3JhZ2UtU2VydmljZV80ODwvdGl0bGU+CiAgICA8ZyBpZD0iSWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BbWF6b24tU2ltcGxlLVN0b3JhZ2UtU2VydmljZV80OCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPGcgaWQ9Ikljb24tQXJjaGl0ZWN0dXJlLUJHLzQ4L1N0b3JhZ2UiIGZpbGw9IiM3QUExMTYiPgogICAgICAgICAgICA8cmVjdCBpZD0iUmVjdGFuZ2xlIiB4PSIwIiB5PSIwIiB3aWR0aD0iNjQiIGhlaWdodD0iNjQiPjwvcmVjdD4KICAgICAgICA8L2c+CiAgICAgICAgPGcgaWQ9Ikljb24tU2VydmljZS80OC9BbWF6b24tU2ltcGxlLVN0b3JhZ2UtU2VydmljZV80OCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAuOTk5ODAwLCAxMC4wMDAyMDApIiBmaWxsPSIjRkZGRkZGIj4KICAgICAgICAgICAgPHBhdGggZD0iTTM2Ljc1OSwyMy45NDggTDM2Ljk5MywyMi4xMzEgQzM5LjE2NiwyMy4zODUgMzkuODQyLDI0LjEyMSA0MC4wMzcsMjQuNDI0IEMzOS43MTMsMjQuNDg1IDM4LjgzMiwyNC41MDkgMzYuNzU5LDIzLjk0OCBMMzYuNzU5LDIzLjk0OCBaIE0xOS41LDExIEM5LjEyNSwxMSAyLjM4Miw4LjQ4OCAyLDYuNjk2IEwyLDYuNTExIEMyLjM0OSw1LjM5MiA4LjE0LDIgMTkuNSwyIEMzMC44NCwyIDM2LjYzMiw1LjM4MSAzNyw2LjUwNSBMMzcsNi42MTYgQzM2LjcyNCw4LjQ0NiAyOS45NjEsMTEgMTkuNSwxMSBMMTkuNSwxMSBaIE0zNC44MTgsMjMuMzYyIEMzMC4wNTMsMjEuNzk3IDIzLjkxMiwxOC45NzkgMjEuNTk0LDE3Ljg4OCBDMjEuNTM1LDE2Ljc4NiAyMC42MjgsMTUuOTA2IDE5LjUxMiwxNS45MDYgQzE4LjM1OCwxNS45MDYgMTcuNDE4LDE2Ljg0NSAxNy40MTgsMTggQzE3LjQxOCwxOS4xNTQgMTguMzU4LDIwLjA5NCAxOS41MTIsMjAuMDk0IEMxOS45NjksMjAuMDk0IDIwLjM4OSwxOS45NDIgMjAuNzMzLDE5LjY5MyBDMjMuMTMyLDIwLjgyMiAyOS42MTksMjMuNzk4IDM0LjU1OCwyNS4zOCBMMzIuODM3LDM4LjcyNCBDMzIuNTgzLDQwLjM1MiAyNy45MTksNDIgMTkuNDk3LDQyIEMxMS4wNzIsNDIgNi40MDUsNDAuMzUyIDYuMTU1LDM4Ljc1MSBMMi40MzUsOS44MTQgQzUuOTQ1LDExLjkxNSAxMi43NDksMTMgMTkuNSwxMyBDMjYuMjUsMTMgMzMuMDU0LDExLjkxNSAzNi41NjUsOS44MTUgTDM0LjgxOCwyMy4zNjIgWiBNMzksNi41IEMzOSwzLjQzMSAzMC42NjEsMCAxOS41LDAgQzguMzM5LDAgLTMuNTUyNzEzNjhlLTE1LDMuNDMxIC0zLjU1MjcxMzY4ZS0xNSw2LjUgTC0zLjU1MjcxMzY4ZS0xNSw3LjA0MyBMNC4xNzQsMzkuMDMzIEM0Ljg3NSw0My41MTYgMTUuMTIzLDQ0IDE5LjQ5Nyw0NCBDMjMuODY5LDQ0IDM0LjExMyw0My41MTYgMzQuODE4LDM5LjAwNyBMMzYuNTAxLDI1Ljk0NyBDMzcuNzc4LDI2LjI3OSAzOC44MTIsMjYuNDU2IDM5LjYxNiwyNi40NTUgQzQwLjYwNiwyNi40NTUgNDEuMjczLDI2LjIwMyA0MS42OTcsMjUuNjk3IEM0Mi4wNDcsMjUuMjgxIDQyLjE4NSwyNC43NTYgNDIuMDg1LDI0LjIyMSBDNDEuODU3LDIzIDQwLjQwMywyMS43MTIgMzcuMzcsMjAuMDQ0IEwzNy4yNywxOS45ODkgTDM5LDcuMDQ0IEwzOSw2LjUgWiIgaWQ9IkFtYXpvbi1TaW1wbGUtU3RvcmFnZS1TZXJ2aWNlLUljb25fNDhfU3F1aWQiPjwvcGF0aD4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPg==" preserveAspectRatio="xMidYMid meet"/>
-    <text x="975" y="179" text-anchor="middle" class="participant">S3 Service</text>
-    <text x="975" y="201" text-anchor="middle" class="role">bucket + object API</text>
-
-    <rect x="1340" y="150" width="200" height="68" rx="10" class="header"/>
-    <image x="1358" y="168" width="34" height="34" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI3LjMuMSwgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IgoJIHZpZXdCb3g9IjAgMCAxMTQuMSAxMTUiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDExNC4xIDExNTsiIHhtbDpzcGFjZT0icHJlc2VydmUiPgo8c3R5bGUgdHlwZT0idGV4dC9jc3MiPgoJLnN0MHtmaWxsLXJ1bGU6ZXZlbm9kZDtjbGlwLXJ1bGU6ZXZlbm9kZDtmaWxsOnVybCgjU1ZHSURfMV8pO30KCS5zdDF7ZmlsbDp1cmwoI1NWR0lEXzAwMDAwMDgzMDc2MDk4ODgwNjAyMjkwNjMwMDAwMDE2NjE1NDgzNzE4OTg1NTY1ODMzXyk7fQoJLnN0MntmaWxsOnVybCgjU1ZHSURfMDAwMDAxMDEwNjI3Mjg2OTk1NDUxNzAxMDAwMDAwMTYwNTE3ODIwODI4NzUzNzQ3NjdfKTt9Cjwvc3R5bGU+CjxsaW5lYXJHcmFkaWVudCBpZD0iU1ZHSURfMV8iIGdyYWRpZW50VW5pdHM9InVzZXJTcGFjZU9uVXNlIiB4MT0iODguMDE4MSIgeTE9Ii0xNDk1LjAwMjEiIHgyPSIyOS4xNjI1IiB5Mj0iLTE1NTMuMjc1OSIgZ3JhZGllbnRUcmFuc2Zvcm09Im1hdHJpeCgxIDAgMCAtMSAwIC0xNDY3LjIxNTcpIj4KCTxzdG9wICBvZmZzZXQ9IjAiIHN0eWxlPSJzdG9wLWNvbG9yOiM0RDI5QjQiLz4KCTxzdG9wICBvZmZzZXQ9IjEiIHN0eWxlPSJzdG9wLWNvbG9yOiM4MzZGRkYiLz4KPC9saW5lYXJHcmFkaWVudD4KPHBhdGggY2xhc3M9InN0MCIgZD0iTTg3LDc0YzAuOSwwLDEuNCwxLjEsMC43LDEuOEw2NS4xLDk4LjNjLTAuNywwLjctMS44LDAuMi0xLjgtMC43Vjc1YzAtMC42LDAuNS0xLDEtMUg4N3ogTTE3LjMsNTIuNwoJYy0wLjksMC0xLjQtMS4xLTAuNy0xLjhsMjIuNi0yMi42YzAuNy0wLjcsMS44LTAuMiwxLjgsMC43djIyLjdjMCwwLjYtMC41LDEtMSwxTDE3LjMsNTIuN0wxNy4zLDUyLjd6Ii8+CjxsaW5lYXJHcmFkaWVudCBpZD0iU1ZHSURfMDAwMDAxNTUxMzAwMDk1NTM3NTI1MzQxODAwMDAwMTgyNDA5MDk0NTQxODkzMTk2MDlfIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjYzLjA2NDgiIHkxPSItMTUxOC4yNzIzIiB4Mj0iMTAzLjc3NjMiIHkyPSItMTQ3OC4yODI1IiBncmFkaWVudFRyYW5zZm9ybT0ibWF0cml4KDEgMCAwIC0xIDAgLTE0NjcuMjE1NykiPgoJPHN0b3AgIG9mZnNldD0iMCIgc3R5bGU9InN0b3AtY29sb3I6IzcwRkZFNSIvPgoJPHN0b3AgIG9mZnNldD0iMSIgc3R5bGU9InN0b3AtY29sb3I6IzYyOTVFMSIvPgo8L2xpbmVhckdyYWRpZW50Pgo8cGF0aCBzdHlsZT0iZmlsbDp1cmwoI1NWR0lEXzAwMDAwMTU1MTMwMDA5NTUzNzUyNTM0MTgwMDAwMDE4MjQwOTA5NDU0MTg5MzE5NjA5Xyk7IiBkPSJNNjYuNSw0OWgzMC4yYzAuNiwwLDEtMC41LDEtMVYxNy43CgljMC0wLjYtMC41LTEtMS0xSDY2LjVjLTAuNiwwLTEsMC41LTEsMVY0OEM2NS41LDQ4LjUsNjUuOSw0OSw2Ni41LDQ5eiIvPgo8bGluZWFyR3JhZGllbnQgaWQ9IlNWR0lEXzAwMDAwMDYxNDcxOTc4NzY0MzcwODg0MzYwMDAwMDAyNzE3NjcyODU1MTI4OTcwOTM4XyIgZ3JhZGllbnRVbml0cz0idXNlclNwYWNlT25Vc2UiIHgxPSI4Mi45MzQiIHkxPSItMTUwMC4wMTA1IiB4Mj0iNDQuNjIzNyIgeTI9Ii0xNTM2LjM4NjYiIGdyYWRpZW50VHJhbnNmb3JtPSJtYXRyaXgoMSAwIDAgLTEgMCAtMTQ2Ny4yMTU3KSI+Cgk8c3RvcCAgb2Zmc2V0PSI3LjQ3NTExMGUtMDMiIHN0eWxlPSJzdG9wLWNvbG9yOiM2NTRGRUMiLz4KCTxzdG9wICBvZmZzZXQ9IjEiIHN0eWxlPSJzdG9wLWNvbG9yOiM3MUIyRkYiLz4KPC9saW5lYXJHcmFkaWVudD4KPHBhdGggc3R5bGU9ImZpbGw6dXJsKCNTVkdJRF8wMDAwMDA2MTQ3MTk3ODc2NDM3MDg4NDM2MDAwMDAwMjcxNzY3Mjg1NTEyODk3MDkzOF8pOyIgZD0iTTg4LjksNjguOEg0Ny4yYy0wLjYsMC0xLTAuNS0xLTFWMjYuMQoJYzAtMC42LDAuNS0xLDEtMWgxMmMwLjYsMCwxLDAuNSwxLDF2MjcuMWMwLDAuNiwwLjUsMSwxLDFoMjcuNmMwLjYsMCwxLDAuNSwxLDF2MTIuNUM4OS44LDY4LjMsODkuNSw2OC44LDg4LjksNjguOHoiLz4KPC9zdmc+Cg==" preserveAspectRatio="xMidYMid meet"/>
-    <text x="1455" y="179" text-anchor="middle" class="participant">FlociServer</text>
-    <text x="1455" y="201" text-anchor="middle" class="role">local endpoint</text>
-  </g>
-
-  <line x1="155" y1="218" x2="155" y2="982" class="lifeline"/>
-  <line x1="410" y1="218" x2="410" y2="982" class="lifeline"/>
-  <line x1="690" y1="218" x2="690" y2="982" class="lifeline"/>
-  <line x1="975" y1="218" x2="975" y2="982" class="lifeline"/>
-  <line x1="1455" y1="218" x2="1455" y2="982" class="lifeline"/>
-
-  <rect x="403" y="302" width="14" height="222" rx="6" class="activation"/>
-  <rect x="683" y="520" width="14" height="160" rx="6" class="activation"/>
-  <rect x="968" y="360" width="14" height="372" rx="6" class="activation"/>
-  <rect x="1448" y="360" width="14" height="372" rx="6" class="activation"/>
-
-  <rect x="84" y="260" width="360" height="34" rx="17" class="label callLabel"/>
-  <circle cx="108" cy="277" r="13" class="badge callBadge"/><text x="108" y="282" text-anchor="middle" class="badgeText callText">1</text>
-  <text x="132" y="282" class="msg callText">createBucket(bucket1), createBucket(bucket2)</text>
-  <path d="M 155 318 L 410 318" class="call"/>
-
-  <rect x="545" y="324" width="330" height="34" rx="17" class="label callLabel"/>
-  <circle cx="569" cy="341" r="13" class="badge callBadge"/><text x="569" y="346" text-anchor="middle" class="badgeText callText">2</text>
-  <text x="593" y="346" class="msg callText">PUT Bucket requests through SDK</text>
-  <path d="M 417 382 L 975 382" class="call"/>
-
-  <rect x="78" y="420" width="1420" height="560" rx="14" class="alt"/>
-  <rect x="102" y="438" width="254" height="30" rx="15" class="branchSetup"/>
-  <text x="123" y="458" class="note">store objects</text>
-  <line x1="78" y1="708" x2="1498" y2="708" class="branchDivider"/>
-  <rect x="102" y="726" width="250" height="30" rx="15" class="branchRead"/>
-  <text x="123" y="746" class="note">list and read</text>
-
-  <rect x="162" y="488" width="360" height="34" rx="17" class="label workLabel"/>
-  <circle cx="186" cy="505" r="13" class="badge workBadge"/><text x="186" y="510" text-anchor="middle" class="badgeText workText">3</text>
-  <text x="210" y="510" class="msg workText">store test-file.txt and my-file.txt</text>
-  <path d="M 155 548 L 690 548" class="work"/>
-
-  <rect x="770" y="552" width="260" height="34" rx="17" class="label workLabel"/>
-  <circle cx="794" cy="569" r="13" class="badge workBadge"/><text x="794" y="574" text-anchor="middle" class="badgeText workText">4</text>
-  <text x="818" y="574" class="msg workText">PUT object requests</text>
-  <path d="M 697 612 L 975 612" class="work"/>
-
-  <rect x="1125" y="628" width="290" height="34" rx="17" class="label workLabel"/>
-  <circle cx="1149" cy="645" r="13" class="badge workBadge"/><text x="1149" y="650" text-anchor="middle" class="badgeText workText">5</text>
-  <text x="1173" y="650" class="msg workText">Floci stores S3 objects</text>
-  <path d="M 982 688 L 1455 688" class="work"/>
-
-  <rect x="88" y="768" width="292" height="34" rx="17" class="label skipLabel"/>
-  <circle cx="112" cy="785" r="13" class="badge skipBadge"/><text x="112" y="790" text-anchor="middle" class="badgeText skipText">6</text>
-  <text x="136" y="790" class="msg skipText">listObjects(bucket1)</text>
-  <path d="M 155 826 L 410 826" class="skip"/>
-
-  <rect x="494" y="772" width="324" height="34" rx="17" class="label skipLabel"/>
-  <circle cx="518" cy="789" r="13" class="badge skipBadge"/><text x="518" y="794" text-anchor="middle" class="badgeText skipText">7</text>
-  <text x="542" y="794" class="msg skipText">GET object listing from S3</text>
-  <path d="M 417 842 L 975 842" class="skip"/>
-
-  <rect x="260" y="852" width="430" height="34" rx="17" class="label skipLabel"/>
-  <circle cx="284" cy="869" r="13" class="badge skipBadge"/><text x="284" y="874" text-anchor="middle" class="badgeText skipText">8</text>
-  <text x="308" y="874" class="msg skipText">ResourceLoader reads s3://bucket1/test-file.txt</text>
-  <path d="M 155 920 L 690 920" class="skip"/>
-
-  <rect x="776" y="890" width="330" height="34" rx="17" class="label returnLabel"/>
-  <circle cx="800" cy="907" r="13" class="badge returnBadge"/><text x="800" y="912" text-anchor="middle" class="badgeText returnText">9</text>
-  <text x="824" y="912" class="msg returnText">content is returned to the runner</text>
-  <path d="M 975 954 L 690 954 L 690 960 L 155 960" class="return"/>
-
-  <rect x="98" y="1022" width="1404" height="44" rx="12" fill="#ffffff" stroke="#ccd7da" stroke-width="2"/>
-  <text x="118" y="1050" class="note">The local path uses FlociServer from bluetape4k-testcontainers, so the sample does not need real AWS credentials.</text>
-  <text x="800" y="1088" text-anchor="middle" class="footer">bluetape4k-workshop - aws/s3-spring-cloud README</text>
+  <rect x="24" y="24" width="1622" height="1086" rx="20" class="frame"/>  <text x="835" y="76" text-anchor="middle" class="title">Spring Cloud AWS S3 Flow</text>  <text x="835" y="106" text-anchor="middle" class="subtitle">Local Floci S3 receives the same bucket, object, list, and ResourceLoader calls used by the sample.</text>
+  <rect x="100" y="406" width="1470" height="230" rx="16" class="alt"/>
+  <rect x="100" y="634" width="1470" height="306" rx="16" class="alt"/>
+  <g filter="url(#shadow)"><rect x="75" y="156" width="230" height="76" rx="10" class="header"/><text x="190" y="186" text-anchor="middle" class="participant">Runner</text><text x="190" y="211" text-anchor="middle" class="role">ApplicationRunner</text></g>
+  <line x1="190" y1="232" x2="190" y2="1022" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="398" y="156" width="230" height="76" rx="10" class="header"/><text x="513" y="186" text-anchor="middle" class="participant">S3Client</text><text x="513" y="211" text-anchor="middle" class="role">AWS SDK v2</text></g>
+  <line x1="513" y1="232" x2="513" y2="1022" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="720" y="156" width="230" height="76" rx="10" class="header"/><text x="835" y="186" text-anchor="middle" class="participant">S3Template</text><text x="835" y="211" text-anchor="middle" class="role">Spring Cloud AWS</text></g>
+  <line x1="835" y1="232" x2="835" y2="1022" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1043" y="156" width="230" height="76" rx="10" class="header"/><image x="1059" y="176" width="36" height="36" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNjRweCIgaGVpZ2h0PSI2NHB4IiB2aWV3Qm94PSIwIDAgNjQgNjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+SWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BbWF6b24tU2ltcGxlLVN0b3JhZ2UtU2VydmljZV80ODwvdGl0bGU+CiAgICA8ZyBpZD0iSWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BbWF6b24tU2ltcGxlLVN0b3JhZ2UtU2VydmljZV80OCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPGcgaWQ9Ikljb24tQXJjaGl0ZWN0dXJlLUJHLzQ4L1N0b3JhZ2UiIGZpbGw9IiM3QUExMTYiPgogICAgICAgICAgICA8cmVjdCBpZD0iUmVjdGFuZ2xlIiB4PSIwIiB5PSIwIiB3aWR0aD0iNjQiIGhlaWdodD0iNjQiPjwvcmVjdD4KICAgICAgICA8L2c+CiAgICAgICAgPGcgaWQ9Ikljb24tU2VydmljZS80OC9BbWF6b24tU2ltcGxlLVN0b3JhZ2UtU2VydmljZV80OCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAuOTk5ODAwLCAxMC4wMDAyMDApIiBmaWxsPSIjRkZGRkZGIj4KICAgICAgICAgICAgPHBhdGggZD0iTTM2Ljc1OSwyMy45NDggTDM2Ljk5MywyMi4xMzEgQzM5LjE2NiwyMy4zODUgMzkuODQyLDI0LjEyMSA0MC4wMzcsMjQuNDI0IEMzOS43MTMsMjQuNDg1IDM4LjgzMiwyNC41MDkgMzYuNzU5LDIzLjk0OCBMMzYuNzU5LDIzLjk0OCBaIE0xOS41LDExIEM5LjEyNSwxMSAyLjM4Miw4LjQ4OCAyLDYuNjk2IEwyLDYuNTExIEMyLjM0OSw1LjM5MiA4LjE0LDIgMTkuNSwyIEMzMC44NCwyIDM2LjYzMiw1LjM4MSAzNyw2LjUwNSBMMzcsNi42MTYgQzM2LjcyNCw4LjQ0NiAyOS45NjEsMTEgMTkuNSwxMSBMMTkuNSwxMSBaIE0zNC44MTgsMjMuMzYyIEMzMC4wNTMsMjEuNzk3IDIzLjkxMiwxOC45NzkgMjEuNTk0LDE3Ljg4OCBDMjEuNTM1LDE2Ljc4NiAyMC42MjgsMTUuOTA2IDE5LjUxMiwxNS45MDYgQzE4LjM1OCwxNS45MDYgMTcuNDE4LDE2Ljg0NSAxNy40MTgsMTggQzE3LjQxOCwxOS4xNTQgMTguMzU4LDIwLjA5NCAxOS41MTIsMjAuMDk0IEMxOS45NjksMjAuMDk0IDIwLjM4OSwxOS45NDIgMjAuNzMzLDE5LjY5MyBDMjMuMTMyLDIwLjgyMiAyOS42MTksMjMuNzk4IDM0LjU1OCwyNS4zOCBMMzIuODM3LDM4LjcyNCBDMzIuNTgzLDQwLjM1MiAyNy45MTksNDIgMTkuNDk3LDQyIEMxMS4wNzIsNDIgNi40MDUsNDAuMzUyIDYuMTU1LDM4Ljc1MSBMMi40MzUsOS44MTQgQzUuOTQ1LDExLjkxNSAxMi43NDksMTMgMTkuNSwxMyBDMjYuMjUsMTMgMzMuMDU0LDExLjkxNSAzNi41NjUsOS44MTUgTDM0LjgxOCwyMy4zNjIgWiBNMzksNi41IEMzOSwzLjQzMSAzMC42NjEsMCAxOS41LDAgQzguMzM5LDAgLTMuNTUyNzEzNjhlLTE1LDMuNDMxIC0zLjU1MjcxMzY4ZS0xNSw2LjUgTC0zLjU1MjcxMzY4ZS0xNSw3LjA0MyBMNC4xNzQsMzkuMDMzIEM0Ljg3NSw0My41MTYgMTUuMTIzLDQ0IDE5LjQ5Nyw0NCBDMjMuODY5LDQ0IDM0LjExMyw0My41MTYgMzQuODE4LDM5LjAwNyBMMzYuNTAxLDI1Ljk0NyBDMzcuNzc4LDI2LjI3OSAzOC44MTIsMjYuNDU2IDM5LjYxNiwyNi40NTUgQzQwLjYwNiwyNi40NTUgNDEuMjczLDI2LjIwMyA0MS42OTcsMjUuNjk3IEM0Mi4wNDcsMjUuMjgxIDQyLjE4NSwyNC43NTYgNDIuMDg1LDI0LjIyMSBDNDEuODU3LDIzIDQwLjQwMywyMS43MTIgMzcuMzcsMjAuMDQ0IEwzNy4yNywxOS45ODkgTDM5LDcuMDQ0IEwzOSw2LjUgWiIgaWQ9IkFtYXpvbi1TaW1wbGUtU3RvcmFnZS1TZXJ2aWNlLUljb25fNDhfU3F1aWQiPjwvcGF0aD4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPg==" preserveAspectRatio="xMidYMid meet"/>  <text x="1178" y="186" text-anchor="middle" class="participant">S3 Service</text><text x="1178" y="211" text-anchor="middle" class="role">bucket + object API</text></g>
+  <line x1="1158" y1="232" x2="1158" y2="1022" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1365" y="156" width="230" height="76" rx="10" class="header"/><image x="1381" y="176" width="36" height="36" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNjRweCIgaGVpZ2h0PSI2NHB4IiB2aWV3Qm94PSIwIDAgNjQgNjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+SWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BbWF6b24tU2ltcGxlLVN0b3JhZ2UtU2VydmljZV80ODwvdGl0bGU+CiAgICA8ZyBpZD0iSWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BbWF6b24tU2ltcGxlLVN0b3JhZ2UtU2VydmljZV80OCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPGcgaWQ9Ikljb24tQXJjaGl0ZWN0dXJlLUJHLzQ4L1N0b3JhZ2UiIGZpbGw9IiM3QUExMTYiPgogICAgICAgICAgICA8cmVjdCBpZD0iUmVjdGFuZ2xlIiB4PSIwIiB5PSIwIiB3aWR0aD0iNjQiIGhlaWdodD0iNjQiPjwvcmVjdD4KICAgICAgICA8L2c+CiAgICAgICAgPGcgaWQ9Ikljb24tU2VydmljZS80OC9BbWF6b24tU2ltcGxlLVN0b3JhZ2UtU2VydmljZV80OCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAuOTk5ODAwLCAxMC4wMDAyMDApIiBmaWxsPSIjRkZGRkZGIj4KICAgICAgICAgICAgPHBhdGggZD0iTTM2Ljc1OSwyMy45NDggTDM2Ljk5MywyMi4xMzEgQzM5LjE2NiwyMy4zODUgMzkuODQyLDI0LjEyMSA0MC4wMzcsMjQuNDI0IEMzOS43MTMsMjQuNDg1IDM4LjgzMiwyNC41MDkgMzYuNzU5LDIzLjk0OCBMMzYuNzU5LDIzLjk0OCBaIE0xOS41LDExIEM5LjEyNSwxMSAyLjM4Miw4LjQ4OCAyLDYuNjk2IEwyLDYuNTExIEMyLjM0OSw1LjM5MiA4LjE0LDIgMTkuNSwyIEMzMC44NCwyIDM2LjYzMiw1LjM4MSAzNyw2LjUwNSBMMzcsNi42MTYgQzM2LjcyNCw4LjQ0NiAyOS45NjEsMTEgMTkuNSwxMSBMMTkuNSwxMSBaIE0zNC44MTgsMjMuMzYyIEMzMC4wNTMsMjEuNzk3IDIzLjkxMiwxOC45NzkgMjEuNTk0LDE3Ljg4OCBDMjEuNTM1LDE2Ljc4NiAyMC42MjgsMTUuOTA2IDE5LjUxMiwxNS45MDYgQzE4LjM1OCwxNS45MDYgMTcuNDE4LDE2Ljg0NSAxNy40MTgsMTggQzE3LjQxOCwxOS4xNTQgMTguMzU4LDIwLjA5NCAxOS41MTIsMjAuMDk0IEMxOS45NjksMjAuMDk0IDIwLjM4OSwxOS45NDIgMjAuNzMzLDE5LjY5MyBDMjMuMTMyLDIwLjgyMiAyOS42MTksMjMuNzk4IDM0LjU1OCwyNS4zOCBMMzIuODM3LDM4LjcyNCBDMzIuNTgzLDQwLjM1MiAyNy45MTksNDIgMTkuNDk3LDQyIEMxMS4wNzIsNDIgNi40MDUsNDAuMzUyIDYuMTU1LDM4Ljc1MSBMMi40MzUsOS44MTQgQzUuOTQ1LDExLjkxNSAxMi43NDksMTMgMTkuNSwxMyBDMjYuMjUsMTMgMzMuMDU0LDExLjkxNSAzNi41NjUsOS44MTUgTDM0LjgxOCwyMy4zNjIgWiBNMzksNi41IEMzOSwzLjQzMSAzMC42NjEsMCAxOS41LDAgQzguMzM5LDAgLTMuNTUyNzEzNjhlLTE1LDMuNDMxIC0zLjU1MjcxMzY4ZS0xNSw2LjUgTC0zLjU1MjcxMzY4ZS0xNSw3LjA0MyBMNC4xNzQsMzkuMDMzIEM0Ljg3NSw0My41MTYgMTUuMTIzLDQ0IDE5LjQ5Nyw0NCBDMjMuODY5LDQ0IDM0LjExMyw0My41MTYgMzQuODE4LDM5LjAwNyBMMzYuNTAxLDI1Ljk0NyBDMzcuNzc4LDI2LjI3OSAzOC44MTIsMjYuNDU2IDM5LjYxNiwyNi40NTUgQzQwLjYwNiwyNi40NTUgNDEuMjczLDI2LjIwMyA0MS42OTcsMjUuNjk3IEM0Mi4wNDcsMjUuMjgxIDQyLjE4NSwyNC43NTYgNDIuMDg1LDI0LjIyMSBDNDEuODU3LDIzIDQwLjQwMywyMS43MTIgMzcuMzcsMjAuMDQ0IEwzNy4yNywxOS45ODkgTDM5LDcuMDQ0IEwzOSw2LjUgWiIgaWQ9IkFtYXpvbi1TaW1wbGUtU3RvcmFnZS1TZXJ2aWNlLUljb25fNDhfU3F1aWQiPjwvcGF0aD4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPg==" preserveAspectRatio="xMidYMid meet"/><text x="1500" y="186" text-anchor="middle" class="participant">FlociServer</text>  <text x="1500" y="211" text-anchor="middle" class="role">local S3 endpoint</text></g>
+  <line x1="1480" y1="232" x2="1480" y2="1022" class="lifeline"/>
+  <rect x="202" y="252" width="400.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="226" cy="269" r="13" class="badge callBadge"/><text x="226" y="274" text-anchor="middle" class="badgeText callText">1</text>
+  <text x="250" y="274" class="msg callText">createBucket(bucket1), createBucket(bucket2)</text>
+  <path d="M 190 300 L 513 300" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="684.3" y="328" width="302.5" height="34" rx="17" class="label callLabel"/>
+  <circle cx="708.3" cy="345" r="13" class="badge callBadge"/><text x="708.3" y="350" text-anchor="middle" class="badgeText callText">2</text>
+  <text x="732.3" y="350" class="msg callText">PUT Bucket requests through SDK</text>
+  <path d="M 513 376 L 1158 376" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="346.3" y="404" width="332.5" height="34" rx="17" class="label workLabel"/>
+  <circle cx="370.3" cy="421" r="13" class="badge workBadge"/><text x="370.3" y="426" text-anchor="middle" class="badgeText workText">3</text>
+  <text x="394.3" y="426" class="msg workText">store test-file.txt and my-file.txt</text>
+  <path d="M 190 452 L 835 452" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="881.5" y="480" width="230.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="905.5" cy="497" r="13" class="badge workBadge"/><text x="905.5" y="502" text-anchor="middle" class="badgeText workText">4</text>
+  <text x="929.5" y="502" class="msg workText">PUT object requests</text>
+  <path d="M 835 528 L 1158 528" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="1197.8" y="556" width="242.5" height="34" rx="17" class="label workLabel"/>
+  <circle cx="1221.8" cy="573" r="13" class="badge workBadge"/><text x="1221.8" y="578" text-anchor="middle" class="badgeText workText">5</text>  <text x="1245.8" y="578" class="msg workText">Floci stores S3 objects</text>
+  <path d="M 1158 604 L 1480 604" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="236.5" y="632" width="230.0" height="34" rx="17" class="label skipLabel"/>
+  <circle cx="260.5" cy="649" r="13" class="badge skipBadge"/><text x="260.5" y="654" text-anchor="middle" class="badgeText skipText">6</text>
+  <text x="284.5" y="654" class="msg skipText">listObjects(bucket1)</text>
+  <path d="M 190 680 L 513 680" class="skip" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="703" y="708" width="265.0" height="34" rx="17" class="label skipLabel"/>
+  <circle cx="727" cy="725" r="13" class="badge skipBadge"/><text x="727" y="730" text-anchor="middle" class="badgeText skipText">7</text>  <text x="751" y="730" class="msg skipText">GET object listing from S3</text>
+  <path d="M 513 756 L 1158 756" class="skip" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="301.3" y="784" width="422.5" height="34" rx="17" class="label skipLabel"/>
+  <circle cx="325.3" cy="801" r="13" class="badge skipBadge"/><text x="325.3" y="806" text-anchor="middle" class="badgeText skipText">8</text>
+  <text x="349.3" y="806" class="msg skipText">ResourceLoader reads s3://bucket1/test-file.txt</text>
+  <path d="M 190 832 L 835 832" class="skip" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="515.3" y="860" width="317.5" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="539.3" cy="877" r="13" class="badge returnBadge"/><text x="539.3" y="882" text-anchor="middle" class="badgeText returnText">9</text>
+  <text x="563.3" y="882" class="msg returnText">content is returned to the runner</text>
+  <path d="M 1158 908 L 190 908" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="90" y="1046" width="1490" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>  <text x="835" y="1072" text-anchor="middle" class="footer">FlociServer comes from bluetape4k-testcontainers, so the sample runs without real AWS credentials.</text>
 </svg>

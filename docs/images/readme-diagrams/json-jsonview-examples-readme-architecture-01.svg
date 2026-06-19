@@ -5,16 +5,16 @@
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.17"/>
     </filter>
     <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/>
     </marker>
     <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/>
     </marker>
     <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/>
     </marker>
     <marker id="arrowSlate" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#64748B"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#64748B" stroke-dasharray="none"/>
     </marker>
     <style>
       .canvas { fill: #F8FAFC; }
@@ -97,10 +97,10 @@
     <text class="cardTitle" x="1081" y="649" text-anchor="middle">ArticleControllerTest</text>
   </g>
 
-  <path class="line" d="M 269 286 L 269 390" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 412 434 L 548 434" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 834 434 L 970 434" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 691 478 L 691 616" stroke="#D97706" marker-end="url(#arrowAmber-d97706)"/>
-  <path class="line" d="M 458 645 L 556 645" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 826 645 L 946 645" stroke="#64748B" marker-end="url(#arrowSlate)"/>
+  <path class="line" d="M 269 286 L 269 390" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 412 434 L 548 434" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 834 434 L 970 434" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 691 478 L 691 616" stroke="#D97706" marker-end="url(#arrowAmber-d97706)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 458 645 L 556 645" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 826 645 L 946 645" stroke="#64748B" marker-end="url(#arrowSlate)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

@@ -13,16 +13,16 @@
       .line { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <marker id="blueArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke-dasharray="none"/>
     </marker>
     <marker id="greenArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#16a34a"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#16a34a" stroke-dasharray="none"/>
     </marker>
     <marker id="orangeArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#ea580c"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#ea580c" stroke-dasharray="none"/>
     </marker>
     <marker id="grayArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#64748b"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#64748b" stroke-dasharray="none"/>
     </marker>
   </defs>
 
@@ -53,40 +53,40 @@
 
   <rect class="alt" x="62" y="235" width="1516" height="210" fill="#eff6ff" stroke="#93c5fd"/>
   <text class="actor" x="95" y="275">Simple MVC request</text>
-  <path class="line" d="M195 315 L505 315" stroke="#2563eb" marker-end="url(#blueArrow)"/>
+  <path class="line" d="M195 315 L505 315" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="350" y="300" text-anchor="middle">GET /virtual-thread</text>
-  <path class="line" d="M505 355 L825 355" stroke="#2563eb" marker-end="url(#blueArrow)"/>
+  <path class="line" d="M505 355 L825 355" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="665" y="340" text-anchor="middle">dispatch on virtual thread</text>
-  <path class="line" d="M825 395 L1145 395" stroke="#16a34a" marker-end="url(#greenArrow)"/>
+  <path class="line" d="M825 395 L1145 395" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="985" y="380" text-anchor="middle">@Async uses VT executor</text>
-  <path class="line" d="M825 430 L195 430" stroke="#64748b" marker-end="url(#grayArrow)"/>
+  <path class="line" d="M825 430 L195 430" stroke="#64748b" marker-end="url(#grayArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="510" y="415" text-anchor="middle">return current thread name</text>
 
   <rect class="alt" x="62" y="485" width="1516" height="250" fill="#f0fdf4" stroke="#86efac"/>
   <text class="actor" x="95" y="525">Parallel virtual-thread helpers</text>
-  <path class="line" d="M195 570 L505 570" stroke="#2563eb" marker-end="url(#blueArrow)"/>
+  <path class="line" d="M195 570 L505 570" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="350" y="555" text-anchor="middle">GET /virtual-thread/multi</text>
-  <path class="line" d="M505 610 L825 610" stroke="#2563eb" marker-end="url(#blueArrow)"/>
+  <path class="line" d="M505 610 L825 610" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="665" y="595" text-anchor="middle">invoke controller</text>
-  <path class="line" d="M825 650 L1145 650" stroke="#16a34a" marker-end="url(#greenArrow)"/>
+  <path class="line" d="M825 650 L1145 650" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="985" y="635" text-anchor="middle">structuredTaskScopeAll</text>
-  <path class="line" d="M1145 690 L1450 690" stroke="#16a34a" marker-end="url(#greenArrow)"/>
+  <path class="line" d="M1145 690 L1450 690" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="1298" y="675" text-anchor="middle">100 blocking subtasks</text>
-  <path class="line" d="M1145 720 L825 720" stroke="#64748b" marker-end="url(#grayArrow)"/>
+  <path class="line" d="M1145 720 L825 720" stroke="#64748b" marker-end="url(#grayArrow)" stroke-linecap="round" stroke-linejoin="round"/>
 
   <rect class="alt" x="62" y="775" width="1516" height="165" fill="#fff7ed" stroke="#fdba74"/>
   <text class="actor" x="95" y="815">MVC + JPA endpoints</text>
-  <path class="line" d="M195 855 L505 855" stroke="#2563eb" marker-end="url(#blueArrow)"/>
+  <path class="line" d="M195 855 L505 855" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="350" y="840" text-anchor="middle">GET /member or /team</text>
-  <path class="line" d="M505 895 L825 895" stroke="#2563eb" marker-end="url(#blueArrow)"/>
-  <path class="line" d="M825 895 L1450 895" stroke="#ea580c" marker-end="url(#orangeArrow)"/>
+  <path class="line" d="M505 895 L825 895" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M825 895 L1450 895" stroke="#ea580c" marker-end="url(#orangeArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="1138" y="880" text-anchor="middle">Spring Data JPA / Querydsl</text>
-  <path class="line" d="M1450 925 L195 925" stroke="#64748b" marker-end="url(#grayArrow)"/>
+  <path class="line" d="M1450 925 L195 925" stroke="#64748b" marker-end="url(#grayArrow)" stroke-linecap="round" stroke-linejoin="round"/>
 
   <rect class="alt" x="62" y="980" width="1516" height="130" fill="#fef2f2" stroke="#fca5a5"/>
   <text class="actor" x="95" y="1020">Blocking external HTTP endpoint</text>
-  <path class="line" d="M195 1060 L825 1060" stroke="#2563eb" marker-end="url(#blueArrow)"/>
+  <path class="line" d="M195 1060 L825 1060" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="510" y="1045" text-anchor="middle">GET /httpbin/block/{seconds}</text>
-  <path class="line" d="M825 1085 L1450 1085" stroke="#ea580c" marker-end="url(#orangeArrow)"/>
+  <path class="line" d="M825 1085 L1450 1085" stroke="#ea580c" marker-end="url(#orangeArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="1138" y="1070" text-anchor="middle">WebClient.block against Testcontainers httpbin</text>
 </svg>

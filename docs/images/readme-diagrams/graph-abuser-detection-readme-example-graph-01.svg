@@ -5,10 +5,10 @@
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/>
     </filter>
     <marker id="arrowDevice" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/>
     </marker>
     <marker id="arrowIp" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/>
     </marker>
     <marker id="arrowReferral" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
       <path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/>
@@ -73,16 +73,16 @@
     <text class="nodeText" x="1041" y="617" text-anchor="middle">private device</text>
   </g>
 
-  <path class="line" d="M 344 208 L 450 208 L 450 238 L 548 238" stroke="#2563EB" marker-end="url(#arrowDevice)"/>
-  <path class="line" d="M 344 356 L 470 356 L 470 260 L 548 260" stroke="#2563EB" marker-end="url(#arrowDevice)"/>
-  <path class="line" d="M 344 506 L 490 506 L 490 282 L 548 282" stroke="#2563EB" marker-end="url(#arrowDevice)"/>
-  <path class="line" d="M 344 246 L 412 246 L 412 446 L 548 446" stroke="#16A34A" marker-end="url(#arrowIp)"/>
-  <path class="line" d="M 344 394 L 452 394 L 452 490 L 548 490" stroke="#16A34A" marker-end="url(#arrowIp)"/>
-  <path class="line" d="M 1041 514 L 1041 562" stroke="#2563EB" marker-end="url(#arrowDevice)"/>
+  <path class="line" d="M 344 208 L 450 208 L 450 238 L 548 238" stroke="#2563EB" marker-end="url(#arrowDevice)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 344 356 L 470 356 L 470 260 L 548 260" stroke="#2563EB" marker-end="url(#arrowDevice)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 344 506 L 490 506 L 490 282 L 548 282" stroke="#2563EB" marker-end="url(#arrowDevice)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 344 246 L 412 246 L 412 446 L 548 446" stroke="#16A34A" marker-end="url(#arrowIp)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 344 394 L 452 394 L 452 490 L 548 490" stroke="#16A34A" marker-end="url(#arrowIp)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1041 514 L 1041 562" stroke="#2563EB" marker-end="url(#arrowDevice)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line" d="M 234 272 L 234 334" stroke="#C47A12" stroke-dasharray="8 8" marker-end="url(#arrowReferral)"/>
-  <path class="line" d="M 234 422 L 234 484" stroke="#C47A12" stroke-dasharray="8 8" marker-end="url(#arrowReferral)"/>
-  <path class="line" d="M 124 528 L 92 528 L 92 228 L 124 228" stroke="#C47A12" stroke-dasharray="8 8" marker-end="url(#arrowReferral)"/>
+  <path class="line" d="M 234 272 L 234 334" stroke="#C47A12" stroke-dasharray="8 8" marker-end="url(#arrowReferral)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 234 422 L 234 484" stroke="#C47A12" stroke-dasharray="8 8" marker-end="url(#arrowReferral)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 124 528 L 92 528 L 92 228 L 124 228" stroke="#C47A12" stroke-dasharray="8 8" marker-end="url(#arrowReferral)" stroke-linecap="round" stroke-linejoin="round"/>
 
   <rect x="88" y="690" width="1096" height="124" rx="16" fill="#FFFFFF" stroke="#D5E0E8" stroke-width="1.4"/>
   <circle cx="126" cy="724" r="7" fill="#2563EB"/>

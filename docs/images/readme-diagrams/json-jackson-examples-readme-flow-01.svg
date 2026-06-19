@@ -2,7 +2,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1260" height="440" viewBox="0 0 1260 440" role="img" aria-label="Jackson examples serialization flow diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
     <style>
       .canvas { fill: #F8FAFC; }
       .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
@@ -21,7 +21,7 @@
   <g filter="url(#shadow)"><rect x="390" y="166" width="240" height="116" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.8"/><text class="cardTitle" x="510" y="204" text-anchor="middle">JsonMapper</text><text class="cardText" x="510" y="234" text-anchor="middle">defaultJsonMapper rebuild</text><text class="cardText" x="510" y="258" text-anchor="middle">INDENT_OUTPUT in tests</text></g>
   <g filter="url(#shadow)"><rect x="690" y="166" width="240" height="116" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.8"/><text class="cardTitle" x="810" y="204" text-anchor="middle">JSON result</text><text class="cardText" x="810" y="234" text-anchor="middle">field shape and type info</text><text class="cardText" x="810" y="258" text-anchor="middle">root, raw, view output</text></g>
   <g filter="url(#shadow)"><rect x="990" y="166" width="240" height="116" rx="16" fill="#F8FAFC" stroke="#94A3B8" stroke-width="1.8"/><text class="cardTitle" x="1110" y="204" text-anchor="middle">JsonPath checks</text><text class="cardText" x="1110" y="234" text-anchor="middle">toDocument and readAs</text><text class="cardText" x="1110" y="258" text-anchor="middle">assert semantic output</text></g>
-  <path class="line" d="M 330 224 L 390 224" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 630 224 L 690 224" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 930 224 L 990 224" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 330 224 L 390 224" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 630 224 L 690 224" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 930 224 L 990 224" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

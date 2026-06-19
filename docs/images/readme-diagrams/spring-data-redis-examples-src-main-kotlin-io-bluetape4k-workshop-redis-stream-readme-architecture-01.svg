@@ -8,11 +8,10 @@
       .layer{stroke-width:1.5;rx:22;ry:22}.card{fill:#fff;stroke:#cbd5e1;stroke-width:1.5;rx:18;ry:18}.line{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
       .redis{fill:#dc2626}.redis2{fill:#ef4444}.redis3{fill:#f87171}
     </style>
-    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb"/></marker>
-    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#059669"/></marker>
+    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb" stroke-dasharray="none"/></marker>
+    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#059669" stroke-dasharray="none"/></marker>
   </defs>
-  <rect class="bg" width="1700" height="900"/>
-  <text class="title" x="70" y="70">Redis Stream API Examples</text>
+  <rect class="bg" width="1700" height="900"/>  <text class="title" x="70" y="70">Redis Stream API Examples</text>
 
   <rect class="layer" x="70" y="120" width="1560" height="185" fill="#eff6ff" stroke="#bfdbfe"/>
   <text class="layer-title" x="105" y="165">Record factory</text>
@@ -29,19 +28,17 @@
   <text class="card-title" x="1010" y="490">ReactiveStringRedisTemplate</text>
   <text class="body" x="1010" y="518">reactive StreamOperations</text>
 
-  <rect class="layer" x="70" y="635" width="1560" height="185" fill="#fff7ed" stroke="#fed7aa"/>
-  <text class="layer-title" x="105" y="680">Redis runtime</text>
+  <rect class="layer" x="70" y="635" width="1560" height="185" fill="#fff7ed" stroke="#fed7aa"/>  <text class="layer-title" x="105" y="680">Redis runtime</text>
   <rect class="card" x="590" y="710" width="520" height="75"/>
   <g transform="translate(635 730)">
     <rect class="redis3" x="0" y="26" width="58" height="18" rx="5"/>
     <rect class="redis2" x="0" y="13" width="58" height="18" rx="5"/>
     <rect class="redis" x="0" y="0" width="58" height="18" rx="5"/>
-  </g>
-  <text class="card-title" x="720" y="756">Redis Testcontainer</text>
+  </g>  <text class="card-title" x="720" y="756">Redis Testcontainer</text>
   <text class="body" x="720" y="780">stream key: my-stream</text>
 
-  <path class="line" d="M850 270 L850 330 L470 330 L470 445" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
-  <path class="line" d="M850 270 L850 330 L1230 330 L1230 445" stroke="#059669" marker-end="url(#arrow-green)"/>
-  <path class="line" d="M470 525 L470 600 L760 600 L760 710" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
-  <path class="line" d="M1230 525 L1230 600 L940 600 L940 710" stroke="#059669" marker-end="url(#arrow-green)"/>
+  <path class="line" d="M850 270 L850 330 L470 330 L470 445" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M850 270 L850 330 L1230 330 L1230 445" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M470 525 L470 600 L760 600 L760 710" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M1230 525 L1230 600 L940 600 L940 710" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

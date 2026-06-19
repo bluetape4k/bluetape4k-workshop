@@ -2,16 +2,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="690" viewBox="0 0 1500 690" role="img" aria-label="Kafka demo message flow diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.lane{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.laneTitle{font-family:"Architects Daughter";font-size:25px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
     </style>
   </defs>
   <rect class="canvas" width="1500" height="690"/>
-  <rect class="frame" x="24" y="24" width="1452" height="642" rx="24"/>
-  <text class="title" x="750" y="66" text-anchor="middle">Kafka publish and consume paths</text>
+  <rect class="frame" x="24" y="24" width="1452" height="642" rx="24"/>  <text class="title" x="750" y="66" text-anchor="middle">Kafka publish and consume paths</text>
   <text class="subtitle" x="750" y="94" text-anchor="middle">The simple path logs a string; the greeting path relays a GreetingRequest into a GreetingResult on the logger topic.</text>
 
   <rect class="lane" x="70" y="132" width="1360" height="206" rx="18"/>
@@ -30,13 +29,13 @@
   <g filter="url(#shadow)"><rect x="1010" y="542" width="240" height="74" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/><text class="cardTitle" x="1130" y="573" text-anchor="middle">logger.topic.1</text><text class="cardText" x="1130" y="598" text-anchor="middle">@SendTo target</text></g>
   <g filter="url(#shadow)"><rect x="1270" y="542" width="130" height="74" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/><text class="cardTitle" x="1335" y="573" text-anchor="middle">Logger</text><text class="cardText" x="1335" y="598" text-anchor="middle">stores result</text></g>
 
-  <path class="line" d="M 320 255 L 410 255" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 620 255 L 710 255" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 920 255 L 1010 255" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 320 255 L 410 255" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 620 255 L 710 255" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 920 255 L 1010 255" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line" d="M 320 503 L 410 503" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 620 503 L 710 503" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 920 503 L 965 503 L 965 463 L 1010 463" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 1130 500 L 1130 542" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 1250 579 L 1270 579" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 320 503 L 410 503" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 620 503 L 710 503" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 920 503 L 965 503 L 965 463 L 1010 463" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1130 500 L 1130 542" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1250 579 L 1270 579" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

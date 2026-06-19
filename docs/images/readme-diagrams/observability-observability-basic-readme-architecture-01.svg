@@ -2,10 +2,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1540" height="700" viewBox="0 0 1540 700" role="img" aria-label="Observability basic architecture diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
-    <marker id="arrowCyan" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0891B2"/></marker>
-    <marker id="arrowSlate" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#475569"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowCyan" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0891B2" stroke-dasharray="none"/></marker>
+    <marker id="arrowSlate" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#475569" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:29px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.small{font-family:"Comic Mono";font-size:13px;fill:#64748B}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
     </style>
@@ -62,11 +62,11 @@
     <text class="cardText" x="1330" y="380" text-anchor="middle">/inventory/{id}</text>
   </g>
 
-  <path class="line" d="M 262 344 L 398 278" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 520 334 L 520 408" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 642 470 L 712 470 L 712 301 L 780 301" stroke="#0891B2" marker-end="url(#arrowCyan)"/>
-  <path class="line" d="M 902 362 L 902 444" stroke="#475569" marker-end="url(#arrowSlate)"/>
-  <path class="line" d="M 1024 497 L 1090 497 L 1090 347 L 1170 347" stroke="#0891B2" marker-end="url(#arrowCyan)"/>
-  <path class="line soft" d="M 1295 420 L 1295 586 L 902 586 L 902 550" stroke="#475569" marker-end="url(#arrowSlate)"/>
+  <path class="line" d="M 262 344 L 398 278" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 520 334 L 520 408" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 642 470 L 712 470 L 712 301 L 780 301" stroke="#0891B2" marker-end="url(#arrowCyan)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 902 362 L 902 444" stroke="#475569" marker-end="url(#arrowSlate)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1024 497 L 1090 497 L 1090 347 L 1170 347" stroke="#0891B2" marker-end="url(#arrowCyan)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line soft" d="M 1295 420 L 1295 586 L 902 586 L 902 550" stroke="#475569" marker-end="url(#arrowSlate)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="small" x="1110" y="612" text-anchor="middle">TracePropagationTest asserts outbound traceparent.</text>
 </svg>

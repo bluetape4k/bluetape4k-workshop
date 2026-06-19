@@ -4,9 +4,9 @@
     <filter id="shadow" x="-8%" y="-10%" width="116%" height="130%">
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#5b7282" flood-opacity="0.15"/>
     </filter>
-    <marker id="blueArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#457b9d"/></marker>
-    <marker id="greenArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5f8f5b"/></marker>
-    <marker id="goldArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#a87332"/></marker>
+    <marker id="blueArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#457b9d" stroke-dasharray="none"/></marker>
+    <marker id="greenArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5f8f5b" stroke-dasharray="none"/></marker>
+    <marker id="goldArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#a87332" stroke-dasharray="none"/></marker>
     <style>
       .canvas { fill: #f7fafc; }
       .frame { fill: #fffefd; stroke: #cdd8df; stroke-width: 2; }
@@ -78,8 +78,8 @@
   <text class="cardTitle" x="1174" y="786" text-anchor="middle">Compare Curves</text>
   <text class="smallText" x="1174" y="813" text-anchor="middle">latency, RPS, errors, active users</text>
 
-  <path class="flow" d="M 482 250 H 568"/>
-  <path class="flow" d="M 868 250 H 954"/>
+  <path class="flow" d="M 482 250 H 568" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="flow" d="M 868 250 H 954" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="sync" d="M 1155 294 V 410 H 512"/>
   <rect class="labelBox" x="732" y="354" width="174" height="30" rx="15" stroke="#91b884"/>
   <text class="label" x="819" y="374" text-anchor="middle" fill="#5f8f5b">HTTP load begins</text>

@@ -13,16 +13,16 @@
       .line { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <marker id="blueArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke-dasharray="none"/>
     </marker>
     <marker id="greenArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#16a34a"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#16a34a" stroke-dasharray="none"/>
     </marker>
     <marker id="orangeArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#ea580c"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#ea580c" stroke-dasharray="none"/>
     </marker>
     <marker id="grayArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#64748b"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#64748b" stroke-dasharray="none"/>
     </marker>
   </defs>
 
@@ -42,8 +42,7 @@
   <text class="actor" x="1140" y="142" text-anchor="middle">Dispatcher</text>
   <text class="small" x="1140" y="168" text-anchor="middle">default / io / custom / VT</text>
   <rect class="card" x="1345" y="105" width="225" height="82"/>
-  <text class="actor" x="1458" y="142" text-anchor="middle">Target</text>
-  <text class="small" x="1458" y="168" text-anchor="middle">flow or httpbin</text>
+  <text class="actor" x="1458" y="142" text-anchor="middle">Target</text>  <text class="small" x="1458" y="168" text-anchor="middle">flow or httpbin</text>
 
   <line class="lane" x1="190" y1="190" x2="190" y2="1095"/>
   <line class="lane" x1="495" y1="190" x2="495" y2="1095"/>
@@ -53,35 +52,33 @@
 
   <rect class="alt" x="55" y="235" width="1530" height="175" fill="#eff6ff" stroke="#93c5fd"/>
   <text class="actor" x="90" y="275">Path selects dispatcher controller</text>
-  <path class="line" d="M190 320 L495 320" stroke="#2563eb" marker-end="url(#blueArrow)"/>
+  <path class="line" d="M190 320 L495 320" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="342" y="305" text-anchor="middle">GET /default/suspend</text>
-  <path class="line" d="M495 360 L812 360" stroke="#2563eb" marker-end="url(#blueArrow)"/>
+  <path class="line" d="M495 360 L812 360" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="654" y="345" text-anchor="middle">route by path prefix</text>
-  <path class="line" d="M812 395 L190 395" stroke="#64748b" marker-end="url(#grayArrow)"/>
+  <path class="line" d="M812 395 L190 395" stroke="#64748b" marker-end="url(#grayArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="500" y="380" text-anchor="middle">Banner response</text>
 
   <rect class="alt" x="55" y="455" width="1530" height="235" fill="#f0fdf4" stroke="#86efac"/>
   <text class="actor" x="90" y="495">Deferred endpoint</text>
-  <path class="line" d="M190 540 L812 540" stroke="#2563eb" marker-end="url(#blueArrow)"/>
+  <path class="line" d="M190 540 L812 540" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="501" y="525" text-anchor="middle">GET /{path}/deferred</text>
-  <path class="line" d="M812 585 L1140 585" stroke="#16a34a" marker-end="url(#greenArrow)"/>
+  <path class="line" d="M812 585 L1140 585" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="976" y="570" text-anchor="middle">CoroutineScope(dispatcher).async</text>
-  <path class="line" d="M1140 630 L812 630" stroke="#64748b" marker-end="url(#grayArrow)"/>
+  <path class="line" d="M1140 630 L812 630" stroke="#64748b" marker-end="url(#grayArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="976" y="615" text-anchor="middle">Deferred&lt;Banner&gt;</text>
-  <path class="line" d="M812 670 L190 670" stroke="#64748b" marker-end="url(#grayArrow)"/>
+  <path class="line" d="M812 670 L190 670" stroke="#64748b" marker-end="url(#grayArrow)" stroke-linecap="round" stroke-linejoin="round"/>
 
   <rect class="alt" x="55" y="735" width="1530" height="185" fill="#fff7ed" stroke="#fdba74"/>
   <text class="actor" x="90" y="775">Flow endpoints</text>
-  <path class="line" d="M190 820 L812 820" stroke="#2563eb" marker-end="url(#blueArrow)"/>
+  <path class="line" d="M190 820 L812 820" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="501" y="805" text-anchor="middle">GET /{path}/sequential-flow or concurrent-flow</text>
-  <path class="line" d="M812 865 L1458 865" stroke="#ea580c" marker-end="url(#orangeArrow)"/>
+  <path class="line" d="M812 865 L1458 865" stroke="#ea580c" marker-end="url(#orangeArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="1135" y="850" text-anchor="middle">flow { repeat } or flatMapMerge(size)</text>
-  <path class="line" d="M1458 905 L190 905" stroke="#64748b" marker-end="url(#grayArrow)"/>
+  <path class="line" d="M1458 905 L190 905" stroke="#64748b" marker-end="url(#grayArrow)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <rect class="alt" x="55" y="965" width="1530" height="130" fill="#fef2f2" stroke="#fca5a5"/>
-  <text class="actor" x="90" y="1005">Httpbin virtual-thread boundary</text>
-  <path class="line" d="M190 1045 L812 1045" stroke="#2563eb" marker-end="url(#blueArrow)"/>
-  <text class="label" x="501" y="1030" text-anchor="middle">GET /httpbin/delay/mono or suspend</text>
-  <path class="line" d="M812 1075 L1458 1075" stroke="#ea580c" marker-end="url(#orangeArrow)"/>
+  <rect class="alt" x="55" y="965" width="1530" height="130" fill="#fef2f2" stroke="#fca5a5"/>  <text class="actor" x="90" y="1005">Httpbin virtual-thread boundary</text>
+  <path class="line" d="M190 1045 L812 1045" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>  <text class="label" x="501" y="1030" text-anchor="middle">GET /httpbin/delay/mono or suspend</text>
+  <path class="line" d="M812 1075 L1458 1075" stroke="#ea580c" marker-end="url(#orangeArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="1135" y="1060" text-anchor="middle">virtual-thread scheduler / coroutine dispatcher</text>
 </svg>

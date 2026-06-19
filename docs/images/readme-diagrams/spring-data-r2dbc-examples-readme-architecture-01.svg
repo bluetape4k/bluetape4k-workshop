@@ -10,9 +10,9 @@
       .line{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
       .db{fill:#fff;stroke:#94a3b8;stroke-width:2}.dbtop{fill:#e0f2fe;stroke:#0284c7;stroke-width:2}
     </style>
-    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb"/></marker>
-    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#059669"/></marker>
-    <marker id="arrow-purple" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#7c3aed"/></marker>
+    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb" stroke-dasharray="none"/></marker>
+    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#059669" stroke-dasharray="none"/></marker>
+    <marker id="arrow-purple" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#7c3aed" stroke-dasharray="none"/></marker>
   <marker id="arrow-blue-64748b" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path stroke-dasharray="none" d="M1,1 L11,6 L1,11 Z" fill="#64748b"/></marker>
 </defs>
   <rect class="bg" width="1720" height="980"/>
@@ -53,15 +53,14 @@
     <path class="db" d="M0,26 C0,48 310,48 310,26"/>
     <text class="card-title" x="115" y="70">H2 R2DBC</text>
   </g>
-  <rect class="card" x="1100" y="770" width="350" height="95"/>
-  <text class="card-title" x="1130" y="812">DatabaseClient</text>
+  <rect class="card" x="1100" y="770" width="350" height="95"/>  <text class="card-title" x="1130" y="812">DatabaseClient</text>
   <text class="body" x="1130" y="842">DDL and setup SQL</text>
 
-  <path class="line" d="M325 300 L325 480" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
-  <path class="line" d="M860 300 L860 480" stroke="#059669" marker-end="url(#arrow-green)"/>
-  <path class="line" d="M1395 300 L1395 480" stroke="#7c3aed" marker-end="url(#arrow-purple)"/>
-  <path class="line" d="M325 590 L760 770" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
-  <path class="line" d="M860 590 L860 770" stroke="#059669" marker-end="url(#arrow-green)"/>
-  <path class="line" d="M1395 590 L1015 770" stroke="#7c3aed" marker-end="url(#arrow-purple)"/>
-  <path class="line" d="M1100 818 L1018 818" stroke="#64748b" marker-end="url(#arrow-blue-64748b)"/>
+  <path class="line" d="M325 300 L325 480" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M860 300 L860 480" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M1395 300 L1395 480" stroke="#7c3aed" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M325 590 L760 770" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M860 590 L860 770" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M1395 590 L1015 770" stroke="#7c3aed" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M1100 818 L1018 818" stroke="#64748b" marker-end="url(#arrow-blue-64748b)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

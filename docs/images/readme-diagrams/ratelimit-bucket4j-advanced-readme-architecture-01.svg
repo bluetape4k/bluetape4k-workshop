@@ -2,19 +2,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1700" height="700" viewBox="0 0 1700 700" role="img" aria-label="Bucket4j advanced architecture diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#D97706"/></marker>
-    <marker id="arrowRose" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#E11D48"/></marker>
-    <marker id="arrowSlate" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#475569"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#D97706" stroke-dasharray="none"/></marker>
+    <marker id="arrowRose" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#E11D48" stroke-dasharray="none"/></marker>
+    <marker id="arrowSlate" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#475569" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
     </style>
   </defs>
   <rect class="canvas" width="1700" height="700"/>
   <rect class="frame" x="24" y="24" width="1652" height="652" rx="24"/>
-  <text class="title" x="850" y="70" text-anchor="middle">Advanced Bucket4j architecture</text>
-  <text class="subtitle" x="850" y="102" text-anchor="middle">Three path-isolated coroutine filters share one Redis proxy manager but use separate bucket policies.</text>
+  <text class="title" x="850" y="70" text-anchor="middle">Advanced Bucket4j architecture</text>  <text class="subtitle" x="850" y="102" text-anchor="middle">Three path-isolated coroutine filters share one Redis proxy manager but use separate bucket policies.</text>
 
   <rect class="layer" x="66" y="142" width="284" height="522" rx="18"/>
   <text class="layerLabel" x="94" y="180">Endpoint groups</text>
@@ -67,13 +66,11 @@
     <text class="cardText" x="1023" y="552" text-anchor="middle">X-User-ID</text>
   </g>
 
-  <rect class="layer" x="1254" y="142" width="380" height="522" rx="18"/>
-  <text class="layerLabel" x="1282" y="180">Redis bucket store</text>
+  <rect class="layer" x="1254" y="142" width="380" height="522" rx="18"/>  <text class="layerLabel" x="1282" y="180">Redis bucket store</text>
   <g filter="url(#shadow)">
     <rect x="1300" y="252" width="286" height="130" rx="16" fill="#FFF1F2" stroke="#E11D48" stroke-width="1.7"/>
     <rect x="1334" y="292" width="82" height="36" rx="18" fill="#FFE4E6" stroke="#E11D48" stroke-width="2.8"/>
-    <path d="M 1334 310 C 1334 331 1416 331 1416 310" fill="none" stroke="#E11D48" stroke-width="2.8"/>
-    <text class="cardTitle" x="1490" y="306" text-anchor="middle">Redis</text>
+    <path d="M 1334 310 C 1334 331 1416 331 1416 310" fill="none" stroke="#E11D48" stroke-width="2.8"/>  <text class="cardTitle" x="1490" y="306" text-anchor="middle">Redis</text>
     <text class="cardText" x="1490" y="338" text-anchor="middle">Lettuce proxy manager</text>
   </g>
   <g filter="url(#shadow)">
@@ -82,12 +79,12 @@
     <text class="cardText" x="1443" y="538" text-anchor="middle">Remaining, Reset, Retry-After</text>
   </g>
 
-  <path class="line" d="M 310 272 L 460 268" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 310 420 L 460 424" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 310 568 L 460 580" stroke="#D97706" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 748 268 L 900 273" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 748 424 L 858 424 L 858 273 L 900 273" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 748 580 L 858 580 L 858 334 L 1023 334 L 1023 334" stroke="#D97706" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 1146 273 L 1254 273 L 1254 317 L 1300 317" stroke="#E11D48" marker-end="url(#arrowRose)"/>
-  <path class="line" d="M 1146 511 L 1254 511 L 1254 517 L 1300 517" stroke="#475569" marker-end="url(#arrowSlate)"/>
+  <path class="line" d="M 310 272 L 460 268" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 310 420 L 460 424" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 310 568 L 460 580" stroke="#D97706" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 748 268 L 900 273" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 748 424 L 858 424 L 858 273 L 900 273" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 748 580 L 858 580 L 858 334 L 1023 334 L 1023 334" stroke="#D97706" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1146 273 L 1254 273 L 1254 317 L 1300 317" stroke="#E11D48" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1146 511 L 1254 511 L 1254 517 L 1300 517" stroke="#475569" marker-end="url(#arrowSlate)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

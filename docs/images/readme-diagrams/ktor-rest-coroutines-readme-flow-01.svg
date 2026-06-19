@@ -2,12 +2,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1480" height="700" viewBox="0 0 1480 700" role="img" aria-label="Ktor REST coroutines request flow diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
-    <marker id="arrowTeal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0D9488"/></marker>
-    <marker id="arrowCyan" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0891B2"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
-    <marker id="arrowRed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#DC2626"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowTeal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0D9488" stroke-dasharray="none"/></marker>
+    <marker id="arrowCyan" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0891B2" stroke-dasharray="none"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/></marker>
+    <marker id="arrowRed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#DC2626" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.tag{font-family:"Comic Mono";font-size:13px;font-weight:700}.line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
     </style>
@@ -75,19 +75,19 @@
     <text class="cardText" x="1196" y="456" text-anchor="middle">or typed error body</text>
   </g>
 
-  <path class="line" d="M 248 350 L 292 350 L 292 190 L 332 190" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 248 350 L 332 350" stroke="#0D9488" marker-end="url(#arrowTeal)"/>
-  <path class="line" d="M 248 350 L 292 350 L 292 510 L 332 510" stroke="#0891B2" marker-end="url(#arrowCyan)"/>
+  <path class="line" d="M 248 350 L 292 350 L 292 190 L 332 190" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 248 350 L 332 350" stroke="#0D9488" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 248 350 L 292 350 L 292 510 L 332 510" stroke="#0891B2" marker-end="url(#arrowCyan)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line" d="M 578 190 L 716 190" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 940 190 L 1078 190" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 1196 248 L 1196 322 L 1030 322 L 1030 422 L 1078 422" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 578 190 L 716 190" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 940 190 L 1078 190" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1196 248 L 1196 322 L 1030 322 L 1030 422 L 1078 422" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line" d="M 578 350 L 716 350" stroke="#0D9488" marker-end="url(#arrowTeal)"/>
-  <path class="line" d="M 940 350 L 1030 350 L 1030 422 L 1078 422" stroke="#0D9488" marker-end="url(#arrowTeal)"/>
+  <path class="line" d="M 578 350 L 716 350" stroke="#0D9488" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 940 350 L 1030 350 L 1030 422 L 1078 422" stroke="#0D9488" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line" d="M 578 510 L 716 510" stroke="#0891B2" marker-end="url(#arrowCyan)"/>
-  <path class="line" d="M 940 510 L 1030 510 L 1030 422 L 1078 422" stroke="#0891B2" marker-end="url(#arrowCyan)"/>
+  <path class="line" d="M 578 510 L 716 510" stroke="#0891B2" marker-end="url(#arrowCyan)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 940 510 L 1030 510 L 1030 422 L 1078 422" stroke="#0891B2" marker-end="url(#arrowCyan)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line" d="M 828 248 L 828 268 L 994 268 L 994 422 L 1078 422" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+  <path class="line" d="M 828 248 L 828 268 L 994 268 L 994 422 L 1078 422" stroke="#DC2626" marker-end="url(#arrowRed)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

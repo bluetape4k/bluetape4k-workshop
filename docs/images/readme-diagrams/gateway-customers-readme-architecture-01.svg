@@ -4,9 +4,9 @@
     <filter id="shadow" x="-8%" y="-10%" width="116%" height="130%">
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#5b7282" flood-opacity="0.15"/>
     </filter>
-    <marker id="blueArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#457b9d"/></marker>
-    <marker id="greenArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5f8f5b"/></marker>
-    <marker id="goldArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#a87332"/></marker>
+    <marker id="blueArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#457b9d" stroke-dasharray="none"/></marker>
+    <marker id="greenArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5f8f5b" stroke-dasharray="none"/></marker>
+    <marker id="goldArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#a87332" stroke-dasharray="none"/></marker>
     <style>
       .canvas { fill: #f7fafc; }
       .frame { fill: #fffefd; stroke: #cdd8df; stroke-width: 2; }
@@ -74,23 +74,23 @@
   <text class="smallText" x="1265" y="555" text-anchor="middle">MeterFilter excludes</text>
   <text class="smallText" x="1265" y="578" text-anchor="middle">actuator/api-docs</text>
 
-  <path class="lineBlue" d="M 332 370 H 498"/>
+  <path class="lineBlue" d="M 332 370 H 498" stroke-linecap="round" stroke-linejoin="round"/>
   <rect class="labelBox" x="356" y="328" width="112" height="30" rx="15" stroke="#8eb4d6"/>
   <text class="label" x="412" y="348" text-anchor="middle" fill="#457b9d">service API</text>
 
-  <path class="lineGreen" d="M 707 376 V 432"/>
+  <path class="lineGreen" d="M 707 376 V 432" stroke-linecap="round" stroke-linejoin="round"/>
   <rect class="labelBox" x="730" y="388" width="116" height="30" rx="15" stroke="#91b884"/>
   <text class="label" x="788" y="408" text-anchor="middle" fill="#5f8f5b">returns list</text>
 
-  <path class="lineGold" d="M 332 566 H 456 V 655 H 498"/>
+  <path class="lineGold" d="M 332 566 H 456 V 655 H 498" stroke-linecap="round" stroke-linejoin="round"/>
   <rect class="labelBox" x="356" y="606" width="88" height="30" rx="15" stroke="#d5a656"/>
   <text class="label" x="400" y="626" text-anchor="middle" fill="#a87332">root</text>
 
-  <path class="lineGold" d="M 916 655 H 1070 V 317 H 1160"/>
+  <path class="lineGold" d="M 916 655 H 1070 V 317 H 1160" stroke-linecap="round" stroke-linejoin="round"/>
   <rect class="labelBox" x="944" y="536" width="116" height="30" rx="15" stroke="#d5a656"/>
   <text class="label" x="1002" y="556" text-anchor="middle" fill="#a87332">swagger</text>
 
-  <path class="lineGold" d="M 916 313 H 1084 V 525 H 1160"/>
+  <path class="lineGold" d="M 916 313 H 1084 V 525 H 1160" stroke-linecap="round" stroke-linejoin="round"/>
   <rect class="labelBox" x="966" y="268" width="116" height="30" rx="15" stroke="#d5a656"/>
   <text class="label" x="1024" y="288" text-anchor="middle" fill="#a87332">metrics</text>
 </svg>

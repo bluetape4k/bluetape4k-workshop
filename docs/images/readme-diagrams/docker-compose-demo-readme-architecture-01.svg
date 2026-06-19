@@ -19,11 +19,11 @@
       .disabledLine{fill:none;stroke:#8995a1;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:8 7;marker-end:url(#disabledArrow)}
       .dockerIconFill{fill:#e8f3ff;stroke:#2563eb;stroke-width:3}.dbIcon{fill:#fff0d8;stroke:#8c6f33;stroke-width:3}.redisIcon{fill:#f04438;stroke:#9f1c18;stroke-width:3}.elasticIcon{fill:#f7f1ff;stroke:#735ba8;stroke-width:3}
     </style>
-    <marker id="arrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#52748d"/></marker>
-    <marker id="pgArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9b6b2f"/></marker>
-    <marker id="redisArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b74d46"/></marker>
-    <marker id="elasticArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#735ba8"/></marker>
-    <marker id="disabledArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#8995a1"/></marker>
+    <marker id="arrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#52748d" stroke-dasharray="none"/></marker>
+    <marker id="pgArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9b6b2f" stroke-dasharray="none"/></marker>
+    <marker id="redisArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b74d46" stroke-dasharray="none"/></marker>
+    <marker id="elasticArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#735ba8" stroke-dasharray="none"/></marker>
+    <marker id="disabledArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#8995a1" stroke-dasharray="none"/></marker>
     <g id="dockerIcon">
       <rect class="dockerIconFill" x="0" y="0" width="66" height="58" rx="12"/>
       <rect x="14" y="24" width="10" height="8" fill="#2563eb"/><rect x="27" y="24" width="10" height="8" fill="#2563eb"/><rect x="40" y="24" width="10" height="8" fill="#2563eb"/>
@@ -48,51 +48,40 @@
   </defs>
 
   <rect class="frame" x="30" y="28" width="1620" height="984" rx="18"/>
-  <text class="title" x="840" y="84" text-anchor="middle">Docker Compose Test Infrastructure</text>
-  <text class="subtitle" x="840" y="116" text-anchor="middle">JUnit tests hand compose files to Testcontainers, then assert exposed services through mapped ports.</text>
+  <text class="title" x="840" y="84" text-anchor="middle">Docker Compose Test Infrastructure</text>  <text class="subtitle" x="840" y="116" text-anchor="middle">JUnit tests hand compose files to Testcontainers, then assert exposed services through mapped ports.</text>
 
   <rect class="layer tests" x="70" y="160" width="1540" height="205" rx="14"/>
   <text class="layerTitle" x="102" y="202">JUnit entrypoints</text>
   <rect class="card testCard" x="125" y="245" width="360" height="76" rx="10"/>
-  <text class="cardTitle" x="305" y="276" text-anchor="middle">DockerComposeRedisTest</text>
-  <text class="small" x="305" y="302" text-anchor="middle">redis map round-trip through Redisson</text>
+  <text class="cardTitle" x="305" y="276" text-anchor="middle">DockerComposeRedisTest</text>  <text class="small" x="305" y="302" text-anchor="middle">redis map round-trip through Redisson</text>
   <rect class="card testCard" x="660" y="245" width="360" height="76" rx="10"/>
   <text class="cardTitle" x="840" y="276" text-anchor="middle">DockerComposePostgresTest</text>
   <text class="small" x="840" y="302" text-anchor="middle">container running + mapped 5432</text>
   <rect class="card testCard" x="1195" y="245" width="360" height="76" rx="10"/>
-  <text class="cardTitle" x="1375" y="276" text-anchor="middle">MultipleServiceTest</text>
-  <text class="small" x="1375" y="302" text-anchor="middle">Elasticsearch + PostgreSQL; Redis disabled</text>
+  <text class="cardTitle" x="1375" y="276" text-anchor="middle">MultipleServiceTest</text>  <text class="small" x="1375" y="302" text-anchor="middle">Elasticsearch + PostgreSQL; Redis disabled</text>
 
   <rect class="layer compose" x="70" y="420" width="1540" height="210" rx="14"/>
   <text class="layerTitle" x="102" y="462">Compose orchestration</text>
   <rect class="card composeCard" x="260" y="498" width="1160" height="78" rx="10"/>
-  <use href="#dockerIcon" x="292" y="508"/>
-  <text class="cardTitle" x="840" y="530" text-anchor="middle">DockerComposeContainer</text>
+  <use href="#dockerIcon" x="292" y="508"/>  <text class="cardTitle" x="840" y="530" text-anchor="middle">DockerComposeContainer</text>
   <text class="small" x="840" y="556" text-anchor="middle">File("docker/docker-compose-*.yml") + withExposedService(name, port, Wait.forListeningPort())</text>
 
   <rect class="layer services" x="70" y="684" width="1540" height="218" rx="14"/>
   <text class="layerTitle" x="102" y="726">Compose services</text>
   <rect class="card redisCard" x="145" y="775" width="330" height="82" rx="10"/>
-  <use href="#redisIcon" x="170" y="783"/>
-  <text class="cardTitle" x="325" y="809" text-anchor="middle">Redis 7</text>
-  <text class="small" x="325" y="835" text-anchor="middle">redis:7, port 6379</text>
+  <use href="#redisIcon" x="170" y="783"/>  <text class="cardTitle" x="390" y="809" text-anchor="middle">Redis 7</text>  <text class="small" x="325" y="835" text-anchor="middle">redis:7, port 6379</text>
   <rect class="card pgCard" x="675" y="775" width="330" height="82" rx="10"/>
-  <use href="#postgresIcon" x="700" y="783"/>
-  <text class="cardTitle" x="855" y="809" text-anchor="middle">PostgreSQL 18</text>
-  <text class="small" x="855" y="835" text-anchor="middle">postgres:18-alpine, port 5432</text>
+  <use href="#postgresIcon" x="700" y="783"/>  <text class="cardTitle" x="960" y="809" text-anchor="middle">PostgreSQL 18</text>  <text class="small" x="855" y="835" text-anchor="middle">postgres:18-alpine, port 5432</text>
   <rect class="card elasticCard" x="1175" y="775" width="330" height="82" rx="10"/>
-  <use href="#elasticIcon" x="1200" y="783"/>
-  <text class="cardTitle" x="1355" y="809" text-anchor="middle">Elasticsearch 8</text>
+  <use href="#elasticIcon" x="1200" y="783"/>  <text class="cardTitle" x="1460" y="809" text-anchor="middle">Elasticsearch 8</text>
   <text class="small" x="1355" y="835" text-anchor="middle">single-node, port 9200</text>
-  <rect class="card disabledCard" x="1175" y="660" width="330" height="58" rx="10"/>
-  <text class="dimTitle" x="1340" y="694" text-anchor="middle">Redis in multiple.yml is commented out</text>
+  <rect class="card disabledCard" x="1175" y="660" width="330" height="58" rx="10"/>  <text class="dimTitle" x="1340" y="694" text-anchor="middle">Redis in multiple.yml is commented out</text>
 
-  <rect class="layer contract" x="70" y="930" width="1540" height="52" rx="14"/>
-  <text class="footer" x="840" y="962" text-anchor="middle">Reader contract: this module demonstrates Docker Compose service exposure, not production container orchestration.</text>
+  <rect class="layer contract" x="70" y="930" width="1540" height="52" rx="14"/>  <text class="footer" x="840" y="962" text-anchor="middle">Reader contract: this module demonstrates Docker Compose service exposure, not production container orchestration.</text>
 
-  <path class="line" d="M 305 321 V 445 H 610 V 498"/>
-  <path class="line" d="M 840 321 V 498"/>
-  <path class="line" d="M 1375 321 V 445 H 1070 V 498"/>
+  <path class="line" d="M 305 321 V 445 H 610 V 498" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 840 321 V 498" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1375 321 V 445 H 1070 V 498" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="redisLine" d="M 610 576 V 704 H 310 V 775"/>
   <path class="pgLine" d="M 840 576 V 775"/>
   <path class="elasticLine" d="M 1070 576 V 704 H 1355 V 775"/>

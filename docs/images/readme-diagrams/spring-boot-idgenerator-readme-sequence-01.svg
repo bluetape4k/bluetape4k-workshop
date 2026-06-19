@@ -1,22 +1,65 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1700" height="900" viewBox="0 0 1700 900" role="img" aria-label="ID generator request flow">
-  <defs><filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.15"/></filter><marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker><marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker><marker id="arrowOrange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#EA580C"/></marker><style>.canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:40px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}.cardTitle{font-family:"Architects Daughter";font-size:29px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}.msg{font-family:"Comic Mono";font-size:15px;fill:#334155}.life{stroke:#94A3B8;stroke-width:1.7;stroke-dasharray:8 8}.region{fill-opacity:.58;stroke-width:1.6;rx:18}.noteTitle{font-family:"Architects Daughter";font-size:24px;fill:#102033}</style></defs>
-  <rect class="canvas" width="1700" height="900"/><rect class="frame" x="24" y="24" width="1652" height="852" rx="24"/>
-  <text class="title" x="850" y="72" text-anchor="middle">Generator request flow</text><text class="subtitle" x="850" y="106" text-anchor="middle">Each endpoint calls the matching generator and returns the response shape that helps compare ID behavior.</text>
-  <g filter="url(#shadow)"><rect x="110" y="154" width="220" height="72" rx="14" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="220" y="188" text-anchor="middle">Client</text><text class="cardText" x="220" y="212" text-anchor="middle">curl or WebTestClient</text></g>
-  <g filter="url(#shadow)"><rect x="470" y="154" width="320" height="72" rx="14" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="630" y="188" text-anchor="middle">IdGeneratorController</text><text class="cardText" x="630" y="212" text-anchor="middle">GET /ids/**</text></g>
-  <g filter="url(#shadow)"><rect x="930" y="154" width="280" height="72" rx="14" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1070" y="188" text-anchor="middle">Generator</text><text class="cardText" x="1070" y="212" text-anchor="middle">Snowflake / ULID / KSUID</text></g>
-  <g filter="url(#shadow)"><rect x="1370" y="154" width="230" height="72" rx="14" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1485" y="188" text-anchor="middle">Response</text><text class="cardText" x="1485" y="212" text-anchor="middle">DTO body</text></g>
-  <line class="life" x1="220" y1="238" x2="220" y2="802"/><line class="life" x1="630" y1="238" x2="630" y2="802"/><line class="life" x1="1070" y1="238" x2="1070" y2="802"/><line class="life" x1="1485" y1="238" x2="1485" y2="802"/>
-  <rect class="region" x="82" y="288" width="1536" height="164" fill="#ECFDF5" stroke="#86EFAC"/><text class="noteTitle" x="124" y="328">Snowflake</text>
-  <path class="line" d="M 220 356 L 630 356" stroke="#2563EB" marker-end="url(#arrowBlue)"/><text class="msg" x="425" y="338" text-anchor="middle">GET /ids/snowflake or /parse/{id}</text>
-  <path class="line" d="M 630 390 L 1070 390" stroke="#EA580C" marker-end="url(#arrowOrange)"/><text class="msg" x="850" y="372" text-anchor="middle">nextId(), parse(id), nextIds(count)</text>
-  <path class="line" d="M 1070 424 L 1485 424" stroke="#16A34A" marker-end="url(#arrowGreen)"/><text class="msg" x="1278" y="406" text-anchor="middle">SnowflakeResponse or BatchIdResponse</text>
-  <rect class="region" x="82" y="496" width="1536" height="122" fill="#EFF6FF" stroke="#93C5FD"/><text class="noteTitle" x="124" y="536">ULID and KSUID</text>
-  <path class="line" d="M 220 574 L 630 574" stroke="#2563EB" marker-end="url(#arrowBlue)"/><text class="msg" x="425" y="556" text-anchor="middle">GET /ids/ulid, /ids/ksuid, or batch</text>
-  <path class="line" d="M 630 594 L 1070 594" stroke="#EA580C" marker-end="url(#arrowOrange)"/><text class="msg" x="850" y="620" text-anchor="middle">nextId() or List(count) nextId()</text>
-  <rect class="region" x="82" y="662" width="1536" height="116" fill="#FFF7ED" stroke="#FED7AA"/><text class="noteTitle" x="124" y="702">Hashids</text>
-  <path class="line" d="M 220 738 L 630 738" stroke="#2563EB" marker-end="url(#arrowBlue)"/><text class="msg" x="425" y="720" text-anchor="middle">encode?numbers=... or decode/{hash}</text>
-  <path class="line" d="M 630 758 L 1070 758" stroke="#EA580C" marker-end="url(#arrowOrange)"/><text class="msg" x="850" y="784" text-anchor="middle">Hashids(salt, minLength).encode/decode</text>
-  <path class="line" d="M 1485 832 L 220 832" stroke="#16A34A" marker-end="url(#arrowGreen)"/><text class="msg" x="852" y="858" text-anchor="middle">HTTP 200 JSON response with generated, parsed, or decoded values</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1670" height="1134" viewBox="0 0 1670 1134" role="img" aria-labelledby="title desc">
+  <title id="title">Generator Request Flow</title>
+  <desc id="desc">HTTP endpoints expose Snowflake, ULID, KSUID, and Hashids generation through one controller surface.</desc>
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
+    <style>
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:21px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:13px;fill:#546A73}.msg{font-size:14px}.note{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.return,.skip{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call);stroke-linecap:round;stroke-linejoin:round}.work{stroke:#6E8F4F;marker-end:url(#arrow-work);stroke-linecap:round;stroke-linejoin:round}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret);stroke-linecap:round;stroke-linejoin:round}.skip{stroke:#B86868;marker-end:url(#arrow-skip);stroke-linecap:round;stroke-linejoin:round}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.skipLabel{stroke:#D9ABAB}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.skipBadge{fill:#FFF0F0;stroke:#B86868}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.skipText,.badgeText.skipText{fill:#9D4F4F}.alt{fill:#FFF7ED;fill-opacity:.42;stroke:#D08A39;stroke-width:2.4;stroke-dasharray:12 8}.branch{fill:#FFFFFF;fill-opacity:.82;stroke:#E6C68C;stroke-width:1.5}
+    </style>
+    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none"/></marker>
+    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none"/></marker>
+    <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none"/></marker>
+    <marker id="arrow-skip" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none"/></marker>
+  </defs>
+  <rect x="24" y="24" width="1622" height="1086" rx="20" class="frame"/>
+  <text x="835" y="76" text-anchor="middle" class="title">Generator Request Flow</text>
+  <text x="835" y="106" text-anchor="middle" class="subtitle">HTTP endpoints expose Snowflake, ULID, KSUID, and Hashids generation through one controller surface.</text>
+  <g filter="url(#shadow)"><rect x="75" y="156" width="230" height="76" rx="10" class="header"/><text x="190" y="186" text-anchor="middle" class="participant">Client</text><text x="190" y="211" text-anchor="middle" class="role">HTTP caller</text></g>
+  <line x1="190" y1="232" x2="190" y2="1022" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="398" y="156" width="230" height="76" rx="10" class="header"/><text x="513" y="186" text-anchor="middle" class="participant">IdGeneratorController</text><text x="513" y="211" text-anchor="middle" class="role">GET /ids/**</text></g>
+  <line x1="513" y1="232" x2="513" y2="1022" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="720" y="156" width="230" height="76" rx="10" class="header"/><text x="835" y="186" text-anchor="middle" class="participant">Generator</text><text x="835" y="211" text-anchor="middle" class="role">Snowflake / ULID / KSUID</text></g>
+  <line x1="835" y1="232" x2="835" y2="1022" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1043" y="156" width="230" height="76" rx="10" class="header"/><text x="1158" y="186" text-anchor="middle" class="participant">Hashids</text><text x="1158" y="211" text-anchor="middle" class="role">encode/decode</text></g>
+  <line x1="1158" y1="232" x2="1158" y2="1022" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1365" y="156" width="230" height="76" rx="10" class="header"/><text x="1480" y="186" text-anchor="middle" class="participant">Response</text><text x="1480" y="211" text-anchor="middle" class="role">DTO body</text></g>
+  <line x1="1480" y1="232" x2="1480" y2="1022" class="lifeline"/>
+  <rect x="202" y="252" width="317.5" height="34" rx="17" class="label callLabel"/>
+  <circle cx="226" cy="269" r="13" class="badge callBadge"/><text x="226" y="274" text-anchor="middle" class="badgeText callText">1</text>
+  <text x="250" y="274" class="msg callText">GET /ids/snowflake or /parse/{id}</text>
+  <path d="M 190 300 L 513 300" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="537.8" y="328" width="272.5" height="34" rx="17" class="label workLabel"/>
+  <circle cx="561.8" cy="345" r="13" class="badge workBadge"/><text x="561.8" y="350" text-anchor="middle" class="badgeText workText">2</text>
+  <text x="585.8" y="350" class="msg workText">generate or parse Snowflake</text>
+  <path d="M 513 376 L 835 376" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="987.5" y="404" width="340.0" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="1011.5" cy="421" r="13" class="badge returnBadge"/><text x="1011.5" y="426" text-anchor="middle" class="badgeText returnText">3</text>
+  <text x="1035.5" y="426" class="msg returnText">SnowflakeResponse or BatchIdResponse</text>
+  <path d="M 835 452 L 1480 452" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="215.3" y="480" width="272.5" height="34" rx="17" class="label callLabel"/>
+  <circle cx="239.3" cy="497" r="13" class="badge callBadge"/><text x="239.3" y="502" text-anchor="middle" class="badgeText callText">4</text>
+  <text x="263.3" y="502" class="msg callText">GET /ids/ulid or /ids/ksuid</text>
+  <path d="M 190 528 L 513 528" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="537.8" y="556" width="272.5" height="34" rx="17" class="label workLabel"/>
+  <circle cx="561.8" cy="573" r="13" class="badge workBadge"/><text x="561.8" y="578" text-anchor="middle" class="badgeText workText">5</text>
+  <text x="585.8" y="578" class="msg workText">generate ULID / KSUID batch</text>
+  <path d="M 513 604 L 835 604" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="1042.5" y="632" width="230.0" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="1066.5" cy="649" r="13" class="badge returnBadge"/><text x="1066.5" y="654" text-anchor="middle" class="badgeText returnText">6</text>
+  <text x="1090.5" y="654" class="msg returnText">ULID / KSUID body</text>
+  <path d="M 835 680 L 1480 680" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="236.5" y="708" width="230.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="260.5" cy="725" r="13" class="badge callBadge"/><text x="260.5" y="730" text-anchor="middle" class="badgeText callText">7</text>
+  <text x="284.5" y="730" class="msg callText">GET /ids/hashids/{id}</text>
+  <path d="M 190 756 L 513 756" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="658" y="784" width="355.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="682" cy="801" r="13" class="badge workBadge"/><text x="682" y="806" text-anchor="middle" class="badgeText workText">8</text>
+  <text x="706" y="806" class="msg workText">Hashids(salt, minLength).encode/decode</text>
+  <path d="M 513 832 L 1158 832" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="1194" y="860" width="250.0" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="1218" cy="877" r="13" class="badge returnBadge"/><text x="1218" y="882" text-anchor="middle" class="badgeText returnText">9</text>
+  <text x="1242" y="882" class="msg returnText">encoded or decoded value</text>
+  <path d="M 1158 908 L 1480 908" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="90" y="1046" width="1490" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
+  <text x="835" y="1072" text-anchor="middle" class="footer">Reader contract: request order, branch ownership, and infrastructure boundary are shown without hiding call labels.</text>
 </svg>

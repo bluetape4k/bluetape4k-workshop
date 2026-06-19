@@ -18,13 +18,13 @@
       .icon-stroke { fill: none; stroke: #334155; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <marker id="blueArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke-dasharray="none"/>
     </marker>
     <marker id="greenArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#16a34a"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#16a34a" stroke-dasharray="none"/>
     </marker>
     <marker id="orangeArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#ea580c"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#ea580c" stroke-dasharray="none"/>
     </marker>
   </defs>
 
@@ -50,8 +50,7 @@
   <rect class="card" x="560" y="445" width="350" height="95"/>
   <text class="card-title" x="735" y="482" text-anchor="middle">Abstract Controller</text>
   <text class="body" x="735" y="512" text-anchor="middle">shared coroutine endpoints</text>
-  <rect class="card" x="990" y="445" width="260" height="95"/>
-  <text class="card-title" x="1120" y="482" text-anchor="middle">Httpbin</text>
+  <rect class="card" x="990" y="445" width="260" height="95"/>  <text class="card-title" x="1120" y="482" text-anchor="middle">Httpbin</text>
   <text class="body" x="1120" y="512" text-anchor="middle">mono + suspend calls</text>
   <rect class="card" x="1320" y="445" width="230" height="95"/>
   <text class="card-title" x="1435" y="482" text-anchor="middle">@Async</text>
@@ -75,15 +74,14 @@
   <rect class="layer external" x="70" y="900" width="1540" height="90"/>
   <text class="layer-title" x="105" y="954">External Blocking Service</text>
   <rect class="card" x="960" y="912" width="470" height="62"/>
-  <path class="icon-stroke" d="M1010 943h38m-30-15h22m-22 30h22"/>
-  <text class="card-title" x="1235" y="952" text-anchor="middle">Testcontainers Httpbin</text>
+  <path class="icon-stroke" d="M1010 943h38m-30-15h22m-22 30h22"/>  <text class="card-title" x="1235" y="952" text-anchor="middle">Testcontainers Httpbin</text>
 
-  <path class="line" d="M1325 275 L1325 333 L315 333 L315 445" stroke="#2563eb" marker-end="url(#blueArrow)"/>
-  <path class="line" d="M840 275 L840 332 L315 332 L315 445" stroke="#2563eb" marker-end="url(#blueArrow)"/>
-  <path class="line" d="M315 540 L315 635 L300 635 L300 735" stroke="#16a34a" marker-end="url(#greenArrow)"/>
-  <path class="line" d="M735 540 L735 635 L670 635 L670 735" stroke="#16a34a" marker-end="url(#greenArrow)"/>
-  <path class="line" d="M735 540 L735 635 L1040 635 L1040 735" stroke="#16a34a" marker-end="url(#greenArrow)"/>
-  <path class="line" d="M735 540 L735 635 L1410 635 L1410 735" stroke="#16a34a" marker-end="url(#greenArrow)"/>
-  <path class="line" d="M1120 540 L1120 635 L1410 635 L1410 735" stroke="#16a34a" marker-end="url(#greenArrow)"/>
-  <path class="line" d="M1120 540 L1120 625 L1585 625 L1585 885 L1235 885 L1235 912" stroke="#ea580c" marker-end="url(#orangeArrow)"/>
+  <path class="line" d="M1325 275 L1325 333 L315 333 L315 445" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M840 275 L840 332 L315 332 L315 445" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M315 540 L315 635 L300 635 L300 735" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M735 540 L735 635 L670 635 L670 735" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M735 540 L735 635 L1040 635 L1040 735" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M735 540 L735 635 L1410 635 L1410 735" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M1120 540 L1120 635 L1410 635 L1410 735" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M1120 540 L1120 625 L1585 625 L1585 885 L1235 885 L1235 912" stroke="#ea580c" marker-end="url(#orangeArrow)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

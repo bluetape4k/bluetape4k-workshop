@@ -21,22 +21,21 @@
       .line-red { fill: none; stroke: #f04438; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <marker id="mcf-blue" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none"/>
     </marker>
     <marker id="mcf-green" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none"/>
     </marker>
     <marker id="mcf-orange" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none"/>
     </marker>
     <marker id="mcf-red" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none"/>
     </marker>
   </defs>
 
   <rect class="canvas" x="0" y="0" width="1800" height="980"/>
-  <rect x="24" y="24" width="1752" height="932" rx="22" fill="#ffffff" stroke="#d7e0eb" stroke-width="2"/>
-  <text class="title" x="900" y="72" text-anchor="middle">MongoDB coroutine and reactive paths</text>
+  <rect x="24" y="24" width="1752" height="932" rx="22" fill="#ffffff" stroke="#d7e0eb" stroke-width="2"/>  <text class="title" x="900" y="72" text-anchor="middle">MongoDB coroutine and reactive paths</text>
   <text class="subtitle" x="900" y="102" text-anchor="middle">Tests move between repository return types, Reactor publishers, Kotlin Flow, and MongoDB cursors.</text>
 
   <rect class="lane-blue" x="80" y="150" width="1640" height="150" rx="18" stroke-width="2"/>
@@ -50,8 +49,8 @@
   <rect class="card-blue" x="1190" y="198" width="270" height="72" rx="10" stroke-width="2"/>
   <text class="card-title" x="1325" y="228" text-anchor="middle">constructor defaults</text>
   <text class="card-small" x="1325" y="251" text-anchor="middle">missing fields default</text>
-  <path class="line-blue" d="M 600 234 L 748 234" marker-end="url(#mcf-blue)"/>
-  <path class="line-blue" d="M 1030 234 L 1178 234" marker-end="url(#mcf-blue)"/>
+  <path class="line-blue" d="M 600 234 L 748 234" marker-end="url(#mcf-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-blue" d="M 1030 234 L 1178 234" marker-end="url(#mcf-blue)" stroke-linecap="round" stroke-linejoin="round"/>
 
   <rect class="lane-green" x="80" y="340" width="1640" height="150" rx="18" stroke-width="2"/>
   <text class="lane-title" x="116" y="387">Reactive repository</text>
@@ -64,8 +63,8 @@
   <rect class="card-green" x="1190" y="388" width="270" height="72" rx="10" stroke-width="2"/>
   <text class="card-title" x="1325" y="418" text-anchor="middle">@Tailable Flux</text>
   <text class="card-small" x="1325" y="441" text-anchor="middle">stream cursor events</text>
-  <path class="line-green" d="M 600 424 L 748 424" marker-end="url(#mcf-green)"/>
-  <path class="line-green" d="M 1030 424 L 1178 424" marker-end="url(#mcf-green)"/>
+  <path class="line-green" d="M 600 424 L 748 424" marker-end="url(#mcf-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 1030 424 L 1178 424" marker-end="url(#mcf-green)" stroke-linecap="round" stroke-linejoin="round"/>
 
   <rect class="lane-orange" x="80" y="530" width="1640" height="150" rx="18" stroke-width="2"/>
   <text class="lane-title" x="116" y="577">Coroutine repository</text>
@@ -78,8 +77,8 @@
   <rect class="card-orange" x="1190" y="578" width="270" height="72" rx="10" stroke-width="2"/>
   <text class="card-title" x="1325" y="608" text-anchor="middle">asFlow bridge</text>
   <text class="card-small" x="1325" y="631" text-anchor="middle">Reactor to coroutines</text>
-  <path class="line-orange" d="M 600 614 L 748 614" marker-end="url(#mcf-orange)"/>
-  <path class="line-orange" d="M 1030 614 L 1178 614" marker-end="url(#mcf-orange)"/>
+  <path class="line-orange" d="M 600 614 L 748 614" marker-end="url(#mcf-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 1030 614 L 1178 614" marker-end="url(#mcf-orange)" stroke-linecap="round" stroke-linejoin="round"/>
 
   <rect class="lane-red" x="80" y="720" width="1640" height="150" rx="18" stroke-width="2"/>
   <text class="lane-title" x="116" y="767">Reactive operations setup</text>
@@ -92,6 +91,6 @@
   <rect class="card-red" x="1190" y="768" width="270" height="72" rx="10" stroke-width="2"/>
   <text class="card-title" x="1325" y="798" text-anchor="middle">insert sample docs</text>
   <text class="card-small" x="1325" y="821" text-anchor="middle">Walter, Skyler, Saul, Jesse</text>
-  <path class="line-red" d="M 600 804 L 748 804" marker-end="url(#mcf-red)"/>
-  <path class="line-red" d="M 1030 804 L 1178 804" marker-end="url(#mcf-red)"/>
+  <path class="line-red" d="M 600 804 L 748 804" marker-end="url(#mcf-red)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-red" d="M 1030 804 L 1178 804" marker-end="url(#mcf-red)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

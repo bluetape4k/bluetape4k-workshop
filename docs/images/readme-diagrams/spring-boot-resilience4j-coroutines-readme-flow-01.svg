@@ -5,16 +5,16 @@
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.15"/>
     </filter>
     <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/>
+      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none"/>
     </marker>
     <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/>
+      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A" stroke-dasharray="none"/>
     </marker>
     <marker id="arrowOrange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#EA580C"/>
+      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#EA580C" stroke-dasharray="none"/>
     </marker>
     <marker id="arrowRed" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#DC2626"/>
+      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#DC2626" stroke-dasharray="none"/>
     </marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.lane{stroke-width:1.6;rx:24}
@@ -56,13 +56,13 @@
     <rect x="568" y="364" width="690" height="58" rx="14" fill="#FEFCE8" stroke="#FACC15" stroke-width="1.5"/>
     <text class="noteText" x="913" y="399" text-anchor="middle">Flow retry is not handled by @Retry; use Flow.retry(retry) at the stream boundary.</text>
   </g>
-  <path class="line" d="M 375 287 L 515 287" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 375 287 L 515 287" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="445" y="268" text-anchor="middle">call endpoint</text>
-  <path class="line" d="M 815 287 L 960 287" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 815 287 L 960 287" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="887" y="268" text-anchor="middle">proxy wraps</text>
-  <path class="line" d="M 1270 287 L 1410 287" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1270 287 L 1410 287" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="1340" y="268" text-anchor="middle">invoke</text>
-  <path class="line" d="M 1535 334 L 1535 392 L 1294 392" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
+  <path class="line" d="M 1535 334 L 1535 392 L 1294 392" stroke="#EA580C" marker-end="url(#arrowOrange)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="1450" y="374" text-anchor="middle">exception or fallback</text>
 
   <rect class="lane" x="84" y="520" width="1672" height="300" fill="#F0FDF4" stroke="#BBF7D0"/>
@@ -93,12 +93,12 @@
     <rect x="548" y="744" width="720" height="48" rx="14" fill="#FEF2F2" stroke="#FCA5A5" stroke-width="1.5"/>
     <text class="noteText" x="908" y="774" text-anchor="middle">Suspend timeout is explicit: use withTimeout or a programmatic decorator instead of @TimeLimiter.</text>
   </g>
-  <path class="line" d="M 395 659 L 525 659" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 395 659 L 525 659" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="460" y="640" text-anchor="middle">wrap supplier</text>
-  <path class="line" d="M 855 659 L 995 659" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
+  <path class="line" d="M 855 659 L 995 659" stroke="#EA580C" marker-end="url(#arrowOrange)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="925" y="640" text-anchor="middle">attach policies</text>
-  <path class="line" d="M 1305 659 L 1440 659" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1305 659 L 1440 659" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="1372" y="640" text-anchor="middle">invoke()</text>
-  <path class="line" d="M 1555 698 L 1555 756 L 1304 756" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+  <path class="line" d="M 1555 698 L 1555 756 L 1304 756" stroke="#DC2626" marker-end="url(#arrowRed)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="1466" y="738" text-anchor="middle">fallback branch</text>
 </svg>

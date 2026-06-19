@@ -2,9 +2,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1640" height="720" viewBox="0 0 1640 720" role="img" aria-label="Redis Cluster number service flow">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
-    <marker id="arrowRed" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#DC2626"/></marker>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowRed" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#DC2626" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.band{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.bandLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.label{font-family:"Comic Mono";font-size:14px;fill:#475569}.line{fill:none;stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
     </style>
@@ -32,8 +32,7 @@
   <g filter="url(#shadow)">
     <rect x="858" y="228" width="250" height="102" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/>
     <circle cx="894" cy="276" r="22" fill="#FEE2E2" stroke="#DC2626" stroke-width="2.4"/>
-    <text x="894" y="285" text-anchor="middle" font-family="Comic Mono" font-size="16" fill="#B91C1C">R</text>
-    <text class="cardTitle" x="1030" y="268" text-anchor="middle">Redis slot owner</text>
+    <text x="894" y="285" text-anchor="middle" font-family="Comic Mono" font-size="16" fill="#B91C1C">R</text>  <text class="cardTitle" x="1030" y="268" text-anchor="middle">Redis slot owner</text>
     <text class="cardText" x="1030" y="300" text-anchor="middle">hash slot by key bytes</text>
   </g>
   <g filter="url(#shadow)">
@@ -55,11 +54,11 @@
     <text class="cardTitle" x="1217" y="534" text-anchor="middle">assert i * 2</text>
   </g>
 
-  <path class="line" d="M 336 279 L 470 279" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 720 279 L 858 279" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 1108 279 L 1244 279" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line soft" d="M 1012 330 L 1012 394 L 425 394 L 425 494" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+  <path class="line" d="M 336 279 L 470 279" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 720 279 L 858 279" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1108 279 L 1244 279" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line soft" d="M 1012 330 L 1012 394 L 425 394 L 425 494" stroke="#DC2626" marker-end="url(#arrowRed)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="700" y="382" text-anchor="middle">later read from clusterConnection</text>
-  <path class="line" d="M 548 525 L 698 525" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 944 525 L 1094 525" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 548 525 L 698 525" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 944 525 L 1094 525" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

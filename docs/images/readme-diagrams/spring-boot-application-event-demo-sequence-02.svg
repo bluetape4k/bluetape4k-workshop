@@ -1,39 +1,49 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1660" height="860" viewBox="0 0 1660 860" role="img" aria-label="AOP aspect event publishing flow">
+<svg xmlns="http://www.w3.org/2000/svg" width="1670" height="830" viewBox="0 0 1670 830" role="img" aria-labelledby="title desc">
+  <title id="title">AOP AspectEvent Publishing</title>
+  <desc id="desc">The aspect proceeds with the annotated service call and publishes an AspectEvent after the operation returns.</desc>
   <defs>
-    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.15"/></filter>
-    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
-    <marker id="arrowTeal" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#0891B2"/></marker>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
     <style>
-      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}
-      .title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}
-      .actor{font-family:"Architects Daughter";font-size:25px;fill:#102033}.actorText{font-family:"Comic Mono";font-size:14px;fill:#51606F}
-      .lifeline{stroke:#CBD5E1;stroke-width:1.6;stroke-dasharray:8 8}.msg{font-family:"Comic Mono";font-size:15px;fill:#334155}
-      .line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.noteTitle{font-family:"Architects Daughter";font-size:24px;fill:#102033}.note{font-family:"Comic Mono";font-size:14px;fill:#415166}
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:21px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:13px;fill:#546A73}.msg{font-size:14px}.note{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.return,.skip{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call);stroke-linecap:round;stroke-linejoin:round}.work{stroke:#6E8F4F;marker-end:url(#arrow-work);stroke-linecap:round;stroke-linejoin:round}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret);stroke-linecap:round;stroke-linejoin:round}.skip{stroke:#B86868;marker-end:url(#arrow-skip);stroke-linecap:round;stroke-linejoin:round}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.skipLabel{stroke:#D9ABAB}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.skipBadge{fill:#FFF0F0;stroke:#B86868}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.skipText,.badgeText.skipText{fill:#9D4F4F}.alt{fill:#FFF7ED;fill-opacity:.42;stroke:#D08A39;stroke-width:2.4;stroke-dasharray:12 8}.branch{fill:#FFFFFF;fill-opacity:.82;stroke:#E6C68C;stroke-width:1.5}
     </style>
+    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none"/></marker>
+    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none"/></marker>
+    <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none"/></marker>
+    <marker id="arrow-skip" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none"/></marker>
   </defs>
-  <rect class="canvas" width="1660" height="860"/>
-  <rect class="frame" x="24" y="24" width="1612" height="812" rx="24"/>
-  <text class="title" x="830" y="72" text-anchor="middle">AOP AspectEvent publishing</text>
-  <text class="subtitle" x="830" y="104" text-anchor="middle">@AspectEventEmitter lets the service stay focused on the operation while advice creates and publishes the AspectEvent.</text>
-
-  <g filter="url(#shadow)"><rect x="70" y="150" width="240" height="76" rx="14" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/><text class="actor" x="190" y="182" text-anchor="middle">Test code</text><text class="actorText" x="190" y="206" text-anchor="middle">someOperation(params)</text></g>
-  <g filter="url(#shadow)"><rect x="400" y="150" width="230" height="76" rx="14" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/><text class="actor" x="515" y="182" text-anchor="middle">MyEventService</text><text class="actorText" x="515" y="206" text-anchor="middle">annotated method</text></g>
-  <g filter="url(#shadow)"><rect x="720" y="150" width="280" height="76" rx="14" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/><text class="actor" x="860" y="182" text-anchor="middle">Aspect Advice</text><text class="actorText" x="860" y="206" text-anchor="middle">proceed + SpEL</text></g>
-  <g filter="url(#shadow)"><rect x="1080" y="150" width="250" height="76" rx="14" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.7"/><text class="actor" x="1205" y="182" text-anchor="middle">Spring Publisher</text><text class="actorText" x="1205" y="206" text-anchor="middle">publishEvent</text></g>
-  <g filter="url(#shadow)"><rect x="1410" y="150" width="180" height="76" rx="14" fill="#FDF2F8" stroke="#DB2777" stroke-width="1.7"/><text class="actor" x="1500" y="182" text-anchor="middle">Aspect listeners</text><text class="actorText" x="1500" y="206" text-anchor="middle">sync + mono</text></g>
-
-  <line class="lifeline" x1="190" y1="226" x2="190" y2="700"/>
-  <line class="lifeline" x1="515" y1="226" x2="515" y2="700"/>
-  <line class="lifeline" x1="860" y1="226" x2="860" y2="700"/>
-  <line class="lifeline" x1="1205" y1="226" x2="1205" y2="700"/>
-  <line class="lifeline" x1="1500" y1="226" x2="1500" y2="700"/>
-
-  <path class="line" d="M 190 285 L 515 285" stroke="#2563EB" marker-end="url(#arrowBlue)"/><text class="msg" x="352" y="270" text-anchor="middle">1. call annotated service</text>
-  <path class="line" d="M 860 365 L 515 365" stroke="#2563EB" marker-end="url(#arrowBlue)"/><text class="msg" x="688" y="350" text-anchor="middle">2. @Around proceed()</text>
-  <path class="line" d="M 515 445 L 860 445" stroke="#0891B2" marker-end="url(#arrowTeal)"/><text class="msg" x="688" y="430" text-anchor="middle">3. return OperationParams</text>
-  <path class="line" d="M 860 525 L 1205 525" stroke="#0891B2" marker-end="url(#arrowTeal)"/><text class="msg" x="1032" y="510" text-anchor="middle">4. publishEvent(AspectEvent)</text>
-  <path class="line" d="M 1205 605 L 1500 605" stroke="#0891B2" marker-end="url(#arrowTeal)"/><text class="msg" x="1352" y="590" text-anchor="middle">5. dispatch AspectEvent</text>
-
-  <g filter="url(#shadow)"><rect x="920" y="650" width="520" height="96" rx="16" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/><text class="noteTitle" x="950" y="686">Event payload</text><text class="note" x="950" y="714">The annotation SpEL builds MyAspectParams from the returned id,</text><text class="note" x="950" y="738">then the aspect wraps it in AspectEvent before Spring dispatches it.</text></g>
+  <rect x="24" y="24" width="1622" height="782" rx="20" class="frame"/>
+  <text x="835" y="76" text-anchor="middle" class="title">AOP AspectEvent Publishing</text>
+  <text x="835" y="106" text-anchor="middle" class="subtitle">The aspect proceeds with the annotated service call and publishes an AspectEvent after the operation returns.</text>
+  <g filter="url(#shadow)"><rect x="75" y="156" width="230" height="76" rx="10" class="header"/><text x="190" y="186" text-anchor="middle" class="participant">Test code</text><text x="190" y="211" text-anchor="middle" class="role">caller</text></g>
+  <line x1="190" y1="232" x2="190" y2="718" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="398" y="156" width="230" height="76" rx="10" class="header"/><text x="513" y="186" text-anchor="middle" class="participant">MyEventService</text><text x="513" y="211" text-anchor="middle" class="role">annotated service</text></g>
+  <line x1="513" y1="232" x2="513" y2="718" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="720" y="156" width="230" height="76" rx="10" class="header"/><text x="835" y="186" text-anchor="middle" class="participant">Aspect Advice</text><text x="835" y="211" text-anchor="middle" class="role">@Around</text></g>
+  <line x1="835" y1="232" x2="835" y2="718" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1043" y="156" width="230" height="76" rx="10" class="header"/><text x="1158" y="186" text-anchor="middle" class="participant">Spring Publisher</text><text x="1158" y="211" text-anchor="middle" class="role">ApplicationEventPublisher</text></g>
+  <line x1="1158" y1="232" x2="1158" y2="718" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1365" y="156" width="230" height="76" rx="10" class="header"/><text x="1480" y="186" text-anchor="middle" class="participant">Aspect listeners</text><text x="1480" y="211" text-anchor="middle" class="role">event consumers</text></g>
+  <line x1="1480" y1="232" x2="1480" y2="718" class="lifeline"/>
+  <rect x="395" y="252" width="235.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="419" cy="269" r="13" class="badge callBadge"/><text x="419" y="274" text-anchor="middle" class="badgeText callText">1</text>
+  <text x="443" y="274" class="msg callText">call annotated service</text>
+  <path d="M 190 300 L 835 300" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="559" y="328" width="230.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="583" cy="345" r="13" class="badge workBadge"/><text x="583" y="350" text-anchor="middle" class="badgeText workText">2</text>
+  <text x="607" y="350" class="msg workText">@Around proceed()</text>
+  <path d="M 835 376 L 513 376" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="556.5" y="404" width="235.0" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="580.5" cy="421" r="13" class="badge returnBadge"/><text x="580.5" y="426" text-anchor="middle" class="badgeText returnText">3</text>
+  <text x="604.5" y="426" class="msg returnText">return OperationParams</text>
+  <path d="M 513 452 L 835 452" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="867.8" y="480" width="257.5" height="34" rx="17" class="label workLabel"/>
+  <circle cx="891.8" cy="497" r="13" class="badge workBadge"/><text x="891.8" y="502" text-anchor="middle" class="badgeText workText">4</text>
+  <text x="915.8" y="502" class="msg workText">publishEvent(AspectEvent)</text>
+  <path d="M 835 528 L 1158 528" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="1204" y="556" width="230.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="1228" cy="573" r="13" class="badge workBadge"/><text x="1228" y="578" text-anchor="middle" class="badgeText workText">5</text>
+  <text x="1252" y="578" class="msg workText">dispatch AspectEvent</text>
+  <path d="M 1158 604 L 1480 604" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="90" y="742" width="1490" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
+  <text x="835" y="768" text-anchor="middle" class="footer">Reader contract: request order, branch ownership, and infrastructure boundary are shown without hiding call labels.</text>
 </svg>

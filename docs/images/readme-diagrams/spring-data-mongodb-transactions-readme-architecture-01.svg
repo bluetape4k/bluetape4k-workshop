@@ -20,14 +20,13 @@
       .line-orange { fill: none; stroke: #f07d22; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
       .line-red { fill: none; stroke: #f04438; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
-    <marker id="mt-blue" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6"/></marker>
-    <marker id="mt-green" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558"/></marker>
-    <marker id="mt-orange" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22"/></marker>
-    <marker id="mt-red" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438"/></marker>
+    <marker id="mt-blue" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none"/></marker>
+    <marker id="mt-green" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none"/></marker>
+    <marker id="mt-orange" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none"/></marker>
+    <marker id="mt-red" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none"/></marker>
   </defs>
   <rect class="canvas" x="0" y="0" width="1800" height="980"/>
-  <rect x="24" y="24" width="1752" height="932" rx="22" fill="#ffffff" stroke="#d7e0eb" stroke-width="2"/>
-  <text class="title" x="900" y="72" text-anchor="middle">MongoDB transaction styles</text>
+  <rect x="24" y="24" width="1752" height="932" rx="22" fill="#ffffff" stroke="#d7e0eb" stroke-width="2"/>  <text class="title" x="900" y="72" text-anchor="middle">MongoDB transaction styles</text>
   <text class="subtitle" x="900" y="102" text-anchor="middle">Three service styles update the same Process document and verify commit versus rollback behavior.</text>
 
   <rect class="layer-test" x="80" y="140" width="1640" height="160" rx="18" stroke-width="2"/>
@@ -36,8 +35,7 @@
   <text class="card-title" x="305" y="243" text-anchor="middle">Imperative test</text>
   <text class="card-small" x="305" y="265" text-anchor="middle">blocking MongoClient</text>
   <rect class="card-blue" x="575" y="215" width="310" height="66" rx="10" stroke-width="2"/>
-  <text class="card-title" x="730" y="243" text-anchor="middle">Reactive test</text>
-  <text class="card-small" x="730" y="265" text-anchor="middle">reactive MongoClient</text>
+  <text class="card-title" x="730" y="243" text-anchor="middle">Reactive test</text>  <text class="card-small" x="730" y="265" text-anchor="middle">reactive MongoClient</text>
   <rect class="card-blue" x="1000" y="215" width="310" height="66" rx="10" stroke-width="2"/>
   <text class="card-title" x="1155" y="243" text-anchor="middle">Coroutine test</text>
   <text class="card-small" x="1155" y="265" text-anchor="middle">runSuspendIO assertions</text>
@@ -59,28 +57,25 @@
 
   <rect class="layer-tx" x="80" y="585" width="1640" height="150" rx="18" stroke-width="2"/>
   <text class="layer-title" x="112" y="629">Transaction managers and repositories</text>
-  <rect class="card-orange" x="180" y="660" width="360" height="54" rx="10" stroke-width="2"/>
-  <text class="card-title" x="360" y="695" text-anchor="middle">MongoTransactionManager</text>
-  <rect class="card-orange" x="700" y="660" width="410" height="54" rx="10" stroke-width="2"/>
-  <text class="card-title" x="905" y="695" text-anchor="middle">ReactiveMongoTransactionManager</text>
+  <rect class="card-orange" x="180" y="660" width="360" height="54" rx="10" stroke-width="2"/>  <text class="card-title" x="360" y="695" text-anchor="middle">MongoTransactionManager</text>
+  <rect class="card-orange" x="700" y="660" width="410" height="54" rx="10" stroke-width="2"/>  <text class="card-title" x="905" y="695" text-anchor="middle">ReactiveMongoTransactionManager</text>
   <rect class="card-orange" x="1270" y="660" width="320" height="54" rx="10" stroke-width="2"/>
   <text class="card-title" x="1430" y="695" text-anchor="middle">Process repositories</text>
 
   <rect class="layer-runtime" x="80" y="775" width="1640" height="120" rx="18" stroke-width="2"/>
   <text class="layer-title" x="112" y="818">Runtime</text>
   <rect class="card-red" x="610" y="810" width="580" height="64" rx="10" stroke-width="2"/>
-  <g transform="translate(650 822)"><path d="M 32 0 C 12 24 15 50 33 64 C 51 46 51 20 32 0 Z" fill="#13aa52" stroke="#0f8d45" stroke-width="2"/><path d="M 33 12 C 30 27 31 43 34 58" fill="none" stroke="#ffffff" stroke-width="2.5"/></g>
-  <text class="card-title" x="930" y="840" text-anchor="middle">MongoDB Testcontainer</text>
+  <g transform="translate(650 822)"><path d="M 32 0 C 12 24 15 50 33 64 C 51 46 51 20 32 0 Z" fill="#13aa52" stroke="#0f8d45" stroke-width="2"/><path d="M 33 12 C 30 27 31 43 34 58" fill="none" stroke="#ffffff" stroke-width="2.5"/></g>  <text class="card-title" x="930" y="840" text-anchor="middle">MongoDB Testcontainer</text>
   <text class="card-small" x="930" y="864" text-anchor="middle">replica-set capable transaction runtime</text>
 
-  <path class="line-blue" d="M 305 281 L 305 418" marker-end="url(#mt-blue)"/>
-  <path class="line-blue" d="M 730 281 L 730 418" marker-end="url(#mt-blue)"/>
-  <path class="line-blue" d="M 1155 281 L 1500 281 L 1500 418" marker-end="url(#mt-blue)"/>
-  <path class="line-green" d="M 300 512 L 300 640 L 360 640 L 360 648" marker-end="url(#mt-green)"/>
-  <path class="line-green" d="M 1100 512 L 1100 640 L 905 640 L 905 648" marker-end="url(#mt-green)"/>
-  <path class="line-green" d="M 1500 512 L 1500 640 L 905 640 L 905 648" marker-end="url(#mt-green)"/>
-  <path class="line-green" d="M 700 512 L 700 640 L 1430 640 L 1430 648" marker-end="url(#mt-green)"/>
-  <path class="line-orange" d="M 360 714 L 360 755 L 830 755 L 830 798" marker-end="url(#mt-orange)"/>
-  <path class="line-orange" d="M 905 714 L 905 798" marker-end="url(#mt-orange)"/>
-  <path class="line-orange" d="M 1430 714 L 1430 755 L 1030 755 L 1030 798" marker-end="url(#mt-orange)"/>
+  <path class="line-blue" d="M 305 281 L 305 418" marker-end="url(#mt-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-blue" d="M 730 281 L 730 418" marker-end="url(#mt-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-blue" d="M 1155 281 L 1500 281 L 1500 418" marker-end="url(#mt-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 300 512 L 300 640 L 360 640 L 360 648" marker-end="url(#mt-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 1100 512 L 1100 640 L 905 640 L 905 648" marker-end="url(#mt-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 1500 512 L 1500 640 L 905 640 L 905 648" marker-end="url(#mt-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 700 512 L 700 640 L 1430 640 L 1430 648" marker-end="url(#mt-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 360 714 L 360 755 L 830 755 L 830 798" marker-end="url(#mt-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 905 714 L 905 798" marker-end="url(#mt-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 1430 714 L 1430 755 L 1030 755 L 1030 798" marker-end="url(#mt-orange)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
