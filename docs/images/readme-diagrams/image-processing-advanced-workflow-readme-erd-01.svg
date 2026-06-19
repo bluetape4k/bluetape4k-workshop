@@ -2,7 +2,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1660" height="960" viewBox="0 0 1660 960" role="img" aria-label="image-processing advanced workflow persistence ERD">
   <defs>
     <marker id="fkArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#667F8C"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#667F8C" stroke-dasharray="none"/>
     </marker>
     <style>
       svg { background: #F8FAFC; }

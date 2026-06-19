@@ -2,10 +2,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1580" height="650" viewBox="0 0 1580 650" role="img" aria-label="Observability basic trace propagation flow">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
-    <marker id="arrowCyan" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#0891B2"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#D97706"/></marker>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowCyan" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#0891B2" stroke-dasharray="none"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#D97706" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.band{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.bandLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:29px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.label{font-family:"Comic Mono";font-size:14px;fill:#475569}.line{fill:none;stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
     </style>
@@ -61,11 +61,11 @@
     <text class="cardText" x="1283" y="544" text-anchor="middle">@AutoConfigureTracing</text>
   </g>
 
-  <path class="line" d="M 306 268 L 420 268" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 658 268 L 772 268" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 1010 268 L 1124 268" stroke="#0891B2" marker-end="url(#arrowCyan)"/>
-  <path class="line soft" d="M 448 524 L 642 524" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line soft" d="M 940 524 L 1134 524" stroke="#D97706" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 306 268 L 420 268" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 658 268 L 772 268" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1010 268 L 1124 268" stroke="#0891B2" marker-end="url(#arrowCyan)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line soft" d="M 448 524 L 642 524" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line soft" d="M 940 524 L 1134 524" stroke="#D97706" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="545" y="490" text-anchor="middle">no real tracer</text>
   <text class="label" x="1037" y="490" text-anchor="middle">real tracer path</text>
 </svg>

@@ -1,106 +1,65 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="1180" viewBox="0 0 1640 1180" role="img" aria-labelledby="title desc">
-  <title id="title">exposed/javers-audit sequence</title>
-  <desc id="desc">Sequence showing save, delete, history, latest snapshot, and diff calls in ProductAuditService.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1670" height="1134" viewBox="0 0 1670 1134" role="img" aria-labelledby="title desc">
+  <title id="title">Product Audit Runtime Flow</title>
+  <desc id="desc">Product changes are written through Exposed and captured by JaVers diff snapshots in the same reader-facing flow.</desc>
   <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
     <style>
-      svg{background:#f8fafc}
-      .title{font-family:"Architects Daughter";font-size:41px;fill:#263238}
-      .subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464f}
-      .subtitle{font-size:17px}.msg{font-size:14px}.note{font-size:13px}.footer{font-size:14px;fill:#60727d}
-      .participant{font-family:"Architects Daughter";font-size:21px;fill:#1f3138}.role{font-family:"Comic Mono";font-size:13px;fill:#546a73}
-      .frame{fill:#fbfcf8;stroke:#41545d;stroke-width:3}.header{fill:#ffffff;stroke:#546e7a;stroke-width:2}
-      .lifeline{stroke:#9aaab1;stroke-width:2;stroke-dasharray:7 8}.activation{fill:#e6f2ec;stroke:#5b7e67;stroke-width:1.5}
-      .call{fill:none;stroke:#3f7d9c;stroke-width:3;marker-end:url(#arrowCall)}.audit{fill:none;stroke:#7a64aa;stroke-width:3;marker-end:url(#arrowAudit)}
-      .db{fill:none;stroke:#9b6b2f;stroke-width:3;marker-end:url(#arrowDb)}.return{fill:none;stroke:#9b7d54;stroke-width:2.5;stroke-dasharray:8 6;marker-end:url(#arrowReturn)}
-      .alt{fill:#ffffff;fill-opacity:.24;stroke:#78909c;stroke-width:3;stroke-dasharray:12 7}
-      .branchSave{fill:#eef7f0;stroke:#6e8f4f;stroke-width:1.8}.branchDelete{fill:#fff7e8;stroke:#c79553;stroke-width:1.8}.branchRead{fill:#f6f1ff;stroke:#9a83c7;stroke-width:1.8}
-      .label{fill:#ffffff;stroke:#d7e0e4;stroke-width:1.5}.callLabel{stroke:#9cc2d1}.auditLabel{stroke:#beaee0}.dbLabel{stroke:#d2ad7c}.returnLabel{stroke:#c8b38f}
-      .badge{stroke-width:1.8}.callBadge{fill:#eaf4f8;stroke:#3f7d9c}.auditBadge{fill:#f3ecff;stroke:#7a64aa}.dbBadge{fill:#fff4df;stroke:#9b6b2f}.returnBadge{fill:#fff7e8;stroke:#9b7d54}
-      .badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2f6f8e}.auditText,.badgeText.auditText{fill:#654f9c}.dbText,.badgeText.dbText{fill:#835a27}.returnText,.badgeText.returnText{fill:#7f6038}
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:21px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:13px;fill:#546A73}.msg{font-size:14px}.note{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.return,.skip{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call);stroke-linecap:round;stroke-linejoin:round}.work{stroke:#6E8F4F;marker-end:url(#arrow-work);stroke-linecap:round;stroke-linejoin:round}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret);stroke-linecap:round;stroke-linejoin:round}.skip{stroke:#B86868;marker-end:url(#arrow-skip);stroke-linecap:round;stroke-linejoin:round}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.skipLabel{stroke:#D9ABAB}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.skipBadge{fill:#FFF0F0;stroke:#B86868}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.skipText,.badgeText.skipText{fill:#9D4F4F}.alt{fill:#FFF7ED;fill-opacity:.42;stroke:#D08A39;stroke-width:2.4;stroke-dasharray:12 8}.branch{fill:#FFFFFF;fill-opacity:.82;stroke:#E6C68C;stroke-width:1.5}
     </style>
-    <marker id="arrowCall" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3f7d9c"/></marker>
-    <marker id="arrowAudit" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#7a64aa"/></marker>
-    <marker id="arrowDb" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9b6b2f"/></marker>
-    <marker id="arrowReturn" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9b7d54"/></marker>
+    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none"/></marker>
+    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none"/></marker>
+    <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none"/></marker>
+    <marker id="arrow-skip" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none"/></marker>
   </defs>
-
-  <rect x="24" y="24" width="1592" height="1132" rx="20" class="frame"/>
-  <text x="820" y="78" text-anchor="middle" class="title">Product Audit Runtime Flow</text>
-  <text x="820" y="108" text-anchor="middle" class="subtitle">save and delete write JaVers first; Exposed then mutates the current ProductTable row.</text>
-
-  <rect x="82" y="150" width="160" height="68" rx="10" class="header"/>
-  <text x="162" y="179" text-anchor="middle" class="participant">Caller</text>
-  <text x="162" y="201" text-anchor="middle" class="role">test or app code</text>
-  <rect x="360" y="150" width="246" height="68" rx="10" class="header"/>
-  <text x="483" y="179" text-anchor="middle" class="participant">ProductAuditService</text>
-  <text x="483" y="201" text-anchor="middle" class="role">author validation</text>
-  <rect x="748" y="150" width="180" height="68" rx="10" class="header"/>
-  <text x="838" y="179" text-anchor="middle" class="participant">JaVers</text>
-  <text x="838" y="201" text-anchor="middle" class="role">snapshot history</text>
-  <rect x="1088" y="150" width="210" height="68" rx="10" class="header"/>
-  <text x="1193" y="179" text-anchor="middle" class="participant">Exposed JDBC</text>
-  <text x="1193" y="201" text-anchor="middle" class="role">ProductTable</text>
-  <rect x="1380" y="150" width="170" height="68" rx="10" class="header"/>
-  <text x="1465" y="179" text-anchor="middle" class="participant">Diff</text>
-  <text x="1465" y="201" text-anchor="middle" class="role">value compare</text>
-
-  <line x1="162" y1="218" x2="162" y2="1076" class="lifeline"/>
-  <line x1="483" y1="218" x2="483" y2="1076" class="lifeline"/>
-  <line x1="838" y1="218" x2="838" y2="1076" class="lifeline"/>
-  <line x1="1193" y1="218" x2="1193" y2="1076" class="lifeline"/>
-  <line x1="1465" y1="218" x2="1465" y2="1076" class="lifeline"/>
-  <rect x="476" y="302" width="14" height="700" rx="6" class="activation"/>
-  <rect x="831" y="376" width="14" height="376" rx="6" class="activation"/>
-  <rect x="1186" y="466" width="14" height="254" rx="6" class="activation"/>
-  <rect x="1458" y="900" width="14" height="56" rx="6" class="activation"/>
-
-  <rect x="72" y="254" width="1496" height="288" rx="14" class="alt"/>
-  <rect x="98" y="272" width="216" height="30" rx="15" class="branchSave"/>
-  <text x="120" y="292" class="note">save(author, product)</text>
-  <rect x="94" y="320" width="342" height="34" rx="17" class="label callLabel"/>
-  <circle cx="118" cy="337" r="13" class="badge callBadge"/><text x="118" y="342" text-anchor="middle" class="badgeText callText">1</text>
-  <text x="142" y="342" class="msg callText">validate author and receive Product</text>
-  <path d="M 162 372 L 483 372" class="call"/>
-  <rect x="548" y="360" width="296" height="34" rx="17" class="label auditLabel"/>
-  <circle cx="572" cy="377" r="13" class="badge auditBadge"/><text x="572" y="382" text-anchor="middle" class="badgeText auditText">2</text>
-  <text x="596" y="382" class="msg auditText">commit(author, product)</text>
-  <path d="M 490 414 L 838 414" class="audit"/>
-  <rect x="708" y="456" width="376" height="34" rx="17" class="label dbLabel"/>
-  <circle cx="732" cy="473" r="13" class="badge dbBadge"/><text x="732" y="478" text-anchor="middle" class="badgeText dbText">3</text>
-  <text x="756" y="478" class="msg dbText">transaction { ProductTable.upsert }</text>
-  <path d="M 490 514 L 1193 514" class="db"/>
-
-  <rect x="72" y="590" width="1496" height="242" rx="14" class="alt"/>
-  <rect x="98" y="608" width="248" height="30" rx="15" class="branchRead"/>
-  <text x="120" y="628" class="note">history and latest reads</text>
-  <rect x="236" y="658" width="282" height="34" rx="17" class="label callLabel"/>
-  <circle cx="260" cy="675" r="13" class="badge callBadge"/><text x="260" y="680" text-anchor="middle" class="badgeText callText">4</text>
-  <text x="284" y="680" class="msg callText">getHistory(productId)</text>
-  <path d="M 162 718 L 483 718" class="call"/>
-  <rect x="566" y="658" width="354" height="34" rx="17" class="label auditLabel"/>
-  <circle cx="590" cy="675" r="13" class="badge auditBadge"/><text x="590" y="680" text-anchor="middle" class="badgeText auditText">5</text>
-  <text x="614" y="680" class="msg auditText">findSnapshots(query), oldest-first</text>
-  <path d="M 490 746 L 838 746" class="audit"/>
-  <rect x="274" y="756" width="340" height="34" rx="17" class="label returnLabel"/>
-  <circle cx="298" cy="773" r="13" class="badge returnBadge"/><text x="298" y="778" text-anchor="middle" class="badgeText returnText">6</text>
-  <text x="322" y="778" class="msg returnText">snapshots or latestSnapshotOrNull()</text>
-  <path d="M 838 808 L 483 808 L 162 808" class="return"/>
-
-  <rect x="72" y="872" width="1496" height="214" rx="14" class="alt"/>
-  <rect x="98" y="890" width="270" height="30" rx="15" class="branchDelete"/>
-  <text x="120" y="910" class="note">delete and value-only diff</text>
-  <rect x="546" y="930" width="348" height="34" rx="17" class="label auditLabel"/>
-  <circle cx="570" cy="947" r="13" class="badge auditBadge"/><text x="570" y="952" text-anchor="middle" class="badgeText auditText">7</text>
-  <text x="594" y="952" class="msg auditText">commitShallowDelete(author, product)</text>
-  <path d="M 490 982 L 838 982" class="audit"/>
-  <rect x="748" y="1010" width="342" height="34" rx="17" class="label dbLabel"/>
-  <circle cx="772" cy="1027" r="13" class="badge dbBadge"/><text x="772" y="1032" text-anchor="middle" class="badgeText dbText">8</text>
-  <text x="796" y="1032" class="msg dbText">deleteWhere { id eq product.id }</text>
-  <path d="M 490 1062 L 1193 1062" class="db"/>
-  <rect x="1120" y="930" width="366" height="34" rx="17" class="label returnLabel"/>
-  <circle cx="1144" cy="947" r="13" class="badge returnBadge"/><text x="1144" y="952" class="badgeText returnText" text-anchor="middle">9</text>
-  <text x="1168" y="952" class="msg returnText">diff(old, new): compare only, no write</text>
-  <path d="M 483 914 L 1465 914" class="return"/>
-
-  <text x="820" y="1126" text-anchor="middle" class="footer">Source-backed order: audit snapshot first, relational current row second; diff never writes.</text>
+  <rect x="24" y="24" width="1622" height="1086" rx="20" class="frame"/>
+  <text x="835" y="76" text-anchor="middle" class="title">Product Audit Runtime Flow</text>
+  <text x="835" y="106" text-anchor="middle" class="subtitle">Product changes are written through Exposed and captured by JaVers diff snapshots in the same reader-facing flow.</text>
+  <g filter="url(#shadow)"><rect x="75" y="156" width="230" height="76" rx="10" class="header"/><text x="190" y="186" text-anchor="middle" class="participant">Caller</text><text x="190" y="211" text-anchor="middle" class="role">test or API</text></g>
+  <line x1="190" y1="232" x2="190" y2="1022" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="398" y="156" width="230" height="76" rx="10" class="header"/><text x="513" y="186" text-anchor="middle" class="participant">ProductAuditService</text><text x="513" y="211" text-anchor="middle" class="role">service boundary</text></g>
+  <line x1="513" y1="232" x2="513" y2="1022" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="720" y="156" width="230" height="76" rx="10" class="header"/><text x="835" y="186" text-anchor="middle" class="participant">JaVers</text><text x="835" y="211" text-anchor="middle" class="role">audit engine</text></g>
+  <line x1="835" y1="232" x2="835" y2="1022" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1043" y="156" width="230" height="76" rx="10" class="header"/><text x="1158" y="186" text-anchor="middle" class="participant">Exposed JDBC</text><text x="1158" y="211" text-anchor="middle" class="role">repository</text></g>
+  <line x1="1158" y1="232" x2="1158" y2="1022" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1365" y="156" width="230" height="76" rx="10" class="header"/><text x="1500" y="186" text-anchor="middle" class="participant">ProductTable</text><text x="1500" y="211" text-anchor="middle" class="role">database table</text></g>
+  <line x1="1480" y1="232" x2="1480" y2="1022" class="lifeline"/>
+  <rect x="226.5" y="252" width="250.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="250.5" cy="269" r="13" class="badge callBadge"/><text x="250.5" y="274" text-anchor="middle" class="badgeText callText">1</text>
+  <text x="274.5" y="274" class="msg callText">create or update product</text>
+  <path d="M 190 300 L 513 300" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="680.5" y="328" width="310.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="704.5" cy="345" r="13" class="badge workBadge"/><text x="704.5" y="350" text-anchor="middle" class="badgeText workText">2</text>
+  <text x="728.5" y="350" class="msg workText">write product row in transaction</text>
+  <path d="M 513 376 L 1158 376" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="1197.8" y="404" width="242.5" height="34" rx="17" class="label workLabel"/>
+  <circle cx="1221.8" cy="421" r="13" class="badge workBadge"/><text x="1221.8" y="426" text-anchor="middle" class="badgeText workText">3</text>
+  <text x="1245.8" y="426" class="msg workText">INSERT / UPDATE product</text>
+  <path d="M 1158 452 L 1480 452" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="1197.8" y="480" width="242.5" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="1221.8" cy="497" r="13" class="badge returnBadge"/><text x="1221.8" y="502" text-anchor="middle" class="badgeText returnText">4</text>
+  <text x="1245.8" y="502" class="msg returnText">persisted product state</text>
+  <path d="M 1480 528 L 1158 528" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="549" y="556" width="250.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="573" cy="573" r="13" class="badge callBadge"/><text x="573" y="578" text-anchor="middle" class="badgeText callText">5</text>
+  <text x="597" y="578" class="msg callText">commit product aggregate</text>
+  <path d="M 513 604 L 835 604" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="559" y="632" width="230.0" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="583" cy="649" r="13" class="badge returnBadge"/><text x="583" y="654" text-anchor="middle" class="badgeText returnText">6</text>
+  <text x="607" y="654" class="msg returnText">snapshot + change set</text>
+  <path d="M 835 680 L 513 680" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="236.5" y="708" width="230.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="260.5" cy="725" r="13" class="badge callBadge"/><text x="260.5" y="730" text-anchor="middle" class="badgeText callText">7</text>
+  <text x="284.5" y="730" class="msg callText">request diff history</text>
+  <path d="M 190 756 L 513 756" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="559" y="784" width="230.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="583" cy="801" r="13" class="badge workBadge"/><text x="583" y="806" text-anchor="middle" class="badgeText workText">8</text>
+  <text x="607" y="806" class="msg workText">compare snapshots</text>
+  <path d="M 513 832 L 835 832" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="383.8" y="860" width="257.5" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="407.8" cy="877" r="13" class="badge returnBadge"/><text x="407.8" y="882" text-anchor="middle" class="badgeText returnText">9</text>
+  <text x="431.8" y="882" class="msg returnText">Diff returned to test/API</text>
+  <path d="M 835 908 L 190 908" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="90" y="1046" width="1490" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
+  <text x="835" y="1072" text-anchor="middle" class="footer">Reader contract: request order, branch ownership, and infrastructure boundary are shown without hiding call labels.</text>
 </svg>

@@ -2,9 +2,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1840" height="940" viewBox="0 0 1840 940" role="img" aria-label="Spring WebFlux coroutine architecture">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.15"/></filter>
-    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
-    <marker id="arrowOrange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#EA580C"/></marker>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowOrange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#EA580C" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{stroke-width:1.6;rx:24}
       .title{font-family:"Architects Daughter";font-size:42px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}
@@ -39,13 +39,13 @@
   <g filter="url(#shadow)"><rect x="1010" y="704" width="310" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1165" y="738" text-anchor="middle">WebClient loopback</text><text class="cardText" x="1165" y="764" text-anchor="middle">httpGet("/suspend")</text></g>
   <g filter="url(#shadow)"><rect x="1440" y="704" width="250" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1565" y="738" text-anchor="middle">NettyConfig</text><text class="cardText" x="1565" y="764" text-anchor="middle">event loops and timeouts</text></g>
 
-  <path class="line" d="M 295 282 L 295 448" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 685 282 L 685 448" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 1055 282 L 1055 438" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 1460 292 L 1460 438" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 310 536 L 310 716" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 735 536 L 735 704" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 1095 546 L 1095 676 L 1165 676 L 1165 704" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
+  <path class="line" d="M 295 282 L 295 448" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 685 282 L 685 448" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1055 282 L 1055 438" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1460 292 L 1460 438" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 310 536 L 310 716" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 735 536 L 735 704" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1095 546 L 1095 676 L 1165 676 L 1165 704" stroke="#EA580C" marker-end="url(#arrowOrange)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="1130" y="658" text-anchor="middle">self-call</text>
-  <path class="line" d="M 1510 546 L 1510 704" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
+  <path class="line" d="M 1510 546 L 1510 704" stroke="#EA580C" marker-end="url(#arrowOrange)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

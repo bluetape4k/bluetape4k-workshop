@@ -2,18 +2,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1640" height="720" viewBox="0 0 1640 720" role="img" aria-label="Spring WebFlux Bucket4j Redis request flow">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
-    <marker id="arrowOrange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#EA580C"/></marker>
-    <marker id="arrowRose" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#E11D48"/></marker>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowOrange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#EA580C" stroke-dasharray="none"/></marker>
+    <marker id="arrowRose" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#E11D48" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.band{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.bandLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:29px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.label{font-family:"Comic Mono";font-size:14px;fill:#475569}.line{fill:none;stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
     </style>
   </defs>
   <rect class="canvas" width="1640" height="720"/>
-  <rect class="frame" x="24" y="24" width="1592" height="672" rx="24"/>
-  <text class="title" x="820" y="70" text-anchor="middle">Redis-backed WebFlux request flow</text>
-  <text class="subtitle" x="820" y="102" text-anchor="middle">Both coroutine and reactive routes share Redis bucket state, so quota decisions survive beyond one JVM instance.</text>
+  <rect class="frame" x="24" y="24" width="1592" height="672" rx="24"/>  <text class="title" x="820" y="70" text-anchor="middle">Redis-backed WebFlux request flow</text>  <text class="subtitle" x="820" y="102" text-anchor="middle">Both coroutine and reactive routes share Redis bucket state, so quota decisions survive beyond one JVM instance.</text>
 
   <rect class="band" x="72" y="148" width="1496" height="236" rx="18"/>
   <text class="bandLabel" x="102" y="186">Runtime decision</text>
@@ -34,8 +32,7 @@
   <g filter="url(#shadow)">
     <rect x="848" y="224" width="248" height="116" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/>
     <circle cx="902" cy="282" r="27" fill="#FEE2E2" stroke="#DC2626" stroke-width="2.4"/>
-    <text x="902" y="292" text-anchor="middle" font-family="Comic Mono" font-size="18" fill="#B91C1C">R</text>
-    <text class="cardTitle" x="1015" y="270" text-anchor="middle">Redis buckets</text>
+    <text x="902" y="292" text-anchor="middle" font-family="Comic Mono" font-size="18" fill="#B91C1C">R</text>  <text class="cardTitle" x="1015" y="270" text-anchor="middle">Redis buckets</text>
     <text class="cardText" x="1015" y="302" text-anchor="middle">Lettuce commands</text>
     <text class="cardText" x="1015" y="328" text-anchor="middle">shared token state</text>
   </g>
@@ -59,12 +56,12 @@
     <text class="cardTitle" x="793" y="530" text-anchor="middle">world: 10 / 10s</text>
   </g>
 
-  <path class="line" d="M 330 282 L 460 282" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 706 282 L 848 282" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 1096 282 L 1224 282" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 583 340 L 583 408 L 437 408 L 437 492" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 620 340 L 620 408 L 793 408 L 793 492" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line soft" d="M 972 340 L 972 408 L 1342 408 L 1342 486" stroke="#E11D48" marker-end="url(#arrowRose)"/>
-  <path class="line soft" d="M 972 224 L 972 188 L 583 188 L 583 224" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
+  <path class="line" d="M 330 282 L 460 282" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 706 282 L 848 282" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1096 282 L 1224 282" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 583 340 L 583 408 L 437 408 L 437 492" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 620 340 L 620 408 L 793 408 L 793 492" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line soft" d="M 972 340 L 972 408 L 1342 408 L 1342 486" stroke="#E11D48" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line soft" d="M 972 224 L 972 188 L 583 188 L 583 224" stroke="#EA580C" marker-end="url(#arrowOrange)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="768" y="176" text-anchor="middle">token read/update</text>
 </svg>

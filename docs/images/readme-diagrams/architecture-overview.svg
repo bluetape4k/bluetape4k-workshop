@@ -9,13 +9,13 @@
       .mono{font-family:"Comic Mono";font-size:12px;font-weight:400;fill:#102033}
       .small{font-family:"Comic Mono";font-size:12px;font-weight:400;fill:#536273}
       .card{stroke-width:2.1;filter:url(#shadow)}
-      .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+      .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow);stroke-linecap:round;stroke-linejoin:round}
     </style>
     <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
       <feDropShadow dx="2" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.12"/>
     </filter>
     <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+      <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297" stroke-dasharray="none"/>
     </marker>
   </defs>
 
@@ -25,8 +25,7 @@
   <rect x="24" y="20" width="912" height="660" rx="22" class="frame"/>
 
   <!-- Title -->
-  <text x="480" y="68" class="title" text-anchor="middle">Leader Election Architecture</text>
-  <text x="480" y="90" class="subtitle" text-anchor="middle">Distributed leader election with Redis  -  bluetape4k-leader library</text>
+  <text x="480" y="68" class="title" text-anchor="middle">Leader Election Architecture</text>  <text x="480" y="90" class="subtitle" text-anchor="middle">Distributed leader election with Redis  -  bluetape4k-leader library</text>
 
   <!-- ═══════════════════════════════════════════════════ -->
   <!-- ROW 1: 3 Instance cards  y=108..208  -->
@@ -57,14 +56,14 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
 
   <!-- Instance 1 bottom (195,208) -> down y=238 -> right to (480,238) -> down to (480,248) -->
-  <path d="M 195,208 L 195,238 L 480,238 L 480,248" class="line"/>
+  <path d="M 195,208 L 195,238 L 480,238 L 480,248" class="line" stroke-linecap="round" stroke-linejoin="round"/>
 
   <!-- Instance 2 bottom (480,208) -> straight down -->
-  <path d="M 480,208 L 480,248" class="line"/>
+  <path d="M 480,208 L 480,248" class="line" stroke-linecap="round" stroke-linejoin="round"/>
 
   <!-- Instance 3 bottom (765,208) -> down y=238 -> left to (480,238) -->
   <!-- Already drawn segment 480,238->480,248 above; just add the branch -->
-  <path d="M 765,208 L 765,238 L 480,238" class="line" marker-end="none"/>
+  <path d="M 765,208 L 765,238 L 480,238" class="line" marker-end="none" stroke-linecap="round" stroke-linejoin="round"/>
 
   <!-- ════════════════════════════════════════════════════════════ -->
   <!-- ROW 2: LeaderScheduledJobService (amber, full-width)        -->
@@ -76,7 +75,7 @@
   <text x="480" y="318" class="mono" text-anchor="middle">Runs on all instances; only the leader executes the job body</text>
 
   <!-- Arrow: JobService -> LettuceLeaderElector -->
-  <path d="M 480,330 L 480,368" class="line"/>
+  <path d="M 480,330 L 480,368" class="line" stroke-linecap="round" stroke-linejoin="round"/>
 
   <!-- ════════════════════════════════════════════════════ -->
   <!-- ROW 3: LettuceLeaderElector (teal, full-width)       -->
@@ -94,10 +93,10 @@
   <!-- ════════════════════════════════════════════════════════════ -->
 
   <!-- Elector bottom (480,448) -> down y=478 -> left to (262,478) -> down to (262,488) -->
-  <path d="M 480,448 L 480,478 L 262,478 L 262,488" class="line"/>
+  <path d="M 480,448 L 480,478 L 262,478 L 262,488" class="line" stroke-linecap="round" stroke-linejoin="round"/>
 
   <!-- Elector bottom (480,448) -> down y=478 -> right to (699,478) -> down to (699,488) -->
-  <path d="M 480,448 L 480,478 L 699,478 L 699,488" class="line"/>
+  <path d="M 480,448 L 480,478 L 699,478 L 699,488" class="line" stroke-linecap="round" stroke-linejoin="round"/>
 
   <!-- ═══════════════════════════════════════════════════ -->
   <!-- ROW 4: Job cards (green)  y=488..558              -->
@@ -135,14 +134,13 @@
   <!-- Redis arrow: from right edge of Elector (888,408) -> right to x=920 would exceed frame -->
   <!-- Use interior path: right edge of Elector is x=888, frame inner edge is 936 -->
   <!-- Route: M 888,408 L 920,408 L 920,598 L 888,598 stays inside frame -->
-  <path d="M 888,408 L 920,408 L 920,598 L 888,598" class="line"/>
+  <path d="M 888,408 L 920,408 L 920,598 L 888,598" class="line" stroke-linecap="round" stroke-linejoin="round"/>
 
   <!-- ════════════════════════════════════════════════ -->
   <!-- BOTTOM BAND: Redis (amber, full-width)           -->
   <!-- y=578..648                                        -->
   <!-- ════════════════════════════════════════════════ -->
-  <rect x="72" y="578" width="816" height="70" rx="14" class="card" fill="#FFF3D9" stroke="#D6A441"/>
-  <text x="480" y="608" class="smallLabel" text-anchor="middle">Redis</text>
+  <rect x="72" y="578" width="816" height="70" rx="14" class="card" fill="#FFF3D9" stroke="#D6A441"/>  <text x="480" y="608" class="smallLabel" text-anchor="middle">Redis</text>
   <text x="480" y="628" class="small" text-anchor="middle">Single-Key Distributed Lock  -  SET {lockName} NX EX {ttl}</text>
   <text x="480" y="645" class="mono" text-anchor="middle">Returns OK to winner  -  FAIL to others</text>
 

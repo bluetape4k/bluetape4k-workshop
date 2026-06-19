@@ -5,16 +5,16 @@
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/>
     </filter>
     <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#3B82F6"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#3B82F6" stroke-dasharray="none"/>
     </marker>
     <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/>
     </marker>
     <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/>
     </marker>
     <marker id="arrowRose" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#D14F6B"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#D14F6B" stroke-dasharray="none"/>
     </marker>
     <style>
       .canvas { fill: #F7FAFC; }
@@ -132,14 +132,14 @@
     </g>
   </g>
 
-  <path class="line" d="M 458 226 L 458 278 L 70 278 L 70 420 L 116 420" stroke="#3B82F6" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 862 226 L 862 294 L 1054 294 L 1054 366" stroke="#3B82F6" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 416 420 L 510 420" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 810 420 L 904 420" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 660 474 L 660 536 L 657 536 L 657 578" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 1054 474 L 1054 536 L 945 536 L 945 578" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 657 648 L 657 706 L 394 706 L 394 750" stroke="#D14F6B" marker-end="url(#arrowRose)"/>
-  <path class="line" d="M 657 648 L 657 706 L 660 706 L 660 750" stroke="#D14F6B" marker-end="url(#arrowRose)"/>
-  <path class="line" d="M 657 648 L 657 706 L 926 706 L 926 750" stroke="#D14F6B" marker-end="url(#arrowRose)"/>
+  <path class="line" d="M 458 226 L 458 278 L 70 278 L 70 420 L 116 420" stroke="#3B82F6" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 862 226 L 862 294 L 1054 294 L 1054 366" stroke="#3B82F6" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 416 420 L 510 420" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 810 420 L 904 420" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 660 474 L 660 536 L 657 536 L 657 578" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1054 474 L 1054 536 L 945 536 L 945 578" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 657 648 L 657 706 L 394 706 L 394 750" stroke="#D14F6B" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 657 648 L 657 706 L 660 706 L 660 750" stroke="#D14F6B" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 657 648 L 657 706 L 926 706 L 926 750" stroke="#D14F6B" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
 
 </svg>

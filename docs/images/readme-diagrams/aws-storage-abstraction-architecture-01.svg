@@ -6,13 +6,13 @@
       <feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#18304a" flood-opacity="0.13"/>
     </filter>
     <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f6de0"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f6de0" stroke-dasharray="none"/>
     </marker>
     <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f8b57"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f8b57" stroke-dasharray="none"/>
     </marker>
     <marker id="arrow-purple" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#7953b6"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#7953b6" stroke-dasharray="none"/>
     </marker>
     <g id="s3-icon">
       <rect x="0" y="0" width="64" height="64" rx="8" fill="#7aa116"/>
@@ -47,8 +47,7 @@
   </defs>
 
   <rect class="frame" x="30" y="26" width="1440" height="848" rx="24"/>
-  <text id="titleText" class="title" x="750" y="82" text-anchor="middle">AWS Storage Abstraction</text>
-  <text class="subtitle" x="750" y="116" text-anchor="middle">One coroutine StorageService contract; Spring profiles select local files, S3, or presigned S3 URLs.</text>
+  <text id="titleText" class="title" x="750" y="82" text-anchor="middle">AWS Storage Abstraction</text>  <text class="subtitle" x="750" y="116" text-anchor="middle">One coroutine StorageService contract; Spring profiles select local files, S3, or presigned S3 URLs.</text>
 
   <g id="layers">
     <rect class="layer" x="78" y="155" width="312" height="590" rx="16"/>
@@ -56,22 +55,20 @@
     <text class="layerDetail" x="112" y="222">code depends on interface only</text>
 
     <rect class="layer" x="430" y="155" width="590" height="590" rx="16"/>
-    <text class="layerTitle" x="462" y="198">Profile-selected services</text>
-    <text class="layerDetail" x="464" y="222">local, s3, or s3-presigned</text>
+    <text class="layerTitle" x="462" y="198">Profile-selected services</text>  <text class="layerDetail" x="464" y="222">local, s3, or s3-presigned</text>
 
     <rect class="layer" x="1042" y="155" width="380" height="590" rx="16"/>
-    <text class="layerTitle" x="1074" y="198">Storage target</text>
-    <text class="layerDetail" x="1076" y="222">filesystem or S3-compatible endpoint</text>
+    <text class="layerTitle" x="1074" y="198">Storage target</text>  <text class="layerDetail" x="1076" y="222">filesystem or S3-compatible endpoint</text>
   </g>
 
   <g id="connections">
-    <path class="edge" d="M 235 303 V 340" stroke="#2f6de0" marker-end="url(#arrow-blue)"/>
-    <path class="edge" d="M 352 380 H 480" stroke="#2f8b57" marker-end="url(#arrow-green)"/>
-    <path class="edge" d="M 352 487 H 480" stroke="#2f6de0" marker-end="url(#arrow-blue)"/>
-    <path class="edge" d="M 352 594 H 480" stroke="#7953b6" marker-end="url(#arrow-purple)"/>
-    <path class="edge" d="M 980 380 H 1100" stroke="#2f8b57" marker-end="url(#arrow-green)"/>
-    <path class="edge" d="M 980 487 H 1100" stroke="#2f6de0" marker-end="url(#arrow-blue)"/>
-    <path class="edge" d="M 980 594 H 1100" stroke="#7953b6" marker-end="url(#arrow-purple)"/>
+    <path class="edge" d="M 235 303 V 340" stroke="#2f6de0" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="edge" d="M 352 380 H 480" stroke="#2f8b57" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="edge" d="M 352 487 H 480" stroke="#2f6de0" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="edge" d="M 352 594 H 480" stroke="#7953b6" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="edge" d="M 980 380 H 1100" stroke="#2f8b57" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="edge" d="M 980 487 H 1100" stroke="#2f6de0" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="edge" d="M 980 594 H 1100" stroke="#7953b6" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 
   <g id="application-cards">
@@ -97,13 +94,11 @@
 
     <rect class="card" x="480" y="439" width="500" height="96" rx="14" fill="#e8f3ff" stroke="#5b8def"/>
     <text class="cardTitle" x="730" y="474" text-anchor="middle">S3StorageService</text>
-    <text class="detail" x="730" y="501" text-anchor="middle">S3Client put/get/delete inside Dispatchers.IO</text>
-    <text class="mono" x="730" y="521" text-anchor="middle">@Profile("s3") - direct S3 URL</text>
+    <text class="detail" x="730" y="501" text-anchor="middle">S3Client put/get/delete inside Dispatchers.IO</text>  <text class="mono" x="730" y="521" text-anchor="middle">@Profile("s3") - direct S3 URL</text>
 
     <rect class="card" x="480" y="546" width="500" height="96" rx="14" fill="#f1ecff" stroke="#8a72d6"/>
     <text class="cardTitle" x="730" y="581" text-anchor="middle">S3PresignedStorageService</text>
-    <text class="detail" x="730" y="608" text-anchor="middle">S3Client plus S3Presigner for GET links</text>
-    <text class="mono" x="730" y="628" text-anchor="middle">@Profile("s3-presigned") - default 900s TTL</text>
+    <text class="detail" x="730" y="608" text-anchor="middle">S3Client plus S3Presigner for GET links</text>  <text class="mono" x="730" y="628" text-anchor="middle">@Profile("s3-presigned") - default 900s TTL</text>
   </g>
 
   <g id="target-cards">
@@ -116,12 +111,10 @@
 
     <rect class="card" x="1100" y="449" width="292" height="173" rx="14" fill="#eef8ef" stroke="#66a65d"/>
     <use href="#s3-icon" x="1126" y="488" width="58" height="58"/>
-    <use href="#localstack-icon" x="1134" y="560" width="48" height="48"/>
-    <text class="smallTitle" x="1284" y="489" text-anchor="middle">S3-compatible</text>
+    <use href="#localstack-icon" x="1134" y="560" width="48" height="48"/>  <text class="smallTitle" x="1284" y="489" text-anchor="middle">S3-compatible</text>
     <text class="smallTitle" x="1284" y="519" text-anchor="middle">bucket</text>
     <text class="detail" x="1284" y="548" text-anchor="middle">workshop bucket</text>
-    <text class="detail" x="1284" y="574" text-anchor="middle">FlociServer in tests</text>
-    <text class="detail" x="1284" y="600" text-anchor="middle">AWS S3 in production</text>
+    <text class="detail" x="1284" y="574" text-anchor="middle">FlociServer in tests</text>  <text class="detail" x="1284" y="600" text-anchor="middle">AWS S3 in production</text>
     <text class="mono" x="1284" y="617" text-anchor="middle">X-Amz-Expires=900</text>
   </g>
 

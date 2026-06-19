@@ -1,130 +1,62 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1700" height="1180" viewBox="0 0 1700 1180" role="img" aria-labelledby="title desc">
-  <title id="title">AWS Storage Abstraction Request Sequence</title>
-  <desc id="desc">Sequence diagram showing StorageService upload, download, getUrl, and delete behavior across local, S3, and presigned S3 profiles.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1058" viewBox="0 0 1920 1058" role="img" aria-labelledby="title desc">
+  <title id="title">StorageService Request Sequence</title>
+  <desc id="desc">The StorageService contract keeps local file, direct S3, and presigned S3 profiles behind one coroutine API.</desc>
   <defs>
-    <marker id="callArrow" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3f7d9c"/></marker>
-    <marker id="workArrow" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6e8f4f"/></marker>
-    <marker id="returnArrow" markerWidth="13.5" markerHeight="13.5" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9b7d54"/></marker>
-    <marker id="presignArrow" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#7953b6"/></marker>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#0f172a" flood-opacity="0.10"/></filter>
-    <g id="s3-icon-small">
-      <rect x="0" y="0" width="42" height="42" rx="6" fill="#7aa116"/>
-      <g transform="translate(7 6.5) scale(.65)" fill="#ffffff">
-        <path d="M36.759,23.948 L36.993,22.131 C39.166,23.385 39.842,24.121 40.037,24.424 C39.713,24.485 38.832,24.509 36.759,23.948 Z M19.5,11 C9.125,11 2.382,8.488 2,6.696 L2,6.511 C2.349,5.392 8.14,2 19.5,2 C30.84,2 36.632,5.381 37,6.505 L37,6.616 C36.724,8.446 29.961,11 19.5,11 Z M34.818,23.362 C30.053,21.797 23.912,18.979 21.594,17.888 C21.535,16.786 20.628,15.906 19.512,15.906 C18.358,15.906 17.418,16.845 17.418,18 C17.418,19.154 18.358,20.094 19.512,20.094 C19.969,20.094 20.389,19.942 20.733,19.693 C23.132,20.822 29.619,23.798 34.558,25.38 L32.837,38.724 C32.583,40.352 27.919,42 19.497,42 C11.072,42 6.405,40.352 6.155,38.751 L2.435,9.814 C5.945,11.915 12.749,13 19.5,13 C26.25,13 33.054,11.915 36.565,9.815 L34.818,23.362 Z M39,6.5 C39,3.431 30.661,0 19.5,0 C8.339,0 0,3.431 0,6.5 L0,7.043 L4.174,39.033 C4.875,43.516 15.123,44 19.497,44 C23.869,44 34.113,43.516 34.818,39.007 L36.501,25.947 C37.778,26.279 38.812,26.456 39.616,26.455 C40.606,26.455 41.273,26.203 41.697,25.697 C42.047,25.281 42.185,24.756 42.085,24.221 C41.857,23 40.403,21.712 37.37,20.044 L37.27,19.989 L39,7.044 L39,6.5 Z"/>
-      </g>
-    </g>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
     <style>
-      svg{background:#f8fafc}
-      .frame{fill:#ffffff;stroke:#8aa6cf;stroke-width:3;filter:url(#shadow)}
-      .title{font-family:"Architects Daughter";font-size:48px;fill:#17233a}
-      .subtitle{font-family:"Comic Mono";font-size:16px;fill:#475569}
-      .participantTitle{font-family:"Architects Daughter";font-size:22px;fill:#17233a}
-      .participantText{font-family:"Comic Mono";font-size:14px;fill:#475569}
-      .pApp{fill:#eaf4f8;stroke:#3f7d9c;stroke-width:2.4}
-      .pService{fill:#e9f7f6;stroke:#45a7a1;stroke-width:2.4}
-      .pImpl{fill:#eef7f0;stroke:#6e8f4f;stroke-width:2.4}
-      .pBackend{fill:#fff7e8;stroke:#d6a441;stroke-width:2.4}
-      .pPresign{fill:#f1ecff;stroke:#8a72d6;stroke-width:2.4}
-      .lifeline{stroke:#94a3b8;stroke-width:2.2;stroke-dasharray:8 9}
-      .activation{fill:#eef7f0;stroke:#6e8f4f;stroke-width:1.8}
-      .call{stroke:#3f7d9c;stroke-width:3.3;marker-end:url(#callArrow);fill:none}
-      .work{stroke:#6e8f4f;stroke-width:3.3;marker-end:url(#workArrow);fill:none}
-      .presign{stroke:#7953b6;stroke-width:3.3;marker-end:url(#presignArrow);fill:none}
-      .ret{stroke:#9b7d54;stroke-width:2.8;stroke-dasharray:8 7;marker-end:url(#returnArrow);fill:none}
-      .label{font-family:"Comic Mono";font-size:15px;fill:#334155}
-      .labelBox{fill:#ffffff;stroke:#d7e0e4;stroke-width:1.4}
-      .regionCommon{fill:#eef7f0;fill-opacity:.42;stroke:#6e8f4f;stroke-width:2.2;stroke-dasharray:12 8}
-      .regionUrl{fill:#f7f3ff;fill-opacity:.38;stroke:#8a72d6;stroke-width:2.2;stroke-dasharray:12 8}
-      .regionTitle{font-family:"Architects Daughter";font-size:24px;fill:#263f58}
-      .regionText{font-family:"Comic Mono";font-size:15px;fill:#475569}
-      .footer{font-family:"Comic Mono";font-size:15px;fill:#475569}
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:21px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:13px;fill:#546A73}.msg{font-size:14px}.note{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.return,.skip{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call);stroke-linecap:round;stroke-linejoin:round}.work{stroke:#6E8F4F;marker-end:url(#arrow-work);stroke-linecap:round;stroke-linejoin:round}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret);stroke-linecap:round;stroke-linejoin:round}.skip{stroke:#B86868;marker-end:url(#arrow-skip);stroke-linecap:round;stroke-linejoin:round}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.skipLabel{stroke:#D9ABAB}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.skipBadge{fill:#FFF0F0;stroke:#B86868}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.skipText,.badgeText.skipText{fill:#9D4F4F}.alt{fill:#FFF7ED;fill-opacity:.42;stroke:#D08A39;stroke-width:2.4;stroke-dasharray:12 8}.branch{fill:#FFFFFF;fill-opacity:.82;stroke:#E6C68C;stroke-width:1.5}
     </style>
+    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none"/></marker>
+    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none"/></marker>
+    <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none"/></marker>
+    <marker id="arrow-skip" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none"/></marker>
   </defs>
-
-  <rect class="frame" x="34" y="30" width="1632" height="1116" rx="28"/>
-  <text class="title" x="80" y="96">StorageService Request Sequence</text>
-  <text class="subtitle" x="82" y="130">The caller invokes one coroutine interface; the active Spring profile owns the blocking I/O and URL contract.</text>
-
-  <g filter="url(#shadow)">
-    <rect class="pApp" x="76" y="188" width="190" height="82" rx="14"/>
-    <text class="participantTitle" x="126" y="222">Caller</text>
-    <text class="participantText" x="110" y="248">application code</text>
-
-    <rect class="pService" x="334" y="188" width="220" height="82" rx="14"/>
-    <text class="participantTitle" x="384" y="222">StorageService</text>
-    <text class="participantText" x="372" y="248">injected interface</text>
-
-    <rect class="pImpl" x="626" y="188" width="250" height="82" rx="14"/>
-    <text class="participantTitle" x="665" y="222">Profile implementation</text>
-    <text class="participantText" x="660" y="248">local, s3, presigned</text>
-
-    <rect class="pImpl" x="952" y="188" width="210" height="82" rx="14"/>
-    <text class="participantTitle" x="998" y="222">Dispatchers.IO</text>
-    <text class="participantText" x="996" y="248">blocking boundary</text>
-
-    <rect class="pBackend" x="1232" y="188" width="210" height="82" rx="14"/>
-    <use href="#s3-icon-small" x="1254" y="208" width="42" height="42"/>
-    <text class="participantTitle" x="1346" y="218">Storage</text>
-    <text class="participantTitle" x="1346" y="244">target</text>
-
-    <rect class="pPresign" x="1492" y="188" width="130" height="82" rx="14"/>
-    <text class="participantTitle" x="1518" y="222">Presigner</text>
-    <text class="participantText" x="1512" y="248">GET URL</text>
-  </g>
-
-  <line class="lifeline" x1="171" y1="270" x2="171" y2="1032"/>
-  <line class="lifeline" x1="444" y1="270" x2="444" y2="1032"/>
-  <line class="lifeline" x1="751" y1="270" x2="751" y2="1032"/>
-  <line class="lifeline" x1="1057" y1="270" x2="1057" y2="1032"/>
-  <line class="lifeline" x1="1337" y1="270" x2="1337" y2="1032"/>
-  <line class="lifeline" x1="1557" y1="270" x2="1557" y2="1032"/>
-  <rect class="activation" x="743" y="366" width="16" height="516" rx="8"/>
-  <rect class="activation" x="1049" y="486" width="16" height="244" rx="8"/>
-  <rect class="activation" x="1329" y="544" width="16" height="118" rx="8"/>
-
-  <path class="call" d="M 171 326 H 432"/>
-  <rect class="labelBox" x="230" y="284" width="242" height="28" rx="9"/>
-  <text class="label" x="248" y="304">upload/download/getUrl/delete</text>
-
-  <path class="call" d="M 444 384 H 739"/>
-  <rect class="labelBox" x="506" y="342" width="230" height="28" rx="9"/>
-  <text class="label" x="526" y="362">dispatch to active profile</text>
-
-  <rect class="regionCommon" x="622" y="436" width="828" height="338" rx="16"/>
-  <text class="regionTitle" x="652" y="474">common object operations</text>
-  <text class="regionText" x="652" y="502">upload, download, and delete wrap local Files or synchronous S3Client calls in Dispatchers.IO.</text>
-
-  <path class="work" d="M 759 542 H 1045"/>
-  <rect class="labelBox" x="812" y="500" width="180" height="28" rx="9"/>
-  <text class="label" x="822" y="520">withContext(Dispatchers.IO)</text>
-
-  <path class="work" d="M 1065 604 H 1325"/>
-  <rect class="labelBox" x="1120" y="562" width="136" height="28" rx="9"/>
-  <text class="label" x="1130" y="582">Files or S3Client</text>
-
-  <path class="ret" d="M 1329 674 H 1065"/>
-  <rect class="labelBox" x="1140" y="688" width="144" height="28" rx="9"/>
-  <text class="label" x="1150" y="708">bytes, URL, or Unit</text>
-
-  <path class="ret" d="M 1049 744 H 759"/>
-  <rect class="labelBox" x="826" y="756" width="118" height="28" rx="9"/>
-  <text class="label" x="836" y="776">return result</text>
-
-  <rect class="regionUrl" x="622" y="806" width="980" height="176" rx="16"/>
-  <text class="regionTitle" x="652" y="844">getUrl branch</text>
-  <text class="regionText" x="652" y="872">local and s3 profiles return direct URLs; s3-presigned builds a time-limited GET URL.</text>
-
-  <path class="presign" d="M 759 920 H 1545"/>
-  <rect class="labelBox" x="918" y="878" width="264" height="28" rx="9"/>
-  <text class="label" x="928" y="898">s3-presigned: presignGetObject(900s)</text>
-
-  <path class="ret" d="M 1549 958 H 759"/>
-  <rect class="labelBox" x="1048" y="970" width="220" height="28" rx="9"/>
-  <text class="label" x="1058" y="990">URL with X-Amz-Expires=900</text>
-
-  <path class="ret" d="M 751 1042 H 171"/>
-  <rect class="labelBox" x="350" y="1000" width="238" height="28" rx="9"/>
-  <text class="label" x="360" y="1020">caller receives backend-specific URL</text>
-
-  <text class="footer" x="82" y="1102">Reader contract: profile switching changes only the bean implementation; application code keeps the same suspend StorageService methods.</text>
+  <rect x="24" y="24" width="1872" height="1010" rx="20" class="frame"/>
+  <text x="960" y="76" text-anchor="middle" class="title">StorageService Request Sequence</text>  <text x="960" y="106" text-anchor="middle" class="subtitle">The StorageService contract keeps local file, direct S3, and presigned S3 profiles behind one coroutine API.</text>
+  <g filter="url(#shadow)"><rect x="75" y="156" width="230" height="76" rx="10" class="header"/><text x="190" y="186" text-anchor="middle" class="participant">Caller</text><text x="190" y="211" text-anchor="middle" class="role">HTTP or test</text></g>
+  <line x1="190" y1="232" x2="190" y2="946" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="383" y="156" width="230" height="76" rx="10" class="header"/><text x="498" y="186" text-anchor="middle" class="participant">StorageService</text><text x="498" y="211" text-anchor="middle" class="role">contract</text></g>
+  <line x1="498" y1="232" x2="498" y2="946" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="691" y="156" width="230" height="76" rx="10" class="header"/><text x="826" y="186" text-anchor="middle" class="participant">Profile impl</text>  <text x="826" y="211" text-anchor="middle" class="role">local / s3 / presigned</text></g>
+  <line x1="806" y1="232" x2="806" y2="946" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="999" y="156" width="230" height="76" rx="10" class="header"/><text x="1114" y="186" text-anchor="middle" class="participant">Dispatchers.IO</text><text x="1114" y="211" text-anchor="middle" class="role">blocking boundary</text></g>
+  <line x1="1114" y1="232" x2="1114" y2="946" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1307" y="156" width="230" height="76" rx="10" class="header"/><text x="1442" y="186" text-anchor="middle" class="participant">Storage</text><text x="1442" y="211" text-anchor="middle" class="role">Files or S3Client</text></g>
+  <line x1="1422" y1="232" x2="1422" y2="946" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1615" y="156" width="230" height="76" rx="10" class="header"/><text x="1750" y="186" text-anchor="middle" class="participant">Presigner</text><text x="1750" y="211" text-anchor="middle" class="role">S3Presigner</text></g>
+  <line x1="1730" y1="232" x2="1730" y2="946" class="lifeline"/>
+  <rect x="229" y="252" width="230.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="253" cy="269" r="13" class="badge callBadge"/><text x="253" y="274" text-anchor="middle" class="badgeText callText">1</text>
+  <text x="277" y="274" class="msg callText">upload(key, content)</text>
+  <path d="M 190 300 L 498 300" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="493.3" y="328" width="317.5" height="34" rx="17" class="label callLabel"/>
+  <circle cx="517.3" cy="345" r="13" class="badge callBadge"/><text x="517.3" y="350" text-anchor="middle" class="badgeText callText">2</text>
+  <text x="541.3" y="350" class="msg callText">delegate to selected profile bean</text>
+  <path d="M 498 376 L 806 376" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="790" y="404" width="340.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="814" cy="421" r="13" class="badge workBadge"/><text x="814" y="426" text-anchor="middle" class="badgeText workText">3</text>
+  <text x="838" y="426" class="msg workText">wrap blocking Files or S3Client call</text>
+  <path d="M 806 452 L 1114 452" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="1143" y="480" width="250.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="1167" cy="497" r="13" class="badge workBadge"/><text x="1167" y="502" text-anchor="middle" class="badgeText workText">4</text>
+  <text x="1191" y="502" class="msg workText">putObject or Files.write</text>
+  <path d="M 1114 528 L 1422 528" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="654.8" y="556" width="302.5" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="678.8" cy="573" r="13" class="badge returnBadge"/><text x="678.8" y="578" text-anchor="middle" class="badgeText returnText">5</text>
+  <text x="702.8" y="578" class="msg returnText">download returns bytes/resource</text>
+  <path d="M 1422 604 L 190 604" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="229" y="632" width="230.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="253" cy="649" r="13" class="badge callBadge"/><text x="253" y="654" text-anchor="middle" class="badgeText callText">6</text>
+  <text x="277" y="654" class="msg callText">getUrl(key)</text>
+  <path d="M 190 680 L 498 680" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="951.5" y="708" width="325.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="975.5" cy="725" r="13" class="badge workBadge"/><text x="975.5" y="730" text-anchor="middle" class="badgeText workText">7</text>
+  <text x="999.5" y="730" class="msg workText">create 15-minute presigned GET URL</text>
+  <path d="M 498 756 L 1730 756" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="827.5" y="784" width="265.0" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="851.5" cy="801" r="13" class="badge returnBadge"/><text x="851.5" y="806" text-anchor="middle" class="badgeText returnText">8</text>
+  <text x="875.5" y="806" class="msg returnText">URL with X-Amz-Expires=900</text>
+  <path d="M 1730 832 L 190 832" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="90" y="970" width="1740" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
+  <text x="960" y="996" text-anchor="middle" class="footer">Reader contract: request order, branch ownership, and infrastructure boundary are shown without hiding call labels.</text>
 </svg>

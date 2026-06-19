@@ -2,8 +2,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1360" height="700" viewBox="0 0 1360 700" role="img" aria-label="Abstract Factory pattern diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#fff;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.label{font-family:"Architects Daughter";font-size:22px;fill:#172033}.cardTitle{font-family:"Architects Daughter";font-size:25px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
     </style>
@@ -25,10 +25,10 @@
   <g filter="url(#shadow)"><rect x="520" y="424" width="320" height="92" rx="14" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="680" y="458" text-anchor="middle">Product interfaces</text><text class="cardText" x="680" y="486" text-anchor="middle">Castle, King, Army</text></g>
   <g filter="url(#shadow)"><rect x="916" y="424" width="320" height="92" rx="14" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/><text class="cardTitle" x="1076" y="458" text-anchor="middle">OrcKingdomFactory</text><text class="cardText" x="1076" y="486" text-anchor="middle">OrcCastle, OrcKing, OrcArmy</text></g>
 
-  <path class="line" d="M 378 231 L 550 231" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 810 231 L 982 231" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 1090 266 L 1090 326 L 284 326 L 284 424" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 1134 266 L 1134 326 L 1076 326 L 1076 424" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 444 470 L 520 470" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 916 470 L 840 470" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 378 231 L 550 231" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 810 231 L 982 231" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1090 266 L 1090 326 L 284 326 L 284 424" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1134 266 L 1134 326 L 1076 326 L 1076 424" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 444 470 L 520 470" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 916 470 L 840 470" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

@@ -2,9 +2,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1640" height="720" viewBox="0 0 1640 720" role="img" aria-label="Redis distributed lock fenced flow">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
-    <marker id="arrowRed" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#DC2626"/></marker>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowRed" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#DC2626" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.band{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.bandLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.label{font-family:"Comic Mono";font-size:14px;fill:#475569}.line{fill:none;stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
     </style>
@@ -28,11 +28,11 @@
   <g filter="url(#shadow)"><rect x="704" y="492" width="264" height="62" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="836" y="532" text-anchor="middle">tryLockAsync</text></g>
   <g filter="url(#shadow)"><rect x="1084" y="492" width="264" height="62" rx="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="1.7"/><text class="cardTitle" x="1216" y="526" text-anchor="middle">NonCancellable</text><text class="cardText" x="1216" y="548" text-anchor="middle">unlockAsync awaits</text></g>
 
-  <path class="line" d="M 344 277 L 468 277" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 728 277 L 852 277" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 1112 277 L 1236 277" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line soft" d="M 982 328 L 982 388 L 598 388 L 598 328" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+  <path class="line" d="M 344 277 L 468 277" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 728 277 L 852 277" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1112 277 L 1236 277" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line soft" d="M 982 328 L 982 388 L 598 388 L 598 328" stroke="#DC2626" marker-end="url(#arrowRed)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="790" y="376" text-anchor="middle">stale token -> Rejected</text>
-  <path class="line" d="M 588 523 L 704 523" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 968 523 L 1084 523" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 588 523 L 704 523" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 968 523 L 1084 523" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

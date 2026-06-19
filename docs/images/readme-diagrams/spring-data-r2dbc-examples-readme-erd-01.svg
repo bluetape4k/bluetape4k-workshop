@@ -7,7 +7,7 @@
       .col{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:19px;fill:#263244}.note{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:17px;fill:#475569}
       .line{fill:none;stroke:#64748b;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
     </style>
-    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#64748b"/></marker>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#64748b" stroke-dasharray="none"/></marker>
   </defs>
   <rect class="bg" width="1500" height="760"/>
   <text class="title" x="70" y="70">R2DBC Example Schemas</text>
@@ -45,6 +45,6 @@
   <text class="name" x="365" y="565">Schema scope</text>
   <text class="note" x="365" y="600">Tables are recreated inside integration tests; there is no cross-table foreign key.</text>
 
-  <path class="line" d="M750 310 L750 385 L480 385" marker-end="url(#arrow)"/>
+  <path class="line" d="M750 310 L750 385 L480 385" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="note" x="614" y="372">generates customer.id</text>
 </svg>

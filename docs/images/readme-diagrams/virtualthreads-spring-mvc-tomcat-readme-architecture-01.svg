@@ -17,13 +17,13 @@
       .icon-stroke { fill: none; stroke: #334155; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <marker id="blueArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke-dasharray="none"/>
     </marker>
     <marker id="greenArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#16a34a"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#16a34a" stroke-dasharray="none"/>
     </marker>
     <marker id="orangeArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#ea580c"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#ea580c" stroke-dasharray="none"/>
     </marker>
   </defs>
 
@@ -42,8 +42,7 @@
   <rect class="card" x="885" y="215" width="310" height="94"/>
   <text class="card-title" x="1040" y="252" text-anchor="middle">Client</text>
   <text class="body" x="1040" y="282" text-anchor="middle">HTTP requests</text>
-  <rect class="card" x="1260" y="215" width="285" height="94"/>
-  <text class="card-title" x="1402" y="252" text-anchor="middle">Spring Boot</text>
+  <rect class="card" x="1260" y="215" width="285" height="94"/>  <text class="card-title" x="1402" y="252" text-anchor="middle">Spring Boot</text>
   <text class="body" x="1402" y="282" text-anchor="middle">application bootstrap</text>
 
   <rect class="layer service" x="70" y="405" width="1540" height="250"/>
@@ -59,8 +58,7 @@
   <rect class="card" x="930" y="485" width="290" height="110"/>
   <text class="card-title" x="1075" y="528" text-anchor="middle">Member / Team</text>
   <text class="body" x="1075" y="558" text-anchor="middle">MVC + JPA endpoints</text>
-  <rect class="card" x="1295" y="485" width="250" height="110"/>
-  <text class="card-title" x="1420" y="528" text-anchor="middle">Httpbin</text>
+  <rect class="card" x="1295" y="485" width="250" height="110"/>  <text class="card-title" x="1420" y="528" text-anchor="middle">Httpbin</text>
   <text class="body" x="1420" y="558" text-anchor="middle">blocking HTTP call</text>
 
   <rect class="layer exec" x="70" y="705" width="1540" height="145"/>
@@ -81,15 +79,14 @@
   <path d="M780 940v25c0 7 13 12 30 12s30-5 30-12v-25" fill="#fff0d8" stroke="#8c6f33" stroke-width="3"/>
   <path d="M780 956c0 7 13 12 30 12s30-5 30-12" fill="none" stroke="#8c6f33" stroke-width="2.5"/>
   <text class="card-title" x="910" y="956" text-anchor="middle">H2 DB</text>
-  <rect class="card" x="1110" y="915" width="310" height="65"/>
-  <text class="card-title" x="1265" y="956" text-anchor="middle">Testcontainers Httpbin</text>
+  <rect class="card" x="1110" y="915" width="310" height="65"/>  <text class="card-title" x="1265" y="956" text-anchor="middle">Testcontainers Httpbin</text>
 
-  <path class="line" d="M1040 309 L1040 380 L310 380 L310 485" stroke="#2563eb" marker-end="url(#blueArrow)"/>
-  <path class="line" d="M665 309 L665 382 L310 382 L310 485" stroke="#2563eb" marker-end="url(#blueArrow)"/>
-  <path class="line" d="M310 595 L310 675 L430 675 L430 765" stroke="#16a34a" marker-end="url(#greenArrow)"/>
-  <path class="line" d="M710 595 L710 675 L820 675 L820 765" stroke="#16a34a" marker-end="url(#greenArrow)"/>
-  <path class="line" d="M1420 595 L1420 690 L1200 690 L1200 765" stroke="#16a34a" marker-end="url(#greenArrow)"/>
-  <path class="line" d="M1075 595 L1075 680 L980 680 L980 890 L525 890 L525 915" stroke="#ea580c" marker-end="url(#orangeArrow)"/>
-  <path class="line" d="M670 948 L760 948" stroke="#ea580c" marker-end="url(#orangeArrow)"/>
-  <path class="line" d="M1420 595 L1420 875 L1265 875 L1265 915" stroke="#ea580c" marker-end="url(#orangeArrow)"/>
+  <path class="line" d="M1040 309 L1040 380 L310 380 L310 485" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M665 309 L665 382 L310 382 L310 485" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M310 595 L310 675 L430 675 L430 765" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M710 595 L710 675 L820 675 L820 765" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M1420 595 L1420 690 L1200 690 L1200 765" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M1075 595 L1075 680 L980 680 L980 890 L525 890 L525 915" stroke="#ea580c" marker-end="url(#orangeArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M670 948 L760 948" stroke="#ea580c" marker-end="url(#orangeArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M1420 595 L1420 875 L1265 875 L1265 915" stroke="#ea580c" marker-end="url(#orangeArrow)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

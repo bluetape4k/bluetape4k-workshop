@@ -2,9 +2,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1660" height="760" viewBox="0 0 1660 760" role="img" aria-label="Redis Cluster demo architecture">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
-    <marker id="arrowRed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#DC2626"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowRed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#DC2626" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.nodeText{font-family:"Comic Mono";font-size:13px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
     </style>
@@ -12,8 +12,7 @@
 <marker id="arrowBlue-0891b2" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path stroke-dasharray="none" d="M 0 0 L 12 6 L 0 12 Z" fill="#0891b2"/></marker>
 </defs>
   <rect class="canvas" width="1660" height="760"/>
-  <rect class="frame" x="24" y="24" width="1612" height="712" rx="24"/>
-  <text class="title" x="830" y="72" text-anchor="middle">Redis Cluster demo architecture</text>
+  <rect class="frame" x="24" y="24" width="1612" height="712" rx="24"/>  <text class="title" x="830" y="72" text-anchor="middle">Redis Cluster demo architecture</text>
   <text class="subtitle" x="830" y="104" text-anchor="middle">Testcontainers starts a 3 master / 3 replica Redis Cluster and Spring Data routes cluster operations through Lettuce.</text>
 
   <rect class="layer" x="72" y="146" width="350" height="500" rx="18"/>
@@ -36,8 +35,7 @@
   <g filter="url(#shadow)">
     <rect x="504" y="228" width="254" height="132" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
     <rect x="526" y="268" width="42" height="42" rx="10" fill="#E0F2FE" stroke="#0284C7" stroke-width="2.2"/>
-    <text x="547" y="295" text-anchor="middle" font-family="Comic Mono" font-size="14" fill="#0369A1">TC</text>
-    <text class="cardTitle" x="668" y="270" text-anchor="middle">Redis Cluster</text>
+    <text x="547" y="295" text-anchor="middle" font-family="Comic Mono" font-size="14" fill="#0369A1">TC</text>  <text class="cardTitle" x="668" y="270" text-anchor="middle">Redis Cluster</text>
     <text class="cardText" x="668" y="304" text-anchor="middle">Server launcher</text>
     <text class="cardText" x="657" y="330" text-anchor="middle">6 container nodes</text>
   </g>
@@ -48,8 +46,7 @@
     <text class="cardText" x="631" y="544" text-anchor="middle">container port mapping</text>
   </g>
 
-  <rect class="layer" x="860" y="146" width="438" height="500" rx="18"/>
-  <text class="layerLabel" x="888" y="184">Redis Cluster topology</text>
+  <rect class="layer" x="860" y="146" width="438" height="500" rx="18"/>  <text class="layerLabel" x="888" y="184">Redis Cluster topology</text>
   <g filter="url(#shadow)">
     <rect x="900" y="232" width="358" height="318" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/>
     <circle cx="1082" cy="274" r="24" fill="#FEE2E2" stroke="#DC2626" stroke-width="2.4"/>
@@ -76,9 +73,9 @@
       <rect x="1136" y="456" width="88" height="46" rx="12" fill="#F8FAFC" stroke="#94A3B8" stroke-width="1.4"/>
       <text class="nodeText" x="1180" y="484" text-anchor="middle">Replica 3</text>
     </g>
-    <path class="line soft" d="M 978 418 L 978 456" stroke="#DC2626" marker-end="url(#arrowRed)"/>
-    <path class="line soft" d="M 1079 418 L 1079 456" stroke="#DC2626" marker-end="url(#arrowRed)"/>
-    <path class="line soft" d="M 1180 418 L 1180 456" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+    <path class="line soft" d="M 978 418 L 978 456" stroke="#DC2626" marker-end="url(#arrowRed)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="line soft" d="M 1079 418 L 1079 456" stroke="#DC2626" marker-end="url(#arrowRed)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="line soft" d="M 1180 418 L 1180 456" stroke="#DC2626" marker-end="url(#arrowRed)" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 
   <rect class="layer" x="1340" y="146" width="248" height="500" rx="18"/>
@@ -94,10 +91,10 @@
     <text class="cardText" x="1464" y="508" text-anchor="middle">1..99 doubled</text>
   </g>
 
-  <path class="line" d="M 384 302 L 504 294" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 384 504 L 504 504" stroke="#0D9488" marker-end="url(#arrowGreen-0d9488)"/>
-  <path class="line" d="M 758 294 L 900 314" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 758 504 L 900 482" stroke="#0891B2" marker-end="url(#arrowBlue-0891b2)"/>
-  <path class="line" d="M 1258 392 L 1362 294" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 1258 482 L 1362 486" stroke="#0D9488" marker-end="url(#arrowGreen-0d9488)"/>
+  <path class="line" d="M 384 302 L 504 294" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 384 504 L 504 504" stroke="#0D9488" marker-end="url(#arrowGreen-0d9488)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 758 294 L 900 314" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 758 504 L 900 482" stroke="#0891B2" marker-end="url(#arrowBlue-0891b2)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1258 392 L 1362 294" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1258 482 L 1362 486" stroke="#0D9488" marker-end="url(#arrowGreen-0d9488)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

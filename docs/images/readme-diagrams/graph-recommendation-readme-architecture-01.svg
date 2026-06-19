@@ -2,10 +2,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1320" height="900" viewBox="0 0 1320 900" role="img" aria-label="graph-recommendation architecture diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#3B82F6"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
-    <marker id="arrowRose" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#D14F6B"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#3B82F6" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/></marker>
+    <marker id="arrowRose" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#D14F6B" stroke-dasharray="none"/></marker>
     <style>
       .canvas { fill: #F8FAFC; }
       .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
@@ -97,14 +97,14 @@
     <text class="cardText" x="948" y="780" text-anchor="middle">integrationTest</text>
   </g>
 
-  <path class="line" d="M 463 220 L 463 270 L 251 270 L 251 372" stroke="#3B82F6" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 857 220 L 857 270 L 1067 270 L 1067 360" stroke="#3B82F6" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 386 407 L 524 407" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 794 407 L 932 407" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 251 442 L 251 520 L 391 520 L 391 560" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 659 454 L 659 520 L 931 520 L 931 560" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 1067 454 L 1067 492 L 170 492 L 170 594 L 266 594" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 659 628 L 659 674 L 396 674 L 396 728" stroke="#D14F6B" marker-end="url(#arrowRose)"/>
-  <path class="line" d="M 659 628 L 659 728" stroke="#D14F6B" marker-end="url(#arrowRose)"/>
-  <path class="line" d="M 659 628 L 659 674 L 928 674 L 928 728" stroke="#D14F6B" marker-end="url(#arrowRose)"/>
+  <path class="line" d="M 463 220 L 463 270 L 251 270 L 251 372" stroke="#3B82F6" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 857 220 L 857 270 L 1067 270 L 1067 360" stroke="#3B82F6" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 386 407 L 524 407" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 794 407 L 932 407" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 251 442 L 251 520 L 391 520 L 391 560" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 659 454 L 659 520 L 931 520 L 931 560" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1067 454 L 1067 492 L 170 492 L 170 594 L 266 594" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 659 628 L 659 674 L 396 674 L 396 728" stroke="#D14F6B" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 659 628 L 659 728" stroke="#D14F6B" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 659 628 L 659 674 L 928 674 L 928 728" stroke="#D14F6B" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

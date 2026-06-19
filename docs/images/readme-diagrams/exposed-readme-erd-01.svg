@@ -40,17 +40,17 @@
   <line class="schemaLine" x1="1398" y1="190" x2="1782" y2="190"/>
 
   <g id="relationships">
-    <path class="relationship" d="M 516 375 H 662"/>
+    <path class="relationship" d="M 516 375 H 662" stroke-linecap="round" stroke-linejoin="round"/>
     <path class="crow" d="M 662 375 L 638 361 M 662 375 L 638 389"/>
     <path class="crow" d="M 526 355 V 395"/>
     <text class="rel" x="589" y="354" text-anchor="middle">author_id</text>
 
-    <path class="relationship" d="M 516 790 H 662"/>
+    <path class="relationship" d="M 516 790 H 662" stroke-linecap="round" stroke-linejoin="round"/>
     <path class="crow" d="M 662 790 L 638 776 M 662 790 L 638 804"/>
     <path class="crow" d="M 526 770 V 810"/>
     <text class="rel" x="589" y="769" text-anchor="middle">order_id</text>
 
-    <path class="relationship" d="M 1068 790 H 1168"/>
+    <path class="relationship" d="M 1068 790 H 1168" stroke-linecap="round" stroke-linejoin="round"/>
     <path class="crow" d="M 1068 790 L 1092 776 M 1068 790 L 1092 804"/>
     <path class="crow" d="M 1158 770 V 810"/>
     <text class="rel" x="1118" y="769" text-anchor="middle">product_id</text>

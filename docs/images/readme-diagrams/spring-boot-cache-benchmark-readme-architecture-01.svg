@@ -2,8 +2,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1840" height="980" viewBox="0 0 1840 980" role="img" aria-label="Cache benchmark architecture">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
-    <marker id="arrowTeal" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#0891B2"/></marker>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowTeal" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#0891B2" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{stroke-width:1.6;rx:22}
       .title{font-family:"Architects Daughter";font-size:40px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}
@@ -13,8 +13,7 @@
   </defs>
   <rect class="canvas" width="1840" height="980"/>
   <rect class="frame" x="24" y="24" width="1792" height="932" rx="24"/>
-  <text class="title" x="920" y="72" text-anchor="middle">Cache benchmark runtime</text>
-  <text class="subtitle" x="920" y="106" text-anchor="middle">kotlinx-benchmark runs seven ProductCacheService implementations against H2, Caffeine, Redis, and Redisson near cache.</text>
+  <text class="title" x="920" y="72" text-anchor="middle">Cache benchmark runtime</text>  <text class="subtitle" x="920" y="106" text-anchor="middle">kotlinx-benchmark runs seven ProductCacheService implementations against H2, Caffeine, Redis, and Redisson near cache.</text>
 
   <rect class="layer" x="80" y="152" width="1680" height="170" fill="#EFF6FF" stroke="#BFDBFE"/>
   <text class="layerTitle" x="120" y="196">Benchmark harness</text>
@@ -29,25 +28,25 @@
   <g filter="url(#shadow)"><rect x="652" y="464" width="218" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="761" y="496" text-anchor="middle">Redis Cache</text><text class="cardText" x="761" y="520" text-anchor="middle">@Cacheable remote</text></g>
   <g filter="url(#shadow)"><rect x="908" y="464" width="218" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1017" y="496" text-anchor="middle">Near Cache</text><text class="cardText" x="1017" y="520" text-anchor="middle">RLocalCachedMap</text></g>
   <g filter="url(#shadow)"><rect x="1164" y="464" width="218" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1273" y="496" text-anchor="middle">Read Through</text><text class="cardText" x="1273" y="520" text-anchor="middle">manual get-or-load</text></g>
-  <g filter="url(#shadow)"><rect x="524" y="552" width="260" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="654" y="584" text-anchor="middle">Write Through</text><text class="cardText" x="654" y="608" text-anchor="middle">sync Redis + DB</text></g>
+  <g filter="url(#shadow)"><rect x="524" y="552" width="260" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="654" y="584" text-anchor="middle">Write Through</text>  <text class="cardText" x="654" y="608" text-anchor="middle">sync Redis + DB</text></g>
   <g filter="url(#shadow)"><rect x="1056" y="552" width="260" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1186" y="584" text-anchor="middle">Write Behind</text><text class="cardText" x="1186" y="608" text-anchor="middle">cache now, DB async</text></g>
   <g filter="url(#shadow)"><rect x="1482" y="464" width="218" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1591" y="496" text-anchor="middle">Common API</text><text class="cardText" x="1591" y="520" text-anchor="middle">ProductCacheService</text></g>
 
   <rect class="layer" x="80" y="700" width="1680" height="160" fill="#FFF7ED" stroke="#FED7AA"/>
   <text class="layerTitle" x="120" y="744">Runtime stores</text>
-  <g filter="url(#shadow)"><rect x="280" y="770" width="320" height="72" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><path d="M336 790 C336 780 376 780 376 790 L376 822 C376 832 336 832 336 822 Z M336 790 C336 800 376 800 376 790" fill="#FFEDD5" stroke="#EA580C" stroke-width="2"/><text class="cardTitle" x="456" y="804" text-anchor="middle">H2 database</text><text class="cardText" x="456" y="830" text-anchor="middle">ProductRepository</text></g>
-  <g filter="url(#shadow)"><rect x="760" y="770" width="320" height="72" rx="14" fill="#FFFFFF" stroke="#DC2626" stroke-width="1.7"/><rect x="810" y="790" width="28" height="28" rx="4" fill="#DC2626" transform="rotate(-12 824 804)"/><rect x="834" y="785" width="28" height="28" rx="4" fill="#EF4444" transform="rotate(-12 848 799)"/><rect x="826" y="812" width="28" height="28" rx="4" fill="#B91C1C" transform="rotate(-12 840 826)"/><text class="cardTitle" x="936" y="804" text-anchor="middle">Redis</text><text class="cardText" x="936" y="830" text-anchor="middle">Spring Redis + Redisson</text></g>
-  <g filter="url(#shadow)"><rect x="1240" y="770" width="320" height="72" rx="14" fill="#FFFFFF" stroke="#0891B2" stroke-width="1.7"/><text class="cardTitle" x="1400" y="804" text-anchor="middle">Testcontainers</text><text class="cardText" x="1400" y="830" text-anchor="middle">RedisServer.Launcher</text></g>
+  <g filter="url(#shadow)"><rect x="280" y="770" width="320" height="72" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><path d="M336 790 C336 780 376 780 376 790 L376 822 C376 832 336 832 336 822 Z M336 790 C336 800 376 800 376 790" fill="#FFEDD5" stroke="#EA580C" stroke-width="2"/>  <text class="cardTitle" x="456" y="804" text-anchor="middle">H2 database</text><text class="cardText" x="456" y="830" text-anchor="middle">ProductRepository</text></g>
+  <g filter="url(#shadow)"><rect x="760" y="770" width="320" height="72" rx="14" fill="#FFFFFF" stroke="#DC2626" stroke-width="1.7"/><rect x="810" y="790" width="28" height="28" rx="4" fill="#DC2626" transform="rotate(-12 824 804)"/><rect x="834" y="785" width="28" height="28" rx="4" fill="#EF4444" transform="rotate(-12 848 799)"/><rect x="826" y="812" width="28" height="28" rx="4" fill="#B91C1C" transform="rotate(-12 840 826)"/>  <text class="cardTitle" x="936" y="804" text-anchor="middle">Redis</text>  <text class="cardText" x="936" y="830" text-anchor="middle">Spring Redis + Redisson</text></g>
+  <g filter="url(#shadow)"><rect x="1240" y="770" width="320" height="72" rx="14" fill="#FFFFFF" stroke="#0891B2" stroke-width="1.7"/>  <text class="cardTitle" x="1400" y="804" text-anchor="middle">Testcontainers</text><text class="cardText" x="1400" y="830" text-anchor="middle">RedisServer.Launcher</text></g>
 
-  <path class="line" d="M 520 260 L 760 260" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 1080 260 L 1300 260" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 1450 298 L 1450 346 L 1591 346 L 1591 464" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 249 536 L 249 668 L 440 668 L 440 770" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
-  <path class="line" d="M 505 536 L 505 668 L 440 668 L 440 770" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
-  <path class="line" d="M 654 624 L 654 668 L 440 668 L 440 770" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
-  <path class="line" d="M 761 536 L 761 668 L 920 668 L 920 770" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
-  <path class="line" d="M 1017 536 L 1017 668 L 920 668 L 920 770" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
-  <path class="line" d="M 1273 536 L 1273 668 L 920 668 L 920 770" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
-  <path class="line" d="M 1186 624 L 1186 668 L 920 668 L 920 770" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
-  <path class="line" d="M 1400 770 L 1400 724 L 920 724 L 920 770" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
+  <path class="line" d="M 520 260 L 760 260" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1080 260 L 1300 260" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1450 298 L 1450 346 L 1591 346 L 1591 464" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 249 536 L 249 668 L 440 668 L 440 770" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 505 536 L 505 668 L 440 668 L 440 770" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 654 624 L 654 668 L 440 668 L 440 770" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 761 536 L 761 668 L 920 668 L 920 770" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1017 536 L 1017 668 L 920 668 L 920 770" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1273 536 L 1273 668 L 920 668 L 920 770" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1186 624 L 1186 668 L 920 668 L 920 770" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1400 770 L 1400 724 L 920 724 L 920 770" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

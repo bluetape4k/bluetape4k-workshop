@@ -2,12 +2,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1480" height="760" viewBox="0 0 1480 760" role="img" aria-label="Ktor REST coroutines architecture diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
-    <marker id="arrowTeal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0D9488"/></marker>
-    <marker id="arrowCyan" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0891B2"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
-    <marker id="arrowRed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#DC2626"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowTeal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0D9488" stroke-dasharray="none"/></marker>
+    <marker id="arrowCyan" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0891B2" stroke-dasharray="none"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/></marker>
+    <marker id="arrowRed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#DC2626" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:23px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
     </style>
@@ -82,9 +82,9 @@
     <text class="cardText" x="1311" y="557" text-anchor="middle">64 event buffer</text>
   </g>
 
-  <path class="line" d="M 268 367 L 324 367 L 324 487 L 374 487" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 596 487 L 627 487" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 485 548 L 485 590 L 1009 590 L 1009 548" stroke="#0D9488" marker-end="url(#arrowTeal)"/>
-  <path class="line" d="M 849 487 L 872 487 L 872 366 L 1230 338" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 1311 466 L 1311 430 L 1150 430 L 1150 514 L 1120 514" stroke="#0891B2" marker-end="url(#arrowCyan)"/>
+  <path class="line" d="M 268 367 L 324 367 L 324 487 L 374 487" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 596 487 L 627 487" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 485 548 L 485 590 L 1009 590 L 1009 548" stroke="#0D9488" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 849 487 L 872 487 L 872 366 L 1230 338" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1311 466 L 1311 430 L 1150 430 L 1150 514 L 1120 514" stroke="#0891B2" marker-end="url(#arrowCyan)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

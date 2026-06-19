@@ -24,10 +24,10 @@
       .txLine{fill:none;stroke:#7b66a3;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:8 7;marker-end:url(#arrowTx)}
       .schemaLine{fill:none;stroke:#6a8798;stroke-width:2.6;stroke-linecap:round;stroke-dasharray:7 7;marker-end:url(#arrowSchema)}
     </style>
-    <marker id="arrow" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#53738b"/></marker>
-    <marker id="arrowRepo" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9c6f27"/></marker>
-    <marker id="arrowTx" markerUnits="userSpaceOnUse" markerWidth="13.5" markerHeight="13.5" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#7b66a3"/></marker>
-    <marker id="arrowSchema" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6a8798"/></marker>
+    <marker id="arrow" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#53738b" stroke-dasharray="none"/></marker>
+    <marker id="arrowRepo" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9c6f27" stroke-dasharray="none"/></marker>
+    <marker id="arrowTx" markerUnits="userSpaceOnUse" markerWidth="13.5" markerHeight="13.5" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#7b66a3" stroke-dasharray="none"/></marker>
+    <marker id="arrowSchema" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="10" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6a8798" stroke-dasharray="none"/></marker>
     <g id="databaseIcon">
       <rect x="0" y="0" width="70" height="70" rx="12" fill="#fffaf2" stroke="#28485a" stroke-width="3"/>
       <path d="M17 23v26c0 7 36 7 36 0V23" fill="#fff0d8" stroke="#8c6f33" stroke-width="3.2" stroke-linejoin="round"/>
@@ -78,8 +78,7 @@
   <text class="body" x="1477.5" y="524" text-anchor="middle">OrderLineRepository</text>
   <text class="body" x="1477.5" y="549" text-anchor="middle">ProductRepository</text>
 
-  <rect class="layer" x="78" y="748" width="1524" height="210" rx="15"/>
-  <text class="layerTitle" x="108" y="789">PostgreSQL Tables</text>
+  <rect class="layer" x="78" y="748" width="1524" height="210" rx="15"/>  <text class="layerTitle" x="108" y="789">PostgreSQL Tables</text>
 
   <rect class="card db" x="220" y="820" width="520" height="104" rx="10"/>
   <use href="#databaseIcon" x="250" y="837"/>
@@ -93,8 +92,8 @@
   <text class="body" x="1240" y="884" text-anchor="middle">products are selected FOR UPDATE</text>
   <text class="body" x="1240" y="908" text-anchor="middle">orders and order_lines commit or roll back together</text>
 
-  <path class="line" d="M 382.5 294 V 455"/>
-  <path class="line" d="M 1297.5 294 V 435"/>
+  <path class="line" d="M 382.5 294 V 455" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1297.5 294 V 435" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="repoLine" d="M 500 501 H 560"/>
   <path class="repoLine" d="M 1335 501 H 1375"/>
   <path class="repoLine" d="M 765 567 V 710 H 500 V 820"/>

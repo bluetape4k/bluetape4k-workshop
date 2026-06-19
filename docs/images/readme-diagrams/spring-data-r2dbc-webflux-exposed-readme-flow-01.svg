@@ -7,8 +7,8 @@
       .card{fill:#fff;stroke:#cbd5e1;stroke-width:1.5;rx:18;ry:18}.lane{fill:#f1f5f9;stroke:#cbd5e1;stroke-width:1.3;rx:20;ry:20}
       .line{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}.db{fill:#fff;stroke:#94a3b8;stroke-width:2}.dbtop{fill:#e0f2fe;stroke:#0284c7;stroke-width:2}
     </style>
-    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb"/></marker>
-    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#059669"/></marker>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb" stroke-dasharray="none"/></marker>
+    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#059669" stroke-dasharray="none"/></marker>
   </defs>
   <rect class="bg" width="1760" height="860"/>
   <text class="title" x="70" y="70">Users Request Flow</text>
@@ -42,10 +42,10 @@
     <text class="card-title" x="121" y="64">users table</text>
   </g>
 
-  <path class="line" d="M440 300 L440 365" stroke="#2563eb" marker-end="url(#arrow)"/>
-  <path class="line" d="M440 440 L440 505" stroke="#2563eb" marker-end="url(#arrow)"/>
-  <path class="line" d="M440 580 L790 735" stroke="#2563eb" marker-end="url(#arrow)"/>
-  <path class="line" d="M1280 300 L1280 365" stroke="#059669" marker-end="url(#arrow-green)"/>
-  <path class="line" d="M1280 440 L1280 505" stroke="#059669" marker-end="url(#arrow-green)"/>
-  <path class="line" d="M1280 580 L970 735" stroke="#059669" marker-end="url(#arrow-green)"/>
+  <path class="line" d="M440 300 L440 365" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M440 440 L440 505" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M440 580 L790 735" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M1280 300 L1280 365" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M1280 440 L1280 505" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M1280 580 L970 735" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

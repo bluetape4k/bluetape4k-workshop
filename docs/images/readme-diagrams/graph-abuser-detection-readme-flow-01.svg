@@ -5,10 +5,10 @@
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/>
     </filter>
     <marker id="arrowMain" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/>
     </marker>
     <marker id="arrowSide" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#B45309"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#B45309" stroke-dasharray="none"/>
     </marker>
     <style>
       .canvas { fill: #F8FAFC; }
@@ -55,9 +55,9 @@
     <text class="cardText" x="455" y="636" text-anchor="middle">users exclude the seed user</text>
   </g>
 
-  <path class="line" d="M 455 204 L 455 266" stroke="#2563EB" marker-end="url(#arrowMain)"/>
-  <path class="line" d="M 455 360 L 455 424" stroke="#2563EB" marker-end="url(#arrowMain)"/>
-  <path class="line" d="M 455 518 L 455 582" stroke="#2563EB" marker-end="url(#arrowMain)"/>
+  <path class="line" d="M 455 204 L 455 266" stroke="#2563EB" marker-end="url(#arrowMain)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 455 360 L 455 424" stroke="#2563EB" marker-end="url(#arrowMain)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 455 518 L 455 582" stroke="#2563EB" marker-end="url(#arrowMain)" stroke-linecap="round" stroke-linejoin="round"/>
   <rect class="labelBox" x="500" y="224" width="166" height="24" rx="12"/>
   <text class="label" x="583" y="237" text-anchor="middle">Direction.OUTGOING</text>
   <rect class="labelBox" x="500" y="382" width="166" height="24" rx="12"/>
@@ -83,9 +83,9 @@
     <text class="cardText" x="1029" y="564" text-anchor="middle">rank User vertices</text>
   </g>
 
-  <path class="line" d="M 600 313 L 744 313 L 744 234 L 918 234" stroke="#B45309" marker-end="url(#arrowSide)"/>
-  <path class="line" d="M 600 471 L 780 471 L 780 392 L 918 392" stroke="#B45309" marker-end="url(#arrowSide)"/>
-  <path class="line" d="M 600 620 L 816 620 L 816 550 L 918 550" stroke="#B45309" marker-end="url(#arrowSide)"/>
+  <path class="line" d="M 600 313 L 744 313 L 744 234 L 918 234" stroke="#B45309" marker-end="url(#arrowSide)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 600 471 L 780 471 L 780 392 L 918 392" stroke="#B45309" marker-end="url(#arrowSide)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 600 620 L 816 620 L 816 550 L 918 550" stroke="#B45309" marker-end="url(#arrowSide)" stroke-linecap="round" stroke-linejoin="round"/>
 
   <text class="noteText" x="630" y="706" text-anchor="middle">Referral edges do not participate in identifier BFS; they have their own cycle-detection query.</text>
 </svg>

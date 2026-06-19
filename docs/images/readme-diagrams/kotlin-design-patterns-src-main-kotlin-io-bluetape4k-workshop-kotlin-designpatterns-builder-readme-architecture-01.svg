@@ -2,8 +2,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1320" height="620" viewBox="0 0 1320 620" role="img" aria-label="Builder pattern diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#fff;stroke:#D6E0E8;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.cardTitle{font-family:"Architects Daughter";font-size:25px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
     </style>
@@ -20,8 +20,8 @@
 
   <g filter="url(#shadow)"><rect x="254" y="396" width="812" height="92" rx="16" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.7"/><text class="cardTitle" x="660" y="432" text-anchor="middle">Kotlin alternative: HeroDataClass</text><text class="cardText" x="660" y="462" text-anchor="middle">Default nullable properties can replace a builder when invariants are simple.</text></g>
 
-  <path class="line" d="M 322 231 L 402 231" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 678 231 L 758 231" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 998 231 L 1078 231" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 660 312 L 660 396" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 322 231 L 402 231" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 678 231 L 758 231" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 998 231 L 1078 231" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 660 312 L 660 396" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

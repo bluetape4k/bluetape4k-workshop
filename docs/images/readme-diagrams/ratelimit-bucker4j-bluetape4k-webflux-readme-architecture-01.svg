@@ -2,10 +2,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1660" height="700" viewBox="0 0 1660 700" role="img" aria-label="WebFlux Bucket4j rate limit architecture diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
-    <marker id="arrowRose" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#E11D48"/></marker>
-    <marker id="arrowSlate" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#475569"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowRose" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#E11D48" stroke-dasharray="none"/></marker>
+    <marker id="arrowSlate" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#475569" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:29px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
     </style>
@@ -65,15 +65,14 @@
   <g filter="url(#shadow)">
     <rect x="1232" y="424" width="314" height="118" rx="16" fill="#FFF1F2" stroke="#E11D48" stroke-width="1.7"/>
     <rect x="1264" y="458" width="78" height="34" rx="17" fill="#FFE4E6" stroke="#E11D48" stroke-width="2.8"/>
-    <path d="M 1264 475 C 1264 496 1342 496 1342 475" fill="none" stroke="#E11D48" stroke-width="2.8"/>
-    <text class="cardTitle" x="1432" y="472" text-anchor="middle">Redis</text>
+    <path d="M 1264 475 C 1264 496 1342 496 1342 475" fill="none" stroke="#E11D48" stroke-width="2.8"/>  <text class="cardTitle" x="1432" y="472" text-anchor="middle">Redis</text>
     <text class="cardText" x="1432" y="504" text-anchor="middle">Lettuce proxy manager</text>
   </g>
 
-  <path class="line" d="M 266 325 L 402 281" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 660 281 L 800 280" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 660 480 L 800 480" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 1092 280 L 1232 282" stroke="#475569" marker-end="url(#arrowSlate)"/>
-  <path class="line" d="M 1092 480 L 1232 483" stroke="#E11D48" marker-end="url(#arrowRose)"/>
-  <path class="line" d="M 1389 346 L 1389 424" stroke="#E11D48" marker-end="url(#arrowRose)"/>
+  <path class="line" d="M 266 325 L 402 281" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 660 281 L 800 280" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 660 480 L 800 480" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1092 280 L 1232 282" stroke="#475569" marker-end="url(#arrowSlate)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1092 480 L 1232 483" stroke="#E11D48" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1389 346 L 1389 424" stroke="#E11D48" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

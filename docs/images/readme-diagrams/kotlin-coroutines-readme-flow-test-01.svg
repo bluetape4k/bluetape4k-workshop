@@ -5,13 +5,13 @@
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/>
     </filter>
     <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/>
     </marker>
     <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/>
     </marker>
     <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/>
     </marker>
     <style>
       .canvas { fill: #F8FAFC; }
@@ -72,10 +72,10 @@
     <text class="cardText" x="991" y="480" text-anchor="middle">cancel, assertion error</text>
   </g>
 
-  <path class="line" d="M 346 236 L 426 236" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 656 236 L 736 236" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 966 236 L 1046 236" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 1082 272 L 1082 324 L 331 324 L 331 428" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 1121 272 L 1121 348 L 661 348 L 661 428" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 1160 272 L 1160 372 L 991 372 L 991 428" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 346 236 L 426 236" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 656 236 L 736 236" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 966 236 L 1046 236" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1082 272 L 1082 324 L 331 324 L 331 428" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1121 272 L 1121 348 L 661 348 L 661 428" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1160 272 L 1160 372 L 991 372 L 991 428" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

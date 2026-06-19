@@ -2,7 +2,7 @@
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.09"/></filter>
   <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
-    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297" stroke-dasharray="none"/>
   </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
@@ -12,15 +12,14 @@
     .mono{font-family:"Comic Mono";font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Mono";font-size:12px;font-weight:400;fill:#536273}
     .card{stroke-width:2.1;filter:url(#shadow)}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow);stroke-linecap:round;stroke-linejoin:round}
   </style>
 </defs>
 <rect class="canvas" width="960" height="520"/>
 <rect class="frame" x="24" y="20" width="912" height="476" rx="20"/>
 
 <!-- Title -->
-<text class="title" x="48" y="66">Leader Election Component Architecture</text>
-<text class="subtitle" x="48" y="90">Spring Boot  -  LeaderElector  -  Redis/Lettuce  -  bluetape4k-leader</text>
+<text class="title" x="48" y="66">Leader Election Component Architecture</text>  <text class="subtitle" x="48" y="90">Spring Boot  -  LeaderElector  -  Redis/Lettuce  -  bluetape4k-leader</text>
 
 <!-- Row 1: LeaderElectionApp (top center) -->
 <rect class="card" x="330" y="108" width="300" height="64" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
@@ -37,8 +36,8 @@
 <text class="small" x="760" y="264" text-anchor="middle">@Scheduled  -  dispatches LeaderGuardedJob</text>
 
 <!-- Arrows Row1 -> Row2 -->
-<line class="line" x1="410" y1="172" x2="280" y2="216"/>
-<line class="line" x1="550" y1="172" x2="680" y2="216"/>
+<line class="line" x1="410" y1="172" x2="280" y2="216" stroke-linecap="round" stroke-linejoin="round"/>
+<line class="line" x1="550" y1="172" x2="680" y2="216" stroke-linecap="round" stroke-linejoin="round"/>
 
 <!-- Row 3: LettuceLeaderElector | Jobs -->
 <rect class="card" x="60" y="332" width="280" height="68" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
@@ -54,15 +53,14 @@
 <text class="small" x="850" y="360" text-anchor="middle">LeaderGuardedJob</text>
 
 <!-- Arrows Row2 -> Row3 -->
-<line class="line" x1="200" y1="284" x2="200" y2="332"/>
-<line class="line" x1="760" y1="284" x2="650" y2="316"/>
-<line class="line" x1="780" y1="284" x2="860" y2="316"/>
+<line class="line" x1="200" y1="284" x2="200" y2="332" stroke-linecap="round" stroke-linejoin="round"/>
+<line class="line" x1="760" y1="284" x2="650" y2="316" stroke-linecap="round" stroke-linejoin="round"/>
+<line class="line" x1="780" y1="284" x2="860" y2="316" stroke-linecap="round" stroke-linejoin="round"/>
 
 <!-- Row 4: Redis (full width) -->
-<rect class="card" x="60" y="430" width="840" height="56" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="480" y="455" text-anchor="middle">Redis (Testcontainers)</text>
+<rect class="card" x="60" y="430" width="840" height="56" rx="14" fill="#FDECEF" stroke="#DC6B82"/>  <text class="smallLabel" x="480" y="455" text-anchor="middle">Redis (Testcontainers)</text>
 <text class="small" x="480" y="473" text-anchor="middle">SETNX leader:{lockName}  -  atomic distributed lock  -  single instance tiebreaker</text>
 
 <!-- Arrow LettuceLeaderElector -> Redis -->
-<line class="line" x1="200" y1="400" x2="350" y2="430"/>
+<line class="line" x1="200" y1="400" x2="350" y2="430" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

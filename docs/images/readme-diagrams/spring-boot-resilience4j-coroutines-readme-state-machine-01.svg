@@ -5,13 +5,13 @@
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.15"/>
     </filter>
     <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/>
+      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none"/>
     </marker>
     <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/>
+      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A" stroke-dasharray="none"/>
     </marker>
     <marker id="arrowRed" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#DC2626"/>
+      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#DC2626" stroke-dasharray="none"/>
     </marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}
@@ -45,13 +45,13 @@
     <text class="stateText" x="1225" y="354" text-anchor="middle">measure recovery</text>
   </g>
 
-  <path class="line" d="M 440 315 L 585 315" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+  <path class="line" d="M 440 315 L 585 315" stroke="#DC2626" marker-end="url(#arrowRed)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="512" y="292" text-anchor="middle">failure rate threshold</text>
-  <path class="line" d="M 915 315 L 1060 315" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 915 315 L 1060 315" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="987" y="292" text-anchor="middle">wait duration elapsed</text>
-  <path class="line" d="M 1225 390 L 1225 490 L 275 490 L 275 390" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1225 390 L 1225 490 L 275 490 L 275 390" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="750" y="472" text-anchor="middle">probe calls succeed</text>
-  <path class="line" d="M 1060 353 L 930 438 L 820 390" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+  <path class="line" d="M 1060 353 L 930 438 L 820 390" stroke="#DC2626" marker-end="url(#arrowRed)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="988" y="424" text-anchor="middle">probe fails</text>
 
   <g filter="url(#shadow)">

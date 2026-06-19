@@ -1,73 +1,68 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1420" height="1371" viewBox="0 0 1420 1371" role="img" aria-label="Hibernate Reactive Panache CRUD Sequence">
-<defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L7 4 L1 7 Z" fill="#5b8def"/></marker>
-  <marker id="arrowTeal" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L7 4 L1 7 Z" fill="#45a7a1"/></marker>
-  <style>
-    .canvas{fill:#f7f9fc}
-    .frame{fill:#ffffff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter";font-size:34px;fill:#102033}
-    .subtitle{font-family:"Comic Mono";font-size:13px;fill:#536273}
-    .actor{font-family:"Architects Daughter";font-size:17px;fill:#102033}
-    .message{font-family:"Comic Mono";font-size:12px;fill:#263445}
-    .detail{font-family:"Comic Mono";font-size:11px;fill:#536273}
-    .lifeline{stroke:#b8c4d3;stroke-width:1.4;stroke-dasharray:7 6}
-    .call{stroke:#5b8def;stroke-width:2.15;fill:none;marker-end:url(#arrowBlue)}
-    .return{stroke:#45a7a1;stroke-width:2.05;stroke-dasharray:7 5;fill:none;marker-end:url(#arrowTeal)}
-    .box{stroke-width:1.8;filter:url(#shadow)}
-  </style>
-</defs>
-<rect class="canvas" width="1420" height="1371"/>
-<rect class="frame" x="24" y="20" width="1372" height="1331" rx="18"/>
-<text class="title" x="48" y="58">Hibernate Reactive Panache CRUD Sequence</text>
-<text class="subtitle" x="50" y="84">Quarkus  -  RESTEasy  -  PanacheEntity  -  SessionFactory  -  PostgreSQL</text>
-<rect class="box" x="40" y="108" width="220" height="58" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
-<text class="actor" x="150" y="137" text-anchor="middle" dominant-baseline="middle">Client</text>
-<line class="lifeline" x1="150" y1="166" x2="150" y2="1313"/>
-<rect class="box" x="320" y="108" width="220" height="58" rx="10" fill="#eaf7ef" stroke="#7aa0c4"/>
-<text class="actor" x="430" y="137" text-anchor="middle" dominant-baseline="middle">Resource RESTEasy</text>
-<line class="lifeline" x1="430" y1="166" x2="430" y2="1313"/>
-<rect class="box" x="600" y="108" width="220" height="58" rx="10" fill="#fff3d9" stroke="#7aa0c4"/>
-<text class="actor" x="710" y="130" text-anchor="middle" dominant-baseline="middle">PanacheEntity Reactive</text>
-<text class="actor" x="710" y="144" text-anchor="middle" dominant-baseline="middle">ORM</text>
-<line class="lifeline" x1="710" y1="166" x2="710" y2="1313"/>
-<rect class="box" x="880" y="108" width="220" height="58" rx="10" fill="#f1ecff" stroke="#7aa0c4"/>
-<text class="actor" x="990" y="130" text-anchor="middle" dominant-baseline="middle">SessionFactory</text>
-<text class="actor" x="990" y="144" text-anchor="middle" dominant-baseline="middle">Hibernate</text>
-<line class="lifeline" x1="990" y1="166" x2="990" y2="1313"/>
-<rect class="box" x="1160" y="108" width="220" height="58" rx="10" fill="#fdecef" stroke="#7aa0c4"/>
-<text class="actor" x="1270" y="130" text-anchor="middle" dominant-baseline="middle">PostgreSQL</text>
-<text class="actor" x="1270" y="144" text-anchor="middle" dominant-baseline="middle">Testcontainers</text>
-<line class="lifeline" x1="1270" y1="166" x2="1270" y2="1313"/>
-<path class="call" d="M150 205 L430 205"/>
-<rect class="message-label" x="75" y="219" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="290" y="234.5" text-anchor="middle" dominant-baseline="middle">1. POST /entity body</text>
-<path class="call" d="M430 313 L710 313"/>
-<rect class="message-label" x="355" y="327" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="570" y="342.5" text-anchor="middle" dominant-baseline="middle">2. entity.persist()</text>
-<path class="call" d="M710 421 L990 421"/>
-<rect class="message-label" x="635" y="435" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="850" y="450.5" text-anchor="middle" dominant-baseline="middle">3. INSERT INTO entity ...</text>
-<path class="call" d="M990 529 L1270 529"/>
-<rect class="message-label" x="915" y="543" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="1130" y="558.5" text-anchor="middle" dominant-baseline="middle">4. execute SQL</text>
-<path class="return" d="M1270 637 L990 637"/>
-<rect class="message-label" x="915" y="651" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="1130" y="666.5" text-anchor="middle" dominant-baseline="middle">5. entity id returned</text>
-<path class="return" d="M990 745 L710 745"/>
-<rect class="message-label" x="635" y="759" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="850" y="774.5" text-anchor="middle" dominant-baseline="middle">6. Uni&amp;#60;Entity&amp;#62;</text>
-<path class="return" d="M710 853 L430 853"/>
-<rect class="message-label" x="355" y="867" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="570" y="882.5" text-anchor="middle" dominant-baseline="middle">7. 201 Created response</text>
-<path class="return" d="M430 961 L150 961"/>
-<rect class="message-label" x="75" y="975" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="290" y="990.5" text-anchor="middle" dominant-baseline="middle">8. GET /entity/{id} - Read</text>
-<path class="call" d="M150 1069 L430 1069"/>
-<rect class="message-label" x="75" y="1083" width="430" height="46" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="290" y="1098.5" text-anchor="middle" dominant-baseline="middle">9. GET /entity/{id} -> find() -> SELECT -> entity -></text>
-<text class="message" x="290" y="1113.5" text-anchor="middle" dominant-baseline="middle">200 OK</text>
-<path class="call" d="M430 1177 L1270 1177"/>
-<rect class="message-label" x="570" y="1191" width="560" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="850" y="1206.5" text-anchor="middle" dominant-baseline="middle">10. Resource RESTEasy to PostgreSQL Testcontainers</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1670" height="1210" viewBox="0 0 1670 1210" role="img" aria-labelledby="title desc">
+  <title id="title">Hibernate Reactive Panache CRUD Sequence</title>
+  <desc id="desc">RESTEasy resources return Uni values while Hibernate Reactive executes CRUD work against PostgreSQL.</desc>
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
+    <style>
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:21px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:13px;fill:#546A73}.msg{font-size:14px}.note{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.return,.skip{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call);stroke-linecap:round;stroke-linejoin:round}.work{stroke:#6E8F4F;marker-end:url(#arrow-work);stroke-linecap:round;stroke-linejoin:round}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret);stroke-linecap:round;stroke-linejoin:round}.skip{stroke:#B86868;marker-end:url(#arrow-skip);stroke-linecap:round;stroke-linejoin:round}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.skipLabel{stroke:#D9ABAB}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.skipBadge{fill:#FFF0F0;stroke:#B86868}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.skipText,.badgeText.skipText{fill:#9D4F4F}.alt{fill:#FFF7ED;fill-opacity:.42;stroke:#D08A39;stroke-width:2.4;stroke-dasharray:12 8}.branch{fill:#FFFFFF;fill-opacity:.82;stroke:#E6C68C;stroke-width:1.5}
+    </style>
+    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none"/></marker>
+    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none"/></marker>
+    <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none"/></marker>
+    <marker id="arrow-skip" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none"/></marker>
+  </defs>
+  <rect x="24" y="24" width="1622" height="1162" rx="20" class="frame"/>
+  <text x="835" y="76" text-anchor="middle" class="title">Hibernate Reactive Panache CRUD Sequence</text>  <text x="835" y="106" text-anchor="middle" class="subtitle">RESTEasy resources return Uni values while Hibernate Reactive executes CRUD work against PostgreSQL.</text>
+  <g filter="url(#shadow)"><rect x="75" y="156" width="230" height="76" rx="10" class="header"/><text x="190" y="186" text-anchor="middle" class="participant">Client</text><text x="190" y="211" text-anchor="middle" class="role">HTTP caller</text></g>
+  <line x1="190" y1="232" x2="190" y2="1098" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="398" y="156" width="230" height="76" rx="10" class="header"/><text x="513" y="186" text-anchor="middle" class="participant">Resource</text><text x="513" y="211" text-anchor="middle" class="role">RESTEasy</text></g>
+  <line x1="513" y1="232" x2="513" y2="1098" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="720" y="156" width="230" height="76" rx="10" class="header"/><text x="835" y="186" text-anchor="middle" class="participant">PanacheEntity</text><text x="835" y="211" text-anchor="middle" class="role">reactive entity</text></g>
+  <line x1="835" y1="232" x2="835" y2="1098" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1043" y="156" width="230" height="76" rx="10" class="header"/><text x="1158" y="186" text-anchor="middle" class="participant">SessionFactory</text><text x="1158" y="211" text-anchor="middle" class="role">Hibernate</text></g>
+  <line x1="1158" y1="232" x2="1158" y2="1098" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1365" y="156" width="230" height="76" rx="10" class="header"/><image x="1381" y="176" width="36" height="36" href="data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+UG9zdGdyZVNRTDwvdGl0bGU+PHBhdGggZD0iTTIzLjU1OTQgMTQuNzIyOGEuNTI2OS41MjY5IDAgMCAwLS4wNTYzLS4xMTkxYy0uMTM5LS4yNjMyLS40NzY4LS4zNDE4LTEuMDA3NC0uMjMyMS0xLjY1MzMuMzQxMS0yLjI5MzUuMTMxMi0yLjUyNTYtLjAxOTEgMS4zNDItMi4wNDgyIDIuNDQ1LTQuNTIyIDMuMDQxMS02LjgyOTcuMjcxNC0xLjA1MDcuNzk4Mi0zLjUyMzcuMTIyMi00LjczMTZhMS41NjQxIDEuNTY0MSAwIDAgMC0uMTUwOS0uMjM1QzIxLjY5MzEuOTA4NiAxOS44MDA3LjAyNDggMTcuNTA5OS4wMDA1Yy0xLjQ5NDctLjAxNTgtMi43NzA1LjM0NjEtMy4xMTYxLjQ3OTRhOS40NDkgOS40NDkgMCAwIDAtLjUxNTktLjA4MTYgOC4wNDQgOC4wNDQgMCAwIDAtMS4zMTE0LS4xMjc4Yy0xLjE4MjItLjAxODQtMi4yMDM4LjI2NDItMy4wNDk4Ljg0MDYtLjg1NzMtLjMyMTEtNC43ODg4LTEuNjQ1LTcuMjIxOS4wNzg4Qy45MzU5IDIuMTUyNi4zMDg2IDMuODczMy40MzAyIDYuMzA0M2MuMDQwOS44MTguNTA2OSAzLjMzNCAxLjI0MjMgNS43NDM2LjQ1OTggMS41MDY1LjkzODcgMi43MDE5IDEuNDMzNCAzLjU4Mi41NTMuOTk0MiAxLjEyNTkgMS41OTMzIDEuNzE0MyAxLjc4OTUuNDQ3NC4xNDkxIDEuMTMyNy4xNDQxIDEuODU4MS0uNzI3OS44MDEyLS45NjM1IDEuNTkwMy0xLjgyNTggMS45NDQ2LTIuMjA2OS40MzUxLjIzNTUuOTA2NC4zNjI1IDEuMzkuMzc3MmEuMDU2OS4wNTY5IDAgMCAwIC4wMDA0LjAwNDEgMTEuMDMxMiAxMS4wMzEyIDAgMCAwLS4yNDcyLjMwNTRjLS4zMzg5LjQzMDItLjQwOTQuNTE5Ny0xLjUwMDIuNzQ0My0uMzEwMi4wNjQtMS4xMzQ0LjIzMzktMS4xNDY0LjgxMTUtLjAwMjUuMTIyNC4wMzI5LjIzMDkuMDkxOS4zMjY4LjIyNjkuNDIzMS45MjE2LjYwOTcgMS4wMTUuNjMzMSAxLjMzNDUuMzMzNSAyLjUwNDQuMDkyIDMuMzcxNC0uNjc4Ny0uMDE3IDIuMjMxLjA3NzUgNC40MTc0LjM0NTQgNS4wODc0LjIyMTIuNTUyOS43NjE4IDEuOTA0NSAyLjQ2OTIgMS45MDQzLjI1MDUgMCAuNTI2My0uMDI5MS44Mjk2LS4wOTQxIDEuNzgxOS0uMzgyMSAyLjU1NTctMS4xNjk2IDIuODU1LTIuOTA1OS4xNTAzLS44NzA3LjQwMTYtMi44NzUzLjUzODgtNC4xMDEyLjAxNjktLjA3MDMuMDM1Ny0uMTIwNy4wNTctLjEzNjIuMDAwNy0uMDAwNS4wNjk3LS4wNDcxLjQyNzIuMDMwN2EuMzY3My4zNjczIDAgMCAwIC4wNDQzLjAwNjhsLjI1MzkuMDIyMy4wMTQ5LjAwMWMuODQ2OC4wMzg0IDEuOTExNC0uMTQyNiAyLjUzMTItLjQzMDguNjQzOC0uMjk4OCAxLjgwNTctMS4wMzIzIDEuNTk1MS0xLjY2OTh6TTIuMzcxIDExLjg3NjVjLS43NDM1LTIuNDM1OC0xLjE3NzktNC44ODUxLTEuMjEyMy01LjU3MTktLjEwODYtMi4xNzE0LjQxNzEtMy42ODI5IDEuNTYyMy00LjQ5MjcgMS44MzY3LTEuMjk4NiA0LjgzOTgtLjU0MDggNi4xMDgtLjEzLS4wMDMyLjAwMzItLjAwNjYuMDA2MS0uMDA5OC4wMDk0LTIuMDIzOCAyLjA0NC0xLjk3NTggNS41MzYtMS45NzA4IDUuNzQ5NS0uMDAwMi4wODIzLjAwNjYuMTk4OS4wMTYyLjM1OTMuMDM0OC41ODczLjA5OTYgMS42ODA0LS4wNzM1IDIuOTE4NC0uMTYwOSAxLjE1MDQuMTkzNyAyLjI3NjQuOTcyOCAzLjA4OTIuMDgwNi4wODQxLjE2NDguMTYzMS4yNTE4LjIzNzQtLjM0NjguMzcxNC0xLjEwMDQgMS4xOTI2LTEuOTAyNSAyLjE1NzYtLjU2NzcuNjgyNS0uOTU5Ny41NTE3LTEuMDg4Ni41MDg3LS4zOTE5LS4xMzA3LS44MTMtLjU4NzEtMS4yMzgxLTEuMzIyMy0uNDc5Ni0uODM5LS45NjM1LTIuMDMxNy0xLjQxNTUtMy41MTI2em02LjAwNzIgNS4wODcxYy0uMTcxMS0uMDQyOC0uMzI3MS0uMTEzMi0uNDMyMi0uMTc3Mi4wODg5LS4wMzk0LjIzNzQtLjA5MDIuNDgzMy0uMTQwOSAxLjI4MzMtLjI2NDEgMS40ODE1LS40NTA2IDEuOTE0My0xLjAwMDIuMDk5Mi0uMTI2LjIxMTYtLjI2ODcuMzY3My0uNDQyNmEuMzU0OS4zNTQ5IDAgMCAwIC4wNzM3LS4xMjk4Yy4xNzA4LS4xNTEzLjI3MjQtLjEwOTkuNDM2OS0uMDQxNy4xNTYuMDY0Ni4zMDc4LjI2LjM2OTUuNDc1Mi4wMjkxLjEwMTYuMDYxOS4yOTQ1LS4wNDUyLjQ0NDQtLjkwNDMgMS4yNjU4LTIuMjIxNiAxLjI0OTQtMy4xNjc2IDEuMDEyOHptMi4wOTQtMy45ODgtLjA1MjUuMTQxYy0uMTMzLjM1NjYtLjI1NjcuNjg4MS0uMzMzNCAxLjAwMy0uNjY3NC0uMDAyMS0xLjMxNjgtLjI4NzItMS44MTA1LS44MDI0LS42Mjc5LS42NTUxLS45MTMxLTEuNTY2NC0uNzgyNS0yLjUwMDQuMTgyOC0xLjMwNzkuMTE1My0yLjQ0NjguMDc5LTMuMDU4Ni0uMDA1LS4wODU3LS4wMDk1LS4xNjA3LS4wMTIyLS4yMTk5LjI5NTctLjI2MjEgMS42NjU5LS45OTYyIDIuNjQyOS0uNzcyNC40NDU5LjEwMjIuNzE3Ni40MDU3LjgzMDUuOTI4LjU4NDYgMi43MDM4LjA3NzQgMy44MzA3LS4zMzAyIDQuNzM2My0uMDg0LjE4NjYtLjE2MzMuMzYyOS0uMjMxMS41NDU0em03LjM2MzcgNC41NzI1Yy0uMDE2OS4xNzY4LS4wMzU4LjM3Ni0uMDYxOC41OTU5bC0uMTQ2LjQzODNhLjM1NDcuMzU0NyAwIDAgMC0uMDE4Mi4xMDc3Yy0uMDA1OS40NzQ3LS4wNTQuNjQ4OS0uMTE1Ljg2OTMtLjA2MzQuMjI5Mi0uMTM1My40ODkxLS4xNzk0IDEuMDU3NS0uMTEgMS40MTQzLS44NzgyIDIuMjI2Ny0yLjQxNzIgMi41NTY1LTEuNTE1NS4zMjUxLTEuNzg0My0uNDk2OC0yLjAyMTItMS4yMjE3YTYuNTgyNCA2LjU4MjQgMCAwIDAtLjA3NjktLjIyNjZjLS4yMTU0LS41ODU4LS4xOTExLTEuNDExOS0uMTU3NC0yLjU1NTEuMDE2NS0uNTYxMi0uMDI0OS0xLjkwMTMtLjMzMDItMi42NDYyLjAwNDQtLjI5MzIuMDEwNi0uNTkwOS4wMTktLjg5MThhLjM1MjkuMzUyOSAwIDAgMC0uMDE1My0uMTEyNiAxLjQ5MjcgMS40OTI3IDAgMCAwLS4wNDM5LS4yMDhjLS4xMjI2LS40MjgzLS40MjEzLS43ODY2LS43Nzk3LS45MzUxLS4xNDI0LS4wNTktLjQwMzgtLjE2NzItLjcxNzgtLjA4NjkuMDY3LS4yNzYuMTgzMS0uNTg3NS4zMDktLjkyNDlsLjA1MjktLjE0MmMuMDU5NS0uMTYuMTM0LS4zMjU3LjIxMy0uNTAxMi40MjY1LS45NDc2IDEuMDEwNi0yLjI0NTMuMzc2Ni01LjE3NzItLjIzNzQtMS4wOTgxLTEuMDMwNC0xLjYzNDMtMi4yMzI0LTEuNTA5OC0uNzIwNy4wNzQ2LTEuMzc5OS4zNjU0LTEuNzA4OC41MzIxYTUuNjcxNiA1LjY3MTYgMCAwIDAtLjE5NTguMTA0MWMuMDkxOC0xLjEwNjQuNDM4Ni0zLjE3NDEgMS43MzU3LTQuNDgyM2E0LjAzMDYgNC4wMzA2IDAgMCAxIC4zMDMzLS4yNzYuMzUzMi4zNTMyIDAgMCAwIC4xNDQ3LS4wNjQ0Yy43NTI0LS41NzA2IDEuNjk0NS0uODUwNiAyLjgwMi0uODMyNS40MDkxLjAwNjcuODAxNy4wMzM5IDEuMTc0Mi4wODEgMS45MzkuMzU0NCAzLjI0MzkgMS40NDY4IDQuMDM1OSAyLjM4MjcuODE0My45NjIzIDEuMjU1MiAxLjkzMTUgMS40MzEyIDIuNDU0My0xLjMyMzItLjEzNDYtMi4yMjM0LjEyNjgtMi42Nzk3Ljc3OS0uOTkyNiAxLjQxODkuNTQzIDQuMTcyOSAxLjI4MTEgNS40OTY0LjEzNTMuMjQyNi4yNTIyLjQ1MjIuMjg4OS41NDEzLjI0MDMuNTgyNS41NTE1Ljk3MTMuNzc4NyAxLjI1NTIuMDY5Ni4wODcuMTM3Mi4xNzE0LjE4ODUuMjQ1LS40MDA4LjExNTUtMS4xMjA4LjM4MjUtMS4wNTUyIDEuNzE3LS4wMTIzLjE1NjMtLjA0MjMuNDQ2OS0uMDgzNC44MTQ4LS4wNDYxLjIwNzctLjA3MDIuNDYwMy0uMDk5NC43NjYyem0uODkwNS0xLjYyMTFjLS4wNDA1LS44MzE2LjI2OTEtLjkxODUuNTk2Ny0xLjAxMDVhMi44NTY2IDIuODU2NiAwIDAgMCAuMTM1LS4wNDA2IDEuMjAyIDEuMjAyIDAgMCAwIC4xMzQyLjEwM2MuNTcwMy4zNzY1IDEuNTgyMy40MjEzIDMuMDA2OC4xMzQ0LS4yMDE2LjE3NjktLjUxODkuMzk5NC0uOTUzMy42MDExLS40MDk4LjE5MDMtMS4wOTU3LjMzMy0xLjc0NzMuMzYzNi0uNzE5Ny4wMzM2LTEuMDg1OS0uMDgwNy0xLjE3MjEtLjE1MXptLjU2OTUtOS4yNzEyYy0uMDA1OS4zNTA4LS4wNTQyLjY2OTItLjEwNTQgMS4wMDE3LS4wNTUuMzU3Ni0uMTEyLjcyNzQtLjEyNjQgMS4xNzYyLS4wMTQyLjQzNjguMDQwNC44OTA5LjA5MzIgMS4zMzAxLjEwNjYuODg3LjIxNiAxLjgwMDMtLjIwNzUgMi43MDE0YTMuNTI3MiAzLjUyNzIgMCAwIDEtLjE4NzYtLjM4NTZjLS4wNTI3LS4xMjc2LS4xNjY5LS4zMzI2LS4zMjUxLS42MTYyLS42MTU2LTEuMTA0MS0yLjA1NzQtMy42ODk2LTEuMzE5My00Ljc0NDYuMzc5NS0uNTQyNyAxLjM0MDgtLjU2NjEgMi4xNzgxLS40NjN6bS4yMjg0IDcuMDEzN2ExMi4zNzYyIDEyLjM3NjIgMCAwIDAtLjA4NTMtLjEwNzRsLS4wMzU1LS4wNDQ0Yy43MjYyLTEuMTk5NS41ODQyLTIuMzg2Mi40NTc4LTMuNDM4NS0uMDUxOS0uNDMxOC0uMTAwOS0uODM5Ni0uMDg4NS0xLjIyMjYuMDEyOS0uNDA2MS4wNjY2LS43NTQzLjExODUtMS4wOTExLjA2MzktLjQxNS4xMjg4LS44NDQzLjExMDktMS4zNTA1LjAxMzQtLjA1MzEuMDE4OC0uMTE1OC4wMTE4LS4xOTAyLS4wNDU3LS40ODU1LS41OTk5LTEuOTM4LTEuNzI5NC0zLjI1My0uNjA3Ni0uNzA3My0xLjQ4OTYtMS40OTcyLTIuNjg4OS0yLjAzOTUuNTI1MS0uMTA2NiAxLjIzMjgtLjIwMzUgMi4wMjQ0LS4xODU5IDIuMDUxNS4wNDU2IDMuNjc0Ni44MTM1IDQuODI0MiAyLjI4MjRhLjkwOC45MDggMCAwIDEgLjA2NjcuMTAwMmMuNzIzMSAxLjM1NTYtLjI3NjIgNi4yNzUxLTIuOTg2NyAxMC41NDA1em0tOC44MTY2LTYuMTE2MmMtLjAyNS4xNzk0LS4zMDg5LjQyMjUtLjYyMTEuNDIyNWEuNTgyMS41ODIxIDAgMCAxLS4wODA5LS4wMDU2Yy0uMTg3My0uMDI2LS4zNzY1LS4xNDQtLjUwNTktLjMxNTYtLjA0NTgtLjA2MDUtLjEyMDMtLjE3OC0uMTA1NS0uMjg0NC4wMDU1LS4wNDAxLjAyNjEtLjA5ODUuMDkyNS0uMTQ4OC4xMTgyLS4wODk0LjM1MTgtLjEyMjYuNjA5Ni0uMDg2Ny4zMTYzLjA0NDEuNjQyNi4xOTM4LjYxMTMuNDE4NnptNy45MzA1LS40MTE0Yy4wMTExLjA3OTItLjA0OS4yMDEtLjE1MzEuMzEwMi0uMDY4My4wNzE3LS4yMTIuMTk2MS0uNDA3OS4yMjMyYS41NDU2LjU0NTYgMCAwIDEtLjA3NS4wMDUyYy0uMjkzNSAwLS41NDE0LS4yMzQ0LS41NjA3LS4zNzE3LS4wMjQtLjE3NjUuMjY0MS0uMzEwNi41NjExLS4zNTIuMjk3LS4wNDE0LjYxMTEuMDA4OC42MzU2LjE4NTF6Ii8+PC9zdmc+" preserveAspectRatio="xMidYMid meet"/>  <text x="1500" y="186" text-anchor="middle" class="participant">PostgreSQL</text>  <text x="1500" y="211" text-anchor="middle" class="role">Testcontainers</text></g>
+  <line x1="1480" y1="232" x2="1480" y2="1098" class="lifeline"/>
+  <rect x="236.5" y="252" width="230.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="260.5" cy="269" r="13" class="badge callBadge"/><text x="260.5" y="274" text-anchor="middle" class="badgeText callText">1</text>
+  <text x="284.5" y="274" class="msg callText">POST /entity body</text>
+  <path d="M 190 300 L 513 300" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="559" y="328" width="230.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="583" cy="345" r="13" class="badge callBadge"/><text x="583" y="350" text-anchor="middle" class="badgeText callText">2</text>
+  <text x="607" y="350" class="msg callText">entity.persist()</text>
+  <path d="M 513 376 L 835 376" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="879" y="404" width="235.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="903" cy="421" r="13" class="badge workBadge"/><text x="903" y="426" text-anchor="middle" class="badgeText workText">3</text>
+  <text x="927" y="426" class="msg workText">INSERT INTO entity ...</text>
+  <path d="M 835 452 L 1158 452" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="1204" y="480" width="230.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="1228" cy="497" r="13" class="badge workBadge"/><text x="1228" y="502" text-anchor="middle" class="badgeText workText">4</text>
+  <text x="1252" y="502" class="msg workText">execute SQL</text>
+  <path d="M 1158 528 L 1480 528" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="1204" y="556" width="230.0" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="1228" cy="573" r="13" class="badge returnBadge"/><text x="1228" y="578" text-anchor="middle" class="badgeText returnText">5</text>
+  <text x="1252" y="578" class="msg returnText">entity id returned</text>
+  <path d="M 1480 604 L 1158 604" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="720.5" y="632" width="230.0" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="744.5" cy="649" r="13" class="badge returnBadge"/><text x="744.5" y="654" text-anchor="middle" class="badgeText returnText">6</text>
+  <text x="768.5" y="654" class="msg returnText">Uni&lt;Entity&gt;</text>
+  <path d="M 1158 680 L 513 680" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="236.5" y="708" width="230.0" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="260.5" cy="725" r="13" class="badge returnBadge"/><text x="260.5" y="730" text-anchor="middle" class="badgeText returnText">7</text>
+  <text x="284.5" y="730" class="msg returnText">201 Created response</text>
+  <path d="M 513 756 L 190 756" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="236.5" y="784" width="230.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="260.5" cy="801" r="13" class="badge callBadge"/><text x="260.5" y="806" text-anchor="middle" class="badgeText callText">8</text>
+  <text x="284.5" y="806" class="msg callText">GET /entity/{id}</text>
+  <path d="M 190 832 L 513 832" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="864" y="860" width="265.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="888" cy="877" r="13" class="badge workBadge"/><text x="888" y="882" text-anchor="middle" class="badgeText workText">9</text>
+  <text x="912" y="882" class="msg workText">find() -&gt; SELECT -&gt; entity</text>
+  <path d="M 513 908 L 1480 908" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="720" y="936" width="230.0" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="744" cy="953" r="13" class="badge returnBadge"/><text x="744" y="958" text-anchor="middle" class="badgeText returnText">10</text>
+  <text x="768" y="958" class="msg returnText">entity response</text>
+  <path d="M 1480 984 L 190 984" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="90" y="1122" width="1490" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
+  <text x="835" y="1148" text-anchor="middle" class="footer">Reader contract: request order, branch ownership, and infrastructure boundary are shown without hiding call labels.</text>
 </svg>

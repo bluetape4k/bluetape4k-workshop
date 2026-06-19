@@ -5,13 +5,13 @@
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.15"/>
     </filter>
     <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/>
+      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none"/>
     </marker>
     <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/>
+      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A" stroke-dasharray="none"/>
     </marker>
     <marker id="arrowOrange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#EA580C"/>
+      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#EA580C" stroke-dasharray="none"/>
     </marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}
@@ -102,16 +102,16 @@
     <text class="pill" x="920" y="902" text-anchor="middle">Coroutine caveat: no @TimeLimiter on suspend endpoints; use withTimeout or explicit decorators.</text>
   </g>
 
-  <path class="line" d="M 345 284 L 345 350 L 310 350 L 310 448" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 825 294 L 825 350 L 725 350 L 725 438" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 1355 294 L 1355 350 L 1545 350 L 1545 448" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 345 284 L 345 350 L 310 350 L 310 448" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 825 294 L 825 350 L 725 350 L 725 438" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1355 294 L 1355 350 L 1545 350 L 1545 448" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line" d="M 310 534 L 310 640" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 310 534 L 310 640" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="250" y="604" text-anchor="middle">annotations</text>
-  <path class="line" d="M 725 544 L 725 640" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 725 544 L 725 640" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="664" y="606" text-anchor="middle">suspend AOP</text>
-  <path class="line" d="M 1160 544 L 1160 640" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
+  <path class="line" d="M 1160 544 L 1160 640" stroke="#EA580C" marker-end="url(#arrowOrange)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="1092" y="606" text-anchor="middle">explicit chain</text>
-  <path class="line" d="M 1545 534 L 1545 640" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1545 534 L 1545 640" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="label" x="1482" y="606" text-anchor="middle">registry events</text>
 </svg>

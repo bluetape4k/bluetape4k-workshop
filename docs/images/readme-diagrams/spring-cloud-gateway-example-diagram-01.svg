@@ -2,7 +2,7 @@
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.09"/></filter>
   <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
-    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297" stroke-dasharray="none"/>
   </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
@@ -12,7 +12,7 @@
     .mono{font-family:"Comic Mono";font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Mono";font-size:12px;font-weight:400;fill:#536273}
     .card{stroke-width:2.1;filter:url(#shadow)}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow);stroke-linecap:round;stroke-linejoin:round}
   </style>
 </defs>
 <rect class="canvas" width="960" height="520"/>
@@ -31,8 +31,7 @@
 <!-- RateLimiter -->
 <rect class="card" x="36" y="208" width="256" height="76" rx="14" fill="#EAF7EF" stroke="#58A978"/>
 <text class="smallLabel" x="164" y="234" text-anchor="middle">RateLimiter Filter</text>
-<text class="small" x="164" y="254" text-anchor="middle">RequestRateLimiter</text>
-<text class="small" x="164" y="271" text-anchor="middle">UserKeyResolver  -  Redis backend</text>
+<text class="small" x="164" y="254" text-anchor="middle">RequestRateLimiter</text>  <text class="small" x="164" y="271" text-anchor="middle">UserKeyResolver  -  Redis backend</text>
 
 <!-- CircuitBreaker -->
 <rect class="card" x="352" y="208" width="256" height="76" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
@@ -47,9 +46,9 @@
 <text class="small" x="796" y="271" text-anchor="middle">Thread pool  -  routing rules</text>
 
 <!-- Arrows Row1 -> Row2 -->
-<line class="line" x1="380" y1="164" x2="200" y2="208"/>
-<line class="line" x1="480" y1="164" x2="480" y2="208"/>
-<line class="line" x1="580" y1="164" x2="760" y2="208"/>
+<line class="line" x1="380" y1="164" x2="200" y2="208" stroke-linecap="round" stroke-linejoin="round"/>
+<line class="line" x1="480" y1="164" x2="480" y2="208" stroke-linecap="round" stroke-linejoin="round"/>
+<line class="line" x1="580" y1="164" x2="760" y2="208" stroke-linecap="round" stroke-linejoin="round"/>
 
 <!-- Row 3: Controllers -->
 <rect class="card" x="152" y="332" width="256" height="64" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
@@ -61,16 +60,15 @@
 <text class="small" x="680" y="377" text-anchor="middle">circuit breaker fallback</text>
 
 <!-- Arrows Row2 -> Row3 -->
-<line class="line" x1="164" y1="284" x2="250" y2="332"/>
-<line class="line" x1="480" y1="284" x2="400" y2="332"/>
-<line class="line" x1="540" y1="284" x2="620" y2="332"/>
-<line class="line" x1="796" y1="284" x2="710" y2="332"/>
+<line class="line" x1="164" y1="284" x2="250" y2="332" stroke-linecap="round" stroke-linejoin="round"/>
+<line class="line" x1="480" y1="284" x2="400" y2="332" stroke-linecap="round" stroke-linejoin="round"/>
+<line class="line" x1="540" y1="284" x2="620" y2="332" stroke-linecap="round" stroke-linejoin="round"/>
+<line class="line" x1="796" y1="284" x2="710" y2="332" stroke-linecap="round" stroke-linejoin="round"/>
 
 <!-- Row 4: Redis full width -->
-<rect class="card" x="36" y="416" width="886" height="48" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="479" y="436" text-anchor="middle">Redis (rate limit storage)</text>
+<rect class="card" x="36" y="416" width="886" height="48" rx="14" fill="#FDECEF" stroke="#DC6B82"/>  <text class="smallLabel" x="479" y="436" text-anchor="middle">Redis (rate limit storage)</text>
 <text class="small" x="479" y="454" text-anchor="middle">RequestRateLimiter  -  sliding window counters  -  UserKeyResolver key extraction</text>
 
 <!-- Arrow RateLimiter -> Redis: jog left to x=140 to avoid crossing IndexController (x=152..408) -->
-<path class="line" d="M164,284 L164,312 L140,312 L140,416"/>
+<path class="line" d="M164,284 L164,312 L140,312 L140,416" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

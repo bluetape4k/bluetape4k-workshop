@@ -2,9 +2,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1360" height="760" viewBox="0 0 1360 760" role="img" aria-label="graph-social-network traversal flow diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/></filter>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/></marker>
     <style>
       .canvas { fill: #F8FAFC; }
       .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
@@ -44,9 +44,9 @@
     <text class="cardTitle" x="251" y="616" text-anchor="middle">Nth-degree result</text>
     <text class="cardText" x="251" y="640" text-anchor="middle">remove closer vertices</text>
   </g>
-  <path class="line" d="M 251 262 L 251 316" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 251 388 L 251 442" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 251 524 L 251 588" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 251 262 L 251 316" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 251 388 L 251 442" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 251 524 L 251 588" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
 
   <rect x="488" y="122" width="386" height="552" rx="22" fill="#EAF3FF" stroke="#9DB9D8" stroke-width="1.5"/>
   <text class="section" x="681" y="160" text-anchor="middle">FOAF recommendation</text>
@@ -70,9 +70,9 @@
     <text class="cardTitle" x="681" y="616" text-anchor="middle">Ranked result</text>
     <text class="cardText" x="681" y="640" text-anchor="middle">count desc, personId asc</text>
   </g>
-  <path class="line" d="M 681 262 L 681 316" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 681 398 L 681 452" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 681 534 L 681 588" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 681 262 L 681 316" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 681 398 L 681 452" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 681 534 L 681 588" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
 
   <rect x="918" y="122" width="386" height="552" rx="22" fill="#FFF7E8" stroke="#D8B86E" stroke-width="1.5"/>
   <text class="section" x="1111" y="160" text-anchor="middle">Path and workplace queries</text>
@@ -96,8 +96,8 @@
     <text class="cardTitle" x="1111" y="616" text-anchor="middle">Mutual connections</text>
     <text class="cardText" x="1111" y="640" text-anchor="middle">alice and dave share bob</text>
   </g>
-  <path class="line" d="M 1111 262 L 1111 316" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 1111 398 L 1111 452" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 1111 534 L 1111 588" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 1111 262 L 1111 316" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1111 398 L 1111 452" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1111 534 L 1111 588" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="note" x="680" y="714" text-anchor="middle">All traversal APIs use KNOWS unless the query explicitly crosses WORKS_AT for colleagues.</text>
 </svg>

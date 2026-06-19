@@ -21,16 +21,16 @@
       .line-red { fill: none; stroke: #f04438; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <marker id="jq-arrow-blue" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none"/>
     </marker>
     <marker id="jq-arrow-green" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none"/>
     </marker>
     <marker id="jq-arrow-orange" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none"/>
     </marker>
     <marker id="jq-arrow-red" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none"/>
     </marker>
   </defs>
 
@@ -43,8 +43,7 @@
   <rect class="layer-test" x="80" y="140" width="1640" height="175" rx="18" stroke-width="2"/>
   <text class="layer-title" x="112" y="184">Test slice and sample data</text>
   <rect class="card-blue" x="160" y="220" width="300" height="70" rx="10" stroke-width="2"/>
-  <text class="card-title" x="310" y="249" text-anchor="middle">@DataJpaTest</text>
-  <text class="card-small" x="310" y="272" text-anchor="middle">H2 in MySQL mode</text>
+  <text class="card-title" x="310" y="249" text-anchor="middle">@DataJpaTest</text>  <text class="card-small" x="310" y="272" text-anchor="middle">H2 in MySQL mode</text>
   <rect class="card-blue" x="620" y="220" width="300" height="70" rx="10" stroke-width="2"/>
   <text class="card-title" x="770" y="249" text-anchor="middle">InitMemberService</text>
   <text class="card-small" x="770" y="272" text-anchor="middle">teamA, teamB, members</text>
@@ -89,22 +88,20 @@
     <ellipse cx="28" cy="10" rx="28" ry="10" fill="#ffffff" stroke="#f04438" stroke-width="3"/>
     <path d="M 0 10 L 0 42 C 0 55 56 55 56 42 L 56 10" fill="#fff7f7" stroke="#f04438" stroke-width="3"/>
     <path d="M 0 42 C 0 55 56 55 56 42" fill="none" stroke="#f04438" stroke-width="3"/>
-  </g>
-  <text class="card-title" x="1210" y="867" text-anchor="middle">H2 database</text>
-  <text class="card-small" x="1210" y="892" text-anchor="middle">MySQL compatibility mode</text>
+  </g>  <text class="card-title" x="1210" y="867" text-anchor="middle">H2 database</text>  <text class="card-small" x="1210" y="892" text-anchor="middle">MySQL compatibility mode</text>
 
-  <path class="line-blue" d="M 460 255 L 608 255" marker-end="url(#jq-arrow-blue)"/>
-  <path class="line-blue" d="M 920 255 L 1068 255" marker-end="url(#jq-arrow-blue)"/>
-  <path class="line-green" d="M 1230 290 L 1230 334 L 1300 334 L 1300 426" marker-end="url(#jq-arrow-green)"/>
-  <path class="line-green" d="M 520 477 L 628 477" marker-end="url(#jq-arrow-green)"/>
-  <path class="line-green" d="M 1000 477 L 1108 477" marker-end="url(#jq-arrow-green)"/>
+  <path class="line-blue" d="M 460 255 L 608 255" marker-end="url(#jq-arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-blue" d="M 920 255 L 1068 255" marker-end="url(#jq-arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 1230 290 L 1230 334 L 1300 334 L 1300 426" marker-end="url(#jq-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 520 477 L 628 477" marker-end="url(#jq-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 1000 477 L 1108 477" marker-end="url(#jq-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line-orange" d="M 1300 516 L 1300 562 L 310 562 L 310 656" marker-end="url(#jq-arrow-orange)"/>
-  <path class="line-orange" d="M 1300 516 L 1300 562 L 710 562 L 710 656" marker-end="url(#jq-arrow-orange)"/>
-  <path class="line-orange" d="M 1300 516 L 1300 562 L 1110 562 L 1110 656" marker-end="url(#jq-arrow-orange)"/>
-  <path class="line-orange" d="M 1300 516 L 1300 562 L 1510 562 L 1510 656" marker-end="url(#jq-arrow-orange)"/>
+  <path class="line-orange" d="M 1300 516 L 1300 562 L 310 562 L 310 656" marker-end="url(#jq-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 1300 516 L 1300 562 L 710 562 L 710 656" marker-end="url(#jq-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 1300 516 L 1300 562 L 1110 562 L 1110 656" marker-end="url(#jq-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 1300 516 L 1300 562 L 1510 562 L 1510 656" marker-end="url(#jq-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line-red" d="M 310 746 L 310 795 L 620 795 L 620 834" marker-end="url(#jq-arrow-red)"/>
-  <path class="line-red" d="M 810 877 L 978 877" marker-end="url(#jq-arrow-red)"/>
-  <path class="line-red" d="M 710 746 L 710 795 L 1210 795 L 1210 824" marker-end="url(#jq-arrow-red)"/>
+  <path class="line-red" d="M 310 746 L 310 795 L 620 795 L 620 834" marker-end="url(#jq-arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-red" d="M 810 877 L 978 877" marker-end="url(#jq-arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-red" d="M 710 746 L 710 795 L 1210 795 L 1210 824" marker-end="url(#jq-arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

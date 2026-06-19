@@ -21,16 +21,16 @@
       .line-red { fill: none; stroke: #f04438; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <marker id="mc-arrow-blue" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none"/>
     </marker>
     <marker id="mc-arrow-green" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none"/>
     </marker>
     <marker id="mc-arrow-orange" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none"/>
     </marker>
     <marker id="mc-arrow-red" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none"/>
     </marker>
   </defs>
 
@@ -73,8 +73,7 @@
   <text class="card-title" x="445" y="706" text-anchor="middle">MongoClientConfig</text>
   <rect class="card-orange" x="720" y="670" width="390" height="58" rx="10" stroke-width="2"/>
   <text class="card-title" x="915" y="706" text-anchor="middle">ReactiveMongoConfig</text>
-  <rect class="card-orange" x="1190" y="670" width="300" height="58" rx="10" stroke-width="2"/>
-  <text class="card-title" x="1340" y="706" text-anchor="middle">people database</text>
+  <rect class="card-orange" x="1190" y="670" width="300" height="58" rx="10" stroke-width="2"/>  <text class="card-title" x="1340" y="706" text-anchor="middle">people database</text>
 
   <rect class="layer-runtime" x="80" y="795" width="1640" height="115" rx="18" stroke-width="2"/>
   <text class="layer-title" x="112" y="838">Runtime</text>
@@ -82,21 +81,20 @@
   <g transform="translate(690 837)">
     <path d="M 32 0 C 12 24 15 50 33 64 C 51 46 51 20 32 0 Z" fill="#13aa52" stroke="#0f8d45" stroke-width="2"/>
     <path d="M 33 12 C 30 27 31 43 34 58" fill="none" stroke="#ffffff" stroke-width="2.5"/>
-  </g>
-  <text class="card-title" x="930" y="854" text-anchor="middle">MongoDB Testcontainer</text>
+  </g>  <text class="card-title" x="930" y="854" text-anchor="middle">MongoDB Testcontainer</text>
   <text class="card-small" x="930" y="877" text-anchor="middle">MongoDBServer.Launcher.mongoDB</text>
 
-  <path class="line-blue" d="M 490 253 L 733 253" marker-end="url(#mc-arrow-blue)"/>
-  <path class="line-blue" d="M 1055 253 L 1298 253" marker-end="url(#mc-arrow-blue)"/>
-  <path class="line-green" d="M 900 288 L 900 330 L 325 330 L 325 428" marker-end="url(#mc-arrow-green)"/>
-  <path class="line-green" d="M 900 288 L 900 330 L 775 330 L 775 428" marker-end="url(#mc-arrow-green)"/>
-  <path class="line-green" d="M 900 288 L 900 330 L 1225 330 L 1225 428" marker-end="url(#mc-arrow-green)"/>
-  <path class="line-green" d="M 1465 288 L 1465 330 L 775 330 L 775 428" marker-end="url(#mc-arrow-green)"/>
+  <path class="line-blue" d="M 490 253 L 733 253" marker-end="url(#mc-arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-blue" d="M 1055 253 L 1298 253" marker-end="url(#mc-arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 900 288 L 900 330 L 325 330 L 325 428" marker-end="url(#mc-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 900 288 L 900 330 L 775 330 L 775 428" marker-end="url(#mc-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 900 288 L 900 330 L 1225 330 L 1225 428" marker-end="url(#mc-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 1465 288 L 1465 330 L 775 330 L 775 428" marker-end="url(#mc-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line-orange" d="M 325 522 L 325 580 L 445 580 L 445 658" marker-end="url(#mc-arrow-orange)"/>
-  <path class="line-orange" d="M 775 522 L 775 580 L 915 580 L 915 658" marker-end="url(#mc-arrow-orange)"/>
-  <path class="line-orange" d="M 1225 522 L 1225 580 L 915 580 L 915 658" marker-end="url(#mc-arrow-orange)"/>
-  <path class="line-red" d="M 445 728 L 445 775 L 880 775 L 880 813" marker-end="url(#mc-arrow-red)"/>
-  <path class="line-red" d="M 915 728 L 915 813" marker-end="url(#mc-arrow-red)"/>
-  <path class="line-red" d="M 1340 728 L 1340 775 L 980 775 L 980 813" marker-end="url(#mc-arrow-red)"/>
+  <path class="line-orange" d="M 325 522 L 325 580 L 445 580 L 445 658" marker-end="url(#mc-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 775 522 L 775 580 L 915 580 L 915 658" marker-end="url(#mc-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 1225 522 L 1225 580 L 915 580 L 915 658" marker-end="url(#mc-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-red" d="M 445 728 L 445 775 L 880 775 L 880 813" marker-end="url(#mc-arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-red" d="M 915 728 L 915 813" marker-end="url(#mc-arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-red" d="M 1340 728 L 1340 775 L 980 775 L 980 813" marker-end="url(#mc-arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

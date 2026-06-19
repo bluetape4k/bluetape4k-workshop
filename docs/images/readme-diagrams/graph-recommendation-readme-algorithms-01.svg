@@ -2,8 +2,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1420" height="760" viewBox="0 0 1420 760" role="img" aria-label="graph-recommendation algorithm flow diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/></filter>
-    <marker id="arrowProduct" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
-    <marker id="arrowFollow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowProduct" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowFollow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
     <style>
       .canvas { fill: #F8FAFC; }
       .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
@@ -43,9 +43,9 @@
     <text class="cardTitle" x="362" y="618" text-anchor="middle">Ranked result</text>
     <text class="cardText" x="362" y="642" text-anchor="middle">score desc, productId asc</text>
   </g>
-  <path class="line" d="M 362 256 L 362 304" stroke="#16A34A" marker-end="url(#arrowProduct)"/>
-  <path class="line" d="M 362 384 L 362 436" stroke="#16A34A" marker-end="url(#arrowProduct)"/>
-  <path class="line" d="M 362 524 L 362 590" stroke="#16A34A" marker-end="url(#arrowProduct)"/>
+  <path class="line" d="M 362 256 L 362 304" stroke="#16A34A" marker-end="url(#arrowProduct)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 362 384 L 362 436" stroke="#16A34A" marker-end="url(#arrowProduct)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 362 524 L 362 590" stroke="#16A34A" marker-end="url(#arrowProduct)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="note" x="362" y="710" text-anchor="middle">Already purchased products are excluded before scoring.</text>
 
   <rect x="740" y="122" width="620" height="552" rx="22" fill="#EAF3FF" stroke="#9DB9D8" stroke-width="1.5"/>
@@ -70,8 +70,8 @@
     <text class="cardTitle" x="1042" y="618" text-anchor="middle">Ranked result</text>
     <text class="cardText" x="1042" y="642" text-anchor="middle">count desc, userId asc</text>
   </g>
-  <path class="line" d="M 1042 256 L 1042 304" stroke="#2563EB" marker-end="url(#arrowFollow)"/>
-  <path class="line" d="M 1042 384 L 1042 436" stroke="#2563EB" marker-end="url(#arrowFollow)"/>
-  <path class="line" d="M 1042 524 L 1042 590" stroke="#2563EB" marker-end="url(#arrowFollow)"/>
+  <path class="line" d="M 1042 256 L 1042 304" stroke="#2563EB" marker-end="url(#arrowFollow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1042 384 L 1042 436" stroke="#2563EB" marker-end="url(#arrowFollow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1042 524 L 1042 590" stroke="#2563EB" marker-end="url(#arrowFollow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="note" x="1042" y="710" text-anchor="middle">The seed user and direct follows are excluded from candidates.</text>
 </svg>

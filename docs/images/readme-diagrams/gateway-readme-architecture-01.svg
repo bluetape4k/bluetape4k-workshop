@@ -5,16 +5,16 @@
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#5b7282" flood-opacity="0.16"/>
     </filter>
     <marker id="blueArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#457b9d"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#457b9d" stroke-dasharray="none"/>
     </marker>
     <marker id="greenArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#5f8f5b"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#5f8f5b" stroke-dasharray="none"/>
     </marker>
     <marker id="redArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#b44d49"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#b44d49" stroke-dasharray="none"/>
     </marker>
     <marker id="goldArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#a87332"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#a87332" stroke-dasharray="none"/>
     </marker>
     <style>
       .canvas { fill: #f7fafc; }
@@ -97,27 +97,26 @@
   <text class="smallText" x="1274" y="707" text-anchor="middle">/echo -> localhost:9000</text>
 
   <rect class="card" x="572" y="810" width="390" height="94" rx="14" fill="#fff7f6" stroke="#bc544f"/>
-  <use href="#redisIcon" x="602" y="821"/>
-  <text class="cardTitle" x="810" y="850" text-anchor="middle">Redis</text>
+  <use href="#redisIcon" x="602" y="821"/>  <text class="cardTitle" x="810" y="850" text-anchor="middle">Redis</text>
   <text class="cardText" x="810" y="882" text-anchor="middle">Bucket4j bucket cache</text>
 
-  <path class="lineBlue" d="M 326 380 H 500"/>
+  <path class="lineBlue" d="M 326 380 H 500" stroke-linecap="round" stroke-linejoin="round"/>
   <rect class="labelBox" x="346" y="337" width="142" height="30" rx="15" stroke="#8eb4d6"/>
   <text class="label" x="417" y="357" text-anchor="middle" fill="#457b9d">public HTTP</text>
 
-  <path class="lineGreen" d="M 852 324 H 1070"/>
+  <path class="lineGreen" d="M 852 324 H 1070" stroke-linecap="round" stroke-linejoin="round"/>
   <rect class="labelBox" x="882" y="279" width="156" height="30" rx="15" stroke="#91b884"/>
   <text class="label" x="960" y="299" text-anchor="middle" fill="#5f8f5b">/customer-service/**</text>
 
-  <path class="lineGreen" d="M 852 394 H 940 V 508 H 1070"/>
+  <path class="lineGreen" d="M 852 394 H 940 V 508 H 1070" stroke-linecap="round" stroke-linejoin="round"/>
   <rect class="labelBox" x="875" y="428" width="144" height="30" rx="15" stroke="#91b884"/>
   <text class="label" x="947" y="448" text-anchor="middle" fill="#5f8f5b">/order-service/**</text>
 
-  <path class="lineGold" d="M 852 410 H 930 V 685 H 1070"/>
+  <path class="lineGold" d="M 852 410 H 930 V 685 H 1070" stroke-linecap="round" stroke-linejoin="round"/>
   <rect class="labelBox" x="876" y="632" width="122" height="30" rx="15" stroke="#d5a656"/>
   <text class="label" x="937" y="652" text-anchor="middle" fill="#a87332">/echo route</text>
 
-  <path class="lineRed" d="M 676 624 V 810"/>
+  <path class="lineRed" d="M 676 624 V 810" stroke-linecap="round" stroke-linejoin="round"/>
   <rect class="labelBox" x="702" y="700" width="142" height="30" rx="15" stroke="#bc544f"/>
   <text class="label" x="773" y="720" text-anchor="middle" fill="#b44d49">rate-limit state</text>
 

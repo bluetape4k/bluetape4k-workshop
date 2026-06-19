@@ -2,9 +2,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="760" viewBox="0 0 1500 760" role="img" aria-label="Kafka reply request-reply flow diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.lane{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.laneLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
     </style>
@@ -66,12 +66,12 @@
     <text class="cardText" x="428" y="584" text-anchor="middle">pong at timestamp</text>
   </g>
 
-  <path class="line" d="M 284 267 L 346 267" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 576 267 L 638 267" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 832 267 L 894 267" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 1114 267 L 1176 267" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 1264 310 L 1264 522" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 1176 565 L 1114 565" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 878 565 L 818 565" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 600 565 L 538 565" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 284 267 L 346 267" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 576 267 L 638 267" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 832 267 L 894 267" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1114 267 L 1176 267" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1264 310 L 1264 522" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1176 565 L 1114 565" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 878 565 L 818 565" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 600 565 L 538 565" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

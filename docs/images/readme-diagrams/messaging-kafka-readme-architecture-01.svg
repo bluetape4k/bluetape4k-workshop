@@ -2,16 +2,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="740" viewBox="0 0 1500 740" role="img" aria-label="Kafka demo architecture diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:23px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.kafkaText{font-family:"Architects Daughter";font-size:27px;fill:#102033}
     </style>
   </defs>
   <rect class="canvas" width="1500" height="740"/>
-  <rect class="frame" x="24" y="24" width="1452" height="692" rx="24"/>
-  <text class="title" x="750" y="66" text-anchor="middle">Spring Kafka message demo</text>
+  <rect class="frame" x="24" y="24" width="1452" height="692" rx="24"/>  <text class="title" x="750" y="66" text-anchor="middle">Spring Kafka message demo</text>
   <text class="subtitle" x="750" y="94" text-anchor="middle">A WebFlux controller publishes with KafkaTemplate.suspendSend; Spring Kafka listeners consume simple, greeting, and logger topics.</text>
 
   <rect class="layer" x="64" y="132" width="306" height="486" rx="18"/>
@@ -30,12 +29,10 @@
     <rect x="462" y="252" width="216" height="170" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
     <text class="cardTitle" x="570" y="300" text-anchor="middle">KafkaTemplate</text>
     <text class="cardText" x="570" y="334" text-anchor="middle">DefaultKafkaProducerFactory</text>
-    <text class="cardText" x="570" y="358" text-anchor="middle">bluetape4k suspendSend</text>
-    <text class="cardText" x="570" y="382" text-anchor="middle">Spring Kafka 4 result</text>
+    <text class="cardText" x="570" y="358" text-anchor="middle">bluetape4k suspendSend</text>  <text class="cardText" x="570" y="382" text-anchor="middle">Spring Kafka 4 result</text>
   </g>
 
-  <rect class="layer" x="770" y="132" width="302" height="486" rx="18"/>
-  <text class="layerLabel" x="798" y="168">Kafka runtime</text>
+  <rect class="layer" x="770" y="132" width="302" height="486" rx="18"/>  <text class="layerLabel" x="798" y="168">Kafka runtime</text>
   <g filter="url(#shadow)">
     <rect x="812" y="198" width="218" height="134" rx="16" fill="#F8FAFC" stroke="#111827" stroke-width="1.7"/>
     <g transform="translate(862 220)">
@@ -44,8 +41,7 @@
       <circle cx="72" cy="76" r="13" fill="#111827"/>
       <path d="M 34 42 L 60 27" stroke="#111827" stroke-width="5" stroke-linecap="round"/>
       <path d="M 34 54 L 60 70" stroke="#111827" stroke-width="5" stroke-linecap="round"/>
-    </g>
-    <text class="kafkaText" x="921" y="306" text-anchor="middle">Kafka</text>
+    </g>  <text class="kafkaText" x="921" y="306" text-anchor="middle">Kafka</text>
   </g>
   <g filter="url(#shadow)">
     <rect x="812" y="368" width="218" height="178" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
@@ -75,9 +71,9 @@
     <text class="cardText" x="1279" y="544" text-anchor="middle">stores GreetingResult</text>
   </g>
 
-  <path class="line" d="M 330 338 L 462 338" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 678 338 L 746 338 L 746 438 L 812 438" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 921 368 L 921 340 L 1096 340 L 1096 254 L 1162 254" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 1030 389 L 1162 389" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 1030 526 L 1162 526" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 330 338 L 462 338" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 678 338 L 746 338 L 746 438 L 812 438" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 921 368 L 921 340 L 1096 340 L 1096 254 L 1162 254" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1030 389 L 1162 389" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1030 526 L 1162 526" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

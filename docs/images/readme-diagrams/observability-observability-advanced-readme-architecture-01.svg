@@ -2,10 +2,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1680" height="800" viewBox="0 0 1680 800" role="img" aria-label="Observability advanced architecture diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#D97706"/></marker>
-    <marker id="arrowSlate" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#475569"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#D97706" stroke-dasharray="none"/></marker>
+    <marker id="arrowSlate" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#475569" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:29px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.small{font-family:"Comic Mono";font-size:13px;fill:#64748B}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
     </style>
@@ -27,8 +27,7 @@
     <text class="cardText" x="198" y="350" text-anchor="middle">POST /users</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="106" y="480" width="184" height="132" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="1.7"/>
-    <text class="cardTitle" x="198" y="526" text-anchor="middle">Prometheus</text>
+    <rect x="106" y="480" width="184" height="132" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="1.7"/>  <text class="cardTitle" x="198" y="526" text-anchor="middle">Prometheus</text>
     <text class="cardText" x="198" y="558" text-anchor="middle">scrapes metrics</text>
     <text class="cardText" x="198" y="584" text-anchor="middle">after requests run</text>
   </g>
@@ -73,8 +72,7 @@
   <g filter="url(#shadow)">
     <rect x="1210" y="218" width="166" height="138" rx="16" fill="#FFF1F2" stroke="#E11D48" stroke-width="1.7"/>
     <rect x="1252" y="250" width="82" height="38" rx="19" fill="#FFE4E6" stroke="#E11D48" stroke-width="3"/>
-    <path d="M 1252 269 C 1252 292 1334 292 1334 269" fill="none" stroke="#E11D48" stroke-width="3"/>
-    <text class="cardTitle" x="1293" y="318" text-anchor="middle">Redis</text>
+    <path d="M 1252 269 C 1252 292 1334 292 1334 269" fill="none" stroke="#E11D48" stroke-width="3"/>  <text class="cardTitle" x="1293" y="318" text-anchor="middle">Redis</text>
     <text class="cardText" x="1293" y="344" text-anchor="middle">RMapCache TTL</text>
   </g>
   <g filter="url(#shadow)">
@@ -92,13 +90,13 @@
     <text class="cardText" x="1391" y="602" text-anchor="middle">export disabled locally</text>
   </g>
 
-  <path class="line" d="M 290 310 L 424 282" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 548 342 L 548 418" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 672 448 L 742 448 L 742 298 L 812 298" stroke="#475569" marker-end="url(#arrowSlate)"/>
-  <path class="line" d="M 941 366 L 941 470" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 672 486 L 756 486 L 756 388 L 1140 388 L 1140 287 L 1210 287" stroke="#E11D48" marker-end="url(#arrowSlate-e11d48)"/>
-  <path class="line" d="M 672 522 L 732 522 L 732 408 L 1493 408 L 1493 356" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 1070 538 L 1238 563" stroke="#0891B2" marker-end="url(#arrowSlate-0891b2)"/>
-  <path class="line soft" d="M 290 546 L 424 670" stroke="#64748B" marker-end="url(#arrowSlate-64748b)"/>
+  <path class="line" d="M 290 310 L 424 282" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 548 342 L 548 418" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 672 448 L 742 448 L 742 298 L 812 298" stroke="#475569" marker-end="url(#arrowSlate)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 941 366 L 941 470" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 672 486 L 756 486 L 756 388 L 1140 388 L 1140 287 L 1210 287" stroke="#E11D48" marker-end="url(#arrowSlate-e11d48)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 672 522 L 732 522 L 732 408 L 1493 408 L 1493 356" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1070 538 L 1238 563" stroke="#0891B2" marker-end="url(#arrowSlate-0891b2)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line soft" d="M 290 546 L 424 670" stroke="#64748B" marker-end="url(#arrowSlate-64748b)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="small" x="352" y="626" text-anchor="middle">scrape only</text>
 </svg>

@@ -2,18 +2,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="740" viewBox="0 0 1500 740" role="img" aria-label="ZooKeeper leader election behavior diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
-    <marker id="arrowCyan" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0891B2"/></marker>
-    <marker id="arrowRed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#DC2626"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/></marker>
+    <marker id="arrowCyan" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0891B2" stroke-dasharray="none"/></marker>
+    <marker id="arrowRed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#DC2626" stroke-dasharray="none"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.laneTitle{font-family:"Architects Daughter";font-size:25px;fill:#263548}.lane{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
     </style>
   </defs>
   <rect class="canvas" width="1500" height="740"/>
-  <rect class="frame" x="24" y="24" width="1452" height="692" rx="24"/>
-  <text class="title" x="750" y="66" text-anchor="middle">ZooKeeper election semantics</text>
-  <text class="subtitle" x="750" y="94" text-anchor="middle">Single-leader uses one mutex holder; group-leader admits up to N holders; failover depends on ZooKeeper session expiry, not a Redis-style TTL.</text>
+  <rect class="frame" x="24" y="24" width="1452" height="692" rx="24"/>  <text class="title" x="750" y="66" text-anchor="middle">ZooKeeper election semantics</text>  <text class="subtitle" x="750" y="94" text-anchor="middle">Single-leader uses one mutex holder; group-leader admits up to N holders; failover depends on ZooKeeper session expiry, not a Redis-style TTL.</text>
 
   <rect class="lane" x="70" y="132" width="1360" height="210" rx="18"/>
   <text class="laneTitle" x="104" y="170">Single leader</text>
@@ -35,13 +33,13 @@
     <text class="cardText" x="750" y="672" text-anchor="middle">Session loss deletes ephemeral znodes, then candidates re-elect.</text>
   </g>
 
-  <path class="line" d="M 334 251 L 424 251" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 634 251 L 724 251" stroke="#0891B2" marker-end="url(#arrowCyan)"/>
-  <path class="line" d="M 934 251 L 1024 251" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 529 292 L 529 320 L 1300 320 L 1300 600 L 850 600 L 850 612" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+  <path class="line" d="M 334 251 L 424 251" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 634 251 L 724 251" stroke="#0891B2" marker-end="url(#arrowCyan)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 934 251 L 1024 251" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 529 292 L 529 320 L 1300 320 L 1300 600 L 850 600 L 850 612" stroke="#DC2626" marker-end="url(#arrowRed)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line" d="M 334 499 L 424 499" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 634 499 L 724 499" stroke="#0891B2" marker-end="url(#arrowCyan)"/>
-  <path class="line" d="M 934 499 L 1024 499" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <path class="line" d="M 529 540 L 529 580 L 850 580 L 850 612" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+  <path class="line" d="M 334 499 L 424 499" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 634 499 L 724 499" stroke="#0891B2" marker-end="url(#arrowCyan)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 934 499 L 1024 499" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 529 540 L 529 580 L 850 580 L 850 612" stroke="#DC2626" marker-end="url(#arrowRed)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
