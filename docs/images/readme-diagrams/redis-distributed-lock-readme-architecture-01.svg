@@ -8,7 +8,9 @@
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
     </style>
-  </defs>
+  <marker id="arrowBlue-0891b2" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path stroke-dasharray="none" d="M 0 0 L 12 6 L 0 12 Z" fill="#0891b2"/></marker>
+<marker id="arrowRed-ea580c" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path stroke-dasharray="none" d="M 0 0 L 12 6 L 0 12 Z" fill="#ea580c"/></marker>
+</defs>
   <rect class="canvas" width="1660" height="740"/>
   <rect class="frame" x="24" y="24" width="1612" height="692" rx="24"/>
   <text class="title" x="830" y="72" text-anchor="middle">Redis distributed lock workshop</text>
@@ -75,9 +77,9 @@
 
   <path class="line soft" d="M 352 486 L 492 486" stroke="#DC2626" marker-end="url(#arrowRed)"/>
   <path class="line" d="M 352 314 L 492 294" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <path class="line" d="M 746 482 L 888 482" stroke="#0891B2" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 746 482 L 888 482" stroke="#0891B2" marker-end="url(#arrowBlue-0891b2)"/>
   <path class="line" d="M 746 294 L 888 294" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 1025 350 L 1025 426" stroke="#EA580C" marker-end="url(#arrowRed)"/>
+  <path class="line" d="M 1025 350 L 1025 426" stroke="#EA580C" marker-end="url(#arrowRed-ea580c)"/>
   <path class="line" d="M 1162 294 L 1304 302" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
   <path class="line" d="M 1162 482 L 1304 484" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
 </svg>

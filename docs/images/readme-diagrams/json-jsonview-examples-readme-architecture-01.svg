@@ -29,7 +29,10 @@
       .cardText { font-family: "Comic Mono"; font-size: 14px; fill: #415166; }
       .line { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
-  </defs>
+  <marker id="arrowAmber-d97706" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+      <path stroke-dasharray="none" d="M 0 0 L 12 6 L 0 12 Z" fill="#d97706"/>
+    </marker>
+</defs>
   <rect class="canvas" width="1380" height="780"/>
   <rect class="frame" x="28" y="24" width="1324" height="732" rx="24"/>
 
@@ -97,7 +100,7 @@
   <path class="line" d="M 269 286 L 269 390" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
   <path class="line" d="M 412 434 L 548 434" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
   <path class="line" d="M 834 434 L 970 434" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <path class="line" d="M 691 478 L 691 616" stroke="#D97706" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 691 478 L 691 616" stroke="#D97706" marker-end="url(#arrowAmber-d97706)"/>
   <path class="line" d="M 458 645 L 556 645" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
   <path class="line" d="M 826 645 L 946 645" stroke="#64748B" marker-end="url(#arrowSlate)"/>
 </svg>

@@ -6,7 +6,8 @@
     <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
     <marker id="arrowRed" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#DC2626"/></marker>
     <style>.canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{stroke-width:1.6;rx:22}.title{font-family:"Architects Daughter";font-size:40px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}.layerTitle{font-family:"Architects Daughter";font-size:29px;fill:#243447}.cardTitle{font-family:"Architects Daughter";font-size:29px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.small{font-family:"Comic Mono";font-size:14px;fill:#51606F}.line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}.label{font-family:"Comic Mono";font-size:14px;fill:#334155}</style>
-  </defs>
+  <marker id="arrowRed-ea580c" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path stroke-dasharray="none" d="M 0 0 L 14 7 L 0 14 Z" fill="#ea580c"/></marker>
+</defs>
   <rect class="canvas" width="1740" height="900"/><rect class="frame" x="24" y="24" width="1692" height="852" rx="24"/>
   <text class="title" x="870" y="72" text-anchor="middle">Idempotent order boundary</text>
   <text class="subtitle" x="870" y="106" text-anchor="middle">WebFlux validates Idempotency-Key, Redisson performs atomic cache writes, and Redis keeps replayable order responses for 5 minutes.</text>
@@ -27,7 +28,7 @@
   <path class="line" d="M 870 296 L 870 338 L 420 338 L 420 452" stroke="#16A34A" marker-end="url(#arrowGreen)"/><text class="label" x="631" y="324" text-anchor="middle">valid order request</text>
   <path class="line" d="M 600 494 L 720 494" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
   <path class="line" d="M 1060 494 L 1200 494" stroke="#16A34A" marker-end="url(#arrowGreen)"/><text class="label" x="1130" y="476" text-anchor="middle">cache value</text>
-  <path class="line" d="M 890 546 L 890 632 L 915 632 L 915 696" stroke="#EA580C" marker-end="url(#arrowRed)"/><text class="label" x="1002" y="618" text-anchor="middle">Redisson map ops</text>
-  <path class="line" d="M 610 735 L 750 735" stroke="#EA580C" marker-end="url(#arrowRed)"/>
+  <path class="line" d="M 890 546 L 890 632 L 915 632 L 915 696" stroke="#EA580C" marker-end="url(#arrowRed-ea580c)"/><text class="label" x="1002" y="618" text-anchor="middle">Redisson map ops</text>
+  <path class="line" d="M 610 735 L 750 735" stroke="#EA580C" marker-end="url(#arrowRed-ea580c)"/>
   <path class="line" d="M 1080 735 L 1220 735" stroke="#DC2626" marker-end="url(#arrowRed)"/>
 </svg>

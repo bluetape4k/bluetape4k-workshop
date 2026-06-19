@@ -14,7 +14,7 @@
     <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
       <feDropShadow dx="2" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.12"/>
     </filter>
-    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse">
       <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
     </marker>
   </defs>
@@ -26,44 +26,44 @@
 
   <!-- Title -->
   <text x="480" y="68" class="title" text-anchor="middle">Leader Election Architecture</text>
-  <text x="480" y="90" class="subtitle" text-anchor="middle">Distributed leader election with Redis · bluetape4k-leader library</text>
+  <text x="480" y="90" class="subtitle" text-anchor="middle">Distributed leader election with Redis  -  bluetape4k-leader library</text>
 
   <!-- ═══════════════════════════════════════════════════ -->
   <!-- ROW 1: 3 Instance cards  y=108..208  -->
   <!-- x: 72  w=246, 360 w=246, 648 w=246  gap≈18 -->
   <!-- ═══════════════════════════════════════════════════ -->
 
-  <!-- Instance 1 (LEADER) — blue -->
+  <!-- Instance 1 (LEADER) - blue -->
   <rect x="72" y="108" width="246" height="100" rx="14" class="card" fill="#E8F3FF" stroke="#5B8DEF"/>
   <text x="195" y="145" class="smallLabel" text-anchor="middle">Instance 1</text>
   <text x="195" y="167" class="small" text-anchor="middle">app-pod-1</text>
-  <text x="195" y="185" class="mono" text-anchor="middle">LEADER — lock acquired</text>
+  <text x="195" y="185" class="mono" text-anchor="middle">LEADER - lock acquired</text>
 
-  <!-- Instance 2 (FOLLOWER) — lavender -->
+  <!-- Instance 2 (FOLLOWER) - lavender -->
   <rect x="357" y="108" width="246" height="100" rx="14" class="card" fill="#F1ECFF" stroke="#8A72D6"/>
   <text x="480" y="145" class="smallLabel" text-anchor="middle">Instance 2</text>
   <text x="480" y="167" class="small" text-anchor="middle">app-pod-2</text>
-  <text x="480" y="185" class="mono" text-anchor="middle">FOLLOWER — waiting</text>
+  <text x="480" y="185" class="mono" text-anchor="middle">FOLLOWER - waiting</text>
 
-  <!-- Instance 3 (FOLLOWER) — lavender -->
+  <!-- Instance 3 (FOLLOWER) - lavender -->
   <rect x="642" y="108" width="246" height="100" rx="14" class="card" fill="#F1ECFF" stroke="#8A72D6"/>
   <text x="765" y="145" class="smallLabel" text-anchor="middle">Instance 3</text>
   <text x="765" y="167" class="small" text-anchor="middle">app-pod-3</text>
-  <text x="765" y="185" class="mono" text-anchor="middle">FOLLOWER — waiting</text>
+  <text x="765" y="185" class="mono" text-anchor="middle">FOLLOWER - waiting</text>
 
   <!-- ═══════════════════════════════════════════════════════════ -->
-  <!-- Arrows: Instances → LeaderScheduledJobService (orthogonal) -->
+  <!-- Arrows: Instances -> LeaderScheduledJobService (orthogonal) -->
   <!-- JobService top edge y=248  center x=480 -->
   <!-- ═══════════════════════════════════════════════════════════ -->
 
-  <!-- Instance 1 bottom (195,208) → down y=238 → right to (480,238) → down to (480,248) -->
+  <!-- Instance 1 bottom (195,208) -> down y=238 -> right to (480,238) -> down to (480,248) -->
   <path d="M 195,208 L 195,238 L 480,238 L 480,248" class="line"/>
 
-  <!-- Instance 2 bottom (480,208) → straight down -->
+  <!-- Instance 2 bottom (480,208) -> straight down -->
   <path d="M 480,208 L 480,248" class="line"/>
 
-  <!-- Instance 3 bottom (765,208) → down y=238 → left to (480,238) -->
-  <!-- Already drawn segment 480,238→480,248 above; just add the branch -->
+  <!-- Instance 3 bottom (765,208) -> down y=238 -> left to (480,238) -->
+  <!-- Already drawn segment 480,238->480,248 above; just add the branch -->
   <path d="M 765,208 L 765,238 L 480,238" class="line" marker-end="none"/>
 
   <!-- ════════════════════════════════════════════════════════════ -->
@@ -72,10 +72,10 @@
   <!-- ════════════════════════════════════════════════════════════ -->
   <rect x="72" y="248" width="816" height="82" rx="14" class="card" fill="#FFF3D9" stroke="#D6A441"/>
   <text x="480" y="280" class="smallLabel" text-anchor="middle">LeaderScheduledJobService</text>
-  <text x="480" y="300" class="small" text-anchor="middle">@Service · @Scheduled · fixed-delay: PT10S</text>
+  <text x="480" y="300" class="small" text-anchor="middle">@Service  -  @Scheduled  -  fixed-delay: PT10S</text>
   <text x="480" y="318" class="mono" text-anchor="middle">Runs on all instances; only the leader executes the job body</text>
 
-  <!-- Arrow: JobService → LettuceLeaderElector -->
+  <!-- Arrow: JobService -> LettuceLeaderElector -->
   <path d="M 480,330 L 480,368" class="line"/>
 
   <!-- ════════════════════════════════════════════════════ -->
@@ -84,19 +84,19 @@
   <!-- ════════════════════════════════════════════════════ -->
   <rect x="72" y="368" width="816" height="80" rx="14" class="card" fill="#E9F7F6" stroke="#45A7A1"/>
   <text x="480" y="400" class="smallLabel" text-anchor="middle">LettuceLeaderElector</text>
-  <text x="480" y="420" class="small" text-anchor="middle">runIfLeader(lockName) { block }  ·  bluetape4k-leader</text>
-  <text x="480" y="438" class="mono" text-anchor="middle">SET lockName NX EX ttl — only winner instance executes block</text>
+  <text x="480" y="420" class="small" text-anchor="middle">runIfLeader(lockName) { block }   -   bluetape4k-leader</text>
+  <text x="480" y="438" class="mono" text-anchor="middle">SET lockName NX EX ttl - only winner instance executes block</text>
 
   <!-- ════════════════════════════════════════════════════════════ -->
-  <!-- Arrows: Elector → Jobs (orthogonal)                         -->
+  <!-- Arrows: Elector -> Jobs (orthogonal)                         -->
   <!-- CacheWarmupJob center x=262  StaleWorkflowCleanupJob cx=699 -->
   <!-- Elector bottom y=448                                         -->
   <!-- ════════════════════════════════════════════════════════════ -->
 
-  <!-- Elector bottom (480,448) → down y=478 → left to (262,478) → down to (262,488) -->
+  <!-- Elector bottom (480,448) -> down y=478 -> left to (262,478) -> down to (262,488) -->
   <path d="M 480,448 L 480,478 L 262,478 L 262,488" class="line"/>
 
-  <!-- Elector bottom (480,448) → down y=478 → right to (699,478) → down to (699,488) -->
+  <!-- Elector bottom (480,448) -> down y=478 -> right to (699,478) -> down to (699,488) -->
   <path d="M 480,448 L 480,478 L 699,478 L 699,488" class="line"/>
 
   <!-- ═══════════════════════════════════════════════════ -->
@@ -104,35 +104,35 @@
   <!-- CacheWarmupJob x=72 w=376  StaleWorkflow x=512 w=376 -->
   <!-- ═══════════════════════════════════════════════════ -->
 
-  <!-- CacheWarmupJob — green -->
+  <!-- CacheWarmupJob - green -->
   <rect x="72" y="488" width="376" height="70" rx="14" class="card" fill="#EAF7EF" stroke="#58A978"/>
   <text x="260" y="519" class="smallLabel" text-anchor="middle">CacheWarmupJob</text>
-  <text x="260" y="539" class="small" text-anchor="middle">lock: cache-warmup · LeaderGuardedJob</text>
+  <text x="260" y="539" class="small" text-anchor="middle">lock: cache-warmup  -  LeaderGuardedJob</text>
 
-  <!-- StaleWorkflowCleanupJob — green -->
+  <!-- StaleWorkflowCleanupJob - green -->
   <rect x="512" y="488" width="376" height="70" rx="14" class="card" fill="#EAF7EF" stroke="#58A978"/>
   <text x="700" y="519" class="smallLabel" text-anchor="middle">StaleWorkflowCleanupJob</text>
-  <text x="700" y="539" class="small" text-anchor="middle">lock: stale-cleanup · LeaderGuardedJob</text>
+  <text x="700" y="539" class="small" text-anchor="middle">lock: stale-cleanup  -  LeaderGuardedJob</text>
 
   <!-- ════════════════════════════════════════════════ -->
-  <!-- Arrow: LettuceLeaderElector → Redis             -->
+  <!-- Arrow: LettuceLeaderElector -> Redis             -->
   <!-- Route: right side of Elector (888,408)          -->
-  <!-- → right to x=920 → ... stays inside frame       -->
-  <!-- Better: bottom of Elector center → down,        -->
+  <!-- -> right to x=920 -> ... stays inside frame       -->
+  <!-- Better: bottom of Elector center -> down,        -->
   <!-- but jobs are below. Use a side path:             -->
-  <!-- from (888,408) → right to x=908 is out of frame -->
+  <!-- from (888,408) -> right to x=908 is out of frame -->
   <!-- Route through below jobs:                        -->
-  <!-- from (480,558) → down to y=590 → left/right     -->
+  <!-- from (480,558) -> down to y=590 -> left/right     -->
   <!-- Redis is full-width band at y=588..648           -->
-  <!-- Use: Elector bottom → already going to jobs      -->
+  <!-- Use: Elector bottom -> already going to jobs      -->
   <!-- Instead draw from Elector BOTTOM CENTER but      -->
   <!-- split: use y=468 horizontal waypoint             -->
   <!-- Redis arrow: from LettuceLeaderElector right     -->
-  <!-- end (888,408) → down to y=598 (Redis top+10)    -->
+  <!-- end (888,408) -> down to y=598 (Redis top+10)    -->
   <!-- That path stays inside the frame (frame right=936)-->
   <!-- ════════════════════════════════════════════════ -->
 
-  <!-- Redis arrow: from right edge of Elector (888,408) → right to x=920 would exceed frame -->
+  <!-- Redis arrow: from right edge of Elector (888,408) -> right to x=920 would exceed frame -->
   <!-- Use interior path: right edge of Elector is x=888, frame inner edge is 936 -->
   <!-- Route: M 888,408 L 920,408 L 920,598 L 888,598 stays inside frame -->
   <path d="M 888,408 L 920,408 L 920,598 L 888,598" class="line"/>
@@ -143,7 +143,7 @@
   <!-- ════════════════════════════════════════════════ -->
   <rect x="72" y="578" width="816" height="70" rx="14" class="card" fill="#FFF3D9" stroke="#D6A441"/>
   <text x="480" y="608" class="smallLabel" text-anchor="middle">Redis</text>
-  <text x="480" y="628" class="small" text-anchor="middle">Single-Key Distributed Lock · SET {lockName} NX EX {ttl}</text>
-  <text x="480" y="645" class="mono" text-anchor="middle">Returns OK to winner · FAIL to others</text>
+  <text x="480" y="628" class="small" text-anchor="middle">Single-Key Distributed Lock  -  SET {lockName} NX EX {ttl}</text>
+  <text x="480" y="645" class="mono" text-anchor="middle">Returns OK to winner  -  FAIL to others</text>
 
 </svg>
