@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1420" height="760" viewBox="0 0 1420 760" role="img" aria-label="graph-recommendation algorithm flow diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1533.6" height="760" viewBox="0 0 1533.6 760" role="img" aria-label="graph-recommendation algorithm flow diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/></filter>
-    <marker id="arrowProduct" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
-    <marker id="arrowFollow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowProduct" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowFollow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       .canvas { fill: #F8FAFC; }
       .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
@@ -16,62 +16,62 @@
       .line { fill: none; stroke-width: 3.3; stroke-linecap: round; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1420" height="760"/>
-  <rect class="frame" x="18" y="18" width="1384" height="724" rx="24"/>
-  <text class="title" x="710" y="58" text-anchor="middle">Recommendation algorithms</text>
-  <text class="subtitle" x="710" y="84" text-anchor="middle">Product recommendations use co-buyers; follow recommendations use two-hop FOLLOWS paths.</text>
+  <rect class="canvas" width="1533.6" height="760"/>
+  <rect class="frame" x="19.44" y="18" width="1494.72" height="724" rx="24"/>
+  <text class="title" x="766.8" y="58" text-anchor="middle">Recommendation algorithms</text>
+  <text class="subtitle" x="766.8" y="84" text-anchor="middle">Product recommendations use co-buyers; follow recommendations use two-hop FOLLOWS paths.</text>
 
-  <rect x="60" y="122" width="620" height="552" rx="22" fill="#EAF8F0" stroke="#93C5A7" stroke-width="1.5"/>
-  <text class="section" x="370" y="160" text-anchor="middle">recommendProducts(alice)</text>
+  <rect x="64.8" y="122" width="669.6" height="552" rx="22" fill="#EAF8F0" stroke="#93C5A7" stroke-width="1.62"/>
+  <text class="section" x="399.6" y="160" text-anchor="middle">recommendProducts(alice)</text>
   <g filter="url(#shadow)">
-    <rect x="212" y="184" width="300" height="72" rx="14" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/>
-    <text class="cardTitle" x="362" y="212" text-anchor="middle">Alice purchases</text>
-    <text class="cardText" x="362" y="236" text-anchor="middle">laptop, phone, tablet</text>
+    <rect x="228.96" y="184" width="324" height="72" rx="14" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.62"/>
+    <text class="cardTitle" x="390.96" y="212" text-anchor="middle">Alice purchases</text>
+    <text class="cardText" x="390.96" y="236" text-anchor="middle">laptop, phone, tablet</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="212" y="304" width="300" height="80" rx="14" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/>
-    <text class="cardTitle" x="362" y="333" text-anchor="middle">Co-buyers</text>
-    <text class="cardText" x="362" y="358" text-anchor="middle">bob, carol, dave, eve, frank</text>
+    <rect x="228.96" y="304" width="324" height="80" rx="14" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.62"/>
+    <text class="cardTitle" x="390.96" y="333" text-anchor="middle">Co-buyers</text>
+    <text class="cardText" x="390.96" y="358" text-anchor="middle">bob, carol, dave, eve, frank</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="212" y="436" width="300" height="88" rx="14" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/>
-    <text class="cardTitle" x="362" y="466" text-anchor="middle">Candidate products</text>
-    <text class="cardText" x="362" y="492" text-anchor="middle">headphones, keyboard, mouse</text>
+    <rect x="228.96" y="436" width="324" height="88" rx="14" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.62"/>
+    <text class="cardTitle" x="390.96" y="466" text-anchor="middle">Candidate products</text>
+    <text class="cardText" x="390.96" y="492" text-anchor="middle">headphones, keyboard, mouse</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="212" y="590" width="300" height="72" rx="14" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/>
-    <text class="cardTitle" x="362" y="618" text-anchor="middle">Ranked result</text>
-    <text class="cardText" x="362" y="642" text-anchor="middle">score desc, productId asc</text>
+    <rect x="228.96" y="590" width="324" height="72" rx="14" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.62"/>
+    <text class="cardTitle" x="390.96" y="618" text-anchor="middle">Ranked result</text>
+    <text class="cardText" x="390.96" y="642" text-anchor="middle">score desc, productId asc</text>
   </g>
-  <path class="line" d="M 362 256 L 362 304" stroke="#16A34A" marker-end="url(#arrowProduct)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 362 384 L 362 436" stroke="#16A34A" marker-end="url(#arrowProduct)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 362 524 L 362 590" stroke="#16A34A" marker-end="url(#arrowProduct)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="note" x="362" y="710" text-anchor="middle">Already purchased products are excluded before scoring.</text>
+  <path class="line" d="M 390.96 256 L 390.96 304" stroke="#16A34A" marker-end="url(#arrowProduct)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 390.96 384 L 390.96 436" stroke="#16A34A" marker-end="url(#arrowProduct)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 390.96 524 L 390.96 590" stroke="#16A34A" marker-end="url(#arrowProduct)" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="note" x="390.96" y="710" text-anchor="middle">Already purchased products are excluded before scoring.</text>
 
-  <rect x="740" y="122" width="620" height="552" rx="22" fill="#EAF3FF" stroke="#9DB9D8" stroke-width="1.5"/>
-  <text class="section" x="1050" y="160" text-anchor="middle">recommendFollows(alice)</text>
+  <rect x="799.2" y="122" width="669.6" height="552" rx="22" fill="#EAF3FF" stroke="#9DB9D8" stroke-width="1.62"/>
+  <text class="section" x="1134" y="160" text-anchor="middle">recommendFollows(alice)</text>
   <g filter="url(#shadow)">
-    <rect x="892" y="184" width="300" height="72" rx="14" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
-    <text class="cardTitle" x="1042" y="212" text-anchor="middle">Alice follows</text>
-    <text class="cardText" x="1042" y="236" text-anchor="middle">bob, carol</text>
+    <rect x="963.36" y="184" width="324" height="72" rx="14" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.62"/>
+    <text class="cardTitle" x="1125.36" y="212" text-anchor="middle">Alice follows</text>
+    <text class="cardText" x="1125.36" y="236" text-anchor="middle">bob, carol</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="892" y="304" width="300" height="80" rx="14" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
-    <text class="cardTitle" x="1042" y="333" text-anchor="middle">Depth-2 candidates</text>
-    <text class="cardText" x="1042" y="358" text-anchor="middle">dave, eve; skip bob, carol</text>
+    <rect x="963.36" y="304" width="324" height="80" rx="14" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.62"/>
+    <text class="cardTitle" x="1125.36" y="333" text-anchor="middle">Depth-2 candidates</text>
+    <text class="cardText" x="1125.36" y="358" text-anchor="middle">dave, eve; skip bob, carol</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="892" y="436" width="300" height="88" rx="14" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
-    <text class="cardTitle" x="1042" y="466" text-anchor="middle">Mutual follows</text>
-    <text class="cardText" x="1042" y="492" text-anchor="middle">dave via bob; eve via carol</text>
+    <rect x="963.36" y="436" width="324" height="88" rx="14" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.62"/>
+    <text class="cardTitle" x="1125.36" y="466" text-anchor="middle">Mutual follows</text>
+    <text class="cardText" x="1125.36" y="492" text-anchor="middle">dave via bob; eve via carol</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="892" y="590" width="300" height="72" rx="14" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
-    <text class="cardTitle" x="1042" y="618" text-anchor="middle">Ranked result</text>
-    <text class="cardText" x="1042" y="642" text-anchor="middle">count desc, userId asc</text>
+    <rect x="963.36" y="590" width="324" height="72" rx="14" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.62"/>
+    <text class="cardTitle" x="1125.36" y="618" text-anchor="middle">Ranked result</text>
+    <text class="cardText" x="1125.36" y="642" text-anchor="middle">count desc, userId asc</text>
   </g>
-  <path class="line" d="M 1042 256 L 1042 304" stroke="#2563EB" marker-end="url(#arrowFollow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1042 384 L 1042 436" stroke="#2563EB" marker-end="url(#arrowFollow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1042 524 L 1042 590" stroke="#2563EB" marker-end="url(#arrowFollow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="note" x="1042" y="710" text-anchor="middle">The seed user and direct follows are excluded from candidates.</text>
+  <path class="line" d="M 1125.36 256 L 1125.36 304" stroke="#2563EB" marker-end="url(#arrowFollow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1125.36 384 L 1125.36 436" stroke="#2563EB" marker-end="url(#arrowFollow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1125.36 524 L 1125.36 590" stroke="#2563EB" marker-end="url(#arrowFollow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="note" x="1125.36" y="710" text-anchor="middle">The seed user and direct follows are excluded from candidates.</text>
 </svg>

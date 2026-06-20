@@ -12,7 +12,7 @@
 
 ## 요청 흐름
 
-![Module Protobuf in Spring Boot MVC 요청 흐름 다이어그램](../../docs/images/readme-diagrams/spring-boot-protobuf-mvc-readme-flow-01.png)
+![Module Protobuf in Spring Boot MVC 요청 시퀀스 다이어그램](../../docs/images/readme-diagrams/spring-boot-protobuf-mvc-readme-sequence-01.png)
 
 이 예제는 서버 데이터를 Protobuf 형식으로 보내고 받는 방법을 보여 줍니다.
 

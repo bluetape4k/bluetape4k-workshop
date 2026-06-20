@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="900" viewBox="0 0 1320 900" role="img" aria-label="graph-knowledge-graph architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1689.6" height="900" viewBox="0 0 1689.6 900" role="img" aria-label="graph-knowledge-graph architecture diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#3B82F6" stroke-dasharray="none"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/></marker>
-    <marker id="arrowRose" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#D14F6B" stroke-dasharray="none"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#3B82F6" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowRose" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#D14F6B" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       .canvas { fill: #F8FAFC; }
       .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
@@ -18,97 +18,97 @@
       .line { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <g id="graphDbIcon">
-      <circle cx="8" cy="10" r="5" fill="#A7F3D0" stroke="#0F766E" stroke-width="1.6"/>
-      <circle cx="28" cy="8" r="6" fill="#BFDBFE" stroke="#2563EB" stroke-width="1.6"/>
-      <circle cx="25" cy="29" r="5.5" fill="#FDE68A" stroke="#B45309" stroke-width="1.6"/>
-      <path d="M 13 10 L 22 8 M 12 13 L 21 25 M 28 14 L 26 23" stroke="#64748B" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <circle cx="10.24" cy="10" r="5" fill="#A7F3D0" stroke="#0F766E" stroke-width="1.6"/>
+      <circle cx="35.84" cy="8" r="6" fill="#BFDBFE" stroke="#2563EB" stroke-width="1.6"/>
+      <circle cx="32" cy="29" r="5.5" fill="#FDE68A" stroke="#B45309" stroke-width="1.6"/>
+      <path d="M 13 10 L 22 8 M 12 13 L 21 25 M 28 14 L 26 23" stroke="#64748B" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </g>
   </defs>
-  <rect class="canvas" width="1320" height="900"/>
-  <rect class="frame" x="18" y="18" width="1284" height="864" rx="24"/>
-  <text class="title" x="660" y="58" text-anchor="middle">graph-knowledge-graph</text>
-  <text class="subtitle" x="660" y="84" text-anchor="middle">Technology knowledge graph services, schema, traversal APIs, and graph backends</text>
+  <rect class="canvas" width="1689.6" height="900"/>
+  <rect class="frame" x="23.04" y="18" width="1643.52" height="864" rx="24"/>
+  <text class="title" x="844.8" y="58" text-anchor="middle">graph-knowledge-graph</text>
+  <text class="subtitle" x="844.8" y="84" text-anchor="middle">Technology knowledge graph services, schema, traversal APIs, and graph backends</text>
 
-  <rect x="54" y="112" width="1212" height="140" rx="20" fill="#EAF3FF" stroke="#9DB9D8" stroke-width="1.5"/>
-  <text class="layerTitle" x="88" y="146">Entry points</text>
-  <text class="layerNote" x="88" y="170">Blocking and coroutine tests</text>
+  <rect x="69.12" y="112" width="1551.36" height="140" rx="20" fill="#EAF3FF" stroke="#9DB9D8" stroke-width="1.92"/>
+  <text class="layerTitle" x="112.64" y="146">Entry points</text>
+  <text class="layerNote" x="112.64" y="170">Blocking and coroutine tests</text>
   <g filter="url(#shadow)">
-    <rect x="320" y="142" width="286" height="78" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
-    <text class="cardTitle" x="463" y="172" text-anchor="middle">KnowledgeGraphService</text>
-    <text class="cardText" x="463" y="196" text-anchor="middle">List-returning blocking API</text>
+    <rect x="409.6" y="142" width="366.08" height="78" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.92"/>
+    <text class="cardTitle" x="592.64" y="172" text-anchor="middle">KnowledgeGraphService</text>
+    <text class="cardText" x="592.64" y="196" text-anchor="middle">List-returning blocking API</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="714" y="142" width="286" height="78" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
-    <text class="cardTitle" x="857" y="172" text-anchor="middle">KnowledgeGraphSuspendService</text>
-    <text class="cardText" x="857" y="196" text-anchor="middle">suspend and Flow API</text>
-  </g>
-
-  <rect x="54" y="284" width="1212" height="184" rx="20" fill="#EAF8F0" stroke="#93C5A7" stroke-width="1.5"/>
-  <text class="layerTitle" x="88" y="318">Operations</text>
-  <g filter="url(#shadow)">
-    <rect x="118" y="372" width="270" height="70" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/>
-    <text class="cardTitle" x="253" y="400" text-anchor="middle">Graph mutators</text>
-    <text class="cardText" x="253" y="424" text-anchor="middle">add, mention, relate, classify</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="526" y="360" width="270" height="94" rx="12" fill="#F7FFF9" stroke="#86B89B" stroke-width="1.5"/>
-    <text class="cardTitle" x="661" y="390" text-anchor="middle">Traversal queries</text>
-    <text class="cardText" x="661" y="416" text-anchor="middle">mentioned, related, concepts</text>
-    <text class="cardText" x="661" y="437" text-anchor="middle">RELATED_TO max depth 10</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="934" y="372" width="270" height="70" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/>
-    <text class="cardTitle" x="1069" y="400" text-anchor="middle">Path inference</text>
-    <text class="cardText" x="1069" y="424" text-anchor="middle">allPaths with maxPaths cap</text>
+    <rect x="913.92" y="142" width="366.08" height="78" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.92"/>
+    <text class="cardTitle" x="1096.96" y="172" text-anchor="middle">KnowledgeGraphSuspendService</text>
+    <text class="cardText" x="1096.96" y="196" text-anchor="middle">suspend and Flow API</text>
   </g>
 
-  <rect x="54" y="500" width="1212" height="156" rx="20" fill="#FFF7E8" stroke="#D8B86E" stroke-width="1.5"/>
-  <text class="layerTitle" x="88" y="534">Typed schema</text>
+  <rect x="69.12" y="284" width="1551.36" height="184" rx="20" fill="#EAF8F0" stroke="#93C5A7" stroke-width="1.92"/>
+  <text class="layerTitle" x="112.64" y="318">Operations</text>
   <g filter="url(#shadow)">
-    <rect x="210" y="560" width="234" height="68" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/>
-    <text class="cardTitle" x="327" y="587" text-anchor="middle">Document</text>
-    <text class="cardText" x="327" y="611" text-anchor="middle">documentId, title, source</text>
+    <rect x="151.04" y="372" width="345.6" height="70" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.92"/>
+    <text class="cardTitle" x="323.84" y="400" text-anchor="middle">Graph mutators</text>
+    <text class="cardText" x="323.84" y="424" text-anchor="middle">add, mention, relate, classify</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="544" y="560" width="234" height="68" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/>
-    <text class="cardTitle" x="661" y="587" text-anchor="middle">Entity</text>
-    <text class="cardText" x="661" y="611" text-anchor="middle">entityId, name, type</text>
+    <rect x="673.28" y="360" width="345.6" height="94" rx="12" fill="#F7FFF9" stroke="#86B89B" stroke-width="1.92"/>
+    <text class="cardTitle" x="846.08" y="390" text-anchor="middle">Traversal queries</text>
+    <text class="cardText" x="846.08" y="416" text-anchor="middle">mentioned, related, concepts</text>
+    <text class="cardText" x="846.08" y="437" text-anchor="middle">RELATED_TO max depth 10</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="878" y="560" width="234" height="68" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/>
-    <text class="cardTitle" x="995" y="587" text-anchor="middle">Concept</text>
-    <text class="cardText" x="995" y="611" text-anchor="middle">conceptId, name, domain</text>
-  </g>
-
-  <rect x="54" y="688" width="1212" height="132" rx="20" fill="#F2F5F8" stroke="#B3BFCA" stroke-width="1.5"/>
-  <text class="layerTitle" x="88" y="722">Graph runtime backends</text>
-  <g filter="url(#shadow)">
-    <rect x="286" y="728" width="220" height="64" rx="12" fill="#FFFFFF" stroke="#A7B3BF" stroke-width="1.5"/>
-    <use href="#graphDbIcon" x="306" y="741"/>
-    <text class="cardTitle" x="416" y="756" text-anchor="middle">TinkerGraph</text>
-    <text class="cardText" x="416" y="780" text-anchor="middle">test, no Docker</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="552" y="728" width="220" height="64" rx="12" fill="#FFFFFF" stroke="#A7B3BF" stroke-width="1.5"/>
-    <use href="#graphDbIcon" x="572" y="741"/>
-    <text class="cardTitle" x="682" y="756" text-anchor="middle">Neo4j</text>
-    <text class="cardText" x="682" y="780" text-anchor="middle">integrationTest</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="818" y="728" width="220" height="64" rx="12" fill="#FFFFFF" stroke="#A7B3BF" stroke-width="1.5"/>
-    <use href="#graphDbIcon" x="838" y="741"/>
-    <text class="cardTitle" x="948" y="756" text-anchor="middle">Memgraph</text>
-    <text class="cardText" x="948" y="780" text-anchor="middle">integrationTest</text>
+    <rect x="1195.52" y="372" width="345.6" height="70" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.92"/>
+    <text class="cardTitle" x="1368.32" y="400" text-anchor="middle">Path inference</text>
+    <text class="cardText" x="1368.32" y="424" text-anchor="middle">allPaths with maxPaths cap</text>
   </g>
 
-  <path class="line" d="M 463 220 L 463 270 L 253 270 L 253 372" stroke="#3B82F6" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 857 220 L 857 270 L 1069 270 L 1069 372" stroke="#3B82F6" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 388 407 L 526 407" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 796 407 L 934 407" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 327 442 L 327 560" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 661 454 L 661 560" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1069 442 L 1069 520 L 995 520 L 995 560" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 661 628 L 661 674 L 396 674 L 396 728" stroke="#D14F6B" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 661 628 L 661 728" stroke="#D14F6B" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 661 628 L 661 674 L 928 674 L 928 728" stroke="#D14F6B" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="69.12" y="500" width="1551.36" height="156" rx="20" fill="#FFF7E8" stroke="#D8B86E" stroke-width="1.92"/>
+  <text class="layerTitle" x="112.64" y="534">Typed schema</text>
+  <g filter="url(#shadow)">
+    <rect x="268.8" y="560" width="299.52" height="68" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.92"/>
+    <text class="cardTitle" x="418.56" y="587" text-anchor="middle">Document</text>
+    <text class="cardText" x="418.56" y="611" text-anchor="middle">documentId, title, source</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="696.32" y="560" width="299.52" height="68" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.92"/>
+    <text class="cardTitle" x="846.08" y="587" text-anchor="middle">Entity</text>
+    <text class="cardText" x="846.08" y="611" text-anchor="middle">entityId, name, type</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1123.84" y="560" width="299.52" height="68" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.92"/>
+    <text class="cardTitle" x="1273.6" y="587" text-anchor="middle">Concept</text>
+    <text class="cardText" x="1273.6" y="611" text-anchor="middle">conceptId, name, domain</text>
+  </g>
+
+  <rect x="69.12" y="688" width="1551.36" height="132" rx="20" fill="#F2F5F8" stroke="#B3BFCA" stroke-width="1.92"/>
+  <text class="layerTitle" x="112.64" y="722">Graph runtime backends</text>
+  <g filter="url(#shadow)">
+    <rect x="366.08" y="728" width="281.6" height="64" rx="12" fill="#FFFFFF" stroke="#A7B3BF" stroke-width="1.92"/>
+    <use href="#graphDbIcon" x="391.68" y="741"/>
+    <text class="cardTitle" x="532.48" y="756" text-anchor="middle">TinkerGraph</text>
+    <text class="cardText" x="532.48" y="780" text-anchor="middle">test, no Docker</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="706.56" y="728" width="281.6" height="64" rx="12" fill="#FFFFFF" stroke="#A7B3BF" stroke-width="1.92"/>
+    <use href="#graphDbIcon" x="732.16" y="741"/>
+    <text class="cardTitle" x="872.96" y="756" text-anchor="middle">Neo4j</text>
+    <text class="cardText" x="872.96" y="780" text-anchor="middle">integrationTest</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1047.04" y="728" width="281.6" height="64" rx="12" fill="#FFFFFF" stroke="#A7B3BF" stroke-width="1.92"/>
+    <use href="#graphDbIcon" x="1072.64" y="741"/>
+    <text class="cardTitle" x="1213.44" y="756" text-anchor="middle">Memgraph</text>
+    <text class="cardText" x="1213.44" y="780" text-anchor="middle">integrationTest</text>
+  </g>
+
+  <path class="line" d="M 592.64 220 L 592.64 260 Q 592.64 268 579.84 268 L 336.64 268 Q 323.84 268 323.84 280 L 323.84 372" stroke="#3B82F6" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1096.96 220 L 1096.96 260 Q 1096.96 268 1109.76 268 L 1355.52 268 Q 1368.32 268 1368.32 280 L 1368.32 372" stroke="#3B82F6" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 496.64 407 L 673.28 407" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1018.88 407 L 1195.52 407" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 418.56 442 L 418.56 560" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 846.08 454 L 846.08 560" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1368.32 442 L 1368.32 510 Q 1368.32 520 1355.52 520 L 1286.4 520 Q 1273.6 520 1273.6 530 L 1273.6 560" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 846.08 628 L 846.08 664 Q 846.08 672 833.28 672 L 519.68 672 Q 506.88 672 506.88 684 L 506.88 728" stroke="#D14F6B" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 846.08 628 L 846.08 728" stroke="#D14F6B" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 846.08 628 L 846.08 664 Q 846.08 672 858.88 672 L 1175.04 672 Q 1187.84 672 1187.84 684 L 1187.84 728" stroke="#D14F6B" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

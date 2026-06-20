@@ -14,7 +14,7 @@ It starts Kafka through `KafkaServer.Launcher.kafka`, so the sample and tests ca
 
 ## Message Flow
 
-![Kafka demo message flow](../../docs/images/readme-diagrams/messaging-kafka-readme-message-flow-01.png)
+![Kafka demo message sequence](../../docs/images/readme-diagrams/messaging-kafka-readme-message-sequence-01.png)
 
 | Endpoint | Kafka path |
 |----------|------------|

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2790" height="800" viewBox="0 0 2790 800" role="img" aria-labelledby="title desc">
+  <title id="title">ReplyingKafkaTemplate request-reply path</title>
+  <desc id="desc">The request goes through pingpong; the @SendTo reply returns through the dedicated replies listener container.</desc>
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
+    <style>.title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:19px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:12px;fill:#546A73}.msg{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.return{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call)}.work{stroke:#6E8F4F;marker-end:url(#arrow-work)}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret)}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}</style>
+    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+  <rect x="24" y="24" width="2742" height="752" rx="20" class="frame"/>
+  <text id="titleText" x="1395.0" y="76" text-anchor="middle" class="title">ReplyingKafkaTemplate request-reply path</text>
+  <text x="1395.0" y="106" text-anchor="middle" class="subtitle">The request goes through pingpong; the @SendTo reply returns through the dedicated replies listener container.</text>
+  <g filter="url(#shadow)"><rect x="90.0" y="156" width="258" height="76" rx="10" class="header"/>
+    <text x="219.0" y="186" text-anchor="middle" class="participant">GET /ping</text>
+    <text x="219.0" y="211" text-anchor="middle" class="role">HTTP request</text></g>
+  <line x1="219.0" y1="232" x2="219.0" y2="712" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="426.0" y="156" width="258" height="76" rx="10" class="header"/>
+    <text x="555.0" y="186" text-anchor="middle" class="participant">HTTP 200</text>
+    <text x="555.0" y="211" text-anchor="middle" class="role">pong at timestamp</text></g>
+  <line x1="555.0" y1="232" x2="555.0" y2="712" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="762.0" y="156" width="258" height="76" rx="10" class="header"/>
+    <text x="891.0" y="186" text-anchor="middle" class="participant">sendAndReceive</text>
+    <text x="891.0" y="211" text-anchor="middle" class="role">ProducerRecord(&quot;ping&quot;)</text></g>
+  <line x1="891.0" y1="232" x2="891.0" y2="712" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1098.0" y="156" width="258" height="76" rx="10" class="header"/>
+    <text x="1227.0" y="186" text-anchor="middle" class="participant">await reply</text>
+    <text x="1227.0" y="211" text-anchor="middle" class="role">replyFuture.await()</text></g>
+  <line x1="1227.0" y1="232" x2="1227.0" y2="712" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1434.0" y="156" width="258" height="76" rx="10" class="header"/>
+    <image data-bluetape4k-icon="kafka" data-source="docs/icons/testcontainers/mq/apache-kafka.svg" x="1450.0" y="176" width="36" height="36" href="data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+QXBhY2hlIEthZmthPC90aXRsZT48cGF0aCBkPSJNOS43MSAyLjEzNmExLjQzIDEuNDMgMCAwIDAtMi4wNDcgMGgtLjAwN2ExLjQ4IDEuNDggMCAwIDAtLjQyMSAxLjA0MmMwIC40MS4xNjEuNzc3LjQyMiAxLjAzOWwuMDA3LjAwN2MuMjU3LjI2NC42MTYuNDI2IDEuMDE5LjQyNi40MDQgMCAuNzY2LS4xNjIgMS4wMjctLjQyNmwuMDAzLS4wMDdjLjI2MS0uMjYyLjQyMS0uNjI5LjQyMS0xLjAzOSAwLS40MDgtLjE1OS0uNzc3LS40MjEtMS4wNDJIOS43MXpNOC42ODMgMjIuMjk1Yy40MDQgMCAuNzY2LS4xNjcgMS4wMjctLjQyOWwuMDAzLS4wMDhjLjI2MS0uMjYxLjQyMS0uNjMxLjQyMS0xLjAzNiAwLS40MS0uMTU5LS43NzgtLjQyMS0xLjA0NEg5LjcxYTEuNDIgMS40MiAwIDAgMC0xLjAyNy0uNDMyIDEuNCAxLjQgMCAwIDAtMS4wMi40MzJoLS4wMDdjLS4yNi4yNjYtLjQyMi42MzQtLjQyMiAxLjA0NCAwIC40MDYuMTYxLjc3NS40MjIgMS4wMzZsLjAwNy4wMDhjLjI1OC4yNjIuNjE3LjQyOSAxLjAyLjQyOXptNy44OS00LjQ2MmMuMzU5LS4wOTYuNjgzLS4zMy44ODItLjY4NGwuMDI3LS4wNTJhMS40NyAxLjQ3IDAgMCAwIC4xMTQtMS4wNjcgMS40NTQgMS40NTQgMCAwIDAtLjY3NS0uODk2bC0uMDIxLS4wMTRhMS40MjUgMS40MjUgMCAwIDAtMS4wNzgtLjEzMmMtLjM2LjA5MS0uNjg0LjMzNS0uODgxLjY4Ni0uMi4zNDktLjI0MS43NS0uMTQ2IDEuMTE5LjA5OS4zNjMuMzMuNjkxLjY3NS44OTZoLjAwMmMuMzQ2LjIwMy43MzcuMjM5IDEuMTAxLjE0NHptLTYuNDA1LTcuMzQyYTIuMDgzIDIuMDgzIDAgMCAwLTEuNDg1LS42MjdjLS41OCAwLTEuMTAzLjI0Mi0xLjQ4Mi42MjctLjM3OC4zODUtLjYxMi45MTYtLjYxMiAxLjUwN3MuMjMzIDEuMTI0LjYxMiAxLjUxNGEyLjA4IDIuMDggMCAwIDAgMi45NjcgMGMuMzc5LS4zOS42MTItLjkyMy42MTItMS41MTRzLS4yMzMtMS4xMjItLjYxMi0xLjUwN3ptLS44MzUtMi41MWMuODQzLjE0MSAxLjYuNTUyIDIuMTc4IDEuMTQ0aC4wMDRjLjA5Mi4wOTMuMTgyLjE5Ni4yNjUuMjk5bDEuNDQ2LS44NTFhMy4xNzYgMy4xNzYgMCAwIDEtLjA0Ny0xLjgwOCAzLjE0OSAzLjE0OSAwIDAgMSAxLjQ1Ni0xLjkyNmwuMDI1LS4wMTZhMy4wNjIgMy4wNjIgMCAwIDEgMi4zNDUtLjMwNmMuNzcuMjEgMS40NjUuNzIxIDEuODk4IDEuNDgydi4wMDJjLjQzMS43NTcuNTE4IDEuNjI2LjMxMyAyLjQwOGEzLjE0NSAzLjE0NSAwIDAgMS0xLjQ1NiAxLjkyOGwtLjE5OC4xMThoLS4wMmEzLjA5NSAzLjA5NSAwIDAgMS0yLjE1NC4yMDEgMy4xMjcgMy4xMjcgMCAwIDEtMS41MTQtLjk0NGwtMS40NDQuODQ4YTQuMTYyIDQuMTYyIDAgMCAxIDAgMi44NzlsMS40NDQuODQ2Yy40MTMtLjQ3LjkzOS0uNzg5IDEuNTE0LS45NDRhMy4wNDEgMy4wNDEgMCAwIDEgMi4zNzEuMzE5bC4wNDguMDIzdi4wMDJhMy4xNyAzLjE3IDAgMCAxIDEuNDA4IDEuOTA2IDMuMjE1IDMuMjE1IDAgMCAxLS4zMTMgMi40MDVsLS4wMjYuMDUzLS4wMDMtLjAwNWEzLjE0NyAzLjE0NyAwIDAgMS0xLjg2NyAxLjQzNiAzLjA5NiAzLjA5NiAwIDAgMS0yLjM3MS0uMzE4di0uMDA2YTMuMTU2IDMuMTU2IDAgMCAxLTEuNDU2LTEuOTI3IDMuMTc1IDMuMTc1IDAgMCAxIC4wNDctMS44MDVsLTEuNDQ2LS44NDhhMy45MDUgMy45MDUgMCAwIDEtLjI2NS4yOTRsLS4wMDQuMDA1YTMuOTM4IDMuOTM4IDAgMCAxLTIuMTc4IDEuMTM4djEuNjk5YTMuMDkgMy4wOSAwIDAgMSAxLjU2Ljg2MmwuMDAyLjAwNGMuNTY1LjU3Mi45MTQgMS4zNjguOTE0IDIuMjQzIDAgLjg3My0uMzUgMS42NjQtLjkxNCAyLjIzOWwtLjAwMi4wMDlhMy4xIDMuMSAwIDAgMS0yLjIxLjkzMSAzLjEgMy4xIDAgMCAxLTIuMjA2LS45M2gtLjAwMnYtLjAwOWEzLjE4NiAzLjE4NiAwIDAgMS0uOTE2LTIuMjM5YzAtLjg3NS4zNS0xLjY3Mi45MTYtMi4yNDN2LS4wMDRoLjAwMmEzLjEgMy4xIDAgMCAxIDEuNTU4LS44NjJ2LTEuNjk5YTMuOTI2IDMuOTI2IDAgMCAxLTIuMTc2LTEuMTM4bC0uMDA2LS4wMDVhNC4wOTggNC4wOTggMCAwIDEtMS4xNzMtMi44NzRjMC0xLjEyMi40NTItMi4xMzYgMS4xNzMtMi44NzJoLjAwNmEzLjk0NyAzLjk0NyAwIDAgMSAyLjE3Ni0xLjE0NFY2LjI4OWEzLjEzNyAzLjEzNyAwIDAgMS0xLjU1OC0uODY0aC0uMDAydi0uMDA0YTMuMTkyIDMuMTkyIDAgMCAxLS45MTYtMi4yNDNjMC0uODcxLjM1LTEuNjY5LjkxNi0yLjI0M2wuMDAyLS4wMDJBMy4wODQgMy4wODQgMCAwIDEgOC42ODMgMGMuODYxIDAgMS42NDEuMzU1IDIuMjEuOTMydi4wMDJoLjAwMmMuNTY1LjU3NC45MTQgMS4zNzIuOTE0IDIuMjQzIDAgLjg3Ni0uMzUgMS42NjctLjkxNCAyLjI0M2wtLjAwMi4wMDVhMy4xNDIgMy4xNDIgMCAwIDEtMS41Ni44NjR2MS42OTJ6bTguMTIxLTEuMTI5bC0uMDEyLS4wMTlhMS40NTIgMS40NTIgMCAwIDAtLjg3LS42NjggMS40MyAxLjQzIDAgMCAwLTEuMTAzLjE0NmguMDAyYy0uMzQ3LjItLjU4LjUyOS0uNjc3Ljg5Ni0uMDk1LjM2NS0uMDU0Ljc2OC4xNDYgMS4xMTlsLjAwNy4wMDljLjIuMzQ3LjUxOS41NzkuODc0LjY3My4zNTcuMTAzLjc1NS4wNTkgMS4wOTgtLjE0NGwuMDE5LS4wMDlhMS40NyAxLjQ3IDAgMCAwIC42NTctLjg4NSAxLjQ5MyAxLjQ5MyAwIDAgMC0uMTQxLTEuMTE4Ii8+PC9zdmc+" preserveAspectRatio="xMidYMid meet"/>
+    <text x="1563.0" y="186" text-anchor="middle" class="participant">pingpong</text>
+    <text x="1563.0" y="211" text-anchor="middle" class="role">request topic</text></g>
+  <line x1="1563.0" y1="232" x2="1563.0" y2="712" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1770.0" y="156" width="258" height="76" rx="10" class="header"/>
+    <text x="1899.0" y="186" text-anchor="middle" class="participant">listenerContainer</text>
+    <text x="1899.0" y="211" text-anchor="middle" class="role">group repliesGroup</text></g>
+  <line x1="1899.0" y1="232" x2="1899.0" y2="712" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="2106.0" y="156" width="258" height="76" rx="10" class="header"/>
+    <text x="2235.0" y="186" text-anchor="middle" class="participant">PongHandler</text>
+    <text x="2235.0" y="211" text-anchor="middle" class="role">@KafkaListener / returns pong</text></g>
+  <line x1="2235.0" y1="232" x2="2235.0" y2="712" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="2442.0" y="156" width="258" height="76" rx="10" class="header"/>
+    <text x="2571.0" y="186" text-anchor="middle" class="participant">@SendTo</text>
+    <text x="2571.0" y="211" text-anchor="middle" class="role">reply header</text></g>
+  <line x1="2571.0" y1="232" x2="2571.0" y2="712" class="lifeline"/>
+  <rect x="428.0" y="252" width="254.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="452.0" cy="269" r="13" class="badge callBadge"/><text x="452.0" y="274" text-anchor="middle" class="badgeText callText">1</text>
+  <text x="476.0" y="274" class="msg callText">ProducerRecord(&quot;ping&quot;)</text>
+  <path d="M 219.0 298 L 891.0 298" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="884.0" y="290" width="14" height="48" rx="4" class="activation"/>
+  <rect x="1117.0" y="328" width="220.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="1141.0" cy="345" r="13" class="badge callBadge"/><text x="1141.0" y="350" text-anchor="middle" class="badgeText callText">2</text>
+  <text x="1165.0" y="350" class="msg callText">request topic</text>
+  <path d="M 891.0 374 L 1563.0 374" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="1556.0" y="366" width="14" height="48" rx="4" class="activation"/>
+  <rect x="1744.0" y="404" width="310.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="1768.0" cy="421" r="13" class="badge workBadge"/><text x="1768.0" y="426" text-anchor="middle" class="badgeText workText">3</text>
+  <text x="1792.0" y="426" class="msg workText">@KafkaListener / returns pong</text>
+  <path d="M 1563.0 450 L 2235.0 450" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="2228.0" y="442" width="14" height="48" rx="4" class="activation"/>
+  <rect x="2293.0" y="480" width="220.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="2317.0" cy="497" r="13" class="badge callBadge"/><text x="2317.0" y="502" text-anchor="middle" class="badgeText callText">4</text>
+  <text x="2341.0" y="502" class="msg callText">reply header</text>
+  <path d="M 2235.0 526 L 2571.0 526" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="2564.0" y="518" width="14" height="48" rx="4" class="activation"/>
+  <rect x="1448.0" y="556" width="230.0" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="1472.0" cy="573" r="13" class="badge returnBadge"/><text x="1472.0" y="578" text-anchor="middle" class="badgeText returnText">5</text>
+  <text x="1496.0" y="578" class="msg returnText">replyFuture.await()</text>
+  <path d="M 1899.0 602 L 1227.0 602" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="1234.0" y="594" width="14" height="48" rx="4" class="activation"/>
+  <rect x="781.0" y="632" width="220.0" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="805.0" cy="649" r="13" class="badge returnBadge"/><text x="805.0" y="654" text-anchor="middle" class="badgeText returnText">6</text>
+  <text x="829.0" y="654" class="msg returnText">pong at timestamp</text>
+  <path d="M 1227.0 678 L 555.0 678" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="562.0" y="670" width="14" height="48" rx="4" class="activation"/>
+  <rect x="90" y="736" width="2610" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
+  <text x="1395.0" y="762" text-anchor="middle" class="footer">Reader contract: participants, ordered messages, returns, and infrastructure boundaries stay visible.</text>
+</svg>

@@ -17,7 +17,7 @@ the Caffeine JCache cache named `buckets`.
 
 ## Request Flow
 
-![Spring WebMVC Bucket4j Caffeine request flow](../../docs/images/readme-diagrams/ratelimit-bucket4j-caffeine-web-readme-request-flow-01.png)
+![Spring WebMVC Bucket4j Caffeine request sequence](../../docs/images/readme-diagrams/ratelimit-bucket4j-caffeine-web-readme-request-sequence-01.png)
 
 The default application profile applies one catch-all `url: .*` limit. The servlet test profile uses
 two explicit URL rules so the test can prove different quotas:

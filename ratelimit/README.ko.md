@@ -12,7 +12,7 @@
 
 ## 선택 흐름
 
-![Rate limiter module selection flow](../docs/images/readme-diagrams/ratelimit-readme-selection-flow-01.png)
+![Rate limiter module selection flow](../docs/images/readme-diagrams/ratelimit-readme-selection-sequence-01.png)
 
 먼저 필요한 key를 고릅니다. 사용자 token이나 여러 identity 조합이 필요하면 bluetape4k 모듈을 보면 됩니다. IP-only starter 동작만 확인하면 Redis 또는 Caffeine starter 모듈이 맞습니다. Redis 예제는 공유 bucket 상태를, Caffeine 예제는 로컬 servlet filter 동작을 보여줍니다.
 

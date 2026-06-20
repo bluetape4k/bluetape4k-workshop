@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="440" viewBox="0 0 960 440" role="img" aria-label="Spring Data Redis Data Structures and Operations">
+<svg xmlns="http://www.w3.org/2000/svg" width="1171.2" height="440" viewBox="0 0 1171.2 440" role="img" aria-label="Spring Data Redis Data Structures and Operations">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1f2937" flood-opacity="0.10"/></filter>
   <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L8,4.5 L1,8 Z" fill="#758297" stroke-dasharray="none"/></marker>
@@ -13,62 +13,62 @@
     .zoneBox{stroke-width:1.5;fill-opacity:0.4}
   </style>
 </defs>
-<rect class="canvas" width="960" height="440"/>
-<rect class="frame" x="24" y="20" width="912" height="396" rx="16"/>
-<text class="title" x="48" y="66">Redis Operations + Keyspace Notifications</text>
-<text class="subtitle" x="48" y="90">String  -  Hash  -  List  -  Set  -  ZSet  -  Stream  -  keyspace notifications</text>
+<rect class="canvas" width="1171.2" height="440"/>
+<rect class="frame" x="29.28" y="20" width="1112.64" height="396" rx="16"/>
+<text class="title" x="58.56" y="66">Redis Operations + Keyspace Notifications</text>
+<text class="subtitle" x="58.56" y="90">String  -  Hash  -  List  -  Set  -  ZSet  -  Stream  -  keyspace notifications</text>
 
 <!-- Zone: Data Types (top row) -->
-<rect class="card" x="44" y="110" width="130" height="56" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="109" y="138" text-anchor="middle">String</text>
-<text class="small" x="109" y="157" text-anchor="middle">ValueOperations</text>
+<rect class="card" x="53.68" y="110" width="158.6" height="56" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
+<text class="smallLabel" x="132.98" y="138" text-anchor="middle">String</text>
+<text class="small" x="132.98" y="157" text-anchor="middle">ValueOperations</text>
 
-<rect class="card" x="194" y="110" width="130" height="56" rx="8" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="259" y="138" text-anchor="middle">Hash</text>
-<text class="small" x="259" y="157" text-anchor="middle">HashOperations</text>
+<rect class="card" x="236.68" y="110" width="158.6" height="56" rx="8" fill="#EAF7EF" stroke="#58A978"/>
+<text class="smallLabel" x="315.98" y="138" text-anchor="middle">Hash</text>
+<text class="small" x="315.98" y="157" text-anchor="middle">HashOperations</text>
 
-<rect class="card" x="344" y="110" width="130" height="56" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="409" y="138" text-anchor="middle">List</text>
-<text class="small" x="409" y="157" text-anchor="middle">ListOperations</text>
+<rect class="card" x="419.68" y="110" width="158.6" height="56" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
+<text class="smallLabel" x="498.98" y="138" text-anchor="middle">List</text>
+<text class="small" x="498.98" y="157" text-anchor="middle">ListOperations</text>
 
-<rect class="card" x="494" y="110" width="130" height="56" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="559" y="138" text-anchor="middle">Set</text>
-<text class="small" x="559" y="157" text-anchor="middle">SetOperations</text>
+<rect class="card" x="602.68" y="110" width="158.6" height="56" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
+<text class="smallLabel" x="681.98" y="138" text-anchor="middle">Set</text>
+<text class="small" x="681.98" y="157" text-anchor="middle">SetOperations</text>
 
-<rect class="card" x="644" y="110" width="130" height="56" rx="8" fill="#F1ECFF" stroke="#8A72D6"/>
-<text class="smallLabel" x="709" y="138" text-anchor="middle">ZSet</text>
-<text class="small" x="709" y="157" text-anchor="middle">ZSetOperations</text>
+<rect class="card" x="785.68" y="110" width="158.6" height="56" rx="8" fill="#F1ECFF" stroke="#8A72D6"/>
+<text class="smallLabel" x="864.98" y="138" text-anchor="middle">ZSet</text>
+<text class="small" x="864.98" y="157" text-anchor="middle">ZSetOperations</text>
 
-<rect class="card" x="794" y="110" width="130" height="56" rx="8" fill="#E9F7F6" stroke="#45A7A1"/>
-<text class="smallLabel" x="859" y="138" text-anchor="middle">Stream</text>
-<text class="small" x="859" y="157" text-anchor="middle">SensorData</text>
+<rect class="card" x="968.68" y="110" width="158.6" height="56" rx="8" fill="#E9F7F6" stroke="#45A7A1"/>
+<text class="smallLabel" x="1047.98" y="138" text-anchor="middle">Stream</text>
+<text class="small" x="1047.98" y="157" text-anchor="middle">SensorData</text>
 
 <!-- Center: Redis Server -->
-<rect class="card" x="300" y="220" width="360" height="60" rx="10" fill="#FFF3D9" stroke="#D6A441"/>  <text class="smallLabel" x="480" y="250" text-anchor="middle">Redis Server (Testcontainers)</text>
-<text class="small" x="480" y="268" text-anchor="middle">keyspace notifications  -  MULTI/EXEC  -  Lua scripting</text>
+<rect class="card" x="366" y="220" width="439.2" height="60" rx="10" fill="#FFF3D9" stroke="#D6A441"/><image data-bluetape4k-icon="redis" data-source="docs/icons/redis/redis-icon.svg" x="380.64" y="238" width="24" height="24" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBoZWlnaHQ9IjY0IiB2aWV3Qm94PSIwIDAgMzIgMzIiIHdpZHRoPSI2NCI+PGcgdHJhbnNmb3JtPSJtYXRyaXgoLjg0ODMyNyAwIDAgLjg0ODMyNyAtNy44ODM1NzMgLTkuNDQ5NjkxKSI+PHVzZSB4bGluazpocmVmPSIjQiIgZmlsbD0iI2E0MWUxMSIvPjxwYXRoIGQ9Ik00NS41MzYgMzQuOTVjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTRzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2LTIuMDQtMS42MTMtLjA3Ny0yLjM4MmwxNS4zMzItNS45MzZjMi4zMzItLjgzNiAzLjE0LS44NjcgNS4xMjYtLjE0UzQzLjU1IDMxLjg3IDQ1LjUxIDMyLjZzMi4wMzcgMS4zMS4wMjQgMi4zNnoiIGZpbGw9IiNkODJjMjAiLz48dXNlIHhsaW5rOmhyZWY9IiNCIiB5PSItNi4yMTgiIGZpbGw9IiNhNDFlMTEiLz48dXNlIHhsaW5rOmhyZWY9IiNDIiBmaWxsPSIjZDgyYzIwIi8+PHBhdGggZD0iTTQ1LjUzNiAyNi4wOThjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTVzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2Yy0xLS40NzgtMS41MjQtLjg4LTEuNTI0LTEuMjZWMjEuNTVzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6IiBmaWxsPSIjYTQxZTExIi8+PHVzZSB4bGluazpocmVmPSIjQyIgeT0iLTYuNDQ5IiBmaWxsPSIjZDgyYzIwIi8+PGcgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTI5LjA5NiAyMC43MTJsLTEuMTgyLTEuOTY1LTMuNzc0LS4zNCAyLjgxNi0xLjAxNi0uODQ1LTEuNTYgMi42MzYgMS4wMyAyLjQ4Ni0uODE0LS42NzIgMS42MTIgMi41MzQuOTUtMy4yNjguMzR6TTIyLjggMjQuNjI0bDguNzQtMS4zNDItMi42NCAzLjg3MnoiLz48ZWxsaXBzZSBjeD0iMjAuNDQ0IiByeD0iNC42NzIiIHJ5PSIxLjgxMSIgY3k9IjIxLjQwMiIvPjwvZz48cGF0aCBkPSJNNDIuMTMyIDIxLjEzOGwtNS4xNyAyLjA0Mi0uMDA0LTQuMDg3eiIgZmlsbD0iIzdhMGMwMCIvPjxwYXRoIGQ9Ik0zNi45NjMgMjMuMThsLS41Ni4yMi01LjE2Ni0yLjA0MiA1LjcyMy0yLjI2NHoiIGZpbGw9IiNhZDIxMTUiLz48L2c+PGRlZnMgPjxwYXRoIGlkPSJCIiBkPSJNNDUuNTM2IDM4Ljc2NGMtMi4wMTMgMS4wNS0xMi40NCA1LjMzNy0xNC42NiA2LjQ5NHMtMy40NTMgMS4xNDYtNS4yMDcuMzA4LTEyLjg1LTUuMzItMTQuODUtNi4yNzZjLTEtLjQ3OC0xLjUyNC0uODgtMS41MjQtMS4yNnYtMy44MTNzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6Ii8+PHBhdGggaWQ9IkMiIGQ9Ik00NS41MzYgMjguNzMzYy0yLjAxMyAxLjA1LTEyLjQ0IDUuMzM3LTE0LjY2IDYuNDk0cy0zLjQ1MyAxLjE0Ni01LjIwNy4zMDgtMTIuODUtNS4zMi0xNC44NS02LjI3Ni0yLjA0LTEuNjEzLS4wNzctMi4zODJsMTUuMzMyLTUuOTM1YzIuMzMyLS44MzcgMy4xNC0uODY3IDUuMTI2LS4xNHMxMi4zNSA0Ljg1MyAxNC4zMTIgNS41NyAyLjAzNyAxLjMxLjAyNCAyLjM2eiIvPjwvZGVmcz48L3N2Zz4=" preserveAspectRatio="xMidYMid meet"/>  <text class="smallLabel" x="585.6" y="250" text-anchor="middle">Redis Server (Testcontainers)</text>
+<text class="small" x="585.6" y="268" text-anchor="middle">keyspace notifications  -  MULTI/EXEC  -  Lua scripting</text>
 
 <!-- Bottom: Reactive + Repository access -->
-<rect class="card" x="80" y="350" width="240" height="52" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="200" y="378" text-anchor="middle">PersonRepository</text>
-<text class="small" x="200" y="394" text-anchor="middle">@RedisHash CRUD</text>
+<rect class="card" x="97.6" y="350" width="292.8" height="52" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
+<text class="smallLabel" x="244" y="378" text-anchor="middle">PersonRepository</text>
+<text class="small" x="244" y="394" text-anchor="middle">@RedisHash CRUD</text>
 
-<rect class="card" x="380" y="350" width="240" height="52" rx="8" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="500" y="378" text-anchor="middle">ReactiveRedisTemplate</text>
-<text class="small" x="500" y="394" text-anchor="middle">Reactive operations</text>
+<rect class="card" x="463.6" y="350" width="292.8" height="52" rx="8" fill="#EAF7EF" stroke="#58A978"/>
+<text class="smallLabel" x="610" y="378" text-anchor="middle">ReactiveRedisTemplate</text>
+<text class="small" x="610" y="394" text-anchor="middle">Reactive operations</text>
 
-<rect class="card" x="680" y="350" width="200" height="52" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="780" y="378" text-anchor="middle">Keyspace Events</text>
-<text class="small" x="780" y="394" text-anchor="middle">expiry  -  del  -  set events</text>
+<rect class="card" x="829.6" y="350" width="244" height="52" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
+<text class="smallLabel" x="951.6" y="378" text-anchor="middle">Keyspace Events</text>
+<text class="small" x="951.6" y="394" text-anchor="middle">expiry  -  del  -  set events</text>
 
 <!-- Arrows: Data types -> Redis -->
-<path class="line" d="M109 166 L400 220" stroke-linecap="round" stroke-linejoin="round"/>
-<path class="line" d="M259 166 L440 220" stroke-linecap="round" stroke-linejoin="round"/>
-<path class="line" d="M409 166 L470 220" stroke-linecap="round" stroke-linejoin="round"/>
-<path class="line" d="M559 166 L510 220" stroke-linecap="round" stroke-linejoin="round"/>
-<path class="line" d="M709 166 L560 220" stroke-linecap="round" stroke-linejoin="round"/>
-<path class="line" d="M859 166 L620 220" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M 132.98 166 L 488 220" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M 315.98 166 L 536.8 220" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M 498.98 166 L 573.4 220" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M 681.98 166 L 622.2 220" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M 864.98 166 L 683.2 220" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M 1047.98 166 L 756.4 220" stroke-linecap="round" stroke-linejoin="round"/>
 <!-- Redis -> Bottom -->
-<path class="line" d="M390 280 L250 350" stroke-linecap="round" stroke-linejoin="round"/>
-<path class="line" d="M480 280 L500 350" stroke-linecap="round" stroke-linejoin="round"/>
-<path class="line" d="M590 280 L750 350" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M 475.8 280 L 305 350" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M 585.6 280 L 610 350" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M 719.8 280 L 915 350" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

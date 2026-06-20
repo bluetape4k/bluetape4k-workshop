@@ -1,68 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1540" height="680" viewBox="0 0 1540 680" role="img" aria-label="Spring WebMVC Bucket4j Caffeine architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="1971.2" height="680" viewBox="0 0 1971.2 680" role="img" aria-label="Spring WebMVC Bucket4j Caffeine architecture">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#D97706" stroke-dasharray="none"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#D97706" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:29px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
     </style>
   </defs>
-  <rect class="canvas" width="1540" height="680"/>
-  <rect class="frame" x="24" y="24" width="1492" height="632" rx="24"/>
-  <text class="title" x="770" y="70" text-anchor="middle">WebMVC Bucket4j with Caffeine</text>
-  <text class="subtitle" x="770" y="102" text-anchor="middle">The starter installs a servlet filter and stores local bucket state in Caffeine JCache.</text>
+  <rect class="canvas" width="1971.2" height="680"/>
+  <rect class="frame" x="30.72" y="24" width="1909.76" height="632" rx="24"/>
+  <text class="title" x="985.6" y="70" text-anchor="middle">WebMVC Bucket4j with Caffeine</text>
+  <text class="subtitle" x="985.6" y="102" text-anchor="middle">The starter installs a servlet filter and stores local bucket state in Caffeine JCache.</text>
 
-  <rect class="layer" x="72" y="144" width="288" height="430" rx="18"/>
-  <text class="layerLabel" x="100" y="182">Servlet app</text>
+  <rect class="layer" x="92.16" y="144" width="368.64" height="430" rx="18"/>
+  <text class="layerLabel" x="128" y="182">Servlet app</text>
   <g filter="url(#shadow)">
-    <rect x="112" y="236" width="208" height="112" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
-    <text class="cardTitle" x="216" y="278" text-anchor="middle">IndexController</text>
-    <text class="cardText" x="216" y="310" text-anchor="middle">GET /hello</text>
-    <text class="cardText" x="216" y="336" text-anchor="middle">GET /world</text>
+    <rect x="143.36" y="236" width="266.24" height="112" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="2.176"/>
+    <text class="cardTitle" x="276.48" y="278" text-anchor="middle">IndexController</text>
+    <text class="cardText" x="276.48" y="310" text-anchor="middle">GET /hello</text>
+    <text class="cardText" x="276.48" y="336" text-anchor="middle">GET /world</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="112" y="422" width="208" height="86" rx="16" fill="#F8FAFC" stroke="#475569" stroke-width="1.7"/>
-    <text class="cardTitle" x="216" y="458" text-anchor="middle">@EnableCaching</text>
-    <text class="cardText" x="216" y="486" text-anchor="middle">CaffeineApplication</text>
-  </g>
-
-  <rect class="layer" x="438" y="144" width="314" height="430" rx="18"/>
-  <text class="layerLabel" x="466" y="182">Bucket4j starter</text>
-  <g filter="url(#shadow)">
-    <rect x="482" y="226" width="226" height="124" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
-    <text class="cardTitle" x="595" y="270" text-anchor="middle">Servlet Filter</text>
-    <text class="cardText" x="595" y="302" text-anchor="middle">url rules from YAML</text>
-    <text class="cardText" x="595" y="328" text-anchor="middle">returns 429 when empty</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="482" y="422" width="226" height="86" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
-    <text class="cardTitle" x="595" y="458" text-anchor="middle">Response Headers</text>
-    <text class="cardText" x="595" y="486" text-anchor="middle">X-Rate-Limit-Remaining</text>
+    <rect x="143.36" y="422" width="266.24" height="86" rx="16" fill="#F8FAFC" stroke="#475569" stroke-width="2.176"/>
+    <text class="cardTitle" x="276.48" y="458" text-anchor="middle">@EnableCaching</text>
+    <text class="cardText" x="276.48" y="486" text-anchor="middle">CaffeineApplication</text>
   </g>
 
-  <rect class="layer" x="830" y="144" width="302" height="430" rx="18"/>
-  <text class="layerLabel" x="858" y="182">Local bucket store</text>
+  <rect class="layer" x="560.64" y="144" width="401.92" height="430" rx="18"/>
+  <text class="layerLabel" x="596.48" y="182">Bucket4j starter</text>
   <g filter="url(#shadow)">
-    <rect x="852" y="256" width="258" height="142" rx="16" fill="#FFFBEB" stroke="#D97706" stroke-width="1.7"/>
-    <rect x="884" y="294" width="70" height="32" rx="16" fill="#FEF3C7" stroke="#D97706" stroke-width="2.6"/>
+    <rect x="616.96" y="226" width="289.28" height="124" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="2.176"/>
+    <text class="cardTitle" x="761.6" y="270" text-anchor="middle">Servlet Filter</text>
+    <text class="cardText" x="761.6" y="302" text-anchor="middle">url rules from YAML</text>
+    <text class="cardText" x="761.6" y="328" text-anchor="middle">returns 429 when empty</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="616.96" y="422" width="289.28" height="86" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="2.176"/>
+    <text class="cardTitle" x="761.6" y="458" text-anchor="middle">Response Headers</text>
+    <text class="cardText" x="761.6" y="486" text-anchor="middle">X-Rate-Limit-Remaining</text>
+  </g>
+
+  <rect class="layer" x="1062.4" y="144" width="386.56" height="430" rx="18"/>
+  <text class="layerLabel" x="1098.24" y="182">Local bucket store</text>
+  <g filter="url(#shadow)">
+    <rect x="1090.56" y="256" width="330.24" height="142" rx="16" fill="#FFFBEB" stroke="#D97706" stroke-width="2.176"/>
+    <rect x="1131.52" y="294" width="89.6" height="32" rx="16" fill="#FEF3C7" stroke="#D97706" stroke-width="3.328"/>
     <path d="M 884 310 C 884 330 954 330 954 310" fill="none" stroke="#D97706" stroke-width="2.6"/>
-    <text class="cardTitle" x="1040" y="310" text-anchor="middle">Caffeine</text>
-    <text class="cardText" x="1040" y="344" text-anchor="middle">JCache buckets</text>
-    <text class="cardText" x="1040" y="370" text-anchor="middle">local JVM state</text>
+    <text class="cardTitle" x="1331.2" y="310" text-anchor="middle">Caffeine</text>
+    <text class="cardText" x="1331.2" y="344" text-anchor="middle">JCache buckets</text>
+    <text class="cardText" x="1331.2" y="370" text-anchor="middle">local JVM state</text>
   </g>
 
-  <rect class="layer" x="1210" y="144" width="258" height="430" rx="18"/>
-  <text class="layerLabel" x="1238" y="182">Verification</text>
+  <rect class="layer" x="1548.8" y="144" width="330.24" height="430" rx="18"/>
+  <text class="layerLabel" x="1584.64" y="182">Verification</text>
   <g filter="url(#shadow)">
-    <rect x="1250" y="274" width="178" height="108" rx="16" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.7"/>
-    <text class="cardTitle" x="1339" y="316" text-anchor="middle">Servlet Test</text>
-    <text class="cardText" x="1339" y="348" text-anchor="middle">5/s and 10/s rules</text>
+    <rect x="1600" y="274" width="227.84" height="108" rx="16" fill="#ECFEFF" stroke="#0891B2" stroke-width="2.176"/>
+    <text class="cardTitle" x="1713.92" y="316" text-anchor="middle">Servlet Test</text>
+    <text class="cardText" x="1713.92" y="348" text-anchor="middle">5/s and 10/s rules</text>
   </g>
 
-  <path class="line" d="M 320 292 L 482 288" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 708 288 L 852 327" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1110 327 L 1250 328" stroke="#D97706" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 595 350 L 595 422" stroke="#D97706" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 409.6 292 L 616.96 288" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 906.24 288 L 1090.56 327" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1420.8 327 L 1600 328" stroke="#D97706" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 761.6 350 L 761.6 422" stroke="#D97706" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

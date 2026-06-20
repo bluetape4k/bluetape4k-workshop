@@ -1,87 +1,87 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="820" viewBox="0 0 1600 820" role="img" aria-label="Micrometer tracing coroutines architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="820" viewBox="0 0 2048 820" role="img" aria-label="Micrometer tracing coroutines architecture diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:37px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:23px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
     </style>
   </defs>
-  <rect class="canvas" width="1600" height="820"/>
-  <rect class="frame" x="24" y="24" width="1552" height="772" rx="24"/>
-  <text class="title" x="800" y="68" text-anchor="middle">WebFlux tracing architecture</text>  <text class="subtitle" x="800" y="98" text-anchor="middle">Sync, Reactor, and coroutine handlers create Micrometer observations that export spans to Zipkin.</text>
+  <rect class="canvas" width="2048" height="820"/>
+  <rect class="frame" x="30.72" y="24" width="1986.56" height="772" rx="24"/>
+  <text class="title" x="1024" y="68" text-anchor="middle">WebFlux tracing architecture</text>  <text class="subtitle" x="1024" y="98" text-anchor="middle">Sync, Reactor, and coroutine handlers create Micrometer observations that export spans to Zipkin.</text>
 
-  <rect class="layer" x="64" y="136" width="286" height="560" rx="18"/>
-  <text class="layerLabel" x="92" y="174">HTTP routes</text>
+  <rect class="layer" x="81.92" y="136" width="366.08" height="560" rx="18"/>
+  <text class="layerLabel" x="117.76" y="174">HTTP routes</text>
   <g filter="url(#shadow)">
-    <rect x="104" y="214" width="206" height="96" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
-    <text class="cardTitle" x="207" y="252" text-anchor="middle">Sync</text>
-    <text class="cardText" x="207" y="280" text-anchor="middle">Controller /sync/*</text>
+    <rect x="133.12" y="214" width="263.68" height="96" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="2.176"/>
+    <text class="cardTitle" x="264.96" y="252" text-anchor="middle">Sync</text>
+    <text class="cardText" x="264.96" y="280" text-anchor="middle">Controller /sync/*</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="104" y="366" width="206" height="96" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
-    <text class="cardTitle" x="207" y="404" text-anchor="middle">Reactor</text>
-    <text class="cardText" x="207" y="432" text-anchor="middle">Controller /reactor/*</text>
+    <rect x="133.12" y="366" width="263.68" height="96" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="2.176"/>
+    <text class="cardTitle" x="264.96" y="404" text-anchor="middle">Reactor</text>
+    <text class="cardText" x="264.96" y="432" text-anchor="middle">Controller /reactor/*</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="104" y="518" width="206" height="96" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
-    <text class="cardTitle" x="207" y="556" text-anchor="middle">Coroutine</text>
-    <text class="cardText" x="207" y="584" text-anchor="middle">Controller /coroutine/*</text>
-  </g>
-
-  <rect class="layer" x="402" y="136" width="322" height="560" rx="18"/>
-  <text class="layerLabel" x="430" y="174">Service styles</text>
-  <g filter="url(#shadow)">
-    <rect x="442" y="214" width="242" height="96" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
-    <text class="cardTitle" x="563" y="252" text-anchor="middle">Sync Service</text>
-    <text class="cardText" x="563" y="280" text-anchor="middle">@Observed + withObservation</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="442" y="366" width="242" height="96" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
-    <text class="cardTitle" x="563" y="404" text-anchor="middle">Reactor Service</text>
-    <text class="cardText" x="563" y="432" text-anchor="middle">Mono pipeline + @Observed</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="442" y="518" width="242" height="96" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
-    <text class="cardTitle" x="563" y="556" text-anchor="middle">Coroutine Service</text>
-    <text class="cardText" x="563" y="584" text-anchor="middle">withObservationSuspending</text>
+    <rect x="133.12" y="518" width="263.68" height="96" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="2.176"/>
+    <text class="cardTitle" x="264.96" y="556" text-anchor="middle">Coroutine</text>
+    <text class="cardText" x="264.96" y="584" text-anchor="middle">Controller /coroutine/*</text>
   </g>
 
-  <rect class="layer" x="776" y="136" width="286" height="560" rx="18"/>
-  <text class="layerLabel" x="804" y="174">Observation core</text>
+  <rect class="layer" x="514.56" y="136" width="412.16" height="560" rx="18"/>
+  <text class="layerLabel" x="550.4" y="174">Service styles</text>
   <g filter="url(#shadow)">
-    <rect x="816" y="230" width="206" height="116" rx="16" fill="#F8FAFC" stroke="#475569" stroke-width="1.7"/>
-    <text class="cardTitle" x="919" y="274" text-anchor="middle">Observed Aspect</text>
-    <text class="cardText" x="919" y="304" text-anchor="middle">ObservationConfig</text>
+    <rect x="565.76" y="214" width="309.76" height="96" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="2.176"/>
+    <text class="cardTitle" x="720.64" y="252" text-anchor="middle">Sync Service</text>
+    <text class="cardText" x="720.64" y="280" text-anchor="middle">@Observed + withObservation</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="816" y="428" width="206" height="128" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
-    <text class="cardTitle" x="919" y="472" text-anchor="middle">Registry</text>
-    <text class="cardText" x="919" y="504" text-anchor="middle">spans + context</text>
-    <text class="cardText" x="919" y="528" text-anchor="middle">cancellation safe</text>
-  </g>
-
-  <rect class="layer" x="1114" y="136" width="374" height="560" rx="18"/>
-  <text class="layerLabel" x="1142" y="174">Export and remote calls</text>
-  <g filter="url(#shadow)">
-    <rect x="1154" y="226" width="230" height="96" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
-    <text class="cardTitle" x="1269" y="264" text-anchor="middle">JSON Placeholder</text>
-    <text class="cardText" x="1269" y="292" text-anchor="middle">WebClient todos</text>
+    <rect x="565.76" y="366" width="309.76" height="96" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="2.176"/>
+    <text class="cardTitle" x="720.64" y="404" text-anchor="middle">Reactor Service</text>
+    <text class="cardText" x="720.64" y="432" text-anchor="middle">Mono pipeline + @Observed</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="1154" y="404" width="230" height="126" rx="16" fill="#F8FAFC" stroke="#111827" stroke-width="1.7"/>
-    <circle cx="1224" cy="454" r="24" fill="#DBEAFE" stroke="#111827" stroke-width="2"/>
-    <path d="M 1242 472 L 1262 492" stroke="#111827" stroke-width="5" stroke-linecap="round"/>  <text class="cardTitle" x="1290" y="456" text-anchor="middle">Zipkin</text>  <text class="cardText" x="1290" y="486" text-anchor="middle">Testcontainer</text>
+    <rect x="565.76" y="518" width="309.76" height="96" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="2.176"/>
+    <text class="cardTitle" x="720.64" y="556" text-anchor="middle">Coroutine Service</text>
+    <text class="cardText" x="720.64" y="584" text-anchor="middle">withObservationSuspending</text>
   </g>
 
-  <path class="line" d="M 310 262 L 442 262" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 310 414 L 442 414" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 310 566 L 442 566" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 684 262 L 816 288" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 684 414 L 816 288" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 684 566 L 816 492" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1022 492 L 1154 467" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 684 566 L 748 566 L 748 650 L 1090 650 L 1090 274 L 1154 274" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect class="layer" x="993.28" y="136" width="366.08" height="560" rx="18"/>
+  <text class="layerLabel" x="1029.12" y="174">Observation core</text>
+  <g filter="url(#shadow)">
+    <rect x="1044.48" y="230" width="263.68" height="116" rx="16" fill="#F8FAFC" stroke="#475569" stroke-width="2.176"/>
+    <text class="cardTitle" x="1176.32" y="274" text-anchor="middle">Observed Aspect</text>
+    <text class="cardText" x="1176.32" y="304" text-anchor="middle">ObservationConfig</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1044.48" y="428" width="263.68" height="128" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="2.176"/>
+    <text class="cardTitle" x="1176.32" y="472" text-anchor="middle">Registry</text>
+    <text class="cardText" x="1176.32" y="504" text-anchor="middle">spans + context</text>
+    <text class="cardText" x="1176.32" y="528" text-anchor="middle">cancellation safe</text>
+  </g>
+
+  <rect class="layer" x="1425.92" y="136" width="478.72" height="560" rx="18"/>
+  <text class="layerLabel" x="1461.76" y="174">Export and remote calls</text>
+  <g filter="url(#shadow)">
+    <rect x="1477.12" y="226" width="294.4" height="96" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="2.176"/>
+    <text class="cardTitle" x="1624.32" y="264" text-anchor="middle">JSON Placeholder</text>
+    <text class="cardText" x="1624.32" y="292" text-anchor="middle">WebClient todos</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1477.12" y="404" width="294.4" height="126" rx="16" fill="#F8FAFC" stroke="#111827" stroke-width="2.176"/>
+    <circle cx="1566.72" cy="454" r="24" fill="#DBEAFE" stroke="#111827" stroke-width="2"/>
+    <path d="M 1242 472 L 1262 492" stroke="#111827" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>  <text class="cardTitle" x="1651.2" y="456" text-anchor="middle">Zipkin</text>  <text class="cardText" x="1651.2" y="486" text-anchor="middle">Testcontainer</text>
+  </g>
+
+  <path class="line" d="M 396.8 262 L 565.76 262" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 396.8 414 L 565.76 414" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 396.8 566 L 565.76 566" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 875.52 262 L 1044.48 288" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 875.52 414 L 1044.48 288" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 875.52 566 L 1044.48 492" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1308.16 492 L 1477.12 467" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 875.52 566 L 944.64 566 Q 957.44 566 957.44 576 L 957.44 640 Q 957.44 650 970.24 650 L 1382.4 650 Q 1395.2 650 1395.2 640 L 1395.2 284 Q 1395.2 274 1408 274 L 1477.12 274" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

@@ -18,7 +18,7 @@ and are persisted in the `books` index.
 
 ## Request flow
 
-![Spring Data Elasticsearch WebFlux request flow](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-readme-flow-01.png)
+![Spring Data Elasticsearch WebFlux request sequence](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-readme-sequence-01.png)
 
 The public API is centered on `/v1/books`:
 

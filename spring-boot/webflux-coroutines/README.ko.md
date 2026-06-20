@@ -17,7 +17,7 @@
 
 ## Coroutine 흐름
 
-![Spring WebFlux coroutine flow](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-readme-flow-01.png)
+![Spring WebFlux coroutine sequence](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-readme-sequence-01.png)
 
 이 예제는 Spring WebFlux 환경에서 Kotlin coroutines를 사용합니다. bluetape4k `Dispatchers.VT`,
 `Flow<T>.async`, `Runtimex`, shared `WebClient` helper를 보여 주되, 각 요청을 받는 controller style을

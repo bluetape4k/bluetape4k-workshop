@@ -15,7 +15,7 @@ an annotation, a Reactor/Future wrapper, or an explicit coroutine decorator.
 
 ## Request and Decorator Flow
 
-![Spring Boot Resilience4j coroutine request and decorator flow](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-readme-flow-01.png)
+![Spring Boot Resilience4j coroutine request and decorator flow](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-readme-sequence-01.png)
 
 ## Circuit Breaker State Machine
 

@@ -1,0 +1,77 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" width="2022" height="952" viewBox="0 0 2022 952" role="img" aria-labelledby="title desc">
+  <ns0:title id="title">Gateway route outcomes</ns0:title>
+  <ns0:desc id="desc">Most routes forward to nghttp2; protected routes either fallback locally, consume Redis quota, or proxy WebSocket traffic.</ns0:desc>
+  <ns0:defs>
+    <ns0:filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><ns0:feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14" /></ns0:filter>
+    <ns0:style>.title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:19px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:12px;fill:#546A73}.msg{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.return{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call)}.work{stroke:#6E8F4F;marker-end:url(#arrow-work)}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret)}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}</ns0:style>
+    <ns0:marker id="arrow-call" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><ns0:path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" /></ns0:marker>
+    <ns0:marker id="arrow-work" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><ns0:path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" /></ns0:marker>
+    <ns0:marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><ns0:path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" /></ns0:marker>
+  </ns0:defs>
+  <ns0:rect x="24" y="24" width="1974" height="904" rx="20" class="frame" />
+  <ns0:text id="titleText" x="1011.0" y="76" text-anchor="middle" class="title">Gateway route outcomes</ns0:text>
+  <ns0:text x="1011.0" y="106" text-anchor="middle" class="subtitle">Most routes forward to nghttp2; protected routes either fallback locally, consume Redis quota, or proxy WebSocket traffic.</ns0:text>
+  <ns0:g filter="url(#shadow)"><ns0:rect x="90.0" y="156" width="306" height="76" rx="10" class="header" />
+    <ns0:text x="243.0" y="186" text-anchor="middle" class="participant">Client</ns0:text>
+    <ns0:text x="243.0" y="211" text-anchor="middle" class="role">HTTP or WebSocket</ns0:text></ns0:g>
+  <ns0:line x1="243.0" y1="232" x2="243.0" y2="864" class="lifeline" />
+  <ns0:g filter="url(#shadow)"><ns0:rect x="474.0" y="156" width="306" height="76" rx="10" class="header" />
+    <ns0:text x="627.0" y="186" text-anchor="middle" class="participant">RouteLocator</ns0:text>
+    <ns0:text x="627.0" y="211" text-anchor="middle" class="role">path, host, rewrite / circuit, li…</ns0:text></ns0:g>
+  <ns0:line x1="627.0" y1="232" x2="627.0" y2="864" class="lifeline" />
+  <ns0:g filter="url(#shadow)"><ns0:rect x="858.0" y="156" width="306" height="76" rx="10" class="header" />
+    <ns0:text x="1011.0" y="186" text-anchor="middle" class="participant">Redis quota</ns0:text>
+    <ns0:text x="1011.0" y="211" text-anchor="middle" class="role">participant</ns0:text></ns0:g>
+  <ns0:line x1="1011.0" y1="232" x2="1011.0" y2="864" class="lifeline" />
+  <ns0:g filter="url(#shadow)"><ns0:rect x="1242.0" y="156" width="306" height="76" rx="10" class="header" />
+    <ns0:text x="1395.0" y="186" text-anchor="middle" class="participant">Selected filter chain</ns0:text>
+    <ns0:text x="1395.0" y="211" text-anchor="middle" class="role">prefix, rewrite, circuit / rate l…</ns0:text></ns0:g>
+  <ns0:line x1="1395.0" y1="232" x2="1395.0" y2="864" class="lifeline" />
+  <ns0:g filter="url(#shadow)"><ns0:rect x="1626.0" y="156" width="306" height="76" rx="10" class="header" />
+    <ns0:text x="1779.0" y="186" text-anchor="middle" class="participant">Outcome</ns0:text>
+    <ns0:text x="1779.0" y="211" text-anchor="middle" class="role">forward or reject</ns0:text></ns0:g>
+  <ns0:line x1="1779.0" y1="232" x2="1779.0" y2="864" class="lifeline" />
+  <ns0:rect x="325.0" y="252" width="220.0" height="34" rx="17" class="label callLabel" />
+  <ns0:circle cx="349.0" cy="269" r="13" class="badge callBadge" /><ns0:text x="349.0" y="274" text-anchor="middle" class="badgeText callText">1</ns0:text>
+  <ns0:text x="373.0" y="274" class="msg callText">apply filters</ns0:text>
+  <ns0:path d="M 243.0 298 L 627.0 298" class="call" stroke-linecap="round" stroke-linejoin="round" />
+  <ns0:rect x="620.0" y="290" width="14" height="48" rx="4" class="activation" />
+  <ns0:rect x="901.0" y="328" width="220.0" height="34" rx="17" class="label callLabel" />
+  <ns0:circle cx="925.0" cy="345" r="13" class="badge callBadge" /><ns0:text x="925.0" y="350" text-anchor="middle" class="badgeText callText">2</ns0:text>
+  <ns0:text x="949.0" y="350" class="msg callText">apply filters</ns0:text>
+  <ns0:path d="M 627.0 374 L 1395.0 374" class="call" stroke-linecap="round" stroke-linejoin="round" />
+  <ns0:rect x="1388.0" y="366" width="14" height="48" rx="4" class="activation" />
+  <ns0:rect x="1477.0" y="404" width="220.0" height="34" rx="17" class="label workLabel" />
+  <ns0:circle cx="1501.0" cy="421" r="13" class="badge workBadge" /><ns0:text x="1501.0" y="426" text-anchor="middle" class="badgeText workText">3</ns0:text>
+  <ns0:text x="1525.0" y="426" class="msg workText">apply filters</ns0:text>
+  <ns0:path d="M 1395.0 450 L 1779.0 450" class="work" stroke-linecap="round" stroke-linejoin="round" />
+  <ns0:rect x="1772.0" y="442" width="14" height="48" rx="4" class="activation" />
+  <ns0:rect x="781.0" y="480" width="471.2" height="34" rx="17" class="label callLabel" />
+  <ns0:circle cx="805.0" cy="497" r="13" class="badge callBadge" /><ns0:text x="805.0" y="502" text-anchor="middle" class="badgeText callText">4</ns0:text>
+  <ns0:text x="829.0" y="502" class="msg callText">prefixPath and optional rewrite forward to https://ng…</ns0:text>
+  <ns0:path d="M 243.0 526 L 1779.0 526" class="call" stroke-linecap="round" stroke-linejoin="round" />
+  <ns0:rect x="1772.0" y="518" width="14" height="48" rx="4" class="activation" />
+  <ns0:rect x="397.0" y="556" width="460.0" height="34" rx="17" class="label callLabel" />
+  <ns0:circle cx="421.0" cy="573" r="13" class="badge callBadge" /><ns0:text x="421.0" y="578" text-anchor="middle" class="badgeText callText">5</ns0:text>
+  <ns0:text x="445.0" y="578" class="msg callText">forward:/circuitbreaker/fallback returns local text</ns0:text>
+  <ns0:path d="M 243.0 602 L 1011.0 602" class="call" stroke-linecap="round" stroke-linejoin="round" />
+  <ns0:rect x="1004.0" y="594" width="14" height="48" rx="4" class="activation" />
+  <ns0:rect x="1165.0" y="632" width="460.0" height="34" rx="17" class="label workLabel" />
+  <ns0:circle cx="1189.0" cy="649" r="13" class="badge workBadge" /><ns0:text x="1189.0" y="654" text-anchor="middle" class="badgeText workText">6</ns0:text>
+  <ns0:text x="1213.0" y="654" class="msg workText">forward:/circuitbreaker/fallback returns local text</ns0:text>
+  <ns0:path d="M 1011.0 678 L 1779.0 678" class="work" stroke-linecap="round" stroke-linejoin="round" />
+  <ns0:rect x="1772.0" y="670" width="14" height="48" rx="4" class="activation" />
+  <ns0:rect x="476.0" y="708" width="302.0" height="34" rx="17" class="label callLabel" />
+  <ns0:circle cx="500.0" cy="725" r="13" class="badge callBadge" /><ns0:text x="500.0" y="730" text-anchor="middle" class="badgeText callText">7</ns0:text>
+  <ns0:text x="524.0" y="730" class="msg callText">allow upstream or return 429</ns0:text>
+  <ns0:path d="M 243.0 754 L 1011.0 754" class="call" stroke-linecap="round" stroke-linejoin="round" />
+  <ns0:rect x="1004.0" y="746" width="14" height="48" rx="4" class="activation" />
+  <ns0:rect x="1244.0" y="784" width="302.0" height="34" rx="17" class="label callLabel" />
+  <ns0:circle cx="1268.0" cy="801" r="13" class="badge callBadge" /><ns0:text x="1268.0" y="806" text-anchor="middle" class="badgeText callText">8</ns0:text>
+  <ns0:text x="1292.0" y="806" class="msg callText">allow upstream or return 429</ns0:text>
+  <ns0:path d="M 1011.0 830 L 1779.0 830" class="call" stroke-linecap="round" stroke-linejoin="round" />
+  <ns0:rect x="1772.0" y="822" width="14" height="48" rx="4" class="activation" />
+  <ns0:rect x="90" y="888" width="1842" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2" />
+  <ns0:text x="1011.0" y="914" text-anchor="middle" class="footer">Reader contract: participants, ordered messages, returns, and infrastructure boundaries stay visible.</ns0:text>
+</ns0:svg>

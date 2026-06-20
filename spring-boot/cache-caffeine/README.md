@@ -12,7 +12,7 @@ This module shows a local in-memory cache using Spring Cache and Caffeine. It is
 
 ## Cache Flow
 
-![Cache Caffeine Demo lookup flow](../../docs/images/readme-diagrams/spring-boot-cache-caffeine-readme-cache-flow-01.png)
+![Cache Caffeine Demo lookup sequence](../../docs/images/readme-diagrams/spring-boot-cache-caffeine-readme-cache-sequence-01.png)
 
 `CountryRepository.findByCode(code)` is annotated with `@Cacheable`. The first call waits for the simulated slow load; the second call returns from the local cache. `evictCache(code)` removes the entry and forces the next call to load again.
 

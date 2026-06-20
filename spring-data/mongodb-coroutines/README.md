@@ -18,7 +18,7 @@ behavior without changing the document model.
 
 ## Coroutine and reactive flow
 
-![MongoDB coroutine flow](../../docs/images/readme-diagrams/spring-data-mongodb-coroutines-readme-flow-01.png)
+![MongoDB coroutine sequence](../../docs/images/readme-diagrams/spring-data-mongodb-coroutines-readme-sequence-01.png)
 
 | Path | API | What it demonstrates |
 |---|---|---|

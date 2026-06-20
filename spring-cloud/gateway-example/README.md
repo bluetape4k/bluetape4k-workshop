@@ -16,7 +16,7 @@ The architecture separates route matching, filter behavior, the upstream target,
 
 ## Route Flow
 
-![Spring Cloud Gateway route flow](../../docs/images/readme-diagrams/spring-cloud-gateway-example-readme-flow-01.png)
+![Spring Cloud Gateway route sequence](../../docs/images/readme-diagrams/spring-cloud-gateway-example-readme-sequence-01.png)
 
 ## Notes
 

@@ -12,7 +12,7 @@
 
 ## 캐시 흐름
 
-![Cache Caffeine Demo lookup flow](../../docs/images/readme-diagrams/spring-boot-cache-caffeine-readme-cache-flow-01.png)
+![Cache Caffeine Demo lookup sequence](../../docs/images/readme-diagrams/spring-boot-cache-caffeine-readme-cache-sequence-01.png)
 
 `CountryRepository.findByCode(code)`에는 `@Cacheable`이 적용되어 있습니다. 첫 호출은 느린 로드를 기다리고, 두 번째 호출은 local cache에서 바로 반환됩니다. `evictCache(code)`는 엔트리를 제거해 다음 호출이 다시 로드되게 합니다.
 

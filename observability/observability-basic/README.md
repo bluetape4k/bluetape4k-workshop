@@ -17,7 +17,7 @@ and injects trace headers through the auto-configured `WebClient.Builder`.
 
 ## Trace Propagation Flow
 
-![observability-basic trace propagation flow](../../docs/images/readme-diagrams/observability-observability-basic-readme-trace-flow-01.png)
+![observability-basic trace propagation sequence](../../docs/images/readme-diagrams/observability-observability-basic-readme-trace-sequence-01.png)
 
 `TracePropagationTest` uses real Micrometer + OpenTelemetry tracing so the outbound MockWebServer
 request contains a `traceparent` header. Controller tests that replace the registry with

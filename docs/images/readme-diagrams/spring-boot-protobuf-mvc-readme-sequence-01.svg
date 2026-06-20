@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" width="1414" height="724" viewBox="0 0 1414 724" role="img" aria-labelledby="title desc">
+  <ns0:title id="title">Course response negotiation</ns0:title>
+  <ns0:desc id="desc">The same Course object can be returned as Protobuf bytes or converted to JSON for tooling and tests.</ns0:desc>
+  <ns0:defs>
+    <ns0:filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><ns0:feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14" /></ns0:filter>
+    <ns0:style>.title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:19px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:12px;fill:#546A73}.msg{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.return{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call)}.work{stroke:#6E8F4F;marker-end:url(#arrow-work)}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret)}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}</ns0:style>
+    <ns0:marker id="arrow-call" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><ns0:path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" /></ns0:marker>
+    <ns0:marker id="arrow-work" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><ns0:path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" /></ns0:marker>
+    <ns0:marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><ns0:path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" /></ns0:marker>
+  </ns0:defs>
+  <ns0:rect x="24" y="24" width="1366" height="676" rx="20" class="frame" />
+  <ns0:text id="titleText" x="707.0" y="76" text-anchor="middle" class="title">Course response negotiation</ns0:text>
+  <ns0:text x="707.0" y="106" text-anchor="middle" class="subtitle">The same Course object can be returned as Protobuf bytes or converted to JSON for tooling and tests.</ns0:text>
+  <ns0:g filter="url(#shadow)"><ns0:rect x="90.0" y="156" width="250" height="76" rx="10" class="header" />
+    <ns0:text x="215.0" y="186" text-anchor="middle" class="participant">Client</ns0:text>
+    <ns0:text x="215.0" y="211" text-anchor="middle" class="role">Accept header</ns0:text></ns0:g>
+  <ns0:line x1="215.0" y1="232" x2="215.0" y2="636" class="lifeline" />
+  <ns0:g filter="url(#shadow)"><ns0:rect x="418.0" y="156" width="250" height="76" rx="10" class="header" />
+    <ns0:text x="543.0" y="186" text-anchor="middle" class="participant">CourseController</ns0:text>
+    <ns0:text x="543.0" y="211" text-anchor="middle" class="role">/courses/{id}</ns0:text></ns0:g>
+  <ns0:line x1="543.0" y1="232" x2="543.0" y2="636" class="lifeline" />
+  <ns0:g filter="url(#shadow)"><ns0:rect x="746.0" y="156" width="250" height="76" rx="10" class="header" />
+    <ns0:text x="871.0" y="186" text-anchor="middle" class="participant">Repository</ns0:text>
+    <ns0:text x="871.0" y="211" text-anchor="middle" class="role">Map&lt;Int, Course&gt;</ns0:text></ns0:g>
+  <ns0:line x1="871.0" y1="232" x2="871.0" y2="636" class="lifeline" />
+  <ns0:g filter="url(#shadow)"><ns0:rect x="1074.0" y="156" width="250" height="76" rx="10" class="header" />
+    <ns0:text x="1199.0" y="186" text-anchor="middle" class="participant">Converter</ns0:text>
+    <ns0:text x="1199.0" y="211" text-anchor="middle" class="role">Protobuf or JSON</ns0:text></ns0:g>
+  <ns0:line x1="1199.0" y1="232" x2="1199.0" y2="636" class="lifeline" />
+  <ns0:rect x="164.0" y="252" width="430.0" height="34" rx="17" class="label callLabel" />
+  <ns0:circle cx="188.0" cy="269" r="13" class="badge callBadge" /><ns0:text x="188.0" y="274" text-anchor="middle" class="badgeText callText">1</ns0:text>
+  <ns0:text x="212.0" y="274" class="msg callText">GET /courses/1 Accept application/x-protobuf</ns0:text>
+  <ns0:path d="M 215.0 298 L 543.0 298" class="call" stroke-linecap="round" stroke-linejoin="round" />
+  <ns0:rect x="536.0" y="290" width="14" height="48" rx="4" class="activation" />
+  <ns0:rect x="597.0" y="328" width="220.0" height="34" rx="17" class="label callLabel" />
+  <ns0:circle cx="621.0" cy="345" r="13" class="badge callBadge" /><ns0:text x="621.0" y="350" text-anchor="middle" class="badgeText callText">2</ns0:text>
+  <ns0:text x="645.0" y="350" class="msg callText">getCourse(id)</ns0:text>
+  <ns0:path d="M 543.0 374 L 871.0 374" class="call" stroke-linecap="round" stroke-linejoin="round" />
+  <ns0:rect x="864.0" y="366" width="14" height="48" rx="4" class="activation" />
+  <ns0:rect x="900.0" y="404" width="270.0" height="34" rx="17" class="label workLabel" />
+  <ns0:circle cx="924.0" cy="421" r="13" class="badge workBadge" /><ns0:text x="924.0" y="426" text-anchor="middle" class="badgeText workText">3</ns0:text>
+  <ns0:text x="948.0" y="426" class="msg workText">Course generated message</ns0:text>
+  <ns0:path d="M 871.0 450 L 1199.0 450" class="work" stroke-linecap="round" stroke-linejoin="round" />
+  <ns0:rect x="1192.0" y="442" width="14" height="48" rx="4" class="activation" />
+  <ns0:rect x="896.0" y="480" width="278.0" height="34" rx="17" class="label callLabel" />
+  <ns0:circle cx="920.0" cy="497" r="13" class="badge callBadge" /><ns0:text x="920.0" y="502" text-anchor="middle" class="badgeText callText">4</ns0:text>
+  <ns0:text x="944.0" y="502" class="msg callText">MessageOrBuilder.toJson()</ns0:text>
+  <ns0:path d="M 871.0 526 L 1199.0 526" class="call" stroke-linecap="round" stroke-linejoin="round" />
+  <ns0:rect x="1192.0" y="518" width="14" height="48" rx="4" class="activation" />
+  <ns0:rect x="477.0" y="556" width="471.2" height="34" rx="17" class="label returnLabel" />
+  <ns0:circle cx="501.0" cy="573" r="13" class="badge returnBadge" /><ns0:text x="501.0" y="578" text-anchor="middle" class="badgeText returnText">5</ns0:text>
+  <ns0:text x="525.0" y="578" class="msg returnText">HTTP response is parsed by RestTemplate, WebClient, o…</ns0:text>
+  <ns0:path d="M 1199.0 602 L 215.0 602" class="return" stroke-linecap="round" stroke-linejoin="round" />
+  <ns0:rect x="222.0" y="594" width="14" height="48" rx="4" class="activation" />
+  <ns0:rect x="90" y="660" width="1234" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2" />
+  <ns0:text x="707.0" y="686" text-anchor="middle" class="footer">Reader contract: participants, ordered messages, returns, and infrastructure boundaries stay visible.</ns0:text>
+</ns0:svg>

@@ -27,7 +27,7 @@ filter는 응답에 `X-BLUETAPE4K-API: BLUETAPE4K.IO` 헤더를 추가합니다.
 
 ## 요청 흐름
 
-![API Gateway request flow](../../docs/images/readme-diagrams/gateway-api-gateway-readme-sequence-01.png)
+![API Gateway request sequence](../../docs/images/readme-diagrams/gateway-api-gateway-readme-sequence-01.png)
 
 일반 service path는 다음 순서로 처리됩니다.
 

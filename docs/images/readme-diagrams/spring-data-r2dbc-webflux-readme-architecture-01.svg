@@ -6,7 +6,7 @@
       .card-title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:27px;fill:#101827}
       .body{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:18px;fill:#364152}.small{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:15px;fill:#475569}
       .layer{stroke-width:1.5;rx:22;ry:22}.card{fill:#fff;stroke:#cbd5e1;stroke-width:1.5;rx:18;ry:18}
-      .line{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}.db{fill:#fff;stroke:#94a3b8;stroke-width:2}.dbtop{fill:#e0f2fe;stroke:#0284c7;stroke-width:2}
+      .line{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
     </style>
     <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb" stroke-dasharray="none"/></marker>
     <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#059669" stroke-dasharray="none"/></marker>
@@ -41,15 +41,14 @@
   <rect class="card" x="285" y="910" width="460" height="50"/>
   <text class="body" x="315" y="942">ConnectionFactoryInitializer + SQL resources</text>
   <g transform="translate(1110 895)">
-    <path class="db" d="M0,24 C0,4 290,4 290,24 L290,74 C290,94 0,94 0,74 Z"/>
-    <ellipse class="dbtop" cx="145" cy="24" rx="145" ry="22"/>
-    <path class="db" d="M0,24 C0,44 290,44 290,24"/>
-    <text class="card-title" x="101" y="64">H2 R2DBC</text>
+    <rect x="0" y="0" width="290" height="98" rx="14" fill="#FFFAF2" stroke="#8C6F33" stroke-width="2"/>
+    <image data-bluetape4k-icon="database" data-source="docs/icons/generic/database-server.svg" x="18" y="31" width="38" height="38" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsbGVkYnk9InRpdGxlIGRlc2MiPgogIDx0aXRsZSBpZD0idGl0bGUiPkdlbmVyaWMgZGF0YWJhc2Ugc2VydmVyIGljb248L3RpdGxlPgogIDxkZXNjIGlkPSJkZXNjIj5HZW5lcmljIGRhdGFiYXNlIHNlcnZlciBpY29uIGZvciBibHVldGFwZTRrIGRpYWdyYW1zLjwvZGVzYz4KICA8cmVjdCB4PSIxMCIgeT0iOCIgd2lkdGg9IjEwOCIgaGVpZ2h0PSIxMTIiIHJ4PSIxOCIgZmlsbD0iI2ZmZmFmMiIgc3Ryb2tlPSIjMjg0ODVhIiBzdHJva2Utd2lkdGg9IjYiLz4KICA8ZWxsaXBzZSBjeD0iNjQiIGN5PSIzNiIgcng9IjM0IiByeT0iMTMiIGZpbGw9IiNmZmYwZDgiIHN0cm9rZT0iIzhjNmYzMyIgc3Ryb2tlLXdpZHRoPSI2Ii8+CiAgPHBhdGggZD0iTTMwIDM2djQ0YzAgOCAxNSAxNCAzNCAxNHMzNC02IDM0LTE0VjM2IiBmaWxsPSIjZmZmMGQ4IiBzdHJva2U9IiM4YzZmMzMiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMCA1OGMwIDggMTUgMTQgMzQgMTRzMzQtNiAzNC0xNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGM2ZjMzIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMCA4MGMwIDggMTUgMTQgMzQgMTRzMzQtNiAzNC0xNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGM2ZjMzIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K" preserveAspectRatio="xMidYMid meet"/>
+    <text class="card-title" x="82" y="50" text-anchor="start">H2 R2DBC</text>
   </g>
 
-  <path class="line" d="M445 305 L445 360 L840 360 L840 475" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M1355 305 L1355 360 L960 360 L960 475" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 445 305 L 445 350 Q 445 361 455 361 L 830 361 Q 840 361 840 370 L 840 475" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1355 305 L 1355 350 Q 1355 361 1345 361 L 970 361 Q 960 361 960 370 L 960 475" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line" d="M900 560 L900 715" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M900 785 L900 835 L515 835 L515 910" stroke="#7c3aed" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 900 785 L 900 825 Q 900 835 890 835 L 525 835 Q 515 835 515 845 L 515 910" stroke="#7c3aed" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line" d="M745 935 L1110 935" stroke="#7c3aed" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

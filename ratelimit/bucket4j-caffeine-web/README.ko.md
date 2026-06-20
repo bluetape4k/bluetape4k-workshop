@@ -17,7 +17,7 @@ filter 코드도 없습니다. 단일 WebMVC 인스턴스에서 작은 in-memory
 
 ## Request Flow
 
-![Spring WebMVC Bucket4j Caffeine request flow](../../docs/images/readme-diagrams/ratelimit-bucket4j-caffeine-web-readme-request-flow-01.png)
+![Spring WebMVC Bucket4j Caffeine request sequence](../../docs/images/readme-diagrams/ratelimit-bucket4j-caffeine-web-readme-request-sequence-01.png)
 
 기본 application profile은 하나의 catch-all `url: .*` 제한을 적용합니다. Servlet 테스트 profile은
 서로 다른 quota를 검증할 수 있도록 두 URL 규칙을 분리합니다.

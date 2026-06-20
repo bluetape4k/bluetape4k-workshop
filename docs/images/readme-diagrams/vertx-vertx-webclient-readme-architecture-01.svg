@@ -12,10 +12,10 @@
       .line { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke-dasharray="none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#059669" stroke-dasharray="none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#059669" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
   </defs>
   <rect class="bg" width="1680" height="820"/>
@@ -49,10 +49,10 @@
   <text class="small" x="960" y="706">withSuspendTestContext reports failures</text>
 
   <path class="line" d="M290 260 L290 445" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M660 260 L660 330 L360 330 L360 445" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M1030 260 L1030 330 L840 330 L840 445" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 660 260 L 660 320 Q 660 330 650 330 L 370 330 Q 360 330 360 340 L 360 445" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1030 260 L 1030 320 Q 1030 330 1020 330 L 850 330 Q 840 330 840 340 L 840 445" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line" d="M1400 260 L1400 445" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line" d="M360 505 L360 675" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M840 505 L840 585 L535 585 L535 675" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M1320 505 L1320 585 L1145 585 L1145 675" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 840 505 L 840 575 Q 840 585 830 585 L 545 585 Q 535 585 535 595 L 535 675" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1320 505 L 1320 575 Q 1320 585 1310 585 L 1155 585 Q 1145 585 1145 595 L 1145 675" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

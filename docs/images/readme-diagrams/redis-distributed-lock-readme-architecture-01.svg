@@ -1,82 +1,81 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1660" height="740" viewBox="0 0 1660 740" role="img" aria-label="Redis distributed lock architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="1792.8" height="740" viewBox="0 0 1792.8 740" role="img" aria-label="Redis distributed lock architecture">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
-    <marker id="arrowRed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#DC2626" stroke-dasharray="none"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowRed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#DC2626" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
     </style>
-  <marker id="arrowBlue-0891b2" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path stroke-dasharray="none" d="M 0 0 L 12 6 L 0 12 Z" fill="#0891b2"/></marker>
-<marker id="arrowRed-ea580c" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path stroke-dasharray="none" d="M 0 0 L 12 6 L 0 12 Z" fill="#ea580c"/></marker>
+  <marker id="arrowBlue-0891b2" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path stroke-dasharray="none" d="M 0 0 L 12 6 L 0 12 Z" fill="#0891b2" stroke-linecap="round" stroke-linejoin="round"/></marker>
+<marker id="arrowRed-ea580c" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path stroke-dasharray="none" d="M 0 0 L 12 6 L 0 12 Z" fill="#ea580c" stroke-linecap="round" stroke-linejoin="round"/></marker>
 </defs>
-  <rect class="canvas" width="1660" height="740"/>
-  <rect class="frame" x="24" y="24" width="1612" height="692" rx="24"/>  <text class="title" x="830" y="72" text-anchor="middle">Redis distributed lock workshop</text>
-  <text class="subtitle" x="830" y="104" text-anchor="middle">The tests compare unsafe stock deduction, Redisson RLock, RFencedLock tokens, and coroutine-safe unlock.</text>
+  <rect class="canvas" width="1792.8" height="740"/>
+  <rect class="frame" x="25.92" y="24" width="1740.96" height="692" rx="24"/>  <text class="title" x="896.4" y="72" text-anchor="middle">Redis distributed lock workshop</text>
+  <text class="subtitle" x="896.4" y="104" text-anchor="middle">The tests compare unsafe stock deduction, Redisson RLock, RFencedLock tokens, and coroutine-safe unlock.</text>
 
-  <rect class="layer" x="72" y="146" width="318" height="470" rx="18"/>
-  <text class="layerLabel" x="100" y="184">Inventory model</text>
+  <rect class="layer" x="77.76" y="146" width="343.44" height="470" rx="18"/>
+  <text class="layerLabel" x="108" y="184">Inventory model</text>
   <g filter="url(#shadow)">
-    <rect x="110" y="260" width="242" height="108" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
-    <text class="cardTitle" x="231" y="300" text-anchor="middle">InventoryStore</text>
-    <text class="cardText" x="231" y="332" text-anchor="middle">in-memory stock</text>
-    <text class="cardText" x="231" y="358" text-anchor="middle">reset before each test</text>
+    <rect x="118.8" y="260" width="261.36" height="108" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.836"/>
+    <text class="cardTitle" x="249.48" y="300" text-anchor="middle">InventoryStore</text>
+    <text class="cardText" x="249.48" y="332" text-anchor="middle">in-memory stock</text>
+    <text class="cardText" x="249.48" y="358" text-anchor="middle">reset before each test</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="110" y="438" width="242" height="96" rx="16" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.7"/>
-    <text class="cardTitle" x="231" y="478" text-anchor="middle">Unsafe service</text>
-    <text class="cardText" x="231" y="508" text-anchor="middle">race proves oversell</text>
-  </g>
-
-  <rect class="layer" x="452" y="146" width="334" height="470" rx="18"/>
-  <text class="layerLabel" x="480" y="184">Redisson locks</text>
-  <g filter="url(#shadow)">
-    <rect x="492" y="238" width="254" height="112" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
-    <circle cx="526" cy="292" r="21" fill="#FEE2E2" stroke="#DC2626" stroke-width="2.2"/>
-    <text x="526" y="300" text-anchor="middle" font-family="Comic Mono" font-size="15" fill="#B91C1C">R</text>  <text class="cardTitle" x="650" y="282" text-anchor="middle">Redis Server</text>  <text class="cardText" x="642" y="314" text-anchor="middle">Testcontainers singleton</text>
-    <text class="cardText" x="642" y="340" text-anchor="middle">redissonClient DSL</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="492" y="426" width="254" height="112" rx="16" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.7"/>
-    <text class="cardTitle" x="619" y="468" text-anchor="middle">RLock</text>
-    <text class="cardText" x="619" y="500" text-anchor="middle">tryLock(wait, lease)</text>
-    <text class="cardText" x="619" y="526" text-anchor="middle">mutual exclusion</text>
+    <rect x="118.8" y="438" width="261.36" height="96" rx="16" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.836"/>
+    <text class="cardTitle" x="249.48" y="478" text-anchor="middle">Unsafe service</text>
+    <text class="cardText" x="249.48" y="508" text-anchor="middle">race proves oversell</text>
   </g>
 
-  <rect class="layer" x="848" y="146" width="354" height="470" rx="18"/>
-  <text class="layerLabel" x="876" y="184">Fencing guard</text>
+  <rect class="layer" x="488.16" y="146" width="360.72" height="470" rx="18"/>
+  <text class="layerLabel" x="518.4" y="184">Redisson locks</text>
   <g filter="url(#shadow)">
-    <rect x="888" y="238" width="274" height="112" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/>
-    <text class="cardTitle" x="1025" y="280" text-anchor="middle">RFencedLock</text>
-    <text class="cardText" x="1025" y="312" text-anchor="middle">monotonic token</text>
-    <text class="cardText" x="1025" y="338" text-anchor="middle">stale holders rejected</text>
+    <rect x="531.36" y="238" width="274.32" height="112" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.836"/>
+    <image data-bluetape4k-icon="redis" data-source="docs/icons/redis/redis-icon.svg" x="550.8" y="276" width="33" height="33" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBoZWlnaHQ9IjY0IiB2aWV3Qm94PSIwIDAgMzIgMzIiIHdpZHRoPSI2NCI+PGcgdHJhbnNmb3JtPSJtYXRyaXgoLjg0ODMyNyAwIDAgLjg0ODMyNyAtNy44ODM1NzMgLTkuNDQ5NjkxKSI+PHVzZSB4bGluazpocmVmPSIjQiIgZmlsbD0iI2E0MWUxMSIvPjxwYXRoIGQ9Ik00NS41MzYgMzQuOTVjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTRzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2LTIuMDQtMS42MTMtLjA3Ny0yLjM4MmwxNS4zMzItNS45MzZjMi4zMzItLjgzNiAzLjE0LS44NjcgNS4xMjYtLjE0UzQzLjU1IDMxLjg3IDQ1LjUxIDMyLjZzMi4wMzcgMS4zMS4wMjQgMi4zNnoiIGZpbGw9IiNkODJjMjAiLz48dXNlIHhsaW5rOmhyZWY9IiNCIiB5PSItNi4yMTgiIGZpbGw9IiNhNDFlMTEiLz48dXNlIHhsaW5rOmhyZWY9IiNDIiBmaWxsPSIjZDgyYzIwIi8+PHBhdGggZD0iTTQ1LjUzNiAyNi4wOThjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTVzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2Yy0xLS40NzgtMS41MjQtLjg4LTEuNTI0LTEuMjZWMjEuNTVzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6IiBmaWxsPSIjYTQxZTExIi8+PHVzZSB4bGluazpocmVmPSIjQyIgeT0iLTYuNDQ5IiBmaWxsPSIjZDgyYzIwIi8+PGcgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTI5LjA5NiAyMC43MTJsLTEuMTgyLTEuOTY1LTMuNzc0LS4zNCAyLjgxNi0xLjAxNi0uODQ1LTEuNTYgMi42MzYgMS4wMyAyLjQ4Ni0uODE0LS42NzIgMS42MTIgMi41MzQuOTUtMy4yNjguMzR6TTIyLjggMjQuNjI0bDguNzQtMS4zNDItMi42NCAzLjg3MnoiLz48ZWxsaXBzZSBjeD0iMjAuNDQ0IiByeD0iNC42NzIiIHJ5PSIxLjgxMSIgY3k9IjIxLjQwMiIvPjwvZz48cGF0aCBkPSJNNDIuMTMyIDIxLjEzOGwtNS4xNyAyLjA0Mi0uMDA0LTQuMDg3eiIgZmlsbD0iIzdhMGMwMCIvPjxwYXRoIGQ9Ik0zNi45NjMgMjMuMThsLS41Ni4yMi01LjE2Ni0yLjA0MiA1LjcyMy0yLjI2NHoiIGZpbGw9IiNhZDIxMTUiLz48L2c+PGRlZnMgPjxwYXRoIGlkPSJCIiBkPSJNNDUuNTM2IDM4Ljc2NGMtMi4wMTMgMS4wNS0xMi40NCA1LjMzNy0xNC42NiA2LjQ5NHMtMy40NTMgMS4xNDYtNS4yMDcuMzA4LTEyLjg1LTUuMzItMTQuODUtNi4yNzZjLTEtLjQ3OC0xLjUyNC0uODgtMS41MjQtMS4yNnYtMy44MTNzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6Ii8+PHBhdGggaWQ9IkMiIGQ9Ik00NS41MzYgMjguNzMzYy0yLjAxMyAxLjA1LTEyLjQ0IDUuMzM3LTE0LjY2IDYuNDk0cy0zLjQ1MyAxLjE0Ni01LjIwNy4zMDgtMTIuODUtNS4zMi0xNC44NS02LjI3Ni0yLjA0LTEuNjEzLS4wNzctMi4zODJsMTUuMzMyLTUuOTM1YzIuMzMyLS44MzcgMy4xNC0uODY3IDUuMTI2LS4xNHMxMi4zNSA0Ljg1MyAxNC4zMTIgNS41NyAyLjAzNyAxLjMxLjAyNCAyLjM2eiIvPjwvZGVmcz48L3N2Zz4=" preserveAspectRatio="xMidYMid meet"/>  <text class="cardTitle" x="702" y="282" text-anchor="middle">Redis Server</text>  <text class="cardText" x="693.36" y="314" text-anchor="middle">Testcontainers singleton</text>
+    <text class="cardText" x="693.36" y="340" text-anchor="middle">redissonClient DSL</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="888" y="426" width="274" height="112" rx="16" fill="#FFFBEB" stroke="#D97706" stroke-width="1.7"/>
-    <text class="cardTitle" x="1025" y="468" text-anchor="middle">FencedResource</text>
-    <text class="cardText" x="1025" y="500" text-anchor="middle">CAS lastSeenToken</text>
-    <text class="cardText" x="1025" y="526" text-anchor="middle">null means rejected</text>
-  </g>
-
-  <rect class="layer" x="1264" y="146" width="324" height="470" rx="18"/>
-  <text class="layerLabel" x="1292" y="184">Concurrency tests</text>
-  <g filter="url(#shadow)">
-    <rect x="1304" y="250" width="244" height="104" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
-    <text class="cardTitle" x="1426" y="292" text-anchor="middle">Thread Tester</text>
-    <text class="cardText" x="1426" y="324" text-anchor="middle">MultithreadingTester</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="1304" y="432" width="244" height="104" rx="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="1.7"/>
-    <text class="cardTitle" x="1426" y="474" text-anchor="middle">Suspend Tester</text>
-    <text class="cardText" x="1426" y="506" text-anchor="middle">SuspendedJobTester</text>
+    <rect x="531.36" y="426" width="274.32" height="112" rx="16" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.836"/>
+    <text class="cardTitle" x="668.52" y="468" text-anchor="middle">RLock</text>
+    <text class="cardText" x="668.52" y="500" text-anchor="middle">tryLock(wait, lease)</text>
+    <text class="cardText" x="668.52" y="526" text-anchor="middle">mutual exclusion</text>
   </g>
 
-  <path class="line soft" d="M 352 486 L 492 486" stroke="#DC2626" marker-end="url(#arrowRed)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 352 314 L 492 294" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 746 482 L 888 482" stroke="#0891B2" marker-end="url(#arrowBlue-0891b2)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 746 294 L 888 294" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1025 350 L 1025 426" stroke="#EA580C" marker-end="url(#arrowRed-ea580c)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1162 294 L 1304 302" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1162 482 L 1304 484" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect class="layer" x="915.84" y="146" width="382.32" height="470" rx="18"/>
+  <text class="layerLabel" x="946.08" y="184">Fencing guard</text>
+  <g filter="url(#shadow)">
+    <rect x="959.04" y="238" width="295.92" height="112" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.836"/>
+    <text class="cardTitle" x="1107" y="280" text-anchor="middle">RFencedLock</text>
+    <text class="cardText" x="1107" y="312" text-anchor="middle">monotonic token</text>
+    <text class="cardText" x="1107" y="338" text-anchor="middle">stale holders rejected</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="959.04" y="426" width="295.92" height="112" rx="16" fill="#FFFBEB" stroke="#D97706" stroke-width="1.836"/>
+    <text class="cardTitle" x="1107" y="468" text-anchor="middle">FencedResource</text>
+    <text class="cardText" x="1107" y="500" text-anchor="middle">CAS lastSeenToken</text>
+    <text class="cardText" x="1107" y="526" text-anchor="middle">null means rejected</text>
+  </g>
+
+  <rect class="layer" x="1365.12" y="146" width="349.92" height="470" rx="18"/>
+  <text class="layerLabel" x="1395.36" y="184">Concurrency tests</text>
+  <g filter="url(#shadow)">
+    <rect x="1408.32" y="250" width="263.52" height="104" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.836"/>
+    <text class="cardTitle" x="1540.08" y="292" text-anchor="middle">Thread Tester</text>
+    <text class="cardText" x="1540.08" y="324" text-anchor="middle">MultithreadingTester</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1408.32" y="432" width="263.52" height="104" rx="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="1.836"/>
+    <text class="cardTitle" x="1540.08" y="474" text-anchor="middle">Suspend Tester</text>
+    <text class="cardText" x="1540.08" y="506" text-anchor="middle">SuspendedJobTester</text>
+  </g>
+
+  <path class="line soft" d="M 380.16 486 L 531.36 486" stroke="#DC2626" marker-end="url(#arrowRed)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 380.16 314 L 531.36 294" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 805.68 482 L 959.04 482" stroke="#0891B2" marker-end="url(#arrowBlue-0891b2)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 805.68 294 L 959.04 294" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1107 350 L 1107 426" stroke="#EA580C" marker-end="url(#arrowRed-ea580c)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1254.96 294 L 1408.32 302" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1254.96 482 L 1408.32 484" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

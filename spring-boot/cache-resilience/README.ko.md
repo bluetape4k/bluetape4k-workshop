@@ -17,7 +17,7 @@
 
 ## CircuitBreaker 흐름
 
-![Spring Boot Cache Resilience state flow](../../docs/images/readme-diagrams/spring-boot-cache-resilience-readme-state-flow-01.png)
+![Spring Boot Cache Resilience state sequence](../../docs/images/readme-diagrams/spring-boot-cache-resilience-readme-state-sequence-01.png)
 
 Integration test는 전체 상태 머신을 직접 구동합니다. Redis가 정상일 때는 breaker가 `CLOSED`이고, timeout 주입 후 `OPEN`이 되며, 서비스는 Caffeine으로 fallback합니다. 대기 시간이 지난 뒤 probe가 성공하면 breaker가 다시 닫힙니다.
 

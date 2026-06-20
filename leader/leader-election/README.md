@@ -14,7 +14,7 @@ Use this example when a multi-pod service has work that must not run concurrentl
 
 ## Election Flow
 
-![Leader election flow](../../docs/images/readme-diagrams/leader-leader-election-readme-election-flow-01.png)
+![Leader election flow](../../docs/images/readme-diagrams/leader-leader-election-readme-election-sequence-01.png)
 
 1. Every instance triggers `LeaderScheduledJobService` on the configured fixed delay.
 2. Each `LeaderGuardedJob` supplies a unique `lockName`.

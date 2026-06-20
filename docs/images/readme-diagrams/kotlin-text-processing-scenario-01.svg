@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="460" viewBox="0 0 1320 460" role="img" aria-label="Kotlin text processing scenario flow diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1471.2" height="460" viewBox="0 0 1471.2 460" role="img" aria-label="Kotlin text processing scenario flow diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#fff;stroke:#D6E0E8;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.cardTitle{font-family:"Architects Daughter";font-size:25px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="460"/>
-  <rect class="frame" x="24" y="24" width="1272" height="412" rx="24"/>
-  <text class="title" x="660" y="66" text-anchor="middle">Text processing flow</text>
-  <text class="subtitle" x="660" y="94" text-anchor="middle">Raw text can be normalized, searched for abuse words, or classified by language, then asserted in tests.</text>
+  <rect class="canvas" width="1471.2" height="460"/>
+  <rect class="frame" x="26.749" y="24" width="1417.702" height="412" rx="24"/>
+  <text class="title" x="735.6" y="66" text-anchor="middle">Text processing flow</text>
+  <text class="subtitle" x="735.6" y="94" text-anchor="middle">Raw text can be normalized, searched for abuse words, or classified by language, then asserted in tests.</text>
 
-  <g filter="url(#shadow)"><rect x="82" y="210" width="220" height="84" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="1.7"/><text class="cardTitle" x="192" y="244" text-anchor="middle">Raw text</text><text class="cardText" x="192" y="270" text-anchor="middle">message or sentence</text></g>
-  <g filter="url(#shadow)"><rect x="380" y="210" width="220" height="84" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/><text class="cardTitle" x="490" y="244" text-anchor="middle">Normalize</text><text class="cardText" x="490" y="270" text-anchor="middle">lowercase + whitespace</text></g>
-  <g filter="url(#shadow)"><rect x="698" y="132" width="250" height="84" rx="16" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.7"/><text class="cardTitle" x="823" y="166" text-anchor="middle">Abuse filter</text><text class="cardText" x="823" y="192" text-anchor="middle">mask and match spans</text></g>
-  <g filter="url(#shadow)"><rect x="698" y="290" width="250" height="84" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="823" y="324" text-anchor="middle">Language detect</text><text class="cardText" x="823" y="350" text-anchor="middle">top language + confidence</text></g>
-  <g filter="url(#shadow)"><rect x="1030" y="210" width="220" height="84" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="1.7"/><text class="cardTitle" x="1140" y="244" text-anchor="middle">JUnit tests</text><text class="cardText" x="1140" y="270" text-anchor="middle">assertions per contract</text></g>
+  <g filter="url(#shadow)"><rect x="91.393" y="210" width="245.2" height="84" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="1.895"/><text class="cardTitle" x="213.993" y="244" text-anchor="middle">Raw text</text><text class="cardText" x="213.993" y="270" text-anchor="middle">message or sentence</text></g>
+  <g filter="url(#shadow)"><rect x="423.527" y="210" width="245.2" height="84" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.895"/><text class="cardTitle" x="546.127" y="244" text-anchor="middle">Normalize</text><text class="cardText" x="546.127" y="270" text-anchor="middle">lowercase + whitespace</text></g>
+  <g filter="url(#shadow)"><rect x="777.953" y="132" width="278.636" height="84" rx="16" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.895"/><text class="cardTitle" x="917.271" y="166" text-anchor="middle">Abuse filter</text><text class="cardText" x="917.271" y="192" text-anchor="middle">mask and match spans</text></g>
+  <g filter="url(#shadow)"><rect x="777.953" y="290" width="278.636" height="84" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.895"/><text class="cardTitle" x="917.271" y="324" text-anchor="middle">Language detect</text><text class="cardText" x="917.271" y="350" text-anchor="middle">top language + confidence</text></g>
+  <g filter="url(#shadow)"><rect x="1147.982" y="210" width="245.2" height="84" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="1.895"/><text class="cardTitle" x="1270.582" y="244" text-anchor="middle">JUnit tests</text><text class="cardText" x="1270.582" y="270" text-anchor="middle">assertions per contract</text></g>
 
-  <path class="line" d="M 302 252 L 380 252" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 600 252 L 650 252 L 650 174 L 698 174" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 600 252 L 650 252 L 650 332 L 698 332" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 948 174 L 988 174 L 988 252 L 1030 252" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 948 332 L 988 332 L 988 252 L 1030 252" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 336.593 252 L 423.527 252" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 668.727 252 L 713.309 252 Q 724.455 252 724.455 242 L 724.455 184 Q 724.455 174 735.6 174 L 777.953 174" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 668.727 252 L 713.309 252 Q 724.455 252 724.455 262 L 724.455 322 Q 724.455 332 735.6 332 L 777.953 332" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1056.589 174 L 1090.025 174 Q 1101.171 174 1101.171 184 L 1101.171 242 Q 1101.171 252 1112.316 252 L 1147.982 252" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1056.589 332 L 1090.025 332 Q 1101.171 332 1101.171 322 L 1101.171 262 Q 1101.171 252 1112.316 252 L 1147.982 252" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

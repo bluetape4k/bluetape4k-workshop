@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1380" height="780" viewBox="0 0 1380 780" role="img" aria-label="JsonView examples architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1766.4" height="780" viewBox="0 0 1766.4 780" role="img" aria-label="JsonView examples architecture diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%">
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.17"/>
     </filter>
     <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="arrowSlate" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#64748B" stroke-dasharray="none"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#64748B" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <style>
       .canvas { fill: #F8FAFC; }
@@ -30,77 +30,77 @@
       .line { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
   <marker id="arrowAmber-d97706" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path stroke-dasharray="none" d="M 0 0 L 12 6 L 0 12 Z" fill="#d97706"/>
+      <path stroke-dasharray="none" d="M 0 0 L 12 6 L 0 12 Z" fill="#d97706" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
 </defs>
-  <rect class="canvas" width="1380" height="780"/>
-  <rect class="frame" x="28" y="24" width="1324" height="732" rx="24"/>
+  <rect class="canvas" width="1766.4" height="780"/>
+  <rect class="frame" x="35.84" y="24" width="1694.72" height="732" rx="24"/>
 
-  <text class="title" x="690" y="66" text-anchor="middle">JsonView response filtering</text>
-  <text class="subtitle" x="690" y="94" text-anchor="middle">Spring endpoints choose a view, Jackson serializes only that view's ArticleDTO fields.</text>
+  <text class="title" x="883.2" y="66" text-anchor="middle">JsonView response filtering</text>
+  <text class="subtitle" x="883.2" y="94" text-anchor="middle">Spring endpoints choose a view, Jackson serializes only that view's ArticleDTO fields.</text>
 
-  <rect class="layerApi" x="64" y="124" width="1252" height="162" rx="18"/>
-  <text class="layerLabel" x="92" y="158">HTTP API</text>
+  <rect class="layerApi" x="81.92" y="124" width="1602.56" height="162" rx="18"/>
+  <text class="layerLabel" x="117.76" y="158">HTTP API</text>
   <g filter="url(#shadow)">
-    <rect x="112" y="184" width="246" height="74" rx="12" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.6"/>
-    <text class="cardTitle" x="235" y="214" text-anchor="middle">GET /articles</text>
-    <text class="cardText" x="235" y="240" text-anchor="middle">@JsonView(Public)</text>
+    <rect x="143.36" y="184" width="314.88" height="74" rx="12" fill="#FFFFFF" stroke="#3B82F6" stroke-width="2.048"/>
+    <text class="cardTitle" x="300.8" y="214" text-anchor="middle">GET /articles</text>
+    <text class="cardText" x="300.8" y="240" text-anchor="middle">@JsonView(Public)</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="414" y="184" width="246" height="74" rx="12" fill="#FFFFFF" stroke="#64748B" stroke-width="1.6"/>
-    <text class="cardTitle" x="537" y="214" text-anchor="middle">GET /articles/{id}</text>
-    <text class="cardText" x="537" y="240" text-anchor="middle">no view, full DTO</text>
+    <rect x="529.92" y="184" width="314.88" height="74" rx="12" fill="#FFFFFF" stroke="#64748B" stroke-width="2.048"/>
+    <text class="cardTitle" x="687.36" y="214" text-anchor="middle">GET /articles/{id}</text>
+    <text class="cardText" x="687.36" y="240" text-anchor="middle">no view, full DTO</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="716" y="184" width="246" height="74" rx="12" fill="#FFFFFF" stroke="#D97706" stroke-width="1.6"/>
-    <text class="cardTitle" x="839" y="214" text-anchor="middle">GET /{id}/analytics</text>
-    <text class="cardText" x="839" y="240" text-anchor="middle">@JsonView(Analytics)</text>
+    <rect x="916.48" y="184" width="314.88" height="74" rx="12" fill="#FFFFFF" stroke="#D97706" stroke-width="2.048"/>
+    <text class="cardTitle" x="1073.92" y="214" text-anchor="middle">GET /{id}/analytics</text>
+    <text class="cardText" x="1073.92" y="240" text-anchor="middle">@JsonView(Analytics)</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="1018" y="184" width="246" height="74" rx="12" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.6"/>
-    <text class="cardTitle" x="1141" y="214" text-anchor="middle">GET /{id}/internal</text>
-    <text class="cardText" x="1141" y="240" text-anchor="middle">@JsonView(Internal)</text>
-  </g>
-
-  <rect class="layerContract" x="64" y="324" width="1252" height="186" rx="18"/>
-  <text class="layerLabel" x="92" y="358">Controller contract</text>
-  <g filter="url(#shadow)">
-    <rect x="126" y="390" width="286" height="88" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/>
-    <text class="cardTitle" x="269" y="425" text-anchor="middle">ArticleController</text>
-    <text class="cardText" x="269" y="452" text-anchor="middle">Flow and suspend handlers</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="548" y="390" width="286" height="88" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/>
-    <text class="cardTitle" x="691" y="425" text-anchor="middle">ArticleDTO</text>
-    <text class="cardText" x="691" y="452" text-anchor="middle">id, title, category, content</text>
-    <text class="cardText" x="691" y="472" text-anchor="middle">views, likes</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="970" y="390" width="286" height="88" rx="14" fill="#FFFFFF" stroke="#D97706" stroke-width="1.7"/>
-    <text class="cardTitle" x="1113" y="425" text-anchor="middle">Views hierarchy</text>
-    <text class="cardText" x="1113" y="452" text-anchor="middle">Public + Analytics</text>
-    <text class="cardText" x="1113" y="472" text-anchor="middle">Internal inherits both</text>
+    <rect x="1303.04" y="184" width="314.88" height="74" rx="12" fill="#FFFFFF" stroke="#16A34A" stroke-width="2.048"/>
+    <text class="cardTitle" x="1460.48" y="214" text-anchor="middle">GET /{id}/internal</text>
+    <text class="cardText" x="1460.48" y="240" text-anchor="middle">@JsonView(Internal)</text>
   </g>
 
-  <rect class="layerRuntime" x="64" y="548" width="1252" height="148" rx="18"/>
-  <text class="layerLabel" x="92" y="582">Serialization and verification</text>
+  <rect class="layerContract" x="81.92" y="324" width="1602.56" height="186" rx="18"/>
+  <text class="layerLabel" x="117.76" y="358">Controller contract</text>
   <g filter="url(#shadow)">
-    <rect x="132" y="616" width="326" height="58" rx="12" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.6"/>
-    <text class="cardTitle" x="295" y="649" text-anchor="middle">Jackson.defaultJsonMapper</text>
+    <rect x="161.28" y="390" width="366.08" height="88" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="2.176"/>
+    <text class="cardTitle" x="344.32" y="425" text-anchor="middle">ArticleController</text>
+    <text class="cardText" x="344.32" y="452" text-anchor="middle">Flow and suspend handlers</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="556" y="616" width="270" height="58" rx="12" fill="#FFFFFF" stroke="#D97706" stroke-width="1.6"/>
-    <text class="cardTitle" x="691" y="649" text-anchor="middle">Filtered JSON response</text>
+    <rect x="701.44" y="390" width="366.08" height="88" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="2.176"/>
+    <text class="cardTitle" x="884.48" y="425" text-anchor="middle">ArticleDTO</text>
+    <text class="cardText" x="884.48" y="452" text-anchor="middle">id, title, category, content</text>
+    <text class="cardText" x="884.48" y="472" text-anchor="middle">views, likes</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="946" y="616" width="270" height="58" rx="12" fill="#FFFFFF" stroke="#64748B" stroke-width="1.6"/>
-    <text class="cardTitle" x="1081" y="649" text-anchor="middle">ArticleControllerTest</text>
+    <rect x="1241.6" y="390" width="366.08" height="88" rx="14" fill="#FFFFFF" stroke="#D97706" stroke-width="2.176"/>
+    <text class="cardTitle" x="1424.64" y="425" text-anchor="middle">Views hierarchy</text>
+    <text class="cardText" x="1424.64" y="452" text-anchor="middle">Public + Analytics</text>
+    <text class="cardText" x="1424.64" y="472" text-anchor="middle">Internal inherits both</text>
   </g>
 
-  <path class="line" d="M 269 286 L 269 390" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 412 434 L 548 434" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 834 434 L 970 434" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 691 478 L 691 616" stroke="#D97706" marker-end="url(#arrowAmber-d97706)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 458 645 L 556 645" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 826 645 L 946 645" stroke="#64748B" marker-end="url(#arrowSlate)" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect class="layerRuntime" x="81.92" y="548" width="1602.56" height="148" rx="18"/>
+  <text class="layerLabel" x="117.76" y="582">Serialization and verification</text>
+  <g filter="url(#shadow)">
+    <rect x="168.96" y="616" width="417.28" height="58" rx="12" fill="#FFFFFF" stroke="#16A34A" stroke-width="2.048"/>
+    <text class="cardTitle" x="377.6" y="649" text-anchor="middle">Jackson.defaultJsonMapper</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="711.68" y="616" width="345.6" height="58" rx="12" fill="#FFFFFF" stroke="#D97706" stroke-width="2.048"/>
+    <text class="cardTitle" x="884.48" y="649" text-anchor="middle">Filtered JSON response</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1210.88" y="616" width="345.6" height="58" rx="12" fill="#FFFFFF" stroke="#64748B" stroke-width="2.048"/>
+    <text class="cardTitle" x="1383.68" y="649" text-anchor="middle">ArticleControllerTest</text>
+  </g>
+
+  <path class="line" d="M 344.32 286 L 344.32 390" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 527.36 434 L 701.44 434" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1067.52 434 L 1241.6 434" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 884.48 478 L 884.48 616" stroke="#D97706" marker-end="url(#arrowAmber-d97706)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 586.24 645 L 711.68 645" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1057.28 645 L 1210.88 645" stroke="#64748B" marker-end="url(#arrowSlate)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

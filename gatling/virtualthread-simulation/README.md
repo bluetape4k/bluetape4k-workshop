@@ -25,7 +25,7 @@ Tomcat protocol handler executor. `AsyncConfig` also exposes Spring's
 
 ## Load-Test Flow
 
-![Gatling virtual thread flow](../../docs/images/readme-diagrams/gatling-virtualthread-simulation-readme-flow-01.png)
+![Gatling virtual thread flow](../../docs/images/readme-diagrams/gatling-virtualthread-simulation-readme-sequence-01.png)
 
 The application must be running on `localhost:8080` before Gatling starts. The
 simulation classes live under `src/gatling/kotlin/simulations`.

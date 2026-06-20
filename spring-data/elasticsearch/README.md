@@ -20,7 +20,7 @@ API surface.
 
 ## Query flow
 
-![Spring Data Elasticsearch query flow](../../docs/images/readme-diagrams/spring-data-elasticsearch-readme-flow-01.png)
+![Spring Data Elasticsearch query flow](../../docs/images/readme-diagrams/spring-data-elasticsearch-readme-sequence-01.png)
 
 The tests exercise three reader paths:
 

@@ -23,7 +23,7 @@ application event에서 시작해 aggregate event, transactional listener를 거
 
 ## Event Flow
 
-![Spring Modulith events flow](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-readme-flow-01.png)
+![Spring Modulith events flow](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-readme-sequence-01.png)
 
 After architecture에서는 order module이 inventory dependency를 갖지 않습니다. Module
 test는 이 경계를 검증하고, integration test는 event delivery 동작을 검증합니다.

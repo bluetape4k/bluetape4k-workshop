@@ -26,7 +26,7 @@ filter adds `X-BLUETAPE4K-API: BLUETAPE4K.IO` to responses.
 
 ## Request Flow
 
-![API Gateway request flow](../../docs/images/readme-diagrams/gateway-api-gateway-readme-sequence-01.png)
+![API Gateway request sequence](../../docs/images/readme-diagrams/gateway-api-gateway-readme-sequence-01.png)
 
 The normal service path is:
 

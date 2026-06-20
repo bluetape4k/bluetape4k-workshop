@@ -12,7 +12,7 @@ Snowflake `Long`을 역파싱하거나, 숫자 ID를 Hashids로 가리는 용도
 
 ## 요청 흐름
 
-![ID Generator Workshop 요청 흐름 다이어그램](../../docs/images/readme-diagrams/spring-boot-idgenerator-readme-sequence-01.png)
+![ID Generator Workshop 요청 시퀀스 다이어그램](../../docs/images/readme-diagrams/spring-boot-idgenerator-readme-sequence-01.png)
 
 이 통합 예제는 `bluetape4k-idgenerators`가 제공하는 네 가지 분산 ID 생성기를 Spring Boot WebFlux REST API로 노출합니다.
 Snowflake, ULID, KSUID, Hashids의 특성과 각 알고리즘의 운영상 주의점을 함께 다룹니다.

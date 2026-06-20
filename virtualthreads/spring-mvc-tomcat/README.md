@@ -13,7 +13,7 @@ executors.
 
 ## Request Flow
 
-![Spring MVC virtual thread request flow](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-readme-flow-01.png)
+![Spring MVC virtual thread request sequence](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-readme-sequence-01.png)
 
 ## What To Look At
 

@@ -17,9 +17,9 @@ JsonPath parsing을 제공하고, 각 annotation 예제는 field filtering, poly
 wrapping, circular reference, Java Time formatting, dynamic properties처럼 하나의 JSON shape
 관심사를 분리해서 보여줍니다.
 
-## 직렬화 흐름
+## 직렬화 시퀀스
 
-![Jackson examples 직렬화 흐름](../../docs/images/readme-diagrams/json-jackson-examples-readme-flow-01.png)
+![Jackson examples 직렬화 시퀀스](../../docs/images/readme-diagrams/json-jackson-examples-readme-sequence-01.png)
 
 ## 사용한 bluetape4k 기능
 

@@ -18,7 +18,7 @@
 | Order placement | `OrderService.placeOrder()`가 주문 전체 transaction을 소유합니다. | stock lock, order-line write, stock decrement가 하나의 명시적 transaction에서 수행됩니다. |
 | Error handling | `GlobalExceptionHandler`가 `ExecutionException`, `CompletionException`을 unwrap합니다. | `Future.get()` 내부 실패도 의미 있는 HTTP 응답으로 변환됩니다. |
 
-## 주문 처리 흐름
+## 주문 처리 시퀀스
 
 ![exposed/mvc-virtualthread order placement sequence](../../docs/images/readme-diagrams/exposed-mvc-virtualthread-readme-sequence-01.png)
 

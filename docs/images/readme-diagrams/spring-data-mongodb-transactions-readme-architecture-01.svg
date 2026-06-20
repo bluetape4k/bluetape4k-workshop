@@ -20,10 +20,10 @@
       .line-orange { fill: none; stroke: #f07d22; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
       .line-red { fill: none; stroke: #f04438; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
-    <marker id="mt-blue" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none"/></marker>
-    <marker id="mt-green" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none"/></marker>
-    <marker id="mt-orange" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none"/></marker>
-    <marker id="mt-red" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none"/></marker>
+    <marker id="mt-blue" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="mt-green" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="mt-orange" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="mt-red" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
   </defs>
   <rect class="canvas" x="0" y="0" width="1800" height="980"/>
   <rect x="24" y="24" width="1752" height="932" rx="22" fill="#ffffff" stroke="#d7e0eb" stroke-width="2"/>  <text class="title" x="900" y="72" text-anchor="middle">MongoDB transaction styles</text>
@@ -70,12 +70,12 @@
 
   <path class="line-blue" d="M 305 281 L 305 418" marker-end="url(#mt-blue)" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line-blue" d="M 730 281 L 730 418" marker-end="url(#mt-blue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-blue" d="M 1155 281 L 1500 281 L 1500 418" marker-end="url(#mt-blue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-green" d="M 300 512 L 300 640 L 360 640 L 360 648" marker-end="url(#mt-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-green" d="M 1100 512 L 1100 640 L 905 640 L 905 648" marker-end="url(#mt-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-green" d="M 1500 512 L 1500 640 L 905 640 L 905 648" marker-end="url(#mt-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-green" d="M 700 512 L 700 640 L 1430 640 L 1430 648" marker-end="url(#mt-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-orange" d="M 360 714 L 360 755 L 830 755 L 830 798" marker-end="url(#mt-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-blue" d="M 1155 281 L 1490 281 Q 1500 281 1500 291 L 1500 418" marker-end="url(#mt-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 300 512 L 300 630 Q 300 640 310 640 L 357 640 Q 360 640 360 643 L 360 648" marker-end="url(#mt-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 1100 512 L 1100 630 Q 1100 640 1090 640 L 908 640 Q 905 640 905 643 L 905 648" marker-end="url(#mt-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 1500 512 L 1500 630 Q 1500 640 1490 640 L 908 640 Q 905 640 905 643 L 905 648" marker-end="url(#mt-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 700 512 L 700 630 Q 700 640 710 640 L 1427 640 Q 1430 640 1430 643 L 1430 648" marker-end="url(#mt-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 360 714 L 360 745 Q 360 755 370 755 L 820 755 Q 830 755 830 765 L 830 798" marker-end="url(#mt-orange)" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line-orange" d="M 905 714 L 905 798" marker-end="url(#mt-orange)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-orange" d="M 1430 714 L 1430 755 L 1030 755 L 1030 798" marker-end="url(#mt-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 1430 714 L 1430 745 Q 1430 755 1420 755 L 1040 755 Q 1030 755 1030 765 L 1030 798" marker-end="url(#mt-orange)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

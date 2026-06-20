@@ -12,7 +12,7 @@
 
 ## Assault 흐름
 
-![Chaos Monkey assault flow](../../docs/images/readme-diagrams/spring-boot-chaos-monkey-readme-assault-flow-01.png)
+![Chaos Monkey assault sequence](../../docs/images/readme-diagrams/spring-boot-chaos-monkey-readme-assault-sequence-01.png)
 
 Chaos Monkey는 정상 student API가 끝나기 전에 watched method call을 지연시키거나 실패시킬 수 있습니다. 기본 설정은 10-15초 latency assault를 활성화하고, actuator endpoint를 통해 런타임 상태 확인과 변경을 허용합니다.
 

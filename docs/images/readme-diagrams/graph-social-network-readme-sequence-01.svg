@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2886" height="800" viewBox="0 0 2886 800" role="img" aria-labelledby="title desc">
+  <title id="title">Traversal and recommendation sequence</title>
+  <desc id="desc">The test seed makes degree traversal, FOAF ranking, colleagues, and paths easy to inspect.</desc>
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
+    <style>.title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:19px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:12px;fill:#546A73}.msg{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.return{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call)}.work{stroke:#6E8F4F;marker-end:url(#arrow-work)}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret)}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}</style>
+    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+  <rect x="24" y="24" width="2838" height="752" rx="20" class="frame"/>
+  <text id="titleText" x="1443.0" y="76" text-anchor="middle" class="title">Traversal and recommendation sequence</text>
+  <text x="1443.0" y="106" text-anchor="middle" class="subtitle">The test seed makes degree traversal, FOAF ranking, colleagues, and paths easy to inspect.</text>
+  <g filter="url(#shadow)"><rect x="90.0" y="156" width="270" height="76" rx="10" class="header"/>
+    <text x="225.0" y="186" text-anchor="middle" class="participant">Seed: alice</text>
+    <text x="225.0" y="211" text-anchor="middle" class="role">getDirectConnections</text></g>
+  <line x1="225.0" y1="232" x2="225.0" y2="712" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="438.0" y="156" width="270" height="76" rx="10" class="header"/>
+    <text x="573.0" y="186" text-anchor="middle" class="participant">Depth 1</text>
+    <text x="573.0" y="211" text-anchor="middle" class="role">bob via KNOWS</text></g>
+  <line x1="573.0" y1="232" x2="573.0" y2="712" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="786.0" y="156" width="270" height="76" rx="10" class="header"/>
+    <text x="921.0" y="186" text-anchor="middle" class="participant">Depth 2 candidates</text>
+    <text x="921.0" y="211" text-anchor="middle" class="role">carol, dave</text></g>
+  <line x1="921.0" y1="232" x2="921.0" y2="712" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1134.0" y="156" width="270" height="76" rx="10" class="header"/>
+    <text x="1269.0" y="186" text-anchor="middle" class="participant">Nth-degree result</text>
+    <text x="1269.0" y="211" text-anchor="middle" class="role">remove closer vertices</text></g>
+  <line x1="1269.0" y1="232" x2="1269.0" y2="712" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1482.0" y="156" width="270" height="76" rx="10" class="header"/>
+    <text x="1617.0" y="186" text-anchor="middle" class="participant">Direct friends</text>
+    <text x="1617.0" y="211" text-anchor="middle" class="role">bob</text></g>
+  <line x1="1617.0" y1="232" x2="1617.0" y2="712" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1830.0" y="156" width="270" height="76" rx="10" class="header"/>
+    <text x="1965.0" y="186" text-anchor="middle" class="participant">Depth-2 candidates</text>
+    <text x="1965.0" y="211" text-anchor="middle" class="role">exclude alice and direct friends</text></g>
+  <line x1="1965.0" y1="232" x2="1965.0" y2="712" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="2178.0" y="156" width="270" height="76" rx="10" class="header"/>
+    <text x="2313.0" y="186" text-anchor="middle" class="participant">Mutual count</text>
+    <text x="2313.0" y="211" text-anchor="middle" class="role">carol via bob, dave via bob</text></g>
+  <line x1="2313.0" y1="232" x2="2313.0" y2="712" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="2526.0" y="156" width="270" height="76" rx="10" class="header"/>
+    <text x="2661.0" y="186" text-anchor="middle" class="participant">Ranked result</text>
+    <text x="2661.0" y="211" text-anchor="middle" class="role">count desc, personId asc</text></g>
+  <line x1="2661.0" y1="232" x2="2661.0" y2="712" class="lifeline"/>
+  <rect x="289.0" y="252" width="220.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="313.0" cy="269" r="13" class="badge callBadge"/><text x="313.0" y="274" text-anchor="middle" class="badgeText callText">1</text>
+  <text x="337.0" y="274" class="msg callText">bob via KNOWS</text>
+  <path d="M 225.0 298 L 573.0 298" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="566.0" y="290" width="14" height="48" rx="4" class="activation"/>
+  <rect x="637.0" y="328" width="220.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="661.0" cy="345" r="13" class="badge callBadge"/><text x="661.0" y="350" text-anchor="middle" class="badgeText callText">2</text>
+  <text x="685.0" y="350" class="msg callText">carol, dave</text>
+  <path d="M 573.0 374 L 921.0 374" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="914.0" y="366" width="14" height="48" rx="4" class="activation"/>
+  <rect x="968.0" y="404" width="254.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="992.0" cy="421" r="13" class="badge workBadge"/><text x="992.0" y="426" text-anchor="middle" class="badgeText workText">3</text>
+  <text x="1016.0" y="426" class="msg workText">remove closer vertices</text>
+  <path d="M 921.0 450 L 1269.0 450" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="1262.0" y="442" width="14" height="48" rx="4" class="activation"/>
+  <rect x="1624.0" y="480" width="334.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="1648.0" cy="497" r="13" class="badge callBadge"/><text x="1648.0" y="502" text-anchor="middle" class="badgeText callText">4</text>
+  <text x="1672.0" y="502" class="msg callText">exclude alice and direct friends</text>
+  <path d="M 1617.0 526 L 1965.0 526" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="1958.0" y="518" width="14" height="48" rx="4" class="activation"/>
+  <rect x="1992.0" y="556" width="294.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="2016.0" cy="573" r="13" class="badge callBadge"/><text x="2016.0" y="578" text-anchor="middle" class="badgeText callText">5</text>
+  <text x="2040.0" y="578" class="msg callText">carol via bob, dave via bob</text>
+  <path d="M 1965.0 602 L 2313.0 602" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="2306.0" y="594" width="14" height="48" rx="4" class="activation"/>
+  <rect x="2352.0" y="632" width="270.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="2376.0" cy="649" r="13" class="badge workBadge"/><text x="2376.0" y="654" text-anchor="middle" class="badgeText workText">6</text>
+  <text x="2400.0" y="654" class="msg workText">count desc, personId asc</text>
+  <path d="M 2313.0 678 L 2661.0 678" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="2654.0" y="670" width="14" height="48" rx="4" class="activation"/>
+  <rect x="90" y="736" width="2706" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
+  <text x="1443.0" y="762" text-anchor="middle" class="footer">Reader contract: participants, ordered messages, returns, and infrastructure boundaries stay visible.</text>
+</svg>

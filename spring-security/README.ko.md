@@ -25,7 +25,7 @@ OAuth2 resource server JWT 지원으로 모든 exchange를 보호하고 token �
 
 ## Common Request Shape
 
-![Spring Security workshop filter flow](../docs/images/readme-diagrams/spring-security-readme-flow-01.png)
+![Spring Security workshop filter sequence](../docs/images/readme-diagrams/spring-security-readme-sequence-01.png)
 
 Servlet과 reactive stack은 서로 다른 filter 구현을 사용하지만, 독자가 이해할 흐름은
 같습니다. Public route는 통과하고, protected route는 module에 맞는 인증 방식이

@@ -17,13 +17,13 @@
       .icon-stroke { fill: none; stroke: #334155; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <marker id="blueArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke-dasharray="none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="greenArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#16a34a" stroke-dasharray="none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#16a34a" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="orangeArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#ea580c" stroke-dasharray="none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#ea580c" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
   </defs>
 
@@ -74,19 +74,19 @@
   <text class="layer-title" x="105" y="956">Blocking Targets</text>
   <rect class="card" x="380" y="915" width="290" height="65"/>
   <text class="card-title" x="525" y="956" text-anchor="middle">JPA / Querydsl</text>
-  <rect class="card" x="760" y="915" width="260" height="65"/>
+  <rect class="card" x="760" y="915" width="260" height="65"/><image data-bluetape4k-icon="database" data-source="docs/icons/generic/database-server.svg" x="772" y="934.5" width="26" height="26" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsbGVkYnk9InRpdGxlIGRlc2MiPgogIDx0aXRsZSBpZD0idGl0bGUiPkdlbmVyaWMgZGF0YWJhc2Ugc2VydmVyIGljb248L3RpdGxlPgogIDxkZXNjIGlkPSJkZXNjIj5HZW5lcmljIGRhdGFiYXNlIHNlcnZlciBpY29uIGZvciBibHVldGFwZTRrIGRpYWdyYW1zLjwvZGVzYz4KICA8cmVjdCB4PSIxMCIgeT0iOCIgd2lkdGg9IjEwOCIgaGVpZ2h0PSIxMTIiIHJ4PSIxOCIgZmlsbD0iI2ZmZmFmMiIgc3Ryb2tlPSIjMjg0ODVhIiBzdHJva2Utd2lkdGg9IjYiLz4KICA8ZWxsaXBzZSBjeD0iNjQiIGN5PSIzNiIgcng9IjM0IiByeT0iMTMiIGZpbGw9IiNmZmYwZDgiIHN0cm9rZT0iIzhjNmYzMyIgc3Ryb2tlLXdpZHRoPSI2Ii8+CiAgPHBhdGggZD0iTTMwIDM2djQ0YzAgOCAxNSAxNCAzNCAxNHMzNC02IDM0LTE0VjM2IiBmaWxsPSIjZmZmMGQ4IiBzdHJva2U9IiM4YzZmMzMiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMCA1OGMwIDggMTUgMTQgMzQgMTRzMzQtNiAzNC0xNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGM2ZjMzIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMCA4MGMwIDggMTUgMTQgMzQgMTRzMzQtNiAzNC0xNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGM2ZjMzIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K" preserveAspectRatio="xMidYMid meet"/>
   <ellipse cx="810" cy="940" rx="30" ry="11" fill="#fff0d8" stroke="#8c6f33" stroke-width="3"/>
   <path d="M780 940v25c0 7 13 12 30 12s30-5 30-12v-25" fill="#fff0d8" stroke="#8c6f33" stroke-width="3"/>
   <path d="M780 956c0 7 13 12 30 12s30-5 30-12" fill="none" stroke="#8c6f33" stroke-width="2.5"/>
   <text class="card-title" x="910" y="956" text-anchor="middle">H2 DB</text>
   <rect class="card" x="1110" y="915" width="310" height="65"/>  <text class="card-title" x="1265" y="956" text-anchor="middle">Testcontainers Httpbin</text>
 
-  <path class="line" d="M1040 309 L1040 380 L310 380 L310 485" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M665 309 L665 382 L310 382 L310 485" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M310 595 L310 675 L430 675 L430 765" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M710 595 L710 675 L820 675 L820 765" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M1420 595 L1420 690 L1200 690 L1200 765" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M1075 595 L1075 680 L980 680 L980 890 L525 890 L525 915" stroke="#ea580c" marker-end="url(#orangeArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1040 309 L 1040 370 Q 1040 380 1030 380 L 320 380 Q 310 380 310 390 L 310 485" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 665 309 L 665 372 Q 665 382 655 382 L 320 382 Q 310 382 310 392 L 310 485" stroke="#2563eb" marker-end="url(#blueArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 310 595 L 310 665 Q 310 675 320 675 L 420 675 Q 430 675 430 685 L 430 765" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 710 595 L 710 665 Q 710 675 720 675 L 810 675 Q 820 675 820 685 L 820 765" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1420 595 L 1420 680 Q 1420 689 1410 689 L 1210 689 Q 1200 689 1200 700 L 1200 765" stroke="#16a34a" marker-end="url(#greenArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1075 595 L 1075 670 Q 1075 680 1065 680 L 990 680 Q 980 680 980 690 L 980 880 Q 980 879 970 879 L 535 879 Q 525 879 525 900 L 525 915" stroke="#ea580c" marker-end="url(#orangeArrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line" d="M670 948 L760 948" stroke="#ea580c" marker-end="url(#orangeArrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M1420 595 L1420 875 L1265 875 L1265 915" stroke="#ea580c" marker-end="url(#orangeArrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1420 595 L 1420 865 Q 1420 875 1410 875 L 1275 875 Q 1265 875 1265 885 L 1265 915" stroke="#ea580c" marker-end="url(#orangeArrow)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="960" viewBox="0 0 1680 960" role="img" aria-label="Gateway demo runtime overview">
+<svg xmlns="http://www.w3.org/2000/svg" width="2049.6" height="960" viewBox="0 0 2049.6 960" role="img" aria-label="Gateway demo runtime overview">
   <defs>
     <filter id="shadow" x="-8%" y="-10%" width="116%" height="130%">
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#5b7282" flood-opacity="0.16"/>
     </filter>
-    <marker id="blueArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#457b9d" stroke-dasharray="none"/>
+    <marker id="blueArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 12.2 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#457b9d" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
-    <marker id="greenArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#5f8f5b" stroke-dasharray="none"/>
+    <marker id="greenArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 12.2 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#5f8f5b" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
-    <marker id="redArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#b44d49" stroke-dasharray="none"/>
+    <marker id="redArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 12.2 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#b44d49" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
-    <marker id="goldArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#a87332" stroke-dasharray="none"/>
+    <marker id="goldArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 12.2 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#a87332" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <style>
       .canvas { fill: #f7fafc; }
@@ -35,89 +35,83 @@
       .label { font-family: "Comic Mono"; font-size: 14px; font-weight: 700; }
       .labelBox { fill: #ffffff; stroke-width: 1.4; }
     </style>
-    <g id="redisIcon">
-      <rect x="0" y="0" width="72" height="72" rx="14" fill="#fff2f1" stroke="#a92823" stroke-width="4"/>
-      <path d="M17 25 36 15 55 25 36 35Z" fill="#d82c20"/>
-      <path d="M17 37 36 27 55 37 36 47Z" fill="#c82019"/>
-      <path d="M17 49 36 39 55 49 36 59Z" fill="#a92823"/>
-    </g>
     <g id="gatewayIcon">
-      <rect x="0" y="0" width="74" height="74" rx="16" fill="#edf6ff" stroke="#315f85" stroke-width="4"/>
+      <rect x="0" y="0" width="90.28" height="74" rx="16" fill="#edf6ff" stroke="#315f85" stroke-width="4.88"/>
       <path d="M18 22h38M18 37h38M18 52h38" stroke="#315f85" stroke-width="5" stroke-linecap="round"/>
-      <circle cx="25" cy="22" r="4" fill="#457b9d"/>
-      <circle cx="49" cy="37" r="4" fill="#457b9d"/>
-      <circle cx="25" cy="52" r="4" fill="#457b9d"/>
+      <circle cx="30.5" cy="22" r="4" fill="#457b9d"/>
+      <circle cx="59.78" cy="37" r="4" fill="#457b9d"/>
+      <circle cx="30.5" cy="52" r="4" fill="#457b9d"/>
     </g>
   </defs>
 
-  <rect class="canvas" width="1680" height="960"/>
-  <rect class="frame" x="28" y="28" width="1624" height="904" rx="24"/>
-  <text class="title" x="840" y="84" text-anchor="middle">Gateway Demo Runtime</text>
-  <text class="subtitle" x="840" y="114" text-anchor="middle">Spring Cloud Gateway routes public paths to local WebFlux services.</text>
+  <rect class="canvas" width="2049.6" height="960"/>
+  <rect class="frame" x="34.16" y="28" width="1981.28" height="904" rx="24"/>
+  <text class="title" x="1024.8" y="84" text-anchor="middle">Gateway Demo Runtime</text>
+  <text class="subtitle" x="1024.8" y="114" text-anchor="middle">Spring Cloud Gateway routes public paths to local WebFlux services.</text>
 
-  <rect class="layer" x="76" y="164" width="300" height="610" rx="18" fill="#eef6ff" stroke="#b5cfe8"/>
-  <text class="layerTitle" x="226" y="207" text-anchor="middle">Client Surface</text>
+  <rect class="layer" x="92.72" y="164" width="366" height="610" rx="18" fill="#eef6ff" stroke="#b5cfe8"/>
+  <text class="layerTitle" x="275.72" y="207" text-anchor="middle">Client Surface</text>
 
-  <rect class="layer" x="436" y="164" width="480" height="610" rx="18" fill="#f4fbf2" stroke="#b7d4ae"/>
-  <text class="layerTitle" x="676" y="207" text-anchor="middle">Gateway Runtime</text>
+  <rect class="layer" x="531.92" y="164" width="585.6" height="610" rx="18" fill="#f4fbf2" stroke="#b7d4ae"/>
+  <text class="layerTitle" x="824.72" y="207" text-anchor="middle">Gateway Runtime</text>
 
-  <rect class="layer" x="976" y="164" width="628" height="610" rx="18" fill="#fff8ea" stroke="#dec289"/>
-  <text class="layerTitle" x="1290" y="207" text-anchor="middle">Downstream Services</text>
+  <rect class="layer" x="1190.72" y="164" width="766.16" height="610" rx="18" fill="#fff8ea" stroke="#dec289"/>
+  <text class="layerTitle" x="1573.8" y="207" text-anchor="middle">Downstream Services</text>
 
-  <rect class="card" x="126" y="308" width="200" height="144" rx="14" fill="#ffffff" stroke="#8eb4d6"/>
-  <text class="cardTitle" x="226" y="358" text-anchor="middle">HTTP Client</text>
-  <text class="cardText" x="226" y="389" text-anchor="middle">calls gateway</text>
-  <text class="smallText" x="226" y="418" text-anchor="middle">:8080 public paths</text>
+  <rect class="card" x="153.72" y="308" width="244" height="144" rx="14" fill="#ffffff" stroke="#8eb4d6"/>
+  <text class="cardTitle" x="275.72" y="358" text-anchor="middle">HTTP Client</text>
+  <text class="cardText" x="275.72" y="389" text-anchor="middle">calls gateway</text>
+  <text class="smallText" x="275.72" y="418" text-anchor="middle">:8080 public paths</text>
 
-  <rect class="card" x="500" y="270" width="352" height="166" rx="14" fill="#ffffff" stroke="#91b884"/>
-  <use href="#gatewayIcon" x="530" y="314"/>
-  <text class="cardTitle" x="704" y="321" text-anchor="middle">API Gateway</text>
-  <text class="cardText" x="704" y="353" text-anchor="middle">Spring Cloud Gateway</text>
-  <text class="smallText" x="704" y="382" text-anchor="middle">port 8080</text>
-  <text class="smallText" x="704" y="407" text-anchor="middle">RewritePath + response header</text>
+  <rect class="card" x="610" y="270" width="429.44" height="166" rx="14" fill="#ffffff" stroke="#91b884"/>
+  <use href="#gatewayIcon" x="646.6" y="314"/>
+  <text class="cardTitle" x="858.88" y="321" text-anchor="middle">API Gateway</text>
+  <text class="cardText" x="858.88" y="353" text-anchor="middle">Spring Cloud Gateway</text>
+  <text class="smallText" x="858.88" y="382" text-anchor="middle">port 8080</text>
+  <text class="smallText" x="858.88" y="407" text-anchor="middle">RewritePath + response header</text>
 
-  <rect class="card" x="500" y="500" width="352" height="124" rx="14" fill="#fffdf6" stroke="#c39a56"/>
-  <text class="cardTitle" x="676" y="542" text-anchor="middle">Gateway Support</text>
-  <text class="cardText" x="676" y="574" text-anchor="middle">Swagger UI + OpenAPI</text>
-  <text class="smallText" x="676" y="599" text-anchor="middle">Bucket4j WebFlux filter</text>
+  <rect class="card" x="610" y="500" width="429.44" height="124" rx="14" fill="#fffdf6" stroke="#c39a56"/>
+  <text class="cardTitle" x="824.72" y="542" text-anchor="middle">Gateway Support</text>
+  <text class="cardText" x="824.72" y="574" text-anchor="middle">Swagger UI + OpenAPI</text>
+  <text class="smallText" x="824.72" y="599" text-anchor="middle">Bucket4j WebFlux filter</text>
 
-  <rect class="card" x="1070" y="248" width="408" height="130" rx="14" fill="#fffefa" stroke="#d2a85e"/>
-  <text class="cardTitle" x="1274" y="291" text-anchor="middle">Customer Service</text>
-  <text class="cardText" x="1274" y="323" text-anchor="middle">port 8081</text>
-  <text class="smallText" x="1274" y="349" text-anchor="middle">/api/v1/customers</text>
+  <rect class="card" x="1305.4" y="248" width="497.76" height="130" rx="14" fill="#fffefa" stroke="#d2a85e"/>
+  <text class="cardTitle" x="1554.28" y="291" text-anchor="middle">Customer Service</text>
+  <text class="cardText" x="1554.28" y="323" text-anchor="middle">port 8081</text>
+  <text class="smallText" x="1554.28" y="349" text-anchor="middle">/api/v1/customers</text>
 
-  <rect class="card" x="1070" y="436" width="408" height="144" rx="14" fill="#fffefa" stroke="#d2a85e"/>
-  <text class="cardTitle" x="1274" y="480" text-anchor="middle">Order Service</text>
-  <text class="cardText" x="1274" y="512" text-anchor="middle">port 8082</text>
-  <text class="smallText" x="1274" y="538" text-anchor="middle">/api/v1/orders</text>
-  <text class="smallText" x="1274" y="562" text-anchor="middle">/api/v1/products</text>
+  <rect class="card" x="1305.4" y="436" width="497.76" height="144" rx="14" fill="#fffefa" stroke="#d2a85e"/>
+  <text class="cardTitle" x="1554.28" y="480" text-anchor="middle">Order Service</text>
+  <text class="cardText" x="1554.28" y="512" text-anchor="middle">port 8082</text>
+  <text class="smallText" x="1554.28" y="538" text-anchor="middle">/api/v1/orders</text>
+  <text class="smallText" x="1554.28" y="562" text-anchor="middle">/api/v1/products</text>
 
-  <rect class="card" x="1070" y="638" width="408" height="94" rx="14" fill="#f9fbff" stroke="#9db4c8" stroke-dasharray="8 7"/>
-  <text class="cardTitle" x="1274" y="677" text-anchor="middle">WebSocket Echo</text>
-  <text class="smallText" x="1274" y="707" text-anchor="middle">/echo -> localhost:9000</text>
+  <rect class="card" x="1305.4" y="638" width="497.76" height="94" rx="14" fill="#f9fbff" stroke="#9db4c8" stroke-dasharray="8 7"/>
+  <text class="cardTitle" x="1554.28" y="677" text-anchor="middle">WebSocket Echo</text>
+  <text class="smallText" x="1554.28" y="707" text-anchor="middle">/echo -> localhost:9000</text>
 
-  <rect class="card" x="572" y="810" width="390" height="94" rx="14" fill="#fff7f6" stroke="#bc544f"/>
-  <use href="#redisIcon" x="602" y="821"/>  <text class="cardTitle" x="810" y="850" text-anchor="middle">Redis</text>
-  <text class="cardText" x="810" y="882" text-anchor="middle">Bucket4j bucket cache</text>
+  <rect class="card" x="697.84" y="810" width="475.8" height="94" rx="14" fill="#fff7f6" stroke="#bc544f"/>
+  <image data-bluetape4k-icon="redis" data-source="docs/icons/redis/redis-icon.svg" x="734.44" y="834" width="42" height="42" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBoZWlnaHQ9IjY0IiB2aWV3Qm94PSIwIDAgMzIgMzIiIHdpZHRoPSI2NCI+PGcgdHJhbnNmb3JtPSJtYXRyaXgoLjg0ODMyNyAwIDAgLjg0ODMyNyAtNy44ODM1NzMgLTkuNDQ5NjkxKSI+PHVzZSB4bGluazpocmVmPSIjQiIgZmlsbD0iI2E0MWUxMSIvPjxwYXRoIGQ9Ik00NS41MzYgMzQuOTVjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTRzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2LTIuMDQtMS42MTMtLjA3Ny0yLjM4MmwxNS4zMzItNS45MzZjMi4zMzItLjgzNiAzLjE0LS44NjcgNS4xMjYtLjE0UzQzLjU1IDMxLjg3IDQ1LjUxIDMyLjZzMi4wMzcgMS4zMS4wMjQgMi4zNnoiIGZpbGw9IiNkODJjMjAiLz48dXNlIHhsaW5rOmhyZWY9IiNCIiB5PSItNi4yMTgiIGZpbGw9IiNhNDFlMTEiLz48dXNlIHhsaW5rOmhyZWY9IiNDIiBmaWxsPSIjZDgyYzIwIi8+PHBhdGggZD0iTTQ1LjUzNiAyNi4wOThjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTVzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2Yy0xLS40NzgtMS41MjQtLjg4LTEuNTI0LTEuMjZWMjEuNTVzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6IiBmaWxsPSIjYTQxZTExIi8+PHVzZSB4bGluazpocmVmPSIjQyIgeT0iLTYuNDQ5IiBmaWxsPSIjZDgyYzIwIi8+PGcgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTI5LjA5NiAyMC43MTJsLTEuMTgyLTEuOTY1LTMuNzc0LS4zNCAyLjgxNi0xLjAxNi0uODQ1LTEuNTYgMi42MzYgMS4wMyAyLjQ4Ni0uODE0LS42NzIgMS42MTIgMi41MzQuOTUtMy4yNjguMzR6TTIyLjggMjQuNjI0bDguNzQtMS4zNDItMi42NCAzLjg3MnoiLz48ZWxsaXBzZSBjeD0iMjAuNDQ0IiByeD0iNC42NzIiIHJ5PSIxLjgxMSIgY3k9IjIxLjQwMiIvPjwvZz48cGF0aCBkPSJNNDIuMTMyIDIxLjEzOGwtNS4xNyAyLjA0Mi0uMDA0LTQuMDg3eiIgZmlsbD0iIzdhMGMwMCIvPjxwYXRoIGQ9Ik0zNi45NjMgMjMuMThsLS41Ni4yMi01LjE2Ni0yLjA0MiA1LjcyMy0yLjI2NHoiIGZpbGw9IiNhZDIxMTUiLz48L2c+PGRlZnMgPjxwYXRoIGlkPSJCIiBkPSJNNDUuNTM2IDM4Ljc2NGMtMi4wMTMgMS4wNS0xMi40NCA1LjMzNy0xNC42NiA2LjQ5NHMtMy40NTMgMS4xNDYtNS4yMDcuMzA4LTEyLjg1LTUuMzItMTQuODUtNi4yNzZjLTEtLjQ3OC0xLjUyNC0uODgtMS41MjQtMS4yNnYtMy44MTNzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6Ii8+PHBhdGggaWQ9IkMiIGQ9Ik00NS41MzYgMjguNzMzYy0yLjAxMyAxLjA1LTEyLjQ0IDUuMzM3LTE0LjY2IDYuNDk0cy0zLjQ1MyAxLjE0Ni01LjIwNy4zMDgtMTIuODUtNS4zMi0xNC44NS02LjI3Ni0yLjA0LTEuNjEzLS4wNzctMi4zODJsMTUuMzMyLTUuOTM1YzIuMzMyLS44MzcgMy4xNC0uODY3IDUuMTI2LS4xNHMxMi4zNSA0Ljg1MyAxNC4zMTIgNS41NyAyLjAzNyAxLjMxLjAyNCAyLjM2eiIvPjwvZGVmcz48L3N2Zz4=" preserveAspectRatio="xMidYMid meet"/>  <text class="cardTitle" x="988.2" y="850" text-anchor="middle">Redis</text>
+  <text class="cardText" x="988.2" y="882" text-anchor="middle">Bucket4j bucket cache</text>
 
-  <path class="lineBlue" d="M 326 380 H 500" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect class="labelBox" x="346" y="337" width="142" height="30" rx="15" stroke="#8eb4d6"/>
-  <text class="label" x="417" y="357" text-anchor="middle" fill="#457b9d">public HTTP</text>
+  <path class="lineBlue" d="M 397.72 380 H 610" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect class="labelBox" x="422.12" y="337" width="173.24" height="30" rx="15" stroke="#8eb4d6"/>
+  <text class="label" x="508.74" y="357" text-anchor="middle" fill="#457b9d">public HTTP</text>
 
-  <path class="lineGreen" d="M 852 324 H 1070" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect class="labelBox" x="882" y="279" width="156" height="30" rx="15" stroke="#91b884"/>
-  <text class="label" x="960" y="299" text-anchor="middle" fill="#5f8f5b">/customer-service/**</text>
+  <path class="lineGreen" d="M 1039.44 324 H 1305.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect class="labelBox" x="1076.04" y="279" width="190.32" height="30" rx="15" stroke="#91b884"/>
+  <text class="label" x="1171.2" y="299" text-anchor="middle" fill="#5f8f5b">/customer-service/**</text>
 
-  <path class="lineGreen" d="M 852 394 H 940 V 508 H 1070" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect class="labelBox" x="875" y="428" width="144" height="30" rx="15" stroke="#91b884"/>
-  <text class="label" x="947" y="448" text-anchor="middle" fill="#5f8f5b">/order-service/**</text>
+  <path class="lineGreen" d="M 1039.44 394 L 1134.6 394 Q 1146.8 394 1146.8 404 L 1146.8 498 Q 1146.8 508 1159 508 L 1305.4 508" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect class="labelBox" x="1067.5" y="428" width="175.68" height="30" rx="15" stroke="#91b884"/>
+  <text class="label" x="1155.34" y="448" text-anchor="middle" fill="#5f8f5b">/order-service/**</text>
 
-  <path class="lineGold" d="M 852 410 H 930 V 685 H 1070" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect class="labelBox" x="876" y="632" width="122" height="30" rx="15" stroke="#d5a656"/>
-  <text class="label" x="937" y="652" text-anchor="middle" fill="#a87332">/echo route</text>
+  <path class="lineGold" d="M 1039.44 410 L 1122.4 410 Q 1137.04 410 1137.04 420 L 1137.04 675 Q 1137.04 685 1146.8 685 L 1305.4 685" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect class="labelBox" x="1068.72" y="632" width="148.84" height="30" rx="15" stroke="#d5a656"/>
+  <text class="label" x="1143.14" y="652" text-anchor="middle" fill="#a87332">/echo route</text>
 
-  <path class="lineRed" d="M 676 624 V 810" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect class="labelBox" x="702" y="700" width="142" height="30" rx="15" stroke="#bc544f"/>
-  <text class="label" x="773" y="720" text-anchor="middle" fill="#b44d49">rate-limit state</text>
+  <path class="lineRed" d="M 824.72 624 V 810" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect class="labelBox" x="856.44" y="700" width="173.24" height="30" rx="15" stroke="#bc544f"/>
+  <text class="label" x="943.06" y="720" text-anchor="middle" fill="#b44d49">rate-limit state</text>
 
 </svg>

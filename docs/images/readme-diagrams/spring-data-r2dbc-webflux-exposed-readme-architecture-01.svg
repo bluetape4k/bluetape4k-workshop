@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1040" viewBox="0 0 1800 1040">
+<svg xmlns="http://www.w3.org/2000/svg" width="2196" height="1040" viewBox="0 0 2196 1040">
   <defs>
     <style>
       .bg{fill:#f8fafc}.title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:34px;fill:#18212f}
@@ -6,50 +6,49 @@
       .card-title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:27px;fill:#101827}
       .body{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:18px;fill:#364152}.small{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:15px;fill:#475569}
       .layer{stroke-width:1.5;rx:22;ry:22}.card{fill:#fff;stroke:#cbd5e1;stroke-width:1.5;rx:18;ry:18}
-      .line{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}.db{fill:#fff;stroke:#94a3b8;stroke-width:2}.dbtop{fill:#e0f2fe;stroke:#0284c7;stroke-width:2}
+      .line{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
     </style>
     <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb" stroke-dasharray="none"/></marker>
     <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#059669" stroke-dasharray="none"/></marker>
     <marker id="arrow-purple" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#7c3aed" stroke-dasharray="none"/></marker>
   </defs>
-  <rect class="bg" width="1800" height="1040"/>
-  <text class="title" x="70" y="70">WebFlux + Exposed R2DBC Users API</text>
+  <rect class="bg" width="2196" height="1040"/>
+  <text class="title" x="85.4" y="70">WebFlux + Exposed R2DBC Users API</text>
 
-  <rect class="layer" x="70" y="120" width="1660" height="225" fill="#eff6ff" stroke="#bfdbfe"/>
-  <text class="layer-title" x="105" y="165">HTTP entrypoints</text>
-  <rect class="card" x="210" y="205" width="470" height="100"/>
-  <text class="card-title" x="240" y="245">UserController</text>
-  <text class="body" x="240" y="276">Annotation routes under /api/users</text>
-  <rect class="card" x="1120" y="205" width="470" height="100"/>
-  <text class="card-title" x="1150" y="245">coRouter + UserHandler</text>
-  <text class="body" x="1150" y="276">Functional routes under /users</text>
+  <rect class="layer" x="85.4" y="120" width="2025.2" height="225" fill="#eff6ff" stroke="#bfdbfe"/>
+  <text class="layer-title" x="128.1" y="165">HTTP entrypoints</text>
+  <rect class="card" x="256.2" y="205" width="573.4" height="100"/>
+  <text class="card-title" x="292.8" y="245">UserController</text>
+  <text class="body" x="292.8" y="276">Annotation routes under /api/users</text>
+  <rect class="card" x="1366.4" y="205" width="573.4" height="100"/>
+  <text class="card-title" x="1403" y="245">coRouter + UserHandler</text>
+  <text class="body" x="1403" y="276">Functional routes under /users</text>
 
-  <rect class="layer" x="70" y="395" width="1660" height="205" fill="#f0fdf4" stroke="#bbf7d0"/>
-  <text class="layer-title" x="105" y="440">Coroutine service boundary</text>
-  <rect class="card" x="600" y="475" width="600" height="85"/>
-  <text class="card-title" x="630" y="515">UserService</text>
-  <text class="body" x="630" y="545">suspendTransaction + user use cases</text>
+  <rect class="layer" x="85.4" y="395" width="2025.2" height="205" fill="#f0fdf4" stroke="#bbf7d0"/>
+  <text class="layer-title" x="128.1" y="440">Coroutine service boundary</text>
+  <rect class="card" x="732" y="475" width="732" height="85"/>
+  <text class="card-title" x="768.6" y="515">UserService</text>
+  <text class="body" x="768.6" y="545">suspendTransaction + user use cases</text>
 
-  <rect class="layer" x="70" y="650" width="1660" height="160" fill="#faf5ff" stroke="#ddd6fe"/>
-  <text class="layer-title" x="105" y="695">Exposed R2DBC repository</text>
-  <rect class="card" x="600" y="715" width="600" height="70"/>
-  <text class="card-title" x="630" y="758">UserExposedRepository</text>
-  <text class="small" x="960" y="758">R2dbcRepository&lt;Int, UserRecord&gt;</text>
+  <rect class="layer" x="85.4" y="650" width="2025.2" height="160" fill="#faf5ff" stroke="#ddd6fe"/>
+  <text class="layer-title" x="128.1" y="695">Exposed R2DBC repository</text>
+  <rect class="card" x="732" y="715" width="732" height="70"/>
+  <text class="card-title" x="768.6" y="758">UserExposedRepository</text>
+  <text class="small" x="1171.2" y="758">R2dbcRepository&lt;Int, UserRecord&gt;</text>
 
-  <rect class="layer" x="70" y="860" width="1660" height="120" fill="#fefce8" stroke="#fde68a"/>
-  <text class="layer-title" x="105" y="910">Runtime</text>
-  <rect class="card" x="365" y="910" width="380" height="50"/>
-  <text class="body" x="395" y="942">ConnectionPool + R2dbcDatabase</text>
-  <g transform="translate(1110 895)">
-    <path class="db" d="M0,24 C0,4 290,4 290,24 L290,74 C290,94 0,94 0,74 Z"/>
-    <ellipse class="dbtop" cx="145" cy="24" rx="145" ry="22"/>
-    <path class="db" d="M0,24 C0,44 290,44 290,24"/>
-    <text class="card-title" x="101" y="64">H2 R2DBC</text>
+  <rect class="layer" x="85.4" y="860" width="2025.2" height="120" fill="#fefce8" stroke="#fde68a"/>
+  <text class="layer-title" x="128.1" y="910">Runtime</text>
+  <rect class="card" x="445.3" y="910" width="463.6" height="50"/>
+  <text class="body" x="481.9" y="942">ConnectionPool + R2dbcDatabase</text>
+  <g transform="translate(1354.2 895)">
+    <rect x="0" y="0" width="353.8" height="98" rx="14" fill="#FFFAF2" stroke="#8C6F33" stroke-width="2.44"/>
+    <image data-bluetape4k-icon="database" data-source="docs/icons/generic/database-server.svg" x="21.96" y="31" width="38" height="38" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsbGVkYnk9InRpdGxlIGRlc2MiPgogIDx0aXRsZSBpZD0idGl0bGUiPkdlbmVyaWMgZGF0YWJhc2Ugc2VydmVyIGljb248L3RpdGxlPgogIDxkZXNjIGlkPSJkZXNjIj5HZW5lcmljIGRhdGFiYXNlIHNlcnZlciBpY29uIGZvciBibHVldGFwZTRrIGRpYWdyYW1zLjwvZGVzYz4KICA8cmVjdCB4PSIxMCIgeT0iOCIgd2lkdGg9IjEwOCIgaGVpZ2h0PSIxMTIiIHJ4PSIxOCIgZmlsbD0iI2ZmZmFmMiIgc3Ryb2tlPSIjMjg0ODVhIiBzdHJva2Utd2lkdGg9IjYiLz4KICA8ZWxsaXBzZSBjeD0iNjQiIGN5PSIzNiIgcng9IjM0IiByeT0iMTMiIGZpbGw9IiNmZmYwZDgiIHN0cm9rZT0iIzhjNmYzMyIgc3Ryb2tlLXdpZHRoPSI2Ii8+CiAgPHBhdGggZD0iTTMwIDM2djQ0YzAgOCAxNSAxNCAzNCAxNHMzNC02IDM0LTE0VjM2IiBmaWxsPSIjZmZmMGQ4IiBzdHJva2U9IiM4YzZmMzMiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMCA1OGMwIDggMTUgMTQgMzQgMTRzMzQtNiAzNC0xNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGM2ZjMzIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMCA4MGMwIDggMTUgMTQgMzQgMTRzMzQtNiAzNC0xNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGM2ZjMzIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K" preserveAspectRatio="xMidYMid meet"/>
+    <text class="card-title" x="100.04" y="50" text-anchor="start">H2 R2DBC</text>
   </g>
 
-  <path class="line" d="M445 305 L445 360 L840 360 L840 475" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M1355 305 L1355 360 L960 360 L960 475" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M900 560 L900 715" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M900 785 L900 835 L555 835 L555 910" stroke="#7c3aed" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M745 935 L1110 935" stroke="#7c3aed" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 542.9 305 L 542.9 350 Q 542.9 361 555.1 361 L 1012.6 361 Q 1024.8 361 1024.8 370 L 1024.8 475" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1653.1 305 L 1653.1 350 Q 1653.1 361 1640.9 361 L 1183.4 361 Q 1171.2 361 1171.2 370 L 1171.2 475" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1098 560 L 1098 715" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1098 785 L 1098 825 Q 1098 835 1085.8 835 L 689.3 835 Q 677.1 835 677.1 845 L 677.1 910" stroke="#7c3aed" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 908.9 935 L 1354.2 935" stroke="#7c3aed" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

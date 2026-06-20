@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="580" viewBox="0 0 1180 580" role="img" aria-label="graph-knowledge-graph domain model diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1274.4" height="580" viewBox="0 0 1274.4 580" role="img" aria-label="graph-knowledge-graph domain model diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/></filter>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       .canvas { fill: #F8FAFC; }
       .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
@@ -17,53 +17,53 @@
       .line { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1180" height="580"/>
-  <rect class="frame" x="18" y="18" width="1144" height="544" rx="24"/>
-  <text class="title" x="590" y="58" text-anchor="middle">Knowledge graph schema</text>
-  <text class="subtitle" x="590" y="84" text-anchor="middle">Documents mention entities, entities relate to entities, and entities classify under concepts.</text>
+  <rect class="canvas" width="1274.4" height="580"/>
+  <rect class="frame" x="19.44" y="18" width="1235.52" height="544" rx="24"/>
+  <text class="title" x="637.2" y="58" text-anchor="middle">Knowledge graph schema</text>
+  <text class="subtitle" x="637.2" y="84" text-anchor="middle">Documents mention entities, entities relate to entities, and entities classify under concepts.</text>
 
   <g filter="url(#shadow)">
-    <rect x="92" y="190" width="250" height="160" rx="18" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.8"/>
-    <text class="cardTitle" x="217" y="232" text-anchor="middle">Document</text>
-    <text class="cardText" x="217" y="267" text-anchor="middle">documentId</text>
-    <text class="cardText" x="217" y="292" text-anchor="middle">title</text>
-    <text class="cardText" x="217" y="317" text-anchor="middle">source</text>
+    <rect x="99.36" y="190" width="270" height="160" rx="18" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.944"/>
+    <text class="cardTitle" x="234.36" y="232" text-anchor="middle">Document</text>
+    <text class="cardText" x="234.36" y="267" text-anchor="middle">documentId</text>
+    <text class="cardText" x="234.36" y="292" text-anchor="middle">title</text>
+    <text class="cardText" x="234.36" y="317" text-anchor="middle">source</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="466" y="190" width="250" height="160" rx="18" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.8"/>
-    <text class="cardTitle" x="591" y="232" text-anchor="middle">Entity</text>
-    <text class="cardText" x="591" y="267" text-anchor="middle">entityId</text>
-    <text class="cardText" x="591" y="292" text-anchor="middle">name</text>
-    <text class="cardText" x="591" y="317" text-anchor="middle">entityType</text>
+    <rect x="503.28" y="190" width="270" height="160" rx="18" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.944"/>
+    <text class="cardTitle" x="638.28" y="232" text-anchor="middle">Entity</text>
+    <text class="cardText" x="638.28" y="267" text-anchor="middle">entityId</text>
+    <text class="cardText" x="638.28" y="292" text-anchor="middle">name</text>
+    <text class="cardText" x="638.28" y="317" text-anchor="middle">entityType</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="840" y="190" width="250" height="160" rx="18" fill="#FFF7ED" stroke="#D97706" stroke-width="1.8"/>
-    <text class="cardTitle" x="965" y="232" text-anchor="middle">Concept</text>
-    <text class="cardText" x="965" y="267" text-anchor="middle">conceptId</text>
-    <text class="cardText" x="965" y="292" text-anchor="middle">name</text>
-    <text class="cardText" x="965" y="317" text-anchor="middle">domain</text>
+    <rect x="907.2" y="190" width="270" height="160" rx="18" fill="#FFF7ED" stroke="#D97706" stroke-width="1.944"/>
+    <text class="cardTitle" x="1042.2" y="232" text-anchor="middle">Concept</text>
+    <text class="cardText" x="1042.2" y="267" text-anchor="middle">conceptId</text>
+    <text class="cardText" x="1042.2" y="292" text-anchor="middle">name</text>
+    <text class="cardText" x="1042.2" y="317" text-anchor="middle">domain</text>
   </g>
 
-  <path class="line" d="M 342 270 L 466 270" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 716 270 L 840 270" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 716 316 L 790 316 L 790 154 L 591 154 L 591 190" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 369.36 270 L 503.28 270" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 773.28 270 L 907.2 270" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 773.28 316 L 842.4 316 Q 853.2 316 853.2 306 L 853.2 164 Q 853.2 154 842.4 154 L 649.08 154 Q 638.28 154 638.28 164 L 638.28 190" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
 
   <g filter="url(#shadow)">
-    <rect x="378" y="420" width="220" height="82" rx="14" fill="#FFFFFF" stroke="#D5E0E8" stroke-width="1.4"/>
-    <text class="edgeTitle" x="488" y="450" text-anchor="middle">RELATED_TO</text>
-    <text class="edgeText" x="488" y="475" text-anchor="middle">Entity -> Entity</text>
-    <text class="edgeText" x="488" y="495" text-anchor="middle">relationType property</text>
+    <rect x="408.24" y="420" width="237.6" height="82" rx="14" fill="#FFFFFF" stroke="#D5E0E8" stroke-width="1.512"/>
+    <text class="edgeTitle" x="527.04" y="450" text-anchor="middle">RELATED_TO</text>
+    <text class="edgeText" x="527.04" y="475" text-anchor="middle">Entity -> Entity</text>
+    <text class="edgeText" x="527.04" y="495" text-anchor="middle">relationType property</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="314" y="110" width="220" height="82" rx="14" fill="#FFFFFF" stroke="#D5E0E8" stroke-width="1.4"/>
-    <text class="edgeTitle" x="424" y="140" text-anchor="middle">MENTIONS</text>
-    <text class="edgeText" x="424" y="165" text-anchor="middle">Document -> Entity</text>
-    <text class="edgeText" x="424" y="185" text-anchor="middle">confidence 0..100</text>
+    <rect x="339.12" y="110" width="237.6" height="82" rx="14" fill="#FFFFFF" stroke="#D5E0E8" stroke-width="1.512"/>
+    <text class="edgeTitle" x="457.92" y="140" text-anchor="middle">MENTIONS</text>
+    <text class="edgeText" x="457.92" y="165" text-anchor="middle">Document -> Entity</text>
+    <text class="edgeText" x="457.92" y="185" text-anchor="middle">confidence 0..100</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="740" y="348" width="220" height="82" rx="14" fill="#FFFFFF" stroke="#D5E0E8" stroke-width="1.4"/>
-    <text class="edgeTitle" x="850" y="378" text-anchor="middle">IS_A</text>
-    <text class="edgeText" x="850" y="403" text-anchor="middle">Entity -> Concept</text>
-    <text class="edgeText" x="850" y="423" text-anchor="middle">classification edge</text>
+    <rect x="799.2" y="348" width="237.6" height="82" rx="14" fill="#FFFFFF" stroke="#D5E0E8" stroke-width="1.512"/>
+    <text class="edgeTitle" x="918" y="378" text-anchor="middle">IS_A</text>
+    <text class="edgeText" x="918" y="403" text-anchor="middle">Entity -> Concept</text>
+    <text class="edgeText" x="918" y="423" text-anchor="middle">classification edge</text>
   </g>
 </svg>

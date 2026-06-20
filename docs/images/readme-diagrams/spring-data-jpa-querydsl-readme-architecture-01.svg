@@ -21,16 +21,16 @@
       .line-red { fill: none; stroke: #f04438; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <marker id="jq-arrow-blue" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="jq-arrow-green" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="jq-arrow-orange" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="jq-arrow-red" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
   </defs>
 
@@ -83,25 +83,25 @@
   <rect class="card-red" x="430" y="846" width="380" height="62" rx="10" stroke-width="2"/>
   <text class="card-title" x="620" y="873" text-anchor="middle">Hibernate EntityManager</text>
   <text class="card-small" x="620" y="895" text-anchor="middle">lazy Member.team association</text>
-  <rect class="card-red" x="990" y="836" width="380" height="82" rx="10" stroke-width="2"/>
+  <rect class="card-red" x="990" y="836" width="380" height="82" rx="10" stroke-width="2"/><image data-bluetape4k-icon="database" data-source="docs/icons/generic/database-server.svg" x="1002" y="860" width="34" height="34" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsbGVkYnk9InRpdGxlIGRlc2MiPgogIDx0aXRsZSBpZD0idGl0bGUiPkdlbmVyaWMgZGF0YWJhc2Ugc2VydmVyIGljb248L3RpdGxlPgogIDxkZXNjIGlkPSJkZXNjIj5HZW5lcmljIGRhdGFiYXNlIHNlcnZlciBpY29uIGZvciBibHVldGFwZTRrIGRpYWdyYW1zLjwvZGVzYz4KICA8cmVjdCB4PSIxMCIgeT0iOCIgd2lkdGg9IjEwOCIgaGVpZ2h0PSIxMTIiIHJ4PSIxOCIgZmlsbD0iI2ZmZmFmMiIgc3Ryb2tlPSIjMjg0ODVhIiBzdHJva2Utd2lkdGg9IjYiLz4KICA8ZWxsaXBzZSBjeD0iNjQiIGN5PSIzNiIgcng9IjM0IiByeT0iMTMiIGZpbGw9IiNmZmYwZDgiIHN0cm9rZT0iIzhjNmYzMyIgc3Ryb2tlLXdpZHRoPSI2Ii8+CiAgPHBhdGggZD0iTTMwIDM2djQ0YzAgOCAxNSAxNCAzNCAxNHMzNC02IDM0LTE0VjM2IiBmaWxsPSIjZmZmMGQ4IiBzdHJva2U9IiM4YzZmMzMiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMCA1OGMwIDggMTUgMTQgMzQgMTRzMzQtNiAzNC0xNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGM2ZjMzIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMCA4MGMwIDggMTUgMTQgMzQgMTRzMzQtNiAzNC0xNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGM2ZjMzIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K" preserveAspectRatio="xMidYMid meet"/>
   <g transform="translate(1024 852)">
     <ellipse cx="28" cy="10" rx="28" ry="10" fill="#ffffff" stroke="#f04438" stroke-width="3"/>
-    <path d="M 0 10 L 0 42 C 0 55 56 55 56 42 L 56 10" fill="#fff7f7" stroke="#f04438" stroke-width="3"/>
+    <path d="M 0 10 L 0 42 C 0 55 56 55 56 42 L 56 10" fill="#fff7f7" stroke="#f04438" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
     <path d="M 0 42 C 0 55 56 55 56 42" fill="none" stroke="#f04438" stroke-width="3"/>
   </g>  <text class="card-title" x="1210" y="867" text-anchor="middle">H2 database</text>  <text class="card-small" x="1210" y="892" text-anchor="middle">MySQL compatibility mode</text>
 
   <path class="line-blue" d="M 460 255 L 608 255" marker-end="url(#jq-arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line-blue" d="M 920 255 L 1068 255" marker-end="url(#jq-arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-green" d="M 1230 290 L 1230 334 L 1300 334 L 1300 426" marker-end="url(#jq-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 1230 290 L 1230 324 Q 1230 334 1240 334 L 1290 334 Q 1300 334 1300 344 L 1300 426" marker-end="url(#jq-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line-green" d="M 520 477 L 628 477" marker-end="url(#jq-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line-green" d="M 1000 477 L 1108 477" marker-end="url(#jq-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line-orange" d="M 1300 516 L 1300 562 L 310 562 L 310 656" marker-end="url(#jq-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-orange" d="M 1300 516 L 1300 562 L 710 562 L 710 656" marker-end="url(#jq-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-orange" d="M 1300 516 L 1300 562 L 1110 562 L 1110 656" marker-end="url(#jq-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-orange" d="M 1300 516 L 1300 562 L 1510 562 L 1510 656" marker-end="url(#jq-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 1300 516 L 1300 552 Q 1300 562 1290 562 L 320 562 Q 310 562 310 572 L 310 656" marker-end="url(#jq-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 1300 516 L 1300 552 Q 1300 562 1290 562 L 720 562 Q 710 562 710 572 L 710 656" marker-end="url(#jq-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 1300 516 L 1300 552 Q 1300 562 1290 562 L 1120 562 Q 1110 562 1110 572 L 1110 656" marker-end="url(#jq-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 1300 516 L 1300 552 Q 1300 562 1310 562 L 1500 562 Q 1510 562 1510 572 L 1510 656" marker-end="url(#jq-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line-red" d="M 310 746 L 310 795 L 620 795 L 620 834" marker-end="url(#jq-arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-red" d="M 310 746 L 310 785 Q 310 795 320 795 L 610 795 Q 620 795 620 805 L 620 834" marker-end="url(#jq-arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line-red" d="M 810 877 L 978 877" marker-end="url(#jq-arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-red" d="M 710 746 L 710 795 L 1210 795 L 1210 824" marker-end="url(#jq-arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-red" d="M 710 746 L 710 785 Q 710 795 720 795 L 1200 795 Q 1210 795 1210 805 L 1210 824" marker-end="url(#jq-arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

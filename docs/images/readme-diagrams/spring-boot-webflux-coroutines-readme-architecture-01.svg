@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1840" height="940" viewBox="0 0 1840 940" role="img" aria-label="Spring WebFlux coroutine architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="1987.2" height="940" viewBox="0 0 1987.2 940" role="img" aria-label="Spring WebFlux coroutine architecture">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.15"/></filter>
-    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
-    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
-    <marker id="arrowOrange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#EA580C" stroke-dasharray="none"/></marker>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowOrange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#EA580C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{stroke-width:1.6;rx:24}
       .title{font-family:"Architects Daughter";font-size:42px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}
@@ -13,39 +13,39 @@
       .label{font-family:"Comic Mono";font-size:14px;fill:#334155}
     </style>
   </defs>
-  <rect class="canvas" width="1840" height="940"/>
-  <rect class="frame" x="24" y="24" width="1792" height="892" rx="26"/>
-  <text class="title" x="920" y="74" text-anchor="middle">WebFlux coroutine execution map</text>
-  <text class="subtitle" x="920" y="108" text-anchor="middle">Annotation controllers and coRouter handlers share WebClient loopback, Flow examples, and tuned Reactor Netty resources.</text>
+  <rect class="canvas" width="1987.2" height="940"/>
+  <rect class="frame" x="25.92" y="24" width="1935.36" height="892" rx="26"/>
+  <text class="title" x="993.6" y="74" text-anchor="middle">WebFlux coroutine execution map</text>
+  <text class="subtitle" x="993.6" y="108" text-anchor="middle">Annotation controllers and coRouter handlers share WebClient loopback, Flow examples, and tuned Reactor Netty resources.</text>
 
-  <rect class="layer" x="84" y="154" width="1672" height="150" fill="#EFF6FF" stroke="#BFDBFE"/>
-  <text class="layerTitle" x="124" y="198">HTTP entrypoints</text>
-  <g filter="url(#shadow)"><rect x="150" y="220" width="290" height="62" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="295" y="258" text-anchor="middle">Default Controller</text></g>
-  <g filter="url(#shadow)"><rect x="560" y="220" width="250" height="62" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="685" y="258" text-anchor="middle">IO Controller</text></g>
-  <g filter="url(#shadow)"><rect x="930" y="220" width="250" height="62" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="1055" y="258" text-anchor="middle">VT Controller</text></g>
-  <g filter="url(#shadow)"><rect x="1310" y="210" width="300" height="82" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="1460" y="244" text-anchor="middle">coRouter Handler</text><text class="cardText" x="1460" y="270" text-anchor="middle">/, /suspend, /flows</text></g>
+  <rect class="layer" x="90.72" y="154" width="1805.76" height="150" fill="#EFF6FF" stroke="#BFDBFE"/>
+  <text class="layerTitle" x="133.92" y="198">HTTP entrypoints</text>
+  <g filter="url(#shadow)"><rect x="162" y="220" width="313.2" height="62" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.836"/><text class="cardTitle" x="318.6" y="258" text-anchor="middle">Default Controller</text></g>
+  <g filter="url(#shadow)"><rect x="604.8" y="220" width="270" height="62" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.836"/><text class="cardTitle" x="739.8" y="258" text-anchor="middle">IO Controller</text></g>
+  <g filter="url(#shadow)"><rect x="1004.4" y="220" width="270" height="62" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.836"/><text class="cardTitle" x="1139.4" y="258" text-anchor="middle">VT Controller</text></g>
+  <g filter="url(#shadow)"><rect x="1414.8" y="210" width="324" height="82" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.836"/><text class="cardTitle" x="1576.8" y="244" text-anchor="middle">coRouter Handler</text><text class="cardText" x="1576.8" y="270" text-anchor="middle">/, /suspend, /flows</text></g>
 
-  <rect class="layer" x="84" y="366" width="1672" height="210" fill="#F0FDF4" stroke="#BBF7D0"/>
-  <text class="layerTitle" x="124" y="410">Coroutine strategy</text>
-  <g filter="url(#shadow)"><rect x="155" y="448" width="310" height="88" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="310" y="482" text-anchor="middle">Dispatchers.Default</text><text class="cardText" x="310" y="508" text-anchor="middle">baseline controller scope</text></g>
-  <g filter="url(#shadow)"><rect x="565" y="448" width="280" height="88" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="705" y="482" text-anchor="middle">Dispatchers.IO</text><text class="cardText" x="705" y="508" text-anchor="middle">blocking-friendly scope</text></g>
-  <g filter="url(#shadow)"><rect x="945" y="438" width="300" height="108" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1095" y="472" text-anchor="middle">Dispatchers.VT</text><text class="cardText" x="1095" y="498" text-anchor="middle">virtual-thread dispatcher</text><text class="cardText" x="1095" y="522" text-anchor="middle">from bluetape4k</text></g>
-  <g filter="url(#shadow)"><rect x="1360" y="438" width="300" height="108" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1510" y="472" text-anchor="middle">CoroutineHandler</text><text class="cardText" x="1510" y="498" text-anchor="middle">suspend ServerResponse</text><text class="cardText" x="1510" y="522" text-anchor="middle">bodyAndAwait / bodyValue</text></g>
+  <rect class="layer" x="90.72" y="366" width="1805.76" height="210" fill="#F0FDF4" stroke="#BBF7D0"/>
+  <text class="layerTitle" x="133.92" y="410">Coroutine strategy</text>
+  <g filter="url(#shadow)"><rect x="167.4" y="448" width="334.8" height="88" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.836"/><text class="cardTitle" x="334.8" y="482" text-anchor="middle">Dispatchers.Default</text><text class="cardText" x="334.8" y="508" text-anchor="middle">baseline controller scope</text></g>
+  <g filter="url(#shadow)"><rect x="610.2" y="448" width="302.4" height="88" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.836"/><text class="cardTitle" x="761.4" y="482" text-anchor="middle">Dispatchers.IO</text><text class="cardText" x="761.4" y="508" text-anchor="middle">blocking-friendly scope</text></g>
+  <g filter="url(#shadow)"><rect x="1020.6" y="438" width="324" height="108" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.836"/><text class="cardTitle" x="1182.6" y="472" text-anchor="middle">Dispatchers.VT</text><text class="cardText" x="1182.6" y="498" text-anchor="middle">virtual-thread dispatcher</text><text class="cardText" x="1182.6" y="522" text-anchor="middle">from bluetape4k</text></g>
+  <g filter="url(#shadow)"><rect x="1468.8" y="438" width="324" height="108" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.836"/><text class="cardTitle" x="1630.8" y="472" text-anchor="middle">CoroutineHandler</text><text class="cardText" x="1630.8" y="498" text-anchor="middle">suspend ServerResponse</text><text class="cardText" x="1630.8" y="522" text-anchor="middle">bodyAndAwait / bodyValue</text></g>
 
-  <rect class="layer" x="84" y="640" width="1672" height="160" fill="#FFF7ED" stroke="#FED7AA"/>
-  <text class="layerTitle" x="124" y="684">Shared runtime helpers</text>
-  <g filter="url(#shadow)"><rect x="170" y="716" width="290" height="58" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="315" y="753" text-anchor="middle">Banner model</text></g>
-  <g filter="url(#shadow)"><rect x="580" y="704" width="310" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="735" y="738" text-anchor="middle">Flow.async</text><text class="cardText" x="735" y="764" text-anchor="middle">parallel retrieveBanner()</text></g>
-  <g filter="url(#shadow)"><rect x="1010" y="704" width="310" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1165" y="738" text-anchor="middle">WebClient loopback</text><text class="cardText" x="1165" y="764" text-anchor="middle">httpGet("/suspend")</text></g>
-  <g filter="url(#shadow)"><rect x="1440" y="704" width="250" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1565" y="738" text-anchor="middle">NettyConfig</text><text class="cardText" x="1565" y="764" text-anchor="middle">event loops and timeouts</text></g>
+  <rect class="layer" x="90.72" y="640" width="1805.76" height="160" fill="#FFF7ED" stroke="#FED7AA"/>
+  <text class="layerTitle" x="133.92" y="684">Shared runtime helpers</text>
+  <g filter="url(#shadow)"><rect x="183.6" y="716" width="313.2" height="58" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.836"/><text class="cardTitle" x="340.2" y="753" text-anchor="middle">Banner model</text></g>
+  <g filter="url(#shadow)"><rect x="626.4" y="704" width="334.8" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.836"/><text class="cardTitle" x="793.8" y="738" text-anchor="middle">Flow.async</text><text class="cardText" x="793.8" y="764" text-anchor="middle">parallel retrieveBanner()</text></g>
+  <g filter="url(#shadow)"><rect x="1090.8" y="704" width="334.8" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.836"/><text class="cardTitle" x="1258.2" y="738" text-anchor="middle">WebClient loopback</text><text class="cardText" x="1258.2" y="764" text-anchor="middle">httpGet("/suspend")</text></g>
+  <g filter="url(#shadow)"><rect x="1555.2" y="704" width="270" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.836"/><text class="cardTitle" x="1690.2" y="738" text-anchor="middle">NettyConfig</text><text class="cardText" x="1690.2" y="764" text-anchor="middle">event loops and timeouts</text></g>
 
-  <path class="line" d="M 295 282 L 295 448" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 685 282 L 685 448" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1055 282 L 1055 438" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1460 292 L 1460 438" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 310 536 L 310 716" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 735 536 L 735 704" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1095 546 L 1095 676 L 1165 676 L 1165 704" stroke="#EA580C" marker-end="url(#arrowOrange)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="label" x="1130" y="658" text-anchor="middle">self-call</text>
-  <path class="line" d="M 1510 546 L 1510 704" stroke="#EA580C" marker-end="url(#arrowOrange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 318.6 282 L 318.6 448" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 739.8 282 L 739.8 448" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1139.4 282 L 1139.4 438" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1576.8 292 L 1576.8 438" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 334.8 536 L 334.8 716" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 793.8 536 L 793.8 704" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1182.6 546 L 1182.6 666 Q 1182.6 676 1193.4 676 L 1247.4 676 Q 1258.2 676 1258.2 686 L 1258.2 704" stroke="#EA580C" marker-end="url(#arrowOrange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="label" x="1220.4" y="658" text-anchor="middle">self-call</text>
+  <path class="line" d="M 1630.8 546 L 1630.8 704" stroke="#EA580C" marker-end="url(#arrowOrange)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

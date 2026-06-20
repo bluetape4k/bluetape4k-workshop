@@ -16,7 +16,7 @@ the same Redis Testcontainer.
 
 ## Stream Flow
 
-![Redis stream flow](../../../../../../../../../../docs/images/readme-diagrams/spring-data-redis-examples-src-main-kotlin-io-bluetape4k-workshop-redis-stream-readme-flow-01.png)
+![Redis stream sequence](../../../../../../../../../../docs/images/readme-diagrams/spring-data-redis-examples-src-main-kotlin-io-bluetape4k-workshop-redis-stream-readme-sequence-01.png)
 
 The tests cover the same stream behavior from two API styles:
 

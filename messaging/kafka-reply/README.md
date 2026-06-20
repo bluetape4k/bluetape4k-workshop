@@ -15,7 +15,7 @@ coroutine/Future ergonomics, logging, `uninitialized()` injection fields, and th
 
 ## Request-Reply Flow
 
-![Kafka reply request-reply flow](../../docs/images/readme-diagrams/messaging-kafka-reply-readme-request-reply-flow-01.png)
+![Kafka reply request-reply flow](../../docs/images/readme-diagrams/messaging-kafka-reply-readme-request-reply-sequence-01.png)
 
 `PingController` waits for two results:
 

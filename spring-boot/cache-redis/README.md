@@ -12,7 +12,7 @@ This module shows Spring Cache backed by Redis and Lettuce. It mirrors the Caffe
 
 ## Cache Flow
 
-![Redis Cache Demo lookup flow](../../docs/images/readme-diagrams/spring-boot-cache-redis-readme-cache-flow-01.png)
+![Redis Cache Demo lookup sequence](../../docs/images/readme-diagrams/spring-boot-cache-redis-readme-cache-sequence-01.png)
 
 `CountryRepository.findByCode(code)` uses `@Cacheable`. The first call executes the slow method and writes a Redis entry; the next call is served from Redis. `evictCache(code)` removes the Redis key.
 

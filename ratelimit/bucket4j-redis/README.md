@@ -12,7 +12,7 @@ The application registers a Lettuce `RedisClient` from the Testcontainers Redis 
 
 ## Request Flow
 
-![Spring WebFlux Bucket4j Redis request flow](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-readme-request-flow-01.png)
+![Spring WebFlux Bucket4j Redis request sequence](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-readme-request-sequence-01.png)
 
 Every request first reaches the Bucket4j WebFlux filter. The filter chooses the matching URL rule, consumes a token from Redis, and only then dispatches to either `CoroutineController` or `ReactiveController`. Once the Redis bucket is empty, the starter returns `429 Too Many Requests` with the configured response body and headers instead of invoking the handler.
 

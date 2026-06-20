@@ -1,69 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="720" viewBox="0 0 1640 720" role="img" aria-label="Rate limiter module map">
+<svg xmlns="http://www.w3.org/2000/svg" width="2160.864" height="720" viewBox="0 0 2160.864 720" role="img" aria-label="Rate limiter module map">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
-    <marker id="arrowOrange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#EA580C" stroke-dasharray="none"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowOrange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#EA580C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
     </style>
   </defs>
-  <rect class="canvas" width="1640" height="720"/>
-  <rect class="frame" x="24" y="24" width="1592" height="672" rx="24"/>
-  <text class="title" x="820" y="72" text-anchor="middle">Rate limiter workshop modules</text>  <text class="subtitle" x="820" y="104" text-anchor="middle">Choose between a bluetape4k Redis limiter, advanced strategy filters, starter Redis, and starter Caffeine.</text>
+  <rect class="canvas" width="2160.864" height="720"/>
+  <rect class="frame" x="31.622" y="24" width="2097.619" height="672" rx="24"/>
+  <text class="title" x="1080.432" y="72" text-anchor="middle">Rate limiter workshop modules</text>  <text class="subtitle" x="1080.432" y="104" text-anchor="middle">Choose between a bluetape4k Redis limiter, advanced strategy filters, starter Redis, and starter Caffeine.</text>
 
-  <rect class="layer" x="72" y="148" width="348" height="440" rx="18"/>
-  <text class="layerLabel" x="100" y="186">Recommended path</text>
+  <rect class="layer" x="94.867" y="148" width="458.525" height="440" rx="18"/>
+  <text class="layerLabel" x="131.76" y="186">Recommended path</text>
   <g filter="url(#shadow)">
-    <rect x="110" y="246" width="272" height="146" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
-    <circle cx="154" cy="298" r="24" fill="#FEE2E2" stroke="#DC2626" stroke-width="2.4"/>
-    <text x="154" y="307" text-anchor="middle" font-family="Comic Mono" font-size="16" fill="#B91C1C">R</text>
-    <text class="cardTitle" x="270" y="286" text-anchor="middle">bt4k WebFlux</text>
-    <text class="cardText" x="270" y="322" text-anchor="middle">User token or IP key</text>
-    <text class="cardText" x="270" y="348" text-anchor="middle">DistributedRateLimiter</text>  <text class="cardText" x="270" y="374" text-anchor="middle">Redis Lettuce store</text>
+    <rect x="144.936" y="246" width="358.387" height="146" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="2.24"/>
+    <image data-bluetape4k-icon="redis" data-source="docs/icons/redis/redis-icon.svg" x="179.194" y="280" width="37" height="37" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBoZWlnaHQ9IjY0IiB2aWV3Qm94PSIwIDAgMzIgMzIiIHdpZHRoPSI2NCI+PGcgdHJhbnNmb3JtPSJtYXRyaXgoLjg0ODMyNyAwIDAgLjg0ODMyNyAtNy44ODM1NzMgLTkuNDQ5NjkxKSI+PHVzZSB4bGluazpocmVmPSIjQiIgZmlsbD0iI2E0MWUxMSIvPjxwYXRoIGQ9Ik00NS41MzYgMzQuOTVjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTRzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2LTIuMDQtMS42MTMtLjA3Ny0yLjM4MmwxNS4zMzItNS45MzZjMi4zMzItLjgzNiAzLjE0LS44NjcgNS4xMjYtLjE0UzQzLjU1IDMxLjg3IDQ1LjUxIDMyLjZzMi4wMzcgMS4zMS4wMjQgMi4zNnoiIGZpbGw9IiNkODJjMjAiLz48dXNlIHhsaW5rOmhyZWY9IiNCIiB5PSItNi4yMTgiIGZpbGw9IiNhNDFlMTEiLz48dXNlIHhsaW5rOmhyZWY9IiNDIiBmaWxsPSIjZDgyYzIwIi8+PHBhdGggZD0iTTQ1LjUzNiAyNi4wOThjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTVzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2Yy0xLS40NzgtMS41MjQtLjg4LTEuNTI0LTEuMjZWMjEuNTVzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6IiBmaWxsPSIjYTQxZTExIi8+PHVzZSB4bGluazpocmVmPSIjQyIgeT0iLTYuNDQ5IiBmaWxsPSIjZDgyYzIwIi8+PGcgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTI5LjA5NiAyMC43MTJsLTEuMTgyLTEuOTY1LTMuNzc0LS4zNCAyLjgxNi0xLjAxNi0uODQ1LTEuNTYgMi42MzYgMS4wMyAyLjQ4Ni0uODE0LS42NzIgMS42MTIgMi41MzQuOTUtMy4yNjguMzR6TTIyLjggMjQuNjI0bDguNzQtMS4zNDItMi42NCAzLjg3MnoiLz48ZWxsaXBzZSBjeD0iMjAuNDQ0IiByeD0iNC42NzIiIHJ5PSIxLjgxMSIgY3k9IjIxLjQwMiIvPjwvZz48cGF0aCBkPSJNNDIuMTMyIDIxLjEzOGwtNS4xNyAyLjA0Mi0uMDA0LTQuMDg3eiIgZmlsbD0iIzdhMGMwMCIvPjxwYXRoIGQ9Ik0zNi45NjMgMjMuMThsLS41Ni4yMi01LjE2Ni0yLjA0MiA1LjcyMy0yLjI2NHoiIGZpbGw9IiNhZDIxMTUiLz48L2c+PGRlZnMgPjxwYXRoIGlkPSJCIiBkPSJNNDUuNTM2IDM4Ljc2NGMtMi4wMTMgMS4wNS0xMi40NCA1LjMzNy0xNC42NiA2LjQ5NHMtMy40NTMgMS4xNDYtNS4yMDcuMzA4LTEyLjg1LTUuMzItMTQuODUtNi4yNzZjLTEtLjQ3OC0xLjUyNC0uODgtMS41MjQtMS4yNnYtMy44MTNzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6Ii8+PHBhdGggaWQ9IkMiIGQ9Ik00NS41MzYgMjguNzMzYy0yLjAxMyAxLjA1LTEyLjQ0IDUuMzM3LTE0LjY2IDYuNDk0cy0zLjQ1MyAxLjE0Ni01LjIwNy4zMDgtMTIuODUtNS4zMi0xNC44NS02LjI3Ni0yLjA0LTEuNjEzLS4wNzctMi4zODJsMTUuMzMyLTUuOTM1YzIuMzMyLS44MzcgMy4xNC0uODY3IDUuMTI2LS4xNHMxMi4zNSA0Ljg1MyAxNC4zMTIgNS41NyAyLjAzNyAxLjMxLjAyNCAyLjM2eiIvPjwvZGVmcz48L3N2Zz4=" preserveAspectRatio="xMidYMid meet"/>
+    <text class="cardTitle" x="355.752" y="286" text-anchor="middle">bt4k WebFlux</text>
+    <text class="cardText" x="355.752" y="322" text-anchor="middle">User token or IP key</text>
+    <text class="cardText" x="355.752" y="348" text-anchor="middle">DistributedRateLimiter</text>  <text class="cardText" x="355.752" y="374" text-anchor="middle">Redis Lettuce store</text>
   </g>
 
-  <rect class="layer" x="472" y="148" width="348" height="440" rx="18"/>
-  <text class="layerLabel" x="500" y="186">Strategy lab</text>
+  <rect class="layer" x="621.907" y="148" width="458.525" height="440" rx="18"/>
+  <text class="layerLabel" x="658.8" y="186">Strategy lab</text>
   <g filter="url(#shadow)">
-    <rect x="510" y="246" width="272" height="146" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
-    <text class="cardTitle" x="646" y="292" text-anchor="middle">Advanced filters</text>
-    <text class="cardText" x="646" y="326" text-anchor="middle">IP, user, combined keys</text>
-    <text class="cardText" x="646" y="352" text-anchor="middle">standard retry headers</text>  <text class="cardText" x="646" y="378" text-anchor="middle">Redis proxy manager</text>
+    <rect x="671.976" y="246" width="358.387" height="146" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="2.24"/>
+    <text class="cardTitle" x="851.17" y="292" text-anchor="middle">Advanced filters</text>
+    <text class="cardText" x="851.17" y="326" text-anchor="middle">IP, user, combined keys</text>
+    <text class="cardText" x="851.17" y="352" text-anchor="middle">standard retry headers</text>  <text class="cardText" x="851.17" y="378" text-anchor="middle">Redis proxy manager</text>
   </g>
 
-  <rect class="layer" x="872" y="148" width="304" height="440" rx="18"/>  <text class="layerLabel" x="900" y="186">Starter + Redis</text>
+  <rect class="layer" x="1148.947" y="148" width="400.55" height="440" rx="18"/>  <text class="layerLabel" x="1185.84" y="186">Starter + Redis</text>
   <g filter="url(#shadow)">
-    <rect x="910" y="246" width="228" height="146" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/>
-    <circle cx="940" cy="298" r="24" fill="#FEE2E2" stroke="#DC2626" stroke-width="2.4"/>
-    <text x="940" y="307" text-anchor="middle" font-family="Comic Mono" font-size="16" fill="#B91C1C">R</text>  <text class="cardTitle" x="1058" y="292" text-anchor="middle">Redis starter</text>
-    <text class="cardText" x="1050" y="326" text-anchor="middle">filter-method: webflux</text>
-    <text class="cardText" x="1050" y="352" text-anchor="middle">shared bucket state</text>
-    <text class="cardText" x="1050" y="378" text-anchor="middle">starter configuration</text>
+    <rect x="1199.016" y="246" width="300.413" height="146" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="2.24"/>
+    <image data-bluetape4k-icon="redis" data-source="docs/icons/redis/redis-icon.svg" x="1214.827" y="280" width="37" height="37" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBoZWlnaHQ9IjY0IiB2aWV3Qm94PSIwIDAgMzIgMzIiIHdpZHRoPSI2NCI+PGcgdHJhbnNmb3JtPSJtYXRyaXgoLjg0ODMyNyAwIDAgLjg0ODMyNyAtNy44ODM1NzMgLTkuNDQ5NjkxKSI+PHVzZSB4bGluazpocmVmPSIjQiIgZmlsbD0iI2E0MWUxMSIvPjxwYXRoIGQ9Ik00NS41MzYgMzQuOTVjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTRzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2LTIuMDQtMS42MTMtLjA3Ny0yLjM4MmwxNS4zMzItNS45MzZjMi4zMzItLjgzNiAzLjE0LS44NjcgNS4xMjYtLjE0UzQzLjU1IDMxLjg3IDQ1LjUxIDMyLjZzMi4wMzcgMS4zMS4wMjQgMi4zNnoiIGZpbGw9IiNkODJjMjAiLz48dXNlIHhsaW5rOmhyZWY9IiNCIiB5PSItNi4yMTgiIGZpbGw9IiNhNDFlMTEiLz48dXNlIHhsaW5rOmhyZWY9IiNDIiBmaWxsPSIjZDgyYzIwIi8+PHBhdGggZD0iTTQ1LjUzNiAyNi4wOThjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTVzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2Yy0xLS40NzgtMS41MjQtLjg4LTEuNTI0LTEuMjZWMjEuNTVzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6IiBmaWxsPSIjYTQxZTExIi8+PHVzZSB4bGluazpocmVmPSIjQyIgeT0iLTYuNDQ5IiBmaWxsPSIjZDgyYzIwIi8+PGcgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTI5LjA5NiAyMC43MTJsLTEuMTgyLTEuOTY1LTMuNzc0LS4zNCAyLjgxNi0xLjAxNi0uODQ1LTEuNTYgMi42MzYgMS4wMyAyLjQ4Ni0uODE0LS42NzIgMS42MTIgMi41MzQuOTUtMy4yNjguMzR6TTIyLjggMjQuNjI0bDguNzQtMS4zNDItMi42NCAzLjg3MnoiLz48ZWxsaXBzZSBjeD0iMjAuNDQ0IiByeD0iNC42NzIiIHJ5PSIxLjgxMSIgY3k9IjIxLjQwMiIvPjwvZz48cGF0aCBkPSJNNDIuMTMyIDIxLjEzOGwtNS4xNyAyLjA0Mi0uMDA0LTQuMDg3eiIgZmlsbD0iIzdhMGMwMCIvPjxwYXRoIGQ9Ik0zNi45NjMgMjMuMThsLS41Ni4yMi01LjE2Ni0yLjA0MiA1LjcyMy0yLjI2NHoiIGZpbGw9IiNhZDIxMTUiLz48L2c+PGRlZnMgPjxwYXRoIGlkPSJCIiBkPSJNNDUuNTM2IDM4Ljc2NGMtMi4wMTMgMS4wNS0xMi40NCA1LjMzNy0xNC42NiA2LjQ5NHMtMy40NTMgMS4xNDYtNS4yMDcuMzA4LTEyLjg1LTUuMzItMTQuODUtNi4yNzZjLTEtLjQ3OC0xLjUyNC0uODgtMS41MjQtMS4yNnYtMy44MTNzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6Ii8+PHBhdGggaWQ9IkMiIGQ9Ik00NS41MzYgMjguNzMzYy0yLjAxMyAxLjA1LTEyLjQ0IDUuMzM3LTE0LjY2IDYuNDk0cy0zLjQ1MyAxLjE0Ni01LjIwNy4zMDgtMTIuODUtNS4zMi0xNC44NS02LjI3Ni0yLjA0LTEuNjEzLS4wNzctMi4zODJsMTUuMzMyLTUuOTM1YzIuMzMyLS44MzcgMy4xNC0uODY3IDUuMTI2LS4xNHMxMi4zNSA0Ljg1MyAxNC4zMTIgNS41NyAyLjAzNyAxLjMxLjAyNCAyLjM2eiIvPjwvZGVmcz48L3N2Zz4=" preserveAspectRatio="xMidYMid meet"/>  <text class="cardTitle" x="1394.021" y="292" text-anchor="middle">Redis starter</text>
+    <text class="cardText" x="1383.48" y="326" text-anchor="middle">filter-method: webflux</text>
+    <text class="cardText" x="1383.48" y="352" text-anchor="middle">shared bucket state</text>
+    <text class="cardText" x="1383.48" y="378" text-anchor="middle">starter configuration</text>
   </g>
 
-  <rect class="layer" x="1228" y="148" width="340" height="440" rx="18"/>
-  <text class="layerLabel" x="1256" y="186">Starter + local cache</text>
+  <rect class="layer" x="1618.013" y="148" width="447.984" height="440" rx="18"/>
+  <text class="layerLabel" x="1654.906" y="186">Starter + local cache</text>
   <g filter="url(#shadow)">
-    <rect x="1266" y="246" width="264" height="146" rx="16" fill="#FFFBEB" stroke="#D97706" stroke-width="1.7"/>
-    <rect x="1286" y="288" width="64" height="30" rx="15" fill="#FEF3C7" stroke="#D97706" stroke-width="2.4"/>
+    <rect x="1668.082" y="246" width="347.846" height="146" rx="16" fill="#FFFBEB" stroke="#D97706" stroke-width="2.24"/>
+    <rect x="1694.434" y="288" width="84.326" height="30" rx="15" fill="#FEF3C7" stroke="#D97706" stroke-width="3.162"/>
     <path d="M 1286 303 C 1286 322 1350 322 1350 303" fill="none" stroke="#D97706" stroke-width="2.4"/>
-    <text class="cardTitle" x="1454" y="292" text-anchor="middle">Caffeine servlet</text>
-    <text class="cardText" x="1450" y="326" text-anchor="middle">filter-method: servlet</text>
-    <text class="cardText" x="1450" y="352" text-anchor="middle">single JVM buckets</text>
-    <text class="cardText" x="1450" y="378" text-anchor="middle">local/dev fit</text>
+    <text class="cardTitle" x="1915.79" y="292" text-anchor="middle">Caffeine servlet</text>
+    <text class="cardText" x="1910.52" y="326" text-anchor="middle">filter-method: servlet</text>
+    <text class="cardText" x="1910.52" y="352" text-anchor="middle">single JVM buckets</text>
+    <text class="cardText" x="1910.52" y="378" text-anchor="middle">local/dev fit</text>
   </g>
 
   <g filter="url(#shadow)">
-    <rect x="520" y="480" width="600" height="72" rx="16" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.7"/>
-    <text class="cardTitle" x="820" y="516" text-anchor="middle">Token bucket behavior</text>
-    <text class="cardText" x="820" y="542" text-anchor="middle">consume one token, allow while available, return 429 when exhausted</text>
+    <rect x="685.152" y="480" width="790.56" height="72" rx="16" fill="#ECFEFF" stroke="#0891B2" stroke-width="2.24"/>
+    <text class="cardTitle" x="1080.432" y="516" text-anchor="middle">Token bucket behavior</text>
+    <text class="cardText" x="1080.432" y="542" text-anchor="middle">consume one token, allow while available, return 429 when exhausted</text>
   </g>
 
-  <path class="line" d="M 382 320 L 510 320" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 782 320 L 910 320" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1138 320 L 1266 320" stroke="#EA580C" marker-end="url(#arrowOrange)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 646 392 L 646 480" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1024 392 L 1024 480" stroke="#EA580C" marker-end="url(#arrowOrange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 503.323 320 L 671.976 320" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1030.363 320 L 1199.016 320" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1499.429 320 L 1668.082 320" stroke="#EA580C" marker-end="url(#arrowOrange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 851.17 392 L 851.17 480" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1349.222 392 L 1349.222 480" stroke="#EA580C" marker-end="url(#arrowOrange)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

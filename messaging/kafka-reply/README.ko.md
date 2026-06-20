@@ -15,7 +15,7 @@
 
 ## Request-Reply 흐름
 
-![Kafka reply request-reply flow](../../docs/images/readme-diagrams/messaging-kafka-reply-readme-request-reply-flow-01.png)
+![Kafka reply request-reply flow](../../docs/images/readme-diagrams/messaging-kafka-reply-readme-request-reply-sequence-01.png)
 
 `PingController`는 두 결과를 기다린다.
 

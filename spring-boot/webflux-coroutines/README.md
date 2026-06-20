@@ -17,7 +17,7 @@ used by flow examples, and the tuned Reactor Netty resources.
 
 ## Coroutine Flow
 
-![Spring WebFlux coroutine flow](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-readme-flow-01.png)
+![Spring WebFlux coroutine sequence](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-readme-sequence-01.png)
 
 This example uses Kotlin coroutines in a Spring WebFlux environment. It demonstrates bluetape4k
 `Dispatchers.VT`, `Flow<T>.async`, `Runtimex`, and shared `WebClient` helpers without hiding the

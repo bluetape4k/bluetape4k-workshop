@@ -12,7 +12,7 @@
 
 ## 요청 흐름
 
-![Spring WebFlux Bucket4j Redis request flow](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-readme-request-flow-01.png)
+![Spring WebFlux Bucket4j Redis request sequence](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-readme-request-sequence-01.png)
 
 모든 요청은 먼저 Bucket4j WebFlux filter를 통과합니다. Filter는 URL rule을 선택하고 Redis bucket에서 token 하나를 소비한 뒤에야 `CoroutineController` 또는 `ReactiveController`로 요청을 넘깁니다. Redis bucket이 비면 handler를 호출하지 않고 starter가 설정된 body/header와 함께 `429 Too Many Requests`를 반환합니다.
 

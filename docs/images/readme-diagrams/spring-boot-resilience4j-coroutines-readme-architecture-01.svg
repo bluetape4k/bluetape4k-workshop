@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1840" height="980" viewBox="0 0 1840 980" role="img" aria-label="Spring Boot Resilience4j coroutine architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="2172.222" height="980" viewBox="0 0 2172.222 980" role="img" aria-label="Spring Boot Resilience4j coroutine architecture">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%">
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.15"/>
     </filter>
     <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none"/>
+      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A" stroke-dasharray="none"/>
+      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="arrowOrange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#EA580C" stroke-dasharray="none"/>
+      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#EA580C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}
@@ -22,96 +22,96 @@
       .label{font-family:"Comic Mono";font-size:14px;fill:#334155}.pill{font-family:"Comic Mono";font-size:14px;fill:#243447}
     </style>
   </defs>
-  <rect class="canvas" width="1840" height="980"/>
-  <rect class="frame" x="24" y="24" width="1792" height="932" rx="26"/>
-  <text class="title" x="920" y="74" text-anchor="middle">Resilience4j integration choices</text>
-  <text class="subtitle" x="920" y="108" text-anchor="middle">Annotations cover MVC, Reactor, Future, and most suspend calls; SuspendDecorators keep coroutine retry/fallback explicit.</text>
+  <rect class="canvas" width="2172.222" height="980"/>
+  <rect class="frame" x="28.333" y="24" width="2115.556" height="932" rx="26"/>
+  <text class="title" x="1086.111" y="74" text-anchor="middle">Resilience4j integration choices</text>
+  <text class="subtitle" x="1086.111" y="108" text-anchor="middle">Annotations cover MVC, Reactor, Future, and most suspend calls; SuspendDecorators keep coroutine retry/fallback explicit.</text>
 
-  <rect class="layer" x="82" y="154" width="1676" height="160" fill="#EFF6FF" stroke="#BFDBFE"/>
-  <text class="layerTitle" x="122" y="198">HTTP entrypoints</text>
+  <rect class="layer" x="96.806" y="154" width="1978.611" height="160" fill="#EFF6FF" stroke="#BFDBFE"/>
+  <text class="layerTitle" x="144.028" y="198">HTTP entrypoints</text>
   <g filter="url(#shadow)">
-    <rect x="190" y="220" width="310" height="64" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/>
-    <text class="cardTitle" x="345" y="258" text-anchor="middle">BackendAController</text>
+    <rect x="224.306" y="220" width="365.972" height="64" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="2.007"/>
+    <text class="cardTitle" x="407.292" y="258" text-anchor="middle">BackendAController</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="650" y="210" width="350" height="84" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/>
-    <text class="cardTitle" x="825" y="244" text-anchor="middle">SuspendBackendAController</text>
-    <text class="cardText" x="825" y="270" text-anchor="middle">/coroutines/backendA</text>
+    <rect x="767.361" y="210" width="413.194" height="84" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="2.007"/>
+    <text class="cardTitle" x="973.958" y="244" text-anchor="middle">SuspendBackendAController</text>
+    <text class="cardText" x="973.958" y="270" text-anchor="middle">/coroutines/backendA</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="1160" y="210" width="390" height="84" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/>
-    <text class="cardTitle" x="1355" y="244" text-anchor="middle">BackendB and BackendC</text>
-    <text class="cardText" x="1355" y="270" text-anchor="middle">rate limit and extra backend profiles</text>
-  </g>
-
-  <rect class="layer" x="82" y="366" width="1676" height="210" fill="#F0FDF4" stroke="#BBF7D0"/>
-  <text class="layerTitle" x="122" y="410">Invocation models</text>
-  <g filter="url(#shadow)">
-    <rect x="145" y="448" width="330" height="86" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/>
-    <text class="cardTitle" x="310" y="482" text-anchor="middle">BackendAService</text>
-    <text class="cardText" x="310" y="508" text-anchor="middle">blocking, Mono, Flux, Future</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="560" y="438" width="330" height="106" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/>
-    <text class="cardTitle" x="725" y="472" text-anchor="middle">BackendACoService</text>
-    <text class="cardText" x="725" y="498" text-anchor="middle">suspend functions and Flow</text>
-    <text class="cardText" x="725" y="522" text-anchor="middle">fallback methods stay non-suspend</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="995" y="438" width="330" height="106" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/>
-    <text class="cardTitle" x="1160" y="472" text-anchor="middle">SuspendDecorators</text>
-    <text class="cardText" x="1160" y="498" text-anchor="middle">programmatic supplier chain</text>
-    <text class="cardText" x="1160" y="522" text-anchor="middle">retry and fallback tested directly</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="1420" y="448" width="250" height="86" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/>
-    <text class="cardTitle" x="1545" y="482" text-anchor="middle">Event Consumers</text>
-    <text class="cardText" x="1545" y="508" text-anchor="middle">registry add/remove logs</text>
+    <rect x="1369.444" y="210" width="460.417" height="84" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="2.007"/>
+    <text class="cardTitle" x="1599.653" y="244" text-anchor="middle">BackendB and BackendC</text>
+    <text class="cardText" x="1599.653" y="270" text-anchor="middle">rate limit and extra backend profiles</text>
   </g>
 
-  <rect class="layer" x="82" y="640" width="1676" height="210" fill="#FFF7ED" stroke="#FED7AA"/>
-  <text class="layerTitle" x="122" y="684">Resilience4j registries and exported behavior</text>
+  <rect class="layer" x="96.806" y="366" width="1978.611" height="210" fill="#F0FDF4" stroke="#BBF7D0"/>
+  <text class="layerTitle" x="144.028" y="410">Invocation models</text>
   <g filter="url(#shadow)">
-    <rect x="160" y="720" width="250" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/>
-    <text class="cardTitle" x="285" y="754" text-anchor="middle">CircuitBreaker</text>
-    <text class="cardText" x="285" y="780" text-anchor="middle">closed, open, half-open</text>
+    <rect x="171.181" y="448" width="389.583" height="86" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="2.007"/>
+    <text class="cardTitle" x="365.972" y="482" text-anchor="middle">BackendAService</text>
+    <text class="cardText" x="365.972" y="508" text-anchor="middle">blocking, Mono, Flux, Future</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="500" y="720" width="210" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/>
-    <text class="cardTitle" x="605" y="754" text-anchor="middle">Retry</text>
-    <text class="cardText" x="605" y="780" text-anchor="middle">attempt policy</text>
+    <rect x="661.111" y="438" width="389.583" height="106" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="2.007"/>
+    <text class="cardTitle" x="855.903" y="472" text-anchor="middle">BackendACoService</text>
+    <text class="cardText" x="855.903" y="498" text-anchor="middle">suspend functions and Flow</text>
+    <text class="cardText" x="855.903" y="522" text-anchor="middle">fallback methods stay non-suspend</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="800" y="720" width="230" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/>
-    <text class="cardTitle" x="915" y="754" text-anchor="middle">Bulkhead</text>
-    <text class="cardText" x="915" y="780" text-anchor="middle">concurrency cap</text>
+    <rect x="1174.653" y="438" width="389.583" height="106" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="2.007"/>
+    <text class="cardTitle" x="1369.444" y="472" text-anchor="middle">SuspendDecorators</text>
+    <text class="cardText" x="1369.444" y="498" text-anchor="middle">programmatic supplier chain</text>
+    <text class="cardText" x="1369.444" y="522" text-anchor="middle">retry and fallback tested directly</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="1120" y="720" width="250" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/>
-    <text class="cardTitle" x="1245" y="754" text-anchor="middle">TimeLimiter</text>
-    <text class="cardText" x="1245" y="780" text-anchor="middle">Mono, Flux, Future only</text>
+    <rect x="1676.389" y="448" width="295.139" height="86" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="2.007"/>
+    <text class="cardTitle" x="1823.958" y="482" text-anchor="middle">Event Consumers</text>
+    <text class="cardText" x="1823.958" y="508" text-anchor="middle">registry add/remove logs</text>
+  </g>
+
+  <rect class="layer" x="96.806" y="640" width="1978.611" height="210" fill="#FFF7ED" stroke="#FED7AA"/>
+  <text class="layerTitle" x="144.028" y="684">Resilience4j registries and exported behavior</text>
+  <g filter="url(#shadow)">
+    <rect x="188.889" y="720" width="295.139" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="2.007"/>
+    <text class="cardTitle" x="336.458" y="754" text-anchor="middle">CircuitBreaker</text>
+    <text class="cardText" x="336.458" y="780" text-anchor="middle">closed, open, half-open</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="1460" y="720" width="210" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/>
-    <text class="cardTitle" x="1565" y="754" text-anchor="middle">RateLimiter</text>
-    <text class="cardText" x="1565" y="780" text-anchor="middle">Backend B quota</text>
+    <rect x="590.278" y="720" width="247.917" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="2.007"/>
+    <text class="cardTitle" x="714.236" y="754" text-anchor="middle">Retry</text>
+    <text class="cardText" x="714.236" y="780" text-anchor="middle">attempt policy</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="944.444" y="720" width="271.528" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="2.007"/>
+    <text class="cardTitle" x="1080.208" y="754" text-anchor="middle">Bulkhead</text>
+    <text class="cardText" x="1080.208" y="780" text-anchor="middle">concurrency cap</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1322.222" y="720" width="295.139" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="2.007"/>
+    <text class="cardTitle" x="1469.792" y="754" text-anchor="middle">TimeLimiter</text>
+    <text class="cardText" x="1469.792" y="780" text-anchor="middle">Mono, Flux, Future only</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1723.611" y="720" width="247.917" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="2.007"/>
+    <text class="cardTitle" x="1847.569" y="754" text-anchor="middle">RateLimiter</text>
+    <text class="cardText" x="1847.569" y="780" text-anchor="middle">Backend B quota</text>
   </g>
 
   <g filter="url(#shadow)">
-    <rect x="560" y="872" width="720" height="48" rx="14" fill="#FEFCE8" stroke="#FACC15" stroke-width="1.5"/>
-    <text class="pill" x="920" y="902" text-anchor="middle">Coroutine caveat: no @TimeLimiter on suspend endpoints; use withTimeout or explicit decorators.</text>
+    <rect x="661.111" y="872" width="850" height="48" rx="14" fill="#FEFCE8" stroke="#FACC15" stroke-width="1.771"/>
+    <text class="pill" x="1086.111" y="902" text-anchor="middle">Coroutine caveat: no @TimeLimiter on suspend endpoints; use withTimeout or explicit decorators.</text>
   </g>
 
-  <path class="line" d="M 345 284 L 345 350 L 310 350 L 310 448" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 825 294 L 825 350 L 725 350 L 725 438" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1355 294 L 1355 350 L 1545 350 L 1545 448" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 407.292 284 L 407.292 340 Q 407.292 350 395.486 350 L 377.778 350 Q 365.972 350 365.972 360 L 365.972 448" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 973.958 294 L 973.958 340 Q 973.958 350 962.153 350 L 867.708 350 Q 855.903 350 855.903 360 L 855.903 438" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1599.653 294 L 1599.653 340 Q 1599.653 350 1611.458 350 L 1812.153 350 Q 1823.958 350 1823.958 360 L 1823.958 448" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line" d="M 310 534 L 310 640" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="label" x="250" y="604" text-anchor="middle">annotations</text>
-  <path class="line" d="M 725 544 L 725 640" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="label" x="664" y="606" text-anchor="middle">suspend AOP</text>
-  <path class="line" d="M 1160 544 L 1160 640" stroke="#EA580C" marker-end="url(#arrowOrange)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="label" x="1092" y="606" text-anchor="middle">explicit chain</text>
-  <path class="line" d="M 1545 534 L 1545 640" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="label" x="1482" y="606" text-anchor="middle">registry events</text>
+  <path class="line" d="M 365.972 534 L 365.972 640" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="label" x="295.139" y="604" text-anchor="middle">annotations</text>
+  <path class="line" d="M 855.903 544 L 855.903 640" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="label" x="783.889" y="606" text-anchor="middle">suspend AOP</text>
+  <path class="line" d="M 1369.444 544 L 1369.444 640" stroke="#EA580C" marker-end="url(#arrowOrange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="label" x="1289.167" y="606" text-anchor="middle">explicit chain</text>
+  <path class="line" d="M 1823.958 534 L 1823.958 640" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="label" x="1749.583" y="606" text-anchor="middle">registry events</text>
 </svg>

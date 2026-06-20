@@ -23,7 +23,7 @@ service가 transaction boundary를 정의하며, repository가 Exposed table 접
 | 주문 생성 | `OrderService.placeOrder` | 주문 header를 만들고, line을 `productId`로 정렬한 뒤, product row를 잠그고, order line 삽입과 stock 감소를 한 transaction에서 처리합니다. |
 | 재고 부족 | `InsufficientStockException` | 재고가 부족하면 transaction이 중단되어 부분 order line과 stock 변경이 rollback됩니다. |
 
-## 주문 처리 흐름
+## 주문 처리 시퀀스
 
 ![exposed-mvc-jdbc order placement sequence](../../docs/images/readme-diagrams/exposed-mvc-jdbc-readme-sequence-01.png)
 

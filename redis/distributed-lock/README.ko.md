@@ -14,7 +14,7 @@
 
 ## Fenced Lock 흐름
 
-![redis-distributed-lock fenced flow diagram](../../docs/images/readme-diagrams/redis-distributed-lock-readme-fenced-flow-01.png)
+![redis-distributed-lock fenced sequence diagram](../../docs/images/readme-diagrams/redis-distributed-lock-readme-fenced-sequence-01.png)
 
 Fenced variant는 Redis에서 단조 증가 token을 받고, 그 token을 `FencedResource`에 전달한 뒤 `lastSeenToken`보다 오래되지 않은 경우에만 `InventoryStore`를 갱신합니다. Suspending variant는 `getLockId(lockName)`과 `withContext(NonCancellable)`을 추가해 cancellation이 `unlockAsync(lockId).await()`를 끊지 못하게 합니다.
 

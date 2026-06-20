@@ -12,7 +12,7 @@
 
 ## 요청 흐름
 
-![spring-boot/idempotency request flow diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-sequence-01.png)
+![spring-boot/idempotency request sequence diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-sequence-01.png)
 
 ## 핵심 기능
 

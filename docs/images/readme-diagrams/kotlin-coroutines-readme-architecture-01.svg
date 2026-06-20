@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1420" height="840" viewBox="0 0 1420 840" role="img" aria-label="Kotlin coroutines examples learning map">
+<svg xmlns="http://www.w3.org/2000/svg" width="1643.475" height="840" viewBox="0 0 1643.475 840" role="img" aria-label="Kotlin coroutines examples learning map">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%">
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/>
@@ -18,101 +18,101 @@
       .cardText { font-family: "Comic Mono"; font-size: 14px; fill: #415166; }
     </style>
   </defs>
-  <rect class="canvas" width="1420" height="840"/>
-  <rect class="frame" x="30" y="24" width="1360" height="792" rx="24"/>
+  <rect class="canvas" width="1643.475" height="840"/>
+  <rect class="frame" x="34.721" y="24" width="1574.033" height="792" rx="24"/>
 
-  <text class="title" x="710" y="66" text-anchor="middle">Coroutines examples learning map</text>
-  <text class="subtitle" x="710" y="94" text-anchor="middle">The module is a test-driven catalog of coroutine builders, streams, context propagation, scope lifecycle, and verification helpers.</text>
+  <text class="title" x="821.738" y="66" text-anchor="middle">Coroutines examples learning map</text>
+  <text class="subtitle" x="821.738" y="94" text-anchor="middle">The module is a test-driven catalog of coroutine builders, streams, context propagation, scope lifecycle, and verification helpers.</text>
 
-  <rect class="layerCore" x="66" y="126" width="610" height="260" rx="18"/>
-  <text class="layerLabel" x="94" y="160">Core coroutine behavior</text>
+  <rect class="layerCore" x="76.387" y="126" width="706" height="260" rx="18"/>
+  <text class="layerLabel" x="108.793" y="160">Core coroutine behavior</text>
   <g filter="url(#shadow)">
-    <rect x="104" y="190" width="244" height="70" rx="12" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.6"/>
-    <text class="cardTitle" x="226" y="220" text-anchor="middle">Builders</text>
-    <text class="cardText" x="226" y="246" text-anchor="middle">launch, async, runBlocking</text>
+    <rect x="120.367" y="190" width="282.4" height="70" rx="12" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.852"/>
+    <text class="cardTitle" x="261.567" y="220" text-anchor="middle">Builders</text>
+    <text class="cardText" x="261.567" y="246" text-anchor="middle">launch, async, runBlocking</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="392" y="190" width="244" height="70" rx="12" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.6"/>
-    <text class="cardTitle" x="514" y="220" text-anchor="middle">Dispatchers</text>
-    <text class="cardText" x="514" y="246" text-anchor="middle">Default, IO, custom, Main</text>
+    <rect x="453.692" y="190" width="282.4" height="70" rx="12" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.852"/>
+    <text class="cardTitle" x="594.892" y="220" text-anchor="middle">Dispatchers</text>
+    <text class="cardText" x="594.892" y="246" text-anchor="middle">Default, IO, custom, Main</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="104" y="288" width="244" height="70" rx="12" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.6"/>
-    <text class="cardTitle" x="226" y="318" text-anchor="middle">Cancellation</text>
-    <text class="cardText" x="226" y="344" text-anchor="middle">propagation, NonCancellable</text>
+    <rect x="120.367" y="288" width="282.4" height="70" rx="12" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.852"/>
+    <text class="cardTitle" x="261.567" y="318" text-anchor="middle">Cancellation</text>
+    <text class="cardText" x="261.567" y="344" text-anchor="middle">propagation, NonCancellable</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="392" y="288" width="244" height="70" rx="12" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.6"/>
-    <text class="cardTitle" x="514" y="318" text-anchor="middle">Exceptions</text>
-    <text class="cardText" x="514" y="344" text-anchor="middle">scope vs supervisorScope</text>
-  </g>
-
-  <rect class="layerFlow" x="744" y="126" width="610" height="260" rx="18"/>
-  <text class="layerLabel" x="772" y="160">Streams and message passing</text>
-  <g filter="url(#shadow)">
-    <rect x="782" y="190" width="244" height="70" rx="12" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.6"/>
-    <text class="cardTitle" x="904" y="220" text-anchor="middle">Flow builders</text>
-    <text class="cardText" x="904" y="246" text-anchor="middle">flowOf, asFlow, flow { }</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="1070" y="190" width="244" height="70" rx="12" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.6"/>
-    <text class="cardTitle" x="1192" y="220" text-anchor="middle">Flow lifecycle</text>
-    <text class="cardText" x="1192" y="246" text-anchor="middle">operators, callbackFlow</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="782" y="288" width="244" height="70" rx="12" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.6"/>
-    <text class="cardTitle" x="904" y="318" text-anchor="middle">SharedFlow</text>
-    <text class="cardText" x="904" y="344" text-anchor="middle">StateFlow, hot streams</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="1070" y="288" width="244" height="70" rx="12" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.6"/>
-    <text class="cardTitle" x="1192" y="318" text-anchor="middle">Channels</text>
-    <text class="cardText" x="1192" y="344" text-anchor="middle">producer-consumer, actor</text>
+    <rect x="453.692" y="288" width="282.4" height="70" rx="12" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.852"/>
+    <text class="cardTitle" x="594.892" y="318" text-anchor="middle">Exceptions</text>
+    <text class="cardText" x="594.892" y="344" text-anchor="middle">scope vs supervisorScope</text>
   </g>
 
-  <rect class="layerContext" x="66" y="426" width="610" height="270" rx="18"/>
-  <text class="layerLabel" x="94" y="460">Context and lifecycle</text>
+  <rect class="layerFlow" x="861.089" y="126" width="706" height="260" rx="18"/>
+  <text class="layerLabel" x="893.495" y="160">Streams and message passing</text>
   <g filter="url(#shadow)">
-    <rect x="104" y="496" width="244" height="76" rx="12" fill="#FFFFFF" stroke="#D97706" stroke-width="1.6"/>
-    <text class="cardTitle" x="226" y="528" text-anchor="middle">CoroutineContext</text>
-    <text class="cardText" x="226" y="554" text-anchor="middle">custom elements and keys</text>
+    <rect x="905.069" y="190" width="282.4" height="70" rx="12" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.852"/>
+    <text class="cardTitle" x="1046.269" y="220" text-anchor="middle">Flow builders</text>
+    <text class="cardText" x="1046.269" y="246" text-anchor="middle">flowOf, asFlow, flow { }</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="392" y="496" width="244" height="76" rx="12" fill="#FFFFFF" stroke="#D97706" stroke-width="1.6"/>
-    <text class="cardTitle" x="514" y="528" text-anchor="middle">UUID provider</text>
-    <text class="cardText" x="514" y="554" text-anchor="middle">real and fake context IDs</text>
+    <rect x="1238.393" y="190" width="282.4" height="70" rx="12" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.852"/>
+    <text class="cardTitle" x="1379.593" y="220" text-anchor="middle">Flow lifecycle</text>
+    <text class="cardText" x="1379.593" y="246" text-anchor="middle">operators, callbackFlow</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="104" y="596" width="244" height="76" rx="12" fill="#FFFFFF" stroke="#D97706" stroke-width="1.6"/>
-    <text class="cardTitle" x="226" y="628" text-anchor="middle">Structured scope</text>
-    <text class="cardText" x="226" y="654" text-anchor="middle">CoroutineScope examples</text>
+    <rect x="905.069" y="288" width="282.4" height="70" rx="12" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.852"/>
+    <text class="cardTitle" x="1046.269" y="318" text-anchor="middle">SharedFlow</text>
+    <text class="cardText" x="1046.269" y="344" text-anchor="middle">StateFlow, hot streams</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="392" y="596" width="244" height="76" rx="12" fill="#FFFFFF" stroke="#D97706" stroke-width="1.6"/>
-    <text class="cardTitle" x="514" y="628" text-anchor="middle">Spring scope</text>
-    <text class="cardText" x="514" y="654" text-anchor="middle">DisposableBean cancels Job</text>
+    <rect x="1238.393" y="288" width="282.4" height="70" rx="12" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.852"/>
+    <text class="cardTitle" x="1379.593" y="318" text-anchor="middle">Channels</text>
+    <text class="cardText" x="1379.593" y="344" text-anchor="middle">producer-consumer, actor</text>
   </g>
 
-  <rect class="layerTest" x="744" y="426" width="610" height="270" rx="18"/>
-  <text class="layerLabel" x="772" y="460">Diagnostics and tests</text>
+  <rect class="layerContext" x="76.387" y="426" width="706" height="270" rx="18"/>
+  <text class="layerLabel" x="108.793" y="460">Context and lifecycle</text>
   <g filter="url(#shadow)">
-    <rect x="782" y="496" width="244" height="76" rx="12" fill="#FFFFFF" stroke="#64748B" stroke-width="1.6"/>
-    <text class="cardTitle" x="904" y="528" text-anchor="middle">KLoggingChannel</text>
-    <text class="cardText" x="904" y="554" text-anchor="middle">coroutine-aware logging</text>
+    <rect x="120.367" y="496" width="282.4" height="76" rx="12" fill="#FFFFFF" stroke="#D97706" stroke-width="1.852"/>
+    <text class="cardTitle" x="261.567" y="528" text-anchor="middle">CoroutineContext</text>
+    <text class="cardText" x="261.567" y="554" text-anchor="middle">custom elements and keys</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="1070" y="496" width="244" height="76" rx="12" fill="#FFFFFF" stroke="#64748B" stroke-width="1.6"/>
-    <text class="cardTitle" x="1192" y="528" text-anchor="middle">Flow.log()</text>
-    <text class="cardText" x="1192" y="554" text-anchor="middle">emit, complete, error trace</text>
+    <rect x="453.692" y="496" width="282.4" height="76" rx="12" fill="#FFFFFF" stroke="#D97706" stroke-width="1.852"/>
+    <text class="cardTitle" x="594.892" y="528" text-anchor="middle">UUID provider</text>
+    <text class="cardText" x="594.892" y="554" text-anchor="middle">real and fake context IDs</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="782" y="596" width="244" height="76" rx="12" fill="#FFFFFF" stroke="#64748B" stroke-width="1.6"/>
-    <text class="cardTitle" x="904" y="628" text-anchor="middle">assertResult</text>
-    <text class="cardText" x="904" y="654" text-anchor="middle">compact flow expectations</text>
+    <rect x="120.367" y="596" width="282.4" height="76" rx="12" fill="#FFFFFF" stroke="#D97706" stroke-width="1.852"/>
+    <text class="cardTitle" x="261.567" y="628" text-anchor="middle">Structured scope</text>
+    <text class="cardText" x="261.567" y="654" text-anchor="middle">CoroutineScope examples</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="1070" y="596" width="244" height="76" rx="12" fill="#FFFFFF" stroke="#64748B" stroke-width="1.6"/>
-    <text class="cardTitle" x="1192" y="628" text-anchor="middle">Turbine</text>
-    <text class="cardText" x="1192" y="654" text-anchor="middle">awaitItem, awaitComplete</text>
+    <rect x="453.692" y="596" width="282.4" height="76" rx="12" fill="#FFFFFF" stroke="#D97706" stroke-width="1.852"/>
+    <text class="cardTitle" x="594.892" y="628" text-anchor="middle">Spring scope</text>
+    <text class="cardText" x="594.892" y="654" text-anchor="middle">DisposableBean cancels Job</text>
+  </g>
+
+  <rect class="layerTest" x="861.089" y="426" width="706" height="270" rx="18"/>
+  <text class="layerLabel" x="893.495" y="460">Diagnostics and tests</text>
+  <g filter="url(#shadow)">
+    <rect x="905.069" y="496" width="282.4" height="76" rx="12" fill="#FFFFFF" stroke="#64748B" stroke-width="1.852"/>
+    <text class="cardTitle" x="1046.269" y="528" text-anchor="middle">KLoggingChannel</text>
+    <text class="cardText" x="1046.269" y="554" text-anchor="middle">coroutine-aware logging</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1238.393" y="496" width="282.4" height="76" rx="12" fill="#FFFFFF" stroke="#64748B" stroke-width="1.852"/>
+    <text class="cardTitle" x="1379.593" y="528" text-anchor="middle">Flow.log()</text>
+    <text class="cardText" x="1379.593" y="554" text-anchor="middle">emit, complete, error trace</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="905.069" y="596" width="282.4" height="76" rx="12" fill="#FFFFFF" stroke="#64748B" stroke-width="1.852"/>
+    <text class="cardTitle" x="1046.269" y="628" text-anchor="middle">assertResult</text>
+    <text class="cardText" x="1046.269" y="654" text-anchor="middle">compact flow expectations</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1238.393" y="596" width="282.4" height="76" rx="12" fill="#FFFFFF" stroke="#64748B" stroke-width="1.852"/>
+    <text class="cardTitle" x="1379.593" y="628" text-anchor="middle">Turbine</text>
+    <text class="cardText" x="1379.593" y="654" text-anchor="middle">awaitItem, awaitComplete</text>
   </g>
 </svg>

@@ -36,8 +36,8 @@
   <text class="card-title" x="1000" y="742">After</text>
   <text class="body" x="1000" y="770">OrderCompleted crosses module boundary</text>
 
-  <path class="line" d="M465 275 L465 335 L880 335 L880 450" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M1295 275 L1295 335 L880 335" stroke="#2563eb" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M880 520 L880 585 L465 585 L465 700" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M880 585 L1295 585 L1295 700" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 465 275 L 465 325 Q 465 335 475 335 L 870 335 Q 880 335 880 345 L 880 450" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1295 275 L 1295 325 Q 1295 335 1285 335 L 880 335" stroke="#2563eb" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 880 520 L 880 575 Q 880 585 870 585 L 475 585 Q 465 585 465 595 L 465 700" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 880 585 L 1285 585 Q 1295 585 1295 595 L 1295 700" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

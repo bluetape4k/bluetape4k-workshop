@@ -13,7 +13,7 @@ tests and tooling.
 
 ## Request Flow
 
-![Module Protobuf in Spring Boot MVC request flow diagram](../../docs/images/readme-diagrams/spring-boot-protobuf-mvc-readme-flow-01.png)
+![Module Protobuf in Spring Boot MVC request sequence diagram](../../docs/images/readme-diagrams/spring-boot-protobuf-mvc-readme-sequence-01.png)
 
 This example shows how to send and receive server data in Protobuf format.
 

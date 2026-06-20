@@ -16,7 +16,7 @@ request span. `GreetingService` is the method-level observation target, and it a
 
 ## Observation Flow
 
-![Micrometer observation flow](../../docs/images/readme-diagrams/observability-micrometer-observation-readme-flow-01.png)
+![Micrometer observation flow](../../docs/images/readme-diagrams/observability-micrometer-observation-readme-sequence-01.png)
 
 `sayHello()` uses a reusable `Observation` and `observe { ... }`. `sayHelloWithName(name)` creates a named observation,
 adds low/high cardinality key-values, and runs the block through the bluetape4k `observeOrNull` extension.

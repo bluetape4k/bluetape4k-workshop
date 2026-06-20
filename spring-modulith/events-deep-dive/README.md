@@ -24,7 +24,7 @@ time.
 
 ## Event Flow
 
-![Spring Modulith events flow](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-readme-flow-01.png)
+![Spring Modulith events sequence](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-readme-sequence-01.png)
 
 The after architecture keeps the order module free from an inventory dependency.
 Module tests verify that boundary, while integration tests verify the event

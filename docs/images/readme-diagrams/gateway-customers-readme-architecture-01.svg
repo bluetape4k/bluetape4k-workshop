@@ -4,9 +4,9 @@
     <filter id="shadow" x="-8%" y="-10%" width="116%" height="130%">
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#5b7282" flood-opacity="0.15"/>
     </filter>
-    <marker id="blueArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#457b9d" stroke-dasharray="none"/></marker>
-    <marker id="greenArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5f8f5b" stroke-dasharray="none"/></marker>
-    <marker id="goldArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#a87332" stroke-dasharray="none"/></marker>
+    <marker id="blueArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#457b9d" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="greenArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5f8f5b" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="goldArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#a87332" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       .canvas { fill: #f7fafc; }
       .frame { fill: #fffefd; stroke: #cdd8df; stroke-width: 2; }
@@ -82,15 +82,15 @@
   <rect class="labelBox" x="730" y="388" width="116" height="30" rx="15" stroke="#91b884"/>
   <text class="label" x="788" y="408" text-anchor="middle" fill="#5f8f5b">returns list</text>
 
-  <path class="lineGold" d="M 332 566 H 456 V 655 H 498" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="lineGold" d="M 332 566 L 446 566 Q 426 566 426 576 L 426 645 Q 426 655 466 655 L 498 655" stroke-linecap="round" stroke-linejoin="round"/>
   <rect class="labelBox" x="356" y="606" width="88" height="30" rx="15" stroke="#d5a656"/>
   <text class="label" x="400" y="626" text-anchor="middle" fill="#a87332">root</text>
 
-  <path class="lineGold" d="M 916 655 H 1070 V 317 H 1160" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="lineGold" d="M 916 655 L 1060 655 Q 1070 655 1070 645 L 1070 327 Q 1070 317 1080 317 L 1160 317" stroke-linecap="round" stroke-linejoin="round"/>
   <rect class="labelBox" x="944" y="536" width="116" height="30" rx="15" stroke="#d5a656"/>
   <text class="label" x="1002" y="556" text-anchor="middle" fill="#a87332">swagger</text>
 
-  <path class="lineGold" d="M 916 313 H 1084 V 525 H 1160" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="lineGold" d="M 916 313 L 1074 313 Q 1084 313 1084 323 L 1084 515 Q 1084 525 1094 525 L 1160 525" stroke-linecap="round" stroke-linejoin="round"/>
   <rect class="labelBox" x="966" y="268" width="116" height="30" rx="15" stroke="#d5a656"/>
   <text class="label" x="1024" y="288" text-anchor="middle" fill="#a87332">metrics</text>
 </svg>

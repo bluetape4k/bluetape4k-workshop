@@ -12,7 +12,7 @@ The example keeps two boundaries separate. Spring Data Redis proves cluster rout
 
 ## NumberService Flow
 
-![Redis Cluster Demo number service flow](../../docs/images/readme-diagrams/redis-cluster-demo-readme-number-flow-01.png)
+![Redis Cluster Demo number service sequence](../../docs/images/readme-diagrams/redis-cluster-demo-readme-number-sequence-01.png)
 
 `NumberService` opens `StringRedisTemplate.requiredConnectionFactory.clusterConnection`, writes `number.toByteArray()` as the key, writes `(number * 2).toByteArray()` as the value, then reads the bytes back as `Int`.
 

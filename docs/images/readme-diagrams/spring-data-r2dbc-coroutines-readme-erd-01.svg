@@ -23,7 +23,7 @@
   <g transform="translate(100 185)">
     <rect class="table" width="430" height="330" rx="12"/>
     <rect class="header" width="430" height="72" rx="12"/>
-    <path class="row" d="M 0 60 L 430 60 M 0 118 L 430 118 M 0 176 L 430 176 M 0 234 L 430 234"/>
+    <path class="row" d="M 0 60 L 430 60 M 0 118 L 430 118 M 0 176 L 430 176 M 0 234 L 430 234" stroke-linecap="round" stroke-linejoin="round"/>
     <text class="entity-title" x="215" y="45" text-anchor="middle">POSTS</text>
     <text class="col" x="30" y="105">PK</text><text class="col" x="95" y="105">id</text><text class="col-muted" x="280" y="105">BIGINT IDENTITY</text>
     <text class="col" x="95" y="163">title</text><text class="col-muted" x="280" y="163">VARCHAR(255)</text>
@@ -33,7 +33,7 @@
   <g transform="translate(635 185)">
     <rect class="table" width="430" height="330" rx="12"/>
     <rect class="header" width="430" height="72" rx="12"/>
-    <path class="row" d="M 0 60 L 430 60 M 0 118 L 430 118 M 0 176 L 430 176 M 0 234 L 430 234"/>
+    <path class="row" d="M 0 60 L 430 60 M 0 118 L 430 118 M 0 176 L 430 176 M 0 234 L 430 234" stroke-linecap="round" stroke-linejoin="round"/>
     <text class="entity-title" x="215" y="45" text-anchor="middle">COMMENTS</text>
     <text class="col" x="30" y="105">PK</text><text class="col" x="95" y="105">id</text><text class="col-muted" x="280" y="105">BIGINT IDENTITY</text>
     <text class="col" x="30" y="163">REF</text><text class="col" x="95" y="163">post_id</text><text class="col-muted" x="280" y="163">BIGINT</text>
@@ -43,7 +43,7 @@
   <g transform="translate(1170 185)">
     <rect class="table" width="430" height="390" rx="12"/>
     <rect class="header" width="430" height="72" rx="12"/>
-    <path class="row" d="M 0 60 L 430 60 M 0 118 L 430 118 M 0 176 L 430 176 M 0 234 L 430 234 M 0 292 L 430 292"/>
+    <path class="row" d="M 0 60 L 430 60 M 0 118 L 430 118 M 0 176 L 430 176 M 0 234 L 430 234 M 0 292 L 430 292" stroke-linecap="round" stroke-linejoin="round"/>
     <text class="entity-title" x="215" y="45" text-anchor="middle">MEMBERS</text>
     <text class="col" x="30" y="105">PK</text><text class="col" x="95" y="105">id</text><text class="col-muted" x="280" y="105">BIGINT IDENTITY</text>
     <text class="col" x="95" y="163">name</text><text class="col-muted" x="280" y="163">VARCHAR(255)</text>
@@ -51,9 +51,9 @@
     <text class="col" x="95" y="279">email</text><text class="col-muted" x="280" y="279">VARCHAR(255)</text>
   </g>
 
-  <path class="rel" d="M 530 350 L 623 350"/>
-  <path class="rel" d="M 530 330 L 530 370"/>
-  <path class="rel" d="M 623 350 L 598 330 M 623 350 L 598 350 M 623 350 L 598 370"/>
+  <path class="rel" d="M 530 350 L 623 350" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="rel" d="M 530 330 L 530 370" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="rel" d="M 623 350 L 598 330 M 623 350 L 598 350 M 623 350 L 598 370" stroke-linecap="round" stroke-linejoin="round"/>
 
   <rect class="note-card" x="330" y="660" width="520" height="90" rx="12"/>
   <text class="note" x="590" y="695" text-anchor="middle">comments.post_id is queried as a logical relationship.</text>

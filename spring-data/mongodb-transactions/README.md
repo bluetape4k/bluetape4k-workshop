@@ -15,9 +15,9 @@ The tests share `MongoDBServer.Launcher.mongoDB` and create either blocking or r
 Mongo clients. Imperative tests install `MongoTransactionManager`; reactive and coroutine
 tests install `ReactiveMongoTransactionManager`.
 
-## Transaction state flow
+## Transaction state sequence
 
-![MongoDB transaction state flow](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-readme-flow-01.png)
+![MongoDB transaction state sequence](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-readme-sequence-01.png)
 
 | Style | Service | Transaction boundary |
 |---|---|---|

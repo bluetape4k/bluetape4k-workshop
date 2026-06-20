@@ -15,7 +15,7 @@ flow/channel, context propagation, Spring scope lifecycle 예제로 넘어가면
 
 ## Flow 테스트와 디버깅 흐름
 
-![Flow test and debug path](../../docs/images/readme-diagrams/kotlin-coroutines-readme-flow-test-01.png)
+![Flow test and debug path](../../docs/images/readme-diagrams/kotlin-coroutines-readme-sequence-test-01.png)
 
 Flow 예제는 cold stream 또는 channel 기반 stream을 만들고, `Flow<T>.log()`로 emit/complete 이벤트를
 확인한 뒤 `assertResult`, Turbine, cancellation check, failure assertion으로 결과를 검증합니다.

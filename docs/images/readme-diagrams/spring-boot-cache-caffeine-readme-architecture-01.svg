@@ -1,33 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="840" viewBox="0 0 1680 840" role="img" aria-label="Caffeine cache architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="2150.4" height="840" viewBox="0 0 2150.4 840" role="img" aria-label="Caffeine cache architecture">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
-    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>.canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{stroke-width:1.6;rx:22}.title{font-family:"Architects Daughter";font-size:40px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}.layerTitle{font-family:"Architects Daughter";font-size:29px;fill:#243447}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}</style>
   </defs>
-  <rect class="canvas" width="1680" height="840"/>
-  <rect class="frame" x="24" y="24" width="1632" height="792" rx="24"/>
-  <text class="title" x="840" y="72" text-anchor="middle">Caffeine local cache demo</text>
-  <text class="subtitle" x="840" y="106" text-anchor="middle">Spring Cache annotations use a bluetape4k Caffeine DSL builder with virtual-thread executors and scheduled cache warming.</text>
-  <rect class="layer" x="86" y="156" width="1508" height="150" fill="#EFF6FF" stroke="#BFDBFE"/><text class="layerTitle" x="126" y="200">Application entry</text>
-  <g filter="url(#shadow)"><rect x="210" y="220" width="300" height="62" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="360" y="259" text-anchor="middle">CaffeineCacheApplication</text></g>
-  <g filter="url(#shadow)"><rect x="690" y="220" width="300" height="62" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="840" y="259" text-anchor="middle">Spring Boot tests</text></g>
-  <g filter="url(#shadow)"><rect x="1170" y="220" width="300" height="62" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="1320" y="259" text-anchor="middle">CountryPrefetcher</text></g>
-  <rect class="layer" x="86" y="366" width="1508" height="170" fill="#F0FDF4" stroke="#BBF7D0"/><text class="layerTitle" x="126" y="410">Cache configuration</text>
-  <g filter="url(#shadow)"><rect x="180" y="446" width="330" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="345" y="477" text-anchor="middle">CaffeineConfig</text><text class="cardText" x="345" y="502" text-anchor="middle">@EnableCaching</text></g>
-  <g filter="url(#shadow)"><rect x="660" y="436" width="360" height="92" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="840" y="468" text-anchor="middle">bluetape4k caffeine DSL</text><text class="cardText" x="840" y="494" text-anchor="middle">maximumSize 1000, expire 5m</text><text class="cardText" x="840" y="518" text-anchor="middle">VirtualThreadExecutor</text></g>
-  <g filter="url(#shadow)"><rect x="1170" y="446" width="300" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1320" y="477" text-anchor="middle">TaskScheduler</text><text class="cardText" x="1320" y="502" text-anchor="middle">virtual scheduled thread</text></g>
-  <rect class="layer" x="86" y="596" width="1508" height="150" fill="#FFF7ED" stroke="#FED7AA"/><text class="layerTitle" x="126" y="640">Cached domain access</text>
-  <g filter="url(#shadow)"><rect x="245" y="668" width="310" height="58" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="400" y="705" text-anchor="middle">CountryRepository</text></g>
-  <g filter="url(#shadow)"><rect x="685" y="668" width="310" height="58" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="840" y="705" text-anchor="middle">cache:contries</text></g>
-  <g filter="url(#shadow)"><rect x="1125" y="668" width="310" height="58" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1280" y="705" text-anchor="middle">Country payload</text></g>
-  <path class="line" d="M 360 282 L 345 446" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 840 282 L 840 436" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1320 282 L 1320 446" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 510 482 L 660 482" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 840 528 L 840 668" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 400 668 L 400 560 L 840 560 L 840 668" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 995 697 L 1125 697" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1320 518 L 1320 596 L 400 596 L 400 668" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect class="canvas" width="2150.4" height="840"/>
+  <rect class="frame" x="30.72" y="24" width="2088.96" height="792" rx="24"/>
+  <text class="title" x="1075.2" y="72" text-anchor="middle">Caffeine local cache demo</text>
+  <text class="subtitle" x="1075.2" y="106" text-anchor="middle">Spring Cache annotations use a bluetape4k Caffeine DSL builder with virtual-thread executors and scheduled cache warming.</text>
+  <rect class="layer" x="110.08" y="156" width="1930.24" height="150" fill="#EFF6FF" stroke="#BFDBFE"/><text class="layerTitle" x="161.28" y="200">Application entry</text>
+  <g filter="url(#shadow)"><rect x="268.8" y="220" width="384" height="62" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="2.176"/><text class="cardTitle" x="460.8" y="259" text-anchor="middle">CaffeineCacheApplication</text></g>
+  <g filter="url(#shadow)"><rect x="883.2" y="220" width="384" height="62" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="2.176"/><text class="cardTitle" x="1075.2" y="259" text-anchor="middle">Spring Boot tests</text></g>
+  <g filter="url(#shadow)"><rect x="1497.6" y="220" width="384" height="62" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="2.176"/><text class="cardTitle" x="1689.6" y="259" text-anchor="middle">CountryPrefetcher</text></g>
+  <rect class="layer" x="110.08" y="366" width="1930.24" height="170" fill="#F0FDF4" stroke="#BBF7D0"/><text class="layerTitle" x="161.28" y="410">Cache configuration</text>
+  <g filter="url(#shadow)"><rect x="230.4" y="446" width="422.4" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="2.176"/><text class="cardTitle" x="441.6" y="477" text-anchor="middle">CaffeineConfig</text><text class="cardText" x="441.6" y="502" text-anchor="middle">@EnableCaching</text></g>
+  <g filter="url(#shadow)"><rect x="844.8" y="436" width="460.8" height="92" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="2.176"/><text class="cardTitle" x="1075.2" y="468" text-anchor="middle">bluetape4k caffeine DSL</text><text class="cardText" x="1075.2" y="494" text-anchor="middle">maximumSize 1000, expire 5m</text><text class="cardText" x="1075.2" y="518" text-anchor="middle">VirtualThreadExecutor</text></g>
+  <g filter="url(#shadow)"><rect x="1497.6" y="446" width="384" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="2.176"/><text class="cardTitle" x="1689.6" y="477" text-anchor="middle">TaskScheduler</text><text class="cardText" x="1689.6" y="502" text-anchor="middle">virtual scheduled thread</text></g>
+  <rect class="layer" x="110.08" y="596" width="1930.24" height="150" fill="#FFF7ED" stroke="#FED7AA"/><text class="layerTitle" x="161.28" y="640">Cached domain access</text>
+  <g filter="url(#shadow)"><rect x="313.6" y="668" width="396.8" height="58" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="2.176"/><text class="cardTitle" x="512" y="705" text-anchor="middle">CountryRepository</text></g>
+  <g filter="url(#shadow)"><rect x="876.8" y="668" width="396.8" height="58" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="2.176"/><text class="cardTitle" x="1075.2" y="705" text-anchor="middle">cache:contries</text></g>
+  <g filter="url(#shadow)"><rect x="1440" y="668" width="396.8" height="58" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="2.176"/><text class="cardTitle" x="1638.4" y="705" text-anchor="middle">Country payload</text></g>
+  <path class="line" d="M 460.8 282 L 441.6 446" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1075.2 282 L 1075.2 436" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1689.6 282 L 1689.6 446" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 652.8 482 L 844.8 482" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1075.2 528 L 1075.2 668" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 512 668 L 512 570 Q 512 560 524.8 560 L 1062.4 560 Q 1075.2 560 1075.2 570 L 1075.2 668" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1273.6 697 L 1440 697" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1689.6 518 L 1689.6 586 Q 1689.6 596 1676.8 596 L 524.8 596 Q 512 596 512 606 L 512 668" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

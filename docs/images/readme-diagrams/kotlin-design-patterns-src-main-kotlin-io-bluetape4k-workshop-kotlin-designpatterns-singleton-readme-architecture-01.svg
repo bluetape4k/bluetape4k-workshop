@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="640" viewBox="0 0 1320 640" role="img" aria-label="Singleton pattern diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1519.385" height="640" viewBox="0 0 1519.385 640" role="img" aria-label="Singleton pattern diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#fff;stroke:#D6E0E8;stroke-width:1.4}.layerK{fill:#EFF6FF;stroke:#93C5FD;stroke-width:1.5}.layerJ{fill:#ECFDF5;stroke:#86EFAC;stroke-width:1.5}.layerL{fill:#FFF7ED;stroke:#FDBA74;stroke-width:1.5}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.label{font-family:"Architects Daughter";font-size:22px;fill:#172033}.cardTitle{font-family:"Architects Daughter";font-size:24px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="640"/>
-  <rect class="frame" x="24" y="24" width="1272" height="592" rx="24"/>
-  <text class="title" x="660" y="66" text-anchor="middle">Singleton implementations</text>
-  <text class="subtitle" x="660" y="94" text-anchor="middle">The package compares Kotlin-native, enum, eager, lazy, holder, and lock-based singleton forms.</text>
+  <rect class="canvas" width="1519.385" height="640"/>
+  <rect class="frame" x="27.625" y="24" width="1464.134" height="592" rx="24"/>
+  <text class="title" x="759.692" y="66" text-anchor="middle">Singleton implementations</text>
+  <text class="subtitle" x="759.692" y="94" text-anchor="middle">The package compares Kotlin-native, enum, eager, lazy, holder, and lock-based singleton forms.</text>
 
-  <rect class="layerK" x="70" y="136" width="370" height="380" rx="18"/>
-  <text class="label" x="98" y="170">Kotlin-native</text>
-  <g filter="url(#shadow)"><rect x="112" y="220" width="286" height="76" rx="14" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.7"/><text class="cardTitle" x="255" y="252" text-anchor="middle">IvoryTowerObject</text><text class="cardText" x="255" y="278" text-anchor="middle">object instance</text></g>
-  <g filter="url(#shadow)"><rect x="112" y="344" width="286" height="76" rx="14" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.7"/><text class="cardTitle" x="255" y="376" text-anchor="middle">KotlinSingleton</text><text class="cardText" x="255" y="402" text-anchor="middle">companion lazy INSTANCE</text></g>
+  <rect class="layerK" x="80.573" y="136" width="425.888" height="380" rx="18"/>
+  <text class="label" x="112.803" y="170">Kotlin-native</text>
+  <g filter="url(#shadow)"><rect x="128.917" y="220" width="329.2" height="76" rx="14" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.957"/><text class="cardTitle" x="293.517" y="252" text-anchor="middle">IvoryTowerObject</text><text class="cardText" x="293.517" y="278" text-anchor="middle">object instance</text></g>
+  <g filter="url(#shadow)"><rect x="128.917" y="344" width="329.2" height="76" rx="14" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.957"/><text class="cardTitle" x="293.517" y="376" text-anchor="middle">KotlinSingleton</text><text class="cardText" x="293.517" y="402" text-anchor="middle">companion lazy INSTANCE</text></g>
 
-  <rect class="layerJ" x="476" y="136" width="370" height="380" rx="18"/>
-  <text class="label" x="504" y="170">Java-style access</text>
-  <g filter="url(#shadow)"><rect x="518" y="220" width="286" height="76" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="661" y="252" text-anchor="middle">EnumIvoryTower</text><text class="cardText" x="661" y="278" text-anchor="middle">single enum INSTANCE</text></g>
-  <g filter="url(#shadow)"><rect x="518" y="344" width="286" height="76" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="661" y="376" text-anchor="middle">IvoryTower</text><text class="cardText" x="661" y="402" text-anchor="middle">private constructor + getInstance</text></g>
+  <rect class="layerJ" x="547.899" y="136" width="425.888" height="380" rx="18"/>
+  <text class="label" x="580.129" y="170">Java-style access</text>
+  <g filter="url(#shadow)"><rect x="596.243" y="220" width="329.2" height="76" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.957"/><text class="cardTitle" x="760.843" y="252" text-anchor="middle">EnumIvoryTower</text><text class="cardText" x="760.843" y="278" text-anchor="middle">single enum INSTANCE</text></g>
+  <g filter="url(#shadow)"><rect x="596.243" y="344" width="329.2" height="76" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.957"/><text class="cardTitle" x="760.843" y="376" text-anchor="middle">IvoryTower</text><text class="cardText" x="760.843" y="402" text-anchor="middle">private constructor + getInstance</text></g>
 
-  <rect class="layerL" x="882" y="136" width="370" height="380" rx="18"/>
-  <text class="label" x="910" y="170">Lazy and lock guarded</text>
-  <g filter="url(#shadow)"><rect x="924" y="196" width="286" height="76" rx="14" fill="#FFFFFF" stroke="#D97706" stroke-width="1.7"/><text class="cardTitle" x="1067" y="228" text-anchor="middle">Holder idiom</text><text class="cardText" x="1067" y="254" text-anchor="middle">nested holder loads on demand</text></g>
-  <g filter="url(#shadow)"><rect x="924" y="296" width="286" height="76" rx="14" fill="#FFFFFF" stroke="#D97706" stroke-width="1.7"/><text class="cardTitle" x="1067" y="328" text-anchor="middle">Lazy loaded tower</text><text class="cardText" x="1067" y="354" text-anchor="middle">ReentrantLock around instance</text></g>
-  <g filter="url(#shadow)"><rect x="924" y="396" width="286" height="76" rx="14" fill="#FFFFFF" stroke="#D97706" stroke-width="1.7"/><text class="cardTitle" x="1067" y="428" text-anchor="middle">Double-check lock</text><text class="cardText" x="1067" y="454" text-anchor="middle">@Volatile plus ReentrantLock</text></g>
+  <rect class="layerL" x="1015.225" y="136" width="425.888" height="380" rx="18"/>
+  <text class="label" x="1047.455" y="170">Lazy and lock guarded</text>
+  <g filter="url(#shadow)"><rect x="1063.569" y="196" width="329.2" height="76" rx="14" fill="#FFFFFF" stroke="#D97706" stroke-width="1.957"/><text class="cardTitle" x="1228.169" y="228" text-anchor="middle">Holder idiom</text><text class="cardText" x="1228.169" y="254" text-anchor="middle">nested holder loads on demand</text></g>
+  <g filter="url(#shadow)"><rect x="1063.569" y="296" width="329.2" height="76" rx="14" fill="#FFFFFF" stroke="#D97706" stroke-width="1.957"/><text class="cardTitle" x="1228.169" y="328" text-anchor="middle">Lazy loaded tower</text><text class="cardText" x="1228.169" y="354" text-anchor="middle">ReentrantLock around instance</text></g>
+  <g filter="url(#shadow)"><rect x="1063.569" y="396" width="329.2" height="76" rx="14" fill="#FFFFFF" stroke="#D97706" stroke-width="1.957"/><text class="cardTitle" x="1228.169" y="428" text-anchor="middle">Double-check lock</text><text class="cardText" x="1228.169" y="454" text-anchor="middle">@Volatile plus ReentrantLock</text></g>
 </svg>

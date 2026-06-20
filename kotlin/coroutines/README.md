@@ -16,7 +16,7 @@ lifecycle examples.
 
 ## Flow test and debug path
 
-![Flow test and debug path](../../docs/images/readme-diagrams/kotlin-coroutines-readme-flow-test-01.png)
+![Flow test and debug path](../../docs/images/readme-diagrams/kotlin-coroutines-readme-sequence-test-01.png)
 
 Flow examples build cold or channel-backed streams, attach `Flow<T>.log()` to observe emit/complete
 events, and then verify the result through `assertResult`, Turbine, cancellation checks, or failure

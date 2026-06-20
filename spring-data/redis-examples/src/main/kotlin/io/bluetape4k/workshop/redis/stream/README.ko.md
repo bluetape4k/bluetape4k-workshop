@@ -16,7 +16,7 @@ Testcontainer에 연결됩니다.
 
 ## Stream Flow
 
-![Redis stream flow](../../../../../../../../../../docs/images/readme-diagrams/spring-data-redis-examples-src-main-kotlin-io-bluetape4k-workshop-redis-stream-readme-flow-01.png)
+![Redis stream flow](../../../../../../../../../../docs/images/readme-diagrams/spring-data-redis-examples-src-main-kotlin-io-bluetape4k-workshop-redis-stream-readme-sequence-01.png)
 
 테스트는 같은 stream 동작을 두 API 스타일로 확인합니다.
 

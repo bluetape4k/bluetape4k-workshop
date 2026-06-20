@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="920" viewBox="0 0 1320 920" role="img" aria-label="graph-abuser-detection architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1689.6" height="920" viewBox="0 0 1689.6 920" role="img" aria-label="graph-abuser-detection architecture diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%">
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/>
     </filter>
     <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#3B82F6" stroke-dasharray="none"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#3B82F6" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="arrowRose" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#D14F6B" stroke-dasharray="none"/>
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#D14F6B" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <style>
       .canvas { fill: #F7FAFC; }
@@ -31,115 +31,115 @@
       .label { font-family: "Comic Mono"; font-size: 12px; fill: #243244; dominant-baseline: middle; }
     </style>
     <g id="graphDbIcon">
-      <circle cx="8" cy="10" r="5" fill="#A7F3D0" stroke="#0F766E" stroke-width="1.6"/>
-      <circle cx="28" cy="8" r="6" fill="#BFDBFE" stroke="#2563EB" stroke-width="1.6"/>
-      <circle cx="25" cy="29" r="5.5" fill="#FDE68A" stroke="#B45309" stroke-width="1.6"/>
-      <path d="M 13 10 L 22 8 M 12 13 L 21 25 M 28 14 L 26 23" stroke="#64748B" stroke-width="2" fill="none" stroke-linecap="round"/>
+      <circle cx="10.24" cy="10" r="5" fill="#A7F3D0" stroke="#0F766E" stroke-width="1.6"/>
+      <circle cx="35.84" cy="8" r="6" fill="#BFDBFE" stroke="#2563EB" stroke-width="1.6"/>
+      <circle cx="32" cy="29" r="5.5" fill="#FDE68A" stroke="#B45309" stroke-width="1.6"/>
+      <path d="M 13 10 L 22 8 M 12 13 L 21 25 M 28 14 L 26 23" stroke="#64748B" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </g>
     <g id="tinkerIcon">
-      <rect x="0" y="0" width="38" height="38" rx="10" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.6"/>
-      <circle cx="12" cy="12" r="4" fill="#16A34A"/>
-      <circle cx="26" cy="12" r="4" fill="#22C55E"/>
-      <circle cx="19" cy="27" r="4" fill="#4ADE80"/>
-      <path d="M 15 13 L 23 13 M 14 15 L 18 24 M 24 15 L 20 24" stroke="#166534" stroke-width="1.8" fill="none"/>
+      <rect x="0" y="0" width="48.64" height="38" rx="10" fill="#ECFDF5" stroke="#16A34A" stroke-width="2.048"/>
+      <circle cx="15.36" cy="12" r="4" fill="#16A34A"/>
+      <circle cx="33.28" cy="12" r="4" fill="#22C55E"/>
+      <circle cx="24.32" cy="27" r="4" fill="#4ADE80"/>
+      <path d="M 15 13 L 23 13 M 14 15 L 18 24 M 24 15 L 20 24" stroke="#166534" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </g>
   </defs>
-  <rect class="canvas" width="1320" height="920"/>
-  <rect class="frame" x="18" y="18" width="1284" height="884" rx="24"/>
+  <rect class="canvas" width="1689.6" height="920"/>
+  <rect class="frame" x="23.04" y="18" width="1643.52" height="884" rx="24"/>
 
-  <text class="title" x="660" y="58" text-anchor="middle">graph-abuser-detection</text>
-  <text class="subtitle" x="660" y="84" text-anchor="middle">Identity graph services, typed schema, algorithms, and graph test backends</text>
+  <text class="title" x="844.8" y="58" text-anchor="middle">graph-abuser-detection</text>
+  <text class="subtitle" x="844.8" y="84" text-anchor="middle">Identity graph services, typed schema, algorithms, and graph test backends</text>
 
   <g id="reader-layer">
-    <rect x="54" y="112" width="1212" height="148" rx="20" fill="#EAF3FF" stroke="#9DB9D8" stroke-width="1.5"/>
-    <text class="layerTitle" x="88" y="146">Reader entry points</text>
-    <text class="layerNote" x="88" y="170">Service API selection</text>
+    <rect x="69.12" y="112" width="1551.36" height="148" rx="20" fill="#EAF3FF" stroke="#9DB9D8" stroke-width="1.92"/>
+    <text class="layerTitle" x="112.64" y="146">Reader entry points</text>
+    <text class="layerNote" x="112.64" y="170">Service API selection</text>
     <g filter="url(#shadow)">
-      <rect x="312" y="142" width="292" height="84" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
-      <text class="cardTitle" x="458" y="172" text-anchor="middle">Blocking tests</text>
-      <text class="cardText" x="458" y="197" text-anchor="middle">AbuserDetectionService</text>
+      <rect x="399.36" y="142" width="373.76" height="84" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.92"/>
+      <text class="cardTitle" x="586.24" y="172" text-anchor="middle">Blocking tests</text>
+      <text class="cardText" x="586.24" y="197" text-anchor="middle">AbuserDetectionService</text>
     </g>
     <g filter="url(#shadow)">
-      <rect x="716" y="142" width="292" height="84" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
-      <text class="cardTitle" x="862" y="172" text-anchor="middle">Coroutine tests</text>
-      <text class="cardText" x="862" y="197" text-anchor="middle">AbuserDetectionSuspendService</text>
+      <rect x="916.48" y="142" width="373.76" height="84" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.92"/>
+      <text class="cardTitle" x="1103.36" y="172" text-anchor="middle">Coroutine tests</text>
+      <text class="cardText" x="1103.36" y="197" text-anchor="middle">AbuserDetectionSuspendService</text>
     </g>
   </g>
 
   <g id="service-layer">
-    <rect x="54" y="292" width="1212" height="198" rx="20" fill="#EAF8F0" stroke="#93C5A7" stroke-width="1.5"/>
-    <text class="layerTitle" x="88" y="326">Service and algorithm boundary</text>
-    <text class="layerNote" x="88" y="350">Same contract; different return style.</text>
+    <rect x="69.12" y="292" width="1551.36" height="198" rx="20" fill="#EAF8F0" stroke="#93C5A7" stroke-width="1.92"/>
+    <text class="layerTitle" x="112.64" y="326">Service and algorithm boundary</text>
+    <text class="layerNote" x="112.64" y="350">Same contract; different return style.</text>
     <g filter="url(#shadow)">
-      <rect x="116" y="382" width="300" height="76" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/>
-      <text class="cardTitle" x="266" y="411" text-anchor="middle">Vertex and edge mutators</text>
-      <text class="cardText" x="266" y="436" text-anchor="middle">find-or-create vertices; create edges</text>
+      <rect x="148.48" y="382" width="384" height="76" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.92"/>
+      <text class="cardTitle" x="340.48" y="411" text-anchor="middle">Vertex and edge mutators</text>
+      <text class="cardText" x="340.48" y="436" text-anchor="middle">find-or-create vertices; create edges</text>
     </g>
     <g filter="url(#shadow)">
-      <rect x="510" y="366" width="300" height="108" rx="12" fill="#F7FFF9" stroke="#86B89B" stroke-width="1.5"/>
-      <text class="cardTitle" x="660" y="397" text-anchor="middle">Cluster and evidence queries</text>
-      <text class="cardText" x="660" y="423" text-anchor="middle">findAbuseCluster</text>
-      <text class="cardText" x="660" y="444" text-anchor="middle">explainSuspicion</text>
+      <rect x="652.8" y="366" width="384" height="108" rx="12" fill="#F7FFF9" stroke="#86B89B" stroke-width="1.92"/>
+      <text class="cardTitle" x="844.8" y="397" text-anchor="middle">Cluster and evidence queries</text>
+      <text class="cardText" x="844.8" y="423" text-anchor="middle">findAbuseCluster</text>
+      <text class="cardText" x="844.8" y="444" text-anchor="middle">explainSuspicion</text>
     </g>
     <g filter="url(#shadow)">
-      <rect x="904" y="366" width="300" height="108" rx="12" fill="#F7FFF9" stroke="#86B89B" stroke-width="1.5"/>
-      <text class="cardTitle" x="1054" y="397" text-anchor="middle">Graph algorithms</text>
-      <text class="cardText" x="1054" y="423" text-anchor="middle">detectReferralLoops</text>
-      <text class="cardText" x="1054" y="444" text-anchor="middle">rankSuspiciousUsers</text>
+      <rect x="1157.12" y="366" width="384" height="108" rx="12" fill="#F7FFF9" stroke="#86B89B" stroke-width="1.92"/>
+      <text class="cardTitle" x="1349.12" y="397" text-anchor="middle">Graph algorithms</text>
+      <text class="cardText" x="1349.12" y="423" text-anchor="middle">detectReferralLoops</text>
+      <text class="cardText" x="1349.12" y="444" text-anchor="middle">rankSuspiciousUsers</text>
     </g>
   </g>
 
   <g id="schema-layer">
-    <rect x="54" y="522" width="1212" height="158" rx="20" fill="#FFF7E8" stroke="#D8B86E" stroke-width="1.5"/>
-    <text class="layerTitle" x="88" y="556">Typed graph schema</text>
+    <rect x="69.12" y="522" width="1551.36" height="158" rx="20" fill="#FFF7E8" stroke="#D8B86E" stroke-width="1.92"/>
+    <text class="layerTitle" x="112.64" y="556">Typed graph schema</text>
     <g filter="url(#shadow)">
-      <rect x="250" y="578" width="238" height="70" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/>
-      <text class="cardTitle" x="369" y="606" text-anchor="middle">User vertices</text>
-      <text class="cardText" x="369" y="631" text-anchor="middle">userId, country</text>
+      <rect x="320" y="578" width="304.64" height="70" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.92"/>
+      <text class="cardTitle" x="472.32" y="606" text-anchor="middle">User vertices</text>
+      <text class="cardText" x="472.32" y="631" text-anchor="middle">userId, country</text>
     </g>
     <g filter="url(#shadow)">
-      <rect x="538" y="578" width="238" height="70" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/>
-      <text class="cardTitle" x="657" y="606" text-anchor="middle">Identifier vertices</text>
-      <text class="cardText" x="657" y="631" text-anchor="middle">device, IP, phone hash, token</text>
+      <rect x="688.64" y="578" width="304.64" height="70" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.92"/>
+      <text class="cardTitle" x="840.96" y="606" text-anchor="middle">Identifier vertices</text>
+      <text class="cardText" x="840.96" y="631" text-anchor="middle">device, IP, phone hash, token</text>
     </g>
     <g filter="url(#shadow)">
-      <rect x="826" y="578" width="238" height="70" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/>
-      <text class="cardTitle" x="945" y="606" text-anchor="middle">Referral edges</text>
-      <text class="cardText" x="945" y="631" text-anchor="middle">REFERRED_BY cycles only</text>
+      <rect x="1057.28" y="578" width="304.64" height="70" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.92"/>
+      <text class="cardTitle" x="1209.6" y="606" text-anchor="middle">Referral edges</text>
+      <text class="cardText" x="1209.6" y="631" text-anchor="middle">REFERRED_BY cycles only</text>
     </g>
   </g>
 
   <g id="runtime-layer">
-    <rect x="54" y="712" width="1212" height="138" rx="20" fill="#F2F5F8" stroke="#B3BFCA" stroke-width="1.5"/>
-    <text class="layerTitle" x="88" y="746">Graph runtime backends</text>
+    <rect x="69.12" y="712" width="1551.36" height="138" rx="20" fill="#F2F5F8" stroke="#B3BFCA" stroke-width="1.92"/>
+    <text class="layerTitle" x="112.64" y="746">Graph runtime backends</text>
     <g filter="url(#shadow)">
-      <rect x="284" y="750" width="220" height="72" rx="12" fill="#FFFFFF" stroke="#A7B3BF" stroke-width="1.5"/>
-      <use href="#tinkerIcon" x="304" y="767"/>
-      <text class="cardTitle" x="414" y="779" text-anchor="middle">TinkerGraph</text>
-      <text class="cardText" x="414" y="804" text-anchor="middle">test, no Docker</text>
+      <rect x="363.52" y="750" width="281.6" height="72" rx="12" fill="#FFFFFF" stroke="#A7B3BF" stroke-width="1.92"/>
+      <use href="#tinkerIcon" x="389.12" y="767"/>
+      <text class="cardTitle" x="529.92" y="779" text-anchor="middle">TinkerGraph</text>
+      <text class="cardText" x="529.92" y="804" text-anchor="middle">test, no Docker</text>
     </g>
     <g filter="url(#shadow)">
-      <rect x="550" y="750" width="220" height="72" rx="12" fill="#FFFFFF" stroke="#A7B3BF" stroke-width="1.5"/>
-      <use href="#graphDbIcon" x="570" y="767"/>
-      <text class="cardTitle" x="680" y="779" text-anchor="middle">Neo4j</text>
-      <text class="cardText" x="680" y="804" text-anchor="middle">integrationTest</text>
+      <rect x="704" y="750" width="281.6" height="72" rx="12" fill="#FFFFFF" stroke="#A7B3BF" stroke-width="1.92"/>
+      <use href="#graphDbIcon" x="729.6" y="767"/>
+      <text class="cardTitle" x="870.4" y="779" text-anchor="middle">Neo4j</text>
+      <text class="cardText" x="870.4" y="804" text-anchor="middle">integrationTest</text>
     </g>
     <g filter="url(#shadow)">
-      <rect x="816" y="750" width="220" height="72" rx="12" fill="#FFFFFF" stroke="#A7B3BF" stroke-width="1.5"/>
-      <use href="#graphDbIcon" x="836" y="767"/>
-      <text class="cardTitle" x="946" y="779" text-anchor="middle">Memgraph</text>
-      <text class="cardText" x="946" y="804" text-anchor="middle">integrationTest</text>
+      <rect x="1044.48" y="750" width="281.6" height="72" rx="12" fill="#FFFFFF" stroke="#A7B3BF" stroke-width="1.92"/>
+      <use href="#graphDbIcon" x="1070.08" y="767"/>
+      <text class="cardTitle" x="1210.88" y="779" text-anchor="middle">Memgraph</text>
+      <text class="cardText" x="1210.88" y="804" text-anchor="middle">integrationTest</text>
     </g>
   </g>
 
-  <path class="line" d="M 458 226 L 458 278 L 70 278 L 70 420 L 116 420" stroke="#3B82F6" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 862 226 L 862 294 L 1054 294 L 1054 366" stroke="#3B82F6" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 416 420 L 510 420" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 810 420 L 904 420" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 660 474 L 660 536 L 657 536 L 657 578" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1054 474 L 1054 536 L 945 536 L 945 578" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 657 648 L 657 706 L 394 706 L 394 750" stroke="#D14F6B" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 657 648 L 657 706 L 660 706 L 660 750" stroke="#D14F6B" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 657 648 L 657 706 L 926 706 L 926 750" stroke="#D14F6B" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 586.24 226 L 586.24 268 Q 586.24 276 573.44 276 L 102.4 276 Q 89.6 276 89.6 288 L 89.6 410 Q 89.6 420 102.4 420 L 148.48 420" stroke="#3B82F6" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1103.36 226 L 1103.36 284 Q 1103.36 276 1116.16 276 L 1336.32 276 Q 1349.12 276 1349.12 304 L 1349.12 366" stroke="#3B82F6" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 532.48 420 L 652.8 420" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1036.8 420 L 1157.12 420" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 844.8 474 L 844.8 534.75 Q 844.8 536 843.2 536 L 842.56 536 Q 840.96 536 840.96 537.25 L 840.96 578" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1349.12 474 L 1349.12 526 Q 1349.12 506 1336.32 506 L 1222.4 506 Q 1209.6 506 1209.6 546 L 1209.6 578" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 840.96 648 L 840.96 696 Q 840.96 696 828.16 696 L 517.12 696 Q 504.32 696 504.32 716 L 504.32 750" stroke="#D14F6B" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 840.96 648 L 840.96 704.75 Q 840.96 706 842.56 706 L 843.2 706 Q 844.8 706 844.8 707.25 L 844.8 750" stroke="#D14F6B" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 840.96 648 L 840.96 696 Q 840.96 696 853.76 696 L 1172.48 696 Q 1185.28 696 1185.28 716 L 1185.28 750" stroke="#D14F6B" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
 
 </svg>

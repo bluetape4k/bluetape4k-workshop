@@ -17,7 +17,7 @@
 
 ## Quote Streaming 흐름
 
-![WebFlux WebSocket quote streaming flow](../../docs/images/readme-diagrams/spring-boot-webflux-websocket-readme-flow-01.png)
+![WebFlux WebSocket quote streaming flow](../../docs/images/readme-diagrams/spring-boot-webflux-websocket-readme-sequence-01.png)
 
 원본 소스: [sample-webflux-websockets](https://github.com/ketangit/sample-webflux-websockets)
 

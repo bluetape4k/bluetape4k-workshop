@@ -13,7 +13,7 @@ handling, `@Async` 작업, 일부 parallel blocking task를 virtual-thread execu
 
 ## Request Flow
 
-![Spring MVC virtual thread request flow](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-readme-flow-01.png)
+![Spring MVC virtual thread request sequence](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-readme-sequence-01.png)
 
 ## 무엇을 볼 것인가
 
