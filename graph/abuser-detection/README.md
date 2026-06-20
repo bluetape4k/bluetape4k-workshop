@@ -32,7 +32,7 @@ does not appear in the cluster for `user-1`.
 
 ## Cluster Detection Flow
 
-![graph-abuser-detection cluster detection flow](../../docs/images/readme-diagrams/graph-abuser-detection-readme-flow-01.png)
+![graph-abuser-detection cluster detection flow](../../docs/images/readme-diagrams/graph-abuser-detection-readme-sequence-01.png)
 
 `findAbuseCluster(seedUserId)` traverses only identifier edges. `REFERRED_BY` edges are intentionally
 excluded from this BFS and are used by `detectReferralLoops` instead.

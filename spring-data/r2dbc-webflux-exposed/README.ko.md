@@ -17,7 +17,7 @@ annotation controller와 `/users` 아래의 functional router입니다.
 
 ## 요청 흐름
 
-![R2DBC WebFlux Exposed request flow](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-flow-01.png)
+![R2DBC WebFlux Exposed request sequence](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-sequence-01.png)
 
 애플리케이션 시작 시 샘플 데이터도 준비합니다. `SchemaInitializer`는 Exposed table을
 생성하고, table이 비어 있으면 user 4건을 insert합니다.

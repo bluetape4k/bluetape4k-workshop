@@ -21,7 +21,7 @@ Use this example when a service already depends on ZooKeeper or when leadership 
 
 ## Election Semantics
 
-![ZooKeeper leader election flow](../../docs/images/readme-diagrams/leader-leader-zookeeper-readme-election-flow-01.png)
+![ZooKeeper leader election flow](../../docs/images/readme-diagrams/leader-leader-zookeeper-readme-election-sequence-01.png)
 
 Single-leader election uses a ZooKeeper mutex path: one candidate owns the ephemeral znode and runs the job; the others receive `null`.
 

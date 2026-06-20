@@ -15,7 +15,7 @@ Micrometer tracing span을 export한다.
 
 ## Coroutine Trace Flow
 
-![Coroutine trace flow](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-readme-coroutine-flow-01.png)
+![Coroutine trace flow](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-readme-coroutine-sequence-01.png)
 
 `withObservationSuspending`은 `pre-processing`, `get-todo-by-id`, `post-processing` 같은 suspend block을 감싼다.
 observation scope는 `delay(...)`, `WebClient.awaitBodyOrNull()` suspension point를 지나도 유지되고,

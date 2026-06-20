@@ -13,7 +13,7 @@ tests and Gatling scenarios can compare behavior by path.
 
 ## Request Flow
 
-![Spring WebFlux dispatcher request flow](../../docs/images/readme-diagrams/virtualthreads-spring-webflux-readme-flow-01.png)
+![Spring WebFlux dispatcher request sequence](../../docs/images/readme-diagrams/virtualthreads-spring-webflux-readme-sequence-01.png)
 
 ## Dispatcher Paths
 

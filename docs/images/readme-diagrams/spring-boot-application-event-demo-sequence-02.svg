@@ -1,49 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1670" height="830" viewBox="0 0 1670 830" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1902.348" height="830" viewBox="0 0 1902.348 830" role="img" aria-labelledby="title desc">
   <title id="title">AOP AspectEvent Publishing</title>
   <desc id="desc">The aspect proceeds with the annotated service call and publishes an AspectEvent after the operation returns.</desc>
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
     <style>
-      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:21px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:13px;fill:#546A73}.msg{font-size:14px}.note{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.return,.skip{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call);stroke-linecap:round;stroke-linejoin:round}.work{stroke:#6E8F4F;marker-end:url(#arrow-work);stroke-linecap:round;stroke-linejoin:round}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret);stroke-linecap:round;stroke-linejoin:round}.skip{stroke:#B86868;marker-end:url(#arrow-skip);stroke-linecap:round;stroke-linejoin:round}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.skipLabel{stroke:#D9ABAB}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.skipBadge{fill:#FFF0F0;stroke:#B86868}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.skipText,.badgeText.skipText{fill:#9D4F4F}.alt{fill:#FFF7ED;fill-opacity:.42;stroke:#D08A39;stroke-width:2.4;stroke-dasharray:12 8}.branch{fill:#FFFFFF;fill-opacity:.82;stroke:#E6C68C;stroke-width:1.5}
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:19px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:12px;fill:#546A73}.msg{font-size:13px}.note{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.return,.skip{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call);stroke-linecap:round;stroke-linejoin:round}.work{stroke:#6E8F4F;marker-end:url(#arrow-work);stroke-linecap:round;stroke-linejoin:round}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret);stroke-linecap:round;stroke-linejoin:round}.skip{stroke:#B86868;marker-end:url(#arrow-skip);stroke-linecap:round;stroke-linejoin:round}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.skipLabel{stroke:#D9ABAB}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.skipBadge{fill:#FFF0F0;stroke:#B86868}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.skipText,.badgeText.skipText{fill:#9D4F4F}.alt{fill:#FFF7ED;fill-opacity:.42;stroke:#D08A39;stroke-width:2.4;stroke-dasharray:12 8}.branch{fill:#FFFFFF;fill-opacity:.82;stroke:#E6C68C;stroke-width:1.5}
     </style>
-    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none"/></marker>
-    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none"/></marker>
-    <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none"/></marker>
-    <marker id="arrow-skip" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none"/></marker>
+    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-skip" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
   </defs>
-  <rect x="24" y="24" width="1622" height="782" rx="20" class="frame"/>
-  <text x="835" y="76" text-anchor="middle" class="title">AOP AspectEvent Publishing</text>
-  <text x="835" y="106" text-anchor="middle" class="subtitle">The aspect proceeds with the annotated service call and publishes an AspectEvent after the operation returns.</text>
-  <g filter="url(#shadow)"><rect x="75" y="156" width="230" height="76" rx="10" class="header"/><text x="190" y="186" text-anchor="middle" class="participant">Test code</text><text x="190" y="211" text-anchor="middle" class="role">caller</text></g>
-  <line x1="190" y1="232" x2="190" y2="718" class="lifeline"/>
-  <g filter="url(#shadow)"><rect x="398" y="156" width="230" height="76" rx="10" class="header"/><text x="513" y="186" text-anchor="middle" class="participant">MyEventService</text><text x="513" y="211" text-anchor="middle" class="role">annotated service</text></g>
-  <line x1="513" y1="232" x2="513" y2="718" class="lifeline"/>
-  <g filter="url(#shadow)"><rect x="720" y="156" width="230" height="76" rx="10" class="header"/><text x="835" y="186" text-anchor="middle" class="participant">Aspect Advice</text><text x="835" y="211" text-anchor="middle" class="role">@Around</text></g>
-  <line x1="835" y1="232" x2="835" y2="718" class="lifeline"/>
-  <g filter="url(#shadow)"><rect x="1043" y="156" width="230" height="76" rx="10" class="header"/><text x="1158" y="186" text-anchor="middle" class="participant">Spring Publisher</text><text x="1158" y="211" text-anchor="middle" class="role">ApplicationEventPublisher</text></g>
-  <line x1="1158" y1="232" x2="1158" y2="718" class="lifeline"/>
-  <g filter="url(#shadow)"><rect x="1365" y="156" width="230" height="76" rx="10" class="header"/><text x="1480" y="186" text-anchor="middle" class="participant">Aspect listeners</text><text x="1480" y="211" text-anchor="middle" class="role">event consumers</text></g>
-  <line x1="1480" y1="232" x2="1480" y2="718" class="lifeline"/>
-  <rect x="395" y="252" width="235.0" height="34" rx="17" class="label callLabel"/>
-  <circle cx="419" cy="269" r="13" class="badge callBadge"/><text x="419" y="274" text-anchor="middle" class="badgeText callText">1</text>
-  <text x="443" y="274" class="msg callText">call annotated service</text>
-  <path d="M 190 300 L 835 300" class="call" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="559" y="328" width="230.0" height="34" rx="17" class="label workLabel"/>
-  <circle cx="583" cy="345" r="13" class="badge workBadge"/><text x="583" y="350" text-anchor="middle" class="badgeText workText">2</text>
-  <text x="607" y="350" class="msg workText">@Around proceed()</text>
-  <path d="M 835 376 L 513 376" class="work" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="556.5" y="404" width="235.0" height="34" rx="17" class="label returnLabel"/>
-  <circle cx="580.5" cy="421" r="13" class="badge returnBadge"/><text x="580.5" y="426" text-anchor="middle" class="badgeText returnText">3</text>
-  <text x="604.5" y="426" class="msg returnText">return OperationParams</text>
-  <path d="M 513 452 L 835 452" class="return" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="867.8" y="480" width="257.5" height="34" rx="17" class="label workLabel"/>
-  <circle cx="891.8" cy="497" r="13" class="badge workBadge"/><text x="891.8" y="502" text-anchor="middle" class="badgeText workText">4</text>
-  <text x="915.8" y="502" class="msg workText">publishEvent(AspectEvent)</text>
-  <path d="M 835 528 L 1158 528" class="work" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="1204" y="556" width="230.0" height="34" rx="17" class="label workLabel"/>
-  <circle cx="1228" cy="573" r="13" class="badge workBadge"/><text x="1228" y="578" text-anchor="middle" class="badgeText workText">5</text>
-  <text x="1252" y="578" class="msg workText">dispatch AspectEvent</text>
-  <path d="M 1158 604 L 1480 604" class="work" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="90" y="742" width="1490" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
-  <text x="835" y="768" text-anchor="middle" class="footer">Reader contract: request order, branch ownership, and infrastructure boundary are shown without hiding call labels.</text>
+  <rect x="27.339" y="24" width="1847.67" height="782" rx="20" class="frame"/>
+  <text x="951.174" y="76" text-anchor="middle" class="title">AOP AspectEvent Publishing</text>
+  <text x="951.174" y="106" text-anchor="middle" class="subtitle">The aspect proceeds with the annotated service call and publishes an AspectEvent after the operation returns.</text>
+  <g filter="url(#shadow)"><rect x="85.435" y="156" width="262" height="76" rx="10" class="header"/><text x="216.435" y="186" text-anchor="middle" class="participant">Test code</text><text x="216.435" y="211" text-anchor="middle" class="role">caller</text></g>
+  <line x1="216.435" y1="232" x2="216.435" y2="718" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="453.374" y="156" width="262" height="76" rx="10" class="header"/><text x="584.374" y="186" text-anchor="middle" class="participant">MyEventService</text><text x="584.374" y="211" text-anchor="middle" class="role">annotated service</text></g>
+  <line x1="584.374" y1="232" x2="584.374" y2="718" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="820.174" y="156" width="262" height="76" rx="10" class="header"/><text x="951.174" y="186" text-anchor="middle" class="participant">Aspect Advice</text><text x="951.174" y="211" text-anchor="middle" class="role">@Around</text></g>
+  <line x1="951.174" y1="232" x2="951.174" y2="718" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1188.113" y="156" width="262" height="76" rx="10" class="header"/><text x="1319.113" y="186" text-anchor="middle" class="participant">Spring Publisher</text><text x="1319.113" y="211" text-anchor="middle" class="role">ApplicationEventPublisher</text></g>
+  <line x1="1319.113" y1="232" x2="1319.113" y2="718" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1554.913" y="156" width="262" height="76" rx="10" class="header"/><text x="1685.913" y="186" text-anchor="middle" class="participant">Aspect listeners</text><text x="1685.913" y="211" text-anchor="middle" class="role">event consumers</text></g>
+  <line x1="1685.913" y1="232" x2="1685.913" y2="718" class="lifeline"/>
+  <rect x="449.957" y="252" width="267.696" height="34" rx="17" class="label callLabel"/>
+  <circle cx="477.296" cy="269" r="13" class="badge callBadge"/><text x="477.296" y="274" text-anchor="middle" class="badgeText callText">1</text>
+  <text x="504.635" y="274" class="msg callText">call annotated service</text>
+  <path d="M 216.435 300 L 951.174 300" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="636.774" y="328" width="262" height="34" rx="17" class="label workLabel"/>
+  <circle cx="664.113" cy="345" r="13" class="badge workBadge"/><text x="664.113" y="350" text-anchor="middle" class="badgeText workText">2</text>
+  <text x="691.452" y="350" class="msg workText">@Around proceed()</text>
+  <path d="M 951.174 376 L 584.374 376" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="633.926" y="404" width="267.696" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="661.265" cy="421" r="13" class="badge returnBadge"/><text x="661.265" y="426" text-anchor="middle" class="badgeText returnText">3</text>
+  <text x="688.604" y="426" class="msg returnText">return OperationParams</text>
+  <path d="M 584.374 452 L 951.174 452" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="988.537" y="480" width="293.326" height="34" rx="17" class="label workLabel"/>
+  <circle cx="1015.877" cy="497" r="13" class="badge workBadge"/><text x="1015.877" y="502" text-anchor="middle" class="badgeText workText">4</text>
+  <text x="1043.216" y="502" class="msg workText">publishEvent(AspectEvent)</text>
+  <path d="M 951.174 528 L 1319.113 528" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="1371.513" y="556" width="262" height="34" rx="17" class="label workLabel"/>
+  <circle cx="1398.852" cy="573" r="13" class="badge workBadge"/><text x="1398.852" y="578" text-anchor="middle" class="badgeText workText">5</text>
+  <text x="1426.191" y="578" class="msg workText">dispatch AspectEvent</text>
+  <path d="M 1319.113 604 L 1685.913 604" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="102.522" y="742" width="1697.304" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2.278"/>
+  <text x="951.174" y="768" text-anchor="middle" class="footer">Reader contract: request order, branch ownership, and infrastructure boundary are shown without hiding call labels.</text>
 </svg>

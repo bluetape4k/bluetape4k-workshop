@@ -12,7 +12,7 @@ Ktor 3 coroutine REST service example for a small book catalog. The module shows
 
 ## Request Flow
 
-![Ktor REST coroutines request flow](../../docs/images/readme-diagrams/ktor-rest-coroutines-readme-flow-01.png)
+![Ktor REST coroutines request sequence](../../docs/images/readme-diagrams/ktor-rest-coroutines-readme-sequence-01.png)
 
 The endpoints are small enough to test independently:
 

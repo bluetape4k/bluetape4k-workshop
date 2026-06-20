@@ -14,9 +14,9 @@ transaction 스타일을 비교합니다. 각 service는 process를 `CREATED`로
 생성합니다. Imperative test는 `MongoTransactionManager`를 설치하고, reactive 및 coroutine
 test는 `ReactiveMongoTransactionManager`를 설치합니다.
 
-## Transaction state flow
+## Transaction state sequence
 
-![MongoDB transaction state flow](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-readme-flow-01.png)
+![MongoDB transaction state sequence](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-readme-sequence-01.png)
 
 | Style | Service | Transaction boundary |
 |---|---|---|

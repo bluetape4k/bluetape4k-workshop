@@ -12,7 +12,7 @@
 
 ## 캐시 흐름
 
-![Redis Cache Demo lookup flow](../../docs/images/readme-diagrams/spring-boot-cache-redis-readme-cache-flow-01.png)
+![Redis Cache Demo lookup sequence](../../docs/images/readme-diagrams/spring-boot-cache-redis-readme-cache-sequence-01.png)
 
 `CountryRepository.findByCode(code)`에는 `@Cacheable`이 적용되어 있습니다. 첫 호출은 느린 메서드를 실행하고 Redis entry를 저장하며, 다음 호출은 Redis에서 반환됩니다. `evictCache(code)`는 Redis key를 제거합니다.
 

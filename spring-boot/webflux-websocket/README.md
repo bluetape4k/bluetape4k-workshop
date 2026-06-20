@@ -17,7 +17,7 @@ Netty runtime tuning.
 
 ## Quote Streaming Flow
 
-![WebFlux WebSocket quote streaming flow](../../docs/images/readme-diagrams/spring-boot-webflux-websocket-readme-flow-01.png)
+![WebFlux WebSocket quote streaming flow](../../docs/images/readme-diagrams/spring-boot-webflux-websocket-readme-sequence-01.png)
 
 Original source: [sample-webflux-websockets](https://github.com/ketangit/sample-webflux-websockets)
 

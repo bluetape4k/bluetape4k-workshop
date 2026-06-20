@@ -18,7 +18,7 @@
 | Repository primitives | Repository는 select에 `Flow<DTO>`, insert/update/delete에 suspend method를 제공합니다. | Repository는 얇게 유지되고 transaction lifetime을 결정하지 않습니다. |
 | Schema initialization | `DatabaseInitializer`가 R2DBC URL을 JDBC URL로 바꾸고 startup 시 Hikari를 한 번 사용합니다. | Blocking JDBC는 schema creation에만 쓰이고 request processing에는 쓰이지 않습니다. |
 
-## 주문 처리 흐름
+## 주문 처리 시퀀스
 
 ![exposed/webflux-r2dbc order placement sequence](../../docs/images/readme-diagrams/exposed-webflux-r2dbc-readme-sequence-01.png)
 

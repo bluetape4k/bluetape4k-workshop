@@ -16,7 +16,7 @@ custom query method로 제공합니다.
 
 ## 요청 흐름
 
-![R2DBC WebFlux request flow](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-flow-01.png)
+![R2DBC WebFlux request sequence](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-sequence-01.png)
 
 `WebfluxR2dbcConfiguration`은 database 초기화도 담당합니다.
 `ConnectionFactoryInitializer`가 `data/schema.sql`을 먼저 실행하고

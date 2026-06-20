@@ -18,7 +18,7 @@ coroutine adapter와 함께 계층적으로 조합할 수 있습니다.
 
 ## Stream 흐름
 
-![Okio examples stream wrapper 흐름](../../docs/images/readme-diagrams/io-okio-examples-readme-flow-01.png)
+![Okio examples stream wrapper 흐름](../../docs/images/readme-diagrams/io-okio-examples-readme-sequence-01.png)
 
 ---
 

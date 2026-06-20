@@ -12,7 +12,7 @@
 
 ## 요청 흐름
 
-![CBOR in Spring Boot MVC request flow](../../docs/images/readme-diagrams/spring-boot-cbor-mvc-sequence-01.png)
+![CBOR in Spring Boot MVC request sequence](../../docs/images/readme-diagrams/spring-boot-cbor-mvc-sequence-01.png)
 
 이 예제는 일반 JSON 대신 바이너리 JSON 형식인 CBOR(Concise Binary Object Representation)을 REST API 통신 형식으로 사용하는 방법을 보여 줍니다.
 

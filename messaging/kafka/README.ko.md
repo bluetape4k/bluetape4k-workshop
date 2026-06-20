@@ -14,7 +14,7 @@ Kafka는 `KafkaServer.Launcher.kafka`로 시작하므로, 샘플과 테스트가
 
 ## 메시지 흐름
 
-![Kafka demo message flow](../../docs/images/readme-diagrams/messaging-kafka-readme-message-flow-01.png)
+![Kafka demo message sequence](../../docs/images/readme-diagrams/messaging-kafka-readme-message-sequence-01.png)
 
 | Endpoint | Kafka path |
 |----------|------------|

@@ -1,47 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="830" viewBox="0 0 1560 830" role="img" aria-labelledby="title desc">
-  <title id="title">CBOR Request Flow</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="1684.8" height="830" viewBox="0 0 1684.8 830" role="img" aria-labelledby="title desc">
+  <title id="title">CBOR Request Sequence</title>
   <desc id="desc">The request selects Jackson CBOR conversion and returns a compact binary Course response.</desc>
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
     <style>
-      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:21px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:13px;fill:#546A73}.msg{font-size:14px}.note{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.return,.skip{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call);stroke-linecap:round;stroke-linejoin:round}.work{stroke:#6E8F4F;marker-end:url(#arrow-work);stroke-linecap:round;stroke-linejoin:round}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret);stroke-linecap:round;stroke-linejoin:round}.skip{stroke:#B86868;marker-end:url(#arrow-skip);stroke-linecap:round;stroke-linejoin:round}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.skipLabel{stroke:#D9ABAB}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.skipBadge{fill:#FFF0F0;stroke:#B86868}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.skipText,.badgeText.skipText{fill:#9D4F4F}.alt{fill:#FFF7ED;fill-opacity:.42;stroke:#D08A39;stroke-width:2.4;stroke-dasharray:12 8}.branch{fill:#FFFFFF;fill-opacity:.82;stroke:#E6C68C;stroke-width:1.5}
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:19px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:12px;fill:#546A73}.msg{font-size:13px}.note{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.return,.skip{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call);stroke-linecap:round;stroke-linejoin:round}.work{stroke:#6E8F4F;marker-end:url(#arrow-work);stroke-linecap:round;stroke-linejoin:round}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret);stroke-linecap:round;stroke-linejoin:round}.skip{stroke:#B86868;marker-end:url(#arrow-skip);stroke-linecap:round;stroke-linejoin:round}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.skipLabel{stroke:#D9ABAB}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.skipBadge{fill:#FFF0F0;stroke:#B86868}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.skipText,.badgeText.skipText{fill:#9D4F4F}.alt{fill:#FFF7ED;fill-opacity:.42;stroke:#D08A39;stroke-width:2.4;stroke-dasharray:12 8}.branch{fill:#FFFFFF;fill-opacity:.82;stroke:#E6C68C;stroke-width:1.5}
     </style>
-    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none"/></marker>
-    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none"/></marker>
-    <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none"/></marker>
-    <marker id="arrow-skip" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none"/></marker>
+    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-skip" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
   </defs>
-  <rect x="24" y="24" width="1512" height="782" rx="20" class="frame"/>
-  <text x="780" y="76" text-anchor="middle" class="title">CBOR Request Flow</text>
-  <text x="780" y="106" text-anchor="middle" class="subtitle">The request selects Jackson CBOR conversion and returns a compact binary Course response.</text>
-  <g filter="url(#shadow)"><rect x="75" y="156" width="230" height="76" rx="10" class="header"/><text x="190" y="186" text-anchor="middle" class="participant">Client</text><text x="190" y="211" text-anchor="middle" class="role">Accept application/cbor</text></g>
-  <line x1="190" y1="232" x2="190" y2="718" class="lifeline"/>
-  <g filter="url(#shadow)"><rect x="468" y="156" width="230" height="76" rx="10" class="header"/><text x="583" y="186" text-anchor="middle" class="participant">Controller</text><text x="583" y="211" text-anchor="middle" class="role">/courses/{id}</text></g>
-  <line x1="583" y1="232" x2="583" y2="718" class="lifeline"/>
-  <g filter="url(#shadow)"><rect x="862" y="156" width="230" height="76" rx="10" class="header"/><text x="977" y="186" text-anchor="middle" class="participant">Repository</text><text x="977" y="211" text-anchor="middle" class="role">Map&lt;Int, Course&gt;</text></g>
-  <line x1="977" y1="232" x2="977" y2="718" class="lifeline"/>
-  <g filter="url(#shadow)"><rect x="1255" y="156" width="230" height="76" rx="10" class="header"/><text x="1370" y="186" text-anchor="middle" class="participant">Converter</text><text x="1370" y="211" text-anchor="middle" class="role">Jackson CBOR</text></g>
-  <line x1="1370" y1="232" x2="1370" y2="718" class="lifeline"/>
-  <rect x="271.5" y="252" width="230.0" height="34" rx="17" class="label callLabel"/>
-  <circle cx="295.5" cy="269" r="13" class="badge callBadge"/><text x="295.5" y="274" text-anchor="middle" class="badgeText callText">1</text>
-  <text x="319.5" y="274" class="msg callText">GET /courses/1</text>
-  <path d="M 190 300 L 583 300" class="call" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="665" y="328" width="230.0" height="34" rx="17" class="label callLabel"/>
-  <circle cx="689" cy="345" r="13" class="badge callBadge"/><text x="689" y="350" text-anchor="middle" class="badgeText callText">2</text>
-  <text x="713" y="350" class="msg callText">getCourse(id)</text>
-  <path d="M 583 376 L 977 376" class="call" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="665" y="404" width="230.0" height="34" rx="17" class="label returnLabel"/>
-  <circle cx="689" cy="421" r="13" class="badge returnBadge"/><text x="689" y="426" text-anchor="middle" class="badgeText returnText">3</text>
-  <text x="713" y="426" class="msg returnText">Course model</text>
-  <path d="M 977 452 L 583 452" class="return" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="851.5" y="480" width="250.0" height="34" rx="17" class="label workLabel"/>
-  <circle cx="875.5" cy="497" r="13" class="badge workBadge"/><text x="875.5" y="502" text-anchor="middle" class="badgeText workText">4</text>
-  <text x="899.5" y="502" class="msg workText">serialize Course to CBOR</text>
-  <path d="M 583 528 L 1370 528" class="work" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="621.3" y="556" width="317.5" height="34" rx="17" class="label returnLabel"/>
-  <circle cx="645.3" cy="573" r="13" class="badge returnBadge"/><text x="645.3" y="578" text-anchor="middle" class="badgeText returnText">5</text>
-  <text x="669.3" y="578" class="msg returnText">binary response decoded by client</text>
-  <path d="M 1370 604 L 190 604" class="return" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="90" y="742" width="1380" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
-  <text x="780" y="768" text-anchor="middle" class="footer">Reader contract: request order, branch ownership, and infrastructure boundary are shown without hiding call labels.</text>
+  <rect x="25.92" y="24" width="1632.96" height="782" rx="20" class="frame"/>
+  <text x="842.4" y="76" text-anchor="middle" class="title">CBOR Request Sequence</text>
+  <text x="842.4" y="106" text-anchor="middle" class="subtitle">The request selects Jackson CBOR conversion and returns a compact binary Course response.</text>
+  <g filter="url(#shadow)"><rect x="81" y="156" width="248.4" height="76" rx="10" class="header"/><text x="205.2" y="186" text-anchor="middle" class="participant">Client</text><text x="205.2" y="211" text-anchor="middle" class="role">Accept application/cbor</text></g>
+  <line x1="205.2" y1="232" x2="205.2" y2="718" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="505.44" y="156" width="248.4" height="76" rx="10" class="header"/><text x="629.64" y="186" text-anchor="middle" class="participant">Controller</text><text x="629.64" y="211" text-anchor="middle" class="role">/courses/{id}</text></g>
+  <line x1="629.64" y1="232" x2="629.64" y2="718" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="930.96" y="156" width="248.4" height="76" rx="10" class="header"/><text x="1055.16" y="186" text-anchor="middle" class="participant">Repository</text><text x="1055.16" y="211" text-anchor="middle" class="role">Map&lt;Int, Course&gt;</text></g>
+  <line x1="1055.16" y1="232" x2="1055.16" y2="718" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1355.4" y="156" width="248.4" height="76" rx="10" class="header"/><text x="1479.6" y="186" text-anchor="middle" class="participant">Converter</text><text x="1479.6" y="211" text-anchor="middle" class="role">Jackson CBOR</text></g>
+  <line x1="1479.6" y1="232" x2="1479.6" y2="718" class="lifeline"/>
+  <rect x="293.22" y="252" width="248.4" height="34" rx="17" class="label callLabel"/>
+  <circle cx="319.14" cy="269" r="13" class="badge callBadge"/><text x="319.14" y="274" text-anchor="middle" class="badgeText callText">1</text>
+  <text x="345.06" y="274" class="msg callText">GET /courses/1</text>
+  <path d="M 205.2 300 L 629.64 300" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="718.2" y="328" width="248.4" height="34" rx="17" class="label callLabel"/>
+  <circle cx="744.12" cy="345" r="13" class="badge callBadge"/><text x="744.12" y="350" text-anchor="middle" class="badgeText callText">2</text>
+  <text x="770.04" y="350" class="msg callText">getCourse(id)</text>
+  <path d="M 629.64 376 L 1055.16 376" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="718.2" y="404" width="248.4" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="744.12" cy="421" r="13" class="badge returnBadge"/><text x="744.12" y="426" text-anchor="middle" class="badgeText returnText">3</text>
+  <text x="770.04" y="426" class="msg returnText">Course model</text>
+  <path d="M 1055.16 452 L 629.64 452" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="919.62" y="480" width="270" height="34" rx="17" class="label workLabel"/>
+  <circle cx="945.54" cy="497" r="13" class="badge workBadge"/><text x="945.54" y="502" text-anchor="middle" class="badgeText workText">4</text>
+  <text x="971.46" y="502" class="msg workText">serialize Course to CBOR</text>
+  <path d="M 629.64 528 L 1479.6 528" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="671.004" y="556" width="342.9" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="696.924" cy="573" r="13" class="badge returnBadge"/><text x="696.924" y="578" text-anchor="middle" class="badgeText returnText">5</text>
+  <text x="722.844" y="578" class="msg returnText">binary response decoded by client</text>
+  <path d="M 1479.6 604 L 205.2 604" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="97.2" y="742" width="1490.4" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2.16"/>
+  <text x="842.4" y="768" text-anchor="middle" class="footer">Reader contract: request order, branch ownership, and infrastructure boundary are shown without hiding call labels.</text>
 </svg>

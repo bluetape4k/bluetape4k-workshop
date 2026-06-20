@@ -18,7 +18,7 @@ file channels, sockets, or coroutine adapters.
 
 ## Stream Flow
 
-![Okio examples stream wrapper flow](../../docs/images/readme-diagrams/io-okio-examples-readme-flow-01.png)
+![Okio examples stream wrapper flow](../../docs/images/readme-diagrams/io-okio-examples-readme-sequence-01.png)
 
 ---
 

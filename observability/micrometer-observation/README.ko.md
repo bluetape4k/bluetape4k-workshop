@@ -16,7 +16,7 @@ HTTP controller는 의도적으로 `ObservedAspect` 대상에서 제외한다. S
 
 ## Observation Flow
 
-![Micrometer observation flow](../../docs/images/readme-diagrams/observability-micrometer-observation-readme-flow-01.png)
+![Micrometer observation flow](../../docs/images/readme-diagrams/observability-micrometer-observation-readme-sequence-01.png)
 
 `sayHello()`는 재사용 가능한 `Observation`과 `observe { ... }`를 사용한다. `sayHelloWithName(name)`은 이름 있는
 observation을 새로 만들고 low/high cardinality key-value를 붙인 뒤 bluetape4k `observeOrNull` extension으로 block을

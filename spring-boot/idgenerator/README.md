@@ -12,7 +12,7 @@ Snowflake `Long`, or hide numeric IDs with reversible Hashids encoding.
 
 ## Request Flow
 
-![ID Generator Workshop request flow diagram](../../docs/images/readme-diagrams/spring-boot-idgenerator-readme-sequence-01.png)
+![ID Generator Workshop request sequence diagram](../../docs/images/readme-diagrams/spring-boot-idgenerator-readme-sequence-01.png)
 
 This integration example exposes four distributed ID generators from `bluetape4k-idgenerators` through a Spring Boot WebFlux REST API.
 It covers the characteristics of Snowflake, ULID, KSUID, and Hashids, along with operational cautions for each algorithm.

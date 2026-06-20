@@ -18,7 +18,7 @@ Spring Data Elasticsearch client를 구성하며, reactive Elasticsearch reposit
 
 ## Request 흐름
 
-![Spring Data Elasticsearch WebFlux request flow](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-readme-flow-01.png)
+![Spring Data Elasticsearch WebFlux request sequence](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-readme-sequence-01.png)
 
 Public API는 `/v1/books`를 중심으로 구성됩니다.
 

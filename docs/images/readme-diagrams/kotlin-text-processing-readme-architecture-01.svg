@@ -1,37 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="520" viewBox="0 0 1320 520" role="img" aria-label="Kotlin text processing architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1590.4" height="520" viewBox="0 0 1590.4 520" role="img" aria-label="Kotlin text processing architecture diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#fff;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.label{font-family:"Architects Daughter";font-size:22px;fill:#172033}.cardTitle{font-family:"Architects Daughter";font-size:26px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="520"/>
-  <rect class="frame" x="24" y="24" width="1272" height="472" rx="24"/>
-  <text class="title" x="660" y="66" text-anchor="middle">Text processing examples</text>
-  <text class="subtitle" x="660" y="94" text-anchor="middle">Three small services show keyword search, language detection, and lightweight normalization.</text>
+  <rect class="canvas" width="1590.4" height="520"/>
+  <rect class="frame" x="28.916" y="24" width="1532.567" height="472" rx="24"/>
+  <text class="title" x="795.2" y="66" text-anchor="middle">Text processing examples</text>
+  <text class="subtitle" x="795.2" y="94" text-anchor="middle">Three small services show keyword search, language detection, and lightweight normalization.</text>
 
-  <rect class="layer" x="72" y="132" width="1176" height="270" rx="18"/>
-  <text class="label" x="100" y="168">In-process text components</text>
+  <rect class="layer" x="86.749" y="132" width="1416.902" height="270" rx="18"/>
+  <text class="label" x="120.485" y="168">In-process text components</text>
   <g filter="url(#shadow)">
-    <rect x="112" y="226" width="330" height="150" rx="18" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.8"/>
-    <text class="cardTitle" x="277" y="270" text-anchor="middle">AbuseWordFilter</text>
-    <text class="cardText" x="277" y="304" text-anchor="middle">AhoCorasickAutomaton</text>
-    <text class="cardText" x="277" y="328" text-anchor="middle">ignoreCase, overlaps, NFC</text>
-    <text class="cardText" x="277" y="352" text-anchor="middle">contains, replace, matches</text>
+    <rect x="134.943" y="226" width="397.6" height="150" rx="18" fill="#EFF6FF" stroke="#3B82F6" stroke-width="2.169"/>
+    <text class="cardTitle" x="333.743" y="270" text-anchor="middle">AbuseWordFilter</text>
+    <text class="cardText" x="333.743" y="304" text-anchor="middle">AhoCorasickAutomaton</text>
+    <text class="cardText" x="333.743" y="328" text-anchor="middle">ignoreCase, overlaps, NFC</text>
+    <text class="cardText" x="333.743" y="352" text-anchor="middle">contains, replace, matches</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="495" y="226" width="330" height="150" rx="18" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.8"/>
-    <text class="cardTitle" x="660" y="270" text-anchor="middle">LanguageDetectionService</text>
-    <text class="cardText" x="660" y="304" text-anchor="middle">Lingua allLanguageDetector</text>
-    <text class="cardText" x="660" y="328" text-anchor="middle">shared detector instance</text>
-    <text class="cardText" x="660" y="352" text-anchor="middle">language and confidence map</text>
+    <rect x="596.4" y="226" width="397.6" height="150" rx="18" fill="#ECFDF5" stroke="#16A34A" stroke-width="2.169"/>
+    <text class="cardTitle" x="795.2" y="270" text-anchor="middle">LanguageDetectionService</text>
+    <text class="cardText" x="795.2" y="304" text-anchor="middle">Lingua allLanguageDetector</text>
+    <text class="cardText" x="795.2" y="328" text-anchor="middle">shared detector instance</text>
+    <text class="cardText" x="795.2" y="352" text-anchor="middle">language and confidence map</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="878" y="226" width="330" height="150" rx="18" fill="#FFF7ED" stroke="#D97706" stroke-width="1.8"/>
-    <text class="cardTitle" x="1043" y="270" text-anchor="middle">TextNormalizer</text>
-    <text class="cardText" x="1043" y="304" text-anchor="middle">stateless object</text>
-    <text class="cardText" x="1043" y="328" text-anchor="middle">lowercase, trim, collapse</text>
-    <text class="cardText" x="1043" y="352" text-anchor="middle">deduplicated keywords</text>
+    <rect x="1057.857" y="226" width="397.6" height="150" rx="18" fill="#FFF7ED" stroke="#D97706" stroke-width="2.169"/>
+    <text class="cardTitle" x="1256.657" y="270" text-anchor="middle">TextNormalizer</text>
+    <text class="cardText" x="1256.657" y="304" text-anchor="middle">stateless object</text>
+    <text class="cardText" x="1256.657" y="328" text-anchor="middle">lowercase, trim, collapse</text>
+    <text class="cardText" x="1256.657" y="352" text-anchor="middle">deduplicated keywords</text>
   </g>
 </svg>

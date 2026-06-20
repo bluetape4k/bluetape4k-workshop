@@ -12,7 +12,7 @@
       .line { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <marker id="arrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke-dasharray="none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
   </defs>
   <rect class="bg" width="1650" height="840"/>
@@ -47,8 +47,8 @@
   <text class="body" x="520" y="772">Run ./gradlew :virtualthreads-rules:test to execute the examples</text>
 
   <path class="line" d="M340 295 L340 500" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M825 295 L825 390 L705 390 L705 500" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M825 295 L825 390 L1085 390 L1085 500" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M1310 295 L1310 390 L1410 390 L1410 500" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M1310 295 L1310 390 L825 390 L825 600" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 825 295 L 825 380 Q 825 389 815 389 L 715 389 Q 705 389 705 400 L 705 500" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 825 295 L 825 380 Q 825 389 835 389 L 1075 389 Q 1085 389 1085 400 L 1085 500" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1310 295 L 1310 380 Q 1310 389 1320 389 L 1400 389 Q 1410 389 1410 400 L 1410 500" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1310 295 L 1310 380 Q 1310 389 1320 389 L 1550 389 Q 1560 389 1560 399 L 1560 625 Q 1560 635 1550 635 L 1067 635" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

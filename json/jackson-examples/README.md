@@ -18,7 +18,7 @@ polymorphism, root wrapping, circular references, Java Time formatting, or dynam
 
 ## Serialization Flow
 
-![Jackson examples serialization flow](../../docs/images/readme-diagrams/json-jackson-examples-readme-flow-01.png)
+![Jackson examples serialization sequence](../../docs/images/readme-diagrams/json-jackson-examples-readme-sequence-01.png)
 
 ## bluetape4k features used
 

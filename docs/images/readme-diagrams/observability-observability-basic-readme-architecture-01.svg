@@ -1,72 +1,72 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1540" height="700" viewBox="0 0 1540 700" role="img" aria-label="Observability basic architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1888.526" height="700" viewBox="0 0 1888.526 700" role="img" aria-label="Observability basic architecture diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
-    <marker id="arrowCyan" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0891B2" stroke-dasharray="none"/></marker>
-    <marker id="arrowSlate" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#475569" stroke-dasharray="none"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowCyan" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0891B2" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowSlate" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#475569" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:29px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.small{font-family:"Comic Mono";font-size:13px;fill:#64748B}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
     </style>
   </defs>
-  <rect class="canvas" width="1540" height="700"/>
-  <rect class="frame" x="24" y="24" width="1492" height="652" rx="24"/>
-  <text class="title" x="770" y="70" text-anchor="middle">Basic observability architecture</text>
-  <text class="subtitle" x="770" y="102" text-anchor="middle">A single manual service span sits between automatic HTTP server and WebClient client spans.</text>
+  <rect class="canvas" width="1888.526" height="700"/>
+  <rect class="frame" x="29.432" y="24" width="1829.663" height="652" rx="24"/>
+  <text class="title" x="944.263" y="70" text-anchor="middle">Basic observability architecture</text>
+  <text class="subtitle" x="944.263" y="102" text-anchor="middle">A single manual service span sits between automatic HTTP server and WebClient client spans.</text>
 
-  <rect class="layer" x="70" y="142" width="232" height="496" rx="18"/>
-  <text class="layerLabel" x="98" y="180">Caller</text>
+  <rect class="layer" x="85.842" y="142" width="284.505" height="496" rx="18"/>
+  <text class="layerLabel" x="120.179" y="180">Caller</text>
   <g filter="url(#shadow)">
-    <rect x="110" y="286" width="152" height="116" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
-    <text class="cardTitle" x="186" y="330" text-anchor="middle">Client</text>
-    <text class="cardText" x="186" y="362" text-anchor="middle">GET /orders/{id}</text>
-  </g>
-
-  <rect class="layer" x="356" y="142" width="328" height="496" rx="18"/>
-  <text class="layerLabel" x="384" y="180">WebFlux app</text>
-  <g filter="url(#shadow)">
-    <rect x="398" y="222" width="244" height="112" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
-    <text class="cardTitle" x="520" y="264" text-anchor="middle">OrderController</text>
-    <text class="cardText" x="520" y="294" text-anchor="middle">auto server span</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="398" y="408" width="244" height="122" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
-    <text class="cardTitle" x="520" y="452" text-anchor="middle">OrderService</text>
-    <text class="cardText" x="520" y="484" text-anchor="middle">order.service.fetch</text>
-    <text class="cardText" x="520" y="510" text-anchor="middle">manual observed()</text>
+    <rect x="134.895" y="286" width="186.4" height="116" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="2.085"/>
+    <text class="cardTitle" x="228.095" y="330" text-anchor="middle">Client</text>
+    <text class="cardText" x="228.095" y="362" text-anchor="middle">GET /orders/{id}</text>
   </g>
 
-  <rect class="layer" x="738" y="142" width="328" height="496" rx="18"/>
-  <text class="layerLabel" x="766" y="180">HTTP client</text>
+  <rect class="layer" x="436.568" y="142" width="402.232" height="496" rx="18"/>
+  <text class="layerLabel" x="470.905" y="180">WebFlux app</text>
   <g filter="url(#shadow)">
-    <rect x="780" y="240" width="244" height="122" rx="16" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.7"/>
-    <text class="cardTitle" x="902" y="284" text-anchor="middle">InventoryClient</text>
-    <text class="cardText" x="902" y="316" text-anchor="middle">4xx -> null</text>
-    <text class="cardText" x="902" y="342" text-anchor="middle">5xx -> exception</text>
+    <rect x="488.074" y="222" width="299.221" height="112" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="2.085"/>
+    <text class="cardTitle" x="637.684" y="264" text-anchor="middle">OrderController</text>
+    <text class="cardText" x="637.684" y="294" text-anchor="middle">auto server span</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="780" y="444" width="244" height="106" rx="16" fill="#F8FAFC" stroke="#475569" stroke-width="1.7"/>
-    <text class="cardTitle" x="902" y="484" text-anchor="middle">WebClient.Builder</text>
-    <text class="cardText" x="902" y="516" text-anchor="middle">traceparent injection</text>
-  </g>
-
-  <rect class="layer" x="1120" y="142" width="350" height="496" rx="18"/>
-  <text class="layerLabel" x="1148" y="180">Downstream</text>
-  <g filter="url(#shadow)">
-    <rect x="1170" y="274" width="250" height="146" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
-    <rect x="1198" y="314" width="58" height="42" rx="10" fill="#FFFBEB" stroke="#D97706" stroke-width="2.4"/>
-    <circle cx="1216" cy="335" r="7" fill="#D97706"/>
-    <text class="cardTitle" x="1330" y="320" text-anchor="middle">Inventory API</text>
-    <text class="cardText" x="1330" y="354" text-anchor="middle">MockWebServer</text>
-    <text class="cardText" x="1330" y="380" text-anchor="middle">/inventory/{id}</text>
+    <rect x="488.074" y="408" width="299.221" height="122" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="2.085"/>
+    <text class="cardTitle" x="637.684" y="452" text-anchor="middle">OrderService</text>
+    <text class="cardText" x="637.684" y="484" text-anchor="middle">order.service.fetch</text>
+    <text class="cardText" x="637.684" y="510" text-anchor="middle">manual observed()</text>
   </g>
 
-  <path class="line" d="M 262 344 L 398 278" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 520 334 L 520 408" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 642 470 L 712 470 L 712 301 L 780 301" stroke="#0891B2" marker-end="url(#arrowCyan)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 902 362 L 902 444" stroke="#475569" marker-end="url(#arrowSlate)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1024 497 L 1090 497 L 1090 347 L 1170 347" stroke="#0891B2" marker-end="url(#arrowCyan)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line soft" d="M 1295 420 L 1295 586 L 902 586 L 902 550" stroke="#475569" marker-end="url(#arrowSlate)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="small" x="1110" y="612" text-anchor="middle">TracePropagationTest asserts outbound traceparent.</text>
+  <rect class="layer" x="905.021" y="142" width="402.232" height="496" rx="18"/>
+  <text class="layerLabel" x="939.358" y="180">HTTP client</text>
+  <g filter="url(#shadow)">
+    <rect x="956.526" y="240" width="299.221" height="122" rx="16" fill="#ECFEFF" stroke="#0891B2" stroke-width="2.085"/>
+    <text class="cardTitle" x="1106.137" y="284" text-anchor="middle">InventoryClient</text>
+    <text class="cardText" x="1106.137" y="316" text-anchor="middle">4xx -> null</text>
+    <text class="cardText" x="1106.137" y="342" text-anchor="middle">5xx -> exception</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="956.526" y="444" width="299.221" height="106" rx="16" fill="#F8FAFC" stroke="#475569" stroke-width="2.085"/>
+    <text class="cardTitle" x="1106.137" y="484" text-anchor="middle">WebClient.Builder</text>
+    <text class="cardText" x="1106.137" y="516" text-anchor="middle">traceparent injection</text>
+  </g>
+
+  <rect class="layer" x="1373.474" y="142" width="429.211" height="496" rx="18"/>
+  <text class="layerLabel" x="1407.811" y="180">Downstream</text>
+  <g filter="url(#shadow)">
+    <rect x="1434.789" y="274" width="306.579" height="146" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="2.085"/>
+    <rect x="1469.126" y="314" width="71.126" height="42" rx="10" fill="#FFFBEB" stroke="#D97706" stroke-width="2.943"/>
+    <circle cx="1491.2" cy="335" r="7" fill="#D97706"/>
+    <text class="cardTitle" x="1631" y="320" text-anchor="middle">Inventory API</text>
+    <text class="cardText" x="1631" y="354" text-anchor="middle">MockWebServer</text>
+    <text class="cardText" x="1631" y="380" text-anchor="middle">/inventory/{id}</text>
+  </g>
+
+  <path class="line" d="M 321.295 344 L 488.074 278" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 637.684 334 L 637.684 408" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 787.295 470 L 860.874 470 Q 873.137 470 873.137 460 L 873.137 311 Q 873.137 301 885.4 301 L 956.526 301" stroke="#0891B2" marker-end="url(#arrowCyan)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1106.137 362 L 1106.137 444" stroke="#475569" marker-end="url(#arrowSlate)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1255.747 497 L 1324.421 497 Q 1336.684 497 1336.684 487 L 1336.684 357 Q 1336.684 347 1348.947 347 L 1434.789 347" stroke="#0891B2" marker-end="url(#arrowCyan)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line soft" d="M 1588.079 420 L 1588.079 576 Q 1588.079 586 1575.816 586 L 1118.4 586 Q 1106.137 586 1106.137 576 L 1106.137 550" stroke="#475569" marker-end="url(#arrowSlate)" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="small" x="1361.211" y="612" text-anchor="middle">TracePropagationTest asserts outbound traceparent.</text>
 </svg>

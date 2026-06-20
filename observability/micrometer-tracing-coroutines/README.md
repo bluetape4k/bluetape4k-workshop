@@ -15,7 +15,7 @@ uses bluetape4k `withObservation` / `withObservationSuspending` for explicit nes
 
 ## Coroutine Trace Flow
 
-![Coroutine trace flow](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-readme-coroutine-flow-01.png)
+![Coroutine trace flow](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-readme-coroutine-sequence-01.png)
 
 `withObservationSuspending` wraps suspend blocks such as `pre-processing`, `get-todo-by-id`, and `post-processing`. The
 observation scope survives `delay(...)` and `WebClient.awaitBodyOrNull()` suspension points and rethrows

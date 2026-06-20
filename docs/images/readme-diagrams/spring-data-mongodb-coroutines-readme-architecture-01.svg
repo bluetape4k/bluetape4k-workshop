@@ -21,16 +21,16 @@
       .line-red { fill: none; stroke: #f04438; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <marker id="mc-arrow-blue" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="mc-arrow-green" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="mc-arrow-orange" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="mc-arrow-red" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
   </defs>
 
@@ -73,7 +73,7 @@
   <text class="card-title" x="445" y="706" text-anchor="middle">MongoClientConfig</text>
   <rect class="card-orange" x="720" y="670" width="390" height="58" rx="10" stroke-width="2"/>
   <text class="card-title" x="915" y="706" text-anchor="middle">ReactiveMongoConfig</text>
-  <rect class="card-orange" x="1190" y="670" width="300" height="58" rx="10" stroke-width="2"/>  <text class="card-title" x="1340" y="706" text-anchor="middle">people database</text>
+  <rect class="card-orange" x="1190" y="670" width="300" height="58" rx="10" stroke-width="2"/><image data-bluetape4k-icon="database" data-source="docs/icons/generic/database-server.svg" x="1202" y="687" width="24" height="24" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsbGVkYnk9InRpdGxlIGRlc2MiPgogIDx0aXRsZSBpZD0idGl0bGUiPkdlbmVyaWMgZGF0YWJhc2Ugc2VydmVyIGljb248L3RpdGxlPgogIDxkZXNjIGlkPSJkZXNjIj5HZW5lcmljIGRhdGFiYXNlIHNlcnZlciBpY29uIGZvciBibHVldGFwZTRrIGRpYWdyYW1zLjwvZGVzYz4KICA8cmVjdCB4PSIxMCIgeT0iOCIgd2lkdGg9IjEwOCIgaGVpZ2h0PSIxMTIiIHJ4PSIxOCIgZmlsbD0iI2ZmZmFmMiIgc3Ryb2tlPSIjMjg0ODVhIiBzdHJva2Utd2lkdGg9IjYiLz4KICA8ZWxsaXBzZSBjeD0iNjQiIGN5PSIzNiIgcng9IjM0IiByeT0iMTMiIGZpbGw9IiNmZmYwZDgiIHN0cm9rZT0iIzhjNmYzMyIgc3Ryb2tlLXdpZHRoPSI2Ii8+CiAgPHBhdGggZD0iTTMwIDM2djQ0YzAgOCAxNSAxNCAzNCAxNHMzNC02IDM0LTE0VjM2IiBmaWxsPSIjZmZmMGQ4IiBzdHJva2U9IiM4YzZmMzMiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMCA1OGMwIDggMTUgMTQgMzQgMTRzMzQtNiAzNC0xNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGM2ZjMzIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMCA4MGMwIDggMTUgMTQgMzQgMTRzMzQtNiAzNC0xNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGM2ZjMzIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K" preserveAspectRatio="xMidYMid meet"/>  <text class="card-title" x="1340" y="706" text-anchor="middle">people database</text>
 
   <rect class="layer-runtime" x="80" y="795" width="1640" height="115" rx="18" stroke-width="2"/>
   <text class="layer-title" x="112" y="838">Runtime</text>
@@ -86,15 +86,15 @@
 
   <path class="line-blue" d="M 490 253 L 733 253" marker-end="url(#mc-arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line-blue" d="M 1055 253 L 1298 253" marker-end="url(#mc-arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-green" d="M 900 288 L 900 330 L 325 330 L 325 428" marker-end="url(#mc-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-green" d="M 900 288 L 900 330 L 775 330 L 775 428" marker-end="url(#mc-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-green" d="M 900 288 L 900 330 L 1225 330 L 1225 428" marker-end="url(#mc-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-green" d="M 1465 288 L 1465 330 L 775 330 L 775 428" marker-end="url(#mc-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 900 288 L 900 320 Q 900 330 890 330 L 335 330 Q 325 330 325 340 L 325 428" marker-end="url(#mc-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 900 288 L 900 320 Q 900 330 890 330 L 785 330 Q 775 330 775 340 L 775 428" marker-end="url(#mc-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 900 288 L 900 320 Q 900 330 910 330 L 1215 330 Q 1225 330 1225 340 L 1225 428" marker-end="url(#mc-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 1465 288 L 1465 320 Q 1465 330 1455 330 L 785 330 Q 775 330 775 340 L 775 428" marker-end="url(#mc-arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line-orange" d="M 325 522 L 325 580 L 445 580 L 445 658" marker-end="url(#mc-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-orange" d="M 775 522 L 775 580 L 915 580 L 915 658" marker-end="url(#mc-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-orange" d="M 1225 522 L 1225 580 L 915 580 L 915 658" marker-end="url(#mc-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-red" d="M 445 728 L 445 775 L 880 775 L 880 813" marker-end="url(#mc-arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 325 522 L 325 570 Q 325 580 335 580 L 435 580 Q 445 580 445 590 L 445 658" marker-end="url(#mc-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 775 522 L 775 570 Q 775 580 785 580 L 905 580 Q 915 580 915 590 L 915 658" marker-end="url(#mc-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 1225 522 L 1225 570 Q 1225 580 1215 580 L 925 580 Q 915 580 915 590 L 915 658" marker-end="url(#mc-arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-red" d="M 445 728 L 445 765 Q 445 775 455 775 L 870 775 Q 880 775 880 785 L 880 813" marker-end="url(#mc-arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line-red" d="M 915 728 L 915 813" marker-end="url(#mc-arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-red" d="M 1340 728 L 1340 775 L 980 775 L 980 813" marker-end="url(#mc-arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-red" d="M 1340 728 L 1340 765 Q 1340 775 1330 775 L 990 775 Q 980 775 980 785 L 980 813" marker-end="url(#mc-arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

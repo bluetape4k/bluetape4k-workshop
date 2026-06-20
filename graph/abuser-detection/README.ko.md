@@ -24,9 +24,9 @@ bluetape4k 워크샵 모듈로, 그래프 기반 어뷰저(abuser) 탐지를 시
 `user-1`과 `user-2`는 `ipA`도 공유합니다. `unrelated-user`는 `device-B`만 사용하므로 `user-1` 기준
 클러스터에 포함되지 않습니다.
 
-## 클러스터 탐지 흐름
+## 클러스터 탐지 시퀀스
 
-![graph-abuser-detection 클러스터 탐지 흐름](../../docs/images/readme-diagrams/graph-abuser-detection-readme-flow-01.png)
+![graph-abuser-detection 클러스터 탐지 시퀀스](../../docs/images/readme-diagrams/graph-abuser-detection-readme-sequence-01.png)
 
 `findAbuseCluster(seedUserId)`는 식별자 엣지만 탐색합니다. `REFERRED_BY` 엣지는 이 BFS에서 의도적으로
 제외되며, `detectReferralLoops`에서 별도로 사용됩니다.

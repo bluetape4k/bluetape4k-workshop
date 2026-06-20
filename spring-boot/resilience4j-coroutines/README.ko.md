@@ -15,7 +15,7 @@ annotation으로 둘지, Reactor/Future wrapper로 둘지, 명시적인 coroutin
 
 ## 요청 및 Decorator 흐름
 
-![Spring Boot Resilience4j coroutine request and decorator flow](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-readme-flow-01.png)
+![Spring Boot Resilience4j coroutine request and decorator flow](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-readme-sequence-01.png)
 
 ## Circuit Breaker 상태 머신
 

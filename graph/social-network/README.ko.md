@@ -66,7 +66,7 @@ graph/social-network/
 
 ## 시드 토폴로지 (테스트 데이터)
 
-![graph-social-network 탐색 및 추천 흐름](../../docs/images/readme-diagrams/graph-social-network-readme-flow-01.png)
+![graph-social-network 탐색 및 추천 시퀀스](../../docs/images/readme-diagrams/graph-social-network-readme-sequence-01.png)
 
 ```
 alice ──KNOWS──► bob ──KNOWS──► carol ──KNOWS──► dave

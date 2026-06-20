@@ -16,7 +16,7 @@ owned by another module.
 
 ## Organization Event Flow
 
-![Spring Modulith JPA event flow](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-flow-01.png)
+![Spring Modulith JPA event sequence](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-sequence-01.png)
 
 Adding an organization saves the JPA entity and publishes `OrganizationAddEvent`.
 Department listens with `@ApplicationModuleListener` and creates default

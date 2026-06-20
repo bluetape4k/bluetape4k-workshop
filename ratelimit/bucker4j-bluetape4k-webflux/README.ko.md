@@ -18,7 +18,7 @@ Bucket4j 설정과 Redis/Lettuce proxy manager를 공유합니다.
 
 ## Filter Decision Flow
 
-![WebFlux Bucket4j filter decision flow](../../docs/images/readme-diagrams/ratelimit-bucker4j-bluetape4k-webflux-readme-filter-flow-01.png)
+![WebFlux Bucket4j filter decision sequence](../../docs/images/readme-diagrams/ratelimit-bucker4j-bluetape4k-webflux-readme-filter-sequence-01.png)
 
 대상 경로이고 key가 있으며 token 소비에 성공하면 요청을 계속 진행하고
 `X-Bluetape4k-Remaining-Token` header를 기록합니다. key가 없으면 `400 Bad Request`, bucket이

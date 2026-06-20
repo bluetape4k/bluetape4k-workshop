@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1720" height="920" viewBox="0 0 1720 920" role="img" aria-label="Spring application event demo architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="2201.6" height="920" viewBox="0 0 2201.6 920" role="img" aria-label="Spring application event demo architecture">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
-    <marker id="arrowTeal" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#0891B2" stroke-dasharray="none"/></marker>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowTeal" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#0891B2" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}
       .title{font-family:"Architects Daughter";font-size:40px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}
@@ -12,36 +12,36 @@
       .line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}.lineLabel{font-family:"Comic Mono";font-size:14px;fill:#334155}
     </style>
   </defs>
-  <rect class="canvas" width="1720" height="920"/>
-  <rect class="frame" x="24" y="24" width="1672" height="872" rx="24"/>
-  <text class="title" x="860" y="72" text-anchor="middle">Spring Application Event demo</text>
-  <text class="subtitle" x="860" y="106" text-anchor="middle">Two publishing styles share Spring ApplicationEventPublisher while showing synchronous and coroutine listener choices.</text>
+  <rect class="canvas" width="2201.6" height="920"/>
+  <rect class="frame" x="30.72" y="24" width="2140.16" height="872" rx="24"/>
+  <text class="title" x="1100.8" y="72" text-anchor="middle">Spring Application Event demo</text>
+  <text class="subtitle" x="1100.8" y="106" text-anchor="middle">Two publishing styles share Spring ApplicationEventPublisher while showing synchronous and coroutine listener choices.</text>
 
-  <rect class="layer" x="90" y="160" width="1540" height="160" fill="#EFF6FF" stroke="#BFDBFE"/>
-  <text class="layerTitle" x="130" y="202">Entry points</text>
-  <g filter="url(#shadow)"><rect x="210" y="220" width="300" height="76" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="360" y="252" text-anchor="middle">CustomEventController</text><text class="cardText" x="360" y="278" text-anchor="middle">GET /event?message=...</text></g>
-  <g filter="url(#shadow)"><rect x="690" y="220" width="300" height="76" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="840" y="252" text-anchor="middle">MyEventService</text><text class="cardText" x="840" y="278" text-anchor="middle">@AspectEventEmitter</text></g>
-  <g filter="url(#shadow)"><rect x="1170" y="220" width="300" height="76" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="1320" y="252" text-anchor="middle">Spring Boot Test</text><text class="cardText" x="1320" y="278" text-anchor="middle">WebTestClient + output capture</text></g>
+  <rect class="layer" x="115.2" y="160" width="1971.2" height="160" fill="#EFF6FF" stroke="#BFDBFE"/>
+  <text class="layerTitle" x="166.4" y="202">Entry points</text>
+  <g filter="url(#shadow)"><rect x="268.8" y="220" width="384" height="76" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="2.176"/><text class="cardTitle" x="460.8" y="252" text-anchor="middle">CustomEventController</text><text class="cardText" x="460.8" y="278" text-anchor="middle">GET /event?message=...</text></g>
+  <g filter="url(#shadow)"><rect x="883.2" y="220" width="384" height="76" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="2.176"/><text class="cardTitle" x="1075.2" y="252" text-anchor="middle">MyEventService</text><text class="cardText" x="1075.2" y="278" text-anchor="middle">@AspectEventEmitter</text></g>
+  <g filter="url(#shadow)"><rect x="1497.6" y="220" width="384" height="76" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="2.176"/><text class="cardTitle" x="1689.6" y="252" text-anchor="middle">Spring Boot Test</text><text class="cardText" x="1689.6" y="278" text-anchor="middle">WebTestClient + output capture</text></g>
 
-  <rect class="layer" x="90" y="380" width="1540" height="230" fill="#F0FDF4" stroke="#BBF7D0"/>
-  <text class="layerTitle" x="130" y="422">Publishing adapters</text>
-  <g filter="url(#shadow)"><rect x="190" y="460" width="340" height="110" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="360" y="498" text-anchor="middle">CustomEventPublisher</text><text class="cardText" x="360" y="528" text-anchor="middle">builds CustomEvent</text><text class="cardText" x="360" y="554" text-anchor="middle">calls publishEvent(event)</text></g>
-  <g filter="url(#shadow)"><rect x="670" y="450" width="340" height="130" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="840" y="488" text-anchor="middle">AspectEventPublisherAspect</text><text class="cardText" x="840" y="518" text-anchor="middle">@Around proceeds target</text><text class="cardText" x="840" y="544" text-anchor="middle">SpEL extracts event message</text><text class="cardText" x="840" y="570" text-anchor="middle">builds AspectEvent</text></g>
-  <g filter="url(#shadow)"><rect x="1160" y="460" width="320" height="110" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1320" y="498" text-anchor="middle">ApplicationEventPublisher</text><text class="cardText" x="1320" y="528" text-anchor="middle">Spring dispatch boundary</text><text class="cardText" x="1320" y="554" text-anchor="middle">CustomEvent / AspectEvent</text></g>
+  <rect class="layer" x="115.2" y="380" width="1971.2" height="230" fill="#F0FDF4" stroke="#BBF7D0"/>
+  <text class="layerTitle" x="166.4" y="422">Publishing adapters</text>
+  <g filter="url(#shadow)"><rect x="243.2" y="460" width="435.2" height="110" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="2.176"/><text class="cardTitle" x="460.8" y="498" text-anchor="middle">CustomEventPublisher</text><text class="cardText" x="460.8" y="528" text-anchor="middle">builds CustomEvent</text><text class="cardText" x="460.8" y="554" text-anchor="middle">calls publishEvent(event)</text></g>
+  <g filter="url(#shadow)"><rect x="857.6" y="450" width="435.2" height="130" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="2.176"/><text class="cardTitle" x="1075.2" y="488" text-anchor="middle">AspectEventPublisherAspect</text><text class="cardText" x="1075.2" y="518" text-anchor="middle">@Around proceeds target</text><text class="cardText" x="1075.2" y="544" text-anchor="middle">SpEL extracts event message</text><text class="cardText" x="1075.2" y="570" text-anchor="middle">builds AspectEvent</text></g>
+  <g filter="url(#shadow)"><rect x="1484.8" y="460" width="409.6" height="110" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="2.176"/><text class="cardTitle" x="1689.6" y="498" text-anchor="middle">ApplicationEventPublisher</text><text class="cardText" x="1689.6" y="528" text-anchor="middle">Spring dispatch boundary</text><text class="cardText" x="1689.6" y="554" text-anchor="middle">CustomEvent / AspectEvent</text></g>
 
-  <rect class="layer" x="90" y="670" width="1540" height="150" fill="#FFF7ED" stroke="#FED7AA"/>
-  <text class="layerTitle" x="130" y="712">Listeners</text>
-  <g filter="url(#shadow)"><rect x="190" y="738" width="250" height="62" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="315" y="777" text-anchor="middle">ApplicationListener</text></g>
-  <g filter="url(#shadow)"><rect x="520" y="738" width="250" height="62" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="645" y="777" text-anchor="middle">@EventListener</text></g>
-  <g filter="url(#shadow)"><rect x="850" y="738" width="270" height="62" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="985" y="777" text-anchor="middle">Coroutine listener</text></g>
-  <g filter="url(#shadow)"><rect x="1200" y="738" width="270" height="62" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1335" y="777" text-anchor="middle">Aspect listeners</text></g>
+  <rect class="layer" x="115.2" y="670" width="1971.2" height="150" fill="#FFF7ED" stroke="#FED7AA"/>
+  <text class="layerTitle" x="166.4" y="712">Listeners</text>
+  <g filter="url(#shadow)"><rect x="243.2" y="738" width="320" height="62" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="2.176"/><text class="cardTitle" x="403.2" y="777" text-anchor="middle">ApplicationListener</text></g>
+  <g filter="url(#shadow)"><rect x="665.6" y="738" width="320" height="62" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="2.176"/><text class="cardTitle" x="825.6" y="777" text-anchor="middle">@EventListener</text></g>
+  <g filter="url(#shadow)"><rect x="1088" y="738" width="345.6" height="62" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="2.176"/><text class="cardTitle" x="1260.8" y="777" text-anchor="middle">Coroutine listener</text></g>
+  <g filter="url(#shadow)"><rect x="1536" y="738" width="345.6" height="62" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="2.176"/><text class="cardTitle" x="1708.8" y="777" text-anchor="middle">Aspect listeners</text></g>
 
-  <path class="line" d="M 360 296 L 360 460" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 840 296 L 840 450" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 530 500 L 600 500 L 600 432 L 1320 432 L 1320 460" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1010 515 L 1160 515" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1320 570 L 1320 640 L 1335 640 L 1335 738" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1320 640 L 985 640 L 985 738" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1320 640 L 645 640 L 645 738" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1320 640 L 315 640 L 315 738" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 460.8 296 L 460.8 460" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1075.2 296 L 1075.2 450" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 678.4 500 L 755.2 500 Q 768 500 768 490 L 768 442 Q 768 432 780.8 432 L 1676.8 432 Q 1689.6 432 1689.6 442 L 1689.6 460" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1292.8 515 L 1484.8 515" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1689.6 570 L 1689.6 633.5 Q 1689.6 640 1697.92 640 L 1700.48 640 Q 1708.8 640 1708.8 646.5 L 1708.8 738" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1689.6 640 L 1273.6 640 Q 1260.8 640 1260.8 650 L 1260.8 738" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1689.6 640 L 838.4 640 Q 825.6 640 825.6 650 L 825.6 738" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1689.6 640 L 416 640 Q 403.2 640 403.2 650 L 403.2 738" stroke="#0891B2" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

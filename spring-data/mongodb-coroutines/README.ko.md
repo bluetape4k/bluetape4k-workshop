@@ -18,7 +18,7 @@ reactive-to-coroutine adapter, tailable cursor 처리도 함께 보여 줍니다
 
 ## Coroutine and reactive flow
 
-![MongoDB coroutine flow](../../docs/images/readme-diagrams/spring-data-mongodb-coroutines-readme-flow-01.png)
+![MongoDB coroutine sequence](../../docs/images/readme-diagrams/spring-data-mongodb-coroutines-readme-sequence-01.png)
 
 | Path | API | 보여 주는 내용 |
 |---|---|---|

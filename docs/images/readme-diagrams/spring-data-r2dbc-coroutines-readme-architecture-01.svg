@@ -20,10 +20,10 @@
       .line-orange { fill: none; stroke: #f07d22; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
       .line-red { fill: none; stroke: #f04438; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
-    <marker id="r2c-blue" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none"/></marker>
-    <marker id="r2c-green" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none"/></marker>
-    <marker id="r2c-orange" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none"/></marker>
-    <marker id="r2c-red" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none"/></marker>
+    <marker id="r2c-blue" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="r2c-green" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="r2c-orange" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="r2c-red" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
   </defs>
   <rect class="canvas" x="0" y="0" width="1800" height="980"/>
   <rect x="24" y="24" width="1752" height="932" rx="22" fill="#ffffff" stroke="#d7e0eb" stroke-width="2"/>
@@ -63,16 +63,16 @@
 
   <rect class="layer-runtime" x="80" y="790" width="1640" height="115" rx="18" stroke-width="2"/>
   <text class="layer-title" x="112" y="833">Runtime</text>
-  <rect class="card-red" x="650" y="820" width="500" height="64" rx="10" stroke-width="2"/>
-  <g transform="translate(690 833)"><ellipse cx="28" cy="10" rx="28" ry="10" fill="#ffffff" stroke="#f04438" stroke-width="3"/><path d="M 0 10 L 0 42 C 0 55 56 55 56 42 L 56 10" fill="#fff7f7" stroke="#f04438" stroke-width="3"/><path d="M 0 42 C 0 55 56 55 56 42" fill="none" stroke="#f04438" stroke-width="3"/></g>  <text class="card-title" x="930" y="850" text-anchor="middle">H2 R2DBC database</text>
+  <rect class="card-red" x="650" y="820" width="500" height="64" rx="10" stroke-width="2"/><image data-bluetape4k-icon="database" data-source="docs/icons/generic/database-server.svg" x="662" y="839" width="26" height="26" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsbGVkYnk9InRpdGxlIGRlc2MiPgogIDx0aXRsZSBpZD0idGl0bGUiPkdlbmVyaWMgZGF0YWJhc2Ugc2VydmVyIGljb248L3RpdGxlPgogIDxkZXNjIGlkPSJkZXNjIj5HZW5lcmljIGRhdGFiYXNlIHNlcnZlciBpY29uIGZvciBibHVldGFwZTRrIGRpYWdyYW1zLjwvZGVzYz4KICA8cmVjdCB4PSIxMCIgeT0iOCIgd2lkdGg9IjEwOCIgaGVpZ2h0PSIxMTIiIHJ4PSIxOCIgZmlsbD0iI2ZmZmFmMiIgc3Ryb2tlPSIjMjg0ODVhIiBzdHJva2Utd2lkdGg9IjYiLz4KICA8ZWxsaXBzZSBjeD0iNjQiIGN5PSIzNiIgcng9IjM0IiByeT0iMTMiIGZpbGw9IiNmZmYwZDgiIHN0cm9rZT0iIzhjNmYzMyIgc3Ryb2tlLXdpZHRoPSI2Ii8+CiAgPHBhdGggZD0iTTMwIDM2djQ0YzAgOCAxNSAxNCAzNCAxNHMzNC02IDM0LTE0VjM2IiBmaWxsPSIjZmZmMGQ4IiBzdHJva2U9IiM4YzZmMzMiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMCA1OGMwIDggMTUgMTQgMzQgMTRzMzQtNiAzNC0xNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGM2ZjMzIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMCA4MGMwIDggMTUgMTQgMzQgMTRzMzQtNiAzNC0xNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGM2ZjMzIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K" preserveAspectRatio="xMidYMid meet"/>
+  <g transform="translate(690 833)"><ellipse cx="28" cy="10" rx="28" ry="10" fill="#ffffff" stroke="#f04438" stroke-width="3"/><path d="M 0 10 L 0 42 C 0 55 56 55 56 42 L 56 10" fill="#fff7f7" stroke="#f04438" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M 0 42 C 0 55 56 55 56 42" fill="none" stroke="#f04438" stroke-width="3"/></g>  <text class="card-title" x="930" y="850" text-anchor="middle">H2 R2DBC database</text>
   <text class="card-small" x="930" y="874" text-anchor="middle">r2dbc:h2:mem:///test</text>
 
   <path class="line-blue" d="M 330 292 L 330 433" marker-end="url(#r2c-blue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-blue" d="M 900 292 L 900 335 L 775 335 L 775 433" marker-end="url(#r2c-blue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-green" d="M 320 523 L 320 575 L 415 575 L 415 653" marker-end="url(#r2c-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-green" d="M 775 523 L 775 575 L 415 575 L 415 653" marker-end="url(#r2c-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-green" d="M 1230 523 L 1230 575 L 1385 575 L 1385 653" marker-end="url(#r2c-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-orange" d="M 415 723 L 415 770 L 850 770 L 850 808" marker-end="url(#r2c-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-blue" d="M 900 292 L 900 325 Q 900 335 890 335 L 785 335 Q 775 335 775 345 L 775 433" marker-end="url(#r2c-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 320 523 L 320 565 Q 320 575 330 575 L 405 575 Q 415 575 415 585 L 415 653" marker-end="url(#r2c-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 775 523 L 775 565 Q 775 575 765 575 L 425 575 Q 415 575 415 585 L 415 653" marker-end="url(#r2c-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 1230 523 L 1230 565 Q 1230 575 1240 575 L 1375 575 Q 1385 575 1385 585 L 1385 653" marker-end="url(#r2c-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 415 723 L 415 760 Q 415 770 425 770 L 840 770 Q 850 770 850 780 L 850 808" marker-end="url(#r2c-orange)" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line-orange" d="M 900 723 L 900 808" marker-end="url(#r2c-orange)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-orange" d="M 1385 723 L 1385 770 L 1000 770 L 1000 808" marker-end="url(#r2c-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 1385 723 L 1385 760 Q 1385 770 1375 770 L 1010 770 Q 1000 770 1000 780 L 1000 808" marker-end="url(#r2c-orange)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

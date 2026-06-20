@@ -20,7 +20,7 @@ stops the observation in `finally`.
 
 ## Span Flow
 
-![observability-advanced span flow diagram](../../docs/images/readme-diagrams/observability-observability-advanced-readme-span-flow-01.png)
+![observability-advanced span sequence diagram](../../docs/images/readme-diagrams/observability-observability-advanced-readme-span-sequence-01.png)
 
 Cache hits stop after `user.cache.get`. Cache misses continue to `user.db.find` and then
 `user.cache.put`. Redis read/write failures are logged and treated as cache misses or skipped cache

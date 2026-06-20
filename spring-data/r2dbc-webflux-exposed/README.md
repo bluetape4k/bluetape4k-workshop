@@ -16,7 +16,7 @@ controller under `/api/users` and a functional router under `/users`.
 
 ## Request Flow
 
-![R2DBC WebFlux Exposed request flow](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-flow-01.png)
+![R2DBC WebFlux Exposed request sequence](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-sequence-01.png)
 
 The application also seeds sample data on startup. `SchemaInitializer` creates
 the Exposed table and inserts four users when the table is empty.

@@ -13,7 +13,7 @@ of creating another order.
 
 ## Request Flow
 
-![spring-boot/idempotency request flow diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-sequence-01.png)
+![spring-boot/idempotency request sequence diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-sequence-01.png)
 
 ## Core Features
 

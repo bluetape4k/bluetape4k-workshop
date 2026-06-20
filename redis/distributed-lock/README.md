@@ -14,7 +14,7 @@ This module demonstrates Redis-backed inventory deduction under contention. It s
 
 ## Fenced Lock Flow
 
-![redis-distributed-lock fenced flow diagram](../../docs/images/readme-diagrams/redis-distributed-lock-readme-fenced-flow-01.png)
+![redis-distributed-lock fenced sequence diagram](../../docs/images/readme-diagrams/redis-distributed-lock-readme-fenced-sequence-01.png)
 
 The fenced variants issue a monotonic token from Redis, pass that token into `FencedResource`, and update `InventoryStore` only when the token is not older than `lastSeenToken`. The suspending variant adds `getLockId(lockName)` and `withContext(NonCancellable)` so cancellation cannot interrupt `unlockAsync(lockId).await()`.
 

@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="802" viewBox="0 0 1680 802" role="img" aria-labelledby="title desc">
+  <title id="title">Users API Initialization Sequence</title>
+  <desc id="desc">Database initialization runs before WebFlux user routes read and write rows through R2DBC.</desc>
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
+    <style>
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:19px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:12px;fill:#546A73}.msg{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.call,.work,.return,.skip{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call)}.work{stroke:#6E8F4F;marker-end:url(#arrow-work)}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret)}.skip{stroke:#B86868;marker-end:url(#arrow-skip)}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.skipLabel{stroke:#D9ABAB}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.skipBadge{fill:#FFF0F0;stroke:#B86868}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.skipText,.badgeText.skipText{fill:#9D4F4F}.alt{fill:#FFF7ED;fill-opacity:.38;stroke:#D08A39;stroke-width:2.2;stroke-dasharray:12 8}.divider{stroke:#D08A39;stroke-width:1.8;stroke-dasharray:9 7;opacity:.7}
+    </style>
+    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="13" markerHeight="13" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="13" markerHeight="13" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="13" markerHeight="13" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-skip" viewBox="0 0 10 10" markerWidth="13" markerHeight="13" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+  <rect x="24" y="24" width="1632" height="754" rx="20" class="frame"/>
+  <text x="840.0" y="76" text-anchor="middle" class="title">Users API Initialization Sequence</text>
+  <text x="840.0" y="106" text-anchor="middle" class="subtitle">Database initialization runs before WebFlux user routes read and write rows through R2DBC.</text>
+  <rect x="88" y="250" width="1504" height="180" rx="16" class="alt"/>
+  <rect x="88" y="430" width="1504" height="260" rx="16" class="alt"/>
+  <g filter="url(#shadow)"><rect x="55.0" y="154" width="250" height="74" rx="10" class="header"/>
+    <text x="180.0" y="183" text-anchor="middle" class="participant">App Startup</text>
+    <text x="180.0" y="208" text-anchor="middle" class="role">initializer</text></g>
+  <line x1="180.0" y1="228" x2="180.0" y2="690" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="385.0" y="154" width="250" height="74" rx="10" class="header"/>
+    <text x="510.0" y="183" text-anchor="middle" class="participant">DatabaseClient</text>
+    <text x="510.0" y="208" text-anchor="middle" class="role">DDL + seed</text></g>
+  <line x1="510.0" y1="228" x2="510.0" y2="690" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="715.0" y="154" width="250" height="74" rx="10" class="header"/>
+    <text x="840.0" y="183" text-anchor="middle" class="participant">Client</text>
+    <text x="840.0" y="208" text-anchor="middle" class="role">HTTP caller</text></g>
+  <line x1="840.0" y1="228" x2="840.0" y2="690" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1045.0" y="154" width="250" height="74" rx="10" class="header"/>
+    <text x="1170.0" y="183" text-anchor="middle" class="participant">CustomerController</text>
+    <text x="1170.0" y="208" text-anchor="middle" class="role">WebFlux route</text></g>
+  <line x1="1170.0" y1="228" x2="1170.0" y2="690" class="lifeline"/>
+  <g filter="url(#shadow)"><rect x="1375.0" y="154" width="250" height="74" rx="10" class="header"/>
+    <image data-bluetape4k-icon="database" data-source="docs/icons/generic/database-server.svg" x="1391.0" y="177" width="24" height="24" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsbGVkYnk9InRpdGxlIGRlc2MiPgogIDx0aXRsZSBpZD0idGl0bGUiPkdlbmVyaWMgZGF0YWJhc2Ugc2VydmVyIGljb248L3RpdGxlPgogIDxkZXNjIGlkPSJkZXNjIj5HZW5lcmljIGRhdGFiYXNlIHNlcnZlciBpY29uIGZvciBibHVldGFwZTRrIGRpYWdyYW1zLjwvZGVzYz4KICA8cmVjdCB4PSIxMCIgeT0iOCIgd2lkdGg9IjEwOCIgaGVpZ2h0PSIxMTIiIHJ4PSIxOCIgZmlsbD0iI2ZmZmFmMiIgc3Ryb2tlPSIjMjg0ODVhIiBzdHJva2Utd2lkdGg9IjYiLz4KICA8ZWxsaXBzZSBjeD0iNjQiIGN5PSIzNiIgcng9IjM0IiByeT0iMTMiIGZpbGw9IiNmZmYwZDgiIHN0cm9rZT0iIzhjNmYzMyIgc3Ryb2tlLXdpZHRoPSI2Ii8+CiAgPHBhdGggZD0iTTMwIDM2djQ0YzAgOCAxNSAxNCAzNCAxNHMzNC02IDM0LTE0VjM2IiBmaWxsPSIjZmZmMGQ4IiBzdHJva2U9IiM4YzZmMzMiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMCA1OGMwIDggMTUgMTQgMzQgMTRzMzQtNiAzNC0xNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGM2ZjMzIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik0zMCA4MGMwIDggMTUgMTQgMzQgMTRzMzQtNiAzNC0xNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGM2ZjMzIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K" preserveAspectRatio="xMidYMid meet"/>
+    <text x="1518.0" y="183" text-anchor="middle" class="participant">Database</text>
+    <text x="1518.0" y="208" text-anchor="middle" class="role">R2DBC store</text></g>
+  <line x1="1500.0" y1="228" x2="1500.0" y2="690" class="lifeline"/>
+  <rect x="188.3" y="274" width="313.4" height="34" rx="17" class="label callLabel"/>
+  <circle cx="212.3" cy="291" r="13" class="badge callBadge"/><text x="212.3" y="296" text-anchor="middle" class="badgeText callText">1</text>
+  <text x="236.3" y="296" class="msg callText">create table and seed users</text>
+  <path d="M 180.0 322 L 510.0 322" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="890.0" y="350" width="230.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="914.0" cy="367" r="13" class="badge workBadge"/><text x="914.0" y="372" text-anchor="middle" class="badgeText workText">2</text>
+  <text x="938.0" y="372" class="msg workText">execute init SQL</text>
+  <path d="M 510.0 398 L 1500.0 398" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="890.0" y="454" width="230.0" height="34" rx="17" class="label callLabel"/>
+  <circle cx="914.0" cy="471" r="13" class="badge callBadge"/><text x="914.0" y="476" text-anchor="middle" class="badgeText callText">3</text>
+  <text x="938.0" y="476" class="msg callText">GET /customers</text>
+  <path d="M 840.0 502 L 1170.0 502" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="1166.0" y="530" width="338.0" height="34" rx="17" class="label workLabel"/>
+  <circle cx="1190.0" cy="547" r="13" class="badge workBadge"/><text x="1190.0" y="552" text-anchor="middle" class="badgeText workText">4</text>
+  <text x="1214.0" y="552" class="msg workText">query rows with DatabaseClient</text>
+  <path d="M 1170.0 578 L 1500.0 578" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="1021.5" y="606" width="297.0" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="1045.5" cy="623" r="13" class="badge returnBadge"/><text x="1045.5" y="628" text-anchor="middle" class="badgeText returnText">5</text>
+  <text x="1069.5" y="628" class="msg returnText">return JSON customer list</text>
+  <path d="M 1500.0 654 L 840.0 654" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="90" y="720" width="1500" height="38" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
+  <text x="840.0" y="745" text-anchor="middle" class="footer">Reader contract: ordered calls, branch boundaries, and infrastructure touchpoints stay visible without label overlap.</text>
+</svg>

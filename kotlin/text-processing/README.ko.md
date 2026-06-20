@@ -10,7 +10,7 @@
 
 ![kotlin/text-processing architecture](../../docs/images/readme-diagrams/kotlin-text-processing-readme-architecture-01.png)
 
-## 처리 흐름
+## 처리 시퀀스
 
 ![kotlin/text-processing flow](../../docs/images/readme-diagrams/kotlin-text-processing-scenario-01.png)
 

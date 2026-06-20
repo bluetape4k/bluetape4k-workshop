@@ -17,7 +17,7 @@ This module demonstrates a resilient cache read path:
 
 ## CircuitBreaker Flow
 
-![Spring Boot Cache Resilience state flow](../../docs/images/readme-diagrams/spring-boot-cache-resilience-readme-state-flow-01.png)
+![Spring Boot Cache Resilience state sequence](../../docs/images/readme-diagrams/spring-boot-cache-resilience-readme-state-sequence-01.png)
 
 The integration test drives the full state machine: healthy Redis keeps the breaker `CLOSED`, injected timeouts push it `OPEN`, the service falls back to Caffeine, and successful probes after the wait duration close the breaker again.
 

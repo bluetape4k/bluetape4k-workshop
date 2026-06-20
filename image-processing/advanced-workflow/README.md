@@ -21,7 +21,7 @@ uploads, public URL resolution, Micrometer metrics, and Exposed-backed persisten
 
 ## Processing Flow
 
-![image-processing-advanced-workflow processing flow](../../docs/images/readme-diagrams/image-processing-advanced-workflow-readme-flow-01.png)
+![image-processing-advanced-workflow processing sequence](../../docs/images/readme-diagrams/image-processing-advanced-workflow-readme-sequence-01.png)
 
 The workflow is a small saga:
 

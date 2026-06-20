@@ -10,7 +10,7 @@ This module provides small HTTP client and integration-test helpers used by work
 
 ## Test Helper Flow
 
-![Bluetape4k Workshop Shared WebTestClient flow](../docs/images/readme-diagrams/shared-readme-test-flow-01.png)
+![Bluetape4k Workshop Shared WebTestClient flow](../docs/images/readme-diagrams/shared-readme-test-sequence-01.png)
 
 ## Key Features
 

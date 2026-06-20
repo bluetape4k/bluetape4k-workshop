@@ -16,7 +16,7 @@ custom query for email lookup.
 
 ## Request Flow
 
-![R2DBC WebFlux request flow](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-flow-01.png)
+![R2DBC WebFlux request sequence](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-sequence-01.png)
 
 `WebfluxR2dbcConfiguration` also owns database initialization. It runs
 `data/schema.sql` and then `data/data.sql` through a `ConnectionFactoryInitializer`

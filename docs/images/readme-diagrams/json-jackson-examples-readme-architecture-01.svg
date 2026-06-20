@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1380" height="840" viewBox="0 0 1380 840" role="img" aria-label="Jackson examples architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1766.4" height="840" viewBox="0 0 1766.4 840" role="img" aria-label="Jackson examples architecture diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       .canvas { fill: #F8FAFC; }
       .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
@@ -16,48 +16,48 @@
       .line { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1380" height="840"/>
-  <rect class="frame" x="18" y="18" width="1344" height="804" rx="24"/>
-  <text class="title" x="690" y="58" text-anchor="middle">Jackson examples</text>
-  <text class="subtitle" x="690" y="84" text-anchor="middle">Jackson 3 mapper defaults plus annotation-focused serialization tests</text>
+  <rect class="canvas" width="1766.4" height="840"/>
+  <rect class="frame" x="23.04" y="18" width="1720.32" height="804" rx="24"/>
+  <text class="title" x="883.2" y="58" text-anchor="middle">Jackson examples</text>
+  <text class="subtitle" x="883.2" y="84" text-anchor="middle">Jackson 3 mapper defaults plus annotation-focused serialization tests</text>
 
-  <rect x="54" y="116" width="1272" height="138" rx="20" fill="#EAF3FF" stroke="#9DB9D8" stroke-width="1.5"/>
-  <text class="layerTitle" x="88" y="150">Shared test harness</text>
+  <rect x="69.12" y="116" width="1628.16" height="138" rx="20" fill="#EAF3FF" stroke="#9DB9D8" stroke-width="1.92"/>
+  <text class="layerTitle" x="112.64" y="150">Shared test harness</text>
   <g filter="url(#shadow)">
-    <rect x="190" y="148" width="288" height="74" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
-    <text class="cardTitle" x="334" y="176" text-anchor="middle">AbstractJacksonTest</text>
-    <text class="cardText" x="334" y="200" text-anchor="middle">mapper, faker, JsonPath config</text>
+    <rect x="243.2" y="148" width="368.64" height="74" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.92"/>
+    <text class="cardTitle" x="427.52" y="176" text-anchor="middle">AbstractJacksonTest</text>
+    <text class="cardText" x="427.52" y="200" text-anchor="middle">mapper, faker, JsonPath config</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="546" y="148" width="288" height="74" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
-    <text class="cardTitle" x="690" y="176" text-anchor="middle">Jackson.defaultJsonMapper</text>
-    <text class="cardText" x="690" y="200" text-anchor="middle">Kotlin, JavaTime, Blackbird</text>
+    <rect x="698.88" y="148" width="368.64" height="74" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.92"/>
+    <text class="cardTitle" x="883.2" y="176" text-anchor="middle">Jackson.defaultJsonMapper</text>
+    <text class="cardText" x="883.2" y="200" text-anchor="middle">Kotlin, JavaTime, Blackbird</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="902" y="148" width="288" height="74" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
-    <text class="cardTitle" x="1046" y="176" text-anchor="middle">JsonPathSupport</text>
-    <text class="cardText" x="1046" y="200" text-anchor="middle">typed readAs helper</text>
+    <rect x="1154.56" y="148" width="368.64" height="74" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.92"/>
+    <text class="cardTitle" x="1338.88" y="176" text-anchor="middle">JsonPathSupport</text>
+    <text class="cardText" x="1338.88" y="200" text-anchor="middle">typed readAs helper</text>
   </g>
 
-  <rect x="54" y="286" width="1272" height="220" rx="20" fill="#EAF8F0" stroke="#93C5A7" stroke-width="1.5"/>
-  <text class="layerTitle" x="88" y="320">Annotation scenarios</text>
-  <g filter="url(#shadow)"><rect x="110" y="356" width="220" height="76" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/><text class="cardTitle" x="220" y="385" text-anchor="middle">Field shape</text><text class="cardText" x="220" y="410" text-anchor="middle">ignore, rename, unwrapped</text></g>
-  <g filter="url(#shadow)"><rect x="400" y="356" width="220" height="76" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/><text class="cardTitle" x="510" y="385" text-anchor="middle">View and raw JSON</text><text class="cardText" x="510" y="410" text-anchor="middle">JsonView, RawValue</text></g>
-  <g filter="url(#shadow)"><rect x="690" y="356" width="220" height="76" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/><text class="cardTitle" x="800" y="385" text-anchor="middle">Object graph</text><text class="cardText" x="800" y="410" text-anchor="middle">polymorphism, cyclic refs</text></g>
-  <g filter="url(#shadow)"><rect x="980" y="356" width="220" height="76" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/><text class="cardTitle" x="1090" y="385" text-anchor="middle">Dynamic and time</text><text class="cardText" x="1090" y="410" text-anchor="middle">AnyGetter, JavaTime</text></g>
+  <rect x="69.12" y="286" width="1628.16" height="220" rx="20" fill="#EAF8F0" stroke="#93C5A7" stroke-width="1.92"/>
+  <text class="layerTitle" x="112.64" y="320">Annotation scenarios</text>
+  <g filter="url(#shadow)"><rect x="140.8" y="356" width="281.6" height="76" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.92"/><text class="cardTitle" x="281.6" y="385" text-anchor="middle">Field shape</text><text class="cardText" x="281.6" y="410" text-anchor="middle">ignore, rename, unwrapped</text></g>
+  <g filter="url(#shadow)"><rect x="512" y="356" width="281.6" height="76" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.92"/><text class="cardTitle" x="652.8" y="385" text-anchor="middle">View and raw JSON</text><text class="cardText" x="652.8" y="410" text-anchor="middle">JsonView, RawValue</text></g>
+  <g filter="url(#shadow)"><rect x="883.2" y="356" width="281.6" height="76" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.92"/><text class="cardTitle" x="1024" y="385" text-anchor="middle">Object graph</text><text class="cardText" x="1024" y="410" text-anchor="middle">polymorphism, cyclic refs</text></g>
+  <g filter="url(#shadow)"><rect x="1254.4" y="356" width="281.6" height="76" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.92"/><text class="cardTitle" x="1395.2" y="385" text-anchor="middle">Dynamic and time</text><text class="cardText" x="1395.2" y="410" text-anchor="middle">AnyGetter, JavaTime</text></g>
 
-  <rect x="54" y="538" width="1272" height="150" rx="20" fill="#FFF7E8" stroke="#D8B86E" stroke-width="1.5"/>
-  <text class="layerTitle" x="88" y="572">Reader workflow</text>
-  <g filter="url(#shadow)"><rect x="178" y="596" width="246" height="62" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/><text class="cardTitle" x="301" y="620" text-anchor="middle">Kotlin model</text><text class="cardText" x="301" y="642" text-anchor="middle">data class or class</text></g>
-  <g filter="url(#shadow)"><rect x="566" y="596" width="246" height="62" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/><text class="cardTitle" x="689" y="620" text-anchor="middle">JSON document</text><text class="cardText" x="689" y="642" text-anchor="middle">writeValue and readValue</text></g>
-  <g filter="url(#shadow)"><rect x="954" y="596" width="246" height="62" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/><text class="cardTitle" x="1077" y="620" text-anchor="middle">JsonPath assertion</text><text class="cardText" x="1077" y="642" text-anchor="middle">verify shape and values</text></g>
+  <rect x="69.12" y="538" width="1628.16" height="150" rx="20" fill="#FFF7E8" stroke="#D8B86E" stroke-width="1.92"/>
+  <text class="layerTitle" x="112.64" y="572">Reader workflow</text>
+  <g filter="url(#shadow)"><rect x="227.84" y="596" width="314.88" height="62" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.92"/><text class="cardTitle" x="385.28" y="620" text-anchor="middle">Kotlin model</text><text class="cardText" x="385.28" y="642" text-anchor="middle">data class or class</text></g>
+  <g filter="url(#shadow)"><rect x="724.48" y="596" width="314.88" height="62" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.92"/><text class="cardTitle" x="881.92" y="620" text-anchor="middle">JSON document</text><text class="cardText" x="881.92" y="642" text-anchor="middle">writeValue and readValue</text></g>
+  <g filter="url(#shadow)"><rect x="1221.12" y="596" width="314.88" height="62" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.92"/><text class="cardTitle" x="1378.56" y="620" text-anchor="middle">JsonPath assertion</text><text class="cardText" x="1378.56" y="642" text-anchor="middle">verify shape and values</text></g>
 
-  <path class="line" d="M 334 222 L 334 270 L 220 270 L 220 356" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 690 222 L 690 270 L 800 270 L 800 356" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1046 222 L 1046 270 L 1090 270 L 1090 356" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 220 432 L 220 520 L 301 520 L 301 596" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 800 432 L 800 520 L 689 520 L 689 596" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1090 432 L 1090 520 L 1077 520 L 1077 596" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 424 627 L 566 627" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 812 627 L 954 627" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 427.52 222 L 427.52 260 Q 427.52 270 414.72 270 L 294.4 270 Q 281.6 270 281.6 280 L 281.6 356" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 883.2 222 L 883.2 260 Q 883.2 270 896 270 L 1011.2 270 Q 1024 270 1024 280 L 1024 356" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1338.88 222 L 1338.88 260 Q 1338.88 270 1351.68 270 L 1382.4 270 Q 1395.2 270 1395.2 280 L 1395.2 356" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 281.6 432 L 281.6 510 Q 281.6 522 294.4 522 L 372.48 522 Q 385.28 522 385.28 530 L 385.28 596" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1024 432 L 1024 510 Q 1024 522 1011.2 522 L 894.72 522 Q 881.92 522 881.92 530 L 881.92 596" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1395.2 432 L 1395.2 514.5 Q 1395.2 520 1388.16 520 L 1385.6 520 Q 1378.56 520 1378.56 525.5 L 1378.56 596" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 542.72 627 L 724.48 627" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1039.36 627 L 1221.12 627" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

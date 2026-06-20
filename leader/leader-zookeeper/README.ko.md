@@ -21,7 +21,7 @@
 
 ## 선출 의미
 
-![ZooKeeper leader election flow](../../docs/images/readme-diagrams/leader-leader-zookeeper-readme-election-flow-01.png)
+![ZooKeeper leader election flow](../../docs/images/readme-diagrams/leader-leader-zookeeper-readme-election-sequence-01.png)
 
 Single-leader 선출은 ZooKeeper mutex path를 사용합니다. 하나의 candidate가 ephemeral znode를 소유하고 job을 실행하며, 나머지는 `null`을 받습니다.
 

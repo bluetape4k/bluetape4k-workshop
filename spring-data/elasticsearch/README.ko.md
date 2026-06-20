@@ -20,7 +20,7 @@ reactive operations는 동일한 document model을 WebFlux 스타일 API와 비�
 
 ## Query 흐름
 
-![Spring Data Elasticsearch query flow](../../docs/images/readme-diagrams/spring-data-elasticsearch-readme-flow-01.png)
+![Spring Data Elasticsearch query flow](../../docs/images/readme-diagrams/spring-data-elasticsearch-readme-sequence-01.png)
 
 테스트는 세 가지 읽기 경로를 다룹니다.
 

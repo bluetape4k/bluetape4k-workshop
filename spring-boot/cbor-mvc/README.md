@@ -12,7 +12,7 @@ This module shows Spring MVC returning `Course` resources as CBOR (`application/
 
 ## Request Flow
 
-![CBOR in Spring Boot MVC request flow](../../docs/images/readme-diagrams/spring-boot-cbor-mvc-sequence-01.png)
+![CBOR in Spring Boot MVC request sequence](../../docs/images/readme-diagrams/spring-boot-cbor-mvc-sequence-01.png)
 
 This example shows how to use CBOR (Concise Binary Object Representation), a binary JSON format, as the REST API communication format instead of regular JSON.
 

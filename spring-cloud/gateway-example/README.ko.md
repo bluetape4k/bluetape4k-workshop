@@ -14,7 +14,7 @@
 
 ## Route 흐름
 
-![Spring Cloud Gateway route flow](../../docs/images/readme-diagrams/spring-cloud-gateway-example-readme-flow-01.png)
+![Spring Cloud Gateway route sequence](../../docs/images/readme-diagrams/spring-cloud-gateway-example-readme-sequence-01.png)
 
 ## 참고 사항
 

@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="620" viewBox="0 0 1320 620" role="img" aria-label="Builder pattern diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1447.341" height="620" viewBox="0 0 1447.341 620" role="img" aria-label="Builder pattern diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#fff;stroke:#D6E0E8;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.cardTitle{font-family:"Architects Daughter";font-size:25px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="620"/>
-  <rect class="frame" x="24" y="24" width="1272" height="572" rx="24"/>
-  <text class="title" x="660" y="66" text-anchor="middle">Builder</text>
-  <text class="subtitle" x="660" y="94" text-anchor="middle">Hero.Builder separates required identity from optional appearance and equipment choices.</text>
+  <rect class="canvas" width="1447.341" height="620"/>
+  <rect class="frame" x="26.315" y="24" width="1394.711" height="572" rx="24"/>
+  <text class="title" x="723.671" y="66" text-anchor="middle">Builder</text>
+  <text class="subtitle" x="723.671" y="94" text-anchor="middle">Hero.Builder separates required identity from optional appearance and equipment choices.</text>
 
-  <g filter="url(#shadow)"><rect x="82" y="184" width="240" height="94" rx="16" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.7"/><text class="cardTitle" x="202" y="220" text-anchor="middle">Required input</text><text class="cardText" x="202" y="250" text-anchor="middle">profession and name</text></g>
-  <g filter="url(#shadow)"><rect x="402" y="150" width="276" height="162" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="540" y="188" text-anchor="middle">Hero.Builder</text><text class="cardText" x="540" y="220" text-anchor="middle">withHairType</text><text class="cardText" x="540" y="244" text-anchor="middle">withHairColor</text><text class="cardText" x="540" y="268" text-anchor="middle">withArmor, withWeapon</text></g>
-  <g filter="url(#shadow)"><rect x="758" y="184" width="240" height="94" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/><text class="cardTitle" x="878" y="220" text-anchor="middle">build()</text><text class="cardText" x="878" y="250" text-anchor="middle">private Hero constructor</text></g>
-  <g filter="url(#shadow)"><rect x="1078" y="184" width="170" height="94" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="1.7"/><text class="cardTitle" x="1163" y="220" text-anchor="middle">Hero</text><text class="cardText" x="1163" y="250" text-anchor="middle">read-only values</text></g>
+  <g filter="url(#shadow)"><rect x="89.911" y="184" width="263.153" height="94" rx="16" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.864"/><text class="cardTitle" x="221.487" y="220" text-anchor="middle">Required input</text><text class="cardText" x="221.487" y="250" text-anchor="middle">profession and name</text></g>
+  <g filter="url(#shadow)"><rect x="440.781" y="150" width="302.626" height="162" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.864"/><text class="cardTitle" x="592.094" y="188" text-anchor="middle">Hero.Builder</text><text class="cardText" x="592.094" y="220" text-anchor="middle">withHairType</text><text class="cardText" x="592.094" y="244" text-anchor="middle">withHairColor</text><text class="cardText" x="592.094" y="268" text-anchor="middle">withArmor, withWeapon</text></g>
+  <g filter="url(#shadow)"><rect x="831.125" y="184" width="263.153" height="94" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.864"/><text class="cardTitle" x="962.701" y="220" text-anchor="middle">build()</text><text class="cardText" x="962.701" y="250" text-anchor="middle">private Hero constructor</text></g>
+  <g filter="url(#shadow)"><rect x="1181.995" y="184" width="186.4" height="94" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="1.864"/><text class="cardTitle" x="1275.195" y="220" text-anchor="middle">Hero</text><text class="cardText" x="1275.195" y="250" text-anchor="middle">read-only values</text></g>
 
-  <g filter="url(#shadow)"><rect x="254" y="396" width="812" height="92" rx="16" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.7"/><text class="cardTitle" x="660" y="432" text-anchor="middle">Kotlin alternative: HeroDataClass</text><text class="cardText" x="660" y="462" text-anchor="middle">Default nullable properties can replace a builder when invariants are simple.</text></g>
+  <g filter="url(#shadow)"><rect x="278.504" y="396" width="890.334" height="92" rx="16" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.864"/><text class="cardTitle" x="723.671" y="432" text-anchor="middle">Kotlin alternative: HeroDataClass</text><text class="cardText" x="723.671" y="462" text-anchor="middle">Default nullable properties can replace a builder when invariants are simple.</text></g>
 
-  <path class="line" d="M 322 231 L 402 231" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 678 231 L 758 231" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 998 231 L 1078 231" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 660 312 L 660 396" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 353.064 231 L 440.781 231" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 743.407 231 L 831.125 231" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1094.278 231 L 1181.995 231" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 723.671 312 L 723.671 396" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

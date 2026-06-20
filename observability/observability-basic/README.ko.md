@@ -17,7 +17,7 @@
 
 ## Trace Propagation Flow
 
-![observability-basic trace propagation flow](../../docs/images/readme-diagrams/observability-observability-basic-readme-trace-flow-01.png)
+![observability-basic trace propagation sequence](../../docs/images/readme-diagrams/observability-observability-basic-readme-trace-sequence-01.png)
 
 `TracePropagationTest`는 실제 Micrometer + OpenTelemetry tracing을 사용해 MockWebServer로 나가는
 요청에 `traceparent` header가 들어가는지 확인합니다. `TestObservationRegistry`로 registry를

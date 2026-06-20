@@ -25,7 +25,7 @@ adds token issuing infrastructure.
 
 ## Common Request Shape
 
-![Spring Security workshop filter flow](../docs/images/readme-diagrams/spring-security-readme-flow-01.png)
+![Spring Security workshop filter sequence](../docs/images/readme-diagrams/spring-security-readme-sequence-01.png)
 
 The servlet and reactive stacks use different filter implementations, but the
 reader-facing flow is the same: public routes pass, protected routes require a

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="560" viewBox="0 0 1120 560" role="img" aria-label="graph-recommendation domain model diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1346.545" height="560" viewBox="0 0 1346.545 560" role="img" aria-label="graph-recommendation domain model diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/></filter>
-    <marker id="arrowPurchase" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
-    <marker id="arrowFollow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
+    <marker id="arrowPurchase" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowFollow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       .canvas { fill: #F8FAFC; }
       .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
@@ -16,36 +16,36 @@
       .line { fill: none; stroke-width: 3.3; stroke-linecap: round; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1120" height="560"/>
-  <rect class="frame" x="18" y="18" width="1084" height="524" rx="24"/>
-  <text class="title" x="560" y="58" text-anchor="middle">Recommendation graph schema</text>
-  <text class="subtitle" x="560" y="84" text-anchor="middle">Users purchase products and follow other users; both edges are directed.</text>
+  <rect class="canvas" width="1346.545" height="560"/>
+  <rect class="frame" x="21.641" y="18" width="1303.264" height="524" rx="24"/>
+  <text class="title" x="673.273" y="58" text-anchor="middle">Recommendation graph schema</text>
+  <text class="subtitle" x="673.273" y="84" text-anchor="middle">Users purchase products and follow other users; both edges are directed.</text>
 
   <g filter="url(#shadow)">
-    <rect x="150" y="196" width="280" height="154" rx="18" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.8"/>
-    <text class="cardTitle" x="290" y="238" text-anchor="middle">User</text>
-    <text class="cardText" x="290" y="276" text-anchor="middle">userId</text>
-    <text class="cardText" x="290" y="304" text-anchor="middle">name</text>
+    <rect x="180.341" y="196" width="336.636" height="154" rx="18" fill="#EFF6FF" stroke="#3B82F6" stroke-width="2.164"/>
+    <text class="cardTitle" x="348.659" y="238" text-anchor="middle">User</text>
+    <text class="cardText" x="348.659" y="276" text-anchor="middle">userId</text>
+    <text class="cardText" x="348.659" y="304" text-anchor="middle">name</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="690" y="196" width="280" height="154" rx="18" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.8"/>
-    <text class="cardTitle" x="830" y="238" text-anchor="middle">Product</text>
-    <text class="cardText" x="830" y="276" text-anchor="middle">productId</text>
-    <text class="cardText" x="830" y="304" text-anchor="middle">name, category</text>
+    <rect x="829.568" y="196" width="336.636" height="154" rx="18" fill="#F0FDF4" stroke="#16A34A" stroke-width="2.164"/>
+    <text class="cardTitle" x="997.886" y="238" text-anchor="middle">Product</text>
+    <text class="cardText" x="997.886" y="276" text-anchor="middle">productId</text>
+    <text class="cardText" x="997.886" y="304" text-anchor="middle">name, category</text>
   </g>
 
-  <path class="line" d="M 430 272 L 690 272" stroke="#16A34A" marker-end="url(#arrowPurchase)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 430 226 L 560 226 L 560 134 L 290 134 L 290 196" stroke="#2563EB" marker-end="url(#arrowFollow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 516.977 330 L 516.977 382 Q 516.977 392 528.977 392 L 985.886 392 Q 997.886 392 997.886 382 L 997.886 350" stroke="#16A34A" marker-end="url(#arrowPurchase)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 516.977 200 L 661.25 200 Q 673.273 200 673.273 216 L 673.273 144 Q 673.273 134 661.25 134 L 360.682 134 Q 348.659 134 348.659 144 L 348.659 196" stroke="#2563EB" marker-end="url(#arrowFollow)" stroke-linecap="round" stroke-linejoin="round"/>
 
   <g filter="url(#shadow)">
-    <rect x="474" y="214" width="176" height="92" rx="14" fill="#FFFFFF" stroke="#D5E0E8" stroke-width="1.4"/>
-    <text class="edgeTitle" x="562" y="246" text-anchor="middle">PURCHASED</text>
-    <text class="edgeText" x="562" y="272" text-anchor="middle">User -> Product</text>
-    <text class="edgeText" x="562" y="294" text-anchor="middle">rating, purchasedAt</text>
+    <rect x="569.877" y="214" width="211.6" height="92" rx="14" fill="#FFFFFF" stroke="#D5E0E8" stroke-width="1.683"/>
+    <text class="edgeTitle" x="675.677" y="246" text-anchor="middle">PURCHASED</text>
+    <text class="edgeText" x="675.677" y="272" text-anchor="middle">User -> Product</text>
+    <text class="edgeText" x="675.677" y="294" text-anchor="middle">rating, purchasedAt</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="432" y="112" width="188" height="72" rx="14" fill="#FFFFFF" stroke="#D5E0E8" stroke-width="1.4"/>
-    <text class="edgeTitle" x="526" y="142" text-anchor="middle">FOLLOWS</text>
-    <text class="edgeText" x="526" y="166" text-anchor="middle">User -> User</text>
+    <rect x="519.382" y="112" width="226.027" height="72" rx="14" fill="#FFFFFF" stroke="#D5E0E8" stroke-width="1.683"/>
+    <text class="edgeTitle" x="632.395" y="142" text-anchor="middle">FOLLOWS</text>
+    <text class="edgeText" x="632.395" y="166" text-anchor="middle">User -> User</text>
   </g>
 </svg>

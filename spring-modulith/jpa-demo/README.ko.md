@@ -15,7 +15,7 @@ module 간에는 다른 모듈이 소유한 read model이 필요할 때 internal
 
 ## Organization Event Flow
 
-![Spring Modulith JPA event flow](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-flow-01.png)
+![Spring Modulith JPA event flow](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-sequence-01.png)
 
 Organization을 추가하면 JPA entity를 저장하고 `OrganizationAddEvent`를 발행합니다.
 Department는 `@ApplicationModuleListener`로 이벤트를 받아 기본 부서를 생성합니다.

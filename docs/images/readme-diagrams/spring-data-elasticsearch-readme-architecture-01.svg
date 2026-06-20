@@ -21,16 +21,16 @@
       .line-red { fill: none; stroke: #f04438; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <marker id="arrow-blue" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="arrow-green" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="arrow-orange" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="arrow-red" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
   </defs>
 
@@ -95,16 +95,16 @@
   <path class="line-blue" d="M 480 261 L 730 261" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line-blue" d="M 1060 261 L 1310 261" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line-green" d="M 900 302 L 900 456 L 310 456 L 310 466" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-green" d="M 900 302 L 900 456 L 700 456 L 700 466" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-green" d="M 1480 302 L 1480 456 L 1100 456 L 1100 466" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-green" d="M 1480 302 L 1480 456 L 1500 456 L 1500 466" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 900 302 L 900 446 Q 900 456 890 456 L 314 456 Q 310 456 310 460 L 310 466" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 900 302 L 900 446 Q 900 456 890 456 L 704 456 Q 700 456 700 460 L 700 466" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 1480 302 L 1480 446 Q 1480 456 1470 456 L 1104 456 Q 1100 456 1100 460 L 1100 466" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 1480 302 L 1480 447 Q 1480 456 1489 456 L 1496 456 Q 1500 456 1500 460 L 1500 466" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line-orange" d="M 310 568 L 310 650 L 480 650 L 480 753" marker-end="url(#arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-orange" d="M 700 568 L 700 650 L 480 650 L 480 753" marker-end="url(#arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-orange" d="M 1100 568 L 1100 650 L 920 650 L 920 753" marker-end="url(#arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-orange" d="M 1500 568 L 1500 650 L 920 650 L 920 753" marker-end="url(#arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 310 568 L 310 640 Q 310 656 320 656 L 470 656 Q 480 656 480 660 L 480 753" marker-end="url(#arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 700 568 L 700 640 Q 700 656 690 656 L 490 656 Q 480 656 480 660 L 480 753" marker-end="url(#arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 1100 568 L 1100 640 Q 1100 656 1090 656 L 930 656 Q 920 656 920 660 L 920 753" marker-end="url(#arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 1500 568 L 1500 640 Q 1500 656 1490 656 L 930 656 Q 920 656 920 660 L 920 753" marker-end="url(#arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
 
-  <path class="line-red" d="M 690 806 L 720 806 L 720 878 L 1160 878 L 1160 836 L 1188 836" marker-end="url(#arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-red" d="M 690 806 L 710 806 Q 720 806 720 816 L 720 868 Q 720 906 730 906 L 1150 906 Q 1160 906 1160 868 L 1160 846 Q 1160 836 1170 836 L 1188 836" marker-end="url(#arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line-red" d="M 1080 806 L 1188 806" marker-end="url(#arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

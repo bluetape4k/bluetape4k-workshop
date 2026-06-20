@@ -1,79 +1,79 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="760" viewBox="0 0 1500 760" role="img" aria-label="Micrometer observation architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="760" viewBox="0 0 1920 760" role="img" aria-label="Micrometer observation architecture diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:23px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.label{font-family:"Comic Mono";font-size:13px;fill:#334155}.line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
     </style>
   </defs>
-  <rect class="canvas" width="1500" height="760"/>
-  <rect class="frame" x="24" y="24" width="1452" height="712" rx="24"/>
-  <text class="title" x="750" y="66" text-anchor="middle">Micrometer Observation architecture</text>
-  <text class="subtitle" x="750" y="94" text-anchor="middle">Spring HTTP observation remains outermost; GreetingService creates method observations through ObservationRegistry.</text>
+  <rect class="canvas" width="1920" height="760"/>
+  <rect class="frame" x="30.72" y="24" width="1858.56" height="712" rx="24"/>
+  <text class="title" x="960" y="66" text-anchor="middle">Micrometer Observation architecture</text>
+  <text class="subtitle" x="960" y="94" text-anchor="middle">Spring HTTP observation remains outermost; GreetingService creates method observations through ObservationRegistry.</text>
 
-  <rect class="layer" x="64" y="132" width="292" height="520" rx="18"/>
-  <text class="layerLabel" x="92" y="168">Web endpoints</text>
+  <rect class="layer" x="81.92" y="132" width="373.76" height="520" rx="18"/>
+  <text class="layerLabel" x="117.76" y="168">Web endpoints</text>
   <g filter="url(#shadow)">
-    <rect x="104" y="234" width="212" height="120" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
-    <text class="cardTitle" x="210" y="278" text-anchor="middle">Greeting Controller</text>
-    <text class="cardText" x="210" y="310" text-anchor="middle">GET /greeting</text>
-    <text class="cardText" x="210" y="334" text-anchor="middle">GET /greeting/for</text>
+    <rect x="133.12" y="234" width="271.36" height="120" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="2.176"/>
+    <text class="cardTitle" x="268.8" y="278" text-anchor="middle">Greeting Controller</text>
+    <text class="cardText" x="268.8" y="310" text-anchor="middle">GET /greeting</text>
+    <text class="cardText" x="268.8" y="334" text-anchor="middle">GET /greeting/for</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="104" y="438" width="212" height="94" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="1.7"/>
-    <text class="cardTitle" x="210" y="474" text-anchor="middle">HTTP filter</text>
-    <text class="cardText" x="210" y="500" text-anchor="middle">ServerHttpObservation</text>
-  </g>
-
-  <rect class="layer" x="408" y="132" width="312" height="520" rx="18"/>
-  <text class="layerLabel" x="436" y="168">Service observations</text>
-  <g filter="url(#shadow)">
-    <rect x="448" y="250" width="232" height="130" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
-    <text class="cardTitle" x="564" y="296" text-anchor="middle">Greeting Service</text>
-    <text class="cardText" x="564" y="328" text-anchor="middle">@Observed greetingService</text>
-    <text class="cardText" x="564" y="352" text-anchor="middle">manual observations</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="448" y="438" width="232" height="94" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
-    <text class="cardTitle" x="564" y="474" text-anchor="middle">Observed Aspect</text>
-    <text class="cardText" x="564" y="500" text-anchor="middle">skips controllers</text>
+    <rect x="133.12" y="438" width="271.36" height="94" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="2.176"/>
+    <text class="cardTitle" x="268.8" y="474" text-anchor="middle">HTTP filter</text>
+    <text class="cardText" x="268.8" y="500" text-anchor="middle">ServerHttpObservation</text>
   </g>
 
-  <rect class="layer" x="772" y="132" width="292" height="520" rx="18"/>
-  <text class="layerLabel" x="800" y="168">Micrometer core</text>
+  <rect class="layer" x="522.24" y="132" width="399.36" height="520" rx="18"/>
+  <text class="layerLabel" x="558.08" y="168">Service observations</text>
   <g filter="url(#shadow)">
-    <rect x="812" y="292" width="212" height="130" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
-    <text class="cardTitle" x="918" y="330" text-anchor="middle">Observation</text>
-    <text class="cardTitle" x="918" y="360" text-anchor="middle">Registry</text>
-    <text class="cardText" x="918" y="394" text-anchor="middle">events + key-values</text>
+    <rect x="573.44" y="250" width="296.96" height="130" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="2.176"/>
+    <text class="cardTitle" x="721.92" y="296" text-anchor="middle">Greeting Service</text>
+    <text class="cardText" x="721.92" y="328" text-anchor="middle">@Observed greetingService</text>
+    <text class="cardText" x="721.92" y="352" text-anchor="middle">manual observations</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="573.44" y="438" width="296.96" height="94" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="2.176"/>
+    <text class="cardTitle" x="721.92" y="474" text-anchor="middle">Observed Aspect</text>
+    <text class="cardText" x="721.92" y="500" text-anchor="middle">skips controllers</text>
   </g>
 
-  <rect class="layer" x="1116" y="132" width="320" height="520" rx="18"/>
-  <text class="layerLabel" x="1144" y="168">Handlers and exports</text>
+  <rect class="layer" x="988.16" y="132" width="373.76" height="520" rx="18"/>
+  <text class="layerLabel" x="1024" y="168">Micrometer core</text>
   <g filter="url(#shadow)">
-    <rect x="1156" y="214" width="240" height="106" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
-    <text class="cardTitle" x="1276" y="254" text-anchor="middle">Text Publisher</text>
-    <text class="cardText" x="1276" y="284" text-anchor="middle">ObservationTextPublisher</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="1156" y="366" width="240" height="106" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
-    <text class="cardTitle" x="1276" y="406" text-anchor="middle">Actuator metrics</text>  <text class="cardText" x="1276" y="436" text-anchor="middle">Prometheus endpoint</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="1156" y="518" width="240" height="84" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
-    <text class="cardTitle" x="1276" y="554" text-anchor="middle">Test registry</text>
-    <text class="cardText" x="1276" y="580" text-anchor="middle">integration assertions</text>
+    <rect x="1039.36" y="292" width="271.36" height="130" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="2.176"/>
+    <text class="cardTitle" x="1175.04" y="330" text-anchor="middle">Observation</text>
+    <text class="cardTitle" x="1175.04" y="360" text-anchor="middle">Registry</text>
+    <text class="cardText" x="1175.04" y="394" text-anchor="middle">events + key-values</text>
   </g>
 
-  <path class="line" d="M 316 294 L 448 315" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 316 485 L 360 485 L 360 572 L 760 572 L 760 370 L 812 370" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 680 315 L 748 315 L 748 340 L 812 340" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 680 485 L 748 485 L 748 400 L 812 400" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1024 338 L 1156 266" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1024 374 L 1156 419" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 918 422 L 918 560 L 1156 560" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
-  <text class="label" x="382" y="552">HTTP observation</text>
+  <rect class="layer" x="1428.48" y="132" width="409.6" height="520" rx="18"/>
+  <text class="layerLabel" x="1464.32" y="168">Handlers and exports</text>
+  <g filter="url(#shadow)">
+    <rect x="1479.68" y="214" width="307.2" height="106" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="2.176"/>
+    <text class="cardTitle" x="1633.28" y="254" text-anchor="middle">Text Publisher</text>
+    <text class="cardText" x="1633.28" y="284" text-anchor="middle">ObservationTextPublisher</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1479.68" y="366" width="307.2" height="106" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="2.176"/>
+    <text class="cardTitle" x="1633.28" y="406" text-anchor="middle">Actuator metrics</text>  <text class="cardText" x="1633.28" y="436" text-anchor="middle">Prometheus endpoint</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1479.68" y="518" width="307.2" height="84" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="2.176"/>
+    <text class="cardTitle" x="1633.28" y="554" text-anchor="middle">Test registry</text>
+    <text class="cardText" x="1633.28" y="580" text-anchor="middle">integration assertions</text>
+  </g>
+
+  <path class="line" d="M 404.48 294 L 573.44 315" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 404.48 485 L 448 485 Q 476.16 485 476.16 495 L 476.16 562 Q 476.16 572 473.6 572 L 960 572 Q 967.68 572 967.68 562 L 967.68 380 Q 967.68 370 985.6 370 L 1039.36 370" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 870.4 315 L 944.64 315 Q 957.44 315 957.44 325 L 957.44 330 Q 957.44 340 970.24 340 L 1039.36 340" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 870.4 485 L 944.64 485 Q 957.44 485 957.44 475 L 957.44 410 Q 957.44 400 970.24 400 L 1039.36 400" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1310.72 338 L 1479.68 266" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1310.72 374 L 1479.68 419" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1175.04 422 L 1175.04 550 Q 1175.04 560 1187.84 560 L 1479.68 560" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <text class="label" x="488.96" y="552">HTTP observation</text>
 </svg>

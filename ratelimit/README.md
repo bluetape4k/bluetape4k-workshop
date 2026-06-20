@@ -12,7 +12,7 @@ The recommended path is `bucker4j-bluetape4k-webflux` when you want a bluetape4k
 
 ## Selection Flow
 
-![Rate limiter module selection flow](../docs/images/readme-diagrams/ratelimit-readme-selection-flow-01.png)
+![Rate limiter module selection flow](../docs/images/readme-diagrams/ratelimit-readme-selection-sequence-01.png)
 
 Start with the key you need. User-token or mixed identity work belongs in the bluetape4k modules. IP-only starter behavior belongs in the Redis or Caffeine starter modules. Redis examples demonstrate shared bucket state; the Caffeine example demonstrates local servlet filtering.
 

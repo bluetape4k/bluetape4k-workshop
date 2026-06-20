@@ -1,90 +1,90 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="760" viewBox="0 0 1480 760" role="img" aria-label="Ktor REST coroutines architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1894.4" height="760" viewBox="0 0 1894.4 760" role="img" aria-label="Ktor REST coroutines architecture diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
-    <marker id="arrowTeal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0D9488" stroke-dasharray="none"/></marker>
-    <marker id="arrowCyan" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0891B2" stroke-dasharray="none"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none"/></marker>
-    <marker id="arrowRed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#DC2626" stroke-dasharray="none"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowTeal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0D9488" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowCyan" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0891B2" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowRed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#DC2626" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:23px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
     </style>
   </defs>
-  <rect class="canvas" width="1480" height="760"/>
-  <rect class="frame" x="24" y="24" width="1432" height="712" rx="24"/>
-  <text class="title" x="740" y="66" text-anchor="middle">Ktor coroutine REST service</text>
-  <text class="subtitle" x="740" y="94" text-anchor="middle">Application.module wires Ktor plugins, book routes, coroutine service logic, and an in-memory hot stream repository.</text>
+  <rect class="canvas" width="1894.4" height="760"/>
+  <rect class="frame" x="30.72" y="24" width="1832.96" height="712" rx="24"/>
+  <text class="title" x="947.2" y="66" text-anchor="middle">Ktor coroutine REST service</text>
+  <text class="subtitle" x="947.2" y="94" text-anchor="middle">Application.module wires Ktor plugins, book routes, coroutine service logic, and an in-memory hot stream repository.</text>
 
-  <rect class="layer" x="72" y="132" width="232" height="504" rx="18"/>
-  <text class="layerLabel" x="100" y="168">Client surface</text>
+  <rect class="layer" x="92.16" y="132" width="296.96" height="504" rx="18"/>
+  <text class="layerLabel" x="128" y="168">Client surface</text>
   <g filter="url(#shadow)">
-    <rect x="108" y="308" width="160" height="118" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="1.7"/>
-    <text class="cardTitle" x="188" y="350" text-anchor="middle">HTTP Client</text>
-    <text class="cardText" x="188" y="378" text-anchor="middle">JSON, SSE, NDJSON</text>
-    <text class="cardText" x="188" y="402" text-anchor="middle">curl or tests</text>
-  </g>
-
-  <rect class="layer" x="332" y="132" width="830" height="504" rx="18"/>
-  <text class="layerLabel" x="360" y="168">Ktor application module</text>
-  <g filter="url(#shadow)">
-    <rect x="374" y="214" width="222" height="116" rx="16" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.7"/>
-    <text class="cardTitle" x="485" y="253" text-anchor="middle">CallLogging</text>
-    <text class="cardText" x="485" y="282" text-anchor="middle">request trace</text>
-    <text class="cardText" x="485" y="306" text-anchor="middle">KLoggingChannel</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="627" y="214" width="240" height="116" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
-    <text class="cardTitle" x="747" y="253" text-anchor="middle">ContentNegotiation</text>
-    <text class="cardText" x="747" y="282" text-anchor="middle">AppJson</text>
-    <text class="cardText" x="747" y="306" text-anchor="middle">kotlinx JSON</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="898" y="214" width="222" height="116" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
-    <text class="cardTitle" x="1009" y="253" text-anchor="middle">StatusPages</text>
-    <text class="cardText" x="1009" y="282" text-anchor="middle">400, 404, 409, 500</text>
-    <text class="cardText" x="1009" y="306" text-anchor="middle">typed error body</text>
+    <rect x="138.24" y="308" width="204.8" height="118" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="2.176"/>
+    <text class="cardTitle" x="240.64" y="350" text-anchor="middle">HTTP Client</text>
+    <text class="cardText" x="240.64" y="378" text-anchor="middle">JSON, SSE, NDJSON</text>
+    <text class="cardText" x="240.64" y="402" text-anchor="middle">curl or tests</text>
   </g>
 
+  <rect class="layer" x="424.96" y="132" width="1062.4" height="504" rx="18"/>
+  <text class="layerLabel" x="460.8" y="168">Ktor application module</text>
   <g filter="url(#shadow)">
-    <rect x="374" y="426" width="222" height="122" rx="16" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.7"/>
-    <text class="cardTitle" x="485" y="468" text-anchor="middle">BookRoutes</text>
-    <text class="cardText" x="485" y="496" text-anchor="middle">CRUD endpoints</text>
-    <text class="cardText" x="485" y="520" text-anchor="middle">stream + export</text>
+    <rect x="478.72" y="214" width="284.16" height="116" rx="16" fill="#EFF6FF" stroke="#3B82F6" stroke-width="2.176"/>
+    <text class="cardTitle" x="620.8" y="253" text-anchor="middle">CallLogging</text>
+    <text class="cardText" x="620.8" y="282" text-anchor="middle">request trace</text>
+    <text class="cardText" x="620.8" y="306" text-anchor="middle">KLoggingChannel</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="627" y="426" width="222" height="122" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
-    <text class="cardTitle" x="738" y="468" text-anchor="middle">BookService</text>
-    <text class="cardText" x="738" y="496" text-anchor="middle">validation rules</text>
-    <text class="cardText" x="738" y="520" text-anchor="middle">domain errors</text>
+    <rect x="802.56" y="214" width="307.2" height="116" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="2.176"/>
+    <text class="cardTitle" x="956.16" y="253" text-anchor="middle">ContentNegotiation</text>
+    <text class="cardText" x="956.16" y="282" text-anchor="middle">AppJson</text>
+    <text class="cardText" x="956.16" y="306" text-anchor="middle">kotlinx JSON</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="898" y="426" width="222" height="122" rx="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="1.7"/>
-    <text class="cardTitle" x="1009" y="468" text-anchor="middle">Jackson3Support</text>
-    <text class="cardText" x="1009" y="496" text-anchor="middle">tools.jackson.*</text>
-    <text class="cardText" x="1009" y="520" text-anchor="middle">NDJSON writer</text>
-  </g>
-
-  <rect class="layer" x="1194" y="132" width="234" height="504" rx="18"/>
-  <text class="layerLabel" x="1222" y="168">In-memory state</text>
-  <g filter="url(#shadow)">
-    <rect x="1230" y="266" width="162" height="144" rx="16" fill="#FEFCE8" stroke="#CA8A04" stroke-width="1.7"/>
-    <text class="cardTitle" x="1311" y="308" text-anchor="middle">Repository</text>
-    <text class="cardText" x="1311" y="337" text-anchor="middle">ConcurrentHashMap</text>
-    <text class="cardText" x="1311" y="361" text-anchor="middle">save, update, delete</text>
-    <text class="cardText" x="1311" y="385" text-anchor="middle">findAll, findById</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="1230" y="466" width="162" height="112" rx="16" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.7"/>
-    <text class="cardTitle" x="1311" y="505" text-anchor="middle">SharedFlow</text>
-    <text class="cardText" x="1311" y="533" text-anchor="middle">hot stream</text>
-    <text class="cardText" x="1311" y="557" text-anchor="middle">64 event buffer</text>
+    <rect x="1149.44" y="214" width="284.16" height="116" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="2.176"/>
+    <text class="cardTitle" x="1291.52" y="253" text-anchor="middle">StatusPages</text>
+    <text class="cardText" x="1291.52" y="282" text-anchor="middle">400, 404, 409, 500</text>
+    <text class="cardText" x="1291.52" y="306" text-anchor="middle">typed error body</text>
   </g>
 
-  <path class="line" d="M 268 367 L 324 367 L 324 487 L 374 487" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 596 487 L 627 487" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 485 548 L 485 590 L 1009 590 L 1009 548" stroke="#0D9488" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 849 487 L 872 487 L 872 366 L 1230 338" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1311 466 L 1311 430 L 1150 430 L 1150 514 L 1120 514" stroke="#0891B2" marker-end="url(#arrowCyan)" stroke-linecap="round" stroke-linejoin="round"/>
+  <g filter="url(#shadow)">
+    <rect x="478.72" y="426" width="284.16" height="122" rx="16" fill="#EEF2FF" stroke="#6366F1" stroke-width="2.176"/>
+    <text class="cardTitle" x="620.8" y="468" text-anchor="middle">BookRoutes</text>
+    <text class="cardText" x="620.8" y="496" text-anchor="middle">CRUD endpoints</text>
+    <text class="cardText" x="620.8" y="520" text-anchor="middle">stream + export</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="802.56" y="426" width="284.16" height="122" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="2.176"/>
+    <text class="cardTitle" x="944.64" y="468" text-anchor="middle">BookService</text>
+    <text class="cardText" x="944.64" y="496" text-anchor="middle">validation rules</text>
+    <text class="cardText" x="944.64" y="520" text-anchor="middle">domain errors</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1149.44" y="426" width="284.16" height="122" rx="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="2.176"/>
+    <text class="cardTitle" x="1291.52" y="468" text-anchor="middle">Jackson3Support</text>
+    <text class="cardText" x="1291.52" y="496" text-anchor="middle">tools.jackson.*</text>
+    <text class="cardText" x="1291.52" y="520" text-anchor="middle">NDJSON writer</text>
+  </g>
+
+  <rect class="layer" x="1528.32" y="132" width="299.52" height="504" rx="18"/>
+  <text class="layerLabel" x="1564.16" y="168">In-memory state</text>
+  <g filter="url(#shadow)">
+    <rect x="1574.4" y="266" width="207.36" height="144" rx="16" fill="#FEFCE8" stroke="#CA8A04" stroke-width="2.176"/>
+    <text class="cardTitle" x="1678.08" y="308" text-anchor="middle">Repository</text>
+    <text class="cardText" x="1678.08" y="337" text-anchor="middle">ConcurrentHashMap</text>
+    <text class="cardText" x="1678.08" y="361" text-anchor="middle">save, update, delete</text>
+    <text class="cardText" x="1678.08" y="385" text-anchor="middle">findAll, findById</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1574.4" y="466" width="207.36" height="112" rx="16" fill="#ECFEFF" stroke="#0891B2" stroke-width="2.176"/>
+    <text class="cardTitle" x="1678.08" y="505" text-anchor="middle">SharedFlow</text>
+    <text class="cardText" x="1678.08" y="533" text-anchor="middle">hot stream</text>
+    <text class="cardText" x="1678.08" y="557" text-anchor="middle">64 event buffer</text>
+  </g>
+
+  <path class="line" d="M 343.04 367 L 401.92 367 Q 409.6 367 409.6 377 L 409.6 477 Q 409.6 487 427.52 487 L 478.72 487" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 762.88 487 L 802.56 487" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 620.8 548 L 620.8 580 Q 620.8 590 633.6 590 L 1278.72 590 Q 1291.52 590 1291.52 580 L 1291.52 548" stroke="#0D9488" marker-end="url(#arrowTeal)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1086.72 487 L 1103.36 487 Q 1116.16 487 1116.16 477 L 1116.16 366 L 1574.4 338" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1678.08 466 L 1678.08 440 Q 1678.08 430 1665.28 430 L 1484.8 430 Q 1507.84 430 1507.84 440 L 1507.84 504 Q 1507.84 514 1459.2 514 L 1433.6 514" stroke="#0891B2" marker-end="url(#arrowCyan)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

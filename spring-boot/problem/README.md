@@ -13,7 +13,7 @@ path is controller exception -> `RestApiExceptionHandler` -> Zalando
 
 ## Error Flow
 
-![Problem Web Demo error flow diagram](../../docs/images/readme-diagrams/spring-boot-problem-readme-flow-01.png)
+![Problem Web Demo error sequence diagram](../../docs/images/readme-diagrams/spring-boot-problem-readme-sequence-01.png)
 
 This error-handling example combines Spring Boot 4, which includes built-in RFC 9457 Problem Details support, with Zalando Problem Spring Web.
 It uses bluetape4k `KLogging` and `bluetape4k-resilience4j` to convert Circuit Breaker related exceptions into the RFC 9457 format.

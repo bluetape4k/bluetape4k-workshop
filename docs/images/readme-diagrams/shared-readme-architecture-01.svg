@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="680" viewBox="0 0 1600 680" role="img" aria-label="Workshop shared utility map">
+<svg xmlns="http://www.w3.org/2000/svg" width="1867.107" height="680" viewBox="0 0 1867.107 680" role="img" aria-label="Workshop shared utility map">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
     <style>.canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}</style>
   </defs>
-  <rect class="canvas" width="1600" height="680"/>
-  <rect class="frame" x="24" y="24" width="1552" height="632" rx="24"/>
-  <text class="title" x="800" y="72" text-anchor="middle">Workshop shared utilities</text>
-  <text class="subtitle" x="800" y="104" text-anchor="middle">A small helper module for HTTP clients and integration-test request assertions used by workshop examples.</text>
-  <rect class="layer" x="72" y="160" width="330" height="374" rx="18"/>
-  <text class="layerLabel" x="100" y="198">Synchronous client</text>
-  <g filter="url(#shadow)"><rect x="112" y="280" width="250" height="124" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="237" y="324" text-anchor="middle">RestClient</text><text class="cardText" x="237" y="356" text-anchor="middle">GET, HEAD, POST</text><text class="cardText" x="237" y="382" text-anchor="middle">PUT, PATCH, DELETE</text></g>
-  <rect class="layer" x="450" y="160" width="330" height="374" rx="18"/>
-  <text class="layerLabel" x="478" y="198">Reactive client</text>
-  <g filter="url(#shadow)"><rect x="490" y="280" width="250" height="124" rx="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="1.7"/><text class="cardTitle" x="615" y="324" text-anchor="middle">WebClient</text><text class="cardText" x="615" y="356" text-anchor="middle">value, Publisher, Flow</text><text class="cardText" x="615" y="382" text-anchor="middle">body() / bodyValue()</text></g>
-  <rect class="layer" x="828" y="160" width="330" height="374" rx="18"/>
-  <text class="layerLabel" x="856" y="198">Integration tests</text>
-  <g filter="url(#shadow)"><rect x="868" y="280" width="250" height="124" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="993" y="324" text-anchor="middle">WebTestClient</text><text class="cardText" x="993" y="356" text-anchor="middle">exchange + status</text><text class="cardText" x="993" y="382" text-anchor="middle">one-line assertions</text></g>
-  <rect class="layer" x="1206" y="160" width="322" height="374" rx="18"/>
-  <text class="layerLabel" x="1234" y="198">HTTP fixture</text>
-  <g filter="url(#shadow)"><rect x="1246" y="280" width="242" height="124" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1367" y="318" text-anchor="middle">Spring Test Base</text><text class="cardText" x="1367" y="348" text-anchor="middle">AbstractSpringTest</text><text class="cardText" x="1367" y="374" text-anchor="middle">BluetapeHttpServer</text>  <text class="cardText" x="1367" y="400" text-anchor="middle">httpbin baseUrl</text></g>
+  <rect class="canvas" width="1867.107" height="680"/>
+  <rect class="frame" x="28.007" y="24" width="1811.094" height="632" rx="24"/>
+  <text class="title" x="933.554" y="72" text-anchor="middle">Workshop shared utilities</text>
+  <text class="subtitle" x="933.554" y="104" text-anchor="middle">A small helper module for HTTP clients and integration-test request assertions used by workshop examples.</text>
+  <rect class="layer" x="84.02" y="160" width="385.091" height="374" rx="18"/>
+  <text class="layerLabel" x="116.694" y="198">Synchronous client</text>
+  <g filter="url(#shadow)"><rect x="130.698" y="280" width="291.736" height="124" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.984"/><text class="cardTitle" x="276.565" y="324" text-anchor="middle">RestClient</text><text class="cardText" x="276.565" y="356" text-anchor="middle">GET, HEAD, POST</text><text class="cardText" x="276.565" y="382" text-anchor="middle">PUT, PATCH, DELETE</text></g>
+  <rect class="layer" x="525.124" y="160" width="385.091" height="374" rx="18"/>
+  <text class="layerLabel" x="557.798" y="198">Reactive client</text>
+  <g filter="url(#shadow)"><rect x="571.802" y="280" width="291.736" height="124" rx="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="1.984"/><text class="cardTitle" x="717.669" y="324" text-anchor="middle">WebClient</text><text class="cardText" x="717.669" y="356" text-anchor="middle">value, Publisher, Flow</text><text class="cardText" x="717.669" y="382" text-anchor="middle">body() / bodyValue()</text></g>
+  <rect class="layer" x="966.228" y="160" width="385.091" height="374" rx="18"/>
+  <text class="layerLabel" x="998.902" y="198">Integration tests</text>
+  <g filter="url(#shadow)"><rect x="1012.906" y="280" width="291.736" height="124" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.984"/><text class="cardTitle" x="1158.774" y="324" text-anchor="middle">WebTestClient</text><text class="cardText" x="1158.774" y="356" text-anchor="middle">exchange + status</text><text class="cardText" x="1158.774" y="382" text-anchor="middle">one-line assertions</text></g>
+  <rect class="layer" x="1407.332" y="160" width="375.755" height="374" rx="18"/>
+  <text class="layerLabel" x="1440.007" y="198">HTTP fixture</text>
+  <g filter="url(#shadow)"><rect x="1454.01" y="280" width="282.4" height="124" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.984"/><text class="cardTitle" x="1595.21" y="318" text-anchor="middle">Spring Test Base</text><text class="cardText" x="1595.21" y="348" text-anchor="middle">AbstractSpringTest</text><text class="cardText" x="1595.21" y="374" text-anchor="middle">BluetapeHttpServer</text>  <text class="cardText" x="1595.21" y="400" text-anchor="middle">httpbin baseUrl</text></g>
 </svg>

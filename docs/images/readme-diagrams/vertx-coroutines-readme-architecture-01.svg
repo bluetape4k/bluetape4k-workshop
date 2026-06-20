@@ -12,10 +12,10 @@
       .line { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke-dasharray="none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
     <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#059669" stroke-dasharray="none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#059669" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
     </marker>
   </defs>
   <rect class="bg" width="1680" height="900"/>
@@ -56,8 +56,8 @@
   <text class="small" x="685" y="762">MOVIE and RATING tables</text>
 
   <path class="line" d="M340 260 L340 445" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M840 260 L840 330 L450 330 L450 445" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M1340 260 L1340 330 L560 330 L560 445" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 840 260 L 840 320 Q 840 330 830 330 L 460 330 Q 450 330 450 340 L 450 445" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1340 260 L 1340 320 Q 1340 330 1330 330 L 570 330 Q 560 330 560 340 L 560 445" stroke="#2563eb" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line" d="M690 484 L850 484" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M1065 523 L1065 620 L950 620 L950 705" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1065 523 L 1065 610 Q 1065 614 1055 614 L 960 614 Q 950 614 950 630 L 950 705" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

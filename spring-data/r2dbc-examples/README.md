@@ -22,7 +22,7 @@ own Spring test configuration and schema setup.
 
 ## Test Flow
 
-![Spring Data R2DBC examples test flow](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-readme-flow-01.png)
+![Spring Data R2DBC examples test sequence](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-readme-sequence-01.png)
 
 The important behavior is visible in tests:
 

@@ -12,7 +12,7 @@
 
 ## NumberService 흐름
 
-![Redis Cluster Demo number service flow](../../docs/images/readme-diagrams/redis-cluster-demo-readme-number-flow-01.png)
+![Redis Cluster Demo number service sequence](../../docs/images/readme-diagrams/redis-cluster-demo-readme-number-sequence-01.png)
 
 `NumberService`는 `StringRedisTemplate.requiredConnectionFactory.clusterConnection`을 열고, `number.toByteArray()`를 key로, `(number * 2).toByteArray()`를 value로 저장한 뒤 bytes를 다시 `Int`로 읽습니다.
 

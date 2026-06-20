@@ -22,7 +22,7 @@ Spring 테스트 설정과 schema 준비 방식을 가집니다.
 
 ## 테스트 흐름
 
-![Spring Data R2DBC examples test flow](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-readme-flow-01.png)
+![Spring Data R2DBC examples test sequence](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-readme-sequence-01.png)
 
 중요한 동작은 테스트에서 바로 확인할 수 있습니다.
 

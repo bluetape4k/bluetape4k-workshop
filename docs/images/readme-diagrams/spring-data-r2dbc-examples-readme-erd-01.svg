@@ -45,6 +45,6 @@
   <text class="name" x="365" y="565">Schema scope</text>
   <text class="note" x="365" y="600">Tables are recreated inside integration tests; there is no cross-table foreign key.</text>
 
-  <path class="line" d="M750 310 L750 385 L480 385" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 750 310 L 750 375 Q 750 385 740 385 L 480 385" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <text class="note" x="614" y="372">generates customer.id</text>
 </svg>

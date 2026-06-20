@@ -12,7 +12,7 @@ The application enables the `chaos-monkey` profile in `application.properties`. 
 
 ## Assault Flow
 
-![Chaos Monkey assault flow](../../docs/images/readme-diagrams/spring-boot-chaos-monkey-readme-assault-flow-01.png)
+![Chaos Monkey assault sequence](../../docs/images/readme-diagrams/spring-boot-chaos-monkey-readme-assault-sequence-01.png)
 
 Chaos Monkey can delay or fail watched method calls before the normal student API finishes. The default configuration enables latency assaults with a 10-15 second range and exposes the actuator endpoints for runtime inspection and changes.
 

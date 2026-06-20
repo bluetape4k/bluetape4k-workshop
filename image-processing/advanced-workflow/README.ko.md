@@ -19,9 +19,9 @@ Controller는 업로드 작업 전체를 `ImageDerivativeWorkflowService`에 위
 service는 검증, libvips 파생 이미지 생성, object key 생성, `ImageStorage` 업로드, public
 URL 해석, Micrometer metric, Exposed 기반 persistence를 조율합니다.
 
-## 처리 흐름
+## 처리 시퀀스
 
-![image-processing-advanced-workflow 처리 흐름](../../docs/images/readme-diagrams/image-processing-advanced-workflow-readme-flow-01.png)
+![image-processing-advanced-workflow 처리 시퀀스](../../docs/images/readme-diagrams/image-processing-advanced-workflow-readme-sequence-01.png)
 
 이 workflow는 작은 saga로 동작합니다.
 

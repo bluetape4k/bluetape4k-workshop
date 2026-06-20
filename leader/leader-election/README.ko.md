@@ -14,7 +14,7 @@
 
 ## 선출 흐름
 
-![Leader election flow](../../docs/images/readme-diagrams/leader-leader-election-readme-election-flow-01.png)
+![Leader election flow](../../docs/images/readme-diagrams/leader-leader-election-readme-election-sequence-01.png)
 
 1. 모든 인스턴스가 설정된 fixed delay마다 `LeaderScheduledJobService`를 트리거합니다.
 2. 각 `LeaderGuardedJob`은 고유한 `lockName`을 제공합니다.

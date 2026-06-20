@@ -67,7 +67,7 @@ graph/social-network/
 
 ## Seed Topology (test data)
 
-![graph-social-network traversal and recommendation flow](../../docs/images/readme-diagrams/graph-social-network-readme-flow-01.png)
+![graph-social-network traversal and recommendation sequence](../../docs/images/readme-diagrams/graph-social-network-readme-sequence-01.png)
 
 ```
 alice ──KNOWS──► bob ──KNOWS──► carol ──KNOWS──► dave

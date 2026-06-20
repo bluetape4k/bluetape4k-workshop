@@ -18,7 +18,7 @@ Bucket4j configuration and Redis/Lettuce proxy manager.
 
 ## Filter Decision Flow
 
-![WebFlux Bucket4j filter decision flow](../../docs/images/readme-diagrams/ratelimit-bucker4j-bluetape4k-webflux-readme-filter-flow-01.png)
+![WebFlux Bucket4j filter decision sequence](../../docs/images/readme-diagrams/ratelimit-bucker4j-bluetape4k-webflux-readme-filter-sequence-01.png)
 
 When a target path has a key and a token is consumed, the request continues and
 `X-Bluetape4k-Remaining-Token` is written. Missing keys return `400 Bad Request`. Empty buckets return

@@ -36,8 +36,8 @@
   <text class="body" x="940" y="692">user/password -> allowed</text>
 
   <path class="line" d="M320 265 L320 445" stroke="#059669" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M800 265 L800 325 L460 325 L460 445" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M1280 265 L1280 325 L460 325" stroke="#2563eb" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 800 265 L 800 315 Q 800 325 790 325 L 470 325 Q 460 325 460 335 L 460 445" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1280 265 L 1280 315 Q 1280 325 1270 325 L 460 325" stroke="#2563eb" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line" d="M460 505 L460 660" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
   <path class="line" d="M1140 505 L1140 660" stroke="#2563eb" marker-end="url(#arrow)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

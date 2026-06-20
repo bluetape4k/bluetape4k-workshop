@@ -19,7 +19,7 @@ DB 호출은 `UserRepository`에 남겨 `withContext(Dispatchers.IO) { transacti
 
 ## Span Flow
 
-![observability-advanced span flow diagram](../../docs/images/readme-diagrams/observability-observability-advanced-readme-span-flow-01.png)
+![observability-advanced span sequence diagram](../../docs/images/readme-diagrams/observability-observability-advanced-readme-span-sequence-01.png)
 
 Cache hit은 `user.cache.get`에서 끝나고 DB span을 만들지 않습니다. Cache miss는
 `user.db.find`로 이어지고 값이 있으면 `user.cache.put`까지 진행합니다. Redis read/write

@@ -12,7 +12,7 @@
 
 ## 요청 흐름
 
-![Ktor REST coroutines request flow](../../docs/images/readme-diagrams/ktor-rest-coroutines-readme-flow-01.png)
+![Ktor REST coroutines request sequence](../../docs/images/readme-diagrams/ktor-rest-coroutines-readme-sequence-01.png)
 
 각 엔드포인트는 독립적으로 테스트하기 쉬운 계약을 갖습니다.
 

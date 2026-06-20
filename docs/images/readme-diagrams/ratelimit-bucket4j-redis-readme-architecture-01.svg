@@ -1,74 +1,74 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="700" viewBox="0 0 1600 700" role="img" aria-label="Spring WebFlux Bucket4j Redis architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="1930.94" height="700" viewBox="0 0 1930.94 700" role="img" aria-label="Spring WebFlux Bucket4j Redis architecture">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none"/></marker>
-    <marker id="arrowRose" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#E11D48" stroke-dasharray="none"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowRose" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#E11D48" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:29px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
     </style>
   </defs>
-  <rect class="canvas" width="1600" height="700"/>
-  <rect class="frame" x="24" y="24" width="1552" height="652" rx="24"/>  <text class="title" x="800" y="72" text-anchor="middle">WebFlux Bucket4j with Redis</text>  <text class="subtitle" x="800" y="104" text-anchor="middle">A WebFlux filter consumes shared bucket tokens through Lettuce-backed Redis before coroutine or reactive handlers run.</text>
+  <rect class="canvas" width="1930.94" height="700"/>
+  <rect class="frame" x="28.964" y="24" width="1873.012" height="652" rx="24"/>  <text class="title" x="965.47" y="72" text-anchor="middle">WebFlux Bucket4j with Redis</text>  <text class="subtitle" x="965.47" y="104" text-anchor="middle">A WebFlux filter consumes shared bucket tokens through Lettuce-backed Redis before coroutine or reactive handlers run.</text>
 
-  <rect class="layer" x="72" y="146" width="300" height="448" rx="18"/>
-  <text class="layerLabel" x="100" y="184">WebFlux endpoints</text>
+  <rect class="layer" x="86.892" y="146" width="362.051" height="448" rx="18"/>
+  <text class="layerLabel" x="120.684" y="184">WebFlux endpoints</text>
   <g filter="url(#shadow)">
-    <rect x="82" y="238" width="280" height="112" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
-    <text class="cardTitle" x="222" y="280" text-anchor="middle">CoroutineController</text>
-    <text class="cardText" x="222" y="312" text-anchor="middle">/coroutines/hello</text>
-    <text class="cardText" x="222" y="338" text-anchor="middle">/coroutines/world</text>
+    <rect x="98.961" y="238" width="337.915" height="112" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="2.052"/>
+    <text class="cardTitle" x="267.918" y="280" text-anchor="middle">CoroutineController</text>
+    <text class="cardText" x="267.918" y="312" text-anchor="middle">/coroutines/hello</text>
+    <text class="cardText" x="267.918" y="338" text-anchor="middle">/coroutines/world</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="82" y="420" width="280" height="112" rx="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="1.7"/>
-    <text class="cardTitle" x="222" y="462" text-anchor="middle">ReactiveController</text>
-    <text class="cardText" x="222" y="494" text-anchor="middle">/reactive/hello</text>
-    <text class="cardText" x="222" y="520" text-anchor="middle">/reactive/world</text>
-  </g>
-
-  <rect class="layer" x="440" y="146" width="330" height="448" rx="18"/>
-  <text class="layerLabel" x="468" y="184">Bucket4j starter</text>
-  <g filter="url(#shadow)">
-    <rect x="488" y="232" width="234" height="126" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
-    <text class="cardTitle" x="605" y="276" text-anchor="middle">WebFlux Filter</text>
-    <text class="cardText" x="605" y="308" text-anchor="middle">filter-method: webflux</text>
-    <text class="cardText" x="605" y="334" text-anchor="middle">returns 429 when empty</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="488" y="430" width="234" height="84" rx="16" fill="#FEE2E2" stroke="#E11D48" stroke-width="1.7"/>
-    <text class="cardTitle" x="605" y="466" text-anchor="middle">JSON Limit Reply</text>
-    <text class="cardText" x="605" y="494" text-anchor="middle">custom body + headers</text>
+    <rect x="98.961" y="420" width="337.915" height="112" rx="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="2.052"/>
+    <text class="cardTitle" x="267.918" y="462" text-anchor="middle">ReactiveController</text>
+    <text class="cardText" x="267.918" y="494" text-anchor="middle">/reactive/hello</text>
+    <text class="cardText" x="267.918" y="520" text-anchor="middle">/reactive/world</text>
   </g>
 
-  <rect class="layer" x="840" y="146" width="320" height="448" rx="18"/>
-  <text class="layerLabel" x="868" y="184">Shared bucket state</text>
+  <rect class="layer" x="531.009" y="146" width="398.256" height="448" rx="18"/>
+  <text class="layerLabel" x="564.8" y="184">Bucket4j starter</text>
   <g filter="url(#shadow)">
-    <rect x="882" y="250" width="236" height="150" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/>
-    <circle cx="935" cy="300" r="28" fill="#FEE2E2" stroke="#DC2626" stroke-width="2.4"/>
-    <text x="935" y="310" text-anchor="middle" font-family="Comic Mono" font-size="18" fill="#B91C1C">R</text>  <text class="cardTitle" x="1034" y="292" text-anchor="middle">Redis</text>
-    <text class="cardText" x="1034" y="326" text-anchor="middle">cache-to-use:</text>  <text class="cardText" x="1034" y="352" text-anchor="middle">redis-lettuce</text>
-    <text class="cardText" x="1034" y="378" text-anchor="middle">cache: buckets</text>
+    <rect x="588.937" y="232" width="282.4" height="126" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="2.052"/>
+    <text class="cardTitle" x="730.137" y="276" text-anchor="middle">WebFlux Filter</text>
+    <text class="cardText" x="730.137" y="308" text-anchor="middle">filter-method: webflux</text>
+    <text class="cardText" x="730.137" y="334" text-anchor="middle">returns 429 when empty</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="588.937" y="430" width="282.4" height="84" rx="16" fill="#FEE2E2" stroke="#E11D48" stroke-width="2.052"/>
+    <text class="cardTitle" x="730.137" y="466" text-anchor="middle">JSON Limit Reply</text>
+    <text class="cardText" x="730.137" y="494" text-anchor="middle">custom body + headers</text>
   </g>
 
-  <rect class="layer" x="1228" y="146" width="300" height="448" rx="18"/>
-  <text class="layerLabel" x="1256" y="184">Verification profile</text>
+  <rect class="layer" x="1013.744" y="146" width="386.188" height="448" rx="18"/>
+  <text class="layerLabel" x="1047.535" y="184">Shared bucket state</text>
   <g filter="url(#shadow)">
-    <rect x="1268" y="240" width="220" height="112" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
-    <text class="cardTitle" x="1378" y="282" text-anchor="middle">Hello quota</text>
-    <text class="cardText" x="1378" y="314" text-anchor="middle">5 requests / 10s</text>
-    <text class="cardText" x="1378" y="340" text-anchor="middle">coroutine + reactive</text>
-  </g>
-  <g filter="url(#shadow)">
-    <rect x="1268" y="420" width="220" height="112" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
-    <text class="cardTitle" x="1378" y="462" text-anchor="middle">World quota</text>
-    <text class="cardText" x="1378" y="494" text-anchor="middle">10 requests / 10s</text>  <text class="cardText" x="1378" y="520" text-anchor="middle">same Redis store</text>
+    <rect x="1042.708" y="250" width="328.26" height="150" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="2.052"/>
+    <image data-bluetape4k-icon="redis" data-source="docs/icons/redis/redis-icon.svg" x="1103.05" y="279" width="42" height="42" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBoZWlnaHQ9IjY0IiB2aWV3Qm94PSIwIDAgMzIgMzIiIHdpZHRoPSI2NCI+PGcgdHJhbnNmb3JtPSJtYXRyaXgoLjg0ODMyNyAwIDAgLjg0ODMyNyAtNy44ODM1NzMgLTkuNDQ5NjkxKSI+PHVzZSB4bGluazpocmVmPSIjQiIgZmlsbD0iI2E0MWUxMSIvPjxwYXRoIGQ9Ik00NS41MzYgMzQuOTVjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTRzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2LTIuMDQtMS42MTMtLjA3Ny0yLjM4MmwxNS4zMzItNS45MzZjMi4zMzItLjgzNiAzLjE0LS44NjcgNS4xMjYtLjE0UzQzLjU1IDMxLjg3IDQ1LjUxIDMyLjZzMi4wMzcgMS4zMS4wMjQgMi4zNnoiIGZpbGw9IiNkODJjMjAiLz48dXNlIHhsaW5rOmhyZWY9IiNCIiB5PSItNi4yMTgiIGZpbGw9IiNhNDFlMTEiLz48dXNlIHhsaW5rOmhyZWY9IiNDIiBmaWxsPSIjZDgyYzIwIi8+PHBhdGggZD0iTTQ1LjUzNiAyNi4wOThjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTVzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2Yy0xLS40NzgtMS41MjQtLjg4LTEuNTI0LTEuMjZWMjEuNTVzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6IiBmaWxsPSIjYTQxZTExIi8+PHVzZSB4bGluazpocmVmPSIjQyIgeT0iLTYuNDQ5IiBmaWxsPSIjZDgyYzIwIi8+PGcgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTI5LjA5NiAyMC43MTJsLTEuMTgyLTEuOTY1LTMuNzc0LS4zNCAyLjgxNi0xLjAxNi0uODQ1LTEuNTYgMi42MzYgMS4wMyAyLjQ4Ni0uODE0LS42NzIgMS42MTIgMi41MzQuOTUtMy4yNjguMzR6TTIyLjggMjQuNjI0bDguNzQtMS4zNDItMi42NCAzLjg3MnoiLz48ZWxsaXBzZSBjeD0iMjAuNDQ0IiByeD0iNC42NzIiIHJ5PSIxLjgxMSIgY3k9IjIxLjQwMiIvPjwvZz48cGF0aCBkPSJNNDIuMTMyIDIxLjEzOGwtNS4xNyAyLjA0Mi0uMDA0LTQuMDg3eiIgZmlsbD0iIzdhMGMwMCIvPjxwYXRoIGQ9Ik0zNi45NjMgMjMuMThsLS41Ni4yMi01LjE2Ni0yLjA0MiA1LjcyMy0yLjI2NHoiIGZpbGw9IiNhZDIxMTUiLz48L2c+PGRlZnMgPjxwYXRoIGlkPSJCIiBkPSJNNDUuNTM2IDM4Ljc2NGMtMi4wMTMgMS4wNS0xMi40NCA1LjMzNy0xNC42NiA2LjQ5NHMtMy40NTMgMS4xNDYtNS4yMDcuMzA4LTEyLjg1LTUuMzItMTQuODUtNi4yNzZjLTEtLjQ3OC0xLjUyNC0uODgtMS41MjQtMS4yNnYtMy44MTNzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6Ii8+PHBhdGggaWQ9IkMiIGQ9Ik00NS41MzYgMjguNzMzYy0yLjAxMyAxLjA1LTEyLjQ0IDUuMzM3LTE0LjY2IDYuNDk0cy0zLjQ1MyAxLjE0Ni01LjIwNy4zMDgtMTIuODUtNS4zMi0xNC44NS02LjI3Ni0yLjA0LTEuNjEzLS4wNzctMi4zODJsMTUuMzMyLTUuOTM1YzIuMzMyLS44MzcgMy4xNC0uODY3IDUuMTI2LS4xNHMxMi4zNSA0Ljg1MyAxNC4zMTIgNS41NyAyLjAzNyAxLjMxLjAyNCAyLjM2eiIvPjwvZGVmcz48L3N2Zz4=" preserveAspectRatio="xMidYMid meet"/>  <text class="cardTitle" x="1247.87" y="292" text-anchor="middle">Redis</text>
+    <text class="cardText" x="1247.87" y="326" text-anchor="middle">cache-to-use:</text>  <text class="cardText" x="1247.87" y="352" text-anchor="middle">redis-lettuce</text>
+    <text class="cardText" x="1247.87" y="378" text-anchor="middle">cache: buckets</text>
   </g>
 
-  <path class="line" d="M 362 294 L 488 294" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 362 476 L 410 476 L 410 322 L 488 322" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 722 294 L 882 312" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1118 326 L 1268 296" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1118 354 L 1202 354 L 1202 476 L 1268 476" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line soft" d="M 605 358 L 605 430" stroke="#E11D48" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect class="layer" x="1481.997" y="146" width="362.051" height="448" rx="18"/>
+  <text class="layerLabel" x="1515.788" y="184">Verification profile</text>
+  <g filter="url(#shadow)">
+    <rect x="1530.27" y="240" width="265.504" height="112" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="2.052"/>
+    <text class="cardTitle" x="1663.022" y="282" text-anchor="middle">Hello quota</text>
+    <text class="cardText" x="1663.022" y="314" text-anchor="middle">5 requests / 10s</text>
+    <text class="cardText" x="1663.022" y="340" text-anchor="middle">coroutine + reactive</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1506.133" y="420" width="313.778" height="112" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="2.052"/>
+    <image data-bluetape4k-icon="redis" data-source="docs/icons/redis/redis-icon.svg" x="1532.684" y="458" width="36" height="36" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBoZWlnaHQ9IjY0IiB2aWV3Qm94PSIwIDAgMzIgMzIiIHdpZHRoPSI2NCI+PGcgdHJhbnNmb3JtPSJtYXRyaXgoLjg0ODMyNyAwIDAgLjg0ODMyNyAtNy44ODM1NzMgLTkuNDQ5NjkxKSI+PHVzZSB4bGluazpocmVmPSIjQiIgZmlsbD0iI2E0MWUxMSIvPjxwYXRoIGQ9Ik00NS41MzYgMzQuOTVjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTRzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2LTIuMDQtMS42MTMtLjA3Ny0yLjM4MmwxNS4zMzItNS45MzZjMi4zMzItLjgzNiAzLjE0LS44NjcgNS4xMjYtLjE0UzQzLjU1IDMxLjg3IDQ1LjUxIDMyLjZzMi4wMzcgMS4zMS4wMjQgMi4zNnoiIGZpbGw9IiNkODJjMjAiLz48dXNlIHhsaW5rOmhyZWY9IiNCIiB5PSItNi4yMTgiIGZpbGw9IiNhNDFlMTEiLz48dXNlIHhsaW5rOmhyZWY9IiNDIiBmaWxsPSIjZDgyYzIwIi8+PHBhdGggZD0iTTQ1LjUzNiAyNi4wOThjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTVzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2Yy0xLS40NzgtMS41MjQtLjg4LTEuNTI0LTEuMjZWMjEuNTVzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6IiBmaWxsPSIjYTQxZTExIi8+PHVzZSB4bGluazpocmVmPSIjQyIgeT0iLTYuNDQ5IiBmaWxsPSIjZDgyYzIwIi8+PGcgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTI5LjA5NiAyMC43MTJsLTEuMTgyLTEuOTY1LTMuNzc0LS4zNCAyLjgxNi0xLjAxNi0uODQ1LTEuNTYgMi42MzYgMS4wMyAyLjQ4Ni0uODE0LS42NzIgMS42MTIgMi41MzQuOTUtMy4yNjguMzR6TTIyLjggMjQuNjI0bDguNzQtMS4zNDItMi42NCAzLjg3MnoiLz48ZWxsaXBzZSBjeD0iMjAuNDQ0IiByeD0iNC42NzIiIHJ5PSIxLjgxMSIgY3k9IjIxLjQwMiIvPjwvZz48cGF0aCBkPSJNNDIuMTMyIDIxLjEzOGwtNS4xNyAyLjA0Mi0uMDA0LTQuMDg3eiIgZmlsbD0iIzdhMGMwMCIvPjxwYXRoIGQ9Ik0zNi45NjMgMjMuMThsLS41Ni4yMi01LjE2Ni0yLjA0MiA1LjcyMy0yLjI2NHoiIGZpbGw9IiNhZDIxMTUiLz48L2c+PGRlZnMgPjxwYXRoIGlkPSJCIiBkPSJNNDUuNTM2IDM4Ljc2NGMtMi4wMTMgMS4wNS0xMi40NCA1LjMzNy0xNC42NiA2LjQ5NHMtMy40NTMgMS4xNDYtNS4yMDcuMzA4LTEyLjg1LTUuMzItMTQuODUtNi4yNzZjLTEtLjQ3OC0xLjUyNC0uODgtMS41MjQtMS4yNnYtMy44MTNzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6Ii8+PHBhdGggaWQ9IkMiIGQ9Ik00NS41MzYgMjguNzMzYy0yLjAxMyAxLjA1LTEyLjQ0IDUuMzM3LTE0LjY2IDYuNDk0cy0zLjQ1MyAxLjE0Ni01LjIwNy4zMDgtMTIuODUtNS4zMi0xNC44NS02LjI3Ni0yLjA0LTEuNjEzLS4wNzctMi4zODJsMTUuMzMyLTUuOTM1YzIuMzMyLS44MzcgMy4xNC0uODY3IDUuMTI2LS4xNHMxMi4zNSA0Ljg1MyAxNC4zMTIgNS41NyAyLjAzNyAxLjMxLjAyNCAyLjM2eiIvPjwvZGVmcz48L3N2Zz4=" preserveAspectRatio="xMidYMid meet"/>
+    <text class="cardTitle" x="1679.918" y="462" text-anchor="middle">World quota</text>
+    <text class="cardText" x="1679.918" y="494" text-anchor="middle">10 requests / 10s</text>  <text class="cardText" x="1679.918" y="520" text-anchor="middle">same Redis store</text>
+  </g>
+
+  <path class="line" d="M 436.875 294 L 588.937 294" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 436.875 476 L 482.735 476 Q 494.803 476 494.803 466 L 494.803 332 Q 494.803 322 506.872 322 L 588.937 322" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 871.337 294 L 1064.431 312" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1349.244 326 L 1530.27 296" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 1349.244 354 L 1438.55 354 Q 1450.619 354 1450.619 364 L 1450.619 466 Q 1450.619 476 1462.687 476 L 1530.27 476" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line soft" d="M 730.137 358 L 730.137 430" stroke="#E11D48" marker-end="url(#arrowRose)" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

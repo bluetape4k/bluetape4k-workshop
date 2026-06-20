@@ -25,7 +25,7 @@ protocol handler executor로 설정합니다. `AsyncConfig`도 Spring
 
 ## 부하 테스트 흐름
 
-![Gatling virtual thread flow](../../docs/images/readme-diagrams/gatling-virtualthread-simulation-readme-flow-01.png)
+![Gatling virtual thread flow](../../docs/images/readme-diagrams/gatling-virtualthread-simulation-readme-sequence-01.png)
 
 Gatling을 실행하기 전에 애플리케이션이 `localhost:8080`에서 실행 중이어야
 합니다. Simulation class는 `src/gatling/kotlin/simulations` 아래에 있습니다.
