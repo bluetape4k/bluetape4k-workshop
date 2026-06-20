@@ -26,8 +26,7 @@
     <text class="cardText" x="240.64" y="402" text-anchor="middle">curl or tests</text>
   </g>
 
-  <rect class="layer" x="424.96" y="132" width="1062.4" height="504" rx="18"/><image data-bluetape4k-icon="ktor" data-source="docs/icons/frameworks/ktor.svg" x="439.0" y="145.0" width="30" height="30" href="data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+S3RvcjwvdGl0bGU+PHBhdGggZD0iTTggMCAwIDhsOCA4VjhoOHptOCA4djhIOGw4IDggOC04eiIvPjwvc3ZnPg==" preserveAspectRatio="xMidYMid meet"/>
-  <text class="layerLabel" x="460.8" y="168">Ktor application module</text>
+  <rect class="layer" x="424.96" y="132" width="1062.4" height="504" rx="18"/><text class="layerLabel" x="460.8" y="168">Ktor application module</text>
   <g filter="url(#shadow)">
     <rect x="478.72" y="214" width="284.16" height="116" rx="16" fill="#EFF6FF" stroke="#3B82F6" stroke-width="2.176"/>
     <text class="cardTitle" x="620.8" y="253" text-anchor="middle">CallLogging</text>
