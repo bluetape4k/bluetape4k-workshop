@@ -42,8 +42,7 @@
     <text class="cardText" x="721.92" y="500" text-anchor="middle">skips controllers</text>
   </g>
 
-  <rect class="layer" x="988.16" y="132" width="373.76" height="520" rx="18"/>
-  <text class="layerLabel" x="1024" y="168">Micrometer core</text>
+  <rect class="layer" x="988.16" y="132" width="373.76" height="520" rx="18"/>  <text class="layerLabel" x="1024" y="168">Micrometer core</text>
   <g filter="url(#shadow)">
     <rect x="1039.36" y="292" width="271.36" height="130" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="2.176"/>
     <text class="cardTitle" x="1175.04" y="330" text-anchor="middle">Observation</text>
@@ -59,7 +58,7 @@
     <text class="cardText" x="1633.28" y="284" text-anchor="middle">ObservationTextPublisher</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="1479.68" y="366" width="307.2" height="106" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="2.176"/>
+    <rect x="1479.68" y="366" width="307.2" height="106" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="2.176"/><image data-bluetape4k-icon="prometheus" data-source="docs/icons/testcontainers/infra/prometheus.svg" x="1493.7" y="413.0" width="30" height="30" href="data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+UHJvbWV0aGV1czwvdGl0bGU+PHBhdGggZD0iTTEyIDBDNS4zNzMgMCAwIDUuMzcyIDAgMTJjMCA2LjYyNyA1LjM3MyAxMiAxMiAxMnMxMi01LjM3MyAxMi0xMmMwLTYuNjI4LTUuMzczLTEyLTEyLTEyem0wIDIyLjQ2Yy0xLjg4NSAwLTMuNDE0LTEuMjYtMy40MTQtMi44MTRoNi44MjhjMCAxLjU1My0xLjUyOCAyLjgxMy0zLjQxNCAyLjgxM3ptNS42NC0zLjc0NUg2LjM2di0yLjA0NmgxMS4yOHYyLjA0NnptLS4wNC0zLjA5OEg2LjM5MWMtLjAzNy0uMDQzLS4wNzUtLjA4Ni0uMTExLS4xMy0xLjE1NS0xLjQwMS0xLjQyNy0yLjEzMy0xLjY5LTIuODc5LS4wMDUtLjAyNSAxLjQuMjg3IDIuMzk1LjUxMSAwIDAgLjUxMy4xMTkgMS4yNjIuMjU1LS43Mi0uODQzLTEuMTQ3LTEuOTE1LTEuMTQ3LTMuMDEgMC0yLjQwNiAxLjg0NS00LjUwOCAxLjE4LTYuMjA3LjY0OC4wNTMgMS4zNCAxLjM2NyAxLjM4NyAzLjQyMi42ODktLjk1MS45NzctMi42OS45NzctMy43NTUgMC0xLjEwMy43MjctMi4zODUgMS40NTQtMi40MjktLjY0OCAxLjA2OS4xNjggMS45ODQuODk0IDQuMjU2LjI3Mi44NTQuMjM3IDIuMjkuNDQ3IDMuMjAxLjA3LTEuODkyLjM5NS00LjY1MiAxLjU5NS01LjYwNS0uNTI5IDEuMi4wNzkgMi43MDIuNDk0IDMuNDI0LjY3MSAxLjE2NCAxLjA3OCAyLjA0NyAxLjA3OCAzLjcxNmE0LjY0MiA0LjY0MiAwIDAxLTEuMTEgMi45OTZjLjc5Mi0uMTQ5IDEuMzQtLjI4MyAxLjM0LS4yODNsMi41NzMtLjUwMnMtLjM3NCAxLjUzOC0xLjgxIDMuMDE5eiIvPjwvc3ZnPg==" preserveAspectRatio="xMidYMid meet"/>
     <text class="cardTitle" x="1633.28" y="406" text-anchor="middle">Actuator metrics</text>  <text class="cardText" x="1633.28" y="436" text-anchor="middle">Prometheus endpoint</text>
   </g>
   <g filter="url(#shadow)">
