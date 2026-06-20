@@ -17,12 +17,6 @@
       .cardText { font-family: "Comic Mono"; font-size: 14px; fill: #415166; }
       .line { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
-    <g id="s3Icon">
-      <rect x="0" y="0" width="58.88" height="46" rx="8" fill="#7AA116"/>
-      <ellipse cx="29.44" cy="14" rx="14" ry="5" fill="#FFFFFF" opacity="0.92"/>
-      <path d="M 9 14 V 31 C 9 36 37 36 37 31 V 14" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M 12 25 C 18 29 28 29 34 25" fill="none" stroke="#FFFFFF" stroke-width="2.2"/>
-    </g>
     <g id="folderIcon">
       <path d="M 4 14 H 18 L 23 20 H 42 V 38 H 4 Z" fill="#FDE68A" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       <path d="M 4 20 H 42" stroke="#B45309" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -104,8 +98,7 @@
     <text class="cardText" x="491.52" y="783" text-anchor="middle">default backend</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="724.48" y="732" width="320" height="64" rx="12" fill="#FFFFFF" stroke="#A7B3BF" stroke-width="1.92"/>
-    <use href="#s3Icon" x="750.08" y="741"/>  <text class="cardTitle" x="903.68" y="760" text-anchor="middle">S3 bucket</text>
+    <rect x="724.48" y="732" width="320" height="64" rx="12" fill="#FFFFFF" stroke="#A7B3BF" stroke-width="1.92"/><image data-bluetape4k-icon="s3" data-source="docs/icons/aws/architecture-icons-2026-04-30/Architecture-Service-Icons_04302026/Arch_Storage/48/Arch_Amazon-Simple-Storage-Service_48.svg" x="738.5" y="742.0" width="30" height="30" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNjRweCIgaGVpZ2h0PSI2NHB4IiB2aWV3Qm94PSIwIDAgNjQgNjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+SWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BbWF6b24tU2ltcGxlLVN0b3JhZ2UtU2VydmljZV80ODwvdGl0bGU+CiAgICA8ZyBpZD0iSWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BbWF6b24tU2ltcGxlLVN0b3JhZ2UtU2VydmljZV80OCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPGcgaWQ9Ikljb24tQXJjaGl0ZWN0dXJlLUJHLzQ4L1N0b3JhZ2UiIGZpbGw9IiM3QUExMTYiPgogICAgICAgICAgICA8cmVjdCBpZD0iUmVjdGFuZ2xlIiB4PSIwIiB5PSIwIiB3aWR0aD0iNjQiIGhlaWdodD0iNjQiPjwvcmVjdD4KICAgICAgICA8L2c+CiAgICAgICAgPGcgaWQ9Ikljb24tU2VydmljZS80OC9BbWF6b24tU2ltcGxlLVN0b3JhZ2UtU2VydmljZV80OCIgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTAuOTk5ODAwLCAxMC4wMDAyMDApIiBmaWxsPSIjRkZGRkZGIj4KICAgICAgICAgICAgPHBhdGggZD0iTTM2Ljc1OSwyMy45NDggTDM2Ljk5MywyMi4xMzEgQzM5LjE2NiwyMy4zODUgMzkuODQyLDI0LjEyMSA0MC4wMzcsMjQuNDI0IEMzOS43MTMsMjQuNDg1IDM4LjgzMiwyNC41MDkgMzYuNzU5LDIzLjk0OCBMMzYuNzU5LDIzLjk0OCBaIE0xOS41LDExIEM5LjEyNSwxMSAyLjM4Miw4LjQ4OCAyLDYuNjk2IEwyLDYuNTExIEMyLjM0OSw1LjM5MiA4LjE0LDIgMTkuNSwyIEMzMC44NCwyIDM2LjYzMiw1LjM4MSAzNyw2LjUwNSBMMzcsNi42MTYgQzM2LjcyNCw4LjQ0NiAyOS45NjEsMTEgMTkuNSwxMSBMMTkuNSwxMSBaIE0zNC44MTgsMjMuMzYyIEMzMC4wNTMsMjEuNzk3IDIzLjkxMiwxOC45NzkgMjEuNTk0LDE3Ljg4OCBDMjEuNTM1LDE2Ljc4NiAyMC42MjgsMTUuOTA2IDE5LjUxMiwxNS45MDYgQzE4LjM1OCwxNS45MDYgMTcuNDE4LDE2Ljg0NSAxNy40MTgsMTggQzE3LjQxOCwxOS4xNTQgMTguMzU4LDIwLjA5NCAxOS41MTIsMjAuMDk0IEMxOS45NjksMjAuMDk0IDIwLjM4OSwxOS45NDIgMjAuNzMzLDE5LjY5MyBDMjMuMTMyLDIwLjgyMiAyOS42MTksMjMuNzk4IDM0LjU1OCwyNS4zOCBMMzIuODM3LDM4LjcyNCBDMzIuNTgzLDQwLjM1MiAyNy45MTksNDIgMTkuNDk3LDQyIEMxMS4wNzIsNDIgNi40MDUsNDAuMzUyIDYuMTU1LDM4Ljc1MSBMMi40MzUsOS44MTQgQzUuOTQ1LDExLjkxNSAxMi43NDksMTMgMTkuNSwxMyBDMjYuMjUsMTMgMzMuMDU0LDExLjkxNSAzNi41NjUsOS44MTUgTDM0LjgxOCwyMy4zNjIgWiBNMzksNi41IEMzOSwzLjQzMSAzMC42NjEsMCAxOS41LDAgQzguMzM5LDAgLTMuNTUyNzEzNjhlLTE1LDMuNDMxIC0zLjU1MjcxMzY4ZS0xNSw2LjUgTC0zLjU1MjcxMzY4ZS0xNSw3LjA0MyBMNC4xNzQsMzkuMDMzIEM0Ljg3NSw0My41MTYgMTUuMTIzLDQ0IDE5LjQ5Nyw0NCBDMjMuODY5LDQ0IDM0LjExMyw0My41MTYgMzQuODE4LDM5LjAwNyBMMzYuNTAxLDI1Ljk0NyBDMzcuNzc4LDI2LjI3OSAzOC44MTIsMjYuNDU2IDM5LjYxNiwyNi40NTUgQzQwLjYwNiwyNi40NTUgNDEuMjczLDI2LjIwMyA0MS42OTcsMjUuNjk3IEM0Mi4wNDcsMjUuMjgxIDQyLjE4NSwyNC43NTYgNDIuMDg1LDI0LjIyMSBDNDEuODU3LDIzIDQwLjQwMywyMS43MTIgMzcuMzcsMjAuMDQ0IEwzNy4yNywxOS45ODkgTDM5LDcuMDQ0IEwzOSw2LjUgWiIgaWQ9IkFtYXpvbi1TaW1wbGUtU3RvcmFnZS1TZXJ2aWNlLUljb25fNDhfU3F1aWQiPjwvcGF0aD4KICAgICAgICA8L2c+CiAgICA8L2c+Cjwvc3ZnPg==" preserveAspectRatio="xMidYMid meet"/>  <text class="cardTitle" x="903.68" y="760" text-anchor="middle">S3 bucket</text>
     <text class="cardText" x="903.68" y="783" text-anchor="middle">production option</text>
   </g>
   <g filter="url(#shadow)">
