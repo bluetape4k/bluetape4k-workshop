@@ -11,9 +11,9 @@ kotlinx-serialization = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbr
 kotlinx-atomicfu = "0.32.1"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/atomicfu
 
 spring-boot4 = "4.0.6"  # https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
-spring-cloud = "2025.1.1"  # https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-dependencies
-spring-integration = "7.0.4"  # https://mvnrepository.com/artifact/org.springframework.integration/spring-integration-bom
-spring-modulith = "2.0.6"  # https://mvnrepository.com/artifact/org.springframework.modulith/spring-modulith-bom
+spring-cloud = "2025.1.2"  # https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-dependencies
+spring-integration = "7.1.0"  # https://mvnrepository.com/artifact/org.springframework.integration/spring-integration-bom
+spring-modulith = "2.1.0"  # https://mvnrepository.com/artifact/org.springframework.modulith/spring-modulith-bom
 
 reactor-bom = "2025.0.5"  # https://mvnrepository.com/artifact/io.projectreactor/reactor-bom
 resilience4j = "2.4.0"  # https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-bom
