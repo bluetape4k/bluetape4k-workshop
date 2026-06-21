@@ -28,7 +28,7 @@ jobs:
     name: Validate Gradle Wrapper
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: gradle/actions/wrapper-validation@v6
 
   build:
@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: validate-wrapper
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
           java-version: ${{ env.JAVA_VERSION }}
@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
           java-version: ${{ env.JAVA_VERSION }}
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
           java-version: ${{ env.JAVA_VERSION }}
@@ -93,7 +93,7 @@ jobs:
           gradle-version: wrapper
           cache-read-only: true
       - name: Checkout bluetape4k projects
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: bluetape4k/bluetape4k-projects
           ref: develop
