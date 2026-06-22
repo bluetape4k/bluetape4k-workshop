@@ -7,7 +7,7 @@ repo-specific layout, commands, domain rules, and local exceptions.
 
 Backend examples using bluetape4k libraries.
 
-- Kotlin 2.3.21
+- Kotlin 2.4.0
 - Java 21
 - Spring Boot 4.0.6
 - bluetape4k 1.7.0
