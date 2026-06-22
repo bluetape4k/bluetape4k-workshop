@@ -56,15 +56,7 @@ webTestClient.httpPost("/tasks", task, HttpStatus.CREATED)
 
 ## Usage
 
-Add the dependency to `build.gradle.kts`.
-
-```kotlin
-// For production code
-implementation(project(":shared"))
-
-// For test code
-testImplementation(project(":shared"))
-```
+The `shared` module is repository-internal workshop support code. The examples in this repository already wire it through Gradle. External projects should copy the helper pattern they need instead of adding a published dependency.
 
 ### Extending AbstractSpringTest
 

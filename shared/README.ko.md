@@ -56,15 +56,7 @@ webTestClient.httpPost("/tasks", task, HttpStatus.CREATED)
 
 ## 사용법
 
-`build.gradle.kts`에 dependency를 추가합니다.
-
-```kotlin
-// For production code
-implementation(project(":shared"))
-
-// For test code
-testImplementation(project(":shared"))
-```
+`shared` 모듈은 이 workshop 저장소 내부에서 쓰는 지원 코드입니다. 이 저장소의 예제들은 이미 Gradle로 해당 모듈을 연결합니다. 외부 프로젝트에서는 published dependency를 추가하는 대신 필요한 helper 패턴만 가져가서 사용하세요.
 
 ### AbstractSpringTest 확장
 
