@@ -1,94 +1,83 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="900" viewBox="0 0 1680 900" role="img" aria-label="Flow enrichment ERD">
-  <defs>
-    <style>
-      .canvas{fill:#F8FBFD}
-      .frame{fill:#FFFFFF;stroke:#D5E1EB;stroke-width:1.5}
-      .title{font-family:'Architects Daughter';font-size:34px;fill:#12263D}
-      .subtitle{font-family:'Comic Mono';font-size:13px;fill:#51606F}
-      .entity{fill:#FFFFFF;stroke:#8FA6B6;stroke-width:1.8}
-      .entity-title{font-family:'Architects Daughter';font-size:22px;fill:#12263D}
-      .column{font-family:'Comic Mono';font-size:13px;fill:#2F3E4D}
-      .line{stroke:#4B5563;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-      .line-label{font-family:'Comic Mono';font-size:12px;fill:#1F2937}
-      .pk{fill:#DCFCE7;stroke:#22C55E;stroke-width:1.4}
-      .fk{fill:#FEE2E2;stroke:#F87171;stroke-width:1.4}
-    </style>
-    <marker id="erdArrow" viewBox="0 0 10 10" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#334155"/>
-    </marker>
-    <marker id="crowArrow" viewBox="0 0 10 10" markerWidth="10" markerHeight="10" refX="0" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <polyline points="10,0 0,5 10,10" fill="none" stroke="#334155" stroke-width="2"/>
-    </marker>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" width="1700" height="900" viewBox="0 0 1700 900" role="img" aria-label="Flow enrichment in-memory domain ERD">
+<defs>
+<style>
 
-  <rect class="canvas" width="1680" height="900"/>
-  <rect class="frame" x="16" y="16" width="1648" height="868" rx="20"/>
-  <text class="title" x="840" y="66" text-anchor="middle">Flow Enrichment Domain ERD</text>
-  <text class="subtitle" x="840" y="95" text-anchor="middle">In-memory domain model used by the example (not persisted as DB tables)</text>
+      .canvas{fill:#F6FAFB}
+      .frame{fill:#FFFFFF;stroke:#C7D4DF;stroke-width:1.8}
+      .title{font-family:'Architects Daughter';font-size:38px;fill:#142638}
+      .subtitle{font-family:'Comic Mono';font-size:15px;fill:#51606F}
+      .lane{stroke-width:2;rx:18}
+      .lane-title{font-family:'Architects Daughter';font-size:21px;fill:#102033}
+      .lane-detail{font-family:'Comic Mono';font-size:12px;fill:#51606F}
+      .card{stroke:#8FA6B6;stroke-width:1.8;rx:14}
+      .card-title{font-family:'Architects Daughter';font-size:19px;fill:#102033}
+      .card-detail{font-family:'Comic Mono';font-size:12px;fill:#465160}
+      .small{font-family:'Comic Mono';font-size:11px;fill:#51606F}
+      .line{fill:none;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
+      .line-thin{fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+      .dash{stroke-dasharray:8 7}
+      .label{font-family:'Comic Mono';font-size:12px;fill:#263238}
+      .pill{fill:#FFFFFF;stroke:#D5E0E8;stroke-width:1.4;rx:12}
 
-  <g class="g" data-node="order_command" data-lines="OrderCommand | aggregate root">
-    <rect class="entity" x="120" y="170" width="330" height="168" rx="12"/>
-    <text class="entity-title" x="285" y="200" text-anchor="middle">OrderCommand</text>
-    <line x1="120" y1="211" x2="450" y2="211" class="line"/>
-    <rect class="pk" x="130" y="219" width="18" height="12"/>
-    <text class="column" x="154" y="230">PK orderId</text>
-    <text class="column" x="154" y="250">customerId</text>
-    <text class="column" x="154" y="270">items : List&lt;OrderItem&gt;</text>
-    <text class="column" x="154" y="290">createdAt</text>
-  </g>
+</style>
 
-  <g class="g" data-node="order_item" data-lines="OrderItem | order child">
-    <rect class="entity" x="520" y="170" width="330" height="168" rx="12"/>
-    <text class="entity-title" x="685" y="200" text-anchor="middle">OrderItem</text>
-    <line x1="520" y1="211" x2="850" y2="211" class="line"/>
-    <rect class="pk" x="530" y="219" width="18" height="12"/>
-    <text class="column" x="554" y="230">PK sku</text>
-    <text class="column" x="554" y="250">requestQuantity</text>
-    <text class="column" x="554" y="270">orderId (FK)</text>
-    <text class="column" x="554" y="290">reservedQty</text>
-  </g>
+    <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2F6F8E" stroke="#2F6F8E" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#55783F" stroke="#55783F" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#A46628" stroke="#A46628" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B85E63" stroke="#B85E63" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
 
-  <g class="g" data-node="customer_profile" data-lines="CustomerProfile | snapshot">
-    <rect class="entity" x="920" y="170" width="330" height="168" rx="12"/>
-    <text class="entity-title" x="1085" y="200" text-anchor="middle">CustomerProfile</text>
-    <line x1="920" y1="211" x2="1250" y2="211" class="line"/>
-    <rect class="fk" x="930" y="219" width="18" height="12"/>
-    <text class="column" x="954" y="230">FK customerId</text>
-    <text class="column" x="954" y="250">loyaltyGrade</text>
-  </g>
-
-  <g class="g" data-node="inventory_snapshot" data-lines="InventorySnapshot | fulfillment">
-    <rect class="entity" x="1320" y="170" width="300" height="168" rx="12"/>
-    <text class="entity-title" x="1470" y="200" text-anchor="middle">InventorySnapshot</text>
-    <line x1="1320" y1="211" x2="1620" y2="211" class="line"/>
-    <text class="column" x="1340" y="230">fulfillable</text>
-    <text class="column" x="1340" y="250">unavailableSkus</text>
-    <text class="column" x="1340" y="270">createdFrom stockBySku</text>
-  </g>
-
-  <g class="g" data-node="enriched_order" data-lines="EnrichedOrder | output">
-    <rect class="entity" x="620" y="560" width="420" height="185" rx="12" fill="#FFF9F1" stroke="#8FA6B6" stroke-width="1.8"/>
-    <text class="entity-title" x="830" y="593" text-anchor="middle">EnrichedOrder</text>
-    <line x1="620" y1="604" x2="1040" y2="604" class="line"/>
-    <text class="column" x="640" y="624">orderId</text>
-    <text class="column" x="640" y="643">customerId</text>
-    <text class="column" x="640" y="662">loyaltyGrade</text>
-    <text class="column" x="640" y="681">totalItems</text>
-    <text class="column" x="640" y="700">discountPercent</text>
-    <text class="column" x="640" y="719">fulfillable</text>
-    <text class="column" x="640" y="738">unavailableSkus</text>
-  </g>
-
-  <path class="line" d="M 450 254 L 520 254" marker-end="url(#erdArrow)"/>
-  <text class="line-label" x="465" y="246">1:N</text>
-
-  <path class="line" d="M 285 338 L 285 560" marker-end="url(#erdArrow)"/>
-  <text class="line-label" x="295" y="446" transform="rotate(90 295 446)">1:1</text>
-
-  <path class="line" d="M 1085 338 L 1085 500 Q 800 500 800 560" marker-end="url(#erdArrow)"/>
-  <text class="line-label" x="970" y="425">1:1</text>
-
-  <path class="line" d="M 1470 338 L 1470 500 Q 990 500 990 560" marker-end="url(#erdArrow)"/>
-  <text class="line-label" x="1260" y="452">1:1</text>
-
+</defs>
+<rect x="0" y="0" width="1700" height="900" rx="0" class="canvas" fill="#F8FBFD"/>
+<rect x="18" y="18" width="1664" height="864" rx="22" class="frame" fill="#FFFFFF"/>
+<text x="850" y="66" class="title" text-anchor="middle">Flow Enrichment Domain Model</text>
+<text x="850" y="96" class="subtitle" text-anchor="middle">In-memory Serializable DTOs: order input, service snapshots, and enriched output</text>
+<rect x="100" y="170" width="310" height="190" rx="14" class="card" fill="#FFF8E7"/>
+<text x="255.0" y="204" class="card-title" text-anchor="middle">OrderCommand</text>
+<line x1="100" y1="218" x2="410" y2="218" stroke="#8FA6B6" stroke-width="1.4"/>
+<text x="122" y="246" class="card-detail">orderId: String</text>
+<text x="122" y="268" class="card-detail">customerId: String</text>
+<text x="122" y="290" class="card-detail">items: List&lt;OrderItem&gt;</text>
+<rect x="500" y="170" width="300" height="170" rx="14" class="card" fill="#FFFFFF"/>
+<text x="650.0" y="204" class="card-title" text-anchor="middle">OrderItem</text>
+<line x1="500" y1="218" x2="800" y2="218" stroke="#8FA6B6" stroke-width="1.4"/>
+<text x="522" y="246" class="card-detail">sku: String</text>
+<text x="522" y="268" class="card-detail">quantity: Int</text>
+<rect x="900" y="170" width="330" height="170" rx="14" class="card" fill="#FFFFFF"/>
+<text x="1065.0" y="204" class="card-title" text-anchor="middle">CustomerProfile</text>
+<line x1="900" y1="218" x2="1230" y2="218" stroke="#8FA6B6" stroke-width="1.4"/>
+<text x="922" y="246" class="card-detail">customerId: String</text>
+<text x="922" y="268" class="card-detail">loyaltyGrade: LoyaltyGrade</text>
+<rect x="1300" y="170" width="300" height="192" rx="14" class="card" fill="#FFFFFF"/>
+<text x="1450.0" y="204" class="card-title" text-anchor="middle">InventorySnapshot</text>
+<line x1="1300" y1="218" x2="1600" y2="218" stroke="#8FA6B6" stroke-width="1.4"/>
+<text x="1322" y="246" class="card-detail">perItem: List&lt;ProductInventorySnapshot&gt;</text>
+<text x="1322" y="268" class="card-detail">fulfillable: Boolean</text>
+<text x="1322" y="290" class="card-detail">unavailableSkus: List&lt;String&gt;</text>
+<rect x="1180" y="430" width="380" height="178" rx="14" class="card" fill="#FFFFFF"/>
+<text x="1370.0" y="464" class="card-title" text-anchor="middle">ProductInventorySnapshot</text>
+<line x1="1180" y1="478" x2="1560" y2="478" stroke="#8FA6B6" stroke-width="1.4"/>
+<text x="1202" y="506" class="card-detail">sku: String</text>
+<text x="1202" y="528" class="card-detail">requestQuantity: Int</text>
+<text x="1202" y="550" class="card-detail">availableQuantity: Int</text>
+<text x="1202" y="572" class="card-detail">availableForOrder: Boolean</text>
+<rect x="640" y="610" width="420" height="216" rx="14" class="card" fill="#FFF9F1"/>
+<text x="850.0" y="644" class="card-title" text-anchor="middle">EnrichedOrder</text>
+<line x1="640" y1="658" x2="1060" y2="658" stroke="#8FA6B6" stroke-width="1.4"/>
+<text x="662" y="686" class="card-detail">orderId, customerId</text>
+<text x="662" y="708" class="card-detail">loyaltyGrade, totalItems</text>
+<text x="662" y="730" class="card-detail">discountPercent</text>
+<text x="662" y="752" class="card-detail">fulfillable, unavailableSkus</text>
+<path class="line" d="M 410 245 L 500 245" stroke="#2F6F8E" marker-end="url(#arrow-blue)"/>
+<path class="line" d="M 285 360 L 285 515 Q 285 535 620 535 L 710 535 Q 730 535 730 610" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<path class="line" d="M 1065 340 L 1065 515 Q 1065 535 970 535 L 930 535 Q 910 535 910 610" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<path class="line" d="M 1450 362 L 1450 430" stroke="#2F6F8E" marker-end="url(#arrow-blue)"/>
+<path class="line" d="M 1370 608 L 1370 655 Q 1370 675 1080 675 L 1060 675" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<rect x="430" y="214" width="76" height="24" class="pill"/>
+<text x="468.0" y="230" class="label" text-anchor="middle">1:N</text>
+<rect x="590" y="520" width="132" height="24" class="pill"/>
+<text x="656.0" y="536" class="label" text-anchor="middle">source ids</text>
+<rect x="990" y="520" width="116" height="24" class="pill"/>
+<text x="1048.0" y="536" class="label" text-anchor="middle">grade</text>
+<rect x="1240" y="650" width="132" height="24" class="pill"/>
+<text x="1306.0" y="666" class="label" text-anchor="middle">stock result</text>
 </svg>
