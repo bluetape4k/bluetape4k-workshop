@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820">
+
+  <defs>
+    <marker id="arrow-blue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f80dc"/></marker>
+    <marker id="arrow-green" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f9e44"/></marker>
+    <marker id="arrow-orange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#d97706"/></marker>
+    <marker id="arrow-purple" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#8b5cf6"/></marker>
+    <marker id="arrow-red" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#dc2626"/></marker>
+  </defs>
+  <style>
+    .bg { fill: #f4f8fc; }
+    .frame { fill: #ffffff; stroke: #b9c9dc; stroke-width: 3; }
+    .title { font: 46px 'Comic Sans MS', 'Marker Felt', cursive; fill: #20364f; text-anchor: middle; }
+    .subtitle { font: 20px 'Menlo', monospace; fill: #56677d; text-anchor: middle; font-weight: 700; }
+    .lane-blue { fill: #e8f2ff; stroke: #bdd4ee; stroke-width: 2; }
+    .lane-green { fill: #eaf8f0; stroke: #b9e0c8; stroke-width: 2; }
+    .lane-orange { fill: #fff4df; stroke: #e6c27d; stroke-width: 2; }
+    .lane-purple { fill: #f0eafa; stroke: #c9b7f2; stroke-width: 2; }
+    .card-blue { fill: #e8f2ff; stroke: #84b4ea; stroke-width: 3; }
+    .card-green { fill: #eaf8f0; stroke: #82cf9a; stroke-width: 3; }
+    .card-orange { fill: #fff4df; stroke: #e8b956; stroke-width: 3; }
+    .card-purple { fill: #f0eafa; stroke: #ad95ec; stroke-width: 3; }
+    .card-red { fill: #fff0f0; stroke: #e99a9a; stroke-width: 3; }
+    .lane-title { font: 25px 'Comic Sans MS', cursive; fill: #20364f; }
+    .card-title { font: 24px 'Comic Sans MS', cursive; fill: #20364f; text-anchor: middle; }
+    .card-text { font: 15px 'Menlo', monospace; fill: #314158; text-anchor: middle; font-weight: 700; }
+    .small { font: 13px 'Menlo', monospace; fill: #314158; text-anchor: middle; font-weight: 700; }
+    .line-blue { fill: none; stroke: #2f80dc; stroke-width: 4; marker-end: url(#arrow-blue); stroke-linecap: round; stroke-linejoin: round; }
+    .line-green { fill: none; stroke: #2f9e44; stroke-width: 4; marker-end: url(#arrow-green); stroke-linecap: round; stroke-linejoin: round; }
+    .line-orange { fill: none; stroke: #d97706; stroke-width: 4; marker-end: url(#arrow-orange); stroke-linecap: round; stroke-linejoin: round; }
+    .line-purple { fill: none; stroke: #8b5cf6; stroke-width: 4; marker-end: url(#arrow-purple); stroke-linecap: round; stroke-linejoin: round; }
+    .line-red { fill: none; stroke: #dc2626; stroke-width: 4; marker-end: url(#arrow-red); stroke-linecap: round; stroke-linejoin: round; }
+    .dash { stroke-dasharray: 10 9; }
+  </style>
+
+  <rect class="bg" x="0" y="0" width="1400" height="820"/>
+  <rect class="frame" x="34" y="34" width="1332" height="752" rx="22"/>
+  <text class="title" x="700.0" y="82">Race/Fallback Scenario</text>
+  <text class="subtitle" x="700.0" y="116">Multi-source catalog reads need explicit Flow source contracts</text>
+  <rect class="card-orange" x="90" y="210" width="230" height="110" rx="16"/>
+  <text class="card-title" x="205.0" y="246">Sources</text>
+  <text class="card-text" x="205.0" y="280">cache / replica</text>
+  <text class="card-text" x="205.0" y="302">remote / backup</text>
+  <rect class="card-blue" x="430" y="210" width="260" height="120" rx="16"/>
+  <text class="card-title" x="560.0" y="246">RaceFallbackCatalog</text>
+  <text class="card-text" x="560.0" y="280">choose operator</text>
+  <text class="card-text" x="560.0" y="302">per source contract</text>
+  <rect class="card-green" x="805" y="165" width="220" height="120" rx="16"/>
+  <text class="card-title" x="915.0" y="201">race / amb</text>
+  <text class="card-text" x="915.0" y="235">first value wins</text>
+  <text class="card-text" x="915.0" y="257">losers cancel</text>
+  <rect class="card-green" x="805" y="305" width="220" height="120" rx="16"/>
+  <text class="card-title" x="915.0" y="341">concat</text>
+  <text class="card-text" x="915.0" y="375">ordered fallback</text>
+  <text class="card-text" x="915.0" y="397">priority preserved</text>
+  <rect class="card-green" x="805" y="445" width="220" height="120" rx="16"/>
+  <text class="card-title" x="915.0" y="481">merge</text>
+  <text class="card-text" x="915.0" y="515">all contributions</text>
+  <text class="card-text" x="915.0" y="537">arrival order</text>
+  <rect class="card-purple" x="1110" y="235" width="220" height="120" rx="16"/>
+  <text class="card-title" x="1220.0" y="271">eager concat</text>
+  <text class="card-text" x="1220.0" y="305">start early</text>
+  <text class="card-text" x="1220.0" y="327">emit in order</text>
+  <rect class="card-red" x="1110" y="445" width="220" height="120" rx="16"/>
+  <text class="card-title" x="1220.0" y="481">materialize</text>
+  <text class="card-text" x="1220.0" y="515">error-as-value</text>
+  <text class="card-text" x="1220.0" y="537">dematerialize</text>
+  <path class="line-blue" d="M 320 265 L 430 265"/>
+  <path class="line-green" d="M 690 270 L 760 270 Q 780 270 780 212 L 805 212"/>
+  <path class="line-green" d="M 690 270 L 760 270 Q 780 270 780 352 L 805 352"/>
+  <path class="line-green" d="M 690 270 L 760 270 Q 780 270 780 492 L 805 492"/>
+  <path class="line-purple" d="M 1025 352 L 1080 352 Q 1100 352 1100 282 L 1110 282"/>
+  <path class="line-red" d="M 1025 492 L 1080 492 Q 1100 492 1100 492 L 1110 492"/>
+  <text class="subtitle" x="700" y="660">Pick race, concat, eager concat, merge, or materialize before writing fallback glue.</text>
+</svg>

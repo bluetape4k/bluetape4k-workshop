@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820">
+
+  <defs>
+    <marker id="arrow-blue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f80dc"/></marker>
+    <marker id="arrow-green" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f9e44"/></marker>
+    <marker id="arrow-orange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#d97706"/></marker>
+    <marker id="arrow-purple" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#8b5cf6"/></marker>
+    <marker id="arrow-red" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#dc2626"/></marker>
+  </defs>
+  <style>
+    .bg { fill: #f4f8fc; }
+    .frame { fill: #ffffff; stroke: #b9c9dc; stroke-width: 3; }
+    .title { font: 46px 'Comic Sans MS', 'Marker Felt', cursive; fill: #20364f; text-anchor: middle; }
+    .subtitle { font: 20px 'Menlo', monospace; fill: #56677d; text-anchor: middle; font-weight: 700; }
+    .lane-blue { fill: #e8f2ff; stroke: #bdd4ee; stroke-width: 2; }
+    .lane-green { fill: #eaf8f0; stroke: #b9e0c8; stroke-width: 2; }
+    .lane-orange { fill: #fff4df; stroke: #e6c27d; stroke-width: 2; }
+    .lane-purple { fill: #f0eafa; stroke: #c9b7f2; stroke-width: 2; }
+    .card-blue { fill: #e8f2ff; stroke: #84b4ea; stroke-width: 3; }
+    .card-green { fill: #eaf8f0; stroke: #82cf9a; stroke-width: 3; }
+    .card-orange { fill: #fff4df; stroke: #e8b956; stroke-width: 3; }
+    .card-purple { fill: #f0eafa; stroke: #ad95ec; stroke-width: 3; }
+    .card-red { fill: #fff0f0; stroke: #e99a9a; stroke-width: 3; }
+    .lane-title { font: 25px 'Comic Sans MS', cursive; fill: #20364f; }
+    .card-title { font: 24px 'Comic Sans MS', cursive; fill: #20364f; text-anchor: middle; }
+    .card-text { font: 15px 'Menlo', monospace; fill: #314158; text-anchor: middle; font-weight: 700; }
+    .small { font: 13px 'Menlo', monospace; fill: #314158; text-anchor: middle; font-weight: 700; }
+    .line-blue { fill: none; stroke: #2f80dc; stroke-width: 4; marker-end: url(#arrow-blue); stroke-linecap: round; stroke-linejoin: round; }
+    .line-green { fill: none; stroke: #2f9e44; stroke-width: 4; marker-end: url(#arrow-green); stroke-linecap: round; stroke-linejoin: round; }
+    .line-orange { fill: none; stroke: #d97706; stroke-width: 4; marker-end: url(#arrow-orange); stroke-linecap: round; stroke-linejoin: round; }
+    .line-purple { fill: none; stroke: #8b5cf6; stroke-width: 4; marker-end: url(#arrow-purple); stroke-linecap: round; stroke-linejoin: round; }
+    .line-red { fill: none; stroke: #dc2626; stroke-width: 4; marker-end: url(#arrow-red); stroke-linecap: round; stroke-linejoin: round; }
+    .dash { stroke-dasharray: 10 9; }
+  </style>
+
+  <rect class="bg" x="0" y="0" width="1400" height="820"/>
+  <rect class="frame" x="34" y="34" width="1332" height="752" rx="22"/>
+  <text class="title" x="700.0" y="82">Race/Fallback Domain Model</text>
+  <text class="subtitle" x="700.0" y="116">Small serializable DTOs plus materialized terminal events</text>
+  <rect class="card-orange" x="110" y="210" width="250" height="160" rx="16"/>
+  <text class="card-title" x="235.0" y="256">CatalogItem</text>
+  <text class="card-text" x="235.0" y="290">sku: String</text>
+  <text class="card-text" x="235.0" y="312">name: String</text>
+  <text class="card-text" x="235.0" y="334">priceCents: Long</text>
+  <text class="card-text" x="235.0" y="356">attributes: Map</text>
+  <rect class="card-green" x="560" y="200" width="260" height="150" rx="16"/>
+  <text class="card-title" x="690.0" y="236">SourceResult</text>
+  <text class="card-text" x="690.0" y="270">source: CatalogSource</text>
+  <text class="card-text" x="690.0" y="292">item: CatalogItem</text>
+  <text class="card-text" x="690.0" y="314">latencyMs: Long</text>
+  <text class="card-text" x="690.0" y="336">quality: SourceQuality</text>
+  <rect class="card-blue" x="1020" y="220" width="250" height="130" rx="16"/>
+  <text class="card-title" x="1145.0" y="256">CatalogSource</text>
+  <text class="card-text" x="1145.0" y="290">CACHE / REPLICA</text>
+  <text class="card-text" x="1145.0" y="312">REMOTE_API / BACKUP_API</text>
+  <rect class="card-purple" x="560" y="500" width="260" height="110" rx="16"/>
+  <text class="card-title" x="690.0" y="536">SourceQuality</text>
+  <text class="card-text" x="690.0" y="570">FRESH / STALE</text>
+  <text class="card-text" x="690.0" y="592">PARTIAL</text>
+  <rect class="card-red" x="1020" y="500" width="250" height="110" rx="16"/>
+  <text class="card-title" x="1145.0" y="536">FlowEvent</text>
+  <text class="card-text" x="1145.0" y="570">Value / Error</text>
+  <text class="card-text" x="1145.0" y="592">Complete</text>
+  <path class="line-orange" d="M 360 285 L 520 285 Q 540 285 540 275 L 560 275"/>
+  <path class="line-blue" d="M 820 255 L 980 255 Q 1000 255 1000 285 L 1020 285"/>
+  <path class="line-purple" d="M 690 350 L 690 500"/>
+  <path class="line-red dash" d="M 820 560 L 980 560 Q 1000 560 1000 555 L 1020 555"/>
+  <text class="small" x="460" y="258">item</text>
+  <text class="small" x="940" y="235">source</text>
+  <text class="small" x="720" y="450">quality</text>
+  <text class="small" x="920" y="535">materialize</text>
+</svg>
