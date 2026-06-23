@@ -1,122 +1,130 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="920" viewBox="0 0 1680 920" role="img" aria-label="Parallel enrichment flow architecture">
-  <defs>
-    <style>
-      .canvas{fill:#F7FAFC}
-      .frame{fill:#FFFFFF;stroke:#CBD5E1;stroke-width:1.2}
-      .title{font-family:'Architects Daughter';font-size:32px;fill:#102033}
-      .subtitle{font-family:'Comic Mono';font-size:14px;fill:#51606F}
-      .layer-title{font-family:'Architects Daughter';font-size:18px;fill:#0F2233}
-      .layer-detail{font-family:'Comic Mono';font-size:12px;fill:#51606F}
-      .layer{rx:16;stroke-width:1.6}
-      .node rect{stroke-width:1.4}
-      .node-title{font-family:'Architects Daughter';font-size:18px;fill:#102033}
-      .node-detail{font-family:'Comic Mono';font-size:12px;fill:#465160}
-      .line{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:2.4}
-      .api{stroke:#2563eb}
-      .parallel{stroke:#16A34A}
-      .infra{stroke:#B85E63}
-      .result{stroke:#F59E0B}
-      .marker{fill:#1F2937}
-    </style>
-    <marker id="archArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#1F2937" stroke="none"/>
-    </marker>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1080" viewBox="0 0 1800 1080" role="img" aria-label="Flow enrichment architecture with vertical lanes">
+<defs>
+<style>
 
-  <rect class="canvas" width="1680" height="920"/>
-  <rect class="frame" x="16" y="16" width="1648" height="888" rx="22"/>
+      .canvas{fill:#F6FAFB}
+      .frame{fill:#FFFFFF;stroke:#C7D4DF;stroke-width:1.8}
+      .title{font-family:'Architects Daughter';font-size:38px;fill:#142638}
+      .subtitle{font-family:'Comic Mono';font-size:15px;fill:#51606F}
+      .lane{stroke-width:2;rx:18}
+      .lane-title{font-family:'Architects Daughter';font-size:21px;fill:#102033}
+      .lane-detail{font-family:'Comic Mono';font-size:12px;fill:#51606F}
+      .card{stroke:#8FA6B6;stroke-width:1.8;rx:14}
+      .card-title{font-family:'Architects Daughter';font-size:19px;fill:#102033}
+      .card-detail{font-family:'Comic Mono';font-size:12px;fill:#465160}
+      .small{font-family:'Comic Mono';font-size:11px;fill:#51606F}
+      .line{fill:none;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
+      .line-thin{fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+      .dash{stroke-dasharray:8 7}
+      .label{font-family:'Comic Mono';font-size:12px;fill:#263238}
+      .pill{fill:#FFFFFF;stroke:#D5E0E8;stroke-width:1.4;rx:12}
 
-  <text class="title" x="840" y="58" text-anchor="middle">Flow Enrichment Architecture</text>
-  <text class="subtitle" x="840" y="84" text-anchor="middle">Flow.parallel rails enrich orders and sequentially merge the output stream</text>
+</style>
 
-  <rect class="layer" x="64" y="124" width="1552" height="200" fill="#EAF3FF" stroke="#9AB7D9"/>
-  <text class="layer-title" x="101" y="158">Input and API Layer</text>
-  <text class="layer-detail" x="101" y="178">Flow source, filtering, and orchestration entry</text>
+    <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2F6F8E" stroke="#2F6F8E" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#55783F" stroke="#55783F" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#A46628" stroke="#A46628" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B85E63" stroke="#B85E63" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
 
-  <rect class="layer" x="64" y="356" width="1552" height="250" fill="#F8F5FF" stroke="#B79EE3"/>
-  <text class="layer-title" x="101" y="390">Parallel Enrichment Rails</text>
-  <text class="layer-detail" x="101" y="410">Customer, inventory, and promotion enrichment runs in parallel</text>
-
-  <rect class="layer" x="64" y="630" width="1552" height="190" fill="#F2F7F2" stroke="#A7D0B0"/>
-  <text class="layer-title" x="101" y="664">Output and Merge Layer</text>
-  <text class="layer-detail" x="101" y="684">Results are collected and forwarded as enriched orders</text>
-
-  <g class="node" data-node="input" data-lines="Incoming Orders | Source Flow | In-memory">
-    <rect x="130" y="170" width="240" height="90" rx="14" fill="#FFF8E7" stroke="#8FA6B6"/>
-    <text x="250" y="203" text-anchor="middle" class="node-title">Order Command Stream</text>
-    <text x="250" y="227" text-anchor="middle" class="node-detail">Flow&lt;OrderCommand&gt;</text>
-  </g>
-
-  <g class="node" data-node="pipeline" data-lines="OrderEnrichmentPipeline | parallel + sequential | orchestrator">
-    <rect x="450" y="170" width="330" height="90" rx="14" fill="#EAF7F0" stroke="#8FA6B6"/>
-    <text x="615" y="203" text-anchor="middle" class="node-title">OrderEnrichmentPipeline</text>
-    <text x="615" y="227" text-anchor="middle" class="node-detail">enrichInParallel / enrichSequentially</text>
-  </g>
-
-  <g class="node" data-node="parallel" data-lines="Parallel Rail | Fan-out / Fan-in | Flow API">
-    <rect x="840" y="170" width="300" height="90" rx="14" fill="#EFF6FF" stroke="#8FA6B6"/>
-    <text x="990" y="203" text-anchor="middle" class="node-title">Flow.parallel()</text>
-    <text x="990" y="227" text-anchor="middle" class="node-title">sequential()</text>
-  </g>
-
-  <g class="node" data-node="customer" data-lines="CustomerProfileService | in-memory | profile lookup">
-    <rect x="200" y="402" width="320" height="90" rx="14" fill="#FFF1F1" stroke="#8FA6B6"/>
-    <text x="360" y="435" text-anchor="middle" class="node-title">CustomerProfileService</text>
-    <text x="360" y="459" text-anchor="middle" class="node-detail">findByCustomerId()</text>
-  </g>
-
-  <g class="node" data-node="inventory" data-lines="InventoryService | in-memory | snapshot">
-    <rect x="640" y="402" width="320" height="90" rx="14" fill="#FFF1F1" stroke="#8FA6B6"/>
-    <text x="800" y="435" text-anchor="middle" class="node-title">InventoryService</text>
-    <text x="800" y="459" text-anchor="middle" class="node-detail">reserve()</text>
-  </g>
-
-  <g class="node" data-node="promotion" data-lines="PromotionService | in-memory | discount calc">
-    <rect x="1080" y="402" width="320" height="90" rx="14" fill="#FFF1F1" stroke="#8FA6B6"/>
-    <text x="1240" y="435" text-anchor="middle" class="node-title">PromotionService</text>
-    <text x="1240" y="459" text-anchor="middle" class="node-detail">estimateDiscount()</text>
-  </g>
-
-  <g class="node" data-node="domain" data-lines="Domain Model | OrderItem | EnrichedOrder | Exceptions">
-    <rect x="600" y="662" width="300" height="90" rx="14" fill="#F5F0FF" stroke="#8FA6B6"/>
-    <text x="750" y="695" text-anchor="middle" class="node-title">Domain Model</text>
-    <text x="750" y="719" text-anchor="middle" class="node-detail">OrderCommand, EnrichedOrder</text>
-  </g>
-
-  <g class="node" data-node="output" data-lines="Output Consumer | collect / toList | downstream">
-    <rect x="1000" y="662" width="320" height="90" rx="14" fill="#F0F7FF" stroke="#8FA6B6"/>
-    <text x="1160" y="695" text-anchor="middle" class="node-title">Enriched Order Flow</text>
-    <text x="1160" y="719" text-anchor="middle" class="node-detail">Flow&lt;EnrichedOrder&gt;</text>
-  </g>
-
-  <g class="edge" data-edge="input->pipeline" data-label="validates">
-    <path class="line api" marker-end="url(#archArrow)" d="M 370 215 L 450 215"/>
-  </g>
-  <g class="edge" data-edge="pipeline->parallel" data-label="fan-out by rail">
-    <path class="line api" marker-end="url(#archArrow)" d="M 780 215 L 840 215"/>
-  </g>
-  <g class="edge" data-edge="parallel->customer" data-label="parallel call">
-    <path class="line parallel" marker-end="url(#archArrow)" d="M 990 260 L 990 333 Q 990 343 910 343 L 910 402"/>
-  </g>
-  <g class="edge" data-edge="parallel->inventory" data-label="parallel call">
-    <path class="line parallel" marker-end="url(#archArrow)" d="M 990 260 L 990 333 Q 990 343 799 343 L 799 402"/>
-  </g>
-  <g class="edge" data-edge="parallel->promotion" data-label="parallel call">
-    <path class="line parallel" marker-end="url(#archArrow)" d="M 990 260 L 990 333 Q 990 343 1240 343 L 1240 402"/>
-  </g>
-  <g class="edge" data-edge="customer->parallel" data-label="returns customer profile">
-    <path class="line infra" marker-end="url(#archArrow)" d="M 360 492 L 360 560 Q 360 575 378 575 L 972 575 Q 990 575 990 590 L 990 640"/>
-  </g>
-  <g class="edge" data-edge="inventory->parallel" data-label="returns stock">
-    <path class="line infra" marker-end="url(#archArrow)" d="M 800 492 L 800 560 Q 800 573 990 573 L 990 640"/>
-  </g>
-  <g class="edge" data-edge="promotion->parallel" data-label="returns discount">
-    <path class="line infra" marker-end="url(#archArrow)" d="M 1240 492 L 1240 560 Q 1240 573 990 573 L 990 640"/>
-  </g>
-  <g class="edge" data-edge="parallel->domain" data-label="creates result model">
-    <path class="line result" marker-end="url(#archArrow)" d="M 990 640 L 990 662"/>
-  </g>
-  <g class="edge" data-edge="domain->output" data-label="emit EnrichedOrder">
-    <path class="line result" marker-end="url(#archArrow)" d="M 900 707 L 1000 707"/>
-  </g>
+</defs>
+<rect x="0" y="0" width="1800" height="1080" rx="0" class="canvas" fill="#F6FAFB"/>
+<rect x="20" y="20" width="1760" height="1040" rx="24" class="frame" fill="#FFFFFF"/>
+<text x="900" y="70" class="title" text-anchor="middle">Flow Enrichment Architecture</text>
+<text x="900" y="100" class="subtitle" text-anchor="middle">Vertical responsibility lanes: source validation, Flow rail orchestration, service enrichment, and merged output</text>
+<rect x="70" y="140" width="360" height="820" rx="18" class="lane" fill="#EAF3FF" stroke="#9AB7D9"/>
+<text x="94" y="178" class="lane-title">Input Stream</text>
+<text x="94" y="201" class="lane-detail">Order commands and validity filter</text>
+<rect x="470" y="140" width="370" height="820" rx="18" class="lane" fill="#F8F5FF" stroke="#B79EE3"/>
+<text x="494" y="178" class="lane-title">Flow Rail Orchestration</text>
+<text x="494" y="201" class="lane-detail">parallel rails, rail map, sequential merge</text>
+<rect x="880" y="140" width="450" height="820" rx="18" class="lane" fill="#FFF4F2" stroke="#D49A9A"/>
+<text x="904" y="178" class="lane-title">Enrichment Services</text>
+<text x="904" y="201" class="lane-detail">source-backed in-memory service calls</text>
+<rect x="1370" y="140" width="360" height="820" rx="18" class="lane" fill="#F2F7F2" stroke="#A7D0B0"/>
+<text x="1394" y="178" class="lane-title">Output Contract</text>
+<text x="1394" y="201" class="lane-detail">combine, emit, or propagate failures</text>
+<g data-node="Flow&lt;OrderCommand&gt;">
+<rect x="110" y="235" width="280" height="110" rx="14" class="card" fill="#FFF8E7"/>
+<text x="250.0" y="269" class="card-title" text-anchor="middle">Flow&lt;OrderCommand&gt;</text>
+<text x="250.0" y="294" class="card-detail" text-anchor="middle">incoming source stream</text>
+<text x="250.0" y="313" class="card-detail" text-anchor="middle">orderId/customer/items</text>
+</g>
+<g data-node="filter(::isValidOrder)">
+<rect x="110" y="420" width="280" height="110" rx="14" class="card" fill="#EAF7F0"/>
+<text x="250.0" y="454" class="card-title" text-anchor="middle">filter(::isValidOrder)</text>
+<text x="250.0" y="479" class="card-detail" text-anchor="middle">drops blank ids</text>
+<text x="250.0" y="498" class="card-detail" text-anchor="middle">drops empty items</text>
+</g>
+<g data-node="Flow.parallel(...)">
+<rect x="510" y="225" width="290" height="110" rx="14" class="card" fill="#EFF6FF"/>
+<text x="655.0" y="259" class="card-title" text-anchor="middle">Flow.parallel(...)</text>
+<text x="655.0" y="284" class="card-detail" text-anchor="middle">splits candidates</text>
+<text x="655.0" y="303" class="card-detail" text-anchor="middle">runOn(index) dispatchers</text>
+</g>
+<g data-node="parallelMap { enrich }">
+<rect x="510" y="410" width="290" height="120" rx="14" class="card" fill="#F5F0FF"/>
+<text x="655.0" y="444" class="card-title" text-anchor="middle">parallelMap { enrich }</text>
+<text x="655.0" y="469" class="card-detail" text-anchor="middle">per-order rail work</text>
+<text x="655.0" y="488" class="card-detail" text-anchor="middle">coroutineScope + async</text>
+</g>
+<g data-node="sequential()">
+<rect x="510" y="635" width="290" height="110" rx="14" class="card" fill="#EEF7F0"/>
+<text x="655.0" y="669" class="card-title" text-anchor="middle">sequential()</text>
+<text x="655.0" y="694" class="card-detail" text-anchor="middle">fan-in to one Flow</text>
+<text x="655.0" y="713" class="card-detail" text-anchor="middle">collector-facing order</text>
+</g>
+<g data-node="CustomerProfileService">
+<rect x="925" y="205" width="360" height="96" rx="14" class="card" fill="#FFF1F1"/>
+<text x="1105.0" y="239" class="card-title" text-anchor="middle">CustomerProfileService</text>
+<text x="1105.0" y="264" class="card-detail" text-anchor="middle">findByCustomerId()</text>
+<text x="1105.0" y="283" class="card-detail" text-anchor="middle">UnknownCustomerException</text>
+</g>
+<g data-node="InventoryService">
+<rect x="925" y="355" width="360" height="96" rx="14" class="card" fill="#FFF1F1"/>
+<text x="1105.0" y="389" class="card-title" text-anchor="middle">InventoryService</text>
+<text x="1105.0" y="414" class="card-detail" text-anchor="middle">reserve(order.items)</text>
+<text x="1105.0" y="433" class="card-detail" text-anchor="middle">UnknownProductException</text>
+</g>
+<g data-node="PromotionService">
+<rect x="925" y="505" width="360" height="96" rx="14" class="card" fill="#FFF1F1"/>
+<text x="1105.0" y="539" class="card-title" text-anchor="middle">PromotionService</text>
+<text x="1105.0" y="564" class="card-detail" text-anchor="middle">estimateDiscount(profile)</text>
+<text x="1105.0" y="583" class="card-detail" text-anchor="middle">grade-based discount</text>
+</g>
+<g data-node="EnrichedOrder">
+<rect x="1405" y="270" width="290" height="110" rx="14" class="card" fill="#F0F7FF"/>
+<text x="1550.0" y="304" class="card-title" text-anchor="middle">EnrichedOrder</text>
+<text x="1550.0" y="329" class="card-detail" text-anchor="middle">loyalty, item total</text>
+<text x="1550.0" y="348" class="card-detail" text-anchor="middle">fulfillable + unavailable SKUs</text>
+</g>
+<g data-node="combine results">
+<rect x="1405" y="465" width="290" height="95" rx="14" class="card" fill="#FFF9F1"/>
+<text x="1550.0" y="499" class="card-title" text-anchor="middle">combine results</text>
+<text x="1550.0" y="524" class="card-detail" text-anchor="middle">profile + stock + discount</text>
+<text x="1550.0" y="543" class="card-detail" text-anchor="middle">then build output DTO</text>
+</g>
+<g data-node="Fast-fail Paths">
+<rect x="1405" y="665" width="290" height="110" rx="14" class="card" fill="#FFF3F3"/>
+<text x="1550.0" y="699" class="card-title" text-anchor="middle">Fast-fail Paths</text>
+<text x="1550.0" y="724" class="card-detail" text-anchor="middle">missing customer/product</text>
+<text x="1550.0" y="743" class="card-detail" text-anchor="middle">exception propagates</text>
+</g>
+<path class="line" d="M 390 290 L 448 290 Q 468 290 468 310 L 468 452 Q 468 472 488 472 L 510 472" stroke="#2F6F8E" marker-end="url(#arrow-blue)"/>
+<path class="line" d="M 390 475 L 448 475 Q 468 475 468 300 Q 468 280 488 280 L 510 280" stroke="#2F6F8E" marker-end="url(#arrow-blue)"/>
+<path class="line" d="M 800 280 L 858 280 Q 878 280 878 253 Q 878 233 898 233 L 925 233" stroke="#55783F" marker-end="url(#arrow-green)"/>
+<path class="line" d="M 800 470 L 858 470 Q 878 470 878 403 Q 878 383 898 383 L 925 383" stroke="#55783F" marker-end="url(#arrow-green)"/>
+<path class="line" d="M 800 470 L 858 470 Q 878 470 878 553 Q 878 573 898 573 L 925 573" stroke="#55783F" marker-end="url(#arrow-green)"/>
+<path class="line" d="M 1285 253 L 1340 253 Q 1360 253 1360 497 Q 1360 517 1380 517 L 1405 517" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<path class="line" d="M 1285 403 L 1340 403 Q 1360 403 1360 505 Q 1360 525 1380 525 L 1405 525" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<path class="line" d="M 1285 553 L 1340 553 Q 1360 553 1360 533 Q 1360 513 1380 513 L 1405 513" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<path class="line" d="M 800 690 L 1340 690 Q 1360 690 1360 545 Q 1360 525 1380 525 L 1405 525" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<path class="line" d="M 1550 465 L 1550 400 L 1550 380" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<path class="line-thin dash" d="M 1285 290 L 1340 290 Q 1360 290 1360 718 Q 1360 738 1380 738 L 1405 738" stroke="#B85E63" marker-end="url(#arrow-red)"/>
+<path class="line-thin dash" d="M 1285 440 L 1340 440 Q 1360 440 1360 718 Q 1360 738 1380 738 L 1405 738" stroke="#B85E63" marker-end="url(#arrow-red)"/>
+<rect x="430" y="328" width="142" height="24" class="pill"/>
+<text x="501.0" y="344" class="label" text-anchor="middle">valid orders</text>
+<rect x="842" y="612" width="128" height="24" class="pill"/>
+<text x="906.0" y="628" class="label" text-anchor="middle">async calls</text>
+<rect x="1320" y="580" width="128" height="24" class="pill"/>
+<text x="1384.0" y="596" class="label" text-anchor="middle">fan-in</text>
 </svg>

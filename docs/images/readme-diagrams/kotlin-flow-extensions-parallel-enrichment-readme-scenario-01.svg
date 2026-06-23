@@ -1,62 +1,88 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="920" viewBox="0 0 1680 920" role="img" aria-label="Parallel flow enrichment scenario">
-  <defs>
-    <style>
+<svg xmlns="http://www.w3.org/2000/svg" width="1740" height="980" viewBox="0 0 1740 980" role="img" aria-label="Parallel flow enrichment scenario">
+<defs>
+<style>
+
       .canvas{fill:#F8FBFD}
       .frame{fill:#FFFFFF;stroke:#D1DCE5;stroke-width:1.8}
       .title{font-family:'Architects Daughter';font-size:38px;fill:#142638}
-      .subtitle{font-family:'Comic Mono';font-size:14px;fill:#51606F}
-      .panel{fill:#FFFFFF;stroke:#A8BCCB;stroke-width:2}
-      .panel-title{font-family:'Architects Daughter';font-size:20px;fill:#102033}
-      .step{font-family:'Comic Mono';font-size:14px;fill:#263238}
-      .arrow{fill:none;stroke:#334155;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#stepArrow)}
-      .badge{fill:#DBEAFE;stroke:#3B82F6;stroke-width:1.8}
-      .badgeText{font-family:'Comic Mono';font-size:12px;font-weight:700;fill:#1D4ED8}
-      .muted{fill:#60717F}
-    </style>
-    <marker id="stepArrow" viewBox="0 0 10 10" markerWidth="11" markerHeight="11" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#334155"/>
-    </marker>
-  </defs>
+      .subtitle{font-family:'Comic Mono';font-size:15px;fill:#51606F}
+      .lane{stroke-width:2;rx:18}
+      .lane-title{font-family:'Architects Daughter';font-size:21px;fill:#102033}
+      .card{stroke:#8FA6B6;stroke-width:1.8;rx:14}
+      .card-title{font-family:'Architects Daughter';font-size:19px;fill:#102033}
+      .card-detail{font-family:'Comic Mono';font-size:12px;fill:#465160}
+      .small{font-family:'Comic Mono';font-size:11px;fill:#51606F}
+      .line{fill:none;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
+      .line-thin{fill:none;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+      .dash{stroke-dasharray:8 7}
+      .label{font-family:'Comic Mono';font-size:12px;fill:#263238}
+      .pill{fill:#FFFFFF;stroke:#D5E0E8;stroke-width:1.4;rx:12}
 
-  <rect class="canvas" width="1680" height="920"/>
-  <rect class="frame" x="22" y="18" width="1636" height="884" rx="20"/>
+</style>
 
-  <text class="title" x="840" y="70" text-anchor="middle">Parallel Enrichment Scenario</text>
-  <text class="subtitle" x="840" y="100" text-anchor="middle">Three services are enriched in parallel for each valid order and merged into one stream</text>
+    <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2F6F8E" stroke="#2F6F8E" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#55783F" stroke="#55783F" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#A46628" stroke="#A46628" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B85E63" stroke="#B85E63" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
 
-  <g>
-    <rect class="panel" x="80" y="145" width="1520" height="215" rx="16"/>
-    <text class="panel-title" x="100" y="180">Step 1 - Input and Validation</text>
-    <text class="step" x="110" y="215">1) Flow&lt;OrderCommand&gt; is received from callers</text>
-    <text class="step" x="110" y="240">2) Orders missing id/customer/items are filtered</text>
-    <text class="step" x="110" y="265">3) Remaining orders are sent to the parallel rail</text>
-    <path class="arrow" d="M 110 285 L 980 285"/>
-    <circle class="badge" cx="95" cy="285" r="10"/>
-    <text class="badgeText" x="95" y="289" text-anchor="middle">1</text>
-    <text class="muted" x="1010" y="289">pipeline ingress</text>
-  </g>
-
-  <g>
-    <rect class="panel" x="80" y="390" width="1520" height="230" rx="16"/>
-    <text class="panel-title" x="100" y="425">Step 2 - Parallel Rail</text>
-    <text class="step" x="110" y="458">4) Pipeline fans out the same order to three services</text>
-    <text class="step" x="110" y="486">5) CustomerProfileService, InventoryService, PromotionService run concurrently</text>
-    <text class="step" x="110" y="514">6) Each service emits profile, snapshot, and discount once</text>
-    <path class="arrow" d="M 130 534 L 980 534"/>
-    <circle class="badge" cx="95" cy="534" r="10"/>
-    <text class="badgeText" x="95" y="538" text-anchor="middle">2</text>
-    <text class="muted" x="1010" y="534">parallel fan-out + fan-in point</text>
-  </g>
-
-  <g>
-    <rect class="panel" x="80" y="650" width="1520" height="210" rx="16"/>
-    <text class="panel-title" x="100" y="685">Step 3 - Merge and Result</text>
-    <text class="step" x="110" y="718">7) All service results are combined into one `EnrichedOrder`</text>
-    <text class="step" x="110" y="746">8) Missing customer or product throws an error and cancels the flow</text>
-    <text class="step" x="110" y="774">9) Downstream collector receives ordered enriched outputs</text>
-    <path class="arrow" d="M 130 796 L 980 796"/>
-    <circle class="badge" cx="95" cy="796" r="10"/>
-    <text class="badgeText" x="95" y="800" text-anchor="middle">3</text>
-    <text class="muted" x="1010" y="796">sequential merge and final stream emission</text>
-  </g>
+</defs>
+<rect x="0" y="0" width="1740" height="980" rx="0" class="canvas" fill="#F8FBFD"/>
+<rect x="22" y="18" width="1696" height="944" rx="22" class="frame" fill="#FFFFFF"/>
+<text x="870" y="70" class="title" text-anchor="middle">Parallel Enrichment Scenario</text>
+<text x="870" y="102" class="subtitle" text-anchor="middle">Valid orders move through a compact story: validate, fan out, combine, emit or fail fast</text>
+<rect x="90" y="180" width="290" height="126" rx="14" class="card" fill="#FFF8E7"/>
+<circle cx="126" cy="216" r="18" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.8"/>
+<text x="126" y="222" class="label" text-anchor="middle">1</text>
+<text x="250" y="220" class="card-title" text-anchor="middle">Source Flow</text>
+<text x="250" y="252" class="card-detail" text-anchor="middle">Flow&lt;OrderCommand&gt; enters</text>
+<text x="250" y="273" class="card-detail" text-anchor="middle">from callers</text>
+<rect x="430" y="180" width="290" height="126" rx="14" class="card" fill="#EAF7F0"/>
+<circle cx="466" cy="216" r="18" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.8"/>
+<text x="466" y="222" class="label" text-anchor="middle">2</text>
+<text x="590" y="220" class="card-title" text-anchor="middle">Validate</text>
+<text x="590" y="252" class="card-detail" text-anchor="middle">invalid commands are</text>
+<text x="590" y="273" class="card-detail" text-anchor="middle">filtered first</text>
+<rect x="770" y="180" width="290" height="126" rx="14" class="card" fill="#EFF6FF"/>
+<circle cx="806" cy="216" r="18" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.8"/>
+<text x="806" y="222" class="label" text-anchor="middle">3</text>
+<text x="930" y="220" class="card-title" text-anchor="middle">Parallel Rail</text>
+<text x="930" y="252" class="card-detail" text-anchor="middle">orders split over</text>
+<text x="930" y="273" class="card-detail" text-anchor="middle">dispatchers</text>
+<rect x="90" y="470" width="290" height="126" rx="14" class="card" fill="#FFF1F1"/>
+<circle cx="126" cy="506" r="18" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.8"/>
+<text x="126" y="512" class="label" text-anchor="middle">4</text>
+<text x="250" y="510" class="card-title" text-anchor="middle">Service Fan-out</text>
+<text x="250" y="542" class="card-detail" text-anchor="middle">profile and stock</text>
+<text x="250" y="563" class="card-detail" text-anchor="middle">run with async</text>
+<rect x="430" y="470" width="290" height="126" rx="14" class="card" fill="#FFF1F1"/>
+<circle cx="466" cy="506" r="18" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.8"/>
+<text x="466" y="512" class="label" text-anchor="middle">5</text>
+<text x="590" y="510" class="card-title" text-anchor="middle">Discount</text>
+<text x="590" y="542" class="card-detail" text-anchor="middle">discount waits for</text>
+<text x="590" y="563" class="card-detail" text-anchor="middle">CustomerProfile</text>
+<rect x="770" y="470" width="290" height="126" rx="14" class="card" fill="#F5F0FF"/>
+<circle cx="806" cy="506" r="18" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.8"/>
+<text x="806" y="512" class="label" text-anchor="middle">6</text>
+<text x="930" y="510" class="card-title" text-anchor="middle">Merge</text>
+<text x="930" y="542" class="card-detail" text-anchor="middle">profile + stock + discount</text>
+<text x="930" y="563" class="card-detail" text-anchor="middle">build EnrichedOrder</text>
+<rect x="1130" y="330" width="290" height="126" rx="14" class="card" fill="#F0F7FF"/>
+<circle cx="1166" cy="366" r="18" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.8"/>
+<text x="1166" y="372" class="label" text-anchor="middle">7</text>
+<text x="1290" y="370" class="card-title" text-anchor="middle">Emit / Fail</text>
+<text x="1290" y="402" class="card-detail" text-anchor="middle">emit enriched output</text>
+<text x="1290" y="423" class="card-detail" text-anchor="middle">missing data throws</text>
+<path class="line" d="M 380 243 L 430 243" stroke="#2F6F8E" marker-end="url(#arrow-blue)"/>
+<path class="line" d="M 720 243 L 770 243" stroke="#2F6F8E" marker-end="url(#arrow-blue)"/>
+<path class="line" d="M 1060 243 L 1255 243 Q 1275 243 1275 263 L 1275 330" stroke="#2F6F8E" marker-end="url(#arrow-blue)"/>
+<path class="line" d="M 915 306 L 915 395 Q 915 415 520 415 L 255 415 Q 235 415 235 470" stroke="#55783F" marker-end="url(#arrow-green)"/>
+<path class="line" d="M 380 533 L 430 533" stroke="#55783F" marker-end="url(#arrow-green)"/>
+<path class="line" d="M 720 533 L 770 533" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<path class="line" d="M 1060 533 L 1110 533 Q 1130 533 1130 476" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<path class="line-thin dash" d="M 1275 456 L 1275 620 Q 1275 640 1180 640" stroke="#B85E63" marker-end="url(#arrow-red)"/>
+<rect x="1078" y="625" width="160" height="24" class="pill"/>
+<text x="1158" y="641" class="label" text-anchor="middle">exception path</text>
+<rect x="90" y="755" width="1560" height="120" rx="18" class="lane" fill="#F2F7F2" stroke="#A7D0B0"/>
+<text x="120" y="795" class="lane-title">Reader contract</text>
+<text x="120" y="827" class="subtitle">Flow.parallel rail orchestration plus inner async enrichment; sequential fallback remains available for comparison.</text>
 </svg>
