@@ -8,11 +8,13 @@
 
 [English](README.md) | 한국어
 
-[bluetape4k](https://github.com/bluetape4k) 라이브러리가 실제 Spring Boot 4, Exposed,
-Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티브 워크로드 안에서
-어떻게 동작하는지 확인하는 실행 가능한 백엔드 예제 모음입니다.
+[bluetape4k](https://github.com/bluetape4k) 라이브러리를 실무형 Spring Boot 4, Exposed,
+Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티브 워크로드 맥락에서
+직접 돌려보며 익힐 수 있는 백엔드 예제 워크숍입니다.
 
 ![Workshop workbench](./docs/assets/workshop-workbench.png)
+
+![Workshop Module Map](./docs/images/readme-charts/root-readme-module-chart-01.png)
 
 ![Bluetape4k Workshop Overview](./docs/images/readme-diagrams/root-readme-overview-01.png)
 
@@ -34,12 +36,15 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 
 **요구 사항**: JDK 21+, Docker (Testcontainers)
 
-이 저장소는 실행 가능한 cookbook처럼 사용합니다.
+이 저장소는 실행 가능한 cookbook로 구성됩니다.
 
 1. 지금 해결하려는 백엔드 문제와 가장 가까운 도메인을 고릅니다.
 2. 전체 저장소를 빌드하기 전에 하나의 모듈 테스트부터 실행합니다.
 3. Testcontainers 또는 다계층 동작이 필요할 때 Basic 모듈에서 Advanced 모듈로 이동합니다.
-4. 모듈 README를 source와 함께 읽습니다. 최종 계약은 source code입니다.
+4. 모듈 README를 읽을 때는 소스 코드 기준으로 판단합니다.
+
+학습을 시작할 때는 모듈 지도를 먼저 보고, 우선 **Basic** 예제로 흐름을 익힌 뒤
+필요 시 분산/인프라 동작이 중요한 지점으로 **Advanced** 예제를 확장합니다.
 
 ---
 
