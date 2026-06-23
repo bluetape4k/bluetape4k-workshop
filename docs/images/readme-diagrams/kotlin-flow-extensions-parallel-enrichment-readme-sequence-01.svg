@@ -64,12 +64,12 @@
 <circle cx="398.0" cy="342" r="11" fill="#EAF4F8" stroke="#55783F" stroke-width="1.5"/>
 <text x="398.0" y="346" class="small" text-anchor="middle">2</text>
 <text x="418.0" y="346" class="label">filter valid orders</text>
-<path class="line" d="M 485 365 L 485 365" stroke="#55783F" marker-end="url(#arrow-green)"/>
+<rect x="473" y="358" width="24" height="28" rx="6" fill="#EEF7F0" stroke="#55783F" stroke-width="1.4"/>
 <rect x="372.0" y="404" width="226" height="26" rx="13" class="pill" fill="#FFFFFF"/>
 <circle cx="390.0" cy="417" r="11" fill="#EAF4F8" stroke="#55783F" stroke-width="1.5"/>
 <text x="390.0" y="421" class="small" text-anchor="middle">3</text>
 <text x="410.0" y="421" class="label">parallelMap rail work</text>
-<path class="line" d="M 485 440 L 485 440" stroke="#55783F" marker-end="url(#arrow-green)"/>
+<rect x="473" y="433" width="24" height="28" rx="6" fill="#EEF7F0" stroke="#55783F" stroke-width="1.4"/>
 <rect x="520.5" y="484" width="234" height="26" rx="13" class="pill" fill="#FFFFFF"/>
 <circle cx="538.5" cy="497" r="11" fill="#EAF4F8" stroke="#2F6F8E" stroke-width="1.5"/>
 <text x="538.5" y="501" class="small" text-anchor="middle">4</text>
@@ -84,7 +84,7 @@
 <circle cx="984.0" cy="637" r="11" fill="#EAF4F8" stroke="#55783F" stroke-width="1.5"/>
 <text x="984.0" y="641" class="small" text-anchor="middle">6</text>
 <text x="1004.0" y="641" class="label">estimateDiscount(profile)</text>
-<path class="line" d="M 790 660 L 1400 660" stroke="#55783F" marker-end="url(#arrow-green)"/>
+<path class="line" d="M 485 660 L 1400 660" stroke="#55783F" marker-end="url(#arrow-green)"/>
 <rect x="785.5" y="699" width="314" height="26" rx="13" class="pill" fill="#FFFFFF"/>
 <circle cx="803.5" cy="712" r="11" fill="#EAF4F8" stroke="#A46628" stroke-width="1.5"/>
 <text x="803.5" y="716" class="small" text-anchor="middle">7</text>
