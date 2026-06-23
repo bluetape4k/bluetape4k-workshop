@@ -17,8 +17,10 @@ import java.util.concurrent.TimeUnit
 /**
  * Profile 6 — Write-Through Cache.
  *
- * Measures write throughput when both the Redis cache and the DB are updated
- * synchronously on every [save] call.
+ * Profile 6 — Write-Through Cache.
+ *
+ * Measures write throughput when both Redis and DB are updated synchronously
+ * on every [save] call.
  *
  * Also measures read throughput (cache-warmed) to compare with write cost.
  */

@@ -7,7 +7,7 @@
 - `kotlinx-benchmark`가 JMH 스타일 warmup과 iteration을 제공합니다.
 - H2는 persistence layer를 로컬이고 반복 가능한 상태로 유지합니다.
 - Redis-backed profile은 bluetape4k Testcontainers로 Redis를 시작합니다.
-- Caffeine, Spring Cache Redis, Redisson near cache, manual read/write policy를 같은 연산으로 측정합니다.
+- Caffeine, Spring Cache Redis, Redisson near cache, 그리고 명시적 캐시 전략(읽기/쓰기 전략)을 같은 연산으로 측정합니다.
 
 ## 아키텍처
 
@@ -19,7 +19,14 @@
 
 ![7 Cache Strategy Comparison](../../docs/images/readme-diagrams/cache-benchmark-scenario-01.png)
 
-프로파일은 직접 DB 접근, local cache, shared Redis cache, two-tier near cache, explicit read-through, synchronous write-through, asynchronous write-behind update를 모두 포함합니다.
+프로파일은 직접 DB 접근, local cache, shared Redis cache, two-tier near cache, 명시적 read-through 읽기, cache-aside 쓰기, 동기 write-through 쓰기, 비동기 write-behind update를 모두 포함합니다.
+
+### 전략 의미
+
+- **Read-Through**: `findById`의 캐시 미스는 Repository 조회로 처리한 뒤 캐시에 저장합니다.
+- **Cache-aside 쓰기**: 애플리케이션이 DB 저장 후 캐시를 갱신하는 쓰기 방식입니다.
+- **Write-Through**: 쓰기마다 DB와 캐시를 동기적으로 같이 갱신합니다.
+- **Write-Behind**: 캐시를 먼저 갱신하고 DB 반영은 백그라운드로 지연 수행합니다.
 
 ## 7가지 캐시 프로파일
 
@@ -29,9 +36,9 @@
 | 2 | **Caffeine** | `@Cacheable` local | Per-instance | Low | Lowest (ns) |
 | 3 | **Redis Cache** | `@Cacheable` remote | Shared | Low | Low (µs) |
 | 4 | **Near Cache** | Redisson `RLocalCachedMap` | Eventual | Medium | Mixed |
-| 5 | **Read-Through** | Manual Redis RT | Eventual | Low | Low |
-| 6 | **Write-Through** | Sync Redis + DB | Strong | High | Low |
-| 7 | **Write-Behind** | Async DB flush | Eventual | Lowest | Low |
+| 5 | **Read-Through** | 캐시 미스 시 Read-Through 조회 후 저장 | Eventual | Low | Low |
+| 6 | **Write-Through** | 동기식 Dual-Write | Strong | High | Low |
+| 7 | **Write-Behind** | 캐시 즉시 갱신 + 비동기 DB flush | Eventual | Lowest | Low |
 
 ## 벤치마크 결과
 

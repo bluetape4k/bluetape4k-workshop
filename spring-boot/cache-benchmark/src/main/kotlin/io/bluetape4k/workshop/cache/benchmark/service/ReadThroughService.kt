@@ -10,12 +10,14 @@ import java.time.Duration
 /**
  * Profile 5 — Read-Through Cache.
  *
- * A manual read-through implementation using Redis:
- * - On cache hit: return cached value (no DB access)
- * - On cache miss: load from DB, populate cache, return value
+ * Read strategy: Redis-backed cache with explicit miss handling.
  *
- * Difference from Profile 3 (Redis Cache): explicit `getOrLoad` logic is visible here,
- * making the read-through pattern explicit and measurable.
+ * - On cache hit: return cached value (no DB access).
+ * - On cache miss: load from DB and populate cache.
+ *
+ * Write strategy: cache-aside / application-managed.
+ * Writes are persisted in the repository first, then reflected in Redis so this
+ * profile is intentionally not a write-through strategy.
  */
 @Service
 class ReadThroughService(

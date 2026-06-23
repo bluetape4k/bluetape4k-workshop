@@ -17,8 +17,10 @@ import java.util.concurrent.TimeUnit
 /**
  * Profile 7 — Write-Behind Cache.
  *
- * Measures write throughput when the cache is updated synchronously but the DB
- * flush is deferred to a background thread ([@Async]).
+ * Profile 7 — Write-Behind Cache.
+ *
+ * Measures write throughput when cache updates are synchronous but DB flush is
+ * deferred to a background thread ([@Async]) for eventual consistency.
  *
  * Expected: highest write throughput among profiles 6 & 7 (async DB flush),
  * at the cost of eventual consistency.
