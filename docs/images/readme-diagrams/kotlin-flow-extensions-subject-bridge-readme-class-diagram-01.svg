@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#8aa0b8" flood-opacity="0.22"/>
+    </filter>
+    <marker id="arrow-blue" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f7ed8" stroke="#2f7ed8" stroke-width="1" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <marker id="arrow-green" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f9e44" stroke="#2f9e44" stroke-width="1" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <marker id="arrow-orange" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#d97706" stroke="#d97706" stroke-width="1" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <marker id="arrow-purple" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#8b5cf6" stroke="#8b5cf6" stroke-width="1" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <style>
+      .canvas { fill:#f8fbff; }
+      .frame { fill:#ffffff; stroke:#b7c8dc; stroke-width:2.2; }
+      .title { font-family:'Architects Daughter','Comic Sans MS',cursive; font-size:34px; fill:#1f3349; text-anchor:middle; }
+      .subtitle { font-family:'Comic Mono','Comic Sans MS',monospace; font-size:14px; fill:#52677f; text-anchor:middle; }
+      .lane-title { font-family:'Architects Daughter','Comic Sans MS',cursive; font-size:21px; fill:#26384d; }
+      .card-title { font-family:'Architects Daughter','Comic Sans MS',cursive; font-size:18px; fill:#1f3349; text-anchor:middle; }
+      .card-text { font-family:'Comic Mono','Comic Sans MS',monospace; font-size:12px; fill:#334155; text-anchor:middle; }
+      .small { font-family:'Comic Mono','Comic Sans MS',monospace; font-size:11px; fill:#52677f; text-anchor:middle; }
+      .label { font-family:'Comic Mono','Comic Sans MS',monospace; font-size:11px; fill:#334155; text-anchor:middle; }
+      .card { stroke-width:2; filter:url(#shadow); }
+      .blue { fill:#e8f2ff; stroke:#8bb8ec; }
+      .green { fill:#eaf8ef; stroke:#92d6a5; }
+      .orange { fill:#fff4df; stroke:#e8b765; }
+      .purple { fill:#f1edff; stroke:#b7a5f6; }
+      .red { fill:#fff0f0; stroke:#eca0a0; }
+      .line-blue { fill:none; stroke:#2f7ed8; stroke-width:3.4; stroke-linecap:round; stroke-linejoin:round; marker-end:url(#arrow-blue); }
+      .line-green { fill:none; stroke:#2f9e44; stroke-width:3.4; stroke-linecap:round; stroke-linejoin:round; marker-end:url(#arrow-green); }
+      .line-orange { fill:none; stroke:#d97706; stroke-width:3.4; stroke-linecap:round; stroke-linejoin:round; marker-end:url(#arrow-orange); }
+      .line-purple { fill:none; stroke:#8b5cf6; stroke-width:3.4; stroke-linecap:round; stroke-linejoin:round; marker-end:url(#arrow-purple); }
+      .dash { stroke-dasharray:8 7; }
+    </style>
+  </defs>
+  <rect class="canvas" x="0" y="0" width="1400" height="820"/>
+  <rect class="frame" x="34" y="32" width="1332" height="756" rx="18"/>
+  <text class="title" x="700.0" y="72">Subject Bridge Class Diagram</text>
+  <text class="subtitle" x="700.0" y="98">Bridge owns Subject mutation and exposes read-only Flow views</text>
+  <rect class="card blue" x="520" y="130" width="360" height="170" rx="14"/>
+  <text class="card-title" x="700.0" y="160">DeviceSubjectBridge</text>
+  <text class="card-text" x="700.0" y="186">events: Flow&lt;DeviceEvent&gt;</text>
+  <text class="card-text" x="700.0" y="204">latestState: Flow&lt;DeviceState&gt;</text>
+  <text class="card-text" x="700.0" y="222">history: Flow&lt;DeviceEvent&gt;</text>
+  <text class="card-text" x="700.0" y="240">workItems: Flow&lt;WorkItem&gt;</text>
+  <text class="card-text" x="700.0" y="258">publish/update/complete/fail methods</text>
+  <rect class="card green" x="80" y="390" width="210" height="96" rx="14"/>
+  <text class="card-title" x="185.0" y="420">PublishSubject</text>
+  <text class="card-text" x="185.0" y="446">event-only</text>
+  <text class="card-text" x="185.0" y="464">active subscribers</text>
+  <rect class="card green" x="330" y="390" width="210" height="96" rx="14"/>
+  <text class="card-title" x="435.0" y="420">BehaviorSubject</text>
+  <text class="card-text" x="435.0" y="446">latest state</text>
+  <text class="card-text" x="435.0" y="464">late subscriber</text>
+  <rect class="card green" x="580" y="390" width="210" height="96" rx="14"/>
+  <text class="card-title" x="685.0" y="420">ReplaySubject</text>
+  <text class="card-text" x="685.0" y="446">bounded history</text>
+  <text class="card-text" x="685.0" y="464">late subscriber</text>
+  <rect class="card purple" x="830" y="390" width="210" height="96" rx="14"/>
+  <text class="card-title" x="935.0" y="420">MulticastSubject</text>
+  <text class="card-text" x="935.0" y="446">expected readers</text>
+  <text class="card-text" x="935.0" y="464">fan-out</text>
+  <rect class="card purple" x="1080" y="390" width="210" height="96" rx="14"/>
+  <text class="card-title" x="1185.0" y="420">UnicastWorkSubject</text>
+  <text class="card-text" x="1185.0" y="446">one consumer</text>
+  <text class="card-text" x="1185.0" y="464">queued work</text>
+  <rect class="card orange" x="120" y="610" width="220" height="92" rx="14"/>
+  <text class="card-title" x="230.0" y="640">DeviceEvent</text>
+  <text class="card-text" x="230.0" y="666">eventId/deviceId</text>
+  <text class="card-text" x="230.0" y="684">type/payload</text>
+  <rect class="card orange" x="590" y="610" width="220" height="92" rx="14"/>
+  <text class="card-title" x="700.0" y="640">DeviceState</text>
+  <text class="card-text" x="700.0" y="666">deviceId/status</text>
+  <text class="card-text" x="700.0" y="684">lastEventId</text>
+  <rect class="card orange" x="1030" y="610" width="220" height="92" rx="14"/>
+  <text class="card-title" x="1140.0" y="640">WorkItem</text>
+  <text class="card-text" x="1140.0" y="666">workId/deviceId</text>
+  <text class="card-text" x="1140.0" y="684">command</text>
+  <path class="line-green" d="M 585 300 L 585 345 Q 585 365 565 365 L 205 365 Q 185 365 185 385 L 185 390"/>
+  <rect x="358" y="333" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
+  <text class="label" x="430" y="351">uses</text>
+  <path class="line-green" d="M 645 300 L 645 345 Q 645 365 625 365 L 455 365 Q 435 365 435 385 L 435 390"/>
+  <rect x="523" y="333" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
+  <text class="label" x="595" y="351">uses</text>
+  <path class="line-green" d="M 705 300 L 705 345 Q 705 365 725 365 L 705 365 Q 685 365 685 385 L 685 390"/>
+  <rect x="678" y="333" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
+  <text class="label" x="750" y="351">uses</text>
+  <path class="line-purple" d="M 765 300 L 765 345 Q 765 365 785 365 L 915 365 Q 935 365 935 385 L 935 390"/>
+  <rect x="828" y="333" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
+  <text class="label" x="900" y="351">uses</text>
+  <path class="line-purple" d="M 825 300 L 825 345 Q 825 365 845 365 L 1165 365 Q 1185 365 1185 385 L 1185 390"/>
+  <rect x="908" y="307" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
+  <text class="label" x="980" y="325">uses</text>
+  <path class="line-orange dash" d="M 185 486 L 185 575 Q 185 600 210 600 L 220 600 Q 230 600 230 610"/>
+  <rect x="148" y="540" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
+  <text class="label" x="220" y="558">emits</text>
+  <path class="line-orange dash" d="M 435 486 L 435 575 Q 435 600 460 600 L 680 600 Q 700 600 700 610"/>
+  <rect x="448" y="540" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
+  <text class="label" x="520" y="558">state</text>
+  <path class="line-orange dash" d="M 1185 486 L 1185 575 Q 1185 600 1165 600 L 1150 600 Q 1140 600 1140 610"/>
+  <rect x="1138" y="540" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
+  <text class="label" x="1210" y="558">queue</text>
+</svg>
