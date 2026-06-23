@@ -68,10 +68,10 @@
 <text x="662" y="730" class="card-detail">discountPercent</text>
 <text x="662" y="752" class="card-detail">fulfillable, unavailableSkus</text>
 <path class="line" d="M 410 245 L 500 245" stroke="#2F6F8E" marker-end="url(#arrow-blue)"/>
-<path class="line" d="M 285 360 L 285 515 Q 285 535 620 535 L 710 535 Q 730 535 730 610" stroke="#A46628" marker-end="url(#arrow-amber)"/>
-<path class="line" d="M 1065 340 L 1065 515 Q 1065 535 970 535 L 930 535 Q 910 535 910 610" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<path class="line" d="M 285 360 L 285 515 Q 285 535 305 535 L 710 535 Q 730 535 730 555 L 730 610" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<path class="line" d="M 1065 340 L 1065 515 Q 1065 535 1045 535 L 930 535 Q 910 535 910 555 L 910 610" stroke="#A46628" marker-end="url(#arrow-amber)"/>
 <path class="line" d="M 1450 362 L 1450 430" stroke="#2F6F8E" marker-end="url(#arrow-blue)"/>
-<path class="line" d="M 1370 608 L 1370 655 Q 1370 675 1080 675 L 1060 675" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<path class="line" d="M 1370 608 L 1370 655 Q 1370 675 1350 675 L 1060 675" stroke="#A46628" marker-end="url(#arrow-amber)"/>
 <rect x="430" y="214" width="76" height="24" class="pill"/>
 <text x="468.0" y="230" class="label" text-anchor="middle">1:N</text>
 <rect x="590" y="520" width="132" height="24" class="pill"/>

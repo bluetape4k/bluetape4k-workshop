@@ -110,17 +110,17 @@
 <text x="1550.0" y="743" class="card-detail" text-anchor="middle">exception propagates</text>
 </g>
 <path class="line" d="M 390 290 L 448 290 Q 468 290 468 310 L 468 452 Q 468 472 488 472 L 510 472" stroke="#2F6F8E" marker-end="url(#arrow-blue)"/>
-<path class="line" d="M 390 475 L 448 475 Q 468 475 468 300 Q 468 280 488 280 L 510 280" stroke="#2F6F8E" marker-end="url(#arrow-blue)"/>
-<path class="line" d="M 800 280 L 858 280 Q 878 280 878 253 Q 878 233 898 233 L 925 233" stroke="#55783F" marker-end="url(#arrow-green)"/>
-<path class="line" d="M 800 470 L 858 470 Q 878 470 878 403 Q 878 383 898 383 L 925 383" stroke="#55783F" marker-end="url(#arrow-green)"/>
-<path class="line" d="M 800 470 L 858 470 Q 878 470 878 553 Q 878 573 898 573 L 925 573" stroke="#55783F" marker-end="url(#arrow-green)"/>
-<path class="line" d="M 1285 253 L 1340 253 Q 1360 253 1360 497 Q 1360 517 1380 517 L 1405 517" stroke="#A46628" marker-end="url(#arrow-amber)"/>
-<path class="line" d="M 1285 403 L 1340 403 Q 1360 403 1360 505 Q 1360 525 1380 525 L 1405 525" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<path class="line" d="M 390 475 L 448 475 Q 468 475 468 455 L 468 300 Q 468 280 488 280 L 510 280" stroke="#2F6F8E" marker-end="url(#arrow-blue)"/>
+<path class="line" d="M 800 280 L 858 280 Q 878 280 878 260 L 878 253 Q 878 233 898 233 L 925 233" stroke="#55783F" marker-end="url(#arrow-green)"/>
+<path class="line" d="M 800 470 L 858 470 Q 878 470 878 450 L 878 403 Q 878 383 898 383 L 925 383" stroke="#55783F" marker-end="url(#arrow-green)"/>
+<path class="line" d="M 800 470 L 858 470 Q 878 470 878 490 L 878 553 Q 878 573 898 573 L 925 573" stroke="#55783F" marker-end="url(#arrow-green)"/>
+<path class="line" d="M 1285 253 L 1340 253 Q 1360 253 1360 273 L 1360 497 Q 1360 517 1380 517 L 1405 517" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<path class="line" d="M 1285 403 L 1340 403 Q 1360 403 1360 423 L 1360 505 Q 1360 525 1380 525 L 1405 525" stroke="#A46628" marker-end="url(#arrow-amber)"/>
 <path class="line" d="M 1285 553 L 1340 553 Q 1360 553 1360 533 Q 1360 513 1380 513 L 1405 513" stroke="#A46628" marker-end="url(#arrow-amber)"/>
-<path class="line" d="M 800 690 L 1340 690 Q 1360 690 1360 545 Q 1360 525 1380 525 L 1405 525" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<path class="line" d="M 800 690 L 1340 690 Q 1360 690 1360 670 L 1360 545 Q 1360 525 1380 525 L 1405 525" stroke="#A46628" marker-end="url(#arrow-amber)"/>
 <path class="line" d="M 1550 465 L 1550 400 L 1550 380" stroke="#A46628" marker-end="url(#arrow-amber)"/>
-<path class="line-thin dash" d="M 1285 290 L 1340 290 Q 1360 290 1360 718 Q 1360 738 1380 738 L 1405 738" stroke="#B85E63" marker-end="url(#arrow-red)"/>
-<path class="line-thin dash" d="M 1285 440 L 1340 440 Q 1360 440 1360 718 Q 1360 738 1380 738 L 1405 738" stroke="#B85E63" marker-end="url(#arrow-red)"/>
+<path class="line-thin dash" d="M 1285 290 L 1340 290 Q 1360 290 1360 310 L 1360 718 Q 1360 738 1380 738 L 1405 738" stroke="#B85E63" marker-end="url(#arrow-red)"/>
+<path class="line-thin dash" d="M 1285 440 L 1340 440 Q 1360 440 1360 460 L 1360 718 Q 1360 738 1380 738 L 1405 738" stroke="#B85E63" marker-end="url(#arrow-red)"/>
 <rect x="430" y="328" width="142" height="24" class="pill"/>
 <text x="501.0" y="344" class="label" text-anchor="middle">valid orders</text>
 <rect x="842" y="612" width="128" height="24" class="pill"/>
