@@ -10,10 +10,10 @@ import java.time.Duration
 /**
  * Profile 7 — Write-Behind Cache.
  *
- * Writes are applied immediately to the Redis cache and asynchronously to the DB.
- * - Reads: cache-first, fall through to DB on miss
- * - Writes (new entity): DB save first to get the generated ID, then populate cache
- * - Writes (update): cache updated immediately, DB flush deferred via [WriteBehindFlusher]
+ * Strategy: cache-first reads and write-behind writes.
+ * - Reads: cache-first, fall through to DB on miss.
+ * - Writes (new entity): DB save first to get the generated ID, then cache the new row.
+ * - Writes (update): update Redis immediately, flush DB asynchronously.
  *
  * ## Why a separate flusher?
  * Spring's `@Async` requires the call to pass through a Spring proxy.

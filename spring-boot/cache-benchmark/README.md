@@ -7,7 +7,7 @@ This module benchmarks seven cache strategies behind one `ProductCacheService` c
 - `kotlinx-benchmark` provides JMH-style warmups and iterations.
 - H2 keeps the persistence layer local and repeatable.
 - Redis is started through bluetape4k Testcontainers for Redis-backed profiles.
-- Caffeine, Spring Cache Redis, Redisson near cache, and manual read/write policies are measured with the same operations.
+- Caffeine, Spring Cache Redis, Redisson near cache, and explicit read/write strategy profiles are measured with the same operations.
 
 ## Architecture
 
@@ -19,7 +19,14 @@ Each benchmark profile boots the Spring context with a fresh H2 database URL and
 
 ![7 Cache Strategy Comparison](../../docs/images/readme-diagrams/cache-benchmark-scenario-01.png)
 
-The profiles cover direct database access, local caching, shared Redis caching, two-tier near caching, explicit read-through, synchronous write-through, and asynchronous write-behind updates.
+The profiles cover direct database access, local caching, shared Redis caching, two-tier near caching, explicit read-through reads, explicit cache-aside write management, synchronous write-through writes, and asynchronous write-behind updates.
+
+### Strategy semantics
+
+- **Read-Through**: cache miss on `findById` is handled by repository lookup and then cached.
+- **Cache-aside writes**: application code writes to DB first, then explicitly updates cache for the target profile.
+- **Write-Through**: every write performs synchronized DB + cache updates.
+- **Write-Behind**: writes update cache immediately and flush DB asynchronously.
 
 ## 7 Cache Profiles
 
@@ -29,9 +36,9 @@ The profiles cover direct database access, local caching, shared Redis caching, 
 | 2 | **Caffeine** | `@Cacheable` local | Per-instance | Low | Lowest (ns) |
 | 3 | **Redis Cache** | `@Cacheable` remote | Shared | Low | Low (µs) |
 | 4 | **Near Cache** | Redisson `RLocalCachedMap` | Eventual | Medium | Mixed |
-| 5 | **Read-Through** | Manual Redis RT | Eventual | Low | Low |
-| 6 | **Write-Through** | Sync Redis + DB | Strong | High | Low |
-| 7 | **Write-Behind** | Async DB flush | Eventual | Lowest | Low |
+| 5 | **Read-Through** | Cache-on-miss reads (`read-through`) | Eventual | Low | Low |
+| 6 | **Write-Through** | Synchronous dual-write | Strong | High | Low |
+| 7 | **Write-Behind** | Cache-first writes + async DB flush | Eventual | Lowest | Low |
 
 ## Benchmark Results
 

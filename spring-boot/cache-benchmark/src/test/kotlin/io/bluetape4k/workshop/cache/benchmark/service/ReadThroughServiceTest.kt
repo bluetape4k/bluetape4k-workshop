@@ -1,11 +1,13 @@
 package io.bluetape4k.workshop.cache.benchmark.service
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.cache.benchmark.AbstractCacheBenchmarkTest
 import io.bluetape4k.workshop.cache.benchmark.domain.Product
 import io.bluetape4k.workshop.cache.benchmark.domain.ProductRepository
+import org.springframework.data.redis.core.RedisTemplate
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.math.BigDecimal
@@ -13,6 +15,7 @@ import java.math.BigDecimal
 class ReadThroughServiceTest(
     @Autowired private val service: ReadThroughService,
     @Autowired private val productRepository: ProductRepository,
+    @Autowired private val redisTemplate: RedisTemplate<String, Product>,
 ) : AbstractCacheBenchmarkTest() {
 
     @Test
@@ -34,6 +37,22 @@ class ReadThroughServiceTest(
     @Test
     fun `findById returns null for unknown id`() {
         service.findById(999_999L).shouldBeNull()
+    }
+
+    @Test
+    fun `findById loads from repository on cache miss and populates Redis cache`() {
+        val existing = productRepository.findAll().first()
+        service.evict(existing.id)
+
+        (redisTemplate.hasKey(ReadThroughService.KEY_PREFIX + existing.id)).shouldBeFalse()
+
+        val first = service.findById(existing.id)
+        first shouldBeEqualTo existing
+
+        (redisTemplate.hasKey(ReadThroughService.KEY_PREFIX + existing.id)).shouldBeTrue()
+
+        val second = service.findById(existing.id)
+        second shouldBeEqualTo first
     }
 
     @Test

@@ -16,9 +16,10 @@ import java.util.concurrent.TimeUnit
 /**
  * Profile 5 — Read-Through Cache.
  *
- * Manual Redis read-through: cache-first; on miss loads from DB and
- * populates the cache. Similar to Profile 3 but the pattern is explicit
- * and key-prefixed for isolation.
+ * Profile 5 — Read-Through Cache.
+ *
+ * Read path: Redis cache-first with explicit DB fallback; cache is populated on miss.
+ * Write path remains application-managed (cache-aside) in this service.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)

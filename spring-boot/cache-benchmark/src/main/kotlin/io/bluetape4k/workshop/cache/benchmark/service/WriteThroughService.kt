@@ -10,9 +10,11 @@ import java.time.Duration
 /**
  * Profile 6 — Write-Through Cache.
  *
- * Every write is applied synchronously to **both** Redis cache and the DB.
- * - Reads: cache-first, fall through to DB on miss
- * - Writes: synchronous dual-write (cache + DB) — strong consistency, higher write latency
+ * Strategy: true write-through.
+ * Every write is applied synchronously to both Redis cache and DB.
+ *
+ * - Reads: cache-first, then repository on miss.
+ * - Writes: synchronized dual-write (cache + DB) for immediate consistency.
  */
 @Service
 class WriteThroughService(
@@ -37,7 +39,6 @@ class WriteThroughService(
     }
 
     override fun save(product: Product): Product {
-        // Write-through: update DB first, then update cache atomically
         val saved = productRepository.save(product)
         redisTemplate.opsForValue().set(cacheKey(saved.id), saved, TTL)
         return saved
