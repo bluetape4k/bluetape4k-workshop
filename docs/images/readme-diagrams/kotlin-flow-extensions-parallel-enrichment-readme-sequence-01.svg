@@ -88,8 +88,12 @@
 <rect x="785.5" y="699" width="314" height="26" rx="13" class="pill" fill="#FFFFFF"/>
 <circle cx="803.5" cy="712" r="11" fill="#EAF4F8" stroke="#A46628" stroke-width="1.5"/>
 <text x="803.5" y="716" class="small" text-anchor="middle">7</text>
-<text x="823.5" y="716" class="label">merge profile + stock + discount</text>
+<text x="823.5" y="716" class="label">discount returned</text>
 <path class="line-thin dash" d="M 1400 735 L 485 735" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<rect x="392" y="748" width="250" height="26" rx="13" class="pill" fill="#FFFFFF"/>
+<circle cx="410" cy="761" r="11" fill="#FFF7E8" stroke="#A46628" stroke-width="1.5"/>
+<text x="410" y="765" class="small" text-anchor="middle">7b</text>
+<text x="430" y="765" class="label">pipeline builds EnrichedOrder</text>
 <rect x="948.5" y="776" width="298" height="26" rx="13" class="pill" fill="#FFFFFF"/>
 <circle cx="966.5" cy="789" r="11" fill="#EAF4F8" stroke="#55783F" stroke-width="1.5"/>
 <text x="966.5" y="793" class="small" text-anchor="middle">8</text>

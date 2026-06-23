@@ -77,11 +77,11 @@
 <line x1="510" y1="810" x2="870" y2="810" stroke="#8FA6B6" stroke-width="1.4"/>
 <text x="530" y="836" class="card-detail">extends IllegalArgumentException</text>
 <text x="530" y="858" class="card-detail">thrown by inventory lookup</text>
-<path class="line" d="M 760 380 L 760 425 Q 760 445 450 445 L 270 445 Q 250 445 250 470" stroke="#55783F" marker-end="url(#arrow-green)"/>
-<path class="line" d="M 900 380 L 900 425 Q 900 445 700 445 Q 680 445 680 470" stroke="#55783F" marker-end="url(#arrow-green)"/>
-<path class="line" d="M 1040 380 L 1040 425 Q 1040 445 1080 445 Q 1100 445 1100 470" stroke="#55783F" marker-end="url(#arrow-green)"/>
-<path class="line" d="M 1150 265 L 1288 265 Q 1308 265 1308 505 L 1330 505" stroke="#2F6F8E" marker-end="url(#arrow-blue)"/>
-<path class="line" d="M 1150 315 L 1288 315 Q 1308 315 1308 775 L 1330 775" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<path class="line" d="M 760 380 L 760 425 Q 760 445 740 445 L 270 445 Q 250 445 250 465 L 250 470" stroke="#55783F" marker-end="url(#arrow-green)"/>
+<path class="line" d="M 900 380 L 900 425 Q 900 445 880 445 L 700 445 Q 680 445 680 465 L 680 470" stroke="#55783F" marker-end="url(#arrow-green)"/>
+<path class="line" d="M 1040 380 L 1040 425 Q 1040 445 1060 445 L 1080 445 Q 1100 445 1100 465 L 1100 470" stroke="#55783F" marker-end="url(#arrow-green)"/>
+<path class="line" d="M 1150 265 L 1288 265 Q 1308 265 1308 285 L 1308 485 Q 1308 505 1328 505 L 1330 505" stroke="#2F6F8E" marker-end="url(#arrow-blue)"/>
+<path class="line" d="M 1150 315 L 1288 315 Q 1308 315 1308 335 L 1308 755 Q 1308 775 1328 775 L 1330 775" stroke="#A46628" marker-end="url(#arrow-amber)"/>
 <path class="line-thin dash" d="M 270 620 L 270 740 L 270 760" stroke="#B85E63" marker-end="url(#arrow-red)"/>
 <path class="line-thin dash" d="M 680 620 L 680 740 L 680 760" stroke="#B85E63" marker-end="url(#arrow-red)"/>
 <rect x="470" y="430" width="122" height="24" class="pill"/>
