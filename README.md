@@ -8,11 +8,13 @@
 
 [한국어](README.ko.md) | English
 
-Runnable backend examples for learning how [bluetape4k](https://github.com/bluetape4k)
-libraries behave inside real Spring Boot 4, Exposed, Redis, Kafka, observability,
+This repository is a runnable backend workshop for learning how [bluetape4k](https://github.com/bluetape4k)
+libraries behave in practical Spring Boot 4, Exposed, Redis, Kafka, observability,
 virtual-thread, Vert.x, and cloud-native workloads.
 
 ![Workshop workbench](./docs/assets/workshop-workbench.png)
+
+![Workshop Module Map](./docs/images/readme-charts/root-readme-module-chart-01.png)
 
 ![Bluetape4k Workshop Overview](./docs/images/readme-diagrams/root-readme-overview-01.png)
 
@@ -40,6 +42,10 @@ Use this repository as a runnable cookbook:
 2. Run one focused module test before building the whole repository.
 3. Move from Basic modules to Advanced modules when you need Testcontainers or cross-layer behavior.
 4. Read the module README beside the source; source code is the final contract.
+
+When you are deciding where to start, read the module map first and choose a domain
+path where **Basic** modules are enough for exploration, then switch to
+**Advanced** examples when distributed/integration behavior becomes your target.
 
 ---
 
