@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="920" viewBox="0 0 1680 920" role="img" aria-label="Parallel flow enrichment scenario">
+  <defs>
+    <style>
+      .canvas{fill:#F8FBFD}
+      .frame{fill:#FFFFFF;stroke:#D1DCE5;stroke-width:1.8}
+      .title{font-family:'Architects Daughter';font-size:38px;fill:#142638}
+      .subtitle{font-family:'Comic Mono';font-size:14px;fill:#51606F}
+      .panel{fill:#FFFFFF;stroke:#A8BCCB;stroke-width:2}
+      .panel-title{font-family:'Architects Daughter';font-size:20px;fill:#102033}
+      .step{font-family:'Comic Mono';font-size:14px;fill:#263238}
+      .arrow{fill:none;stroke:#334155;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#stepArrow)}
+      .badge{fill:#DBEAFE;stroke:#3B82F6;stroke-width:1.8}
+      .badgeText{font-family:'Comic Mono';font-size:12px;font-weight:700;fill:#1D4ED8}
+      .muted{fill:#60717F}
+    </style>
+    <marker id="stepArrow" viewBox="0 0 10 10" markerWidth="11" markerHeight="11" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#334155"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" width="1680" height="920"/>
+  <rect class="frame" x="22" y="18" width="1636" height="884" rx="20"/>
+
+  <text class="title" x="840" y="70" text-anchor="middle">Parallel Enrichment Scenario</text>
+  <text class="subtitle" x="840" y="100" text-anchor="middle">Three services are enriched in parallel for each valid order and merged into one stream</text>
+
+  <g>
+    <rect class="panel" x="80" y="145" width="1520" height="215" rx="16"/>
+    <text class="panel-title" x="100" y="180">Step 1 - Input and Validation</text>
+    <text class="step" x="110" y="215">1) Flow&lt;OrderCommand&gt; is received from callers</text>
+    <text class="step" x="110" y="240">2) Orders missing id/customer/items are filtered</text>
+    <text class="step" x="110" y="265">3) Remaining orders are sent to the parallel rail</text>
+    <path class="arrow" d="M 110 285 L 980 285"/>
+    <circle class="badge" cx="95" cy="285" r="10"/>
+    <text class="badgeText" x="95" y="289" text-anchor="middle">1</text>
+    <text class="muted" x="1010" y="289">pipeline ingress</text>
+  </g>
+
+  <g>
+    <rect class="panel" x="80" y="390" width="1520" height="230" rx="16"/>
+    <text class="panel-title" x="100" y="425">Step 2 - Parallel Rail</text>
+    <text class="step" x="110" y="458">4) Pipeline fans out the same order to three services</text>
+    <text class="step" x="110" y="486">5) CustomerProfileService, InventoryService, PromotionService run concurrently</text>
+    <text class="step" x="110" y="514">6) Each service emits profile, snapshot, and discount once</text>
+    <path class="arrow" d="M 130 534 L 980 534"/>
+    <circle class="badge" cx="95" cy="534" r="10"/>
+    <text class="badgeText" x="95" y="538" text-anchor="middle">2</text>
+    <text class="muted" x="1010" y="534">parallel fan-out + fan-in point</text>
+  </g>
+
+  <g>
+    <rect class="panel" x="80" y="650" width="1520" height="210" rx="16"/>
+    <text class="panel-title" x="100" y="685">Step 3 - Merge and Result</text>
+    <text class="step" x="110" y="718">7) All service results are combined into one `EnrichedOrder`</text>
+    <text class="step" x="110" y="746">8) Missing customer or product throws an error and cancels the flow</text>
+    <text class="step" x="110" y="774">9) Downstream collector receives ordered enriched outputs</text>
+    <path class="arrow" d="M 130 796 L 980 796"/>
+    <circle class="badge" cx="95" cy="796" r="10"/>
+    <text class="badgeText" x="95" y="800" text-anchor="middle">3</text>
+    <text class="muted" x="1010" y="796">sequential merge and final stream emission</text>
+  </g>
+</svg>

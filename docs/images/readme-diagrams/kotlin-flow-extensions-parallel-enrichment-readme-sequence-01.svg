@@ -1,0 +1,165 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1880" height="780" viewBox="0 0 1880 780" role="img" aria-labelledby="title desc">
+  <title id="title">Flow Extensions Parallel Enrichment Sequence</title>
+  <desc id="desc">Each valid order is split into parallel enrichment calls and reassembled as one enriched output.</desc>
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
+    <style>
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}
+      .subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}
+      .subtitle{font-size:17px}
+      .participant{font-family:"Architects Daughter";font-size:19px;fill:#1F3138}
+      .role{font-family:"Comic Mono";font-size:12px;fill:#546A73}
+      .msg{font-size:13px}
+      .footer{font-size:14px;fill:#60727D}
+      .frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}
+      .header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}
+      .lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}
+      .activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}
+      .call,.return,.work{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+      .call{stroke:#3F7D9C}
+      .work{stroke:#6E8F4F}
+      .return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6}
+      .label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}
+      .callLabel{stroke:#9CC2D1}
+      .workLabel{stroke:#B6C9A4}
+      .returnLabel{stroke:#C8B38F}
+      .badge{stroke-width:1.8}
+      .callBadge{fill:#EAF4F8;stroke:#3F7D9C}
+      .workBadge{fill:#EEF7F0;stroke:#6E8F4F}
+      .returnBadge{fill:#FFF7E8;stroke:#9B7D54}
+      .badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}
+      .callText,.badgeText.callText{fill:#2F6F8E}
+      .workText,.badgeText.workText{fill:#55783F}
+      .returnText,.badgeText.returnText{fill:#7F6038}
+      .note{font-family:"Comic Mono";font-size:12px;fill:#51636E}
+      .noteBox{fill:#F8FBF8;stroke:#BFD8C3;stroke-width:2}
+    </style>
+    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke="none" stroke-dasharray="none"/>
+    </marker>
+    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke="none" stroke-dasharray="none"/>
+    </marker>
+    <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke="none" stroke-dasharray="none"/>
+    </marker>
+  </defs>
+
+  <rect x="24" y="24" width="1832" height="732" rx="20" class="frame"/>
+  <text x="940" y="76" text-anchor="middle" class="title">Flow Parallel Enrichment Sequence</text>
+  <text x="940" y="106" text-anchor="middle" class="subtitle">Valid orders are enriched through three independent service calls, then emitted as one ordered output.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="84" y="156" width="230" height="76" rx="10" class="header"/>
+    <text x="199" y="186" text-anchor="middle" class="participant">Order Source</text>
+    <text x="199" y="211" text-anchor="middle" class="role">Flow&lt;OrderCommand&gt;</text>
+  </g>
+  <line x1="199" y1="232" x2="199" y2="724" class="lifeline"/>
+
+  <g filter="url(#shadow)">
+    <rect x="374" y="156" width="264" height="76" rx="10" class="header"/>
+    <text x="506" y="186" text-anchor="middle" class="participant">OrderEnrichmentPipeline</text>
+    <text x="506" y="211" text-anchor="middle" class="role">filter + parallel + sequential</text>
+  </g>
+  <line x1="506" y1="232" x2="506" y2="724" class="lifeline"/>
+
+  <g filter="url(#shadow)">
+    <rect x="668" y="156" width="230" height="76" rx="10" class="header"/>
+    <text x="783" y="186" text-anchor="middle" class="participant">CustomerProfileService</text>
+    <text x="783" y="211" text-anchor="middle" class="role">findByCustomerId()</text>
+  </g>
+  <line x1="783" y1="232" x2="783" y2="724" class="lifeline"/>
+
+  <g filter="url(#shadow)">
+    <rect x="958" y="156" width="230" height="76" rx="10" class="header"/>
+    <text x="1073" y="186" text-anchor="middle" class="participant">InventoryService</text>
+    <text x="1073" y="211" text-anchor="middle" class="role">reserve(items)</text>
+  </g>
+  <line x1="1073" y1="232" x2="1073" y2="724" class="lifeline"/>
+
+  <g filter="url(#shadow)">
+    <rect x="1248" y="156" width="230" height="76" rx="10" class="header"/>
+    <text x="1363" y="186" text-anchor="middle" class="participant">PromotionService</text>
+    <text x="1363" y="211" text-anchor="middle" class="role">estimateDiscount()</text>
+  </g>
+  <line x1="1363" y1="232" x2="1363" y2="724" class="lifeline"/>
+
+  <g filter="url(#shadow)">
+    <rect x="1538" y="156" width="244" height="76" rx="10" class="header"/>
+    <text x="1660" y="186" text-anchor="middle" class="participant">Downstream</text>
+    <text x="1660" y="211" text-anchor="middle" class="role">collect / subscribe</text>
+  </g>
+  <line x1="1660" y1="232" x2="1660" y2="724" class="lifeline"/>
+
+  <rect x="148" y="252" width="280" height="34" rx="17" class="label callLabel"/>
+  <circle cx="172" cy="269" r="13" class="badge callBadge"/>
+  <text x="172" y="274" text-anchor="middle" class="badgeText callText">1</text>
+  <text x="196" y="274" class="msg callText">emit flow</text>
+  <path d="M 199 300 L 506 300" class="call" marker-end="url(#arrow-call)"/>
+
+  <rect x="470" y="328" width="294" height="34" rx="17" class="label callLabel"/>
+  <circle cx="494" cy="345" r="13" class="badge callBadge"/>
+  <text x="518" y="350" class="badgeText callText">2</text>
+  <text x="518" y="350" class="msg callText">filter(::isValidOrder)</text>
+  <path d="M 506 374 L 506 374" class="call"/>
+
+  <rect x="578" y="404" width="314" height="34" rx="17" class="label workLabel"/>
+  <circle cx="602" cy="421" r="13" class="badge workBadge"/>
+  <text x="626" y="426" text-anchor="middle" class="badgeText workText">3</text>
+  <text x="625" y="426" class="msg workText">parallel(3) and branch per order</text>
+  <path d="M 506 450 L 506 450" class="work" marker-end="url(#arrow-work)"/>
+
+  <rect x="734" y="478" width="248" height="34" rx="17" class="label callLabel"/>
+  <circle cx="758" cy="495" r="13" class="badge callBadge"/>
+  <text x="782" y="500" class="badgeText callText">4</text>
+  <text x="782" y="500" class="msg callText">findByCustomerId(customerId)</text>
+  <path d="M 506 530 L 783 530" class="call" marker-end="url(#arrow-call)"/>
+  <rect x="776" y="518" width="14" height="38" rx="4" class="activation"/>
+
+  <rect x="1024" y="478" width="260" height="34" rx="17" class="label callLabel"/>
+  <circle cx="1048" cy="495" r="13" class="badge callBadge"/>
+  <text x="1072" y="500" class="badgeText callText">5</text>
+  <text x="1072" y="500" class="msg callText">reserve(orderItems)</text>
+  <path d="M 506 530 L 1073 530" class="call" marker-end="url(#arrow-call)"/>
+  <rect x="1066" y="518" width="14" height="38" rx="4" class="activation"/>
+
+  <rect x="1328" y="478" width="232" height="34" rx="17" class="label workLabel"/>
+  <circle cx="1352" cy="495" r="13" class="badge workBadge"/>
+  <text x="1376" y="500" class="badgeText workText">6</text>
+  <text x="1376" y="500" class="msg workText">estimateDiscount(profile)</text>
+  <path d="M 783 530 L 1363 530" class="call" marker-end="url(#arrow-work)"/>
+  <rect x="1356" y="518" width="14" height="38" rx="4" class="activation"/>
+
+  <rect x="502" y="606" width="282" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="526" cy="623" r="13" class="badge returnBadge"/>
+  <text x="550" y="628" text-anchor="middle" class="badgeText returnText">7</text>
+  <text x="550" y="628" class="msg returnText">customer + stock + discount merged</text>
+  <path d="M 783 656 L 506 656" class="return" marker-end="url(#arrow-ret)"/>
+
+  <rect x="730" y="684" width="244" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="754" cy="701" r="13" class="badge returnBadge"/>
+  <text x="778" y="706" text-anchor="middle" class="badgeText returnText">8</text>
+  <text x="778" y="706" class="msg returnText">CustomerProfile</text>
+  <path d="M 783 740 L 506 740" class="return" marker-end="url(#arrow-ret)"/>
+
+  <rect x="1000" y="684" width="214" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="1024" cy="701" r="13" class="badge returnBadge"/>
+  <text x="1048" y="706" text-anchor="middle" class="badgeText returnText">9</text>
+  <text x="1048" y="706" class="msg returnText">InventorySnapshot</text>
+  <path d="M 1073 740 L 506 740" class="return" marker-end="url(#arrow-ret)"/>
+
+  <rect x="1268" y="684" width="248" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="1292" cy="701" r="13" class="badge returnBadge"/>
+  <text x="1316" y="706" text-anchor="middle" class="badgeText returnText">10</text>
+  <text x="1316" y="706" class="msg returnText">discountPercent</text>
+  <path d="M 1363 740 L 506 740" class="return" marker-end="url(#arrow-ret)"/>
+
+  <rect x="1426" y="706" width="264" height="34" rx="17" class="label workLabel"/>
+  <circle cx="1450" cy="723" r="13" class="badge workBadge"/>
+  <text x="1474" y="728" text-anchor="middle" class="badgeText workText">11</text>
+  <text x="1474" y="728" class="msg workText">toList()/collect EnrichedOrder</text>
+  <path d="M 506 760 L 1660 760" class="work" marker-end="url(#arrow-work)"/>
+
+  <rect x="60" y="736" width="1760" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
+  <text x="940" y="762" text-anchor="middle" class="footer">Flow parallel rails are fan-out calls; sequential reorders only after enrichment has finished for each order.</text>
+</svg>

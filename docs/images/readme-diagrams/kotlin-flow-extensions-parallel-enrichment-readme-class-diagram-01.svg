@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="980" viewBox="0 0 1680 980" role="img" aria-label="Flow enrichment class diagram">
+  <defs>
+    <style>
+      .canvas{fill:#F8FBFD}
+      .frame{fill:#FFFFFF;stroke:#D2DFEA;stroke-width:1.5}
+      .title{font-family:'Architects Daughter';font-size:36px;fill:#12263D}
+      .subtitle{font-family:'Comic Mono';font-size:14px;fill:#51606F}
+      .class-box{fill:#FFFFFF;stroke:#90A4B3;stroke-width:1.8}
+      .class-title{font-family:'Architects Daughter';font-size:24px;fill:#102033}
+      .class-row{font-family:'Comic Mono';font-size:13px;fill:#2F3E4D}
+      .line{fill:none;stroke:#4B5563;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+      .line-dash{fill:none;stroke:#64748B;stroke-width:2;stroke-dasharray:6 6;stroke-linecap:round;stroke-linejoin:round}
+      .arrow{marker-end:url(#classArrow)}
+      .depends{marker-end:url(#dArrow)}
+    </style>
+    <marker id="classArrow" viewBox="0 0 10 10" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#1F2937"/>
+    </marker>
+    <marker id="dArrow" viewBox="0 0 10 10" markerWidth="10" markerHeight="10" refX="0" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 10 0 L 0 5 L 10 10 Z" fill="#334155"/>
+    </marker>
+  </defs>
+
+  <rect class="canvas" width="1680" height="980"/>
+  <rect class="frame" x="20" y="20" width="1640" height="940" rx="18"/>
+  <text class="title" x="840" y="68" text-anchor="middle">Parallel Enrichment Class Diagram</text>
+  <text class="subtitle" x="840" y="95" text-anchor="middle">Read-through map from source to services and domain outputs</text>
+
+  <g class="g" data-node="pipeline" data-lines="OrderEnrichmentPipeline | orchestrator">
+    <rect class="class-box" x="540" y="140" width="430" height="220"/>
+    <text class="class-title" x="755" y="172" text-anchor="middle">OrderEnrichmentPipeline</text>
+    <line x1="540" y1="184" x2="970" y2="184" class="line"/>
+    <text class="class-row" x="555" y="206">-customerProfileService : CustomerProfileService</text>
+    <text class="class-row" x="555" y="226">-inventoryService : InventoryService</text>
+    <text class="class-row" x="555" y="246">-promotionService : PromotionService</text>
+    <line x1="540" y1="258" x2="970" y2="258" class="line"/>
+    <text class="class-row" x="555" y="281">+enrichInParallel(source, parallelism, runOn)</text>
+    <text class="class-row" x="555" y="301">+enrichSequentially(source)</text>
+    <text class="class-row" x="555" y="321">-enrichOrder(order)</text>
+  </g>
+
+  <g class="g" data-node="customerService" data-lines="CustomerProfileService | domain service">
+    <rect class="class-box" x="110" y="420" width="320" height="170"/>
+    <text class="class-title" x="270" y="452" text-anchor="middle">CustomerProfileService</text>
+    <line x1="110" y1="464" x2="430" y2="464" class="line"/>
+    <text class="class-row" x="130" y="486">-profiles : Map&lt;String, LoyaltyGrade&gt;</text>
+    <line x1="110" y1="498" x2="430" y2="498" class="line"/>
+    <text class="class-row" x="130" y="522">+findByCustomerId(customerId)</text>
+  </g>
+
+  <g class="g" data-node="inventoryService" data-lines="InventoryService | domain service">
+    <rect class="class-box" x="470" y="420" width="320" height="170"/>
+    <text class="class-title" x="630" y="452" text-anchor="middle">InventoryService</text>
+    <line x1="470" y1="464" x2="790" y2="464" class="line"/>
+    <text class="class-row" x="490" y="486">-stockBySku : Map&lt;String, Int&gt;</text>
+    <line x1="470" y1="498" x2="790" y2="498" class="line"/>
+    <text class="class-row" x="490" y="522">+reserve(orderItems)</text>
+  </g>
+
+  <g class="g" data-node="promotionService" data-lines="PromotionService | domain service">
+    <rect class="class-box" x="830" y="420" width="320" height="170"/>
+    <text class="class-title" x="990" y="452" text-anchor="middle">PromotionService</text>
+    <line x1="830" y1="464" x2="1150" y2="464" class="line"/>
+    <text class="class-row" x="850" y="486">-baseDiscount : Int</text>
+    <line x1="830" y1="498" x2="1150" y2="498" class="line"/>
+    <text class="class-row" x="850" y="522">+estimateDiscount(profile)</text>
+  </g>
+
+  <g class="g" data-node="orderCommand" data-lines="OrderCommand | domain model">
+    <rect class="class-box" x="1200" y="420" width="320" height="240"/>
+    <text class="class-title" x="1360" y="452" text-anchor="middle">OrderCommand</text>
+    <line x1="1200" y1="464" x2="1520" y2="464" class="line"/>
+    <text class="class-row" x="1220" y="486">+orderId: String</text>
+    <text class="class-row" x="1220" y="506">+customerId: String</text>
+    <text class="class-row" x="1220" y="526">+items: List&lt;OrderItem&gt;</text>
+    <line x1="1200" y1="541" x2="1520" y2="541" class="line"/>
+    <text class="class-row" x="1220" y="565">+serialVersionUID: Long</text>
+  </g>
+
+  <g class="g" data-node="enrichedOrder" data-lines="EnrichedOrder | domain model">
+    <rect class="class-box" x="1200" y="740" width="320" height="190"/>
+    <text class="class-title" x="1360" y="772" text-anchor="middle">EnrichedOrder</text>
+    <line x1="1200" y1="784" x2="1520" y2="784" class="line"/>
+    <text class="class-row" x="1220" y="808">+orderId: String</text>
+    <text class="class-row" x="1220" y="828">+loyaltyGrade: LoyaltyGrade</text>
+    <text class="class-row" x="1220" y="848">+totalItems: Int</text>
+  </g>
+
+  <path class="line arrow" d="M 755 360 L 755 505 Q 430 505 110 505"/>
+  <path class="line arrow" d="M 755 360 L 755 505 Q 770 505 470 505"/>
+  <path class="line arrow" d="M 755 360 L 755 505 Q 1150 505 830 505"/>
+  <path class="line arrow" d="M 990 590 L 1200 590 Q 1100 620 1200 620"/>
+  <path class="line arrow" d="M 1360 660 L 1360 740"/>
+
+  <path class="line-dash depends" d="M 1360 590 L 1360 660"/>
+  <text class="class-row" x="1375" y="626">uses enrichment output</text>
+</svg>
