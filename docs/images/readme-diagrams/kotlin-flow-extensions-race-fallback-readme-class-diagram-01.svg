@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820">
+
+  <defs>
+    <marker id="arrow-blue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f80dc"/></marker>
+    <marker id="arrow-green" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f9e44"/></marker>
+    <marker id="arrow-orange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#d97706"/></marker>
+    <marker id="arrow-purple" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#8b5cf6"/></marker>
+    <marker id="arrow-red" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#dc2626"/></marker>
+  </defs>
+  <style>
+    .bg { fill: #f4f8fc; }
+    .frame { fill: #ffffff; stroke: #b9c9dc; stroke-width: 3; }
+    .title { font: 46px 'Comic Sans MS', 'Marker Felt', cursive; fill: #20364f; text-anchor: middle; }
+    .subtitle { font: 20px 'Menlo', monospace; fill: #56677d; text-anchor: middle; font-weight: 700; }
+    .lane-blue { fill: #e8f2ff; stroke: #bdd4ee; stroke-width: 2; }
+    .lane-green { fill: #eaf8f0; stroke: #b9e0c8; stroke-width: 2; }
+    .lane-orange { fill: #fff4df; stroke: #e6c27d; stroke-width: 2; }
+    .lane-purple { fill: #f0eafa; stroke: #c9b7f2; stroke-width: 2; }
+    .card-blue { fill: #e8f2ff; stroke: #84b4ea; stroke-width: 3; }
+    .card-green { fill: #eaf8f0; stroke: #82cf9a; stroke-width: 3; }
+    .card-orange { fill: #fff4df; stroke: #e8b956; stroke-width: 3; }
+    .card-purple { fill: #f0eafa; stroke: #ad95ec; stroke-width: 3; }
+    .card-red { fill: #fff0f0; stroke: #e99a9a; stroke-width: 3; }
+    .lane-title { font: 25px 'Comic Sans MS', cursive; fill: #20364f; }
+    .card-title { font: 24px 'Comic Sans MS', cursive; fill: #20364f; text-anchor: middle; }
+    .card-text { font: 15px 'Menlo', monospace; fill: #314158; text-anchor: middle; font-weight: 700; }
+    .small { font: 13px 'Menlo', monospace; fill: #314158; text-anchor: middle; font-weight: 700; }
+    .line-blue { fill: none; stroke: #2f80dc; stroke-width: 4; marker-end: url(#arrow-blue); stroke-linecap: round; stroke-linejoin: round; }
+    .line-green { fill: none; stroke: #2f9e44; stroke-width: 4; marker-end: url(#arrow-green); stroke-linecap: round; stroke-linejoin: round; }
+    .line-orange { fill: none; stroke: #d97706; stroke-width: 4; marker-end: url(#arrow-orange); stroke-linecap: round; stroke-linejoin: round; }
+    .line-purple { fill: none; stroke: #8b5cf6; stroke-width: 4; marker-end: url(#arrow-purple); stroke-linecap: round; stroke-linejoin: round; }
+    .line-red { fill: none; stroke: #dc2626; stroke-width: 4; marker-end: url(#arrow-red); stroke-linecap: round; stroke-linejoin: round; }
+    .dash { stroke-dasharray: 10 9; }
+  </style>
+
+  <rect class="bg" x="0" y="0" width="1400" height="820"/>
+  <rect class="frame" x="34" y="34" width="1332" height="752" rx="22"/>
+  <text class="title" x="700.0" y="82">Race/Fallback Class Diagram</text>
+  <text class="subtitle" x="700.0" y="116">The facade exposes operator semantics as named example methods</text>
+  <rect class="card-blue" x="455" y="170" width="490" height="170" rx="16"/>
+  <text class="card-title" x="700.0" y="206">RaceFallbackCatalog</text>
+  <text class="card-text" x="700.0" y="240">source(result, delay, hooks)</text>
+  <text class="card-text" x="700.0" y="262">fastestHealthy(): Flow&lt;SourceResult&gt;</text>
+  <text class="card-text" x="700.0" y="284">orderedFallback(): Flow&lt;SourceResult&gt;</text>
+  <text class="card-text" x="700.0" y="306">eagerFallback()/mergeContributions()</text>
+  <text class="card-text" x="700.0" y="328">materialized()/dematerialized()</text>
+  <rect class="card-green" x="95" y="435" width="250" height="110" rx="16"/>
+  <text class="card-title" x="220.0" y="471">race / amb</text>
+  <text class="card-text" x="220.0" y="505">first emitted value</text>
+  <text class="card-text" x="220.0" y="527">cancel losing sources</text>
+  <rect class="card-green" x="415" y="435" width="250" height="110" rx="16"/>
+  <text class="card-title" x="540.0" y="471">concat</text>
+  <text class="card-text" x="540.0" y="505">strict source order</text>
+  <text class="card-text" x="540.0" y="527">lazy fallback</text>
+  <rect class="card-purple" x="735" y="435" width="250" height="110" rx="16"/>
+  <text class="card-title" x="860.0" y="471">concat eager</text>
+  <text class="card-text" x="860.0" y="505">start all sources</text>
+  <text class="card-text" x="860.0" y="527">preserve order</text>
+  <rect class="card-orange" x="1055" y="435" width="250" height="110" rx="16"/>
+  <text class="card-title" x="1180.0" y="471">merge</text>
+  <text class="card-text" x="1180.0" y="505">all contributions</text>
+  <text class="card-text" x="1180.0" y="527">arrival order</text>
+  <rect class="card-orange" x="250" y="640" width="250" height="120" rx="16"/>
+  <text class="card-title" x="375.0" y="676">SourceResult</text>
+  <text class="card-text" x="375.0" y="710">source / item</text>
+  <text class="card-text" x="375.0" y="732">latency / quality</text>
+  <rect class="card-red" x="915" y="640" width="250" height="120" rx="16"/>
+  <text class="card-title" x="1040.0" y="676">FlowEvent</text>
+  <text class="card-text" x="1040.0" y="710">Value / Error</text>
+  <text class="card-text" x="1040.0" y="732">Complete</text>
+  <path class="line-green" d="M 520 340 L 520 385 Q 520 405 325 405 L 220 405 Q 220 405 220 435"/>
+  <path class="line-green" d="M 620 340 L 620 385 Q 620 405 540 405 L 540 435"/>
+  <path class="line-purple" d="M 730 340 L 730 385 Q 730 405 860 405 L 860 435"/>
+  <path class="line-orange" d="M 830 340 L 830 385 Q 830 405 1180 405 L 1180 435"/>
+  <path class="line-orange dash" d="M 540 545 L 540 600 Q 540 620 500 620 L 375 620 Q 375 620 375 640"/>
+  <path class="line-red dash" d="M 860 545 L 860 600 Q 860 620 930 620 L 1040 620 Q 1040 620 1040 640"/>
+</svg>
