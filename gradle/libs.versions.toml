@@ -39,7 +39,7 @@ okio = "3.17.0"  # https://mvnrepository.com/artifact/com.squareup.okio/okio
 asynchttpclient = "3.0.9"  # https://mvnrepository.com/artifact/org.asynchttpclient/async-http-client
 
 jackson = "2.22.0"  # https://mvnrepository.com/artifact/com.fasterxml.jackson/jackson-bom
-jackson-annotations = "2.21"  # https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations
+jackson-annotations = "2.22"  # https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations
 jackson3 = "3.2.0"  # https://mvnrepository.com/artifact/tools.jackson/jackson-bom
 fastjson2 = "2.0.62"  # https://mvnrepository.com/artifact/com.alibaba.fastjson2/fastjson2
 
