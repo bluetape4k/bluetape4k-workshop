@@ -65,9 +65,9 @@ dependencies {
     api(libs.hibernate.core)
 
     // QueryDsl
-    implementation(libs.querydsl.jpa.get().toString() + ":jakarta")
-    kapt(libs.querydsl.apt.get().toString() + ":jakarta")
-    kaptTest(libs.querydsl.apt.get().toString() + ":jakarta")
+    implementation(libs.querydsl.jpa)
+    kapt(libs.querydsl.apt)
+    kaptTest(libs.querydsl.apt)
 
     // Database
     implementation(libs.hikaricp)
