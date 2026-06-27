@@ -91,7 +91,7 @@ class QuerydslExamples: AbstractQuerydslTest() {
         val member2 = Member("member-2", 20, teamA)
         tem.persist(member2)
 
-        val count = queryFactory.select(qmember).from(qmember).fetchCount()
+        val count = queryFactory.select(qmember.count()).from(qmember).fetchOne()!!
         log.debug { "Member count=$count" }
         count.toInt() shouldBeEqualTo MEMBER_COUNT + 1
 
@@ -168,33 +168,25 @@ class QuerydslExamples: AbstractQuerydslTest() {
     }
 
     /**
-     * 페이징 적용 시 - `fetchResults()` 사용
-     *
-     * `fetchResults()` 는 deprecated 되었고 (`fetchCount()` 때문),
-     * [Blaze-Persistence](https://persistence.blazebit.com/documentation/1.5/core/manual/en_US/index.html#querydsl-integration)
-     * 를 사용하는 걸 추천하네요
+     * 페이징 적용 시 content query와 count query를 분리한다.
      */
     @Test
-    fun `페이징 적용 시 - fetchResults 사용`() {
+    fun `페이징 적용 시 - content query와 count query 분리`() {
 
-        val queryResults = queryFactory
+        val members = queryFactory
             .selectFrom(qmember)
             .offset(1)
             .limit(3)
-            .fetchResults()
+            .fetch()
 
-        val total = queryResults.total
-        val offset = queryResults.offset
-        val limit = queryResults.limit
-        val members = queryResults.results
+        val total = queryFactory
+            .select(qmember.count())
+            .from(qmember)
+            .fetchOne()!!
 
         members shouldHaveSize 3
 
-        val memberCount = queryFactory
-            .selectFrom(qmember)
-            .fetchCount()
-
-        total shouldBeEqualTo memberCount
+        total shouldBeEqualTo MEMBER_COUNT.toLong()
     }
 
     @Test
@@ -222,22 +214,28 @@ class QuerydslExamples: AbstractQuerydslTest() {
 
     @Test
     fun `aggregation query`() {
+        val memberCount = qmember.count()
+        val ageSum = qmember.age.sumAggregate()
+        val ageAvg = qmember.age.avg()
+        val ageMax = qmember.age.max()
+        val ageMin = qmember.age.min()
+
         val result = queryFactory
             .select(
-                qmember.count(),
-                qmember.age.sum(),
-                qmember.age.avg(),
-                qmember.age.max(),
-                qmember.age.min()
+                memberCount,
+                ageSum,
+                ageAvg,
+                ageMax,
+                ageMin
             )
             .from(qmember)
             .fetchOne()!!
 
-        result[qmember.count()] shouldBeEqualTo 4
-        result[qmember.age.sum()] shouldBeEqualTo 100
-        result[qmember.age.avg()] shouldBeEqualTo 25.0
-        result[qmember.age.max()] shouldBeEqualTo 40
-        result[qmember.age.min()] shouldBeEqualTo 10
+        result[memberCount] shouldBeEqualTo 4
+        result[ageSum] shouldBeEqualTo 100
+        result[ageAvg] shouldBeEqualTo 25.0
+        result[ageMax] shouldBeEqualTo 40
+        result[ageMin] shouldBeEqualTo 10
     }
 
     @Test
