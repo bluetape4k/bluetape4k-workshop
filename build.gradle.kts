@@ -251,6 +251,11 @@ subprojects {
             dependency(rootLibs.logback.lib.get().toString())
             dependency(rootLibs.logback.core.get().toString())
 
+            val protobufVersion = rootLibs.versions.protobuf.asProvider().get()
+            dependency("com.google.protobuf:protobuf-java:$protobufVersion")
+            dependency("com.google.protobuf:protobuf-java-util:$protobufVersion")
+            dependency("com.google.protobuf:protobuf-kotlin:$protobufVersion")
+
             val coroutinesVersion = rootLibs.versions.kotlinx.coroutines.get()
             dependency("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
             dependency("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$coroutinesVersion")
