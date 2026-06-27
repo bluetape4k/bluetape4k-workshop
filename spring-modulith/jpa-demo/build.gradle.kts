@@ -57,8 +57,8 @@ dependencies {
 
     // QueryDsl
     implementation(libs.querydsl.jpa)
-    kapt(libs.querydsl.apt)
-    kaptTest(libs.querydsl.apt)
+    kapt(libs.querydsl.apt.get().toString() + ":jakarta")
+    kaptTest(libs.querydsl.apt.get().toString() + ":jakarta")
 
     implementation(libs.hikaricp)
     implementation(libs.h2.v2)
