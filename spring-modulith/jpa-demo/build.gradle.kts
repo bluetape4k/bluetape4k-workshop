@@ -56,9 +56,9 @@ dependencies {
     implementation(libs.bluetape4k.hibernate)
 
     // QueryDsl
-    implementation(libs.querydsl.jpa.get().toString() + ":jakarta")
-    kapt(libs.querydsl.apt.get().toString() + ":jakarta")
-    kaptTest(libs.querydsl.apt.get().toString() + ":jakarta")
+    implementation(libs.querydsl.jpa)
+    kapt(libs.querydsl.apt)
+    kaptTest(libs.querydsl.apt)
 
     implementation(libs.hikaricp)
     implementation(libs.h2.v2)
