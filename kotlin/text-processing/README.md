@@ -43,7 +43,7 @@ pass over the input text plus the number of matches.
 val service = LanguageDetectionService()
 
 service.detectLanguage("Hello, World!")      // Language.ENGLISH
-service.detectLanguage("안녕하세요.")         // Language.KOREAN
+service.detectLanguage("\uC548\uB155\uD558\uC138\uC694.") // Language.KOREAN
 service.detectLanguage("東京は首都です。")      // Language.JAPANESE
 
 val scores = service.computeConfidenceValues("This is English text.")

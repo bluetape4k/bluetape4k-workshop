@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="760" viewBox="0 0 1500 760" role="img" aria-labelledby="title desc">
+  <title id="title">Graph IO Pipeline Architecture</title>
+  <desc id="desc">CSV fixtures enter GraphIoPipeline, TinkerGraph stores the imported graph, and Jackson3 NDJSON or GraphML exports prove round-trip behavior through graph-io reports.</desc>
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
+    <marker id="arrowBlue" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#15803D" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowPurple" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#7C3AED" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#CBD5E1;stroke-width:2}.title{font-family:"Architects Daughter";font-size:42px;fill:#102033}.subtitle,.cardText,.footer{font-family:"Comic Mono";fill:#415166}.subtitle{font-size:17px}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-size:14px}.node rect{rx:14;filter:url(#shadow)}.line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}.blue{stroke:#2563EB;marker-end:url(#arrowBlue)}.green{stroke:#15803D;marker-end:url(#arrowGreen)}.purple{stroke:#7C3AED;marker-end:url(#arrowPurple)}.footer{font-size:14px;fill:#526272}
+    </style>
+  </defs>
+  <rect class="canvas" width="1500" height="760"/>
+  <rect class="frame" x="28" y="24" width="1444" height="712" rx="24"/>
+  <text class="title" x="750" y="78" text-anchor="middle">Graph IO Pipeline Architecture</text>
+  <text class="subtitle" x="750" y="112" text-anchor="middle">A small CSV fixture is imported into TinkerGraph, then exported through explicit Jackson3 NDJSON and GraphML adapters.</text>
+
+  <g class="node" data-node="csv">
+    <rect x="90" y="215" width="240" height="90" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+    <text class="cardTitle" x="210" y="252" text-anchor="middle">CSV fixtures</text>
+    <text class="cardText" x="210" y="278" text-anchor="middle">vertices.csv + edges.csv</text>
+  </g>
+  <g class="node" data-node="pipeline">
+    <rect x="430" y="215" width="260" height="90" fill="#F0FDF4" stroke="#15803D" stroke-width="2"/>
+    <text class="cardTitle" x="560" y="252" text-anchor="middle">GraphIoPipeline</text>
+    <text class="cardText" x="560" y="278" text-anchor="middle">fail-fast import options</text>
+  </g>
+  <g class="node" data-node="tinkergraph">
+    <rect x="800" y="215" width="260" height="90" fill="#FFF7ED" stroke="#EA580C" stroke-width="2"/>
+    <text class="cardTitle" x="930" y="252" text-anchor="middle">TinkerGraph</text>
+    <text class="cardText" x="930" y="278" text-anchor="middle">3 vertices, 2 edges</text>
+  </g>
+  <g class="node" data-node="ndjson">
+    <rect x="1170" y="150" width="240" height="90" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2"/>
+    <text class="cardTitle" x="1290" y="187" text-anchor="middle">Jackson3 NDJSON</text>
+    <text class="cardText" x="1290" y="213" text-anchor="middle">single-line records</text>
+  </g>
+  <g class="node" data-node="graphml">
+    <rect x="1170" y="310" width="240" height="90" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2"/>
+    <text class="cardTitle" x="1290" y="347" text-anchor="middle">GraphML</text>
+    <text class="cardText" x="1290" y="373" text-anchor="middle">strict unsupported elements</text>
+  </g>
+  <g class="node" data-node="reports">
+    <rect x="430" y="500" width="260" height="92" fill="#ECFEFF" stroke="#0891B2" stroke-width="2"/>
+    <text class="cardTitle" x="560" y="536" text-anchor="middle">Graph IO reports</text>
+    <text class="cardText" x="560" y="562" text-anchor="middle">COMPLETED or failures</text>
+  </g>
+  <g class="node" data-node="tests">
+    <rect x="800" y="500" width="260" height="92" fill="#FDF2F8" stroke="#DB2777" stroke-width="2"/>
+    <text class="cardTitle" x="930" y="536" text-anchor="middle">Round-trip tests</text>
+    <text class="cardText" x="930" y="562" text-anchor="middle">counts, labels, properties</text>
+  </g>
+
+  <g class="edge" data-edge="csv-&gt;pipeline" data-label="paired CSV import">
+    <path class="line blue" d="M 330 260 L 430 260"/>
+  </g>
+  <g class="edge" data-edge="pipeline-&gt;tinkergraph" data-label="GraphOperations writes">
+    <path class="line green" d="M 690 260 L 800 260"/>
+  </g>
+  <g class="edge" data-edge="tinkergraph-&gt;ndjson" data-label="filtered export">
+    <path class="line purple" d="M 1060 260 L 1130 260 L 1130 195 L 1170 195"/>
+  </g>
+  <g class="edge" data-edge="tinkergraph-&gt;graphml" data-label="filtered export">
+    <path class="line purple" d="M 1060 260 L 1130 260 L 1130 355 L 1170 355"/>
+  </g>
+  <g class="edge" data-edge="pipeline-&gt;reports" data-label="report contract">
+    <path class="line green" d="M 560 305 L 560 500"/>
+  </g>
+  <g class="edge" data-edge="reports-&gt;tests" data-label="assert status">
+    <path class="line blue" d="M 690 546 L 800 546"/>
+  </g>
+  <g class="edge" data-edge="ndjson-&gt;tests" data-label="round-trip proof">
+    <path class="line purple" d="M 1410 195 L 1440 195 L 1440 455 L 930 455 L 930 500"/>
+  </g>
+  <g class="edge" data-edge="graphml-&gt;tests" data-label="round-trip proof">
+    <path class="line purple" d="M 1170 355 L 1120 355 L 1120 455 L 930 455 L 930 500"/>
+  </g>
+
+  <rect x="160" y="650" width="1180" height="40" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+  <text class="footer" x="750" y="675" text-anchor="middle">Reader contract: the workshop demonstrates format adapters and report checks, not upload sanitization or container-backed graph databases.</text>
+</svg>

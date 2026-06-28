@@ -170,6 +170,10 @@ bluetape4k-graph-core      = { module = "io.github.bluetape4k.graph:bluetape4k-g
 bluetape4k-graph-tinkerpop = { module = "io.github.bluetape4k.graph:bluetape4k-graph-tinkerpop" }
 bluetape4k-graph-neo4j     = { module = "io.github.bluetape4k.graph:bluetape4k-graph-neo4j" }
 bluetape4k-graph-memgraph  = { module = "io.github.bluetape4k.graph:bluetape4k-graph-memgraph" }
+bluetape4k-graph-io-core   = { module = "io.github.bluetape4k.graph:bluetape4k-graph-io-core" }
+bluetape4k-graph-io-csv    = { module = "io.github.bluetape4k.graph:bluetape4k-graph-io-csv" }
+bluetape4k-graph-io-graphml = { module = "io.github.bluetape4k.graph:bluetape4k-graph-io-graphml" }
+bluetape4k-graph-io-jackson3 = { module = "io.github.bluetape4k.graph:bluetape4k-graph-io-jackson3" }
 
 # bluetape4k
 bluetape4k-dependencies = { module = "io.github.bluetape4k:bluetape4k-dependencies", version.ref = "bluetape4k-dependencies-version" }

@@ -13,6 +13,7 @@ on:
       - 'spring-boot/resilience4j-coroutines/**'
       - 'json/jackson-examples/**'
       - 'json/jsonview-examples/**'
+      - 'graph/io-pipeline/**'
       - 'messaging/kafka/**'
       - 'shared/**'
       - 'buildSrc/**'
@@ -30,6 +31,7 @@ on:
       - 'spring-boot/resilience4j-coroutines/**'
       - 'json/jackson-examples/**'
       - 'json/jsonview-examples/**'
+      - 'graph/io-pipeline/**'
       - 'messaging/kafka/**'
       - 'shared/**'
       - 'buildSrc/**'
@@ -91,6 +93,7 @@ jobs:
           :spring-boot-resilience4j-coroutines:test
           :jackson-examples:test
           :jsonview-examples:test
+          :graph-io-pipeline:test
           --continue
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
@@ -111,6 +114,8 @@ jobs:
             json/jackson-examples/build/reports/tests/test/
             json/jsonview-examples/build/test-results/test/*.xml
             json/jsonview-examples/build/reports/tests/test/
+            graph/io-pipeline/build/test-results/test/*.xml
+            graph/io-pipeline/build/reports/tests/test/
           retention-days: 7
 
   container-examples:
