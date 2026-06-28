@@ -14,6 +14,7 @@ on:
       - 'json/jackson-examples/**'
       - 'json/jsonview-examples/**'
       - 'graph/io-pipeline/**'
+      - 'image-processing/ocr-api/**'
       - 'messaging/kafka/**'
       - 'shared/**'
       - 'buildSrc/**'
@@ -32,6 +33,7 @@ on:
       - 'json/jackson-examples/**'
       - 'json/jsonview-examples/**'
       - 'graph/io-pipeline/**'
+      - 'image-processing/ocr-api/**'
       - 'messaging/kafka/**'
       - 'shared/**'
       - 'buildSrc/**'
@@ -94,6 +96,7 @@ jobs:
           :jackson-examples:test
           :jsonview-examples:test
           :graph-io-pipeline:test
+          :image-processing-ocr-api:test
           --continue
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
@@ -116,6 +119,8 @@ jobs:
             json/jsonview-examples/build/reports/tests/test/
             graph/io-pipeline/build/test-results/test/*.xml
             graph/io-pipeline/build/reports/tests/test/
+            image-processing/ocr-api/build/test-results/test/*.xml
+            image-processing/ocr-api/build/reports/tests/test/
           retention-days: 7
 
   container-examples:

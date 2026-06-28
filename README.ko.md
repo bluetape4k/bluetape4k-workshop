@@ -209,6 +209,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Basic | [`redis-redisson-examples`](redis/redisson-examples/) | `redis`, `redisson` | Redis (TC) | Redisson 데이터 구조와 Pub/Sub |
 | Advanced | [`aws-s3-spring-cloud`](aws/s3-spring-cloud/) | `aws`, `testcontainers` | LocalStack (TC) | Spring Cloud AWS + LocalStack으로 AWS S3 사용 |
 | Advanced | [`image-processing-advanced-workflow`](image-processing/advanced-workflow/) | `images-vips-java25`, `images-spring-boot`, `micrometer` | S3 또는 local storage | 업로드 → 원본 저장 → WebP 파생 이미지 → unsigned public URL |
+| Advanced | [`image-processing-ocr-api`](image-processing/ocr-api/) | `images-ocr`, `images`, `spring-boot4-core` | In-memory | 검증된 fallback과 선택 Tesseract를 사용하는 multipart OCR API |
 | Advanced | [`leader-leader-election`](leader/) | `coroutines`, `redis`, `testcontainers` | Redis (TC) | 분산 리더 선출: 블로킹, 코루틴, 가상 스레드 |
 
 ```bash
@@ -240,7 +241,7 @@ bluetape4k-workshop/
 ├── gateway/                # API Gateway + 마이크로서비스
 ├── gatling/                # 부하/성능 테스트
 ├── graph/                  # TinkerGraph, traversal, graph-io 예제
-├── image-processing/       # 이미지 업로드, VIPS 파생 이미지, 저장소
+├── image-processing/       # 이미지 업로드, VIPS 파생 이미지, OCR API
 ├── io/                     # Okio I/O 예제
 ├── json/                   # Jackson 3 직렬화
 ├── kotlin/                 # 코루틴, 디자인 패턴

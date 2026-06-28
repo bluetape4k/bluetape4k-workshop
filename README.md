@@ -210,6 +210,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Basic | [`redis-redisson-examples`](redis/redisson-examples/) | `redis`, `redisson` | Redis (TC) | Redisson data structures and pub/sub |
 | Advanced | [`aws-s3-spring-cloud`](aws/s3-spring-cloud/) | `aws`, `testcontainers` | LocalStack (TC) | AWS S3 with Spring Cloud AWS + LocalStack |
 | Advanced | [`image-processing-advanced-workflow`](image-processing/advanced-workflow/) | `images-vips-java25`, `images-spring-boot`, `micrometer` | S3 or local storage | Upload → original storage → WebP variants → unsigned public URLs |
+| Advanced | [`image-processing-ocr-api`](image-processing/ocr-api/) | `images-ocr`, `images`, `spring-boot4-core` | In-memory | Multipart OCR API with validated fallback and optional Tesseract |
 | Advanced | [`leader-leader-election`](leader/) | `coroutines`, `redis`, `testcontainers` | Redis (TC) | Distributed leader election: blocking, coroutine, virtual thread |
 
 ```bash
@@ -241,7 +242,7 @@ bluetape4k-workshop/
 ├── gateway/                # API Gateway + microservices
 ├── gatling/                # Load/performance tests
 ├── graph/                  # TinkerGraph, traversal, graph-io examples
-├── image-processing/       # Image upload, VIPS derivatives, storage
+├── image-processing/       # Image upload, VIPS derivatives, OCR API
 ├── io/                     # Okio I/O examples
 ├── json/                   # Jackson 3 serialization
 ├── kotlin/                 # Coroutines, design patterns

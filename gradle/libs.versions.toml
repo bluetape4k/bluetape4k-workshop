@@ -242,6 +242,7 @@ bluetape4k-money = { module = "io.github.bluetape4k:bluetape4k-money" }
 bluetape4k-mutiny = { module = "io.github.bluetape4k:bluetape4k-mutiny" }
 bluetape4k-opentelemetry = { module = "io.github.bluetape4k:bluetape4k-opentelemetry" }
 bluetape4k-images = { module = "io.github.bluetape4k.image:bluetape4k-images" }
+bluetape4k-images-ocr = { module = "io.github.bluetape4k.image:bluetape4k-images-ocr" }
 bluetape4k-images-spring-boot = { module = "io.github.bluetape4k.image:bluetape4k-images-spring-boot" }
 bluetape4k-images-vips-api = { module = "io.github.bluetape4k.image:bluetape4k-images-vips-api" }
 bluetape4k-images-vips-java25 = { module = "io.github.bluetape4k.image:bluetape4k-images-vips-java25" }

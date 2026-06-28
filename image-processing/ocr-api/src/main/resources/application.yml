@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: image-ocr-api
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+workshop:
+  ocr:
+    native-enabled: false
+    max-upload-bytes: 5242880
+    max-image-pixels: 12000000
+    timeout: 10s
+    languages:
+      - eng
+    tessdata-path:
