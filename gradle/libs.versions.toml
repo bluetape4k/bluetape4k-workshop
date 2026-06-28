@@ -118,7 +118,7 @@ jna = "5.19.1"  # https://mvnrepository.com/artifact/net.java.dev.jna/jna
 archunit = "1.4.2"  # https://mvnrepository.com/artifact/com.tngtech.archunit/archunit
 rest-assured = "6.0.0"  # https://mvnrepository.com/artifact/io.rest-assured/kotlin-extensions
 
-datafaker = "2.6.0"  # https://mvnrepository.com/artifact/net.datafaker/datafaker
+datafaker = "2.7.0"  # https://mvnrepository.com/artifact/net.datafaker/datafaker
 snakeyaml = "2.6"  # https://mvnrepository.com/artifact/org.yaml/snakeyaml
 random-beans = "3.9.0"  # https://mvnrepository.com/artifact/io.github.benas/random-beans
 
