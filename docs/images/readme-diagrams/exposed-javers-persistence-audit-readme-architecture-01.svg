@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1320" viewBox="0 0 1500 1320" role="img" aria-labelledby="title desc">
+  <title id="title">exposed/javers-persistence-audit architecture</title>
+  <desc id="desc">Top-to-bottom architecture for Redis-backed JaVers audit history with Exposed storing only the current order row.</desc>
+  <defs>
+    <style>
+      svg{background:#f8fafc}
+      .frame{fill:#ffffff;stroke:#d8e4ef;stroke-width:2}
+      .title{font-family:"Architects Daughter";font-size:42px;fill:#142033}
+      .subtitle,.small,.footer{font-family:"Comic Mono";fill:#435469}
+      .subtitle{font-size:17px}.small{font-size:15px}.footer{font-size:13px;fill:#5f7181}
+      .node rect{stroke-width:2.4}
+      .input{fill:#eef7ff;stroke:#7aa6cf}.service{fill:#effaf2;stroke:#75a985}.audit{fill:#f7f1ff;stroke:#9b83c7}.redis{fill:#fff1f0;stroke:#d06a63}.db{fill:#fff7e8;stroke:#c59352}.kafka{fill:#fff8f3;stroke:#c77d61}
+      .cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#142033}
+      .nodeText{font-family:"Comic Mono";font-size:15px;fill:#435469}
+      .edge path{fill:none;stroke:#52748d;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow)}
+      .edge.auditEdge path{stroke:#7a64aa;marker-end:url(#auditArrow)}
+      .edge.redisEdge path{stroke:#bd4d45;marker-end:url(#redisArrow)}
+      .edge.dbEdge path{stroke:#9b6b2f;marker-end:url(#dbArrow)}
+      .edge.kafkaEdge path{stroke:#a05d44;stroke-dasharray:10 7;marker-end:url(#kafkaArrow)}
+      .badge{font-family:"Comic Mono";font-size:13px;font-weight:700;fill:#ffffff}
+    </style>
+    <marker id="arrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#52748d" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="auditArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#7a64aa" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="redisArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#bd4d45" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="dbArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9b6b2f" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="kafkaArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#a05d44" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+
+  <rect class="frame" x="28" y="28" width="1444" height="1264" rx="18"/>
+  <text class="title" x="750" y="82" text-anchor="middle">Redis-backed JaVers Audit over Exposed</text>
+  <text class="subtitle" x="750" y="115" text-anchor="middle">Top-to-bottom write order: validate request, commit audit history, then materialize the current order row.</text>
+
+  <g class="node" data-node="caller">
+    <rect class="input" x="470" y="158" width="560" height="112" rx="12"/>
+    <text class="cardTitle" x="750" y="196" text-anchor="middle">Caller / Test</text>
+    <text class="nodeText" x="750" y="226" text-anchor="middle">place, markPaid, delete, history, latest, diff</text>
+    <text class="nodeText" x="750" y="250" text-anchor="middle">source-backed examples drive the service boundary</text>
+  </g>
+
+  <g class="node" data-node="service">
+    <rect class="service" x="470" y="342" width="560" height="126" rx="12"/>
+    <text class="cardTitle" x="750" y="382" text-anchor="middle">OrderAuditService</text>
+    <text class="nodeText" x="750" y="413" text-anchor="middle">validates author and order identity</text>
+    <text class="nodeText" x="750" y="438" text-anchor="middle">audit write happens before the current-row write</text>
+  </g>
+
+  <g class="node" data-node="javers">
+    <rect class="audit" x="470" y="540" width="560" height="128" rx="12"/>
+    <text class="cardTitle" x="750" y="580" text-anchor="middle">JaVers + Redisson Repository</text>
+    <text class="nodeText" x="750" y="611" text-anchor="middle">commit, commitShallowDelete, QueryBuilder.byInstanceId</text>
+    <text class="nodeText" x="750" y="636" text-anchor="middle">oldest-first history and latestSnapshotOrNull reads</text>
+  </g>
+
+  <g class="node" data-node="redis">
+    <rect class="redis" x="470" y="740" width="560" height="132" rx="12"/>
+    <image data-bluetape4k-icon="redis" data-source="docs/icons/testcontainers/storage/redis.svg" x="500" y="771" width="54" height="54" href="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjRkY0NDM4IiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+UmVkaXM8L3RpdGxlPjxwYXRoIGQ9Ik0yMi43MSAxMy4xNDVjLTEuNjYgMi4wOTItMy40NTIgNC40ODMtNy4wMzggNC40ODMtMy4yMDMgMC00LjM5Ny0yLjgyNS00LjQ4LTUuMTIuNzAxIDEuNDg0IDIuMDczIDIuNjg1IDQuMjE0IDIuNjMgNC4xMTctLjEzMyA2Ljk0LTMuODUyIDYuOTQtNy4yMzkgMC00LjA1LTMuMDIyLTYuOTcyLTguMjY4LTYuOTcyLTMuNzUyIDAtOC40IDEuNDI4LTExLjQ1NSAzLjY4NUMyLjU5IDYuOTM3IDMuODg1IDkuOTU4IDQuMzUgOS42MjZjMi42NDgtMS45MDQgNC43NDgtMy4xMyA2Ljc4NC0zLjc0NEM4LjEyIDkuMjQ0Ljg4NiAxNy4wNSAwIDE4LjQyNWMuMSAxLjI2MSAxLjY2IDQuNjQ4IDIuNDI0IDQuNjQ4LjIzMiAwIC40MzEtLjEzMy42NjQtLjM2NWExMDAuNDkgMTAwLjQ5IDAgMCAwIDUuNTQtNi43NjVjLjIyMiAzLjEwNCAxLjc0OCA2Ljg5OCA2LjAxNCA2Ljg5OCAzLjgxOSAwIDcuNjA0LTIuNzU2IDkuMzMtOC45NjUuMi0uNzY0LS43My0xLjM2MS0xLjI2MS0uNzN6bS00LjM0OS01LjAxM2MwIDEuOTU5LTEuOTI2IDIuOTIyLTMuNjg1IDIuOTIyLS45NDEgMC0xLjY2NC0uMjQ3LTIuMjM1LS41NjggMS4wNTEtMS41OTIgMi4wOTItMy4yMjUgMy4yMS00Ljk3MyAxLjk3Mi4zMzQgMi43MSAxLjQzIDIuNzEgMi42MTl6Ii8+PC9zdmc+" preserveAspectRatio="xMidYMid meet"/>
+    <text class="cardTitle" x="750" y="785" text-anchor="middle">Redis Snapshot Store</text>
+    <text class="nodeText" x="750" y="816" text-anchor="middle">durable, read-capable JaVers audit history</text>
+    <text class="nodeText" x="750" y="841" text-anchor="middle">service rebuild can still read previous commits</text>
+  </g>
+
+  <g class="node" data-node="exposed">
+    <rect class="db" x="470" y="944" width="560" height="132" rx="12"/>
+    <image data-bluetape4k-icon="database-server" data-source="docs/icons/generic/database-server.svg" x="948" y="974" width="58" height="58" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsbGVkYnk9InRpdGxlIGRlc2MiPgogIDx0aXRsZSBpZD0idGl0bGUiPkdlbmVyaWMgZGF0YWJhc2Ugc2VydmVyIGljb248L3RpdGxlPgogIDxkZXNjIGlkPSJkZXNjIj5HZW5lcmljIGRhdGFiYXNlIHNlcnZlciBpY29uIGZvciBibHVldGFwZTRrIGRpYWdyYW1zLjwvZGVzYz4KICA8cmVjdCB4PSIxMCIgeT0iOCIgd2lkdGg9IjEwOCIgaGVpZ2h0PSIxMTIiIHJ4PSIxOCIgZmlsbD0iI2ZmZmFmMiIgc3Ryb2tlPSIjMjg0ODVhIiBzdHJva2Utd2lkdGg9IjYiLz4KICA8ZWxsaXBzZSBjeD0iNjQiIGN5PSIzNiIgcng9IjM0IiByeT0iMTMiIGZpbGw9IiNmZmYwZDgiIHN0cm9rZT0iIzhjNmYzMyIgc3Ryb2tlLXdpZHRoPSI2Ii8+CiAgPHBhdGggZD0iTTMwIDM2djQ0YzAgOCAxNSAxNCAzNCAxNHMzNC02IDM0LTE0VjM2IiBmaWxsPSIjZmZmMGQ4IiBzdHJva2U9IiM4YzZmMzMiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogIDxlbGxpcHNlIGN4PSI2NCIgY3k9IjM2IiByeD0iMzQiIHJ5PSIxMyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGM2ZjMzIiBzdHJva2Utd2lkdGg9IjUiLz4KICA8cGF0aCBkPSJNMzAgNThjMCA4IDE1IDE0IDM0IDE0czM0LTYgMzQtMTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzhjNmYzMyIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KICA8cGF0aCBkPSJNMzAgODBjMCA4IDE1IDE0IDM0IDE0czM0LTYgMzQtMTQiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzhjNmYzMyIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+Cg==" preserveAspectRatio="xMidYMid meet"/>
+    <text class="cardTitle" x="750" y="989" text-anchor="middle">Exposed OrderTable</text>
+    <text class="nodeText" x="735" y="1020" text-anchor="middle">current row only: id, customerId, status</text>
+    <text class="nodeText" x="735" y="1045" text-anchor="middle">amount and history stay in separate stores</text>
+  </g>
+
+  <g class="node" data-node="kafka">
+    <rect class="kafka" x="470" y="1144" width="560" height="86" rx="12"/>
+    <image data-bluetape4k-icon="apache-kafka" data-source="docs/icons/testcontainers/mq/apache-kafka.svg" x="956" y="1161" width="46" height="46" href="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjRDIyMTI4IiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+QXBhY2hlIEthZmthPC90aXRsZT48cGF0aCBkPSJNOS43MSAyLjEzNmExLjQzIDEuNDMgMCAwIDAtMi4wNDcgMGgtLjAwN2ExLjQ4IDEuNDggMCAwIDAtLjQyMSAxLjA0MmMwIC40MS4xNjEuNzc3LjQyMiAxLjAzOWwuMDA3LjAwN2MuMjU3LjI2NC42MTYuNDI2IDEuMDE5LjQyNi40MDQgMCAuNzY2LS4xNjIgMS4wMjctLjQyNmwuMDAzLS4wMDdjLjI2MS0uMjYyLjQyMS0uNjI5LjQyMS0xLjAzOSAwLS40MDgtLjE1OS0uNzc3LS40MjEtMS4wNDJIOS43MXpNOC42ODMgMjIuMjk1Yy40MDQgMCAuNzY2LS4xNjcgMS4wMjctLjQyOWwuMDAzLS4wMDhjLjI2MS0uMjYxLjQyMS0uNjMxLjQyMS0xLjAzNiAwLS40MS0uMTU5LS43NzgtLjQyMS0xLjA0NEg5LjcxYTEuNDIgMS40MiAwIDAgMC0xLjAyNy0uNDMyIDEuNCAxLjQgMCAwIDAtMS4wMi40MzJoLS4wMDdjLS4yNi4yNjYtLjQyMi42MzQtLjQyMiAxLjA0NCAwIC40MDYuMTYxLjc3NS40MjIgMS4wMzZsLjAwNy4wMDhjLjI1OC4yNjIuNjE3LjQyOSAxLjAyLjQyOXptNy44OS00LjQ2MmMuMzU5LS4wOTYuNjgzLS4zMy44ODItLjY4NGwuMDI3LS4wNTJhMS40NyAxLjQ3IDAgMCAwIC4xMTQtMS4wNjcgMS40NTQgMS40NTQgMCAwIDAtLjY3NS0uODk2bC0uMDIxLS4wMTRhMS40MjUgMS40MjUgMCAwIDAtMS4wNzgtLjEzMmMtLjM2LjA5MS0uNjg0LjMzNS0uODgxLjY4Ni0uMi4zNDktLjI0MS43NS0uMTQ2IDEuMTE5LjA5OS4zNjMuMzMuNjkxLjY3NS44OTZoLjAwMmMuMzQ2LjIwMy43MzcuMjM5IDEuMTAxLjE0NHptLTYuNDA1LTcuMzQyYTIuMDgzIDIuMDgzIDAgMCAwLTEuNDg1LS42MjdjLS41OCAwLTEuMTAzLjI0Mi0xLjQ4Mi42MjctLjM3OC4zODUtLjYxMi45MTYtLjYxMiAxLjUwN3MuMjMzIDEuMTI0LjYxMiAxLjUxNGEyLjA4IDIuMDggMCAwIDAgMi45NjcgMGMuMzc5LS4zOS42MTItLjkyMy42MTItMS41MTRzLS4yMzMtMS4xMjItLjYxMi0xLjUwN3ptLS44MzUtMi41MWMuODQzLjE0MSAxLjYuNTUyIDIuMTc4IDEuMTQ0aC4wMDRjLjA5Mi4wOTMuMTgyLjE5Ni4yNjUuMjk5bDEuNDQ2LS44NTFhMy4xNzYgMy4xNzYgMCAwIDEtLjA0Ny0xLjgwOCAzLjE0OSAzLjE0OSAwIDAgMSAxLjQ1Ni0xLjkyNmwuMDI1LS4wMTZhMy4wNjIgMy4wNjIgMCAwIDEgMi4zNDUtLjMwNmMuNzcuMjEgMS40NjUuNzIxIDEuODk4IDEuNDgydi4wMDJjLjQzMS43NTcuNTE4IDEuNjI2LjMxMyAyLjQwOGEzLjE0NSAzLjE0NSAwIDAgMS0xLjQ1NiAxLjkyOGwtLjE5OC4xMThoLS4wMmEzLjA5NSAzLjA5NSAwIDAgMS0yLjE1NC4yMDEgMy4xMjcgMy4xMjcgMCAwIDEtMS41MTQtLjk0NGwtMS40NDQuODQ4YTQuMTYyIDQuMTYyIDAgMCAxIDAgMi44NzlsMS40NDQuODQ2Yy40MTMtLjQ3LjkzOS0uNzg5IDEuNTE0LS45NDRhMy4wNDEgMy4wNDEgMCAwIDEgMi4zNzEuMzE5bC4wNDguMDIzdi4wMDJhMy4xNyAzLjE3IDAgMCAxIDEuNDA4IDEuOTA2IDMuMjE1IDMuMjE1IDAgMCAxLS4zMTMgMi40MDVsLS4wMjYuMDUzLS4wMDMtLjAwNWEzLjE0NyAzLjE0NyAwIDAgMS0xLjg2NyAxLjQzNiAzLjA5NiAzLjA5NiAwIDAgMS0yLjM3MS0uMzE4di0uMDA2YTMuMTU2IDMuMTU2IDAgMCAxLTEuNDU2LTEuOTI3IDMuMTc1IDMuMTc1IDAgMCAxIC4wNDctMS44MDVsLTEuNDQ2LS44NDhhMy45MDUgMy45MDUgMCAwIDEtLjI2NS4yOTRsLS4wMDQuMDA1YTMuOTM4IDMuOTM4IDAgMCAxLTIuMTc4IDEuMTM4djEuNjk5YTMuMDkgMy4wOSAwIDAgMSAxLjU2Ljg2MmwuMDAyLjAwNGMuNTY1LjU3Mi45MTQgMS4zNjguOTE0IDIuMjQzIDAgLjg3My0uMzUgMS42NjQtLjkxNCAyLjIzOWwtLjAwMi4wMDlhMy4xIDMuMSAwIDAgMS0yLjIxLjkzMSAzLjEgMy4xIDAgMCAxLTIuMjA2LS45M2gtLjAwMnYtLjAwOWEzLjE4NiAzLjE4NiAwIDAgMS0uOTE2LTIuMjM5YzAtLjg3NS4zNS0xLjY3Mi45MTYtMi4yNDN2LS4wMDRoLjAwMmEzLjEgMy4xIDAgMCAxIDEuNTU4LS44NjJ2LTEuNjk5YTMuOTI2IDMuOTI2IDAgMCAxLTIuMTc2LTEuMTM4bC0uMDA2LS4wMDVhNC4wOTggNC4wOTggMCAwIDEtMS4xNzMtMi44NzRjMC0xLjEyMi40NTItMi4xMzYgMS4xNzMtMi44NzJoLjAwNmEzLjk0NyAzLjk0NyAwIDAgMSAyLjE3Ni0xLjE0NFY2LjI4OWEzLjEzNyAzLjEzNyAwIDAgMS0xLjU1OC0uODY0aC0uMDAydi0uMDA0YTMuMTkyIDMuMTkyIDAgMCAxLS45MTYtMi4yNDNjMC0uODcxLjM1LTEuNjY5LjkxNi0yLjI0M2wuMDAyLS4wMDJBMy4wODQgMy4wODQgMCAwIDEgOC42ODMgMGMuODYxIDAgMS42NDEuMzU1IDIuMjEuOTMydi4wMDJoLjAwMmMuNTY1LjU3NC45MTQgMS4zNzIuOTE0IDIuMjQzIDAgLjg3Ni0uMzUgMS42NjctLjkxNCAyLjI0M2wtLjAwMi4wMDVhMy4xNDIgMy4xNDIgMCAwIDEtMS41Ni44NjR2MS42OTJ6bTguMTIxLTEuMTI5bC0uMDEyLS4wMTlhMS40NTIgMS40NTIgMCAwIDAtLjg3LS42NjggMS40MyAxLjQzIDAgMCAwLTEuMTAzLjE0NmguMDAyYy0uMzQ3LjItLjU4LjUyOS0uNjc3Ljg5Ni0uMDk1LjM2NS0uMDU0Ljc2OC4xNDYgMS4xMTlsLjAwNy4wMDljLjIuMzQ3LjUxOS41NzkuODc0LjY3My4zNTcuMTAzLjc1NS4wNTkgMS4wOTgtLjE0NGwuMDE5LS4wMDlhMS40NyAxLjQ3IDAgMCAwIC42NTctLjg4NSAxLjQ5MyAxLjQ5MyAwIDAgMC0uMTQxLTEuMTE4Ii8+PC9zdmc+" preserveAspectRatio="xMidYMid meet"/>
+    <text class="cardTitle" x="750" y="1177" text-anchor="middle">Kafka Repository Boundary</text>
+    <text class="nodeText" x="735" y="1205" text-anchor="middle">write-only event stream; project before querying</text>
+  </g>
+
+  <g class="edge" data-edge="caller-&gt;service" data-label="invoke audited order operation">
+    <path d="M 750 270 L 750 342"/>
+  </g>
+  <g class="edge auditEdge" data-edge="service-&gt;javers" data-label="commit audit snapshot first">
+    <path d="M 750 468 L 750 540"/>
+  </g>
+  <g class="edge redisEdge" data-edge="javers-&gt;redis" data-label="persist read-capable snapshot history">
+    <path d="M 750 668 L 750 740"/>
+  </g>
+  <g class="edge dbEdge" data-edge="redis-&gt;exposed" data-label="then materialize current row through Exposed">
+    <path d="M 750 872 L 750 944"/>
+  </g>
+  <g class="edge kafkaEdge" data-edge="exposed-&gt;kafka" data-label="document write-only stream alternative">
+    <path d="M 750 1076 L 750 1144"/>
+  </g>
+
+  <text class="footer" x="750" y="1268" text-anchor="middle">Runtime module uses Redis for queryable JaVers history; Kafka is documented as a write-only stream boundary, not a history reader.</text>
+</svg>
