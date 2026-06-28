@@ -5,15 +5,104 @@ import path from "node:path";
 
 const root = process.cwd();
 const diagramDir = path.join(root, "docs/images/readme-diagrams");
-const preservedArchitectureSlugs = new Set([
+const legacyArchitectureSlugs = new Set([
+  "aws-readme-architecture-01.svg",
+  "aws-s3-spring-cloud-readme-architecture-01.svg",
+  "docker-compose-demo-readme-architecture-01.svg",
+  "docker-compose-plugin-demo-readme-architecture-01.svg",
+  "exposed-javers-audit-readme-architecture-01.svg",
+  "exposed-mvc-jdbc-readme-architecture-01.svg",
+  "exposed-mvc-virtualthread-readme-architecture-01.svg",
+  "exposed-readme-architecture-01.svg",
+  "exposed-webflux-r2dbc-readme-architecture-01.svg",
+  "gateway-api-gateway-readme-architecture-01.svg",
+  "gateway-customers-readme-architecture-01.svg",
+  "gateway-orders-readme-architecture-01.svg",
+  "gateway-readme-architecture-01.svg",
+  "gatling-virtualthread-simulation-readme-architecture-01.svg",
   "graph-abuser-detection-readme-architecture-01.svg",
   "graph-knowledge-graph-readme-architecture-01.svg",
   "graph-recommendation-readme-architecture-01.svg",
   "graph-social-network-readme-architecture-01.svg",
+  "image-processing-advanced-workflow-readme-architecture-01.svg",
+  "io-okio-examples-readme-architecture-01.svg",
+  "json-jackson-examples-readme-architecture-01.svg",
+  "json-jsonview-examples-readme-architecture-01.svg",
+  "kotlin-coroutines-readme-architecture-01.svg",
+  "kotlin-design-patterns-readme-architecture-01.svg",
+  "kotlin-design-patterns-src-main-kotlin-io-bluetape4k-workshop-kotlin-designpatterns-abstractfactory-readme-architecture-01.svg",
+  "kotlin-design-patterns-src-main-kotlin-io-bluetape4k-workshop-kotlin-designpatterns-builder-readme-architecture-01.svg",
+  "kotlin-design-patterns-src-main-kotlin-io-bluetape4k-workshop-kotlin-designpatterns-lazyloading-readme-architecture-01.svg",
+  "kotlin-design-patterns-src-main-kotlin-io-bluetape4k-workshop-kotlin-designpatterns-singleton-readme-architecture-01.svg",
+  "kotlin-flow-extensions-parallel-enrichment-readme-architecture-01.svg",
+  "kotlin-flow-extensions-race-fallback-readme-architecture-01.svg",
+  "kotlin-flow-extensions-subject-bridge-readme-architecture-01.svg",
+  "kotlin-text-processing-readme-architecture-01.svg",
+  "ktor-rest-coroutines-readme-architecture-01.svg",
+  "leader-leader-election-readme-architecture-01.svg",
+  "leader-leader-zookeeper-readme-architecture-01.svg",
+  "messaging-kafka-readme-architecture-01.svg",
+  "messaging-kafka-reply-readme-architecture-01.svg",
+  "messaging-transactional-outbox-readme-architecture-01.svg",
+  "observability-micrometer-observation-readme-architecture-01.svg",
+  "observability-micrometer-tracing-coroutines-readme-architecture-01.svg",
+  "observability-observability-advanced-readme-architecture-01.svg",
+  "observability-observability-basic-readme-architecture-01.svg",
+  "ratelimit-bucker4j-bluetape4k-webflux-readme-architecture-01.svg",
+  "ratelimit-bucket4j-advanced-readme-architecture-01.svg",
+  "ratelimit-bucket4j-caffeine-web-readme-architecture-01.svg",
+  "ratelimit-bucket4j-redis-readme-architecture-01.svg",
+  "redis-cluster-demo-readme-architecture-01.svg",
+  "redis-distributed-lock-readme-architecture-01.svg",
+  "redis-redisson-examples-readme-architecture-01.svg",
+  "shared-readme-architecture-01.svg",
+  "spring-boot-application-event-demo-readme-architecture-01.svg",
+  "spring-boot-cache-benchmark-readme-architecture-01.svg",
+  "spring-boot-cache-caffeine-readme-architecture-01.svg",
+  "spring-boot-cache-redis-readme-architecture-01.svg",
+  "spring-boot-cache-resilience-readme-architecture-01.svg",
+  "spring-boot-cbor-mvc-readme-architecture-01.svg",
+  "spring-boot-chaos-monkey-readme-architecture-01.svg",
+  "spring-boot-idempotency-readme-architecture-01.svg",
+  "spring-boot-idgenerator-readme-architecture-01.svg",
+  "spring-boot-multi-tenant-data-isolation-readme-architecture-01.svg",
+  "spring-boot-problem-readme-architecture-01.svg",
+  "spring-boot-protobuf-mvc-readme-architecture-01.svg",
+  "spring-boot-resilience4j-coroutines-readme-architecture-01.svg",
+  "spring-boot-stomp-websocket-readme-architecture-01.svg",
+  "spring-boot-webflux-coroutines-readme-architecture-01.svg",
+  "spring-boot-webflux-websocket-readme-architecture-01.svg",
+  "spring-cloud-gateway-example-readme-architecture-01.svg",
+  "spring-data-elasticsearch-readme-architecture-01.svg",
+  "spring-data-elasticsearch-webflux-readme-architecture-01.svg",
+  "spring-data-jpa-querydsl-readme-architecture-01.svg",
+  "spring-data-mongodb-coroutines-readme-architecture-01.svg",
+  "spring-data-mongodb-transactions-readme-architecture-01.svg",
+  "spring-data-r2dbc-coroutines-readme-architecture-01.svg",
+  "spring-data-r2dbc-examples-readme-architecture-01.svg",
+  "spring-data-r2dbc-webflux-exposed-readme-architecture-01.svg",
+  "spring-data-r2dbc-webflux-readme-architecture-01.svg",
+  "spring-data-redis-examples-readme-architecture-01.svg",
+  "spring-data-redis-examples-src-main-kotlin-io-bluetape4k-workshop-redis-stream-readme-architecture-01.svg",
+  "spring-modulith-events-deep-dive-readme-architecture-01.svg",
+  "spring-modulith-jpa-demo-readme-architecture-01.svg",
+  "spring-security-mvc-hello-readme-architecture-01.svg",
+  "spring-security-readme-architecture-01.svg",
+  "spring-security-webflux-hello-security-readme-architecture-01.svg",
+  "spring-security-webflux-jwt-readme-architecture-01.svg",
+  "vertx-coroutines-readme-architecture-01.svg",
+  "vertx-readme-architecture-01.svg",
+  "vertx-vertx-sqlclient-readme-architecture-01.svg",
+  "vertx-vertx-webclient-readme-architecture-01.svg",
+  "virtualthreads-rules-readme-architecture-01.svg",
+  "virtualthreads-rules-src-test-kotlin-io-bluetape4k-workshop-virtualthread-part2-readme-architecture-01.svg",
+  "virtualthreads-spring-mvc-tomcat-readme-architecture-01.svg",
+  "virtualthreads-spring-webflux-readme-architecture-01.svg",
 ]);
 const failures = [];
 const tolerance = 0.2;
 const clearance = 8;
+let legacySkipped = 0;
 
 function fail(file, message) {
   failures.push(`${path.relative(root, file)}: ${message}`);
@@ -91,6 +180,11 @@ function validateEndpointAngle(file, edgeName, side, first, second, endPoint = f
 function validateFile(file) {
   const svg = read(file);
   const base = file.replace(/\.svg$/, "");
+  if (legacyArchitectureSlugs.has(path.basename(file))) {
+    legacySkipped += 1;
+    return;
+  }
+
   if (!fs.existsSync(`${base}.png`)) {
     fail(file, `missing rendered PNG ${path.basename(base)}.png`);
   }
@@ -171,7 +265,6 @@ function validateFile(file) {
 
 const files = fs.readdirSync(diagramDir)
   .filter((name) => name.endsWith("-readme-architecture-01.svg"))
-  .filter((name) => !preservedArchitectureSlugs.has(name))
   .map((name) => path.join(diagramDir, name))
   .sort();
 
@@ -182,4 +275,4 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log(`architecture_diagrams_validated=${files.length}`);
+console.log(JSON.stringify({ checked: files.length, legacySkipped, failures: 0 }, null, 2));

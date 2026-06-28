@@ -51,7 +51,7 @@ path where **Basic** modules are enough for exploration, then switch to
 
 ## Domain Catalog
 
-Modules are organized into six learning domains.
+Modules are organized into seven learning domains.
 Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (multi-layer, Testcontainers) modules.
 
 ![Workshop Module Composition](./docs/images/readme-charts/root-readme-module-chart-01.png)
@@ -172,7 +172,26 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 
 ---
 
-### 6. Architecture Extensions
+### 6. Graph
+
+> TinkerGraph examples, graph traversal, and graph-io import/export
+
+| Level | Module | bluetape4k libs | Infra | Learning outcome |
+|-------|--------|-----------------|-------|-----------------|
+| Basic | [`graph-io-pipeline`](graph/io-pipeline/) | `graph-core`, `graph-tinkerpop`, `graph-io-csv`, `graph-io-jackson3`, `graph-io-graphml` | In-memory | CSV fixture import, Jackson3 NDJSON export/import, GraphML export/import, and graph-io report checks |
+| Basic | [`graph-social-network`](graph/social-network/) | `graph-core`, `graph-tinkerpop` | In-memory | Social graph modeling and traversal |
+| Basic | [`graph-knowledge-graph`](graph/knowledge-graph/) | `graph-core`, `graph-tinkerpop` | In-memory | Heterogeneous knowledge graph model and traversal |
+| Advanced | [`graph-abuser-detection`](graph/abuser-detection/) | `graph-core`, `graph-tinkerpop` | In-memory | Fraud/abuse relationship analysis |
+| Advanced | [`graph-recommendation`](graph/recommendation/) | `graph-core`, `graph-tinkerpop` | In-memory | Recommendation graph traversal |
+
+```bash
+./gradlew :graph-io-pipeline:test
+./gradlew :graph-social-network:test
+```
+
+---
+
+### 7. Architecture Extensions
 
 > API Gateway, Spring Modulith, Security, Redis distributed patterns, AWS, Rate Limiting, Leader Election
 
@@ -221,6 +240,7 @@ bluetape4k-workshop/
 ├── exposed/                # JetBrains Exposed ORM
 ├── gateway/                # API Gateway + microservices
 ├── gatling/                # Load/performance tests
+├── graph/                  # TinkerGraph, traversal, graph-io examples
 ├── image-processing/       # Image upload, VIPS derivatives, storage
 ├── io/                     # Okio I/O examples
 ├── json/                   # Jackson 3 serialization

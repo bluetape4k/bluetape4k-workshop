@@ -32,6 +32,7 @@ case "${1:-help}" in
       :jsonview-examples:test \
       :image-processing-advanced-workflow:test \
       :okio-examples:test \
+      :graph-io-pipeline:test \
       :kotlin-design-patterns:test \
       :micrometer-observation:test \
       :spring-boot-application-event-demo:test \
@@ -148,7 +149,7 @@ case "${1:-help}" in
   stale-check)
     echo "=== Gradle project count ==="
     count=$("$GRADLEW" projects --console=plain 2>/dev/null | grep -Ec "Project ':" || true)
-    expected=76
+    expected=80
     echo "Active modules: $count (expected: $expected)"
     [ "$count" -eq "$expected" ] || echo "WARNING: Gradle project count drifted."
 

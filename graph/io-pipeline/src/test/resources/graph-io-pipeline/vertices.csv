@@ -1,0 +1,4 @@
+id,label,prop.code,prop.name,prop.kind
+person-alice,Person,alice,Alice,learner
+person-bob,Person,bob,Bob,reviewer
+project-graphio,Project,graphio,Graph IO Pipeline,workshop

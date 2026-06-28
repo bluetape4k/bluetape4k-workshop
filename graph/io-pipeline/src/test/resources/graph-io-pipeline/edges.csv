@@ -1,0 +1,3 @@
+id,label,from,to,prop.code,prop.role
+edge-alice-project,CONTRIBUTES_TO,person-alice,project-graphio,alice-project,author
+edge-bob-project,REVIEWS,person-bob,project-graphio,bob-project,reviewer

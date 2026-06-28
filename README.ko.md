@@ -50,7 +50,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 
 ## 도메인 카탈로그
 
-모듈은 여섯 개의 학습 도메인으로 구성됩니다.
+모듈은 일곱 개의 학습 도메인으로 구성됩니다.
 각 도메인에는 **Basic** (독립적, 최소 인프라)과 **Advanced** (다계층, Testcontainers) 모듈이 있습니다.
 
 ![Workshop Module Composition](./docs/images/readme-charts/root-readme-module-chart-01.png)
@@ -171,7 +171,26 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 
 ---
 
-### 6. 아키텍처 확장
+### 6. Graph
+
+> TinkerGraph 예제, graph traversal, graph-io import/export
+
+| 수준 | 모듈 | bluetape4k 라이브러리 | 인프라 | 학습 목표 |
+|------|------|----------------------|-------|-----------|
+| Basic | [`graph-io-pipeline`](graph/io-pipeline/) | `graph-core`, `graph-tinkerpop`, `graph-io-csv`, `graph-io-jackson3`, `graph-io-graphml` | In-memory | CSV fixture import, Jackson3 NDJSON export/import, GraphML export/import, graph-io report 확인 |
+| Basic | [`graph-social-network`](graph/social-network/) | `graph-core`, `graph-tinkerpop` | In-memory | Social graph modeling과 traversal |
+| Basic | [`graph-knowledge-graph`](graph/knowledge-graph/) | `graph-core`, `graph-tinkerpop` | In-memory | Heterogeneous knowledge graph model과 traversal |
+| Advanced | [`graph-abuser-detection`](graph/abuser-detection/) | `graph-core`, `graph-tinkerpop` | In-memory | Fraud/abuse 관계 분석 |
+| Advanced | [`graph-recommendation`](graph/recommendation/) | `graph-core`, `graph-tinkerpop` | In-memory | Recommendation graph traversal |
+
+```bash
+./gradlew :graph-io-pipeline:test
+./gradlew :graph-social-network:test
+```
+
+---
+
+### 7. 아키텍처 확장
 
 > API Gateway, Spring Modulith, 보안, Redis 분산 패턴, AWS, Rate Limiting, 리더 선출
 
@@ -220,6 +239,7 @@ bluetape4k-workshop/
 ├── exposed/                # JetBrains Exposed ORM
 ├── gateway/                # API Gateway + 마이크로서비스
 ├── gatling/                # 부하/성능 테스트
+├── graph/                  # TinkerGraph, traversal, graph-io 예제
 ├── image-processing/       # 이미지 업로드, VIPS 파생 이미지, 저장소
 ├── io/                     # Okio I/O 예제
 ├── json/                   # Jackson 3 직렬화
