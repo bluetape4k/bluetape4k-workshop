@@ -219,6 +219,8 @@ bluetape4k-kafka = { module = "io.github.bluetape4k:bluetape4k-kafka" }
 bluetape4k-kafka4 = { module = "io.github.bluetape4k:bluetape4k-kafka4" }
 bluetape4k-lettuce = { module = "io.github.bluetape4k:bluetape4k-lettuce" }
 bluetape4k-leader-core = { module = "io.github.bluetape4k.leader:bluetape4k-leader-core" }
+bluetape4k-leader-k8s = { module = "io.github.bluetape4k.leader:bluetape4k-leader-k8s" }
+bluetape4k-leader-micrometer = { module = "io.github.bluetape4k.leader:bluetape4k-leader-micrometer" }
 bluetape4k-leader-redis-lettuce = { module = "io.github.bluetape4k.leader:bluetape4k-leader-redis-lettuce" }
 bluetape4k-leader-zookeeper = { module = "io.github.bluetape4k.leader:bluetape4k-leader-zookeeper" }
 bluetape4k-javers-core = { module = "io.github.bluetape4k.javers:javers-core" }
@@ -680,6 +682,7 @@ aws2-aws-crt-client = { module = "software.amazon.awssdk:aws-crt-client" }
 
 # Kubernetes
 fabric8-kubernetes-client-bom = { module = "io.fabric8:kubernetes-client-bom", version = "7.7.0" }  # https://mvnrepository.com/artifact/io.fabric8/kubernetes-client-bom
+fabric8-kubernetes-client = { module = "io.fabric8:kubernetes-client" }
 
 # JMH / Benchmark
 jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }

@@ -1,0 +1,21 @@
+workshop:
+  leader:
+    k8s:
+      enabled: false
+      namespace: workshop
+      identity: ${HOSTNAME:local-workshop}
+      lease-name: workshop-nightly-export
+      wait-time: 2s
+      lease-time: 30s
+      retry-delay: 50ms
+      job-fixed-delay: 10s
+      simulated-work-time: 100ms
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      application: k8s-lease-micrometer-workshop

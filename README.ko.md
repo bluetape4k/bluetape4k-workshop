@@ -211,6 +211,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Advanced | [`image-processing-advanced-workflow`](image-processing/advanced-workflow/) | `images-vips-java25`, `images-spring-boot`, `micrometer` | S3 또는 local storage | 업로드 → 원본 저장 → WebP 파생 이미지 → unsigned public URL |
 | Advanced | [`image-processing-ocr-api`](image-processing/ocr-api/) | `images-ocr`, `images`, `spring-boot4-core` | In-memory | 검증된 fallback과 선택 Tesseract를 사용하는 multipart OCR API |
 | Advanced | [`leader-leader-election`](leader/) | `coroutines`, `redis`, `testcontainers` | Redis (TC) | 분산 리더 선출: 블로킹, 코루틴, 가상 스레드 |
+| Advanced | [`leader-k8s-lease-micrometer`](leader/k8s-lease-micrometer/) | `leader-k8s`, `micrometer`, `spring-boot4-core` | Kubernetes Lease (opt-in) | Micrometer metric과 함께 배우는 Kubernetes Lease 리더 선출 |
 
 ```bash
 ./gradlew :spring-security-mvc:test

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="1180" viewBox="0 0 980 1180" role="img" aria-labelledby="title desc">
+  <title id="title">Kubernetes Lease Execution Flow</title>
+  <desc id="desc">A top-to-bottom execution flow for scheduled guard attempts, skipped followers, elected task execution, metrics, and handoff.</desc>
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563EB"/>
+    </marker>
+    <style>
+      .canvas{fill:#FBFCF8}.frame{fill:#FFFFFF;stroke:#CBD5E1;stroke-width:2}.title{font-family:"Architects Daughter";font-size:40px;fill:#102033}.subtitle,.stepText,.footer{font-family:"Comic Mono";fill:#415166}.subtitle{font-size:17px}.stepTitle{font-family:"Architects Daughter";font-size:25px;fill:#102033}.stepText{font-size:14px}.box{rx:14;filter:url(#shadow)}.line{fill:none;stroke:#2563EB;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow)}.footer{font-size:14px;fill:#526272}
+    </style>
+  </defs>
+  <rect class="canvas" width="980" height="1180"/>
+  <rect class="frame" x="28" y="24" width="924" height="1132" rx="24"/>
+  <text class="title" x="490" y="78" text-anchor="middle">Kubernetes Lease Execution Flow</text>
+  <text class="subtitle" x="490" y="112" text-anchor="middle">Every scheduled tick takes one vertical path: skipped follower or elected leader.</text>
+
+  <rect class="box" x="300" y="154" width="380" height="86" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+  <text class="stepTitle" x="490" y="190" text-anchor="middle">1. Scheduled tick</text>
+  <text class="stepText" x="490" y="216" text-anchor="middle">record guard attempt</text>
+  <path class="line" d="M 490 240 L 490 310"/>
+
+  <rect class="box" x="286" y="310" width="408" height="92" fill="#FFF7ED" stroke="#C2410C" stroke-width="2"/>
+  <text class="stepTitle" x="490" y="346" text-anchor="middle">2. Try Lease leadership</text>
+  <text class="stepText" x="490" y="372" text-anchor="middle">Fabric8 Lease only when enabled=true</text>
+  <path class="line" d="M 490 402 L 490 476"/>
+
+  <rect class="box" x="176" y="476" width="300" height="92" fill="#ECFEFF" stroke="#0891B2" stroke-width="2"/>
+  <text class="stepTitle" x="326" y="512" text-anchor="middle">3a. Follower</text>
+  <text class="stepText" x="326" y="538" text-anchor="middle">increment skipped meter</text>
+  <rect class="box" x="504" y="476" width="300" height="92" fill="#F0FDF4" stroke="#15803D" stroke-width="2"/>
+  <text class="stepTitle" x="654" y="512" text-anchor="middle">3b. Leader</text>
+  <text class="stepText" x="654" y="538" text-anchor="middle">mark active gauge = 1</text>
+
+  <path class="line" d="M 654 568 L 654 642"/>
+  <rect class="box" x="504" y="642" width="300" height="92" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2"/>
+  <text class="stepTitle" x="654" y="678" text-anchor="middle">4. Work heartbeat</text>
+  <text class="stepText" x="654" y="704" text-anchor="middle">record renew attempt or failure</text>
+  <path class="line" d="M 654 734 L 654 808"/>
+
+  <rect class="box" x="504" y="808" width="300" height="92" fill="#FDF2F8" stroke="#DB2777" stroke-width="2"/>
+  <text class="stepTitle" x="654" y="844" text-anchor="middle">5. Task result</text>
+  <text class="stepText" x="654" y="870" text-anchor="middle">execution counter and duration timer</text>
+  <path class="line" d="M 654 900 L 654 974"/>
+
+  <rect class="box" x="340" y="974" width="300" height="92" fill="#F7FEE7" stroke="#65A30D" stroke-width="2"/>
+  <text class="stepTitle" x="490" y="1010" text-anchor="middle">6. Handoff ready</text>
+  <text class="stepText" x="490" y="1036" text-anchor="middle">active gauge resets to 0</text>
+
+  <path class="line" d="M 326 568 L 326 1020 L 340 1020"/>
+
+  <rect x="110" y="1100" width="760" height="38" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+  <text class="footer" x="490" y="1125" text-anchor="middle">Leader handoff is observed when a new pod later acquires the same Lease name.</text>
+</svg>

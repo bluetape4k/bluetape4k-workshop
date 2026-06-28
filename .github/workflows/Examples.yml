@@ -15,6 +15,7 @@ on:
       - 'json/jsonview-examples/**'
       - 'graph/io-pipeline/**'
       - 'image-processing/ocr-api/**'
+      - 'leader/k8s-lease-micrometer/**'
       - 'messaging/kafka/**'
       - 'shared/**'
       - 'buildSrc/**'
@@ -34,6 +35,7 @@ on:
       - 'json/jsonview-examples/**'
       - 'graph/io-pipeline/**'
       - 'image-processing/ocr-api/**'
+      - 'leader/k8s-lease-micrometer/**'
       - 'messaging/kafka/**'
       - 'shared/**'
       - 'buildSrc/**'
@@ -97,6 +99,7 @@ jobs:
           :jsonview-examples:test
           :graph-io-pipeline:test
           :image-processing-ocr-api:test
+          :leader-k8s-lease-micrometer:test
           --continue
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
@@ -121,6 +124,8 @@ jobs:
             graph/io-pipeline/build/reports/tests/test/
             image-processing/ocr-api/build/test-results/test/*.xml
             image-processing/ocr-api/build/reports/tests/test/
+            leader/k8s-lease-micrometer/build/test-results/test/*.xml
+            leader/k8s-lease-micrometer/build/reports/tests/test/
           retention-days: 7
 
   container-examples:
