@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="1240" viewBox="0 0 1100 1240" role="img" aria-labelledby="title desc">
+  <title id="title">Kubernetes Lease Micrometer Architecture</title>
+  <desc id="desc">Spring Boot scheduler flows top to bottom through a coordinator, Kubernetes Lease elector, guarded task, Micrometer meters, and Prometheus scraping.</desc>
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/>
+    </filter>
+    <marker id="arrowBlue" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563EB"/>
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#15803D"/>
+    </marker>
+    <marker id="arrowOrange" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#C2410C"/>
+    </marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#CBD5E1;stroke-width:2}.title{font-family:"Architects Daughter";font-size:41px;fill:#102033}.subtitle,.cardText,.footer{font-family:"Comic Mono";fill:#415166}.subtitle{font-size:17px}.cardTitle{font-family:"Architects Daughter";font-size:26px;fill:#102033}.cardText{font-size:14px}.node rect{rx:14;filter:url(#shadow)}.line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}.blue{stroke:#2563EB;marker-end:url(#arrowBlue)}.green{stroke:#15803D;marker-end:url(#arrowGreen)}.orange{stroke:#C2410C;marker-end:url(#arrowOrange)}.footer{font-size:14px;fill:#526272}
+    </style>
+  </defs>
+
+  <rect class="canvas" width="1100" height="1240"/>
+  <rect class="frame" x="28" y="24" width="1044" height="1192" rx="24"/>
+  <text class="title" x="550" y="78" text-anchor="middle">Kubernetes Lease Micrometer Architecture</text>
+  <text class="subtitle" x="550" y="112" text-anchor="middle">Scheduler, Lease leadership, task execution, and meters are arranged top-to-bottom.</text>
+
+  <g class="node" data-node="scheduler">
+    <rect x="390" y="150" width="320" height="92" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+    <text class="cardTitle" x="550" y="186" text-anchor="middle">Spring Scheduler</text>
+    <text class="cardText" x="550" y="212" text-anchor="middle">fixedDelay from workshop.leader.k8s</text>
+  </g>
+
+  <g class="node" data-node="task">
+    <rect x="382" y="310" width="336" height="96" fill="#F0FDF4" stroke="#15803D" stroke-width="2"/>
+    <text class="cardTitle" x="550" y="346" text-anchor="middle">K8sLeaseGuardedTask</text>
+    <text class="cardText" x="550" y="372" text-anchor="middle">records attempt, active state, duration</text>
+  </g>
+
+  <g class="node" data-node="coordinator">
+    <rect x="370" y="478" width="360" height="96" fill="#FFF7ED" stroke="#C2410C" stroke-width="2"/>
+    <text class="cardTitle" x="550" y="514" text-anchor="middle">LeaderCoordinator</text>
+    <text class="cardText" x="550" y="540" text-anchor="middle">disabled by default, Kubernetes opt-in</text>
+  </g>
+
+  <g class="node" data-node="lease">
+    <rect x="350" y="646" width="400" height="96" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2"/>
+    <text class="cardTitle" x="550" y="682" text-anchor="middle">Kubernetes Lease Elector</text>
+    <text class="cardText" x="550" y="708" text-anchor="middle">namespace, identity, waitTime, leaseTime</text>
+  </g>
+
+  <g class="node" data-node="k8sapi">
+    <rect x="365" y="814" width="370" height="96" fill="#ECFEFF" stroke="#0891B2" stroke-width="2"/>
+    <text class="cardTitle" x="550" y="850" text-anchor="middle">Kubernetes API</text>
+    <text class="cardText" x="550" y="876" text-anchor="middle">coordination.k8s.io/v1 Lease + RBAC</text>
+  </g>
+
+  <g class="node" data-node="metrics">
+    <rect x="215" y="994" width="300" height="92" fill="#FDF2F8" stroke="#DB2777" stroke-width="2"/>
+    <text class="cardTitle" x="365" y="1030" text-anchor="middle">Micrometer Meters</text>
+    <text class="cardText" x="365" y="1056" text-anchor="middle">active, attempts, renew, executions</text>
+  </g>
+
+  <g class="node" data-node="prometheus">
+    <rect x="585" y="994" width="300" height="92" fill="#F7FEE7" stroke="#65A30D" stroke-width="2"/>
+    <text class="cardTitle" x="735" y="1030" text-anchor="middle">Prometheus Endpoint</text>
+    <text class="cardText" x="735" y="1056" text-anchor="middle">/actuator/prometheus</text>
+  </g>
+
+  <g class="edge" data-edge="scheduler-&gt;task" data-label="scheduled tick">
+    <path class="line blue" d="M 550 242 L 550 310"/>
+  </g>
+  <g class="edge" data-edge="task-&gt;coordinator" data-label="runIfLeader">
+    <path class="line green" d="M 550 406 L 550 478"/>
+  </g>
+  <g class="edge" data-edge="coordinator-&gt;lease" data-label="enabled path">
+    <path class="line orange" d="M 550 574 L 550 646"/>
+  </g>
+  <g class="edge" data-edge="lease-&gt;k8sapi" data-label="lease CRUD">
+    <path class="line blue" d="M 550 742 L 550 814"/>
+  </g>
+  <g class="edge" data-edge="k8sapi-&gt;metrics" data-label="leadership result">
+    <path class="line orange" d="M 505 910 L 505 954 L 365 954 L 365 994"/>
+  </g>
+  <g class="edge" data-edge="k8sapi-&gt;prometheus" data-label="scraped meters">
+    <path class="line green" d="M 595 910 L 595 954 L 735 954 L 735 994"/>
+  </g>
+
+  <rect x="120" y="1134" width="860" height="44" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+  <text class="footer" x="550" y="1162" text-anchor="middle">Default tests stop at the disabled coordinator; real Kubernetes Lease work is opt-in with RBAC.</text>
+</svg>
