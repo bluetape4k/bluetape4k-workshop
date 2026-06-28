@@ -7,6 +7,7 @@ on:
     branches: [ develop, main ]
     paths:
       - 'exposed/webflux-r2dbc/**'
+      - 'exposed/javers-persistence-audit/**'
       - 'spring-data/r2dbc-webflux-exposed/**'
       - 'spring-boot/cache-caffeine/**'
       - 'spring-boot/cache-redis/**'
@@ -27,6 +28,7 @@ on:
     branches: [ develop, main ]
     paths:
       - 'exposed/webflux-r2dbc/**'
+      - 'exposed/javers-persistence-audit/**'
       - 'spring-data/r2dbc-webflux-exposed/**'
       - 'spring-boot/cache-caffeine/**'
       - 'spring-boot/cache-redis/**'
@@ -148,12 +150,14 @@ jobs:
 
       # Representative Testcontainers examples run in one sequential lane:
       # - exposed-webflux-r2dbc: PostgreSQL-backed Exposed R2DBC consumer path
+      # - exposed-javers-persistence-audit: Redis-backed JaVers audit history
       # - spring-boot-cache-redis: Redis-backed cache path
       # - messaging-kafka: Kafka-backed messaging path
       - name: Run container-backed examples
         run: >-
           ./gradlew
           :exposed-webflux-r2dbc:test
+          :exposed-javers-persistence-audit:test
           :spring-boot-cache-redis:test
           :messaging-kafka:test
           --continue
@@ -171,6 +175,8 @@ jobs:
           path: |
             exposed/webflux-r2dbc/build/test-results/test/*.xml
             exposed/webflux-r2dbc/build/reports/tests/test/
+            exposed/javers-persistence-audit/build/test-results/test/*.xml
+            exposed/javers-persistence-audit/build/reports/tests/test/
             spring-boot/cache-redis/build/test-results/test/*.xml
             spring-boot/cache-redis/build/reports/tests/test/
             messaging/kafka/build/test-results/test/*.xml
