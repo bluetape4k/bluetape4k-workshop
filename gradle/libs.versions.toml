@@ -105,7 +105,7 @@ eclipse-collections = "13.0.0"  # https://mvnrepository.com/artifact/org.eclipse
 jctools = "4.0.6"  # https://mvnrepository.com/artifact/org.jctools/jctools-core
 ow2-asm = "9.10.1"  # https://mvnrepository.com/artifact/org.ow2.asm/asm
 
-junit-jupiter = "6.1.0"  # https://mvnrepository.com/artifact/org.junit/junit-bom
+junit-jupiter = "6.1.1"  # https://mvnrepository.com/artifact/org.junit/junit-bom
 junit-platform = "6.0.3"  # https://mvnrepository.com/artifact/org.junit.platform/junit-platform-commons
 assertj-core = "3.27.7"  # https://mvnrepository.com/artifact/org.assertj/assertj-core
 mockk = "1.14.11"  # https://mvnrepository.com/artifact/io.mockk/mockk
