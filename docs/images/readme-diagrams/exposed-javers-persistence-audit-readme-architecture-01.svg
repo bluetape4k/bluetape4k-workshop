@@ -8,6 +8,10 @@
       .title{font-family:"Architects Daughter";font-size:42px;fill:#142033}
       .subtitle,.small,.footer{font-family:"Comic Mono";fill:#435469}
       .subtitle{font-size:17px}.small{font-size:15px}.footer{font-size:13px;fill:#5f7181}
+      .layerBand{fill:#f6f9fc;stroke:#cbd8e4;stroke-width:1.7}
+      .layerBand.inputLayer{fill:#f2f8ff}.layerBand.serviceLayer{fill:#f3fbf4}.layerBand.auditLayer{fill:#f8f4ff}.layerBand.redisLayer{fill:#fff4f3}.layerBand.rowLayer{fill:#fff8ea}.layerBand.streamLayer{fill:#fff6f1}
+      .layerLabel{font-family:"Architects Daughter";font-size:23px;fill:#26394a}
+      .layerHint{font-family:"Comic Mono";font-size:13px;fill:#66798a}
       .node rect{stroke-width:2.4}
       .input{fill:#eef7ff;stroke:#7aa6cf}.service{fill:#effaf2;stroke:#75a985}.audit{fill:#f7f1ff;stroke:#9b83c7}.redis{fill:#fff1f0;stroke:#d06a63}.db{fill:#fff7e8;stroke:#c59352}.kafka{fill:#fff8f3;stroke:#c77d61}
       .cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#142033}
@@ -29,6 +33,30 @@
   <rect class="frame" x="28" y="28" width="1444" height="1264" rx="18"/>
   <text class="title" x="750" y="82" text-anchor="middle">Redis-backed JaVers Audit over Exposed</text>
   <text class="subtitle" x="750" y="115" text-anchor="middle">Top-to-bottom write order: validate request, commit audit history, then materialize the current order row.</text>
+
+  <rect class="layerBand inputLayer" x="150" y="140" width="1200" height="148" rx="18"/>
+  <text class="layerLabel" x="192" y="194">Request layer</text>
+  <text class="layerHint" x="192" y="222">example API contract</text>
+
+  <rect class="layerBand serviceLayer" x="150" y="318" width="1200" height="172" rx="18"/>
+  <text class="layerLabel" x="192" y="378">Application layer</text>
+  <text class="layerHint" x="192" y="406">validation and ordering</text>
+
+  <rect class="layerBand auditLayer" x="150" y="516" width="1200" height="174" rx="18"/>
+  <text class="layerLabel" x="192" y="578">Audit engine layer</text>
+  <text class="layerHint" x="192" y="606">JaVers commit/query API</text>
+
+  <rect class="layerBand redisLayer" x="150" y="718" width="1200" height="176" rx="18"/>
+  <text class="layerLabel" x="192" y="782">History store layer</text>
+  <text class="layerHint" x="192" y="810">Redis-backed snapshots</text>
+
+  <rect class="layerBand rowLayer" x="150" y="922" width="1200" height="176" rx="18"/>
+  <text class="layerLabel" x="192" y="986">Current state layer</text>
+  <text class="layerHint" x="192" y="1014">Exposed table row</text>
+
+  <rect class="layerBand streamLayer" x="150" y="1122" width="1200" height="126" rx="18"/>
+  <text class="layerLabel" x="192" y="1170">Stream boundary</text>
+  <text class="layerHint" x="192" y="1198">write-only alternative</text>
 
   <g class="node" data-node="caller">
     <rect class="input" x="470" y="158" width="560" height="112" rx="12"/>
@@ -53,7 +81,7 @@
 
   <g class="node" data-node="redis">
     <rect class="redis" x="470" y="740" width="560" height="132" rx="12"/>
-    <image data-bluetape4k-icon="redis" data-source="docs/icons/testcontainers/storage/redis.svg" x="500" y="771" width="54" height="54" href="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjRkY0NDM4IiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+UmVkaXM8L3RpdGxlPjxwYXRoIGQ9Ik0yMi43MSAxMy4xNDVjLTEuNjYgMi4wOTItMy40NTIgNC40ODMtNy4wMzggNC40ODMtMy4yMDMgMC00LjM5Ny0yLjgyNS00LjQ4LTUuMTIuNzAxIDEuNDg0IDIuMDczIDIuNjg1IDQuMjE0IDIuNjMgNC4xMTctLjEzMyA2Ljk0LTMuODUyIDYuOTQtNy4yMzkgMC00LjA1LTMuMDIyLTYuOTcyLTguMjY4LTYuOTcyLTMuNzUyIDAtOC40IDEuNDI4LTExLjQ1NSAzLjY4NUMyLjU5IDYuOTM3IDMuODg1IDkuOTU4IDQuMzUgOS42MjZjMi42NDgtMS45MDQgNC43NDgtMy4xMyA2Ljc4NC0zLjc0NEM4LjEyIDkuMjQ0Ljg4NiAxNy4wNSAwIDE4LjQyNWMuMSAxLjI2MSAxLjY2IDQuNjQ4IDIuNDI0IDQuNjQ4LjIzMiAwIC40MzEtLjEzMy42NjQtLjM2NWExMDAuNDkgMTAwLjQ5IDAgMCAwIDUuNTQtNi43NjVjLjIyMiAzLjEwNCAxLjc0OCA2Ljg5OCA2LjAxNCA2Ljg5OCAzLjgxOSAwIDcuNjA0LTIuNzU2IDkuMzMtOC45NjUuMi0uNzY0LS43My0xLjM2MS0xLjI2MS0uNzN6bS00LjM0OS01LjAxM2MwIDEuOTU5LTEuOTI2IDIuOTIyLTMuNjg1IDIuOTIyLS45NDEgMC0xLjY2NC0uMjQ3LTIuMjM1LS41NjggMS4wNTEtMS41OTIgMi4wOTItMy4yMjUgMy4yMS00Ljk3MyAxLjk3Mi4zMzQgMi43MSAxLjQzIDIuNzEgMi42MTl6Ii8+PC9zdmc+" preserveAspectRatio="xMidYMid meet"/>
+    <image data-bluetape4k-icon="redis" data-source="docs/icons/redis/redis-icon.svg" x="500" y="771" width="54" height="54" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBoZWlnaHQ9IjY0IiB2aWV3Qm94PSIwIDAgMzIgMzIiIHdpZHRoPSI2NCI+PGcgdHJhbnNmb3JtPSJtYXRyaXgoLjg0ODMyNyAwIDAgLjg0ODMyNyAtNy44ODM1NzMgLTkuNDQ5NjkxKSI+PHVzZSB4bGluazpocmVmPSIjQiIgZmlsbD0iI2E0MWUxMSIvPjxwYXRoIGQ9Ik00NS41MzYgMzQuOTVjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTRzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2LTIuMDQtMS42MTMtLjA3Ny0yLjM4MmwxNS4zMzItNS45MzZjMi4zMzItLjgzNiAzLjE0LS44NjcgNS4xMjYtLjE0UzQzLjU1IDMxLjg3IDQ1LjUxIDMyLjZzMi4wMzcgMS4zMS4wMjQgMi4zNnoiIGZpbGw9IiNkODJjMjAiLz48dXNlIHhsaW5rOmhyZWY9IiNCIiB5PSItNi4yMTgiIGZpbGw9IiNhNDFlMTEiLz48dXNlIHhsaW5rOmhyZWY9IiNDIiBmaWxsPSIjZDgyYzIwIi8+PHBhdGggZD0iTTQ1LjUzNiAyNi4wOThjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTVzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2Yy0xLS40NzgtMS41MjQtLjg4LTEuNTI0LTEuMjZWMjEuNTVzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6IiBmaWxsPSIjYTQxZTExIi8+PHVzZSB4bGluazpocmVmPSIjQyIgeT0iLTYuNDQ5IiBmaWxsPSIjZDgyYzIwIi8+PGcgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTI5LjA5NiAyMC43MTJsLTEuMTgyLTEuOTY1LTMuNzc0LS4zNCAyLjgxNi0xLjAxNi0uODQ1LTEuNTYgMi42MzYgMS4wMyAyLjQ4Ni0uODE0LS42NzIgMS42MTIgMi41MzQuOTUtMy4yNjguMzR6TTIyLjggMjQuNjI0bDguNzQtMS4zNDItMi42NCAzLjg3MnoiLz48ZWxsaXBzZSBjeD0iMjAuNDQ0IiByeD0iNC42NzIiIHJ5PSIxLjgxMSIgY3k9IjIxLjQwMiIvPjwvZz48cGF0aCBkPSJNNDIuMTMyIDIxLjEzOGwtNS4xNyAyLjA0Mi0uMDA0LTQuMDg3eiIgZmlsbD0iIzdhMGMwMCIvPjxwYXRoIGQ9Ik0zNi45NjMgMjMuMThsLS41Ni4yMi01LjE2Ni0yLjA0MiA1LjcyMy0yLjI2NHoiIGZpbGw9IiNhZDIxMTUiLz48L2c+PGRlZnMgPjxwYXRoIGlkPSJCIiBkPSJNNDUuNTM2IDM4Ljc2NGMtMi4wMTMgMS4wNS0xMi40NCA1LjMzNy0xNC42NiA2LjQ5NHMtMy40NTMgMS4xNDYtNS4yMDcuMzA4LTEyLjg1LTUuMzItMTQuODUtNi4yNzZjLTEtLjQ3OC0xLjUyNC0uODgtMS41MjQtMS4yNnYtMy44MTNzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6Ii8+PHBhdGggaWQ9IkMiIGQ9Ik00NS41MzYgMjguNzMzYy0yLjAxMyAxLjA1LTEyLjQ0IDUuMzM3LTE0LjY2IDYuNDk0cy0zLjQ1MyAxLjE0Ni01LjIwNy4zMDgtMTIuODUtNS4zMi0xNC44NS02LjI3Ni0yLjA0LTEuNjEzLS4wNzctMi4zODJsMTUuMzMyLTUuOTM1YzIuMzMyLS44MzcgMy4xNC0uODY3IDUuMTI2LS4xNHMxMi4zNSA0Ljg1MyAxNC4zMTIgNS41NyAyLjAzNyAxLjMxLjAyNCAyLjM2eiIvPjwvZGVmcz48L3N2Zz4=" preserveAspectRatio="xMidYMid meet"/>
     <text class="cardTitle" x="750" y="785" text-anchor="middle">Redis Snapshot Store</text>
     <text class="nodeText" x="750" y="816" text-anchor="middle">durable, read-capable JaVers audit history</text>
     <text class="nodeText" x="750" y="841" text-anchor="middle">service rebuild can still read previous commits</text>
