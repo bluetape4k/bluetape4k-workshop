@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="720" viewBox="0 0 1120 720" role="img" aria-labelledby="title desc">
+  <title id="title">Realtime Search Pipeline Scenario</title>
+  <desc id="desc">A top-to-bottom scenario diagram for debounced realtime search with settings, cancellation, and redacted logs.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f7fbff"/>
+      <stop offset="100%" stop-color="#f8f5ef"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9 z" fill="#355c7d"/>
+    </marker>
+    <style>
+      .title { font-family: 'Architects Daughter', 'Comic Mono', sans-serif; font-size: 34px; fill: #1f2a37; }
+      .subtitle, .label, .body { font-family: 'Comic Mono', 'Architects Daughter', sans-serif; fill: #263238; }
+      .subtitle { font-size: 17px; }
+      .label { font-size: 19px; font-weight: 700; }
+      .body { font-size: 14px; }
+      .card { fill: #ffffff; stroke: #355c7d; stroke-width: 2.5; rx: 7; }
+      .accent-a { fill: #eaf4ff; stroke: #2f80ed; }
+      .accent-b { fill: #eef8ef; stroke: #2d9d78; }
+      .accent-c { fill: #fff6df; stroke: #c78a15; }
+      .accent-d { fill: #f6ecff; stroke: #7c4dcc; }
+      .arrow { fill: none; stroke: #355c7d; stroke-width: 3; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1120" height="720" fill="url(#bg)"/>
+  <text class="title" x="560" y="58" text-anchor="middle">Realtime Search Scenario</text>
+  <text class="subtitle" x="560" y="88" text-anchor="middle">type bursts, snapshot settings, cancel stale work, stop safely</text>
+
+  <g transform="translate(300 128)">
+    <rect class="card accent-a" x="0" y="0" width="520" height="82"/>
+    <text class="label" x="260" y="31" text-anchor="middle">1. User query burst</text>
+    <text class="body" x="260" y="57" text-anchor="middle">"r", "re", "red", "redi", "redis"</text>
+  </g>
+  <path class="arrow" d="M 560 210 L 560 250"/>
+
+  <g transform="translate(300 250)">
+    <rect class="card accent-b" x="0" y="0" width="520" height="82"/>
+    <text class="label" x="260" y="31" text-anchor="middle">2. Debounce and normalize</text>
+    <text class="body" x="260" y="57" text-anchor="middle">keep the latest non-blank query from the burst</text>
+  </g>
+  <path class="arrow" d="M 560 332 L 560 372"/>
+
+  <g transform="translate(300 372)">
+    <rect class="card accent-c" x="0" y="0" width="520" height="82"/>
+    <text class="label" x="260" y="31" text-anchor="middle">3. Attach latest settings</text>
+    <text class="body" x="260" y="57" text-anchor="middle">tenant, locale, mode, flags, result limit</text>
+  </g>
+  <path class="arrow" d="M 560 454 L 560 494"/>
+
+  <g transform="translate(300 494)">
+    <rect class="card accent-d" x="0" y="0" width="520" height="82"/>
+    <text class="label" x="260" y="31" text-anchor="middle">4. Search with cancellation</text>
+    <text class="body" x="260" y="57" text-anchor="middle">new query or session close cancels stale adapter work</text>
+  </g>
+  <path class="arrow" d="M 560 576 L 560 616"/>
+
+  <g transform="translate(300 616)">
+    <rect class="card" x="0" y="0" width="520" height="64"/>
+    <text class="label" x="260" y="28" text-anchor="middle">5. Redacted result stream</text>
+    <text class="body" x="260" y="50" text-anchor="middle">hits are emitted; logs never reveal query or tenant text</text>
+  </g>
+</svg>

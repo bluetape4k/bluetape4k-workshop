@@ -16,6 +16,7 @@ on:
       - 'json/jsonview-examples/**'
       - 'graph/io-pipeline/**'
       - 'image-processing/ocr-api/**'
+      - 'kotlin/flow-extensions-search-pipeline/**'
       - 'leader/k8s-lease-micrometer/**'
       - 'messaging/kafka/**'
       - 'shared/**'
@@ -37,6 +38,7 @@ on:
       - 'json/jsonview-examples/**'
       - 'graph/io-pipeline/**'
       - 'image-processing/ocr-api/**'
+      - 'kotlin/flow-extensions-search-pipeline/**'
       - 'leader/k8s-lease-micrometer/**'
       - 'messaging/kafka/**'
       - 'shared/**'
@@ -101,6 +103,7 @@ jobs:
           :jsonview-examples:test
           :graph-io-pipeline:test
           :image-processing-ocr-api:test
+          :kotlin-flow-extensions-search-pipeline:test
           :leader-k8s-lease-micrometer:test
           --continue
         env:
@@ -126,6 +129,8 @@ jobs:
             graph/io-pipeline/build/reports/tests/test/
             image-processing/ocr-api/build/test-results/test/*.xml
             image-processing/ocr-api/build/reports/tests/test/
+            kotlin/flow-extensions-search-pipeline/build/test-results/test/*.xml
+            kotlin/flow-extensions-search-pipeline/build/reports/tests/test/
             leader/k8s-lease-micrometer/build/test-results/test/*.xml
             leader/k8s-lease-micrometer/build/reports/tests/test/
           retention-days: 7

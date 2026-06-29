@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="760" viewBox="0 0 1120 760" role="img" aria-labelledby="title desc">
+  <title id="title">Search Pipeline Sequence</title>
+  <desc id="desc">Sequence showing debounced query search, stale cancellation, and session close handling.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9 z" fill="#314a67"/>
+    </marker>
+    <style>
+      .title { font-family: 'Architects Daughter', 'Comic Mono', sans-serif; font-size: 34px; fill: #1f2937; }
+      .actor, .message, .note { font-family: 'Comic Mono', 'Architects Daughter', sans-serif; fill: #263238; }
+      .actor { font-size: 16px; font-weight: 700; }
+      .message { font-size: 13px; }
+      .note { font-size: 13px; fill: #52616f; }
+      .box { fill: #ffffff; stroke: #314a67; stroke-width: 2.2; rx: 7; }
+      .lifeline { stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 7 7; }
+      .call { fill: none; stroke: #314a67; stroke-width: 2.6; marker-end: url(#arrow); }
+      .return { fill: none; stroke: #2d9d78; stroke-width: 2.6; stroke-dasharray: 8 5; marker-end: url(#arrow); }
+      .message-label { fill: #fbfcfe; stroke: #d4dce6; stroke-width: 1.2; rx: 5; }
+    </style>
+  </defs>
+  <rect width="1120" height="760" fill="#fbfcfe"/>
+  <text class="title" x="560" y="44" text-anchor="middle">Search Pipeline Sequence</text>
+
+  <rect class="box" x="48" y="64" width="170" height="58"/>
+  <text class="actor" x="133" y="99" text-anchor="middle">Query Flow</text>
+  <rect class="box" x="260" y="64" width="170" height="58"/>
+  <text class="actor" x="345" y="99" text-anchor="middle">Settings Flow</text>
+  <rect class="box" x="472" y="64" width="170" height="58"/>
+  <text class="actor" x="557" y="99" text-anchor="middle">Pipeline</text>
+  <rect class="box" x="684" y="64" width="170" height="58"/>
+  <text class="actor" x="769" y="99" text-anchor="middle">Adapter</text>
+  <rect class="box" x="896" y="64" width="170" height="58"/>
+  <text class="actor" x="981" y="99" text-anchor="middle">Collector</text>
+
+  <path class="lifeline" d="M 133 122 L 133 706"/>
+  <path class="lifeline" d="M 345 122 L 345 706"/>
+  <path class="lifeline" d="M 557 122 L 557 706"/>
+  <path class="lifeline" d="M 769 122 L 769 706"/>
+  <path class="lifeline" d="M 981 122 L 981 706"/>
+
+  <path class="call" d="M 133 156 L 557 156"/>
+  <rect class="message-label" x="254" y="174" width="182" height="24"/>
+  <text class="message" x="345" y="191" text-anchor="middle">query burst emits</text>
+
+  <path class="call" d="M 345 242 L 557 242"/>
+  <rect class="message-label" x="374" y="260" width="154" height="24"/>
+  <text class="message" x="451" y="277" text-anchor="middle">latest settings</text>
+
+  <path class="call" d="M 557 328 L 769 328"/>
+  <rect class="message-label" x="584" y="346" width="158" height="24"/>
+  <text class="message" x="663" y="363" text-anchor="middle">start search A</text>
+
+  <path class="call" d="M 133 414 L 557 414"/>
+  <rect class="message-label" x="236" y="432" width="218" height="24"/>
+  <text class="message" x="345" y="449" text-anchor="middle">newer query supersedes</text>
+
+  <path class="call" d="M 557 500 L 769 500"/>
+  <rect class="message-label" x="566" y="518" width="194" height="24"/>
+  <text class="message" x="663" y="535" text-anchor="middle">cancel A, start B</text>
+
+  <path class="return" d="M 769 586 L 981 586"/>
+  <rect class="message-label" x="784" y="604" width="182" height="24"/>
+  <text class="message" x="875" y="621" text-anchor="middle">redacted result</text>
+
+  <text class="note" x="557" y="690" text-anchor="middle">Session close races every adapter call and cancels suspended work.</text>
+</svg>
