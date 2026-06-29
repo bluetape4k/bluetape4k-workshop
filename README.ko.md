@@ -139,6 +139,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Basic | [`flow-extensions-parallel-enrichment`](kotlin/flow-extensions-parallel-enrichment/) | `coroutines`, `junit5` | In-memory | 고객/재고/프로모션 조회를 병렬 Flow로 enrichment |
 | Basic | [`flow-extensions-subject-bridge`](kotlin/flow-extensions-subject-bridge/) | `coroutines`, `junit5` | In-memory | bluetape4k Subject 타입으로 callback-to-Flow bridge 구성 |
 | Advanced | [`flow-extensions-race-fallback`](kotlin/flow-extensions-race-fallback/) | `coroutines`, `junit5` | In-memory | 여러 source Flow의 race, fallback, eager concat, merge, materialized error 의미론 |
+| Basic | [`flow-extensions-search-pipeline`](kotlin/flow-extensions-search-pipeline/) | `coroutines`, `junit5` | In-memory | debounce, 최신 settings, 오래된 검색 취소, session stop, redacted Flow logging으로 실시간 검색 파이프라인 구성 |
 | Basic | [`virtualthreads-rules`](virtualthreads/rules/) | `logging` | In-memory | 가상 스레드 피닝 방지, synchronized 회피 |
 | Advanced | [`virtualthreads-spring-mvc-tomcat`](virtualthreads/spring-mvc-tomcat/) | `logging`, `testcontainers` | PostgreSQL (TC) | 가상 스레드 실행기를 활용한 Spring MVC |
 | Advanced | [`virtualthreads-spring-webflux`](virtualthreads/spring-webflux/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | 가상 스레드 디스패처를 활용한 WebFlux |
