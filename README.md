@@ -113,7 +113,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 
 ### 3. Serialization & Messaging
 
-> Jackson 3, JsonView, Kafka, Kafka Reply
+> Jackson 3, JsonView, Kafka, Kafka Reply, Outbox fallback
 
 | Level | Module | bluetape4k libs | Infra | Learning outcome |
 |-------|--------|-----------------|-------|-----------------|
@@ -121,10 +121,12 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Basic | [`jsonview-examples`](json/jsonview-examples/) | `jackson3` | In-memory | `@JsonView` for selective field projection |
 | Basic | [`messaging-kafka`](messaging/kafka/) | `jackson3`, `coroutines`, `testcontainers` | Kafka (TC) | Kafka producer/consumer with coroutines |
 | Advanced | [`messaging-kafka-reply`](messaging/kafka-reply/) | `jackson3`, `coroutines`, `testcontainers` | Kafka (TC) | Kafka request-reply pattern with `ReplyingKafkaTemplate` |
+| Advanced | [`messaging-kafka-outbox-fallback`](messaging/kafka-outbox-fallback/) | `jackson3`, `exposed-jdbc`, `testcontainers`, `micrometer` | PostgreSQL + Kafka (TC) | Kafka-first publication with durable outbox fallback and relay/reconciler recovery |
 
 ```bash
 ./gradlew :jackson-examples:test
 ./gradlew :messaging-kafka:test
+./gradlew :messaging-kafka-outbox-fallback:test --max-workers=1
 ```
 
 ---
