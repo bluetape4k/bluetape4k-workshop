@@ -30,7 +30,9 @@ Six review lanes checked correctness, cancellation behavior, Kotlin/API style, l
 - `./scripts/smoke-validate.sh async` passed and included `:kotlin-flow-extensions-metrics-sampling:test`.
 - `./scripts/smoke-validate.sh stale-check` passed: 86 active modules, no stale README refs, no broken README image links.
 - `node scripts/validate-readme-language.mjs`, `node scripts/validate-readme-parity.mjs`, `node scripts/validate-readme-architecture-diagrams.mjs`, and `node scripts/validate-sequence-diagrams.mjs` passed.
-- Diagram XML, geometry, endpoint, and sequence-style audits passed for the new SVGs.
+- Diagram XML, geometry, endpoint, connector, mixed-corner, and sequence-style audits passed for the new SVGs.
+- Connector audit evidence: architecture `PASS markers=1 connectors=0 cards=5 intrusions=0 crossings=0`; sequence `PASS markers=1 connectors=0 cards=0 intrusions=0 crossings=0`.
+- Mixed-corner audit evidence: `PASS files=2 paths=7 q_bends=0 failures=0`.
 - PNG visual inspection passed for architecture, sequence, and contact sheet.
 - `actionlint .github/workflows/Examples.yml` passed.
 - `git diff --check` passed.

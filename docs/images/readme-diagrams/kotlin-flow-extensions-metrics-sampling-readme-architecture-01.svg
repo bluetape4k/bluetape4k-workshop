@@ -2,8 +2,8 @@
   <title id="title">Metrics Sampling Architecture</title>
   <desc id="desc">A top-to-bottom layered architecture for Flow based metrics sampling and transition analysis.</desc>
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M 1 1 L 9 5 L 1 9 z" fill="#314a67"/>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="14" markerHeight="14" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#314a67" stroke="#314a67" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
     <style>
       .title { font-family: 'Architects Daughter', 'Comic Mono'; font-size: 34px; fill: #1f2937; }
