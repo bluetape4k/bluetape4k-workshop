@@ -1,86 +1,164 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="760" viewBox="0 0 1120 760" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1040" viewBox="0 0 1400 1040" role="img" aria-labelledby="title desc">
   <title id="title">Metrics Sampling Sequence</title>
-  <desc id="desc">Sequence showing leading preview, trailing dashboard sampling, pairwise transition analysis, and lifecycle stop handling.</desc>
+  <desc id="desc">Best-practices sequence diagram showing Flow samples, leading and trailing throttling, pairwise metric analysis, lifecycle stop handling, and final collector output.</desc>
   <defs>
-    <marker id="arrow" viewBox="0 0 16 16" refX="13" refY="8" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
-      <path d="M 3 3 L 13 8 L 3 13 z" fill="#314a67"/>
-    </marker>
     <style>
-      .title { font-family: 'Architects Daughter', 'Comic Mono'; font-size: 34px; fill: #1f2937; }
-      .actor, .message, .note { font-family: 'Comic Mono', 'Architects Daughter'; fill: #263238; }
-      .actor { font-size: 16px; font-weight: 700; }
-      .message { font-size: 13px; }
-      .note { font-size: 13px; fill: #52616f; }
-      .box { fill: #ffffff; stroke: #314a67; stroke-width: 2.2; rx: 7; }
-      .header { fill: #eaf2fb; stroke: #314a67; stroke-width: 2.2; rx: 7; }
-      .lifeline { stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 7 7; }
-      .activation { fill: #eefaf3; stroke: #2d9d78; stroke-width: 1.6; rx: 4; }
-      .call { fill: none; stroke: #314a67; stroke-width: 2.6; marker-end: url(#arrow); }
-      .return { fill: none; stroke: #2d9d78; stroke-width: 2.6; stroke-dasharray: 8 5; marker-end: url(#arrow); }
-      .message-label { fill: #fbfcfe; stroke: #d4dce6; stroke-width: 1.2; rx: 5; }
-      .label { fill: none; stroke: none; rx: 12; }
+      text { letter-spacing: 0; }
+      .title { font-family: "Architects Daughter"; font-size: 40px; font-weight: 400; fill: #263238; }
+      .subtitle, .msg, .note, .footer, .role, .badgeText { font-family: "Comic Mono"; fill: #36464f; }
+      .subtitle { font-size: 18px; }
+      .participant { font-family: "Architects Daughter"; font-size: 20px; font-weight: 400; fill: #1f3138; }
+      .role { font-size: 13px; fill: #546a73; }
+      .msg { font-size: 14px; }
+      .note { font-size: 13px; fill: #60727d; }
+      .footer { font-size: 14px; fill: #60727d; }
+      .frame { fill: #fbfcf8; stroke: #41545d; stroke-width: 3; }
+      .canvas { fill: #fbfcf8; }
+      .header { fill: #ffffff; stroke: #546e7a; stroke-width: 2; }
+      .box { fill: #ffffff; stroke: #546e7a; stroke-width: 2; }
+      .lifeline { stroke: #9aaab1; stroke-width: 2; stroke-dasharray: 7 8; }
+      .activation { fill: #f3ecdf; stroke: #8f784e; stroke-width: 1.5; }
+      .phase { fill: none; stroke: #78909c; stroke-width: 3; stroke-dasharray: 12 7; }
+      .phaseLabel { fill: #ffffff; stroke: #d7e0e4; stroke-width: 1.5; }
+      .label { fill: #ffffff; stroke-width: 1.5; }
+      .flowLabel { stroke: #9cc2d1; }
+      .sampleLabel { stroke: #d0b078; }
+      .analyzeLabel { stroke: #b6c9a4; }
+      .stopLabel { stroke: #d9abab; }
+      .returnLabel { stroke: #c8b38f; }
+      .badge { stroke-width: 1.8; }
+      .flowBadge { fill: #eaf4f8; stroke: #3f7d9c; }
+      .sampleBadge { fill: #fff4df; stroke: #a2743d; }
+      .analyzeBadge { fill: #eef7f0; stroke: #6e8f4f; }
+      .stopBadge { fill: #fff0f0; stroke: #b86868; }
+      .returnBadge { fill: #fff7e8; stroke: #9b7d54; }
+      .badgeText { font-size: 12px; font-weight: 700; }
+      .flowText, .badgeText.flowText { fill: #2f6f8e; }
+      .sampleText, .badgeText.sampleText { fill: #855a29; }
+      .analyzeText, .badgeText.analyzeText { fill: #55783f; }
+      .stopText, .badgeText.stopText { fill: #9d4f4f; }
+      .returnText, .badgeText.returnText { fill: #7f6038; }
+      .call { fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+      .return { fill: none; stroke-width: 2.5; stroke-dasharray: 8 6; stroke-linecap: round; stroke-linejoin: round; }
+      .message-label { fill: #ffffff; opacity: 0; }
     </style>
+    <marker viewBox="0 0 10 10" markerUnits="userSpaceOnUse" id="arrowFlow" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#3f7d9c" stroke="#3f7d9c" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none!important"/>
+    </marker>
+    <marker viewBox="0 0 10 10" markerUnits="userSpaceOnUse" id="arrowSample" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#a2743d" stroke="#a2743d" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none!important"/>
+    </marker>
+    <marker viewBox="0 0 10 10" markerUnits="userSpaceOnUse" id="arrowAnalyze" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#6e8f4f" stroke="#6e8f4f" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none!important"/>
+    </marker>
+    <marker viewBox="0 0 10 10" markerUnits="userSpaceOnUse" id="arrowStop" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#b86868" stroke="#b86868" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none!important"/>
+    </marker>
+    <marker viewBox="0 0 10 10" markerUnits="userSpaceOnUse" id="arrowReturn" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#9b7d54" stroke="#9b7d54" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none!important"/>
+    </marker>
   </defs>
-  <rect width="1120" height="760" fill="#fbfcfe"/>
-  <text class="title" x="560" y="44" text-anchor="middle">Metrics Sampling Sequence</text>
 
-  <rect class="header" x="44" y="64" width="176" height="58"/>
-  <rect class="box" x="44" y="64" width="176" height="58"/>
-  <text class="actor" x="132" y="99" text-anchor="middle">Metric Flow</text>
-  <rect class="header" x="256" y="64" width="176" height="58"/>
-  <rect class="box" x="256" y="64" width="176" height="58"/>
-  <text class="actor" x="344" y="99" text-anchor="middle">Sampler</text>
-  <rect class="header" x="468" y="64" width="176" height="58"/>
-  <rect class="box" x="468" y="64" width="176" height="58"/>
-  <text class="actor" x="556" y="99" text-anchor="middle">Analyzer</text>
-  <rect class="header" x="680" y="64" width="176" height="58"/>
-  <rect class="box" x="680" y="64" width="176" height="58"/>
-  <text class="actor" x="768" y="99" text-anchor="middle">Lifecycle</text>
-  <rect class="header" x="892" y="64" width="176" height="58"/>
-  <rect class="box" x="892" y="64" width="176" height="58"/>
-  <text class="actor" x="980" y="99" text-anchor="middle">Collector</text>
+  <rect x="24" y="24" width="1352" height="992" rx="20" class="frame"/>
+  <text x="700" y="78" text-anchor="middle" class="title">Metrics Sampling Sequence</text>
+  <text x="700" y="108" text-anchor="middle" class="subtitle">A hot Flow keeps only meaningful samples: preview now, settle later, analyze adjacent deltas, then stop cleanly.</text>
 
-  <path class="lifeline" d="M 132 122 L 132 706"/>
-  <path class="lifeline" d="M 344 122 L 344 706"/>
-  <path class="lifeline" d="M 556 122 L 556 706"/>
-  <path class="lifeline" d="M 768 122 L 768 706"/>
-  <path class="lifeline" d="M 980 122 L 980 706"/>
-  <rect class="activation" x="338" y="148" width="12" height="532"/>
-  <rect class="activation" x="550" y="406" width="12" height="102"/>
-  <rect class="activation" x="762" y="578" width="12" height="48"/>
+  <g>
+    <rect x="70" y="150" width="180" height="72" rx="10" class="box header"/>
+    <text x="160" y="179" text-anchor="middle" class="participant">Metric Flow</text>
+    <text x="160" y="202" text-anchor="middle" class="role">CPU / latency stream</text>
 
-  <path class="call" d="M 132 156 L 344 156"/>
-  <rect class="label" x="154" y="174" width="168" height="24"/>
-  <rect class="message-label" x="154" y="174" width="168" height="24"/>
-  <text class="message" x="238" y="191" text-anchor="middle">samples arrive</text>
+    <rect x="330" y="150" width="190" height="72" rx="10" class="box header"/>
+    <text x="425" y="179" text-anchor="middle" class="participant">Sampler</text>
+    <text x="425" y="202" text-anchor="middle" class="role">leading + trailing</text>
 
-  <path class="return" d="M 344 242 L 980 242"/>
-  <rect class="label" x="579" y="260" width="166" height="24"/>
-  <rect class="message-label" x="579" y="260" width="166" height="24"/>
-  <text class="message" x="662" y="277" text-anchor="middle">leading preview</text>
+    <rect x="604" y="150" width="190" height="72" rx="10" class="box header"/>
+    <text x="699" y="179" text-anchor="middle" class="participant">Analyzer</text>
+    <text x="699" y="202" text-anchor="middle" class="role">pairwise deltas</text>
 
-  <path class="return" d="M 344 328 L 980 328"/>
-  <rect class="label" x="576" y="346" width="172" height="24"/>
-  <rect class="message-label" x="576" y="346" width="172" height="24"/>
-  <text class="message" x="662" y="363" text-anchor="middle">trailing sample</text>
+    <rect x="878" y="150" width="190" height="72" rx="10" class="box header"/>
+    <text x="973" y="179" text-anchor="middle" class="participant">Lifecycle</text>
+    <text x="973" y="202" text-anchor="middle" class="role">takeUntil stop</text>
 
-  <path class="call" d="M 344 414 L 556 414"/>
-  <rect class="label" x="360" y="432" width="180" height="24"/>
-  <rect class="message-label" x="360" y="432" width="180" height="24"/>
-  <text class="message" x="450" y="449" text-anchor="middle">pairwise deltas</text>
+    <rect x="1150" y="150" width="180" height="72" rx="10" class="box header"/>
+    <text x="1240" y="179" text-anchor="middle" class="participant">Collector</text>
+    <text x="1240" y="202" text-anchor="middle" class="role">dashboard + alert</text>
+  </g>
 
-  <path class="return" d="M 556 500 L 980 500"/>
-  <rect class="label" x="634" y="518" width="268" height="24"/>
-  <rect class="message-label" x="634" y="518" width="268" height="24"/>
-  <text class="message" x="768" y="535" text-anchor="middle">significant trend only</text>
+  <line x1="160" y1="222" x2="160" y2="834" class="lifeline"/>
+  <line x1="425" y1="222" x2="425" y2="834" class="lifeline"/>
+  <line x1="699" y1="222" x2="699" y2="834" class="lifeline"/>
+  <line x1="973" y1="222" x2="973" y2="834" class="lifeline"/>
+  <line x1="1240" y1="222" x2="1240" y2="834" class="lifeline"/>
 
-  <path class="call" d="M 768 586 L 344 586"/>
-  <rect class="label" x="438" y="604" width="236" height="24"/>
-  <rect class="message-label" x="438" y="604" width="236" height="24"/>
-  <text class="message" x="556" y="621" text-anchor="middle">takeUntil stop signal</text>
+  <rect x="418" y="316" width="14" height="438" rx="6" class="activation"/>
+  <rect x="692" y="518" width="14" height="132" rx="6" class="activation"/>
+  <rect x="966" y="688" width="14" height="58" rx="6" class="activation"/>
+  <rect x="1233" y="392" width="14" height="320" rx="6" class="activation"/>
 
-  <path class="return" d="M 344 672 L 980 672"/>
-  <rect class="label" x="574" y="690" width="176" height="24"/>
-  <rect class="message-label" x="574" y="690" width="176" height="24"/>
-  <text class="message" x="662" y="707" text-anchor="middle">logged values end</text>
+  <rect x="56" y="256" width="1288" height="278" rx="14" class="phase"/>
+  <rect x="828" y="274" width="438" height="30" rx="15" class="phaseLabel"/>
+  <text x="852" y="294" class="note">sampling window: preview immediately, settle after quiet time</text>
+
+  <rect x="104" y="276" width="376" height="34" rx="17" class="label flowLabel"/>
+  <circle cx="128" cy="293" r="13" class="badge flowBadge"/>
+  <text x="128" y="298" text-anchor="middle" class="badgeText flowText">1</text>
+  <text x="152" y="298" class="msg flowText">samples arrive faster than UI can consume</text>
+  <path d="M 160 330 L 425 330" class="call" stroke="#3f7d9c" marker-end="url(#arrowFlow)"/>
+  <rect class="message-label" x="220" y="346" width="140" height="24"/>
+
+  <rect x="474" y="354" width="398" height="34" rx="17" class="label sampleLabel"/>
+  <circle cx="498" cy="371" r="13" class="badge sampleBadge"/>
+  <text x="498" y="376" text-anchor="middle" class="badgeText sampleText">2</text>
+  <text x="522" y="376" class="msg sampleText">throttleLeading emits first sample in window</text>
+  <path d="M 425 414 L 1240 414" class="return" stroke="#a2743d" marker-end="url(#arrowSample)"/>
+  <rect class="message-label" x="692" y="430" width="220" height="24"/>
+
+  <rect x="472" y="438" width="406" height="34" rx="17" class="label sampleLabel"/>
+  <circle cx="496" cy="455" r="13" class="badge sampleBadge"/>
+  <text x="496" y="460" text-anchor="middle" class="badgeText sampleText">3</text>
+  <text x="520" y="460" class="msg sampleText">throttleTrailing emits last settled sample</text>
+  <path d="M 425 498 L 1240 498" class="return" stroke="#a2743d" marker-end="url(#arrowSample)"/>
+  <rect class="message-label" x="692" y="514" width="220" height="24"/>
+
+  <rect x="72" y="556" width="1256" height="128" rx="14" class="phase"/>
+  <rect x="100" y="574" width="184" height="30" rx="15" class="phaseLabel"/>
+  <text x="124" y="594" class="note">analysis window</text>
+
+  <rect x="450" y="548" width="346" height="34" rx="17" class="label analyzeLabel"/>
+  <circle cx="474" cy="565" r="13" class="badge analyzeBadge"/>
+  <text x="474" y="570" text-anchor="middle" class="badgeText analyzeText">4</text>
+  <text x="498" y="570" class="msg analyzeText">pairwise builds previous/current delta</text>
+  <path d="M 425 628 L 699 628" class="call" stroke="#6e8f4f" marker-end="url(#arrowAnalyze)"/>
+  <rect class="message-label" x="492" y="644" width="154" height="24"/>
+
+  <rect x="722" y="592" width="408" height="34" rx="17" class="label analyzeLabel"/>
+  <circle cx="746" cy="609" r="13" class="badge analyzeBadge"/>
+  <text x="746" y="614" text-anchor="middle" class="badgeText analyzeText">5</text>
+  <text x="770" y="614" class="msg analyzeText">significantChange keeps threshold breaches</text>
+  <path d="M 699 670 L 1240 670" class="return" stroke="#6e8f4f" marker-end="url(#arrowAnalyze)"/>
+  <rect class="message-label" x="854" y="686" width="200" height="24"/>
+
+  <rect x="80" y="710" width="1240" height="130" rx="14" class="phase"/>
+  <rect x="108" y="728" width="198" height="30" rx="15" class="phaseLabel"/>
+  <text x="132" y="748" class="note">lifecycle boundary</text>
+
+  <rect x="606" y="712" width="356" height="34" rx="17" class="label stopLabel"/>
+  <circle cx="630" cy="729" r="13" class="badge stopBadge"/>
+  <text x="630" y="734" text-anchor="middle" class="badgeText stopText">6</text>
+  <text x="654" y="734" class="msg stopText">takeUntil receives explicit stop signal</text>
+  <path d="M 973 774 L 425 774" class="call" stroke="#b86868" marker-end="url(#arrowStop)"/>
+  <rect class="message-label" x="610" y="790" width="180" height="24"/>
+
+  <rect x="544" y="804" width="344" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="568" cy="821" r="13" class="badge returnBadge"/>
+  <text x="568" y="826" text-anchor="middle" class="badgeText returnText">7</text>
+  <text x="592" y="826" class="msg returnText">collector logs final bounded sample set</text>
+  <path d="M 425 862 L 1240 862" class="return" stroke="#9b7d54" marker-end="url(#arrowReturn)"/>
+  <rect class="message-label" x="724" y="878" width="180" height="24"/>
+
+  <rect x="86" y="890" width="1228" height="54" rx="12" fill="#ffffff" stroke="#ccd7da" stroke-width="2"/>
+  <text x="112" y="912" class="note">Flow helpers compose into a bounded learner pipeline: throttleLeading, throttleTrailing, pairwise, and significantChange.</text>
+  <text x="112" y="932" class="note">mapResultCatching preserves cancellation as control flow; takeUntil stops collection with an explicit lifecycle signal.</text>
+  <text x="700" y="982" text-anchor="middle" class="footer">bluetape4k-workshop - kotlin/flow-extensions-metrics-sampling</text>
 </svg>
