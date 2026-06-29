@@ -32,6 +32,7 @@ case "${1:-help}" in
       :jsonview-examples:test \
       :image-processing-advanced-workflow:test \
       :image-processing-ocr-api:test \
+      :kotlin-flow-extensions-event-aggregation:test \
       :kotlin-flow-extensions-search-pipeline:test \
       :leader-k8s-lease-micrometer:test \
       :okio-examples:test \
@@ -125,6 +126,7 @@ case "${1:-help}" in
     run "$GRADLEW \
       :kotlin-coroutines:test \
       :kotlin-design-patterns:test \
+      :kotlin-flow-extensions-event-aggregation:test \
       :kotlin-flow-extensions-search-pipeline:test \
       :vertx-coroutines:test \
       :vertx-vertx-sqlclient:test \
@@ -154,7 +156,7 @@ case "${1:-help}" in
   stale-check)
     echo "=== Gradle project count ==="
     count=$("$GRADLEW" projects --console=plain 2>/dev/null | grep -Ec "Project ':" || true)
-    expected=84
+    expected=85
     echo "Active modules: $count (expected: $expected)"
     [ "$count" -eq "$expected" ] || echo "WARNING: Gradle project count drifted."
 

@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="860" viewBox="0 0 1120 860" role="img" aria-labelledby="title desc">
+  <title id="title">Event Aggregation Architecture</title>
+  <desc id="desc">A top-to-bottom layered architecture for Flow based order event aggregation.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9 z" fill="#314a67"/>
+    </marker>
+    <style>
+      .title { font-family: 'Architects Daughter', 'Comic Mono'; font-size: 34px; fill: #1f2937; }
+      .layer-label, .node-title, .node-body { font-family: 'Comic Mono', 'Architects Daughter'; fill: #263238; }
+      .layer-label { font-size: 16px; font-weight: 700; letter-spacing: 0; }
+      .node-title { font-size: 18px; font-weight: 700; }
+      .node-body { font-size: 13px; }
+      .layer { rx: 8; fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+      .source-layer { fill: #eff6ff; }
+      .operator-layer { fill: #f0fdf4; }
+      .projection-layer { fill: #fff7ed; }
+      .output-layer { fill: #f5f3ff; }
+      .node rect { rx: 7; fill: #ffffff; stroke: #314a67; stroke-width: 2.5; }
+      .operator-card { stroke: #2d9d78; }
+      .projection-card { stroke: #c78a15; }
+      .output-card { stroke: #7c4dcc; }
+      .edge path { fill: none; stroke: #314a67; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1120" height="860" fill="#fbfcfe"/>
+  <text class="title" x="560" y="50" text-anchor="middle">Event Aggregation Architecture</text>
+
+  <rect class="layer source-layer" x="48" y="76" width="1024" height="144"/>
+  <text class="layer-label" x="72" y="206">Source layer</text>
+  <rect class="layer operator-layer" x="48" y="250" width="1024" height="170"/>
+  <text class="layer-label" x="72" y="278">Bounded Flow operator layer</text>
+  <rect class="layer projection-layer" x="48" y="450" width="1024" height="166"/>
+  <text class="layer-label" x="72" y="478">Projection layer</text>
+  <rect class="layer output-layer" x="48" y="646" width="1024" height="166"/>
+  <text class="layer-label" x="72" y="798">Output layer</text>
+
+  <g class="node" data-node="event-stream">
+    <rect x="410" y="110" width="300" height="84"/>
+    <text class="node-title" x="560" y="142" text-anchor="middle">Order Event Stream</text>
+    <text class="node-body" x="560" y="168" text-anchor="middle">validated in-memory replay</text>
+  </g>
+  <g class="node" data-node="operator-chain">
+    <rect class="operator-card" x="350" y="286" width="420" height="100"/>
+    <text class="node-title" x="560" y="318" text-anchor="middle">Flow Operator Examples</text>
+    <text class="node-body" x="560" y="344" text-anchor="middle">chunked, windowed, finite groupBy</text>
+    <text class="node-body" x="560" y="366" text-anchor="middle">bounded summaries before projection</text>
+  </g>
+  <g class="node" data-node="read-model">
+    <rect class="projection-card" x="410" y="500" width="300" height="84"/>
+    <text class="node-title" x="560" y="532" text-anchor="middle">Order Read Model</text>
+    <text class="node-body" x="560" y="558" text-anchor="middle">scanWith immutable snapshots</text>
+  </g>
+  <g class="node" data-node="activity-summary">
+    <rect class="output-card" x="110" y="690" width="260" height="84"/>
+    <text class="node-title" x="240" y="722" text-anchor="middle">Activity Summary</text>
+    <text class="node-body" x="240" y="748" text-anchor="middle">batch and rolling metrics</text>
+  </g>
+  <g class="node" data-node="status-transitions">
+    <rect class="output-card" x="430" y="690" width="260" height="84"/>
+    <text class="node-title" x="560" y="722" text-anchor="middle">Status Transitions</text>
+    <text class="node-body" x="560" y="748" text-anchor="middle">bufferUntilChanged, zipWithNext</text>
+  </g>
+  <g class="node" data-node="audit-output">
+    <rect class="output-card" x="750" y="690" width="260" height="84"/>
+    <text class="node-title" x="880" y="722" text-anchor="middle">Audit Output</text>
+    <text class="node-body" x="880" y="748" text-anchor="middle">redacted Flow log values</text>
+  </g>
+
+  <g class="edge" data-edge="event-stream-&gt;operator-chain" data-label="bounded replay events">
+    <path d="M 560 194 L 560 286"/>
+  </g>
+  <g class="edge" data-edge="operator-chain-&gt;read-model" data-label="projected events">
+    <path d="M 560 386 L 560 500"/>
+  </g>
+  <g class="edge" data-edge="read-model-&gt;activity-summary" data-label="summary values">
+    <path d="M 470 584 L 470 638 L 240 638 L 240 690"/>
+  </g>
+  <g class="edge" data-edge="read-model-&gt;status-transitions" data-label="status states">
+    <path d="M 560 584 L 560 690"/>
+  </g>
+  <g class="edge" data-edge="read-model-&gt;audit-output" data-label="sanitized audit values">
+    <path d="M 650 584 L 650 638 L 880 638 L 880 690"/>
+  </g>
+</svg>
