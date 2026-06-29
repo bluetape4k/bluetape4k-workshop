@@ -33,6 +33,7 @@ case "${1:-help}" in
       :image-processing-advanced-workflow:test \
       :image-processing-ocr-api:test \
       :kotlin-flow-extensions-event-aggregation:test \
+      :kotlin-flow-extensions-metrics-sampling:test \
       :kotlin-flow-extensions-search-pipeline:test \
       :leader-k8s-lease-micrometer:test \
       :okio-examples:test \
@@ -128,6 +129,7 @@ case "${1:-help}" in
       :kotlin-coroutines:test \
       :kotlin-design-patterns:test \
       :kotlin-flow-extensions-event-aggregation:test \
+      :kotlin-flow-extensions-metrics-sampling:test \
       :kotlin-flow-extensions-search-pipeline:test \
       :vertx-coroutines:test \
       :vertx-vertx-sqlclient:test \

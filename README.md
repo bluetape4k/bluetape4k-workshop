@@ -144,6 +144,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Advanced | [`flow-extensions-race-fallback`](kotlin/flow-extensions-race-fallback/) | `coroutines`, `junit5` | In-memory | Race, fallback, eager concat, merge, and materialized error semantics for multi-source Flow reads |
 | Basic | [`flow-extensions-search-pipeline`](kotlin/flow-extensions-search-pipeline/) | `coroutines`, `junit5` | In-memory | Realtime search pipeline with debounce, latest settings, stale-search cancellation, session stop, and redacted Flow logging |
 | Basic | [`flow-extensions-event-aggregation`](kotlin/flow-extensions-event-aggregation/) | `coroutines`, `junit5` | In-memory | Event aggregation with chunked windows, finite grouping, read-model projection, lifecycle transitions, and sanitized audit logging |
+| Basic | [`flow-extensions-metrics-sampling`](kotlin/flow-extensions-metrics-sampling/) | `coroutines`, `junit5` | In-memory | Metrics sampling with leading previews, trailing dashboard values, adjacent deltas, lifecycle stop, and cancellation-safe result mapping |
 | Basic | [`virtualthreads-rules`](virtualthreads/rules/) | `logging` | In-memory | Virtual thread pinning, synchronized avoidance |
 | Advanced | [`virtualthreads-spring-mvc-tomcat`](virtualthreads/spring-mvc-tomcat/) | `logging`, `testcontainers` | PostgreSQL (TC) | Spring MVC with virtual thread executor |
 | Advanced | [`virtualthreads-spring-webflux`](virtualthreads/spring-webflux/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | WebFlux with virtual thread dispatcher |
