@@ -20,7 +20,7 @@
       .sampling-card { stroke: #2d9d78; }
       .analysis-card { stroke: #c7861b; }
       .lifecycle-card { stroke: #7c4dcc; }
-      .edge path { fill: none; stroke: #314a67; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#arrow); }
+      .edge, .edge path { fill: none; stroke: #314a67; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#arrow); }
     </style>
   </defs>
   <rect width="1120" height="900" fill="#fbfcfe"/>
@@ -69,18 +69,18 @@
   </g>
 
   <g class="edge" data-edge="metric-source-&gt;sampling-chain" data-label="raw samples">
-    <path d="M 560 196 L 560 292"/>
+    <path class="edge" data-connector="metric-source-to-sampling-chain" d="M 560 196 L 560 292" marker-end="url(#arrow)"/>
   </g>
   <g class="edge" data-edge="sampling-chain-&gt;delta-analysis" data-label="sampled values">
-    <path d="M 560 388 L 560 494"/>
+    <path class="edge" data-connector="sampling-chain-to-delta-analysis" d="M 560 388 L 560 494" marker-end="url(#arrow)"/>
   </g>
   <g class="edge" data-edge="delta-analysis-&gt;alert-preview" data-label="leading preview">
-    <path d="M 450 590 L 450 650 L 232 650 L 232 700"/>
+    <path class="edge" data-connector="delta-analysis-to-alert-preview" d="M 350 590 L 350 700" marker-end="url(#arrow)"/>
   </g>
   <g class="edge" data-edge="delta-analysis-&gt;dashboard-output" data-label="trailing dashboard">
-    <path d="M 560 590 L 560 700"/>
+    <path class="edge" data-connector="delta-analysis-to-dashboard-output" d="M 560 590 L 560 700" marker-end="url(#arrow)"/>
   </g>
   <g class="edge" data-edge="delta-analysis-&gt;bounded-lifecycle" data-label="stop bounded stream">
-    <path d="M 670 590 L 670 650 L 888 650 L 888 700"/>
+    <path class="edge" data-connector="delta-analysis-to-bounded-lifecycle" d="M 770 590 L 770 700" marker-end="url(#arrow)"/>
   </g>
 </svg>
