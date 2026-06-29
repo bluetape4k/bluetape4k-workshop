@@ -20,6 +20,7 @@ on:
       - 'kotlin/flow-extensions-search-pipeline/**'
       - 'leader/k8s-lease-micrometer/**'
       - 'messaging/kafka/**'
+      - 'messaging/kafka-outbox-fallback/**'
       - 'shared/**'
       - 'buildSrc/**'
       - 'gradle/**'
@@ -43,6 +44,7 @@ on:
       - 'kotlin/flow-extensions-search-pipeline/**'
       - 'leader/k8s-lease-micrometer/**'
       - 'messaging/kafka/**'
+      - 'messaging/kafka-outbox-fallback/**'
       - 'shared/**'
       - 'buildSrc/**'
       - 'gradle/**'
@@ -163,6 +165,7 @@ jobs:
       # - exposed-javers-persistence-audit: Redis-backed JaVers audit history
       # - spring-boot-cache-redis: Redis-backed cache path
       # - messaging-kafka: Kafka-backed messaging path
+      # - messaging-kafka-outbox-fallback: PostgreSQL + Kafka fallback relay path
       - name: Run container-backed examples
         run: >-
           ./gradlew
@@ -170,6 +173,7 @@ jobs:
           :exposed-javers-persistence-audit:test
           :spring-boot-cache-redis:test
           :messaging-kafka:test
+          :messaging-kafka-outbox-fallback:test
           --continue
           --max-workers=1
         env:
@@ -191,6 +195,8 @@ jobs:
             spring-boot/cache-redis/build/reports/tests/test/
             messaging/kafka/build/test-results/test/*.xml
             messaging/kafka/build/reports/tests/test/
+            messaging/kafka-outbox-fallback/build/test-results/test/*.xml
+            messaging/kafka-outbox-fallback/build/reports/tests/test/
           retention-days: 7
 
   examples-status:

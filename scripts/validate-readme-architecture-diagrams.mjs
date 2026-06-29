@@ -125,8 +125,49 @@ function parseAttrs(text) {
 }
 
 function parsePoints(d) {
-  const matches = [...d.matchAll(/[ML]\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)/g)];
-  return matches.map((match) => ({ x: Number(match[1]), y: Number(match[2]) }));
+  const tokens = d.match(/[A-Za-z]|-?\d+(?:\.\d+)?/g) || [];
+  const points = [];
+  let i = 0;
+  let command = null;
+  let current = { x: 0, y: 0 };
+
+  const readNumber = () => Number(tokens[i++]);
+
+  while (i < tokens.length) {
+    if (/^[A-Za-z]$/.test(tokens[i])) {
+      command = tokens[i++];
+    }
+    if (!command) break;
+
+    switch (command) {
+      case "M":
+      case "L": {
+        current = { x: readNumber(), y: readNumber() };
+        points.push(current);
+        break;
+      }
+      case "H": {
+        current = { x: readNumber(), y: current.y };
+        points.push(current);
+        break;
+      }
+      case "V": {
+        current = { x: current.x, y: readNumber() };
+        points.push(current);
+        break;
+      }
+      case "Q": {
+        const control = { x: readNumber(), y: readNumber() };
+        current = { x: readNumber(), y: readNumber() };
+        points.push(control, current);
+        break;
+      }
+      default:
+        return points;
+    }
+  }
+
+  return points;
 }
 
 function onBoundary(point, rect) {

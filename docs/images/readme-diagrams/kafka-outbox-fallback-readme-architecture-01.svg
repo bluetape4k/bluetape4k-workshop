@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="760" viewBox="0 0 1680 760" role="img" aria-labelledby="title desc">
+  <title id="title">Kafka-first outbox fallback architecture</title>
+  <desc id="desc">Orders are stored in the hot database transaction, then events are published directly to Kafka with a durable fallback table for failed publication.</desc>
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563EB" stroke="#2563EB" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#16A34A" stroke="#16A34A" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#C47A12" stroke="#C47A12" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#CBD5E1;stroke-width:2}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle,.cardText,.note{font-family:"Comic Mono";fill:#475569}.subtitle{font-size:14px}.cardTitle{font-family:"Architects Daughter";font-size:25px;fill:#102033}.cardText{font-size:13px}.nodeRect{stroke-width:2.6}.edgePath{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}.note{font-size:12px}.lane{fill:#F1F5F9;stroke:#CBD5E1;stroke-width:1.6}
+    </style>
+  </defs>
+  <rect class="canvas" width="1680" height="760"/>
+  <rect class="frame" x="32" y="24" width="1616" height="712" rx="24"/>
+  <text class="title" x="840" y="68" text-anchor="middle">Kafka-first outbox fallback</text>
+  <text class="subtitle" x="840" y="96" text-anchor="middle">The hot transaction writes only orders; Kafka publish happens after commit and failed events enter a fallback table.</text>
+
+  <rect class="lane" x="56" y="128" width="1568" height="286" rx="18"/>
+  <rect class="lane" x="56" y="452" width="1568" height="206" rx="18"/>
+  <text class="subtitle" x="84" y="158">Synchronous order placement path</text>
+  <text class="subtitle" x="84" y="482">Recovery path for failed or missing publications</text>
+
+  <g class="node" data-node="client" filter="url(#shadow)">
+    <rect class="nodeRect" x="80" y="242" width="220" height="104" rx="14" fill="#EFF6FF" stroke="#2563EB"/>
+    <text class="cardTitle" x="190" y="282" text-anchor="middle">HTTP Client</text>
+    <text class="cardText" x="190" y="314" text-anchor="middle">POST /api/orders</text>
+  </g>
+  <g class="node" data-node="api" filter="url(#shadow)">
+    <rect class="nodeRect" x="380" y="242" width="220" height="104" rx="14" fill="#EEF2FF" stroke="#4F46E5"/>
+    <text class="cardTitle" x="490" y="282" text-anchor="middle">Order API</text>
+    <text class="cardText" x="490" y="314" text-anchor="middle">validation + response</text>
+  </g>
+  <g class="node" data-node="writer" filter="url(#shadow)">
+    <rect class="nodeRect" x="700" y="242" width="220" height="104" rx="14" fill="#ECFDF5" stroke="#16A34A"/>
+    <text class="cardTitle" x="810" y="282" text-anchor="middle">Order Writer</text>
+    <text class="cardText" x="810" y="314" text-anchor="middle">orders only in TX</text>
+  </g>
+  <g class="node" data-node="postgres" filter="url(#shadow)">
+    <rect class="nodeRect" x="1020" y="184" width="260" height="220" rx="16" fill="#FFF7ED" stroke="#C47A12"/>
+    <g data-bluetape4k-icon="database" data-source="docs/icons/generic/database-server.svg" transform="translate(1112 204) scale(0.44)">
+      <rect x="10" y="8" width="108" height="112" rx="18" fill="#fffaf2" stroke="#28485a" stroke-width="6"/>
+      <ellipse cx="64" cy="36" rx="34" ry="13" fill="#fff0d8" stroke="#8c6f33" stroke-width="6"/>
+      <path d="M30 36v44c0 8 15 14 34 14s34-6 34-14V36" fill="#fff0d8" stroke="#8c6f33" stroke-width="6" stroke-linejoin="round"/>
+      <ellipse cx="64" cy="36" rx="34" ry="13" fill="none" stroke="#8c6f33" stroke-width="5"/>
+      <path d="M30 58c0 8 15 14 34 14s34-6 34-14" fill="none" stroke="#8c6f33" stroke-width="5" stroke-linecap="round"/>
+      <path d="M30 80c0 8 15 14 34 14s34-6 34-14" fill="none" stroke="#8c6f33" stroke-width="5" stroke-linecap="round"/>
+    </g>
+    <text class="cardTitle" x="1150" y="294" text-anchor="middle">PostgreSQL</text>
+    <text class="cardText" x="1150" y="328" text-anchor="middle">orders</text>
+    <text class="cardText" x="1150" y="352" text-anchor="middle">event_publications</text>
+  </g>
+  <g class="node" data-node="kafka" filter="url(#shadow)">
+    <rect class="nodeRect" x="1380" y="242" width="220" height="104" rx="14" fill="#F8FAFC" stroke="#111827"/>
+    <g data-bluetape4k-icon="kafka" data-source="docs/icons/testcontainers/mq/apache-kafka.svg" transform="translate(1410 267) scale(2)">
+      <path fill="#D22128" d="M9.71 2.136a1.43 1.43 0 0 0-2.047 0h-.007a1.48 1.48 0 0 0-.421 1.042c0 .41.161.777.422 1.039l.007.007c.257.264.616.426 1.019.426.404 0 .766-.162 1.027-.426l.003-.007c.261-.262.421-.629.421-1.039 0-.408-.159-.777-.421-1.042H9.71zM8.683 22.295c.404 0 .766-.167 1.027-.429l.003-.008c.261-.261.421-.631.421-1.036 0-.41-.159-.778-.421-1.044H9.71a1.42 1.42 0 0 0-1.027-.432 1.4 1.4 0 0 0-1.02.432h-.007c-.26.266-.422.634-.422 1.044 0 .406.161.775.422 1.036l.007.008c.258.262.617.429 1.02.429zm7.89-4.462c.359-.096.683-.33.882-.684l.027-.052a1.47 1.47 0 0 0 .114-1.067 1.454 1.454 0 0 0-.675-.896l-.021-.014a1.425 1.425 0 0 0-1.078-.132c-.36.091-.684.335-.881.686-.2.349-.241.75-.146 1.119.099.363.33.691.675.896h.002c.346.203.737.239 1.101.144zm-6.405-7.342a2.083 2.083 0 0 0-1.485-.627c-.58 0-1.103.242-1.482.627-.378.385-.612.916-.612 1.507s.233 1.124.612 1.514a2.08 2.08 0 0 0 2.967 0c.379-.39.612-.923.612-1.514s-.233-1.122-.612-1.507zm-.835-2.51c.843.141 1.6.552 2.178 1.144h.004c.092.093.182.196.265.299l1.446-.851a3.176 3.176 0 0 1-.047-1.808 3.149 3.149 0 0 1 1.456-1.926l.025-.016a3.062 3.062 0 0 1 2.345-.306c.77.21 1.465.721 1.898 1.482v.002c.431.757.518 1.626.313 2.408a3.145 3.145 0 0 1-1.456 1.928l-.198.118h-.02a3.095 3.095 0 0 1-2.154.201 3.127 3.127 0 0 1-1.514-.944l-1.444.848a4.162 4.162 0 0 1 0 2.879l1.444.846c.413-.47.939-.789 1.514-.944a3.041 3.041 0 0 1 2.371.319l.048.023v.002a3.17 3.17 0 0 1 1.408 1.906 3.215 3.215 0 0 1-.313 2.405l-.026.053-.003-.005a3.147 3.147 0 0 1-1.867 1.436 3.096 3.096 0 0 1-2.371-.318v-.006a3.156 3.156 0 0 1-1.456-1.927 3.175 3.175 0 0 1 .047-1.805l-1.446-.848a3.905 3.905 0 0 1-.265.294l-.004.005a3.938 3.938 0 0 1-2.178 1.138v1.699a3.09 3.09 0 0 1 1.56.862l.002.004c.565.572.914 1.368.914 2.243 0 .873-.35 1.664-.914 2.239l-.002.009a3.1 3.1 0 0 1-2.21.931 3.1 3.1 0 0 1-2.206-.93h-.002v-.009a3.186 3.186 0 0 1-.916-2.239c0-.875.35-1.672.916-2.243v-.004h.002a3.1 3.1 0 0 1 1.558-.862v-1.699a3.926 3.926 0 0 1-2.176-1.138l-.006-.005a4.098 4.098 0 0 1-1.173-2.874c0-1.122.452-2.136 1.173-2.872h.006a3.947 3.947 0 0 1 2.176-1.144V6.289a3.137 3.137 0 0 1-1.558-.864h-.002v-.004a3.192 3.192 0 0 1-.916-2.243c0-.871.35-1.669.916-2.243l.002-.002A3.084 3.084 0 0 1 8.683 0c.861 0 1.641.355 2.21.932v.002h.002c.565.574.914 1.372.914 2.243 0 .876-.35 1.667-.914 2.243l-.002.005a3.142 3.142 0 0 1-1.56.864v1.692zm8.121-1.129l-.012-.019a1.452 1.452 0 0 0-.87-.668 1.43 1.43 0 0 0-1.103.146h.002c-.347.2-.58.529-.677.896-.095.365-.054.768.146 1.119l.007.009c.2.347.519.579.874.673.357.103.755.059 1.098-.144l.019-.009a1.47 1.47 0 0 0 .657-.885 1.493 1.493 0 0 0-.141-1.118"/>
+    </g>
+    <text class="cardTitle" x="1515" y="292" text-anchor="middle">Kafka</text>
+    <text class="cardText" x="1515" y="320" text-anchor="middle">order-events</text>
+  </g>
+  <g class="node" data-node="relay" filter="url(#shadow)">
+    <rect class="nodeRect" x="650" y="516" width="320" height="104" rx="14" fill="#FFF7ED" stroke="#C47A12"/>
+    <text class="cardTitle" x="810" y="556" text-anchor="middle">Relay + Reconciler</text>
+    <text class="cardText" x="810" y="588" text-anchor="middle">claim, retry, repair</text>
+  </g>
+
+  <g class="edge" data-edge="client-&gt;api" data-label="HTTP command"><path class="edgePath" d="M 300 294 L 380 294" stroke="#2563EB" marker-end="url(#arrowBlue)"/></g>
+  <g class="edge" data-edge="api-&gt;writer" data-label="validated request"><path class="edgePath" d="M 600 294 L 700 294" stroke="#2563EB" marker-end="url(#arrowBlue)"/></g>
+  <g class="edge" data-edge="writer-&gt;postgres" data-label="orders row only"><path class="edgePath" d="M 920 294 L 1020 294" stroke="#16A34A" marker-end="url(#arrowGreen)"/></g>
+  <g class="edge" data-edge="writer-&gt;kafka" data-label="direct event after commit"><path class="edgePath" d="M 810 242 L 810 196 Q 810 176 830 176 L 1470 176 Q 1490 176 1490 196 L 1490 242" stroke="#16A34A" marker-end="url(#arrowGreen)"/></g>
+  <g class="edge" data-edge="relay-&gt;postgres" data-label="claim fallback rows"><path class="edgePath" d="M 970 568 L 1130 568 Q 1150 568 1150 548 L 1150 404" stroke="#C47A12" marker-end="url(#arrowAmber)"/></g>
+  <g class="edge" data-edge="relay-&gt;kafka" data-label="re-drive failed event"><path class="edgePath" d="M 970 596 L 1470 596 Q 1490 596 1490 576 L 1490 346" stroke="#C47A12" marker-end="url(#arrowAmber)"/></g>
+
+  <rect x="80" y="676" width="1520" height="34" rx="12" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <text class="note" x="840" y="698" text-anchor="middle">Reader contract: lower hot-TX database work, but direct Kafka timeout has unknown outcome and fallback relay can duplicate without idempotent consumers.</text>
+</svg>

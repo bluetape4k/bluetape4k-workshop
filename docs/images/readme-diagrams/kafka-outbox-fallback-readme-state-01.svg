@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="720" viewBox="0 0 1480 720" role="img" aria-labelledby="title desc">
+  <title id="title">Fallback publication state lifecycle</title>
+  <desc id="desc">Fallback publication rows move from NOT_PUBLISHED through relay success, retryable failure, stale claim recovery, or DEAD_LETTER.</desc>
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
+    <marker id="arrowBlue" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563EB" stroke="#2563EB" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#16A34A" stroke="#16A34A" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#C47A12" stroke="#C47A12" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#DC2626" stroke="#DC2626" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#CBD5E1;stroke-width:2}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle,.stateText,.label,.footer{font-family:"Comic Mono";fill:#475569}.subtitle{font-size:14px}.stateTitle{font-family:"Architects Daughter";font-size:26px;fill:#102033}.stateText{font-size:13px}.state{stroke-width:2.6}.edge{fill:none;stroke-width:3.3;stroke-linecap:round;stroke-linejoin:round}.label{font-size:12px}.labelBg{fill:#FFFFFF;stroke:#CBD5E1;stroke-width:1.3}.footer{font-size:12px}
+    </style>
+  </defs>
+  <rect class="canvas" width="1480" height="720"/>
+  <rect class="frame" x="32" y="24" width="1416" height="672" rx="24"/>
+  <text class="title" x="740" y="70" text-anchor="middle">Fallback publication lifecycle</text>
+  <text class="subtitle" x="740" y="98" text-anchor="middle">Only failed or reconstructed events enter this table; direct Kafka success leaves no publication row.</text>
+
+  <g filter="url(#shadow)">
+    <rect class="state" x="86" y="254" width="236" height="118" rx="16" fill="#EFF6FF" stroke="#2563EB"/>
+    <text class="stateTitle" x="204" y="300" text-anchor="middle">NO ROW</text>
+    <text class="stateText" x="204" y="330" text-anchor="middle">direct publish success</text>
+    <text class="stateText" x="204" y="352" text-anchor="middle">or not yet repaired</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect class="state" x="450" y="254" width="236" height="118" rx="16" fill="#FFF7ED" stroke="#C47A12"/>
+    <text class="stateTitle" x="568" y="300" text-anchor="middle">NOT_PUBLISHED</text>
+    <text class="stateText" x="568" y="330" text-anchor="middle">fallback stored</text>
+    <text class="stateText" x="568" y="352" text-anchor="middle">eligible for relay</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect class="state" x="814" y="120" width="236" height="118" rx="16" fill="#ECFDF5" stroke="#16A34A"/>
+    <text class="stateTitle" x="932" y="166" text-anchor="middle">PUBLISHED</text>
+    <text class="stateText" x="932" y="196" text-anchor="middle">Kafka acknowledged</text>
+    <text class="stateText" x="932" y="218" text-anchor="middle">publishedAt set</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect class="state" x="814" y="388" width="236" height="118" rx="16" fill="#FEF2F2" stroke="#DC2626"/>
+    <text class="stateTitle" x="932" y="434" text-anchor="middle">FAILED</text>
+    <text class="stateText" x="932" y="464" text-anchor="middle">retryable relay miss</text>
+    <text class="stateText" x="932" y="486" text-anchor="middle">nextAttemptAt set</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect class="state" x="1178" y="388" width="236" height="118" rx="16" fill="#F8FAFC" stroke="#334155"/>
+    <text class="stateTitle" x="1296" y="434" text-anchor="middle">DEAD_LETTER</text>
+    <text class="stateText" x="1296" y="464" text-anchor="middle">relayMaxRetries hit</text>
+    <text class="stateText" x="1296" y="486" text-anchor="middle">manual review</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect class="state" x="450" y="522" width="236" height="90" rx="16" fill="#F1F5F9" stroke="#64748B"/>
+    <text class="stateTitle" x="568" y="558" text-anchor="middle">CLAIMED</text>
+    <text class="stateText" x="568" y="588" text-anchor="middle">claimedBy + TTL</text>
+  </g>
+
+  <path class="edge" d="M 322 313 L 450 313" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <rect class="labelBg" x="334" y="280" width="102" height="24" rx="12"/><text class="label" x="385" y="296" text-anchor="middle">fallback</text>
+  <path class="edge" d="M 568 254 L 568 206 Q 568 186 588 186 L 814 186" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <rect class="labelBg" x="618" y="151" width="116" height="24" rx="12"/><text class="label" x="676" y="167" text-anchor="middle">relay success</text>
+  <path class="edge" d="M 686 338 L 740 338 Q 760 338 760 358 L 760 427 Q 760 447 780 447 L 814 447" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+  <rect class="labelBg" x="792" y="356" width="86" height="24" rx="12"/><text class="label" x="835" y="372" text-anchor="middle">failure</text>
+  <path class="edge" d="M 1050 447 L 1178 447" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+  <rect class="labelBg" x="1078" y="414" width="76" height="24" rx="12"/><text class="label" x="1116" y="430" text-anchor="middle">max retry</text>
+  <path class="edge" d="M 932 388 L 932 340 Q 932 320 912 320 L 686 320" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <rect class="labelBg" x="790" y="286" width="92" height="24" rx="12"/><text class="label" x="836" y="302" text-anchor="middle">retry later</text>
+  <path class="edge" d="M 568 372 L 568 522" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <rect class="labelBg" x="590" y="434" width="78" height="24" rx="12"/><text class="label" x="629" y="450" text-anchor="middle">claim</text>
+  <path class="edge" d="M 450 567 L 406 567 Q 386 567 386 547 L 386 366 Q 386 346 406 346 L 450 346" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <rect class="labelBg" x="328" y="472" width="104" height="24" rx="12"/><text class="label" x="380" y="488" text-anchor="middle">stale claim</text>
+
+  <rect x="86" y="642" width="1328" height="32" rx="12" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <text class="footer" x="750" y="663" text-anchor="middle">DEAD_LETTER stays in the table; this workshop deliberately avoids an extra Redis buffer so the DB fallback trade-off remains visible.</text>
+</svg>

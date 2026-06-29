@@ -1,0 +1,45 @@
+server:
+    port: 8080
+    error:
+        include-message: never
+        include-stacktrace: never
+        include-binding-errors: never
+
+spring:
+    application:
+        name: messaging-kafka-outbox-fallback
+    datasource:
+        url: jdbc:postgresql://localhost:5432/workshop
+        username: postgres
+        password: postgres
+        driver-class-name: org.postgresql.Driver
+    kafka:
+        bootstrap-servers: localhost:9092
+
+management:
+    endpoint:
+        health:
+            probes:
+                enabled: true
+            show-details: never
+    endpoints:
+        web:
+            exposure:
+                include: health,info,prometheus
+
+workshop:
+    kafka-outbox-fallback:
+        topic: order-events
+        direct-publish-attempts: 3
+        direct-publish-timeout: 500ms
+        direct-publish-total-timeout: 1600ms
+        relay-max-retries: 3
+        relay-batch-size: 25
+        relay-fixed-delay: 2000ms
+        relay-claim-ttl: 30s
+        reconciler-grace: 30s
+        max-payload-bytes: 8192
+        direct-publish-enabled: true
+        relay-enabled: true
+        reconciler-enabled: true
+        demo-admin-endpoints-enabled: false

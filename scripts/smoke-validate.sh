@@ -119,6 +119,7 @@ case "${1:-help}" in
     run "$GRADLEW \
       :messaging-kafka:test \
       :messaging-kafka-reply:test \
+      :messaging-kafka-outbox-fallback:test \
       --continue --max-workers=1"
     ;;
 
@@ -156,7 +157,7 @@ case "${1:-help}" in
   stale-check)
     echo "=== Gradle project count ==="
     count=$("$GRADLEW" projects --console=plain 2>/dev/null | grep -Ec "Project ':" || true)
-    expected=85
+    expected=86
     echo "Active modules: $count (expected: $expected)"
     [ "$count" -eq "$expected" ] || echo "WARNING: Gradle project count drifted."
 
