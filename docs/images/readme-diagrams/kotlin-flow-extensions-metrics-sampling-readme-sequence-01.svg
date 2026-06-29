@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="760" viewBox="0 0 1120 760" role="img" aria-labelledby="title desc">
+  <title id="title">Metrics Sampling Sequence</title>
+  <desc id="desc">Sequence showing leading preview, trailing dashboard sampling, pairwise transition analysis, and lifecycle stop handling.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 16 16" refX="13" refY="8" markerWidth="16" markerHeight="16" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+      <path d="M 3 3 L 13 8 L 3 13 z" fill="#314a67"/>
+    </marker>
+    <style>
+      .title { font-family: 'Architects Daughter', 'Comic Mono'; font-size: 34px; fill: #1f2937; }
+      .actor, .message, .note { font-family: 'Comic Mono', 'Architects Daughter'; fill: #263238; }
+      .actor { font-size: 16px; font-weight: 700; }
+      .message { font-size: 13px; }
+      .note { font-size: 13px; fill: #52616f; }
+      .box { fill: #ffffff; stroke: #314a67; stroke-width: 2.2; rx: 7; }
+      .header { fill: #eaf2fb; stroke: #314a67; stroke-width: 2.2; rx: 7; }
+      .lifeline { stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 7 7; }
+      .activation { fill: #eefaf3; stroke: #2d9d78; stroke-width: 1.6; rx: 4; }
+      .call { fill: none; stroke: #314a67; stroke-width: 2.6; marker-end: url(#arrow); }
+      .return { fill: none; stroke: #2d9d78; stroke-width: 2.6; stroke-dasharray: 8 5; marker-end: url(#arrow); }
+      .message-label { fill: #fbfcfe; stroke: #d4dce6; stroke-width: 1.2; rx: 5; }
+      .label { fill: none; stroke: none; rx: 12; }
+    </style>
+  </defs>
+  <rect width="1120" height="760" fill="#fbfcfe"/>
+  <text class="title" x="560" y="44" text-anchor="middle">Metrics Sampling Sequence</text>
+
+  <rect class="header" x="44" y="64" width="176" height="58"/>
+  <rect class="box" x="44" y="64" width="176" height="58"/>
+  <text class="actor" x="132" y="99" text-anchor="middle">Metric Flow</text>
+  <rect class="header" x="256" y="64" width="176" height="58"/>
+  <rect class="box" x="256" y="64" width="176" height="58"/>
+  <text class="actor" x="344" y="99" text-anchor="middle">Sampler</text>
+  <rect class="header" x="468" y="64" width="176" height="58"/>
+  <rect class="box" x="468" y="64" width="176" height="58"/>
+  <text class="actor" x="556" y="99" text-anchor="middle">Analyzer</text>
+  <rect class="header" x="680" y="64" width="176" height="58"/>
+  <rect class="box" x="680" y="64" width="176" height="58"/>
+  <text class="actor" x="768" y="99" text-anchor="middle">Lifecycle</text>
+  <rect class="header" x="892" y="64" width="176" height="58"/>
+  <rect class="box" x="892" y="64" width="176" height="58"/>
+  <text class="actor" x="980" y="99" text-anchor="middle">Collector</text>
+
+  <path class="lifeline" d="M 132 122 L 132 706"/>
+  <path class="lifeline" d="M 344 122 L 344 706"/>
+  <path class="lifeline" d="M 556 122 L 556 706"/>
+  <path class="lifeline" d="M 768 122 L 768 706"/>
+  <path class="lifeline" d="M 980 122 L 980 706"/>
+  <rect class="activation" x="338" y="148" width="12" height="532"/>
+  <rect class="activation" x="550" y="406" width="12" height="102"/>
+  <rect class="activation" x="762" y="578" width="12" height="48"/>
+
+  <path class="call" d="M 132 156 L 344 156"/>
+  <rect class="label" x="154" y="174" width="168" height="24"/>
+  <rect class="message-label" x="154" y="174" width="168" height="24"/>
+  <text class="message" x="238" y="191" text-anchor="middle">samples arrive</text>
+
+  <path class="return" d="M 344 242 L 980 242"/>
+  <rect class="label" x="579" y="260" width="166" height="24"/>
+  <rect class="message-label" x="579" y="260" width="166" height="24"/>
+  <text class="message" x="662" y="277" text-anchor="middle">leading preview</text>
+
+  <path class="return" d="M 344 328 L 980 328"/>
+  <rect class="label" x="576" y="346" width="172" height="24"/>
+  <rect class="message-label" x="576" y="346" width="172" height="24"/>
+  <text class="message" x="662" y="363" text-anchor="middle">trailing sample</text>
+
+  <path class="call" d="M 344 414 L 556 414"/>
+  <rect class="label" x="360" y="432" width="180" height="24"/>
+  <rect class="message-label" x="360" y="432" width="180" height="24"/>
+  <text class="message" x="450" y="449" text-anchor="middle">pairwise deltas</text>
+
+  <path class="return" d="M 556 500 L 980 500"/>
+  <rect class="label" x="634" y="518" width="268" height="24"/>
+  <rect class="message-label" x="634" y="518" width="268" height="24"/>
+  <text class="message" x="768" y="535" text-anchor="middle">significant trend only</text>
+
+  <path class="call" d="M 768 586 L 344 586"/>
+  <rect class="label" x="438" y="604" width="236" height="24"/>
+  <rect class="message-label" x="438" y="604" width="236" height="24"/>
+  <text class="message" x="556" y="621" text-anchor="middle">takeUntil stop signal</text>
+
+  <path class="return" d="M 344 672 L 980 672"/>
+  <rect class="label" x="574" y="690" width="176" height="24"/>
+  <rect class="message-label" x="574" y="690" width="176" height="24"/>
+  <text class="message" x="662" y="707" text-anchor="middle">logged values end</text>
+</svg>

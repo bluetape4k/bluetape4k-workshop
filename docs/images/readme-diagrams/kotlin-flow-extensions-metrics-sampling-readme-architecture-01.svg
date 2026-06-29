@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="900" viewBox="0 0 1120 900" role="img" aria-labelledby="title desc">
+  <title id="title">Metrics Sampling Architecture</title>
+  <desc id="desc">A top-to-bottom layered architecture for Flow based metrics sampling and transition analysis.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 1 1 L 9 5 L 1 9 z" fill="#314a67"/>
+    </marker>
+    <style>
+      .title { font-family: 'Architects Daughter', 'Comic Mono'; font-size: 34px; fill: #1f2937; }
+      .layer-label, .node-title, .node-body { font-family: 'Comic Mono', 'Architects Daughter'; fill: #263238; }
+      .layer-label { font-size: 16px; font-weight: 700; letter-spacing: 0; }
+      .node-title { font-size: 18px; font-weight: 700; }
+      .node-body { font-size: 13px; }
+      .layer { rx: 8; fill: #f8fafc; stroke: #cbd5e1; stroke-width: 1.5; }
+      .source-layer { fill: #eef6ff; }
+      .sampling-layer { fill: #eefaf3; }
+      .analysis-layer { fill: #fff8e8; }
+      .lifecycle-layer { fill: #f5f2ff; }
+      .node rect { rx: 7; fill: #ffffff; stroke: #314a67; stroke-width: 2.5; }
+      .sampling-card { stroke: #2d9d78; }
+      .analysis-card { stroke: #c7861b; }
+      .lifecycle-card { stroke: #7c4dcc; }
+      .edge path { fill: none; stroke: #314a67; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1120" height="900" fill="#fbfcfe"/>
+  <text class="title" x="560" y="50" text-anchor="middle">Metrics Sampling Architecture</text>
+
+  <rect class="layer source-layer" x="48" y="76" width="1024" height="146"/>
+  <text class="layer-label" x="72" y="208">Source layer</text>
+  <rect class="layer sampling-layer" x="48" y="252" width="1024" height="172"/>
+  <text class="layer-label" x="72" y="280">Sampling operator layer</text>
+  <rect class="layer analysis-layer" x="48" y="454" width="1024" height="172"/>
+  <text class="layer-label" x="72" y="482">Transition analysis layer</text>
+  <rect class="layer lifecycle-layer" x="48" y="656" width="1024" height="172"/>
+  <text class="layer-label" x="72" y="814">Lifecycle output layer</text>
+
+  <g class="node" data-node="metric-source">
+    <rect x="380" y="110" width="360" height="86"/>
+    <text class="node-title" x="560" y="142" text-anchor="middle">High Frequency Metric Flow</text>
+    <text class="node-body" x="560" y="168" text-anchor="middle">CPU, queue depth, latency, sensor values</text>
+  </g>
+  <g class="node" data-node="sampling-chain">
+    <rect class="sampling-card" x="340" y="292" width="440" height="96"/>
+    <text class="node-title" x="560" y="324" text-anchor="middle">Sampling Chain</text>
+    <text class="node-body" x="560" y="350" text-anchor="middle">throttleLeading for alert preview</text>
+    <text class="node-body" x="560" y="372" text-anchor="middle">throttleTrailing for dashboard stability</text>
+  </g>
+  <g class="node" data-node="delta-analysis">
+    <rect class="analysis-card" x="340" y="494" width="440" height="96"/>
+    <text class="node-title" x="560" y="526" text-anchor="middle">Transition Analysis</text>
+    <text class="node-body" x="560" y="552" text-anchor="middle">pairwise adjacent samples</text>
+    <text class="node-body" x="560" y="574" text-anchor="middle">threshold-based significant trends</text>
+  </g>
+  <g class="node" data-node="alert-preview">
+    <rect class="lifecycle-card" x="96" y="700" width="272" height="84"/>
+    <text class="node-title" x="232" y="732" text-anchor="middle">Alert Preview</text>
+    <text class="node-body" x="232" y="758" text-anchor="middle">first value per window</text>
+  </g>
+  <g class="node" data-node="dashboard-output">
+    <rect class="lifecycle-card" x="424" y="700" width="272" height="84"/>
+    <text class="node-title" x="560" y="732" text-anchor="middle">Dashboard Output</text>
+    <text class="node-body" x="560" y="758" text-anchor="middle">last value after settling</text>
+  </g>
+  <g class="node" data-node="bounded-lifecycle">
+    <rect class="lifecycle-card" x="752" y="700" width="272" height="84"/>
+    <text class="node-title" x="888" y="732" text-anchor="middle">Bounded Lifecycle</text>
+    <text class="node-body" x="888" y="758" text-anchor="middle">takeUntil stop signal, Flow log</text>
+  </g>
+
+  <g class="edge" data-edge="metric-source-&gt;sampling-chain" data-label="raw samples">
+    <path d="M 560 196 L 560 292"/>
+  </g>
+  <g class="edge" data-edge="sampling-chain-&gt;delta-analysis" data-label="sampled values">
+    <path d="M 560 388 L 560 494"/>
+  </g>
+  <g class="edge" data-edge="delta-analysis-&gt;alert-preview" data-label="leading preview">
+    <path d="M 450 590 L 450 650 L 232 650 L 232 700"/>
+  </g>
+  <g class="edge" data-edge="delta-analysis-&gt;dashboard-output" data-label="trailing dashboard">
+    <path d="M 560 590 L 560 700"/>
+  </g>
+  <g class="edge" data-edge="delta-analysis-&gt;bounded-lifecycle" data-label="stop bounded stream">
+    <path d="M 670 590 L 670 650 L 888 650 L 888 700"/>
+  </g>
+</svg>
