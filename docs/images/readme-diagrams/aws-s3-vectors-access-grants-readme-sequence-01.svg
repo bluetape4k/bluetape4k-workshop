@@ -1,89 +1,170 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="900" viewBox="0 0 1180 900" role="img" aria-label="S3 Vectors and Access Grants request sequence">
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1220" viewBox="0 0 1440 1220" role="img" aria-label="S3 Vectors and Access Grants request sequence">
   <defs>
-    <marker id="seqArrowBlue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M1 1 L7 4 L1 7 Z" fill="#4f78b8"/>
+    <marker id="seqArrowBlue" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86c6" stroke="#4f86c6" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
-    <marker id="seqArrowGreen" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M1 1 L7 4 L1 7 Z" fill="#4f8f70"/>
+    <marker id="seqArrowGreen" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#3f9b72" stroke="#3f9b72" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
-    <marker id="seqArrowTeal" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M1 1 L7 4 L1 7 Z" fill="#4e9a9a"/>
+    <marker id="seqArrowAmber" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#b78022" stroke="#b78022" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <marker id="seqArrowTeal" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f9c95" stroke="#2f9c95" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
     <style>
       .canvas{fill:#f7f9fc}
-      .frame{fill:#ffffff;stroke:#d9e2ec;stroke-width:1.5}
-      .title{font-family:"Architects Daughter", "Comic Sans MS", cursive;font-size:34px;font-weight:700;fill:#162033}
-      .subtitle{font-family:"Comic Mono", "Comic Sans MS", cursive;font-size:13px;fill:#526274}
-      .actor{font-family:"Architects Daughter", "Comic Sans MS", cursive;font-size:17px;fill:#182335}
-      .message{font-family:"Comic Mono", "Comic Sans MS", cursive;font-size:12px;fill:#263445}
-      .smallLabel{font-family:"Comic Mono", "Comic Sans MS", cursive;font-size:12px;fill:#526274}
-      .box{fill:#ffffff;stroke:#9fb1c5;stroke-width:1.7}
-      .lifeline{stroke:#b8c4d3;stroke-width:1.4;stroke-dasharray:7 6}
-      .call{stroke:#4f78b8;stroke-width:2.15;fill:none;marker-end:url(#seqArrowBlue)}
-      .return{stroke:#4f8f70;stroke-width:2.05;stroke-dasharray:7 5;fill:none;marker-end:url(#seqArrowGreen)}
-      .accessCall{stroke:#4e9a9a;stroke-width:2.15;fill:none;marker-end:url(#seqArrowTeal)}
-      .label{fill:#ffffff;stroke:#d8e0ea;stroke-width:1.2}
-      .alt{fill:none;stroke:#8ab8b8;stroke-width:1.8;stroke-dasharray:10 7}
+      .frame{fill:#fffefa;stroke:#445760;stroke-width:3.2}
+      .title{font-family:"Architects Daughter", "Comic Sans MS", cursive;font-size:42px;font-weight:700;fill:#1f2b3d}
+      .subtitle{font-family:"Comic Mono", "Comic Sans MS", cursive;font-size:16px;fill:#526274}
+      .header{stroke-width:2.4}
+      .header.client{fill:#f3f8fd;stroke:#4f86c6}
+      .header.app{fill:#f7fbf6;stroke:#3f9b72}
+      .header.vector{fill:#fffaf0;stroke:#b78022}
+      .header.access{fill:#eefafa;stroke:#2f9c95}
+      .participant-title{font-family:"Architects Daughter", "Comic Sans MS", cursive;font-size:22px;font-weight:700;fill:#213047}
+      .role{font-family:"Comic Mono", "Comic Sans MS", cursive;font-size:13px;fill:#586879}
+      .lifeline{stroke:#9db0bd;stroke-width:2;stroke-dasharray:9 8}
+      .activation{fill:#edf7ef;stroke:#6b9a7d;stroke-width:1.8}
+      .callBlue{stroke:#4f86c6;stroke-width:3;fill:none;marker-end:url(#seqArrowBlue);stroke-linecap:round;stroke-linejoin:round}
+      .callGreen{stroke:#3f9b72;stroke-width:3;fill:none;marker-end:url(#seqArrowGreen);stroke-linecap:round;stroke-linejoin:round}
+      .callAmber{stroke:#b78022;stroke-width:3;fill:none;marker-end:url(#seqArrowAmber);stroke-linecap:round;stroke-linejoin:round}
+      .return{stroke:#2f9c95;stroke-width:3;stroke-dasharray:10 8;fill:none;marker-end:url(#seqArrowTeal);stroke-linecap:round;stroke-linejoin:round}
+      .labelPill{fill:#ffffff;stroke-width:1.7}
+      .pillBlue{stroke:#c8dceb}
+      .pillGreen{stroke:#cce6d4}
+      .pillAmber{stroke:#ead9b4}
+      .pillTeal{stroke:#c9e4e2}
+      .numBadge{fill:#fffefa;stroke-width:1.7}
+      .badgeBlue{stroke:#4f86c6}
+      .badgeGreen{stroke:#3f9b72}
+      .badgeAmber{stroke:#b78022}
+      .badgeTeal{stroke:#2f9c95}
+      .num{font-family:"Comic Mono", "Comic Sans MS", cursive;font-size:13px;font-weight:700}
+      .numBlue{fill:#326d9f}
+      .numGreen{fill:#347f5f}
+      .numAmber{fill:#8f641b}
+      .numTeal{fill:#287f7a}
+      .labelText{font-family:"Comic Mono", "Comic Sans MS", cursive;font-size:15px;font-weight:700}
+      .textBlue{fill:#326d9f}
+      .textGreen{fill:#347f5f}
+      .textAmber{fill:#8f641b}
+      .textTeal{fill:#287f7a}
+      .alt{fill:none;stroke:#7daeb2;stroke-width:2.2;stroke-dasharray:10 8}
+      .branchHeader{fill:#ffffff;stroke:#7daeb2;stroke-width:1.6}
+      .branchText{font-family:"Comic Mono", "Comic Sans MS", cursive;font-size:14px;font-weight:700;fill:#557f86}
+      .footer{fill:#ffffff;stroke:#d6e2ec;stroke-width:1.6}
+      .footerText{font-family:"Comic Mono", "Comic Sans MS", cursive;font-size:14px;fill:#586879}
     </style>
   </defs>
 
-  <rect class="canvas" x="0" y="0" width="1180" height="900"/>
-  <rect class="frame" x="24" y="22" width="1132" height="850" rx="18"/>
-  <text class="title" x="590" y="68" text-anchor="middle">S3 Vectors + Access Grants Sequence</text>
-  <text class="subtitle" x="590" y="98" text-anchor="middle">Numbered calls keep the vector path separate from the optional object-access decision.</text>
+  <rect class="canvas" x="0" y="0" width="1440" height="1220"/>
+  <rect class="frame" x="28" y="28" width="1384" height="1164" rx="24"/>
+  <text class="title" x="720" y="86" text-anchor="middle">S3 Vectors + Access Grants Sequence</text>
+  <text class="subtitle" x="720" y="120" text-anchor="middle">Vector publication and query stay separate from the optional, redacted data-access decision.</text>
 
-  <rect class="box" x="70" y="122" width="130" height="54" rx="9"/>
-  <text class="actor" x="135" y="153" text-anchor="middle">Client</text>
-  <rect class="box" x="290" y="122" width="150" height="54" rx="9"/>
-  <text class="actor" x="365" y="153" text-anchor="middle">Controller</text>
-  <rect class="box" x="520" y="122" width="150" height="54" rx="9"/>
-  <text class="actor" x="595" y="153" text-anchor="middle">Service</text>
-  <rect class="box" x="750" y="122" width="150" height="54" rx="9"/>
-  <text class="actor" x="825" y="153" text-anchor="middle">S3 Vectors</text>
-  <rect class="box" x="970" y="122" width="150" height="54" rx="9"/>
-  <text class="actor" x="1045" y="153" text-anchor="middle">Access Grants</text>
+  <rect class="header client" x="82" y="164" width="170" height="74" rx="10"/>
+  <text class="participant-title" x="167" y="196" text-anchor="middle">Client</text>
+  <text class="role" x="167" y="219" text-anchor="middle">REST learner</text>
 
-  <line class="lifeline" x1="135" y1="176" x2="135" y2="830"/>
-  <line class="lifeline" x1="365" y1="176" x2="365" y2="830"/>
-  <line class="lifeline" x1="595" y1="176" x2="595" y2="830"/>
-  <line class="lifeline" x1="825" y1="176" x2="825" y2="830"/>
-  <line class="lifeline" x1="1045" y1="176" x2="1045" y2="830"/>
+  <rect class="header app" x="338" y="164" width="190" height="74" rx="10"/>
+  <text class="participant-title" x="433" y="196" text-anchor="middle">Controller</text>
+  <text class="role" x="433" y="219" text-anchor="middle">HTTP boundary</text>
 
-  <path class="call" d="M 135 230 L 365 230"/>
-  <rect class="label" x="185" y="184" width="130" height="24" rx="6"/>
-  <text class="message" x="250" y="201" text-anchor="middle">1. POST document</text>
+  <rect class="header app" x="614" y="164" width="190" height="74" rx="10"/>
+  <text class="participant-title" x="709" y="196" text-anchor="middle">Service</text>
+  <text class="role" x="709" y="219" text-anchor="middle">local ranking</text>
 
-  <path class="call" d="M 365 310 L 595 310"/>
-  <rect class="label" x="399" y="264" width="162" height="24" rx="6"/>
-  <text class="message" x="480" y="281" text-anchor="middle">2. validate vector DTO</text>
+  <rect class="header vector" x="892" y="164" width="190" height="74" rx="10"/>
+  <text class="participant-title" x="987" y="196" text-anchor="middle">S3 Vectors</text>
+  <text class="role" x="987" y="219" text-anchor="middle">vector index</text>
 
-  <path class="call" d="M 595 390 L 825 390"/>
-  <rect class="label" x="635" y="344" width="150" height="24" rx="6"/>
-  <text class="message" x="710" y="361" text-anchor="middle">3. PutVectors</text>
+  <rect class="header access" x="1168" y="164" width="190" height="74" rx="10"/>
+  <text class="participant-title" x="1263" y="196" text-anchor="middle">Access Grants</text>
+  <text class="role" x="1263" y="219" text-anchor="middle">S3 Control</text>
 
-  <path class="return" d="M 825 470 L 595 470"/>
-  <rect class="label" x="619" y="424" width="182" height="24" rx="6"/>
-  <text class="message" x="710" y="441" text-anchor="middle">4. published status</text>
+  <line class="lifeline" x1="167" y1="238" x2="167" y2="1112"/>
+  <line class="lifeline" x1="433" y1="238" x2="433" y2="1112"/>
+  <line class="lifeline" x1="709" y1="238" x2="709" y2="1112"/>
+  <line class="lifeline" x1="987" y1="238" x2="987" y2="1112"/>
+  <line class="lifeline" x1="1263" y1="238" x2="1263" y2="1112"/>
 
-  <path class="call" d="M 135 550 L 365 550"/>
-  <rect class="label" x="186" y="504" width="128" height="24" rx="6"/>
-  <text class="message" x="250" y="521" text-anchor="middle">5. POST search</text>
+  <rect class="activation" x="428" y="314" width="14" height="782" rx="5"/>
+  <rect class="activation" x="704" y="394" width="14" height="582" rx="5"/>
+  <rect class="activation" x="982" y="464" width="14" height="132" rx="5"/>
+  <rect class="activation" x="982" y="714" width="14" height="100" rx="5"/>
+  <rect class="activation" x="1258" y="914" width="14" height="126" rx="5"/>
 
-  <path class="call" d="M 595 620 L 825 620"/>
-  <rect class="label" x="635" y="574" width="150" height="24" rx="6"/>
-  <text class="message" x="710" y="591" text-anchor="middle">6. QueryVectors</text>
+  <path class="callBlue" d="M 167 314 L 433 314"/>
+  <rect class="labelPill pillBlue" x="194" y="266" width="212" height="30" rx="14"/>
+  <circle class="numBadge badgeBlue" cx="216" cy="281" r="12"/>
+  <text class="num numBlue" x="216" y="286" text-anchor="middle">1</text>
+  <text class="labelText textBlue" x="300" y="286" text-anchor="middle">POST document</text>
 
-  <path class="return" d="M 595 690 L 365 690"/>
-  <rect class="label" x="395" y="644" width="170" height="24" rx="6"/>
-  <text class="message" x="480" y="661" text-anchor="middle">7. ranked matches</text>
+  <path class="callGreen" d="M 433 394 L 709 394"/>
+  <rect class="labelPill pillGreen" x="455" y="346" width="232" height="30" rx="14"/>
+  <circle class="numBadge badgeGreen" cx="477" cy="361" r="12"/>
+  <text class="num numGreen" x="477" y="366" text-anchor="middle">2</text>
+  <text class="labelText textGreen" x="582" y="366" text-anchor="middle">validate vector DTO</text>
 
-  <rect class="alt" x="496" y="718" width="606" height="104" rx="10"/>
-  <text class="smallLabel" x="516" y="741">alt requireAccessGrant=true</text>
-  <path class="accessCall" d="M 595 770 L 1045 770"/>
-  <rect class="label" x="724" y="724" width="192" height="24" rx="6"/>
-  <text class="message" x="820" y="741" text-anchor="middle">8. GetDataAccess READ</text>
+  <path class="callGreen" d="M 709 474 L 987 474"/>
+  <rect class="labelPill pillGreen" x="772" y="426" width="152" height="30" rx="14"/>
+  <circle class="numBadge badgeGreen" cx="794" cy="441" r="12"/>
+  <text class="num numGreen" x="794" y="446" text-anchor="middle">3</text>
+  <text class="labelText textGreen" x="854" y="446" text-anchor="middle">PutVectors</text>
 
-  <path class="return" d="M 1045 820 L 595 820"/>
-  <rect class="label" x="718" y="774" width="204" height="24" rx="6"/>
-  <text class="message" x="820" y="791" text-anchor="middle">9. redacted decision</text>
+  <path class="return" d="M 987 574 L 709 574"/>
+  <rect class="labelPill pillTeal" x="758" y="526" width="180" height="30" rx="14"/>
+  <circle class="numBadge badgeTeal" cx="780" cy="541" r="12"/>
+  <text class="num numTeal" x="780" y="546" text-anchor="middle">4</text>
+  <text class="labelText textTeal" x="852" y="546" text-anchor="middle">published</text>
+
+  <path class="callBlue" d="M 167 634 L 433 634"/>
+  <rect class="labelPill pillBlue" x="204" y="586" width="192" height="30" rx="14"/>
+  <circle class="numBadge badgeBlue" cx="226" cy="601" r="12"/>
+  <text class="num numBlue" x="226" y="606" text-anchor="middle">5</text>
+  <text class="labelText textBlue" x="300" y="606" text-anchor="middle">POST search</text>
+
+  <path class="callGreen" d="M 433 714 L 709 714"/>
+  <rect class="labelPill pillGreen" x="456" y="666" width="230" height="30" rx="14"/>
+  <circle class="numBadge badgeGreen" cx="478" cy="681" r="12"/>
+  <text class="num numGreen" x="478" y="686" text-anchor="middle">6</text>
+  <text class="labelText textGreen" x="582" y="686" text-anchor="middle">normalize query DTO</text>
+
+  <path class="callGreen" d="M 709 794 L 987 794"/>
+  <rect class="labelPill pillGreen" x="760" y="746" width="184" height="30" rx="14"/>
+  <circle class="numBadge badgeGreen" cx="782" cy="761" r="12"/>
+  <text class="num numGreen" x="782" y="766" text-anchor="middle">7</text>
+  <text class="labelText textGreen" x="852" y="766" text-anchor="middle">QueryVectors</text>
+
+  <path class="return" d="M 709 854 L 433 854"/>
+  <rect class="labelPill pillTeal" x="488" y="806" width="220" height="30" rx="14"/>
+  <circle class="numBadge badgeTeal" cx="510" cy="821" r="12"/>
+  <text class="num numTeal" x="510" y="826" text-anchor="middle">8</text>
+  <text class="labelText textTeal" x="612" y="826" text-anchor="middle">ranked matches</text>
+
+  <rect class="alt" x="650" y="860" width="668" height="190" rx="12"/>
+  <rect class="branchHeader" x="674" y="878" width="240" height="30" rx="14"/>
+  <text class="branchText" x="794" y="898" text-anchor="middle">alt requireAccessGrant=true</text>
+
+  <path class="callAmber" d="M 709 934 L 1263 934"/>
+  <rect class="labelPill pillAmber" x="930" y="886" width="268" height="30" rx="14"/>
+  <circle class="numBadge badgeAmber" cx="952" cy="901" r="12"/>
+  <text class="num numAmber" x="952" y="906" text-anchor="middle">9</text>
+  <text class="labelText textAmber" x="1066" y="906" text-anchor="middle">GetDataAccess READ</text>
+
+  <path class="return" d="M 1263 1016 L 709 1016"/>
+  <rect class="labelPill pillTeal" x="868" y="968" width="240" height="30" rx="14"/>
+  <circle class="numBadge badgeTeal" cx="890" cy="983" r="12"/>
+  <text class="num numTeal" x="890" y="988" text-anchor="middle">10</text>
+  <text class="labelText textTeal" x="1012" y="988" text-anchor="middle">redacted decision</text>
+
+  <path class="return" d="M 433 1084 L 167 1084"/>
+  <rect class="labelPill pillTeal" x="168" y="1036" width="310" height="30" rx="14"/>
+  <circle class="numBadge badgeTeal" cx="190" cy="1051" r="12"/>
+  <text class="num numTeal" x="190" y="1056" text-anchor="middle">11</text>
+  <text class="labelText textTeal" x="336" y="1056" text-anchor="middle">credential-free response</text>
+
+  <rect class="footer" x="84" y="1136" width="1272" height="36" rx="10"/>
+  <text class="footerText" x="720" y="1159" text-anchor="middle">The sample can run locally with fake facades; real AWS profiles stay opt-in and never echo temporary access values.</text>
 </svg>
