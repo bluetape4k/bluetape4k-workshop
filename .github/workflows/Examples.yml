@@ -18,6 +18,7 @@ on:
       - 'graph/io-pipeline/**'
       - 'image-processing/ocr-api/**'
       - 'aws/cloudwatch-imds-observability/**'
+      - 'aws/s3-vectors-access-grants/**'
       - 'kotlin/flow-extensions-event-aggregation/**'
       - 'kotlin/flow-extensions-metrics-sampling/**'
       - 'kotlin/flow-extensions-search-pipeline/**'
@@ -45,6 +46,7 @@ on:
       - 'graph/io-pipeline/**'
       - 'image-processing/ocr-api/**'
       - 'aws/cloudwatch-imds-observability/**'
+      - 'aws/s3-vectors-access-grants/**'
       - 'kotlin/flow-extensions-event-aggregation/**'
       - 'kotlin/flow-extensions-metrics-sampling/**'
       - 'kotlin/flow-extensions-search-pipeline/**'
@@ -115,6 +117,7 @@ jobs:
           :graph-io-pipeline:test
           :image-processing-ocr-api:test
           :aws-cloudwatch-imds-observability:test
+          :aws-s3-vectors-access-grants:test
           :kotlin-flow-extensions-event-aggregation:test
           :kotlin-flow-extensions-metrics-sampling:test
           :kotlin-flow-extensions-search-pipeline:test
@@ -147,6 +150,8 @@ jobs:
             image-processing/ocr-api/build/reports/tests/test/
             aws/cloudwatch-imds-observability/build/test-results/test/*.xml
             aws/cloudwatch-imds-observability/build/reports/tests/test/
+            aws/s3-vectors-access-grants/build/test-results/test/*.xml
+            aws/s3-vectors-access-grants/build/reports/tests/test/
             kotlin/flow-extensions-event-aggregation/build/test-results/test/*.xml
             kotlin/flow-extensions-event-aggregation/build/reports/tests/test/
             kotlin/flow-extensions-metrics-sampling/build/test-results/test/*.xml

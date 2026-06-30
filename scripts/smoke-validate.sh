@@ -33,6 +33,7 @@ case "${1:-help}" in
       :image-processing-advanced-workflow:test \
       :image-processing-ocr-api:test \
       :aws-cloudwatch-imds-observability:test \
+      :aws-s3-vectors-access-grants:test \
       :kotlin-flow-extensions-event-aggregation:test \
       :kotlin-flow-extensions-metrics-sampling:test \
       :kotlin-flow-extensions-search-pipeline:test \
@@ -144,6 +145,7 @@ case "${1:-help}" in
     run "$GRADLEW \
       :micrometer-observation:test \
       :aws-cloudwatch-imds-observability:test \
+      :aws-s3-vectors-access-grants:test \
       :micrometer-tracing-coroutines:test \
       :virtualthreads-rules:test \
       :virtualthreads-spring-mvc-tomcat:test \
@@ -163,7 +165,7 @@ case "${1:-help}" in
   stale-check)
     echo "=== Gradle project count ==="
     count=$("$GRADLEW" projects --console=plain 2>/dev/null | grep -Ec "Project ':" || true)
-    expected=89
+    expected=90
     echo "Active modules: $count (expected: $expected)"
     [ "$count" -eq "$expected" ] || echo "WARNING: Gradle project count drifted."
 

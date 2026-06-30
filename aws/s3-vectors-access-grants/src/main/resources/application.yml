@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: s3-vectors-access-grants
+
+bluetape4k:
+  aws:
+    s3:
+      enabled: false
+
+workshop:
+  aws:
+    s3-vector-access:
+      vector-bucket-name: semantic-documents
+      index-name: docs-rag
+      document-bucket-name: workshop-documents
+      object-prefix: docs/
+      max-search-results: 5
+      max-vector-dimensions: 16
+      access-grants:
+        account-id: "123456789012"
+        location-arn: arn:aws:s3:ap-northeast-2:123456789012:access-grants/default/location/default
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

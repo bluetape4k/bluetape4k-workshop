@@ -680,8 +680,10 @@ aws2-bom = { module = "software.amazon.awssdk:bom", version.ref = "aws2" }
 aws2-cloudwatch-lib = { module = "software.amazon.awssdk:cloudwatch" }
 aws2-cloudwatchlogs-lib = { module = "software.amazon.awssdk:cloudwatchlogs" }
 aws2-imds-lib = { module = "software.amazon.awssdk:imds" }
+aws2-s3control-lib = { module = "software.amazon.awssdk:s3control" }
 aws2-s3-lib = { module = "software.amazon.awssdk:s3" }
 aws2-s3-transfer-manager = { module = "software.amazon.awssdk:s3-transfer-manager" }
+aws2-s3vectors-lib = { module = "software.amazon.awssdk:s3vectors" }
 aws2-aws-crt-client = { module = "software.amazon.awssdk:aws-crt-client" }
 
 # Kubernetes
