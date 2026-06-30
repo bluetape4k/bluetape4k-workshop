@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="900" viewBox="0 0 1180 900" role="img" aria-label="S3 Vectors and Access Grants request sequence">
+  <defs>
+    <marker id="seqArrowBlue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M1 1 L7 4 L1 7 Z" fill="#4f78b8"/>
+    </marker>
+    <marker id="seqArrowGreen" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M1 1 L7 4 L1 7 Z" fill="#4f8f70"/>
+    </marker>
+    <marker id="seqArrowTeal" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M1 1 L7 4 L1 7 Z" fill="#4e9a9a"/>
+    </marker>
+    <style>
+      .canvas{fill:#f7f9fc}
+      .frame{fill:#ffffff;stroke:#d9e2ec;stroke-width:1.5}
+      .title{font-family:"Architects Daughter", "Comic Sans MS", cursive;font-size:34px;font-weight:700;fill:#162033}
+      .subtitle{font-family:"Comic Mono", "Comic Sans MS", cursive;font-size:13px;fill:#526274}
+      .actor{font-family:"Architects Daughter", "Comic Sans MS", cursive;font-size:17px;fill:#182335}
+      .message{font-family:"Comic Mono", "Comic Sans MS", cursive;font-size:12px;fill:#263445}
+      .smallLabel{font-family:"Comic Mono", "Comic Sans MS", cursive;font-size:12px;fill:#526274}
+      .box{fill:#ffffff;stroke:#9fb1c5;stroke-width:1.7}
+      .lifeline{stroke:#b8c4d3;stroke-width:1.4;stroke-dasharray:7 6}
+      .call{stroke:#4f78b8;stroke-width:2.15;fill:none;marker-end:url(#seqArrowBlue)}
+      .return{stroke:#4f8f70;stroke-width:2.05;stroke-dasharray:7 5;fill:none;marker-end:url(#seqArrowGreen)}
+      .accessCall{stroke:#4e9a9a;stroke-width:2.15;fill:none;marker-end:url(#seqArrowTeal)}
+      .label{fill:#ffffff;stroke:#d8e0ea;stroke-width:1.2}
+      .alt{fill:none;stroke:#8ab8b8;stroke-width:1.8;stroke-dasharray:10 7}
+    </style>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="1180" height="900"/>
+  <rect class="frame" x="24" y="22" width="1132" height="850" rx="18"/>
+  <text class="title" x="590" y="68" text-anchor="middle">S3 Vectors + Access Grants Sequence</text>
+  <text class="subtitle" x="590" y="98" text-anchor="middle">Numbered calls keep the vector path separate from the optional object-access decision.</text>
+
+  <rect class="box" x="70" y="122" width="130" height="54" rx="9"/>
+  <text class="actor" x="135" y="153" text-anchor="middle">Client</text>
+  <rect class="box" x="290" y="122" width="150" height="54" rx="9"/>
+  <text class="actor" x="365" y="153" text-anchor="middle">Controller</text>
+  <rect class="box" x="520" y="122" width="150" height="54" rx="9"/>
+  <text class="actor" x="595" y="153" text-anchor="middle">Service</text>
+  <rect class="box" x="750" y="122" width="150" height="54" rx="9"/>
+  <text class="actor" x="825" y="153" text-anchor="middle">S3 Vectors</text>
+  <rect class="box" x="970" y="122" width="150" height="54" rx="9"/>
+  <text class="actor" x="1045" y="153" text-anchor="middle">Access Grants</text>
+
+  <line class="lifeline" x1="135" y1="176" x2="135" y2="830"/>
+  <line class="lifeline" x1="365" y1="176" x2="365" y2="830"/>
+  <line class="lifeline" x1="595" y1="176" x2="595" y2="830"/>
+  <line class="lifeline" x1="825" y1="176" x2="825" y2="830"/>
+  <line class="lifeline" x1="1045" y1="176" x2="1045" y2="830"/>
+
+  <path class="call" d="M 135 230 L 365 230"/>
+  <rect class="label" x="185" y="184" width="130" height="24" rx="6"/>
+  <text class="message" x="250" y="201" text-anchor="middle">1. POST document</text>
+
+  <path class="call" d="M 365 310 L 595 310"/>
+  <rect class="label" x="399" y="264" width="162" height="24" rx="6"/>
+  <text class="message" x="480" y="281" text-anchor="middle">2. validate vector DTO</text>
+
+  <path class="call" d="M 595 390 L 825 390"/>
+  <rect class="label" x="635" y="344" width="150" height="24" rx="6"/>
+  <text class="message" x="710" y="361" text-anchor="middle">3. PutVectors</text>
+
+  <path class="return" d="M 825 470 L 595 470"/>
+  <rect class="label" x="619" y="424" width="182" height="24" rx="6"/>
+  <text class="message" x="710" y="441" text-anchor="middle">4. published status</text>
+
+  <path class="call" d="M 135 550 L 365 550"/>
+  <rect class="label" x="186" y="504" width="128" height="24" rx="6"/>
+  <text class="message" x="250" y="521" text-anchor="middle">5. POST search</text>
+
+  <path class="call" d="M 595 620 L 825 620"/>
+  <rect class="label" x="635" y="574" width="150" height="24" rx="6"/>
+  <text class="message" x="710" y="591" text-anchor="middle">6. QueryVectors</text>
+
+  <path class="return" d="M 595 690 L 365 690"/>
+  <rect class="label" x="395" y="644" width="170" height="24" rx="6"/>
+  <text class="message" x="480" y="661" text-anchor="middle">7. ranked matches</text>
+
+  <rect class="alt" x="496" y="718" width="606" height="104" rx="10"/>
+  <text class="smallLabel" x="516" y="741">alt requireAccessGrant=true</text>
+  <path class="accessCall" d="M 595 770 L 1045 770"/>
+  <rect class="label" x="724" y="724" width="192" height="24" rx="6"/>
+  <text class="message" x="820" y="741" text-anchor="middle">8. GetDataAccess READ</text>
+
+  <path class="return" d="M 1045 820 L 595 820"/>
+  <rect class="label" x="718" y="774" width="204" height="24" rx="6"/>
+  <text class="message" x="820" y="791" text-anchor="middle">9. redacted decision</text>
+</svg>
