@@ -21,7 +21,7 @@
       .activation { fill: #ffffff; stroke: #6d8190; stroke-width: 2.2; rx: 5; ry: 5; }
       .label { fill: #ffffff; stroke: #d4e0e7; stroke-width: 1.7; rx: 16; ry: 16; filter: url(#labelShadow); }
       .badge { fill: #f7fbff; stroke-width: 1.8; }
-      .alt { fill: #fffdf8; stroke: #7f97a4; stroke-width: 2.3; stroke-dasharray: 10 9; rx: 18; ry: 18; }
+      .alt { fill: none; stroke: #7f97a4; stroke-width: 2.3; stroke-dasharray: 10 9; rx: 18; ry: 18; }
       .branchDivider { stroke: #b9c4cb; stroke-width: 2.1; stroke-dasharray: 9 9; }
       .branchOkBox { fill: #eefaf7; stroke: #2c9b8f; stroke-width: 1.7; rx: 11; ry: 11; }
       .branchErrorBox { fill: #fff3f2; stroke: #d95c55; stroke-width: 1.7; rx: 11; ry: 11; }
