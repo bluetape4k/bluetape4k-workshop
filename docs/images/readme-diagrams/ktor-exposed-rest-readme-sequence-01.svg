@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="960" viewBox="0 0 1680 960" role="img" aria-labelledby="title desc">
+  <title id="title">Ktor Exposed REST Request Sequence</title>
+  <desc id="desc">Ktor routes validate a request, enter exposedJdbcTransaction, persist a book in PostgreSQL, and map rollback failures safely.</desc>
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/>
+    </filter>
+    <style>
+      .frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}
+      .title{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:40px;fill:#263238}
+      .subtitle,.role,.msg,.footer,.altText{font-family:"Comic Mono","Courier New",monospace;fill:#36464F}
+      .subtitle{font-size:17px}.role{font-size:12px;fill:#546A73}.msg{font-size:13px}.footer{font-size:14px;fill:#60727D}
+      .participant{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:19px;fill:#1F3138}
+      .header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2;rx:10;ry:10}
+      .lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}
+      .activation{fill:#EEF4F6;stroke:#607D8B;stroke-width:1.6;rx:4;ry:4}
+      .call,.work,.return,.fail{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+      .call{stroke:#3F7D9C;marker-end:url(#arrow-call)}
+      .work{stroke:#5F8A54;marker-end:url(#arrow-work)}
+      .return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-return)}
+      .fail{stroke:#B86868;marker-end:url(#arrow-fail)}
+      .label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5;rx:17;ry:17}
+      .callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.failLabel{stroke:#D9ABAB}
+      .badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#5F8A54}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.failBadge{fill:#FFF0F0;stroke:#B86868}
+      .badgeText{font-family:"Comic Mono","Courier New",monospace;font-size:12px;font-weight:700}
+      .callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#4F7642}.returnText,.badgeText.returnText{fill:#7F6038}.failText,.badgeText.failText{fill:#9D4F4F}
+      .alt{fill:none;stroke:#D08A39;stroke-width:2.2;stroke-dasharray:12 8;rx:16;ry:16}
+      .divider{stroke:#D08A39;stroke-width:1.8;stroke-dasharray:9 7;opacity:.7}
+      .altText{font-size:13px;fill:#8A5A18;font-weight:700}
+    </style>
+    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="13" markerHeight="13" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke="#3F7D9C" stroke-dasharray="none"/></marker>
+    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="13" markerHeight="13" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5F8A54" stroke="#5F8A54" stroke-dasharray="none"/></marker>
+    <marker id="arrow-return" viewBox="0 0 10 10" markerWidth="13" markerHeight="13" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke="#9B7D54" stroke-dasharray="none"/></marker>
+    <marker id="arrow-fail" viewBox="0 0 10 10" markerWidth="13" markerHeight="13" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke="#B86868" stroke-dasharray="none"/></marker>
+  </defs>
+
+  <rect x="24" y="24" width="1632" height="912" rx="20" class="frame"/>
+  <text x="840" y="76" text-anchor="middle" class="title">Ktor Exposed REST Request Sequence</text>
+  <text x="840" y="106" text-anchor="middle" class="subtitle">Numbered calls keep validation, transaction, rollback, and safe error mapping visible.</text>
+
+  <rect x="88" y="590" width="1504" height="260" class="alt"/>
+  <text x="112" y="620" class="altText">alt rollback or database failure</text>
+  <line x1="88" y1="710" x2="1592" y2="710" class="divider"/>
+  <text x="112" y="740" class="altText">else direct SQLException</text>
+
+  <g filter="url(#shadow)">
+    <rect x="50" y="150" width="230" height="74" class="header"/>
+    <text x="165" y="179" text-anchor="middle" class="participant">Client</text>
+    <text x="165" y="204" text-anchor="middle" class="role">HTTP caller</text>
+  </g>
+  <line x1="165" y1="224" x2="165" y2="850" class="lifeline"/>
+
+  <g filter="url(#shadow)">
+    <rect x="370" y="150" width="230" height="74" class="header"/>
+    <text x="485" y="179" text-anchor="middle" class="participant">BookRoutes</text>
+    <text x="485" y="204" text-anchor="middle" class="role">Ktor routing</text>
+  </g>
+  <line x1="485" y1="224" x2="485" y2="850" class="lifeline"/>
+
+  <g filter="url(#shadow)">
+    <rect x="690" y="150" width="230" height="74" class="header"/>
+    <text x="805" y="179" text-anchor="middle" class="participant">Exposed Ktor</text>
+    <text x="805" y="204" text-anchor="middle" class="role">transaction helper</text>
+  </g>
+  <line x1="805" y1="224" x2="805" y2="850" class="lifeline"/>
+
+  <g filter="url(#shadow)">
+    <rect x="1010" y="150" width="230" height="74" class="header"/>
+    <text x="1125" y="179" text-anchor="middle" class="participant">BookRepository</text>
+    <text x="1125" y="204" text-anchor="middle" class="role">Exposed DSL</text>
+  </g>
+  <line x1="1125" y1="224" x2="1125" y2="850" class="lifeline"/>
+
+  <g filter="url(#shadow)">
+    <rect x="1330" y="150" width="250" height="74" class="header"/>
+    <text x="1455" y="179" text-anchor="middle" class="participant">PostgreSQL</text>
+    <text x="1455" y="204" text-anchor="middle" class="role">Testcontainer</text>
+  </g>
+  <line x1="1455" y1="224" x2="1455" y2="850" class="lifeline"/>
+
+  <rect x="479" y="274" width="12" height="575" class="activation"/>
+  <rect x="799" y="338" width="12" height="520" class="activation"/>
+  <rect x="1119" y="402" width="12" height="410" class="activation"/>
+
+  <rect x="210" y="250" width="230" height="34" class="label labelPill callLabel"/>
+  <circle cx="234" cy="267" r="13" class="badge callBadge"/><text x="234" y="272" text-anchor="middle" class="badgeText num callText">1</text>
+  <text x="258" y="272" class="msg callText">POST /api/books</text>
+  <path d="M165 298 L485 298" class="call"/>
+
+  <rect x="524" y="314" width="242" height="34" class="label labelPill callLabel"/>
+  <circle cx="548" cy="331" r="13" class="badge callBadge"/><text x="548" y="336" text-anchor="middle" class="badgeText num callText">2</text>
+  <text x="572" y="336" class="msg callText">validate BookRequest</text>
+  <path d="M485 362 L805 362" class="call"/>
+
+  <rect x="842" y="378" width="248" height="34" class="label labelPill workLabel"/>
+  <circle cx="866" cy="395" r="13" class="badge workBadge"/><text x="866" y="400" text-anchor="middle" class="badgeText num workText">3</text>
+  <text x="890" y="400" class="msg workText">start JDBC transaction</text>
+  <path d="M805 426 L1125 426" class="work"/>
+
+  <rect x="1168" y="442" width="252" height="34" class="label labelPill workLabel"/>
+  <circle cx="1192" cy="459" r="13" class="badge workBadge"/><text x="1192" y="464" text-anchor="middle" class="badgeText num workText">4</text>
+  <text x="1216" y="464" class="msg workText">INSERT book row</text>
+  <path d="M1125 490 L1455 490" class="work"/>
+
+  <rect x="510" y="506" width="250" height="34" class="label labelPill returnLabel"/>
+  <circle cx="534" cy="523" r="13" class="badge returnBadge"/><text x="534" y="528" text-anchor="middle" class="badgeText num returnText">5</text>
+  <text x="558" y="528" class="msg returnText">201 BookResponse</text>
+  <path d="M1455 554 L165 554" class="return"/>
+
+  <rect x="520" y="614" width="252" height="34" class="label labelPill failLabel"/>
+  <circle cx="544" cy="631" r="13" class="badge failBadge"/><text x="544" y="636" text-anchor="middle" class="badgeText num failText">6</text>
+  <text x="568" y="636" class="msg failText">POST /api/books/rollback</text>
+  <path d="M165 662 L485 662" class="fail"/>
+
+  <rect x="850" y="732" width="300" height="34" class="label labelPill failLabel"/>
+  <circle cx="874" cy="749" r="13" class="badge failBadge"/><text x="874" y="754" text-anchor="middle" class="badgeText num failText">7</text>
+  <text x="898" y="754" class="msg failText">insert then throw inside tx</text>
+  <path d="M805 780 L1125 780" class="fail"/>
+
+  <rect x="520" y="796" width="348" height="34" class="label labelPill returnLabel"/>
+  <circle cx="544" cy="813" r="13" class="badge returnBadge"/><text x="544" y="818" text-anchor="middle" class="badgeText num returnText">8</text>
+  <text x="568" y="818" class="msg returnText">safe EXPOSED_* error, no secrets</text>
+  <path d="M1125 844 L165 844" class="return"/>
+
+  <rect x="90" y="880" width="1500" height="38" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
+  <text x="840" y="905" text-anchor="middle" class="footer">Contract: validation happens before the transaction; rollback and SQL exceptions return sanitized JSON errors.</text>
+</svg>
