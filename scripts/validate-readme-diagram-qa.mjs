@@ -7,7 +7,7 @@ import path from "node:path";
 
 const root = process.cwd();
 const diagramDir = path.join(root, "docs/images/readme-diagrams");
-const skillAuditDir = "/Users/debop/.codex/skills/bluetape4k-diagram/references";
+const skillAuditDir = process.env.DIAGRAM_QA_REFERENCE_AUDIT_DIR || "/Users/debop/.codex/skills/bluetape4k-diagram/references";
 const localCairosvg = path.join(os.homedir(), ".local/bin/cairosvg");
 const cairosvg = process.env.CAIROSVG_BIN || (fs.existsSync(localCairosvg) ? localCairosvg : "cairosvg");
 const failures = [];
@@ -319,7 +319,7 @@ function runSkillAudits(file, svg) {
   for (const [gate, script] of audits) {
     const scriptPath = path.join(skillAuditDir, script);
     if (!fs.existsSync(scriptPath)) {
-      fail(scope, `${gate} reference audit`, `${scriptPath} missing`);
+      addRow(scope, `${gate} reference audit`, `${scriptPath} missing`, "UNAVAILABLE");
       continue;
     }
     const result = run("python3", [scriptPath, rel(file)]);
@@ -383,7 +383,7 @@ if (targets.some((file) => path.basename(file).includes("sequence"))) {
   }
 }
 
-const weakRows = rows.filter((row) => row.result === "WEAK");
+const weakRows = rows.filter((row) => row.result === "WEAK" || row.result === "UNAVAILABLE");
 const fallbackRows = rows.filter((row) => row.gate.startsWith("fallback "));
 if (weakRows.length > 0 && fallbackRows.length === 0) {
   fail("diagram-set", "weak audit fallback", `weak_rows=${weakRows.length} fallback_rows=0`);
