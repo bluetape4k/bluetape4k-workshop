@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: text-moderation-api
+
+workshop:
+  text-moderation:
+    max-text-characters: 2000
+    blockwords:
+      - spam
+      - badword
+      - abuse
+      - hate

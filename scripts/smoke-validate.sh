@@ -48,6 +48,7 @@ case "${1:-help}" in
       :spring-boot-protobuf-mvc:test \
       :spring-boot-resilience4j-coroutines:test \
       :spring-boot-stomp-websocket:test \
+      :spring-boot-text-moderation-api:test \
       :spring-boot-webflux-coroutines:test \
       :spring-boot-webflux-websocket:test \
       :spring-data-r2dbc-examples:test \
@@ -100,6 +101,7 @@ case "${1:-help}" in
       :spring-boot-cbor-mvc:test \
       :spring-boot-protobuf-mvc:test \
       :spring-boot-stomp-websocket:test \
+      :spring-boot-text-moderation-api:test \
       :spring-modulith-events-deep-dive:test \
       :spring-security-mvc-hello:test \
       :spring-security-webflux-hello-security:test \
@@ -159,7 +161,7 @@ case "${1:-help}" in
   stale-check)
     echo "=== Gradle project count ==="
     count=$("$GRADLEW" projects --console=plain 2>/dev/null | grep -Ec "Project ':" || true)
-    expected=86
+    expected=88
     echo "Active modules: $count (expected: $expected)"
     [ "$count" -eq "$expected" ] || echo "WARNING: Gradle project count drifted."
 

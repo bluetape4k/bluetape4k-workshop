@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1080" viewBox="0 0 1280 1080" role="img" aria-labelledby="title desc">
+  <title id="title">spring-boot-text-moderation-api architecture</title>
+  <desc id="desc">Top-to-bottom request processing layers for the text moderation API.</desc>
+  <defs>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Architects+Daughter&amp;display=swap");
+      @font-face { font-family: "Comic Mono"; src: local("Comic Mono"); }
+      :root { color-scheme: light; }
+      text { font-family: "Comic Mono", monospace; fill: #263238; }
+      .title { font-family: "Architects Daughter", cursive; font-size: 38px; fill: #172026; }
+      .subtitle { font-size: 18px; fill: #51626d; }
+      .layer-title { font-family: "Architects Daughter", cursive; font-size: 22px; fill: #30434f; }
+      .node-title { font-family: "Architects Daughter", cursive; font-size: 23px; fill: #16232b; }
+      .node-note { font-size: 15px; fill: #52646f; }
+      .layer { rx: 22; ry: 22; stroke-width: 2; }
+      .edge path { fill: none; stroke: #5d7280; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#arrow); }
+      .node rect { stroke-width: 2.4; rx: 18; ry: 18; filter: url(#softShadow); }
+    </style>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1a2c34" flood-opacity="0.14"/>
+    </filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+      <path class="connector" d="M 0 0 L 10 5 L 0 10 Z" fill="#5d7280"/>
+    </marker>
+  </defs>
+
+  <rect x="24" y="24" width="1232" height="1032" rx="34" fill="#f8fbfc" stroke="#d7e2e7" stroke-width="2"/>
+  <text class="title" x="64" y="76">Text Moderation API</text>
+  <text class="subtitle" x="64" y="108">Spring MVC boundary with reusable bluetape4k-text components</text>
+
+  <rect class="layer" x="62" y="138" width="1156" height="220" fill="#eef7f3" stroke="#b9dccc"/>
+  <text class="layer-title" x="84" y="172">HTTP boundary</text>
+  <rect class="layer" x="62" y="376" width="1156" height="274" fill="#f5f2fb" stroke="#d8c9ef"/>
+  <text class="layer-title" x="84" y="410">Moderation core</text>
+  <rect class="layer" x="62" y="668" width="1156" height="168" fill="#fff6e8" stroke="#f0d6a9"/>
+  <text class="layer-title" x="84" y="702">Reusable text components</text>
+  <rect class="layer" x="62" y="872" width="1156" height="144" fill="#eef4fb" stroke="#bfd4ea"/>
+  <text class="layer-title" x="84" y="906">Local verification</text>
+
+  <g class="node" data-node="client">
+    <rect class="card" x="500" y="156" width="280" height="76" fill="#ffffff" stroke="#6fbf9f"/>
+    <text class="node-title" x="640" y="190" text-anchor="middle">HTTP Client</text>
+    <text class="node-note" x="640" y="214" text-anchor="middle">JSON text request</text>
+  </g>
+  <g class="node" data-node="controller">
+    <rect class="card" x="455" y="272" width="370" height="84" fill="#ffffff" stroke="#6fbf9f"/>
+    <text class="node-title" x="640" y="306" text-anchor="middle">TextModerationController</text>
+    <text class="node-note" x="640" y="331" text-anchor="middle">POST /api/moderation/analyze</text>
+  </g>
+  <g class="node" data-node="validation">
+    <rect class="card" x="455" y="418" width="370" height="86" fill="#ffffff" stroke="#9b7ed0"/>
+    <text class="node-title" x="640" y="452" text-anchor="middle">Request Validation</text>
+    <text class="node-note" x="640" y="477" text-anchor="middle">400 blank or missing, 413 oversized</text>
+  </g>
+  <g class="node" data-node="service">
+    <rect class="card" x="455" y="558" width="370" height="92" fill="#ffffff" stroke="#9b7ed0"/>
+    <text class="node-title" x="640" y="593" text-anchor="middle">TextModerationService</text>
+    <text class="node-note" x="640" y="618" text-anchor="middle">detect, match, mask, normalize</text>
+  </g>
+  <g class="node" data-node="detector">
+    <rect class="card" x="125" y="728" width="300" height="88" fill="#ffffff" stroke="#d9a548"/>
+    <text class="node-title" x="275" y="762" text-anchor="middle">LanguageDetector</text>
+    <text class="node-note" x="275" y="787" text-anchor="middle">bluetape4k-text-lingua</text>
+  </g>
+  <g class="node" data-node="matcher">
+    <rect class="card" x="490" y="728" width="300" height="88" fill="#ffffff" stroke="#d9a548"/>
+    <text class="node-title" x="640" y="762" text-anchor="middle">Aho-Corasick</text>
+    <text class="node-note" x="640" y="787" text-anchor="middle">bluetape4k-text-search</text>
+  </g>
+  <g class="node" data-node="response">
+    <rect class="card" x="855" y="728" width="300" height="88" fill="#ffffff" stroke="#d9a548"/>
+    <text class="node-title" x="1005" y="762" text-anchor="middle">ModerationResponse</text>
+    <text class="node-note" x="1005" y="787" text-anchor="middle">language, matches, masked text</text>
+  </g>
+  <g class="node" data-node="tests">
+    <rect class="card" x="455" y="914" width="370" height="80" fill="#ffffff" stroke="#6699c7"/>
+    <text class="node-title" x="640" y="947" text-anchor="middle">Deterministic Tests</text>
+    <text class="node-note" x="640" y="971" text-anchor="middle">MVC status, masking, bean reuse</text>
+  </g>
+
+  <g class="edge" data-edge="client-&gt;controller" data-label="submit-json">
+    <path class="connector" d="M 640 232 L 640 272"/>
+  </g>
+  <g class="edge" data-edge="controller-&gt;validation" data-label="bind-and-validate">
+    <path class="connector" d="M 640 356 L 640 418"/>
+  </g>
+  <g class="edge" data-edge="validation-&gt;service" data-label="valid-text">
+    <path class="connector" d="M 640 504 L 640 558"/>
+  </g>
+  <g class="edge" data-edge="service-&gt;detector" data-label="language-detection">
+    <path class="connector" d="M 455 604 L 295 604 Q 275 604 275 624 L 275 728"/>
+  </g>
+  <g class="edge" data-edge="service-&gt;matcher" data-label="keyword-scan">
+    <path class="connector" d="M 640 650 L 640 728"/>
+  </g>
+  <g class="edge" data-edge="service-&gt;response" data-label="normalized-response">
+    <path class="connector" d="M 825 604 L 985 604 Q 1005 604 1005 624 L 1005 728"/>
+  </g>
+  <g class="edge" data-edge="matcher-&gt;response" data-label="masked-terms">
+    <path class="connector" d="M 790 772 L 855 772"/>
+  </g>
+  <g class="edge" data-edge="response-&gt;tests" data-label="assert-contract">
+    <path class="connector" d="M 1005 816 L 1005 838 Q 1005 858 985 858 L 660 858 Q 640 858 640 878 L 640 914"/>
+  </g>
+</svg>

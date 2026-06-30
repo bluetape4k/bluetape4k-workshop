@@ -96,6 +96,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Advanced | [`spring-boot-resilience4j-coroutines`](spring-boot/resilience4j-coroutines/) | `resilience4j`, `coroutines` | In-memory | Circuit breaker + retry + rate limiter with coroutines |
 | Basic | [`spring-boot-cbor-mvc`](spring-boot/cbor-mvc/) | `logging` | In-memory | CBOR binary serialization in Spring MVC |
 | Basic | [`spring-boot-protobuf-mvc`](spring-boot/protobuf-mvc/) | `logging` | In-memory | Protobuf serialization in Spring MVC |
+| Basic | [`spring-boot-text-moderation-api`](spring-boot/text-moderation-api/) | `text-search`, `lingua`, `logging` | In-memory | Web-safety text moderation API with deterministic language detection and masking |
 | Advanced | [`spring-boot-stomp-websocket`](spring-boot/stomp-websocket/) | `coroutines` | In-memory | STOMP WebSocket with coroutine message handlers |
 | Advanced | [`spring-boot-webflux-websocket`](spring-boot/webflux-websocket/) | `coroutines` | In-memory | WebFlux reactive WebSocket |
 | Advanced | [`spring-boot-chaos-monkey`](spring-boot/chaos-monkey/) | `logging` | In-memory | Chaos Monkey for Spring Boot — latency/exception injection |
