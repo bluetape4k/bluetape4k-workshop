@@ -1,138 +1,191 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1080" viewBox="0 0 1500 1080" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1460" viewBox="0 0 1600 1460" role="img" aria-labelledby="title desc">
   <title id="title">spring-boot-text-moderation-api sequence</title>
-  <desc id="desc">Best-practices sequence diagram for validation and success flows in the text moderation API.</desc>
+  <desc id="desc">Numbered best-practices sequence diagram for the text moderation API request, valid moderation branch, and error JSON branch.</desc>
   <defs>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Architects+Daughter&amp;display=swap");
       @font-face { font-family: "Comic Mono"; src: local("Comic Mono"); }
       text { font-family: "Comic Mono", monospace; fill: #263238; }
-      .title { font-family: "Architects Daughter", cursive; font-size: 38px; fill: #172026; }
+      .title { font-family: "Architects Daughter", cursive; font-size: 42px; fill: #172026; }
       .subtitle { font-size: 18px; fill: #51626d; }
-      .participant { font-family: "Architects Daughter", cursive; font-size: 22px; fill: #18272f; }
+      .participant { font-family: "Architects Daughter", cursive; font-size: 24px; fill: #18272f; }
       .role { font-size: 14px; fill: #5a6b75; }
-      .message { font-size: 15px; fill: #263238; }
-      .note { font-size: 15px; fill: #5a6b75; }
-      .lifeline, .life { stroke: #9fb0b9; stroke-width: 2; stroke-dasharray: 8 9; }
-      .activation { fill: #ffffff; stroke: #6d8190; stroke-width: 2; rx: 5; ry: 5; }
-      .call { fill: none; stroke: #506c7a; stroke-width: 3.2; stroke-linecap: round; marker-end: url(#seqArrow); }
-      .return { fill: none; stroke: #7c8b94; stroke-width: 3; stroke-dasharray: 8 7; stroke-linecap: round; marker-end: url(#seqArrow); }
-      .message-label { fill: none; stroke: none; opacity: 0; }
-      .label { fill: #ffffff; stroke: #aec7d4; stroke-width: 1.8; rx: 16; ry: 16; filter: url(#labelShadow); }
-      .box { fill: #ffffff; stroke: #98b7c7; stroke-width: 2.2; rx: 17; ry: 17; filter: url(#labelShadow); }
-      .header { fill: none; stroke: none; rx: 17; ry: 17; }
-      .frame { fill: #f8fbfc; stroke: #d7e2e7; stroke-width: 2; rx: 34; ry: 34; }
-      .alt { fill: #f4f0fb; fill-opacity: 0.12; stroke: #b9a2db; stroke-width: 2; rx: 18; ry: 18; }
-      .branchDivider { stroke: #b9a2db; stroke-width: 2; stroke-dasharray: 9 8; }
+      .message { font-size: 15px; font-weight: 700; fill: #2d3d45; }
+      .note { font-size: 14px; fill: #5a6b75; }
+      .branchTitle { font-size: 14px; font-weight: 700; letter-spacing: 0; }
+      .badgeText { font-size: 16px; font-weight: 800; text-anchor: middle; dominant-baseline: central; }
+      .frame { fill: #fcfdfb; stroke: #40555e; stroke-width: 3; rx: 30; ry: 30; }
+      .footer { fill: #ffffff; stroke: #d6e4eb; stroke-width: 2; rx: 12; ry: 12; }
+      .header, .participantBox { fill: #ffffff; stroke: #5d7481; stroke-width: 2.4; rx: 12; ry: 12; filter: url(#softShadow); }
+      .lifeline, .life { stroke: #9fb0b9; stroke-width: 2; stroke-dasharray: 8 10; }
+      .activation { fill: #ffffff; stroke: #6d8190; stroke-width: 2.2; rx: 5; ry: 5; }
+      .label { fill: #ffffff; stroke: #d4e0e7; stroke-width: 1.7; rx: 16; ry: 16; filter: url(#labelShadow); }
+      .badge { fill: #f7fbff; stroke-width: 1.8; }
+      .alt { fill: #fffdf8; stroke: #7f97a4; stroke-width: 2.3; stroke-dasharray: 10 9; rx: 18; ry: 18; }
+      .branchDivider { stroke: #b9c4cb; stroke-width: 2.1; stroke-dasharray: 9 9; }
+      .branchOkBox { fill: #eefaf7; stroke: #2c9b8f; stroke-width: 1.7; rx: 11; ry: 11; }
+      .branchErrorBox { fill: #fff3f2; stroke: #d95c55; stroke-width: 1.7; rx: 11; ry: 11; }
+      .branchOk { fill: #196c63; }
+      .branchError { fill: #ad352e; }
+      .call { fill: none; stroke: #4f8fda; stroke-width: 3.2; stroke-linecap: round; marker-end: url(#arrowCall); }
+      .state { fill: none; stroke: #8a63d2; stroke-width: 3.1; stroke-linecap: round; marker-end: url(#arrowState); }
+      .detect { fill: none; stroke: #2fa36f; stroke-width: 3.2; stroke-linecap: round; marker-end: url(#arrowDetect); }
+      .scan { fill: none; stroke: #c28518; stroke-width: 3.2; stroke-linecap: round; marker-end: url(#arrowScan); }
+      .success { fill: none; stroke: #24928d; stroke-width: 3.2; stroke-linecap: round; marker-end: url(#arrowSuccess); }
+      .return { fill: none; stroke-dasharray: 9 8; stroke-linecap: round; }
+      .return.call { marker-end: url(#arrowCall); }
+      .return.detect { marker-end: url(#arrowDetect); }
+      .return.scan { marker-end: url(#arrowScan); }
+      .return.success { marker-end: url(#arrowSuccess); }
+      .error { fill: none; stroke: #d95c55; stroke-width: 3.2; stroke-linecap: round; marker-end: url(#arrowError); }
+      .return.error { stroke-dasharray: 9 8; marker-end: url(#arrowError); }
     </style>
-    <filter id="labelShadow" x="-10%" y="-20%" width="120%" height="150%">
-      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1a2c34" flood-opacity="0.12"/>
+    <filter id="softShadow" x="-10%" y="-20%" width="120%" height="150%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#263238" flood-opacity="0.10"/>
     </filter>
-    <marker id="seqArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#506c7a"/>
+    <filter id="labelShadow" x="-12%" y="-35%" width="124%" height="170%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#263238" flood-opacity="0.10"/>
+    </filter>
+    <marker id="arrowCall" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f8fda"/>
+    </marker>
+    <marker id="arrowState" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#8a63d2"/>
+    </marker>
+    <marker id="arrowDetect" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2fa36f"/>
+    </marker>
+    <marker id="arrowScan" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#c28518"/>
+    </marker>
+    <marker id="arrowSuccess" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#24928d"/>
+    </marker>
+    <marker id="arrowError" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#d95c55"/>
     </marker>
   </defs>
 
-  <rect class="frame" x="24" y="24" width="1452" height="1032"/>
-  <text class="title" x="64" y="76">Text Moderation Request Flow</text>
-  <text class="subtitle" x="64" y="108">Validation branch and local text-component reuse in one Spring MVC request</text>
+  <rect class="frame" x="28" y="28" width="1544" height="1404"/>
+  <text class="title" x="76" y="84">Text Moderation Request Flow</text>
+  <text class="subtitle" x="78" y="116">Spring MVC delegates once, the service reuses local text components, and advice turns validation failures into stable JSON.</text>
 
   <g id="participants">
-    <rect class="box" x="70" y="146" width="180" height="76"/>
-    <rect class="header" x="70" y="146" width="180" height="76"/>
-    <text class="participant" x="160" y="178" text-anchor="middle">Client</text>
-    <text class="role" x="160" y="202" text-anchor="middle">JSON caller</text>
+    <rect class="participantBox header" x="72" y="164" width="178" height="78"/>
+    <text class="participant" x="161" y="197" text-anchor="middle">Client</text>
+    <text class="role" x="161" y="222" text-anchor="middle">JSON caller</text>
 
-    <rect class="box" x="300" y="146" width="200" height="76"/>
-    <rect class="header" x="300" y="146" width="200" height="76"/>
-    <text class="participant" x="400" y="178" text-anchor="middle">Controller</text>
-    <text class="role" x="400" y="202" text-anchor="middle">MVC endpoint</text>
+    <rect class="participantBox header" x="312" y="164" width="202" height="78"/>
+    <text class="participant" x="413" y="197" text-anchor="middle">Controller</text>
+    <text class="role" x="413" y="222" text-anchor="middle">POST /analyze</text>
 
-    <rect class="box" x="550" y="146" width="200" height="76"/>
-    <rect class="header" x="550" y="146" width="200" height="76"/>
-    <text class="participant" x="650" y="178" text-anchor="middle">Service</text>
-    <text class="role" x="650" y="202" text-anchor="middle">moderation core</text>
+    <rect class="participantBox header" x="566" y="164" width="202" height="78"/>
+    <text class="participant" x="667" y="197" text-anchor="middle">Service</text>
+    <text class="role" x="667" y="222" text-anchor="middle">validate + compose</text>
 
-    <rect class="box" x="800" y="146" width="200" height="76"/>
-    <rect class="header" x="800" y="146" width="200" height="76"/>
-    <text class="participant" x="900" y="178" text-anchor="middle">Detector</text>
-    <text class="role" x="900" y="202" text-anchor="middle">Lingua bean</text>
+    <rect class="participantBox header" x="822" y="164" width="202" height="78"/>
+    <text class="participant" x="923" y="197" text-anchor="middle">Detector</text>
+    <text class="role" x="923" y="222" text-anchor="middle">Lingua singleton</text>
 
-    <rect class="box" x="1050" y="146" width="200" height="76"/>
-    <rect class="header" x="1050" y="146" width="200" height="76"/>
-    <text class="participant" x="1150" y="178" text-anchor="middle">Matcher</text>
-    <text class="role" x="1150" y="202" text-anchor="middle">Aho-Corasick</text>
+    <rect class="participantBox header" x="1078" y="164" width="202" height="78"/>
+    <text class="participant" x="1179" y="197" text-anchor="middle">Aho-Corasick</text>
+    <text class="role" x="1179" y="222" text-anchor="middle">blockword matcher</text>
 
-    <rect class="box" x="1290" y="146" width="160" height="76"/>
-    <rect class="header" x="1290" y="146" width="160" height="76"/>
-    <text class="participant" x="1370" y="178" text-anchor="middle">Advice</text>
-    <text class="role" x="1370" y="202" text-anchor="middle">error mapper</text>
+    <rect class="participantBox header" x="1354" y="164" width="174" height="78"/>
+    <text class="participant" x="1441" y="197" text-anchor="middle">Advice</text>
+    <text class="role" x="1441" y="222" text-anchor="middle">error JSON</text>
   </g>
 
-  <line class="lifeline life" x1="160" y1="222" x2="160" y2="1032"/>
-  <line class="lifeline life" x1="400" y1="222" x2="400" y2="1032"/>
-  <line class="lifeline life" x1="650" y1="222" x2="650" y2="1032"/>
-  <line class="lifeline life" x1="900" y1="222" x2="900" y2="1032"/>
-  <line class="lifeline life" x1="1150" y1="222" x2="1150" y2="1032"/>
-  <line class="lifeline life" x1="1370" y1="222" x2="1370" y2="1032"/>
+  <line class="lifeline life" x1="161" y1="242" x2="161" y2="1300"/>
+  <line class="lifeline life" x1="413" y1="242" x2="413" y2="1300"/>
+  <line class="lifeline life" x1="667" y1="242" x2="667" y2="1300"/>
+  <line class="lifeline life" x1="923" y1="242" x2="923" y2="1300"/>
+  <line class="lifeline life" x1="1179" y1="242" x2="1179" y2="1300"/>
+  <line class="lifeline life" x1="1441" y1="242" x2="1441" y2="1300"/>
 
-  <rect class="activation" x="391" y="270" width="18" height="730"/>
-  <rect class="activation" x="641" y="350" width="18" height="530"/>
-  <rect class="activation" x="891" y="705" width="18" height="60"/>
-  <rect class="activation" x="1141" y="825" width="18" height="60"/>
-  <rect class="activation" x="1361" y="500" width="18" height="70"/>
+  <rect class="activation" x="404" y="318" width="18" height="890"/>
+  <rect class="activation" x="658" y="388" width="18" height="822"/>
+  <rect class="activation" x="914" y="588" width="18" height="92"/>
+  <rect class="activation" x="1170" y="758" width="18" height="92"/>
+  <rect class="activation" x="1432" y="1128" width="18" height="92"/>
 
-  <path class="call" d="M 160 270 L 400 270"/>
-  <rect class="message-label" x="205" y="284" width="150" height="34"/>
-  <rect class="label" x="205" y="224" width="150" height="34"/>
-  <text class="message" x="280" y="246" text-anchor="middle">POST analyze JSON</text>
+  <g id="messages">
+    <rect class="label" x="216" y="274" width="282" height="38"/>
+    <circle class="badge" cx="238" cy="293" r="14" stroke="#4f8fda"/>
+    <text class="badgeText" x="238" y="293" fill="#2b6fb5">1</text>
+    <text class="message" x="266" y="298">POST /api/moderation/analyze</text>
+    <path class="call" d="M 161 324 L 413 324"/>
 
-  <path class="call" d="M 409 350 L 650 350"/>
-  <rect class="message-label" x="455" y="364" width="148" height="34"/>
-  <rect class="label" x="455" y="304" width="148" height="34"/>
-  <text class="message" x="529" y="326" text-anchor="middle">analyze(text)</text>
+    <rect class="label" x="458" y="344" width="306" height="38"/>
+    <circle class="badge" cx="480" cy="363" r="14" stroke="#4f8fda"/>
+    <text class="badgeText" x="480" y="363" fill="#2b6fb5">2</text>
+    <text class="message" x="508" y="368">service.analyze(request.text)</text>
+    <path class="call" d="M 422 394 L 667 394"/>
 
-  <rect class="alt" x="520" y="400" width="895" height="625"/>
-  <text class="note" x="544" y="430">alt invalid input</text>
-  <line class="branchDivider" x1="544" y1="620" x2="1390" y2="620"/>
-  <text class="note" x="544" y="650">else valid text</text>
+    <rect class="label" x="542" y="426" width="314" height="38"/>
+    <circle class="badge" cx="564" cy="445" r="14" stroke="#8a63d2"/>
+    <text class="badgeText" x="564" y="445" fill="#7049bd">3</text>
+    <text class="message" x="592" y="450">validate blank + payload size</text>
+    <path class="state" d="M 676 482 L 758 482 L 758 526 L 676 526"/>
+  </g>
 
-  <path class="call" d="M 659 500 L 1370 500"/>
-  <rect class="message-label" x="915" y="514" width="198" height="34"/>
-  <rect class="label" x="915" y="452" width="198" height="34"/>
-  <text class="message" x="1014" y="474" text-anchor="middle">map validation error</text>
+  <g id="alt-valid-or-error">
+    <rect class="alt" x="82" y="548" width="1446" height="700"/>
+    <rect class="branchOkBox" x="108" y="568" width="208" height="34"/>
+    <text class="branchTitle branchOk" x="132" y="590">alt valid text</text>
+    <line class="branchDivider" x1="108" y1="1024" x2="1500" y2="1024"/>
+    <rect class="branchErrorBox" x="108" y="1044" width="294" height="34"/>
+    <text class="branchTitle branchError" x="132" y="1066">else invalid or unreadable body</text>
 
-  <path class="return" d="M 1361 570 L 160 570"/>
-  <rect class="message-label" x="650" y="584" width="250" height="34"/>
-  <rect class="label" x="650" y="522" width="250" height="34"/>
-  <text class="message" x="775" y="544" text-anchor="middle">400 invalid or 413 too large</text>
+    <rect class="label" x="722" y="564" width="296" height="38"/>
+    <circle class="badge" cx="744" cy="583" r="14" stroke="#2fa36f"/>
+    <text class="badgeText" x="744" y="583" fill="#1f7e55">4</text>
+    <text class="message" x="772" y="588">detectLanguageOf(text)</text>
+    <path class="detect" d="M 676 612 L 923 612"/>
 
-  <path class="call" d="M 659 705 L 900 705"/>
-  <rect class="message-label" x="710" y="719" width="140" height="34"/>
-  <rect class="label" x="710" y="657" width="140" height="34"/>
-  <text class="message" x="780" y="679" text-anchor="middle">detect language</text>
+    <rect class="label" x="704" y="644" width="348" height="38"/>
+    <circle class="badge" cx="726" cy="663" r="14" stroke="#2fa36f"/>
+    <text class="badgeText" x="726" y="663" fill="#1f7e55">5</text>
+    <text class="message" x="754" y="668">language + confidence snapshot</text>
+    <path class="return detect" d="M 914 692 L 667 692"/>
 
-  <path class="return" d="M 891 765 L 650 765"/>
-  <rect class="message-label" x="720" y="779" width="122" height="34"/>
-  <rect class="label" x="720" y="717" width="122" height="34"/>
-  <text class="message" x="781" y="739" text-anchor="middle">language score</text>
+    <rect class="label" x="888" y="724" width="310" height="38"/>
+    <circle class="badge" cx="910" cy="743" r="14" stroke="#c28518"/>
+    <text class="badgeText" x="910" y="743" fill="#9a650d">6</text>
+    <text class="message" x="938" y="748">parseText for blockwords</text>
+    <path class="scan" d="M 676 772 L 1179 772"/>
 
-  <path class="call" d="M 659 825 L 1150 825"/>
-  <rect class="message-label" x="835" y="839" width="138" height="34"/>
-  <rect class="label" x="835" y="777" width="138" height="34"/>
-  <text class="message" x="904" y="799" text-anchor="middle">parse + mask</text>
+    <rect class="label" x="864" y="804" width="330" height="38"/>
+    <circle class="badge" cx="886" cy="823" r="14" stroke="#c28518"/>
+    <text class="badgeText" x="886" y="823" fill="#9a650d">7</text>
+    <text class="message" x="914" y="828">matches + masked text</text>
+    <path class="return scan" d="M 1170 852 L 667 852"/>
 
-  <path class="return" d="M 1141 885 L 650 885"/>
-  <rect class="message-label" x="828" y="899" width="154" height="34"/>
-  <rect class="label" x="828" y="837" width="154" height="34"/>
-  <text class="message" x="905" y="859" text-anchor="middle">masked matches</text>
+    <rect class="label" x="452" y="884" width="286" height="38"/>
+    <circle class="badge" cx="474" cy="903" r="14" stroke="#24928d"/>
+    <text class="badgeText" x="474" y="903" fill="#17736e">8</text>
+    <text class="message" x="502" y="908">ModerationResponse DTO</text>
+    <path class="return success" d="M 658 932 L 413 932"/>
 
-  <path class="return" d="M 641 945 L 400 945"/>
-  <rect class="message-label" x="460" y="959" width="140" height="34"/>
-  <rect class="label" x="460" y="897" width="140" height="34"/>
-  <text class="message" x="530" y="919" text-anchor="middle">200 response</text>
+    <rect class="label" x="186" y="950" width="270" height="38"/>
+    <circle class="badge" cx="208" cy="969" r="14" stroke="#24928d"/>
+    <text class="badgeText" x="208" y="969" fill="#17736e">9</text>
+    <text class="message" x="236" y="974">200 OK masked JSON</text>
+    <path class="return success" d="M 404 1000 L 161 1000"/>
 
-  <path class="return" d="M 391 1000 L 160 1000"/>
-  <rect class="message-label" x="215" y="1014" width="128" height="34"/>
-  <rect class="label" x="215" y="952" width="128" height="34"/>
-  <text class="message" x="279" y="974" text-anchor="middle">masked JSON</text>
+    <rect class="label" x="966" y="1078" width="342" height="38"/>
+    <circle class="badge" cx="988" cy="1097" r="14" stroke="#d95c55"/>
+    <text class="badgeText" x="988" y="1097" fill="#ad352e">10</text>
+    <text class="message" x="1016" y="1102">validation exception to advice</text>
+    <path class="error" d="M 676 1128 L 1441 1128"/>
+
+    <rect class="label" x="646" y="1160" width="338" height="38"/>
+    <circle class="badge" cx="668" cy="1179" r="14" stroke="#d95c55"/>
+    <text class="badgeText" x="668" y="1179" fill="#ad352e">11</text>
+    <text class="message" x="696" y="1184">400 Bad Request or 413 JSON</text>
+    <path class="return error" d="M 1432 1210 L 161 1210"/>
+  </g>
+
+  <rect class="footer" x="226" y="1326" width="1148" height="46"/>
+  <text class="note" x="800" y="1355" text-anchor="middle">All moderation work stays in-process: Lingua detection and Aho-Corasick matching are reusable singleton beans.</text>
 </svg>
