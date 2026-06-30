@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: cloudwatch-imds-observability
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  metrics:
+    tags:
+      service: cloudwatch-imds-observability
+
+bluetape4k:
+  aws:
+    enabled: false
+    cloudwatch:
+      enabled: false
+    cloudwatch-logs:
+      enabled: false
+    imds:
+      enabled: false
+  workshop:
+    aws:
+      observability:
+        namespace: Bluetape4k/Workshop
+        log-group-name: /bluetape4k/workshop/orders
+        log-stream-name: local
+        service-name: order-service
+        source-name: workshop
+        max-field-length: 160
+        metadata:
+          enabled: false
