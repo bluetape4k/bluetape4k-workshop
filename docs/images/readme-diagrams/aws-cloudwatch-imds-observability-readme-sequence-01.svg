@@ -3,49 +3,68 @@
   <desc id="desc">Best-practices sequence diagram with numbered calls, transparent alt frame, branch-specific colors, participant roles, lifelines, and activation bars.</desc>
   <defs>
     <marker id="seqArrowBlue" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke="#2563eb"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86c6" stroke="#4f86c6"/>
     </marker>
     <marker id="seqArrowPurple" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#7c3aed" stroke="#7c3aed"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#8a6a3b" stroke="#8a6a3b"/>
     </marker>
     <marker id="seqArrowGreen" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#16a34a" stroke="#16a34a"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#5d8c47" stroke="#5d8c47"/>
     </marker>
     <marker id="seqArrowAmber" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#d97706" stroke="#d97706"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#b9822d" stroke="#b9822d"/>
     </marker>
     <marker id="seqArrowOrange" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#ea580c" stroke="#ea580c"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#9a6a2e" stroke="#9a6a2e"/>
     </marker>
     <marker id="seqArrowRed" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#dc2626" stroke="#dc2626"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#bd5a62" stroke="#bd5a62"/>
     </marker>
     <marker id="seqArrowReturn" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#0f766e" stroke="#0f766e"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2b8f88" stroke="#2b8f88"/>
     </marker>
     <style>
-      .frame { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 2; rx: 8; }
-      .title { font-family: "Architects Daughter"; font-size: 34px; font-weight: 700; fill: #0f172a; }
-      .subtitle { font-family: "Comic Mono"; font-size: 17px; font-weight: 400; fill: #475569; }
-      .header { fill: #ffffff; stroke: #94a3b8; stroke-width: 2; rx: 8; }
-      .participant { font-family: "Architects Daughter"; font-size: 18px; font-weight: 700; fill: #111827; }
-      .role { font-family: "Comic Mono"; font-size: 13px; font-weight: 400; fill: #64748b; }
-      .lifeline { stroke: #94a3b8; stroke-width: 2; stroke-dasharray: 8 8; }
-      .activation { fill: #e0f2fe; stroke: #0284c7; stroke-width: 2; rx: 5; }
-      .activationService { fill: #dcfce7; stroke: #16a34a; stroke-width: 2; rx: 5; }
-      .activationOps { fill: #fef3c7; stroke: #d97706; stroke-width: 2; rx: 5; }
-      .call { fill: none; stroke: #2563eb; stroke-width: 3; marker-end: url(#seqArrowBlue); }
-      .callPurple { fill: none; stroke: #7c3aed; stroke-width: 3; marker-end: url(#seqArrowPurple); }
-      .callGreen { fill: none; stroke: #16a34a; stroke-width: 3; marker-end: url(#seqArrowGreen); }
-      .callAmber { fill: none; stroke: #d97706; stroke-width: 3; marker-end: url(#seqArrowAmber); }
-      .callOrange { fill: none; stroke: #ea580c; stroke-width: 3; marker-end: url(#seqArrowOrange); }
-      .return { fill: none; stroke: #0f766e; stroke-width: 3; marker-end: url(#seqArrowReturn); }
-      .error { fill: none; stroke: #dc2626; stroke-width: 3; stroke-dasharray: 8 6; marker-end: url(#seqArrowRed); }
-      .label { fill: #ffffff; stroke: #94a3b8; stroke-width: 1.5; rx: 8; }
-      .badge { font-family: "Comic Mono"; font-size: 14px; font-weight: 700; fill: #0f172a; }
-      .labelText { font-family: "Comic Mono"; font-size: 14px; font-weight: 600; fill: #1f2937; }
-      .note { font-family: "Comic Mono"; font-size: 13px; font-weight: 400; fill: #64748b; }
-      .alt { fill: none; fill-opacity: 0; stroke: #64748b; stroke-width: 2; rx: 8; }
+      .frame { fill: #fbfcf8; stroke: #40545d; stroke-width: 3; rx: 8; }
+      .title { font-family: "Architects Daughter"; font-size: 34px; font-weight: 700; fill: #263238; }
+      .subtitle { font-family: "Comic Mono"; font-size: 17px; font-weight: 400; fill: #3f4f57; }
+      .header { fill: #fffefa; stroke: #536d79; stroke-width: 2; rx: 8; }
+      .participant { font-family: "Architects Daughter"; font-size: 18px; font-weight: 700; fill: #1f2933; }
+      .role { font-family: "Comic Mono"; font-size: 13px; font-weight: 400; fill: #596b74; }
+      .lifeline { stroke: #8aa0aa; stroke-width: 2; stroke-dasharray: 8 8; }
+      .activation { fill: #eef8f0; stroke: #6f8f77; stroke-width: 2; rx: 5; }
+      .activationService { fill: #eef8f0; stroke: #6f8f77; stroke-width: 2; rx: 5; }
+      .activationOps { fill: #fff8e8; stroke: #b9822d; stroke-width: 2; rx: 5; }
+      .call { fill: none; stroke: #4f86c6; stroke-width: 3; marker-end: url(#seqArrowBlue); }
+      .callPurple { fill: none; stroke: #8a6a3b; stroke-width: 3; marker-end: url(#seqArrowPurple); }
+      .callGreen { fill: none; stroke: #5d8c47; stroke-width: 3; marker-end: url(#seqArrowGreen); }
+      .callAmber { fill: none; stroke: #b9822d; stroke-width: 3; marker-end: url(#seqArrowAmber); }
+      .callOrange { fill: none; stroke: #9a6a2e; stroke-width: 3; marker-end: url(#seqArrowOrange); }
+      .return { fill: none; stroke: #2b8f88; stroke-width: 3; marker-end: url(#seqArrowReturn); }
+      .error { fill: none; stroke: #bd5a62; stroke-width: 3; stroke-dasharray: 8 6; marker-end: url(#seqArrowRed); }
+      .label { fill: #ffffff; stroke-width: 1.5; rx: 8; }
+      .labelBlue { stroke: #9cc6df; }
+      .labelBrown { stroke: #c8a66e; }
+      .labelGreen { stroke: #a7c68f; }
+      .labelAmber { stroke: #d6b069; }
+      .labelReturn { stroke: #9bc9c4; }
+      .labelRed { stroke: #d9a0a6; }
+      .badgeCircle { fill: #fffefa; stroke-width: 1.5; }
+      .badgeBlue { stroke: #4f86c6; }
+      .badgeBrown { stroke: #8a6a3b; }
+      .badgeGreen { stroke: #5d8c47; }
+      .badgeAmber { stroke: #b9822d; }
+      .badgeReturn { stroke: #2b8f88; }
+      .badgeRed { stroke: #bd5a62; }
+      .badge { font-family: "Comic Mono"; font-size: 14px; font-weight: 700; fill: #263238; text-anchor: middle; }
+      .labelText { font-family: "Comic Mono"; font-size: 14px; font-weight: 600; fill: #263238; }
+      .labelTextBlue { fill: #276b9d; }
+      .labelTextBrown { fill: #7c582e; }
+      .labelTextGreen { fill: #4f783c; }
+      .labelTextAmber { fill: #8e641f; }
+      .labelTextReturn { fill: #217a74; }
+      .labelTextRed { fill: #9e4851; }
+      .note { font-family: "Comic Mono"; font-size: 13px; font-weight: 400; fill: #5b6f7a; }
+      .alt { fill: none; fill-opacity: 0; stroke: #78909c; stroke-width: 2; stroke-dasharray: 10 8; rx: 8; }
       .branchDivider { stroke: #94a3b8; stroke-width: 2; stroke-dasharray: 8 8; }
       .branchTitle { font-family: "Comic Mono"; font-size: 14px; font-weight: 700; fill: #334155; }
     </style>
@@ -83,29 +102,34 @@
   <rect class="activationOps" x="1346" y="830" width="18" height="78" rx="5"/>
 
   <path class="call" d="M 175 290 L 456 290"/>
-  <rect class="label" x="216" y="250" width="240" height="32" rx="8"/>
-  <text class="badge" x="229" y="271">1</text>
-  <text class="labelText" x="252" y="271">POST order telemetry</text>
+  <rect class="label labelBlue" x="216" y="250" width="240" height="32" rx="8"/>
+  <circle class="badgeCircle badgeBlue" cx="240" cy="266" r="13"/>
+  <text class="badge" x="240" y="271">1</text>
+  <text class="labelText labelTextBlue" x="268" y="271">POST order telemetry</text>
 
   <path class="call" d="M 474 342 L 761 342"/>
-  <rect class="label" x="500" y="298" width="260" height="32" rx="8"/>
-  <text class="badge" x="513" y="319">2</text>
-  <text class="labelText" x="536" y="319">Validate and start timer</text>
+  <rect class="label labelBlue" x="500" y="298" width="260" height="32" rx="8"/>
+  <circle class="badgeCircle badgeBlue" cx="524" cy="314" r="13"/>
+  <text class="badge" x="524" y="319">2</text>
+  <text class="labelText labelTextBlue" x="552" y="319">Validate and start timer</text>
 
   <path class="call" d="M 779 498 L 1076 498"/>
-  <rect class="label" x="810" y="454" width="255" height="32" rx="8"/>
-  <text class="badge" x="823" y="475">3</text>
-  <text class="labelText" x="846" y="475">Put metric datum</text>
+  <rect class="label labelBlue" x="810" y="454" width="255" height="32" rx="8"/>
+  <circle class="badgeCircle badgeBlue" cx="834" cy="470" r="13"/>
+  <text class="badge" x="834" y="475">4</text>
+  <text class="labelText labelTextBlue" x="862" y="475">Put metric datum</text>
 
   <path class="callPurple" d="M 779 560 L 1076 560"/>
-  <rect class="label" x="810" y="516" width="255" height="32" rx="8"/>
-  <text class="badge" x="823" y="537">4</text>
-  <text class="labelText" x="846" y="537">Put sanitized log event</text>
+  <rect class="label labelBrown" x="810" y="516" width="255" height="32" rx="8"/>
+  <circle class="badgeCircle badgeBrown" cx="834" cy="532" r="13"/>
+  <text class="badge" x="834" y="537">5</text>
+  <text class="labelText labelTextBrown" x="862" y="537">Put sanitized log event</text>
 
   <path class="callGreen" d="M 779 622 L 1076 622"/>
-  <rect class="label" x="810" y="578" width="255" height="32" rx="8"/>
-  <text class="badge" x="823" y="599">5</text>
-  <text class="labelText" x="846" y="599">Publish meter snapshot</text>
+  <rect class="label labelGreen" x="810" y="578" width="255" height="32" rx="8"/>
+  <circle class="badgeCircle badgeGreen" cx="834" cy="594" r="13"/>
+  <text class="badge" x="834" y="599">6</text>
+  <text class="labelText labelTextGreen" x="862" y="599">Publish meter snapshot</text>
 
   <rect class="alt" x="610" y="690" width="800" height="255" rx="8"/>
   <text class="branchTitle" x="630" y="720">alt metadata boundary</text>
@@ -113,28 +137,36 @@
   <text class="branchTitle" x="630" y="815">else includeMetadata=true or metadata.enabled=true</text>
 
   <path class="callOrange" d="M 779 746 L 1076 746"/>
-  <rect class="label" x="812" y="702" width="250" height="32" rx="8"/>
-  <text class="badge" x="825" y="723">6</text>
-  <text class="labelText" x="848" y="723">Default skips metadata</text>
+  <rect class="label labelBrown" x="812" y="702" width="250" height="32" rx="8"/>
+  <circle class="badgeCircle badgeBrown" cx="836" cy="718" r="13"/>
+  <text class="badge" x="836" y="723">7</text>
+  <text class="labelText labelTextBrown" x="864" y="723">Default skips metadata</text>
   <text class="note" x="820" y="773">No IMDS path is touched by default local POST.</text>
 
   <path class="callAmber" d="M 779 854 L 1346 854"/>
-  <rect class="label" x="1020" y="810" width="350" height="32" rx="8"/>
-  <text class="badge" x="1033" y="831">7</text>
-  <text class="labelText" x="1056" y="831">Read instanceId, region, and AZ only</text>
+  <rect class="label labelAmber" x="1020" y="810" width="350" height="32" rx="8"/>
+  <circle class="badgeCircle badgeAmber" cx="1044" cy="826" r="13"/>
+  <text class="badge" x="1044" y="831">8</text>
+  <text class="labelText labelTextAmber" x="1072" y="831">Read instanceId, region, and AZ only</text>
   <text class="note" x="890" y="890">Credential document paths are intentionally not requested.</text>
 
   <path class="return" d="M 1076 972 L 779 972"/>
-  <rect class="label" x="824" y="928" width="250" height="32" rx="8"/>
-  <text class="badge" x="837" y="949">8</text>
-  <text class="labelText" x="860" y="949">Independent publish states</text>
+  <rect class="label labelReturn" x="824" y="928" width="250" height="32" rx="8"/>
+  <circle class="badgeCircle badgeReturn" cx="848" cy="944" r="13"/>
+  <text class="badge" x="848" y="949">9</text>
+  <text class="labelText labelTextReturn" x="876" y="949">Independent publish states</text>
 
   <path class="return" d="M 761 1032 L 474 1032"/>
   <path class="return" d="M 456 1032 L 175 1032"/>
-  <rect class="label" x="250" y="990" width="310" height="32" rx="8"/>
-  <text class="badge" x="263" y="1011">9</text>
-  <text class="labelText" x="286" y="1011">Report or normalized 400 error</text>
+  <rect class="label labelReturn" x="250" y="990" width="310" height="32" rx="8"/>
+  <circle class="badgeCircle badgeReturn" cx="274" cy="1006" r="13"/>
+  <text class="badge" x="274" y="1011">10</text>
+  <text class="labelText labelTextReturn" x="302" y="1011">Report or normalized 400 error</text>
 
   <path class="error" d="M 474 390 L 175 390"/>
+  <rect class="label labelRed" x="218" y="350" width="270" height="32" rx="8"/>
+  <circle class="badgeCircle badgeRed" cx="242" cy="366" r="13"/>
+  <text class="badge" x="242" y="371">3</text>
+  <text class="labelText labelTextRed" x="270" y="371">Reject blank eventId</text>
   <text class="note" x="225" y="420">Blank eventId returns a sanitized error message.</text>
 </svg>
