@@ -215,6 +215,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Advanced | [`redis-cluster-demo`](redis/cluster-demo/) | `redis`, `redisson` | Redis Cluster (TC) | Redis 클러스터 토폴로지 및 장애 조치 |
 | Basic | [`redis-redisson-examples`](redis/redisson-examples/) | `redis`, `redisson` | Redis (TC) | Redisson 데이터 구조와 Pub/Sub |
 | Advanced | [`aws-s3-spring-cloud`](aws/s3-spring-cloud/) | `aws`, `testcontainers` | LocalStack (TC) | Spring Cloud AWS + LocalStack으로 AWS S3 사용 |
+| Advanced | [`aws-cloudwatch-imds-observability`](aws/cloudwatch-imds-observability/) | `aws`, `micrometer`, `coroutines` | Local adapters | CloudWatch metric/log publish intent, Micrometer snapshot, 명시적 IMDS metadata opt-in |
 | Advanced | [`image-processing-advanced-workflow`](image-processing/advanced-workflow/) | `images-vips-java25`, `images-spring-boot`, `micrometer` | S3 또는 local storage | 업로드 → 원본 저장 → WebP 파생 이미지 → unsigned public URL |
 | Advanced | [`image-processing-ocr-api`](image-processing/ocr-api/) | `images-ocr`, `images`, `spring-boot4-core` | In-memory | 검증된 fallback과 선택 Tesseract를 사용하는 multipart OCR API |
 | Advanced | [`leader-leader-election`](leader/) | `coroutines`, `redis`, `testcontainers` | Redis (TC) | 분산 리더 선출: 블로킹, 코루틴, 가상 스레드 |
@@ -224,6 +225,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 ./gradlew :spring-security-mvc:test
 ./gradlew :redis-distributed-lock:test
 ./gradlew :aws-s3-spring-cloud:test
+./gradlew :aws-cloudwatch-imds-observability:test
 ```
 
 ---
