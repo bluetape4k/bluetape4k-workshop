@@ -30,6 +30,9 @@ on:
       - 'gradle/**'
       - '*.gradle.kts'
       - 'settings.gradle.kts'
+      - 'docs/images/readme-diagrams/**'
+      - 'scripts/validate-readme-diagram-qa.mjs'
+      - 'scripts/smoke-validate.sh'
       - '.github/workflows/Examples.yml'
   pull_request:
     branches: [ develop, main ]
@@ -58,6 +61,9 @@ on:
       - 'gradle/**'
       - '*.gradle.kts'
       - 'settings.gradle.kts'
+      - 'docs/images/readme-diagrams/**'
+      - 'scripts/validate-readme-diagram-qa.mjs'
+      - 'scripts/smoke-validate.sh'
       - '.github/workflows/Examples.yml'
   workflow_dispatch:
 
@@ -162,6 +168,30 @@ jobs:
             leader/k8s-lease-micrometer/build/reports/tests/test/
           retention-days: 7
 
+  diagram-qa:
+    name: Diagram QA
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: validate-wrapper
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
+      - name: Install diagram QA tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxml2-utils
+          python -m pip install --user cairosvg
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Run README diagram QA
+        run: ./scripts/smoke-validate.sh diagram-qa
+
   container-examples:
     name: Container Examples (sequential)
     runs-on: ubuntu-latest
@@ -223,6 +253,7 @@ jobs:
     name: Examples Status
     runs-on: ubuntu-latest
     needs:
+      - diagram-qa
       - smoke-examples
       - container-examples
     if: always()

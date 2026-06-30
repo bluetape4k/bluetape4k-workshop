@@ -6,6 +6,7 @@
 #   ./scripts/smoke-validate.sh all-smoke     # all no-Testcontainers modules
 #   ./scripts/smoke-validate.sh compile       # compile-only (no tests)
 #   ./scripts/smoke-validate.sh stale-check   # Gradle project count + README link check
+#   ./scripts/smoke-validate.sh diagram-qa    # changed README diagram QA evidence
 #
 # Groups: data-access  spring-boot  serialization  messaging  async  observability  redis
 # Each group runs with --continue so a single failure does not abort the rest.
@@ -196,6 +197,10 @@ case "${1:-help}" in
     [ "$broken" -eq 0 ] && echo "No broken image links found." || echo "WARNING: $broken broken link(s) found."
     ;;
 
+  diagram-qa)
+    run "node scripts/validate-readme-diagram-qa.mjs"
+    ;;
+
   help|*)
     echo "Usage: $0 <group>"
     echo ""
@@ -211,5 +216,6 @@ case "${1:-help}" in
     echo "  observability    Micrometer / Virtual Threads"
     echo "  redis            Redis / Redisson / Rate Limit"
     echo "  stale-check      Gradle project count + README link check"
+    echo "  diagram-qa       Changed README diagram QA evidence"
     ;;
 esac
