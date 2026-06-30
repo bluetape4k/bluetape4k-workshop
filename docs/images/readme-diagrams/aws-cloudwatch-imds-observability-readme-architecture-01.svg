@@ -66,9 +66,8 @@
   <text class="titleText" x="165" y="512">OrderTelemetryController</text>
   <text class="bodyText" x="165" y="540">HTTP boundary and 400 error mapping.</text>
   <rect id="card-service" class="card" x="555" y="475" width="330" height="92" rx="8"/>
-  <image x="585" y="496" width="44" height="44" data-bluetape4k-icon="spring.boot" data-source="docs/icons/spring/spring-boot.svg" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI0LjAuMywgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIGZpbGw9IiM2REIzM0YiIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiCgkgdmlld0JveD0iMCAwIDUxMCA0NTcuOCIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNTEwIDQ1Ny44OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+Cgkuc3Qwe2ZpbGw6IzZEQjMzRjt9Cjwvc3R5bGU+Cjx0aXRsZT5pY29uLXNwcmluZy1ib290PC90aXRsZT4KPGcgaWQ9IkxheWVyXzJfMV8iPgoJPGcgaWQ9IkxheWVyXzEtMiI+CgkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTUwMy41LDIwMS40TDQwMywyNy41QzM5NC4zLDEyLjQsMzcyLjksMCwzNTUuNCwwSDE1NC42Yy0xNy40LDAtMzguOSwxMi40LTQ3LjYsMjcuNUw2LjYsMjAxLjQKCQljLTguNywxNS4xLTguNywzOS44LDAsNTQuOWwxMDAuNCwxNzRjOC43LDE1LjEsMzAuMSwyNy41LDQ3LjYsMjcuNWgyMDAuOWMxNy40LDAsMzguOC0xMi40LDQ3LjYtMjcuNWwxMDAuNC0xNzQKCQlDNTEyLjIsMjQxLjIsNTEyLjIsMjE2LjUsNTAzLjUsMjAxLjR6IE0yMzMuMyw5Ni4yYzAtMTEuNCw5LjMtMjAuNywyMC43LTIwLjdjMTEuNCwwLDIwLjcsOS4zLDIwLjcsMjAuN3YxMjMuNwoJCWMwLDExLjQtOS4zLDIwLjctMjAuNywyMC43Yy0xMS40LDAtMjAuNy05LjMtMjAuNy0yMC43bDAsMFY5Ni4yeiBNMjU0LDM2MC4zYy03Ny40LDAtMTQwLjQtNjMtMTQwLjQtMTQwLjQKCQljMC4xLTQ0LjQsMjEuMS04Ni4xLDU2LjctMTEyLjdjOC4yLTYuMSwxOS43LTQuNCwyNS44LDMuOHM0LjQsMTkuNy0zLjgsMjUuOGwwLDBjLTQ1LjksMzQuMS01NS41LDk5LTIxLjQsMTQ0LjkKCQlzOTksNTUuNSwxNDQuOSwyMS40YzI2LjMtMTkuNSw0MS44LTUwLjQsNDEuOC04My4yYy0wLjEtMzIuOS0xNS43LTYzLjgtNDIuMi04My40Yy04LjItNi05LjktMTcuNi0zLjktMjUuOHMxNy42LTkuOSwyNS44LTMuOQoJCWMzNS45LDI2LjUsNTcsNjguNSw1Ny4xLDExMy4xQzM5NC40LDI5Ny40LDMzMS40LDM2MC4zLDI1NCwzNjAuM3oiLz4KCTwvZz4KPC9nPgo8L3N2Zz4K"/>
-  <text class="titleText" x="645" y="512">OrderTelemetryService</text>
-  <text class="bodyText" x="645" y="540">Builds telemetry; isolates failures.</text>
+  <text class="titleText" x="585" y="512">OrderTelemetryService</text>
+  <text class="bodyText" x="585" y="540">Builds telemetry; isolates failures.</text>
   <rect id="card-properties" class="card" x="975" y="475" width="330" height="92" rx="8"/>
   <text class="titleText" x="1005" y="512">AwsObservabilityProperties</text>
   <text class="bodyText" x="1005" y="540">Namespace, stream, tags, metadata flag.</text>
@@ -109,6 +108,10 @@
   <text class="titleText" x="655" y="1358">CloudWatch Logs</text>
   <text class="bodyText" x="655" y="1386">Same official CloudWatch icon.</text>
   <rect id="card-real-imds" class="awsCard" x="975" y="1320" width="330" height="104" rx="8"/>
+  <svg x="1005" y="1340" width="54" height="54" viewBox="0 0 64 64" data-bluetape4k-icon="aws.ec2" data-source="docs/icons/aws/architecture-icons-2026-04-30/Architecture-Service-Icons_04302026/Arch_Compute/48/Arch_Amazon-EC2_48.svg">
+    <rect x="0" y="0" width="64" height="64" fill="#ED7100"/>
+    <path d="M22,41 L41,41 L41,23 L22,23 L22,41 Z M43,23 L46,23 L46,25 L43,25 L43,27 L46,27 L46,29 L43,29 L43,31 L46,31 L46,33 L43,33 L43,36 L46,36 L46,38 L43,38 L43,40 L46,40 L46,42 L42.863,42 C42.608,42.587 42.023,43 41.344,43 L41,43 L41,46 L39,46 L39,43 L37,43 L37,46 L35,46 L35,43 L33,43 L33,46 L31,46 L31,43 L29,43 L29,46 L27,46 L27,43 L24,43 L24,46 L22,46 L22,43 L21.656,43 C20.977,43 20.392,42.587 20.137,42 L18,42 L18,40 L20,40 L20,38 L18,38 L18,36 L20,36 L20,33 L18,33 L18,31 L20,31 L20,29 L18,29 L18,27 L20,27 L20,25 L18,25 L18,23 L20,23 L20,22.656 C20,21.743 20.743,21 21.656,21 L22,21 L22,18 L24,18 L24,21 L27,21 L27,18 L29,18 L29,21 L31,21 L31,18 L33,18 L33,21 L35,21 L35,18 L37,18 L37,21 L39,21 L39,18 L41,18 L41,21 L41.344,21 C42.257,21 43,21.743 43,22.656 L43,23 Z M32,52 L12,52 L12,32 L16,32 L16,30 L11.843,30 C10.826,30 10,30.827 10,31.843 L10,52.157 C10,53.173 10.826,54 11.843,54 L32.157,54 C33.174,54 34,53.173 34,52.157 L34,48 L32,48 L32,52 Z M54,11.843 L54,32.157 C54,33.173 53.174,34 52.157,34 L48,34 L48,32 L52,32 L52,12 L32,12 L32,16 L30,16 L30,11.843 C30,10.827 30.826,10 31.843,10 L52.157,10 C53.174,10 54,10.827 54,11.843 L54,11.843 Z" fill="#FFFFFF"/>
+  </svg>
   <text class="titleText" x="1075" y="1358">EC2 IMDS</text>
   <text class="bodyText" x="1075" y="1386">Only instanceId, region, AZ are read.</text>
 
