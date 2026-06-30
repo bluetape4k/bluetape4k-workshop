@@ -12,6 +12,7 @@ on:
       - 'spring-boot/cache-caffeine/**'
       - 'spring-boot/cache-redis/**'
       - 'spring-boot/resilience4j-coroutines/**'
+      - 'spring-boot/text-moderation-api/**'
       - 'json/jackson-examples/**'
       - 'json/jsonview-examples/**'
       - 'graph/io-pipeline/**'
@@ -37,6 +38,7 @@ on:
       - 'spring-boot/cache-caffeine/**'
       - 'spring-boot/cache-redis/**'
       - 'spring-boot/resilience4j-coroutines/**'
+      - 'spring-boot/text-moderation-api/**'
       - 'json/jackson-examples/**'
       - 'json/jsonview-examples/**'
       - 'graph/io-pipeline/**'
@@ -105,6 +107,7 @@ jobs:
           :spring-data-r2dbc-webflux-exposed:test
           :spring-boot-cache-caffeine:test
           :spring-boot-resilience4j-coroutines:test
+          :spring-boot-text-moderation-api:test
           :jackson-examples:test
           :jsonview-examples:test
           :graph-io-pipeline:test
@@ -129,6 +132,8 @@ jobs:
             spring-boot/cache-caffeine/build/reports/tests/test/
             spring-boot/resilience4j-coroutines/build/test-results/test/*.xml
             spring-boot/resilience4j-coroutines/build/reports/tests/test/
+            spring-boot/text-moderation-api/build/test-results/test/*.xml
+            spring-boot/text-moderation-api/build/reports/tests/test/
             json/jackson-examples/build/test-results/test/*.xml
             json/jackson-examples/build/reports/tests/test/
             json/jsonview-examples/build/test-results/test/*.xml

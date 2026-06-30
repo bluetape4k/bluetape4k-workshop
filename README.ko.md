@@ -95,6 +95,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Advanced | [`spring-boot-resilience4j-coroutines`](spring-boot/resilience4j-coroutines/) | `resilience4j`, `coroutines` | In-memory | 코루틴과 함께하는 서킷 브레이커 + 재시도 + 속도 제한 |
 | Basic | [`spring-boot-cbor-mvc`](spring-boot/cbor-mvc/) | `logging` | In-memory | Spring MVC에서 CBOR 바이너리 직렬화 |
 | Basic | [`spring-boot-protobuf-mvc`](spring-boot/protobuf-mvc/) | `logging` | In-memory | Spring MVC에서 Protobuf 직렬화 |
+| Basic | [`spring-boot-text-moderation-api`](spring-boot/text-moderation-api/) | `text-search`, `lingua`, `logging` | In-memory | 결정적 language detection과 masking으로 구성한 web-safety text moderation API |
 | Advanced | [`spring-boot-stomp-websocket`](spring-boot/stomp-websocket/) | `coroutines` | In-memory | 코루틴 메시지 핸들러를 활용한 STOMP WebSocket |
 | Advanced | [`spring-boot-webflux-websocket`](spring-boot/webflux-websocket/) | `coroutines` | In-memory | WebFlux 리액티브 WebSocket |
 | Advanced | [`spring-boot-chaos-monkey`](spring-boot/chaos-monkey/) | `logging` | In-memory | Spring Boot용 Chaos Monkey — 지연/예외 주입 |
