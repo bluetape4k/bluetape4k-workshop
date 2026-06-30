@@ -88,10 +88,10 @@
     <path class="solid" data-connector="controller-to-service" d="M 560 365 L 560 380"/>
   </g>
   <g class="edge" data-edge="service-&gt;vectorsOps" data-label="Vector upsert and query">
-    <path class="solid" data-connector="service-to-vectors-ops" d="M 560 450 L 560 515 L 490 515 L 490 560 L 460 560"/>
+    <path class="solid" data-connector="service-to-vectors-ops" d="M 560 450 L 560 503 Q 560 515 548 515 L 502 515 Q 490 515 490 527 L 490 548 Q 490 560 478 560 L 460 560"/>
   </g>
   <g class="edge" data-edge="service-&gt;accessOps" data-label="Access decision after top match">
-    <path class="dashed" data-connector="service-to-access-ops" d="M 560 450 L 560 515 L 630 515 L 630 560 L 660 560"/>
+    <path class="dashed" data-connector="service-to-access-ops" d="M 560 450 L 560 503 Q 560 515 572 515 L 618 515 Q 630 515 630 527 L 630 548 Q 630 560 642 560 L 660 560"/>
   </g>
   <g class="edge" data-edge="vectorsOps-&gt;s3Vectors" data-label="AWS SDK S3 Vectors request">
     <path class="solid" data-connector="vectors-ops-to-s3-vectors" d="M 295 595 L 295 700"/>
@@ -100,7 +100,7 @@
     <path class="dashed" data-connector="access-ops-to-access-grants" d="M 825 595 L 825 700"/>
   </g>
   <g class="edge" data-edge="accessGrants-&gt;objectData" data-label="Temporary object access decision">
-    <path class="dashed" data-connector="access-grants-to-object-data" d="M 825 770 L 825 820 L 560 820 L 560 835"/>
+    <path class="dashed" data-connector="access-grants-to-object-data" d="M 825 770 L 825 778 Q 825 790 813 790 L 572 790 Q 560 790 560 802 L 560 835"/>
   </g>
 
   <rect x="86" y="970" width="650" height="28" rx="8" fill="#ffffff" stroke="#cad5e2"/>
