@@ -1,10 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="960" viewBox="0 0 1120 960" role="img" aria-label="S3 Vectors and Access Grants workshop architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="1040" viewBox="0 0 1120 1040" role="img" aria-label="S3 Vectors and Access Grants workshop architecture">
   <defs>
-    <marker id="archArrowBlue" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
-      <path d="M1 1 L9 5 L1 9 Z" fill="#4f78b8"/>
+    <marker id="archArrowBlue" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f78b8" stroke="#4f78b8" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
-    <marker id="archArrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
-      <path d="M1 1 L9 5 L1 9 Z" fill="#4f8f70"/>
+    <marker id="archArrowGreen" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f8f70" stroke="#4f8f70" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
     <style>
       .canvas{fill:#f7f9fc}
@@ -26,8 +26,8 @@
     </style>
   </defs>
 
-  <rect class="canvas" x="0" y="0" width="1120" height="960"/>
-  <rect class="frame" x="28" y="24" width="1064" height="912" rx="18"/>
+  <rect class="canvas" x="0" y="0" width="1120" height="1040"/>
+  <rect class="frame" x="28" y="24" width="1064" height="992" rx="18"/>
   <text class="title" x="560" y="72" text-anchor="middle">S3 Vectors + Access Grants Workshop</text>
   <text class="subtitle" x="560" y="104" text-anchor="middle">Local-first Spring Boot example with explicit AWS service boundaries and redacted data-access decisions.</text>
 
@@ -37,7 +37,7 @@
   <text class="layerText" x="100" y="282">2. Workshop application layer</text>
   <rect class="layer" x="70" y="470" width="980" height="140" rx="12"/>
   <text class="layerText" x="100" y="502">3. bluetape4k AWS facade layer</text>
-  <rect class="layer" x="70" y="640" width="980" height="220" rx="12"/>
+  <rect class="layer" x="70" y="640" width="980" height="300" rx="12"/>
   <text class="layerText" x="100" y="672">4. AWS service boundary layer</text>
 
   <g class="node" data-node="client" data-kind="app">
@@ -76,36 +76,36 @@
     <text class="cardText" x="825" y="753" text-anchor="middle">permission decision, no secret output</text>
   </g>
   <g class="node" data-node="objectData" data-kind="aws">
-    <rect x="380" y="805" width="360" height="70" rx="10"/>
-    <text class="cardTitle" x="560" y="833" text-anchor="middle">Amazon S3 object data</text>
-    <text class="cardText" x="560" y="858" text-anchor="middle">selected document is reachable only after grant</text>
+    <rect x="380" y="835" width="360" height="70" rx="10"/>
+    <text class="cardTitle" x="560" y="863" text-anchor="middle">Amazon S3 object data</text>
+    <text class="cardText" x="560" y="888" text-anchor="middle">selected document is reachable only after grant</text>
   </g>
 
   <g class="edge" data-edge="client-&gt;controller" data-label="HTTP command">
-    <path class="solid" d="M 560 207 L 560 295"/>
+    <path class="solid" data-connector="client-to-controller" d="M 560 207 L 560 295"/>
   </g>
   <g class="edge" data-edge="controller-&gt;service" data-label="Validated request DTO">
-    <path class="solid" d="M 560 365 L 560 380"/>
+    <path class="solid" data-connector="controller-to-service" d="M 560 365 L 560 380"/>
   </g>
   <g class="edge" data-edge="service-&gt;vectorsOps" data-label="Vector upsert and query">
-    <path class="solid" d="M 560 450 L 560 515 L 490 515 L 490 560 L 460 560"/>
+    <path class="solid" data-connector="service-to-vectors-ops" d="M 560 450 L 560 515 L 490 515 L 490 560 L 460 560"/>
   </g>
   <g class="edge" data-edge="service-&gt;accessOps" data-label="Access decision after top match">
-    <path class="dashed" d="M 560 450 L 560 515 L 630 515 L 630 560 L 660 560"/>
+    <path class="dashed" data-connector="service-to-access-ops" d="M 560 450 L 560 515 L 630 515 L 630 560 L 660 560"/>
   </g>
   <g class="edge" data-edge="vectorsOps-&gt;s3Vectors" data-label="AWS SDK S3 Vectors request">
-    <path class="solid" d="M 295 595 L 295 700"/>
+    <path class="solid" data-connector="vectors-ops-to-s3-vectors" d="M 295 595 L 295 700"/>
   </g>
   <g class="edge" data-edge="accessOps-&gt;accessGrants" data-label="AWS SDK S3 Control request">
-    <path class="dashed" d="M 825 595 L 825 700"/>
+    <path class="dashed" data-connector="access-ops-to-access-grants" d="M 825 595 L 825 700"/>
   </g>
   <g class="edge" data-edge="accessGrants-&gt;objectData" data-label="Temporary object access decision">
-    <path class="dashed" d="M 825 770 L 825 790 L 560 790 L 560 805"/>
+    <path class="dashed" data-connector="access-grants-to-object-data" d="M 825 770 L 825 820 L 560 820 L 560 835"/>
   </g>
 
-  <rect x="86" y="890" width="650" height="28" rx="8" fill="#ffffff" stroke="#cad5e2"/>
-  <path d="M 104 904 L 170 904" class="solid" fill="none" stroke-width="2.5"/>
-  <text class="legend" x="184" y="908">solid: vector write/query path</text>
-  <path d="M 470 904 L 536 904" class="dashed" fill="none" stroke-width="2.5"/>
-  <text class="legend" x="550" y="908">dashed: access grant decision</text>
+  <rect x="86" y="970" width="650" height="28" rx="8" fill="#ffffff" stroke="#cad5e2"/>
+  <path d="M 104 984 L 170 984" class="solid" fill="none" stroke-width="2.5"/>
+  <text class="legend" x="184" y="988">solid: vector write/query path</text>
+  <path d="M 470 984 L 536 984" class="dashed" fill="none" stroke-width="2.5"/>
+  <text class="legend" x="550" y="988">dashed: access grant decision</text>
 </svg>
