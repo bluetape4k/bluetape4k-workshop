@@ -22,6 +22,8 @@
       .smallText { font-family: "Comic Mono"; font-size: 13px; font-weight: 400; fill: #64748b; }
       .connector { fill: none; stroke: #2563eb; stroke-width: 3; marker-end: url(#arrow); }
       .optionalConnector { fill: none; stroke: #c2410c; stroke-width: 3; stroke-dasharray: 10 8; marker-end: url(#arrowOptional); }
+      .legendDefault { fill: none; stroke: #2563eb; stroke-width: 3; marker-end: url(#arrow); }
+      .legendOptional { fill: none; stroke: #c2410c; stroke-width: 3; stroke-dasharray: 10 8; marker-end: url(#arrowOptional); }
       .guard { fill: #eef2ff; stroke: #4f46e5; stroke-width: 2; rx: 8; }
     </style>
     <g class="node" data-node="post"><rect x="180" y="220" width="480" height="88"/></g>
@@ -44,6 +46,10 @@
   <rect class="bg" x="0" y="0" width="1440" height="1720"/>
   <text class="title" x="80" y="76">CloudWatch + IMDS Observability Workshop</text>
   <text class="subtitle" x="80" y="112">Default path is local and credential-free. Real AWS and IMDS access are explicit opt-in boundaries.</text>
+  <path class="legendDefault" d="M 760 124 L 820 124"/>
+  <text class="smallText" x="835" y="129">solid blue: default local flow</text>
+  <path class="legendOptional" d="M 1050 124 L 1110 124"/>
+  <text class="smallText" x="1125" y="129">dashed orange: real AWS opt-in</text>
 
   <rect id="layer-learner" class="layer" x="70" y="145" width="1300" height="205" rx="8"/>
   <text class="layerLabel" x="95" y="180">Layer 1 - Learner Requests</text>
@@ -103,8 +109,8 @@
   <text class="titleText" x="655" y="1358">CloudWatch Logs</text>
   <text class="bodyText" x="655" y="1386">Same official CloudWatch icon.</text>
   <rect id="card-real-imds" class="awsCard" x="975" y="1320" width="330" height="104" rx="8"/>
-  <text class="titleText" x="1005" y="1358">EC2 IMDS</text>
-  <text class="bodyText" x="1005" y="1386">Only instanceId, region, AZ are read.</text>
+  <text class="titleText" x="1075" y="1358">EC2 IMDS</text>
+  <text class="bodyText" x="1075" y="1386">Only instanceId, region, AZ are read.</text>
 
   <rect id="card-boundary" class="guard" x="260" y="1525" width="920" height="104" rx="8"/>
   <text class="titleText" x="300" y="1564">Safety Boundary</text>

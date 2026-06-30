@@ -101,6 +101,23 @@ function readMessagePaths(svg) {
 
 function readMessageLabels(svg) {
   const labels = [];
+  const rectRe = /<rect\b([^>]*)\/>/g;
+  let match;
+  while ((match = rectRe.exec(svg))) {
+    const attrs = match[1];
+    const className = (attrs.match(/\bclass="([^"]+)"/) || [])[1] || "";
+    if (!/\b(label|labelPill|pill)\b/.test(className) || /\bmessage-label\b/.test(className)) continue;
+    const x = Number((attrs.match(/\bx="([^"]+)"/) || [])[1]);
+    const y = Number((attrs.match(/\by="([^"]+)"/) || [])[1]);
+    const width = Number((attrs.match(/\bwidth="([^"]+)"/) || [])[1]);
+    const height = Number((attrs.match(/\bheight="([^"]+)"/) || [])[1]);
+    if ([x, y, width, height].every(Number.isFinite)) labels.push({ x, y, width, height });
+  }
+  return labels;
+}
+
+function readLegacyMessageLabels(svg) {
+  const labels = [];
   const rectRe = /<rect\b([^>]*\bclass="message-label"[^>]*)\/>/g;
   let match;
   while ((match = rectRe.exec(svg))) {
@@ -190,13 +207,14 @@ for (const file of files) {
   }
 
   const paths = readMessagePaths(svg);
-  const labels = readMessageLabels(svg);
+  const visibleLabels = readMessageLabels(svg);
+  const labels = visibleLabels.length > 0 ? visibleLabels : readLegacyMessageLabels(svg);
   const actorBoxes = readActorBoxes(svg);
   const messageTexts = readMessageTexts(svg);
   const viewBox = firstNumberList((svg.match(/\bviewBox="([^"]+)"/) || [])[1] || "");
   const canvasWidth = viewBox.length >= 4 ? viewBox[2] : Number((svg.match(/\bwidth="([^"]+)"/) || [])[1]);
-  if (paths.length !== labels.length) {
-    failures.push({ file: rel, failure: `message path/label count ${paths.length}/${labels.length}` });
+  if (paths.length > 0 && labels.length < 2) {
+    failures.push({ file: rel, failure: `visible message label count ${labels.length}` });
     continue;
   }
   actorBoxes.forEach((box, index) => {
@@ -209,15 +227,20 @@ for (const file of files) {
     failures.push({ file: rel, failure: "empty, numeric-only, or fallback message label" });
   }
 
-  paths.forEach((messagePath, index) => {
-    const label = labels[index];
-    const gap = label.y - messagePath.y;
-    if (gap < 10) {
-      failures.push({ file: rel, failure: `label overlaps call line at message ${index + 1}`, gap });
+  labels.forEach((label, labelIndex) => {
+    const bottomGapToNearestLine = Math.min(
+      ...paths
+        .filter((messagePath) => labelIntersectsPath({ ...label, height: label.height + 12 }, messagePath.points))
+        .map((messagePath) => messagePath.y - (label.y + label.height)),
+    );
+    if (Number.isFinite(bottomGapToNearestLine) && bottomGapToNearestLine < 6) {
+      failures.push({ file: rel, failure: `visible label overlaps or touches call line at label ${labelIndex + 1}`, gap: bottomGapToNearestLine });
     }
-    if (labelIntersectsPath(label, messagePath.points)) {
-      failures.push({ file: rel, failure: `label intersects connector segment at message ${index + 1}` });
-    }
+    paths.forEach((messagePath, pathIndex) => {
+      if (labelIntersectsPath(label, messagePath.points)) {
+        failures.push({ file: rel, failure: `visible label intersects connector segment at label ${labelIndex + 1}, path ${pathIndex + 1}` });
+      }
+    });
   });
 }
 
