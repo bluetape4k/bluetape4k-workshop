@@ -196,6 +196,8 @@ bluetape4k-io = { module = "io.github.bluetape4k:bluetape4k-io" }
 bluetape4k-jackson2 = { module = "io.github.bluetape4k:bluetape4k-jackson2" }
 bluetape4k-jackson3 = { module = "io.github.bluetape4k:bluetape4k-jackson3" }
 bluetape4k-json = { module = "io.github.bluetape4k:bluetape4k-json" }
+bluetape4k-ktor-core = { module = "io.github.bluetape4k:bluetape4k-ktor-core" }
+bluetape4k-ktor-testing = { module = "io.github.bluetape4k:bluetape4k-ktor-testing" }
 bluetape4k-netty = { module = "io.github.bluetape4k:bluetape4k-netty" }
 bluetape4k-okio = { module = "io.github.bluetape4k:bluetape4k-okio" }
 bluetape4k-protobuf = { module = "io.github.bluetape4k:bluetape4k-protobuf" }
@@ -205,6 +207,7 @@ bluetape4k-cassandra = { module = "io.github.bluetape4k:bluetape4k-cassandra" }
 exposed-core = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-core" }
 exposed-dao = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-dao" }
 exposed-jdbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc" }
+exposed-ktor = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-ktor" }
 exposed-jackson3 = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jackson3" }
 exposed-jdbc-tests = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc-tests" }
 exposed-r2dbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-r2dbc" }

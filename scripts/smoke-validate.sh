@@ -77,11 +77,12 @@ case "${1:-help}" in
   data-access-full)
     # Testcontainers required
     run "$GRADLEW \
-      :exposed-dao-web-transaction:test \
+      :exposed-javers-audit:test \
       :exposed-javers-persistence-audit:test \
-      :exposed-spring-transaction:test \
-      :exposed-sql-web-virtualthread:test \
-      :exposed-sql-webflux-coroutines:test \
+      :exposed-mvc-jdbc:test \
+      :exposed-mvc-virtualthread:test \
+      :exposed-webflux-r2dbc:test \
+      :ktor-exposed-rest:test \
       :spring-data-r2dbc-coroutines:test \
       :spring-data-jpa-querydsl:test \
       :spring-data-mongodb-coroutines:test \
@@ -166,7 +167,7 @@ case "${1:-help}" in
   stale-check)
     echo "=== Gradle project count ==="
     count=$("$GRADLEW" projects --console=plain 2>/dev/null | grep -Ec "Project ':" || true)
-    expected=90
+    expected=91
     echo "Active modules: $count (expected: $expected)"
     [ "$count" -eq "$expected" ] || echo "WARNING: Gradle project count drifted."
 
