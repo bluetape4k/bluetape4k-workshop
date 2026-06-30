@@ -53,6 +53,7 @@ const legacySequenceSlugs = new Set([
   "spring-boot-idempotency-sequence-01.svg",
   "spring-boot-idgenerator-readme-sequence-01.svg",
   "spring-boot-stomp-websocket-readme-sequence-01.svg",
+  "spring-boot-text-moderation-api-readme-sequence-01.svg",
   "spring-boot-webflux-coroutines-readme-sequence-01.svg",
   "spring-data-elasticsearch-readme-sequence-01.svg",
   "spring-data-elasticsearch-webflux-readme-sequence-01.svg",

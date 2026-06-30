@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1720" viewBox="0 0 1440 1720" role="img" aria-labelledby="title desc">
+  <title id="title">CloudWatch and IMDS Observability Workshop Architecture</title>
+  <desc id="desc">Top-to-bottom architecture showing local-first Spring Boot telemetry, CloudWatch payload builders, local adapters, and optional real AWS targets.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrowOptional" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#c2410c"/>
+    </marker>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font-family: "Architects Daughter"; font-size: 38px; font-weight: 700; fill: #0f172a; }
+      .subtitle { font-family: "Comic Mono"; font-size: 18px; font-weight: 400; fill: #475569; }
+      .layer { fill: #ffffff; stroke: #cbd5e1; stroke-width: 2; rx: 8; }
+      .layerLabel { font-family: "Comic Mono"; font-size: 17px; font-weight: 700; fill: #334155; text-transform: uppercase; letter-spacing: 0; }
+      .card { fill: #ffffff; stroke: #94a3b8; stroke-width: 2; rx: 8; }
+      .localCard { fill: #ecfdf5; stroke: #059669; stroke-width: 2; rx: 8; }
+      .awsCard { fill: #fff7ed; stroke: #ea580c; stroke-width: 2; rx: 8; }
+      .titleText { font-family: "Architects Daughter"; font-size: 18px; font-weight: 700; fill: #111827; }
+      .bodyText { font-family: "Comic Mono"; font-size: 13px; font-weight: 400; fill: #475569; }
+      .smallText { font-family: "Comic Mono"; font-size: 13px; font-weight: 400; fill: #64748b; }
+      .connector { fill: none; stroke: #2563eb; stroke-width: 3; marker-end: url(#arrow); }
+      .optionalConnector { fill: none; stroke: #c2410c; stroke-width: 3; stroke-dasharray: 10 8; marker-end: url(#arrowOptional); }
+      .guard { fill: #eef2ff; stroke: #4f46e5; stroke-width: 2; rx: 8; }
+    </style>
+    <g class="node" data-node="post"><rect x="180" y="220" width="480" height="88"/></g>
+    <g class="node" data-node="get"><rect x="780" y="220" width="420" height="88"/></g>
+    <g class="node" data-node="controller"><rect x="135" y="475" width="330" height="92"/></g>
+    <g class="node" data-node="service"><rect x="555" y="475" width="330" height="92"/></g>
+    <g class="node" data-node="properties"><rect x="975" y="475" width="330" height="92"/></g>
+    <g class="node" data-node="metric"><rect x="135" y="745" width="330" height="92"/></g>
+    <g class="node" data-node="log"><rect x="555" y="745" width="330" height="92"/></g>
+    <g class="node" data-node="meter"><rect x="975" y="745" width="330" height="92"/></g>
+    <g class="node" data-node="local-metric"><rect x="135" y="1020" width="330" height="98"/></g>
+    <g class="node" data-node="local-logs"><rect x="555" y="1020" width="330" height="98"/></g>
+    <g class="node" data-node="local-imds"><rect x="975" y="1020" width="330" height="98"/></g>
+    <g class="node" data-node="cloudwatch-metrics"><rect x="135" y="1320" width="330" height="104"/></g>
+    <g class="node" data-node="cloudwatch-logs"><rect x="555" y="1320" width="330" height="104"/></g>
+    <g class="node" data-node="ec2-imds"><rect x="975" y="1320" width="330" height="104"/></g>
+    <g class="node" data-node="safety"><rect x="260" y="1525" width="920" height="104"/></g>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1440" height="1720"/>
+  <text class="title" x="80" y="76">CloudWatch + IMDS Observability Workshop</text>
+  <text class="subtitle" x="80" y="112">Default path is local and credential-free. Real AWS and IMDS access are explicit opt-in boundaries.</text>
+
+  <rect id="layer-learner" class="layer" x="70" y="145" width="1300" height="205" rx="8"/>
+  <text class="layerLabel" x="95" y="180">Layer 1 - Learner Requests</text>
+  <rect id="card-post" class="card" x="180" y="220" width="480" height="88" rx="8"/>
+  <text class="titleText" x="210" y="256">POST /api/aws-observability/orders</text>
+  <text class="bodyText" x="210" y="284">Publishes metric, log, and meter intent.</text>
+  <rect id="card-get" class="card" x="780" y="220" width="420" height="88" rx="8"/>
+  <text class="titleText" x="810" y="256">GET /api/aws-observability/metadata</text>
+  <text class="bodyText" x="810" y="284">Explicit metadata read for demos and tests.</text>
+
+  <rect id="layer-app" class="layer" x="70" y="390" width="1300" height="230" rx="8"/>
+  <text class="layerLabel" x="95" y="425">Layer 2 - Spring Boot Local Mode</text>
+  <rect id="card-controller" class="card" x="135" y="475" width="330" height="92" rx="8"/>
+  <text class="titleText" x="165" y="512">OrderTelemetryController</text>
+  <text class="bodyText" x="165" y="540">HTTP boundary and 400 error mapping.</text>
+  <rect id="card-service" class="card" x="555" y="475" width="330" height="92" rx="8"/>
+  <image x="585" y="496" width="44" height="44" data-bluetape4k-icon="spring.boot" data-source="docs/icons/spring/spring-boot.svg" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCEtLSBHZW5lcmF0b3I6IEFkb2JlIElsbHVzdHJhdG9yIDI0LjAuMywgU1ZHIEV4cG9ydCBQbHVnLUluIC4gU1ZHIFZlcnNpb246IDYuMDAgQnVpbGQgMCkgIC0tPgo8c3ZnIGZpbGw9IiM2REIzM0YiIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiCgkgdmlld0JveD0iMCAwIDUxMCA0NTcuOCIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAwIDAgNTEwIDQ1Ny44OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+Cgkuc3Qwe2ZpbGw6IzZEQjMzRjt9Cjwvc3R5bGU+Cjx0aXRsZT5pY29uLXNwcmluZy1ib290PC90aXRsZT4KPGcgaWQ9IkxheWVyXzJfMV8iPgoJPGcgaWQ9IkxheWVyXzEtMiI+CgkJPHBhdGggY2xhc3M9InN0MCIgZD0iTTUwMy41LDIwMS40TDQwMywyNy41QzM5NC4zLDEyLjQsMzcyLjksMCwzNTUuNCwwSDE1NC42Yy0xNy40LDAtMzguOSwxMi40LTQ3LjYsMjcuNUw2LjYsMjAxLjQKCQljLTguNywxNS4xLTguNywzOS44LDAsNTQuOWwxMDAuNCwxNzRjOC43LDE1LjEsMzAuMSwyNy41LDQ3LjYsMjcuNWgyMDAuOWMxNy40LDAsMzguOC0xMi40LDQ3LjYtMjcuNWwxMDAuNC0xNzQKCQlDNTEyLjIsMjQxLjIsNTEyLjIsMjE2LjUsNTAzLjUsMjAxLjR6IE0yMzMuMyw5Ni4yYzAtMTEuNCw5LjMtMjAuNywyMC43LTIwLjdjMTEuNCwwLDIwLjcsOS4zLDIwLjcsMjAuN3YxMjMuNwoJCWMwLDExLjQtOS4zLDIwLjctMjAuNywyMC43Yy0xMS40LDAtMjAuNy05LjMtMjAuNy0yMC43bDAsMFY5Ni4yeiBNMjU0LDM2MC4zYy03Ny40LDAtMTQwLjQtNjMtMTQwLjQtMTQwLjQKCQljMC4xLTQ0LjQsMjEuMS04Ni4xLDU2LjctMTEyLjdjOC4yLTYuMSwxOS43LTQuNCwyNS44LDMuOHM0LjQsMTkuNy0zLjgsMjUuOGwwLDBjLTQ1LjksMzQuMS01NS41LDk5LTIxLjQsMTQ0LjkKCQlzOTksNTUuNSwxNDQuOSwyMS40YzI2LjMtMTkuNSw0MS44LTUwLjQsNDEuOC04My4yYy0wLjEtMzIuOS0xNS43LTYzLjgtNDIuMi04My40Yy04LjItNi05LjktMTcuNi0zLjktMjUuOHMxNy42LTkuOSwyNS44LTMuOQoJCWMzNS45LDI2LjUsNTcsNjguNSw1Ny4xLDExMy4xQzM5NC40LDI5Ny40LDMzMS40LDM2MC4zLDI1NCwzNjAuM3oiLz4KCTwvZz4KPC9nPgo8L3N2Zz4K"/>
+  <text class="titleText" x="645" y="512">OrderTelemetryService</text>
+  <text class="bodyText" x="645" y="540">Builds telemetry; isolates failures.</text>
+  <rect id="card-properties" class="card" x="975" y="475" width="330" height="92" rx="8"/>
+  <text class="titleText" x="1005" y="512">AwsObservabilityProperties</text>
+  <text class="bodyText" x="1005" y="540">Namespace, stream, tags, metadata flag.</text>
+
+  <rect id="layer-builders" class="layer" x="70" y="660" width="1300" height="230" rx="8"/>
+  <text class="layerLabel" x="95" y="695">Layer 3 - Telemetry Builders</text>
+  <rect id="card-metric" class="card" x="135" y="745" width="330" height="92" rx="8"/>
+  <text class="titleText" x="165" y="782">MetricDatum</text>
+  <text class="bodyText" x="165" y="810">Outcome, Service, Source dimensions.</text>
+  <rect id="card-log" class="card" x="555" y="745" width="330" height="92" rx="8"/>
+  <text class="titleText" x="585" y="782">InputLogEvent</text>
+  <text class="bodyText" x="585" y="810">JSON message with redacted fields.</text>
+  <rect id="card-meter" class="card" x="975" y="745" width="330" height="92" rx="8"/>
+  <image x="1005" y="766" width="44" height="44" data-bluetape4k-icon="observability.micrometer" data-source="docs/icons/observability/micrometer.svg" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjgiIGhlaWdodD0iMTI4IiB2aWV3Qm94PSIwIDAgMTI4IDEyOCIgcm9sZT0iaW1nIiBhcmlhLWxhYmVsbGVkYnk9InRpdGxlIGRlc2MiPgogIDx0aXRsZSBpZD0idGl0bGUiPk1pY3JvbWV0ZXIgbWV0cmljcyBpY29uPC90aXRsZT4KICA8ZGVzYyBpZD0iZGVzYyI+TmV1dHJhbCBtZXRyaWNzIGdhdWdlIGljb24gZm9yIE1pY3JvbWV0ZXIgaW5zdHJ1bWVudGF0aW9uIGluIGJsdWV0YXBlNGsgZGlhZ3JhbXMuPC9kZXNjPgogIDxyZWN0IHg9IjEwIiB5PSIxMiIgd2lkdGg9IjEwOCIgaGVpZ2h0PSIxMDQiIHJ4PSIxOCIgZmlsbD0iI2Y4ZmFmYyIgc3Ryb2tlPSIjMzM0MTU1IiBzdHJva2Utd2lkdGg9IjYiLz4KICA8cGF0aCBkPSJNMzQgODJhMzAgMzAgMCAxIDEgNjAgMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMTZhMzRhIiBzdHJva2Utd2lkdGg9IjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxwYXRoIGQ9Ik02NCA4MmwyMi0yNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMjU2M2ViIiBzdHJva2Utd2lkdGg9IjciIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogIDxjaXJjbGUgY3g9IjY0IiBjeT0iODIiIHI9IjgiIGZpbGw9IiMyNTYzZWIiLz4KICA8cGF0aCBkPSJNMzQgOTZoNjAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzY0NzQ4YiIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz4KPC9zdmc+Cg=="/>
+  <text class="titleText" x="1065" y="782">Micrometer Registry</text>
+  <text class="bodyText" x="1065" y="810">Counter and timer state.</text>
+
+  <rect id="layer-local" class="layer" x="70" y="930" width="1300" height="240" rx="8"/>
+  <text class="layerLabel" x="95" y="965">Layer 4 - Local Adapters (Default)</text>
+  <rect id="card-local-cw" class="localCard" x="135" y="1020" width="330" height="98" rx="8"/>
+  <text class="titleText" x="165" y="1056">Local CloudWatchOperations</text>
+  <text class="bodyText" x="165" y="1084">Returns success without AWS clients.</text>
+  <rect id="card-local-logs" class="localCard" x="555" y="1020" width="330" height="98" rx="8"/>
+  <text class="titleText" x="585" y="1056">Local CloudWatchLogsOperations</text>
+  <text class="bodyText" x="585" y="1084">Accepts sanitized events in memory.</text>
+  <rect id="card-local-imds" class="localCard" x="975" y="1020" width="330" height="98" rx="8"/>
+  <text class="titleText" x="1005" y="1056">Local ImdsOperations</text>
+  <text class="bodyText" x="1005" y="1084">Returns local instance, region, AZ.</text>
+
+  <rect id="layer-aws" class="layer" x="70" y="1225" width="1300" height="260" rx="8"/>
+  <text class="layerLabel" x="95" y="1260">Layer 5 - Optional Real AWS Profile</text>
+  <rect id="card-aws-metrics" class="awsCard" x="135" y="1320" width="330" height="104" rx="8"/>
+  <image x="165" y="1340" width="54" height="54" data-bluetape4k-icon="aws.cloudwatch" data-source="docs/icons/aws/architecture-icons-2026-04-30/Architecture-Service-Icons_04302026/Arch_Management-Tools/48/Arch_Amazon-CloudWatch_48.svg" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNjRweCIgaGVpZ2h0PSI2NHB4IiB2aWV3Qm94PSIwIDAgNjQgNjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+SWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BbWF6b24tQ2xvdWRXYXRjaF80ODwvdGl0bGU+CiAgICA8ZyBpZD0iSWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BbWF6b24tQ2xvdWRXYXRjaF80OCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPGcgaWQ9Ikljb24tQXJjaGl0ZWN0dXJlLUJHLzQ4L01hbmFnZW1lbnQtR292ZXJuYW5jZSIgZmlsbD0iI0U3MTU3QiI+CiAgICAgICAgICAgIDxyZWN0IGlkPSJSZWN0YW5nbGUiIHg9IjAiIHk9IjAiIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCI+PC9yZWN0PgogICAgICAgIDwvZz4KICAgICAgICA8cGF0aCBkPSJNNDIuMTg0LDM5LjM4MTEyMTYgQzQyLjE4NCwzNy4xMjgyNjk4IDQwLjM0NywzNS4yOTU0NTgxIDM4LjA4OSwzNS4yOTU0NTgxIEMzNS44MzEsMzUuMjk1NDU4MSAzMy45OTUsMzcuMTI4MjY5OCAzMy45OTUsMzkuMzgxMTIxNiBDMzMuOTk1LDQxLjYzMzk3MzUgMzUuODMxLDQzLjQ2Njc4NTIgMzguMDg5LDQzLjQ2Njc4NTIgQzQwLjM0Nyw0My40NjY3ODUyIDQyLjE4NCw0MS42MzM5NzM1IDQyLjE4NCwzOS4zODExMjE2IEw0Mi4xODQsMzkuMzgxMTIxNiBaIE00NC4xODQsMzkuMzgxMTIxNiBDNDQuMTg0LDQyLjczNDQ1ODcgNDEuNDUsNDUuNDYyMjI1MiAzOC4wODksNDUuNDYyMjI1MiBDMzQuNzI5LDQ1LjQ2MjIyNTIgMzEuOTk1LDQyLjczNDQ1ODcgMzEuOTk1LDM5LjM4MTEyMTYgQzMxLjk5NSwzNi4wMjc3ODQ2IDM0LjcyOSwzMy4zMDAwMTgxIDM4LjA4OSwzMy4zMDAwMTgxIEM0MS40NSwzMy4zMDAwMTgxIDQ0LjE4NCwzNi4wMjc3ODQ2IDQ0LjE4NCwzOS4zODExMjE2IEw0NC4xODQsMzkuMzgxMTIxNiBaIE01MC43NDMsNDkuNjE1NzMzNyBMNDUuODQ2LDQ1LjIxNTc4ODQgQzQ1LjUyNCw0NS42Mzk4MTk0IDQ1LjE3LDQ2LjAzNzkwOTcgNDQuNzg1LDQ2LjQwNTA3MDYgTDQ5LjY3MSw1MC44MDMwMjA1IEM0OS45OTcsNTEuMDk1MzUyNSA1MC41MDUsNTEuMDcxNDA3MiA1MC44MDIsNTAuNzQ0MTU1IEM1MS4wOTYsNTAuNDE3OTAwNiA1MS4wNyw0OS45MTEwNTg4IDUwLjc0Myw0OS42MTU3MzM3IEw1MC43NDMsNDkuNjE1NzMzNyBaIE0zOC4wODksNDcuMDkxNTAyIEM0Mi4zNTEsNDcuMDkxNTAyIDQ1LjgxOCw0My42MzI0MDY3IDQ1LjgxOCwzOS4zODExMjE2IEM0NS44MTgsMzUuMTI5ODM2NiA0Mi4zNTEsMzEuNjcwNzQxMyAzOC4wODksMzEuNjcwNzQxMyBDMzMuODI5LDMxLjY3MDc0MTMgMzAuMzYyLDM1LjEyOTgzNjYgMzAuMzYyLDM5LjM4MTEyMTYgQzMwLjM2Miw0My42MzI0MDY3IDMzLjgyOSw0Ny4wOTE1MDIgMzguMDg5LDQ3LjA5MTUwMiBMMzguMDg5LDQ3LjA5MTUwMiBaIE01Mi4wODEsNDguMTM0MTE5NCBDNTMuMjI3LDQ5LjE2Njc1OTcgNTMuMzE5LDUwLjkzNTcxNzMgNTIuMjg4LDUyLjA4MDEwMjEgQzUxLjczNSw1Mi42ODk3MDkxIDUwLjk3MSw1MyA1MC4yMDUsNTMgQzQ5LjUzOCw1MyA0OC44NjgsNTIuNzY1NTM1OCA0OC4zMzMsNTIuMjg2NjMwMiBMNDMuMTcyLDQ3LjY0MTI0NTcgQzQxLjY5MSw0OC41NTIxNjQxIDM5Ljk1NCw0OS4wODY5NDIxIDM4LjA4OSw0OS4wODY5NDIxIEMzMi43MjUsNDkuMDg2OTQyMSAyOC4zNjIsNDQuNzMyODkxOSAyOC4zNjIsMzkuMzgxMTIxNiBDMjguMzYyLDM0LjAyOTM1MTQgMzIuNzI1LDI5LjY3NTMwMTIgMzguMDg5LDI5LjY3NTMwMTIgQzQzLjQ1NCwyOS42NzUzMDEyIDQ3LjgxOCwzNC4wMjkzNTE0IDQ3LjgxOCwzOS4zODExMjE2IEM0Ny44MTgsNDAuODQ0Nzc2OSA0Ny40ODIsNDIuMjI4NjE0NiA0Ni44OTcsNDMuNDc1NzY0NiBMNTIuMDgxLDQ4LjEzNDExOTQgWiBNMTcuNjk3LDIzLjUzODMyNTQgQzE3LjY5NywyMy45Mzk0MDg4IDE3LjcyLDI0LjMzODQ5NjggMTcuNzY3LDI0LjcyMjYxOSBDMTcuODAyLDI1LjAwNTk3MTUgMTcuNzEzLDI1LjI5MTMxOTQgMTcuNTI0LDI1LjUwNDgzMTUgQzE3LjM3NSwyNS42NzE0NTA4IDE3LjE3NywyNS43ODMxOTU0IDE2Ljk2MSwyNS44MjQxMDE5IEMxNS4wODQsMjYuMzA3OTk2MSAxMiwyNy43NzE2NTE0IDEyLDMyLjE1NjYzMDkgQzEyLDM1LjQ4MDAzNjMgMTMuODM2LDM3LjMxMzg0NTggMTUuMzc3LDM4LjI2NzY2NjEgQzE2LjA0OSwzOC42ODk3MDE3IDE2LjY0LDM4LjkwNTIwOTIgMTcuMTM4LDM4LjkxMDE5NzggTDI2LjEyNywzOC45MTAxOTc4IEwyNi4xMjcsNDAuOTA1NjM3OCBMMTcuMTI3LDQwLjkwNTYzNzggQzE2LjI0Myw0MC44OTY2NTg0IDE1LjMsNDAuNTc3Mzg4IDE0LjMxNywzOS45NTg4MDE1IEMxMi43MDgsMzguOTY0MDc0NyAxMCwzNi42MjE0MjgxIDEwLDMyLjE1NjYzMDkgQzEwLDI2Ljg4NzY3MTUgMTMuNTI2LDI0Ljg2NDI5NTMgMTUuNzEsMjQuMTE3MDAzIEMxNS43MDIsMjMuOTI0NDQzIDE1LjY5NywyMy43MzA4ODUzIDE1LjY5NywyMy41MzgzMjU0IEMxNS42OTcsMTkuMTYwMzI5OSAxOC42NzMsMTQuNjIxNzAxNSAyMi42MjEsMTIuOTc4NDU2NiBDMjcuMjMyLDExLjA1MDg2MTUgMzIuMTE5LDEyLjAwNjY3NzMgMzUuNjg3LDE1LjUzMzYxNzYgQzM2LjczNCwxNi41NjcyNTU1IDM3LjYwNCwxNy44MDg0MTkyIDM4LjI4NSwxOS4yMzYxNTY2IEMzOS4yMDMsMTguNTUwNzIyOSA0MC4zMDQsMTguMTc0NTgyNSA0MS40NTksMTguMTc0NTgyNSBDNDMuODc0LDE4LjE3NDU4MjUgNDYuNTg3LDE5Ljk2ODQ4MzEgNDcuMTIyLDIzLjg4OTUyMjggQzUwLjU4LDI0LjcyMTYyMTMgNTQsMjcuMjc3NzggNTQsMzIuMjE3NDkxOSBDNTQsMzUuMTA3ODg2OCA1Mi44NjQsMzcuNDU2NTE5NyA1MC43MTMsMzkuMDA4OTcyMSBMNDkuNTQxLDM3LjM5MjY2NTYgQzUxLjE3MywzNi4yMTQzNTgzIDUyLDM0LjQ3MzMzNjggNTIsMzIuMjE3NDkxOSBDNTIsMjcuMjM4ODY4OSA0Ny44MTEsMjUuOTk5NzAwNyA0Ni4wMSwyNS42OTgzODkyIEM0NS43NDMsMjUuNjUzNDkxOCA0NS41MDUsMjUuNTAxODM4NCA0NS4zNTEsMjUuMjc5MzQ2OCBDNDUuMjA4LDI1LjA3MTgyMSA0NS4xNSwyNC44MTg0MDAxIDQ1LjE4NiwyNC41NzA5NjU2IEM0NC45MzEsMjEuNTMxOTEwNCA0My4xNDEsMjAuMTcwMDIyNSA0MS40NTksMjAuMTcwMDIyNSBDNDAuNDAyLDIwLjE3MDAyMjUgMzkuNDA5LDIwLjY4NTg0MzggMzguNzM0LDIxLjU4NTc4NzMgQzM4LjUxNCwyMS44NzkxMTY5IDM4LjE1NiwyMi4wMjk3NzI3IDM3Ljc4NiwyMS45NzQ4OTgxIEMzNy40MjIsMjEuOTIxMDIxMiAzNy4xMTgsMjEuNjcxNTkxMiAzNi45OTMsMjEuMzI2MzgwMSBDMzYuMzU5LDE5LjU3NDM4MzcgMzUuNDQ2LDE4LjEwMjc0NjYgMzQuMjgxLDE2Ljk1MTM3NzcgQzMyLjg1MSwxNS41Mzk2MDM5IDI4LjkzMywxMi41MDY1MzUgMjMuMzkxLDE0LjgxOTI1IEMyMC4xOTgsMTYuMTQ5MjEwOCAxNy42OTcsMTkuOTc4NDYwMyAxNy42OTcsMjMuNTM4MzI1NCBMMTcuNjk3LDIzLjUzODMyNTQgWiIgaWQ9IkFtYXpvbi1DbG91ZFdhdGNoX0ljb25fNDhfU3F1aWQiIGZpbGw9IiNGRkZGRkYiPjwvcGF0aD4KICAgIDwvZz4KPC9zdmc+"/>
+  <text class="titleText" x="235" y="1358">CloudWatch Metrics</text>
+  <text class="bodyText" x="235" y="1386">Manual profile only.</text>
+  <rect id="card-aws-logs" class="awsCard" x="555" y="1320" width="330" height="104" rx="8"/>
+  <image x="585" y="1340" width="54" height="54" data-bluetape4k-icon="aws.cloudwatch" data-source="docs/icons/aws/architecture-icons-2026-04-30/Architecture-Service-Icons_04302026/Arch_Management-Tools/48/Arch_Amazon-CloudWatch_48.svg" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyB3aWR0aD0iNjRweCIgaGVpZ2h0PSI2NHB4IiB2aWV3Qm94PSIwIDAgNjQgNjQiIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+CiAgICA8dGl0bGU+SWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BbWF6b24tQ2xvdWRXYXRjaF80ODwvdGl0bGU+CiAgICA8ZyBpZD0iSWNvbi1BcmNoaXRlY3R1cmUvNDgvQXJjaF9BbWF6b24tQ2xvdWRXYXRjaF80OCIgc3Ryb2tlPSJub25lIiBzdHJva2Utd2lkdGg9IjEiIGZpbGw9Im5vbmUiIGZpbGwtcnVsZT0iZXZlbm9kZCI+CiAgICAgICAgPGcgaWQ9Ikljb24tQXJjaGl0ZWN0dXJlLUJHLzQ4L01hbmFnZW1lbnQtR292ZXJuYW5jZSIgZmlsbD0iI0U3MTU3QiI+CiAgICAgICAgICAgIDxyZWN0IGlkPSJSZWN0YW5nbGUiIHg9IjAiIHk9IjAiIHdpZHRoPSI2NCIgaGVpZ2h0PSI2NCI+PC9yZWN0PgogICAgICAgIDwvZz4KICAgICAgICA8cGF0aCBkPSJNNDIuMTg0LDM5LjM4MTEyMTYgQzQyLjE4NCwzNy4xMjgyNjk4IDQwLjM0NywzNS4yOTU0NTgxIDM4LjA4OSwzNS4yOTU0NTgxIEMzNS44MzEsMzUuMjk1NDU4MSAzMy45OTUsMzcuMTI4MjY5OCAzMy45OTUsMzkuMzgxMTIxNiBDMzMuOTk1LDQxLjYzMzk3MzUgMzUuODMxLDQzLjQ2Njc4NTIgMzguMDg5LDQzLjQ2Njc4NTIgQzQwLjM0Nyw0My40NjY3ODUyIDQyLjE4NCw0MS42MzM5NzM1IDQyLjE4NCwzOS4zODExMjE2IEw0Mi4xODQsMzkuMzgxMTIxNiBaIE00NC4xODQsMzkuMzgxMTIxNiBDNDQuMTg0LDQyLjczNDQ1ODcgNDEuNDUsNDUuNDYyMjI1MiAzOC4wODksNDUuNDYyMjI1MiBDMzQuNzI5LDQ1LjQ2MjIyNTIgMzEuOTk1LDQyLjczNDQ1ODcgMzEuOTk1LDM5LjM4MTEyMTYgQzMxLjk5NSwzNi4wMjc3ODQ2IDM0LjcyOSwzMy4zMDAwMTgxIDM4LjA4OSwzMy4zMDAwMTgxIEM0MS40NSwzMy4zMDAwMTgxIDQ0LjE4NCwzNi4wMjc3ODQ2IDQ0LjE4NCwzOS4zODExMjE2IEw0NC4xODQsMzkuMzgxMTIxNiBaIE01MC43NDMsNDkuNjE1NzMzNyBMNDUuODQ2LDQ1LjIxNTc4ODQgQzQ1LjUyNCw0NS42Mzk4MTk0IDQ1LjE3LDQ2LjAzNzkwOTcgNDQuNzg1LDQ2LjQwNTA3MDYgTDQ5LjY3MSw1MC44MDMwMjA1IEM0OS45OTcsNTEuMDk1MzUyNSA1MC41MDUsNTEuMDcxNDA3MiA1MC44MDIsNTAuNzQ0MTU1IEM1MS4wOTYsNTAuNDE3OTAwNiA1MS4wNyw0OS45MTEwNTg4IDUwLjc0Myw0OS42MTU3MzM3IEw1MC43NDMsNDkuNjE1NzMzNyBaIE0zOC4wODksNDcuMDkxNTAyIEM0Mi4zNTEsNDcuMDkxNTAyIDQ1LjgxOCw0My42MzI0MDY3IDQ1LjgxOCwzOS4zODExMjE2IEM0NS44MTgsMzUuMTI5ODM2NiA0Mi4zNTEsMzEuNjcwNzQxMyAzOC4wODksMzEuNjcwNzQxMyBDMzMuODI5LDMxLjY3MDc0MTMgMzAuMzYyLDM1LjEyOTgzNjYgMzAuMzYyLDM5LjM4MTEyMTYgQzMwLjM2Miw0My42MzI0MDY3IDMzLjgyOSw0Ny4wOTE1MDIgMzguMDg5LDQ3LjA5MTUwMiBMMzguMDg5LDQ3LjA5MTUwMiBaIE01Mi4wODEsNDguMTM0MTE5NCBDNTMuMjI3LDQ5LjE2Njc1OTcgNTMuMzE5LDUwLjkzNTcxNzMgNTIuMjg4LDUyLjA4MDEwMjEgQzUxLjczNSw1Mi42ODk3MDkxIDUwLjk3MSw1MyA1MC4yMDUsNTMgQzQ5LjUzOCw1MyA0OC44NjgsNTIuNzY1NTM1OCA0OC4zMzMsNTIuMjg2NjMwMiBMNDMuMTcyLDQ3LjY0MTI0NTcgQzQxLjY5MSw0OC41NTIxNjQxIDM5Ljk1NCw0OS4wODY5NDIxIDM4LjA4OSw0OS4wODY5NDIxIEMzMi43MjUsNDkuMDg2OTQyMSAyOC4zNjIsNDQuNzMyODkxOSAyOC4zNjIsMzkuMzgxMTIxNiBDMjguMzYyLDM0LjAyOTM1MTQgMzIuNzI1LDI5LjY3NTMwMTIgMzguMDg5LDI5LjY3NTMwMTIgQzQzLjQ1NCwyOS42NzUzMDEyIDQ3LjgxOCwzNC4wMjkzNTE0IDQ3LjgxOCwzOS4zODExMjE2IEM0Ny44MTgsNDAuODQ0Nzc2OSA0Ny40ODIsNDIuMjI4NjE0NiA0Ni44OTcsNDMuNDc1NzY0NiBMNTIuMDgxLDQ4LjEzNDExOTQgWiBNMTcuNjk3LDIzLjUzODMyNTQgQzE3LjY5NywyMy45Mzk0MDg4IDE3LjcyLDI0LjMzODQ5NjggMTcuNzY3LDI0LjcyMjYxOSBDMTcuODAyLDI1LjAwNTk3MTUgMTcuNzEzLDI1LjI5MTMxOTQgMTcuNTI0LDI1LjUwNDgzMTUgQzE3LjM3NSwyNS42NzE0NTA4IDE3LjE3NywyNS43ODMxOTU0IDE2Ljk2MSwyNS44MjQxMDE5IEMxNS4wODQsMjYuMzA3OTk2MSAxMiwyNy43NzE2NTE0IDEyLDMyLjE1NjYzMDkgQzEyLDM1LjQ4MDAzNjMgMTMuODM2LDM3LjMxMzg0NTggMTUuMzc3LDM4LjI2NzY2NjEgQzE2LjA0OSwzOC42ODk3MDE3IDE2LjY0LDM4LjkwNTIwOTIgMTcuMTM4LDM4LjkxMDE5NzggTDI2LjEyNywzOC45MTAxOTc4IEwyNi4xMjcsNDAuOTA1NjM3OCBMMTcuMTI3LDQwLjkwNTYzNzggQzE2LjI0Myw0MC44OTY2NTg0IDE1LjMsNDAuNTc3Mzg4IDE0LjMxNywzOS45NTg4MDE1IEMxMi43MDgsMzguOTY0MDc0NyAxMCwzNi42MjE0MjgxIDEwLDMyLjE1NjYzMDkgQzEwLDI2Ljg4NzY3MTUgMTMuNTI2LDI0Ljg2NDI5NTMgMTUuNzEsMjQuMTE3MDAzIEMxNS43MDIsMjMuOTI0NDQzIDE1LjY5NywyMy43MzA4ODUzIDE1LjY5NywyMy41MzgzMjU0IEMxNS42OTcsMTkuMTYwMzI5OSAxOC42NzMsMTQuNjIxNzAxNSAyMi42MjEsMTIuOTc4NDU2NiBDMjcuMjMyLDExLjA1MDg2MTUgMzIuMTE5LDEyLjAwNjY3NzMgMzUuNjg3LDE1LjUzMzYxNzYgQzM2LjczNCwxNi41NjcyNTU1IDM3LjYwNCwxNy44MDg0MTkyIDM4LjI4NSwxOS4yMzYxNTY2IEMzOS4yMDMsMTguNTUwNzIyOSA0MC4zMDQsMTguMTc0NTgyNSA0MS40NTksMTguMTc0NTgyNSBDNDMuODc0LDE4LjE3NDU4MjUgNDYuNTg3LDE5Ljk2ODQ4MzEgNDcuMTIyLDIzLjg4OTUyMjggQzUwLjU4LDI0LjcyMTYyMTMgNTQsMjcuMjc3NzggNTQsMzIuMjE3NDkxOSBDNTQsMzUuMTA3ODg2OCA1Mi44NjQsMzcuNDU2NTE5NyA1MC43MTMsMzkuMDA4OTcyMSBMNDkuNTQxLDM3LjM5MjY2NTYgQzUxLjE3MywzNi4yMTQzNTgzIDUyLDM0LjQ3MzMzNjggNTIsMzIuMjE3NDkxOSBDNTIsMjcuMjM4ODY4OSA0Ny44MTEsMjUuOTk5NzAwNyA0Ni4wMSwyNS42OTgzODkyIEM0NS43NDMsMjUuNjUzNDkxOCA0NS41MDUsMjUuNTAxODM4NCA0NS4zNTEsMjUuMjc5MzQ2OCBDNDUuMjA4LDI1LjA3MTgyMSA0NS4xNSwyNC44MTg0MDAxIDQ1LjE4NiwyNC41NzA5NjU2IEM0NC45MzEsMjEuNTMxOTEwNCA0My4xNDEsMjAuMTcwMDIyNSA0MS40NTksMjAuMTcwMDIyNSBDNDAuNDAyLDIwLjE3MDAyMjUgMzkuNDA5LDIwLjY4NTg0MzggMzguNzM0LDIxLjU4NTc4NzMgQzM4LjUxNCwyMS44NzkxMTY5IDM4LjE1NiwyMi4wMjk3NzI3IDM3Ljc4NiwyMS45NzQ4OTgxIEMzNy40MjIsMjEuOTIxMDIxMiAzNy4xMTgsMjEuNjcxNTkxMiAzNi45OTMsMjEuMzI2MzgwMSBDMzYuMzU5LDE5LjU3NDM4MzcgMzUuNDQ2LDE4LjEwMjc0NjYgMzQuMjgxLDE2Ljk1MTM3NzcgQzMyLjg1MSwxNS41Mzk2MDM5IDI4LjkzMywxMi41MDY1MzUgMjMuMzkxLDE0LjgxOTI1IEMyMC4xOTgsMTYuMTQ5MjEwOCAxNy42OTcsMTkuOTc4NDYwMyAxNy42OTcsMjMuNTM4MzI1NCBMMTcuNjk3LDIzLjUzODMyNTQgWiIgaWQ9IkFtYXpvbi1DbG91ZFdhdGNoX0ljb25fNDhfU3F1aWQiIGZpbGw9IiNGRkZGRkYiPjwvcGF0aD4KICAgIDwvZz4KPC9zdmc+"/>
+  <text class="titleText" x="655" y="1358">CloudWatch Logs</text>
+  <text class="bodyText" x="655" y="1386">Same official CloudWatch icon.</text>
+  <rect id="card-real-imds" class="awsCard" x="975" y="1320" width="330" height="104" rx="8"/>
+  <text class="titleText" x="1005" y="1358">EC2 IMDS</text>
+  <text class="bodyText" x="1005" y="1386">Only instanceId, region, AZ are read.</text>
+
+  <rect id="card-boundary" class="guard" x="260" y="1525" width="920" height="104" rx="8"/>
+  <text class="titleText" x="300" y="1564">Safety Boundary</text>
+  <text class="bodyText" x="300" y="1594">No real AWS calls in default tests. No automatic credentials are read from IMDS.</text>
+
+  <path class="connector" d="M 420 308 L 420 475"/>
+  <path class="connector" d="M 990 308 L 990 475"/>
+  <path class="connector" d="M 720 567 L 720 745"/>
+  <path class="connector" d="M 300 837 L 300 1020"/>
+  <path class="connector" d="M 720 837 L 720 1020"/>
+  <path class="connector" d="M 1140 837 L 1140 1020"/>
+  <path class="optionalConnector" d="M 300 1118 L 300 1320"/>
+  <path class="optionalConnector" d="M 720 1118 L 720 1320"/>
+  <path class="optionalConnector" d="M 1140 1118 L 1140 1320"/>
+  <path class="optionalConnector" d="M 1140 1424 L 1140 1525"/>
+  <text class="smallText" x="340" y="1180">default local beans</text>
+  <text class="smallText" x="790" y="1280">activate `real-aws` manually</text>
+</svg>
