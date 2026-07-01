@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1700" height="1220" viewBox="0 0 1700 1220" role="img" aria-labelledby="title desc">
+  <title id="title">JaVers Approval Workflow Architecture</title>
+  <desc id="desc">A reviewer submits a proposed ProductPolicy, the approval service compares it with the current H2 row through JaVers, persists the pending decision, and commits approved snapshots only after approval.</desc>
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#64748B" flood-opacity="0.12"/></filter>
+    <style>
+      .bg{fill:#F8FAFC}.title{font-family:"Architects Daughter";font-size:42px;fill:#263238}.subtitle,.body,.small,.legendText,.footer{font-family:"Comic Mono";fill:#3B4A54}.subtitle{font-size:18px}.layerTitle{font-family:"Architects Daughter";font-size:25px;fill:#344154}.cardTitle{font-family:"Architects Daughter";font-size:23px;fill:#16202A}.body{font-size:15px}.small{font-size:13px;fill:#5B6975}.footer{font-size:14px;fill:#60727D}.layer{fill:#FFFFFF;stroke:#CAD6DF;stroke-width:2}.card{stroke-width:2.2}.blue{fill:#EFF6FF;stroke:#4F86C6}.green{fill:#F0F8F0;stroke:#6E8F4F}.amber{fill:#FFF7E8;stroke:#9B7D54}.red{fill:#FFF0F0;stroke:#B86868}.teal{fill:#ECFDF8;stroke:#2D948C}.violet{fill:#F6F3FF;stroke:#7E6AAE}.connector{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.command{stroke:#4F86C6}.compare{stroke:#A8793D}.approved{stroke:#6E8F4F}.rejected{stroke:#B86868;stroke-dasharray:12 8}.arrowHead{stroke-dasharray:none;stroke-linejoin:round}.legendBox{fill:#FFFFFF;stroke:#CAD6DF;stroke-width:1.8}.legendText{font-size:14px}.iconSlot{fill:#FFFFFF;stroke:#CAD6DF;stroke-width:1.4}
+    </style>
+  </defs>
+  <rect class="bg" width="1700" height="1220"/>
+  <text class="title" x="850" y="66" text-anchor="middle">JaVers Approval Workflow</text>
+  <text class="subtitle" x="850" y="100" text-anchor="middle">Pre-commit diff review: pending decisions are stored, but JaVers history changes only on approval.</text>
+
+  <rect class="layer" x="70" y="136" width="1560" height="166" rx="20"/>
+  <text class="layerTitle" x="106" y="180">Review entry</text>
+  <g class="node" data-node="reviewer" filter="url(#shadow)">
+    <rect class="card blue" x="140" y="202" width="360" height="84" rx="12"/>
+    <text class="cardTitle" x="320" y="235" text-anchor="middle">Reviewer / Test</text>
+    <text class="body" x="320" y="261" text-anchor="middle">submit, approve, or reject</text>
+  </g>
+  <g class="node" data-node="proposal" filter="url(#shadow)">
+    <rect class="card blue" x="760" y="202" width="420" height="84" rx="12"/>
+    <text class="cardTitle" x="970" y="235" text-anchor="middle">Proposed ProductPolicy</text>
+    <text class="body" x="970" y="261" text-anchor="middle">candidate aggregate state</text>
+  </g>
+
+  <rect class="layer" x="70" y="360" width="1560" height="190" rx="20"/>
+  <text class="layerTitle" x="106" y="404">Approval service</text>
+  <g class="node" data-node="approval-service" filter="url(#shadow)">
+    <rect class="card green" x="170" y="432" width="430" height="86" rx="12"/>
+    <text class="cardTitle" x="385" y="466" text-anchor="middle">ProductPolicyApprovalService</text>
+    <text class="body" x="385" y="492" text-anchor="middle">orchestrates decision state</text>
+  </g>
+  <g class="node" data-node="javers-compare" filter="url(#shadow)">
+    <rect class="card amber" x="790" y="432" width="360" height="86" rx="12"/>
+    <text class="cardTitle" x="970" y="466" text-anchor="middle">JaVers diff compare</text>
+    <text class="body" x="970" y="492" text-anchor="middle">field paths + before/after values</text>
+  </g>
+
+  <rect class="layer" x="70" y="608" width="1560" height="228" rx="20"/>
+  <text class="layerTitle" x="106" y="652">Decision and current data</text>
+  <g class="node" data-node="decision-row" filter="url(#shadow)">
+    <rect class="card teal" x="140" y="690" width="410" height="104" rx="12"/>
+    <text class="cardTitle" x="345" y="728" text-anchor="middle">policy_proposals</text>
+    <text class="body" x="345" y="754" text-anchor="middle">pending / approved / rejected</text>
+    <text class="small" x="345" y="779" text-anchor="middle">changed fields + reviewer note</text>
+  </g>
+  <g class="node" data-node="current-row" filter="url(#shadow)">
+    <rect class="card violet" x="690" y="690" width="410" height="104" rx="12"/>
+    <rect class="iconSlot" x="722" y="716" width="52" height="52" rx="12"/>
+    <image data-bluetape4k-icon="h2" data-source="docs/icons/database/h2.svg" x="734" y="728" width="28" height="28" preserveAspectRatio="xMidYMid meet" href="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDk0NzZCIiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+SDIgRGF0YWJhc2U8L3RpdGxlPjxwYXRoIGQ9Ik0xNy4xNyAxMy4yN2MuMTQtLjAxNS4yOC0uMDIzLjQxNi0uMDIzLjcgMCAxLjIyOC4xNTkgMS41OTkuNDY5LjM3LjMxNC41NTUuNzU2LjU1NSAxLjMzNGEyLjg2MSAyLjg2MSAwIDAgMS0uNDMgMS40NTVjLS4yOTEuNDkyLS43NzUgMS4wNjYtMS40NiAxLjcyNy0uNDUzLjQ0Ni0xLjA2MS45NzYtMS44MjEgMS41OTJhNDguMDIgNDguMDIgMCAwIDEtMi4yNzUgMS43NDJ2Mi4wODNoOS44OTVWMjEuMjRIMTcuOTljLjIxOS0uMTU5LjU5LS40MzUgMS4xMS0uODMyLjUxOS0uNCAxLjAzMy0uODM1IDEuNTUtMS4zMTEuODE3LS43NiAxLjQyNS0xLjUgMS44MjItMi4yMTVhNC42MjQgNC42MjQgMCAwIDAgLjU5Ny0yLjI2OGMwLTEuMjEzLS40MTYtMi4xNTQtMS4yNDctMi44MTUtLjgyOC0uNjYyLTIuMDMzLS45OTQtMy42MTMtLjk5NC0uMzQ0IDAtLjY5Mi4wMTUtMS4wMzYuMDQ5VjYuMDRIMTMuODZ2NC43MDFIOC45NjVWNi4wNEg1LjY1djEyLjg0NmgzLjMxNXYtNS42NjFoNC44OXY1LjY2MWguMDM5Yy4zMS0uMjQyLjYyMy0uNDg3LjkzMy0uNzRhMjguNTY0IDI4LjU2NCAwIDAgMCAxLjgyNi0xLjU4OCAxNC44NTQgMTQuODU0IDAgMCAwIC41MTctLjUyOXpNMTIuMDExIDIzLjNBMTEuMzI3IDExLjMyNyAwIDAgMSAuNyAxMS45OSAxMS4zMDUgMTEuMzA1IDAgMCAxIDEyLjAxMS42OTlhMTEuMjg2IDExLjI4NiAwIDAgMSAxMS4yOSAxMS4yOXYuMzUxSDI0di0uMzUxQTExLjk4NSAxMS45ODUgMCAwIDAgMTIuMDExIDAgMTIuMDA4IDEyLjAwOCAwIDAgMCAwIDExLjk4OSAxMi4wMjYgMTIuMDI2IDAgMCAwIDEyLjAxMSAyNGguMzUydi0uN3oiLz48L3N2Zz4="/>
+    <text class="cardTitle" x="916" y="728" text-anchor="middle">product_policies</text>
+    <text class="body" x="916" y="754" text-anchor="middle">current approved row</text>
+    <text class="small" x="916" y="779" text-anchor="middle">H2 + Exposed table</text>
+  </g>
+  <g class="node" data-node="javers-history" filter="url(#shadow)">
+    <rect class="card green" x="1250" y="690" width="320" height="104" rx="12"/>
+    <text class="cardTitle" x="1410" y="728" text-anchor="middle">JaVers history</text>
+    <text class="body" x="1410" y="754" text-anchor="middle">INITIAL / UPDATE snapshots</text>
+    <text class="small" x="1410" y="779" text-anchor="middle">approved changes only</text>
+  </g>
+
+  <rect class="layer" x="70" y="894" width="1560" height="158" rx="20"/>
+  <text class="layerTitle" x="106" y="938">Reader contract</text>
+  <g class="node" data-node="contract" filter="url(#shadow)">
+    <rect class="card red" x="430" y="958" width="840" height="70" rx="12"/>
+    <text class="cardTitle" x="850" y="987" text-anchor="middle">Rejected proposals never mutate current state</text>
+    <text class="body" x="850" y="1013" text-anchor="middle">Approval writes both JaVers history and the current policy row.</text>
+  </g>
+
+  <g class="edge" data-edge="reviewer-&gt;approval-service" data-label="submit approve reject commands">
+    <path data-connector="reviewer-to-service" class="connector command" d="M 385 286 L 385 432"/>
+    <polygon data-connector-head="reviewer-to-service" class="arrowHead" points="385,432 377,416 393,416" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <g class="edge" data-edge="proposal-&gt;javers-compare" data-label="candidate state is compared">
+    <path data-connector="proposal-to-compare" class="connector compare" d="M 970 286 L 970 432"/>
+    <polygon data-connector-head="proposal-to-compare" class="arrowHead" points="970,432 962,416 978,416" fill="#A8793D" stroke="#A8793D" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <g class="edge" data-edge="approval-service-&gt;current-row" data-label="read current row for diff">
+    <path data-connector="service-to-current-read" class="connector compare" d="M 500 518 L 500 650 Q 500 670 520 670 L 1120 670 Q 1140 670 1140 690 L 1140 742 Q 1140 760 1120 760 L 1100 760"/>
+    <polygon data-connector-head="service-to-current-read" class="arrowHead" points="1100,760 1116,752 1116,768" fill="#A8793D" stroke="#A8793D" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <g class="edge" data-edge="approval-service-&gt;javers-compare" data-label="JaVers produces review diff">
+    <path data-connector="service-to-diff" class="connector compare" d="M 600 474 L 790 474"/>
+    <polygon data-connector-head="service-to-diff" class="arrowHead" points="790,474 774,466 774,482" fill="#A8793D" stroke="#A8793D" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <g class="edge" data-edge="approval-service-&gt;decision-row" data-label="changed fields stored with pending decision">
+    <path data-connector="diff-to-decision" class="connector command" d="M 345 518 L 345 690"/>
+    <polygon data-connector-head="diff-to-decision" class="arrowHead" points="345,690 337,674 353,674" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <g class="edge" data-edge="decision-row-&gt;javers-history" data-label="approved proposal commits JaVers snapshot">
+    <path data-connector="approve-to-history" class="connector approved" d="M 500 794 L 500 830 Q 500 850 520 850 L 1410 850 Q 1430 850 1430 830 L 1430 794"/>
+    <polygon data-connector-head="approve-to-history" class="arrowHead" points="1430,794 1422,810 1438,810" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <g class="edge" data-edge="decision-row-&gt;current-row" data-label="approved proposal upserts current row">
+    <path data-connector="approve-to-current" class="connector approved" d="M 550 770 L 690 770"/>
+    <polygon data-connector-head="approve-to-current" class="arrowHead" points="690,770 674,762 674,778" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <g class="edge" data-edge="decision-row-&gt;contract" data-label="rejection stores decision only">
+    <path data-connector="rejected-stop" class="connector rejected" d="M 345 794 L 345 850 Q 345 870 365 870 L 850 870 Q 870 870 870 890 L 870 958"/>
+    <polygon data-connector-head="rejected-stop" class="arrowHead" points="870,958 862,942 878,942" fill="#B86868" stroke="#B86868" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+
+  <rect class="legendBox" x="140" y="1082" width="1420" height="76" rx="16"/>
+  <path d="M 214 1120 L 288 1120" fill="none" stroke="#4F86C6" stroke-width="4" stroke-linecap="round"/><polygon points="288,1120 272,1112 272,1128" fill="#4F86C6"/><text class="legendText" x="306" y="1125">command / pending decision write</text>
+  <path d="M 602 1120 L 676 1120" fill="none" stroke="#A8793D" stroke-width="4" stroke-linecap="round"/><polygon points="676,1120 660,1112 660,1128" fill="#A8793D"/><text class="legendText" x="694" y="1125">current-vs-proposed compare</text>
+  <path d="M 978 1120 L 1052 1120" fill="none" stroke="#6E8F4F" stroke-width="4" stroke-linecap="round"/><polygon points="1052,1120 1036,1112 1036,1128" fill="#6E8F4F"/><text class="legendText" x="1070" y="1125">approval mutates history/current row</text>
+  <path d="M 1350 1120 L 1424 1120" fill="none" stroke="#B86868" stroke-width="4" stroke-linecap="round" stroke-dasharray="12 8"/><polygon points="1424,1120 1408,1112 1408,1128" fill="#B86868"/><text class="legendText" x="1442" y="1125">rejection stops mutation</text>
+  <text class="footer" x="850" y="1194" text-anchor="middle">Reader contract: dashed red means a persisted rejection decision, not a write to JaVers history or product_policies.</text>
+</svg>

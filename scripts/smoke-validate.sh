@@ -31,6 +31,7 @@ case "${1:-help}" in
     run "$GRADLEW \
       :jackson-examples:test \
       :jsonview-examples:test \
+      :exposed-javers-approval-workflow:test \
       :image-processing-advanced-workflow:test \
       :image-processing-ocr-api:test \
       :aws-cloudwatch-imds-observability:test \
@@ -70,6 +71,7 @@ case "${1:-help}" in
   data-access)
     # Smoke (in-memory / H2)
     run "$GRADLEW \
+      :exposed-javers-approval-workflow:test \
       :spring-data-r2dbc-examples:test \
       :spring-data-r2dbc-webflux-exposed:test \
       --continue"
@@ -169,7 +171,7 @@ case "${1:-help}" in
   stale-check)
     echo "=== Gradle project count ==="
     count=$("$GRADLEW" projects --console=plain 2>/dev/null | grep -Ec "Project ':" || true)
-    expected=93
+    expected=94
     echo "Active modules: $count (expected: $expected)"
     [ "$count" -eq "$expected" ] || echo "WARNING: Gradle project count drifted."
 
