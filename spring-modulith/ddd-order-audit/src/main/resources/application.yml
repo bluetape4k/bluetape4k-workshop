@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: ddd-order-audit
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    open-in-view: false
+    properties:
+      hibernate.format_sql: true
+  modulith:
+    events:
+      republish-outstanding-events-on-restart: false
+
+logging:
+  level:
+    org.springframework.modulith.events: INFO
