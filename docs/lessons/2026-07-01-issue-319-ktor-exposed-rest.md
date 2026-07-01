@@ -16,6 +16,11 @@
   diagram-qa` can be weak because it discovers changed committed paths. Run
   `node scripts/validate-readme-diagram-qa.mjs <new-svg...>` explicitly and
   inspect the rendered PNGs at full size before claiming checklist completion.
+- Architecture connector lesson: If a connector path ends with a curve or
+  crowded bend, CairoSVG can render marker direction differently than the raw
+  SVG suggests. For reader-facing architecture flow arrows, prefer simple
+  perpendicular routes and direct polygon arrowheads after the final coordinate
+  change, then inspect the PNG before pushing.
 - Future agents: Keep sequence diagrams on the current best-practices palette:
   numbered labels above lines, matching arrowhead and line colors, transparent
   `alt` bodies, centered card text, and SVG metadata that lets repo validators
