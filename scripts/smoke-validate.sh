@@ -8,7 +8,7 @@
 #   ./scripts/smoke-validate.sh stale-check   # Gradle project count + README link check
 #   ./scripts/smoke-validate.sh diagram-qa    # changed README diagram QA evidence
 #
-# Groups: data-access  spring-boot  serialization  messaging  async  observability  redis
+# Groups: data-access  spring-boot  serialization  messaging  async  observability  aws  redis
 # Each group runs with --continue so a single failure does not abort the rest.
 
 set -euo pipefail
@@ -159,6 +159,14 @@ case "${1:-help}" in
       --continue --max-workers=1"
     ;;
 
+  aws)
+    run "$GRADLEW \
+      :aws-cloudwatch-imds-observability:test \
+      :aws-ktor-dynamodb:test \
+      :aws-s3-vectors-access-grants:test \
+      --continue --max-workers=1"
+    ;;
+
   redis)
     run "$GRADLEW \
       :redis-cluster-demo:test \
@@ -171,7 +179,7 @@ case "${1:-help}" in
   stale-check)
     echo "=== Gradle project count ==="
     count=$("$GRADLEW" projects --console=plain 2>/dev/null | grep -Ec "Project ':" || true)
-    expected=94
+    expected=95
     echo "Active modules: $count (expected: $expected)"
     [ "$count" -eq "$expected" ] || echo "WARNING: Gradle project count drifted."
 
@@ -219,6 +227,7 @@ case "${1:-help}" in
     echo "  messaging        Kafka (Testcontainers)"
     echo "  async            Coroutines / Vert.x"
     echo "  observability    Micrometer / Virtual Threads"
+    echo "  aws              AWS local-first examples"
     echo "  redis            Redis / Redisson / Rate Limit"
     echo "  stale-check      Gradle project count + README link check"
     echo "  diagram-qa       Changed README diagram QA evidence"

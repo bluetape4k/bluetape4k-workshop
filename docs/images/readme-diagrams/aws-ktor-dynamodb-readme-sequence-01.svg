@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="820" viewBox="0 0 1320 820" role="img" aria-labelledby="title desc">
+  <title id="title">Ktor DynamoDB Request Sequence</title>
+  <desc id="desc">Sequence diagram for creating, reading, updating, and error mapping an OrderSession through Ktor, service, repository, and DynamoDB.</desc>
+  <defs>
+    <marker id="seq-blue" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86c6" stroke="#4f86c6" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <marker id="seq-green" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#668b4a" stroke="#668b4a" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <marker id="seq-teal" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f9a9b" stroke="#2f9a9b" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <marker id="seq-brown" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#a1743f" stroke="#a1743f" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <marker id="seq-red" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#b65d61" stroke="#b65d61" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <style>
+      .canvas { fill: #fbfcf8; }
+      .frame { fill: none; stroke: #d6e2e6; stroke-width: 2; rx: 22; }
+      .title { font-family: "Architects Daughter", "Comic Sans MS", cursive; font-size: 40px; fill: #263642; text-anchor: middle; }
+      .subtitle { font-family: "Comic Mono", "Comic Sans MS", monospace; font-size: 16px; fill: #516675; text-anchor: middle; }
+      rect.participant { fill: #ffffff; stroke: #607989; stroke-width: 2.2; rx: 12; }
+      .participant-title { font-family: "Architects Daughter", "Comic Sans MS", cursive; font-size: 22px; fill: #2b3c47; text-anchor: middle; }
+      .role { font-family: "Comic Mono", "Comic Sans MS", monospace; font-size: 12px; fill: #607585; text-anchor: middle; }
+      .life { stroke: #9fb3bf; stroke-width: 2.2; stroke-dasharray: 8 8; }
+      .activation { fill: #eef8f1; stroke: #7d9d8b; stroke-width: 2; rx: 5; }
+      .msg { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+      .blue { stroke: #4f86c6; marker-end: url(#seq-blue); }
+      .green { stroke: #668b4a; marker-end: url(#seq-green); }
+      .teal { stroke: #2f9a9b; marker-end: url(#seq-teal); }
+      .brown { stroke: #a1743f; marker-end: url(#seq-brown); }
+      .red { stroke: #b65d61; marker-end: url(#seq-red); }
+      .return { stroke-dasharray: 8 6; }
+      .pill { fill: #ffffff; stroke-width: 1.8; rx: 18; }
+      .pill-blue { stroke: #a7cce3; }
+      .pill-green { stroke: #b9cfa6; }
+      .pill-teal { stroke: #acd5d4; }
+      .pill-brown { stroke: #d6bd92; }
+      .pill-red { stroke: #deb3b4; }
+      .label { font-family: "Comic Mono", "Comic Sans MS", monospace; font-size: 14px; font-weight: 700; }
+      .blue-text { fill: #276b9d; }
+      .green-text { fill: #5f7f44; }
+      .teal-text { fill: #237f80; }
+      .brown-text { fill: #8c6234; }
+      .red-text { fill: #a04f53; }
+      .badge { fill: #fbfcf8; stroke-width: 2; }
+      .alt { fill: none; stroke: #d99337; stroke-width: 2.4; stroke-dasharray: 10 8; rx: 18; }
+      .alt-label { fill: #fffaf0; stroke: #d99337; stroke-width: 1.8; rx: 16; }
+      .alt-text { font-family: "Architects Daughter", "Comic Sans MS", cursive; font-size: 18px; fill: #8c6234; }
+      .footer { font-family: "Comic Mono", "Comic Sans MS", monospace; font-size: 14px; fill: #607585; text-anchor: middle; }
+    </style>
+  </defs>
+  <rect class="canvas" x="0" y="0" width="1320" height="820" rx="24"/>
+  <rect class="frame" x="34" y="104" width="1252" height="658" rx="22"/>
+  <text class="title" x="660" y="52">Ktor DynamoDB Request Sequence</text>
+  <text class="subtitle" x="660" y="82">Numbered calls show validation, conditional writes, bounded reads, and safe error mapping.</text>
+
+  <g id="participants">
+    <rect class="participant" x="58" y="122" width="170" height="64"/>
+    <text class="participant-title" x="143" y="150">Client</text>
+    <text class="role" x="143" y="170">HTTP caller</text>
+    <rect class="participant" x="318" y="122" width="190" height="64"/>
+    <text class="participant-title" x="413" y="150">Ktor Routes</text>
+    <text class="role" x="413" y="170">JSON + status pages</text>
+    <rect class="participant" x="568" y="122" width="270" height="64"/>
+    <text class="participant-title" x="703" y="150">OrderSessionService</text>
+    <text class="role" x="703" y="170">validation + version rules</text>
+    <rect class="participant" x="888" y="122" width="210" height="64"/>
+    <text class="participant-title" x="993" y="150">Repository</text>
+    <text class="role" x="993" y="170">AWS SDK commands</text>
+    <rect class="participant" x="1138" y="122" width="164" height="64"/>
+    <text class="participant-title" x="1220" y="150">DynamoDB</text>
+    <text class="role" x="1220" y="170">local endpoint</text>
+  </g>
+
+  <line class="life" x1="143" y1="186" x2="143" y2="742"/>
+  <line class="life" x1="413" y1="186" x2="413" y2="742"/>
+  <line class="life" x1="703" y1="186" x2="703" y2="742"/>
+  <line class="life" x1="993" y1="186" x2="993" y2="742"/>
+  <line class="life" x1="1220" y1="186" x2="1220" y2="742"/>
+  <rect class="activation" x="405" y="230" width="16" height="360"/>
+  <rect class="activation" x="695" y="300" width="16" height="280"/>
+  <rect class="activation" x="985" y="390" width="16" height="225"/>
+  <rect class="activation" x="1212" y="430" width="16" height="112"/>
+
+  <path class="msg blue" d="M 143 250 H 405"/>
+  <rect class="labelPill pill pill-blue" x="178" y="208" width="218" height="32"/>
+  <circle class="badge pill-blue" cx="200" cy="224" r="13"/>
+  <text class="label num blue-text" x="196" y="229">1</text>
+  <text class="label blue-text" x="220" y="229">POST /dynamodb/order-sessions</text>
+
+  <path class="msg blue" d="M 421 322 H 695"/>
+  <rect class="labelPill pill pill-blue" x="462" y="280" width="210" height="32"/>
+  <circle class="badge pill-blue" cx="484" cy="296" r="13"/>
+  <text class="label num blue-text" x="480" y="301">2</text>
+  <text class="label blue-text" x="504" y="301">validate request fields</text>
+
+  <path class="msg green" d="M 711 402 H 985"/>
+  <rect class="labelPill pill pill-green" x="746" y="360" width="224" height="32"/>
+  <circle class="badge pill-green" cx="768" cy="376" r="13"/>
+  <text class="label num green-text" x="764" y="381">3</text>
+  <text class="label green-text" x="788" y="381">create version=1 session</text>
+
+  <path class="msg green" d="M 1001 452 H 1212"/>
+  <rect class="labelPill pill pill-green" x="1030" y="410" width="170" height="32"/>
+  <circle class="badge pill-green" cx="1052" cy="426" r="13"/>
+  <text class="label num green-text" x="1048" y="431">4</text>
+  <text class="label green-text" x="1072" y="431">conditional PutItem</text>
+
+  <path class="msg teal return" d="M 1212 520 H 1001"/>
+  <rect class="labelPill pill pill-teal" x="1014" y="476" width="180" height="32"/>
+  <circle class="badge pill-teal" cx="1036" cy="492" r="13"/>
+  <text class="label num teal-text" x="1032" y="497">5</text>
+  <text class="label teal-text" x="1056" y="497">stored item accepted</text>
+
+  <path class="msg teal return" d="M 985 560 H 421"/>
+  <rect class="labelPill pill pill-teal" x="562" y="518" width="210" height="32"/>
+  <circle class="badge pill-teal" cx="584" cy="534" r="13"/>
+  <text class="label num teal-text" x="580" y="539">6</text>
+  <text class="label teal-text" x="604" y="539">201 OrderSessionResponse</text>
+
+  <rect class="alt" x="72" y="620" width="1180" height="126"/>
+  <rect class="alt-label" x="92" y="602" width="214" height="34"/>
+  <text class="alt-text" x="112" y="625">alt conditional failure</text>
+  <line x1="72" y1="682" x2="1252" y2="682" stroke="#d99337" stroke-width="1.8" stroke-dasharray="8 7"/>
+  <text class="alt-text" x="112" y="674">duplicate or stale version</text>
+  <text class="alt-text" x="112" y="724">missing row</text>
+
+  <path class="msg red" d="M 1001 660 H 1212"/>
+  <rect class="labelPill pill pill-red" x="1030" y="618" width="170" height="32"/>
+  <circle class="badge pill-red" cx="1052" cy="634" r="13"/>
+  <text class="label num red-text" x="1048" y="639">7</text>
+  <text class="label red-text" x="1072" y="639">condition failed</text>
+
+  <path class="msg brown return" d="M 985 724 H 421"/>
+  <rect class="labelPill pill pill-brown" x="560" y="688" width="246" height="32"/>
+  <circle class="badge pill-brown" cx="582" cy="704" r="13"/>
+  <text class="label num brown-text" x="578" y="709">8</text>
+  <text class="label brown-text" x="602" y="709">409 or 404 safe JSON error</text>
+
+  <rect x="80" y="770" width="1160" height="30" rx="12" fill="#ffffff" stroke="#cbd9df" stroke-width="2"/>
+  <text class="footer" x="660" y="791">Contract: labels sit above call lines, arrowheads match line colors, and the alt body remains transparent.</text>
+</svg>
