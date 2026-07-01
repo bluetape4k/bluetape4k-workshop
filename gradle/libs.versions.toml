@@ -405,6 +405,7 @@ spring-integration-webflux = { module = "org.springframework.integration:spring-
 # Spring Modulith
 spring-modulith-actuator = { module = "org.springframework.modulith:spring-modulith-actuator" }
 spring-modulith-observability = { module = "org.springframework.modulith:spring-modulith-observability" }
+spring-modulith-events-core = { module = "org.springframework.modulith:spring-modulith-events-core" }
 spring-modulith-starter-core = { module = "org.springframework.modulith:spring-modulith-starter-core" }
 spring-modulith-starter-jpa = { module = "org.springframework.modulith:spring-modulith-starter-jpa" }
 spring-modulith-starter-test = { module = "org.springframework.modulith:spring-modulith-starter-test" }
