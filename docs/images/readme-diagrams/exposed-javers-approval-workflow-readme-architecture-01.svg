@@ -85,12 +85,12 @@
     <polygon data-connector-head="service-to-diff" class="arrowHead" points="790,474 774,466 774,482" fill="#A8793D" stroke="#A8793D" stroke-dasharray="none" style="stroke-dasharray:none"/>
   </g>
   <g class="edge" data-edge="approval-service-&gt;decision-row" data-label="changed fields stored with pending decision">
-    <path data-connector="diff-to-decision" class="connector command" d="M 520 518 L 520 630 Q 520 650 540 650 L 875 650 Q 895 650 895 670 L 895 690"/>
-    <polygon data-connector-head="diff-to-decision" class="arrowHead" points="895,690 887,674 903,674" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    <path data-connector="diff-to-decision" class="connector command" d="M 560 518 L 560 630 Q 560 650 580 650 L 760 650 Q 780 650 780 670 L 780 690"/>
+    <polygon data-connector-head="diff-to-decision" class="arrowHead" points="780,690 772,674 788,674" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/>
   </g>
   <g class="edge" data-edge="decision-row-&gt;javers-history" data-label="approved proposal commits JaVers snapshot">
-    <path data-connector="approve-to-history" class="connector approved" d="M 1060 794 L 1060 830 Q 1060 850 1080 850 L 1410 850 Q 1430 850 1430 830 L 1430 794"/>
-    <polygon data-connector-head="approve-to-history" class="arrowHead" points="1430,794 1422,810 1438,810" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    <path data-connector="approve-to-history" class="connector approved" d="M 1100 742 L 1250 742"/>
+    <polygon data-connector-head="approve-to-history" class="arrowHead" points="1250,742 1234,734 1234,750" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none"/>
   </g>
   <g class="edge" data-edge="decision-row-&gt;current-row" data-label="approved proposal upserts current row">
     <path data-connector="approve-to-current" class="connector approved" d="M 690 770 L 550 770"/>
