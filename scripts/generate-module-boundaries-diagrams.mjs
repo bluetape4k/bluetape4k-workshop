@@ -25,7 +25,9 @@ function rel(file) {
 
 function render(svgFile) {
   const pngFile = svgFile.replace(/\.svg$/, ".png");
-  execFileSync("rsvg-convert", ["--keep-aspect-ratio", "-f", "png", "-o", pngFile, svgFile], {
+  const localCairosvg = path.join(process.env.HOME || "", ".local/bin/cairosvg");
+  const cairosvg = fs.existsSync(localCairosvg) ? localCairosvg : "cairosvg";
+  execFileSync(cairosvg, [svgFile, "-o", pngFile, "-s", "2"], {
     stdio: "pipe",
   });
 }
@@ -37,11 +39,8 @@ function architectureSvg() {
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#64748B" flood-opacity="0.12"/></filter>
     <style>
-      .bg{fill:#F8FAFC}.title{font-family:"Architects Daughter";font-size:42px;fill:#263238}.subtitle,.body,.small,.legendText,.footer{font-family:"Comic Mono";fill:#3B4A54}.subtitle{font-size:18px}.layerTitle{font-family:"Architects Daughter";font-size:25px;fill:#344154}.cardTitle{font-family:"Architects Daughter";font-size:23px;fill:#16202A}.body{font-size:15px}.small{font-size:13px;fill:#5B6975}.footer{font-size:14px;fill:#60727D}.layer{fill:#FFFFFF;stroke:#CAD6DF;stroke-width:2}.card{stroke-width:2.2}.blue{fill:#EFF6FF;stroke:#4F86C6}.green{fill:#F0F8F0;stroke:#6E8F4F}.amber{fill:#FFF7E8;stroke:#9B7D54}.red{fill:#FFF0F0;stroke:#B86868}.violet{fill:#F6F3FF;stroke:#7E6AAE}.connector{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.allowed{stroke:#4F86C6;marker-end:url(#arrow-allowed)}.event{stroke:#6E8F4F;marker-end:url(#arrow-event)}.rejected{stroke:#B86868;stroke-dasharray:12 8;marker-end:url(#arrow-rejected)}.legendBox{fill:#FFFFFF;stroke:#CAD6DF;stroke-width:1.8}.legendText{font-size:14px}
+      .bg{fill:#F8FAFC}.title{font-family:"Architects Daughter";font-size:42px;fill:#263238}.subtitle,.body,.small,.legendText,.footer{font-family:"Comic Mono";fill:#3B4A54}.subtitle{font-size:18px}.layerTitle{font-family:"Architects Daughter";font-size:25px;fill:#344154}.cardTitle{font-family:"Architects Daughter";font-size:23px;fill:#16202A}.body{font-size:15px}.small{font-size:13px;fill:#5B6975}.footer{font-size:14px;fill:#60727D}.layer{fill:#FFFFFF;stroke:#CAD6DF;stroke-width:2}.card{stroke-width:2.2}.blue{fill:#EFF6FF;stroke:#4F86C6}.green{fill:#F0F8F0;stroke:#6E8F4F}.amber{fill:#FFF7E8;stroke:#9B7D54}.red{fill:#FFF0F0;stroke:#B86868}.violet{fill:#F6F3FF;stroke:#7E6AAE}.connector{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.allowed{stroke:#4F86C6}.event{stroke:#6E8F4F}.rejected{stroke:#B86868;stroke-dasharray:12 8}.arrowHead{stroke-dasharray:none;stroke-linejoin:round}.legendBox{fill:#FFFFFF;stroke:#CAD6DF;stroke-width:1.8}.legendText{font-size:14px}
     </style>
-    ${marker("arrow-allowed", "#4F86C6")}
-    ${marker("arrow-event", "#6E8F4F")}
-    ${marker("arrow-rejected", "#B86868")}
   </defs>
   <rect class="bg" width="1700" height="1160"/>
   <text class="title" x="850" y="66" text-anchor="middle">Spring Modulith Module Boundaries</text>
@@ -66,11 +65,11 @@ function architectureSvg() {
   <text class="layerTitle" x="106" y="894">Boundary verification</text>
   ${card("invalid-fixture", 1120, 914, 360, 86, "Invalid test fixture", "payment -> ordering.internal", "red")}
 
-  ${edge("catalog-api-&gt;ordering-service", "ordering uses exported catalog api", "catalog-to-ordering", "allowed", "M 300 286 L 300 390 Q 300 410 300 430")}
-  ${edge("ordering-service-&gt;ordering-events", "ordering exports order placed event", "ordering-to-events", "event", "M 480 473 L 620 473")}
-  ${edge("ordering-events-&gt;payment-module", "payment consumes ordering events only", "events-to-payment", "event", "M 800 516 L 800 600 Q 800 620 780 620 L 570 620 Q 550 620 550 640 L 550 680")}
-  ${edge("ordering-events-&gt;notification-module", "notification consumes ordering events only", "events-to-notification", "event", "M 800 516 L 800 600 Q 800 620 820 620 L 1070 620 Q 1050 620 1050 640 L 1050 680")}
-  ${edge("invalid-fixture-&gt;ordering-internal", "boundary test rejects internal import", "fixture-to-internal", "rejected", "M 1300 914 L 1300 826 Q 1300 806 1300 786 L 1300 550 Q 1300 530 1300 516")}
+  ${edge("catalog-api-&gt;ordering-service", "ordering uses exported catalog api", "catalog-to-ordering", "allowed", "M 300 286 L 300 430", downHead(300, 430, "#4F86C6"))}
+  ${edge("ordering-service-&gt;ordering-events", "ordering exports order placed event", "ordering-to-events", "event", "M 480 473 L 620 473", rightHead(620, 473, "#6E8F4F"))}
+  ${edge("ordering-events-&gt;payment-module", "payment consumes ordering events only", "events-to-payment", "event", "M 760 516 L 760 600 Q 760 620 740 620 L 570 620 Q 550 620 550 640 L 550 680", downHead(550, 680, "#6E8F4F"))}
+  ${edge("ordering-events-&gt;notification-module", "notification consumes ordering events only", "events-to-notification", "event", "M 840 516 L 840 600 Q 840 620 860 620 L 1030 620 Q 1050 620 1050 640 L 1050 680", downHead(1050, 680, "#6E8F4F"))}
+  ${edge("invalid-fixture-&gt;ordering-internal", "boundary test rejects internal import", "fixture-to-internal", "rejected", "M 1300 914 L 1300 516", upHead(1300, 516, "#B86868"))}
 
   <rect class="legendBox" x="176" y="1052" width="1348" height="64" rx="16"/>
   ${legend(260, 1086, "#4F86C6", "allowed named interface dependency")}
@@ -142,8 +141,24 @@ function card(id, x, y, w, h, title, body, colorClass) {
   return `<g class="node" data-node="${id}" filter="url(#shadow)"><rect class="card ${colorClass}" x="${x}" y="${y}" width="${w}" height="${h}" rx="12"/><text class="cardTitle" x="${x + w / 2}" y="${y + 34}" text-anchor="middle">${title}</text><text class="body" x="${x + w / 2}" y="${y + 60}" text-anchor="middle">${body}</text></g>`;
 }
 
-function edge(dataEdge, label, id, edgeClass, d) {
-  return `<g class="edge" data-edge="${dataEdge}" data-label="${escapeXml(label)}"><path data-connector="${id}" class="connector ${edgeClass}" d="${d}"/></g>`;
+function edge(dataEdge, label, id, edgeClass, d, head) {
+  return `<g class="edge" data-edge="${dataEdge}" data-label="${escapeXml(label)}"><path data-connector="${id}" class="connector ${edgeClass}" d="${d}"/>${headSvg(id, head)}</g>`;
+}
+
+function headSvg(id, head) {
+  return `<polygon data-connector-head="${id}" class="arrowHead" points="${head.points}" fill="${head.color}" stroke="${head.color}" stroke-dasharray="none" style="stroke-dasharray:none"/>`;
+}
+
+function rightHead(x, y, color) {
+  return { color, points: `${x},${y} ${x - 16},${y - 8} ${x - 16},${y + 8}` };
+}
+
+function downHead(x, y, color) {
+  return { color, points: `${x},${y} ${x - 8},${y - 16} ${x + 8},${y - 16}` };
+}
+
+function upHead(x, y, color) {
+  return { color, points: `${x},${y} ${x - 8},${y + 16} ${x + 8},${y + 16}` };
 }
 
 function marker(id, color) {

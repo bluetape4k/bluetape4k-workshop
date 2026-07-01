@@ -12,6 +12,14 @@
 - Diagram lesson: Keep architecture diagrams layered with a visible legend and
   keep sequence diagrams on the best-practices style: numbered labels above
   call lines, matching arrowhead/line colors, and transparent grouped regions.
+- Visual QA lesson: An architecture `Q` bend can pass syntax checks while
+  visually turning backward when the pre-bend point overshoots the real corner.
+  Audit sibling routes for overshoot/backtracking and remove fake `Q` segments
+  on straight connectors.
+- Visual QA lesson: If SVG arrowheads look correct but the rendered PNG points
+  differently, do not keep marker-dependent architecture arrows. Use direct
+  head geometry, verify head tips match connector endpoints, and inspect the
+  final PNG at full size.
 - Verification evidence:
   - `./gradlew :spring-modulith-module-boundaries:test --console=plain --max-workers=1 --rerun-tasks` passed.
   - `./gradlew projects --console=plain` reported 93 active modules and
