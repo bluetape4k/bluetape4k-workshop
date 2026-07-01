@@ -60,13 +60,15 @@ The module will model an order approval workflow:
 1. `OrderCommandService` receives commands such as `PlaceOrder` and
    `ApproveOrder`.
 2. `Order` aggregate enforces invariants through explicit command methods.
-3. `OrderAuditRepository` persists the aggregate and commits the saved state to
-   JaVers.
-4. `SpringApplicationEventDomainEventPublisher` publishes domain events after
-   the surrounding transaction commits.
+3. `OrderRepository` persists the aggregate in PostgreSQL.
+4. The command service hands domain events to Spring Modulith inside the same
+   transaction so the publication registry row commits with the order row.
 5. `FulfillmentReservationHandler` handles `OrderApproved` with
-   `@ApplicationModuleListener`.
-6. Query code reads JaVers snapshots, changes, and diffs for the aggregate.
+   `@ApplicationModuleListener` after the transaction commits.
+6. `OrderAuditService` commits the aggregate state to JaVers only after a
+   successful transaction commit when the selected JaVers repository is not
+   transactionally coupled to PostgreSQL.
+7. Query code reads JaVers snapshots, changes, and diffs for the aggregate.
 
 The module will use PostgreSQL Testcontainers as the source-of-truth database
 for application state and Spring Modulith publication rows. JaVers will use the
@@ -92,6 +94,8 @@ Pros:
 Cons:
 
 - JaVers snapshot storage itself is not PostgreSQL-backed by default.
+- Audit writes are after-commit and therefore eventually consistent with the
+  order transaction unless Option B proves simple enough during implementation.
 - Container-backed tests are heavier and must be registered in the full lane.
 
 ### Option B - PostgreSQL + PostgreSQL-backed JaVers repository
@@ -129,8 +133,8 @@ Expected files:
 - `spring-modulith/ddd-order-audit/build.gradle.kts`
 - `spring-modulith/ddd-order-audit/README.md`
 - `spring-modulith/ddd-order-audit/README.ko.md`
-- `spring-modulith/ddd-order-audit/src/main/kotlin/...`
-- `spring-modulith/ddd-order-audit/src/test/kotlin/...`
+- `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/`
+- `spring-modulith/ddd-order-audit/src/test/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/`
 - `spring-modulith/ddd-order-audit/src/test/resources/junit-platform.properties`
 - `spring-modulith/ddd-order-audit/src/test/resources/logback-test.xml`
 - README diagram SVG/PNG assets under `docs/images/readme-diagrams/`
@@ -158,6 +162,9 @@ Aggregate rules:
 - Only `PLACED` orders can be approved.
 - Cancelled orders cannot be approved.
 - Commands must return new aggregate instances rather than mutating state.
+- Repeated or concurrent approval must be safe through optimistic locking,
+  idempotent command handling, or a unique fulfillment reservation keyed by
+  `orderId`; the implementation plan must choose one.
 
 All public domain types that become durable contracts must include English KDoc.
 Value/data classes must implement `Serializable` and define `serialVersionUID`.
@@ -176,20 +183,45 @@ boundary. If the exact helper name differs, implementation must inspect
 `bluetape4k-testcontainers` and record the chosen helper in the plan and DoD
 evidence. Raw `GenericContainer` is not allowed.
 
+The command transaction must persist the order row and register the Spring
+Modulith publication row atomically. Publishing the domain event only after the
+transaction commits is not enough for this lesson because it would leave a crash
+window where the order row exists but the publication row does not. Listener
+execution remains after-commit through `@ApplicationModuleListener`.
+
+Tests must isolate PostgreSQL schema state, Spring Modulith publication rows,
+fulfillment rows, listener failure toggles, and in-memory JaVers state between
+cases. Testcontainers may use a shared launcher, but test data must not leak
+across test methods.
+
 ## JaVers Boundary
 
 The module should reuse `bluetape4k-javers` DDD helpers where they fit:
 
 - `AggregateRoot` for the audited aggregate contract.
 - `DomainEvent` for event metadata.
-- `AggregateRepository` for save + JaVers commit + event publication behavior.
-- `SpringApplicationEventDomainEventPublisher` for after-commit Spring event
-  publication.
+- `AggregateRepository` only if its save + JaVers commit + event publication
+  order is compatible with the selected transaction boundary.
+- `SpringApplicationEventDomainEventPublisher` only if it can hand events to
+  Spring Modulith without weakening atomic publication-row registration.
 
 The implementation must not copy those helpers into the workshop module unless
 dependency resolution proves the artifact is unavailable through the current
 root BOM. If a fallback is needed, it must be explained in the plan before
 implementation.
+
+If the module uses in-memory JaVers, audit commit must run only after the
+PostgreSQL transaction commits, and rollback tests must prove that failed
+commands leave no misleading JaVers snapshot or diff. If implementation
+discovery proves a simple PostgreSQL-backed JaVers repository is available, the
+plan may instead choose a transactionally coupled audit path and record the
+extra setup cost.
+
+Audit/event payloads must contain only safe sample data: synthetic identifiers,
+status, line quantities, and amounts. Events should carry aggregate identifiers
+and minimal metadata, not full aggregate bodies. Logs and exception messages must
+use safe correlation fields such as `orderId` or publication id and must not dump
+serialized event bodies, snapshots, or JaVers diffs.
 
 ## Spring Modulith Boundary
 
@@ -202,7 +234,10 @@ The listener must demonstrate the publication registry behavior:
 
 - successful approval eventually creates a fulfillment reservation.
 - listener failure leaves an incomplete/failed publication that can be inspected.
-- rollback before commit does not publish the domain event.
+- failed publication can be resubmitted through a deterministic test path when
+  the current Spring Modulith API exposes one.
+- rollback before commit leaves no order row, publication row, fulfillment row,
+  listener side effect, or JaVers snapshot.
 
 ## Documentation And Diagrams
 
@@ -212,6 +247,9 @@ README files must be learner-facing:
 - `README.ko.md` in natural Korean with equivalent source content.
 - Language switch directly below the title.
 - Validation command and PostgreSQL/Testcontainers prerequisite.
+- Testcontainers credentials and JDBC URLs are ephemeral test-only values; no
+  production credentials belong in README/config, and JDBC URLs must not be
+  logged with passwords.
 - Explanation table comparing:
   - domain events,
   - Spring Modulith publication,
@@ -222,8 +260,8 @@ Diagrams are mandatory:
 
 - Architecture diagram: aggregate command, PostgreSQL, JaVers, publication
   registry, fulfillment listener.
-- Sequence diagram: place/approve order, transaction commit, after-commit event
-  publication, listener execution, audit query.
+- Sequence diagram: place/approve order, in-transaction publication-row
+  registration, transaction commit, after-commit listener execution, audit query.
 
 All diagram assets must pass the full `bluetape4k-diagram` checklist, generated
 SVG/PNG validation, and full-size PNG eye inspection. A script PASS alone is not
@@ -252,12 +290,19 @@ Required tests:
 - aggregate invariant rejects invalid lines and invalid state transitions.
 - placing an order persists the aggregate and records a JaVers snapshot.
 - approving an order records a second snapshot and exposes a useful diff.
-- approval publishes `OrderApproved` only after transaction commit.
+- approval registers the `OrderApproved` publication row with the order
+  transaction, then listener side effects run only after transaction commit.
 - fulfillment listener creates a reservation on successful publication.
 - simulated listener failure leaves an incomplete/failed Modulith publication
-  and can be resubmitted when practical.
-- rollback before commit prevents fulfillment side effects and event
-  publication.
+  and can be resubmitted through a deterministic path when the API supports it.
+- rollback before commit prevents publication-row persistence, fulfillment side
+  effects, and listener execution.
+- rollback after a command path fails leaves no order row, publication row,
+  fulfillment reservation, or JaVers snapshot/diff for the failed command.
+- repeated or concurrent approve does not create duplicate fulfillment
+  reservations or duplicate effective approvals.
+- a bounded approval loop verifies no unexpected publication backlog and keeps
+  listener polling within a fixed timeout.
 
 Verification commands planned for implementation:
 
@@ -277,11 +322,12 @@ git diff --check
 | Risk | Mitigation |
 |---|---|
 | PostgreSQL Testcontainers increases CI cost | Put the module in the container-backed lane and keep tests focused. |
-| JaVers persistence plumbing distracts from the lesson | Use in-memory JaVers unless a stable PostgreSQL-backed path is simple through the current BOM. |
-| Event publication timing is flaky | Use Spring Modulith testing APIs and Awaitility-style bounded assertions already used in sibling examples. |
+| JaVers persistence plumbing distracts from the lesson | Use after-commit in-memory JaVers unless a stable PostgreSQL-backed path is simple through the current BOM; document eventual audit consistency. |
+| Event publication timing is flaky | Use Spring Modulith testing APIs and Awaitility-style bounded assertions already used in sibling examples, with fixed timeout and poll interval values in tests. |
 | Raw container setup bypasses bluetape4k conventions | Use `bluetape4k-testcontainers` PostgreSQL helper; document the helper in DoD. |
 | Diagram regressions repeat previous misses | Treat rendered PNG eye inspection as mandatory final evidence after every diagram coordinate change. |
 | Duplicate scope with `exposed-workshop` | Keep this module focused on bluetape4k-workshop's Spring Modulith + JaVers integration, not Exposed DDD repository mechanics. |
+| Audit data leaks sensitive payloads | Keep sample payloads synthetic, publish minimal events, and redact logs/diffs from failure diagnostics. |
 
 ## Acceptance Criteria
 
@@ -292,6 +338,10 @@ git diff --check
   not pin versions.
 - Tests cover aggregate invariants, event publication, rollback behavior, and
   JaVers history/diff query.
+- Rollback tests prove no order row, publication row, fulfillment row, or JaVers
+  snapshot/diff remains for failed commands.
+- Event publication row registration is transactionally coupled to the order row
+  in PostgreSQL; listener execution is after-commit.
 - README.md and README.ko.md include diagrams, validation commands, and the
   domain-events/Modulith/outbox/JaVers comparison.
 - CI/smoke registration covers the new module in the correct container-backed
