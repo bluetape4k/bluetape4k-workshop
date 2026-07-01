@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1700" height="1160" viewBox="0 0 1700 1160" role="img" aria-labelledby="title desc">
+  <title id="title">Spring Modulith Module Boundary Architecture</title>
+  <desc id="desc">Catalog exports a named API, ordering exports events, payment and notification react to those events, and a test fixture proves direct internal imports are rejected.</desc>
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#64748B" flood-opacity="0.12"/></filter>
+    <style>
+      .bg{fill:#F8FAFC}.title{font-family:"Architects Daughter";font-size:42px;fill:#263238}.subtitle,.body,.small,.legendText,.footer{font-family:"Comic Mono";fill:#3B4A54}.subtitle{font-size:18px}.layerTitle{font-family:"Architects Daughter";font-size:25px;fill:#344154}.cardTitle{font-family:"Architects Daughter";font-size:23px;fill:#16202A}.body{font-size:15px}.small{font-size:13px;fill:#5B6975}.footer{font-size:14px;fill:#60727D}.layer{fill:#FFFFFF;stroke:#CAD6DF;stroke-width:2}.card{stroke-width:2.2}.blue{fill:#EFF6FF;stroke:#4F86C6}.green{fill:#F0F8F0;stroke:#6E8F4F}.amber{fill:#FFF7E8;stroke:#9B7D54}.red{fill:#FFF0F0;stroke:#B86868}.violet{fill:#F6F3FF;stroke:#7E6AAE}.connector{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.allowed{stroke:#4F86C6;marker-end:url(#arrow-allowed)}.event{stroke:#6E8F4F;marker-end:url(#arrow-event)}.rejected{stroke:#B86868;stroke-dasharray:12 8;marker-end:url(#arrow-rejected)}.legendBox{fill:#FFFFFF;stroke:#CAD6DF;stroke-width:1.8}.legendText{font-size:14px}
+    </style>
+    <marker id="arrow-allowed" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-event" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-rejected" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke="#B86868" stroke-dasharray="none" style="stroke-dasharray:none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  </defs>
+  <rect class="bg" width="1700" height="1160"/>
+  <text class="title" x="850" y="66" text-anchor="middle">Spring Modulith Module Boundaries</text>
+  <text class="subtitle" x="850" y="100" text-anchor="middle">Named interfaces expose contracts; internal packages stay private and are enforced by ApplicationModules.verify().</text>
+
+  <rect class="layer" x="70" y="136" width="1560" height="166" rx="20"/>
+  <text class="layerTitle" x="106" y="180">Catalog module</text>
+  <g class="node" data-node="catalog-api" filter="url(#shadow)"><rect class="card blue" x="120" y="200" width="360" height="86" rx="12"/><text class="cardTitle" x="300" y="234" text-anchor="middle">Catalog :: api</text><text class="body" x="300" y="260" text-anchor="middle">read-only item snapshots</text></g>
+
+  <rect class="layer" x="70" y="360" width="1560" height="190" rx="20"/>
+  <text class="layerTitle" x="106" y="404">Ordering module</text>
+  <g class="node" data-node="ordering-service" filter="url(#shadow)"><rect class="card green" x="120" y="430" width="360" height="86" rx="12"/><text class="cardTitle" x="300" y="464" text-anchor="middle">OrderingService</text><text class="body" x="300" y="490" text-anchor="middle">validates request + publishes</text></g>
+  <g class="node" data-node="ordering-events" filter="url(#shadow)"><rect class="card green" x="620" y="430" width="360" height="86" rx="12"/><text class="cardTitle" x="800" y="464" text-anchor="middle">Ordering :: events</text><text class="body" x="800" y="490" text-anchor="middle">OrderPlacedEvent contract</text></g>
+  <g class="node" data-node="ordering-internal" filter="url(#shadow)"><rect class="card violet" x="1120" y="430" width="360" height="86" rx="12"/><text class="cardTitle" x="1300" y="464" text-anchor="middle">Ordering internal</text><text class="body" x="1300" y="490" text-anchor="middle">private generator/repository</text></g>
+
+  <rect class="layer" x="70" y="608" width="1560" height="186" rx="20"/>
+  <text class="layerTitle" x="106" y="652">Event consumers</text>
+  <g class="node" data-node="payment-module" filter="url(#shadow)"><rect class="card amber" x="370" y="680" width="360" height="86" rx="12"/><text class="cardTitle" x="550" y="714" text-anchor="middle">Payment module</text><text class="body" x="550" y="740" text-anchor="middle">authorizes from order event</text></g>
+  <g class="node" data-node="notification-module" filter="url(#shadow)"><rect class="card amber" x="870" y="680" width="360" height="86" rx="12"/><text class="cardTitle" x="1050" y="714" text-anchor="middle">Notification module</text><text class="body" x="1050" y="740" text-anchor="middle">enqueues customer message</text></g>
+
+  <rect class="layer" x="70" y="850" width="1560" height="164" rx="20"/>
+  <text class="layerTitle" x="106" y="894">Boundary verification</text>
+  <g class="node" data-node="invalid-fixture" filter="url(#shadow)"><rect class="card red" x="1120" y="914" width="360" height="86" rx="12"/><text class="cardTitle" x="1300" y="948" text-anchor="middle">Invalid test fixture</text><text class="body" x="1300" y="974" text-anchor="middle">payment -> ordering.internal</text></g>
+
+  <g class="edge" data-edge="catalog-api-&gt;ordering-service" data-label="ordering uses exported catalog api"><path data-connector="catalog-to-ordering" class="connector allowed" d="M 300 286 L 300 390 Q 300 410 300 430"/></g>
+  <g class="edge" data-edge="ordering-service-&gt;ordering-events" data-label="ordering exports order placed event"><path data-connector="ordering-to-events" class="connector event" d="M 480 473 L 620 473"/></g>
+  <g class="edge" data-edge="ordering-events-&gt;payment-module" data-label="payment consumes ordering events only"><path data-connector="events-to-payment" class="connector event" d="M 800 516 L 800 600 Q 800 620 780 620 L 570 620 Q 550 620 550 640 L 550 680"/></g>
+  <g class="edge" data-edge="ordering-events-&gt;notification-module" data-label="notification consumes ordering events only"><path data-connector="events-to-notification" class="connector event" d="M 800 516 L 800 600 Q 800 620 820 620 L 1070 620 Q 1050 620 1050 640 L 1050 680"/></g>
+  <g class="edge" data-edge="invalid-fixture-&gt;ordering-internal" data-label="boundary test rejects internal import"><path data-connector="fixture-to-internal" class="connector rejected" d="M 1300 914 L 1300 826 Q 1300 806 1300 786 L 1300 550 Q 1300 530 1300 516"/></g>
+
+  <rect class="legendBox" x="176" y="1052" width="1348" height="64" rx="16"/>
+  <path d="M 260 1086 L 334 1086" fill="none" stroke="#4F86C6" stroke-width="4" stroke-linecap="round"/><polygon points="334,1086 318,1078 318,1094" fill="#4F86C6"/><text class="legendText" x="352" y="1091">allowed named interface dependency</text>
+  <path d="M 710 1086 L 784 1086" fill="none" stroke="#6E8F4F" stroke-width="4" stroke-linecap="round"/><polygon points="784,1086 768,1078 768,1094" fill="#6E8F4F"/><text class="legendText" x="802" y="1091">event contract handoff</text>
+  <path d="M 1130 1086 L 1204 1086" fill="none" stroke="#B86868" stroke-width="4" stroke-linecap="round" stroke-dasharray="12 8"/><polygon points="1204,1086 1188,1078 1188,1094" fill="#B86868"/><text class="legendText" x="1222" y="1091">rejected direct internal import</text>
+  <text class="footer" x="850" y="1140" text-anchor="middle">Reader contract: changing a dashed edge into production code should fail the module-boundary test.</text>
+</svg>
