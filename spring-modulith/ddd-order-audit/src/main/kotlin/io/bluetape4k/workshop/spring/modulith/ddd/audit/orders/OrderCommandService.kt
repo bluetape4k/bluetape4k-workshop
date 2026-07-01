@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional
 class OrderCommandService(
     private val orderRepository: OrderJpaRepository,
     private val eventPublisher: ApplicationEventPublisher,
+    private val auditService: OrderAuditService,
 ) {
 
     /**
@@ -27,8 +28,14 @@ class OrderCommandService(
     fun place(command: PlaceOrderCommand): Order {
         val order = Order.place(command)
         orderRepository.save(OrderEntity.from(order))
+        val auditedOrder = order.withoutEvents()
+        auditService.commitAfterTransaction(
+            author = "order-command",
+            order = auditedOrder,
+            properties = mapOf("action" to "place"),
+        )
         order.events.forEach(eventPublisher::publishEvent)
-        return order.withoutEvents()
+        return auditedOrder
     }
 
     /**
@@ -43,7 +50,13 @@ class OrderCommandService(
 
         val approved = current.toDomain().approve(command)
         orderRepository.save(current.apply(approved))
+        val auditedOrder = approved.withoutEvents()
+        auditService.commitAfterTransaction(
+            author = command.approvedBy,
+            order = auditedOrder,
+            properties = mapOf("action" to "approve"),
+        )
         approved.events.forEach(eventPublisher::publishEvent)
-        return approved.withoutEvents()
+        return auditedOrder
     }
 }
