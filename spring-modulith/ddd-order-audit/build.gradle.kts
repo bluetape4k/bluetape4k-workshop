@@ -22,6 +22,7 @@ configurations {
 
 dependencies {
     implementation(libs.spring.modulith.starter.jpa)
+    testImplementation(libs.spring.modulith.events.core)
     testImplementation(libs.spring.modulith.starter.test)
 
     implementation(libs.jakarta.persistence.api)
