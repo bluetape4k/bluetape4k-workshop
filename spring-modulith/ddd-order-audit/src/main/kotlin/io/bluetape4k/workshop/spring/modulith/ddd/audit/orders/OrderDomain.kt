@@ -190,6 +190,8 @@ data class Order(
     @Id val id: OrderId,
     val customerId: CustomerId,
     val lines: List<OrderLine>,
+    val totalAmount: BigDecimal = lines.totalAmount(),
+    val lineCount: Int = lines.size,
     val status: OrderStatus,
     val version: Long = 0,
     val events: List<DomainEvent> = emptyList(),
@@ -257,3 +259,8 @@ data class Order(
             )
     }
 }
+
+private fun List<OrderLine>.totalAmount(): BigDecimal =
+    fold(BigDecimal.ZERO) { total, line ->
+        total + line.unitPrice.amount.multiply(BigDecimal(line.quantity))
+    }
