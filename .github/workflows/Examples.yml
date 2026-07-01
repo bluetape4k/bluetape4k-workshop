@@ -26,6 +26,7 @@ on:
       - 'leader/k8s-lease-micrometer/**'
       - 'messaging/kafka/**'
       - 'messaging/kafka-outbox-fallback/**'
+      - 'spring-modulith/module-boundaries/**'
       - 'shared/**'
       - 'buildSrc/**'
       - 'gradle/**'
@@ -58,6 +59,7 @@ on:
       - 'leader/k8s-lease-micrometer/**'
       - 'messaging/kafka/**'
       - 'messaging/kafka-outbox-fallback/**'
+      - 'spring-modulith/module-boundaries/**'
       - 'shared/**'
       - 'buildSrc/**'
       - 'gradle/**'
@@ -130,6 +132,7 @@ jobs:
           :kotlin-flow-extensions-metrics-sampling:test
           :kotlin-flow-extensions-search-pipeline:test
           :leader-k8s-lease-micrometer:test
+          :spring-modulith-module-boundaries:test
           --continue
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
@@ -168,6 +171,8 @@ jobs:
             kotlin/flow-extensions-search-pipeline/build/reports/tests/test/
             leader/k8s-lease-micrometer/build/test-results/test/*.xml
             leader/k8s-lease-micrometer/build/reports/tests/test/
+            spring-modulith/module-boundaries/build/test-results/test/*.xml
+            spring-modulith/module-boundaries/build/reports/tests/test/
           retention-days: 7
 
   diagram-qa:
