@@ -7,6 +7,7 @@ on:
     branches: [ develop, main ]
     paths:
       - 'exposed/webflux-r2dbc/**'
+      - 'exposed/javers-approval-workflow/**'
       - 'exposed/javers-persistence-audit/**'
       - 'spring-data/r2dbc-webflux-exposed/**'
       - 'spring-boot/cache-caffeine/**'
@@ -40,6 +41,7 @@ on:
     branches: [ develop, main ]
     paths:
       - 'exposed/webflux-r2dbc/**'
+      - 'exposed/javers-approval-workflow/**'
       - 'exposed/javers-persistence-audit/**'
       - 'spring-data/r2dbc-webflux-exposed/**'
       - 'spring-boot/cache-caffeine/**'
@@ -112,12 +114,14 @@ jobs:
 
       # Representative non-container examples:
       # - spring-data-r2dbc-webflux-exposed: data access + Exposed consumer path
+      # - exposed-javers-approval-workflow: in-memory JaVers approval decision path
       # - spring-boot-cache-caffeine: local cache path
       # - spring-boot-resilience4j-coroutines: resilience path
       # - jackson/jsonview examples: serialization path
       - name: Run H2/default examples
         run: >-
           ./gradlew
+          :exposed-javers-approval-workflow:test
           :spring-data-r2dbc-webflux-exposed:test
           :spring-boot-cache-caffeine:test
           :spring-boot-resilience4j-coroutines:test
@@ -143,6 +147,8 @@ jobs:
         with:
           name: smoke-example-test-results
           path: |
+            exposed/javers-approval-workflow/build/test-results/test/*.xml
+            exposed/javers-approval-workflow/build/reports/tests/test/
             spring-data/r2dbc-webflux-exposed/build/test-results/test/*.xml
             spring-data/r2dbc-webflux-exposed/build/reports/tests/test/
             spring-boot/cache-caffeine/build/test-results/test/*.xml
