@@ -96,12 +96,16 @@ Evidence:
   docs/images/readme-diagrams/ktor-exposed-rest-readme-architecture-01.svg
   docs/images/readme-diagrams/ktor-exposed-rest-readme-sequence-01.svg`: PASS,
   `targets=2`, `weak_reference_rows=0`.
-- Architecture marker audit: PASS, `markers_checked=7`,
-  `marker_failures=0`.
+- Architecture marker audit: PASS, `markers_checked=3`,
+  `marker_failures=0`; flow arrowheads use direct polygon heads instead of
+  `marker-end`.
 - Architecture connector audit: PASS, `connectors=7`, `cards=7`,
   `intrusions=0`, `crossings=0`.
-- Architecture mixed-corner audit: PASS, `paths=4`, `q_bends=4`,
+- Architecture mixed-corner audit: PASS, `paths=4`, `q_bends=0`,
   `failures=0`.
+- Architecture direct-head invariant: PASS, `flow_connectors=4`,
+  `direct_arrowheads=4`, `flow_marker_end=0`, `flow_q_segments=0`,
+  `flow_diagonal_candidates=0`.
 - Sequence marker audit: PASS, `markers_checked=8`, `marker_failures=0`.
 - Sequence fallback audit: PASS, `labels=8`, `numbers=8`,
   `monotonic=true`, `alt_fill_failures=0`.

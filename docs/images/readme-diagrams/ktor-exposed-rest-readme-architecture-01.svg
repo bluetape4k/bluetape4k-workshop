@@ -28,9 +28,13 @@
       .card{fill:#FFFFFF;stroke:#CAD7DC;stroke-width:2;rx:12;ry:12}
       .callout{fill:#FFFFFF;stroke:#D2DDE2;stroke-width:1.6;rx:12;ry:12}
       .line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
-      .blue{stroke:#3F7D9C;marker-end:url(#arrow-blue)}
-      .green{stroke:#5F8A54;marker-end:url(#arrow-green)}
-      .amber{stroke:#9B7D54;marker-end:url(#arrow-amber)}
+      .blue{stroke:#3F7D9C}
+      .green{stroke:#5F8A54}
+      .amber{stroke:#9B7D54}
+      .marker-blue{marker-end:url(#arrow-blue)}
+      .marker-green{marker-end:url(#arrow-green)}
+      .marker-amber{marker-end:url(#arrow-amber)}
+      .arrowhead{stroke-dasharray:none}
       .legend{font-size:12px;fill:#60727D}
       .footer{font-size:14px;fill:#60727D}
     </style>
@@ -41,11 +45,11 @@
   <text class="title" x="800" y="78" text-anchor="middle">Ktor Exposed REST Architecture</text>
   <text class="subtitle" x="800" y="108" text-anchor="middle">PostgreSQL-backed Ktor routes use bluetape4k-exposed-ktor for transaction and error boundaries.</text>
   <g aria-label="connector legend">
-    <path class="line blue" data-connector="legend-request-route" d="M511 128 L551 128"/>
+    <path class="line blue marker-blue" data-connector="legend-request-route" d="M511 128 L551 128"/>
     <text class="legend" x="560" y="132">request route</text>
-    <path class="line green" data-connector="legend-repository-call" d="M673 128 L713 128"/>
+    <path class="line green marker-green" data-connector="legend-repository-call" d="M673 128 L713 128"/>
     <text class="legend" x="722" y="132">repository call</text>
-    <path class="line amber" data-connector="legend-postgresql-jdbc" d="M885 128 L925 128"/>
+    <path class="line amber marker-amber" data-connector="legend-postgresql-jdbc" d="M885 128 L925 128"/>
     <text class="legend" x="934" y="132">PostgreSQL JDBC</text>
   </g>
 
@@ -61,15 +65,15 @@
   <rect class="layer" x="80" y="350" width="1440" height="210" fill="#F0FDF4" stroke="#BFE3C3"/>
   <text class="layer-title" x="118" y="394">Ktor Application Layer</text>
   <text class="layer-text" x="118" y="423">Routes validate payloads before entering blocking JDBC work.</text>
-  <g class="node" data-node="book-routes" filter="url(#soft-shadow)">
-    <rect class="card" x="185" y="450" width="345" height="82"/>
-    <text class="card-title" x="357.5" y="483" text-anchor="middle">BookRoutes</text>
-    <text class="card-body" x="357.5" y="512" text-anchor="middle">CRUD, rollback, failure demo routes</text>
-  </g>
   <g class="node" data-node="status-pages" filter="url(#soft-shadow)">
+    <rect class="card" x="185" y="450" width="345" height="82"/>
+    <text class="card-title" x="357.5" y="483" text-anchor="middle">StatusPages</text>
+    <text class="card-body" x="357.5" y="512" text-anchor="middle">generic + Exposed error responses</text>
+  </g>
+  <g class="node" data-node="book-routes" filter="url(#soft-shadow)">
     <rect class="card" x="627.5" y="450" width="345" height="82"/>
-    <text class="card-title" x="800" y="483" text-anchor="middle">StatusPages</text>
-    <text class="card-body" x="800" y="512" text-anchor="middle">generic + Exposed error responses</text>
+    <text class="card-title" x="800" y="483" text-anchor="middle">BookRoutes</text>
+    <text class="card-body" x="800" y="512" text-anchor="middle">CRUD, rollback, failure demo routes</text>
   </g>
   <g class="node" data-node="resources" filter="url(#soft-shadow)">
     <rect class="card" x="1070" y="450" width="345" height="82"/>
@@ -81,33 +85,37 @@
   <text class="layer-title" x="118" y="659">Exposed Transaction Layer</text>
   <text class="layer-text" x="118" y="688">All JDBC statements run inside call-scoped Exposed transactions.</text>
   <g class="node" data-node="exposed-jdbc-transaction" filter="url(#soft-shadow)">
-    <rect class="card" x="355" y="705" width="395" height="72"/>
-    <text class="card-title" x="552.5" y="735" text-anchor="middle">exposedJdbcTransaction</text>
-    <text class="card-body" x="552.5" y="762" text-anchor="middle">wraps errors, rethrows cancellation</text>
+    <rect class="card" x="602.5" y="705" width="395" height="72"/>
+    <text class="card-title" x="800" y="735" text-anchor="middle">exposedJdbcTransaction</text>
+    <text class="card-body" x="800" y="762" text-anchor="middle">wraps errors, rethrows cancellation</text>
   </g>
   <g class="node" data-node="book-repository" filter="url(#soft-shadow)">
-    <rect class="card" x="850" y="705" width="395" height="72"/>
-    <text class="card-title" x="1047.5" y="735" text-anchor="middle">BookRepository</text>
-    <text class="card-body" x="1047.5" y="762" text-anchor="middle">Exposed DSL for ktor_exposed_books</text>
+    <rect class="card" x="1070" y="705" width="395" height="72"/>
+    <text class="card-title" x="1267.5" y="735" text-anchor="middle">BookRepository</text>
+    <text class="card-body" x="1267.5" y="762" text-anchor="middle">Exposed DSL for ktor_exposed_books</text>
   </g>
 
   <rect class="layer" x="80" y="860" width="1440" height="125" fill="#F8FAFC" stroke="#CBD5E1"/>
   <text class="layer-title" x="118" y="904">PostgreSQL Infrastructure Layer</text>
   <text class="layer-text" x="118" y="933">Tests use PostgreSQLServer; runtime uses JDBC env vars.</text>
   <g class="node" data-node="postgresql-testcontainer" filter="url(#soft-shadow)">
-    <rect class="card" x="565" y="884" width="470" height="100"/>
-    <g data-bluetape4k-icon="testcontainers.postgresql" data-source="docs/icons/testcontainers/database/postgresql.svg" transform="translate(788 890) scale(1)">
+    <rect class="card" x="1032.5" y="884" width="470" height="100"/>
+    <g data-bluetape4k-icon="testcontainers.postgresql" data-source="docs/icons/testcontainers/database/postgresql.svg" transform="translate(1255.5 890) scale(1)">
       <title>PostgreSQL</title>
       <path fill="#4169E1" d="M23.5594 14.7228a.5269.5269 0 0 0-.0563-.1191c-.139-.2632-.4768-.3418-1.0074-.2321-1.6533.3411-2.2935.1312-2.5256-.0191 1.342-2.0482 2.445-4.522 3.0411-6.8297.2714-1.0507.7982-3.5237.1222-4.7316a1.5641 1.5641 0 0 0-.1509-.235C21.6931.9086 19.8007.0248 17.5099.0005c-1.4947-.0158-2.7705.3461-3.1161.4794a9.449 9.449 0 0 0-.5159-.0816 8.044 8.044 0 0 0-1.3114-.1278c-1.1822-.0184-2.2038.2642-3.0498.8406-.8573-.3211-4.7888-1.645-7.2219.0788C.9359 2.1526.3086 3.8733.4302 6.3043c.0409.818.5069 3.334 1.2423 5.7436.4598 1.5065.9387 2.7019 1.4334 3.582.553.9942 1.1259 1.5933 1.7143 1.7895.4474.1491 1.1327.1441 1.8581-.7279.8012-.9635 1.5903-1.8258 1.9446-2.2069.4351.2355.9064.3625 1.39.3772a.0569.0569 0 0 0 .0004.0041 11.0312 11.0312 0 0 0-.2472.3054c-.3389.4302-.4094.5197-1.5002.7443-.3102.064-1.1344.2339-1.1464.8115-.0025.1224.0329.2309.0919.3268.2269.4231.9216.6097 1.015.6331 1.3345.3335 2.5044.092 3.3714-.6787-.017 2.231.0775 4.4174.3454 5.0874.2212.5529.7618 1.9045 2.4692 1.9043.2505 0 .5263-.0291.8296-.0941 1.7819-.3821 2.5557-1.1696 2.855-2.9059.1503-.8707.4016-2.8753.5388-4.1012.0169-.0703.0357-.1207.057-.1362.0007-.0005.0697-.0471.4272.0307a.3673.3673 0 0 0 .0443.0068l.2539.0223.0149.001c.8468.0384 1.9114-.1426 2.5312-.4308.6438-.2988 1.8057-1.0323 1.5951-1.6698z"/>
     </g>
-    <text class="card-title" x="800" y="950" text-anchor="middle">PostgreSQL Testcontainer</text>
-    <text class="card-body" x="800" y="974" text-anchor="middle">real JDBC, rollback, readiness, and SQL error tests</text>
+    <text class="card-title" x="1267.5" y="950" text-anchor="middle">PostgreSQL Testcontainer</text>
+    <text class="card-body" x="1267.5" y="974" text-anchor="middle">real JDBC, rollback, readiness, and SQL error tests</text>
   </g>
 
-  <path class="line blue" data-connector="client-to-routes" d="M800 267 L800 322 Q800 334 610 334 Q357.5 334 357.5 450"/>
-  <path class="line blue" data-connector="routes-to-transaction" d="M357.5 532 L357.5 592 Q357.5 604 455 604 Q552.5 604 552.5 705"/>
-  <path class="line green" data-connector="transaction-to-repository" d="M750 741 L850 741"/>
-  <path class="line amber" data-connector="repository-to-postgresql" d="M1047.5 777 L1047.5 838 Q1047.5 850 650 850 Q650 850 650 884"/>
+  <path class="line blue" data-connector="client-to-routes" d="M800 267 L800 450"/>
+  <polygon class="arrowhead" data-arrowhead="client-to-routes" points="800,450 792,436 808,436" fill="#3F7D9C" stroke="#3F7D9C" style="stroke-dasharray:none"/>
+  <path class="line blue" data-connector="routes-to-transaction" d="M800 532 L800 705"/>
+  <polygon class="arrowhead" data-arrowhead="routes-to-transaction" points="800,705 792,691 808,691" fill="#3F7D9C" stroke="#3F7D9C" style="stroke-dasharray:none"/>
+  <path class="line green" data-connector="transaction-to-repository" d="M997.5 741 L1070 741"/>
+  <polygon class="arrowhead" data-arrowhead="transaction-to-repository" points="1070,741 1056,733 1056,749" fill="#5F8A54" stroke="#5F8A54" style="stroke-dasharray:none"/>
+  <path class="line amber" data-connector="repository-to-postgresql" d="M1267.5 777 L1267.5 884"/>
+  <polygon class="arrowhead" data-arrowhead="repository-to-postgresql" points="1267.5,884 1259.5,870 1275.5,870" fill="#9B7D54" stroke="#9B7D54" style="stroke-dasharray:none"/>
 
   <rect class="callout" x="120" y="992" width="1360" height="30"/>
   <text class="footer" x="800" y="1013" text-anchor="middle">Contract: route validation is outside the transaction; JDBC work is inside exposedJdbcTransaction; PostgreSQL is supplied by bluetape4k-testcontainers.</text>
