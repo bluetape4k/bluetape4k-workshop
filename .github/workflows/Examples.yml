@@ -19,6 +19,7 @@ on:
       - 'graph/io-pipeline/**'
       - 'image-processing/ocr-api/**'
       - 'ktor/exposed-rest/**'
+      - 'aws/ktor-dynamodb/**'
       - 'aws/cloudwatch-imds-observability/**'
       - 'aws/s3-vectors-access-grants/**'
       - 'kotlin/flow-extensions-event-aggregation/**'
@@ -53,6 +54,7 @@ on:
       - 'graph/io-pipeline/**'
       - 'image-processing/ocr-api/**'
       - 'ktor/exposed-rest/**'
+      - 'aws/ktor-dynamodb/**'
       - 'aws/cloudwatch-imds-observability/**'
       - 'aws/s3-vectors-access-grants/**'
       - 'kotlin/flow-extensions-event-aggregation/**'
@@ -227,6 +229,7 @@ jobs:
       # - exposed-webflux-r2dbc: PostgreSQL-backed Exposed R2DBC consumer path
       # - exposed-javers-persistence-audit: Redis-backed JaVers audit history
       # - ktor-exposed-rest: PostgreSQL-backed Ktor + Exposed transaction path
+      # - aws-ktor-dynamodb: local AWS emulator-backed Ktor + DynamoDB path
       # - spring-boot-cache-redis: Redis-backed cache path
       # - messaging-kafka: Kafka-backed messaging path
       # - messaging-kafka-outbox-fallback: PostgreSQL + Kafka fallback relay path
@@ -236,6 +239,7 @@ jobs:
           :exposed-webflux-r2dbc:test
           :exposed-javers-persistence-audit:test
           :ktor-exposed-rest:test
+          :aws-ktor-dynamodb:test
           :spring-boot-cache-redis:test
           :messaging-kafka:test
           :messaging-kafka-outbox-fallback:test
@@ -258,6 +262,8 @@ jobs:
             exposed/javers-persistence-audit/build/reports/tests/test/
             ktor/exposed-rest/build/test-results/test/*.xml
             ktor/exposed-rest/build/reports/tests/test/
+            aws/ktor-dynamodb/build/test-results/test/*.xml
+            aws/ktor-dynamodb/build/reports/tests/test/
             spring-boot/cache-redis/build/test-results/test/*.xml
             spring-boot/cache-redis/build/reports/tests/test/
             messaging/kafka/build/test-results/test/*.xml
