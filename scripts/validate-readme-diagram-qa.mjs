@@ -109,6 +109,39 @@ function parsePathEndPoints(d) {
   return points;
 }
 
+function parsePathSteps(d) {
+  const tokens = pathTokens(d);
+  const steps = [];
+  let index = 0;
+  let command = null;
+  let current = { x: 0, y: 0 };
+
+  const nextNumber = () => Number(tokens[index++]);
+  while (index < tokens.length) {
+    if (/^[A-Za-z]$/.test(tokens[index])) command = tokens[index++];
+    if (!command) break;
+    const from = { ...current };
+    if (command === "M" || command === "L") {
+      current = { x: nextNumber(), y: nextNumber() };
+      steps.push({ command, from, ...current });
+    } else if (command === "H") {
+      current = { x: nextNumber(), y: current.y };
+      steps.push({ command, from, ...current });
+    } else if (command === "V") {
+      current = { x: current.x, y: nextNumber() };
+      steps.push({ command, from, ...current });
+    } else if (command === "Q") {
+      const cx = nextNumber();
+      const cy = nextNumber();
+      current = { x: nextNumber(), y: nextNumber() };
+      steps.push({ command, from, cx, cy, ...current });
+    } else {
+      break;
+    }
+  }
+  return steps;
+}
+
 function segmentDirection(a, b) {
   if (Math.abs(a.x - b.x) < 0.2 && Math.abs(a.y - b.y) >= 0.2) return "vertical";
   if (Math.abs(a.y - b.y) < 0.2 && Math.abs(a.x - b.x) >= 0.2) return "horizontal";
@@ -176,6 +209,14 @@ function markerDefs(svg) {
   return markers;
 }
 
+function resolveStroke(attrs, styles) {
+  let stroke = attrs.stroke;
+  for (const className of (attrs.class || "").split(/\s+/).filter(Boolean)) {
+    stroke ||= styles.get(className)?.stroke;
+  }
+  return stroke;
+}
+
 function auditMarkers(file, svg) {
   const scope = rel(file);
   const styles = classStyles(svg);
@@ -226,6 +267,108 @@ function auditMarkers(file, svg) {
     fail(scope, "marker audit", "marker-end exists but no marker paths were checked");
   } else if (markerFailures === 0) {
     addRow(scope, "marker audit", `markers_checked=${checked} marker_failures=0`);
+  }
+}
+
+function polygonPoints(points) {
+  return points.trim().split(/\s+/).map((point) => {
+    const [x, y] = point.split(",").map(Number);
+    return { x, y };
+  });
+}
+
+function auditDirectHeads(file, svg) {
+  const scope = rel(file);
+  const styles = classStyles(svg);
+  const paths = new Map();
+  const heads = new Map();
+
+  for (const match of svg.matchAll(/<path\b([^>]*\bdata-connector="([^"]+)"[^>]*)\/?>/g)) {
+    paths.set(match[2], parseAttrs(match[1]));
+  }
+  for (const match of svg.matchAll(/<polygon\b([^>]*\bdata-connector-head="([^"]+)"[^>]*)\/?>/g)) {
+    heads.set(match[2], parseAttrs(match[1]));
+  }
+  if (heads.size === 0) return;
+
+  let failures = 0;
+  for (const [id, pathAttrs] of paths) {
+    if (id.startsWith("seq-")) continue;
+    const head = heads.get(id);
+    if (!head) {
+      failures += 1;
+      fail(scope, "direct-head audit", `${id} missing data-connector-head polygon`);
+      continue;
+    }
+    const points = parsePathEndPoints(pathAttrs.d || "");
+    const end = points.at(-1);
+    const beforeEnd = points.at(-2);
+    const headPoints = polygonPoints(head.points || "");
+    const [tip, base1, base2] = headPoints;
+    if (!end || !beforeEnd || !tip || !base1 || !base2) {
+      failures += 1;
+      fail(scope, "direct-head audit", `${id} has incomplete path/head geometry`);
+      continue;
+    }
+    const base = { x: (base1.x + base2.x) / 2, y: (base1.y + base2.y) / 2 };
+    const finalVector = { x: end.x - beforeEnd.x, y: end.y - beforeEnd.y };
+    const headVector = { x: tip.x - base.x, y: tip.y - base.y };
+    const stroke = resolveStroke(pathAttrs, styles);
+    const dot = finalVector.x * headVector.x + finalVector.y * headVector.y;
+    if (distance(tip, end) > 0.2) {
+      failures += 1;
+      fail(scope, "direct-head audit", `${id} head tip=${tip.x},${tip.y} endpoint=${end.x},${end.y}`);
+    }
+    if (dot <= 0) {
+      failures += 1;
+      fail(scope, "direct-head audit", `${id} head direction opposes final connector segment`);
+    }
+    if (!stroke || head.fill !== stroke || head.stroke !== stroke) {
+      failures += 1;
+      fail(scope, "direct-head audit", `${id} head fill=${head.fill} stroke=${head.stroke} expected=${stroke}`);
+    }
+    if (head["stroke-dasharray"] !== "none" || !(head.style || "").includes("stroke-dasharray:none")) {
+      failures += 1;
+      fail(scope, "direct-head audit", `${id} direct head can inherit dashed stroke`);
+    }
+  }
+
+  if (failures === 0) addRow(scope, "direct-head audit", `heads=${heads.size} failures=0`);
+}
+
+function auditRoundedBendDirection(file, svg) {
+  const scope = rel(file);
+  let qBends = 0;
+  let reverseFailures = 0;
+  let fakeAxisFailures = 0;
+
+  for (const match of svg.matchAll(/<path\b([^>]*\bdata-connector="([^"]+)"[^>]*)\/?>/g)) {
+    const attrs = parseAttrs(match[1]);
+    const connector = match[2];
+    const steps = parsePathSteps(attrs.d || "");
+    for (let i = 0; i < steps.length; i += 1) {
+      const step = steps[i];
+      if (step.command !== "Q") continue;
+      qBends += 1;
+      const previous = steps[i - 1];
+      const incoming = previous ? { x: step.from.x - previous.from.x, y: step.from.y - previous.from.y } : { x: 0, y: 0 };
+      const control = { x: step.cx - step.from.x, y: step.cy - step.from.y };
+      const fakeAxis =
+        (Math.abs(step.from.x - step.cx) < 0.2 && Math.abs(step.cx - step.x) < 0.2) ||
+        (Math.abs(step.from.y - step.cy) < 0.2 && Math.abs(step.cy - step.y) < 0.2);
+      if (fakeAxis) {
+        fakeAxisFailures += 1;
+        fail(scope, "rounded-bend direction audit", `${connector} Q bend stays on one axis`);
+      }
+      if (incoming.x * control.x + incoming.y * control.y < 0) {
+        reverseFailures += 1;
+        fail(scope, "rounded-bend direction audit", `${connector} Q bend control point backtracks from incoming segment`);
+      }
+    }
+  }
+
+  if (qBends > 0 && reverseFailures === 0 && fakeAxisFailures === 0) {
+    addRow(scope, "rounded-bend direction audit", `q_bends=${qBends} reverse_failures=0 fake_axis_failures=0`);
   }
 }
 
@@ -363,6 +506,8 @@ for (const file of targets) {
     addRow(scope, "PNG pair", `${rel(png)} bytes=${stat.size}`);
   }
   auditMarkers(file, svg);
+  auditDirectHeads(file, svg);
+  auditRoundedBendDirection(file, svg);
   runSkillAudits(file, svg);
   auditConnectorGeometry(file, svg);
   auditSequenceShape(file, svg);
