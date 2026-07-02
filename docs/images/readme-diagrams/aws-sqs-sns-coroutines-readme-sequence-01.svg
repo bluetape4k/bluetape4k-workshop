@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="940" viewBox="0 0 1680 940" role="img" aria-labelledby="title desc">
+  <title id="title">SQS SNS Coroutine Messaging Sequence</title>
+  <desc id="desc">Publish an order notification to SNS, consume SQS messages, and classify success, retry, and dead-letter branches.</desc>
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
+    <style>
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}
+      .subtitle,.msg,.footer{font-family:"Comic Mono";fill:#36464F}
+      .subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:19px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:12px;fill:#546A73}
+      .msg{font-size:13px}.footer{font-size:14px;fill:#60727D}
+      .frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}
+      .header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}
+      .lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}
+      .activation{fill:#EAF6EF;stroke:#6E8F4F;stroke-width:2}
+      .call,.return{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+      .callBlue{stroke:#4F86C6;marker-end:url(#arrow-blue)}
+      .callGreen{stroke:#6E8F4F;marker-end:url(#arrow-green)}
+      .callAmber{stroke:#9B7D54;marker-end:url(#arrow-amber)}
+      .callRed{stroke:#B86868;marker-end:url(#arrow-red)}
+      .returnTeal{stroke:#2F9D9A;stroke-width:2.8;stroke-dasharray:8 7;marker-end:url(#arrow-teal)}
+      .labelPill{fill:#FFFFFF;stroke-width:1.6}
+      .callLabel{stroke:#9CC2D1}.greenLabel{stroke:#B6C9A4}.amberLabel{stroke:#C8B38F}.redLabel{stroke:#D9ABAB}.tealLabel{stroke:#91C9C6}
+      .badge{stroke-width:1.8}.blueBadge{fill:#EAF4F8;stroke:#4F86C6}.greenBadge{fill:#EEF7F0;stroke:#6E8F4F}.amberBadge{fill:#FFF7E8;stroke:#9B7D54}.redBadge{fill:#FFF0F0;stroke:#B86868}.tealBadge{fill:#EAF8F7;stroke:#2F9D9A}
+      .num{font-family:"Comic Mono";font-size:12px;font-weight:700}
+      .blueText{fill:#2F6F8E}.greenText{fill:#55783F}.amberText{fill:#7F6038}.redText{fill:#9D4F4F}.tealText{fill:#247F7D}
+      .alt{fill:none;stroke:#D08A39;stroke-width:2.2;stroke-dasharray:12 8}
+      .branchDivider{stroke:#D08A39;stroke-width:1.8;stroke-dasharray:9 7;opacity:.72}
+      .branchTitle{font-family:"Comic Mono";font-size:13px;fill:#805B2A}
+      .branchPill{fill:#FFFDF8;stroke:#D08A39;stroke-width:1.6}
+    </style>
+    <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke="#9B7D54" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke="#B86868" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-teal" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2F9D9A" stroke="#2F9D9A" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+  </defs>
+  <rect x="24" y="24" width="1632" height="892" rx="20" class="frame"/>
+  <text x="840" y="76" text-anchor="middle" class="title">SQS SNS Coroutine Messaging Sequence</text>
+  <text x="840" y="106" text-anchor="middle" class="subtitle">SNS publish and SQS consume stay cancellable while reports expose ack, retry, and dead-letter outcomes.</text>
+
+  <g filter="url(#shadow)"><rect x="54" y="150" width="224" height="74" rx="10" class="header"/><text x="166" y="179" text-anchor="middle" class="participant">Learner</text><text x="166" y="204" text-anchor="middle" class="role">test or bootRun</text></g>
+  <g filter="url(#shadow)"><rect x="330" y="150" width="260" height="74" rx="10" class="header"/><text x="460" y="179" text-anchor="middle" class="participant">MessagingService</text><text x="460" y="204" text-anchor="middle" class="role">coroutine boundary</text></g>
+  <g filter="url(#shadow)"><rect x="654" y="150" width="224" height="74" rx="10" class="header"/><text x="766" y="179" text-anchor="middle" class="participant">SNS Topic</text><text x="766" y="204" text-anchor="middle" class="role">fan-out envelope</text></g>
+  <g filter="url(#shadow)"><rect x="958" y="150" width="224" height="74" rx="10" class="header"/><text x="1070" y="179" text-anchor="middle" class="participant">SQS Queue</text><text x="1070" y="204" text-anchor="middle" class="role">receive count</text></g>
+  <g filter="url(#shadow)"><rect x="1262" y="150" width="224" height="74" rx="10" class="header"/><text x="1374" y="179" text-anchor="middle" class="participant">Handler</text><text x="1374" y="204" text-anchor="middle" class="role">business action</text></g>
+  <g filter="url(#shadow)"><rect x="1480" y="150" width="144" height="74" rx="10" class="header"/><text x="1552" y="179" text-anchor="middle" class="participant">Metrics</text><text x="1552" y="204" text-anchor="middle" class="role">meters</text></g>
+
+  <line x1="166" y1="224" x2="166" y2="838" class="lifeline"/>
+  <line x1="460" y1="224" x2="460" y2="838" class="lifeline"/>
+  <line x1="766" y1="224" x2="766" y2="838" class="lifeline"/>
+  <line x1="1070" y1="224" x2="1070" y2="838" class="lifeline"/>
+  <line x1="1374" y1="224" x2="1374" y2="838" class="lifeline"/>
+  <line x1="1552" y1="224" x2="1552" y2="838" class="lifeline"/>
+  <rect x="452" y="270" width="16" height="520" rx="6" class="activation"/>
+  <rect x="758" y="340" width="16" height="90" rx="6" class="activation"/>
+  <rect x="1062" y="430" width="16" height="270" rx="6" class="activation"/>
+  <rect x="1366" y="610" width="16" height="96" rx="6" class="activation"/>
+  <rect x="1544" y="392" width="16" height="382" rx="6" class="activation"/>
+
+  <rect x="92" y="258" width="352" height="34" rx="17" class="labelPill callLabel"/><circle cx="116" cy="275" r="13" class="badge blueBadge"/><text x="116" y="280" text-anchor="middle" class="num blueText">1</text><text x="140" y="280" class="msg message blueText">publish order notification</text>
+  <path d="M 166 306 L 460 306" class="call callBlue"/>
+  <rect x="528" y="328" width="348" height="34" rx="17" class="labelPill callLabel"/><circle cx="552" cy="345" r="13" class="badge blueBadge"/><text x="552" y="350" text-anchor="middle" class="num blueText">2</text><text x="576" y="350" class="msg message blueText">SnsPublishRequest + attributes</text>
+  <path d="M 460 376 L 766 376" class="call callBlue"/>
+  <rect x="836" y="420" width="286" height="34" rx="17" class="labelPill greenLabel"/><circle cx="860" cy="437" r="13" class="badge greenBadge"/><text x="860" y="442" text-anchor="middle" class="num greenText">3</text><text x="884" y="442" class="msg message greenText">fan-out JSON message</text>
+  <path d="M 766 468 L 1070 468" class="call callGreen"/>
+  <rect x="1190" y="486" width="292" height="34" rx="17" class="labelPill greenLabel"/><circle cx="1214" cy="503" r="13" class="badge greenBadge"/><text x="1214" y="508" text-anchor="middle" class="num greenText">4</text><text x="1238" y="508" class="msg message greenText">record publish success</text>
+  <path d="M 460 534 L 1552 534" class="call callGreen"/>
+
+  <rect x="104" y="568" width="1456" height="212" rx="16" class="alt" fill="none"/>
+  <rect x="130" y="550" width="226" height="32" rx="16" class="branchPill"/><text x="154" y="571" class="branchTitle">alt consume outcome</text>
+  <line x1="104" y1="646" x2="1560" y2="646" class="branchDivider"/>
+  <line x1="104" y1="714" x2="1560" y2="714" class="branchDivider"/>
+
+  <rect x="686" y="570" width="270" height="34" rx="17" class="labelPill amberLabel"/><circle cx="710" cy="587" r="13" class="badge amberBadge"/><text x="710" y="592" text-anchor="middle" class="num amberText">5</text><text x="734" y="592" class="msg message amberText">poll SQS once</text>
+  <path d="M 460 618 L 1070 618" class="call callAmber"/>
+  <rect x="1114" y="654" width="300" height="34" rx="17" class="labelPill greenLabel"/><circle cx="1138" cy="671" r="13" class="badge greenBadge"/><text x="1138" y="676" text-anchor="middle" class="num greenText">6</text><text x="1162" y="676" class="msg message greenText">handle and delete on success</text>
+  <path d="M 460 702 L 1374 702" class="call callGreen"/>
+  <rect x="668" y="720" width="326" height="34" rx="17" class="labelPill redLabel"/><circle cx="692" cy="737" r="13" class="badge redBadge"/><text x="692" y="742" text-anchor="middle" class="num redText">7</text><text x="716" y="742" class="msg message redText">retry visibility or dead-letter</text>
+  <path d="M 460 768 L 1070 768" class="call callRed"/>
+
+  <rect x="230" y="804" width="306" height="34" rx="17" class="labelPill tealLabel"/><circle cx="254" cy="821" r="13" class="badge tealBadge"/><text x="254" y="826" text-anchor="middle" class="num tealText">8</text><text x="278" y="826" class="msg message tealText">return publish or consume report</text>
+  <path d="M 460 852 L 166 852" class="return returnTeal"/>
+  <rect x="92" y="872" width="1496" height="28" rx="10" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
+  <text x="840" y="891" text-anchor="middle" class="footer">Reader contract: cancellation is rethrown; failures become explicit reports or retry requests instead of hidden side effects.</text>
+</svg>
