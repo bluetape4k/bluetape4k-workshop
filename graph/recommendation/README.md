@@ -20,6 +20,7 @@ Neo4j, and Memgraph backends.
 | **Edge types** | `PURCHASED` (rating, purchasedAt) — `FOLLOWS` |
 | **Service** | `RecommendationService` (blocking) · `RecommendationSuspendService` (coroutine) |
 | **Algorithms** | Collaborative Filtering (`recommendProducts`) · FOAF on FOLLOWS (`recommendFollows`) |
+| **Explainability** | `explainProductRecommendations` · `explainFollowRecommendations` |
 | **Backends** | TinkerGraph (in-memory) · Neo4j (Testcontainer) · Memgraph (Testcontainer) |
 
 ---
@@ -83,6 +84,44 @@ data class FollowRecommendation(
     val mutualFollows: List<GraphVertex>, // mutual-follow vertices
 )
 ```
+
+---
+
+### Explainable Recommendations
+
+The `explain*` APIs return the same ranking as `recommendProducts()` and
+`recommendFollows()`, plus evidence paths and exclusion rules that can be shown
+to a learner or a UI:
+
+```kotlin
+data class ExplainedProductRecommendation(
+    val recommendation: ProductRecommendation,
+    val evidencePaths: List<ProductEvidencePath>,
+    val excludedCandidates: List<CandidateExclusion>,
+)
+
+data class ExplainedFollowRecommendation(
+    val recommendation: FollowRecommendation,
+    val evidencePaths: List<FollowEvidencePath>,
+    val excludedCandidates: List<CandidateExclusion>,
+)
+```
+
+For Alice, the top product recommendation is explainable without reading the
+whole graph:
+
+| Recommendation | Score input | Evidence path | Excluded candidates |
+|----------------|-------------|---------------|---------------------|
+| headphones | 3 distinct co-buyers | laptop → bob → headphones<br>phone → carol → headphones<br>tablet → dave → headphones | laptop, phone, tablet (`ALREADY_PURCHASED`) |
+
+For follow recommendations, the payload makes both accepted and rejected
+2-hop paths explicit:
+
+| Recommendation | Evidence path | Excluded candidates |
+|----------------|---------------|---------------------|
+| dave | bob → dave | bob, carol (`ALREADY_FOLLOWED`) |
+| eve | carol → eve | bob, carol (`ALREADY_FOLLOWED`) |
+| self candidate | bob → alice | alice (`SELF`) |
 
 ---
 
@@ -184,6 +223,15 @@ val followRecs = service.recommendFollows(alice.id, limit = 5)
 followRecs.forEach { rec ->
     println("${rec.person} — mutual=${rec.mutualFollowCount}")
 }
+
+// Get explainable recommendations
+val explainedProducts = service.explainProductRecommendations(alice.id)
+explainedProducts.forEach { explanation ->
+    println("${explanation.recommendation.product} was recommended because:")
+    explanation.evidencePaths.forEach { path ->
+        println("  ${path.sharedProduct} -> ${path.coBuyer} -> ${path.candidateProduct}")
+    }
+}
 ```
 
 ### Coroutine (Suspend) Service
@@ -195,6 +243,9 @@ service.initialize()
 
 val productRecs = service.recommendProducts(alice.id, limit = 10)
 val followRecs  = service.recommendFollows(alice.id, limit = 5)
+
+val explainedProducts = service.explainProductRecommendations(alice.id)
+val explainedFollows  = service.explainFollowRecommendations(alice.id)
 ```
 
 ---
@@ -206,7 +257,7 @@ constraints are intentional trade-offs documented here for transparency:
 
 | Limitation | Detail | Production alternative |
 |-----------|--------|----------------------|
-| **N+1 traversal** | `recommendProducts` issues one neighbor query per seed product and one per co-buyer; `recommendFollows` issues one per depth-2 candidate. `limit` bounds output, not I/O calls. | Native Cypher / Gremlin query for the full traversal |
+| **N+1 traversal** | `recommendProducts` issues one neighbor query per seed product and one per co-buyer; `recommendFollows` issues one outgoing neighbor query per direct follow. `limit` bounds output, not I/O calls. | Native Cypher / Gremlin query for the full traversal |
 | **TOCTOU in `initialize()`** | `graphExists → createGraph` is not atomic; concurrent callers on a shared backend may attempt duplicate graph creation. | Advisory lock or server-side upsert semantics |
 | **No vertex-type enforcement** | `purchase()` and `follow()` accept any vertex ID without verifying it is a User or Product vertex at runtime. | Schema constraints on the graph backend |
 | **`CancellationException` propagation** | The suspend service propagates `CancellationException` correctly, but underlying `GraphSuspendOperations` implementations must also honor structured concurrency. | Verify each backend's coroutine contract |

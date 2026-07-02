@@ -19,6 +19,7 @@ TinkerGraph, Neo4j, Memgraph 백엔드를 지원합니다.
 | **엣지 유형** | `PURCHASED` (rating, purchasedAt) — `FOLLOWS` |
 | **서비스** | `RecommendationService` (블로킹) · `RecommendationSuspendService` (코루틴) |
 | **알고리즘** | 협업 필터링 (`recommendProducts`) · FOLLOWS FOAF (`recommendFollows`) |
+| **설명 가능성** | `explainProductRecommendations` · `explainFollowRecommendations` |
 | **백엔드** | TinkerGraph (인메모리) · Neo4j (Testcontainer) · Memgraph (Testcontainer) |
 
 ---
@@ -81,6 +82,42 @@ data class FollowRecommendation(
     val mutualFollows: List<GraphVertex>, // 상호 팔로우 버텍스 목록
 )
 ```
+
+---
+
+### 설명 가능한 추천
+
+`explain*` API는 `recommendProducts()`와 `recommendFollows()`와 같은 순위 결과를
+반환하면서, 점수를 만든 경로와 제외 규칙을 함께 제공합니다. 학습자는 결과만 보는 대신
+"왜 추천됐는지", "왜 제외됐는지"를 payload에서 바로 확인할 수 있습니다.
+
+```kotlin
+data class ExplainedProductRecommendation(
+    val recommendation: ProductRecommendation,
+    val evidencePaths: List<ProductEvidencePath>,
+    val excludedCandidates: List<CandidateExclusion>,
+)
+
+data class ExplainedFollowRecommendation(
+    val recommendation: FollowRecommendation,
+    val evidencePaths: List<FollowEvidencePath>,
+    val excludedCandidates: List<CandidateExclusion>,
+)
+```
+
+alice의 1순위 상품 추천은 전체 그래프를 머릿속에 그리지 않아도 설명됩니다.
+
+| 추천 | 점수 입력 | 근거 경로 | 제외 후보 |
+|------|----------|----------|----------|
+| headphones | 고유 공동구매자 3명 | laptop → bob → headphones<br>phone → carol → headphones<br>tablet → dave → headphones | laptop, phone, tablet (`ALREADY_PURCHASED`) |
+
+팔로우 추천도 채택된 2-hop 경로와 제외된 후보를 함께 보여줍니다.
+
+| 추천 | 근거 경로 | 제외 후보 |
+|------|----------|----------|
+| dave | bob → dave | bob, carol (`ALREADY_FOLLOWED`) |
+| eve | carol → eve | bob, carol (`ALREADY_FOLLOWED`) |
+| 본인 후보 | bob → alice | alice (`SELF`) |
 
 ---
 
@@ -182,6 +219,15 @@ val followRecs = service.recommendFollows(alice.id, limit = 5)
 followRecs.forEach { rec ->
     println("${rec.person} — 상호팔로우=${rec.mutualFollowCount}")
 }
+
+// 설명 가능한 추천 조회
+val explainedProducts = service.explainProductRecommendations(alice.id)
+explainedProducts.forEach { explanation ->
+    println("${explanation.recommendation.product} 추천 이유:")
+    explanation.evidencePaths.forEach { path ->
+        println("  ${path.sharedProduct} -> ${path.coBuyer} -> ${path.candidateProduct}")
+    }
+}
 ```
 
 ### 코루틴 (Suspend) 서비스
@@ -193,6 +239,9 @@ service.initialize()
 
 val productRecs = service.recommendProducts(alice.id, limit = 10)
 val followRecs  = service.recommendFollows(alice.id, limit = 5)
+
+val explainedProducts = service.explainProductRecommendations(alice.id)
+val explainedFollows  = service.explainFollowRecommendations(alice.id)
 ```
 
 ---
@@ -203,7 +252,7 @@ val followRecs  = service.recommendFollows(alice.id, limit = 5)
 
 | 제한사항 | 설명 | 프로덕션 대안 |
 |---------|------|------------|
-| **N+1 탐색** | `recommendProducts`는 시드 상품마다, 공동구매자마다 쿼리를 1회씩 발행; `recommendFollows`는 2-hop 후보마다 1회. `limit`은 출력 건수를 제한하지 I/O 호출 횟수를 제한하지 않음 | 전체 탐색을 단일 Cypher / Gremlin 쿼리로 대체 |
+| **N+1 탐색** | `recommendProducts`는 시드 상품마다, 공동구매자마다 쿼리를 1회씩 발행; `recommendFollows`는 직접 팔로우마다 outgoing 쿼리를 1회 발행. `limit`은 출력 건수를 제한하지 I/O 호출 횟수를 제한하지 않음 | 전체 탐색을 단일 Cypher / Gremlin 쿼리로 대체 |
 | **`initialize()` TOCTOU** | `graphExists → createGraph` 가 원자적이지 않아, 동시 호출 시 그래프 중복 생성 시도 가능 | 어드바이저리 락 또는 서버 측 upsert 시맨틱 |
 | **런타임 버텍스 타입 검증 없음** | `purchase()`/`follow()`는 전달받은 버텍스 ID가 User/Product 타입인지 런타임에 검증하지 않음. 호출자가 `addUser()`/`addProduct()` 반환 ID를 사용해야 함 | 그래프 백엔드 스키마 제약 |
 | **`CancellationException` 전파** | suspend 서비스 자체는 취소 예외를 올바르게 전파하지만, 하위 `GraphSuspendOperations` 구현이 구조적 동시성을 지원해야 함 | 각 백엔드의 코루틴 계약 확인 |

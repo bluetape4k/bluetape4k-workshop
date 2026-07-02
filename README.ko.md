@@ -192,7 +192,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Basic | [`graph-knowledge-graph`](graph/knowledge-graph/) | `graph-core`, `graph-tinkerpop` | In-memory | Heterogeneous knowledge graph model과 traversal |
 | Advanced | [`graph-abuser-detection`](graph/abuser-detection/) | `graph-core`, `graph-tinkerpop` | In-memory | Fraud/abuse 관계 분석 |
 | Advanced | [`graph-event-lineage`](graph/event-lineage/) | `graph-core`, `graph-tinkerpop`, `graph-neo4j`, `testcontainers` | TinkerGraph + Neo4j Testcontainer | Event lineage graph modeling, 영향도 traversal, audit trail 조립 |
-| Advanced | [`graph-recommendation`](graph/recommendation/) | `graph-core`, `graph-tinkerpop` | In-memory | Recommendation graph traversal |
+| Advanced | [`graph-recommendation`](graph/recommendation/) | `graph-core`, `graph-tinkerpop` | In-memory | 설명 가능한 추천 graph traversal |
 
 ```bash
 ./gradlew :graph-io-pipeline:test
