@@ -21,10 +21,11 @@ Grants read decision을 분리해서 보고 싶다면 `s3-vectors-access-grants/
 
 ![AWS Workshop architecture diagram](../docs/images/readme-diagrams/aws-readme-architecture-01.png)
 
-모든 모듈은 기본 학습 경로를 local-first로 유지합니다. S3와 DynamoDB 모듈은 로컬 AWS
-호환 인프라를 사용하고, EventBridge Scheduler, S3 Vectors/Access Grants,
-SQS/SNS, CloudWatch/IMDS 모듈은 local adapter bean을 사용하므로 기본 테스트는 실제
-AWS 서비스나 IMDS를 호출하지 않습니다.
+모든 모듈은 기본 학습 경로를 local-first로 유지합니다. S3, DynamoDB, SQS/SNS 모듈은
+Floci 기반 AWS 호환 인프라로 통합 테스트를 수행합니다. EventBridge Scheduler,
+S3 Vectors/Access Grants, CloudWatch/IMDS는 실제 AWS 서비스나 IMDS를 호출하지 않고
+request construction, failure isolation, 명시적 opt-in 경계를 배우도록 local adapter
+경계를 유지합니다.
 
 ## 모듈 가이드
 
@@ -51,6 +52,18 @@ AWS 서비스나 IMDS를 호출하지 않습니다.
 | Spring integration | `s3-spring-cloud/`는 Spring Cloud AWS `S3Template`과 `ResourceLoader`를, `storage-abstraction/`은 Spring profile을 사용합니다. |
 | Vector and access boundaries | `s3-vectors-access-grants/`는 기본적으로 bluetape4k `S3VectorsOperations`와 `S3AccessGrantsOperations` local adapter를 사용합니다. |
 | Observability | `cloudwatch-imds-observability/`는 기본적으로 로컬 CloudWatch intent를 publish하고, 명시적으로 요청한 경우에만 IMDS metadata를 읽습니다. |
+
+## 로컬 AWS 커버리지
+
+| module | coverage mode | rationale |
+| --- | --- | --- |
+| `s3-spring-cloud/` | Floci 기반 S3 통합 테스트 | Spring Boot 테스트가 `FlociServer.Launcher.floci`를 시작하고, 같은 S3 호환 endpoint에서 `S3Template`, `S3Client`, `ResourceLoader`를 검증합니다. |
+| `storage-abstraction/` | Floci 기반 S3 통합 테스트 | `s3`, `s3-presigned` profile이 `S3Config.floci`를 사용하며 upload, download, delete, pre-signed URL 동작을 검증합니다. |
+| `ktor-dynamodb/` | Floci 기반 DynamoDB 통합 테스트 | Ktor route 테스트가 `FlociServer.Launcher.floci`, AWS Kotlin `DynamoDbClient`, `DynamoDbKtorPlugin` table bootstrap을 함께 사용합니다. |
+| `sqs-sns-coroutines/` | Floci 기반 SNS/SQS 통합 테스트와 local adapter | Unit test는 local fake 경계를 작게 유지하고, 통합 테스트는 Floci에서 `SnsCoroutinesTemplate` publish와 `SqsCoroutinesTemplate` consume을 검증합니다. |
+| `eventbridge-scheduler/` | local adapter only | 이 lesson은 실제 AWS target provisioning 없이 EventBridge entry, Scheduler request mapping, idempotency, failure/cancellation 경계를 배우는 데 집중합니다. |
+| `cloudwatch-imds-observability/` | local adapter only | metadata 접근을 명시적이고 안전하게 유지하기 위해 기본 테스트에서는 CloudWatch와 IMDS network call을 피합니다. |
+| `s3-vectors-access-grants/` | local adapter only | S3 Vectors와 S3 Access Grants는 bluetape4k operation interface 뒤에 두고, deterministic local ranking과 redacted access report를 테스트 대상 동작으로 둡니다. |
 
 ## 실행
 

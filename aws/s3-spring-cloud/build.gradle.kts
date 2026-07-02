@@ -41,6 +41,7 @@ dependencies {
 
     implementation(libs.spring.boot.starter.web)
     implementation(libs.spring.boot.starter.actuator)
+    testImplementation(libs.bluetape4k.assertions)
     testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

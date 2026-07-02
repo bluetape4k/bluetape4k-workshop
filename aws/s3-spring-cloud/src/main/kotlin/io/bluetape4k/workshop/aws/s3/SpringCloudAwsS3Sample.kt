@@ -15,6 +15,7 @@ import org.springframework.core.io.ResourceLoader
 import org.springframework.core.io.WritableResource
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.model.S3Exception
 import java.util.*
 
 fun main(vararg args: String) {
@@ -49,8 +50,8 @@ class SpringCloudAwsS3Sample {
         s3Template: S3Template,
     ): ApplicationRunner {
         return ApplicationRunner {
-            s3Client.createBucket("spring-cloud-aws-sample-bucket1") {}
-            s3Client.createBucket("spring-cloud-aws-sample-bucket2") {}
+            s3Client.ensureBucketExists("spring-cloud-aws-sample-bucket1")
+            s3Client.ensureBucketExists("spring-cloud-aws-sample-bucket2")
             s3Template.store("spring-cloud-aws-sample-bucket1", "test-file.txt", "test file content")
             s3Template.store("spring-cloud-aws-sample-bucket1", "my-file.txt", "my file content")
 
@@ -72,4 +73,15 @@ class SpringCloudAwsS3Sample {
 fun Resource.readContent(): String {
     val scanner = Scanner(this.inputStream).useDelimiter("\\A")
     return if (scanner.hasNext()) scanner.next() else ""
+}
+
+private fun S3Client.ensureBucketExists(bucketName: String) {
+    try {
+        headBucket { it.bucket(bucketName) }
+    } catch (e: S3Exception) {
+        if (e.statusCode() != 404) {
+            throw e
+        }
+        createBucket(bucketName) {}
+    }
 }
