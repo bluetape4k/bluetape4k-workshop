@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: leader-backend-comparison-lab
+  main:
+    banner-mode: off
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
