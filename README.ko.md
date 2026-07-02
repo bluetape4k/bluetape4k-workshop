@@ -210,6 +210,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 |------|------|----------------------|-------|-----------|
 | Basic | [`spring-security-mvc`](spring-security/mvc/) | `logging`, `spring-boot4-core` | In-memory | Spring Security MVC: JWT, 메서드 보안 |
 | Basic | [`spring-security-webflux`](spring-security/webflux/) | `coroutines`, `spring-boot4-core` | In-memory | Spring Security WebFlux: 리액티브 필터 체인 |
+| Basic | [`kotlin-text-processing`](kotlin/text-processing/) | `text-search`, `lingua`, `text-korean`, `text-japanese` | In-memory | 다국어 텍스트 정규화, 언어 감지, 검색 색인, 원문 span highlighting |
 | Basic | [`spring-modulith-module-boundaries`](spring-modulith/module-boundaries/) | Spring Modulith | In-memory | Named interface와 event contract로 module boundary 검증 |
 | Advanced | [`spring-modulith-events-deep-dive`](spring-modulith/events-deep-dive/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | 영속성을 갖춘 Modulith 애플리케이션 이벤트 |
 | Advanced | [`spring-modulith-jpa-demo`](spring-modulith/jpa-demo/) | `logging`, `testcontainers` | PostgreSQL (TC) | JPA를 활용한 Modulith 모듈 캡슐화 |

@@ -1,28 +1,67 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1471.2" height="460" viewBox="0 0 1471.2 460" role="img" aria-label="Kotlin text processing scenario flow diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1060" viewBox="0 0 1320 1060" role="img" aria-label="Kotlin text processing search flow diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#6B8F4E" stroke="#6B8F4E" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
     <style>
-      .canvas{fill:#F8FAFC}.frame{fill:#fff;stroke:#D6E0E8;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.cardTitle{font-family:"Architects Daughter";font-size:25px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.6}.laneBuild{fill:#EEF8F3;stroke:#A9D8C6;stroke-width:2}.laneSearch{fill:#F5F1FA;stroke:#CDB9EA;stroke-width:2}.title{font-family:"Architects Daughter";font-size:42px;fill:#172033}.subtitle{font-family:"Comic Mono";font-size:17px;fill:#536473}.legendText{font-family:"Comic Mono";font-size:15px;fill:#536473}.laneTitle{font-family:"Architects Daughter";font-size:27px;fill:#2D4050}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#132033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#4F6070}.legendBuild{fill:none;stroke:#4F86C6;stroke-width:4;stroke-linecap:round}.legendSearch{fill:none;stroke:#6B8F4E;stroke-width:4;stroke-linecap:round}.lineBuild{fill:none;stroke:#4F86C6;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrowBlue)}.lineSearch{fill:none;stroke:#6B8F4E;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrowGreen)}
     </style>
   </defs>
-  <rect class="canvas" width="1471.2" height="460"/>
-  <rect class="frame" x="26.749" y="24" width="1417.702" height="412" rx="24"/>
-  <text class="title" x="735.6" y="66" text-anchor="middle">Text processing flow</text>
-  <text class="subtitle" x="735.6" y="94" text-anchor="middle">Raw text can be normalized, searched for abuse words, or classified by language, then asserted in tests.</text>
+  <rect class="canvas" width="1320" height="1060"/>
+  <rect class="frame" x="32" y="28" width="1256" height="1004" rx="30"/>
+  <text class="title" x="660" y="78" text-anchor="middle">Multilingual Search Flow</text>
+  <text class="subtitle" x="660" y="112" text-anchor="middle">The example first builds reusable language-aware terms, then resolves query hits with source spans and highlights.</text>
+  <path class="legendBuild" d="M 458 132 L 514 132"/>
+  <text class="legendText" x="532" y="137">index build path</text>
+  <path class="legendSearch" d="M 690 132 L 746 132"/>
+  <text class="legendText" x="764" y="137">query search path</text>
 
-  <g filter="url(#shadow)"><rect x="91.393" y="210" width="245.2" height="84" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="1.895"/><text class="cardTitle" x="213.993" y="244" text-anchor="middle">Raw text</text><text class="cardText" x="213.993" y="270" text-anchor="middle">message or sentence</text></g>
-  <g filter="url(#shadow)"><rect x="423.527" y="210" width="245.2" height="84" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.895"/><text class="cardTitle" x="546.127" y="244" text-anchor="middle">Normalize</text><text class="cardText" x="546.127" y="270" text-anchor="middle">lowercase + whitespace</text></g>
-  <g filter="url(#shadow)"><rect x="777.953" y="132" width="278.636" height="84" rx="16" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.895"/><text class="cardTitle" x="917.271" y="166" text-anchor="middle">Abuse filter</text><text class="cardText" x="917.271" y="192" text-anchor="middle">mask and match spans</text></g>
-  <g filter="url(#shadow)"><rect x="777.953" y="290" width="278.636" height="84" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.895"/><text class="cardTitle" x="917.271" y="324" text-anchor="middle">Language detect</text><text class="cardText" x="917.271" y="350" text-anchor="middle">top language + confidence</text></g>
-  <g filter="url(#shadow)"><rect x="1147.982" y="210" width="245.2" height="84" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="1.895"/><text class="cardTitle" x="1270.582" y="244" text-anchor="middle">JUnit tests</text><text class="cardText" x="1270.582" y="270" text-anchor="middle">assertions per contract</text></g>
+  <rect class="laneBuild" x="86" y="150" width="1148" height="380" rx="24"/>
+  <text class="laneTitle" x="118" y="192">Index build path</text>
+  <g filter="url(#shadow)">
+    <rect class="card" x="430" y="210" width="460" height="70" rx="18" fill="#FFFFFF" stroke="#6FBF9C" stroke-width="2.4"/>
+    <text class="cardTitle" x="660" y="243" text-anchor="middle">1. Register SearchDocument list</text>
+    <text class="cardText" x="660" y="267" text-anchor="middle">id, title, English/Korean/Japanese body</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect class="card" x="430" y="315" width="460" height="70" rx="18" fill="#FFFFFF" stroke="#6FBF9C" stroke-width="2.4"/>
+    <text class="cardTitle" x="660" y="348" text-anchor="middle">2. Detect document language</text>
+    <text class="cardText" x="660" y="372" text-anchor="middle">reuse one Lingua-backed detector</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect class="card" x="430" y="420" width="460" height="70" rx="18" fill="#FFFFFF" stroke="#6FBF9C" stroke-width="2.4"/>
+    <text class="cardTitle" x="660" y="453" text-anchor="middle">3. Tokenize by language</text>
+    <text class="cardText" x="660" y="477" text-anchor="middle">Korean nouns, Japanese nouns, English keywords</text>
+  </g>
 
-  <path class="line" d="M 336.593 252 L 423.527 252" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 668.727 252 L 713.309 252 Q 724.455 252 724.455 242 L 724.455 184 Q 724.455 174 735.6 174 L 777.953 174" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 668.727 252 L 713.309 252 Q 724.455 252 724.455 262 L 724.455 322 Q 724.455 332 735.6 332 L 777.953 332" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1056.589 174 L 1090.025 174 Q 1101.171 174 1101.171 184 L 1101.171 242 Q 1101.171 252 1112.316 252 L 1147.982 252" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1056.589 332 L 1090.025 332 Q 1101.171 332 1101.171 322 L 1101.171 262 Q 1101.171 252 1112.316 252 L 1147.982 252" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect class="laneSearch" x="86" y="560" width="1148" height="470" rx="24"/>
+  <text class="laneTitle" x="118" y="602">Search request path</text>
+  <g filter="url(#shadow)">
+    <rect class="card" x="430" y="620" width="460" height="70" rx="18" fill="#FFFFFF" stroke="#9F7AD6" stroke-width="2.4"/>
+    <text class="cardTitle" x="660" y="653" text-anchor="middle">4. Store inverted term index</text>
+    <text class="cardText" x="660" y="677" text-anchor="middle">term to candidate document ids</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect class="card" x="430" y="725" width="460" height="70" rx="18" fill="#FFFFFF" stroke="#9F7AD6" stroke-width="2.4"/>
+    <text class="cardTitle" x="660" y="758" text-anchor="middle">5. Normalize and tokenize query</text>
+    <text class="cardText" x="660" y="782" text-anchor="middle">same language-aware term path</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect class="card" x="430" y="830" width="460" height="70" rx="18" fill="#FFFFFF" stroke="#9F7AD6" stroke-width="2.4"/>
+    <text class="cardTitle" x="660" y="863" text-anchor="middle">6. Scan candidate text</text>
+    <text class="cardText" x="660" y="887" text-anchor="middle">Aho-Corasick returns original offsets</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect class="card" x="430" y="935" width="460" height="70" rx="18" fill="#FFFFFF" stroke="#9F7AD6" stroke-width="2.4"/>
+    <text class="cardTitle" x="660" y="968" text-anchor="middle">7. Return highlighted hits</text>
+    <text class="cardText" x="660" y="992" text-anchor="middle">matches plus deterministic &lt;mark&gt; fragments</text>
+  </g>
+
+  <path class="lineBuild" data-connector="register-to-detect" d="M 660 280 L 660 315"/>
+  <path class="lineBuild" data-connector="detect-to-tokenize" d="M 660 385 L 660 420"/>
+  <path class="lineBuild" data-connector="tokenize-to-index" d="M 660 490 L 660 620"/>
+  <path class="lineSearch" data-connector="index-to-query" d="M 660 690 L 660 725"/>
+  <path class="lineSearch" data-connector="query-to-scan" d="M 660 795 L 660 830"/>
+  <path class="lineSearch" data-connector="scan-to-highlight" d="M 660 900 L 660 935"/>
 </svg>

@@ -13,6 +13,8 @@ dependencies {
     implementation(libs.bluetape4k.text.lingua)
     // bluetape4k-text — Korean tokenizer / blockword processing
     implementation(libs.bluetape4k.text.korean)
+    // bluetape4k-text — Japanese tokenizer / blockword processing
+    implementation(libs.bluetape4k.text.japanese)
 
     implementation(libs.bluetape4k.logging)
 

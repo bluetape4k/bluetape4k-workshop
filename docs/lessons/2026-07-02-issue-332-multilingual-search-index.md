@@ -1,0 +1,32 @@
+# Issue 332 Multilingual Search Index
+
+## Context
+
+Issue #332 adds a `kotlin/text-processing` workshop extension for multilingual search indexing and highlighting. The goal is learner clarity while reusing the bluetape4k text ecosystem instead of replacing the existing text-processing example.
+
+## Decision
+
+- Keep the example in memory so learners can inspect the text-processing pipeline without database or service setup.
+- Reuse `LanguageDetectionService` for documents and queries because Lingua detector construction is expensive.
+- Use language-specific tokenizers:
+  - Korean: `KoreanProcessor.normalize` plus noun tokens.
+  - Japanese: `JapaneseProcessor.tokenize` plus noun filtering.
+  - English/unknown: `TextNormalizer.extractKeywords`.
+- Use Aho-Corasick for deterministic source-span matches and `<mark>` rendering.
+- Reject duplicate `SearchDocument.id` values because ids are the index key.
+
+## Outcome
+
+The module now includes `MultilingualSearchIndex`, `SearchDocument`, `IndexedDocument`, `SearchHighlightMatch`, and `SearchHighlightHit`, with tests for English, Korean, Japanese, no-match, case normalization, overlaps, language recording, and duplicate ids.
+
+## Verification
+
+- `:kotlin-text-processing:compileKotlin`
+- `:kotlin-text-processing:compileTestKotlin`
+- `:kotlin-text-processing:test` with 34 passing tests
+- README stale/image checks
+- Full bluetape4k diagram checklist plus rendered PNG eye check
+
+## Future Notes
+
+If this example grows beyond in-memory search, preserve the same visible contracts first: language detection reuse, tokenizer choice, source offsets, and explicit highlight limitations.

@@ -3,8 +3,8 @@
 [한국어](README.ko.md) | English
 
 This module demonstrates in-process text utilities built on `bluetape4k-text` and small Kotlin
-helpers. It covers three reader-visible tasks: abuse-word filtering, language detection, and text
-normalization before search or indexing.
+helpers. It covers four reader-visible tasks: abuse-word filtering, language detection, text
+normalization before indexing, and a small multilingual search index with highlighted results.
 
 ## Architecture
 
@@ -21,6 +21,7 @@ normalization before search or indexing.
 | `AbuseWordFilter` | `AhoCorasickAutomaton` from `text-search` | Case-insensitive NFC matching with overlaps; masks matched spans with `*` |
 | `LanguageDetectionService` | Lingua detector from `bluetape4k-text-lingua` | Reuses one detector and returns `null` for blank or unknown text |
 | `TextNormalizer` | pure Kotlin object | Lowercases text, collapses whitespace, extracts deduplicated keywords |
+| `MultilingualSearchIndex` | `LanguageDetectionService`, `KoreanProcessor`, `JapaneseProcessor`, `TextNormalizer`, `AhoCorasickAutomaton` | Detects document/query language, builds an inverted term index, ranks matched documents, and emits source-span highlights |
 
 ## Usage
 
@@ -60,6 +61,44 @@ TextNormalizer.extractKeywords("the quick brown fox")          // ["the", "quick
 TextNormalizer.extractKeywords("a b quick", minKeywordLength = 4) // ["quick"]
 ```
 
+### Multilingual search index
+
+```kotlin
+val index = MultilingualSearchIndex.indexOf(
+    listOf(
+        SearchDocument.of(
+            id = "ko-1",
+            title = "Korean indexing",
+            text = "코틀린 검색 인덱스는 한국어 명사를 토큰으로 사용합니다.",
+        ),
+        SearchDocument.of(
+            id = "ja-1",
+            title = "Japanese indexing",
+            text = "検索インデックスは日本語の名詞をトークンとして保存します。",
+        ),
+    ),
+)
+
+val hits = index.search("한국어 검색")
+hits.first().highlightedText   // source text with <mark>...</mark> fragments
+hits.first().matches           // original start/end offsets for matched terms
+```
+
+The example deliberately keeps the index in memory so the language-processing path is easy to
+inspect:
+
+- Korean text uses `KoreanProcessor.normalize` plus noun tokens.
+- Japanese text uses `JapaneseProcessor.tokenize` plus noun filtering.
+- English and unknown text use `TextNormalizer.extractKeywords`.
+- `SearchDocument.id` is the index key and must be unique within one index.
+- `LanguageDetectionService` is reused for every document and query because Lingua detector
+  construction is expensive.
+- Highlighting is literal term matching against the original source text. It is not stemming,
+  semantic search, or typo-tolerant search.
+- Overlapping matches are preserved in `SearchHighlightHit.matches`. The rendered
+  `highlightedText` uses deterministic non-overlapping fragments from Aho-Corasick tokenization,
+  so nested `<mark>` tags are intentionally avoided.
+
 ## Dependencies
 
 The module uses the repository version catalog:
@@ -69,5 +108,6 @@ dependencies {
     implementation(libs.bluetape4k.text.search)
     implementation(libs.bluetape4k.text.lingua)
     implementation(libs.bluetape4k.text.korean)
+    implementation(libs.bluetape4k.text.japanese)
 }
 ```
