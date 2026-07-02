@@ -46,7 +46,7 @@ services or IMDS.
 | S3 client | AWS SDK v2 `S3Client`; blocking calls are wrapped in `Dispatchers.IO` in the storage abstraction module. |
 | DynamoDB client | AWS Kotlin SDK `DynamoDbClient` installed through `DynamoDbKtorPlugin` in `ktor-dynamodb/`. |
 | EventBridge and Scheduler | AWS SDK v2 `PutEventsRequestEntry` model plus local publisher/scheduler boundaries in `eventbridge-scheduler/`. |
-| SQS and SNS messaging | bluetape4k `SqsOperations` and `SnsOperations` with local adapters in `sqs-sns-coroutines/`. |
+| SQS and SNS messaging | bluetape4k `SqsOperations` and `SnsOperations` with local adapters plus Floci integration tests in `sqs-sns-coroutines/`. |
 | Spring integration | Spring Cloud AWS `S3Template` and `ResourceLoader` in `s3-spring-cloud/`; Spring profiles in `storage-abstraction/`. |
 | Vector and access boundaries | `s3-vectors-access-grants/` uses bluetape4k `S3VectorsOperations` and `S3AccessGrantsOperations` local adapters by default. |
 | Observability | `cloudwatch-imds-observability/` publishes local CloudWatch intent by default and reads IMDS metadata only when explicitly requested. |

@@ -4,8 +4,10 @@
 
 This example teaches a local-first coroutine boundary for AWS SNS publish and
 SQS consume flows. The default beans are in-memory adapters, so learners can run
-the publish, poll, retry, and dead-letter paths without an AWS account, AWS
-credentials, Docker, or LocalStack.
+the application without an AWS account, AWS credentials, Docker, or LocalStack.
+The test suite also includes a Floci/Testcontainers integration test that uses
+real bluetape4k `SnsCoroutinesTemplate` and `SqsCoroutinesTemplate` clients
+against a local AWS-compatible endpoint.
 
 ## Architecture
 
@@ -15,7 +17,8 @@ credentials, Docker, or LocalStack.
 the request, serializes an `OrderNotificationEvent`, publishes the JSON payload
 through bluetape4k `SnsOperations`, polls bluetape4k `SqsOperations`, and returns
 explicit reports instead of hiding side effects. Local `SnsOperations` and
-`SqsOperations` beans are registered only when no real beans exist.
+`SqsOperations` beans are registered only when no real beans exist. The service
+uses `Jackson.defaultJsonMapper` from `bluetape4k-jackson3` for JSON payloads.
 
 ## Request Flow
 
@@ -35,7 +38,7 @@ is always rethrown so coroutine cancellation is not converted into a report.
 | Retry classification | Handler failures call `changeVisibility(..., timeoutSeconds = 0)` and return `RETRY_REQUESTED`. |
 | Dead-letter classification | Messages at or above `maxReceiveCount` are deleted and returned as `DEAD_LETTER`. |
 | Metrics | `OrderNotificationMetrics` records publish timing and consume result counters with Micrometer. |
-| Local safety | Default tests and smoke runs never contact real AWS services. |
+| Local safety | `bootRun` never contacts real AWS services by default; integration tests use Floci instead of real AWS. |
 
 ## Run Locally
 
@@ -43,6 +46,9 @@ is always rethrown so coroutine cancellation is not converted into a report.
 ./gradlew :aws-sqs-sns-coroutines:test
 ./gradlew :aws-sqs-sns-coroutines:bootRun
 ```
+
+`test` starts a Floci Testcontainers AWS emulator. Use Docker locally, and keep
+this module in sequential container-backed CI lanes.
 
 The module is intentionally service-first. Use the test class as the executable
 walkthrough for publish, ack, retry, dead-letter, validation, and cancellation
@@ -82,6 +88,9 @@ cost, retry policy, and queue/topic subscription wiring are understood.
 ./gradlew :aws-sqs-sns-coroutines:test
 ```
 
-The tests verify SNS request mapping, SQS ack, retry and dead-letter
+The unit tests verify SNS request mapping, SQS ack, retry and dead-letter
 classification, metrics, property validation, request validation, and coroutine
-cancellation propagation without real AWS credentials.
+cancellation propagation. `OrderNotificationFlociIntegrationTest` verifies SNS
+publish and SQS consume through real bluetape4k operation templates, Floci,
+Awaitility `untilSuspending`, and `Jackson.defaultJsonMapper` without real AWS
+credentials.

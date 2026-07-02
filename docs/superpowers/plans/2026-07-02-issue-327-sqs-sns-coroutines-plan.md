@@ -9,12 +9,15 @@ teaches SNS publish, SQS coroutine consumption, retry/dead-letter
 classification, and Micrometer outcome metrics.
 
 **Architecture:** Spring Boot service code uses `SnsOperations` and
-`SqsOperations` from `bluetape4k-aws-spring-boot`. The default runtime and tests
-use in-memory local operations so the module does not need AWS credentials.
+`SqsOperations` from `bluetape4k-aws-spring-boot`. The default runtime uses
+conditional in-memory local operations, while integration tests use
+`FlociServer.Launcher.floci` with real bluetape4k coroutine operation templates
+so the module does not need AWS credentials.
 
 **Tech Stack:** Kotlin 2.4, Java 21, Spring Boot 4, bluetape4k core/assertions,
-bluetape4k-aws Spring Boot SQS/SNS operations, Jackson 3, Micrometer core, JUnit
-5, MockK where useful.
+bluetape4k-aws Spring Boot SQS/SNS operations, `bluetape4k-jackson3`
+`Jackson.defaultJsonMapper`, Micrometer core, Awaitility `untilSuspending`,
+Floci/Testcontainers, JUnit 5, MockK where useful.
 
 ## File Structure
 
@@ -51,11 +54,15 @@ bluetape4k-aws Spring Boot SQS/SNS operations, Jackson 3, Micrometer core, JUnit
 - [x] Add model data classes with `Serializable` and `serialVersionUID`.
 - [x] Add `SqsSnsMessagingProperties` with local-safe defaults.
 - [x] Add `OrderNotificationMetrics` helper.
+- [x] Add `JacksonMessagingConfig` with `Jackson.defaultJsonMapper`.
 - [x] Add `OrderNotificationMessagingService` with validation helpers,
   cancellation rethrow, SNS mapping, SQS processing, retry/dead-letter
   classification, and metrics.
 - [x] Add local in-memory `SnsOperations` and `SqsOperations` beans for default
   runtime only when real beans are absent.
+- [x] Add `OrderNotificationFlociIntegrationTest` with `FlociServer.Launcher.floci`,
+  real `SnsCoroutinesTemplate`/`SqsCoroutinesTemplate`, and Awaitility
+  `untilSuspending` polling.
 - [x] Run targeted test until green.
 
 ### Task 3: Add README and diagrams
@@ -71,9 +78,10 @@ bluetape4k-aws Spring Boot SQS/SNS operations, Jackson 3, Micrometer core, JUnit
 ### Task 4: Register validation and CI
 
 - [x] Update `scripts/smoke-validate.sh` `all-smoke`, `aws`, and `stale-check`
-  expected project count.
-- [x] Update `.github/workflows/Examples.yml` path filters, smoke command,
-  artifact paths, and comments.
+  expected project count; keep the Floci-backed module out of non-container
+  `all-smoke`.
+- [x] Update `.github/workflows/Examples.yml` path filters, smoke/container
+  commands, artifact paths, and comments.
 - [x] Run `actionlint .github/workflows/Examples.yml`.
 
 ### Task 5: Verify
@@ -92,18 +100,20 @@ bluetape4k-aws Spring Boot SQS/SNS operations, Jackson 3, Micrometer core, JUnit
 - [x] Run Step 6-R 7-Tier review with P0/P1 convergence.
 - [x] Save `docs/review/2026-07-02-issue-327-sqs-sns-coroutines-review.md`.
 - [x] Add `docs/lessons/2026-07-02-issue-327-sqs-sns-coroutines.md`.
-- [ ] Commit with Lore trailers.
-- [ ] Create PR with body ending in `## DoD Status`.
-- [ ] Verify PR milestone, assignee, labels, body, and CI checks.
+- [x] Commit with Lore trailers.
+- [x] Create PR with body ending in `## DoD Status`.
+- [x] Verify PR milestone, assignee, labels, body, and CI checks.
 
 ## Verification Evidence
 
-- Targeted compile/test: `OrderNotificationMessagingServiceTest` 7 tests passed,
-  `BUILD SUCCESSFUL`.
+- Targeted compile: `./gradlew :aws-sqs-sns-coroutines:compileKotlin
+  :aws-sqs-sns-coroutines:compileTestKotlin --warning-mode all --max-workers=1
+  --console=plain` -> `BUILD SUCCESSFUL`.
 - Re-run test: `./gradlew :aws-sqs-sns-coroutines:test --no-build-cache
-  --rerun-tasks --max-workers=1 --console=plain` -> 7 tests passed,
-  `BUILD SUCCESSFUL`.
-- AWS smoke: `./scripts/smoke-validate.sh aws` -> `BUILD SUCCESSFUL`.
+  --rerun-tasks --max-workers=1 --console=plain` -> 8 tests passed,
+  including `OrderNotificationFlociIntegrationTest`, `BUILD SUCCESSFUL`.
+- AWS smoke: `./scripts/smoke-validate.sh aws` -> `BUILD SUCCESSFUL`;
+  `aws-sqs-sns-coroutines` ran 8 tests including the Floci integration test.
 - All smoke: `./scripts/smoke-validate.sh all-smoke` -> `BUILD SUCCESSFUL`.
 - Stale check: active modules `97 (expected: 97)`, no stale refs, no broken
   image links.
@@ -119,4 +129,5 @@ bluetape4k-aws Spring Boot SQS/SNS operations, Jackson 3, Micrometer core, JUnit
 - Placeholder scan: no TODO/TBD placeholders are left as implementation steps.
 - Type consistency: module, package, and class names consistently use
   `sqs-sns-coroutines`, `sqssns`, and `OrderNotification*`.
-- Risk: real AWS/LocalStack validation is explicitly opt-in, not default CI.
+- Risk: real AWS is not used; Floci/Testcontainers validation is default for
+  this module's `test` task and is kept in sequential container-backed lanes.

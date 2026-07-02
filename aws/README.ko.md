@@ -47,7 +47,7 @@ AWS 서비스나 IMDS를 호출하지 않습니다.
 | S3 client | AWS SDK v2 `S3Client`를 사용합니다. storage abstraction 모듈은 blocking 호출을 `Dispatchers.IO`로 감쌉니다. |
 | DynamoDB client | `ktor-dynamodb/`에서 `DynamoDbKtorPlugin`을 통해 AWS Kotlin SDK `DynamoDbClient`를 설치합니다. |
 | EventBridge and Scheduler | `eventbridge-scheduler/`에서 AWS SDK v2 `PutEventsRequestEntry` 모델과 로컬 publisher/scheduler 경계를 사용합니다. |
-| SQS and SNS messaging | `sqs-sns-coroutines/`에서 bluetape4k `SqsOperations`와 `SnsOperations`를 local adapter와 함께 사용합니다. |
+| SQS and SNS messaging | `sqs-sns-coroutines/`에서 bluetape4k `SqsOperations`와 `SnsOperations`를 local adapter 및 Floci 통합 테스트와 함께 사용합니다. |
 | Spring integration | `s3-spring-cloud/`는 Spring Cloud AWS `S3Template`과 `ResourceLoader`를, `storage-abstraction/`은 Spring profile을 사용합니다. |
 | Vector and access boundaries | `s3-vectors-access-grants/`는 기본적으로 bluetape4k `S3VectorsOperations`와 `S3AccessGrantsOperations` local adapter를 사용합니다. |
 | Observability | `cloudwatch-imds-observability/`는 기본적으로 로컬 CloudWatch intent를 publish하고, 명시적으로 요청한 경우에만 IMDS metadata를 읽습니다. |

@@ -12,6 +12,7 @@ import io.bluetape4k.aws.spring.sns.SnsSmsRequest
 import io.bluetape4k.aws.spring.sqs.SqsOperations
 import io.bluetape4k.aws.spring.sqs.SqsReceivedMessage
 import io.bluetape4k.aws.spring.sqs.SqsSendRequest
+import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Test
@@ -30,7 +31,6 @@ import java.time.ZoneOffset
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
-import tools.jackson.module.kotlin.jacksonObjectMapper
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OrderNotificationMessagingServiceTest {
@@ -149,7 +149,7 @@ class OrderNotificationMessagingServiceTest {
         val sqs = CapturingSqsOperations()
         val handler = CapturingHandler()
         val meterRegistry = SimpleMeterRegistry()
-        val objectMapper = jacksonObjectMapper()
+        val objectMapper = Jackson.defaultJsonMapper
         val properties = SqsSnsMessagingProperties(
             topicArn = TOPIC_ARN,
             queueUrl = QUEUE_URL,
