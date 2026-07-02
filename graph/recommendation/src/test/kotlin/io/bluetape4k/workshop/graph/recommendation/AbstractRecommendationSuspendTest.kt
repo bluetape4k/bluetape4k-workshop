@@ -4,10 +4,14 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldContainAll
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.graph.repository.GraphSuspendOperations
+import io.bluetape4k.workshop.graph.recommendation.model.RecommendationExclusionReason.ALREADY_FOLLOWED
+import io.bluetape4k.workshop.graph.recommendation.model.RecommendationExclusionReason.ALREADY_PURCHASED
+import io.bluetape4k.workshop.graph.recommendation.model.RecommendationExclusionReason.SELF
 import io.bluetape4k.workshop.graph.recommendation.schema.PurchasedLabel
 import io.bluetape4k.workshop.graph.recommendation.schema.UserLabel
 import io.bluetape4k.workshop.graph.recommendation.seed.PROD_HEADPHONES
@@ -304,6 +308,43 @@ abstract class AbstractRecommendationSuspendTest {
         results.first().product.properties["productId"] shouldBeEqualTo PROD_HEADPHONES
     }
 
+    @Test
+    fun `explainProductRecommendations returns co-buyer evidence and exclusions`() = runSuspendIO {
+        val seed = seedRecommendation(service)
+
+        val results = service.explainProductRecommendations(seed.alice.id)
+
+        results.map { it.recommendation.product.properties["productId"]?.toString() } shouldBeEqualTo
+                listOf(PROD_HEADPHONES, PROD_KEYBOARD, PROD_MOUSE)
+
+        val headphones = results.first { it.recommendation.product.id == seed.headphones.id }
+        headphones.recommendation.score shouldBeEqualTo 3
+        headphones.evidencePaths shouldHaveSize 3
+        headphones.evidencePaths.map { it.sharedProduct.id }.toSet() shouldBeEqualTo
+                setOf(seed.laptop.id, seed.phone.id, seed.tablet.id)
+        headphones.evidencePaths.map { it.coBuyer.id }.toSet() shouldBeEqualTo
+                setOf(seed.bob.id, seed.carol.id, seed.dave.id)
+        headphones.evidencePaths.map { it.candidateProduct.id }.toSet() shouldBeEqualTo
+                setOf(seed.headphones.id)
+
+        val exclusions = headphones.excludedCandidates.associate { it.candidateId to it.reason }
+        exclusions.keys shouldContainAll listOf(seed.laptop.id, seed.phone.id, seed.tablet.id)
+        exclusions[seed.laptop.id] shouldBeEqualTo ALREADY_PURCHASED
+        exclusions[seed.phone.id] shouldBeEqualTo ALREADY_PURCHASED
+        exclusions[seed.tablet.id] shouldBeEqualTo ALREADY_PURCHASED
+    }
+
+    @Test
+    fun `explainProductRecommendations limit 1 returns only top explanation`() = runSuspendIO {
+        val seed = seedRecommendation(service)
+
+        val results = service.explainProductRecommendations(seed.alice.id, limit = 1)
+
+        results shouldHaveSize 1
+        results.first().recommendation.product.properties["productId"] shouldBeEqualTo PROD_HEADPHONES
+        results.first().evidencePaths shouldHaveSize 3
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     // 5. recommendFollows
     // ─────────────────────────────────────────────────────────────────────────
@@ -401,5 +442,46 @@ abstract class AbstractRecommendationSuspendTest {
         val eveRec = results.first { it.person.properties[UserLabel.userId.name] == USER_EVE }
 
         eveRec.mutualFollows.map { it.id } shouldContain seed.carol.id
+    }
+
+    @Test
+    fun `explainFollowRecommendations returns intermediary evidence and direct-follow exclusions`() = runSuspendIO {
+        val seed = seedRecommendation(service)
+
+        val results = service.explainFollowRecommendations(seed.alice.id)
+        val userIds = results.map { it.recommendation.person.properties[UserLabel.userId.name] as? String }
+
+        userIds shouldBeEqualTo listOf(USER_DAVE, USER_EVE)
+
+        val dave = results.first { it.recommendation.person.id == seed.dave.id }
+        dave.recommendation.mutualFollowCount shouldBeEqualTo 1
+        dave.evidencePaths.map { it.intermediary.id } shouldContain seed.bob.id
+        dave.evidencePaths.map { it.candidate.id }.toSet() shouldBeEqualTo setOf(seed.dave.id)
+
+        val eve = results.first { it.recommendation.person.id == seed.eve.id }
+        eve.recommendation.mutualFollowCount shouldBeEqualTo 1
+        eve.evidencePaths.map { it.intermediary.id } shouldContain seed.carol.id
+        eve.evidencePaths.map { it.candidate.id }.toSet() shouldBeEqualTo setOf(seed.eve.id)
+
+        val exclusions = dave.excludedCandidates.associate { it.candidateId to it.reason }
+        exclusions.keys shouldContainAll listOf(seed.bob.id, seed.carol.id)
+        exclusions[seed.bob.id] shouldBeEqualTo ALREADY_FOLLOWED
+        exclusions[seed.carol.id] shouldBeEqualTo ALREADY_FOLLOWED
+    }
+
+    @Test
+    fun `explainFollowRecommendations records self exclusion when depth two traversal returns seed user`() = runSuspendIO {
+        val seed = seedRecommendation(service)
+        service.follow(seed.bob.id, seed.alice.id)
+
+        val results = service.explainFollowRecommendations(seed.alice.id)
+        val resultIds = results.map { it.recommendation.person.id }
+
+        resultIds shouldNotContain seed.alice.id
+        val selfExclusions = results.flatMap { it.excludedCandidates }
+            .filter { it.candidateId == seed.alice.id }
+        selfExclusions.shouldNotBeEmpty()
+        selfExclusions.map { it.reason }.toSet() shouldBeEqualTo setOf(SELF)
+        selfExclusions.map { it.via?.id }.toSet() shouldBeEqualTo setOf(seed.bob.id)
     }
 }

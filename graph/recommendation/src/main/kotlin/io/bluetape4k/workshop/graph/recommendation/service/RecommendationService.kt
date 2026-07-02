@@ -12,8 +12,16 @@ import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.graph.recommendation.DEFAULT_RECOMMENDATION_LIMIT
 import io.bluetape4k.workshop.graph.recommendation.MAX_RECOMMENDATION_LIMIT
+import io.bluetape4k.workshop.graph.recommendation.model.CandidateExclusion
+import io.bluetape4k.workshop.graph.recommendation.model.ExplainedFollowRecommendation
+import io.bluetape4k.workshop.graph.recommendation.model.ExplainedProductRecommendation
+import io.bluetape4k.workshop.graph.recommendation.model.FollowEvidencePath
 import io.bluetape4k.workshop.graph.recommendation.model.FollowRecommendation
+import io.bluetape4k.workshop.graph.recommendation.model.ProductEvidencePath
 import io.bluetape4k.workshop.graph.recommendation.model.ProductRecommendation
+import io.bluetape4k.workshop.graph.recommendation.model.RecommendationExclusionReason.ALREADY_FOLLOWED
+import io.bluetape4k.workshop.graph.recommendation.model.RecommendationExclusionReason.ALREADY_PURCHASED
+import io.bluetape4k.workshop.graph.recommendation.model.RecommendationExclusionReason.SELF
 import io.bluetape4k.workshop.graph.recommendation.schema.FollowsLabel
 import io.bluetape4k.workshop.graph.recommendation.schema.ProductLabel
 import io.bluetape4k.workshop.graph.recommendation.schema.PurchasedLabel
@@ -35,8 +43,9 @@ import io.bluetape4k.workshop.graph.recommendation.schema.UserLabel
  *
  * ## Known Limitations (workshop demo scope)
  * - **N+1 traversal**: [recommendProducts] issues one neighbor query per seed product and one per
- *   co-buyer; [recommendFollows] issues one per depth-2 candidate. The `limit` parameter bounds
- *   output count, not I/O calls. For large graphs, replace with native Cypher/Gremlin queries.
+ *   co-buyer; [recommendFollows] issues one outgoing neighbor query per direct follow. The `limit`
+ *   parameter bounds output count, not I/O calls. For large graphs, replace with native
+ *   Cypher/Gremlin queries.
  * - **TOCTOU in [initialize]**: The `graphExists → createGraph` check is not atomic and assumes
  *   a single-instance deployment. Concurrent callers may attempt duplicate creation — acceptable
  *   for this demo; production code should use advisory locking or server-side upsert semantics.
@@ -185,6 +194,21 @@ class RecommendationService(
      * @return ranked list of [ProductRecommendation]; `emptyList()` when user not found or has no purchases
      */
     fun recommendProducts(userVertexId: GraphElementId, limit: Int = DEFAULT_RECOMMENDATION_LIMIT): List<ProductRecommendation> {
+        return explainProductRecommendations(userVertexId, limit).map { it.recommendation }
+    }
+
+    /**
+     * Returns product recommendations with the concrete co-buyer paths and exclusion rules
+     * that explain each score.
+     *
+     * [ProductRecommendation.score] still equals the number of distinct co-buyers. The
+     * [ExplainedProductRecommendation.evidencePaths] list keeps the human-readable path
+     * details: seed product → co-buyer → candidate product.
+     */
+    fun explainProductRecommendations(
+        userVertexId: GraphElementId,
+        limit: Int = DEFAULT_RECOMMENDATION_LIMIT,
+    ): List<ExplainedProductRecommendation> {
         limit.requireInRange(1, MAX_RECOMMENDATION_LIMIT, "limit")
 
         val myProducts = ops.neighbors(userVertexId, NeighborOptions(PurchasedLabel.label, Direction.OUTGOING, 1))
@@ -193,9 +217,10 @@ class RecommendationService(
             return emptyList()
         }
         val myProductIds = myProducts.map { it.id }.toSet()
+        val excludedCandidates = myProducts.map { CandidateExclusion(it.id, ALREADY_PURCHASED) }
 
-        // candidateMap: candidateProductId → (candidateVertex, Set<coBuyerVertex>)
-        val candidateMap = mutableMapOf<GraphElementId, Pair<GraphVertex, MutableSet<GraphVertex>>>()
+        // candidateMap: candidateProductId → (candidateVertex, evidence paths)
+        val candidateMap = mutableMapOf<GraphElementId, Pair<GraphVertex, MutableList<ProductEvidencePath>>>()
 
         for (product in myProducts) {
             val coBuyers = ops.neighbors(product.id, NeighborOptions(PurchasedLabel.label, Direction.INCOMING, 1))
@@ -208,19 +233,27 @@ class RecommendationService(
                 ).filter { it.id !in myProductIds }
 
                 for (candidate in theirProducts) {
-                    candidateMap.getOrPut(candidate.id) { candidate to mutableSetOf() }
-                        .second += coBuyer
+                    candidateMap.getOrPut(candidate.id) { candidate to mutableListOf() }
+                        .second += ProductEvidencePath(product, coBuyer, candidate)
                 }
             }
         }
 
         return candidateMap.values
-            .map { (product, coBuyers) ->
-                ProductRecommendation(product, coBuyers.size, coBuyers.toList())
+            .map { (product, evidencePaths) ->
+                val distinctPaths = evidencePaths.distinctBy {
+                    Triple(it.sharedProduct.id, it.coBuyer.id, it.candidateProduct.id)
+                }
+                val sharedBuyers = distinctPaths.distinctBy { it.coBuyer.id }.map { it.coBuyer }
+                ExplainedProductRecommendation(
+                    recommendation = ProductRecommendation(product, sharedBuyers.size, sharedBuyers),
+                    evidencePaths = distinctPaths,
+                    excludedCandidates = excludedCandidates,
+                )
             }
             .sortedWith(
-                compareByDescending<ProductRecommendation> { it.score }
-                    .thenBy { it.product.properties[ProductLabel.productId.name]?.toString() ?: "" }
+                compareByDescending<ExplainedProductRecommendation> { it.recommendation.score }
+                    .thenBy { it.recommendation.product.properties[ProductLabel.productId.name]?.toString() ?: "" }
             )
             .take(limit)
     }
@@ -230,13 +263,12 @@ class RecommendationService(
      *
      * Already-followed users and the seed user itself are excluded from results.
      *
-     * **N+1 warning**: issues one INCOMING neighbor query per depth-2 candidate.
+     * **N+1 warning**: issues one OUTGOING neighbor query per direct follow.
      *
      * ## Algorithm
      * 1. Collect seed's direct follows (OUTGOING FOLLOWS depth-1).
-     * 2. Collect depth-2 candidates (OUTGOING FOLLOWS depth-2); exclude seed and already-followed.
-     * 3. For each candidate, count how many of seed's follows also follow that candidate
-     *    (INCOMING FOLLOWS on candidate, intersected with seed's follow IDs).
+     * 2. For each direct follow, collect their outgoing follows as candidate paths.
+     * 3. Exclude the seed user and already-followed users; record the exclusion reason.
      * 4. Sort by mutual-follow count descending, then by `userId` ascending for tie-breaking.
      *
      * @param userVertexId GraphVertex.id returned by [addUser]
@@ -244,6 +276,19 @@ class RecommendationService(
      * @return ranked list of [FollowRecommendation]; `emptyList()` when user not found or has no follows
      */
     fun recommendFollows(userVertexId: GraphElementId, limit: Int = DEFAULT_RECOMMENDATION_LIMIT): List<FollowRecommendation> {
+        return explainFollowRecommendations(userVertexId, limit).map { it.recommendation }
+    }
+
+    /**
+     * Returns follow recommendations with FOAF evidence and excluded candidate rules.
+     *
+     * The evidence path is `seed user -> intermediary -> candidate`. Already-followed
+     * users and the seed user itself are recorded in [ExplainedFollowRecommendation.excludedCandidates].
+     */
+    fun explainFollowRecommendations(
+        userVertexId: GraphElementId,
+        limit: Int = DEFAULT_RECOMMENDATION_LIMIT,
+    ): List<ExplainedFollowRecommendation> {
         limit.requireInRange(1, MAX_RECOMMENDATION_LIMIT, "limit")
 
         val myFollows = ops.neighbors(userVertexId, NeighborOptions(FollowsLabel.label, Direction.OUTGOING, 1))
@@ -252,24 +297,46 @@ class RecommendationService(
             return emptyList()
         }
         val myFollowIds = myFollows.map { it.id }.toSet()
+        val excludedCandidates = myFollows.map { CandidateExclusion(it.id, ALREADY_FOLLOWED) }.toMutableList()
+        val candidateMap = mutableMapOf<GraphElementId, Pair<GraphVertex, MutableList<FollowEvidencePath>>>()
 
-        val candidates = ops.neighbors(userVertexId, NeighborOptions(FollowsLabel.label, Direction.OUTGOING, 2))
-            .filter { it.id != userVertexId && it.id !in myFollowIds }
-            .distinctBy { it.id }
+        for (intermediary in myFollows) {
+            val candidates = ops.neighbors(
+                intermediary.id,
+                NeighborOptions(FollowsLabel.label, Direction.OUTGOING, 1)
+            )
 
-        return candidates
-            .map { candidate ->
-                val whoFollowsCandidate = ops.neighbors(
-                    candidate.id,
-                    NeighborOptions(FollowsLabel.label, Direction.INCOMING, 1)
-                )
-                val intermediaries = whoFollowsCandidate.filter { it.id in myFollowIds }
-                FollowRecommendation(candidate, intermediaries.size, intermediaries)
+            for (candidate in candidates) {
+                when {
+                    candidate.id == userVertexId ->
+                        excludedCandidates += CandidateExclusion(candidate.id, SELF, intermediary)
+
+                    candidate.id in myFollowIds ->
+                        excludedCandidates += CandidateExclusion(candidate.id, ALREADY_FOLLOWED, intermediary)
+
+                    else ->
+                        candidateMap.getOrPut(candidate.id) { candidate to mutableListOf() }
+                            .second += FollowEvidencePath(intermediary, candidate)
+                }
             }
-            .filter { it.mutualFollowCount > 0 }
+        }
+
+        val distinctExclusions = excludedCandidates.distinctBy { Triple(it.candidateId, it.reason, it.via?.id) }
+
+        return candidateMap.values
+            .map { (candidate, evidencePaths) ->
+                val distinctPaths = evidencePaths.distinctBy { it.intermediary.id to it.candidate.id }
+                val intermediaries = distinctPaths.distinctBy { it.intermediary.id }.map { it.intermediary }
+                ExplainedFollowRecommendation(
+                    recommendation = FollowRecommendation(candidate, intermediaries.size, intermediaries),
+                    evidencePaths = distinctPaths,
+                    excludedCandidates = distinctExclusions,
+                )
+            }
+            .filter { it.recommendation.mutualFollowCount > 0 }
             .sortedWith(
-                compareByDescending<FollowRecommendation> { it.mutualFollowCount }
-                    .thenBy { it.person.properties[UserLabel.userId.name]?.toString() ?: "" }
+                compareByDescending<ExplainedFollowRecommendation> { it.recommendation.mutualFollowCount }
+                    .thenBy { it.recommendation.person.properties[UserLabel.userId.name]?.toString() ?: "" }
             )
             .take(limit)
     }
