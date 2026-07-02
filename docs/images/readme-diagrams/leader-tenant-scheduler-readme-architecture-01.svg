@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1280" viewBox="0 0 1500 1280" role="img" aria-labelledby="title desc">
+  <title id="title">Tenant-Scoped Leader Scheduler Architecture</title>
+  <desc id="desc">A learner configures tenants and a job, validates tenant-safe lock names, runs a deterministic scheduler reducer, then reads bounded tenant metrics and a run report.</desc>
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#64748B" flood-opacity="0.13"/>
+    </filter>
+    <style>
+      .bg{fill:#F8FAFC}.title{font-family:"Architects Daughter";font-size:42px;fill:#263238}.subtitle,.body,.small,.legendText,.footer{font-family:"Comic Mono";fill:#3B4A54}.subtitle{font-size:18px}.layerTitle{font-family:"Architects Daughter";font-size:24px;fill:#344154}.layerNote{font-family:"Comic Mono";font-size:13px;fill:#667783}.layer{stroke:#CBD6DF;stroke-width:2}.layerLearn{fill:#F9FCFF}.layerDomain{fill:#F8FBF5}.layerSchedule{fill:#FCFAF5}.layerOutput{fill:#F7FCFB}.card{stroke-width:2.2}.blue{fill:#EFF6FF;stroke:#4F86C6}.green{fill:#F0F8F0;stroke:#6E8F4F}.amber{fill:#FFF7E8;stroke:#9B7D54}.teal{fill:#EBFAF8;stroke:#2D948C}.red{fill:#FFF0F0;stroke:#B86868}.cardTitle{font-family:"Architects Daughter";font-size:25px;fill:#16202A}.body{font-size:15px}.small{font-size:13px;fill:#5C6E78}.connector{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}.learn{stroke:#4F86C6}.domain{stroke:#6E8F4F}.state{stroke:#2D948C}.metric{stroke:#9B7D54}.alert{stroke:#B86868}.arrowHead{stroke-dasharray:none;stroke-linejoin:round}.legendBox{fill:#FFFFFF;stroke:#CAD6DF;stroke-width:1.8}.legendText{font-size:14px}.badge{font-family:"Comic Mono";font-size:12px;font-weight:700;fill:#FFFFFF}
+    </style>
+  </defs>
+  <rect class="bg" width="1500" height="1280"/>
+  <text class="title" x="750" y="66" text-anchor="middle">Tenant-Scoped Leader Scheduler</text>
+  <text class="subtitle" x="750" y="100" text-anchor="middle">Top-to-bottom flow from learner input to tenant-safe locks, fair scheduling, and bounded metrics.</text>
+
+  <rect class="layer layerLearn" x="80" y="142" width="1340" height="170" rx="22"/>
+  <text class="layerTitle" x="124" y="190">Layer 1 - Learning surface</text>
+  <text class="layerNote" x="124" y="216">README-driven contract</text>
+
+  <rect class="layer layerDomain" x="80" y="348" width="1340" height="254" rx="22"/>
+  <text class="layerTitle" x="124" y="396">Layer 2 - Tenant model</text>
+  <text class="layerNote" x="124" y="422">safe aliases and lock names</text>
+
+  <rect class="layer layerSchedule" x="80" y="638" width="1340" height="254" rx="22"/>
+  <text class="layerTitle" x="124" y="686">Layer 3 - Reducer</text>
+  <text class="layerNote" x="124" y="712">fairness and lease transitions</text>
+
+  <rect class="layer layerOutput" x="80" y="928" width="1340" height="204" rx="22"/>
+  <text class="layerTitle" x="124" y="976">Layer 4 - Output</text>
+  <text class="layerNote" x="124" y="1002">bounded evidence and tags</text>
+
+  <g class="node" data-node="readme-tests" filter="url(#shadow)">
+    <rect class="card blue" x="465" y="206" width="570" height="86" rx="14"/>
+    <text class="cardTitle" x="750" y="240" text-anchor="middle">README + executable snippet test</text>
+    <text class="body" x="750" y="267" text-anchor="middle">learner creates tenants, job policy, and schedule ticks</text>
+  </g>
+
+  <g class="node" data-node="tenant-policy" filter="url(#shadow)">
+    <rect class="card green" x="190" y="462" width="380" height="96" rx="14"/>
+    <text class="cardTitle" x="380" y="498" text-anchor="middle">TenantSchedulePolicy</text>
+    <text class="body" x="380" y="525" text-anchor="middle">validated tenants, job, stale window</text>
+  </g>
+  <g class="node" data-node="lock-namespace" filter="url(#shadow)">
+    <rect class="card amber" x="930" y="462" width="380" height="96" rx="14"/>
+    <text class="cardTitle" x="1120" y="498" text-anchor="middle">TenantLockNamespace</text>
+    <text class="body" x="1120" y="525" text-anchor="middle">tenant:alias:job lock names</text>
+  </g>
+
+  <g class="node" data-node="scheduler-lab" filter="url(#shadow)">
+    <rect class="card teal" x="465" y="752" width="570" height="96" rx="14"/>
+    <text class="cardTitle" x="750" y="788" text-anchor="middle">TenantSchedulerLab</text>
+    <text class="body" x="750" y="815" text-anchor="middle">pure reducer for fairness, skip, failure, stale handoff</text>
+  </g>
+
+  <g class="node" data-node="scheduler-report" filter="url(#shadow)">
+    <rect class="card teal" x="190" y="1040" width="380" height="76" rx="14"/>
+    <text class="cardTitle" x="380" y="1072" text-anchor="middle">TenantSchedulerReport</text>
+    <text class="body" x="380" y="1097" text-anchor="middle">events, final leases, truncation</text>
+  </g>
+  <g class="node" data-node="metric-tags" filter="url(#shadow)">
+    <rect class="card amber" x="930" y="1040" width="380" height="76" rx="14"/>
+    <text class="cardTitle" x="1120" y="1072" text-anchor="middle">TenantMetricTagPolicy</text>
+    <text class="body" x="1120" y="1097" text-anchor="middle">tenant tags or tenant=bounded</text>
+  </g>
+
+  <g class="edge" data-edge="readme-tests-&gt;tenant-policy" data-label="README snippet creates validated scheduling policy">
+    <path data-connector="readme-to-policy" class="connector learn" d="M 690 292 L 690 326 Q 690 346 670 346 L 380 346 Q 360 346 360 366 L 360 462"/>
+    <polygon data-connector-head="readme-to-policy" class="arrowHead" points="360,462 352,446 368,446" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <g class="edge" data-edge="readme-tests-&gt;lock-namespace" data-label="README snippet demonstrates tenant-scoped lock name">
+    <path data-connector="readme-to-namespace" class="connector learn" d="M 810 292 L 810 326 Q 810 346 830 346 L 1120 346 Q 1140 346 1140 366 L 1140 462"/>
+    <polygon data-connector-head="readme-to-namespace" class="arrowHead" points="1140,462 1132,446 1148,446" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <g class="edge" data-edge="tenant-policy-&gt;scheduler-lab" data-label="policy supplies tenants and stale windows">
+    <path data-connector="policy-to-scheduler" class="connector domain" d="M 380 558 L 380 602 Q 380 622 400 622 L 730 622 Q 750 622 750 642 L 750 752"/>
+    <polygon data-connector-head="policy-to-scheduler" class="arrowHead" points="750,752 742,736 758,736" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <g class="edge" data-edge="lock-namespace-&gt;scheduler-lab" data-label="lock planner supplies tenant lock names">
+    <path data-connector="namespace-to-scheduler" class="connector domain" d="M 1120 558 L 1120 602 Q 1120 622 1100 622 L 770 622 Q 750 622 750 642 L 750 752"/>
+    <polygon data-connector-head="namespace-to-scheduler" class="arrowHead" points="750,752 742,736 758,736" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <g class="edge" data-edge="scheduler-lab-&gt;scheduler-report" data-label="scheduler emits bounded report rows">
+    <path data-connector="scheduler-to-report" class="connector state" d="M 690 848 L 690 892 Q 690 912 670 912 L 380 912 Q 360 912 360 932 L 360 1040"/>
+    <polygon data-connector-head="scheduler-to-report" class="arrowHead" points="360,1040 352,1024 368,1024" fill="#2D948C" stroke="#2D948C" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <g class="edge" data-edge="scheduler-lab-&gt;metric-tags" data-label="scheduler output maps tenant-safe metric tags">
+    <path data-connector="scheduler-to-metrics" class="connector metric" d="M 810 848 L 810 892 Q 810 912 830 912 L 1120 912 Q 1140 912 1140 932 L 1140 1040"/>
+    <polygon data-connector-head="scheduler-to-metrics" class="arrowHead" points="1140,1040 1132,1024 1148,1024" fill="#9B7D54" stroke="#9B7D54" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+
+  <rect class="legendBox" x="164" y="1166" width="1172" height="72" rx="16"/>
+  <path d="M 230 1201 L 300 1201" fill="none" stroke="#4F86C6" stroke-width="4" stroke-linecap="round"/>
+  <polygon points="300,1201 284,1193 284,1209" fill="#4F86C6"/>
+  <text class="legendText" x="318" y="1206">learner input</text>
+  <path d="M 494 1201 L 564 1201" fill="none" stroke="#6E8F4F" stroke-width="4" stroke-linecap="round"/>
+  <polygon points="564,1201 548,1193 548,1209" fill="#6E8F4F"/>
+  <text class="legendText" x="582" y="1206">validated domain flow</text>
+  <path d="M 850 1201 L 920 1201" fill="none" stroke="#2D948C" stroke-width="4" stroke-linecap="round"/>
+  <polygon points="920,1201 904,1193 904,1209" fill="#2D948C"/>
+  <text class="legendText" x="938" y="1206">state/report output</text>
+  <path d="M 1126 1201 L 1196 1201" fill="none" stroke="#9B7D54" stroke-width="4" stroke-linecap="round"/>
+  <polygon points="1196,1201 1180,1193 1180,1209" fill="#9B7D54"/>
+  <text class="legendText" x="1214" y="1206">metric tagging</text>
+  <text class="footer" x="750" y="1260" text-anchor="middle">Production boundary: replace the reducer with TenantScopedLeaderElectors plus the chosen backend when leaving the lab.</text>
+</svg>

@@ -230,6 +230,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Advanced | [`leader-leader-election`](leader/) | `coroutines`, `redis`, `testcontainers` | Redis (TC) | Distributed leader election: blocking, coroutine, virtual thread |
 | Advanced | [`leader-backend-comparison-lab`](leader/backend-comparison-lab/) | `leader-core`, `spring-boot4-core` | In-memory | Redis vs ZooKeeper vs Kubernetes Lease backend choice and failover lab |
 | Advanced | [`leader-k8s-lease-micrometer`](leader/k8s-lease-micrometer/) | `leader-k8s`, `micrometer`, `spring-boot4-core` | Kubernetes Lease (opt-in) | Kubernetes Lease leader election with Micrometer metrics |
+| Advanced | [`leader-tenant-scheduler`](leader/tenant-scheduler/) | `leader-core`, `spring-boot4-core` | In-memory | Tenant-scoped leader scheduling with fair ticks, stale handoff, and bounded tenant metrics |
 
 ```bash
 ./gradlew :spring-security-mvc:test
@@ -241,6 +242,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 ./gradlew :aws-sqs-sns-coroutines:test
 ./gradlew :aws-s3-vectors-access-grants:test
 ./gradlew :leader-backend-comparison-lab:test
+./gradlew :leader-tenant-scheduler:test
 ```
 
 ---
