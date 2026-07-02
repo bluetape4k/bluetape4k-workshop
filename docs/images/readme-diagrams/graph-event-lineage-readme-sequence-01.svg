@@ -27,7 +27,7 @@
 
   <g filter="url(#shadow)"><rect x="70" y="154" width="210" height="74" rx="10" class="box"/><text x="175" y="184" text-anchor="middle" class="participant">JUnit Test</text><text x="175" y="208" text-anchor="middle" class="role">seed owner</text></g>
   <g filter="url(#shadow)"><rect x="390" y="154" width="230" height="74" rx="10" class="box"/><text x="505" y="184" text-anchor="middle" class="participant">EventLineageService</text><text x="505" y="208" text-anchor="middle" class="role">GraphOperations facade</text></g>
-  <g filter="url(#shadow)"><rect x="720" y="154" width="220" height="74" rx="10" class="box"/><text x="830" y="184" text-anchor="middle" class="participant">TinkerGraph</text><text x="830" y="208" text-anchor="middle" class="role">vertices + edges</text></g>
+  <g filter="url(#shadow)"><rect x="720" y="154" width="220" height="74" rx="10" class="box"/><text x="830" y="184" text-anchor="middle" class="participant">Graph Backend</text><text x="830" y="208" text-anchor="middle" class="role">TinkerGraph or Neo4j</text></g>
   <g filter="url(#shadow)"><rect x="1040" y="154" width="240" height="74" rx="10" class="box"/><text x="1160" y="184" text-anchor="middle" class="participant">Decision / Actor</text><text x="1160" y="208" text-anchor="middle" class="role">approval evidence</text></g>
   <g filter="url(#shadow)"><rect x="1400" y="154" width="210" height="74" rx="10" class="box"/><text x="1505" y="184" text-anchor="middle" class="participant">AuditTrail</text><text x="1505" y="208" text-anchor="middle" class="role">result model</text></g>
 

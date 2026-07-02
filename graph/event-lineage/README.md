@@ -4,10 +4,13 @@
 
 ## Architecture
 
-This module demonstrates business event lineage with `bluetape4k-graph` and an
-in-memory TinkerGraph. It models aggregate state, emitted domain events,
-approval decisions, and actors as graph vertices, then reconstructs the audit
-trail that explains why an aggregate reached its current state.
+This module demonstrates business event lineage with `bluetape4k-graph`.
+Default tests use in-memory TinkerGraph for fast feedback, and the integration
+test uses `bluetape4k-testcontainers` `Neo4jServer` to prove the same
+`GraphOperations` contract against a real graph database. The example models
+aggregate state, emitted domain events, approval decisions, and actors as graph
+vertices, then reconstructs the audit trail that explains why an aggregate
+reached its current state.
 
 > **Related issue:** [bluetape4k-workshop #330](https://github.com/bluetape4k/bluetape4k-workshop/issues/330)
 
@@ -28,7 +31,8 @@ It shows how to:
 - reconstruct a deterministic aggregate audit trail from graph structure;
 - follow a bounded causal path from a current event back to a root event;
 - identify emitted events that are missing causal or superseding evidence;
-- keep the workshop path container-free with TinkerGraph.
+- keep the default workshop path fast with TinkerGraph while validating the same
+  service against Neo4j through `Neo4jServer`.
 
 ![Event Lineage Audit Sequence](../../docs/images/readme-diagrams/graph-event-lineage-readme-sequence-01.png)
 
@@ -121,10 +125,12 @@ TinkerGraphOperations().use { ops ->
 
 ```bash
 ./gradlew :graph-event-lineage:test
+./gradlew :graph-event-lineage:integrationTest
 ```
 
-The test path uses TinkerGraph only. It does not require Docker,
-Testcontainers, Neo4j, Memgraph, PostgreSQL, or JaVers persistence.
+The default `test` task uses TinkerGraph only and does not require Docker. The
+`integrationTest` task uses `Neo4jServer.Launcher.neo4j` from
+`bluetape4k-testcontainers`, so it requires Docker.
 
 ## Dependencies
 
@@ -132,7 +138,11 @@ Testcontainers, Neo4j, Memgraph, PostgreSQL, or JaVers persistence.
 dependencies {
     implementation(libs.bluetape4k.graph.core)
     implementation(libs.bluetape4k.graph.tinkerpop)
+    compileOnly(libs.bluetape4k.graph.neo4j)
     implementation(libs.bluetape4k.logging)
+
+    testImplementation(libs.bluetape4k.testcontainers)
+    testImplementation(libs.testcontainers.neo4j)
 }
 ```
 
