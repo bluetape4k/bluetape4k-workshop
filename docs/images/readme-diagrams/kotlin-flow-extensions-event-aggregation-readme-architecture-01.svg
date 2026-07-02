@@ -2,9 +2,7 @@
   <title id="title">Event Aggregation Architecture</title>
   <desc id="desc">A top-to-bottom layered architecture for Flow based order event aggregation.</desc>
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
-      <path d="M 1 1 L 9 5 L 1 9 z" fill="#314a67"/>
-    </marker>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="10" markerHeight="10" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#314a67" stroke="#314a67" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
     <style>
       .title { font-family: 'Architects Daughter', 'Comic Mono'; font-size: 34px; fill: #1f2937; }
       .layer-label, .node-title, .node-body { font-family: 'Comic Mono', 'Architects Daughter'; fill: #263238; }
@@ -67,19 +65,14 @@
     <text class="node-body" x="880" y="748" text-anchor="middle">redacted Flow log values</text>
   </g>
 
-  <g class="edge" data-edge="event-stream-&gt;operator-chain" data-label="bounded replay events">
-    <path d="M 560 194 L 560 286"/>
+  <g class="edge" data-edge="event-stream-&gt;operator-chain" data-label="bounded replay events"><path d="M 560 194 L 560 286" data-connector="event-stream-&gt;operator-chain" marker-end="url(#arrow)" stroke="#314a67"/>
   </g>
-  <g class="edge" data-edge="operator-chain-&gt;read-model" data-label="projected events">
-    <path d="M 560 386 L 560 500"/>
+  <g class="edge" data-edge="operator-chain-&gt;read-model" data-label="projected events"><path d="M 560 386 L 560 500" data-connector="operator-chain-&gt;read-model" marker-end="url(#arrow)" stroke="#314a67"/>
   </g>
-  <g class="edge" data-edge="read-model-&gt;activity-summary" data-label="summary values">
-    <path d="M 470 584 L 470 638 L 240 638 L 240 690"/>
+  <g class="edge" data-edge="read-model-&gt;activity-summary" data-label="summary values"><path d="M 470 584 L 470 624 Q 470 638 456 638 L 254 638 Q 240 638 240 652 L 240 690" data-connector="read-model-&gt;activity-summary" marker-end="url(#arrow)" stroke="#314a67"/>
   </g>
-  <g class="edge" data-edge="read-model-&gt;status-transitions" data-label="status states">
-    <path d="M 560 584 L 560 690"/>
+  <g class="edge" data-edge="read-model-&gt;status-transitions" data-label="status states"><path d="M 560 584 L 560 690" data-connector="read-model-&gt;status-transitions" marker-end="url(#arrow)" stroke="#314a67"/>
   </g>
-  <g class="edge" data-edge="read-model-&gt;audit-output" data-label="sanitized audit values">
-    <path d="M 650 584 L 650 638 L 880 638 L 880 690"/>
+  <g class="edge" data-edge="read-model-&gt;audit-output" data-label="sanitized audit values"><path d="M 650 584 L 650 624 Q 650 638 664 638 L 866 638 Q 880 638 880 652 L 880 690" data-connector="read-model-&gt;audit-output" marker-end="url(#arrow)" stroke="#314a67"/>
   </g>
 </svg>

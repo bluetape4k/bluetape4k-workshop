@@ -53,20 +53,20 @@
     <text class="stateText" x="568" y="588" text-anchor="middle">claimedBy + TTL</text>
   </g>
 
-  <path class="edge" d="M 322 313 L 450 313" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <rect class="labelBg" x="334" y="280" width="102" height="24" rx="12"/><text class="label" x="385" y="296" text-anchor="middle">fallback</text>
-  <path class="edge" d="M 568 254 L 568 206 Q 568 186 588 186 L 814 186" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
-  <rect class="labelBg" x="618" y="151" width="116" height="24" rx="12"/><text class="label" x="676" y="167" text-anchor="middle">relay success</text>
-  <path class="edge" d="M 686 338 L 740 338 Q 760 338 760 358 L 760 427 Q 760 447 780 447 L 814 447" stroke="#DC2626" marker-end="url(#arrowRed)"/>
-  <rect class="labelBg" x="792" y="356" width="86" height="24" rx="12"/><text class="label" x="835" y="372" text-anchor="middle">failure</text>
-  <path class="edge" d="M 1050 447 L 1178 447" stroke="#DC2626" marker-end="url(#arrowRed)"/>
-  <rect class="labelBg" x="1078" y="414" width="76" height="24" rx="12"/><text class="label" x="1116" y="430" text-anchor="middle">max retry</text>
-  <path class="edge" d="M 932 388 L 932 340 Q 932 320 912 320 L 686 320" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <rect class="labelBg" x="790" y="286" width="92" height="24" rx="12"/><text class="label" x="836" y="302" text-anchor="middle">retry later</text>
-  <path class="edge" d="M 568 372 L 568 522" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
-  <rect class="labelBg" x="590" y="434" width="78" height="24" rx="12"/><text class="label" x="629" y="450" text-anchor="middle">claim</text>
-  <path class="edge" d="M 450 567 L 406 567 Q 386 567 386 547 L 386 366 Q 386 346 406 346 L 450 346" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
-  <rect class="labelBg" x="328" y="472" width="104" height="24" rx="12"/><text class="label" x="380" y="488" text-anchor="middle">stale claim</text>
+  <path class="edge" data-connector="no-row-to-fallback" d="M 322 313 L 450 313" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <rect class="labelBg" x="334" y="280" width="102" height="24" rx="12"/><text class="label labelPill" x="385" y="296" text-anchor="middle">fallback</text>
+  <path class="edge" data-connector="fallback-to-published" d="M 568 254 L 568 206 Q 568 186 588 186 L 814 186" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <rect class="labelBg" x="618" y="151" width="116" height="24" rx="12"/><text class="label labelPill" x="676" y="167" text-anchor="middle">relay success</text>
+  <path class="edge" data-connector="fallback-to-failed" d="M 686 338 L 740 338 Q 760 338 760 358 L 760 427 Q 760 447 780 447 L 814 447" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+  <rect class="labelBg" x="792" y="356" width="86" height="24" rx="12"/><text class="label labelPill" x="835" y="372" text-anchor="middle">failure</text>
+  <path class="edge" data-connector="failed-to-dead-letter" d="M 1050 447 L 1178 447" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+  <rect class="labelBg" x="1078" y="414" width="76" height="24" rx="12"/><text class="label labelPill" x="1116" y="430" text-anchor="middle">max retry</text>
+  <path class="edge" data-connector="failed-to-retry" d="M 932 388 L 932 340 Q 932 320 912 320 L 686 320" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <rect class="labelBg" x="790" y="286" width="92" height="24" rx="12"/><text class="label labelPill" x="836" y="302" text-anchor="middle">retry later</text>
+  <path class="edge" data-connector="fallback-to-claimed" d="M 568 372 L 568 522" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <rect class="labelBg" x="590" y="434" width="78" height="24" rx="12"/><text class="label labelPill" x="629" y="450" text-anchor="middle">claim</text>
+  <path class="edge" data-connector="stale-claim-to-fallback" d="M 450 567 L 406 567 Q 386 567 386 547 L 386 366 Q 386 346 406 346 L 450 346" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <rect class="labelBg" x="328" y="472" width="104" height="24" rx="12"/><text class="label labelPill" x="380" y="488" text-anchor="middle">stale claim</text>
 
   <rect x="86" y="642" width="1328" height="32" rx="12" fill="#FFFFFF" stroke="#CBD5E1"/>
   <text class="footer" x="750" y="663" text-anchor="middle">DEAD_LETTER stays in the table; this workshop deliberately avoids an extra Redis buffer so the DB fallback trade-off remains visible.</text>

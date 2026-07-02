@@ -100,23 +100,23 @@
   <rect x="828" y="274" width="438" height="30" rx="15" class="phaseLabel"/>
   <text x="852" y="294" class="note">sampling window: preview immediately, settle after quiet time</text>
 
-  <rect x="104" y="276" width="376" height="34" rx="17" class="label flowLabel"/>
-  <circle cx="128" cy="293" r="13" class="badge flowBadge"/>
-  <text x="128" y="298" text-anchor="middle" class="badgeText flowText">1</text>
+  <rect x="104" y="276" width="376" height="34" rx="17" class="label labelPill flowLabel"/>
+  <circle cx="128" cy="293" r="13" class="badge num flowBadge"/>
+  <text x="128" y="298" text-anchor="middle" class="badgeText num flowText">1</text>
   <text x="152" y="298" class="msg flowText">samples arrive faster than UI can consume</text>
   <path d="M 160 330 L 425 330" class="call" stroke="#3f7d9c" marker-end="url(#arrowFlow)"/>
   <rect class="message-label" x="220" y="346" width="140" height="24"/>
 
-  <rect x="474" y="354" width="398" height="34" rx="17" class="label sampleLabel"/>
-  <circle cx="498" cy="371" r="13" class="badge sampleBadge"/>
-  <text x="498" y="376" text-anchor="middle" class="badgeText sampleText">2</text>
+  <rect x="474" y="354" width="398" height="34" rx="17" class="label labelPill sampleLabel"/>
+  <circle cx="498" cy="371" r="13" class="badge num sampleBadge"/>
+  <text x="498" y="376" text-anchor="middle" class="badgeText num sampleText">2</text>
   <text x="522" y="376" class="msg sampleText">throttleLeading emits first sample in window</text>
   <path d="M 425 414 L 1240 414" class="return" stroke="#a2743d" marker-end="url(#arrowSample)"/>
   <rect class="message-label" x="692" y="430" width="220" height="24"/>
 
-  <rect x="472" y="438" width="406" height="34" rx="17" class="label sampleLabel"/>
-  <circle cx="496" cy="455" r="13" class="badge sampleBadge"/>
-  <text x="496" y="460" text-anchor="middle" class="badgeText sampleText">3</text>
+  <rect x="472" y="438" width="406" height="34" rx="17" class="label labelPill sampleLabel"/>
+  <circle cx="496" cy="455" r="13" class="badge num sampleBadge"/>
+  <text x="496" y="460" text-anchor="middle" class="badgeText num sampleText">3</text>
   <text x="520" y="460" class="msg sampleText">throttleTrailing emits last settled sample</text>
   <path d="M 425 498 L 1240 498" class="return" stroke="#a2743d" marker-end="url(#arrowSample)"/>
   <rect class="message-label" x="692" y="514" width="220" height="24"/>
@@ -125,16 +125,16 @@
   <rect x="100" y="574" width="184" height="30" rx="15" class="phaseLabel"/>
   <text x="124" y="594" class="note">analysis window</text>
 
-  <rect x="450" y="548" width="346" height="34" rx="17" class="label analyzeLabel"/>
-  <circle cx="474" cy="565" r="13" class="badge analyzeBadge"/>
-  <text x="474" y="570" text-anchor="middle" class="badgeText analyzeText">4</text>
+  <rect x="450" y="548" width="346" height="34" rx="17" class="label labelPill analyzeLabel"/>
+  <circle cx="474" cy="565" r="13" class="badge num analyzeBadge"/>
+  <text x="474" y="570" text-anchor="middle" class="badgeText num analyzeText">4</text>
   <text x="498" y="570" class="msg analyzeText">pairwise builds previous/current delta</text>
   <path d="M 425 628 L 699 628" class="call" stroke="#6e8f4f" marker-end="url(#arrowAnalyze)"/>
   <rect class="message-label" x="492" y="644" width="154" height="24"/>
 
-  <rect x="722" y="592" width="408" height="34" rx="17" class="label analyzeLabel"/>
-  <circle cx="746" cy="609" r="13" class="badge analyzeBadge"/>
-  <text x="746" y="614" text-anchor="middle" class="badgeText analyzeText">5</text>
+  <rect x="722" y="592" width="408" height="34" rx="17" class="label labelPill analyzeLabel"/>
+  <circle cx="746" cy="609" r="13" class="badge num analyzeBadge"/>
+  <text x="746" y="614" text-anchor="middle" class="badgeText num analyzeText">5</text>
   <text x="770" y="614" class="msg analyzeText">significantChange keeps threshold breaches</text>
   <path d="M 699 670 L 1240 670" class="return" stroke="#6e8f4f" marker-end="url(#arrowAnalyze)"/>
   <rect class="message-label" x="854" y="686" width="200" height="24"/>
@@ -143,16 +143,16 @@
   <rect x="108" y="728" width="198" height="30" rx="15" class="phaseLabel"/>
   <text x="132" y="748" class="note">lifecycle boundary</text>
 
-  <rect x="606" y="712" width="356" height="34" rx="17" class="label stopLabel"/>
-  <circle cx="630" cy="729" r="13" class="badge stopBadge"/>
-  <text x="630" y="734" text-anchor="middle" class="badgeText stopText">6</text>
+  <rect x="606" y="712" width="356" height="34" rx="17" class="label labelPill stopLabel"/>
+  <circle cx="630" cy="729" r="13" class="badge num stopBadge"/>
+  <text x="630" y="734" text-anchor="middle" class="badgeText num stopText">6</text>
   <text x="654" y="734" class="msg stopText">takeUntil receives explicit stop signal</text>
   <path d="M 973 774 L 425 774" class="call" stroke="#b86868" marker-end="url(#arrowStop)"/>
   <rect class="message-label" x="610" y="790" width="180" height="24"/>
 
-  <rect x="544" y="804" width="344" height="34" rx="17" class="label returnLabel"/>
-  <circle cx="568" cy="821" r="13" class="badge returnBadge"/>
-  <text x="568" y="826" text-anchor="middle" class="badgeText returnText">7</text>
+  <rect x="544" y="804" width="344" height="34" rx="17" class="label labelPill returnLabel"/>
+  <circle cx="568" cy="821" r="13" class="badge num returnBadge"/>
+  <text x="568" y="826" text-anchor="middle" class="badgeText num returnText">7</text>
   <text x="592" y="826" class="msg returnText">collector logs final bounded sample set</text>
   <path d="M 425 862 L 1240 862" class="return" stroke="#9b7d54" marker-end="url(#arrowReturn)"/>
   <rect class="message-label" x="724" y="878" width="180" height="24"/>
