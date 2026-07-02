@@ -30,8 +30,7 @@ class PublicationReconciler(
 
     fun reconcileOnce(): ReconcileResult {
         val cutoff = LocalDateTime.now(clock).minus(properties.reconcilerGrace)
-        val candidates = eventPublicationRepository.findOrdersWithoutPublications()
-            .filter { event -> !event.createdAt.isAfter(cutoff) }
+        val candidates = eventPublicationRepository.findOrdersWithoutPublicationsCreatedOnOrBefore(cutoff)
 
         val reconstructed = candidates.count { event ->
             val payload = objectMapper.writeValueAsString(event)

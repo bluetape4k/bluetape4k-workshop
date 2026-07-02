@@ -2,15 +2,22 @@ package io.bluetape4k.workshop.messaging.fallback.publication
 
 import io.bluetape4k.workshop.messaging.fallback.config.FallbackOutboxProperties
 import io.bluetape4k.workshop.messaging.fallback.domain.OrderTable
+import org.jetbrains.exposed.v1.core.NotExists
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.TextColumnType
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.castTo
+import org.jetbrains.exposed.v1.core.concat
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Repository
@@ -106,15 +113,9 @@ class EventPublicationRepository(
         val now = LocalDateTime.now(clock)
         val claimUntil = now.plus(properties.relayClaimTtl)
         val candidates = EventPublicationTable.selectAll()
-            .filter { row ->
-                val status = row[EventPublicationTable.status]
-                val nextAttemptAt = row[EventPublicationTable.nextAttemptAt]
-                val claimedUntil = row[EventPublicationTable.claimedUntil]
-                val eligibleStatus = status == EventPublicationStatus.NOT_PUBLISHED ||
-                    status == EventPublicationStatus.FAILED
-                eligibleStatus && !nextAttemptAt.isAfter(now) && (claimedUntil == null || claimedUntil.isBefore(now))
-            }
-            .take(batchSize)
+            .where { eligibleForClaim(now) }
+            .orderBy(EventPublicationTable.nextAttemptAt to SortOrder.ASC, EventPublicationTable.id to SortOrder.ASC)
+            .limit(batchSize)
 
         return candidates.mapNotNull { row ->
             val rowId = row[EventPublicationTable.id]
@@ -185,16 +186,30 @@ class EventPublicationRepository(
     fun findAll(): List<EventPublicationRecord> =
         EventPublicationTable.selectAll().map { row -> toRecord(row) }
 
+    /**
+     * Finds old order events that still have no durable publication row.
+     *
+     * The cutoff and missing-row check stay in SQL so the reconciler does not
+     * pull broad order sets into memory before filtering.
+     */
     @Transactional(readOnly = true)
-    fun findOrdersWithoutPublications(): List<OrderPlacedEvent> =
-        OrderTable.selectAll()
-            .filter { row ->
-                val orderId = row[OrderTable.id].value
-                val eventId = "order-placed:$orderId:v1"
-                EventPublicationTable.selectAll()
-                    .where { EventPublicationTable.eventId eq eventId }
-                    .empty()
+    fun findOrdersWithoutPublicationsCreatedOnOrBefore(cutoff: LocalDateTime): List<OrderPlacedEvent> {
+        val eventIdExpression = concat(
+            stringLiteral("order-placed:"),
+            OrderTable.id.castTo(TextColumnType()),
+            stringLiteral(":v1"),
+        )
+        val missingPublication = NotExists(
+            EventPublicationTable
+                .select(EventPublicationTable.id)
+                .where { EventPublicationTable.eventId eq eventIdExpression },
+        )
+
+        return OrderTable.selectAll()
+            .where {
+                (OrderTable.createdAt lessEq cutoff) and missingPublication
             }
+            .orderBy(OrderTable.createdAt to SortOrder.ASC, OrderTable.id to SortOrder.ASC)
             .map { row ->
                 OrderPlacedEvent(
                     orderId = row[OrderTable.id].value,
@@ -205,6 +220,7 @@ class EventPublicationRepository(
                     createdAt = row[OrderTable.createdAt],
                 )
             }
+    }
 
     private fun toRecord(
         row: ResultRow,
