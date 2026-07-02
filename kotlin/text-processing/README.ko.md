@@ -3,9 +3,10 @@
 [English](README.md) | 한국어
 
 이 모듈은 `bluetape4k-text`와 작은 Kotlin helper로 애플리케이션 내부에서 실행하는
-텍스트 처리 유틸리티를 보여줍니다. 예제에서 바로 확인할 수 있는 작업은 네 가지입니다.
-금칙어 필터링, 언어 감지, 검색/색인 전 텍스트 정규화, 그리고 highlight 결과를 반환하는
-동기/코루틴 다국어 검색 인덱스입니다.
+텍스트 처리 유틸리티를 보여줍니다. 예제에서 바로 확인할 수 있는 작업은 다섯 가지입니다.
+금칙어 필터링, 언어 감지, 검색/색인 전 텍스트 정규화, highlight 결과를 반환하는
+동기/코루틴 다국어 검색 인덱스, 그리고 audit-safe span metadata를 반환하는 작은
+sensitive text redaction pipeline입니다.
 
 ## 아키텍처
 
@@ -14,6 +15,10 @@
 ## 처리 시퀀스
 
 ![kotlin/text-processing flow](../../docs/images/readme-diagrams/kotlin-text-processing-scenario-01.png)
+
+## Redaction pipeline
+
+![kotlin/text-processing redaction pipeline](../../docs/images/readme-diagrams/kotlin-text-processing-redaction-pipeline-01.png)
 
 ## 구성 요소
 
@@ -25,6 +30,7 @@
 | `TextNormalizer` | pure Kotlin object | 소문자 변환, 공백 정리, 중복 제거 keyword extraction |
 | `MultilingualSearchIndex` | `LanguageDetectionService`, `KoreanProcessor`, `JapaneseProcessor`, `TextNormalizer`, `AhoCorasickAutomaton` | 문서와 query의 언어를 감지하고, inverted term index를 만든 뒤, match 점수와 source-span highlight를 반환 |
 | `CoroutineMultilingualSearchIndex` | `CoroutineLanguageDetectionService`, immutable index snapshot, `AhoCorasickAutomaton` | coroutine service에서 사용할 suspend `indexOf`/`search` API 제공 |
+| `SensitiveTextRedactionPipeline` | `LanguageDetectionService`, `TextNormalizer`, regex rules, `AhoCorasickAutomaton` | 작은 policy를 검증하고 email/phone/token/keyword span을 찾은 뒤, overlap merge, same-length masking, safe metadata 반환 |
 
 ## 사용 예
 
@@ -62,6 +68,35 @@ TextNormalizer.normalize("  Hello   WORLD  ")                 // "hello world"
 TextNormalizer.extractKeywords("the quick brown fox")          // ["the", "quick", "brown", "fox"]
 TextNormalizer.extractKeywords("a b quick", minKeywordLength = 4) // ["quick"]
 ```
+
+### 민감 텍스트 Redaction
+
+```kotlin
+val pipeline = SensitiveTextRedactionPipeline.default()
+
+val result = pipeline.redact(
+    "Contact user@example.test at 555-010-1234 with token=demo_token_value_123456."
+)
+
+result.redactedText
+// "Contact ***************** at ************ with *****************************."
+
+result.spans.map { it.category }
+// ["contact", "contact", "secret"]
+```
+
+기본 policy는 의도적으로 작고 fixture 중심입니다. 이 예제에서 중요한 부분은
+애플리케이션 로그나 support ticket에서 자주 필요한 처리 경계입니다.
+
+- rule id와 category는 safe metadata slug만 허용합니다.
+- regex rule은 backreference, 중첩 unbounded quantifier, unbounded `.*` pattern을 거부합니다.
+- keyword rule은 NFC-aware Aho-Corasick matching을 사용하므로 원문 offset을 보존합니다.
+- overlap span은 priority 기준으로 merge하지만, 서로 붙어만 있는 adjacent span은 분리합니다.
+- `toString()`, debug log, exception, span metadata는 원문 민감값을 담지 않습니다.
+
+지역별 식별자, 자유 형식 주소/이름, OCR 결과, fixture rule을 넘어서는 다국어 PII,
+컴플라이언스 목적의 DLP 요구가 있다면 더 강한 detector를 사용해야 합니다. 이 pipeline은
+학습용 예제이지 완전한 classifier가 아닙니다.
 
 ### 다국어 검색 인덱스
 

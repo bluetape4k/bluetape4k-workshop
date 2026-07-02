@@ -46,7 +46,7 @@ class LanguageDetectionService {
     fun detectLanguage(text: String): Language? {
         if (text.isBlank()) return null
         val detected = detector.detectLanguageOf(text)
-        log.debug { "detectLanguage text='${text.take(40)}' -> $detected" }
+        log.debug { "detectLanguage length=${text.length} -> $detected" }
         return if (detected == Language.UNKNOWN) null else detected
     }
 
@@ -62,7 +62,7 @@ class LanguageDetectionService {
     fun computeConfidenceValues(text: String): Map<Language, Double> {
         if (text.isBlank()) return emptyMap()
         val values = detector.computeLanguageConfidenceValues(text)
-        log.debug { "computeConfidenceValues text='${text.take(40)}' -> top=${values.entries.firstOrNull()}" }
+        log.debug { "computeConfidenceValues length=${text.length} -> top=${values.entries.firstOrNull()?.key}" }
         return values.entries
             .sortedByDescending { it.value }
             .associate { it.key to it.value }

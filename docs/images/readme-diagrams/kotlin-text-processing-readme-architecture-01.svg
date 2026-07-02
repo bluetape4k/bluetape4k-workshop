@@ -9,8 +9,8 @@
   </defs>
   <rect class="canvas" width="1600" height="980"/>
   <rect class="frame" x="32" y="28" width="1536" height="924" rx="30"/>
-  <text class="title" x="800" y="78" text-anchor="middle">Text Processing Search Index</text>
-  <text class="subtitle" x="800" y="112" text-anchor="middle">A reusable in-memory example for language detection, multilingual tokenization, sync/coroutine indexing, and highlighted search results.</text>
+  <text class="title" x="800" y="78" text-anchor="middle">Text Processing Toolkit</text>
+  <text class="subtitle" x="800" y="112" text-anchor="middle">A reusable in-memory example for language detection, multilingual search, sensitive redaction, and audit-safe metadata.</text>
 
   <rect class="layerInput" x="80" y="150" width="1440" height="160" rx="24"/>
   <text class="layerTitle" x="112" y="192">Reader input</text>
@@ -21,17 +21,17 @@
   </g>
   <g filter="url(#shadow)">
     <rect class="card" x="1085" y="202" width="330" height="82" rx="18" fill="#FFFFFF" stroke="#6FBF9C" stroke-width="2.4"/>
-    <text class="cardTitle" x="1250" y="236" text-anchor="middle">Search query</text>
-    <text class="cardText" x="1250" y="262" text-anchor="middle">English, Korean, or Japanese</text>
+    <text class="cardTitle" x="1250" y="236" text-anchor="middle">Query or sensitive text</text>
+    <text class="cardText" x="1250" y="262" text-anchor="middle">search terms, PII, or tokens</text>
   </g>
 
   <rect class="layerCore" x="80" y="335" width="1440" height="180" rx="24"/>
-  <text class="layerTitle" x="112" y="378">Search index core</text>
+  <text class="layerTitle" x="112" y="378">Processing core</text>
   <g filter="url(#shadow)">
-    <rect class="card" x="560" y="385" width="480" height="112" rx="18" fill="#FFFFFF" stroke="#9F7AD6" stroke-width="2.4"/>
-    <text class="cardTitle" x="800" y="420" text-anchor="middle">Search index APIs</text>
+    <rect class="card" x="500" y="385" width="600" height="112" rx="18" fill="#FFFFFF" stroke="#9F7AD6" stroke-width="2.4"/>
+    <text class="cardTitle" x="800" y="420" text-anchor="middle">Text processing APIs</text>
     <text class="cardText" x="800" y="446" text-anchor="middle">MultilingualSearchIndex</text>
-    <text class="cardText" x="800" y="471" text-anchor="middle">CoroutineMultilingualSearchIndex</text>
+    <text class="cardText" x="800" y="471" text-anchor="middle">CoroutineMultilingualSearchIndex + SensitiveTextRedactionPipeline</text>
   </g>
 
   <rect class="layerText" x="80" y="540" width="1440" height="260" rx="24"/>
@@ -57,15 +57,15 @@
     <text class="cardText" x="1275" y="676" text-anchor="middle">English/unknown terms</text>
   </g>
   <g filter="url(#shadow)">
-    <rect class="card" x="595" y="715" width="410" height="64" rx="16" fill="#FFFFFF" stroke="#D8A43B" stroke-width="2.4"/>
-    <text class="cardTitle" x="800" y="752" text-anchor="middle">Aho-Corasick highlighting</text>
+    <rect class="card" x="560" y="715" width="480" height="64" rx="16" fill="#FFFFFF" stroke="#D8A43B" stroke-width="2.4"/>
+    <text class="cardTitle" x="800" y="752" text-anchor="middle">Aho-Corasick spans + regex rules</text>
   </g>
 
   <rect class="layerVerify" x="80" y="825" width="1440" height="100" rx="24"/>
   <text class="layerTitle" x="112" y="866">Local verification</text>
   <g filter="url(#shadow)">
-    <rect class="card" x="560" y="854" width="480" height="50" rx="16" fill="#FFFFFF" stroke="#6BA6D8" stroke-width="2.4"/>
-    <text class="cardTitle" x="800" y="887" text-anchor="middle">JUnit search + coroutine tests</text>
+    <rect class="card" x="470" y="854" width="660" height="50" rx="16" fill="#FFFFFF" stroke="#6BA6D8" stroke-width="2.4"/>
+    <text class="cardTitle" x="800" y="887" text-anchor="middle">JUnit search + redaction + coroutine tests</text>
   </g>
 
   <path class="line" data-connector="document-to-index" d="M 350 284 L 350 323 Q 350 335 362 335 L 788 335 Q 800 335 800 347 L 800 385"/>

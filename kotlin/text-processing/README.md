@@ -3,9 +3,9 @@
 [한국어](README.ko.md) | English
 
 This module demonstrates in-process text utilities built on `bluetape4k-text` and small Kotlin
-helpers. It covers four reader-visible tasks: abuse-word filtering, language detection, text
-normalization before indexing, and sync/coroutine multilingual search indexes with highlighted
-results.
+helpers. It covers five reader-visible tasks: abuse-word filtering, language detection, text
+normalization before indexing, sync/coroutine multilingual search indexes with highlighted results,
+and a small sensitive-text redaction pipeline with audit-safe span metadata.
 
 ## Architecture
 
@@ -14,6 +14,10 @@ results.
 ## Processing flow
 
 ![kotlin/text-processing flow](../../docs/images/readme-diagrams/kotlin-text-processing-scenario-01.png)
+
+## Redaction pipeline
+
+![kotlin/text-processing redaction pipeline](../../docs/images/readme-diagrams/kotlin-text-processing-redaction-pipeline-01.png)
 
 ## Components
 
@@ -25,6 +29,7 @@ results.
 | `TextNormalizer` | pure Kotlin object | Lowercases text, collapses whitespace, extracts deduplicated keywords |
 | `MultilingualSearchIndex` | `LanguageDetectionService`, `KoreanProcessor`, `JapaneseProcessor`, `TextNormalizer`, `AhoCorasickAutomaton` | Detects document/query language, builds an inverted term index, ranks matched documents, and emits source-span highlights |
 | `CoroutineMultilingualSearchIndex` | `CoroutineLanguageDetectionService`, immutable index snapshot, `AhoCorasickAutomaton` | Provides suspend `indexOf` and `search` APIs for coroutine services while keeping detector access guarded |
+| `SensitiveTextRedactionPipeline` | `LanguageDetectionService`, `TextNormalizer`, regex rules, `AhoCorasickAutomaton` | Validates a small policy, finds email/phone/token/keyword spans, merges overlaps, masks same-length output, and returns safe metadata |
 
 ## Usage
 
@@ -64,6 +69,35 @@ TextNormalizer.extractKeywords("the quick brown fox")          // ["the", "quick
 TextNormalizer.extractKeywords("a b quick", minKeywordLength = 4) // ["quick"]
 ```
 
+### Sensitive text redaction
+
+```kotlin
+val pipeline = SensitiveTextRedactionPipeline.default()
+
+val result = pipeline.redact(
+    "Contact user@example.test at 555-010-1234 with token=demo_token_value_123456."
+)
+
+result.redactedText
+// "Contact ***************** at ************ with *****************************."
+
+result.spans.map { it.category }
+// ["contact", "contact", "secret"]
+```
+
+The default policy is deliberately small and fixture-oriented. It demonstrates the mechanics that
+matter in application logs and support-ticket examples:
+
+- rule ids and categories are validated as safe metadata slugs;
+- regex rules reject backreferences, nested unbounded quantifiers, and unbounded `.*` patterns;
+- keyword rules use NFC-aware Aho-Corasick matching, so original offsets are preserved;
+- overlapping spans merge by priority, but adjacent spans remain separate;
+- `toString()`, debug logs, exceptions, and span metadata avoid raw sensitive values.
+
+Use a stronger detector when the input contains jurisdiction-specific identifiers, free-form
+addresses, names, OCR output, multilingual PII beyond the fixture rules, or compliance-driven DLP
+requirements. This workshop pipeline is a learning example, not a full classifier.
+
 ### Multilingual search index
 
 ```kotlin
@@ -72,7 +106,7 @@ val index = MultilingualSearchIndex.indexOf(
         SearchDocument.of(
             id = "ko-1",
             title = "Korean indexing",
-            text = "코틀린 검색 인덱스는 한국어 명사를 토큰으로 사용합니다.",
+            text = "\uCF54\uD2C0\uB9B0 \uAC80\uC0C9 \uC778\uB371\uC2A4\uB294 \uD55C\uAD6D\uC5B4 \uBA85\uC0AC\uB97C \uD1A0\uD070\uC73C\uB85C \uC0AC\uC6A9\uD569\uB2C8\uB2E4.",
         ),
         SearchDocument.of(
             id = "ja-1",
@@ -82,7 +116,7 @@ val index = MultilingualSearchIndex.indexOf(
     ),
 )
 
-val hits = index.search("한국어 검색")
+val hits = index.search("\uD55C\uAD6D\uC5B4 \uAC80\uC0C9")
 hits.first().highlightedText   // source text with <mark>...</mark> fragments
 hits.first().matches           // original start/end offsets for matched terms
 ```
@@ -113,7 +147,7 @@ val index = CoroutineMultilingualSearchIndex.indexOf(
     detectionService = detection,
 )
 
-val hits = index.search("서울 카페")
+val hits = index.search("\uC11C\uC6B8 \uCE74\uD398")
 ```
 
 The coroutine index keeps the synchronous API separate on purpose. `MultilingualSearchIndex` remains
