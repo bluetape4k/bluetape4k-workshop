@@ -10,8 +10,9 @@ import org.springframework.stereotype.Service
 /**
  * Public order placement boundary.
  *
- * Direct Kafka publish and fallback persistence are added in the next TDD task;
- * until then the use case exposes `UNKNOWN` for read-only validation paths.
+ * Persists the order in the hot transaction, then asks [OrderEventPublisher] to
+ * either publish the deterministic `OrderPlaced` event directly to Kafka or
+ * store a durable fallback row when direct publish is disabled or fails.
  */
 @Service
 class PlaceOrderUseCase(

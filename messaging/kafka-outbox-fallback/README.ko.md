@@ -31,11 +31,12 @@ event id를 계약으로 둡니다.
 
 1. `POST /api/orders`가 요청을 검증합니다.
 2. `TransactionalOrderWriter`는 `orders`만 저장합니다.
-3. `OrderEventPublisher`가 `OrderPlacedEvent`를 직렬화해 Kafka로 보냅니다.
-4. 직접 발행이 성공하면 API는 `PUBLISHED_DIRECT`를 반환하고 fallback row는 남기지 않습니다.
-5. 직접 발행이 실패하거나 timeout이면 3번까지 시도한 뒤 `NOT_PUBLISHED` row를 upsert합니다.
-6. `EventPublicationRelay`가 fallback row를 claim하고 Kafka로 다시 보냅니다.
-7. fallback 저장 자체가 실패한 경우 `PublicationReconciler`가 오래된 `orders` row에서 누락된 row를 재구성합니다.
+3. `OrderEventPublisher`가 주문 commit 이후 `OrderPlacedEvent`를 직렬화합니다.
+4. `direct-publish-enabled=false`이면 Kafka를 호출하지 않습니다. 대신 `DIRECT_DISABLED` 사유로 `NOT_PUBLISHED` fallback row를 저장하고 `FALLBACK_STORED`를 반환합니다.
+5. 직접 발행이 활성화되어 있고 성공하면 API는 `PUBLISHED_DIRECT`를 반환하고 fallback row는 남기지 않습니다.
+6. 직접 발행이 활성화되어 있지만 실패하거나 timeout이면 3번까지 시도한 뒤 `NOT_PUBLISHED` row를 upsert합니다.
+7. `EventPublicationRelay`가 fallback row를 claim하고 Kafka로 다시 보냅니다.
+8. fallback 저장 자체가 실패한 경우 `PublicationReconciler`가 오래된 `orders` row에서 누락된 row를 재구성합니다.
 
 ## Fallback 생명주기
 
@@ -82,7 +83,7 @@ curl -s -X POST http://localhost:8080/api/orders \
 | 상태 | 의미 |
 |------|------|
 | `PUBLISHED_DIRECT` | 커밋 이후 Kafka 직접 발행이 성공했습니다. |
-| `FALLBACK_STORED` | 직접 발행이 실패하거나 timeout되어 fallback row를 저장했습니다. |
+| `FALLBACK_STORED` | 직접 발행이 비활성화되었거나, 실패하거나, timeout되어 fallback row를 저장했습니다. |
 | `FALLBACK_STORE_FAILED` | 직접 발행도 실패했고 fallback 저장도 실패했습니다. 이후 reconciler가 `orders`에서 누락 row를 복구할 수 있습니다. |
 | `UNKNOWN` | 조회 API는 내부 publication 상태를 노출하지 않습니다. |
 
@@ -137,6 +138,11 @@ workshop:
 
 예제는 테스트와 다이어그램의 의미가 흔들리지 않도록 `topic`을
 `order-events`, `direct-publish-attempts`를 `3`으로 고정합니다.
+
+`direct-publish-enabled: false`로 설정하면 fallback-only 분기를 확인할 수
+있습니다. 이 모드에서 `OrderEventPublisher`는 `KafkaTemplate.send(...)`를
+건너뛰고, `DIRECT_DISABLED` 사유의 `NOT_PUBLISHED` row를 저장한 뒤
+`FALLBACK_STORED`를 반환합니다.
 
 ## Metrics와 Health
 
