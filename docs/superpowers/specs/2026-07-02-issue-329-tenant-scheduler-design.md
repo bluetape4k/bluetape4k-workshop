@@ -146,9 +146,9 @@ concatenation.
 Policy validation fails fast with `IllegalArgumentException` for empty tenants,
 duplicate tenants after canonicalization, non-positive capacity, capacity larger
 than tenant count, non-positive stale threshold, non-positive metric tag limit,
-metric tag limits above `MAX_LOCAL_TENANT_TAG_VALUES`, non-positive report
-history limit, or report history limits above `MAX_EVENT_HISTORY_LIMIT`.
-Excessive metric cardinality is not a policy construction failure; it is a
+non-positive report history limit, or report history limits above
+`MAX_EVENT_HISTORY_LIMIT`. Excessive metric cardinality or a requested metric tag
+limit above `MAX_LOCAL_TENANT_TAG_VALUES` is not a construction failure; it is a
 reportable safe-degradation path handled by `TenantMetricTagPolicy`.
 
 Remove any separate `fairnessWindow` API unless implementation evidence shows a
@@ -183,7 +183,8 @@ Numeric policy values have explicit constraints:
 
 - `maxTenantsPerTick` in `1..tenantCount`;
 - `staleAfterTicks > 0`;
-- `maxTenantTagValues` in `1..MAX_LOCAL_TENANT_TAG_VALUES`;
+- `maxTenantTagValues > 0`, with `TenantMetricTagPolicy` clamping effective
+  output to `MAX_LOCAL_TENANT_TAG_VALUES`;
 - `eventHistoryLimit` in `1..MAX_EVENT_HISTORY_LIMIT`.
 
 Use named wrappers for same-typed tick values. `TenantLogicalTick` represents a
@@ -514,6 +515,6 @@ geometry audits where applicable.
 - `rg -n ":leader-tenant-scheduler:test" scripts/smoke-validate.sh .github/workflows/Examples.yml`
 - `if rg -n "testcontainers|awaitility|redis|zookeeper|kubernetes|postgres|bom\\(|version\\(" leader/tenant-scheduler/build.gradle.kts; then exit 1; fi`
 - `if rg -n "Thread\\.sleep|delay\\(|GlobalScope|@Scheduled|ScheduledExecutorService|Executors\\.|scheduleAtFixedRate|Timer\\(|System\\.currentTimeMillis|Instant\\.now|Clock\\.system|CoroutineScope\\(|launch\\(|async\\(" leader/tenant-scheduler/src; then exit 1; fi`
-- `if rg -n "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}|\\b(?:acct|aws|customer)-[0-9]{6,}\\b" leader/tenant-scheduler README.md README.ko.md docs/images/readme-diagrams; then exit 1; fi`
+- `if rg -n "[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}|\\b(?:acct|aws|customer)-[0-9]{6,}\\b" leader/tenant-scheduler/README.md leader/tenant-scheduler/README.ko.md leader/tenant-scheduler/src/main leader/tenant-scheduler/src/test/resources docs/images/readme-diagrams README.md README.ko.md; then exit 1; fi`
 - `actionlint .github/workflows/Examples.yml .github/workflows/nightly.yml .github/workflows/ci.yml`
 - `git diff --check`

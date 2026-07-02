@@ -229,6 +229,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Advanced | [`leader-leader-election`](leader/) | `coroutines`, `redis`, `testcontainers` | Redis (TC) | 분산 리더 선출: 블로킹, 코루틴, 가상 스레드 |
 | Advanced | [`leader-backend-comparison-lab`](leader/backend-comparison-lab/) | `leader-core`, `spring-boot4-core` | In-memory | Redis, ZooKeeper, Kubernetes Lease 백엔드 선택과 failover lab |
 | Advanced | [`leader-k8s-lease-micrometer`](leader/k8s-lease-micrometer/) | `leader-k8s`, `micrometer`, `spring-boot4-core` | Kubernetes Lease (opt-in) | Micrometer metric과 함께 배우는 Kubernetes Lease 리더 선출 |
+| Advanced | [`leader-tenant-scheduler`](leader/tenant-scheduler/) | `leader-core`, `spring-boot4-core` | In-memory | tenant-scoped leader scheduling: 공정 tick, stale handoff, bounded tenant metric |
 
 ```bash
 ./gradlew :spring-security-mvc:test
@@ -240,6 +241,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 ./gradlew :aws-sqs-sns-coroutines:test
 ./gradlew :aws-s3-vectors-access-grants:test
 ./gradlew :leader-backend-comparison-lab:test
+./gradlew :leader-tenant-scheduler:test
 ```
 
 ---

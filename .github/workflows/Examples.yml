@@ -29,6 +29,7 @@ on:
       - 'kotlin/flow-extensions-search-pipeline/**'
       - 'leader/backend-comparison-lab/**'
       - 'leader/k8s-lease-micrometer/**'
+      - 'leader/tenant-scheduler/**'
       - 'messaging/kafka/**'
       - 'messaging/kafka-outbox-fallback/**'
       - 'spring-modulith/module-boundaries/**'
@@ -67,6 +68,7 @@ on:
       - 'kotlin/flow-extensions-search-pipeline/**'
       - 'leader/backend-comparison-lab/**'
       - 'leader/k8s-lease-micrometer/**'
+      - 'leader/tenant-scheduler/**'
       - 'messaging/kafka/**'
       - 'messaging/kafka-outbox-fallback/**'
       - 'spring-modulith/module-boundaries/**'
@@ -147,6 +149,7 @@ jobs:
           :kotlin-flow-extensions-search-pipeline:test
           :leader-backend-comparison-lab:test
           :leader-k8s-lease-micrometer:test
+          :leader-tenant-scheduler:test
           :spring-modulith-module-boundaries:test
           --continue
         env:
@@ -192,6 +195,8 @@ jobs:
             leader/backend-comparison-lab/build/reports/tests/test/
             leader/k8s-lease-micrometer/build/test-results/test/*.xml
             leader/k8s-lease-micrometer/build/reports/tests/test/
+            leader/tenant-scheduler/build/test-results/test/*.xml
+            leader/tenant-scheduler/build/reports/tests/test/
             spring-modulith/module-boundaries/build/test-results/test/*.xml
             spring-modulith/module-boundaries/build/reports/tests/test/
           retention-days: 7

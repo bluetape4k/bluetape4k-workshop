@@ -37,6 +37,7 @@ names.
 | `io/` | Okio examples |
 | `json/` | Jackson 3 and JsonView examples |
 | `kotlin/` | Coroutines, design patterns, Kotlin workshops |
+| `leader/` | Distributed leader election and scheduling examples |
 | `mapping/` | MapStruct mapping |
 | `messaging/` | Kafka examples |
 | `observability/` | Micrometer observation/tracing with coroutines |
