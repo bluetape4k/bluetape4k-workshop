@@ -1,16 +1,17 @@
 package io.bluetape4k.workshop.text.search
 
 import com.github.pemistahl.lingua.api.Language
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
-import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendDefault
 import io.bluetape4k.workshop.text.detection.CoroutineLanguageDetectionService
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.atomic.AtomicInteger
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CoroutineMultilingualSearchIndexTest {
@@ -60,12 +61,13 @@ class CoroutineMultilingualSearchIndexTest {
             "서울 카페" to "ko-1",
             "東京 観光" to "ja-1",
         )
+        val queryIndex = AtomicInteger()
 
         SuspendedJobTester()
             .workers(8)
             .rounds(24)
             .add {
-                val (query, expectedId) = queries.random()
+                val (query, expectedId) = queries[queryIndex.getAndIncrement() % queries.size]
                 val hits = index.search(query)
 
                 hits shouldHaveSize 1
@@ -79,20 +81,23 @@ class CoroutineMultilingualSearchIndexTest {
 
     @Test
     fun `rejects duplicate document ids from suspend factory`() = runSuspendDefault {
-        var failure: IllegalArgumentException? = null
-
-        try {
+        val failure = assertFailsWith<IllegalArgumentException> {
             CoroutineMultilingualSearchIndex.indexOf(
                 listOf(
-                    SearchDocument.of("same-id", "First", "first document"),
-                    SearchDocument.of("same-id", "Second", "second document"),
+                    SearchDocument.of(
+                        id = "same-id",
+                        title = "First",
+                        text = "first document",
+                    ),
+                    SearchDocument.of(
+                        id = "same-id",
+                        title = "Second",
+                        text = "second document",
+                    ),
                 )
             )
-        } catch (e: IllegalArgumentException) {
-            failure = e
         }
 
-        failure.shouldNotBeNull()
         failure.message shouldBeEqualTo "documents must have unique ids."
     }
 }

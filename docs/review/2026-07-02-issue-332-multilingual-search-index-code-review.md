@@ -11,6 +11,7 @@ Resolved before PR:
 
 - Duplicate `SearchDocument.id` values could make `indexedDocuments` and `documentsById` disagree. Fixed by rejecting duplicate ids during `MultilingualSearchIndex.indexOf(...)` and adding `rejects duplicate document ids`.
 - The original synchronous search index is read-mostly but does not provide an explicit coroutine/thread-safety contract for shared detector access. Kept it unchanged and added `CoroutineMultilingualSearchIndex` plus `CoroutineLanguageDetectionService` with an immutable index snapshot and `Mutex`-guarded detector access.
+- Follow-up code-pattern repair replaced ad hoc suspend exception try/catch with `io.bluetape4k.assertions.assertFailsWith`, switched coroutine-heavy logging to `KLoggingChannel`, removed random query selection from the concurrency stress test, and changed touched `SearchDocument.of(...)` examples/tests to named arguments.
 
 ## Evidence
 
@@ -18,6 +19,7 @@ Resolved before PR:
   - Result: BUILD SUCCESSFUL
   - Result: 37 tests executed, including 8 `MultilingualSearchIndexTest` tests and 3 `CoroutineMultilingualSearchIndexTest` tests.
   - Coroutine evidence: `SuspendedJobTester` stress test runs concurrent suspend `search(...)` calls against one shared coroutine index and guarded detector wrapper.
+- Code-pattern grep checks: no touched coroutine search files contain ad hoc `try/catch` exception assertions, `queries.random()`, repeated `shouldNotBeNull()`, or `KLogging()`; no `SearchDocument.of("...")` positional string examples remain in `kotlin/text-processing`.
 - `git diff --check`: PASS
 - `./scripts/smoke-validate.sh stale-check`: PASS, 100 active modules, no stale refs, no broken README image links.
 - Diagram checklist:
