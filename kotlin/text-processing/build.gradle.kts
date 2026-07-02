@@ -22,5 +22,5 @@ dependencies {
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.bluetape4k.assertions)
     testImplementation(libs.mockk)
-    testRuntimeOnly(libs.logback.lib)
+    testImplementation(libs.logback.lib)
 }

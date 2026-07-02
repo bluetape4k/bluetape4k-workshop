@@ -50,7 +50,7 @@ class AbuseWordFilter(abuseWords: Collection<String>) {
      */
     fun containsAbuse(text: String): Boolean {
         val result = automaton.containsMatch(text)
-        log.debug { "containsAbuse text='${text.take(40)}' result=$result" }
+        log.debug { "containsAbuse length=${text.length} result=$result" }
         return result
     }
 
@@ -67,7 +67,7 @@ class AbuseWordFilter(abuseWords: Collection<String>) {
         val filtered = automaton.replaceAll(text) { match ->
             "*".repeat(match.length)
         }
-        log.debug { "filterText text='${text.take(40)}' -> '${filtered.take(40)}'" }
+        log.debug { "filterText length=${text.length} -> filteredLength=${filtered.length}" }
         return filtered
     }
 
@@ -80,7 +80,7 @@ class AbuseWordFilter(abuseWords: Collection<String>) {
      */
     fun findMatches(text: String): List<AhoCorasickMatch<String>> {
         val matches = automaton.parseText(text)
-        log.debug { "findMatches text='${text.take(40)}' found=${matches.size} matches" }
+        log.debug { "findMatches length=${text.length} matches=${matches.size}" }
         return matches
     }
 }

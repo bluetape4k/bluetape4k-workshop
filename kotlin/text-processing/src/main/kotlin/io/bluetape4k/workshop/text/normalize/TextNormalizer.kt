@@ -34,7 +34,7 @@ object TextNormalizer : KLogging() {
     fun normalize(text: String): String {
         if (text.isBlank()) return ""
         val normalized = whitespaceRegex.replace(text.lowercase().trim(), " ")
-        log.debug { "normalize: '${text.take(40)}' -> '${normalized.take(40)}'" }
+        log.debug { "normalize length=${text.length} -> normalizedLength=${normalized.length}" }
         return normalized
     }
 
@@ -54,7 +54,7 @@ object TextNormalizer : KLogging() {
             .split(" ")
             .filter { it.length >= minKeywordLength }
             .distinct()
-        log.debug { "extractKeywords: '${text.take(40)}' -> $keywords" }
+        log.debug { "extractKeywords length=${text.length} -> keywords=${keywords.size}" }
         return keywords
     }
 }

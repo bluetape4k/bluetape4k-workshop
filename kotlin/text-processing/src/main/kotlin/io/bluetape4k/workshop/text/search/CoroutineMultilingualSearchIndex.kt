@@ -60,7 +60,7 @@ class CoroutineMultilingualSearchIndex private constructor(
                 .toCollection(linkedSetOf())
 
             if (candidateIds.isEmpty()) {
-                log.debug { "search query='${query.take(40)}' terms=$queryTerms -> no candidates" }
+                log.debug { "search queryLength=${query.length} terms=${queryTerms.size} -> no candidates" }
                 return@withContext emptyList()
             }
 
@@ -86,7 +86,7 @@ class CoroutineMultilingualSearchIndex private constructor(
                 )
                 .take(limit.coerceAtLeast(0))
 
-            log.debug { "search query='${query.take(40)}' terms=$queryTerms -> hits=${hits.size}" }
+            log.debug { "search queryLength=${query.length} terms=${queryTerms.size} -> hits=${hits.size}" }
             hits
         }
 
