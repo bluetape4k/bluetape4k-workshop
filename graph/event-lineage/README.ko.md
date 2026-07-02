@@ -4,10 +4,12 @@
 
 ## 아키텍처
 
-이 모듈은 `bluetape4k-graph`와 in-memory TinkerGraph로 비즈니스 이벤트 lineage를
-학습하는 예제입니다. aggregate 상태, domain event, approval decision, actor를 graph
-vertex로 모델링하고, 현재 aggregate 상태를 설명하는 audit trail을 graph traversal로
-재구성합니다.
+이 모듈은 `bluetape4k-graph`로 비즈니스 이벤트 lineage를 학습하는 예제입니다. 기본
+테스트는 빠른 피드백을 위해 in-memory TinkerGraph를 사용하고, integration test는
+`bluetape4k-testcontainers`의 `Neo4jServer`로 같은 `GraphOperations` 계약을 실제
+graph database에서 검증합니다. aggregate 상태, domain event, approval decision,
+actor를 graph vertex로 모델링하고, 현재 aggregate 상태를 설명하는 audit trail을
+graph traversal로 재구성합니다.
 
 > **관련 이슈:** [bluetape4k-workshop #330](https://github.com/bluetape4k/bluetape4k-workshop/issues/330)
 
@@ -27,7 +29,8 @@ SVG source: [graph-event-lineage-readme-architecture-01.svg](../../docs/images/r
 - graph 구조에서 결정적인 aggregate audit trail을 재구성합니다.
 - 현재 event에서 root event까지 bounded causal path를 따라갑니다.
 - causal 또는 superseding evidence가 빠진 emitted event를 찾습니다.
-- TinkerGraph만 사용해 컨테이너 없이 workshop 테스트를 실행합니다.
+- 기본 workshop 테스트는 TinkerGraph로 빠르게 실행하고, 같은 service를
+  `Neo4jServer` 기반 Neo4j에서도 검증합니다.
 
 ![Event Lineage Audit Sequence](../../docs/images/readme-diagrams/graph-event-lineage-readme-sequence-01.png)
 
@@ -120,10 +123,12 @@ TinkerGraphOperations().use { ops ->
 
 ```bash
 ./gradlew :graph-event-lineage:test
+./gradlew :graph-event-lineage:integrationTest
 ```
 
-테스트 경로는 TinkerGraph만 사용합니다. Docker, Testcontainers, Neo4j, Memgraph,
-PostgreSQL, JaVers persistence가 필요하지 않습니다.
+기본 `test` task는 TinkerGraph만 사용하므로 Docker가 필요하지 않습니다.
+`integrationTest` task는 `bluetape4k-testcontainers`의
+`Neo4jServer.Launcher.neo4j`를 사용하므로 Docker가 필요합니다.
 
 ## 의존성
 
@@ -131,7 +136,11 @@ PostgreSQL, JaVers persistence가 필요하지 않습니다.
 dependencies {
     implementation(libs.bluetape4k.graph.core)
     implementation(libs.bluetape4k.graph.tinkerpop)
+    compileOnly(libs.bluetape4k.graph.neo4j)
     implementation(libs.bluetape4k.logging)
+
+    testImplementation(libs.bluetape4k.testcontainers)
+    testImplementation(libs.testcontainers.neo4j)
 }
 ```
 

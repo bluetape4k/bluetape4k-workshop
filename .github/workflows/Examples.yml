@@ -254,6 +254,7 @@ jobs:
       # - ktor-exposed-rest: PostgreSQL-backed Ktor + Exposed transaction path
       # - aws-ktor-dynamodb: local AWS emulator-backed Ktor + DynamoDB path
       # - aws-sqs-sns-coroutines: Floci-backed SQS/SNS coroutine messaging path
+      # - graph-event-lineage: Neo4j-backed graph lineage audit path
       # - spring-boot-cache-redis: Redis-backed cache path
       # - messaging-kafka: Kafka-backed messaging path
       # - messaging-kafka-outbox-fallback: PostgreSQL + Kafka fallback relay path
@@ -265,6 +266,7 @@ jobs:
           :ktor-exposed-rest:test
           :aws-ktor-dynamodb:test
           :aws-sqs-sns-coroutines:test
+          :graph-event-lineage:integrationTest
           :spring-boot-cache-redis:test
           :messaging-kafka:test
           :messaging-kafka-outbox-fallback:test
@@ -291,6 +293,8 @@ jobs:
             aws/ktor-dynamodb/build/reports/tests/test/
             aws/sqs-sns-coroutines/build/test-results/test/*.xml
             aws/sqs-sns-coroutines/build/reports/tests/test/
+            graph/event-lineage/build/test-results/integrationTest/*.xml
+            graph/event-lineage/build/reports/tests/integrationTest/
             spring-boot/cache-redis/build/test-results/test/*.xml
             spring-boot/cache-redis/build/reports/tests/test/
             messaging/kafka/build/test-results/test/*.xml

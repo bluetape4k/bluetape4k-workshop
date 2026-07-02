@@ -23,11 +23,11 @@ Resolved review findings:
 
 | Tier | Result | Evidence |
 |------|--------|----------|
-| Performance | PASS | The example uses TinkerGraph only, bounded causal traversal with `MAX_TRAVERSAL_DEPTH`, deterministic sorting, and small seed data. |
+| Performance | PASS | The default lane uses TinkerGraph, the integration lane uses Neo4j Testcontainers, and traversal remains bounded with `MAX_TRAVERSAL_DEPTH`, deterministic sorting, and small seed data. |
 | Stability | PASS | Public mutators reject blank IDs and invalid versions. Queries return empty models for unknown IDs, and superseding traversal tracks visited vertices. |
 | Security/privacy | PASS | The seed uses synthetic order, manager, decision, and event IDs. No external systems, secrets, or raw user data are involved. |
-| Operator | PASS | The module is registered in root README files, `AGENTS.md`, `scripts/smoke-validate.sh`, and `.github/workflows/Examples.yml`; stale-check reports 100/100 modules. |
-| Developer/API | PASS | Public data classes implement `Serializable`, use named domain models, and tests use JUnit 5 plus bluetape4k assertions. No direct Testcontainers, coroutine anti-patterns, or forbidden assertion APIs were found. |
+| Operator | PASS | The module is registered in root README files, `AGENTS.md`, `scripts/smoke-validate.sh`, and `.github/workflows/Examples.yml`; the Examples container lane includes `:graph-event-lineage:integrationTest`; stale-check reports 100/100 modules. |
+| Developer/API | PASS | Public data classes implement `Serializable`, use named domain models, and tests use JUnit 5 plus bluetape4k assertions. The integration test uses `Neo4jServer.Launcher.neo4j` instead of a direct `GenericContainer`. No coroutine anti-patterns or forbidden assertion APIs were found. |
 | User/learner | PASS | README and README.ko include language switches, architecture and sequence diagrams, run commands, a seeded scenario, test map, and production boundaries. |
 | Current-session integration | PASS | Spec, plan, implementation, documentation, diagrams, smoke registration, and review evidence all target issue #330 and milestone 1.3.1. |
 
@@ -35,6 +35,7 @@ Resolved review findings:
 
 - RED proof: focused tests first failed before `EventLineageService`, schema, and model classes were implemented.
 - Module test: `./gradlew --no-daemon :graph-event-lineage:test --no-build-cache --rerun-tasks --console=plain` passed 11 tests.
+- Integration test: `./gradlew --no-daemon :graph-event-lineage:integrationTest --no-build-cache --rerun-tasks --console=plain` passed 11 Neo4j-backed tests with `Neo4jServer.Launcher.neo4j`.
 - Compile: `./gradlew --no-daemon :graph-event-lineage:compileKotlin :graph-event-lineage:compileTestKotlin --warning-mode all --console=plain` passed without warnings in the new module.
 - Projects: `./gradlew --no-daemon projects --console=plain` passed, reported 100 projects, and listed `:graph-event-lineage`.
 - Smoke: `./scripts/smoke-validate.sh all-smoke` passed with `BUILD SUCCESSFUL`; the command includes `:graph-event-lineage:test`.
@@ -47,7 +48,7 @@ Resolved review findings:
 
 ## Residual Risk
 
-The workshop proves the event-lineage modeling and traversal contract on
-TinkerGraph only. It does not validate persistence-specific graph behavior,
-indexing, or distributed audit storage; those concerns belong in a
-backend-specific graph integration module.
+The workshop proves the event-lineage modeling and traversal contract on both
+TinkerGraph and Neo4j. It does not tune persistence-specific indexing or
+distributed audit storage; those concerns belong in a production graph
+deployment guide or backend-specific performance module.

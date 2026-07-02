@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1280" viewBox="0 0 1500 1280" role="img" aria-labelledby="title desc">
   <title id="title">Event Lineage Architecture</title>
-  <desc id="desc">A learner asks an audit question, domain lineage nodes model aggregate events and approval evidence, EventLineageService traverses bounded edges, and TinkerGraph returns a deterministic audit trail.</desc>
+  <desc id="desc">A learner asks an audit question, domain lineage nodes model aggregate events and approval evidence, EventLineageService traverses bounded edges, and TinkerGraph or Neo4j returns a deterministic audit trail.</desc>
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%">
       <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#64748B" flood-opacity="0.13"/>
@@ -39,7 +39,7 @@
 
   <rect class="layer layerEvidence" x="80" y="926" width="1340" height="204" rx="22"/>
   <text class="layerTitle" x="124" y="974">Layer 4 - Evidence backend</text>
-  <text class="layerNote" x="124" y="1000">in-memory graph and audit result</text>
+  <text class="layerNote" x="124" y="1000">in-memory or Neo4j-backed graph and audit result</text>
 
   <g class="node" data-node="audit-question" filter="url(#shadow)">
     <rect class="card blue" x="465" y="204" width="570" height="86" rx="14"/>
@@ -69,10 +69,10 @@
     <text class="body" x="750" y="813" text-anchor="middle">events, causal path, audit trail, missing links</text>
   </g>
 
-  <g class="node" data-node="tinkergraph" filter="url(#shadow)">
+  <g class="node" data-node="graph-backend" filter="url(#shadow)">
     <rect class="card teal" x="190" y="1038" width="380" height="76" rx="14"/>
-    <text class="cardTitle" x="380" y="1070" text-anchor="middle">TinkerGraphOperations</text>
-    <text class="body" x="380" y="1095" text-anchor="middle">container-free GraphOperations backend</text>
+    <text class="cardTitle" x="380" y="1070" text-anchor="middle">Graph backend</text>
+    <text class="body" x="380" y="1095" text-anchor="middle">TinkerGraph default, Neo4jServer integration</text>
   </g>
   <g class="node" data-node="audit-trail" filter="url(#shadow)">
     <rect class="card amber" x="930" y="1038" width="380" height="76" rx="14"/>
@@ -92,8 +92,8 @@
   <g class="edge" data-edge="approval-evidence-&gt;event-lineage-service" data-label="decision and actor evidence enriches audit trail">
     <path data-connector="decision-query" class="line domain" d="M 1175 548 L 1175 620 Q 1175 640 1155 640 L 830 640 Q 810 640 810 660 L 810 750"/>
   </g>
-  <g class="edge" data-edge="event-lineage-service-&gt;tinkergraph" data-label="GraphOperations reads and writes vertices and edges">
-    <path data-connector="operation-query" class="line query" d="M 690 846 L 690 910 Q 690 930 670 930 L 380 930 Q 360 930 360 950 L 360 1038"/>
+  <g class="edge" data-edge="event-lineage-service-&gt;graph-backend" data-label="GraphOperations reads and writes vertices and edges">
+    <path data-connector="operation-query" class="line query" d="M 690 846 L 690 910 Q 690 930 670 930 L 560 930 Q 540 930 540 950 L 540 1038"/>
   </g>
   <g class="edge" data-edge="event-lineage-service-&gt;audit-trail" data-label="service returns deterministic audit result models">
     <path data-connector="audit-output" class="line evidence" d="M 810 846 L 810 910 Q 810 930 830 930 L 1120 930 Q 1140 930 1140 950 L 1140 1038"/>
