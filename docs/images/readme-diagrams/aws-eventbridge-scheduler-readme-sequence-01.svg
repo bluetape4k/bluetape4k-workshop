@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="1040" viewBox="0 0 1280 1040" role="img" aria-labelledby="title desc">
+  <title id="title">AWS EventBridge Scheduler order workflow sequence</title>
+  <desc id="desc">Numbered sequence for publishing an EventBridge event and conditionally creating a delayed Scheduler request.</desc>
+  <defs>
+    <marker id="seqArrowBlue" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86c6" stroke="#4f86c6" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <marker id="seqArrowTeal" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#3f8c86" stroke="#3f8c86" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <marker id="seqArrowAmber" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#9b6b30" stroke="#9b6b30" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <marker id="seqArrowRed" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#b65c5c" stroke="#b65c5c" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <style>
+      text { font-family: "Comic Mono", "Architects Daughter", monospace; fill: #26384a; }
+      .frame { fill: #f6f8fb; stroke: #b8c9d7; stroke-width: 2; rx: 12; }
+      .title { font-family: "Architects Daughter", "Comic Mono", cursive; font-size: 34px; font-weight: 700; }
+      .subtitle { font-size: 18px; fill: #627386; }
+      .header { fill: #ffffff; stroke: #b7c9d8; stroke-width: 2; rx: 8; }
+      .participant { font-size: 18px; font-weight: 700; text-anchor: middle; }
+      .role { font-size: 14px; fill: #6a7c8f; text-anchor: middle; }
+      .lifeline { stroke: #9eb1c2; stroke-width: 2; stroke-dasharray: 7 8; }
+      .activation { fill: #ffffff; stroke: #8aa9bd; stroke-width: 2; rx: 5; }
+      .call, .return { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+      .callBlue { stroke: #4f86c6; }
+      .returnTeal { stroke: #3f8c86; }
+      .callAmber { stroke: #9b6b30; }
+      .callRed { stroke: #b65c5c; }
+      .labelPill { fill: #ffffff; stroke-width: 2; rx: 14; }
+      .pillBlue { stroke: #4f86c6; }
+      .pillTeal { stroke: #3f8c86; }
+      .pillAmber { stroke: #9b6b30; }
+      .pillRed { stroke: #b65c5c; }
+      .num { font-size: 14px; font-weight: 700; text-anchor: middle; dominant-baseline: central; fill: #ffffff; }
+      .badge { stroke-width: 2; }
+      .badgeBlue { fill: #4f86c6; stroke: #4f86c6; }
+      .badgeTeal { fill: #3f8c86; stroke: #3f8c86; }
+      .badgeAmber { fill: #9b6b30; stroke: #9b6b30; }
+      .badgeRed { fill: #b65c5c; stroke: #b65c5c; }
+      .labelText { font-size: 15px; dominant-baseline: central; }
+      .alt { fill: none; stroke: #8ea4b5; stroke-width: 2; rx: 8; }
+      .branchDivider { stroke: #b8c7d2; stroke-width: 2; stroke-dasharray: 8 8; }
+      .branchTitle { font-size: 15px; font-weight: 700; fill: #44576a; }
+    </style>
+  </defs>
+
+  <rect class="frame" x="38" y="38" width="1204" height="964"/>
+  <text class="title" x="72" y="88">Order workflow through EventBridge Scheduler</text>
+  <text class="subtitle" x="72" y="118">EventBridge publish decides whether the delayed Scheduler request is created.</text>
+
+  <g>
+    <rect class="header" x="90" y="154" width="180" height="74"/>
+    <text class="participant" x="180" y="184">Learner</text>
+    <text class="role" x="180" y="208">test or bootRun</text>
+    <rect class="header" x="350" y="154" width="180" height="74"/>
+    <text class="participant" x="440" y="184">Service</text>
+    <text class="role" x="440" y="208">OrderWorkflowService</text>
+    <rect class="header" x="610" y="154" width="190" height="74"/>
+    <text class="participant" x="705" y="184">EventBridge</text>
+    <text class="role" x="705" y="208">Publisher boundary</text>
+    <rect class="header" x="870" y="154" width="190" height="74"/>
+    <text class="participant" x="965" y="184">Scheduler</text>
+    <text class="role" x="965" y="208">Delayed boundary</text>
+    <rect class="header" x="1110" y="154" width="120" height="74"/>
+    <text class="participant" x="1170" y="184">Report</text>
+    <text class="role" x="1170" y="208">Status DTO</text>
+  </g>
+
+  <path class="lifeline" d="M180 228 L180 940"/>
+  <path class="lifeline" d="M440 228 L440 940"/>
+  <path class="lifeline" d="M705 228 L705 940"/>
+  <path class="lifeline" d="M965 228 L965 940"/>
+  <path class="lifeline" d="M1170 228 L1170 940"/>
+  <rect class="activation" x="428" y="258" width="24" height="538"/>
+  <rect class="activation" x="693" y="338" width="24" height="82"/>
+  <rect class="activation" x="953" y="592" width="24" height="88"/>
+
+  <rect class="labelPill pillBlue" x="254" y="242" width="238" height="30"/>
+  <circle class="badge badgeBlue" cx="274" cy="257" r="13"/>
+  <text class="num" x="274" y="257">1</text>
+  <text class="labelText" x="296" y="257">startWorkflow(request)</text>
+  <path class="call callBlue" d="M180 282 L440 282"/>
+  <polygon points="440,282 426,275 426,289" fill="#4f86c6" stroke="#4f86c6" stroke-dasharray="none" style="stroke-dasharray:none"/>
+
+  <rect class="labelPill pillBlue" x="494" y="322" width="270" height="30"/>
+  <circle class="badge badgeBlue" cx="514" cy="337" r="13"/>
+  <text class="num" x="514" y="337">2</text>
+  <text class="labelText" x="536" y="337">publish PutEventsRequestEntry</text>
+  <path class="call callBlue" d="M452 362 L705 362"/>
+  <polygon points="705,362 691,355 691,369" fill="#4f86c6" stroke="#4f86c6" stroke-dasharray="none" style="stroke-dasharray:none"/>
+
+  <rect class="labelPill pillTeal" x="500" y="402" width="220" height="30"/>
+  <circle class="badge badgeTeal" cx="520" cy="417" r="13"/>
+  <text class="num" x="520" y="417">3</text>
+  <text class="labelText" x="542" y="417">return publish status</text>
+  <path class="return returnTeal" d="M705 442 L452 442"/>
+  <polygon points="452,442 466,435 466,449" fill="#3f8c86" stroke="#3f8c86" stroke-dasharray="none" style="stroke-dasharray:none"/>
+
+  <rect class="alt" x="120" y="482" width="1080" height="236"/>
+  <text class="branchTitle" x="144" y="512">alt publish failed</text>
+  <path class="branchDivider" d="M120 578 L1200 578"/>
+  <text class="branchTitle" x="144" y="610">else publish accepted</text>
+
+  <rect class="labelPill pillRed" x="724" y="522" width="308" height="30"/>
+  <circle class="badge badgeRed" cx="744" cy="537" r="13"/>
+  <text class="num" x="744" y="537">4</text>
+  <text class="labelText" x="766" y="537">skip Scheduler and mark failed</text>
+  <path class="call callRed" d="M452 562 L1170 562"/>
+  <polygon points="1170,562 1156,555 1156,569" fill="#b65c5c" stroke="#b65c5c" stroke-dasharray="none" style="stroke-dasharray:none"/>
+
+  <rect class="labelPill pillAmber" x="688" y="616" width="274" height="30"/>
+  <circle class="badge badgeAmber" cx="708" cy="631" r="13"/>
+  <text class="num" x="708" y="631">5</text>
+  <text class="labelText" x="730" y="631">schedule delayed workflow</text>
+  <path class="call callAmber" d="M452 656 L965 656"/>
+  <polygon points="965,656 951,649 951,663" fill="#9b6b30" stroke="#9b6b30" stroke-dasharray="none" style="stroke-dasharray:none"/>
+
+  <rect class="labelPill pillTeal" x="684" y="686" width="236" height="30"/>
+  <circle class="badge badgeTeal" cx="704" cy="701" r="13"/>
+  <text class="num" x="704" y="701">6</text>
+  <text class="labelText" x="726" y="701">return schedule status</text>
+  <path class="return returnTeal" d="M965 726 L452 726"/>
+  <polygon points="452,726 466,719 466,733" fill="#3f8c86" stroke="#3f8c86" stroke-dasharray="none" style="stroke-dasharray:none"/>
+
+  <rect class="labelPill pillTeal" x="238" y="806" width="260" height="30"/>
+  <circle class="badge badgeTeal" cx="258" cy="821" r="13"/>
+  <text class="num" x="258" y="821">7</text>
+  <text class="labelText" x="280" y="821">return OrderWorkflowReport</text>
+  <path class="return returnTeal" d="M440 846 L180 846"/>
+  <polygon points="180,846 194,839 194,853" fill="#3f8c86" stroke="#3f8c86" stroke-dasharray="none" style="stroke-dasharray:none"/>
+
+  <text class="subtitle" x="72" y="962">Transparent alt region: failure branch uses muted red, accepted branch uses amber, returns use teal.</text>
+</svg>

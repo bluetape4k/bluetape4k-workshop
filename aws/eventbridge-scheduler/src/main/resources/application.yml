@@ -1,0 +1,15 @@
+bluetape4k:
+  aws:
+    eventbridge-scheduler:
+      source: bluetape4k.workshop.orders
+      detail-type: OrderWorkflowRequested
+      event-bus-name: workshop-events
+      scheduler-group-name: order-workflows
+      scheduler-target-arn: arn:aws:lambda:ap-northeast-2:123456789012:function:order-reminder
+      flexible-time-window-mode: OFF
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
