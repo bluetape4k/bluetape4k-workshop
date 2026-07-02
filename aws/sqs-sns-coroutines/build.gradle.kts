@@ -38,6 +38,7 @@ dependencies {
 
     testImplementation(libs.bluetape4k.assertions)
     testImplementation(libs.bluetape4k.junit5)
+    testImplementation(libs.bluetape4k.testcontainers)
     testImplementation(libs.kotlinx.coroutines.test.lib)
     testImplementation(libs.mockk)
     testImplementation(libs.spring.boot.starter.webmvc.test)
@@ -46,4 +47,5 @@ dependencies {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
+    testImplementation(libs.testcontainers.localstack)
 }

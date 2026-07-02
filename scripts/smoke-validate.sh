@@ -36,7 +36,6 @@ case "${1:-help}" in
       :image-processing-ocr-api:test \
       :aws-cloudwatch-imds-observability:test \
       :aws-eventbridge-scheduler:test \
-      :aws-sqs-sns-coroutines:test \
       :aws-s3-vectors-access-grants:test \
       :kotlin-flow-extensions-event-aggregation:test \
       :kotlin-flow-extensions-metrics-sampling:test \
