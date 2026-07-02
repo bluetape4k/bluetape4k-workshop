@@ -183,4 +183,4 @@ PostgreSQL과 Kafka를 시작합니다.
 - timeout은 Kafka 결과를 알 수 없다는 뜻입니다. event id는 결정적으로 유지하고 consumer는 idempotent하게 만들어야 합니다.
 - `FALLBACK_STORE_FAILED`는 의도적으로 보이는 degraded state입니다. 주문은 존재하지만 reconciler가 복구하기 전까지 durable publication row가 없습니다.
 - `DEAD_LETTER` row는 운영자가 확인할 수 있도록 테이블에 남깁니다. relay loop가 자동 삭제하면 안 됩니다.
-- reconciler는 예제를 위해 단순하게 `reconcilerGrace`보다 오래된 주문 중 publication row가 없는 주문을 찾습니다. 운영 환경에서는 더 좁은 범위, 인덱스, 운영자 제어가 필요합니다.
+- relay와 reconciler는 eligibility, 정렬, limit, missing-row 탐지를 SQL에서 처리합니다. reconciler 자체는 예제를 위해 여전히 단순하게 유지했으므로, 운영 환경에서는 더 좁은 범위, 인덱스, 운영자 제어가 필요합니다.

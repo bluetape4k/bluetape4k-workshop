@@ -21,6 +21,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteAll
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import org.junit.jupiter.api.BeforeEach
@@ -299,6 +300,46 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
     }
 
     @Test
+    fun `claimNextBatch applies SQL eligibility ordering and limit`() {
+        val now = LocalDateTime.now()
+        val first = insertPublicationRow(
+            eventId = "order-placed:1001:v1",
+            aggregateId = "1001",
+            nextAttemptAt = now.minusMinutes(3),
+        )
+        val second = insertPublicationRow(
+            eventId = "order-placed:1002:v1",
+            aggregateId = "1002",
+            nextAttemptAt = now.minusMinutes(1),
+        )
+        val future = insertPublicationRow(
+            eventId = "order-placed:1003:v1",
+            aggregateId = "1003",
+            nextAttemptAt = now.plusMinutes(1),
+        )
+        val published = insertPublicationRow(
+            eventId = "order-placed:1004:v1",
+            aggregateId = "1004",
+            status = EventPublicationStatus.PUBLISHED,
+            nextAttemptAt = now.minusMinutes(5),
+        )
+
+        val claimed = eventPublicationRepository.claimNextBatch("worker-sql", 2)
+
+        claimed.map { it.eventId } shouldBeEqualTo listOf(first, second)
+        val claimStates = transactionTemplate.execute {
+            EventPublicationTable.selectAll().associate { row ->
+                row[EventPublicationTable.eventId] to row[EventPublicationTable.claimedBy]
+            }
+        }
+
+        claimStates.getValue(first) shouldBeEqualTo "worker-sql"
+        claimStates.getValue(second) shouldBeEqualTo "worker-sql"
+        claimStates.getValue(future) shouldBeEqualTo null
+        claimStates.getValue(published) shouldBeEqualTo null
+    }
+
+    @Test
     fun `reconciler reconstructs deterministic fallback row and documents duplicate risk`() {
         every {
             kafkaTemplate.send(any<String>(), any<String>(), any<String>())
@@ -330,6 +371,31 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
         }
 
         eventId.startsWith("order-placed:") shouldBeEqualTo true
+    }
+
+    @Test
+    fun `reconciler uses SQL cutoff and anti join for missing publications`() {
+        val oldMissingOrderId = createOrderWithCreatedAt(LocalDateTime.now().minusMinutes(5))
+        val futureMissingOrderId = createOrderWithCreatedAt(LocalDateTime.now().plusMinutes(5))
+        val existingOrderId = createOrderWithCreatedAt(LocalDateTime.now().minusMinutes(5))
+        val existingEventId = insertPublicationRow(
+            eventId = "order-placed:$existingOrderId:v1",
+            aggregateId = existingOrderId.toString(),
+        )
+
+        val result = publicationReconciler.reconcileOnce()
+
+        result.scanned shouldBeEqualTo 1
+        result.reconstructed shouldBeEqualTo 1
+        val eventIds = transactionTemplate.execute {
+            EventPublicationTable.selectAll()
+                .map { row -> row[EventPublicationTable.eventId] }
+                .toSet()
+        }
+
+        eventIds.contains("order-placed:$oldMissingOrderId:v1") shouldBeEqualTo true
+        eventIds.contains("order-placed:$futureMissingOrderId:v1") shouldBeEqualTo false
+        eventIds.contains(existingEventId) shouldBeEqualTo true
     }
 
     @Test
@@ -486,6 +552,43 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
         every { kafkaTemplate.send(any<String>(), any<String>(), any<String>()) } returns
             CompletableFuture.completedFuture<SendResult<String, String>>(mockk())
 
+        return eventId
+    }
+
+    private fun createOrderWithCreatedAt(createdAt: LocalDateTime): Long {
+        val order = transactionalOrderWriter.saveOrder(
+            customerId = "customer-${faker.number().digits(8)}",
+            product = faker.commerce().productName(),
+            quantity = 1,
+        )
+        transactionTemplate.execute {
+            OrderTable.update({ OrderTable.id eq order.id }) {
+                it[OrderTable.createdAt] = createdAt
+            }
+        }
+        return order.id
+    }
+
+    private fun insertPublicationRow(
+        eventId: String,
+        aggregateId: String,
+        status: EventPublicationStatus = EventPublicationStatus.NOT_PUBLISHED,
+        nextAttemptAt: LocalDateTime = LocalDateTime.now().minusSeconds(1),
+    ): String {
+        transactionTemplate.execute {
+            EventPublicationTable.insert {
+                it[EventPublicationTable.eventId] = eventId
+                it[aggregateType] = "Order"
+                it[EventPublicationTable.aggregateId] = aggregateId
+                it[eventType] = "OrderPlaced"
+                it[payload] = """{"eventId":"$eventId"}"""
+                it[EventPublicationTable.status] = status
+                it[directAttemptCount] = 3
+                it[relayRetryCount] = 0
+                it[EventPublicationTable.nextAttemptAt] = nextAttemptAt
+                it[updatedAt] = LocalDateTime.now()
+            }
+        }
         return eventId
     }
 }

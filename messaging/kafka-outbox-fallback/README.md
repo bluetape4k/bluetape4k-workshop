@@ -187,6 +187,6 @@ Useful focused checks:
   durable publication row exists until reconciliation repairs it.
 - `DEAD_LETTER` rows stay in the table for manual review. Do not delete them in
   an automated relay loop.
-- The reconciler is deliberately simple and scans orders without publication
-  rows after `reconcilerGrace`; production systems should use tighter bounds,
-  indexing, and operator controls.
+- The relay and reconciler keep eligibility, ordering, limits, and missing-row
+  detection in SQL. The reconciler is still deliberately simple; production
+  systems should add tighter bounds, indexing, and operator controls.
