@@ -4,7 +4,8 @@
 
 This module demonstrates in-process text utilities built on `bluetape4k-text` and small Kotlin
 helpers. It covers four reader-visible tasks: abuse-word filtering, language detection, text
-normalization before indexing, and a small multilingual search index with highlighted results.
+normalization before indexing, and sync/coroutine multilingual search indexes with highlighted
+results.
 
 ## Architecture
 
@@ -20,8 +21,10 @@ normalization before indexing, and a small multilingual search index with highli
 |---|---|---|
 | `AbuseWordFilter` | `AhoCorasickAutomaton` from `text-search` | Case-insensitive NFC matching with overlaps; masks matched spans with `*` |
 | `LanguageDetectionService` | Lingua detector from `bluetape4k-text-lingua` | Reuses one detector and returns `null` for blank or unknown text |
+| `CoroutineLanguageDetectionService` | `LanguageDetectionService`, `Mutex`, `Dispatchers.Default` | Serializes detector access for concurrent coroutine callers |
 | `TextNormalizer` | pure Kotlin object | Lowercases text, collapses whitespace, extracts deduplicated keywords |
 | `MultilingualSearchIndex` | `LanguageDetectionService`, `KoreanProcessor`, `JapaneseProcessor`, `TextNormalizer`, `AhoCorasickAutomaton` | Detects document/query language, builds an inverted term index, ranks matched documents, and emits source-span highlights |
+| `CoroutineMultilingualSearchIndex` | `CoroutineLanguageDetectionService`, immutable index snapshot, `AhoCorasickAutomaton` | Provides suspend `indexOf` and `search` APIs for coroutine services while keeping detector access guarded |
 
 ## Usage
 
@@ -99,6 +102,25 @@ inspect:
   `highlightedText` uses deterministic non-overlapping fragments from Aho-Corasick tokenization,
   so nested `<mark>` tags are intentionally avoided.
 
+### Coroutine-safe search index
+
+Use the coroutine variant when the same index is queried from many coroutine workers:
+
+```kotlin
+val detection = CoroutineLanguageDetectionService()
+val index = CoroutineMultilingualSearchIndex.indexOf(
+    documents = documents,
+    detectionService = detection,
+)
+
+val hits = index.search("서울 카페")
+```
+
+The coroutine index keeps the synchronous API separate on purpose. `MultilingualSearchIndex` remains
+small for single-threaded examples, while `CoroutineMultilingualSearchIndex` adds a guarded detector
+wrapper, an immutable index snapshot, and suspend APIs that run CPU-bound text work on
+`Dispatchers.Default`.
+
 ## Dependencies
 
 The module uses the repository version catalog:
@@ -109,5 +131,6 @@ dependencies {
     implementation(libs.bluetape4k.text.lingua)
     implementation(libs.bluetape4k.text.korean)
     implementation(libs.bluetape4k.text.japanese)
+    implementation(libs.kotlinx.coroutines.core.lib)
 }
 ```

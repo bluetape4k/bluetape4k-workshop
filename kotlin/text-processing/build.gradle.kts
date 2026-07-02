@@ -16,6 +16,7 @@ dependencies {
     // bluetape4k-text — Japanese tokenizer / blockword processing
     implementation(libs.bluetape4k.text.japanese)
 
+    implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.bluetape4k.logging)
 
     testImplementation(libs.bluetape4k.junit5)

@@ -14,16 +14,18 @@ Issue #332 adds a `kotlin/text-processing` workshop extension for multilingual s
   - English/unknown: `TextNormalizer.extractKeywords`.
 - Use Aho-Corasick for deterministic source-span matches and `<mark>` rendering.
 - Reject duplicate `SearchDocument.id` values because ids are the index key.
+- Keep the synchronous `MultilingualSearchIndex` for simple examples and add a separate `CoroutineMultilingualSearchIndex` for coroutine callers. The coroutine variant uses `CoroutineLanguageDetectionService` to serialize detector access and immutable index snapshots to avoid shared mutable state.
 
 ## Outcome
 
-The module now includes `MultilingualSearchIndex`, `SearchDocument`, `IndexedDocument`, `SearchHighlightMatch`, and `SearchHighlightHit`, with tests for English, Korean, Japanese, no-match, case normalization, overlaps, language recording, and duplicate ids.
+The module now includes `MultilingualSearchIndex`, `CoroutineMultilingualSearchIndex`, `CoroutineLanguageDetectionService`, `SearchDocument`, `IndexedDocument`, `SearchHighlightMatch`, and `SearchHighlightHit`, with tests for English, Korean, Japanese, no-match, case normalization, overlaps, language recording, duplicate ids, and concurrent suspend search.
 
 ## Verification
 
 - `:kotlin-text-processing:compileKotlin`
 - `:kotlin-text-processing:compileTestKotlin`
-- `:kotlin-text-processing:test` with 34 passing tests
+- `:kotlin-text-processing:test` with 37 passing tests
+- `SuspendedJobTester` coroutine stress test for shared-index concurrent search
 - README stale/image checks
 - Full bluetape4k diagram checklist plus rendered PNG eye check
 

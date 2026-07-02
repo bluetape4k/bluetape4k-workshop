@@ -10,7 +10,7 @@
   <rect class="canvas" width="1600" height="980"/>
   <rect class="frame" x="32" y="28" width="1536" height="924" rx="30"/>
   <text class="title" x="800" y="78" text-anchor="middle">Text Processing Search Index</text>
-  <text class="subtitle" x="800" y="112" text-anchor="middle">A reusable in-memory example for language detection, multilingual tokenization, inverted indexing, and highlighted search results.</text>
+  <text class="subtitle" x="800" y="112" text-anchor="middle">A reusable in-memory example for language detection, multilingual tokenization, sync/coroutine indexing, and highlighted search results.</text>
 
   <rect class="layerInput" x="80" y="150" width="1440" height="160" rx="24"/>
   <text class="layerTitle" x="112" y="192">Reader input</text>
@@ -28,17 +28,18 @@
   <rect class="layerCore" x="80" y="335" width="1440" height="180" rx="24"/>
   <text class="layerTitle" x="112" y="378">Search index core</text>
   <g filter="url(#shadow)">
-    <rect class="card" x="560" y="385" width="480" height="96" rx="18" fill="#FFFFFF" stroke="#9F7AD6" stroke-width="2.4"/>
-    <text class="cardTitle" x="800" y="423" text-anchor="middle">MultilingualSearchIndex</text>
-    <text class="cardText" x="800" y="450" text-anchor="middle">detect once, tokenize by language, rank by matched terms</text>
+    <rect class="card" x="560" y="385" width="480" height="112" rx="18" fill="#FFFFFF" stroke="#9F7AD6" stroke-width="2.4"/>
+    <text class="cardTitle" x="800" y="420" text-anchor="middle">Search index APIs</text>
+    <text class="cardText" x="800" y="446" text-anchor="middle">MultilingualSearchIndex</text>
+    <text class="cardText" x="800" y="471" text-anchor="middle">CoroutineMultilingualSearchIndex</text>
   </g>
 
   <rect class="layerText" x="80" y="540" width="1440" height="260" rx="24"/>
   <text class="layerTitle" x="112" y="584">Reusable bluetape4k-text components</text>
   <g filter="url(#shadow)">
     <rect class="card" x="145" y="615" width="300" height="86" rx="18" fill="#FFFFFF" stroke="#D8A43B" stroke-width="2.4"/>
-    <text class="cardTitle" x="295" y="650" text-anchor="middle">LanguageDetectionService</text>
-    <text class="cardText" x="295" y="676" text-anchor="middle">reused Lingua detector</text>
+    <text class="cardTitle" x="295" y="650" text-anchor="middle">Detection services</text>
+    <text class="cardText" x="295" y="676" text-anchor="middle">Lingua detector + Mutex guard</text>
   </g>
   <g filter="url(#shadow)">
     <rect class="card" x="485" y="615" width="270" height="86" rx="18" fill="#FFFFFF" stroke="#D8A43B" stroke-width="2.4"/>
@@ -64,15 +65,15 @@
   <text class="layerTitle" x="112" y="866">Local verification</text>
   <g filter="url(#shadow)">
     <rect class="card" x="560" y="854" width="480" height="50" rx="16" fill="#FFFFFF" stroke="#6BA6D8" stroke-width="2.4"/>
-    <text class="cardTitle" x="800" y="887" text-anchor="middle">JUnit multilingual search tests</text>
+    <text class="cardTitle" x="800" y="887" text-anchor="middle">JUnit search + coroutine tests</text>
   </g>
 
   <path class="line" data-connector="document-to-index" d="M 350 284 L 350 323 Q 350 335 362 335 L 788 335 Q 800 335 800 347 L 800 385"/>
   <path class="line" data-connector="query-to-index" d="M 1250 284 L 1250 323 Q 1250 335 1238 335 L 812 335 Q 800 335 800 347 L 800 385"/>
-  <path class="line" data-connector="index-to-language-detector" d="M 640 481 L 640 588 Q 640 600 628 600 L 307 600 Q 295 600 295 612 L 295 615"/>
-  <path class="line" data-connector="index-to-korean-processor" d="M 720 481 L 720 588 Q 720 600 708 600 L 632 600 Q 620 600 620 612 L 620 615"/>
-  <path class="line" data-connector="index-to-japanese-processor" d="M 880 481 L 880 580 Q 880 592 892 592 L 928 592 Q 940 592 940 604 L 940 615"/>
-  <path class="line" data-connector="index-to-normalizer" d="M 960 481 L 960 553 Q 960 565 972 565 L 1263 565 Q 1275 565 1275 577 L 1275 615"/>
-  <path class="line" data-connector="index-to-highlighter" d="M 800 481 L 800 715"/>
+  <path class="line" data-connector="index-to-language-detector" d="M 640 497 L 640 588 Q 640 600 628 600 L 307 600 Q 295 600 295 612 L 295 615"/>
+  <path class="line" data-connector="index-to-korean-processor" d="M 720 497 L 720 588 Q 720 600 708 600 L 632 600 Q 620 600 620 612 L 620 615"/>
+  <path class="line" data-connector="index-to-japanese-processor" d="M 880 497 L 880 580 Q 880 592 892 592 L 928 592 Q 940 592 940 604 L 940 615"/>
+  <path class="line" data-connector="index-to-normalizer" d="M 960 497 L 960 553 Q 960 565 972 565 L 1263 565 Q 1275 565 1275 577 L 1275 615"/>
+  <path class="line" data-connector="index-to-highlighter" d="M 800 497 L 800 715"/>
   <path class="line" data-connector="highlighter-to-tests" d="M 800 779 L 800 854"/>
 </svg>

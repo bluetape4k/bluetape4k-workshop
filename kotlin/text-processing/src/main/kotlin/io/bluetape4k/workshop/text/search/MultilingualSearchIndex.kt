@@ -5,6 +5,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
+import io.bluetape4k.text.search.AhoCorasickAutomaton
 import io.bluetape4k.text.search.AhoCorasickMatch
 import io.bluetape4k.text.search.NormalizationForm
 import io.bluetape4k.text.search.SearchToken
@@ -145,10 +146,7 @@ class MultilingualSearchIndex private constructor(
         indexedDocuments.associateBy { it.document.id }
 
     private val invertedIndex: Map<String, Set<String>> =
-        indexedDocuments
-            .flatMap { indexed -> indexed.terms.map { term -> term to indexed.document.id } }
-            .groupBy({ it.first }, { it.second })
-            .mapValues { (_, ids) -> ids.toCollection(linkedSetOf()) }
+        buildSearchInvertedIndex(indexedDocuments)
 
     /**
      * Searches the index and returns ranked hits with source offsets and highlighted text.
@@ -158,7 +156,7 @@ class MultilingualSearchIndex private constructor(
      */
     fun search(query: String, limit: Int = DEFAULT_LIMIT): List<SearchHighlightHit> {
         if (query.isBlank()) return emptyList()
-        val queryTerms = tokenize(query, detectionService.detectLanguage(query))
+        val queryTerms = tokenizeSearchText(query, detectionService.detectLanguage(query))
         if (queryTerms.isEmpty()) return emptyList()
 
         val candidateIds = queryTerms
@@ -170,12 +168,7 @@ class MultilingualSearchIndex private constructor(
             return emptyList()
         }
 
-        val automaton = ahoCorasick<String> {
-            ignoreCase = true
-            allowOverlaps = true
-            normalization = NormalizationForm.NFC
-            queryTerms.forEach { term -> keyword(term, term) }
-        }
+        val automaton = buildSearchHighlighter(queryTerms)
 
         val hits = candidateIds
             .mapNotNull { id ->
@@ -216,50 +209,68 @@ class MultilingualSearchIndex private constructor(
             documents: Collection<SearchDocument>,
             detectionService: LanguageDetectionService = LanguageDetectionService(),
         ): MultilingualSearchIndex {
-            documents.requireNotEmpty("documents")
-            val ids = documents.map { it.id }
-            require(ids.size == ids.toSet().size) {
-                "documents must have unique ids."
-            }
+            validateSearchDocuments(documents)
             val indexed = documents.map { document ->
                 val language = detectionService.detectLanguage(document.text)
                 IndexedDocument(
                     document = document,
                     language = language,
-                    terms = tokenize(document.text, language).toCollection(linkedSetOf()),
+                    terms = tokenizeSearchText(document.text, language).toCollection(linkedSetOf()),
                 )
             }
             return MultilingualSearchIndex(indexed, detectionService)
         }
-
-        private fun tokenize(text: String, language: Language?): List<String> =
-            when (language) {
-                Language.KOREAN -> tokenizeKorean(text)
-                Language.JAPANESE -> tokenizeJapanese(text)
-                else -> TextNormalizer.extractKeywords(text)
-            }
-                .mapNotNull { it.toIndexTermOrNull() }
-                .distinct()
-
-        private fun tokenizeKorean(text: String): List<String> {
-            val normalized = KoreanProcessor.normalize(text).toString()
-            return KoreanProcessor.tokenizeForNoun(normalized).map { it.text }
-        }
-
-        private fun tokenizeJapanese(text: String): List<String> =
-            JapaneseProcessor
-                .filterNoun(JapaneseProcessor.tokenize(text))
-                .map { it.surface }
-
-        private fun String.toIndexTermOrNull(): String? {
-            val normalized = TextNormalizer.normalize(this)
-                .trim { !it.isLetterOrDigit() }
-            return normalized.takeIf { it.length >= 2 }
-        }
     }
 }
 
-private fun List<AhoCorasickMatch<String>>.toHighlightMatches(text: String): List<SearchHighlightMatch> =
+internal fun validateSearchDocuments(documents: Collection<SearchDocument>) {
+    documents.requireNotEmpty("documents")
+    val ids = documents.map { it.id }
+    require(ids.size == ids.toSet().size) {
+        "documents must have unique ids."
+    }
+}
+
+internal fun tokenizeSearchText(text: String, language: Language?): List<String> =
+    when (language) {
+        Language.KOREAN -> tokenizeKorean(text)
+        Language.JAPANESE -> tokenizeJapanese(text)
+        else -> TextNormalizer.extractKeywords(text)
+    }
+        .mapNotNull { it.toIndexTermOrNull() }
+        .distinct()
+
+internal fun buildSearchInvertedIndex(indexedDocuments: List<IndexedDocument>): Map<String, Set<String>> =
+    indexedDocuments
+        .flatMap { indexed -> indexed.terms.map { term -> term to indexed.document.id } }
+        .groupBy({ it.first }, { it.second })
+        .mapValues { (_, ids) -> ids.toCollection(linkedSetOf()) }
+
+internal fun buildSearchHighlighter(queryTerms: Collection<String>): AhoCorasickAutomaton<String> =
+    ahoCorasick {
+        ignoreCase = true
+        allowOverlaps = true
+        normalization = NormalizationForm.NFC
+        queryTerms.forEach { term -> keyword(term, term) }
+    }
+
+private fun tokenizeKorean(text: String): List<String> {
+    val normalized = KoreanProcessor.normalize(text).toString()
+    return KoreanProcessor.tokenizeForNoun(normalized).map { it.text }
+}
+
+private fun tokenizeJapanese(text: String): List<String> =
+    JapaneseProcessor
+        .filterNoun(JapaneseProcessor.tokenize(text))
+        .map { it.surface }
+
+private fun String.toIndexTermOrNull(): String? {
+    val normalized = TextNormalizer.normalize(this)
+        .trim { !it.isLetterOrDigit() }
+    return normalized.takeIf { it.length >= 2 }
+}
+
+internal fun List<AhoCorasickMatch<String>>.toHighlightMatches(text: String): List<SearchHighlightMatch> =
     map { match ->
         SearchHighlightMatch(
             term = match.value,
@@ -269,7 +280,7 @@ private fun List<AhoCorasickMatch<String>>.toHighlightMatches(text: String): Lis
         )
     }
 
-private fun io.bluetape4k.text.search.AhoCorasickAutomaton<String>.toHighlightedText(text: String): String =
+internal fun AhoCorasickAutomaton<String>.toHighlightedText(text: String): String =
     tokenize(text).joinToString(separator = "") { token ->
         when (token) {
             is SearchToken.Fragment -> token.text
