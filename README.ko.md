@@ -222,6 +222,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Advanced | [`aws-ktor-dynamodb`](aws/ktor-dynamodb/) | `aws`, `ktor`, `coroutines`, `testcontainers` | Floci/LocalStack (TC) | fail-closed local mode에서 배우는 Ktor REST + DynamoDB conditional write |
 | Advanced | [`aws-eventbridge-scheduler`](aws/eventbridge-scheduler/) | `aws`, `coroutines` | Local adapters | EventBridge event envelope와 지연 Scheduler request mapping |
 | Advanced | [`aws-cloudwatch-imds-observability`](aws/cloudwatch-imds-observability/) | `aws`, `micrometer`, `coroutines` | Local adapters | CloudWatch metric/log publish intent, Micrometer snapshot, 명시적 IMDS metadata opt-in |
+| Advanced | [`aws-sqs-sns-coroutines`](aws/sqs-sns-coroutines/) | `aws`, `micrometer`, `coroutines` | Local adapters | SNS publish와 SQS consume을 ack, retry, dead-letter report 및 cancellation-safe coroutine으로 학습 |
 | Advanced | [`aws-s3-vectors-access-grants`](aws/s3-vectors-access-grants/) | `aws`, `coroutines` | Local adapters | S3 Vectors upsert/query와 S3 Access Grants read-decision 경계 |
 | Advanced | [`image-processing-advanced-workflow`](image-processing/advanced-workflow/) | `images-vips-java25`, `images-spring-boot`, `micrometer` | S3 또는 local storage | 업로드 → 원본 저장 → WebP 파생 이미지 → unsigned public URL |
 | Advanced | [`image-processing-ocr-api`](image-processing/ocr-api/) | `images-ocr`, `images`, `spring-boot4-core` | In-memory | 검증된 fallback과 선택 Tesseract를 사용하는 multipart OCR API |
@@ -235,6 +236,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 ./gradlew :aws-ktor-dynamodb:test --max-workers=1
 ./gradlew :aws-eventbridge-scheduler:test
 ./gradlew :aws-cloudwatch-imds-observability:test
+./gradlew :aws-sqs-sns-coroutines:test
 ./gradlew :aws-s3-vectors-access-grants:test
 ```
 

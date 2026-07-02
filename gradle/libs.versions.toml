@@ -687,6 +687,8 @@ aws2-cloudwatch-lib = { module = "software.amazon.awssdk:cloudwatch" }
 aws2-cloudwatchlogs-lib = { module = "software.amazon.awssdk:cloudwatchlogs" }
 aws2-eventbridge-lib = { module = "software.amazon.awssdk:eventbridge" }
 aws2-imds-lib = { module = "software.amazon.awssdk:imds" }
+aws2-sns-lib = { module = "software.amazon.awssdk:sns" }
+aws2-sqs-lib = { module = "software.amazon.awssdk:sqs" }
 aws2-s3control-lib = { module = "software.amazon.awssdk:s3control" }
 aws2-s3-lib = { module = "software.amazon.awssdk:s3" }
 aws2-s3-transfer-manager = { module = "software.amazon.awssdk:s3-transfer-manager" }

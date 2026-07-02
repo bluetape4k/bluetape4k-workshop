@@ -1,0 +1,16 @@
+bluetape4k:
+  aws:
+    sqs-sns:
+      topic-arn: arn:aws:sns:ap-northeast-2:123456789012:order-notifications
+      queue-url: https://sqs.ap-northeast-2.amazonaws.com/123456789012/order-notifications
+      subject: Order notification
+      max-messages: 10
+      wait-time-seconds: 1
+      visibility-timeout-seconds: 30
+      max-receive-count: 3
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
