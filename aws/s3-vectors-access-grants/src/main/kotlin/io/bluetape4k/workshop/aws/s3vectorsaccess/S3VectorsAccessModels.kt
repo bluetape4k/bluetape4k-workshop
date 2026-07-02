@@ -131,4 +131,8 @@ internal data class StoredVectorDocument(
     val objectUri: String,
     val vector: List<Float>,
     val metadata: Map<String, String>,
-)
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}

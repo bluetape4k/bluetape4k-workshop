@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.aws.sqssns
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import java.io.Serializable
 
 /**
  * Configuration for the SQS/SNS workshop example.
@@ -14,4 +15,8 @@ data class SqsSnsMessagingProperties(
     val waitTimeSeconds: Int = 1,
     val visibilityTimeoutSeconds: Int = 30,
     val maxReceiveCount: Int = 3,
-)
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}

@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.Positive
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.validation.annotation.Validated
+import java.io.Serializable
 import java.time.Duration
 
 /**
@@ -34,7 +35,7 @@ data class FallbackOutboxProperties(
     val relayEnabled: Boolean = true,
     val reconcilerEnabled: Boolean = true,
     val demoAdminEndpointsEnabled: Boolean = false,
-) {
+) : Serializable {
     @AssertTrue(message = "topic must be order-events")
     fun isTopicAllowed(): Boolean = topic == "order-events"
 
@@ -53,4 +54,8 @@ data class FallbackOutboxProperties(
 
     @AssertTrue(message = "reconcilerGrace must be positive")
     fun isReconcilerGracePositive(): Boolean = !reconcilerGrace.isZero && !reconcilerGrace.isNegative
+
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }

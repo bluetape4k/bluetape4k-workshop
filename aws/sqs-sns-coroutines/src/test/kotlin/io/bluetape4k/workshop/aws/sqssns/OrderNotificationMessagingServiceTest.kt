@@ -25,6 +25,7 @@ import software.amazon.awssdk.services.sqs.model.Message
 import software.amazon.awssdk.services.sqs.model.MessageSystemAttributeName
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
+import java.io.Serializable
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
@@ -196,7 +197,7 @@ class OrderNotificationMessagingServiceTest {
         val handler: CapturingHandler,
         val meterRegistry: SimpleMeterRegistry,
         val objectMapper: tools.jackson.databind.ObjectMapper,
-    ) {
+    ) : Serializable {
         fun eventJson(): String =
             objectMapper.writeValueAsString(
                 OrderNotificationEvent(
@@ -209,6 +210,10 @@ class OrderNotificationMessagingServiceTest {
                     publishedAt = "2026-07-02T01:02:03Z",
                 )
             )
+
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
     }
 
     private class CapturingHandler: OrderNotificationHandler {
@@ -315,7 +320,11 @@ class OrderNotificationMessagingServiceTest {
         val queueUrl: String,
         val receiptHandle: String,
         val timeoutSeconds: Int,
-    )
+    ) : Serializable {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
+    }
 
     companion object {
         private const val TOPIC_ARN = "arn:aws:sns:ap-northeast-2:123456789012:order-notifications"

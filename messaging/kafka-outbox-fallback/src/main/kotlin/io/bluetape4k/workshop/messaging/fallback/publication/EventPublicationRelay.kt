@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.messaging.fallback.publication
 
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.messaging.fallback.config.FallbackOutboxProperties
@@ -8,7 +9,6 @@ import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.Serializable
-import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -33,7 +33,7 @@ class EventPublicationRelay(
     }
 
     fun relayOnce(): RelayResult {
-        val workerId = "relay-${UUID.randomUUID()}"
+        val workerId = "relay-${Base58.randomString(8)}"
         val claimed = eventPublicationRepository.claimNextBatch(workerId, properties.relayBatchSize)
         var published = 0
         var failed = 0

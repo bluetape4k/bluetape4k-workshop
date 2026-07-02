@@ -484,17 +484,25 @@ internal enum class SensitiveRedactionRuleKind {
 private data class LanguageMetadata(
     val detectedLanguage: Language?,
     val bestConfidence: Double?,
-)
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 private data class SensitiveMatch(
     val range: SensitiveTextRange,
     val rule: SensitiveRedactionRule,
-)
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 private data class SensitiveMergedMatch(
     val range: SensitiveTextRange,
     val rules: List<SensitiveRedactionRule>,
-) {
+) : Serializable {
     val bestRule: SensitiveRedactionRule
         get() = rules.sortedByPriority().first()
 
@@ -508,6 +516,8 @@ private data class SensitiveMergedMatch(
         )
 
     companion object {
+        private const val serialVersionUID: Long = 1L
+
         fun of(match: SensitiveMatch): SensitiveMergedMatch =
             SensitiveMergedMatch(
                 range = match.range,
