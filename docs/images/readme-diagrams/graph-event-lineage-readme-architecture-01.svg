@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1280" viewBox="0 0 1500 1280" role="img" aria-labelledby="title desc">
+  <title id="title">Event Lineage Architecture</title>
+  <desc id="desc">A learner asks an audit question, domain lineage nodes model aggregate events and approval evidence, EventLineageService traverses bounded edges, and TinkerGraph returns a deterministic audit trail.</desc>
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#64748B" flood-opacity="0.13"/>
+    </filter>
+    <marker id="arrowBlue" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arrowTeal" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2D948C" stroke="#2D948C" stroke-dasharray="none" style="stroke-dasharray:none" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke="#9B7D54" stroke-dasharray="none" style="stroke-dasharray:none" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      .bg{fill:#F8FAFC}.title{font-family:"Architects Daughter";font-size:42px;fill:#263238}.subtitle,.body,.small,.legendText,.footer{font-family:"Comic Mono";fill:#3B4A54}.subtitle{font-size:18px}.layerTitle{font-family:"Architects Daughter";font-size:24px;fill:#344154}.layerNote{font-family:"Comic Mono";font-size:13px;fill:#667783}.layer{stroke:#CBD6DF;stroke-width:2}.layerLearn{fill:#F9FCFF}.layerDomain{fill:#F8FBF5}.layerService{fill:#FCFAF5}.layerEvidence{fill:#F7FCFB}.card{stroke-width:2.2}.blue{fill:#EFF6FF;stroke:#4F86C6}.green{fill:#F0F8F0;stroke:#6E8F4F}.amber{fill:#FFF7E8;stroke:#9B7D54}.teal{fill:#EBFAF8;stroke:#2D948C}.cardTitle{font-family:"Architects Daughter";font-size:25px;fill:#16202A}.body{font-size:15px}.small{font-size:13px;fill:#5C6E78}.line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}.learn{stroke:#4F86C6;marker-end:url(#arrowBlue)}.domain{stroke:#6E8F4F;marker-end:url(#arrowGreen)}.query{stroke:#2D948C;marker-end:url(#arrowTeal)}.evidence{stroke:#9B7D54;marker-end:url(#arrowAmber)}.legendBox{fill:#FFFFFF;stroke:#CAD6DF;stroke-width:1.8}.legendText{font-size:14px}
+    </style>
+  </defs>
+  <rect class="bg" width="1500" height="1280"/>
+  <text class="title" x="750" y="66" text-anchor="middle">Event Lineage Architecture</text>
+  <text class="subtitle" x="750" y="100" text-anchor="middle">GraphOperations turns audit questions into bounded event, decision, actor, and superseding traversals.</text>
+
+  <rect class="layer layerLearn" x="80" y="142" width="1340" height="168" rx="22"/>
+  <text class="layerTitle" x="124" y="190">Layer 1 - Learning surface</text>
+  <text class="layerNote" x="124" y="216">README and tests ask why a state exists</text>
+
+  <rect class="layer layerDomain" x="80" y="346" width="1340" height="254" rx="22"/>
+  <text class="layerTitle" x="124" y="394">Layer 2 - Domain lineage model</text>
+  <text class="layerNote" x="124" y="420">event, aggregate, decision, actor vertices</text>
+
+  <rect class="layer layerService" x="80" y="636" width="1340" height="254" rx="22"/>
+  <text class="layerTitle" x="124" y="684">Layer 3 - Query service</text>
+  <text class="layerNote" x="124" y="710">bounded traversal and deterministic sorting</text>
+
+  <rect class="layer layerEvidence" x="80" y="926" width="1340" height="204" rx="22"/>
+  <text class="layerTitle" x="124" y="974">Layer 4 - Evidence backend</text>
+  <text class="layerNote" x="124" y="1000">in-memory graph and audit result</text>
+
+  <g class="node" data-node="audit-question" filter="url(#shadow)">
+    <rect class="card blue" x="465" y="204" width="570" height="86" rx="14"/>
+    <text class="cardTitle" x="750" y="238" text-anchor="middle">Audit question</text>
+    <text class="body" x="750" y="265" text-anchor="middle">which event, decision, or actor explains this state?</text>
+  </g>
+
+  <g class="node" data-node="aggregate-state" filter="url(#shadow)">
+    <rect class="card green" x="160" y="452" width="330" height="96" rx="14"/>
+    <text class="cardTitle" x="325" y="488" text-anchor="middle">Aggregate state</text>
+    <text class="body" x="325" y="515" text-anchor="middle">order-1001, APPROVED, version 4</text>
+  </g>
+  <g class="node" data-node="event-stream" filter="url(#shadow)">
+    <rect class="card green" x="585" y="452" width="330" height="96" rx="14"/>
+    <text class="cardTitle" x="750" y="488" text-anchor="middle">Event stream</text>
+    <text class="body" x="750" y="515" text-anchor="middle">EMITS, CAUSED_BY, SUPERSEDES</text>
+  </g>
+  <g class="node" data-node="approval-evidence" filter="url(#shadow)">
+    <rect class="card amber" x="1010" y="452" width="330" height="96" rx="14"/>
+    <text class="cardTitle" x="1175" y="488" text-anchor="middle">Approval evidence</text>
+    <text class="body" x="1175" y="515" text-anchor="middle">Decision approved by Actor</text>
+  </g>
+
+  <g class="node" data-node="event-lineage-service" filter="url(#shadow)">
+    <rect class="card teal" x="465" y="750" width="570" height="96" rx="14"/>
+    <text class="cardTitle" x="750" y="786" text-anchor="middle">EventLineageService</text>
+    <text class="body" x="750" y="813" text-anchor="middle">events, causal path, audit trail, missing links</text>
+  </g>
+
+  <g class="node" data-node="tinkergraph" filter="url(#shadow)">
+    <rect class="card teal" x="190" y="1038" width="380" height="76" rx="14"/>
+    <text class="cardTitle" x="380" y="1070" text-anchor="middle">TinkerGraphOperations</text>
+    <text class="body" x="380" y="1095" text-anchor="middle">container-free GraphOperations backend</text>
+  </g>
+  <g class="node" data-node="audit-trail" filter="url(#shadow)">
+    <rect class="card amber" x="930" y="1038" width="380" height="76" rx="14"/>
+    <text class="cardTitle" x="1120" y="1070" text-anchor="middle">AggregateAuditTrail</text>
+    <text class="body" x="1120" y="1095" text-anchor="middle">events, root causes, approvals</text>
+  </g>
+
+  <g class="edge" data-edge="audit-question-&gt;event-stream" data-label="question names the current event state">
+    <path data-connector="learn-input" class="line learn" d="M 750 290 L 750 452"/>
+  </g>
+  <g class="edge" data-edge="aggregate-state-&gt;event-lineage-service" data-label="aggregate id scopes emitted events">
+    <path data-connector="aggregate-query" class="line domain" d="M 325 548 L 325 620 Q 325 640 345 640 L 670 640 Q 690 640 690 660 L 690 750"/>
+  </g>
+  <g class="edge" data-edge="event-stream-&gt;event-lineage-service" data-label="event edges provide causal traversal">
+    <path data-connector="event-query" class="line domain" d="M 750 548 L 750 750"/>
+  </g>
+  <g class="edge" data-edge="approval-evidence-&gt;event-lineage-service" data-label="decision and actor evidence enriches audit trail">
+    <path data-connector="decision-query" class="line domain" d="M 1175 548 L 1175 620 Q 1175 640 1155 640 L 830 640 Q 810 640 810 660 L 810 750"/>
+  </g>
+  <g class="edge" data-edge="event-lineage-service-&gt;tinkergraph" data-label="GraphOperations reads and writes vertices and edges">
+    <path data-connector="operation-query" class="line query" d="M 690 846 L 690 910 Q 690 930 670 930 L 380 930 Q 360 930 360 950 L 360 1038"/>
+  </g>
+  <g class="edge" data-edge="event-lineage-service-&gt;audit-trail" data-label="service returns deterministic audit result models">
+    <path data-connector="audit-output" class="line evidence" d="M 810 846 L 810 910 Q 810 930 830 930 L 1120 930 Q 1140 930 1140 950 L 1140 1038"/>
+  </g>
+
+  <rect class="legendBox" x="164" y="1164" width="1172" height="72" rx="16"/>
+  <path d="M 230 1199 L 300 1199" fill="none" stroke="#4F86C6" stroke-width="4" stroke-linecap="round"/>
+  <polygon points="300,1199 284,1191 284,1207" fill="#4F86C6"/>
+  <text class="legendText" x="318" y="1204">learner question</text>
+  <path d="M 512 1199 L 582 1199" fill="none" stroke="#6E8F4F" stroke-width="4" stroke-linecap="round"/>
+  <polygon points="582,1199 566,1191 566,1207" fill="#6E8F4F"/>
+  <text class="legendText" x="600" y="1204">domain lineage evidence</text>
+  <path d="M 872 1199 L 942 1199" fill="none" stroke="#2D948C" stroke-width="4" stroke-linecap="round"/>
+  <polygon points="942,1199 926,1191 926,1207" fill="#2D948C"/>
+  <text class="legendText" x="960" y="1204">graph backend calls</text>
+  <path d="M 1148 1199 L 1218 1199" fill="none" stroke="#9B7D54" stroke-width="4" stroke-linecap="round"/>
+  <polygon points="1218,1199 1202,1191 1202,1207" fill="#9B7D54"/>
+  <text class="legendText" x="1236" y="1204">audit result</text>
+  <text class="footer" x="750" y="1260" text-anchor="middle">Boundary: this example explains event causality and approval evidence, not graph-io import/export or JaVers persistence.</text>
+</svg>

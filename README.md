@@ -192,10 +192,12 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Basic | [`graph-social-network`](graph/social-network/) | `graph-core`, `graph-tinkerpop` | In-memory | Social graph modeling and traversal |
 | Basic | [`graph-knowledge-graph`](graph/knowledge-graph/) | `graph-core`, `graph-tinkerpop` | In-memory | Heterogeneous knowledge graph model and traversal |
 | Advanced | [`graph-abuser-detection`](graph/abuser-detection/) | `graph-core`, `graph-tinkerpop` | In-memory | Fraud/abuse relationship analysis |
+| Advanced | [`graph-event-lineage`](graph/event-lineage/) | `graph-core`, `graph-tinkerpop` | In-memory | Event lineage graph modeling, impact traversal, and audit trail assembly |
 | Advanced | [`graph-recommendation`](graph/recommendation/) | `graph-core`, `graph-tinkerpop` | In-memory | Recommendation graph traversal |
 
 ```bash
 ./gradlew :graph-io-pipeline:test
+./gradlew :graph-event-lineage:test
 ./gradlew :graph-social-network:test
 ```
 

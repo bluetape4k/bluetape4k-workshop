@@ -34,6 +34,7 @@ names.
 | `exposed/` | Exposed DAO/SQL DSL, relations, custom columns, Spring transactions |
 | `gateway/` | API gateway plus customers/orders microservices |
 | `gatling/` | Gatling performance tests |
+| `graph/` | TinkerGraph, traversal, graph-io, lineage, and audit examples |
 | `io/` | Okio examples |
 | `json/` | Jackson 3 and JsonView examples |
 | `kotlin/` | Coroutines, design patterns, Kotlin workshops |
