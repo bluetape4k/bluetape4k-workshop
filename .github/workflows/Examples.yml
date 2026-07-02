@@ -21,6 +21,7 @@ on:
       - 'ktor/exposed-rest/**'
       - 'aws/ktor-dynamodb/**'
       - 'aws/cloudwatch-imds-observability/**'
+      - 'aws/eventbridge-scheduler/**'
       - 'aws/s3-vectors-access-grants/**'
       - 'kotlin/flow-extensions-event-aggregation/**'
       - 'kotlin/flow-extensions-metrics-sampling/**'
@@ -56,6 +57,7 @@ on:
       - 'ktor/exposed-rest/**'
       - 'aws/ktor-dynamodb/**'
       - 'aws/cloudwatch-imds-observability/**'
+      - 'aws/eventbridge-scheduler/**'
       - 'aws/s3-vectors-access-grants/**'
       - 'kotlin/flow-extensions-event-aggregation/**'
       - 'kotlin/flow-extensions-metrics-sampling/**'
@@ -119,6 +121,7 @@ jobs:
       # - exposed-javers-approval-workflow: in-memory JaVers approval decision path
       # - spring-boot-cache-caffeine: local cache path
       # - spring-boot-resilience4j-coroutines: resilience path
+      # - aws-eventbridge-scheduler: local EventBridge + Scheduler boundary path
       # - jackson/jsonview examples: serialization path
       - name: Run H2/default examples
         run: >-
@@ -133,6 +136,7 @@ jobs:
           :graph-io-pipeline:test
           :image-processing-ocr-api:test
           :aws-cloudwatch-imds-observability:test
+          :aws-eventbridge-scheduler:test
           :aws-s3-vectors-access-grants:test
           :kotlin-flow-extensions-event-aggregation:test
           :kotlin-flow-extensions-metrics-sampling:test
@@ -169,6 +173,8 @@ jobs:
             image-processing/ocr-api/build/reports/tests/test/
             aws/cloudwatch-imds-observability/build/test-results/test/*.xml
             aws/cloudwatch-imds-observability/build/reports/tests/test/
+            aws/eventbridge-scheduler/build/test-results/test/*.xml
+            aws/eventbridge-scheduler/build/reports/tests/test/
             aws/s3-vectors-access-grants/build/test-results/test/*.xml
             aws/s3-vectors-access-grants/build/reports/tests/test/
             kotlin/flow-extensions-event-aggregation/build/test-results/test/*.xml
