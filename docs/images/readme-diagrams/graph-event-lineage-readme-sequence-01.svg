@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1120" viewBox="0 0 1680 1120" role="img" aria-labelledby="title desc">
+  <title id="title">Event Lineage Audit Sequence</title>
+  <desc id="desc">A test seeds lineage vertices and edges, asks EventLineageService for aggregate audit evidence, follows causal and approval branches, then returns a deterministic audit trail.</desc>
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/>
+    </filter>
+    <style>
+      .title{font-family:"Architects Daughter";font-size:42px;fill:#263238}.subtitle,.message,.footer,.role{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:20px;fill:#1F3138}.role{font-size:12px;fill:#546A73}.message{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.box{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#EAF6EF;stroke:#6F9278;stroke-width:1.5}.call,.return{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.normal{stroke:#4F86C6;marker-end:url(#seq-blue)}.state{stroke:#2D948C;marker-end:url(#seq-teal)}.fair{stroke:#6E8F4F;marker-end:url(#seq-green)}.branchCall{stroke:#D08A39;marker-end:url(#seq-amber)}.return{stroke:#2D948C;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#seq-teal)}.labelPill{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.blueLabel{stroke:#9CC2D1}.tealLabel{stroke:#9DCBC6}.greenLabel{stroke:#B6C9A4}.amberLabel{stroke:#D8B574}.badge{stroke-width:1.8}.blueBadge{fill:#EAF4F8;stroke:#4F86C6}.tealBadge{fill:#EBFAF8;stroke:#2D948C}.greenBadge{fill:#EEF7F0;stroke:#6E8F4F}.amberBadge{fill:#FFF7E8;stroke:#D08A39}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.blueText{fill:#2F6F8E}.tealText{fill:#247C75}.greenText{fill:#55783F}.amberText{fill:#9A641F}.alt{fill:none;stroke:#D08A39;stroke-width:2.2;stroke-dasharray:12 8}.branch{fill:#FFFFFF;stroke:#D08A39;stroke-width:1.6}.branchText{font-family:"Architects Daughter";font-size:18px;fill:#8A5A22}
+    </style>
+    <marker id="seq-blue" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="seq-teal" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2D948C" stroke="#2D948C" stroke-dasharray="none" style="stroke-dasharray:none" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="seq-green" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="seq-amber" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#D08A39" stroke="#D08A39" stroke-dasharray="none" style="stroke-dasharray:none" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+  <rect x="24" y="24" width="1632" height="1072" rx="20" class="frame"/>
+  <text x="840" y="76" text-anchor="middle" class="title">Event Lineage Audit Sequence</text>
+  <text x="840" y="108" text-anchor="middle" class="subtitle">A deterministic test reconstructs events, causal roots, approvals, superseding evidence, and the final audit trail.</text>
+
+  <g filter="url(#shadow)"><rect x="70" y="154" width="210" height="74" rx="10" class="box"/><text x="175" y="184" text-anchor="middle" class="participant">JUnit Test</text><text x="175" y="208" text-anchor="middle" class="role">seed owner</text></g>
+  <g filter="url(#shadow)"><rect x="390" y="154" width="230" height="74" rx="10" class="box"/><text x="505" y="184" text-anchor="middle" class="participant">EventLineageService</text><text x="505" y="208" text-anchor="middle" class="role">GraphOperations facade</text></g>
+  <g filter="url(#shadow)"><rect x="720" y="154" width="220" height="74" rx="10" class="box"/><text x="830" y="184" text-anchor="middle" class="participant">TinkerGraph</text><text x="830" y="208" text-anchor="middle" class="role">vertices + edges</text></g>
+  <g filter="url(#shadow)"><rect x="1040" y="154" width="240" height="74" rx="10" class="box"/><text x="1160" y="184" text-anchor="middle" class="participant">Decision / Actor</text><text x="1160" y="208" text-anchor="middle" class="role">approval evidence</text></g>
+  <g filter="url(#shadow)"><rect x="1400" y="154" width="210" height="74" rx="10" class="box"/><text x="1505" y="184" text-anchor="middle" class="participant">AuditTrail</text><text x="1505" y="208" text-anchor="middle" class="role">result model</text></g>
+
+  <line x1="175" y1="228" x2="175" y2="1018" class="lifeline"/>
+  <line x1="505" y1="228" x2="505" y2="1018" class="lifeline"/>
+  <line x1="830" y1="228" x2="830" y2="1018" class="lifeline"/>
+  <line x1="1160" y1="228" x2="1160" y2="1018" class="lifeline"/>
+  <line x1="1505" y1="228" x2="1505" y2="1018" class="lifeline"/>
+  <rect class="activation" x="497" y="314" width="16" height="638" rx="6"/>
+  <rect class="activation" x="822" y="404" width="16" height="312" rx="6"/>
+  <rect class="activation" x="1152" y="742" width="16" height="70" rx="6"/>
+  <rect class="activation" x="1497" y="858" width="16" height="70" rx="6"/>
+
+  <rect x="224" y="254" width="266" height="34" rx="17" class="labelPill blueLabel"/><circle cx="248" cy="271" r="13" class="badge blueBadge"/><text x="248" y="276" text-anchor="middle" class="badgeText num blueText">1</text><text x="272" y="276" class="message blueText">seed order lineage graph</text><path data-connector="seq-1" d="M 175 330 H 497" class="call normal"/>
+  <rect x="552" y="344" width="272" height="34" rx="17" class="labelPill greenLabel"/><circle cx="576" cy="361" r="13" class="badge greenBadge"/><text x="576" y="366" text-anchor="middle" class="badgeText num greenText">2</text><text x="600" y="366" class="message greenText">create Event and Aggregate</text><path data-connector="seq-2" d="M 513 420 H 822" class="call fair"/>
+  <rect x="552" y="434" width="274" height="34" rx="17" class="labelPill greenLabel"/><circle cx="576" cy="451" r="13" class="badge greenBadge"/><text x="576" y="456" text-anchor="middle" class="badgeText num greenText">3</text><text x="600" y="456" class="message greenText">link EMITS and CAUSED_BY</text><path data-connector="seq-3" d="M 505 494 H 830" class="call fair"/>
+  <rect x="238" y="524" width="252" height="34" rx="17" class="labelPill blueLabel"/><circle cx="262" cy="541" r="13" class="badge blueBadge"/><text x="262" y="546" text-anchor="middle" class="badgeText num blueText">4</text><text x="286" y="546" class="message blueText">auditTrailForAggregate</text><path data-connector="seq-4" d="M 175 584 H 505" class="call normal"/>
+
+  <rect x="372" y="632" width="880" height="214" rx="16" class="alt"/>
+  <rect x="414" y="614" width="256" height="32" rx="16" class="branch"/>
+  <text x="542" y="636" text-anchor="middle" class="branchText">alt lineage branches</text>
+  <rect x="554" y="654" width="276" height="34" rx="17" class="labelPill tealLabel"/><circle cx="578" cy="671" r="13" class="badge tealBadge"/><text x="578" y="676" text-anchor="middle" class="badgeText num tealText">5</text><text x="602" y="676" class="message tealText">follow CAUSED_BY path</text><path data-connector="seq-5" d="M 505 714 H 830" class="call state"/>
+  <rect x="846" y="742" width="302" height="34" rx="17" class="labelPill amberLabel"/><circle cx="870" cy="759" r="13" class="badge amberBadge"/><text x="870" y="764" text-anchor="middle" class="badgeText num amberText">6</text><text x="894" y="764" class="message amberText">read approval actor evidence</text><path data-connector="seq-6" d="M 513 804 H 1152" class="call branchCall"/>
+
+  <rect x="890" y="858" width="326" height="34" rx="17" class="labelPill tealLabel"/><circle cx="914" cy="875" r="13" class="badge tealBadge"/><text x="914" y="880" text-anchor="middle" class="badgeText num tealText">7</text><text x="938" y="880" class="message tealText">build AggregateAuditTrail</text><path data-connector="seq-7" d="M 513 912 H 1497" class="call state"/>
+  <rect x="214" y="954" width="292" height="34" rx="17" class="labelPill tealLabel"/><circle cx="238" cy="971" r="13" class="badge tealBadge"/><text x="238" y="976" text-anchor="middle" class="badgeText num tealText">8</text><text x="262" y="976" class="message tealText">return deterministic report</text><path data-connector="seq-8" d="M 1505 1012 H 175" class="return"/>
+
+  <rect x="96" y="1042" width="1488" height="34" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
+  <text x="840" y="1065" text-anchor="middle" class="footer">Reader contract: labels sit above call lines, arrowheads match line colors, and the alt frame body is transparent.</text>
+</svg>

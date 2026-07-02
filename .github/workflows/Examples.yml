@@ -16,6 +16,7 @@ on:
       - 'spring-boot/text-moderation-api/**'
       - 'json/jackson-examples/**'
       - 'json/jsonview-examples/**'
+      - 'graph/event-lineage/**'
       - 'graph/io-pipeline/**'
       - 'image-processing/ocr-api/**'
       - 'ktor/exposed-rest/**'
@@ -55,6 +56,7 @@ on:
       - 'spring-boot/text-moderation-api/**'
       - 'json/jackson-examples/**'
       - 'json/jsonview-examples/**'
+      - 'graph/event-lineage/**'
       - 'graph/io-pipeline/**'
       - 'image-processing/ocr-api/**'
       - 'ktor/exposed-rest/**'
@@ -139,6 +141,7 @@ jobs:
           :spring-boot-text-moderation-api:test
           :jackson-examples:test
           :jsonview-examples:test
+          :graph-event-lineage:test
           :graph-io-pipeline:test
           :image-processing-ocr-api:test
           :aws-cloudwatch-imds-observability:test
@@ -175,6 +178,8 @@ jobs:
             json/jackson-examples/build/reports/tests/test/
             json/jsonview-examples/build/test-results/test/*.xml
             json/jsonview-examples/build/reports/tests/test/
+            graph/event-lineage/build/test-results/test/*.xml
+            graph/event-lineage/build/reports/tests/test/
             graph/io-pipeline/build/test-results/test/*.xml
             graph/io-pipeline/build/reports/tests/test/
             image-processing/ocr-api/build/test-results/test/*.xml
