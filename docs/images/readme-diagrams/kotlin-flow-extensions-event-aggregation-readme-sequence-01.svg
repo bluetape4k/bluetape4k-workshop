@@ -1,68 +1,129 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="760" viewBox="0 0 1120 760" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1420" height="980" viewBox="0 0 1420 980" role="img" aria-labelledby="title desc">
   <title id="title">Event Aggregation Sequence</title>
-  <desc id="desc">Sequence showing bounded aggregation, read model projection, lifecycle collapse, and sanitized audit output.</desc>
+  <desc id="desc">Best-practices sequence diagram showing bounded Flow aggregation, read-model projection, audit sanitization, and collector output.</desc>
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 1 1 L 9 5 L 1 9 z" fill="#314a67"/>
+    <marker id="arrowCall" viewBox="0 0 10 10" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86c6" stroke="#4f86c6" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <marker id="arrowWork" viewBox="0 0 10 10" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#6e8f4f" stroke="#6e8f4f" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <marker id="arrowAudit" viewBox="0 0 10 10" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#8a6a3b" stroke="#8a6a3b" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <marker id="arrowReturn" viewBox="0 0 10 10" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2b8f88" stroke="#2b8f88" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
     <style>
-      .title { font-family: 'Architects Daughter', 'Comic Mono'; font-size: 34px; fill: #1f2937; }
-      .actor, .message, .note { font-family: 'Comic Mono', 'Architects Daughter'; fill: #263238; }
-      .actor { font-size: 16px; font-weight: 700; }
-      .message { font-size: 13px; }
-      .note { font-size: 13px; fill: #52616f; }
-      .box { fill: #ffffff; stroke: #314a67; stroke-width: 2.2; rx: 7; }
-      .lifeline { stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 7 7; }
-      .call { fill: none; stroke: #314a67; stroke-width: 2.6; marker-end: url(#arrow); }
-      .return { fill: none; stroke: #2d9d78; stroke-width: 2.6; stroke-dasharray: 8 5; marker-end: url(#arrow); }
-      .message-label { fill: #fbfcfe; stroke: #d4dce6; stroke-width: 1.2; rx: 5; }
+      text { letter-spacing: 0; }
+      .frame { fill: #fbfcf8; stroke: #40545d; stroke-width: 3; rx: 20; }
+      .title { font-family: "Architects Daughter"; font-size: 40px; fill: #263238; }
+      .subtitle, .role, .msg, .note, .badgeText { font-family: "Comic Mono"; fill: #36464f; }
+      .subtitle { font-size: 17px; }
+      .participant { font-family: "Architects Daughter"; font-size: 20px; fill: #1f3138; }
+      .role { font-size: 13px; fill: #546a73; }
+      .header { fill: #ffffff; stroke: #546e7a; stroke-width: 2; rx: 10; }
+      .lifeline { stroke: #9aaab1; stroke-width: 2; stroke-dasharray: 7 8; stroke-linecap: round; }
+      .activation { fill: #eef8f0; stroke: #6f8f77; stroke-width: 1.8; rx: 6; }
+      .activationAudit { fill: #fff7e8; stroke: #9b7d54; stroke-width: 1.8; rx: 6; }
+      .call, .work, .audit, .return { fill: none; stroke-width: 3.1; stroke-linecap: round; stroke-linejoin: round; }
+      .call { stroke: #4f86c6; marker-end: url(#arrowCall); }
+      .work { stroke: #6e8f4f; marker-end: url(#arrowWork); }
+      .audit { stroke: #8a6a3b; marker-end: url(#arrowAudit); }
+      .return { stroke: #2b8f88; stroke-dasharray: 8 6; marker-end: url(#arrowReturn); }
+      .labelPill, .label { fill: #ffffff; stroke-width: 1.6; rx: 17; }
+      .labelCall { stroke: #9cc6df; }
+      .labelWork { stroke: #b6c9a4; }
+      .labelAudit { stroke: #c8a66e; }
+      .labelReturn { stroke: #9bc9c4; }
+      .badgeCircle { fill: #fffefa; stroke-width: 1.6; }
+      .badgeCall { stroke: #4f86c6; }
+      .badgeWork { stroke: #6e8f4f; }
+      .badgeAudit { stroke: #8a6a3b; }
+      .badgeReturn { stroke: #2b8f88; }
+      .badgeText { font-size: 12px; font-weight: 700; text-anchor: middle; }
+      .num.callText, .callText { fill: #276b9d; }
+      .num.workText, .workText { fill: #55783f; }
+      .num.auditText, .auditText { fill: #7c582e; }
+      .num.returnText, .returnText { fill: #217a74; }
+      .msg { font-size: 14px; font-weight: 600; }
+      .note { font-size: 13px; fill: #5b6f7a; }
     </style>
   </defs>
-  <rect width="1120" height="760" fill="#fbfcfe"/>
-  <text class="title" x="560" y="44" text-anchor="middle">Event Aggregation Sequence</text>
 
-  <rect class="box" x="48" y="64" width="170" height="58"/>
-  <text class="actor" x="133" y="99" text-anchor="middle">Event Flow</text>
-  <rect class="box" x="260" y="64" width="170" height="58"/>
-  <text class="actor" x="345" y="99" text-anchor="middle">Aggregator</text>
-  <rect class="box" x="472" y="64" width="170" height="58"/>
-  <text class="actor" x="557" y="99" text-anchor="middle">Read Model</text>
-  <rect class="box" x="684" y="64" width="170" height="58"/>
-  <text class="actor" x="769" y="99" text-anchor="middle">Audit Flow</text>
-  <rect class="box" x="896" y="64" width="170" height="58"/>
-  <text class="actor" x="981" y="99" text-anchor="middle">Collector</text>
+  <rect class="frame" x="24" y="24" width="1372" height="932"/>
+  <text class="title" x="710" y="78" text-anchor="middle">Event Aggregation Sequence</text>
+  <text class="subtitle" x="710" y="108" text-anchor="middle">Flow extensions aggregate bounded events, publish a read model, sanitize audit details, and emit learner-safe output.</text>
 
-  <path class="lifeline" d="M 133 122 L 133 706"/>
-  <path class="lifeline" d="M 345 122 L 345 706"/>
-  <path class="lifeline" d="M 557 122 L 557 706"/>
-  <path class="lifeline" d="M 769 122 L 769 706"/>
-  <path class="lifeline" d="M 981 122 L 981 706"/>
+  <rect class="header" x="70" y="150" width="190" height="76"/>
+  <text class="participant" x="165" y="181" text-anchor="middle">Event Flow</text>
+  <text class="role" x="165" y="205" text-anchor="middle">domain events</text>
+  <rect class="header" x="338" y="150" width="200" height="76"/>
+  <text class="participant" x="438" y="181" text-anchor="middle">Aggregator</text>
+  <text class="role" x="438" y="205" text-anchor="middle">window + chunk</text>
+  <rect class="header" x="616" y="150" width="200" height="76"/>
+  <text class="participant" x="716" y="181" text-anchor="middle">Read Model</text>
+  <text class="role" x="716" y="205" text-anchor="middle">projection</text>
+  <rect class="header" x="894" y="150" width="200" height="76"/>
+  <text class="participant" x="994" y="181" text-anchor="middle">Audit Flow</text>
+  <text class="role" x="994" y="205" text-anchor="middle">sanitizer</text>
+  <rect class="header" x="1162" y="150" width="190" height="76"/>
+  <text class="participant" x="1257" y="181" text-anchor="middle">Collector</text>
+  <text class="role" x="1257" y="205" text-anchor="middle">test output</text>
 
-  <path class="call" d="M 133 156 L 345 156"/>
-  <rect class="message-label" x="154" y="174" width="170" height="24"/>
-  <text class="message" x="239" y="191" text-anchor="middle">events replayed</text>
+  <line class="lifeline" x1="165" y1="226" x2="165" y2="840"/>
+  <line class="lifeline" x1="438" y1="226" x2="438" y2="840"/>
+  <line class="lifeline" x1="716" y1="226" x2="716" y2="840"/>
+  <line class="lifeline" x1="994" y1="226" x2="994" y2="840"/>
+  <line class="lifeline" x1="1257" y1="226" x2="1257" y2="840"/>
 
-  <path class="call" d="M 345 242 L 557 242"/>
-  <rect class="message-label" x="358" y="260" width="186" height="24"/>
-  <text class="message" x="451" y="277" text-anchor="middle">chunk and window</text>
+  <rect class="activation" x="429" y="316" width="18" height="418"/>
+  <rect class="activation" x="707" y="468" width="18" height="122"/>
+  <rect class="activationAudit" x="985" y="638" width="18" height="110"/>
+  <rect class="activation" x="1248" y="530" width="18" height="266"/>
 
-  <path class="call" d="M 345 328 L 557 328"/>
-  <rect class="message-label" x="372" y="346" width="158" height="24"/>
-  <text class="message" x="451" y="363" text-anchor="middle">scan snapshot</text>
+  <rect class="label labelPill labelCall" x="202" y="270" width="254" height="34"/>
+  <circle class="badgeCircle badgeCall" cx="226" cy="287" r="13"/>
+  <text class="badgeText num callText" x="226" y="292">1</text>
+  <text class="msg callText" x="250" y="292">replay domain event stream</text>
+  <path class="call" d="M 165 324 L 438 324"/>
 
-  <path class="return" d="M 557 414 L 981 414"/>
-  <rect class="message-label" x="644" y="432" width="250" height="24"/>
-  <text class="message" x="769" y="449" text-anchor="middle">summary and read model</text>
+  <rect class="label labelPill labelWork" x="470" y="360" width="280" height="34"/>
+  <circle class="badgeCircle badgeWork" cx="494" cy="377" r="13"/>
+  <text class="badgeText num workText" x="494" y="382">2</text>
+  <text class="msg workText" x="518" y="382">chunk events into windows</text>
+  <path class="work" d="M 447 414 L 716 414"/>
 
-  <path class="call" d="M 557 500 L 981 500"/>
-  <rect class="message-label" x="642" y="518" width="254" height="24"/>
-  <text class="message" x="769" y="535" text-anchor="middle">collapse status changes</text>
+  <rect class="label labelPill labelWork" x="470" y="450" width="278" height="34"/>
+  <circle class="badgeCircle badgeWork" cx="494" cy="467" r="13"/>
+  <text class="badgeText num workText" x="494" y="472">3</text>
+  <text class="msg workText" x="518" y="472">fold read-model snapshot</text>
+  <path class="work" d="M 438 504 L 716 504"/>
 
-  <path class="call" d="M 345 586 L 769 586"/>
-  <rect class="message-label" x="444" y="604" width="226" height="24"/>
-  <text class="message" x="557" y="621" text-anchor="middle">sanitize audit entry</text>
+  <rect class="label labelPill labelReturn" x="758" y="540" width="294" height="34"/>
+  <circle class="badgeCircle badgeReturn" cx="782" cy="557" r="13"/>
+  <text class="badgeText num returnText" x="782" y="562">4</text>
+  <text class="msg returnText" x="806" y="562">publish summary projection</text>
+  <path class="return" d="M 716 594 L 1257 594"/>
 
-  <path class="return" d="M 769 672 L 981 672"/>
-  <rect class="message-label" x="788" y="690" width="174" height="24"/>
-  <text class="message" x="875" y="707" text-anchor="middle">redacted output</text>
+  <rect class="label labelPill labelAudit" x="760" y="630" width="302" height="34"/>
+  <circle class="badgeCircle badgeAudit" cx="784" cy="647" r="13"/>
+  <text class="badgeText num auditText" x="784" y="652">5</text>
+  <text class="msg auditText" x="808" y="652">sanitize audit entry text</text>
+  <path class="audit" d="M 438 684 L 994 684"/>
+
+  <rect class="label labelPill labelAudit" x="760" y="720" width="286" height="34"/>
+  <circle class="badgeCircle badgeAudit" cx="784" cy="737" r="13"/>
+  <text class="badgeText num auditText" x="784" y="742">6</text>
+  <text class="msg auditText" x="808" y="742">collapse lifecycle states</text>
+  <path class="audit" d="M 716 774 L 994 774"/>
+
+  <rect class="label labelPill labelReturn" x="1030" y="810" width="258" height="34"/>
+  <circle class="badgeCircle badgeReturn" cx="1054" cy="827" r="13"/>
+  <text class="badgeText num returnText" x="1054" y="832">7</text>
+  <text class="msg returnText" x="1078" y="832">emit redacted output</text>
+  <path class="return" d="M 994 864 L 1257 864"/>
+
+  <rect x="92" y="890" width="1236" height="42" rx="12" fill="#ffffff" stroke="#ccd7da" stroke-width="2"/>
+  <text class="note" x="710" y="916" text-anchor="middle">The collector sees aggregated state plus sanitized audit text; raw event details stay inside the pipeline.</text>
 </svg>
