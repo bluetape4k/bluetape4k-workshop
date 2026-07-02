@@ -5,6 +5,7 @@ import com.ninjasquad.springmockk.MockkSpyBean
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeLessThan
+import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.workshop.messaging.fallback.api.OrderRequest
 import io.bluetape4k.workshop.messaging.fallback.api.OrderResponse
 import io.bluetape4k.workshop.messaging.fallback.api.OrderPublicationStatus
@@ -34,6 +35,10 @@ import org.springframework.transaction.support.TransactionTemplate
 import io.micrometer.core.instrument.MeterRegistry
 import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.CyclicBarrier
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.system.measureTimeMillis
 
 class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
@@ -275,12 +280,32 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
     @Test
     fun `concurrent relay calls cannot claim the same row twice`() {
         createFallbackPublication()
+        val barrier = CyclicBarrier(2)
+        val claimedBy = ConcurrentLinkedQueue<String>()
+        val emptyClaims = AtomicInteger()
 
-        val first = eventPublicationRepository.claimNextBatch("worker-a", 1).single()
-        val second = eventPublicationRepository.claimNextBatch("worker-b", 1)
+        MultithreadingTester()
+            .workers(2)
+            .rounds(1)
+            .add {
+                barrier.await(5, TimeUnit.SECONDS)
+                val workerId = Thread.currentThread().name
+                val claimed = eventPublicationRepository.claimNextBatch(workerId, 1)
+                if (claimed.isEmpty()) {
+                    emptyClaims.incrementAndGet()
+                } else {
+                    claimedBy += requireNotNull(claimed.single().claimedBy)
+                }
+            }
+            .run()
 
-        first.claimedBy shouldBeEqualTo "worker-a"
-        second.size shouldBeEqualTo 0
+        claimedBy.size shouldBeEqualTo 1
+        emptyClaims.get() shouldBeEqualTo 1
+        val storedClaim = transactionTemplate.execute {
+            EventPublicationTable.selectAll().single()[EventPublicationTable.claimedBy]
+        }
+
+        claimedBy.single() shouldBeEqualTo storedClaim
     }
 
     @Test
