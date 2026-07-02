@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.imageprocessing.ocr.service
 
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.images.ocr.OcrEngine
 import io.bluetape4k.images.ocr.TesseractOcrEngine
-import java.util.UUID
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression
 import org.springframework.context.annotation.Bean
@@ -24,5 +24,5 @@ class NativeOcrEngineConfig {
 
     @Bean
     fun requestIdGenerator(): RequestIdGenerator =
-        RequestIdGenerator { "ocr-${UUID.randomUUID()}" }
+        RequestIdGenerator { "ocr-${Base58.randomString(8)}" }
 }
