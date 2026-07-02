@@ -20,10 +20,11 @@ Micrometer publishing, and explicit IMDS boundaries without real AWS credentials
 
 ![AWS Workshop architecture diagram](../docs/images/readme-diagrams/aws-readme-architecture-01.png)
 
-All modules keep the default learning path local-first. The S3 and DynamoDB modules use local
-AWS-compatible infrastructure, while the EventBridge Scheduler, S3 Vectors/Access Grants, and
-SQS/SNS, CloudWatch/IMDS modules use local adapter beans so default tests do not call real AWS
-services or IMDS.
+All modules keep the default learning path local-first. The S3, DynamoDB, and SQS/SNS modules use
+Floci-backed AWS-compatible infrastructure for integration coverage. EventBridge Scheduler,
+S3 Vectors/Access Grants, and CloudWatch/IMDS keep local adapter boundaries because those examples
+teach request construction, failure isolation, and explicit opt-in without calling real AWS services
+or IMDS.
 
 ## Module Guide
 
@@ -50,6 +51,18 @@ services or IMDS.
 | Spring integration | Spring Cloud AWS `S3Template` and `ResourceLoader` in `s3-spring-cloud/`; Spring profiles in `storage-abstraction/`. |
 | Vector and access boundaries | `s3-vectors-access-grants/` uses bluetape4k `S3VectorsOperations` and `S3AccessGrantsOperations` local adapters by default. |
 | Observability | `cloudwatch-imds-observability/` publishes local CloudWatch intent by default and reads IMDS metadata only when explicitly requested. |
+
+## Local AWS Coverage
+
+| module | coverage mode | rationale |
+| --- | --- | --- |
+| `s3-spring-cloud/` | Floci-backed S3 integration | Spring Boot test starts `FlociServer.Launcher.floci`, then verifies `S3Template`, `S3Client`, and `ResourceLoader` against the same S3-compatible endpoint. |
+| `storage-abstraction/` | Floci-backed S3 integration | `s3` and `s3-presigned` profiles use `S3Config.floci` and exercise upload, download, delete, and pre-signed URL behavior. |
+| `ktor-dynamodb/` | Floci-backed DynamoDB integration | The Ktor route test uses `FlociServer.Launcher.floci` with the AWS Kotlin `DynamoDbClient` and `DynamoDbKtorPlugin` table bootstrap. |
+| `sqs-sns-coroutines/` | Floci-backed SNS/SQS integration plus local adapters | Unit tests keep local fake boundaries small; the integration test publishes through `SnsCoroutinesTemplate` and consumes through `SqsCoroutinesTemplate` against Floci. |
+| `eventbridge-scheduler/` | local adapter only | Floci coverage is not used because the lesson focuses on EventBridge entry and Scheduler request mapping, idempotency, and failure/cancellation boundaries without provisioning real AWS targets. |
+| `cloudwatch-imds-observability/` | local adapter only | The example deliberately avoids CloudWatch and IMDS network calls in default tests so metadata access stays explicit and safe. |
+| `s3-vectors-access-grants/` | local adapter only | S3 Vectors and S3 Access Grants are kept behind bluetape4k operation interfaces; deterministic local ranking and redacted access reports are the workshop behavior under test. |
 
 ## Run
 

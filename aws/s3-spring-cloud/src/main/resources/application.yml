@@ -1,7 +1,7 @@
 spring:
     cloud:
         aws:
-            endpoint: ${testcontainers.localstack.url}
+            endpoint: ${AWS_ENDPOINT_URL:${testcontainers.floci.aws-endpoint:http://localhost:4566}}
             region:
                 static: us-east-1
             credentials:
