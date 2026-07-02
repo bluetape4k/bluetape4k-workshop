@@ -30,11 +30,12 @@ accepted the record even if the caller timed out. The deterministic event id
 
 1. `POST /api/orders` validates the request.
 2. `TransactionalOrderWriter` stores only `orders`.
-3. `OrderEventPublisher` serializes `OrderPlacedEvent` and sends it to Kafka.
-4. Direct publish succeeds: the API returns `PUBLISHED_DIRECT`; no fallback row exists.
-5. Direct publish fails or times out: the publisher retries three times, then upserts a `NOT_PUBLISHED` row.
-6. `EventPublicationRelay` claims fallback rows and re-drives them to Kafka.
-7. `PublicationReconciler` reconstructs missing rows from old `orders` rows when fallback persistence itself failed.
+3. `OrderEventPublisher` serializes `OrderPlacedEvent` after the order commit.
+4. When `direct-publish-enabled=false`, the publisher does **not** call Kafka. It stores a `NOT_PUBLISHED` fallback row with `DIRECT_DISABLED` and returns `FALLBACK_STORED`.
+5. When direct publish is enabled and succeeds, the API returns `PUBLISHED_DIRECT`; no fallback row exists.
+6. When direct publish is enabled but fails or times out, the publisher retries three times, then upserts a `NOT_PUBLISHED` row.
+7. `EventPublicationRelay` claims fallback rows and re-drives them to Kafka.
+8. `PublicationReconciler` reconstructs missing rows from old `orders` rows when fallback persistence itself failed.
 
 ## Fallback Lifecycle
 
@@ -81,7 +82,7 @@ Example response:
 | Status | Meaning |
 |--------|---------|
 | `PUBLISHED_DIRECT` | The after-commit direct Kafka send completed successfully. |
-| `FALLBACK_STORED` | Direct publish failed or timed out and a fallback row was stored. |
+| `FALLBACK_STORED` | Direct publish was disabled, failed, or timed out and a fallback row was stored. |
 | `FALLBACK_STORE_FAILED` | Direct publish failed and fallback persistence also failed. The reconciler can later repair the gap from `orders`. |
 | `UNKNOWN` | Read-only order endpoints do not expose internal publication state. |
 
@@ -137,6 +138,10 @@ workshop:
 
 The demo locks `topic` to `order-events` and `direct-publish-attempts` to `3` so
 the tests and diagrams stay deterministic.
+
+Set `direct-publish-enabled: false` to demonstrate the fallback-only branch. In
+that mode `OrderEventPublisher` skips `KafkaTemplate.send(...)`, writes a
+`NOT_PUBLISHED` row with `DIRECT_DISABLED`, and returns `FALLBACK_STORED`.
 
 ## Metrics And Health
 
