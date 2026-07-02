@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.text.search
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.text.detection.CoroutineLanguageDetectionService
 import kotlinx.coroutines.CoroutineDispatcher
@@ -19,7 +19,13 @@ import java.util.Collections
  *
  * ```kotlin
  * val index = CoroutineMultilingualSearchIndex.indexOf(
- *     listOf(SearchDocument.of("ko-1", "Korean cafe", "서울 카페 예약"))
+ *     listOf(
+ *         SearchDocument.of(
+ *             id = "ko-1",
+ *             title = "Korean cafe",
+ *             text = "서울 카페 예약",
+ *         )
+ *     )
  * )
  * val hits = index.search("서울 카페")
  * ```
@@ -84,7 +90,7 @@ class CoroutineMultilingualSearchIndex private constructor(
             hits
         }
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val DEFAULT_LIMIT = 10
 
         /**

@@ -124,8 +124,16 @@ class MultilingualSearchIndexTest {
         assertFailsWith<IllegalArgumentException> {
             MultilingualSearchIndex.indexOf(
                 listOf(
-                    SearchDocument.of("same-id", "First", "first document"),
-                    SearchDocument.of("same-id", "Second", "second document"),
+                    SearchDocument.of(
+                        id = "same-id",
+                        title = "First",
+                        text = "first document",
+                    ),
+                    SearchDocument.of(
+                        id = "same-id",
+                        title = "Second",
+                        text = "second document",
+                    ),
                 ),
                 detectionService = detectionService,
             )

@@ -132,7 +132,13 @@ data class SearchHighlightHit(
  *
  * ```kotlin
  * val index = MultilingualSearchIndex.indexOf(
- *     listOf(SearchDocument.of("ko-1", "Korean cafe", "서울 카페 예약"))
+ *     listOf(
+ *         SearchDocument.of(
+ *             id = "ko-1",
+ *             title = "Korean cafe",
+ *             text = "서울 카페 예약",
+ *         )
+ *     )
  * )
  * val hits = index.search("서울 카페")
  * ```
