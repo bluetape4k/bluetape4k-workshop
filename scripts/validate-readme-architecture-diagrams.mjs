@@ -7,7 +7,6 @@ const root = process.cwd();
 const diagramDir = path.join(root, "docs/images/readme-diagrams");
 const legacyArchitectureSlugs = new Set([
   "aws-readme-architecture-01.svg",
-  "aws-s3-spring-cloud-readme-architecture-01.svg",
   "docker-compose-demo-readme-architecture-01.svg",
   "docker-compose-plugin-demo-readme-architecture-01.svg",
   "exposed-javers-audit-readme-architecture-01.svg",
@@ -103,6 +102,7 @@ const failures = [];
 const tolerance = 0.2;
 const clearance = 8;
 let legacySkipped = 0;
+const documentedExceptionSlugs = [];
 
 function fail(file, message) {
   failures.push(`${path.relative(root, file)}: ${message}`);
@@ -223,6 +223,7 @@ function validateFile(file) {
   const base = file.replace(/\.svg$/, "");
   if (legacyArchitectureSlugs.has(path.basename(file))) {
     legacySkipped += 1;
+    documentedExceptionSlugs.push(path.basename(file));
     return;
   }
 
@@ -311,9 +312,19 @@ const files = fs.readdirSync(diagramDir)
 
 for (const file of files) validateFile(file);
 
+function resultPayload() {
+  return {
+    checked: files.length,
+    validated: files.length - legacySkipped,
+    legacySkipped,
+    documentedExceptions: legacySkipped,
+    exceptionSlugs: documentedExceptionSlugs,
+  };
+}
+
 if (failures.length > 0) {
-  console.error(failures.join("\n"));
+  console.error(JSON.stringify({ ...resultPayload(), failures: failures.length, sample: failures.slice(0, 40) }, null, 2));
   process.exit(1);
 }
 
-console.log(JSON.stringify({ checked: files.length, legacySkipped, failures: 0 }, null, 2));
+console.log(JSON.stringify({ ...resultPayload(), failures: 0 }, null, 2));
