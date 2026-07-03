@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.messaging.fallback.domain
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -67,9 +68,9 @@ class TransactionalOrderWriter {
         customerId.requireNotBlank("customerId")
         product.requireNotBlank("product")
         quantity.requirePositiveNumber("quantity")
-        require(customerId.length <= 80) { "customerId must be 80 characters or less" }
-        require(product.length <= 120) { "product must be 120 characters or less" }
-        require(quantity <= 1000) { "quantity must be 1000 or less" }
+        customerId.length.requireInRange(1, 80, "customerId.length")
+        product.length.requireInRange(1, 120, "product.length")
+        quantity.requireInRange(1, 1000, "quantity")
         require(customerId.none(Char::isISOControl)) { "customerId must not contain control characters" }
         require(product.none(Char::isISOControl)) { "product must not contain control characters" }
     }

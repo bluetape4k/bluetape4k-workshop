@@ -73,13 +73,13 @@ class BookService(private val repository: BookRepository) {
 
     private fun validateBook(book: Book) {
         book.id.requireNotBlank("id")
-        require(book.id.length <= MAX_ID_LENGTH) { "id must not exceed $MAX_ID_LENGTH characters" }
+        book.id.length.requireInRange(1, MAX_ID_LENGTH, "id.length")
 
         book.title.requireNotBlank("title")
-        require(book.title.length <= MAX_TITLE_LENGTH) { "title must not exceed $MAX_TITLE_LENGTH characters" }
+        book.title.length.requireInRange(1, MAX_TITLE_LENGTH, "title.length")
 
         book.author.requireNotBlank("author")
-        require(book.author.length <= MAX_AUTHOR_LENGTH) { "author must not exceed $MAX_AUTHOR_LENGTH characters" }
+        book.author.length.requireInRange(1, MAX_AUTHOR_LENGTH, "author.length")
 
         book.year.requireInRange(YEAR_RANGE.first, YEAR_RANGE.last, "year")
     }

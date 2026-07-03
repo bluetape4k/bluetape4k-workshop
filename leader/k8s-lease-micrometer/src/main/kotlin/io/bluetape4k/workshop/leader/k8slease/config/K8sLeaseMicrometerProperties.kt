@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.leader.k8slease.config
 
 import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.leader.k8s.KubernetesLeaseOptions
+import io.bluetape4k.support.requireNotBlank
 import org.springframework.boot.context.properties.ConfigurationProperties
 import java.io.Serializable
 import java.time.Duration
@@ -31,9 +32,9 @@ data class K8sLeaseMicrometerProperties(
 ) : Serializable {
 
     init {
-        require(namespace.isNotBlank()) { "namespace must not be blank" }
-        require(identity.isNotBlank()) { "identity must not be blank" }
-        require(leaseName.isNotBlank()) { "leaseName must not be blank" }
+        namespace.requireNotBlank("namespace")
+        identity.requireNotBlank("identity")
+        leaseName.requireNotBlank("leaseName")
         require(!waitTime.isNegative) { "waitTime must be zero or positive. waitTime=$waitTime" }
         require(!leaseTime.isNegative && !leaseTime.isZero) { "leaseTime must be positive. leaseTime=$leaseTime" }
         require(!retryDelay.isNegative && !retryDelay.isZero) { "retryDelay must be positive. retryDelay=$retryDelay" }

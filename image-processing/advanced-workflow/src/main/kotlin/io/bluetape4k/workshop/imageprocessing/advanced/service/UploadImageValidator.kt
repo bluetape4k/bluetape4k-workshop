@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.service
 
 import io.bluetape4k.images.spring.UploadOptions
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.imageprocessing.advanced.config.ImageProcessingAdvancedProperties
 import org.springframework.stereotype.Component
 
@@ -10,13 +12,11 @@ class UploadImageValidator(
 ) {
 
     fun validateDeclaredSize(sizeBytes: Long) {
-        require(sizeBytes <= properties.maxInputBytes) {
-            "uploaded image exceeds maxInputBytes (${properties.maxInputBytes}): $sizeBytes"
-        }
+        sizeBytes.requireInRange(0L, properties.maxInputBytes, "sizeBytes")
     }
 
     fun validate(contentType: String?, bytes: ByteArray): UploadOptions {
-        require(bytes.isNotEmpty()) { "uploaded image must not be empty" }
+        bytes.size.requirePositiveNumber("bytes.size")
         validateDeclaredSize(bytes.size.toLong())
         val normalizedContentType = contentType
             ?.substringBefore(';')

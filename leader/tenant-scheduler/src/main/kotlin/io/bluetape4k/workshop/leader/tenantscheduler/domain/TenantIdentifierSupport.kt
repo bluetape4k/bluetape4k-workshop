@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.tenantscheduler.domain
 
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import java.util.Locale
 
@@ -12,9 +13,7 @@ internal fun normalizeTenantAlias(raw: String, fieldName: String): String {
 
     val normalized = raw.lowercase(Locale.ROOT)
 
-    require(normalized.length in 3..64) {
-        "$fieldName must be 3 to 64 characters"
-    }
+    normalized.length.requireInRange(3, 64, "$fieldName.length")
     require(raw.none { it.isISOControl() }) {
         "$fieldName must not contain control characters"
     }

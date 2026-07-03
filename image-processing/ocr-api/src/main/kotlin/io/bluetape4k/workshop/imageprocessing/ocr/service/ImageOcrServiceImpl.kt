@@ -5,6 +5,9 @@ import io.bluetape4k.images.ocr.OcrConfigurationException
 import io.bluetape4k.images.ocr.OcrException
 import io.bluetape4k.images.ocr.OcrOptions
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireNotEmpty
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.imageprocessing.ocr.config.ImageOcrProperties
 import io.bluetape4k.workshop.imageprocessing.ocr.model.ImageOcrRequest
 import io.bluetape4k.workshop.imageprocessing.ocr.model.ImageOcrResponse
@@ -165,10 +168,8 @@ class ImageOcrServiceImpl(
         )
 
     private fun validateBytes(bytes: ByteArray) {
-        require(bytes.isNotEmpty()) { "Image upload must not be empty" }
-        require(bytes.size.toLong() <= properties.maxUploadBytes) {
-            "Image upload exceeds ${properties.maxUploadBytes} bytes"
-        }
+        bytes.size.requirePositiveNumber("bytes.size")
+        bytes.size.toLong().requireInRange(1L, properties.maxUploadBytes, "bytes.size")
     }
 
     private fun validateContentType(contentType: String?): String {
@@ -341,7 +342,7 @@ class ImageOcrServiceImpl(
             .distinct()
 
         val effective = normalized.ifEmpty { properties.languages }
-        require(effective.isNotEmpty()) { "At least one OCR language is required" }
+        effective.requireNotEmpty("languages")
         effective.forEach { language ->
             require(LANGUAGE_PATTERN.matches(language)) {
                 "Invalid OCR language: $language"

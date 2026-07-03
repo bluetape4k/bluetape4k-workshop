@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.messaging.fallback.publication
 
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.messaging.fallback.config.FallbackOutboxProperties
 import io.bluetape4k.workshop.messaging.fallback.domain.OrderTable
 import org.jetbrains.exposed.v1.core.NotExists
@@ -136,7 +137,7 @@ class EventPublicationRepository(
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     fun markPublished(eventId: String, claimedBy: String): Boolean {
-        require(claimedBy.isNotBlank()) { "claimedBy must not be blank" }
+        claimedBy.requireNotBlank("claimedBy")
         val now = LocalDateTime.now(clock)
         val updated = EventPublicationTable.update({
             (EventPublicationTable.eventId eq eventId) and (EventPublicationTable.claimedBy eq claimedBy)
@@ -160,7 +161,7 @@ class EventPublicationRepository(
         errorCode: String,
         errorSummary: String,
     ): EventPublicationStatus {
-        require(claimedBy.isNotBlank()) { "claimedBy must not be blank" }
+        claimedBy.requireNotBlank("claimedBy")
         val now = LocalDateTime.now(clock)
         val nextStatus = if (retryCount >= properties.relayMaxRetries) {
             EventPublicationStatus.DEAD_LETTER

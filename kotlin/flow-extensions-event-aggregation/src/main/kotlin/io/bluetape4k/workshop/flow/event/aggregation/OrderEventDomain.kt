@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.flow.event.aggregation
 
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requirePositiveNumber
@@ -430,9 +431,9 @@ private val tokenPattern = Regex("[A-Za-z0-9][A-Za-z0-9._-]{0,127}")
 private fun normalizeToken(value: String, fieldName: String, maxLength: Int = 64): String {
     val normalized = value.trim()
     normalized.requireNotBlank(fieldName)
-    require(normalized.length <= maxLength) { "$fieldName length must be <= $maxLength." }
+    normalized.length.requireInRange(1, maxLength, "$fieldName.length")
     require(normalized.none(Char::isISOControl)) { "$fieldName must not contain control characters." }
-    require(normalized.matches(tokenPattern) && normalized.length <= maxLength) {
+    require(normalized.matches(tokenPattern)) {
         "$fieldName must be a printable ASCII token."
     }
     return normalized
@@ -441,7 +442,7 @@ private fun normalizeToken(value: String, fieldName: String, maxLength: Int = 64
 private fun normalizeText(value: String, fieldName: String, maxLength: Int): String {
     val normalized = value.trim()
     normalized.requireNotBlank(fieldName)
-    require(normalized.length <= maxLength) { "$fieldName length must be <= $maxLength." }
+    normalized.length.requireInRange(1, maxLength, "$fieldName.length")
     require(normalized.none(Char::isISOControl)) { "$fieldName must not contain control characters." }
     return normalized
 }

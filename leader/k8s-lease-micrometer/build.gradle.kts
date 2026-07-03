@@ -30,6 +30,7 @@ val k8sTest = tasks.register<Test>("k8sTest") {
 }
 
 dependencies {
+    implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.leader.k8s)
     implementation(libs.bluetape4k.leader.micrometer)
     implementation(libs.bluetape4k.logging)

@@ -2,7 +2,9 @@ package io.bluetape4k.workshop.aws.s3vectorsaccess
 
 import io.bluetape4k.aws.s3vectors.S3VectorsOperations
 import io.bluetape4k.aws.spring.s3.accessgrants.S3AccessGrantsOperations
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotEmpty
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.s3control.model.GetDataAccessRequest
 import software.amazon.awssdk.services.s3control.model.Permission
@@ -131,20 +133,14 @@ class S3VectorsAccessService(
         request.documentId.requireNotBlank("documentId")
         request.title.requireNotBlank("title")
         request.objectKey.requireNotBlank("objectKey")
-        require(request.vector.isNotEmpty()) { "vector must not be empty." }
-        require(request.vector.size <= properties.maxVectorDimensions) {
-            "vector size must be <= ${properties.maxVectorDimensions}."
-        }
+        request.vector.requireNotEmpty("vector")
+        request.vector.size.requireInRange(1, properties.maxVectorDimensions, "vector.size")
     }
 
     private fun validateSearch(request: VectorSearchRequest) {
-        require(request.query.isNotEmpty()) { "query must not be empty." }
-        require(request.query.size <= properties.maxVectorDimensions) {
-            "query size must be <= ${properties.maxVectorDimensions}."
-        }
-        require(request.topK in 1..properties.maxSearchResults) {
-            "topK must be between 1 and ${properties.maxSearchResults}."
-        }
+        request.query.requireNotEmpty("query")
+        request.query.size.requireInRange(1, properties.maxVectorDimensions, "query.size")
+        request.topK.requireInRange(1, properties.maxSearchResults, "topK")
     }
 
     private fun toS3Uri(objectKey: String): String {

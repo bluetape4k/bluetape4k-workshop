@@ -14,6 +14,7 @@ configurations {
 
 dependencies {
     implementation(libs.bluetape4k.aws)
+    implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.bluetape4k.logging)

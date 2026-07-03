@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.spring.modulith.boundaries.ordering
 
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.spring.modulith.boundaries.catalog.api.CatalogLookup
 import io.bluetape4k.workshop.spring.modulith.boundaries.ordering.events.OrderPlacedEvent
 import io.bluetape4k.workshop.spring.modulith.boundaries.ordering.internal.OrderNumberGenerator
@@ -21,9 +23,9 @@ class OrderingService(
      * Places an order through the exported catalog API and publishes an order event.
      */
     fun placeOrder(request: OrderRequest): OrderReceipt {
-        require(request.sku.isNotBlank()) { "sku must not be blank" }
-        require(request.quantity > 0) { "quantity must be positive" }
-        require(request.customerId.isNotBlank()) { "customerId must not be blank" }
+        request.sku.requireNotBlank("sku")
+        request.quantity.requirePositiveNumber("quantity")
+        request.customerId.requireNotBlank("customerId")
 
         val item = requireNotNull(catalogLookup.findItem(request.sku)) {
             "catalog item not found: ${request.sku}"

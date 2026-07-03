@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.imageprocessing.ocr.web
 
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.imageprocessing.ocr.config.ImageOcrProperties
 import io.bluetape4k.workshop.imageprocessing.ocr.model.ImageOcrRequest
 import io.bluetape4k.workshop.imageprocessing.ocr.model.ImageOcrResponse
@@ -33,7 +34,7 @@ class ImageOcrController(
         @RequestPart("file") file: MultipartFile,
         @RequestParam("language", required = false) languages: List<String>?,
     ): ImageOcrResponse {
-        require(!file.isEmpty) { "Image upload must not be empty" }
+        file.size.requirePositiveNumber("file.size")
         require(file.size <= properties.maxUploadBytes) {
             "Image upload exceeds ${properties.maxUploadBytes} bytes"
         }

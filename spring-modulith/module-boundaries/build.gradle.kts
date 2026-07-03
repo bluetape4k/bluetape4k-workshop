@@ -18,6 +18,7 @@ dependencies {
     implementation(libs.spring.modulith.starter.core)
     testImplementation(libs.spring.modulith.starter.test)
 
+    implementation(libs.bluetape4k.core)
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)

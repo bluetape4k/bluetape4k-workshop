@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.flow.metrics.sampling
 
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 import java.time.Instant
 import kotlin.math.abs
@@ -129,8 +131,8 @@ data class MetricTrend(
 
 private fun normalizeToken(value: String, label: String, maxLength: Int): String {
     val normalized = value.trim()
-    require(normalized.isNotEmpty()) { "$label must not be blank" }
-    require(normalized.length <= maxLength) { "$label must be at most $maxLength characters" }
+    normalized.requireNotBlank(label)
+    normalized.length.requireInRange(1, maxLength, "$label.length")
     require(normalized.none(Char::isISOControl)) { "$label must not contain control characters" }
     return normalized
 }
