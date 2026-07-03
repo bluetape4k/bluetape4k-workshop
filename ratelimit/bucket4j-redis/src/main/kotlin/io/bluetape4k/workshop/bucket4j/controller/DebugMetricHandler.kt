@@ -4,6 +4,7 @@ import com.giffing.bucket4j.spring.boot.starter.context.metrics.MetricHandler
 import com.giffing.bucket4j.spring.boot.starter.context.metrics.MetricTagResult
 import com.giffing.bucket4j.spring.boot.starter.context.metrics.MetricType
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import org.springframework.stereotype.Component
 
 @Component
@@ -19,6 +20,6 @@ class DebugMetricHandler: MetricHandler {
     ) {
         val tagsStr = tags.joinToString(",") { it.key + ":" + it.value }
         val message = "type: $type; name: $name; tags: $tagsStr; tokens: $tokens"
-        println(message)
+        log.debug { message }
     }
 }

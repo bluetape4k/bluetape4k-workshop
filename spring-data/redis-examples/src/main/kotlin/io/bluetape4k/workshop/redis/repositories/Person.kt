@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.redis.repositories
 import io.bluetape4k.AbstractValueObject
 import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.support.hashOf
+import io.bluetape4k.support.requireNotBlank
 import org.springframework.data.annotation.Id
 import org.springframework.data.annotation.Reference
 import org.springframework.data.redis.core.RedisHash
@@ -57,7 +58,7 @@ class Person: AbstractValueObject() {
     @Id
     var id: String? = null
 
-    val identifier: String get() = id!!
+    val identifier: String get() = id.requireNotBlank("id")
 
     /**
      * Using [Indexed] marks the property as for indexing which uses Redis `SET` to keep track of

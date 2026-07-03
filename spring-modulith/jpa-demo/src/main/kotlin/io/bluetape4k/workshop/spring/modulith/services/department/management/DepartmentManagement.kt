@@ -44,7 +44,8 @@ class DepartmentManagement(
     override fun getDepartmentsByOrganizationIdWithEmployees(organizationId: Long): List<DepartmentDTO> {
         return repository.findDTOByOrganizationId(organizationId)
             .map { dept ->
-                val employees = employeeInternalAPI.getEmployeesByDepartmentId(dept.id!!)
+                val departmentId = checkNotNull(dept.id) { "department id must be present" }
+                val employees = employeeInternalAPI.getEmployeesByDepartmentId(departmentId)
                 dept.employees.addAll(employees)
                 dept
             }

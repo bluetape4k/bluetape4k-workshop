@@ -28,11 +28,13 @@ class GreetingService(private val observationRegistry: ObservationRegistry) {
     }
 
     fun sayHelloWithName(name: String): String {
-        return Observation.createNotStarted("$GREETING_SERVICE_NAME.sayHelloWithName", observationRegistry)
+        val greeting = Observation.createNotStarted("$GREETING_SERVICE_NAME.sayHelloWithName", observationRegistry)
             .contextualName("sayHello-with-name")
             .lowCardinalityKeyValue("name", name)
             .highCardinalityKeyValue("requestId", "1234")
-            .observeOrNull { "Hello, $name" }!!
+            .observeOrNull { "Hello, $name" }
+
+        return checkNotNull(greeting) { "greeting observation must produce a greeting" }
     }
 
     private fun sayHelloInternal(): String {

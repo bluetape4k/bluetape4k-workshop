@@ -30,16 +30,6 @@ class MemberRepositoryImpl: QuerydslRepositorySupport(Member::class.java), Membe
         return searchQuery(condition).fetch()
     }
 
-    //    fun List<Tuple>.toMemberTeamDto(): List<MemberTeamDto> {
-    //        return map { tuple ->
-    //            MemberTeamDto(
-    //                member = MemberDto(tuple.get(qmember.id)!!, tuple.get(qmember.name)!!, tuple.get(qmember.age)!!),
-    //                team = TeamDto(tuple.get(qteam.id) ?: 0, tuple.get(qteam.name) ?: "")
-    //            )
-    //        }
-    //    }
-
-
     override fun searchPageSimple(condition: MemberSearchCondition, pageable: Pageable): Page<MemberTeamDto> {
         val content = pagedSearchQuery(condition, pageable).fetch()
 

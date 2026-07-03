@@ -45,7 +45,7 @@ class OrderRepository {
             it[status] = OrderStatus.PENDING
         }
         val newId = stmt[OrderTable.id]
-        return findByIdOrNull(newId)!!
+        return checkNotNull(findByIdOrNull(newId)) { "inserted order must be readable. id=$newId" }
     }
 
     suspend fun updateStatus(id: Long, status: OrderStatus): Int =

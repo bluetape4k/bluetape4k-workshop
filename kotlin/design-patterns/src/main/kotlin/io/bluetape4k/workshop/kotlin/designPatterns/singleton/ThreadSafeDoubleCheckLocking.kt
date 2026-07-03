@@ -40,7 +40,7 @@ class ThreadSafeDoubleCheckLocking private constructor() {
                 }
             }
 
-            return result!!
+            return checkNotNull(result) { "singleton instance must be initialized" }
         }
     }
 
