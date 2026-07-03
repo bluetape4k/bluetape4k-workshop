@@ -7,6 +7,7 @@ import io.bluetape4k.leader.LeaderElectionEvent
 import io.bluetape4k.leader.LeaderElectionListener
 import io.bluetape4k.leader.ListeningLeaderElector
 import io.bluetape4k.workshop.leader.service.LeaderEventListenerService
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,6 +18,10 @@ import kotlinx.coroutines.withTimeoutOrNull
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.Test
 import io.bluetape4k.codec.Base58
+import org.awaitility.kotlin.atMost
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.untilAsserted
+import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -79,15 +84,11 @@ class LeaderEventListenerTest : AbstractLeaderElectionTest() {
         val receivedEvents = Channel<LeaderElectionEvent>(Channel.BUFFERED)
         val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
-        scope.launch {
+        scope.launch(start = CoroutineStart.UNDISPATCHED) {
             listeningElector.events.collect { event ->
                 receivedEvents.trySend(event)
             }
         }
-
-        // Allow the SharedFlow collector to subscribe before emitting.
-        // SharedFlow has replay=0; events emitted before subscription are lost.
-        Thread.sleep(100)
 
         listeningElector.runIfLeader(lockName) { "work" }
 
@@ -112,11 +113,10 @@ class LeaderEventListenerTest : AbstractLeaderElectionTest() {
             listeningElector.runIfLeader(lockName) { "work" }
         }
 
-        // Small delay to allow the background Flow collector to process events.
-        Thread.sleep(200)
-
-        service.electedCount.get() shouldBeEqualTo 3
-        service.skippedCount.get() shouldBeEqualTo 0
+        await atMost Duration.ofSeconds(2) untilAsserted {
+            service.electedCount.get() shouldBeEqualTo 3
+            service.skippedCount.get() shouldBeEqualTo 0
+        }
 
         service.close()
     }

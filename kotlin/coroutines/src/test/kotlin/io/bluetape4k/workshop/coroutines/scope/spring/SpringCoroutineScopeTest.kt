@@ -8,6 +8,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
+import org.awaitility.kotlin.atMost
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,6 +20,7 @@ import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import java.time.Duration
 
 
 @OutputCapture
@@ -66,10 +70,9 @@ class SpringCoroutineScopeTest {
         myBean2.shouldNotBeNull()
         myBean2.destroy()
 
-        Thread.sleep(10)
-
-        val capture = capturer.capture()
-        capture shouldContain "destroy MyBean"
+        await atMost Duration.ofMillis(500) untilAsserted {
+            capturer.capture() shouldContain "destroy MyBean"
+        }
     }
 
 }

@@ -10,6 +10,10 @@ import org.springframework.data.mongodb.core.ReactiveMongoOperations
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.atMost
+import org.awaitility.kotlin.until
+import java.time.Duration
 import java.util.concurrent.ConcurrentLinkedQueue
 
 class PersonReactiveRepositoryTest @Autowired constructor(
@@ -50,19 +54,19 @@ class PersonReactiveRepositoryTest @Autowired constructor(
             .doOnNext(queue::add)
             .subscribe()
 
-        Thread.sleep(100)
+        await atMost Duration.ofSeconds(1) until { queue.size >= prevCount }
 
         StepVerifier.create(repository.save(newPerson()))
             .expectNextCount(1)
             .verifyComplete()
 
-        Thread.sleep(100)
+        await atMost Duration.ofSeconds(1) until { queue.size >= prevCount + 1 }
 
         StepVerifier.create(repository.save(newPerson()))
             .expectNextCount(1)
             .verifyComplete()
 
-        Thread.sleep(100)
+        await atMost Duration.ofSeconds(1) until { queue.size >= prevCount + 2 }
 
         // dispose 된 이후로 추가된 Person은 queue에 추가되지 않는다
         disposable.dispose()
@@ -71,7 +75,9 @@ class PersonReactiveRepositoryTest @Autowired constructor(
             .expectNextCount(1)
             .verifyComplete()
 
-        Thread.sleep(100)
+        await.during(Duration.ofMillis(150))
+            .atMost(Duration.ofMillis(500))
+            .until { queue.size == prevCount + 2 }
 
         queue.size shouldBeEqualTo prevCount + 2
     }
