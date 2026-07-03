@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.resilience.controller
 
+import io.bluetape4k.concurrent.NamedThreadFactory
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.info
+import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.resilience.service.Service
 import io.github.resilience4j.bulkhead.BulkheadFullException
 import io.github.resilience4j.bulkhead.BulkheadRegistry
@@ -14,6 +17,7 @@ import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOper
 import io.github.resilience4j.reactor.retry.RetryOperator
 import io.github.resilience4j.retry.RetryRegistry
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry
+import jakarta.annotation.PreDestroy
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -22,6 +26,7 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeoutException
 
 @RestController
@@ -34,9 +39,18 @@ class BackendBController(
     retryRegistry: RetryRegistry,
     rateLimiterRegistry: RateLimiterRegistry,
     timeLimiterRegistry: TimeLimiterRegistry,
+    private val scheduledExecutorService: ScheduledExecutorService = newProgrammaticScheduler(),
 ) {
     companion object: KLoggingChannel() {
         private const val BACKEND_B = "backendB"
+        private const val PROGRAMMATIC_SCHEDULER_THREADS = 3
+
+        private fun newProgrammaticScheduler(): ScheduledExecutorService {
+            return Executors.newScheduledThreadPool(
+                PROGRAMMATIC_SCHEDULER_THREADS,
+                NamedThreadFactory("backend-b-programmatic-scheduler", isDaemon = true)
+            )
+        }
     }
 
     private val circuitBreaker = circuitBreakerRegistry.circuitBreaker(BACKEND_B)
@@ -45,8 +59,6 @@ class BackendBController(
     private val retry = retryRegistry.retry(BACKEND_B)
     private val rateLimiter = rateLimiterRegistry.rateLimiter(BACKEND_B)
     private val timeLimiter = timeLimiterRegistry.timeLimiter(BACKEND_B)
-
-    private val scheduledExecutorService = Executors.newScheduledThreadPool(3)
 
     @GetMapping("failure")
     fun failure(): String = execute { serviceB.failure() }
@@ -186,4 +198,14 @@ class BackendBController(
     private fun fallback(ex: Throwable): String = "Recovered: $ex"
     private fun monoFallback(ex: Throwable): Mono<String> = Mono.just("Recovered: $ex")
     private fun fluxFallback(ex: Throwable): Flux<String> = Flux.just("Recovered: $ex")
+
+    @PreDestroy
+    fun close() {
+        runCatching {
+            log.info { "Shutting down BackendB programmatic scheduler" }
+            scheduledExecutorService.shutdown()
+        }.onFailure { e ->
+            log.warn(e) { "Failed to shut down BackendB programmatic scheduler" }
+        }
+    }
 }
