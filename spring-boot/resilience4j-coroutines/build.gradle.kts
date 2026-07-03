@@ -15,7 +15,8 @@ configurations {
 
 dependencies {
     testImplementation(project(":shared"))
-    
+
+    implementation(libs.bluetape4k.core)
     testImplementation(libs.bluetape4k.junit5)
 
     // Bucket4j
