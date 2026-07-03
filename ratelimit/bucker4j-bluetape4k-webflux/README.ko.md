@@ -44,11 +44,15 @@ Bucket4j 설정과 Redis/Lettuce proxy manager를 공유합니다.
 Bucket 상태는 `LettuceBasedProxyManager`를 통해 저장하며, 최대 용량까지 refill될 만큼 시간이 지난
 뒤 만료됩니다.
 
+로컬 `dev` 및 테스트 실행에서는 `TestRedisConfig`가 `bluetape4k-testcontainers`의
+`RedisServer.Launcher.redis` 공유 singleton으로 Redis를 시작합니다. Redis를 고정 기본 포트에
+묶지 않고, Spring은 생성된 Testcontainers URL을 `testcontainers.redis.*` property로 읽습니다.
+
 ## Smoke 확인
 
 ```bash
-./gradlew :ratelimit-bucker4j-bluetape4k-webflux:test
-./gradlew :ratelimit-bucker4j-bluetape4k-webflux:bootRun
+./gradlew :bucker4j-bluetape4k-webflux:test
+./gradlew :bucker4j-bluetape4k-webflux:bootRun
 ```
 
 `UserLateLimit.http`로 v1/v2 endpoint를 반복 호출하면 허용, 제한, 필터 비대상 응답을 비교할 수
