@@ -1,11 +1,15 @@
 package io.bluetape4k.workshop.spring.modulith.ddd.audit.orders
 
+import io.bluetape4k.codec.Base58
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotEmpty
+import io.bluetape4k.support.requirePositiveNumber
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import org.javers.core.metamodel.annotation.Id
 import org.javers.core.metamodel.annotation.TypeName
 import java.io.Serializable
 import java.math.BigDecimal
 import java.time.Instant
-import java.util.UUID
 
 /**
  * Stable order aggregate identifier.
@@ -16,7 +20,7 @@ import java.util.UUID
  */
 data class OrderId(val value: String): Serializable {
     init {
-        require(value.isNotBlank()) { "order id must not be blank." }
+        value.requireNotBlank("value")
     }
 
     companion object {
@@ -25,7 +29,7 @@ data class OrderId(val value: String): Serializable {
         /**
          * Creates a new random order identifier for examples and tests.
          */
-        fun newId(): OrderId = OrderId("order-${UUID.randomUUID()}")
+        fun newId(): OrderId = OrderId("order-${Base58.randomString(8)}")
     }
 }
 
@@ -38,7 +42,7 @@ data class OrderId(val value: String): Serializable {
  */
 data class CustomerId(val value: String): Serializable {
     init {
-        require(value.isNotBlank()) { "customer id must not be blank." }
+        value.requireNotBlank("value")
     }
 
     companion object {
@@ -58,8 +62,8 @@ data class Money(
     val currency: String = "USD",
 ): Serializable {
     init {
-        require(amount >= BigDecimal.ZERO) { "money amount must not be negative." }
-        require(currency.isNotBlank()) { "currency must not be blank." }
+        amount.requireZeroOrPositiveNumber("amount")
+        currency.requireNotBlank("currency")
     }
 
     companion object {
@@ -81,9 +85,9 @@ data class OrderLine(
     val unitPrice: Money,
 ): Serializable {
     init {
-        require(sku.isNotBlank()) { "sku must not be blank." }
-        require(quantity > 0) { "quantity must be positive." }
-        require(unitPrice.amount > BigDecimal.ZERO) { "unit price must be positive." }
+        sku.requireNotBlank("sku")
+        quantity.requirePositiveNumber("quantity")
+        unitPrice.amount.requirePositiveNumber("unitPrice.amount")
     }
 
     companion object {
@@ -112,7 +116,7 @@ data class PlaceOrderCommand(
     val lines: List<OrderLine>,
 ): Serializable {
     init {
-        require(lines.isNotEmpty()) { "order lines must not be empty." }
+        lines.requireNotEmpty("lines")
     }
 
     companion object {
@@ -132,7 +136,7 @@ data class ApproveOrderCommand(
     val approvedBy: String,
 ): Serializable {
     init {
-        require(approvedBy.isNotBlank()) { "approvedBy must not be blank." }
+        approvedBy.requireNotBlank("approvedBy")
     }
 
     companion object {
@@ -169,7 +173,7 @@ data class OrderApproved(
     override val occurredOn: Instant = Instant.now(),
 ): DomainEvent {
     init {
-        require(approvedBy.isNotBlank()) { "approvedBy must not be blank." }
+        approvedBy.requireNotBlank("approvedBy")
     }
 
     companion object {
@@ -197,7 +201,7 @@ data class Order(
     val events: List<DomainEvent> = emptyList(),
 ): Serializable {
     init {
-        require(lines.isNotEmpty()) { "order lines must not be empty." }
+        lines.requireNotEmpty("lines")
     }
 
     /**
