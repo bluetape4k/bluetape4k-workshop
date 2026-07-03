@@ -15,6 +15,7 @@ import io.github.resilience4j.ratelimiter.RateLimiterRegistry
 import io.github.resilience4j.reactor.bulkhead.operator.BulkheadOperator
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator
 import io.github.resilience4j.reactor.retry.RetryOperator
+import io.github.resilience4j.reactor.timelimiter.TimeLimiterOperator
 import io.github.resilience4j.retry.RetryRegistry
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry
 import jakarta.annotation.PreDestroy
@@ -140,6 +141,7 @@ class BackendBController(
             .transform(BulkheadOperator.of(bulkhead))
             .transform(CircuitBreakerOperator.of(circuitBreaker))
             .transform(RetryOperator.of(retry))
+            .transform(TimeLimiterOperator.of(timeLimiter))
             .onErrorResume(TimeoutException::class.java, exceptionHandler)
             .onErrorResume(CallNotPermittedException::class.java, exceptionHandler)
             .onErrorResume(BulkheadFullException::class.java, exceptionHandler)
@@ -160,6 +162,7 @@ class BackendBController(
             .transform(BulkheadOperator.of(bulkhead))
             .transform(CircuitBreakerOperator.of(circuitBreaker))
             .transform(RetryOperator.of(retry))
+            .transform(TimeLimiterOperator.of(timeLimiter))
             .onErrorResume(TimeoutException::class.java, exceptionHandler)
             .onErrorResume(CallNotPermittedException::class.java, exceptionHandler)
             .onErrorResume(BulkheadFullException::class.java, exceptionHandler)

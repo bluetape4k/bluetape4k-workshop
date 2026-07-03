@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.resilience.timelimiter
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldStartWith
 import io.bluetape4k.junit5.coroutines.runSuspendIO
@@ -14,6 +15,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.expectBody
 import java.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.measureTime
 
 /**
  * TimeLimiter — slow response timeout verification.
@@ -53,6 +56,17 @@ class TimeLimiterTest : AbstractResilienceTest() {
 
         val timeoutDuration = timeLimiter.timeLimiterConfig.timeoutDuration
         log.debug { "backendA TimeLimiter timeoutDuration=$timeoutDuration" }
+
+        timeoutDuration shouldBeEqualTo Duration.ofSeconds(2)
+    }
+
+    @Test
+    fun `backendB timeLimiter is configured with 2-second timeout`() {
+        val timeLimiter = timeLimiterRegistry.timeLimiter(BACKEND_B)
+        timeLimiter.shouldNotBeNull()
+
+        val timeoutDuration = timeLimiter.timeLimiterConfig.timeoutDuration
+        log.debug { "backendB TimeLimiter timeoutDuration=$timeoutDuration" }
 
         timeoutDuration shouldBeEqualTo Duration.ofSeconds(2)
     }
@@ -98,6 +112,40 @@ class TimeLimiterTest : AbstractResilienceTest() {
 
         response shouldStartWith "Recovered Future TimeoutException"
         log.debug { "Future TimeLimiter fallback response: $response" }
+    }
+
+    @Test
+    fun `backendB monoTimeout programmatic chain returns fallback before slow Mono completes`() = runSuspendIO {
+        val elapsed = measureTime {
+            val response = webClient
+                .httpGet("/$BACKEND_B/monoTimeout")
+                .expectStatus().is2xxSuccessful
+                .expectBody<String>()
+                .returnResult().responseBody
+                .shouldNotBeNull()
+
+            response shouldStartWith "Recovered"
+            log.debug { "BackendB Mono TimeLimiter fallback response: $response" }
+        }
+
+        elapsed shouldBeLessThan 3.seconds
+    }
+
+    @Test
+    fun `backendB fluxTimeout programmatic chain returns fallback before slow Flux completes`() = runSuspendIO {
+        val elapsed = measureTime {
+            val response = webClient
+                .httpGet("/$BACKEND_B/fluxTimeout")
+                .expectStatus().is2xxSuccessful
+                .expectBody<String>()
+                .returnResult().responseBody
+                .shouldNotBeNull()
+
+            response shouldStartWith "Recovered"
+            log.debug { "BackendB Flux TimeLimiter fallback response: $response" }
+        }
+
+        elapsed shouldBeLessThan 3.seconds
     }
 
     @Test
