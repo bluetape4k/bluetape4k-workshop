@@ -60,7 +60,7 @@ class BookRepositoryTest: AbstractElasticsearchApplicationTest() {
         // id 로 찾는 것은 refresh 할 필요 없습니다.
         // refreshBookIndex()
 
-        val found = repository.findById(saved.last().id!!)
+        val found = repository.findById(saved.last().id.shouldNotBeNull())
         found shouldBeEqualTo saved.last()
     }
 
@@ -116,10 +116,11 @@ class BookRepositoryTest: AbstractElasticsearchApplicationTest() {
     fun `delete by id`() = runSuspendIO {
         val saved = createRandomBooks(3)
 
-        saved.all { repository.existsById(it.id!!) }.shouldBeTrue()
+        saved.all { repository.existsById(it.id.shouldNotBeNull()) }.shouldBeTrue()
 
-        repository.deleteById(saved.last().id!!)
-        repository.existsById(saved.last().id!!).shouldBeFalse()
+        val lastId = saved.last().id.shouldNotBeNull()
+        repository.deleteById(lastId)
+        repository.existsById(lastId).shouldBeFalse()
     }
 
     protected suspend fun createRandomBooks(size: Int = 3): List<Book> {

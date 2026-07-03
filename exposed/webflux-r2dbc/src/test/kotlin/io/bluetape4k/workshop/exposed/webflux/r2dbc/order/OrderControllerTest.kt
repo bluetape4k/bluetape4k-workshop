@@ -4,6 +4,7 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.AbstractWebfluxR2dbcTest
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.order.dto.CreateProductRequest
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.order.dto.OrderDTO
@@ -31,7 +32,7 @@ class OrderControllerTest : AbstractWebfluxR2dbcTest() {
             .exchange()
             .expectStatus().isCreated
             .expectBody(ProductDTO::class.java)
-            .returnResult().responseBody!!
+            .returnResult().responseBody.shouldNotBeNull()
     }
 
     @Test
@@ -49,7 +50,7 @@ class OrderControllerTest : AbstractWebfluxR2dbcTest() {
             .exchange()
             .expectStatus().isCreated
             .expectBody(OrderDTO::class.java)
-            .returnResult().responseBody!!
+            .returnResult().responseBody.shouldNotBeNull()
 
         order.id shouldBeGreaterThan 0L
         order.status shouldBeEqualTo OrderStatus.PENDING
@@ -60,7 +61,7 @@ class OrderControllerTest : AbstractWebfluxR2dbcTest() {
             .exchange()
             .expectStatus().isOk
             .expectBody(OrderDTO::class.java)
-            .returnResult().responseBody!!
+            .returnResult().responseBody.shouldNotBeNull()
         fetched.lines.shouldNotBeEmpty()
     }
 
@@ -77,13 +78,13 @@ class OrderControllerTest : AbstractWebfluxR2dbcTest() {
             .exchange()
             .expectStatus().isCreated
             .expectBody(OrderDTO::class.java)
-            .returnResult().responseBody!!
+            .returnResult().responseBody.shouldNotBeNull()
 
         val cancelled = webTestClient.post().uri("/api/orders/${order.id}/cancel")
             .exchange()
             .expectStatus().isOk
             .expectBody(OrderDTO::class.java)
-            .returnResult().responseBody!!
+            .returnResult().responseBody.shouldNotBeNull()
         cancelled.status shouldBeEqualTo OrderStatus.CANCELLED
     }
 

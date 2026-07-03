@@ -86,7 +86,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
             OutboxEventTable.selectAll()
                 .where { OutboxEventTable.aggregateId eq order.id.toString() }
                 .count()
-        }!!
+        }.shouldNotBeNull()
         eventCount shouldBeEqualTo 1L
         log.debug { "placeOrder: orderId=${order.id}, outboxEventCount=$eventCount" }
     }
@@ -107,7 +107,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
             .exchange()
             .expectStatus().isCreated
             .expectBody(OrderResponse::class.java)
-            .value { it!!.id.shouldBeGreaterThan(0L) }
+            .value { it.shouldNotBeNull().id.shouldBeGreaterThan(0L) }
     }
 
     // ── 3. HTTP PUT ───────────────────────────────────────────────────────────
@@ -126,7 +126,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
             .exchange()
             .expectStatus().isOk
             .expectBody(OrderResponse::class.java)
-            .value { it!!.status shouldBeEqualTo OrderStatus.CONFIRMED }
+            .value { it.shouldNotBeNull().status shouldBeEqualTo OrderStatus.CONFIRMED }
     }
 
     // ── 4. Publish succeeds ──────────────────────────────────────────────────
@@ -144,7 +144,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
                 .where { OutboxEventTable.aggregateId eq order.id.toString() }
                 .map { it[OutboxEventTable.id].value }
                 .first()
-        }!!
+        }.shouldNotBeNull()
 
         val result = outboxPublisher.publishEvent(eventId)
         result.shouldBeTrue()
@@ -154,7 +154,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
                 .where { OutboxEventTable.id eq eventId }
                 .map { it[OutboxEventTable.status] }
                 .first()
-        }!!
+        }.shouldNotBeNull()
         status shouldBeEqualTo OutboxStatus.PUBLISHED
     }
 
@@ -173,7 +173,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
                 .where { OutboxEventTable.aggregateId eq order.id.toString() }
                 .map { it[OutboxEventTable.id].value }
                 .first()
-        }!!
+        }.shouldNotBeNull()
 
         every {
             kafkaTemplate.send(any<String>(), any<String>(), any<String>())
@@ -187,7 +187,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
                 .where { OutboxEventTable.id eq eventId }
                 .map { Pair(it[OutboxEventTable.retryCount], it[OutboxEventTable.status]) }
                 .first()
-        }!!
+        }.shouldNotBeNull()
         row.first shouldBeEqualTo 1
         row.second shouldBeEqualTo OutboxStatus.FAILED
     }
@@ -207,7 +207,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
                 .where { OutboxEventTable.aggregateId eq order.id.toString() }
                 .map { it[OutboxEventTable.id].value }
                 .first()
-        }!!
+        }.shouldNotBeNull()
 
         // Pre-set retryCount to MAX_RETRY - 1 so next failure tips it over
         transactionTemplate.execute {
@@ -228,7 +228,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
                 .where { OutboxEventTable.id eq eventId }
                 .map { it[OutboxEventTable.status] }
                 .first()
-        }!!
+        }.shouldNotBeNull()
         status shouldBeEqualTo OutboxStatus.DEAD_LETTER
     }
 
@@ -247,7 +247,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
                 .where { OutboxEventTable.aggregateId eq order.id.toString() }
                 .map { it[OutboxEventTable.id].value }
                 .first()
-        }!!
+        }.shouldNotBeNull()
 
         outboxPublisher.publishEvent(eventId).shouldBeTrue()
 
@@ -259,7 +259,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
                 .where { OutboxEventTable.id eq eventId }
                 .map { it[OutboxEventTable.status] }
                 .first()
-        }!!
+        }.shouldNotBeNull()
         status shouldBeEqualTo OutboxStatus.PUBLISHED
     }
 }

@@ -15,6 +15,7 @@ import io.bluetape4k.workshop.redis.movie.repository.MovieRepository
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContainSame
 import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -98,8 +99,8 @@ class MovieRepositoryTest @Autowired constructor(
         actorRepo.saveAll(listOf(harrisonFord, carrieFisher, arnoldSchwarzenegger))
 
         // Movie - Actor 연관 관계를 저장한다
-        val starWarsHarrisonFord = MovieActor(starwars.hashId!!, harrisonFord.hashId!!)
-        val terminatorArnold = MovieActor(terminator.hashId!!, arnoldSchwarzenegger.hashId!!)
+        val starWarsHarrisonFord = MovieActor(starwars.hashId.shouldNotBeNull(), harrisonFord.hashId.shouldNotBeNull())
+        val terminatorArnold = MovieActor(terminator.hashId.shouldNotBeNull(), arnoldSchwarzenegger.hashId.shouldNotBeNull())
 
         val movieActors = movieActorRepo.saveAll(listOf(starWarsHarrisonFord, terminatorArnold))
         movieActors.forEach {
@@ -109,7 +110,7 @@ class MovieRepositoryTest @Autowired constructor(
         // NOTE: 검색조건에 Reference를 넣지 못한다. Redis HashId 로 찾아야 한다
         // 해리슨 포드가 출연한 영화의 hashId 를 검색한다
         log.debug { "harrisonFord.hashId=${harrisonFord.hashId}" }
-        val movieHashIds = movieActorRepo.findByActorHashId(harrisonFord.hashId!!).map { it.movieHashId }
+        val movieHashIds = movieActorRepo.findByActorHashId(harrisonFord.hashId.shouldNotBeNull()).map { it.movieHashId }
         log.debug { "movieHashIds=$movieHashIds" }
         movieHashIds shouldHaveSize 1
 
@@ -165,7 +166,7 @@ class MovieRepositoryTest @Autowired constructor(
 
         // NOTE: 검색 시 Reference 속성은 Example로 검색은 안된다
         assertFailsWith<AssertionError> {
-            val movies = movieActorRefRepo.findAll(example).map { it.movie!! }
+            val movies = movieActorRefRepo.findAll(example).map { it.movie.shouldNotBeNull() }
             log.debug { "movies=$movies" }
             movies shouldHaveSize 1
             movies shouldContainSame listOf(starwars)

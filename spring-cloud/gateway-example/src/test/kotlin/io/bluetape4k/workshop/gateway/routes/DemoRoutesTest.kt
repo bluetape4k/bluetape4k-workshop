@@ -37,7 +37,7 @@ class DemoRoutesTest: GatewayApplicationTest() {
             .expectStatus().is2xxSuccessful
             .expectBody<Map<*, *>>()
             .consumeWith {
-                it.responseBody!!["url"].toString() shouldBeEqualTo "https://nghttp2.org/httpbin/get"
+                it.responseBody.shouldNotBeNull()["url"].toString() shouldBeEqualTo "https://nghttp2.org/httpbin/get"
             }
     }
 
@@ -49,10 +49,11 @@ class DemoRoutesTest: GatewayApplicationTest() {
             .exchange()
             .expectStatus().is2xxSuccessful
             .expectBody<Map<*, *>>().consumeWith {
-                it.responseBody!!.forEach { (key, value) ->
+                val responseBody = it.responseBody.shouldNotBeNull()
+                responseBody.forEach { (key, value) ->
                     log.debug { "key=$key, value=$value" }
                 }
-                val headers = it.responseBody!!["headers"] as Map<*, *>
+                val headers = responseBody["headers"] as Map<*, *>
                 // headers["X-Forwarded-Host"] shouldBeEqualTo "www.myhost.org"
                 headers["Host"] shouldBeEqualTo "nghttp2.org"
             }
@@ -68,7 +69,7 @@ class DemoRoutesTest: GatewayApplicationTest() {
             .exchange()
             .expectStatus().is2xxSuccessful
             .expectBody<Map<*, *>>().consumeWith {
-                it.responseBody!!["url"].toString() shouldBeEqualTo "https://nghttp2.org/httpbin/get"
+                it.responseBody.shouldNotBeNull()["url"].toString() shouldBeEqualTo "https://nghttp2.org/httpbin/get"
             }
     }
 
@@ -90,7 +91,7 @@ class DemoRoutesTest: GatewayApplicationTest() {
             .exchange()
             .expectStatus().is2xxSuccessful
             .expectBody<String>().consumeWith {
-                it.responseBody!! shouldBeEqualTo "Fallback for circuit breaker"
+                it.responseBody.shouldNotBeNull() shouldBeEqualTo "Fallback for circuit breaker"
             }
     }
 

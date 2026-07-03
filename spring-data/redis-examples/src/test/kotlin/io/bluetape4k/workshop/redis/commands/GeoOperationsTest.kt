@@ -7,6 +7,7 @@ import io.bluetape4k.workshop.redis.AbstractRedisTest
 import io.bluetape4k.assertions.shouldBeInRange
 import io.bluetape4k.assertions.shouldContainSame
 import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,7 +40,7 @@ class GeoOperationsTest(
             "Sicily",
             "Palermo",
             Distance(100.0, RedisGeoCommands.DistanceUnit.KILOMETERS)
-        )!!
+        ).shouldNotBeNull()
         byDistance shouldHaveSize 2
         byDistance.content.map { it.content.name } shouldContainSame listOf("Arigento", "Palermo")
 
@@ -47,7 +48,7 @@ class GeoOperationsTest(
             "Sicily",
             "Palermo",
             Distance(200.0, RedisGeoCommands.DistanceUnit.KILOMETERS)
-        )!!
+        ).shouldNotBeNull()
         greaterDistance shouldHaveSize 3
         greaterDistance.content.map { it.content.name } shouldContainSame listOf("Arigento", "Catania", "Palermo")
     }
@@ -58,7 +59,7 @@ class GeoOperationsTest(
             Point(13.583333, 37.316667),
             Distance(100.0, RedisGeoCommands.DistanceUnit.KILOMETERS)
         )
-        val result = geoOperations.radius("Sicily", circle)!!
+        val result = geoOperations.radius("Sicily", circle).shouldNotBeNull()
 
         result shouldHaveSize 2
         result.content.map { it.content.name } shouldContainSame listOf("Arigento", "Palermo")
@@ -71,13 +72,13 @@ class GeoOperationsTest(
             "Catania",
             "Palermo",
             RedisGeoCommands.DistanceUnit.KILOMETERS
-        )!!
+        ).shouldNotBeNull()
         distance.value shouldBeInRange 130.0..140.0
     }
 
     @Test
     fun `두 지점의 geohash 구하기`() {
-        val geohashes: List<String> = geoOperations.hash("Sicily", "Catania", "Palermo")!!
+        val geohashes: List<String> = geoOperations.hash("Sicily", "Catania", "Palermo").shouldNotBeNull()
 
         log.debug { "geohashes=${geohashes.joinToString(",")}" }
         geohashes shouldHaveSize 2

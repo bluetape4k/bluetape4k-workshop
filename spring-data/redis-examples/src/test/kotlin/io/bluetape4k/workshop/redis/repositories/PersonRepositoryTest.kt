@@ -71,7 +71,7 @@ class PersonRepositoryTest @Autowired constructor(
         repository.save(eddard)
 
         operations.execute { conn ->
-            conn.keyCommands().exists("persons:${eddard.id}".toUtf8Bytes())!!.shouldBeTrue()
+            conn.keyCommands().exists("persons:${eddard.id}".toUtf8Bytes()).shouldNotBeNull().shouldBeTrue()
         }
     }
 
@@ -170,14 +170,16 @@ class PersonRepositoryTest @Autowired constructor(
         eddard.children.addAll(listOf(jon, robb, sansa, arya, bran, rickon))
         repository.save(eddard)
 
-        repository.findByIdOrNull(eddard.id!!)!!.children shouldContainSame listOf(jon, robb, sansa, arya, bran, rickon)
+        val eddardId = eddard.id.shouldNotBeNull()
+        repository.findByIdOrNull(eddardId).shouldNotBeNull()
+            .children shouldContainSame listOf(jon, robb, sansa, arya, bran, rickon)
 
         /**
          * NOTE: 자식 Refrenece를 삭제하면 부모의 children에서도 삭제된다.
          */
         repository.deleteAll(listOf(robb, jon))
 
-        repository.findByIdOrNull(eddard.id!!)!!
+        repository.findByIdOrNull(eddardId).shouldNotBeNull()
             .children shouldContainSame listOf(sansa, arya, bran, rickon) shouldNotContainAny listOf(robb, jon)
     }
 
@@ -190,7 +192,8 @@ class PersonRepositoryTest @Autowired constructor(
         eddard.children.addAll(listOf(jon, robb, sansa, arya, bran, rickon))
         repository.save(eddard)
 
-        repository.findByIdOrNull(eddard.id!!)!!.children shouldContainSame listOf(jon, robb, sansa, arya, bran, rickon)
+        repository.findByIdOrNull(eddard.id.shouldNotBeNull()).shouldNotBeNull()
+            .children shouldContainSame listOf(jon, robb, sansa, arya, bran, rickon)
 
         // Reference 속성으로 조회하는 기능은 제공하지 않습니다.
         val parent = repository.findByChildren_Firstname(robb.firstname)

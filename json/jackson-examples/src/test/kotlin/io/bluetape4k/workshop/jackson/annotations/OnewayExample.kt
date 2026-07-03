@@ -8,6 +8,7 @@ import io.bluetape4k.workshop.jackson.AbstractJacksonTest
 import io.bluetape4k.workshop.jackson.readAs
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.RepeatedTest
 import tools.jackson.module.kotlin.readValue
 
@@ -39,7 +40,7 @@ class OnewayExample: AbstractJacksonTest() {
         val password = faker.credentials().password()
         val user = User(name, password, 100)
 
-        val json = defaultMapper.writeAsString(user)!!
+        val json = defaultMapper.writeAsString(user).shouldNotBeNull()
         log.debug { "Json=$json" }
 
         val doc = json.toDocument()

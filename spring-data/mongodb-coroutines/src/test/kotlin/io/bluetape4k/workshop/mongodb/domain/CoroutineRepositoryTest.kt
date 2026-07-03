@@ -33,7 +33,7 @@ class CoroutineRepositoryTest @Autowired constructor(
     fun `find one person`() = runSuspendIO {
         val person = repository.save(newPerson())
 
-        val loaded = repository.findPersonByFirstname(person.firstname!!)
+        val loaded = repository.findPersonByFirstname(person.firstname.shouldNotBeNull())
         loaded.shouldNotBeNull() shouldBeEqualTo person
     }
 

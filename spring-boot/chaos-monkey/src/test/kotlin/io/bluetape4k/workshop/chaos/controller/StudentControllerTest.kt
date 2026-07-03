@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.returnResult
@@ -44,7 +45,7 @@ class StudentControllerTest: AbstractChaosApplicationTest() {
             .exchange()
             .expectStatus().isOk
             .expectBody<Student>()
-            .returnResult().responseBody!!
+            .returnResult().responseBody.shouldNotBeNull()
 
         student.id shouldBeEqualTo studentId
         log.debug { student }

@@ -33,6 +33,7 @@ import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContainSame
 import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -76,7 +77,7 @@ class QuerydslExamples: AbstractQuerydslTest() {
             val member = Member("member-$i", i * 10, selectedTeam)
             tem.persist(member)
         }
-        testId = members.first().id!!
+        testId = members.first().id.shouldNotBeNull()
 
         flushAndClear()
     }
@@ -91,7 +92,7 @@ class QuerydslExamples: AbstractQuerydslTest() {
         val member2 = Member("member-2", 20, teamA)
         tem.persist(member2)
 
-        val count = queryFactory.select(qmember.count()).from(qmember).fetchOne()!!
+        val count = queryFactory.select(qmember.count()).from(qmember).fetchOne().shouldNotBeNull()
         log.debug { "Member count=$count" }
         count.toInt() shouldBeEqualTo MEMBER_COUNT + 1
 
@@ -145,7 +146,8 @@ class QuerydslExamples: AbstractQuerydslTest() {
                 null,       // Predicate 가 null 인 경우는 단순 무시한다
                 qmember.age.inValues(10, 20, 30, 40)
             )
-            .fetchOne()!!
+            .fetchOne()
+            .shouldNotBeNull()
 
         member.name shouldBeEqualTo "member-1"
         log.debug { "member=$member" }
@@ -161,7 +163,8 @@ class QuerydslExamples: AbstractQuerydslTest() {
                 null,
             )
             .orderBy(qmember.id.asc())
-            .fetchFirst()!!
+            .fetchFirst()
+            .shouldNotBeNull()
 
         member.name shouldBeEqualTo "member-1"
         log.debug { "member=$member" }
@@ -182,7 +185,8 @@ class QuerydslExamples: AbstractQuerydslTest() {
         val total = queryFactory
             .select(qmember.count())
             .from(qmember)
-            .fetchOne()!!
+            .fetchOne()
+            .shouldNotBeNull()
 
         members shouldHaveSize 3
 
@@ -229,7 +233,8 @@ class QuerydslExamples: AbstractQuerydslTest() {
                 ageMin
             )
             .from(qmember)
-            .fetchOne()!!
+            .fetchOne()
+            .shouldNotBeNull()
 
         result[memberCount] shouldBeEqualTo 4
         result[ageSum] shouldBeEqualTo 100
@@ -290,7 +295,7 @@ class QuerydslExamples: AbstractQuerydslTest() {
             .fetch()
 
         members shouldHaveSize 2
-        members.map { it.team!!.name }.distinct() shouldContainSame listOf("teamA")
+        members.map { it.team.shouldNotBeNull().name }.distinct() shouldContainSame listOf("teamA")
     }
 
     @Test
@@ -323,7 +328,7 @@ class QuerydslExamples: AbstractQuerydslTest() {
         tuples.forEach {
             log.debug { "tuple=$it" }
         }
-        tuples.map { it.get(qteam)!!.name }.distinct() shouldContainSame listOf("teamA")
+        tuples.map { it.get(qteam).shouldNotBeNull().name }.distinct() shouldContainSame listOf("teamA")
 
         val members = tuples.map { it.get(qmember) }
         val teams = tuples.map { it.get(qteam) }
@@ -364,7 +369,8 @@ class QuerydslExamples: AbstractQuerydslTest() {
         val teamA = queryFactory
             .selectFrom(qteam)
             .where(qteam.name.eq("teamA"))
-            .fetchOne()!!
+            .fetchOne()
+            .shouldNotBeNull()
 
         // team.members 는 loading 되지 않았다
         val loaded = em.isLoaded(teamA.members) // emf.persistenceUnitUtil.isLoaded(teamA, "members")
@@ -380,7 +386,8 @@ class QuerydslExamples: AbstractQuerydslTest() {
             .selectFrom(qteam)
             .join(qteam.members, qmember).fetchJoin()
             .where(qteam.name.eq("teamA"))
-            .fetchOne()!!
+            .fetchOne()
+            .shouldNotBeNull()
 
         // team.members 는 loading 되어 있다
         val loaded = em.isLoaded(teamA.members) // emf.persistenceUnitUtil.isLoaded(teamA, "members")
@@ -395,7 +402,8 @@ class QuerydslExamples: AbstractQuerydslTest() {
             .select(qmember)
             .from(qmember)
             .where(qmember.name.eq("member-1"))
-            .fetchOne()!!
+            .fetchOne()
+            .shouldNotBeNull()
 
         log.debug { "member name=${member.name}" }
 
@@ -409,7 +417,8 @@ class QuerydslExamples: AbstractQuerydslTest() {
             .selectFrom(qmember)
             .join(qmember.team(), qteam).fetchJoin()
             .where(qmember.name.eq("member-1"))
-            .fetchOne()!!
+            .fetchOne()
+            .shouldNotBeNull()
 
         log.debug { "member name=${member.name}" }
 
@@ -425,7 +434,8 @@ class QuerydslExamples: AbstractQuerydslTest() {
         val member = queryFactory
             .selectFrom(qmember)
             .where(qmember.age.eq(subquery))
-            .fetchFirst()!!
+            .fetchFirst()
+            .shouldNotBeNull()
 
         member.age shouldBeEqualTo 40
     }
@@ -561,7 +571,8 @@ class QuerydslExamples: AbstractQuerydslTest() {
             .select(qmember.name, constantExpr)
             .from(qmember)
             .where(qmember.name.eq("member-1"))
-            .fetchOne()!!
+            .fetchOne()
+            .shouldNotBeNull()
 
         log.debug { "result=$result" }
         result[qmember.name] shouldBeEqualTo "member-1"

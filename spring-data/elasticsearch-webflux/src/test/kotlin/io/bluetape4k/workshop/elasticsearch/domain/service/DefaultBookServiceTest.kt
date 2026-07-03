@@ -57,7 +57,7 @@ class DefaultBookServiceTest(
         val saved = service.create(book)
         refreshBookIndex()
 
-        val loaded = service.getByIsbn(book.isbn)!!
+        val loaded = service.getByIsbn(book.isbn).shouldNotBeNull()
         loaded shouldBeEqualTo saved
     }
 
@@ -117,10 +117,12 @@ class DefaultBookServiceTest(
         saved.id.shouldNotBeNull()
         refreshBookIndex()
 
-        service.deleteById(saved.id!!)
+        val savedId = saved.id.shouldNotBeNull()
+
+        service.deleteById(savedId)
         refreshBookIndex()
 
-        repository.existsById(saved.id!!).shouldBeFalse()
+        repository.existsById(savedId).shouldBeFalse()
     }
 
     @Test
@@ -130,7 +132,7 @@ class DefaultBookServiceTest(
         refreshBookIndex()
 
         val updatedBook = saved.copy("Updated title")
-        val updated = service.update(updatedBook.id!!, updatedBook)
+        val updated = service.update(updatedBook.id.shouldNotBeNull(), updatedBook)
         refreshBookIndex()
 
         updated shouldBeEqualTo updatedBook
