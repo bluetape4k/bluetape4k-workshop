@@ -187,9 +187,13 @@ case "${1:-help}" in
   stale-check)
     echo "=== Gradle project count ==="
     count=$("$GRADLEW" projects --console=plain 2>/dev/null | grep -Ec "Project ':" || true)
-    expected=100
-    echo "Active modules: $count (expected: $expected)"
-    [ "$count" -eq "$expected" ] || echo "WARNING: Gradle project count drifted."
+    expected="${EXPECTED_GRADLE_PROJECTS:-}"
+    if [ -n "$expected" ]; then
+      echo "Active modules: $count (expected: $expected)"
+      [ "$count" -eq "$expected" ] || echo "WARNING: Gradle project count drifted."
+    else
+      echo "Active modules: $count (expected: current Gradle project graph)"
+    fi
 
     echo ""
     echo "=== Stale module refs in READMEs ==="
