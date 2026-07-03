@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.messaging.outbox
 
 import io.bluetape4k.junit5.faker.Fakers
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.mq.KafkaServer
@@ -20,9 +21,9 @@ abstract class AbstractOutboxTest {
         @JvmStatic
         @DynamicPropertySource
         fun containerProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url") { postgres.jdbcUrl!! }
-            registry.add("spring.datasource.username") { postgres.username!! }
-            registry.add("spring.datasource.password") { postgres.password!! }
+            registry.add("spring.datasource.url") { postgres.jdbcUrl.shouldNotBeNull() }
+            registry.add("spring.datasource.username") { postgres.username.shouldNotBeNull() }
+            registry.add("spring.datasource.password") { postgres.password.shouldNotBeNull() }
             registry.add("spring.kafka.bootstrap-servers") { kafka.bootstrapServers }
         }
 

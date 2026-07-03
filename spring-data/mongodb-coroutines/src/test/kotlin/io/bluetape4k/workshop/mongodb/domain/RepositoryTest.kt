@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.mongodb.domain
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,7 +26,7 @@ class RepositoryTest @Autowired constructor(
     fun `should find one person`() {
         val person = repository.save(newPerson())
 
-        val loaded = repository.findOneByFirstname(person.firstname!!)
+        val loaded = repository.findOneByFirstname(person.firstname.shouldNotBeNull())
         loaded shouldBeEqualTo person
     }
 }

@@ -7,6 +7,7 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.jackson.AbstractJacksonTest
 import io.bluetape4k.workshop.jackson.readAs
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.RepeatedTest
 import tools.jackson.databind.DeserializationFeature
 import tools.jackson.databind.SerializationFeature
@@ -36,7 +37,8 @@ class RootValueExample: AbstractJacksonTest() {
             enable(SerializationFeature.WRAP_ROOT_VALUE)
         }
             .build()
-            .writeAsString(user)!!
+            .writeAsString(user)
+            .shouldNotBeNull()
 
         log.debug { "Json=$json" }
 

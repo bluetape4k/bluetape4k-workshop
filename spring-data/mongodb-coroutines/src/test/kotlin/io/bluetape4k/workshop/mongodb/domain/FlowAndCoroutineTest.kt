@@ -11,6 +11,7 @@ import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,7 +39,7 @@ class FlowAndCoroutineTest(
     fun `find - the coroutine way`() = runSuspendIO {
         val person = operations.insert<Person>().one(newPerson()).awaitSingle()
 
-        val query = Query(Criteria.where(Person::firstname.name).isEqualTo(person.firstname!!))
+        val query = Query(Criteria.where(Person::firstname.name).isEqualTo(person.firstname.shouldNotBeNull()))
         val loaded = operations.find<Person>(query).awaitSingle()
         loaded shouldBeEqualTo person
     }

@@ -87,7 +87,7 @@ class TaskControllerTest: AbstractProblemTest() {
             .expectBody()
             .jsonPath("$.title").isEqualTo("Bad Request")
             .consumeWith { result ->
-                val body = result.responseBody!!
+                val body = result.responseBody.shouldNotBeNull()
                 log.debug { body.toUtf8String() }
             }
     }
@@ -114,7 +114,7 @@ class TaskControllerTest: AbstractProblemTest() {
             .expectBody()
             .jsonPath("$.title").isEqualTo("찾는 Task 없음")
             .consumeWith { result ->
-                val body = result.responseBody!!
+                val body = result.responseBody.shouldNotBeNull()
                 log.debug { body.toUtf8String() }
             }
     }
@@ -145,7 +145,7 @@ class TaskControllerTest: AbstractProblemTest() {
             .expectBody()
             .jsonPath("$.detail").isEqualTo("구현 중")
             .consumeWith { result ->
-                val body = result.responseBody!!
+                val body = result.responseBody.shouldNotBeNull()
                 log.debug { body.toUtf8String() }
             }
     }
@@ -171,7 +171,7 @@ class TaskControllerTest: AbstractProblemTest() {
             .expectBody()
             .jsonPath("$.detail").isEqualTo("You can't delete this task [1]")
             .consumeWith { result ->
-                val body = result.responseBody!!
+                val body = result.responseBody.shouldNotBeNull()
                 log.debug { body.toUtf8String() }
             }
     }

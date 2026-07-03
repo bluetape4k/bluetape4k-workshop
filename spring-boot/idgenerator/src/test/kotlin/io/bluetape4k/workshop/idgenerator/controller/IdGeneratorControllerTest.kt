@@ -6,6 +6,7 @@ import io.bluetape4k.assertions.shouldBePositive
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.idgenerator.AbstractIdGeneratorTest
 import io.bluetape4k.workshop.idgenerator.model.BatchIdResponse
@@ -31,7 +32,8 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
             .returnResult<SnowflakeResponse>()
             .responseBody
             .toMono()
-            .block()!!
+            .block()
+            .shouldNotBeNull()
 
         result.id.shouldBePositive()
         result.timestamp.shouldBeGreaterThan(0L)
@@ -46,14 +48,14 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
             .exchange()
             .expectStatus().isOk
             .returnResult<SnowflakeResponse>()
-            .responseBody.toMono().block()!!
+            .responseBody.toMono().block().shouldNotBeNull()
 
         // 생성된 ID를 파싱
         val parsed = client.get().uri("/ids/snowflake/parse/${generated.id}")
             .exchange()
             .expectStatus().isOk
             .returnResult<SnowflakeResponse>()
-            .responseBody.toMono().block()!!
+            .responseBody.toMono().block().shouldNotBeNull()
 
         parsed.id shouldBeEqualTo generated.id
         parsed.timestamp shouldBeEqualTo generated.timestamp
@@ -67,7 +69,7 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
             .exchange()
             .expectStatus().isOk
             .returnResult<BatchIdResponse>()
-            .responseBody.toMono().block()!!
+            .responseBody.toMono().block().shouldNotBeNull()
 
         result.type shouldBeEqualTo "snowflake"
         result.count shouldBeEqualTo count
@@ -84,7 +86,7 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
             .exchange()
             .expectStatus().isOk
             .returnResult<StringIdResponse>()
-            .responseBody.toMono().block()!!
+            .responseBody.toMono().block().shouldNotBeNull()
 
         result.type shouldBeEqualTo "ulid"
         result.id.length shouldBeEqualTo 26  // ULID는 항상 26자
@@ -98,7 +100,7 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
                 .exchange()
                 .expectStatus().isOk
                 .returnResult<StringIdResponse>()
-                .responseBody.toMono().block()!!.id
+                .responseBody.toMono().block().shouldNotBeNull().id
         }
         // ULID는 사전순으로 시간 순서 유지
         ids.zipWithNext().all { (a, b) -> a <= b }.shouldBeTrue()
@@ -111,7 +113,7 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
             .exchange()
             .expectStatus().isOk
             .returnResult<BatchIdResponse>()
-            .responseBody.toMono().block()!!
+            .responseBody.toMono().block().shouldNotBeNull()
 
         result.type shouldBeEqualTo "ulid"
         result.count shouldBeEqualTo count
@@ -126,7 +128,7 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
             .exchange()
             .expectStatus().isOk
             .returnResult<StringIdResponse>()
-            .responseBody.toMono().block()!!
+            .responseBody.toMono().block().shouldNotBeNull()
 
         result.type shouldBeEqualTo "ksuid"
         result.id.length shouldBeEqualTo 27  // KSUID는 항상 27자
@@ -140,7 +142,7 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
             .exchange()
             .expectStatus().isOk
             .returnResult<BatchIdResponse>()
-            .responseBody.toMono().block()!!
+            .responseBody.toMono().block().shouldNotBeNull()
 
         result.type shouldBeEqualTo "ksuid"
         result.count shouldBeEqualTo count
@@ -156,7 +158,7 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
             .exchange()
             .expectStatus().isOk
             .returnResult<HashidsResponse>()
-            .responseBody.toMono().block()!!
+            .responseBody.toMono().block().shouldNotBeNull()
 
         encoded.numbers shouldBeEqualTo numbers
         encoded.encoded.shouldNotBeEmpty()
@@ -167,7 +169,7 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
             .exchange()
             .expectStatus().isOk
             .returnResult<HashidsResponse>()
-            .responseBody.toMono().block()!!
+            .responseBody.toMono().block().shouldNotBeNull()
 
         decoded.decoded shouldBeEqualTo numbers
     }
@@ -178,7 +180,7 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
             .exchange()
             .expectStatus().isOk
             .returnResult<HashidsResponse>()
-            .responseBody.toMono().block()!!
+            .responseBody.toMono().block().shouldNotBeNull()
 
         result.numbers shouldBeEqualTo listOf(42L)
         result.encoded.length shouldBeGreaterThan 0

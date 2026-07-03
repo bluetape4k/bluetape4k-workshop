@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.exposed.webflux.r2dbc.author
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.AbstractWebfluxR2dbcTest
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.AuthorDTO
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.CreateAuthorRequest
@@ -28,7 +29,7 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
             .exchange()
             .expectStatus().isCreated
             .expectBody(AuthorDTO::class.java)
-            .returnResult().responseBody!!
+            .returnResult().responseBody.shouldNotBeNull()
 
         created.id shouldBeGreaterThan 0L
         created.firstName shouldBeEqualTo req.firstName
@@ -60,7 +61,7 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
             .exchange()
             .expectStatus().isOk
             .expectBodyList(AuthorDTO::class.java)
-            .returnResult().responseBody!!
+            .returnResult().responseBody.shouldNotBeNull()
         authors.shouldNotBeEmpty()
     }
 
@@ -84,7 +85,7 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
             .exchange()
             .expectStatus().isCreated
             .expectBody(AuthorDTO::class.java)
-            .returnResult().responseBody!!
+            .returnResult().responseBody.shouldNotBeNull()
 
         val updateReq = req.copy(firstName = "UpdatedName")
         val updated = webTestClient.put().uri("/api/authors/${created.id}")
@@ -93,7 +94,7 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
             .exchange()
             .expectStatus().isOk
             .expectBody(AuthorDTO::class.java)
-            .returnResult().responseBody!!
+            .returnResult().responseBody.shouldNotBeNull()
         updated.firstName shouldBeEqualTo "UpdatedName"
     }
 
@@ -110,7 +111,7 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
             .exchange()
             .expectStatus().isCreated
             .expectBody(AuthorDTO::class.java)
-            .returnResult().responseBody!!
+            .returnResult().responseBody.shouldNotBeNull()
 
         webTestClient.delete().uri("/api/authors/${created.id}")
             .exchange()
