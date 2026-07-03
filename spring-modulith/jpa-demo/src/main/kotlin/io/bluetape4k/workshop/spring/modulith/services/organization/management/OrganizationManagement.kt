@@ -55,7 +55,8 @@ class OrganizationManagement(
 
         val organization = mapper.toEntity(organizationDTO)
         val dto = mapper.toDTO(repository.save(organization))
-        events.publishEvent(OrganizationAddEvent(dto.id!!, dto))
+        val organizationId = checkNotNull(dto.id) { "organization id must be present" }
+        events.publishEvent(OrganizationAddEvent(organizationId, dto))
         return dto
     }
 

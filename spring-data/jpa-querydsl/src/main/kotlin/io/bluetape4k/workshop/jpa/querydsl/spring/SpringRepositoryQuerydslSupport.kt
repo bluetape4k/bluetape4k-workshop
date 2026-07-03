@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.jpa.querydsl.spring
 import com.querydsl.core.types.dsl.PathBuilder
 import com.querydsl.jpa.impl.JPAQuery
 import com.querydsl.jpa.impl.JPAQueryFactory
-import io.bluetape4k.support.assertNotNull
+import io.bluetape4k.support.requireNotNull
 import jakarta.annotation.PostConstruct
 import jakarta.persistence.EntityManager
 import jakarta.persistence.PersistenceContext
@@ -24,8 +24,6 @@ class SpringRepositoryQuerydslSupport(private val entityClass: Class<*>) {
 
     @PersistenceContext
     fun setEntityManager(entityManager: EntityManager) {
-        entityManager.assertNotNull("entityManager")
-
         val entityInfo = JpaEntityInformationSupport.getEntityInformation(entityClass, entityManager)
         val resolver = SimpleEntityPathResolver.INSTANCE
         val path = resolver.createPath(entityInfo.javaType)
@@ -36,14 +34,14 @@ class SpringRepositoryQuerydslSupport(private val entityClass: Class<*>) {
 
     @PostConstruct
     fun assertProperProperty() {
-        entityManager.assertNotNull("entityManager")
-        querydsl.assertNotNull("querydsl")
-        queryFactory.assertNotNull("queryFactory")
+        entityManager.requireNotNull("entityManager")
+        querydsl.requireNotNull("querydsl")
+        queryFactory.requireNotNull("queryFactory")
     }
 
-    protected fun getEntityManager(): EntityManager = entityManager!!
-    protected fun getQuerydsl(): Querydsl = querydsl!!
-    protected fun getQueryFactory(): JPAQueryFactory = queryFactory!!
+    protected fun getEntityManager(): EntityManager = entityManager.requireNotNull("entityManager")
+    protected fun getQuerydsl(): Querydsl = querydsl.requireNotNull("querydsl")
+    protected fun getQueryFactory(): JPAQueryFactory = queryFactory.requireNotNull("queryFactory")
 
     @Suppress("DEPRECATION")
     protected fun <T: Any> withPaging(pageable: Pageable, queryAction: (JPAQueryFactory) -> JPAQuery<T>): Page<T> {

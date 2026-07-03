@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.mongodb.coroutine
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.mongodb.Process
 import io.bluetape4k.workshop.mongodb.State
 import kotlinx.atomicfu.atomic
@@ -45,7 +46,8 @@ class CoroutineManagedTransitionService(
         finish(process)
     }
 
-    private suspend fun lookup(id: Int): Process = repository.findById(id)!!
+    private suspend fun lookup(id: Int): Process =
+        repository.findById(id).requireNotNull("process")
 
     suspend fun start(process: Process) {
         val query = Query.query(Criteria.where(Process::id.name).isEqualTo(process.id))

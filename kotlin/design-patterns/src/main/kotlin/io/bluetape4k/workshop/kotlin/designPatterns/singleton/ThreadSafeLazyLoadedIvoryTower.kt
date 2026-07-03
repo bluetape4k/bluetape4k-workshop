@@ -22,7 +22,7 @@ class ThreadSafeLazyLoadedIvoryTower private constructor() {
                 if (instance == null) {
                     instance = ThreadSafeLazyLoadedIvoryTower()
                 }
-                instance!!
+                checkNotNull(instance) { "singleton instance must be initialized" }
             }
         }
     }

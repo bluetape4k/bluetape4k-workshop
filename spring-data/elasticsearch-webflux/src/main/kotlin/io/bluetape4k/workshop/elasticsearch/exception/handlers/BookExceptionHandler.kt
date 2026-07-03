@@ -19,7 +19,7 @@ class BookExceptionHandler {
 
     @ExceptionHandler(value = [DuplicatedIsbnException::class])
     fun doHandleDuplicatedIsbn(ex: DuplicatedIsbnException): Mono<ResponseEntity<Body>> = mono {
-        ResponseEntity.badRequest().body(Body(ex.message!!))
+        ResponseEntity.badRequest().body(Body(ex.message ?: "Duplicated ISBN"))
     }
 
     data class Body(
