@@ -35,7 +35,7 @@ class UserRateLimitWebFilter(
             log.trace { "rate limit filtering request. path=$targetPath" }
             if (canFilter(exchange)) {
                 val key = extractKey(exchange)
-                log.trace { "Extracted key=$this" }
+                log.trace { "Extracted key=$key" }
 
                 if (!key.isNullOrBlank()) {
                     val result = rateLimiter.consume(key, 1)

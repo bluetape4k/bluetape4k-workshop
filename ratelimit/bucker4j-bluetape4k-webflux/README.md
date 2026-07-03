@@ -44,11 +44,16 @@ continue so the limiter does not become an availability dependency for the demo 
 Bucket state is stored through `LettuceBasedProxyManager` and expires after enough time to refill to
 the maximum capacity.
 
+For local `dev` and test runs, `TestRedisConfig` starts Redis through the shared
+`RedisServer.Launcher.redis` singleton from `bluetape4k-testcontainers`. The module does not bind
+Redis to a fixed default port; Spring reads the generated Testcontainers URL through
+`testcontainers.redis.*` properties.
+
 ## Smoke Checks
 
 ```bash
-./gradlew :ratelimit-bucker4j-bluetape4k-webflux:test
-./gradlew :ratelimit-bucker4j-bluetape4k-webflux:bootRun
+./gradlew :bucker4j-bluetape4k-webflux:test
+./gradlew :bucker4j-bluetape4k-webflux:bootRun
 ```
 
 Use `UserLateLimit.http` to call the v1/v2 endpoints repeatedly and compare accepted, throttled, and
