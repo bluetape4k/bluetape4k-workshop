@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.flow.parallel.enrichment
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
@@ -13,7 +14,6 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.junit.jupiter.api.Test
-import kotlin.test.assertFailsWith
 
 class OrderEnrichmentPipelineTest {
 
