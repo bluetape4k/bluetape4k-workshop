@@ -72,7 +72,8 @@ class OrderEventFlowTest @Autowired constructor(
             )
         }
 
-        error.message shouldContain "quantity must be positive"
+        error.message shouldContain "quantity"
+        error.message shouldContain "greater than 0"
         paymentLedger.all() shouldHaveSize 0
         notificationOutbox.all() shouldHaveSize 0
     }

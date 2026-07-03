@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.tenantscheduler.domain
 
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
@@ -19,16 +20,10 @@ data class TenantSchedulePolicy(
     init {
         tenants.requireNotEmpty("tenants")
         requireDistinct(tenants.map { it.value }, "tenants")
-        maxTenantsPerTick.requirePositiveNumber("maxTenantsPerTick")
-        require(maxTenantsPerTick <= tenants.size) {
-            "maxTenantsPerTick must not exceed tenant count"
-        }
+        maxTenantsPerTick.requireInRange(1, tenants.size, "maxTenantsPerTick")
         staleAfterTicks.requirePositiveNumber("staleAfterTicks")
         maxTenantTagValues.requirePositiveNumber("maxTenantTagValues")
-        eventHistoryLimit.requirePositiveNumber("eventHistoryLimit")
-        require(eventHistoryLimit <= MAX_EVENT_HISTORY_LIMIT) {
-            "eventHistoryLimit must not exceed $MAX_EVENT_HISTORY_LIMIT"
-        }
+        eventHistoryLimit.requireInRange(1, MAX_EVENT_HISTORY_LIMIT, "eventHistoryLimit")
     }
 
     companion object {

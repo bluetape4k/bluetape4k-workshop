@@ -4,7 +4,10 @@ import io.bluetape4k.aws.spring.sns.SnsOperations
 import io.bluetape4k.aws.spring.sns.SnsPublishRequest
 import io.bluetape4k.aws.spring.sqs.SqsOperations
 import io.bluetape4k.aws.spring.sqs.SqsReceivedMessage
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import java.time.Clock
@@ -137,10 +140,10 @@ class OrderNotificationMessagingService(
         properties.topicArn.requireNotBlank("topicArn")
         properties.queueUrl.requireNotBlank("queueUrl")
         properties.subject.requireNotBlank("subject")
-        require(properties.maxMessages in 1..10) { "maxMessages must be in 1..10." }
-        require(properties.waitTimeSeconds in 0..20) { "waitTimeSeconds must be in 0..20." }
-        require(properties.visibilityTimeoutSeconds >= 0) { "visibilityTimeoutSeconds must be non-negative." }
-        require(properties.maxReceiveCount > 0) { "maxReceiveCount must be positive." }
+        properties.maxMessages.requireInRange(1, 10, "maxMessages")
+        properties.waitTimeSeconds.requireInRange(0, 20, "waitTimeSeconds")
+        properties.visibilityTimeoutSeconds.requireZeroOrPositiveNumber("visibilityTimeoutSeconds")
+        properties.maxReceiveCount.requirePositiveNumber("maxReceiveCount")
     }
 
     private fun eventFrom(request: OrderNotificationRequest): OrderNotificationEvent =

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.javers.persistence
 
+import io.bluetape4k.support.requireNotBlank
 import org.javers.core.metamodel.annotation.Id
 import org.javers.core.metamodel.annotation.TypeName
 import java.io.Serializable
@@ -26,8 +27,8 @@ data class Order(
     val totalAmount: BigDecimal,
 ): Serializable {
     init {
-        require(id.isNotBlank()) { "id must not be blank." }
-        require(customerId.isNotBlank()) { "customerId must not be blank." }
+        id.requireNotBlank("id")
+        customerId.requireNotBlank("customerId")
         require(totalAmount >= BigDecimal.ZERO) { "totalAmount must not be negative." }
     }
 

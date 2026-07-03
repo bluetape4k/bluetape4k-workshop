@@ -91,7 +91,7 @@ class SearchSettings private constructor(
             normalizedTenantId.requireNotBlank("tenantId")
             normalizedTenantId.length.requireInRange(1, 64, "tenantId.length")
             resultLimit.requireInRange(1, 20, "resultLimit")
-            require(normalizedFlags.size <= 8) { "featureFlags must contain at most 8 values" }
+            normalizedFlags.size.requireInRange(0, 8, "featureFlags.size")
             require(normalizedFlags.all { it.matches(featureFlagPattern) }) {
                 "featureFlags must be lowercase kebab-case names"
             }

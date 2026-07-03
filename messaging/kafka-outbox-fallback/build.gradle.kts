@@ -28,6 +28,7 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.springmockk)
 
+    implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.logging)
 
     implementation(libs.exposed.core)

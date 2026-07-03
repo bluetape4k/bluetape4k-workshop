@@ -7,6 +7,7 @@ configurations {
 }
 
 dependencies {
+    implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.eclipse.collections)
     implementation(libs.kotlinx.coroutines.core.lib)

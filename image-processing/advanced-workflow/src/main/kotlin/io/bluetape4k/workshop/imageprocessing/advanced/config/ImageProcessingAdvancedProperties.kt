@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.config
 
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requirePositiveNumber
 import org.springframework.boot.context.properties.ConfigurationProperties
 import java.io.Serializable
@@ -38,7 +39,7 @@ data class ImageProcessingAdvancedProperties(
         require(!processingTimeout.isNegative && !processingTimeout.isZero) {
             "processingTimeout must be positive: $processingTimeout"
         }
-        require(variants.isNotEmpty()) { "variants must not be empty" }
+        variants.requireNotEmpty("variants")
         require(variants.count { it.primaryThumbnail } == 1) {
             "exactly one variant must be marked as primaryThumbnail"
         }
