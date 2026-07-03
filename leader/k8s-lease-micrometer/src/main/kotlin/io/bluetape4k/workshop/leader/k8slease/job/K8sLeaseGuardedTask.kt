@@ -32,7 +32,11 @@ class K8sLeaseGuardedTask(
     private companion object : KLogging()
 
     /**
-     * Spring scheduler entry point. `runBlocking` is limited to the scheduler boundary.
+     * Spring scheduler entry point.
+     *
+     * `runBlocking` is intentionally limited to this blocking scheduler boundary. The
+     * guarded work stays suspend-first in [runOnce], including [CancellationException]
+     * rethrow semantics inside the leader boundary.
      */
     @Scheduled(fixedDelayString = "\${workshop.leader.k8s.job-fixed-delay:10s}")
     fun runScheduled() {
