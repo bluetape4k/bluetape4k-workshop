@@ -6,68 +6,8 @@ import path from "node:path";
 const root = process.cwd();
 const diagramDir = path.join(root, "docs/images/readme-diagrams");
 const legacySequenceSlugs = new Set([
-  "aws-s3-spring-cloud-sequence-01.svg",
-  "aws-storage-abstraction-sequence-01.svg",
-  "docker-compose-demo-readme-sequence-01.svg",
-  "docker-compose-plugin-demo-readme-sequence-01.svg",
-  "exposed-dao-web-transaction-sequence-01.svg",
-  "exposed-javers-audit-readme-sequence-01.svg",
-  "exposed-mvc-jdbc-readme-sequence-01.svg",
-  "exposed-mvc-virtualthread-readme-sequence-01.svg",
-  "exposed-sql-webflux-coroutines-sequence-01.svg",
-  "exposed-webflux-r2dbc-readme-sequence-01.svg",
-  "gateway-api-gateway-readme-sequence-01.svg",
-  "gatling-virtualthread-simulation-readme-sequence-01.svg",
-  "graph-abuser-detection-readme-sequence-01.svg",
-  "graph-social-network-readme-sequence-01.svg",
-  "image-processing-advanced-workflow-readme-sequence-01.svg",
-  "io-okio-examples-readme-sequence-01.svg",
-  "json-jackson-examples-readme-sequence-01.svg",
-  "kotlin-coroutines-readme-sequence-test-01.svg",
-  "ktor-rest-coroutines-readme-sequence-01.svg",
-  "leader-election-sequence.svg",
-  "leader-leader-zookeeper-readme-election-sequence-01.svg",
-  "messaging-kafka-readme-message-sequence-01.svg",
-  "messaging-kafka-reply-readme-request-reply-sequence-01.svg",
   "kotlin-flow-extensions-race-fallback-readme-sequence-01.svg",
   "observability-micrometer-observation-readme-sequence-01.svg",
-  "observability-micrometer-tracing-coroutines-readme-coroutine-sequence-01.svg",
-  "observability-observability-advanced-readme-span-sequence-01.svg",
-  "observability-observability-basic-readme-trace-sequence-01.svg",
-  "quarkus-hibernate-reactive-panache-sequence-01.svg",
-  "quarkus-rest-coroutine-sequence-01.svg",
-  "ratelimit-bucker4j-bluetape4k-webflux-readme-filter-sequence-01.svg",
-  "ratelimit-bucket4j-caffeine-web-readme-request-sequence-01.svg",
-  "ratelimit-bucket4j-redis-readme-request-sequence-01.svg",
-  "ratelimit-readme-selection-sequence-01.svg",
-  "redis-cluster-demo-readme-number-sequence-01.svg",
-  "redis-distributed-lock-readme-fenced-sequence-01.svg",
-  "shared-readme-test-sequence-01.svg",
-  "spring-boot-application-event-demo-sequence-01.svg",
-  "spring-boot-application-event-demo-sequence-02.svg",
-  "spring-boot-cache-caffeine-readme-cache-sequence-01.svg",
-  "spring-boot-cache-redis-readme-cache-sequence-01.svg",
-  "spring-boot-cache-resilience-readme-state-sequence-01.svg",
-  "spring-boot-cbor-mvc-sequence-01.svg",
-  "spring-boot-chaos-monkey-readme-assault-sequence-01.svg",
-  "spring-boot-idempotency-sequence-01.svg",
-  "spring-boot-idgenerator-readme-sequence-01.svg",
-  "spring-boot-stomp-websocket-readme-sequence-01.svg",
-  "spring-boot-text-moderation-api-readme-sequence-01.svg",
-  "spring-boot-webflux-coroutines-readme-sequence-01.svg",
-  "spring-data-elasticsearch-readme-sequence-01.svg",
-  "spring-data-elasticsearch-webflux-readme-sequence-01.svg",
-  "spring-data-mongodb-coroutines-readme-sequence-01.svg",
-  "spring-data-mongodb-transactions-readme-sequence-01.svg",
-  "spring-data-r2dbc-examples-readme-sequence-01.svg",
-  "spring-data-r2dbc-webflux-exposed-readme-sequence-01.svg",
-  "spring-data-r2dbc-webflux-readme-sequence-01.svg",
-  "spring-data-redis-examples-src-main-kotlin-io-bluetape4k-workshop-redis-stream-readme-sequence-01.svg",
-  "spring-modulith-events-deep-dive-readme-sequence-01.svg",
-  "spring-modulith-jpa-demo-readme-sequence-01.svg",
-  "spring-security-readme-sequence-01.svg",
-  "virtualthreads-spring-mvc-tomcat-readme-sequence-01.svg",
-  "virtualthreads-spring-webflux-readme-sequence-01.svg",
 ]);
 const files = fs
   .readdirSync(diagramDir)
@@ -190,12 +130,14 @@ function readMessageTexts(svg) {
 
 const failures = [];
 let legacySkipped = 0;
+const documentedExceptionSlugs = [];
 
 for (const file of files) {
   const svg = fs.readFileSync(file, "utf8");
   const rel = path.relative(root, file).replaceAll(path.sep, "/");
   if (legacySequenceSlugs.has(path.basename(file))) {
     legacySkipped += 1;
+    documentedExceptionSlugs.push(path.basename(file));
     continue;
   }
 
@@ -244,9 +186,19 @@ for (const file of files) {
   });
 }
 
+function resultPayload() {
+  return {
+    checked: files.length,
+    validated: files.length - legacySkipped,
+    legacySkipped,
+    documentedExceptions: legacySkipped,
+    exceptionSlugs: documentedExceptionSlugs,
+  };
+}
+
 if (failures.length > 0) {
-  console.error(JSON.stringify({ checked: files.length, legacySkipped, failures: failures.length, sample: failures.slice(0, 40) }, null, 2));
+  console.error(JSON.stringify({ ...resultPayload(), failures: failures.length, sample: failures.slice(0, 40) }, null, 2));
   process.exit(1);
 }
 
-console.log(JSON.stringify({ checked: files.length, legacySkipped, failures: 0 }, null, 2));
+console.log(JSON.stringify({ ...resultPayload(), failures: 0 }, null, 2));
