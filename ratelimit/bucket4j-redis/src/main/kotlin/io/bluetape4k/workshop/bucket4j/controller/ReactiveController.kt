@@ -8,11 +8,19 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
+/**
+ * Reactive WebFlux endpoints protected by the Bucket4j Redis filter.
+ *
+ * The handlers return [Mono] values directly to demonstrate that the same
+ * starter configuration covers both reactive and coroutine controllers.
+ */
 @RestController
 @RequestMapping("/reactive")
 class ReactiveController {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel() {
+        private const val RESPONSE_BODY = "Hello World"
+    }
 
     private val helloCounter = atomic(0)
     private val worldCounter = atomic(0)
@@ -21,13 +29,13 @@ class ReactiveController {
     fun hello(): Mono<String> {
         val helloCount = helloCounter.incrementAndGet()
         log.debug { "hello called. call count=$helloCount" }
-        return Mono.just("Hello World")
+        return Mono.just(RESPONSE_BODY)
     }
 
     @GetMapping("/world")
     fun world(): Mono<String> {
         val worldCount = worldCounter.incrementAndGet()
         log.debug { "world called. call count=$worldCount" }
-        return Mono.just("Hello World")
+        return Mono.just(RESPONSE_BODY)
     }
 }
