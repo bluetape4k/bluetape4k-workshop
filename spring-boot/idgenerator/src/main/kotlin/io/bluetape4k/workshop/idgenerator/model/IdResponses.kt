@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.idgenerator.model
 import java.io.Serializable
 
 /**
- * Snowflake ID 응답 — Long ID와 파싱된 구성요소 포함.
+ * Response for a generated Snowflake ID and its parsed components.
  */
 data class SnowflakeResponse(
     val id: Long,
@@ -11,30 +11,46 @@ data class SnowflakeResponse(
     val timestamp: Long,
     val machineId: Int,
     val sequence: Int,
-) : Serializable
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 /**
- * String ID (ULID / KSUID) 응답.
+ * Response for string-based IDs such as ULID and KSUID.
  */
 data class StringIdResponse(
     val type: String,
     val id: String,
-) : Serializable
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 /**
- * Hashids 인코딩 응답.
+ * Response for Hashids encoding and decoding.
  */
 data class HashidsResponse(
     val numbers: List<Long>,
     val encoded: String,
     val decoded: List<Long>,
-) : Serializable
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 /**
- * 일괄 ID 생성 응답.
+ * Response for batch ID generation.
  */
 data class BatchIdResponse(
     val type: String,
     val count: Int,
     val ids: List<String>,
-) : Serializable
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
