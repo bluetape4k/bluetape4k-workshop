@@ -4,9 +4,11 @@ import io.bluetape4k.bucket4j.ratelimit.distributed.DistributedSuspendRateLimite
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.trace
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.bucket4j.components.RateLimitTargetProvider
 import io.bluetape4k.workshop.bucket4j.components.UserKeyResolver
 import io.bluetape4k.workshop.bucket4j.utils.HeaderUtils
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.coroutines.reactor.mono
@@ -24,9 +26,9 @@ class AsyncUserRateLimitWebFilter(
     private val keyResolver: UserKeyResolver,
     private val rateLimiter: DistributedSuspendRateLimiter,
     private val targetProvider: RateLimitTargetProvider,
-): WebFilter {
+) : WebFilter {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
         return doFilter(exchange, chain)
@@ -41,10 +43,11 @@ class AsyncUserRateLimitWebFilter(
                 log.trace { "Extracted key=$key" }
 
                 if (!key.isNullOrBlank()) {
-                    val result = rateLimiter.consume(key, 1L)
+                    val rateLimitKey = key.requireNotBlank("key")
+                    val result = rateLimiter.consume(rateLimitKey, 1L)
                     writeRateLimitHeaders(exchange, result.availableTokens)
                     if (result.consumedTokens > 0L) {
-                        log.trace { "Bucket[$key] remains token=${result.availableTokens}" }
+                        log.trace { "Bucket[$rateLimitKey] remains token=${result.availableTokens}" }
                         chain.filter(exchange).awaitSingleOrNull()
                     } else {
                         sendErrorResponse(exchange)
@@ -58,6 +61,8 @@ class AsyncUserRateLimitWebFilter(
                 log.trace { "Filtering request 가 아니므로 Rate Limit을 적용하지 않습니다. path=$targetPath" }
                 chain.filter(exchange).awaitSingleOrNull()
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Throwable) {
             log.warn(e) { "Rate Limit 적용에 실패했습니다. 무시하고, 다음 필터를 진행합니다." }
             chain.filter(exchange).awaitSingleOrNull()
@@ -72,12 +77,13 @@ class AsyncUserRateLimitWebFilter(
         return keyResolver.resolve(exchange)
     }
 
-    protected suspend fun writeRateLimitHeaders(exchange: ServerWebExchange, availableTokens: Long) {
+    protected fun writeRateLimitHeaders(exchange: ServerWebExchange, availableTokens: Long) {
         exchange.response.headers.set(HeaderUtils.X_BLUETAPE4K_REMAINING_TOKEN, availableTokens.toString())
     }
 
     protected fun sendErrorResponse(
-        exchange: ServerWebExchange, status: HttpStatus = HttpStatus.TOO_MANY_REQUESTS,
+        exchange: ServerWebExchange,
+        status: HttpStatus = HttpStatus.TOO_MANY_REQUESTS,
     ) {
         log.warn { "Sending error response with status=$status" }
         exchange.response.statusCode = status // exchange.response.headers.contentType = MediaType.APPLICATION_JSON

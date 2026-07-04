@@ -6,7 +6,7 @@ import org.springframework.boot.runApplication
 
 @SpringBootApplication(proxyBeanMethods = false)
 class RateLimiterWebfluxApplication {
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 }
 
 fun main(vararg args: String) {

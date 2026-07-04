@@ -9,10 +9,10 @@ import java.time.Instant
 @RestController
 class ReactiveController {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     /**
-     * `/api/v1/reactive/~~~` 는 Rate limit를 적용한다
+     * Applies rate limiting to `/api/v1/reactive/...`.
      */
     @GetMapping("/api/v1/reactive/hello")
     fun helloV1(): Mono<String> {
@@ -20,8 +20,7 @@ class ReactiveController {
     }
 
     /**
-     * `/api/v2/reactive/~~~` 는 Rate limit를 걸지 않는다 (Bucket4j 적용 안함)
-     *
+     * Leaves `/api/v2/reactive/...` outside Bucket4j rate limiting.
      */
     @GetMapping("/api/v2/reactive/hello")
     fun helloV2(): Mono<String> {

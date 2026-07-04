@@ -15,7 +15,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractRateLimiterApplicationTest {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         @JvmStatic
         @DynamicPropertySource
         fun registerRedisProperties(registry: DynamicPropertyRegistry) {
