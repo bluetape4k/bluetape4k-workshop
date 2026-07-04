@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.tenantscheduler.service
 
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantId
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantLeaseState
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantLeaseWindow
@@ -37,12 +38,10 @@ class TenantSchedulerLab(
 
         ticks.forEach { tick ->
             tick.initialLeases.forEach { lease ->
-                require(lease.tenantId in knownTenants) {
-                    "initialLeases must reference configured tenants"
-                }
-                require(lease.lockName == lockNamePlanner.lockName(lease.tenantId, policy.jobName)) {
-                    "initialLeases must use tenant-scoped lock names"
-                }
+                lease.tenantId.requireKnownTenant(knownTenants, "initialLeases.tenantId")
+                (lease.lockName == lockNamePlanner.lockName(lease.tenantId, policy.jobName))
+                    .toMissingCount()
+                    .requireInRange(0, 0, "initialLeases.lockName")
                 leases[lease.tenantId] = lease
             }
 
@@ -51,12 +50,8 @@ class TenantSchedulerLab(
             } else {
                 tick.dueTenants
             }
-            require(dueTenants.all { it in knownTenants }) {
-                "dueTenants must reference configured tenants"
-            }
-            require(tick.actionFailures.all { it in knownTenants }) {
-                "actionFailures must reference configured tenants"
-            }
+            dueTenants.requireKnownTenants(knownTenants, "dueTenants")
+            tick.actionFailures.requireKnownTenants(knownTenants, "actionFailures")
 
             dueTenants
                 .sortedWith(compareBy<TenantId> { lastSelectedTicks.getValue(it).value }.thenBy { it.value })
@@ -156,3 +151,13 @@ class TenantSchedulerLab(
         )
     }
 }
+
+private fun TenantId.requireKnownTenant(knownTenants: Set<TenantId>, parameterName: String) {
+    (this in knownTenants).toMissingCount().requireInRange(0, 0, parameterName)
+}
+
+private fun Collection<TenantId>.requireKnownTenants(knownTenants: Set<TenantId>, parameterName: String) {
+    count { it !in knownTenants }.requireInRange(0, 0, "$parameterName.unknownCount")
+}
+
+private fun Boolean.toMissingCount(): Int = if (this) 0 else 1

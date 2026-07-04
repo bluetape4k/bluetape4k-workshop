@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.tenantscheduler.domain
 
+import io.bluetape4k.support.requireInRange
 import java.io.Serializable
 
 /**
@@ -14,12 +15,8 @@ data class TenantLeaseWindow(
 ): Serializable {
 
     init {
-        require(acquiredAt <= renewedAt) {
-            "acquiredAt must be before or equal to renewedAt"
-        }
-        require(renewedAt < expiresAt) {
-            "expiresAt must be after renewedAt"
-        }
+        acquiredAt.compareTo(renewedAt).requireInRange(Int.MIN_VALUE, 0, "acquiredAt.compareTo(renewedAt)")
+        renewedAt.compareTo(expiresAt).requireInRange(Int.MIN_VALUE, -1, "renewedAt.compareTo(expiresAt)")
     }
 
     companion object {
