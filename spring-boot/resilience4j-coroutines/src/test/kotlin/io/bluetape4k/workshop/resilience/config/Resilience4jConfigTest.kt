@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 
 class Resilience4jConfigTest: AbstractResilienceTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `context loading`() {

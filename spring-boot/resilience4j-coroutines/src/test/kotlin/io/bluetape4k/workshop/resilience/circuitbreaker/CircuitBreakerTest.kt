@@ -12,7 +12,7 @@ import org.springframework.test.web.reactive.server.expectBody
 
 class CircuitBreakerTest: AbstractCircuitBreakerTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Nested
     inner class BackendA {

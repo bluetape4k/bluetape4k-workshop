@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 
 class FutureCircuitBreakerTest: AbstractCircuitBreakerTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Nested
     inner class BackendA {

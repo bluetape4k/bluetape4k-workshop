@@ -4,6 +4,7 @@ import io.bluetape4k.concurrent.NamedThreadFactory
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
+import io.bluetape4k.workshop.resilience.simulateBlockingLatency
 import io.bluetape4k.workshop.resilience.service.Service
 import io.github.resilience4j.bulkhead.BulkheadFullException
 import io.github.resilience4j.bulkhead.BulkheadRegistry
@@ -29,6 +30,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeoutException
+import kotlin.time.Duration.Companion.seconds
 
 @RestController
 @RequestMapping("/backendB")
@@ -42,7 +44,7 @@ class BackendBController(
     timeLimiterRegistry: TimeLimiterRegistry,
     private val scheduledExecutorService: ScheduledExecutorService = newProgrammaticScheduler(),
 ) {
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private const val BACKEND_B = "backendB"
         private const val PROGRAMMATIC_SCHEDULER_THREADS = 3
 
@@ -113,7 +115,7 @@ class BackendBController(
     }
 
     private fun timeout(): String {
-        Thread.sleep(3_000)    // Time Limiter 가 2s 로 설정되어 있으므로, timeout 이 발생합니다.
+        simulateBlockingLatency(3.seconds) // Time Limiter 가 2s 로 설정되어 있으므로, timeout 이 발생합니다.
         return ""
     }
 

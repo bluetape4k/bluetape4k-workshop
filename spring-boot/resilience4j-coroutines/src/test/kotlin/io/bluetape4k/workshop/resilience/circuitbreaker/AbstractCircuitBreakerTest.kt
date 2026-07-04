@@ -7,7 +7,7 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 
 abstract class AbstractCircuitBreakerTest: AbstractResilienceTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     protected fun checkHealthStatus(circuitBreakerName: String, expectedState: CircuitBreaker.State) {
         val circuitBreaker = circuitBreakerRegistry.circuitBreaker(circuitBreakerName)

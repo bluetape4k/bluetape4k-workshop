@@ -5,6 +5,7 @@ import io.bluetape4k.concurrent.failedCompletableFutureOf
 import io.bluetape4k.concurrent.futureOf
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.resilience.exception.BusinessException
+import io.bluetape4k.workshop.resilience.simulateBlockingLatency
 import io.github.resilience4j.bulkhead.BulkheadFullException
 import io.github.resilience4j.bulkhead.annotation.Bulkhead
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException
@@ -21,11 +22,12 @@ import java.io.IOException
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeoutException
+import kotlin.time.Duration.Companion.seconds
 
 @Component("backendCService")
-class BackendCService: Service {
+class BackendCService : Service {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         const val BACKEND_C = "backendC"
     }
 
@@ -130,7 +132,7 @@ class BackendCService: Service {
     @CircuitBreaker(name = BACKEND_C, fallbackMethod = "futureFallback")
     override fun futureTimeout(): CompletableFuture<String> {
         return futureOf {
-            Thread.sleep(5000)
+            simulateBlockingLatency(5.seconds)
             "Hello World as Future from backend A"
         }
     }

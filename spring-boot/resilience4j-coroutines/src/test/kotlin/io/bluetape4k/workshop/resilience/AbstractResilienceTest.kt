@@ -15,7 +15,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractResilienceTest {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         const val BACKEND_A = "backendA"
         const val BACKEND_B = "backendB"
         const val BACKEND_C = "backendC"
