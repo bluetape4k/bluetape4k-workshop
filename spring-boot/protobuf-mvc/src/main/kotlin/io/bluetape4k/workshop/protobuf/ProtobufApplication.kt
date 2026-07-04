@@ -7,7 +7,7 @@ import org.springframework.boot.runApplication
 @SpringBootApplication(proxyBeanMethods = false)
 class ProtobufApplication {
 
-    companion object: KLogging()
+    companion object : KLogging()
 }
 
 fun main(args: Array<String>) {

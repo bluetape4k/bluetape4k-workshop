@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class CourseController(private val courseRepository: CourseRepository) {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @RequestMapping("/courses/{id}")
     fun course(@PathVariable id: Int): Course {

@@ -16,7 +16,7 @@ class ConurceConfig {
 
     @Bean
     fun courceRepository(): CourseRepository {
-        val courses = mutableMapOf(
+        val courses = mapOf(
             1 to course {
                 id = 1
                 courseName = "Kotlin Programming"
@@ -68,6 +68,6 @@ class ConurceConfig {
             }
         }
 
-        return mutableListOf(student1, student2, student3)
+        return listOf(student1, student2, student3)
     }
 }
