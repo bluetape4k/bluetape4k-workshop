@@ -21,7 +21,7 @@ This module shows a local in-memory cache using Spring Cache and Caffeine. It is
 | Class | Role |
 |---|---|
 | `CaffeineConfig` | Registers `CaffeineCacheManager` and the bluetape4k `caffeine { }` builder |
-| `CountryRepository` | Applies `@Cacheable` and `@CacheEvict` to country lookup methods |
+| `CountryRepository` | Applies bluetape4k validation plus `@Cacheable` and `@CacheEvict` to country lookup methods |
 | `CountryPrefetcher` | Periodically warms a random country code through the cached repository |
 | `SchedulingConfig` | Enables scheduling with a virtual-thread scheduled executor |
 
@@ -32,6 +32,7 @@ This module shows a local in-memory cache using Spring Cache and Caffeine. It is
 | `caffeine { }` DSL | `bluetape4k-cache-core` | `CaffeineConfig.caffeineBean()` | Kotlin-friendly Caffeine builder |
 | `VirtualThreadExecutor` | `bluetape4k-core` | `CaffeineConfig.caffeineBean()` | Runs Caffeine executor work on virtual threads |
 | `KLoggingChannel` | `bluetape4k-logging` | Companion objects | Lazy structured logging |
+| `requireNotBlank()` | `bluetape4k-core` | `CountryRepository.findByCode()` and `evictCache()` | Rejects invalid cache keys before loading or eviction |
 | `randomString()` | `bluetape4k-core` | `Country.kt` | Creates non-trivial cache payloads |
 
 ## Cache Configuration Example
@@ -60,8 +61,8 @@ class CaffeineConfig {
 ## Run
 
 ```bash
-./gradlew :spring-boot:cache-caffeine:bootRun
-./gradlew :spring-boot:cache-caffeine:test
+./gradlew :spring-boot-cache-caffeine:bootRun
+./gradlew :spring-boot-cache-caffeine:test
 ```
 
 ## References

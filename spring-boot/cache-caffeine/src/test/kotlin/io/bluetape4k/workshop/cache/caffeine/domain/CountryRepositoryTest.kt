@@ -1,5 +1,11 @@
 package io.bluetape4k.workshop.cache.caffeine.domain
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.assertions.shouldBeLessThan
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
@@ -9,14 +15,12 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.utils.Runtimex
 import io.bluetape4k.workshop.cache.caffeine.AbstractCaffeineCacheApplicationTest
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeLessOrEqualTo
-import io.bluetape4k.assertions.shouldBeLessThan
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnJre
 import org.junit.jupiter.api.condition.JRE
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cache.CacheManager
 import org.springframework.context.annotation.Profile
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.system.measureTimeMillis
@@ -24,6 +28,7 @@ import kotlin.system.measureTimeMillis
 @Profile("app")
 class CountryRepositoryTest(
     @param:Autowired private val countryRepo: CountryRepository,
+    @param:Autowired private val cacheManager: CacheManager,
 ): AbstractCaffeineCacheApplicationTest() {
 
     companion object: KLoggingChannel() {
@@ -57,12 +62,13 @@ class CountryRepositoryTest(
     @Test
     fun `evict cached country`() {
         countryRepo.evictCache(US)
+        cachedCountry(US).shouldBeNull()
 
         val us = measureTimeMillis {
             countryRepo.findByCode(US)
         }
-        Thread.sleep(10)
         us shouldBeGreaterThan EXPECTED_MILLIS
+        cachedCountry(US).shouldNotBeNull()
 
         val usCached = measureTimeMillis {
             countryRepo.findByCode(US)
@@ -70,12 +76,23 @@ class CountryRepositoryTest(
         usCached shouldBeLessThan EXPECTED_MILLIS
 
         countryRepo.evictCache(US)
-        Thread.sleep(10)
+        cachedCountry(US).shouldBeNull()
 
         val usEvicted = measureTimeMillis {
             countryRepo.findByCode(US)
         }
         usEvicted shouldBeGreaterThan EXPECTED_MILLIS
+        cachedCountry(US).shouldNotBeNull()
+    }
+
+    @Test
+    fun `reject blank country code`() {
+        assertFailsWith<IllegalArgumentException> {
+            countryRepo.findByCode(" ")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            countryRepo.evictCache(" ")
+        }
     }
 
     @Test
@@ -137,4 +154,7 @@ class CountryRepositoryTest(
         log.info { "Looking for country with code [$code]" }
         return countryRepo.findByCode(code)
     }
+
+    private fun cachedCountry(code: String): Country? =
+        cacheManager.getCache("cache:contries")?.get("country:$code", Country::class.java)
 }

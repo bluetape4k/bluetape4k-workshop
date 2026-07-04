@@ -21,7 +21,7 @@
 | 클래스 | 역할 |
 |---|---|
 | `CaffeineConfig` | `CaffeineCacheManager`와 bluetape4k `caffeine { }` builder를 등록합니다. |
-| `CountryRepository` | 국가 조회 메서드에 `@Cacheable`, `@CacheEvict`를 적용합니다. |
+| `CountryRepository` | bluetape4k 검증과 `@Cacheable`, `@CacheEvict`를 국가 조회 메서드에 적용합니다. |
 | `CountryPrefetcher` | 캐시된 repository를 통해 무작위 국가 코드를 주기적으로 예열합니다. |
 | `SchedulingConfig` | virtual-thread scheduled executor로 scheduling을 활성화합니다. |
 
@@ -32,6 +32,7 @@
 | `caffeine { }` DSL | `bluetape4k-cache-core` | `CaffeineConfig.caffeineBean()` | Kotlin 친화적인 Caffeine builder |
 | `VirtualThreadExecutor` | `bluetape4k-core` | `CaffeineConfig.caffeineBean()` | Caffeine executor 작업을 virtual thread에서 실행 |
 | `KLoggingChannel` | `bluetape4k-logging` | Companion objects | Lazy structured logging |
+| `requireNotBlank()` | `bluetape4k-core` | `CountryRepository.findByCode()`, `evictCache()` | 잘못된 cache key를 loading/eviction 전에 거부 |
 | `randomString()` | `bluetape4k-core` | `Country.kt` | 의미 있는 크기의 cache payload 생성 |
 
 ## 캐시 설정 예제
@@ -60,8 +61,8 @@ class CaffeineConfig {
 ## 실행
 
 ```bash
-./gradlew :spring-boot:cache-caffeine:bootRun
-./gradlew :spring-boot:cache-caffeine:test
+./gradlew :spring-boot-cache-caffeine:bootRun
+./gradlew :spring-boot-cache-caffeine:test
 ```
 
 ## 참고
