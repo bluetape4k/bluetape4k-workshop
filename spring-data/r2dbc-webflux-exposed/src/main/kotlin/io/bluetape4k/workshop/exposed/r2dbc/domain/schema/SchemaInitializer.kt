@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component
 @Component
 class SchemaInitializer(private val database: R2dbcDatabase): ApplicationListener<ApplicationReadyEvent> {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     override fun onApplicationEvent(event: ApplicationReadyEvent) {
         log.info { "샘플 데이터 추가" }

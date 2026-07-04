@@ -21,7 +21,7 @@ class UserController(
     private val service: UserService,
 ) {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @GetMapping("/users")
     suspend fun findAll(): List<UserRecord> {

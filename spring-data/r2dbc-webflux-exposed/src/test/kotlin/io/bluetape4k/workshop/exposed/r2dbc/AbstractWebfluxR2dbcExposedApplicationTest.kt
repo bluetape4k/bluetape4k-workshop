@@ -3,7 +3,6 @@ package io.bluetape4k.workshop.exposed.r2dbc
 import io.bluetape4k.exposed.r2dbc.tests.TestDB
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.exposed.r2dbc.domain.model.UserRecord
 import io.bluetape4k.workshop.exposed.r2dbc.domain.schema.SchemaInitializer
 import org.junit.jupiter.api.BeforeEach
@@ -19,7 +18,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractWebfluxR2dbcExposedApplicationTest {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private val testDB = TestDB.POSTGRESQL
 
         @JvmStatic
@@ -35,10 +34,16 @@ abstract class AbstractWebfluxR2dbcExposedApplicationTest {
     }
 
     @Autowired
-    protected val context: ApplicationContext = uninitialized()
+    private var applicationContext: ApplicationContext? = null
+
+    protected val context: ApplicationContext
+        get() = checkNotNull(applicationContext) { "applicationContext is not injected." }
 
     @Autowired
-    private val schemaInitializer: SchemaInitializer = uninitialized()
+    private var injectedSchemaInitializer: SchemaInitializer? = null
+
+    private val schemaInitializer: SchemaInitializer
+        get() = checkNotNull(injectedSchemaInitializer) { "schemaInitializer is not injected." }
 
     protected val webTestClient: WebTestClient by lazy {
         WebTestClient.bindToApplicationContext(context).build()
