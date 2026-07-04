@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.idempotency.controller
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.idempotency.model.OrderRequest
 import io.bluetape4k.workshop.idempotency.model.OrderResponse
 import io.bluetape4k.workshop.idempotency.service.IdempotencyResult
@@ -43,13 +44,7 @@ class OrderController(private val idempotencyService: IdempotencyService) {
         @RequestHeader(IDEMPOTENCY_KEY_HEADER, required = false) idempotencyKey: String?,
         @RequestBody request: OrderRequest,
     ): ResponseEntity<OrderResponse> {
-        val key = idempotencyKey?.trim()
-        if (key.isNullOrBlank()) {
-            throw ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Header '$IDEMPOTENCY_KEY_HEADER' is required and must not be blank"
-            )
-        }
+        val key = requireIdempotencyKey(idempotencyKey)
 
         log.debug { "Processing order with idempotency key=$key, request=$request" }
 
@@ -60,5 +55,16 @@ class OrderController(private val idempotencyService: IdempotencyService) {
             is IdempotencyResult.Replay ->
                 ResponseEntity.ok(result.cached.response)
         }
+    }
+
+    private fun requireIdempotencyKey(idempotencyKey: String?): String {
+        val key = idempotencyKey?.trim().orEmpty()
+        if (key.isBlank()) {
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Header '$IDEMPOTENCY_KEY_HEADER' is required and must not be blank",
+            )
+        }
+        return key.requireNotBlank(IDEMPOTENCY_KEY_HEADER)
     }
 }

@@ -14,8 +14,7 @@ import io.bluetape4k.workshop.idempotency.model.OrderResponse
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
-import org.springframework.test.web.reactive.server.returnResult
-import reactor.kotlin.core.publisher.toMono
+import org.springframework.test.web.reactive.server.expectBody
 
 class OrderControllerTest : AbstractIdempotencyTest() {
 
@@ -41,10 +40,9 @@ class OrderControllerTest : AbstractIdempotencyTest() {
             .bodyValue(sampleRequest)
             .exchange()
             .expectStatus().isCreated
-            .returnResult<OrderResponse>()
+            .expectBody<OrderResponse>()
+            .returnResult()
             .responseBody
-            .toMono()
-            .block()
             .shouldNotBeNull()
             .also { response ->
                 response.orderId.shouldNotBeEmpty()
@@ -64,10 +62,9 @@ class OrderControllerTest : AbstractIdempotencyTest() {
             .bodyValue(sampleRequest)
             .exchange()
             .expectStatus().isCreated
-            .returnResult<OrderResponse>()
+            .expectBody<OrderResponse>()
+            .returnResult()
             .responseBody
-            .toMono()
-            .block()
             .shouldNotBeNull()
 
         // Second request with same key → 200 OK, same orderId
@@ -78,10 +75,9 @@ class OrderControllerTest : AbstractIdempotencyTest() {
             .bodyValue(sampleRequest)
             .exchange()
             .expectStatus().isOk
-            .returnResult<OrderResponse>()
+            .expectBody<OrderResponse>()
+            .returnResult()
             .responseBody
-            .toMono()
-            .block()
             .shouldNotBeNull()
 
         second.orderId shouldBeEqualTo first.orderId
@@ -100,8 +96,10 @@ class OrderControllerTest : AbstractIdempotencyTest() {
             .bodyValue(sampleRequest)
             .exchange()
             .expectStatus().isCreated
-            .returnResult<OrderResponse>()
-            .responseBody.toMono().block().shouldNotBeNull()
+            .expectBody<OrderResponse>()
+            .returnResult()
+            .responseBody
+            .shouldNotBeNull()
 
         val responseB = client.post()
             .uri(ORDERS_PATH)
@@ -110,8 +108,10 @@ class OrderControllerTest : AbstractIdempotencyTest() {
             .bodyValue(sampleRequest)
             .exchange()
             .expectStatus().isCreated
-            .returnResult<OrderResponse>()
-            .responseBody.toMono().block().shouldNotBeNull()
+            .expectBody<OrderResponse>()
+            .returnResult()
+            .responseBody
+            .shouldNotBeNull()
 
         // Different keys → different order IDs
         responseA.orderId shouldNotBeEqualTo responseB.orderId
@@ -149,8 +149,10 @@ class OrderControllerTest : AbstractIdempotencyTest() {
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(sampleRequest)
                 .exchange()
-                .returnResult<OrderResponse>()
-                .responseBody.toMono().block().shouldNotBeNull()
+                .expectBody<OrderResponse>()
+                .returnResult()
+                .responseBody
+                .shouldNotBeNull()
         }
 
         // All responses must carry the same orderId
