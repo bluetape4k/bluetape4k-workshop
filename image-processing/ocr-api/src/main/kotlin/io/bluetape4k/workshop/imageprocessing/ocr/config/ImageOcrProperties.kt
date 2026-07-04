@@ -1,5 +1,9 @@
 package io.bluetape4k.workshop.imageprocessing.ocr.config
 
+import io.bluetape4k.support.requireGt
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotEmpty
+import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
 import java.time.Duration
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -18,6 +22,14 @@ data class ImageOcrProperties(
 ) : Serializable {
     val effectiveNativeEnabled: Boolean
         get() = nativeEnabled || System.getProperty("ocr.enabled")?.equals("true", ignoreCase = true) == true
+
+    init {
+        maxUploadBytes.requirePositiveNumber("maxUploadBytes")
+        maxImagePixels.requirePositiveNumber("maxImagePixels")
+        timeout.requireGt(Duration.ZERO, "timeout")
+        languages.requireNotEmpty("languages")
+        tessdataPath?.requireNotBlank("tessdataPath")
+    }
 
     companion object {
         private const val serialVersionUID: Long = 1L

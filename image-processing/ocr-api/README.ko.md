@@ -28,6 +28,8 @@ short-circuit하거나 제한된 native `OcrEngine`을 호출합니다.
 기본 smoke 경로는 실제로 decode 가능한 이미지를 검증하고 Tesseract 호출은 건너뛴
 뒤 `UNAVAILABLE`을 반환합니다. Native OCR은 `workshop.ocr.native-enabled` 또는
 `-Docr.enabled=true`로 명시적으로 켭니다.
+설정과 decoded-pixel limit은 bluetape4k `require*` helper로 검증하고, HTTP 경계의
+public upload error message는 명시적인 메시지를 유지합니다.
 
 ## 엔드포인트
 
@@ -102,6 +104,8 @@ curl -F "file=@docs/images/readme-diagrams/image-ocr-api-readme-architecture-01.
 | `spring.servlet.multipart.max-request-size` | `5MB` | container multipart request 제한 |
 
 Spring multipart limit은 `workshop.ocr.max-upload-bytes`와 같은 수준으로 맞춰야 합니다.
+`ImageOcrProperties` 생성 시 byte/pixel/time limit이 양수인지, 기본 language 목록이
+비어 있지 않은지 검증합니다.
 
 ## 실행
 

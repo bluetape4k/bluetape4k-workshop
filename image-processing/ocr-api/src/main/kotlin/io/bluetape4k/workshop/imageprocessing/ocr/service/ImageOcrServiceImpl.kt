@@ -328,10 +328,9 @@ class ImageOcrServiceImpl(
     }
 
     private fun validateDecodedPixels(width: Long, height: Long) {
-        require(width > 0 && height > 0) { "Decoded image dimensions are invalid" }
-        require(width <= properties.maxImagePixels / height) {
-            "Decoded image exceeds ${properties.maxImagePixels} pixels"
-        }
+        width.requirePositiveNumber("width")
+        height.requirePositiveNumber("height")
+        width.requireInRange(1L, properties.maxImagePixels / height, "width")
     }
 
     private fun normalizeLanguages(rawLanguages: List<String>): List<String> {
