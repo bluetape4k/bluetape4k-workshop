@@ -11,7 +11,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 @ExtendWith(SpringExtension::class)
 abstract class AbstractMongodbTest {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         @JvmStatic
         val faker = Fakers.faker
 

@@ -20,7 +20,7 @@ class CoroutineManagedTransitionService(
     private val repository: CoroutineProcessRepository,
     private val operations: ReactiveMongoOperations,
 ) {
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     private val counter = atomic(0)
 

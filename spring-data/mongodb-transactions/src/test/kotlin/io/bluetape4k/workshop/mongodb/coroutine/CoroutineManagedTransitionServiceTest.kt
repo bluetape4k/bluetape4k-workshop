@@ -36,7 +36,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @ContextConfiguration(classes = [CoroutineManagedTransitionServiceTest.TestConfig::class])
 class CoroutineManagedTransitionServiceTest: AbstractMongodbTest() {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private const val DATABASE_NAME = "spring-data-mongodb-transactions-coroutines-demo"
     }
 

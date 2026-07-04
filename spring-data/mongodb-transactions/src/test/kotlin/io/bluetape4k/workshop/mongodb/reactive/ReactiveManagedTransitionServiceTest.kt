@@ -28,7 +28,7 @@ import reactor.test.StepVerifier
 @ContextConfiguration(classes = [ReactiveManagedTransitionServiceTest.TestConfig::class])
 class ReactiveManagedTransitionServiceTest: AbstractMongodbTest() {
 
-    companion object: KLogging() {
+    companion object : KLogging() {
         private const val DATABASE_NAME = "spring-data-mongodb-transactions-reactive-demo"
     }
 

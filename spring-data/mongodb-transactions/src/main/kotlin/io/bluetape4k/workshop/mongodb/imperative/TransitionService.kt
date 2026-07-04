@@ -18,7 +18,7 @@ class TransitionService(
     private val repository: ProcessRepository,
     private val operations: MongoOperations,
 ) {
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     private val counter = atomic(0)
 

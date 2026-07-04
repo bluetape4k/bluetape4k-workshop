@@ -36,7 +36,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @ContextConfiguration(classes = [TransitionServiceTest.TestConfig::class])
 class TransitionServiceTest: AbstractMongodbTest() {
 
-    companion object: KLogging() {
+    companion object : KLogging() {
         private const val DATABASE_NAME = "spring-data-mongodb-transactions-demo"
     }
 
