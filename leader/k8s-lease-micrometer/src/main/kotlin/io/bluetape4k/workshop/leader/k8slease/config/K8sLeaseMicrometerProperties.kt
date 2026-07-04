@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.leader.k8slease.config
 
 import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.leader.k8s.KubernetesLeaseOptions
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import org.springframework.boot.context.properties.ConfigurationProperties
 import java.io.Serializable
@@ -35,18 +36,12 @@ data class K8sLeaseMicrometerProperties(
         namespace.requireNotBlank("namespace")
         identity.requireNotBlank("identity")
         leaseName.requireNotBlank("leaseName")
-        require(!waitTime.isNegative) { "waitTime must be zero or positive. waitTime=$waitTime" }
-        require(!leaseTime.isNegative && !leaseTime.isZero) { "leaseTime must be positive. leaseTime=$leaseTime" }
-        require(!retryDelay.isNegative && !retryDelay.isZero) { "retryDelay must be positive. retryDelay=$retryDelay" }
-        require(!jobFixedDelay.isNegative && !jobFixedDelay.isZero) {
-            "jobFixedDelay must be positive. jobFixedDelay=$jobFixedDelay"
-        }
-        require(!simulatedWorkTime.isNegative) {
-            "simulatedWorkTime must be zero or positive. simulatedWorkTime=$simulatedWorkTime"
-        }
-        require(leaseTime >= waitTime) {
-            "leaseTime must be >= waitTime. leaseTime=$leaseTime, waitTime=$waitTime"
-        }
+        waitTime.requireZeroOrPositive("waitTime")
+        leaseTime.requirePositive("leaseTime")
+        retryDelay.requirePositive("retryDelay")
+        jobFixedDelay.requirePositive("jobFixedDelay")
+        simulatedWorkTime.requireZeroOrPositive("simulatedWorkTime")
+        leaseTime.requireGreaterOrEqual(waitTime, "leaseTime", "waitTime")
     }
 
     /**
@@ -67,4 +62,16 @@ data class K8sLeaseMicrometerProperties(
     companion object {
         private const val serialVersionUID: Long = 1L
     }
+}
+
+private fun Duration.requireZeroOrPositive(parameterName: String): Duration = apply {
+    compareTo(Duration.ZERO).requireInRange(0, Int.MAX_VALUE, parameterName)
+}
+
+private fun Duration.requirePositive(parameterName: String): Duration = apply {
+    compareTo(Duration.ZERO).requireInRange(1, Int.MAX_VALUE, parameterName)
+}
+
+private fun Duration.requireGreaterOrEqual(minimum: Duration, parameterName: String, minimumName: String): Duration = apply {
+    compareTo(minimum).requireInRange(0, Int.MAX_VALUE, "$parameterName.compareTo($minimumName)")
 }

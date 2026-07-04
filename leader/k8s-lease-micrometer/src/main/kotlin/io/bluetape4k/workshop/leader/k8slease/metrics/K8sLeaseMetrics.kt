@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.leader.k8slease.metrics
 
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireNotBlank
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.Gauge
 import io.micrometer.core.instrument.MeterRegistry
@@ -17,6 +19,12 @@ data class LeaseMetricTags(
     val lockName: String,
     val namespace: String,
 ) : Serializable {
+
+    init {
+        lockName.requireNotBlank("lockName")
+        namespace.requireNotBlank("namespace")
+    }
+
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -71,8 +79,7 @@ class K8sLeaseMetrics(
         val builder = Counter.builder(name)
             .tag("lock.name", tags.lockName)
             .tag("namespace", tags.namespace)
-        require(extraTags.size % 2 == 0) { "extraTags must contain key/value pairs" }
-        extraTags.asList().chunked(2).forEach { (key, value) ->
+        extraTags.requireKeyValuePairs().asList().chunked(2).forEach { (key, value) ->
             builder.tag(key, value)
         }
         return builder.register(registry)
@@ -87,4 +94,8 @@ class K8sLeaseMetrics(
                 .register(registry)
             value
         }
+}
+
+private fun Array<out String>.requireKeyValuePairs(): Array<out String> = apply {
+    (size % 2).requireInRange(0, 0, "extraTags.size % 2")
 }
