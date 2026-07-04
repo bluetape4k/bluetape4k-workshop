@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.idempotency.model
 
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
 import java.time.Instant
 
@@ -16,6 +18,12 @@ data class OrderRequest(
     val quantity: Int,
     val userId: String,
 ) : Serializable {
+    init {
+        productId.requireNotBlank("productId")
+        quantity.requirePositiveNumber("quantity")
+        userId.requireNotBlank("userId")
+    }
+
     companion object {
         private const val serialVersionUID: Long = 1L
     }

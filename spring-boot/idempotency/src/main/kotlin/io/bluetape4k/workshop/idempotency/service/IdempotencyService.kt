@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.redisson.api.RedissonClient
 import org.springframework.stereotype.Service
+import java.io.Serializable
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 
@@ -22,7 +23,7 @@ import java.util.concurrent.TimeUnit
  *   and returns HTTP 201.
  * - Subsequent calls with the same key within the TTL return the cached response with HTTP 200.
  * - Concurrent first-time calls with the same key: the first writer wins via [RMapCache.putIfAbsent];
- *   the loser receives a 409 Conflict immediately (no waiting).
+ *   later writers receive the cached response produced by the winner.
  * - Blank idempotency keys are rejected before this service is called (controller responsibility).
  */
 @Service
@@ -77,10 +78,22 @@ class IdempotencyService(private val redisson: RedissonClient) {
 /**
  * Sealed result type for idempotent order processing.
  */
-sealed class IdempotencyResult {
+sealed class IdempotencyResult : Serializable {
     /** The order was created for the first time. HTTP 201. */
-    data class Created(val cached: CachedResponse) : IdempotencyResult()
+    data class Created(val cached: CachedResponse) : IdempotencyResult() {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
+    }
 
     /** The same idempotency key was seen before. HTTP 200 with original payload. */
-    data class Replay(val cached: CachedResponse) : IdempotencyResult()
+    data class Replay(val cached: CachedResponse) : IdempotencyResult() {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
+    }
+
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
