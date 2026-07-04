@@ -21,7 +21,7 @@ import org.springframework.web.reactive.function.server.json
 @Component
 class UserHandler(private val service: UserService) {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     suspend fun findAll(request: ServerRequest): ServerResponse {
         val users = service.findAll()

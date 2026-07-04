@@ -26,7 +26,7 @@ class UserControllerTest(
     @param:Autowired private val service: UserService,
 ): AbstractWebfluxR2dbcApplicationTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Nested
     inner class Find {
@@ -165,7 +165,7 @@ class UserControllerTest(
         @Test
         fun `update existing user`() = runSuspendIO {
             val newUser = createUserDTO()
-            val savedUser = service.addUser(newUser)!!
+            val savedUser = checkNotNull(service.addUser(newUser)) { "saved user must not be null." }
 
             val userToUpdate = createUserDTO()
 
@@ -221,7 +221,7 @@ class UserControllerTest(
         @Test
         fun `delete existing user`() = runSuspendIO {
             val newUser = createUserDTO()
-            val savedUser = service.addUser(newUser)!!
+            val savedUser = checkNotNull(service.addUser(newUser)) { "saved user must not be null." }
 
             webTestClient
                 .delete()

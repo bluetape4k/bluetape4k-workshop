@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.r2dbc
 
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.r2dbc.domain.User
 import io.bluetape4k.workshop.r2dbc.domain.UserDTO
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,13 +12,16 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractWebfluxR2dbcApplicationTest {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         @JvmStatic
         val faker = Fakers.faker
     }
 
     @Autowired
-    protected val context: ApplicationContext = uninitialized()
+    private var applicationContext: ApplicationContext? = null
+
+    protected val context: ApplicationContext
+        get() = checkNotNull(applicationContext) { "applicationContext is not injected." }
 
     protected val webTestClient: WebTestClient by lazy {
         WebTestClient.bindToApplicationContext(context).build()

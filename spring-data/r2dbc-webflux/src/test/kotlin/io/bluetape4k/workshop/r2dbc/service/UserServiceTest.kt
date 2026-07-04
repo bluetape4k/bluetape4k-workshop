@@ -31,7 +31,7 @@ class UserServiceTest(
     @param:Autowired private val repository: UserRepository,
 ): AbstractWebfluxR2dbcApplicationTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     @Order(1)
@@ -56,7 +56,8 @@ class UserServiceTest(
     fun `find user by id`() = runSuspendIO {
         val expected = service.findAll().toList().random()
 
-        val actual = service.findById(expected.id!!)
+        val expectedId = checkNotNull(expected.id) { "expected user id must not be null." }
+        val actual = service.findById(expectedId)
         log.debug { actual }
         actual.shouldNotBeNull() shouldBeEqualTo expected
     }
@@ -101,7 +102,8 @@ class UserServiceTest(
     fun `update existing user`() = runSuspendIO {
         val user = service.findAll().toList().random()
 
-        val updated = service.updateUser(user.id!!, user.copy(avatar = "updated-avatar.jpg").toDto())
+        val userId = checkNotNull(user.id) { "user id must not be null." }
+        val updated = service.updateUser(userId, user.copy(avatar = "updated-avatar.jpg").toDto())
         log.debug { "Updated=$updated" }
         updated.shouldNotBeNull()
         updated.id shouldBeEqualTo user.id

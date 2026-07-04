@@ -23,7 +23,7 @@ import java.time.Duration
 @Configuration(proxyBeanMethods = false)
 class NettyConfig {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Bean
     fun nettyReactiveWebServerFactory(): NettyReactiveWebServerFactory {
