@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional(readOnly = true)
 class UserService(private val repository: UserRepository) {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     fun findAll(): Flow<User> = repository.findAll()
 

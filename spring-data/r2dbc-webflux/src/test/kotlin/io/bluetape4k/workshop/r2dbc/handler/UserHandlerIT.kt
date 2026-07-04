@@ -25,7 +25,7 @@ class UserHandlerIT(
     @param:Autowired private val service: UserService,
 ): AbstractWebfluxR2dbcApplicationTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `context loading`() {
@@ -165,7 +165,7 @@ class UserHandlerIT(
         @Test
         fun `update existing user`() = runSuspendIO {
             val newUser = createUserDTO()
-            val savedUser = service.addUser(newUser)!!
+            val savedUser = checkNotNull(service.addUser(newUser)) { "saved user must not be null." }
 
             val userToUpdate = createUserDTO()
 
@@ -230,7 +230,7 @@ class UserHandlerIT(
         @Test
         fun `delete existing user`() = runSuspendIO {
             val newUser = createUserDTO()
-            val savedUser = service.addUser(newUser)!!
+            val savedUser = checkNotNull(service.addUser(newUser)) { "saved user must not be null." }
 
             webTestClient
                 .delete()

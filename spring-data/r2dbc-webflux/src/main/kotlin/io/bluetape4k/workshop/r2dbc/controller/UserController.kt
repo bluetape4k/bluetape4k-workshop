@@ -23,7 +23,7 @@ class UserController(
     private val service: UserService,
 ) {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @GetMapping("/users")
     fun findAll(): Flow<User> {

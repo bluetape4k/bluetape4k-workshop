@@ -7,7 +7,12 @@ data class UserDTO(
     val login: String,
     val email: String,
     val avatar: String? = null,
-): Serializable
+) : Serializable {
+
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 fun UserDTO.toModel(withId: Int? = null): User =
     User(
