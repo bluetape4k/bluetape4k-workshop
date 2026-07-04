@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.observability.basic.client
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.observability.basic.model.Inventory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -36,8 +37,9 @@ class InventoryClient(
      * Throws on 5xx server errors.
      */
     suspend fun fetchInventory(itemId: Long): Inventory? {
+        val validItemId = itemId.requirePositiveNumber("itemId")
         val result = client.get()
-            .uri("/inventory/{id}", itemId)
+            .uri("/inventory/{id}", validItemId)
             .awaitExchangeOrNull { response ->
                 when {
                     response.statusCode().is4xxClientError -> null
@@ -45,7 +47,7 @@ class InventoryClient(
                     else -> response.awaitBodyOrNull<Inventory>()
                 }
             }
-        if (result == null) warn { "fetchInventory returned null for itemId=$itemId" }
+        if (result == null) warn { "fetchInventory returned null for itemId=$validItemId" }
         return result
     }
 }

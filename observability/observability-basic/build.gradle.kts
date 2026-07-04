@@ -16,6 +16,7 @@ dependencies {
     implementation(platform(libs.micrometer.tracing.bom))
 
     // bluetape4k
+    implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.logging)
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.bluetape4k.micrometer)
