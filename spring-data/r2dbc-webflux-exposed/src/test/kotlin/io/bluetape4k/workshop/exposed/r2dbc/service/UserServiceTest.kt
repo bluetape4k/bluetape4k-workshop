@@ -27,7 +27,7 @@ class UserServiceTest(
     @param:Autowired private val repository: UserExposedRepository,
 ): AbstractWebfluxR2dbcExposedApplicationTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     @Order(1)

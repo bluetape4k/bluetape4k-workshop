@@ -21,7 +21,7 @@ import kotlin.math.max
 @Configuration(proxyBeanMethods = false)
 class ExposedR2dbcConfig {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     /**
      * Java 21 가상 스레드 기반 코루틴 컨텍스트를 제공합니다.

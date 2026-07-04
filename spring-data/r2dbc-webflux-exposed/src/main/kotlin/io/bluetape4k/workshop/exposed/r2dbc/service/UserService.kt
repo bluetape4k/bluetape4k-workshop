@@ -15,7 +15,7 @@ class UserService(
     private val repository: UserExposedRepository,
 ) {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     suspend fun findAll(): List<UserRecord> = suspendTransaction(db = database) {
         repository.findAll().toList()

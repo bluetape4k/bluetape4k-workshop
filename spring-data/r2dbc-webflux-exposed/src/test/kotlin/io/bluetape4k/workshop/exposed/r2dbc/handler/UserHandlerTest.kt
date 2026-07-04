@@ -20,7 +20,7 @@ import reactor.kotlin.core.publisher.toMono
 
 class UserHandlerTest: AbstractWebfluxR2dbcExposedApplicationTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     private val service = mockk<UserService>(relaxUnitFun = true)
     private val request = mockk<ServerRequest>(relaxUnitFun = true)
