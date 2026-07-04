@@ -71,7 +71,7 @@ class TransactionalOrderWriter {
         customerId.length.requireInRange(1, 80, "customerId.length")
         product.length.requireInRange(1, 120, "product.length")
         quantity.requireInRange(1, 1000, "quantity")
-        require(customerId.none(Char::isISOControl)) { "customerId must not contain control characters" }
-        require(product.none(Char::isISOControl)) { "product must not contain control characters" }
+        customerId.count(Char::isISOControl).requireInRange(0, 0, "customerId.controlCharacters")
+        product.count(Char::isISOControl).requireInRange(0, 0, "product.controlCharacters")
     }
 }

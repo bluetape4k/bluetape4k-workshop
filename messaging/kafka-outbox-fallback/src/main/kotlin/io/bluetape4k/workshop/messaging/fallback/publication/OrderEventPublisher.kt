@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.messaging.fallback.publication
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.error
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.workshop.messaging.fallback.api.OrderPublicationStatus
 import io.bluetape4k.workshop.messaging.fallback.config.FallbackOutboxProperties
 import io.bluetape4k.workshop.messaging.fallback.observability.OutboxMetrics
@@ -33,9 +34,8 @@ class OrderEventPublisher(
         }
 
         val payload = objectMapper.writeValueAsString(event)
-        require(payload.toByteArray(Charsets.UTF_8).size <= properties.maxPayloadBytes) {
-            "OrderPlaced payload exceeds configured max size"
-        }
+        payload.toByteArray(Charsets.UTF_8).size
+            .requireInRange(0, properties.maxPayloadBytes, "orderPlacedPayload.bytes")
 
         var lastFailure: Exception? = null
         val deadline = System.nanoTime() + properties.directPublishTotalTimeout.toNanos()
