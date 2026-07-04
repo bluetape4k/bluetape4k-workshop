@@ -1,8 +1,11 @@
 package io.bluetape4k.workshop.cbor.course
 
-class CourseRepository(private val courses: MutableMap<Int, Course>) {
+import io.bluetape4k.support.requirePositiveNumber
+
+class CourseRepository(private val courses: Map<Int, Course>) {
 
     fun getCourse(id: Int): Course {
-        return courses[id] ?: throw IllegalArgumentException("Course[$id] not found")
+        val courseId = id.requirePositiveNumber("id")
+        return courses[courseId] ?: throw IllegalArgumentException("Course[$courseId] not found")
     }
 }
