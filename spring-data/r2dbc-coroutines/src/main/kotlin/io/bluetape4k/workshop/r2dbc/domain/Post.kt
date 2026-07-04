@@ -13,4 +13,9 @@ data class Post(
     val content: String? = null,
     @Id
     val id: Long? = null,
-): Serializable
+) : Serializable {
+
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}

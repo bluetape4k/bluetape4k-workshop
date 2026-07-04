@@ -20,7 +20,7 @@ import org.springframework.test.web.reactive.server.returnResult
 @Disabled("Spring Boot가 자동 스키마 생성을 못한다. 수동 생성으로 변경해야 한다")
 class PostControllerTest: AbstractR2dbcApplicationTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `find all posts`() = runSuspendIO {

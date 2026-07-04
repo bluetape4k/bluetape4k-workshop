@@ -16,7 +16,7 @@ import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator
 @SpringBootApplication(proxyBeanMethods = false)
 class R2dbcApplication: AbstractR2dbcConfiguration() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     override fun connectionFactory(): ConnectionFactory {
         // TODO: 환경설정 때문에 h2 로 테스트 했습니다.

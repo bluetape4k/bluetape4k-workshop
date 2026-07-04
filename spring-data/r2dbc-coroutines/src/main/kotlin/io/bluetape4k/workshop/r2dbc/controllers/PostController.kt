@@ -20,7 +20,7 @@ class PostController(
     private val postRepository: PostRepository,
     private val commentRepository: CommentRepository,
 ) {
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @GetMapping
     fun findAll(): Flow<Post> = postRepository.findAll()

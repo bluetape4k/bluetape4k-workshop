@@ -18,7 +18,7 @@ class CommentRepositoryTest(
     @param:Autowired private val commentRepository: CommentRepository,
 ): AbstractR2dbcApplicationTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `find comments by post id`() = runSuspendIO {

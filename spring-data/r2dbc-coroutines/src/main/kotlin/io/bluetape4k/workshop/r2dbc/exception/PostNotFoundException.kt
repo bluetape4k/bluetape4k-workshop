@@ -5,7 +5,7 @@ import io.r2dbc.spi.R2dbcException
 
 open class PostNotFoundException: R2dbcException {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private fun getMessage(postId: Long): String = "Post[$postId] is not found."
     }
 
