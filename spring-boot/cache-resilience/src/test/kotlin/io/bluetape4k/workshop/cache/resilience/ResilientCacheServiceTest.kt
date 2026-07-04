@@ -32,6 +32,7 @@ import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.serializer.StringRedisSerializer
 import org.testcontainers.containers.Network
 import java.time.Duration
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Integration tests for [ResilientProductService].
@@ -170,13 +171,7 @@ class ResilientCacheServiceTest {
 
         // Trigger enough failures to open the circuit
         repeat(MIN_CALLS) { i ->
-            runCatching {
-                SuspendDecorators.ofSupplier<String?> {
-                    redisTemplate.opsForValue().get("product:$id")
-                }
-                    .withCircuitBreaker(circuitBreaker)
-                    .invoke()
-            }.also { result ->
+            recordRedisRead(id).also { result ->
                 log.debug { "Call $i: ${if (result.isSuccess) "success=${result.getOrNull()}" else result.exceptionOrNull()?.javaClass?.simpleName}" }
             }
         }
@@ -206,13 +201,7 @@ class ResilientCacheServiceTest {
         // Open the circuit by injecting timeout toxic
         proxy.toxics().timeout(TIMEOUT_TOXIC, ToxicDirection.UPSTREAM, 1)
         repeat(MIN_CALLS) {
-            runCatching {
-                SuspendDecorators.ofSupplier<String?> {
-                    redisTemplate.opsForValue().get("product:$id")
-                }
-                    .withCircuitBreaker(circuitBreaker)
-                    .invoke()
-            }
+            recordRedisRead(id)
         }
         circuitBreaker.state shouldBeEqualTo CircuitBreaker.State.OPEN
         log.info { "Circuit OPEN — removing toxic to simulate Redis recovery" }
@@ -297,5 +286,21 @@ class ResilientCacheServiceTest {
 
         service = ResilientProductService(redisTemplate, localCache, circuitBreaker)
         log.info { "ResilientProductService built with proxy ${toxiproxyServer.host}:$proxyPort" }
+    }
+
+    private suspend fun recordRedisRead(id: String): Result<String?> {
+        return try {
+            Result.success(
+                SuspendDecorators.ofSupplier<String?> {
+                    redisTemplate.opsForValue().get("product:$id")
+                }
+                    .withCircuitBreaker(circuitBreaker)
+                    .invoke()
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }
