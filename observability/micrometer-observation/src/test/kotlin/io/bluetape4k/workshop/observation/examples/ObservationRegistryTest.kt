@@ -8,7 +8,7 @@ import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
-class ObservationRegistryTest: AbstractObservationTest() {
+class ObservationRegistryTest : AbstractObservationTest() {
 
     @Autowired
     private val observationRegistry: ObservationRegistry = uninitialized()

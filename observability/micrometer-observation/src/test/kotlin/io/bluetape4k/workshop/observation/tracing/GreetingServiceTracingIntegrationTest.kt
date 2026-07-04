@@ -21,7 +21,7 @@ import org.springframework.context.annotation.ComponentScan
 @SpringBootTest
 @ComponentScan(basePackageClasses = [GreetingService::class])
 @EnableAutoConfiguration
-class GreetingServiceTracingIntegrationTest: AbstractObservationTest() {
+class GreetingServiceTracingIntegrationTest : AbstractObservationTest() {
 
     @TestConfiguration
     class ObservationTestConfiguration {
@@ -36,7 +36,7 @@ class GreetingServiceTracingIntegrationTest: AbstractObservationTest() {
         }
     }
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Autowired
     private val observationRegistry: TestObservationRegistry = uninitialized()

@@ -54,11 +54,14 @@ observation을 새로 만들고 low/high cardinality key-value를 붙인 뒤 blu
 
 ```kotlin
 fun sayHelloWithName(name: String): String {
-    return Observation.createNotStarted("$GREETING_SERVICE_NAME.sayHelloWithName", observationRegistry)
+    val greetingName = name.requireNotBlank("name")
+    val greeting = Observation.createNotStarted("$GREETING_SERVICE_NAME.sayHelloWithName", observationRegistry)
         .contextualName("sayHello-with-name")
-        .lowCardinalityKeyValue("name", name)
+        .lowCardinalityKeyValue("name", greetingName)
         .highCardinalityKeyValue("requestId", "1234")
-        .observeOrNull { "Hello, $name" }!!
+        .observeOrNull { "Hello, $greetingName" }
+
+    return greeting.requireNotNull("greeting")
 }
 ```
 
