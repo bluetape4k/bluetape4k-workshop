@@ -19,13 +19,21 @@ class ArticleController {
 
     private val articles = mapOf(
         1L to ArticleDTO(
-            1L, "Article 1", "Spring Framework",
-            "Content 1", 1000, 30
+            id = 1L,
+            title = "Article 1",
+            category = "Spring Framework",
+            content = "Content 1",
+            views = 1000,
+            likes = 30,
         ),
         2L to ArticleDTO(
-            2L, "Article 2", "Kotlin",
-            "Content 2", 5000, 54
-        )
+            id = 2L,
+            title = "Article 2",
+            category = "Kotlin",
+            content = "Content 2",
+            views = 5000,
+            likes = 54,
+        ),
     )
 
     @GetMapping
