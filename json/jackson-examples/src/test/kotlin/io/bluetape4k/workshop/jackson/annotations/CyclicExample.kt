@@ -8,8 +8,8 @@ import io.bluetape4k.workshop.jackson.readAs
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import org.junit.jupiter.api.Test
-import tools.jackson.module.kotlin.jacksonObjectMapper
 import tools.jackson.module.kotlin.readValue
+import java.io.Serializable
 
 class CyclicExample: AbstractJacksonTest() {
 
@@ -37,14 +37,18 @@ class CyclicExample: AbstractJacksonTest() {
             var phone: String,
             @JsonIgnoreProperties("contactData", allowSetters = true)  // allowSetters is required for deserialization
             var user: User? = null,
-        )
+        ) : Serializable {
+            companion object {
+                private const val serialVersionUID: Long = 1L
+            }
+        }
     }
 
     @Test
     fun `cyclic relation conversion object to json`() {
         val user = User("John Doe", User.ContactData("555-555-555"))
 
-        val json = jacksonObjectMapper().writeValueAsString(user)
+        val json = defaultMapper.writeValueAsString(user)
         log.debug { "Json=$json" }
 
         val doc = json.toDocument()
@@ -57,7 +61,7 @@ class CyclicExample: AbstractJacksonTest() {
     fun `cyclic relation conversion object to json by child element`() {
         val user = User("John Doe", User.ContactData("555-555-555"))
 
-        val json = jacksonObjectMapper().writeValueAsString(user.contactData)
+        val json = defaultMapper.writeValueAsString(user.contactData)
         log.debug { "Json=$json" }
 
         val doc = json.toDocument()
@@ -84,7 +88,7 @@ class CyclicExample: AbstractJacksonTest() {
     }
 
     @Test
-    fun `cyclic relation convertion json to object by child element`() {
+    fun `cyclic relation conversion json to object by child element`() {
         val json = """
             {
               "phone": "555-555-555",
