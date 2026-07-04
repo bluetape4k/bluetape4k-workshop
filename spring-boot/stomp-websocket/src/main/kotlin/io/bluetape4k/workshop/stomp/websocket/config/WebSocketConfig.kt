@@ -9,9 +9,9 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 
 @Configuration(proxyBeanMethods = false)
 @EnableWebSocketMessageBroker
-class WebSocketConfig: WebSocketMessageBrokerConfigurer {
+class WebSocketConfig : WebSocketMessageBrokerConfigurer {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     /**
      * Configure message broker options.
