@@ -13,6 +13,8 @@ application uses virtual threads:
 Both endpoints return the measured elapsed time in milliseconds. The Gatling
 simulations call `/sync/1` or `/async/1` and ramp closed concurrent users from
 10 to 20 over 10 seconds.
+The `{seconds}` path variable is intentionally bounded to 1..10 seconds so a
+load-test example cannot create unbounded request-path sleeps.
 
 ## Architecture
 
@@ -80,6 +82,7 @@ Reports are generated under `build/reports/gatling/`.
 | `bluetape4k-io` | Available to Gatling source set through the `gatling` configuration |
 | `bluetape4k-jackson3` | Spring Boot JSON serialization support |
 | `bluetape4k-coroutines` | Test support for suspend-style WebTestClient assertions |
+| `bluetape4k-core` | `requireInRange()` validation for bounded delay requests |
 
 ## Source References
 
@@ -87,6 +90,8 @@ Reports are generated under `build/reports/gatling/`.
 - `src/main/kotlin/io/bluetape4k/workshop/gatling/config/AsyncConfig.kt`
 - `src/main/kotlin/io/bluetape4k/workshop/gatling/controller/SyncTaskController.kt`
 - `src/main/kotlin/io/bluetape4k/workshop/gatling/controller/AsyncTaskController.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gatling/validation/DelayRequestValidation.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gatling/web/RequestValidationAdvice.kt`
 - `src/gatling/kotlin/simulations/SyncTaskSimulation.kt`
 - `src/gatling/kotlin/simulations/AsyncTaskSimulation.kt`
 
