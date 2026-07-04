@@ -53,11 +53,14 @@ adds low/high cardinality key-values, and runs the block through the bluetape4k 
 
 ```kotlin
 fun sayHelloWithName(name: String): String {
-    return Observation.createNotStarted("$GREETING_SERVICE_NAME.sayHelloWithName", observationRegistry)
+    val greetingName = name.requireNotBlank("name")
+    val greeting = Observation.createNotStarted("$GREETING_SERVICE_NAME.sayHelloWithName", observationRegistry)
         .contextualName("sayHello-with-name")
-        .lowCardinalityKeyValue("name", name)
+        .lowCardinalityKeyValue("name", greetingName)
         .highCardinalityKeyValue("requestId", "1234")
-        .observeOrNull { "Hello, $name" }!!
+        .observeOrNull { "Hello, $greetingName" }
+
+    return greeting.requireNotNull("greeting")
 }
 ```
 

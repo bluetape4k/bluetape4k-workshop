@@ -3,6 +3,8 @@ package io.bluetape4k.workshop.observation.service
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.observation.support.observeOrNull
 import io.micrometer.observation.Observation
 import io.micrometer.observation.ObservationRegistry
@@ -14,7 +16,7 @@ import java.util.function.Supplier
 @Service
 class GreetingService(private val observationRegistry: ObservationRegistry) {
 
-    companion object: KLogging() {
+    companion object : KLogging() {
         const val GREETING_SERVICE_NAME = "greetingService"
     }
 
@@ -28,13 +30,14 @@ class GreetingService(private val observationRegistry: ObservationRegistry) {
     }
 
     fun sayHelloWithName(name: String): String {
+        val greetingName = name.requireNotBlank("name")
         val greeting = Observation.createNotStarted("$GREETING_SERVICE_NAME.sayHelloWithName", observationRegistry)
             .contextualName("sayHello-with-name")
-            .lowCardinalityKeyValue("name", name)
+            .lowCardinalityKeyValue("name", greetingName)
             .highCardinalityKeyValue("requestId", "1234")
-            .observeOrNull { "Hello, $name" }
+            .observeOrNull { "Hello, $greetingName" }
 
-        return checkNotNull(greeting) { "greeting observation must produce a greeting" }
+        return greeting.requireNotNull("greeting")
     }
 
     private fun sayHelloInternal(): String {

@@ -51,6 +51,7 @@ dependencies {
     }
 
     implementation(libs.bluetape4k.jackson3)
+    implementation(libs.bluetape4k.core)
     testImplementation(libs.bluetape4k.junit5)
 
 }
