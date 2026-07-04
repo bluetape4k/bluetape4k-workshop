@@ -33,6 +33,7 @@ case "${1:-help}" in
       :jsonview-examples:test \
       :exposed-javers-approval-workflow:test \
       :image-processing-advanced-workflow:test \
+      :image-processing-profile-image-moderation:test \
       :image-processing-ocr-api:test \
       :aws-cloudwatch-imds-observability:test \
       :aws-eventbridge-scheduler:test \

@@ -19,6 +19,7 @@ on:
       - 'graph/event-lineage/**'
       - 'graph/io-pipeline/**'
       - 'image-processing/ocr-api/**'
+      - 'image-processing/profile-image-moderation/**'
       - 'ktor/exposed-rest/**'
       - 'aws/ktor-dynamodb/**'
       - 'aws/cloudwatch-imds-observability/**'
@@ -59,6 +60,7 @@ on:
       - 'graph/event-lineage/**'
       - 'graph/io-pipeline/**'
       - 'image-processing/ocr-api/**'
+      - 'image-processing/profile-image-moderation/**'
       - 'ktor/exposed-rest/**'
       - 'aws/ktor-dynamodb/**'
       - 'aws/cloudwatch-imds-observability/**'
@@ -144,6 +146,7 @@ jobs:
           :graph-event-lineage:test
           :graph-io-pipeline:test
           :image-processing-ocr-api:test
+          :image-processing-profile-image-moderation:test
           :aws-cloudwatch-imds-observability:test
           :aws-eventbridge-scheduler:test
           :aws-s3-vectors-access-grants:test
@@ -184,6 +187,8 @@ jobs:
             graph/io-pipeline/build/reports/tests/test/
             image-processing/ocr-api/build/test-results/test/*.xml
             image-processing/ocr-api/build/reports/tests/test/
+            image-processing/profile-image-moderation/build/test-results/test/*.xml
+            image-processing/profile-image-moderation/build/reports/tests/test/
             aws/cloudwatch-imds-observability/build/test-results/test/*.xml
             aws/cloudwatch-imds-observability/build/reports/tests/test/
             aws/eventbridge-scheduler/build/test-results/test/*.xml

@@ -229,6 +229,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Advanced | [`aws-sqs-sns-coroutines`](aws/sqs-sns-coroutines/) | `aws`, `micrometer`, `coroutines`, `testcontainers` | Local adapters + Floci | SNS publish plus SQS consume with ack, retry, dead-letter reports, and cancellation-safe coroutines |
 | Advanced | [`aws-s3-vectors-access-grants`](aws/s3-vectors-access-grants/) | `aws`, `coroutines` | Local adapters | S3 Vectors upsert/query plus S3 Access Grants read-decision boundary |
 | Advanced | [`image-processing-advanced-workflow`](image-processing/advanced-workflow/) | `images-vips-java25`, `images-spring-boot`, `micrometer` | S3 or local storage | Upload → original storage → WebP variants → unsigned public URLs |
+| Advanced | [`image-processing-profile-image-moderation`](image-processing/profile-image-moderation/) | `images-spring-boot`, `coroutines`, `micrometer` | Local storage / S3-compatible | Profile upload → private original → blurred pending URL → moderation approval/default fallback |
 | Advanced | [`image-processing-ocr-api`](image-processing/ocr-api/) | `images-ocr`, `images`, `spring-boot4-core` | In-memory | Multipart OCR API with validated fallback and optional Tesseract |
 | Advanced | [`leader-leader-election`](leader/) | `coroutines`, `redis`, `testcontainers` | Redis (TC) | Distributed leader election: blocking, coroutine, virtual thread |
 | Advanced | [`leader-backend-comparison-lab`](leader/backend-comparison-lab/) | `leader-core`, `spring-boot4-core` | In-memory | Redis vs ZooKeeper vs Kubernetes Lease backend choice and failover lab |
@@ -244,6 +245,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 ./gradlew :aws-cloudwatch-imds-observability:test
 ./gradlew :aws-sqs-sns-coroutines:test
 ./gradlew :aws-s3-vectors-access-grants:test
+./gradlew :image-processing-profile-image-moderation:test
 ./gradlew :leader-backend-comparison-lab:test
 ./gradlew :leader-tenant-scheduler:test
 ```
@@ -271,7 +273,7 @@ bluetape4k-workshop/
 ├── gateway/                # API Gateway + microservices
 ├── gatling/                # Load/performance tests
 ├── graph/                  # TinkerGraph, traversal, graph-io examples
-├── image-processing/       # Image upload, VIPS derivatives, OCR API
+├── image-processing/       # Image upload, moderation, VIPS derivatives, OCR API
 ├── io/                     # Okio I/O examples
 ├── json/                   # Jackson 3 serialization
 ├── kotlin/                 # Coroutines, design patterns
