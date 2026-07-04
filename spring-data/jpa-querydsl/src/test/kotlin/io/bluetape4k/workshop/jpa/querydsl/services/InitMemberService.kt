@@ -5,17 +5,15 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.jpa.querydsl.domain.model.Member
 import io.bluetape4k.workshop.jpa.querydsl.domain.model.Team
 import jakarta.persistence.EntityManager
-import jakarta.persistence.PersistenceContext
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 @Component
-class InitMemberService {
+class InitMemberService(
+    private val em: EntityManager,
+) {
 
-    companion object: KLogging()
-
-    @PersistenceContext
-    private lateinit var em: EntityManager
+    companion object : KLogging()
 
     @Transactional
     fun init() {

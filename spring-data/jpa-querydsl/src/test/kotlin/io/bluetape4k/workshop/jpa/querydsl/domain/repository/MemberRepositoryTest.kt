@@ -7,16 +7,22 @@ import io.bluetape4k.workshop.jpa.querydsl.domain.dto.MemberSearchCondition
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.workshop.jpa.querydsl.services.InitMemberService
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 
 class MemberRepositoryTest(
     @param:Autowired private val memberRepo: MemberRepository,
-): AbstractDomainTest() {
-
-    companion object: KLogging()
+    @param:Autowired initMemberService: InitMemberService,
+    @param:Autowired tem: TestEntityManager,
+) : AbstractDomainTest(
+    initMemberService = initMemberService,
+    tem = tem,
+) {
+    companion object : KLogging()
 
     @Test
     fun `context loading`() {
