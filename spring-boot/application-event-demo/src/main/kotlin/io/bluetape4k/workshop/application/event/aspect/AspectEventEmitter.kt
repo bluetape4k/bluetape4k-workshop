@@ -4,11 +4,10 @@ import org.springframework.context.ApplicationEvent
 import kotlin.reflect.KClass
 
 /**
- * @AspectEventEmitter 가 적용된 함수가 실행되면, 결과 값을 [AspectEvent.message] 에 담아서 [AspectEvent] 를 발행한다.
+ * Publishes an [ApplicationEvent] after the annotated method returns.
  *
- * @property eventType
- * @property params
- * @constructor Create empty Aspect event emitter
+ * [params] may contain a SpEL expression such as `#{#root.id}`. When omitted,
+ * the intercepted method result is passed to the event constructor.
  */
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)

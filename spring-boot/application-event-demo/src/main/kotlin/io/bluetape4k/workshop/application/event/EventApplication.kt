@@ -8,7 +8,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy
 @SpringBootApplication(proxyBeanMethods = false)
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 class EventApplication {
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 }
 
 fun main(vararg args: String) {

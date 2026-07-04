@@ -18,6 +18,7 @@ dependencies {
     implementation(platform(libs.spring.boot4.dependencies))
 
     // Bluetape4k
+    implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.io)
 
     // Spring Boot

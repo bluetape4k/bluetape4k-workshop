@@ -2,17 +2,17 @@ package io.bluetape4k.workshop.application.event.aspect
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotBlank
 import org.springframework.stereotype.Service
 import java.io.Serializable
 
 @Service
 class MyEventService {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     /**
-     * 함수 실행의 결과 값인 [OperationParams]에서 id 값을 추출해서, [MyAspectParams] 를 만들고,
-     * [AspectEvent.message]에 담아서 [AspectEvent] 를 발행한다.
+     * Executes a sample operation and emits [AspectEvent] through [AspectEventEmitter].
      */
     @AspectEventEmitter(
         eventType = AspectEvent::class,
@@ -28,12 +28,25 @@ class MyEventService {
 data class OperationParams(
     val id: String,
     val type: String,
-): Serializable
+) : Serializable {
+
+    init {
+        id.requireNotBlank("id")
+        type.requireNotBlank("type")
+    }
+
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 data class MyAspectParams(
     val message: String?,
-): Serializable {
+) : Serializable {
+
     companion object {
+        private const val serialVersionUID: Long = 1L
+
         @JvmStatic
         fun create(message: String?): MyAspectParams {
             return MyAspectParams(message)

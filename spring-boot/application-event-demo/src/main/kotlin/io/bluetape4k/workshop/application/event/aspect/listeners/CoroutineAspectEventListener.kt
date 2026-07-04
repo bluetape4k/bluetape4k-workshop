@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 @Component
 class CoroutineAspectEventListener {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @EventListener(classes = [AspectEvent::class])
     fun handleEvent(event: AspectEvent) = mono(Dispatchers.IO) {

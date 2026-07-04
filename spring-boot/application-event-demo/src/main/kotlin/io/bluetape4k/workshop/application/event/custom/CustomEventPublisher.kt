@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 @Component
 class CustomEventPublisher(private val appEventPublisher: ApplicationEventPublisher) {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     suspend fun publish(message: String) {
         val event = CustomEvent(this, message)
