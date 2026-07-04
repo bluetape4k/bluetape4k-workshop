@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.gatling.controller
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.gatling.service.AsyncTaskService
+import io.bluetape4k.workshop.gatling.validation.requireValidDelaySeconds
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -18,8 +19,9 @@ class AsyncTaskController(
 
     @GetMapping("/{seconds}")
     fun task(@PathVariable seconds: Int): Long {
+        val delaySeconds = seconds.requireValidDelaySeconds()
         return measureTimeMillis {
-            asyncTaskService.delay(seconds)
+            asyncTaskService.delay(delaySeconds)
         }
     }
 }

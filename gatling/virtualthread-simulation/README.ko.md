@@ -13,6 +13,8 @@ endpoint를 Gatling 부하로 비교합니다.
 두 endpoint는 측정한 elapsed time을 millisecond로 반환합니다. Gatling
 simulation은 `/sync/1` 또는 `/async/1`을 호출하고, closed concurrent users를
 10초 동안 10명에서 20명으로 ramp합니다.
+`{seconds}` path variable은 1..10초로 제한해 부하 테스트 예제가 무제한
+request-path sleep을 만들지 않도록 합니다.
 
 ## 아키텍처
 
@@ -80,6 +82,7 @@ Spring Boot 애플리케이션을 먼저 실행합니다.
 | `bluetape4k-io` | `gatling` configuration을 통해 Gatling source set에서 사용 가능 |
 | `bluetape4k-jackson3` | Spring Boot JSON serialization support |
 | `bluetape4k-coroutines` | Suspend-style WebTestClient assertion test support |
+| `bluetape4k-core` | Bounded delay request를 위한 `requireInRange()` validation |
 
 ## 소스 기준점
 
@@ -87,6 +90,8 @@ Spring Boot 애플리케이션을 먼저 실행합니다.
 - `src/main/kotlin/io/bluetape4k/workshop/gatling/config/AsyncConfig.kt`
 - `src/main/kotlin/io/bluetape4k/workshop/gatling/controller/SyncTaskController.kt`
 - `src/main/kotlin/io/bluetape4k/workshop/gatling/controller/AsyncTaskController.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gatling/validation/DelayRequestValidation.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gatling/web/RequestValidationAdvice.kt`
 - `src/gatling/kotlin/simulations/SyncTaskSimulation.kt`
 - `src/gatling/kotlin/simulations/AsyncTaskSimulation.kt`
 
