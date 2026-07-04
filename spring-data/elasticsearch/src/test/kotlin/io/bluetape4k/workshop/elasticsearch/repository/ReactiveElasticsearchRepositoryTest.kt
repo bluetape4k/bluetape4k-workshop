@@ -19,7 +19,7 @@ class ReactiveElasticsearchRepositoryTest(
     @param:Autowired private val repository: ReactiveConferenceRepository,
 ): AbstractElasticsearchTest() {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Test
     fun `search all conference`() = runSuspendIO {

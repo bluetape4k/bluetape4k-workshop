@@ -23,7 +23,7 @@ import java.time.Duration
 @Configuration(proxyBeanMethods = false)
 class NettyConfig {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Bean
     fun nettyReactiveWebServerFactory(): NettyReactiveWebServerFactory {
@@ -32,7 +32,7 @@ class NettyConfig {
         }
     }
 
-    class EventLoopNettyCustomer: NettyServerCustomizer {
+    class EventLoopNettyCustomer : NettyServerCustomizer {
         override fun apply(httpServer: HttpServer): HttpServer {
             return httpServer
                 .option(ChannelOption.SO_KEEPALIVE, true)
@@ -57,7 +57,7 @@ class NettyConfig {
                 "event-loop",
                 4,
                 maxOf(Runtimex.availableProcessors * 2, 8),
-                true
+                true,
             )
         }
     }

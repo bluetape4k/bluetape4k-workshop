@@ -7,9 +7,9 @@ import org.springframework.data.elasticsearch.client.ClientConfiguration
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration
 
 @Configuration(proxyBeanMethods = false)
-class ElasticsearchClientConfig: ElasticsearchConfiguration() {
+class ElasticsearchClientConfig : ElasticsearchConfiguration() {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     override fun clientConfiguration(): ClientConfiguration {
         // log.info { "Create Elasticsearch client configuration. username=elastic, url=${elasticsearch.url}" }

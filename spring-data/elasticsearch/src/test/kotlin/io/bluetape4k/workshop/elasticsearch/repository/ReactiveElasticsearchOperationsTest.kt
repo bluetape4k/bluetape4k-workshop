@@ -24,7 +24,7 @@ class ReactiveElasticsearchOperationsTest(
     @param:Autowired private val operations: ReactiveElasticsearchOperations,
 ): AbstractElasticsearchTest() {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Test
     fun `search by expected date and keyword`() = runSuspendIO {
