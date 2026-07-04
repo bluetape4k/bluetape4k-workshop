@@ -1,16 +1,16 @@
 package io.bluetape4k.workshop.redisson.collections
 
-import io.bluetape4k.codec.Base58
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.redis.redisson.cache.localCachedMap
-import io.bluetape4k.workshop.redisson.AbstractRedissonTest
-import kotlinx.coroutines.future.await
-import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContainSame
+import io.bluetape4k.codec.Base58
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.redis.redisson.cache.localCachedMap
+import io.bluetape4k.workshop.redisson.AbstractRedissonTest
+import kotlinx.coroutines.future.await
 import org.junit.jupiter.api.Test
 import org.redisson.api.RLocalCachedMap
 import org.redisson.api.options.LocalCachedMapOptions
@@ -23,9 +23,9 @@ import kotlin.time.toJavaDuration
  *
  * 참고: [Redisson 7.-Distributed-collections](https://github.com/redisson/redisson/wiki/7.-Distributed-collections)
  */
-class LocalCachedMapExamples: AbstractRedissonTest() {
+class LocalCachedMapExamples : AbstractRedissonTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `simple local cached map`() = runSuspendIO {
