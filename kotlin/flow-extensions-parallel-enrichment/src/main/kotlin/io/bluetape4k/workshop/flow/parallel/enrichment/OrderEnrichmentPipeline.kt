@@ -3,9 +3,10 @@ package io.bluetape4k.workshop.flow.parallel.enrichment
 import io.bluetape4k.coroutines.flow.extensions.parallel.map as parallelMap
 import io.bluetape4k.coroutines.flow.extensions.parallel.parallel
 import io.bluetape4k.coroutines.flow.extensions.parallel.sequential
+import io.bluetape4k.support.requirePositiveNumber
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
@@ -29,12 +30,15 @@ class OrderEnrichmentPipeline(
         source: Flow<OrderCommand>,
         parallelism: Int,
         runOn: (Int) -> CoroutineDispatcher
-    ): Flow<EnrichedOrder> =
-        source
+    ): Flow<EnrichedOrder> {
+        parallelism.requirePositiveNumber("parallelism")
+
+        return source
             .filter(::isValidOrder)
             .parallel(parallelism, runOn)
             .parallelMap { order -> enrichOrder(order) }
             .sequential()
+    }
 
     /**
      * 동일한 Enrichment 로직을 병렬 rail 없이 순차로 실행합니다.

@@ -99,6 +99,17 @@ class OrderEnrichmentPipelineTest {
     }
 
     @Test
+    fun `parallelism must be positive`() = runSuspendTest {
+        val input = flowOf(
+            OrderCommand("O-OK", "customer-1001", listOf(OrderItem("suit-01", 1)))
+        )
+
+        assertFailsWith<IllegalArgumentException> {
+            pipeline.enrichInParallel(input, 0) { error("runOn should not be called") }.toList()
+        }
+    }
+
+    @Test
     fun `parallel enrichment fails when customer profile is missing`() = runSuspendTest {
         val input = flowOf(
             OrderCommand("O-unknown", "missing-customer", listOf(OrderItem("suit-01", 1)))
