@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.messaging.kafka.controller
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.kafka.spring.suspendSend
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.messaging.kafka.KafkaTopics
 import io.bluetape4k.workshop.messaging.kafka.listener.LoggerMessageHandler
@@ -18,11 +19,14 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
+/**
+ * Accepts greeting messages and publishes them to Kafka workshop topics.
+ */
 @RestController
 @RequestMapping("/greeting")
 class GreetingController {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Autowired
     private val kafkaTemplate: KafkaTemplate<String, Any> = uninitialized()
@@ -36,8 +40,9 @@ class GreetingController {
     suspend fun sendGreetingMessage(
         @RequestParam(name = "message", defaultValue = "Hello world") message: String,
     ): String {
-        kafkaTemplate.suspendSend(KafkaTopics.TOPIC_SIMPLE, message)
-        return message
+        val greetingMessage = message.requireNotBlank("message")
+        kafkaTemplate.suspendSend(KafkaTopics.TOPIC_SIMPLE, greetingMessage)
+        return greetingMessage
     }
 
     @PostMapping
