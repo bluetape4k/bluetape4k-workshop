@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.ktor.routes
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.ktor.AppJson
 import io.bluetape4k.workshop.ktor.domain.Book
 import io.bluetape4k.workshop.ktor.json.Jackson3Support
@@ -59,7 +60,7 @@ fun Application.bookRoutes(service: BookService, jackson3: Jackson3Support) {
             }
 
             get("/{id}") {
-                val id = call.parameters["id"] ?: throw IllegalArgumentException("Missing id parameter")
+                val id = call.parameters["id"].requireNotNull("id")
                 call.respond(service.get(id))
             }
 
@@ -70,13 +71,13 @@ fun Application.bookRoutes(service: BookService, jackson3: Jackson3Support) {
             }
 
             put("/{id}") {
-                val id = call.parameters["id"] ?: throw IllegalArgumentException("Missing id parameter")
+                val id = call.parameters["id"].requireNotNull("id")
                 val book = call.receive<Book>()
                 call.respond(service.update(id, book))
             }
 
             delete("/{id}") {
-                val id = call.parameters["id"] ?: throw IllegalArgumentException("Missing id parameter")
+                val id = call.parameters["id"].requireNotNull("id")
                 service.delete(id)
                 call.respond(HttpStatusCode.NoContent)
             }
