@@ -106,6 +106,10 @@ Moderation provider가 timeout 또는 실패를 내면 상태는 `MODERATION_FAI
 
 기본 provider는 cloud credential 없이 실행되는 deterministic local 구현입니다. `workshop.profile-image-moderation.decision-delay`만큼 대기하고(기본 1초), `nazi`, `rising-sun`, `hate-text`, `reject` 같은 파일명 marker를 금지된 profile-content detection으로 변환합니다. 이후 local policy가 금지된 hate symbol 또는 hate-expression text를 reject합니다. 운영 코드에서는 demo detection 단계를 [AWS Rekognition `DetectModerationLabels`](https://docs.aws.amazon.com/rekognition/latest/dg/moderation-api.html)가 제공하는 Nazi Party 같은 hate-symbol label, 필요 시 욱일기 등 로컬 정책 상징을 위한 Custom Labels model, 이미지 내 문구를 위한 OCR/text moderation으로 교체해야 합니다. 이후 dependency train에 최신 bluetape4k-image moderation policy artifact가 들어오면 이 adapter가 backend detection을 공유 policy model로 매핑하는 seam이 됩니다. 파일명 marker는 데모 전용이며 실제 안전 판정에 사용하면 안 됩니다.
 
+## TODO
+
+- bluetape4k-images release train에서 최신 moderation policy artifact가 배포되면 `ProfileImageModerationPolicyProvider`의 local demo policy mapping을 공유 bluetape4k-image moderation policy model 기반으로 교체합니다. S3/Rekognition/Custom Labels/OCR adapter seam과 금지 profile-content 테스트는 유지합니다.
+
 ## Operations
 
 Health와 metrics를 확인합니다.
