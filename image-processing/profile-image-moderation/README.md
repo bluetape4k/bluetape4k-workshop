@@ -106,6 +106,10 @@ Invalid uploads return RFC 9457 ProblemDetail JSON:
 
 The default provider is deterministic and local so the example can run without cloud credentials: it waits for `workshop.profile-image-moderation.decision-delay` (1 second by default) and maps filename markers such as `nazi`, `rising-sun`, `hate-text`, and `reject` into banned profile-content detections. The local policy then rejects banned hate symbols or hate-expression text. Production code should replace the demo detection step with [AWS Rekognition `DetectModerationLabels`](https://docs.aws.amazon.com/rekognition/latest/dg/moderation-api.html) for supported hate-symbol labels such as Nazi Party, a Custom Labels model for local policy symbols such as Rising Sun imagery when required, and OCR/text moderation for embedded hate expressions. When the newer bluetape4k-image moderation policy artifacts are available in the dependency train, this adapter is the seam that should map backend detections into those shared policy models. Filename markers are demo-only and must not be used for real safety decisions.
 
+## TODO
+
+- After the bluetape4k-images release train publishes the newer moderation policy artifacts, replace the local demo policy mapping in `ProfileImageModerationPolicyProvider` with the shared bluetape4k-image moderation policy models. Keep the S3/Rekognition/Custom Labels/OCR adapter seam and the banned profile-content tests.
+
 ## Operations
 
 Health and metrics:
