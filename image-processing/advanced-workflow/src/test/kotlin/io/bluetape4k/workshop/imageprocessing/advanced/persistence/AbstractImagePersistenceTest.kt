@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.persistence
 
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.imageprocessing.advanced.model.AssetMetadataInput
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageDimensions
@@ -11,7 +13,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
-import io.bluetape4k.codec.Base58
 
 /**
  * Abstract base class for image persistence integration tests.
@@ -38,8 +39,8 @@ abstract class AbstractImagePersistenceTest {
         @DynamicPropertySource
         fun postgresProperties(registry: DynamicPropertyRegistry) {
             registry.add("spring.datasource.url") { postgres.jdbcUrl }
-            registry.add("spring.datasource.username") { postgres.username!! }
-            registry.add("spring.datasource.password") { postgres.password!! }
+            registry.add("spring.datasource.username") { postgres.username.requireNotNull("postgres.username") }
+            registry.add("spring.datasource.password") { postgres.password.requireNotNull("postgres.password") }
         }
     }
 

@@ -42,6 +42,7 @@ The workflow is a small saga:
 | Storage abstraction | `bluetape4k-images-spring-boot` | `ImageDerivativeWorkflowService` injects `ImageStorage` | Same workflow works with S3 or local storage |
 | S3/local auto-configuration | `bluetape4k-images-spring-boot` | `application.yml` `bluetape4k.images.storage.*` | S3 in production, local fallback in development |
 | Object key validation | `ImageKeyFactory` + `ImageObjectKey` | `ImageKeyFactory` | Sanitizes filenames and builds validated object keys |
+| Validation helpers | `bluetape4k-core` support helpers | `ImageProcessingAdvancedProperties`, `PublicImageUrlResolver`, `FfmVipsDerivativeProcessor` | Keeps configuration, URL, and pixel-limit guards consistent with bluetape4k caller validation |
 | Upload validation | `UploadOptions` | `UploadImageValidator` | Enforces a bounded image content-type allowlist plus magic-byte checks |
 | Storage health/metrics | `images-spring-boot` health and metrics auto-config | Actuator endpoints | Storage reachability and upload/download timing without custom wrappers |
 | Workflow metrics | Micrometer + `bluetape4k-micrometer` ecosystem | `ImageDerivativeWorkflowService` | Low-cardinality upload, duration, failure, and variant counters |
@@ -154,6 +155,8 @@ storage.upload(key, variant, UploadOptions(contentType = "image/webp"))
 ## Validation and Limits
 
 Supported upload types are JPEG, PNG, and WebP. The validator rejects unsupported MIME types and rejects payloads whose magic bytes do not match the declared content type.
+Configuration values, public URL components, variant WebP contracts, and pixel limits use bluetape4k
+`require*` helpers where they map directly to value, range, equality, and nullability contracts.
 
 | Limit | Default |
 |---|---:|
