@@ -8,6 +8,8 @@ import io.bluetape4k.coroutines.flow.extensions.dematerialize
 import io.bluetape4k.coroutines.flow.extensions.materialize
 import io.bluetape4k.coroutines.flow.extensions.merge
 import io.bluetape4k.coroutines.flow.extensions.race
+import io.bluetape4k.support.requireNotEmpty
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -32,17 +34,21 @@ class RaceFallbackCatalog {
         onStart: suspend () -> Unit = {},
         onCancel: suspend () -> Unit = {},
         failWith: Throwable? = null,
-    ): Flow<SourceResult> = flow {
-        onStart()
-        try {
-            delay(delayMs)
-            if (failWith != null) {
-                throw failWith
-            }
-            emit(result)
-        } finally {
-            if (!currentCoroutineContext().isActive) {
-                onCancel()
+    ): Flow<SourceResult> {
+        delayMs.requireZeroOrPositiveNumber("delayMs")
+
+        return flow {
+            onStart()
+            try {
+                delay(delayMs)
+                if (failWith != null) {
+                    throw failWith
+                }
+                emit(result)
+            } finally {
+                if (!currentCoroutineContext().isActive) {
+                    onCancel()
+                }
             }
         }
     }
@@ -50,17 +56,26 @@ class RaceFallbackCatalog {
     /**
      * Selects the first source that emits a value and cancels losing sources.
      */
-    fun fastestHealthy(sources: Iterable<Flow<SourceResult>>): Flow<SourceResult> = sources.race()
+    fun fastestHealthy(sources: Iterable<Flow<SourceResult>>): Flow<SourceResult> =
+        sources.toList()
+            .also { it.requireNotEmpty("sources") }
+            .race()
 
     /**
      * Collects fallback sources strictly in the provided order.
      */
-    fun orderedFallback(sources: Iterable<Flow<SourceResult>>): Flow<SourceResult> = sources.concat()
+    fun orderedFallback(sources: Iterable<Flow<SourceResult>>): Flow<SourceResult> =
+        sources.toList()
+            .also { it.requireNotEmpty("sources") }
+            .concat()
 
     /**
      * Starts all fallback sources immediately while preserving source emission order.
      */
-    fun eagerFallback(vararg sources: Flow<SourceResult>): Flow<SourceResult> = concatArrayEager(*sources)
+    fun eagerFallback(vararg sources: Flow<SourceResult>): Flow<SourceResult> {
+        sources.requireNotEmpty("sources")
+        return concatArrayEager(*sources)
+    }
 
     /**
      * Maps source identifiers to eager fallback probes while preserving source order.
@@ -73,7 +88,10 @@ class RaceFallbackCatalog {
     /**
      * Merges all source contributions by arrival order.
      */
-    fun mergeContributions(vararg sources: Flow<SourceResult>): Flow<SourceResult> = merge(*sources)
+    fun mergeContributions(vararg sources: Flow<SourceResult>): Flow<SourceResult> {
+        sources.requireNotEmpty("sources")
+        return merge(*sources)
+    }
 
     /**
      * Converts terminal errors and completion into value events.

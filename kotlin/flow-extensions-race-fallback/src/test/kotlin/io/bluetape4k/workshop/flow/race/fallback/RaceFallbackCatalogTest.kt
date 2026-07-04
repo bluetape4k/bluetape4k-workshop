@@ -46,6 +46,21 @@ class RaceFallbackCatalogTest {
     }
 
     @Test
+    fun `source delay must be zero or positive`() = runSuspendTest {
+        assertFailsWith<IllegalArgumentException> {
+            catalog.source(result(CatalogSource.CACHE), delayMs = -1)
+        }
+    }
+
+    @Test
+    fun `source composition requires at least one source`() = runSuspendTest {
+        assertFailsWith<IllegalArgumentException> { catalog.fastestHealthy(emptyList()) }
+        assertFailsWith<IllegalArgumentException> { catalog.orderedFallback(emptyList()) }
+        assertFailsWith<IllegalArgumentException> { catalog.eagerFallback() }
+        assertFailsWith<IllegalArgumentException> { catalog.mergeContributions() }
+    }
+
+    @Test
     fun `ordered fallback preserves source order even when later source is faster`() = runSuspendTest {
         val cache = catalog.source(result(CatalogSource.CACHE, latencyMs = 40, quality = SourceQuality.STALE))
         val backup = catalog.source(result(CatalogSource.BACKUP_API, latencyMs = 1))
