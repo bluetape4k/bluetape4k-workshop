@@ -5,10 +5,10 @@ import org.springframework.stereotype.Component
 @Component
 class RateLimitTargetProvider {
 
-    fun getTargets(): List<Regex> {
-        return listOf(
-            "/api/v1/coroutines/.*".toRegex(),
-            "/api/v1/reactive/.*".toRegex()
-        )
-    }
+    private val targets = listOf(
+        "/api/v1/coroutines/.*".toRegex(),
+        "/api/v1/reactive/.*".toRegex(),
+    )
+
+    fun getTargets(): List<Regex> = targets
 }

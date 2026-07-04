@@ -13,7 +13,7 @@ import org.springframework.core.annotation.Order
 @Order(0)
 class TestRedisConfig {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         val redis: RedisServer = RedisServer.Launcher.redis
 
         init {

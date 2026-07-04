@@ -8,10 +8,10 @@ import java.time.Instant
 @RestController
 class CoroutineController {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     /**
-     * `/api/v1/coorutines/~~~` 는 Rate limit를 적용한다
+     * Applies rate limiting to `/api/v1/coroutines/...`.
      */
     @GetMapping("/api/v1/coroutines/hello")
     suspend fun helloV1(): String {
@@ -19,8 +19,7 @@ class CoroutineController {
     }
 
     /**
-     * `/api/v2/coorutines/~~~` 는 Rate limit를 걸지 않는다 (Bucket4j 적용 안함)
-     *
+     * Leaves `/api/v2/coroutines/...` outside Bucket4j rate limiting.
      */
     @GetMapping("/api/v2/coroutines/hello")
     suspend fun helloV2(): String {

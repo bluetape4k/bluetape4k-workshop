@@ -22,6 +22,7 @@ configurations {
 }
 
 dependencies {
+    implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.jackson3)
     //implementation(libs.bluetape4k.spring.boot3)
 

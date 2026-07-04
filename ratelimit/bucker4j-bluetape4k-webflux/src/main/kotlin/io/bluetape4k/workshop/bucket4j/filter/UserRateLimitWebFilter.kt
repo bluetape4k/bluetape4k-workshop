@@ -4,9 +4,11 @@ import io.bluetape4k.bucket4j.ratelimit.distributed.DistributedRateLimiter
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.trace
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.bucket4j.components.RateLimitTargetProvider
 import io.bluetape4k.workshop.bucket4j.components.UserKeyResolver
 import io.bluetape4k.workshop.bucket4j.utils.HeaderUtils
+import kotlinx.coroutines.CancellationException
 import org.springframework.core.annotation.Order
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
@@ -21,9 +23,9 @@ class UserRateLimitWebFilter(
     private val keyResolver: UserKeyResolver,
     private val rateLimiter: DistributedRateLimiter,
     private val targetProvider: RateLimitTargetProvider,
-): WebFilter {
+) : WebFilter {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
         return doFilter(exchange, chain)
@@ -38,10 +40,11 @@ class UserRateLimitWebFilter(
                 log.trace { "Extracted key=$key" }
 
                 if (!key.isNullOrBlank()) {
-                    val result = rateLimiter.consume(key, 1)
+                    val rateLimitKey = key.requireNotBlank("key")
+                    val result = rateLimiter.consume(rateLimitKey, 1)
                     writeRateLimitHeaders(exchange, result.availableTokens)
                     if (result.consumedTokens > 0L) {
-                        log.trace { "Bucket[$key] remains token=${result.availableTokens}" }
+                        log.trace { "Bucket[$rateLimitKey] remains token=${result.availableTokens}" }
                         chain.filter(exchange)
                     } else {
                         sendErrorResponse(exchange)
@@ -55,6 +58,8 @@ class UserRateLimitWebFilter(
                 log.trace { "Filtering request 가 아니므로 Rate Limit을 적용하지 않습니다. path=$targetPath" }
                 chain.filter(exchange)
             }
+        } catch (e: CancellationException) {
+            Mono.error(e)
         } catch (e: Throwable) {
             log.warn(e) { "Rate Limit 적용에 실패했습니다. 무시하고, 다음 필터를 진행합니다." }
             chain.filter(exchange)
