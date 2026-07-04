@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
-    alias(libs.plugins.graalvm.native) 
+    alias(libs.plugins.graalvm.native)
 }
 
 springBoot {
@@ -15,7 +15,7 @@ configurations {
 
 dependencies {
     testImplementation(project(":shared"))
-    
+
     implementation(libs.bluetape4k.core)
     testImplementation(libs.bluetape4k.junit5)
 

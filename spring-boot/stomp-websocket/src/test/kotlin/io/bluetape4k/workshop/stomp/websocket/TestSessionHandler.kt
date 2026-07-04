@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 open class TestSessionHandler(
     private val failure: AtomicReference<Throwable>,
-): StompSessionHandlerAdapter() {
+) : StompSessionHandlerAdapter() {
 
     override fun handleFrame(headers: StompHeaders, payload: Any?) {
         this.failure.set(RuntimeException(headers.toString()))
