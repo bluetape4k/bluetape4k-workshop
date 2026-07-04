@@ -2,11 +2,16 @@ package io.bluetape4k.workshop.lock
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.lock.fenced.FencedResource
+import org.awaitility.kotlin.atMost
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import java.time.Duration
 import java.util.concurrent.TimeUnit.MILLISECONDS
 
 /**
@@ -31,8 +36,10 @@ class FencedStaleHolderTest : AbstractDistributedLockTest() {
         val token1 = fLock1.tryLockAndGetToken(1000, 200, MILLISECONDS)
         token1.shouldNotBeNull()
 
-        // Step 2: Wait for A's lease to expire
-        Thread.sleep(500)
+        // Step 2: Wait for A's lease to expire without touching lock ownership.
+        await atMost Duration.ofSeconds(2) untilAsserted {
+            fLock1.isLocked.shouldBeFalse()
+        }
 
         // Step 3: B acquires — gets a higher token
         val token2 = fLock2.tryLockAndGetToken(1000, 5000, MILLISECONDS)
