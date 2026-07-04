@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.messaging.fallback
 
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.mq.KafkaServer
 import org.springframework.boot.test.context.SpringBootTest
@@ -22,8 +23,8 @@ abstract class AbstractKafkaOutboxFallbackTest {
         @DynamicPropertySource
         fun containerProperties(registry: DynamicPropertyRegistry) {
             registry.add("spring.datasource.url") { postgres.jdbcUrl }
-            registry.add("spring.datasource.username") { requireNotNull(postgres.username) }
-            registry.add("spring.datasource.password") { requireNotNull(postgres.password) }
+            registry.add("spring.datasource.username") { postgres.username.requireNotNull("postgres.username") }
+            registry.add("spring.datasource.password") { postgres.password.requireNotNull("postgres.password") }
             registry.add("spring.kafka.bootstrap-servers") { kafka.bootstrapServers }
             registry.add("workshop.kafka-outbox-fallback.direct-publish-timeout") { "50ms" }
             registry.add("workshop.kafka-outbox-fallback.direct-publish-total-timeout") { "200ms" }

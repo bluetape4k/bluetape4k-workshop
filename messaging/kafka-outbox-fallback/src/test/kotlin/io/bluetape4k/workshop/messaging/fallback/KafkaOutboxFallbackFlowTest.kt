@@ -6,6 +6,7 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.messaging.fallback.api.OrderRequest
 import io.bluetape4k.workshop.messaging.fallback.api.OrderResponse
 import io.bluetape4k.workshop.messaging.fallback.api.OrderPublicationStatus
@@ -131,7 +132,8 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
             .expectStatus().isCreated
             .expectBody(OrderResponse::class.java)
             .value { response ->
-                requireNotNull(response).publicationStatus shouldBeEqualTo OrderPublicationStatus.PUBLISHED_DIRECT
+                response.requireNotNull("response").publicationStatus shouldBeEqualTo
+                    OrderPublicationStatus.PUBLISHED_DIRECT
             }
 
         val counts = transactionTemplate.execute {
@@ -161,7 +163,8 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
             .expectStatus().isCreated
             .expectBody(OrderResponse::class.java)
             .value { response ->
-                requireNotNull(response).publicationStatus shouldBeEqualTo OrderPublicationStatus.FALLBACK_STORED
+                response.requireNotNull("response").publicationStatus shouldBeEqualTo
+                    OrderPublicationStatus.FALLBACK_STORED
             }
 
         verify(exactly = 3) {
@@ -175,7 +178,7 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
         row[EventPublicationTable.status] shouldBeEqualTo EventPublicationStatus.NOT_PUBLISHED
         row[EventPublicationTable.directAttemptCount] shouldBeEqualTo 3
         row[EventPublicationTable.relayRetryCount] shouldBeEqualTo 0
-        requireNotNull(row[EventPublicationTable.lastErrorSummary])
+        row[EventPublicationTable.lastErrorSummary].requireNotNull("lastErrorSummary")
             .contains("secret://") shouldBeEqualTo false
     }
 
@@ -198,7 +201,8 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
                 .expectStatus().isCreated
                 .expectBody(OrderResponse::class.java)
                 .value { response ->
-                    requireNotNull(response).publicationStatus shouldBeEqualTo OrderPublicationStatus.FALLBACK_STORED
+                    response.requireNotNull("response").publicationStatus shouldBeEqualTo
+                        OrderPublicationStatus.FALLBACK_STORED
                 }
         }
 
@@ -234,7 +238,8 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
             .expectStatus().isCreated
             .expectBody(OrderResponse::class.java)
             .value { response ->
-                requireNotNull(response).publicationStatus shouldBeEqualTo OrderPublicationStatus.FALLBACK_STORE_FAILED
+                response.requireNotNull("response").publicationStatus shouldBeEqualTo
+                    OrderPublicationStatus.FALLBACK_STORE_FAILED
             }
     }
 
@@ -273,7 +278,7 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
 
         row[EventPublicationTable.status] shouldBeEqualTo EventPublicationStatus.DEAD_LETTER
         row[EventPublicationTable.relayRetryCount] shouldBeEqualTo 3
-        requireNotNull(row[EventPublicationTable.lastErrorSummary])
+        row[EventPublicationTable.lastErrorSummary].requireNotNull("lastErrorSummary")
             .contains("secret") shouldBeEqualTo false
     }
 
@@ -294,7 +299,7 @@ class KafkaOutboxFallbackFlowTest : AbstractKafkaOutboxFallbackTest() {
                 if (claimed.isEmpty()) {
                     emptyClaims.incrementAndGet()
                 } else {
-                    claimedBy += requireNotNull(claimed.single().claimedBy)
+                    claimedBy += claimed.single().claimedBy.requireNotNull("claimedBy")
                 }
             }
             .run()
