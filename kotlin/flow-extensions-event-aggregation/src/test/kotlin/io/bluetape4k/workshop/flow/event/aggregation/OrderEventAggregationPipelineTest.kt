@@ -156,6 +156,9 @@ class OrderEventAggregationPipelineTest {
         assertFailsWith<IllegalArgumentException> { OrderCreated(" ", "customer-1", t(1)) }
         assertFailsWith<IllegalArgumentException> { LineAdded("order-1", "sku-1", 0, t(1)) }
         assertFailsWith<IllegalArgumentException> { PaymentAuthorized("order-1", 0, t(1)) }
+        assertFailsWith<IllegalArgumentException> {
+            OrderAuditEntry.from(0, OrderCreated("order-1", "customer-1", t(1)))
+        }
     }
 
     @Test
