@@ -186,8 +186,11 @@ class RealBufferedSuspendedSource(
     }
 
     override suspend fun read(sink: ByteArray, offset: Int, byteCount: Int): Int {
-        // TODO checkOffsetAndCount(sink.size.toLong(), offset.toLong(), byteCount.toLong())
+        checkOffsetAndCount(sink.size.toLong(), offset.toLong(), byteCount.toLong())
         checkNotClosed()
+        if (byteCount == 0) {
+            return 0
+        }
         if (buffer.size == 0L) {
             val read = source.read(buffer, SEGMENT_SIZE)
             if (read == -1L) {
@@ -405,6 +408,11 @@ class RealBufferedSuspendedSource(
 
     private fun checkNotClosed() {
         check(!closed.value) { "RealBufferedSuspendedSource is closed" }
+    }
+
+    private fun checkOffsetAndCount(size: Long, offset: Long, byteCount: Long) {
+        offset.requireInRange(0L, size, "offset")
+        byteCount.requireInRange(0L, size - offset, "byteCount")
     }
 
     private fun hasAnyMatchingPrefix(options: Options): Boolean {

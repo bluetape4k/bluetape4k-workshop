@@ -65,6 +65,7 @@ bs.base64() // Base64 encoded string
 | encryption | `CipherSink`, `CipherSource` | JCE `Cipher`를 사용한 암호화/복호화 |
 | pipe | `Pipe` | 비동기 Producer-Consumer 연결, timeout 지원 |
 | coroutine | `asSuspendedSource()`, `asSuspendedSink()` | socket을 coroutine 친화적인 Source/Sink로 변환 |
+| validation | `requirePositiveNumber()`, `requireInRange()` | coroutine pipe buffer 크기와 byte-array read 범위 검증 |
 | NIO Channel | `asSource()` | `ReadableByteChannel`을 Okio `Source`로 변환 |
 | hashing | `HashingSink` | SHA-1, MD5, SHA-256 등 hash 계산 |
 
@@ -116,6 +117,8 @@ buffer.select(options) // 0 (GET) or 1 (POST)
 ### Pipe — 비동기 Producer-Consumer
 
 `Pipe`는 고정 크기 버퍼를 가진 단방향 채널입니다. 버퍼가 가득 차면 쓰기가 block되고, 비어 있으면 읽기가 block됩니다.
+`SuspendedPipe`는 coroutine 친화적인 pipe를 만들기 전에 bluetape4k `requirePositiveNumber()`로
+buffer 크기를 검증합니다.
 
 ```kotlin
 val pipe = Pipe(1000L) // buffer size 1000 bytes
@@ -249,6 +252,8 @@ source.readUtf8() // restore original string
 ### SuspendedSocket — 논블로킹 socket I/O
 
 `asSuspendedSource()` / `asSuspendedSink()` 확장 함수는 `java.net.Socket`을 코루틴 친화적인 Okio Source/Sink로 변환합니다. 내부적으로 NIO는 `SocketChannel`의 `SelectionKey`를 `await()`로 처리해 스레드 blocking을 피합니다.
+`BufferedSuspendedSource.read(ByteArray, offset, byteCount)`는 bluetape4k `requireInRange()`로
+요청 범위를 검증하고, zero-byte read는 source에 접근하지 않고 즉시 `0`을 반환합니다.
 
 ```kotlin
 runSuspendIO {

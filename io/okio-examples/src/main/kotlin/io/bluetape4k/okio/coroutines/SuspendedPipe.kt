@@ -1,5 +1,6 @@
 package io.bluetape4k.okio.coroutines
 
+import io.bluetape4k.support.requirePositiveNumber
 import okio.Buffer
 import okio.IOException
 import okio.Timeout
@@ -25,7 +26,7 @@ class SuspendedPipe(internal val maxBufferSize: Long) {
     val condition: Condition = lock.newCondition()
 
     init {
-        require(maxBufferSize >= 1L) { "maxBufferSize < 1: $maxBufferSize" }
+        maxBufferSize.requirePositiveNumber("maxBufferSize")
     }
 
     @get:JvmName("sink")
