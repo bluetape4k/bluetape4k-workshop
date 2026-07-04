@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.redisson.collections
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
@@ -9,8 +12,6 @@ import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldHaveSize
 import org.junit.jupiter.api.Test
 import org.redisson.api.RStream
 import org.redisson.api.stream.StreamAddArgs
@@ -28,9 +29,9 @@ import kotlin.time.toJavaDuration
  * - [Redis Stream for Java](https://redisson.org/articles/redis-streams-for-java.html)
  * - [Redisson Stream](https://github.com/redisson/redisson/wiki/7.-distributed-collections/#720-stream)
  */
-class StreamExamples: AbstractRedissonTest() {
+class StreamExamples : AbstractRedissonTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `stream 기본 사용 예`() {
@@ -38,7 +39,7 @@ class StreamExamples: AbstractRedissonTest() {
 
         val stream = redisson.getStream<String, String>(randomName())
 
-        // Consumer group 을 만든다
+        // Create a consumer group.
         stream.createGroup(StreamCreateGroupArgs.name(groupName).makeStream())
 
         val id1 = stream.add(StreamAddArgs.entry("key1", "value1"))
@@ -94,16 +95,16 @@ class StreamExamples: AbstractRedissonTest() {
 
         val stream: RStream<String, Int> = redisson.getStream(randomName())
 
-        // Consumer group 을 만든다. Stream이 없다면 새로 만든다 
+        // Create a consumer group and create the stream if it does not exist.
         stream.createGroup(StreamCreateGroupArgs.name(groupName).makeStream())
 
-        // 메시지를 전송한다
+        // Publish messages.
         val messageId1 = stream.addAsync(StreamAddArgs.entry("1", 1)).await()
         val messageId2 = stream.addAsync(StreamAddArgs.entry("2", 2)).await()
         log.debug { "메시지 전송, messageId1=$messageId1" }
         log.debug { "메시지 전송, messageId2=$messageId2" }
 
-        // 2개의 메시지를 받는다
+        // Read two messages.
         val map1 = stream.readGroupAsync(
             groupName,
             consumerName1,
@@ -117,28 +118,28 @@ class StreamExamples: AbstractRedissonTest() {
         map1.keys shouldHaveSize 2
         map1.keys shouldBeEqualTo setOf(messageId1, messageId2)
 
-        // 2개의 메시지를 읽었다고 ack 보냄 (전송완료)
+        // Ack two processed messages.
         stream.ackAsync(groupName, *map1.keys.toTypedArray()).await()
 
-        // 메시지를 기다린다.
+        // Wait for the next message.
         val consumerJob = scope.launch {
-            // 1개의 메시지를 받는다
+            // Read one message.
             val map2: Map<StreamMessageId, Map<String, Int>?> = stream.readGroupAsync(
                 groupName,
                 consumerName2,
                 StreamReadGroupArgs.neverDelivered().timeout(10.seconds.toJavaDuration())
             ).await()
 
-            // 1개의 메시지를 받았다
+            // One message was received.
             map2.keys shouldHaveSize 1
             val msgId = map2.keys.first()
             log.debug { "메시지 수신, messageId=$msgId" }
-            map2[msgId]!! shouldBeEqualTo mapOf("3" to 3, "4" to 4)
+            map2[msgId].shouldNotBeNull() shouldBeEqualTo mapOf("3" to 3, "4" to 4)
 
             stream.ackAsync(groupName, *map2.keys.toTypedArray()).await() shouldBeEqualTo 1L
         }
 
-        // 새로운 메시지 1개를 전송한다
+        // Publish one new message.
         val messageId3 = stream.addAsync(streamAddArgsOf("3" to 3, "4" to 4)).await()
         log.debug { "메시지 전송, messageId3=$messageId3" }
         delay(10)

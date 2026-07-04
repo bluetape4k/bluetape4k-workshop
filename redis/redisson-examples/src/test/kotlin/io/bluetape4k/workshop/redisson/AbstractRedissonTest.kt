@@ -20,7 +20,7 @@ import java.time.Duration
 
 abstract class AbstractRedissonTest {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         @JvmStatic
         val redis: RedisServer by lazy { RedisServer.Launcher.redis }
 
@@ -32,13 +32,13 @@ abstract class AbstractRedissonTest {
                 useSingleServer()
                     .setAddress(redis.url)
                     .setConnectionPoolSize(128)
-                    .setConnectionMinimumIdleSize(32) // 최소 연결을 충분히 확보하여 Latency 방지
-                    .setIdleConnectionTimeout(100_000)  // 연결 유지를 넉넉히 (100초)
+                    .setConnectionMinimumIdleSize(32) // Keep enough idle connections to avoid latency spikes.
+                    .setIdleConnectionTimeout(100_000)  // Keep idle connections for 100 seconds.
                     .setTimeout(5000)
                     .setRetryAttempts(3)
                     .setRetryDelay { attempt -> Duration.ofMillis((attempt + 1) * 10L) }
 
-                    .setDnsMonitoringInterval(5000)  // DNS 변경 감지 (Cloud 환경 필수)
+                    .setDnsMonitoringInterval(5000)  // Detect DNS changes in cloud environments.
 
                 executor = VirtualThreadExecutor
                 threads = 256
@@ -71,7 +71,7 @@ abstract class AbstractRedissonTest {
 
     protected val redisson: Redisson get() = redissonClient
 
-    // Lettuce Client 는 Redis의 RAW 명령어를 실행하기 위해서 사용합니다.
+    // Lettuce is used for raw Redis commands.
     protected val commands by lazy {
         RedisServer.Launcher.LettuceLib.getRedisCommands(redis.host, redis.port)
     }
@@ -96,8 +96,8 @@ abstract class AbstractRedissonTest {
 
     @BeforeAll
     fun beforeAll() {
-        // 참고: [Redis Keyspace notifications](https://redis.io/docs/latest/develop/use/keyspace-notifications/)
-        // redis RAW 명령인 `config set` 을 실행하기 위해 Lettuce Client를 사용한다
+        // See: [Redis Keyspace notifications](https://redis.io/docs/latest/develop/use/keyspace-notifications/)
+        // Use Lettuce for the raw Redis `config set` command.
         commands.configSet("notify-keyspace-events", "AKE")
     }
 }

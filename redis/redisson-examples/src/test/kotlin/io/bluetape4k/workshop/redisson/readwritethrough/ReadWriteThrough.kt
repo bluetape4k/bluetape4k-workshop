@@ -14,7 +14,7 @@ import javax.sql.DataSource
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.toJavaDuration
 
-object ReadWriteThrough: KLogging() {
+object ReadWriteThrough : KLogging() {
 
     const val SELECT_ACTORS = "SELECT * FROM Actors"
     const val SELECT_ACTOR_IDS = "SELECT id FROM Actors"
@@ -33,7 +33,7 @@ object ReadWriteThrough: KLogging() {
      * @return
      */
     fun actorMapLoader(dataSource: DataSource): MapLoader<Int, Actor> {
-        return object: MapLoader<Int, Actor> {
+        return object : MapLoader<Int, Actor> {
             override fun load(key: Int): Actor? {
                 log.debug { "Load actor from DB. actor id=$key" }
 
@@ -56,12 +56,11 @@ object ReadWriteThrough: KLogging() {
             }
 
             override fun loadAllKeys(): MutableIterable<Int> {
-                // Read through 를 하기 위해서는 모든 key 를 읽어와야 합니다.
+                // Read-through loading requires all keys.
                 log.debug { "Load all actor ids." }
 
                 return dataSource.runQuery(SELECT_ACTOR_IDS) { rs ->
-                    // TODO: extract 시에 꼭 Sequence 나 Iterable 로 해야 한다. 끝까지 읽지 않는 작업이 있을 수 있다
-                    // loadAllKeys 도 모두 읽는 게 아니라, Map의 제한만큼만 읽어야 하기 때문이다.
+                    // Keep extraction lazy when the JDBC helper supports it because Redisson may not consume all keys.
                     rs.extract {
                         int[Actor::id.name]
                     }
@@ -81,7 +80,7 @@ object ReadWriteThrough: KLogging() {
      */
     fun actorMapWriter(dataSource: DataSource): MapWriter<Int, Actor> {
 
-        val mapWriter = object: MapWriter<Int, Actor> {
+        val mapWriter = object : MapWriter<Int, Actor> {
             override fun write(map: MutableMap<Int, Actor>) {
                 log.debug { "Write actor to DB. actors=${map.values.joinToString()}" }
 
@@ -103,7 +102,7 @@ object ReadWriteThrough: KLogging() {
             }
         }
 
-        // NOTE: Redisson의 RetryableMapWriter 를 사용해도 되고, Resilience4j Retry 를 사용해도 된다.
+        // NOTE: Redisson RetryableMapWriter is enough here; Resilience4j Retry is another viable wrapper.
         val options = MapOptions.defaults<Int, Actor>()
             .writerRetryAttempts(3)
             .writerRetryInterval(100.milliseconds.toJavaDuration())
