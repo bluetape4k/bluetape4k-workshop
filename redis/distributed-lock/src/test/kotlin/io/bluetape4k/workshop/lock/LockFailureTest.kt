@@ -1,9 +1,14 @@
 package io.bluetape4k.workshop.lock
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import org.awaitility.kotlin.atMost
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
+import java.time.Duration
 import java.util.concurrent.TimeUnit.MILLISECONDS
 
 /**
@@ -25,7 +30,9 @@ class LockFailureTest : AbstractDistributedLockTest() {
         val acquired = lock.tryLock(1000, 200, MILLISECONDS)
         acquired.shouldBeTrue()
 
-        Thread.sleep(500)  // wait for lease to expire (200ms lease)
+        await atMost Duration.ofSeconds(2) untilAsserted {
+            lock.isLocked.shouldBeFalse()
+        }
 
         assertFailsWith<IllegalMonitorStateException> {
             lock.unlock()
