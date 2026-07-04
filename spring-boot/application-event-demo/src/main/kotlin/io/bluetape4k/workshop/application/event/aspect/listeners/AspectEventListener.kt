@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 @Component
 class AspectEventListener {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @EventListener(classes = [AspectEvent::class])
     fun handleEvent(event: AspectEvent) {

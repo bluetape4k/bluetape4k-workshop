@@ -12,7 +12,7 @@ class CustomEventController(
     private val customEventPublisher: CustomEventPublisher,
 ) {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @GetMapping("/event")
     suspend fun event(@RequestParam(name = "message") message: String): String {

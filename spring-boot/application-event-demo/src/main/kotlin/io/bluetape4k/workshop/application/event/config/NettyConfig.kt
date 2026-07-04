@@ -16,14 +16,14 @@ import reactor.netty.resources.LoopResources
 import java.time.Duration
 
 /**
- * Webflux 에서 사용하는 Netty 관련 설정을 제공합니다.
+ * Provides Netty settings for the WebFlux application.
  *
- * 고성능을 원할 경우 Netty 설정을 튜닝하는 걸 추천합니다.
+ * Tune these options when the example needs higher connection concurrency.
  */
 @Configuration(proxyBeanMethods = false)
 class NettyConfig {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Bean
     fun nettyReactiveWebServerFactory(): NettyReactiveWebServerFactory {
@@ -32,7 +32,7 @@ class NettyConfig {
         }
     }
 
-    class EventLoopNettyCustomer: NettyServerCustomizer {
+    class EventLoopNettyCustomer : NettyServerCustomizer {
         override fun apply(httpServer: HttpServer): HttpServer {
             return httpServer
                 .option(ChannelOption.SO_KEEPALIVE, true)

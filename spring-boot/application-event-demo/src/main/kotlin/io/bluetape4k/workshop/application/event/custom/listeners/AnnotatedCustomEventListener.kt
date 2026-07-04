@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 @Component
 class AnnotatedCustomEventListener {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @EventListener(classes = [CustomEvent::class])
     fun handleEvent(event: CustomEvent) {
