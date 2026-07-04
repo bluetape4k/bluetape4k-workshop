@@ -29,7 +29,7 @@ class BookControllerTest(
     @param:Autowired private val bookService: BookService,
 ): AbstractElasticsearchApplicationTest() {
 
-    companion object: KLogging() {
+    companion object : KLogging() {
         private const val BOOK_PATH = "/v1/books"
     }
 

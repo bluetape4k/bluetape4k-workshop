@@ -3,7 +3,6 @@ package io.bluetape4k.workshop.elasticsearch
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.trace
-import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.elasticsearch.domain.model.Book
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
@@ -17,20 +16,26 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractElasticsearchApplicationTest {
 
-    companion object: KLogging() {
+    companion object : KLogging() {
         @JvmStatic
         val faker = Fakers.faker
     }
 
     @Autowired
-    protected val context: ApplicationContext = uninitialized()
+    private var applicationContext: ApplicationContext? = null
+
+    protected val context: ApplicationContext
+        get() = checkNotNull(applicationContext) { "applicationContext is not injected." }
 
     protected val client: WebTestClient by lazy {
         WebTestClient.bindToApplicationContext(context).build()
     }
 
     @Autowired
-    protected val operations: ElasticsearchTemplate = uninitialized()
+    private var elasticsearchOperations: ElasticsearchTemplate? = null
+
+    protected val operations: ElasticsearchTemplate
+        get() = checkNotNull(elasticsearchOperations) { "elasticsearchOperations is not injected." }
 
     // NOTE: ES index refresh는 동기방식으로 해야 검색이 제대로 됩니다.
     protected val indexOpsForBook by lazy { operations.indexOps(Book::class.java) }

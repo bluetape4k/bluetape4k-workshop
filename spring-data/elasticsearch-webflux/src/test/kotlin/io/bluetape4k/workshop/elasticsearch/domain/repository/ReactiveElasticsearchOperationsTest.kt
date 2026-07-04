@@ -27,7 +27,7 @@ class ReactiveElasticsearchOperationsTest(
     @param:Autowired val reactiveOps: ReactiveElasticsearchOperations,
 ): AbstractElasticsearchApplicationTest() {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Test
     fun `find all books`() = runSuspendIO {

@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono
 @Component
 class RedirectWebFilter: WebFilter {
 
-    companion object: KLogging() {
+    companion object : KLogging() {
         private const val SWAGGER_PATH = "/swagger-ui.html"
     }
 

@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController
 class BookController(
     private val bookService: BookService,
 ) {
-    companion object: KLogging()
+    companion object : KLogging()
 
     @GetMapping
     suspend fun getAllBooks(): List<Book> {

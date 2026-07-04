@@ -13,7 +13,7 @@ import org.springframework.data.elasticsearch.core.search
 @Disabled("Elasticsearch Client 가 Jackson2 를 사용합니다. Spring Boot 4 는 Jackson 3를 사용해서 충돌이 발생합니다.")
 class ElasticsearchOperationsTest: AbstractElasticsearchApplicationTest() {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Test
     fun `search all books`() {

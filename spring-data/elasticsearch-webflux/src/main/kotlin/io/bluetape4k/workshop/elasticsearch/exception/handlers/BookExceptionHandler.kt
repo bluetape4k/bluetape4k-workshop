@@ -24,5 +24,9 @@ class BookExceptionHandler {
 
     data class Body(
         val message: String,
-    ): Serializable
+    ) : Serializable {
+        companion object {
+            private const val serialVersionUID: Long = -5092138753579857322L
+        }
+    }
 }

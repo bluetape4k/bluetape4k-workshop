@@ -3,7 +3,6 @@ package io.bluetape4k.workshop.elasticsearch.domain.repository
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.elasticsearch.AbstractElasticsearchApplicationTest
 import io.bluetape4k.workshop.elasticsearch.domain.model.Book
 import kotlinx.coroutines.flow.toList
@@ -21,15 +20,21 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchTemplate
 
 @Disabled("Elasticsearch Client 가 Jackson2 를 사용합니다. Spring Boot 4 는 Jackson 3를 사용해서 충돌이 발생합니다.")
-class BookRepositoryTest: AbstractElasticsearchApplicationTest() {
+class BookRepositoryTest : AbstractElasticsearchApplicationTest() {
 
-    companion object: KLogging()
-
-    @Autowired
-    private val repository: BookRepository = uninitialized()
+    companion object : KLogging()
 
     @Autowired
-    private val template: ReactiveElasticsearchTemplate = uninitialized()
+    private var injectedRepository: BookRepository? = null
+
+    private val repository: BookRepository
+        get() = checkNotNull(injectedRepository) { "repository is not injected." }
+
+    @Autowired
+    private var reactiveTemplate: ReactiveElasticsearchTemplate? = null
+
+    private val template: ReactiveElasticsearchTemplate
+        get() = checkNotNull(reactiveTemplate) { "reactiveTemplate is not injected." }
 
     @Test
     fun `context loading`() {

@@ -12,4 +12,8 @@ data class Book(
     val publicationYear: Int,
     @Field val isbn: String,
     @Id var id: String? = null,
-): Serializable
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = -1940547858666293989L
+    }
+}

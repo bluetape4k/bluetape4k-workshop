@@ -29,7 +29,7 @@ class DefaultBookServiceTest(
     @param:Autowired private val reactiveOps: ReactiveElasticsearchOperations,
 ): AbstractElasticsearchApplicationTest() {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Test
     fun `context loading`() {

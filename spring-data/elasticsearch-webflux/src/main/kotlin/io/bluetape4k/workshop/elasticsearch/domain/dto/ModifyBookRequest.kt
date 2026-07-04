@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Positive
 import java.io.Serializable
 
-
 data class ModifyBookRequest(
     @field:NotBlank
     val title: String,
@@ -20,7 +19,11 @@ data class ModifyBookRequest(
 
     @field:NotBlank
     val isbn: String,
-): Serializable
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 4939016582820918923L
+    }
+}
 
 fun ModifyBookRequest.toBook(): Book {
     return Book(
