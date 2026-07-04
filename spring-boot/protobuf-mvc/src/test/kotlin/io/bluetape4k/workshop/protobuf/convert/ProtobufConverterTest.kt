@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
 
 class ProtobufConverterTest {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     private val course = course {
         id = 2

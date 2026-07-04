@@ -44,6 +44,8 @@ dependencies {
 
     testImplementation(project(":shared"))
 
+    implementation(libs.bluetape4k.core)
+
     // Protobuf
     implementation(libs.bluetape4k.grpc)
     implementation(libs.protobuf.java.lib)

@@ -33,7 +33,7 @@ import java.io.InputStream
 )
 class ProtobufApplicationIT {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     private val restTemplate: RestTemplate by lazy {
         RestTemplate(listOf(ProtobufHttpMessageConverter()))
