@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.config
 
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requirePositiveNumber
@@ -36,13 +38,9 @@ data class ImageProcessingAdvancedProperties(
         requestConcurrency.requirePositiveNumber("requestConcurrency")
         vipsConcurrency.requirePositiveNumber("vipsConcurrency")
         variantConcurrency.requirePositiveNumber("variantConcurrency")
-        require(!processingTimeout.isNegative && !processingTimeout.isZero) {
-            "processingTimeout must be positive: $processingTimeout"
-        }
+        processingTimeout.requireGt(Duration.ZERO, "processingTimeout")
         variants.requireNotEmpty("variants")
-        require(variants.count { it.primaryThumbnail } == 1) {
-            "exactly one variant must be marked as primaryThumbnail"
-        }
+        variants.count { it.primaryThumbnail }.requireEquals(1, "primaryThumbnailCount")
     }
 }
 
@@ -66,7 +64,7 @@ data class ImageVariantProperties(
         extension.requireNotBlank("extension")
         require(VALID_NAME.matches(name)) { "variant name must match [A-Za-z0-9._-]+: $name" }
         require(VALID_NAME.matches(extension)) { "variant extension must match [A-Za-z0-9._-]+: $extension" }
-        require(contentType == "image/webp") { "variants are encoded as image/webp: $contentType" }
-        require(extension == "webp") { "variants are encoded with webp extension: $extension" }
+        contentType.requireEquals("image/webp", "contentType")
+        extension.requireEquals("webp", "extension")
     }
 }

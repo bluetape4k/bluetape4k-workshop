@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.imageprocessing.advanced.service
 
 import io.bluetape4k.images.spring.ImageObjectKey
 import io.bluetape4k.images.spring.autoconfigure.ImageStorageProperties
+import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.support.requireNull
 import io.bluetape4k.workshop.imageprocessing.advanced.config.ImageProcessingAdvancedProperties
 import org.springframework.stereotype.Component
 import java.net.URI
@@ -23,15 +25,11 @@ class PublicImageUrlResolver(
         storageProperties: ImageStorageProperties,
     ): URI {
         val baseUri = URI.create(properties.publicBaseUrl)
-        require(baseUri.scheme != null && baseUri.host != null) {
-            "publicBaseUrl must be an absolute URI with scheme and host"
-        }
-        require(baseUri.rawQuery == null && baseUri.rawFragment == null) {
-            "publicBaseUrl must not include query or fragment"
-        }
-        require(baseUri.userInfo == null) {
-            "publicBaseUrl must not include userinfo"
-        }
+        baseUri.scheme.requireNotNull("publicBaseUrl.scheme")
+        baseUri.host.requireNotNull("publicBaseUrl.host")
+        baseUri.rawQuery.requireNull("publicBaseUrl.query")
+        baseUri.rawFragment.requireNull("publicBaseUrl.fragment")
+        baseUri.userInfo.requireNull("publicBaseUrl.userInfo")
         require(!baseUri.path.contains("..") && baseUri.rawPath?.contains("%2e", ignoreCase = true) != true) {
             "publicBaseUrl path must not include '..'"
         }

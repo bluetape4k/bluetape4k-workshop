@@ -42,6 +42,7 @@ URL 해석, Micrometer metric, Exposed 기반 persistence를 조율합니다.
 | 저장소 추상화 | `bluetape4k-images-spring-boot` | `ImageDerivativeWorkflowService`가 `ImageStorage` 주입 | 같은 workflow가 S3와 local storage에서 동작 |
 | S3/local 자동 구성 | `bluetape4k-images-spring-boot` | `application.yml` `bluetape4k.images.storage.*` | 운영은 S3, 개발/테스트는 local fallback |
 | 객체 key 검증 | `ImageKeyFactory` + `ImageObjectKey` | `ImageKeyFactory` | 파일명을 sanitize하고 검증된 object key 생성 |
+| Validation helper | `bluetape4k-core` support helper | `ImageProcessingAdvancedProperties`, `PublicImageUrlResolver`, `FfmVipsDerivativeProcessor` | 설정, URL, pixel limit guard를 bluetape4k caller validation 방식으로 통일 |
 | 업로드 검증 | `UploadOptions` | `UploadImageValidator` | 제한된 image content-type allowlist와 magic-byte 검사 적용 |
 | 저장소 health/metrics | `images-spring-boot` health/metrics auto-config | Actuator endpoints | 별도 wrapper 없이 저장소 상태와 upload/download timing 확인 |
 | Workflow metrics | Micrometer + `bluetape4k-micrometer` ecosystem | `ImageDerivativeWorkflowService` | 낮은 cardinality의 upload, duration, failure, variant counter |
@@ -154,6 +155,8 @@ storage.upload(key, variant, UploadOptions(contentType = "image/webp"))
 ## 검증과 제한
 
 지원 업로드 타입은 JPEG, PNG, WebP입니다. Validator는 지원하지 않는 MIME type과 선언된 content type에 맞지 않는 magic byte payload를 거부합니다.
+설정값, public URL 구성 요소, variant WebP 계약, pixel limit은 value/range/equality/nullability
+계약에 맞는 bluetape4k `require*` helper로 검증합니다.
 
 | 제한 | 기본값 |
 |---|---:|

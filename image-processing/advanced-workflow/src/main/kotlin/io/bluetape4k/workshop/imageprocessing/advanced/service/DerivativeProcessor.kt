@@ -6,6 +6,7 @@ import io.bluetape4k.images.vips.VipsImageFormat
 import io.bluetape4k.images.vips.coroutines.suspendToBytes
 import io.bluetape4k.images.vips.java25.FfmVipsRuntime
 import io.bluetape4k.images.vips.java25.suspendFfmVipsImageOf
+import io.bluetape4k.support.requireLe
 import io.bluetape4k.workshop.imageprocessing.advanced.config.ImageProcessingAdvancedProperties
 import io.bluetape4k.workshop.imageprocessing.advanced.config.ImageVariantProperties
 import io.bluetape4k.workshop.imageprocessing.advanced.model.OriginalImageInfo
@@ -87,9 +88,7 @@ class FfmVipsDerivativeProcessor(
 
     private fun validatePixelBudget(originalInfo: OriginalImageInfo) {
         val pixels = originalInfo.width.toLong() * originalInfo.height.toLong()
-        require(pixels <= properties.maxPixels) {
-            "image pixel count exceeds maxPixels (${properties.maxPixels}): $pixels"
-        }
+        pixels.requireLe(properties.maxPixels, "pixels")
     }
 
     companion object {
