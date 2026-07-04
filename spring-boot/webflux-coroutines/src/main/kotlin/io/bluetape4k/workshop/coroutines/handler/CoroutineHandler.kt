@@ -4,7 +4,6 @@ import io.bluetape4k.coroutines.flow.async
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
-import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.coroutines.model.Banner
 import io.bluetape4k.workshop.shared.web.httpGet
 import kotlinx.coroutines.CoroutineName
@@ -28,14 +27,12 @@ import org.springframework.web.reactive.function.server.bodyValueAndAwait
 @Component
 class CoroutineHandler(
     private val builder: WebClient.Builder,
+    @Value("\${server.port:8080}") private val port: String,
 ): CoroutineScope by CoroutineScope(Dispatchers.IO + CoroutineName("handler")) {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private const val DEFAULT_DELAY = 100L
     }
-
-    @Value("\${server.port:8080}")
-    private val port: String = uninitialized()
 
     // 응답용 객체
     private val banner = Banner.TEST_BANNER

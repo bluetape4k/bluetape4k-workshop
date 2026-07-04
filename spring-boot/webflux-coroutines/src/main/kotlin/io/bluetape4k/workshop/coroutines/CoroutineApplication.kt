@@ -10,7 +10,7 @@ import org.springframework.web.reactive.function.server.coRouter
 @SpringBootApplication(proxyBeanMethods = false)
 class CoroutinesDemoApplication {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Bean
     fun routes(coroutineHandler: CoroutineHandler) = coRouter {
