@@ -6,6 +6,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.leader.zookeeper.config.LeaderZookeeperProperties
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -39,22 +40,26 @@ class GroupLeaderService(
      *
      * @return `"done"` when this instance entered a slot, `null` when no slot was available.
      */
-    fun runLeaderWork(lockName: String = LOCK_NAME): String? =
-        elector.runIfLeader(lockName) {
+    fun runLeaderWork(lockName: String = LOCK_NAME): String? {
+        lockName.requireNotBlank("lockName")
+        return elector.runIfLeader(lockName) {
             executionCount.incrementAndGet()
             log.info { "[GROUP-LEADER] GroupLeaderService entered slot (total=${executionCount.get()})" }
             "done"
         }.also {
             if (it == null) log.debug { "[SKIPPED] GroupLeaderService — no slot available" }
         }
+    }
 
     /**
      * Inspects the current group-election state for [lockName].
      *
      * Surfaces `activeCount` and `availableSlots` for tests and operational dashboards.
      */
-    fun inspectState(lockName: String = LOCK_NAME): LeaderGroupState =
-        elector.state(lockName)
+    fun inspectState(lockName: String = LOCK_NAME): LeaderGroupState {
+        lockName.requireNotBlank("lockName")
+        return elector.state(lockName)
+    }
 
     /**
      * Scheduled entry point. Catches non-cancellation exceptions so the Spring

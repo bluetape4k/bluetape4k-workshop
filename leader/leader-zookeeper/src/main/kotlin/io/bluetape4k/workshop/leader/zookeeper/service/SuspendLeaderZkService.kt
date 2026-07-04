@@ -5,6 +5,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.leader.zookeeper.config.LeaderZookeeperProperties
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
@@ -41,8 +42,9 @@ class SuspendLeaderZkService(
      *
      * @return `"done"` when this instance won the lock, `null` when skipped.
      */
-    suspend fun runLeaderWork(lockName: String = LOCK_NAME): String? =
-        elector.runIfLeader(lockName) {
+    suspend fun runLeaderWork(lockName: String = LOCK_NAME): String? {
+        lockName.requireNotBlank("lockName")
+        return elector.runIfLeader(lockName) {
             executionCount.incrementAndGet()
             log.info { "[LEADER] SuspendLeaderZkService coroutine work started" }
             delay(20) // simulate async I/O without blocking a thread
@@ -51,6 +53,7 @@ class SuspendLeaderZkService(
         }.also {
             if (it == null) log.debug { "[SKIPPED] SuspendLeaderZkService not the elected leader" }
         }
+    }
 
     /**
      * Scheduled entry point.

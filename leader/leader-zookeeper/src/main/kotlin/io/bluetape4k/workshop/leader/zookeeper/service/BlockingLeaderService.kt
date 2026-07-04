@@ -5,6 +5,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.leader.zookeeper.config.LeaderZookeeperProperties
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -36,14 +37,16 @@ class BlockingLeaderService(
      *
      * @return `"done"` when this instance won the lock, `null` when skipped.
      */
-    fun runLeaderWork(lockName: String = LOCK_NAME): String? =
-        elector.runIfLeader(lockName) {
+    fun runLeaderWork(lockName: String = LOCK_NAME): String? {
+        lockName.requireNotBlank("lockName")
+        return elector.runIfLeader(lockName) {
             executionCount.incrementAndGet()
             log.info { "[LEADER] BlockingLeaderService running work (total=${executionCount.get()})" }
             "done"
         }.also {
             if (it == null) log.debug { "[SKIPPED] BlockingLeaderService not the elected leader" }
         }
+    }
 
     /**
      * Scheduled entry point. Catches non-cancellation exceptions so the Spring
