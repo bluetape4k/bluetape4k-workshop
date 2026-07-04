@@ -26,7 +26,7 @@ review evidence.
 | `:api-gateway` | `gateway/api-gateway` | pending scan | blocked | pending | pending | pending | Codex / 2026-07-04 |
 | `:customers` | `gateway/customers` | pending scan | blocked | pending | pending | pending | Codex / 2026-07-04 |
 | `:orders` | `gateway/orders` | pending scan | blocked | pending | pending | pending | Codex / 2026-07-04 |
-| `:gatling-virtualthread-simulation` | `gatling/virtualthread-simulation` | pending scan | blocked | pending | pending | pending | Codex / 2026-07-04 |
+| `:gatling-virtualthread-simulation` | `gatling/virtualthread-simulation` | PR #401 / head `26edb11f504f58eca9b73311cf3ffd65471b01fb` | PASS / P0=0 P1=0 | `compileKotlin compileTestKotlin cleanTest test`; `compileGatlingKotlin`; GitHub checks all SUCCESS | used `requireInRange`, ProblemDetail bad-request mapping, existing `runSuspendIO`, `httpGet`, bluetape4k assertions | complete | Codex / 2026-07-04 |
 | `:graph-abuser-detection` | `graph/abuser-detection` | pending scan | blocked | pending | pending | pending | Codex / 2026-07-04 |
 | `:graph-event-lineage` | `graph/event-lineage` | pending scan | blocked | pending | pending | pending | Codex / 2026-07-04 |
 | `:graph-io-pipeline` | `graph/io-pipeline` | pending scan | blocked | pending | pending | pending | Codex / 2026-07-04 |
