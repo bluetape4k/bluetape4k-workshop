@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.k8slease.metrics
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Test
@@ -56,5 +57,15 @@ class K8sLeaseMetricsTest {
             .tag("namespace", "workshop")
             .gauge()
             ?.value() shouldBeEqualTo 0.0
+    }
+
+    @Test
+    fun `metric tags reject blank identity fields`() {
+        assertFailsWith<IllegalArgumentException> {
+            LeaseMetricTags(lockName = " ", namespace = "workshop")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            LeaseMetricTags(lockName = "orders-export", namespace = " ")
+        }
     }
 }
