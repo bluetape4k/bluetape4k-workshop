@@ -6,6 +6,7 @@ import io.bluetape4k.concurrent.futureOf
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.resilience.exception.BusinessException
+import io.bluetape4k.workshop.resilience.simulateBlockingLatency
 import io.github.resilience4j.bulkhead.annotation.Bulkhead
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
@@ -16,15 +17,16 @@ import reactor.core.publisher.Mono
 import java.io.IOException
 import java.time.Duration
 import java.util.concurrent.CompletableFuture
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Service B 에서 Resilience4j 를 적용하지 않고,
  * BackendBService를 사용하는 BackendBController 에서 annotation 방식이 아닌 프로그래밍 방식으로 적용합니다.
  */
 @Component("backendBService")
-class BackendBService: Service {
+class BackendBService : Service {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private const val BACKEND_B: String = "backendB"
     }
 
@@ -85,7 +87,7 @@ class BackendBService: Service {
 
     override fun futureTimeout(): CompletableFuture<String> {
         return futureOf {
-            Thread.sleep(5000)
+            simulateBlockingLatency(5.seconds)
             "Hello World from backend B"
         }
     }

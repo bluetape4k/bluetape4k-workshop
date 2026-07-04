@@ -31,7 +31,7 @@ class SuspendBackendBController(
     rateLimiterRegistry: RateLimiterRegistry,
     timeLimiterRegistry: TimeLimiterRegistry,
 ) {
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private const val BACKEND_B = "backendB"
     }
 

@@ -10,7 +10,7 @@ import io.github.resilience4j.core.registry.RegistryEventConsumer
 
 open class CircuitBreakerRegistryEventConsumer: RegistryEventConsumer<CircuitBreaker> {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     override fun onEntryAddedEvent(entryAddedEvent: EntryAddedEvent<CircuitBreaker>) {
         entryAddedEvent.addedEntry.eventPublisher.onEvent { event ->

@@ -10,7 +10,7 @@ import io.github.resilience4j.retry.Retry
 
 open class RetryRegistryEventConsumer: RegistryEventConsumer<Retry> {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     override fun onEntryAddedEvent(entryAddedEvent: EntryAddedEvent<Retry>) {
         entryAddedEvent.addedEntry.eventPublisher.onEvent { event ->

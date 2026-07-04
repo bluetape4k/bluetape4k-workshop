@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 
 class CoroutineCircuitBreakerTest: AbstractCircuitBreakerTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Nested
     inner class SuspendMethod {

@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 abstract class AbstractRetryTest: AbstractResilienceTest() {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         const val FAILED_WITH_RETRY = "failed_with_retry"
         const val SUCCESSFUL_WITHOUT_RETRY = "successful_without_retry"
     }

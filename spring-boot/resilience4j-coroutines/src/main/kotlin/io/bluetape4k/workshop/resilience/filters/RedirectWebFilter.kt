@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono
 @Order(Int.MAX_VALUE)
 class RedirectWebFilter: WebFilter {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         const val ROOT_PATH = "/"
         const val SWAGGER_PATH = "/swagger-ui.html"
     }

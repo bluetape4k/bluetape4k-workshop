@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/$BACKEND_C")
 class BackendCController(@Qualifier("backendCService") private val serviceC: Service) {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         internal const val BACKEND_C = "backendC"
     }
 

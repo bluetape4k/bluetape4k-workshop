@@ -23,7 +23,7 @@ import kotlin.time.Duration.Companion.seconds
 @Service("backendACoService")
 class BackendACoService: CoService {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private const val BACKEND_A: String = "backendA"
     }
 

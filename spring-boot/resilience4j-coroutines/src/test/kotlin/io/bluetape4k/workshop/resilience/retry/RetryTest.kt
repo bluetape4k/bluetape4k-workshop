@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 
 class RetryTest: AbstractRetryTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Nested
     inner class BackendA {

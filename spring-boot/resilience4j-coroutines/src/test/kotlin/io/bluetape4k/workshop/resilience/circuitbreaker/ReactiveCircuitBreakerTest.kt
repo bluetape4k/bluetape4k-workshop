@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 
 class ReactiveCircuitBreakerTest: AbstractCircuitBreakerTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Nested
     inner class MonoMethodTest {
