@@ -29,6 +29,7 @@ dependencies {
     testImplementation(libs.springmockk)
 
     // Logging
+    implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.logging)
 
     // Exposed — transactional DB access

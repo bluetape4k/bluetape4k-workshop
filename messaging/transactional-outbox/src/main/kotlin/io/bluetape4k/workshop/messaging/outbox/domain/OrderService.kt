@@ -83,30 +83,31 @@ class OrderService(
      * @throws NoSuchElementException if no order exists with [orderId].
      */
     fun updateStatus(orderId: Long, status: OrderStatus): OrderResponse {
+        val validOrderId = orderId.requirePositiveNumber("orderId")
         val now = LocalDateTime.now()
-        val rows = OrderTable.update({ OrderTable.id eq orderId }) {
+        val rows = OrderTable.update({ OrderTable.id eq validOrderId }) {
             it[OrderTable.status] = status
             it[OrderTable.updatedAt] = now
         }
-        if (rows == 0) throw NoSuchElementException("Order $orderId not found")
+        if (rows == 0) throw NoSuchElementException("Order $validOrderId not found")
 
-        log.debug { "Updated order id=$orderId status=$status" }
+        log.debug { "Updated order id=$validOrderId status=$status" }
 
         val payloadMap = mapOf(
-            "orderId" to orderId,
+            "orderId" to validOrderId,
             "status" to status.name,
         )
         val payload = objectMapper.writeValueAsString(payloadMap)
 
         OutboxEventTable.insert {
             it[OutboxEventTable.aggregateType] = "Order"
-            it[OutboxEventTable.aggregateId] = orderId.toString()
+            it[OutboxEventTable.aggregateId] = validOrderId.toString()
             it[OutboxEventTable.eventType] = "OrderStatusChanged"
             it[OutboxEventTable.payload] = payload
             it[OutboxEventTable.status] = OutboxStatus.PENDING
         }
 
-        return getOrderResponse(orderId)
+        return getOrderResponse(validOrderId)
     }
 
     /**
@@ -115,7 +116,8 @@ class OrderService(
      * @throws NoSuchElementException if no order exists with [orderId].
      */
     @Transactional(readOnly = true)
-    fun getOrder(orderId: Long): OrderResponse = getOrderResponse(orderId)
+    fun getOrder(orderId: Long): OrderResponse =
+        getOrderResponse(orderId.requirePositiveNumber("orderId"))
 
     /** Returns all orders, ordered by id ascending. */
     @Transactional(readOnly = true)
