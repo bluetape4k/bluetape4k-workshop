@@ -10,7 +10,7 @@ import tools.jackson.databind.json.JsonMapper
 @Configuration(proxyBeanMethods = false)
 class JacksonConfig {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Bean
     @Primary

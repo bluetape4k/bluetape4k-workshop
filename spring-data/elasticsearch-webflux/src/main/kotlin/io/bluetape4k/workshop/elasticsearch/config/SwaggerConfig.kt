@@ -1,12 +1,10 @@
 package io.bluetape4k.workshop.elasticsearch.config
 
-import io.bluetape4k.support.uninitialized
 import io.bluetape4k.support.unsafeLazy
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Contact
 import io.swagger.v3.oas.models.info.Info
 import io.swagger.v3.oas.models.info.License
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.info.BuildProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -15,10 +13,9 @@ import org.springframework.context.annotation.Configuration
  * Swagger 설정을 위한 Configuration
  */
 @Configuration(proxyBeanMethods = false)
-class SwaggerConfig {
-
-    @Autowired
-    private val buildProps: BuildProperties = uninitialized()
+class SwaggerConfig(
+    private val buildProps: BuildProperties,
+) {
 
     @Bean
     fun apiInfo(): OpenAPI {

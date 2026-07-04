@@ -15,7 +15,7 @@ import org.springframework.data.elasticsearch.client.elc.rest5_client.Rest5Clien
 @Execution(ExecutionMode.SAME_THREAD)
 class ElasticsearchServerTest {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
 
     @Test

@@ -11,9 +11,9 @@ import org.springframework.data.elasticsearch.repository.config.EnableReactiveEl
 @Configuration(proxyBeanMethods = false)
 @EnableReactiveElasticsearchRepositories
 @EnableReactiveElasticsearchAuditing
-class ElasticsearchClientConfig: ElasticsearchConfiguration() {
+class ElasticsearchClientConfig : ElasticsearchConfiguration() {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     override fun clientConfiguration(): ClientConfiguration {
         // log.info { "Create Elasticsearch client configuration. username=elastic, password=${esServer.password}" }

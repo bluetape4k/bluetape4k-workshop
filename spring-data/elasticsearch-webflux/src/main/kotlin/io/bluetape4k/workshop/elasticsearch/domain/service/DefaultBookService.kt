@@ -20,7 +20,7 @@ class DefaultBookService(
     private val reactiveTemplate: ReactiveElasticsearchTemplate,
 ): BookService {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     override suspend fun getByIsbn(isbn: String): Book? {
         return bookRepository.findByIsbn(isbn)
