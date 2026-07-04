@@ -12,7 +12,12 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @ActiveProfiles("servlet")
 class ServletRateLimitTest {
 
-    companion object: KLogging()
+    companion object : KLogging() {
+        private const val HELLO_PATH = "/hello"
+        private const val WORLD_PATH = "/world"
+        private const val REMAINING_HEADER = "X-Rate-Limit-Remaining"
+        private const val TOO_MANY_REQUESTS_MESSAGE = "Too many requests!"
+    }
 
     @LocalServerPort
     private val port: Int = 0
@@ -24,27 +29,23 @@ class ServletRateLimitTest {
     }
 
     @Test
-    fun `hello with 5 times late limit`() {
-        val url = "/hello"
-
+    fun `hello with 5 times rate limit`() {
         // `/hello` Rate limit is 5 requests per second
         // `/world` Rate limit is 10 requests per second
         repeat(5) {
-            successfulWebRequest(url, 5 - 1 - it)
+            successfulWebRequest(HELLO_PATH, 5 - 1 - it)
         }
 
-        blockedWebRequestDueToRateLimit(url)
+        blockedWebRequestDueToRateLimit(HELLO_PATH)
     }
 
     @Test
-    fun `world with 10 times late limit`() {
-        val url = "/world"
-
+    fun `world with 10 times rate limit`() {
         repeat(10) {
-            successfulWebRequest(url, 10 - 1 - it)
+            successfulWebRequest(WORLD_PATH, 10 - 1 - it)
         }
 
-        blockedWebRequestDueToRateLimit(url)
+        blockedWebRequestDueToRateLimit(WORLD_PATH)
     }
 
     private fun successfulWebRequest(url: String, remainingTries: Int) {
@@ -52,7 +53,7 @@ class ServletRateLimitTest {
             .uri(url)
             .exchange()
             .expectStatus().isOk
-            .expectHeader().valueEquals("X-Rate-Limit-Remaining", remainingTries.toString())
+            .expectHeader().valueEquals(REMAINING_HEADER, remainingTries.toString())
     }
 
     private fun blockedWebRequestDueToRateLimit(url: String) {
@@ -60,6 +61,6 @@ class ServletRateLimitTest {
             .uri(url)
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
-            .expectBody().jsonPath("$.message").isEqualTo("Too many requests!")
+            .expectBody().jsonPath("$.message").isEqualTo(TOO_MANY_REQUESTS_MESSAGE)
     }
 }
