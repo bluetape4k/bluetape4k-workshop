@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.jsonview.dto
 
 import com.fasterxml.jackson.annotation.JsonView
+import java.io.Serializable
 
 data class ArticleDTO(
 
@@ -20,4 +21,8 @@ data class ArticleDTO(
 
     @JsonView(Views.Analytics::class)
     val likes: Long?,
-)
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}

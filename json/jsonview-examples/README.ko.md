@@ -36,6 +36,7 @@
 | `Jackson.defaultJsonMapper` | `bluetape4k-jackson3` | `JacksonConfig.jsonMapper()` | 예제에서 Jackson module을 직접 재구성하지 않고 기본 mapper를 등록 |
 | `KLoggingChannel` | `bluetape4k-logging` | `ArticleController`, tests | coroutine 환경에 맞는 lazy logging |
 | `httpGet()` and assertions | `shared`, `bluetape4k-assertions` | `ArticleControllerTest` | WebFlux 요청과 응답 형태 검증을 간결하게 작성 |
+| Serializable DTO contract | Kotlin/JVM style rule | `ArticleDTO` | 공개 응답 DTO를 cache/session/message 예제에서도 안전하게 재사용 가능 |
 
 ## View hierarchy
 
@@ -49,6 +50,9 @@ interface Views {
 
 `Views.Internal`은 public 필드와 analytics 필드를 함께 포함합니다. 다만 `content`는 어떤 view에도
 속하지 않으므로 internal 응답에도 포함되지 않습니다.
+
+`ArticleDTO`는 직렬화 가능한 data class로 선언하고, controller fixture는 named argument를 사용합니다.
+덕분에 타입이 같은 `views`, `likes` 값을 실수로 바꾸는 문제를 피할 수 있습니다.
 
 ## Controller 구조
 

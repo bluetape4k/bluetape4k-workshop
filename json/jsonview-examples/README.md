@@ -36,6 +36,7 @@ when a view is active.
 | `Jackson.defaultJsonMapper` | `bluetape4k-jackson3` | `JacksonConfig.jsonMapper()` | Registers the default Kotlin/Jackson mapper without rebuilding modules in the example |
 | `KLoggingChannel` | `bluetape4k-logging` | `ArticleController` and tests | Coroutine-aware lazy logging |
 | `httpGet()` and assertions | `shared`, `bluetape4k-assertions` | `ArticleControllerTest` | Compact WebFlux request and response-shape checks |
+| Serializable DTO contract | Kotlin/JVM style rule | `ArticleDTO` | Keeps the public response DTO compatible with cache/session/message examples |
 
 ## View hierarchy
 
@@ -49,6 +50,9 @@ interface Views {
 
 `Views.Internal` combines the public and analytics fields. It still does not include `content`,
 because that field is not assigned to any view.
+
+`ArticleDTO` is declared as a serializable data class, and the controller fixtures use named
+arguments so the similarly typed `views` and `likes` fields cannot be swapped accidentally.
 
 ## Controller shape
 
