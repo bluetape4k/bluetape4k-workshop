@@ -15,7 +15,7 @@ class CustomerRepositoryIntegrationTest(
     @param:Autowired private val repository: CustomerRepository,
     @param:Autowired private val database: DatabaseClient,
 ) {
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `context loading`() {

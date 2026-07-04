@@ -19,7 +19,7 @@ class CustomerRepositoryIntegrationTest(
     @param:Autowired private val customerRepo: CustomerRepository,
     @param:Autowired private val database: DatabaseClient,
 ) {
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() = runSuspendIO {

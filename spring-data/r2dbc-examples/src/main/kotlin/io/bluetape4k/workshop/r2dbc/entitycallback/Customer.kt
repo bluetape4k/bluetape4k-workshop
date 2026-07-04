@@ -9,9 +9,13 @@ data class Customer(
 
     @Id
     var id: Long? = null,
-): Serializable {
+) : Serializable {
 
     val hasId: Boolean get() = id != null
 
     fun withId(id: Long): Customer = copy().apply { this.id = id }
+
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }

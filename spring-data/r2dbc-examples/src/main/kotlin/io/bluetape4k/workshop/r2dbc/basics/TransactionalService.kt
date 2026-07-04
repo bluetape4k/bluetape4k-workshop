@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class TransactionalService(private val repository: CustomerRepository) {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     /**
      * Suspend 함수도 `@Transactional` 이 적용됩니다.

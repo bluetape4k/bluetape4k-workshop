@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono
 @EnableR2dbcRepositories(basePackageClasses = [CustomerRepository::class])
 class ApplicationConfiguration {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     /**
      * Auto increment identifier 를 callback 으로 받아서 저장한 [Customer]의 Id 값에 적용합니다.
