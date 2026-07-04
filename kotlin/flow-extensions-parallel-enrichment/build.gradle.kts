@@ -8,6 +8,7 @@ configurations {
 
 dependencies {
     // Core coroutine extensions and shared test utilities
+    implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     testImplementation(libs.bluetape4k.junit5)
