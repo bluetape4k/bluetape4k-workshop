@@ -9,7 +9,7 @@ import io.bluetape4k.workshop.redis.cluster.AbstractRedisClusterTest
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.Test
 
-class Bluetape4kLettuceUsageTest: AbstractRedisClusterTest() {
+class Bluetape4kLettuceUsageTest : AbstractRedisClusterTest() {
 
     @Test
     fun `bluetape4k lettuce client supports typed async round trip`() = runSuspendIO {

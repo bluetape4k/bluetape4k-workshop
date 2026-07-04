@@ -7,7 +7,7 @@ import org.springframework.boot.test.context.SpringBootTest
 @SpringBootTest(classes = [RedisClusterApplication::class])
 abstract class AbstractRedisClusterTest {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         @JvmStatic
         val faker = Fakers.faker
 
