@@ -4,7 +4,10 @@ import io.bluetape4k.coroutines.flow.extensions.bufferingDebounce
 import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.coroutines.flow.extensions.takeUntil
 import io.bluetape4k.coroutines.flow.extensions.withLatestFrom
+import io.bluetape4k.support.requireGt
+import io.bluetape4k.support.requireLt
 import kotlin.time.Duration
+import kotlin.time.DurationUnit
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -50,7 +53,7 @@ class SearchPipeline(
         sessionClosed: Flow<Unit>,
         debounce: Duration,
     ): Flow<SearchResult> {
-        require(debounce.isFinite() && debounce > Duration.ZERO) { "debounce must be positive and finite" }
+        debounce.requirePositiveFinite("debounce")
 
         return channelFlow {
             val sharedSessionClosed = MutableSharedFlow<Unit>(replay = 1, extraBufferCapacity = 1)
@@ -110,4 +113,10 @@ class SearchPipeline(
             }
         }
     }
+}
+
+private fun Duration.requirePositiveFinite(parameterName: String): Duration = apply {
+    val nanoseconds = toDouble(DurationUnit.NANOSECONDS)
+    nanoseconds.requireGt(0.0, parameterName)
+    nanoseconds.requireLt(Double.POSITIVE_INFINITY, parameterName)
 }

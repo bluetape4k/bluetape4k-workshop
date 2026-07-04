@@ -14,6 +14,7 @@ import java.util.Locale
 import java.util.concurrent.CancellationException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -316,6 +317,15 @@ class SearchPipelineTest {
 
         assertFailsWith<IllegalArgumentException> {
             pipeline.search(flowOf("red"), flowOf(settings()), flowOf(), 0.milliseconds).toList()
+        }
+    }
+
+    @Test
+    fun `debounce duration must be finite`() = runSuspendTest {
+        val pipeline = SearchPipeline(RecordingSearchAdapter())
+
+        assertFailsWith<IllegalArgumentException> {
+            pipeline.search(flowOf("red"), flowOf(settings()), flowOf(), Duration.INFINITE).toList()
         }
     }
 
