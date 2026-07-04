@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.text.search
 import com.github.pemistahl.lingua.api.Language
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.text.search.AhoCorasickAutomaton
@@ -232,8 +233,15 @@ class MultilingualSearchIndex private constructor(
 internal fun validateSearchDocuments(documents: Collection<SearchDocument>) {
     documents.requireNotEmpty("documents")
     val ids = documents.map { it.id }
-    require(ids.size == ids.toSet().size) {
-        "documents must have unique ids."
+    (ids.size - ids.toSet().size)
+        .requireZero("documents.duplicateIds", "documents must have unique ids.")
+}
+
+private fun Int.requireZero(parameterName: String, message: String): Int = apply {
+    try {
+        requireInRange(0, 0, parameterName)
+    } catch (e: IllegalArgumentException) {
+        throw IllegalArgumentException(message, e)
     }
 }
 
