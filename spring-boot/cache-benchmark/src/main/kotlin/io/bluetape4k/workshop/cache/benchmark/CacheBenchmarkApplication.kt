@@ -10,7 +10,7 @@ import org.springframework.scheduling.annotation.EnableAsync
 @EnableCaching
 @EnableAsync
 class CacheBenchmarkApplication {
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 }
 
 fun main(vararg args: String) {

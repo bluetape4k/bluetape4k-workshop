@@ -40,8 +40,8 @@ data class Product(
 
     @Column(nullable = false)
     val stock: Int = 0,
-): Serializable {
-    companion object: KLoggingChannel() {
+) : Serializable {
+    companion object : KLoggingChannel() {
         private const val serialVersionUID: Long = 1L
     }
 }
