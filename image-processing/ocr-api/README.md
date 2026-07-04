@@ -28,6 +28,8 @@ short-circuits to a fallback response or calls a bounded native `OcrEngine`.
 The default smoke path validates a real decodable image, skips Tesseract, and
 returns `UNAVAILABLE`. Native OCR is opt-in through `workshop.ocr.native-enabled`
 or `-Docr.enabled=true`.
+Configuration and decoded-pixel limits use bluetape4k `require*` helpers, while
+public upload error messages remain explicit at the HTTP boundary.
 
 ## Endpoint
 
@@ -102,6 +104,8 @@ and effective options, not per-line or per-word confidence.
 | `spring.servlet.multipart.max-request-size` | `5MB` | Container multipart request limit |
 
 Keep the Spring multipart limits aligned with `workshop.ocr.max-upload-bytes`.
+The module validates positive byte/pixel/time limits and non-empty default
+languages when `ImageOcrProperties` is created.
 
 ## Run
 
