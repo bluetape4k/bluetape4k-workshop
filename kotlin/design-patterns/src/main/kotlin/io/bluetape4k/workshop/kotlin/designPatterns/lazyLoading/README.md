@@ -14,7 +14,7 @@ Lazy Loading delays expensive initialization until a value is actually requested
 
 | source | role |
 |---|---|
-| `Heavy` | expensive object; sleeps during construction to make creation visible |
+| `Heavy` | expensive object; parks briefly during construction to make creation visible without `Thread.sleep` |
 | `HolderNative` | initializes a `lateinit` property on first `getHeavy()` |
 | `HolderThreadSafe` | protects first initialization with `ReentrantLock` |
 | `HolderKotlinLazy` | uses Kotlin `lazy(LazyThreadSafetyMode.SYNCHRONIZED)` |
