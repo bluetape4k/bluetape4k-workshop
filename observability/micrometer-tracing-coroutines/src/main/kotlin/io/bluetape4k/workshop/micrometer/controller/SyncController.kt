@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.micrometer.controller
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.micrometer.model.Todo
 import io.bluetape4k.workshop.micrometer.service.SyncService
 import io.micrometer.observation.annotation.Observed
@@ -18,7 +19,9 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/sync")
 class SyncController(private val syncService: SyncService) {
 
-    companion object: KLogging()
+    companion object : KLogging() {
+        private const val SIMULATED_BLOCKING_WORK_MILLIS = 100L
+    }
 
     @Observed(contextualName = "sync-get-name-at-controller")
     @GetMapping("/name")
@@ -30,10 +33,15 @@ class SyncController(private val syncService: SyncService) {
     @Observed(contextualName = "sync-get-todo-at-controller")
     @GetMapping("/todos/{id}")
     fun getTodo(@PathVariable(required = true) id: Int): Todo? {
-        log.debug { "Get todo[$id] in sync" }
-        Thread.sleep(100)
-        return syncService.getTodo(id).apply {
-            Thread.sleep(100)
+        val todoId = id.requirePositiveNumber("id")
+        log.debug { "Get todo[$todoId] in sync" }
+        simulateBlockingWork()
+        return syncService.getTodo(todoId).apply {
+            simulateBlockingWork()
         }
+    }
+
+    private fun simulateBlockingWork() {
+        Thread.sleep(SIMULATED_BLOCKING_WORK_MILLIS)
     }
 }
