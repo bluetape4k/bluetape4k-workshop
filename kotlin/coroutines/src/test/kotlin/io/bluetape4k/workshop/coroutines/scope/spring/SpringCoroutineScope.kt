@@ -42,7 +42,9 @@ fun SpringCoroutineScope(
 fun SpringCoroutineScope(coroutineContext: CoroutineContext): SpringCoroutineScope {
     return object: SpringCoroutineScope, CoroutineScope by CoroutineScope(coroutineContext), DisposableBean {
         override val job: Job
-            get() = coroutineContext[Job]!!
+            get() = requireNotNull(coroutineContext[Job]) {
+                "SpringCoroutineScope requires a Job in coroutineContext."
+            }
 
         override fun destroy() {
             job.cancel()
@@ -56,7 +58,9 @@ abstract class AbstractSpringCoroutineScope(
     job: Job = Job(),
 ): SpringCoroutineScope, CoroutineScope by CoroutineScope(dispatcher + job), DisposableBean {
     override val job: Job
-        get() = coroutineContext[Job]!!
+        get() = requireNotNull(coroutineContext[Job]) {
+            "SpringCoroutineScope requires a Job in coroutineContext."
+        }
 
     override fun destroy() {
         job.cancel()

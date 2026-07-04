@@ -11,6 +11,7 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resumeWithException
 import kotlin.random.Random
 
@@ -21,10 +22,8 @@ class SuspendExamples {
     class Service {
 
         fun executeAsync(delayMillis: Long): CompletableFuture<Int> {
-            return CompletableFuture.supplyAsync {
-                Thread.sleep(delayMillis)
-                42
-            }
+            val delayedExecutor = CompletableFuture.delayedExecutor(delayMillis, TimeUnit.MILLISECONDS)
+            return CompletableFuture.supplyAsync({ 42 }, delayedExecutor)
         }
 
         /**
@@ -44,7 +43,7 @@ class SuspendExamples {
                         }
                     }
                     .onFailure { error ->
-                        log.trace { "cause error!!!" }
+                        log.trace { "cause error" }
                         cont.resumeWithException(error)
                     }
             }

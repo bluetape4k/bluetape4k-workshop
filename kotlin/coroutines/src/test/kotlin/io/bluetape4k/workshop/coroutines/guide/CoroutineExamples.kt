@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.RepeatedTest
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ForkJoinPool
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.LockSupport
 
 class CoroutineExamples {
 
@@ -46,7 +48,7 @@ class CoroutineExamples {
         val executor = ForkJoinPool.commonPool()
         List(ITEM_SIZE) {
             executor.execute {
-                Thread.sleep(DELAY_TIME)
+                LockSupport.parkNanos(TimeUnit.MILLISECONDS.toNanos(DELAY_TIME))
                 latch.countDown()
             }
         }
