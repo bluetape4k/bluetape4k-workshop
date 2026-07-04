@@ -46,7 +46,13 @@ class ProfileImageModerationPolicyProvider(
             if (filename.contains("nazi") || filename.contains(properties.rejectedFilenameMarker.lowercase())) {
                 add(ProfileContentDetection("HATE_SYMBOL", "Nazi Party", "profile image contains a banned hate symbol"))
             }
-            if (filename.contains("rising-sun") || filename.contains("imperial-flag")) {
+            if (filename.contains("rising-sun") ||
+                filename.contains("rising-sun-flag") ||
+                filename.contains("imperial-flag") ||
+                filename.contains("imperial-japanese-navy-flag") ||
+                filename.contains("욱일기") ||
+                filename.contains("旭日旗")
+            ) {
                 add(ProfileContentDetection("HATE_SYMBOL", "Rising Sun Flag", "profile image contains a banned hate symbol"))
             }
             if (filename.contains("hate-text") || filename.contains("hate-speech")) {
