@@ -32,7 +32,7 @@ class RenameExample: AbstractJacksonTest() {
     }
 
     @Test
-    fun `rename fileds conversion object to json`() {
+    fun `rename fields conversion object to json`() {
         val user = User().apply {
             name = "John Doe"
             externalCode = "external"
