@@ -75,6 +75,28 @@ class BufferedSuspendedSourceTest: AbstractOkioTest() {
     }
 
     @Test
+    fun `read byte array validates offset and byte count`() = runSuspendIO {
+        val source = RealBufferedSuspendedSource(FakeSuspendedSource(Buffer().writeUtf8("abc")))
+        val sink = ByteArray(3)
+
+        assertFailsWith<IllegalArgumentException> {
+            source.read(sink, -1, 1)
+        }
+
+        assertFailsWith<IllegalArgumentException> {
+            source.read(sink, 2, 2)
+        }
+    }
+
+    @Test
+    fun `read byte array with zero byte count returns zero`() = runSuspendIO {
+        val source = RealBufferedSuspendedSource(FakeSuspendedSource(Buffer()))
+        val sink = ByteArray(3)
+
+        source.read(sink, 0, 0) shouldBeEqualTo 0
+    }
+
+    @Test
     fun `readUtf8 reads string`() = runSuspendIO {
         val buffer = Buffer().writeUtf8("hello")
         val source = RealBufferedSuspendedSource(FakeSuspendedSource(buffer))

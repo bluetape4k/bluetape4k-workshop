@@ -2,7 +2,6 @@ package io.bluetape4k.okio.coroutines
 
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.okio.AbstractOkioTest
 import io.bluetape4k.okio.bufferOf
 import net.datafaker.Faker
@@ -14,8 +13,11 @@ import io.bluetape4k.assertions.assertFailsWith
 
 class SuspendedPipeTest: AbstractOkioTest() {
 
-    companion object: KLoggingChannel() {
-        private const val MAX_BUFFER_SIZE = 1024L
+    @Test
+    fun `reject invalid max buffer size`() {
+        assertFailsWith<IllegalArgumentException> {
+            SuspendedPipe(0)
+        }
     }
 
     @Test
