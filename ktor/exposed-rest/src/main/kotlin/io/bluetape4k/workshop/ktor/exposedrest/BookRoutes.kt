@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.ktor.exposedrest
 
 import io.bluetape4k.exposed.ktor.exposedJdbcTransaction
 import io.bluetape4k.ktor.core.respondApiError
+import io.bluetape4k.support.requireNotNull
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.call
 import io.ktor.server.request.receive
@@ -101,9 +102,7 @@ internal fun Route.bookRoutes(resources: KtorExposedRestResources) {
 }
 
 private fun io.ktor.server.application.ApplicationCall.requireBookId(): Long =
-    requireNotNull(parameters["id"]?.toLongOrNull()) {
-        "id must be a numeric path parameter"
-    }
+    parameters["id"]?.toLongOrNull().requireNotNull("id")
 
 private suspend fun io.ktor.server.application.ApplicationCall.respondBookNotFound(id: Long) {
     respondApiError(
