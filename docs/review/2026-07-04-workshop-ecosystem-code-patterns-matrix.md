@@ -71,7 +71,7 @@ review evidence.
 | `:redis-redisson-examples` | `redis/redisson-examples` | pending scan | blocked | pending | pending | pending | Codex / 2026-07-04 |
 | `:spring-boot-application-event-demo` | `spring-boot/application-event-demo` | pending scan | blocked | pending | pending | pending | Codex / 2026-07-04 |
 | `:spring-boot-cache-benchmark` | `spring-boot/cache-benchmark` | pending scan | blocked | pending | pending | pending | Codex / 2026-07-04 |
-| `:spring-boot-cache-caffeine` | `spring-boot/cache-caffeine` | pending scan | blocked | pending | pending | pending | Codex / 2026-07-04 |
+| `:spring-boot-cache-caffeine` | `spring-boot/cache-caffeine` | request-path slow-load simulation; blank cache-key validation; test-only sleep | patched | PR #399 adopts `requireNotBlank()` and bluetape4k assertion helpers; preserves documented 500 ms cache-fill simulation | PASS, P0/P1=0 in `docs/review/2026-07-04-spring-boot-cache-caffeine-ecosystem-review.md` | Local compile/test pass; GitHub checks all SUCCESS; head `96604c33dc42cbd80b654679ac27159f5f9e2c63` | Codex / 2026-07-04 |
 | `:spring-boot-cache-redis` | `spring-boot/cache-redis` | pending scan | blocked | pending | pending | pending | Codex / 2026-07-04 |
 | `:spring-boot-cache-resilience` | `spring-boot/cache-resilience` | pending scan | blocked | pending | pending | pending | Codex / 2026-07-04 |
 | `:spring-boot-cbor-mvc` | `spring-boot/cbor-mvc` | pending scan | blocked | pending | pending | pending | Codex / 2026-07-04 |
