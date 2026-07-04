@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.flow.metrics.sampling
 
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
 import java.time.Instant
 import kotlin.math.abs
@@ -38,7 +39,7 @@ class MetricSample private constructor(
             timestamp: Instant,
             unit: String = "value",
         ): MetricSample {
-            require(value.isFinite()) { "value must be finite" }
+            value.requireFiniteNumber("value")
             return MetricSample(
                 name = normalizeToken(name, "name", maxLength = 80),
                 value = value,
@@ -112,9 +113,7 @@ data class MetricTrend(
         private const val serialVersionUID: Long = -1095298694973748477L
 
         fun from(delta: MetricDelta, absoluteThreshold: Double): MetricTrend {
-            require(absoluteThreshold.isFinite() && absoluteThreshold > 0.0) {
-                "absoluteThreshold must be positive and finite"
-            }
+            absoluteThreshold.requirePositiveFiniteNumber("absoluteThreshold")
 
             return MetricTrend(
                 delta = delta,
@@ -136,3 +135,11 @@ private fun normalizeToken(value: String, label: String, maxLength: Int): String
     require(normalized.none(Char::isISOControl)) { "$label must not contain control characters" }
     return normalized
 }
+
+internal fun Double.requireFiniteNumber(parameterName: String): Double {
+    require(isFinite()) { "$parameterName must be finite" }
+    return this
+}
+
+internal fun Double.requirePositiveFiniteNumber(parameterName: String): Double =
+    requireFiniteNumber(parameterName).requirePositiveNumber(parameterName)

@@ -58,9 +58,7 @@ class MetricsSamplingPipeline {
         samples: Flow<MetricSample>,
         absoluteThreshold: Double,
     ): Flow<MetricTrend> {
-        require(absoluteThreshold.isFinite() && absoluteThreshold > 0.0) {
-            "absoluteThreshold must be positive and finite"
-        }
+        absoluteThreshold.requirePositiveFiniteNumber("absoluteThreshold")
 
         return deltas(samples)
             .map { MetricTrend.from(it, absoluteThreshold) }
@@ -76,9 +74,7 @@ class MetricsSamplingPipeline {
         deltas: Flow<Result<MetricDelta>>,
         absoluteThreshold: Double,
     ): Flow<Result<MetricTrend>> {
-        require(absoluteThreshold.isFinite() && absoluteThreshold > 0.0) {
-            "absoluteThreshold must be positive and finite"
-        }
+        absoluteThreshold.requirePositiveFiniteNumber("absoluteThreshold")
 
         return deltas
             .mapResultCatching { MetricTrend.from(it, absoluteThreshold) }
