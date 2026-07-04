@@ -31,7 +31,7 @@ class PersonCoroutineRepositoryTest @Autowired constructor(
     private val operations: ReactiveMongoOperations,
 ): AbstractReactiveMongoTest(operations) {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `insert and count`() = runSuspendIO {

@@ -15,7 +15,7 @@ class RepositoryTest @Autowired constructor(
     private val operations: MongoOperations,
 ): AbstractMongodbTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() {

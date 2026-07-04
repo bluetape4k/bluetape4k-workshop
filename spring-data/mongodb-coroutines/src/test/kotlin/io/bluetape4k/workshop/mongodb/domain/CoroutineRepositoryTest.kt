@@ -22,7 +22,7 @@ class CoroutineRepositoryTest @Autowired constructor(
     private val operations: ReactiveMongoOperations,
 ): AbstractMongodbTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() = runSuspendIO {

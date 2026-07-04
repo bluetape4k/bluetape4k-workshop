@@ -21,11 +21,11 @@ class PersonReactiveRepositoryTest @Autowired constructor(
     private val operations: ReactiveMongoOperations,
 ): AbstractReactiveMongoTest(operations) {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `insert and count`() {
-        val prevCount = repository.count().block()!!
+        val prevCount = checkNotNull(repository.count().block()) { "count result must not be null." }
 
         val saveAndCount = repository.count()
             .thenMany(
@@ -46,7 +46,7 @@ class PersonReactiveRepositoryTest @Autowired constructor(
 
     @Test
     fun `stream data with tailable cursor`() {
-        val prevCount = repository.count().block()!!.toInt()
+        val prevCount = checkNotNull(repository.count().block()) { "count result must not be null." }.toInt()
 
         val queue = ConcurrentLinkedQueue<Person>()
 

@@ -11,5 +11,9 @@ data class Person @PersistenceCreator constructor(
     @Id val id: String?,
 ): Serializable {
 
-    constructor(firstname: String?, lastname: String?, age: Int = 0): this(firstname, lastname, age, null)
+    constructor(firstname: String?, lastname: String?, age: Int = 0) : this(firstname, lastname, age, null)
+
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }

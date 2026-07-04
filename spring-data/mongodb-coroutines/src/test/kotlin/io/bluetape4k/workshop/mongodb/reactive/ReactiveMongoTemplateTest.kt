@@ -22,7 +22,7 @@ class ReactiveMongoTemplateTest(
     @param:Autowired private val operations: ReactiveMongoTemplate,
 ): AbstractReactiveMongoTest(operations) {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `insert and count data`() = runSuspendIO {
