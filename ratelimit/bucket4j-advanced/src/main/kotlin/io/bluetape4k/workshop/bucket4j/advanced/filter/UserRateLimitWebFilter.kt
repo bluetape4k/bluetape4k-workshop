@@ -6,6 +6,7 @@ import io.bluetape4k.logging.trace
 import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.bucket4j.advanced.utils.HeaderConstants
 import io.bluetape4k.workshop.bucket4j.advanced.utils.RequestUtils
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.coroutines.reactor.mono
@@ -76,7 +77,9 @@ class UserRateLimitWebFilter(
                             exchange.response.statusCode = HttpStatus.TOO_MANY_REQUESTS
                             Mono.empty<Void>().awaitSingleOrNull()
                         }
-                    } catch (e: Throwable) {
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
                         log.warn(e) { "User rate limit check failed for userId=$userId; failing open" }
                         chain.filter(exchange).awaitSingleOrNull()
                     }

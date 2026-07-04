@@ -6,6 +6,7 @@ import io.bluetape4k.logging.trace
 import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.bucket4j.advanced.utils.HeaderConstants
 import io.bluetape4k.workshop.bucket4j.advanced.utils.RequestUtils
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.coroutines.reactor.mono
@@ -56,33 +57,33 @@ class IpRateLimitWebFilter(
                 // or requests arriving without a remote address). A shared "unknown" bucket applies
                 // rate limiting rather than blocking or failing open.
                 val effectiveIp = ip?.takeIf { it.isNotBlank() } ?: "unknown"
-                run {
-                    try {
-                        val key = "ip:$effectiveIp"
-                        val result = rateLimiter.consume(key, 1L)
-                        exchange.response.headers.set(
-                            HeaderConstants.X_RATELIMIT_REMAINING,
-                            result.availableTokens.toString()
-                        )
-                        val resetSecs =
-                            TimeUnit.NANOSECONDS.toSeconds(result.diagnostics.nanosToWaitForReset).coerceAtLeast(0)
-                        exchange.response.headers.set(HeaderConstants.X_RATELIMIT_RESET, resetSecs.toString())
-                        if (result.isConsumed) {
-                            log.trace { "IP bucket[$key] consumed, remaining=${result.availableTokens}" }
-                            chain.filter(exchange).awaitSingleOrNull()
-                        } else {
-                            val retryAfterSecs = result.retryAfter
-                                ?.let { TimeUnit.NANOSECONDS.toSeconds(it.toNanos()).coerceAtLeast(1) }
-                                ?: 1L
-                            exchange.response.headers.set(HeaderConstants.RETRY_AFTER, retryAfterSecs.toString())
-                            log.warn { "IP rate limit exceeded for $key. retryAfter=${retryAfterSecs}s" }
-                            exchange.response.statusCode = HttpStatus.TOO_MANY_REQUESTS
-                            Mono.empty<Void>().awaitSingleOrNull()
-                        }
-                    } catch (e: Throwable) {
-                        log.warn(e) { "IP rate limit check failed for ip=$effectiveIp; failing open" }
+                try {
+                    val key = "ip:$effectiveIp"
+                    val result = rateLimiter.consume(key, 1L)
+                    exchange.response.headers.set(
+                        HeaderConstants.X_RATELIMIT_REMAINING,
+                        result.availableTokens.toString()
+                    )
+                    val resetSecs =
+                        TimeUnit.NANOSECONDS.toSeconds(result.diagnostics.nanosToWaitForReset).coerceAtLeast(0)
+                    exchange.response.headers.set(HeaderConstants.X_RATELIMIT_RESET, resetSecs.toString())
+                    if (result.isConsumed) {
+                        log.trace { "IP bucket[$key] consumed, remaining=${result.availableTokens}" }
                         chain.filter(exchange).awaitSingleOrNull()
+                    } else {
+                        val retryAfterSecs = result.retryAfter
+                            ?.let { TimeUnit.NANOSECONDS.toSeconds(it.toNanos()).coerceAtLeast(1) }
+                            ?: 1L
+                        exchange.response.headers.set(HeaderConstants.RETRY_AFTER, retryAfterSecs.toString())
+                        log.warn { "IP rate limit exceeded for $key. retryAfter=${retryAfterSecs}s" }
+                        exchange.response.statusCode = HttpStatus.TOO_MANY_REQUESTS
+                        Mono.empty<Void>().awaitSingleOrNull()
                     }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    log.warn(e) { "IP rate limit check failed for ip=$effectiveIp; failing open" }
+                    chain.filter(exchange).awaitSingleOrNull()
                 }
             }
         }
