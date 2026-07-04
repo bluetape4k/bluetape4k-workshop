@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.observability.advanced.service
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.observability.advanced.model.User
 import io.bluetape4k.workshop.observability.advanced.observation.observed
 import io.bluetape4k.workshop.observability.advanced.repository.UserCacheRepository
@@ -38,24 +39,25 @@ class UserService(
      */
     suspend fun getById(id: Long): User? =
         observed("user.service.get", observationRegistry) {
+            val validId = id.requirePositiveNumber("id")
             // Cache read with soft-fail
             val cached = try {
-                cache.get(id)
+                cache.get(validId)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                log.warn(e) { "Redis cache read failed for id=$id, falling back to DB" }
+                log.warn(e) { "Redis cache read failed for id=$validId, falling back to DB" }
                 null
             }
 
             if (cached != null) {
-                log.debug { "Cache hit for user id=$id" }
+                log.debug { "Cache hit for user id=$validId" }
                 return@observed cached
             }
 
             // DB fetch
             val user = observed("user.db.find", observationRegistry) {
-                repo.findById(id)
+                repo.findById(validId)
             }
 
             // Cache write with soft-fail
@@ -65,7 +67,7 @@ class UserService(
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    log.warn(e) { "Redis cache write failed for id=$id" }
+                    log.warn(e) { "Redis cache write failed for id=$validId" }
                 }
             }
 

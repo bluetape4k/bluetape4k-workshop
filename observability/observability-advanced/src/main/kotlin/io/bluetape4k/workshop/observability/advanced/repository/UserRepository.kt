@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.observability.advanced.repository
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.observability.advanced.model.User
 import io.bluetape4k.workshop.observability.advanced.model.Users
 import io.bluetape4k.workshop.observability.advanced.model.toUser
@@ -29,9 +30,10 @@ class UserRepository {
     companion object : KLogging()
 
     suspend fun findById(id: Long): User? = withContext(Dispatchers.IO) {
+        val validId = id.requirePositiveNumber("id")
         transaction {
             Users.selectAll()
-                .where { Users.id eq id }
+                .where { Users.id eq validId }
                 .singleOrNull()
                 ?.toUser()
         }
