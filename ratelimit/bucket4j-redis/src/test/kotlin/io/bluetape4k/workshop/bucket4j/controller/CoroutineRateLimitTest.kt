@@ -4,29 +4,30 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.bucket4j.AbstractRateLimitTest
 import org.junit.jupiter.api.Test
 
-class CoroutineRateLimitTest: AbstractRateLimitTest() {
+class CoroutineRateLimitTest : AbstractRateLimitTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel() {
+        private const val HELLO_PATH = "/coroutines/hello"
+        private const val WORLD_PATH = "/coroutines/world"
+    }
 
     @Test
     fun `call coroutine hello with rate limit`() {
-        val url = "/coroutines/hello"
         val limit = 5
         repeat(limit) {
-            successfulWebRequest(url, limit - 1 - it)
+            successfulWebRequest(HELLO_PATH, limit - 1 - it)
         }
 
-        blockedWebRequestDueToRateLimit(url)
+        blockedWebRequestDueToRateLimit(HELLO_PATH)
     }
 
     @Test
     fun `call coroutine world with rate limit`() {
-        val url = "/coroutines/world"
         val limit = 10
         repeat(limit) {
-            successfulWebRequest(url, limit - 1 - it)
+            successfulWebRequest(WORLD_PATH, limit - 1 - it)
         }
 
-        blockedWebRequestDueToRateLimit(url)
+        blockedWebRequestDueToRateLimit(WORLD_PATH)
     }
 }

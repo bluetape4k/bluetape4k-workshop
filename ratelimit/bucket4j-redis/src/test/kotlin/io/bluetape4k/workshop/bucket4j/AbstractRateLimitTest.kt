@@ -13,7 +13,10 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @ActiveProfiles("webflux")
 abstract class AbstractRateLimitTest {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel() {
+        private const val REMAINING_HEADER = "X-Rate-Limit-Remaining"
+        private const val TOO_MANY_REQUESTS_MESSAGE = "Too many requests!"
+    }
 
     @Autowired
     private val context: ApplicationContext = uninitialized()
@@ -27,7 +30,7 @@ abstract class AbstractRateLimitTest {
             .uri(url)
             .exchangeSuccessfully()
             .expectHeader()
-            .valueEquals("X-Rate-Limit-Remaining", remainingTries.toString())
+            .valueEquals(REMAINING_HEADER, remainingTries.toString())
     }
 
     protected fun blockedWebRequestDueToRateLimit(url: String) {
@@ -37,6 +40,6 @@ abstract class AbstractRateLimitTest {
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
             .expectBody()
-            .jsonPath("message").isEqualTo("Too many requests!")
+            .jsonPath("message").isEqualTo(TOO_MANY_REQUESTS_MESSAGE)
     }
 }

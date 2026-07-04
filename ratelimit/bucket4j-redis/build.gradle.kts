@@ -14,6 +14,7 @@ configurations {
 }
 
 dependencies {
+    implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.jackson3)
     testImplementation(libs.bluetape4k.junit5)
 
