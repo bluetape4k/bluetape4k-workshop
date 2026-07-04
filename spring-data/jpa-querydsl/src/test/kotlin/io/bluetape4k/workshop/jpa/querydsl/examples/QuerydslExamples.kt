@@ -37,15 +37,20 @@ import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager
 import java.time.LocalDateTime
+import kotlin.properties.Delegates
 
-class QuerydslExamples: AbstractQuerydslTest() {
+class QuerydslExamples(
+    @param:Autowired tem: TestEntityManager,
+) : AbstractQuerydslTest(tem) {
 
-    companion object: KLogging() {
+    companion object : KLogging() {
         private const val MEMBER_COUNT = 4
     }
 
-    private lateinit var queryFactory: JPAQueryFactory
+    private var queryFactory: JPAQueryFactory by Delegates.notNull()
 
     private var testId: Long = 0L
 

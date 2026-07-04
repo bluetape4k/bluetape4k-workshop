@@ -16,7 +16,7 @@ import org.hibernate.annotations.DynamicUpdate
 @Access(AccessType.FIELD)
 @DynamicInsert
 @DynamicUpdate
-class Member: LongJpaEntity() {
+class Member : LongJpaEntity() {
 
     companion object {
         operator fun invoke(name: String, age: Int? = null, team: Team? = null): Member {
@@ -46,8 +46,8 @@ class Member: LongJpaEntity() {
 
     override fun equalProperties(other: Any): Boolean =
         other is Member &&
-                name == other.name &&
-                age == other.age
+            name == other.name &&
+            age == other.age
 
     override fun equals(other: Any?): Boolean = other != null && super.equals(other)
 

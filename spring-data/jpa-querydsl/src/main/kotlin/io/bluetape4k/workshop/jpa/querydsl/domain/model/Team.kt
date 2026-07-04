@@ -10,7 +10,7 @@ import jakarta.persistence.OneToMany
 
 @Entity
 @Access(AccessType.FIELD)
-class Team: LongJpaEntity() {
+class Team : LongJpaEntity() {
 
     companion object {
         operator fun invoke(name: String): Team {
@@ -40,7 +40,7 @@ class Team: LongJpaEntity() {
 
     override fun equalProperties(other: Any): Boolean {
         return other is Team &&
-                name == other.name
+            name == other.name
     }
 
     override fun equals(other: Any?): Boolean = other != null && super.equals(other)

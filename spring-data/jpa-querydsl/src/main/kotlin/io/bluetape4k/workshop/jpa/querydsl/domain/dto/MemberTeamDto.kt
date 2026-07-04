@@ -9,7 +9,11 @@ import java.io.Serializable
 data class MemberTeamDto(
     val member: MemberDto,
     val team: TeamDto,
-): Serializable {
+) : Serializable {
+
+    companion object {
+        private const val serialVersionUID: Long = 3711764972343017102L
+    }
 
     constructor(
         memberId: Long,
@@ -17,19 +21,23 @@ data class MemberTeamDto(
         memberAge: Int,
         teamId: Long?,
         teamName: String?,
-    ): this(
+    ) : this(
         member = MemberDto(memberId, memberName, memberAge),
-        team = TeamDto(teamId, teamName)
+        team = TeamDto(teamId, teamName),
     )
 
     /**
      * 이렇게도 가능하지만, 성능 상 좋은 점이 없다
      * 또한, DTO 모듈에 Entity 관련 기능이 포함되어 버린다
      */
-    constructor(member: Member, team: Team): this(member.toDto(), team.toDto())
+    constructor(member: Member, team: Team) : this(member.toDto(), team.toDto())
 }
 
 data class MemberTeamVo @QueryProjection constructor(
     val member: MemberVo? = null,
     val team: TeamVo? = null,
-)
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 9091220730730478024L
+    }
+}
