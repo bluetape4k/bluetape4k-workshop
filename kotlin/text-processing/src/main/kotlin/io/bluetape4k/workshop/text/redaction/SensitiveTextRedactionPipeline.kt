@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.text.redaction
 import com.github.pemistahl.lingua.api.Language
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
@@ -45,9 +46,7 @@ data class SensitiveTextRange private constructor(
          */
         fun of(startInclusive: Int, endExclusive: Int): SensitiveTextRange {
             startInclusive.requireInRange(0, Int.MAX_VALUE, "startInclusive")
-            require(endExclusive > startInclusive) {
-                "endExclusive must be greater than startInclusive."
-            }
+            endExclusive.requireGt(startInclusive, "endExclusive")
             return SensitiveTextRange(startInclusive, endExclusive)
         }
     }
@@ -145,33 +144,18 @@ class SensitiveRedactionRule private constructor(
         }
 
         private fun validateRegexSource(source: String) {
-            require(!BACKREFERENCE_PATTERN.containsMatchIn(source)) {
-                "patternSource must not use backreferences."
-            }
-            require(!NESTED_UNBOUNDED_QUANTIFIER_PATTERN.containsMatchIn(source)) {
-                "patternSource must not use nested unbounded quantifiers."
-            }
-            require(!UNBOUNDED_DOT_STAR_PATTERN.containsMatchIn(source)) {
-                "patternSource must not use unbounded dot-star matching."
-            }
+            BACKREFERENCE_PATTERN.containsMatchIn(source).requireFalse("patternSource.backreferences")
+            NESTED_UNBOUNDED_QUANTIFIER_PATTERN.containsMatchIn(source)
+                .requireFalse("patternSource.nestedUnboundedQuantifiers")
+            UNBOUNDED_DOT_STAR_PATTERN.containsMatchIn(source).requireFalse("patternSource.unboundedDotStar")
         }
 
         private fun validateMetadataSlug(value: String, parameterName: String) {
-            require(SAFE_METADATA_SLUG_PATTERN.matches(value)) {
-                "$parameterName must be a safe metadata slug."
-            }
-            require(!EMAIL_LIKE_PATTERN.containsMatchIn(value)) {
-                "$parameterName must not contain sensitive metadata."
-            }
-            require(!PHONE_LIKE_PATTERN.containsMatchIn(value)) {
-                "$parameterName must not contain sensitive metadata."
-            }
-            require(!TOKEN_LIKE_PATTERN.containsMatchIn(value)) {
-                "$parameterName must not contain sensitive metadata."
-            }
-            require(!CUSTOMER_TICKET_PATTERN.containsMatchIn(value)) {
-                "$parameterName must not contain sensitive metadata."
-            }
+            SAFE_METADATA_SLUG_PATTERN.matches(value).requireTrue("$parameterName.slug")
+            EMAIL_LIKE_PATTERN.containsMatchIn(value).requireFalse("$parameterName.email")
+            PHONE_LIKE_PATTERN.containsMatchIn(value).requireFalse("$parameterName.phone")
+            TOKEN_LIKE_PATTERN.containsMatchIn(value).requireFalse("$parameterName.token")
+            CUSTOMER_TICKET_PATTERN.containsMatchIn(value).requireFalse("$parameterName.customerTicket")
         }
 
     }
@@ -207,9 +191,7 @@ class SensitiveRedactionPolicy private constructor(
             maxTextLength: Int = DEFAULT_MAX_TEXT_LENGTH,
         ): SensitiveRedactionPolicy {
             rules.requireNotEmpty("rules")
-            require(!maskChar.isWhitespace()) {
-                "maskChar must be a non-whitespace character."
-            }
+            maskChar.isWhitespace().requireFalse("maskChar.whitespace")
             maxTextLength.requireInRange(1, Int.MAX_VALUE, "maxTextLength")
             return SensitiveRedactionPolicy(
                 rules = Collections.unmodifiableList(rules.toList()),
@@ -355,9 +337,7 @@ class SensitiveTextRedactionPipeline private constructor(
      * Redacts sensitive values from [text] and returns safe metadata.
      */
     fun redact(text: String): SensitiveRedactionResult {
-        require(text.isNotBlank()) {
-            "blank-text"
-        }
+        text.trim().length.requireInRange(1, Int.MAX_VALUE, "text.trimmed.length")
         text.length.requireInRange(1, policy.maxTextLength, "text.length")
 
         val normalized = TextNormalizer.normalize(text)
@@ -535,6 +515,14 @@ private fun List<SensitiveRedactionRule>.sortedByPriority(): List<SensitiveRedac
             .thenBy { it.id }
             .thenBy { it.category }
     )
+
+private fun Boolean.requireTrue(parameterName: String) {
+    (if (this) 0 else 1).requireInRange(0, 0, parameterName)
+}
+
+private fun Boolean.requireFalse(parameterName: String) {
+    (if (this) 1 else 0).requireInRange(0, 0, parameterName)
+}
 
 private val SAFE_METADATA_SLUG_PATTERN = Regex("""^[a-z0-9._-]{1,64}$""")
 private val BACKREFERENCE_PATTERN = Regex("""\\[1-9]""")
