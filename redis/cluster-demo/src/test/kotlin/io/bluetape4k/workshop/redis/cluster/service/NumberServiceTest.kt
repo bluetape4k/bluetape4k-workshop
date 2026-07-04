@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.redis.cluster.service
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.workshop.redis.cluster.AbstractRedisClusterTest
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.workshop.redis.cluster.AbstractRedisClusterTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,9 +13,9 @@ import org.springframework.data.redis.connection.RedisConnectionFactory
 class NumberServiceTest(
     @param:Autowired private val numberService: NumberService,
     @param:Autowired private val connectionFactory: RedisConnectionFactory,
-): AbstractRedisClusterTest() {
+) : AbstractRedisClusterTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() {

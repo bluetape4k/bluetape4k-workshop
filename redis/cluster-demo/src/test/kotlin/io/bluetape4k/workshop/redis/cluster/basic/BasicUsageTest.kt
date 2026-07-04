@@ -1,24 +1,31 @@
 package io.bluetape4k.workshop.redis.cluster.basic
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.workshop.redis.cluster.AbstractRedisClusterTest
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContainSame
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.workshop.redis.cluster.AbstractRedisClusterTest
+import org.awaitility.kotlin.atMost
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.redis.core.RedisOperations
+import java.time.Duration
 
 class BasicUsageTest(
     @param:Autowired private val operations: RedisOperations<String, String>,
-): AbstractRedisClusterTest() {
+) : AbstractRedisClusterTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @BeforeAll
     fun beforeAll() {
-        Thread.sleep(1000)
+        await atMost Duration.ofSeconds(3) untilAsserted {
+            operations.execute { conn -> conn.serverCommands().dbSize() }.shouldNotBeNull()
+        }
     }
 
     @BeforeEach
@@ -65,7 +72,7 @@ class BasicUsageTest(
             set(key1, value1) // slot 5798
             set(key2, value2) // slot 14594
 
-            multiGet(listOf(key1, key2))!! shouldContainSame listOf(value1, value2)
+            multiGet(listOf(key1, key2)).shouldNotBeNull() shouldContainSame listOf(value1, value2)
         }
     }
 
@@ -87,7 +94,7 @@ class BasicUsageTest(
             set(key1, value1) // slot 5798
             set(key2, value2) // slot 5798
 
-            multiGet(listOf(key1, key2))!! shouldContainSame listOf(value1, value2)
+            multiGet(listOf(key1, key2)).shouldNotBeNull() shouldContainSame listOf(value1, value2)
         }
     }
 
@@ -114,10 +121,10 @@ class BasicUsageTest(
             set(key2, value2) // slot 14594
             set(key3, value3) // slot 741
 
-            multiGet(listOf(key1, key2, key3))!! shouldContainSame listOf(value1, value2, value3)
+            multiGet(listOf(key1, key2, key3)).shouldNotBeNull() shouldContainSame listOf(value1, value2, value3)
         }
 
-        // NOTE: lettuce-core 7.x 에서는 작동하지 않습니다.
-        // operations.keys("*")!! shouldContainAll setOf(key1, key2, key3)
+        // NOTE: This no longer works on lettuce-core 7.x.
+        // operations.keys("*").shouldNotBeNull() shouldContainAll setOf(key1, key2, key3)
     }
 }
