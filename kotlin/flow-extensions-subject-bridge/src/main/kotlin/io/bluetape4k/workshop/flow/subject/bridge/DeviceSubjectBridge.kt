@@ -7,6 +7,7 @@ import io.bluetape4k.coroutines.flow.extensions.subject.ReplaySubject
 import io.bluetape4k.coroutines.flow.extensions.subject.UnicastWorkSubject
 import io.bluetape4k.coroutines.flow.extensions.subject.awaitCollector
 import io.bluetape4k.coroutines.flow.extensions.subject.awaitCollectors
+import io.bluetape4k.support.requirePositiveNumber
 import kotlinx.coroutines.flow.Flow
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -21,6 +22,11 @@ class DeviceSubjectBridge(
     replayHistorySize: Int = 8,
     private val multicastSubscribers: Int = 2,
 ) {
+    init {
+        replayHistorySize.requirePositiveNumber("replayHistorySize")
+        multicastSubscribers.requirePositiveNumber("multicastSubscribers")
+    }
+
     private val eventSubject = PublishSubject<DeviceEvent>()
     private val stateSubject = BehaviorSubject(initialState)
     private val historySubject = ReplaySubject<DeviceEvent>(replayHistorySize)

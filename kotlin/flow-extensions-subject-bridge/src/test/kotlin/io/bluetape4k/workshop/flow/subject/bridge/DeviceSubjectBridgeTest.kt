@@ -24,6 +24,22 @@ class DeviceSubjectBridgeTest {
     )
 
     @Test
+    fun `bridge subject bounds must be positive`() = runSuspendTest {
+        assertFailsWith<IllegalArgumentException> {
+            DeviceSubjectBridge(
+                initialState = DeviceState("device-01", DeviceStatus.OFFLINE, "boot"),
+                replayHistorySize = 0,
+            )
+        }
+        assertFailsWith<IllegalArgumentException> {
+            DeviceSubjectBridge(
+                initialState = DeviceState("device-01", DeviceStatus.OFFLINE, "boot"),
+                multicastSubscribers = 0,
+            )
+        }
+    }
+
+    @Test
     fun `publish subject delivers only events emitted after subscription`() = runSuspendTest {
         val bridge = bridge()
         val activeEvent = DeviceEvent("event-02", "device-01", DeviceEventType.TELEMETRY, "temperature=22")
