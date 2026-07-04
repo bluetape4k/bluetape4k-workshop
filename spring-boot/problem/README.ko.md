@@ -81,7 +81,7 @@ private val logger = LoggerFactory.getLogger(TaskController::class.java)
 logger.info("Task requested: {}", taskId)  // Always interpolates the message
 
 // After — KLogging (lazy lambda, simplified exception logging)
-companion object: KLogging()
+companion object : KLogging()
 
 log.info { "Task requested: $taskId" }         // Lambda is not executed when disabled
 log.warn(e) { "Task not found: $taskId" }      // Combines exception + message

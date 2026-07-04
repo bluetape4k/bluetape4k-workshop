@@ -10,9 +10,9 @@ import reactor.core.publisher.Mono
 /**
  * [ServerWebExchange]로부터 path 와 query parameters 를 추출하여 로깅하는 [WebFilter] 구현체입니다.
  */
-class RestControllerLoggingFilter: WebFilter {
+class RestControllerLoggingFilter : WebFilter {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
         log.debug {
