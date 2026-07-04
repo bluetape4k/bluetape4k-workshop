@@ -42,7 +42,7 @@ class LockExtenderJob : LeaderGuardedJob {
         log.info { "[LockExtenderJob] Starting — simulating a long-running leader job" }
 
         // Phase 1: first unit of work
-        Thread.sleep(50)
+        simulateBlockingWork(PHASE_DURATION)
         log.debug { "[LockExtenderJob] Phase 1 complete" }
 
         // Extend lease before Phase 2 to avoid expiry mid-execution.
@@ -55,12 +55,13 @@ class LockExtenderJob : LeaderGuardedJob {
         }
 
         // Phase 2: second unit of work
-        Thread.sleep(50)
+        simulateBlockingWork(PHASE_DURATION)
         log.info { "[LockExtenderJob] Phase 2 complete — job finished" }
     }
 
     companion object : KLogging() {
         /** Extension duration added to the active lease between work phases. */
         val EXTENSION_DURATION: Duration = Duration.ofSeconds(30)
+        private val PHASE_DURATION: Duration = Duration.ofMillis(50)
     }
 }
