@@ -2,11 +2,18 @@ package io.bluetape4k.workshop.cache.caffeine.domain
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotBlank
 import org.springframework.cache.annotation.CacheConfig
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 
+/**
+ * Simulates a slow country lookup backed by Spring Cache and Caffeine.
+ *
+ * Blank country codes are rejected with bluetape4k validation helpers before
+ * cache loading or eviction work proceeds.
+ */
 @Component
 @CacheConfig(cacheNames = ["cache:contries"])
 class CountryRepository {
@@ -40,15 +47,30 @@ class CountryRepository {
 
     val countrySize: Int get() = SAMPLE_COUNTRY_CODES.size
 
+    /**
+     * Finds a country by ISO-like [code].
+     *
+     * The first valid lookup intentionally waits for 500 ms to demonstrate
+     * cache fill behavior; subsequent lookups are served by Spring Cache.
+     *
+     * @throws IllegalArgumentException when [code] is blank.
+     */
     @Cacheable(key = "'country:' + #code")
     fun findByCode(code: String): Country {
+        code.requireNotBlank("code")
         Thread.sleep(500)
         log.debug { "----> Loading country with code[$code] and caching in caffeine ..." }
         return Country(code)
     }
 
+    /**
+     * Evicts the cached country entry for [code].
+     *
+     * @throws IllegalArgumentException when [code] is blank.
+     */
     @CacheEvict(key = "'country:' + #code")
     fun evictCache(code: String) {
+        code.requireNotBlank("code")
         log.debug { "Evict country cache. code=$code" }
     }
 }
