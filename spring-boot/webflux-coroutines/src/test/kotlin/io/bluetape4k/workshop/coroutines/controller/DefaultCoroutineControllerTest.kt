@@ -17,13 +17,17 @@ import kotlinx.coroutines.reactive.awaitSingle
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.ApplicationContext
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.returnResult
 import tools.jackson.databind.node.JsonNodeFactory
 
-class DefaultCoroutineControllerTest: AbstractCoroutineApplicationTest() {
+class DefaultCoroutineControllerTest @Autowired constructor(
+    context: ApplicationContext,
+) : AbstractCoroutineApplicationTest(context) {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private const val BASE_PATH = "/controller/default"
     }
 
