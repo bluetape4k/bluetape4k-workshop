@@ -12,5 +12,5 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @EnableR2dbcRepositories(basePackageClasses = [CustomerRepository::class])
 class InfrastructureConfiguration {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 }

@@ -26,13 +26,19 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
     private val repository: PersonRepository,
     private val client: DatabaseClient,
 ) {
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
-    private lateinit var skyler: Person
-    private lateinit var walter: Person
-    private lateinit var flynn: Person
-    private lateinit var marie: Person
-    private lateinit var hank: Person
+    private var skylerFixture: Person? = null
+    private var walterFixture: Person? = null
+    private var flynnFixture: Person? = null
+    private var marieFixture: Person? = null
+    private var hankFixture: Person? = null
+
+    private val skyler: Person get() = checkNotNull(skylerFixture) { "skyler fixture is not initialized." }
+    private val walter: Person get() = checkNotNull(walterFixture) { "walter fixture is not initialized." }
+    private val flynn: Person get() = checkNotNull(flynnFixture) { "flynn fixture is not initialized." }
+    private val marie: Person get() = checkNotNull(marieFixture) { "marie fixture is not initialized." }
+    private val hank: Person get() = checkNotNull(hankFixture) { "hank fixture is not initialized." }
 
     @BeforeEach
     fun beforeEach() = runSuspendIO {
@@ -47,11 +53,11 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
             );""".trimIndent()
         )
 
-        skyler = Person("Skyler", "White", 45)
-        walter = Person("Walter", "White", 50)
-        flynn = Person("Walter Jr. (Flynn)", "White", 17)
-        marie = Person("Marie", "Schrader", 38)
-        hank = Person("Hank", "Schrader", 43)
+        skylerFixture = Person("Skyler", "White", 45)
+        walterFixture = Person("Walter", "White", 50)
+        flynnFixture = Person("Walter Jr. (Flynn)", "White", 17)
+        marieFixture = Person("Marie", "Schrader", 38)
+        hankFixture = Person("Hank", "Schrader", 43)
 
         statements.forEach { stmt ->
             client.sql(stmt).fetch().rowsUpdated().awaitSingleOrNull()
@@ -69,7 +75,7 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
     @Test
     fun `count by simple example`() = runSuspendIO {
 
-        // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다!!!
+        // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다.
         val matcher = Person::class
             .buildExampleMatcher(Person::lastname.name)
             .withMatcher(Person::lastname.name, GenericPropertyMatchers.exact())
@@ -83,7 +89,7 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
 
     @Test
     fun `ignore properties and match by age`() = runSuspendIO {
-        // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다!!!
+        // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다.
         val matcher = Person::class
             .buildExampleMatcher(Person::age.name)
             .withMatcher(Person::age.name, GenericPropertyMatchers.exact())
@@ -96,7 +102,7 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
 
     @Test
     fun `match starting strings ignore case`() = runSuspendIO {
-        // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다!!!
+        // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다.
         val matcher = Person::class
             .buildExampleMatcher(Person::firstname.name, Person::lastname.name)
             .withMatcher(Person::firstname.name, GenericPropertyMatchers.startsWith())
@@ -110,7 +116,7 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
 
     @Test
     fun `configuring matchers using lambdas`() = runSuspendIO {
-        // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다!!!
+        // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다.
         val matcher = ExampleMatcher.matching()
             .withIgnorePaths(Person::age.name)
             .withMatcher(Person::firstname.name, GenericPropertyMatchers.startsWith())
@@ -124,7 +130,7 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
 
     @Test
     fun `value transformer`() = runSuspendIO {
-        // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다!!!
+        // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다.
         val matcher = Person::class
             .buildExampleMatcher(Person::lastname.name, Person::age.name)
             .withMatcher(Person::age.name) { it.transform { Optional.of(50) } }

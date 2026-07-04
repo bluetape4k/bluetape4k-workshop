@@ -7,8 +7,12 @@ data class Person(
     val firstname: String,
     val lastname: String,
     val age: Int,
-): Serializable {
+) : Serializable {
     @Id
     var id: Int? = null
     val hasId: Boolean get() = id != null
+
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }

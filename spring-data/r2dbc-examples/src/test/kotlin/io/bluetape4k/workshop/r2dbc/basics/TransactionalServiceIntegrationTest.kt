@@ -20,7 +20,7 @@ class TransactionalServiceIntegrationTest @Autowired constructor(
     private val repository: CustomerRepository,
     private val database: DatabaseClient,
 ) {
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() = runSuspendIO {
