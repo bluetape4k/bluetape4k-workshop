@@ -14,9 +14,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.returnResult
 
-class StudentControllerTest: AbstractChaosApplicationTest() {
+class StudentControllerTest : AbstractChaosApplicationTest() {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Test
     fun `find all students`() = runSuspendIO {
