@@ -10,6 +10,7 @@ import io.bluetape4k.ktor.testing.bluetape4kJsonClient
 import io.bluetape4k.ktor.testing.decodeJsonBody
 import io.bluetape4k.ktor.testing.shouldHaveApiError
 import io.bluetape4k.ktor.testing.shouldHaveStatus
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
@@ -98,7 +99,7 @@ class KtorExposedRestApplicationTest {
         )
         response.bodyAsText() shouldNotContain "Rollback Candidate"
         response.bodyAsText() shouldNotContain postgres.jdbcUrl
-        response.bodyAsText() shouldNotContain requireNotNull(postgres.password)
+        response.bodyAsText() shouldNotContain postgres.password.requireNotNull("postgres.password")
 
         val books = http.get("/api/books")
             .shouldHaveStatus(HttpStatusCode.OK)
@@ -127,8 +128,8 @@ class KtorExposedRestApplicationTest {
 
         val body = response.bodyAsText()
         body shouldNotContain postgres.jdbcUrl
-        body shouldNotContain requireNotNull(postgres.username)
-        body shouldNotContain requireNotNull(postgres.password)
+        body shouldNotContain postgres.username.requireNotNull("postgres.username")
+        body shouldNotContain postgres.password.requireNotNull("postgres.password")
         body shouldNotContain "select * from secret_books"
     }
 
@@ -193,8 +194,8 @@ class KtorExposedRestApplicationTest {
     private fun postgresResources(name: String): KtorExposedRestResources =
         KtorExposedRestResources.create(
             jdbcUrl = postgres.jdbcUrl,
-            username = requireNotNull(postgres.username),
-            password = requireNotNull(postgres.password),
+            username = postgres.username.requireNotNull("postgres.username"),
+            password = postgres.password.requireNotNull("postgres.password"),
             driverClassName = postgres.driverClassName,
             poolName = "ktor-exposed-rest-$name",
         )
