@@ -9,6 +9,7 @@ springBoot {
 }
 
 dependencies {
+    implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.logging)
     implementation(libs.bluetape4k.text.search)
     implementation(libs.bluetape4k.text.lingua)

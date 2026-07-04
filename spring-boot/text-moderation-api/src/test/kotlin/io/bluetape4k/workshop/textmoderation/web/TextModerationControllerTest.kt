@@ -15,10 +15,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @SpringBootTest(classes = [TextModerationApplication::class])
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class TextModerationControllerTest {
-
-    @Autowired
-    private lateinit var mockMvc: MockMvc
+class TextModerationControllerTest @Autowired constructor(
+    private val mockMvc: MockMvc,
+) {
 
     @Test
     fun `POST analyze returns normalized moderation response`() {
