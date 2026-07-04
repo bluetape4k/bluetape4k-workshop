@@ -4,6 +4,7 @@ import io.bluetape4k.concurrent.virtualthread.VT
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.micrometer.observation.withObservation
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.micrometer.model.Todo
 import io.micrometer.observation.Observation
 import io.micrometer.observation.ObservationRegistry
@@ -26,8 +27,9 @@ class SyncService(
     @param:Value("\${workshop.micrometer.jsonplaceholder-base-url:https://jsonplaceholder.typicode.com}")
     private val jsonplaceholderBaseUrl: String,
 ) {
-    companion object: KLogging() {
-        val faker = Faker()
+    companion object : KLogging() {
+        private const val SIMULATED_BLOCKING_WORK_MILLIS = 100L
+        private val faker = Faker()
     }
 
     private val webClientBuilder = WebClient.builder()
@@ -36,13 +38,13 @@ class SyncService(
     @Observed(contextualName = "sync-get-name-at-service")
     fun getName(): String {
         log.debug { "Get fake name in sync service." }
-        Thread.sleep(100)
+        simulateBlockingWork()
 
         return Observation
             .createNotStarted("sync-get-name-at-function", observationRegistry)
             .observe<String> {
                 log.debug { "Get fake name in sync service." }
-                Thread.sleep(100)
+                simulateBlockingWork()
                 faker.name().fullName()
             }
 
@@ -59,8 +61,9 @@ class SyncService(
 
     @Observed(contextualName = "sync-get-todo-at-service")
     fun getTodo(todoId: Int): Todo? {
+        val validTodoId = todoId.requirePositiveNumber("todoId")
         preProcessing()
-        val todo = getTodoById(todoId)
+        val todo = getTodoById(validTodoId)
         postProcessing()
         return todo
     }
@@ -70,7 +73,7 @@ class SyncService(
             .createNotStarted("get-todo-by-webclient", observationRegistry)
             .observe<Todo?> {
                 log.debug { "Get todo by id[$id] in sync service." }
-                Thread.sleep(100)
+                simulateBlockingWork()
 
                 runBlocking(Dispatchers.VT) {
                     client.get()
@@ -98,14 +101,18 @@ class SyncService(
     private fun preProcessing() {
         withObservation("pre-processing", observationRegistry) {
             log.debug { "Pre processing ..." }
-            Thread.sleep(100)
+            simulateBlockingWork()
         }
     }
 
     private fun postProcessing() {
         withObservation("post-processing", observationRegistry) {
             log.debug { "Post processing ..." }
-            Thread.sleep(100)
+            simulateBlockingWork()
         }
+    }
+
+    private fun simulateBlockingWork() {
+        Thread.sleep(SIMULATED_BLOCKING_WORK_MILLIS)
     }
 }

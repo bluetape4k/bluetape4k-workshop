@@ -20,6 +20,7 @@ dependencies {
     testImplementation(project(":shared"))
 
     implementation(libs.bluetape4k.micrometer)
+    implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.bluetape4k.testcontainers)
     testImplementation(libs.bluetape4k.junit5)
