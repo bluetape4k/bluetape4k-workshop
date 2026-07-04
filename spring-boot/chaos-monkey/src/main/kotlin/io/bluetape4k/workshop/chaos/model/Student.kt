@@ -3,7 +3,11 @@ package io.bluetape4k.workshop.chaos.model
 import java.io.Serializable
 
 data class Student(
-    var id: Int? = null,
-    var name: String? = null,
-    var passportNumber: String? = null,
-): Serializable
+    val id: Int? = null,
+    val name: String? = null,
+    val passportNumber: String? = null,
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}

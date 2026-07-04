@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 class StudentController(
     private val service: StudentService,
 ) {
-    companion object: KLogging()
+    companion object : KLogging()
 
     @GetMapping("/students")
     fun findAll() = service.findAll()
@@ -30,7 +30,10 @@ class StudentController(
     fun insert(@RequestBody student: Student) = service.insert(student)
 
     @PutMapping("/students/{id}")
-    fun update(@RequestBody student: Student, id: Int) = service.update(student)
+    fun update(
+        @PathVariable("id") id: Int,
+        @RequestBody student: Student,
+    ) = service.update(student.copy(id = id))
 
     @GetMapping("/sayHello")
     fun sayHello(name: String = "There") = "Hello $name"

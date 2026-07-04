@@ -2,24 +2,21 @@ package io.bluetape4k.workshop.chaos
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
-import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.chaos.model.Student
 import io.bluetape4k.workshop.chaos.repository.StudentJdbcRepository
 import net.datafaker.Faker
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.CommandLineRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication(proxyBeanMethods = false)
-class ChaosApplication: CommandLineRunner {
+class ChaosApplication(
+    private val repository: StudentJdbcRepository,
+) : CommandLineRunner {
 
-    companion object: KLogging() {
+    companion object : KLogging() {
         val faker = Faker()
     }
-
-    @Autowired
-    private val repository: StudentJdbcRepository = uninitialized()
 
     override fun run(vararg args: String) {
         log.info { "Student id 10001 -> ${repository.findById(10001)}" }

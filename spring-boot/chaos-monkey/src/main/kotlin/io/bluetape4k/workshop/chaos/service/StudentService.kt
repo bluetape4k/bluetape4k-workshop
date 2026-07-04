@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service
 class StudentService(
     private val repository: StudentJdbcRepository,
 ) {
-    companion object: KLogging()
+    companion object : KLogging()
 
     fun findAll() = repository.findAll()
     fun findById(id: Int) = repository.findById(id)
