@@ -21,7 +21,7 @@ class PostRepository(
     private val operations: R2dbcEntityOperations,
     private val mappingR2dbcConverter: MappingR2dbcConverter,
 ) {
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     suspend fun count(): Long = operations.countAllSuspending<Post>()
     fun findAll(): Flow<Post> = operations.selectAllSuspending<Post>()

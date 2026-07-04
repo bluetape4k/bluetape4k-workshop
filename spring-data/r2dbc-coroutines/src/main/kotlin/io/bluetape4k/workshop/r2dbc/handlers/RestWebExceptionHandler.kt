@@ -12,7 +12,7 @@ import org.springframework.web.server.ServerWebExchange
 @RestControllerAdvice
 class RestApiExceptionHandler {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @ExceptionHandler(PostNotFoundException::class)
     suspend fun handle(ex: PostNotFoundException, exchange: ServerWebExchange) {

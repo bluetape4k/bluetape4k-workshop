@@ -16,7 +16,7 @@ class DatabaseInitializer(
     private val commentRepository: CommentRepository,
 ) {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     /**
      * Spring Boot Application이 준비되면 호출되는 Event Listener

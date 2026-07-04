@@ -18,7 +18,7 @@ class PostRepositoryTest(
     @param:Autowired private val postRepository: PostRepository,
 ): AbstractR2dbcApplicationTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `context loading`() {

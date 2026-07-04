@@ -17,7 +17,7 @@ class CommentRepository(
     private val client: DatabaseClient,
     private val operations: R2dbcEntityOperations,
 ) {
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     suspend fun save(comment: Comment): Comment {
         return operations.insertSuspending(comment)

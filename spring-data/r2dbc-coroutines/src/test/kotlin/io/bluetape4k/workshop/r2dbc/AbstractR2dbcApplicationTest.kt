@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.r2dbc
 
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.r2dbc.domain.Comment
 import io.bluetape4k.workshop.r2dbc.domain.Post
 import org.junit.jupiter.api.Disabled
@@ -16,13 +15,16 @@ import org.springframework.test.web.reactive.server.WebTestClient
 abstract class AbstractR2dbcApplicationTest {
 
     @Autowired
-    protected val context: ApplicationContext = uninitialized()
+    private var applicationContext: ApplicationContext? = null
+
+    protected val context: ApplicationContext
+        get() = checkNotNull(applicationContext) { "applicationContext is not injected." }
 
     protected val webTestClient: WebTestClient by lazy {
         WebTestClient.bindToApplicationContext(context).build()
     }
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         @JvmStatic
         val faker = Fakers.faker
     }

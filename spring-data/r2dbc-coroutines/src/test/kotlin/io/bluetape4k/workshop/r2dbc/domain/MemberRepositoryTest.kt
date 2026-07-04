@@ -14,7 +14,7 @@ class MemberRepositoryTest(
     @param:Autowired private val memberRepository: MemberRepository,
 ): AbstractR2dbcApplicationTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `context loading`() {
@@ -29,7 +29,7 @@ class MemberRepositoryTest(
         savedMember.shouldNotBeNull()
         savedMember.id.shouldNotBeNull()
 
-        val loadedMember = memberRepository.findById(savedMember.id)!!
+        val loadedMember = checkNotNull(memberRepository.findById(savedMember.id)) { "saved member must exist." }
         loadedMember.name shouldBeEqualTo member.name
         loadedMember.age shouldBeEqualTo member.age
         loadedMember.email shouldBeEqualTo member.email
