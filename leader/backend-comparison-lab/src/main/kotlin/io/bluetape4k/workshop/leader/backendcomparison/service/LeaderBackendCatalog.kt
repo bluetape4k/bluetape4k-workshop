@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader.backendcomparison.service
 
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.leader.backendcomparison.domain.BackendCapability
 import io.bluetape4k.workshop.leader.backendcomparison.domain.BackendProfile
@@ -78,6 +79,11 @@ class LeaderBackendCatalog {
         ),
     )
 
+    private val profilesById: Map<String, BackendProfile> =
+        profiles.associateBy { it.id }.also { byId ->
+            byId.size.requireInRange(profiles.size, profiles.size, "profilesById.size")
+        }
+
     /**
      * Returns the profiles in the learner-facing comparison order.
      */
@@ -88,7 +94,7 @@ class LeaderBackendCatalog {
      */
     fun findById(id: String): BackendProfile {
         id.requireNotBlank("id")
-        return profiles.firstOrNull { it.id == id }
+        return profilesById[id]
             ?: throw IllegalArgumentException("Unknown leader backend id: $id")
     }
 }
