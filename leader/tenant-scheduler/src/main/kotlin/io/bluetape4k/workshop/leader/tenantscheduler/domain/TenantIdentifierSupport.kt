@@ -14,21 +14,15 @@ internal fun normalizeTenantAlias(raw: String, fieldName: String): String {
     val normalized = raw.lowercase(Locale.ROOT)
 
     normalized.length.requireInRange(3, 64, "$fieldName.length")
-    require(raw.none { it.isISOControl() }) {
-        "$fieldName must not contain control characters"
-    }
-    require(!raw.any { it.isWhitespace() }) {
-        "$fieldName must not contain whitespace"
-    }
-    require(!EMAIL_LIKE_PATTERN.matches(raw)) {
-        "$fieldName must not be an email-like value"
-    }
-    require(!ACCOUNT_ID_LIKE_PATTERN.matches(normalized)) {
-        "$fieldName must not be an account-id-shaped value"
-    }
-    require(SAFE_ALIAS_PATTERN.matches(normalized)) {
-        "$fieldName must match a safe lowercase alias pattern"
-    }
+    raw.count { it.isISOControl() }.requireInRange(0, 0, "$fieldName.controlCharacters")
+    raw.count { it.isWhitespace() }.requireInRange(0, 0, "$fieldName.whitespace")
+    EMAIL_LIKE_PATTERN.matches(raw).toViolationCount().requireInRange(0, 0, "$fieldName.emailLike")
+    ACCOUNT_ID_LIKE_PATTERN.matches(normalized).toViolationCount().requireInRange(0, 0, "$fieldName.accountIdLike")
+    SAFE_ALIAS_PATTERN.matches(normalized).toMissingCount().requireInRange(0, 0, "$fieldName.safeAlias")
 
     return normalized
 }
+
+private fun Boolean.toViolationCount(): Int = if (this) 1 else 0
+
+private fun Boolean.toMissingCount(): Int = if (this) 0 else 1

@@ -35,7 +35,5 @@ data class TenantSchedulePolicy(
 }
 
 internal fun requireDistinct(values: List<String>, fieldName: String) {
-    require(values.distinct().size == values.size) {
-        "$fieldName must not contain duplicates"
-    }
+    (values.size - values.distinct().size).requireInRange(0, 0, "$fieldName.duplicateCount")
 }
