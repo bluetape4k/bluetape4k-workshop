@@ -15,7 +15,7 @@ import tools.jackson.databind.ObjectMapper
 @ConditionalOnClass(ProblemModule::class, ObjectMapper::class)
 class ProblemConfig {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     // FIXME: Problem 은 Jackson 2 를 사용합니다. 향후 Jackson 3를 사용하는 버전으로 변경 필요
 //    @Bean
