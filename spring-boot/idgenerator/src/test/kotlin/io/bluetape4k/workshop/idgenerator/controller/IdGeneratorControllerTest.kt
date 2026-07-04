@@ -14,13 +14,13 @@ import io.bluetape4k.workshop.idgenerator.model.HashidsResponse
 import io.bluetape4k.workshop.idgenerator.model.SnowflakeResponse
 import io.bluetape4k.workshop.idgenerator.model.StringIdResponse
 import org.junit.jupiter.api.Test
-import org.springframework.test.web.reactive.server.returnResult
-import reactor.kotlin.core.publisher.toMono
+import org.springframework.context.ApplicationContext
+import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.expectBody
 
-class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
+class IdGeneratorControllerTest(context: ApplicationContext) : AbstractIdGeneratorTest(context) {
 
     companion object : KLogging()
-
 
     // ── Snowflake ──────────────────────────────────────────────────────────
 
@@ -29,11 +29,7 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
         val result = client.get().uri("/ids/snowflake")
             .exchange()
             .expectStatus().isOk
-            .returnResult<SnowflakeResponse>()
-            .responseBody
-            .toMono()
-            .block()
-            .shouldNotBeNull()
+            .expectRequiredBody<SnowflakeResponse>()
 
         result.id.shouldBePositive()
         result.timestamp.shouldBeGreaterThan(0L)
@@ -47,15 +43,13 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
         val generated = client.get().uri("/ids/snowflake")
             .exchange()
             .expectStatus().isOk
-            .returnResult<SnowflakeResponse>()
-            .responseBody.toMono().block().shouldNotBeNull()
+            .expectRequiredBody<SnowflakeResponse>()
 
         // 생성된 ID를 파싱
         val parsed = client.get().uri("/ids/snowflake/parse/${generated.id}")
             .exchange()
             .expectStatus().isOk
-            .returnResult<SnowflakeResponse>()
-            .responseBody.toMono().block().shouldNotBeNull()
+            .expectRequiredBody<SnowflakeResponse>()
 
         parsed.id shouldBeEqualTo generated.id
         parsed.timestamp shouldBeEqualTo generated.timestamp
@@ -68,8 +62,7 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
         val result = client.get().uri("/ids/snowflake/batch?count=$count")
             .exchange()
             .expectStatus().isOk
-            .returnResult<BatchIdResponse>()
-            .responseBody.toMono().block().shouldNotBeNull()
+            .expectRequiredBody<BatchIdResponse>()
 
         result.type shouldBeEqualTo "snowflake"
         result.count shouldBeEqualTo count
@@ -85,8 +78,7 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
         val result = client.get().uri("/ids/ulid")
             .exchange()
             .expectStatus().isOk
-            .returnResult<StringIdResponse>()
-            .responseBody.toMono().block().shouldNotBeNull()
+            .expectRequiredBody<StringIdResponse>()
 
         result.type shouldBeEqualTo "ulid"
         result.id.length shouldBeEqualTo 26  // ULID는 항상 26자
@@ -99,8 +91,8 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
             client.get().uri("/ids/ulid")
                 .exchange()
                 .expectStatus().isOk
-                .returnResult<StringIdResponse>()
-                .responseBody.toMono().block().shouldNotBeNull().id
+                .expectRequiredBody<StringIdResponse>()
+                .id
         }
         // ULID는 사전순으로 시간 순서 유지
         ids.zipWithNext().all { (a, b) -> a <= b }.shouldBeTrue()
@@ -112,8 +104,7 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
         val result = client.get().uri("/ids/ulid/batch?count=$count")
             .exchange()
             .expectStatus().isOk
-            .returnResult<BatchIdResponse>()
-            .responseBody.toMono().block().shouldNotBeNull()
+            .expectRequiredBody<BatchIdResponse>()
 
         result.type shouldBeEqualTo "ulid"
         result.count shouldBeEqualTo count
@@ -127,8 +118,7 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
         val result = client.get().uri("/ids/ksuid")
             .exchange()
             .expectStatus().isOk
-            .returnResult<StringIdResponse>()
-            .responseBody.toMono().block().shouldNotBeNull()
+            .expectRequiredBody<StringIdResponse>()
 
         result.type shouldBeEqualTo "ksuid"
         result.id.length shouldBeEqualTo 27  // KSUID는 항상 27자
@@ -141,8 +131,7 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
         val result = client.get().uri("/ids/ksuid/batch?count=$count")
             .exchange()
             .expectStatus().isOk
-            .returnResult<BatchIdResponse>()
-            .responseBody.toMono().block().shouldNotBeNull()
+            .expectRequiredBody<BatchIdResponse>()
 
         result.type shouldBeEqualTo "ksuid"
         result.count shouldBeEqualTo count
@@ -157,8 +146,7 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
         val encoded = client.get().uri("/ids/hashids/encode?numbers=1,2,3")
             .exchange()
             .expectStatus().isOk
-            .returnResult<HashidsResponse>()
-            .responseBody.toMono().block().shouldNotBeNull()
+            .expectRequiredBody<HashidsResponse>()
 
         encoded.numbers shouldBeEqualTo numbers
         encoded.encoded.shouldNotBeEmpty()
@@ -168,8 +156,7 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
         val decoded = client.get().uri("/ids/hashids/decode/${encoded.encoded}")
             .exchange()
             .expectStatus().isOk
-            .returnResult<HashidsResponse>()
-            .responseBody.toMono().block().shouldNotBeNull()
+            .expectRequiredBody<HashidsResponse>()
 
         decoded.decoded shouldBeEqualTo numbers
     }
@@ -179,11 +166,16 @@ class IdGeneratorControllerTest : AbstractIdGeneratorTest() {
         val result = client.get().uri("/ids/hashids/encode?numbers=42")
             .exchange()
             .expectStatus().isOk
-            .returnResult<HashidsResponse>()
-            .responseBody.toMono().block().shouldNotBeNull()
+            .expectRequiredBody<HashidsResponse>()
 
         result.numbers shouldBeEqualTo listOf(42L)
         result.encoded.length shouldBeGreaterThan 0
         result.decoded shouldBeEqualTo listOf(42L)
     }
+
+    private inline fun <reified T : Any> WebTestClient.ResponseSpec.expectRequiredBody(): T =
+        expectBody<T>()
+            .returnResult()
+            .responseBody
+            .shouldNotBeNull()
 }
