@@ -96,6 +96,7 @@ with proposed Basic/Advanced scenarios.
 | Spring Modulith | `spring-modulith-*` | ⚠️ Partial | Module testing isolation not shown | — | Modulith ApplicationModuleTest per bounded context | — |
 | AWS S3 | `aws-s3-spring-cloud` | ⚠️ Partial | Multipart upload not shown | — | S3 multipart upload with LocalStack | — |
 | `bluetape4k-aws` | `aws-s3-spring-cloud` | ⚠️ Partial | BT AWS Kotlin SDK wrappers not shown | — | AWS Kotlin SDK + coroutine suspend wrappers | — |
+| `bluetape4k-images` / `bluetape4k-images-spring-boot` | `image-processing/advanced-workflow`, `image-processing/ocr-api`, `image-processing/profile-image-moderation` | ✅ Good | — | — | Profile upload moderation with private originals, blurred pending image, and default fallback | — |
 
 ---
 

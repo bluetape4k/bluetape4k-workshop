@@ -228,6 +228,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Advanced | [`aws-sqs-sns-coroutines`](aws/sqs-sns-coroutines/) | `aws`, `micrometer`, `coroutines`, `testcontainers` | Local adapters + Floci | SNS publish와 SQS consume을 ack, retry, dead-letter report 및 cancellation-safe coroutine으로 학습 |
 | Advanced | [`aws-s3-vectors-access-grants`](aws/s3-vectors-access-grants/) | `aws`, `coroutines` | Local adapters | S3 Vectors upsert/query와 S3 Access Grants read-decision 경계 |
 | Advanced | [`image-processing-advanced-workflow`](image-processing/advanced-workflow/) | `images-vips-java25`, `images-spring-boot`, `micrometer` | S3 또는 local storage | 업로드 → 원본 저장 → WebP 파생 이미지 → unsigned public URL |
+| Advanced | [`image-processing-profile-image-moderation`](image-processing/profile-image-moderation/) | `images-spring-boot`, `coroutines`, `micrometer` | Local storage / S3-compatible | 프로필 업로드 → private 원본 → blurred pending URL → moderation 승인/기본 이미지 fallback |
 | Advanced | [`image-processing-ocr-api`](image-processing/ocr-api/) | `images-ocr`, `images`, `spring-boot4-core` | In-memory | 검증된 fallback과 선택 Tesseract를 사용하는 multipart OCR API |
 | Advanced | [`leader-leader-election`](leader/) | `coroutines`, `redis`, `testcontainers` | Redis (TC) | 분산 리더 선출: 블로킹, 코루틴, 가상 스레드 |
 | Advanced | [`leader-backend-comparison-lab`](leader/backend-comparison-lab/) | `leader-core`, `spring-boot4-core` | In-memory | Redis, ZooKeeper, Kubernetes Lease 백엔드 선택과 failover lab |
@@ -243,6 +244,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 ./gradlew :aws-cloudwatch-imds-observability:test
 ./gradlew :aws-sqs-sns-coroutines:test
 ./gradlew :aws-s3-vectors-access-grants:test
+./gradlew :image-processing-profile-image-moderation:test
 ./gradlew :leader-backend-comparison-lab:test
 ./gradlew :leader-tenant-scheduler:test
 ```
@@ -270,7 +272,7 @@ bluetape4k-workshop/
 ├── gateway/                # API Gateway + 마이크로서비스
 ├── gatling/                # 부하/성능 테스트
 ├── graph/                  # TinkerGraph, traversal, graph-io 예제
-├── image-processing/       # 이미지 업로드, VIPS 파생 이미지, OCR API
+├── image-processing/       # 이미지 업로드, moderation, VIPS 파생 이미지, OCR API
 ├── io/                     # Okio I/O 예제
 ├── json/                   # Jackson 3 직렬화
 ├── kotlin/                 # 코루틴, 디자인 패턴

@@ -35,6 +35,7 @@ names.
 | `gateway/` | API gateway plus customers/orders microservices |
 | `gatling/` | Gatling performance tests |
 | `graph/` | TinkerGraph, traversal, graph-io, lineage, and audit examples |
+| `image-processing/` | Image upload, moderation, derivatives, and OCR examples |
 | `io/` | Okio examples |
 | `json/` | Jackson 3 and JsonView examples |
 | `kotlin/` | Coroutines, design patterns, Kotlin workshops |
