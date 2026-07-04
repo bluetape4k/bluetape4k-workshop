@@ -22,23 +22,13 @@ import java.math.BigDecimal
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class TenantIsolationTest {
-
-    @Autowired
-    private lateinit var service: TenantInvoiceService
-
-    @Autowired
-    private lateinit var cache: TenantInvoiceCache
-
-    @Autowired
-    private lateinit var keyFactory: TenantKeyFactory
-
-    @Autowired
-    private lateinit var lockRegistry: TenantLockRegistry
-
-    @Autowired
-    private lateinit var metrics: TenantMetrics
-
+class TenantIsolationTest @Autowired constructor(
+    private val service: TenantInvoiceService,
+    private val cache: TenantInvoiceCache,
+    private val keyFactory: TenantKeyFactory,
+    private val lockRegistry: TenantLockRegistry,
+    private val metrics: TenantMetrics,
+) {
     @BeforeEach
     fun reset() {
         service.resetWorkshopState()
