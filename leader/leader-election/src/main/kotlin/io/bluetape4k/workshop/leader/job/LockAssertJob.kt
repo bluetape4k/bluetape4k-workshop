@@ -5,6 +5,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.support.requireNotBlank
 import org.springframework.stereotype.Component
+import java.time.Duration
 
 /**
  * Leader-guarded job that demonstrates lock ownership verification using [LockAssert].
@@ -49,9 +50,11 @@ class LockAssertJob : LeaderGuardedJob {
         LockAssert.assertLocked(lockName)
         log.info { "[LockAssertJob] assertLocked(\"$lockName\") passed" }
 
-        Thread.sleep(20)
+        simulateBlockingWork(ASSERTION_DEMO_DURATION)
         log.info { "[LockAssertJob] Job complete" }
     }
 
-    companion object : KLogging()
+    companion object : KLogging() {
+        private val ASSERTION_DEMO_DURATION: Duration = Duration.ofMillis(20)
+    }
 }

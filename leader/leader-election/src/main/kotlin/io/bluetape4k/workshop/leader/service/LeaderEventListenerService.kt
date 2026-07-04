@@ -97,7 +97,17 @@ class LeaderEventListenerService(
      */
     @PreDestroy
     fun close() {
-        runCatching { listenerHandle?.close() }
-        runCatching { scope.cancel() }
+        closeQuietly("leader election listener") { listenerHandle?.close() }
+        closeQuietly("leader event flow scope") { scope.cancel() }
+    }
+
+    private inline fun closeQuietly(resourceName: String, action: () -> Unit) {
+        try {
+            action()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            log.warn(e) { "Failed to close $resourceName" }
+        }
     }
 }

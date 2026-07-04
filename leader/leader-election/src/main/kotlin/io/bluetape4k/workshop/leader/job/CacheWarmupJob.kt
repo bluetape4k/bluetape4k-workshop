@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.leader.job
 import io.bluetape4k.logging.*
 import io.bluetape4k.support.requireNotBlank
 import org.springframework.stereotype.Component
+import java.time.Duration
 
 /**
  * Example leader-guarded job: cache warmup.
@@ -29,9 +30,11 @@ class CacheWarmupJob : LeaderGuardedJob {
     override fun execute() {
         log.info { "[CacheWarmupJob] Starting cache warmup on elected leader instance" }
         // Simulate warming up entries (e.g., pre-loading product catalog, config data)
-        Thread.sleep(50)
+        simulateBlockingWork(WARMUP_DURATION)
         log.info { "[CacheWarmupJob] Cache warmup complete" }
     }
 
-    companion object : KLogging()
+    companion object : KLogging() {
+        private val WARMUP_DURATION: Duration = Duration.ofMillis(50)
+    }
 }
