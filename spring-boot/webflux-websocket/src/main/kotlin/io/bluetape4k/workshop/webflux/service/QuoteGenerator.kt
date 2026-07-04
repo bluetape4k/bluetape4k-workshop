@@ -32,7 +32,7 @@ import kotlin.random.Random
 @Service
 class QuoteGenerator {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private val mapper by lazy { jsonMapper() }
         private val MATH_CONTEXT = MathContext(2)
     }
