@@ -26,7 +26,7 @@ import java.math.BigDecimal
 class WebsocketApplicationTest(
     @param:Autowired val context: ApplicationContext,
 ) {
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     private val client by lazy {
         WebTestClient.bindToApplicationContext(context).build()

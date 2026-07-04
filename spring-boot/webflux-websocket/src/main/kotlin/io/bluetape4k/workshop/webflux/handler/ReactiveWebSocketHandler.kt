@@ -13,7 +13,7 @@ class ReactiveWebSocketHandler(
     private val quoteGenerator: QuoteGenerator,
 ): WebSocketHandler {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     /**
      * Invoked when a new WebSocket connection is established, and allows

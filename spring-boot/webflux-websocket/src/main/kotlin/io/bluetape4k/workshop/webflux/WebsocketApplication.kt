@@ -6,7 +6,7 @@ import org.springframework.boot.runApplication
 
 @SpringBootApplication(proxyBeanMethods = false)
 class WebsocketApplication {
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 }
 
 fun main(args: Array<String>) {

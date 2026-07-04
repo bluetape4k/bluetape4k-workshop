@@ -11,7 +11,7 @@ import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAd
 @Configuration(proxyBeanMethods = false)
 class ReactiveWebSocketConfiguration {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Bean
     fun webSocketHandlerAdapter(): WebSocketHandlerAdapter {
