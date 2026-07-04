@@ -413,8 +413,9 @@ data class OrderAuditEntry(
     companion object {
         private const val serialVersionUID: Long = 1L
 
-        fun from(sequence: Int, event: OrderEvent): OrderAuditEntry =
-            OrderAuditEntry(
+        fun from(sequence: Int, event: OrderEvent): OrderAuditEntry {
+            sequence.requirePositiveNumber("sequence")
+            return OrderAuditEntry(
                 sequence = sequence,
                 eventType = event.eventType,
                 orderId = event.orderId,
@@ -423,6 +424,7 @@ data class OrderAuditEntry(
                 amountCents = if (event is PaymentAuthorized) event.amountCents else 0,
                 occurredAt = event.occurredAt,
             )
+        }
     }
 }
 
