@@ -22,7 +22,7 @@ class ElasticsearchOperationsTest @Autowired constructor(
     private val repository: ConferenceRepository,
 ): AbstractElasticsearchTest() {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Test
     fun `search all conference`() {

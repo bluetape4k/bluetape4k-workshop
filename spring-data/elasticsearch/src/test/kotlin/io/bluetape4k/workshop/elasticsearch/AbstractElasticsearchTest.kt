@@ -7,7 +7,7 @@ import java.text.SimpleDateFormat
 @SpringBootTest
 abstract class AbstractElasticsearchTest {
 
-    companion object: KLogging() {
+    companion object : KLogging() {
         @JvmStatic
         val format = SimpleDateFormat("yyyy-MM-dd")
     }

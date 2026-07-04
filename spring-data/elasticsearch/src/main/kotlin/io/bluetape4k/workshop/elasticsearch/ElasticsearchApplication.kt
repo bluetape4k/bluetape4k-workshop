@@ -1,12 +1,10 @@
 package io.bluetape4k.workshop.elasticsearch
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.support.uninitialized
 import io.bluetape4k.testcontainers.storage.ElasticsearchOssServer
 import io.bluetape4k.workshop.elasticsearch.model.Conference
 import io.bluetape4k.workshop.elasticsearch.repository.ConferenceRepository
 import jakarta.annotation.PostConstruct
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations
@@ -16,18 +14,15 @@ import org.springframework.data.elasticsearch.repository.config.EnableElasticsea
 
 @SpringBootApplication(proxyBeanMethods = false)
 @EnableElasticsearchRepositories
-class ElasticsearchApplication {
+class ElasticsearchApplication(
+    private val operations: ElasticsearchOperations,
+    private val repository: ConferenceRepository,
+) {
 
-    companion object: KLogging() {
+    companion object : KLogging() {
         // Elasticsearch Server
         val elasticsearch = ElasticsearchOssServer.Launcher.elasticsearchOssServer
     }
-
-    @Autowired
-    private val operations: ElasticsearchOperations = uninitialized()
-
-    @Autowired
-    private val repository: ConferenceRepository = uninitialized()
 
     @PostConstruct
     fun insertSampleData() {
@@ -64,13 +59,12 @@ class ElasticsearchApplication {
                 name = "JDD14 - Cracow",
                 keywords = mutableListOf("java", "spring"),
                 location = GeoPoint(50.0646501, 19.9449799),
-            )
+            ),
         )
 
         repository.saveAll(documents)
     }
 }
-
 
 fun main(vararg args: String) {
     runApplication<ElasticsearchApplication>(*args)

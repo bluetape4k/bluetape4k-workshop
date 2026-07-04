@@ -14,4 +14,8 @@ data class Conference(
     val location: GeoPoint? = null,
     val keywords: MutableList<String> = mutableListOf(),
     @Id var id: String? = null,
-): Serializable
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = -2268442721364332289L
+    }
+}
