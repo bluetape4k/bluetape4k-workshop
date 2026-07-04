@@ -47,6 +47,7 @@ assertions.
 | `runSuspendTest { }` / `runTest` | `bluetape4k-junit5`, kotlinx-coroutines-test | coroutine tests | Runs suspend examples under JUnit 5 |
 | `OutputCapture` / `OutputCapturer` | `bluetape4k-junit5` | `scope/spring/SpringCoroutineScopeTest` | Verifies destroy-time output |
 | `Uuid.V7` | `bluetape4k-idgenerators` | `context/UuidProviderCoroutineContext` | Provides request-style identifiers through coroutine context |
+| `requireNotNull` Job guard | Kotlin contracts | `scope/spring/SpringCoroutineScope` | Fails fast when a scope is built without a lifecycle `Job` |
 
 ## Representative patterns
 
@@ -85,7 +86,9 @@ class MyBean: SpringCoroutineScope by SpringCoroutineScope() {
 ```
 
 The `SpringCoroutineScope` implementation exposes the `Job` from its coroutine context and cancels
-it from `destroy()`, which fits Spring bean lifecycle cleanup.
+it from `destroy()`, which fits Spring bean lifecycle cleanup. Suspend and Turbine examples use
+`CompletableFuture.delayedExecutor` or coroutine `delay` for timed work so cancellation remains
+observable in tests.
 
 ## References
 

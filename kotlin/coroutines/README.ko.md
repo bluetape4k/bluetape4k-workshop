@@ -45,6 +45,7 @@ Flow 예제는 cold stream 또는 channel 기반 stream을 만들고, `Flow<T>.l
 | `runSuspendTest { }` / `runTest` | `bluetape4k-junit5`, kotlinx-coroutines-test | coroutine tests | JUnit 5에서 suspend 예제 실행 |
 | `OutputCapture` / `OutputCapturer` | `bluetape4k-junit5` | `scope/spring/SpringCoroutineScopeTest` | destroy 시점 출력 검증 |
 | `Uuid.V7` | `bluetape4k-idgenerators` | `context/UuidProviderCoroutineContext` | coroutine context를 통해 request-style identifier 제공 |
+| `requireNotNull` Job guard | Kotlin contracts | `scope/spring/SpringCoroutineScope` | lifecycle `Job` 없이 scope가 만들어지면 즉시 실패 |
 
 ## 대표 패턴
 
@@ -83,7 +84,9 @@ class MyBean: SpringCoroutineScope by SpringCoroutineScope() {
 ```
 
 `SpringCoroutineScope` 구현은 coroutine context의 `Job`을 노출하고 `destroy()`에서 취소합니다.
-Spring bean lifecycle에 맞춰 coroutine 작업을 정리할 때 쓰기 좋은 형태입니다.
+Spring bean lifecycle에 맞춰 coroutine 작업을 정리할 때 쓰기 좋은 형태입니다. Suspend와 Turbine
+예제는 시간 지연 작업에 `CompletableFuture.delayedExecutor` 또는 coroutine `delay`를 사용해 테스트에서
+취소 동작을 관찰할 수 있게 합니다.
 
 ## 참고
 
