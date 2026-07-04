@@ -18,7 +18,7 @@ import org.springframework.web.reactive.function.client.awaitExchange
  */
 class PingPongApplicationTest {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     val client = WebClient.builder().baseUrl("http://localhost:8080").build()
 
