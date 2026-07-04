@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.observability.advanced.config
 
 import io.bluetape4k.redis.redisson.redissonClient
+import io.bluetape4k.support.requireNotBlank
 import org.redisson.api.RedissonClient
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -19,7 +20,10 @@ class RedissonConfig {
     @Bean(destroyMethod = "shutdown")
     fun redissonClient(
         @Value("\${workshop.observability.redis.url}") url: String,
-    ): RedissonClient = redissonClient {
-        useSingleServer().address = url
+    ): RedissonClient {
+        val redisUrl = url.requireNotBlank("url")
+        return redissonClient {
+            useSingleServer().address = redisUrl
+        }
     }
 }

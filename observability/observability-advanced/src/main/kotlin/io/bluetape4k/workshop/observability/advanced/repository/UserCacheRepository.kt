@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.observability.advanced.repository
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.observability.advanced.model.User
 import io.bluetape4k.workshop.observability.advanced.observation.observed
 import io.micrometer.observation.ObservationRegistry
@@ -37,8 +38,9 @@ class UserCacheRepository(
      */
     suspend fun get(id: Long): User? =
         observed("user.cache.get", observationRegistry) {
+            val validId = id.requirePositiveNumber("id")
             withContext(Dispatchers.IO) {
-                cache[id]
+                cache[validId]
             }
         }
 
@@ -47,9 +49,10 @@ class UserCacheRepository(
      */
     suspend fun put(user: User, ttlSeconds: Long = 60L) {
         observed("user.cache.put", observationRegistry) {
+            val ttl = ttlSeconds.requirePositiveNumber("ttlSeconds")
             withContext(Dispatchers.IO) {
                 // RMapCache.put() returns the previous value (V?); discard it
-                cache.put(user.id, user, ttlSeconds, TimeUnit.SECONDS)
+                cache.put(user.id, user, ttl, TimeUnit.SECONDS)
                 Unit
             }
         }
@@ -59,6 +62,6 @@ class UserCacheRepository(
      * Removes a [User] from the cache by [id]. Used for test isolation; not instrumented.
      */
     suspend fun delete(id: Long) = withContext(Dispatchers.IO) {
-        cache.remove(id)
+        cache.remove(id.requirePositiveNumber("id"))
     }
 }
