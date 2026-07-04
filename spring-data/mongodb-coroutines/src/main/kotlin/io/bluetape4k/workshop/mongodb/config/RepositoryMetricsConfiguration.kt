@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit
 @Configuration(proxyBeanMethods = false)
 class RepositoryMetricsConfiguration {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Bean
     fun repoMetricsPostProcessor(): RepoMetricsPostProcessor {
@@ -20,7 +20,7 @@ class RepositoryMetricsConfiguration {
     }
 
     class RepoMetricsPostProcessor: BeanPostProcessor {
-        companion object: KLogging()
+        companion object : KLogging()
 
         override fun postProcessBeforeInitialization(bean: Any, beanName: String): Any? {
 

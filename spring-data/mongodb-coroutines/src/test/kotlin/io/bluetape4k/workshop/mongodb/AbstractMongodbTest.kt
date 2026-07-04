@@ -8,7 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest
 @SpringBootTest
 abstract class AbstractMongodbTest {
 
-    companion object: KLogging() {
+    companion object : KLogging() {
         @JvmStatic
         val faker = Fakers.faker
 

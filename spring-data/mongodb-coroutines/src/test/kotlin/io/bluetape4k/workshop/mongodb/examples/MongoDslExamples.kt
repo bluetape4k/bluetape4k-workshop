@@ -22,7 +22,7 @@ class MongoDslExamples(
     @param:Autowired private val operations: MongoOperations,
 ): AbstractMongodbTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() {
@@ -34,12 +34,14 @@ class MongoDslExamples(
         val person1 = operations.insert<Person>(newPerson())
         val person2 = operations.insert<Person>(newPerson())
 
-        val persons = operations.find<Person>(Query(Person::firstname isEqualTo person2.firstname!!))
+        val person2Firstname = checkNotNull(person2.firstname) { "person2.firstname must not be null." }
+        val persons = operations.find<Person>(Query(Person::firstname isEqualTo person2Firstname))
 
         persons shouldHaveSize 1
         persons.single() shouldBeEqualTo person2
 
-        val persons2 = operations.find<Person>(Query(Person::firstname isEqualTo person1.firstname!!))
+        val person1Firstname = checkNotNull(person1.firstname) { "person1.firstname must not be null." }
+        val persons2 = operations.find<Person>(Query(Person::firstname isEqualTo person1Firstname))
         persons2 shouldHaveSize 1
         persons2.single() shouldBeEqualTo person1
     }
@@ -50,7 +52,7 @@ class MongoDslExamples(
         val person2 = operations.insert<Person>().one(newPerson().copy(firstname = "Sunghyouk"))
 
         val criteria = Criteria().andOperator(
-            Person::lastname isEqualTo person2.lastname!!,
+            Person::lastname isEqualTo checkNotNull(person2.lastname) { "person2.lastname must not be null." },
             Person::firstname regex "^Sun.*"
         )
         val persons = operations.find<Person>(Query(criteria))

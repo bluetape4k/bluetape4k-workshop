@@ -29,7 +29,7 @@ class MongoTemplateExamples(
     @param:Autowired private val operations: MongoOperations,
 ): AbstractMongodbTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() {
@@ -105,7 +105,8 @@ class MongoTemplateExamples(
             .matching(
                 Query.query(where(Person::lastname.name).isEqualTo(document["lastname"]))
             )
-            .firstValue()!!
+            .firstValue()
+            .let { checkNotNull(it) { "person document must exist." } }
 
         log.debug { "Load person=$persons" }
         persons.firstname shouldBeEqualTo "Walter" // Default 값을 사용합니다.
