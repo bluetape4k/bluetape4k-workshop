@@ -158,6 +158,7 @@ dependencies {
     implementation(libs.redisson.spring.boot.starter)
 
     // bluetape4k utilities
+    implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.cache.core)
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.bluetape4k.coroutines)
