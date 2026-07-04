@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.cbor
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -7,9 +10,6 @@ import io.bluetape4k.workshop.cbor.course.Course
 import io.bluetape4k.workshop.cbor.course.PhoneType
 import io.bluetape4k.workshop.shared.web.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldHaveSize
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
@@ -34,7 +34,7 @@ import org.springframework.web.reactive.function.client.awaitBody
 )
 class CborApplicationTest {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     private val cborHttpMessageConverter = JacksonCborHttpMessageConverter()
     private val jacksonCborEncoder = JacksonCborEncoder()

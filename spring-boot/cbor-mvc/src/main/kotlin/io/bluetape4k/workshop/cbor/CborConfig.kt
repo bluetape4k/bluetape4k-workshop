@@ -13,7 +13,7 @@ import org.springframework.http.converter.cbor.JacksonCborHttpMessageConverter
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration(proxyBeanMethods = false)
-class CborConfig: WebMvcConfigurer {
+class CborConfig : WebMvcConfigurer {
 
     @Bean
     @Profile("cbor")
@@ -27,33 +27,32 @@ class CborConfig: WebMvcConfigurer {
 
     @Bean
     fun courseRepository(): CourseRepository {
-        val courses = mutableMapOf(
+        val courses = mapOf(
             1 to Course(
                 id = 1,
                 name = "Kotlin Programming",
-                students = createTestStudents()
-
+                students = createTestStudents(),
             ),
             2 to Course(
                 id = 2,
-                name = "Spring Boot Programming"
-            )
+                name = "Spring Boot Programming",
+            ),
         )
         return CourseRepository(courses)
     }
 
-    private fun createTestStudents(): MutableList<Student> {
+    private fun createTestStudents(): List<Student> {
         val student1 = Student(
             id = 1,
             firstName = "John",
             lastName = "Doe",
             email = "john.doe@example.com",
-            phones = mutableListOf(
+            phones = listOf(
                 Phone(
                     number = "010-1234-5678",
-                    type = PhoneType.MOBILE
-                )
-            )
+                    type = PhoneType.MOBILE,
+                ),
+            ),
         )
 
         val student2 = Student(
@@ -61,12 +60,12 @@ class CborConfig: WebMvcConfigurer {
             firstName = "Richard",
             lastName = "Roe",
             email = "richard.roe@example.com",
-            phones = mutableListOf(
+            phones = listOf(
                 Phone(
                     number = "234567",
-                    type = PhoneType.LANDLINE
-                )
-            )
+                    type = PhoneType.LANDLINE,
+                ),
+            ),
         )
 
         val student3 = Student(
@@ -74,18 +73,18 @@ class CborConfig: WebMvcConfigurer {
             firstName = "Jane",
             lastName = "Doe",
             email = "jane.doe@example.com",
-            phones = mutableListOf(
+            phones = listOf(
                 Phone(
                     number = "345678",
-                    type = PhoneType.LANDLINE
+                    type = PhoneType.LANDLINE,
                 ),
                 Phone(
                     number = "456789",
-                    type = PhoneType.LANDLINE
-                )
-            )
+                    type = PhoneType.LANDLINE,
+                ),
+            ),
         )
 
-        return mutableListOf(student1, student2, student3)
+        return listOf(student1, student2, student3)
     }
 }
