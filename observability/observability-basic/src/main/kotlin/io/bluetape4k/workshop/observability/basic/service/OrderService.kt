@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.observability.basic.service
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.observability.basic.client.InventoryClient
 import io.bluetape4k.workshop.observability.basic.model.Order
 import io.bluetape4k.workshop.observability.basic.observation.observed
@@ -31,10 +32,11 @@ class OrderService(
      */
     suspend fun getOrder(orderId: Long): Order? =
         observed("order.service.fetch", observationRegistry) {
-            val inventory = inventoryClient.fetchInventory(orderId) ?: return@observed null
-            debug { "Fetched inventory for orderId=$orderId: available=${inventory.available}" }
+            val validOrderId = orderId.requirePositiveNumber("orderId")
+            val inventory = inventoryClient.fetchInventory(validOrderId) ?: return@observed null
+            debug { "Fetched inventory for orderId=$validOrderId: available=${inventory.available}" }
             Order(
-                id = orderId,
+                id = validOrderId,
                 itemId = inventory.itemId,
                 quantity = 1,
                 inventoryAvailable = inventory.available,

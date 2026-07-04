@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.observability.basic.observation
 
 import io.bluetape4k.micrometer.observation.start
+import io.bluetape4k.support.requireNotBlank
 import io.micrometer.observation.ObservationRegistry
 import kotlinx.coroutines.CancellationException
 
@@ -32,7 +33,7 @@ suspend fun <T> observed(
     registry: ObservationRegistry,
     block: suspend () -> T,
 ): T {
-    val observation = registry.start(name)
+    val observation = registry.start(name.requireNotBlank("name"))
     return try {
         block()
     } catch (e: CancellationException) {
