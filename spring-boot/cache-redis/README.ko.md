@@ -22,7 +22,15 @@
 |---|---|
 | `LettuceRedisCacheConfiguration` | `RedisCacheManager`, `RedisTemplate`, binary serialization, Lettuce connection factory를 구성합니다. |
 | `AsyncConfig` | virtual thread와 MDC propagation을 사용하는 primary `AsyncTaskExecutor`를 제공합니다. |
-| `CountryRepository` | Redis-backed country lookup에 `@Cacheable`, `@CacheEvict`를 적용합니다. |
+| `CountryRepository` | bluetape4k 검증과 `@Cacheable`, `@CacheEvict`를 Redis-backed country lookup에 적용합니다. |
+
+## 사용한 bluetape4k 기능
+
+| 기능 | 아티팩트 | 코드 위치 | 이점 |
+|---|---|---|---|
+| `RedisServer.Launcher.redis` | `bluetape4k-testcontainers` | `RedisCacheApplication` | 테스트와 로컬 실행을 위한 shared Redis Testcontainers 인스턴스 시작 |
+| `RedisBinarySerializers.LZ4Kryo` | `bluetape4k-spring-boot4-redis` | `LettuceRedisCacheConfiguration.redisTemplate()` | Redis 값을 compact binary 형태로 저장 |
+| `requireNotBlank()` | `bluetape4k-core` | `CountryRepository.findByCode()`, `evictCache()` | 잘못된 cache key를 loading/eviction 전에 거부 |
 | `CountryPrefetcher` | `app` profile에서 무작위 국가 코드를 예열합니다. |
 
 ## Redis 설정 예제
@@ -47,8 +55,8 @@ fun redisTemplate(connectionFactory: RedisConnectionFactory): RedisTemplate<Any,
 ## 실행
 
 ```bash
-./gradlew :spring-boot:cache-redis:test
-./gradlew :spring-boot:cache-redis:bootRun
+./gradlew :spring-boot-cache-redis:test
+./gradlew :spring-boot-cache-redis:bootRun
 ```
 
 ## 참고

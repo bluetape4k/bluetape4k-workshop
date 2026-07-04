@@ -22,7 +22,15 @@ This module shows Spring Cache backed by Redis and Lettuce. It mirrors the Caffe
 |---|---|
 | `LettuceRedisCacheConfiguration` | Configures `RedisCacheManager`, `RedisTemplate`, binary serialization, and Lettuce connection factory |
 | `AsyncConfig` | Provides the primary `AsyncTaskExecutor` backed by virtual threads and MDC propagation |
-| `CountryRepository` | Applies `@Cacheable` and `@CacheEvict` to Redis-backed country lookup |
+| `CountryRepository` | Applies bluetape4k validation plus `@Cacheable` and `@CacheEvict` to Redis-backed country lookup |
+
+## bluetape4k Features Used
+
+| Feature | Artifact | Code Location | Benefit |
+|---|---|---|---|
+| `RedisServer.Launcher.redis` | `bluetape4k-testcontainers` | `RedisCacheApplication` | Starts a shared Redis Testcontainers instance for tests and local runs |
+| `RedisBinarySerializers.LZ4Kryo` | `bluetape4k-spring-boot4-redis` | `LettuceRedisCacheConfiguration.redisTemplate()` | Stores compact binary values in Redis |
+| `requireNotBlank()` | `bluetape4k-core` | `CountryRepository.findByCode()` and `evictCache()` | Rejects invalid cache keys before loading or eviction |
 | `CountryPrefetcher` | Warms random country codes when the `app` profile is active |
 
 ## Redis Configuration Example
@@ -47,8 +55,8 @@ fun redisTemplate(connectionFactory: RedisConnectionFactory): RedisTemplate<Any,
 ## Run
 
 ```bash
-./gradlew :spring-boot:cache-redis:test
-./gradlew :spring-boot:cache-redis:bootRun
+./gradlew :spring-boot-cache-redis:test
+./gradlew :spring-boot-cache-redis:bootRun
 ```
 
 ## References

@@ -1,14 +1,15 @@
 package io.bluetape4k.workshop.cache.redis.domain
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.cache.redis.AbstractRedisCacheTest
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldBeLessOrEqualTo
-import io.bluetape4k.assertions.shouldBeLessThan
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnJre
@@ -38,6 +39,7 @@ class CountryRepositoryTest(
     @Test
     fun `get country at first`() {
         countryRepo.evictCache(KR)
+        Thread.sleep(10)
 
         val kr = measureTimeMillis {
             countryRepo.findByCode(KR)
@@ -58,6 +60,7 @@ class CountryRepositoryTest(
     @Test
     fun `evict cached country`() {
         countryRepo.evictCache(US)
+        Thread.sleep(10)
 
         val us = measureTimeMillis {
             countryRepo.findByCode(US)
@@ -70,7 +73,6 @@ class CountryRepositoryTest(
         }
 
         countryRepo.evictCache(US)
-
         Thread.sleep(10)
 
         val usEvicted = measureTimeMillis {
@@ -80,6 +82,16 @@ class CountryRepositoryTest(
         us shouldBeGreaterThan EXPECTED_MILLIS
         usCached shouldBeLessThan EXPECTED_MILLIS
         usEvicted shouldBeGreaterThan EXPECTED_MILLIS
+    }
+
+    @Test
+    fun `reject blank country code`() {
+        assertFailsWith<IllegalArgumentException> {
+            countryRepo.findByCode(" ")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            countryRepo.evictCache(" ")
+        }
     }
 
     @Test
