@@ -14,6 +14,9 @@ import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.sqrt
 
+/**
+ * Coordinates local vector ranking with the S3 Vectors and S3 Access Grants boundary adapters.
+ */
 @Service
 class S3VectorsAccessService(
     private val properties: S3VectorsAccessProperties,
@@ -135,11 +138,13 @@ class S3VectorsAccessService(
         request.objectKey.requireNotBlank("objectKey")
         request.vector.requireNotEmpty("vector")
         request.vector.size.requireInRange(1, properties.maxVectorDimensions, "vector.size")
+        request.vector.requireFinite("vector")
     }
 
     private fun validateSearch(request: VectorSearchRequest) {
         request.query.requireNotEmpty("query")
         request.query.size.requireInRange(1, properties.maxVectorDimensions, "query.size")
+        request.query.requireFinite("query")
         request.topK.requireInRange(1, properties.maxSearchResults, "topK")
     }
 
@@ -174,6 +179,12 @@ class S3VectorsAccessService(
             return 0.0
         }
         return dot / (sqrt(leftNorm) * sqrt(rightNorm))
+    }
+
+    private fun List<Float>.requireFinite(name: String) {
+        if (any { it.isNaN() || it.isInfinite() }) {
+            throw IllegalArgumentException("$name must contain only finite values.")
+        }
     }
 
     companion object {

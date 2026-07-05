@@ -15,10 +15,9 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @SpringBootTest(classes = [S3VectorsAccessGrantsApplication::class])
 @AutoConfigureMockMvc
-class S3VectorsAccessControllerTest {
-
-    @Autowired
-    private lateinit var mockMvc: MockMvc
+class S3VectorsAccessControllerTest @Autowired constructor(
+    private val mockMvc: MockMvc,
+) {
 
     @Test
     fun `upsert and search endpoints return redacted access grant decision`() {

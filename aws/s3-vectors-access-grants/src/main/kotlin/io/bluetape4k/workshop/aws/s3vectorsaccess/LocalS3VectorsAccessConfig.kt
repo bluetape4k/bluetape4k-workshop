@@ -33,6 +33,9 @@ import software.amazon.awssdk.services.s3vectors.model.PutVectorsResponse
 import software.amazon.awssdk.services.s3vectors.model.QueryVectorsRequest
 import software.amazon.awssdk.services.s3vectors.model.QueryVectorsResponse
 
+/**
+ * Local AWS boundary adapters used when the sample runs without real AWS credentials.
+ */
 @Configuration(proxyBeanMethods = false)
 @Profile("!real-aws")
 class LocalS3VectorsAccessConfig {
@@ -48,7 +51,7 @@ class LocalS3VectorsAccessConfig {
         LocalS3AccessGrantsOperations()
 }
 
-class LocalS3VectorsOperations: S3VectorsOperations {
+private class LocalS3VectorsOperations : S3VectorsOperations {
 
     override suspend fun putVectors(request: PutVectorsRequest): PutVectorsResponse =
         PutVectorsResponse.builder().build()
@@ -75,7 +78,7 @@ class LocalS3VectorsOperations: S3VectorsOperations {
         ListVectorsResponse.builder().build()
 }
 
-class LocalS3AccessGrantsOperations: S3AccessGrantsOperations {
+private class LocalS3AccessGrantsOperations : S3AccessGrantsOperations {
 
     override suspend fun getDataAccess(request: GetDataAccessRequest): GetDataAccessResponse =
         GetDataAccessResponse.builder().build()
