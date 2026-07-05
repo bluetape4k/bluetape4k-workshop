@@ -4,18 +4,16 @@ import io.bluetape4k.junit5.coroutines.runSuspendTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.vertx.tests.withSuspendTestContext
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.vertx.core.Vertx
 import io.vertx.ext.web.client.WebClient
 import io.vertx.ext.web.codec.BodyCodec
 import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.coAwait
-import io.vertx.kotlin.coroutines.dispatcher
-import kotlinx.coroutines.runBlocking
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeGreaterThan
-import io.bluetape4k.assertions.shouldNotBeEmpty
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -23,17 +21,15 @@ import org.junit.jupiter.api.extension.ExtendWith
 @ExtendWith(VertxExtension::class)
 class MovieRatingVerticeTest {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     /**
      * BeforeAll, BeforeEach 에서는 testContext 가 불필요합니다. 만약 injection을 받으면 꼭 completeNow() 를 호출해야 합니다.
      */
     @BeforeAll
-    fun beforeAll(vertx: Vertx) {
-        runBlocking(vertx.dispatcher()) {
-            vertx.deployVerticle(MovieRatingVerticle()).coAwait()
-            log.debug { "MovieRatingVerticle deployed." }
-        }
+    fun beforeAll(vertx: Vertx) = runSuspendTest {
+        vertx.deployVerticle(MovieRatingVerticle()).coAwait()
+        log.debug { "MovieRatingVerticle deployed." }
     }
 
     @Test
