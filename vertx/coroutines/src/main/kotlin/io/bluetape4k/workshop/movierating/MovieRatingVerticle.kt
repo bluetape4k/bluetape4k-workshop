@@ -18,9 +18,9 @@ import io.vertx.kotlin.jdbcclient.jdbcConnectOptionsOf
 import io.vertx.kotlin.sqlclient.poolOptionsOf
 import io.vertx.sqlclient.Tuple
 
-class MovieRatingVerticle: CoroutineVerticle() {
+class MovieRatingVerticle : CoroutineVerticle() {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private val statements = listOf(
             "CREATE TABLE MOVIE (ID VARCHAR(16) PRIMARY KEY, TITLE VARCHAR(256) NOT NULL)",
             "CREATE TABLE RATING (ID INT AUTO_INCREMENT PRIMARY KEY, RATE_VALUE INT, MOVIE_ID VARCHAR(16))",
@@ -33,7 +33,7 @@ class MovieRatingVerticle: CoroutineVerticle() {
             "INSERT INTO RATING (RATE_VALUE, MOVIE_ID) VALUES (4, 'indianajones')",
             "INSERT INTO RATING (RATE_VALUE, MOVIE_ID) VALUES (7, 'indianajones')",
             "INSERT INTO RATING (RATE_VALUE, MOVIE_ID) VALUES (3, 'indianajones')",
-            "INSERT INTO RATING (RATE_VALUE, MOVIE_ID) VALUES (9, 'indianajones')"
+            "INSERT INTO RATING (RATE_VALUE, MOVIE_ID) VALUES (9, 'indianajones')",
         )
     }
 
@@ -84,7 +84,7 @@ class MovieRatingVerticle: CoroutineVerticle() {
             val json = json {
                 obj(
                     "id" to id,
-                    "title" to row.getString("TITLE")
+                    "title" to row.getString("TITLE"),
                 )
             }
             ctx.response().end(json.encode())
