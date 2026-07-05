@@ -48,7 +48,7 @@ val service = ProductAuditService(javers)
 val product = Product(1L, "Widget", BigDecimal("9.99"), "Tools")
 service.save("alice", product)
 
-val updated = product.copy(price = BigDecimal("12.99"))
+val updated = Product(product.id, product.name, BigDecimal("12.99"), product.category)
 service.save("alice", updated)
 
 val history = service.getHistory(1L)
