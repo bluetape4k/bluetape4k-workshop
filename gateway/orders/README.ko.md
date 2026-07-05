@@ -17,9 +17,9 @@ WebFlux 애플리케이션으로 `8082`에서 실행되며, 두 개의 suspend c
 
 ![Gateway Orders Service architecture](../../docs/images/readme-diagrams/gateway-orders-readme-architecture-01.png)
 
-이 서비스에는 database 의존성이 없습니다. In-memory 샘플 product와 order를
-반환하므로, gateway 예제는 route forwarding과 path rewrite 동작에 집중할 수
-있습니다.
+이 서비스에는 database 의존성이 없습니다. `OrderCatalogService`가 in-memory
+샘플 product와 order를 반환하고 controller는 HTTP 계약만 노출하므로, gateway
+예제는 route forwarding과 path rewrite 동작에 집중할 수 있습니다.
 
 ## 런타임 계약
 
@@ -29,7 +29,7 @@ WebFlux 애플리케이션으로 `8082`에서 실행되며, 두 개의 suspend c
 | Products API | `GET /api/v1/products`가 샘플 상품 두 개를 반환 |
 | IDs | `Uuid.V7.nextIdAsString()`으로 샘플 order/product identifier 생성 |
 | Swagger landing page | `RedirectWebFilter`가 `/`를 `/swagger-ui.html`로 rewrite |
-| Observability | Actuator endpoint를 노출하고, Micrometer URI filter가 management/API-doc path를 제외 |
+| Observability | Actuator는 `health,info`를 노출하고, Micrometer URI filter가 management/API-doc path를 제외 |
 | AOT | `application.yml`에서 `spring.aot.enabled=true` |
 
 ## 실행
@@ -53,13 +53,15 @@ http :8082/actuator
 |---|---|
 | `bluetape4k-logging` | application, config, filter, controllers의 `KLoggingChannel()` |
 | `bluetape4k-idgenerators` | Order와 product 샘플 ID를 위한 UUID v7 |
-| `bluetape4k-support` | Swagger 설정의 `uninitialized()`, `unsafeLazy` |
+| `bluetape4k-support` | API 모델의 `requireNotBlank`, `requirePositiveNumber` validation |
 | `bluetape4k-coroutines` | Suspend WebFlux controller endpoints |
+| `bluetape4k-assertions` | WebFlux endpoint, model validation, filter test |
 
 ## 소스 기준점
 
 - `src/main/kotlin/io/bluetape4k/workshop/gateway/orders/controller/OrderController.kt`
 - `src/main/kotlin/io/bluetape4k/workshop/gateway/orders/controller/ProductController.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/orders/service/OrderCatalogService.kt`
 - `src/main/kotlin/io/bluetape4k/workshop/gateway/orders/filters/RedirectWebFilter.kt`
 - `src/main/kotlin/io/bluetape4k/workshop/gateway/orders/config/managements/ObservationConfig.kt`
 - `src/main/resources/application.yml`

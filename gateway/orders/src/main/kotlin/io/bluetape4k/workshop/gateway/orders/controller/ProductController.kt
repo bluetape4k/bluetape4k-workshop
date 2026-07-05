@@ -1,27 +1,22 @@
 package io.bluetape4k.workshop.gateway.orders.controller
 
-import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.gateway.orders.model.Product
-import org.springframework.web.bind.annotation.CrossOrigin
+import io.bluetape4k.workshop.gateway.orders.service.OrderCatalogService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/api/v1/products")
-@CrossOrigin
-class ProductController {
+class ProductController(
+    private val orderCatalogService: OrderCatalogService,
+) {
 
     companion object: KLoggingChannel()
 
-    private val uuidGenerator = Uuid.V7
-
     @GetMapping
     suspend fun getAll(): List<Product> {
-        return listOf(
-            Product(uuidGenerator.nextIdAsString(), "Mac Book Pro", 230.toBigDecimal()),
-            Product(uuidGenerator.nextIdAsString(), "iPhone", 190.toBigDecimal()),
-        )
+        return orderCatalogService.getProducts()
     }
 }
