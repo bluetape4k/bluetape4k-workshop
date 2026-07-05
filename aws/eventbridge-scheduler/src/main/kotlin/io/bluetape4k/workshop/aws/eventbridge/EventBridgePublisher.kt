@@ -22,7 +22,7 @@ interface EventBridgePublisher {
  * In-memory EventBridge publisher for local workshop runs.
  */
 @Component
-class LocalEventBridgePublisher: EventBridgePublisher {
+class LocalEventBridgePublisher : EventBridgePublisher {
 
     private val publishedEntries = CopyOnWriteArrayList<PutEventsRequestEntry>()
 

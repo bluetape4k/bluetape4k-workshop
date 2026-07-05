@@ -15,6 +15,7 @@ data class OrderWorkflowProperties(
     val schedulerTargetArn: String = "arn:aws:lambda:ap-northeast-2:123456789012:function:order-reminder",
     val flexibleTimeWindowMode: String = "OFF",
 ): Serializable {
+
     companion object {
         private const val serialVersionUID: Long = -5979974063158898606L
     }

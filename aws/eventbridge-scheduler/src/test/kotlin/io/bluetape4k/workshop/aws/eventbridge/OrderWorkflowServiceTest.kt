@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.aws.eventbridge
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -39,7 +41,8 @@ class OrderWorkflowServiceTest {
         schedule.name shouldBeEqualTo "order-100-payment-reminder"
         schedule.groupName shouldBeEqualTo "order-workflows"
         schedule.targetArn shouldBeEqualTo "arn:aws:lambda:ap-northeast-2:123456789012:function:order-reminder"
-        schedule.scheduleExpression shouldBeEqualTo "at(2026-07-02T09:30:00Z)"
+        schedule.scheduleExpression shouldBeEqualTo "at(2026-07-02T09:30:00)"
+        schedule.scheduleExpressionTimezone shouldBeEqualTo "UTC"
         schedule.flexibleTimeWindowMode shouldBeEqualTo "OFF"
         schedule.idempotencyKey shouldBeEqualTo "order-100-payment-reminder"
         schedule.correlationId shouldBeEqualTo "corr-100"
@@ -56,7 +59,7 @@ class OrderWorkflowServiceTest {
         report.eventBridge.state shouldBeEqualTo BoundaryState.FAILED
         report.eventBridge.message shouldContain "event bus denied"
         report.scheduler.state shouldBeEqualTo BoundaryState.SKIPPED
-        fixture.scheduler.requests.size shouldBeEqualTo 0
+        fixture.scheduler.requests.shouldBeEmpty()
     }
 
     @Test
@@ -69,7 +72,7 @@ class OrderWorkflowServiceTest {
         report.eventBridge.state shouldBeEqualTo BoundaryState.PUBLISHED
         report.scheduler.state shouldBeEqualTo BoundaryState.FAILED
         report.scheduler.message shouldContain "schedule denied"
-        fixture.eventBridge.entries.size shouldBeEqualTo 1
+        fixture.eventBridge.entries shouldHaveSize 1
     }
 
     @Test
@@ -131,7 +134,7 @@ class OrderWorkflowServiceTest {
         val scheduler: CapturingWorkflowScheduler,
     )
 
-    private class CapturingEventBridgePublisher: EventBridgePublisher {
+    private class CapturingEventBridgePublisher : EventBridgePublisher {
         val entries = mutableListOf<PutEventsRequestEntry>()
         var failure: Throwable? = null
 
@@ -142,7 +145,7 @@ class OrderWorkflowServiceTest {
         }
     }
 
-    private class CapturingWorkflowScheduler: WorkflowScheduler {
+    private class CapturingWorkflowScheduler : WorkflowScheduler {
         val requests = mutableListOf<SchedulerWorkflowRequest>()
         var failure: Throwable? = null
 
@@ -152,4 +155,5 @@ class OrderWorkflowServiceTest {
             return BoundaryStatus.published("scheduled locally")
         }
     }
+
 }
