@@ -18,7 +18,7 @@ import java.time.Instant
  * - [value] must be non-blank.
  * - The identifier is used by PostgreSQL rows, Spring Modulith events, and JaVers snapshots.
  */
-data class OrderId(val value: String): Serializable {
+data class OrderId(val value: String) : Serializable {
     init {
         value.requireNotBlank("value")
     }
@@ -40,7 +40,7 @@ data class OrderId(val value: String): Serializable {
  * - [value] must be non-blank.
  * - The workshop treats it as a synthetic identifier and never as PII.
  */
-data class CustomerId(val value: String): Serializable {
+data class CustomerId(val value: String) : Serializable {
     init {
         value.requireNotBlank("value")
     }
@@ -60,7 +60,7 @@ data class CustomerId(val value: String): Serializable {
 data class Money(
     val amount: BigDecimal,
     val currency: String = "USD",
-): Serializable {
+) : Serializable {
     init {
         amount.requireZeroOrPositiveNumber("amount")
         currency.requireNotBlank("currency")
@@ -83,7 +83,7 @@ data class OrderLine(
     val sku: String,
     val quantity: Int,
     val unitPrice: Money,
-): Serializable {
+) : Serializable {
     init {
         sku.requireNotBlank("sku")
         quantity.requirePositiveNumber("quantity")
@@ -114,7 +114,7 @@ enum class OrderStatus {
 data class PlaceOrderCommand(
     val customerId: CustomerId,
     val lines: List<OrderLine>,
-): Serializable {
+) : Serializable {
     init {
         lines.requireNotEmpty("lines")
     }
@@ -134,7 +134,7 @@ data class PlaceOrderCommand(
 data class ApproveOrderCommand(
     val orderId: OrderId,
     val approvedBy: String,
-): Serializable {
+) : Serializable {
     init {
         approvedBy.requireNotBlank("approvedBy")
     }
@@ -147,7 +147,7 @@ data class ApproveOrderCommand(
 /**
  * Minimal event contract shared by Spring Modulith and JaVers audit metadata.
  */
-interface DomainEvent: Serializable {
+interface DomainEvent : Serializable {
     val aggregateId: String
     val occurredOn: Instant
 }
@@ -158,7 +158,7 @@ interface DomainEvent: Serializable {
 data class OrderPlaced(
     override val aggregateId: String,
     override val occurredOn: Instant = Instant.now(),
-): DomainEvent {
+) : DomainEvent {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -171,7 +171,7 @@ data class OrderApproved(
     override val aggregateId: String,
     val approvedBy: String,
     override val occurredOn: Instant = Instant.now(),
-): DomainEvent {
+) : DomainEvent {
     init {
         approvedBy.requireNotBlank("approvedBy")
     }
@@ -199,7 +199,7 @@ data class Order(
     val status: OrderStatus,
     val version: Long = 0,
     val events: List<DomainEvent> = emptyList(),
-): Serializable {
+) : Serializable {
     init {
         lines.requireNotEmpty("lines")
     }

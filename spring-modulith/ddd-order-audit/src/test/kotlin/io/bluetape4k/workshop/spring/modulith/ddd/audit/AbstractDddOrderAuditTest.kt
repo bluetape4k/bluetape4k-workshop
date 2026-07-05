@@ -16,7 +16,7 @@ import org.springframework.test.context.TestConstructor
 @TestConstructor(autowireMode = TestConstructor.AutowireMode.ALL)
 abstract class AbstractDddOrderAuditTest {
 
-    companion object: KLogging() {
+    companion object : KLogging() {
         val postgres: PostgreSQLServer = PostgreSQLServer.Launcher.postgres
 
         @JvmStatic

@@ -36,7 +36,7 @@ data class OrderAuditEntry(
     val status: OrderStatus,
     val totalAmount: BigDecimal,
     val lineCount: Int,
-): Serializable {
+) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -68,7 +68,7 @@ class OrderAuditService(
 
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.registerSynchronization(
-                object: TransactionSynchronization {
+                object : TransactionSynchronization {
                     override fun afterCommit() {
                         javers.commit(author, orderToAudit, properties)
                     }
