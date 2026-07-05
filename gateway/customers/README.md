@@ -12,9 +12,10 @@ at `GET /api/v1/customers`.
 
 ![Gateway Customers Service architecture](../../docs/images/readme-diagrams/gateway-customers-readme-architecture-01.png)
 
-The service has no database dependency. `CustomerContoller` returns two sample
-`Customer` values, `Winter` and `Spring`, so the gateway example can focus on
-routing instead of persistence.
+The service has no database dependency. `CustomerService` returns two sample
+`Customer` values, `Winter` and `Spring`, while `CustomerController` exposes the
+HTTP contract so the gateway example can focus on routing instead of
+persistence.
 
 ## Runtime Contract
 
@@ -22,7 +23,7 @@ routing instead of persistence.
 |---|---|
 | HTTP API | `GET /api/v1/customers` returns a JSON array of customers |
 | Swagger landing page | `/` is rewritten to `/swagger-ui.html` by `RedirectWebFilter` |
-| Observability | Actuator endpoints are exposed; Micrometer URI filter excludes management and API-doc paths |
+| Observability | Actuator exposes `health,info`; Micrometer URI filter excludes management and API-doc paths |
 | AOT | `spring.aot.enabled=true` in `application.yml` |
 
 ## Run
@@ -44,12 +45,14 @@ http :8081/actuator
 | Library | Usage |
 |---|---|
 | `bluetape4k-logging` | `KLoggingChannel()` in the application, config, filter, and controller |
-| `bluetape4k-support` | `uninitialized()` and `unsafeLazy` in Swagger configuration |
+| `bluetape4k-support` | `requireNotBlank` validation in the `Customer` model |
 | `bluetape4k-coroutines` | Suspend WebFlux controller endpoint |
+| `bluetape4k-assertions` | WebFlux endpoint tests use bluetape4k assertions |
 
 ## Source References
 
-- `src/main/kotlin/io/bluetape4k/workshop/gateway/customer/controller/CustomerContoller.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/customer/controller/CustomerController.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/customer/service/CustomerService.kt`
 - `src/main/kotlin/io/bluetape4k/workshop/gateway/customer/filters/RedirectWebFilter.kt`
 - `src/main/kotlin/io/bluetape4k/workshop/gateway/customer/config/managements/ObservationConfig.kt`
 - `src/main/resources/application.yml`

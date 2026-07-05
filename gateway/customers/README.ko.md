@@ -12,9 +12,10 @@ Spring Boot WebFlux 애플리케이션으로 `8081`에서 실행되며,
 
 ![Gateway Customers Service architecture](../../docs/images/readme-diagrams/gateway-customers-readme-architecture-01.png)
 
-이 서비스에는 database 의존성이 없습니다. `CustomerContoller`는 `Winter`,
-`Spring` 두 개의 샘플 `Customer` 값을 반환하므로, gateway 예제는 persistence
-대신 routing 동작에 집중할 수 있습니다.
+이 서비스에는 database 의존성이 없습니다. `CustomerService`가 `Winter`,
+`Spring` 두 개의 샘플 `Customer` 값을 반환하고, `CustomerController`는 HTTP
+계약만 노출하므로 gateway 예제는 persistence 대신 routing 동작에 집중할 수
+있습니다.
 
 ## 런타임 계약
 
@@ -22,7 +23,7 @@ Spring Boot WebFlux 애플리케이션으로 `8081`에서 실행되며,
 |---|---|
 | HTTP API | `GET /api/v1/customers`가 customer JSON 배열을 반환 |
 | Swagger landing page | `RedirectWebFilter`가 `/`를 `/swagger-ui.html`로 rewrite |
-| Observability | Actuator endpoint를 노출하고, Micrometer URI filter가 management/API-doc path를 제외 |
+| Observability | Actuator는 `health,info`를 노출하고, Micrometer URI filter가 management/API-doc path를 제외 |
 | AOT | `application.yml`에서 `spring.aot.enabled=true` |
 
 ## 실행
@@ -44,12 +45,14 @@ http :8081/actuator
 | Library | Usage |
 |---|---|
 | `bluetape4k-logging` | application, config, filter, controller의 `KLoggingChannel()` |
-| `bluetape4k-support` | Swagger 설정의 `uninitialized()`, `unsafeLazy` |
+| `bluetape4k-support` | `Customer` 모델의 `requireNotBlank` validation |
 | `bluetape4k-coroutines` | Suspend WebFlux controller endpoint |
+| `bluetape4k-assertions` | WebFlux endpoint test의 bluetape4k assertion |
 
 ## 소스 기준점
 
-- `src/main/kotlin/io/bluetape4k/workshop/gateway/customer/controller/CustomerContoller.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/customer/controller/CustomerController.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/customer/service/CustomerService.kt`
 - `src/main/kotlin/io/bluetape4k/workshop/gateway/customer/filters/RedirectWebFilter.kt`
 - `src/main/kotlin/io/bluetape4k/workshop/gateway/customer/config/managements/ObservationConfig.kt`
 - `src/main/resources/application.yml`
