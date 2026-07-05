@@ -227,6 +227,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Advanced | [`aws-eventbridge-scheduler`](aws/eventbridge-scheduler/) | `aws`, `coroutines` | Local adapters | EventBridge event envelope plus delayed Scheduler request mapping |
 | Advanced | [`aws-cloudwatch-imds-observability`](aws/cloudwatch-imds-observability/) | `aws`, `micrometer`, `coroutines` | Local adapters | CloudWatch metric/log publish intent, Micrometer snapshots, and explicit IMDS metadata opt-in |
 | Advanced | [`aws-sqs-sns-coroutines`](aws/sqs-sns-coroutines/) | `aws`, `micrometer`, `coroutines`, `testcontainers` | Local adapters + Floci | SNS publish plus SQS consume with ack, retry, dead-letter reports, and cancellation-safe coroutines |
+| Advanced | [`aws-storage-abstraction`](aws/storage-abstraction/) | `aws`, `coroutines`, `testcontainers` | Local files + Floci | StorageService boundary with guarded object keys, S3 object URIs, and pre-signed GET URLs |
 | Advanced | [`aws-s3-vectors-access-grants`](aws/s3-vectors-access-grants/) | `aws`, `coroutines` | Local adapters | S3 Vectors upsert/query plus S3 Access Grants read-decision boundary |
 | Advanced | [`image-processing-advanced-workflow`](image-processing/advanced-workflow/) | `images-vips-java25`, `images-spring-boot`, `micrometer` | S3 or local storage | Upload → original storage → WebP variants → unsigned public URLs |
 | Advanced | [`image-processing-profile-image-moderation`](image-processing/profile-image-moderation/) | `images-spring-boot`, `coroutines`, `micrometer` | Local storage / S3-compatible | Profile upload → private original → blurred pending URL → moderation approval/default fallback |
@@ -244,6 +245,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 ./gradlew :aws-eventbridge-scheduler:test
 ./gradlew :aws-cloudwatch-imds-observability:test
 ./gradlew :aws-sqs-sns-coroutines:test
+./gradlew :aws-storage-abstraction:test
 ./gradlew :aws-s3-vectors-access-grants:test
 ./gradlew :image-processing-profile-image-moderation:test
 ./gradlew :leader-backend-comparison-lab:test

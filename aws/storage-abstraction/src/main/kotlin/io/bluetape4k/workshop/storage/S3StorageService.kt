@@ -1,7 +1,10 @@
 package io.bluetape4k.workshop.storage
 
+import io.bluetape4k.aws.s3.createBucket
+import io.bluetape4k.aws.s3.existsBucket
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotBlank
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.springframework.beans.factory.annotation.Value
@@ -17,9 +20,10 @@ import software.amazon.awssdk.services.s3.model.NoSuchKeyException
  *
  * ## Behavior / Contract
  * - All objects are stored in [bucketName] on S3 (or LocalStack in tests).
- * - `upload` puts bytes to S3 and returns a plain `https://s3.amazonaws.com/{bucket}/{key}` URL.
+ * - Object keys are validated as relative forward-slash keys before S3 access.
+ * - `upload` puts bytes to S3 and returns an endpoint-neutral `s3://{bucket}/{key}` URI.
  * - `download` retrieves bytes from S3; throws [NoSuchKeyException] if the key does not exist.
- * - `getUrl` returns the same public S3 URL as `upload`.
+ * - `getUrl` returns the same endpoint-neutral S3 object URI as `upload`.
  * - `delete` removes the object; silently ignores missing keys.
  * - All blocking `S3Client` calls are wrapped in `withContext(Dispatchers.IO)`.
  * - Active when Spring profile `s3` is set.
@@ -42,48 +46,49 @@ class S3StorageService(
 
     override suspend fun upload(key: String, content: ByteArray, contentType: String): String =
         withContext(Dispatchers.IO) {
-            ensureBucketExists()
+            val objectKey = storageObjectKey(key)
+            val bucket = storageBucketName(bucketName)
+            val type = contentType.requireNotBlank("contentType").trim()
+            ensureBucketExists(bucket)
             s3Client.putObject(
-                { req -> req.bucket(bucketName).key(key).contentType(contentType).contentLength(content.size.toLong()) },
+                { req -> req.bucket(bucket).key(objectKey).contentType(type).contentLength(content.size.toLong()) },
                 RequestBody.fromBytes(content)
             )
-            log.debug { "Uploaded [$key] to s3://$bucketName ($contentType, ${content.size} bytes)" }
-            "https://s3.amazonaws.com/$bucketName/$key"
+            log.debug { "Uploaded [$objectKey] to s3://$bucket ($type, ${content.size} bytes)" }
+            storageObjectUri(bucket, objectKey)
         }
 
     override suspend fun download(key: String): ByteArray =
         withContext(Dispatchers.IO) {
-            log.debug { "Downloading [$key] from s3://$bucketName" }
+            val objectKey = storageObjectKey(key)
+            val bucket = storageBucketName(bucketName)
+            log.debug { "Downloading [$objectKey] from s3://$bucket" }
             s3Client.getObject(
-                { req -> req.bucket(bucketName).key(key) },
+                { req -> req.bucket(bucket).key(objectKey) },
                 ResponseTransformer.toBytes()
             ).asByteArray()
         }
 
     override suspend fun getUrl(key: String): String =
-        "https://s3.amazonaws.com/$bucketName/$key"
+        storageObjectUri(bucketName, key)
 
     override suspend fun delete(key: String) {
         withContext(Dispatchers.IO) {
+            val objectKey = storageObjectKey(key)
+            val bucket = storageBucketName(bucketName)
             try {
-                s3Client.deleteObject { req -> req.bucket(bucketName).key(key) }
-                log.debug { "Deleted [$key] from s3://$bucketName" }
+                s3Client.deleteObject { req -> req.bucket(bucket).key(objectKey) }
+                log.debug { "Deleted [$objectKey] from s3://$bucket" }
             } catch (e: NoSuchKeyException) {
-                log.debug { "Delete [$key]: key not found, ignoring" }
+                log.debug { "Delete [$objectKey]: key not found, ignoring" }
             }
         }
     }
 
-    private fun ensureBucketExists() {
-        val exists = try {
-            s3Client.headBucket { it.bucket(bucketName) }
-            true
-        } catch (e: Exception) {
-            false
-        }
-        if (!exists) {
-            s3Client.createBucket { it.bucket(bucketName) }
-            log.debug { "Created bucket: $bucketName" }
+    private fun ensureBucketExists(bucket: String) {
+        if (!s3Client.existsBucket(bucket).getOrThrow()) {
+            s3Client.createBucket(bucket)
+            log.debug { "Created bucket: $bucket" }
         }
     }
 }

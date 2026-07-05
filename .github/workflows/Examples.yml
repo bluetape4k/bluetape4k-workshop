@@ -25,6 +25,7 @@ on:
       - 'aws/cloudwatch-imds-observability/**'
       - 'aws/eventbridge-scheduler/**'
       - 'aws/sqs-sns-coroutines/**'
+      - 'aws/storage-abstraction/**'
       - 'aws/s3-spring-cloud/**'
       - 'aws/s3-vectors-access-grants/**'
       - 'kotlin/flow-extensions-event-aggregation/**'
@@ -67,6 +68,7 @@ on:
       - 'aws/cloudwatch-imds-observability/**'
       - 'aws/eventbridge-scheduler/**'
       - 'aws/sqs-sns-coroutines/**'
+      - 'aws/storage-abstraction/**'
       - 'aws/s3-spring-cloud/**'
       - 'aws/s3-vectors-access-grants/**'
       - 'kotlin/flow-extensions-event-aggregation/**'
@@ -262,6 +264,7 @@ jobs:
       # - aws-ktor-dynamodb: local AWS emulator-backed Ktor + DynamoDB path
       # - aws-s3-spring-cloud: Floci-backed Spring Cloud AWS S3 path
       # - aws-sqs-sns-coroutines: Floci-backed SQS/SNS coroutine messaging path
+      # - aws-storage-abstraction: Floci-backed S3 storage abstraction path
       # - graph-event-lineage: Neo4j-backed graph lineage audit path
       # - spring-boot-cache-redis: Redis-backed cache path
       # - messaging-kafka: Kafka-backed messaging path
@@ -275,6 +278,7 @@ jobs:
           :aws-ktor-dynamodb:test
           :aws-s3-spring-cloud:test
           :aws-sqs-sns-coroutines:test
+          :aws-storage-abstraction:test
           :graph-event-lineage:integrationTest
           :spring-boot-cache-redis:test
           :messaging-kafka:test
@@ -304,6 +308,8 @@ jobs:
             aws/s3-spring-cloud/build/reports/tests/test/
             aws/sqs-sns-coroutines/build/test-results/test/*.xml
             aws/sqs-sns-coroutines/build/reports/tests/test/
+            aws/storage-abstraction/build/test-results/test/*.xml
+            aws/storage-abstraction/build/reports/tests/test/
             graph/event-lineage/build/test-results/integrationTest/*.xml
             graph/event-lineage/build/reports/tests/integrationTest/
             spring-boot/cache-redis/build/test-results/test/*.xml

@@ -22,8 +22,10 @@ The important boundary is `StorageService`. The `local`, `s3`, and
 ![Storage Abstraction Workshop request sequence](../../docs/images/readme-diagrams/aws-storage-abstraction-sequence-01.png)
 
 `upload`, `download`, and `delete` run blocking filesystem or AWS SDK calls on
-`Dispatchers.IO`. `getUrl` returns a direct local/S3 URL for the `local` and
-`s3` profiles, and a time-limited pre-signed GET URL for `s3-presigned`.
+`Dispatchers.IO`. Object keys are trimmed and validated as relative forward-slash
+keys before any backend call. `getUrl` returns a direct local URL for the `local`
+profile, an endpoint-neutral `s3://bucket/key` object URI for the `s3` profile,
+and a time-limited pre-signed GET URL for `s3-presigned`.
 
 ## Key Features
 
@@ -32,8 +34,9 @@ The important boundary is `StorageService`. The `local`, `s3`, and
 | Storage abstraction | Single `StorageService` interface with `upload`, `download`, `getUrl`, `delete` |
 | Profile switching | `local` / `s3` / `s3-presigned` Spring profiles select the implementation |
 | Local backend | `java.nio.file.Files` — zero external dependencies, instant test startup |
-| S3 backend | AWS SDK v2 `S3Client` wrapped in `withContext(Dispatchers.IO)` |
+| S3 backend | AWS SDK v2 `S3Client` wrapped in `withContext(Dispatchers.IO)` plus bluetape4k S3 bucket helpers |
 | Pre-signed URLs | `S3Presigner` generates time-limited GET URLs (default 15 min, 900 s) |
+| Key guard | Blank, absolute, backslash, and `.` / `..` traversal keys fail before filesystem or S3 access |
 | Coroutines | All `suspend` methods; blocking I/O dispatched on `Dispatchers.IO` |
 | Local AWS emulator | `FlociServer` (Testcontainers) replaces LocalStack Community edition |
 
@@ -63,10 +66,13 @@ The important boundary is `StorageService`. The `local`, `s3`, and
 interface StorageService {
     suspend fun upload(key: String, content: ByteArray, contentType: String): String
     suspend fun download(key: String): ByteArray
-    suspend fun getUrl(key: String): String   // public URL or pre-signed URL
+    suspend fun getUrl(key: String): String   // local file URL, s3:// URI, or pre-signed URL
     suspend fun delete(key: String)
 }
 ```
+
+Keys are portable object keys, not raw local paths. Use relative values such as
+`docs/readme.txt`; blank, absolute, backslash, and traversal keys are rejected.
 
 ## Pre-signed URL Behaviour
 
@@ -116,9 +122,9 @@ implementation(libs.testcontainers.localstack) // Floci uses LocalStack-compatib
 
 Tests run all three profiles in a single Gradle task:
 
-- `LocalStorageServiceTest` — 5 tests, `local` profile, no Docker
-- `S3StorageServiceTest` — 5 tests, `s3` profile, Floci container (shared JVM singleton)
-- `S3PresignedStorageServiceTest` — 7 tests, `s3-presigned` profile, Floci + presigned URL assertions
+- `LocalStorageServiceTest` — 8 tests, `local` profile, no Docker
+- `S3StorageServiceTest` — 9 tests, `s3` profile, Floci container (shared JVM singleton)
+- `S3PresignedStorageServiceTest` — 10 tests, `s3-presigned` profile, Floci + presigned URL assertions
 
 ## Notes
 

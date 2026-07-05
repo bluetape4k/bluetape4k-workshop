@@ -21,9 +21,10 @@
 ![Storage Abstraction Workshop request sequence](../../docs/images/readme-diagrams/aws-storage-abstraction-sequence-01.png)
 
 `upload`, `download`, `delete`는 blocking filesystem 또는 AWS SDK 호출을
-`Dispatchers.IO`에서 실행합니다. `getUrl`은 `local`과 `s3` profile에서는
-직접 URL을 반환하고, `s3-presigned`에서는 제한 시간 pre-signed GET URL을
-반환합니다.
+`Dispatchers.IO`에서 실행합니다. Object key는 backend 호출 전에 상대
+forward-slash key로 trim/검증됩니다. `getUrl`은 `local` profile에서는 직접
+파일 URL, `s3` profile에서는 endpoint-neutral `s3://bucket/key` object URI,
+`s3-presigned`에서는 제한 시간 pre-signed GET URL을 반환합니다.
 
 ## 주요 기능
 
@@ -32,8 +33,9 @@
 | 스토리지 추상화 | `upload`, `download`, `getUrl`, `delete`를 제공하는 단일 `StorageService` 인터페이스 |
 | 프로파일 전환 | `local` / `s3` / `s3-presigned` Spring profile이 구현체를 선택 |
 | 로컬 백엔드 | `java.nio.file.Files` — 외부 의존성 없이 테스트를 즉시 시작 |
-| S3 백엔드 | AWS SDK v2 `S3Client`를 `withContext(Dispatchers.IO)`로 감쌈 |
+| S3 백엔드 | AWS SDK v2 `S3Client`를 `withContext(Dispatchers.IO)`로 감싸고 bluetape4k S3 bucket helper를 사용 |
 | Pre-signed URL | `S3Presigner`가 제한 시간 GET URL을 생성(기본 15분, 900초) |
+| Key guard | blank, absolute, backslash, `.` / `..` traversal key는 filesystem 또는 S3 접근 전에 실패 |
 | 코루틴 | 모든 메서드가 `suspend`; 블로킹 I/O는 `Dispatchers.IO`에서 실행 |
 | 로컬 AWS 에뮬레이터 | `FlociServer`(Testcontainers)가 LocalStack Community edition을 대체 |
 
@@ -63,10 +65,13 @@
 interface StorageService {
     suspend fun upload(key: String, content: ByteArray, contentType: String): String
     suspend fun download(key: String): ByteArray
-    suspend fun getUrl(key: String): String   // public URL or pre-signed URL
+    suspend fun getUrl(key: String): String   // local file URL, s3:// URI, or pre-signed URL
     suspend fun delete(key: String)
 }
 ```
+
+Key는 raw local path가 아니라 portable object key입니다. `docs/readme.txt` 같은
+상대 경로 값을 사용하세요. blank, absolute, backslash, traversal key는 거부됩니다.
 
 ## Pre-signed URL 동작
 
@@ -114,9 +119,9 @@ implementation(libs.testcontainers.localstack) // Floci uses LocalStack-compatib
 
 테스트는 하나의 Gradle task에서 세 profile을 모두 실행합니다.
 
-- `LocalStorageServiceTest` — 5 tests, `local` profile, no Docker
-- `S3StorageServiceTest` — 5 tests, `s3` profile, Floci container (shared JVM singleton)
-- `S3PresignedStorageServiceTest` — 7 tests, `s3-presigned` profile, Floci + presigned URL assertions
+- `LocalStorageServiceTest` — 8 tests, `local` profile, no Docker
+- `S3StorageServiceTest` — 9 tests, `s3` profile, Floci container (shared JVM singleton)
+- `S3PresignedStorageServiceTest` — 10 tests, `s3-presigned` profile, Floci + presigned URL assertions
 
 ## 참고 사항
 
