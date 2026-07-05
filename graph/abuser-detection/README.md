@@ -72,6 +72,10 @@ from `IdentifierEdgeLabel.all` — referral alone does not imply shared identity
 | `detectReferralLoops(maxDepth, maxCycles)` | Detects directed cycles in the `REFERRED_BY` subgraph among User vertices. Returns `List<GraphCycle>` (blocking) or cold `Flow<GraphCycle>` (coroutine). |
 | `rankSuspiciousUsers(limit)` | Runs PageRank over User vertices and returns results sorted descending by score. Each `SuspiciousUserScore` carries a 1-based rank. Higher PageRank correlates with more shared-identifier connections, which is a proxy for abuse risk. |
 
+Service constructors reject blank graph names. Edge mutators validate endpoint existence
+and expected labels before creating graph edges, so invalid `User -> identifier` or
+`User -> User` relationships fail fast with `IllegalArgumentException`.
+
 ### Result types
 
 ```kotlin

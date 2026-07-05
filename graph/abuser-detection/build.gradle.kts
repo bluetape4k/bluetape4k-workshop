@@ -19,9 +19,13 @@ tasks.test {
 tasks.register<Test>("integrationTest") {
     description = "Runs Neo4j and Memgraph integration tests (requires Docker)."
     group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
     useJUnitPlatform {
         includeTags("integration")
     }
+    shouldRunAfter(tasks.test)
+    usesService(gradle.sharedServices.registrations.named("test-mutex").get().service)
     // Inherit the same JVM args as the standard test task.
     jvmArgs = tasks.test.get().jvmArgs
 }

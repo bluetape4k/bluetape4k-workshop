@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.graph.abuser
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeGreaterThan
@@ -10,6 +11,8 @@ import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.repository.GraphOperations
+import io.bluetape4k.workshop.graph.abuser.model.IdentifierEdgeLabel
+import io.bluetape4k.workshop.graph.abuser.model.SuspiciousUserScore
 import io.bluetape4k.workshop.graph.abuser.schema.DeviceLabel
 import io.bluetape4k.workshop.graph.abuser.schema.IpAddressLabel
 import io.bluetape4k.workshop.graph.abuser.schema.PaymentMethodLabel
@@ -53,6 +56,13 @@ abstract class AbstractAbuserDetectionTest {
         user.label shouldBeEqualTo UserLabel.label
         user.properties[UserLabel.userId.name] shouldBeEqualTo "user-1"
         user.properties[UserLabel.country.name] shouldBeEqualTo "KR"
+    }
+
+    @Test
+    fun `service rejects blank graph name`() {
+        assertFailsWith<IllegalArgumentException> {
+            AbuserDetectionService(ops, " ")
+        }
     }
 
     @Test
@@ -170,7 +180,7 @@ abstract class AbstractAbuserDetectionTest {
     }
 
     @Test
-    fun `explainSuspicion returns empty list for isolated user`() {
+    fun `explainSuspicion returns only outgoing private identifiers for isolated user`() {
         val seed = seedSharedIdentifiers(service)
 
         val paths = service.explainSuspicion(seed.unrelatedUser.id)
@@ -181,6 +191,15 @@ abstract class AbstractAbuserDetectionTest {
         val identifierIds = paths.map { it.identifierVertexId }
         identifierIds shouldNotContain seed.deviceA.id
         identifierIds shouldNotContain seed.ipA.id
+    }
+
+    @Test
+    fun `linkDevice rejects invalid endpoint labels`() {
+        val seed = seedSharedIdentifiers(service)
+
+        assertFailsWith<IllegalArgumentException> {
+            service.linkDevice(seed.deviceA.id, seed.user1.id, "2026-01-01T00:00:00Z")
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -237,6 +256,21 @@ abstract class AbstractAbuserDetectionTest {
         scores shouldHaveSize 2
         scores.first().rank shouldBeEqualTo 1
         scores.last().rank shouldBeEqualTo 2
+    }
+
+    @Test
+    fun `domain model rejects invalid labels and ranks`() {
+        val seed = seedSharedIdentifiers(service)
+
+        assertFailsWith<IllegalArgumentException> {
+            IdentifierEdgeLabel(" ")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            SuspiciousUserScore(user = seed.user1, score = 0.1, rank = 0)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            SuspiciousUserScore(user = seed.user1, score = 0.0, rank = 1)
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────

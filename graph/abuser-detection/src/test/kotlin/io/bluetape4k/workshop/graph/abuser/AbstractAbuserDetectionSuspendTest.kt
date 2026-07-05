@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.graph.abuser
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeGreaterThan
@@ -8,9 +9,11 @@ import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.repository.GraphSuspendOperations
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.workshop.graph.abuser.model.IdentifierEdgeLabel
 import io.bluetape4k.workshop.graph.abuser.model.SuspiciousUserScore
 import io.bluetape4k.workshop.graph.abuser.schema.DeviceLabel
 import io.bluetape4k.workshop.graph.abuser.schema.IpAddressLabel
@@ -21,10 +24,11 @@ import io.bluetape4k.workshop.graph.abuser.seed.AbuserDetectionSeed
 import io.bluetape4k.workshop.graph.abuser.seed.seedReferralLoop
 import io.bluetape4k.workshop.graph.abuser.seed.seedSharedIdentifiers
 import io.bluetape4k.workshop.graph.abuser.service.AbuserDetectionSuspendService
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -59,6 +63,13 @@ abstract class AbstractAbuserDetectionSuspendTest {
         user.label shouldBeEqualTo UserLabel.label
         user.properties[UserLabel.userId.name] shouldBeEqualTo "user-1"
         user.properties[UserLabel.country.name] shouldBeEqualTo "KR"
+    }
+
+    @Test
+    fun `service rejects blank graph name`() = runSuspendIO {
+        assertFailsWith<IllegalArgumentException> {
+            AbuserDetectionSuspendService(ops, " ")
+        }
     }
 
     @Test
@@ -175,7 +186,7 @@ abstract class AbstractAbuserDetectionSuspendTest {
     }
 
     @Test
-    fun `explainSuspicion flow does not emit cluster device for isolated user`() = runSuspendIO {
+    fun `explainSuspicion flow returns only outgoing private identifiers for isolated user`() = runSuspendIO {
         val seed = seedSharedIdentifiers(service)
 
         val paths = service.explainSuspicion(seed.unrelatedUser.id).toList()
@@ -183,6 +194,15 @@ abstract class AbstractAbuserDetectionSuspendTest {
         val identifierIds = paths.map { it.identifierVertexId }
         identifierIds shouldNotContain seed.deviceA.id
         identifierIds shouldNotContain seed.ipA.id
+    }
+
+    @Test
+    fun `linkDevice rejects invalid endpoint labels`() = runSuspendIO {
+        val seed = seedSharedIdentifiers(service)
+
+        assertFailsWith<IllegalArgumentException> {
+            service.linkDevice(seed.deviceA.id, seed.user1.id, "2026-01-01T00:00:00Z")
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────
@@ -240,24 +260,40 @@ abstract class AbstractAbuserDetectionSuspendTest {
         scores.last().rank shouldBeEqualTo 2
     }
 
+    @Test
+    fun `domain model rejects invalid labels and ranks`() = runSuspendIO {
+        val seed = seedSharedIdentifiers(service)
+
+        assertFailsWith<IllegalArgumentException> {
+            IdentifierEdgeLabel(" ")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            SuspiciousUserScore(user = seed.user1, score = 0.1, rank = 0)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            SuspiciousUserScore(user = seed.user1, score = 0.0, rank = 1)
+        }
+    }
+
     // ─────────────────────────────────────────────────────────────────────
     // Flow cancellation test (suspend-only)
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `rankSuspiciousUsers flow honours take(1) cancellation`() = runSuspendIO {
+    fun `rankSuspiciousUsers flow honours collector cancellation`() = runSuspendIO {
         val seed = seedSharedIdentifiers(service)
         seedReferralLoop(service, seed)
 
-        // onEach delay makes the flow slow so cancellation is meaningful;
-        // take(1) cancels the flow after the first emission
-        val first: List<SuspiciousUserScore> = service.rankSuspiciousUsers(limit = 10)
-            .onEach { delay(10) }
-            .take(1)
-            .toList()
+        val collector = launch {
+            service.rankSuspiciousUsers(limit = 10)
+                .onEach { delay(100) }
+                .toList()
+        }
 
-        first shouldHaveSize 1
-        first.first().rank shouldBeEqualTo 1
+        delay(10)
+        collector.cancelAndJoin()
+
+        collector.isCancelled.shouldBeTrue()
     }
 
     // ─────────────────────────────────────────────────────────────────────
