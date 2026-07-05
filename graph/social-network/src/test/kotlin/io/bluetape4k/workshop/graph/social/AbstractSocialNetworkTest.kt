@@ -8,6 +8,7 @@ import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.graph.repository.GraphOperations
+import io.bluetape4k.workshop.graph.social.model.ConnectionRecommendation
 import io.bluetape4k.workshop.graph.social.schema.CompanyLabel
 import io.bluetape4k.workshop.graph.social.schema.KnowsLabel
 import io.bluetape4k.workshop.graph.social.schema.PersonLabel
@@ -135,6 +136,61 @@ abstract class AbstractSocialNetworkTest {
 
         assertFailsWith<IllegalArgumentException> {
             service.findAllConnectionPaths(alice.id, bob.id, maxDepth = SocialNetworkService.MAX_TRAVERSAL_DEPTH + 1)
+        }
+    }
+
+    @Test
+    fun `service rejects blank graphName`() {
+        assertFailsWith<IllegalArgumentException> {
+            SocialNetworkService(ops, "")
+        }
+    }
+
+    @Test
+    fun `connect rejects same person endpoints`() {
+        val alice = service.addPerson("alice", "Alice Smith")
+
+        assertFailsWith<IllegalArgumentException> {
+            service.connect(alice.id, alice.id)
+        }
+    }
+
+    @Test
+    fun `connect rejects company endpoint`() {
+        val alice = service.addPerson("alice", "Alice Smith")
+        val acme = service.addCompany("acme", "Acme Corp")
+
+        assertFailsWith<IllegalArgumentException> {
+            service.connect(alice.id, acme.id)
+        }
+    }
+
+    @Test
+    fun `follow rejects company endpoint`() {
+        val alice = service.addPerson("alice", "Alice Smith")
+        val acme = service.addCompany("acme", "Acme Corp")
+
+        assertFailsWith<IllegalArgumentException> {
+            service.follow(alice.id, acme.id)
+        }
+    }
+
+    @Test
+    fun `addWorkExperience rejects person endpoint as company target`() {
+        val alice = service.addPerson("alice", "Alice Smith")
+        val bob = service.addPerson("bob", "Bob Jones")
+
+        assertFailsWith<IllegalArgumentException> {
+            service.addWorkExperience(alice.id, bob.id, role = "Engineer")
+        }
+    }
+
+    @Test
+    fun `ConnectionRecommendation rejects count and mutualConnections mismatch`() {
+        val seed = seedSocialNetwork(service)
+
+        assertFailsWith<IllegalArgumentException> {
+            ConnectionRecommendation(seed.carol, mutualConnectionCount = 2, mutualConnections = listOf(seed.bob))
         }
     }
 
@@ -375,9 +431,8 @@ abstract class AbstractSocialNetworkTest {
 
         val path = service.findConnectionPath(seed.alice.id, seed.bob.id)
 
-        path.shouldNotBeNull()
         // vertices.size works for both vertex-only and vertex+edge paths (vertices.size = hops + 1)
-        requireNotNull(path).vertices.size shouldBeEqualTo 2
+        path.shouldNotBeNull().vertices.size shouldBeEqualTo 2
     }
 
     @Test
@@ -386,8 +441,7 @@ abstract class AbstractSocialNetworkTest {
 
         val path = service.findConnectionPath(seed.alice.id, seed.dave.id)
 
-        path.shouldNotBeNull()
-        requireNotNull(path).vertices.size shouldBeEqualTo 3
+        path.shouldNotBeNull().vertices.size shouldBeEqualTo 3
     }
 
     @Test

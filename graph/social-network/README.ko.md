@@ -61,8 +61,8 @@ graph/social-network/
 | 레이블 | 방향 | 프로퍼티 |
 |---|---|---|
 | `KNOWS` | 양방향 (두 개의 방향성 edge) | `since`, `strength` (1–10) |
-| `FOLLOWS` | 단방향 | `since` |
-| `WORKS_AT` | `Person` → `Company` | `role`, `startDate`, `endDate`, `isCurrent` |
+| `FOLLOWS` | 단방향 | 없음 |
+| `WORKS_AT` | `Person` -> `Company` | `role`, `startDate`, `isCurrent` |
 
 ## 시드 토폴로지 (테스트 데이터)
 
@@ -92,7 +92,7 @@ val acme  = service.addCompany("acme", "Acme Corp", industry = "Technology")
 
 // Edge 생성
 service.connect(alice.id, bob.id, since = "2024-01-01", strength = 8)    // 양방향 KNOWS
-service.follow(eve.id, alice.id, since = "2024-06-01")                    // 단방향 FOLLOWS
+service.follow(eve.id, alice.id)                                          // 단방향 FOLLOWS
 service.addWorkExperience(alice.id, acme.id, role = "Engineer", isCurrent = true)
 
 // 1촌 연결
@@ -161,7 +161,6 @@ Docker가 필요합니다.
 
 ```kotlin
 // build.gradle.kts
-implementation(platform(libs.bluetape4k.graph.bom))
 implementation(libs.bluetape4k.graph.core)
 implementation(libs.bluetape4k.graph.tinkerpop)
 
@@ -169,6 +168,3 @@ implementation(libs.bluetape4k.graph.tinkerpop)
 compileOnly(libs.bluetape4k.graph.neo4j)
 compileOnly(libs.bluetape4k.graph.memgraph)
 ```
-
-> **참고:** `bluetape4k-graph`는 `mavenLocal`에서 해석됩니다.
-> 먼저 `./gradlew -p bluetape4k-graph publishBluetapeGraphPublicationToMavenLocalRepository`를 실행하세요.
