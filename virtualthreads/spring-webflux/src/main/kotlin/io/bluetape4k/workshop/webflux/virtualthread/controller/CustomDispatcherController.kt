@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/$CUSTOM_PATH")
-class CustomDispatcherController: AbstractDispatcherController() {
+class CustomDispatcherController : AbstractDispatcherController() {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         internal const val CUSTOM_PATH = "custom"
     }
 

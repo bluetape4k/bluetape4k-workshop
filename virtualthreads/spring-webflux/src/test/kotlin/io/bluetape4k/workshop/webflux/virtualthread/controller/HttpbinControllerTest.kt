@@ -7,9 +7,9 @@ import kotlinx.coroutines.reactive.awaitSingle
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
 
-class HttpbinControllerTest: AbstractWebfluxVirtualThreadTest() {
+class HttpbinControllerTest : AbstractWebfluxVirtualThreadTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `call httpbin delay via mono`() = runSuspendIO {

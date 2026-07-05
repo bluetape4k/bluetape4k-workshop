@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.webflux.virtualthread.controller
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.support.uninitialized
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.webflux.virtualthread.model.Banner
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -29,7 +29,7 @@ import tools.jackson.databind.JsonNode
 @RestController
 abstract class AbstractDispatcherController {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         protected val faker = Faker()
 
         protected const val DEFAULT_DELAY = 100L
@@ -38,14 +38,20 @@ abstract class AbstractDispatcherController {
 
     protected val webClientBuilder: WebClient.Builder = WebClient.builder()
 
+    private var portRef: String? = null
+
     @Value("\${server.port:8080}")
-    private val port: String = uninitialized()
+    fun setServerPort(port: String) {
+        portRef = port
+    }
 
     protected abstract val dispatcher: CoroutineDispatcher
 
     protected abstract val path: String
 
-    protected val client: WebClient by lazy { getClient("http://localhost:$port/$path") }
+    protected val client: WebClient by lazy {
+        getClient("http://localhost:${portRef.requireNotNull("port")}/$path")
+    }
 
     protected fun getClient(baseUrl: String): WebClient {
         return webClientBuilder
@@ -93,7 +99,7 @@ abstract class AbstractDispatcherController {
         @RequestParam(
             required = false,
             value = "size",
-            defaultValue = "$FLOW_SIZE"
+            defaultValue = "$FLOW_SIZE",
         ) size: Int,
     ): Flow<Banner> {
         log.debug { "Get banners in sequential mode. size=$size" }
@@ -109,7 +115,7 @@ abstract class AbstractDispatcherController {
         @RequestParam(
             required = false,
             value = "size",
-            defaultValue = "$FLOW_SIZE"
+            defaultValue = "$FLOW_SIZE",
         ) size: Int,
     ): Flow<Banner> {
         log.debug { "Get banners in concurrent mode. size=$size" }

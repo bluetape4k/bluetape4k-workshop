@@ -3,7 +3,7 @@ package simulations
 import io.bluetape4k.workshop.webflux.virtualthread.model.DispatcherType
 import io.gatling.javaapi.core.Simulation
 
-class VirtualThreadCoroutineSimulation: Simulation() {
+class VirtualThreadCoroutineSimulation : Simulation() {
 
     val dispatcherType = DispatcherType.VirtualThread
 

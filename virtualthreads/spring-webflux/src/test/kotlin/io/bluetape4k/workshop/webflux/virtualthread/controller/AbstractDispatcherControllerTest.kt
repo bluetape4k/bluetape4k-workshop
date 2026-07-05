@@ -24,9 +24,9 @@ import tools.jackson.databind.JsonNode
 import tools.jackson.databind.node.JsonNodeFactory
 import java.time.Instant
 
-abstract class AbstractDispatcherControllerTest: AbstractWebfluxVirtualThreadTest() {
+abstract class AbstractDispatcherControllerTest : AbstractWebfluxVirtualThreadTest() {
 
-    companion object: KLogging() {
+    companion object : KLogging() {
         const val REPEAT_SIZE = 3
     }
 
