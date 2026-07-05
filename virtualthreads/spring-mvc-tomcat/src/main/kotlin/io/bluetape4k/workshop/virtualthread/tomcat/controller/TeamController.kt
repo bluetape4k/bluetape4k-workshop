@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/team")
 class TeamController(private val teamRepo: TeamRepository) {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @GetMapping("", "/")
     fun getAllTeams(): List<TeamDTO> {

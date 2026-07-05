@@ -20,7 +20,7 @@ class MemberRepositoryTest(
     @param:Autowired private val memberRepo: MemberRepository,
 ): AbstractDomainTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `context loading`() {

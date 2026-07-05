@@ -14,7 +14,7 @@ import reactor.core.scheduler.Schedulers
 @RestController
 @RequestMapping("/httpbin")
 class HttpbinController {
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         val bluetapeHttpServer by lazy { BluetapeHttpServer.Launcher.bluetapeHttpServer }
     }
 

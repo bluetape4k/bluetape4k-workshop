@@ -14,7 +14,7 @@ import java.util.concurrent.Executors
 @EnableScheduling
 class SchedulingConfig {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     /**
      * Virtual Thread를 사용하는 Scheduled Thread Pool을 사용하도록 합니다.

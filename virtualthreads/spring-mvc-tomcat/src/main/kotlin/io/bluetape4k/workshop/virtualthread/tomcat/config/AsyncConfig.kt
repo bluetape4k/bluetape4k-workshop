@@ -21,7 +21,7 @@ import java.util.concurrent.Executors
 @EnableAsync
 class AsyncConfig {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Bean(TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME)
     fun asyncTaskExecutor(): AsyncTaskExecutor {
@@ -33,7 +33,7 @@ class AsyncConfig {
         }
     }
 
-    class LoggingTaskDecorator: TaskDecorator {
+    class LoggingTaskDecorator : TaskDecorator {
         override fun decorate(task: Runnable): Runnable {
             val callerThreadContext = MDC.getCopyOfContextMap()
             return kotlinx.coroutines.Runnable {

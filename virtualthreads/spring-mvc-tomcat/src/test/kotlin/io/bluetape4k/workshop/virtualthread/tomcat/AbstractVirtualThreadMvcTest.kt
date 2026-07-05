@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.virtualthread.tomcat
 
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.support.uninitialized
+import io.bluetape4k.support.requireNotNull
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -12,13 +12,20 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractVirtualThreadMvcTest {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         @JvmStatic
         val faker = Fakers.faker
     }
 
+    private var contextRef: ApplicationContext? = null
+
     @Autowired
-    protected val context: ApplicationContext = uninitialized()
+    fun setApplicationContext(context: ApplicationContext) {
+        contextRef = context
+    }
+
+    protected val context: ApplicationContext
+        get() = contextRef.requireNotNull("context")
 
     @LocalServerPort
     protected var port: Int = 0

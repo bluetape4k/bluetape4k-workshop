@@ -8,7 +8,7 @@
 //import kotlin.time.Duration.Companion.seconds
 //import kotlin.time.toJavaDuration
 
-//class VirtualThreadSimulation: Simulation() {
+//class VirtualThreadSimulation : Simulation() {
 //
 //    val httpProtocol = http
 //        .baseUrl("http://localhost:8080")

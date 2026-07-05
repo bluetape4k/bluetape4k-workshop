@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/member")
 class MemberController(private val memberRepo: MemberRepository) {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @GetMapping("", "/")
     fun getAllMembers(): List<MemberDTO> {

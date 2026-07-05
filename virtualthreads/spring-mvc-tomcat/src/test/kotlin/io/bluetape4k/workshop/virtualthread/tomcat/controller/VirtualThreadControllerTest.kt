@@ -9,9 +9,9 @@ import io.bluetape4k.assertions.shouldNotBeEmpty
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
 
-class VirtualThreadControllerTest: AbstractVirtualThreadMvcTest() {
+class VirtualThreadControllerTest : AbstractVirtualThreadMvcTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `get response with virtual thread`() = runSuspendIO {

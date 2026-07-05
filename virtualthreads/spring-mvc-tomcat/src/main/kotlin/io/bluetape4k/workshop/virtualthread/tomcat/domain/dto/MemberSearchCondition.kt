@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.virtualthread.tomcat.domain.dto
 
+import java.io.Serializable
+
 /**
  * 회원 검색 조건을 담을 DTO
  */
@@ -8,4 +10,8 @@ data class MemberSearchCondition(
     val teamName: String? = null,
     val ageGoe: Int? = null,
     val ageLoe: Int? = null,
-)
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}

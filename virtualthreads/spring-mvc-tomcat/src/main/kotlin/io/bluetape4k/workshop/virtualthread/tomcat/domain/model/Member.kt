@@ -16,7 +16,7 @@ import org.hibernate.annotations.DynamicUpdate
 @Access(AccessType.FIELD)
 @DynamicInsert
 @DynamicUpdate
-class Member: LongJpaEntity() {
+class Member : LongJpaEntity() {
 
     companion object {
         @JvmStatic
