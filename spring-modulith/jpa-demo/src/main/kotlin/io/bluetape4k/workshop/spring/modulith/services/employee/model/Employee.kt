@@ -5,7 +5,7 @@ import io.bluetape4k.hibernate.model.LongJpaEntity
 import jakarta.persistence.Entity
 
 @Entity
-class Employee: LongJpaEntity() {
+class Employee : LongJpaEntity() {
 
     var organizationId: Long? = null
     var departmentId: Long? = null

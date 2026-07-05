@@ -18,7 +18,7 @@ class EmployeeModuleTest(
     @param:Autowired private val repository: EmployeeRepository,
 ) {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     @Order(1)

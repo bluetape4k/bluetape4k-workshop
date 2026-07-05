@@ -21,7 +21,7 @@ class DepartmentManagement(
     private val mapper: DepartmentMapper,
 ): DepartmentInternalAPI, DepartmentExternalAPI {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     override fun getDepartmentByIdWithEmployees(departmentId: Long): DepartmentDTO {
         log.debug { "Get department by id with employees: $departmentId" }

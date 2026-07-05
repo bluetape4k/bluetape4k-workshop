@@ -9,4 +9,8 @@ data class EmployeeDTO(
     val name: String,
     val age: Int,
     val position: String,
-): Serializable
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}

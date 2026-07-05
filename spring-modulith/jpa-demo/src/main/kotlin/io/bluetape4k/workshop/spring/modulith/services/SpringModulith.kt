@@ -6,7 +6,7 @@ import org.springframework.boot.runApplication
 
 @SpringBootApplication(proxyBeanMethods = false)
 class SpringModulith {
-    companion object: KLogging()
+    companion object : KLogging()
 }
 
 fun main(vararg args: String) {
