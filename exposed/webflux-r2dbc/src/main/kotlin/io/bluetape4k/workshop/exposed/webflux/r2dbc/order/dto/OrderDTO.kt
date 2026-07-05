@@ -3,7 +3,10 @@ package io.bluetape4k.workshop.exposed.webflux.r2dbc.order.dto
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.order.schema.OrderStatus
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotEmpty
+import jakarta.validation.constraints.Positive
+import jakarta.validation.constraints.Size
 import java.io.Serializable
 import java.math.BigDecimal
 
@@ -19,9 +22,9 @@ data class ProductDTO(
 }
 
 data class CreateProductRequest(
-    val name: String = "",
-    val price: BigDecimal = BigDecimal.ZERO,
-    val stock: Int = 0,
+    @field:NotBlank val name: String = "",
+    @field:Positive val price: BigDecimal = BigDecimal.ZERO,
+    @field:Min(0) val stock: Int = 0,
 ) : Serializable {
     companion object {
         private const val serialVersionUID = 1L
@@ -53,7 +56,7 @@ data class OrderDTO(
 }
 
 data class OrderLineRequest(
-    val productId: Long = 0L,
+    @field:Positive val productId: Long = 0L,
     @field:Min(1) val quantity: Int = 1,
 ) : Serializable {
     companion object {
@@ -62,8 +65,8 @@ data class OrderLineRequest(
 }
 
 data class PlaceOrderRequest(
-    val customerId: Long = 0L,
-    @field:NotEmpty @field:Valid val lines: List<OrderLineRequest> = emptyList(),
+    @field:Positive val customerId: Long = 0L,
+    @field:NotEmpty @field:Valid @field:Size(max = 100) val lines: List<OrderLineRequest> = emptyList(),
 ) : Serializable {
     companion object {
         private const val serialVersionUID = 1L

@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.exposed.webflux.r2dbc.author.service
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.BookDTO
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.CreateBookRequest
+import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.repository.AuthorRepository
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.repository.BookRepository
 import kotlinx.coroutines.flow.toList
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class BookService(
+    private val authorRepo: AuthorRepository,
     private val bookRepo: BookRepository,
     private val db: R2dbcDatabase,
 ) {
@@ -30,12 +32,16 @@ class BookService(
     }
 
     suspend fun create(req: CreateBookRequest): BookDTO = suspendTransaction(db = db) {
+        authorRepo.findByIdOrNull(req.authorId)
+            ?: throw NoSuchElementException("Author ${req.authorId} not found")
         val newId = bookRepo.insert(req)
         bookRepo.findByIdOrNull(newId)
             ?: throw NoSuchElementException("Book $newId not found after insert")
     }
 
     suspend fun update(id: Long, req: CreateBookRequest): BookDTO = suspendTransaction(db = db) {
+        authorRepo.findByIdOrNull(req.authorId)
+            ?: throw NoSuchElementException("Author ${req.authorId} not found")
         val rows = bookRepo.update(id, req)
         if (rows == 0) throw NoSuchElementException("Book $id not found")
         bookRepo.findByIdOrNull(id)
