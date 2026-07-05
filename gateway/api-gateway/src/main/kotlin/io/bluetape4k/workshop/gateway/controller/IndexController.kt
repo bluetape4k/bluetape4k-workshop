@@ -16,6 +16,7 @@ class IndexController {
     suspend fun sayHello(
         @RequestParam("name", required = false, defaultValue = "Bluetape4k") name: String,
     ): String {
-        return "Hello $name from API Gateway"
+        val displayName = name.trim().ifBlank { "Bluetape4k" }
+        return "Hello $displayName from API Gateway"
     }
 }

@@ -12,7 +12,8 @@ Swagger UI, and applies a Redis-backed Bucket4j WebFlux rate-limit filter.
 
 ![API Gateway architecture](../../docs/images/readme-diagrams/gateway-api-gateway-readme-architecture-01.png)
 
-The route table lives in `application.yml`:
+The route table lives under the Spring Cloud Gateway 5
+`spring.cloud.gateway.server.webflux` prefix in `application.yml`:
 
 | Route | Public path | Target |
 |---|---|---|
@@ -44,7 +45,7 @@ The normal service path is:
 | `bluetape4k-cache-core` | Redis cache support used by the rate-limit configuration |
 | `bluetape4k-resilience4j` | Available gateway resilience integration dependency |
 | `bluetape4k-junit5` | `runSuspendIO { }` for suspend WebTestClient assertions |
-| `bluetape4k-support` | `uninitialized()` and `unsafeLazy` in Spring beans |
+| `bluetape4k-assertions` | Route, header, miss-response, and controller assertions |
 
 ## Run
 
@@ -71,7 +72,8 @@ http :8080/swagger-ui.html
 ./gradlew :api-gateway:test
 ```
 
-The current test scope verifies context loading and `/hello` responses through
+The test scope verifies context loading, `/hello`, route rewrite behavior for
+customer/order stubs, default response headers, and miss responses through
 `WebTestClient`.
 
 ## Source References

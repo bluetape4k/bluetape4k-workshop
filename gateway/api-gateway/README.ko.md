@@ -13,7 +13,8 @@ rewrite하며, Swagger UI를 노출하고, Redis 기반 Bucket4j WebFlux rate-li
 
 ![API Gateway architecture](../../docs/images/readme-diagrams/gateway-api-gateway-readme-architecture-01.png)
 
-Route table은 `application.yml`에 있습니다.
+Route table은 `application.yml`의 Spring Cloud Gateway 5
+`spring.cloud.gateway.server.webflux` prefix 아래에 있습니다.
 
 | Route | Public path | Target |
 |---|---|---|
@@ -45,7 +46,7 @@ filter는 응답에 `X-BLUETAPE4K-API: BLUETAPE4K.IO` 헤더를 추가합니다.
 | `bluetape4k-cache-core` | Rate-limit 설정에서 사용하는 Redis cache support |
 | `bluetape4k-resilience4j` | Gateway resilience integration 의존성 |
 | `bluetape4k-junit5` | Suspend WebTestClient assertion을 위한 `runSuspendIO { }` |
-| `bluetape4k-support` | Spring bean에서 사용하는 `uninitialized()`, `unsafeLazy` |
+| `bluetape4k-assertions` | Route, header, miss-response, controller assertion |
 
 ## 실행
 
@@ -72,8 +73,8 @@ http :8080/swagger-ui.html
 ./gradlew :api-gateway:test
 ```
 
-현재 테스트 범위는 `WebTestClient`를 통한 context loading과 `/hello` 응답
-검증입니다.
+테스트 범위는 `WebTestClient`를 통한 context loading, `/hello`, customer/order
+stub route rewrite, 기본 응답 헤더, miss response 검증입니다.
 
 ## 소스 기준점
 
