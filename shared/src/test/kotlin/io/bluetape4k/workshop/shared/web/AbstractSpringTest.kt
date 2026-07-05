@@ -4,9 +4,9 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.http.BluetapeHttpServer
 import io.bluetape4k.workshop.shared.AbstractSharedTest
 
-abstract class AbstractSpringTest: AbstractSharedTest() {
+abstract class AbstractSpringTest : AbstractSharedTest() {
 
-    companion object: KLogging() {
+    companion object : KLogging() {
         @JvmStatic
         protected val bluetapeHttpServer by lazy { BluetapeHttpServer.Launcher.bluetapeHttpServer }
 

@@ -5,6 +5,9 @@ import org.reactivestreams.Publisher
 import org.springframework.http.MediaType
 import org.springframework.web.client.RestClient
 
+/**
+ * Starts a GET request and optionally applies an `Accept` header.
+ */
 fun RestClient.httpGet(
     uri: String,
     accept: MediaType? = null,
@@ -14,6 +17,9 @@ fun RestClient.httpGet(
         .apply { accept?.let { accept(it) } }
         .retrieve()
 
+/**
+ * Starts a HEAD request and optionally applies an `Accept` header.
+ */
 fun RestClient.httpHead(
     uri: String,
     accept: MediaType? = null,
@@ -23,6 +29,9 @@ fun RestClient.httpHead(
         .apply { accept?.let { accept(it) } }
         .retrieve()
 
+/**
+ * Starts a POST request with an optional object body.
+ */
 fun RestClient.httpPost(
     uri: String,
     value: Any? = null,
@@ -38,6 +47,9 @@ fun RestClient.httpPost(
         }
         .retrieve()
 
+/**
+ * Starts a POST request with a reactive-streams body.
+ */
 inline fun <reified T: Any> RestClient.httpPost(
     uri: String,
     publisher: Publisher<T>,
@@ -53,6 +65,9 @@ inline fun <reified T: Any> RestClient.httpPost(
         .body(publisher)
         .retrieve()
 
+/**
+ * Starts a POST request with a Kotlin [Flow] body.
+ */
 inline fun <reified T: Any> RestClient.httpPost(
     uri: String,
     flow: Flow<T>,
@@ -68,6 +83,9 @@ inline fun <reified T: Any> RestClient.httpPost(
         .body(flow)
         .retrieve()
 
+/**
+ * Starts a PUT request with an optional object body.
+ */
 fun RestClient.httpPut(
     uri: String,
     value: Any? = null,
@@ -83,6 +101,9 @@ fun RestClient.httpPut(
         }
         .retrieve()
 
+/**
+ * Starts a PUT request with a reactive-streams body.
+ */
 inline fun <reified T: Any> RestClient.httpPut(
     uri: String,
     publisher: Publisher<T>,
@@ -98,6 +119,9 @@ inline fun <reified T: Any> RestClient.httpPut(
         .body(publisher)
         .retrieve()
 
+/**
+ * Starts a PUT request with a Kotlin [Flow] body.
+ */
 inline fun <reified T: Any> RestClient.httpPut(
     uri: String,
     flow: Flow<T>,
@@ -113,6 +137,9 @@ inline fun <reified T: Any> RestClient.httpPut(
         .body(flow)
         .retrieve()
 
+/**
+ * Starts a PATCH request with an optional object body.
+ */
 fun RestClient.httpPatch(
     uri: String,
     value: Any? = null,
@@ -128,6 +155,9 @@ fun RestClient.httpPatch(
         }
         .retrieve()
 
+/**
+ * Starts a DELETE request and optionally applies an `Accept` header.
+ */
 fun RestClient.httpDelete(
     uri: String,
     accept: MediaType? = null,

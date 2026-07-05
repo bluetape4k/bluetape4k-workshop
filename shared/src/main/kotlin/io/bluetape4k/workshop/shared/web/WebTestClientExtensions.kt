@@ -7,8 +7,10 @@ import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.body
 
+/**
+ * Exchanges a GET request and optionally verifies the expected status.
+ */
 fun WebTestClient.httpGet(
-
     uri: String,
     httpStatus: HttpStatus? = null,
     accept: MediaType? = null,
@@ -21,6 +23,9 @@ fun WebTestClient.httpGet(
             httpStatus?.let { expectStatus().isEqualTo(it) }
         }
 
+/**
+ * Exchanges a HEAD request and optionally verifies the expected status.
+ */
 fun WebTestClient.httpHead(
     uri: String,
     httpStatus: HttpStatus? = null,
@@ -34,6 +39,9 @@ fun WebTestClient.httpHead(
             httpStatus?.let { expectStatus().isEqualTo(it) }
         }
 
+/**
+ * Exchanges a POST request with an optional object body.
+ */
 fun WebTestClient.httpPost(
     uri: String,
     value: Any? = null,
@@ -53,6 +61,9 @@ fun WebTestClient.httpPost(
             httpStatus?.let { expectStatus().isEqualTo(it) }
         }
 
+/**
+ * Exchanges a POST request with a reactive-streams body.
+ */
 inline fun <reified T: Any> WebTestClient.httpPost(
     uri: String,
     publisher: Publisher<T>,
@@ -72,6 +83,9 @@ inline fun <reified T: Any> WebTestClient.httpPost(
             httpStatus?.let { expectStatus().isEqualTo(it) }
         }
 
+/**
+ * Exchanges a POST request with a Kotlin [Flow] body.
+ */
 inline fun <reified T: Any> WebTestClient.httpPost(
     uri: String,
     flow: Flow<T>,
@@ -91,6 +105,9 @@ inline fun <reified T: Any> WebTestClient.httpPost(
             httpStatus?.let { expectStatus().isEqualTo(it) }
         }
 
+/**
+ * Exchanges a PUT request with an optional object body.
+ */
 fun WebTestClient.httpPut(
     uri: String,
     value: Any? = null,
@@ -110,6 +127,9 @@ fun WebTestClient.httpPut(
             httpStatus?.let { expectStatus().isEqualTo(it) }
         }
 
+/**
+ * Exchanges a PUT request with a reactive-streams body.
+ */
 inline fun <reified T: Any> WebTestClient.httpPut(
     uri: String,
     publisher: Publisher<T>,
@@ -129,6 +149,9 @@ inline fun <reified T: Any> WebTestClient.httpPut(
             httpStatus?.let { expectStatus().isEqualTo(it) }
         }
 
+/**
+ * Exchanges a PUT request with a Kotlin [Flow] body.
+ */
 inline fun <reified T: Any> WebTestClient.httpPut(
     uri: String,
     flow: Flow<T>,
@@ -148,7 +171,9 @@ inline fun <reified T: Any> WebTestClient.httpPut(
             httpStatus?.let { expectStatus().isEqualTo(it) }
         }
 
-
+/**
+ * Exchanges a PATCH request with an optional object body.
+ */
 fun WebTestClient.httpPatch(
     uri: String,
     value: Any? = null,
@@ -160,7 +185,7 @@ fun WebTestClient.httpPatch(
         .uri(uri)
         .apply {
             contentType?.let { contentType(it) }
-            value?.run { bodyValue(this) }
+            value?.let { bodyValue(it) }
             accept?.let { accept(it) }
         }
         .exchange()
@@ -168,6 +193,9 @@ fun WebTestClient.httpPatch(
             httpStatus?.let { expectStatus().isEqualTo(it) }
         }
 
+/**
+ * Exchanges a DELETE request and optionally verifies the expected status.
+ */
 fun WebTestClient.httpDelete(
     uri: String,
     httpStatus: HttpStatus? = null,
