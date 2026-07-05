@@ -1,69 +1,89 @@
 package io.bluetape4k.workshop.storage
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeBlank
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.toUtf8Bytes
-import org.junit.jupiter.api.MethodOrderer
-import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestMethodOrder
-import org.springframework.beans.factory.annotation.Autowired
+import java.nio.file.Path
 
 /**
  * Base test class for all [StorageService] implementations.
  *
  * Subclasses activate the appropriate Spring profile via `@ActiveProfiles`.
  */
-@TestMethodOrder(MethodOrderer.OrderAnnotation::class)
-abstract class AbstractStorageServiceTest {
+abstract class AbstractStorageServiceTest(
+    protected val storageService: StorageService,
+) {
 
     companion object : KLogging() {
-        const val TEST_KEY = "test/hello.txt"
         val TEST_CONTENT = "Hello, Storage Abstraction!".toUtf8Bytes()
         const val TEST_CONTENT_TYPE = "text/plain"
     }
 
-    @Autowired
-    lateinit var storageService: StorageService
-
     @Test
-    @Order(1)
     fun `upload returns a non-blank URL`() = runSuspendIO {
-        val url = storageService.upload(TEST_KEY, TEST_CONTENT, TEST_CONTENT_TYPE)
+        val key = testKey()
+        val url = storageService.upload(key, TEST_CONTENT, TEST_CONTENT_TYPE)
         url.shouldNotBeNull().shouldNotBeBlank()
+        storageService.delete(key)
     }
 
     @Test
-    @Order(2)
     fun `download returns the same bytes that were uploaded`() = runSuspendIO {
-        storageService.upload(TEST_KEY, TEST_CONTENT, TEST_CONTENT_TYPE)
-        val downloaded = storageService.download(TEST_KEY)
+        val key = testKey()
+        storageService.upload(key, TEST_CONTENT, TEST_CONTENT_TYPE)
+        val downloaded = storageService.download(key)
         downloaded shouldBeEqualTo TEST_CONTENT
+        storageService.delete(key)
     }
 
     @Test
-    @Order(3)
     fun `getUrl returns a non-blank URL for an existing key`() = runSuspendIO {
-        storageService.upload(TEST_KEY, TEST_CONTENT, TEST_CONTENT_TYPE)
-        val url = storageService.getUrl(TEST_KEY)
+        val key = testKey()
+        storageService.upload(key, TEST_CONTENT, TEST_CONTENT_TYPE)
+        val url = storageService.getUrl(key)
         url.shouldNotBeBlank()
+        storageService.delete(key)
     }
 
     @Test
-    @Order(4)
     fun `delete removes the object without error`() = runSuspendIO {
-        storageService.upload(TEST_KEY, TEST_CONTENT, TEST_CONTENT_TYPE)
-        // Should not throw
-        storageService.delete(TEST_KEY)
+        val key = testKey()
+        storageService.upload(key, TEST_CONTENT, TEST_CONTENT_TYPE)
+        storageService.delete(key)
     }
 
     @Test
-    @Order(5)
     fun `delete is idempotent for missing key`() = runSuspendIO {
-        // Delete a key that was never uploaded — must not throw
         storageService.delete("non-existent/key.txt")
     }
+
+    @Test
+    fun `blank key is rejected`() = runSuspendIO {
+        assertFailsWith<IllegalArgumentException> {
+            storageService.upload(" ", TEST_CONTENT, TEST_CONTENT_TYPE)
+        }
+    }
+
+    @Test
+    fun `path traversal key is rejected`() = runSuspendIO {
+        assertFailsWith<IllegalArgumentException> {
+            storageService.upload("../escape.txt", TEST_CONTENT, TEST_CONTENT_TYPE)
+        }
+    }
+
+    @Test
+    fun `absolute key is rejected`() = runSuspendIO {
+        assertFailsWith<IllegalArgumentException> {
+            storageService.upload(Path.of("/tmp/escape.txt").toString(), TEST_CONTENT, TEST_CONTENT_TYPE)
+        }
+    }
+
+    protected fun testKey(): String =
+        "test/${Base58.randomString(8)}.txt"
 }

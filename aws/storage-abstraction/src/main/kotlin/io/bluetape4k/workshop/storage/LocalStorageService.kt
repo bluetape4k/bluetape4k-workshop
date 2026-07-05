@@ -16,6 +16,7 @@ import java.nio.file.Paths
  *
  * ## Behavior / Contract
  * - All objects are stored under [basePath] on the local filesystem.
+ * - Object keys are validated as relative forward-slash paths before filesystem access.
  * - `upload` writes bytes to `{basePath}/{key}` and returns a `file://` URL.
  * - `download` reads bytes from `{basePath}/{key}`.
  * - `getUrl` returns the `file://` URL for the stored path.
@@ -49,27 +50,34 @@ class LocalStorageService(
 
     override suspend fun download(key: String): ByteArray =
         withContext(Dispatchers.IO) {
-            val target = root.resolve(key)
+            val target = resolveKey(key)
             log.debug { "Downloading [$key] from $target" }
             Files.readAllBytes(target)
         }
 
     override suspend fun getUrl(key: String): String =
         withContext(Dispatchers.IO) {
-            root.resolve(key).toUri().toString()
+            resolveKey(key).toUri().toString()
         }
 
     override suspend fun delete(key: String) {
         withContext(Dispatchers.IO) {
-            val target = root.resolve(key)
+            val target = resolveKey(key)
             val deleted = Files.deleteIfExists(target)
             log.debug { "Delete [$key]: deleted=$deleted" }
         }
     }
 
     private fun resolveAndCreateParents(key: String): Path {
-        val target = root.resolve(key)
+        val target = resolveKey(key)
         Files.createDirectories(target.parent ?: root)
+        return target
+    }
+
+    private fun resolveKey(key: String): Path {
+        val rootPath = root.toAbsolutePath().normalize()
+        val target = rootPath.resolve(storageObjectKey(key)).normalize()
+        require(target.startsWith(rootPath)) { "key must stay under the configured storage root: $key" }
         return target
     }
 }

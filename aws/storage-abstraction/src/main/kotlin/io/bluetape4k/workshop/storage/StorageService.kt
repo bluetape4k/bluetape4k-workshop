@@ -6,8 +6,9 @@ package io.bluetape4k.workshop.storage
  * ## Behavior / Contract
  * - `upload` stores the content and returns a URL to access the stored object.
  * - `download` retrieves the raw bytes stored under the given key.
- * - `getUrl` returns a direct URL (local) or a pre-signed URL (S3 presigned) valid for the backend.
+ * - `getUrl` returns a local file URL, endpoint-neutral S3 object URI, or pre-signed URL.
  * - `delete` removes the object; implementations should be idempotent (no error if key is absent).
+ * - Object keys must be relative forward-slash keys; blank, absolute, backslash, and traversal keys fail fast.
  * - Implementations are selected via Spring Profile: `local`, `s3`, or `s3-presigned`.
  *
  * ```kotlin

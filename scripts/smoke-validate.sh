@@ -173,6 +173,7 @@ case "${1:-help}" in
       :aws-ktor-dynamodb:test \
       :aws-s3-spring-cloud:test \
       :aws-sqs-sns-coroutines:test \
+      :aws-storage-abstraction:test \
       :aws-s3-vectors-access-grants:test \
       --continue --max-workers=1"
     ;;
