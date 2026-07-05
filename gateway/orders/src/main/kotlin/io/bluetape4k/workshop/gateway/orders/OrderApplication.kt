@@ -10,11 +10,11 @@ class OrderApplication {
 
     companion object: KLogging() {
         init {
-            log.info { "Starting Customer Application ..." }
+            log.info { "Starting Order Application ..." }
         }
     }
 }
 
 fun main(vararg args: String) {
-    runApplication<OrderApplication>(*args) 
+    runApplication<OrderApplication>(*args)
 }

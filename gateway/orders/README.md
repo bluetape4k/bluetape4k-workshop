@@ -16,9 +16,9 @@ Both controllers generate sample UUID v7 identifiers with `Uuid.V7`.
 
 ![Gateway Orders Service architecture](../../docs/images/readme-diagrams/gateway-orders-readme-architecture-01.png)
 
-The service has no database dependency. It returns in-memory sample products and
-orders so the gateway example can focus on route forwarding and path rewrite
-behavior.
+The service has no database dependency. `OrderCatalogService` returns in-memory
+sample products and orders, while the controllers expose only the HTTP contract
+so the gateway example can focus on route forwarding and path rewrite behavior.
 
 ## Runtime Contract
 
@@ -28,7 +28,7 @@ behavior.
 | Products API | `GET /api/v1/products` returns two sample products |
 | IDs | `Uuid.V7.nextIdAsString()` creates sample order/product identifiers |
 | Swagger landing page | `/` is rewritten to `/swagger-ui.html` by `RedirectWebFilter` |
-| Observability | Actuator endpoints are exposed; Micrometer URI filter excludes management and API-doc paths |
+| Observability | Actuator exposes `health,info`; Micrometer URI filter excludes management and API-doc paths |
 | AOT | `spring.aot.enabled=true` in `application.yml` |
 
 ## Run
@@ -52,13 +52,15 @@ http :8082/actuator
 |---|---|
 | `bluetape4k-logging` | `KLoggingChannel()` in the application, config, filter, and controllers |
 | `bluetape4k-idgenerators` | UUID v7 sample IDs for orders and products |
-| `bluetape4k-support` | `uninitialized()` and `unsafeLazy` in Swagger configuration |
+| `bluetape4k-support` | `requireNotBlank` and `requirePositiveNumber` validation in API models |
 | `bluetape4k-coroutines` | Suspend WebFlux controller endpoints |
+| `bluetape4k-assertions` | WebFlux endpoint, model validation, and filter tests |
 
 ## Source References
 
 - `src/main/kotlin/io/bluetape4k/workshop/gateway/orders/controller/OrderController.kt`
 - `src/main/kotlin/io/bluetape4k/workshop/gateway/orders/controller/ProductController.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/orders/service/OrderCatalogService.kt`
 - `src/main/kotlin/io/bluetape4k/workshop/gateway/orders/filters/RedirectWebFilter.kt`
 - `src/main/kotlin/io/bluetape4k/workshop/gateway/orders/config/managements/ObservationConfig.kt`
 - `src/main/resources/application.yml`
