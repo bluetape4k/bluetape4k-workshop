@@ -47,6 +47,7 @@ case "${1:-help}" in
       :okio-examples:test \
       :graph-event-lineage:test \
       :graph-io-pipeline:test \
+      :graph-recommendation:test \
       :kotlin-design-patterns:test \
       :micrometer-observation:test \
       :spring-boot-application-event-demo:test \

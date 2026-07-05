@@ -110,13 +110,20 @@ jobs:
           DOCKER_HOST: "unix:///var/run/docker.sock"
           DD_API_KEY: "test-api-key"
           DD_APPLICATION_KEY: "test-application-key"
-        run: ./gradlew test --continue --max-workers=1
+        run: >-
+          ./gradlew
+          test
+          :graph-recommendation:integrationTest
+          --continue
+          --max-workers=1
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: test-results
-          path: '**/build/test-results/test/*.xml'
+          path: |
+            **/build/test-results/test/*.xml
+            graph/recommendation/build/test-results/integrationTest/*.xml
           retention-days: 14
 
   nightly-status:

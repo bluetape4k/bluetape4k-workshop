@@ -9,6 +9,8 @@ import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.graph.repository.GraphOperations
+import io.bluetape4k.workshop.graph.recommendation.model.FollowRecommendation
+import io.bluetape4k.workshop.graph.recommendation.model.ProductRecommendation
 import io.bluetape4k.workshop.graph.recommendation.model.RecommendationExclusionReason.ALREADY_FOLLOWED
 import io.bluetape4k.workshop.graph.recommendation.model.RecommendationExclusionReason.ALREADY_PURCHASED
 import io.bluetape4k.workshop.graph.recommendation.model.RecommendationExclusionReason.SELF
@@ -195,6 +197,51 @@ abstract class AbstractRecommendationTest {
 
         assertFailsWith<IllegalArgumentException> {
             service.follow(alice.id, alice.id)
+        }
+    }
+
+    @Test
+    fun `service rejects blank graphName`() {
+        assertFailsWith<IllegalArgumentException> {
+            RecommendationService(ops, "")
+        }
+    }
+
+    @Test
+    fun `purchase rejects non-product target endpoint`() {
+        val alice = service.addUser(USER_ALICE, "Alice")
+        val bob = service.addUser(USER_BOB, "Bob")
+
+        assertFailsWith<IllegalArgumentException> {
+            service.purchase(alice.id, bob.id, rating = 5)
+        }
+    }
+
+    @Test
+    fun `follow rejects non-user target endpoint`() {
+        val alice = service.addUser(USER_ALICE, "Alice")
+        val laptop = service.addProduct("laptop", "Laptop")
+
+        assertFailsWith<IllegalArgumentException> {
+            service.follow(alice.id, laptop.id)
+        }
+    }
+
+    @Test
+    fun `ProductRecommendation rejects score and sharedBuyers mismatch`() {
+        val seed = seedRecommendation(service)
+
+        assertFailsWith<IllegalArgumentException> {
+            ProductRecommendation(seed.headphones, score = 2, sharedBuyers = listOf(seed.bob))
+        }
+    }
+
+    @Test
+    fun `FollowRecommendation rejects count and mutualFollows mismatch`() {
+        val seed = seedRecommendation(service)
+
+        assertFailsWith<IllegalArgumentException> {
+            FollowRecommendation(seed.dave, mutualFollowCount = 2, mutualFollows = listOf(seed.bob))
         }
     }
 

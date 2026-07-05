@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.graph.recommendation.model
 
 import io.bluetape4k.graph.model.GraphVertex
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
 
 /**
@@ -30,6 +32,11 @@ data class ProductRecommendation(
     /** Distinct co-buyer vertices that drove the [score]. */
     val sharedBuyers: List<GraphVertex>,
 ) : Serializable {
+    init {
+        score.requirePositiveNumber("score")
+        sharedBuyers.size.requireEquals(score, "sharedBuyers.size")
+    }
+
     companion object {
         private const val serialVersionUID: Long = 1L
     }

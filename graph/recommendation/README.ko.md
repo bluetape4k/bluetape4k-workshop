@@ -294,8 +294,8 @@ dependencies {
     implementation(libs.bluetape4k.graph.core)
     implementation(libs.bluetape4k.graph.tinkerpop)
 
-    // 선택적 백엔드
-    implementation(libs.bluetape4k.graph.neo4j)
-    implementation(libs.bluetape4k.graph.memgraph)
+    // 이 모듈의 integrationTest에서 사용하는 선택적 백엔드
+    compileOnly(libs.bluetape4k.graph.neo4j)
+    compileOnly(libs.bluetape4k.graph.memgraph)
 }
 ```

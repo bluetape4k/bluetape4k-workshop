@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.graph.recommendation.model
 
 import io.bluetape4k.graph.model.GraphVertex
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
 
 /**
@@ -34,6 +36,11 @@ data class FollowRecommendation(
     /** The intermediary vertices (seed's follows who also follow [person]). */
     val mutualFollows: List<GraphVertex>,
 ) : Serializable {
+    init {
+        mutualFollowCount.requirePositiveNumber("mutualFollowCount")
+        mutualFollows.size.requireEquals(mutualFollowCount, "mutualFollows.size")
+    }
+
     companion object {
         private const val serialVersionUID: Long = 1L
     }
