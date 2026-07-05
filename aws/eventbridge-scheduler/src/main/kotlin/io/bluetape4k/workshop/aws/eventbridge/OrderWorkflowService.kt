@@ -4,6 +4,8 @@ import io.bluetape4k.support.requireNotBlank
 import org.springframework.stereotype.Service
 import software.amazon.awssdk.services.eventbridge.model.PutEventsRequestEntry
 import tools.jackson.databind.ObjectMapper
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
@@ -96,7 +98,8 @@ class OrderWorkflowService(
             name = request.idempotencyKey,
             groupName = properties.schedulerGroupName,
             targetArn = properties.schedulerTargetArn,
-            scheduleExpression = "at(${request.scheduledAt})",
+            scheduleExpression = "at(${SCHEDULER_AT_FORMATTER.format(request.scheduledAt)})",
+            scheduleExpressionTimezone = "UTC",
             payloadJson = payloadJson,
             flexibleTimeWindowMode = properties.flexibleTimeWindowMode,
             idempotencyKey = request.idempotencyKey,
@@ -115,4 +118,10 @@ class OrderWorkflowService(
                 "reason" to request.reason.trim(),
             )
         )
+
+    companion object {
+        private val SCHEDULER_AT_FORMATTER: DateTimeFormatter =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+                .withZone(ZoneOffset.UTC)
+    }
 }

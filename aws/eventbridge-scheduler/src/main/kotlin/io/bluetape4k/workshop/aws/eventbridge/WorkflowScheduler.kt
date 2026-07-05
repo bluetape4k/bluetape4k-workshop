@@ -17,7 +17,7 @@ interface WorkflowScheduler {
  * In-memory Scheduler adapter for local workshop runs.
  */
 @Component
-class LocalWorkflowScheduler: WorkflowScheduler {
+class LocalWorkflowScheduler : WorkflowScheduler {
 
     private val scheduledRequests = CopyOnWriteArrayList<SchedulerWorkflowRequest>()
 

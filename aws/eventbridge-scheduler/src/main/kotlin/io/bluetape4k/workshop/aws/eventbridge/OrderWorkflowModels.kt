@@ -35,6 +35,7 @@ data class OrderWorkflowRequest(
     val correlationId: String,
     val reason: String = "",
 ): Serializable {
+
     companion object {
         private const val serialVersionUID: Long = 863019095481395421L
     }
@@ -47,6 +48,7 @@ data class BoundaryStatus(
     val state: BoundaryState,
     val message: String,
 ): Serializable {
+
     companion object {
         private const val serialVersionUID: Long = -5558132079675700722L
 
@@ -78,11 +80,13 @@ data class SchedulerWorkflowRequest(
     val groupName: String,
     val targetArn: String,
     val scheduleExpression: String,
+    val scheduleExpressionTimezone: String,
     val payloadJson: String,
     val flexibleTimeWindowMode: String,
     val idempotencyKey: String,
     val correlationId: String,
 ): Serializable {
+
     companion object {
         private const val serialVersionUID: Long = 4285108231899947190L
     }
@@ -97,6 +101,7 @@ data class OrderWorkflowReport(
     val idempotencyKey: String,
     val correlationId: String,
 ): Serializable {
+
     companion object {
         private const val serialVersionUID: Long = 9176396687850281355L
     }
