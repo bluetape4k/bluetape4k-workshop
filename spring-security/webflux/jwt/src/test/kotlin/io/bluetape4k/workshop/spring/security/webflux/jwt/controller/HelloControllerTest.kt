@@ -12,9 +12,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.reactive.server.returnResult
 
-class HelloControllerTest: AbstractJwtApplicationTest() {
+class HelloControllerTest : AbstractJwtApplicationTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     // NOTE: "이렇게 plain password 를 전달하면, password encoder 설정을 막아야 하기 때문에 @WithMockUser 를 사용하는 것을 추천합니다"
     @Test
