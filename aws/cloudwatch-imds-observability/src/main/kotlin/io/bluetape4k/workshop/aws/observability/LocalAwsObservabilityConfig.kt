@@ -46,7 +46,7 @@ class LocalAwsObservabilityConfig {
         CloudWatchMeterPublishingTemplate(meterRegistry, cloudWatchOperations)
 }
 
-private class LocalCloudWatchOperations: CloudWatchOperations {
+private class LocalCloudWatchOperations : CloudWatchOperations {
 
     override suspend fun putMetricData(metricData: List<MetricDatum>): List<PutMetricDataResponse> =
         metricData.map { PutMetricDataResponse.builder().build() }
@@ -73,7 +73,7 @@ private class LocalCloudWatchOperations: CloudWatchOperations {
     ): ListMetricsResponse = ListMetricsResponse.builder().build()
 }
 
-private class LocalCloudWatchLogsOperations: CloudWatchLogsOperations {
+private class LocalCloudWatchLogsOperations : CloudWatchLogsOperations {
 
     override suspend fun createLogGroup(logGroupName: String): CreateLogGroupResponse =
         CreateLogGroupResponse.builder().build()
@@ -102,17 +102,16 @@ private class LocalCloudWatchLogsOperations: CloudWatchLogsOperations {
     ): DescribeLogStreamsResponse = DescribeLogStreamsResponse.builder().build()
 }
 
-private class LocalImdsOperations: ImdsOperations {
+private class LocalImdsOperations : ImdsOperations {
 
     override suspend fun get(path: String): String =
         when (path) {
             "/latest/meta-data/instance-id" -> "local-instance"
             "/latest/meta-data/placement/region" -> "local-region"
             "/latest/meta-data/placement/availability-zone" -> "local-zone"
-            "/latest/meta-data/local-ipv4" -> "127.0.0.1"
-            "/latest/meta-data/instance-type" -> "local"
-            else -> ""
+            else -> error("Unexpected local IMDS path: $path")
         }
 
-    override suspend fun getList(path: String): List<String> = emptyList()
+    override suspend fun getList(path: String): List<String> =
+        error("Unexpected local IMDS list path: $path")
 }

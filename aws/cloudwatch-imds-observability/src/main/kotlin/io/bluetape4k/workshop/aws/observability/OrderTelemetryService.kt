@@ -16,6 +16,9 @@ import software.amazon.awssdk.services.cloudwatchlogs.model.InputLogEvent
 import java.time.Clock
 import kotlin.coroutines.cancellation.CancellationException
 
+/**
+ * Coordinates local CloudWatch metrics, logs, Micrometer meter publication, and IMDS reads.
+ */
 @Service
 class OrderTelemetryService(
     private val properties: AwsObservabilityProperties,
@@ -27,6 +30,9 @@ class OrderTelemetryService(
     private val clock: Clock = Clock.systemUTC(),
 ) {
 
+    /**
+     * Records an order telemetry event and returns each boundary result independently.
+     */
     suspend fun recordOrder(request: OrderTelemetryRequest): OrderTelemetryReport {
         validate(request)
 
@@ -59,6 +65,9 @@ class OrderTelemetryService(
         }
     }
 
+    /**
+     * Reads safe local metadata through the configured IMDS operations.
+     */
     suspend fun readMetadata(): MetadataSnapshot =
         try {
             MetadataSnapshot(
