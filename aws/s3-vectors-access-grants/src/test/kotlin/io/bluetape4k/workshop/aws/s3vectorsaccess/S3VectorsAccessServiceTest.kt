@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.aws.s3vectorsaccess
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotContain
@@ -111,7 +112,9 @@ class S3VectorsAccessServiceTest {
     @Test
     fun `reports query failure without requesting access grants`() = runSuspendIO {
         val fixture = serviceFixture()
-        fixture.vectors.failure = IllegalStateException("query denied")
+        fixture.vectors.failure = IllegalStateException(
+            "query denied accessKeyId=AKIA_TEST secretAccessKey=secret sessionToken=token",
+        )
 
         val report = fixture.service.searchDocuments(
             VectorSearchRequest(
@@ -121,7 +124,11 @@ class S3VectorsAccessServiceTest {
         )
 
         report.query.state shouldBeEqualTo BoundaryState.FAILED
+        report.query.message shouldContain "IllegalStateException"
         report.query.message shouldContain "query denied"
+        report.query.message shouldNotContain "AKIA_TEST"
+        report.query.message shouldNotContain "secretAccessKey"
+        report.query.message shouldNotContain "sessionToken"
         report.matches.size shouldBeEqualTo 0
         report.access.state shouldBeEqualTo BoundaryState.SKIPPED
         fixture.accessGrants.dataAccessRequests.size shouldBeEqualTo 0
@@ -134,6 +141,71 @@ class S3VectorsAccessServiceTest {
 
         assertFailsWith<CancellationException> {
             fixture.service.searchDocuments(VectorSearchRequest(query = listOf(1.0f)))
+        }
+    }
+
+    @Test
+    fun `rejects non finite document vectors before calling S3 Vectors`() = runSuspendIO {
+        val fixture = serviceFixture()
+
+        assertFailsWith<IllegalArgumentException> {
+            fixture.service.upsertDocument(
+                VectorDocumentUpsertRequest(
+                    documentId = "doc-invalid",
+                    title = "Invalid vector",
+                    objectKey = "invalid.md",
+                    vector = listOf(Float.NaN),
+                )
+            )
+        }
+
+        fixture.vectors.putRequests shouldHaveSize 0
+    }
+
+    @Test
+    fun `rejects non finite query vectors before calling S3 Vectors`() = runSuspendIO {
+        val fixture = serviceFixture()
+
+        assertFailsWith<IllegalArgumentException> {
+            fixture.service.searchDocuments(VectorSearchRequest(query = listOf(Float.POSITIVE_INFINITY)))
+        }
+
+        fixture.vectors.queryRequests shouldHaveSize 0
+        fixture.accessGrants.dataAccessRequests shouldHaveSize 0
+    }
+
+    @Test
+    fun `rethrows cancellation from vector upsert`() = runSuspendIO {
+        val fixture = serviceFixture()
+        fixture.vectors.failure = CancellationException("put cancelled")
+
+        assertFailsWith<CancellationException> {
+            fixture.service.upsertDocument(
+                VectorDocumentUpsertRequest(
+                    documentId = "doc-cancelled",
+                    title = "Cancelled",
+                    objectKey = "cancelled.md",
+                    vector = listOf(1.0f),
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `rethrows cancellation from access grants request`() = runSuspendIO {
+        val fixture = serviceFixture()
+        fixture.service.upsertDocument(
+            VectorDocumentUpsertRequest(
+                documentId = "doc-access-cancelled",
+                title = "Access cancelled",
+                objectKey = "access-cancelled.md",
+                vector = listOf(1.0f),
+            )
+        )
+        fixture.accessGrants.failure = CancellationException("access grant cancelled")
+
+        assertFailsWith<CancellationException> {
+            fixture.service.searchDocuments(VectorSearchRequest(query = listOf(1.0f), requireAccessGrant = true))
         }
     }
 
@@ -163,7 +235,7 @@ class S3VectorsAccessServiceTest {
         val accessGrants: CapturingS3AccessGrantsOperations,
     )
 
-    private class CapturingS3VectorsOperations: S3VectorsOperations {
+    private class CapturingS3VectorsOperations : S3VectorsOperations {
         val putRequests = mutableListOf<PutVectorsRequest>()
         val queryRequests = mutableListOf<QueryVectorsRequest>()
         var failure: Throwable? = null
@@ -199,10 +271,12 @@ class S3VectorsAccessServiceTest {
             ListVectorsResponse.builder().build()
     }
 
-    private class CapturingS3AccessGrantsOperations: S3AccessGrantsOperations {
+    private class CapturingS3AccessGrantsOperations : S3AccessGrantsOperations {
         val dataAccessRequests = mutableListOf<GetDataAccessRequest>()
+        var failure: Throwable? = null
 
         override suspend fun getDataAccess(request: GetDataAccessRequest): GetDataAccessResponse {
+            failure?.let { throw it }
             dataAccessRequests += request
             return GetDataAccessResponse.builder().build()
         }
