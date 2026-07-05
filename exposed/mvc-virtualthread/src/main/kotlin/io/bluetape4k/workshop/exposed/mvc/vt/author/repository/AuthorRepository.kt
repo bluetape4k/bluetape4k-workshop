@@ -55,7 +55,7 @@ class AuthorRepository(
     fun deleteById(id: Long): VirtualFuture<Unit> = virtualFuture(executor) {
         transaction(db) {
             AuthorTable.deleteWhere { AuthorTable.id eq id }
-            Unit
+            return@transaction
         }
     }
 }

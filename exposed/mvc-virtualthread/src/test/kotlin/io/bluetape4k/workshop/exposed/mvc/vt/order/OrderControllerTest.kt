@@ -26,8 +26,8 @@ class OrderControllerTest : AbstractMvcVirtualThreadTest() {
             .expectStatus().isCreated
             .expectBody(OrderDTO::class.java)
             .returnResult()
-        result.responseBody.shouldNotBeNull()
-        result.responseBody!!.id shouldBeGreaterOrEqualTo 1L
+        val body = result.responseBody.shouldNotBeNull()
+        body.id shouldBeGreaterOrEqualTo 1L
     }
 
     @Test
@@ -58,7 +58,7 @@ class OrderControllerTest : AbstractMvcVirtualThreadTest() {
             .exchange()
             .expectStatus().isCreated
             .expectBody(OrderDTO::class.java)
-            .returnResult().responseBody!!
+            .returnResult().responseBody.shouldNotBeNull()
 
         webTestClient.patch()
             .uri("/api/v1/orders/${order.id}/cancel")

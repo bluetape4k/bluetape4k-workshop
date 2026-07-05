@@ -6,6 +6,7 @@ import io.bluetape4k.workshop.exposed.mvc.vt.AbstractMvcVirtualThreadTest
 import io.bluetape4k.workshop.exposed.mvc.vt.author.dto.AuthorDTO
 import io.bluetape4k.workshop.exposed.mvc.vt.author.dto.BookDTO
 import io.bluetape4k.workshop.exposed.mvc.vt.author.dto.CreateAuthorRequest
+import io.bluetape4k.workshop.exposed.mvc.vt.author.dto.CreateBookRequest
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 
@@ -37,8 +38,38 @@ class AuthorControllerTest : AbstractMvcVirtualThreadTest() {
             .expectStatus().isCreated
             .expectBody(AuthorDTO::class.java)
             .returnResult()
-        result.responseBody.shouldNotBeNull()
-        result.responseBody!!.id shouldBeGreaterOrEqualTo 1L
+        val body = result.responseBody.shouldNotBeNull()
+        body.id shouldBeGreaterOrEqualTo 1L
+    }
+
+    @Test
+    fun `POST author with blank email returns 400`() {
+        val req = CreateAuthorRequest(
+            firstName = faker.name().firstName(),
+            lastName = faker.name().lastName(),
+            email = " ",
+        )
+        webTestClient.post()
+            .uri("/api/v1/authors")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(req)
+            .exchange()
+            .expectStatus().isBadRequest
+    }
+
+    @Test
+    fun `POST book with nonexistent author returns 404`() {
+        val req = CreateBookRequest(
+            title = "Unknown Author Book",
+            publishDate = "2026-07-05",
+            authorId = 999_999L,
+        )
+        webTestClient.post()
+            .uri("/api/v1/books")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(req)
+            .exchange()
+            .expectStatus().isNotFound
     }
 
     @Test
