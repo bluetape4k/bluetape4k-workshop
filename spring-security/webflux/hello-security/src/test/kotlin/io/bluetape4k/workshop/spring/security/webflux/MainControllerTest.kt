@@ -10,9 +10,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.reactive.server.expectBody
 
-class MainControllerTest: AbstractSecurityApplicationTest() {
+class MainControllerTest : AbstractSecurityApplicationTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `index page is not protected`() = runSuspendIO {

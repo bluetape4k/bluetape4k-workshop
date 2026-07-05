@@ -17,7 +17,7 @@ import org.springframework.security.web.server.SecurityWebFilterChain
 @EnableWebFluxSecurity
 class SecurityConfiguration {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Bean
     fun springSecurityFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
