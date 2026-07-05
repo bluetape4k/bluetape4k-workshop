@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Import
 @Import(LoggingConfiguration::class)
 class Application {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
 }
 

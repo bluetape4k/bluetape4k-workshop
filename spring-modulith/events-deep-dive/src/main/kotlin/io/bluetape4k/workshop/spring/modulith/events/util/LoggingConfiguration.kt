@@ -15,7 +15,7 @@ import org.springframework.core.Ordered
 @Configuration(proxyBeanMethods = false)
 class LoggingConfiguration {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Bean
     fun interceptor(): CustomizableTraceInterceptor {
@@ -43,7 +43,7 @@ class LoggingConfiguration {
 
     open class Foo: BeanPostProcessor {
 
-        companion object: KLogging()
+        companion object : KLogging()
 
         override fun postProcessAfterInitialization(bean: Any, beanName: String): Any? {
             if (beanName != "orderManagement") {

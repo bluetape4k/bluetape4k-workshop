@@ -14,7 +14,7 @@ class OrderEventPublicationTests(
     @param:Autowired private val orders: OrderManagement,
 ) {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Test
     fun `publish event on order completed`(events: ApplicationEvents) {

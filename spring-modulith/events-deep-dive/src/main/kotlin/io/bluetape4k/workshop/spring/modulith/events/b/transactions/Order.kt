@@ -11,7 +11,7 @@ import org.hibernate.annotations.DynamicUpdate
 @Table(name = "MyOrder")
 @DynamicInsert
 @DynamicUpdate
-class Order: StringAggregate<Order>() {
+class Order : StringAggregate<Order>() {
 
     var status: OrderStatus = OrderStatus.OPEN
 

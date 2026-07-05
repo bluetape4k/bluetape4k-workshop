@@ -9,7 +9,7 @@ class OrderManagement(
     private val orderRepository: OrderRepository,
 ) {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     fun completeOrder(order: Order) {
         log.info { "Completing order. order=$order" }

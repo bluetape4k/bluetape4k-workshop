@@ -14,7 +14,7 @@ class OrderIntegrationTest(
     private val inventory: Inventory,
 ) {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Test
     fun `transaction rollback if inventory update fails`() {

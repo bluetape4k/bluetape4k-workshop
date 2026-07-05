@@ -10,7 +10,7 @@ import java.io.Serializable
 import java.util.*
 
 @MappedSuperclass
-abstract class UuidAggregate<T: AbstractAggregateRoot<T>>
+abstract class UuidAggregate<T : AbstractAggregateRoot<T>>
     : AbstractAggregateRoot<T>(), JpaEntity<UUID>, Serializable {
 
     @Id

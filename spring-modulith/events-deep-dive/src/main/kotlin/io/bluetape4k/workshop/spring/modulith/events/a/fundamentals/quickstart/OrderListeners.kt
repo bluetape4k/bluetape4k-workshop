@@ -11,7 +11,7 @@ class OrderListeners {
     @Component
     class ImplementingListener: ApplicationListener<OrderManagement.OrderCompleted> {
 
-        companion object: KLogging()
+        companion object : KLogging()
 
         override fun onApplicationEvent(event: OrderManagement.OrderCompleted) {
             log.info { "Received event: $event" }
@@ -21,7 +21,7 @@ class OrderListeners {
     @Component
     class AnnotatedListener {
 
-        companion object: KLogging()
+        companion object : KLogging()
 
         @EventListener
         fun on(event: OrderManagement.OrderCompleted) {

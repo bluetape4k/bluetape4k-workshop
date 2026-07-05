@@ -7,7 +7,7 @@ import jakarta.persistence.Table
 
 @Entity
 @Table(name = "MyOrder")
-class Order: StringAggregate<Order>() {
+class Order : StringAggregate<Order>() {
 
     var status: OrderStatus = OrderStatus.OPEN
 

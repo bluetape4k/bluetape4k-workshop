@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional
 class OrderManagement(
     private val orderRepository: OrderRepository,
 ) {
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Transactional
     fun completeOrder(order: Order) {

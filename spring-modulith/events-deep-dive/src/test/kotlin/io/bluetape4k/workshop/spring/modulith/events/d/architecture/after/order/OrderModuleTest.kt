@@ -13,7 +13,7 @@ class OrderModuleTest(
     @param:Autowired private val orders: OrderManagement,
 ) {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Test
     fun `publish OrderCompletedEvent`(events: PublishedEvents) {

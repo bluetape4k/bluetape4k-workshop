@@ -9,7 +9,7 @@ import org.springframework.data.domain.AbstractAggregateRoot
 import java.io.Serializable
 
 @MappedSuperclass
-abstract class StringAggregate<T: AbstractAggregateRoot<T>>
+abstract class StringAggregate<T : AbstractAggregateRoot<T>>
     : AbstractAggregateRoot<T>(), JpaEntity<String>, Serializable {
 
     @Id

@@ -10,7 +10,7 @@ class OrderListeners {
 
     @Component
     class AnnotatedListener {
-        companion object: KLogging()
+        companion object : KLogging()
 
         @EventListener
         fun on(event: Order.OrderCompleted) {
@@ -20,7 +20,7 @@ class OrderListeners {
 
     @Component
     class ConfigurableEventListener {
-        companion object: KLogging()
+        companion object : KLogging()
 
         var fail: Boolean = false
 
@@ -36,7 +36,7 @@ class OrderListeners {
 
     @Component
     class TransactionalListener {
-        companion object: KLogging()
+        companion object : KLogging()
 
         @TransactionalEventListener
         fun on(event: Order.OrderCompleted) {
@@ -46,7 +46,7 @@ class OrderListeners {
 
     @Component
     class ConfigurableTransactionalListener {
-        companion object: KLogging()
+        companion object : KLogging()
 
         var fail: Boolean = false
 

@@ -11,7 +11,7 @@ class OrderListeners {
     @Component
     class AnnotatedListener {
 
-        companion object: KLogging()
+        companion object : KLogging()
 
         @EventListener
         fun on(event: OrderCompleted) {
