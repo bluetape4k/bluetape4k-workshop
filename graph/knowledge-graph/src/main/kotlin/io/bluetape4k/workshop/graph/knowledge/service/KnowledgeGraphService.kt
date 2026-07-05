@@ -9,8 +9,10 @@ import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
+import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.graph.knowledge.schema.ConceptLabel
 import io.bluetape4k.workshop.graph.knowledge.schema.DocumentLabel
 import io.bluetape4k.workshop.graph.knowledge.schema.EntityLabel
@@ -31,6 +33,7 @@ import io.bluetape4k.workshop.graph.knowledge.schema.RelatedToLabel
  * - [mention] creates a directed MENTIONS edge from a Document to an Entity.
  * - [relateEntities] creates a directed RELATED_TO edge from one Entity to another.
  * - [classify] creates a directed IS_A edge from an Entity to a Concept.
+ * - Edge mutators reject missing vertices and source/target label mismatches with [IllegalArgumentException].
  * - [inferRelationshipPaths] searches only along RELATED_TO edges.
  *
  * ## Usage
@@ -47,6 +50,10 @@ class KnowledgeGraphService(
     private val ops: GraphOperations,
     private val graphName: String = "knowledge_graph",
 ) {
+    init {
+        graphName.requireNotBlank("graphName")
+    }
+
     companion object : KLogging() {
         /** Maximum traversal depth for neighbor and path queries. */
         const val MAX_TRAVERSAL_DEPTH: Int = 10
@@ -127,9 +134,12 @@ class KnowledgeGraphService(
      * Creates a MENTIONS edge from [documentId] to [entityId].
      *
      * @param confidence extraction confidence score 0–100
+     * @throws IllegalArgumentException when endpoints are missing or not Document → Entity.
      */
     fun mention(documentId: GraphElementId, entityId: GraphElementId, confidence: Int = 100) {
         confidence.requireInRange(0, 100, "confidence")
+        requireEndpoint(documentId, DocumentLabel.label, "documentId")
+        requireEndpoint(entityId, EntityLabel.label, "entityId")
         ops.createEdge(
             documentId,
             entityId,
@@ -142,6 +152,7 @@ class KnowledgeGraphService(
      * Creates a directed RELATED_TO edge from [fromEntityId] to [toEntityId].
      *
      * @param relationType describes the kind of relationship (e.g. "has-feature", "integrates-with")
+     * @throws IllegalArgumentException when endpoints are missing or not Entity → Entity.
      */
     fun relateEntities(
         fromEntityId: GraphElementId,
@@ -149,6 +160,8 @@ class KnowledgeGraphService(
         relationType: String = "related",
     ) {
         relationType.requireNotBlank("relationType")
+        requireEndpoint(fromEntityId, EntityLabel.label, "fromEntityId")
+        requireEndpoint(toEntityId, EntityLabel.label, "toEntityId")
         ops.createEdge(
             fromEntityId,
             toEntityId,
@@ -159,8 +172,12 @@ class KnowledgeGraphService(
 
     /**
      * Creates an IS_A edge from [entityId] to [conceptId] (entity → concept classification).
+     *
+     * @throws IllegalArgumentException when endpoints are missing or not Entity → Concept.
      */
     fun classify(entityId: GraphElementId, conceptId: GraphElementId) {
+        requireEndpoint(entityId, EntityLabel.label, "entityId")
+        requireEndpoint(conceptId, ConceptLabel.label, "conceptId")
         ops.createEdge(entityId, conceptId, IsALabel.label, emptyMap())
     }
 
@@ -214,5 +231,11 @@ class KnowledgeGraphService(
             toEntityId,
             PathOptions(edgeLabel = RelatedToLabel.label, maxDepth = maxDepth),
         ).take(maxPaths)
+    }
+
+    private fun requireEndpoint(id: GraphElementId, expectedLabel: String, parameterName: String): GraphVertex {
+        val vertex = ops.findVertexById(id).requireNotNull(parameterName)
+        vertex.label.requireEquals(expectedLabel, "$parameterName.label")
+        return vertex
     }
 }

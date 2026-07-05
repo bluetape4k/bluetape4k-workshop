@@ -48,6 +48,7 @@ case "${1:-help}" in
       :graph-event-lineage:test \
       :graph-io-pipeline:test \
       :graph-recommendation:test \
+      :graph-knowledge-graph:test \
       :kotlin-design-patterns:test \
       :micrometer-observation:test \
       :spring-boot-application-event-demo:test \

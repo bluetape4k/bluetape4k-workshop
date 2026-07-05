@@ -210,6 +210,13 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     }
 
     @Test
+    fun `service rejects blank graphName`() {
+        assertFailsWith<IllegalArgumentException> {
+            KnowledgeGraphSuspendService(ops, "")
+        }
+    }
+
+    @Test
     fun `mention with confidence above 100 throws IllegalArgumentException`() = runSuspendIO {
         assertFailsWith<IllegalArgumentException> {
             service.mention(seed.docKotlinGuide.id, seed.entityKotlin.id, confidence = 101)
@@ -220,6 +227,27 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     fun `mention with negative confidence throws IllegalArgumentException`() = runSuspendIO {
         assertFailsWith<IllegalArgumentException> {
             service.mention(seed.docKotlinGuide.id, seed.entityKotlin.id, confidence = -1)
+        }
+    }
+
+    @Test
+    fun `mention rejects non-document source endpoint`() = runSuspendIO {
+        assertFailsWith<IllegalArgumentException> {
+            service.mention(seed.entityKotlin.id, seed.entityJvm.id, confidence = 90)
+        }
+    }
+
+    @Test
+    fun `relateEntities rejects non-entity endpoint`() = runSuspendIO {
+        assertFailsWith<IllegalArgumentException> {
+            service.relateEntities(seed.docKotlinGuide.id, seed.entityJvm.id)
+        }
+    }
+
+    @Test
+    fun `classify rejects non-concept target endpoint`() = runSuspendIO {
+        assertFailsWith<IllegalArgumentException> {
+            service.classify(seed.entityKotlin.id, seed.entityJvm.id)
         }
     }
 

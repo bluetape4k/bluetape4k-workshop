@@ -9,8 +9,10 @@ import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.graph.repository.GraphSuspendOperations
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
+import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.graph.knowledge.schema.ConceptLabel
 import io.bluetape4k.workshop.graph.knowledge.schema.DocumentLabel
 import io.bluetape4k.workshop.graph.knowledge.schema.EntityLabel
@@ -32,6 +34,7 @@ import kotlinx.coroutines.flow.take
  * - [mention] creates a directed MENTIONS edge from Document to Entity.
  * - [relateEntities] creates a directed RELATED_TO edge between Entities.
  * - [classify] creates a directed IS_A edge from Entity to Concept.
+ * - Edge mutators reject missing vertices and source/target label mismatches with [IllegalArgumentException].
  * - Flow-returning methods do not suspend; consumption suspends.
  *
  * ## Usage
@@ -49,6 +52,10 @@ class KnowledgeGraphSuspendService(
     private val ops: GraphSuspendOperations,
     private val graphName: String = "knowledge_graph",
 ) {
+    init {
+        graphName.requireNotBlank("graphName")
+    }
+
     companion object : KLoggingChannel() {
         /** Maximum traversal depth for neighbor and path queries. */
         const val MAX_TRAVERSAL_DEPTH: Int = 10
@@ -105,9 +112,15 @@ class KnowledgeGraphSuspendService(
         )
     }
 
-    /** Creates a MENTIONS edge from [documentId] to [entityId]. */
+    /**
+     * Creates a MENTIONS edge from [documentId] to [entityId].
+     *
+     * @throws IllegalArgumentException when endpoints are missing or not Document → Entity.
+     */
     suspend fun mention(documentId: GraphElementId, entityId: GraphElementId, confidence: Int = 100) {
         confidence.requireInRange(0, 100, "confidence")
+        requireEndpoint(documentId, DocumentLabel.label, "documentId")
+        requireEndpoint(entityId, EntityLabel.label, "entityId")
         ops.createEdge(
             documentId,
             entityId,
@@ -116,13 +129,19 @@ class KnowledgeGraphSuspendService(
         )
     }
 
-    /** Creates a directed RELATED_TO edge from [fromEntityId] to [toEntityId]. */
+    /**
+     * Creates a directed RELATED_TO edge from [fromEntityId] to [toEntityId].
+     *
+     * @throws IllegalArgumentException when endpoints are missing or not Entity → Entity.
+     */
     suspend fun relateEntities(
         fromEntityId: GraphElementId,
         toEntityId: GraphElementId,
         relationType: String = "related",
     ) {
         relationType.requireNotBlank("relationType")
+        requireEndpoint(fromEntityId, EntityLabel.label, "fromEntityId")
+        requireEndpoint(toEntityId, EntityLabel.label, "toEntityId")
         ops.createEdge(
             fromEntityId,
             toEntityId,
@@ -131,8 +150,14 @@ class KnowledgeGraphSuspendService(
         )
     }
 
-    /** Creates an IS_A edge from [entityId] to [conceptId]. */
+    /**
+     * Creates an IS_A edge from [entityId] to [conceptId].
+     *
+     * @throws IllegalArgumentException when endpoints are missing or not Entity → Concept.
+     */
     suspend fun classify(entityId: GraphElementId, conceptId: GraphElementId) {
+        requireEndpoint(entityId, EntityLabel.label, "entityId")
+        requireEndpoint(conceptId, ConceptLabel.label, "conceptId")
         ops.createEdge(entityId, conceptId, IsALabel.label, emptyMap())
     }
 
@@ -182,5 +207,11 @@ class KnowledgeGraphSuspendService(
             toEntityId,
             PathOptions(edgeLabel = RelatedToLabel.label, maxDepth = maxDepth),
         ).take(maxPaths)
+    }
+
+    private suspend fun requireEndpoint(id: GraphElementId, expectedLabel: String, parameterName: String): GraphVertex {
+        val vertex = ops.findVertexById(id).requireNotNull(parameterName)
+        vertex.label.requireEquals(expectedLabel, "$parameterName.label")
+        return vertex
     }
 }
