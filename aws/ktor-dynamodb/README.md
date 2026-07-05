@@ -117,14 +117,14 @@ curl -i -X DELETE http://localhost:8080/dynamodb/order-sessions/order-1001
 | `bluetape4k.aws.mode` | `local` | Use `real` only for intentional AWS access. |
 | `bluetape4k.aws.emulator` | `floci` | `floci` or `localstack`. |
 | `bluetape4k.aws.region` | `ap-northeast-2` | Can be any emulator-supported region. |
-| `bluetape4k.aws.dynamodb.table-name` | `workshop-order-sessions` | Auto-created by the Ktor plugin. |
+| `bluetape4k.aws.dynamodb.table-name` | `workshop-order-sessions` | Auto-created only in local mode. |
 | `bluetape4k.aws.dynamodb.endpoint-url` | none | Required in local mode. |
 | `bluetape4k.aws.access-key-id` | none | Required in local mode. |
 | `bluetape4k.aws.secret-access-key` | none | Required in local mode. |
 
 ## Real AWS Opt-In
 
-Real AWS mode does not require an endpoint override:
+Real AWS mode does not require an endpoint override and does not auto-create tables:
 
 ```bash
 ./gradlew :aws-ktor-dynamodb:run \
@@ -133,7 +133,7 @@ Real AWS mode does not require an endpoint override:
   -Dbluetape4k.aws.dynamodb.table-name=workshop-order-sessions
 ```
 
-Use a constrained AWS profile, review table costs, and delete the table after the workshop.
+Create the table explicitly before running, use a constrained AWS profile, review table costs, and delete the table after the workshop.
 
 ## Verification
 

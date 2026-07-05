@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.aws.ktordynamodb
 
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import java.time.Instant
@@ -49,12 +50,10 @@ internal class DynamoDbOrderSessionService(
     }
 
     override suspend fun list(limit: Int?, nextToken: String?): OrderSessionListResponse {
-        val pageLimit = limit ?: ORDER_SESSION_DEFAULT_LIST_LIMIT
-        if (pageLimit !in 1..ORDER_SESSION_MAX_LIST_LIMIT) {
-            throw OrderSessionValidationException("limit must be between 1 and $ORDER_SESSION_MAX_LIST_LIMIT.")
-        }
+        val pageLimit = requiredListLimit(limit ?: ORDER_SESSION_DEFAULT_LIST_LIMIT)
+        val trimmedNextToken = nextToken?.trim()?.takeIf { it.isNotBlank() }
 
-        return repository.list(limit = pageLimit, nextToken = nextToken?.takeIf { it.isNotBlank() })
+        return repository.list(limit = pageLimit, nextToken = trimmedNextToken)
     }
 
     override suspend fun update(id: String, request: UpdateOrderSessionRequest): OrderSessionResponse {
@@ -102,6 +101,18 @@ internal class DynamoDbOrderSessionService(
             value.requirePositiveNumber(name)
         } catch (e: IllegalArgumentException) {
             throw OrderSessionValidationException(e.message ?: "$name must be positive.")
+        }
+
+        return value
+    }
+
+    private fun requiredListLimit(value: Int): Int {
+        try {
+            value.requireInRange(1, ORDER_SESSION_MAX_LIST_LIMIT, "limit")
+        } catch (e: IllegalArgumentException) {
+            throw OrderSessionValidationException(
+                e.message ?: "limit must be between 1 and $ORDER_SESSION_MAX_LIST_LIMIT.",
+            )
         }
 
         return value

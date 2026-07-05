@@ -42,7 +42,7 @@ internal fun Application.ktorDynamoDbApplication(config: DynamoDbLocalConfig) {
         endpointUrl = config.endpointUrl
         region = config.region
         credentialsProvider = config.credentialsProvider()
-        autoCreateTables = true
+        autoCreateTables = config.mode == AwsWorkshopMode.LOCAL
         tableReadyTimeout = config.tableReadyTimeout
         table(
             tableName = config.tableName,

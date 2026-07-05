@@ -117,14 +117,14 @@ curl -i -X DELETE http://localhost:8080/dynamodb/order-sessions/order-1001
 | `bluetape4k.aws.mode` | `local` | 의도적으로 AWS에 접근할 때만 `real`을 사용합니다. |
 | `bluetape4k.aws.emulator` | `floci` | `floci` 또는 `localstack`. |
 | `bluetape4k.aws.region` | `ap-northeast-2` | 에뮬레이터가 지원하는 region이면 됩니다. |
-| `bluetape4k.aws.dynamodb.table-name` | `workshop-order-sessions` | Ktor plugin이 자동 생성합니다. |
+| `bluetape4k.aws.dynamodb.table-name` | `workshop-order-sessions` | Local mode에서만 자동 생성합니다. |
 | `bluetape4k.aws.dynamodb.endpoint-url` | 없음 | Local mode에서 필수입니다. |
 | `bluetape4k.aws.access-key-id` | 없음 | Local mode에서 필수입니다. |
 | `bluetape4k.aws.secret-access-key` | 없음 | Local mode에서 필수입니다. |
 
 ## Real AWS Opt-In
 
-Real AWS mode에서는 endpoint override가 필요하지 않습니다.
+Real AWS mode에서는 endpoint override가 필요하지 않으며, 테이블을 자동 생성하지 않습니다.
 
 ```bash
 ./gradlew :aws-ktor-dynamodb:run \
@@ -133,7 +133,7 @@ Real AWS mode에서는 endpoint override가 필요하지 않습니다.
   -Dbluetape4k.aws.dynamodb.table-name=workshop-order-sessions
 ```
 
-실제 AWS에서 실행할 때는 제한된 AWS profile을 사용하고, 테이블 비용과 삭제 절차를 먼저 확인합니다.
+실제 AWS에서 실행할 때는 테이블을 명시적으로 만든 뒤 제한된 AWS profile을 사용하고, 테이블 비용과 삭제 절차를 먼저 확인합니다.
 
 ## 검증
 

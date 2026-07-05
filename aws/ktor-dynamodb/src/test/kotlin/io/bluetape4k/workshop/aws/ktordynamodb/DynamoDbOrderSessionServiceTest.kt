@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.aws.ktordynamodb
 import aws.smithy.kotlin.runtime.net.url.Url
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -61,7 +62,7 @@ class DynamoDbOrderSessionServiceTest {
         }
 
         failure.errorCode shouldBeEqualTo OrderSessionErrorCode.VALIDATION_FAILED
-        repository.createdSessions.size shouldBeEqualTo 0
+        repository.createdSessions shouldHaveSize 0
     }
 
     @Test
@@ -103,7 +104,7 @@ class DynamoDbOrderSessionServiceTest {
         }
 
         failure.errorCode shouldBeEqualTo OrderSessionErrorCode.VALIDATION_FAILED
-        repository.listCalls.size shouldBeEqualTo 0
+        repository.listCalls shouldHaveSize 0
     }
 
     @Test

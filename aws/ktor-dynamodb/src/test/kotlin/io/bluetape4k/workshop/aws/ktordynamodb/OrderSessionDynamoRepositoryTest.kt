@@ -95,6 +95,16 @@ class OrderSessionDynamoRepositoryTest {
     }
 
     @Test
+    fun `list rejects malformed page tokens before scanning`() = runSuspendIO {
+        val failure = assertFailsWith<OrderSessionInvalidPageTokenException> {
+            repository.list(limit = 25, nextToken = "%%%")
+        }
+
+        failure.errorCode shouldBeEqualTo OrderSessionErrorCode.INVALID_PAGE_TOKEN
+        confirmVerified(client)
+    }
+
+    @Test
     fun `update uses one conditional UpdateItem command`() = runSuspendIO {
         val request = slot<UpdateItemRequest>()
         coEvery { client.updateItem(capture(request)) } returns UpdateItemResponse {
