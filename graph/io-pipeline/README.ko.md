@@ -51,6 +51,9 @@ SVG source: [graph-io-pipeline-readme-sequence-01.svg](../../docs/images/readme-
 - `PARTIAL`: option에 따라 일부 record가 skip되었습니다. 이 예제는 partial import를 성공으로 보지 않습니다.
 - `FAILED`: 오류에서 import/export가 중단되었습니다. failure detail은 maintainer용 진단 정보이므로 public endpoint에서 그대로 반환하지 않습니다.
 
+path 입력은 adapter 실행 전에 검증합니다. 존재하지 않는 파일, directory source,
+directory export target은 대상 graph를 변경하지 않고 즉시 실패합니다.
+
 이 모듈이 export한 NDJSON과 GraphML에는 의도적으로 보존한 `_graphIoExternalId`를
 포함한 graph property가 들어갑니다. backend가 생성한 graph id는 round trip마다
 안정적이지 않으므로, test는 label, `code` 값, count, edge topology를 비교합니다.

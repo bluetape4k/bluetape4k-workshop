@@ -55,6 +55,9 @@ log message.
 - `FAILED`: import/export stopped at an error. Failure details are diagnostics
   for maintainers; do not return them verbatim from public endpoints.
 
+Path inputs are validated before adapter execution. Missing files, directory
+sources, and directory export targets fail fast without mutating the target graph.
+
 The NDJSON and GraphML files exported by this module include graph properties,
 including the intentional `_graphIoExternalId` property. Backend-generated graph
 ids are not stable across round trips, so tests compare labels, `code` values,
