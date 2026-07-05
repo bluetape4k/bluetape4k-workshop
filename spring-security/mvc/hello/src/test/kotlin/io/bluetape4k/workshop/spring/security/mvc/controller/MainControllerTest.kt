@@ -12,9 +12,9 @@ import org.springframework.security.test.web.servlet.response.SecurityMockMvcRes
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-class MainControllerTest: AbstractSecurityApplicationTest() {
+class MainControllerTest : AbstractSecurityApplicationTest() {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Test
     fun `index page is not protected`() {
