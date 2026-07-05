@@ -10,8 +10,10 @@ import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.graph.repository.GraphSuspendOperations
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.graph.social.model.ConnectionRecommendation
 import io.bluetape4k.workshop.graph.social.schema.CompanyLabel
 import io.bluetape4k.workshop.graph.social.schema.FollowsLabel
@@ -37,6 +39,7 @@ import kotlinx.coroutines.flow.toList
  * - [connect] stores BIDIRECTIONAL connection as TWO directed edges (A→B and B→A).
  *   Call it once per pair — **never call again with arguments reversed**.
  * - [follow] is unidirectional: one edge from follower to followee.
+ * - Edge mutators reject missing vertices and source/target label mismatches with [IllegalArgumentException].
  * - [recommendConnections] has O(N) per-candidate neighbor lookups — use with care on large graphs.
  * - Never wrap suspend calls in `runCatching` — [kotlinx.coroutines.CancellationException] must propagate.
  *
@@ -55,6 +58,10 @@ class SocialNetworkSuspendService(
     private val ops: GraphSuspendOperations,
     private val graphName: String,
 ) {
+    init {
+        graphName.requireNotBlank("graphName")
+    }
+
     companion object : KLoggingChannel() {
         /**
          * Maximum allowed traversal depth for network queries.
@@ -154,6 +161,7 @@ class SocialNetworkSuspendService(
      * @param since ISO-8601 date when the connection was established (optional)
      * @param strength connection strength 1–10 (default: 5)
      * @return pair of (forward edge, backward edge)
+     * @throws IllegalArgumentException when endpoints are equal, missing, or not Person → Person.
      */
     suspend fun connect(
         fromVertexId: GraphElementId,
@@ -162,6 +170,9 @@ class SocialNetworkSuspendService(
         strength: Int = 5,
     ): Pair<GraphEdge, GraphEdge> {
         strength.requireInRange(1, 10, "strength")
+        requireDistinctEndpoints(fromVertexId, toVertexId, "fromVertexId", "toVertexId")
+        requireEndpoint(fromVertexId, PersonLabel.label, "fromVertexId")
+        requireEndpoint(toVertexId, PersonLabel.label, "toVertexId")
         val props = buildMap {
             if (since.isNotBlank()) put(KnowsLabel.since.name, since)
             put(KnowsLabel.strength.name, strength.toString())
@@ -179,8 +190,12 @@ class SocialNetworkSuspendService(
      *
      * @param followerVertexId graph ID of the Person who follows
      * @param followeeVertexId graph ID of the Person being followed
+     * @throws IllegalArgumentException when endpoints are equal, missing, or not Person → Person.
      */
     suspend fun follow(followerVertexId: GraphElementId, followeeVertexId: GraphElementId): GraphEdge {
+        requireDistinctEndpoints(followerVertexId, followeeVertexId, "followerVertexId", "followeeVertexId")
+        requireEndpoint(followerVertexId, PersonLabel.label, "followerVertexId")
+        requireEndpoint(followeeVertexId, PersonLabel.label, "followeeVertexId")
         return ops.createEdge(followerVertexId, followeeVertexId, FollowsLabel.label, emptyMap())
     }
 
@@ -192,6 +207,7 @@ class SocialNetworkSuspendService(
      * @param role job title or role name (required, must not be blank)
      * @param startDate ISO-8601 employment start date (optional)
      * @param isCurrent whether employment is currently active (stored as "true"/"false")
+     * @throws IllegalArgumentException when endpoints are missing or not Person → Company.
      */
     suspend fun addWorkExperience(
         personVertexId: GraphElementId,
@@ -201,6 +217,8 @@ class SocialNetworkSuspendService(
         isCurrent: Boolean = true,
     ): GraphEdge {
         role.requireNotBlank("role")
+        requireEndpoint(personVertexId, PersonLabel.label, "personVertexId")
+        requireEndpoint(companyVertexId, CompanyLabel.label, "companyVertexId")
         return ops.createEdge(
             personVertexId,
             companyVertexId,
@@ -384,5 +402,22 @@ class SocialNetworkSuspendService(
         return ops.neighbors(vertexId2, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 1))
             .toList()
             .filter { it.id in friends1 }
+    }
+
+    private suspend fun requireEndpoint(id: GraphElementId, expectedLabel: String, parameterName: String): GraphVertex {
+        val vertex = ops.findVertexById(id).requireNotNull(parameterName)
+        vertex.label.requireEquals(expectedLabel, "$parameterName.label")
+        return vertex
+    }
+
+    private fun requireDistinctEndpoints(
+        first: GraphElementId,
+        second: GraphElementId,
+        firstName: String,
+        secondName: String,
+    ) {
+        if (first == second) {
+            throw IllegalArgumentException("$firstName must differ from $secondName")
+        }
     }
 }

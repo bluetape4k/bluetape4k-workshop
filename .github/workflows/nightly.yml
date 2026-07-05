@@ -115,6 +115,7 @@ jobs:
           test
           :graph-recommendation:integrationTest
           :graph-knowledge-graph:integrationTest
+          :graph-social-network:integrationTest
           --continue
           --max-workers=1
       - name: Upload test results
@@ -126,6 +127,7 @@ jobs:
             **/build/test-results/test/*.xml
             graph/recommendation/build/test-results/integrationTest/*.xml
             graph/knowledge-graph/build/test-results/integrationTest/*.xml
+            graph/social-network/build/test-results/integrationTest/*.xml
           retention-days: 14
 
   nightly-status:

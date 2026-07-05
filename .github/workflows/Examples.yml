@@ -20,6 +20,7 @@ on:
       - 'graph/io-pipeline/**'
       - 'graph/recommendation/**'
       - 'graph/knowledge-graph/**'
+      - 'graph/social-network/**'
       - 'image-processing/ocr-api/**'
       - 'image-processing/profile-image-moderation/**'
       - 'ktor/exposed-rest/**'
@@ -65,6 +66,7 @@ on:
       - 'graph/io-pipeline/**'
       - 'graph/recommendation/**'
       - 'graph/knowledge-graph/**'
+      - 'graph/social-network/**'
       - 'image-processing/ocr-api/**'
       - 'image-processing/profile-image-moderation/**'
       - 'ktor/exposed-rest/**'
@@ -155,6 +157,7 @@ jobs:
           :graph-io-pipeline:test
           :graph-recommendation:test
           :graph-knowledge-graph:test
+          :graph-social-network:test
           :image-processing-ocr-api:test
           :image-processing-profile-image-moderation:test
           :aws-cloudwatch-imds-observability:test
@@ -199,6 +202,8 @@ jobs:
             graph/recommendation/build/reports/tests/test/
             graph/knowledge-graph/build/test-results/test/*.xml
             graph/knowledge-graph/build/reports/tests/test/
+            graph/social-network/build/test-results/test/*.xml
+            graph/social-network/build/reports/tests/test/
             image-processing/ocr-api/build/test-results/test/*.xml
             image-processing/ocr-api/build/reports/tests/test/
             image-processing/profile-image-moderation/build/test-results/test/*.xml
@@ -278,6 +283,7 @@ jobs:
       # - graph-event-lineage: Neo4j-backed graph lineage audit path
       # - graph-recommendation: Neo4j/Memgraph-backed recommendation path
       # - graph-knowledge-graph: Neo4j/Memgraph-backed knowledge graph path
+      # - graph-social-network: Neo4j/Memgraph-backed social graph path
       # - spring-boot-cache-redis: Redis-backed cache path
       # - messaging-kafka: Kafka-backed messaging path
       # - messaging-kafka-outbox-fallback: PostgreSQL + Kafka fallback relay path
@@ -294,6 +300,7 @@ jobs:
           :graph-event-lineage:integrationTest
           :graph-recommendation:integrationTest
           :graph-knowledge-graph:integrationTest
+          :graph-social-network:integrationTest
           :spring-boot-cache-redis:test
           :messaging-kafka:test
           :messaging-kafka-outbox-fallback:test
@@ -330,6 +337,8 @@ jobs:
             graph/recommendation/build/reports/tests/integrationTest/
             graph/knowledge-graph/build/test-results/integrationTest/*.xml
             graph/knowledge-graph/build/reports/tests/integrationTest/
+            graph/social-network/build/test-results/integrationTest/*.xml
+            graph/social-network/build/reports/tests/integrationTest/
             spring-boot/cache-redis/build/test-results/test/*.xml
             spring-boot/cache-redis/build/reports/tests/test/
             messaging/kafka/build/test-results/test/*.xml

@@ -49,6 +49,7 @@ case "${1:-help}" in
       :graph-io-pipeline:test \
       :graph-recommendation:test \
       :graph-knowledge-graph:test \
+      :graph-social-network:test \
       :kotlin-design-patterns:test \
       :micrometer-observation:test \
       :spring-boot-application-event-demo:test \

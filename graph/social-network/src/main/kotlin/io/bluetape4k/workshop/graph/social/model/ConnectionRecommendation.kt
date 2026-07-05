@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.graph.social.model
 
 import io.bluetape4k.graph.model.GraphVertex
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
 
 /**
@@ -28,6 +30,11 @@ data class ConnectionRecommendation(
     val mutualConnectionCount: Int,
     val mutualConnections: List<GraphVertex>,
 ) : Serializable {
+    init {
+        mutualConnectionCount.requirePositiveNumber("mutualConnectionCount")
+        mutualConnections.size.requireEquals(mutualConnectionCount, "mutualConnections.size")
+    }
+
     companion object {
         private const val serialVersionUID: Long = 1L
     }

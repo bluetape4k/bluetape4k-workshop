@@ -62,8 +62,8 @@ graph/social-network/
 | Label | Direction | Properties |
 |---|---|---|
 | `KNOWS` | bidirectional (two directed edges) | `since`, `strength` (1–10) |
-| `FOLLOWS` | unidirectional | `since` |
-| `WORKS_AT` | `Person` → `Company` | `role`, `startDate`, `endDate`, `isCurrent` |
+| `FOLLOWS` | unidirectional | none |
+| `WORKS_AT` | `Person` -> `Company` | `role`, `startDate`, `isCurrent` |
 
 ## Seed Topology (test data)
 
@@ -93,7 +93,7 @@ val acme  = service.addCompany("acme", "Acme Corp", industry = "Technology")
 
 // Edge creation
 service.connect(alice.id, bob.id, since = "2024-01-01", strength = 8)     // bidirectional KNOWS
-service.follow(eve.id, alice.id, since = "2024-06-01")                     // unidirectional FOLLOWS
+service.follow(eve.id, alice.id)                                           // unidirectional FOLLOWS
 service.addWorkExperience(alice.id, acme.id, role = "Engineer", isCurrent = true)
 
 // 1st-degree connections
@@ -162,7 +162,6 @@ Requires Docker.
 
 ```kotlin
 // build.gradle.kts
-implementation(platform(libs.bluetape4k.graph.bom))
 implementation(libs.bluetape4k.graph.core)
 implementation(libs.bluetape4k.graph.tinkerpop)
 
@@ -170,6 +169,3 @@ implementation(libs.bluetape4k.graph.tinkerpop)
 compileOnly(libs.bluetape4k.graph.neo4j)
 compileOnly(libs.bluetape4k.graph.memgraph)
 ```
-
-> **Note:** `bluetape4k-graph` is resolved from `mavenLocal`.
-> Run `./gradlew -p bluetape4k-graph publishBluetapeGraphPublicationToMavenLocalRepository` first.
