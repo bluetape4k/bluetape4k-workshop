@@ -20,7 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 @ExtendWith(VertxExtension::class)
 abstract class AbstractSqlClientTest {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
 
         val faker = Fakers.faker
 
@@ -32,13 +32,13 @@ abstract class AbstractSqlClientTest {
                 port = port,
                 database = databaseName,
                 user = username,
-                password = password
+                password = password,
             )
 
         private val h2ConnectOptions: JDBCConnectOptions by lazy {
             jdbcConnectOptionsOf(
                 jdbcUrl = "jdbc:h2:mem:test;MODE=MYSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;DATABASE_TO_UPPER=FALSE;",
-                user = "sa"
+                user = "sa",
             )
         }
 
