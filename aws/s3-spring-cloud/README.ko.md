@@ -52,17 +52,21 @@ fun s3Client(): S3Client =
         .build()
 ```
 
-### 실제 AWS 연결 시 `application.yml` 설정
+### 로컬 에뮬레이터 설정
+
+이 샘플은 의도적으로 Floci 기반 `S3Client` bean을 생성합니다. `application.yml` 값은
+Spring Cloud AWS resource loading을 위한 로컬 기본값이며, 실제 AWS runtime profile로
+사용하지 않습니다.
 
 ```yaml
 spring:
   cloud:
     aws:
       credentials:
-        access-key: ${AWS_ACCESS_KEY_ID}
-        secret-key: ${AWS_SECRET_ACCESS_KEY}
+        access-key: noop
+        secret-key: noop
       region:
-        static: ap-northeast-2
+        static: us-east-1
       s3:
         enabled: true
 ```
@@ -95,3 +99,4 @@ val content = resource.inputStream.bufferedReader().readText()
 
 - Docker 데몬이 실행 중이어야 합니다. Testcontainers가 Floci 컨테이너를 자동으로 시작합니다.
 - 실제 AWS 자격 증명은 필요하지 않습니다. Floci가 로컬에서 S3 호환 API를 제공합니다.
+- 실제 AWS 접근은 이 샘플의 runtime path가 아닙니다. 이 예제는 local-first로 유지합니다.

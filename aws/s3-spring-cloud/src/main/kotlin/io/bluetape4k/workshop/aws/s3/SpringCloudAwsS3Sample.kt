@@ -16,16 +16,18 @@ import org.springframework.core.io.WritableResource
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.S3Exception
-import java.util.*
 
 fun main(vararg args: String) {
     runApplication<SpringCloudAwsS3Sample>(*args)
 }
 
+/**
+ * Local-first Spring Cloud AWS S3 sample backed by a Floci S3-compatible endpoint.
+ */
 @SpringBootApplication(proxyBeanMethods = false)
 class SpringCloudAwsS3Sample {
 
-    companion object: KLogging() {
+    companion object : KLogging() {
         private const val TEST_FILE_URL = "s3://spring-cloud-aws-sample-bucket1/test-file.txt"
 
         private val s3Server = FlociServer.Launcher.floci.withServices("s3")
@@ -70,9 +72,8 @@ class SpringCloudAwsS3Sample {
 }
 
 
-fun Resource.readContent(): String {
-    val scanner = Scanner(this.inputStream).useDelimiter("\\A")
-    return if (scanner.hasNext()) scanner.next() else ""
+internal fun Resource.readContent(): String {
+    return inputStream.bufferedReader().use { it.readText() }
 }
 
 private fun S3Client.ensureBucketExists(bucketName: String) {

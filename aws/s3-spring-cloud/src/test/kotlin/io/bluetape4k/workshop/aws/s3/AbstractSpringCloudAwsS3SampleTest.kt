@@ -4,5 +4,5 @@ import io.bluetape4k.logging.KLogging
 
 abstract class AbstractSpringCloudAwsS3SampleTest {
 
-    companion object: KLogging()
+    companion object : KLogging()
 }
