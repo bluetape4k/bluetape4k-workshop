@@ -9,4 +9,9 @@ import java.io.Serializable
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 data class EmailAddress(
     val address: String = "",
-): Serializable
+) : Serializable {
+
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}

@@ -30,7 +30,7 @@ class MovieRepositoryTest @Autowired constructor(
     private val movieActorRefRepo: MovieActorReferenceRepository,
 ): AbstractRedisTest() {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private val starwars = Movie("Star Wars", "SF", 1977)
         private val terminator = Movie("Terminator", "SF", 1984)
         private val avengers = Movie("Avengers", "Comics", 2018)

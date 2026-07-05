@@ -15,7 +15,7 @@ import org.springframework.data.redis.connection.stream.StringRecord
  */
 class SensorData {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         internal const val KEY = "my-stream"
 
         // NOTE: 참고: RecordId 는 `epoch milliseconds-sequence id` 형식으로 구성됩니다. [RecordId] 참고 

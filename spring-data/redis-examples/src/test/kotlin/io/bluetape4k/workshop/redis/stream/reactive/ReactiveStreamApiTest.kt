@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.redis.stream.reactive
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import io.bluetape4k.workshop.redis.RedisTestSupport
 import io.bluetape4k.workshop.redis.stream.RedisStreamConfiguration
 import io.bluetape4k.workshop.redis.stream.SensorData
 import kotlinx.coroutines.delay
@@ -28,6 +29,8 @@ import org.springframework.data.redis.connection.stream.StreamOffset
 import org.springframework.data.redis.core.ReactiveStreamOperations
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate
 import org.springframework.data.redis.stream.StreamReceiver
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
 import java.time.Duration
 import java.util.concurrent.LinkedBlockingDeque
 
@@ -36,7 +39,14 @@ class ReactiveStreamApiTest(
     @param:Autowired private val template: ReactiveStringRedisTemplate,
     @param:Autowired private val streamReceiver: StreamReceiver<String, MapRecord<String, String, String>>,
 ) {
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel() {
+
+        @JvmStatic
+        @DynamicPropertySource
+        fun redisProperties(registry: DynamicPropertyRegistry) {
+            RedisTestSupport.registerRedisProperties(registry)
+        }
+    }
 
     private val streamOps: ReactiveStreamOperations<String, String, String> = template.opsForStream()
 

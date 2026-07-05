@@ -31,7 +31,7 @@ class PersonRepositoryTest @Autowired constructor(
     private val repository: PersonRepository,
 ): AbstractRedisTest() {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private val CHARSET = Charsets.UTF_8
     }
 

@@ -10,6 +10,8 @@ import io.bluetape4k.support.toUtf8ByteBuffer
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.redis.reactive.AbstractReactiveRedisTest
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.buffer
 import kotlinx.coroutines.flow.count
@@ -21,7 +23,6 @@ import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactor.asFlux
 import kotlinx.coroutines.reactor.awaitSingle
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.RepeatedTest
@@ -38,8 +39,8 @@ class ReactiveKeyCommandsTest(
     @param:Autowired private val connectionFactory: ReactiveRedisConnectionFactory,
 ): AbstractReactiveRedisTest() {
 
-    companion object: KLoggingChannel() {
-        private val PREFIX = ReactiveKeyCommandsTest::class.simpleName!!
+    companion object : KLoggingChannel() {
+        private val PREFIX = ReactiveKeyCommandsTest::class.simpleName.shouldNotBeNull()
         private val KEY_PATTERN = "$PREFIX*"
         private const val KEY_SIZE = 50
 
