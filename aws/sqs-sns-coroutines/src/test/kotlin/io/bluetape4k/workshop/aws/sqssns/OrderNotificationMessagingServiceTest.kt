@@ -92,8 +92,49 @@ class OrderNotificationMessagingServiceTest {
         report.message shouldContain "downstream unavailable"
         fixture.sqs.visibilityChanges.single() shouldBeEqualTo VisibilityChange("orders-queue", "receipt-1", 0)
         fixture.sqs.deletedHandles.size shouldBeEqualTo 0
-        fixture.meterRegistry.counter(OrderNotificationMetrics.CONSUME_MESSAGES, "result", "retry").count()
-            .shouldBeGreaterThan(0.0)
+        val ackedCount = fixture.meterRegistry.counter(OrderNotificationMetrics.CONSUME_MESSAGES, "result", "acked").count()
+        val failureCount = fixture.meterRegistry.counter(OrderNotificationMetrics.CONSUME_MESSAGES, "result", "failure").count()
+        val retryCount = fixture.meterRegistry.counter(OrderNotificationMetrics.CONSUME_MESSAGES, "result", "retry").count()
+        ackedCount shouldBeEqualTo 0.0
+        failureCount shouldBeEqualTo 0.0
+        retryCount shouldBeGreaterThan 0.0
+    }
+
+    @Test
+    fun `delete failure records failure without ack or retry counters`() = runSuspendIO {
+        val fixture = serviceFixture()
+        fixture.sqs.messages += sqsMessage(fixture.eventJson(), receiveCount = 1)
+        fixture.sqs.deleteFailure = IllegalStateException("delete unavailable")
+
+        assertFailsWith<IllegalStateException> {
+            fixture.service.consumeOnce()
+        }
+
+        val ackedCount = fixture.meterRegistry.counter(OrderNotificationMetrics.CONSUME_MESSAGES, "result", "acked").count()
+        val retryCount = fixture.meterRegistry.counter(OrderNotificationMetrics.CONSUME_MESSAGES, "result", "retry").count()
+        val failureCount = fixture.meterRegistry.counter(OrderNotificationMetrics.CONSUME_MESSAGES, "result", "failure").count()
+        ackedCount shouldBeEqualTo 0.0
+        retryCount shouldBeEqualTo 0.0
+        failureCount shouldBeEqualTo 1.0
+    }
+
+    @Test
+    fun `visibility change failure records failure without retry counter`() = runSuspendIO {
+        val fixture = serviceFixture()
+        fixture.sqs.messages += sqsMessage(fixture.eventJson(), receiveCount = 1)
+        fixture.handler.failure = IllegalStateException("downstream unavailable")
+        fixture.sqs.visibilityFailure = IllegalStateException("visibility unavailable")
+
+        assertFailsWith<IllegalStateException> {
+            fixture.service.consumeOnce()
+        }
+
+        val ackedCount = fixture.meterRegistry.counter(OrderNotificationMetrics.CONSUME_MESSAGES, "result", "acked").count()
+        val retryCount = fixture.meterRegistry.counter(OrderNotificationMetrics.CONSUME_MESSAGES, "result", "retry").count()
+        val failureCount = fixture.meterRegistry.counter(OrderNotificationMetrics.CONSUME_MESSAGES, "result", "failure").count()
+        ackedCount shouldBeEqualTo 0.0
+        retryCount shouldBeEqualTo 0.0
+        failureCount shouldBeEqualTo 1.0
     }
 
     @Test
@@ -134,6 +175,28 @@ class OrderNotificationMessagingServiceTest {
         assertFailsWith<CancellationException> {
             fixture.service.publish(sampleRequest())
         }
+        val successCount = fixture.meterRegistry.counter(OrderNotificationMetrics.PUBLISH_ATTEMPTS, "result", "success").count()
+        val cancelledCount = fixture.meterRegistry.counter(OrderNotificationMetrics.PUBLISH_ATTEMPTS, "result", "cancelled").count()
+        successCount shouldBeEqualTo 0.0
+        cancelledCount shouldBeEqualTo 1.0
+    }
+
+    @Test
+    fun `rethrows cancellation from handler and records cancelled consume metric`() = runSuspendIO {
+        val fixture = serviceFixture()
+        fixture.sqs.messages += sqsMessage(fixture.eventJson(), receiveCount = 1)
+        fixture.handler.failure = CancellationException("handler cancelled")
+
+        assertFailsWith<CancellationException> {
+            fixture.service.consumeOnce()
+        }
+
+        fixture.sqs.deletedHandles.size shouldBeEqualTo 0
+        fixture.sqs.visibilityChanges.size shouldBeEqualTo 0
+        val ackedCount = fixture.meterRegistry.counter(OrderNotificationMetrics.CONSUME_MESSAGES, "result", "acked").count()
+        val cancelledCount = fixture.meterRegistry.counter(OrderNotificationMetrics.CONSUME_MESSAGES, "result", "cancelled").count()
+        ackedCount shouldBeEqualTo 0.0
+        cancelledCount shouldBeEqualTo 1.0
     }
 
     @Test
@@ -270,6 +333,8 @@ class OrderNotificationMessagingServiceTest {
         val messages = mutableListOf<SqsReceivedMessage>()
         val deletedHandles = mutableListOf<String>()
         val visibilityChanges = mutableListOf<VisibilityChange>()
+        var deleteFailure: Throwable? = null
+        var visibilityFailure: Throwable? = null
 
         override suspend fun getQueueUrl(queueName: String): String = QUEUE_URL
 
@@ -295,6 +360,7 @@ class OrderNotificationMessagingServiceTest {
             messages.take(maxMessages)
 
         override suspend fun delete(queueUrl: String, receiptHandle: String): DeleteMessageResponse {
+            deleteFailure?.let { throw it }
             deletedHandles += receiptHandle
             return DeleteMessageResponse.builder().build()
         }
@@ -304,6 +370,7 @@ class OrderNotificationMessagingServiceTest {
             receiptHandle: String,
             timeoutSeconds: Int,
         ): ChangeMessageVisibilityResponse {
+            visibilityFailure?.let { throw it }
             visibilityChanges += VisibilityChange(queueUrl, receiptHandle, timeoutSeconds)
             return ChangeMessageVisibilityResponse.builder().build()
         }
