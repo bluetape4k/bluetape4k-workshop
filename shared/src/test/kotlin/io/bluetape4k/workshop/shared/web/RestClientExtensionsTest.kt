@@ -1,23 +1,23 @@
 package io.bluetape4k.workshop.shared.web
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import kotlinx.coroutines.flow.flowOf
-import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Order
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.toEntity
-import org.junit.jupiter.api.Test
-import io.bluetape4k.assertions.assertFailsWith
 
-class RestClientExtensionsTest: AbstractSpringTest() {
+class RestClientExtensionsTest : AbstractSpringTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     private val client: RestClient = RestClient
         .builder()
@@ -29,7 +29,7 @@ class RestClientExtensionsTest: AbstractSpringTest() {
     inner class Get {
         @Test
         @Order(1)
-        fun `httGet httpbin`() {
+        fun `httpGet httpbin`() {
             val response = client.httpGet("/get")
                 .toEntity<String>()
                 .body.shouldNotBeNull()
@@ -40,7 +40,7 @@ class RestClientExtensionsTest: AbstractSpringTest() {
 
         @Test
         @Order(2)
-        fun `httGet httpbin anything`() {
+        fun `httpGet httpbin anything`() {
             val response = client.httpGet("/anything")
                 .toEntity<String>()
                 .body.shouldNotBeNull()
@@ -51,7 +51,7 @@ class RestClientExtensionsTest: AbstractSpringTest() {
 
         @Test
         @Order(3)
-        fun `httGet httpbin not found`() {
+        fun `httpGet httpbin not found`() {
             assertFailsWith<HttpClientErrorException.NotFound> {
                 client.httpGet("/not-existing").toEntity<String>()
             }

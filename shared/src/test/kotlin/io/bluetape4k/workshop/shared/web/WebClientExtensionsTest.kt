@@ -1,22 +1,22 @@
 package io.bluetape4k.workshop.shared.web
 
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.debug
-import kotlinx.coroutines.flow.flowOf
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
+import io.bluetape4k.junit5.coroutines.runSuspendIO
+import kotlinx.coroutines.flow.flowOf
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.client.awaitBodyOrNull
-import org.junit.jupiter.api.Test
-import io.bluetape4k.assertions.assertFailsWith
 
-class WebClientExtensionsTest: AbstractSpringTest() {
+class WebClientExtensionsTest : AbstractSpringTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     private val client: WebClient = WebClient
         .builder()
@@ -26,7 +26,7 @@ class WebClientExtensionsTest: AbstractSpringTest() {
     @Nested
     inner class Get {
         @Test
-        fun `httGet httpbin`() = runSuspendIO {
+        fun `httpGet httpbin`() = runSuspendIO {
             val response = client.httpGet("/get")
                 .awaitBody<String>()
 
@@ -35,7 +35,7 @@ class WebClientExtensionsTest: AbstractSpringTest() {
         }
 
         @Test
-        fun `httGet httpbin anything`() = runSuspendIO {
+        fun `httpGet httpbin anything`() = runSuspendIO {
             val response = client.httpGet("/anything")
                 .awaitBody<String>()
 
@@ -44,7 +44,7 @@ class WebClientExtensionsTest: AbstractSpringTest() {
         }
 
         @Test
-        fun `httGet httpbin not found`() = runSuspendIO {
+        fun `httpGet httpbin not found`() = runSuspendIO {
             assertFailsWith<WebClientResponseException.NotFound> {
                 val response = client.httpGet("/not-existing")
                     .awaitBodyOrNull<String>()

@@ -6,6 +6,9 @@ import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.body
 
+/**
+ * Starts a GET request and optionally applies an `Accept` header.
+ */
 fun WebClient.httpGet(
     uri: String,
     accept: MediaType? = null,
@@ -15,6 +18,9 @@ fun WebClient.httpGet(
         .apply { accept?.let { accept(it) } }
         .retrieve()
 
+/**
+ * Starts a HEAD request and optionally applies an `Accept` header.
+ */
 fun WebClient.httpHead(
     uri: String,
     accept: MediaType? = null,
@@ -24,6 +30,9 @@ fun WebClient.httpHead(
         .apply { accept?.let { accept(it) } }
         .retrieve()
 
+/**
+ * Starts a POST request with an optional object body.
+ */
 fun WebClient.httpPost(
     uri: String,
     value: Any? = null,
@@ -39,6 +48,9 @@ fun WebClient.httpPost(
         }
         .retrieve()
 
+/**
+ * Starts a POST request with a reactive-streams body.
+ */
 inline fun <reified T: Any> WebClient.httpPost(
     uri: String,
     publisher: Publisher<T>,
@@ -54,6 +66,9 @@ inline fun <reified T: Any> WebClient.httpPost(
         .body(publisher)
         .retrieve()
 
+/**
+ * Starts a POST request with a Kotlin [Flow] body.
+ */
 inline fun <reified T: Any> WebClient.httpPost(
     uri: String,
     flow: Flow<T>,
@@ -69,6 +84,9 @@ inline fun <reified T: Any> WebClient.httpPost(
         .body(flow)
         .retrieve()
 
+/**
+ * Starts a PUT request with an optional object body.
+ */
 fun WebClient.httpPut(
     uri: String,
     value: Any? = null,
@@ -84,6 +102,9 @@ fun WebClient.httpPut(
         }
         .retrieve()
 
+/**
+ * Starts a PUT request with a reactive-streams body.
+ */
 inline fun <reified T: Any> WebClient.httpPut(
     uri: String,
     publisher: Publisher<T>,
@@ -99,6 +120,9 @@ inline fun <reified T: Any> WebClient.httpPut(
         .body(publisher)
         .retrieve()
 
+/**
+ * Starts a PUT request with a Kotlin [Flow] body.
+ */
 inline fun <reified T: Any> WebClient.httpPut(
     uri: String,
     flow: Flow<T>,
@@ -112,9 +136,11 @@ inline fun <reified T: Any> WebClient.httpPut(
             accept?.let { accept(it) }
         }
         .body(flow)
-
         .retrieve()
 
+/**
+ * Starts a PATCH request with an optional object body.
+ */
 fun WebClient.httpPatch(
     uri: String,
     value: Any? = null,
@@ -130,6 +156,9 @@ fun WebClient.httpPatch(
         }
         .retrieve()
 
+/**
+ * Starts a DELETE request and optionally applies an `Accept` header.
+ */
 fun WebClient.httpDelete(
     uri: String,
     accept: MediaType? = null,

@@ -1,24 +1,24 @@
 package io.bluetape4k.workshop.shared.web
 
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.toUtf8String
 import kotlinx.coroutines.flow.flowOf
-import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Order
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
-import org.junit.jupiter.api.Test
 
-class WebTestClientExtensionsTest: AbstractSpringTest() {
+class WebTestClientExtensionsTest : AbstractSpringTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     private val client: WebTestClient = WebTestClient
         .bindToServer()
@@ -30,7 +30,7 @@ class WebTestClientExtensionsTest: AbstractSpringTest() {
     inner class Get {
         @Test
         @Order(1)
-        fun `httGet httpbin`() {
+        fun `httpGet httpbin`() {
             val response = client
                 .httpGet("/get")
                 .expectStatus().is2xxSuccessful
@@ -46,7 +46,7 @@ class WebTestClientExtensionsTest: AbstractSpringTest() {
 
         @Test
         @Order(2)
-        fun `httGet httpbin anything`() = runSuspendIO {
+        fun `httpGet httpbin anything`() = runSuspendIO {
             val response = client
                 .httpGet("/anything")
                 .expectStatus().is2xxSuccessful
@@ -60,7 +60,7 @@ class WebTestClientExtensionsTest: AbstractSpringTest() {
 
         @Test
         @Order(3)
-        fun `httGet httpbin not found`() {
+        fun `httpGet httpbin not found`() {
             client
                 .httpGet("/not-existing", HttpStatus.NOT_FOUND)
         }
