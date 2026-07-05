@@ -5,6 +5,9 @@ import io.bluetape4k.support.requirePositiveNumber
 import org.springframework.boot.context.properties.ConfigurationProperties
 import java.io.Serializable
 
+/**
+ * Configuration for the CloudWatch and IMDS observability workshop.
+ */
 @ConfigurationProperties(prefix = "bluetape4k.workshop.aws.observability")
 data class AwsObservabilityProperties(
     val namespace: String = "Bluetape4k/Workshop",
@@ -15,7 +18,6 @@ data class AwsObservabilityProperties(
     val maxFieldLength: Int = 160,
     val metadata: MetadataProperties = MetadataProperties(),
 ): Serializable {
-
     init {
         namespace.requireNotBlank("namespace")
         logGroupName.requireNotBlank("logGroupName")
@@ -30,10 +32,12 @@ data class AwsObservabilityProperties(
     }
 }
 
+/**
+ * Toggles safe local metadata lookup for the example.
+ */
 data class MetadataProperties(
     val enabled: Boolean = false,
 ): Serializable {
-
     companion object {
         private const val serialVersionUID: Long = -8540304635995274343L
     }

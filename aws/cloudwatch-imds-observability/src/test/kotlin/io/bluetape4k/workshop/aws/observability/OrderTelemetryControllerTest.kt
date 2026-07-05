@@ -22,23 +22,13 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 @SpringBootTest(classes = [ObservabilityApplication::class])
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class OrderTelemetryControllerTest {
-
-    @Autowired
-    private lateinit var mockMvc: MockMvc
-
-    @Autowired
-    private lateinit var cloudWatchOperations: CloudWatchOperations
-
-    @Autowired
-    private lateinit var cloudWatchLogsOperations: CloudWatchLogsOperations
-
-    @Autowired
-    private lateinit var meterPublishingOperations: CloudWatchMeterPublishingOperations
-
-    @Autowired
-    private lateinit var imdsOperations: ImdsOperations
-
+class OrderTelemetryControllerTest @Autowired constructor(
+    private val mockMvc: MockMvc,
+    private val cloudWatchOperations: CloudWatchOperations,
+    private val cloudWatchLogsOperations: CloudWatchLogsOperations,
+    private val meterPublishingOperations: CloudWatchMeterPublishingOperations,
+    private val imdsOperations: ImdsOperations,
+) {
     @Test
     fun `local profile wires credential-free AWS observability operations`() {
         cloudWatchOperations.shouldNotBeNull()

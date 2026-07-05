@@ -4,6 +4,7 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.aws.spring.cloudwatch.CloudWatchLogsOperations
 import io.bluetape4k.aws.spring.cloudwatch.CloudWatchMeterPublishingOperations
@@ -12,6 +13,7 @@ import io.bluetape4k.aws.spring.imds.ImdsOperations
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import software.amazon.awssdk.services.cloudwatch.model.DimensionFilter
 import software.amazon.awssdk.services.cloudwatch.model.ListMetricsResponse
 import software.amazon.awssdk.services.cloudwatch.model.MetricDatum
@@ -24,6 +26,7 @@ import software.amazon.awssdk.services.cloudwatchlogs.model.InputLogEvent
 import software.amazon.awssdk.services.cloudwatchlogs.model.PutLogEventsResponse
 import kotlin.coroutines.cancellation.CancellationException
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OrderTelemetryServiceTest {
 
     @Test
@@ -86,7 +89,7 @@ class OrderTelemetryServiceTest {
         report.metadata.state shouldBeEqualTo PublishState.SKIPPED
         report.metric.message shouldContain "metric denied"
         report.meterSnapshot.message shouldContain "meter denied"
-        fixture.logs.events.size shouldBeEqualTo 1
+        fixture.logs.events shouldHaveSize 1
     }
 
     @Test
@@ -165,7 +168,7 @@ class OrderTelemetryServiceTest {
         val meterRegistry: SimpleMeterRegistry,
     )
 
-    private class CapturingCloudWatchOperations: CloudWatchOperations {
+    private class CapturingCloudWatchOperations : CloudWatchOperations {
         val namespaces = mutableListOf<String>()
         val metricData = mutableListOf<MetricDatum>()
         var failure: Throwable? = null
@@ -209,7 +212,7 @@ class OrderTelemetryServiceTest {
         ): ListMetricsResponse = ListMetricsResponse.builder().build()
     }
 
-    private class CapturingCloudWatchLogsOperations: CloudWatchLogsOperations {
+    private class CapturingCloudWatchLogsOperations : CloudWatchLogsOperations {
         val logGroupNames = mutableListOf<String>()
         val logStreamNames = mutableListOf<String>()
         val events = mutableListOf<InputLogEvent>()
@@ -250,7 +253,7 @@ class OrderTelemetryServiceTest {
         ): DescribeLogStreamsResponse = DescribeLogStreamsResponse.builder().build()
     }
 
-    private class CapturingMeterPublisher: CloudWatchMeterPublishingOperations {
+    private class CapturingMeterPublisher : CloudWatchMeterPublishingOperations {
         val publishedNames = mutableListOf<String>()
         var failure: Throwable? = null
 
@@ -266,7 +269,7 @@ class OrderTelemetryServiceTest {
         }
     }
 
-    private class CapturingImdsOperations: ImdsOperations {
+    private class CapturingImdsOperations : ImdsOperations {
         val requestedPaths = mutableListOf<String>()
 
         override suspend fun get(path: String): String {
