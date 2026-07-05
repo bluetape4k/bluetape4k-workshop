@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.vertx.webclient
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.junit5.coroutines.runSuspendTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
@@ -14,7 +16,6 @@ import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.coAwait
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import java.io.Serializable
@@ -22,7 +23,7 @@ import java.io.Serializable
 @ExtendWith(VertxExtension::class)
 class ResponseExamples {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private const val port: Int = 9999
     }
 
@@ -30,12 +31,16 @@ class ResponseExamples {
         val firstname: String = "",
         val lastname: String = "",
         val male: Boolean = true,
-    ): Serializable
+    ) : Serializable {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
+    }
 
     private val expectedUser = User("John", "Dow", true)
     private val mapper = Jackson.defaultJsonMapper
 
-    class JsonServer: CoroutineVerticle() {
+    class JsonServer : CoroutineVerticle() {
 
         private val user = User("John", "Dow", true)
         private val mapper = Jackson.defaultJsonMapper
@@ -70,7 +75,8 @@ class ResponseExamples {
                 .send()
                 .coAwait()
 
-            log.debug { "Response body=\n${response.body().encodePrettily()}" }
+            val responseBody = response.body().shouldNotBeNull()
+            log.debug { "Response body=\n${responseBody.encodePrettily()}" }
             response.statusCode() shouldBeEqualTo 200
         }
     }
@@ -93,5 +99,4 @@ class ResponseExamples {
             responseUser shouldBeEqualTo expectedUser
         }
     }
-
 }
