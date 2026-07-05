@@ -39,7 +39,7 @@ data class AuthorWithBooksDTO(
 data class CreateAuthorRequest(
     @field:NotBlank val firstName: String = "",
     @field:NotBlank val lastName: String = "",
-    @field:Email val email: String = "",
+    @field:NotBlank @field:Email val email: String = "",
 ) : Serializable {
     companion object {
         const val serialVersionUID = 1L

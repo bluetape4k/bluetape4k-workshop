@@ -25,8 +25,7 @@ class OrderControllerTest : AbstractMvcJdbcTest() {
             .expectStatus().isCreated
             .expectBody(OrderDTO::class.java)
             .returnResult()
-        result.responseBody.shouldNotBeNull()
-        result.responseBody!!.id shouldBeGreaterOrEqualTo 1L
+        result.responseBody.shouldNotBeNull().id shouldBeGreaterOrEqualTo 1L
     }
 
     @Test
@@ -57,7 +56,7 @@ class OrderControllerTest : AbstractMvcJdbcTest() {
             .exchange()
             .expectStatus().isCreated
             .expectBody(OrderDTO::class.java)
-            .returnResult().responseBody!!
+            .returnResult().responseBody.shouldNotBeNull()
 
         // Then cancel it
         webTestClient.patch()
