@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.exposed.javers.persistence
 
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import org.javers.core.metamodel.annotation.Id
 import org.javers.core.metamodel.annotation.TypeName
 import java.io.Serializable
@@ -29,7 +30,7 @@ data class Order(
     init {
         id.requireNotBlank("id")
         customerId.requireNotBlank("customerId")
-        require(totalAmount >= BigDecimal.ZERO) { "totalAmount must not be negative." }
+        totalAmount.requireZeroOrPositiveNumber("totalAmount")
     }
 
     companion object {

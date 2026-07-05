@@ -5,6 +5,7 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.javers.codecs.JaversCodec
 import io.bluetape4k.javers.codecs.JaversCodecs
 import io.bluetape4k.javers.persistence.redis.repository.RedissonCdoSnapshotRepository
@@ -25,7 +26,7 @@ class OrderAuditServiceTest {
 
     @BeforeEach
     fun setUp() {
-        redis.keys.flushdb()
+        deleteOrderAuditKeys()
         database = Database.connect(
             url = "jdbc:h2:mem:order-audit-${System.nanoTime()};DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
             driver = "org.h2.Driver",
@@ -40,6 +41,7 @@ class OrderAuditServiceTest {
         transaction(database) {
             SchemaUtils.drop(OrderTable)
         }
+        deleteOrderAuditKeys()
     }
 
     @Test
@@ -69,7 +71,7 @@ class OrderAuditServiceTest {
 
         val diff = service.diff(original, updated)
 
-        diff.hasChanges() shouldBeEqualTo true
+        diff.hasChanges().shouldBeTrue()
         service.getHistory(original.id) shouldHaveSize 0
     }
 
@@ -106,7 +108,12 @@ class OrderAuditServiceTest {
         RedisOrderAuditFactory.create(repositoryName, redis)
 
     private fun repositoryName(scope: String): String =
-        "workshop:order-audit:$scope:${System.nanoTime()}"
+        "$REPOSITORY_PREFIX:$scope:${System.nanoTime()}"
+
+    private fun deleteOrderAuditKeys() {
+        redis.keys.getKeysByPattern("javers:$REPOSITORY_PREFIX:*")
+            .forEach { redis.keys.delete(it) }
+    }
 
     private fun sampleOrder(id: String): Order =
         Order(
@@ -125,6 +132,8 @@ class OrderAuditServiceTest {
     }
 
     private companion object {
+        private const val REPOSITORY_PREFIX = "workshop:order-audit"
+
         val redis = RedisServer.Launcher.RedissonLib.getRedisson()
     }
 }
