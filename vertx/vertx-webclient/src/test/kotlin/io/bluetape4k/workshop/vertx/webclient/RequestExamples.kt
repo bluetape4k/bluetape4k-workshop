@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.vertx.webclient
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.junit5.coroutines.runSuspendTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -15,18 +16,17 @@ import io.vertx.junit5.VertxExtension
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.coroutines.CoroutineVerticle
 import io.vertx.kotlin.coroutines.coAwait
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
 @ExtendWith(VertxExtension::class)
 class RequestExamples {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private const val port: Int = 9989
     }
 
-    class PostStringServer: CoroutineVerticle() {
+    class PostStringServer : CoroutineVerticle() {
         override suspend fun start() {
             val router = Router.router(vertx)
 
