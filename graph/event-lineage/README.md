@@ -79,11 +79,12 @@ object history, persistence snapshots, or field-level diffs.
 | `eventsForAggregate(aggregateId)` | Returns emitted events sorted by `occurredAt`, then `eventId`. |
 | `causalPath(eventId, rootEventId, maxDepth)` | Follows `CAUSED_BY` edges from a current event to a root event with a depth bound. |
 | `auditTrailForAggregate(aggregateId)` | Reconstructs aggregate state, emitted events, root causes, and approval evidence. |
-| `supersededChain(eventId)` | Follows `SUPERSEDES` from newest event to previous events. |
+| `supersededChain(eventId, maxDepth)` | Follows `SUPERSEDES` from newest event to previous events with a depth bound. |
 | `missingCausalLinks(aggregateId)` | Finds emitted events without root-cause, causal, or superseding evidence. |
 
-Unknown IDs return empty results. Blank IDs fail fast with bluetape4k validation
-helpers.
+Unknown IDs return empty results. Blank IDs and invalid traversal depths fail fast
+with bluetape4k validation helpers. Empty lineage sentinels are reserved for
+service results; public `LineageNode` construction requires non-blank IDs and labels.
 
 ## Usage
 

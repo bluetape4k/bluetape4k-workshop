@@ -1,19 +1,43 @@
 package io.bluetape4k.workshop.graph.eventlineage.model
 
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 
 /**
  * Reader-facing graph node snapshot with a stable domain identifier.
  */
-data class LineageNode(
+@ConsistentCopyVisibility
+data class LineageNode private constructor(
     val nodeId: String,
     val label: String,
     val properties: Map<String, Any?> = emptyMap(),
 ) : Serializable {
+    init {
+        if (nodeId.isBlank() || label.isBlank()) {
+            nodeId.length.requireInRange(0, 0, "nodeId.length")
+            label.length.requireInRange(0, 0, "label.length")
+        } else {
+            nodeId.requireNotBlank("nodeId")
+            label.requireNotBlank("label")
+        }
+        properties.keys.forEach { it.requireNotBlank("properties.key") }
+    }
+
     companion object {
         private const val serialVersionUID: Long = 1L
 
         val Empty: LineageNode = LineageNode("", "", emptyMap())
+
+        operator fun invoke(
+            nodeId: String,
+            label: String,
+            properties: Map<String, Any?> = emptyMap(),
+        ): LineageNode {
+            nodeId.requireNotBlank("nodeId")
+            label.requireNotBlank("label")
+            return LineageNode(nodeId, label, properties)
+        }
     }
 }
 
@@ -28,6 +52,12 @@ data class LineagePath(
     val nodes: List<LineageNode>,
     val edgeLabels: List<String>,
 ) : Serializable {
+    init {
+        val expectedEdgeCount = if (nodes.isEmpty()) 0 else nodes.size - 1
+        edgeLabels.size.requireInRange(expectedEdgeCount, expectedEdgeCount, "edgeLabels.size")
+        edgeLabels.forEach { it.requireNotBlank("edgeLabels") }
+    }
+
     companion object {
         private const val serialVersionUID: Long = 1L
 

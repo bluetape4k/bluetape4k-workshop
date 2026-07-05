@@ -19,6 +19,8 @@ import io.bluetape4k.workshop.graph.eventlineage.schema.EventLabel
 import io.bluetape4k.workshop.graph.eventlineage.schema.SupersedesLabel
 import io.bluetape4k.workshop.graph.eventlineage.seed.EventLineageSeed
 import io.bluetape4k.workshop.graph.eventlineage.seed.seedEventLineage
+import io.bluetape4k.workshop.graph.eventlineage.model.LineageNode
+import io.bluetape4k.workshop.graph.eventlineage.model.LineagePath
 import io.bluetape4k.workshop.graph.eventlineage.service.EventLineageService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -120,6 +122,13 @@ abstract class AbstractEventLineageTest {
     }
 
     @Test
+    fun `supersededChain respects max depth`() {
+        val chain = service.supersededChain("order-approval-corrected", maxDepth = 1)
+
+        chain.map { it.nodeId } shouldBeEqualTo listOf("order-approval-corrected")
+    }
+
+    @Test
     fun `missingCausalLinks reports emitted events without root cause or upstream event`() {
         val missing = service.missingCausalLinks("order-1001")
 
@@ -146,6 +155,9 @@ abstract class AbstractEventLineageTest {
         assertFailsWith<IllegalArgumentException> {
             service.supersededChain("")
         }
+        assertFailsWith<IllegalArgumentException> {
+            service.supersededChain("order-approval-corrected", maxDepth = 0)
+        }
     }
 
     @Test
@@ -170,5 +182,27 @@ abstract class AbstractEventLineageTest {
     @Test
     fun `direct graph element lookup returns empty result for unknown vertex id`() {
         service.findEvent(GraphElementId("missing-vertex")).shouldBeEmpty()
+    }
+
+    @Test
+    fun `lineage snapshots reject partial blanks and invalid path shapes`() {
+        assertFailsWith<IllegalArgumentException> {
+            LineageNode(nodeId = "", label = "")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            LineageNode(nodeId = "", label = EventLabel.label)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            LineageNode(nodeId = "event-1", label = " ")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            LineagePath(nodes = listOf(LineageNode("event-1", EventLabel.label)), edgeLabels = listOf(CausedByLabel.label))
+        }
+        assertFailsWith<IllegalArgumentException> {
+            LineagePath(
+                nodes = listOf(LineageNode("event-1", EventLabel.label), LineageNode("event-2", EventLabel.label)),
+                edgeLabels = listOf(" "),
+            )
+        }
     }
 }

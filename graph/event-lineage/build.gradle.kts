@@ -20,6 +20,8 @@ tasks.register<Test>("integrationTest") {
     useJUnitPlatform {
         includeTags("integration")
     }
+    shouldRunAfter(tasks.test)
+    usesService(gradle.sharedServices.registrations.named("test-mutex").get().service)
     jvmArgs = tasks.test.get().jvmArgs
 }
 
