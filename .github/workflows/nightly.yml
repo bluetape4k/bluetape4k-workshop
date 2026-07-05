@@ -114,6 +114,7 @@ jobs:
           ./gradlew
           test
           :graph-recommendation:integrationTest
+          :graph-knowledge-graph:integrationTest
           --continue
           --max-workers=1
       - name: Upload test results
@@ -124,6 +125,7 @@ jobs:
           path: |
             **/build/test-results/test/*.xml
             graph/recommendation/build/test-results/integrationTest/*.xml
+            graph/knowledge-graph/build/test-results/integrationTest/*.xml
           retention-days: 14
 
   nightly-status:

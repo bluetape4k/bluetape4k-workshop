@@ -221,6 +221,13 @@ abstract class AbstractKnowledgeGraphTest {
     }
 
     @Test
+    fun `service rejects blank graphName`() {
+        assertFailsWith<IllegalArgumentException> {
+            KnowledgeGraphService(ops, "")
+        }
+    }
+
+    @Test
     fun `mention with confidence above 100 throws IllegalArgumentException`() {
         assertFailsWith<IllegalArgumentException> {
             service.mention(seed.docKotlinGuide.id, seed.entityKotlin.id, confidence = 101)
@@ -231,6 +238,27 @@ abstract class AbstractKnowledgeGraphTest {
     fun `mention with negative confidence throws IllegalArgumentException`() {
         assertFailsWith<IllegalArgumentException> {
             service.mention(seed.docKotlinGuide.id, seed.entityKotlin.id, confidence = -1)
+        }
+    }
+
+    @Test
+    fun `mention rejects non-document source endpoint`() {
+        assertFailsWith<IllegalArgumentException> {
+            service.mention(seed.entityKotlin.id, seed.entityJvm.id, confidence = 90)
+        }
+    }
+
+    @Test
+    fun `relateEntities rejects non-entity endpoint`() {
+        assertFailsWith<IllegalArgumentException> {
+            service.relateEntities(seed.docKotlinGuide.id, seed.entityJvm.id)
+        }
+    }
+
+    @Test
+    fun `classify rejects non-concept target endpoint`() {
+        assertFailsWith<IllegalArgumentException> {
+            service.classify(seed.entityKotlin.id, seed.entityJvm.id)
         }
     }
 
