@@ -77,11 +77,12 @@ SVG source: [graph-event-lineage-readme-sequence-01.svg](../../docs/images/readm
 | `eventsForAggregate(aggregateId)` | emitted event를 `occurredAt`, `eventId` 순서로 반환합니다. |
 | `causalPath(eventId, rootEventId, maxDepth)` | `CAUSED_BY` edge를 따라 current event에서 root event까지 bounded traversal을 수행합니다. |
 | `auditTrailForAggregate(aggregateId)` | aggregate 상태, emitted event, root cause, approval evidence를 재구성합니다. |
-| `supersededChain(eventId)` | newest event에서 previous event로 `SUPERSEDES` chain을 따라갑니다. |
+| `supersededChain(eventId, maxDepth)` | newest event에서 previous event로 bounded `SUPERSEDES` chain을 따라갑니다. |
 | `missingCausalLinks(aggregateId)` | root-cause, causal, superseding evidence가 없는 emitted event를 찾습니다. |
 
-알 수 없는 ID는 빈 결과를 반환합니다. blank ID는 bluetape4k validation helper로
-즉시 실패합니다.
+알 수 없는 ID는 빈 결과를 반환합니다. blank ID와 잘못된 traversal depth는
+bluetape4k validation helper로 즉시 실패합니다. 빈 lineage sentinel은 서비스
+결과용으로만 쓰며, public `LineageNode` 생성에는 non-blank ID와 label이 필요합니다.
 
 ## 사용 예
 

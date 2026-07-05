@@ -254,14 +254,15 @@ class EventLineageService(
     /**
      * Follows `SUPERSEDES` edges from newest event to previous events.
      */
-    fun supersededChain(eventId: String): List<LineageNode> {
+    fun supersededChain(eventId: String, maxDepth: Int = MAX_TRAVERSAL_DEPTH): List<LineageNode> {
         eventId.requireNotBlank("eventId")
+        maxDepth.requireInRange(1, MAX_TRAVERSAL_DEPTH, "maxDepth")
         val start = findEventVertex(eventId) ?: return emptyList()
         val chain = mutableListOf<GraphVertex>()
         val visited = mutableSetOf<GraphElementId>()
         var current: GraphVertex? = start
 
-        while (current != null && visited.add(current.id)) {
+        while (current != null && chain.size < maxDepth && visited.add(current.id)) {
             chain += current
             val previousId = ops.findEdgesByStartId(current.id, SupersedesLabel.label)
                 .firstOrNull()
