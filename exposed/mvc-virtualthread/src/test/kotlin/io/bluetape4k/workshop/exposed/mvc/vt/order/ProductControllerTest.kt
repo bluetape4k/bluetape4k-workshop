@@ -37,7 +37,22 @@ class ProductControllerTest : AbstractMvcVirtualThreadTest() {
             .expectStatus().isCreated
             .expectBody(ProductDTO::class.java)
             .returnResult()
-        result.responseBody.shouldNotBeNull()
-        result.responseBody!!.id shouldBeGreaterOrEqualTo 1L
+        val body = result.responseBody.shouldNotBeNull()
+        body.id shouldBeGreaterOrEqualTo 1L
+    }
+
+    @Test
+    fun `POST product with blank name returns 400`() {
+        val req = CreateProductRequest(
+            name = " ",
+            price = BigDecimal("19.99"),
+            stock = 100,
+        )
+        webTestClient.post()
+            .uri("/api/v1/products")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(req)
+            .exchange()
+            .expectStatus().isBadRequest
     }
 }

@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.exposed.mvc.vt.order.dto
 import io.bluetape4k.workshop.exposed.mvc.vt.order.schema.OrderStatus
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Min
+import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.Positive
 import jakarta.validation.constraints.Size
@@ -53,7 +54,7 @@ data class OrderWithLinesDTO(
 }
 
 data class CreateProductRequest(
-    @field:NotEmpty val name: String = "",
+    @field:NotBlank val name: String = "",
     @field:Positive val price: BigDecimal = BigDecimal.ZERO,
     @field:Min(0) val stock: Int = 0,
 ) : Serializable {

@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.exposed.mvc.vt
 
 import io.bluetape4k.exposed.tests.TestDB
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.mvc.vt.author.schema.AuthorTable
@@ -119,7 +120,7 @@ abstract class AbstractMvcVirtualThreadTest {
             .expectStatus().isOk
             .expectBodyList(Map::class.java)
             .returnResult()
-            .responseBody!!
+            .responseBody.shouldNotBeNull()
         return (products.first()["id"] as Number).toLong()
     }
 
@@ -130,7 +131,7 @@ abstract class AbstractMvcVirtualThreadTest {
             .expectStatus().isOk
             .expectBodyList(Map::class.java)
             .returnResult()
-            .responseBody!!
+            .responseBody.shouldNotBeNull()
         return (products[1]["id"] as Number).toLong()
     }
 
@@ -141,7 +142,7 @@ abstract class AbstractMvcVirtualThreadTest {
             .expectStatus().isOk
             .expectBodyList(Map::class.java)
             .returnResult()
-            .responseBody!!
+            .responseBody.shouldNotBeNull()
         return (authors.first()["id"] as Number).toLong()
     }
 }
