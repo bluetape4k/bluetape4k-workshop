@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class HelloController {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @GetMapping("/")
     suspend fun hello(authentication: Authentication): String {

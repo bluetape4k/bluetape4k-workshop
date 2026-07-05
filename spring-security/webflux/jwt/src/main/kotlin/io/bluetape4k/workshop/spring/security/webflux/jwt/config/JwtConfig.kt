@@ -29,15 +29,14 @@ import java.security.interfaces.RSAPublicKey
 @Configuration(proxyBeanMethods = false)
 @EnableWebFlux
 @EnableWebFluxSecurity
-class JwtConfig {
+class JwtConfig(
+    @param:Value("\${jwt.public.key}")
+    private val publicKey: RSAPublicKey,
+    @param:Value("\${jwt.private.key}")
+    private val privateKey: RSAPrivateKey,
+) {
 
-    companion object: KLoggingChannel()
-
-    @Value("\${jwt.public.key}")
-    private lateinit var publicKey: RSAPublicKey
-
-    @Value("\${jwt.private.key}")
-    private lateinit var privateKey: RSAPrivateKey
+    companion object : KLoggingChannel()
 
     @Bean
     fun securityWebFilterChain(http: ServerHttpSecurity): SecurityWebFilterChain {
@@ -82,7 +81,7 @@ class JwtConfig {
 
     @Bean
     fun jwtEncoder(): JwtEncoder {
-        val jwk = RSAKey.Builder(this.publicKey).privateKey(this.privateKey).build()
+        val jwk = RSAKey.Builder(publicKey).privateKey(privateKey).build()
         val jwks = ImmutableJWKSet<SecurityContext>(JWKSet(jwk))
         return NimbusJwtEncoder(jwks)
     }
@@ -90,7 +89,7 @@ class JwtConfig {
     @Bean
     fun jwtDecoder(): ReactiveJwtDecoder {
         return NimbusReactiveJwtDecoder
-            .withPublicKey(this.publicKey)
+            .withPublicKey(publicKey)
             .build()
     }
 }

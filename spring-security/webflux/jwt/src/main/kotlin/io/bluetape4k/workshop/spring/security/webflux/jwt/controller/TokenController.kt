@@ -14,7 +14,7 @@ import java.time.Instant
 @RestController
 class TokenController(@param:Autowired private val encoder: JwtEncoder) {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @PostMapping("/token")
     suspend fun token(authentication: Authentication): String {
