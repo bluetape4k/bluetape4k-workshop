@@ -7,7 +7,7 @@ import org.springframework.boot.runApplication
 
 @SpringBootApplication(proxyBeanMethods = false)
 class KotlinWebfluxApplication {
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         init {
             log.debug { "Starting KotlinWebfluxApplication" }
         }

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping
 @Controller
 class MainController {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @GetMapping("/")
     suspend fun index(): String = "index"
