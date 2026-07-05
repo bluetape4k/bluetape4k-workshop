@@ -52,17 +52,21 @@ fun s3Client(): S3Client =
         .build()
 ```
 
-### Setting `application.yml` when connecting to actual AWS
+### Local emulator configuration
+
+The sample intentionally creates a Floci-backed `S3Client` bean. The `application.yml`
+values are local defaults for Spring Cloud AWS resource loading and should not be treated
+as a real AWS runtime profile.
 
 ```yaml
 spring:
   cloud:
     aws:
       credentials:
-        access-key: ${AWS_ACCESS_KEY_ID}
-        secret-key: ${AWS_SECRET_ACCESS_KEY}
+        access-key: noop
+        secret-key: noop
       region:
-        static: ap-northeast-2
+        static: us-east-1
       s3:
         enabled: true
 ```
@@ -95,3 +99,4 @@ val content = resource.inputStream.bufferedReader().readText()
 
 - Requires Docker daemon to run (Testcontainers automatically starts the Floci container)
 - No need for actual AWS credentials — Floci provides the local S3-compatible API
+- Real AWS access is outside this sample's runtime path; keep this example local-first.

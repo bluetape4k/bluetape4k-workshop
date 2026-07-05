@@ -18,9 +18,13 @@ import software.amazon.awssdk.services.s3.S3Client
 
 @SpringBootTest(classes = [SpringCloudAwsS3Sample::class])
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class SpringCloudAwsS3Test: AbstractSpringCloudAwsS3SampleTest() {
+class SpringCloudAwsS3Test @Autowired constructor(
+    private val s3Client: S3Client,
+    private val s3Template: S3Template,
+    private val resourceLoader: ResourceLoader,
+) : AbstractSpringCloudAwsS3SampleTest() {
 
-    companion object: KLogging() {
+    companion object : KLogging() {
         private val floci by lazy { FlociServer.Launcher.floci }
 
         @JvmStatic
@@ -32,15 +36,6 @@ class SpringCloudAwsS3Test: AbstractSpringCloudAwsS3SampleTest() {
             registry.add("spring.cloud.aws.credentials.secret-key") { floci.awsSecretKey }
         }
     }
-
-    @Autowired
-    lateinit var s3Client: S3Client
-
-    @Autowired
-    lateinit var s3Template: S3Template
-
-    @Autowired
-    lateinit var resourceLoader: ResourceLoader
 
     @Test
     fun `stores lists and reads objects through Floci backed Spring Cloud AWS`() {

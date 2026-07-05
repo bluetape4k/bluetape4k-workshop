@@ -25,6 +25,7 @@ on:
       - 'aws/cloudwatch-imds-observability/**'
       - 'aws/eventbridge-scheduler/**'
       - 'aws/sqs-sns-coroutines/**'
+      - 'aws/s3-spring-cloud/**'
       - 'aws/s3-vectors-access-grants/**'
       - 'kotlin/flow-extensions-event-aggregation/**'
       - 'kotlin/flow-extensions-metrics-sampling/**'
@@ -66,6 +67,7 @@ on:
       - 'aws/cloudwatch-imds-observability/**'
       - 'aws/eventbridge-scheduler/**'
       - 'aws/sqs-sns-coroutines/**'
+      - 'aws/s3-spring-cloud/**'
       - 'aws/s3-vectors-access-grants/**'
       - 'kotlin/flow-extensions-event-aggregation/**'
       - 'kotlin/flow-extensions-metrics-sampling/**'
@@ -258,6 +260,7 @@ jobs:
       # - exposed-javers-persistence-audit: Redis-backed JaVers audit history
       # - ktor-exposed-rest: PostgreSQL-backed Ktor + Exposed transaction path
       # - aws-ktor-dynamodb: local AWS emulator-backed Ktor + DynamoDB path
+      # - aws-s3-spring-cloud: Floci-backed Spring Cloud AWS S3 path
       # - aws-sqs-sns-coroutines: Floci-backed SQS/SNS coroutine messaging path
       # - graph-event-lineage: Neo4j-backed graph lineage audit path
       # - spring-boot-cache-redis: Redis-backed cache path
@@ -270,6 +273,7 @@ jobs:
           :exposed-javers-persistence-audit:test
           :ktor-exposed-rest:test
           :aws-ktor-dynamodb:test
+          :aws-s3-spring-cloud:test
           :aws-sqs-sns-coroutines:test
           :graph-event-lineage:integrationTest
           :spring-boot-cache-redis:test
@@ -296,6 +300,8 @@ jobs:
             ktor/exposed-rest/build/reports/tests/test/
             aws/ktor-dynamodb/build/test-results/test/*.xml
             aws/ktor-dynamodb/build/reports/tests/test/
+            aws/s3-spring-cloud/build/test-results/test/*.xml
+            aws/s3-spring-cloud/build/reports/tests/test/
             aws/sqs-sns-coroutines/build/test-results/test/*.xml
             aws/sqs-sns-coroutines/build/reports/tests/test/
             graph/event-lineage/build/test-results/integrationTest/*.xml
