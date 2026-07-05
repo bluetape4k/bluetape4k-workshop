@@ -11,9 +11,9 @@ import kotlin.concurrent.withLock
 /**
  * Rule 6: Virtual Thread 사용 시에는 `synchronized` 블록을 사용하지 말고, 명시적으로 [ReentrantLock] 사용하세요
  */
-class Rule6UseSynchronizedBlocksAndMethodsCarefully: AbstractVirtualThreadTest() {
+class Rule6UseSynchronizedBlocksAndMethodsCarefully : AbstractVirtualThreadTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Nested
     inner class DoNot {
@@ -57,7 +57,7 @@ class Rule6UseSynchronizedBlocksAndMethodsCarefully: AbstractVirtualThreadTest()
     }
 
     private fun exclusiveResource(): String {
-        Thread.sleep(100)
+        sleep(100)
         return "result"
     }
 }

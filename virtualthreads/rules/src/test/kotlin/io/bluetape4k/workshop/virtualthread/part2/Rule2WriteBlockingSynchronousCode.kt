@@ -24,9 +24,9 @@ import java.util.concurrent.Executors
  *  - 신규 제작 시에는 Kotlin Coroutines 를 활용하는 방법도 있다.
  *      - 신규 제작 함수를 suspend 함수로 작성하고, Coroutine 을 이용하여 실행한다.
  */
-class Rule2WriteBlockingSynchronousCode: AbstractVirtualThreadTest() {
+class Rule2WriteBlockingSynchronousCode : AbstractVirtualThreadTest() {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private const val REPEAT_SIZE = 3
     }
 

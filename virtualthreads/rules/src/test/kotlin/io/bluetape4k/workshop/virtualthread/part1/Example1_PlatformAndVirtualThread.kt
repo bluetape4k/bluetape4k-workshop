@@ -11,9 +11,9 @@ import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import org.junit.jupiter.api.Test
 
-class Example1_PlatformAndVirtualThread: AbstractVirtualThreadTest() {
+class Example1_PlatformAndVirtualThread : AbstractVirtualThreadTest() {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private const val THREAD_SIZE = 100_000
     }
 
@@ -70,7 +70,7 @@ class Example1_PlatformAndVirtualThread: AbstractVirtualThreadTest() {
     fun `Platform Thread 로 Blocking 코드 실행하기`() {
         val threads = List(THREAD_SIZE / 100) {
             Thread.ofPlatform().start {
-                Thread.sleep(1000)
+                sleep(1000)
                 log.debug { "Platform Thread $it" }
             }
         }
@@ -81,7 +81,7 @@ class Example1_PlatformAndVirtualThread: AbstractVirtualThreadTest() {
     fun `Virtual Thread 로 Blocking 코드 실행하기`() {
         val threads = List(THREAD_SIZE) {
             Thread.ofVirtual().start {
-                Thread.sleep(1000)
+                sleep(1000)
                 log.debug { "Virtual Thread $it" }
             }
         }

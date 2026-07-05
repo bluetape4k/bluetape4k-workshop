@@ -14,9 +14,9 @@ import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
 
-class Example4_VirtualThreadFactory: AbstractVirtualThreadTest() {
+class Example4_VirtualThreadFactory : AbstractVirtualThreadTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `Virtual Thread Factory를 사용하여 Virtual Thread 생성하기`() {
@@ -26,7 +26,7 @@ class Example4_VirtualThreadFactory: AbstractVirtualThreadTest() {
         factory.javaClass.name shouldBeEqualTo "java.lang.ThreadBuilders\$VirtualThreadFactory"
 
         val thread = factory.newThread {
-            Thread.sleep(1000)
+            sleep(1000)
             log.debug { "Virtual Thread" }
         }
 
@@ -50,7 +50,7 @@ class Example4_VirtualThreadFactory: AbstractVirtualThreadTest() {
         val executedCounter = AtomicInteger(0)
         val threads = List(100_000) {
             Thread.ofVirtual().unstarted {
-                Thread.sleep(1000)
+                sleep(1000)
                 executedCounter.incrementAndGet()
             }
         }
@@ -67,7 +67,7 @@ class Example4_VirtualThreadFactory: AbstractVirtualThreadTest() {
         val executedCounter = AtomicInteger(0)
         val jobs = List(100_000) {
             launch(Dispatchers.VT) {
-                Thread.sleep(1000)
+                sleep(1000)
                 executedCounter.incrementAndGet()
             }
         }

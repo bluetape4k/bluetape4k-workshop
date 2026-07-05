@@ -14,9 +14,9 @@ import java.util.concurrent.Semaphore
 /**
  * Rule 4: 동시성을 제어할 때에는 FixedThreadPool 을 사용하지 말고, [Semaphore]를 사용하세요
  */
-class Rule4UseSemaphoreInsteadOfFixedThreadPools: AbstractVirtualThreadTest() {
+class Rule4UseSemaphoreInsteadOfFixedThreadPools : AbstractVirtualThreadTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Nested
     inner class DoNot {
@@ -75,7 +75,7 @@ class Rule4UseSemaphoreInsteadOfFixedThreadPools: AbstractVirtualThreadTest() {
     }
 
     private fun sharedResource(): String {
-        Thread.sleep(100)
+        sleep(100)
         return "result"
     }
 }
