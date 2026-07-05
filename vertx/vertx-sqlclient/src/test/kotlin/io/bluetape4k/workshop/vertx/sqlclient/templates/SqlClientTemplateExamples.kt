@@ -1,58 +1,55 @@
 package io.bluetape4k.workshop.vertx.sqlclient.templates
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.junit5.coroutines.runSuspendTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.vertx.sqlclient.templates.tupleMapperOfRecord
 import io.bluetape4k.vertx.sqlclient.tests.testWithSuspendTransaction
 import io.bluetape4k.vertx.sqlclient.withSuspendTransaction
 import io.bluetape4k.workshop.vertx.sqlclient.AbstractSqlClientTest
-import io.bluetape4k.workshop.vertx.sqlclient.model.USER_ROW_MAPPER
 import io.bluetape4k.workshop.vertx.sqlclient.model.User
+import io.bluetape4k.workshop.vertx.sqlclient.model.USER_ROW_MAPPER
 import io.vertx.core.Vertx
 import io.vertx.core.json.JsonObject
 import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.core.json.json
 import io.vertx.kotlin.core.json.obj
 import io.vertx.kotlin.coroutines.coAwait
-import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.sqlclient.Row
 import io.vertx.sqlclient.RowSet
 import io.vertx.sqlclient.SqlResult
 import io.vertx.sqlclient.templates.SqlTemplate
 import io.vertx.sqlclient.templates.TupleMapper
-import kotlinx.coroutines.runBlocking
-import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
-class SqlClientTemplateExamples: AbstractSqlClientTest() {
+class SqlClientTemplateExamples : AbstractSqlClientTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @BeforeAll
-    fun setup(vertx: Vertx) {
+    fun setup(vertx: Vertx) = runSuspendTest {
         // setup 에서는 testContext 가 불필요합니다. 만약 injection을 받으면 꼭 completeNow() 를 호출해야 합니다.
-        runBlocking(vertx.dispatcher()) {
-            val pool = vertx.getH2Pool()
-            try {
-                pool.withSuspendTransaction { conn ->
-                    conn.query("DROP TABLE users IF EXISTS").execute().coAwait()
-                    conn.query(
-                        """
+        val pool = vertx.getH2Pool()
+        try {
+            pool.withSuspendTransaction { conn ->
+                conn.query("DROP TABLE users IF EXISTS").execute().coAwait()
+                conn.query(
+                    """
                         CREATE TABLE IF NOT EXISTS users(
                              id LONG PRIMARY KEY,
                              first_name VARCHAR(255),
                              last_name VARCHAR(255)
                         )
                         """.trimIndent()
-                    ).execute().coAwait()
-                    conn.query("INSERT INTO users VALUES (1, 'John', 'Doe'), (2, 'Jane', 'Doe')").execute().coAwait()
-                }
-            } finally {
-                pool.close().coAwait()
+                ).execute().coAwait()
+                conn.query("INSERT INTO users VALUES (1, 'John', 'Doe'), (2, 'Jane', 'Doe')").execute().coAwait()
             }
+        } finally {
+            pool.close().coAwait()
         }
     }
 
@@ -69,7 +66,7 @@ class SqlClientTemplateExamples: AbstractSqlClientTest() {
                 val user = User(
                     id = row.getLong("id"),
                     firstName = row.getString("first_name"),
-                    lastName = row.getString("last_name")
+                    lastName = row.getString("last_name"),
                 )
                 log.debug { user }
             }
@@ -82,7 +79,9 @@ class SqlClientTemplateExamples: AbstractSqlClientTest() {
         val pool = vertx.getH2Pool()
         vertx.testWithSuspendTransaction(testContext, pool) {
             val parameters = mapOf(
-                "id" to 3, "firstName" to "Dale", "lastName" to "Cooper"
+                "id" to 3,
+                "firstName" to "Dale",
+                "lastName" to "Cooper",
             )
             val result: SqlResult<Void> =
                 SqlTemplate.forUpdate(pool, "INSERT INTO users VALUES(#{id}, #{firstName}, #{lastName})")
@@ -132,7 +131,9 @@ class SqlClientTemplateExamples: AbstractSqlClientTest() {
 
         vertx.testWithSuspendTransaction(testContext, pool) {
             val user = User(
-                id = 4, firstName = "Iron", lastName = "Man"
+                id = 4,
+                firstName = "Iron",
+                lastName = "Man",
             )
 
             val result = SqlTemplate.forQuery(pool, "INSERT INTO users VALUES (#{id}, #{firstName}, #{lastName})")

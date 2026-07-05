@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.vertx.sqlclient
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.junit5.coroutines.runSuspendTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.vertx.sqlclient.tests.testWithSuspendTransaction
@@ -10,24 +13,20 @@ import io.vertx.junit5.VertxTestContext
 import io.vertx.kotlin.core.json.json
 import io.vertx.kotlin.core.json.obj
 import io.vertx.kotlin.coroutines.coAwait
-import io.vertx.kotlin.coroutines.dispatcher
 import io.vertx.sqlclient.SqlConnection
 import io.vertx.sqlclient.Tuple
-import kotlinx.coroutines.runBlocking
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldHaveSize
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 
-class JDBCPoolExamples: AbstractSqlClientTest() {
+class JDBCPoolExamples : AbstractSqlClientTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @BeforeAll
-    fun setup(vertx: Vertx) {
+    fun setup(vertx: Vertx) = runSuspendTest {
         // setup 에서는 testContext 가 불필요합니다. 만약 injection을 받으면 꼭 completeNow() 를 호출해야 합니다.
-        runBlocking(vertx.dispatcher()) {
-            val pool = vertx.getH2Pool()
+        val pool = vertx.getH2Pool()
+        try {
             pool.withSuspendTransaction { conn: SqlConnection ->
                 conn
                     .query(
@@ -43,6 +42,7 @@ class JDBCPoolExamples: AbstractSqlClientTest() {
 
                 conn.query("INSERT INTO test VALUES (1, 'Hello'), (2, 'World')").execute().coAwait()
             }
+        } finally {
             pool.close().coAwait()
         }
     }
@@ -57,7 +57,7 @@ class JDBCPoolExamples: AbstractSqlClientTest() {
             records shouldHaveSize 2
             records[0] shouldBeEqualTo json { obj("id" to 1, "name" to "Hello") }
             records[1] shouldBeEqualTo json { obj("id" to 2, "name" to "World") }
-            records.forEach { println(it) }
+            records.forEach { log.debug { it } }
         }
         pool.close().coAwait()
     }
