@@ -25,9 +25,12 @@ uses `Jackson.defaultJsonMapper` from `bluetape4k-jackson3` for JSON payloads.
 ![SQS and SNS coroutine messaging sequence](../../docs/images/readme-diagrams/aws-sqs-sns-coroutines-readme-sequence-01.png)
 
 The important part is the `alt consume outcome` branch. A message is either
-handled and deleted, marked for retry by resetting visibility, or deleted as a
-dead-letter outcome after the configured receive count. `CancellationException`
-is always rethrown so coroutine cancellation is not converted into a report.
+handled and deleted, marked for retry by resetting visibility, or locally
+discarded with a `DEAD_LETTER` classification after the configured receive
+count. This workshop does not implement durable DLQ handoff; real AWS usage
+should rely on SQS redrive policy or add an explicit DLQ publish boundary before
+source deletion. `CancellationException` is always rethrown so coroutine
+cancellation is not converted into a report.
 
 ## What You Learn
 
@@ -36,8 +39,8 @@ is always rethrown so coroutine cancellation is not converted into a report.
 | SNS publish boundary | Builds `SnsPublishRequest` with JSON body, subject, correlation id, idempotency key, and event type attributes. |
 | SQS consume boundary | Polls once with learner-visible queue settings and returns one report per delivered message. |
 | Retry classification | Handler failures call `changeVisibility(..., timeoutSeconds = 0)` and return `RETRY_REQUESTED`. |
-| Dead-letter classification | Messages at or above `maxReceiveCount` are deleted and returned as `DEAD_LETTER`. |
-| Metrics | `OrderNotificationMetrics` records publish timing and consume result counters with Micrometer. |
+| Dead-letter classification | Messages at or above `maxReceiveCount` are deleted and returned as local `DEAD_LETTER` discard reports; durable DLQ handoff is intentionally out of scope. |
+| Metrics | `OrderNotificationMetrics` records publish timing and consume counters, classifying success, retry, failure, and cancellation without counting cancelled work as success. |
 | Local safety | `bootRun` never contacts real AWS services by default; integration tests use Floci instead of real AWS. |
 
 ## Run Locally
@@ -78,7 +81,9 @@ bluetape4k:
 
 Replace the local `SnsOperations` and `SqsOperations` beans with real bluetape4k
 AWS beans only in a manual environment where IAM permissions, cleanup, region,
-cost, retry policy, and queue/topic subscription wiring are understood.
+cost, retry policy, queue/topic subscription wiring, and SQS redrive/DLQ policy
+are understood. The local adapters keep publish and consume as separate
+boundaries; they do not simulate SNS-to-SQS fanout or delayed visibility.
 
 ## Test Coverage
 
@@ -89,8 +94,9 @@ cost, retry policy, and queue/topic subscription wiring are understood.
 ```
 
 The unit tests verify SNS request mapping, SQS ack, retry and dead-letter
-classification, metrics, property validation, request validation, and coroutine
-cancellation propagation. `OrderNotificationFlociIntegrationTest` verifies SNS
+classification, metrics, failure/cancellation metric classification, property
+validation, request validation, and coroutine cancellation propagation.
+`OrderNotificationFlociIntegrationTest` verifies SNS
 publish and SQS consume through real bluetape4k operation templates, Floci,
 Awaitility `untilSuspending`, and `Jackson.defaultJsonMapper` without real AWS
 credentials.

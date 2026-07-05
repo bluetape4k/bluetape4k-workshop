@@ -106,16 +106,14 @@ class OrderNotificationMessagingService(
             }
         }
 
-        return try {
-            metrics.recordConsume(OrderNotificationMetrics.RESULT_ACKED) {
-                handler.handle(event)
-                sqs.delete(message.queueUrl, message.receiptHandle)
-                report(message, event, receiveCount, ConsumeState.ACKED, "acked")
-            }
+        try {
+            handler.handle(event)
         } catch (e: CancellationException) {
-            throw e
+            return metrics.recordConsume(OrderNotificationMetrics.RESULT_CANCELLED) {
+                throw e
+            }
         } catch (e: Exception) {
-            metrics.recordConsume(OrderNotificationMetrics.RESULT_RETRY) {
+            return metrics.recordConsume(OrderNotificationMetrics.RESULT_RETRY) {
                 sqs.changeVisibility(message.queueUrl, message.receiptHandle, timeoutSeconds = 0)
                 report(
                     message = message,
@@ -125,6 +123,11 @@ class OrderNotificationMessagingService(
                     statusMessage = e.message ?: e::class.java.simpleName,
                 )
             }
+        }
+
+        return metrics.recordConsume(OrderNotificationMetrics.RESULT_ACKED) {
+            sqs.delete(message.queueUrl, message.receiptHandle)
+            report(message, event, receiveCount, ConsumeState.ACKED, "acked")
         }
     }
 

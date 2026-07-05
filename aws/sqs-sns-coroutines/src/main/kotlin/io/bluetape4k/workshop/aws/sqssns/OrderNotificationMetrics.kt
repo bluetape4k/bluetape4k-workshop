@@ -20,6 +20,7 @@ class OrderNotificationMetrics(
         try {
             return block()
         } catch (e: CancellationException) {
+            result = RESULT_CANCELLED
             throw e
         } catch (e: Exception) {
             result = RESULT_FAILURE
@@ -35,11 +36,18 @@ class OrderNotificationMetrics(
         block: suspend () -> T,
     ): T {
         val sample = Timer.start(meterRegistry)
+        var recordedResult = result
         try {
             return block()
+        } catch (e: CancellationException) {
+            recordedResult = RESULT_CANCELLED
+            throw e
+        } catch (e: Exception) {
+            recordedResult = RESULT_FAILURE
+            throw e
         } finally {
-            counter(CONSUME_MESSAGES, result).increment()
-            sample.stop(timer(CONSUME_LATENCY, "consume", result))
+            counter(CONSUME_MESSAGES, recordedResult).increment()
+            sample.stop(timer(CONSUME_LATENCY, "consume", recordedResult))
         }
     }
 
@@ -63,6 +71,7 @@ class OrderNotificationMetrics(
         const val TAG_RESULT: String = "result"
         const val RESULT_SUCCESS: String = "success"
         const val RESULT_FAILURE: String = "failure"
+        const val RESULT_CANCELLED: String = "cancelled"
         const val RESULT_ACKED: String = "acked"
         const val RESULT_RETRY: String = "retry"
         const val RESULT_DEAD_LETTER: String = "dead-letter"
