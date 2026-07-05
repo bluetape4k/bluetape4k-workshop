@@ -1,9 +1,12 @@
 package io.bluetape4k.workshop.exposed.javers.approval.service
 
+import com.google.gson.JsonObject
+import io.bluetape4k.javers.codecs.JaversCodecs
 import io.bluetape4k.javers.diff.changesByType
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.exposed.javers.approval.model.ChangedField
 import io.bluetape4k.workshop.exposed.javers.approval.model.PolicyProposal
 import io.bluetape4k.workshop.exposed.javers.approval.model.PolicyProposalTable
@@ -16,6 +19,7 @@ import org.javers.core.diff.changetype.ValueChange
 import org.javers.core.metamodel.`object`.CdoSnapshot
 import org.javers.repository.jql.QueryBuilder
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -37,7 +41,10 @@ import java.math.RoundingMode
 class ProductPolicyApprovalService(
     private val javers: Javers,
 ) {
-    companion object: KLogging()
+    companion object: KLogging() {
+        private const val CURRENCY_CODE_LENGTH = 3
+        private const val MONEY_SCALE = 2
+    }
 
     /**
      * Publishes the first approved policy state.
@@ -78,8 +85,8 @@ class ProductPolicyApprovalService(
                 it[proposedApprovalLimit] = proposed.pricing.approvalLimit
                 it[proposedOwner] = proposed.owner
                 it[PolicyProposalTable.changedFields] = changedFields.encode()
-                it[currentSnapshot] = current.toJson()
-                it[proposedSnapshot] = proposed.toJson()
+                it[currentSnapshot] = current.toPolicyJson()
+                it[proposedSnapshot] = proposed.toPolicyJson()
             }.value
         }
 
@@ -95,9 +102,9 @@ class ProductPolicyApprovalService(
         reason.requireNotBlank("reason")
         val proposal = requirePendingProposal(proposalId)
 
+        transitionPendingDecision(proposalId, ProposalStatus.APPROVED, reviewer, reason)
         javers.commit(reviewer, proposal.proposed)
         upsertCurrentPolicy(proposal.proposed)
-        updateDecision(proposalId, ProposalStatus.APPROVED, reviewer, reason)
         log.debug { "Approved product policy proposal id=$proposalId by $reviewer" }
         return requireNotNull(findProposal(proposalId))
     }
@@ -110,7 +117,7 @@ class ProductPolicyApprovalService(
         reason.requireNotBlank("reason")
         requirePendingProposal(proposalId)
 
-        updateDecision(proposalId, ProposalStatus.REJECTED, reviewer, reason)
+        transitionPendingDecision(proposalId, ProposalStatus.REJECTED, reviewer, reason)
         log.debug { "Rejected product policy proposal id=$proposalId by $reviewer" }
         return requireNotNull(findProposal(proposalId))
     }
@@ -120,8 +127,9 @@ class ProductPolicyApprovalService(
      */
     fun findCurrentPolicy(policyId: Long): ProductPolicy? =
         transaction {
+            val validPolicyId = policyId.requirePositiveNumber("policyId")
             ProductPolicyTable.selectAll()
-                .where { ProductPolicyTable.id eq policyId }
+                .where { ProductPolicyTable.id eq validPolicyId }
                 .singleOrNull()
                 ?.toProductPolicy()
         }
@@ -131,8 +139,9 @@ class ProductPolicyApprovalService(
      */
     fun findProposal(proposalId: Long): PolicyProposal? =
         transaction {
+            val validProposalId = proposalId.requirePositiveNumber("proposalId")
             PolicyProposalTable.selectAll()
-                .where { PolicyProposalTable.id eq proposalId }
+                .where { PolicyProposalTable.id eq validProposalId }
                 .singleOrNull()
                 ?.toPolicyProposal()
         }
@@ -141,7 +150,8 @@ class ProductPolicyApprovalService(
      * Returns approved JaVers snapshots only, oldest-first.
      */
     fun getHistory(policyId: Long): List<CdoSnapshot> {
-        val query = QueryBuilder.byInstanceId(policyId, ProductPolicy::class.java)
+        val validPolicyId = policyId.requirePositiveNumber("policyId")
+        val query = QueryBuilder.byInstanceId(validPolicyId, ProductPolicy::class.java)
             .build()
         return javers.findSnapshots(query)
             .sortedBy { it.commitMetadata.commitDate }
@@ -162,7 +172,8 @@ class ProductPolicyApprovalService(
     }
 
     private fun requirePendingProposal(proposalId: Long): PolicyProposal {
-        val proposal = requireNotNull(findProposal(proposalId)) {
+        val validProposalId = proposalId.requirePositiveNumber("proposalId")
+        val proposal = requireNotNull(findProposal(validProposalId)) {
             "Policy proposal $proposalId does not exist"
         }
         require(proposal.status == ProposalStatus.PENDING) {
@@ -171,19 +182,38 @@ class ProductPolicyApprovalService(
         return proposal
     }
 
-    private fun updateDecision(proposalId: Long, status: ProposalStatus, reviewer: String, reason: String) {
-        transaction {
-            PolicyProposalTable.update({ PolicyProposalTable.id eq proposalId }) {
+    private fun transitionPendingDecision(proposalId: Long, status: ProposalStatus, reviewer: String, reason: String) {
+        val validProposalId = proposalId.requirePositiveNumber("proposalId")
+        val updatedRows = transaction {
+            PolicyProposalTable.update({
+                (PolicyProposalTable.id eq validProposalId) and
+                    (PolicyProposalTable.proposalStatus eq ProposalStatus.PENDING)
+            }) {
                 it[proposalStatus] = status
                 it[PolicyProposalTable.reviewer] = reviewer
                 it[PolicyProposalTable.reason] = reason
             }
         }
+        require(updatedRows == 1) { "Policy proposal $proposalId is no longer pending" }
     }
 
     private fun validatePolicy(policy: ProductPolicy) {
+        policy.id.requirePositiveNumber("policy.id")
         policy.title.requireNotBlank("policy.title")
         policy.pricing.currency.requireNotBlank("policy.pricing.currency")
+        require(policy.pricing.currency.length == CURRENCY_CODE_LENGTH) {
+            "policy.pricing.currency must be a 3-letter ISO currency code"
+        }
+        require(policy.pricing.amount.signum() >= 0) { "policy.pricing.amount must be zero or positive" }
+        require(policy.pricing.amount.scale() <= MONEY_SCALE) {
+            "policy.pricing.amount must use at most 2 decimal places"
+        }
+        require(policy.pricing.approvalLimit.signum() >= 0) {
+            "policy.pricing.approvalLimit must be zero or positive"
+        }
+        require(policy.pricing.approvalLimit.scale() <= MONEY_SCALE) {
+            "policy.pricing.approvalLimit must use at most 2 decimal places"
+        }
         policy.owner.requireNotBlank("policy.owner")
     }
 
@@ -272,10 +302,6 @@ class ProductPolicyApprovalService(
             .replace("\\t", "\t")
             .replace("\\\\", "\\")
 
-    private fun ProductPolicy.toJson(): String =
-        """{"id":$id,"title":"${title.escapeJson()}","status":"$status","pricing":{"currency":"${pricing.currency.escapeJson()}","amount":"${pricing.amount.toReviewString()}","approvalLimit":"${pricing.approvalLimit.toReviewString()}"},"owner":"${owner.escapeJson()}"}"""
-
-    private fun String.escapeJson(): String =
-        replace("\\", "\\\\")
-            .replace("\"", "\\\"")
+    private fun ProductPolicy.toPolicyJson(): String =
+        JaversCodecs.String.encode(javers.jsonConverter.toJsonElement(this) as JsonObject)
 }
