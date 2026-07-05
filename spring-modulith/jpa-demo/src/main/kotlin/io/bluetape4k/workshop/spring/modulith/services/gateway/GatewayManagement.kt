@@ -21,7 +21,7 @@ class GatewayManagement(
     private val departmentExternalAPI: DepartmentExternalAPI,
     private val employeeExternalAPI: EmployeeExternalAPI,
 ) {
-    companion object: KLogging()
+    companion object : KLogging()
 
     @GetMapping("/organizations/{id}/with-departments")
     fun getOrganizationWithDepartments(@PathVariable("id") id: Long): OrganizationDTO? {

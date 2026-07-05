@@ -7,6 +7,10 @@ data class DepartmentDTO(
     val id: Long? = null,
     val organizationId: Long,
     val name: String,
-): Serializable {
+) : Serializable {
     val employees: MutableList<EmployeeDTO> = mutableListOf()
+
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }

@@ -7,7 +7,7 @@ import org.springframework.modulith.docs.Documenter
 
 class SpringModulithTest {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     val modules = ApplicationModules.of(SpringModulith::class.java)
 

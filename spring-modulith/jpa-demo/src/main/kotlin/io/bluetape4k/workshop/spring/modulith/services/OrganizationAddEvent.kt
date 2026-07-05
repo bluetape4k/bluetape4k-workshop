@@ -5,4 +5,8 @@ import java.io.Serializable
 data class OrganizationAddEvent(
     val id: Long,
     val source: Any? = null,
-): Serializable
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}

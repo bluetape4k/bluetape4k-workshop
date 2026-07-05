@@ -23,7 +23,7 @@ class OrganizationManagement(
     private val mapper: OrganizationMapper,
 ): OrganizationExternalAPI {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     override fun findByIdWithEmployees(organizationId: Long): OrganizationDTO? {
         return repository.findDTOById(organizationId)

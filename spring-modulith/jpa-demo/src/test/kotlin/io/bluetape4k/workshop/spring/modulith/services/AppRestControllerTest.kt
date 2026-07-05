@@ -22,7 +22,7 @@ import org.springframework.test.web.reactive.server.returnResult
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class AppRestControllerTest {
     
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         val faker = Fakers.faker
     }
 

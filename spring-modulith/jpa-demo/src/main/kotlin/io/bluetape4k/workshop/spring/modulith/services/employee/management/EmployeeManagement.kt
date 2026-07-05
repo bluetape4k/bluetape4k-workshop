@@ -16,7 +16,7 @@ class EmployeeManagement(
     private val mapper: EmployeeMapper,
 ): EmployeeExternalAPI, EmployeeInternalAPI {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Transactional
     override fun add(employee: EmployeeDTO): EmployeeDTO {
