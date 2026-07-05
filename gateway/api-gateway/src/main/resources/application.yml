@@ -1,5 +1,7 @@
 server:
     port: 8080
+    error:
+        include-stacktrace: never
 
 logging:
     level:
@@ -12,7 +14,7 @@ management:
     endpoints:
         web:
             exposure:
-                include: "*"
+                include: health,info
 
 spring:
     aot:
@@ -21,43 +23,45 @@ spring:
         compatibility-verifier:
             enabled: false
         gateway:
-            default-filters:
-                - AddResponseHeader=X-BLUETAPE4K-API, BLUETAPE4K.IO
+            server:
+                webflux:
+                    default-filters:
+                        - AddResponseHeader=X-BLUETAPE4K-API, BLUETAPE4K.IO
 
-            routes:
-                # =====================================
-                # to run server (참고: https://docs.aws.amazon.com/ko_kr/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-wscat.html)
-                # $ wscat --listen 9000
-                # to run client
-                # $ wscat --connect ws://localhost:8080/echo
-                -   id: websocket-example
-                    uri: ws://localhost:9000
-                    order: 9000
-                    predicates:
-                        - Path=/echo
-                # =====================================
-                -   id: customers
-                    uri: http://localhost:8081
-                    predicates:
-                        - Path=/customer-service/**
-                    filters:
-                        - RewritePath=/customer-service/(?<segment>.*), /$\{segment}
-                        # - AuthFilter
+                    routes:
+                        # =====================================
+                        # to run server (참고: https://docs.aws.amazon.com/ko_kr/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-wscat.html)
+                        # $ wscat --listen 9000
+                        # to run client
+                        # $ wscat --connect ws://localhost:8080/echo
+                        -   id: websocket-example
+                            uri: ws://localhost:9000
+                            order: 9000
+                            predicates:
+                                - Path=/echo
+                        # =====================================
+                        -   id: customers
+                            uri: ${workshop.gateway.customers-uri:http://localhost:8081}
+                            predicates:
+                                - Path=/customer-service/**
+                            filters:
+                                - RewritePath=/customer-service/(?<segment>.*), /$\{segment}
+                                # - AuthFilter
 
-                -   id: orders
-                    uri: http://localhost:8082
-                    predicates:
-                        - Path=/order-service/**
-                    filters:
-                        - RewritePath=/order-service/(?<segment>.*), /$\{segment}
-                        # - AuthFilter
+                        -   id: orders
+                            uri: ${workshop.gateway.orders-uri:http://localhost:8082}
+                            predicates:
+                                - Path=/order-service/**
+                            filters:
+                                - RewritePath=/order-service/(?<segment>.*), /$\{segment}
+                                # - AuthFilter
 
-                -   id: openapi
-                    uri: http://localhost:${server.port}
-                    predicates:
-                        - Path=/v3/api-docs/**
-                    filters:
-                        - RewritePath=/v3/api-docs/(?<segment>.*), /$\{segment}/v3/api-docs
+                        -   id: openapi
+                            uri: http://localhost:${server.port}
+                            predicates:
+                                - Path=/v3/api-docs/**
+                            filters:
+                                - RewritePath=/v3/api-docs/(?<segment>.*), /$\{segment}/v3/api-docs
 
     data:
         redis:
