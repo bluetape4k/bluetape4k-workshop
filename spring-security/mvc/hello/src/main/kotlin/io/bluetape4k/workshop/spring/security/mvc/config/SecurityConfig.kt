@@ -17,7 +17,7 @@ import org.springframework.security.web.SecurityFilterChain
 @EnableWebSecurity
 class SecurityConfig {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Bean
     fun filterChain(http: HttpSecurity): SecurityFilterChain {

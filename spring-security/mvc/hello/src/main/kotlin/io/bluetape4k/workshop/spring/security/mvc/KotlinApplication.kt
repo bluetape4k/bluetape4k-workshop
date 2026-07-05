@@ -7,7 +7,7 @@ import org.springframework.boot.runApplication
 
 @SpringBootApplication(proxyBeanMethods = false)
 class KotlinApplication {
-    companion object: KLogging() {
+    companion object : KLogging() {
         init {
             log.info { "Starting KotlinApplication" }
         }
