@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.graph.io
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeFalse
@@ -13,6 +14,7 @@ import io.bluetape4k.graph.io.report.GraphIoPhase
 import io.bluetape4k.graph.io.report.GraphIoStatus
 import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.graph.tinkerpop.TinkerGraphOperations
+import io.bluetape4k.support.requireNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
@@ -183,6 +185,50 @@ class GraphIoPipelineTest {
     }
 
     @Test
+    fun `missing CSV source fails fast before import`(@TempDir tempDir: Path) {
+        val vertices = tempDir.resolve("missing-vertices.csv")
+        val edges = tempDir.resolve("edges.csv").also {
+            it.writeText("id,label,from,to,prop.code\n")
+        }
+
+        TinkerGraphOperations().use { ops ->
+            assertFailsWith<IllegalArgumentException> {
+                GraphIoPipeline(ops).importCsv(vertices, edges)
+            }
+            totalVertices(ops) shouldBeEqualTo 0
+            totalEdges(ops) shouldBeEqualTo 0
+        }
+    }
+
+    @Test
+    fun `directory CSV source fails fast before import`(@TempDir tempDir: Path) {
+        val vertices = tempDir.resolve("vertices-dir").createDirectories()
+        val edges = tempDir.resolve("edges.csv").also {
+            it.writeText("id,label,from,to,prop.code\n")
+        }
+
+        TinkerGraphOperations().use { ops ->
+            assertFailsWith<IllegalArgumentException> {
+                GraphIoPipeline(ops).importCsv(vertices, edges)
+            }
+            totalVertices(ops) shouldBeEqualTo 0
+            totalEdges(ops) shouldBeEqualTo 0
+        }
+    }
+
+    @Test
+    fun `directory export target fails fast without writing files`(@TempDir tempDir: Path) {
+        TinkerGraphOperations().use { ops ->
+            GraphIoPipeline(ops).importCsv(fixture("vertices.csv"), fixture("edges.csv"))
+
+            assertFailsWith<IllegalArgumentException> {
+                GraphIoPipeline(ops).exportGraphMl(tempDir)
+            }
+            assertTempOutputs(tempDir, emptySet())
+        }
+    }
+
+    @Test
     fun `fixture values are safe for documentation examples`() {
         val forbiddenPrefixes = setOf('=', '+', '-', '@')
         listOf(fixture("vertices.csv"), fixture("edges.csv")).forEach { file ->
@@ -201,9 +247,8 @@ class GraphIoPipelineTest {
     }
 
     private fun fixture(name: String): Path {
-        val url = requireNotNull(javaClass.classLoader.getResource("graph-io-pipeline/$name")) {
-            "Missing graph-io-pipeline fixture: $name"
-        }
+        val url = javaClass.classLoader.getResource("graph-io-pipeline/$name")
+            .requireNotNull("graph-io-pipeline/$name")
         return Path.of(url.toURI())
     }
 
@@ -295,7 +340,7 @@ class GraphIoPipelineTest {
 
         actual shouldBeEqualTo expectedNames
         actual.forEach { name ->
-            (Path.of(name).extension in setOf("ndjson", "graphml")) shouldBeEqualTo true
+            (Path.of(name).extension in setOf("ndjson", "graphml")).shouldBeTrue()
         }
     }
 }

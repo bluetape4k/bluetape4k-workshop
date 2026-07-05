@@ -23,6 +23,8 @@ import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.model.GraphVertex
 import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.graph.tinkerpop.TinkerGraphOperations
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireNotNull
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
@@ -151,14 +153,14 @@ class GraphIoPipeline(
 
     private fun requireReadableFile(path: Path, role: String): Path {
         val normalized = path.normalize().toAbsolutePath()
-        require(normalized.exists()) { "$role path must exist: $normalized" }
-        require(normalized.isRegularFile()) { "$role path must be a regular file: $normalized" }
+        normalized.exists().toMissingCount().requireInRange(0, 0, "$role.exists")
+        normalized.isRegularFile().toMissingCount().requireInRange(0, 0, "$role.regularFile")
         return normalized
     }
 
     private fun requireWritableTarget(path: Path, role: String): Path {
         val normalized = path.normalize().toAbsolutePath()
-        require(!normalized.isDirectory()) { "$role path must not be a directory: $normalized" }
+        normalized.isDirectory().toViolationCount().requireInRange(0, 0, "$role.directory")
         return normalized
     }
 
@@ -196,7 +198,7 @@ class GraphIoPipeline(
         edgeLabels.flatMap { label -> ops.findEdgesByLabel(label) }
 
     private fun Map<GraphElementId, GraphElementId>.requiredId(id: GraphElementId): GraphElementId =
-        requireNotNull(this[id]) { "Imported edge references a missing copied vertex: ${id.value}" }
+        this[id].requireNotNull("copiedVertex[${id.value}]")
 
     private companion object {
         private const val EXTERNAL_ID_PROPERTY = "_graphIoExternalId"
@@ -220,3 +222,7 @@ class GraphIoPipeline(
         )
     }
 }
+
+private fun Boolean.toMissingCount(): Int = if (this) 0 else 1
+
+private fun Boolean.toViolationCount(): Int = if (this) 1 else 0
