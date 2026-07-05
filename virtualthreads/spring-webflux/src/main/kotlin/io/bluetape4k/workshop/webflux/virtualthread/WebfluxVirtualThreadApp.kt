@@ -7,8 +7,7 @@ import org.springframework.boot.runApplication
 @SpringBootApplication(proxyBeanMethods = false)
 class WebFluxVirtualThreadApp {
 
-    companion object: KLoggingChannel()
-
+    companion object : KLoggingChannel()
 }
 
 fun main(vararg args: String) {

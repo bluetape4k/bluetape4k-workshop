@@ -10,9 +10,9 @@ import java.util.concurrent.Executors
 
 @RestController
 @RequestMapping("/$VIRTUAL_THREAD_PATH")
-class VirtualThreadDispatcherController: AbstractDispatcherController() {
+class VirtualThreadDispatcherController : AbstractDispatcherController() {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         internal const val VIRTUAL_THREAD_PATH = "virtual-thread"
     }
 

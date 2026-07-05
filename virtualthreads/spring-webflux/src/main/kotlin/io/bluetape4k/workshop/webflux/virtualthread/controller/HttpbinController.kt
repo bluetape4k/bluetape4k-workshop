@@ -22,7 +22,7 @@ import java.util.concurrent.Executors
 @RequestMapping("/httpbin")
 class HttpbinController {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         val bluetapeHttpServer by lazy { BluetapeHttpServer.Launcher.bluetapeHttpServer }
     }
 

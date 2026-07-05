@@ -12,7 +12,7 @@ import java.util.concurrent.Executors
 @EnableScheduling
 class SchedulingConfig {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     private val virtualThreadFactory = Thread.ofVirtual()
         .inheritInheritableThreadLocals(true)

@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/$IO_PATH")
-class IODispatcherController: AbstractDispatcherController() {
+class IODispatcherController : AbstractDispatcherController() {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         internal const val IO_PATH = "io"
     }
 

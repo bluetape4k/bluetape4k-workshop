@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/$DEFAULT_PATH")
-class DefaultDispatcherController: AbstractDispatcherController() {
+class DefaultDispatcherController : AbstractDispatcherController() {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         internal const val DEFAULT_PATH = "default"
     }
 

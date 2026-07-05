@@ -12,7 +12,7 @@ import java.util.concurrent.Executors
 @EnableAsync
 class AsyncConfig {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     private val virtualThreadFactory = Thread.ofVirtual()
         .inheritInheritableThreadLocals(true)
