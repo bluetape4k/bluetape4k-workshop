@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.graph.abuser.seed
 import io.bluetape4k.graph.model.GraphVertex
 import io.bluetape4k.workshop.graph.abuser.service.AbuserDetectionService
 import io.bluetape4k.workshop.graph.abuser.service.AbuserDetectionSuspendService
+import java.io.Serializable
 
 private const val SEED_TIMESTAMP = "2026-01-01T00:00:00Z"
 
@@ -25,7 +26,11 @@ data class AbuserDetectionSeed(
     val ipA: GraphVertex,
     val unrelatedUser: GraphVertex,
     val deviceB: GraphVertex,
-)
+) : Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+}
 
 // ─────────────────────────────────────────────────────────────────────────
 // Blocking helpers

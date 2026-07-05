@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.graph.abuser.model
 
 import io.bluetape4k.graph.model.GraphVertex
+import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
 
 /**
@@ -28,6 +29,11 @@ data class SuspiciousUserScore(
     /** 1-based rank position in the suspicion ranking. */
     val rank: Int,
 ) : Serializable {
+    init {
+        score.requirePositiveNumber("score")
+        rank.requirePositiveNumber("rank")
+    }
+
     companion object {
         private const val serialVersionUID = 1L
     }

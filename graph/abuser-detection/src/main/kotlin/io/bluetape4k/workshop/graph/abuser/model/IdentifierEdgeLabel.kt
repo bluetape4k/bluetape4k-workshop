@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.graph.abuser.model
 
+import io.bluetape4k.support.requireNotBlank
+import java.io.Serializable
+
 /**
  * Domain-level dispatch enum for user-to-identifier edge types used in abuse cluster detection.
  *
@@ -20,9 +23,15 @@ package io.bluetape4k.workshop.graph.abuser.model
  * ```
  */
 @JvmInline
-value class IdentifierEdgeLabel(val value: String) {
+value class IdentifierEdgeLabel(val value: String): Serializable {
+
+    init {
+        value.requireNotBlank("value")
+    }
 
     companion object {
+        private const val serialVersionUID = 1L
+
         /** Links a User vertex to a Device vertex. */
         val USES_DEVICE = IdentifierEdgeLabel("USES_DEVICE")
 

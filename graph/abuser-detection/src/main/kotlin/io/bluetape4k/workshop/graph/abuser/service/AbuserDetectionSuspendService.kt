@@ -12,7 +12,9 @@ import io.bluetape4k.graph.repository.GraphSuspendOperations
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.graph.abuser.model.AbuseCluster
 import io.bluetape4k.workshop.graph.abuser.model.AbusePath
@@ -28,6 +30,8 @@ import io.bluetape4k.workshop.graph.abuser.schema.UserLabel
 import io.bluetape4k.workshop.graph.abuser.schema.UsesDeviceLabel
 import io.bluetape4k.workshop.graph.abuser.schema.UsesIpLabel
 import io.bluetape4k.workshop.graph.abuser.schema.UsesPaymentLabel
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
@@ -65,6 +69,10 @@ class AbuserDetectionSuspendService(
     private val ops: GraphSuspendOperations,
     private val graphName: String,
 ) {
+
+    init {
+        graphName.requireNotBlank("graphName")
+    }
 
     companion object : KLoggingChannel() {
         /**
@@ -198,6 +206,8 @@ class AbuserDetectionSuspendService(
         occurredAt: String,
     ): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
+        requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
+        requireEndpoint(deviceVertexId, DeviceLabel.label, "deviceVertexId")
         return ops.createEdge(
             userVertexId,
             deviceVertexId,
@@ -219,6 +229,8 @@ class AbuserDetectionSuspendService(
         occurredAt: String,
     ): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
+        requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
+        requireEndpoint(ipVertexId, IpAddressLabel.label, "ipVertexId")
         return ops.createEdge(
             userVertexId,
             ipVertexId,
@@ -240,6 +252,8 @@ class AbuserDetectionSuspendService(
         occurredAt: String,
     ): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
+        requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
+        requireEndpoint(phoneVertexId, PhoneNumberLabel.label, "phoneVertexId")
         return ops.createEdge(
             userVertexId,
             phoneVertexId,
@@ -261,6 +275,8 @@ class AbuserDetectionSuspendService(
         occurredAt: String,
     ): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
+        requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
+        requireEndpoint(paymentVertexId, PaymentMethodLabel.label, "paymentVertexId")
         return ops.createEdge(
             userVertexId,
             paymentVertexId,
@@ -282,6 +298,8 @@ class AbuserDetectionSuspendService(
         occurredAt: String,
     ): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
+        requireEndpoint(referrerVertexId, UserLabel.label, "referrerVertexId")
+        requireEndpoint(referredVertexId, UserLabel.label, "referredVertexId")
         return ops.createEdge(
             referrerVertexId,
             referredVertexId,
@@ -317,6 +335,7 @@ class AbuserDetectionSuspendService(
         // Step 1: traverse OUTGOING identifier edges to gather shared identifiers
         val seedIdentifiers = buildList {
             for (edgeLabel in IdentifierEdgeLabel.all) {
+                currentCoroutineContext().ensureActive()
                 addAll(
                     ops.neighbors(seedUserId, NeighborOptions(edgeLabel.value, Direction.OUTGOING, 1))
                         .toList()
@@ -331,6 +350,7 @@ class AbuserDetectionSuspendService(
         // Step 2: reverse-traverse from each identifier to find co-connected users
         val clusterUsers = mutableListOf<GraphVertex>()
         for (identifierVertex in seedIdentifiers) {
+            currentCoroutineContext().ensureActive()
             val reverseLabel = VERTEX_LABEL_TO_EDGE_LABEL[identifierVertex.label]
             if (reverseLabel == null) {
                 log.warn { "findAbuseCluster: unknown identifier vertex label '${identifierVertex.label}' — skipping reverse traversal" }
@@ -350,15 +370,16 @@ class AbuserDetectionSuspendService(
     }
 
     /**
-     * Returns a cold [Flow] of shared identifier paths that connect the given user to other users.
+     * Returns a cold [Flow] of the user's outgoing identifier paths used as suspicion inputs.
      *
      * Each [AbusePath] describes one identifier vertex and the edge type connecting the user to it.
      *
      * @param userId graph vertex ID of the user to explain
-     * @return cold [Flow] of [AbusePath] entries; empty if the user has no outgoing identifier edges
+     * @return cold [Flow] of outgoing [AbusePath] entries; empty if the user has no identifier edges
      */
     fun explainSuspicion(userId: GraphElementId): Flow<AbusePath> = flow {
         for (edgeLabel in IdentifierEdgeLabel.all) {
+            currentCoroutineContext().ensureActive()
             ops.findEdgesByStartId(userId, edgeLabel.value).collect { edge ->
                 emit(AbusePath(identifierVertexId = edge.endId, edgeLabel = edgeLabel))
             }
@@ -407,5 +428,11 @@ class AbuserDetectionSuspendService(
                     rank  = index + 1,
                 )
             }
+    }
+
+    private suspend fun requireEndpoint(id: GraphElementId, expectedLabel: String, parameterName: String): GraphVertex {
+        val vertex = ops.findVertexById(id).requireNotNull(parameterName)
+        vertex.label.requireEquals(expectedLabel, "$parameterName.label")
+        return vertex
     }
 }

@@ -12,7 +12,9 @@ import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.graph.abuser.model.AbuseCluster
 import io.bluetape4k.workshop.graph.abuser.model.AbusePath
@@ -56,6 +58,10 @@ class AbuserDetectionService(
     private val ops: GraphOperations,
     private val graphName: String,
 ) {
+
+    init {
+        graphName.requireNotBlank("graphName")
+    }
 
     companion object : KLogging() {
         /**
@@ -185,6 +191,8 @@ class AbuserDetectionService(
      */
     fun linkDevice(userVertexId: GraphElementId, deviceVertexId: GraphElementId, occurredAt: String): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
+        requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
+        requireEndpoint(deviceVertexId, DeviceLabel.label, "deviceVertexId")
         return ops.createEdge(
             userVertexId,
             deviceVertexId,
@@ -202,6 +210,8 @@ class AbuserDetectionService(
      */
     fun linkIp(userVertexId: GraphElementId, ipVertexId: GraphElementId, occurredAt: String): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
+        requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
+        requireEndpoint(ipVertexId, IpAddressLabel.label, "ipVertexId")
         return ops.createEdge(
             userVertexId,
             ipVertexId,
@@ -219,6 +229,8 @@ class AbuserDetectionService(
      */
     fun linkPhone(userVertexId: GraphElementId, phoneVertexId: GraphElementId, occurredAt: String): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
+        requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
+        requireEndpoint(phoneVertexId, PhoneNumberLabel.label, "phoneVertexId")
         return ops.createEdge(
             userVertexId,
             phoneVertexId,
@@ -236,6 +248,8 @@ class AbuserDetectionService(
      */
     fun linkPayment(userVertexId: GraphElementId, paymentVertexId: GraphElementId, occurredAt: String): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
+        requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
+        requireEndpoint(paymentVertexId, PaymentMethodLabel.label, "paymentVertexId")
         return ops.createEdge(
             userVertexId,
             paymentVertexId,
@@ -253,6 +267,8 @@ class AbuserDetectionService(
      */
     fun linkReferral(referrerVertexId: GraphElementId, referredVertexId: GraphElementId, occurredAt: String): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
+        requireEndpoint(referrerVertexId, UserLabel.label, "referrerVertexId")
+        requireEndpoint(referredVertexId, UserLabel.label, "referredVertexId")
         return ops.createEdge(
             referrerVertexId,
             referredVertexId,
@@ -316,12 +332,12 @@ class AbuserDetectionService(
     }
 
     /**
-     * Returns the shared identifier paths that connect the given user to other users.
+     * Returns the user's outgoing identifier paths used as suspicion inputs.
      *
      * Each [AbusePath] describes one identifier vertex and the edge type connecting the user to it.
      *
      * @param userId graph vertex ID of the user to explain
-     * @return list of [AbusePath] entries; empty if the user has no outgoing identifier edges
+     * @return list of outgoing [AbusePath] entries; empty if the user has no identifier edges
      */
     fun explainSuspicion(userId: GraphElementId): List<AbusePath> {
         val paths = mutableListOf<AbusePath>()
@@ -380,5 +396,11 @@ class AbuserDetectionService(
                     rank  = index + 1,
                 )
             }
+    }
+
+    private fun requireEndpoint(id: GraphElementId, expectedLabel: String, parameterName: String): GraphVertex {
+        val vertex = ops.findVertexById(id).requireNotNull(parameterName)
+        vertex.label.requireEquals(expectedLabel, "$parameterName.label")
+        return vertex
     }
 }
