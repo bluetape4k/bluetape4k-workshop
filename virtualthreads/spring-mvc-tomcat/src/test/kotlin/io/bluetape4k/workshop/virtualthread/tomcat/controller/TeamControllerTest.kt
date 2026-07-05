@@ -13,9 +13,9 @@ import io.bluetape4k.assertions.shouldNotBeEmpty
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
 
-class TeamControllerTest: AbstractVirtualThreadMvcTest() {
+class TeamControllerTest : AbstractVirtualThreadMvcTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `get all teams`() = runSuspendIO {

@@ -10,7 +10,11 @@ data class MemberDTO(
     val id: Long,
     val name: String,
     val age: Int? = null,
-): Serializable
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 /**
  * [Member] Entity를 MemberDTO로 변환하는 확장 함수
@@ -19,5 +23,5 @@ fun Member.toMemberDTO(): MemberDTO =
     MemberDTO(
         id = this.id ?: 0,
         name = this.name,
-        age = this.age ?: 0
+        age = this.age ?: 0,
     )

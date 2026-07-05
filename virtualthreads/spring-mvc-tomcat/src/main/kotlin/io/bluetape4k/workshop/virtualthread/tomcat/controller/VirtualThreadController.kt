@@ -15,7 +15,7 @@ import kotlin.random.Random
 @RequestMapping("/virtual-thread")
 class VirtualThreadController(private val executor: ExecutorService) {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private const val SLEEP_TIME = 300L
     }
 

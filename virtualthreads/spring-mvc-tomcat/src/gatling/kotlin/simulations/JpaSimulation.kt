@@ -8,7 +8,7 @@ import io.gatling.javaapi.http.HttpDsl.status
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
-class JpaSimulation: Simulation() {
+class JpaSimulation : Simulation() {
 
     val httpProtocol = http
         .baseUrl("http://localhost:8080")

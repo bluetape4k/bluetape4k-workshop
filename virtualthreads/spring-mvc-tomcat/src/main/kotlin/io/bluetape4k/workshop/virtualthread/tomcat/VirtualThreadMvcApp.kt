@@ -1,9 +1,7 @@
 package io.bluetape4k.workshop.virtualthread.tomcat
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.DatabaseInitializer
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -16,16 +14,15 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @SpringBootApplication(proxyBeanMethods = false)
 @EnableJpaRepositories(
     basePackageClasses = [DatabaseInitializer::class],
-    bootstrapMode = BootstrapMode.DEFERRED
+    bootstrapMode = BootstrapMode.DEFERRED,
 )
 @EntityScan(basePackageClasses = [DatabaseInitializer::class])
 @EnableTransactionManagement
-class VirtualThreadMvcApp: ApplicationRunner {
+class VirtualThreadMvcApp(
+    private val databaseInitializer: DatabaseInitializer,
+) : ApplicationRunner {
 
-    companion object: KLogging()
-
-    @Autowired
-    private val databaseInitializer: DatabaseInitializer = uninitialized()
+    companion object : KLogging()
 
     override fun run(args: ApplicationArguments) {
         databaseInitializer.insertSampleData()
@@ -33,5 +30,5 @@ class VirtualThreadMvcApp: ApplicationRunner {
 }
 
 fun main(vararg args: String) {
-    runApplication<VirtualThreadMvcApp>(*args) 
+    runApplication<VirtualThreadMvcApp>(*args)
 }

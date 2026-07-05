@@ -17,7 +17,7 @@ class TeamRepositoryTest(
     @param:Autowired private val teamRepo: TeamRepository,
 ): AbstractDomainTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `context loading`() {

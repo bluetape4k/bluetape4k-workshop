@@ -46,7 +46,7 @@ interface MemberRepositoryCustom {
 
 }
 
-class MemberRepositoryImpl: QuerydslRepositorySupport(Member::class.java), MemberRepositoryCustom {
+class MemberRepositoryImpl : QuerydslRepositorySupport(Member::class.java), MemberRepositoryCustom {
 
     private val queryFactory get() = JPAQueryFactory(entityManager)
 

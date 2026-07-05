@@ -7,9 +7,9 @@ import jakarta.persistence.EntityManager
 import jakarta.persistence.EntityManagerFactory
 import jakarta.persistence.PersistenceContext
 
-abstract class AbstractDomainTest: AbstractVirtualThreadMvcTest() {
+abstract class AbstractDomainTest : AbstractVirtualThreadMvcTest() {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         @JvmStatic
         val faker = Fakers.faker
     }

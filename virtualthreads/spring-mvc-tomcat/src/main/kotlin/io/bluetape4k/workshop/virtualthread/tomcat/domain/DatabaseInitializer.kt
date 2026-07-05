@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 @Component
 class DatabaseInitializer {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @PersistenceContext
     private lateinit var em: EntityManager

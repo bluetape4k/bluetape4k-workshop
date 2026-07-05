@@ -14,7 +14,7 @@ import java.util.concurrent.Executors
 @Configuration(proxyBeanMethods = false)
 class TomcatConfig {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     /**
      * Tomcat ProtocolHandler의 executor 를 Virtual Thread 를 사용하는 Executor를 사용하도록 설정

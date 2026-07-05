@@ -16,9 +16,9 @@ import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
 
-class MemberControllerTest: AbstractVirtualThreadMvcTest() {
+class MemberControllerTest : AbstractVirtualThreadMvcTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `get all members`() = runSuspendIO {
