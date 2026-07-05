@@ -42,7 +42,11 @@ class AuthorService(
     fun createAuthor(req: CreateAuthorRequest): AuthorDTO = authorRepo.save(req)
 
     @Transactional
-    fun createBook(req: CreateBookRequest): BookDTO = bookRepo.save(req)
+    fun createBook(req: CreateBookRequest): BookDTO {
+        authorRepo.findByIdOrNull(req.authorId)
+            ?: throw NoSuchElementException("Author ${req.authorId} not found")
+        return bookRepo.save(req)
+    }
 
     @Transactional
     fun deleteAuthor(id: Long) = authorRepo.deleteById(id)

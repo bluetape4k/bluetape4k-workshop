@@ -20,8 +20,10 @@ class PlaceOrderRollbackTest : AbstractMvcJdbcTest() {
     @Autowired
     private lateinit var txManager: PlatformTransactionManager
 
-    private fun <T> inTx(block: () -> T): T =
-        TransactionTemplate(txManager).execute { block() }!!
+    private fun <T: Any> inTx(block: () -> T): T =
+        requireNotNull(TransactionTemplate(txManager).execute { block() }) {
+            "Transaction callback returned null"
+        }
 
     @Test
     fun `failed order with invalid product rolls back all tables`() {

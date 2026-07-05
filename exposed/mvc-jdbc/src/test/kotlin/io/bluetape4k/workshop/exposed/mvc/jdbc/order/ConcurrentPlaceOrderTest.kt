@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.exposed.mvc.jdbc.order
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.workshop.exposed.mvc.jdbc.AbstractMvcJdbcTest
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.dto.OrderLineRequest
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.dto.PlaceOrderRequest
@@ -14,17 +15,18 @@ import org.springframework.http.MediaType
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.math.BigDecimal
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 class ConcurrentPlaceOrderTest : AbstractMvcJdbcTest() {
 
     @Autowired
     private lateinit var txManager: PlatformTransactionManager
 
-    private fun <T> inTx(block: () -> T): T =
-        TransactionTemplate(txManager).execute { block() }!!
+    private fun <T: Any> inTx(block: () -> T): T =
+        requireNotNull(TransactionTemplate(txManager).execute { block() }) {
+            "Transaction callback returned null"
+        }
 
     @Test
     fun `only one of N concurrent orders succeeds with stock=1`() {
@@ -39,34 +41,29 @@ class ConcurrentPlaceOrderTest : AbstractMvcJdbcTest() {
         val N = 10
         val successCount = AtomicInteger(0)
         val conflictCount = AtomicInteger(0)
-        val latch = CountDownLatch(N)
-        val executor = Executors.newFixedThreadPool(N)
+        val customerSeq = AtomicLong(1L)
 
-        repeat(N) { i ->
-            executor.submit {
-                try {
-                    val req = PlaceOrderRequest(
-                        customerId = (i + 1).toLong(),
-                        lines = listOf(OrderLineRequest(productId = testProductId, quantity = 1))
-                    )
-                    val status = webTestClient.post()
-                        .uri("/api/v1/orders")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .bodyValue(req)
-                        .exchange()
-                        .returnResult(String::class.java)
-                        .status
-                    when {
-                        status.is2xxSuccessful -> successCount.incrementAndGet()
-                        status.value() == 409 -> conflictCount.incrementAndGet()
-                    }
-                } finally {
-                    latch.countDown()
+        MultithreadingTester()
+            .workers(N)
+            .rounds(1)
+            .add {
+                val req = PlaceOrderRequest(
+                    customerId = customerSeq.getAndIncrement(),
+                    lines = listOf(OrderLineRequest(productId = testProductId, quantity = 1))
+                )
+                val status = webTestClient.post()
+                    .uri("/api/v1/orders")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(req)
+                    .exchange()
+                    .returnResult(String::class.java)
+                    .status
+                when {
+                    status.is2xxSuccessful -> successCount.incrementAndGet()
+                    status.value() == 409 -> conflictCount.incrementAndGet()
                 }
             }
-        }
-        latch.await()
-        executor.shutdown()
+            .run()
 
         successCount.get() shouldBeEqualTo 1
         conflictCount.get() shouldBeEqualTo N - 1
