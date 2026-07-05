@@ -17,9 +17,9 @@ import java.util.concurrent.Executors
  * 즉, Virtual Thread 생성 수가 Platform Thread의 수에 의해 제한될 수 있습니다.
  * 또한 작업들이 Virtual Thread 를 재활용하도록 한다. (이건 Virtual Thread에는 장점이 아니다.)
  */
-class Rule3DoNotPoolVirtualThreads: AbstractVirtualThreadTest() {
+class Rule3DoNotPoolVirtualThreads : AbstractVirtualThreadTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Nested
     inner class DoNot {
@@ -30,12 +30,12 @@ class Rule3DoNotPoolVirtualThreads: AbstractVirtualThreadTest() {
                 executor.javaClass.name shouldBeEqualTo "java.util.concurrent.ThreadPoolExecutor"
 
                 executor.submit {
-                    Thread.sleep(1000)
+                    sleep(1000)
                     log.debug { "1 run ${Thread.currentThread()}" }
                 }
 
                 executor.submit {
-                    Thread.sleep(1000)
+                    sleep(1000)
                     log.debug { "2 run ${Thread.currentThread()}" }
                 }
             }
@@ -51,12 +51,12 @@ class Rule3DoNotPoolVirtualThreads: AbstractVirtualThreadTest() {
                 executor.javaClass.name shouldBeEqualTo "java.util.concurrent.ThreadPerTaskExecutor"
 
                 executor.submit {
-                    Thread.sleep(1000)
+                    sleep(1000)
                     log.debug { "1 run ${Thread.currentThread()}" }
                 }
 
                 executor.submit {
-                    Thread.sleep(1000)
+                    sleep(1000)
                     log.debug { "2 run ${Thread.currentThread()}" }
                 }
             }

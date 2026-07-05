@@ -6,16 +6,16 @@ import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
-class Example3_CreateStartedAndUnstartedVirtualThread: AbstractVirtualThreadTest() {
+class Example3_CreateStartedAndUnstartedVirtualThread : AbstractVirtualThreadTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `자동 시작하는 Virtual Thread 생성하기`() {
         val builder = Thread.ofVirtual()
 
         val thread = builder.start {
-            Thread.sleep(1000)
+            sleep(1000)
             log.debug { "Virtual thread running" }
         }
         thread.state shouldBeEqualTo Thread.State.RUNNABLE

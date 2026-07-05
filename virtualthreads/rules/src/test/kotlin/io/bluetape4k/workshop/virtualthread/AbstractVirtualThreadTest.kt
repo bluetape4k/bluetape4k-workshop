@@ -10,8 +10,9 @@ import java.util.concurrent.TimeUnit
 @EnabledOnJre(JRE.JAVA_21, JRE.JAVA_25)
 abstract class AbstractVirtualThreadTest {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
 
+        @JvmStatic
         protected fun sleep(millis: Int) {
             TimeUnit.MILLISECONDS.sleep(millis.toLong())
         }

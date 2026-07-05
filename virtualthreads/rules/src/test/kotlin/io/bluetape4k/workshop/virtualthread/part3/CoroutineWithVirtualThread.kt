@@ -15,9 +15,9 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * 동기 코드를 Coroutines 환경에서 `Executors.newVirtualThreadPerTaskExecutor()` 를 이용해서 비동기로 실행할 수 있습니다.
  */
-class CoroutineWithVirtualThread: AbstractVirtualThreadTest() {
+class CoroutineWithVirtualThread : AbstractVirtualThreadTest() {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private const val REPEAT_SIZE = 3
     }
 
@@ -42,7 +42,7 @@ class CoroutineWithVirtualThread: AbstractVirtualThreadTest() {
     }
 
     private fun mySyncCode(executedCounter: AtomicInteger) {
-        Thread.sleep(1000)
+        sleep(1000)
         executedCounter.incrementAndGet()
     }
 }

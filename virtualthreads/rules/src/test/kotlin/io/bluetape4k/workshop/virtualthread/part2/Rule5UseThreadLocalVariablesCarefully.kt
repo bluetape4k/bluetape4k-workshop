@@ -16,9 +16,9 @@ import io.bluetape4k.assertions.fail
 /**
  * Rule 5: Virtual Thread 사용 시에는 ThreadLocal 를 사용하지 말고, [ScopedValue]를 사용하세요
  */
-class Rule5UseThreadLocalVariablesCarefully: AbstractVirtualThreadTest() {
+class Rule5UseThreadLocalVariablesCarefully : AbstractVirtualThreadTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Nested
     inner class DoNot {

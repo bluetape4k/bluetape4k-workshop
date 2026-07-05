@@ -8,15 +8,33 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
+import java.io.Serializable
 import java.util.concurrent.StructuredTaskScope
 
-class StructuredConcurrencyExamples: AbstractVirtualThreadTest() {
+class StructuredConcurrencyExamples : AbstractVirtualThreadTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
-    data class Pasta(val name: String = "Spaghetti")
-    data class Sauce(val name: String = "Tomato")
-    data class Dish(val pasta: Pasta, val sauce: Sauce)
+    data class Pasta(val name: String = "Spaghetti") : Serializable {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
+    }
+
+    data class Sauce(val name: String = "Tomato") : Serializable {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
+    }
+
+    data class Dish(
+        val pasta: Pasta,
+        val sauce: Sauce,
+    ) : Serializable {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
+    }
 
     fun preparePasta(): Pasta {
         log.debug { "prepare Pasta" }
@@ -38,14 +56,14 @@ class StructuredConcurrencyExamples: AbstractVirtualThreadTest() {
     fun prepareDish(): Dish = structuredTaskScopeAll { scope ->
         log.debug { "prepare Dish ..." }
         val pasta: StructuredSubtask<Pasta> = scope.fork {
-            Thread.sleep(100)
+            sleep(100)
             preparePasta()
         }
         val sauce = scope.fork {
-            Thread.sleep(200)
+            sleep(200)
             makeSaurce()
         }
-        Thread.sleep(5)
+        sleep(5)
 
         scope.join().throwIfFailed()
 
@@ -75,16 +93,16 @@ class StructuredConcurrencyExamples: AbstractVirtualThreadTest() {
         val pasta = structuredTaskScopeAny { scope ->
 
             val subtask1 = scope.fork {
-                Thread.sleep(100)
+                sleep(100)
                 preparePasta()
             }
 
             val subtask2 = scope.fork {
-                Thread.sleep(200)
+                sleep(200)
                 preparePasta()
             }
 
-            Thread.sleep(5)
+            sleep(5)
             subtask1.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.UNAVAILABLE
             subtask2.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.UNAVAILABLE
 

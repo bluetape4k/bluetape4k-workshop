@@ -8,9 +8,9 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import java.util.concurrent.Executors
 
-class Example5_VirtualThreadPerTaskExecutor: AbstractVirtualThreadTest() {
+class Example5_VirtualThreadPerTaskExecutor : AbstractVirtualThreadTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `Virtual threads per Task Executor`() {
@@ -20,7 +20,7 @@ class Example5_VirtualThreadPerTaskExecutor: AbstractVirtualThreadTest() {
             executor.javaClass.name shouldBeEqualTo "java.util.concurrent.ThreadPerTaskExecutor"
 
             val future = executor.submit {
-                Thread.sleep(100)
+                sleep(100)
                 log.info { "Run in ${Thread.currentThread()}" }
                 Thread.currentThread().name.shouldBeEmpty()
             }

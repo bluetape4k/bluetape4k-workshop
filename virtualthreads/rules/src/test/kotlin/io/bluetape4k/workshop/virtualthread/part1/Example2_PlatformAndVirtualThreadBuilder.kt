@@ -9,9 +9,9 @@ import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 
-class Example2_PlatformAndVirtualThreadBuilder: AbstractVirtualThreadTest() {
+class Example2_PlatformAndVirtualThreadBuilder : AbstractVirtualThreadTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @Test
     fun `Platform Thread Builder 사용`() {
