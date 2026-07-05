@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Import
 @SpringBootApplication(proxyBeanMethods = false)
 @Import(LoggingConfiguration::class)
 class Application {
-    companion object: KLogging()
+    companion object : KLogging()
 }
 
 fun main(vararg args: String) {

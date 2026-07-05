@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional
 @Component
 class Inventory {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Transactional
     fun updateInventoryFor(order: Order) {

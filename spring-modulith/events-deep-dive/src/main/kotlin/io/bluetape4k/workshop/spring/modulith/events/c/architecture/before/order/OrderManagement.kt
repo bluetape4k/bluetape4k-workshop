@@ -12,7 +12,7 @@ class OrderManagement(
     private val inventory: Inventory,
 ) {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Transactional
     fun completeOrder(order: Order) {

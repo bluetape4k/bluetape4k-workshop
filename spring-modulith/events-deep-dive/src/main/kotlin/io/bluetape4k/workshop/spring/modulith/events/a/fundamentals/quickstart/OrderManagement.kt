@@ -12,7 +12,7 @@ class OrderManagement(
     private val publisher: ApplicationEventPublisher,
 ) {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     fun completeOrder(order: Order) {
         publisher.publishEvent(SomeOtherEvent())
@@ -25,7 +25,7 @@ class OrderManagement(
         publisher.publishEvent(OrderCompleted(order))
     }
 
-    class OrderCompleted(source: Any): ApplicationEvent(source) {
+    class OrderCompleted(source: Any) : ApplicationEvent(source) {
         override fun toString(): String = "OrderCompleted(source=$source)"
     }
 

@@ -1,11 +1,10 @@
 package io.bluetape4k.workshop.spring.modulith.events.a.fundamentals.quickstart
 
 import com.ninjasquad.springmockk.MockkBean
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.spring.modulith.events.util.IntegrationTest
 import io.mockk.every
-import io.bluetape4k.assertions.shouldHaveSize
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,14 +13,13 @@ import org.springframework.test.context.event.RecordApplicationEvents
 
 @IntegrationTest
 @RecordApplicationEvents   // 어플리케이션 이벤트를 기록하기 위한 어노테이션
+@MockkBean(types = [OrderRepository::class])
 class OrderEventPublicationTests(
     @param:Autowired private val orders: OrderManagement,
+    @param:Autowired private val repository: OrderRepository,
 ) {
 
-    companion object: KLogging()
-
-    @MockkBean
-    private val repository: OrderRepository = uninitialized()
+    companion object : KLogging()
 
     @BeforeEach
     fun setup() {

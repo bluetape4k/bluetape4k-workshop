@@ -13,7 +13,7 @@ import org.hibernate.annotations.DynamicUpdate
 @Table(name = "MyOrder")
 @DynamicInsert
 @DynamicUpdate
-class Order: AbstractJpaEntity<String>() {
+class Order : AbstractJpaEntity<String>() {
 
     @Id
     override var id: String? = Uuid.V7.nextIdAsString()

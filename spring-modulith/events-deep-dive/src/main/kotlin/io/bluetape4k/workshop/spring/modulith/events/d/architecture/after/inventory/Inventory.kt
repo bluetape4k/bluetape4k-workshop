@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 @Component
 class Inventory {
 
-    companion object: KLogging()
+    companion object : KLogging()
 
     var fail = false
 

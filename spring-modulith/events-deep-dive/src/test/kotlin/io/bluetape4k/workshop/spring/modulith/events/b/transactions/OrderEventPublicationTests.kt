@@ -13,7 +13,7 @@ class OrderEventPublicationTests(
     @param:Autowired private val listener: OrderListeners.ConfigurableEventListener,
     @param:Autowired private val txListener: OrderListeners.ConfigurableTransactionalListener,
 ) {
-    companion object: KLogging()
+    companion object : KLogging()
 
     @Test
     fun `주문 완료 시 주문이 저장된다`() {
