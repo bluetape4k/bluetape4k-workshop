@@ -22,6 +22,8 @@ tasks.register<Test>("integrationTest") {
     // Must reference the same test source set; without this the task produces NO-SOURCE.
     testClassesDirs = sourceSets["test"].output.classesDirs
     classpath = sourceSets["test"].runtimeClasspath
+    shouldRunAfter(tasks.test)
+    usesService(gradle.sharedServices.registrations.named("test-mutex").get().service)
     useJUnitPlatform {
         includeTags("integration")
     }
@@ -56,4 +58,3 @@ dependencies {
     testImplementation(libs.bluetape4k.assertions)
     testImplementation(libs.mockk)
 }
-

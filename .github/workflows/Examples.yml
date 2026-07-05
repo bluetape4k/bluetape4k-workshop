@@ -18,6 +18,7 @@ on:
       - 'json/jsonview-examples/**'
       - 'graph/event-lineage/**'
       - 'graph/io-pipeline/**'
+      - 'graph/recommendation/**'
       - 'image-processing/ocr-api/**'
       - 'image-processing/profile-image-moderation/**'
       - 'ktor/exposed-rest/**'
@@ -61,6 +62,7 @@ on:
       - 'json/jsonview-examples/**'
       - 'graph/event-lineage/**'
       - 'graph/io-pipeline/**'
+      - 'graph/recommendation/**'
       - 'image-processing/ocr-api/**'
       - 'image-processing/profile-image-moderation/**'
       - 'ktor/exposed-rest/**'
@@ -149,6 +151,7 @@ jobs:
           :jsonview-examples:test
           :graph-event-lineage:test
           :graph-io-pipeline:test
+          :graph-recommendation:test
           :image-processing-ocr-api:test
           :image-processing-profile-image-moderation:test
           :aws-cloudwatch-imds-observability:test
@@ -189,6 +192,8 @@ jobs:
             graph/event-lineage/build/reports/tests/test/
             graph/io-pipeline/build/test-results/test/*.xml
             graph/io-pipeline/build/reports/tests/test/
+            graph/recommendation/build/test-results/test/*.xml
+            graph/recommendation/build/reports/tests/test/
             image-processing/ocr-api/build/test-results/test/*.xml
             image-processing/ocr-api/build/reports/tests/test/
             image-processing/profile-image-moderation/build/test-results/test/*.xml
@@ -266,6 +271,7 @@ jobs:
       # - aws-sqs-sns-coroutines: Floci-backed SQS/SNS coroutine messaging path
       # - aws-storage-abstraction: Floci-backed S3 storage abstraction path
       # - graph-event-lineage: Neo4j-backed graph lineage audit path
+      # - graph-recommendation: Neo4j/Memgraph-backed recommendation path
       # - spring-boot-cache-redis: Redis-backed cache path
       # - messaging-kafka: Kafka-backed messaging path
       # - messaging-kafka-outbox-fallback: PostgreSQL + Kafka fallback relay path
@@ -280,6 +286,7 @@ jobs:
           :aws-sqs-sns-coroutines:test
           :aws-storage-abstraction:test
           :graph-event-lineage:integrationTest
+          :graph-recommendation:integrationTest
           :spring-boot-cache-redis:test
           :messaging-kafka:test
           :messaging-kafka-outbox-fallback:test
@@ -312,6 +319,8 @@ jobs:
             aws/storage-abstraction/build/reports/tests/test/
             graph/event-lineage/build/test-results/integrationTest/*.xml
             graph/event-lineage/build/reports/tests/integrationTest/
+            graph/recommendation/build/test-results/integrationTest/*.xml
+            graph/recommendation/build/reports/tests/integrationTest/
             spring-boot/cache-redis/build/test-results/test/*.xml
             spring-boot/cache-redis/build/reports/tests/test/
             messaging/kafka/build/test-results/test/*.xml

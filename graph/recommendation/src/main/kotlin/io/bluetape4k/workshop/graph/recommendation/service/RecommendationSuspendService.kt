@@ -8,8 +8,10 @@ import io.bluetape4k.graph.model.NeighborOptions
 import io.bluetape4k.graph.repository.GraphSuspendOperations
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.graph.recommendation.DEFAULT_RECOMMENDATION_LIMIT
 import io.bluetape4k.workshop.graph.recommendation.MAX_RECOMMENDATION_LIMIT
 import io.bluetape4k.workshop.graph.recommendation.model.CandidateExclusion
@@ -39,6 +41,7 @@ import kotlinx.coroutines.flow.toList
  * - [initialize] must be called once before any other method to ensure the named graph exists.
  * - Vertex mutators ([addUser], [addProduct]) are idempotent: find-by-domain-key or create.
  * - [purchase] and [follow] are NOT idempotent — repeated calls create additional edges.
+ * - [purchase] validates User → Product endpoints; [follow] validates User → User endpoints.
  * - [recommendProducts] returns `emptyList()` when [userVertexId] is not found or has no purchases.
  * - [recommendFollows] returns `emptyList()` when [userVertexId] is not found or has no follows.
  * - [follow] throws [IllegalArgumentException] when follower equals followee.
@@ -54,10 +57,6 @@ import kotlinx.coroutines.flow.toList
  * - **TOCTOU in [initialize]**: The `graphExists → createGraph` check is not atomic and assumes
  *   a single-instance deployment. Concurrent callers may attempt duplicate creation — acceptable
  *   for this demo; production code should use advisory locking or server-side upsert semantics.
- * - **No vertex-type enforcement at runtime**: [purchase] and [follow] accept any
- *   [io.bluetape4k.graph.model.GraphElementId] without verifying that it belongs to a User or
- *   Product vertex. Callers are responsible for passing IDs returned by [addUser] / [addProduct].
- *
  * ## Usage
  * ```kotlin
  * val service = RecommendationSuspendService(ops, "recommendation")
@@ -72,6 +71,10 @@ class RecommendationSuspendService(
     private val ops: GraphSuspendOperations,
     private val graphName: String,
 ) {
+    init {
+        graphName.requireNotBlank("graphName")
+    }
+
     companion object : KLoggingChannel()
 
     /**
@@ -143,6 +146,7 @@ class RecommendationSuspendService(
      * @param productVertexId graph ID of the Product vertex
      * @param rating purchase rating 0–5; 0 means unrated (stored only when > 0)
      * @param purchasedAt ISO-8601 timestamp (optional)
+     * @throws IllegalArgumentException when endpoints are missing or not User → Product.
      */
     suspend fun purchase(
         userVertexId: GraphElementId,
@@ -151,6 +155,8 @@ class RecommendationSuspendService(
         purchasedAt: String = "",
     ): GraphEdge {
         rating.requireInRange(0, 5, "rating")
+        requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
+        requireEndpoint(productVertexId, ProductLabel.label, "productVertexId")
         val props = buildMap {
             if (rating > 0) put(PurchasedLabel.rating.name, rating.toString())
             if (purchasedAt.isNotBlank()) put(PurchasedLabel.purchasedAt.name, purchasedAt)
@@ -165,12 +171,12 @@ class RecommendationSuspendService(
      *
      * @param followerVertexId graph ID of the User who follows
      * @param followeeVertexId graph ID of the User being followed
-     * @throws IllegalArgumentException when [followerVertexId] equals [followeeVertexId]
+     * @throws IllegalArgumentException when endpoints are equal, missing, or not User → User.
      */
     suspend fun follow(followerVertexId: GraphElementId, followeeVertexId: GraphElementId): GraphEdge {
-        require(followerVertexId != followeeVertexId) {
-            "followerVertexId must differ from followeeVertexId"
-        }
+        requireDistinctEndpoints(followerVertexId, followeeVertexId, "followerVertexId", "followeeVertexId")
+        requireEndpoint(followerVertexId, UserLabel.label, "followerVertexId")
+        requireEndpoint(followeeVertexId, UserLabel.label, "followeeVertexId")
         return ops.createEdge(followerVertexId, followeeVertexId, FollowsLabel.label, emptyMap())
     }
 
@@ -321,5 +327,22 @@ class RecommendationSuspendService(
                     .thenBy { it.recommendation.person.properties[UserLabel.userId.name]?.toString() ?: "" }
             )
             .take(limit)
+    }
+
+    private suspend fun requireEndpoint(id: GraphElementId, expectedLabel: String, parameterName: String): GraphVertex {
+        val vertex = ops.findVertexById(id).requireNotNull(parameterName)
+        vertex.label.requireEquals(expectedLabel, "$parameterName.label")
+        return vertex
+    }
+
+    private fun requireDistinctEndpoints(
+        first: GraphElementId,
+        second: GraphElementId,
+        firstName: String,
+        secondName: String,
+    ) {
+        if (first == second) {
+            throw IllegalArgumentException("$firstName must differ from $secondName")
+        }
     }
 }

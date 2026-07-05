@@ -299,8 +299,8 @@ dependencies {
     implementation(libs.bluetape4k.graph.core)
     implementation(libs.bluetape4k.graph.tinkerpop)
 
-    // Optional backends
-    implementation(libs.bluetape4k.graph.neo4j)
-    implementation(libs.bluetape4k.graph.memgraph)
+    // Optional backends used by integrationTest in this module
+    compileOnly(libs.bluetape4k.graph.neo4j)
+    compileOnly(libs.bluetape4k.graph.memgraph)
 }
 ```
