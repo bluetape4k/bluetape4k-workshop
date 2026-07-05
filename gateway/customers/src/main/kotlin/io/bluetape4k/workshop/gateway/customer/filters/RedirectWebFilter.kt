@@ -9,7 +9,7 @@ import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
 
 /**
- * ROOT path ('/') 를 swagger-ui.html로 redirect 합니다.
+ * ROOT path ('/') 를 swagger-ui.html로 rewrite 합니다.
  */
 @Component
 class RedirectWebFilter: WebFilter {
@@ -22,7 +22,7 @@ class RedirectWebFilter: WebFilter {
     override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
         val redirectExchange = when (exchange.request.uri.path) {
             ROOT_PATH -> {
-                log.trace { "redirect to `$SWAGGER_PATH`" }
+                log.trace { "rewrite to `$SWAGGER_PATH`" }
                 exchange.mutate().request(exchange.request.mutate().path(SWAGGER_PATH).build()).build()
             }
 
