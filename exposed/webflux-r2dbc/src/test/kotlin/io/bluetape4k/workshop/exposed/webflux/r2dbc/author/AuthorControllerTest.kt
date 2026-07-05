@@ -6,6 +6,7 @@ import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.AbstractWebfluxR2dbcTest
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.AuthorDTO
+import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.CreateBookRequest
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.CreateAuthorRequest
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
@@ -68,6 +69,34 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
     @Test
     fun `get non-existent author returns 404`() {
         webTestClient.get().uri("/api/authors/99999999")
+            .exchange()
+            .expectStatus().isNotFound
+    }
+
+    @Test
+    fun `create author with blank email returns 400`() {
+        val req = CreateAuthorRequest(
+            firstName = faker.name().firstName(),
+            lastName = faker.name().lastName(),
+            email = " ",
+        )
+        webTestClient.post().uri("/api/authors")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(req)
+            .exchange()
+            .expectStatus().isBadRequest
+    }
+
+    @Test
+    fun `create book with nonexistent author returns 404`() {
+        val req = CreateBookRequest(
+            title = "Unknown Author Book",
+            publishDate = "2026-07-05",
+            authorId = 999_999L,
+        )
+        webTestClient.post().uri("/api/books")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(req)
             .exchange()
             .expectStatus().isNotFound
     }

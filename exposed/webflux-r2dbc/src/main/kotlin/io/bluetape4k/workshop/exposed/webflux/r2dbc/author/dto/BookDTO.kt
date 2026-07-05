@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto
 
 import jakarta.validation.constraints.NotBlank
+import jakarta.validation.constraints.Positive
 import java.io.Serializable
 
 data class BookDTO(
@@ -17,7 +18,7 @@ data class BookDTO(
 data class CreateBookRequest(
     @field:NotBlank val title: String = "",
     @field:NotBlank val publishDate: String = "",
-    val authorId: Long = 0L,
+    @field:Positive val authorId: Long = 0L,
 ) : Serializable {
     companion object {
         private const val serialVersionUID = 1L

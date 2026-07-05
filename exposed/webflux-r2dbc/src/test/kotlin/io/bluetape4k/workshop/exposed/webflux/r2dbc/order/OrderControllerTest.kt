@@ -13,6 +13,7 @@ import io.bluetape4k.workshop.exposed.webflux.r2dbc.order.dto.PlaceOrderRequest
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.order.dto.ProductDTO
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.order.schema.OrderStatus
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.annotation.DirtiesContext
 import java.math.BigDecimal
@@ -99,7 +100,34 @@ class OrderControllerTest : AbstractWebfluxR2dbcTest() {
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(req)
             .exchange()
-            .expectStatus().is4xxClientError
+            .expectStatus().isEqualTo(HttpStatus.CONFLICT)
+    }
+
+    @Test
+    fun `create product with blank name returns 400`() {
+        val req = CreateProductRequest(
+            name = " ",
+            price = BigDecimal("9.99"),
+            stock = 10,
+        )
+        webTestClient.post().uri("/api/products")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(req)
+            .exchange()
+            .expectStatus().isBadRequest
+    }
+
+    @Test
+    fun `place order with invalid product id returns 400`() {
+        val req = PlaceOrderRequest(
+            customerId = 3L,
+            lines = listOf(OrderLineRequest(productId = 0L, quantity = 1)),
+        )
+        webTestClient.post().uri("/api/orders")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(req)
+            .exchange()
+            .expectStatus().isBadRequest
     }
 
     @Test
