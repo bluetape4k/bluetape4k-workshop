@@ -4,14 +4,17 @@ import io.bluetape4k.javers.latestSnapshotOrNull
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.exposed.javers.model.Product
 import io.bluetape4k.workshop.exposed.javers.model.ProductTable
 import org.javers.core.Javers
 import org.javers.core.diff.Diff
 import org.javers.core.metamodel.`object`.CdoSnapshot
 import org.javers.repository.jql.QueryBuilder
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.upsert
 
@@ -47,6 +50,7 @@ class ProductAuditService(
      */
     fun save(author: String, product: Product) {
         author.requireNotBlank("author")
+        validateProduct(product)
         javers.commit(author, product)
         transaction {
             ProductTable.upsert {
@@ -63,7 +67,8 @@ class ProductAuditService(
      * Returns all JaVers snapshots for the given [productId], oldest-first.
      */
     fun getHistory(productId: Long): List<CdoSnapshot> {
-        val query = QueryBuilder.byInstanceId(productId, Product::class.java)
+        val validProductId = productId.requirePositiveNumber("productId")
+        val query = QueryBuilder.byInstanceId(validProductId, Product::class.java)
             .build()
         return javers.findSnapshots(query)
             .sortedBy { it.commitMetadata.commitDate }
@@ -73,7 +78,7 @@ class ProductAuditService(
      * Returns the latest JaVers snapshot for [productId], or null if no commits exist.
      */
     fun getLatestSnapshot(productId: Long): CdoSnapshot? =
-        javers.latestSnapshotOrNull<Product>(productId)
+        javers.latestSnapshotOrNull<Product>(productId.requirePositiveNumber("productId"))
 
     /**
      * Computes and returns a JaVers [Diff] between [oldProduct] and [newProduct].
@@ -81,7 +86,10 @@ class ProductAuditService(
      * Neither object is persisted.
      */
     fun diff(oldProduct: Product, newProduct: Product): Diff =
-        javers.compare(oldProduct, newProduct)
+        javers.compare(
+            validateProduct(oldProduct),
+            validateProduct(newProduct),
+        )
 
     /**
      * Deletes the [product] row from Exposed and records a terminal JaVers commit.
@@ -91,10 +99,37 @@ class ProductAuditService(
      */
     fun delete(author: String, product: Product) {
         author.requireNotBlank("author")
-        javers.commitShallowDelete(author, product)
-        transaction {
-            ProductTable.deleteWhere { ProductTable.id eq product.id }
+        val current = requireNotNull(findCurrentProduct(product.id)) {
+            "Product ${product.id} does not exist"
         }
-        log.debug { "Deleted and audited product id=${product.id} by $author" }
+        javers.commitShallowDelete(author, current)
+        transaction {
+            ProductTable.deleteWhere { ProductTable.id eq current.id }
+        }
+        log.debug { "Deleted and audited product id=${current.id} by $author" }
     }
+
+    private fun validateProduct(product: Product): Product {
+        product.id.requirePositiveNumber("product.id")
+        product.name.requireNotBlank("product.name")
+        product.category.requireNotBlank("product.category")
+        require(product.price.signum() >= 0) { "product.price must be zero or positive" }
+        return product
+    }
+
+    private fun findCurrentProduct(productId: Long): Product? =
+        transaction {
+            ProductTable.selectAll()
+                .where { ProductTable.id eq productId.requirePositiveNumber("productId") }
+                .singleOrNull()
+                ?.toProduct()
+        }
+
+    private fun ResultRow.toProduct(): Product =
+        Product(
+            id = this[ProductTable.id],
+            name = this[ProductTable.name],
+            price = this[ProductTable.price],
+            category = this[ProductTable.category],
+        )
 }
