@@ -5,10 +5,8 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.redis.serializer.RedisBinarySerializers
 import io.bluetape4k.spring.redis.serializer.redisSerializationContext
-import io.bluetape4k.support.uninitialized
 import io.bluetape4k.testcontainers.storage.RedisServer
 import jakarta.annotation.PreDestroy
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.BeanPostProcessor
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -27,18 +25,14 @@ fun main(vararg args: String) {
 }
 
 @SpringBootApplication(proxyBeanMethods = false)
-class RedisApplication {
+class RedisApplication(
+    private val factory: RedisConnectionFactory,
+) {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         @JvmStatic
         val redis = RedisServer.Launcher.redis
     }
-
-    @Autowired
-    private val factory: RedisConnectionFactory = uninitialized()
-
-    @Autowired
-    private val reactiveFactory: ReactiveRedisConnectionFactory = uninitialized()
 
     @Bean
     fun redisTemplate(factory: RedisConnectionFactory): RedisTemplate<*, *> {
@@ -72,8 +66,8 @@ class RedisApplication {
         return RepoMetricsPostProcessor()
     }
 
-    class RepoMetricsPostProcessor: BeanPostProcessor {
-        companion object: KLogging()
+    class RepoMetricsPostProcessor : BeanPostProcessor {
+        companion object : KLogging()
 
         override fun postProcessBeforeInitialization(bean: Any, beanName: String): Any? {
 

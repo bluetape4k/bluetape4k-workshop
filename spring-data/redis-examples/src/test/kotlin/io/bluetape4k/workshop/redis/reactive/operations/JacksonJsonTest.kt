@@ -25,7 +25,7 @@ class JacksonJsonTest @Autowired constructor(
     private val genericOperations: ReactiveRedisOperations<String, Any>,
 ): AbstractReactiveRedisTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() = runSuspendIO {

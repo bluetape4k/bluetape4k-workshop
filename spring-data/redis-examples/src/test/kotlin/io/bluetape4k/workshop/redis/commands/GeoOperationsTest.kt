@@ -22,7 +22,7 @@ class GeoOperationsTest(
     @param:Autowired private val operations: RedisOperations<String, String>,
 ): AbstractRedisTest() {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     private val geoOperations: GeoOperations<String, String>
         get() = operations.opsForGeo()

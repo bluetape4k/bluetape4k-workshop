@@ -19,7 +19,7 @@ class ListOperationsTest(
     @param:Autowired private val operations: ReactiveRedisOperations<String, String>,
 ): AbstractReactiveRedisTest() {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private const val MESSAGE = "Hello World"
     }
 

@@ -14,4 +14,9 @@ data class Address(
 
     @GeoIndexed
     var location: Point? = null,
-): Serializable
+) : Serializable {
+
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}

@@ -24,8 +24,8 @@ class KeyOperationsTest(
     @param:Autowired private val connectionFactory: RedisConnectionFactory,
 ): AbstractRedisTest() {
 
-    companion object: KLoggingChannel() {
-        private val PREFIX: String = KeyOperationsTest::class.simpleName!!
+    companion object : KLoggingChannel() {
+        private val PREFIX: String = KeyOperationsTest::class.simpleName.shouldNotBeNull()
         private val KEY_PATTERN = "$PREFIX*"
         private const val KEY_SIZE = 5000
 

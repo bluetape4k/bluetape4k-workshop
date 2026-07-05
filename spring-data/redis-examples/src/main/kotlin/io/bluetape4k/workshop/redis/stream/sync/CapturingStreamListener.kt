@@ -4,14 +4,16 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import kotlinx.atomicfu.atomic
 import org.springframework.data.redis.connection.stream.MapRecord
 import org.springframework.data.redis.stream.StreamListener
+import java.time.Duration
 import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.TimeUnit
 
 /**
  * Spring Data Redis에서 제공하는 Redis Stream 을 읽기 위한 [StreamListener]의 구현체
  */
 class CapturingStreamListener: StreamListener<String, MapRecord<String, String, String>> {
 
-    companion object: KLoggingChannel()
+    companion object : KLoggingChannel()
 
     private val counter = atomic(0)
     private val dequeue = LinkedBlockingDeque<MapRecord<String, String, String>>()
@@ -28,7 +30,7 @@ class CapturingStreamListener: StreamListener<String, MapRecord<String, String, 
 
     val receivedRecordCount get() = counter.value
 
-    fun take(): MapRecord<String, String, String> {
-        return dequeue.take()
+    fun poll(timeout: Duration): MapRecord<String, String, String>? {
+        return dequeue.poll(timeout.toMillis(), TimeUnit.MILLISECONDS)
     }
 }

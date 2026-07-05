@@ -1,15 +1,13 @@
 package io.bluetape4k.workshop.redis.reactive
 
 
-import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.support.uninitialized
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.workshop.redis.reactive.model.Person
 import jakarta.annotation.PreDestroy
 import kotlinx.coroutines.reactor.awaitSingleOrNull
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory
@@ -26,18 +24,17 @@ import tools.jackson.module.kotlin.kotlinModule
  * [RedisApplication] 과 분리해서 독립적으로 테스트하기 위해서 [SpringBootApplication] 을 선언합니다.
  */
 @SpringBootApplication(proxyBeanMethods = false)
-class ReactiveRedisConfiguration {
+class ReactiveRedisConfiguration(
+    private val reactiveRedisConnectionFactory: ReactiveRedisConnectionFactory,
+) {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         @JvmStatic
         val redis = RedisServer.Launcher.redis
 
         @JvmStatic
         val faker = Fakers.faker
     }
-
-    @Autowired
-    private val reactiveRedisConnectionFactory: ReactiveRedisConnectionFactory = uninitialized()
 
     /**
      * Configures a [ReactiveRedisTemplate] with [String] keys and a typed [JacksonJsonRedisSerializer].

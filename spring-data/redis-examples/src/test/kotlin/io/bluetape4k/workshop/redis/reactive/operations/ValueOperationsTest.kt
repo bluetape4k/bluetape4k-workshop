@@ -22,7 +22,7 @@ class ValueOperationsTest(
     @param:Autowired private val operations: ReactiveRedisOperations<String, String>,
 ): AbstractReactiveRedisTest() {
 
-    companion object: KLoggingChannel() {
+    companion object : KLoggingChannel() {
         private const val CACHED_VALUE = "Hello, World!"
     }
 
