@@ -173,7 +173,7 @@ subprojects {
             showFullStackTraces = true
         }
 
-        val reportMerge by registering(ReportMergeTask::class) {
+        val reportMerge = register<ReportMergeTask>("reportMerge") {
             val file = rootProject.layout.buildDirectory.asFile.get().resolve("reports/detekt/exposed.xml")
             output.set(file)
             // output.set(rootProject.buildDir.resolve("reports/detekt/exposed.xml"))
@@ -269,14 +269,14 @@ subprojects {
     }
 
     dependencies {
-        val api by configurations
-        val testApi by configurations
-        val implementation by configurations
-        val testImplementation by configurations
+        val api = configurations.getByName("api")
+        val testApi = configurations.getByName("testApi")
+        val implementation = configurations.getByName("implementation")
+        val testImplementation = configurations.getByName("testImplementation")
 
-        val compileOnly by configurations
-        val testCompileOnly by configurations
-        val testRuntimeOnly by configurations
+        val compileOnly = configurations.getByName("compileOnly")
+        val testCompileOnly = configurations.getByName("testCompileOnly")
+        val testRuntimeOnly = configurations.getByName("testRuntimeOnly")
 
         implementation(platform(rootLibs.bluetape4k.dependencies))
         compileOnly(platform(rootLibs.spring.boot4.dependencies))
