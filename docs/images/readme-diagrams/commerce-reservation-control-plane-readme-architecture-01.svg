@@ -105,24 +105,24 @@
   <text class="titleText" x="1010" y="1328">Fake provider fixture</text>
   <text class="bodyText" x="1010" y="1356">Fail-first retry / deliveryId dedup</text>
 
-  <path class="connector" d="M 700 287 L 700 390"/>
-  <path class="connector" d="M 700 486 L 700 590"/>
-  <path class="authorityConnector" d="M 700 698 L 700 835"/>
-  <path class="authorityConnector" d="M 700 947 L 700 1090"/>
-  <path class="advisoryConnector" d="M 520 644 L 420 644"/>
-  <path class="advisoryConnector" d="M 260 698 L 260 835"/>
-  <path class="advisoryConnector" d="M 880 644 L 980 644"/>
-  <path class="advisoryConnector" d="M 1140 698 L 1140 835"/>
-  <path class="authorityConnector" d="M 980 891 L 880 891"/>
-  <path class="asyncConnector" d="M 880 1153 L 980 1153"/>
-  <path class="asyncConnector" d="M 1140 1216 L 1140 1290"/>
+  <path data-connector="browser-to-tomcat" class="connector" d="M 700 287 L 700 390"/>
+  <path data-connector="tomcat-to-command-api" class="connector" d="M 700 486 L 700 590"/>
+  <path data-connector="command-api-to-resource-transaction" class="authorityConnector" d="M 700 698 L 700 835"/>
+  <path data-connector="resource-transaction-to-postgresql" class="authorityConnector" d="M 700 947 L 700 1090"/>
+  <path data-connector="command-api-to-redis-gate" class="advisoryConnector" d="M 520 644 L 420 644"/>
+  <path data-connector="redis-gate-to-node-local-bulkhead" class="advisoryConnector" d="M 260 698 L 260 835"/>
+  <path data-connector="command-api-to-leader-scheduling" class="advisoryConnector" d="M 880 644 L 980 644"/>
+  <path data-connector="leader-scheduling-to-expiry-sweeper" class="advisoryConnector" d="M 1140 698 L 1140 835"/>
+  <path data-connector="expiry-sweeper-to-resource-transaction" class="authorityConnector" d="M 980 891 L 880 891"/>
+  <path data-connector="postgresql-to-notification-delivery" class="asyncConnector" d="M 880 1153 L 980 1153"/>
+  <path data-connector="notification-delivery-to-fake-provider" class="asyncConnector" d="M 1140 1216 L 1140 1290"/>
 
-  <path class="connector" d="M 90 1405 L 150 1405"/>
+  <path data-connector="legend-request-flow" class="connector" d="M 90 1405 L 150 1405"/>
   <text class="smallText" x="165" y="1411">request flow</text>
-  <path class="authorityConnector" d="M 340 1405 L 400 1405"/>
+  <path data-connector="legend-authoritative-transaction" class="authorityConnector" d="M 340 1405 L 400 1405"/>
   <text class="smallText" x="415" y="1411">authoritative transaction</text>
-  <path class="advisoryConnector" d="M 675 1405 L 735 1405"/>
+  <path data-connector="legend-advisory-control" class="advisoryConnector" d="M 675 1405 L 735 1405"/>
   <text class="smallText" x="750" y="1411">advisory control</text>
-  <path class="asyncConnector" d="M 965 1405 L 1025 1405"/>
+  <path data-connector="legend-asynchronous-delivery" class="asyncConnector" d="M 965 1405 L 1025 1405"/>
   <text class="smallText" x="1040" y="1411">asynchronous delivery</text>
 </svg>
