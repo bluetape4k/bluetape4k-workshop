@@ -7,6 +7,12 @@ import java.security.MessageDigest
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
+/**
+ * Converts caller credentials into domain-separated HMAC digests.
+ *
+ * Raw owner, operator, and idempotency credentials are compared at the boundary and are never
+ * persisted or written to operational logs.
+ */
 internal class ReservationCredentialService(secret: String) {
     private val key = SecretKeySpec(
         secret.toByteArray(StandardCharsets.UTF_8).also {

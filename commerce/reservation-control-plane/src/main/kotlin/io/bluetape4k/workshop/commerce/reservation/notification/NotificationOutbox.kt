@@ -9,6 +9,10 @@ import java.time.Instant
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
+/**
+ * Deterministic outbox fixture with token-like claims, bounded retry, exhaustion, and idempotent redrive.
+ * Production command paths use [NotificationDeliveryRepository]; this fixture exercises delivery contracts.
+ */
 internal class InMemoryNotificationOutbox {
     private val lock = ReentrantLock()
     private val deliveries = linkedMapOf<String, NotificationDelivery>()
@@ -43,6 +47,7 @@ internal class InMemoryNotificationOutbox {
 
     fun size(): Int = lock.withLock { deliveries.size }
 
+    /** Claims only pending, due, or expired-lease work so concurrent workers cannot both finalize it. */
     fun claim(
         deliveryId: String,
         owner: String,

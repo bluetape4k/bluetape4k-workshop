@@ -35,6 +35,12 @@ internal data class ReservationOfferRecord(
     }
 }
 
+/**
+ * Persists the single short-lived offer associated with a promoted waitlist entry.
+ *
+ * The unique entry reference prevents duplicate offers, while revision CAS prevents accept and expiry
+ * from both finalizing the same offer.
+ */
 @Repository
 internal class ReservationOfferRepository : LongAuditableJdbcRepository<ReservationOfferRecord, ReservationOfferTable> {
     override val table = ReservationOfferTable
@@ -87,6 +93,7 @@ internal class ReservationOfferRepository : LongAuditableJdbcRepository<Reservat
         .singleOrNull()
         ?.let { with(this) { it.toEntity() } }
 
+    /** Returns bounded candidates; the transaction service merges these with expired holds by timestamp. */
     fun expiredResourceCandidates(now: Instant, limit: Int): List<ExpiredResourceCandidate> {
         require(limit in 1..32) { "limit must be between 1 and 32" }
         return table.selectAll()

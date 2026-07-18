@@ -10,6 +10,7 @@ import org.springframework.boot.ApplicationRunner
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
+/** Creates the application-owned Exposed schema and seeds one deterministic demonstration resource. */
 @Component
 internal class ReservationSchemaInitializer(
     private val resources: CapacityResourceRepository,

@@ -24,6 +24,10 @@ import org.springframework.web.bind.annotation.RestController
 import java.io.Serializable
 import java.time.Duration
 
+/**
+ * Authenticated operator boundary for force release and bounded manual sweep commands.
+ * Force release remains revision-checked, audited, and idempotent like a user command.
+ */
 @RestController
 @RequestMapping("/api/operator")
 @ConditionalOnProperty(prefix = "reservation.operator", name = ["enabled"], havingValue = "true")

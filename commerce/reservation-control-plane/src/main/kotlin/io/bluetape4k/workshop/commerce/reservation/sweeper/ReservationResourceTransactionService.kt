@@ -21,6 +21,12 @@ import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 
+/**
+ * Finalizes expired holds and offers one resource transaction at a time.
+ *
+ * Each transaction locks the resource first, applies revision CAS transitions, records audit rows,
+ * and either promotes the FIFO head or releases capacity before commit.
+ */
 @Service
 internal class ReservationResourceTransactionService(
     private val resources: CapacityResourceRepository,
@@ -30,6 +36,7 @@ internal class ReservationResourceTransactionService(
     private val handoff: ReservationCapacityHandoffService,
     private val audits: ReservationAuditRepository,
 ) {
+    /** Merges hold and offer expiry streams globally before deduplication and batch limiting. */
     @Transactional(readOnly = true)
     fun expiredResourceIds(now: Instant, limit: Int): List<Long> =
         (holds.expiredResourceCandidates(now, limit) + offers.expiredResourceCandidates(now, limit))
@@ -98,6 +105,7 @@ internal class ReservationResourceTransactionService(
     companion object : KLogging()
 }
 
+/** Executes bounded PostgreSQL sweep work behind the background JDBC bulkhead. */
 @Component
 internal class PostgresReservationSweepWork(
     private val transactions: ReservationResourceTransactionService,

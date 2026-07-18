@@ -13,6 +13,7 @@ import java.io.Serializable
 import java.time.OffsetDateTime
 import java.time.ZoneId
 
+/** Projects authoritative resource counters with one observation timestamp and resource-local calendar time. */
 @Service
 internal class ReservationQueryService(
     private val resources: CapacityResourceRepository,

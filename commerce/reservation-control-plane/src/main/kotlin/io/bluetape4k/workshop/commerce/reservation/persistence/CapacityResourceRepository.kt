@@ -15,6 +15,12 @@ import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
 
+/**
+ * Persists the capacity counter that acts as the reservation correctness boundary.
+ *
+ * Occupy and release operations combine state, revision, and capacity predicates in one SQL update
+ * so callers never authorize capacity from a stale read.
+ */
 @Repository
 internal class CapacityResourceRepository :
     LongAuditableJdbcRepository<CapacityResourceRecord, CapacityResourceTable> {
@@ -75,6 +81,7 @@ internal class CapacityResourceRepository :
 
     fun snapshots(): List<CapacityResourceRecord> = table.selectAll().map { with(this) { it.toEntity() } }
 
+    /** Acquires the canonical first lock for every transaction that may transfer capacity ownership. */
     fun findByIdForUpdate(id: Long): CapacityResourceRecord = table.selectAll()
         .where { table.id eq id }
         .forUpdate()

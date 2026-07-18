@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.Serializable
 
+/** Returns owner-scoped waitlist position and active-offer state without exposing stored credential digests. */
 @Service
 internal class WaitlistQueryService(
     private val waitlists: WaitlistEntryRepository,

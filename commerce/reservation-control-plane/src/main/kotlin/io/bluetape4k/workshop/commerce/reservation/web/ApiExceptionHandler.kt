@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import java.time.Instant
 import java.io.Serializable
 
+/** Maps stable command rejection codes to retry-aware HTTP problem responses without leaking credentials. */
 @RestControllerAdvice
 internal class ApiExceptionHandler {
     @ExceptionHandler(ReservationCommandException::class)

@@ -7,6 +7,7 @@ import io.bluetape4k.workshop.commerce.reservation.domain.HoldState
 import java.io.Serializable
 import java.time.Instant
 
+/** Exposed repository projection of the authoritative capacity row. */
 internal data class CapacityResourceRecord(
     val id: Long,
     val code: String,
@@ -24,6 +25,7 @@ internal data class CapacityResourceRecord(
     companion object { private const val serialVersionUID = 1L }
 }
 
+/** Exposed repository projection of a durable, revisioned hold. */
 internal data class ReservationHoldRecord(
     val id: Long,
     val resourceId: Long,

@@ -5,6 +5,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import java.time.Duration
 
+/** Calculates capped exponential retry delays without adding jitter to deterministic fixtures. */
 internal class NotificationRetryPolicy(
     val maxAttempts: Int = 5,
     private val initialDelay: Duration = Duration.ofSeconds(1),

@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.time.Instant
 import java.io.Serializable
 
+/** HTTP boundary for hold commands; every mutation passes admission, suppression, and durable idempotency. */
 @RestController
 @RequestMapping("/api")
 internal class ReservationController(

@@ -5,6 +5,12 @@ import io.bluetape4k.logging.debug
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.springframework.stereotype.Repository
 
+/**
+ * Appends one idempotent audit outcome per aggregate revision.
+ *
+ * The composite primary key and `insertIgnore` make command retries observable without duplicating
+ * the durable transition record.
+ */
 @Repository
 internal class ReservationAuditRepository {
     fun record(

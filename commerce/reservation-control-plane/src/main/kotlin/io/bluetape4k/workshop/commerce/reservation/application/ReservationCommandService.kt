@@ -16,6 +16,12 @@ import java.time.Clock
 import java.time.Duration
 import java.io.Serializable
 
+/**
+ * Owns durable hold state transitions.
+ *
+ * PostgreSQL revisions and row locks decide every command outcome. Admission controls may reduce
+ * contention before this service, but they never authorize or finalize a reservation.
+ */
 @Service
 internal class ReservationCommandService(
     private val resources: CapacityResourceRepository,
@@ -32,6 +38,7 @@ internal class ReservationCommandService(
         if (resource.policyVersion != command.policyVersion) {
             throw ReservationCommandException("POLICY_VERSION_MISMATCH", resource.revision, false)
         }
+        // The capacity CAS and hold insert share this transaction, so a failed insert cannot leak occupancy.
         if (!resources.tryOccupy(resource.id, command.expectedResourceRevision)) {
             throw ReservationCommandException("CAPACITY_EXHAUSTED_OR_STALE", resource.revision, true)
         }
@@ -84,6 +91,7 @@ internal class ReservationCommandService(
     fun forceRelease(command: ForceReleaseHoldCommand): ReservationHoldRecord {
         val now = clock.instant()
         val snapshot = holds.findById(command.holdId)
+        // Lock the resource first so every capacity handoff follows the same global lock order.
         resources.findByIdForUpdate(snapshot.resourceId)
         val current = holds.findById(command.holdId)
         if (current.revision != command.expectedRevision) {
@@ -113,6 +121,7 @@ internal class ReservationCommandService(
         val now = clock.instant()
         val holdLocator = holds.findById(command.holdId)
         if (target == HoldState.CANCELLED) {
+            // Cancellation may hand capacity to a waiter, therefore it joins the resource-first lock order.
             resources.findByIdForUpdate(holdLocator.resourceId)
         }
         val current = holds.findById(command.holdId)

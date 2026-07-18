@@ -3,14 +3,19 @@ package io.bluetape4k.workshop.commerce.reservation.domain
 import java.time.Instant
 import java.io.Serializable
 
+/** Availability lifecycle controlled independently from current occupancy. */
 enum class ResourceState { OPEN, PAUSED, CLOSED }
 
+/** Durable lifecycle of a capacity-owning reservation hold. */
 enum class HoldState { HELD, CONFIRMED, EXPIRED, CANCELLED, RELEASED_BY_OPERATOR }
 
+/** Durable FIFO entry lifecycle; `OFFERED` means the capacity slot remains reserved for this entry. */
 enum class WaitlistState { WAITING, OFFERED, ACCEPTED, EXPIRED, CANCELLED }
 
+/** Short-lived offer lifecycle paired with an `OFFERED` waitlist entry. */
 enum class OfferState { ACTIVE, ACCEPTED, EXPIRED, CANCELLED }
 
+/** Stable rejection vocabulary returned to callers and recorded in audit events. */
 enum class TransitionReason {
     OWNER_MISMATCH,
     STALE_REVISION,
@@ -23,6 +28,7 @@ enum class TransitionReason {
     INVALID_STATE,
 }
 
+/** Immutable input used to evaluate capacity policy outside a database transaction. */
 data class CapacityResourceSnapshot(
     val id: Long,
     val capacity: Int,
@@ -42,6 +48,7 @@ data class CapacityResourceSnapshot(
     }
 }
 
+/** Immutable hold state consumed by [ReservationPolicies]. */
 data class ReservationHoldSnapshot(
     val id: Long,
     val resourceId: Long,
@@ -56,6 +63,7 @@ data class ReservationHoldSnapshot(
     }
 }
 
+/** Policy result that must still be committed with the corresponding repository CAS. */
 sealed interface TransitionOutcome {
     data class Applied(val hold: ReservationHoldSnapshot) : TransitionOutcome, Serializable {
         companion object {

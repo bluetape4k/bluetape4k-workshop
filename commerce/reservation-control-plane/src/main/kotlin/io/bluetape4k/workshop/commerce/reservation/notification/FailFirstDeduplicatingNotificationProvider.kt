@@ -7,6 +7,10 @@ import io.bluetape4k.support.requireZeroOrPositiveNumber
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
+/**
+ * Deterministic fake provider that fails a configured number of attempts and applies each delivery once.
+ * It models provider retry and deduplication semantics without introducing an external delivery service.
+ */
 internal class FailFirstDeduplicatingNotificationProvider(
     private val failFirstAttempts: Int = 1,
 ) {

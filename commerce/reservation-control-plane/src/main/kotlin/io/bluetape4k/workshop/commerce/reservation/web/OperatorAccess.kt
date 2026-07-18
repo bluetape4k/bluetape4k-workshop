@@ -13,6 +13,7 @@ import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
+/** Precomputes the configured operator HMAC and compares request credentials in constant time. */
 @Component
 @ConditionalOnProperty(prefix = "reservation.operator", name = ["enabled"], havingValue = "true")
 internal class OperatorPrincipalResolver(
@@ -29,6 +30,7 @@ internal class OperatorPrincipalResolver(
     companion object : KLogging()
 }
 
+/** Rejects unauthorized operator routes before request bodies reach command controllers. */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
 @ConditionalOnProperty(prefix = "reservation.operator", name = ["enabled"], havingValue = "true")

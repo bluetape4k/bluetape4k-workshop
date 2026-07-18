@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
+/** Provides the UTC clock, Exposed transaction manager, HMAC service, and Java 25 virtual-thread executor. */
 @Configuration(proxyBeanMethods = false)
 internal class ReservationConfiguration {
     @Bean
@@ -42,6 +43,7 @@ internal class ReservationConfiguration {
     companion object : KLogging()
 }
 
+/** Gives the virtual-thread executor a bounded graceful shutdown before forcing cancellation. */
 internal class ExecutorShutdown(
     private val executor: ExecutorService,
     private val timeout: Duration = Duration.ofSeconds(10),

@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.io.Serializable
 import java.time.Instant
 
+/** HTTP boundary for owner-scoped waitlist and offer commands with replayable idempotent responses. */
 @RestController
 @RequestMapping("/api")
 internal class WaitlistController(

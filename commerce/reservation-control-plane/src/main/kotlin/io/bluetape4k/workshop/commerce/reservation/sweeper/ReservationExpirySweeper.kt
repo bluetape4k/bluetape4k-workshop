@@ -12,6 +12,7 @@ import java.time.Duration
 import java.util.concurrent.CancellationException
 import java.util.concurrent.atomic.AtomicBoolean
 
+/** Bounded work summary used for scheduler logs and deterministic sweep assertions. */
 data class SweepBatchSummary(
     val scannedResources: Int,
     val expiredHolds: Int,
@@ -33,10 +34,12 @@ data class SweepBatchSummary(
     }
 }
 
+/** PostgreSQL-owned expiry batch invoked only after advisory scheduling gates succeed. */
 fun interface ReservationSweepWork {
     fun sweep(maxResources: Int, budget: Duration): SweepBatchSummary
 }
 
+/** Adapter boundary that preserves the leader library's elected, skipped, and failed outcomes. */
 fun interface SweepLeaderGate {
     fun run(slot: LeaderSlot, action: () -> SweepBatchSummary): LeaderRunResult<SweepBatchSummary>
 }
@@ -53,8 +56,10 @@ class LeaderElectorSweepGate(
     ): LeaderRunResult<SweepBatchSummary> = elector.runIfLeaderResult(slot, action)
 }
 
+/** Stable operational failure categories; none implies that PostgreSQL correctness was weakened. */
 enum class SweepFailureCode { LEADER_BACKEND_UNAVAILABLE, ACTION_FAILED, EMPTY_RESULT }
 
+/** One scheduler tick outcome, including local suppression and distributed leader skips. */
 sealed interface SweepTickOutcome : Serializable {
     data class Completed(val summary: SweepBatchSummary) : SweepTickOutcome {
         companion object {

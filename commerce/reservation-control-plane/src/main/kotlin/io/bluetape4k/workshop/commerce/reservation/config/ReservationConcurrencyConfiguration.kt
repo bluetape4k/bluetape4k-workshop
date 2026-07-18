@@ -30,6 +30,11 @@ import io.bluetape4k.workshop.commerce.reservation.sweeper.LeaderElectorSweepGat
 import io.bluetape4k.workshop.commerce.reservation.sweeper.ReservationExpirySweeper
 import io.bluetape4k.workshop.commerce.reservation.sweeper.ReservationSweepWork
 
+/**
+ * Wires always-on local JDBC protection and optional distributed coordination.
+ *
+ * Missing Redis beans intentionally degrade to PostgreSQL-backed execution instead of preventing startup.
+ */
 @Configuration(proxyBeanMethods = false)
 internal class ReservationConcurrencyConfiguration {
     @Bean
@@ -76,6 +81,10 @@ internal class ReservationConcurrencyConfiguration {
     companion object : KLogging()
 }
 
+/**
+ * Creates Lettuce admission, suppression, and leader adapters only when Redis is enabled and reachable.
+ * These beans are advisory; returning `null` keeps PostgreSQL commands available during Redis outages.
+ */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(prefix = "reservation.redis", name = ["enabled"], havingValue = "true")
 internal class ReservationRedisConfiguration {

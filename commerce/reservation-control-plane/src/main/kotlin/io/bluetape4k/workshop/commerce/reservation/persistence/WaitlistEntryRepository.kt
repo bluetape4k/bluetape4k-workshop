@@ -33,6 +33,12 @@ internal data class WaitlistEntryRecord(
     }
 }
 
+/**
+ * Stores FIFO sequence and lifecycle state for each resource's waitlist.
+ *
+ * Sequence allocation assumes the caller already holds the resource lock; transition updates remain
+ * owner- and revision-checked so retries cannot advance the same entry twice.
+ */
 @Repository
 internal class WaitlistEntryRepository : LongAuditableJdbcRepository<WaitlistEntryRecord, WaitlistEntryTable> {
     override val table = WaitlistEntryTable
@@ -86,6 +92,7 @@ internal class WaitlistEntryRepository : LongAuditableJdbcRepository<WaitlistEnt
         .orderBy(table.sequence to SortOrder.ASC, table.id to SortOrder.ASC)
         .map { with(this) { it.toEntity() } }
 
+    /** Selects the stable FIFO head by sequence and id while the caller holds the resource lock. */
     fun oldestWaiting(resourceId: Long): WaitlistEntryRecord? = table.selectAll()
         .where { (table.resourceId eq resourceId) and (table.state eq WaitlistState.WAITING) }
         .orderBy(table.sequence to SortOrder.ASC, table.id to SortOrder.ASC)

@@ -4,6 +4,7 @@ import io.bluetape4k.exposed.core.auditable.AuditableLongIdTable
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.javatime.timestamp
 
+/** Stores one replayable command result per tenant, operation, and opaque key digest. */
 internal object HttpIdempotencyTable : AuditableLongIdTable("reservation_http_idempotency") {
     val tenantId = varchar("tenant_id", 80)
     val operation = varchar("operation", 80)

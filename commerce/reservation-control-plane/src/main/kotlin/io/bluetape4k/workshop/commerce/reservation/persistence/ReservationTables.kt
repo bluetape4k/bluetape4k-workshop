@@ -11,6 +11,7 @@ import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.javatime.timestamp
 
+/** Capacity authority; `revision` and `occupiedCount` are updated by the same SQL CAS. */
 internal object CapacityResourceTable : AuditableLongIdTable("reservation_capacity_resources") {
     val code = varchar("code", 80).uniqueIndex()
     val state = enumerationByName<ResourceState>("state", 16).default(ResourceState.OPEN)
@@ -21,6 +22,7 @@ internal object CapacityResourceTable : AuditableLongIdTable("reservation_capaci
     val timezone = varchar("timezone", 64).default("UTC")
 }
 
+/** Durable hold state indexed by expiry for bounded sweeper discovery. */
 internal object ReservationHoldTable : AuditableLongIdTable("reservation_holds") {
     val resourceId = reference("resource_id", CapacityResourceTable, onDelete = ReferenceOption.RESTRICT).index()
     val ownerDigest = char("owner_digest", 64)
@@ -34,6 +36,7 @@ internal object ReservationHoldTable : AuditableLongIdTable("reservation_holds")
     }
 }
 
+/** FIFO entries ordered by resource, state, sequence, and stable id. */
 internal object WaitlistEntryTable : AuditableLongIdTable("reservation_waitlist_entries") {
     val resourceId = reference("resource_id", CapacityResourceTable, onDelete = ReferenceOption.RESTRICT)
     val ownerDigest = char("owner_digest", 64)
@@ -46,6 +49,7 @@ internal object WaitlistEntryTable : AuditableLongIdTable("reservation_waitlist_
     }
 }
 
+/** One expiring offer per waitlist entry; the unique entry reference prevents double promotion. */
 internal object ReservationOfferTable : AuditableLongIdTable("reservation_offers") {
     val resourceId = reference("resource_id", CapacityResourceTable, onDelete = ReferenceOption.RESTRICT).index()
     val entryId = reference("entry_id", WaitlistEntryTable, onDelete = ReferenceOption.RESTRICT).uniqueIndex()
@@ -59,6 +63,7 @@ internal object ReservationOfferTable : AuditableLongIdTable("reservation_offers
     }
 }
 
+/** Append-only transition evidence keyed by aggregate identity and revision. */
 internal object ReservationAuditTable : Table("reservation_transition_audits") {
     val aggregateType = varchar("aggregate_type", 32)
     val aggregateId = long("aggregate_id")
@@ -69,6 +74,7 @@ internal object ReservationAuditTable : Table("reservation_transition_audits") {
     override val primaryKey = PrimaryKey(aggregateType, aggregateId, revision)
 }
 
+/** Complete application-owned schema used by bootstrap and isolated PostgreSQL fixtures. */
 internal val reservationTables = arrayOf(
     CapacityResourceTable,
     ReservationHoldTable,

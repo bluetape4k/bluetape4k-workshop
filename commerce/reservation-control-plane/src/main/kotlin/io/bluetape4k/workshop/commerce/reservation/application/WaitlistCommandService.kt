@@ -20,6 +20,12 @@ import java.io.Serializable
 import java.time.Clock
 import java.time.Duration
 
+/**
+ * Coordinates FIFO waitlist entries and their short-lived offers.
+ *
+ * Mutations that can transfer occupied capacity lock the resource row before reading dependent
+ * waitlist or offer rows. This makes promotion, acceptance, expiry, and release share one lock order.
+ */
 @Service
 internal class WaitlistCommandService(
     private val waitlists: WaitlistEntryRepository,
@@ -115,6 +121,7 @@ internal class WaitlistCommandService(
     @Transactional
     fun accept(command: AcceptOfferCommand): AcceptedOffer {
         val offerSnapshot = offers.findById(command.offerId)
+        // Re-read the offer after taking the resource lock; the first read is only a lock locator.
         val resource = resources?.findByIdForUpdate(offerSnapshot.resourceId)
         val offer = offers.findById(command.offerId)
         requireOwner(command.ownerToken, offer.ownerDigest, offer.revision)
