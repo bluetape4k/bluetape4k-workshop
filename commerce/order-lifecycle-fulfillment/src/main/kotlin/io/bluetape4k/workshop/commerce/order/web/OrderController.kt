@@ -109,19 +109,30 @@ internal class OrderController(
 
     @PostMapping("/operations/publications/replay-failed")
     fun replayFailed(
+        @RequestHeader(WORKSHOP_OPERATOR_HEADER, required = false) operatorGuard: String?,
         @RequestParam(defaultValue = "10") batchSize: Int,
     ): ResponseEntity<Map<String, Int>> {
+        requireWorkshopOperator(operatorGuard)
         val result = reconciliation.replayFailed(batchSize)
         return ResponseEntity.accepted().body(mapOf("requested" to result.requested))
     }
 
     @PostMapping("/operations/payments/{paymentAttemptId}/reconcile-delayed")
     fun reconcileDelayedPayment(
+        @RequestHeader(WORKSHOP_OPERATOR_HEADER, required = false) operatorGuard: String?,
         @PathVariable paymentAttemptId: UUID,
     ): ResponseEntity<Map<String, String>> {
+        requireWorkshopOperator(operatorGuard)
         val disposition = paymentEvents.reconcileDelayedSuccess(paymentAttemptId)
         return ResponseEntity.accepted().body(mapOf("disposition" to disposition.name))
     }
 
-    companion object : KLogging()
+    private fun requireWorkshopOperator(operatorGuard: String?) {
+        require(operatorGuard == WORKSHOP_OPERATOR_VALUE) { "invalid workshop operator guard" }
+    }
+
+    companion object : KLogging() {
+        const val WORKSHOP_OPERATOR_HEADER = "X-Workshop-Operator"
+        const val WORKSHOP_OPERATOR_VALUE = "local-console"
+    }
 }

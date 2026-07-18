@@ -98,11 +98,14 @@ HTTP 409와 `IDEMPOTENCY_FINGERPRINT_CONFLICT`를 반환합니다. 원본 key는
 Operator replay는 의도적으로 제한합니다.
 
 ```bash
-curl -X POST 'http://localhost:8080/api/v1/operations/publications/replay-failed?batchSize=10'
+curl -X POST \
+  -H 'X-Workshop-Operator: local-console' \
+  'http://localhost:8080/api/v1/operations/publications/replay-failed?batchSize=10'
 ```
 
 `batchSize`는 100을 넘을 수 없습니다. 운영 배포에서는 이 route를 operator
-인증과 권한 뒤에 두어야 합니다.
+인증과 권한 뒤에 두어야 합니다. Local-only custom header는 browser workshop의
+CSRF guard일 뿐 인증 credential은 아닙니다.
 
 ## 동시성과 timeout
 
@@ -115,7 +118,16 @@ spring:
       connection-timeout: 60000
   transaction:
     default-timeout: 60s
+order-lifecycle:
+  idempotency:
+    cleanup-batch-size: 250
+    cleanup-interval: 1h
+  sse:
+    max-connections: 1000
+    max-concurrent-polls: 4
+    poll-interval: 1s
 server:
+  address: 127.0.0.1
   tomcat:
     threads:
       max: 8000
@@ -128,7 +140,13 @@ platform thread fallback으로 유지하고, 실제 HTTP admission limit는
 `max-connections`로 둡니다. Virtual thread가 PostgreSQL connection 비용을
 낮추지는 않으므로 Hikari pool은 작게 유지합니다. 늘어난 connection 및
 transaction timeout은 제한된 대기를 허용할 뿐, DB capacity나 backpressure를
-대신하지 않습니다.
+대신하지 않습니다. 같은 주문을 구독하는 SSE client는 poller 하나를 공유하고,
+동시에 PostgreSQL로 들어가는 poll query는 최대 4개로 제한합니다. Terminal
+idempotency 응답은 24시간 뒤 만료되며 scheduled cleanup은 실행당 완료/실패 row를
+최대 250개만 삭제합니다. 처리 중인 lease는 cleanup 대상에 포함하지 않습니다. 이
+workshop에는 identity provider가 없으므로 기본 bind address는 loopback입니다.
+`ORDER_SERVER_ADDRESS`를 외부 address로 바꾸려면 tenant 및 operator route에 인증과
+권한 검사를 먼저 추가해야 합니다.
 
 ## 운영 Logging
 

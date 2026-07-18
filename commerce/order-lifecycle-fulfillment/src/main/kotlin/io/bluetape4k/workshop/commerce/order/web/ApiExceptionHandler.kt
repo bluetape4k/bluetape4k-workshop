@@ -28,6 +28,10 @@ internal class ApiExceptionHandler {
     fun capacity(failure: StreamCapacityExceeded): ResponseEntity<ApiError> =
         error(HttpStatus.SERVICE_UNAVAILABLE, "SSE_CAPACITY_EXCEEDED", failure)
 
+    @ExceptionHandler(StreamShuttingDown::class)
+    fun streamShuttingDown(failure: StreamShuttingDown): ResponseEntity<ApiError> =
+        error(HttpStatus.SERVICE_UNAVAILABLE, "SSE_SHUTTING_DOWN", failure)
+
     @ExceptionHandler(NoSuchElementException::class)
     fun notFound(failure: NoSuchElementException): ResponseEntity<ApiError> =
         error(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", failure)

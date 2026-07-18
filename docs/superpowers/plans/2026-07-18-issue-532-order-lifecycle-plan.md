@@ -93,7 +93,7 @@ payload 원문 없이 투영한다.
 - [x] same/same replay, same/different conflict, in-flight policy를 구현한다.
 - [x] PostgreSQL concurrent acquire와 expired lease takeover를 검증한다.
 - [x] stale owner finalize 거부를 검증한다.
-- [ ] terminal retention cleanup을 검증한다.
+- [x] terminal retention cleanup을 검증한다.
 
 ### 5. Spring Modulith publication
 
@@ -121,7 +121,7 @@ payload 원문 없이 투영한다.
 
 - [x] `RANDOM_PORT + WebTestClient.bindToServer()`로 REST query/command와 실제 Tomcat 경계를 검증한다.
 - [x] snapshot-first SSE, event cursor, `Last-Event-ID`, heartbeat를 구현한다.
-- [ ] emitter limit/timeout/disconnect와 virtual-thread executor close를 검증한다.
+- [x] emitter limit/timeout/disconnect와 virtual-thread executor close를 검증한다.
 - [x] Tomcat fallback threads/max connections 8000과 60초 timeout을 검증한다.
 - [x] Hikari pool 8을 유지하고 connection/transaction timeout 60초를 검증한다.
 - [x] static UI에서 revision, line/fulfillment 잔여 수량, cancellation/refund, backlog, unresolved event, reason을 렌더링한다.

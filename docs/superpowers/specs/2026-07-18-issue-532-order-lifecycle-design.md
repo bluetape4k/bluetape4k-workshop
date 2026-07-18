@@ -34,6 +34,7 @@ application을 `commerce/order-lifecycle-fulfillment`에 추가한다. `Order`,
 ### 제외
 
 - 실제 payment gateway, PCI 데이터, tax/carrier 계산
+- 실제 identity provider와 tenant/operator authorization
 - 실제 notification, Kafka, Redis, leader election
 - 범용 idempotency 또는 범용 broker outbox 공용 모듈
 - 여러 애플리케이션에 앞서 도입하는 공유 abstraction
@@ -132,8 +133,8 @@ inbox를 통과하므로 중복 전달은 terminal revision을 다시 증가시�
 - 브라우저는 fulfillment 진행, 미배송 line 부분 취소, delayed payment reconciliation을 직접 실행한다.
 - 기본 수량 2 line은 두 fulfillment group에 실제로 분할하고, 한 group이 배송된 뒤에는
   다른 group의 미배송 link 수량만 취소한다.
-- emitter마다 Java 25 virtual thread 하나를 사용하되 최대 연결 수, timeout, interruption,
-  executor close를 테스트한다.
+- 주문별 SSE feed가 Java 25 virtual thread 하나를 사용하고 같은 주문의 emitter는 poller를
+  공유한다. 최대 연결 수, PostgreSQL poll permit, timeout, interruption, executor close를 테스트한다.
 
 Tomcat은 `threads.max=8000`을 platform-thread fallback으로 기록한다. Spring Boot 4.1은
 virtual threads가 활성화되면 이 값을 사용하지 않으므로 실제 접속 경계는
@@ -141,6 +142,8 @@ virtual threads가 활성화되면 이 값을 사용하지 않으므로 실제 �
 PostgreSQL은 HikariCP 최대 8/minimum idle 2 connection을 유지하고 connection acquisition과
 Spring transaction timeout을 각각 60초로 늘린다. virtual thread 수에 맞춰 DB connection을
 늘리지 않아 PostgreSQL session, memory, lock 경합을 제한한다.
+Identity provider가 범위 밖이므로 기본 server address는 `127.0.0.1`로 제한한다. 외부 bind는
+tenant 및 operator route에 인증과 권한 검사를 추가한 배포에서만 허용한다.
 
 ## Java 25와 Bluetape virtual threads
 

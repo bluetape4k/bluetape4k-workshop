@@ -101,11 +101,14 @@ stored.
 Operator replay is deliberately bounded:
 
 ```bash
-curl -X POST 'http://localhost:8080/api/v1/operations/publications/replay-failed?batchSize=10'
+curl -X POST \
+  -H 'X-Workshop-Operator: local-console' \
+  'http://localhost:8080/api/v1/operations/publications/replay-failed?batchSize=10'
 ```
 
 `batchSize` cannot exceed 100. A production deployment must protect this route
-with operator authentication and authorization.
+with operator authentication and authorization. The local-only custom header is
+a CSRF guard for the browser workshop, not an authentication credential.
 
 ## Concurrency And Timeouts
 
@@ -118,7 +121,16 @@ spring:
       connection-timeout: 60000
   transaction:
     default-timeout: 60s
+order-lifecycle:
+  idempotency:
+    cleanup-batch-size: 250
+    cleanup-interval: 1h
+  sse:
+    max-connections: 1000
+    max-concurrent-polls: 4
+    poll-interval: 1s
 server:
+  address: 127.0.0.1
   tomcat:
     threads:
       max: 8000
@@ -131,7 +143,13 @@ kept as a platform-thread fallback. `max-connections` is the effective HTTP
 admission limit. The Hikari pool stays small because virtual threads do not make
 PostgreSQL connections cheaper. The longer connection and transaction timeouts
 allow bounded waiting; they are not a substitute for database capacity or
-backpressure.
+backpressure. SSE clients for the same order share one poller, and at most four
+poll queries can enter PostgreSQL concurrently. Terminal idempotency responses
+expire after 24 hours and a scheduled cleanup deletes at most 250 completed or
+failed rows per run; active leases are never removed by cleanup. The workshop
+binds to loopback because it deliberately has no identity provider. Before
+setting `ORDER_SERVER_ADDRESS` to a non-loopback address, protect tenant and
+operator routes with authentication and authorization.
 
 ## Operational Logging
 

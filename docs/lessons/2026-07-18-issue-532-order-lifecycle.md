@@ -57,6 +57,9 @@ Spring Modulith의 publication auto-configuration은 repository bean을 조건 �
 - 부분 취소는 `CancellationCase`를 먼저 승인하고 fulfillment 잔여 수량을 줄인 뒤 별도 `RefundCase`를 진행한다.
 - delayed payment success는 deterministic operator endpoint로 전달하며 provider inbox idempotency를 그대로 통과한다.
 - SSE는 snapshot을 먼저 보내고 audit cursor 이후 변경분만 이어서 보낸다.
+- 같은 주문의 SSE connection은 poller 하나를 공유하고, DB poll permit을 Hikari pool보다 작게
+  유지해야 virtual thread 수가 PostgreSQL 동시성으로 그대로 번지지 않는다.
+- Terminal idempotency row는 bounded batch로 정리하되 `IN_PROGRESS` lease는 복구를 위해 보존한다.
 
 ## 운영 Logging
 

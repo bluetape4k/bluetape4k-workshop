@@ -126,6 +126,7 @@ internal class OrderLifecycleWebIntegrationTest(
         webTestClient
             .post()
             .uri("/api/v1/operations/payments/{paymentAttemptId}/reconcile-delayed", paymentAttemptId)
+            .header(OrderController.WORKSHOP_OPERATOR_HEADER, OrderController.WORKSHOP_OPERATOR_VALUE)
             .exchange()
             .expectStatus()
             .isAccepted
@@ -192,6 +193,30 @@ internal class OrderLifecycleWebIntegrationTest(
                 .jsonPath("$.refunds[0].status")
                 .isEqualTo("SUCCEEDED")
         }
+    }
+
+    @Test
+    fun `operator routes reject simple cross origin form posts without the workshop guard`() {
+        webTestClient
+            .post()
+            .uri("/api/v1/operations/publications/replay-failed?batchSize=1")
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+            .expectBody()
+            .jsonPath("$.code")
+            .isEqualTo("INVALID_REQUEST")
+
+        webTestClient
+            .post()
+            .uri("/api/v1/operations/publications/replay-failed?batchSize=1")
+            .header(OrderController.WORKSHOP_OPERATOR_HEADER, "wrong")
+            .exchange()
+            .expectStatus()
+            .isBadRequest
+            .expectBody()
+            .jsonPath("$.code")
+            .isEqualTo("INVALID_REQUEST")
     }
 
     @Test

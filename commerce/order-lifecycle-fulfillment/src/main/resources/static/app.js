@@ -114,13 +114,15 @@ async function cancelLine(lineId) {
 }
 
 async function reconcileDelayed(paymentAttemptId) {
-  await command(`/api/v1/operations/payments/${paymentAttemptId}/reconcile-delayed`);
+  await command(`/api/v1/operations/payments/${paymentAttemptId}/reconcile-delayed`, undefined, true);
 }
 
-async function command(url, body) {
+async function command(url, body, operator = false) {
+  const headers = body ? { 'Content-Type': 'application/json' } : {};
+  if (operator) headers['X-Workshop-Operator'] = 'local-console';
   const response = await fetch(url, {
     method: 'POST',
-    headers: body ? { 'Content-Type': 'application/json' } : {},
+    headers,
     body: body ? JSON.stringify(body) : undefined
   });
   if (!response.ok) return showError((await response.json()).code || 'COMMAND_FAILED');
@@ -128,7 +130,10 @@ async function command(url, body) {
 }
 
 async function replayFailed() {
-  const response = await fetch('/api/v1/operations/publications/replay-failed?batchSize=10', { method: 'POST' });
+  const response = await fetch('/api/v1/operations/publications/replay-failed?batchSize=10', {
+    method: 'POST',
+    headers: { 'X-Workshop-Operator': 'local-console' }
+  });
   if (!response.ok) showError('REPLAY_FAILED');
 }
 

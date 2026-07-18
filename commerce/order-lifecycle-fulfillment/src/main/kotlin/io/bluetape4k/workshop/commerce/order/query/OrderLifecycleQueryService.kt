@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.commerce.order.query
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.modulith.exposed.ExposedEventPublicationRepository
 import io.bluetape4k.workshop.commerce.order.domain.AggregateType
 import io.bluetape4k.workshop.commerce.order.domain.CancellationStatus
 import io.bluetape4k.workshop.commerce.order.domain.FulfillmentStatus
@@ -20,8 +19,8 @@ import io.bluetape4k.workshop.commerce.order.persistence.OrderLineRepository
 import io.bluetape4k.workshop.commerce.order.persistence.OrderRepository
 import io.bluetape4k.workshop.commerce.order.persistence.PaymentAttemptRepository
 import io.bluetape4k.workshop.commerce.order.persistence.ProviderEventInboxRepository
+import io.bluetape4k.workshop.commerce.order.persistence.PublicationSnapshotRepository
 import io.bluetape4k.workshop.commerce.order.persistence.RefundCaseRepository
-import org.springframework.modulith.events.EventPublication
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.Serializable
@@ -185,7 +184,7 @@ internal class OrderLifecycleQueryService(
     private val refunds: RefundCaseRepository,
     private val audits: LifecycleAuditRepository,
     private val providerEvents: ProviderEventInboxRepository,
-    private val publications: ExposedEventPublicationRepository,
+    private val publications: PublicationSnapshotRepository,
     private val clock: Clock,
 ) {
     @Transactional(readOnly = true)
@@ -252,16 +251,15 @@ internal class OrderLifecycleQueryService(
     ): List<AuditSnapshot> = audits.findByOrderId(orderId, afterId).map(::toSnapshot)
 
     private fun publicationSnapshot(): PublicationSnapshot {
-        val incomplete = publications.findIncompletePublications()
-        val oldest = incomplete.minOfOrNull { it.publicationDate }
+        val summary = publications.snapshot()
         return PublicationSnapshot(
-            published = publications.countByStatus(EventPublication.Status.PUBLISHED),
-            processing = publications.countByStatus(EventPublication.Status.PROCESSING),
-            failed = publications.countByStatus(EventPublication.Status.FAILED),
-            resubmitted = publications.countByStatus(EventPublication.Status.RESUBMITTED),
-            completed = publications.countByStatus(EventPublication.Status.COMPLETED),
+            published = summary.published,
+            processing = summary.processing,
+            failed = summary.failed,
+            resubmitted = summary.resubmitted,
+            completed = summary.completed,
             oldestIncompleteLagSeconds =
-                oldest
+                summary.oldestIncomplete
                     ?.let { Duration.between(it, Instant.now(clock)).seconds.coerceAtLeast(0) }
                     ?: 0
         )

@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.commerce.order.idempotency
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.order.persistence.HttpIdempotencyTable
@@ -124,6 +126,35 @@ internal class HttpIdempotencyRepositoryTest {
         acquired.get() shouldBeEqualTo 1
     }
 
+    @Test
+    fun `cleanup deletes only expired terminal records and preserves in progress owners`() {
+        val expiredSucceeded =
+            IdempotencyScope("tenant-a", "submit-order", IdempotencyFingerprint.key("expired-success"))
+        val expiredFailed = IdempotencyScope("tenant-a", "submit-order", IdempotencyFingerprint.key("expired-failure"))
+        val expiredInProgress =
+            IdempotencyScope("tenant-a", "submit-order", IdempotencyFingerprint.key("expired-owner"))
+        val retainedTerminal =
+            IdempotencyScope("tenant-a", "submit-order", IdempotencyFingerprint.key("retained-success"))
+
+        transaction {
+            acquireAndFinalize(expiredSucceeded, retention = Duration.ofSeconds(1), failed = false)
+            acquireAndFinalize(expiredFailed, retention = Duration.ofSeconds(1), failed = true)
+            acquireScope(expiredInProgress, retention = Duration.ofSeconds(1))
+            acquireAndFinalize(retainedTerminal, retention = Duration.ofDays(1), failed = false)
+        }
+
+        transaction {
+            repository.deleteExpiredTerminal(now.plusSeconds(2), limit = 10)
+        } shouldBeEqualTo 2
+
+        transaction {
+            repository.findByScope(expiredSucceeded).shouldBeNull()
+            repository.findByScope(expiredFailed).shouldBeNull()
+            repository.findByScope(expiredInProgress).shouldNotBeNull()
+            repository.findByScope(retainedTerminal).shouldNotBeNull()
+        }
+    }
+
     private fun acquire(owner: UUID): AcquireResult =
         repository.acquire(
             scope = scope,
@@ -133,4 +164,32 @@ internal class HttpIdempotencyRepositoryTest {
             lease = Duration.ofSeconds(30),
             retention = Duration.ofDays(1)
         )
+
+    private fun acquireScope(
+        targetScope: IdempotencyScope,
+        retention: Duration,
+    ): AcquireResult =
+        repository.acquire(
+            scope = targetScope,
+            fingerprint = fingerprint,
+            ownerToken = UUID.randomUUID(),
+            now = now,
+            lease = Duration.ofSeconds(30),
+            retention = retention
+        )
+
+    private fun acquireAndFinalize(
+        targetScope: IdempotencyScope,
+        retention: Duration,
+        failed: Boolean,
+    ) {
+        val acquired = acquireScope(targetScope, retention) as AcquireResult.Acquired
+        repository.finalize(
+            id = acquired.record.id,
+            ownerToken = acquired.record.ownerToken,
+            status = if (failed) 503 else 201,
+            body = if (failed) "{\"code\":\"FAILED\"}" else "{\"orderId\":\"o-1\"}",
+            failed = failed
+        ) shouldBeEqualTo true
+    }
 }

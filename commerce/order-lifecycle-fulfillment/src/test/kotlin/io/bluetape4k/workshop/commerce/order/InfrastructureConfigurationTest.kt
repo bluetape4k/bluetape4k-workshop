@@ -13,6 +13,8 @@ internal class InfrastructureConfigurationTest {
 
     @Test
     fun `Tomcat records eight thousand connection and fallback thread limits`() {
+        properties.getProperty("server.address") shouldBeEqualTo
+            "${'$'}{ORDER_SERVER_ADDRESS:127.0.0.1}"
         properties.getProperty("server.tomcat.threads.max") shouldBeEqualTo
             "${'$'}{ORDER_TOMCAT_MAX_THREADS:8000}"
         properties.getProperty("server.tomcat.max-connections") shouldBeEqualTo

@@ -36,13 +36,21 @@ bluetape4k:
             application: order-lifecycle-fulfillment
 
 order-lifecycle:
+  idempotency:
+    cleanup-batch-size: ${ORDER_IDEMPOTENCY_CLEANUP_BATCH_SIZE:250}
+    cleanup-interval: ${ORDER_IDEMPOTENCY_CLEANUP_INTERVAL:1h}
+    cleanup-initial-delay: ${ORDER_IDEMPOTENCY_CLEANUP_INITIAL_DELAY:1m}
   sse:
     max-connections: ${ORDER_SSE_MAX_CONNECTIONS:1000}
+    # Keep database polling below the Hikari pool boundary; virtual threads do not add DB capacity.
+    max-concurrent-polls: ${ORDER_SSE_MAX_CONCURRENT_POLLS:4}
     timeout: ${ORDER_SSE_TIMEOUT:60s}
-    poll-interval: ${ORDER_SSE_POLL_INTERVAL:250ms}
+    poll-interval: ${ORDER_SSE_POLL_INTERVAL:1s}
     heartbeat-interval: ${ORDER_SSE_HEARTBEAT_INTERVAL:15s}
 
 server:
+  # This workshop has no authentication provider; stay loopback-only unless a deployment adds one.
+  address: ${ORDER_SERVER_ADDRESS:127.0.0.1}
   max-http-request-header-size: 16KB
   tomcat:
     # Boot ignores threads.max while virtual threads are enabled; keep it as the platform-thread fallback.

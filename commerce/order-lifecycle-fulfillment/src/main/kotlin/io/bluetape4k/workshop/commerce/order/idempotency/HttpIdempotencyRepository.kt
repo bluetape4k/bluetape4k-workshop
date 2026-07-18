@@ -8,8 +8,13 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.commerce.order.persistence.HttpIdempotencyTable
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
@@ -215,7 +220,33 @@ internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<Idempoten
             }.firstOrNull()
             ?.let { with(this) { it.toEntity() } }
 
+    /** Deletes a bounded batch of expired terminal responses while preserving recoverable owners. */
+    fun deleteExpiredTerminal(
+        now: Instant,
+        limit: Int,
+    ): Int {
+        require(limit in 1..MAX_CLEANUP_BATCH) { "limit must contain 1..$MAX_CLEANUP_BATCH" }
+        val candidateIds =
+            table
+                .selectAll()
+                .where {
+                    (
+                        (table.status eq IdempotencyStatus.SUCCEEDED) or
+                            (table.status eq IdempotencyStatus.FAILED)
+                    ) and
+                        (table.expiresAt lessEq now)
+                }.orderBy(table.expiresAt to SortOrder.ASC, table.id to SortOrder.ASC)
+                .limit(limit)
+                .map { it[table.id] }
+        if (candidateIds.isEmpty()) return 0
+
+        return table.deleteWhere { table.id inList candidateIds }.also { deleted ->
+            log.debug { "idempotency_terminal_cleanup deleted=$deleted requestedLimit=$limit" }
+        }
+    }
+
     companion object : KLogging() {
         const val MAX_RESPONSE_BODY = 64 * 1024
+        const val MAX_CLEANUP_BATCH = 1_000
     }
 }
