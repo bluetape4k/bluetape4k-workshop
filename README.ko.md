@@ -50,7 +50,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 
 ## 도메인 카탈로그
 
-모듈은 일곱 개의 학습 도메인으로 구성됩니다.
+모듈은 여덟 개의 학습 도메인으로 구성됩니다.
 각 도메인에는 **Basic** (독립적, 최소 인프라)과 **Advanced** (다계층, Testcontainers) 모듈이 있습니다.
 
 ![Workshop Module Composition](./docs/images/readme-charts/root-readme-module-chart-01.png)
@@ -253,13 +253,30 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 
 ---
 
+### 8. Optimization 계약
+
+> Provider-neutral planning, PostgreSQL 수렴, Java 25 virtual thread
+
+| 수준 | 모듈 | bluetape4k 라이브러리 | 인프라 | 학습 목표 |
+|------|------|----------------------|-------|-----------|
+| Advanced | [`optimization-planning-contracts`](optimization/planning-contracts/) | `exposed-jdbc`, `exposed-jdbc-tests`, `virtualthread-api`, `virtualthread-jdk25`, `http`, `testcontainers` | PostgreSQL + WireMock (TC) | request/outbox 원자성, callback idempotency, stale result audit, 최종 aggregate version 재검증 |
+
+```bash
+./gradlew :optimization-planning-contracts:test --max-workers=1
+```
+
+`optimization/` 아래의 모든 모듈은 Java 25를 사용합니다. 나머지 workshop
+모듈은 Java 21 toolchain을 유지합니다.
+
+---
+
 ## 기술 스택
 
 | 항목 | 버전 |
 |------|------|
-| Kotlin | 2.3.21 |
-| JVM | 21 |
-| Spring Boot | 4.0.6 |
+| Kotlin | 2.4.0 |
+| JVM | 21; `optimization/*`는 Java 25 |
+| Spring Boot | 4.1.0 |
 | bluetape4k | 1.7.0 |
 | Gradle | 8.x (Kotlin DSL, 멀티모듈) |
 
@@ -281,6 +298,7 @@ bluetape4k-workshop/
 ├── leader/                 # 분산 리더 선출
 ├── messaging/              # Kafka
 ├── observability/          # Micrometer Observation + Tracing
+├── optimization/           # Java 25 planning/optimization 계약
 ├── ratelimit/              # Bucket4j 속도 제한
 ├── redis/                  # Redisson + Redis 패턴
 ├── spring-boot/            # Spring Boot 기능

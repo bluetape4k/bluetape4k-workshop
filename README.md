@@ -51,7 +51,7 @@ path where **Basic** modules are enough for exploration, then switch to
 
 ## Domain Catalog
 
-Modules are organized into seven learning domains.
+Modules are organized into eight learning domains.
 Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (multi-layer, Testcontainers) modules.
 
 ![Workshop Module Composition](./docs/images/readme-charts/root-readme-module-chart-01.png)
@@ -254,13 +254,30 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 
 ---
 
+### 8. Optimization Contracts
+
+> Provider-neutral planning, PostgreSQL convergence, Java 25 virtual threads
+
+| Level | Module | bluetape4k libs | Infra | Learning outcome |
+|-------|--------|-----------------|-------|-----------------|
+| Advanced | [`optimization-planning-contracts`](optimization/planning-contracts/) | `exposed-jdbc`, `exposed-jdbc-tests`, `virtualthread-api`, `virtualthread-jdk25`, `http`, `testcontainers` | PostgreSQL + WireMock (TC) | Request/outbox atomicity, callback idempotency, stale-result audit, and final aggregate-version revalidation |
+
+```bash
+./gradlew :optimization-planning-contracts:test --max-workers=1
+```
+
+All modules below `optimization/` use Java 25. Other workshop modules retain
+the Java 21 toolchain.
+
+---
+
 ## Tech Stack
 
 | Item | Version |
 |------|---------|
-| Kotlin | 2.3.21 |
-| JVM | 21 |
-| Spring Boot | 4.0.6 |
+| Kotlin | 2.4.0 |
+| JVM | 21; Java 25 for `optimization/*` |
+| Spring Boot | 4.1.0 |
 | bluetape4k | 1.7.0 |
 | Gradle | 8.x (Kotlin DSL, multi-module) |
 
@@ -282,6 +299,7 @@ bluetape4k-workshop/
 ├── leader/                 # Distributed leader election
 ├── messaging/              # Kafka
 ├── observability/          # Micrometer Observation + Tracing
+├── optimization/           # Java 25 planning/optimization contracts
 ├── ratelimit/              # Bucket4j rate limiting
 ├── redis/                  # Redisson + Redis patterns
 ├── spring-boot/            # Spring Boot features

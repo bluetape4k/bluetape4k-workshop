@@ -8,7 +8,7 @@
 #   ./scripts/smoke-validate.sh stale-check   # Gradle project count + README link check
 #   ./scripts/smoke-validate.sh diagram-qa    # changed README diagram QA evidence
 #
-# Groups: data-access  spring-boot  serialization  messaging  async  observability  aws  redis
+# Groups: data-access  spring-boot  serialization  messaging  async  observability  optimization  aws  redis
 # Each group runs with --continue so a single failure does not abort the rest.
 
 set -euo pipefail
@@ -169,6 +169,13 @@ case "${1:-help}" in
       --continue --max-workers=1"
     ;;
 
+  optimization)
+    # Java 25 and Testcontainers required
+    run "$GRADLEW \
+      :optimization-planning-contracts:test \
+      --continue --max-workers=1"
+    ;;
+
   aws)
     run "$GRADLEW \
       :aws-cloudwatch-imds-observability:test \
@@ -245,6 +252,7 @@ case "${1:-help}" in
     echo "  messaging        Kafka (Testcontainers)"
     echo "  async            Coroutines / Vert.x"
     echo "  observability    Micrometer / Virtual Threads"
+    echo "  optimization     Java 25 planning contracts (Testcontainers)"
     echo "  aws              AWS local-first examples"
     echo "  redis            Redis / Redisson / Rate Limit"
     echo "  stale-check      Gradle project count + README link check"

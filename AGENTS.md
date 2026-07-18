@@ -43,6 +43,7 @@ names.
 | `mapping/` | MapStruct mapping |
 | `messaging/` | Kafka examples |
 | `observability/` | Micrometer observation/tracing with coroutines |
+| `optimization/` | Java 25 planning and optimization contract examples |
 | `ratelimit/` | Bucket4j rate limiting |
 | `reactive/` | Mutiny reactive streams |
 | `redis/` | Redisson and cluster examples |
@@ -59,7 +60,8 @@ names.
 - Dependency versions live in `gradle/libs.versions.toml`.
 - Package prefix: `io.bluetape4k.workshop.{module}.*`.
 - Tests are serialized by `TestMutexService` to avoid DB conflicts.
-- JVM uses the Java 21 toolchain, ZGC, 2-4 GB heap, and preview features.
+- JVM uses the Java 21 toolchain except `optimization/*`, which uses Java 25.
+  Both toolchains use ZGC, 2-4 GB heap, and preview features.
 - Spring Boot modules use `springBoot { mainClass.set(...) }` and extend test
   dependencies from `compileOnly`/`runtimeOnly` where the repo already does so.
 - Common bluetape4k modules include logging, JUnit5, coroutines, Exposed, and

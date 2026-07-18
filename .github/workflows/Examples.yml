@@ -39,6 +39,7 @@ on:
       - 'leader/tenant-scheduler/**'
       - 'messaging/kafka/**'
       - 'messaging/kafka-outbox-fallback/**'
+      - 'optimization/planning-contracts/**'
       - 'spring-modulith/module-boundaries/**'
       - 'shared/**'
       - 'buildSrc/**'
@@ -85,6 +86,7 @@ on:
       - 'leader/tenant-scheduler/**'
       - 'messaging/kafka/**'
       - 'messaging/kafka-outbox-fallback/**'
+      - 'optimization/planning-contracts/**'
       - 'spring-modulith/module-boundaries/**'
       - 'shared/**'
       - 'buildSrc/**'
@@ -105,7 +107,9 @@ permissions:
   contents: read
 
 env:
-  JAVA_VERSION: '21'
+  JAVA_VERSIONS: |-
+    21
+    25
   JAVA_DISTRIBUTION: 'temurin'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
@@ -128,7 +132,7 @@ jobs:
 
       - uses: actions/setup-java@v5
         with:
-          java-version: ${{ env.JAVA_VERSION }}
+          java-version: ${{ env.JAVA_VERSIONS }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
 
       - uses: gradle/actions/setup-gradle@v6
@@ -264,7 +268,7 @@ jobs:
 
       - uses: actions/setup-java@v5
         with:
-          java-version: ${{ env.JAVA_VERSION }}
+          java-version: ${{ env.JAVA_VERSIONS }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
 
       - uses: gradle/actions/setup-gradle@v6
@@ -287,6 +291,7 @@ jobs:
       # - spring-boot-cache-redis: Redis-backed cache path
       # - messaging-kafka: Kafka-backed messaging path
       # - messaging-kafka-outbox-fallback: PostgreSQL + Kafka fallback relay path
+      # - optimization-planning-contracts: PostgreSQL planning inbox/outbox on Java 25
       - name: Run container-backed examples
         run: >-
           ./gradlew
@@ -304,6 +309,7 @@ jobs:
           :spring-boot-cache-redis:test
           :messaging-kafka:test
           :messaging-kafka-outbox-fallback:test
+          :optimization-planning-contracts:test
           --continue
           --max-workers=1
         env:
@@ -345,6 +351,8 @@ jobs:
             messaging/kafka/build/reports/tests/test/
             messaging/kafka-outbox-fallback/build/test-results/test/*.xml
             messaging/kafka-outbox-fallback/build/reports/tests/test/
+            optimization/planning-contracts/build/test-results/test/*.xml
+            optimization/planning-contracts/build/reports/tests/test/
           retention-days: 7
 
   examples-status:
