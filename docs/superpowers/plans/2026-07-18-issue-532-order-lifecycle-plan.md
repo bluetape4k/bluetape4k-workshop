@@ -39,13 +39,13 @@ payload 원문 없이 투영한다.
 
 - `OrderLifecycleApplication.kt`: Spring Boot entrypoint
 - `config/OrderLifecycleConfiguration.kt`: Java 25 executor, clock, schema/lifecycle bean
-- `domain/OrderModels.kt`: aggregate, status, command, event value
+- `domain/LifecycleModels.kt`: aggregate, status, command, event value
 - `domain/TransitionPolicies.kt`: 상태 머신별 허용 전이
-- `persistence/OrderTables.kt`: aggregate, line, inbox, audit, idempotency table
-- `persistence/OrderRepositories.kt`: Bluetape JDBC repository 구현
+- `persistence/LifecycleTables.kt`: aggregate, line, inbox, audit, idempotency table
+- `persistence/LifecycleRepositories.kt`: Bluetape JDBC repository 구현
 - `idempotency/HttpIdempotencyRepository.kt`: acquire/replay/conflict/lease/finalize
 - `payment/DeterministicPaymentProvider.kt`: success/decline/delay/out-of-order/duplicate fixture
-- `payment/PaymentEventInbox.kt`: provider event deduplication과 transition
+- `persistence/ProviderEventInboxRepository.kt`: provider event deduplication과 transition
 - `application/OrderCommandService.kt`: transaction과 domain event publication
 - `application/LifecycleListeners.kt`: payment, inventory, fulfillment, refund listener
 - `application/ReconciliationService.kt`: publication/provider 보정 command
@@ -69,70 +69,84 @@ payload 원문 없이 투영한다.
 
 ### 1. 모듈과 버전 계약
 
-- [ ] `commerce` group과 `commerce-order-lifecycle-fulfillment` project를 등록한다.
-- [ ] 모듈의 Java/Kotlin toolchain을 25로 override한다.
-- [ ] versionless alias로 Exposed JDBC/Modulith/virtual-thread artifact를 추가한다.
-- [ ] dependency insight로 Exposed 1.3.0, Bluetape Exposed 1.11.0, JDK25 provider를 확인한다.
+- [x] `commerce` group과 `commerce-order-lifecycle-fulfillment` project를 등록한다.
+- [x] 모듈의 Java/Kotlin toolchain을 25로 override한다.
+- [x] versionless alias로 Exposed JDBC/Modulith/virtual-thread artifact를 추가한다.
+- [x] dependency insight로 Exposed 1.3.0, Bluetape Exposed 1.11.0, JDK25 provider를 확인한다.
 
 ### 2. 상태 머신 TDD
 
-- [ ] Order/payment/reservation/fulfillment/refund transition test를 먼저 작성한다.
-- [ ] terminal transition 재적용과 revision 건너뛰기를 거부한다.
-- [ ] payment success가 fulfillment 완료를 직접 만들 수 없음을 테스트한다.
+- [x] Order/payment/reservation/fulfillment/refund transition test를 먼저 작성한다.
+- [x] terminal transition 재적용과 revision 건너뛰기를 거부한다.
+- [x] payment success가 fulfillment 완료를 직접 만들 수 없음을 테스트한다.
 
 ### 3. Exposed repository와 audit
 
-- [ ] auditable UUID repository를 aggregate별로 구현한다.
-- [ ] line/group association과 transition audit repository를 구현한다.
-- [ ] PostgreSQL `withTables` test로 revision CAS와 audit unique key를 검증한다.
+- [x] auditable UUID repository를 aggregate별로 구현한다.
+- [x] line/group association과 transition audit repository를 구현한다.
+- [x] PostgreSQL `withTables` test로 aggregate별 revision CAS를 검증한다.
+- [ ] audit unique key 중복 거부를 별도 repository test로 고정한다.
 
 ### 4. HTTP idempotency와 #1055/#391 fixture
 
-- [ ] canonical fingerprint와 hashed key scope test를 작성한다.
-- [ ] same/same replay, same/different conflict, in-flight policy를 구현한다.
-- [ ] PostgreSQL concurrent acquire와 expired lease takeover를 검증한다.
-- [ ] stale owner finalize와 terminal retention cleanup을 검증한다.
+- [x] canonical fingerprint와 hashed key scope test를 작성한다.
+- [x] same/same replay, same/different conflict, in-flight policy를 구현한다.
+- [x] PostgreSQL concurrent acquire와 expired lease takeover를 검증한다.
+- [x] stale owner finalize 거부를 검증한다.
+- [ ] terminal retention cleanup을 검증한다.
 
 ### 5. Spring Modulith publication
 
-- [ ] `bluetape4k-exposed-spring-modulith` auto-configuration을 연결한다.
-- [ ] command transaction에서 stable domain event를 publish한다.
-- [ ] listener failure가 FAILED publication으로 남고 bounded replay 후 한 번만 반영됨을 검증한다.
-- [ ] completed/failed/incomplete count와 oldest lag를 query projection에 포함한다.
+- [x] `bluetape4k-exposed-spring-modulith` auto-configuration을 연결한다.
+- [x] command transaction에서 stable domain event를 publish한다.
+- [x] listener failure가 FAILED publication으로 남고 bounded replay 후 한 번만 반영됨을 검증한다.
+- [x] completed/failed/incomplete count와 oldest lag를 query projection에 포함한다.
 
 ### 6. Provider inbox와 lifecycle orchestration
 
 - [ ] deterministic fake mode별 contract test를 작성한다.
-- [ ] duplicate/out-of-order/conflicting provider event 분류를 구현한다.
-- [ ] payment success 후 inventory commit, 그 후 fulfillment request 순서를 event로 연결한다.
+- [x] duplicate/out-of-order/conflicting provider event 분류를 구현한다.
+- [x] payment success 후 inventory commit, 그 후 fulfillment request 순서를 event로 연결한다.
 - [ ] inventory commit failure는 `RECONCILIATION_REQUIRED`로 남긴다.
 
 ### 7. Split fulfillment, cancellation, refund
 
-- [ ] order line을 두 fulfillment group으로 나누는 command를 구현한다.
-- [ ] group별 shipped/delivered revision을 독립 갱신한다.
-- [ ] 미배송 line partial cancel과 refund case 생성을 별도 audit로 남긴다.
-- [ ] cancel/refund bounded reason code를 browser snapshot에 노출한다.
+- [x] order line을 두 fulfillment group으로 나누는 lifecycle 처리를 구현한다.
+- [x] group별 shipped/delivered revision을 독립 갱신한다.
+- [x] 미배송 line partial cancel과 refund case 생성을 별도 audit로 남긴다.
+- [x] `CancellationCase`와 `RefundCase`를 독립 aggregate/revision으로 노출한다.
+- [x] cancel/refund bounded reason code를 browser snapshot에 노출한다.
 
 ### 8. Browser UI와 SSE
 
-- [ ] REST query/command MockMvc test를 작성한다.
-- [ ] snapshot-first SSE, event cursor, `Last-Event-ID`, heartbeat를 구현한다.
+- [x] `RANDOM_PORT + WebTestClient.bindToServer()`로 REST query/command와 실제 Tomcat 경계를 검증한다.
+- [x] snapshot-first SSE, event cursor, `Last-Event-ID`, heartbeat를 구현한다.
 - [ ] emitter limit/timeout/disconnect와 virtual-thread executor close를 검증한다.
-- [ ] static UI에서 revision, backlog, unresolved event, reason을 렌더링한다.
+- [x] Tomcat fallback threads/max connections 8000과 60초 timeout을 검증한다.
+- [x] Hikari pool 8을 유지하고 connection/transaction timeout 60초를 검증한다.
+- [x] static UI에서 revision, line/fulfillment 잔여 수량, cancellation/refund, backlog, unresolved event, reason을 렌더링한다.
+- [x] UI에서 fulfillment 진행, 부분 취소, delayed payment reconciliation을 실행한다.
 
 ### 9. 운영성과 실패 안전
 
-- [ ] low-cardinality metrics와 redacted log test를 추가한다.
-- [ ] operator reconciliation endpoint의 batch bound와 안정 error code를 검증한다.
+- [ ] application-owned low-cardinality metric을 추가한다.
+- [x] raw key/customer/payload가 출력되지 않는 redacted log test를 추가한다.
+- [x] 모든 운영 component에 `bluetape4k-logging`을 적용하고 raw key/payload를 제외한다.
+- [x] operator reconciliation endpoint의 batch bound와 안정 error code를 검증한다.
 - [ ] restart 후 PostgreSQL 상태/inbox/publication을 재구성하는 통합 테스트를 추가한다.
 
 ### 10. 저장소 통합과 검증
 
-- [ ] Java 25 CI job과 full container-backed group에 모듈을 추가한다.
-- [ ] module/group README, root bilingual index, AGENTS, lesson/review를 갱신한다.
-- [ ] targeted tests, compile, smoke/full, actionlint, stale-check, README validator를 실행한다.
-- [ ] `git diff --check`와 dependency insight 결과를 최종 review 문서에 기록한다.
+- [x] Java 21 workflow runtime을 덮지 않고 module toolchain으로 Java 25를 provision하며 full container-backed group에 모듈을 추가한다.
+- [x] module/group README, root bilingual index, AGENTS, lesson/review를 갱신한다.
+- [x] module README에 영문·한글 예제 시나리오와 Architecture/Sequence Diagram을 추가한다.
+- [x] targeted tests, compile, smoke/full, actionlint, stale-check, scoped README/diagram validator를 실행한다.
+- [x] `git diff --check`와 dependency insight 결과를 최종 review 문서에 기록한다.
+
+전역 README language/parity validator의 유일한 실패는 변경 범위 밖인
+`image-processing/profile-image-moderation/README.md`의 기존 language switch와 한글 표기다.
+#532가 변경한 세 README 쌍은 language switch, heading, code fence, image target parity를
+별도 범위 검사로 통과했다.
 
 ## Six-lens 계획 리뷰
 
@@ -158,4 +172,3 @@ payload 원문 없이 투영한다.
 - SSE snapshot/reconnect/lifecycle test 통과
 - Java 25 compile/test와 JDK25 virtual-thread provider resolution 확인
 - actionlint, stale-check, README language/link validator, `git diff --check` 통과
-

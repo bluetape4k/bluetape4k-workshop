@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Order Lifecycle Console</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">Java 25 · PostgreSQL · Exposed · Spring Modulith</p>
+    <h1>Order Lifecycle Console</h1>
+    <p>Run deterministic payment fixtures and inspect independent aggregate revisions, audit, and publication lag.</p>
+  </header>
+
+  <section class="panel controls">
+    <label>Payment fixture
+      <select id="provider-mode">
+        <option>SUCCESS</option>
+        <option>DECLINE</option>
+        <option>DELAYED_SUCCESS</option>
+        <option>OUT_OF_ORDER</option>
+        <option>DUPLICATE_SUCCESS</option>
+      </select>
+    </label>
+    <button id="create-order">Create sample order</button>
+    <label>Order ID
+      <input id="order-id" placeholder="UUID" autocomplete="off">
+    </label>
+    <button id="load-order" class="secondary">Load</button>
+    <span id="connection" class="pill">offline</span>
+  </section>
+
+  <section id="operations" class="metrics"></section>
+  <section id="aggregates" class="grid"></section>
+  <section id="lines" class="grid"></section>
+
+  <section class="panel">
+    <div class="section-title">
+      <h2>Transition audit</h2>
+      <button id="replay" class="secondary">Replay failed publications</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Cursor</th><th>Aggregate</th><th>Revision</th><th>Transition</th><th>Reason</th><th>Actor</th></tr></thead>
+        <tbody id="audit"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+<script src="/app.js" defer></script>
+</body>
+</html>

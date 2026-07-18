@@ -1,0 +1,24 @@
+# Commerce 예제
+
+[English](README.md) | 한국어
+
+이 그룹은 서로 독립적으로 revision을 갖는 여러 aggregate, durable application
+event, 운영자가 확인할 수 있는 복구 경계가 함께 필요한 end-to-end commerce
+workflow를 다룹니다.
+
+## 모듈
+
+| 모듈 | 초점 | 인프라 |
+|------|------|--------|
+| [`order-lifecycle-fulfillment`](order-lifecycle-fulfillment/) | 독립적인 주문, 결제, 재고, 배송, 환불 생명주기 | PostgreSQL (Testcontainers) |
+
+각 모듈은 blocking Spring MVC와 Exposed JDBC 작업에 Java 25 virtual thread를
+사용합니다. 요청 동시성은 virtual thread로 확장하지만, PostgreSQL 동시성은
+HikariCP로 제한합니다.
+
+## 실행
+
+```bash
+./gradlew :commerce-order-lifecycle-fulfillment:test --max-workers=1
+./scripts/smoke-validate.sh commerce
+```
