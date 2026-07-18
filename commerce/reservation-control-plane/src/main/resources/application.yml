@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: reservation-control-plane
+  datasource:
+    url: ${RESERVATION_DATABASE_URL:jdbc:postgresql://localhost:5432/reservation_control_plane}
+    username: ${RESERVATION_DATABASE_USERNAME:reservations}
+    password: ${RESERVATION_DATABASE_PASSWORD:reservations}
+    hikari:
+      pool-name: reservation-control-plane-pool
+      maximum-pool-size: ${RESERVATION_DB_POOL_MAX:8}
+      minimum-idle: ${RESERVATION_DB_POOL_MIN_IDLE:2}
+      connection-timeout: ${RESERVATION_DB_CONNECTION_TIMEOUT_MS:60000}
+      validation-timeout: ${RESERVATION_DB_VALIDATION_TIMEOUT_MS:5000}
+      idle-timeout: ${RESERVATION_DB_IDLE_TIMEOUT_MS:600000}
+      max-lifetime: ${RESERVATION_DB_MAX_LIFETIME_MS:1800000}
+      keepalive-time: ${RESERVATION_DB_KEEPALIVE_MS:120000}
+  transaction:
+    default-timeout: ${RESERVATION_TRANSACTION_TIMEOUT:60s}
+  threads:
+    virtual:
+      enabled: true
+
+reservation:
+  security:
+    hmac-secret: ${RESERVATION_HMAC_SECRET:local-demo-reservation-secret-32-bytes-minimum}
+  tenant-id: ${RESERVATION_TENANT_ID:demo}
+  redis:
+    enabled: ${RESERVATION_REDIS_ENABLED:false}
+    uri: ${RESERVATION_REDIS_URI:redis://localhost:6379}
+  sweep:
+    fixed-delay: ${RESERVATION_SWEEP_DELAY:2s}
+    batch-size: ${RESERVATION_SWEEP_BATCH_SIZE:32}
+  operator:
+    enabled: ${RESERVATION_OPERATOR_ENABLED:false}
+    key: ${RESERVATION_OPERATOR_KEY:local-demo-operator-key-32-bytes-minimum}
+
+server:
+  max-http-request-header-size: 16KB
+  tomcat:
+    # Virtual threads bypass the worker pool; this remains the platform-thread fallback.
+    threads:
+      max: ${RESERVATION_TOMCAT_MAX_THREADS:8000}
+    max-connections: ${RESERVATION_TOMCAT_MAX_CONNECTIONS:8000}
+    accept-count: ${RESERVATION_TOMCAT_ACCEPT_COUNT:1000}
+    connection-timeout: ${RESERVATION_TOMCAT_CONNECTION_TIMEOUT:60s}
+    keep-alive-timeout: ${RESERVATION_TOMCAT_KEEP_ALIVE_TIMEOUT:60s}
+    max-keep-alive-requests: ${RESERVATION_TOMCAT_MAX_KEEP_ALIVE_REQUESTS:1000}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true

@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1460" viewBox="0 0 1400 1460" role="img" aria-labelledby="title desc">
+  <title id="title">Reservation Control Plane Architecture</title>
+  <desc id="desc">Layered architecture where PostgreSQL is authoritative and Redis provides advisory coordination.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke="#2563eb" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <marker id="arrowAdvisory" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#c2410c" stroke="#c2410c" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <marker id="arrowAuthority" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#059669" stroke="#059669" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <marker id="arrowAsync" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#7c3aed" stroke="#7c3aed" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    </marker>
+    <style>
+      .bg { fill: #f8fafc; }
+      .title { font-family: "Architects Daughter"; font-size: 38px; font-weight: 700; fill: #0f172a; }
+      .subtitle { font-family: "Comic Mono"; font-size: 18px; fill: #475569; }
+      .layer { fill: #ffffff; stroke: #cbd5e1; stroke-width: 2; rx: 8; }
+      .layerLabel { font-family: "Comic Mono"; font-size: 17px; font-weight: 700; fill: #334155; }
+      .card { fill: #eff6ff; stroke: #60a5fa; stroke-width: 2; rx: 8; }
+      .authorityCard { fill: #ecfdf5; stroke: #059669; stroke-width: 2; rx: 8; }
+      .advisoryCard { fill: #fff7ed; stroke: #ea580c; stroke-width: 2; rx: 8; }
+      .asyncCard { fill: #faf5ff; stroke: #8b5cf6; stroke-width: 2; rx: 8; }
+      .titleText { font-family: "Architects Daughter"; font-size: 19px; font-weight: 700; fill: #111827; }
+      .bodyText { font-family: "Comic Mono"; font-size: 13px; fill: #475569; }
+      .smallText { font-family: "Comic Mono"; font-size: 13px; fill: #64748b; }
+      .connector { fill: none; stroke: #2563eb; stroke-width: 3; marker-end: url(#arrow); }
+      .authorityConnector { fill: none; stroke: #059669; stroke-width: 3; marker-end: url(#arrowAuthority); }
+      .advisoryConnector { fill: none; stroke: #c2410c; stroke-width: 3; stroke-dasharray: 10 8; marker-end: url(#arrowAdvisory); }
+      .asyncConnector { fill: none; stroke: #7c3aed; stroke-width: 3; stroke-dasharray: 10 8; marker-end: url(#arrowAsync); }
+    </style>
+    <g class="node" data-node="browser"><rect x="520" y="195" width="360" height="92"/></g>
+    <g class="node" data-node="http"><rect x="520" y="390" width="360" height="96"/></g>
+    <g class="node" data-node="service"><rect x="520" y="590" width="360" height="108"/></g>
+    <g class="node" data-node="safety"><rect x="100" y="590" width="320" height="108"/></g>
+    <g class="node" data-node="leader"><rect x="980" y="590" width="320" height="108"/></g>
+    <g class="node" data-node="redis"><rect x="100" y="835" width="320" height="112"/></g>
+    <g class="node" data-node="repository"><rect x="520" y="835" width="360" height="112"/></g>
+    <g class="node" data-node="sweeper"><rect x="980" y="835" width="320" height="112"/></g>
+    <g class="node" data-node="postgres"><rect x="520" y="1090" width="360" height="126"/></g>
+    <g class="node" data-node="outbox"><rect x="980" y="1090" width="320" height="126"/></g>
+    <g class="node" data-node="provider"><rect x="980" y="1290" width="320" height="92"/></g>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1400" height="1460"/>
+  <text class="title" x="70" y="70">Reservation Control Plane Architecture</text>
+  <text class="subtitle" x="70" y="106">PostgreSQL decides every reservation outcome. Redis only reduces duplicate or excessive work.</text>
+
+  <rect class="layer" x="60" y="145" width="1280" height="185" rx="8"/>
+  <text class="layerLabel" x="85" y="180">Layer 1 - Browser scenario</text>
+  <rect id="card-browser" class="card" x="520" y="195" width="360" height="92" rx="8"/>
+  <text class="titleText" x="550" y="232">Browser console</text>
+  <text class="bodyText" x="550" y="260">Memory-only owner and idempotency keys / 2s snapshots</text>
+
+  <rect class="layer" x="60" y="345" width="1280" height="185" rx="8"/>
+  <text class="layerLabel" x="85" y="380">Layer 2 - Spring Boot MVC on Java 25 virtual threads</text>
+  <rect id="card-http" class="card" x="520" y="390" width="360" height="96" rx="8"/>
+  <text class="titleText" x="550" y="428">HTTP boundary</text>
+  <text class="bodyText" x="550" y="456">Live MVC / security headers / requestId / redacted logs</text>
+
+  <rect class="layer" x="60" y="545" width="1280" height="200" rx="8"/>
+  <text class="layerLabel" x="85" y="580">Layer 3 - Commands and advisory gates</text>
+  <rect id="card-safety" class="advisoryCard" x="100" y="590" width="320" height="108" rx="8"/>
+  <text class="titleText" x="130" y="628">Always-on local safety</text>
+  <text class="bodyText" x="130" y="656">5 foreground + 1 background DB permits</text>
+  <text class="bodyText" x="130" y="680">100ms acquisition boundary</text>
+  <rect id="card-service" class="card" x="520" y="590" width="360" height="108" rx="8"/>
+  <text class="titleText" x="550" y="628">Application services</text>
+  <text class="bodyText" x="550" y="656">Hold / confirm / cancel / waitlist</text>
+  <text class="bodyText" x="550" y="680">Extend / offer / 90s idempotency lease</text>
+  <rect id="card-leader" class="advisoryCard" x="980" y="590" width="320" height="108" rx="8"/>
+  <text class="titleText" x="1010" y="628">Leader coordination</text>
+  <text class="bodyText" x="1010" y="656">15s auto-extended Lettuce leader lease</text>
+  <text class="bodyText" x="1010" y="680">Only one automatic sweeper is active</text>
+
+  <rect class="layer" x="60" y="790" width="1280" height="205" rx="8"/>
+  <text class="layerLabel" x="85" y="825">Layer 4 - Coordination and persistence adapters</text>
+  <rect id="card-redis" class="advisoryCard" x="100" y="835" width="320" height="112" rx="8"/>
+  <text class="titleText" x="130" y="873">Redis + Lettuce</text>
+  <text class="bodyText" x="130" y="901">64 permits / 2s duplicate lock</text>
+  <text class="bodyText" x="130" y="925">Fail-open; semaphore has no crash lease</text>
+  <rect id="card-repository" class="authorityCard" x="520" y="835" width="360" height="112" rx="8"/>
+  <text class="titleText" x="550" y="873">Bluetape Exposed repositories</text>
+  <text class="bodyText" x="550" y="901">Resource-first lock / revision and state CAS</text>
+  <text class="bodyText" x="550" y="925">Same transaction for state and replay body</text>
+  <rect id="card-sweeper" class="advisoryCard" x="980" y="835" width="320" height="112" rx="8"/>
+  <text class="titleText" x="1010" y="873">Bounded expiry sweeper</text>
+  <text class="bodyText" x="1010" y="901">32 resources / 5s budget / single-flight</text>
+  <text class="bodyText" x="1010" y="925">Expire then promote FIFO head in one tx</text>
+
+  <rect class="layer" x="60" y="1040" width="1280" height="390" rx="8"/>
+  <text class="layerLabel" x="85" y="1075">Layer 5 - Authoritative state and delivery boundary</text>
+  <rect id="card-postgres" class="authorityCard" x="520" y="1090" width="360" height="126" rx="8"/>
+  <text class="titleText" x="550" y="1128">PostgreSQL - authoritative</text>
+  <text class="bodyText" x="550" y="1156">Capacity / holds / waitlist / offers</text>
+  <text class="bodyText" x="550" y="1180">Idempotency / notification delivery intent</text>
+  <rect id="card-outbox" class="asyncCard" x="980" y="1090" width="320" height="126" rx="8"/>
+  <text class="titleText" x="1010" y="1128">Durable notification delivery</text>
+  <text class="bodyText" x="1010" y="1156">Stable deliveryId / PENDING state</text>
+  <text class="bodyText" x="1010" y="1180">Provider retry outside reservation tx</text>
+  <rect id="card-provider" class="asyncCard" x="980" y="1290" width="320" height="92" rx="8"/>
+  <text class="titleText" x="1010" y="1328">Fake provider fixture</text>
+  <text class="bodyText" x="1010" y="1356">Fail-first retry / deliveryId dedup</text>
+
+  <path class="connector" d="M 700 287 L 700 390"/>
+  <path class="connector" d="M 700 486 L 700 590"/>
+  <path class="authorityConnector" d="M 700 698 L 700 835"/>
+  <path class="authorityConnector" d="M 700 947 L 700 1090"/>
+  <path class="advisoryConnector" d="M 520 644 L 420 644"/>
+  <path class="advisoryConnector" d="M 260 698 L 260 835"/>
+  <path class="advisoryConnector" d="M 880 644 L 980 644"/>
+  <path class="advisoryConnector" d="M 1140 698 L 1140 835"/>
+  <path class="authorityConnector" d="M 980 891 L 880 891"/>
+  <path class="asyncConnector" d="M 880 1153 L 980 1153"/>
+  <path class="asyncConnector" d="M 1140 1216 L 1140 1290"/>
+
+  <path class="connector" d="M 90 1405 L 150 1405"/>
+  <text class="smallText" x="165" y="1411">request flow</text>
+  <path class="authorityConnector" d="M 340 1405 L 400 1405"/>
+  <text class="smallText" x="415" y="1411">authoritative transaction</text>
+  <path class="advisoryConnector" d="M 675 1405 L 735 1405"/>
+  <text class="smallText" x="750" y="1411">advisory control</text>
+  <path class="asyncConnector" d="M 965 1405 L 1025 1405"/>
+  <text class="smallText" x="1040" y="1411">asynchronous delivery</text>
+</svg>

@@ -128,11 +128,15 @@ application-owned repository로 재현한다. 두 예제의 실제 중복은 향
 `bluetape4k-lettuce`의 공개 API를 직접 사용한다.
 
 - `LettuceClients`가 `RedisClient`와 connection lifecycle을 관리한다.
-- `LettuceSemaphore`는 HTTP command admission에만 사용한다. distributed permit은 64,
-  acquire timeout은 100ms, lease는 5초로 둔다.
+- `LettuceSemaphore`는 HTTP command admission에만 best-effort로 사용한다. distributed
+  permit은 64, acquire timeout은 100ms이며 모든 정상/예외 경로에서 `finally`로 release한다.
+  BOM 1.3.1의 Bluetape 1.11.0 API에는 permit lease가 없으므로 crash expiry를 보장하지 않는다.
 - `LettuceLock.tryLock(waitTime = ZERO, leaseTime = short)`은 동일 command fingerprint의
   짧은 in-flight suppression에만 사용하며 lease는 2초다.
 - Redis token, semaphore count, lock lease는 resource availability를 표현하지 않는다.
+- process crash로 semaphore permit이 누수될 수 있으며 operator projection으로 관찰하고
+  demo Redis reset/restart로 복구한다. 이 가용성 제약은 always-on local bulkhead와
+  PostgreSQL correctness를 약화하지 않는다.
 - suppression hit는 PostgreSQL idempotency snapshot을 읽어 replay 또는
   `COMMAND_IN_PROGRESS`로 수렴한다.
 - Redis exception은 `redis_admission_degraded` 또는 `redis_suppression_degraded`로

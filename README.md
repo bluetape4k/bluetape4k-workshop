@@ -216,6 +216,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Advanced | [`spring-modulith-events-deep-dive`](spring-modulith/events-deep-dive/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | Modulith application events with persistence |
 | Advanced | [`spring-modulith-jpa-demo`](spring-modulith/jpa-demo/) | `logging`, `testcontainers` | PostgreSQL (TC) | Modulith module encapsulation with JPA |
 | Advanced | [`commerce-order-lifecycle-fulfillment`](commerce/order-lifecycle-fulfillment/) | `exposed-jdbc`, `exposed-jdbc-tests`, `virtualthread-jdk25`, `micrometer` | PostgreSQL (TC) | Independent order, payment, inventory, split fulfillment, cancellation, and refund lifecycles with durable event replay |
+| Advanced | [`commerce-reservation-control-plane`](commerce/reservation-control-plane/) | `exposed-jdbc`, `exposed-jdbc-tests`, `lettuce`, `leader`, `virtualthread-jdk25`, `logging` | PostgreSQL + Redis (TC) | PostgreSQL-authoritative holds, idempotent retries, waitlist offers, and leader-guarded expiry |
 | Advanced | [`gateway-api-gateway`](gateway/api-gateway/) | `logging` | Services running | Spring Cloud Gateway routing, filters, predicates |
 | Basic | [`ratelimit-bucket4j-caffeine-web`](ratelimit/bucket4j-caffeine-web/) | `logging` | In-memory | Bucket4j rate limiting with Caffeine |
 | Advanced | [`ratelimit-bucket4j-redis`](ratelimit/bucket4j-redis/) | `redis`, `testcontainers` | Redis (TC) | Distributed rate limiting via Bucket4j + Redis |

@@ -290,6 +290,7 @@ jobs:
       # - messaging-kafka: Kafka-backed messaging path
       # - messaging-kafka-outbox-fallback: PostgreSQL + Kafka fallback relay path
       # - commerce-order-lifecycle-fulfillment: PostgreSQL durable lifecycle and replay path
+      # - commerce-reservation-control-plane: PostgreSQL-authoritative reservation and advisory Redis path
       - name: Run container-backed examples
         run: >-
           ./gradlew
@@ -308,6 +309,7 @@ jobs:
           :messaging-kafka:test
           :messaging-kafka-outbox-fallback:test
           :commerce-order-lifecycle-fulfillment:test
+          :commerce-reservation-control-plane:test
           --continue
           --max-workers=1
         env:
@@ -351,6 +353,8 @@ jobs:
             messaging/kafka-outbox-fallback/build/reports/tests/test/
             commerce/order-lifecycle-fulfillment/build/test-results/test/*.xml
             commerce/order-lifecycle-fulfillment/build/reports/tests/test/
+            commerce/reservation-control-plane/build/test-results/test/*.xml
+            commerce/reservation-control-plane/build/reports/tests/test/
           retention-days: 7
 
   examples-status:

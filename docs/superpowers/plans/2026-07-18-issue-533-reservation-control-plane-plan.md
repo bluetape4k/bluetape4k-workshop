@@ -27,11 +27,11 @@ promotion은 PostgreSQL CAS/unique constraint로 중복 안전하게 만든다.
 | Repository tests | `bluetape4k-exposed-jdbc-tests` | `withTables`, `TestDB.POSTGRESQL`, 공개 test helper 재사용 |
 | PostgreSQL | `bluetape4k-testcontainers` `PostgreSQLServer` | 동시성/재시작 correctness authority. H2로 대체 금지 |
 | Redis client | `bluetape4k-lettuce` `LettuceClients` | client/connection lifecycle 재사용 |
-| Admission | `bluetape4k-lettuce` `LettuceSemaphore` | HTTP 진입 제한 전용. resource capacity 권위 아님 |
+| Admission | `bluetape4k-lettuce` `LettuceSemaphore` | 1.11.0에는 permit lease가 없으므로 best-effort + finally release. local bulkhead가 안전 경계 |
 | In-flight suppression | `bluetape4k-lettuce` `LettuceLock` | token-checked unlock 재사용. ad-hoc SET NX/Lua 금지 |
 | Redis tests | `bluetape4k-testcontainers` `RedisServer` | backend failure/expiry/reconnect fixture |
 | Sweeper election | `bluetape4k-leader-core`, `bluetape4k-leader-redis-lettuce` 0.4.0 | `@Scheduled` 안에서 `runIfLeaderResult` 사용 |
-| Spring leader wiring | `bluetape4k-leader-spring-boot` 0.4.0 | versionless catalog alias 추가. Redis connection bean은 application 소유 |
+| Leader wiring | `bluetape4k-leader-core` + `bluetape4k-leader-redis-lettuce` 0.4.0 | Redis connection과 optional leader bean을 application이 소유한다. connection bean 존재만으로 backend auto-configuration이 활성화되는 Spring Boot 모듈은 startup fail-open과 맞지 않아 사용하지 않는다. |
 | Virtual threads | `bluetape4k-virtualthread-api`, runtime `bluetape4k-virtualthread-jdk25` | MVC/JDBC/Lettuce/worker blocking 경계. JDK21 provider 제외 |
 | Concurrency fixture | `bluetape4k-junit5` `MultithreadingTester` | CAS race와 duplicate sweeper 검증 |
 | IDs and JSON | `bluetape4k-idgenerators`, `bluetape4k-jackson3`, `bluetape4k-exposed-jackson3` | UUID v7, canonical fingerprint, closed DTO |
@@ -104,7 +104,7 @@ promotion은 PostgreSQL CAS/unique constraint로 중복 안전하게 만든다.
 ### 1. 모듈과 dependency 계약
 
 - [ ] module skeleton과 Java 25 toolchain을 등록한다.
-- [ ] versionless `bluetape4k-leader-spring-boot` alias를 추가한다.
+- [ ] BOM이 관리하는 versionless `bluetape4k-leader-core`와 `bluetape4k-leader-redis-lettuce`를 조합한다.
 - [ ] dependency insight로 Exposed 1.3.0, Bluetape 1.11.0, leader 0.4.0,
   JDK25 virtual-thread provider를 확인한다.
 - [ ] Java 21 workflow runtime은 유지하고 module toolchain으로 Java 25를 provision한다.
@@ -140,7 +140,8 @@ promotion은 PostgreSQL CAS/unique constraint로 중복 안전하게 만든다.
 ### 5. Redis admission과 suppression
 
 - [ ] always-on foreground 5/background 1 node-local DB bulkhead를 먼저 구현한다.
-- [ ] `LettuceSemaphore` 64 permit/100ms acquire/5초 lease admission을 구현한다.
+- [ ] `LettuceSemaphore` 64 permit/100ms acquire와 모든 경로의 finally release를 구현한다.
+- [ ] 1.11.0 semaphore의 crash lease 부재를 문서화하고 permit 누수 projection/reset recovery를 검증한다.
 - [ ] `LettuceLock` 2초 suppression과 token-checked release를 연결한다.
 - [ ] rejection, lock hit, TTL expiry, Redis failure/degraded path를 검증한다.
 - [ ] Redis flush/eviction 뒤에도 PostgreSQL 결과가 동일함을 검증한다.
