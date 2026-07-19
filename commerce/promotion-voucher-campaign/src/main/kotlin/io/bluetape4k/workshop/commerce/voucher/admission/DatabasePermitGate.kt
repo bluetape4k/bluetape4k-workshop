@@ -77,6 +77,9 @@ internal class DatabasePermitGate(
         check(heldLane.get() != null) { "JDBC access requires a database permit" }
     }
 
+    /** Exposes lane-local capacity for health probes and deterministic leak tests. */
+    fun availablePermits(lane: DatabaseLane): Int = semaphores.getValue(lane).availablePermits()
+
     companion object : KLogging() {
         private val RETRY_AFTER: Duration = Duration.ofSeconds(1)
     }

@@ -6,10 +6,46 @@ import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.concurrent.virtualthread.VirtualThreads
 import org.junit.jupiter.api.Test
 import java.time.Duration
+import java.util.concurrent.CancellationException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 internal class DatabasePermitGateTest {
+    @Test
+    fun `cancelled foreground work returns only the local JDBC permit`() {
+        val gate = gate()
+
+        assertFailsWith<CancellationException> {
+            gate.withPermit(DatabaseLane.FOREGROUND) { throw CancellationException("cancelled") }
+        }
+
+        gate.availablePermits(DatabaseLane.FOREGROUND) shouldBeEqualTo 1
+        gate.availablePermits(DatabaseLane.WORKER) shouldBeEqualTo 1
+        gate.availablePermits(DatabaseLane.SSE_MAINTENANCE) shouldBeEqualTo 1
+    }
+
+    @Test
+    fun `occupied SSE maintenance lane cannot starve the reserved worker lane`() {
+        val gate = gate()
+        val sseEntered = CountDownLatch(1)
+        val sseRelease = CountDownLatch(1)
+
+        VirtualThreads.executorService().use { executor ->
+            val sse =
+                executor.submit {
+                    gate.withPermit(DatabaseLane.SSE_MAINTENANCE) {
+                        sseEntered.countDown()
+                        sseRelease.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                    }
+                }
+            sseEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+
+            gate.withPermit(DatabaseLane.WORKER) { "worker-progress" } shouldBeEqualTo "worker-progress"
+            sseRelease.countDown()
+            sse.get(5, TimeUnit.SECONDS)
+        }
+    }
+
     @Test
     fun `foreground exhaustion rejects without consuming the worker lane`() {
         val gate = gate()

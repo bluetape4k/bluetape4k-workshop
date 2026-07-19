@@ -28,6 +28,7 @@ import javax.sql.DataSource
 internal data class VoucherProperties(
     val db: VoucherDatabaseProperties = VoucherDatabaseProperties(),
     val keys: VoucherKeyProperties = VoucherKeyProperties(),
+    val redis: VoucherRedisProperties = VoucherRedisProperties(),
 )
 
 internal data class VoucherDatabaseProperties(
@@ -45,6 +46,20 @@ internal data class VoucherKeyProperties(
     val identity: String = "",
     val risk: String = "",
     val redisSlot: String = "",
+)
+
+internal data class VoucherRedisProperties(
+    val enabled: Boolean = false,
+    val uri: String = "redis://127.0.0.1:6379",
+    val commandTimeout: Duration = Duration.ofMillis(500),
+    val failureThreshold: Int = 3,
+    val recoverySuccessThreshold: Int = 3,
+    val probeInterval: Duration = Duration.ofSeconds(1),
+    val maxInFlightProbes: Int = 1,
+    val quotaCapacity: Long = 10,
+    val quotaPeriod: Duration = Duration.ofMinutes(1),
+    val bloomExpectedInsertions: Long = 100_000,
+    val bloomFalseProbability: Double = 0.01,
 )
 
 internal data class VoucherRuntimeEnvironment(
@@ -105,6 +120,7 @@ internal class VoucherStartupValidator(
         runtime: VoucherRuntimeEnvironment,
     ) {
         validateDatabase(properties.db, runtime.hikariMaximumPoolSize)
+        validateRedis(properties.redis)
         validateKeys(properties.keys, runtime.isProduction())
         validateReferencedKeys(properties.keys)
         validateBind(runtime)
@@ -161,6 +177,25 @@ internal class VoucherStartupValidator(
                 .values
                 .any { values -> values.map { it.first }.distinct().size > 1 }
         if (reusedAcrossDomains) fail(StartupFailureCode.DOMAIN_KEY_REUSE)
+    }
+
+    private fun validateRedis(redis: VoucherRedisProperties) {
+        val invalid =
+            (redis.enabled && redis.uri.isBlank()) ||
+                redis.commandTimeout.isNegative ||
+                redis.commandTimeout.isZero ||
+                redis.failureThreshold <= 0 ||
+                redis.recoverySuccessThreshold <= 0 ||
+                redis.probeInterval.isNegative ||
+                redis.probeInterval.isZero ||
+                redis.maxInFlightProbes <= 0 ||
+                redis.quotaCapacity <= 0 ||
+                redis.quotaPeriod.isNegative ||
+                redis.quotaPeriod.isZero ||
+                redis.bloomExpectedInsertions <= 0 ||
+                redis.bloomFalseProbability <= 0.0 ||
+                redis.bloomFalseProbability >= 1.0
+        if (invalid) fail(StartupFailureCode.INVALID_RANGE)
     }
 
     private fun validateReferencedKeys(keys: VoucherKeyProperties) {

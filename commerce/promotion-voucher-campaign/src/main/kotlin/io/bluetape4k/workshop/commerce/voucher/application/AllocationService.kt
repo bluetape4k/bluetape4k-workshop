@@ -30,6 +30,7 @@ import java.util.UUID
 internal enum class RiskSignal {
     CLEAR,
     REVIEW,
+    UNKNOWN,
 }
 
 internal enum class VoucherCommandFailure {

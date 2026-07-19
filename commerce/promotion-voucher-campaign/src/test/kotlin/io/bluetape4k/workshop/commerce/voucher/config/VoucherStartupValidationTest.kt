@@ -60,6 +60,11 @@ internal class VoucherStartupValidationTest {
                     expectedCode = StartupFailureCode.INVALID_RANGE,
                 ),
                 InvalidConfiguration(
+                    name = "invalid Redis recovery threshold",
+                    properties = valid.copy(redis = valid.redis.copy(recoverySuccessThreshold = 0)),
+                    expectedCode = StartupFailureCode.INVALID_RANGE,
+                ),
+                InvalidConfiguration(
                     name = "missing current key",
                     properties = valid.copy(keys = valid.keys.copy(generation = emptyMap())),
                     expectedCode = StartupFailureCode.MISSING_KEY,
