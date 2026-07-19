@@ -95,13 +95,13 @@ dependencies {
     testImplementation(libs.mockk)
 }
 
-val compatibility by sourceSets.creating {
+val compatibility = sourceSets.create("compatibility") {
     java.srcDir("src/compatibility/java")
     compileClasspath = files()
     runtimeClasspath = output
 }
 
-val previousBinaryJar by tasks.registering(Jar::class) {
+val previousBinaryJar = tasks.register<Jar>("previousBinaryJar") {
     archiveClassifier.set("previous-binary")
     from(compatibility.output)
     isPreserveFileTimestamps = false
@@ -145,7 +145,7 @@ tasks.test {
 
 val stressRun = providers.gradleProperty("voucherStressRun")
 val stressReportDirectory = layout.buildDirectory.dir(stressRun.map { "reports/voucher-stress/$it" })
-val stressTest by tasks.registering(Test::class) {
+val stressTest = tasks.register<Test>("stressTest") {
     description = "Runs voucher stress evidence profiles."
     group = "verification"
     useWorkshopTestRuntime()
@@ -163,7 +163,7 @@ val stressTest by tasks.registering(Test::class) {
     shouldRunAfter(tasks.test)
 }
 
-val migrationCompatibilityTest by tasks.registering(Test::class) {
+val migrationCompatibilityTest = tasks.register<Test>("migrationCompatibilityTest") {
     description = "Runs packaged voucher migration compatibility processes."
     group = "verification"
     useWorkshopTestRuntime()
@@ -173,5 +173,20 @@ val migrationCompatibilityTest by tasks.registering(Test::class) {
         includeTags("migration-compatibility")
     }
     dependsOn(tasks.bootJar, previousBinaryJar)
+    val artifactsDirectory = layout.buildDirectory.dir("libs").get().asFile
+    val postgresqlDriver =
+        configurations.testRuntimeClasspath
+            .get()
+            .files
+            .single { it.name.startsWith("postgresql-") && it.extension == "jar" }
+    systemProperty(
+        "voucher.compatibility.current-boot-jar",
+        artifactsDirectory.resolve("${project.name}.jar").absolutePath,
+    )
+    systemProperty(
+        "voucher.compatibility.previous-jar",
+        artifactsDirectory.resolve("${project.name}-previous-binary.jar").absolutePath,
+    )
+    systemProperty("voucher.compatibility.postgresql-driver", postgresqlDriver.absolutePath)
     shouldRunAfter(tasks.test)
 }

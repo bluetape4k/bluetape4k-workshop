@@ -38,7 +38,7 @@ internal class VoucherJdbcExecutor(
                         TransactionManager.current().exec("SET LOCAL lock_timeout = '${lockTimeout.toMillis()}ms'")
                     }
                     TransactionResult(block())
-                } ?: error("voucher transaction returned no result")
+                }
             log.debug { "voucher_jdbc_transaction_completed lane=$lane" }
             result.value
         }

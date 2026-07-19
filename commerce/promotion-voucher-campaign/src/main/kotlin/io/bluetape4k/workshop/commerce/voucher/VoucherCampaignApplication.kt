@@ -13,6 +13,10 @@ internal class VoucherCampaignApplication {
 }
 
 fun main(args: Array<String>) {
+    if (VoucherCompatibilityCli.supports(args)) {
+        VoucherCompatibilityCli.run(args)
+        return
+    }
     runApplication<VoucherCampaignApplication>(*args)
     VoucherCampaignApplication.log.info { "voucher_campaign_application_started" }
 }

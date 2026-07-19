@@ -15,6 +15,8 @@ import org.springframework.core.io.ClassPathResource
 import java.sql.DriverManager
 import java.time.Duration
 import java.util.UUID
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -57,6 +59,26 @@ internal class VoucherMigrationRunnerTest {
     }
 
     @Test
+    fun `production migration creates the complete authority schema and replays`() {
+        val runner = runner("db/migration/V001__voucher_campaign.sql")
+
+        runner.migrate() shouldBeEqualTo VoucherMigrationResult.APPLIED
+        runner.migrate() shouldBeEqualTo VoucherMigrationResult.ALREADY_APPLIED
+
+        queryLong(
+            """
+            SELECT count(*)
+            FROM information_schema.tables
+            WHERE table_schema = '$schema'
+              AND table_name IN (
+                'voucher_campaigns', 'voucher_claims', 'voucher_reviews', 'voucher_audits',
+                'campaign_event_inbox', 'voucher_http_idempotency', 'voucher_schema_history'
+              )
+            """.trimIndent(),
+        ) shouldBeEqualTo 7L
+    }
+
+    @Test
     fun `checksum drift fails closed without mutating the applied schema`() {
         runner("db/migration/test/V001__voucher_probe.sql").migrate()
 
@@ -79,6 +101,10 @@ internal class VoucherMigrationRunnerTest {
         failure.code shouldBeEqualTo VoucherMigrationFailureCode.STATEMENT_FAILED
         queryString("SELECT to_regclass('$schema.voucher_migration_partial')").shouldBeNull()
         queryString("SELECT to_regclass('$schema.voucher_schema_history')").shouldBeNull()
+
+        runner("db/migration/test/V001__voucher_probe.sql", version = "002").migrate() shouldBeEqualTo
+            VoucherMigrationResult.APPLIED
+        queryLong("SELECT count(*) FROM voucher_schema_history") shouldBeEqualTo 1L
     }
 
     @Test
@@ -99,6 +125,30 @@ internal class VoucherMigrationRunnerTest {
 
             failure.code shouldBeEqualTo VoucherMigrationFailureCode.LOCK_TIMEOUT
             blocker.rollback()
+        }
+    }
+
+    @Test
+    fun `contending startup waits for the winner then rechecks the checksum`() {
+        adminConnection().use { blocker ->
+            blocker.autoCommit = false
+            blocker.createStatement().use { statement ->
+                statement.executeQuery("SELECT pg_advisory_xact_lock($MIGRATION_LOCK_KEY)").use { it.next() }
+            }
+            Executors.newVirtualThreadPerTaskExecutor().use { executor ->
+                val migration =
+                    executor.submit<VoucherMigrationResult> {
+                        runner(
+                            resource = "db/migration/test/V001__voucher_probe.sql",
+                            lockTimeout = Duration.ofSeconds(2),
+                        ).migrate()
+                    }
+                TimeUnit.MILLISECONDS.sleep(50)
+                migration.isDone shouldBeEqualTo false
+                blocker.rollback()
+
+                migration.get(2, TimeUnit.SECONDS) shouldBeEqualTo VoucherMigrationResult.APPLIED
+            }
         }
     }
 

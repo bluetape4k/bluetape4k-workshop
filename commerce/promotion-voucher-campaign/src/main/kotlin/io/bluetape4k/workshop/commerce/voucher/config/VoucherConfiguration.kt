@@ -15,6 +15,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment
+import org.springframework.core.io.ClassPathResource
 import org.springframework.transaction.PlatformTransactionManager
 import java.nio.charset.StandardCharsets
 import java.time.Clock
@@ -236,6 +237,25 @@ internal class VoucherConfiguration {
     ): VoucherJdbcExecutor = VoucherJdbcExecutor(gate, transactionManager, properties.db.lockTimeout)
 
     @Bean
+    fun voucherMigrationRunner(
+        dataSource: DataSource,
+        properties: VoucherProperties,
+    ): VoucherMigrationRunner =
+        VoucherMigrationRunner(
+            dataSource = dataSource,
+            migration = VoucherMigration("001", ClassPathResource("db/migration/V001__voucher_campaign.sql")),
+            advisoryLockKey = VOUCHER_MIGRATION_LOCK_KEY,
+            lockTimeout = properties.db.lockTimeout,
+        )
+
+    @Bean
+    fun voucherSchemaMigration(runner: VoucherMigrationRunner): SmartInitializingSingleton =
+        SmartInitializingSingleton {
+            val result = runner.migrate()
+            log.info { "voucher_schema_migration_completed result=$result" }
+        }
+
+    @Bean
     fun voucherStartupValidation(
         properties: VoucherProperties,
         environment: Environment,
@@ -264,7 +284,9 @@ internal class VoucherConfiguration {
             log.info { "voucher_startup_validation_passed profiles=${activeProfiles.sorted()}" }
         }
 
-    companion object : KLogging()
+    companion object : KLogging() {
+        private const val VOUCHER_MIGRATION_LOCK_KEY = 534001L
+    }
 }
 
 /** Gives the application-owned virtual-thread executor a bounded shutdown. */
