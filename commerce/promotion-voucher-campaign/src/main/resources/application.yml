@@ -21,8 +21,23 @@ spring:
   threads:
     virtual:
       enabled: true
+  modulith:
+    events:
+      republish-outstanding-events-on-restart: true
   lifecycle:
     timeout-per-shutdown-phase: 30s
+
+bluetape4k:
+  spring:
+    modulith:
+      exposed:
+        completion-mode: update
+        initialize-schema: true
+        observability:
+          enabled: true
+          include-unloadable: true
+          tags:
+            application: promotion-voucher-campaign
 
 server:
   address: ${VOUCHER_SERVER_ADDRESS:127.0.0.1}
@@ -85,6 +100,12 @@ workshop:
     worker:
       batch-size: 50
       run-deadline: 10s
+      transaction-timeout: 5s
+      max-attempts: 5
+      instance-id: ${VOUCHER_INSTANCE_ID:${random.uuid}}
+      scheduling-enabled: true
+      interval: 5s
+      initial-delay: 5s
     sse:
       max-campaigns: 32
       queue-size: 32

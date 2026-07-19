@@ -4,11 +4,23 @@ import io.bluetape4k.exposed.jdbc.repository.LongAuditableJdbcRepository
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.or
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Repository
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+import java.time.Duration
+import java.time.Instant
 import java.util.UUID
 
 @Repository
@@ -57,6 +69,27 @@ internal class EventInboxRepository(
         return findById(id)
     }
 
+    /** Inserts once by tenant/event id and returns the durable winner after a unique-key race. */
+    fun insertIfAbsent(record: EventInboxRecord): InboxInsertResult {
+        gate.requireHeld()
+        val inserted =
+            table.insertIgnore {
+                it[tenantId] = record.tenantId
+                it[eventId] = record.eventId
+                it[aggregateType] = record.aggregateType
+                it[aggregateId] = record.aggregateId
+                it[payloadDigest] = record.payloadDigest
+                it[observedSequence] = record.observedSequence
+                it[status] = record.status
+                it[attempt] = record.attempt
+                it[nextAttemptAt] = record.nextAttemptAt
+                it[claimOwner] = record.claimOwner
+                it[claimUntil] = record.claimUntil
+            }.insertedCount == 1
+        val durable = checkNotNull(findEvent(record.tenantId, record.eventId))
+        return InboxInsertResult(durable, inserted)
+    }
+
     override fun findById(id: Long): EventInboxRecord {
         gate.requireHeld()
         return table.selectAll().where { table.id eq id }.single().let { with(this) { it.toEntity() } }
@@ -74,5 +107,128 @@ internal class EventInboxRepository(
             ?.let { with(this) { it.toEntity() } }
     }
 
-    companion object : KLogging()
+    /** Claims one due row without waiting behind a row already owned by another worker. */
+    fun claimNext(
+        now: Instant,
+        owner: String,
+        lease: Duration,
+    ): EventInboxRecord? {
+        gate.requireHeld()
+        val row =
+            table
+                .selectAll()
+                .where {
+                    ((table.status eq InboxStatus.PENDING) and (table.nextAttemptAt lessEq now)) or
+                        ((table.status eq InboxStatus.CLAIMED) and (table.claimUntil lessEq now))
+                }.orderBy(table.nextAttemptAt to SortOrder.ASC, table.id to SortOrder.ASC)
+                .limit(1)
+                .forUpdate(
+                    ForUpdateOption.PostgreSQL.ForUpdate(
+                        ForUpdateOption.PostgreSQL.MODE.SKIP_LOCKED,
+                    ),
+                ).singleOrNull()
+                ?: return null
+        val id = row[table.id].value
+        table.update({ table.id eq id }) {
+            it[status] = InboxStatus.CLAIMED
+            it[claimOwner] = owner.take(128)
+            it[claimUntil] = now.plus(lease)
+        }
+        return findById(id)
+    }
+
+    /** Claims the just-inserted row for synchronous acceptance without selecting unrelated backlog. */
+    fun claimById(
+        id: Long,
+        now: Instant,
+        owner: String,
+        lease: Duration,
+    ): EventInboxRecord {
+        gate.requireHeld()
+        val row =
+            table
+                .selectAll()
+                .where { (table.id eq id) and (table.status eq InboxStatus.PENDING) }
+                .forUpdate()
+                .single()
+        check(row[table.id].value == id)
+        check(
+            table.update({ (table.id eq id) and (table.status eq InboxStatus.PENDING) }) {
+                it[status] = InboxStatus.CLAIMED
+                it[claimOwner] = owner.take(128)
+                it[claimUntil] = now.plus(lease)
+            } == 1,
+        ) { "pending inbox row changed before synchronous claim" }
+        return findById(id)
+    }
+
+    /** Serializes decisions for one tenant/aggregate without adding another authority table. */
+    fun lockAggregate(record: EventInboxRecord) {
+        gate.requireHeld()
+        val material = "${record.tenantId}:${record.aggregateType}:${record.aggregateId}"
+        val digest = MessageDigest.getInstance("SHA-256").digest(material.toByteArray(StandardCharsets.UTF_8))
+        val lockKey = ByteBuffer.wrap(digest).long
+        TransactionManager.current().exec("SELECT pg_advisory_xact_lock($lockKey)")
+    }
+
+    fun latestAppliedSequence(record: EventInboxRecord): Long? {
+        gate.requireHeld()
+        return table
+            .selectAll()
+            .where {
+                (table.tenantId eq record.tenantId) and
+                    (table.aggregateType eq record.aggregateType) and
+                    (table.aggregateId eq record.aggregateId) and
+                    (table.status eq InboxStatus.APPLIED)
+            }.orderBy(table.observedSequence to SortOrder.DESC)
+            .limit(1)
+            .singleOrNull()
+            ?.get(table.observedSequence)
+    }
+
+    fun complete(
+        id: Long,
+        outcome: InboxStatus,
+    ): EventInboxRecord {
+        gate.requireHeld()
+        require(outcome in TERMINAL_OUTCOMES) { "outcome must be terminal" }
+        check(
+            table.update({ (table.id eq id) and (table.status eq InboxStatus.CLAIMED) }) {
+                it[status] = outcome
+                it[claimOwner] = null
+                it[claimUntil] = null
+            } == 1,
+        ) { "claimed inbox row changed before completion" }
+        return findById(id)
+    }
+
+    fun retry(
+        record: EventInboxRecord,
+        now: Instant,
+        nextAttemptAt: Instant,
+        maxAttempts: Int,
+    ): EventInboxRecord {
+        gate.requireHeld()
+        val nextAttempt = record.attempt + 1
+        val nextStatus = if (nextAttempt >= maxAttempts) InboxStatus.FAILED else InboxStatus.PENDING
+        check(
+            table.update({ (table.id eq record.id) and (table.status eq InboxStatus.CLAIMED) }) {
+                it[status] = nextStatus
+                it[attempt] = nextAttempt
+                it[EventInboxTable.nextAttemptAt] = if (nextStatus == InboxStatus.FAILED) now else nextAttemptAt
+                it[claimOwner] = null
+                it[claimUntil] = null
+            } == 1,
+        ) { "claimed inbox row changed before retry" }
+        return findById(record.id)
+    }
+
+    companion object : KLogging() {
+        private val TERMINAL_OUTCOMES = setOf(InboxStatus.APPLIED, InboxStatus.IGNORED, InboxStatus.CONFLICT)
+    }
 }
+
+internal data class InboxInsertResult(
+    val record: EventInboxRecord,
+    val inserted: Boolean,
+)

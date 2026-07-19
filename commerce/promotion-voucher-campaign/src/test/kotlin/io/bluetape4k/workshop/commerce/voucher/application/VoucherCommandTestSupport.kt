@@ -46,6 +46,7 @@ internal abstract class VoucherCommandTestSupport : VoucherCompatibilityTestSupp
 
     protected fun configureCommandRuntime(
         foregroundPermits: Int = 12,
+        workerPermits: Int = 1,
         acquireTimeout: Duration = Duration.ofSeconds(2),
         lockTimeout: Duration = Duration.ofSeconds(5),
         serviceClock: Clock = clock,
@@ -53,7 +54,7 @@ internal abstract class VoucherCommandTestSupport : VoucherCompatibilityTestSupp
         gate =
             DatabasePermitGate(
                 foregroundPermits = foregroundPermits,
-                workerPermits = 1,
+                workerPermits = workerPermits,
                 sseMaintenancePermits = 3,
                 acquireTimeout = acquireTimeout,
             )

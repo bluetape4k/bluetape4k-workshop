@@ -6,6 +6,8 @@ import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucher.persistence.VoucherJdbcExecutor
+import io.bluetape4k.workshop.commerce.voucher.security.VoucherCodeKeyRing
+import io.bluetape4k.workshop.commerce.voucher.security.VoucherCodeService
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
 import org.springframework.beans.factory.ObjectProvider
@@ -29,6 +31,8 @@ internal data class VoucherProperties(
     val db: VoucherDatabaseProperties = VoucherDatabaseProperties(),
     val keys: VoucherKeyProperties = VoucherKeyProperties(),
     val redis: VoucherRedisProperties = VoucherRedisProperties(),
+    val worker: VoucherWorkerProperties = VoucherWorkerProperties(),
+    val sse: VoucherSseProperties = VoucherSseProperties(),
 )
 
 internal data class VoucherDatabaseProperties(
@@ -60,6 +64,22 @@ internal data class VoucherRedisProperties(
     val quotaPeriod: Duration = Duration.ofMinutes(1),
     val bloomExpectedInsertions: Long = 100_000,
     val bloomFalseProbability: Double = 0.01,
+)
+
+internal data class VoucherWorkerProperties(
+    val batchSize: Int = 50,
+    val runDeadline: Duration = Duration.ofSeconds(10),
+    val transactionTimeout: Duration = Duration.ofSeconds(5),
+    val maxAttempts: Int = 5,
+    val instanceId: String = "voucher-node",
+    val schedulingEnabled: Boolean = true,
+    val interval: Duration = Duration.ofSeconds(5),
+    val initialDelay: Duration = Duration.ofSeconds(5),
+)
+
+internal data class VoucherSseProperties(
+    val maxCampaigns: Int = 32,
+    val queueSize: Int = 32,
 )
 
 internal data class VoucherRuntimeEnvironment(
@@ -121,6 +141,8 @@ internal class VoucherStartupValidator(
     ) {
         validateDatabase(properties.db, runtime.hikariMaximumPoolSize)
         validateRedis(properties.redis)
+        validateWorker(properties.worker)
+        validateSse(properties.sse)
         validateKeys(properties.keys, runtime.isProduction())
         validateReferencedKeys(properties.keys)
         validateBind(runtime)
@@ -198,6 +220,27 @@ internal class VoucherStartupValidator(
         if (invalid) fail(StartupFailureCode.INVALID_RANGE)
     }
 
+    private fun validateWorker(worker: VoucherWorkerProperties) {
+        val invalid =
+            worker.batchSize !in 1..50 ||
+                worker.runDeadline.isNegative ||
+                worker.runDeadline.isZero ||
+                worker.transactionTimeout.isNegative ||
+                worker.transactionTimeout.isZero ||
+                worker.transactionTimeout > worker.runDeadline ||
+                worker.maxAttempts !in 1..20 ||
+                worker.instanceId.isBlank() ||
+                worker.instanceId.length > 128 ||
+                worker.interval.isNegative ||
+                worker.interval.isZero ||
+                worker.initialDelay.isNegative
+        if (invalid) fail(StartupFailureCode.INVALID_RANGE)
+    }
+
+    private fun validateSse(sse: VoucherSseProperties) {
+        if (sse.maxCampaigns <= 0 || sse.queueSize <= 0) fail(StartupFailureCode.INVALID_RANGE)
+    }
+
     private fun validateReferencedKeys(keys: VoucherKeyProperties) {
         val referenced = referencedKeyVersions.referencedVersions()
         if (!keys.generation.keys.containsAll(referenced.generation) ||
@@ -270,6 +313,17 @@ internal class VoucherConfiguration {
         transactionManager: PlatformTransactionManager,
         properties: VoucherProperties,
     ): VoucherJdbcExecutor = VoucherJdbcExecutor(gate, transactionManager, properties.db.lockTimeout)
+
+    @Bean
+    fun voucherCodeService(properties: VoucherProperties): VoucherCodeService =
+        VoucherCodeService(
+            VoucherCodeKeyRing(
+                currentGenerationVersion = properties.keys.currentVersion,
+                currentVerificationVersion = properties.keys.currentVersion,
+                generationKeys = properties.keys.generation.mapValues { it.value.toByteArray(StandardCharsets.UTF_8) },
+                verificationKeys = properties.keys.verification.mapValues { it.value.toByteArray(StandardCharsets.UTF_8) },
+            ),
+        )
 
     @Bean
     fun voucherMigrationRunner(

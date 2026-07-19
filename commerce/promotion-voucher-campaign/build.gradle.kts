@@ -1,3 +1,4 @@
+import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -20,6 +21,10 @@ kotlin {
 
 springBoot {
     mainClass.set("io.bluetape4k.workshop.commerce.voucher.VoucherCampaignApplicationKt")
+}
+
+tasks.withType<JavaExec>().configureEach {
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
 }
 
 configurations {
@@ -118,6 +123,7 @@ fun Test.useWorkshopTestRuntime() {
         "-XX:+UnlockExperimentalVMOptions",
         "-XX:+EnableDynamicAgentLoading",
         "--enable-preview",
+        "--enable-native-access=ALL-UNNAMED",
         "-Didea.io.use.nio2=true",
     )
     systemProperty("user.language", "en")

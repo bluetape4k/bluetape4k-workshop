@@ -7,6 +7,7 @@ import io.bluetape4k.bucket4j.distributed.redis.lettuceBasedProxyManagerOf
 import io.bluetape4k.bucket4j.ratelimit.RateLimiter
 import io.bluetape4k.bucket4j.ratelimit.RateLimitResult
 import io.bluetape4k.bucket4j.ratelimit.distributed.DistributedRateLimiter
+import io.bluetape4k.leader.lettuce.LettuceLeaderElector
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
@@ -36,7 +37,32 @@ internal class VoucherRedisResources private constructor(
     private val bloomConnection: StatefulRedisConnection<String, String>?,
     val bloomFilter: LettuceBloomFilter?,
 ) : AutoCloseable {
+    @Volatile
+    private var leaderConnection: StatefulRedisConnection<String, String>? = null
+
+    @Volatile
+    private var leaderElector: LettuceLeaderElector? = null
+
+    /** Reuses one lazily connected Lettuce elector and retries after an unavailable startup backend. */
+    fun leaderElector(): LettuceLeaderElector? =
+        synchronized(this) {
+            leaderElector ?: try {
+                val connection = client.connect()
+                leaderConnection = connection
+                LettuceLeaderElector(connection).also {
+                    leaderElector = it
+                    log.info { "voucher_redis_leader_connected" }
+                }
+            } catch (failure: Exception) {
+                log.warn {
+                    "voucher_redis_leader_unavailable fallback=MANUAL failure=${failure.javaClass.simpleName}"
+                }
+                null
+            }
+        }
+
     override fun close() {
+        leaderConnection?.close()
         if (bloomFilter != null) {
             bloomFilter.close()
         } else {
@@ -85,7 +111,12 @@ internal fun voucherDistributedRateLimiter(
     val manager = lettuceBasedProxyManagerOf(client) {}
     val configuration =
         bucketConfiguration {
-            addBandwidth { Bandwidth.simple(properties.quotaCapacity, properties.quotaPeriod) }
+            addBandwidth {
+                Bandwidth.builder()
+                    .capacity(properties.quotaCapacity)
+                    .refillGreedy(properties.quotaCapacity, properties.quotaPeriod)
+                    .build()
+            }
         }
     return DistributedRateLimiter(
         BucketProxyProvider(manager, configuration, keyPrefix = "voucher:rate:"),

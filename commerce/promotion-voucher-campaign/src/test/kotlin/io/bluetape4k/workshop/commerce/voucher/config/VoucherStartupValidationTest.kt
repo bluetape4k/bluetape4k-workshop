@@ -65,6 +65,16 @@ internal class VoucherStartupValidationTest {
                     expectedCode = StartupFailureCode.INVALID_RANGE,
                 ),
                 InvalidConfiguration(
+                    name = "zero worker scheduling interval",
+                    properties = valid.copy(worker = valid.worker.copy(interval = Duration.ZERO)),
+                    expectedCode = StartupFailureCode.INVALID_RANGE,
+                ),
+                InvalidConfiguration(
+                    name = "negative worker scheduling initial delay",
+                    properties = valid.copy(worker = valid.worker.copy(initialDelay = Duration.ofMillis(-1))),
+                    expectedCode = StartupFailureCode.INVALID_RANGE,
+                ),
+                InvalidConfiguration(
                     name = "missing current key",
                     properties = valid.copy(keys = valid.keys.copy(generation = emptyMap())),
                     expectedCode = StartupFailureCode.MISSING_KEY,

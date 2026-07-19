@@ -16,30 +16,56 @@ internal interface VoucherTransactionRunner {
 /** Opens the Spring/Exposed transaction only after the matching local JDBC permit is held. */
 internal class VoucherJdbcExecutor(
     private val gate: DatabasePermitGate,
-    transactionManager: PlatformTransactionManager,
+    private val transactionManager: PlatformTransactionManager,
     private val lockTimeout: Duration = Duration.ofSeconds(5),
 ) : VoucherTransactionRunner {
     private val transactions = TransactionTemplate(transactionManager)
 
     override fun <T> foregroundTransaction(block: () -> T): T =
-        transaction(DatabaseLane.FOREGROUND, applyLockTimeout = true, block)
+        transaction(DatabaseLane.FOREGROUND, applyLockTimeout = true, block = block)
 
     fun <T> workerTransaction(block: () -> T): T =
-        transaction(DatabaseLane.WORKER, applyLockTimeout = false, block)
+        transaction(DatabaseLane.WORKER, applyLockTimeout = false, block = block)
+
+    /** Applies both Spring and PostgreSQL timeouts to a deadline-bounded worker row. */
+    fun <T> workerTransaction(
+        timeout: Duration,
+        block: () -> T,
+    ): T {
+        require(!timeout.isNegative && !timeout.isZero) { "timeout must be positive" }
+        return transaction(
+            lane = DatabaseLane.WORKER,
+            applyLockTimeout = false,
+            transactionTimeout = timeout,
+            block = block,
+        )
+    }
 
     fun <T> sseMaintenanceTransaction(block: () -> T): T =
-        transaction(DatabaseLane.SSE_MAINTENANCE, applyLockTimeout = false, block)
+        transaction(DatabaseLane.SSE_MAINTENANCE, applyLockTimeout = false, block = block)
 
     private fun <T> transaction(
         lane: DatabaseLane,
         applyLockTimeout: Boolean,
+        transactionTimeout: Duration? = null,
         block: () -> T,
     ): T =
         gate.withPermit(lane) {
+            val template =
+                transactionTimeout?.let { timeout ->
+                    TransactionTemplate(transactionManager).apply {
+                        this.timeout = timeout.toSpringTimeoutSeconds()
+                    }
+                } ?: transactions
             val result =
-                transactions.execute {
+                template.execute {
                     if (applyLockTimeout) {
                         TransactionManager.current().exec("SET LOCAL lock_timeout = '${lockTimeout.toMillis()}ms'")
+                    }
+                    if (transactionTimeout != null) {
+                        TransactionManager.current().exec(
+                            "SET LOCAL statement_timeout = '${transactionTimeout.toMillis().coerceAtLeast(1)}ms'",
+                        )
                     }
                     TransactionResult(block())
                 }
@@ -48,6 +74,12 @@ internal class VoucherJdbcExecutor(
         }
 
     private data class TransactionResult<T>(val value: T)
+
+    private fun Duration.toSpringTimeoutSeconds(): Int =
+        ((toMillis() + 999L) / 1_000L)
+            .coerceAtLeast(1L)
+            .coerceAtMost(Int.MAX_VALUE.toLong())
+            .toInt()
 
     companion object : KLogging()
 }
