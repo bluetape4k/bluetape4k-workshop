@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.commerce.voucher.config
 
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.postgresql.ds.PGSimpleDataSource
 import org.springframework.core.io.ClassPathResource
 import java.sql.DriverManager
-import java.util.UUID
 import javax.sql.DataSource
 
 internal abstract class VoucherCompatibilityTestSupport {
@@ -15,7 +15,7 @@ internal abstract class VoucherCompatibilityTestSupport {
 
     @BeforeEach
     fun createCompatibilitySchema() {
-        schema = "voucher_compat_${UUID.randomUUID().toString().replace("-", "")}".lowercase()
+        schema = "voucher_compat_${Base58.randomString(8).lowercase()}"
         adminConnection().use { connection ->
             connection.createStatement().use { it.execute("CREATE SCHEMA $schema") }
         }

@@ -31,6 +31,7 @@ internal data class RedeemVoucherCommand(
     val expectedRevision: Long,
     val redemptionReference: String,
     val riskSignal: RiskSignal = RiskSignal.CLEAR,
+    val claimId: UUID? = null,
 )
 
 internal data class ClaimTransitionCommand(
@@ -61,6 +62,9 @@ internal class ClaimCommandService(
             val candidate =
                 claims.findByVerifier(command.tenantId, lookup.verifier)
                     ?: fail(VoucherCommandFailure.INVALID_CODE)
+            if (command.claimId != null && candidate.claimId != command.claimId) {
+                fail(VoucherCommandFailure.CLAIM_NOT_FOUND)
+            }
             val campaign =
                 campaigns.findPublicForUpdate(command.tenantId, candidate.campaignId)
                     ?: fail(VoucherCommandFailure.CAMPAIGN_NOT_FOUND)

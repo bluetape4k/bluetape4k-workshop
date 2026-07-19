@@ -29,6 +29,16 @@ internal data class CampaignPolicyCommand(
     val redemptionTtlSeconds: Long,
 )
 
+internal data class CreateCampaignCommand(
+    val tenantId: String,
+    val campaignId: UUID,
+    val startsAt: Instant,
+    val endsAt: Instant,
+    val capacity: Int,
+    val perUserLimit: Int,
+    val redemptionTtlSeconds: Long,
+)
+
 /** Applies operator campaign commands while holding the same canonical campaign lock as claims. */
 @Service
 internal class CampaignCommandService(
@@ -37,6 +47,39 @@ internal class CampaignCommandService(
     private val audits: AuditRepository,
     private val clock: Clock,
 ) {
+    fun create(command: CreateCampaignCommand): CampaignSnapshot {
+        require(command.tenantId.isNotBlank()) { "tenantId must not be blank" }
+        require(command.startsAt.isBefore(command.endsAt)) { "startsAt must precede endsAt" }
+        require(command.capacity > 0) { "capacity must be positive" }
+        require(command.perUserLimit > 0) { "perUserLimit must be positive" }
+        require(command.redemptionTtlSeconds > 0) { "redemptionTtlSeconds must be positive" }
+        return transactions.foregroundTransaction {
+            if (campaigns.findPublic(command.tenantId, command.campaignId) != null) {
+                fail(VoucherCommandFailure.CAMPAIGN_ALREADY_EXISTS)
+            }
+            val created =
+                campaigns.create(
+                    CampaignRecord(
+                        id = 0,
+                        tenantId = command.tenantId,
+                        campaignId = command.campaignId,
+                        state = io.bluetape4k.workshop.commerce.voucher.domain.CampaignState.DRAFT,
+                        startsAt = command.startsAt,
+                        endsAt = command.endsAt,
+                        capacity = command.capacity,
+                        allocatedCount = 0,
+                        perUserLimit = command.perUserLimit,
+                        redemptionTtlSeconds = command.redemptionTtlSeconds,
+                        policyVersion = 0,
+                        revision = 0,
+                    ),
+                )
+            audits.append(created.auditCampaign("CAMPAIGN_CREATED"))
+            log.debug { "voucher_campaign_created campaignId=${created.campaignId}" }
+            created.toSnapshot()
+        }
+    }
+
     fun activate(command: CampaignTransitionCommand): CampaignSnapshot =
         transition(command, "CAMPAIGN_ACTIVATED") { campaign ->
             VoucherPolicies.activateCampaign(campaign, command.expectedRevision, Instant.now(clock))

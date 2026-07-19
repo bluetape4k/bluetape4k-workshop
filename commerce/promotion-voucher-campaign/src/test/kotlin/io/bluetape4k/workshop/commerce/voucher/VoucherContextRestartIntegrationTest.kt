@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.commerce.voucher
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.codec.Base58
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.spring.modulith.exposed.ExposedEventPublicationRepository
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.persistence.EventInboxRecord
@@ -30,8 +32,8 @@ internal class VoucherContextRestartIntegrationTest {
 
     @Test
     fun `pending inbox and Modulith publication repository survive context restart`() {
-        val schema = "voucher_restart_${UUID.randomUUID().toString().replace("-", "")}"
-        val eventId = UUID.randomUUID()
+        val schema = "voucher_restart_${Base58.randomString(8).lowercase()}"
+        val eventId = Uuid.V7.nextId()
         var publicationId: UUID? = null
         createSchema(schema)
         try {
@@ -84,7 +86,7 @@ internal class VoucherContextRestartIntegrationTest {
                     tenantId = "tenant-restart",
                     eventId = eventId,
                     aggregateType = "CAMPAIGN",
-                    aggregateId = UUID.randomUUID(),
+                    aggregateId = Uuid.V7.nextId(),
                     payloadDigest = eventId.toString().replace("-", "").repeat(2),
                     observedSequence = 1,
                     status = InboxStatus.PENDING,

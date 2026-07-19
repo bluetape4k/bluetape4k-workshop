@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.voucher.config
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -14,7 +15,6 @@ import org.postgresql.ds.PGSimpleDataSource
 import org.springframework.core.io.ClassPathResource
 import java.sql.DriverManager
 import java.time.Duration
-import java.util.UUID
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
@@ -27,7 +27,7 @@ internal class VoucherMigrationRunnerTest {
 
     @BeforeEach
     fun createIsolatedSchema() {
-        schema = "voucher_migration_${UUID.randomUUID().toString().replace("-", "")}".lowercase()
+        schema = "voucher_migration_${Base58.randomString(8).lowercase()}"
         adminConnection().use { connection ->
             connection.createStatement().use { statement -> statement.execute("CREATE SCHEMA $schema") }
         }

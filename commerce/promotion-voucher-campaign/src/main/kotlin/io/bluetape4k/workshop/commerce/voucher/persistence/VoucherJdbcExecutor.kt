@@ -22,7 +22,11 @@ internal class VoucherJdbcExecutor(
     private val transactions = TransactionTemplate(transactionManager)
 
     override fun <T> foregroundTransaction(block: () -> T): T =
-        transaction(DatabaseLane.FOREGROUND, applyLockTimeout = true, block = block)
+        if (gate.isHeld(DatabaseLane.FOREGROUND)) {
+            block()
+        } else {
+            transaction(DatabaseLane.FOREGROUND, applyLockTimeout = true, block = block)
+        }
 
     fun <T> workerTransaction(block: () -> T): T =
         transaction(DatabaseLane.WORKER, applyLockTimeout = false, block = block)

@@ -26,6 +26,9 @@ spring:
       republish-outstanding-events-on-restart: true
   lifecycle:
     timeout-per-shutdown-phase: 30s
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
 
 bluetape4k:
   spring:
@@ -109,3 +112,11 @@ workshop:
     sse:
       max-campaigns: 32
       queue-size: 32
+    http:
+      max-header-length: 64
+      max-scalar-bytes: 256
+      max-page-size: 100
+      max-cursor-bytes: 512
+      operator-secret: ${VOUCHER_OPERATOR_SECRET:local-operator-secret-0000000000000001}
+      operator-guard: ${VOUCHER_OPERATOR_GUARD:voucher-workshop-operator}
+      allowed-hosts: 127.0.0.1,localhost,::1

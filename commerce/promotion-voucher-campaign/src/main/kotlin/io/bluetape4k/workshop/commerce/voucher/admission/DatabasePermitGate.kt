@@ -77,6 +77,9 @@ internal class DatabasePermitGate(
         check(heldLane.get() != null) { "JDBC access requires a database permit" }
     }
 
+    /** Allows a transaction facade to join its own foreground boundary without reacquiring a permit. */
+    fun isHeld(lane: DatabaseLane): Boolean = heldLane.get() == lane
+
     /** Exposes lane-local capacity for health probes and deterministic leak tests. */
     fun availablePermits(lane: DatabaseLane): Int = semaphores.getValue(lane).availablePermits()
 

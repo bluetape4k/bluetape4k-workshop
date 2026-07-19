@@ -37,10 +37,23 @@ internal enum class IdempotencyStatus {
 
 /** Closed response variants are persisted instead of arbitrary serialized bodies. */
 internal enum class VoucherResponseKind {
+    CAMPAIGN_CREATED,
+    CAMPAIGN_ACTIVATED,
+    CAMPAIGN_PAUSE_ACCEPTED,
+    CAMPAIGN_END_ACCEPTED,
+    CAMPAIGN_POLICY_UPDATED,
     ALLOCATION_ACCEPTED,
     ALLOCATION_REVIEW_REQUIRED,
     REDEMPTION_ACCEPTED,
     REDEMPTION_REVIEW_REQUIRED,
+    CLAIM_RELEASED,
+    CLAIM_REVOCATION_ACCEPTED,
+    CODE_ACKNOWLEDGED,
+    REVIEW_APPROVED,
+    REVIEW_REJECTED,
+    FIXTURE_CONFIGURED,
+    RECONCILIATION_COMPLETED,
+    RECONCILIATION_IN_PROGRESS,
     RATE_LIMITED,
     DATABASE_BULKHEAD_REJECTED,
     AUTHORITATIVE_BACKEND_UNAVAILABLE,
@@ -52,6 +65,16 @@ internal enum class VoucherResponseKind {
     CAPACITY_EXHAUSTED,
     PER_USER_LIMIT_REACHED,
     STALE_REVISION,
+    CAMPAIGN_ALREADY_EXISTS,
+    CAMPAIGN_NOT_FOUND,
+    CLAIM_NOT_FOUND,
+    REVIEW_NOT_FOUND,
+    CAMPAIGN_NOT_ACTIVE,
+    CAMPAIGN_NOT_STARTED,
+    INVALID_CODE,
+    CONCURRENT_MODIFICATION,
+    CODE_ALREADY_ACKNOWLEDGED,
+    IDEMPOTENCY_REPLAY_KEY_UNAVAILABLE,
 }
 
 internal data class StoredHttpResponse(
@@ -76,7 +99,17 @@ internal data class StoredHttpResponse(
 
     companion object {
         private const val MAX_HEADERS = 4
-        private val ALLOWED_RESPONSE_HEADERS = setOf("Content-Type", "ETag", "Location", "Retry-After")
+        private val ALLOWED_RESPONSE_HEADERS =
+            setOf(
+                "Content-Type",
+                "ETag",
+                "Location",
+                "Retry-After",
+                "X-Workshop-Campaign-Descriptor",
+                "X-Workshop-Claim-Descriptor",
+                "X-Workshop-Allocation-Descriptor",
+                "X-Workshop-Reconciliation-Result",
+            )
         private const val serialVersionUID: Long = 1L
     }
 }

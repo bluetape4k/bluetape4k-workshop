@@ -70,5 +70,21 @@ internal class AuditRepository(
             .map { with(this) { it.toEntity() } }
     }
 
+    fun hasReason(
+        tenantId: String,
+        aggregateId: UUID,
+        reasonCode: String,
+    ): Boolean {
+        gate.requireHeld()
+        return table
+            .selectAll()
+            .where {
+                (table.tenantId eq tenantId) and
+                    (table.aggregateId eq aggregateId) and
+                    (table.reasonCode eq reasonCode)
+            }.limit(1)
+            .any()
+    }
+
     companion object : KLogging()
 }

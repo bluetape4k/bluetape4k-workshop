@@ -64,6 +64,8 @@ internal class RetryableVoucherCommand(
                 VoucherResponseKind.DATABASE_BULKHEAD_REJECTED,
                 VoucherResponseKind.AUTHORITATIVE_BACKEND_UNAVAILABLE,
                 VoucherResponseKind.CAMPAIGN_PAUSED,
+                VoucherResponseKind.IDEMPOTENCY_REPLAY_KEY_UNAVAILABLE,
+                VoucherResponseKind.RECONCILIATION_IN_PROGRESS,
             )
     }
 }
@@ -83,6 +85,24 @@ internal class IdempotentVoucherCommandService(
     fun execute(
         command: IdempotentVoucherCommand,
         admission: () -> StoredHttpResponse?,
+        business: () -> StoredHttpResponse,
+    ): IdempotentCommandResult = executeOwned(command, admission, transactionalBusiness = true, business)
+
+    /**
+     * Runs a command whose business operation owns smaller independent transactions, such as a
+     * bounded reconciliation batch. Owner validation and terminal replay persistence remain
+     * PostgreSQL-authoritative, but no foreground permit is retained across the external work.
+     */
+    fun executeExternal(
+        command: IdempotentVoucherCommand,
+        admission: () -> StoredHttpResponse?,
+        business: () -> StoredHttpResponse,
+    ): IdempotentCommandResult = executeOwned(command, admission, transactionalBusiness = false, business)
+
+    private fun executeOwned(
+        command: IdempotentVoucherCommand,
+        admission: () -> StoredHttpResponse?,
+        transactionalBusiness: Boolean,
         business: () -> StoredHttpResponse,
     ): IdempotentCommandResult {
         val replay =
@@ -120,18 +140,23 @@ internal class IdempotentVoucherCommandService(
 
         val response =
             try {
-                transactions.foregroundTransaction {
-                    val businessNow = Instant.now(clock)
-                    check(idempotency.isOwner(command.scope, acquired.ownerToken, businessNow)) {
-                        "idempotency owner or command deadline was lost before business mutation"
+                if (transactionalBusiness) {
+                    transactions.foregroundTransaction {
+                        requireOwner(command, acquired, Instant.now(clock))
+                        cutPoint(IdempotencyCutPoint.BEFORE_BUSINESS)
+                        val completed = business()
+                        finalize(command, acquired, completed)
+                        completed
+                    }
+                } else {
+                    transactions.foregroundTransaction {
+                        requireOwner(command, acquired, Instant.now(clock))
                     }
                     cutPoint(IdempotencyCutPoint.BEFORE_BUSINESS)
                     val completed = business()
-                    val finalizeNow = Instant.now(clock)
-                    check(idempotency.finalize(command.scope, acquired.ownerToken, finalizeNow, completed)) {
-                        "idempotency owner was lost before terminal finalize"
+                    transactions.foregroundTransaction {
+                        finalize(command, acquired, completed)
                     }
-                    cutPoint(IdempotencyCutPoint.AFTER_FINALIZE_BEFORE_COMMIT)
                     completed
                 }
             } catch (retryable: RetryableVoucherCommand) {
@@ -153,6 +178,27 @@ internal class IdempotentVoucherCommandService(
         return IdempotentCommandResult.Completed(response, replayed = false)
     }
 
+    private fun requireOwner(
+        command: IdempotentVoucherCommand,
+        acquired: IdempotencyAcquireResult.Owner,
+        now: Instant,
+    ) {
+        check(idempotency.isOwner(command.scope, acquired.ownerToken, now)) {
+            "idempotency owner or command deadline was lost before business mutation"
+        }
+    }
+
+    private fun finalize(
+        command: IdempotentVoucherCommand,
+        acquired: IdempotencyAcquireResult.Owner,
+        response: StoredHttpResponse,
+    ) {
+        check(idempotency.finalize(command.scope, acquired.ownerToken, Instant.now(clock), response)) {
+            "idempotency owner was lost before terminal finalize"
+        }
+        cutPoint(IdempotencyCutPoint.AFTER_FINALIZE_BEFORE_COMMIT)
+    }
+
     private fun terminalResult(result: IdempotencyAcquireResult?): IdempotentCommandResult? =
         when (result) {
             is IdempotencyAcquireResult.Replay ->
@@ -168,6 +214,8 @@ internal class IdempotentVoucherCommandService(
                 VoucherResponseKind.DATABASE_BULKHEAD_REJECTED,
                 VoucherResponseKind.AUTHORITATIVE_BACKEND_UNAVAILABLE,
                 VoucherResponseKind.CAMPAIGN_PAUSED,
+                VoucherResponseKind.IDEMPOTENCY_REPLAY_KEY_UNAVAILABLE,
+                VoucherResponseKind.RECONCILIATION_IN_PROGRESS,
             )
     }
 }

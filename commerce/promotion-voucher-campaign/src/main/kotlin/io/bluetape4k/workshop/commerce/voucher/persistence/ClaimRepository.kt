@@ -71,7 +71,7 @@ internal class ClaimRepository(
                 it[redemptionReferenceDigest] = record.redemptionReferenceDigest
                 it[revision] = record.revision
             }.value
-        log.debug { "voucher_claim_inserted tenant=${record.tenantId} claimId=${record.claimId}" }
+        log.debug { "voucher_claim_inserted claimId=${record.claimId}" }
         return findById(id)
     }
 

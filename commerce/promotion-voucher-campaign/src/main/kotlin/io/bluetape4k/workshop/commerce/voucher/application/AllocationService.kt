@@ -34,6 +34,7 @@ internal enum class RiskSignal {
 }
 
 internal enum class VoucherCommandFailure {
+    CAMPAIGN_ALREADY_EXISTS,
     CAMPAIGN_NOT_FOUND,
     CLAIM_NOT_FOUND,
     REVIEW_NOT_FOUND,
@@ -49,6 +50,7 @@ internal enum class VoucherCommandFailure {
     STALE_REVISION,
     CONCURRENT_MODIFICATION,
     REPLAY_KEY_UNAVAILABLE,
+    CODE_ALREADY_ACKNOWLEDGED,
 }
 
 internal class VoucherCommandException(
@@ -86,7 +88,7 @@ internal class AllocationService(
         val allocationId = Uuid.V7.nextId()
         val issued = codes.issue(VoucherGenerationInput(command.tenantId, command.campaignId, allocationId))
         val now = Instant.now(clock)
-        val userDigest = digestHex(USER_DIGEST_DOMAIN, command.tenantId, command.userRef)
+        val userDigest = voucherUserDigest(command.tenantId, command.userRef)
 
         return transactions.foregroundTransaction {
             val campaign =
@@ -166,10 +168,13 @@ internal class AllocationService(
         require(command.userRef.length in 1..128) { "userRef must contain 1..128 characters" }
     }
 
-    companion object : KLogging() {
-        private const val USER_DIGEST_DOMAIN = "voucher-user-v1"
-    }
+    companion object : KLogging()
 }
+
+internal fun voucherUserDigest(
+    tenantId: String,
+    userRef: String,
+): String = digestHex("voucher-user-v1", tenantId, userRef)
 
 internal fun requireCampaignActive(
     campaign: CampaignRecord,

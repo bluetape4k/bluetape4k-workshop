@@ -30,6 +30,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.time.Clock
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /** Owns optional Redis resources without allowing their absence to block PostgreSQL commands. */
 internal class VoucherRedisResources private constructor(
@@ -37,6 +39,8 @@ internal class VoucherRedisResources private constructor(
     private val bloomConnection: StatefulRedisConnection<String, String>?,
     val bloomFilter: LettuceBloomFilter?,
 ) : AutoCloseable {
+    private val leaderLock = ReentrantLock()
+
     @Volatile
     private var leaderConnection: StatefulRedisConnection<String, String>? = null
 
@@ -45,7 +49,7 @@ internal class VoucherRedisResources private constructor(
 
     /** Reuses one lazily connected Lettuce elector and retries after an unavailable startup backend. */
     fun leaderElector(): LettuceLeaderElector? =
-        synchronized(this) {
+        leaderLock.withLock {
             leaderElector ?: try {
                 val connection = client.connect()
                 leaderConnection = connection
@@ -128,6 +132,8 @@ internal class RecoverableVoucherRateLimiter(
     private val client: RedisClient,
     private val properties: VoucherRedisProperties,
 ) : RateLimiter<String> {
+    private val delegateLock = ReentrantLock()
+
     @Volatile
     private var delegate: RateLimiter<String>? = null
 
@@ -140,7 +146,7 @@ internal class RecoverableVoucherRateLimiter(
     }
 
     private fun createDelegate(): RateLimiter<String>? =
-        synchronized(this) {
+        delegateLock.withLock {
             delegate ?: try {
                 voucherDistributedRateLimiter(client, properties).also { delegate = it }
             } catch (failure: Exception) {

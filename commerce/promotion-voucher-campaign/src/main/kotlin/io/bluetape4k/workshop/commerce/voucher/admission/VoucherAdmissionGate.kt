@@ -8,6 +8,8 @@ import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.CancellationException
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 internal enum class AdmissionState {
     HEALTHY,
@@ -52,7 +54,7 @@ internal class VoucherAdmissionGate(
     private val recoveryPolicy: AdmissionRecoveryPolicy = AdmissionRecoveryPolicy(),
     private val clock: Clock = Clock.systemUTC(),
 ) {
-    private val monitor = Any()
+    private val stateLock = ReentrantLock()
     private var currentState = if (rateLimiter == null) AdmissionState.DEGRADED else AdmissionState.HEALTHY
     private var consecutiveFailures = 0
     private var recoverySuccesses = 0
@@ -95,10 +97,10 @@ internal class VoucherAdmissionGate(
         }
     }
 
-    fun state(): AdmissionState = synchronized(monitor) { currentState }
+    fun state(): AdmissionState = stateLock.withLock { currentState }
 
     private fun reserveBackendCall(now: Instant): BackendCall? =
-        synchronized(monitor) {
+        stateLock.withLock {
             when (currentState) {
                 AdmissionState.HEALTHY -> BackendCall(probe = false)
                 AdmissionState.DEGRADED -> {
@@ -122,7 +124,7 @@ internal class VoucherAdmissionGate(
         }
 
     private fun recordSuccess() {
-        synchronized(monitor) {
+        stateLock.withLock {
             when (currentState) {
                 AdmissionState.HEALTHY -> consecutiveFailures = 0
                 AdmissionState.DEGRADED -> {
@@ -154,7 +156,7 @@ internal class VoucherAdmissionGate(
         probe: Boolean,
         failure: Exception? = null,
     ) {
-        synchronized(monitor) {
+        stateLock.withLock {
             when (currentState) {
                 AdmissionState.HEALTHY -> {
                     consecutiveFailures++
@@ -180,7 +182,7 @@ internal class VoucherAdmissionGate(
     }
 
     private fun releaseProbe() {
-        synchronized(monitor) {
+        stateLock.withLock {
             check(probesInFlight > 0) { "admission probe accounting underflow" }
             probesInFlight--
         }

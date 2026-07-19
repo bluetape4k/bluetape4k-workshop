@@ -62,7 +62,7 @@ internal class CampaignRepository(
                 it[policyVersion] = record.policyVersion
                 it[revision] = record.revision
             }.value
-        log.debug { "voucher_campaign_created tenant=${record.tenantId} campaignId=${record.campaignId}" }
+        log.debug { "voucher_campaign_created campaignId=${record.campaignId}" }
         return findById(id)
     }
 

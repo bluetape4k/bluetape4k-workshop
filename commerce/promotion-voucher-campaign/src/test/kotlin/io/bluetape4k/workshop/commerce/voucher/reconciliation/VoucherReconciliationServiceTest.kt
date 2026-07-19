@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.voucher.reconciliation
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.concurrent.virtualthread.VirtualThreads
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.voucher.application.VoucherCommandTestSupport
 import io.bluetape4k.workshop.commerce.voucher.persistence.EventInboxRecord
 import io.bluetape4k.workshop.commerce.voucher.persistence.EventInboxRepository
@@ -45,7 +46,7 @@ internal class VoucherReconciliationServiceTest : VoucherCommandTestSupport() {
 
     @Test
     fun `stale out of order event is retained as conflict`() {
-        val aggregateId = UUID.randomUUID()
+        val aggregateId = Uuid.V7.nextId()
         reconciliation.accept(delayedEvent(aggregateId = aggregateId, sequence = 3)).outcome shouldBeEqualTo
             InboxOutcome.APPLIED
         val stale = delayedEvent(aggregateId = aggregateId, sequence = 2)
@@ -68,7 +69,7 @@ internal class VoucherReconciliationServiceTest : VoucherCommandTestSupport() {
 
     @Test
     fun `worker overlap claims each inbox row once`() {
-        repeat(75) { seedPending(delayedEvent(aggregateId = UUID.randomUUID(), sequence = 1)) }
+        repeat(75) { seedPending(delayedEvent(aggregateId = Uuid.V7.nextId(), sequence = 1)) }
         val ready = CountDownLatch(2)
         val start = CountDownLatch(1)
 
@@ -94,8 +95,8 @@ internal class VoucherReconciliationServiceTest : VoucherCommandTestSupport() {
 
     @Test
     fun `poison row backs off without starving the next row and becomes failed after five attempts`() {
-        val poison = delayedEvent(aggregateId = UUID.randomUUID())
-        val valid = delayedEvent(aggregateId = UUID.randomUUID())
+        val poison = delayedEvent(aggregateId = Uuid.V7.nextId())
+        val valid = delayedEvent(aggregateId = Uuid.V7.nextId())
         seedPending(poison)
         seedPending(valid)
         reconciliation =
@@ -124,7 +125,7 @@ internal class VoucherReconciliationServiceTest : VoucherCommandTestSupport() {
 
     @Test
     fun `zero deadline claims no inbox row`() {
-        repeat(3) { seedPending(delayedEvent(aggregateId = UUID.randomUUID())) }
+        repeat(3) { seedPending(delayedEvent(aggregateId = Uuid.V7.nextId())) }
 
         val result = reconciliation.runBatch(50, Duration.ZERO)
 
@@ -215,8 +216,8 @@ internal class VoucherReconciliationServiceTest : VoucherCommandTestSupport() {
         jdbc.foregroundTransaction { checkNotNull(inbox.findEvent(TENANT_ID, eventId)) }
 
     private fun delayedEvent(
-        eventId: UUID = UUID.randomUUID(),
-        aggregateId: UUID = UUID.randomUUID(),
+        eventId: UUID = Uuid.V7.nextId(),
+        aggregateId: UUID = Uuid.V7.nextId(),
         sequence: Long = 1,
     ): DelayedVoucherEvent =
         DelayedVoucherEvent(

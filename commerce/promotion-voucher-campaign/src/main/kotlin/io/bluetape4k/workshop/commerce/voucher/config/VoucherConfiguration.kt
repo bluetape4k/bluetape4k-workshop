@@ -8,6 +8,7 @@ import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucher.persistence.VoucherJdbcExecutor
 import io.bluetape4k.workshop.commerce.voucher.security.VoucherCodeKeyRing
 import io.bluetape4k.workshop.commerce.voucher.security.VoucherCodeService
+import io.bluetape4k.workshop.commerce.voucher.web.VoucherHttpProperties
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
 import org.springframework.beans.factory.ObjectProvider
@@ -33,6 +34,7 @@ internal data class VoucherProperties(
     val redis: VoucherRedisProperties = VoucherRedisProperties(),
     val worker: VoucherWorkerProperties = VoucherWorkerProperties(),
     val sse: VoucherSseProperties = VoucherSseProperties(),
+    val http: VoucherHttpProperties = VoucherHttpProperties(),
 )
 
 internal data class VoucherDatabaseProperties(
@@ -143,6 +145,7 @@ internal class VoucherStartupValidator(
         validateRedis(properties.redis)
         validateWorker(properties.worker)
         validateSse(properties.sse)
+        validateHttp(properties.http)
         validateKeys(properties.keys, runtime.isProduction())
         validateReferencedKeys(properties.keys)
         validateBind(runtime)
@@ -239,6 +242,18 @@ internal class VoucherStartupValidator(
 
     private fun validateSse(sse: VoucherSseProperties) {
         if (sse.maxCampaigns <= 0 || sse.queueSize <= 0) fail(StartupFailureCode.INVALID_RANGE)
+    }
+
+    private fun validateHttp(http: VoucherHttpProperties) {
+        val invalid =
+            http.maxHeaderLength !in 8..256 ||
+                http.maxScalarBytes !in 32..1024 ||
+                http.maxPageSize !in 1..100 ||
+                http.maxCursorBytes !in 64..512 ||
+                http.operatorSecret.toByteArray(StandardCharsets.UTF_8).size < MINIMUM_KEY_BYTES ||
+                http.operatorGuard.length !in 8..64 ||
+                http.allowedHosts.isEmpty()
+        if (invalid) fail(StartupFailureCode.INVALID_RANGE)
     }
 
     private fun validateReferencedKeys(keys: VoucherKeyProperties) {
