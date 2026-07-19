@@ -4,9 +4,11 @@ import io.bluetape4k.exposed.jdbc.repository.LongAuditableJdbcRepository
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
+import io.bluetape4k.workshop.commerce.voucher.domain.ClaimState
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
@@ -90,6 +92,19 @@ internal class ClaimRepository(
             ?.let { with(this) { it.toEntity() } }
     }
 
+    fun findPublicForUpdate(
+        tenantId: String,
+        claimId: UUID,
+    ): ClaimRecord? {
+        gate.requireHeld()
+        return table
+            .selectAll()
+            .where { (table.tenantId eq tenantId) and (table.claimId eq claimId) }
+            .forUpdate()
+            .singleOrNull()
+            ?.let { with(this) { it.toEntity() } }
+    }
+
     fun findByVerifier(
         tenantId: String,
         verifier: ByteArray?,
@@ -103,5 +118,50 @@ internal class ClaimRepository(
             ?.let { with(this) { it.toEntity() } }
     }
 
-    companion object : KLogging()
+    fun countForUser(
+        tenantId: String,
+        campaignId: UUID,
+        userDigest: String,
+    ): Long {
+        gate.requireHeld()
+        return table
+            .selectAll()
+            .where {
+                (table.tenantId eq tenantId) and
+                    (table.campaignId eq campaignId) and
+                    (table.userDigest eq userDigest) and
+                    (table.state inList USER_LIMIT_STATES)
+            }.count()
+    }
+
+    fun transition(
+        record: ClaimRecord,
+        expectedRevision: Long,
+    ): Boolean {
+        gate.requireHeld()
+        require(record.revision == expectedRevision + 1) { "claim transition must advance revision exactly once" }
+        return auditedUpdateAll(
+            predicate = {
+                (table.tenantId eq record.tenantId) and
+                    (table.id eq record.id) and
+                    (table.revision eq expectedRevision)
+            },
+        ) {
+            it[state] = record.state
+            it[reviewKind] = record.reviewKind
+            it[pendingFromState] = record.pendingFromState
+            it[capacityReserved] = record.capacityReserved
+            it[codeVerifier] = record.codeVerifier
+            it[generationKeyVersion] = record.generationKeyVersion
+            it[verificationKeyVersion] = record.verificationKeyVersion
+            it[expiresAt] = record.expiresAt
+            it[redemptionReferenceDigest] = record.redemptionReferenceDigest
+            it[revision] = record.revision
+        } == 1
+    }
+
+    companion object : KLogging() {
+        private val USER_LIMIT_STATES =
+            listOf(ClaimState.ALLOCATED, ClaimState.REVIEW_REQUIRED, ClaimState.REDEEMED)
+    }
 }

@@ -8,7 +8,9 @@ import io.bluetape4k.workshop.commerce.voucher.domain.CampaignState
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.minus
 import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -81,6 +83,20 @@ internal class CampaignRepository(
             ?.let { with(this) { it.toEntity() } }
     }
 
+    /** Acquires the canonical first row lock for every capacity-changing command. */
+    fun findPublicForUpdate(
+        tenantId: String,
+        campaignId: UUID,
+    ): CampaignRecord? {
+        gate.requireHeld()
+        return table
+            .selectAll()
+            .where { (table.tenantId eq tenantId) and (table.campaignId eq campaignId) }
+            .forUpdate()
+            .singleOrNull()
+            ?.let { with(this) { it.toEntity() } }
+    }
+
     fun tryReserve(
         tenantId: String,
         id: Long,
@@ -100,6 +116,50 @@ internal class CampaignRepository(
             it[revision] = expectedRevision + 1
         }.also { updated ->
             log.debug { "voucher_campaign_reserve campaignRowId=$id revision=$expectedRevision updated=$updated" }
+        } == 1
+    }
+
+    fun tryRelease(
+        tenantId: String,
+        id: Long,
+        expectedRevision: Long,
+    ): Boolean {
+        gate.requireHeld()
+        return auditedUpdateAll(
+            predicate = {
+                (table.tenantId eq tenantId) and
+                    (table.id eq id) and
+                    (table.revision eq expectedRevision) and
+                    (table.allocatedCount greater 0)
+            },
+        ) {
+            it[allocatedCount] = allocatedCount - 1
+            it[revision] = expectedRevision + 1
+        } == 1
+    }
+
+    fun transition(
+        record: CampaignRecord,
+        expectedRevision: Long,
+    ): Boolean {
+        gate.requireHeld()
+        require(record.revision == expectedRevision + 1) { "campaign transition must advance revision exactly once" }
+        return auditedUpdateAll(
+            predicate = {
+                (table.tenantId eq record.tenantId) and
+                    (table.id eq record.id) and
+                    (table.revision eq expectedRevision)
+            },
+        ) {
+            it[state] = record.state
+            it[startsAt] = record.startsAt
+            it[endsAt] = record.endsAt
+            it[capacity] = record.capacity
+            it[allocatedCount] = record.allocatedCount
+            it[perUserLimit] = record.perUserLimit
+            it[redemptionTtlSeconds] = record.redemptionTtlSeconds
+            it[policyVersion] = record.policyVersion
+            it[revision] = record.revision
         } == 1
     }
 

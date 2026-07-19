@@ -77,5 +77,45 @@ internal class ReviewRepository(
             ?.let { with(this) { it.toEntity() } }
     }
 
+    fun findOpenForUpdate(
+        tenantId: String,
+        claimId: UUID,
+        reviewId: Long,
+    ): ReviewRecord? {
+        gate.requireHeld()
+        return table
+            .selectAll()
+            .where {
+                (table.tenantId eq tenantId) and
+                    (table.claimId eq claimId) and
+                    (table.id eq reviewId) and
+                    (table.status eq ReviewStatus.OPEN)
+            }.forUpdate()
+            .singleOrNull()
+            ?.let { with(this) { it.toEntity() } }
+    }
+
+    fun decide(
+        review: ReviewRecord,
+        status: ReviewStatus,
+        reviewerActorDigest: String,
+        expectedRevision: Long,
+    ): Boolean {
+        gate.requireHeld()
+        require(status != ReviewStatus.OPEN) { "review decision must be terminal" }
+        return auditedUpdateAll(
+            predicate = {
+                (table.tenantId eq review.tenantId) and
+                    (table.id eq review.id) and
+                    (table.status eq ReviewStatus.OPEN) and
+                    (table.revision eq expectedRevision)
+            },
+        ) {
+            it[ReviewTable.status] = status
+            it[ReviewTable.reviewerActorDigest] = reviewerActorDigest
+            it[revision] = expectedRevision + 1
+        } == 1
+    }
+
     companion object : KLogging()
 }

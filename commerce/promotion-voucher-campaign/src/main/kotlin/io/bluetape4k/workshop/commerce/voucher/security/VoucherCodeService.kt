@@ -48,6 +48,11 @@ internal data class IssuedVoucherCode(
     val verificationKeyVersion: Int,
 )
 
+internal data class VoucherLookupMaterial(
+    val verifier: ByteArray,
+    val verificationKeyVersion: Int,
+)
+
 internal enum class VerificationResult {
     VALID,
     INVALID_CODE,
@@ -57,21 +62,49 @@ internal enum class VerificationResult {
 internal class VoucherCodeService(
     private val keyRing: VoucherCodeKeyRing,
 ) {
-    fun issue(input: VoucherGenerationInput): IssuedVoucherCode {
-        val generationKey = keyRing.generationKeys.getValue(keyRing.currentGenerationVersion)
+    fun issue(input: VoucherGenerationInput): IssuedVoucherCode =
+        checkNotNull(
+            reconstruct(
+                input,
+                generationKeyVersion = keyRing.currentGenerationVersion,
+                verificationKeyVersion = keyRing.currentVerificationVersion,
+            ),
+        ) { "current voucher keys disappeared after key-ring validation" }
+
+    /** Reconstructs a committed code only while both recorded key versions remain available. */
+    fun reconstruct(
+        input: VoucherGenerationInput,
+        generationKeyVersion: Int,
+        verificationKeyVersion: Int,
+    ): IssuedVoucherCode? {
+        val generationKey = keyRing.generationKeys[generationKeyVersion] ?: return null
+        val verificationKey = keyRing.verificationKeys[verificationKeyVersion] ?: return null
         val tokenMaterial = hmac(generationKey, GENERATION_DOMAIN, input.canonicalBytes()).copyOf(TOKEN_BYTES)
         val payload = Base58.encode(tokenMaterial).padStart(PAYLOAD_LENGTH, BASE58_ZERO)
         check(payload.length == PAYLOAD_LENGTH) { "voucher token material exceeded the bounded payload" }
 
-        val prefix = "V${keyRing.currentVerificationVersion}-$payload"
+        val prefix = "V$verificationKeyVersion-$payload"
         val code = prefix + checksum(prefix)
-        val verifier = verifier(code, keyRing.verificationKeys.getValue(keyRing.currentVerificationVersion))
+        val verifier = verifier(code, verificationKey)
         return IssuedVoucherCode(
             code = code,
             verifier = verifier,
-            generationKeyVersion = keyRing.currentGenerationVersion,
-            verificationKeyVersion = keyRing.currentVerificationVersion,
+            generationKeyVersion = generationKeyVersion,
+            verificationKeyVersion = verificationKeyVersion,
         )
+    }
+
+    /** Converts a canonical external code into the opaque tenant-scoped lookup material. */
+    fun lookup(candidate: String): VoucherLookupMaterial? {
+        val parsed = parse(candidate)
+        val key = parsed?.let { keyRing.verificationKeys[it.verificationKeyVersion] } ?: DUMMY_KEY
+        val digest = verifier(candidate.take(MAX_CODE_LENGTH), key)
+        return if (parsed != null && keyRing.verificationKeys.containsKey(parsed.verificationKeyVersion)) {
+            VoucherLookupMaterial(digest, parsed.verificationKeyVersion)
+        } else {
+            log.debug { "voucher_code_rejected reason=INVALID_CODE" }
+            null
+        }
     }
 
     fun verify(
