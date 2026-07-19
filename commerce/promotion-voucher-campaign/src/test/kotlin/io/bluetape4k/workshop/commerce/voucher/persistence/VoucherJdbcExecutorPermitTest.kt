@@ -7,7 +7,9 @@ import io.bluetape4k.workshop.commerce.voucher.config.VoucherCompatibilityTestSu
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherMigrationResult
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.lang.reflect.Proxy
@@ -18,6 +20,8 @@ import java.util.concurrent.atomic.AtomicInteger
 import javax.sql.DataSource
 
 internal class VoucherJdbcExecutorPermitTest : VoucherCompatibilityTestSupport() {
+    private var exposedDatabase: Database? = null
+
     @BeforeEach
     fun migrate() {
         migrationRunner().migrate() shouldBeEqualTo VoucherMigrationResult.APPLIED
@@ -33,8 +37,8 @@ internal class VoucherJdbcExecutorPermitTest : VoucherCompatibilityTestSupport()
                 acquireTimeout = Duration.ofSeconds(1),
             )
         val probe = PermitCheckingDataSource(dataSource) { gate.requireHeld() }
-        Database.connect(probe)
         val manager = SpringTransactionManager(probe, DatabaseConfig {}, false)
+        exposedDatabase = TransactionManager.primaryDatabase
         val jdbc = VoucherJdbcExecutor(gate, manager)
 
         probe.openCount.get() shouldBeEqualTo 0
@@ -46,6 +50,11 @@ internal class VoucherJdbcExecutorPermitTest : VoucherCompatibilityTestSupport()
 
         probe.closeCount.get() shouldBeEqualTo 1
         gate.availablePermits(DatabaseLane.FOREGROUND) shouldBeEqualTo 1
+    }
+
+    @AfterEach
+    fun closePermitDatabase() {
+        exposedDatabase?.let(TransactionManager::closeAndUnregister)
     }
 
     private class PermitCheckingDataSource(

@@ -17,6 +17,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.SpringProperties
 import org.springframework.core.env.Environment
 import org.springframework.core.io.ClassPathResource
 import org.springframework.transaction.PlatformTransactionManager
@@ -82,6 +83,12 @@ internal data class VoucherWorkerProperties(
 internal data class VoucherSseProperties(
     val maxCampaigns: Int = 32,
     val queueSize: Int = 32,
+    val pollInterval: Duration = Duration.ofMillis(500),
+    val maxIdleInterval: Duration = Duration.ofSeconds(2),
+    val heartbeatInterval: Duration = Duration.ofSeconds(15),
+    val writeTimeout: Duration = Duration.ofSeconds(5),
+    val maxRows: Int = 200,
+    val maxPayloadBytes: Int = 256 * 1024,
 )
 
 internal data class VoucherRuntimeEnvironment(
@@ -241,7 +248,20 @@ internal class VoucherStartupValidator(
     }
 
     private fun validateSse(sse: VoucherSseProperties) {
-        if (sse.maxCampaigns <= 0 || sse.queueSize <= 0) fail(StartupFailureCode.INVALID_RANGE)
+        val invalid =
+            sse.maxCampaigns !in 1..32 ||
+                sse.queueSize !in 1..32 ||
+                sse.pollInterval.isNegative ||
+                sse.pollInterval.isZero ||
+                sse.maxIdleInterval < sse.pollInterval ||
+                sse.maxIdleInterval > Duration.ofSeconds(2) ||
+                sse.heartbeatInterval.isNegative ||
+                sse.heartbeatInterval.isZero ||
+                sse.writeTimeout.isNegative ||
+                sse.writeTimeout.isZero ||
+                sse.maxRows !in 1..200 ||
+                sse.maxPayloadBytes !in 1..(256 * 1024)
+        if (invalid) fail(StartupFailureCode.INVALID_RANGE)
     }
 
     private fun validateHttp(http: VoucherHttpProperties) {
@@ -296,6 +316,11 @@ internal class VoucherStartupValidator(
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(VoucherProperties::class)
 internal class VoucherConfiguration {
+    init {
+        // Spring Framework 7 disables body-stream flushes by default; SSE requires each event to reach the network.
+        SpringProperties.setProperty(SPRING_HTTP_RESPONSE_FLUSH_ENABLED, "true")
+    }
+
     @Bean
     fun clock(): Clock = Clock.systemUTC()
 
@@ -389,6 +414,7 @@ internal class VoucherConfiguration {
         }
 
     companion object : KLogging() {
+        private const val SPRING_HTTP_RESPONSE_FLUSH_ENABLED = "spring.http.response.flush.enabled"
         private const val VOUCHER_MIGRATION_LOCK_KEY = 534001L
     }
 }

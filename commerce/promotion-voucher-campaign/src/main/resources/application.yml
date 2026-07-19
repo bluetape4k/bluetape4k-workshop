@@ -18,6 +18,9 @@ spring:
       keepalive-time: 120000
   transaction:
     default-timeout: 60s
+  mvc:
+    async:
+      request-timeout: 60s
   threads:
     virtual:
       enabled: true
@@ -112,6 +115,12 @@ workshop:
     sse:
       max-campaigns: 32
       queue-size: 32
+      poll-interval: 500ms
+      max-idle-interval: 2s
+      heartbeat-interval: 15s
+      write-timeout: 5s
+      max-rows: 200
+      max-payload-bytes: 262144
     http:
       max-header-length: 64
       max-scalar-bytes: 256

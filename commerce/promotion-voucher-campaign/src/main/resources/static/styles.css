@@ -1,0 +1,105 @@
+:root {
+    color-scheme: dark;
+    --bg: #08110f;
+    --panel: #101c19;
+    --panel-soft: #142622;
+    --line: #315149;
+    --text: #f3f7f3;
+    --muted: #a8bdb5;
+    --mint: #67e8b5;
+    --amber: #f4c96b;
+    --danger: #ff8c86;
+    --focus: #f8ef9c;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background:
+        radial-gradient(circle at 90% 0%, rgba(103, 232, 181, 0.12), transparent 28rem),
+        var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+}
+
+.skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -5rem;
+    z-index: 5;
+    background: var(--focus);
+    color: #111;
+    padding: 0.75rem 1rem;
+}
+
+.skip-link:focus { top: 1rem; }
+
+.hero, main {
+    width: min(1180px, calc(100% - 2rem));
+    margin-inline: auto;
+}
+
+.hero { padding: 4.5rem 0 2rem; }
+.hero h1 { margin: 0; font-size: clamp(2.3rem, 8vw, 5.8rem); line-height: 0.95; max-width: 10ch; letter-spacing: -0.055em; }
+.hero > p:last-child { color: var(--muted); max-width: 66ch; font-size: 1.05rem; }
+
+.eyebrow, .section-index {
+    color: var(--mint);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.72rem;
+    font-weight: 750;
+}
+
+main { padding-bottom: 5rem; }
+.panel, .metric { border: 1px solid var(--line); background: rgba(16, 28, 25, 0.94); border-radius: 1rem; }
+.panel { padding: clamp(1.25rem, 3vw, 2rem); margin-top: 1rem; }
+.panel h2 { margin-top: 0.2rem; }
+
+.connection { display: grid; grid-template-columns: minmax(12rem, 0.6fr) 1.4fr; gap: 2rem; align-items: end; }
+.form-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.85rem; align-items: end; }
+
+label { display: grid; gap: 0.45rem; color: var(--muted); font-weight: 650; }
+input, button { font: inherit; border-radius: 0.65rem; min-height: 2.8rem; }
+input { width: 100%; border: 1px solid var(--line); background: #091512; color: var(--text); padding: 0.65rem 0.75rem; }
+button { border: 1px solid var(--mint); background: var(--mint); color: #072019; font-weight: 780; padding: 0.65rem 1rem; cursor: pointer; }
+button:hover:not(:disabled) { filter: brightness(1.08); }
+button:disabled { cursor: not-allowed; opacity: 0.45; }
+button.danger { border-color: var(--danger); background: transparent; color: var(--danger); }
+
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.help { color: var(--muted); font-size: 0.88rem; }
+.connection > .help { grid-column: 2; margin: -1rem 0 0; }
+
+.status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 1rem; margin-top: 1rem; }
+.metric { padding: 1.2rem; }
+.metric span { display: block; color: var(--muted); font-size: 0.8rem; }
+.metric strong { display: block; margin-top: 0.5rem; font-size: 1.25rem; }
+
+.two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.button-row { display: flex; flex-wrap: wrap; gap: 0.65rem; margin-top: 1rem; }
+.claim-card { background: var(--panel-soft); border-radius: 0.8rem; padding: 1rem; margin-top: 1rem; display: grid; gap: 0.3rem; }
+.claim-card span { color: var(--muted); font-size: 0.8rem; }
+.claim-card code { color: var(--mint); overflow-wrap: anywhere; }
+
+.timeline { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.6rem; }
+.timeline li { border-left: 3px solid var(--mint); background: var(--panel-soft); padding: 0.8rem 1rem; border-radius: 0 0.6rem 0.6rem 0; }
+.timeline time { color: var(--muted); display: block; font-size: 0.78rem; margin-top: 0.25rem; }
+
+dialog { color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 1rem; max-width: 30rem; }
+dialog::backdrop { background: rgba(0, 0, 0, 0.72); }
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+@media (max-width: 850px) {
+    .connection, .two-column { grid-template-columns: 1fr; }
+    .connection > .help { grid-column: 1; }
+    .form-grid, .status-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 560px) {
+    .form-grid, .status-grid { grid-template-columns: 1fr; }
+    .hero { padding-top: 3rem; }
+}

@@ -42,6 +42,25 @@ internal class ApiExceptionHandler {
             ceil(failure.retryAfter.toMillis() / 1_000.0).toLong().coerceAtLeast(1),
         )
 
+    @ExceptionHandler(SseCapacityRejected::class)
+    fun sseCapacity(
+        failure: SseCapacityRejected,
+        request: HttpServletRequest,
+    ): ResponseEntity<ApiError> {
+        val fallback = "/api/v1/campaigns/${failure.campaignId}"
+        val headers = HttpHeaders()
+        headers.set("Retry-After", "2")
+        headers.set(HttpHeaders.LINK, "<$fallback>; rel=\"alternate\"; type=\"application/json\"")
+        return ResponseEntity.status(503).headers(headers).body(
+            ApiError(
+                "SSE_CAPACITY_REJECTED",
+                "event stream capacity is temporarily unavailable",
+                request.requestId(),
+                2,
+            ),
+        )
+    }
+
     @ExceptionHandler(
         MethodArgumentNotValidException::class,
         HttpMessageNotReadableException::class,

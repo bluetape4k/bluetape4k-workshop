@@ -14,7 +14,9 @@ import io.bluetape4k.workshop.commerce.voucher.security.VoucherCodeKeyRing
 import io.bluetape4k.workshop.commerce.voucher.security.VoucherCodeService
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import java.time.Clock
 import java.time.Duration
@@ -23,6 +25,8 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 internal abstract class VoucherCommandTestSupport : VoucherCompatibilityTestSupport() {
+    private val exposedDatabases = mutableListOf<Database>()
+
     protected lateinit var gate: DatabasePermitGate
     protected lateinit var jdbc: VoucherJdbcExecutor
     protected lateinit var campaigns: CampaignRepository
@@ -40,8 +44,13 @@ internal abstract class VoucherCommandTestSupport : VoucherCompatibilityTestSupp
     @BeforeEach
     fun createCommandRuntime() {
         check(migrationRunner().migrate() in setOf(VoucherMigrationResult.APPLIED, VoucherMigrationResult.ALREADY_APPLIED))
-        Database.connect(dataSource)
         configureCommandRuntime()
+    }
+
+    @AfterEach
+    fun closeCommandDatabase() {
+        exposedDatabases.asReversed().forEach(TransactionManager::closeAndUnregister)
+        exposedDatabases.clear()
     }
 
     protected fun configureCommandRuntime(
@@ -59,6 +68,7 @@ internal abstract class VoucherCommandTestSupport : VoucherCompatibilityTestSupp
                 acquireTimeout = acquireTimeout,
             )
         val transactionManager = SpringTransactionManager(dataSource, DatabaseConfig {}, false)
+        exposedDatabases += checkNotNull(TransactionManager.primaryDatabase)
         jdbc = VoucherJdbcExecutor(gate, transactionManager, lockTimeout)
         campaigns = CampaignRepository(gate)
         claims = ClaimRepository(gate)

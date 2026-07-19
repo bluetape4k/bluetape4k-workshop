@@ -1,0 +1,49 @@
+{
+  "capturedAt": "2026-07-19T17:23:51.313Z",
+  "browser": "Chromium 149.0.7827.55",
+  "url": "http://127.0.0.1:18080",
+  "mode": "headless, keyboard-only interaction",
+  "input": {
+    "tenantLength": 8,
+    "principalLength": 8,
+    "campaignId": "019f7b5e-0000-7000-8000-000000000534"
+  },
+  "steps": [
+    "Navigate with Tab from the skip link through tenant, principal, campaign, and submit controls.",
+    "Load the PostgreSQL snapshot and connect a header-authenticated SSE stream with a stale retention cursor.",
+    "Allocate a voucher with Enter and wait for the authoritative campaign snapshot refresh.",
+    "Capture the operator secret in memory, verify the password input is cleared, and reach allowed actions with Tab.",
+    "Open the confirmation dialog, cancel with Escape, and verify focus restoration.",
+    "Confirm pause with Enter, advance the revision externally, then submit the stale end form.",
+    "Verify the 412 handler refreshes the authoritative snapshot and revision before retrying end.",
+    "Inspect DOM, storage, cookie, and URL surfaces for the raw operator secret and capture the final screenshot."
+  ],
+  "checks": [
+    { "name": "skip link is first keyboard target", "status": "PASS" },
+    { "name": "tenant is second keyboard target", "status": "PASS" },
+    { "name": "connection submit follows scoped fields", "status": "PASS" },
+    { "name": "SSE is snapshot first and retention reset is announced", "status": "PASS" },
+    { "name": "allocation is keyboard reachable", "status": "PASS" },
+    { "name": "customer allocation renders a claim", "status": "PASS" },
+    { "name": "operator secret follows customer action", "status": "PASS" },
+    { "name": "ACTIVE state skips disabled activate and reaches pause", "status": "PASS" },
+    { "name": "operator secret is cleared from password input", "status": "PASS" },
+    { "name": "confirmation accepts focus", "status": "PASS" },
+    { "name": "Escape cancels and restores action focus", "status": "PASS" },
+    { "name": "confirmation accept performs pause", "status": "PASS" },
+    { "name": "end action remains keyboard reachable", "status": "PASS" },
+    { "name": "external revision advance prepared stale form", "status": "PASS", "detail": "HTTP 200" },
+    { "name": "412 refreshes authoritative snapshot and revision", "status": "PASS" },
+    { "name": "disabled actions expose a reason", "status": "PASS" },
+    { "name": "final destructive action completes from refreshed revision", "status": "PASS" },
+    { "name": "operator secret is absent from DOM storage cookie and URL", "status": "PASS" }
+  ],
+  "secretSurfaces": {
+    "body": false,
+    "html": false,
+    "localStorage": false,
+    "sessionStorage": false,
+    "cookie": false,
+    "url": false
+  }
+}
