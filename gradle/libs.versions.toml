@@ -116,7 +116,7 @@ kotlinx-benchmark = "0.4.13"  # https://mvnrepository.com/artifact/org.jetbrains
 testcontainers = "2.0.5"  # https://mvnrepository.com/artifact/org.testcontainers/testcontainers-bom
 jna = "5.19.1"  # https://mvnrepository.com/artifact/net.java.dev.jna/jna
 archunit = "1.4.2"  # https://mvnrepository.com/artifact/com.tngtech.archunit/archunit
-rest-assured = "6.0.0"  # https://mvnrepository.com/artifact/io.rest-assured/kotlin-extensions
+rest-assured = "6.0.1"  # https://mvnrepository.com/artifact/io.rest-assured/kotlin-extensions
 
 datafaker = "2.7.0"  # https://mvnrepository.com/artifact/net.datafaker/datafaker
 snakeyaml = "2.6"  # https://mvnrepository.com/artifact/org.yaml/snakeyaml
