@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.commerce.reservation
 
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.reservation.persistence.CapacityResourceRepository
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Execution
@@ -10,7 +9,6 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.http.client.reactive.ReactorClientHttpConnector
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -19,9 +17,6 @@ import org.springframework.test.context.TestConstructor
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
-import reactor.netty.http.client.HttpClient
-import reactor.netty.resources.ConnectionProvider
-import reactor.netty.resources.LoopResources
 import java.time.Duration
 import javax.sql.DataSource
 
@@ -43,16 +38,6 @@ internal abstract class AbstractReservationIntegrationTest {
     @Autowired
     private lateinit var transactionManager: PlatformTransactionManager
 
-    private val clientConnectionProvider =
-        lazy {
-            ConnectionProvider.create("reservation-webtest-$port", 32)
-        }
-
-    private val clientLoopResources =
-        lazy {
-            LoopResources.create("reservation-webtest-$port", 2, true)
-        }
-
     @BeforeEach
     fun resetReservationFixture() {
         JdbcTemplate(dataSource).execute(
@@ -73,27 +58,12 @@ internal abstract class AbstractReservationIntegrationTest {
         }
     }
 
-    /** Keeps live HTTP tests independent from application-context Reactor Netty shutdown. */
     protected val webTestClient: WebTestClient by lazy {
-        val httpClient =
-            HttpClient
-                .create(clientConnectionProvider.value)
-                .runOn(clientLoopResources.value)
         WebTestClient
-            .bindToServer(ReactorClientHttpConnector(httpClient))
+            .bindToServer()
             .baseUrl("http://localhost:$port")
             .responseTimeout(Duration.ofSeconds(60))
             .build()
-    }
-
-    @AfterAll
-    fun closeWebTestClientResources() {
-        if (clientConnectionProvider.isInitialized()) {
-            clientConnectionProvider.value.disposeLater().block(Duration.ofSeconds(5))
-        }
-        if (clientLoopResources.isInitialized()) {
-            clientLoopResources.value.disposeLater().block(Duration.ofSeconds(5))
-        }
     }
 
     companion object {

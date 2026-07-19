@@ -29,7 +29,8 @@ internal class ReservationWebIntegrationTest : AbstractReservationIntegrationTes
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue("""{"expectedResourceRevision":0,"policyVersion":1}""")
                         .exchange()
-                        .returnResult(String::class.java)
+                        .expectBody()
+                        .returnResult()
                         .status
                 if (status.value() == 201) accepted.incrementAndGet() else rejected.incrementAndGet()
             }.run()
@@ -79,7 +80,8 @@ internal class ReservationWebIntegrationTest : AbstractReservationIntegrationTes
                         .contentType(MediaType.APPLICATION_JSON)
                         .bodyValue("""{"expectedRevision":0,"policyVersion":1}""")
                         .exchange()
-                        .returnResult(String::class.java)
+                        .expectBody()
+                        .returnResult()
                         .status
                         .value()
             }.run()

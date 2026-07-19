@@ -32,11 +32,10 @@ Branch: `feature/issue-533-reservation-control-plane`
 하나의 더 오래된 offer를 구성한 회귀 테스트가 32개 제한에서도 offer resource를 첫 후보로
 선택함을 검증한다.
 
-GitHub Actions의 저자원 runner에서는 Redis-unavailable context가 종료된 뒤 Netty event executor
-종료가 겹치면서 다음 live HTTP 검증이 60초 동안 대기한 사례가 있었다. Integration test의
-`WebTestClient`에 전용 `ConnectionProvider`와 `LoopResources`를 할당하고 `@AfterAll`에서
-명시적으로 정리해 application context 간 Reactor Netty lifecycle을 분리했다. 실패했던 class
-순서를 그대로 실행한 9개 테스트와 전체 58개 테스트가 모두 통과했다.
+GitHub Actions의 저자원 runner에서는 concurrent HTTP probe가 `returnResult`에서 status만 읽고
+response body를 소비하지 않은 뒤, 같은 client의 후속 GET이 60초 동안 connection을 기다리는
+사례가 두 개의 서로 다른 테스트 순서에서 재현됐다. 모든 concurrent probe가
+`expectBody().returnResult()`로 response를 완전히 소비한 뒤 상태를 집계하도록 수정했다.
 
 ## Ecosystem 및 dependency 확인
 
@@ -52,7 +51,7 @@ GitHub Actions의 저자원 runner에서는 Redis-unavailable context가 종료�
 
 - `:commerce-reservation-control-plane:test --rerun-tasks`: PASS, 58 tests
 - `:commerce-reservation-control-plane:build`: PASS
-- Redis-unavailable bootstrap → live HTTP concurrency 순서 검증: PASS, 9 tests
+- concurrent live HTTP response consumption 검증: PASS
 - `ktlint` module main/test: PASS
 - root `detekt`: PASS (`NO-SOURCE`; module-local detekt task 없음)
 - `git diff --check`: PASS

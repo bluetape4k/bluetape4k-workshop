@@ -17,10 +17,10 @@ resource row lock, revision CAS, idempotency record가 보장하고 HikariCP poo
 동시 요청 수를 제한한다. 따라서 Tomcat `threads.max=8000`은 요청 수용 범위로만 해석하며,
 Hikari `maximum-pool-size=8`, connection/transaction timeout `60s`를 별도 경계로 유지한다.
 
-여러 Spring context가 같은 test JVM에서 순차 종료될 때 live HTTP client가 전역 Reactor Netty
-lifecycle에 의존하면 이전 context의 종료와 다음 요청이 겹칠 수 있다. 실제 Tomcat 검증은 유지하되
-테스트별 `ConnectionProvider`와 `LoopResources`를 사용하고 `@AfterAll`에서 정리해야 CI 저자원
-환경에서도 HTTP client lifecycle이 application context와 독립적이다.
+`WebTestClient.returnResult(Class)`는 streaming body를 caller에게 넘기므로 status만 읽으면
+response consumption과 connection 반환을 기다리지 않는다. Concurrent probe 직후 같은 client로
+후속 검증을 수행할 때는 `expectBody().returnResult()`로 body를 완전히 소비한 다음 status를
+집계해야 저자원 CI에서도 connection lifecycle이 결정적이다.
 
 만료 sweeper는 repository별 후보를 따로 제한하면 안 된다. hold와 offer를 각각 32개씩 읽어
 순서대로 처리하면, 더 오래된 offer가 hold batch 뒤로 밀려 resource capacity 반환이 지연될 수
@@ -46,9 +46,8 @@ Redis는 correctness authority가 아니므로 application context 시작을 막
 
 ## 검증 계약
 
-- `RANDOM_PORT + WebTestClient.bindToServer(ReactorClientHttpConnector)`와 테스트 전용 Reactor
-  Netty resource로 실제 Tomcat, virtual thread, serialization, security header, operator
-  authorization 경계를 검증한다.
+- `RANDOM_PORT + WebTestClient.bindToServer()`로 실제 Tomcat, virtual thread, serialization,
+  security header, operator authorization 경계를 검증하고 모든 concurrent response를 소비한다.
 - `PostgreSQLServer`로 hold/confirm/cancel/extend, waitlist FIFO, offer TTL, expiry handoff,
   idempotency lease, outbox retry를 검증한다.
 - Redis 연결 가능/불가능 두 bootstrap 경로와 Lettuce coordination을 각각 검증한다.
