@@ -8,7 +8,7 @@
 #   ./scripts/smoke-validate.sh stale-check   # Gradle project count + README link check
 #   ./scripts/smoke-validate.sh diagram-qa    # changed README diagram QA evidence
 #
-# Groups: data-access  spring-boot  serialization  messaging  async  observability  aws  redis
+# Groups: data-access  spring-boot  serialization  messaging  commerce  async  observability  aws  redis
 # Each group runs with --continue so a single failure does not abort the rest.
 
 set -euo pipefail
@@ -142,6 +142,13 @@ case "${1:-help}" in
       --continue --max-workers=1"
     ;;
 
+  commerce)
+    # Testcontainers: PostgreSQL, Java 25 virtual threads
+    run "$GRADLEW \
+      :commerce-order-lifecycle-fulfillment:test \
+      --continue --max-workers=1"
+    ;;
+
   async)
     run "$GRADLEW \
       :kotlin-coroutines:test \
@@ -243,6 +250,7 @@ case "${1:-help}" in
     echo "  spring-boot      Spring Boot Operations (smoke)"
     echo "  serialization    Jackson / JSON / Okio"
     echo "  messaging        Kafka (Testcontainers)"
+    echo "  commerce         Commerce lifecycles (PostgreSQL Testcontainers)"
     echo "  async            Coroutines / Vert.x"
     echo "  observability    Micrometer / Virtual Threads"
     echo "  aws              AWS local-first examples"

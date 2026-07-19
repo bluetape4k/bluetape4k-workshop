@@ -6,6 +6,7 @@ on:
   push:
     branches: [ develop, main ]
     paths:
+      - 'commerce/**'
       - 'exposed/webflux-r2dbc/**'
       - 'exposed/javers-approval-workflow/**'
       - 'exposed/javers-persistence-audit/**'
@@ -52,6 +53,7 @@ on:
   pull_request:
     branches: [ develop, main ]
     paths:
+      - 'commerce/**'
       - 'exposed/webflux-r2dbc/**'
       - 'exposed/javers-approval-workflow/**'
       - 'exposed/javers-persistence-audit/**'
@@ -287,6 +289,7 @@ jobs:
       # - spring-boot-cache-redis: Redis-backed cache path
       # - messaging-kafka: Kafka-backed messaging path
       # - messaging-kafka-outbox-fallback: PostgreSQL + Kafka fallback relay path
+      # - commerce-order-lifecycle-fulfillment: PostgreSQL durable lifecycle and replay path
       - name: Run container-backed examples
         run: >-
           ./gradlew
@@ -304,6 +307,7 @@ jobs:
           :spring-boot-cache-redis:test
           :messaging-kafka:test
           :messaging-kafka-outbox-fallback:test
+          :commerce-order-lifecycle-fulfillment:test
           --continue
           --max-workers=1
         env:
@@ -345,6 +349,8 @@ jobs:
             messaging/kafka/build/reports/tests/test/
             messaging/kafka-outbox-fallback/build/test-results/test/*.xml
             messaging/kafka-outbox-fallback/build/reports/tests/test/
+            commerce/order-lifecycle-fulfillment/build/test-results/test/*.xml
+            commerce/order-lifecycle-fulfillment/build/reports/tests/test/
           retention-days: 7
 
   examples-status:

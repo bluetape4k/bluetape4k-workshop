@@ -1,0 +1,44 @@
+:root {
+  color-scheme: dark;
+  --bg: #071019;
+  --panel: #101c28;
+  --line: #263a4d;
+  --text: #e8f1f8;
+  --muted: #8fa7ba;
+  --accent: #60d6b0;
+  --warn: #ffca68;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: radial-gradient(circle at top left, #133044, var(--bg) 38%); color: var(--text); font: 15px/1.5 ui-sans-serif, system-ui, sans-serif; }
+main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 48px 0 80px; }
+header { margin-bottom: 28px; }
+h1 { margin: 4px 0 8px; font-size: clamp(32px, 5vw, 58px); letter-spacing: -.04em; }
+h2 { margin: 0; font-size: 18px; }
+.eyebrow { color: var(--accent); text-transform: uppercase; letter-spacing: .12em; font-size: 12px; }
+.panel, .card { background: color-mix(in srgb, var(--panel) 92%, transparent); border: 1px solid var(--line); border-radius: 16px; box-shadow: 0 16px 48px #0005; }
+.panel { padding: 18px; margin-bottom: 18px; }
+.controls { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+label { color: var(--muted); display: grid; gap: 6px; font-size: 12px; }
+input, select, button { border-radius: 10px; border: 1px solid var(--line); padding: 10px 12px; color: var(--text); background: #0b1620; }
+input { width: min(360px, 70vw); }
+button { cursor: pointer; background: var(--accent); border-color: transparent; color: #06251c; font-weight: 700; }
+button.secondary { background: transparent; border-color: var(--line); color: var(--text); }
+.pill { border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px; color: var(--muted); }
+.metrics, .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.card { padding: 16px; min-height: 112px; }
+.card small { color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.card strong { display: block; margin-top: 8px; font-size: 22px; }
+.card code { color: var(--accent); }
+.section-title { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 14px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 760px; }
+th, td { text-align: left; border-top: 1px solid var(--line); padding: 10px 8px; }
+th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+.error { color: #ff8f8f; }
+
+@media (max-width: 640px) {
+  main { width: min(100% - 20px, 1180px); padding-top: 28px; }
+  .controls > * { width: 100%; }
+  input { width: 100%; }
+}

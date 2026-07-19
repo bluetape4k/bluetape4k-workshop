@@ -31,6 +31,7 @@ names.
 | Directory | Purpose |
 |---|---|
 | `aws/` | S3 and Spring Cloud examples |
+| `commerce/` | Order, payment, inventory, fulfillment, and refund lifecycle examples |
 | `exposed/` | Exposed DAO/SQL DSL, relations, custom columns, Spring transactions |
 | `gateway/` | API gateway plus customers/orders microservices |
 | `gatling/` | Gatling performance tests |

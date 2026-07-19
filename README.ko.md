@@ -214,6 +214,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Basic | [`spring-modulith-module-boundaries`](spring-modulith/module-boundaries/) | Spring Modulith | In-memory | Named interface와 event contract로 module boundary 검증 |
 | Advanced | [`spring-modulith-events-deep-dive`](spring-modulith/events-deep-dive/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | 영속성을 갖춘 Modulith 애플리케이션 이벤트 |
 | Advanced | [`spring-modulith-jpa-demo`](spring-modulith/jpa-demo/) | `logging`, `testcontainers` | PostgreSQL (TC) | JPA를 활용한 Modulith 모듈 캡슐화 |
+| Advanced | [`commerce-order-lifecycle-fulfillment`](commerce/order-lifecycle-fulfillment/) | `exposed-jdbc`, `exposed-jdbc-tests`, `virtualthread-jdk25`, `micrometer` | PostgreSQL (TC) | Durable event replay를 포함한 독립적인 주문, 결제, 재고, 분할 배송, 취소, 환불 생명주기 |
 | Advanced | [`gateway-api-gateway`](gateway/api-gateway/) | `logging` | Services running | Spring Cloud Gateway 라우팅, 필터, 프레디케이트 |
 | Basic | [`ratelimit-bucket4j-caffeine-web`](ratelimit/bucket4j-caffeine-web/) | `logging` | In-memory | Caffeine을 활용한 Bucket4j 속도 제한 |
 | Advanced | [`ratelimit-bucket4j-redis`](ratelimit/bucket4j-redis/) | `redis`, `testcontainers` | Redis (TC) | Bucket4j + Redis를 통한 분산 속도 제한 |
@@ -270,6 +271,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 ```
 bluetape4k-workshop/
 ├── aws/                    # AWS SDK + Spring Cloud AWS
+├── commerce/               # End-to-end commerce 생명주기
 ├── exposed/                # JetBrains Exposed ORM
 ├── gateway/                # API Gateway + 마이크로서비스
 ├── gatling/                # 부하/성능 테스트
