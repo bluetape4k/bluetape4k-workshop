@@ -1,0 +1,80 @@
+spring:
+  application:
+    name: promotion-voucher-campaign
+  profiles:
+    default: local
+  datasource:
+    url: ${VOUCHER_DATABASE_URL:jdbc:postgresql://localhost:5432/voucher_campaign}
+    username: ${VOUCHER_DATABASE_USERNAME:vouchers}
+    password: ${VOUCHER_DATABASE_PASSWORD:vouchers}
+    hikari:
+      pool-name: voucher-campaign-pool
+      maximum-pool-size: 16
+      minimum-idle: 4
+      connection-timeout: 60000
+      validation-timeout: 5000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      keepalive-time: 120000
+  transaction:
+    default-timeout: 60s
+  threads:
+    virtual:
+      enabled: true
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+server:
+  address: ${VOUCHER_SERVER_ADDRESS:127.0.0.1}
+  port: ${VOUCHER_SERVER_PORT:8080}
+  shutdown: graceful
+  max-http-request-header-size: 16KB
+  tomcat:
+    threads:
+      max: 8000
+    max-connections: 8000
+    accept-count: 1000
+    connection-timeout: 60s
+    keep-alive-timeout: 60s
+    max-keep-alive-requests: 1000
+    max-http-form-post-size: 64KB
+
+management:
+  server:
+    address: 127.0.0.1
+    port: ${VOUCHER_MANAGEMENT_PORT:8081}
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+
+workshop:
+  voucher:
+    db:
+      foreground-permits: 12
+      background-permits: 4
+      permit-timeout: 250ms
+      lock-timeout: 5s
+    keys:
+      current-version: 1
+      active-read-versions: 1
+      generation:
+        1: ${VOUCHER_GENERATION_KEY_1:local-generation-secret-000000000000001}
+      verification:
+        1: ${VOUCHER_VERIFICATION_KEY_1:local-verification-secret-0000000000001}
+      identity: ${VOUCHER_IDENTITY_KEY:local-identity-secret-0000000000000001}
+      risk: ${VOUCHER_RISK_KEY:local-risk-secret-00000000000000000001}
+      redis-slot: ${VOUCHER_REDIS_SLOT_KEY:local-redis-slot-secret-00000000000001}
+    redis:
+      command-timeout: 500ms
+    worker:
+      batch-size: 50
+      run-deadline: 10s
+    sse:
+      max-campaigns: 32
+      queue-size: 32
