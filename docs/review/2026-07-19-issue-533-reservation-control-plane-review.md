@@ -32,10 +32,11 @@ Branch: `feature/issue-533-reservation-control-plane`
 하나의 더 오래된 offer를 구성한 회귀 테스트가 32개 제한에서도 offer resource를 첫 후보로
 선택함을 검증한다.
 
-GitHub Actions의 저자원 runner에서는 concurrent HTTP probe가 `returnResult`에서 status만 읽고
-response body를 소비하지 않은 뒤, 같은 client의 후속 GET이 60초 동안 connection을 기다리는
-사례가 두 개의 서로 다른 테스트 순서에서 재현됐다. 모든 concurrent probe가
-`expectBody().returnResult()`로 response를 완전히 소비한 뒤 상태를 집계하도록 수정했다.
+GitHub Actions의 저자원 runner에서 Reactor Netty 기반 `WebTestClient` 요청 하나가 60초 동안
+대기하는 현상이 세 번의 exact-head run에서 서로 다른 endpoint로 이동했다. Timeout 취소 직후
+다음 테스트는 즉시 통과했고 HikariCP/transaction failure는 없었다. 실제 Tomcat 서버 검증은
+유지하면서 test transport를 JDK `HttpClient` 기반 `JdkClientHttpConnector`로 교체했다. Concurrent
+probe도 `expectBody().returnResult()`로 response를 완전히 소비한 뒤 상태를 집계한다.
 
 ## Ecosystem 및 dependency 확인
 
@@ -51,7 +52,7 @@ response body를 소비하지 않은 뒤, 같은 client의 후속 GET이 60초 �
 
 - `:commerce-reservation-control-plane:test --rerun-tasks`: PASS, 58 tests
 - `:commerce-reservation-control-plane:build`: PASS
-- concurrent live HTTP response consumption 검증: PASS
+- JDK HTTP connector + concurrent response consumption 검증: PASS
 - `ktlint` module main/test: PASS
 - root `detekt`: PASS (`NO-SOURCE`; module-local detekt task 없음)
 - `git diff --check`: PASS

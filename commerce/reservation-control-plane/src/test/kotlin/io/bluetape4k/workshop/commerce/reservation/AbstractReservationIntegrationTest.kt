@@ -9,6 +9,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
+import org.springframework.http.client.reactive.JdkClientHttpConnector
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -59,8 +60,12 @@ internal abstract class AbstractReservationIntegrationTest {
     }
 
     protected val webTestClient: WebTestClient by lazy {
+        val connector =
+            JdkClientHttpConnector().apply {
+                setReadTimeout(Duration.ofSeconds(60))
+            }
         WebTestClient
-            .bindToServer()
+            .bindToServer(connector)
             .baseUrl("http://localhost:$port")
             .responseTimeout(Duration.ofSeconds(60))
             .build()
