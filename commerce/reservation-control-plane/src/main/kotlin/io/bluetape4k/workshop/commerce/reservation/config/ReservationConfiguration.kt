@@ -33,9 +33,10 @@ internal class ReservationConfiguration {
     ) = ReservationCredentialService(secret)
 
     @Bean(destroyMethod = "")
-    fun reservationExecutor(): ExecutorService = VirtualThreads.executorService().also {
-        log.info { "reservation_executor_created virtualThreads=true" }
-    }
+    fun reservationExecutor(): ExecutorService =
+        VirtualThreads.executorService().also {
+            log.info { "reservation_executor_created virtualThreads=true" }
+        }
 
     @Bean
     fun reservationExecutorShutdown(executor: ExecutorService) = ExecutorShutdown(executor)

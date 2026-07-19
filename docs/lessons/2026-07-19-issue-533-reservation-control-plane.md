@@ -56,4 +56,3 @@ Redis는 correctness authority가 아니므로 application context 시작을 막
 테스트로 이 결함을 재현하고 전역 정렬로 수정했다. 앞으로 여러 repository의 후보를 하나의
 worker limit으로 처리할 때는 개별 query ordering이 아니라 병합 이후의 global ordering과
 fairness를 반드시 테스트한다.
-

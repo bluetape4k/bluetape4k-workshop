@@ -44,27 +44,32 @@ internal class OperatorController(
         @RequestHeader("Idempotency-Key") key: String,
         @Valid @RequestBody request: ForceReleaseRequest,
     ): ResponseEntity<OperatorReleaseResponse> {
-        val result = executionGate.execute(FORCE_RELEASE, key) {
-            idempotency.execute(
-                FORCE_RELEASE,
-                key,
-                operatorKey,
-                "holdId=$holdId\nexpectedRevision=${request.expectedRevision}\nreasonCode=${request.reasonCode}",
-                HttpStatus.OK.value(),
-                OperatorReleaseResponse::class.java,
-            ) {
-                commands.forceRelease(ForceReleaseHoldCommand(holdId, request.expectedRevision, request.reasonCode))
-                    .let { OperatorReleaseResponse(it.id, it.resourceId, it.state.name, it.revision) }
+        val result =
+            executionGate.execute(FORCE_RELEASE, key) {
+                idempotency.execute(
+                    FORCE_RELEASE,
+                    key,
+                    operatorKey,
+                    "holdId=$holdId\nexpectedRevision=${request.expectedRevision}\nreasonCode=${request.reasonCode}",
+                    HttpStatus.OK.value(),
+                    OperatorReleaseResponse::class.java
+                ) {
+                    commands
+                        .forceRelease(ForceReleaseHoldCommand(holdId, request.expectedRevision, request.reasonCode))
+                        .let { OperatorReleaseResponse(it.id, it.resourceId, it.state.name, it.revision) }
+                }
             }
-        }
         log.info { "reservation_operator_force_release_completed holdId=$holdId replayed=${result.replayed}" }
-        return ResponseEntity.status(result.status)
+        return ResponseEntity
+            .status(result.status)
             .header("Idempotency-Replayed", result.replayed.toString())
             .body(result.value)
     }
 
     @PostMapping("/sweep")
-    fun sweep(@Valid @RequestBody request: ManualSweepRequest): SweepBatchSummary =
+    fun sweep(
+        @Valid @RequestBody request: ManualSweepRequest,
+    ): SweepBatchSummary =
         sweepWork.sweep(request.maxResources, Duration.ofSeconds(5)).also { summary ->
             log.info {
                 "reservation_operator_sweep_completed scanned=${summary.scannedResources} " +
@@ -81,13 +86,17 @@ internal data class ForceReleaseRequest(
     @field:Min(0) val expectedRevision: Long,
     @field:Pattern(regexp = "[A-Z0-9_]{3,40}") val reasonCode: String,
 ) : Serializable {
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
 internal data class ManualSweepRequest(
     @field:Min(1) @field:Max(32) val maxResources: Int = 32,
 ) : Serializable {
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
 internal data class OperatorReleaseResponse(
@@ -96,5 +105,7 @@ internal data class OperatorReleaseResponse(
     val state: String,
     val revision: Long,
 ) : Serializable {
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }

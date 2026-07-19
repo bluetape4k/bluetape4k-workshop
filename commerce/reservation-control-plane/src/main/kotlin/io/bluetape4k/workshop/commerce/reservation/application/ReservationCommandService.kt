@@ -7,14 +7,14 @@ import io.bluetape4k.workshop.commerce.reservation.domain.ReservationHoldSnapsho
 import io.bluetape4k.workshop.commerce.reservation.domain.ReservationPolicies
 import io.bluetape4k.workshop.commerce.reservation.domain.TransitionOutcome
 import io.bluetape4k.workshop.commerce.reservation.persistence.CapacityResourceRepository
+import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationAuditRepository
 import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationHoldRecord
 import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationHoldRepository
-import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationAuditRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.io.Serializable
 import java.time.Clock
 import java.time.Duration
-import java.io.Serializable
 
 /**
  * Owns durable hold state transitions.
@@ -42,16 +42,22 @@ internal class ReservationCommandService(
         if (!resources.tryOccupy(resource.id, command.expectedResourceRevision)) {
             throw ReservationCommandException("CAPACITY_EXHAUSTED_OR_STALE", resource.revision, true)
         }
-        return holds.create(
-            resourceId = resource.id,
-            ownerDigest = credentials.ownerDigest(command.ownerToken),
-            policyVersion = command.policyVersion,
-            expiresAt = now.plus(HOLD_TTL),
-        ).also {
-            audits.record("CAPACITY_RESOURCE", resource.id, command.expectedResourceRevision + 1, "CAPACITY_OCCUPIED")
-            audits.record("RESERVATION_HOLD", it.id, it.revision, it.state.name)
-            log.debug { "reservation_hold_command_applied holdId=${it.id} resourceId=${resource.id}" }
-        }
+        return holds
+            .create(
+                resourceId = resource.id,
+                ownerDigest = credentials.ownerDigest(command.ownerToken),
+                policyVersion = command.policyVersion,
+                expiresAt = now.plus(HOLD_TTL)
+            ).also {
+                audits.record(
+                    "CAPACITY_RESOURCE",
+                    resource.id,
+                    command.expectedResourceRevision + 1,
+                    "CAPACITY_OCCUPIED"
+                )
+                audits.record("RESERVATION_HOLD", it.id, it.revision, it.state.name)
+                log.debug { "reservation_hold_command_applied holdId=${it.id} resourceId=${resource.id}" }
+            }
     }
 
     @Transactional
@@ -69,13 +75,14 @@ internal class ReservationCommandService(
             throw ReservationCommandException("POLICY_VERSION_MISMATCH", current.revision, false)
         }
         val newExpiresAt = maxOf(current.expiresAt, now).plusSeconds(command.extendBySeconds)
-        val outcome = ReservationPolicies.extend(
-            current.toSnapshot(),
-            ownerDigest,
-            command.expectedRevision,
-            now,
-            newExpiresAt,
-        )
+        val outcome =
+            ReservationPolicies.extend(
+                current.toSnapshot(),
+                ownerDigest,
+                command.expectedRevision,
+                now,
+                newExpiresAt
+            )
         if (outcome is TransitionOutcome.Rejected) {
             throw ReservationCommandException(outcome.reason.name, outcome.currentRevision, false)
         }
@@ -100,13 +107,15 @@ internal class ReservationCommandService(
         if (current.state != HoldState.HELD) {
             throw ReservationCommandException("INVALID_STATE", current.revision, false)
         }
-        check(holds.transition(
-            current.id,
-            current.ownerDigest,
-            current.revision,
-            HoldState.HELD,
-            HoldState.RELEASED_BY_OPERATOR,
-        )) { "operator hold transition lost" }
+        check(
+            holds.transition(
+                current.id,
+                current.ownerDigest,
+                current.revision,
+                HoldState.HELD,
+                HoldState.RELEASED_BY_OPERATOR
+            )
+        ) { "operator hold transition lost" }
         val updated = holds.findById(current.id)
         audits.record("RESERVATION_HOLD", updated.id, updated.revision, updated.state.name, command.reasonCode)
         handoff.promoteOrRelease(current.resourceId, now)
@@ -117,7 +126,10 @@ internal class ReservationCommandService(
         return updated
     }
 
-    private fun mutate(command: MutateHoldCommand, target: HoldState): ReservationHoldRecord {
+    private fun mutate(
+        command: MutateHoldCommand,
+        target: HoldState,
+    ): ReservationHoldRecord {
         val now = clock.instant()
         val holdLocator = holds.findById(command.holdId)
         if (target == HoldState.CANCELLED) {
@@ -130,11 +142,12 @@ internal class ReservationCommandService(
             throw ReservationCommandException("POLICY_VERSION_MISMATCH", current.revision, false)
         }
         val snapshot = current.toSnapshot()
-        val outcome = when (target) {
-            HoldState.CONFIRMED -> ReservationPolicies.confirm(snapshot, ownerDigest, command.expectedRevision, now)
-            HoldState.CANCELLED -> ReservationPolicies.cancel(snapshot, ownerDigest, command.expectedRevision, now)
-            else -> error("unsupported target $target")
-        }
+        val outcome =
+            when (target) {
+                HoldState.CONFIRMED -> ReservationPolicies.confirm(snapshot, ownerDigest, command.expectedRevision, now)
+                HoldState.CANCELLED -> ReservationPolicies.cancel(snapshot, ownerDigest, command.expectedRevision, now)
+                else -> error("unsupported target $target")
+            }
         if (outcome is TransitionOutcome.Rejected) {
             throw ReservationCommandException(outcome.reason.name, outcome.currentRevision, false)
         }
@@ -160,7 +173,9 @@ internal data class CreateHoldCommand(
     val policyVersion: Long,
     val ownerToken: String,
 ) : Serializable {
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
 internal data class MutateHoldCommand(
@@ -169,7 +184,9 @@ internal data class MutateHoldCommand(
     val policyVersion: Long,
     val ownerToken: String,
 ) : Serializable {
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
 internal data class ExtendHoldCommand(
@@ -183,7 +200,9 @@ internal data class ExtendHoldCommand(
         require(extendBySeconds in 1..300) { "extendBySeconds must be between 1 and 300" }
     }
 
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
 internal data class ForceReleaseHoldCommand(
@@ -195,8 +214,9 @@ internal data class ForceReleaseHoldCommand(
         require(reasonCode.matches(Regex("[A-Z0-9_]{3,40}"))) { "reasonCode must be a bounded stable code" }
     }
 
-
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
 internal class ReservationCommandException(
@@ -206,12 +226,13 @@ internal class ReservationCommandException(
     val retryAfterSeconds: Long? = null,
 ) : RuntimeException(reason)
 
-private fun ReservationHoldRecord.toSnapshot() = ReservationHoldSnapshot(
-    id = id,
-    resourceId = resourceId,
-    ownerDigest = ownerDigest,
-    state = state,
-    revision = revision,
-    policyVersion = policyVersion,
-    expiresAt = expiresAt,
-)
+private fun ReservationHoldRecord.toSnapshot() =
+    ReservationHoldSnapshot(
+        id = id,
+        resourceId = resourceId,
+        ownerDigest = ownerDigest,
+        state = state,
+        revision = revision,
+        policyVersion = policyVersion,
+        expiresAt = expiresAt
+    )

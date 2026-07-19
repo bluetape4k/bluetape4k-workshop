@@ -2,14 +2,14 @@ package io.bluetape4k.workshop.commerce.reservation.query
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.workshop.commerce.reservation.domain.ReservationTimePolicy
 import io.bluetape4k.workshop.commerce.reservation.persistence.CapacityResourceRecord
 import io.bluetape4k.workshop.commerce.reservation.persistence.CapacityResourceRepository
-import io.bluetape4k.workshop.commerce.reservation.domain.ReservationTimePolicy
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.io.Serializable
 import java.time.Clock
 import java.time.Instant
-import java.io.Serializable
 import java.time.OffsetDateTime
 import java.time.ZoneId
 
@@ -34,7 +34,9 @@ internal data class ResourceSnapshotResponse(
     val observedAt: Instant,
     val resources: List<ResourceSnapshot>,
 ) : Serializable {
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
 internal data class ResourceSnapshot(
@@ -49,18 +51,21 @@ internal data class ResourceSnapshot(
     val timezone: String,
     val localObservedAt: OffsetDateTime,
 ) : Serializable {
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
-private fun CapacityResourceRecord.toSnapshot(observedAt: Instant) = ResourceSnapshot(
-    id = id,
-    code = code,
-    state = state.name,
-    capacity = capacity,
-    occupiedCount = occupiedCount,
-    availableCount = capacity - occupiedCount,
-    revision = revision,
-    policyVersion = policyVersion,
-    timezone = timezone,
-    localObservedAt = ReservationTimePolicy.project(observedAt, ZoneId.of(timezone)),
-)
+private fun CapacityResourceRecord.toSnapshot(observedAt: Instant) =
+    ResourceSnapshot(
+        id = id,
+        code = code,
+        state = state.name,
+        capacity = capacity,
+        occupiedCount = occupiedCount,
+        availableCount = capacity - occupiedCount,
+        revision = revision,
+        policyVersion = policyVersion,
+        timezone = timezone,
+        localObservedAt = ReservationTimePolicy.project(observedAt, ZoneId.of(timezone))
+    )

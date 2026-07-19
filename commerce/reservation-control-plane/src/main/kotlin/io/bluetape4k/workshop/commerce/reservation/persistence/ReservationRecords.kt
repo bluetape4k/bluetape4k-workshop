@@ -2,8 +2,8 @@ package io.bluetape4k.workshop.commerce.reservation.persistence
 
 import io.bluetape4k.exposed.core.auditable.Auditable
 import io.bluetape4k.exposed.core.auditable.UserContext
-import io.bluetape4k.workshop.commerce.reservation.domain.ResourceState
 import io.bluetape4k.workshop.commerce.reservation.domain.HoldState
+import io.bluetape4k.workshop.commerce.reservation.domain.ResourceState
 import java.io.Serializable
 import java.time.Instant
 
@@ -21,8 +21,11 @@ internal data class CapacityResourceRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable, Serializable {
-    companion object { private const val serialVersionUID = 1L }
+) : Auditable,
+    Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
 /** Exposed repository projection of a durable, revisioned hold. */
@@ -38,6 +41,9 @@ internal data class ReservationHoldRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable, Serializable {
-    companion object { private const val serialVersionUID = 1L }
+) : Auditable,
+    Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }

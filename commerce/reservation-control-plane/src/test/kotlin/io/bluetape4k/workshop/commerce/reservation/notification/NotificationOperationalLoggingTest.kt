@@ -20,26 +20,27 @@ class NotificationOperationalLoggingTest {
         val commandSecret = "operator-command-secret"
         val outbox = InMemoryNotificationOutbox()
 
-        val messages = captureNotificationLogs {
-            outbox.enqueue(
-                NotificationRequest(
-                    deliveryId = "safe-delivery-id",
-                    channel = NotificationChannel.IN_APP,
-                    templateCode = "reservation-state-changed",
-                    aggregateId = aggregateSecret,
-                ),
-                now,
-            )
-            outbox.claim("safe-delivery-id", claimSecret, now, Duration.ofSeconds(30))
-            outbox.markFailed(
-                "safe-delivery-id",
-                claimSecret,
-                now.plusSeconds(1),
-                NotificationFailureCode.FAKE_TRANSIENT,
-                NotificationRetryPolicy(maxAttempts = 1),
-            )
-            outbox.redrive("safe-delivery-id", commandSecret, now.plusSeconds(2))
-        }.joinToString("\n")
+        val messages =
+            captureNotificationLogs {
+                outbox.enqueue(
+                    NotificationRequest(
+                        deliveryId = "safe-delivery-id",
+                        channel = NotificationChannel.IN_APP,
+                        templateCode = "reservation-state-changed",
+                        aggregateId = aggregateSecret
+                    ),
+                    now
+                )
+                outbox.claim("safe-delivery-id", claimSecret, now, Duration.ofSeconds(30))
+                outbox.markFailed(
+                    "safe-delivery-id",
+                    claimSecret,
+                    now.plusSeconds(1),
+                    NotificationFailureCode.FAKE_TRANSIENT,
+                    NotificationRetryPolicy(maxAttempts = 1)
+                )
+                outbox.redrive("safe-delivery-id", commandSecret, now.plusSeconds(2))
+            }.joinToString("\n")
 
         messages shouldContain "notification_claimed"
         messages shouldContain "notification_exhausted"

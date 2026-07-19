@@ -2,8 +2,8 @@ package io.bluetape4k.workshop.commerce.reservation.config
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
-import io.bluetape4k.workshop.commerce.reservation.persistence.reservationTables
 import io.bluetape4k.workshop.commerce.reservation.persistence.CapacityResourceRepository
+import io.bluetape4k.workshop.commerce.reservation.persistence.reservationTables
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner

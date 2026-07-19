@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.commerce.reservation.notification
 
 import io.bluetape4k.support.requireNotBlank
-import java.time.Instant
 import java.io.Serializable
+import java.time.Instant
 
 internal enum class NotificationChannel {
     IN_APP,
@@ -32,7 +32,9 @@ internal data class NotificationRequest(
         aggregateId.requireNotBlank("aggregateId")
     }
 
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
 internal data class NotificationDelivery(
@@ -47,7 +49,9 @@ internal data class NotificationDelivery(
     val claimUntil: Instant?,
     val failureCode: NotificationFailureCode?,
 ) : Serializable {
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
 internal enum class FinalizeDisposition {
@@ -67,8 +71,15 @@ internal enum class RedriveDisposition {
 /** Provider result vocabulary that keeps duplicate acceptance distinct from retryable failure. */
 internal sealed interface ProviderSendResult {
     data object Accepted : ProviderSendResult
+
     data object Duplicate : ProviderSendResult
-    data class RetryableFailure(val code: NotificationFailureCode) : ProviderSendResult, Serializable {
-        companion object { private const val serialVersionUID = 1L }
+
+    data class RetryableFailure(
+        val code: NotificationFailureCode,
+    ) : ProviderSendResult,
+        Serializable {
+        companion object {
+            private const val serialVersionUID = 1L
+        }
     }
 }

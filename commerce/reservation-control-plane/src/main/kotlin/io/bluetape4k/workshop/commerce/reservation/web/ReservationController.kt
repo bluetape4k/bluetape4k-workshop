@@ -4,10 +4,11 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.reservation.application.CreateHoldCommand
 import io.bluetape4k.workshop.commerce.reservation.application.ExtendHoldCommand
-import io.bluetape4k.workshop.commerce.reservation.application.MutateHoldCommand
+import io.bluetape4k.workshop.commerce.reservation.application.IdempotentCommandResult
 import io.bluetape4k.workshop.commerce.reservation.application.IdempotentReservationCommandService
-import io.bluetape4k.workshop.commerce.reservation.application.ReservationCommandService
+import io.bluetape4k.workshop.commerce.reservation.application.MutateHoldCommand
 import io.bluetape4k.workshop.commerce.reservation.application.ReservationCommandExecutionGate
+import io.bluetape4k.workshop.commerce.reservation.application.ReservationCommandService
 import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationHoldRecord
 import io.bluetape4k.workshop.commerce.reservation.query.ReservationQueryService
 import io.bluetape4k.workshop.commerce.reservation.query.ResourceSnapshotResponse
@@ -22,8 +23,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import java.time.Instant
 import java.io.Serializable
+import java.time.Instant
 
 /** HTTP boundary for hold commands; every mutation passes admission, suppression, and durable idempotency. */
 @RestController
@@ -45,21 +46,29 @@ internal class ReservationController(
         @Valid @RequestBody request: CreateHoldRequest,
     ): ResponseEntity<HoldResponse> {
         validateHeaders(owner, idempotencyKey)
-        val result = executionGate.execute(CREATE_HOLD, idempotencyKey) {
-            idempotency.execute(
-                operation = CREATE_HOLD,
-                rawKey = idempotencyKey,
-                rawOwner = owner,
-                canonicalPayload = "resourceId=$resourceId\nexpectedRevision=${request.expectedResourceRevision}\n" +
-                    "policyVersion=${request.policyVersion}",
-                successStatus = HttpStatus.CREATED.value(),
-                bodyType = HoldResponse::class.java,
-            ) {
-                commands.hold(
-                    CreateHoldCommand(resourceId, request.expectedResourceRevision, request.policyVersion, owner),
-                ).toResponse()
+        val result =
+            executionGate.execute(CREATE_HOLD, idempotencyKey) {
+                idempotency.execute(
+                    operation = CREATE_HOLD,
+                    rawKey = idempotencyKey,
+                    rawOwner = owner,
+                    canonicalPayload =
+                        "resourceId=$resourceId\nexpectedRevision=${request.expectedResourceRevision}\n" +
+                            "policyVersion=${request.policyVersion}",
+                    successStatus = HttpStatus.CREATED.value(),
+                    bodyType = HoldResponse::class.java
+                ) {
+                    commands
+                        .hold(
+                            CreateHoldCommand(
+                                resourceId,
+                                request.expectedResourceRevision,
+                                request.policyVersion,
+                                owner
+                            )
+                        ).toResponse()
+                }
             }
-        }
         log.debug { "reservation_http_hold_applied holdId=${result.value.id} resourceId=$resourceId" }
         return result.toResponseEntity()
     }
@@ -70,8 +79,7 @@ internal class ReservationController(
         @RequestHeader("X-Reservation-Owner") owner: String,
         @RequestHeader("Idempotency-Key") idempotencyKey: String,
         @Valid @RequestBody request: MutateHoldRequest,
-    ): ResponseEntity<HoldResponse> =
-        mutate(CONFIRM_HOLD, holdId, owner, idempotencyKey, request, commands::confirm)
+    ): ResponseEntity<HoldResponse> = mutate(CONFIRM_HOLD, holdId, owner, idempotencyKey, request, commands::confirm)
 
     @PostMapping("/holds/{holdId}/cancel")
     fun cancel(
@@ -79,8 +87,7 @@ internal class ReservationController(
         @RequestHeader("X-Reservation-Owner") owner: String,
         @RequestHeader("Idempotency-Key") idempotencyKey: String,
         @Valid @RequestBody request: MutateHoldRequest,
-    ): ResponseEntity<HoldResponse> =
-        mutate(CANCEL_HOLD, holdId, owner, idempotencyKey, request, commands::cancel)
+    ): ResponseEntity<HoldResponse> = mutate(CANCEL_HOLD, holdId, owner, idempotencyKey, request, commands::cancel)
 
     @PostMapping("/holds/{holdId}/extend")
     fun extend(
@@ -90,27 +97,30 @@ internal class ReservationController(
         @Valid @RequestBody request: ExtendHoldRequest,
     ): ResponseEntity<HoldResponse> {
         validateHeaders(owner, idempotencyKey)
-        val result = executionGate.execute(EXTEND_HOLD, idempotencyKey) {
-            idempotency.execute(
-                operation = EXTEND_HOLD,
-                rawKey = idempotencyKey,
-                rawOwner = owner,
-                canonicalPayload = "holdId=$holdId\nexpectedRevision=${request.expectedRevision}\n" +
-                    "policyVersion=${request.policyVersion}\nextendBySeconds=${request.extendBySeconds}",
-                successStatus = HttpStatus.OK.value(),
-                bodyType = HoldResponse::class.java,
-            ) {
-                commands.extend(
-                    ExtendHoldCommand(
-                        holdId = holdId,
-                        expectedRevision = request.expectedRevision,
-                        policyVersion = request.policyVersion,
-                        extendBySeconds = request.extendBySeconds,
-                        ownerToken = owner,
-                    ),
-                ).toResponse()
+        val result =
+            executionGate.execute(EXTEND_HOLD, idempotencyKey) {
+                idempotency.execute(
+                    operation = EXTEND_HOLD,
+                    rawKey = idempotencyKey,
+                    rawOwner = owner,
+                    canonicalPayload =
+                        "holdId=$holdId\nexpectedRevision=${request.expectedRevision}\n" +
+                            "policyVersion=${request.policyVersion}\nextendBySeconds=${request.extendBySeconds}",
+                    successStatus = HttpStatus.OK.value(),
+                    bodyType = HoldResponse::class.java
+                ) {
+                    commands
+                        .extend(
+                            ExtendHoldCommand(
+                                holdId = holdId,
+                                expectedRevision = request.expectedRevision,
+                                policyVersion = request.policyVersion,
+                                extendBySeconds = request.extendBySeconds,
+                                ownerToken = owner
+                            )
+                        ).toResponse()
+                }
             }
-        }
         return result.toResponseEntity()
     }
 
@@ -123,23 +133,30 @@ internal class ReservationController(
         action: (MutateHoldCommand) -> ReservationHoldRecord,
     ): ResponseEntity<HoldResponse> {
         validateHeaders(owner, idempotencyKey)
-        val result = executionGate.execute(operation, idempotencyKey) {
-            idempotency.execute(
-                operation = operation,
-                rawKey = idempotencyKey,
-                rawOwner = owner,
-                canonicalPayload = "holdId=$holdId\nexpectedRevision=${request.expectedRevision}\n" +
-                    "policyVersion=${request.policyVersion}",
-                successStatus = HttpStatus.OK.value(),
-                bodyType = HoldResponse::class.java,
-            ) {
-                action(MutateHoldCommand(holdId, request.expectedRevision, request.policyVersion, owner)).toResponse()
+        val result =
+            executionGate.execute(operation, idempotencyKey) {
+                idempotency.execute(
+                    operation = operation,
+                    rawKey = idempotencyKey,
+                    rawOwner = owner,
+                    canonicalPayload =
+                        "holdId=$holdId\nexpectedRevision=${request.expectedRevision}\n" +
+                            "policyVersion=${request.policyVersion}",
+                    successStatus = HttpStatus.OK.value(),
+                    bodyType = HoldResponse::class.java
+                ) {
+                    action(
+                        MutateHoldCommand(holdId, request.expectedRevision, request.policyVersion, owner)
+                    ).toResponse()
+                }
             }
-        }
         return result.toResponseEntity()
     }
 
-    private fun validateHeaders(owner: String, idempotencyKey: String) {
+    private fun validateHeaders(
+        owner: String,
+        idempotencyKey: String,
+    ) {
         require(owner.length >= 32) { "owner credential must contain at least 256 bits of encoded entropy" }
         require(idempotencyKey.length >= 16) { "idempotency key must contain at least 128 bits of encoded entropy" }
     }
@@ -156,14 +173,18 @@ internal data class CreateHoldRequest(
     @field:Min(0) val expectedResourceRevision: Long,
     @field:Min(1) val policyVersion: Long,
 ) : Serializable {
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
 internal data class MutateHoldRequest(
     @field:Min(0) val expectedRevision: Long,
     @field:Min(1) val policyVersion: Long,
 ) : Serializable {
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
 internal data class ExtendHoldRequest(
@@ -171,7 +192,9 @@ internal data class ExtendHoldRequest(
     @field:Min(1) val policyVersion: Long,
     @field:Min(1) val extendBySeconds: Long,
 ) : Serializable {
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
 internal data class HoldResponse(
@@ -182,12 +205,16 @@ internal data class HoldResponse(
     val policyVersion: Long,
     val expiresAt: Instant,
 ) : Serializable {
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
-private fun ReservationHoldRecord.toResponse() = HoldResponse(id, resourceId, state.name, revision, policyVersion, expiresAt)
+private fun ReservationHoldRecord.toResponse() =
+    HoldResponse(id, resourceId, state.name, revision, policyVersion, expiresAt)
 
-private fun <T : Any> io.bluetape4k.workshop.commerce.reservation.application.IdempotentCommandResult<T>.toResponseEntity(): ResponseEntity<T> =
-    ResponseEntity.status(status)
+private fun <T : Any> IdempotentCommandResult<T>.toResponseEntity(): ResponseEntity<T> =
+    ResponseEntity
+        .status(status)
         .header("Idempotency-Replayed", replayed.toString())
         .body(value)

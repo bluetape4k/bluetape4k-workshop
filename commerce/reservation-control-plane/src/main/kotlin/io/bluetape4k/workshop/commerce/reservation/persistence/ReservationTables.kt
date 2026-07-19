@@ -75,12 +75,13 @@ internal object ReservationAuditTable : Table("reservation_transition_audits") {
 }
 
 /** Complete application-owned schema used by bootstrap and isolated PostgreSQL fixtures. */
-internal val reservationTables = arrayOf(
-    CapacityResourceTable,
-    ReservationHoldTable,
-    WaitlistEntryTable,
-    ReservationOfferTable,
-    ReservationAuditTable,
-    reservationHttpIdempotencyTable,
-    reservationNotificationDeliveryTable,
-)
+internal val reservationTables =
+    arrayOf(
+        CapacityResourceTable,
+        ReservationHoldTable,
+        WaitlistEntryTable,
+        ReservationOfferTable,
+        ReservationAuditTable,
+        reservationHttpIdempotencyTable,
+        reservationNotificationDeliveryTable
+    )

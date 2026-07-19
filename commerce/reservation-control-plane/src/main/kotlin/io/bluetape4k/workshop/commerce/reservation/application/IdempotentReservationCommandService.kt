@@ -46,44 +46,43 @@ internal class IdempotentReservationCommandService(
     ): IdempotentCommandResult<T> {
         require(rawKey.length in 16..200) { "Idempotency-Key must contain 16..200 characters" }
         val ownerDigest = credentials.ownerDigest(rawOwner)
-        val scope = IdempotencyScope(
-            tenantId = tenantId,
-            operation = operation,
-            keyDigest = credentials.idempotencyDigest(tenantId, operation, rawKey),
-        )
+        val scope =
+            IdempotencyScope(
+                tenantId = tenantId,
+                operation = operation,
+                keyDigest = credentials.idempotencyDigest(tenantId, operation, rawKey)
+            )
         val fingerprint = IdempotencyFingerprint.request(operation, "$canonicalPayload\nowner=$ownerDigest")
         val ownerToken = Uuid.V7.nextId()
         return when (val acquired = repository.acquire(scope, fingerprint, ownerToken, clock.instant())) {
             is AcquireResult.New,
             is AcquireResult.Takeover,
-            -> {
-                val record = when (acquired) {
-                    is AcquireResult.New -> acquired.record
-                    is AcquireResult.Takeover -> acquired.record
+                -> {
+                    val record =
+                        when (acquired) {
+                            is AcquireResult.New -> acquired.record
+                            is AcquireResult.Takeover -> acquired.record
+                        }
+                    val response = action()
+                    val body = objectMapper.writeValueAsString(response)
+                    check(repository.finalize(record.id, ownerToken, successStatus, body, failed = false)) {
+                        "idempotency owner lost before command finalize"
+                    }
+                    log.info { "reservation_idempotency_completed operation=$operation status=$successStatus" }
+                    IdempotentCommandResult(successStatus, response, replayed = false)
                 }
-                val response = action()
-                val body = objectMapper.writeValueAsString(response)
-                check(repository.finalize(record.id, ownerToken, successStatus, body, failed = false)) {
-                    "idempotency owner lost before command finalize"
-                }
-                log.info { "reservation_idempotency_completed operation=$operation status=$successStatus" }
-                IdempotentCommandResult(successStatus, response, replayed = false)
-            }
-
             is AcquireResult.Replay -> {
                 log.info { "reservation_idempotency_replayed operation=$operation status=${acquired.status}" }
                 IdempotentCommandResult(
                     acquired.status,
                     objectMapper.readValue(acquired.body, bodyType),
-                    replayed = true,
+                    replayed = true
                 )
             }
-
             AcquireResult.FingerprintConflict -> {
                 log.warn { "reservation_idempotency_rejected operation=$operation reason=FINGERPRINT_CONFLICT" }
                 throw ReservationCommandException("IDEMPOTENCY_FINGERPRINT_CONFLICT", null, false)
             }
-
             is AcquireResult.InProgress -> {
                 val retryAfter = acquired.retryAfter.seconds.coerceAtLeast(1)
                 log.warn { "reservation_idempotency_rejected operation=$operation reason=COMMAND_IN_PROGRESS" }

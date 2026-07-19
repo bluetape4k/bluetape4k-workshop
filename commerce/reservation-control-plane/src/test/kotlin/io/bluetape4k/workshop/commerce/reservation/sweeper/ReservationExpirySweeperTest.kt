@@ -7,23 +7,24 @@ import org.junit.jupiter.api.Test
 import java.time.Duration
 
 class ReservationExpirySweeperTest {
-
     @Test
     fun `elected tick runs a bounded batch with the configured leader slot`() {
         val gate = RecordingSweepLeaderGate(LeaderDecision.ELECT)
         var requestedMax = 0
         var requestedBudget = Duration.ZERO
-        val sweeper = sweeper(gate) { maxResources, budget ->
-            requestedMax = maxResources
-            requestedBudget = budget
-            SweepBatchSummary(scannedResources = 3, expiredHolds = 2, promotedEntries = 1, staleConflicts = 0)
-        }
+        val sweeper =
+            sweeper(gate) { maxResources, budget ->
+                requestedMax = maxResources
+                requestedBudget = budget
+                SweepBatchSummary(scannedResources = 3, expiredHolds = 2, promotedEntries = 1, staleConflicts = 0)
+            }
 
         val outcome = sweeper.sweepOnce()
 
-        outcome shouldBeEqualTo SweepTickOutcome.Completed(
-            SweepBatchSummary(scannedResources = 3, expiredHolds = 2, promotedEntries = 1, staleConflicts = 0),
-        )
+        outcome shouldBeEqualTo
+            SweepTickOutcome.Completed(
+                SweepBatchSummary(scannedResources = 3, expiredHolds = 2, promotedEntries = 1, staleConflicts = 0)
+            )
         gate.slot shouldBeEqualTo LeaderSlot("reservation-expiry-sweeper", "node-a")
         requestedMax shouldBeEqualTo 32
         requestedBudget shouldBeEqualTo Duration.ofSeconds(5)
@@ -33,10 +34,11 @@ class ReservationExpirySweeperTest {
     fun `non leader tick is skipped without running database work`() {
         val gate = RecordingSweepLeaderGate(LeaderDecision.SKIP)
         var executions = 0
-        val sweeper = sweeper(gate) { _, _ ->
-            executions++
-            SweepBatchSummary.Empty
-        }
+        val sweeper =
+            sweeper(gate) { _, _ ->
+                executions++
+                SweepBatchSummary.Empty
+            }
 
         sweeper.sweepOnce() shouldBeEqualTo SweepTickOutcome.Skipped
         executions shouldBeEqualTo 0
@@ -44,12 +46,14 @@ class ReservationExpirySweeperTest {
 
     @Test
     fun `backend and action failures are reduced to bounded outcomes`() {
-        val backendFailure = sweeper(RecordingSweepLeaderGate(LeaderDecision.BACKEND_FAILURE)) { _, _ ->
-            SweepBatchSummary.Empty
-        }
-        val actionFailure = sweeper(RecordingSweepLeaderGate(LeaderDecision.ACTION_FAILURE)) { _, _ ->
-            SweepBatchSummary.Empty
-        }
+        val backendFailure =
+            sweeper(RecordingSweepLeaderGate(LeaderDecision.BACKEND_FAILURE)) { _, _ ->
+                SweepBatchSummary.Empty
+            }
+        val actionFailure =
+            sweeper(RecordingSweepLeaderGate(LeaderDecision.ACTION_FAILURE)) { _, _ ->
+                SweepBatchSummary.Empty
+            }
 
         backendFailure.sweepOnce() shouldBeEqualTo
             SweepTickOutcome.Failed(SweepFailureCode.LEADER_BACKEND_UNAVAILABLE)
@@ -60,10 +64,11 @@ class ReservationExpirySweeperTest {
     fun `local single flight skips reentrant tick`() {
         lateinit var sweeper: ReservationExpirySweeper
         var nested: SweepTickOutcome? = null
-        sweeper = sweeper(RecordingSweepLeaderGate(LeaderDecision.ELECT)) { _, _ ->
-            nested = sweeper.sweepOnce()
-            SweepBatchSummary.Empty
-        }
+        sweeper =
+            sweeper(RecordingSweepLeaderGate(LeaderDecision.ELECT)) { _, _ ->
+                nested = sweeper.sweepOnce()
+                SweepBatchSummary.Empty
+            }
 
         sweeper.sweepOnce() shouldBeEqualTo SweepTickOutcome.Completed(SweepBatchSummary.Empty)
         nested shouldBeEqualTo SweepTickOutcome.LocalBusy
@@ -77,7 +82,7 @@ class ReservationExpirySweeperTest {
         sweepWork = work,
         instanceId = "node-a",
         maxResources = 32,
-        tickBudget = Duration.ofSeconds(5),
+        tickBudget = Duration.ofSeconds(5)
     )
 
     private enum class LeaderDecision { ELECT, SKIP, ACTION_FAILURE, BACKEND_FAILURE }

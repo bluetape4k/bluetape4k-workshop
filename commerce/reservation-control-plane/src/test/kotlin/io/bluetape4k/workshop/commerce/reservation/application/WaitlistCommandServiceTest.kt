@@ -60,7 +60,10 @@ class WaitlistCommandServiceTest {
                 service.accept(AcceptOfferCommand(offer.id, expectedRevision = 9, ownerToken = "offer-owner"))
             }
 
-            val accepted = service.accept(AcceptOfferCommand(offer.id, expectedRevision = 0, ownerToken = "offer-owner"))
+            val accepted =
+                service.accept(
+                    AcceptOfferCommand(offer.id, expectedRevision = 0, ownerToken = "offer-owner")
+                )
 
             assertEquals(OfferState.ACCEPTED, accepted.offer.state)
             assertEquals(1L, accepted.offer.revision)
@@ -79,11 +82,13 @@ class WaitlistCommandServiceTest {
             val entry = joinService.join(JoinWaitlistCommand(resource.id, "offer-owner"))
             val offer = joinService.promote(resource.id)!!
             val expiredClock = Clock.fixed(now.plusSeconds(21), ZoneOffset.UTC)
-            val acceptService = WaitlistCommandService(waitlists, offers, credentialService, expiredClock, Duration.ofSeconds(20))
+            val acceptService =
+                WaitlistCommandService(waitlists, offers, credentialService, expiredClock, Duration.ofSeconds(20))
 
-            val error = assertThrows(WaitlistCommandException::class.java) {
-                acceptService.accept(AcceptOfferCommand(offer.id, expectedRevision = 0, ownerToken = "offer-owner"))
-            }
+            val error =
+                assertThrows(WaitlistCommandException::class.java) {
+                    acceptService.accept(AcceptOfferCommand(offer.id, expectedRevision = 0, ownerToken = "offer-owner"))
+                }
 
             assertEquals("OFFER_EXPIRED", error.reason)
             assertEquals(OfferState.ACTIVE, offers.findById(offer.id).state)
@@ -99,6 +104,6 @@ class WaitlistCommandServiceTest {
         offers = offers,
         credentials = credentialService,
         clock = Clock.fixed(now, ZoneOffset.UTC),
-        offerTtl = Duration.ofSeconds(20),
+        offerTtl = Duration.ofSeconds(20)
     )
 }

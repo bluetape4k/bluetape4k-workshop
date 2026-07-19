@@ -26,7 +26,8 @@ internal class HttpIdempotencyRepositoryTest {
             val owner = UUID.randomUUID()
             val acquired = repository.acquire(scope, fingerprint, owner, now) as AcquireResult.New
 
-            repository.finalize(acquired.record.id, owner, 201, "{\"holdId\":\"h-1\"}", failed = false) shouldBeEqualTo true
+            repository.finalize(acquired.record.id, owner, 201, "{\"holdId\":\"h-1\"}", failed = false) shouldBeEqualTo
+                true
             repository.acquire(scope, fingerprint, UUID.randomUUID(), now.plusSeconds(1)) shouldBeEqualTo
                 AcquireResult.Replay(201, "{\"holdId\":\"h-1\"}", failed = false)
         }

@@ -18,17 +18,19 @@ internal class ReservationOperationalLoggingTest {
         val rawOwner = "owner-secret-0123456789abcdef0123456789abcdef"
         val rawKey = "idempotency-secret-0123456789abcdef"
         val credentials = ReservationCredentialService("0123456789abcdef0123456789abcdef")
-        val gate = ReservationCommandExecutionGate(
-            ReservationAdmissionGate(NodeLocalDatabaseBulkhead()),
-            InFlightCommandSuppressor(),
-            credentials,
-            tenantId = "demo",
-        )
+        val gate =
+            ReservationCommandExecutionGate(
+                ReservationAdmissionGate(NodeLocalDatabaseBulkhead()),
+                InFlightCommandSuppressor(),
+                credentials,
+                tenantId = "demo"
+            )
 
-        val messages = captureReservationLogs {
-            credentials.matchesOwner(rawOwner, credentials.ownerDigest(rawOwner))
-            check(gate.execute("LOGGING_FIXTURE", rawKey) { "ok" } == "ok")
-        }.joinToString("\n")
+        val messages =
+            captureReservationLogs {
+                credentials.matchesOwner(rawOwner, credentials.ownerDigest(rawOwner))
+                check(gate.execute("LOGGING_FIXTURE", rawKey) { "ok" } == "ok")
+            }.joinToString("\n")
 
         messages shouldContain "reservation_owner_verified"
         messages shouldContain "reservation_command_gate_completed"

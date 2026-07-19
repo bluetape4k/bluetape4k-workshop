@@ -16,17 +16,26 @@ internal sealed interface LocalTimeResolution : Serializable {
         val instant: Instant,
         val offset: ZoneOffset,
     ) : LocalTimeResolution {
-        companion object { private const val serialVersionUID: Long = 1L }
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
     }
 
-    data class Rejected(val reason: LocalTimeRejection) : LocalTimeResolution {
-        companion object { private const val serialVersionUID: Long = 1L }
+    data class Rejected(
+        val reason: LocalTimeRejection,
+    ) : LocalTimeResolution {
+        companion object {
+            private const val serialVersionUID: Long = 1L
+        }
     }
 }
 
 /** Keeps local-time ambiguity out of reservation commands by requiring an explicit offset during DST overlap. */
 internal object ReservationTimePolicy : KLogging() {
-    fun project(instant: Instant, zoneId: ZoneId): OffsetDateTime = instant.atZone(zoneId).toOffsetDateTime()
+    fun project(
+        instant: Instant,
+        zoneId: ZoneId,
+    ): OffsetDateTime = instant.atZone(zoneId).toOffsetDateTime()
 
     fun resolve(
         localDateTime: LocalDateTime,

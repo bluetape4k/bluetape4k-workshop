@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.commerce.reservation.domain
 
-import java.time.Instant
 import java.io.Serializable
+import java.time.Instant
 
 /** Availability lifecycle controlled independently from current occupancy. */
 enum class ResourceState { OPEN, PAUSED, CLOSED }
@@ -65,13 +65,20 @@ data class ReservationHoldSnapshot(
 
 /** Policy result that must still be committed with the corresponding repository CAS. */
 sealed interface TransitionOutcome {
-    data class Applied(val hold: ReservationHoldSnapshot) : TransitionOutcome, Serializable {
+    data class Applied(
+        val hold: ReservationHoldSnapshot,
+    ) : TransitionOutcome,
+        Serializable {
         companion object {
             private const val serialVersionUID = 1L
         }
     }
 
-    data class Rejected(val reason: TransitionReason, val currentRevision: Long) : TransitionOutcome, Serializable {
+    data class Rejected(
+        val reason: TransitionReason,
+        val currentRevision: Long,
+    ) : TransitionOutcome,
+        Serializable {
         companion object {
             private const val serialVersionUID = 1L
         }

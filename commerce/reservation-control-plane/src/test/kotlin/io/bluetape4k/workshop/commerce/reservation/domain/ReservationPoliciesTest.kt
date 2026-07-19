@@ -68,13 +68,14 @@ class ReservationPoliciesTest {
         assertEquals(TransitionReason.INVALID_EXPIRY, (outcome as TransitionOutcome.Rejected).reason)
     }
 
-    private fun hold(expiresAt: Instant = now.plusSeconds(30)) = ReservationHoldSnapshot(
-        id = 10,
-        resourceId = 1,
-        ownerDigest = "owner-digest",
-        state = HoldState.HELD,
-        revision = 1,
-        policyVersion = 1,
-        expiresAt = expiresAt,
-    )
+    private fun hold(expiresAt: Instant = now.plusSeconds(30)) =
+        ReservationHoldSnapshot(
+            id = 10,
+            resourceId = 1,
+            ownerDigest = "owner-digest",
+            state = HoldState.HELD,
+            revision = 1,
+            policyVersion = 1,
+            expiresAt = expiresAt
+        )
 }

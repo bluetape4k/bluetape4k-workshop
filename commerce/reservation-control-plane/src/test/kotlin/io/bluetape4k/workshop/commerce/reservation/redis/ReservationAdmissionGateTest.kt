@@ -6,17 +6,17 @@ import org.junit.jupiter.api.Test
 import java.time.Duration
 
 class ReservationAdmissionGateTest {
-
     @Test
     fun `redis rejection does not enter the authoritative database action`() {
         val backend = RecordingAdmissionBackend(acquireResults = ArrayDeque(listOf(false)))
         val gate = gate(backend)
         var executions = 0
 
-        val outcome = gate.execute {
-            executions++
-            "unexpected"
-        }
+        val outcome =
+            gate.execute {
+                executions++
+                "unexpected"
+            }
 
         outcome shouldBeEqualTo AdmissionOutcome.Rejected(AdmissionRejection.REDIS_CAPACITY)
         executions shouldBeEqualTo 0
@@ -25,9 +25,10 @@ class ReservationAdmissionGateTest {
 
     @Test
     fun `redis outage falls back to the always on local bulkhead and later recovers`() {
-        val backend = RecordingAdmissionBackend(
-            acquireResults = ArrayDeque(listOf(IllegalStateException("redis secret detail"), true)),
-        )
+        val backend =
+            RecordingAdmissionBackend(
+                acquireResults = ArrayDeque(listOf(IllegalStateException("redis secret detail"), true))
+            )
         val gate = gate(backend)
 
         val degraded = gate.execute { "postgres-result" }
@@ -50,15 +51,17 @@ class ReservationAdmissionGateTest {
         backend.releases shouldBeEqualTo 1
     }
 
-    private fun gate(backend: AdmissionPermitBackend) = ReservationAdmissionGate(
-        localBulkhead = NodeLocalDatabaseBulkhead(
-            foregroundPermits = 1,
-            backgroundPermits = 1,
-            acquireTimeout = Duration.ZERO,
-        ),
-        redisBackend = backend,
-        redisWaitTime = Duration.ofMillis(100),
-    )
+    private fun gate(backend: AdmissionPermitBackend) =
+        ReservationAdmissionGate(
+            localBulkhead =
+                NodeLocalDatabaseBulkhead(
+                    foregroundPermits = 1,
+                    backgroundPermits = 1,
+                    acquireTimeout = Duration.ZERO
+                ),
+            redisBackend = backend,
+            redisWaitTime = Duration.ofMillis(100)
+        )
 
     private class RecordingAdmissionBackend(
         private val acquireResults: ArrayDeque<Any>,

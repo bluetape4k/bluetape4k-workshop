@@ -38,7 +38,10 @@ internal class ReservationResourceTransactionService(
 ) {
     /** Merges hold and offer expiry streams globally before deduplication and batch limiting. */
     @Transactional(readOnly = true)
-    fun expiredResourceIds(now: Instant, limit: Int): List<Long> =
+    fun expiredResourceIds(
+        now: Instant,
+        limit: Int,
+    ): List<Long> =
         (holds.expiredResourceCandidates(now, limit) + offers.expiredResourceCandidates(now, limit))
             .sortedWith(compareBy({ it.expiresAt }, { it.resourceId }))
             .distinctBy { it.resourceId }
@@ -47,19 +50,23 @@ internal class ReservationResourceTransactionService(
 
     /** Finalizes one resource using the canonical resource -> hold -> waitlist -> outbox lock order. */
     @Transactional
-    fun finalizeExpiredResource(resourceId: Long, now: Instant): SweepBatchSummary {
+    fun finalizeExpiredResource(
+        resourceId: Long,
+        now: Instant,
+    ): SweepBatchSummary {
         resources.findByIdForUpdate(resourceId)
         var expired = 0
         var promoted = 0
         var stale = 0
         holds.expiredForResource(resourceId, now).forEach { hold ->
-            val transitioned = holds.transition(
-                id = hold.id,
-                ownerDigest = hold.ownerDigest,
-                expectedRevision = hold.revision,
-                from = HoldState.HELD,
-                to = HoldState.EXPIRED,
-            )
+            val transitioned =
+                holds.transition(
+                    id = hold.id,
+                    ownerDigest = hold.ownerDigest,
+                    expectedRevision = hold.revision,
+                    from = HoldState.HELD,
+                    to = HoldState.EXPIRED
+                )
             if (!transitioned) {
                 stale += 1
                 return@forEach
@@ -76,20 +83,22 @@ internal class ReservationResourceTransactionService(
                     ownerDigest = offer.ownerDigest,
                     expectedRevision = offer.revision,
                     from = OfferState.ACTIVE,
-                    to = OfferState.EXPIRED,
+                    to = OfferState.EXPIRED
                 )
             ) {
                 stale += 1
                 return@forEach
             }
             val entry = waitlists.findById(offer.entryId)
-            check(waitlists.transition(
-                id = entry.id,
-                ownerDigest = entry.ownerDigest,
-                expectedRevision = entry.revision,
-                from = WaitlistState.OFFERED,
-                to = WaitlistState.EXPIRED,
-            )) { "expired offer waitlist transition lost" }
+            check(
+                waitlists.transition(
+                    id = entry.id,
+                    ownerDigest = entry.ownerDigest,
+                    expectedRevision = entry.revision,
+                    from = WaitlistState.OFFERED,
+                    to = WaitlistState.EXPIRED
+                )
+            ) { "expired offer waitlist transition lost" }
             audits.record("RESERVATION_OFFER", offer.id, offer.revision + 1, OfferState.EXPIRED.name)
             audits.record("WAITLIST_ENTRY", entry.id, entry.revision + 1, WaitlistState.EXPIRED.name)
             if (handoff.promoteOrRelease(resourceId, now) != null) {
@@ -112,18 +121,29 @@ internal class PostgresReservationSweepWork(
     private val bulkhead: NodeLocalDatabaseBulkhead,
     private val clock: Clock,
 ) : ReservationSweepWork {
-    override fun sweep(maxResources: Int, budget: Duration): SweepBatchSummary {
+    override fun sweep(
+        maxResources: Int,
+        budget: Duration,
+    ): SweepBatchSummary {
         val now = clock.instant()
         val deadline = System.nanoTime() + budget.toNanos()
-        return when (val outcome = bulkhead.execute(DatabaseWorkload.BACKGROUND) {
-            val resourceIds = transactions.expiredResourceIds(now, maxResources)
-            resourceIds.takeWhile { System.nanoTime() < deadline }
-                .map { transactions.finalizeExpiredResource(it, now) }
-                .fold(SweepBatchSummary.Empty, SweepBatchSummary::plus)
-        }) {
-            is DatabaseBulkheadOutcome.Executed -> outcome.value
-            is DatabaseBulkheadOutcome.Rejected -> SweepBatchSummary.Empty.also {
-                log.debug { "reservation_sweep_background_busy outcome=SKIPPED" }
+        return when (
+            val outcome =
+                bulkhead.execute(DatabaseWorkload.BACKGROUND) {
+                    val resourceIds = transactions.expiredResourceIds(now, maxResources)
+                    resourceIds
+                        .takeWhile { System.nanoTime() < deadline }
+                        .map { transactions.finalizeExpiredResource(it, now) }
+                        .fold(SweepBatchSummary.Empty, SweepBatchSummary::plus)
+                }
+        ) {
+            is DatabaseBulkheadOutcome.Executed -> {
+                outcome.value
+            }
+            is DatabaseBulkheadOutcome.Rejected -> {
+                SweepBatchSummary.Empty.also {
+                    log.debug { "reservation_sweep_background_busy outcome=SKIPPED" }
+                }
             }
         }
     }
@@ -131,9 +151,10 @@ internal class PostgresReservationSweepWork(
     companion object : KLogging()
 }
 
-private operator fun SweepBatchSummary.plus(other: SweepBatchSummary) = SweepBatchSummary(
-    scannedResources + other.scannedResources,
-    expiredHolds + other.expiredHolds,
-    promotedEntries + other.promotedEntries,
-    staleConflicts + other.staleConflicts,
-)
+private operator fun SweepBatchSummary.plus(other: SweepBatchSummary) =
+    SweepBatchSummary(
+        scannedResources + other.scannedResources,
+        expiredHolds + other.expiredHolds,
+        promotedEntries + other.promotedEntries,
+        staleConflicts + other.staleConflicts
+    )

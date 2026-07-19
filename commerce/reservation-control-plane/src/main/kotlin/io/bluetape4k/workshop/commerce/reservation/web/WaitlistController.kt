@@ -43,21 +43,28 @@ internal class WaitlistController(
         @Valid @RequestBody request: JoinWaitlistRequest,
     ): ResponseEntity<WaitlistResponse> {
         validateCommandHeaders(owner, key)
-        val result = executionGate.execute(JOIN_WAITLIST, key) {
-            idempotency.execute(
-                JOIN_WAITLIST,
-                key,
-                owner,
-                "resourceId=$resourceId\nexpectedRevision=${request.expectedResourceRevision}\n" +
-                    "policyVersion=${request.policyVersion}",
-                HttpStatus.CREATED.value(),
-                WaitlistResponse::class.java,
-            ) {
-                commands.join(
-                    JoinWaitlistCommand(resourceId, owner, request.expectedResourceRevision, request.policyVersion),
-                ).toResponse(position = 0, offer = null)
+        val result =
+            executionGate.execute(JOIN_WAITLIST, key) {
+                idempotency.execute(
+                    JOIN_WAITLIST,
+                    key,
+                    owner,
+                    "resourceId=$resourceId\nexpectedRevision=${request.expectedResourceRevision}\n" +
+                        "policyVersion=${request.policyVersion}",
+                    HttpStatus.CREATED.value(),
+                    WaitlistResponse::class.java
+                ) {
+                    commands
+                        .join(
+                            JoinWaitlistCommand(
+                                resourceId,
+                                owner,
+                                request.expectedResourceRevision,
+                                request.policyVersion
+                            )
+                        ).toResponse(position = 0, offer = null)
+                }
             }
-        }
         log.debug { "waitlist_http_join_applied entryId=${result.value.id} resourceId=$resourceId" }
         return result.toResponseEntity()
     }
@@ -80,18 +87,19 @@ internal class WaitlistController(
         @Valid @RequestBody request: RevisionRequest,
     ): ResponseEntity<WaitlistResponse> {
         validateCommandHeaders(owner, key)
-        val result = executionGate.execute(CANCEL_WAITLIST, key) {
-            idempotency.execute(
-                CANCEL_WAITLIST,
-                key,
-                owner,
-                "entryId=$entryId\nexpectedRevision=${request.expectedRevision}",
-                HttpStatus.OK.value(),
-                WaitlistResponse::class.java,
-            ) {
-                commands.cancel(CancelWaitlistCommand(entryId, request.expectedRevision, owner)).toResponse(0, null)
+        val result =
+            executionGate.execute(CANCEL_WAITLIST, key) {
+                idempotency.execute(
+                    CANCEL_WAITLIST,
+                    key,
+                    owner,
+                    "entryId=$entryId\nexpectedRevision=${request.expectedRevision}",
+                    HttpStatus.OK.value(),
+                    WaitlistResponse::class.java
+                ) {
+                    commands.cancel(CancelWaitlistCommand(entryId, request.expectedRevision, owner)).toResponse(0, null)
+                }
             }
-        }
         return result.toResponseEntity()
     }
 
@@ -112,22 +120,26 @@ internal class WaitlistController(
         @Valid @RequestBody request: RevisionRequest,
     ): ResponseEntity<OfferResponse> {
         validateCommandHeaders(owner, key)
-        val result = executionGate.execute(ACCEPT_OFFER, key) {
-            idempotency.execute(
-                ACCEPT_OFFER,
-                key,
-                owner,
-                "offerId=$offerId\nexpectedRevision=${request.expectedRevision}",
-                HttpStatus.OK.value(),
-                OfferResponse::class.java,
-            ) {
-                commands.accept(AcceptOfferCommand(offerId, request.expectedRevision, owner)).offer.toResponse()
+        val result =
+            executionGate.execute(ACCEPT_OFFER, key) {
+                idempotency.execute(
+                    ACCEPT_OFFER,
+                    key,
+                    owner,
+                    "offerId=$offerId\nexpectedRevision=${request.expectedRevision}",
+                    HttpStatus.OK.value(),
+                    OfferResponse::class.java
+                ) {
+                    commands.accept(AcceptOfferCommand(offerId, request.expectedRevision, owner)).offer.toResponse()
+                }
             }
-        }
         return result.toResponseEntity()
     }
 
-    private fun validateCommandHeaders(owner: String, key: String) {
+    private fun validateCommandHeaders(
+        owner: String,
+        key: String,
+    ) {
         require(owner.length >= 32) { "owner credential must contain at least 256 bits of encoded entropy" }
         require(key.length in 16..200) { "idempotency key must contain 16..200 characters" }
     }
@@ -143,11 +155,17 @@ internal data class JoinWaitlistRequest(
     @field:Min(0) val expectedResourceRevision: Long,
     @field:Min(1) val policyVersion: Long,
 ) : Serializable {
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
-internal data class RevisionRequest(@field:Min(0) val expectedRevision: Long) : Serializable {
-    companion object { private const val serialVersionUID = 1L }
+internal data class RevisionRequest(
+    @field:Min(0) val expectedRevision: Long,
+) : Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
 internal data class WaitlistResponse(
@@ -161,7 +179,9 @@ internal data class WaitlistResponse(
     val offerRevision: Long? = null,
     val offerExpiresAt: Instant? = null,
 ) : Serializable {
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
 internal data class OfferResponse(
@@ -172,21 +192,25 @@ internal data class OfferResponse(
     val revision: Long,
     val expiresAt: Instant,
 ) : Serializable {
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }
 
-private fun WaitlistEntryRecord.toResponse(position: Int, offer: ReservationOfferRecord?) =
-    WaitlistResponse(
-        id = id,
-        resourceId = resourceId,
-        state = state.name,
-        sequence = sequence,
-        revision = revision,
-        position = position,
-        offerId = offer?.id,
-        offerRevision = offer?.revision,
-        offerExpiresAt = offer?.expiresAt,
-    )
+private fun WaitlistEntryRecord.toResponse(
+    position: Int,
+    offer: ReservationOfferRecord?,
+) = WaitlistResponse(
+    id = id,
+    resourceId = resourceId,
+    state = state.name,
+    sequence = sequence,
+    revision = revision,
+    position = position,
+    offerId = offer?.id,
+    offerRevision = offer?.revision,
+    offerExpiresAt = offer?.expiresAt
+)
 
 private fun ReservationOfferRecord.toResponse() =
     OfferResponse(id, resourceId, entryId, state.name, revision, expiresAt)

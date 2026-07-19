@@ -55,18 +55,21 @@ object ReservationPolicies : KLogging() {
         now: Instant,
         target: HoldState,
     ): TransitionOutcome {
-        val rejection = when {
-            hold.ownerDigest != ownerDigest -> TransitionReason.OWNER_MISMATCH
-            hold.revision != expectedRevision -> TransitionReason.STALE_REVISION
-            hold.state == HoldState.CONFIRMED -> TransitionReason.ALREADY_CONFIRMED
-            hold.state == HoldState.CANCELLED -> TransitionReason.HOLD_CANCELLED
-            hold.state == HoldState.RELEASED_BY_OPERATOR -> TransitionReason.HOLD_RELEASED_BY_OPERATOR
-            hold.state != HoldState.HELD -> TransitionReason.INVALID_STATE
-            !now.isBefore(hold.expiresAt) -> TransitionReason.HOLD_EXPIRED
-            else -> null
-        }
+        val rejection =
+            when {
+                hold.ownerDigest != ownerDigest -> TransitionReason.OWNER_MISMATCH
+                hold.revision != expectedRevision -> TransitionReason.STALE_REVISION
+                hold.state == HoldState.CONFIRMED -> TransitionReason.ALREADY_CONFIRMED
+                hold.state == HoldState.CANCELLED -> TransitionReason.HOLD_CANCELLED
+                hold.state == HoldState.RELEASED_BY_OPERATOR -> TransitionReason.HOLD_RELEASED_BY_OPERATOR
+                hold.state != HoldState.HELD -> TransitionReason.INVALID_STATE
+                !now.isBefore(hold.expiresAt) -> TransitionReason.HOLD_EXPIRED
+                else -> null
+            }
         if (rejection != null) {
-            log.debug { "reservation_transition_rejected holdId=${hold.id} revision=${hold.revision} reason=$rejection" }
+            log.debug {
+                "reservation_transition_rejected holdId=${hold.id} revision=${hold.revision} reason=$rejection"
+            }
             return TransitionOutcome.Rejected(rejection, hold.revision)
         }
 

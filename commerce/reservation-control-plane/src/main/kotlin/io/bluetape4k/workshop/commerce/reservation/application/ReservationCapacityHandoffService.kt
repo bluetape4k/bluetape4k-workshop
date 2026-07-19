@@ -22,7 +22,10 @@ internal class ReservationCapacityHandoffService(
     private val notifications: NotificationDeliveryRepository,
     private val audits: ReservationAuditRepository,
 ) {
-    fun promoteOrRelease(resourceId: Long, now: Instant): ReservationOfferRecord? {
+    fun promoteOrRelease(
+        resourceId: Long,
+        now: Instant,
+    ): ReservationOfferRecord? {
         val offer = waitlist.promote(resourceId)
         if (offer == null) {
             val resource = resources.findByIdForUpdate(resourceId)
@@ -38,9 +41,9 @@ internal class ReservationCapacityHandoffService(
                 deliveryId = "offer-created:${offer.id}:${offer.revision}:in-app",
                 channel = NotificationChannel.IN_APP,
                 templateCode = "RESERVATION_OFFER_CREATED",
-                aggregateId = offer.id.toString(),
+                aggregateId = offer.id.toString()
             ),
-            now,
+            now
         )
         log.debug { "reservation_capacity_handed_off resourceId=$resourceId offerId=${offer.id}" }
         return offer

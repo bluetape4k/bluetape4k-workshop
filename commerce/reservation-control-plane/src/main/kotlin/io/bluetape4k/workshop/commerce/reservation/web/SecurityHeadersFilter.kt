@@ -11,7 +11,11 @@ import org.springframework.web.filter.OncePerRequestFilter
 /** Prevents reservation and owner-specific browser state from being cached or embedded by other origins. */
 @Component
 internal class SecurityHeadersFilter : OncePerRequestFilter() {
-    override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, chain: FilterChain) {
+    override fun doFilterInternal(
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+        chain: FilterChain,
+    ) {
         response.setHeader("Cache-Control", "no-store")
         response.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'")
         response.setHeader("Referrer-Policy", "no-referrer")

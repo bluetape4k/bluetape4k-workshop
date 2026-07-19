@@ -29,7 +29,8 @@ internal data class ReservationOfferRecord(
     override val createdAt: Instant? = null,
     override val updatedBy: String? = null,
     override val updatedAt: Instant? = null,
-) : Auditable, Serializable {
+) : Auditable,
+    Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
@@ -47,19 +48,20 @@ internal class ReservationOfferRepository : LongAuditableJdbcRepository<Reservat
 
     override fun extractId(entity: ReservationOfferRecord): Long = entity.id
 
-    override fun ResultRow.toEntity() = ReservationOfferRecord(
-        id = this[table.id].value,
-        resourceId = this[table.resourceId].value,
-        entryId = this[table.entryId].value,
-        ownerDigest = this[table.ownerDigest],
-        state = this[table.state],
-        revision = this[table.revision],
-        expiresAt = this[table.expiresAt],
-        createdBy = this[table.createdBy],
-        createdAt = this[table.createdAt],
-        updatedBy = this[table.updatedBy],
-        updatedAt = this[table.updatedAt],
-    )
+    override fun ResultRow.toEntity() =
+        ReservationOfferRecord(
+            id = this[table.id].value,
+            resourceId = this[table.resourceId].value,
+            entryId = this[table.entryId].value,
+            ownerDigest = this[table.ownerDigest],
+            state = this[table.state],
+            revision = this[table.revision],
+            expiresAt = this[table.expiresAt],
+            createdBy = this[table.createdBy],
+            createdAt = this[table.createdAt],
+            updatedBy = this[table.updatedBy],
+            updatedAt = this[table.updatedAt]
+        )
 
     fun createActive(
         resourceId: Long,
@@ -67,36 +69,51 @@ internal class ReservationOfferRepository : LongAuditableJdbcRepository<Reservat
         ownerDigest: String,
         expiresAt: Instant,
     ): ReservationOfferRecord {
-        val id = table.insertAndGetId {
-            it[table.resourceId] = resourceId
-            it[table.entryId] = entryId
-            it[table.ownerDigest] = ownerDigest
-            it[table.state] = OfferState.ACTIVE
-            it[table.expiresAt] = expiresAt
-        }.value
+        val id =
+            table
+                .insertAndGetId {
+                    it[table.resourceId] = resourceId
+                    it[table.entryId] = entryId
+                    it[table.ownerDigest] = ownerDigest
+                    it[table.state] = OfferState.ACTIVE
+                    it[table.expiresAt] = expiresAt
+                }.value
         log.debug { "reservation_offer_created offerId=$id entryId=$entryId resourceId=$resourceId" }
         return findById(id)
     }
 
-    fun snapshot(id: Long, ownerDigest: String): ReservationOfferRecord? = table.selectAll()
-        .where { (table.id eq id) and (table.ownerDigest eq ownerDigest) }
-        .singleOrNull()
-        ?.let { with(this) { it.toEntity() } }
+    fun snapshot(
+        id: Long,
+        ownerDigest: String,
+    ): ReservationOfferRecord? =
+        table
+            .selectAll()
+            .where { (table.id eq id) and (table.ownerDigest eq ownerDigest) }
+            .singleOrNull()
+            ?.let { with(this) { it.toEntity() } }
 
-    fun snapshots(resourceId: Long): List<ReservationOfferRecord> = table.selectAll()
-        .where { table.resourceId eq resourceId }
-        .orderBy(table.id to SortOrder.ASC)
-        .map { with(this) { it.toEntity() } }
+    fun snapshots(resourceId: Long): List<ReservationOfferRecord> =
+        table
+            .selectAll()
+            .where { table.resourceId eq resourceId }
+            .orderBy(table.id to SortOrder.ASC)
+            .map { with(this) { it.toEntity() } }
 
-    fun activeForEntry(entryId: Long): ReservationOfferRecord? = table.selectAll()
-        .where { (table.entryId eq entryId) and (table.state eq OfferState.ACTIVE) }
-        .singleOrNull()
-        ?.let { with(this) { it.toEntity() } }
+    fun activeForEntry(entryId: Long): ReservationOfferRecord? =
+        table
+            .selectAll()
+            .where { (table.entryId eq entryId) and (table.state eq OfferState.ACTIVE) }
+            .singleOrNull()
+            ?.let { with(this) { it.toEntity() } }
 
     /** Returns bounded candidates; the transaction service merges these with expired holds by timestamp. */
-    fun expiredResourceCandidates(now: Instant, limit: Int): List<ExpiredResourceCandidate> {
+    fun expiredResourceCandidates(
+        now: Instant,
+        limit: Int,
+    ): List<ExpiredResourceCandidate> {
         require(limit in 1..32) { "limit must be between 1 and 32" }
-        return table.selectAll()
+        return table
+            .selectAll()
             .where { (table.state eq OfferState.ACTIVE) and (table.expiresAt lessEq now) }
             .orderBy(table.expiresAt to SortOrder.ASC, table.id to SortOrder.ASC)
             .limit(limit * 4)
@@ -105,14 +122,18 @@ internal class ReservationOfferRepository : LongAuditableJdbcRepository<Reservat
             .take(limit)
     }
 
-    fun expiredForResource(resourceId: Long, now: Instant): List<ReservationOfferRecord> = table.selectAll()
-        .where {
-            (table.resourceId eq resourceId) and
-                (table.state eq OfferState.ACTIVE) and
-                (table.expiresAt lessEq now)
-        }
-        .orderBy(table.expiresAt to SortOrder.ASC, table.id to SortOrder.ASC)
-        .map { with(this) { it.toEntity() } }
+    fun expiredForResource(
+        resourceId: Long,
+        now: Instant,
+    ): List<ReservationOfferRecord> =
+        table
+            .selectAll()
+            .where {
+                (table.resourceId eq resourceId) and
+                    (table.state eq OfferState.ACTIVE) and
+                    (table.expiresAt lessEq now)
+            }.orderBy(table.expiresAt to SortOrder.ASC, table.id to SortOrder.ASC)
+            .map { with(this) { it.toEntity() } }
 
     fun transition(
         id: Long,
@@ -121,15 +142,16 @@ internal class ReservationOfferRepository : LongAuditableJdbcRepository<Reservat
         from: OfferState,
         to: OfferState,
     ): Boolean {
-        val applied = auditedUpdateAll({
-            (table.id eq id) and
-                (table.ownerDigest eq ownerDigest) and
-                (table.revision eq expectedRevision) and
-                (table.state eq from)
-        }) {
-            it[state] = to
-            it[revision] = expectedRevision + 1
-        } == 1
+        val applied =
+            auditedUpdateAll({
+                (table.id eq id) and
+                    (table.ownerDigest eq ownerDigest) and
+                    (table.revision eq expectedRevision) and
+                    (table.state eq from)
+            }) {
+                it[state] = to
+                it[revision] = expectedRevision + 1
+            } == 1
         log.debug {
             "reservation_offer_transition offerId=$id expectedRevision=$expectedRevision from=$from to=$to applied=$applied"
         }

@@ -42,20 +42,25 @@ class InFlightCommandSuppressor(
 ) {
     companion object : KLogging()
 
-    fun <T> execute(opaqueCommandId: String, action: () -> T): SuppressionOutcome<T> {
-        val currentBackend = backend
-            ?: return SuppressionOutcome.Executed(action(), SuppressionMode.POSTGRES_FALLBACK)
-        val lease = try {
-            currentBackend.tryAcquire(opaqueCommandId)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
-            throw e
-        } catch (_: Exception) {
-            log.warn { "reservation_suppression_degraded reason=REDIS_UNAVAILABLE fallback=POSTGRES" }
-            return SuppressionOutcome.Executed(action(), SuppressionMode.POSTGRES_FALLBACK)
-        }
+    fun <T> execute(
+        opaqueCommandId: String,
+        action: () -> T,
+    ): SuppressionOutcome<T> {
+        val currentBackend =
+            backend
+                ?: return SuppressionOutcome.Executed(action(), SuppressionMode.POSTGRES_FALLBACK)
+        val lease =
+            try {
+                currentBackend.tryAcquire(opaqueCommandId)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                throw e
+            } catch (_: Exception) {
+                log.warn { "reservation_suppression_degraded reason=REDIS_UNAVAILABLE fallback=POSTGRES" }
+                return SuppressionOutcome.Executed(action(), SuppressionMode.POSTGRES_FALLBACK)
+            }
 
         if (lease == null) {
             log.debug { "reservation_suppression_hit outcome=SUPPRESSED" }
@@ -97,11 +102,12 @@ class LettuceLockSuppressionBackend(
         require(OPAQUE_ID.matches(opaqueCommandId)) {
             "opaqueCommandId must be an 8 to 32 character HMAC-derived identifier"
         }
-        val lock = LettuceLock(
-            connection = connection,
-            lockKey = "$keyPrefix:$opaqueCommandId",
-            defaultLeaseTime = leaseTime,
-        )
+        val lock =
+            LettuceLock(
+                connection = connection,
+                lockKey = "$keyPrefix:$opaqueCommandId",
+                defaultLeaseTime = leaseTime
+            )
         if (!lock.tryLock(waitTime = Duration.ZERO, leaseTime = leaseTime)) {
             return null
         }

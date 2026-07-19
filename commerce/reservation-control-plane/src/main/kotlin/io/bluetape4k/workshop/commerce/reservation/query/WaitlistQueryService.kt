@@ -20,26 +20,38 @@ internal class WaitlistQueryService(
     private val credentials: ReservationCredentialService,
 ) {
     @Transactional(readOnly = true)
-    fun entry(entryId: Long, rawOwner: String): WaitlistSnapshot {
+    fun entry(
+        entryId: Long,
+        rawOwner: String,
+    ): WaitlistSnapshot {
         val entry = waitlists.findById(entryId)
         requireOwner(rawOwner, entry.ownerDigest, entry.revision)
-        val position = waitlists.snapshots(entry.resourceId)
-            .filter { it.state.name == "WAITING" || it.id == entry.id }
-            .indexOfFirst { it.id == entry.id }
-            .let { if (it < 0) 0 else it + 1 }
+        val position =
+            waitlists
+                .snapshots(entry.resourceId)
+                .filter { it.state.name == "WAITING" || it.id == entry.id }
+                .indexOfFirst { it.id == entry.id }
+                .let { if (it < 0) 0 else it + 1 }
         log.debug { "waitlist_snapshot_queried entryId=$entryId position=$position" }
         return WaitlistSnapshot(entry, position, offers.activeForEntry(entry.id))
     }
 
     @Transactional(readOnly = true)
-    fun offer(offerId: Long, rawOwner: String): ReservationOfferRecord {
+    fun offer(
+        offerId: Long,
+        rawOwner: String,
+    ): ReservationOfferRecord {
         val offer = offers.findById(offerId)
         requireOwner(rawOwner, offer.ownerDigest, offer.revision)
         log.debug { "reservation_offer_snapshot_queried offerId=$offerId" }
         return offer
     }
 
-    private fun requireOwner(rawOwner: String, expectedDigest: String, revision: Long) {
+    private fun requireOwner(
+        rawOwner: String,
+        expectedDigest: String,
+        revision: Long,
+    ) {
         if (!credentials.matchesOwner(rawOwner, expectedDigest)) {
             throw WaitlistCommandException("OWNER_MISMATCH", revision)
         }

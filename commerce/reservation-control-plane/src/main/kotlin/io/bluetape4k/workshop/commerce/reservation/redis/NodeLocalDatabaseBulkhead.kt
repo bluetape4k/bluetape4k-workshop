@@ -11,13 +11,17 @@ import java.util.concurrent.TimeUnit
 enum class DatabaseWorkload { FOREGROUND, BACKGROUND }
 
 sealed interface DatabaseBulkheadOutcome<out T> : Serializable {
-    data class Executed<out T>(val value: T) : DatabaseBulkheadOutcome<T> {
+    data class Executed<out T>(
+        val value: T,
+    ) : DatabaseBulkheadOutcome<T> {
         companion object {
             private const val serialVersionUID = 1L
         }
     }
 
-    data class Rejected(val workload: DatabaseWorkload) : DatabaseBulkheadOutcome<Nothing> {
+    data class Rejected(
+        val workload: DatabaseWorkload,
+    ) : DatabaseBulkheadOutcome<Nothing> {
         companion object {
             private const val serialVersionUID = 1L
         }
@@ -44,17 +48,22 @@ class NodeLocalDatabaseBulkhead(
         require(!acquireTimeout.isNegative) { "acquireTimeout must not be negative" }
     }
 
-    fun <T> execute(workload: DatabaseWorkload, action: () -> T): DatabaseBulkheadOutcome<T> {
-        val semaphore = when (workload) {
-            DatabaseWorkload.FOREGROUND -> foreground
-            DatabaseWorkload.BACKGROUND -> background
-        }
-        val acquired = try {
-            semaphore.tryAcquire(acquireTimeout.toNanos(), TimeUnit.NANOSECONDS)
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
-            throw e
-        }
+    fun <T> execute(
+        workload: DatabaseWorkload,
+        action: () -> T,
+    ): DatabaseBulkheadOutcome<T> {
+        val semaphore =
+            when (workload) {
+                DatabaseWorkload.FOREGROUND -> foreground
+                DatabaseWorkload.BACKGROUND -> background
+            }
+        val acquired =
+            try {
+                semaphore.tryAcquire(acquireTimeout.toNanos(), TimeUnit.NANOSECONDS)
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                throw e
+            }
         if (!acquired) {
             log.debug { "reservation_db_bulkhead_rejected workload=$workload" }
             return DatabaseBulkheadOutcome.Rejected(workload)

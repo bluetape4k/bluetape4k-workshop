@@ -12,10 +12,11 @@ class ReservationTimePolicyTest {
 
     @Test
     fun `DST gap local time is rejected deterministically`() {
-        val result = ReservationTimePolicy.resolve(
-            LocalDateTime.parse("2026-03-08T02:30:00"),
-            newYork,
-        )
+        val result =
+            ReservationTimePolicy.resolve(
+                LocalDateTime.parse("2026-03-08T02:30:00"),
+                newYork
+            )
 
         assertEquals(LocalTimeRejection.DST_GAP, (result as LocalTimeResolution.Rejected).reason)
     }
@@ -31,7 +32,10 @@ class ReservationTimePolicyTest {
         assertEquals(LocalTimeRejection.DST_OVERLAP, (ambiguous as LocalTimeResolution.Rejected).reason)
         assertTrue(first is LocalTimeResolution.Resolved)
         assertTrue(second is LocalTimeResolution.Resolved)
-        assertEquals(3_600, (second as LocalTimeResolution.Resolved).instant.epochSecond -
-            (first as LocalTimeResolution.Resolved).instant.epochSecond)
+        assertEquals(
+            3_600,
+            (second as LocalTimeResolution.Resolved).instant.epochSecond -
+                (first as LocalTimeResolution.Resolved).instant.epochSecond
+        )
     }
 }

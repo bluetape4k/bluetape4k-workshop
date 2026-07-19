@@ -3,29 +3,29 @@ package io.bluetape4k.workshop.commerce.reservation.sweeper
 import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.exposed.tests.withTables
 import io.bluetape4k.workshop.commerce.reservation.application.JoinWaitlistCommand
+import io.bluetape4k.workshop.commerce.reservation.application.ReservationCapacityHandoffService
 import io.bluetape4k.workshop.commerce.reservation.application.ReservationCredentialService
 import io.bluetape4k.workshop.commerce.reservation.application.WaitlistCommandService
-import io.bluetape4k.workshop.commerce.reservation.application.ReservationCapacityHandoffService
 import io.bluetape4k.workshop.commerce.reservation.domain.HoldState
 import io.bluetape4k.workshop.commerce.reservation.domain.OfferState
 import io.bluetape4k.workshop.commerce.reservation.domain.WaitlistState
 import io.bluetape4k.workshop.commerce.reservation.notification.NotificationDeliveryRepository
-import io.bluetape4k.workshop.commerce.reservation.notification.NotificationDeliveryTable
 import io.bluetape4k.workshop.commerce.reservation.notification.NotificationDeliveryStatus
+import io.bluetape4k.workshop.commerce.reservation.notification.NotificationDeliveryTable
 import io.bluetape4k.workshop.commerce.reservation.persistence.CapacityResourceRepository
 import io.bluetape4k.workshop.commerce.reservation.persistence.CapacityResourceTable
+import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationAuditRepository
+import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationAuditTable
 import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationHoldRepository
 import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationHoldTable
 import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationOfferRepository
 import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationOfferTable
-import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationAuditTable
-import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationAuditRepository
-import io.bluetape4k.workshop.commerce.reservation.persistence.reservationTables
 import io.bluetape4k.workshop.commerce.reservation.persistence.WaitlistEntryRepository
 import io.bluetape4k.workshop.commerce.reservation.persistence.WaitlistEntryTable
+import io.bluetape4k.workshop.commerce.reservation.persistence.reservationTables
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -46,25 +46,28 @@ internal class ReservationResourceTransactionServiceTest {
             val credential = ReservationCredentialService("0123456789abcdef0123456789abcdef")
             val resource = resources.create("sweep-room", capacity = 1, policyVersion = 1)
             check(resources.tryOccupy(resource.id, resource.revision))
-            val hold = holds.create(
-                resource.id,
-                credential.ownerDigest("holder-owner"),
-                policyVersion = 1,
-                expiresAt = now.minusSeconds(1),
-            )
-            val waitlistService = WaitlistCommandService(
-                waitlists,
-                offers,
-                credential,
-                Clock.fixed(now, ZoneOffset.UTC),
-                Duration.ofSeconds(20),
-                resources,
-                holds,
-                audits,
-            )
-            val entry = waitlistService.join(
-                JoinWaitlistCommand(resource.id, "waiter-owner", expectedResourceRevision = 1, policyVersion = 1),
-            )
+            val hold =
+                holds.create(
+                    resource.id,
+                    credential.ownerDigest("holder-owner"),
+                    policyVersion = 1,
+                    expiresAt = now.minusSeconds(1)
+                )
+            val waitlistService =
+                WaitlistCommandService(
+                    waitlists,
+                    offers,
+                    credential,
+                    Clock.fixed(now, ZoneOffset.UTC),
+                    Duration.ofSeconds(20),
+                    resources,
+                    holds,
+                    audits
+                )
+            val entry =
+                waitlistService.join(
+                    JoinWaitlistCommand(resource.id, "waiter-owner", expectedResourceRevision = 1, policyVersion = 1)
+                )
             val handoff = ReservationCapacityHandoffService(resources, waitlistService, notifications, audits)
             val service = ReservationResourceTransactionService(resources, holds, offers, waitlists, handoff, audits)
 
@@ -79,7 +82,7 @@ internal class ReservationResourceTransactionServiceTest {
             val offer = offers.snapshots(resource.id).single()
             assertEquals(
                 NotificationDeliveryStatus.PENDING,
-                notifications.findByDeliveryId("offer-created:${offer.id}:0:in-app")?.delivery?.status,
+                notifications.findByDeliveryId("offer-created:${offer.id}:0:in-app")?.delivery?.status
             )
             assertEquals(4L, ReservationAuditTable.selectAll().count())
         }
@@ -97,16 +100,17 @@ internal class ReservationResourceTransactionServiceTest {
             val credential = ReservationCredentialService("0123456789abcdef0123456789abcdef")
             val resource = resources.create("expired-offer-room", capacity = 1, policyVersion = 1)
             check(resources.tryOccupy(resource.id, resource.revision))
-            val waitlistService = WaitlistCommandService(
-                waitlists,
-                offers,
-                credential,
-                Clock.fixed(now.minusSeconds(30), ZoneOffset.UTC),
-                Duration.ofSeconds(20),
-                resources,
-                holds,
-                audits,
-            )
+            val waitlistService =
+                WaitlistCommandService(
+                    waitlists,
+                    offers,
+                    credential,
+                    Clock.fixed(now.minusSeconds(30), ZoneOffset.UTC),
+                    Duration.ofSeconds(20),
+                    resources,
+                    holds,
+                    audits
+                )
             val firstEntry = waitlists.join(resource.id, credential.ownerDigest("first-waiter"))
             val firstOffer = checkNotNull(waitlistService.promote(resource.id))
             val secondEntry = waitlists.join(resource.id, credential.ownerDigest("second-waiter"))
@@ -137,16 +141,17 @@ internal class ReservationResourceTransactionServiceTest {
             val credential = ReservationCredentialService("0123456789abcdef0123456789abcdef")
             val resource = resources.create("expired-offer-release-room", capacity = 1, policyVersion = 1)
             check(resources.tryOccupy(resource.id, resource.revision))
-            val waitlistService = WaitlistCommandService(
-                waitlists,
-                offers,
-                credential,
-                Clock.fixed(now.minusSeconds(30), ZoneOffset.UTC),
-                Duration.ofSeconds(20),
-                resources,
-                holds,
-                audits,
-            )
+            val waitlistService =
+                WaitlistCommandService(
+                    waitlists,
+                    offers,
+                    credential,
+                    Clock.fixed(now.minusSeconds(30), ZoneOffset.UTC),
+                    Duration.ofSeconds(20),
+                    resources,
+                    holds,
+                    audits
+                )
             val entry = waitlists.join(resource.id, credential.ownerDigest("only-waiter"))
             val offer = checkNotNull(waitlistService.promote(resource.id))
             val handoff = ReservationCapacityHandoffService(resources, waitlistService, notifications, audits)
@@ -172,16 +177,17 @@ internal class ReservationResourceTransactionServiceTest {
             val notifications = NotificationDeliveryRepository()
             val audits = ReservationAuditRepository()
             val credential = ReservationCredentialService("0123456789abcdef0123456789abcdef")
-            val waitlistService = WaitlistCommandService(
-                waitlists,
-                offers,
-                credential,
-                Clock.fixed(now.minusSeconds(60), ZoneOffset.UTC),
-                Duration.ofSeconds(20),
-                resources,
-                holds,
-                audits,
-            )
+            val waitlistService =
+                WaitlistCommandService(
+                    waitlists,
+                    offers,
+                    credential,
+                    Clock.fixed(now.minusSeconds(60), ZoneOffset.UTC),
+                    Duration.ofSeconds(20),
+                    resources,
+                    holds,
+                    audits
+                )
             repeat(32) { index ->
                 val resource = resources.create("newer-expired-hold-$index", capacity = 1, policyVersion = 1)
                 check(resources.tryOccupy(resource.id, resource.revision))
@@ -189,7 +195,7 @@ internal class ReservationResourceTransactionServiceTest {
                     resource.id,
                     credential.ownerDigest("holder-$index"),
                     policyVersion = 1,
-                    expiresAt = now.minusSeconds(1),
+                    expiresAt = now.minusSeconds(1)
                 )
             }
             val offerResource = resources.create("oldest-expired-offer", capacity = 1, policyVersion = 1)

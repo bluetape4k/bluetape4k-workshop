@@ -10,20 +10,24 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
-import java.time.Instant
 import java.io.Serializable
+import java.time.Instant
 
 /** Maps stable command rejection codes to retry-aware HTTP problem responses without leaking credentials. */
 @RestControllerAdvice
 internal class ApiExceptionHandler {
     @ExceptionHandler(ReservationCommandException::class)
-    fun reservation(ex: ReservationCommandException, request: HttpServletRequest): ResponseEntity<ApiError> {
-        val status = when (ex.reason) {
-            "OWNER_MISMATCH" -> HttpStatus.FORBIDDEN
-            "HOLD_EXPIRED" -> HttpStatus.GONE
-            "ADMISSION_REJECTED" -> HttpStatus.TOO_MANY_REQUESTS
-            else -> HttpStatus.CONFLICT
-        }
+    fun reservation(
+        ex: ReservationCommandException,
+        request: HttpServletRequest,
+    ): ResponseEntity<ApiError> {
+        val status =
+            when (ex.reason) {
+                "OWNER_MISMATCH" -> HttpStatus.FORBIDDEN
+                "HOLD_EXPIRED" -> HttpStatus.GONE
+                "ADMISSION_REJECTED" -> HttpStatus.TOO_MANY_REQUESTS
+                else -> HttpStatus.CONFLICT
+            }
         log.debug { "reservation_http_rejected reason=${ex.reason} status=${status.value()}" }
         val response = ResponseEntity.status(status)
         ex.retryAfterSeconds?.let { response.header("Retry-After", it.toString()) }
@@ -31,18 +35,25 @@ internal class ApiExceptionHandler {
     }
 
     @ExceptionHandler(WaitlistCommandException::class)
-    fun waitlist(ex: WaitlistCommandException, request: HttpServletRequest): ResponseEntity<ApiError> {
-        val status = when (ex.reason) {
-            "OWNER_MISMATCH" -> HttpStatus.FORBIDDEN
-            "OFFER_EXPIRED" -> HttpStatus.GONE
-            else -> HttpStatus.CONFLICT
-        }
+    fun waitlist(
+        ex: WaitlistCommandException,
+        request: HttpServletRequest,
+    ): ResponseEntity<ApiError> {
+        val status =
+            when (ex.reason) {
+                "OWNER_MISMATCH" -> HttpStatus.FORBIDDEN
+                "OFFER_EXPIRED" -> HttpStatus.GONE
+                else -> HttpStatus.CONFLICT
+            }
         log.debug { "reservation_http_rejected reason=${ex.reason} status=${status.value()}" }
         return ResponseEntity.status(status).body(error(ex.reason, request, false, ex.currentRevision))
     }
 
     @ExceptionHandler(IllegalArgumentException::class, MethodArgumentNotValidException::class)
-    fun malformed(ex: Exception, request: HttpServletRequest): ResponseEntity<ApiError> {
+    fun malformed(
+        ex: Exception,
+        request: HttpServletRequest,
+    ): ResponseEntity<ApiError> {
         log.debug { "reservation_http_rejected reason=MALFORMED_REQUEST status=400" }
         return ResponseEntity.badRequest().body(error("MALFORMED_REQUEST", request, false, null))
     }
@@ -60,7 +71,7 @@ internal class ApiExceptionHandler {
         retryable = retryable,
         currentRevision = revision,
         observedAt = Instant.now(),
-        retryAfterSeconds = retryAfterSeconds,
+        retryAfterSeconds = retryAfterSeconds
     )
 
     companion object : KLogging()
@@ -76,5 +87,7 @@ internal data class ApiError(
     val expiresAt: Instant? = null,
     val retryAfterSeconds: Long? = null,
 ) : Serializable {
-    companion object { private const val serialVersionUID = 1L }
+    companion object {
+        private const val serialVersionUID = 1L
+    }
 }

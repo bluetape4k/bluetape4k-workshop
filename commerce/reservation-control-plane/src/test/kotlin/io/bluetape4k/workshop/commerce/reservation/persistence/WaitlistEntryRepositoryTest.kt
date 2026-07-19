@@ -32,27 +32,33 @@ class WaitlistEntryRepositoryTest {
             val repository = WaitlistEntryRepository()
             val entry = repository.join(resource.id, ownerDigest = "a".repeat(64))
 
-            assertFalse(repository.transition(
-                id = entry.id,
-                ownerDigest = "b".repeat(64),
-                expectedRevision = 0,
-                from = WaitlistState.WAITING,
-                to = WaitlistState.CANCELLED,
-            ))
-            assertTrue(repository.transition(
-                id = entry.id,
-                ownerDigest = entry.ownerDigest,
-                expectedRevision = 0,
-                from = WaitlistState.WAITING,
-                to = WaitlistState.CANCELLED,
-            ))
-            assertFalse(repository.transition(
-                id = entry.id,
-                ownerDigest = entry.ownerDigest,
-                expectedRevision = 0,
-                from = WaitlistState.WAITING,
-                to = WaitlistState.CANCELLED,
-            ))
+            assertFalse(
+                repository.transition(
+                    id = entry.id,
+                    ownerDigest = "b".repeat(64),
+                    expectedRevision = 0,
+                    from = WaitlistState.WAITING,
+                    to = WaitlistState.CANCELLED
+                )
+            )
+            assertTrue(
+                repository.transition(
+                    id = entry.id,
+                    ownerDigest = entry.ownerDigest,
+                    expectedRevision = 0,
+                    from = WaitlistState.WAITING,
+                    to = WaitlistState.CANCELLED
+                )
+            )
+            assertFalse(
+                repository.transition(
+                    id = entry.id,
+                    ownerDigest = entry.ownerDigest,
+                    expectedRevision = 0,
+                    from = WaitlistState.WAITING,
+                    to = WaitlistState.CANCELLED
+                )
+            )
 
             assertEquals(WaitlistState.CANCELLED, repository.findById(entry.id).state)
             assertEquals(1L, repository.findById(entry.id).revision)

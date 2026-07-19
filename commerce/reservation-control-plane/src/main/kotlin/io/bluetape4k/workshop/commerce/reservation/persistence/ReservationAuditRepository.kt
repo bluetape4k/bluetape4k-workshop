@@ -23,13 +23,15 @@ internal class ReservationAuditRepository {
         require(aggregateType.matches(AGGREGATE_TYPE)) { "aggregateType must be a bounded stable code" }
         require(outcome.matches(OUTCOME)) { "outcome must be a bounded stable code" }
         require(reason == null || reason.length <= 80) { "reason must be at most 80 characters" }
-        val inserted = ReservationAuditTable.insertIgnore {
-            it[ReservationAuditTable.aggregateType] = aggregateType
-            it[ReservationAuditTable.aggregateId] = aggregateId
-            it[ReservationAuditTable.revision] = revision
-            it[ReservationAuditTable.outcome] = outcome
-            it[ReservationAuditTable.reason] = reason
-        }.insertedCount == 1
+        val inserted =
+            ReservationAuditTable
+                .insertIgnore {
+                    it[ReservationAuditTable.aggregateType] = aggregateType
+                    it[ReservationAuditTable.aggregateId] = aggregateId
+                    it[ReservationAuditTable.revision] = revision
+                    it[ReservationAuditTable.outcome] = outcome
+                    it[ReservationAuditTable.reason] = reason
+                }.insertedCount == 1
         log.debug {
             "reservation_transition_audit aggregateType=$aggregateType aggregateId=$aggregateId " +
                 "revision=$revision outcome=$outcome inserted=$inserted"

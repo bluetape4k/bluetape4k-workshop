@@ -20,12 +20,14 @@ internal class OperatorPrincipalResolver(
     private val credentials: ReservationCredentialService,
     @Value("\${reservation.operator.key}") configuredKey: String,
 ) {
-    private val expectedDigest = credentials.operatorDigest(configuredKey.also {
-        require(it.length >= 32) { "operator key must contain at least 32 characters" }
-    })
+    private val expectedDigest =
+        credentials.operatorDigest(
+            configuredKey.also {
+                require(it.length >= 32) { "operator key must contain at least 32 characters" }
+            }
+        )
 
-    fun authorized(rawKey: String?): Boolean =
-        rawKey?.let { credentials.matchesOperator(it, expectedDigest) } == true
+    fun authorized(rawKey: String?): Boolean = rawKey?.let { credentials.matchesOperator(it, expectedDigest) } == true
 
     companion object : KLogging()
 }
@@ -40,7 +42,11 @@ internal class OperatorAuthorizationFilter(
     override fun shouldNotFilter(request: HttpServletRequest): Boolean =
         !request.requestURI.startsWith("/api/operator/")
 
-    override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, chain: FilterChain) {
+    override fun doFilterInternal(
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+        chain: FilterChain,
+    ) {
         if (!principals.authorized(request.getHeader(OPERATOR_KEY_HEADER))) {
             log.warn { "reservation_operator_rejected reason=INVALID_CREDENTIAL" }
             response.sendError(HttpServletResponse.SC_FORBIDDEN)

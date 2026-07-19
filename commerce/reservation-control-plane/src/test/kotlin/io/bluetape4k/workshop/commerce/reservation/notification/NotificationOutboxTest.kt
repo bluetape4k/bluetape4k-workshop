@@ -41,11 +41,12 @@ class NotificationOutboxTest {
     @Test
     fun `retry uses bounded exponential delay and exhausts after five attempts`() {
         val outbox = InMemoryNotificationOutbox()
-        val policy = NotificationRetryPolicy(
-            maxAttempts = 5,
-            initialDelay = Duration.ofSeconds(2),
-            maxDelay = Duration.ofSeconds(10),
-        )
+        val policy =
+            NotificationRetryPolicy(
+                maxAttempts = 5,
+                initialDelay = Duration.ofSeconds(2),
+                maxDelay = Duration.ofSeconds(10)
+            )
         outbox.enqueue(notification("hold-10-expired"), now)
 
         var attemptAt = now
@@ -59,7 +60,7 @@ class NotificationOutboxTest {
                 owner,
                 attemptAt.plusSeconds(1),
                 NotificationFailureCode.FAKE_TRANSIENT,
-                policy,
+                policy
             ) shouldBeEqualTo
                 FinalizeDisposition.APPLIED
             val delivery = outbox.find("hold-10-expired") ?: error("retry delivery is required")
@@ -70,7 +71,7 @@ class NotificationOutboxTest {
                 "hold-10-expired",
                 "early-worker",
                 retryAt.minusNanos(1),
-                Duration.ofSeconds(30),
+                Duration.ofSeconds(30)
             ) shouldBeEqualTo null
             attemptAt = retryAt
         }
@@ -81,7 +82,7 @@ class NotificationOutboxTest {
             "worker-5",
             attemptAt.plusSeconds(1),
             NotificationFailureCode.FAKE_TRANSIENT,
-            policy,
+            policy
         ) shouldBeEqualTo
             FinalizeDisposition.APPLIED
 
@@ -106,24 +107,26 @@ class NotificationOutboxTest {
             "worker-a",
             now.plusSeconds(1),
             NotificationFailureCode.FAKE_TRANSIENT,
-            policy,
+            policy
         )
 
         val secondAt = outbox.find("waitlist-30-offered")!!.nextAttemptAt!!
-        val acceptedBeforeCrash = outbox.claim(
-            "waitlist-30-offered",
-            "worker-a",
-            secondAt,
-            Duration.ofSeconds(30),
-        )!!
+        val acceptedBeforeCrash =
+            outbox.claim(
+                "waitlist-30-offered",
+                "worker-a",
+                secondAt,
+                Duration.ofSeconds(30)
+            )!!
         provider.send(acceptedBeforeCrash) shouldBeEqualTo ProviderSendResult.Accepted
 
-        val recovered = outbox.claim(
-            "waitlist-30-offered",
-            "worker-b",
-            secondAt.plusSeconds(31),
-            Duration.ofSeconds(30),
-        )!!
+        val recovered =
+            outbox.claim(
+                "waitlist-30-offered",
+                "worker-b",
+                secondAt.plusSeconds(31),
+                Duration.ofSeconds(30)
+            )!!
         provider.send(recovered) shouldBeEqualTo ProviderSendResult.Duplicate
         outbox.markDelivered("waitlist-30-offered", "worker-b", secondAt.plusSeconds(32)) shouldBeEqualTo
             FinalizeDisposition.APPLIED
@@ -143,7 +146,7 @@ class NotificationOutboxTest {
             "worker-a",
             now.plusSeconds(1),
             NotificationFailureCode.FAKE_TRANSIENT,
-            policy,
+            policy
         )
 
         outbox.redrive("hold-40-released", "redrive-command-1", now.plusSeconds(2)) shouldBeEqualTo
@@ -158,10 +161,11 @@ class NotificationOutboxTest {
         redriven?.nextAttemptAt shouldBeEqualTo now.plusSeconds(2)
     }
 
-    private fun notification(deliveryId: String) = NotificationRequest(
-        deliveryId = deliveryId,
-        channel = NotificationChannel.IN_APP,
-        templateCode = "reservation-state-changed",
-        aggregateId = "reservation-10",
-    )
+    private fun notification(deliveryId: String) =
+        NotificationRequest(
+            deliveryId = deliveryId,
+            channel = NotificationChannel.IN_APP,
+            templateCode = "reservation-state-changed",
+            aggregateId = "reservation-10"
+        )
 }

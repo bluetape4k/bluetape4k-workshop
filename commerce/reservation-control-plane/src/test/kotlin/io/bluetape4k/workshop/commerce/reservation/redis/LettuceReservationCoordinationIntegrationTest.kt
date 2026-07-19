@@ -8,23 +8,23 @@ import java.time.Duration
 import java.util.UUID
 
 class LettuceReservationCoordinationIntegrationTest {
-
     @Test
-    fun `published Lettuce semaphore bounds advisory admission and recovers after release`() = withRedisConnection { connection ->
-        val key = "reservation:test:semaphore:${UUID.randomUUID()}"
-        val first = LettuceSemaphoreAdmissionBackend(connection, key, totalPermits = 1)
-        val second = LettuceSemaphoreAdmissionBackend(connection, key, totalPermits = 1)
+    fun `published Lettuce semaphore bounds advisory admission and recovers after release`() =
+        withRedisConnection { connection ->
+            val key = "reservation:test:semaphore:${UUID.randomUUID()}"
+            val first = LettuceSemaphoreAdmissionBackend(connection, key, totalPermits = 1)
+            val second = LettuceSemaphoreAdmissionBackend(connection, key, totalPermits = 1)
 
-        try {
-            first.tryAcquire(Duration.ZERO) shouldBeEqualTo true
-            second.tryAcquire(Duration.ZERO) shouldBeEqualTo false
-            first.release()
-            second.tryAcquire(Duration.ofMillis(200)) shouldBeEqualTo true
-            second.release()
-        } finally {
-            connection.sync().del(key)
+            try {
+                first.tryAcquire(Duration.ZERO) shouldBeEqualTo true
+                second.tryAcquire(Duration.ZERO) shouldBeEqualTo false
+                first.release()
+                second.tryAcquire(Duration.ofMillis(200)) shouldBeEqualTo true
+                second.release()
+            } finally {
+                connection.sync().del(key)
+            }
         }
-    }
 
     @Test
     fun `published Lettuce lock suppresses the same opaque command until token checked release`() =
@@ -43,17 +43,18 @@ class LettuceReservationCoordinationIntegrationTest {
         }
 
     @Test
-    fun `semaphore reinitializes after its advisory Redis key is evicted`() = withRedisConnection { connection ->
-        val key = "reservation:test:eviction:${UUID.randomUUID()}"
-        val beforeEviction = LettuceSemaphoreAdmissionBackend(connection, key, totalPermits = 1)
-        val afterEviction = LettuceSemaphoreAdmissionBackend(connection, key, totalPermits = 1)
+    fun `semaphore reinitializes after its advisory Redis key is evicted`() =
+        withRedisConnection { connection ->
+            val key = "reservation:test:eviction:${UUID.randomUUID()}"
+            val beforeEviction = LettuceSemaphoreAdmissionBackend(connection, key, totalPermits = 1)
+            val afterEviction = LettuceSemaphoreAdmissionBackend(connection, key, totalPermits = 1)
 
-        beforeEviction.tryAcquire(Duration.ZERO) shouldBeEqualTo true
-        connection.sync().del(key)
-        afterEviction.tryAcquire(Duration.ZERO) shouldBeEqualTo true
-        afterEviction.release()
-        connection.sync().del(key)
-    }
+            beforeEviction.tryAcquire(Duration.ZERO) shouldBeEqualTo true
+            connection.sync().del(key)
+            afterEviction.tryAcquire(Duration.ZERO) shouldBeEqualTo true
+            afterEviction.release()
+            connection.sync().del(key)
+        }
 
     private fun withRedisConnection(block: (io.lettuce.core.api.StatefulRedisConnection<String, String>) -> Unit) {
         val redis = RedisServer.Launcher.redis

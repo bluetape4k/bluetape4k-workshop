@@ -36,12 +36,18 @@ data class SweepBatchSummary(
 
 /** PostgreSQL-owned expiry batch invoked only after advisory scheduling gates succeed. */
 fun interface ReservationSweepWork {
-    fun sweep(maxResources: Int, budget: Duration): SweepBatchSummary
+    fun sweep(
+        maxResources: Int,
+        budget: Duration,
+    ): SweepBatchSummary
 }
 
 /** Adapter boundary that preserves the leader library's elected, skipped, and failed outcomes. */
 fun interface SweepLeaderGate {
-    fun run(slot: LeaderSlot, action: () -> SweepBatchSummary): LeaderRunResult<SweepBatchSummary>
+    fun run(
+        slot: LeaderSlot,
+        action: () -> SweepBatchSummary,
+    ): LeaderRunResult<SweepBatchSummary>
 }
 
 /** Calls the published leader 0.4.0 result API without collapsing elected-null and skipped. */
@@ -61,7 +67,9 @@ enum class SweepFailureCode { LEADER_BACKEND_UNAVAILABLE, ACTION_FAILED, EMPTY_R
 
 /** One scheduler tick outcome, including local suppression and distributed leader skips. */
 sealed interface SweepTickOutcome : Serializable {
-    data class Completed(val summary: SweepBatchSummary) : SweepTickOutcome {
+    data class Completed(
+        val summary: SweepBatchSummary,
+    ) : SweepTickOutcome {
         companion object {
             private const val serialVersionUID = 1L
         }
@@ -71,7 +79,9 @@ sealed interface SweepTickOutcome : Serializable {
 
     data object LocalBusy : SweepTickOutcome
 
-    data class Failed(val code: SweepFailureCode) : SweepTickOutcome {
+    data class Failed(
+        val code: SweepFailureCode,
+    ) : SweepTickOutcome {
         companion object {
             private const val serialVersionUID = 1L
         }
@@ -103,7 +113,7 @@ class ReservationExpirySweeper(
 
     @Scheduled(
         fixedDelayString = "\${reservation.sweeper.fixed-delay:PT5S}",
-        initialDelayString = "\${reservation.sweeper.initial-delay:PT5S}",
+        initialDelayString = "\${reservation.sweeper.initial-delay:PT5S}"
     )
     fun scheduledSweep() {
         sweepOnce()
@@ -116,17 +126,18 @@ class ReservationExpirySweeper(
         }
 
         return try {
-            val leaderResult = try {
-                leaderGate.run(slot) { sweepWork.sweep(maxResources, tickBudget) }
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: InterruptedException) {
-                Thread.currentThread().interrupt()
-                throw e
-            } catch (_: Exception) {
-                log.warn { "reservation_sweep_backend_failed reason=LEADER_BACKEND_UNAVAILABLE" }
-                return SweepTickOutcome.Failed(SweepFailureCode.LEADER_BACKEND_UNAVAILABLE)
-            }
+            val leaderResult =
+                try {
+                    leaderGate.run(slot) { sweepWork.sweep(maxResources, tickBudget) }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                    throw e
+                } catch (_: Exception) {
+                    log.warn { "reservation_sweep_backend_failed reason=LEADER_BACKEND_UNAVAILABLE" }
+                    return SweepTickOutcome.Failed(SweepFailureCode.LEADER_BACKEND_UNAVAILABLE)
+                }
 
             when (leaderResult) {
                 is LeaderRunResult.Elected -> {
@@ -143,12 +154,10 @@ class ReservationExpirySweeper(
                         SweepTickOutcome.Completed(summary)
                     }
                 }
-
                 LeaderRunResult.Skipped -> {
                     log.debug { "reservation_sweep_leader_skipped outcome=SKIPPED" }
                     SweepTickOutcome.Skipped
                 }
-
                 is LeaderRunResult.ActionFailed -> {
                     log.warn { "reservation_sweep_action_failed reason=ACTION_FAILED" }
                     SweepTickOutcome.Failed(SweepFailureCode.ACTION_FAILED)

@@ -46,6 +46,7 @@ Branch: `feature/issue-533-reservation-control-plane`
 
 - `:commerce-reservation-control-plane:test --rerun-tasks`: PASS, 58 tests
 - `:commerce-reservation-control-plane:build`: PASS
+- `ktlint` module main/test: PASS
 - root `detekt`: PASS (`NO-SOURCE`; module-local detekt task 없음)
 - `git diff --check`: PASS
 - production Kotlin KDoc: 43/43 files, 83 KDoc blocks
@@ -58,4 +59,3 @@ Branch: `feature/issue-533-reservation-control-plane`
   기존 language switch/한글 표기 문제를 계속 보고한다. #533이 변경한 README 쌍에는 같은 문제가 없다.
 - 장시간 부하에서 PostgreSQL pool wait와 Redis reconnect 분포를 측정하는 benchmark는 예제의
   correctness acceptance가 아니므로 별도 성능 작업으로 남긴다.
-

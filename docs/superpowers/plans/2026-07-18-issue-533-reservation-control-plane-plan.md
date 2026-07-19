@@ -79,7 +79,7 @@ promotion은 PostgreSQL CAS/unique constraint로 중복 안전하게 만든다.
 - `redis/InFlightCommandSuppressor.kt`: LettuceLock + PostgreSQL fallback
 - `sweeper/ReservationExpirySweeper.kt`: leader-guarded bounded expiry/promotion
 - `sweeper/ReservationResourceTransactionService.kt`: proxy-safe one-resource transaction
-- `notification/NotificationOutbox.kt`: unique delivery와 deterministic fake adapter
+- `notification/InMemoryNotificationOutbox.kt`: unique delivery와 deterministic fake adapter
 - `application/ReservationCommandService.kt`: command transaction orchestration
 - `query/ReservationQueryService.kt`: browser snapshot와 operator projection
 - `web/ReservationController.kt`: live REST command/query

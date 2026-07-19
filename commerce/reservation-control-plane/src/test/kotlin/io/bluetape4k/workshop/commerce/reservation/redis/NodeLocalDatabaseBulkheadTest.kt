@@ -5,20 +5,21 @@ import org.junit.jupiter.api.Test
 import java.time.Duration
 
 class NodeLocalDatabaseBulkheadTest {
-
     @Test
     fun `foreground work is rejected when its local lane is full and recovers after release`() {
-        val bulkhead = NodeLocalDatabaseBulkhead(
-            foregroundPermits = 1,
-            backgroundPermits = 1,
-            acquireTimeout = Duration.ZERO,
-        )
+        val bulkhead =
+            NodeLocalDatabaseBulkhead(
+                foregroundPermits = 1,
+                backgroundPermits = 1,
+                acquireTimeout = Duration.ZERO
+            )
         var nested: DatabaseBulkheadOutcome<String>? = null
 
-        val outer = bulkhead.execute(DatabaseWorkload.FOREGROUND) {
-            nested = bulkhead.execute(DatabaseWorkload.FOREGROUND) { "unexpected" }
-            "outer"
-        }
+        val outer =
+            bulkhead.execute(DatabaseWorkload.FOREGROUND) {
+                nested = bulkhead.execute(DatabaseWorkload.FOREGROUND) { "unexpected" }
+                "outer"
+            }
         val recovered = bulkhead.execute(DatabaseWorkload.FOREGROUND) { "recovered" }
 
         outer shouldBeEqualTo DatabaseBulkheadOutcome.Executed("outer")
@@ -28,11 +29,12 @@ class NodeLocalDatabaseBulkheadTest {
 
     @Test
     fun `background lane remains independent from a saturated foreground lane`() {
-        val bulkhead = NodeLocalDatabaseBulkhead(
-            foregroundPermits = 1,
-            backgroundPermits = 1,
-            acquireTimeout = Duration.ZERO,
-        )
+        val bulkhead =
+            NodeLocalDatabaseBulkhead(
+                foregroundPermits = 1,
+                backgroundPermits = 1,
+                acquireTimeout = Duration.ZERO
+            )
         var background: DatabaseBulkheadOutcome<String>? = null
 
         bulkhead.execute(DatabaseWorkload.FOREGROUND) {

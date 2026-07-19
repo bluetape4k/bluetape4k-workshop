@@ -25,7 +25,9 @@ sealed interface AdmissionOutcome<out T> : Serializable {
         }
     }
 
-    data class Rejected(val reason: AdmissionRejection) : AdmissionOutcome<Nothing> {
+    data class Rejected(
+        val reason: AdmissionRejection,
+    ) : AdmissionOutcome<Nothing> {
         companion object {
             private const val serialVersionUID = 1L
         }
@@ -60,20 +62,22 @@ class ReservationAdmissionGate(
         }
 
     private fun <T> executeAfterLocalAcquire(action: () -> T): AdmissionOutcome<T> {
-        val backend = redisBackend
-            ?: return AdmissionOutcome.Executed(action(), AdmissionMode.LOCAL_FALLBACK)
+        val backend =
+            redisBackend
+                ?: return AdmissionOutcome.Executed(action(), AdmissionMode.LOCAL_FALLBACK)
 
-        val redisAcquired = try {
-            backend.tryAcquire(redisWaitTime)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: InterruptedException) {
-            Thread.currentThread().interrupt()
-            throw e
-        } catch (_: Exception) {
-            log.warn { "reservation_admission_degraded reason=REDIS_UNAVAILABLE fallback=LOCAL" }
-            return AdmissionOutcome.Executed(action(), AdmissionMode.LOCAL_FALLBACK)
-        }
+        val redisAcquired =
+            try {
+                backend.tryAcquire(redisWaitTime)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                throw e
+            } catch (_: Exception) {
+                log.warn { "reservation_admission_degraded reason=REDIS_UNAVAILABLE fallback=LOCAL" }
+                return AdmissionOutcome.Executed(action(), AdmissionMode.LOCAL_FALLBACK)
+            }
 
         if (!redisAcquired) {
             log.debug { "reservation_admission_rejected reason=REDIS_CAPACITY" }
@@ -108,11 +112,12 @@ class LettuceSemaphoreAdmissionBackend(
 ) : AdmissionPermitBackend {
     companion object : KLogging()
 
-    private val semaphore = LettuceSemaphore(
-        connection = connection,
-        semaphoreKey = semaphoreKey,
-        totalPermits = totalPermits.requirePositiveNumber("totalPermits"),
-    )
+    private val semaphore =
+        LettuceSemaphore(
+            connection = connection,
+            semaphoreKey = semaphoreKey,
+            totalPermits = totalPermits.requirePositiveNumber("totalPermits")
+        )
 
     init {
         require(!retryInterval.isNegative && !retryInterval.isZero) { "retryInterval must be positive" }

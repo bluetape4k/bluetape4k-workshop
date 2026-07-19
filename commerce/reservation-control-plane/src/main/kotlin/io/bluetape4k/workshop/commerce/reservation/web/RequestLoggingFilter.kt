@@ -16,10 +16,16 @@ import java.util.concurrent.TimeUnit
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 internal class RequestLoggingFilter : OncePerRequestFilter() {
-    override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, chain: FilterChain) {
-        val requestId = request.getHeader(REQUEST_ID_HEADER)
-            ?.takeIf(REQUEST_ID_PATTERN::matches)
-            ?: UUID.randomUUID().toString()
+    override fun doFilterInternal(
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+        chain: FilterChain,
+    ) {
+        val requestId =
+            request
+                .getHeader(REQUEST_ID_HEADER)
+                ?.takeIf(REQUEST_ID_PATTERN::matches)
+                ?: UUID.randomUUID().toString()
         response.setHeader(REQUEST_ID_HEADER, requestId)
         request.setAttribute(REQUEST_ID_ATTRIBUTE, requestId)
         val startedAt = System.nanoTime()

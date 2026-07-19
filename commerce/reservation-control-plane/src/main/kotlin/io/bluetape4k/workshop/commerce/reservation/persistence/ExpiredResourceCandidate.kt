@@ -8,5 +8,7 @@ internal data class ExpiredResourceCandidate(
     val resourceId: Long,
     val expiresAt: Instant,
 ) : Serializable {
-    companion object { private const val serialVersionUID: Long = 1L }
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }

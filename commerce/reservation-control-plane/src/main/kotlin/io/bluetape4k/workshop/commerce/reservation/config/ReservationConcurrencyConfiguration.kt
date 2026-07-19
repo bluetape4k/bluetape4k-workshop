@@ -16,19 +16,19 @@ import io.bluetape4k.workshop.commerce.reservation.redis.LettuceLockSuppressionB
 import io.bluetape4k.workshop.commerce.reservation.redis.LettuceSemaphoreAdmissionBackend
 import io.bluetape4k.workshop.commerce.reservation.redis.NodeLocalDatabaseBulkhead
 import io.bluetape4k.workshop.commerce.reservation.redis.ReservationAdmissionGate
+import io.bluetape4k.workshop.commerce.reservation.sweeper.LeaderElectorSweepGate
+import io.bluetape4k.workshop.commerce.reservation.sweeper.ReservationExpirySweeper
+import io.bluetape4k.workshop.commerce.reservation.sweeper.ReservationSweepWork
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulRedisConnection
 import org.springframework.beans.factory.ObjectProvider
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.beans.factory.annotation.Qualifier
 import java.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import io.bluetape4k.workshop.commerce.reservation.sweeper.LeaderElectorSweepGate
-import io.bluetape4k.workshop.commerce.reservation.sweeper.ReservationExpirySweeper
-import io.bluetape4k.workshop.commerce.reservation.sweeper.ReservationSweepWork
 
 /**
  * Wires always-on local JDBC protection and optional distributed coordination.
@@ -38,11 +38,12 @@ import io.bluetape4k.workshop.commerce.reservation.sweeper.ReservationSweepWork
 @Configuration(proxyBeanMethods = false)
 internal class ReservationConcurrencyConfiguration {
     @Bean
-    fun nodeLocalDatabaseBulkhead(): NodeLocalDatabaseBulkhead = NodeLocalDatabaseBulkhead(
-        foregroundPermits = 5,
-        backgroundPermits = 1,
-        acquireTimeout = Duration.ofMillis(100),
-    )
+    fun nodeLocalDatabaseBulkhead(): NodeLocalDatabaseBulkhead =
+        NodeLocalDatabaseBulkhead(
+            foregroundPermits = 5,
+            backgroundPermits = 1,
+            acquireTimeout = Duration.ofMillis(100)
+        )
 
     @Bean
     fun reservationAdmissionGate(
@@ -51,9 +52,8 @@ internal class ReservationConcurrencyConfiguration {
     ): ReservationAdmissionGate = ReservationAdmissionGate(localBulkhead, redisBackend.ifAvailable)
 
     @Bean
-    fun inFlightCommandSuppressor(
-        redisBackend: ObjectProvider<CommandSuppressionBackend>,
-    ): InFlightCommandSuppressor = InFlightCommandSuppressor(redisBackend.ifAvailable)
+    fun inFlightCommandSuppressor(redisBackend: ObjectProvider<CommandSuppressionBackend>): InFlightCommandSuppressor =
+        InFlightCommandSuppressor(redisBackend.ifAvailable)
 
     @Bean
     fun reservationCommandExecutionGate(
@@ -61,8 +61,7 @@ internal class ReservationConcurrencyConfiguration {
         suppression: InFlightCommandSuppressor,
         credentials: ReservationCredentialService,
         @Value("\${reservation.tenant-id}") tenantId: String,
-    ): ReservationCommandExecutionGate =
-        ReservationCommandExecutionGate(admission, suppression, credentials, tenantId)
+    ): ReservationCommandExecutionGate = ReservationCommandExecutionGate(admission, suppression, credentials, tenantId)
 
     @Bean
     fun reservationExpirySweeper(
@@ -70,13 +69,14 @@ internal class ReservationConcurrencyConfiguration {
         leaderElector: ObjectProvider<LeaderElector>,
         sweepWork: ReservationSweepWork,
         @Value("\${reservation.instance-id:#{T(java.util.UUID).randomUUID().toString()}}") instanceId: String,
-    ): ReservationExpirySweeper? = leaderElector.ifAvailable?.let {
-        ReservationExpirySweeper(
-            leaderGate = LeaderElectorSweepGate(it),
-            sweepWork = sweepWork,
-            instanceId = instanceId,
-        )
-    }
+    ): ReservationExpirySweeper? =
+        leaderElector.ifAvailable?.let {
+            ReservationExpirySweeper(
+                leaderGate = LeaderElectorSweepGate(it),
+                sweepWork = sweepWork,
+                instanceId = instanceId
+            )
+        }
 
     companion object : KLogging()
 }
@@ -89,8 +89,9 @@ internal class ReservationConcurrencyConfiguration {
 @ConditionalOnProperty(prefix = "reservation.redis", name = ["enabled"], havingValue = "true")
 internal class ReservationRedisConfiguration {
     @Bean(destroyMethod = "shutdown")
-    fun reservationRedisClient(@Value("\${reservation.redis.uri}") uri: String): RedisClient =
-        LettuceClients.clientOf(uri).also { log.info { "reservation_redis_client_created" } }
+    fun reservationRedisClient(
+        @Value("\${reservation.redis.uri}") uri: String,
+    ): RedisClient = LettuceClients.clientOf(uri).also { log.info { "reservation_redis_client_created" } }
 
     @Bean(destroyMethod = "close")
     fun reservationRedisConnection(client: RedisClient): StatefulRedisConnection<String, String>? =
@@ -112,18 +113,17 @@ internal class ReservationRedisConfiguration {
     ): CommandSuppressionBackend? = connection.ifAvailable?.let { LettuceLockSuppressionBackend(it) }
 
     @Bean
-    fun reservationLeaderElector(
-        connection: ObjectProvider<StatefulRedisConnection<String, String>>,
-    ): LeaderElector? = connection.ifAvailable?.let {
-        LettuceLeaderElector(
-            it,
-            LeaderElectionOptions(
-                waitTime = kotlin.time.Duration.ZERO,
-                leaseTime = 15.seconds,
-                autoExtend = true,
-            ),
-        )
-    }
+    fun reservationLeaderElector(connection: ObjectProvider<StatefulRedisConnection<String, String>>): LeaderElector? =
+        connection.ifAvailable?.let {
+            LettuceLeaderElector(
+                it,
+                LeaderElectionOptions(
+                    waitTime = kotlin.time.Duration.ZERO,
+                    leaseTime = 15.seconds,
+                    autoExtend = true
+                )
+            )
+        }
 
     companion object : KLogging()
 }

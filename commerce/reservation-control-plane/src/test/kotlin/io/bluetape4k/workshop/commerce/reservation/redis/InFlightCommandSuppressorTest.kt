@@ -5,17 +5,17 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
 class InFlightCommandSuppressorTest {
-
     @Test
     fun `redis lock hit suppresses duplicate work`() {
         val backend = RecordingSuppressionBackend(ArrayDeque(listOf(false)))
         val suppressor = InFlightCommandSuppressor(backend)
         var executions = 0
 
-        val outcome = suppressor.execute("hmac-prefix-01") {
-            executions++
-            "unexpected"
-        }
+        val outcome =
+            suppressor.execute("hmac-prefix-01") {
+                executions++
+                "unexpected"
+            }
 
         outcome shouldBeEqualTo SuppressionOutcome.Suppressed
         executions shouldBeEqualTo 0
@@ -23,9 +23,10 @@ class InFlightCommandSuppressorTest {
 
     @Test
     fun `redis outage delegates correctness to postgres and recovers on the next command`() {
-        val backend = RecordingSuppressionBackend(
-            ArrayDeque(listOf(IllegalStateException("redis secret detail"), true)),
-        )
+        val backend =
+            RecordingSuppressionBackend(
+                ArrayDeque(listOf(IllegalStateException("redis secret detail"), true))
+            )
         val suppressor = InFlightCommandSuppressor(backend)
 
         val degraded = suppressor.execute("hmac-prefix-02") { "postgres-result" }

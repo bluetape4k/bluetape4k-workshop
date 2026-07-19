@@ -96,8 +96,7 @@ internal sealed interface AcquireResult : Serializable {
  * in-progress lease can be reclaimed only by matching its previous token and deadline in one CAS.
  */
 @Repository
-internal class HttpIdempotencyRepository :
-    LongAuditableJdbcRepository<IdempotencyRecord, HttpIdempotencyTable> {
+internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<IdempotencyRecord, HttpIdempotencyTable> {
     override val table = HttpIdempotencyTable
 
     override fun extractId(entity: IdempotencyRecord): Long = entity.id
@@ -144,7 +143,9 @@ internal class HttpIdempotencyRepository :
         var current = findByScope(scope) ?: error("idempotency record was not persisted")
         if (inserted) {
             log.debug {
-                "idempotency_acquired_new operation=${scope.operation} keyDigestPrefix=${scope.keyDigest.take(LOG_DIGEST_PREFIX)}"
+                "idempotency_acquired_new operation=${scope.operation} keyDigestPrefix=${scope.keyDigest.take(
+                    LOG_DIGEST_PREFIX
+                )}"
             }
             return AcquireResult.New(current)
         }
@@ -200,17 +201,19 @@ internal class HttpIdempotencyRepository :
         responseBody: String,
         failed: Boolean,
     ): Boolean =
-        (auditedUpdateAll(
-            predicate = {
-                (table.id eq id) and
-                    (table.ownerToken eq ownerToken) and
-                    (table.status eq IdempotencyStatus.IN_PROGRESS)
-            }
-        ) {
-            it[status] = if (failed) IdempotencyStatus.FAILED else IdempotencyStatus.SUCCEEDED
-            it[HttpIdempotencyTable.responseStatus] = responseStatus
-            it[HttpIdempotencyTable.responseBody] = responseBody.take(MAX_RESPONSE_BODY)
-        } == 1).also { finalized ->
+        (
+            auditedUpdateAll(
+                predicate = {
+                    (table.id eq id) and
+                        (table.ownerToken eq ownerToken) and
+                        (table.status eq IdempotencyStatus.IN_PROGRESS)
+                }
+            ) {
+                it[status] = if (failed) IdempotencyStatus.FAILED else IdempotencyStatus.SUCCEEDED
+                it[HttpIdempotencyTable.responseStatus] = responseStatus
+                it[HttpIdempotencyTable.responseBody] = responseBody.take(MAX_RESPONSE_BODY)
+            } == 1
+        ).also { finalized ->
             log.debug {
                 "idempotency_finalized id=$id responseStatus=$responseStatus failed=$failed finalized=$finalized"
             }
@@ -226,7 +229,11 @@ internal class HttpIdempotencyRepository :
             }.firstOrNull()
             ?.let { with(this) { it.toEntity() } }
 
-    private fun validate(scope: IdempotencyScope, requestFingerprint: String, retention: Duration) {
+    private fun validate(
+        scope: IdempotencyScope,
+        requestFingerprint: String,
+        retention: Duration,
+    ) {
         require(scope.tenantId.length in 1..80) { "tenantId must contain 1..80 characters" }
         require(scope.operation.length in 1..80) { "operation must contain 1..80 characters" }
         require(scope.keyDigest.length == SHA256_HEX_LENGTH) { "keyDigest must be a SHA-256 hex digest" }
