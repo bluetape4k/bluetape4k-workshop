@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reservation Control Plane</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<main>
+  <header>
+    <p class="eyebrow">Bluetape4k Workshop · Issue #533</p>
+    <h1>Reservation Control Plane</h1>
+    <p>PostgreSQL decides. Redis and leader election only reduce duplicate work.</p>
+  </header>
+  <section class="panel">
+    <div class="panel-heading">
+      <h2>Capacity resources</h2>
+      <button id="refresh" type="button">Refresh snapshot</button>
+    </div>
+    <p id="observed">Loading authoritative snapshot…</p>
+    <div id="resources" class="resources"></div>
+  </section>
+  <section class="panel note">
+    <h2>Browser session safety</h2>
+    <p>The owner credential and pending idempotency keys stay in memory only. Reloading this page loses control of active holds.</p>
+  </section>
+  <section class="panel">
+    <div class="panel-heading">
+      <h2>Session activity</h2>
+      <span id="session-state" class="status">Owner credential active in memory</span>
+    </div>
+    <div id="active-command" class="active-command">No active hold or waitlist entry.</div>
+    <ol id="activity" class="activity" aria-live="polite"></ol>
+  </section>
+</main>
+<script src="/app.js" defer></script>
+</body>
+</html>

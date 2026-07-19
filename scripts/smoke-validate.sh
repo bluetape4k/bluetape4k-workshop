@@ -146,6 +146,7 @@ case "${1:-help}" in
     # Testcontainers: PostgreSQL, Java 25 virtual threads
     run "$GRADLEW \
       :commerce-order-lifecycle-fulfillment:test \
+      :commerce-reservation-control-plane:test \
       --continue --max-workers=1"
     ;;
 
