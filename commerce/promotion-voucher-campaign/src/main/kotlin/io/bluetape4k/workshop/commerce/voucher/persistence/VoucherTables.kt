@@ -4,6 +4,7 @@ import io.bluetape4k.exposed.core.auditable.AuditableLongIdTable
 import io.bluetape4k.workshop.commerce.voucher.domain.CampaignState
 import io.bluetape4k.workshop.commerce.voucher.domain.ClaimState
 import io.bluetape4k.workshop.commerce.voucher.domain.ReviewKind
+import io.bluetape4k.workshop.commerce.voucher.idempotency.HttpIdempotencyTable
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
@@ -149,4 +150,5 @@ internal val voucherTables =
         ReviewTable,
         AuditTable,
         EventInboxTable,
+        HttpIdempotencyTable,
     )

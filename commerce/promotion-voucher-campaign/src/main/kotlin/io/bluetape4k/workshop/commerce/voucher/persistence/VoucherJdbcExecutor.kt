@@ -9,15 +9,19 @@ import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.time.Duration
 
+internal interface VoucherTransactionRunner {
+    fun <T> foregroundTransaction(block: () -> T): T
+}
+
 /** Opens the Spring/Exposed transaction only after the matching local JDBC permit is held. */
 internal class VoucherJdbcExecutor(
     private val gate: DatabasePermitGate,
     transactionManager: PlatformTransactionManager,
     private val lockTimeout: Duration = Duration.ofSeconds(5),
-) {
+) : VoucherTransactionRunner {
     private val transactions = TransactionTemplate(transactionManager)
 
-    fun <T> foregroundTransaction(block: () -> T): T =
+    override fun <T> foregroundTransaction(block: () -> T): T =
         transaction(DatabaseLane.FOREGROUND, applyLockTimeout = true, block)
 
     fun <T> workerTransaction(block: () -> T): T =
