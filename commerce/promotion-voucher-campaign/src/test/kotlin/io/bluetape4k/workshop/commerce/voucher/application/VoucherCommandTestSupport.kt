@@ -18,6 +18,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.springframework.transaction.support.TransactionTemplate
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -68,7 +69,12 @@ internal abstract class VoucherCommandTestSupport : VoucherCompatibilityTestSupp
                 acquireTimeout = acquireTimeout,
             )
         val transactionManager = SpringTransactionManager(dataSource, DatabaseConfig {}, false)
-        exposedDatabases += checkNotNull(TransactionManager.primaryDatabase)
+        exposedDatabases +=
+            checkNotNull(
+                TransactionTemplate(transactionManager).execute {
+                    TransactionManager.current().db
+                },
+            )
         jdbc = VoucherJdbcExecutor(gate, transactionManager, lockTimeout)
         campaigns = CampaignRepository(gate)
         claims = ClaimRepository(gate)

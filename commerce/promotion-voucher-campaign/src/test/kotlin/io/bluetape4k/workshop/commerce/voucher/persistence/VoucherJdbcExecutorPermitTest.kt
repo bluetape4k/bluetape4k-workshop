@@ -38,11 +38,11 @@ internal class VoucherJdbcExecutorPermitTest : VoucherCompatibilityTestSupport()
             )
         val probe = PermitCheckingDataSource(dataSource) { gate.requireHeld() }
         val manager = SpringTransactionManager(probe, DatabaseConfig {}, false)
-        exposedDatabase = TransactionManager.primaryDatabase
         val jdbc = VoucherJdbcExecutor(gate, manager)
 
         probe.openCount.get() shouldBeEqualTo 0
         jdbc.foregroundTransaction {
+            exposedDatabase = TransactionManager.current().db
             probe.openCount.get() shouldBeEqualTo 1
             probe.closeCount.get() shouldBeEqualTo 0
             gate.availablePermits(DatabaseLane.FOREGROUND) shouldBeEqualTo 0

@@ -12,6 +12,7 @@ import org.springframework.web.bind.MissingRequestHeaderException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import kotlin.math.ceil
 
 @RestControllerAdvice
@@ -61,6 +62,12 @@ internal class ApiExceptionHandler {
         )
     }
 
+    @ExceptionHandler(VoucherServiceShuttingDown::class)
+    fun shuttingDown(
+        request: HttpServletRequest,
+    ): ResponseEntity<ApiError> =
+        errorResponse(503, "SERVICE_SHUTTING_DOWN", "service is shutting down", request.requestId(), 1)
+
     @ExceptionHandler(
         MethodArgumentNotValidException::class,
         HttpMessageNotReadableException::class,
@@ -74,6 +81,15 @@ internal class ApiExceptionHandler {
     ): ResponseEntity<ApiError> {
         log.warn { "voucher_http_rejected category=INVALID_REQUEST failure=${failure.javaClass.simpleName}" }
         return errorResponse(400, "INVALID_REQUEST", "request validation failed", request.requestId(), null)
+    }
+
+    @ExceptionHandler(NoResourceFoundException::class)
+    fun missingResource(
+        failure: NoResourceFoundException,
+        request: HttpServletRequest,
+    ): ResponseEntity<ApiError> {
+        log.warn { "voucher_http_rejected category=NOT_FOUND failure=${failure.javaClass.simpleName}" }
+        return errorResponse(404, "RESOURCE_NOT_FOUND", "resource was not found", request.requestId(), null)
     }
 
     @ExceptionHandler(Exception::class)

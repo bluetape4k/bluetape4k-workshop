@@ -14,6 +14,7 @@ import io.bluetape4k.workshop.commerce.voucher.idempotency.IdempotencyFingerprin
 import io.bluetape4k.workshop.commerce.voucher.idempotency.IdempotencyScope
 import io.bluetape4k.workshop.commerce.voucher.idempotency.StoredHttpResponse
 import io.bluetape4k.workshop.commerce.voucher.idempotency.VoucherResponseKind
+import io.bluetape4k.workshop.commerce.voucher.config.VoucherMetrics
 import org.springframework.stereotype.Component
 import java.time.Duration
 import java.util.UUID
@@ -30,6 +31,7 @@ internal class VoucherHttpCommandExecutor(
     private val commands: IdempotentVoucherCommandService,
     private val admission: VoucherAdmissionGate,
     private val admissionKeys: VoucherAdmissionKeyFactory,
+    private val metrics: VoucherMetrics? = null,
 ) {
     fun execute(
         tenantId: String,
@@ -72,6 +74,36 @@ internal class VoucherHttpCommandExecutor(
         )
 
     private fun executeScoped(
+        tenantId: String,
+        principalRef: String,
+        rawIdempotencyKey: String,
+        operation: String,
+        resourceId: UUID,
+        fingerprintMaterial: String,
+        externalBusiness: Boolean,
+        business: () -> StoredHttpResponse,
+    ): ExecutedHttpCommand {
+        val startedAt = System.nanoTime()
+        var outcome = "FAILED"
+        try {
+            val executed = executeCommand(
+                tenantId,
+                principalRef,
+                rawIdempotencyKey,
+                operation,
+                resourceId,
+                fingerprintMaterial,
+                externalBusiness,
+                business,
+            )
+            outcome = executed.response.responseKind.name
+            return executed
+        } finally {
+            metrics?.recordCommand(operation, outcome, Duration.ofNanos(System.nanoTime() - startedAt))
+        }
+    }
+
+    private fun executeCommand(
         tenantId: String,
         principalRef: String,
         rawIdempotencyKey: String,

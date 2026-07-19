@@ -30,6 +30,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.time.Clock
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -38,8 +39,10 @@ internal class VoucherRedisResources private constructor(
     val client: RedisClient,
     private val bloomConnection: StatefulRedisConnection<String, String>?,
     val bloomFilter: LettuceBloomFilter?,
+    private val degradation: VoucherDegradationState,
 ) : AutoCloseable {
     private val leaderLock = ReentrantLock()
+    private val closed = AtomicBoolean()
 
     @Volatile
     private var leaderConnection: StatefulRedisConnection<String, String>? = null
@@ -55,9 +58,11 @@ internal class VoucherRedisResources private constructor(
                 leaderConnection = connection
                 LettuceLeaderElector(connection).also {
                     leaderElector = it
+                    degradation.recover(VoucherDegradedComponent.LEADER)
                     log.info { "voucher_redis_leader_connected" }
                 }
             } catch (failure: Exception) {
+                degradation.degrade(VoucherDegradedComponent.LEADER)
                 log.warn {
                     "voucher_redis_leader_unavailable fallback=MANUAL failure=${failure.javaClass.simpleName}"
                 }
@@ -66,6 +71,7 @@ internal class VoucherRedisResources private constructor(
         }
 
     override fun close() {
+        if (!closed.compareAndSet(false, true)) return
         leaderConnection?.close()
         if (bloomFilter != null) {
             bloomFilter.close()
@@ -77,7 +83,10 @@ internal class VoucherRedisResources private constructor(
     }
 
     companion object : KLogging() {
-        fun open(properties: VoucherRedisProperties): VoucherRedisResources {
+        fun open(
+            properties: VoucherRedisProperties,
+            degradation: VoucherDegradationState = VoucherDegradationState(),
+        ): VoucherRedisResources {
             val uri = RedisURI.create(properties.uri).apply { timeout = properties.commandTimeout }
             val client = LettuceClients.clientOf(uri)
             var connection: StatefulRedisConnection<String, String>? = null
@@ -94,14 +103,16 @@ internal class VoucherRedisResources private constructor(
                                 properties.bloomFalseProbability,
                             ),
                     ).also { it.tryInit() }
+                degradation.recover(VoucherDegradedComponent.REDIS)
                 log.info { "voucher_redis_bloom_connected" }
             } catch (failure: Exception) {
+                degradation.degrade(VoucherDegradedComponent.REDIS)
                 filter?.close() ?: connection?.close()
                 connection = null
                 filter = null
                 log.warn { "voucher_redis_bloom_unavailable fallback=POSTGRES failure=${failure.javaClass.simpleName}" }
             }
-            return VoucherRedisResources(client, connection, filter)
+            return VoucherRedisResources(client, connection, filter, degradation)
         }
 
         private const val BLOOM_FILTER_NAME = "voucher:risk:v1"
@@ -131,6 +142,7 @@ internal fun voucherDistributedRateLimiter(
 internal class RecoverableVoucherRateLimiter(
     private val client: RedisClient,
     private val properties: VoucherRedisProperties,
+    private val degradation: VoucherDegradationState = VoucherDegradationState(),
 ) : RateLimiter<String> {
     private val delegateLock = ReentrantLock()
 
@@ -148,8 +160,12 @@ internal class RecoverableVoucherRateLimiter(
     private fun createDelegate(): RateLimiter<String>? =
         delegateLock.withLock {
             delegate ?: try {
-                voucherDistributedRateLimiter(client, properties).also { delegate = it }
+                voucherDistributedRateLimiter(client, properties).also {
+                    delegate = it
+                    degradation.recover(VoucherDegradedComponent.REDIS)
+                }
             } catch (failure: Exception) {
+                degradation.degrade(VoucherDegradedComponent.REDIS)
                 log.warn {
                     "voucher_redis_rate_limiter_unavailable fallback=POSTGRES failure=${failure.javaClass.simpleName}"
                 }
@@ -193,10 +209,12 @@ internal class VoucherAdmissionConfiguration {
     fun riskSignalService(
         keys: VoucherAdmissionKeyFactory,
         resources: ObjectProvider<VoucherRedisResources>,
+        degradation: ObjectProvider<VoucherDegradationState>,
     ): RiskSignalService =
         RiskSignalService(
             keys,
             resources.ifAvailable?.bloomFilter?.let(::LettuceBloomRiskBackend),
+            degradation.getIfAvailable(::VoucherDegradationState),
         )
 }
 
@@ -204,12 +222,21 @@ internal class VoucherAdmissionConfiguration {
 @ConditionalOnProperty(prefix = "workshop.voucher.redis", name = ["enabled"], havingValue = "true")
 internal class VoucherRedisConfiguration {
     @Bean(destroyMethod = "close")
-    fun voucherRedisResources(properties: VoucherProperties): VoucherRedisResources =
-        VoucherRedisResources.open(properties.redis)
+    fun voucherRedisResources(
+        properties: VoucherProperties,
+        degradation: ObjectProvider<VoucherDegradationState>,
+    ): VoucherRedisResources =
+        VoucherRedisResources.open(properties.redis, degradation.getIfAvailable(::VoucherDegradationState))
 
     @Bean("voucherRateLimiter")
     fun voucherRateLimiter(
         resources: VoucherRedisResources,
         properties: VoucherProperties,
-    ): RateLimiter<String> = RecoverableVoucherRateLimiter(resources.client, properties.redis)
+        degradation: ObjectProvider<VoucherDegradationState>,
+    ): RateLimiter<String> =
+        RecoverableVoucherRateLimiter(
+            resources.client,
+            properties.redis,
+            degradation.getIfAvailable(::VoucherDegradationState),
+        )
 }

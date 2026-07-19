@@ -71,8 +71,18 @@ management:
   endpoint:
     health:
       show-details: never
+      show-components: always
       probes:
         enabled: true
+      group:
+        readiness:
+          include: readinessState,voucherDatabase
+        liveness:
+          include: livenessState
+      status:
+        order: down,out-of-service,unknown,degraded,up
+        http-mapping:
+          degraded: 200
 
 workshop:
   voucher:
@@ -121,6 +131,11 @@ workshop:
       write-timeout: 5s
       max-rows: 200
       max-payload-bytes: 262144
+    retention:
+      audit: 90d
+      terminal-extra: 7d
+      applied-event: 30d
+      purge-batch-size: 200
     http:
       max-header-length: 64
       max-scalar-bytes: 256

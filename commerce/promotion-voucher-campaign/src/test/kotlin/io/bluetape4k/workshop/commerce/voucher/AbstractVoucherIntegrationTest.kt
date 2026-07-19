@@ -5,13 +5,13 @@ import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-import org.springframework.test.annotation.DirtiesContext
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.MediaType
 import org.springframework.http.client.reactive.JdkClientHttpConnector
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.net.http.HttpClient
 import java.time.Duration
@@ -20,7 +20,7 @@ import java.util.UUID
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Execution(ExecutionMode.SAME_THREAD)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 internal abstract class AbstractVoucherIntegrationTest {
     @LocalServerPort
     protected var port: Int = 0
@@ -110,6 +110,7 @@ internal abstract class AbstractVoucherIntegrationTest {
             registry.add("spring.datasource.username") { requireNotNull(postgres.username) }
             registry.add("spring.datasource.password") { requireNotNull(postgres.password) }
             registry.add("workshop.voucher.redis.enabled") { false }
+            registry.add("management.server.port") { 0 }
             registry.add("workshop.voucher.http.operator-secret") { OPERATOR_SECRET }
             registry.add("workshop.voucher.http.operator-guard") { OPERATOR_GUARD }
         }

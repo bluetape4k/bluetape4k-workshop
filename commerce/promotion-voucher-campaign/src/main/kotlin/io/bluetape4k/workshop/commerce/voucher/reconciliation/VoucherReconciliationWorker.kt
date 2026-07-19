@@ -7,7 +7,12 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherWorkerProperties
+import io.bluetape4k.workshop.commerce.voucher.config.VoucherDegradationState
+import io.bluetape4k.workshop.commerce.voucher.config.VoucherDegradedComponent
+import io.bluetape4k.workshop.commerce.voucher.config.VoucherLeaderState
+import io.bluetape4k.workshop.commerce.voucher.config.VoucherMetrics
 import org.springframework.scheduling.annotation.Scheduled
+import java.time.Instant
 import java.util.concurrent.atomic.AtomicBoolean
 
 internal fun interface VoucherLeaderRunner {
@@ -55,6 +60,8 @@ internal class VoucherReconciliationWorker(
     private val reconciliation: VoucherReconciliationService,
     private val properties: VoucherWorkerProperties,
     private val leader: VoucherLeaderRunner,
+    private val degradation: VoucherDegradationState? = null,
+    private val metrics: VoucherMetrics? = null,
 ) {
     private val running = AtomicBoolean()
 
@@ -63,10 +70,20 @@ internal class VoucherReconciliationWorker(
             try {
                 when (val result = leader.run(::runService)) {
                     is LeaderRunResult.Elected -> {
-                        WorkerRunResult.Elected(checkNotNull(result.value), result.leaderId)
+                        degradation?.recover(VoucherDegradedComponent.LEADER)
+                        metrics?.leaderState(VoucherLeaderState.ELECTED)
+                        WorkerRunResult.Elected(checkNotNull(result.value), result.leaderId).also {
+                            recordSuccess(it.result)
+                        }
                     }
-                    LeaderRunResult.Skipped -> WorkerRunResult.LeaderSkipped
+                    LeaderRunResult.Skipped -> {
+                        degradation?.recover(VoucherDegradedComponent.LEADER)
+                        metrics?.leaderState(VoucherLeaderState.SKIPPED)
+                        WorkerRunResult.LeaderSkipped
+                    }
                     is LeaderRunResult.ActionFailed -> {
+                        degradation?.degrade(VoucherDegradedComponent.LEADER)
+                        metrics?.leaderState(VoucherLeaderState.DEGRADED)
                         log.warn {
                             "voucher_reconciliation_leader_action_failed " +
                                 "failure=${result.cause.javaClass.simpleName}"
@@ -75,6 +92,8 @@ internal class VoucherReconciliationWorker(
                     }
                 }
             } catch (failure: Exception) {
+                degradation?.degrade(VoucherDegradedComponent.LEADER)
+                metrics?.leaderState(VoucherLeaderState.DEGRADED)
                 log.warn {
                     "voucher_reconciliation_leader_unavailable fallback=MANUAL " +
                         "failure=${failure.javaClass.simpleName}"
@@ -84,7 +103,14 @@ internal class VoucherReconciliationWorker(
         }
 
     fun runManual(): WorkerRunResult =
-        singleFlight { WorkerRunResult.Manual(runService()) }
+        singleFlight { WorkerRunResult.Manual(runService()).also { recordSuccess(it.result) } }
+
+    private fun recordSuccess(result: ReconciliationResult) {
+        metrics?.workerSucceeded(
+            Instant.now().epochSecond,
+            result.processed + result.skipped + result.failed,
+        )
+    }
 
     private fun runService(): ReconciliationResult =
         reconciliation.runBatch(properties.batchSize, properties.runDeadline)
@@ -108,11 +134,17 @@ internal class VoucherReconciliationWorker(
 internal class VoucherReconciliationScheduler(
     private val worker: VoucherReconciliationWorker,
 ) {
+    private val running = AtomicBoolean(true)
+
     @Scheduled(
         fixedDelayString = "\${workshop.voucher.worker.interval:5s}",
         initialDelayString = "\${workshop.voucher.worker.initial-delay:5s}",
     )
     fun tick() {
-        worker.runScheduled()
+        if (running.get()) worker.runScheduled()
+    }
+
+    fun stop() {
+        running.set(false)
     }
 }

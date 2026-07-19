@@ -10,9 +10,12 @@ import io.bluetape4k.workshop.commerce.voucher.security.VoucherCodeKeyRing
 import io.bluetape4k.workshop.commerce.voucher.security.VoucherCodeService
 import io.bluetape4k.workshop.commerce.voucher.web.VoucherHttpProperties
 import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
 import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.SmartInitializingSingleton
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -21,6 +24,7 @@ import org.springframework.core.SpringProperties
 import org.springframework.core.env.Environment
 import org.springframework.core.io.ClassPathResource
 import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.support.TransactionTemplate
 import java.nio.charset.StandardCharsets
 import java.time.Clock
 import java.time.Duration
@@ -35,6 +39,7 @@ internal data class VoucherProperties(
     val redis: VoucherRedisProperties = VoucherRedisProperties(),
     val worker: VoucherWorkerProperties = VoucherWorkerProperties(),
     val sse: VoucherSseProperties = VoucherSseProperties(),
+    val retention: VoucherRetentionProperties = VoucherRetentionProperties(),
     val http: VoucherHttpProperties = VoucherHttpProperties(),
 )
 
@@ -152,6 +157,7 @@ internal class VoucherStartupValidator(
         validateRedis(properties.redis)
         validateWorker(properties.worker)
         validateSse(properties.sse)
+        validateRetention(properties.retention)
         validateHttp(properties.http)
         validateKeys(properties.keys, runtime.isProduction())
         validateReferencedKeys(properties.keys)
@@ -276,6 +282,14 @@ internal class VoucherStartupValidator(
         if (invalid) fail(StartupFailureCode.INVALID_RANGE)
     }
 
+    private fun validateRetention(retention: VoucherRetentionProperties) {
+        try {
+            VoucherRetentionPolicy(retention)
+        } catch (_: IllegalArgumentException) {
+            fail(StartupFailureCode.INVALID_RANGE)
+        }
+    }
+
     private fun validateReferencedKeys(keys: VoucherKeyProperties) {
         val referenced = referencedKeyVersions.referencedVersions()
         if (!keys.generation.keys.containsAll(referenced.generation) ||
@@ -328,6 +342,19 @@ internal class VoucherConfiguration {
     fun springTransactionManager(dataSource: DataSource): PlatformTransactionManager =
         SpringTransactionManager(dataSource, DatabaseConfig {}, false)
 
+    @Bean
+    fun voucherExposedDatabaseRegistration(
+        @Qualifier("springTransactionManager")
+        springTransactionManager: PlatformTransactionManager,
+    ): VoucherExposedDatabaseRegistration =
+        VoucherExposedDatabaseRegistration(
+            checkNotNull(
+                TransactionTemplate(springTransactionManager).execute {
+                    TransactionManager.current().db
+                },
+            ),
+        )
+
     @Bean(destroyMethod = "")
     fun voucherExecutor(): ExecutorService =
         VirtualThreads.executorService().also {
@@ -339,17 +366,22 @@ internal class VoucherConfiguration {
         VoucherExecutorShutdown(executor)
 
     @Bean
-    fun databasePermitGate(properties: VoucherProperties): DatabasePermitGate =
+    fun databasePermitGate(
+        properties: VoucherProperties,
+        metrics: VoucherMetrics,
+    ): DatabasePermitGate =
         DatabasePermitGate(
             foregroundPermits = properties.db.foregroundPermits,
             workerPermits = 1,
             sseMaintenancePermits = properties.db.backgroundPermits - 1,
             acquireTimeout = properties.db.permitTimeout,
+            metrics = metrics,
         )
 
     @Bean
     fun voucherJdbcExecutor(
         gate: DatabasePermitGate,
+        @Qualifier("springTransactionManager")
         transactionManager: PlatformTransactionManager,
         properties: VoucherProperties,
     ): VoucherJdbcExecutor = VoucherJdbcExecutor(gate, transactionManager, properties.db.lockTimeout)
@@ -383,6 +415,10 @@ internal class VoucherConfiguration {
             val result = runner.migrate()
             log.info { "voucher_schema_migration_completed result=$result" }
         }
+
+    @Bean
+    fun referencedKeyVersionSource(dataSource: DataSource): ReferencedKeyVersionSource =
+        PostgresReferencedKeyVersionSource(dataSource)
 
     @Bean
     fun voucherStartupValidation(
@@ -419,12 +455,32 @@ internal class VoucherConfiguration {
     }
 }
 
+/** Removes the Exposed process-wide database registration when its Spring context closes. */
+internal class VoucherExposedDatabaseRegistration(
+    private val database: Database,
+) : AutoCloseable {
+    private val closed = java.util.concurrent.atomic.AtomicBoolean()
+
+    init {
+        TransactionManager.defaultDatabase = database
+    }
+
+    override fun close() {
+        if (closed.compareAndSet(false, true)) {
+            TransactionManager.closeAndUnregister(database)
+        }
+    }
+}
+
 /** Gives the application-owned virtual-thread executor a bounded shutdown. */
 internal class VoucherExecutorShutdown(
     private val executor: ExecutorService,
     private val timeout: Duration = Duration.ofSeconds(10),
 ) : AutoCloseable {
+    private val closed = java.util.concurrent.atomic.AtomicBoolean()
+
     override fun close() {
+        if (!closed.compareAndSet(false, true)) return
         executor.shutdown()
         try {
             if (!executor.awaitTermination(timeout.toMillis(), TimeUnit.MILLISECONDS)) {

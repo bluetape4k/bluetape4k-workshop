@@ -6,6 +6,7 @@ import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.commerce.voucher.application.toSnapshot
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherProperties
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherSseProperties
+import io.bluetape4k.workshop.commerce.voucher.config.VoucherMetrics
 import io.bluetape4k.workshop.commerce.voucher.persistence.AuditRecord
 import io.bluetape4k.workshop.commerce.voucher.persistence.AuditRepository
 import io.bluetape4k.workshop.commerce.voucher.persistence.CampaignRepository
@@ -192,6 +193,7 @@ internal class VoucherEventStream(
     private val mapper: ObjectMapper,
     private val executor: ExecutorService,
     properties: VoucherProperties,
+    private val metrics: VoucherMetrics? = null,
 ) : AutoCloseable {
     private val config: VoucherSseProperties = properties.sse
     private val registryLock = ReentrantLock()
@@ -203,10 +205,10 @@ internal class VoucherEventStream(
         campaignId: UUID,
         requestedCursor: EventCursor?,
     ): StreamSubscription {
-        check(!closed.get()) { "voucher event stream is shutting down" }
+        if (closed.get()) throw VoucherServiceShuttingDown()
         val key = CampaignStreamKey(tenantId, campaignId)
         registryLock.withLock {
-            if (key !in pollers && pollers.size >= config.maxCampaigns) throw SseCapacityRejected(campaignId)
+            if (key !in pollers && pollers.size >= config.maxCampaigns) rejectCapacity(campaignId)
         }
         val initial = source.initial(tenantId, campaignId, requestedCursor)
         val subscription = StreamSubscription(config.queueSize, initial.cursor, this)
@@ -218,7 +220,7 @@ internal class VoucherEventStream(
         registryLock.withLock {
             val poller =
                 pollers[key] ?: run {
-                    if (pollers.size >= config.maxCampaigns) throw SseCapacityRejected(campaignId)
+                    if (pollers.size >= config.maxCampaigns) rejectCapacity(campaignId)
                     CampaignPoller(key, initial.cursor).also {
                         pollers[key] = it
                         it.start()
@@ -226,6 +228,7 @@ internal class VoucherEventStream(
                 }
             poller.add(subscription)
         }
+        metrics?.sseOpened()
         log.info { "voucher_sse_subscribed campaignId=$campaignId activePollers=${activePollers()}" }
         return subscription
     }
@@ -274,6 +277,11 @@ internal class VoucherEventStream(
     private fun remove(subscription: StreamSubscription) {
         val poller = subscription.poller.getAndSet(null) ?: return
         poller.remove(subscription)
+    }
+
+    private fun rejectCapacity(campaignId: UUID): Nothing {
+        metrics?.sseRejected("CAPACITY")
+        throw SseCapacityRejected(campaignId)
     }
 
     private fun removePoller(poller: CampaignPoller) {
@@ -355,6 +363,7 @@ internal class VoucherEventStream(
             cleanupCount.incrementAndGet()
             queue.clear()
             owner.remove(this)
+            metrics?.sseClosed()
         }
     }
 
@@ -446,6 +455,8 @@ internal data class CampaignStreamKey(
 internal class SseCapacityRejected(
     val campaignId: UUID,
 ) : RuntimeException("SSE_CAPACITY_REJECTED")
+
+internal class VoucherServiceShuttingDown : RuntimeException("SERVICE_SHUTTING_DOWN")
 
 /** Header-authenticated SSE endpoint used by the same-origin browser fetch stream. */
 @RestController

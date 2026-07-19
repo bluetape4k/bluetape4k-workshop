@@ -5,6 +5,8 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
 import io.bluetape4k.redis.lettuce.filter.LettuceBloomFilter
 import io.bluetape4k.workshop.commerce.voucher.application.RiskSignal
+import io.bluetape4k.workshop.commerce.voucher.config.VoucherDegradationState
+import io.bluetape4k.workshop.commerce.voucher.config.VoucherDegradedComponent
 import java.nio.charset.StandardCharsets.UTF_8
 import java.util.Base64
 import javax.crypto.Mac
@@ -77,6 +79,7 @@ internal class LettuceBloomRiskBackend(
 internal class RiskSignalService(
     private val keys: VoucherAdmissionKeyFactory,
     private val backend: VoucherRiskBackend?,
+    private val degradation: VoucherDegradationState? = null,
 ) {
     fun assess(
         tenantId: String,
@@ -85,8 +88,11 @@ internal class RiskSignalService(
         val digest = keys.riskKey(tenantId, subjectRef)
         val riskBackend = backend ?: return RiskSignal.UNKNOWN
         return try {
-            if (riskBackend.mightContain(digest)) RiskSignal.REVIEW else RiskSignal.CLEAR
+            (if (riskBackend.mightContain(digest)) RiskSignal.REVIEW else RiskSignal.CLEAR).also {
+                degradation?.recover(VoucherDegradedComponent.REDIS)
+            }
         } catch (failure: Exception) {
+            degradation?.degrade(VoucherDegradedComponent.REDIS)
             log.warn { "voucher_risk_unknown backend=REDIS failure=${failure.javaClass.simpleName}" }
             RiskSignal.UNKNOWN
         }
@@ -98,9 +104,12 @@ internal class RiskSignalService(
     ): Boolean {
         val riskBackend = backend ?: return false
         return try {
-            riskBackend.add(keys.riskKey(tenantId, subjectRef))
-            true
+            riskBackend.add(keys.riskKey(tenantId, subjectRef)).let {
+                degradation?.recover(VoucherDegradedComponent.REDIS)
+                true
+            }
         } catch (failure: Exception) {
+            degradation?.degrade(VoucherDegradedComponent.REDIS)
             log.warn { "voucher_risk_remember_failed backend=REDIS failure=${failure.javaClass.simpleName}" }
             false
         }.also { remembered ->

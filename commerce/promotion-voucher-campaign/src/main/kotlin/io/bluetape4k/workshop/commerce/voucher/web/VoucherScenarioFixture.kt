@@ -3,6 +3,8 @@ package io.bluetape4k.workshop.commerce.voucher.web
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.commerce.voucher.application.RiskSignal
+import io.bluetape4k.workshop.commerce.voucher.fixture.VoucherScenarioDefinition
+import io.bluetape4k.workshop.commerce.voucher.fixture.VoucherScenarioFixtures
 import io.bluetape4k.workshop.commerce.voucher.idempotency.StoredHttpResponse
 import io.bluetape4k.workshop.commerce.voucher.idempotency.VoucherResponseKind
 import jakarta.servlet.http.HttpServletRequest
@@ -20,28 +22,35 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.nio.charset.StandardCharsets.UTF_8
 import java.util.UUID
-import java.util.concurrent.ConcurrentHashMap
 
 /** Server-owned deterministic signals used only by loopback demo and integration-test profiles. */
 @Component
 @Profile("local", "demo", "test")
-internal class VoucherScenarioFixture {
-    private val riskSignals = ConcurrentHashMap<FixtureSubject, RiskSignal>()
+internal class VoucherScenarioFixture(
+    private val scenarios: VoucherScenarioFixtures,
+) {
 
     fun configureAllocationReview(
         tenantId: String,
         principalRef: String,
     ) {
-        riskSignals[FixtureSubject(tenantId, principalRef)] = RiskSignal.REVIEW
+        scenarios.configure("allocation-review", tenantId, principalRef)
         log.info { "voucher_fixture_configured scenario=ALLOCATION_REVIEW" }
     }
+
+    fun configure(
+        scenario: String,
+        tenantId: String,
+        principalRef: String,
+    ): VoucherScenarioDefinition =
+        scenarios.configure(scenario, tenantId, principalRef).also {
+            log.info { "voucher_fixture_configured scenario=${it.slug}" }
+        }
 
     fun signalFor(
         tenantId: String,
         principalRef: String,
-    ): RiskSignal? = riskSignals.remove(FixtureSubject(tenantId, principalRef))
-
-    private data class FixtureSubject(val tenantId: String, val principalRef: String)
+    ): RiskSignal? = scenarios.consumeRiskSignal(tenantId, principalRef)
 
     companion object : KLogging()
 }
@@ -53,6 +62,7 @@ internal data class VoucherFixtureRequest(
 internal data class VoucherFixtureResponse(
     val scenario: String,
     val principalRef: String,
+    val expected: io.bluetape4k.workshop.commerce.voucher.fixture.VoucherScenarioExpectation,
 )
 
 /** Guarded fixture API; the entire controller is absent from production profiles. */
@@ -73,8 +83,8 @@ internal class VoucherFixtureController(
     ): ResponseEntity<Any> {
         val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
         val principal = requireAsciiIdentifier(body.principalRef, "principalRef")
-        if (scenario != ALLOCATION_REVIEW) throw invalidRequest("unsupported fixture scenario")
         val resourceId = UUID.nameUUIDFromBytes("$tenant\u0000$principal\u0000$scenario".toByteArray(UTF_8))
+        var configured: VoucherScenarioDefinition? = null
         val executed =
             executor.execute(
                 tenant,
@@ -84,7 +94,7 @@ internal class VoucherFixtureController(
                 resourceId,
                 principal,
             ) {
-                fixture.configureAllocationReview(tenant, principal)
+                configured = fixture.configure(scenario, tenant, principal)
                 StoredHttpResponse(
                     VoucherResponseKind.FIXTURE_CONFIGURED,
                     200,
@@ -96,11 +106,13 @@ internal class VoucherFixtureController(
                     null,
                 )
             }
-        return executedResponse(executed, request) { VoucherFixtureResponse(scenario, principal) }
+        return executedResponse(executed, request) {
+            val definition = configured ?: fixture.configure(scenario, tenant, principal)
+            VoucherFixtureResponse(scenario, principal, definition.expected)
+        }
     }
 
     private companion object {
-        const val ALLOCATION_REVIEW = "allocation-review"
         const val FIXTURE_PRINCIPAL = "workshop-fixture"
     }
 }

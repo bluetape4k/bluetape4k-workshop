@@ -32,49 +32,44 @@ internal class VoucherContextRestartIntegrationTest {
 
     @Test
     fun `pending inbox and Modulith publication repository survive context restart`() {
-        val schema = "voucher_restart_${Base58.randomString(8).lowercase()}"
+        val tenant = Base58.randomString(8)
         val eventId = Uuid.V7.nextId()
         var publicationId: UUID? = null
-        createSchema(schema)
-        try {
-            startContext(schema).use { first ->
-                val publications = first.getBean(ExposedEventPublicationRepository::class.java)
-                val publication =
-                    TargetEventPublication.of(
-                        RestartPublication(eventId.toString()),
-                        PublicationTargetIdentifier.of("voucher.restart.listener"),
-                        Instant.now(),
-                    )
-                publications.create(publication)
-                publications.markFailed(publication.identifier)
-                publicationId = publication.identifier
-                seedPending(first, eventId)
+        startContext().use { first ->
+            val publications = first.getBean(ExposedEventPublicationRepository::class.java)
+            val publication =
+                TargetEventPublication.of(
+                    RestartPublication(eventId.toString()),
+                    PublicationTargetIdentifier.of("voucher.restart.listener"),
+                    Instant.now(),
+                )
+            publications.create(publication)
+            publications.markFailed(publication.identifier)
+            publicationId = publication.identifier
+            seedPending(first, tenant, eventId)
+        }
+        startContext().use { restarted ->
+            val publications = restarted.getBean(ExposedEventPublicationRepository::class.java)
+            publications.findByStatus(Status.FAILED).single { it.identifier == publicationId }
+            publications.markCompleted(checkNotNull(publicationId), Instant.now())
+            publications.findByStatus(Status.COMPLETED).single { it.identifier == publicationId }
+            val result = restarted.getBean(VoucherReconciliationService::class.java)
+                .runBatch(50, Duration.ofSeconds(10))
+            check(result.processed >= 1)
+            readInbox(restarted, tenant, eventId).status shouldBeEqualTo InboxStatus.APPLIED
+            queryAuditCount(tenant) shouldBeEqualTo 1L
+            await atMost Duration.ofSeconds(5) untilAsserted {
+                publications.findCompletedPublications().any { publication ->
+                    val event = publication.event as? VoucherInboxAppliedEvent
+                    event?.eventId == eventId
+                } shouldBeEqualTo true
             }
-
-            startContext(schema).use { restarted ->
-                val publications = restarted.getBean(ExposedEventPublicationRepository::class.java)
-                publications.findByStatus(Status.FAILED).single().identifier shouldBeEqualTo publicationId
-                publications.markCompleted(checkNotNull(publicationId), Instant.now())
-                publications.findByStatus(Status.COMPLETED).single().identifier shouldBeEqualTo publicationId
-                val result = restarted.getBean(VoucherReconciliationService::class.java)
-                    .runBatch(50, Duration.ofSeconds(10))
-                result.processed shouldBeEqualTo 1
-                readInbox(restarted, eventId).status shouldBeEqualTo InboxStatus.APPLIED
-                queryLong(schema, "SELECT count(*) FROM voucher_audits") shouldBeEqualTo 1L
-                await atMost Duration.ofSeconds(5) untilAsserted {
-                    publications.findCompletedPublications().any { publication ->
-                        val event = publication.event as? VoucherInboxAppliedEvent
-                        event?.eventId == eventId
-                    } shouldBeEqualTo true
-                }
-            }
-        } finally {
-            dropSchema(schema)
         }
     }
 
     private fun seedPending(
         context: ConfigurableApplicationContext,
+        tenant: String,
         eventId: UUID,
     ) {
         val jdbc = context.getBean(VoucherJdbcExecutor::class.java)
@@ -83,7 +78,7 @@ internal class VoucherContextRestartIntegrationTest {
             inbox.insert(
                 EventInboxRecord(
                     id = 0,
-                    tenantId = "tenant-restart",
+                    tenantId = tenant,
                     eventId = eventId,
                     aggregateType = "CAMPAIGN",
                     aggregateId = Uuid.V7.nextId(),
@@ -101,18 +96,19 @@ internal class VoucherContextRestartIntegrationTest {
 
     private fun readInbox(
         context: ConfigurableApplicationContext,
+        tenant: String,
         eventId: UUID,
     ): EventInboxRecord {
         val jdbc = context.getBean(VoucherJdbcExecutor::class.java)
         val inbox = context.getBean(EventInboxRepository::class.java)
-        return jdbc.foregroundTransaction { checkNotNull(inbox.findEvent("tenant-restart", eventId)) }
+        return jdbc.foregroundTransaction { checkNotNull(inbox.findEvent(tenant, eventId)) }
     }
 
-    private fun startContext(schema: String): ConfigurableApplicationContext =
+    private fun startContext(): ConfigurableApplicationContext =
         SpringApplicationBuilder(VoucherCampaignApplication::class.java)
             .web(WebApplicationType.NONE)
             .run(
-                "--spring.datasource.url=${schemaJdbcUrl(schema)}",
+                "--spring.datasource.url=${postgres.jdbcUrl}",
                 "--spring.datasource.username=${requireNotNull(postgres.username)}",
                 "--spring.datasource.password=${requireNotNull(postgres.password)}",
                 "--spring.datasource.hikari.minimum-idle=0",
@@ -120,42 +116,20 @@ internal class VoucherContextRestartIntegrationTest {
                 "--workshop.voucher.redis.enabled=false",
             )
 
-    private fun queryLong(
-        schema: String,
-        sql: String,
-    ): Long =
+    private fun queryAuditCount(tenant: String): Long =
         DriverManager.getConnection(
-            schemaJdbcUrl(schema),
+            postgres.jdbcUrl,
             requireNotNull(postgres.username),
             requireNotNull(postgres.password),
         ).use { connection ->
-            connection.createStatement().use { statement ->
-                statement.executeQuery(sql).use { result ->
+            connection.prepareStatement("SELECT count(*) FROM voucher_audits WHERE tenant_id = ?").use { statement ->
+                statement.setString(1, tenant)
+                statement.executeQuery().use { result ->
                     check(result.next())
                     result.getLong(1)
                 }
             }
         }
-
-    private fun createSchema(schema: String) =
-        postgresConnection().use { connection -> connection.createStatement().use { it.execute("CREATE SCHEMA $schema") } }
-
-    private fun dropSchema(schema: String) =
-        postgresConnection().use { connection ->
-            connection.createStatement().use { it.execute("DROP SCHEMA IF EXISTS $schema CASCADE") }
-        }
-
-    private fun postgresConnection() =
-        DriverManager.getConnection(
-            postgres.jdbcUrl,
-            requireNotNull(postgres.username),
-            requireNotNull(postgres.password),
-        )
-
-    private fun schemaJdbcUrl(schema: String): String {
-        val separator = if ('?' in postgres.jdbcUrl) '&' else '?'
-        return "${postgres.jdbcUrl}${separator}currentSchema=$schema"
-    }
 
     private data class RestartPublication(val eventId: String) : Serializable
 }

@@ -6,6 +6,8 @@ import io.bluetape4k.support.requirePositiveNumber
 import java.time.Duration
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 internal enum class DatabaseLane {
     FOREGROUND,
@@ -18,6 +20,14 @@ internal class DatabasePermitRejected(
     cause: Throwable? = null,
 ) : RuntimeException("database permit unavailable", cause)
 
+internal fun interface DatabasePermitMetrics {
+    fun rejected(lane: DatabaseLane)
+
+    companion object {
+        val NONE = DatabasePermitMetrics {}
+    }
+}
+
 /**
  * Keeps virtual-thread concurrency outside the bounded JDBC connection pool.
  *
@@ -29,6 +39,7 @@ internal class DatabasePermitGate(
     workerPermits: Int = 1,
     sseMaintenancePermits: Int = 3,
     private val acquireTimeout: Duration = Duration.ofMillis(250),
+    private val metrics: DatabasePermitMetrics = DatabasePermitMetrics.NONE,
 ) {
     private val semaphores =
         mapOf(
@@ -38,6 +49,13 @@ internal class DatabasePermitGate(
                 Semaphore(sseMaintenancePermits.requirePositiveNumber("sseMaintenancePermits"), true),
         )
     private val heldLane = ThreadLocal<DatabaseLane?>()
+    private val lifecycleLock = ReentrantLock()
+    private val drained = lifecycleLock.newCondition()
+
+    @Volatile
+    private var accepting = true
+
+    private var activePermits = 0
 
     init {
         require(!acquireTimeout.isNegative && !acquireTimeout.isZero) {
@@ -49,6 +67,7 @@ internal class DatabasePermitGate(
         lane: DatabaseLane,
         block: () -> T,
     ): T {
+        if (!accepting) throw DatabasePermitRejected(RETRY_AFTER)
         check(heldLane.get() == null) { "nested database permit acquisition is forbidden" }
         val semaphore = semaphores.getValue(lane)
         val acquired =
@@ -59,8 +78,18 @@ internal class DatabasePermitGate(
                 throw DatabasePermitRejected(RETRY_AFTER, interrupted)
             }
         if (!acquired) {
+            metrics.rejected(lane)
             log.debug { "voucher_db_permit_rejected lane=$lane" }
             throw DatabasePermitRejected(RETRY_AFTER)
+        }
+
+        lifecycleLock.withLock {
+            if (!accepting) {
+                semaphore.release()
+                metrics.rejected(lane)
+                throw DatabasePermitRejected(RETRY_AFTER)
+            }
+            activePermits++
         }
 
         heldLane.set(lane)
@@ -69,9 +98,34 @@ internal class DatabasePermitGate(
         } finally {
             heldLane.remove()
             semaphore.release()
+            lifecycleLock.withLock {
+                activePermits--
+                if (activePermits == 0) drained.signalAll()
+            }
             log.debug { "voucher_db_permit_released lane=$lane" }
         }
     }
+
+    /** Atomically rejects future acquisitions while allowing already admitted work to drain. */
+    fun beginShutdown() {
+        lifecycleLock.withLock {
+            accepting = false
+            if (activePermits == 0) drained.signalAll()
+        }
+    }
+
+    fun awaitDrained(timeout: Duration): Boolean {
+        require(!timeout.isNegative) { "timeout must not be negative" }
+        var remaining = timeout.toNanos()
+        lifecycleLock.withLock {
+            while (activePermits > 0 && remaining > 0) {
+                remaining = drained.awaitNanos(remaining)
+            }
+            return activePermits == 0
+        }
+    }
+
+    fun inUsePermits(): Int = lifecycleLock.withLock { activePermits }
 
     fun requireHeld() {
         check(heldLane.get() != null) { "JDBC access requires a database permit" }

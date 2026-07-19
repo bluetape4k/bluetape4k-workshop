@@ -96,8 +96,10 @@ internal class VoucherPublicationConfiguration {
         reconciliation: VoucherReconciliationService,
         properties: VoucherProperties,
         leader: VoucherLeaderRunner,
+        degradation: VoucherDegradationState,
+        metrics: VoucherMetrics,
     ): VoucherReconciliationWorker =
-        VoucherReconciliationWorker(reconciliation, properties.worker, leader)
+        VoucherReconciliationWorker(reconciliation, properties.worker, leader, degradation, metrics)
 
     @Bean
     @ConditionalOnProperty(prefix = "workshop.voucher.redis", name = ["enabled"], havingValue = "true")
