@@ -25,9 +25,11 @@ internal abstract class AbstractVoucherIntegrationTest {
     @LocalServerPort
     protected var port: Int = 0
 
-    protected val webTestClient: WebTestClient by lazy {
+    protected val webTestClient: WebTestClient by lazy { testClient(port) }
+
+    protected fun testClient(port: Int): WebTestClient {
         val connector = JdkClientHttpConnector(HttpClient.newBuilder().connectTimeout(HTTP_TIMEOUT).build())
-        WebTestClient.bindToServer(connector)
+        return WebTestClient.bindToServer(connector)
             .baseUrl("http://127.0.0.1:$port")
             .responseTimeout(HTTP_TIMEOUT)
             .build()

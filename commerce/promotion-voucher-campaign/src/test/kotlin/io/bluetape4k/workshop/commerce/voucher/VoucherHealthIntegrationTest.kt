@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.commerce.voucher
 
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.web.server.LocalManagementPort
-import org.springframework.test.web.reactive.server.WebTestClient
 
 internal class VoucherHealthIntegrationTest : AbstractVoucherIntegrationTest() {
     @LocalManagementPort
@@ -27,10 +26,5 @@ internal class VoucherHealthIntegrationTest : AbstractVoucherIntegrationTest() {
         }
     }
 
-    private val management: WebTestClient by lazy {
-        WebTestClient.bindToServer()
-            .baseUrl("http://127.0.0.1:$managementPort")
-            .responseTimeout(HTTP_TIMEOUT)
-            .build()
-    }
+    private val management by lazy { testClient(managementPort) }
 }
