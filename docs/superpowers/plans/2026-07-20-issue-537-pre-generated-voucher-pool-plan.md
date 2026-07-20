@@ -413,7 +413,7 @@ enum class VoucherPoolErrorCode {
     BATCH_FAILED_RETRYABLE, BATCH_FAILED_TERMINAL,
     RESERVATION_EXPIRED, ALLOCATION_EXPIRED, WRONG_OWNER, SCOPE_NOT_FOUND,
     RATE_LIMITED, BACKEND_TIMEOUT, KEY_MATERIAL_UNAVAILABLE, CIPHERTEXT_INVALID,
-    ALREADY_REVEALED, REPLACEMENT_LIMIT_REACHED,
+    ALREADY_REVEALED,
 }
 ```
 
@@ -777,7 +777,12 @@ fun `lost reveal response permits exactly one replacement`() = withPostgres {
     val allocation = reserveAndAllocate()
     revealAndDropResponse(allocation)
     replace(allocation).state shouldBeEqualTo ReservationState.ACTIVE
-    invoking { replace(allocation) } shouldThrow ReplacementLimitReachedException::class
+    replace(allocation).apply {
+        outcome shouldBeEqualTo VoucherPoolErrorCode.ALREADY_REVEALED
+        replacementAvailable.shouldBeFalse()
+        requestId.shouldNotBeBlank()
+    }
+    consumedEntryCount() shouldBeEqualTo 2
 }
 
 @Test
@@ -837,8 +842,9 @@ Run:
 
 Expected: reservation/user-limit counters, same-campaign shared-lock throughput, pause/revoke races,
 expiry/reuse, lost reveal replacement, redemption/revoke and leak/deadlock assertions PASS.
-`REPLACEMENT_LIMIT_REACHED` is a stable terminal response with no additional pool consumption and a safe
-request ID/operator-escalation action.
+After the single replacement is consumed, another loss keeps the approved `ALREADY_REVEALED` safe descriptor,
+sets `replacementAvailable=false`, consumes no additional entry and returns a safe request ID/operator-
+escalation action. No plan-only public error code is introduced.
 
 - [ ] **Step 4: Lore commit을 만든다**
 
@@ -1298,7 +1304,8 @@ function clearSecrets() {
 Operator secret input is masked, `autocomplete="off"`, memory-only and cleared on logout/pagehide. Neither
 operator secret nor raw code may enter URL/history, local/session storage, DOM attributes, request logs or
 error text. `ALREADY_REVEALED` opens an explicit replacement confirmation; success navigates to the new
-reservation. `REPLACEMENT_LIMIT_REACHED` shows a safe request ID and operator-escalation action. Revoke first
+reservation. `ALREADY_REVEALED` with `replacementAvailable=false` shows a safe request ID and
+operator-escalation action. Revoke first
 renders aggregate identity, revision and affected count from preview; cancel sends no command.
 
 - [ ] **Step 3: browser GREEN을 확인한다**
