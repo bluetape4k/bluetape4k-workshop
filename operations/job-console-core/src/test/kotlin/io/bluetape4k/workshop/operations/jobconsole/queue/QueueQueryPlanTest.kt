@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.operations.jobconsole.queue
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
+import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleService
 import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobConsoleDatabaseFixture
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepository
@@ -19,12 +20,13 @@ class QueueQueryPlanTest {
             fixture.migrate()
             val repository = JobRepository(fixture.dataSource)
             val scope = DemoCallerScope("tenant-a", "submitter-a")
-            repeat(120) { index ->
+            val submitted = (0 until 120).map { index ->
                 repository.submit(scope, "key-$index", SubmitJobRequest(JobType.DOCUMENT_EXPORT, 1), NOW)
             }
 
             repository.queueRows("tenant-a", afterSequence = null, limit = 1_000).size shouldBeEqualTo 100
             repository.queueRows("tenant-b", afterSequence = null, limit = 10).size shouldBeEqualTo 0
+            JobConsoleService(repository).snapshot(scope, submitted.last().jobId).queue?.position shouldBeEqualTo 120
 
             repeat(120) { index ->
                 repository.recordDuration(JobType.DOCUMENT_EXPORT, Duration.ofSeconds((index + 1).toLong()), NOW)

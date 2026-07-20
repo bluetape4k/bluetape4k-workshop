@@ -2,9 +2,10 @@
 
 [English](README.md) | 한국어
 
-이 Java 25 어댑터는 Ktor Netty, Ktor SSE, 애플리케이션이 소유하는 poller
-scope, 공유 운영 UI로 core 계약을 노출합니다. Blocking JDBC core 호출은
-`Dispatchers.IO`에서 실행하고 request cancellation은 다시 던집니다.
+이 Java 25 어댑터는 Ktor Netty, Ktor SSE, 애플리케이션이 소유하는
+poller/worker scope, 공유 운영 UI로 core 계약을 노출합니다. Blocking JDBC와
+worker 호출은 `Dispatchers.IO`에서 실행하고 coroutine cancellation은 다시
+던집니다.
 
 ## 안전 경계
 
@@ -20,6 +21,8 @@ export POSTGRES_JDBC_URL=jdbc:postgresql://localhost:5432/postgres
 export POSTGRES_USERNAME=postgres
 export POSTGRES_PASSWORD=postgres
 export JOB_CONSOLE_DEMO=true
+# 선택 사항인 취소 알림 가속 경로:
+# export REDIS_URI=redis://localhost:6379
 ./gradlew :operations-job-console-ktor:run
 ```
 

@@ -15,6 +15,10 @@ import io.bluetape4k.workshop.operations.jobconsole.persistence.JobMigrationRunn
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobOutboxRepository
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepository
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepositoryException
+import io.bluetape4k.workshop.operations.jobconsole.signal.LettuceCancelSignal
+import io.bluetape4k.workshop.operations.jobconsole.signal.NoOpCancelSignal
+import io.bluetape4k.workshop.operations.jobconsole.worker.DeterministicJobWorkload
+import io.bluetape4k.workshop.operations.jobconsole.worker.JobWorkerEngine
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
@@ -47,16 +51,22 @@ import javax.sql.DataSource
 
 private val mapper = jacksonObjectMapper()
 
-fun Application.jobConsoleModule(dataSource: DataSource, demoEnabled: Boolean = true) {
+fun Application.jobConsoleModule(
+    dataSource: DataSource,
+    demoEnabled: Boolean = false,
+    redisUri: String? = null,
+) {
     JobMigrationRunner(
         dataSource,
         listOf(JobMigration.classpath("001", "db/job-console/V001__job_console.sql")),
         advisoryLockKey = 520_001L,
     ).migrate()
     val repository = JobRepository(dataSource)
-    val service = JobConsoleService(repository)
+    val redisSignal = redisUri?.takeIf(String::isNotBlank)?.let { runCatching { LettuceCancelSignal(it) }.getOrNull() }
+    val service = JobConsoleService(repository, redisSignal ?: NoOpCancelSignal)
     val fanout = BoundedJobEventFanout(Duration.ofSeconds(2))
     val poller = JobOutboxPoller(JobOutboxRepository(dataSource), fanout)
+    val workerEngine = JobWorkerEngine(repository, DeterministicJobWorkload())
 
     install(CallLogging)
     install(SSE)
@@ -90,12 +100,20 @@ fun Application.jobConsoleModule(dataSource: DataSource, demoEnabled: Boolean = 
 
     val pollJob = launch(Dispatchers.IO) {
         while (isActive) {
-            runCatching { poller.pollOnce() }
+            try {
+                if (demoEnabled) workerEngine.runOnce()
+                poller.pollOnce()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (failure: Exception) {
+                environment.log.warn("Job console background cycle failed", failure)
+            }
             delay(100)
         }
     }
     monitor.subscribe(ApplicationStopped) {
         pollJob.cancel()
+        redisSignal?.close()
         (dataSource as? AutoCloseable)?.close()
     }
 }
@@ -141,7 +159,9 @@ private fun Application.installJobConsoleRoutes(service: JobConsoleService, fano
             if (call.request.headers["X-Demo-Operator"] != "true" || scope.tenantId != tenantId) {
                 throw JobRepositoryException(JobProblemCode.SCOPE_DENIED)
             }
-            call.respondJson(HttpStatusCode.OK, withContext(Dispatchers.IO) { service.tenantQueue(tenantId, null, 25) })
+            val cursor = call.request.headers["X-Queue-Cursor"]
+            val pageSize = call.request.headers["X-Queue-Page-Size"]?.toIntOrNull() ?: 25
+            call.respondJson(HttpStatusCode.OK, withContext(Dispatchers.IO) { service.tenantQueue(tenantId, cursor, pageSize) })
         }
         sse("/v1/jobs/{jobId}/events") {
             val jobId = UUID.fromString(requireNotNull(call.parameters["jobId"]))
@@ -189,7 +209,11 @@ fun main() {
             },
         )
     embeddedServer(Netty, port = environment("PORT", "8080").toInt()) {
-        jobConsoleModule(dataSource, demoEnabled = environment("JOB_CONSOLE_DEMO", "false").toBoolean())
+        jobConsoleModule(
+            dataSource,
+            demoEnabled = environment("JOB_CONSOLE_DEMO", "false").toBoolean(),
+            redisUri = environment("REDIS_URI", "").ifBlank { null },
+        )
     }.start(wait = true)
 }
 

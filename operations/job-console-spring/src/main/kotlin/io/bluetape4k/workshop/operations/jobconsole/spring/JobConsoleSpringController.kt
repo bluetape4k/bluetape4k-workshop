@@ -12,6 +12,7 @@ import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepositoryException
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
 import io.bluetape4k.workshop.operations.jobconsole.queue.QueuePage
+import io.bluetape4k.workshop.operations.jobconsole.worker.JobWorkerEngine
 import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -26,6 +27,8 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.util.UUID
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.atomic.AtomicBoolean
 
 @Profile("demo")
 @RestController
@@ -92,6 +95,27 @@ class JobConsoleOutboxSchedule(
     @Scheduled(fixedDelayString = "\${job-console.outbox-delay-ms:100}")
     fun publishEvents() {
         poller.pollOnce()
+    }
+}
+
+@Profile("demo")
+@RestController
+class JobConsoleWorkerSchedule(
+    private val workerEngine: JobWorkerEngine,
+    private val jobWorkerExecutor: ExecutorService,
+) {
+    private val running = AtomicBoolean()
+
+    @Scheduled(fixedDelayString = "\${job-console.worker-delay-ms:50}")
+    fun processNextJob() {
+        if (!running.compareAndSet(false, true)) return
+        jobWorkerExecutor.submit {
+            try {
+                workerEngine.runOnce()
+            } finally {
+                running.set(false)
+            }
+        }
     }
 }
 

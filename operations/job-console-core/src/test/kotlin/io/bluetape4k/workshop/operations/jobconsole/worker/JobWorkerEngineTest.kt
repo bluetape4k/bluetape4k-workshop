@@ -14,6 +14,27 @@ import java.time.Instant
 
 @Tag("integration")
 class JobWorkerEngineTest {
+    @Test
+    fun `run once discovers queued tenant and completes its oldest job`() {
+        JobConsoleDatabaseFixture().use { fixture ->
+            fixture.migrate()
+            val repository = JobRepository(fixture.dataSource)
+            val scope = DemoCallerScope("tenant-discovery", "submitter-a")
+            val submitted =
+                repository.submit(
+                    scope,
+                    "discovered-job",
+                    SubmitJobRequest(JobType.DOCUMENT_EXPORT, 2),
+                    Instant.parse("2026-07-21T00:00:00Z"),
+                )
+
+            val processed = JobWorkerEngine(repository, DeterministicJobWorkload()).runOnce()
+
+            processed shouldBeEqualTo true
+            requireNotNull(repository.load(submitted.jobId)).state shouldBeEqualTo JobState.SUCCEEDED
+        }
+    }
+
 
     @Test
     fun `worker checkpoints every unit and completes exactly once`() {

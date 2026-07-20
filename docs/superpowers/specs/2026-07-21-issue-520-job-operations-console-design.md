@@ -124,7 +124,7 @@ queue와 claim hot path는 `(tenant_id, state, enqueue_sequence)`와 lease expir
 | `POST /v1/jobs/{jobId}/cancel` | queued 즉시 취소 또는 running cancel request |
 | `GET /v1/queues/me` | 현재 submitter의 tenant queue summary |
 | `GET /v1/tenants/{tenantId}/queue` | operator용 redacted tenant queue summary |
-| `GET /v1/events/jobs/{jobId}` | `job.updated`, `queue.updated`, heartbeat SSE |
+| `GET /v1/jobs/{jobId}/events` | `job.updated`, `queue.updated`, heartbeat SSE |
 | `GET /healthz` | process liveness |
 | `GET /readyz` | PostgreSQL 필수, Redis degraded 허용 readiness |
 

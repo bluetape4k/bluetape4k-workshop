@@ -19,6 +19,22 @@ import java.util.UUID
 class RedisLossCancellationTest {
 
     @Test
+    fun `missing advisory signal is reported degraded while durable cancellation succeeds`() {
+        JobConsoleDatabaseFixture().use { fixture ->
+            fixture.migrate()
+            val repository = JobRepository(fixture.dataSource)
+            val scope = DemoCallerScope("tenant-no-redis", "submitter-a")
+            val submitted = repository.submit(scope, "job-key", SubmitJobRequest(JobType.DOCUMENT_EXPORT, 3), NOW)
+            repository.claimNext(scope.tenantId, Duration.ofSeconds(30))
+
+            val outcome = JobConsoleService(repository).cancel(scope, submitted.jobId)
+
+            outcome.state shouldBeEqualTo JobState.CANCEL_REQUESTED
+            outcome.signalDegraded shouldBeEqualTo true
+        }
+    }
+
+    @Test
     fun `signal loss does not roll back durable running cancellation`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()

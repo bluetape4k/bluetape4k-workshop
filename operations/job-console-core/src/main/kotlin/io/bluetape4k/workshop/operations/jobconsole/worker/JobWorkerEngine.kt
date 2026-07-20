@@ -4,11 +4,27 @@ import io.bluetape4k.workshop.operations.jobconsole.domain.JobSignal
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobState
 import io.bluetape4k.workshop.operations.jobconsole.persistence.ClaimedJob
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepository
+import java.time.Duration
 
 class JobWorkerEngine(
     private val repository: JobRepository,
     private val workload: DeterministicJobWorkload,
 ) {
+    fun runOnce(
+        leaseDuration: Duration = Duration.ofSeconds(30),
+        tenantLimit: Int = 100,
+    ): Boolean {
+        for (tenantId in repository.runnableTenantIds(tenantLimit)) {
+            val claimed = repository.reclaimExpired(tenantId, leaseDuration)
+                ?: repository.claimNext(tenantId, leaseDuration)
+            if (claimed != null) {
+                run(claimed)
+                return true
+            }
+        }
+        return false
+    }
+
     fun run(claimed: ClaimedJob) {
         var current = claimed
         try {

@@ -25,6 +25,7 @@ data class CancelServiceOutcome(
 class JobConsoleService(
     private val repository: JobRepository,
     private val cancelSignal: CancelSignal = NoOpCancelSignal,
+    private val redisAvailable: Boolean = cancelSignal !== NoOpCancelSignal,
     private val clock: Clock = Clock.systemUTC(),
     private val etaEstimator: EtaEstimator = EtaEstimator(),
 ) {
@@ -44,7 +45,7 @@ class JobConsoleService(
                 null
             } else {
                 val now = clock.instant()
-                val base = QueueProjectionService.project(repository.queueRows(scope.tenantId, null, 100), jobId, now)
+                val base = repository.queueProjection(scope.tenantId, jobId, now) ?: return snapshot(scope, jobId)
                 val estimate =
                     etaEstimator.estimate(
                         repository.durationSamples(stored.jobType, now.minus(Duration.ofDays(30)), 100),
@@ -76,7 +77,7 @@ class JobConsoleService(
     fun tenantQueue(tenantId: String, cursor: String?, pageSize: Int): QueuePage =
         QueueProjectionService.page(repository.queueRows(tenantId, null, 100), cursor, pageSize)
 
-    fun readiness(redisAvailable: Boolean = false): JobConsoleReadiness {
+    fun readiness(): JobConsoleReadiness {
         val postgresReady = repository.databaseReady()
         return JobConsoleReadiness(
             ready = postgresReady,
@@ -88,7 +89,7 @@ class JobConsoleService(
     fun cancel(scope: DemoCallerScope, jobId: UUID): CancelServiceOutcome {
         val durable = repository.cancel(scope, jobId)
         val signalDegraded =
-            durable.notificationRequired && runCatching { cancelSignal.publish(jobId) }.isFailure
+            durable.notificationRequired && runCatching { cancelSignal.publish(jobId) }.getOrNull()?.delivered != true
         return CancelServiceOutcome(jobId, durable.state, signalDegraded)
     }
 }
