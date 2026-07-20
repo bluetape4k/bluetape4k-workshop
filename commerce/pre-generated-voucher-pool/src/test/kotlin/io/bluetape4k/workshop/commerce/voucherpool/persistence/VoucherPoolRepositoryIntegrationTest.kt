@@ -23,6 +23,7 @@ import java.nio.file.Path
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.CyclicBarrier
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -82,8 +83,8 @@ internal class VoucherPoolRepositoryIntegrationTest {
                 }
             }
             acquired.await(2, TimeUnit.SECONDS)
-            repository.sharedLockHolders(backendPids.toSet()) shouldBeEqualTo 2
-            repository.exclusiveWaiters(backendPids.toSet()) shouldBeEqualTo 0
+            dataSource.sharedLockHolders(backendPids.toSet()) shouldBeEqualTo 2
+            dataSource.lockWaiters(backendPids.toSet()) shouldBeEqualTo 0
             release.await(2, TimeUnit.SECONDS)
             holders.forEach { it.get(2, TimeUnit.SECONDS) }
         }
@@ -96,8 +97,16 @@ internal class VoucherPoolRepositoryIntegrationTest {
             reader.autoCommit = false
             repository.lockCampaignForShare(reader, TENANT, campaign)
             Executors.newVirtualThreadPerTaskExecutor().use { executor ->
-                val update = executor.submit<Int> { updateCampaignPolicy(TENANT, campaign) }
-                Thread.sleep(100)
+                val updaterReady = CountDownLatch(1)
+                val updaterPids = ConcurrentLinkedQueue<Int>()
+                val update = executor.submit<Int> {
+                    updateCampaignPolicy(TENANT, campaign) { pid ->
+                        updaterPids += pid
+                        updaterReady.countDown()
+                    }
+                }
+                updaterReady.await(2, TimeUnit.SECONDS) shouldBeEqualTo true
+                dataSource.awaitLockWaiters(updaterPids.toSet(), expected = 1) shouldBeEqualTo 1
                 update.isDone shouldBeEqualTo false
                 reader.commit()
                 update.get(2, TimeUnit.SECONDS) shouldBeEqualTo 1
@@ -254,6 +263,14 @@ internal class VoucherPoolRepositoryIntegrationTest {
         executeSql(allocationInsert(originalReservation, originalEntry, allocationScope, 0))
         executeSql(allocationInsert(replacementReservation, replacementEntry, allocationScope, 1))
         assertSqlFails(allocationInsert(rejectedReservation, rejectedEntry, allocationScope, 1))
+        assertSqlFails(
+            """UPDATE voucher_pool_allocations SET entitlement_root_id=gen_random_uuid()
+                WHERE tenant_id='$TENANT' AND reservation_id='$originalReservation'""",
+        )
+        assertSqlFails(
+            """DELETE FROM voucher_pool_allocations
+                WHERE tenant_id='$TENANT' AND reservation_id='$originalReservation'""",
+        )
     }
 
     @Test
@@ -344,6 +361,33 @@ internal class VoucherPoolRepositoryIntegrationTest {
     }
 
     @Test
+    fun `worker canonical chain rejects a reservation owned by another entry`() {
+        val campaign = createCampaign(TENANT)
+        val batch = createBatch(TENANT, campaign)
+        val targetEntry = createAvailableEntry(TENANT, campaign, batch, 32)
+        val otherEntry = createAvailableEntry(TENANT, campaign, batch, 33)
+        val otherReservation = UUID.randomUUID()
+        executeSql(reservationInsert(otherReservation, campaign, batch, otherEntry, "ACTIVE"))
+        dataSource.connection.use { connection ->
+            connection.autoCommit = false
+            repository.lockCanonicalChain(
+                connection,
+                WorkerCandidate(
+                    TENANT,
+                    campaign,
+                    batch,
+                    targetEntry,
+                    0,
+                    0,
+                    0,
+                    reservations = listOf(ExpectedReservation(otherReservation, 0)),
+                ),
+            ) shouldBeEqualTo null
+            connection.rollback()
+        }
+    }
+
+    @Test
     fun `production worker and pool depth queries return bounded authority rows`() {
         val campaign = createCampaign(TENANT)
         val batch = createBatch(TENANT, campaign)
@@ -413,7 +457,7 @@ internal class VoucherPoolRepositoryIntegrationTest {
             require(scans.isNotEmpty()) { "$name omitted its bounded scan" }
             val (rowCeiling, heapCeiling, blockCeiling) = checkNotNull(ceilings[name])
             requiredMetric(root, "Actual Rows") shouldBeAtMost rowCeiling
-            scans.sumOf { optionalHeapFetches(it) } shouldBeAtMost heapCeiling
+            scans.sumOf { heapFetches(it) } shouldBeAtMost heapCeiling
             scans.sumOf { requiredMetric(it, "Shared Hit Blocks") + requiredMetric(it, "Shared Read Blocks") } shouldBeAtMost blockCeiling
         }
     }
@@ -518,12 +562,18 @@ internal class VoucherPoolRepositoryIntegrationTest {
         }
     }
 
-    private fun updateCampaignPolicy(tenantId: String, campaignId: UUID): Int = dataSource.connection.use { connection ->
+    private fun updateCampaignPolicy(
+        tenantId: String,
+        campaignId: UUID,
+        beforeExecute: (Int) -> Unit = {},
+    ): Int = dataSource.connection.use { connection ->
         connection.prepareStatement(
             """UPDATE voucher_pool_campaigns SET policy_version=policy_version+1,revision=revision+1
                 WHERE tenant_id=? AND campaign_id=?""",
         ).use { statement ->
-            statement.setString(1, tenantId); statement.setObject(2, campaignId); statement.executeUpdate()
+            statement.setString(1, tenantId); statement.setObject(2, campaignId)
+            beforeExecute(backendPid(connection))
+            statement.executeUpdate()
         }
     }
 
@@ -599,12 +649,14 @@ internal class VoucherPoolRepositoryIntegrationTest {
         return node.path(name).longValue()
     }
 
-    private fun optionalHeapFetches(node: JsonNode): Long =
-        if (node.has("Heap Fetches")) node.path("Heap Fetches").longValue()
-        else {
-            require(node.path("Node Type").stringValue() != "Index Only Scan") { "Index Only Scan omitted Heap Fetches" }
-            0L
-        }
+    private fun heapFetches(node: JsonNode): Long = when (node.path("Node Type").stringValue()) {
+        "Index Only Scan" -> requiredMetric(node, "Heap Fetches")
+        "Index Scan" -> requiredMetric(node, "Actual Rows") +
+            node.get("Rows Removed by Filter")?.longValue().orZero()
+        else -> 0L
+    }
+
+    private fun Long?.orZero(): Long = this ?: 0L
 
     private fun adminConnection() = DriverManager.getConnection(
         postgres.jdbcUrl,

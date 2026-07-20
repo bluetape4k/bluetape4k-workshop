@@ -190,22 +190,60 @@ CREATE INDEX ix_voucher_pool_allocation_cursor ON voucher_pool_allocations(tenan
 CREATE FUNCTION voucher_pool_require_original_entitlement() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
-    IF NEW.replacement_ordinal = 1 AND NOT EXISTS (
-        SELECT 1 FROM voucher_pool_allocations original
+    IF TG_OP = 'DELETE' THEN
+        IF OLD.replacement_ordinal = 0 AND EXISTS (
+            SELECT 1 FROM voucher_pool_allocations replacement
+            WHERE replacement.tenant_id = OLD.tenant_id
+              AND replacement.campaign_id = OLD.campaign_id
+              AND replacement.user_digest = OLD.user_digest
+              AND replacement.entitlement_root_id = OLD.entitlement_root_id
+              AND replacement.replacement_ordinal = 1
+        ) THEN
+            RAISE EXCEPTION 'original allocation with a replacement cannot be deleted'
+                USING ERRCODE = '23503';
+        END IF;
+        RETURN OLD;
+    END IF;
+
+    IF TG_OP = 'UPDATE'
+       AND OLD.replacement_ordinal = 0
+       AND (NEW.tenant_id, NEW.campaign_id, NEW.user_digest, NEW.entitlement_root_id, NEW.replacement_ordinal)
+           IS DISTINCT FROM
+           (OLD.tenant_id, OLD.campaign_id, OLD.user_digest, OLD.entitlement_root_id, OLD.replacement_ordinal)
+       AND EXISTS (
+           SELECT 1 FROM voucher_pool_allocations replacement
+           WHERE replacement.tenant_id = OLD.tenant_id
+             AND replacement.campaign_id = OLD.campaign_id
+             AND replacement.user_digest = OLD.user_digest
+             AND replacement.entitlement_root_id = OLD.entitlement_root_id
+             AND replacement.replacement_ordinal = 1
+       ) THEN
+        RAISE EXCEPTION 'original allocation with a replacement cannot change entitlement lineage'
+            USING ERRCODE = '23503';
+    END IF;
+
+    IF NEW.replacement_ordinal = 1 THEN
+        PERFORM 1 FROM voucher_pool_allocations original
         WHERE original.tenant_id = NEW.tenant_id
           AND original.campaign_id = NEW.campaign_id
           AND original.user_digest = NEW.user_digest
           AND original.entitlement_root_id = NEW.entitlement_root_id
           AND original.replacement_ordinal = 0
-    ) THEN
-        RAISE EXCEPTION 'replacement allocation requires its original entitlement'
-            USING ERRCODE = '23503';
+        FOR KEY SHARE;
+        IF NOT FOUND THEN
+            RAISE EXCEPTION 'replacement allocation requires its original entitlement'
+                USING ERRCODE = '23503';
+        END IF;
     END IF;
     RETURN NEW;
 END;
 $$;
 CREATE TRIGGER voucher_pool_allocation_entitlement_chain
-BEFORE INSERT OR UPDATE OF entitlement_root_id,replacement_ordinal,user_digest ON voucher_pool_allocations
+BEFORE INSERT OR UPDATE OF tenant_id,campaign_id,entitlement_root_id,replacement_ordinal,user_digest
+ON voucher_pool_allocations
+FOR EACH ROW EXECUTE FUNCTION voucher_pool_require_original_entitlement();
+CREATE TRIGGER voucher_pool_allocation_entitlement_delete
+BEFORE DELETE ON voucher_pool_allocations
 FOR EACH ROW EXECUTE FUNCTION voucher_pool_require_original_entitlement();
 
 ALTER TABLE voucher_pool_entries

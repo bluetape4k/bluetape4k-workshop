@@ -137,27 +137,6 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.executeQuery().use { result -> check(result.next()); result.entryRecord() }
         }
 
-    internal fun exclusiveWaiters(backendPids: Set<Int>): Int = dataSource.connection.use { connection ->
-        connection.prepareStatement(
-            """SELECT count(*) FROM pg_locks l WHERE NOT l.granted AND l.mode IN ('RowExclusiveLock','ExclusiveLock')
-                AND l.relation='voucher_pool_campaigns'::regclass AND l.pid=ANY(?)""",
-        ).use { statement ->
-            statement.setArray(1, connection.createArrayOf("integer", backendPids.toTypedArray()))
-            statement.executeQuery().use { result -> result.next(); result.getInt(1) }
-        }
-    }
-
-    internal fun sharedLockHolders(backendPids: Set<Int>): Int = dataSource.connection.use { connection ->
-        connection.prepareStatement(
-            """SELECT count(DISTINCT pid) FROM pg_locks
-                WHERE granted AND mode='RowShareLock' AND relation='voucher_pool_campaigns'::regclass
-                  AND pid=ANY(?)""",
-        ).use { statement ->
-            statement.setArray(1, connection.createArrayOf("integer", backendPids.toTypedArray()))
-            statement.executeQuery().use { result -> result.next(); result.getInt(1) }
-        }
-    }
-
     internal fun selectWorkerCandidates(
         connection: Connection,
         tenantId: String,
@@ -364,10 +343,12 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         expected: ExpectedReservation,
     ): ReservationRecord? = connection.prepareStatement(
         """SELECT * FROM voucher_pool_reservations
-            WHERE tenant_id=? AND reservation_id=? AND revision=? FOR UPDATE""",
+            WHERE tenant_id=? AND reservation_id=? AND campaign_id=? AND batch_id=? AND entry_id=?
+              AND revision=? FOR UPDATE""",
     ).use { statement ->
         statement.setString(1, candidate.tenantId); statement.setObject(2, expected.reservationId)
-        statement.setLong(3, expected.expectedRevision)
+        statement.setObject(3, candidate.campaignId); statement.setObject(4, candidate.batchId)
+        statement.setObject(5, candidate.entryId); statement.setLong(6, expected.expectedRevision)
         statement.executeQuery().use { result -> if (result.next()) result.reservationRecord() else null }
     }
 

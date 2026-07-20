@@ -2,6 +2,9 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.config
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.info
+import io.bluetape4k.logging.warn
 import org.springframework.core.io.Resource
 import java.security.MessageDigest
 import java.sql.Connection
@@ -56,18 +59,27 @@ internal class VoucherPoolMigrationRunner(
                 )
                 val checksum = appliedChecksum(connection, script.version)
                 when {
-                    checksum == null -> apply(connection, script)
+                    checksum == null -> apply(connection, script).also {
+                        log.info { "voucher_pool_migration_applied version=${script.version}" }
+                    }
                     checksum == script.checksum -> {
                         connection.commit()
+                        log.info { "voucher_pool_migration_already_applied version=${script.version}" }
                         VoucherPoolMigrationResult.ALREADY_APPLIED
                     }
                     else -> throw VoucherPoolMigrationException(VoucherPoolMigrationFailureCode.CHECKSUM_DRIFT)
                 }
             } catch (failure: VoucherPoolMigrationException) {
                 runCatching { connection.rollback() }
+                log.warn(failure) {
+                    "voucher_pool_migration_failed version=${script.version} code=${failure.code}"
+                }
                 throw failure
             } catch (failure: SQLException) {
                 runCatching { connection.rollback() }
+                log.warn(failure) {
+                    "voucher_pool_migration_failed version=${script.version} code=${VoucherPoolMigrationFailureCode.STATEMENT_FAILED}"
+                }
                 throw VoucherPoolMigrationException(VoucherPoolMigrationFailureCode.STATEMENT_FAILED, failure)
             }
         }
@@ -103,6 +115,8 @@ internal class VoucherPoolMigrationRunner(
         connection.commit()
         return VoucherPoolMigrationResult.APPLIED
     }
+
+    companion object : KLogging()
 
     @Suppress("LongMethod", "CyclomaticComplexMethod") // The scanner keeps PostgreSQL lexical states explicit.
     private fun splitSqlStatements(sql: String): List<String> {
