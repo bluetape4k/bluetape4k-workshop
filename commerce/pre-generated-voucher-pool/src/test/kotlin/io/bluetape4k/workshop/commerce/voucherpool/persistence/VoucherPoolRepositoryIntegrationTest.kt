@@ -457,7 +457,7 @@ internal class VoucherPoolRepositoryIntegrationTest {
             require(scans.isNotEmpty()) { "$name omitted its bounded scan" }
             val (rowCeiling, heapCeiling, blockCeiling) = checkNotNull(ceilings[name])
             requiredMetric(root, "Actual Rows") shouldBeAtMost rowCeiling
-            scans.sumOf { heapFetches(it) } shouldBeAtMost heapCeiling
+            scans.sumOf { heapAccesses(it) } shouldBeAtMost heapCeiling
             scans.sumOf { requiredMetric(it, "Shared Hit Blocks") + requiredMetric(it, "Shared Read Blocks") } shouldBeAtMost blockCeiling
         }
     }
@@ -649,14 +649,15 @@ internal class VoucherPoolRepositoryIntegrationTest {
         return node.path(name).longValue()
     }
 
-    private fun heapFetches(node: JsonNode): Long = when (node.path("Node Type").stringValue()) {
+    private fun heapAccesses(node: JsonNode): Long = when (node.path("Node Type").stringValue()) {
         "Index Only Scan" -> requiredMetric(node, "Heap Fetches")
-        "Index Scan" -> requiredMetric(node, "Actual Rows") +
-            node.get("Rows Removed by Filter")?.longValue().orZero()
+        "Index Scan", "Bitmap Heap Scan" -> requiredMetric(node, "Actual Rows") +
+            optionalMetric(node, "Rows Removed by Filter") +
+            optionalMetric(node, "Rows Removed by Index Recheck")
         else -> 0L
     }
 
-    private fun Long?.orZero(): Long = this ?: 0L
+    private fun optionalMetric(node: JsonNode, name: String): Long = node.get(name)?.longValue() ?: 0L
 
     private fun adminConnection() = DriverManager.getConnection(
         postgres.jdbcUrl,

@@ -30,7 +30,13 @@ internal data class VoucherPoolMigrationScript(val version: String, val checksum
 
 internal enum class VoucherPoolMigrationResult { APPLIED, ALREADY_APPLIED }
 
-internal enum class VoucherPoolMigrationFailureCode { LOCK_TIMEOUT, CHECKSUM_DRIFT, STATEMENT_FAILED, RESOURCE_UNAVAILABLE }
+internal enum class VoucherPoolMigrationFailureCode {
+    LOCK_TIMEOUT,
+    CHECKSUM_DRIFT,
+    STATEMENT_FAILED,
+    RESOURCE_UNAVAILABLE,
+    CONNECTION_UNAVAILABLE,
+}
 
 internal class VoucherPoolMigrationException(
     val code: VoucherPoolMigrationFailureCode,
@@ -46,9 +52,23 @@ internal class VoucherPoolMigrationRunner(
 ) {
     init { require(!lockTimeout.isNegative && !lockTimeout.isZero) { "lockTimeout must be positive" } }
 
-    fun migrate(): VoucherPoolMigrationResult {
-        val script = migration.read()
-        return dataSource.connection.use { connection ->
+    fun migrate(): VoucherPoolMigrationResult = try {
+        migrate(migration.read())
+    } catch (failure: VoucherPoolMigrationException) {
+        log.warn(failure) {
+            "voucher_pool_migration_failed version=${migration.version} code=${failure.code}"
+        }
+        throw failure
+    } catch (failure: SQLException) {
+        val mapped = VoucherPoolMigrationException(VoucherPoolMigrationFailureCode.CONNECTION_UNAVAILABLE, failure)
+        log.warn(mapped) {
+            "voucher_pool_migration_failed version=${migration.version} code=${mapped.code}"
+        }
+        throw mapped
+    }
+
+    private fun migrate(script: VoucherPoolMigrationScript): VoucherPoolMigrationResult =
+        dataSource.connection.use { connection ->
             connection.autoCommit = false
             try {
                 acquireLock(connection)
@@ -71,19 +91,12 @@ internal class VoucherPoolMigrationRunner(
                 }
             } catch (failure: VoucherPoolMigrationException) {
                 runCatching { connection.rollback() }
-                log.warn(failure) {
-                    "voucher_pool_migration_failed version=${script.version} code=${failure.code}"
-                }
                 throw failure
             } catch (failure: SQLException) {
                 runCatching { connection.rollback() }
-                log.warn(failure) {
-                    "voucher_pool_migration_failed version=${script.version} code=${VoucherPoolMigrationFailureCode.STATEMENT_FAILED}"
-                }
                 throw VoucherPoolMigrationException(VoucherPoolMigrationFailureCode.STATEMENT_FAILED, failure)
             }
         }
-    }
 
     private fun acquireLock(connection: Connection) {
         val deadline = System.nanoTime() + lockTimeout.toNanos()

@@ -13,8 +13,12 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.postgresql.ds.PGSimpleDataSource
+import org.springframework.core.io.AbstractResource
 import org.springframework.core.io.ClassPathResource
+import java.io.IOException
+import java.lang.reflect.Proxy
 import java.sql.DriverManager
+import java.sql.SQLException
 import java.time.Duration
 import javax.sql.DataSource
 
@@ -92,6 +96,30 @@ internal class VoucherPoolMigrationRunnerTest {
         queryLong("SELECT count(*) FROM information_schema.tables WHERE table_schema='$schema'") shouldBeEqualTo 0L
     }
 
+    @Test
+    fun `resource and connection acquisition failures remain classified`() {
+        val unavailableResource = object : AbstractResource() {
+            override fun getDescription(): String = "unavailable migration"
+
+            override fun getInputStream() = throw IOException("unavailable")
+        }
+        assertFailsWith<VoucherPoolMigrationException> {
+            VoucherPoolMigrationRunner(
+                dataSource,
+                VoucherPoolMigration("unavailable", unavailableResource),
+                LOCK_KEY,
+            ).migrate()
+        }.code shouldBeEqualTo VoucherPoolMigrationFailureCode.RESOURCE_UNAVAILABLE
+
+        assertFailsWith<VoucherPoolMigrationException> {
+            VoucherPoolMigrationRunner(
+                unavailableDataSource(),
+                VoucherPoolMigration("001", ClassPathResource("db/migration/V001__voucher_pool.sql")),
+                LOCK_KEY,
+            ).migrate()
+        }.code shouldBeEqualTo VoucherPoolMigrationFailureCode.CONNECTION_UNAVAILABLE
+    }
+
     private fun runner(timeout: Duration = Duration.ofSeconds(2)) =
         VoucherPoolMigrationRunner(
             dataSource,
@@ -109,6 +137,14 @@ internal class VoucherPoolMigrationRunnerTest {
         postgres.username ?: PostgreSQLServer.USERNAME,
         postgres.password ?: PostgreSQLServer.PASSWORD,
     )
+
+    private fun unavailableDataSource(): DataSource = Proxy.newProxyInstance(
+        DataSource::class.java.classLoader,
+        arrayOf(DataSource::class.java),
+    ) { _, method, _ ->
+        if (method.name == "getConnection") throw SQLException("unavailable")
+        error("unexpected DataSource method: ${method.name}")
+    } as DataSource
 
     companion object {
         private const val LOCK_KEY = 537001L
