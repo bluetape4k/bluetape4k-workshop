@@ -368,8 +368,17 @@ class JobRepository(
             CancelJobResult(jobId, next, next == JobState.CANCEL_REQUESTED)
         }
 
-    fun queueRows(tenantId: String, afterSequence: Long?, limit: Int): List<QueueRow> {
-        val boundedLimit = limit.coerceIn(1, QueueProjectionService.MAX_PAGE_SIZE)
+    fun queueRows(tenantId: String, afterSequence: Long?, limit: Int): List<QueueRow> =
+        queryQueueRows(tenantId, afterSequence, limit.coerceIn(1, QueueProjectionService.MAX_PAGE_SIZE))
+
+    fun queuePageRows(tenantId: String, afterSequence: Long?, pageSize: Int): List<QueueRow> =
+        queryQueueRows(
+            tenantId,
+            afterSequence,
+            pageSize.coerceIn(1, QueueProjectionService.MAX_PAGE_SIZE) + 1,
+        )
+
+    private fun queryQueueRows(tenantId: String, afterSequence: Long?, boundedLimit: Int): List<QueueRow> {
         return dataSource.connection.use { connection ->
             val cursorClause = if (afterSequence == null) "" else "AND enqueue_sequence > ?"
             connection.prepareStatement(
@@ -455,13 +464,15 @@ class JobRepository(
             }
         }
 
-    fun submitterQueueRows(scope: DemoCallerScope): List<QueueRow> =
+    fun submitterQueuePageRows(scope: DemoCallerScope, afterSequence: Long?, pageSize: Int): List<QueueRow> =
         dataSource.connection.use { connection ->
+            val cursorClause = if (afterSequence == null) "" else "AND enqueue_sequence > ?"
             connection.prepareStatement(
                 """
                 SELECT job_id, job_type, state, enqueue_sequence, queue_version, updated_at
                 FROM jobs
                 WHERE tenant_id = ? AND submitter_hash = ? AND state IN (?, ?, ?)
+                $cursorClause
                 ORDER BY enqueue_sequence
                 LIMIT ?
                 """.trimIndent(),
@@ -471,7 +482,12 @@ class JobRepository(
                 statement.setString(3, JobState.QUEUED.wireValue)
                 statement.setString(4, JobState.RUNNING.wireValue)
                 statement.setString(5, JobState.CANCEL_REQUESTED.wireValue)
-                statement.setInt(6, QueueProjectionService.MAX_PAGE_SIZE)
+                if (afterSequence == null) {
+                    statement.setInt(6, pageSize.coerceIn(1, QueueProjectionService.MAX_PAGE_SIZE) + 1)
+                } else {
+                    statement.setLong(6, afterSequence)
+                    statement.setInt(7, pageSize.coerceIn(1, QueueProjectionService.MAX_PAGE_SIZE) + 1)
+                }
                 statement.executeQuery().use { result ->
                     buildList {
                         while (result.next()) {

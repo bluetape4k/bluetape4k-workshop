@@ -26,7 +26,13 @@ class QueueQueryPlanTest {
 
             repository.queueRows("tenant-a", afterSequence = null, limit = 1_000).size shouldBeEqualTo 100
             repository.queueRows("tenant-b", afterSequence = null, limit = 10).size shouldBeEqualTo 0
-            JobConsoleService(repository).snapshot(scope, submitted.last().jobId).queue?.position shouldBeEqualTo 120
+            val service = JobConsoleService(repository)
+            service.snapshot(scope, submitted.last().jobId).queue?.position shouldBeEqualTo 120
+            val firstPage = service.tenantQueue(scope.tenantId, null, 100)
+            firstPage.items.size shouldBeEqualTo 100
+            val secondPage = service.tenantQueue(scope.tenantId, firstPage.nextCursor, 100)
+            secondPage.items.size shouldBeEqualTo 20
+            secondPage.nextCursor shouldBeEqualTo null
 
             repeat(120) { index ->
                 repository.recordDuration(JobType.DOCUMENT_EXPORT, Duration.ofSeconds((index + 1).toLong()), NOW)

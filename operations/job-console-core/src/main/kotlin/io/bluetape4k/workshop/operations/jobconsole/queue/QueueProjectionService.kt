@@ -46,12 +46,14 @@ object QueueProjectionService {
 
     fun page(rows: List<QueueRow>, cursor: String?, requestedSize: Int): QueuePage {
         val size = requestedSize.coerceIn(1, MAX_PAGE_SIZE)
-        val after = cursor?.let(::decodeCursor)
+        val after = cursorSequence(cursor)
         val candidates = rows.asSequence().filter { after == null || it.enqueueSequence > after }.sortedBy { it.enqueueSequence }.toList()
         val items = candidates.take(size)
         val next = if (candidates.size > size) encodeCursor(items.last().enqueueSequence) else null
         return QueuePage(items, next)
     }
+
+    fun cursorSequence(cursor: String?): Long? = cursor?.let(::decodeCursor)
 
     private fun encodeCursor(sequence: Long): String =
         Base64.getUrlEncoder().withoutPadding().encodeToString(ByteBuffer.allocate(Long.SIZE_BYTES).putLong(sequence).array())

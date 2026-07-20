@@ -71,10 +71,18 @@ class JobConsoleService(
     }
 
     fun myQueue(scope: DemoCallerScope, cursor: String?, pageSize: Int): QueuePage =
-        QueueProjectionService.page(repository.submitterQueueRows(scope), cursor, pageSize)
+        QueueProjectionService.page(
+            repository.submitterQueuePageRows(scope, QueueProjectionService.cursorSequence(cursor), pageSize),
+            null,
+            pageSize,
+        )
 
     fun tenantQueue(tenantId: String, cursor: String?, pageSize: Int): QueuePage =
-        QueueProjectionService.page(repository.queueRows(tenantId, null, 100), cursor, pageSize)
+        QueueProjectionService.page(
+            repository.queuePageRows(tenantId, QueueProjectionService.cursorSequence(cursor), pageSize),
+            null,
+            pageSize,
+        )
 
     fun readiness(): JobConsoleReadiness {
         val postgresReady = repository.databaseReady()
