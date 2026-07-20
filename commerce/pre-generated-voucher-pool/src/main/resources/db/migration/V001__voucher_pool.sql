@@ -267,6 +267,16 @@ CREATE TABLE voucher_pool_code_dedup (
 );
 CREATE UNIQUE INDEX uq_voucher_pool_dedup ON voucher_pool_code_dedup(tenant_id,stable_dedup_digest);
 
+CREATE FUNCTION voucher_pool_reject_code_dedup_mutation() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+    RAISE EXCEPTION 'voucher_pool_code_dedup is tenant-lifetime immutable' USING ERRCODE = '55000';
+END;
+$$;
+CREATE TRIGGER voucher_pool_code_dedup_immutable
+BEFORE UPDATE OR DELETE ON voucher_pool_code_dedup
+FOR EACH ROW EXECUTE FUNCTION voucher_pool_reject_code_dedup_mutation();
+
 CREATE TABLE voucher_pool_http_idempotency (
     tenant_id VARCHAR(64) NOT NULL, operation VARCHAR(64) NOT NULL, scoped_key_digest BYTEA NOT NULL,
     fingerprint BYTEA NOT NULL, status VARCHAR(24) NOT NULL, owner_token_digest BYTEA,

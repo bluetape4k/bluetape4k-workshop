@@ -93,6 +93,19 @@ internal data class EntryRecord(
     val updatedAt: Instant = Instant.EPOCH,
 )
 
+/** Crypto material returned while the allocated entry row lock is held. */
+internal data class LockedVoucherCryptoRecord(
+    val state: EntryState,
+    val revision: Long,
+    val stableDedupDigest: DigestValue?,
+    val stableDedupKeyVersion: Int,
+    val codeCiphertext: DigestValue?,
+    val codeNonce: DigestValue?,
+    val wrappedDek: DigestValue?,
+    val wrapNonce: DigestValue?,
+    val kekVersion: String?,
+)
+
 /** Immutable user-limit projection locked after campaign and batch guards. */
 internal data class UserLimitRecord(
     val tenantId: String,

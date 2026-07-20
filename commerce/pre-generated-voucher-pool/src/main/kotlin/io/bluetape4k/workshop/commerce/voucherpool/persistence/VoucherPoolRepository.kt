@@ -9,6 +9,7 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.isNotNull
 import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.or
@@ -17,6 +18,7 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -34,6 +36,24 @@ internal interface VoucherPoolRepository {
     fun lockUserLimit(connection: Connection, tenantId: String, campaignId: UUID, userDigest: ByteArray): UserLimitRecord
     fun selectAvailableEntrySkipLocked(connection: Connection, tenantId: String, campaignId: UUID): EntryRecord?
     fun lockCanonicalChain(connection: Connection, candidate: WorkerCandidate): LockedWorkerChain?
+    fun lockAllocatedCryptoEntry(
+        connection: Connection,
+        tenantId: String,
+        campaignId: UUID,
+        batchId: UUID,
+        entryId: UUID,
+        sourceOrdinal: Long,
+        expectedRevision: Long,
+    ): LockedVoucherCryptoRecord?
+    fun eraseVoucherCiphertext(connection: Connection, tenantId: String, entryId: UUID, expectedRevision: Long)
+    fun quarantineVoucherCrypto(
+        connection: Connection,
+        tenantId: String,
+        entryId: UUID,
+        sourceState: EntryState,
+        sourceRevision: Long,
+        reasonCode: String,
+    )
     fun appendAudit(connection: Connection, event: VoucherPoolAuditRecord)
 }
 
@@ -125,6 +145,102 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
                 it[reasonCode] = event.reasonCode
                 it[correlationDigest] = event.correlationDigest?.copyBytes()
                 it[requestDigest] = event.requestDigest?.copyBytes()
+            }
+        }
+    }
+
+    override fun lockAllocatedCryptoEntry(
+        connection: Connection,
+        tenantId: String,
+        campaignId: UUID,
+        batchId: UUID,
+        entryId: UUID,
+        sourceOrdinal: Long,
+        expectedRevision: Long,
+    ): LockedVoucherCryptoRecord? = connection.prepareStatement(
+        """SELECT e.state,e.revision,e.stable_dedup_digest,d.key_version AS stable_dedup_key_version,
+            e.code_ciphertext,e.code_nonce,e.wrapped_dek,e.wrap_nonce,e.kek_version
+            FROM voucher_pool_entries e JOIN voucher_pool_code_dedup d
+              ON d.tenant_id=e.tenant_id AND d.stable_dedup_digest=e.stable_dedup_digest
+            WHERE e.tenant_id=? AND e.campaign_id=? AND e.batch_id=? AND e.entry_id=? AND e.source_ordinal=?
+              AND e.revision=? AND e.state='ALLOCATED'
+              AND e.revealed_at IS NULL AND e.quarantined_at IS NULL FOR UPDATE OF e""",
+    ).use { statement ->
+        var parameterIndex = 1
+        statement.setString(parameterIndex++, tenantId)
+        statement.setObject(parameterIndex++, campaignId)
+        statement.setObject(parameterIndex++, batchId)
+        statement.setObject(parameterIndex++, entryId)
+        statement.setLong(parameterIndex++, sourceOrdinal)
+        statement.setLong(parameterIndex, expectedRevision)
+        statement.executeQuery().use { result -> if (result.next()) result.lockedVoucherCryptoRecord() else null }
+    }
+
+    override fun eraseVoucherCiphertext(
+        connection: Connection,
+        tenantId: String,
+        entryId: UUID,
+        expectedRevision: Long,
+    ) {
+        val updated = withExposed(connection) {
+            VoucherPoolEntryTable.update({
+                (VoucherPoolEntryTable.tenantId eq tenantId) and
+                    (VoucherPoolEntryTable.entryId eq entryId) and
+                    (VoucherPoolEntryTable.revision eq expectedRevision) and
+                    VoucherPoolEntryTable.quarantinedAt.isNull()
+            }) {
+                it[revealedAt] = CurrentTimestamp
+                it[codeCiphertext] = null
+                it[codeNonce] = null
+                it[wrappedDek] = null
+                it[wrapNonce] = null
+                it[kekVersion] = null
+                it[revision] = expectedRevision + 1
+            }
+        }
+        check(updated == 1) { "voucher ciphertext erase lost its revision" }
+    }
+
+    override fun quarantineVoucherCrypto(
+        connection: Connection,
+        tenantId: String,
+        entryId: UUID,
+        sourceState: EntryState,
+        sourceRevision: Long,
+        reasonCode: String,
+    ) {
+        withExposed(connection) {
+            val entryUpdated = VoucherPoolEntryTable.update({
+                (VoucherPoolEntryTable.tenantId eq tenantId) and
+                    (VoucherPoolEntryTable.entryId eq entryId) and
+                    (VoucherPoolEntryTable.revision eq sourceRevision) and
+                    VoucherPoolEntryTable.quarantinedAt.isNull()
+            }) {
+                it[quarantinedAt] = CurrentTimestamp
+                it[revision] = sourceRevision + 1
+            }
+            check(entryUpdated == 1) { "voucher quarantine lost its revision" }
+
+            val reactivated = VoucherPoolQuarantineTable.update({
+                (VoucherPoolQuarantineTable.tenantId eq tenantId) and
+                    (VoucherPoolQuarantineTable.entryId eq entryId) and
+                    VoucherPoolQuarantineTable.resolvedAt.isNotNull()
+            }) {
+                it[VoucherPoolQuarantineTable.sourceState] = sourceState.name
+                it[VoucherPoolQuarantineTable.sourceRevision] = sourceRevision
+                it[VoucherPoolQuarantineTable.reasonCode] = reasonCode
+                it[detectedAt] = CurrentTimestamp
+                it[resolvedAt] = null
+                it[resolution] = null
+            }
+            if (reactivated == 0) {
+                VoucherPoolQuarantineTable.insert {
+                    it[VoucherPoolQuarantineTable.tenantId] = tenantId
+                    it[VoucherPoolQuarantineTable.entryId] = entryId
+                    it[VoucherPoolQuarantineTable.sourceState] = sourceState.name
+                    it[VoucherPoolQuarantineTable.sourceRevision] = sourceRevision
+                    it[VoucherPoolQuarantineTable.reasonCode] = reasonCode
+                }
             }
         }
     }
@@ -407,6 +523,18 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         replacementCount = getInt("replacement_count"), quarantinedAt = getTimestamp("quarantined_at")?.toInstant(),
         revision = getLong("revision"), createdAt = getTimestamp("created_at").toInstant(),
         updatedAt = getTimestamp("updated_at").toInstant(),
+    )
+
+    private fun ResultSet.lockedVoucherCryptoRecord() = LockedVoucherCryptoRecord(
+        state = EntryState.valueOf(getString("state")),
+        revision = getLong("revision"),
+        stableDedupDigest = getBytes("stable_dedup_digest")?.let(DigestValue::of),
+        stableDedupKeyVersion = getInt("stable_dedup_key_version"),
+        codeCiphertext = getBytes("code_ciphertext")?.let(DigestValue::of),
+        codeNonce = getBytes("code_nonce")?.let(DigestValue::of),
+        wrappedDek = getBytes("wrapped_dek")?.let(DigestValue::of),
+        wrapNonce = getBytes("wrap_nonce")?.let(DigestValue::of),
+        kekVersion = getString("kek_version"),
     )
 
     private fun ResultSet.reservationRecord() = ReservationRecord(
