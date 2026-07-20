@@ -12,7 +12,8 @@ Bloom filter와 leader election은 admission 또는 실행 중복 감소를 보�
 다음 고급 운영 계약을 증명한다.
 
 - 같은 pool entry를 서로 다른 사용자가 동시에 예약하거나 할당할 수 없다.
-- 같은 멱등 allocation command가 pool entry를 두 개 이상 소비하지 않는다.
+- 같은 멱등 reservation command가 pool entry를 두 개 이상 소비하지 않으며 allocation retry는
+  이미 선택된 entry만 확정한다.
 - batch import/generation은 bounded chunk 단위로 재실행하고 실패 지점부터 재개할 수 있다.
 - reservation, allocation, one-time reveal, redemption, release, expiry, revocation을 구분한다.
 - 한 번이라도 공개된 code는 어떤 terminal 경로에서도 다시 pool로 돌아가지 않는다.
@@ -34,7 +35,7 @@ Bloom filter와 leader election은 admission 또는 실행 중복 감소를 보�
   `REVOKED` lifecycle
 - explicit reservation과 allocation, 별도 one-time code reveal command
 - application-owned HTTP idempotency와 PostgreSQL contention fixture
-- keyed digest lookup, pre-reveal envelope encryption, reveal 후 ciphertext 삭제
+- purpose-separated keyed digest, pre-reveal per-entry envelope encryption, reveal 후 ciphertext 삭제
 - Redis/Lettuce/Bucket4j admission과 Bloom risk hint
 - deterministic fraud/identity/WAF/notification fixture
 - leader-triggered reservation expiry, revocation, reconciliation worker
@@ -117,14 +118,30 @@ churn을 늘린다. `SKIP LOCKED`가 이 workload를 더 직접적으로 표현�
 
 #### 채택: staging batch + bounded chunk checkpoint
 
-import/generation은 batch를 `STAGING`으로 만들고 최대 500 entry의 chunk를 처리한다. 각 entry는
-`(tenant_id, batch_id, source_ordinal)`과 keyed code digest가 unique하다. chunk transaction은
-성공한 마지막 ordinal, accepted/rejected count, bounded failure code를 batch checkpoint에 기록한다.
-같은 import idempotency key와 payload digest를 재실행하면 완료 chunk를 건너뛰고 첫 미완료
-ordinal부터 재개한다.
+import/generation은 batch를 `STAGING`으로 만들고 command마다 최대 500 entry의 chunk를 처리한다.
+batch 전체 상한은 10,000 entry, JSON request 상한은 4 MiB다. 첫 import command는 provenance,
+`expectedCount`, 전체 source manifest digest, ordinal 0부터의 첫 chunk를 받고 `201` batch snapshot을
+반환한다. `POST /operator/api/v1/batches/{batchId}/import-chunks`는 정확한
+`nextSourceOrdinal`, 같은 manifest digest와 다음 chunk를 받는다. 호출마다 새 idempotency key를
+사용하되 command fingerprint에는 batch, ordinal range와 chunk digest가 포함된다. 같은 chunk의
+same-key replay는 같은 checkpoint를 반환하고, 이미 commit된 ordinal을 다른 key로 보내도 digest가
+같으면 replay success, 다르면 `409 CHUNK_FINGERPRINT_CONFLICT`다.
+
+generation은 non-test에서 `SecureRandom`으로 entry마다 최소 128-bit entropy를 만들고 같은 bounded
+chunk/checkpoint protocol을 사용한다. deterministic generator는 loopback test/demo profile에서만
+등록하며 non-test에서 알려진 seed 또는 deterministic generator가 보이면 startup을 실패시킨다.
+seed는 API, DB, log와 audit에 저장하지 않는다.
+
+각 entry는 `(tenant_id, batch_id, source_ordinal)`과 stable code-dedup digest가 unique하다. JSON
+parsing, canonical validation과 encryption은 bounded buffer에서 transaction 밖에서 끝내고, chunk
+transaction은 prepared ciphertext persistence와 checkpoint만 수행한다. transaction은 성공한 마지막
+ordinal, accepted/rejected count, bounded failure code를 기록한다.
 
 entry validation failure는 원문 code 대신 source ordinal, bounded reason, payload digest만 남긴다.
-부분 성공 batch는 allocation 대상이 아니다. 모든 chunk가 성공하고 count/digest reconciliation이
+validation, duplicate, cryptographic failure는 `FAILED_TERMINAL`이고 수정된 payload와 새 batch/key를
+요구한다. process crash, connection loss와 retryable resource failure는 batch를 `STAGING` 또는
+`FAILED_RETRYABLE`에 두며 stale owner takeover 뒤 첫 미완료 ordinal부터 재개한다. 부분 성공 batch는
+allocation 대상이 아니다. `rejectedCount`가 0이고 모든 chunk와 count/digest reconciliation이
 통과해야 `STAGING -> ACTIVE`가 된다.
 
 #### 거절: 전체 batch 단일 transaction
@@ -139,22 +156,34 @@ scope를 벗어난다.
 
 ### Code 보관과 공개
 
-#### 채택: 공개 전 암호화, 공개 후 digest-only
+#### 채택: 공개 전 per-entry envelope encryption, 공개 후 digest-only
 
-- canonical ASCII code에 domain-separated `HMAC-SHA-256` lookup digest를 계산한다.
-- import code는 JDK `AES/GCM/NoPadding`으로 암호화하고 batch/key version, nonce, ciphertext만 저장한다.
-- generated code는 deterministic fixture 입력으로 만들되 entry마다 암호화해 import와 같은 storage
-  lifecycle을 사용한다.
+- code dedup, verification, user identity, idempotency, Redis/Bloom, audit/correlation에 서로 다른
+  configured key ring 또는 domain-separated subkey를 사용한다. canonical input은 length-prefix와
+  tenant, campaign, purpose, operation scope를 포함한다.
+- tenant/campaign lifecycle 전체의 plaintext 중복은 rotation과 무관한 stable code-dedup digest로
+  막고, verification digest는 version을 저장한다. rotation 중 retained read version 전체를 검사하며
+  unknown version은 not-found가 아니라 fail-closed다.
+- import code는 random per-entry DEK로 JDK `AES/GCM/NoPadding` 암호화하고, DEK는 versioned KEK로
+  다시 AES-GCM wrapping한다. 96-bit nonce 두 개, code ciphertext, wrapped DEK와 KEK version만 저장한다.
+- code AAD는 immutable tenant/campaign/batch/entry/source ordinal을 canonical encoding하고, DEK-wrap
+  AAD는 entry와 KEK version을 묶는다. `(kek_version, wrap_nonce)`와 code nonce는 unique constraint로
+  보호하고 retry는 새 nonce/DEK를 만든다. decrypt 뒤 stable digest를 다시 검증해 row swap을 막는다.
+- generated code는 non-test `SecureRandom` 또는 test-only deterministic generator가 만들고 entry마다
+  암호화해 import와 같은 storage lifecycle을 사용한다.
 - raw code, generation seed, plaintext payload는 DB, idempotency response, audit, log와 metric label에
   저장하지 않는다.
 - reveal transaction은 allocation ownership과 unrevealed 상태를 lock하고 decrypt한 뒤
-  `revealed_at`을 기록하며 ciphertext, nonce와 encryption key reference를 같은 transaction에서
+  `revealed_at`을 기록하며 code ciphertext, nonce, wrapped DEK와 wrap nonce를 같은 transaction에서
   제거한다. lookup digest와 verification key version만 남긴다.
 - raw code는 transaction 밖에서 response object에만 존재하며 operational log/toString에서 제외한다.
 
 현재 catalog와 #534 source에서 reusable Bluetape envelope-encryption helper를 찾지 못했다. 새
-dependency를 추가하지 않고 JDK cryptography를 사용한다. key validation, nonce uniqueness,
-authenticated tag failure, version rotation과 plaintext zero-retention을 직접 테스트한다.
+dependency를 추가하지 않고 JDK cryptography를 사용한다. current/read KEK와 verification key set,
+reference drain 뒤 retirement, missing referenced key의 fail-closed startup/readiness, nonce uniqueness,
+authenticated tag failure와 rotation을 직접 테스트한다. “one-time”은 application replay 금지와
+per-entry key material 삭제를 뜻하며 WAL, backup, JVM 또는 browser의 물리적 zero-retention을
+절대적으로 보장한다는 뜻이 아니다.
 
 #### 거절: plaintext code 저장
 
@@ -170,10 +199,10 @@ PostgreSQL 중심 modular monolith를 사용한다.
 
 | 경계 | 책임 | 장애 시 동작 |
 |---|---|---|
-| PostgreSQL | batch, entry, reservation, allocation, redemption, idempotency, audit, inbox | terminal outcome의 유일한 권위다. |
+| PostgreSQL | batch, entry, reservation, allocation, redemption, idempotency, audit, inbox | terminal outcome와 시간 판정의 유일한 권위다. |
 | Redis/Bucket4j | tenant/campaign/user admission | 장애 시 bounded node-local permit으로 축소 운전한다. |
 | Redis Bloom | keyed code/user signal의 이전 관찰 hint | positive는 deterministic review hint이며 terminal reject가 아니다. |
-| Node-local permit | Redis fail-open 시 DB 보호 | foreground, worker, SSE lane을 분리하고 포화 시 `503`을 반환한다. |
+| Always-on permit | 모든 JDBC 진입 전 DB 보호 | foreground, worker, SSE query lane을 분리하고 포화 시 `503`을 반환한다. |
 | Leader trigger | expiry/revocation/reconciliation 중복 감소 | leader가 없어도 operator command로 같은 bounded path를 실행한다. |
 | Deterministic fake | fraud/identity/WAF/notification 결과 | 실제 provider 없이 failure와 replay 순서를 재현한다. |
 | Static browser | customer/operator workflow와 SSE | SSE 실패 시 bounded polling으로 전환한다. |
@@ -190,7 +219,8 @@ locking SQL만 소유한다.
 `voucher_batches`는 다음 필드를 가진다.
 
 - `tenant_id`, public UUID `batch_id`, `campaign_id`
-- `state`: `STAGING`, `ACTIVE`, `PAUSED`, `FAILED`, `REVOKING`, `REVOKED`
+- `state`: `STAGING`, `FAILED_RETRYABLE`, `FAILED_TERMINAL`, `ACTIVE`, `PAUSED`,
+  `EXPIRING`, `EXPIRED`, `REVOKING`, `REVOKED`
 - `source_kind`: `IMPORTED`, `GENERATED`
 - `provenance_digest`, `request_fingerprint`
 - `policy_version`, `activates_at`, `expires_at`
@@ -200,11 +230,15 @@ locking SQL만 소유한다.
 상태 전이는 다음과 같다.
 
 - `STAGING -> ACTIVE`: 모든 chunk와 digest/count reconciliation이 통과한 경우만 가능하다.
-- `STAGING -> FAILED`: schema, duplicate, cryptographic 또는 chunk failure가 기록된 상태다.
-- `FAILED -> STAGING`: 같은 fingerprint의 resume command만 가능하다.
+- `STAGING -> FAILED_RETRYABLE -> STAGING`: crash/resource failure 뒤 stale owner takeover와 같은
+  manifest의 resume만 가능하다.
+- `STAGING -> FAILED_TERMINAL`: validation, duplicate, cryptographic failure이며 새 batch만 허용한다.
 - `ACTIVE -> PAUSED -> ACTIVE`: activation window 안에서만 가능하다.
-- `ACTIVE|PAUSED|FAILED -> REVOKING -> REVOKED`: bounded worker가 entry를 chunk로 종결한다.
-- `REVOKED`는 terminal이며 새 entry나 reservation을 허용하지 않는다.
+- `ACTIVE|PAUSED -> EXPIRING -> EXPIRED`: PostgreSQL time 기준 activation window 종료를 bounded
+  worker가 terminalize한다.
+- `ACTIVE|PAUSED|FAILED_RETRYABLE|FAILED_TERMINAL -> REVOKING -> REVOKED`: bounded worker가
+  entry를 chunk로 종결한다.
+- `EXPIRED|REVOKED`는 terminal이며 새 entry나 reservation을 허용하지 않는다.
 
 ### Pool entry
 
@@ -212,10 +246,11 @@ locking SQL만 소유한다.
 
 - `tenant_id`, `campaign_id`, `batch_id`, public UUID `entry_id`
 - `source_ordinal`, `state`
-- `code_digest`, `verification_key_version`
-- pre-reveal `ciphertext`, `nonce`, `encryption_key_version`
+- `stable_dedup_digest`, `verification_digest`, `verification_key_version`
+- pre-reveal `code_ciphertext`, `code_nonce`, `wrapped_dek`, `wrap_nonce`, `kek_version`
 - `reservation_id`, `allocation_id`, `user_digest`
-- `reserved_at`, `reservation_expires_at`, `allocated_at`, `revealed_at`, `redeemed_at`
+- `reserved_at`, `reservation_expires_at`, `allocated_at`, `allocation_expires_at`, `revealed_at`,
+  `redeemed_at`
 - `allocation_policy_version`, `terminal_reason`, `revision`
 
 전이와 재사용 규칙은 다음과 같다.
@@ -223,6 +258,7 @@ locking SQL만 소유한다.
 | From | 명령 | To | 재사용 |
 |---|---|---|---|
 | `AVAILABLE` | reserve | `RESERVED` | reservation이 만료되기 전에는 불가 |
+| `AVAILABLE` | batch revoke/expiry | `REVOKED|EXPIRED` | terminal |
 | `RESERVED` | reservation expiry, never allocated/revealed | `AVAILABLE` | 가능, expiry audit는 별도 기록 |
 | `RESERVED` | allocate | `ALLOCATED` | 이후 영구 불가 |
 | `ALLOCATED` | reveal | `ALLOCATED` + `revealed_at` | ciphertext 삭제, 영구 불가 |
@@ -241,9 +277,13 @@ locking SQL만 소유한다.
 idempotency owner, `ACTIVE|ALLOCATED|EXPIRED|RELEASED|REVOKED`, expiry, policy version과
 revision을 보존한다. entry가 `AVAILABLE`로 돌아가더라도 이전 reservation history는 남는다.
 
-`voucher_pool_user_limits`는 `(tenant_id, campaign_id, user_digest)` unique row로 active
-reservation/allocation count와 revision을 가진다. 같은 user의 command만 이 row에서 직렬화된다.
-reconciliation은 entry/reservation count에서 projection drift를 검출하고 자동 수정 전후 값을 audit한다.
+`voucher_pool_user_limits`는 `(tenant_id, campaign_id, user_digest)` unique row로 active reservation,
+active allocation과 lifetime consumed count, revision을 가진다. `INSERT ... ON CONFLICT DO NOTHING`
+후 같은 row를 lock해 최초 생성 race도 직렬화한다. reserve는 reservation +1, allocate는 reservation
+-1/allocation +1/lifetime +1, reservation expiry는 reservation -1, release/allocated expiry/revoke는
+allocation -1, redeem은 allocation -1이며 lifetime은 감소하지 않는다. 모든 delta는 entry 전이와
+같은 transaction이고 negative count를 check constraint로 막는다. reconciliation은 source rows에서
+projection drift를 검출하고 자동 수정 전후 값을 audit한다.
 
 ### Idempotency
 
@@ -258,10 +298,13 @@ descriptor, replay/conflict/takeover/cleanup 계약을 사용한다.
 - idempotency key와 raw request payload는 저장하지 않고 scoped digest/fingerprint만 저장한다.
 
 one-time reveal은 의도적으로 일반 response replay contract에서 제외한다. 첫 성공은 code를 반환하고
-같은 키 재요청은 side effect 없이 `200`, `Idempotency-Replayed: true`,
+같은 키 재요청은 side effect 없이 `200`, `Duplicate-Request: true`,
 `codeAvailable=false`, `outcome=ALREADY_REVEALED`를 반환한다. 응답을 잃은 client는 이전 code를
-복구할 수 없다. Operator가 allocation을 revoke한 뒤 새 entry를 예약해야 하며 이전 code는 절대
-재사용하지 않는다. README와 UI가 이 복구 절차를 명시한다.
+복구할 수 없다. Customer는 명시적 확인 뒤 allocation replacement command를 실행한다. 이 command는
+전역 lock order로 batch, user-limit, 원 reservation/entry를 lock하고 replacement capacity를 먼저
+확보한 뒤 원 entry를 `REVOKED`로 만들고 새 reservation을 한 transaction에서 생성한다. capacity가
+없으면 원 상태를 바꾸지 않는다.
+원 allocation당 replacement는 한 번만 허용하며 이전 code는 절대 재사용하지 않는다.
 
 ### Audit와 reconciliation inbox
 
@@ -270,41 +313,97 @@ bounded reason, request/correlation digest만 저장한다. `voucher_pool_reconc
 fixture와 worker command의 event id, payload digest, status, attempt, next attempt, claim lease와
 terminal outcome을 저장한다. raw code, tenant, user/device/IP, idempotency key는 저장하지 않는다.
 
+모든 lease, TTL, activation window와 expiry 경계는 PostgreSQL transaction time을 사용한다. JVM
+clock은 표시와 test injection에만 쓰며 equality는 만료로 판정한다.
+
+## Physical schema와 query contract
+
+- 모든 aggregate PK/FK는 tenant를 포함한 composite key이며 cross-tenant FK가 성립하지 않는다.
+- entry는 state별 required/null column check를 둔다. `AVAILABLE`은 reservation/allocation/user fields가
+  null이고, recycle transaction은 이를 명시적으로 clear한다. `RESERVED`와 이후 상태는 대응 public
+  id와 timestamps를 요구한다.
+- campaign당 복수 ACTIVE batch를 허용하고 allocation 후보는
+  `(activates_at, batch_id, source_ordinal, entry_id)` 순서다.
+- partial index는 eligible entry `(tenant_id, campaign_id, state, batch_id, source_ordinal, entry_id)`,
+  reservation expiry `(state, reservation_expires_at, entry_id)`, allocation expiry
+  `(state, allocation_expires_at, entry_id)`, revocation `(batch_id, state, entry_id)`를 지원한다.
+- redemption은 tenant/allocation ID로 row와 stored verification key version을 찾고 lock한 뒤 해당
+  retained key로 digest를 계산해 constant-time 비교한다. raw-code-only global scan은 없다.
+- exact pool depth는 `(tenant_id, batch_id, state)` counter projection을 entry 전이와 같은 transaction에서
+  갱신하고 reconciliation이 source rows와 비교한다.
+- representative 10,000-entry batch에서 핵심 query의 `EXPLAIN (ANALYZE, BUFFERS)`를 저장하고
+  candidate/worker lookup은 index scan, returned rows는 chunk 상한, heap fetch와 buffer는 plan에서
+  고정한 report limit 안이어야 한다.
+
 ## Transaction과 race 계약
+
+Idempotency lookup/admission과 owner lease 획득은 짧은 별도 transaction이다. business transaction은
+committed owner/lease를 다시 확인한 뒤 effect와 safe descriptor를 finalize하고, retryable failure는
+별도 짧은 transaction에서 owner를 release한다. 경쟁 caller는 committed owner를 보고
+`COMMAND_IN_PROGRESS`를 받으며 unique-insert wait를 business transaction까지 끌고 가지 않는다.
+
+모든 foreground/operator/worker transaction의 전역 lock order는 `batch -> user-limit -> reservation ->
+entry -> audit/inbox`다. 각 command는 필요한 row만 잠그되 이 상대 순서를 지킨다. 필요한 ID는 lock
+없이 먼저 resolve할 수 있지만 역순 lock은 금지한다.
+batch pause/revoke/expiry와 allocate/redeem은 batch lock 또는 expected state/revision conditional update로
+commit 순서를 고정한다. deadlock, permit wait와 lock timeout은 terminal descriptor를 저장하지 않는
+retryable `503`과 bounded `Retry-After`로 매핑한다.
 
 ### Reservation
 
 한 transaction에서 다음 순서를 지킨다.
 
-1. idempotency owner를 acquire한다.
-2. tenant/campaign/user limit row를 lock한다.
-3. ACTIVE batch와 activation window를 확인한다.
+1. committed idempotency owner/lease를 재검증한다.
+2. ACTIVE batch를 `(activates_at, batch_id)` 순서로 lock하고 window를 확인한다.
+3. tenant/campaign/user limit row를 upsert한 뒤 lock한다.
 4. `AVAILABLE` entry 하나를 deterministic ordering + `FOR UPDATE SKIP LOCKED`로 선택한다.
 5. entry와 reservation을 기록하고 user active count를 증가시킨다.
 6. audit와 safe idempotency descriptor를 finalize한다.
 
-entry가 없으면 pool exhaustion을 terminal `409 POOL_EXHAUSTED`로 저장한다. lock/permit timeout은
-retryable `503`이고 terminal descriptor로 고정하지 않는다.
+`SKIP LOCKED` 후보가 없으면 동일 eligibility predicate의 non-locking existence query를 실행한다.
+eligible row가 보이면 transient contention `503 POOL_BUSY`, 실제 row가 없을 때만 terminal
+`409 POOL_EXHAUSTED`를 저장한다. lock/permit timeout도 retryable `503`이고 terminal descriptor로
+고정하지 않는다.
 
 ### Allocation과 reveal
 
-allocation은 reservation row와 entry를 lock하고 owner, expiry, batch state, policy version을 다시
-확인한다. batch pause/revoke가 먼저 commit하면 allocation은 거절된다. allocation이 먼저 commit하면
-후속 revoke가 `ALLOCATED -> REVOKED`를 기록한다.
+allocation은 batch, user-limit, reservation, entry 순서로 lock하고 owner, expiry, batch state, policy
+version을 다시 확인한다. `allocation_expires_at`은 PostgreSQL time에서
+`min(batch.expires_at, now + policy allocationTtl)`로 snapshot한다. batch pause/revoke가 먼저 commit하면
+allocation은 거절된다. allocation이 먼저 commit하면 후속 revoke가 `ALLOCATED -> REVOKED`를 기록한다.
 
-reveal은 entry를 lock하고 `ALLOCATED`, correct owner, `revealed_at IS NULL`, ciphertext 존재를
-검증한다. decrypt/tag 검증과 ciphertext 제거를 같은 transaction에서 수행한다. commit 뒤 response
-serialization이 실패해도 entry는 exposed로 취급한다.
+reveal은 같은 전역 순서로 batch/reservation/entry를 lock하고 `ALLOCATED`, correct owner,
+`revealed_at IS NULL`, ciphertext 존재를 검증한다. decrypt/tag 검증과 ciphertext 제거를 같은
+transaction에서 수행한다. commit 뒤 response serialization이 실패해도 entry는 exposed로 취급한다.
 
 ### Redemption과 revocation
 
-redemption은 canonical code의 keyed digest를 계산해 `(tenant_id, allocation_id, code_digest)`로
-entry를 찾고 constant-time 비교 후 lock한다. entry, batch/campaign safety state, expiry와 policy
-snapshot을 검증하고 `ALLOCATED -> REDEEMED`를 단 한 번 기록한다.
+redemption은 tenant/allocation ID로 batch/entry identity와 stored verification key version을 먼저
+resolve하고 전역 순서로 lock한다. canonical code digest를 retained version으로 계산해 constant-time
+비교하고 batch/campaign safety state, allocation expiry와 policy snapshot을 검증한 뒤
+`ALLOCATED -> REDEEMED`를 단 한 번 기록한다.
 
-batch revocation worker는 batch를 `REVOKING`으로 바꾸고 entry id 순서로 최대 100개씩 lock한다.
-`AVAILABLE|RESERVED|ALLOCATED`는 `REVOKED`, `REDEEMED`는 그대로 유지한다. redemption과 revoke가
-경합하면 먼저 얻은 entry lock의 결과가 audit revision으로 설명 가능한 terminal outcome이 된다.
+batch revocation/expiry worker는 batch를 `REVOKING|EXPIRING`으로 바꾸고 durable cursor 뒤 entry를
+`FOR UPDATE SKIP LOCKED`로 최대 100개씩 짧은 transaction에서 처리한다. cursor 끝에서 wrap-around해
+skipped row를 재검사하며 bounded run deadline 뒤 backoff한다. zero-remaining authoritative query와
+counter reconciliation이 통과해야 batch를 terminal로 바꾼다. `AVAILABLE|RESERVED|ALLOCATED`는
+각 worker의 `REVOKED|EXPIRED`, `REDEEMED`는 그대로 유지한다. redemption과 worker는 같은 batch-first
+lock order와 revision으로 단일 terminal outcome을 만든다.
+
+Batch expiry는 `AVAILABLE|RESERVED|ALLOCATED -> EXPIRED`, `REDEEMED|RELEASED|REVOKED` 유지로
+고정한다. reservation/allocation command가 먼저 commit하면 expiry worker가 그 committed state를
+terminalize하고, batch가 먼저 `EXPIRING`이면 새 foreground transition을 거절한다. Dashboard는
+eligible depth와 expired-but-not-terminalized depth를 별도로 표시한다.
+
+## Worker recovery contract
+
+expiry, revocation, reconciliation, purge와 delayed fixture worker는 `claim_owner`, `claim_until`,
+`claim_revision`, `attempt`, `next_attempt_at`, cursor와 last checkpoint를 PostgreSQL에 저장한다. Claim,
+chunk commit과 finalize는 owner/revision CAS이고 lease가 지난 stale owner 결과는 거절한다. leader와
+operator command는 같은 claim path를 사용한다. bounded exponential backoff와 max attempt 뒤
+`POISONED`가 되며 operator는 원문 payload 없이 reason과 next action을 본다. 매 run은 deadline과
+single-run guard를 가지며 cancellation은 현재 chunk commit 뒤 claim을 release한다. 기본 claim은
+15초, run deadline은 30초, max attempt는 5, backoff는 1초에서 30초까지다.
 
 ## HTTP와 browser 계약
 
@@ -315,26 +414,70 @@ batch revocation worker는 batch를 `REVOKING`으로 바꾸고 entry id 순서�
 - `POST /api/v1/reservations/{reservationId}/allocate`
 - `POST /api/v1/allocations/{allocationId}/code-reveals`
 - `GET /api/v1/allocations/{allocationId}` — raw code를 반환하지 않는다.
+- `POST /api/v1/allocations/{allocationId}/replacements` — reveal-loss 전용 1회 recovery
 - `POST /api/v1/allocations/{allocationId}/redeem`
 - `POST /api/v1/allocations/{allocationId}/release`
+- `GET /api/v1/snapshots`
+- `GET /api/v1/events?cursor=`
 
-모든 mutation은 tenant/principal header, bounded `Idempotency-Key`, JSON size/content validation을
-요구한다. `userRef`가 body에 있다면 authenticated workshop principal과 같아야 한다.
+모든 customer GET/mutation/SSE는 server-established tenant/principal과 resource owner predicate를
+사용한다. `userRef`는 body에 받지 않고 principal에서 파생하며 scope mismatch는 uniform `404`다.
+demo header identity는 authentication이 아니므로 loopback bind에서만 허용한다. 실제 authentication
+adapter 없이 public bind하면 startup을 실패시킨다. Mutation은 bounded `Idempotency-Key`, expected
+revision과 JSON size/content validation을 요구한다.
 
 ### Operator API
 
 - `POST /operator/api/v1/batches/import`
 - `POST /operator/api/v1/batches/generate`
+- `POST /operator/api/v1/batches/{batchId}/import-chunks`
 - `POST /operator/api/v1/batches/{batchId}/resume`
-- `POST /operator/api/v1/batches/{batchId}/activate|pause|revoke`
+- `POST /operator/api/v1/batches/{batchId}/activate`
+- `POST /operator/api/v1/batches/{batchId}/pause`
+- `POST /operator/api/v1/batches/{batchId}/revoke-preview`
+- `POST /operator/api/v1/batches/{batchId}/revoke`
 - `GET /operator/api/v1/batches/{batchId}`
-- `GET /operator/api/v1/pool-depth`
-- `GET /operator/api/v1/reservations/stuck`
+- `GET /operator/api/v1/pool-depth?campaignId=&batchId=`
+- `GET /operator/api/v1/reservations/stuck?campaignId=&cursor=&limit=`
+- `GET /operator/api/v1/diagnostics/{requestId}`
 - `POST /operator/api/v1/reconciliation/run`
+- `GET /operator/api/v1/snapshots?campaignId=&batchId=`
+- `GET /operator/api/v1/events?campaignId=&batchId=&cursor=`
 - test profile의 guarded deterministic failure/fixture routes
 
-Operator mutation은 #534와 같은 same-origin guard, explicit operator secret, tenant scope,
-idempotency key와 expected revision을 요구한다. Cookie에 secret을 저장하지 않는다.
+모든 `/operator/**` GET/POST/SSE는 strict Host/Origin allowlist, CORS deny-by-default, constant-time
+operator secret, credential rate limit와 tenant scope를 요구하며 mismatch는 uniform `404`다. Mutation은
+추가로 idempotency key와 expected revision을 요구한다. Cookie에 secret을 저장하지 않는다. Revoke는
+affected state/count preview, batch identity 재입력, fresh revision, 상태별 action disable, progress와
+partial-recovery 안내가 선행된다.
+
+### HTTP success와 error vocabulary
+
+create는 `201 + Location`, accepted worker command는 `202`, safe replay/조회/전이는 `200`을 기본으로
+한다. 모든 resource response는 public ID, state, revision, observed PostgreSQL time와 safe request ID를
+포함하고 raw code는 reveal의 첫 `200`에만 있다. error body는 `code`, allowlisted `reason`, `requestId`,
+optional `retryAfterSeconds`만 가진다.
+
+| Code | HTTP | Retry/same key | Caller action |
+|---|---:|---|---|
+| `COMMAND_IN_PROGRESS` | 409 | retry / same | `Retry-After` 뒤 재시도 |
+| `IDEMPOTENCY_FINGERPRINT_CONFLICT` | 409 | no / new | payload/key 수정 |
+| `POOL_BUSY`, `BACKEND_TIMEOUT` | 503 | retry / same | bounded backoff |
+| `POOL_EXHAUSTED`, `USER_LIMIT_REACHED` | 409 | terminal / new command | UI terminal 또는 operator 확인 |
+| `STALE_REVISION` | 409 | no / new | snapshot refresh |
+| `BATCH_PAUSED`, `BATCH_REVOKED`, `RESERVATION_EXPIRED` | 409 | terminal / new | 상태 refresh/새 reservation |
+| `WRONG_OWNER`, `SCOPE_NOT_FOUND` | 404 | no | resource를 노출하지 않음 |
+| `RATE_LIMITED` | 429 | retry / same | `Retry-After` |
+| `KEY_MATERIAL_UNAVAILABLE`, `CIPHERTEXT_INVALID` | 503 | retry / same | operator escalation; fail closed |
+| `ALREADY_REVEALED` | 200 | duplicate / n/a | replacement flow 안내 |
+
+각 route의 plan은 request/response DTO, required header, revision, stored descriptor와 위 error subset을
+black-box contract table로 확정한다.
+
+Import/generation response는 batch ID/state/revision, next ordinal, expected/accepted/rejected count,
+checkpoint digest와 `nextAction`을 포함한다. failure list는 ordinal과 bounded reason만 cursor/limit 100으로
+조회한다. activation 가능 여부와 resume/import-chunk URI는 snapshot과 SSE에 동일하게 노출한다.
+safe `requestId`는 response header/body와 tenant-scoped diagnostic lookup을 연결한다.
 
 ### UI
 
@@ -342,11 +485,24 @@ idempotency key와 expected revision을 요구한다. Cookie에 secret을 저장
 
 - customer flow: admission → reservation → allocation → one-time reveal → redemption
 - operator batch view: provenance, chunk progress, active window, accepted/rejected count
-- pool depth: available/reserved/allocated/redeemed/released/expired/revoked count
+- pool depth: eligible available과 expired-but-not-terminalized, reserved/allocated/redeemed/released/
+  expired/revoked count
 - timeline: state, policy version, bounded reason, revision, timestamp
 - stuck reservation과 worker lease
 - batch revocation progress와 reconciliation before/after count
 - Redis healthy/degraded와 PostgreSQL authoritative outcome을 구분하는 banner
+
+reveal은 explicit user gesture와 confirmation 뒤 실행한다. response는 `Cache-Control: no-store`,
+`Pragma: no-cache`, `Referrer-Policy: no-referrer`, strict CSP를 사용하며 third-party script/service worker,
+URL/history/localStorage/sessionStorage와 application log에 code를 두지 않는다. code는 bounded ephemeral
+DOM에만 표시하고 copy acknowledgement, navigation/refresh 경고와 clear control을 제공한다. 서버는
+mutable buffer와 best-effort zeroization을 사용하고 reveal body/error logging과 production heap dump를
+금지한다. semantic control, keyboard-only flow, focus 이동, `aria-live`, 색 외 상태 표현을 검증한다.
+
+SSE는 customer/operator별 동일 authorization을 적용하는 header-capable same-origin endpoint다.
+global 32, campaign 8 subscriber, client queue 64 event/256 KiB, shared poller query 100 row/512 KiB,
+write 5초를 상한으로 한다. overflow/expired cursor는 reset 후 close하고 polling route도 같은 scope를
+사용한다. JDBC permit은 connection lifetime이 아니라 query 동안만 보유한다.
 
 list와 SSE payload는 public UUID, state, bounded reason과 coarse count만 포함한다. raw code,
 user/device/IP, idempotency key, secret, request body와 digest 원문은 표시하지 않는다.
@@ -355,15 +511,66 @@ user/device/IP, idempotency key, secret, request body와 digest 원문은 표시
 
 - Java/Kotlin toolchain과 target은 25다.
 - Spring MVC virtual thread를 사용하되 Hikari max 16을 기본으로 유지한다.
-- foreground/worker/SSE permit은 #534의 12/1/3 분리를 기준으로 시작하고 stress evidence로 확인한다.
-- common HTTP, management readiness, JDBC connection/transaction timeout은 60초다.
+- foreground/worker/SSE query permit은 항상 JDBC connection 획득 전에 12/1/3으로 분리하며 합계는
+  16을 넘지 않는다. nested acquire를 금지하고 foreground 250 ms, worker/SSE 1초 wait 뒤 `503`이다.
+  공정한 semaphore를 쓰고 transaction 종료/cancellation에서 즉시 release하며 leak 0을 검증한다.
+- common HTTP와 management readiness client timeout은 60초다. Hikari connection wait는 2초,
+  foreground transaction/lock deadline은 5초, worker chunk는 10초다.
 - batch chunk max 500, revoke chunk max 100, reconciliation max 50을 기본값으로 둔다.
-- reservation TTL, worker deadline, key ring, operator guard, Redis URI와 enable flag는 immutable
+- reservation TTL, allocation TTL, worker deadline, key ring, operator guard, Redis URI와 enable flag는 immutable
   configuration properties로 노출하고 startup validation을 둔다.
 - non-test profile은 짧거나 알려진 test key, missing operator secret, invalid timeout/pool/chunk
   조합에서 fail-fast한다.
-- shutdown은 새 admission을 막고 worker claim을 중단하며 독립 resource를 모두 닫는다.
-- readiness는 PostgreSQL migration/key material을 필수로, Redis와 leader를 degraded advisory로 표시한다.
+- shutdown은 readiness DOWN → 새 command/SSE 거부 → scheduler/leader trigger 중단 → worker claim 중단
+  → in-flight transaction bounded drain → SSE/poller → leader lease/Redis/Bloom → owned executor →
+  DataSource 순서다. 단계별 5초, 전체 30초 뒤 forced reason을 metric/log에 남기며 close는 idempotent다.
+- liveness는 process-only다. readiness는 migration, PostgreSQL과 global/live-reference key usability를
+  필수로 한다. 단일 quarantined entry 손상과 Redis/leader 장애는 redacted `DEGRADED`, recovery 중은
+  `RECOVERING`이다. reason은 allowlist이고 last-success/error time을 노출한다. management port는
+  loopback bind와 health/metrics allowlist를 사용한다.
+
+### Rate limit과 abuse boundary
+
+reserve/allocate/reveal/redeem/operator-auth는 서로 다른 keyed namespace를 사용하며 기본 상한은
+principal/source별 분당 20/20/5/10/5다. 특히 reveal/redeem/operator-auth는 Redis 장애에도 같은
+node-local hard cap, short permit wait와 uniform
+not-found/unauthorized timing을 유지한다. 공격 실패 횟수는 voucher를 terminal lockout하지 않으며
+정상 owner의 PostgreSQL state transition만 terminal outcome을 만든다.
+
+## Migration, key backup과 배포
+
+application-owned migration runner는 `src/main/resources/db/migration/V001__voucher_pool.sql` 같은
+versioned SQL과 migration-history checksum을 authority로 사용한다. PostgreSQL advisory lock으로 동시
+startup을 직렬화하고 checksum drift는 startup fail-closed다. clean, current warm, previous-schema
+startup을 검증한다. 변경은 expand → compatible dual-read/write → contract 순서이며 이 예제의 rollback은
+직전 schema와 binary까지만 보장한다.
+
+DB backup은 referenced KEK/verification/dedup key-version inventory와 같은 recovery unit으로 기록한다.
+restore는 key manifest를 먼저 검증하고 DB를 복구한 뒤 live ciphertext coverage, counter, idempotency
+replay, audit/cursor, stale worker takeover와 one-time reveal smoke를 실행한다. rotate는 current 추가 →
+read set 유지 → reference drain 확인 → backup/rollback rehearsal → retire 순서다.
+
+## Observability, retention과 runbook
+
+metric tag는 command/outcome/reason/backend/state의 bounded enum만 허용한다. tenant, batch, allocation,
+request, user, code/digest, URL과 exception message는 label 금지다. worker backlog/oldest age, claim stall,
+Hikari active/pending, permit wait, SSE subscribers/reset, pool depth, degraded component, purge와 restore
+결과를 측정하고 structured lifecycle event도 같은 redaction을 따른다.
+
+Hikari pending 지속, worker checkpoint 정체, Redis degradation, pool exhaustion, SSE reset burst,
+quarantined ciphertext, purge lag와 restore failure에 threshold/duration alert와 recovery signal을 둔다.
+runbook은 alert마다 safe request ID/tenant-scoped diagnostic, authoritative query, bounded operator action과
+recovery verification을 연결한다.
+
+기본 warning은 Hikari pending `>0` 10초, worker no-progress 30초, Redis degraded 30초, eligible pool
+depth 10% 미만 60초, SSE reset 10회/분, quarantine 1건 이상, purge lag 24시간, restore smoke failure
+즉시다. recovery signal은 같은 window에서 정상 상태를 확인한 뒤 발생한다.
+
+기본 retention은 idempotency terminal descriptor 24시간, terminal inbox/claim 7일, terminal entry와
+reservation history 30일, audit 90일이다. quarantine과 legal-hold fixture는 purge를 중단한다. key는
+live row, replay descriptor, backup inventory와 audit retention이 참조하는 동안 retire하지 않는다.
+bounded purge worker는 dependency order와 cursor를 쓰며 oldest age/count를 보고하고 backup/restore 및
+concurrent replay와 경합 테스트를 가진다.
 
 ## Ecosystem capability selection
 
@@ -390,19 +597,20 @@ user/device/IP, idempotency key, secret, request body와 digest 원문은 표시
 2. **reservation response 유실 후 retry한다.** 같은 key/fingerprint는 같은 reservation descriptor를
    replay하고 새 entry를 소비하지 않는다.
 3. **reveal response가 commit 뒤 유실된다.** code는 복구하지 않는다. replay는
-   `ALREADY_REVEALED`를 반환하고 operator revoke + 새 reservation runbook을 따른다.
+   `ALREADY_REVEALED`를 반환하고 owner-confirmed allocation replacement flow를 따른다.
 4. **batch chunk 중간에 process가 종료된다.** 마지막 committed ordinal부터 같은 fingerprint로
    resume한다. duplicate digest/source ordinal은 deterministic diagnostic으로 남는다.
 5. **Redis가 timeout 또는 unavailable이다.** node-local permit으로 DB 부하를 제한하고 동일한
    PostgreSQL transaction을 실행한다. Redis failure가 terminal reject를 만들지 않는다.
 6. **Bloom false positive가 발생한다.** review/admission hint만 바뀌며 PostgreSQL eligibility와 entry
    ownership은 그대로 검증한다.
-7. **batch revoke와 redemption이 경합한다.** entry row lock commit 순서가 단일 결과를 정하고 audit가
-   policy version과 loser outcome을 보존한다.
+7. **batch revoke와 redemption이 경합한다.** 같은 batch-first lock order와 revision commit 순서가
+   단일 결과를 정하고 audit가 policy version과 loser outcome을 보존한다.
 8. **reservation expiry worker가 중복 실행된다.** claim lease와 revision CAS가 한 worker만 전이하게
    한다. leader 부재 시 operator가 같은 bounded path를 실행한다.
-9. **ciphertext/tag/key version이 손상 또는 누락된다.** allocation/reveal을 fail closed하고 readiness와
-   operator diagnostic을 degraded로 표시한다. raw payload를 오류에 포함하지 않는다.
+9. **ciphertext/tag/key version이 손상 또는 누락된다.** global/live-reference key 누락은 startup 또는
+   readiness DOWN, 격리 가능한 단일 row 손상은 quarantined `DEGRADED`다. 해당 allocation/reveal은
+   fail closed하고 raw payload를 오류에 포함하지 않는다.
 10. **projection count가 drift한다.** source entry/reservation rows에서 recompute하고 reconciliation이
     before/after count와 reason을 audit한다. 자동 수정은 tenant/batch scope와 expected revision을 요구한다.
 11. **SSE client가 느리거나 cursor가 retention 밖이다.** bounded queue를 넘으면 reset event를 보내고
@@ -432,6 +640,8 @@ TDD의 RED → GREEN → REFACTOR를 behavior별로 기록한다.
 - redemption/revoke, pause/allocate, expiry/reveal race
 - worker duplicate claim, restart, reconciliation drift repair
 - migration clean/existing DB, failed checksum, backup/restore
+- global lock order, forced deadlock/timeout mapping, stale worker takeover와 batch expiry terminalization
+- physical FK/check/partial index, counter delta와 negative/drift guard
 
 PostgreSQL concurrency evidence는 H2로 대체하지 않는다. 적합한 경우 `MultithreadingTester`와 실제
 virtual-thread executor를 사용하고, raw harness가 필요하면 ecosystem tester가 transaction barrier와
@@ -447,12 +657,16 @@ HTTP concurrency를 표현하지 못하는 이유를 plan에 기록한다.
 - Redis unavailable boot/degradation과 PostgreSQL continuity
 - readiness/liveness, management 60초 timeout, graceful shutdown
 - SSE snapshot/reset/reconnect와 bounded slow consumer
+- reveal security headers/storage-free browser behavior, replacement recovery와 accessibility smoke
 
 ### Stress/performance
 
-- concurrency 64/128에서 Redis healthy/unavailable profile을 각각 두 번 실행한다.
-- latency는 report-only로 기록하고 correctness, pool count, winner uniqueness, permit 상한,
-  connection leak 0과 bounded deadline을 hard evidence로 사용한다.
+- 10,000-entry batch, 64/128 virtual clients, same-user hotspot 50%, worker와 SSE 동시 부하에서 Redis
+  healthy/unavailable profile을 각각 두 번 실행한다.
+- latency는 report-only지만 active connection `<=16`, permit 합/동시 holder `<=16`, foreground permit
+  wait `<=250 ms`, worker/SSE wait `<=1 s`, transaction deadline 준수, worker checkpoint progress,
+  pending drain, connection/permit leak 0, winner/count invariant는 hard gate다. JSON metric snapshot과
+  JFR 또는 thread dump artifact를 두 실행 모두 보존한다.
 - allocation query와 operator pool-depth query는 representative cardinality에서 bounded index scan을
   확인한다.
 
@@ -462,16 +676,19 @@ HTTP concurrency를 표현하지 못하는 이유를 plan에 기록한다.
 - architecture와 contention/reconciliation sequence를 SVG source + rendered PNG로 제공한다.
 - root/commerce README locale set과 repo `AGENTS.md` module map을 갱신한다.
 - `settings.gradle.kts` 자동 등록 결과를 `./gradlew projects`로 확인한다.
-- `.github/workflows/Examples.yml`의 sequential container lane, artifact paths와 주석을 갱신한다.
-- nightly full group, `scripts/smoke-validate.sh` data-access/full 또는 commerce validation,
-  stale-check와 diagram QA를 갱신한다.
+- `.github/workflows/Examples.yml`의 sequential container lane에
+  `:commerce-pre-generated-voucher-pool:test`와 test-result/Kover artifact glob을 등록한다.
+- nightly commerce/full group, `scripts/smoke-validate.sh` data-access/full commerce expected-module check,
+  stale-check, README locale parity, voucher runbook validator와 diagram QA를 갱신한다.
+- workflow YAML syntax와 validator 입력을 local/CI에서 확인한다.
 - Kover XML/Codecov visibility는 유지하되 hard threshold를 추가하지 않는다.
 - module은 consumer example이며 publication/BOM artifact를 만들지 않는다.
 
 ## Acceptance criteria
 
 - 서로 다른 concurrent allocator가 같은 entry를 예약하거나 할당하지 않는다.
-- 같은 idempotent allocation command는 하나의 reservation/entry만 소비한다.
+- 같은 idempotent reservation command는 하나의 entry만 소비하고 allocation retry는 새 entry를
+  소비하지 않는다.
 - redemption/revocation race가 policy version을 포함한 하나의 PostgreSQL outcome으로 수렴한다.
 - 만료 reservation은 capacity를 반환하고 allocated 또는 exposed code는 다시 사용하지 않는다.
 - batch import/generation은 replay-safe하고 partial failure를 진단·재개한다.
