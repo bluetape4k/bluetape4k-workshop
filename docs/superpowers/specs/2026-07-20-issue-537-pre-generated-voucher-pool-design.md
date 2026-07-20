@@ -163,8 +163,17 @@ scope를 벗어난다.
 #### 채택: 공개 전 per-entry envelope encryption, 공개 후 digest-only
 
 - code dedup, verification, user identity, idempotency, Redis/Bloom, audit/correlation에 서로 다른
-  configured key ring 또는 domain-separated subkey를 사용한다. canonical input은 length-prefix와
-  tenant, campaign, purpose, operation scope를 포함한다.
+  configured key ring 또는 domain-separated subkey를 사용한다. 모든 input은 length-prefix canonical
+  encoding을 쓰되 purpose별 scope는 다음 표로 고정한다.
+
+| Purpose | Canonical input | Key lifetime |
+|---|---|---|
+| stable code dedup | fixed purpose + tenant + canonical code | tenant-lifetime; campaign/batch/operation/version 제외 |
+| code verification | purpose + tenant + campaign + allocation + canonical code | retained version set |
+| user identity | purpose + tenant + campaign + canonical user | retained policy window |
+| command tombstone | purpose + tenant + operation + raw idempotency key | tenant-lifetime; digest key version 저장 |
+| Redis/Bloom | purpose + tenant + campaign + operation + signal | bounded rotating set |
+| audit/correlation | purpose + tenant + operation + request material | bounded rotating set |
 - tenant/campaign lifecycle 전체의 plaintext 중복은 rotation과 무관한 stable code-dedup digest로
   막고, verification digest는 version을 저장한다. rotation 중 retained read version 전체를 검사하며
   unknown version은 not-found가 아니라 fail-closed다.
@@ -220,11 +229,13 @@ locking SQL만 소유한다.
 
 ### Campaign
 
-`voucher_pool_campaigns`는 tenant/campaign public ID, `ACTIVE|PAUSED|REVOKED` state, policy version,
-revision과 audit timestamps를 가진 단일 policy aggregate다. batch lifecycle과 entry eligibility는 이
-campaign snapshot 아래에 있으며 campaign pause/revoke는 모든 batch보다 먼저 lock한다. Operator는
-campaign pause/resume/revoke를 expected campaign revision으로 실행한다. campaign `REVOKED`는
-terminal이고 campaign state와 batch state 중 더 제한적인 결과가 foreground command를 지배한다.
+`voucher_pool_campaigns`는 tenant/campaign public ID, `DRAFT|ACTIVE|PAUSED|REVOKED` state, per-user
+limit, reservation/allocation TTL, replacement allowance, policy version, revision과 audit timestamps를
+가진 단일 policy aggregate다. operator create는 `If-None-Match: *`와 idempotency로 `DRAFT`를 만들고,
+policy update는 DRAFT/PAUSED에서 expected revision으로 수행하며 activate가 first `ACTIVE`를 만든다.
+batch lifecycle과 entry eligibility는 이 campaign snapshot 아래에 있으며 campaign pause/revoke는 모든
+batch보다 먼저 lock한다. campaign `REVOKED`는 terminal이고 campaign state와 batch state 중 더
+제한적인 결과가 foreground command를 지배한다.
 
 ### Voucher batch
 
@@ -326,11 +337,14 @@ descriptor, replay/conflict/takeover/cleanup 계약을 사용한다.
 - idempotency key와 raw request payload는 저장하지 않고 scoped digest/fingerprint만 저장한다.
 
 full terminal descriptor는 24시간 보존하지만 minimal `voucher_pool_command_tombstones`는 tenant,
-operation, scoped key digest, fingerprint와 effect public ID 또는 terminal code만 tenant 삭제 전까지
-보존한다. descriptor
-purge 뒤 same-key/same-fingerprint는 `410 REPLAY_WINDOW_EXPIRED`와 기존 effect ID를 반환하고 새 effect를
+operation, tombstone digest key version, scoped key digest, fingerprint와 effect public ID 또는 terminal
+code만 tenant 삭제 전까지 보존한다. 모든 idempotent terminal effect는 business effect, safe descriptor와
+tombstone을 같은 transaction에서 commit한다. descriptor purge는 대응 tombstone 존재를 확인해야 한다.
+descriptor purge 뒤 same-key/same-fingerprint는 `410 REPLAY_WINDOW_EXPIRED`와 기존 effect ID를 반환하고
+새 effect를
 실행하지 않으며 different fingerprint는 계속 conflict다. API가 원 response replay를 보장하는 window는
-24시간임을 header/README에 공개한다.
+24시간임을 header/README에 공개한다. Tombstone digest key는 tenant lifetime 동안 바꾸지 않으며 저장한
+version은 backup/restore identity다. Tombstone이 존재하는 동안 이 key를 retire하지 않는다.
 
 one-time reveal은 의도적으로 일반 response replay contract에서 제외한다. 첫 성공은 code를 반환하고
 같은 키 재요청은 side effect 없이 `200`, `Duplicate-Request: true`,
@@ -343,7 +357,9 @@ one-time reveal은 의도적으로 일반 response replay contract에서 제외�
 
 ### Dedup ledger와 quarantine
 
-`voucher_pool_code_dedup`은 `(tenant_id, stable_dedup_digest)` unique tombstone, first campaign/batch/entry,
+`voucher_pool_code_dedup`은 tenant-lifetime dedup key로
+`HMAC(fixedPurpose || tenant || canonicalCode)`를 계산한다. `(tenant_id, stable_dedup_digest)` unique
+tombstone, first campaign/batch/entry,
 key version과 first-seen time만 저장한다. entry가 purge되어도 tombstone은 tenant의 명시적 irreversible
 deletion과 backup-retention 종료 전에는 삭제하지 않는다. import/generation은 entry insert보다 먼저
 ledger uniqueness를 획득하므로 campaign과 key rotation을 넘어 공개/terminal code를 재사용하지 않는다.
@@ -421,13 +437,15 @@ eligible row가 보이면 transient contention `503 POOL_BUSY`, 실제 row가 �
 
 ### Allocation과 reveal
 
-allocation은 batch, user-limit, reservation, entry 순서로 lock하고 owner, expiry, batch state, policy
-version을 다시 확인한다. `allocation_expires_at`은 PostgreSQL time에서
+allocation은 campaign, batch, user-limit, reservation, entry 순서로 lock하고 owner, expiry,
+campaign/batch state와 policy version을 다시 확인한다. campaign `ACTIVE`만 allocation을 허용하고
+`PAUSED|REVOKED`는 각각 stable error를 반환한다. `allocation_expires_at`은 PostgreSQL time에서
 `min(batch.expires_at, now + policy allocationTtl)`로 snapshot한다. batch pause/revoke가 먼저 commit하면
 allocation은 거절된다. allocation이 먼저 commit하면 후속 revoke가 `ALLOCATED -> REVOKED`를 기록한다.
 
-reveal은 같은 전역 순서로 batch/reservation/entry를 lock하고 `ALLOCATED`, correct owner,
-`revealed_at IS NULL`, ciphertext 존재를 검증한다. decrypt/tag 검증과 ciphertext 제거를 같은
+reveal은 같은 전역 순서로 campaign/batch/reservation/entry를 lock하고 `ALLOCATED`, correct owner,
+`revealed_at IS NULL`, ciphertext 존재를 검증한다. campaign `ACTIVE`만 새 raw-code 공개를 허용하고
+`PAUSED|REVOKED`는 각각 `CAMPAIGN_PAUSED|CAMPAIGN_REVOKED`다. decrypt/tag 검증과 ciphertext 제거를 같은
 transaction에서 수행한다. commit 뒤 response serialization이 실패해도 entry는 exposed로 취급한다.
 
 ### Redemption과 revocation
@@ -495,8 +513,12 @@ revision과 JSON size/content validation을 요구한다. Resource create는 exp
 - `POST /operator/api/v1/batches/{batchId}/pause`
 - `POST /operator/api/v1/batches/{batchId}/revoke-preview`
 - `POST /operator/api/v1/batches/{batchId}/revoke`
+- `POST /operator/api/v1/campaigns`
+- `POST /operator/api/v1/campaigns/{campaignId}/policy`
+- `POST /operator/api/v1/campaigns/{campaignId}/activate`
 - `POST /operator/api/v1/campaigns/{campaignId}/pause`
 - `POST /operator/api/v1/campaigns/{campaignId}/resume`
+- `POST /operator/api/v1/campaigns/{campaignId}/revoke-preview`
 - `POST /operator/api/v1/campaigns/{campaignId}/revoke`
 - `GET /operator/api/v1/batches/{batchId}`
 - `GET /operator/api/v1/pool-depth?campaignId=&batchId=`
@@ -530,7 +552,7 @@ optional `retryAfterSeconds`만 가진다.
 | `POOL_BUSY`, `BACKEND_TIMEOUT`, `BATCH_FAILED_RETRYABLE` | 503 | retry / same · release | bounded backoff |
 | `POOL_EXHAUSTED`, `USER_LIMIT_REACHED` | 409 | terminal / new · store | UI terminal 또는 operator 확인 |
 | `STALE_REVISION` | 409 | no / new · release | snapshot refresh |
-| `CAMPAIGN_PAUSED`, `BATCH_PAUSED`, `BATCH_EXPIRING` | 409 | retry / same · release | 상태 refresh/backoff |
+| `CAMPAIGN_NOT_ACTIVE`, `CAMPAIGN_PAUSED`, `BATCH_PAUSED`, `BATCH_EXPIRING` | 409 | retry / same · release | 상태 refresh/backoff |
 | `CAMPAIGN_REVOKED`, `BATCH_REVOKED`, `BATCH_EXPIRED`, `BATCH_FAILED_TERMINAL` | 409 | terminal / new · store | 새 campaign/batch 또는 operator 확인 |
 | `RESERVATION_EXPIRED`, `ALLOCATION_EXPIRED` | 409 | terminal / new · store | 새 reservation/recovery 판단 |
 | `WRONG_OWNER`, `SCOPE_NOT_FOUND` | 404 | no · release | resource를 노출하지 않음 |
@@ -552,7 +574,9 @@ optional `retryAfterSeconds`만 가진다.
 | batch import/generate create | DTO, `If-None-Match: *`, idempotency | `201 Location`, batch checkpoint | terminal descriptor/tombstone; operator tenant |
 | import/generate chunk | expected batch revision, exact ordinal/count, idempotency | `200` checkpoint | terminal descriptor; operator tenant |
 | batch resume | expected batch revision, idempotency | `202` worker snapshot | accepted descriptor; operator tenant |
-| campaign/batch pause/resume/activate | expected aggregate revision, idempotency | `200` snapshot | terminal descriptor; operator tenant |
+| campaign create | policy DTO, `If-None-Match: *`, idempotency | `201 Location`, DRAFT snapshot | terminal descriptor/tombstone; operator tenant |
+| campaign policy/activate | expected campaign revision, idempotency | `200` snapshot | terminal descriptor; operator tenant |
+| campaign/batch pause/resume and batch activate | expected aggregate revision, idempotency | `200` snapshot | terminal descriptor; operator tenant |
 | revoke preview | expected aggregate revision | `200` impact snapshot | no descriptor; operator tenant |
 | revoke | expected aggregate revision, preview token, idempotency | `202` progress snapshot | accepted descriptor; operator tenant |
 | reconciliation run | idempotency, single-run guard, scope | `202` run snapshot | accepted descriptor; operator tenant |
@@ -560,7 +584,12 @@ optional `retryAfterSeconds`만 가진다.
 
 DTO는 raw code를 import chunk 외에는 포함하지 않는다. 모든 mutation response는 revision, PostgreSQL
 observed time, request ID와 route-specific next action을 포함하며 error subset은 aggregate state와 위
-vocabulary에서 결정한다.
+vocabulary에서 결정한다. 표에서 생략된 경우도 모든 idempotent terminal success/failure는 descriptor와
+command tombstone을 business effect와 원자적으로 기록한다.
+
+Campaign revoke preview는 child batch/entry 상태별 affected count, eligible depth, active reservation/
+allocation, already-terminal count, campaign revision과 single-use preview token을 반환한다. revoke worker는
+campaign-first lock order와 같은 bounded batch/entry cursor를 사용하고 progress를 snapshot/SSE에 노출한다.
 
 Import/generation response는 batch ID/state/revision, next ordinal, expected/accepted/rejected count,
 checkpoint digest와 `nextAction`을 포함한다. failure list는 ordinal과 bounded reason만 cursor/limit 100으로
@@ -735,12 +764,14 @@ TDD의 RED → GREEN → REFACTOR를 behavior별로 기록한다.
 - reservation expiry/reuse와 allocated/revealed entry non-reuse
 - partial import crash/resume, duplicate ordinal/digest, activation gate
 - generated chunk rollback/regeneration, committed replay와 10,000-entry finalization
+- campaign create/policy/activate와 pause/revoke-versus-allocation/reveal forced race
 - redemption/revoke, pause/allocate, expiry/reveal race
 - worker duplicate claim, restart, reconciliation drift repair
 - migration clean/existing DB, failed checksum, backup/restore
 - global lock order, forced deadlock/timeout mapping, stale worker takeover와 batch expiry terminalization
 - physical FK/check/partial index, counter delta와 negative/drift guard
-- entry purge 뒤 duplicate-code reject, descriptor purge 뒤 same-key no-effect tombstone
+- entry purge 및 cross-campaign duplicate-code reject, descriptor purge 뒤 same-key no-effect tombstone
+- effect/descriptor/tombstone commit-loss, concurrent retry와 purge race
 - lease renewal/takeover boundary, quarantine detect/clear/terminalize와 shutdown cancel/rollback
 
 PostgreSQL concurrency evidence는 H2로 대체하지 않는다. 적합한 경우 `MultithreadingTester`와 실제
