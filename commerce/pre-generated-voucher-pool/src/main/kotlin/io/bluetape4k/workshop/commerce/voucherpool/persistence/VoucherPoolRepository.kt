@@ -241,7 +241,12 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
                 }
             }
         } as Connection
-        return transaction(Database.connect(getNewConnection = { proxy })) { block() }
+        val exposedDatabase = Database.connect(getNewConnection = { proxy })
+        return try {
+            transaction(exposedDatabase) { block() }
+        } finally {
+            TransactionManager.closeAndUnregister(exposedDatabase)
+        }
     }
 
     private fun selectAvailableEntryInBatch(connection: Connection, tenantId: String, batchId: UUID): EntryRecord? =
