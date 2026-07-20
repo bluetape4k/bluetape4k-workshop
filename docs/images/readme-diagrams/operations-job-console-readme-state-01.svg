@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#23384d" flood-opacity="0.16"/>
+    </filter>
+    <marker id="state-arrow-blue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L13 7 L1 13 Z" fill="#397ca6" stroke="#397ca6" stroke-dasharray="none"/>
+    </marker>
+    <marker id="state-arrow-green" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L13 7 L1 13 Z" fill="#4f8a55" stroke="#4f8a55" stroke-dasharray="none"/>
+    </marker>
+    <marker id="state-arrow-amber" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L13 7 L1 13 Z" fill="#b67a1d" stroke="#b67a1d" stroke-dasharray="none"/>
+    </marker>
+    <marker id="state-arrow-red" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L13 7 L1 13 Z" fill="#ba565d" stroke="#ba565d" stroke-dasharray="none"/>
+    </marker>
+    <style>
+      .title { font: 48px 'Architects Daughter', cursive; fill: #16283a; }
+      .subtitle, .zone-title, .state-title { font-family: 'Architects Daughter', cursive; fill: #263b50; }
+      .subtitle { font-size: 22px; }
+      .zone-title { font-size: 26px; }
+      .state-title { font-size: 30px; }
+      .detail, .label, .legend { font-family: 'Comic Mono', monospace; fill: #43586d; }
+      .detail { font-size: 18px; }
+      .label { font-size: 17px; font-weight: 700; }
+      .legend { font-size: 17px; }
+      .card { fill: #fffefa; stroke-width: 2.5; filter: url(#shadow); }
+      .terminal { fill: #f7fbf8; stroke-width: 2.5; filter: url(#shadow); }
+      .connector { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+  </defs>
+
+  <rect x="18" y="18" width="1564" height="964" rx="28" fill="#f8faf9" stroke="#ccd9df" stroke-width="2"/>
+  <text x="800" y="78" text-anchor="middle" class="title">Durable Job State Machine</text>
+  <text x="800" y="112" text-anchor="middle" class="subtitle">PostgreSQL commits every transition; terminal states reject every later signal</text>
+
+  <rect x="55" y="155" width="1490" height="455" rx="24" fill="#edf5fb" stroke="#91b7d8" stroke-width="2.5"/>
+  <text x="82" y="195" class="zone-title">Active lifecycle</text>
+
+  <g data-card="queued">
+    <rect class="card" x="120" y="320" width="270" height="135" rx="18" stroke="#6da5cd"/>
+    <text x="255" y="370" text-anchor="middle" class="state-title">queued</text>
+    <text x="255" y="405" text-anchor="middle" class="detail">FIFO identity retained</text>
+    <text x="255" y="431" text-anchor="middle" class="detail">waiting for lease claim</text>
+  </g>
+
+  <g data-card="running">
+    <rect class="card" x="520" y="320" width="270" height="135" rx="18" stroke="#4f8a55"/>
+    <text x="655" y="370" text-anchor="middle" class="state-title">running</text>
+    <text x="655" y="405" text-anchor="middle" class="detail">lease-owned execution</text>
+    <text x="655" y="431" text-anchor="middle" class="detail">progress at checkpoints</text>
+  </g>
+
+  <g data-card="cancel-requested">
+    <rect class="card" x="920" y="320" width="270" height="135" rx="18" stroke="#b67a1d"/>
+    <text x="1055" y="368" text-anchor="middle" class="state-title">cancel_requested</text>
+    <text x="1055" y="405" text-anchor="middle" class="detail">durable request committed</text>
+    <text x="1055" y="431" text-anchor="middle" class="detail">worker stops at checkpoint</text>
+  </g>
+
+  <rect x="55" y="645" width="1490" height="260" rx="24" fill="#f1f7f2" stroke="#8fc39c" stroke-width="2.5"/>
+  <text x="82" y="685" class="zone-title">Terminal states — no outgoing transitions</text>
+
+  <g data-card="succeeded">
+    <rect class="card terminal" x="390" y="735" width="250" height="105" rx="18" stroke="#4f8a55"/>
+    <text x="515" y="781" text-anchor="middle" class="state-title">succeeded</text>
+    <text x="515" y="815" text-anchor="middle" class="detail">work completed</text>
+  </g>
+  <g data-card="failed">
+    <rect class="card terminal" x="675" y="735" width="250" height="105" rx="18" stroke="#ba565d"/>
+    <text x="800" y="781" text-anchor="middle" class="state-title">failed</text>
+    <text x="800" y="815" text-anchor="middle" class="detail">non-retryable failure</text>
+  </g>
+  <g data-card="dead-lettered">
+    <rect class="card terminal" x="960" y="735" width="250" height="105" rx="18" stroke="#ba565d"/>
+    <text x="1085" y="781" text-anchor="middle" class="state-title">dead_lettered</text>
+    <text x="1085" y="815" text-anchor="middle" class="detail">retry budget exhausted</text>
+  </g>
+  <g data-card="cancelled">
+    <rect class="card terminal" x="1245" y="735" width="250" height="105" rx="18" stroke="#b67a1d"/>
+    <text x="1370" y="781" text-anchor="middle" class="state-title">cancelled</text>
+    <text x="1370" y="815" text-anchor="middle" class="detail">before claim or checkpoint</text>
+  </g>
+
+  <path class="connector" d="M390 387 H520" stroke="#397ca6" marker-end="url(#state-arrow-blue)"/>
+  <path class="connector" d="M790 387 H920" stroke="#b67a1d" marker-end="url(#state-arrow-amber)"/>
+  <path class="connector" d="M575 455 V650 Q575 680 545 680 H535 Q515 680 515 700 V735" stroke="#4f8a55" marker-end="url(#state-arrow-green)"/>
+  <path class="connector" d="M600 320 V285 Q600 270 585 270 H315 Q300 270 300 285 V320" stroke="#b67a1d" stroke-dasharray="10 8" marker-end="url(#state-arrow-amber)"/>
+  <path class="connector" d="M655 455 V650 Q655 680 685 680 H770 Q800 680 800 710 V735" stroke="#ba565d" marker-end="url(#state-arrow-red)"/>
+  <path class="connector" d="M735 455 V630 Q735 670 775 670 H1045 Q1085 670 1085 710 V735" stroke="#ba565d" marker-end="url(#state-arrow-red)"/>
+  <path class="connector" d="M1055 455 V610 Q1055 660 1105 660 H1320 Q1370 660 1370 710 V735" stroke="#b67a1d" marker-end="url(#state-arrow-amber)"/>
+  <path class="connector" d="M210 320 V235 Q210 220 225 220 H1510 Q1525 220 1525 235 V640 Q1525 670 1495 670 H1485 Q1460 670 1460 695 V735" stroke="#b67a1d" marker-end="url(#state-arrow-amber)"/>
+
+  <g><rect x="425" y="350" width="75" height="30" rx="10" fill="#f8faf9" stroke="#8eb6cf"/><text x="462" y="371" text-anchor="middle" class="label">claim</text></g>
+  <g><rect x="808" y="350" width="94" height="30" rx="10" fill="#f8faf9" stroke="#d0a45b"/><text x="855" y="371" text-anchor="middle" class="label">cancel</text></g>
+  <g><rect x="470" y="570" width="130" height="30" rx="10" fill="#f8faf9" stroke="#8eb694"/><text x="535" y="591" text-anchor="middle" class="label">success</text></g>
+  <g><rect x="350" y="245" width="195" height="30" rx="10" fill="#f8faf9" stroke="#d0a45b"/><text x="447" y="266" text-anchor="middle" class="label">retryable failure</text></g>
+  <g><rect x="650" y="570" width="245" height="30" rx="10" fill="#f8faf9" stroke="#cb878b"/><text x="772" y="591" text-anchor="middle" class="label">non-retryable failure</text></g>
+  <g><rect x="815" y="635" width="242" height="30" rx="10" fill="#f8faf9" stroke="#cb878b"/><text x="936" y="656" text-anchor="middle" class="label">retry budget exhausted</text></g>
+  <g><rect x="1110" y="650" width="230" height="30" rx="10" fill="#f8faf9" stroke="#d0a45b"/><text x="1225" y="671" text-anchor="middle" class="label">checkpoint observes cancel</text></g>
+  <g><rect x="1145" y="205" width="198" height="30" rx="10" fill="#f8faf9" stroke="#d0a45b"/><text x="1244" y="226" text-anchor="middle" class="label">cancel before claim</text></g>
+
+  <rect x="300" y="925" width="1000" height="40" rx="12" fill="#ffffff" stroke="#c7d4dc" stroke-width="2"/>
+  <text x="800" y="951" text-anchor="middle" class="legend">A retry returns to queued with the same job and queue identity; only the attempt and revision advance.</text>
+</svg>

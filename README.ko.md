@@ -234,6 +234,9 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Advanced | [`image-processing-advanced-workflow`](image-processing/advanced-workflow/) | `images-vips-java25`, `images-spring-boot`, `micrometer` | S3 또는 local storage | 업로드 → 원본 저장 → WebP 파생 이미지 → unsigned public URL |
 | Advanced | [`image-processing-profile-image-moderation`](image-processing/profile-image-moderation/) | `images-spring-boot`, `coroutines`, `micrometer` | Local storage / S3-compatible | 프로필 업로드 → private 원본 → blurred pending URL → moderation 승인/기본 이미지 fallback |
 | Advanced | [`image-processing-ocr-api`](image-processing/ocr-api/) | `images-ocr`, `images`, `spring-boot4-core` | In-memory | 검증된 fallback과 선택 Tesseract를 사용하는 multipart OCR API |
+| Advanced | [`operations-job-console-core`](operations/job-console-core/) | `exposed-jdbc`, `lettuce`, `micrometer`, `testcontainers` | PostgreSQL + Redis (TC) | 내구성 있는 FIFO 작업, lease, checkpoint, 취소, 재시도 예산, 제한된 ETA, outbox |
+| Advanced | [`operations-job-console-spring`](operations/job-console-spring/) | `spring-boot4-core`, `virtualthread-jdk25` | PostgreSQL (TC) | 공유 Java 25 작업 콘솔 계약을 위한 Spring MVC REST/SSE 어댑터 |
+| Advanced | [`operations-job-console-ktor`](operations/job-console-ktor/) | `ktor`, `coroutines` | PostgreSQL (TC) | 공유 Java 25 작업 콘솔 계약을 위한 Ktor Netty REST/SSE 어댑터 |
 | Advanced | [`leader-leader-election`](leader/) | `coroutines`, `redis`, `testcontainers` | Redis (TC) | 분산 리더 선출: 블로킹, 코루틴, 가상 스레드 |
 | Advanced | [`leader-backend-comparison-lab`](leader/backend-comparison-lab/) | `leader-core`, `spring-boot4-core` | In-memory | Redis, ZooKeeper, Kubernetes Lease 백엔드 선택과 failover lab |
 | Advanced | [`leader-k8s-lease-micrometer`](leader/k8s-lease-micrometer/) | `leader-k8s`, `micrometer`, `spring-boot4-core` | Kubernetes Lease (opt-in) | Micrometer metric과 함께 배우는 Kubernetes Lease 리더 선출 |
@@ -250,6 +253,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 ./gradlew :aws-storage-abstraction:test
 ./gradlew :aws-s3-vectors-access-grants:test
 ./gradlew :image-processing-profile-image-moderation:test
+./scripts/smoke-validate.sh operations
 ./gradlew :leader-backend-comparison-lab:test
 ./gradlew :leader-tenant-scheduler:test
 ```
@@ -285,6 +289,7 @@ bluetape4k-workshop/
 ├── leader/                 # 분산 리더 선출
 ├── messaging/              # Kafka
 ├── observability/          # Micrometer Observation + Tracing
+├── operations/             # 내구성 작업 콘솔 core + Spring MVC/Ktor 어댑터
 ├── ratelimit/              # Bucket4j 속도 제한
 ├── redis/                  # Redisson + Redis 패턴
 ├── spring-boot/            # Spring Boot 기능

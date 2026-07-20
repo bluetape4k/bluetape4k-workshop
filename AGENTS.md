@@ -45,6 +45,7 @@ names.
 | `mapping/` | MapStruct mapping |
 | `messaging/` | Kafka examples |
 | `observability/` | Micrometer observation/tracing with coroutines |
+| `operations/` | PostgreSQL-authoritative job console core with Spring MVC and Ktor adapters |
 | `ratelimit/` | Bucket4j rate limiting |
 | `reactive/` | Mutiny reactive streams |
 | `redis/` | Redisson and cluster examples |
