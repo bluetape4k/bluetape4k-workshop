@@ -212,13 +212,21 @@ class JobRepository(
             val leaseState = currentLeaseState(connection, lease)
             val effectiveLease = lease.copy(revision = leaseState.version)
             val current = leaseState.state
-            val next = JobTransitions.next(current, signal)
+            val effectiveSignal =
+                if (signal == JobSignal.RETRYABLE_FAILURE && leaseState.retryBudget == 0) {
+                    JobSignal.RETRY_EXHAUSTED
+                } else {
+                    signal
+                }
+            val next = JobTransitions.next(current, effectiveSignal)
             val progress = if (next == JobState.SUCCEEDED) 100 else load(lease.jobId, connection)?.progress ?: 0
             val version =
                 connection.prepareStatement(
                     """
                     UPDATE jobs
-                    SET state = ?, progress = ?, version = version + 1, queue_version = queue_version + 1,
+                    SET state = ?, progress = ?,
+                        retry_budget = CASE WHEN ? THEN retry_budget - 1 ELSE retry_budget END,
+                        version = version + 1, queue_version = queue_version + 1,
                         lease_token = NULL, lease_expires_at = NULL, updated_at = CURRENT_TIMESTAMP
                     WHERE job_id = ? AND lease_token = ? AND version = ?
                     RETURNING version
@@ -226,15 +234,16 @@ class JobRepository(
                 ).use { statement ->
                     statement.setString(1, next.wireValue)
                     statement.setInt(2, progress)
-                    statement.setObject(3, effectiveLease.jobId)
-                    statement.setObject(4, effectiveLease.token)
-                    statement.setLong(5, effectiveLease.revision)
+                    statement.setBoolean(3, effectiveSignal == JobSignal.RETRYABLE_FAILURE)
+                    statement.setObject(4, effectiveLease.jobId)
+                    statement.setObject(5, effectiveLease.token)
+                    statement.setLong(6, effectiveLease.revision)
                     statement.executeQuery().use { result ->
                         if (!result.next()) throw JobRepositoryException(JobProblemCode.LEASE_LOST)
                         result.getLong(1)
                     }
                 }
-            appendTransition(connection, effectiveLease.jobId, current, next, signal.name.lowercase(), version)
+            appendTransition(connection, effectiveLease.jobId, current, next, effectiveSignal.name.lowercase(), version)
             requireNotNull(load(effectiveLease.jobId, connection))
         }
 
@@ -616,7 +625,7 @@ class JobRepository(
     }
 
     private fun currentLeaseState(connection: Connection, lease: JobLease): LeaseState =
-        connection.prepareStatement("SELECT state, version FROM jobs WHERE job_id = ? AND lease_token = ?").use { statement ->
+        connection.prepareStatement("SELECT state, version, retry_budget FROM jobs WHERE job_id = ? AND lease_token = ?").use { statement ->
             statement.setObject(1, lease.jobId)
             statement.setObject(2, lease.token)
             statement.executeQuery().use { result ->
@@ -624,6 +633,7 @@ class JobRepository(
                 LeaseState(
                     state = JobState.entries.single { it.wireValue == result.getString("state") },
                     version = result.getLong("version"),
+                    retryBudget = result.getInt("retry_budget"),
                 )
             }
         }
@@ -738,7 +748,7 @@ class JobRepository(
 
     private data class ExistingRequest(val fingerprint: String, val jobId: UUID)
 
-    private data class LeaseState(val state: JobState, val version: Long)
+    private data class LeaseState(val state: JobState, val version: Long, val retryBudget: Int)
 
     private data class CancelRow(
         val tenantId: String,

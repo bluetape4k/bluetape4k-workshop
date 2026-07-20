@@ -43,6 +43,15 @@ internal class JobConsoleDatabaseFixture : AutoCloseable {
             }
         }
 
+    fun countWhere(table: String, predicate: String): Long = countQuery("SELECT count(*) FROM $table WHERE $predicate")
+
+    private fun countQuery(sql: String): Long =
+        dataSource.connection.use { connection ->
+            connection.createStatement().use { statement ->
+                statement.executeQuery(sql).use { result -> result.next(); result.getLong(1) }
+            }
+        }
+
     fun execute(sql: String) {
         dataSource.connection.use { connection ->
             connection.createStatement().use { statement -> statement.execute(sql) }

@@ -11,13 +11,20 @@ class JobWorkerEngine(
 ) {
     fun run(claimed: ClaimedJob) {
         var current = claimed
-        for (unit in (claimed.completedChunk + 1)..claimed.workUnits.toLong()) {
-            workload.execute(current, unit)
-            val progress = ((unit * 100) / claimed.workUnits).toInt()
-            val checkpoint = repository.checkpoint(current.lease, unit, progress)
-            if (checkpoint.state == JobState.CANCELLED) return
-            current = current.copy(lease = checkpoint.lease, completedChunk = checkpoint.completedChunk)
+        try {
+            for (unit in (claimed.completedChunk + 1)..claimed.workUnits.toLong()) {
+                workload.execute(current, unit)
+                val progress = ((unit * 100) / claimed.workUnits).toInt()
+                val checkpoint = repository.checkpoint(current.lease, unit, progress)
+                if (checkpoint.state == JobState.CANCELLED) return
+                current = current.copy(lease = checkpoint.lease, completedChunk = checkpoint.completedChunk)
+            }
+            repository.complete(current.lease, JobSignal.SUCCESS)
+        } catch (failure: DeterministicWorkloadFailure) {
+            repository.complete(
+                current.lease,
+                if (failure.retryable) JobSignal.RETRYABLE_FAILURE else JobSignal.NON_RETRYABLE_FAILURE,
+            )
         }
-        repository.complete(current.lease, JobSignal.SUCCESS)
     }
 }
