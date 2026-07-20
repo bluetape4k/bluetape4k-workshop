@@ -8,6 +8,8 @@ import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobSignal
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobState
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobTransitions
+import io.bluetape4k.workshop.operations.jobconsole.queue.QueueProjectionService
+import io.bluetape4k.workshop.operations.jobconsole.queue.QueueRow
 import java.security.MessageDigest
 import java.sql.Connection
 import java.sql.ResultSet
@@ -302,6 +304,87 @@ class JobRepository(
             appendTransition(connection, jobId, row.state, next, "cancel_requested", version)
             CancelJobResult(jobId, next, next == JobState.CANCEL_REQUESTED)
         }
+
+    fun queueRows(tenantId: String, afterSequence: Long?, limit: Int): List<QueueRow> {
+        val boundedLimit = limit.coerceIn(1, QueueProjectionService.MAX_PAGE_SIZE)
+        return dataSource.connection.use { connection ->
+            val cursorClause = if (afterSequence == null) "" else "AND enqueue_sequence > ?"
+            connection.prepareStatement(
+                """
+                SELECT job_id, job_type, state, enqueue_sequence, queue_version, updated_at
+                FROM jobs
+                WHERE tenant_id = ?
+                  AND state IN (?, ?, ?)
+                  $cursorClause
+                ORDER BY enqueue_sequence
+                LIMIT ?
+                """.trimIndent(),
+            ).use { statement ->
+                statement.setString(1, tenantId)
+                statement.setString(2, JobState.QUEUED.wireValue)
+                statement.setString(3, JobState.RUNNING.wireValue)
+                statement.setString(4, JobState.CANCEL_REQUESTED.wireValue)
+                if (afterSequence == null) {
+                    statement.setInt(5, boundedLimit)
+                } else {
+                    statement.setLong(5, afterSequence)
+                    statement.setInt(6, boundedLimit)
+                }
+                statement.executeQuery().use { result ->
+                    buildList {
+                        while (result.next()) {
+                            add(
+                                QueueRow(
+                                    jobId = result.getObject("job_id", UUID::class.java),
+                                    jobType = JobType.entries.single { it.wireValue == result.getString("job_type") },
+                                    state = JobState.entries.single { it.wireValue == result.getString("state") },
+                                    enqueueSequence = result.getLong("enqueue_sequence"),
+                                    queueVersion = result.getLong("queue_version"),
+                                    updatedAt = result.getTimestamp("updated_at").toInstant(),
+                                ),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun recordDuration(jobType: JobType, duration: Duration, completedAt: Instant) {
+        require(!duration.isNegative && !duration.isZero) { "duration must be positive" }
+        dataSource.connection.use { connection ->
+            connection.prepareStatement(
+                "INSERT INTO job_duration_samples(job_type, duration_millis, completed_at) VALUES (?, ?, ?)",
+            ).use { statement ->
+                statement.setString(1, jobType.wireValue)
+                statement.setLong(2, duration.toMillis())
+                statement.setTimestamp(3, Timestamp.from(completedAt))
+                statement.executeUpdate()
+            }
+        }
+    }
+
+    fun durationSamples(jobType: JobType, since: Instant, limit: Int): List<Duration> {
+        val boundedLimit = limit.coerceIn(1, MAX_DURATION_SAMPLES)
+        return dataSource.connection.use { connection ->
+            connection.prepareStatement(
+                """
+                SELECT duration_millis
+                FROM job_duration_samples
+                WHERE job_type = ? AND completed_at >= ?
+                ORDER BY completed_at DESC, sample_id DESC
+                LIMIT ?
+                """.trimIndent(),
+            ).use { statement ->
+                statement.setString(1, jobType.wireValue)
+                statement.setTimestamp(2, Timestamp.from(since))
+                statement.setInt(3, boundedLimit)
+                statement.executeQuery().use { result ->
+                    buildList { while (result.next()) add(Duration.ofMillis(result.getLong("duration_millis"))) }
+                }
+            }
+        }
+    }
 
     private fun existingRequest(
         connection: Connection,
@@ -631,5 +714,9 @@ class JobRepository(
                     version = result.getLong("version"),
                 )
         }
+    }
+
+    companion object {
+        const val MAX_DURATION_SAMPLES: Int = 100
     }
 }

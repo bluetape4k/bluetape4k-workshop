@@ -49,6 +49,16 @@ internal class JobConsoleDatabaseFixture : AutoCloseable {
         }
     }
 
+    fun queryLines(sql: String): List<String> =
+        dataSource.connection.use { connection ->
+            connection.createStatement().use { statement ->
+                statement.execute("SET enable_seqscan = off")
+                statement.executeQuery(sql).use { result ->
+                    buildList { while (result.next()) add(result.getString(1)) }
+                }
+            }
+        }
+
     override fun close() {
         dataSource.close()
         adminConnection().use { connection ->
