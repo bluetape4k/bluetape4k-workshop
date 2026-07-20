@@ -18,6 +18,8 @@ internal class VoucherDigestServiceTest {
         stableBefore.keyVersion shouldBeEqualTo 7
         before.commandTombstone(TENANT, "reserve", "request-1") shouldBeEqualTo
             after.commandTombstone(TENANT, "reserve", "request-1")
+        before.commandTombstoneKeyVersion shouldBeEqualTo 4
+        after.commandTombstoneKeyVersion shouldBeEqualTo 4
 
         val oldVerification = before.verification(TENANT, CAMPAIGN, ALLOCATION, code)
         val currentVerification = after.verification(TENANT, CAMPAIGN, ALLOCATION, code)

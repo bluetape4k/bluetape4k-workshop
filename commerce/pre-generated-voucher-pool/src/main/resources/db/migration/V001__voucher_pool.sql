@@ -297,6 +297,16 @@ CREATE TABLE voucher_pool_command_tombstones (
     PRIMARY KEY (tenant_id,operation,scoped_key_digest), CHECK ((effect_id IS NULL) <> (terminal_code IS NULL))
 );
 
+CREATE FUNCTION voucher_pool_reject_command_tombstone_mutation() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+    RAISE EXCEPTION 'voucher_pool_command_tombstones is tenant-lifetime immutable' USING ERRCODE = '55000';
+END;
+$$;
+CREATE TRIGGER voucher_pool_command_tombstones_tenant_lifetime_immutable
+BEFORE UPDATE OR DELETE ON voucher_pool_command_tombstones
+FOR EACH ROW EXECUTE FUNCTION voucher_pool_reject_command_tombstone_mutation();
+
 CREATE TABLE voucher_pool_audits (
     id BIGSERIAL PRIMARY KEY, tenant_id VARCHAR(64) NOT NULL, campaign_id UUID NOT NULL,
     aggregate_type VARCHAR(32) NOT NULL, aggregate_id UUID NOT NULL, revision BIGINT NOT NULL CHECK(revision>=0),

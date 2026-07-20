@@ -91,6 +91,9 @@ internal class VoucherDigestService(
 ) {
     private val rotatingKeys = rotatingKeys.toMap()
 
+    /** Fixed tenant-lifetime command digest authority version; key material remains encapsulated. */
+    val commandTombstoneKeyVersion: Int get() = commandTombstoneKey.version
+
     init {
         require(rotatingKeys.keys == ROTATING_PURPOSES) {
             "every rotating digest purpose requires an explicit key ring"
