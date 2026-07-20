@@ -1003,6 +1003,21 @@ fun `shutdown follows bounded order and releases cancelled claim`() {
     shutdownDuration() shouldBeLessOrEqualTo 45.seconds
     staleClaims() shouldBeEmpty()
 }
+
+@Test
+fun `shutdown timeout cancels rolls back and releases claim before datasource close`() {
+    startWorkerTransaction(duration = 20.seconds, mutation = CounterAndCheckpointMutation)
+    shutdown()
+    cancellationTime() shouldBeGreaterOrEqualTo shutdownStart() + 12.seconds
+    rollbackVerified().shouldBeTrue()
+    counterDrift() shouldBeEqualTo 0
+    checkpointDrift() shouldBeEqualTo 0
+    claimReleaseDuration() shouldBeLessOrEqualTo 5.seconds
+    eventTime("claim-released") shouldBeLessThan eventTime("datasource-closed")
+    forcedShutdownReason() shouldBeEqualTo "transaction-drain-timeout"
+    invoking { shutdown() }.shouldNotThrowAnyException()
+    shutdownDuration() shouldBeLessOrEqualTo 45.seconds
+}
 ```
 
 - [ ] **Step 2: advisory infrastructure를 구현한다**
