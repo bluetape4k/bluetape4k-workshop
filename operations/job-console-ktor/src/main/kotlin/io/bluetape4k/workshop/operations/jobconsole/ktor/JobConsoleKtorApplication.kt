@@ -7,6 +7,7 @@ import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import io.bluetape4k.workshop.operations.jobconsole.application.BoundedJobEventFanout
 import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleService
 import io.bluetape4k.workshop.operations.jobconsole.application.JobOutboxPoller
+import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleUi
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
 import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobMigration
@@ -101,6 +102,16 @@ fun Application.jobConsoleModule(dataSource: DataSource, demoEnabled: Boolean = 
 
 private fun Application.installJobConsoleRoutes(service: JobConsoleService, fanout: BoundedJobEventFanout) {
     routing {
+        get("/") {
+            call.respondText(JobConsoleUi.indexHtml, ContentType.Text.Html, HttpStatusCode.OK)
+        }
+        get("/healthz") {
+            call.respondJson(HttpStatusCode.OK, mapOf("status" to "up"))
+        }
+        get("/readyz") {
+            val readiness = withContext(Dispatchers.IO) { service.readiness() }
+            call.respondJson(if (readiness.ready) HttpStatusCode.OK else HttpStatusCode.ServiceUnavailable, readiness)
+        }
         route("/v1/jobs") {
             post {
                 val scope = call.demoScope()

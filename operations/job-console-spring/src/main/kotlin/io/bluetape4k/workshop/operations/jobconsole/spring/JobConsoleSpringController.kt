@@ -6,6 +6,8 @@ import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import io.bluetape4k.workshop.operations.jobconsole.application.BoundedJobEventFanout
 import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleService
 import io.bluetape4k.workshop.operations.jobconsole.application.JobOutboxPoller
+import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleUi
+import io.bluetape4k.workshop.operations.jobconsole.observability.JobConsoleReadiness
 import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepositoryException
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
@@ -116,5 +118,23 @@ class JobConsoleSpringQueueController(
     ): QueuePage {
         if (!operator || tenant != tenantId) throw JobRepositoryException(JobProblemCode.SCOPE_DENIED)
         return service.tenantQueue(tenantId, cursor, pageSize)
+    }
+}
+
+@Profile("demo")
+@RestController
+class JobConsoleSpringOperationsController(
+    private val service: JobConsoleService,
+) {
+    @GetMapping("/", produces = [MediaType.TEXT_HTML_VALUE])
+    fun index(): String = JobConsoleUi.indexHtml
+
+    @GetMapping("/healthz")
+    fun health(): Map<String, String> = mapOf("status" to "up")
+
+    @GetMapping("/readyz")
+    fun readiness(): org.springframework.http.ResponseEntity<JobConsoleReadiness> {
+        val readiness = service.readiness()
+        return org.springframework.http.ResponseEntity.status(if (readiness.ready) 200 else 503).body(readiness)
     }
 }

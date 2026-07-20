@@ -78,6 +78,14 @@ class JobRepositoryException(
 class JobRepository(
     private val dataSource: DataSource,
 ) {
+    fun databaseReady(): Boolean =
+        runCatching {
+            dataSource.connection.use { connection ->
+                connection.prepareStatement("SELECT 1").use { statement ->
+                    statement.executeQuery().use { result -> result.next() && result.getInt(1) == 1 }
+                }
+            }
+        }.getOrDefault(false)
 
     fun submit(
         scope: DemoCallerScope,

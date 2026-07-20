@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Job Operations Console</title>
+  <style>
+    :root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; }
+    body { margin: 0; background: #07111f; color: #e7eef8; }
+    main { max-width: 1040px; margin: auto; padding: 48px 24px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .card { background: #102038; border: 1px solid #29415f; border-radius: 14px; padding: 18px; }
+    .value { color: #72e6c1; font-size: 1.35rem; font-weight: 700; }
+    .notice { color: #ffcf70; }
+    code { color: #90c8ff; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Job Operations Console</h1>
+  <p>Spring MVC and Ktor share one PostgreSQL-authoritative job contract.</p>
+  <div class="grid">
+    <section class="card"><h2>Queue</h2><div>Jobs ahead</div><div class="value" id="jobsAhead">—</div></section>
+    <section class="card"><h2>ETA range</h2><div id="etaRange">insufficient data</div><div>Confidence / sample size</div></section>
+    <section class="card"><h2>Progress</h2><div id="progress">0%</div><div>Checkpoint: <span id="checkpoint">—</span></div></section>
+    <section class="card"><h2>Cancellation</h2><div id="cancelAcknowledgement">No request</div></section>
+  </div>
+  <p class="notice">ETA is an estimate, not an SLA. SSE is notification-only; refresh the REST snapshot after an event.</p>
+  <p>Last snapshot update: <time id="lastSnapshotUpdate">—</time></p>
+  <h2>Operator view</h2>
+  <p>Redacted backlog, oldest wait, active leases, retries/dead letters, PostgreSQL readiness, and Redis degraded state only.</p>
+  <p>Demo headers are for local workshops and are not production authentication.</p>
+</main>
+</body>
+</html>

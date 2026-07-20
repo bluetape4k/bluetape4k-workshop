@@ -44,12 +44,18 @@ class KtorJobConsoleHttpTest {
 
     @AfterAll
     fun stopServer() {
-        stopServer?.invoke()
         fixture.dropSchema()
+        stopServer?.invoke()
     }
 
     @Test
     fun `live REST submit snapshot and cancel share the core contract`() {
+        request("GET", "/").body().contains("ETA is an estimate, not an SLA") shouldBeEqualTo true
+        request("GET", "/healthz").statusCode() shouldBeEqualTo 200
+        val readiness = request("GET", "/readyz")
+        readiness.statusCode() shouldBeEqualTo 200
+        readiness.body().contains("\"redis\":\"DEGRADED\"") shouldBeEqualTo true
+
         val submit = request("POST", "/v1/jobs", SUBMIT_BODY, idempotencyKey = "ktor-key")
         submit.statusCode() shouldBeEqualTo 202
         val jobId = requireNotNull(JOB_ID.find(submit.body())?.groupValues?.get(1))

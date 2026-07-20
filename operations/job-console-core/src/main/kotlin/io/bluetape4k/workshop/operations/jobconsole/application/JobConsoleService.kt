@@ -10,6 +10,8 @@ import io.bluetape4k.workshop.operations.jobconsole.signal.NoOpCancelSignal
 import io.bluetape4k.workshop.operations.jobconsole.queue.EtaEstimator
 import io.bluetape4k.workshop.operations.jobconsole.queue.QueueProjectionService
 import io.bluetape4k.workshop.operations.jobconsole.queue.QueuePage
+import io.bluetape4k.workshop.operations.jobconsole.observability.DependencyState
+import io.bluetape4k.workshop.operations.jobconsole.observability.JobConsoleReadiness
 import java.time.Clock
 import java.time.Duration
 import java.util.UUID
@@ -73,6 +75,15 @@ class JobConsoleService(
 
     fun tenantQueue(tenantId: String, cursor: String?, pageSize: Int): QueuePage =
         QueueProjectionService.page(repository.queueRows(tenantId, null, 100), cursor, pageSize)
+
+    fun readiness(redisAvailable: Boolean = false): JobConsoleReadiness {
+        val postgresReady = repository.databaseReady()
+        return JobConsoleReadiness(
+            ready = postgresReady,
+            postgres = if (postgresReady) DependencyState.UP else DependencyState.DOWN,
+            redis = if (redisAvailable) DependencyState.UP else DependencyState.DEGRADED,
+        )
+    }
 
     fun cancel(scope: DemoCallerScope, jobId: UUID): CancelServiceOutcome {
         val durable = repository.cancel(scope, jobId)
