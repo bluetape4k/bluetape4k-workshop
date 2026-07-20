@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.voucherpool.admission
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
@@ -82,6 +83,9 @@ internal class DatabasePermitGate(
         lane: PermitLane,
         block: () -> T,
     ): T {
+        check(!TransactionSynchronizationManager.isActualTransactionActive()) {
+            "database permit must be acquired before starting a transaction"
+        }
         activeLane.get()?.let { held -> throw NestedPermitException(held, lane) }
         val semaphore = permits.getValue(lane)
         val wait = configs.getValue(lane).wait

@@ -37,8 +37,6 @@ management:
 workshop:
   voucher-pool:
     database:
-      hikari-maximum-pool-size: 16
-      connection-acquisition-timeout: 2s
       foreground:
         capacity: 12
         permit-wait: 250ms

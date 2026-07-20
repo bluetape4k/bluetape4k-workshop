@@ -6,6 +6,7 @@ import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.concurrent.virtualthread.VirtualThreads
 import org.junit.jupiter.api.Test
+import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -105,6 +106,26 @@ internal class DatabasePermitGateTest {
                     ),
             )
         }
+    }
+
+    @Test
+    fun `active transaction is rejected before permit acquisition`() {
+        val gate = gate()
+
+        TransactionSynchronizationManager.setActualTransactionActive(true)
+        try {
+            assertFailsWith<IllegalStateException> {
+                gate.withForegroundPermit { error("permit entered with an active transaction") }
+            }
+            gate.snapshot().foregroundInUse shouldBeEqualTo 0
+            gate.snapshot().workerInUse shouldBeEqualTo 0
+            gate.snapshot().sseInUse shouldBeEqualTo 0
+        } finally {
+            TransactionSynchronizationManager.clear()
+        }
+
+        gate.withForegroundPermit { "released" } shouldBeEqualTo "released"
+        gate.snapshot().foregroundInUse shouldBeEqualTo 0
     }
 
     @Test

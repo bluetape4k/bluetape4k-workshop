@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucherpool.config
 
+import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.concurrent.virtualthread.VirtualThreads
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
@@ -24,8 +25,6 @@ import java.util.concurrent.ExecutorService
 import javax.sql.DataSource
 import kotlin.time.toKotlinDuration
 
-private const val DEFAULT_HIKARI_MAXIMUM_POOL_SIZE = 16
-private const val DEFAULT_CONNECTION_ACQUISITION_TIMEOUT_SECONDS = 2L
 private const val DEFAULT_FOREGROUND_CAPACITY = 12
 private const val DEFAULT_FOREGROUND_PERMIT_WAIT_MILLIS = 250L
 private const val DEFAULT_FOREGROUND_TRANSACTION_TIMEOUT_SECONDS = 5L
@@ -45,8 +44,6 @@ internal data class VoucherPoolProperties(
 )
 
 internal data class VoucherPoolDatabaseProperties(
-    val hikariMaximumPoolSize: Int = DEFAULT_HIKARI_MAXIMUM_POOL_SIZE,
-    val connectionAcquisitionTimeout: Duration = Duration.ofSeconds(DEFAULT_CONNECTION_ACQUISITION_TIMEOUT_SECONDS),
     val foreground: VoucherPoolLaneProperties =
         VoucherPoolLaneProperties(
             capacity = DEFAULT_FOREGROUND_CAPACITY,
@@ -91,10 +88,13 @@ internal class VoucherPoolConfiguration {
         }
 
     @Bean
-    fun databasePermitGate(properties: VoucherPoolProperties): DatabasePermitGate {
+    fun databasePermitGate(
+        dataSource: DataSource,
+        properties: VoucherPoolProperties,
+    ): DatabasePermitGate {
         val database = properties.database
         return DatabasePermitGate(
-            hikariMaximumPoolSize = database.hikariMaximumPoolSize,
+            hikariMaximumPoolSize = dataSource.requireHikariDataSource().maximumPoolSize,
             configs =
                 mapOf(
                     PermitLane.FOREGROUND to database.foreground.toPermitConfig(),
@@ -114,37 +114,51 @@ internal class VoucherPoolConfiguration {
         }
 
     @Bean
+    fun voucherPoolJdbcTimeouts(
+        dataSource: DataSource,
+        properties: VoucherPoolProperties,
+    ): VoucherPoolJdbcTimeouts {
+        val database = properties.database
+        val hikariDataSource = dataSource.requireHikariDataSource()
+        return VoucherPoolJdbcTimeouts(
+            connectionAcquisition = Duration.ofMillis(hikariDataSource.connectionTimeout),
+            foregroundTransaction = database.foreground.transactionTimeout,
+            operatorTransaction = database.foreground.transactionTimeout,
+            workerChunkTransaction = database.worker.transactionTimeout,
+            foregroundLock = database.foreground.lockTimeout,
+            operatorLock = database.foreground.lockTimeout,
+            workerLock = database.worker.lockTimeout,
+        )
+    }
+
+    @Bean
     fun voucherPoolJdbcExecutor(
         gate: DatabasePermitGate,
         @Qualifier("springTransactionManager") transactionManager: PlatformTransactionManager,
         metrics: VoucherPoolJdbcMetrics,
         lockTimeoutApplier: VoucherPoolLockTimeoutApplier,
-        properties: VoucherPoolProperties,
-    ): VoucherPoolJdbcExecutor {
-        val database = properties.database
-        return VoucherPoolJdbcExecutor(
+        timeouts: VoucherPoolJdbcTimeouts,
+    ): VoucherPoolJdbcExecutor =
+        VoucherPoolJdbcExecutor(
             gate = gate,
             transactionManager = transactionManager,
-            timeouts =
-                VoucherPoolJdbcTimeouts(
-                    connectionAcquisition = database.connectionAcquisitionTimeout,
-                    foregroundTransaction = database.foreground.transactionTimeout,
-                    operatorTransaction = database.foreground.transactionTimeout,
-                    workerChunkTransaction = database.worker.transactionTimeout,
-                    foregroundLock = database.foreground.lockTimeout,
-                    operatorLock = database.foreground.lockTimeout,
-                    workerLock = database.worker.lockTimeout,
-                ),
+            timeouts = timeouts,
             metrics = metrics,
             lockTimeoutApplier = lockTimeoutApplier,
         )
-    }
 
     private fun VoucherPoolLaneProperties.toPermitConfig(): PermitLaneConfig =
         PermitLaneConfig(
             capacity = capacity,
             wait = permitWait.toKotlinDuration(),
         )
+
+    private fun DataSource.requireHikariDataSource(): HikariDataSource =
+        this as? HikariDataSource
+            ?: error(
+                "pre-generated-voucher-pool requires HikariDataSource so the live pool size and connection timeout " +
+                    "remain authoritative",
+            )
 
     companion object : KLogging()
 }

@@ -159,6 +159,7 @@ val migrationCompatibilityTest = tasks.register<Test>("migrationCompatibilityTes
     group = "verification"
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+    usesService(gradle.sharedServices.registrations.named("test-mutex").get().service)
     useJUnitPlatform {
         includeTags("migration-compatibility")
     }
@@ -172,6 +173,7 @@ val stressTest = tasks.register<Test>("stressTest") {
     group = "verification"
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+    usesService(gradle.sharedServices.registrations.named("test-mutex").get().service)
     useJUnitPlatform {
         includeTags("stress")
     }

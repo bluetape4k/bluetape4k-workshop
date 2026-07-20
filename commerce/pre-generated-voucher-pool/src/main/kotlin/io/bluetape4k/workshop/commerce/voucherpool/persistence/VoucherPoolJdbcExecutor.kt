@@ -9,8 +9,8 @@ import org.springframework.transaction.TransactionTimedOutException
 import org.springframework.transaction.support.TransactionSynchronization
 import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.transaction.support.TransactionTemplate
-import java.lang.reflect.UndeclaredThrowableException
 import java.sql.SQLException
+import java.sql.SQLTimeoutException
 import java.sql.SQLTransientConnectionException
 import java.time.Duration
 import java.util.Collections
@@ -28,6 +28,7 @@ private const val MILLIS_CEILING_OFFSET = MILLIS_PER_SECOND - 1L
 private const val MINIMUM_TIMEOUT_SECONDS = 1L
 private const val MAX_TIMEOUT_CAUSE_DEPTH = 32
 private const val POSTGRES_LOCK_NOT_AVAILABLE = "55P03"
+private const val POSTGRES_QUERY_CANCELED = "57014"
 
 private fun Throwable.timeoutPhaseInCauseChain(): JdbcTimeoutPhase? {
     val visited = Collections.newSetFromMap(IdentityHashMap<Throwable, Boolean>())
@@ -49,6 +50,10 @@ private fun Throwable.directTimeoutPhase(): JdbcTimeoutPhase? =
         SQLTransientConnectionException::class.java.isInstance(this) -> JdbcTimeoutPhase.ACQUISITION
         SQLException::class.java.isInstance(this) &&
             SQLException::class.java.cast(this).sqlState == POSTGRES_LOCK_NOT_AVAILABLE -> JdbcTimeoutPhase.LOCK
+
+        SQLTimeoutException::class.java.isInstance(this) -> JdbcTimeoutPhase.TRANSACTION
+        SQLException::class.java.isInstance(this) &&
+            SQLException::class.java.cast(this).sqlState == POSTGRES_QUERY_CANCELED -> JdbcTimeoutPhase.TRANSACTION
 
         TransactionTimedOutException::class.java.isInstance(this) -> JdbcTimeoutPhase.TRANSACTION
 
@@ -89,6 +94,9 @@ internal data class VoucherPoolJdbcTimeouts(
                 workerLock,
             ).all { !it.isNegative && !it.isZero },
         ) { "JDBC timeouts must be positive" }
+        require(listOf(foregroundLock, operatorLock, workerLock).all { it.toMillis() >= 1L }) {
+            "JDBC lock timeouts must be at least one millisecond"
+        }
     }
 
     fun transactionTimeout(lane: JdbcExecutionLane): Duration =
@@ -178,11 +186,9 @@ internal class VoucherPoolJdbcExecutor(
             }
         } catch (failure: PoolBusyException) {
             throw timeoutFailure(lane, JdbcTimeoutPhase.PERMIT, failure)
-        } catch (failure: SQLException) {
-            throw failure.toTimeoutFailure(lane) ?: failure
-        } catch (failure: TransactionTimedOutException) {
-            throw timeoutFailure(lane, JdbcTimeoutPhase.TRANSACTION, failure)
-        } catch (failure: UndeclaredThrowableException) {
+        } catch (failure: VoucherPoolJdbcTimeoutException) {
+            throw failure
+        } catch (@Suppress("TooGenericExceptionCaught") failure: RuntimeException) {
             throw failure.toTimeoutFailure(lane) ?: failure
         }
 

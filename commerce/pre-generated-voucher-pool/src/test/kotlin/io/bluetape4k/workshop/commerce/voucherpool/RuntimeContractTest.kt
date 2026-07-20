@@ -23,11 +23,13 @@ import org.springframework.core.env.MutablePropertySources
 import org.springframework.core.env.PropertySourcesPropertyResolver
 import org.springframework.core.io.ClassPathResource
 import org.springframework.transaction.TransactionDefinition
+import org.springframework.transaction.CannotCreateTransactionException
 import org.springframework.transaction.TransactionTimedOutException
 import org.springframework.transaction.support.AbstractPlatformTransactionManager
 import org.springframework.transaction.support.DefaultTransactionStatus
 import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.sql.SQLException
+import java.sql.SQLTimeoutException
 import java.sql.SQLTransientConnectionException
 import java.time.Duration
 import java.util.concurrent.CopyOnWriteArrayList
@@ -182,6 +184,86 @@ internal class RuntimeContractTest {
     }
 
     @Test
+    fun `JDBC executor maps generic acquisition wrappers and records one metric`() {
+        val metrics = RecordingJdbcMetrics()
+        val executor = jdbcExecutor(metrics = metrics)
+        val failureCause =
+            RepositoryRuntimeException(
+                "service wrapper",
+                CannotCreateTransactionException(
+                    "transaction acquisition",
+                    SQLTransientConnectionException("pool acquisition"),
+                ),
+            )
+
+        val failure =
+            assertFailsWith<VoucherPoolJdbcTimeoutException> {
+                executor.foregroundTransaction<Unit> { throw failureCause }
+            }
+
+        failure.phase shouldBeEqualTo JdbcTimeoutPhase.ACQUISITION
+        failure.cause shouldBeEqualTo failureCause
+        metrics.timeouts shouldBeEqualTo
+            listOf(JdbcExecutionLane.FOREGROUND to JdbcTimeoutPhase.ACQUISITION)
+    }
+
+    @Test
+    fun `JDBC executor maps SQL timeout to transaction and records one metric`() {
+        val metrics = RecordingJdbcMetrics()
+        val executor = jdbcExecutor(metrics = metrics)
+
+        val failure =
+            assertFailsWith<VoucherPoolJdbcTimeoutException> {
+                executor.workerTransaction<Unit> {
+                    throw RepositoryRuntimeException("repository wrapper", SQLTimeoutException("statement deadline"))
+                }
+            }
+
+        failure.phase shouldBeEqualTo JdbcTimeoutPhase.TRANSACTION
+        metrics.timeouts shouldBeEqualTo
+            listOf(JdbcExecutionLane.WORKER to JdbcTimeoutPhase.TRANSACTION)
+    }
+
+    @Test
+    fun `JDBC executor maps PostgreSQL query cancellation to transaction and records one metric`() {
+        val metrics = RecordingJdbcMetrics()
+        val executor = jdbcExecutor(metrics = metrics)
+
+        val failure =
+            assertFailsWith<VoucherPoolJdbcTimeoutException> {
+                executor.operatorTransaction<Unit> {
+                    throw RepositoryRuntimeException("repository wrapper", SQLException("query cancelled", "57014"))
+                }
+            }
+
+        failure.phase shouldBeEqualTo JdbcTimeoutPhase.TRANSACTION
+        metrics.timeouts shouldBeEqualTo
+            listOf(JdbcExecutionLane.OPERATOR to JdbcTimeoutPhase.TRANSACTION)
+    }
+
+    @Test
+    fun `JDBC executor preserves unknown generic wrapper identity without metrics`() {
+        val metrics = RecordingJdbcMetrics()
+        val executor = jdbcExecutor(metrics = metrics)
+        val unknown = RepositoryRuntimeException("service wrapper", IllegalArgumentException("unknown"))
+
+        val failure =
+            assertFailsWith<RuntimeException> {
+                executor.foregroundTransaction<Unit> { throw unknown }
+            }
+
+        failure shouldBeEqualTo unknown
+        metrics.timeouts shouldBeEqualTo emptyList()
+    }
+
+    @Test
+    fun `JDBC timeout configuration rejects sub-millisecond lock timeout`() {
+        assertFailsWith<IllegalArgumentException> {
+            VoucherPoolJdbcTimeouts(foregroundLock = Duration.ofNanos(1))
+        }
+    }
+
+    @Test
     fun `JDBC executor maps permit timeout and records one metric`() {
         val gate =
             DatabasePermitGate(
@@ -301,4 +383,9 @@ internal class RuntimeContractTest {
             timeouts += lane to phase
         }
     }
+
+    private class RepositoryRuntimeException(
+        message: String,
+        cause: Throwable,
+    ) : RuntimeException(message, cause)
 }
