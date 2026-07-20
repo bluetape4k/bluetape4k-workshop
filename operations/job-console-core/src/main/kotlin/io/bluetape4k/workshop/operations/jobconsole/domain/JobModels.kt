@@ -18,6 +18,9 @@ enum class JobState(
 
     val terminal: Boolean
         get() = this == SUCCEEDED || this == FAILED || this == DEAD_LETTERED || this == CANCELLED
+
+    val active: Boolean
+        get() = this == RUNNING || this == CANCEL_REQUESTED
 }
 
 enum class JobSignal {

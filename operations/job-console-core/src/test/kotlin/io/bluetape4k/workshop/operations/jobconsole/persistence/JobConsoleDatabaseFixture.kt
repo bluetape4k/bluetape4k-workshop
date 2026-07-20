@@ -43,6 +43,12 @@ internal class JobConsoleDatabaseFixture : AutoCloseable {
             }
         }
 
+    fun execute(sql: String) {
+        dataSource.connection.use { connection ->
+            connection.createStatement().use { statement -> statement.execute(sql) }
+        }
+    }
+
     override fun close() {
         dataSource.close()
         adminConnection().use { connection ->
