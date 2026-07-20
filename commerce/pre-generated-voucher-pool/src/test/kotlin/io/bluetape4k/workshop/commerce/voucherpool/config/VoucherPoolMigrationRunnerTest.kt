@@ -74,8 +74,9 @@ internal class VoucherPoolMigrationRunnerTest {
         queryLong(
             """SELECT count(*) FROM pg_constraint c JOIN pg_class t ON t.oid=c.conrelid
                 JOIN pg_namespace n ON n.oid=t.relnamespace WHERE n.nspname='$schema'
-                AND c.contype='f' AND t.relname IN ('voucher_pool_entries','voucher_pool_reservations','voucher_pool_allocations')""",
-        ) shouldBeEqualTo 9L
+                AND c.contype='f' AND t.relname IN
+                    ('voucher_pool_entries','voucher_pool_reservations','voucher_pool_allocations','voucher_pool_audits')""",
+        ) shouldBeEqualTo 12L
     }
 
     @Test

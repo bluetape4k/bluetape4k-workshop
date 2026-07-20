@@ -95,12 +95,129 @@ internal class VoucherPoolMigrationRunner(
 
     private fun apply(connection: Connection, script: VoucherPoolMigrationScript): VoucherPoolMigrationResult {
         connection.createStatement().use { statement ->
-            script.sql.split(';').map(String::trim).filter(String::isNotEmpty).forEach(statement::execute)
+            splitSqlStatements(script.sql).forEach(statement::execute)
         }
         connection.prepareStatement("INSERT INTO voucher_pool_schema_history(version,checksum) VALUES (?,?)").use {
             it.setString(1, script.version); it.setString(2, script.checksum); it.executeUpdate()
         }
         connection.commit()
         return VoucherPoolMigrationResult.APPLIED
+    }
+
+    @Suppress("LongMethod", "CyclomaticComplexMethod") // The scanner keeps PostgreSQL lexical states explicit.
+    private fun splitSqlStatements(sql: String): List<String> {
+        val statements = mutableListOf<String>()
+        val current = StringBuilder()
+        var index = 0
+        var singleQuoted = false
+        var doubleQuoted = false
+        var lineComment = false
+        var blockCommentDepth = 0
+        var dollarTag: String? = null
+        while (index < sql.length) {
+            val next = sql.getOrNull(index + 1)
+            val activeDollarTag = dollarTag
+            when {
+                activeDollarTag != null -> {
+                    if (sql.startsWith(activeDollarTag, index)) {
+                        current.append(activeDollarTag)
+                        index += activeDollarTag.length
+                        dollarTag = null
+                    } else {
+                        current.append(sql[index++])
+                    }
+                }
+
+                lineComment -> {
+                    current.append(sql[index])
+                    if (sql[index++] == '\n') lineComment = false
+                }
+
+                blockCommentDepth > 0 -> {
+                    when {
+                        sql[index] == '/' && next == '*' -> {
+                            current.append("/*")
+                            blockCommentDepth++
+                            index += 2
+                        }
+                        sql[index] == '*' && next == '/' -> {
+                            current.append("*/")
+                            blockCommentDepth--
+                            index += 2
+                        }
+                        else -> current.append(sql[index++])
+                    }
+                }
+
+                singleQuoted -> {
+                    current.append(sql[index])
+                    if (sql[index] == '\'' && next == '\'') {
+                        current.append(next)
+                        index += 2
+                    } else {
+                        if (sql[index] == '\'') singleQuoted = false
+                        index++
+                    }
+                }
+
+                doubleQuoted -> {
+                    current.append(sql[index])
+                    if (sql[index] == '"' && next == '"') {
+                        current.append(next)
+                        index += 2
+                    } else {
+                        if (sql[index] == '"') doubleQuoted = false
+                        index++
+                    }
+                }
+
+                sql[index] == '-' && next == '-' -> {
+                    current.append("--")
+                    lineComment = true
+                    index += 2
+                }
+
+                sql[index] == '/' && next == '*' -> {
+                    current.append("/*")
+                    blockCommentDepth = 1
+                    index += 2
+                }
+
+                sql[index] == '\'' -> {
+                    current.append(sql[index++])
+                    singleQuoted = true
+                }
+
+                sql[index] == '"' -> {
+                    current.append(sql[index++])
+                    doubleQuoted = true
+                }
+
+                sql[index] == '$' -> {
+                    val tagEnd = sql.indexOf('$', startIndex = index + 1)
+                    val tag = tagEnd.takeIf { it >= 0 }?.let { sql.substring(index, it + 1) }
+                    if (tag != null && tag.drop(1).dropLast(1).all { it == '_' || it.isLetterOrDigit() }) {
+                        current.append(tag)
+                        dollarTag = tag
+                        index += tag.length
+                    } else {
+                        current.append(sql[index++])
+                    }
+                }
+
+                sql[index] == ';' -> {
+                    current.toString().trim().takeIf(String::isNotEmpty)?.let(statements::add)
+                    current.clear()
+                    index++
+                }
+
+                else -> current.append(sql[index++])
+            }
+        }
+        check(!singleQuoted && !doubleQuoted && blockCommentDepth == 0 && dollarTag == null) {
+            "unterminated SQL literal or comment"
+        }
+        current.toString().trim().takeIf(String::isNotEmpty)?.let(statements::add)
+        return statements
     }
 }

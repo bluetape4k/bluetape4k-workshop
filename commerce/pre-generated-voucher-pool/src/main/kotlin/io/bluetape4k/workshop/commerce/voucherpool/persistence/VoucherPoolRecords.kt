@@ -31,6 +31,8 @@ internal data class CampaignRecord(
     val replacementAllowance: Int = 0,
     val policyVersion: Long,
     val revision: Long,
+    val createdAt: Instant = Instant.EPOCH,
+    val updatedAt: Instant = Instant.EPOCH,
 )
 
 /** Immutable batch snapshot returned while the batch row lock is held. */
@@ -39,15 +41,21 @@ internal data class BatchRecord(
     val batchId: UUID,
     val campaignId: UUID,
     val state: BatchState,
+    val sourceKind: String,
+    val provenanceDigest: DigestValue,
+    val requestFingerprint: DigestValue,
+    val policyVersion: Long,
     val activatesAt: Instant,
     val expiresAt: Instant? = null,
-    val importCursor: Long = 0,
-    val expectedEntryCount: Long? = null,
-    val committedEntryCount: Long = 0,
-    val sourceDigest: DigestValue? = null,
+    val nextSourceOrdinal: Long = 0,
+    val expectedCount: Long = 0,
+    val acceptedCount: Long = 0,
+    val rejectedCount: Long = 0,
     val checkpointDigest: DigestValue? = null,
-    val failureCode: String? = null,
+    val lastFailureCode: String? = null,
     val revision: Long,
+    val createdAt: Instant = Instant.EPOCH,
+    val updatedAt: Instant = Instant.EPOCH,
 )
 
 /** Immutable entry snapshot used by bounded allocation and worker queries. */
@@ -58,20 +66,31 @@ internal data class EntryRecord(
     val batchId: UUID,
     val sourceOrdinal: Long,
     val state: EntryState,
+    val stableDedupDigest: DigestValue,
+    val verificationDigest: DigestValue,
+    val verificationKeyVersion: Int,
+    val codeCiphertext: DigestValue? = null,
+    val codeNonce: DigestValue? = null,
+    val wrappedDek: DigestValue? = null,
+    val wrapNonce: DigestValue? = null,
+    val kekVersion: String? = null,
     val reservationId: UUID? = null,
     val allocationId: UUID? = null,
     val userDigest: DigestValue? = null,
+    val reservedAt: Instant? = null,
     val reservationExpiresAt: Instant? = null,
+    val allocatedAt: Instant? = null,
     val allocationExpiresAt: Instant? = null,
-    val codeCiphertext: DigestValue? = null,
-    val wrappedDek: DigestValue? = null,
-    val codeNonce: DigestValue? = null,
-    val wrapNonce: DigestValue? = null,
-    val keyVersion: Int = 1,
-    val verificationKeyVersion: Int? = null,
     val revealedAt: Instant? = null,
+    val redeemedAt: Instant? = null,
+    val allocationPolicyVersion: Long? = null,
+    val terminalReason: String? = null,
+    val entitlementRootId: UUID? = null,
+    val replacementCount: Int = 0,
     val quarantinedAt: Instant? = null,
     val revision: Long,
+    val createdAt: Instant = Instant.EPOCH,
+    val updatedAt: Instant = Instant.EPOCH,
 )
 
 /** Immutable user-limit projection locked after campaign and batch guards. */
@@ -90,12 +109,29 @@ internal data class WorkerCandidate(
     val campaignId: UUID,
     val batchId: UUID,
     val entryId: UUID,
+    val expectedCampaignRevision: Long,
+    val expectedBatchRevision: Long,
+    val expectedEntryRevision: Long,
+    val userLimits: List<ExpectedUserLimit> = emptyList(),
+    val reservations: List<ExpectedReservation> = emptyList(),
+)
+
+internal data class ExpectedUserLimit(
+    val userDigest: DigestValue,
+    val expectedRevision: Long,
+)
+
+internal data class ExpectedReservation(
+    val reservationId: UUID,
+    val expectedRevision: Long,
 )
 
 internal data class LockedWorkerChain(
     val campaign: CampaignRecord,
     val batch: BatchRecord,
     val entry: EntryRecord,
+    val userLimits: List<UserLimitRecord> = emptyList(),
+    val reservations: List<ReservationRecord> = emptyList(),
 )
 
 internal data class VoucherPoolAuditRecord(
