@@ -8,6 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
@@ -86,6 +87,7 @@ internal class VoucherPoolPoliciesTest {
         "AVAILABLE,RESERVED,true",
         "RESERVED,AVAILABLE,true",
         "RESERVED,ALLOCATED,true",
+        "RESERVED,EXPIRED,true",
         "ALLOCATED,REDEEMED,true",
         "ALLOCATED,AVAILABLE,false",
         "REDEEMED,REVOKED,false",
@@ -107,6 +109,7 @@ internal class VoucherPoolPoliciesTest {
                 EntryState.AVAILABLE to EntryState.EXPIRED,
                 EntryState.RESERVED to EntryState.AVAILABLE,
                 EntryState.RESERVED to EntryState.ALLOCATED,
+                EntryState.RESERVED to EntryState.EXPIRED,
                 EntryState.RESERVED to EntryState.REVOKED,
                 EntryState.ALLOCATED to EntryState.REDEEMED,
                 EntryState.ALLOCATED to EntryState.RELEASED,
@@ -190,6 +193,16 @@ internal class VoucherPoolPoliciesTest {
         }
         assertFailsWith<IllegalArgumentException> {
             VoucherPoolPolicy.of(1, 15.minutes, (-1).hours, 1)
+        }
+    }
+
+    @Test
+    fun `infinite TTL values are rejected`() {
+        assertFailsWith<IllegalArgumentException> {
+            VoucherPoolPolicy.of(1, Duration.INFINITE, 1.hours, 1)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            VoucherPoolPolicy.of(1, 15.minutes, Duration.INFINITE, 1)
         }
     }
 

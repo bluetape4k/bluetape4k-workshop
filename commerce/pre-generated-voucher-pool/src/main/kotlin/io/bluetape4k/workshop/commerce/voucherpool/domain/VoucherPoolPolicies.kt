@@ -58,6 +58,7 @@ object EntryPolicy {
             EntryState.AVAILABLE to EntryState.EXPIRED,
             EntryState.RESERVED to EntryState.AVAILABLE,
             EntryState.RESERVED to EntryState.ALLOCATED,
+            EntryState.RESERVED to EntryState.EXPIRED,
             EntryState.RESERVED to EntryState.REVOKED,
             EntryState.ALLOCATED to EntryState.REDEEMED,
             EntryState.ALLOCATED to EntryState.RELEASED,

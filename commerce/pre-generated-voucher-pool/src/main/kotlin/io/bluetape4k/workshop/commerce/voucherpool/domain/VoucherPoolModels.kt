@@ -140,8 +140,12 @@ data class VoucherPoolPolicy private constructor(
             replacementAllowance: Int,
         ): VoucherPoolPolicy {
             val validatedLimit = perUserLimit.requirePositiveNumber("perUserLimit")
-            require(reservationTtl.isPositive()) { "reservationTtl must be positive." }
-            require(allocationTtl.isPositive()) { "allocationTtl must be positive." }
+            require(reservationTtl.isFinite() && reservationTtl.isPositive()) {
+                "reservationTtl must be finite and positive."
+            }
+            require(allocationTtl.isFinite() && allocationTtl.isPositive()) {
+                "allocationTtl must be finite and positive."
+            }
             val validatedAllowance =
                 replacementAllowance.requireInRange(
                     start = 0,
