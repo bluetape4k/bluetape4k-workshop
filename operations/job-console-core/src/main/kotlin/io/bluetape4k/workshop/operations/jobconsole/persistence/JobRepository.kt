@@ -55,11 +55,14 @@ data class CheckpointResult(
 data class StoredJob(
     val jobId: UUID,
     val tenantId: String,
+    val submitterHash: String,
+    val jobType: JobType,
     val state: JobState,
     val progress: Int,
     val completedChunk: Long,
     val enqueueSequence: Long,
     val version: Long,
+    val updatedAt: Instant,
 )
 
 data class CancelJobResult(
@@ -237,11 +240,20 @@ class JobRepository(
 
     fun load(jobId: UUID): StoredJob? = dataSource.connection.use { load(jobId, it) }
 
+    fun load(scope: DemoCallerScope, jobId: UUID): StoredJob {
+        val stored = load(jobId) ?: throw JobRepositoryException(JobProblemCode.JOB_NOT_FOUND)
+        if (stored.tenantId != scope.tenantId || stored.submitterHash != normalizedSubmitterHash(scope.submitterHash)) {
+            throw JobRepositoryException(JobProblemCode.SCOPE_DENIED)
+        }
+        return stored
+    }
+
     fun loadTenantJobs(tenantId: String): List<StoredJob> =
         dataSource.connection.use { connection ->
             connection.prepareStatement(
                 """
-                SELECT j.job_id, j.tenant_id, j.state, j.progress, j.enqueue_sequence, j.version,
+                SELECT j.job_id, j.tenant_id, j.submitter_hash, j.job_type, j.state, j.progress,
+                       j.enqueue_sequence, j.version, j.updated_at,
                        COALESCE(c.completed_chunk, 0) AS completed_chunk
                 FROM jobs j
                 LEFT JOIN job_checkpoints c ON c.job_id = j.job_id
@@ -349,6 +361,42 @@ class JobRepository(
             }
         }
     }
+
+    fun submitterQueueRows(scope: DemoCallerScope): List<QueueRow> =
+        dataSource.connection.use { connection ->
+            connection.prepareStatement(
+                """
+                SELECT job_id, job_type, state, enqueue_sequence, queue_version, updated_at
+                FROM jobs
+                WHERE tenant_id = ? AND submitter_hash = ? AND state IN (?, ?, ?)
+                ORDER BY enqueue_sequence
+                LIMIT ?
+                """.trimIndent(),
+            ).use { statement ->
+                statement.setString(1, scope.tenantId)
+                statement.setString(2, normalizedSubmitterHash(scope.submitterHash))
+                statement.setString(3, JobState.QUEUED.wireValue)
+                statement.setString(4, JobState.RUNNING.wireValue)
+                statement.setString(5, JobState.CANCEL_REQUESTED.wireValue)
+                statement.setInt(6, QueueProjectionService.MAX_PAGE_SIZE)
+                statement.executeQuery().use { result ->
+                    buildList {
+                        while (result.next()) {
+                            add(
+                                QueueRow(
+                                    jobId = result.getObject("job_id", UUID::class.java),
+                                    jobType = JobType.entries.single { it.wireValue == result.getString("job_type") },
+                                    state = JobState.entries.single { it.wireValue == result.getString("state") },
+                                    enqueueSequence = result.getLong("enqueue_sequence"),
+                                    queueVersion = result.getLong("queue_version"),
+                                    updatedAt = result.getTimestamp("updated_at").toInstant(),
+                                ),
+                            )
+                        }
+                    }
+                }
+            }
+        }
 
     fun recordDuration(jobType: JobType, duration: Duration, completedAt: Instant) {
         require(!duration.isNegative && !duration.isZero) { "duration must be positive" }
@@ -635,7 +683,8 @@ class JobRepository(
     private fun load(jobId: UUID, connection: Connection): StoredJob? =
         connection.prepareStatement(
             """
-            SELECT j.job_id, j.tenant_id, j.state, j.progress, j.enqueue_sequence, j.version,
+            SELECT j.job_id, j.tenant_id, j.submitter_hash, j.job_type, j.state, j.progress,
+                   j.enqueue_sequence, j.version, j.updated_at,
                    COALESCE(c.completed_chunk, 0) AS completed_chunk
             FROM jobs j LEFT JOIN job_checkpoints c ON c.job_id = j.job_id
             WHERE j.job_id = ?
@@ -649,11 +698,14 @@ class JobRepository(
         StoredJob(
             jobId = getObject("job_id", UUID::class.java),
             tenantId = getString("tenant_id"),
+            submitterHash = getString("submitter_hash").trim(),
+            jobType = JobType.entries.single { it.wireValue == getString("job_type") },
             state = JobState.entries.single { it.wireValue == getString("state") },
             progress = getInt("progress"),
             completedChunk = getLong("completed_chunk"),
             enqueueSequence = getLong("enqueue_sequence"),
             version = getLong("version"),
+            updatedAt = getTimestamp("updated_at").toInstant(),
         )
 
     private fun <T> inTransaction(block: (Connection) -> T): T =

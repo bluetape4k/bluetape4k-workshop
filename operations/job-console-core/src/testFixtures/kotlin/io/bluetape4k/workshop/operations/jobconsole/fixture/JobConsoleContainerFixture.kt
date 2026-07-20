@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.operations.jobconsole.fixture
 
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.storage.RedisServer
+import java.sql.DriverManager
 import java.util.UUID
 
 data class JobConsoleContainerFixture(
@@ -11,6 +12,18 @@ data class JobConsoleContainerFixture(
     val redisUri: String,
     val schema: String,
 ) {
+    fun createSchema() {
+        DriverManager.getConnection(jdbcUrl, databaseUsername, databasePassword).use { connection ->
+            connection.createStatement().use { it.execute("CREATE SCHEMA $schema") }
+        }
+    }
+
+    fun dropSchema() {
+        DriverManager.getConnection(jdbcUrl, databaseUsername, databasePassword).use { connection ->
+            connection.createStatement().use { it.execute("DROP SCHEMA IF EXISTS $schema CASCADE") }
+        }
+    }
+
     companion object {
         fun shared(): JobConsoleContainerFixture {
             val postgres = PostgreSQLServer.Launcher.postgres
