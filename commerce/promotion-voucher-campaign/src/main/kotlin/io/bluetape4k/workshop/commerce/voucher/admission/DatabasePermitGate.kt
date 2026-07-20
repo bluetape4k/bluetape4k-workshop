@@ -41,13 +41,14 @@ internal class DatabasePermitGate(
     private val acquireTimeout: Duration = Duration.ofMillis(250),
     private val metrics: DatabasePermitMetrics = DatabasePermitMetrics.NONE,
 ) {
-    private val semaphores =
+    private val permitCapacities =
         mapOf(
-            DatabaseLane.FOREGROUND to Semaphore(foregroundPermits.requirePositiveNumber("foregroundPermits"), true),
-            DatabaseLane.WORKER to Semaphore(workerPermits.requirePositiveNumber("workerPermits"), true),
-            DatabaseLane.SSE_MAINTENANCE to
-                Semaphore(sseMaintenancePermits.requirePositiveNumber("sseMaintenancePermits"), true),
+            DatabaseLane.FOREGROUND to foregroundPermits.requirePositiveNumber("foregroundPermits"),
+            DatabaseLane.WORKER to workerPermits.requirePositiveNumber("workerPermits"),
+            DatabaseLane.SSE_MAINTENANCE to sseMaintenancePermits.requirePositiveNumber("sseMaintenancePermits"),
         )
+    private val semaphores =
+        permitCapacities.mapValues { (_, permits) -> Semaphore(permits, true) }
     private val heldLane = ThreadLocal<DatabaseLane?>()
     private val lifecycleLock = ReentrantLock()
     private val drained = lifecycleLock.newCondition()
@@ -136,6 +137,12 @@ internal class DatabasePermitGate(
 
     /** Exposes lane-local capacity for health probes and deterministic leak tests. */
     fun availablePermits(lane: DatabaseLane): Int = semaphores.getValue(lane).availablePermits()
+
+    /** Exposes lane-local occupancy without acquiring a permit. */
+    fun inUsePermits(lane: DatabaseLane): Int = permitCapacities.getValue(lane) - availablePermits(lane)
+
+    /** Exposes the fair semaphore queue depth for bounded operational sampling. */
+    fun waitingThreads(lane: DatabaseLane): Int = semaphores.getValue(lane).queueLength
 
     companion object : KLogging() {
         private val RETRY_AFTER: Duration = Duration.ofSeconds(1)

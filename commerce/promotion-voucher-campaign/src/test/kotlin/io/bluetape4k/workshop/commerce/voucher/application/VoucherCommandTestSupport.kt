@@ -24,9 +24,11 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
 import java.util.UUID
+import javax.sql.DataSource
 
 internal abstract class VoucherCommandTestSupport : VoucherCompatibilityTestSupport() {
     private val exposedDatabases = mutableListOf<Database>()
+    private var previousDefaultDatabase: Database? = null
 
     protected lateinit var gate: DatabasePermitGate
     protected lateinit var jdbc: VoucherJdbcExecutor
@@ -44,6 +46,7 @@ internal abstract class VoucherCommandTestSupport : VoucherCompatibilityTestSupp
 
     @BeforeEach
     fun createCommandRuntime() {
+        previousDefaultDatabase = TransactionManager.defaultDatabase
         check(migrationRunner().migrate() in setOf(VoucherMigrationResult.APPLIED, VoucherMigrationResult.ALREADY_APPLIED))
         configureCommandRuntime()
     }
@@ -52,6 +55,8 @@ internal abstract class VoucherCommandTestSupport : VoucherCompatibilityTestSupp
     fun closeCommandDatabase() {
         exposedDatabases.asReversed().forEach(TransactionManager::closeAndUnregister)
         exposedDatabases.clear()
+        TransactionManager.defaultDatabase = previousDefaultDatabase
+        previousDefaultDatabase = null
     }
 
     protected fun configureCommandRuntime(
@@ -60,6 +65,7 @@ internal abstract class VoucherCommandTestSupport : VoucherCompatibilityTestSupp
         acquireTimeout: Duration = Duration.ofSeconds(2),
         lockTimeout: Duration = Duration.ofSeconds(5),
         serviceClock: Clock = clock,
+        runtimeDataSource: DataSource = dataSource,
     ) {
         gate =
             DatabasePermitGate(
@@ -68,7 +74,7 @@ internal abstract class VoucherCommandTestSupport : VoucherCompatibilityTestSupp
                 sseMaintenancePermits = 3,
                 acquireTimeout = acquireTimeout,
             )
-        val transactionManager = SpringTransactionManager(dataSource, DatabaseConfig {}, false)
+        val transactionManager = SpringTransactionManager(runtimeDataSource, DatabaseConfig {}, false)
         exposedDatabases +=
             checkNotNull(
                 TransactionTemplate(transactionManager).execute {

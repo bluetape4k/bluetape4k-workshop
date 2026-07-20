@@ -149,8 +149,10 @@ tasks.test {
     }
 }
 
-val stressRun = providers.gradleProperty("voucherStressRun")
-val stressReportDirectory = layout.buildDirectory.dir(stressRun.map { "reports/voucher-stress/$it" })
+val stressRun = providers.gradleProperty("voucherStressRun").orNull
+val missingStressRun = "missing-voucher-stress-run"
+val resolvedStressRun = stressRun ?: missingStressRun
+val stressReportDirectory = layout.buildDirectory.dir("reports/voucher-stress/$resolvedStressRun").get().asFile.absolutePath
 val stressTest = tasks.register<Test>("stressTest") {
     description = "Runs voucher stress evidence profiles."
     group = "verification"
@@ -161,10 +163,12 @@ val stressTest = tasks.register<Test>("stressTest") {
         includeTags("stress")
     }
     outputs.dir(stressReportDirectory)
+    systemProperty("voucher.stress.run", resolvedStressRun)
+    systemProperty("voucher.stress.report-directory", stressReportDirectory)
     doFirst {
-        val run = stressRun.orNull ?: error("-PvoucherStressRun=<unique-run-id> is required")
-        systemProperty("voucher.stress.run", run)
-        systemProperty("voucher.stress.report-directory", stressReportDirectory.get().asFile.absolutePath)
+        check(systemProperties["voucher.stress.run"] != "missing-voucher-stress-run") {
+            "-PvoucherStressRun=<unique-run-id> is required"
+        }
     }
     shouldRunAfter(tasks.test)
 }

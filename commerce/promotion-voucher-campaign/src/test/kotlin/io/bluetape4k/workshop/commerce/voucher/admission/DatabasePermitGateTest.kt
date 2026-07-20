@@ -64,7 +64,8 @@ internal class DatabasePermitGateTest {
 
             val failure =
                 assertFailsWith<DatabasePermitRejected> {
-                    gate.withPermit(DatabaseLane.FOREGROUND) { "unexpected" }
+                    val result = gate.withPermit(DatabaseLane.FOREGROUND) { Unit }
+                    error("foreground permit was acquired unexpectedly: $result")
                 }
             failure.retryAfter shouldBeEqualTo Duration.ofSeconds(1)
             gate.withPermit(DatabaseLane.WORKER) { "worker-progress" } shouldBeEqualTo "worker-progress"
@@ -75,13 +76,52 @@ internal class DatabasePermitGateTest {
     }
 
     @Test
+    fun `lane probes expose active and queued virtual threads without consuming permits`() {
+        val gate = gate(acquireTimeout = Duration.ofSeconds(5))
+        val foregroundEntered = CountDownLatch(1)
+        val foregroundRelease = CountDownLatch(1)
+        val waiterStarted = CountDownLatch(1)
+
+        VirtualThreads.executorService().use { executor ->
+            val holder =
+                executor.submit {
+                    gate.withPermit(DatabaseLane.FOREGROUND) {
+                        foregroundEntered.countDown()
+                        foregroundRelease.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                    }
+                }
+            foregroundEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            val waiter =
+                executor.submit<String> {
+                    waiterStarted.countDown()
+                    gate.withPermit(DatabaseLane.FOREGROUND) { "queued-progress" }
+                }
+            waiterStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+
+            awaitQueued(gate)
+            gate.inUsePermits(DatabaseLane.FOREGROUND) shouldBeEqualTo 1
+            gate.waitingThreads(DatabaseLane.FOREGROUND) shouldBeEqualTo 1
+            gate.availablePermits(DatabaseLane.WORKER) shouldBeEqualTo 1
+
+            foregroundRelease.countDown()
+            holder.get(5, TimeUnit.SECONDS)
+            waiter.get(5, TimeUnit.SECONDS) shouldBeEqualTo "queued-progress"
+            gate.inUsePermits(DatabaseLane.FOREGROUND) shouldBeEqualTo 0
+            gate.waitingThreads(DatabaseLane.FOREGROUND) shouldBeEqualTo 0
+        }
+    }
+
+    @Test
     fun `nested acquisition is rejected before another lane is touched`() {
         val gate = gate()
 
         assertFailsWith<IllegalStateException> {
-            gate.withPermit(DatabaseLane.FOREGROUND) {
-                gate.withPermit(DatabaseLane.SSE_MAINTENANCE) { "unexpected" }
-            }
+            val result =
+                gate.withPermit(DatabaseLane.FOREGROUND) {
+                    val nestedResult = gate.withPermit(DatabaseLane.SSE_MAINTENANCE) { Unit }
+                    error("nested permit was acquired unexpectedly: $nestedResult")
+                }
+            error("outer permit completed unexpectedly: $result")
         }
     }
 
@@ -105,7 +145,8 @@ internal class DatabasePermitGateTest {
                 executor.submit<Boolean> {
                     Thread.currentThread().interrupt()
                     assertFailsWith<DatabasePermitRejected> {
-                        gate.withPermit(DatabaseLane.FOREGROUND) { "unexpected" }
+                        val result = gate.withPermit(DatabaseLane.FOREGROUND) { Unit }
+                        error("interrupted permit was acquired unexpectedly: $result")
                     }
                     Thread.currentThread().isInterrupted
                 }
@@ -123,4 +164,12 @@ internal class DatabasePermitGateTest {
             sseMaintenancePermits = 1,
             acquireTimeout = acquireTimeout,
         )
+
+    private fun awaitQueued(gate: DatabasePermitGate) {
+        val deadline = System.nanoTime() + Duration.ofSeconds(2).toNanos()
+        while (gate.waitingThreads(DatabaseLane.FOREGROUND) == 0 && System.nanoTime() < deadline) {
+            Thread.onSpinWait()
+        }
+        gate.waitingThreads(DatabaseLane.FOREGROUND) shouldBeEqualTo 1
+    }
 }
