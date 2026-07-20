@@ -86,17 +86,19 @@ enum class VoucherPoolErrorCode {
  * [toString] so accidental diagnostics do not expose it.
  */
 class CanonicalVoucherCode private constructor(
-    val value: String,
-) : Serializable {
-    override fun equals(other: Any?): Boolean =
-        this === other || (other is CanonicalVoucherCode && value == other.value)
+    private val rawValue: String,
+) {
+    /** Runs trusted module code against the raw value without exposing a bean property. */
+    internal fun <T> withRawValue(block: (String) -> T): T = block(rawValue)
 
-    override fun hashCode(): Int = value.hashCode()
+    override fun equals(other: Any?): Boolean =
+        this === other || (other is CanonicalVoucherCode && rawValue == other.rawValue)
+
+    override fun hashCode(): Int = rawValue.hashCode()
 
     override fun toString(): String = "CanonicalVoucherCode([REDACTED])"
 
     companion object {
-        private const val serialVersionUID: Long = 1L
         private const val MAX_CODE_POINTS = 256
 
         /** Creates a voucher code after enforcing its semantic input boundary. */
@@ -128,6 +130,15 @@ data class VoucherPoolPolicy private constructor(
     val allocationTtl: Duration,
     val replacementAllowance: Int,
 ) : Serializable {
+    @Suppress("unused")
+    private fun readResolve(): Any =
+        of(
+            perUserLimit = perUserLimit,
+            reservationTtl = reservationTtl,
+            allocationTtl = allocationTtl,
+            replacementAllowance = replacementAllowance,
+        )
+
     companion object {
         private const val serialVersionUID: Long = 1L
         private const val MAX_REPLACEMENT_ALLOWANCE = 1

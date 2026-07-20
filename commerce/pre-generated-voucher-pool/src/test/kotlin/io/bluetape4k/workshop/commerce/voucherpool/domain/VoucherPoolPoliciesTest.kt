@@ -2,11 +2,22 @@ package io.bluetape4k.workshop.commerce.voucherpool.domain
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.jackson3.Jackson
 import org.junit.jupiter.api.Assertions.assertAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.MethodSource
+import tools.jackson.databind.SerializationFeature
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.NotSerializableException
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
+import java.io.Serializable
 import java.util.stream.Stream
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
@@ -154,15 +165,50 @@ internal class VoucherPoolPoliciesTest {
     @Test
     fun `unicode voucher codes are accepted without changing their value`() {
         val rawCode = "여름-할인-🎟️"
+        val code = CanonicalVoucherCode.of(rawCode)
 
-        CanonicalVoucherCode.of(rawCode).value shouldBeEqualTo rawCode
-        CanonicalVoucherCode.of(rawCode).toString() shouldBeEqualTo "CanonicalVoucherCode([REDACTED])"
+        code.withRawValue { it } shouldBeEqualTo rawCode
+        code.toString() shouldBeEqualTo "CanonicalVoucherCode([REDACTED])"
+    }
+
+    @Test
+    fun `supplementary unicode voucher codes honor the code point limit`() {
+        val supplementaryCodePoint = "🎟"
+
+        CanonicalVoucherCode.of(supplementaryCodePoint.repeat(256)) shouldBeEqualTo
+            CanonicalVoucherCode.of(supplementaryCodePoint.repeat(256))
+        assertFailsWith<IllegalArgumentException> {
+            CanonicalVoucherCode.of(supplementaryCodePoint.repeat(257))
+        }
     }
 
     @Test
     fun `blank and malformed unicode voucher codes are rejected`() {
         assertFailsWith<IllegalArgumentException> { CanonicalVoucherCode.of("   ") }
         assertFailsWith<IllegalArgumentException> { CanonicalVoucherCode.of("ABC\uD800DEF") }
+        assertFailsWith<IllegalArgumentException> { CanonicalVoucherCode.of("ABC\uDC00DEF") }
+    }
+
+    @Test
+    fun `voucher codes cannot be read or written through generic Java serialization`() {
+        val code = CanonicalVoucherCode.of(RAW_CODE_SENTINEL)
+
+        Serializable::class.java.isInstance(code).shouldBeFalse()
+        CanonicalVoucherCode::class.java.methods
+            .any { it.name == "getValue" && it.parameterCount == 0 }
+            .shouldBeFalse()
+        assertFailsWith<NotSerializableException> { serialize(code) }
+    }
+
+    @Test
+    fun `Jackson serialization never exposes a raw voucher code`() {
+        val mapper =
+            Jackson.defaultJsonMapper
+                .rebuild()
+                .apply { configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false) }
+                .build()
+
+        mapper.writeValueAsString(CanonicalVoucherCode.of(RAW_CODE_SENTINEL)) shouldNotContain RAW_CODE_SENTINEL
     }
 
     @Test
@@ -181,6 +227,25 @@ internal class VoucherPoolPoliciesTest {
             { policy.allocationTtl shouldBeEqualTo 1.hours },
             { policy.replacementAllowance shouldBeEqualTo 1 },
         )
+    }
+
+    @Test
+    fun `valid policy survives Java serialization roundtrip`() {
+        val policy = validPolicy()
+
+        deserialize(serialize(policy), VoucherPoolPolicy::class.java) shouldBeEqualTo policy
+    }
+
+    @Test
+    fun `Java deserialization rejects a policy whose serialized state bypasses the factory`() {
+        val policy = validPolicy()
+        val limitField = VoucherPoolPolicy::class.java.getDeclaredField("perUserLimit")
+        limitField.trySetAccessible().shouldBeTrue()
+        limitField.setInt(policy, 0)
+
+        assertFailsWith<IllegalArgumentException> {
+            deserialize(serialize(policy), VoucherPoolPolicy::class.java)
+        }
     }
 
     @Test
@@ -234,6 +299,16 @@ internal class VoucherPoolPoliciesTest {
         VoucherPoolErrorCatalog.codes shouldBeEqualTo VoucherPoolErrorCode.entries.toSet()
     }
 
+    @Test
+    fun `expected error cases contain every public code exactly once`() {
+        val expectedCodes = expectedErrorCases().map(ErrorCatalogCase::code)
+
+        assertAll(
+            { expectedCodes.toSet() shouldBeEqualTo VoucherPoolErrorCode.entries.toSet() },
+            { expectedCodes.size shouldBeEqualTo expectedCodes.toSet().size },
+        )
+    }
+
     private fun <S> allowedTransitions(
         states: List<S>,
         canTransition: (S, S) -> Boolean,
@@ -243,16 +318,39 @@ internal class VoucherPoolPoliciesTest {
             .filter { (from, to) -> canTransition(from, to) }
             .toSet()
 
+    private fun validPolicy(): VoucherPoolPolicy =
+        VoucherPoolPolicy.of(
+            perUserLimit = 1,
+            reservationTtl = 15.minutes,
+            allocationTtl = 1.hours,
+            replacementAllowance = 1,
+        )
+
+    private fun serialize(value: Any): ByteArray =
+        ByteArrayOutputStream().use { buffer ->
+            ObjectOutputStream(buffer).use { output -> output.writeObject(value) }
+            buffer.toByteArray()
+        }
+
+    private fun <T : Any> deserialize(
+        serialized: ByteArray,
+        type: Class<T>,
+    ): T = ObjectInputStream(ByteArrayInputStream(serialized)).use { type.cast(it.readObject()) }
+
     companion object {
+        private const val RAW_CODE_SENTINEL = "raw-voucher-code-must-not-leak"
+
         @JvmStatic
-        fun errorCatalogCases(): Stream<ErrorCatalogCase> =
+        fun errorCatalogCases(): Stream<ErrorCatalogCase> = expectedErrorCases().stream()
+
+        private fun expectedErrorCases(): List<ErrorCatalogCase> =
             (
                 commandCases() +
                     capacityCases() +
                     stateCases() +
                     resourceCases() +
                     protectionCases()
-            ).stream()
+            )
 
         private fun commandCases(): List<ErrorCatalogCase> =
             listOf(
