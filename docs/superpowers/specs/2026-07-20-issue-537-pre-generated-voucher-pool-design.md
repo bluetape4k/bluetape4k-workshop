@@ -229,13 +229,14 @@ locking SQL만 소유한다.
 
 ### Campaign
 
-`voucher_pool_campaigns`는 tenant/campaign public ID, `DRAFT|ACTIVE|PAUSED|REVOKED` state, per-user
-limit, reservation/allocation TTL, replacement allowance, policy version, revision과 audit timestamps를
+`voucher_pool_campaigns`는 tenant/campaign public ID, `DRAFT|ACTIVE|PAUSED|REVOKING|REVOKED` state,
+per-user limit, reservation/allocation TTL, replacement allowance, policy version, revision과 audit timestamps를
 가진 단일 policy aggregate다. operator create는 `If-None-Match: *`와 idempotency로 `DRAFT`를 만들고,
 policy update는 DRAFT/PAUSED에서 expected revision으로 수행하며 activate가 first `ACTIVE`를 만든다.
 batch lifecycle과 entry eligibility는 이 campaign snapshot 아래에 있으며 campaign pause/revoke는 모든
-batch보다 먼저 lock한다. campaign `REVOKED`는 terminal이고 campaign state와 batch state 중 더
-제한적인 결과가 foreground command를 지배한다.
+batch보다 먼저 lock한다. accepted revoke는 campaign을 `REVOKING`으로 먼저 commit해 새 foreground
+transition을 차단하고 worker 완료 뒤 `REVOKED`로 terminalize한다. campaign `REVOKED`는 terminal이고
+campaign state와 batch state 중 더 제한적인 결과가 foreground command를 지배한다.
 
 ### Voucher batch
 
@@ -414,6 +415,11 @@ committed owner/lease를 다시 확인한 뒤 effect와 safe descriptor를 final
 모든 foreground/operator/worker transaction의 전역 lock order는 `campaign -> batch -> user-limit ->
 reservation -> entry -> audit/inbox`다. 각 command는 필요한 row만 잠그되 이 상대 순서를 지킨다.
 필요한 ID는 lock 없이 먼저 resolve할 수 있지만 역순 lock은 금지한다.
+read-only policy/state guard가 필요한 foreground command는 campaign과 batch를 `FOR SHARE`로 잠가 같은
+campaign의 foreground 요청끼리는 호환되게 한다. policy/pause/revoke/activate와 worker state 전이는
+row update의 exclusive lock을 사용해 기존 foreground commit 뒤 순서를 정하고, 이후 요청은 새 state를
+관찰한다. foreground path에서 campaign/batch `FOR UPDATE`를 사용해 같은 campaign 트래픽을 직렬화하지
+않는다.
 batch pause/revoke/expiry와 allocate/redeem은 batch lock 또는 expected state/revision conditional update로
 commit 순서를 고정한다. deadlock, permit wait와 lock timeout은 terminal descriptor를 저장하지 않는
 retryable `503`과 bounded `Retry-After`로 매핑한다.
@@ -439,14 +445,15 @@ eligible row가 보이면 transient contention `503 POOL_BUSY`, 실제 row가 �
 
 allocation은 campaign, batch, user-limit, reservation, entry 순서로 lock하고 owner, expiry,
 campaign/batch state와 policy version을 다시 확인한다. campaign `ACTIVE`만 allocation을 허용하고
-`PAUSED|REVOKED`는 각각 stable error를 반환한다. `allocation_expires_at`은 PostgreSQL time에서
+`PAUSED|REVOKING|REVOKED`는 각각 stable error를 반환한다. `allocation_expires_at`은 PostgreSQL time에서
 `min(batch.expires_at, now + policy allocationTtl)`로 snapshot한다. batch pause/revoke가 먼저 commit하면
 allocation은 거절된다. allocation이 먼저 commit하면 후속 revoke가 `ALLOCATED -> REVOKED`를 기록한다.
 
 reveal은 같은 전역 순서로 campaign/batch/reservation/entry를 lock하고 `ALLOCATED`, correct owner,
 `revealed_at IS NULL`, ciphertext 존재를 검증한다. campaign `ACTIVE`만 새 raw-code 공개를 허용하고
-`PAUSED|REVOKED`는 각각 `CAMPAIGN_PAUSED|CAMPAIGN_REVOKED`다. decrypt/tag 검증과 ciphertext 제거를 같은
-transaction에서 수행한다. commit 뒤 response serialization이 실패해도 entry는 exposed로 취급한다.
+`PAUSED|REVOKING|REVOKED`는 각각 `CAMPAIGN_PAUSED|CAMPAIGN_REVOKING|CAMPAIGN_REVOKED`다.
+decrypt/tag 검증과 ciphertext 제거를 같은 transaction에서 수행한다. commit 뒤 response serialization이
+실패해도 entry는 exposed로 취급한다.
 
 ### Redemption과 revocation
 
@@ -455,9 +462,13 @@ resolve하고 전역 순서로 lock한다. canonical code digest를 retained ver
 비교하고 batch/campaign safety state, allocation expiry와 policy snapshot을 검증한 뒤
 `ALLOCATED -> REDEEMED`를 단 한 번 기록한다.
 
-batch revocation/expiry worker는 batch를 `REVOKING|EXPIRING`으로 바꾸고 durable cursor 뒤 entry를
-`FOR UPDATE SKIP LOCKED`로 최대 100개씩 짧은 transaction에서 처리한다. cursor 끝에서 wrap-around해
-skipped row를 재검사하며 bounded run deadline 뒤 backoff한다. zero-remaining authoritative query와
+batch revocation/expiry worker는 batch를 `REVOKING|EXPIRING`으로 바꾸고 durable cursor 뒤 최대 100개의
+candidate entry와 연결된 reservation/user-limit ID를 lock 없이 읽는다. 짧은 transaction은 campaign,
+batch, 정렬된 user-limit, reservation, entry 순서로 lock하고 마지막 entry lock은
+`FOR UPDATE SKIP LOCKED` 또는 expected state/revision CAS로 확정한다. candidate가 바뀌었으면 effect 없이
+건너뛰고 다음 cursor/wrap-around에서 다시 판정한다. entry lock을 먼저 유지한 채 user-limit을 갱신하는
+역순 worker path는 금지한다. cursor 끝에서 wrap-around해 skipped row를 재검사하며 bounded run deadline
+뒤 backoff한다. zero-remaining authoritative query와
 counter reconciliation이 통과해야 batch를 terminal로 바꾼다. `AVAILABLE|RESERVED|ALLOCATED`는
 각 worker의 `REVOKED|EXPIRED`, `REDEEMED`는 그대로 유지한다. redemption과 worker는 같은 campaign-first
 lock order와 revision으로 단일 terminal outcome을 만든다.
@@ -553,7 +564,7 @@ optional `retryAfterSeconds`만 가진다.
 | `POOL_EXHAUSTED`, `USER_LIMIT_REACHED` | 409 | terminal / new · store | UI terminal 또는 operator 확인 |
 | `STALE_REVISION` | 409 | no / new · release | snapshot refresh |
 | `CAMPAIGN_NOT_ACTIVE`, `CAMPAIGN_PAUSED`, `BATCH_PAUSED`, `BATCH_EXPIRING` | 409 | retry / same · release | 상태 refresh/backoff |
-| `CAMPAIGN_REVOKED`, `BATCH_REVOKED`, `BATCH_EXPIRED`, `BATCH_FAILED_TERMINAL` | 409 | terminal / new · store | 새 campaign/batch 또는 operator 확인 |
+| `CAMPAIGN_REVOKING`, `CAMPAIGN_REVOKED`, `BATCH_REVOKED`, `BATCH_EXPIRED`, `BATCH_FAILED_TERMINAL` | 409 | terminal / new · store | 새 campaign/batch 또는 operator 확인 |
 | `RESERVATION_EXPIRED`, `ALLOCATION_EXPIRED` | 409 | terminal / new · store | 새 reservation/recovery 판단 |
 | `WRONG_OWNER`, `SCOPE_NOT_FOUND` | 404 | no · release | resource를 노출하지 않음 |
 | `RATE_LIMITED` | 429 | retry / same · release | `Retry-After` |
@@ -667,11 +678,14 @@ startup을 직렬화하고 checksum drift는 startup fail-closed다. clean, curr
 startup을 검증한다. 변경은 expand → compatible dual-read/write → contract 순서이며 이 예제의 rollback은
 직전 schema와 binary까지만 보장한다.
 
-DB backup은 referenced KEK/verification/dedup key-version inventory와 같은 recovery unit으로 기록한다.
-restore는 key manifest를 먼저 검증하고 DB를 복구한 뒤 live ciphertext coverage, counter, idempotency
-replay, audit/cursor, stale worker takeover와 one-time reveal smoke를 실행한다. rotate는 current 추가 →
+DB backup은 referenced KEK/verification/dedup/command-tombstone digest key-version inventory와 같은
+recovery unit으로 기록한다. restore는 descriptor-purged tombstone이 참조하는 key version까지 manifest에서
+먼저 검증하고 DB를 복구한 뒤 live ciphertext coverage, counter, idempotency replay, audit/cursor, stale
+worker takeover와 one-time reveal smoke를 실행한다. restore smoke는 descriptor purge 뒤 같은 key 요청이
+새 effect 없이 `410 REPLAY_WINDOW_EXPIRED`가 되는지도 검증한다. rotate는 current 추가 →
 read set 유지 → reference drain 확인 → backup/rollback rehearsal → retire 순서다. KEK/verification key는
-이 절차로 회전하고, stable dedup key는 tenant-lifetime tombstone이 존재하는 동안 retire하지 않는다.
+이 절차로 회전하고, stable dedup과 command-tombstone digest key는 tenant-lifetime tombstone이 존재하는
+동안 retire하지 않는다.
 
 ## Observability, retention과 runbook
 
@@ -766,8 +780,10 @@ TDD의 RED → GREEN → REFACTOR를 behavior별로 기록한다.
 - generated chunk rollback/regeneration, committed replay와 10,000-entry finalization
 - campaign create/policy/activate와 pause/revoke-versus-allocation/reveal forced race
 - redemption/revoke, pause/allocate, expiry/reveal race
+- same-campaign foreground stress에서 campaign/batch exclusive-lock queue가 없고 pool throughput이 유지됨
+- worker-versus-allocation/replacement forced race에서 deadlock 0건과 정확한 user-limit counter delta
 - worker duplicate claim, restart, reconciliation drift repair
-- migration clean/existing DB, failed checksum, backup/restore
+- migration clean/existing DB, failed checksum, tombstone-key 포함 backup/restore와 post-purge `410` smoke
 - global lock order, forced deadlock/timeout mapping, stale worker takeover와 batch expiry terminalization
 - physical FK/check/partial index, counter delta와 negative/drift guard
 - entry purge 및 cross-campaign duplicate-code reject, descriptor purge 뒤 same-key no-effect tombstone
