@@ -17,7 +17,7 @@ envelope encryption과 tenant-lifetime digest가 raw code와 replay 경계를 �
 4.1.0 MVC/Tomcat, Exposed 1.3.0 JDBC, PostgreSQL, HikariCP, Redis/Lettuce, Bucket4j, Bluetape leader,
 Micrometer, JUnit 5, Kluent, MockK, live WebTestClient, `bluetape4k-dependencies:1.3.1`,
 `bluetape4k-exposed-jdbc`, `bluetape4k-exposed-jdbc-tests`, `bluetape4k-testcontainers`,
-`bluetape4k-virtualthread-jdk25`.
+`bluetape4k-virtualthread-jdk25`, Kover 0.9.8 report-only XML.
 
 ---
 
@@ -28,8 +28,10 @@ Micrometer, JUnit 5, Kluent, MockK, live WebTestClient, `bluetape4k-dependencies
 - module은 `commerce/pre-generated-voucher-pool`, Gradle project는
   `:commerce-pre-generated-voucher-pool`, package는
   `io.bluetape4k.workshop.commerce.voucherpool`이다.
-- root `platform(libs.bluetape4k.dependencies)`만 Bluetape version authority로 사용한다. 개별 BOM,
-  명시 Bluetape version과 새 dependency를 추가하지 않는다.
+- root `platform(libs.bluetape4k.dependencies)`만 Bluetape version authority로 사용한다. 개별 BOM과
+  명시 Bluetape module version은 추가하지 않는다. 승인 설계가 요구한 report-only Kover plugin만
+  `gradle/libs.versions.toml`에 중앙 catalog와 같은 0.9.8로 등록하며 새 runtime dependency는 추가하지
+  않는다.
 - `promotion-voucher-campaign`의 Gradle/Testcontainers/HTTP/CI 패턴은 차용하지만 production source를
   복사하거나 cross-module runtime dependency로 연결하지 않는다.
 - production operational class는 `KLogging`을 사용하고 raw code, user/device/IP, idempotency key,
@@ -44,9 +46,9 @@ Micrometer, JUnit 5, Kluent, MockK, live WebTestClient, `bluetape4k-dependencies
 - public DTO와 configuration properties는 English KDoc, validation, `Serializable`, explicit
   `serialVersionUID`를 가진다. production Kotlin에 `!!`, deprecated
   `SqlExpressionBuilder.eq`, `println`과 raw payload `toString()`을 추가하지 않는다.
-- root에는 Kover plugin/task/Codecov 업로드가 존재하지 않는다. 새 coverage dependency는 추가하지
-  않고 Kover XML은 repository-infrastructure N/A로 기록한다. 대신 compile, unit/integration/stress,
-  detekt task discovery, forbidden scan과 test-result artifact를 필수 증거로 유지한다.
+- Kover는 module-local report-only XML로 적용한다. hard threshold는 추가하지 않으며
+  `:commerce-pre-generated-voucher-pool:koverXmlReport`와 XML artifact 존재를 local/Examples CI에서
+  검증한다. Codecov uploader를 새로 도입하지 않고 XML artifact visibility를 보존한다.
 
 ## 파일 구조와 책임
 
@@ -54,6 +56,7 @@ Micrometer, JUnit 5, Kluent, MockK, live WebTestClient, `bluetape4k-dependencies
 
 - `commerce/pre-generated-voucher-pool/build.gradle.kts`: Java 25, versionless dependencies,
   `test`, `migrationCompatibilityTest`, `stressTest` task
+- `gradle/libs.versions.toml`: Kover 0.9.8 plugin alias only
 - `commerce/pre-generated-voucher-pool/src/main/kotlin/io/bluetape4k/workshop/commerce/voucherpool/PreGeneratedVoucherPoolApplication.kt`: application entrypoint
 - `commerce/pre-generated-voucher-pool/src/main/kotlin/io/bluetape4k/workshop/commerce/voucherpool/domain/VoucherPoolModels.kt`: campaign/batch/entry/reservation/allocation 상태와 DTO
 - `commerce/pre-generated-voucher-pool/src/main/kotlin/io/bluetape4k/workshop/commerce/voucherpool/domain/VoucherPoolPolicies.kt`: validation, transition, TTL와 error policy
@@ -126,7 +129,7 @@ Micrometer, JUnit 5, Kluent, MockK, live WebTestClient, `bluetape4k-dependencies
 | campaign shared lock가 exclusive queue로 변질 | Hikari pending, lock wait, throughput collapse | Task 7 barrier test와 Task 13 two-run stress 재실행 | foreground repository commit revert |
 | worker reverse lock/deadlock | PostgreSQL deadlock, counter drift | candidate ID 선조회와 canonical relock, Task 8 forced race | worker task commit revert |
 | reveal commit 뒤 response 유실 | duplicate raw code 또는 second pool consumption | safe descriptor + one replacement root test | reveal/replacement commit revert |
-| tombstone key 누락 restore | post-purge retry가 새 effect 생성 | Task 12 key-manifest preflight와 `410` smoke | migration/retention commit revert |
+| tombstone key 누락 restore | post-purge retry가 새 effect 생성 | Task 12 key-manifest preflight와 `410` smoke | destructive down migration 금지; compatible previous binary rollback, 아니면 key manifest 포함 backup restore 후 roll-forward |
 | shared schema test isolation | relation missing 또는 migration history drift | Base58 schema와 `currentSchema`, full module clean rerun | test-schema commit revert |
 | Redis 장애가 terminal reject 생성 | outcome이 healthy profile과 다름 | node-local cap + always-on JDBC permit, outage profile | admission commit revert |
 | module registration 누락 | project count/README/workflow artifact drift | Task 14 `105` count, actionlint와 sequential Commerce lane | registration-only commit revert |
@@ -138,6 +141,7 @@ Micrometer, JUnit 5, Kluent, MockK, live WebTestClient, `bluetape4k-dependencies
 **Pattern skills:** `bluetape-kotlin-patterns`, `ecc-springboot-kotlin`, `ecc-kotlin-testing`
 
 **Files:**
+- Modify: `gradle/libs.versions.toml`
 - Create: `commerce/pre-generated-voucher-pool/build.gradle.kts`
 - Create: `commerce/pre-generated-voucher-pool/src/main/kotlin/io/bluetape4k/workshop/commerce/voucherpool/PreGeneratedVoucherPoolApplication.kt`
 - Create: `commerce/pre-generated-voucher-pool/src/main/kotlin/io/bluetape4k/workshop/commerce/voucherpool/config/VoucherPoolConfiguration.kt`
@@ -167,6 +171,7 @@ plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.detekt)
+    alias(libs.plugins.kover)
 }
 
 java { toolchain { languageVersion.set(JavaLanguageVersion.of(25)) } }
@@ -177,6 +182,13 @@ kotlin {
 springBoot {
     mainClass.set("io.bluetape4k.workshop.commerce.voucherpool.PreGeneratedVoucherPoolApplicationKt")
 }
+kover {
+    reports {
+        total {
+            xml { onCheck = false }
+        }
+    }
+}
 configurations.configureEach {
     exclude(group = "io.github.bluetape4k", module = "bluetape4k-virtualthread-jdk21")
 }
@@ -184,7 +196,13 @@ configurations.configureEach {
 
 Dependencies are the existing aliases for core/logging/jackson3/idgenerators/micrometer/virtualthread,
 Exposed JDBC, Bucket4j/Lettuce/leader, Hikari/PostgreSQL, Spring MVC/Actuator/validation and the existing
-JUnit/Kluent/Testcontainers/MockK test stack. No catalog edit is permitted.
+JUnit/Kluent/Testcontainers/MockK test stack. Add only `kover = "0.9.8"` under `[versions]` and
+`kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }` under `[plugins]`.
+
+Define `migrationCompatibility` and `stressTest` source sets with their own compile/runtime classpaths.
+Their `Test` tasks use JUnit Platform, `migrationCompatibilityTest` includes tag `migration-compatibility`,
+`stressTest` includes tag `stress`, both depend on test classes, and neither runs as part of the default
+`test` task. Container-backed executions always use `--max-workers=1`.
 
 - [ ] **Step 3: runtime and permit RED tests를 작성한다**
 
@@ -199,9 +217,29 @@ fun `runtime uses Java 25 virtual threads and excludes the JDK21 provider`() {
 
 @Test
 fun `foreground timeout releases its permit`() {
-    val gate = DatabasePermitGate(foreground = 1, worker = 1, sse = 1, wait = 25.milliseconds)
+    val gate = DatabasePermitGate(
+        hikariMaximumPoolSize = 3,
+        configs = mapOf(
+            PermitLane.FOREGROUND to PermitLaneConfig(1, 25.milliseconds),
+            PermitLane.WORKER to PermitLaneConfig(1, 1.seconds),
+            PermitLane.SSE to PermitLaneConfig(1, 1.seconds),
+        ),
+    )
     gate.withForegroundPermit { invoking { gate.withForegroundPermit { Unit } } shouldThrow PoolBusyException::class }
     gate.snapshot().foregroundInUse shouldBeEqualTo 0
+}
+
+@Test
+fun `default lane budgets fit Hikari and nested acquisition fails immediately`() {
+    val gate = DatabasePermitGate.default(hikariMaximumPoolSize = 16)
+    gate.snapshot().capacities shouldBeEqualTo mapOf(
+        PermitLane.FOREGROUND to 12,
+        PermitLane.WORKER to 1,
+        PermitLane.SSE to 3,
+    )
+    gate.withForegroundPermit {
+        invoking { gate.withSsePermit { Unit } } shouldThrow NestedPermitException::class
+    }
 }
 ```
 
@@ -210,28 +248,27 @@ fun `foreground timeout releases its permit`() {
 ```kotlin
 enum class PermitLane { FOREGROUND, WORKER, SSE }
 
+data class PermitLaneConfig(val capacity: Int, val wait: kotlin.time.Duration)
+
 data class PermitSnapshot(
     val foregroundInUse: Int,
     val workerInUse: Int,
     val sseInUse: Int,
+    val capacities: Map<PermitLane, Int>,
 )
 
 class DatabasePermitGate(
-    foreground: Int,
-    worker: Int,
-    sse: Int,
-    private val wait: kotlin.time.Duration,
+    hikariMaximumPoolSize: Int,
+    private val configs: Map<PermitLane, PermitLaneConfig>,
 ) {
-    private val permits = mapOf(
-        PermitLane.FOREGROUND to Semaphore(foreground, true),
-        PermitLane.WORKER to Semaphore(worker, true),
-        PermitLane.SSE to Semaphore(sse, true),
-    )
-    private val capacities = mapOf(
-        PermitLane.FOREGROUND to foreground,
-        PermitLane.WORKER to worker,
-        PermitLane.SSE to sse,
-    )
+    init {
+        require(configs.keys == PermitLane.entries.toSet())
+        require(configs.values.sumOf { it.capacity } <= hikariMaximumPoolSize)
+        require(configs.values.all { it.capacity > 0 && it.wait.isPositive() })
+    }
+
+    private val permits = configs.mapValues { (_, config) -> Semaphore(config.capacity, true) }
+    private val activeLane = ThreadLocal<PermitLane?>()
 
     fun <T> withForegroundPermit(block: () -> T): T = withPermit(PermitLane.FOREGROUND, block)
     fun <T> withWorkerPermit(block: () -> T): T = withPermit(PermitLane.WORKER, block)
@@ -241,26 +278,36 @@ class DatabasePermitGate(
         foregroundInUse = inUse(PermitLane.FOREGROUND),
         workerInUse = inUse(PermitLane.WORKER),
         sseInUse = inUse(PermitLane.SSE),
+        capacities = configs.mapValues { it.value.capacity },
     )
 
     private fun <T> withPermit(lane: PermitLane, block: () -> T): T {
+        if (activeLane.get() != null) throw NestedPermitException(activeLane.get(), lane)
         val semaphore = permits.getValue(lane)
+        val wait = configs.getValue(lane).wait
         if (!semaphore.tryAcquire(wait.inWholeNanoseconds, TimeUnit.NANOSECONDS)) {
             throw PoolBusyException(lane)
         }
+        activeLane.set(lane)
         return try {
             block()
         } finally {
+            activeLane.remove()
             semaphore.release()
         }
     }
 
-    private fun inUse(lane: PermitLane): Int = capacities.getValue(lane) - permits.getValue(lane).availablePermits()
+    private fun inUse(lane: PermitLane): Int =
+        configs.getValue(lane).capacity - permits.getValue(lane).availablePermits()
 }
 ```
 
-Use `java.util.concurrent.Semaphore` and `TimeUnit`; `VoucherPoolJdbcExecutor` applies
-foreground `2.seconds`, operator/worker `5.seconds` transaction deadlines.
+Use `java.util.concurrent.Semaphore` and `TimeUnit`. `VoucherPoolJdbcExecutor` keeps three independent
+budgets: Hikari connection acquisition `2.seconds`, foreground/operator transaction and lock `5.seconds`,
+worker chunk `10.seconds`. Timeout metrics and error mapping distinguish acquisition, permit, lock and
+transaction deadline; boundary tests assert each duration and release/cancellation behavior. The executor
+uses Spring `TransactionTemplate` around Exposed/JDBC work and exposes an explicit `afterCommit` hook; tests
+assert transaction synchronization is active and never signal after rollback.
 
 - [ ] **Step 5: targeted GREEN과 module registration을 확인한다**
 
@@ -271,12 +318,13 @@ Run:
 ./gradlew :commerce-pre-generated-voucher-pool:tasks --all
 ```
 
-Expected: tests PASS; `test`, `stressTest`, `migrationCompatibilityTest`, `detekt`, `detektTest` visible.
+Expected: tests PASS; `test`, `stressTest`, `migrationCompatibilityTest`, `detekt`, `detektTest`,
+`koverXmlReport` visible.
 
 - [ ] **Step 6: Lore commit을 만든다**
 
 ```bash
-git add commerce/pre-generated-voucher-pool
+git add gradle/libs.versions.toml commerce/pre-generated-voucher-pool
 git commit -m "feat: bound voucher pool runtime capacity" -m "Constraint: Java 25 virtual traffic must not outrun the PostgreSQL pool.\nConfidence: high\nScope-risk: moderate\nTested: RuntimeContractTest and DatabasePermitGateTest.\nNot-tested: Database behavior begins in the next task."
 ```
 
@@ -334,13 +382,17 @@ enum class VoucherPoolErrorCode {
     POOL_BUSY, POOL_EXHAUSTED, USER_LIMIT_REACHED, STALE_REVISION,
     CAMPAIGN_NOT_ACTIVE, CAMPAIGN_PAUSED, CAMPAIGN_REVOKING, CAMPAIGN_REVOKED,
     BATCH_PAUSED, BATCH_EXPIRING, BATCH_REVOKED, BATCH_EXPIRED,
+    BATCH_FAILED_RETRYABLE, BATCH_FAILED_TERMINAL,
     RESERVATION_EXPIRED, ALLOCATION_EXPIRED, WRONG_OWNER, SCOPE_NOT_FOUND,
-    RATE_LIMITED, KEY_MATERIAL_UNAVAILABLE, CIPHERTEXT_INVALID, ALREADY_REVEALED,
+    RATE_LIMITED, BACKEND_TIMEOUT, KEY_MATERIAL_UNAVAILABLE, CIPHERTEXT_INVALID,
+    ALREADY_REVEALED, REPLACEMENT_LIMIT_REACHED,
 }
 ```
 
 Use validated factories based on `require*`; keep constructors private where generated copy paths could
 bypass validation. Public contracts receive English KDoc and `serialVersionUID`.
+Add a parameterized error-catalog test that covers every enum value and asserts its HTTP status,
+retryability, descriptor action, tombstone action and caller recovery instruction.
 
 - [ ] **Step 3: domain GREEN을 확인한다**
 
@@ -388,6 +440,8 @@ fun `foreground campaign guards are compatible shared locks`() = withTwoTransact
     first { lockCampaignForShare(CAMPAIGN) }
     second { lockCampaignForShare(CAMPAIGN) }
     bothCompletedWithin(500.milliseconds).shouldBeTrue()
+    concurrentSharedLockHolders(CAMPAIGN) shouldBeGreaterOrEqualTo 2
+    exclusiveWaiters(CAMPAIGN) shouldBeEqualTo 0
 }
 ```
 
@@ -438,8 +492,12 @@ Run:
 ./gradlew :commerce-pre-generated-voucher-pool:test --tests '*VoucherPoolRepositoryIntegrationTest' --tests '*VoucherPoolMigrationRunnerTest' --max-workers=1
 ```
 
-Expected: physical checks, cross-campaign dedup, compatible shared locks, exclusive policy update ordering,
-`SKIP LOCKED` progress and representative index plan PASS.
+Expected: physical checks, cross-campaign dedup, barrier-proven concurrent shared holders, zero accidental
+exclusive waiter, exclusive policy update ordering and `SKIP LOCKED` progress PASS. For allocation candidate,
+worker candidate and operator pool-depth queries, load 10,000 entries and persist
+`EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)` artifacts; reject sequential scans of the entry table and assert
+returned rows, heap fetches and shared-hit/read blocks stay within the per-query fixture bounds recorded in
+the test.
 
 - [ ] **Step 5: Lore commit을 만든다**
 
@@ -473,9 +531,9 @@ fun `stable dedup ignores campaign and key rotation`() {
 }
 
 @Test
-fun `revealed entry destroys encrypted material`() = withPostgres {
+fun `repository crypto erasure destroys encrypted material`() = withPostgres {
     val entry = insertEncryptedEntry("POOL-002")
-    reveal(entry)
+    decryptAndEraseCiphertext(entry)
     loadEntry(entry).apply {
         revealedAt.shouldNotBeNull()
         codeCiphertext.shouldBeNull()
@@ -516,7 +574,8 @@ Run:
 ```
 
 Expected: round trip, nonce uniqueness, rotation, unknown key, tag failure, row swap, quarantine and
-ciphertext deletion tests PASS.
+ciphertext erasure tests PASS. The customer reveal transaction and public result are intentionally deferred
+to Task 7, which owns the allocation lifecycle.
 
 - [ ] **Step 4: Lore commit을 만든다**
 
@@ -542,14 +601,15 @@ git commit -m "feat: protect voucher codes until one-time reveal" -m "Constraint
 ```kotlin
 @Test
 fun `descriptor purge keeps same key from executing again`() = withPostgres {
-    val effect = executeCommand(IDEMPOTENCY_KEY, REQUEST)
-    purgeDescriptor(effect.operationId)
-    executeCommand(IDEMPOTENCY_KEY, REQUEST).apply {
-        status shouldBeEqualTo HttpStatus.GONE
-        code shouldBeEqualTo VoucherPoolErrorCode.REPLAY_WINDOW_EXPIRED
-        effectId shouldBeEqualTo effect.effectId
+    val owner = acquire(SCOPE, IDEMPOTENCY_KEY, FINGERPRINT) as IdempotencyDecision.Execute
+    inTransaction {
+        finalize(owner.ownerToken, DESCRIPTOR, EffectReference(EFFECT_ID))
     }
-    effectCount() shouldBeEqualTo 1
+    purgeDescriptors(limit = 1)
+    acquire(SCOPE, IDEMPOTENCY_KEY, FINGERPRINT).apply {
+        this shouldBeInstanceOf IdempotencyDecision.Expired::class
+        (this as IdempotencyDecision.Expired).effectId shouldBeEqualTo EFFECT_ID
+    }
 }
 ```
 
@@ -566,14 +626,17 @@ sealed interface IdempotencyDecision {
 
 interface VoucherPoolIdempotencyRepository {
     fun acquire(scope: CommandScope, rawKey: String, fingerprint: ByteArray): IdempotencyDecision
-    fun finalize(effect: BusinessEffect, descriptor: SafeResponseDescriptor, ownerToken: String)
+    fun finalize(ownerToken: String, descriptor: SafeResponseDescriptor, effect: EffectReference)
     fun releaseRetryable(scope: CommandScope, ownerToken: String)
     fun purgeDescriptors(limit: Int): Int
 }
 ```
 
-`finalize` writes business effect, descriptor and command tombstone in one transaction. Tombstone lookup uses
-the tenant-lifetime command key/version; purge refuses descriptor deletion without its tombstone.
+Application services call `finalize` inside the same `VoucherPoolJdbcExecutor` transaction that writes their
+business effect; Task 5 owns lease/descriptor/tombstone persistence without inventing a pre-Task-6 business
+command. A test-only effect marker proves rollback atomicity here, while Task 7 repeats commit-loss injection
+with real reservation/allocation effects. Tombstone lookup uses the tenant-lifetime command key/version;
+purge refuses descriptor deletion without its tombstone.
 
 - [ ] **Step 3: idempotency GREEN을 확인한다**
 
@@ -632,7 +695,7 @@ interface CampaignBatchCommandService {
 ```
 
 Parsing, canonical validation and encryption finish in bounded buffers before the transaction. Each chunk is
-`<=100`; source ordinal, checkpoint digest and accepted/rejected count are committed atomically. Activation
+`<=500`; source ordinal, checkpoint digest and accepted/rejected count are committed atomically. Activation
 requires exact expected count, no gap and no unresolved failure.
 
 - [ ] **Step 3: ingest GREEN과 10,000-entry finalize를 확인한다**
@@ -683,6 +746,19 @@ fun `lost reveal response permits exactly one replacement`() = withPostgres {
     replace(allocation).state shouldBeEqualTo ReservationState.ACTIVE
     invoking { replace(allocation) } shouldThrow ReplacementLimitReachedException::class
 }
+
+@Test
+fun `effect descriptor and tombstone rollback or commit together`() = withPostgres {
+    injectCommitLossAfterAllocationEffect()
+    retryAllocation(SAME_KEY).assertSingleEffectAndSafeReplay()
+}
+
+@Test
+fun `same campaign reservations retain concurrent shared progress`() = withPostgresBarrier {
+    holdCampaignShareLock(CAMPAIGN, callers = 4)
+    concurrentSharedLockHolders(CAMPAIGN) shouldBeGreaterOrEqualTo 4
+    exclusiveWaiters(CAMPAIGN) shouldBeEqualTo 0
+}
 ```
 
 - [ ] **Step 2: services를 canonical lock order로 구현한다**
@@ -719,6 +795,8 @@ Run:
 
 Expected: reservation/user-limit counters, same-campaign shared-lock throughput, pause/revoke races,
 expiry/reuse, lost reveal replacement, redemption/revoke and leak/deadlock assertions PASS.
+`REPLACEMENT_LIMIT_REACHED` is a stable terminal response with no additional pool consumption and a safe
+request ID/operator-escalation action.
 
 - [ ] **Step 4: Lore commit을 만든다**
 
@@ -748,12 +826,40 @@ fun `worker and replacement preserve lock order and exact counters`() = withBarr
     deadlocks() shouldBeEqualTo 0
     reconcileUserLimit(USER).drift shouldBeEqualTo 0
 }
+
+@Test
+fun `failed chunks back off then poison without stale finalize`() = withDatabaseClock {
+    repeat(5) { attempt ->
+        failChunkAndAdvanceTo(nextBackoff = minOf(1.shl(attempt), 30).seconds)
+    }
+    claimSnapshot().apply {
+        state shouldBeEqualTo WorkerClaimState.POISONED
+        attempt shouldBeEqualTo 5
+        nextAction.shouldNotBeBlank()
+    }
+    invoking { finalizeWithStaleRevision() } shouldThrow StaleWorkerClaimException::class
+}
+
+@Test
+fun `cancellation commits current chunk then releases claim`() = withPostgres {
+    cancelDuringSecondChunk()
+    committedChunkCount() shouldBeEqualTo 1
+    claimSnapshot().owner.shouldBeNull()
+}
 ```
 
 - [ ] **Step 2: claim/cursor worker를 구현한다**
 
 ```kotlin
-data class WorkerClaim(val owner: String, val revision: Long, val claimUntil: Instant, val cursor: Long)
+data class WorkerClaim(
+    val owner: String,
+    val revision: Long,
+    val claimUntil: Instant,
+    val cursor: Long,
+    val attempt: Int,
+    val nextAttemptAt: Instant,
+    val runDeadline: Instant,
+)
 
 interface VoucherPoolWorkerRepository {
     fun claim(kind: WorkerKind, scopeId: UUID, owner: String): WorkerClaim?
@@ -765,7 +871,12 @@ interface VoucherPoolWorkerRepository {
 
 Candidate IDs are read without retained entry locks. Each chunk reacquires campaign, batch, sorted user-limit,
 reservation and entry locks; final entry uses `SKIP LOCKED` or expected revision CAS. Claim, checkpoint and
-finalize reject stale owners. Leader and operator use the same claim API.
+finalize reject stale owners. Leader and operator use the same claim API. Defaults are claim/renewal
+`15.seconds`, chunk deadline `10.seconds`, run deadline `30.seconds`, max attempt `5`, and bounded exponential
+backoff `1..30.seconds`. Every successful checkpoint renews the claim using database time and owner/revision
+CAS. Renewal failure forbids the next chunk; cancellation finishes or rolls back the current chunk, releases
+the claim, and exposes a redacted reason/next action. Revoke chunks are `<=100`; reconciliation chunks are
+`<=50`.
 
 - [ ] **Step 3: worker GREEN을 확인한다**
 
@@ -776,7 +887,9 @@ Run:
 ```
 
 Expected: duplicate claim, lease renewal/takeover, restart, cursor wrap-around, campaign `REVOKING`, batch
-expiry/revoke, worker-versus-allocation/replacement and reconciliation drift PASS.
+expiry/revoke, worker-versus-allocation/replacement, 10/30-second deadline, 15-second renewal, 1..30-second
+backoff, max-attempt `POISONED`, cancellation release, healthy-run no-takeover, stale-finalize rejection and
+reconciliation drift PASS.
 
 - [ ] **Step 4: Lore commit을 만든다**
 
@@ -810,13 +923,43 @@ git commit -m "feat: recover voucher pool workers from checkpoints" -m "Constrai
 fun `Redis outage keeps PostgreSQL outcome authoritative`() {
     stopRedis()
     reserveThroughLiveHttp().status shouldBeEqualTo HttpStatus.CREATED
-    readiness().components["redis"]!!.status shouldBeEqualTo "DEGRADED"
+    readiness().components.getValue("redis").status shouldBeEqualTo "DEGRADED"
 }
 
 @Test
 fun `management client tolerates CI readiness delay`() {
     managementWebTestClient.responseTimeout shouldBeEqualTo HTTP_TIMEOUT
     HTTP_TIMEOUT shouldBeEqualTo 60.seconds
+}
+
+@ParameterizedTest
+@MethodSource("healthMatrix")
+fun `health state follows authoritative component matrix`(failure: FailureMode, expected: HealthState) {
+    activateFailure(failure)
+    readiness().state shouldBeEqualTo expected
+    liveness().state shouldBeEqualTo HealthState.UP
+    readiness().reason.shouldBeIn(ALLOWED_REDACTED_REASONS)
+}
+
+@Test
+fun `Redis outage keeps operator auth hard cap and uniform timing`() {
+    stopRedis()
+    repeat(OPERATOR_AUTH_LIMIT_PER_MINUTE) { invalidOperatorSecret().expectStatus().isNotFound }
+    invalidOperatorSecret().expectStatus().isEqualTo(429)
+    timingEnvelope(invalidSecret(), unknownTenant(), unknownResource()).spreadMillis shouldBeLessOrEqualTo 25
+}
+
+@Test
+fun `shutdown follows bounded order and releases cancelled claim`() {
+    startWorkerTransaction(duration = 10.seconds)
+    shutdown()
+    lifecycleEvents() shouldContainInOrder listOf(
+        "readiness-down", "commands-and-sse-rejected", "triggers-stopped", "claims-stopped",
+        "transaction-drain", "sse-and-poller-closed", "advisory-resources-closed",
+        "executor-closed", "datasource-closed",
+    )
+    shutdownDuration() shouldBeLessOrEqualTo 45.seconds
+    staleClaims() shouldBeEmpty()
 }
 ```
 
@@ -832,8 +975,19 @@ enum class AdmissionDecision { ALLOW, RATE_LIMITED, DEGRADED_ALLOW, DATABASE_BUS
 
 Use operation-specific Redis/Bucket4j namespaces, node-local hard caps for reveal/redeem/operator-auth,
 always-on JDBC permits, bounded timeout and hysteresis. Leader only schedules the Task 8 claim path.
-Lifecycle stops new requests, closes SSE, cancels workers, waits for bounded transactions and closes owned
-Redis/executor resources independently.
+Lifecycle sequence is readiness DOWN → reject new command/SSE → stop scheduler/leader trigger → stop claims
+→ drain in-flight transactions for `12.seconds` → close SSE/poller → close leader/Redis/Bloom → close owned
+executor → close DataSource. On drain timeout it cancels, verifies rollback and waits another `5.seconds` for
+claim release; all other phases are bounded by `5.seconds`, total shutdown by `45.seconds`, and close is
+idempotent. Restart tests prove no stale claim survives.
+
+The health matrix fixes PostgreSQL, migration and referenced-key failure as readiness `DOWN`; process-only
+liveness stays `UP`; quarantine and Redis/leader loss are redacted `DEGRADED`; recovery work is `RECOVERING`.
+Readiness includes allowlisted reason plus last-success/error time. Management binds loopback and exposes only
+health/metrics. Metrics enforce bounded tags and cover Hikari active/pending, lane wait, worker backlog/oldest
+age/checkpoint, SSE subscriber/reset, pool depth, degraded component, purge and restore. Alert tests fix
+warning/recovery windows: Hikari pending `>0/10s`, no-progress `30s`, Redis degraded `30s`, eligible depth
+`<10%/60s`, SSE reset `10/min`, quarantine `>=1`, purge lag `24h`, restore failure immediately.
 
 - [ ] **Step 3: infrastructure GREEN을 확인한다**
 
@@ -844,7 +998,8 @@ Run:
 ```
 
 Expected: healthy/degraded admission, timeout, readiness/liveness, 60-second management client, graceful
-shutdown, resource close and bounded metric tags PASS.
+shutdown, component health matrix, management allowlist, Redis healthy/unavailable operator-auth caps,
+constant-time uniform failure, exact alert/recovery windows, resource close and bounded metric tags PASS.
 
 - [ ] **Step 4: Lore commit을 만든다**
 
@@ -866,10 +1021,12 @@ git commit -m "feat: degrade voucher admission without losing authority" -m "Con
 - Create: `commerce/pre-generated-voucher-pool/src/main/kotlin/io/bluetape4k/workshop/commerce/voucherpool/web/VoucherPoolHttpCommandExecutor.kt`
 - Create: `commerce/pre-generated-voucher-pool/src/main/kotlin/io/bluetape4k/workshop/commerce/voucherpool/web/VoucherPoolExceptionHandler.kt`
 - Create: `commerce/pre-generated-voucher-pool/src/main/kotlin/io/bluetape4k/workshop/commerce/voucherpool/web/OperatorAccessFilter.kt`
+- Create: `commerce/pre-generated-voucher-pool/src/main/kotlin/io/bluetape4k/workshop/commerce/voucherpool/web/TenantPrincipalResolver.kt`
 - Create: `commerce/pre-generated-voucher-pool/src/main/kotlin/io/bluetape4k/workshop/commerce/voucherpool/web/VoucherPoolEventStream.kt`
 - Test: `commerce/pre-generated-voucher-pool/src/test/kotlin/io/bluetape4k/workshop/commerce/voucherpool/web/CustomerVoucherPoolWebIntegrationTest.kt`
 - Test: `commerce/pre-generated-voucher-pool/src/test/kotlin/io/bluetape4k/workshop/commerce/voucherpool/web/OperatorVoucherPoolWebIntegrationTest.kt`
 - Test: `commerce/pre-generated-voucher-pool/src/test/kotlin/io/bluetape4k/workshop/commerce/voucherpool/web/OperatorAccessFilterIntegrationTest.kt`
+- Test: `commerce/pre-generated-voucher-pool/src/test/kotlin/io/bluetape4k/workshop/commerce/voucherpool/web/TenantPrincipalAuthorizationIntegrationTest.kt`
 - Test: `commerce/pre-generated-voucher-pool/src/test/kotlin/io/bluetape4k/workshop/commerce/voucherpool/web/VoucherPoolEventStreamIntegrationTest.kt`
 - Test: `commerce/pre-generated-voucher-pool/src/test/kotlin/io/bluetape4k/workshop/commerce/voucherpool/web/VoucherPoolInputBoundaryIntegrationTest.kt`
 
@@ -878,11 +1035,20 @@ git commit -m "feat: degrade voucher admission without losing authority" -m "Con
 ```kotlin
 @Test
 fun `first reveal returns code and duplicate reveal is safe`() {
-    val first = postReveal(ALLOCATION, KEY).expectStatus().isOk.expectBody<RevealResponse>().returnResult().responseBody!!
-    first.code.shouldNotBeNull()
-    val duplicate = postReveal(ALLOCATION, KEY).expectStatus().isOk.expectBody<RevealResponse>().returnResult().responseBody!!
-    duplicate.code.shouldBeNull()
-    duplicate.outcome shouldBeEqualTo "ALREADY_REVEALED"
+    postReveal(ALLOCATION, KEY, REVISION).expectStatus().isOk.expectBody<RevealResponse>().value { first ->
+        first.code.shouldNotBeNull()
+    }
+    postReveal(ALLOCATION, KEY, REVISION).expectStatus().isOk.expectBody<RevealResponse>().value { duplicate ->
+        duplicate.code.shouldBeNull()
+        duplicate.outcome shouldBeEqualTo "ALREADY_REVEALED"
+    }
+}
+
+@Test
+fun `customer scope mismatch and forged identity are uniform not found`() {
+    getReservation(asPrincipal = OTHER_PRINCIPAL).expectStatus().isNotFound
+    getReservation(asTenant = OTHER_TENANT).expectStatus().isNotFound
+    getReservation(extraHeader = "X-Demo-Principal: forged").expectStatus().isNotFound
 }
 ```
 
@@ -890,23 +1056,29 @@ fun `first reveal returns code and duplicate reveal is safe`() {
 
 ```kotlin
 @RestController
-@RequestMapping("/customer/api/v1")
+@RequestMapping("/api/v1")
 class CustomerVoucherPoolController(
     private val commands: VoucherPoolHttpCommandExecutor,
     private val queries: VoucherPoolQueryService,
 ) {
     @PostMapping("/campaigns/{campaignId}/reservations")
     fun reserve(
+        principal: TenantPrincipal,
         @PathVariable campaignId: UUID,
         @RequestHeader("Idempotency-Key") idempotencyKey: String,
+        @RequestHeader("If-None-Match") ifNoneMatch: String,
         @Valid @RequestBody request: ReserveVoucherRequest,
-    ): ResponseEntity<ReservationResponse> = commands.reserve(campaignId, idempotencyKey, request)
+    ): ResponseEntity<ReservationResponse> =
+        commands.reserve(principal, campaignId, idempotencyKey, ifNoneMatch, request)
 
-    @PostMapping("/allocations/{allocationId}/reveal")
+    @PostMapping("/allocations/{allocationId}/code-reveals")
     fun reveal(
+        principal: TenantPrincipal,
         @PathVariable allocationId: UUID,
         @RequestHeader("Idempotency-Key") idempotencyKey: String,
-    ): ResponseEntity<RevealResponse> = commands.reveal(allocationId, idempotencyKey)
+        @RequestHeader("If-Match") expectedRevision: String,
+    ): ResponseEntity<RevealResponse> =
+        commands.reveal(principal, allocationId, idempotencyKey, expectedRevision)
 }
 
 @RestController
@@ -922,17 +1094,50 @@ class OperatorVoucherPoolController(
         @Valid @RequestBody request: CreateCampaignRequest,
     ): ResponseEntity<CampaignResponse> = commands.createCampaign(idempotencyKey, ifNoneMatch, request)
 
+    @PostMapping("/campaigns/{campaignId}/revoke-preview")
+    fun previewCampaignRevoke(
+        @PathVariable campaignId: UUID,
+        @RequestHeader("If-Match") expectedRevision: String,
+    ): RevokePreviewResponse = queries.previewCampaignRevoke(campaignId, expectedRevision)
+
     @PostMapping("/campaigns/{campaignId}/revoke")
     fun revokeCampaign(
         @PathVariable campaignId: UUID,
         @RequestHeader("Idempotency-Key") idempotencyKey: String,
         @RequestHeader("If-Match") expectedRevision: String,
-    ): ResponseEntity<CampaignResponse> = commands.revokeCampaign(campaignId, idempotencyKey, expectedRevision)
+        @Valid @RequestBody request: RevokeCampaignRequest,
+    ): ResponseEntity<WorkerProgressResponse> =
+        commands.revokeCampaign(campaignId, idempotencyKey, expectedRevision, request)
+}
+
+data class RevokeCampaignRequest(
+    val previewToken: String,
+    val confirmedCampaignId: UUID,
+) : Serializable {
+    companion object {
+        @JvmField
+        val serialVersionUID: Long = 1L
+    }
 }
 ```
 
-Implement every route matrix row with closed request DTO, `If-None-Match: *` for creates, expected revision
-for mutations, idempotency key, stable error code and safe descriptor. Reveal adds `Cache-Control: no-store`,
+The black-box route matrix covers every exact design path: customer reserve, reservation GET/allocate,
+allocation code-reveal/GET/replacement/redeem/release, snapshot and SSE under `/api/v1`; operator batch
+import/generate, chunk, resume, activate, pause, revoke-preview/revoke; campaign create/policy/activate/pause/
+resume/revoke-preview/revoke; batch/pool-depth/stuck-reservation/diagnostic queries, reconciliation run,
+snapshot and SSE under `/operator/api/v1`. Creates require `If-None-Match: *`; existing-resource mutations
+require `If-Match`; commands require idempotency; revoke requires preview token and confirmed identity; async
+revoke/reconciliation return `202` progress snapshots.
+
+`TenantPrincipalResolver` accepts only server-established authentication, derives user identity without a
+body `userRef`, and applies owner predicates to every customer GET/mutation/SSE. Cross-tenant,
+cross-principal and forged demo headers return uniform `404`; public bind without a production auth adapter
+fails startup. Operator preview tokens are purpose-signed, single-use and bound to tenant, aggregate ID,
+revision, affected-count digest and expiry. Revoke DTO requires the token plus retyped campaign/batch identity;
+stale, replayed and cross-resource tokens fail without effect.
+
+Implement every route matrix row with closed request DTO, stable error code and safe descriptor. Reveal adds
+`Cache-Control: no-store`,
 `Pragma: no-cache`, CSP and `X-Content-Type-Options`. Operator filter enforces loopback bind,
 Host/Origin allowlist, constant-time secret, tenant scope and uniform `404`.
 
@@ -941,7 +1146,7 @@ Host/Origin allowlist, constant-time secret, tenant scope and uniform `404`.
 Run:
 
 ```bash
-./gradlew :commerce-pre-generated-voucher-pool:test --tests '*CustomerVoucherPoolWebIntegrationTest' --tests '*OperatorVoucherPoolWebIntegrationTest' --tests '*OperatorAccessFilterIntegrationTest' --tests '*VoucherPoolEventStreamIntegrationTest' --tests '*VoucherPoolInputBoundaryIntegrationTest' --max-workers=1
+./gradlew :commerce-pre-generated-voucher-pool:test --tests '*CustomerVoucherPoolWebIntegrationTest' --tests '*OperatorVoucherPoolWebIntegrationTest' --tests '*OperatorAccessFilterIntegrationTest' --tests '*TenantPrincipalAuthorizationIntegrationTest' --tests '*VoucherPoolEventStreamIntegrationTest' --tests '*VoucherPoolInputBoundaryIntegrationTest' --max-workers=1
 ```
 
 Expected: route status/precondition/error/descriptor matrix, same-origin security, redaction, SSE
@@ -978,10 +1183,13 @@ fun `fixture signal arms only after transaction commit`() {
 }
 
 @Test
-fun `browser requires confirmation before reveal and revoke`() {
-    browserSource shouldContain "confirmReveal"
-    browserSource shouldContain "confirmRevoke"
-    browserSource shouldContain "aria-live"
+fun `browser exposes keyboard focus announcement and destructive confirmation behavior`() {
+    browserDom.button("reveal").accessibleName shouldBeEqualTo "Reveal voucher code"
+    browserDom.activateByKeyboard("reveal")
+    browserDom.focusedElementId shouldBeEqualTo "reveal-confirmation"
+    browserDom.cancelRevoke()
+    operatorCommands().shouldBeEmpty()
+    browserDom.liveRegionText.shouldContain("Reveal cancelled")
 }
 ```
 
@@ -998,46 +1206,55 @@ bounded polling.
 @Profile("test")
 class VoucherPoolFixtures(
     private val scenarios: ConcurrentMap<String, FixtureScenario>,
+    private val jdbcExecutor: VoucherPoolJdbcExecutor,
 ) {
     fun armAfterCommit(name: String) {
         require(name in SUPPORTED_SCENARIOS) { "Unsupported fixture scenario" }
-        TransactionSynchronizationManager.registerSynchronization(object : TransactionSynchronization {
-            override fun afterCommit() {
-                scenarios.computeIfPresent(name) { _, current -> current.armOnce() }
-            }
-        })
+        jdbcExecutor.afterCommit {
+            scenarios.computeIfPresent(name) { _, current -> current.armOnce() }
+        }
     }
 }
 ```
 
 ```javascript
-const secretState = { revealedCode: null };
+const secretState = { revealedCode: null, operatorSecret: null };
 
 export function confirmReveal(run) {
   if (!window.confirm("Reveal this voucher once?")) return;
-  run().finally(() => window.addEventListener("pagehide", clearRevealedCode, { once: true }));
+  run().finally(() => window.addEventListener("pagehide", clearSecrets, { once: true }));
 }
 
-export function confirmRevoke(run) {
-  if (window.confirm("Revoke this campaign?")) run();
+export function confirmRevoke(preview, typedIdentity, run) {
+  if (typedIdentity !== preview.aggregateIdentity) return announce("Identity does not match");
+  if (!window.confirm(`Revoke ${preview.affectedCount} vouchers?`)) return announce("Revoke cancelled");
+  run({ previewToken: preview.token, confirmedIdentity: typedIdentity });
 }
 
-function clearRevealedCode() {
+function clearSecrets() {
   secretState.revealedCode = null;
+  secretState.operatorSecret = null;
   document.querySelector("[data-revealed-code]").replaceChildren();
 }
 ```
+
+Operator secret input is masked, `autocomplete="off"`, memory-only and cleared on logout/pagehide. Neither
+operator secret nor raw code may enter URL/history, local/session storage, DOM attributes, request logs or
+error text. `ALREADY_REVEALED` opens an explicit replacement confirmation; success navigates to the new
+reservation. `REPLACEMENT_LIMIT_REACHED` shows a safe request ID and operator-escalation action. Revoke first
+renders aggregate identity, revision and affected count from preview; cancel sends no command.
 
 - [ ] **Step 3: browser GREEN을 확인한다**
 
 Run:
 
 ```bash
-./gradlew :commerce-pre-generated-voucher-pool:test --tests '*VoucherPoolFixturesTest' --tests '*VoucherPoolBrowserContractTest'
+./gradlew :commerce-pre-generated-voucher-pool:test --tests '*VoucherPoolFixturesTest' --tests '*VoucherPoolBrowserContractTest' --max-workers=1
 ```
 
-Expected: deterministic replay, rollback isolation, secret-free storage, confirmation, keyboard, focus,
-`aria-live` and polling fallback assertions PASS.
+Expected: deterministic replay, rollback isolation, operator/raw-code secret-free storage/history/DOM,
+replacement and revoke-preview flows, semantic accessible names, keyboard-only action, post-action focus,
+`aria-live` state changes, non-color status and polling fallback assertions PASS.
 
 - [ ] **Step 4: Lore commit을 만든다**
 
@@ -1071,6 +1288,18 @@ fun `restore retains command tombstone replay fence`() = restoreBackup {
     retry(COMMAND).code shouldBeEqualTo VoucherPoolErrorCode.REPLAY_WINDOW_EXPIRED
     effectCount(COMMAND) shouldBeEqualTo 1
 }
+
+@ParameterizedTest
+@CsvSource(
+    "DESCRIPTOR,24,hours",
+    "TERMINAL_INBOX_CLAIM,7,days",
+    "TERMINAL_ENTRY_RESERVATION,30,days",
+    "AUDIT,90,days",
+)
+fun `retention boundary uses database time`(kind: RetentionKind, amount: Long, unit: String) {
+    assertRetainedImmediatelyBefore(kind, amount, unit)
+    assertPurgedAtBoundary(kind, amount, unit)
+}
 ```
 
 - [ ] **Step 2: dependency-ordered retention과 key manifest를 구현한다**
@@ -1084,9 +1313,19 @@ data class BackupKeyManifest(
 )
 ```
 
-Purge order is expired descriptors/inbox, reservations/terminal entries, audit, then tenant deletion only
-after backup retention. Legal hold/quarantine stops purge. Restore preflight validates every referenced key
-before DB import, then runs ciphertext, counter, replay, cursor, stale worker and one-time reveal smoke.
+Purge order is expired descriptors, inbox/claims, reservations/terminal entries, audit, then tenant deletion
+only after backup retention. Defaults are descriptor 24 hours, terminal inbox/claim 7 days, terminal
+entry/reservation 30 days and audit 90 days using PostgreSQL time. Command tombstone and stable dedup remain
+tenant-lifetime. Legal hold/quarantine pauses purge. Live row, tombstone, dedup, audit and backup inventory
+references block key retirement. Cursor restart, oldest-age/count metrics and concurrent replay/purge are
+verified.
+
+Restore preflight validates every referenced key before DB import, then runs ciphertext, counter, replay,
+cursor, stale worker and one-time reveal smoke. The previous-binary fixture is an immutable JAR compiled from
+the pinned `V000` API/schema source, checked against `previous-binary.sha256`, and executed by
+`migrationCompatibilityTest` against the expanded current schema. Destructive down migration is forbidden:
+rollback uses a compatible previous binary; if compatibility cannot be proven, restore the verified backup
+plus key manifest and roll forward. Retention and key retirement remain held until rehearsal passes.
 
 - [ ] **Step 3: compatibility/restore GREEN을 확인한다**
 
@@ -1098,7 +1337,8 @@ Run:
 ```
 
 Expected: clean/warm/previous schema, checksum drift fail-closed, previous binary, backup/restore,
-post-purge `410`, key retirement and concurrent replay/purge PASS.
+fixture-JAR SHA-256, post-purge `410`, exact table retention boundaries, legal-hold/quarantine pause,
+referenced-key retirement guard, cursor restart/metrics and concurrent replay/purge PASS.
 
 - [ ] **Step 4: Lore commit을 만든다**
 
@@ -1121,11 +1361,26 @@ git commit -m "feat: restore voucher replay safety with data" -m "Constraint: Da
 
 ```kotlin
 @Tag("stress")
-@Test
-fun `virtual client matrix preserves hard resource bounds`() {
-    val evidence = runProfile(entries = 10_000, clients = 128, sameUserPercent = 50, redis = RedisMode.UNAVAILABLE)
+@ParameterizedTest
+@CsvSource("64,HEALTHY", "64,UNAVAILABLE", "128,HEALTHY", "128,UNAVAILABLE")
+fun `virtual client matrix preserves hard resource bounds`(clients: Int, redis: RedisMode) {
+    val evidence = runProfile(
+        entries = 10_000,
+        clients = clients,
+        sameUserPercent = 50,
+        redis = redis,
+        workerLoad = true,
+        sseSubscribers = 16,
+        freshDatabase = true,
+    )
     evidence.hikariActiveMax.shouldBeLessOrEqualTo(16)
     evidence.totalPermitHoldersMax.shouldBeLessOrEqualTo(16)
+    evidence.foregroundWaitMaxMillis.shouldBeLessOrEqualTo(250)
+    evidence.workerWaitMaxMillis.shouldBeLessOrEqualTo(1_000)
+    evidence.sseWaitMaxMillis.shouldBeLessOrEqualTo(1_000)
+    evidence.deadlineViolations shouldBeEqualTo 0
+    evidence.hikariPendingDrainMillis.shouldBeLessOrEqualTo(12_000)
+    evidence.workerCheckpointProgress shouldBeGreaterThan 0
     evidence.connectionLeaks shouldBeEqualTo 0
     evidence.permitLeaks shouldBeEqualTo 0
     evidence.counterDrift shouldBeEqualTo 0
@@ -1143,6 +1398,12 @@ data class VoucherPoolStressEvidence(
     val hikariActiveMax: Int,
     val totalPermitHoldersMax: Int,
     val foregroundWaitMaxMillis: Long,
+    val workerWaitMaxMillis: Long,
+    val sseWaitMaxMillis: Long,
+    val acquisitionTimeouts: Int,
+    val deadlineViolations: Int,
+    val hikariPendingMax: Int,
+    val hikariPendingDrainMillis: Long,
     val workerCheckpointProgress: Long,
     val connectionLeaks: Int,
     val permitLeaks: Int,
@@ -1150,8 +1411,10 @@ data class VoucherPoolStressEvidence(
 )
 ```
 
-Store one JSON and one JFR or thread-dump artifact per profile plus a manifest. Latency/throughput are
-report-only; resource, progress and correctness fields are hard gates.
+Store one JSON and one JFR or thread-dump artifact per profile plus a run manifest. Every run starts from a
+fresh database/Redis state and the manifest must contain exactly the four profiles with unique artifact
+checksums. Latency/throughput are report-only; lane waits, acquisition/transaction/lock/chunk deadlines,
+Hikari pending/drain, resource, progress and correctness fields are hard gates.
 
 - [ ] **Step 3: two independent stress runs를 실행한다**
 
@@ -1162,8 +1425,9 @@ Run:
 ./gradlew :commerce-pre-generated-voucher-pool:stressTest -PvoucherPoolStressRun=final-2 --rerun-tasks --max-workers=1
 ```
 
-Expected: 64/128 clients × Redis healthy/unavailable profiles PASS twice; JSON/JFR-or-dump/manifest present,
-Hikari/permit/deadline/progress/leak/winner/count hard gates PASS.
+Expected: 64/128 clients × Redis healthy/unavailable profiles with concurrent worker/SSE load PASS twice;
+each run's four-profile JSON/JFR-or-dump manifest is complete and checksum-valid, and
+Hikari/permit/lane-wait/deadline/pending-drain/progress/leak/winner/count hard gates PASS.
 
 - [ ] **Step 4: Lore commit을 만든다**
 
@@ -1192,6 +1456,7 @@ git commit -m "test: prove voucher pool contention bounds" -m "Constraint: Virtu
 - Modify: `commerce/README.ko.md`
 - Modify: `AGENTS.md`
 - Modify: `.github/workflows/Examples.yml`
+- Modify: `.github/workflows/nightly.yml`
 - Modify: `scripts/smoke-validate.sh`
 - Modify if registration requires: `scripts/validate-readme-architecture-diagrams.mjs`
 - Modify if registration requires: `scripts/validate-sequence-diagrams.mjs`
@@ -1224,19 +1489,42 @@ const REQUIRED_SECTIONS = [
   "Architecture",
   "Contention and recovery",
   "Import and generation",
+  "Customer workflow",
   "Lost reveal replacement",
+  "Error status retry and action catalog",
+  "Revoke preview confirm and progress",
+  "Reconciliation",
   "Redis outage",
+  "Health and degraded state",
+  "Alerts and diagnostics",
+  "Retention and purge",
+  "Migration and rollback",
   "Backup and restore",
 ];
 const FORBIDDEN = [/raw.*code.*log/i, /GenericContainer/, /MockMvc/];
 ```
 
+The validator requires every section and representative route/error/command in both locales, checks the
+customer curl and error/status/retry/action matrix for parity, and requires every alert to name its threshold,
+safe diagnostic, authoritative query, bounded operator action and recovery signal.
+
 - [ ] **Step 3: repository registration을 갱신한다**
 
-Add `:commerce-pre-generated-voucher-pool:test` after the campaign module in the sequential container job,
-artifact paths, and `scripts/smoke-validate.sh commerce`. Add root/commerce README rows and one `AGENTS.md`
-module-map row. Nightly full already executes root `test`, so no task-list edit is required; verify that the new
-project appears in its graph. Do not add Kover/Codecov paths because the repository has no such infrastructure.
+Add `:commerce-pre-generated-voucher-pool:test` and
+`:commerce-pre-generated-voucher-pool:koverXmlReport` after the campaign module in the sequential container
+job. Register exact Examples artifact paths:
+
+```text
+commerce/pre-generated-voucher-pool/build/test-results/test/*.xml
+commerce/pre-generated-voucher-pool/build/reports/tests/test/
+commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
+```
+
+The workflow checks the JUnit glob is non-empty and `report.xml` is non-empty before upload. Nightly full
+keeps root `test`, adds the module Kover XML task, and uploads the same XML path. No hard threshold or new
+Codecov uploader is added because this repository has no existing uploader to preserve. Add
+`scripts/smoke-validate.sh commerce`, root/commerce README rows and one `AGENTS.md` module-map row. Verify the
+new project appears in the nightly root-test graph.
 
 - [ ] **Step 4: docs/registration GREEN을 확인한다**
 
@@ -1251,11 +1539,14 @@ node scripts/validate-readme-architecture-diagrams.mjs
 node scripts/validate-sequence-diagrams.mjs
 actionlint .github/workflows/Examples.yml .github/workflows/nightly.yml
 bash -n scripts/smoke-validate.sh
+./gradlew :commerce-pre-generated-voucher-pool:test :commerce-pre-generated-voucher-pool:koverXmlReport --max-workers=1
+test -n "$(find commerce/pre-generated-voucher-pool/build/test-results/test -name '*.xml' -print -quit)"
+test -s commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
 ```
 
-Expected: 105 projects, locale/image/fence parity, diagram/sequence validators, actionlint and shell syntax
-PASS. Any pre-existing global language finding is recorded with exact unrelated path and the new module must
-have zero finding.
+Expected: 105 projects, locale/image/fence parity, diagram/sequence validators, actionlint, shell syntax,
+non-empty JUnit/Kover artifact globs and module Kover XML PASS. Any pre-existing global language finding is
+recorded with exact unrelated path and the new module must have zero finding.
 
 - [ ] **Step 5: sequential Commerce lane를 실행한다**
 
@@ -1270,7 +1561,7 @@ Expected: four PostgreSQL-backed Commerce modules PASS sequentially with `--max-
 - [ ] **Step 6: Lore commit을 만든다**
 
 ```bash
-git add README.md README.ko.md commerce/README.md commerce/README.ko.md AGENTS.md .github/workflows/Examples.yml scripts docs/images/readme-diagrams commerce/pre-generated-voucher-pool/README.md commerce/pre-generated-voucher-pool/README.ko.md
+git add README.md README.ko.md commerce/README.md commerce/README.ko.md AGENTS.md .github/workflows/Examples.yml .github/workflows/nightly.yml scripts docs/images/readme-diagrams commerce/pre-generated-voucher-pool/README.md commerce/pre-generated-voucher-pool/README.ko.md
 git commit -m "docs: register the pre-generated voucher pool" -m "Constraint: New workshop modules must remain discoverable and covered by container CI.\nConfidence: high\nScope-risk: moderate\nTested: Project graph, runbook/parity/diagram validators, actionlint, stale-check, and Commerce lane.\nNot-tested: Live GitHub CI follows after PR creation."
 ```
 
@@ -1292,13 +1583,14 @@ Run sequentially:
 ```bash
 ./gradlew :commerce-pre-generated-voucher-pool:test --rerun-tasks --max-workers=1
 ./gradlew :commerce-pre-generated-voucher-pool:migrationCompatibilityTest --rerun-tasks --max-workers=1
+./gradlew :commerce-pre-generated-voucher-pool:koverXmlReport --rerun-tasks --max-workers=1
 ./gradlew :commerce-pre-generated-voucher-pool:detekt :commerce-pre-generated-voucher-pool:detektTest
 ./gradlew :commerce-pre-generated-voucher-pool:dependencies --configuration runtimeClasspath
+test -s commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
 ```
 
 Expected: all module tests, packaged migration compatibility and detekt PASS; runtime resolves JDK25 provider,
-Exposed JDBC, Lettuce/Bucket4j/leader and has no JDK21 provider. Kover XML remains evidence-backed N/A because
-no root/plugin/task exists.
+Exposed JDBC, Lettuce/Bucket4j/leader and has no JDK21 provider; report-only Kover XML exists and is non-empty.
 
 - [ ] **Step 2: forbidden and repository-wide proportional checks를 실행한다**
 
@@ -1345,6 +1637,7 @@ scope, but merge still waits for a separate fresh approval after live CI and cur
 - README locales, diagrams, module map, Examples container job, artifacts, Commerce smoke and project count are
   assigned.
 - Nightly full uses root `test`, so explicit task-list mutation is N/A but graph inclusion is verified.
-- Kover/Codecov is N/A from current repository evidence; no unapproved dependency is introduced.
+- Module-local Kover XML and Examples/Nightly artifact visibility are assigned without a hard threshold or
+  a repository-wide Codecov uploader.
 - Public KDoc and GitHub-facing metadata remain English; plan/review/lesson prose remains Korean.
 - The plan contains no `TODO`, `TBD`, deferred implementation marker or unnamed validation step.
