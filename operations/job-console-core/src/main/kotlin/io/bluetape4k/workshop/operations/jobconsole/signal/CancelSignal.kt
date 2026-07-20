@@ -8,8 +8,12 @@ data class CancelSignalResult(
 
 fun interface CancelSignal {
     fun publish(jobId: UUID): CancelSignalResult
+
+    fun isAvailable(): Boolean = true
 }
 
 object NoOpCancelSignal : CancelSignal {
     override fun publish(jobId: UUID): CancelSignalResult = CancelSignalResult(delivered = false)
+
+    override fun isAvailable(): Boolean = false
 }

@@ -25,7 +25,6 @@ data class CancelServiceOutcome(
 class JobConsoleService(
     private val repository: JobRepository,
     private val cancelSignal: CancelSignal = NoOpCancelSignal,
-    private val redisAvailable: Boolean = cancelSignal !== NoOpCancelSignal,
     private val clock: Clock = Clock.systemUTC(),
     private val etaEstimator: EtaEstimator = EtaEstimator(),
 ) {
@@ -79,6 +78,7 @@ class JobConsoleService(
 
     fun readiness(): JobConsoleReadiness {
         val postgresReady = repository.databaseReady()
+        val redisAvailable = cancelSignal.isAvailable()
         return JobConsoleReadiness(
             ready = postgresReady,
             postgres = if (postgresReady) DependencyState.UP else DependencyState.DOWN,
