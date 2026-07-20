@@ -36,6 +36,7 @@ dependencies {
     implementation(libs.ktor.client.core)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.jackson3.module.kotlin)
+    implementation(libs.hikaricp)
     runtimeOnly(libs.postgresql.driver)
 
     testImplementation(testFixtures(project(":operations-job-console-core")))
