@@ -26,11 +26,43 @@ import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Proxy
 import java.sql.Connection
 import java.sql.ResultSet
+import java.sql.Timestamp
 import java.time.Instant
 import java.util.UUID
 import javax.sql.DataSource
 
 internal interface VoucherPoolRepository {
+    fun createCampaign(connection: Connection, campaign: CampaignRecord): CampaignRecord
+    fun lockCampaignForUpdate(connection: Connection, tenantId: String, campaignId: UUID): CampaignRecord?
+    fun updateCampaign(connection: Connection, campaign: CampaignRecord, expectedRevision: Long): CampaignRecord
+    fun createBatch(connection: Connection, batch: BatchRecord): BatchRecord
+    fun lockBatchForUpdate(connection: Connection, tenantId: String, batchId: UUID): BatchRecord?
+    fun insertPreparedEntries(connection: Connection, entries: List<PreparedVoucherEntryRecord>)
+    fun committedOrdinalDigests(
+        connection: Connection,
+        tenantId: String,
+        batchId: UUID,
+        firstOrdinal: Long,
+        count: Int,
+    ): List<CommittedOrdinalDigest>
+    fun updateBatchCheckpoint(
+        connection: Connection,
+        batch: BatchRecord,
+        nextSourceOrdinal: Long,
+        acceptedCount: Long,
+        rejectedCount: Long,
+        checkpointDigest: DigestValue,
+        state: BatchState,
+        lastFailureCode: String?,
+    ): BatchRecord
+    fun markBatchTerminalFailure(
+        connection: Connection,
+        batch: BatchRecord,
+        rejectedCount: Long,
+        failureCode: String,
+    ): BatchRecord
+    fun batchOrdinalCoverage(connection: Connection, tenantId: String, batchId: UUID): BatchOrdinalCoverage
+    fun activateBatch(connection: Connection, batch: BatchRecord): BatchRecord
     fun lockCampaignForShare(connection: Connection, tenantId: String, campaignId: UUID): CampaignRecord
     fun lockBatchForShare(connection: Connection, tenantId: String, batchId: UUID): BatchRecord
     fun lockUserLimit(connection: Connection, tenantId: String, campaignId: UUID, userDigest: ByteArray): UserLimitRecord
@@ -58,8 +90,264 @@ internal interface VoucherPoolRepository {
 }
 
 /** PostgreSQL authority repository; raw JDBC is limited to explicit row-lock syntax. */
+@Suppress("LargeClass")
 internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : VoucherPoolRepository {
     private val database = Database.connect(dataSource)
+
+    override fun createCampaign(connection: Connection, campaign: CampaignRecord): CampaignRecord {
+        connection.prepareStatement(
+            """INSERT INTO voucher_pool_campaigns
+                (tenant_id,campaign_id,state,starts_at,ends_at,per_user_limit,reservation_ttl_seconds,
+                 allocation_ttl_seconds,replacement_allowance,policy_version,revision)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+        ).use { statement ->
+            statement.setString(1, campaign.tenantId)
+            statement.setObject(2, campaign.campaignId)
+            statement.setString(3, campaign.state.name)
+            statement.setTimestamp(4, Timestamp.from(campaign.startsAt))
+            statement.setTimestamp(5, Timestamp.from(campaign.endsAt))
+            statement.setInt(6, campaign.perUserLimit)
+            statement.setLong(7, campaign.reservationTtlSeconds)
+            statement.setLong(8, campaign.allocationTtlSeconds)
+            statement.setInt(9, campaign.replacementAllowance)
+            statement.setLong(10, campaign.policyVersion)
+            statement.setLong(11, campaign.revision)
+            statement.executeUpdate()
+        }
+        return checkNotNull(lockCampaignForUpdate(connection, campaign.tenantId, campaign.campaignId))
+    }
+
+    override fun lockCampaignForUpdate(
+        connection: Connection,
+        tenantId: String,
+        campaignId: UUID,
+    ): CampaignRecord? = connection.prepareStatement(
+        "SELECT * FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=? FOR UPDATE",
+    ).use { statement ->
+        statement.setString(1, tenantId)
+        statement.setObject(2, campaignId)
+        statement.executeQuery().use { result -> if (result.next()) result.campaignRecord() else null }
+    }
+
+    override fun updateCampaign(
+        connection: Connection,
+        campaign: CampaignRecord,
+        expectedRevision: Long,
+    ): CampaignRecord {
+        val updated = connection.prepareStatement(
+            """UPDATE voucher_pool_campaigns
+                SET state=?,starts_at=?,ends_at=?,per_user_limit=?,reservation_ttl_seconds=?,
+                    allocation_ttl_seconds=?,replacement_allowance=?,policy_version=?,revision=revision+1,
+                    updated_at=statement_timestamp()
+                WHERE tenant_id=? AND campaign_id=? AND revision=?""",
+        ).use { statement ->
+            statement.setString(1, campaign.state.name)
+            statement.setTimestamp(2, Timestamp.from(campaign.startsAt))
+            statement.setTimestamp(3, Timestamp.from(campaign.endsAt))
+            statement.setInt(4, campaign.perUserLimit)
+            statement.setLong(5, campaign.reservationTtlSeconds)
+            statement.setLong(6, campaign.allocationTtlSeconds)
+            statement.setInt(7, campaign.replacementAllowance)
+            statement.setLong(8, campaign.policyVersion)
+            statement.setString(9, campaign.tenantId)
+            statement.setObject(10, campaign.campaignId)
+            statement.setLong(11, expectedRevision)
+            statement.executeUpdate()
+        }
+        check(updated == 1) { "campaign update lost its revision" }
+        return checkNotNull(lockCampaignForUpdate(connection, campaign.tenantId, campaign.campaignId))
+    }
+
+    override fun createBatch(connection: Connection, batch: BatchRecord): BatchRecord {
+        connection.prepareStatement(
+            """INSERT INTO voucher_pool_batches
+                (tenant_id,batch_id,campaign_id,state,source_kind,provenance_digest,request_fingerprint,
+                 policy_version,activates_at,expires_at,next_source_ordinal,expected_count,accepted_count,
+                 rejected_count,checkpoint_digest,last_failure_code,revision)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+        ).use { statement ->
+            statement.setString(1, batch.tenantId)
+            statement.setObject(2, batch.batchId)
+            statement.setObject(3, batch.campaignId)
+            statement.setString(4, batch.state.name)
+            statement.setString(5, batch.sourceKind)
+            statement.setBytes(6, batch.provenanceDigest.copyBytes())
+            statement.setBytes(7, batch.requestFingerprint.copyBytes())
+            statement.setLong(8, batch.policyVersion)
+            statement.setTimestamp(9, Timestamp.from(batch.activatesAt))
+            statement.setTimestamp(10, batch.expiresAt?.let(Timestamp::from))
+            statement.setLong(11, batch.nextSourceOrdinal)
+            statement.setLong(12, batch.expectedCount)
+            statement.setLong(13, batch.acceptedCount)
+            statement.setLong(14, batch.rejectedCount)
+            statement.setBytes(15, batch.checkpointDigest?.copyBytes())
+            statement.setString(16, batch.lastFailureCode)
+            statement.setLong(17, batch.revision)
+            statement.executeUpdate()
+        }
+        return checkNotNull(lockBatchForUpdate(connection, batch.tenantId, batch.batchId))
+    }
+
+    override fun lockBatchForUpdate(connection: Connection, tenantId: String, batchId: UUID): BatchRecord? =
+        connection.prepareStatement(
+            "SELECT * FROM voucher_pool_batches WHERE tenant_id=? AND batch_id=? FOR UPDATE",
+        ).use { statement ->
+            statement.setString(1, tenantId)
+            statement.setObject(2, batchId)
+            statement.executeQuery().use { result -> if (result.next()) result.batchRecord() else null }
+        }
+
+    override fun insertPreparedEntries(connection: Connection, entries: List<PreparedVoucherEntryRecord>) {
+        entries.forEach { entry ->
+            connection.prepareStatement(
+                """INSERT INTO voucher_pool_code_dedup
+                    (tenant_id,stable_dedup_digest,first_campaign_id,first_batch_id,first_entry_id,key_version)
+                    VALUES (?,?,?,?,?,?)""",
+            ).use { statement ->
+                statement.setString(1, entry.tenantId)
+                statement.setBytes(2, entry.stableDedupDigest.copyBytes())
+                statement.setObject(3, entry.campaignId)
+                statement.setObject(4, entry.batchId)
+                statement.setObject(5, entry.entryId)
+                statement.setInt(6, entry.stableDedupKeyVersion)
+                statement.executeUpdate()
+            }
+            connection.prepareStatement(
+                """INSERT INTO voucher_pool_entries
+                    (tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,stable_dedup_digest,
+                     verification_digest,verification_key_version,code_ciphertext,code_nonce,wrapped_dek,
+                     wrap_nonce,kek_version,revision)
+                    VALUES (?,?,?,?,?,'AVAILABLE',?,NULL,NULL,?,?,?,?,?,0)""",
+            ).use { statement ->
+                statement.setString(1, entry.tenantId)
+                statement.setObject(2, entry.entryId)
+                statement.setObject(3, entry.campaignId)
+                statement.setObject(4, entry.batchId)
+                statement.setLong(5, entry.sourceOrdinal)
+                statement.setBytes(6, entry.stableDedupDigest.copyBytes())
+                statement.setBytes(7, entry.codeCiphertext.copyBytes())
+                statement.setBytes(8, entry.codeNonce.copyBytes())
+                statement.setBytes(9, entry.wrappedDek.copyBytes())
+                statement.setBytes(10, entry.wrapNonce.copyBytes())
+                statement.setString(11, entry.kekVersion)
+                statement.executeUpdate()
+            }
+        }
+    }
+
+    override fun committedOrdinalDigests(
+        connection: Connection,
+        tenantId: String,
+        batchId: UUID,
+        firstOrdinal: Long,
+        count: Int,
+    ): List<CommittedOrdinalDigest> = connection.prepareStatement(
+        """SELECT source_ordinal,stable_dedup_digest FROM voucher_pool_entries
+            WHERE tenant_id=? AND batch_id=? AND source_ordinal>=? AND source_ordinal<?
+            ORDER BY source_ordinal""",
+    ).use { statement ->
+        statement.setString(1, tenantId)
+        statement.setObject(2, batchId)
+        statement.setLong(3, firstOrdinal)
+        statement.setLong(4, firstOrdinal + count)
+        statement.executeQuery().use { result ->
+            buildList {
+                while (result.next()) {
+                    add(CommittedOrdinalDigest(result.getLong(1), DigestValue.of(result.getBytes(2))))
+                }
+            }
+        }
+    }
+
+    override fun updateBatchCheckpoint(
+        connection: Connection,
+        batch: BatchRecord,
+        nextSourceOrdinal: Long,
+        acceptedCount: Long,
+        rejectedCount: Long,
+        checkpointDigest: DigestValue,
+        state: BatchState,
+        lastFailureCode: String?,
+    ): BatchRecord {
+        val updated = connection.prepareStatement(
+            """UPDATE voucher_pool_batches
+                SET next_source_ordinal=?,accepted_count=?,rejected_count=?,checkpoint_digest=?,state=?,
+                    last_failure_code=?,revision=revision+1,updated_at=statement_timestamp()
+                WHERE tenant_id=? AND batch_id=? AND revision=?""",
+        ).use { statement ->
+            statement.setLong(1, nextSourceOrdinal)
+            statement.setLong(2, acceptedCount)
+            statement.setLong(3, rejectedCount)
+            statement.setBytes(4, checkpointDigest.copyBytes())
+            statement.setString(5, state.name)
+            statement.setString(6, lastFailureCode)
+            statement.setString(7, batch.tenantId)
+            statement.setObject(8, batch.batchId)
+            statement.setLong(9, batch.revision)
+            statement.executeUpdate()
+        }
+        check(updated == 1) { "batch checkpoint lost its revision" }
+        return checkNotNull(lockBatchForUpdate(connection, batch.tenantId, batch.batchId))
+    }
+
+    override fun markBatchTerminalFailure(
+        connection: Connection,
+        batch: BatchRecord,
+        rejectedCount: Long,
+        failureCode: String,
+    ): BatchRecord {
+        val updated = connection.prepareStatement(
+            """UPDATE voucher_pool_batches
+                SET next_source_ordinal=?,rejected_count=?,state='FAILED_TERMINAL',last_failure_code=?,
+                    revision=revision+1,updated_at=statement_timestamp()
+                WHERE tenant_id=? AND batch_id=? AND revision=? AND state='STAGING'""",
+        ).use { statement ->
+            statement.setLong(1, batch.nextSourceOrdinal + rejectedCount)
+            statement.setLong(2, batch.rejectedCount + rejectedCount)
+            statement.setString(3, failureCode)
+            statement.setString(4, batch.tenantId)
+            statement.setObject(5, batch.batchId)
+            statement.setLong(6, batch.revision)
+            statement.executeUpdate()
+        }
+        check(updated == 1) { "batch terminal failure lost its revision" }
+        return checkNotNull(lockBatchForUpdate(connection, batch.tenantId, batch.batchId))
+    }
+
+    override fun batchOrdinalCoverage(
+        connection: Connection,
+        tenantId: String,
+        batchId: UUID,
+    ): BatchOrdinalCoverage = connection.prepareStatement(
+        """SELECT count(*),min(source_ordinal),max(source_ordinal) FROM voucher_pool_entries
+            WHERE tenant_id=? AND batch_id=?""",
+    ).use { statement ->
+        statement.setString(1, tenantId)
+        statement.setObject(2, batchId)
+        statement.executeQuery().use { result ->
+            check(result.next())
+            BatchOrdinalCoverage(
+                result.getLong(1),
+                result.getLong(2).takeUnless { result.wasNull() },
+                result.getLong(3).takeUnless { result.wasNull() },
+            )
+        }
+    }
+
+    override fun activateBatch(connection: Connection, batch: BatchRecord): BatchRecord {
+        val updated = connection.prepareStatement(
+            """UPDATE voucher_pool_batches SET state='ACTIVE',revision=revision+1,updated_at=statement_timestamp()
+                WHERE tenant_id=? AND batch_id=? AND revision=? AND state='STAGING'""",
+        ).use { statement ->
+            statement.setString(1, batch.tenantId)
+            statement.setObject(2, batch.batchId)
+            statement.setLong(3, batch.revision)
+            statement.executeUpdate()
+        }
+        check(updated == 1) { "batch activation lost its revision" }
+        return checkNotNull(lockBatchForUpdate(connection, batch.tenantId, batch.batchId))
+    }
+
     override fun lockCampaignForShare(connection: Connection, tenantId: String, campaignId: UUID): CampaignRecord =
         connection.prepareStatement(
             "SELECT * FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=? FOR SHARE",
@@ -507,8 +795,8 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         campaignId = getObject("campaign_id", UUID::class.java), batchId = getObject("batch_id", UUID::class.java),
         sourceOrdinal = getLong("source_ordinal"), state = EntryState.valueOf(getString("state")),
         stableDedupDigest = DigestValue.of(getBytes("stable_dedup_digest")),
-        verificationDigest = DigestValue.of(getBytes("verification_digest")),
-        verificationKeyVersion = getInt("verification_key_version"),
+        verificationDigest = getBytes("verification_digest")?.let(DigestValue::of),
+        verificationKeyVersion = getInt("verification_key_version").takeUnless { wasNull() },
         codeCiphertext = getBytes("code_ciphertext")?.let(DigestValue::of),
         codeNonce = getBytes("code_nonce")?.let(DigestValue::of), wrappedDek = getBytes("wrapped_dek")?.let(DigestValue::of),
         wrapNonce = getBytes("wrap_nonce")?.let(DigestValue::of), kekVersion = getString("kek_version"),

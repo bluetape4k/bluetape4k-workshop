@@ -12,7 +12,7 @@ CREATE TABLE voucher_pool_campaigns (
     revision BIGINT NOT NULL DEFAULT 0 CHECK (revision >= 0),
     created_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
-    PRIMARY KEY (tenant_id, campaign_id),
+    CONSTRAINT pk_voucher_pool_campaigns PRIMARY KEY (tenant_id, campaign_id),
     CHECK (state IN ('DRAFT','ACTIVE','PAUSED','REVOKING','REVOKED')),
     CHECK (starts_at < ends_at),
     CHECK (created_at <= updated_at)
@@ -38,8 +38,8 @@ CREATE TABLE voucher_pool_batches (
     last_failure_code VARCHAR(64),
     created_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
-    PRIMARY KEY (tenant_id, batch_id),
-    UNIQUE (tenant_id, batch_id, campaign_id),
+    CONSTRAINT pk_voucher_pool_batches PRIMARY KEY (tenant_id, batch_id),
+    CONSTRAINT uq_voucher_pool_batch_identity UNIQUE (tenant_id, batch_id, campaign_id),
     FOREIGN KEY (tenant_id, campaign_id) REFERENCES voucher_pool_campaigns(tenant_id, campaign_id),
     CHECK (source_kind IN ('IMPORTED','GENERATED')),
     CHECK (state IN ('STAGING','ACTIVE','PAUSED','REVOKING','EXPIRING','REVOKED','EXPIRED','FAILED_RETRYABLE','FAILED_TERMINAL')),
@@ -59,8 +59,8 @@ CREATE TABLE voucher_pool_entries (
     source_ordinal BIGINT NOT NULL CHECK (source_ordinal >= 0),
     state VARCHAR(24) NOT NULL,
     stable_dedup_digest BYTEA NOT NULL,
-    verification_digest BYTEA NOT NULL,
-    verification_key_version INTEGER NOT NULL CHECK (verification_key_version > 0),
+    verification_digest BYTEA,
+    verification_key_version INTEGER CHECK (verification_key_version > 0),
     code_ciphertext BYTEA,
     code_nonce BYTEA,
     wrapped_dek BYTEA,
@@ -83,13 +83,16 @@ CREATE TABLE voucher_pool_entries (
     revision BIGINT NOT NULL DEFAULT 0 CHECK (revision >= 0),
     created_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
-    PRIMARY KEY (tenant_id, entry_id),
-    UNIQUE (tenant_id, entry_id, campaign_id, batch_id),
+    CONSTRAINT pk_voucher_pool_entries PRIMARY KEY (tenant_id, entry_id),
+    CONSTRAINT uq_voucher_pool_entry_identity UNIQUE (tenant_id, entry_id, campaign_id, batch_id),
     FOREIGN KEY (tenant_id, campaign_id) REFERENCES voucher_pool_campaigns(tenant_id, campaign_id),
     FOREIGN KEY (tenant_id, batch_id, campaign_id) REFERENCES voucher_pool_batches(tenant_id, batch_id, campaign_id),
-    UNIQUE (tenant_id, batch_id, source_ordinal),
-    UNIQUE (tenant_id, stable_dedup_digest),
+    CONSTRAINT uq_voucher_pool_entry_batch_ordinal UNIQUE (tenant_id, batch_id, source_ordinal),
+    CONSTRAINT uq_voucher_pool_entry_stable_dedup UNIQUE (tenant_id, stable_dedup_digest),
     CHECK (state IN ('AVAILABLE','RESERVED','ALLOCATED','REDEEMED','RELEASED','REVOKED','EXPIRED')),
+    CONSTRAINT voucher_pool_entry_verification_pair CHECK (
+      (verification_digest IS NULL) = (verification_key_version IS NULL)
+    ),
     CONSTRAINT voucher_pool_entry_cipher_contract CHECK (
       (revealed_at IS NULL AND code_ciphertext IS NOT NULL AND code_nonce IS NOT NULL
         AND wrapped_dek IS NOT NULL AND wrap_nonce IS NOT NULL AND kek_version IS NOT NULL)
@@ -263,7 +266,7 @@ CREATE TABLE voucher_pool_code_dedup (
     first_entry_id UUID NOT NULL,
     key_version INTEGER NOT NULL CHECK (key_version > 0),
     first_seen_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
-    PRIMARY KEY (tenant_id,stable_dedup_digest)
+    CONSTRAINT pk_voucher_pool_code_dedup PRIMARY KEY (tenant_id,stable_dedup_digest)
 );
 CREATE UNIQUE INDEX uq_voucher_pool_dedup ON voucher_pool_code_dedup(tenant_id,stable_dedup_digest);
 

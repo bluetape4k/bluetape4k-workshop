@@ -67,8 +67,9 @@ internal data class EntryRecord(
     val sourceOrdinal: Long,
     val state: EntryState,
     val stableDedupDigest: DigestValue,
-    val verificationDigest: DigestValue,
-    val verificationKeyVersion: Int,
+    /** Null while staged; Task 7 sets the allocation-scoped digest and version together. */
+    val verificationDigest: DigestValue?,
+    val verificationKeyVersion: Int?,
     val codeCiphertext: DigestValue? = null,
     val codeNonce: DigestValue? = null,
     val wrappedDek: DigestValue? = null,
@@ -91,6 +92,42 @@ internal data class EntryRecord(
     val revision: Long,
     val createdAt: Instant = Instant.EPOCH,
     val updatedAt: Instant = Instant.EPOCH,
+)
+
+/** Fully validated and encrypted entry buffer ready for one bounded chunk transaction. */
+internal data class PreparedVoucherEntryRecord(
+    val tenantId: String,
+    val campaignId: UUID,
+    val batchId: UUID,
+    val entryId: UUID,
+    val sourceOrdinal: Long,
+    val stableDedupDigest: DigestValue,
+    val stableDedupKeyVersion: Int,
+    val codeCiphertext: DigestValue,
+    val codeNonce: DigestValue,
+    val wrappedDek: DigestValue,
+    val wrapNonce: DigestValue,
+    val kekVersion: String,
+)
+
+/** Redacted validation evidence retained without source material. */
+internal data class RejectedVoucherEntryRecord(
+    val sourceOrdinal: Long,
+    val reasonCode: String,
+    val payloadDigest: DigestValue,
+)
+
+/** Stable digest authority for an already committed source ordinal. */
+internal data class CommittedOrdinalDigest(
+    val sourceOrdinal: Long,
+    val stableDedupDigest: DigestValue,
+)
+
+/** Physical ordinal coverage used by the activation gate. */
+internal data class BatchOrdinalCoverage(
+    val entryCount: Long,
+    val minimumOrdinal: Long?,
+    val maximumOrdinal: Long?,
 )
 
 /** Crypto material returned while the allocated entry row lock is held. */

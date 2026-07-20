@@ -79,6 +79,7 @@ dependencies {
     implementation(libs.bluetape4k.leader.redis.lettuce)
 
     implementation(libs.hikaricp)
+    compileOnly(libs.postgresql.driver)
     runtimeOnly(libs.postgresql.driver)
 
     implementation(libs.spring.boot.autoconfigure.lib)

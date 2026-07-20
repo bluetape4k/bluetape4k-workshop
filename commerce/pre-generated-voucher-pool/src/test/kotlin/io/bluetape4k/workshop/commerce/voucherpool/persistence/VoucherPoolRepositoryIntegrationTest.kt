@@ -31,6 +31,7 @@ import tools.jackson.databind.JsonNode
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD)
+@Suppress("LargeClass")
 internal class VoucherPoolRepositoryIntegrationTest {
     private val dataSource = PGSimpleDataSource().apply {
         setURL(postgres.jdbcUrl)
@@ -60,6 +61,35 @@ internal class VoucherPoolRepositoryIntegrationTest {
         insertDedup(TENANT, digest, 1)
         assertFailsWith<SQLException> {
             insertDedup(TENANT, digest, 1)
+        }
+    }
+
+    @Test
+    fun `staged entries allow an absent verification pair but reject a half populated pair`() {
+        val campaign = createCampaign(TENANT)
+        val batch = createBatch(TENANT, campaign)
+        val staged = UUID.randomUUID()
+        executeSql(
+            """INSERT INTO voucher_pool_entries
+                (tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,stable_dedup_digest,
+                 verification_digest,verification_key_version,code_ciphertext,code_nonce,wrapped_dek,
+                 wrap_nonce,kek_version,revision)
+                VALUES ('$TENANT','$staged','$campaign','$batch',700,'AVAILABLE',decode(md5('$staged-stable'),'hex'),
+                        NULL,NULL,decode('01','hex'),decode(substr(md5('$staged-code'),1,24),'hex'),decode('02','hex'),
+                        decode(substr(md5('$staged-wrap'),1,24),'hex'),'test-kek',0)""",
+        )
+
+        val invalid = UUID.randomUUID()
+        assertFailsWith<SQLException> {
+            executeSql(
+                """INSERT INTO voucher_pool_entries
+                    (tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,stable_dedup_digest,
+                     verification_digest,verification_key_version,code_ciphertext,code_nonce,wrapped_dek,
+                     wrap_nonce,kek_version,revision)
+                    VALUES ('$TENANT','$invalid','$campaign','$batch',701,'AVAILABLE',decode(md5('$invalid-stable'),'hex'),
+                            decode('01','hex'),NULL,decode('01','hex'),decode(substr(md5('$invalid-code'),1,24),'hex'),
+                            decode('02','hex'),decode(substr(md5('$invalid-wrap'),1,24),'hex'),'test-kek',0)""",
+            )
         }
     }
 
