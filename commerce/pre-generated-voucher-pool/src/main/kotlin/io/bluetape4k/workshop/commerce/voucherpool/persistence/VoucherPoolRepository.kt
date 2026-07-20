@@ -60,7 +60,7 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.executeQuery().use { result ->
                 check(result.next())
                 UserLimitRecord(
-                    tenantId, campaignId, result.getBytes("user_digest"),
+                    tenantId, campaignId, DigestValue.of(result.getBytes("user_digest")),
                     result.getInt("active_reservations"), result.getInt("active_allocations"),
                     result.getInt("lifetime_consumed"), result.getLong("revision"),
                 )
@@ -125,8 +125,10 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             dataSource.connection.use { connection ->
                 connection.prepareStatement(
                     """INSERT INTO voucher_pool_entries
-                        (tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,code_ciphertext,wrapped_dek,nonce,revision)
-                        VALUES (?,?,?,?,?,'AVAILABLE',decode('01','hex'),decode('02','hex'),gen_random_bytes(12),0)""",
+                        (tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,code_ciphertext,wrapped_dek,
+                         code_nonce,wrap_nonce,revision)
+                        VALUES (?,?,?,?,?,'AVAILABLE',decode('01','hex'),decode('02','hex'),
+                                gen_random_bytes(12),gen_random_bytes(12),0)""",
                 ).use {
                     it.setString(1, tenantId); it.setObject(2, id); it.setObject(3, campaignId)
                     it.setObject(4, batchId); it.setLong(5, ordinal); it.executeUpdate()
@@ -185,18 +187,21 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
     }
 
     private fun ResultSet.campaignRecord() = CampaignRecord(
-        getString("tenant_id"), getObject("campaign_id", UUID::class.java), CampaignState.valueOf(getString("state")),
-        getLong("policy_version"), getLong("revision"),
+        tenantId = getString("tenant_id"), campaignId = getObject("campaign_id", UUID::class.java),
+        state = CampaignState.valueOf(getString("state")), policyVersion = getLong("policy_version"),
+        revision = getLong("revision"),
     )
 
     private fun ResultSet.batchRecord() = BatchRecord(
-        getString("tenant_id"), getObject("batch_id", UUID::class.java), getObject("campaign_id", UUID::class.java),
-        BatchState.valueOf(getString("state")), getObject("activates_at", Instant::class.java), getLong("revision"),
+        tenantId = getString("tenant_id"), batchId = getObject("batch_id", UUID::class.java),
+        campaignId = getObject("campaign_id", UUID::class.java), state = BatchState.valueOf(getString("state")),
+        activatesAt = getObject("activates_at", Instant::class.java), revision = getLong("revision"),
     )
 
     private fun ResultSet.entryRecord() = EntryRecord(
-        getString("tenant_id"), getObject("entry_id", UUID::class.java), getObject("campaign_id", UUID::class.java),
-        getObject("batch_id", UUID::class.java), getLong("source_ordinal"), EntryState.valueOf(getString("state")),
-        getLong("revision"),
+        tenantId = getString("tenant_id"), entryId = getObject("entry_id", UUID::class.java),
+        campaignId = getObject("campaign_id", UUID::class.java), batchId = getObject("batch_id", UUID::class.java),
+        sourceOrdinal = getLong("source_ordinal"), state = EntryState.valueOf(getString("state")),
+        revision = getLong("revision"),
     )
 }

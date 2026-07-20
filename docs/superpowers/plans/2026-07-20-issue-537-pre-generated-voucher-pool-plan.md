@@ -487,7 +487,8 @@ ALTER TABLE voucher_pool_entries
     (revealed_at IS NOT NULL AND code_ciphertext IS NULL AND wrapped_dek IS NULL)
   );
 CREATE UNIQUE INDEX uq_voucher_pool_dedup ON voucher_pool_code_dedup(tenant_id, stable_dedup_digest);
-CREATE UNIQUE INDEX uq_voucher_pool_reservation_entry ON voucher_pool_reservations(tenant_id, entry_id);
+CREATE UNIQUE INDEX uq_voucher_pool_reservation_active_entry
+  ON voucher_pool_reservations(tenant_id, entry_id) WHERE state = 'ACTIVE';
 CREATE UNIQUE INDEX uq_voucher_pool_allocation_entry ON voucher_pool_allocations(tenant_id, entry_id);
 CREATE INDEX ix_voucher_pool_available ON voucher_pool_entries(tenant_id, campaign_id, batch_id, source_ordinal)
   WHERE state = 'AVAILABLE' AND quarantined_at IS NULL;

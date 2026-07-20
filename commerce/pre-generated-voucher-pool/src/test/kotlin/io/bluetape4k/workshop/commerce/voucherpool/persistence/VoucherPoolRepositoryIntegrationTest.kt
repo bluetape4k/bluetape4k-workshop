@@ -122,10 +122,53 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val batch = repository.createBatch(TENANT, campaign)
         val entry = repository.createAvailableEntry(TENANT, campaign, batch, 10)
         assertSqlFails("UPDATE voucher_pool_campaigns SET revision=-1 WHERE tenant_id='$TENANT' AND campaign_id='$campaign'")
-        assertSqlFails("UPDATE voucher_pool_entries SET nonce=NULL WHERE tenant_id='$TENANT' AND entry_id='$entry'")
+        assertSqlFails("UPDATE voucher_pool_entries SET code_nonce=NULL WHERE tenant_id='$TENANT' AND entry_id='$entry'")
         assertSqlFails("INSERT INTO voucher_pool_user_limits(tenant_id,campaign_id,user_digest,active_reservations) VALUES ('$TENANT','$campaign',decode('01','hex'),-1)")
         assertSqlFails("INSERT INTO voucher_pool_batches(tenant_id,batch_id,campaign_id,state,activates_at) VALUES ('other','$entry','$campaign','ACTIVE',now())")
-        assertSqlFails("INSERT INTO voucher_pool_entries(tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,code_ciphertext,wrapped_dek,nonce) VALUES ('$TENANT',gen_random_uuid(),'$campaign','$batch',11,'AVAILABLE',decode('01','hex'),decode('02','hex'),(SELECT nonce FROM voucher_pool_entries WHERE tenant_id='$TENANT' AND entry_id='$entry'))")
+        assertSqlFails("INSERT INTO voucher_pool_entries(tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,code_ciphertext,wrapped_dek,code_nonce) VALUES ('$TENANT',gen_random_uuid(),'$campaign','$batch',11,'AVAILABLE',decode('01','hex'),decode('02','hex'),(SELECT code_nonce FROM voucher_pool_entries WHERE tenant_id='$TENANT' AND entry_id='$entry'))")
+    }
+
+    @Test
+    fun `reservation history permits terminal reuse but one active owner and nonce domains stay unique`() {
+        val campaign = repository.createCampaign(TENANT)
+        val batch = repository.createBatch(TENANT, campaign)
+        val entry = repository.createAvailableEntry(TENANT, campaign, batch, 20)
+        val first = UUID.randomUUID()
+        executeSql(reservationInsert(first, campaign, batch, entry, "RELEASED"))
+        executeSql(reservationInsert(UUID.randomUUID(), campaign, batch, entry, "EXPIRED"))
+        executeSql(reservationInsert(UUID.randomUUID(), campaign, batch, entry, "ACTIVE"))
+        assertSqlFails(reservationInsert(UUID.randomUUID(), campaign, batch, entry, "ACTIVE"))
+        assertSqlFails(
+            """INSERT INTO voucher_pool_entries
+                (tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,code_ciphertext,wrapped_dek,code_nonce,wrap_nonce)
+                SELECT tenant_id,gen_random_uuid(),campaign_id,batch_id,21,state,code_ciphertext,wrapped_dek,
+                       code_nonce,gen_random_bytes(12) FROM voucher_pool_entries WHERE tenant_id='$TENANT' AND entry_id='$entry'""",
+        )
+    }
+
+    @Test
+    fun `durable lifecycle checks reject half owned claims and invalid state context`() {
+        assertSqlFails(
+            """INSERT INTO voucher_pool_worker_claims
+                (tenant_id,worker_type,scope_id,owner_id,claim_until,attempt,next_attempt_at,checkpoint)
+                VALUES ('$TENANT','RESERVATION_EXPIRY',gen_random_uuid(),'owner',NULL,0,now(),0)""",
+        )
+        assertSqlFails(
+            """INSERT INTO voucher_pool_reconciliation_inbox
+                (tenant_id,event_id,payload_digest,status,attempt,next_attempt_at,claim_owner)
+                VALUES ('$TENANT',gen_random_uuid(),decode('01','hex'),'CLAIMED',0,now(),'owner')""",
+        )
+    }
+
+    @Test
+    fun `digest values defensively copy ingress and egress bytes`() {
+        val source = byteArrayOf(1, 2, 3)
+        val digest = DigestValue.of(source)
+        source[0] = 9
+        digest.copyBytes().toList() shouldBeEqualTo listOf<Byte>(1, 2, 3)
+        val exposed = digest.copyBytes()
+        exposed[1] = 9
+        digest shouldBeEqualTo DigestValue.of(byteArrayOf(1, 2, 3))
     }
 
     @Test
@@ -134,8 +177,10 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val batch = repository.createBatch(TENANT, campaign)
         dataSource.connection.use { connection ->
             connection.createStatement().execute(
-                """INSERT INTO voucher_pool_entries(tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,code_ciphertext,wrapped_dek,nonce,revision)
-                    SELECT '$TENANT',gen_random_uuid(),'$campaign','$batch',n,'AVAILABLE',decode('01','hex'),decode('02','hex'),gen_random_bytes(12),0
+                """INSERT INTO voucher_pool_entries(tenant_id,entry_id,campaign_id,batch_id,source_ordinal,state,
+                    code_ciphertext,wrapped_dek,code_nonce,wrap_nonce,revision)
+                    SELECT '$TENANT',gen_random_uuid(),'$campaign','$batch',n,'AVAILABLE',decode('01','hex'),
+                           decode('02','hex'),gen_random_bytes(12),gen_random_bytes(12),0
                     FROM generate_series(1,10000) n""",
             )
             connection.createStatement().execute("ANALYZE voucher_pool_entries")
@@ -175,6 +220,23 @@ internal class VoucherPoolRepositoryIntegrationTest {
     private fun assertSqlFails(sql: String) {
         assertFailsWith<SQLException> { dataSource.connection.use { it.createStatement().execute(sql) } }
     }
+
+    private fun executeSql(sql: String) {
+        dataSource.connection.use { it.createStatement().execute(sql) }
+    }
+
+    private fun reservationInsert(
+        reservationId: UUID,
+        campaignId: UUID,
+        batchId: UUID,
+        entryId: UUID,
+        state: String,
+    ): String =
+        """INSERT INTO voucher_pool_reservations
+            (tenant_id,reservation_id,campaign_id,batch_id,entry_id,user_digest,idempotency_owner_digest,
+             state,reservation_expires_at,policy_version,revision)
+            VALUES ('$TENANT','$reservationId','$campaignId','$batchId','$entryId',decode('01','hex'),
+                    decode('02','hex'),'$state',now()+interval '1 hour',1,0)"""
 
     private fun queryString(sql: String): String = dataSource.connection.use { connection ->
         connection.createStatement().execute("SET enable_seqscan=off")

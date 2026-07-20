@@ -57,6 +57,28 @@ internal class VoucherPoolMigrationRunnerTest {
     }
 
     @Test
+    fun `production migration exposes complete authority metadata`() {
+        runner().migrate()
+
+        queryLong(
+            """SELECT count(*) FROM information_schema.columns WHERE table_schema='$schema' AND
+                ((table_name='voucher_pool_entries' AND column_name IN ('code_nonce','wrap_nonce')) OR
+                 (table_name='voucher_pool_audits' AND column_name='request_digest') OR
+                 (table_name='voucher_pool_worker_claims' AND column_name IN
+                    ('attempt','next_attempt_at','checkpoint','poison_reason')))""",
+        ) shouldBeEqualTo 7L
+        queryLong(
+            """SELECT count(*) FROM pg_indexes WHERE schemaname='$schema' AND
+                indexname='uq_voucher_pool_reservation_active_entry' AND indexdef LIKE '%WHERE%state%ACTIVE%'""",
+        ) shouldBeEqualTo 1L
+        queryLong(
+            """SELECT count(*) FROM pg_constraint c JOIN pg_class t ON t.oid=c.conrelid
+                JOIN pg_namespace n ON n.oid=t.relnamespace WHERE n.nspname='$schema'
+                AND c.contype='f' AND t.relname IN ('voucher_pool_entries','voucher_pool_reservations','voucher_pool_allocations')""",
+        ) shouldBeEqualTo 9L
+    }
+
+    @Test
     fun `held advisory startup lock times out without schema mutation`() {
         adminConnection().use { blocker ->
             blocker.autoCommit = false

@@ -4,10 +4,17 @@ CREATE TABLE voucher_pool_campaigns (
     tenant_id VARCHAR(64) NOT NULL,
     campaign_id UUID NOT NULL,
     state VARCHAR(24) NOT NULL,
+    starts_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
+    ends_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp() + interval '365 days',
+    per_user_limit INTEGER NOT NULL DEFAULT 1 CHECK (per_user_limit > 0),
+    reservation_ttl_seconds BIGINT NOT NULL DEFAULT 300 CHECK (reservation_ttl_seconds > 0),
+    allocation_ttl_seconds BIGINT NOT NULL DEFAULT 3600 CHECK (allocation_ttl_seconds > 0),
+    replacement_allowance INTEGER NOT NULL DEFAULT 1 CHECK (replacement_allowance BETWEEN 0 AND 1),
     policy_version BIGINT NOT NULL CHECK (policy_version > 0),
     revision BIGINT NOT NULL DEFAULT 0 CHECK (revision >= 0),
     PRIMARY KEY (tenant_id, campaign_id),
-    CHECK (state IN ('DRAFT','ACTIVE','PAUSED','REVOKING','REVOKED'))
+    CHECK (state IN ('DRAFT','ACTIVE','PAUSED','REVOKING','REVOKED')),
+    CHECK (starts_at < ends_at)
 );
 
 CREATE TABLE voucher_pool_batches (
@@ -19,9 +26,15 @@ CREATE TABLE voucher_pool_batches (
     expires_at TIMESTAMPTZ,
     revision BIGINT NOT NULL DEFAULT 0 CHECK (revision >= 0),
     import_cursor BIGINT NOT NULL DEFAULT 0 CHECK (import_cursor >= 0),
+    expected_entry_count BIGINT CHECK (expected_entry_count IS NULL OR expected_entry_count >= 0),
+    committed_entry_count BIGINT NOT NULL DEFAULT 0 CHECK (committed_entry_count >= 0),
+    source_digest BYTEA,
+    checkpoint_digest BYTEA,
+    failure_code VARCHAR(64),
     PRIMARY KEY (tenant_id, batch_id),
     FOREIGN KEY (tenant_id, campaign_id) REFERENCES voucher_pool_campaigns(tenant_id, campaign_id),
     CHECK (state IN ('STAGING','ACTIVE','PAUSED','REVOKING','EXPIRING','REVOKED','EXPIRED','FAILED_RETRYABLE','FAILED_TERMINAL')),
+    CHECK ((state IN ('FAILED_RETRYABLE','FAILED_TERMINAL'))=(failure_code IS NOT NULL)),
     CHECK (expires_at IS NULL OR activates_at < expires_at)
 );
 CREATE INDEX ix_voucher_pool_batch_campaign_state ON voucher_pool_batches(tenant_id,campaign_id,state,activates_at,batch_id);
@@ -40,7 +53,8 @@ CREATE TABLE voucher_pool_entries (
     allocation_expires_at TIMESTAMPTZ,
     code_ciphertext BYTEA,
     wrapped_dek BYTEA,
-    nonce BYTEA,
+    code_nonce BYTEA NOT NULL DEFAULT gen_random_bytes(12),
+    wrap_nonce BYTEA NOT NULL DEFAULT gen_random_bytes(12),
     key_version INTEGER NOT NULL DEFAULT 1 CHECK (key_version > 0),
     verification_key_version INTEGER,
     revealed_at TIMESTAMPTZ,
@@ -50,15 +64,17 @@ CREATE TABLE voucher_pool_entries (
     FOREIGN KEY (tenant_id, campaign_id) REFERENCES voucher_pool_campaigns(tenant_id, campaign_id),
     FOREIGN KEY (tenant_id, batch_id) REFERENCES voucher_pool_batches(tenant_id, batch_id),
     UNIQUE (tenant_id, batch_id, source_ordinal),
-    UNIQUE (tenant_id, nonce),
+    UNIQUE (tenant_id, code_nonce),
+    UNIQUE (tenant_id, wrap_nonce),
     CHECK (state IN ('AVAILABLE','RESERVED','ALLOCATED','REDEEMED','RELEASED','REVOKED','EXPIRED')),
     CONSTRAINT voucher_pool_entry_cipher_contract CHECK (
-      (revealed_at IS NULL AND code_ciphertext IS NOT NULL AND wrapped_dek IS NOT NULL AND nonce IS NOT NULL)
+      (revealed_at IS NULL AND code_ciphertext IS NOT NULL AND wrapped_dek IS NOT NULL)
       OR (revealed_at IS NOT NULL AND code_ciphertext IS NULL AND wrapped_dek IS NULL)
     ),
     CHECK (state <> 'AVAILABLE' OR (reservation_id IS NULL AND allocation_id IS NULL AND user_digest IS NULL AND reservation_expires_at IS NULL AND allocation_expires_at IS NULL)),
-    CHECK (state <> 'RESERVED' OR (reservation_id IS NOT NULL AND user_digest IS NOT NULL AND reservation_expires_at IS NOT NULL)),
-    CHECK (state NOT IN ('ALLOCATED','REDEEMED') OR (allocation_id IS NOT NULL AND user_digest IS NOT NULL))
+    CHECK (state <> 'RESERVED' OR (reservation_id IS NOT NULL AND allocation_id IS NULL AND user_digest IS NOT NULL AND reservation_expires_at IS NOT NULL AND allocation_expires_at IS NULL)),
+    CHECK (state NOT IN ('ALLOCATED','REDEEMED','RELEASED') OR (reservation_id IS NOT NULL AND allocation_id IS NOT NULL AND user_digest IS NOT NULL AND allocation_expires_at IS NOT NULL)),
+    CHECK (state <> 'REDEEMED' OR revealed_at IS NOT NULL)
 );
 CREATE INDEX ix_voucher_pool_available ON voucher_pool_entries(tenant_id,campaign_id,batch_id,source_ordinal,entry_id) WHERE state='AVAILABLE' AND quarantined_at IS NULL;
 CREATE INDEX ix_voucher_pool_reservation_expiry ON voucher_pool_entries(state,reservation_expires_at,entry_id) WHERE state='RESERVED';
@@ -83,7 +99,8 @@ CREATE TABLE voucher_pool_reservations (
     FOREIGN KEY (tenant_id,entry_id) REFERENCES voucher_pool_entries(tenant_id,entry_id),
     CHECK (state IN ('ACTIVE','ALLOCATED','EXPIRED','RELEASED','REVOKED'))
 );
-CREATE UNIQUE INDEX uq_voucher_pool_reservation_entry ON voucher_pool_reservations(tenant_id,entry_id);
+CREATE UNIQUE INDEX uq_voucher_pool_reservation_active_entry
+    ON voucher_pool_reservations(tenant_id,entry_id) WHERE state='ACTIVE';
 CREATE INDEX ix_voucher_pool_reservation_cursor ON voucher_pool_reservations(tenant_id,state,reservation_expires_at,reservation_id);
 
 CREATE TABLE voucher_pool_user_limits (
@@ -113,6 +130,8 @@ CREATE TABLE voucher_pool_allocations (
     revision BIGINT NOT NULL DEFAULT 0 CHECK (revision >= 0),
     PRIMARY KEY (tenant_id,allocation_id),
     FOREIGN KEY (tenant_id,reservation_id) REFERENCES voucher_pool_reservations(tenant_id,reservation_id),
+    FOREIGN KEY (tenant_id,campaign_id) REFERENCES voucher_pool_campaigns(tenant_id,campaign_id),
+    FOREIGN KEY (tenant_id,batch_id) REFERENCES voucher_pool_batches(tenant_id,batch_id),
     FOREIGN KEY (tenant_id,entry_id) REFERENCES voucher_pool_entries(tenant_id,entry_id),
     UNIQUE (tenant_id,campaign_id,user_digest,entitlement_root_id,replacement_ordinal)
 );
@@ -136,9 +155,13 @@ CREATE TABLE voucher_pool_http_idempotency (
     fingerprint BYTEA NOT NULL, status VARCHAR(24) NOT NULL, owner_token_digest BYTEA,
     lease_until TIMESTAMPTZ, command_deadline TIMESTAMPTZ NOT NULL, descriptor JSONB,
     expires_at TIMESTAMPTZ NOT NULL, revision BIGINT NOT NULL DEFAULT 0 CHECK (revision >= 0),
-    PRIMARY KEY (tenant_id,operation,scoped_key_digest)
+    PRIMARY KEY (tenant_id,operation,scoped_key_digest),
+    CHECK (status IN ('OWNED','COMPLETED','RETRYABLE_FAILED')),
+    CHECK ((owner_token_digest IS NULL)=(lease_until IS NULL)),
+    CHECK ((status='OWNED')=(owner_token_digest IS NOT NULL))
 );
 CREATE INDEX ix_voucher_pool_idempotency_lease ON voucher_pool_http_idempotency(status,lease_until,tenant_id,operation);
+CREATE INDEX ix_voucher_pool_idempotency_cleanup ON voucher_pool_http_idempotency(status,expires_at,tenant_id,operation);
 
 CREATE TABLE voucher_pool_command_tombstones (
     tenant_id VARCHAR(64) NOT NULL, operation VARCHAR(64) NOT NULL, key_version INTEGER NOT NULL CHECK(key_version>0),
@@ -151,9 +174,10 @@ CREATE TABLE voucher_pool_audits (
     id BIGSERIAL PRIMARY KEY, tenant_id VARCHAR(64) NOT NULL, campaign_id UUID NOT NULL,
     aggregate_type VARCHAR(32) NOT NULL, aggregate_id UUID NOT NULL, revision BIGINT NOT NULL CHECK(revision>=0),
     policy_version BIGINT NOT NULL CHECK(policy_version>0), actor_type VARCHAR(32) NOT NULL,
-    reason_code VARCHAR(64) NOT NULL, correlation_digest BYTEA,
+    reason_code VARCHAR(64) NOT NULL, correlation_digest BYTEA, request_digest BYTEA,
     created_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
-    UNIQUE (tenant_id,aggregate_type,aggregate_id,revision)
+    UNIQUE (tenant_id,aggregate_type,aggregate_id,revision),
+    CHECK (actor_type IN ('CUSTOMER','OPERATOR','WORKER','SYSTEM'))
 );
 CREATE INDEX ix_voucher_pool_audit_cursor ON voucher_pool_audits(tenant_id,campaign_id,id);
 
@@ -162,9 +186,12 @@ CREATE TABLE voucher_pool_reconciliation_inbox (
     status VARCHAR(24) NOT NULL, attempt INTEGER NOT NULL DEFAULT 0 CHECK(attempt>=0),
     next_attempt_at TIMESTAMPTZ NOT NULL, claim_owner VARCHAR(128), claim_until TIMESTAMPTZ,
     terminal_outcome VARCHAR(64), revision BIGINT NOT NULL DEFAULT 0 CHECK(revision>=0),
-    PRIMARY KEY (tenant_id,event_id), CHECK ((claim_owner IS NULL)=(claim_until IS NULL))
+    PRIMARY KEY (tenant_id,event_id), CHECK ((claim_owner IS NULL)=(claim_until IS NULL)),
+    CHECK (status IN ('PENDING','CLAIMED','APPLIED','IGNORED','FAILED_RETRYABLE','FAILED_TERMINAL')),
+    CHECK ((status='CLAIMED')=(claim_owner IS NOT NULL))
 );
 CREATE INDEX ix_voucher_pool_reconciliation_cursor ON voucher_pool_reconciliation_inbox(status,next_attempt_at,tenant_id,event_id);
+CREATE INDEX ix_voucher_pool_reconciliation_claim ON voucher_pool_reconciliation_inbox(claim_until,tenant_id,event_id) WHERE claim_owner IS NOT NULL;
 
 CREATE TABLE voucher_pool_quarantines (
     tenant_id VARCHAR(64) NOT NULL, entry_id UUID NOT NULL, source_state VARCHAR(24) NOT NULL,
@@ -172,19 +199,31 @@ CREATE TABLE voucher_pool_quarantines (
     detected_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(), resolved_at TIMESTAMPTZ,
     resolution VARCHAR(64), PRIMARY KEY (tenant_id,entry_id),
     FOREIGN KEY (tenant_id,entry_id) REFERENCES voucher_pool_entries(tenant_id,entry_id),
+    CHECK (source_state IN ('AVAILABLE','RESERVED','ALLOCATED','REDEEMED','RELEASED','REVOKED','EXPIRED')),
+    CHECK (reason_code IN ('UNKNOWN_KEY_VERSION','INVALID_CIPHERTEXT','INVALID_TAG','DIGEST_MISMATCH')),
+    CHECK (resolution IS NULL OR resolution IN ('CLEARED','REVOKED','TERMINAL_PRESERVED')),
     CHECK ((resolved_at IS NULL AND resolution IS NULL) OR (resolved_at IS NOT NULL AND resolution IS NOT NULL))
 );
+CREATE INDEX ix_voucher_pool_quarantine_active ON voucher_pool_quarantines(detected_at,tenant_id,entry_id) WHERE resolved_at IS NULL;
 
 CREATE TABLE voucher_pool_worker_claims (
     tenant_id VARCHAR(64) NOT NULL, worker_type VARCHAR(32) NOT NULL, scope_id UUID NOT NULL,
-    owner_id VARCHAR(128) NOT NULL, claim_until TIMESTAMPTZ NOT NULL, cursor BIGINT NOT NULL DEFAULT 0 CHECK(cursor>=0),
-    revision BIGINT NOT NULL DEFAULT 0 CHECK(revision>=0), PRIMARY KEY(tenant_id,worker_type,scope_id)
+    owner_id VARCHAR(128), claim_until TIMESTAMPTZ, cursor BIGINT NOT NULL DEFAULT 0 CHECK(cursor>=0),
+    attempt INTEGER NOT NULL DEFAULT 0 CHECK(attempt>=0),
+    next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
+    checkpoint BIGINT NOT NULL DEFAULT 0 CHECK(checkpoint>=0), poison_reason VARCHAR(64),
+    revision BIGINT NOT NULL DEFAULT 0 CHECK(revision>=0), PRIMARY KEY(tenant_id,worker_type,scope_id),
+    CHECK (worker_type IN ('RESERVATION_EXPIRY','ALLOCATION_EXPIRY','BATCH_REVOKE','BATCH_EXPIRY','RECONCILIATION','PURGE')),
+    CHECK ((owner_id IS NULL)=(claim_until IS NULL)),
+    CHECK (poison_reason IS NULL OR attempt > 0)
 );
 CREATE INDEX ix_voucher_pool_worker_active_claim ON voucher_pool_worker_claims(worker_type,claim_until,tenant_id,scope_id);
+CREATE INDEX ix_voucher_pool_worker_cursor ON voucher_pool_worker_claims(worker_type,next_attempt_at,checkpoint,tenant_id,scope_id);
 
 CREATE TABLE voucher_pool_pool_depth (
     tenant_id VARCHAR(64) NOT NULL, batch_id UUID NOT NULL, state VARCHAR(24) NOT NULL,
     entry_count BIGINT NOT NULL DEFAULT 0 CHECK(entry_count>=0), revision BIGINT NOT NULL DEFAULT 0 CHECK(revision>=0),
-    PRIMARY KEY(tenant_id,batch_id,state), FOREIGN KEY(tenant_id,batch_id) REFERENCES voucher_pool_batches(tenant_id,batch_id)
+    PRIMARY KEY(tenant_id,batch_id,state), FOREIGN KEY(tenant_id,batch_id) REFERENCES voucher_pool_batches(tenant_id,batch_id),
+    CHECK (state IN ('AVAILABLE','RESERVED','ALLOCATED','REDEEMED','RELEASED','REVOKED','EXPIRED'))
 );
 CREATE INDEX ix_voucher_pool_depth_campaign ON voucher_pool_pool_depth(tenant_id,batch_id,state) INCLUDE(entry_count);
