@@ -40,7 +40,10 @@ class JobConsoleV1LiveContract(
     private val client: HttpClient = HttpClient.newHttpClient(),
 ) {
     fun verifyOwnedWorkerLifecycle(idempotencyKey: String) {
-        check(request("GET", "/").body().contains("ETA is an estimate, not an SLA"))
+        val ui = request("GET", "/").body()
+        check(ui.contains("ETA is an estimate, not an SLA"))
+        check(ui.contains("id=\"submitJob\""))
+        check(ui.contains("response.body.getReader()"))
         check(request("GET", "/healthz").statusCode() == 200)
         val readiness = request("GET", "/readyz")
         check(readiness.statusCode() == 200)
@@ -49,8 +52,18 @@ class JobConsoleV1LiveContract(
         val submit = request("POST", "/v1/jobs", SUBMIT_BODY, idempotencyKey)
         check(submit.statusCode() == 202)
         val jobId = requireNotNull(JOB_ID.find(submit.body())?.groupValues?.get(1))
+        val replay = request("POST", "/v1/jobs", SUBMIT_BODY, idempotencyKey)
+        check(replay.statusCode() == 202)
+        check(JOB_ID.find(replay.body())?.groupValues?.get(1) == jobId)
         verifyHeartbeat(jobId)
         awaitState(jobId, "succeeded")
+
+        val cancellable = request("POST", "/v1/jobs", CANCELLABLE_BODY, "$idempotencyKey-cancel")
+        val cancellableJobId = requireNotNull(JOB_ID.find(cancellable.body())?.groupValues?.get(1))
+        awaitState(cancellableJobId, "running")
+        val cancelled = request("POST", "/v1/jobs/$cancellableJobId/cancel")
+        check(cancelled.statusCode() == 200)
+        awaitState(cancellableJobId, "cancelled")
     }
 
     private fun verifyHeartbeat(jobId: String) {
@@ -101,5 +114,6 @@ class JobConsoleV1LiveContract(
     private companion object {
         val JOB_ID = Regex("\\\"jobId\\\":\\\"([^\\\"]+)")
         const val SUBMIT_BODY = """{"jobType":"document_export","workUnits":3,"failureMode":"none"}"""
+        const val CANCELLABLE_BODY = """{"jobType":"document_export","workUnits":1000,"failureMode":"none"}"""
     }
 }

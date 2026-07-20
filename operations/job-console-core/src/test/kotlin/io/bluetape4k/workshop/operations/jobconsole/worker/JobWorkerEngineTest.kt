@@ -56,6 +56,7 @@ class JobWorkerEngineTest {
             stored.state shouldBeEqualTo JobState.SUCCEEDED
             stored.progress shouldBeEqualTo 100
             stored.completedChunk shouldBeEqualTo 3L
+            repository.durationSamples(JobType.DOCUMENT_EXPORT, Instant.EPOCH, 10).size shouldBeEqualTo 1
         }
     }
 }

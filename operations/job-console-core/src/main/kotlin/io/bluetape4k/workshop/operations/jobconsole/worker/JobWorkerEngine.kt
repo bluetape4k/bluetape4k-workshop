@@ -4,11 +4,13 @@ import io.bluetape4k.workshop.operations.jobconsole.domain.JobSignal
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobState
 import io.bluetape4k.workshop.operations.jobconsole.persistence.ClaimedJob
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepository
+import java.time.Clock
 import java.time.Duration
 
 class JobWorkerEngine(
     private val repository: JobRepository,
     private val workload: DeterministicJobWorkload,
+    private val clock: Clock = Clock.systemUTC(),
 ) {
     fun runOnce(
         leaseDuration: Duration = Duration.ofSeconds(30),
@@ -27,6 +29,7 @@ class JobWorkerEngine(
 
     fun run(claimed: ClaimedJob) {
         var current = claimed
+        val startedAt = clock.instant()
         try {
             for (unit in (claimed.completedChunk + 1)..claimed.workUnits.toLong()) {
                 workload.execute(current, unit)
@@ -36,6 +39,9 @@ class JobWorkerEngine(
                 current = current.copy(lease = checkpoint.lease, completedChunk = checkpoint.completedChunk)
             }
             repository.complete(current.lease, JobSignal.SUCCESS)
+            val completedAt = clock.instant()
+            val elapsed = Duration.between(startedAt, completedAt).coerceAtLeast(Duration.ofMillis(1))
+            repository.recordDuration(current.jobType, elapsed, completedAt)
         } catch (failure: DeterministicWorkloadFailure) {
             repository.complete(
                 current.lease,
