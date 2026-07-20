@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.operations.jobconsole.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
+import io.bluetape4k.workshop.operations.jobconsole.api.JobEventType
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -10,6 +11,19 @@ import java.time.Instant
 
 @Tag("integration")
 class JobOutboxRepositoryTest {
+    @Test
+    fun `each durable change notifies both job and queue snapshot consumers`() {
+        JobConsoleDatabaseFixture().use { fixture ->
+            fixture.migrate()
+            JobRepository(fixture.dataSource).submit(SCOPE, "key", SubmitJobRequest(JobType.DOCUMENT_EXPORT, 1), NOW)
+
+            val events = JobOutboxRepository(fixture.dataSource).claim(10, Duration.ofSeconds(30)).events
+
+            events.map { it.eventType }.toSet() shouldBeEqualTo
+                setOf(JobEventType.JOB_UPDATED, JobEventType.QUEUE_UPDATED)
+        }
+    }
+
     @Test
     fun `claim is bounded and failed publication can be retried with stable event id`() {
         JobConsoleDatabaseFixture().use { fixture ->

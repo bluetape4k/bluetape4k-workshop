@@ -49,7 +49,24 @@ class JobConsoleV1LiveContract(
         val submit = request("POST", "/v1/jobs", SUBMIT_BODY, idempotencyKey)
         check(submit.statusCode() == 202)
         val jobId = requireNotNull(JOB_ID.find(submit.body())?.groupValues?.get(1))
+        verifyHeartbeat(jobId)
         awaitState(jobId, "succeeded")
+    }
+
+    private fun verifyHeartbeat(jobId: String) {
+        val request =
+            HttpRequest.newBuilder(baseUri.resolve("/v1/jobs/$jobId/events"))
+                .header("Accept", "text/event-stream")
+                .header("X-Demo-Tenant", "tenant-a")
+                .header("X-Demo-Submitter", "submitter-a")
+                .GET()
+                .build()
+        val response = client.send(request, HttpResponse.BodyHandlers.ofInputStream())
+        check(response.statusCode() == 200)
+        response.body().bufferedReader().use { reader ->
+            val lines = generateSequence(reader::readLine).take(4).toList()
+            check(lines.any { it.replace(" ", "") == "event:heartbeat" }) { "heartbeat event was not received: $lines" }
+        }
     }
 
     private fun awaitState(jobId: String, expected: String) {

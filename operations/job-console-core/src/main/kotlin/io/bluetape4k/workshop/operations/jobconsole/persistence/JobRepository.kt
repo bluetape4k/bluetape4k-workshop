@@ -628,12 +628,17 @@ class JobRepository(
 
     private fun insertOutbox(connection: Connection, jobId: UUID, now: Instant) {
         connection.prepareStatement(
-            "INSERT INTO job_outbox(event_id, job_id, event_type, resource_version, queue_version, occurred_at) VALUES (?, ?, ?, 1, 1, ?)",
+            """
+            INSERT INTO job_outbox(event_id, job_id, event_type, resource_version, queue_version, occurred_at)
+            VALUES (?, ?, 'job.updated', 1, 1, ?), (?, ?, 'queue.updated', 1, 1, ?)
+            """.trimIndent(),
         ).use { statement ->
             statement.setObject(1, UUID.randomUUID())
             statement.setObject(2, jobId)
-            statement.setString(3, "job.updated")
-            statement.setTimestamp(4, Timestamp.from(now))
+            statement.setTimestamp(3, Timestamp.from(now))
+            statement.setObject(4, UUID.randomUUID())
+            statement.setObject(5, jobId)
+            statement.setTimestamp(6, Timestamp.from(now))
             statement.executeUpdate()
         }
     }
@@ -833,10 +838,17 @@ class JobRepository(
             statement.executeUpdate()
         }
         connection.prepareStatement(
-            "INSERT INTO job_outbox(event_id, job_id, event_type, resource_version, queue_version, occurred_at) SELECT ?, job_id, 'job.updated', version, queue_version, CURRENT_TIMESTAMP FROM jobs WHERE job_id = ?",
+            """
+            INSERT INTO job_outbox(event_id, job_id, event_type, resource_version, queue_version, occurred_at)
+            SELECT events.event_id, jobs.job_id, events.event_type, jobs.version, jobs.queue_version, CURRENT_TIMESTAMP
+            FROM jobs
+            CROSS JOIN (VALUES (?, 'job.updated'), (?, 'queue.updated')) AS events(event_id, event_type)
+            WHERE jobs.job_id = ?
+            """.trimIndent(),
         ).use { statement ->
             statement.setObject(1, UUID.randomUUID())
-            statement.setObject(2, jobId)
+            statement.setObject(2, UUID.randomUUID())
+            statement.setObject(3, jobId)
             statement.executeUpdate()
         }
     }

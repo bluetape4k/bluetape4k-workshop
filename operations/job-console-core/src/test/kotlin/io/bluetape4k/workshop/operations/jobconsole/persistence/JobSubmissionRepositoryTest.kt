@@ -29,7 +29,7 @@ class JobSubmissionRepositoryTest {
             replay.enqueueSequence shouldBeEqualTo first.enqueueSequence
             fixture.count("jobs") shouldBeEqualTo 1L
             fixture.count("job_requests") shouldBeEqualTo 1L
-            fixture.count("job_outbox") shouldBeEqualTo 1L
+            fixture.count("job_outbox") shouldBeEqualTo 2L
             fixture.count("job_history") shouldBeEqualTo 1L
         }
     }

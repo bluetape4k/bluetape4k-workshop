@@ -79,6 +79,7 @@ class JobConsoleSpringController(
         emitter.onCompletion(subscription::close)
         emitter.onTimeout { subscription.close(); emitter.complete() }
         emitter.onError { subscription.close() }
+        emitter.send(SseEmitter.event().name("heartbeat").data("{}"))
         return emitter
     }
 

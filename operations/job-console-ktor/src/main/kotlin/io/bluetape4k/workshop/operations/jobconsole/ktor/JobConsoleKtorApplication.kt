@@ -44,6 +44,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.time.Duration
 import java.util.UUID
@@ -98,10 +99,9 @@ fun Application.jobConsoleModule(
 
     if (demoEnabled) installJobConsoleRoutes(service, fanout)
 
-    val pollJob = launch(Dispatchers.IO) {
+    val outboxJob = launch(Dispatchers.IO) {
         while (isActive) {
             try {
-                if (demoEnabled) workerEngine.runOnce()
                 poller.pollOnce()
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -111,8 +111,26 @@ fun Application.jobConsoleModule(
             delay(100)
         }
     }
+    val workerJob =
+        if (demoEnabled) {
+            launch(Dispatchers.IO) {
+                while (isActive) {
+                    try {
+                        workerEngine.runOnce()
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (failure: Exception) {
+                        environment.log.warn("Job console worker cycle failed", failure)
+                    }
+                    delay(50)
+                }
+            }
+        } else {
+            null
+        }
     monitor.subscribe(ApplicationStopped) {
-        pollJob.cancel()
+        workerJob?.cancel()
+        outboxJob.cancel()
         redisSignal?.close()
         (dataSource as? AutoCloseable)?.close()
     }
@@ -169,14 +187,20 @@ private fun Application.installJobConsoleRoutes(service: JobConsoleService, fano
             val channel = Channel<io.bluetape4k.workshop.operations.jobconsole.api.JobEvent>(capacity = 16)
             val subscription = fanout.subscribe("ktor-${UUID.randomUUID()}") { if (it.jobId == jobId) channel.trySend(it) }
             try {
-                for (event in channel) {
-                    send(
-                        ServerSentEvent(
-                            data = mapper.writeValueAsString(event),
-                            event = event.eventType.wireValue,
-                            id = event.eventId.toString(),
-                        ),
-                    )
+                send(ServerSentEvent(data = "{}", event = "heartbeat"))
+                while (true) {
+                    val event = withTimeoutOrNull(Duration.ofSeconds(10).toMillis()) { channel.receive() }
+                    if (event == null) {
+                        send(ServerSentEvent(data = "{}", event = "heartbeat"))
+                    } else {
+                        send(
+                            ServerSentEvent(
+                                data = mapper.writeValueAsString(event),
+                                event = event.eventType.wireValue,
+                                id = event.eventId.toString(),
+                            ),
+                        )
+                    }
                 }
             } catch (cancelled: CancellationException) {
                 throw cancelled
