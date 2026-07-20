@@ -6,6 +6,7 @@ import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.concurrent.virtualthread.VirtualThreads
 import org.junit.jupiter.api.Test
+import java.util.concurrent.CancellationException
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.milliseconds
@@ -155,6 +156,42 @@ internal class DatabasePermitGateTest {
 
         gate.snapshot().workerInUse shouldBeEqualTo 0
         Thread.currentThread().isInterrupted.shouldBeFalse()
+    }
+
+    @Test
+    fun `cancellation after acquisition releases only the acquired lane`() {
+        val gate = gate()
+        val foregroundEntered = CountDownLatch(1)
+        val foregroundRelease = CountDownLatch(1)
+
+        VirtualThreads.executorService().use { executor ->
+            val foregroundHolder =
+                executor.submit {
+                    gate.withForegroundPermit {
+                        foregroundEntered.countDown()
+                        foregroundRelease.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                    }
+                }
+            foregroundEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            try {
+                assertFailsWith<CancellationException> {
+                    gate.withWorkerPermit {
+                        gate.snapshot().foregroundInUse shouldBeEqualTo 1
+                        gate.snapshot().workerInUse shouldBeEqualTo 1
+                        throw CancellationException("worker cancelled")
+                    }
+                }
+
+                gate.snapshot().foregroundInUse shouldBeEqualTo 1
+                gate.snapshot().workerInUse shouldBeEqualTo 0
+                gate.snapshot().sseInUse shouldBeEqualTo 0
+            } finally {
+                foregroundRelease.countDown()
+                foregroundHolder.get(5, TimeUnit.SECONDS)
+            }
+        }
+
+        gate.snapshot().foregroundInUse shouldBeEqualTo 0
     }
 
     private fun gate(workerWaitSeconds: Int = 1): DatabasePermitGate =

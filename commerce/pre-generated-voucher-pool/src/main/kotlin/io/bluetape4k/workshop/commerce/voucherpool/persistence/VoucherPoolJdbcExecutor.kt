@@ -9,10 +9,12 @@ import org.springframework.transaction.TransactionTimedOutException
 import org.springframework.transaction.support.TransactionSynchronization
 import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.transaction.support.TransactionTemplate
+import java.lang.reflect.UndeclaredThrowableException
 import java.sql.SQLException
 import java.sql.SQLTransientConnectionException
 import java.time.Duration
-import java.lang.reflect.UndeclaredThrowableException
+import java.util.Collections
+import java.util.IdentityHashMap
 
 private const val DEFAULT_CONNECTION_ACQUISITION_TIMEOUT_SECONDS = 2L
 private const val DEFAULT_FOREGROUND_TRANSACTION_TIMEOUT_SECONDS = 5L
@@ -24,6 +26,34 @@ private const val DEFAULT_WORKER_LOCK_TIMEOUT_SECONDS = 10L
 private const val MILLIS_PER_SECOND = 1_000L
 private const val MILLIS_CEILING_OFFSET = MILLIS_PER_SECOND - 1L
 private const val MINIMUM_TIMEOUT_SECONDS = 1L
+private const val MAX_TIMEOUT_CAUSE_DEPTH = 32
+private const val POSTGRES_LOCK_NOT_AVAILABLE = "55P03"
+
+private fun Throwable.timeoutPhaseInCauseChain(): JdbcTimeoutPhase? {
+    val visited = Collections.newSetFromMap(IdentityHashMap<Throwable, Boolean>())
+    var current: Throwable? = this
+    var phase: JdbcTimeoutPhase? = null
+    var depth = 0
+    while (current != null && depth < MAX_TIMEOUT_CAUSE_DEPTH) {
+        if (phase != null || !visited.add(current)) break
+        phase = current.directTimeoutPhase()
+        current = current.cause
+        depth++
+    }
+    return phase
+}
+
+private fun Throwable.directTimeoutPhase(): JdbcTimeoutPhase? =
+    when {
+        PoolBusyException::class.java.isInstance(this) -> JdbcTimeoutPhase.PERMIT
+        SQLTransientConnectionException::class.java.isInstance(this) -> JdbcTimeoutPhase.ACQUISITION
+        SQLException::class.java.isInstance(this) &&
+            SQLException::class.java.cast(this).sqlState == POSTGRES_LOCK_NOT_AVAILABLE -> JdbcTimeoutPhase.LOCK
+
+        TransactionTimedOutException::class.java.isInstance(this) -> JdbcTimeoutPhase.TRANSACTION
+
+        else -> null
+    }
 
 internal enum class JdbcExecutionLane {
     FOREGROUND,
@@ -148,16 +178,12 @@ internal class VoucherPoolJdbcExecutor(
             }
         } catch (failure: PoolBusyException) {
             throw timeoutFailure(lane, JdbcTimeoutPhase.PERMIT, failure)
-        } catch (failure: SQLTransientConnectionException) {
-            throw timeoutFailure(lane, JdbcTimeoutPhase.ACQUISITION, failure)
         } catch (failure: SQLException) {
-            if (failure.sqlState != POSTGRES_LOCK_NOT_AVAILABLE) throw failure
-            throw timeoutFailure(lane, JdbcTimeoutPhase.LOCK, failure)
+            throw failure.toTimeoutFailure(lane) ?: failure
         } catch (failure: TransactionTimedOutException) {
             throw timeoutFailure(lane, JdbcTimeoutPhase.TRANSACTION, failure)
         } catch (failure: UndeclaredThrowableException) {
-            val phase = failure.jdbcTimeoutPhase() ?: throw failure
-            throw timeoutFailure(lane, phase, failure)
+            throw failure.toTimeoutFailure(lane) ?: failure
         }
 
     private fun <T> withPermit(
@@ -182,16 +208,8 @@ internal class VoucherPoolJdbcExecutor(
         return VoucherPoolJdbcTimeoutException(lane = lane, phase = phase, cause = cause)
     }
 
-    private fun UndeclaredThrowableException.jdbcTimeoutPhase(): JdbcTimeoutPhase? {
-        val failure = undeclaredThrowable ?: return null
-        return when {
-            SQLTransientConnectionException::class.java.isInstance(failure) -> JdbcTimeoutPhase.ACQUISITION
-            SQLException::class.java.isInstance(failure) &&
-                SQLException::class.java.cast(failure).sqlState == POSTGRES_LOCK_NOT_AVAILABLE -> JdbcTimeoutPhase.LOCK
-
-            else -> null
-        }
-    }
+    private fun Throwable.toTimeoutFailure(lane: JdbcExecutionLane): VoucherPoolJdbcTimeoutException? =
+        timeoutPhaseInCauseChain()?.let { phase -> timeoutFailure(lane, phase, this) }
 
     private data class TransactionResult<T>(val value: T)
 
@@ -201,7 +219,5 @@ internal class VoucherPoolJdbcExecutor(
             .coerceAtMost(Int.MAX_VALUE.toLong())
             .toInt()
 
-    companion object : KLogging() {
-        private const val POSTGRES_LOCK_NOT_AVAILABLE = "55P03"
-    }
+    companion object : KLogging()
 }
