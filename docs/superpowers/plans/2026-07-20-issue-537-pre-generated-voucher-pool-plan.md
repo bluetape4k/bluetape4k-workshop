@@ -199,10 +199,38 @@ Exposed JDBC, Bucket4j/Lettuce/leader, Hikari/PostgreSQL, Spring MVC/Actuator/va
 JUnit/Kluent/Testcontainers/MockK test stack. Add only `kover = "0.9.8"` under `[versions]` and
 `kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }` under `[plugins]`.
 
-Define `migrationCompatibility` and `stressTest` source sets with their own compile/runtime classpaths.
-Their `Test` tasks use JUnit Platform, `migrationCompatibilityTest` includes tag `migration-compatibility`,
-`stressTest` includes tag `stress`, both depend on test classes, and neither runs as part of the default
-`test` task. Container-backed executions always use `--max-workers=1`.
+Keep all tests under `src/test`; create custom `Test` tasks over the same compiled test output and exclude
+their tags from default `test`:
+
+```kotlin
+tasks.test {
+    useJUnitPlatform { excludeTags("stress", "migration-compatibility") }
+}
+
+fun Test.failOnZeroTests() {
+    var executed = 0L
+    afterTest { _, _ -> executed += 1 }
+    doLast { check(executed > 0) { "$name discovered zero tests" } }
+}
+
+val migrationCompatibilityTest by tasks.registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform { includeTags("migration-compatibility") }
+    failOnZeroTests()
+}
+
+val stressTest by tasks.registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform { includeTags("stress") }
+    failOnZeroTests()
+}
+```
+
+Migration compatibility classes use `@Tag("migration-compatibility")`; stress classes use `@Tag("stress")`.
+Verification asserts non-empty XML under each custom task's test-result directory. Container-backed
+executions always use `--max-workers=1`.
 
 - [ ] **Step 3: runtime and permit RED tests를 작성한다**
 
@@ -496,8 +524,13 @@ Expected: physical checks, cross-campaign dedup, barrier-proven concurrent share
 exclusive waiter, exclusive policy update ordering and `SKIP LOCKED` progress PASS. For allocation candidate,
 worker candidate and operator pool-depth queries, load 10,000 entries and persist
 `EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)` artifacts; reject sequential scans of the entry table and assert
-returned rows, heap fetches and shared-hit/read blocks stay within the per-query fixture bounds recorded in
-the test.
+the following fixed ceilings:
+
+| Query | Returned rows | Heap fetches | Shared hit + read blocks | Allowed scan nodes |
+|---|---:|---:|---:|---|
+| allocation candidate | 1 | 4 | 128 | `Limit`, `LockRows`, `Index Scan` |
+| worker candidate chunk | 100 | 200 | 512 | `Limit`, `Index Scan` |
+| operator pool depth | 4 | 64 | 1,024 | `Aggregate`, `Index Only Scan`, bounded `Bitmap Heap/Index Scan` |
 
 - [ ] **Step 5: Lore commit을 만든다**
 
@@ -755,9 +788,18 @@ fun `effect descriptor and tombstone rollback or commit together`() = withPostgr
 
 @Test
 fun `same campaign reservations retain concurrent shared progress`() = withPostgresBarrier {
-    holdCampaignShareLock(CAMPAIGN, callers = 4)
+    val results = runCompleteReservations(
+        campaign = CAMPAIGN,
+        batch = BATCH,
+        uniqueUsers = 4,
+        barrier = BarrierPoint.AFTER_CAMPAIGN_AND_BATCH_GUARDS,
+    )
     concurrentSharedLockHolders(CAMPAIGN) shouldBeGreaterOrEqualTo 4
+    concurrentSharedLockHolders(BATCH) shouldBeGreaterOrEqualTo 4
     exclusiveWaiters(CAMPAIGN) shouldBeEqualTo 0
+    exclusiveWaiters(BATCH) shouldBeEqualTo 0
+    results.completedWithin(2.seconds).shouldBeTrue()
+    results.map { it.entryId }.distinct().size shouldBeEqualTo 4
 }
 ```
 
@@ -1333,6 +1375,7 @@ Run:
 
 ```bash
 ./gradlew :commerce-pre-generated-voucher-pool:migrationCompatibilityTest --rerun-tasks --max-workers=1
+test -n "$(find commerce/pre-generated-voucher-pool/build/test-results/migrationCompatibilityTest -name '*.xml' -print -quit)"
 ./gradlew :commerce-pre-generated-voucher-pool:test --tests '*VoucherPoolRetentionIntegrationTest' --tests '*VoucherPoolBackupRestoreIntegrationTest' --tests '*VoucherPoolKeyRotationIntegrationTest' --max-workers=1
 ```
 
@@ -1374,6 +1417,7 @@ fun `virtual client matrix preserves hard resource bounds`(clients: Int, redis: 
         freshDatabase = true,
     )
     evidence.hikariActiveMax.shouldBeLessOrEqualTo(16)
+    evidence.hikariAcquisitionWaitMaxMillis.shouldBeLessOrEqualTo(2_000)
     evidence.totalPermitHoldersMax.shouldBeLessOrEqualTo(16)
     evidence.foregroundWaitMaxMillis.shouldBeLessOrEqualTo(250)
     evidence.workerWaitMaxMillis.shouldBeLessOrEqualTo(1_000)
@@ -1381,6 +1425,12 @@ fun `virtual client matrix preserves hard resource bounds`(clients: Int, redis: 
     evidence.deadlineViolations shouldBeEqualTo 0
     evidence.hikariPendingDrainMillis.shouldBeLessOrEqualTo(12_000)
     evidence.workerCheckpointProgress shouldBeGreaterThan 0
+    evidence.duplicateWinnerCount shouldBeEqualTo 0
+    evidence.winners shouldBeEqualTo evidence.authoritativeAllocationCount
+    evidence.successfulResponses shouldBeEqualTo evidence.authoritativeAllocationCount
+    evidence.authoritativeReservationCount shouldBeEqualTo evidence.authoritativeAllocationCount
+    evidence.stateCountSum shouldBeEqualTo evidence.entryCount
+    evidence.acquisitionTimeoutTerminalDescriptors shouldBeEqualTo 0
     evidence.connectionLeaks shouldBeEqualTo 0
     evidence.permitLeaks shouldBeEqualTo 0
     evidence.counterDrift shouldBeEqualTo 0
@@ -1395,12 +1445,20 @@ data class VoucherPoolStressEvidence(
     val clients: Int,
     val redisMode: RedisMode,
     val winners: Int,
+    val successfulResponses: Int,
+    val authoritativeReservationCount: Int,
+    val authoritativeAllocationCount: Int,
+    val duplicateWinnerCount: Int,
+    val stateCountSum: Int,
+    val entryCount: Int,
     val hikariActiveMax: Int,
+    val hikariAcquisitionWaitMaxMillis: Long,
     val totalPermitHoldersMax: Int,
     val foregroundWaitMaxMillis: Long,
     val workerWaitMaxMillis: Long,
     val sseWaitMaxMillis: Long,
     val acquisitionTimeouts: Int,
+    val acquisitionTimeoutTerminalDescriptors: Int,
     val deadlineViolations: Int,
     val hikariPendingMax: Int,
     val hikariPendingDrainMillis: Long,
@@ -1415,6 +1473,8 @@ Store one JSON and one JFR or thread-dump artifact per profile plus a run manife
 fresh database/Redis state and the manifest must contain exactly the four profiles with unique artifact
 checksums. Latency/throughput are report-only; lane waits, acquisition/transaction/lock/chunk deadlines,
 Hikari pending/drain, resource, progress and correctness fields are hard gates.
+Every Hikari acquisition timeout must map to retryable `503 BACKEND_TIMEOUT`, release the idempotency owner and
+write no terminal descriptor.
 
 - [ ] **Step 3: two independent stress runs를 실행한다**
 
@@ -1423,6 +1483,7 @@ Run:
 ```bash
 ./gradlew :commerce-pre-generated-voucher-pool:stressTest -PvoucherPoolStressRun=final-1 --rerun-tasks --max-workers=1
 ./gradlew :commerce-pre-generated-voucher-pool:stressTest -PvoucherPoolStressRun=final-2 --rerun-tasks --max-workers=1
+test -n "$(find commerce/pre-generated-voucher-pool/build/test-results/stressTest -name '*.xml' -print -quit)"
 ```
 
 Expected: 64/128 clients × Redis healthy/unavailable profiles with concurrent worker/SSE load PASS twice;
@@ -1587,6 +1648,8 @@ Run sequentially:
 ./gradlew :commerce-pre-generated-voucher-pool:detekt :commerce-pre-generated-voucher-pool:detektTest
 ./gradlew :commerce-pre-generated-voucher-pool:dependencies --configuration runtimeClasspath
 test -s commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
+test -n "$(find commerce/pre-generated-voucher-pool/build/test-results/migrationCompatibilityTest -name '*.xml' -print -quit)"
+test -n "$(find commerce/pre-generated-voucher-pool/build/test-results/stressTest -name '*.xml' -print -quit)"
 ```
 
 Expected: all module tests, packaged migration compatibility and detekt PASS; runtime resolves JDK25 provider,
