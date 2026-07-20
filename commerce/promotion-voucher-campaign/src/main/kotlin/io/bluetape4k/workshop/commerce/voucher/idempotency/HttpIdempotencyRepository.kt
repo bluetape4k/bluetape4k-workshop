@@ -109,6 +109,8 @@ internal data class StoredHttpResponse(
                 "X-Workshop-Claim-Descriptor",
                 "X-Workshop-Allocation-Descriptor",
                 "X-Workshop-Reconciliation-Result",
+                "X-Workshop-Fixture-Evidence",
+                "X-Workshop-Fixture-Reset-Result",
             )
         private const val serialVersionUID: Long = 1L
     }

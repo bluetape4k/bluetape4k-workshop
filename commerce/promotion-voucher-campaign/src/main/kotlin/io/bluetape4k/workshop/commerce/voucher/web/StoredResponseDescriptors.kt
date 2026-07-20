@@ -110,7 +110,9 @@ internal fun String.isStoredDescriptorHeader(): Boolean =
     this == CAMPAIGN_DESCRIPTOR_HEADER ||
         this == CLAIM_DESCRIPTOR_HEADER ||
         this == ALLOCATION_DESCRIPTOR_HEADER ||
-        this == RECONCILIATION_DESCRIPTOR_HEADER
+        this == RECONCILIATION_DESCRIPTOR_HEADER ||
+        this == "X-Workshop-Fixture-Evidence" ||
+        this == "X-Workshop-Fixture-Reset-Result"
 
 private fun CampaignSnapshot.campaignDescriptor(): String =
     listOf(

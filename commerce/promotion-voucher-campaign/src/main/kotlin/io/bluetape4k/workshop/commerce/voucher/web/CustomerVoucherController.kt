@@ -12,6 +12,8 @@ import io.bluetape4k.workshop.commerce.voucher.application.VoucherCodeAcknowledg
 import io.bluetape4k.workshop.commerce.voucher.admission.RiskSignalService
 import io.bluetape4k.workshop.commerce.voucher.domain.CampaignSnapshot
 import io.bluetape4k.workshop.commerce.voucher.domain.ClaimSnapshot
+import io.bluetape4k.workshop.commerce.voucher.domain.ClaimState
+import io.bluetape4k.workshop.commerce.voucher.fixture.FixtureRiskOperation
 import io.bluetape4k.workshop.commerce.voucher.idempotency.StoredHttpResponse
 import io.bluetape4k.workshop.commerce.voucher.idempotency.VoucherResponseKind
 import io.bluetape4k.workshop.commerce.voucher.query.VoucherQueryService
@@ -120,7 +122,7 @@ internal class CustomerVoucherController(
                 fingerprintMaterial = body.userRef,
             ) {
                 val riskSignal =
-                    fixtureProvider.ifAvailable?.signalFor(tenant, principal)
+                    fixtureProvider.ifAvailable?.signalFor(tenant, principal, FixtureRiskOperation.ALLOCATION)
                         ?: risks.assess(tenant, principal)
                 val result =
                     allocation.allocate(
@@ -165,6 +167,9 @@ internal class CustomerVoucherController(
                 claimId,
                 listOf(body.code, body.expectedRevision, body.redemptionReference).joinToString("\u0000"),
             ) {
+                val riskSignal =
+                    fixtureProvider.ifAvailable?.signalFor(tenant, principal, FixtureRiskOperation.REDEMPTION)
+                        ?: risks.assess(tenant, principal)
                 val result =
                     claims.redeem(
                         RedeemVoucherCommand(
@@ -172,10 +177,19 @@ internal class CustomerVoucherController(
                             code = body.code,
                             expectedRevision = body.expectedRevision,
                             redemptionReference = body.redemptionReference,
+                            riskSignal = riskSignal,
                             claimId = claimId,
                         ),
                     )
-                result.storedClaimResponse(VoucherResponseKind.REDEMPTION_ACCEPTED)
+                result.storedClaimResponse(
+                    kind =
+                        if (result.state == ClaimState.REVIEW_REQUIRED) {
+                            VoucherResponseKind.REDEMPTION_REVIEW_REQUIRED
+                        } else {
+                            VoucherResponseKind.REDEMPTION_ACCEPTED
+                        },
+                    status = if (result.state == ClaimState.REVIEW_REQUIRED) 202 else 200,
+                )
             }
         return executedResponse(executed, request, executed.response::claimBody)
     }

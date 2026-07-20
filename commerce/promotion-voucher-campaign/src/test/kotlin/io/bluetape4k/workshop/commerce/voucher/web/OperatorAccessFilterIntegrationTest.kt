@@ -55,4 +55,23 @@ internal class OperatorAccessFilterIntegrationTest : AbstractVoucherIntegrationT
             .header(OPERATOR_GUARD_HEADER, OPERATOR_GUARD)
             .exchange().expectStatus().isForbidden
     }
+
+    @Test
+    fun `same origin browser GET uses explicit origin header when browsers omit Origin`() {
+        val tenant = randomIdentifier()
+
+        webTestClient.get().uri("/operator/api/v1/reviews?status=OPEN&limit=1")
+            .header("X-Workshop-Origin", "http://127.0.0.1:$port")
+            .header(TENANT_HEADER, tenant)
+            .header(OPERATOR_SECRET_HEADER, OPERATOR_SECRET)
+            .header(OPERATOR_GUARD_HEADER, OPERATOR_GUARD)
+            .exchange().expectStatus().isOk
+
+        webTestClient.get().uri("/operator/api/v1/reviews?status=OPEN&limit=1")
+            .header("X-Workshop-Origin", "https://untrusted.example")
+            .header(TENANT_HEADER, tenant)
+            .header(OPERATOR_SECRET_HEADER, OPERATOR_SECRET)
+            .header(OPERATOR_GUARD_HEADER, OPERATOR_GUARD)
+            .exchange().expectStatus().isForbidden
+    }
 }

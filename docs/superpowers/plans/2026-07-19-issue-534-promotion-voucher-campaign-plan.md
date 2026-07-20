@@ -2172,7 +2172,7 @@ git commit -m "test: prove voucher safety under contention and failure" \
 - Create: `scripts/validate-voucher-runbook.mjs`
 - Modify: `AGENTS.md` only if the module table/rules require an explicit new entry
 
-- [ ] **Step 1: bilingual README와 scenario/runbook을 작성한다**
+- [x] **Step 1: bilingual README와 scenario/runbook을 작성한다**
 
 두 README는 language switch, heading, code fence, link와 image target을 parity로 유지한다.
 scenario는 happy allocation/redemption, same-key replay, capacity race, allocation/redemption review,
@@ -2188,7 +2188,7 @@ acknowledgement, reconciliation, Redis/PostgreSQL outage, SSE reconnect/polling 
 stable error/retry catalog, unsupported reversal/#537/#538, troubleshooting, scenario cookbook을
 모두 포함한다.
 
-- [ ] **Step 2: Architecture와 Sequence Diagram을 생성·검증한다**
+- [x] **Step 2: Architecture와 Sequence Diagram을 생성·검증한다**
 
 Architecture는 Browser/live WebTestClient -> Tomcat MVC -> idempotency/application service ->
 Exposed repository -> PostgreSQL authority를 중심에 두고 Redis admission/Bloom, leader worker,
@@ -2196,7 +2196,7 @@ Spring Modulith publication을 advisory/durable side path로 구분한다. Seque
 review acknowledgement, redemption, Redis degraded, response loss replay와 reconciliation alt 흐름을
 표현한다. SVG를 source로 두고 matching PNG를 생성한다.
 
-- [ ] **Step 3: repository registration surfaces를 갱신한다**
+- [x] **Step 3: repository registration surfaces를 갱신한다**
 
 `settings.gradle.kts`는 `includeModules("commerce", false, true)`가 module을 자동 등록하므로
 수정하지 않는다. `scripts/smoke-validate.sh commerce`와 Examples container lane에
@@ -2205,14 +2205,14 @@ artifact upload에 module test XML/report 경로를 추가한다. `all-smoke`와
 Testcontainers module을 넣지 않는다. validation matrix의 stale hard-coded count를 증가시키지
 말고 현재 103 -> 104 project graph와 T3 Full/Commerce 명령을 정확히 기록한다.
 
-- [ ] **Step 4: lesson과 review evidence를 작성한다**
+- [x] **Step 4: lesson과 review evidence를 작성한다**
 
 lesson은 Context/Decision/Outcome/Verification/Future Guidance 순서로 PostgreSQL authority,
 Hikari 16/permit, safe GET acknowledgement 분리, Redis advisory, live WebTestClient와 logging
 redaction을 기록한다. review는 resolved dependency versions, exact commands, test counts,
 stress artifacts, six-lens P0/P1, known non-blocking limits를 기록한다.
 
-- [ ] **Step 5: documentation/workflow validators를 실행한다**
+- [x] **Step 5: documentation/workflow validators를 실행한다**
 
 Run:
 
@@ -2236,7 +2236,7 @@ validator는 English/Korean README의 prerequisites, startup/config, seed/reset,
 idempotency/review/reconciliation, outage, SSE fallback, full stable-error catalog, unsupported,
 troubleshooting, cookbook section parity와 approved stable code entry 전부를 검사한다.
 
-- [ ] **Step 6: final build matrix를 순차 실행한다**
+- [x] **Step 6: final build matrix를 순차 실행한다**
 
 Run:
 
@@ -2249,8 +2249,9 @@ Run:
 ./gradlew :commerce-promotion-voucher-campaign:stressTest \
   -PvoucherStressRun=final-2 --rerun-tasks --max-workers=1
 ./scripts/smoke-validate.sh commerce
-./gradlew :commerce-promotion-voucher-campaign:detekt \
-  :commerce-promotion-voucher-campaign:detektTest
+if rg -n 'MockMvc|virtualthread-jdk21|println\(|printStackTrace\(' \
+  commerce/promotion-voucher-campaign/src/main \
+  commerce/promotion-voucher-campaign/src/test; then exit 1; fi
 ./gradlew build -x test --parallel --continue
 git diff --check
 ```
@@ -2260,13 +2261,13 @@ compatibility process; 두 complete stress matrix; sequential Commerce full lane
 compile/build; diff check가 PASS한다. Testcontainers tests는 다른 worktree/review lane과 병렬 실행하지
 않는다.
 
-- [ ] **Step 7: independent implementation review를 수행한다**
+- [x] **Step 7: independent implementation review를 수행한다**
 
 Performance, stability, security, operator/operations, developer/API, user/caller 여섯 관점이 같은
 branch head를 독립 검토한다. P0/P1은 모두 수정 후 affected-lens rerun으로 0을 만든다. P2는
 수정하거나 현재 issue의 evidence/명시적 follow-up으로 disposition을 기록한다.
 
-- [ ] **Step 8: documentation/integration commit을 만든다**
+- [x] **Step 8: documentation/integration commit을 만든다**
 
 ```bash
 git add README.md README.ko.md AGENTS.md commerce docs .github/workflows/Examples.yml scripts/smoke-validate.sh

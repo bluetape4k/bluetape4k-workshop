@@ -97,7 +97,7 @@ internal class ApiExceptionHandler {
         failure: Exception,
         request: HttpServletRequest,
     ): ResponseEntity<ApiError> {
-        log.warn(failure) { "voucher_http_failed category=INTERNAL_ERROR failure=${failure.javaClass.simpleName}" }
+        log.warn { "voucher_http_failed category=INTERNAL_ERROR failure=${failure.javaClass.simpleName}" }
         return errorResponse(500, "INTERNAL_ERROR", "request could not be completed", request.requestId(), null)
     }
 

@@ -10,6 +10,7 @@ const state = {
     reconnects: 0,
     fallbackAttempts: 0,
     lastEventId: null,
+    latestClaim: null,
 };
 
 const elements = {
@@ -32,6 +33,13 @@ const elements = {
     operatorSecret: document.querySelector("#operator-secret"),
     operatorActions: Array.from(document.querySelectorAll(".operator-action")),
     operatorDisabledReason: document.querySelector("#operator-disabled-reason"),
+    scenario: document.querySelector("#scenario"),
+    runScenario: document.querySelector("#run-scenario"),
+    resetScenario: document.querySelector("#reset-scenario"),
+    scenarioResult: document.querySelector("#scenario-result"),
+    refreshOperatorEvidence: document.querySelector("#refresh-operator-evidence"),
+    reviewList: document.querySelector("#review-list"),
+    reconciliationList: document.querySelector("#reconciliation-list"),
     confirmation: document.querySelector("#confirmation"),
     confirmationTitle: document.querySelector("#confirmation-title"),
     confirmationDescription: document.querySelector("#confirmation-description"),
@@ -39,8 +47,7 @@ const elements = {
 };
 
 let focusReturnTarget = null;
-let pendingOperatorAction = null;
-let pendingOperatorRevision = null;
+let pendingConfirmation = null;
 
 function announce(message) {
     elements.liveStatus.textContent = message;
@@ -61,6 +68,16 @@ function restoreFocus() {
         focusReturnTarget.focus();
     }
     focusReturnTarget = null;
+}
+
+function requestConfirmation(target, title, description, execute) {
+    focusReturnTarget = target;
+    pendingConfirmation = execute;
+    elements.confirmationTitle.textContent = title;
+    elements.confirmationDescription.textContent = description;
+    elements.confirmation.returnValue = "";
+    elements.confirmation.showModal();
+    elements.confirmationAccept.focus();
 }
 
 function randomKey() {
@@ -84,6 +101,7 @@ function operatorHeaders() {
         "X-Workshop-Tenant": state.tenant,
         "X-Workshop-Operator-Secret": state.operatorSecret,
         "X-Workshop-Guard": "voucher-workshop-operator",
+        "X-Workshop-Origin": location.origin,
         "Origin": location.origin,
     };
 }
@@ -142,6 +160,167 @@ function refreshActions(campaignState = elements.campaignState.textContent.split
     elements.operatorDisabledReason.textContent = operatorReady
         ? `Available for ${campaignState}: ${availableActions || "none"}.`
         : "Load a campaign and enter the operator secret.";
+    elements.runScenario.disabled = !operatorReady;
+    elements.resetScenario.disabled = !operatorReady;
+    elements.refreshOperatorEvidence.disabled = !operatorReady;
+}
+
+async function customerCommand(path, body, key = randomKey(), principal = state.principal) {
+    return api(path, {
+        method: "POST",
+        headers: {
+            ...customerHeaders(),
+            "X-Workshop-Principal": principal,
+            "Idempotency-Key": key,
+        },
+        body: JSON.stringify(body),
+    });
+}
+
+async function operatorCommand(path, body, key = randomKey(), extraHeaders = {}) {
+    return api(path, {
+        method: "POST",
+        headers: { ...operatorHeaders(), ...extraHeaders, "Idempotency-Key": key },
+        body: JSON.stringify(body),
+    });
+}
+
+async function operatorQuery(path) {
+    return api(path, { headers: operatorHeaders() });
+}
+
+async function customerQuery(path) {
+    return api(path, { headers: customerHeaders() });
+}
+
+function emptyEvidenceItem(message) {
+    const item = document.createElement("li");
+    item.textContent = message;
+    return item;
+}
+
+function renderReviews(page) {
+    elements.reviewList.replaceChildren();
+    if (page.items.length === 0) {
+        elements.reviewList.append(emptyEvidenceItem("No open reviews"));
+        return;
+    }
+    page.items.forEach(review => {
+        const item = document.createElement("li");
+        const summary = document.createElement("span");
+        const actions = document.createElement("div");
+        const approve = document.createElement("button");
+        const reject = document.createElement("button");
+        summary.textContent = `${review.kind} · ${review.reasonCode} · claim ${review.claimId} · revision ${review.revision}`;
+        approve.type = "button";
+        approve.textContent = "Approve";
+        approve.setAttribute("aria-label", `Approve review ${review.id}`);
+        reject.type = "button";
+        reject.textContent = "Reject";
+        reject.className = "danger";
+        reject.setAttribute("aria-label", `Reject review ${review.id}`);
+        [approve, reject].forEach((button, index) => {
+            const decision = index === 0 ? "approve" : "reject";
+            button.addEventListener("click", () => requestConfirmation(
+                button,
+                `Confirm review ${decision}`,
+                `${decision} review ${review.id} at review revision ${review.revision}.`,
+                async () => {
+                    await operatorCommand(`/operator/api/v1/reviews/${review.id}/${decision}`, {
+                        campaignId: review.campaignId,
+                        claimId: review.claimId,
+                        expectedReviewRevision: review.revision,
+                        expectedClaimRevision: review.expectedClaimRevision,
+                    });
+                    await loadOperatorEvidence();
+                    await loadSnapshot();
+                    announce(`Review ${review.id} ${decision} completed`);
+                },
+            ));
+        });
+        actions.className = "button-row";
+        actions.append(approve, reject);
+        item.append(summary, actions);
+        elements.reviewList.append(item);
+    });
+}
+
+function renderReconciliationBacklog(page) {
+    elements.reconciliationList.replaceChildren();
+    if (page.items.length === 0) {
+        elements.reconciliationList.append(emptyEvidenceItem("No reconciliation backlog"));
+        setText(elements.reconciliationState, "No signal");
+        return;
+    }
+    page.items.forEach(entry => {
+        const item = document.createElement("li");
+        item.textContent = `${entry.status} · ${entry.aggregateType} ${entry.aggregateId} · sequence ${entry.observedSequence} · attempt ${entry.attempt}`;
+        elements.reconciliationList.append(item);
+    });
+    setText(elements.reconciliationState, `${page.items.length} visible backlog item(s)`);
+}
+
+async function loadOperatorEvidence() {
+    const [reviews, backlog] = await Promise.all([
+        operatorQuery("/operator/api/v1/reviews?status=OPEN&limit=20"),
+        operatorQuery("/operator/api/v1/reconciliation/backlog?limit=20"),
+    ]);
+    renderReviews(reviews);
+    renderReconciliationBacklog(backlog);
+}
+
+async function allocate(principal = state.principal, key = randomKey()) {
+    const claim = await customerCommand(
+        `/api/v1/campaigns/${encodeURIComponent(state.campaignId)}/claims`,
+        { userRef: principal },
+        key,
+        principal,
+    );
+    if (principal === state.principal) state.latestClaim = claim;
+    return claim;
+}
+
+async function prepareFixture(scenario) {
+    return operatorCommand(
+        `/operator/api/v1/fixtures/${encodeURIComponent(scenario)}/run`,
+        { principalRef: state.principal, campaignId: state.campaignId },
+    );
+}
+
+async function resetTenant(capacity = 10) {
+    if (state.streamAbort) state.streamAbort.abort();
+    state.lastEventId = null;
+    state.reconnects = 0;
+    state.fallbackAttempts = 0;
+    await operatorCommand("/operator/api/v1/fixtures/reset", {});
+    const now = Date.now();
+    await operatorCommand(
+        "/operator/api/v1/campaigns",
+        {
+            campaignId: state.campaignId,
+            startsAt: new Date(now - 60_000).toISOString(),
+            endsAt: new Date(now + 3_600_000).toISOString(),
+            capacity,
+            perUserLimit: 1,
+            redemptionTtlSeconds: 600,
+        },
+        randomKey(),
+        { "If-None-Match": "*" },
+    );
+    await operatorCommand(`/operator/api/v1/campaigns/${encodeURIComponent(state.campaignId)}/activate`, { expectedRevision: 0 });
+    state.latestClaim = null;
+    await loadSnapshot();
+    connectStream();
+}
+
+async function redeemLatest(key = randomKey()) {
+    const claim = state.latestClaim || await allocate();
+    if (!claim.code) throw new Error("Scenario requires an allocated voucher code");
+    return customerCommand(
+        `/api/v1/claims/${encodeURIComponent(claim.claimId)}/redeem`,
+        { code: claim.code, expectedRevision: claim.revision, redemptionReference: randomKey() },
+        key,
+    );
 }
 
 async function loadSnapshot() {
@@ -279,11 +458,7 @@ elements.connectionForm.addEventListener("submit", async event => {
 
 elements.allocate.addEventListener("click", async () => {
     try {
-        const claim = await api(`/api/v1/campaigns/${encodeURIComponent(state.campaignId)}/claims`, {
-            method: "POST",
-            headers: { ...customerHeaders(), "Idempotency-Key": randomKey() },
-            body: JSON.stringify({ userRef: state.principal }),
-        });
+        const claim = await allocate();
         setText(elements.claimState, claim.state);
         setText(elements.claimId, claim.claimId);
         setText(elements.reconciliationState, claim.reviewId ? `Review ${claim.reviewId} pending` : "No pending review");
@@ -299,43 +474,256 @@ elements.operatorSecret.addEventListener("change", () => {
     elements.operatorSecret.value = "";
     refreshActions();
     announce("Operator secret captured in session memory");
+    loadOperatorEvidence().catch(failure => announce(`Operator evidence refresh failed: ${failure.message}`));
+});
+
+elements.refreshOperatorEvidence.addEventListener("click", () => {
+    loadOperatorEvidence()
+        .then(() => announce("Operator evidence refreshed"))
+        .catch(failure => announce(`Operator evidence refresh failed: ${failure.message}`));
 });
 
 elements.operatorActions.forEach(button => {
     button.addEventListener("click", () => {
-        focusReturnTarget = button;
-        pendingOperatorAction = button.dataset.action;
-        pendingOperatorRevision = state.revision;
-        elements.confirmationTitle.textContent = `Confirm ${pendingOperatorAction}`;
-        elements.confirmationDescription.textContent = `${pendingOperatorAction} changes authoritative campaign state at revision ${state.revision}.`;
-        elements.confirmation.showModal();
-        elements.confirmationAccept.focus();
+        const action = button.dataset.action;
+        const expectedRevision = state.revision;
+        requestConfirmation(
+            button,
+            `Confirm ${action}`,
+            `${action} changes authoritative campaign state at revision ${expectedRevision}.`,
+            async () => {
+                try {
+                    const updated = await api(`/operator/api/v1/campaigns/${encodeURIComponent(state.campaignId)}/${action}`, {
+                        method: "POST",
+                        headers: { ...operatorHeaders(), "Idempotency-Key": randomKey() },
+                        body: JSON.stringify({ expectedRevision }),
+                    });
+                    renderSnapshot(updated);
+                    announce(`Campaign ${action} completed`);
+                } catch (failure) {
+                    if (failure.status === 412) {
+                        await loadSnapshot();
+                        announce("Stale revision refreshed from authoritative snapshot");
+                    } else {
+                        throw failure;
+                    }
+                }
+            },
+        );
     });
 });
 
 elements.confirmation.addEventListener("close", async () => {
-    const action = pendingOperatorAction;
-    const expectedRevision = pendingOperatorRevision;
-    pendingOperatorAction = null;
-    pendingOperatorRevision = null;
+    const execute = pendingConfirmation;
+    pendingConfirmation = null;
     restoreFocus();
-    if (elements.confirmation.returnValue !== "confirm" || !action) return;
+    if (elements.confirmation.returnValue !== "confirm" || !execute) return;
     try {
-        const updated = await api(`/operator/api/v1/campaigns/${encodeURIComponent(state.campaignId)}/${action}`, {
-            method: "POST",
-            headers: { ...operatorHeaders(), "Idempotency-Key": randomKey() },
-            body: JSON.stringify({ expectedRevision }),
-        });
-        renderSnapshot(updated);
-        announce(`Campaign ${action} completed`);
+        await execute();
     } catch (failure) {
-        if (failure.status === 412) {
-            await loadSnapshot();
-            announce("Stale revision refreshed from authoritative snapshot");
-        } else {
-            announce(`Operator action failed: ${failure.message}`);
-        }
+        announce(`Operator action failed: ${failure.message}`);
     }
+});
+
+function requireRejected(result, expectedStatus, expectedCodes, label) {
+    if (result.status !== "rejected") throw new Error(`${label} unexpectedly succeeded`);
+    const failure = result.reason;
+    if (failure?.status !== expectedStatus || !expectedCodes.includes(failure?.payload?.code)) {
+        throw new Error(`${label} returned ${failure?.status || "network failure"} ${failure?.payload?.code || failure?.message || "unknown"}`);
+    }
+}
+
+async function executeScenario(scenario) {
+    await resetTenant(scenario === "capacity-race" ? 2 : 10);
+    const fixture = await prepareFixture(scenario);
+    let detail;
+    switch (scenario) {
+        case "happy-allocation": {
+            await allocate();
+            const redeemed = await redeemLatest();
+            if (redeemed.state !== "REDEEMED") throw new Error(`Expected REDEEMED, observed ${redeemed.state}`);
+            detail = `claim ${redeemed.claimId} reached ${redeemed.state}`;
+            break;
+        }
+        case "same-key-response-loss": {
+            const key = randomKey();
+            const first = await allocate(state.principal, key);
+            const replay = await allocate(state.principal, key);
+            if (first.claimId !== replay.claimId) throw new Error("Replay returned another claim");
+            detail = `claim ${first.claimId} replayed without a second effect`;
+            break;
+        }
+        case "capacity-race": {
+            const attempts = await Promise.allSettled(
+                Array.from({ length: 8 }, (_, index) => allocate(`${state.principal}-${index}`)),
+            );
+            const winners = attempts.filter(result => result.status === "fulfilled");
+            const rejected = attempts.filter(result => result.status === "rejected");
+            if (winners.length !== 2) throw new Error(`Expected 2 capacity winners, observed ${winners.length}`);
+            rejected.forEach((result, index) => requireRejected(result, 409, ["CAPACITY_EXHAUSTED"], `capacity loser ${index + 1}`));
+            const snapshot = await loadSnapshot();
+            if (snapshot.remainingCapacity !== 0) {
+                throw new Error(`Expected remaining capacity 0, observed ${snapshot.remainingCapacity}`);
+            }
+            detail = `${winners.length} winners and ${rejected.length} authoritative rejections`;
+            break;
+        }
+        case "allocation-review":
+        case "bloom-false-positive": {
+            const claim = await allocate();
+            if (!claim.reviewId) throw new Error("Expected an allocation review");
+            detail = `review ${claim.reviewId} opened without exposing a code`;
+            break;
+        }
+        case "redemption-review": {
+            state.latestClaim = await allocate();
+            await prepareFixture(scenario);
+            const reviewed = await redeemLatest();
+            if (reviewed.state !== "REVIEW_REQUIRED") throw new Error("Expected a redemption review");
+            detail = `redemption entered ${reviewed.state}`;
+            break;
+        }
+        case "pause-allocation-race": {
+            const [pause, allocation] = await Promise.allSettled([
+                operatorCommand(`/operator/api/v1/campaigns/${encodeURIComponent(state.campaignId)}/pause`, { expectedRevision: 1 }),
+                allocate(),
+            ]);
+            if ((pause.status === "fulfilled" ? 1 : 0) + (allocation.status === "fulfilled" ? 1 : 0) !== 1) {
+                throw new Error("Expected exactly one pause/allocation winner");
+            }
+            if (pause.status === "rejected") requireRejected(pause, 412, ["STALE_REVISION"], "pause loser");
+            if (allocation.status === "rejected") {
+                requireRejected(allocation, 409, ["CAMPAIGN_PAUSED", "CONCURRENT_MODIFICATION"], "allocation loser");
+            }
+            const snapshot = await loadSnapshot();
+            const expectedState = pause.status === "fulfilled" ? "PAUSED" : "ACTIVE";
+            if (snapshot.state !== expectedState) throw new Error(`Expected ${expectedState}, observed ${snapshot.state}`);
+            const expectedRemaining = allocation.status === "fulfilled" ? 9 : 10;
+            if (snapshot.remainingCapacity !== expectedRemaining) {
+                throw new Error(`Expected remaining capacity ${expectedRemaining}, observed ${snapshot.remainingCapacity}`);
+            }
+            detail = `${pause.status === "fulfilled" ? "pause" : "allocation"} won revision 1; ${expectedState} with remaining ${expectedRemaining}`;
+            break;
+        }
+        case "redeem-revoke-race": {
+            state.latestClaim = await allocate();
+            const claim = state.latestClaim;
+            const outcomes = await Promise.allSettled([
+                redeemLatest(),
+                operatorCommand(`/operator/api/v1/claims/${encodeURIComponent(claim.claimId)}/revoke`, {
+                    campaignId: state.campaignId,
+                    expectedRevision: claim.revision,
+                }),
+            ]);
+            const winners = outcomes.filter(result => result.status === "fulfilled");
+            const losers = outcomes.filter(result => result.status === "rejected");
+            if (winners.length !== 1 || losers.length !== 1) {
+                throw new Error("Expected exactly one terminal winner");
+            }
+            if (![409, 412].includes(losers[0].reason?.status)) throw new Error("Terminal loser returned an unexpected status");
+            requireRejected(losers[0], losers[0].reason?.status, ["STALE_REVISION", "ALREADY_REDEEMED", "CLAIM_REVOKED"], "terminal loser");
+            const finalClaim = await customerQuery(`/api/v1/claims/${encodeURIComponent(claim.claimId)}`);
+            if (!["REDEEMED", "REVOKED"].includes(finalClaim.state)) {
+                throw new Error(`Expected terminal claim state, observed ${finalClaim.state}`);
+            }
+            const terminalSnapshot = await loadSnapshot();
+            const expectedTerminalRemaining = finalClaim.state === "REVOKED" ? 10 : 9;
+            if (terminalSnapshot.remainingCapacity !== expectedTerminalRemaining) {
+                throw new Error(`Expected terminal remaining capacity ${expectedTerminalRemaining}, observed ${terminalSnapshot.remainingCapacity}`);
+            }
+            detail = "exactly one terminal command won";
+            break;
+        }
+        case "policy-change": {
+            const body = { expectedRevision: 1, capacity: 12, perUserLimit: 1, redemptionTtlSeconds: 600 };
+            const outcomes = await Promise.allSettled([
+                operatorCommand(`/operator/api/v1/campaigns/${encodeURIComponent(state.campaignId)}/policy`, body),
+                operatorCommand(`/operator/api/v1/campaigns/${encodeURIComponent(state.campaignId)}/policy`, body),
+            ]);
+            const winners = outcomes.filter(result => result.status === "fulfilled");
+            const losers = outcomes.filter(result => result.status === "rejected");
+            if (winners.length !== 1 || losers.length !== 1) {
+                throw new Error("Expected one policy revision winner");
+            }
+            requireRejected(losers[0], 412, ["STALE_REVISION"], "policy loser");
+            const policySnapshot = await loadSnapshot();
+            if (policySnapshot.policyVersion !== 1) {
+                throw new Error(`Expected policy version 1, observed ${policySnapshot.policyVersion}`);
+            }
+            if (policySnapshot.capacity !== 12 || policySnapshot.remainingCapacity !== 12) {
+                throw new Error(`Expected policy capacity 12, observed ${policySnapshot.capacity}`);
+            }
+            detail = "one policy update won the expected revision";
+            break;
+        }
+        case "redis-outage": {
+            const claim = await allocate();
+            detail = `advisory UNKNOWN fell back to PostgreSQL claim ${claim.claimId}`;
+            break;
+        }
+        case "delayed-duplicate-out-of-order":
+            if (fixture.executionMode !== "SERVER_EVENT" || fixture.evidence?.join(",") !== "APPLIED,IGNORED,CONFLICT") {
+                throw new Error(`Unexpected delayed-event evidence ${fixture.evidence?.join(",") || "none"}`);
+            }
+            detail = "fixture submitted apply, duplicate, and stale event evidence";
+            break;
+        default:
+            throw new Error(`Unsupported scenario ${scenario}`);
+    }
+    await loadSnapshot();
+    return `${fixture.executionMode}: ${detail}`;
+}
+
+async function runSelectedScenario() {
+    const scenario = elements.scenario.value;
+    elements.runScenario.disabled = true;
+    setText(elements.scenarioResult, `Running ${scenario}…`);
+    try {
+        const result = await executeScenario(scenario);
+        setText(elements.scenarioResult, result);
+        addTimeline("Scenario complete", `${scenario}: ${result}`);
+        await loadOperatorEvidence();
+        announce(`Scenario ${scenario} completed`);
+    } catch (failure) {
+        setText(elements.scenarioResult, `Failed: ${failure.payload?.code || failure.message}`);
+        announce(`Scenario ${scenario} failed: ${failure.message}`);
+    } finally {
+        refreshActions();
+    }
+}
+
+async function resetSelectedTenant() {
+    elements.resetScenario.disabled = true;
+    try {
+        await resetTenant();
+        setText(elements.scenarioResult, "Tenant reset and active campaign recreated");
+        await loadOperatorEvidence();
+        announce("Scenario tenant reset completed");
+    } catch (failure) {
+        setText(elements.scenarioResult, `Reset failed: ${failure.payload?.code || failure.message}`);
+        announce(`Scenario reset failed: ${failure.message}`);
+    } finally {
+        refreshActions();
+    }
+}
+
+elements.runScenario.addEventListener("click", () => {
+    const scenario = elements.scenario.value;
+    requestConfirmation(
+        elements.runScenario,
+        `Confirm scenario ${scenario}`,
+        `Running ${scenario} deletes and recreates only tenant ${state.tenant} before executing the scenario.`,
+        runSelectedScenario,
+    );
+});
+
+elements.resetScenario.addEventListener("click", () => {
+    requestConfirmation(
+        elements.resetScenario,
+        "Confirm tenant reset",
+        `Reset deletes and recreates campaign data only for tenant ${state.tenant}.`,
+        resetSelectedTenant,
+    );
 });
 
 window.addEventListener("pagehide", () => {

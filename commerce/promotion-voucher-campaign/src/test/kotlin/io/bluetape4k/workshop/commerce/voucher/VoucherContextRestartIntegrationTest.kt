@@ -29,6 +29,7 @@ import java.util.UUID
 
 internal class VoucherContextRestartIntegrationTest {
     private val postgres = PostgreSQLServer.Launcher.postgres
+    private val applicationJdbcUrl = VoucherTestSchema.create("voucher_restart")
 
     @Test
     fun `pending inbox and Modulith publication repository survive context restart`() {
@@ -108,7 +109,7 @@ internal class VoucherContextRestartIntegrationTest {
         SpringApplicationBuilder(VoucherCampaignApplication::class.java)
             .web(WebApplicationType.NONE)
             .run(
-                "--spring.datasource.url=${postgres.jdbcUrl}",
+                "--spring.datasource.url=$applicationJdbcUrl",
                 "--spring.datasource.username=${requireNotNull(postgres.username)}",
                 "--spring.datasource.password=${requireNotNull(postgres.password)}",
                 "--spring.datasource.hikari.minimum-idle=0",
@@ -118,7 +119,7 @@ internal class VoucherContextRestartIntegrationTest {
 
     private fun queryAuditCount(tenant: String): Long =
         DriverManager.getConnection(
-            postgres.jdbcUrl,
+            applicationJdbcUrl,
             requireNotNull(postgres.username),
             requireNotNull(postgres.password),
         ).use { connection ->

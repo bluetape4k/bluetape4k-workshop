@@ -90,6 +90,37 @@
                 <button class="operator-action danger" data-action="end" type="button" disabled>End campaign</button>
             </div>
             <p id="operator-disabled-reason" class="help">Load a campaign and enter the operator secret.</p>
+            <label>Scenario cookbook
+                <select id="scenario" aria-label="Scenario cookbook">
+                    <option value="happy-allocation">Happy allocation and redemption</option>
+                    <option value="same-key-response-loss">Same-key response loss</option>
+                    <option value="capacity-race">Capacity race</option>
+                    <option value="allocation-review">Allocation review</option>
+                    <option value="redemption-review">Redemption review</option>
+                    <option value="pause-allocation-race">Pause/allocation race</option>
+                    <option value="redeem-revoke-race">Redeem/revoke race</option>
+                    <option value="policy-change">Policy change race</option>
+                    <option value="redis-outage">Redis outage fallback</option>
+                    <option value="bloom-false-positive">Bloom false positive</option>
+                    <option value="delayed-duplicate-out-of-order">Delayed duplicate/out-of-order event</option>
+                </select>
+            </label>
+            <div class="button-row" role="group" aria-label="Scenario actions">
+                <button id="run-scenario" type="button" disabled>Run scenario</button>
+                <button id="reset-scenario" type="button" disabled>Reset tenant</button>
+            </div>
+            <p id="scenario-result" class="help" aria-live="polite">Choose a scenario after loading the campaign.</p>
+            <section aria-labelledby="review-queue-title">
+                <div class="button-row">
+                    <h3 id="review-queue-title">Open reviews</h3>
+                    <button id="refresh-operator-evidence" type="button" disabled>Refresh evidence</button>
+                </div>
+                <ol id="review-list" class="timeline" aria-label="Open voucher reviews"></ol>
+            </section>
+            <section aria-labelledby="reconciliation-backlog-title">
+                <h3 id="reconciliation-backlog-title">Reconciliation backlog</h3>
+                <ol id="reconciliation-list" class="timeline" aria-label="Reconciliation backlog items"></ol>
+            </section>
         </article>
     </section>
 

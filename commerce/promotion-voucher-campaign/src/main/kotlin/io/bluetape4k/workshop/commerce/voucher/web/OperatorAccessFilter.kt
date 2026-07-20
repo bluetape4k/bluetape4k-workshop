@@ -60,8 +60,17 @@ internal class OperatorAccessFilter(
     }
 
     private fun sameOrigin(request: HttpServletRequest): Boolean {
-        val origin = request.getHeader("Origin") ?: return false
-        val uri = runCatching { URI(origin) }.getOrNull() ?: return false
+        request.getHeader("Origin")?.let { return matchesServerOrigin(it, request) }
+        if (request.method !in SAFE_METHODS) return false
+        val explicitOrigin = request.getHeader("X-Workshop-Origin") ?: return false
+        return matchesServerOrigin(explicitOrigin, request)
+    }
+
+    private fun matchesServerOrigin(
+        value: String,
+        request: HttpServletRequest,
+    ): Boolean {
+        val uri = runCatching { URI(value) }.getOrNull() ?: return false
         val originPort = if (uri.port >= 0) uri.port else if (uri.scheme == "https") 443 else 80
         return uri.scheme in setOf("http", "https") &&
             uri.host.equals(request.serverName, ignoreCase = true) &&

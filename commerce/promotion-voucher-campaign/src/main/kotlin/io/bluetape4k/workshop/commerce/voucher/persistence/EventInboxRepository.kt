@@ -7,6 +7,8 @@ import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
@@ -105,6 +107,23 @@ internal class EventInboxRepository(
             .where { (table.tenantId eq tenantId) and (table.eventId eq eventId) }
             .singleOrNull()
             ?.let { with(this) { it.toEntity() } }
+    }
+
+    fun findBacklogPage(
+        tenantId: String,
+        afterId: Long?,
+        limit: Int,
+    ): List<EventInboxRecord> {
+        gate.requireHeld()
+        val predicate =
+            (table.tenantId eq tenantId) and
+                (table.status inList BACKLOG_STATUSES) and
+                (afterId?.let { table.id greater it } ?: org.jetbrains.exposed.v1.core.Op.TRUE)
+        return table.selectAll()
+            .where { predicate }
+            .orderBy(table.id to SortOrder.ASC)
+            .limit(limit)
+            .map { with(this) { it.toEntity() } }
     }
 
     /** Claims one due row without waiting behind a row already owned by another worker. */
@@ -225,6 +244,7 @@ internal class EventInboxRepository(
 
     companion object : KLogging() {
         private val TERMINAL_OUTCOMES = setOf(InboxStatus.APPLIED, InboxStatus.IGNORED, InboxStatus.CONFLICT)
+        private val BACKLOG_STATUSES = listOf(InboxStatus.PENDING, InboxStatus.CLAIMED, InboxStatus.FAILED)
     }
 }
 

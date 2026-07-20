@@ -107,6 +107,26 @@ internal class VoucherEventStreamIntegrationTest : AbstractVoucherIntegrationTes
     }
 
     @Test
+    fun `delayed event fixture leaves a cursor that can resume`() {
+        val tenant = randomIdentifier()
+        val campaignId = createActiveCampaign(tenant)
+        operatorPost(
+            tenant,
+            "/operator/api/v1/fixtures/delayed-duplicate-out-of-order/run",
+            randomIdentifier(),
+            mapOf("principalRef" to randomIdentifier(), "campaignId" to campaignId),
+        ).exchange().expectStatus().isOk
+
+        val first = streams.open(tenant, campaignId, null)
+        val cursor = checkNotNull(first.next(Duration.ZERO)).cursor
+        first.close()
+
+        val resumed = streams.open(tenant, campaignId, cursor)
+        check(checkNotNull(resumed.next(Duration.ZERO)).event == "snapshot")
+        resumed.close()
+    }
+
+    @Test
     fun `future cursor is rejected before the stream starts`() {
         val tenant = randomIdentifier()
         val campaignId = createActiveCampaign(tenant)

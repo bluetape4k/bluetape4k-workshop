@@ -6,6 +6,178 @@ import java.util.UUID
 
 internal class CustomerVoucherWebIntegrationTest : AbstractVoucherIntegrationTest() {
     @Test
+    fun `redemption review fixture is consumed only by redemption`() {
+        val tenant = randomIdentifier()
+        val principal = "principal-redemption-review"
+        val campaignId = createActiveCampaign(tenant)
+        val allocated =
+            customerPost(
+                tenant,
+                principal,
+                "/api/v1/campaigns/$campaignId/claims",
+                randomIdentifier(),
+                mapOf("userRef" to principal),
+            ).exchange().expectStatus().isCreated
+                .expectBody(AllocationHttpResponse::class.java)
+                .returnResult().responseBody!!
+
+        operatorPost(
+            tenant,
+            "/operator/api/v1/fixtures/redemption-review/run",
+            randomIdentifier(),
+            mapOf("principalRef" to principal),
+        ).exchange().expectStatus().isOk
+
+        customerPost(
+            tenant,
+            principal,
+            "/api/v1/claims/${allocated.claimId}/redeem",
+            randomIdentifier(),
+            mapOf(
+                "code" to allocated.code,
+                "expectedRevision" to 0,
+                "redemptionReference" to randomIdentifier(),
+            ),
+        ).exchange().expectStatus().isAccepted
+            .expectBody()
+            .jsonPath("$.state").isEqualTo("REVIEW_REQUIRED")
+            .jsonPath("$.revision").isEqualTo(1)
+    }
+
+    @Test
+    fun `fixture replay does not rearm a consumed one-shot signal`() {
+        val tenant = randomIdentifier()
+        val principal = "principal-fixture-replay"
+        val fixtureKey = randomIdentifier()
+        operatorPost(
+            tenant,
+            "/operator/api/v1/fixtures/allocation-review/run",
+            fixtureKey,
+            mapOf("principalRef" to principal),
+        ).exchange().expectStatus().isOk
+            .expectHeader().valueEquals("Idempotency-Replayed", "false")
+
+        val firstCampaign = createActiveCampaign(tenant)
+        customerPost(
+            tenant,
+            principal,
+            "/api/v1/campaigns/$firstCampaign/claims",
+            randomIdentifier(),
+            mapOf("userRef" to principal),
+        ).exchange().expectStatus().isAccepted
+
+        operatorPost(
+            tenant,
+            "/operator/api/v1/fixtures/allocation-review/run",
+            fixtureKey,
+            mapOf("principalRef" to principal),
+        ).exchange().expectStatus().isOk
+            .expectHeader().valueEquals("Idempotency-Replayed", "true")
+
+        val secondCampaign = createActiveCampaign(tenant)
+        customerPost(
+            tenant,
+            principal,
+            "/api/v1/campaigns/$secondCampaign/claims",
+            randomIdentifier(),
+            mapOf("userRef" to principal),
+        ).exchange().expectStatus().isCreated
+    }
+
+    @Test
+    fun `delayed event fixture returns submitted principal and authoritative acceptance evidence`() {
+        val tenant = randomIdentifier()
+        val principal = "principal-delayed"
+        val campaignId = createActiveCampaign(tenant)
+
+        operatorPost(
+            tenant,
+            "/operator/api/v1/fixtures/delayed-duplicate-out-of-order/run",
+            randomIdentifier(),
+            mapOf("principalRef" to principal, "campaignId" to campaignId),
+        ).exchange().expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.principalRef").isEqualTo(principal)
+            .jsonPath("$.executionMode").isEqualTo("SERVER_EVENT")
+            .jsonPath("$.evidence[0]").isEqualTo("APPLIED")
+            .jsonPath("$.evidence[1]").isEqualTo("IGNORED")
+            .jsonPath("$.evidence[2]").isEqualTo("CONFLICT")
+    }
+
+    @Test
+    fun `operator can page open reviews and inspect reconciliation backlog`() {
+        val tenant = randomIdentifier()
+        val principal = "principal-operator-read"
+        val campaignId = createActiveCampaign(tenant)
+        operatorPost(
+            tenant,
+            "/operator/api/v1/fixtures/allocation-review/run",
+            randomIdentifier(),
+            mapOf("principalRef" to principal),
+        ).exchange().expectStatus().isOk
+        customerPost(
+            tenant,
+            principal,
+            "/api/v1/campaigns/$campaignId/claims",
+            randomIdentifier(),
+            mapOf("userRef" to principal),
+        ).exchange().expectStatus().isAccepted
+
+        operatorGet(tenant, "/operator/api/v1/reviews?status=OPEN&limit=1")
+            .exchange().expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.items[0].campaignId").isEqualTo(campaignId.toString())
+            .jsonPath("$.items[0].status").isEqualTo("OPEN")
+            .jsonPath("$.items[0].signalSummary").doesNotExist()
+
+        operatorGet(tenant, "/operator/api/v1/reconciliation/backlog?limit=1")
+            .exchange().expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.items").isArray
+    }
+
+    @Test
+    fun `fixture reset is idempotent and clears tenant scoped one-shot signals`() {
+        val tenant = randomIdentifier()
+        val principal = "principal-fixture-reset"
+        val deletedCampaignId = createActiveCampaign(tenant)
+        operatorPost(
+            tenant,
+            "/operator/api/v1/fixtures/allocation-review/run",
+            randomIdentifier(),
+            mapOf("principalRef" to principal),
+        ).exchange().expectStatus().isOk
+        val resetKey = randomIdentifier()
+
+        operatorPost(tenant, "/operator/api/v1/fixtures/reset", resetKey, emptyMap<String, String>())
+            .exchange().expectStatus().isOk
+            .expectHeader().valueEquals("Idempotency-Replayed", "false")
+            .expectBody()
+            .jsonPath("$.clearedSignals").isEqualTo(1)
+            .jsonPath("$.deletedRows").value<Int> { check(it > 0) }
+        operatorPost(tenant, "/operator/api/v1/fixtures/reset", resetKey, emptyMap<String, String>())
+            .exchange().expectStatus().isOk
+            .expectHeader().valueEquals("Idempotency-Replayed", "true")
+            .expectBody()
+            .jsonPath("$.clearedSignals").isEqualTo(1)
+            .jsonPath("$.deletedRows").value<Int> { check(it > 0) }
+
+        webTestClient.get().uri("/api/v1/campaigns/$deletedCampaignId")
+            .header(TENANT_HEADER, tenant)
+            .header(PRINCIPAL_HEADER, principal)
+            .exchange().expectStatus().isNotFound
+
+        val campaignId = createActiveCampaign(tenant)
+        customerPost(
+            tenant,
+            principal,
+            "/api/v1/campaigns/$campaignId/claims",
+            randomIdentifier(),
+            mapOf("userRef" to principal),
+        ).exchange().expectStatus().isCreated
+    }
+
+    @Test
     fun `allocation replays the same one-time code while GET stays safe and tenant scoped`() {
         val tenant = randomIdentifier()
         val principal = "principal-a"

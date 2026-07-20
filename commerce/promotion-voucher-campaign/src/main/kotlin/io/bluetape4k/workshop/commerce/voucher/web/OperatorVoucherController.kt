@@ -13,6 +13,7 @@ import io.bluetape4k.workshop.commerce.voucher.application.digestHex
 import io.bluetape4k.workshop.commerce.voucher.domain.CampaignSnapshot
 import io.bluetape4k.workshop.commerce.voucher.idempotency.StoredHttpResponse
 import io.bluetape4k.workshop.commerce.voucher.idempotency.VoucherResponseKind
+import io.bluetape4k.workshop.commerce.voucher.persistence.ReviewStatus
 import io.bluetape4k.workshop.commerce.voucher.query.VoucherQueryService
 import io.bluetape4k.workshop.commerce.voucher.reconciliation.ReconciliationResult
 import io.bluetape4k.workshop.commerce.voucher.reconciliation.VoucherReconciliationWorker
@@ -29,9 +30,11 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
-import java.time.Instant
 import java.nio.charset.StandardCharsets.UTF_8
+import java.time.Instant
+import java.util.Base64
 import java.util.UUID
 
 internal data class CreateCampaignRequest(
@@ -74,6 +77,32 @@ internal data class ReconciliationHttpResponse(
     val deadlineReached: Boolean,
 )
 
+internal data class OperatorPage<T>(val items: List<T>, val nextCursor: String?)
+
+internal data class ReviewHttpItem(
+    val id: Long,
+    val campaignId: UUID,
+    val claimId: UUID,
+    val kind: String,
+    val status: String,
+    val reasonCode: String,
+    val expectedClaimRevision: Long,
+    val revision: Long,
+    val createdAt: Instant?,
+)
+
+internal data class ReconciliationBacklogHttpItem(
+    val id: Long,
+    val eventId: UUID,
+    val aggregateType: String,
+    val aggregateId: UUID,
+    val observedSequence: Long,
+    val status: String,
+    val attempt: Int,
+    val nextAttemptAt: Instant,
+    val createdAt: Instant?,
+)
+
 /** Live operator API behind [OperatorAccessFilter] and route-specific preconditions. */
 @RestController
 @RequestMapping("/operator/api/v1")
@@ -85,6 +114,47 @@ internal class OperatorVoucherController(
     private val executor: VoucherHttpCommandExecutor,
     private val reconciliation: VoucherReconciliationWorker,
 ) {
+    @GetMapping("/reviews")
+    fun listReviews(
+        @RequestHeader(TENANT_HEADER, required = false) tenantHeader: String?,
+        @RequestParam(defaultValue = "OPEN") status: ReviewStatus,
+        @RequestParam(required = false) cursor: String?,
+        @RequestParam(defaultValue = "100") @Min(1) @Max(100) limit: Int,
+    ): OperatorPage<ReviewHttpItem> {
+        val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
+        val rows = queries.reviews(tenant, status, decodeCursor(cursor), limit + 1)
+        val page = rows.take(limit)
+        return OperatorPage(
+            page.map {
+                ReviewHttpItem(
+                    it.id, it.campaignId, it.claimId, it.kind.name, it.status.name, it.reasonCode,
+                    it.expectedClaimRevision, it.revision, it.createdAt,
+                )
+            },
+            rows.getOrNull(limit - 1)?.id?.takeIf { rows.size > limit }?.let(::encodeCursor),
+        )
+    }
+
+    @GetMapping("/reconciliation/backlog")
+    fun reconciliationBacklog(
+        @RequestHeader(TENANT_HEADER, required = false) tenantHeader: String?,
+        @RequestParam(required = false) cursor: String?,
+        @RequestParam(defaultValue = "100") @Min(1) @Max(100) limit: Int,
+    ): OperatorPage<ReconciliationBacklogHttpItem> {
+        val tenant = requireAsciiIdentifier(tenantHeader, TENANT_HEADER)
+        val rows = queries.reconciliationBacklog(tenant, decodeCursor(cursor), limit + 1)
+        val page = rows.take(limit)
+        return OperatorPage(
+            page.map {
+                ReconciliationBacklogHttpItem(
+                    it.id, it.eventId, it.aggregateType, it.aggregateId, it.observedSequence,
+                    it.status.name, it.attempt, it.nextAttemptAt, it.createdAt,
+                )
+            },
+            rows.getOrNull(limit - 1)?.id?.takeIf { rows.size > limit }?.let(::encodeCursor),
+        )
+    }
+
     @PostMapping("/campaigns")
     fun createCampaign(
         @RequestHeader(TENANT_HEADER, required = false) tenantHeader: String?,
@@ -375,6 +445,19 @@ internal class OperatorVoucherController(
 
     companion object {
         private const val OPERATOR_PRINCIPAL = "workshop-operator"
+
+        private fun encodeCursor(id: Long): String =
+            Base64.getUrlEncoder().withoutPadding().encodeToString("v1:$id".toByteArray(UTF_8))
+
+        private fun decodeCursor(cursor: String?): Long? {
+            if (cursor == null) return null
+            val decoded =
+                runCatching { String(Base64.getUrlDecoder().decode(cursor), UTF_8) }
+                    .getOrElse { throw invalidRequest("cursor is invalid") }
+            return decoded.removePrefix("v1:").takeIf { decoded.startsWith("v1:") }
+                ?.toLongOrNull()
+                ?: throw invalidRequest("cursor is invalid")
+        }
     }
 }
 

@@ -427,7 +427,7 @@ internal class VoucherEventStream(
                     stop()
                 } catch (failure: Exception) {
                     if (running.get()) {
-                        log.warn(failure) { "voucher_sse_poll_failed campaignId=${key.campaignId}" }
+                        log.warn { "voucher_sse_poll_failed campaignId=${key.campaignId} failure=${failure.javaClass.simpleName}" }
                     }
                     delay.set(config.maxIdleInterval)
                 }

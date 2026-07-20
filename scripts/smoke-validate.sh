@@ -147,6 +147,7 @@ case "${1:-help}" in
     run "$GRADLEW \
       :commerce-order-lifecycle-fulfillment:test \
       :commerce-reservation-control-plane:test \
+      :commerce-promotion-voucher-campaign:test \
       --continue --max-workers=1"
     ;;
 

@@ -13,3 +13,9 @@ Use this structure for each lesson:
 Name files as `YYYY-MM-DD-{slug}.md`. Promote repeated rules to `AGENTS.md`,
 workflow docs, or a narrower skill. Keep transient `.omx` notes out of this
 directory unless they have been deliberately promoted.
+
+Recent delivery lessons:
+
+- [Issue #534 promotion voucher campaign](2026-07-19-issue-534-promotion-voucher-campaign.md)
+- [Issue #533 reservation control plane](2026-07-19-issue-533-reservation-control-plane.md)
+- [Issue #532 order lifecycle](2026-07-18-issue-532-order-lifecycle.md)

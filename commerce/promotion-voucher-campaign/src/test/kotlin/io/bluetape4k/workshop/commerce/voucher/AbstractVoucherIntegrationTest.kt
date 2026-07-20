@@ -78,6 +78,16 @@ internal abstract class AbstractVoucherIntegrationTest {
         return customize(request).bodyValue(body)
     }
 
+    protected fun operatorGet(
+        tenant: String,
+        path: String,
+    ): WebTestClient.RequestHeadersSpec<*> =
+        webTestClient.get().uri(path)
+            .header(TENANT_HEADER, tenant)
+            .header(OPERATOR_SECRET_HEADER, OPERATOR_SECRET)
+            .header(OPERATOR_GUARD_HEADER, OPERATOR_GUARD)
+            .header("Origin", "http://127.0.0.1:$port")
+
     protected fun customerPost(
         tenant: String,
         principal: String,
@@ -102,11 +112,12 @@ internal abstract class AbstractVoucherIntegrationTest {
         const val OPERATOR_GUARD = "voucher-workshop-operator"
         val HTTP_TIMEOUT: Duration = Duration.ofSeconds(60)
         val postgres: PostgreSQLServer = PostgreSQLServer.Launcher.postgres
+        val applicationJdbcUrl: String = VoucherTestSchema.create("voucher_web")
 
         @JvmStatic
         @DynamicPropertySource
         fun postgresProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url") { postgres.jdbcUrl }
+            registry.add("spring.datasource.url") { applicationJdbcUrl }
             registry.add("spring.datasource.username") { requireNotNull(postgres.username) }
             registry.add("spring.datasource.password") { requireNotNull(postgres.password) }
             registry.add("workshop.voucher.redis.enabled") { false }

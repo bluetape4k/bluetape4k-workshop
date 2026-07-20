@@ -8,8 +8,11 @@ import io.bluetape4k.workshop.commerce.voucher.domain.ClaimState
 import io.bluetape4k.workshop.commerce.voucher.persistence.CampaignRepository
 import io.bluetape4k.workshop.commerce.voucher.persistence.ClaimRecord
 import io.bluetape4k.workshop.commerce.voucher.persistence.ClaimRepository
+import io.bluetape4k.workshop.commerce.voucher.persistence.EventInboxRecord
+import io.bluetape4k.workshop.commerce.voucher.persistence.EventInboxRepository
 import io.bluetape4k.workshop.commerce.voucher.persistence.ReviewRecord
 import io.bluetape4k.workshop.commerce.voucher.persistence.ReviewRepository
+import io.bluetape4k.workshop.commerce.voucher.persistence.ReviewStatus
 import io.bluetape4k.workshop.commerce.voucher.persistence.VoucherTransactionRunner
 import io.bluetape4k.workshop.commerce.voucher.security.VoucherCodeService
 import io.bluetape4k.workshop.commerce.voucher.security.VoucherGenerationInput
@@ -32,6 +35,7 @@ internal class VoucherQueryService(
     private val campaigns: CampaignRepository,
     private val claims: ClaimRepository,
     private val reviews: ReviewRepository,
+    private val inbox: EventInboxRepository,
     private val codes: VoucherCodeService,
 ) {
     fun campaign(
@@ -64,6 +68,21 @@ internal class VoucherQueryService(
             val claim = claims.findPublic(tenantId, claimId) ?: return@foregroundTransaction null
             claim.descriptor(reviews.findOpen(tenantId, claimId))
         }
+
+    fun reviews(
+        tenantId: String,
+        status: ReviewStatus,
+        afterId: Long?,
+        limit: Int,
+    ): List<ReviewRecord> =
+        transactions.foregroundTransaction { reviews.findPage(tenantId, status, afterId, limit) }
+
+    fun reconciliationBacklog(
+        tenantId: String,
+        afterId: Long?,
+        limit: Int,
+    ): List<EventInboxRecord> =
+        transactions.foregroundTransaction { inbox.findBacklogPage(tenantId, afterId, limit) }
 
     /** Reconstructs a code only for an allocated claim and verifies it against the persisted digest. */
     fun activeCode(

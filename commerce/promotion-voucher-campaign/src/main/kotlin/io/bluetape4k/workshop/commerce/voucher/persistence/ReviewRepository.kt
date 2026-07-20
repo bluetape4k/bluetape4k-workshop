@@ -6,6 +6,8 @@ import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
@@ -93,6 +95,24 @@ internal class ReviewRepository(
             }.forUpdate()
             .singleOrNull()
             ?.let { with(this) { it.toEntity() } }
+    }
+
+    fun findPage(
+        tenantId: String,
+        status: ReviewStatus,
+        afterId: Long?,
+        limit: Int,
+    ): List<ReviewRecord> {
+        gate.requireHeld()
+        val predicate =
+            (table.tenantId eq tenantId) and
+                (table.status eq status) and
+                (afterId?.let { table.id greater it } ?: org.jetbrains.exposed.v1.core.Op.TRUE)
+        return table.selectAll()
+            .where { predicate }
+            .orderBy(table.id to SortOrder.ASC)
+            .limit(limit)
+            .map { with(this) { it.toEntity() } }
     }
 
     fun decide(
