@@ -142,7 +142,7 @@ CREATE TABLE voucher_pool_reservations (
     FOREIGN KEY (tenant_id,batch_id,campaign_id) REFERENCES voucher_pool_batches(tenant_id,batch_id,campaign_id),
     FOREIGN KEY (tenant_id,entry_id,campaign_id,batch_id)
       REFERENCES voucher_pool_entries(tenant_id,entry_id,campaign_id,batch_id),
-    UNIQUE (tenant_id,reservation_id,campaign_id,batch_id,entry_id),
+    UNIQUE (tenant_id,reservation_id,campaign_id,batch_id,entry_id,user_digest),
     CHECK (state IN ('ACTIVE','ALLOCATED','EXPIRED','RELEASED','REVOKED'))
 );
 CREATE UNIQUE INDEX uq_voucher_pool_reservation_active_entry
@@ -176,8 +176,8 @@ CREATE TABLE voucher_pool_allocations (
     revision BIGINT NOT NULL DEFAULT 0 CHECK (revision >= 0),
     PRIMARY KEY (tenant_id,allocation_id),
     UNIQUE (tenant_id,allocation_id,campaign_id,batch_id,entry_id),
-    FOREIGN KEY (tenant_id,reservation_id,campaign_id,batch_id,entry_id)
-      REFERENCES voucher_pool_reservations(tenant_id,reservation_id,campaign_id,batch_id,entry_id),
+    FOREIGN KEY (tenant_id,reservation_id,campaign_id,batch_id,entry_id,user_digest)
+      REFERENCES voucher_pool_reservations(tenant_id,reservation_id,campaign_id,batch_id,entry_id,user_digest),
     FOREIGN KEY (tenant_id,campaign_id) REFERENCES voucher_pool_campaigns(tenant_id,campaign_id),
     FOREIGN KEY (tenant_id,batch_id,campaign_id) REFERENCES voucher_pool_batches(tenant_id,batch_id,campaign_id),
     FOREIGN KEY (tenant_id,entry_id,campaign_id,batch_id)
@@ -187,9 +187,30 @@ CREATE TABLE voucher_pool_allocations (
 CREATE UNIQUE INDEX uq_voucher_pool_allocation_entry ON voucher_pool_allocations(tenant_id,entry_id);
 CREATE INDEX ix_voucher_pool_allocation_cursor ON voucher_pool_allocations(tenant_id,allocation_expires_at,allocation_id);
 
+CREATE FUNCTION voucher_pool_require_original_entitlement() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+    IF NEW.replacement_ordinal = 1 AND NOT EXISTS (
+        SELECT 1 FROM voucher_pool_allocations original
+        WHERE original.tenant_id = NEW.tenant_id
+          AND original.campaign_id = NEW.campaign_id
+          AND original.user_digest = NEW.user_digest
+          AND original.entitlement_root_id = NEW.entitlement_root_id
+          AND original.replacement_ordinal = 0
+    ) THEN
+        RAISE EXCEPTION 'replacement allocation requires its original entitlement'
+            USING ERRCODE = '23503';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+CREATE TRIGGER voucher_pool_allocation_entitlement_chain
+BEFORE INSERT OR UPDATE OF entitlement_root_id,replacement_ordinal,user_digest ON voucher_pool_allocations
+FOR EACH ROW EXECUTE FUNCTION voucher_pool_require_original_entitlement();
+
 ALTER TABLE voucher_pool_entries
-    ADD FOREIGN KEY (tenant_id,reservation_id,campaign_id,batch_id,entry_id)
-    REFERENCES voucher_pool_reservations(tenant_id,reservation_id,campaign_id,batch_id,entry_id)
+    ADD FOREIGN KEY (tenant_id,reservation_id,campaign_id,batch_id,entry_id,user_digest)
+    REFERENCES voucher_pool_reservations(tenant_id,reservation_id,campaign_id,batch_id,entry_id,user_digest)
     DEFERRABLE INITIALLY DEFERRED;
 ALTER TABLE voucher_pool_entries
     ADD FOREIGN KEY (tenant_id,allocation_id,campaign_id,batch_id,entry_id)

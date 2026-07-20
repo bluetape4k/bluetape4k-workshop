@@ -236,6 +236,27 @@ internal class VoucherPoolRepositoryIntegrationTest {
     }
 
     @Test
+    fun `replacement allocation requires one original entitlement and cannot consume a second replacement`() {
+        val campaign = createCampaign(TENANT)
+        val batch = createBatch(TENANT, campaign)
+        val originalEntry = createAvailableEntry(TENANT, campaign, batch, 22)
+        val replacementEntry = createAvailableEntry(TENANT, campaign, batch, 23)
+        val rejectedEntry = createAvailableEntry(TENANT, campaign, batch, 24)
+        val originalReservation = UUID.randomUUID()
+        val replacementReservation = UUID.randomUUID()
+        val rejectedReservation = UUID.randomUUID()
+        val entitlement = UUID.randomUUID()
+        val allocationScope = AllocationScope(campaign, batch, entitlement)
+        executeSql(reservationInsert(originalReservation, campaign, batch, originalEntry, "ALLOCATED"))
+        executeSql(reservationInsert(replacementReservation, campaign, batch, replacementEntry, "ALLOCATED"))
+        executeSql(reservationInsert(rejectedReservation, campaign, batch, rejectedEntry, "ALLOCATED"))
+        assertSqlFails(allocationInsert(replacementReservation, replacementEntry, allocationScope, 1))
+        executeSql(allocationInsert(originalReservation, originalEntry, allocationScope, 0))
+        executeSql(allocationInsert(replacementReservation, replacementEntry, allocationScope, 1))
+        assertSqlFails(allocationInsert(rejectedReservation, rejectedEntry, allocationScope, 1))
+    }
+
+    @Test
     fun `durable lifecycle checks reject half owned claims and invalid state context`() {
         assertSqlFails(
             """INSERT INTO voucher_pool_worker_claims
@@ -527,6 +548,18 @@ internal class VoucherPoolRepositoryIntegrationTest {
             VALUES ('$TENANT','$reservationId','$campaignId','$batchId','$entryId',decode('01','hex'),
                     decode('02','hex'),'$state',now()+interval '1 hour',1,0)"""
 
+    private fun allocationInsert(
+        reservationId: UUID,
+        entryId: UUID,
+        scope: AllocationScope,
+        replacementOrdinal: Int,
+    ): String =
+        """INSERT INTO voucher_pool_allocations
+            (tenant_id,allocation_id,reservation_id,campaign_id,batch_id,entry_id,user_digest,
+             entitlement_root_id,replacement_ordinal,allocation_expires_at,policy_version,revision)
+            VALUES ('$TENANT',gen_random_uuid(),'$reservationId','${scope.campaignId}','${scope.batchId}','$entryId',
+                    decode('01','hex'),'${scope.entitlementRootId}',$replacementOrdinal,now()+interval '1 hour',1,0)"""
+
     private fun userLimitInsert(campaignId: UUID, userDigest: DigestValue): String =
         """INSERT INTO voucher_pool_user_limits
             (tenant_id,campaign_id,user_digest,active_reservations,active_allocations,lifetime_consumed,revision)
@@ -584,4 +617,10 @@ internal class VoucherPoolRepositoryIntegrationTest {
         private const val TENANT = "tenant-a"
         private val postgres = PostgreSQLServer.Launcher.postgres
     }
+
+    private data class AllocationScope(
+        val campaignId: UUID,
+        val batchId: UUID,
+        val entitlementRootId: UUID,
+    )
 }
