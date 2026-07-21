@@ -641,7 +641,8 @@ user/device/IP, idempotency key, secret, request body와 digest 원문은 표시
 - Spring MVC virtual thread를 사용하되 Hikari max 16을 기본으로 유지한다.
 - foreground/worker/SSE query permit은 항상 JDBC connection 획득 전에 11/1/3으로 분리하고 readiness
   permit 1개를 별도로 예약해 합계 16을 넘지 않는다. nested acquire를 금지하고 foreground 기본 wait
-  200 ms, worker/SSE 1초 wait 뒤 `503`이다. foreground 관측 stress hard gate는 `<=250 ms`를 유지한다.
+  200 ms, worker/SSE 1초 wait 뒤 `503`이다. foreground 관측 stress hard gate는 shared CI scheduler 지연까지
+  포함한 wall-clock 기준 `<=500 ms`를 유지한다.
   공정한 semaphore를 쓰고 transaction 종료/cancellation에서 즉시 release하며 leak 0을 검증한다.
 - common HTTP와 management readiness client timeout은 60초다. Hikari connection wait는 2초,
   foreground transaction/lock deadline은 5초, worker chunk는 10초다.

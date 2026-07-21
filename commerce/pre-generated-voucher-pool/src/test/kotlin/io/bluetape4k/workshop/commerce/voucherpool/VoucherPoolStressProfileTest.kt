@@ -39,8 +39,8 @@ internal class VoucherPoolStressProfileTest {
             sseSubscribers = 16,
             freshDatabase = true,
         )
-        assertVoucherPoolStressHardGates(evidence)
         profiles += "$clients-${redis.name.lowercase()}"
+        assertVoucherPoolStressHardGates(evidence)
     }
 
     @Test
@@ -83,16 +83,29 @@ internal class VoucherPoolStressProfileTest {
 
 internal class VoucherPoolStressHardGateTest {
     @Test
-    fun `hard gates require observed samples and reject a measured over-limit wait`() {
+    fun `hard gates require observed samples and reject a scheduler-inclusive over-limit wait`() {
         val passing = passingHardGateEvidence()
         assertVoucherPoolStressHardGates(passing)
+        assertVoucherPoolStressHardGates(
+            passing.copy(
+                foregroundWaitMaxMillis = FOREGROUND_OBSERVED_WAIT_HARD_LIMIT_MILLIS,
+                hikariPendingMax = 3,
+            ),
+        )
+        val waitFailure = assertFailsWith<AssertionError> {
+            assertVoucherPoolStressHardGates(
+                passing.copy(foregroundWaitMaxMillis = FOREGROUND_OBSERVED_WAIT_HARD_LIMIT_MILLIS + 1),
+            )
+        }
+        waitFailure.message shouldBeEqualTo
+            "foreground permit wait exceeded hard limit: actual=501 ms maximum=500 ms"
 
         listOf(
             passing.copy(hikariAcquisitionWaitSamples = 0),
             passing.copy(foregroundWaitSamples = 0),
             passing.copy(workerWaitSamples = 0),
             passing.copy(sseWaitSamples = 0),
-            passing.copy(foregroundWaitMaxMillis = 251),
+            passing.copy(hikariPendingDrainMillis = 12_001),
         ).forEach { invalidEvidence ->
             assertFailsWith<AssertionError> { assertVoucherPoolStressHardGates(invalidEvidence) }
         }
@@ -133,19 +146,23 @@ internal class VoucherPoolStressHardGateTest {
 }
 
 private fun assertVoucherPoolStressHardGates(evidence: VoucherPoolStressEvidence) {
-    (evidence.hikariActiveMax <= 16).shouldBeTrue()
+    assertMaximum("Hikari active connections", evidence.hikariActiveMax.toLong(), 16, "connections")
     (evidence.hikariAcquisitionWaitSamples > 0).shouldBeTrue()
-    (evidence.hikariAcquisitionWaitMaxMillis <= 2_000).shouldBeTrue()
-    (evidence.totalPermitHoldersMax <= 15).shouldBeTrue()
+    assertMaximum("Hikari acquisition wait", evidence.hikariAcquisitionWaitMaxMillis, 2_000, "ms")
+    assertMaximum("total permit holders", evidence.totalPermitHoldersMax.toLong(), 15, "holders")
     (evidence.foregroundWaitSamples > 0).shouldBeTrue()
-    (evidence.foregroundWaitMaxMillis <= 250).shouldBeTrue()
+    assertMaximum(
+        "foreground permit wait",
+        evidence.foregroundWaitMaxMillis,
+        FOREGROUND_OBSERVED_WAIT_HARD_LIMIT_MILLIS,
+        "ms",
+    )
     (evidence.workerWaitSamples > 0).shouldBeTrue()
-    (evidence.workerWaitMaxMillis <= 1_000).shouldBeTrue()
+    assertMaximum("worker permit wait", evidence.workerWaitMaxMillis, 1_000, "ms")
     (evidence.sseWaitSamples > 0).shouldBeTrue()
-    (evidence.sseWaitMaxMillis <= 1_000).shouldBeTrue()
+    assertMaximum("SSE permit wait", evidence.sseWaitMaxMillis, 1_000, "ms")
     evidence.deadlineViolations shouldBeEqualTo 0
-    (evidence.hikariPendingMax <= 1).shouldBeTrue()
-    (evidence.hikariPendingDrainMillis <= 12_000).shouldBeTrue()
+    assertMaximum("Hikari pending drain", evidence.hikariPendingDrainMillis, 12_000, "ms")
     (evidence.workerCheckpointProgress > 0).shouldBeTrue()
     evidence.duplicateWinnerCount shouldBeEqualTo 0
     evidence.authoritativeAllocationCount shouldBeEqualTo evidence.winners
@@ -157,3 +174,11 @@ private fun assertVoucherPoolStressHardGates(evidence: VoucherPoolStressEvidence
     evidence.permitLeaks shouldBeEqualTo 0
     evidence.counterDrift shouldBeEqualTo 0L
 }
+
+private fun assertMaximum(name: String, actual: Long, maximum: Long, unit: String) {
+    if (actual > maximum) {
+        throw AssertionError("$name exceeded hard limit: actual=$actual $unit maximum=$maximum $unit")
+    }
+}
+
+private const val FOREGROUND_OBSERVED_WAIT_HARD_LIMIT_MILLIS = 500L

@@ -16,7 +16,7 @@
 | 사용자/API | 응답 유실 뒤 여섯 command가 새 idempotency key를 사용 | reserve, allocate, reveal, replacement, redeem, revoke를 매개변수화한 browser contract가 동일 key와 단일 effect를 검증한다. |
 | 사용자/API | malformed `2xx` JSON을 성공으로 오판해 key를 폐기 | `SyntaxError`를 ambiguous outcome으로 전파한다. 여섯 command 모두 같은 key로 재시도하는 RED/GREEN 계약을 추가했다. |
 | 사용자/API | retryable non-2xx도 terminal로 취급해 key를 폐기 | payload의 `retryAfterSeconds`와 `Retry-After`를 소비한다. retryable response는 key를 유지하고 확인된 terminal response만 폐기한다. |
-| 성능 | configured wait를 실제 wait처럼 보고 | permit lane과 Hikari connection 획득을 `System.nanoTime()` 기반으로 직접 관측하고 sample 수와 최대값을 hard gate에 포함했다. |
+| 성능 | configured wait를 실제 wait처럼 보고 | permit lane과 Hikari connection 획득을 `System.nanoTime()` 기반으로 직접 관측하고 sample 수와 최대값을 hard gate에 포함했다. Foreground gate는 shared CI scheduling까지 포함하는 500ms 상한이며 실제 초과값을 진단에 노출한다. Hikari pending peak는 report-only로 두고 acquisition/drain deadline을 gate로 유지한다. |
 | 안정성 | lifecycle의 SSE shutdown이 실제 stream/poller를 닫지 않음 | 실제 `VoucherPoolEventStream`이 shutdown contract를 구현하고 executor와 datasource보다 먼저 닫히는 순서를 검증했다. |
 | 안정성 | `close()`와 blocking initial snapshot 사이 race로 종료 후 poller 등록 가능 | poller registry lock 안에서 `closed`를 다시 검사한다. blocking initial과 concurrent close 회귀 테스트가 `SERVICE_SHUTTING_DOWN`, subscription 미생성, poller 0을 검증한다. |
 | 안정성/운영 | owner release가 DB timeout 한 번에 중단되고 operator timeout이 안전한 API 오류로 변환되지 않음 | owner release를 8회로 제한해 재시도하고, JDBC timeout을 `503 BACKEND_TIMEOUT`으로 변환하는 단위/HTTP 테스트를 추가했다. |
@@ -46,7 +46,7 @@
 | browser Node contract / `VoucherPoolBrowserContractTest` | PASS, 7 JUnit tests; six commands의 network loss, malformed 2xx, retryable response를 검증 |
 | `:commerce-pre-generated-voucher-pool:koverXmlReport` | PASS, XML 1,058,448 bytes |
 | Kover | instruction 89.53%, branch 63.45%, line 92.43%, method 89.29%, class 93.53% |
-| exact-head stress evidence | permit max 15, deadline violation 0; foreground max 201/201/245/201ms; worker max 1ms; SSE max 78/83/200/94ms |
+| post-CI hardening stress evidence | permit max 15, deadline violation 0; foreground max 237/201/204/201ms; worker max 1ms; SSE max 234/73/111/95ms; pending drain 0/11/6/5ms |
 | runtime dependency graph | JDK25 provider, Exposed JDBC, Lettuce, Bucket4j, leader present; JDK21 provider absent |
 | `./gradlew build -x test --parallel --continue` | PASS, 619 tasks |
 | project/stale/runbook/diagram/workflow checks | 108 projects; stale-check, runbook, architecture/sequence, actionlint, `bash -n` PASS |

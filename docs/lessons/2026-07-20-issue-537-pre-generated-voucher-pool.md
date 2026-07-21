@@ -32,9 +32,11 @@ blocking `initial()`과 concurrent `close()`를 강제로 교차시킨 RED 테�
 
 ### configured timeout은 성능 증거가 아니다
 
-stress evidence가 설정값을 그대로 기록하면 실제 queueing과 Hikari 획득 지연을 숨긴다. permit 획득과 `DataSource.getConnection()`의 실제 경과를 측정하고 sample 수 0도 실패시키도록 바꿨다. 첫 RED run에서 foreground가 250ms 경계를 넘었고, production 기본 wait를 200ms로 낮춘 뒤 실제 관측 hard gate `<=250ms`가 안정적으로 통과했다.
+stress evidence가 설정값을 그대로 기록하면 실제 queueing과 Hikari 획득 지연을 숨긴다. permit 획득과 `DataSource.getConnection()`의 실제 경과를 측정하고 sample 수 0도 실패시키도록 바꿨다. Production 기본 wait는 200ms로 유지하되, `Semaphore.tryAcquire` 반환 뒤 virtual thread가 다시 scheduling될 때까지 포함하는 관측치는 shared CI에서 250ms를 넘을 수 있었다. 따라서 실제 관측을 잘라내지 않고 scheduler-inclusive hard gate를 500ms로 두고, 실패 메시지에는 실제값과 상한을 함께 남긴다.
 
-최종 64/128 client × Redis healthy/unavailable matrix는 permit max 15, violation 0을 기록했다. 설정 표와 stress hard gate는 서로 다른 값일 수 있으므로 runbook에도 기본 200ms와 관측 상한 250ms를 분리해 적었다.
+최종 64/128 client × Redis healthy/unavailable matrix는 permit max 15, violation 0을 기록했다. 설정된 획득 deadline과 scheduler-inclusive stress hard gate는 서로 다른 값이므로 runbook에도 기본 200ms와 관측 상한 500ms를 분리해 적었다.
+
+Hikari의 순간 pending peak도 active 15/16, acquisition wait 1ms, drain 0ms, leak 0인 정상 run에서 3까지 관측됐다. Connection handoff 순간의 waiter 수는 구조적 상한 1이 아니므로 report-only evidence로 남기고, acquisition deadline과 pending drain deadline을 hard gate로 유지한다.
 
 ### 복구 경로는 wiring까지 검증해야 한다
 
