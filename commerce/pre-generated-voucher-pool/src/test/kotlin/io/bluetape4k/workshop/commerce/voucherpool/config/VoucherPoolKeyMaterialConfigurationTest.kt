@@ -2,6 +2,12 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.config
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.workshop.commerce.voucherpool.application.AllocationService
 import io.bluetape4k.workshop.commerce.voucherpool.application.CampaignBatchCommandService
@@ -17,11 +23,6 @@ import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherKekRing
 import io.bluetape4k.workshop.commerce.voucherpool.worker.JdbcVoucherPoolWorkerRepository
 import io.bluetape4k.workshop.commerce.voucherpool.worker.VoucherPoolWorkers
 import io.mockk.mockk
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
@@ -45,12 +46,12 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
 
         val runtimeKeys = provider.load()
 
-        assertEquals(VoucherPoolKeyProvenance.MOUNTED_SECRET, runtimeKeys.provenance)
-        assertEquals("kek-v1", runtimeKeys.kekRing.current.version)
-        assertFalse(runtimeKeys.toString().contains(MARKER))
+        runtimeKeys.provenance shouldBeEqualTo VoucherPoolKeyProvenance.MOUNTED_SECRET
+        runtimeKeys.kekRing.current.version shouldBeEqualTo "kek-v1"
+        runtimeKeys.toString() shouldNotContain MARKER
 
         serviceContextRunner(secret).run { context ->
-            assertNull(context.startupFailure)
+            context.startupFailure.shouldBeNull()
             listOf(
                 VoucherPoolRuntimeKeys::class.java,
                 VoucherDigestService::class.java,
@@ -65,7 +66,7 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
                 RedemptionService::class.java,
                 JdbcVoucherPoolWorkerRepository::class.java,
                 VoucherPoolWorkers::class.java,
-            ).forEach { type -> assertEquals(1, context.getBeansOfType(type).size, type.name) }
+            ).forEach { type -> context.getBeansOfType(type) shouldHaveSize 1 }
         }
     }
 
@@ -78,12 +79,10 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
                 VoucherPoolServiceConfiguration::class.java,
                 VoucherPoolTestKeyMaterialConfiguration::class.java,
             ).run { context ->
-                assertNull(context.startupFailure)
-                assertEquals(1, context.getBeansOfType(VoucherPoolKeyMaterialProvider::class.java).size)
-                assertEquals(
-                    VoucherPoolKeyProvenance.TEST_FIXTURE,
-                    context.getBean(VoucherPoolRuntimeKeys::class.java).provenance,
-                )
+                context.startupFailure.shouldBeNull()
+                context.getBeansOfType(VoucherPoolKeyMaterialProvider::class.java) shouldHaveSize 1
+                context.getBean(VoucherPoolRuntimeKeys::class.java).provenance shouldBeEqualTo
+                    VoucherPoolKeyProvenance.TEST_FIXTURE
             }
     }
 
@@ -95,9 +94,8 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
                 VoucherPoolKeyMaterialConfiguration::class.java,
                 VoucherPoolServiceConfiguration::class.java,
             ).run { context ->
-                val failure = context.startupFailure
-                assertNotNull(failure)
-                assertTrue(failure.causeMessages().contains("VoucherPoolKeyMaterialProvider"))
+                val failure = context.startupFailure.shouldNotBeNull()
+                failure.causeMessages() shouldContain "VoucherPoolKeyMaterialProvider"
             }
     }
 
@@ -114,9 +112,7 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
                 VoucherPoolKeyMaterialConfiguration::class.java,
                 VoucherPoolServiceConfiguration::class.java,
             ).run { context ->
-                assertTrue(
-                    context.startupFailure.causeMessages().contains("VOUCHER_POOL_KEY_MATERIAL_MISSING_LOCATION"),
-                )
+                context.startupFailure.causeMessages() shouldContain "VOUCHER_POOL_KEY_MATERIAL_MISSING_LOCATION"
             }
     }
 
@@ -167,7 +163,7 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
         val previous = System.getProperty("user.name")
         try {
             System.setProperty("user.name", "forged-owner-name")
-            assertNotNull(mountedProvider(secret).load())
+            mountedProvider(secret).load().shouldNotBeNull()
         } finally {
             if (previous == null) {
                 System.clearProperty("user.name")
@@ -290,13 +286,12 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
         MountedSecretVoucherPoolKeyMaterialProvider(VoucherPoolKeyFileLocator { path.toString() }, MAPPER)
 
     private fun assertRedactedFailure(provider: VoucherPoolKeyMaterialProvider) {
-        val failure = runCatching(provider::load).exceptionOrNull()
-        assertNotNull(failure)
+        val failure = runCatching(provider::load).exceptionOrNull().shouldNotBeNull()
         val rendered = failure.toString()
-        assertFalse(rendered.contains(MARKER))
-        assertFalse(rendered.contains(material(1)))
-        assertFalse(rendered.contains(directory.toString()))
-        assertFalse(rendered.contains("material"))
+        rendered shouldNotContain MARKER
+        rendered shouldNotContain material(1)
+        rendered shouldNotContain directory.toString()
+        rendered shouldNotContain "material"
     }
 
     private fun Throwable?.causeMessages(): String =

@@ -1,8 +1,9 @@
 package io.bluetape4k.workshop.commerce.voucherpool.config
 
-import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotContain
+import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcMetrics
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolLockTimeoutApplier
 import io.bluetape4k.workshop.commerce.voucherpool.web.VoucherPoolHttpProperties
@@ -79,10 +80,10 @@ internal class VoucherPoolConfigurationTest {
     fun `configuration representations redact operator credentials`() {
         val properties = testProperties()
 
-        properties.http.toString().contains("test-operator-secret") shouldBeEqualTo false
-        properties.http.toString().contains("test-voucher-pool-operator-guard") shouldBeEqualTo false
-        properties.toString().contains("test-operator-secret") shouldBeEqualTo false
-        properties.toString().contains("test-voucher-pool-operator-guard") shouldBeEqualTo false
+        properties.http.toString() shouldNotContain "test-operator-secret"
+        properties.http.toString() shouldNotContain "test-voucher-pool-operator-guard"
+        properties.toString() shouldNotContain "test-operator-secret"
+        properties.toString() shouldNotContain "test-voucher-pool-operator-guard"
     }
 
     @Test

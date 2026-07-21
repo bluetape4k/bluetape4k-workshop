@@ -3,6 +3,10 @@
 package io.bluetape4k.workshop.commerce.voucherpool.web
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeBlank
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.workshop.commerce.voucherpool.AbstractVoucherPoolIntegrationTest
 import io.bluetape4k.workshop.commerce.voucherpool.application.BatchRevisionCommand
 import io.bluetape4k.workshop.commerce.voucherpool.application.BatchSourceKind
@@ -62,7 +66,7 @@ internal class CustomerVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
 
         reservation.campaignId shouldBeEqualTo fixture.campaignId
         reservation.state shouldBeEqualTo "ACTIVE"
-        reservation.requestId.isNotBlank() shouldBeEqualTo true
+        reservation.requestId.shouldNotBeBlank()
 
         customerGet("/api/v1/reservations/${reservation.reservationId}")
             .exchange().expectStatus().isOk
@@ -88,11 +92,11 @@ internal class CustomerVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
                 .returnResult().responseBody ?: error("reveal response is required")
 
         firstReveal.code shouldBeEqualTo "CUSTOMER-LIFECYCLE-A"
-        firstReveal.toString().contains("CUSTOMER-LIFECYCLE-A") shouldBeEqualTo false
-        RedeemVoucherRequest("CUSTOMER-LIFECYCLE-A").toString().contains("CUSTOMER-LIFECYCLE-A") shouldBeEqualTo false
-        firstReveal.codeAvailable shouldBeEqualTo true
+        firstReveal.toString() shouldNotContain "CUSTOMER-LIFECYCLE-A"
+        RedeemVoucherRequest("CUSTOMER-LIFECYCLE-A").toString() shouldNotContain "CUSTOMER-LIFECYCLE-A"
+        firstReveal.codeAvailable.shouldBeTrue()
         firstReveal.outcome shouldBeEqualTo "VOUCHER_REVEALED"
-        firstReveal.replacementAvailable shouldBeEqualTo false
+        firstReveal.replacementAvailable.shouldBeFalse()
         firstReveal.safeRequestId shouldBeEqualTo firstReveal.requestId
 
         mutation("/api/v1/allocations/${allocation.allocationId}/code-reveals", "reveal-lifecycle", 0)
@@ -194,7 +198,7 @@ internal class CustomerVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             ).okReveal()
 
         duplicate.outcome shouldBeEqualTo "ALREADY_REVEALED"
-        duplicate.replacementAvailable shouldBeEqualTo false
+        duplicate.replacementAvailable.shouldBeFalse()
         duplicate.safeRequestId shouldBeEqualTo duplicate.requestId
         duplicate.nextAction shouldBeEqualTo "CONTACT_OPERATOR_WITH_REQUEST_ID"
     }

@@ -4,6 +4,7 @@ package io.bluetape4k.workshop.commerce.voucherpool.config
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.codec.Base58
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Tag
@@ -79,7 +80,7 @@ internal class VoucherPoolMigrationCompatibilityIntegrationTest {
                     result.getString("state") shouldBeEqualTo "PAUSED"
                     result.getLong("revision") shouldBeEqualTo 2L
                     result.getInt("user_identity_key_version") shouldBeEqualTo 3
-                    result.getBoolean("expanded") shouldBeEqualTo true
+                    result.getBoolean("expanded").shouldBeTrue()
                 }
             }
         }

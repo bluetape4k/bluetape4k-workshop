@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.voucherpool.web
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.workshop.commerce.voucherpool.application.CampaignBatchCommandService
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.JdbcExecutionLane
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.JdbcTimeoutPhase
@@ -107,7 +108,7 @@ internal class VoucherPoolExceptionHandlerTest {
         }
 
         now = now.plus(Duration.ofMinutes(16))
-        repeat(200) { index -> registry.find("tenant-a", "request-$index") shouldBeEqualTo null }
+        repeat(200) { index -> registry.find("tenant-a", "request-$index").shouldBeNull() }
 
         registry.queuedKeyCount() shouldBeEqualTo 0
     }

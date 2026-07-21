@@ -2,6 +2,10 @@ package io.bluetape4k.workshop.commerce.voucherpool.application
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.DigestValue
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.JdbcExecutionLane
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.JdbcTimeoutPhase
@@ -76,10 +80,10 @@ internal class CampaignBatchCommandServiceTest {
         val source = SecureRandomVoucherCodeSource()
         val generated = List(100) { source.nextCode() }
 
-        source.deterministic shouldBeEqualTo false
-        generated.distinct().size shouldBeEqualTo generated.size
-        generated.all { it.startsWith("VP-") && it.removePrefix("VP-").length >= 22 } shouldBeEqualTo true
-        source.toString().contains("seed", ignoreCase = true) shouldBeEqualTo false
+        source.deterministic.shouldBeFalse()
+        generated.distinct() shouldHaveSize generated.size
+        generated.all { it.startsWith("VP-") && it.removePrefix("VP-").length >= 22 }.shouldBeTrue()
+        source.toString().contains("seed", ignoreCase = true).shouldBeFalse()
     }
 
     @Test
@@ -94,7 +98,7 @@ internal class CampaignBatchCommandServiceTest {
 
         nested.postgresConstraintName() shouldBeEqualTo "uq_voucher_pool_batch_identity"
         SQLException("violates constraint \"uq_voucher_pool_batch_identity\"")
-            .postgresConstraintName() shouldBeEqualTo null
+            .postgresConstraintName().shouldBeNull()
     }
 
     @Test

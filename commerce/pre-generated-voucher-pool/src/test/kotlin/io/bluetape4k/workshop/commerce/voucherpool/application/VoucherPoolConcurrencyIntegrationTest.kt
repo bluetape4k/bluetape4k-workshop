@@ -3,6 +3,8 @@
 package io.bluetape4k.workshop.commerce.voucherpool.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CanonicalVoucherCode
 import io.bluetape4k.workshop.commerce.voucherpool.domain.EntryState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolErrorCode
@@ -42,7 +44,7 @@ internal class VoucherPoolConcurrencyIntegrationTest {
                 })
             }
             val results = futures.map { it.get(20, TimeUnit.SECONDS) }
-            results.map { it.entryId }.distinct().size shouldBeEqualTo 64
+            results.map { it.entryId }.distinct() shouldHaveSize 64
         }
     }
 
@@ -78,15 +80,15 @@ internal class VoucherPoolConcurrencyIntegrationTest {
                     harness.reservations.reserve(harness.reserve(fixture, "shared-user-$index", "shared-$index")).applied()
                 })
             }
-            probe.awaitEntered() shouldBeEqualTo true
+            probe.awaitEntered().shouldBeTrue()
             harness.sharedGuardHolders(probe, "voucher_pool_campaigns") shouldBeEqualTo 4
             harness.sharedGuardHolders(probe, "voucher_pool_batches") shouldBeEqualTo 4
             harness.guardWaiters(probe) shouldBeEqualTo 0
             probe.release()
             val reservations = results.map { it.get(2, TimeUnit.SECONDS) }
-            reservations.map { it.entryId }.distinct().size shouldBeEqualTo 4
+            reservations.map { it.entryId }.distinct() shouldHaveSize 4
         }
-        (TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAt) <= 2_000) shouldBeEqualTo true
+        (TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAt) <= 2_000).shouldBeTrue()
     }
 
     @Test
@@ -174,7 +176,7 @@ internal class VoucherPoolConcurrencyIntegrationTest {
             val loser = outcomes.single { it.isFailure }.exceptionOrNull() as VoucherPoolLifecycleException
             loser.code shouldBeEqualTo VoucherPoolErrorCode.STALE_REVISION
             val terminalState = harness.entryState(allocation.entryId)
-            (terminalState in setOf(EntryState.REDEEMED, EntryState.REVOKED)) shouldBeEqualTo true
+            (terminalState in setOf(EntryState.REDEEMED, EntryState.REVOKED)).shouldBeTrue()
             harness.userCounts(fixture.campaign.campaignId, "racer") shouldBeEqualTo UserCounts(0, 0, 1)
             harness.terminalAuditCount(allocation.allocationId) shouldBeEqualTo 1L
             harness.revokeRaceLostAuditCount(allocation.allocationId) shouldBeEqualTo

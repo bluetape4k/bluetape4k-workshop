@@ -3,6 +3,8 @@
 package io.bluetape4k.workshop.commerce.voucherpool.query
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.workshop.commerce.voucherpool.AbstractVoucherPoolIntegrationTest
 import io.bluetape4k.workshop.commerce.voucherpool.application.AllocateVoucherCommand
 import io.bluetape4k.workshop.commerce.voucherpool.application.AllocationService
@@ -84,16 +86,16 @@ internal class VoucherPoolQueryServiceIntegrationTest : AbstractVoucherPoolInteg
         terminalizeEntry(allocation.entryId, fixture.batchId)
 
         queries.reservation(TENANT, PRINCIPAL, stuck.reservationId)?.reservationId shouldBeEqualTo stuck.reservationId
-        queries.reservation(TENANT, "wrong-principal", stuck.reservationId) shouldBeEqualTo null
-        queries.reservation("wrong-tenant", PRINCIPAL, stuck.reservationId) shouldBeEqualTo null
+        queries.reservation(TENANT, "wrong-principal", stuck.reservationId).shouldBeNull()
+        queries.reservation("wrong-tenant", PRINCIPAL, stuck.reservationId).shouldBeNull()
         queries.allocation(TENANT, PRINCIPAL, allocation.allocationId)?.state shouldBeEqualTo EntryState.RELEASED
-        queries.allocation(TENANT, "wrong-principal", allocation.allocationId) shouldBeEqualTo null
-        queries.allocation("wrong-tenant", PRINCIPAL, allocation.allocationId) shouldBeEqualTo null
+        queries.allocation(TENANT, "wrong-principal", allocation.allocationId).shouldBeNull()
+        queries.allocation("wrong-tenant", PRINCIPAL, allocation.allocationId).shouldBeNull()
 
         queries.batch(TENANT, fixture.batchId)?.batchId shouldBeEqualTo fixture.batchId
-        queries.batch("wrong-tenant", fixture.batchId) shouldBeEqualTo null
+        queries.batch("wrong-tenant", fixture.batchId).shouldBeNull()
         queries.campaign(TENANT, fixture.campaignId)?.campaignId shouldBeEqualTo fixture.campaignId
-        queries.campaign("wrong-tenant", fixture.campaignId) shouldBeEqualTo null
+        queries.campaign("wrong-tenant", fixture.campaignId).shouldBeNull()
         val depth = checkNotNull(queries.poolDepth(TENANT, fixture.campaignId, fixture.batchId))
         depth.counts shouldBeEqualTo
             EntryState.entries.associateWith { state ->
@@ -107,15 +109,15 @@ internal class VoucherPoolQueryServiceIntegrationTest : AbstractVoucherPoolInteg
             }
         depth.eligibleAvailable shouldBeEqualTo 1L
         depth.expiredButNotTerminalized shouldBeEqualTo 1L
-        queries.poolDepth("wrong-tenant", fixture.campaignId, fixture.batchId) shouldBeEqualTo null
+        queries.poolDepth("wrong-tenant", fixture.campaignId, fixture.batchId).shouldBeNull()
 
         val otherFixture = activePool("other")
-        queries.poolDepth(TENANT, fixture.campaignId, otherFixture.batchId) shouldBeEqualTo null
+        queries.poolDepth(TENANT, fixture.campaignId, otherFixture.batchId).shouldBeNull()
 
         val stuckPage = checkNotNull(queries.stuckReservations(TENANT, fixture.campaignId, null, 1))
         stuckPage.items.map(StuckReservationReadModel::reservationId) shouldBeEqualTo listOf(stuck.reservationId)
-        stuckPage.nextCursor shouldBeEqualTo null
-        queries.stuckReservations("wrong-tenant", fixture.campaignId, null, 1) shouldBeEqualTo null
+        stuckPage.nextCursor.shouldBeNull()
+        queries.stuckReservations("wrong-tenant", fixture.campaignId, null, 1).shouldBeNull()
     }
 
     @Test
@@ -136,11 +138,11 @@ internal class VoucherPoolQueryServiceIntegrationTest : AbstractVoucherPoolInteg
         val cursor = checkNotNull(firstPage.nextCursor)
         val secondPage = checkNotNull(queries.stuckReservations(TENANT, fixture.campaignId, cursor, 1))
 
-        firstPage.items.size shouldBeEqualTo 1
-        secondPage.items.size shouldBeEqualTo 1
+        firstPage.items shouldHaveSize 1
+        secondPage.items shouldHaveSize 1
         (firstPage.items + secondPage.items).map(StuckReservationReadModel::reservationId).toSet() shouldBeEqualTo
             setOf(first.reservationId, second.reservationId)
-        secondPage.nextCursor shouldBeEqualTo null
+        secondPage.nextCursor.shouldBeNull()
     }
 
     private fun activePool(name: String = "primary"): QueryFixture {

@@ -3,7 +3,9 @@
 package io.bluetape4k.workshop.commerce.voucherpool.config
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
@@ -179,7 +181,7 @@ internal class VoucherPoolRetentionIntegrationTest {
             .run()
 
         invalid.get() shouldBeEqualTo 0
-        hasReplayDecision(tenant) shouldBeEqualTo true
+        hasReplayDecision(tenant).shouldBeTrue()
         queryLong(
             "SELECT count(*) FROM voucher_pool_http_idempotency WHERE tenant_id='$tenant' AND descriptor IS NULL",
         ) shouldBeEqualTo 1L
@@ -199,12 +201,12 @@ internal class VoucherPoolRetentionIntegrationTest {
                         statement_timestamp()+interval '1 day',statement_timestamp())""",
         )
 
-        retention.deleteTenant(tenant) shouldBeEqualTo false
+        retention.deleteTenant(tenant).shouldBeFalse()
 
         execute(
             "UPDATE voucher_pool_backup_inventory SET retained_until=statement_timestamp() WHERE tenant_id='$tenant'",
         )
-        retention.deleteTenant(tenant) shouldBeEqualTo true
+        retention.deleteTenant(tenant).shouldBeTrue()
         queryLong("SELECT count(*) FROM voucher_pool_command_tombstones WHERE tenant_id='$tenant'") shouldBeEqualTo 0L
     }
 
@@ -214,7 +216,7 @@ internal class VoucherPoolRetentionIntegrationTest {
         seed(RetentionKind.DESCRIPTOR, tenant, "25 hours")
         execute("DELETE FROM voucher_pool_backup_inventory WHERE tenant_id='$tenant'")
 
-        retention.deleteTenant(tenant) shouldBeEqualTo false
+        retention.deleteTenant(tenant).shouldBeFalse()
         queryLong("SELECT count(*) FROM voucher_pool_command_tombstones WHERE tenant_id='$tenant'") shouldBeEqualTo 1L
     }
 

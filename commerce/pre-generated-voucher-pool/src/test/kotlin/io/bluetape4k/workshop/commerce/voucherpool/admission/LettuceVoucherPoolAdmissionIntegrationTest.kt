@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.commerce.voucherpool.admission
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.redis.lettuce.LettuceClients
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolRedisProperties
@@ -36,8 +39,8 @@ internal class LettuceVoucherPoolAdmissionIntegrationTest {
                 resources.client.connect().use { connection ->
                     connection.sync().keys("voucher-pool:admission:*")
                 }
-            keys.size shouldBeEqualTo 2
-            keys.none { "principal" in it || "414141" in it } shouldBeEqualTo true
+            keys shouldHaveSize 2
+            keys.none { "principal" in it || "414141" in it }.shouldBeTrue()
         }
     }
 
@@ -78,7 +81,7 @@ internal class LettuceVoucherPoolAdmissionIntegrationTest {
             val trigger = VoucherPoolLeaderTrigger(resources::leaderElector, "test-instance")
             val result = trigger.run("voucher-pool-reconciliation") { calls.incrementAndGet() }
 
-            (result != null) shouldBeEqualTo true
+            result.shouldNotBeNull()
             calls.get() shouldBeEqualTo 1
         }
     }

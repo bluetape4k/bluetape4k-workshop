@@ -4,6 +4,10 @@ package io.bluetape4k.workshop.commerce.voucherpool.idempotency
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolMigration
@@ -84,7 +88,7 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         val owner = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
         val descriptor = descriptor(fixture.effectId)
 
-        tx { repository.finalize(owner.owner, descriptor, EffectReference.effect(fixture.effectId)) } shouldBeEqualTo true
+        tx { repository.finalize(owner.owner, descriptor, EffectReference.effect(fixture.effectId)) }.shouldBeTrue()
         tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) } shouldBeEqualTo
             IdempotencyDecision.Replay(descriptor)
         tx {
@@ -102,11 +106,11 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         val first = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
 
         val active = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) }
-        (active as IdempotencyDecision.InProgress).retryAfter.isNegative shouldBeEqualTo false
+        (active as IdempotencyDecision.InProgress).retryAfter.isNegative.shouldBeFalse()
         expireLease(first.owner)
         val second = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
 
-        (first.owner == second.owner) shouldBeEqualTo false
+        (first.owner == second.owner).shouldBeFalse()
         assertFailsWith<IdempotencyOwnershipLostException> {
             tx {
                 insertEffect(fixture.effectId, "stale-owner-must-rollback")
@@ -117,7 +121,7 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         tx {
             repository.lockOwnerForExecution(second.owner)
             repository.finalize(second.owner, descriptor(fixture.effectId), EffectReference.effect(fixture.effectId))
-        } shouldBeEqualTo true
+        }.shouldBeTrue()
     }
 
     @Test
@@ -125,10 +129,10 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         val fixture = fixture("retryable-release")
         val first = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
 
-        tx { repository.releaseRetryable(first.owner) } shouldBeEqualTo true
+        tx { repository.releaseRetryable(first.owner) }.shouldBeTrue()
         val second = tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) as IdempotencyDecision.Execute }
 
-        (first.owner == second.owner) shouldBeEqualTo false
+        (first.owner == second.owner).shouldBeFalse()
     }
 
     @Test
@@ -140,7 +144,7 @@ internal class VoucherPoolIdempotencyIntegrationTest {
             repository.lockOwnerForExecution(owner.owner)
             insertEffect(fixture.effectId, "committed")
             repository.finalize(owner.owner, descriptor(fixture.effectId), EffectReference.effect(fixture.effectId))
-        } shouldBeEqualTo true
+        }.shouldBeTrue()
 
         effectCount(fixture.effectId) shouldBeEqualTo 1
         tombstoneCount(owner.owner) shouldBeEqualTo 1
@@ -166,7 +170,7 @@ internal class VoucherPoolIdempotencyIntegrationTest {
         tombstoneCount(owner.owner) shouldBeEqualTo 0
         descriptorCount(owner.owner) shouldBeEqualTo 0
         tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) }
-            .let { it is IdempotencyDecision.InProgress } shouldBeEqualTo true
+            .let { it is IdempotencyDecision.InProgress }.shouldBeTrue()
     }
 
     @Test
@@ -257,7 +261,7 @@ internal class VoucherPoolIdempotencyIntegrationTest {
                 repository.finalize(owner.owner, descriptor(fixture.effectId), EffectReference.effect(fixture.effectId))
             }
         }
-        finalizeFailure.message.orEmpty().contains(owner.owner.keyVersion.toString()) shouldBeEqualTo false
+        finalizeFailure.message.orEmpty() shouldNotContain owner.owner.keyVersion.toString()
         effectCount(fixture.effectId) shouldBeEqualTo 0
 
         completeWithoutTombstone(owner.owner, descriptorJson(fixture.effectId))
@@ -291,7 +295,7 @@ internal class VoucherPoolIdempotencyIntegrationTest {
             val failure = assertFailsWith<IdempotencyDescriptorCorruptedException> {
                 tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) }
             }
-            failure.message.orEmpty().contains("must-not-leak") shouldBeEqualTo false
+            failure.message.orEmpty() shouldNotContain "must-not-leak"
         }
     }
 
@@ -308,7 +312,7 @@ internal class VoucherPoolIdempotencyIntegrationTest {
                 "SELECT 1 FROM voucher_pool_command_tombstones WHERE tenant_id=? AND operation=? AND scoped_key_digest=? FOR UPDATE",
             ).use { statement ->
                 owner.owner.bindScope(statement)
-                statement.executeQuery().use { result -> result.next() shouldBeEqualTo true }
+                statement.executeQuery().use { result -> result.next().shouldBeTrue() }
             }
             tx { repository.purgeDescriptors(limit = 1) } shouldBeEqualTo 0
             lockingConnection.commit()
@@ -359,7 +363,7 @@ internal class VoucherPoolIdempotencyIntegrationTest {
             decision
         }
 
-        (retry is IdempotencyDecision.Execute) shouldBeEqualTo false
+        (retry is IdempotencyDecision.Execute).shouldBeFalse()
         tx { repository.purgeDescriptors(limit = 1) }
         tx { repository.acquire(fixture.scope, fixture.rawKey, fixture.fingerprint) } shouldBeEqualTo
             IdempotencyDecision.Expired(fixture.effectId, null)
@@ -398,13 +402,13 @@ internal class VoucherPoolIdempotencyIntegrationTest {
                 statement.setString(2, fixture.scope.operation)
                 statement.executeQuery().use { result ->
                     result.next()
-                    result.getString(1).contains(fixture.rawKey) shouldBeEqualTo false
-                    result.getString(2).contains(fixture.rawKey) shouldBeEqualTo false
-                    result.getString(3) shouldBeEqualTo null
+                    result.getString(1) shouldNotContain fixture.rawKey
+                    result.getString(2) shouldNotContain fixture.rawKey
+                    result.getString(3).shouldBeNull()
                 }
             }
         }
-        owner.owner.toString().contains("never-store") shouldBeEqualTo false
+        owner.owner.toString() shouldNotContain "never-store"
     }
 
     @Test

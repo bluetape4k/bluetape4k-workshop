@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucherpool
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
@@ -277,7 +278,7 @@ internal class RuntimeContractTest {
             }
 
         failure shouldBeEqualTo unknown
-        metrics.timeouts shouldBeEqualTo emptyList()
+        metrics.timeouts.shouldBeEmpty()
     }
 
     @Test
@@ -389,7 +390,7 @@ internal class RuntimeContractTest {
             }
 
         failure.undeclaredThrowable shouldBeEqualTo exposedFailure
-        metrics.timeouts shouldBeEqualTo emptyList()
+        metrics.timeouts.shouldBeEmpty()
     }
 
     private fun applicationProperties(): PropertySourcesPropertyResolver {

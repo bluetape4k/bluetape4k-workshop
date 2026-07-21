@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.commerce.voucherpool.web
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.workshop.commerce.voucherpool.AbstractVoucherPoolIntegrationTest
 import io.bluetape4k.workshop.commerce.voucherpool.admission.AdmissionLimits
 import io.bluetape4k.workshop.commerce.voucherpool.admission.AdmissionNamespace
@@ -51,8 +53,8 @@ internal class OperatorAccessFilterIntegrationTest : AbstractVoucherPoolIntegrat
             .jsonPath("$.retryAfterSeconds").doesNotExist()
             .consumeWith { result ->
                 val body = result.responseBody?.decodeToString().orEmpty()
-                body.contains(secret) shouldBeEqualTo false
-                body.contains("wrong-guard-that-must-not-leak") shouldBeEqualTo false
+                body shouldNotContain secret
+                body shouldNotContain "wrong-guard-that-must-not-leak"
             }
 
         operatorPost(path, tenant = "tenant-secret", secret = "wrong-secret")
@@ -152,10 +154,10 @@ internal class OperatorAccessFilterIntegrationTest : AbstractVoucherPoolIntegrat
             guard = GUARD_SECRET,
         ).exchange().expectStatus().isNotFound
 
-        output.all.contains(QUERY_SECRET) shouldBeEqualTo false
-        output.all.contains(BODY_SECRET) shouldBeEqualTo false
-        output.all.contains(HEADER_SECRET) shouldBeEqualTo false
-        output.all.contains(GUARD_SECRET) shouldBeEqualTo false
+        output.all shouldNotContain QUERY_SECRET
+        output.all shouldNotContain BODY_SECRET
+        output.all shouldNotContain HEADER_SECRET
+        output.all shouldNotContain GUARD_SECRET
     }
 
     @Test
@@ -181,7 +183,7 @@ internal class OperatorAccessFilterIntegrationTest : AbstractVoucherPoolIntegrat
                     false
                 }
 
-            verifier.matches(candidate, OPERATOR_SECRET, candidate, OPERATOR_GUARD) shouldBeEqualTo false
+            verifier.matches(candidate, OPERATOR_SECRET, candidate, OPERATOR_GUARD).shouldBeFalse()
             comparedLengths shouldBeEqualTo listOf(32 to 32, 32 to 32)
         }
     }

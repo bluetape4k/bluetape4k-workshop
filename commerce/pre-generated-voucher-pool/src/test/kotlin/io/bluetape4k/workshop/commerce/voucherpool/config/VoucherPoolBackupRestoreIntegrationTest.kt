@@ -4,6 +4,7 @@ package io.bluetape4k.workshop.commerce.voucherpool.config
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CanonicalVoucherCode
 import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolErrorCode
@@ -140,7 +141,7 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
                 },
             )
 
-            restored.passed shouldBeEqualTo true
+            restored.passed.shouldBeTrue()
         } finally {
             VOUCHER_POOL_TASK_12_POSTGRES.dropSchema(schema)
         }

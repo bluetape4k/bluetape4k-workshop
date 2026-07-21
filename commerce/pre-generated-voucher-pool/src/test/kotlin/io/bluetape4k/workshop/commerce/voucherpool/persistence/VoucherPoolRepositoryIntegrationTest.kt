@@ -4,6 +4,10 @@ package io.bluetape4k.workshop.commerce.voucherpool.persistence
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolMigration
@@ -147,9 +151,9 @@ internal class VoucherPoolRepositoryIntegrationTest {
                             updaterReady.countDown()
                         }
                     }
-                    updaterReady.await(2, TimeUnit.SECONDS) shouldBeEqualTo true
+                    updaterReady.await(2, TimeUnit.SECONDS).shouldBeTrue()
                     dataSource.awaitLockWaiters(updaterPids.toSet(), expected = 1) shouldBeEqualTo 1
-                    update.isDone shouldBeEqualTo false
+                    update.isDone.shouldBeFalse()
                     reader.commit()
                     update.get(2, TimeUnit.SECONDS) shouldBeEqualTo 1
                 }
@@ -432,7 +436,7 @@ internal class VoucherPoolRepositoryIntegrationTest {
             withExistingJdbcTransaction(connection) {
                 repository.lockCanonicalChain(
                     WorkerCandidate(TENANT, campaign, batch, entry, 0, 0, 0),
-                ) shouldBeEqualTo null
+                ).shouldBeNull()
             }
             connection.rollback()
         }
@@ -499,7 +503,7 @@ internal class VoucherPoolRepositoryIntegrationTest {
                         0,
                         reservations = listOf(ExpectedReservation(otherReservation, 0)),
                     ),
-                ) shouldBeEqualTo null
+                ).shouldBeNull()
             }
             connection.rollback()
         }
@@ -514,7 +518,7 @@ internal class VoucherPoolRepositoryIntegrationTest {
         dataSource.connection.use { connection ->
             connection.autoCommit = false
             withExistingJdbcTransaction(connection) {
-                repository.selectWorkerCandidates(TENANT, batch, 100).size shouldBeEqualTo 1
+                repository.selectWorkerCandidates(TENANT, batch, 100) shouldHaveSize 1
                 repository.poolDepth(TENANT, batch)[EntryState.AVAILABLE] shouldBeEqualTo 1L
             }
             connection.rollback()

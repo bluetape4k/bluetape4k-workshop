@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.voucherpool.config
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.commerce.voucherpool.AbstractVoucherPoolIntegrationTest
 import io.bluetape4k.workshop.commerce.voucherpool.admission.PermitLane
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.JdbcExecutionLane
@@ -137,7 +138,7 @@ internal class VoucherPoolHealthIntegrationTest : AbstractVoucherPoolIntegration
         meterRegistry.get("voucher.pool.hikari.pending").gauge().value() shouldBeEqualTo 1.0
         meterRegistry.get("voucher.pool.permit.wait").timer().count() shouldBeEqualTo 1L
         meterRegistry.get("voucher.pool.jdbc.timeout").counter().count() shouldBeGreaterThan 0.0
-        meterRegistry.meters.flatMap { it.id.tags }.none { it.key in FORBIDDEN_TAGS } shouldBeEqualTo true
+        meterRegistry.meters.flatMap { it.id.tags }.none { it.key in FORBIDDEN_TAGS }.shouldBeTrue()
 
         VoucherPoolAlertPolicy[VoucherPoolAlert.HIKARI_PENDING].duration shouldBeEqualTo Duration.ofSeconds(10)
         VoucherPoolAlertPolicy[VoucherPoolAlert.WORKER_NO_PROGRESS].duration shouldBeEqualTo Duration.ofSeconds(30)

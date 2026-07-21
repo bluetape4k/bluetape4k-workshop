@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.commerce.voucherpool.security
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CanonicalVoucherCode
 import org.junit.jupiter.api.Test
 import java.util.Base64
@@ -21,11 +23,11 @@ internal class VoucherEnvelopeCryptoTest {
             crypto.decryptAndVerify(IDENTITY, encrypted, stableDigest) shouldBeEqualTo code
             codeNonces += Base64.getEncoder().encodeToString(encrypted.copyCodeNonce())
             wrapNonces += Base64.getEncoder().encodeToString(encrypted.copyWrapNonce())
-            encrypted.toString().contains("POOL-ROUND-TRIP") shouldBeEqualTo false
+            encrypted.toString() shouldNotContain "POOL-ROUND-TRIP"
         }
 
-        codeNonces.size shouldBeEqualTo 64
-        wrapNonces.size shouldBeEqualTo 64
+        codeNonces shouldHaveSize 64
+        wrapNonces shouldHaveSize 64
     }
 
     @Test

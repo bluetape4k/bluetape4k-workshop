@@ -3,6 +3,7 @@
 package io.bluetape4k.workshop.commerce.voucherpool.web
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.workshop.commerce.voucherpool.AbstractVoucherPoolIntegrationTest
 import io.bluetape4k.workshop.commerce.voucherpool.admission.AdmissionLimits
 import io.bluetape4k.workshop.commerce.voucherpool.admission.AdmissionNamespace
@@ -358,8 +359,8 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             requestId = "request-preview-redaction",
         )
 
-        snapshot.toString().contains(token) shouldBeEqualTo false
-        response.toString().contains(token) shouldBeEqualTo false
+        snapshot.toString() shouldNotContain token
+        response.toString() shouldNotContain token
     }
 
     @Test

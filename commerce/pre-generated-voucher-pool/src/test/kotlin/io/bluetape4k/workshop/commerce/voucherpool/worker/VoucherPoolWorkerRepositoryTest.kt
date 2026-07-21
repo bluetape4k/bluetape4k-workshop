@@ -4,6 +4,8 @@ package io.bluetape4k.workshop.commerce.voucherpool.worker
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucherpool.admission.DatabasePermitGate
@@ -70,12 +72,12 @@ internal class VoucherPoolWorkerRepositoryTest {
     @Test
     fun `duplicate claim is rejected until the lease expires then stale owner cannot checkpoint`() {
         val original = checkNotNull(repository.claim(tenant, WorkerKind.BATCH_REVOKE, scopeId, "owner-a"))
-        repository.claim(tenant, WorkerKind.BATCH_REVOKE, scopeId, "owner-b") shouldBeEqualTo null
+        repository.claim(tenant, WorkerKind.BATCH_REVOKE, scopeId, "owner-b").shouldBeNull()
 
         expireLease()
         val takeover = checkNotNull(repository.claim(tenant, WorkerKind.BATCH_REVOKE, scopeId, "owner-b"))
         takeover.owner shouldBeEqualTo "owner-b"
-        (takeover.revision > original.revision) shouldBeEqualTo true
+        (takeover.revision > original.revision).shouldBeTrue()
         assertFailsWith<StaleWorkerClaimException> { repository.checkpoint(original, 10) }
     }
 
@@ -86,10 +88,10 @@ internal class VoucherPoolWorkerRepositoryTest {
 
         renewed.cursor shouldBeEqualTo 42L
         renewed.checkpoint shouldBeEqualTo 1L
-        (renewed.claimUntil > original.claimUntil) shouldBeEqualTo true
+        (renewed.claimUntil > original.claimUntil).shouldBeTrue()
         assertFailsWith<StaleWorkerClaimException> { repository.finalize(original) }
         val finalized = repository.finalize(renewed)
-        finalized.owner shouldBeEqualTo null
+        finalized.owner.shouldBeNull()
         finalized.cursor shouldBeEqualTo 0L
     }
 
@@ -113,7 +115,7 @@ internal class VoucherPoolWorkerRepositoryTest {
         snapshot.poisonReason shouldBeEqualTo "SIMULATED_FAILURE"
         snapshot.state shouldBeEqualTo WorkerClaimState.POISONED
         snapshot.nextAction shouldBeEqualTo "OPERATOR_REVIEW_REQUIRED"
-        repository.claim(tenant, WorkerKind.RECONCILIATION, scopeId, "other") shouldBeEqualTo null
+        repository.claim(tenant, WorkerKind.RECONCILIATION, scopeId, "other").shouldBeNull()
     }
 
     @Test
@@ -121,7 +123,7 @@ internal class VoucherPoolWorkerRepositoryTest {
         WorkerPolicy().lease shouldBeEqualTo Duration.ofSeconds(15)
         WorkerPolicy().runDeadline shouldBeEqualTo Duration.ofSeconds(30)
         val claim = checkNotNull(repository.claim(tenant, WorkerKind.RESERVATION_EXPIRY, scopeId, "deadline-owner"))
-        (claim.runDeadline > claim.claimUntil) shouldBeEqualTo true
+        (claim.runDeadline > claim.claimUntil).shouldBeTrue()
 
         assertFailsWith<StaleWorkerClaimException> {
             repository.checkpoint(claim.copy(runDeadline = Instant.EPOCH), 1)
@@ -134,7 +136,7 @@ internal class VoucherPoolWorkerRepositoryTest {
         val claim = checkNotNull(repository.claim(tenant, WorkerKind.ALLOCATION_EXPIRY, scopeId, "owner-a"))
         val checkpoint = repository.checkpoint(claim, 17)
         val released = repository.release(checkpoint)
-        released.owner shouldBeEqualTo null
+        released.owner.shouldBeNull()
         released.cursor shouldBeEqualTo 17L
 
         checkNotNull(

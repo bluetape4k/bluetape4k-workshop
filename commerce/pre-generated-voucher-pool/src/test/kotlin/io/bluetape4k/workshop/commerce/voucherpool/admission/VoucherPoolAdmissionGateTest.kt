@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucherpool.admission
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.bucket4j.ratelimit.RateLimitDiagnostics
 import io.bluetape4k.bucket4j.ratelimit.RateLimitRejectionReason
 import io.bluetape4k.bucket4j.ratelimit.RateLimitResult
@@ -23,7 +24,7 @@ internal class VoucherPoolAdmissionGateTest {
         gate.admit(AdmissionNamespace.REDEEM, principal) shouldBeEqualTo AdmissionDecision.ALLOW
 
         backend.namespaces shouldBeEqualTo listOf(AdmissionNamespace.REVEAL, AdmissionNamespace.REDEEM)
-        backend.keys.distinct().size shouldBeEqualTo 2
+        backend.keys.distinct() shouldHaveSize 2
     }
 
     @Test

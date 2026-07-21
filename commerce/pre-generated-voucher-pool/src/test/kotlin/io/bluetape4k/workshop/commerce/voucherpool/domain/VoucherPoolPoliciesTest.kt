@@ -1,12 +1,13 @@
 package io.bluetape4k.workshop.commerce.voucherpool.domain
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.assertSoftly
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.jackson3.Jackson
-import org.junit.jupiter.api.Assertions.assertAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -221,12 +222,12 @@ internal class VoucherPoolPoliciesTest {
                 replacementAllowance = 1,
             )
 
-        assertAll(
-            { policy.perUserLimit shouldBeEqualTo 1 },
-            { policy.reservationTtl shouldBeEqualTo 15.minutes },
-            { policy.allocationTtl shouldBeEqualTo 1.hours },
-            { policy.replacementAllowance shouldBeEqualTo 1 },
-        )
+        assertSoftly {
+            add { policy.perUserLimit shouldBeEqualTo 1 }
+            add { policy.reservationTtl shouldBeEqualTo 15.minutes }
+            add { policy.allocationTtl shouldBeEqualTo 1.hours }
+            add { policy.replacementAllowance shouldBeEqualTo 1 }
+        }
     }
 
     @Test
@@ -285,13 +286,13 @@ internal class VoucherPoolPoliciesTest {
         val semantics = VoucherPoolErrorCatalog[case.code]
         val expected = case.semantics
 
-        assertAll(
-            { semantics.httpStatus shouldBeEqualTo expected.httpStatus },
-            { semantics.retryable shouldBeEqualTo expected.retryable },
-            { semantics.descriptorAction shouldBeEqualTo expected.descriptorAction },
-            { semantics.tombstoneAction shouldBeEqualTo expected.tombstoneAction },
-            { semantics.callerRecovery shouldBeEqualTo expected.callerRecovery },
-        )
+        assertSoftly {
+            add { semantics.httpStatus shouldBeEqualTo expected.httpStatus }
+            add { semantics.retryable shouldBeEqualTo expected.retryable }
+            add { semantics.descriptorAction shouldBeEqualTo expected.descriptorAction }
+            add { semantics.tombstoneAction shouldBeEqualTo expected.tombstoneAction }
+            add { semantics.callerRecovery shouldBeEqualTo expected.callerRecovery }
+        }
     }
 
     @Test
@@ -303,10 +304,10 @@ internal class VoucherPoolPoliciesTest {
     fun `expected error cases contain every public code exactly once`() {
         val expectedCodes = expectedErrorCases().map(ErrorCatalogCase::code)
 
-        assertAll(
-            { expectedCodes.toSet() shouldBeEqualTo VoucherPoolErrorCode.entries.toSet() },
-            { expectedCodes.size shouldBeEqualTo expectedCodes.toSet().size },
-        )
+        assertSoftly {
+            add { expectedCodes.toSet() shouldBeEqualTo VoucherPoolErrorCode.entries.toSet() }
+            add { expectedCodes shouldHaveSize expectedCodes.toSet().size }
+        }
     }
 
     private fun <S> allowedTransitions(

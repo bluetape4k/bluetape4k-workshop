@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.commerce.voucherpool.query
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.commerce.voucherpool.domain.ReservationState
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcExecutor
 import io.bluetape4k.workshop.commerce.voucherpool.security.DigestKey
@@ -13,7 +16,6 @@ import io.mockk.verify
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.util.UUID
-import kotlin.test.assertFailsWith
 
 internal class VoucherPoolQueryServiceTest {
     private val executor = mockk<VoucherPoolJdbcExecutor>()
@@ -39,7 +41,7 @@ internal class VoucherPoolQueryServiceTest {
 
         checkNotNull(ownerDigest).contentEquals(
             digests.userIdentity(TENANT, campaignId, PRINCIPAL).copyBytes(),
-        ) shouldBeEqualTo true
+        ).shouldBeTrue()
         verify(exactly = 1) { executor.foregroundTransaction<ReservationReadModel?>(any()) }
         verify(exactly = 0) { executor.operatorTransaction<Any?>(any()) }
     }
@@ -53,10 +55,10 @@ internal class VoucherPoolQueryServiceTest {
         every { store.findUserIdentityKeyVersion(TENANT, campaignId) } returns digests.currentUserIdentityKeyVersion
         every { store.findOwnedReservation(TENANT, reservationId, any()) } returns null
 
-        service.reservation(TENANT, "wrong-principal", reservationId) shouldBeEqualTo null
+        service.reservation(TENANT, "wrong-principal", reservationId).shouldBeNull()
 
         every { store.resolveReservationCampaign(TENANT, reservationId) } returns null
-        service.reservation(TENANT, PRINCIPAL, reservationId) shouldBeEqualTo null
+        service.reservation(TENANT, PRINCIPAL, reservationId).shouldBeNull()
     }
 
     @Test
@@ -70,8 +72,8 @@ internal class VoucherPoolQueryServiceTest {
         every { store.scopeExists(TENANT, null, null) } returns true
         every { store.findStuckReservations(TENANT, null, null, 100) } returns page
 
-        service.campaign(TENANT, campaignId) shouldBeEqualTo null
-        service.batch(TENANT, batchId) shouldBeEqualTo null
+        service.campaign(TENANT, campaignId).shouldBeNull()
+        service.batch(TENANT, batchId).shouldBeNull()
         service.stuckReservations(TENANT, null, null, 100) shouldBeEqualTo page
 
         verify(exactly = 3) { executor.operatorTransaction<Any?>(any()) }
@@ -86,8 +88,8 @@ internal class VoucherPoolQueryServiceTest {
         every { store.scopeExists(TENANT, campaignId, batchId) } returns false
         every { store.scopeExists(TENANT, campaignId, null) } returns false
 
-        service.poolDepth(TENANT, campaignId, batchId) shouldBeEqualTo null
-        service.stuckReservations(TENANT, campaignId, null, 10) shouldBeEqualTo null
+        service.poolDepth(TENANT, campaignId, batchId).shouldBeNull()
+        service.stuckReservations(TENANT, campaignId, null, 10).shouldBeNull()
 
         verify(exactly = 0) { store.readPoolDepth(any(), any(), any()) }
         verify(exactly = 0) { store.findStuckReservations(any(), any(), any(), any()) }

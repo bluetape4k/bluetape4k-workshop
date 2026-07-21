@@ -3,7 +3,10 @@
 package io.bluetape4k.workshop.commerce.voucherpool.worker
 
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.commerce.voucherpool.application.LifecycleHarness
 import io.bluetape4k.workshop.commerce.voucherpool.application.ReplaceLostRevealCommand
 import io.bluetape4k.workshop.commerce.voucherpool.application.VoucherPoolLifecycleException
@@ -164,7 +167,7 @@ internal class VoucherPoolWorkerIntegrationTest {
         var resumed = checkNotNull(
             claims.claim(harness.tenant, WorkerKind.BATCH_REVOKE, fixture.batch.batchId, "owner-b"),
         )
-        (resumed.cursor > 0L) shouldBeEqualTo true
+        (resumed.cursor > 0L).shouldBeTrue()
         val second = workers.runChunk(resumed, requestedLimit = 1)
         resumed = checkNotNull(second.claim)
         runToCompletion(resumed)
@@ -176,7 +179,7 @@ internal class VoucherPoolWorkerIntegrationTest {
         val duplicate = checkNotNull(
             claims.claim(harness.tenant, WorkerKind.BATCH_REVOKE, fixture.batch.batchId, "owner-c"),
         )
-        workers.runChunk(duplicate).completed shouldBeEqualTo true
+        workers.runChunk(duplicate).completed.shouldBeTrue()
         harness.auditCount("BATCH", fixture.batch.batchId, "REVOKED") shouldBeEqualTo 1L
     }
 
@@ -200,7 +203,7 @@ internal class VoucherPoolWorkerIntegrationTest {
         outcomes.single().state shouldBeEqualTo WorkerRunState.COMPLETED
         harness.batchState(fixture.batch.batchId).name shouldBeEqualTo "EXPIRED"
         harness.poolDepth(fixture.batch.batchId, EntryState.EXPIRED) shouldBeEqualTo 3L
-        claims.findRunnable(10) shouldBeEqualTo emptyList()
+        claims.findRunnable(10).shouldBeEmpty()
     }
 
     @Test
@@ -266,7 +269,7 @@ internal class VoucherPoolWorkerIntegrationTest {
 
         outcome.state shouldBeEqualTo WorkerRunState.RETRYABLE
         checkNotNull(outcome.claim).apply {
-            owner shouldBeEqualTo null
+            owner.shouldBeNull()
             attempt shouldBeEqualTo 1
             nextAction shouldBeEqualTo "RETRY_AFTER_BACKOFF"
         }
@@ -291,8 +294,8 @@ internal class VoucherPoolWorkerIntegrationTest {
         cancelled.state shouldBeEqualTo WorkerRunState.CANCELLED
         cancelled.effects shouldBeEqualTo 1
         checkNotNull(cancelled.claim).apply {
-            owner shouldBeEqualTo null
-            (cursor > 0L) shouldBeEqualTo true
+            owner.shouldBeNull()
+            (cursor > 0L).shouldBeTrue()
         }
         workers.run(
             WorkerRunRequest(
@@ -362,7 +365,7 @@ internal class VoucherPoolWorkerIntegrationTest {
         val counts = harness.userCounts(fixture.campaign.campaignId, "race-user")
         counts.activeReservations shouldBeEqualTo 0
         counts.activeAllocations shouldBeEqualTo 0
-        (counts.lifetimeConsumed in 0..1) shouldBeEqualTo true
+        (counts.lifetimeConsumed in 0..1).shouldBeTrue()
         harness.poolDepth(fixture.batch.batchId, EntryState.REVOKED) shouldBeEqualTo 1L
     }
 

@@ -4,6 +4,8 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucherpool.performance.RedisMode
 import io.bluetape4k.workshop.commerce.voucherpool.performance.VoucherPoolPerformanceProbe
@@ -64,8 +66,8 @@ internal class VoucherPoolStressProfileTest {
         }
         artifacts.all { Files.size(it) > 0L }.shouldBeTrue()
         val checksums = artifacts.map(::sha256)
-        checksums.toSet().size shouldBeEqualTo checksums.size
-        checksums.forEach { checksum -> manifest.contains(checksum).shouldBeTrue() }
+        checksums.toSet() shouldHaveSize checksums.size
+        checksums.forEach { checksum -> manifest shouldContain checksum }
     }
 
     private fun sha256(path: Path): String =

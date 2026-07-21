@@ -2,7 +2,10 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.security
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolMigration
@@ -103,12 +106,12 @@ internal class VoucherCryptoQuarantineIntegrationTest {
                     result.next()
                     result.getString(1) shouldBeEqualTo "ALLOCATED"
                     result.getLong(2) shouldBeEqualTo 1L
-                    result.getBoolean(3) shouldBeEqualTo true
-                    result.getBoolean(4) shouldBeEqualTo true
+                    result.getBoolean(3).shouldBeTrue()
+                    result.getBoolean(4).shouldBeTrue()
                     result.getString(5) shouldBeEqualTo "ALLOCATED"
                     result.getLong(6) shouldBeEqualTo 0L
                     result.getString(7) shouldBeEqualTo corruption.reason.name
-                    result.getObject(8) shouldBeEqualTo null
+                    result.getObject(8).shouldBeNull()
                 }
             }
         }
@@ -135,11 +138,11 @@ internal class VoucherCryptoQuarantineIntegrationTest {
                 statement.executeQuery().use { result ->
                     result.next()
                     result.getLong(1) shouldBeEqualTo 2L
-                    result.getBoolean(2) shouldBeEqualTo true
+                    result.getBoolean(2).shouldBeTrue()
                     result.getLong(3) shouldBeEqualTo 1L
                     result.getString(4) shouldBeEqualTo VoucherCryptoFailureReason.INVALID_TAG.name
-                    result.getBoolean(5) shouldBeEqualTo true
-                    result.getBoolean(6) shouldBeEqualTo true
+                    result.getBoolean(5).shouldBeTrue()
+                    result.getBoolean(6).shouldBeTrue()
                 }
             }
         }
@@ -360,7 +363,7 @@ internal class VoucherCryptoQuarantineIntegrationTest {
 
     private fun assertErasedRow(result: ResultSet, expectedRevision: Long = 1) {
         result.next()
-        (1..6).forEach { result.getBoolean(it) shouldBeEqualTo true }
+        (1..6).forEach { result.getBoolean(it).shouldBeTrue() }
         result.getLong(7) shouldBeEqualTo expectedRevision
     }
 

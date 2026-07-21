@@ -4,6 +4,11 @@ package io.bluetape4k.workshop.commerce.voucherpool.application
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucherpool.admission.DatabasePermitGate
@@ -123,7 +128,7 @@ internal class VoucherBatchIngestIntegrationTest {
         val second = service.importChunk(import(fixture, 2, codes(2, 2))).applied()
         second.nextSourceOrdinal shouldBeEqualTo 4
         second.acceptedCount shouldBeEqualTo 4
-        (second.checkpointDigest == first.checkpointDigest) shouldBeEqualTo false
+        (second.checkpointDigest == first.checkpointDigest).shouldBeFalse()
 
         service.importChunk(import(fixture, 0, codes(0, 2), second.revision)).applied().nextSourceOrdinal shouldBeEqualTo 4
         assertFailsWith<BatchCommandException> {
@@ -294,7 +299,7 @@ internal class VoucherBatchIngestIntegrationTest {
 
         val outcomes = executeConcurrently(commands) { service.importChunk(it).applied() }
 
-        outcomes.filterIsInstance<BatchSnapshot>().size shouldBeEqualTo 1
+        outcomes.filterIsInstance<BatchSnapshot>() shouldHaveSize 1
         outcomes.count { it == BatchCommandFailure.STALE_REVISION } shouldBeEqualTo 1
         val stored = batchRow(fixture.batch.batchId)
         stored.revision shouldBeEqualTo fixture.batch.revision + 1
@@ -337,7 +342,7 @@ internal class VoucherBatchIngestIntegrationTest {
 
         val outcomes = executeConcurrently(commands) { service.generateChunk(it).applied() }
 
-        outcomes.filterIsInstance<BatchSnapshot>().size shouldBeEqualTo 1
+        outcomes.filterIsInstance<BatchSnapshot>() shouldHaveSize 1
         outcomes.count { it == BatchCommandFailure.STALE_REVISION } shouldBeEqualTo 1
         val stored = batchRow(batch.batchId)
         stored.revision shouldBeEqualTo batch.revision + 1
@@ -363,7 +368,7 @@ internal class VoucherBatchIngestIntegrationTest {
                 createCampaignFingerprint(inProgress),
             )
         }
-        (decision is IdempotencyDecision.Execute) shouldBeEqualTo true
+        (decision is IdempotencyDecision.Execute).shouldBeTrue()
         assertFailsWith<BatchCommandException> { service.createCampaign(inProgress) }
             .reason shouldBeEqualTo BatchCommandFailure.COMMAND_IN_PROGRESS
         campaignCount(inProgress.campaignId) shouldBeEqualTo 0
@@ -455,11 +460,11 @@ internal class VoucherBatchIngestIntegrationTest {
         failed.checkpointDigest shouldBeEqualTo before.checkpointDigest
         entryCount(fixture.batch.batchId) shouldBeEqualTo 1
         rejection.evidenceCode shouldBeEqualTo failed.lastFailureCode
-        rejection.evidenceCode.contains("bad") shouldBeEqualTo false
+        rejection.evidenceCode shouldNotContain "bad"
         val plainOracle = java.security.MessageDigest.getInstance("SHA-256")
             .digest("bad\ncode".toByteArray()).take(8).toByteArray().joinToString("") { "%02x".format(it) }
-        failed.lastFailureCode.orEmpty().contains(plainOracle) shouldBeEqualTo false
-        failed.lastFailureCode.orEmpty().length.let { it <= 64 } shouldBeEqualTo true
+        failed.lastFailureCode.orEmpty() shouldNotContain plainOracle
+        failed.lastFailureCode.orEmpty().length.let { it <= 64 }.shouldBeTrue()
         val replay = service.importChunk(command) as MutationResult.Replay
         replay.descriptor.terminalCode shouldBeEqualTo VoucherPoolErrorCode.BATCH_FAILED_TERMINAL
         assertFailsWith<BatchCommandException> {
@@ -478,7 +483,7 @@ internal class VoucherBatchIngestIntegrationTest {
         failed.nextSourceOrdinal shouldBeEqualTo 2
         failed.acceptedCount shouldBeEqualTo 0
         failed.rejectedCount shouldBeEqualTo 2
-        failed.checkpointDigest shouldBeEqualTo null
+        failed.checkpointDigest.shouldBeNull()
         failed.lastFailureCode shouldBeEqualTo rejection.evidenceCode
         entryCount(command.batchId) shouldBeEqualTo 0
         val replay = service.createImportBatch(command) as MutationResult.Replay
@@ -489,7 +494,7 @@ internal class VoucherBatchIngestIntegrationTest {
         )
         transactionExecutor().operatorTransaction { JdbcVoucherPoolIdempotencyRepository(digests).purgeDescriptors(10) }
         val expired = service.createImportBatch(command) as MutationResult.Expired
-        expired.effectId shouldBeEqualTo null
+        expired.effectId.shouldBeNull()
         expired.terminalCode shouldBeEqualTo VoucherPoolErrorCode.BATCH_FAILED_TERMINAL
     }
 
@@ -520,11 +525,11 @@ internal class VoucherBatchIngestIntegrationTest {
         entryCount(fixture.batch.batchId) shouldBeEqualTo 1
         dedupCount(fixture.batch.batchId) shouldBeEqualTo 1
         failed.lastFailureCode shouldBeEqualTo rejection.evidenceCode
-        failed.lastFailureCode.orEmpty().contains(rawSecret) shouldBeEqualTo false
+        failed.lastFailureCode.orEmpty() shouldNotContain rawSecret
         val plainOracle = java.security.MessageDigest.getInstance("SHA-256")
             .digest(rawSecret.toByteArray()).take(8).toByteArray().joinToString("") { "%02x".format(it) }
-        failed.lastFailureCode.orEmpty().contains(plainOracle) shouldBeEqualTo false
-        (failed.lastFailureCode.orEmpty().length <= 64) shouldBeEqualTo true
+        failed.lastFailureCode.orEmpty() shouldNotContain plainOracle
+        (failed.lastFailureCode.orEmpty().length <= 64).shouldBeTrue()
 
         val replay = service.importChunk(command) as MutationResult.Replay
         replay.descriptor.terminalCode shouldBeEqualTo VoucherPoolErrorCode.BATCH_FAILED_TERMINAL
@@ -534,7 +539,7 @@ internal class VoucherBatchIngestIntegrationTest {
         )
         transactionExecutor().operatorTransaction { JdbcVoucherPoolIdempotencyRepository(digests).purgeDescriptors(10) }
         val expired = service.importChunk(command) as MutationResult.Expired
-        expired.effectId shouldBeEqualTo null
+        expired.effectId.shouldBeNull()
         expired.terminalCode shouldBeEqualTo VoucherPoolErrorCode.BATCH_FAILED_TERMINAL
     }
 
@@ -629,7 +634,7 @@ internal class VoucherBatchIngestIntegrationTest {
             val campaigns = listOf(campaignCommand, secondCampaignCommand).map { command ->
                 pool.submit<CampaignSnapshot> { service.createCampaign(command).applied() }
             }.map { it.get(15, TimeUnit.SECONDS) }
-            campaigns.distinct().size shouldBeEqualTo 1
+            campaigns.distinct() shouldHaveSize 1
             campaignCount(campaignCommand.campaignId) shouldBeEqualTo 1
 
             val draft = campaigns.first()
@@ -654,7 +659,7 @@ internal class VoucherBatchIngestIntegrationTest {
             val batches = listOf(firstBatch, secondBatch).map { command ->
                 pool.submit<BatchSnapshot> { service.createImportBatch(command).applied() }
             }.map { it.get(15, TimeUnit.SECONDS) }
-            batches.distinct().size shouldBeEqualTo 1
+            batches.distinct() shouldHaveSize 1
             entryCount(firstBatch.batchId) shouldBeEqualTo 1
         } finally {
             pool.shutdownNow()
@@ -678,7 +683,7 @@ internal class VoucherBatchIngestIntegrationTest {
                 Thread.currentThread().name = TERMINAL_RACE_THREAD
                 failingService.createImportBatch(failingCommand)
             }
-            raceRepository.awaitTerminalRecovery() shouldBeEqualTo true
+            raceRepository.awaitTerminalRecovery().shouldBeTrue()
 
             val healthyCommand = CreateImportBatchCommand(
                 tenantId = TENANT,
@@ -697,7 +702,7 @@ internal class VoucherBatchIngestIntegrationTest {
             raceRepository.releaseTerminalRecovery()
 
             val wrapped = assertFailsWith<ExecutionException> { failingFuture.get(15, TimeUnit.SECONDS) }
-            (wrapped.cause is PreparedChunkRejectedException) shouldBeEqualTo true
+            (wrapped.cause is PreparedChunkRejectedException).shouldBeTrue()
             batchRow(healthy.batchId) shouldBeEqualTo healthy
             healthy.state shouldBeEqualTo BatchState.STAGING
             healthy.nextSourceOrdinal shouldBeEqualTo 1
@@ -748,7 +753,7 @@ internal class VoucherBatchIngestIntegrationTest {
         )
         val failure = assertFailsWith<RuntimeException> { service.importChunk(unknownCommand) }
         dropUnknownIntegrityTrigger()
-        (failure is BatchCommandException) shouldBeEqualTo false
+        (failure is BatchCommandException).shouldBeFalse()
         batchRow(unknown.batch.batchId) shouldBeEqualTo unknown.batch
         entryCount(unknown.batch.batchId) shouldBeEqualTo 1
         assertFailsWith<BatchCommandException> { service.importChunk(unknownCommand) }
@@ -801,9 +806,9 @@ internal class VoucherBatchIngestIntegrationTest {
             ),
         ).applied()
         entryCount(batch.batchId) shouldBeEqualTo 2
-        rawStorageContains("GEN-A") shouldBeEqualTo false
-        rawStorageContains("GEN-C") shouldBeEqualTo false
-        rawStorageContains("seed") shouldBeEqualTo false
+        rawStorageContains("GEN-A").shouldBeFalse()
+        rawStorageContains("GEN-C").shouldBeFalse()
+        rawStorageContains("seed").shouldBeFalse()
     }
 
     @Test
@@ -1133,7 +1138,7 @@ internal class VoucherBatchIngestIntegrationTest {
 
     private class BoundaryCheckingCrypto(private val delegate: VoucherEnvelopeCrypto) : VoucherEnvelopeCrypto {
         override fun encrypt(entryIdentity: EntryIdentity, code: CanonicalVoucherCode): EncryptedVoucherCode {
-            (TransactionManager.currentOrNull() == null) shouldBeEqualTo true
+            TransactionManager.currentOrNull().shouldBeNull()
             return delegate.encrypt(entryIdentity, code)
         }
 

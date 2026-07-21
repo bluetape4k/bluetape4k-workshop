@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.commerce.voucherpool.web
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.workshop.commerce.voucherpool.AbstractVoucherPoolIntegrationTest
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
@@ -119,8 +121,8 @@ internal class VoucherPoolInputBoundaryIntegrationTest : AbstractVoucherPoolInte
             asyncContext.complete()
         })
 
-        (asyncRequest === wrappedRequest) shouldBeEqualTo true
-        (asyncRequest !== request) shouldBeEqualTo true
+        (asyncRequest === wrappedRequest).shouldBeTrue()
+        (asyncRequest !== request).shouldBeTrue()
     }
 
     @Test
@@ -165,7 +167,7 @@ internal class VoucherPoolInputBoundaryIntegrationTest : AbstractVoucherPoolInte
         })
 
         parameterMapReads shouldBeEqualTo 0
-        downstreamSawWrapper shouldBeEqualTo true
+        downstreamSawWrapper.shouldBeTrue()
         response.status shouldBeEqualTo 400
     }
 
@@ -194,7 +196,7 @@ internal class VoucherPoolInputBoundaryIntegrationTest : AbstractVoucherPoolInte
             .jsonPath("$.code").isEqualTo("INTERNAL_ERROR")
             .jsonPath("$.reason").isEqualTo("request could not be completed")
             .consumeWith { result ->
-                result.responseBody?.decodeToString().orEmpty().contains(INTERNAL_SECRET) shouldBeEqualTo false
+                result.responseBody?.decodeToString().orEmpty() shouldNotContain INTERNAL_SECRET
             }
     }
 

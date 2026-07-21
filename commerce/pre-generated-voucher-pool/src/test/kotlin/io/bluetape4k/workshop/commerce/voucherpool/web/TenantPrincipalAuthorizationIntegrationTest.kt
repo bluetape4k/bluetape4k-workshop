@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.commerce.voucherpool.web
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
-import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.commerce.voucherpool.AbstractVoucherPoolIntegrationTest
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolProperties
 import org.junit.jupiter.api.Test
@@ -54,7 +56,7 @@ internal class TenantPrincipalAuthorizationIntegrationTest : AbstractVoucherPool
                 VALID_OPERATOR_GUARD_PROPERTY,
             )
             .run { context ->
-                context.startupFailure?.message?.contains("PUBLIC_BIND_REQUIRES_PRODUCTION_AUTH") shouldBeEqualTo true
+                context.startupFailure?.message shouldContain "PUBLIC_BIND_REQUIRES_PRODUCTION_AUTH"
             }
     }
 
@@ -76,7 +78,7 @@ internal class TenantPrincipalAuthorizationIntegrationTest : AbstractVoucherPool
             .withUserConfiguration(PublicBindValidationConfiguration::class.java)
             .withPropertyValues("server.address=127.0.0.1")
             .run { context ->
-                (context.startupFailure != null) shouldBeEqualTo true
+                context.startupFailure.shouldNotBeNull()
             }
     }
 
@@ -90,8 +92,7 @@ internal class TenantPrincipalAuthorizationIntegrationTest : AbstractVoucherPool
                 "workshop.voucher-pool.http.operator-guard=${"g".repeat(257)}",
             )
             .run { context ->
-                context.startupFailure?.message
-                    ?.contains("INVALID_OPERATOR_CREDENTIAL_CONFIGURATION") shouldBeEqualTo true
+                context.startupFailure?.message shouldContain "INVALID_OPERATOR_CREDENTIAL_CONFIGURATION"
             }
     }
 
@@ -105,7 +106,7 @@ internal class TenantPrincipalAuthorizationIntegrationTest : AbstractVoucherPool
                 VALID_OPERATOR_GUARD_PROPERTY,
             )
             .run { context ->
-                context.startupFailure?.message?.contains("MULTIPLE_PRODUCTION_AUTH_ADAPTERS") shouldBeEqualTo true
+                context.startupFailure?.message shouldContain "MULTIPLE_PRODUCTION_AUTH_ADAPTERS"
             }
     }
 

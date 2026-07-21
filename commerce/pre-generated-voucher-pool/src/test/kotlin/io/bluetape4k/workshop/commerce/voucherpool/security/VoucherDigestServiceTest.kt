@@ -2,6 +2,9 @@ package io.bluetape4k.workshop.commerce.voucherpool.security
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CanonicalVoucherCode
 import org.junit.jupiter.api.Test
 import java.util.UUID
@@ -23,8 +26,8 @@ internal class VoucherDigestServiceTest {
 
         val oldVerification = before.verification(TENANT, CAMPAIGN, ALLOCATION, code)
         val currentVerification = after.verification(TENANT, CAMPAIGN, ALLOCATION, code)
-        (oldVerification == currentVerification) shouldBeEqualTo false
-        after.matchesVerification(TENANT, CAMPAIGN, ALLOCATION, code, oldVerification) shouldBeEqualTo true
+        (oldVerification == currentVerification).shouldBeFalse()
+        after.matchesVerification(TENANT, CAMPAIGN, ALLOCATION, code, oldVerification).shouldBeTrue()
     }
 
     @Test
@@ -37,7 +40,7 @@ internal class VoucherDigestServiceTest {
         )
 
         val original = before.userIdentity(TENANT, CAMPAIGN, "customer-a")
-        (original == after.userIdentity(TENANT, CAMPAIGN, "customer-a")) shouldBeEqualTo false
+        (original == after.userIdentity(TENANT, CAMPAIGN, "customer-a")).shouldBeFalse()
         original shouldBeEqualTo after.userIdentity(TENANT, CAMPAIGN, "customer-a", original.keyVersion)
     }
 
@@ -46,15 +49,15 @@ internal class VoucherDigestServiceTest {
         val service = digestService(verificationVersion = 1)
         val code = CanonicalVoucherCode.of("same-material")
 
-        (service.stableDedup(TENANT, code) == service.stableDedup("other-tenant", code)) shouldBeEqualTo false
+        (service.stableDedup(TENANT, code) == service.stableDedup("other-tenant", code)).shouldBeFalse()
         (
             service.userIdentity(TENANT, CAMPAIGN, "same-material") ==
                 service.commandTombstone(TENANT, "reserve", "same-material")
-        ) shouldBeEqualTo false
+        ).shouldBeFalse()
         (
             service.verification(TENANT, CAMPAIGN, ALLOCATION, code) ==
                 service.verification(TENANT, UUID.randomUUID(), ALLOCATION, code)
-        ) shouldBeEqualTo false
+        ).shouldBeFalse()
     }
 
     @Test
@@ -71,8 +74,8 @@ internal class VoucherDigestServiceTest {
                 unknown,
             )
         }
-        failure.message.orEmpty().contains("TOP-SECRET") shouldBeEqualTo false
-        unknown.toString().contains("09") shouldBeEqualTo false
+        failure.message.orEmpty() shouldNotContain "TOP-SECRET"
+        unknown.toString() shouldNotContain "09"
     }
 
     private fun digestService(

@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucherpool.config
 
-import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -36,17 +37,17 @@ internal class VoucherPoolKeyRotationIntegrationTest {
         val policy = VoucherPoolKeyRetirementPolicy(source)
 
         setOf("kek-v1", "11", "12", "1", "2", "15", "16", "13", "14", "17", "18").forEach { version ->
-            policy.canRetire(version) shouldBeEqualTo false
+            policy.canRetire(version).shouldBeFalse()
         }
-        policy.canRetire("unused") shouldBeEqualTo false
+        policy.canRetire("unused").shouldBeFalse()
 
         execute(
             """UPDATE voucher_pool_backup_inventory
                 SET restore_rehearsed_at=statement_timestamp(),retained_until=statement_timestamp()""",
         )
 
-        policy.canRetire("unused") shouldBeEqualTo true
-        policy.canRetire("kek-v1") shouldBeEqualTo false
+        policy.canRetire("unused").shouldBeTrue()
+        policy.canRetire("kek-v1").shouldBeFalse()
     }
 
     private fun seedReferences() {

@@ -2,6 +2,9 @@ package io.bluetape4k.workshop.commerce.voucherpool.idempotency
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotContain
 import org.junit.jupiter.api.Test
 import java.util.UUID
 
@@ -25,7 +28,7 @@ internal class VoucherPoolFingerprintTest {
         val first = VoucherPoolFingerprint.command("import", mapOf("ab" to "c", "d" to "e"))
         val second = VoucherPoolFingerprint.command("import", mapOf("a" to "bc", "d" to "e"))
 
-        (first == second) shouldBeEqualTo false
+        (first == second).shouldBeFalse()
     }
 
     @Test
@@ -34,8 +37,8 @@ internal class VoucherPoolFingerprintTest {
         val omitted = VoucherPoolFingerprint.command("reserve", emptyMap())
         val otherOperation = VoucherPoolFingerprint.command("allocate", mapOf("user" to null))
 
-        (presentNull == omitted) shouldBeEqualTo false
-        (presentNull == otherOperation) shouldBeEqualTo false
+        (presentNull == omitted).shouldBeFalse()
+        (presentNull == otherOperation).shouldBeFalse()
     }
 
     @Test
@@ -46,8 +49,8 @@ internal class VoucherPoolFingerprintTest {
         val copied = fingerprint.copyBytes().also { it.fill(0) }
 
         fingerprint shouldBeEqualTo VoucherPoolFingerprint.command("reserve", mapOf("campaignId" to "campaign-1"))
-        fingerprint.toString().contains("campaign-1") shouldBeEqualTo false
-        copied.contentEquals(fingerprint.copyBytes()) shouldBeEqualTo false
+        fingerprint.toString() shouldNotContain "campaign-1"
+        copied.contentEquals(fingerprint.copyBytes()).shouldBeFalse()
         assertFailsWith<IllegalArgumentException> {
             VoucherPoolFingerprint.command("reserve", mapOf("payload" to "x".repeat(4_097)))
         }
@@ -68,8 +71,8 @@ internal class VoucherPoolFingerprintTest {
 
         scopedKeyDigest.fill(0)
         capabilityDigest.fill(0)
-        owner.copyTokenDigest().contentEquals(expectedCapability) shouldBeEqualTo true
-        owner.copyScopedKeyDigest().all { it == 0.toByte() } shouldBeEqualTo false
-        owner.javaClass.declaredFields.none { it.type == String::class.java } shouldBeEqualTo true
+        owner.copyTokenDigest().contentEquals(expectedCapability).shouldBeTrue()
+        owner.copyScopedKeyDigest().all { it == 0.toByte() }.shouldBeFalse()
+        owner.javaClass.declaredFields.none { it.type == String::class.java }.shouldBeTrue()
     }
 }

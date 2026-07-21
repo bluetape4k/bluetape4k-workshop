@@ -4,6 +4,7 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
 import java.io.ByteArrayOutputStream
@@ -38,7 +39,7 @@ internal class VoucherPoolBrowserContractTest {
             )
         }
 
-        failure.message.orEmpty().contains("timed out").shouldBeTrue()
+        failure.message.orEmpty() shouldContain "timed out"
     }
 
     @Test

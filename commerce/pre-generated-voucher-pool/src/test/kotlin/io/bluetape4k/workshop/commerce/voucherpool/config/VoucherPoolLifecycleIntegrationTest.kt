@@ -1,9 +1,10 @@
 package io.bluetape4k.workshop.commerce.voucherpool.config
 
-import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
+import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.workshop.commerce.voucherpool.admission.DatabasePermitGate
 import io.mockk.mockk
 import io.mockk.verifyOrder
@@ -90,7 +91,7 @@ internal class VoucherPoolLifecycleIntegrationTest {
 
         runtime.stopClaims()
         runtime.awaitClaimRelease(Duration.ofMillis(20)).shouldBeFalse()
-        runtime.withClaim { error("new claim must be rejected") } shouldBeEqualTo null
+        runtime.withClaim { error("new claim must be rejected") }.shouldBeNull()
         release.countDown()
         runtime.awaitClaimRelease(Duration.ofSeconds(2)).shouldBeTrue()
         thread.join(Duration.ofSeconds(2))

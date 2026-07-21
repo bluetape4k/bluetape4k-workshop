@@ -4,6 +4,9 @@ package io.bluetape4k.workshop.commerce.voucherpool.application
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucherpool.admission.DatabasePermitGate
@@ -70,19 +73,19 @@ internal class VoucherPoolLifecycleIntegrationTest {
         val allocation = harness.allocations.allocate(harness.allocate(reservation, "alice", "allocate-reveal")).applied()
 
         harness.entryState(allocation.entryId) shouldBeEqualTo EntryState.ALLOCATED
-        harness.hasVerificationDigest(allocation.entryId) shouldBeEqualTo true
-        harness.hasCiphertext(allocation.entryId) shouldBeEqualTo true
+        harness.hasVerificationDigest(allocation.entryId).shouldBeTrue()
+        harness.hasCiphertext(allocation.entryId).shouldBeTrue()
 
         val revealed = harness.allocations.reveal(harness.reveal(allocation, "alice", "reveal-once")).applied()
         revealed.code shouldBeEqualTo CanonicalVoucherCode.of("SECRET-REVEAL")
-        harness.hasCiphertext(allocation.entryId) shouldBeEqualTo false
+        harness.hasCiphertext(allocation.entryId).shouldBeFalse()
 
         val replay = harness.allocations.reveal(harness.reveal(allocation, "alice", "reveal-once"))
-        (replay is MutationResult.Replay) shouldBeEqualTo true
+        (replay is MutationResult.Replay).shouldBeTrue()
         (replay as MutationResult.Replay).descriptor.outcome shouldBeEqualTo VoucherPoolErrorCode.ALREADY_REVEALED.name
         val already = harness.allocations.reveal(harness.reveal(allocation, "alice", "reveal-twice")).applied()
         already.outcome shouldBeEqualTo VoucherPoolErrorCode.ALREADY_REVEALED.name
-        already.code shouldBeEqualTo null
+        already.code.shouldBeNull()
     }
 
     @Test
@@ -378,7 +381,7 @@ internal class VoucherPoolLifecycleIntegrationTest {
         }.code shouldBeEqualTo VoucherPoolErrorCode.ALLOCATION_EXPIRED
         val replay = harness.allocations.reveal(reveal) as MutationResult.Replay
         replay.descriptor.terminalCode shouldBeEqualTo VoucherPoolErrorCode.ALLOCATION_EXPIRED
-        replay.descriptor.effectId shouldBeEqualTo null
+        replay.descriptor.effectId.shouldBeNull()
     }
 
     @Test
@@ -391,7 +394,7 @@ internal class VoucherPoolLifecycleIntegrationTest {
         assertFailsWith<VoucherPoolLifecycleException> {
             harness.allocations.allocate(command)
         }.code shouldBeEqualTo VoucherPoolErrorCode.CIPHERTEXT_INVALID
-        harness.isQuarantined(reservation.entryId) shouldBeEqualTo true
+        harness.isQuarantined(reservation.entryId).shouldBeTrue()
         assertFailsWith<VoucherPoolLifecycleException> {
             harness.allocations.allocate(command)
         }.code shouldBeEqualTo VoucherPoolErrorCode.CIPHERTEXT_INVALID
