@@ -27,5 +27,7 @@ workshop:
     redis:
       uri: redis://localhost:6379
       command-timeout: 500ms
+    outbox:
+      claim-timeout: 30s
     lab:
       unsafe-enabled: false

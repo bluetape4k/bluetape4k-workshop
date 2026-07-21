@@ -60,6 +60,9 @@ class JobRunCoordinator(
                             rejection = mutation.reason,
                         )
                 }
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                throw e
             } catch (e: Exception) {
                 log.warn(e) { "job_execution_failed reason=DOMAIN_FAILURE" }
                 JobRunResult(
@@ -75,6 +78,9 @@ class JobRunCoordinator(
     private fun releaseSafely(resource: String, release: () -> Unit) {
         try {
             release()
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+            log.warn(e) { "job_coordination_release_interrupted resource=$resource" }
         } catch (e: Exception) {
             log.warn(e) { "job_coordination_release_failed resource=$resource" }
         }

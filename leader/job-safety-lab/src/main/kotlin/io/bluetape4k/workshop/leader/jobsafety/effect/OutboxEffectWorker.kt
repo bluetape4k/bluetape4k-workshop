@@ -5,6 +5,9 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.ExternalEffectResult
 import io.bluetape4k.workshop.leader.jobsafety.domain.OperationId
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobEffectReceiptRepository
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobOutboxRepository
+import io.bluetape4k.support.requireGt
+import java.time.Duration
+import java.time.Instant
 
 enum class EffectWorkResult { NO_WORK, CONFIRMED, DECLINED, RECONCILIATION_REQUIRED }
 
@@ -19,15 +22,23 @@ class OutboxEffectWorker(
     private val outbox: JobOutboxRepository,
     private val receipts: JobEffectReceiptRepository,
     private val provider: ExternalEffectPort,
+    private val claimTimeout: Duration = Duration.ofSeconds(30),
+    private val clock: () -> Instant = Instant::now,
 ) : EffectOperations {
+    init {
+        claimTimeout.requireGt(Duration.ZERO, "claimTimeout")
+    }
+
     override fun deliverNext(): EffectWorkResult {
-        val claimed = outbox.claimNext(EffectDeliveryState.PENDING) ?: return EffectWorkResult.NO_WORK
+        val claimed =
+            outbox.claimNext(EffectDeliveryState.PENDING, clock(), claimTimeout)
+                ?: return EffectWorkResult.NO_WORK
         return finalize(claimed.operationId, provider.execute(claimed.operationId))
     }
 
     override fun reconcileNext(): EffectWorkResult {
         val claimed =
-            outbox.claimNext(EffectDeliveryState.RECONCILIATION_REQUIRED)
+            outbox.claimNextForReconciliation(clock(), claimTimeout)
                 ?: return EffectWorkResult.NO_WORK
         return finalize(claimed.operationId, provider.query(claimed.operationId))
     }

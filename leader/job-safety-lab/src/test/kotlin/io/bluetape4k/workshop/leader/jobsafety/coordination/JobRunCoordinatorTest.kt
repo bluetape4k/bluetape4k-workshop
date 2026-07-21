@@ -17,6 +17,7 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.TenantId
 import io.bluetape4k.workshop.leader.jobsafety.support.RecordingFencingLease
 import io.bluetape4k.workshop.leader.jobsafety.support.RecordingLeaderElection
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import java.time.Duration
 import java.time.YearMonth
 
@@ -102,6 +103,26 @@ internal class JobRunCoordinatorTest {
         result.state shouldBeEqualTo JobExecutionState.COMMITTED
         events shouldBeEqualTo
             listOf("leader.acquire", "fence.acquire", "execute", "fence.release", "leader.release")
+    }
+
+    @Test
+    fun `interruption is propagated after both leases are released`() {
+        val events = mutableListOf<String>()
+        val coordinator = coordinator(events)
+
+        try {
+            assertThrows<InterruptedException> {
+                coordinator.run(request()) {
+                    events += "execute"
+                    throw InterruptedException("cancelled")
+                }
+            }
+            Thread.currentThread().isInterrupted shouldBeEqualTo true
+            events shouldBeEqualTo
+                listOf("leader.acquire", "fence.acquire", "execute", "fence.release", "leader.release")
+        } finally {
+            Thread.interrupted()
+        }
     }
 
     private fun coordinator(

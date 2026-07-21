@@ -16,6 +16,7 @@ data class JobSafetyProperties(
     val defaultTimeout: Duration = Duration.ofSeconds(1),
     val fencing: Fencing = Fencing(),
     val redis: Redis = Redis(),
+    val outbox: Outbox = Outbox(),
     val lab: Lab = Lab(),
 ) {
     init {
@@ -47,6 +48,14 @@ data class JobSafetyProperties(
         init {
             uri.requireNotBlank("uri")
             commandTimeout.requireGt(Duration.ZERO, "commandTimeout")
+        }
+    }
+
+    data class Outbox(
+        val claimTimeout: Duration = Duration.ofSeconds(30),
+    ) {
+        init {
+            claimTimeout.requireGt(Duration.ZERO, "claimTimeout")
         }
     }
 

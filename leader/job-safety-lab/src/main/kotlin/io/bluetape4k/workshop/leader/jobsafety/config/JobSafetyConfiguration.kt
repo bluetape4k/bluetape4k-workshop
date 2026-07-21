@@ -110,7 +110,14 @@ class JobSafetyConfiguration {
     fun effectOperations(
         repositories: JobSafetyRepositories,
         provider: ExternalEffectPort,
-    ): EffectOperations = OutboxEffectWorker(repositories.outbox, repositories.effectReceipt, provider)
+        properties: JobSafetyProperties,
+    ): EffectOperations =
+        OutboxEffectWorker(
+            outbox = repositories.outbox,
+            receipts = repositories.effectReceipt,
+            provider = provider,
+            claimTimeout = properties.outbox.claimTimeout,
+        )
 
     @Bean
     fun jobSafetySchemaInitializer(jdbc: JobSafetyJdbcExecutor): ApplicationRunner =

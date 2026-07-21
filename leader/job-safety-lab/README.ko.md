@@ -167,6 +167,7 @@ DB fencing은 이미 전송된 이메일, 결제 승인, webhook을 되돌릴 �
 - business state와 outbox에 동일한 stable `OperationId`를 commit합니다.
 - worker는 짧은 transaction에서 row를 claim한 뒤 DB transaction을 닫습니다.
 - provider network call은 transaction 밖에서 수행합니다.
+- claim 직후 worker가 죽으면 `workshop.job-safety.outbox.claim-timeout` 만료 뒤 원래 operation을 조회합니다. provider를 무조건 다시 실행하지 않습니다.
 - `UNKNOWN`이면 새 operation을 만들지 않고 `RECONCILIATION_REQUIRED`를 기록합니다.
 - reconciliation은 provider에 원래 operation을 조회하고 receipt를 `(provider, operationId)` unique key로 기록합니다.
 
