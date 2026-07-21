@@ -43,6 +43,7 @@ case "${1:-help}" in
       :kotlin-flow-extensions-search-pipeline:test \
       :leader-backend-comparison-lab:test \
       :leader-k8s-lease-micrometer:test \
+      :leader-job-safety-lab:test \
       :leader-tenant-scheduler:test \
       :okio-examples:test \
       :graph-event-lineage:test \
@@ -166,6 +167,14 @@ case "${1:-help}" in
       --continue --max-workers=1"
     ;;
 
+  leader-full)
+    # Java 25; the default path is container-free and integration is serialized.
+    run "$GRADLEW \
+      :leader-job-safety-lab:test \
+      :leader-job-safety-lab:integrationTest \
+      --continue --max-workers=1"
+    ;;
+
   async)
     run "$GRADLEW \
       :kotlin-coroutines:test \
@@ -269,6 +278,7 @@ case "${1:-help}" in
     echo "  messaging        Kafka (Testcontainers)"
     echo "  commerce         Commerce lifecycles (PostgreSQL Testcontainers)"
     echo "  operations       Job console core + Spring MVC/Ktor (PostgreSQL/Redis Testcontainers)"
+    echo "  leader-full      Job safety lab default + PostgreSQL/Redis integration tests"
     echo "  async            Coroutines / Vert.x"
     echo "  observability    Micrometer / Virtual Threads"
     echo "  aws              AWS local-first examples"

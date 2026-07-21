@@ -244,6 +244,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Advanced | [`leader-backend-comparison-lab`](leader/backend-comparison-lab/) | `leader-core`, `spring-boot4-core` | In-memory | Redis vs ZooKeeper vs Kubernetes Lease backend choice and failover lab |
 | Advanced | [`leader-k8s-lease-micrometer`](leader/k8s-lease-micrometer/) | `leader-k8s`, `micrometer`, `spring-boot4-core` | Kubernetes Lease (opt-in) | Kubernetes Lease leader election with Micrometer metrics |
 | Advanced | [`leader-tenant-scheduler`](leader/tenant-scheduler/) | `leader-core`, `spring-boot4-core` | In-memory | Tenant-scoped leader scheduling with fair ticks, stale handoff, and bounded tenant metrics |
+| Advanced | [`leader-job-safety-lab`](leader/job-safety-lab/) | `leader-redis-lettuce`, `lettuce`, `exposed-jdbc`, `spring-boot4-core`, `virtualthread-jdk25` | PostgreSQL + Redis (TC) | Java 25 Spring Boot lab for resource fencing, PostgreSQL authority, transactional outbox, and reconciliation |
 
 ```bash
 ./gradlew :spring-security-mvc:test
@@ -259,6 +260,8 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 ./scripts/smoke-validate.sh operations
 ./gradlew :leader-backend-comparison-lab:test
 ./gradlew :leader-tenant-scheduler:test
+./gradlew :leader-job-safety-lab:test
+./gradlew :leader-job-safety-lab:integrationTest --max-workers=1
 ```
 
 ---
