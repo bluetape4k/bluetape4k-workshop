@@ -23,9 +23,12 @@ workshop:
       permit-timeout: 250ms
       transaction-timeout: 750ms
     redis:
+      uri: redis://localhost:6379
       command-timeout: 500ms
       renew-interval: 2s
       lease-ttl: 5s
+      rate-limit-capacity: 30
+      rate-limit-period: 1s
     worker:
       batch-size: 50
       run-deadline: 10s
