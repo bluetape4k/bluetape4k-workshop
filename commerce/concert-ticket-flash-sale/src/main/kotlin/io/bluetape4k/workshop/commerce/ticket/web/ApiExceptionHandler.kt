@@ -13,8 +13,10 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import java.io.Serial
+import java.io.Serializable
 import java.time.Instant
-import java.util.UUID
+import io.bluetape4k.idgenerators.uuid.Uuid
 
 data class TicketProblem(
     val code: String,
@@ -23,7 +25,12 @@ data class TicketProblem(
     val retryAt: Instant? = null,
     val nextAction: String? = null,
     val correlationId: String,
-)
+) : Serializable {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 /** Stable allowlist problem responses; exception messages and raw input never cross the HTTP boundary. */
 @RestControllerAdvice
@@ -61,7 +68,7 @@ class ApiExceptionHandler {
     private fun correlationId(request: HttpServletRequest): String =
         request.getHeader("X-Correlation-Id")
             ?.takeIf { it.length in 8..64 && it.all(CORRELATION_CHARACTERS::contains) }
-            ?: UUID.randomUUID().toString()
+            ?: Uuid.V7.nextId().toString()
 
     companion object {
         private val CORRELATION_CHARACTERS = (('a'..'z') + ('A'..'Z') + ('0'..'9') + listOf('-', '_')).toSet()

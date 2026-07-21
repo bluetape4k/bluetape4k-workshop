@@ -10,6 +10,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import java.time.Instant
+import io.bluetape4k.idgenerators.uuid.Uuid
 import java.util.UUID
 
 /** PostgreSQL inventory authority backed by Bluetape4k [TicketExposedJdbcRepository]. */
@@ -87,7 +88,7 @@ class TicketWaitingRoomRepository(
     TicketWaitingRoomEntryEntity::class.java,
 ) {
     fun join(saleId: UUID, userSubjectId: UUID, sequence: Long): UUID {
-        val entryId = UUID.randomUUID()
+        val entryId = Uuid.V7.nextId()
         val now = Instant.now()
         jdbc.transaction {
             TicketWaitingRoomEntries.insert {
@@ -149,13 +150,16 @@ class TicketPaymentOperationRepository(
     TicketPaymentOperationEntity::class.java,
 ) {
     fun insertAuthorization(provider: String, operationId: UUID, attemptId: UUID) {
+        val authorizationProvider = provider
+        val authorizationOperationId = operationId
+        val purchaseAttemptId = attemptId
         val now = Instant.now()
         jdbc.transaction {
             acquire(TicketLockRank.EFFECT)
             TicketPaymentOperations.insert {
-                it[TicketPaymentOperations.provider] = provider
-                it[TicketPaymentOperations.operationId] = operationId
-                it[TicketPaymentOperations.attemptId] = attemptId
+                it[TicketPaymentOperations.provider] = authorizationProvider
+                it[TicketPaymentOperations.operationId] = authorizationOperationId
+                it[TicketPaymentOperations.attemptId] = purchaseAttemptId
                 it[operationKind] = "authorize"
                 it[status] = "pending"
                 it[nextReconcileAt] = now

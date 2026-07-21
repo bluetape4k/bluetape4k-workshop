@@ -1,5 +1,11 @@
 package io.bluetape4k.workshop.commerce.ticket.ticketing.internal
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.info
+import io.bluetape4k.logging.warn
+import java.io.Serial
+import java.io.Serializable
+import java.util.UUID
 import io.bluetape4k.workshop.commerce.ticket.domain.TicketDisposition
 import io.bluetape4k.workshop.commerce.ticket.domain.TicketEffectOutcome
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketEffectOperationEntity
@@ -17,7 +23,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import java.time.Clock
 import java.time.Duration
-import java.util.UUID
+import io.bluetape4k.idgenerators.uuid.Uuid
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -55,7 +61,12 @@ data class TicketEffectClaim(
     val orderId: UUID,
     val token: UUID,
     val revision: Long,
-)
+) : Serializable {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 class TicketEffectRepository(
     private val jdbc: TicketJdbcExecutor,
@@ -63,7 +74,7 @@ class TicketEffectRepository(
 ) : TicketExposedJdbcRepository<TicketEffectOperationEntity, Long>(TicketEffectOperationEntity::class.java) {
     fun claim(operationId: UUID, ttl: Duration): TicketEffectClaim? = jdbc.transaction {
         val now = clock.instant()
-        val token = UUID.randomUUID()
+        val token = Uuid.V7.nextId()
         val claimed = TicketEffectOperations.update({
             (TicketEffectOperations.operationId eq operationId) and
                 (TicketEffectOperations.effectKind eq "issue") and
@@ -98,7 +109,8 @@ class TicketEffectWorker(
         val claim = effects.claim(operationId, claimTtl) ?: return false
         val outcome = provider.lookup(operationId) ?: try {
             provider.issue(operationId)
-        } catch (_: TicketResponseLost) {
+        } catch (failure: TicketResponseLost) {
+            log.warn(failure) { "ticket_issue_response_lost operationId=$operationId" }
             TicketEffectOutcome.RETRYABLE_FAILURE
         }
         purchases.applyTicketOutcome(
@@ -111,6 +123,9 @@ class TicketEffectWorker(
                 disposition = TicketDisposition.ISSUED,
             ),
         )
+        log.info { "ticket_effect_applied operationId=$operationId outcome=$outcome" }
         return true
     }
+
+    companion object : KLogging()
 }

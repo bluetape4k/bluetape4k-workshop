@@ -23,10 +23,15 @@ import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
+import java.io.Serial
+import java.io.Serializable
 import java.time.Clock
 import java.time.Duration
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
+import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.info
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -63,7 +68,12 @@ data class RefundClaim(
     val orderId: UUID,
     val token: UUID,
     val revision: Long,
-)
+) : Serializable {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 class RefundOperationRepository(
     private val jdbc: TicketJdbcExecutor,
@@ -71,7 +81,7 @@ class RefundOperationRepository(
 ) : TicketExposedJdbcRepository<TicketPaymentOperationEntity, Long>(TicketPaymentOperationEntity::class.java) {
     fun claim(operationId: UUID, ttl: Duration): RefundClaim? = jdbc.transaction {
         val now = clock.instant()
-        val token = UUID.randomUUID()
+        val token = Uuid.V7.nextId()
         val claimed = TicketPaymentOperations.update({
             (TicketPaymentOperations.operationId eq operationId) and
                 (TicketPaymentOperations.operationKind eq "refund") and
@@ -183,6 +193,10 @@ class RefundService(
     fun run(operationId: UUID): Boolean {
         val claim = operations.claim(operationId, claimTtl) ?: return false
         val outcome = provider.lookup(operationId) ?: provider.refund(operationId)
-        return refunds.apply(claim, outcome)
+        return refunds.apply(claim, outcome).also { applied ->
+            log.info { "refund_outcome_applied operationId=$operationId outcome=$outcome applied=$applied" }
+        }
     }
+
+    companion object : KLogging()
 }

@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.commerce.ticket.idempotency
 
 import io.bluetape4k.jackson3.jsonMapper
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireGe
+import io.bluetape4k.support.requireInRange
 import tools.jackson.databind.JsonNode
 import java.math.BigDecimal
 import java.nio.charset.StandardCharsets.UTF_8
@@ -34,10 +37,9 @@ object IdempotencyFingerprint {
         secret: ByteArray,
         rawKey: String,
     ): TicketDigest {
-        require(secret.size >= 32) { "idempotency secret must contain at least 32 bytes" }
-        require(rawKey.length in 16..128 && rawKey.all { it.code in 0x21..0x7e }) {
-            "Idempotency-Key must contain 16..128 visible ASCII characters"
-        }
+        secret.size.requireGe(32, "secret.size")
+        rawKey.length.requireInRange(16, 128, "rawKey.length")
+        rawKey.all { it.code in 0x21..0x7e }.requireEquals(true, "rawKey.isVisibleAscii")
         val mac = Mac.getInstance("HmacSHA256")
         mac.init(SecretKeySpec(secret.copyOf(), "HmacSHA256"))
         return TicketDigest.of(mac.doFinal("ticket-idempotency-key-v1\u0000$rawKey".toByteArray(UTF_8)))
@@ -48,16 +50,16 @@ object IdempotencyFingerprint {
         path: String,
         body: String,
     ): TicketDigest {
-        require(body.toByteArray(UTF_8).size <= 16 * 1024) { "request body is too large" }
+        body.toByteArray(UTF_8).size.requireInRange(0, 16 * 1024, "body.bytes")
         val root =
             try {
                 mapper.readTree(body)
             } catch (failure: Exception) {
                 throw IllegalArgumentException("request body must be valid JSON", failure)
             }
-        require(root.isObject) { "request body must be a JSON object" }
+        root.isObject.requireEquals(true, "body.isObject")
         val names = root.propertyNames().asSequence().toSet()
-        require(names == setOf("grade", "quantity")) { "purchase request must contain only grade and quantity" }
+        names.requireEquals(setOf("grade", "quantity"), "body.propertyNames")
         val canonical =
             buildString {
                 append("ticket-idempotency-request-v1\n")

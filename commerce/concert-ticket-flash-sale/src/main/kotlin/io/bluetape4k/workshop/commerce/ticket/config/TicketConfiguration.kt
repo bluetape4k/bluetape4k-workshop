@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.io.ClassPathResource
 import java.io.Serial
+import java.io.Serializable
 import java.time.Duration
 import javax.sql.DataSource
 
@@ -21,7 +22,12 @@ data class TicketProperties(
     val redis: TicketRedisProperties = TicketRedisProperties(),
     val worker: TicketWorkerProperties = TicketWorkerProperties(),
     val sse: TicketSseProperties = TicketSseProperties(),
-)
+) : Serializable {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 /** Database pool and workload-lane capacity. */
 data class TicketDatabaseProperties(
@@ -32,7 +38,12 @@ data class TicketDatabaseProperties(
     val operatorPermits: Int = 1,
     val permitTimeout: Duration = Duration.ofMillis(250),
     val transactionTimeout: Duration = Duration.ofMillis(750),
-)
+) : Serializable {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 /** Redis admission lease timing. */
 data class TicketRedisProperties(
@@ -42,19 +53,34 @@ data class TicketRedisProperties(
     val leaseTtl: Duration = Duration.ofSeconds(5),
     val rateLimitCapacity: Long = 30,
     val rateLimitPeriod: Duration = Duration.ofSeconds(1),
-)
+) : Serializable {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 /** Background worker bounds. */
 data class TicketWorkerProperties(
     val batchSize: Int = 50,
     val runDeadline: Duration = Duration.ofSeconds(10),
-)
+) : Serializable {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 /** Server-sent event capacity. */
 data class TicketSseProperties(
     val queueSize: Int = 32,
     val maxConnections: Int = 512,
-)
+) : Serializable {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 /** Stable startup failure codes safe to expose in diagnostics. */
 enum class TicketStartupFailure {

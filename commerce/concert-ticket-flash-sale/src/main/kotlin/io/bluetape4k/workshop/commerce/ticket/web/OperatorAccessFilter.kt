@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.ticket.web
 
+import io.bluetape4k.support.requireGe
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -11,7 +12,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 /** Demo-only operator authentication; rejects the credential unless the TCP peer is loopback. */
 class OperatorAccessFilter(private val expectedToken: String) : OncePerRequestFilter() {
     init {
-        require(expectedToken.length >= 32) { "demo operator token must contain at least 32 characters" }
+        expectedToken.length.requireGe(32, "expectedToken.length")
     }
 
     override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, chain: FilterChain) {

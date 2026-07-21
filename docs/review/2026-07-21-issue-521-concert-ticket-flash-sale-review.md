@@ -35,6 +35,10 @@ Branch: `feature/issue-521-concert-ticket-flash-sale`
    제거하고 실제 core contract와 production adapter 책임을 구분했다.
 4. Timeout/late approval diagram과 state mapping에 `NEVER_ISSUED`, refund success, revoke 완료 전
    restock 금지 규칙을 명시했다.
+5. `bluetape-kotlin-patterns` 전수 검토에서 raw `UUID.randomUUID`, Kotlin `require`, monitor
+   `synchronized`를 Bluetape UUID/validation helper와 `ReentrantLock`으로 교체했다. 모든 production
+   data class의 `Serializable`/`serialVersionUID`를 architecture test로 고정했다. Worker·Redis 장애
+   경계에는 `KLogging`을 추가하고 Exposed lambda는 receiver-shadowing 방지 로컬 값을 사용한다.
 
 ## Ecosystem 및 dependency 확인
 
@@ -48,7 +52,8 @@ Branch: `feature/issue-521-concert-ticket-flash-sale`
 
 ## 검증 결과
 
-- `:commerce-concert-ticket-flash-sale:test`: PASS, 71 tests
+- `:commerce-concert-ticket-flash-sale:test`: PASS, 73 tests
+- `KotlinPatternArchitectureTest`: PASS, 2 architecture guards
 - `:commerce-concert-ticket-flash-sale:build`: PASS
 - Root `detekt`: PASS (`NO-SOURCE` 포함)
 - Commerce smoke lane: PASS
