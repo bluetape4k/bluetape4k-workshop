@@ -9,6 +9,7 @@ import javax.sql.DataSource
 
 /** Global row-lock acquisition order for all ticket transactions. */
 enum class TicketLockRank {
+    SALE,
     IDEMPOTENCY,
     USER_GUARD,
     IP_GUARD,

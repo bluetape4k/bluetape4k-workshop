@@ -13,12 +13,24 @@ import java.util.UUID
 /** Starts one owner-scoped purchase under the referenced sale policy. */
 data class StartPurchase(
     val attemptId: UUID,
+    val authorizationOperationId: UUID,
+    val idempotencyOwnerId: Long,
     val buyerSubjectId: UUID,
     val ipSubjectId: UUID,
     val grade: String,
     val quantity: Int,
     val grant: ConsumeGrant,
     val policy: SalePolicySnapshot,
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
+
+/** Requests an owner-scoped cancellation without assuming the provider outcome. */
+data class CancelPurchase(
+    val attemptId: UUID,
+    val buyerSubjectId: UUID,
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
@@ -65,6 +77,8 @@ data class PurchaseSnapshot(
 /** Commands owned by the purchase module. */
 interface PurchaseCommands {
     fun start(command: StartPurchase): PurchaseSnapshot
+
+    fun cancel(command: CancelPurchase): PurchaseSnapshot
 
     fun applyPaymentOutcome(command: ApplyPaymentOutcome): PurchaseSnapshot
 
