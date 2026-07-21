@@ -27,6 +27,7 @@ import io.bluetape4k.workshop.commerce.voucherpool.persistence.DigestValue
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.ReservationRecord
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolAuditRecord
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcExecutor
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcTimeoutException
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolRepository
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigestService
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
@@ -277,7 +278,7 @@ internal class LifecycleMutationExecutor(
         } catch (failure: VoucherPoolLifecycleException) {
             return handleLifecycleFailure(owner, lane, failure)
         } catch (failure: RuntimeException) {
-            transaction(lane) { idempotency.releaseRetryable(owner) }
+            releaseRetryable(owner, lane)
             throw failure
         }
         return when (outcome) {
@@ -301,7 +302,7 @@ internal class LifecycleMutationExecutor(
                     EffectReference.terminal(failure.code),
                 )
             }
-            DescriptorAction.RELEASE, DescriptorAction.NONE -> transaction(lane) { idempotency.releaseRetryable(owner) }
+            DescriptorAction.RELEASE, DescriptorAction.NONE -> releaseRetryable(owner, lane)
             DescriptorAction.STORE_SAFE -> {
                 val descriptor = SafeResponseDescriptor.success(
                     semantics.httpStatus,
@@ -330,9 +331,27 @@ internal class LifecycleMutationExecutor(
         else -> error("unsupported lifecycle mutation result")
     }
 
+    private fun releaseRetryable(owner: IdempotencyOwner, lane: LifecycleLane) {
+        var lastTimeout: VoucherPoolJdbcTimeoutException? = null
+        repeat(MAX_OWNER_RELEASE_ATTEMPTS) {
+            try {
+                transaction(lane) { idempotency.releaseRetryable(owner) }
+                return
+            } catch (failure: VoucherPoolJdbcTimeoutException) {
+                lastTimeout = failure
+                Thread.yield()
+            }
+        }
+        throw checkNotNull(lastTimeout)
+    }
+
     private fun <T> transaction(lane: LifecycleLane, block: () -> T): T = when (lane) {
         LifecycleLane.FOREGROUND -> executor.foregroundTransaction(block)
         LifecycleLane.OPERATOR -> executor.operatorTransaction(block)
+    }
+
+    private companion object {
+        const val MAX_OWNER_RELEASE_ATTEMPTS = 8
     }
 }
 

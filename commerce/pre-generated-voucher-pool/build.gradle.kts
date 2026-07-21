@@ -206,6 +206,10 @@ val stressTest = tasks.register<Test>("stressTest") {
     useJUnitPlatform {
         includeTags("stress")
     }
+    systemProperty(
+        "voucherPool.stressRun",
+        providers.gradleProperty("voucherPoolStressRun").orElse("dev").get(),
+    )
     failOnZeroTests()
     verifyNonEmptyXmlResults()
     shouldRunAfter(tasks.test)
