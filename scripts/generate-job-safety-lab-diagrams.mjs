@@ -95,7 +95,7 @@ function participant(cx, title, role) {
 
 function message(n, x1, x2, y, label, css) {
   const width = Math.max(260, label.length * 9 + 70); const x = Math.min(x1, x2) + Math.abs(x2 - x1) / 2 - width / 2;
-  return `<rect class="label" x="${x}" y="${y - 44}" width="${width}" height="34" rx="17"/><circle cx="${x + 22}" cy="${y - 27}" r="13" fill="#FFFFFF" stroke="#4F86C6" stroke-width="2"/><text class="badge" x="${x + 22}" y="${y - 22}" text-anchor="middle">${n}</text><text class="msg" x="${x + 44}" y="${y - 22}">${label}</text>${edge(`sequence-${n}`, label, css, `M ${x1} ${y} L ${x2} ${y}`)}`;
+  return `<rect class="label labelPill" x="${x}" y="${y - 44}" width="${width}" height="34" rx="17"/><circle cx="${x + 22}" cy="${y - 27}" r="13" fill="#FFFFFF" stroke="#4F86C6" stroke-width="2"/><text class="badge num" x="${x + 22}" y="${y - 22}" text-anchor="middle">${n}</text><text class="msg" x="${x + 44}" y="${y - 22}">${label}</text>${edge(`sequence-${n}`, label, css, `M ${x1} ${y} L ${x2} ${y}`)}`;
 }
 
 function takeoverSequenceSvg() {
