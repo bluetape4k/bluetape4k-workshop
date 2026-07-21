@@ -15,7 +15,9 @@ class JobSafetyDatabasePermitUnavailable : IllegalStateException("job_safety_dat
 
 class JobSafetyJdbcTransaction internal constructor(
     val exposed: JdbcTransaction,
-)
+) {
+    fun <T> withExposed(block: JdbcTransaction.() -> T): T = exposed.block()
+}
 
 class JobSafetyJdbcExecutor(
     dataSource: DataSource,

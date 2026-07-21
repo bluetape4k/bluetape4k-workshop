@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.leader.jobsafety.persistence
 
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.leader.jobsafety.domain.ExecutionContractVersion
+import io.bluetape4k.workshop.leader.jobsafety.domain.ConflictKey
 import io.bluetape4k.workshop.leader.jobsafety.domain.MembershipRevision
 import io.bluetape4k.workshop.leader.jobsafety.domain.NamespaceEpoch
 import io.bluetape4k.workshop.leader.jobsafety.domain.RegionEpoch
@@ -9,6 +10,7 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.RegionId
 import io.bluetape4k.workshop.leader.jobsafety.domain.TenantId
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.postgresql.ds.PGSimpleDataSource
+import java.time.Instant
 
 internal data class JobAuthoritySeed(
     val tenantId: TenantId,
@@ -52,6 +54,26 @@ internal class JobSafetyDatabaseFixture : AutoCloseable {
                 namespaceEpoch = authority.namespaceEpoch.value
                 minimumWriterVersion = authority.minimumWriterVersion.value
                 checkpointSchemaVersion = authority.checkpointSchemaVersion
+            }
+        }
+    }
+
+    fun seedResource(
+        conflictKey: ConflictKey,
+        namespaceEpoch: NamespaceEpoch,
+        lastAcceptedFence: Long = 0L,
+        summaryValue: Long = 0L,
+    ) {
+        val key = conflictKey
+        val epoch = namespaceEpoch
+        val now = Instant.now()
+        executor.transaction {
+            JobResourceEntity.new {
+                this.conflictKey = key.value
+                this.namespaceEpoch = epoch.value
+                this.lastAcceptedFence = lastAcceptedFence
+                this.summaryValue = summaryValue
+                updatedAt = now
             }
         }
     }
