@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
   <defs>
     <style>.bg{fill:#f8fafc}.title{font:34px 'Architects Daughter','Comic Sans MS',cursive;fill:#18212f}.subtitle{font:16px 'Comic Mono','Courier New',monospace;fill:#64748b}.zone{stroke-width:1.5}.zone-title{font:24px 'Architects Daughter','Comic Sans MS',cursive;fill:#243044}.card{fill:#fff;stroke:#cbd5e1;stroke-width:1.5}.card-title{font:20px 'Architects Daughter','Comic Sans MS',cursive;fill:#111827}.body{font:14px 'Comic Mono','Courier New',monospace;fill:#475569}.edge{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}.rule{font:bold 16px 'Comic Mono','Courier New',monospace;fill:#1e293b}</style>
-    <marker id="authorityArrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L13 7 L1 13 Z" fill="#2563eb"/></marker>
-    <marker id="durableArrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L13 7 L1 13 Z" fill="#059669"/></marker>
+    <marker id="authorityArrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L13 7 L1 13 Z" fill="#2563eb" stroke="#2563eb" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="durableArrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L13 7 L1 13 Z" fill="#059669" stroke="#059669" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
   </defs>
   <rect class="bg" width="1600" height="900"/><text class="title" x="70" y="62">Redis and PostgreSQL Authority — Fast Gate, Durable Truth</text><text class="subtitle" x="72" y="91">Redis reduces hot-path contention; PostgreSQL remains the recovery and correctness boundary.</text>
   <rect class="zone" x="60" y="125" width="410" height="610" rx="24" fill="#eff6ff" stroke="#bfdbfe"/><text class="zone-title" x="90" y="168">Request boundary</text>

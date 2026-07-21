@@ -31,8 +31,7 @@ names.
 | Directory | Purpose |
 |---|---|
 | `aws/` | S3 and Spring Cloud examples |
-| `commerce/` | PostgreSQL-authoritative order and reservation lifecycle examples |
-| `commerce/` | Order, payment, inventory, fulfillment, and refund lifecycle examples |
+| `commerce/` | PostgreSQL-authoritative order, reservation, voucher, and flash-sale lifecycle examples |
 | `exposed/` | Exposed DAO/SQL DSL, relations, custom columns, Spring transactions |
 | `gateway/` | API gateway plus customers/orders microservices |
 | `gatling/` | Gatling performance tests |
@@ -62,7 +61,7 @@ names.
 - Dependency versions live in `gradle/libs.versions.toml`.
 - Package prefix: `io.bluetape4k.workshop.{module}.*`.
 - Tests are serialized by `TestMutexService` to avoid DB conflicts.
-- JVM uses the Java 21 toolchain, ZGC, 2-4 GB heap, and preview features.
+- JVM uses the Java 21 toolchain by default; explicitly marked new examples may use Java 25 virtual threads.
 - Spring Boot modules use `springBoot { mainClass.set(...) }` and extend test
   dependencies from `compileOnly`/`runtimeOnly` where the repo already does so.
 - Common bluetape4k modules include logging, JUnit5, coroutines, Exposed, and
