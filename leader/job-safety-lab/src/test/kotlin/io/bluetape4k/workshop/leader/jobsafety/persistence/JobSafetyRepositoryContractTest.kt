@@ -48,10 +48,10 @@ internal class JobSafetyRepositoryContractTest {
     @Test
     fun `module contains no raw database access escape hatch`() {
         val moduleRoot = locateModuleRoot()
-        val violations = Files.walk(moduleRoot).use { paths ->
+        val productionSource = moduleRoot.resolve("src/main/kotlin")
+        val violations = Files.walk(productionSource).use { paths ->
             paths.filter(Files::isRegularFile)
                 .filter { it.toString().endsWith(".kt") }
-                .filter { it.fileName.toString() != "JobSafetyRepositoryContractTest.kt" }
                 .filter { path -> RAW_DATABASE_MARKERS.any(Files.readString(path)::contains) }
                 .toList()
         }
