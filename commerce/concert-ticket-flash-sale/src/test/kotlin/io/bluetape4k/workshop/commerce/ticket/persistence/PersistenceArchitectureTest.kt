@@ -9,7 +9,10 @@ import io.bluetape4k.workshop.commerce.ticket.identity.IdentityAliasRepository
 import io.bluetape4k.workshop.commerce.ticket.identity.IdentitySubjectRepository
 import io.bluetape4k.workshop.commerce.ticket.payment.internal.PaymentOperationClaimRepository
 import io.bluetape4k.workshop.commerce.ticket.purchase.internal.TicketPurchaseRepository
+import io.bluetape4k.workshop.commerce.ticket.purchase.internal.RefundOperationRepository
+import io.bluetape4k.workshop.commerce.ticket.purchase.internal.TicketRefundRepository
 import io.bluetape4k.workshop.commerce.ticket.salecontrol.internal.TicketSaleRepository
+import io.bluetape4k.workshop.commerce.ticket.ticketing.internal.TicketEffectRepository
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
@@ -29,6 +32,9 @@ internal class PersistenceArchitectureTest {
             TicketSaleRepository::class.java,
             TicketPurchaseRepository::class.java,
             PaymentOperationClaimRepository::class.java,
+            RefundOperationRepository::class.java,
+            TicketRefundRepository::class.java,
+            TicketEffectRepository::class.java,
         )
 
         repositories.all(ExposedJdbcRepository::class.java::isAssignableFrom).shouldBeTrue()

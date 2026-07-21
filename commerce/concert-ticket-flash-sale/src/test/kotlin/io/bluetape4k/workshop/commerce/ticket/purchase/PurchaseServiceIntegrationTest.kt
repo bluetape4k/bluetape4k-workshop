@@ -225,6 +225,16 @@ internal class PurchaseFixture(
             }
         }
 
+    fun queryUuid(sql: String): UUID =
+        database.dataSource.connection.use { connection ->
+            connection.createStatement().use { statement ->
+                statement.executeQuery(sql).use { result ->
+                    check(result.next())
+                    result.getObject(1, UUID::class.java)
+                }
+            }
+        }
+
     override fun close() = database.close()
 }
 

@@ -4,12 +4,15 @@ import io.bluetape4k.workshop.commerce.ticket.admission.api.TransactionalAdmissi
 import io.bluetape4k.workshop.commerce.ticket.domain.PaymentOutcome
 import io.bluetape4k.workshop.commerce.ticket.domain.PurchaseState
 import io.bluetape4k.workshop.commerce.ticket.domain.TicketDisposition
+import io.bluetape4k.workshop.commerce.ticket.domain.TicketState
+import io.bluetape4k.workshop.commerce.ticket.domain.ticketTransition
 import io.bluetape4k.workshop.commerce.ticket.domain.transition
 import io.bluetape4k.workshop.commerce.ticket.persistence.IdentityKind
 import io.bluetape4k.workshop.commerce.ticket.persistence.InventoryRecord
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketActiveIdentityGuards
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketBuyerSaleStates
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketEffectOperations
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketEffectReceipts
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketExposedJdbcRepository
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketHttpIdempotencies
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketIdentitySubjects
@@ -41,6 +44,7 @@ import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
+import org.springframework.transaction.annotation.Transactional
 import java.io.Serial
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets.UTF_8
@@ -157,6 +161,59 @@ class TicketPurchaseRepository(
         }
         completePaymentOperation(command, change.next)
         ApplyResult.APPLIED
+    }
+
+    fun applyTicketOutcome(command: ApplyTicketOutcome): PurchaseSnapshot = jdbc.transaction {
+        acquire(TicketLockRank.ATTEMPT_ORDER)
+        val order = TicketOrders.selectAll().where { TicketOrders.id eq command.orderId }.forUpdate().single()
+        val attemptId = order[TicketOrders.attemptId]
+        val attempt = findById(attemptId).orElseThrow(::PurchaseNotFound).toRecord()
+        acquire(TicketLockRank.EFFECT)
+        val operation = TicketEffectOperations.selectAll().where {
+            (TicketEffectOperations.operationId eq command.operationId) and
+                (TicketEffectOperations.orderId eq command.orderId) and
+                (TicketEffectOperations.status eq "claimed") and
+                (TicketEffectOperations.claimToken eq command.claimToken) and
+                (TicketEffectOperations.claimRevision eq command.expectedRevision)
+        }.forUpdate().singleOrNull() ?: return@transaction attempt.snapshot()
+        val ticket = TicketTickets.selectAll()
+            .where { TicketTickets.orderId eq command.orderId }
+            .forUpdate()
+            .single()
+        val current = TicketState.entries.single { it.code == ticket[TicketTickets.state] }
+        val next = ticketTransition(current, command.outcome)
+        val now = clock.instant()
+        TicketTickets.update({ TicketTickets.id eq ticket[TicketTickets.id] }) {
+            it[state] = next.code
+            if (next == TicketState.ISSUED) it[externalTicketDigest] = effectDigest(command.operationId, command.disposition)
+            it[revision] = revision + 1
+            it[updatedAt] = now
+        }
+        TicketEffectOperations.update({ TicketEffectOperations.id eq operation[TicketEffectOperations.id] }) {
+            it[status] = when (command.outcome) {
+                io.bluetape4k.workshop.commerce.ticket.domain.TicketEffectOutcome.SUCCEEDED -> "succeeded"
+                io.bluetape4k.workshop.commerce.ticket.domain.TicketEffectOutcome.RETRYABLE_FAILURE -> "retry"
+                io.bluetape4k.workshop.commerce.ticket.domain.TicketEffectOutcome.RETRY_BUDGET_EXHAUSTED -> "quarantined"
+            }
+            it[claimToken] = null
+            it[claimUntil] = null
+            it[revision] = revision + 1
+            it[updatedAt] = now
+        }
+        if (command.outcome == io.bluetape4k.workshop.commerce.ticket.domain.TicketEffectOutcome.SUCCEEDED) {
+            TicketOrders.update({ TicketOrders.id eq command.orderId }) {
+                it[ticketDisposition] = command.disposition.code
+                it[revision] = revision + 1
+                it[updatedAt] = now
+            }
+            TicketEffectReceipts.insert {
+                it[consumerName] = "ticket-effect-worker"
+                it[operationId] = command.operationId
+                it[payloadDigest] = effectDigest(command.operationId, command.disposition)
+                it[createdAt] = now
+            }
+        }
+        attempt.snapshot()
     }
 
     private fun TicketJdbcTransaction.lockIdempotency(command: StartPurchase): UUID? {
@@ -451,6 +508,10 @@ class TicketPurchaseRepository(
     private fun stableOperationId(kind: String, orderId: UUID): UUID =
         UUID.nameUUIDFromBytes("ticket-$kind-v1:$orderId".toByteArray(UTF_8))
 
+    private fun effectDigest(operationId: UUID, disposition: TicketDisposition): ByteArray =
+        MessageDigest.getInstance("SHA-256")
+            .digest("ticket-effect-v1:$operationId:${disposition.code}".toByteArray(UTF_8))
+
     private fun guardAdvisoryKey(saleId: UUID, kind: IdentityKind, subjectId: UUID): Long {
         val digest = MessageDigest.getInstance("SHA-256").digest(
             "ticket-active-guard-v1\u0000$saleId\u0000${kind.name}\u0000$subjectId".toByteArray(UTF_8),
@@ -483,6 +544,7 @@ class TicketPurchaseRepository(
 }
 
 /** Application service; all database work is delegated to [TicketPurchaseRepository]. */
+@Transactional
 class PurchaseService(
     jdbc: TicketJdbcExecutor,
     sale: SalePurchaseAuthority,
@@ -503,7 +565,7 @@ class PurchaseService(
     override fun applyPaymentOutcome(command: ApplyPaymentOutcome): ApplyResult = purchases.applyPaymentOutcome(command)
 
     override fun applyTicketOutcome(command: ApplyTicketOutcome): PurchaseSnapshot =
-        throw UnsupportedOperationException("implemented by the ticket effect task")
+        purchases.applyTicketOutcome(command)
 
     private fun validate(command: StartPurchase) {
         if (command.idempotencyOwnerId <= 0 || command.grade.isBlank() || command.quantity <= 0 ||
