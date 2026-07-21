@@ -1,6 +1,11 @@
 package io.bluetape4k.workshop.commerce.ticket.config
 
+import io.bluetape4k.workshop.commerce.ticket.operations.internal.OperationsService
+import io.bluetape4k.workshop.commerce.ticket.operations.internal.ReconciliationJob
+import io.bluetape4k.workshop.commerce.ticket.web.TicketEventStream
+import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.beans.factory.SmartInitializingSingleton
+import org.springframework.beans.factory.ObjectProvider
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -148,6 +153,38 @@ internal class TicketConfiguration {
     @Bean
     fun ticketSchemaMigration(runner: TicketMigrationRunner): SmartInitializingSingleton =
         SmartInitializingSingleton { runner.migrate() }
+
+    @Bean
+    fun ticketEventStream(properties: TicketProperties): TicketEventStream =
+        TicketEventStream(properties.sse.queueSize, properties.sse.maxConnections)
+
+    @Bean
+    fun ticketLifecycle(eventStream: TicketEventStream): TicketLifecycle = TicketLifecycle(eventStream)
+
+    @Bean
+    fun ticketMetrics(registry: MeterRegistry): TicketMetrics = TicketMetrics(registry)
+
+    @Bean
+    fun ticketMigrationHealth(readiness: TicketMigrationReadiness): TicketMigrationHealthIndicator =
+        TicketMigrationHealthIndicator(readiness)
+
+    @Bean
+    fun ticketRedisHealth(resources: TicketRedisResources): TicketRedisHealthIndicator =
+        TicketRedisHealthIndicator(TicketRedisHealthProbe { resources.commands().ping() })
+
+    @Bean
+    fun ticketLivenessHealth(): TicketLivenessHealthIndicator = TicketLivenessHealthIndicator()
+
+    @Bean
+    fun ticketOperations(
+        jobs: ObjectProvider<ReconciliationJob>,
+        properties: TicketProperties,
+    ): OperationsService = OperationsService(
+        jobs = jobs.orderedStream().toList(),
+        operatorPermits = properties.db.operatorPermits,
+        maxBatchSize = properties.worker.batchSize,
+        runDeadline = properties.worker.runDeadline,
+    )
 
     companion object {
         private const val TICKET_MIGRATION_LOCK_KEY: Long = 521_001L
