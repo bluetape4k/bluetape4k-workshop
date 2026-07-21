@@ -4,8 +4,10 @@ import org.springframework.beans.factory.SmartInitializingSingleton
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.io.ClassPathResource
 import java.io.Serial
 import java.time.Duration
+import javax.sql.DataSource
 
 /** Closed configuration contract for the concert ticket example. */
 @ConfigurationProperties(prefix = "workshop.ticket", ignoreUnknownFields = false)
@@ -116,4 +118,31 @@ internal class TicketConfiguration {
     @Bean
     fun ticketStartupValidation(properties: TicketProperties): SmartInitializingSingleton =
         SmartInitializingSingleton { TicketStartupValidator.validate(properties) }
+
+    @Bean
+    fun ticketMigrationReadiness(): TicketMigrationReadiness = TicketMigrationReadiness()
+
+    @Bean
+    fun ticketMigrationRunner(
+        dataSource: DataSource,
+        readiness: TicketMigrationReadiness,
+    ): TicketMigrationRunner =
+        TicketMigrationRunner(
+            dataSource = dataSource,
+            migration =
+                TicketMigration(
+                    version = "001",
+                    resource = ClassPathResource("db/migration/V001__concert_ticket_flash_sale.sql"),
+                ),
+            advisoryLockKey = TICKET_MIGRATION_LOCK_KEY,
+            readiness = readiness,
+        )
+
+    @Bean
+    fun ticketSchemaMigration(runner: TicketMigrationRunner): SmartInitializingSingleton =
+        SmartInitializingSingleton { runner.migrate() }
+
+    companion object {
+        private const val TICKET_MIGRATION_LOCK_KEY: Long = 521_001L
+    }
 }

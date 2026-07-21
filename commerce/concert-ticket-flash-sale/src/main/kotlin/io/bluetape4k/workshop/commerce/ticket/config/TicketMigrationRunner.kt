@@ -9,6 +9,7 @@ import java.security.MessageDigest
 import java.sql.Connection
 import java.sql.SQLException
 import java.time.Duration
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.LockSupport
 import javax.sql.DataSource
 
@@ -68,12 +69,24 @@ class TicketMigrationException(
     }
 }
 
+/** Readiness gate that opens only after migration checksum verification completes. */
+class TicketMigrationReadiness {
+    private val ready = AtomicBoolean(false)
+
+    val isReady: Boolean get() = ready.get()
+
+    internal fun markReady() {
+        ready.set(true)
+    }
+}
+
 /** Applies an application-owned migration under a PostgreSQL transaction advisory lock. */
 class TicketMigrationRunner(
     private val dataSource: DataSource,
     private val migration: TicketMigration,
     private val advisoryLockKey: Long,
     private val lockTimeout: Duration = Duration.ofSeconds(30),
+    private val readiness: TicketMigrationReadiness = TicketMigrationReadiness(),
 ) {
     init {
         require(lockTimeout.isPositive) { "lockTimeout must be positive" }
@@ -86,7 +99,7 @@ class TicketMigrationRunner(
             try {
                 acquireMigrationLock(connection)
                 createHistoryTable(connection)
-                when (val checksum = appliedChecksum(connection, script.version)) {
+                val result = when (val checksum = appliedChecksum(connection, script.version)) {
                     null -> applyMigration(connection, script)
                     script.checksum -> {
                         connection.commit()
@@ -96,6 +109,8 @@ class TicketMigrationRunner(
 
                     else -> throw TicketMigrationException(TicketMigrationFailure.CHECKSUM_MISMATCH)
                 }
+                readiness.markReady()
+                result
             } catch (failure: TicketMigrationException) {
                 connection.rollbackQuietly()
                 log.warn { "ticket_migration_failed version=${script.version} code=${failure.code}" }
