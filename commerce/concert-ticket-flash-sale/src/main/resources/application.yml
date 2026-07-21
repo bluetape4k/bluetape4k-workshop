@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: commerce-concert-ticket-flash-sale
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+  transaction:
+    default-timeout: 750ms
+  modulith:
+    detection-strategy: explicitly-annotated
+
+workshop:
+  ticket:
+    db:
+      max-pool-size: 20
+      foreground-permits: 12
+      worker-permits: 3
+      sse-permits: 2
+      operator-permits: 1
+      permit-timeout: 250ms
+      transaction-timeout: 750ms
+    redis:
+      command-timeout: 500ms
+      renew-interval: 2s
+      lease-ttl: 5s
+    worker:
+      batch-size: 50
+      run-deadline: 10s
+    sse:
+      queue-size: 32
+      max-connections: 512
