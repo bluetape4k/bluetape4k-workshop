@@ -16,6 +16,7 @@ directory unless they have been deliberately promoted.
 
 Recent delivery lessons:
 
+- [Issue #548 job safety lab](2026-07-22-issue-548-job-safety-lab.md)
 - [Issue #534 promotion voucher campaign](2026-07-19-issue-534-promotion-voucher-campaign.md)
 - [Issue #533 reservation control plane](2026-07-19-issue-533-reservation-control-plane.md)
 - [Issue #532 order lifecycle](2026-07-18-issue-532-order-lifecycle.md)
