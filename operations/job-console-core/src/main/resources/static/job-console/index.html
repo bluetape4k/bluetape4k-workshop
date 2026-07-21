@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Job Operations Console</title>
+  <style>
+    :root { color-scheme: dark; font-family: ui-sans-serif, system-ui, sans-serif; }
+    body { margin: 0; background: #07111f; color: #e7eef8; }
+    main { max-width: 1040px; margin: auto; padding: 48px 24px; }
+    .controls, .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+    .card { background: #102038; border: 1px solid #29415f; border-radius: 14px; padding: 18px; }
+    .value { color: #72e6c1; font-size: 1.35rem; font-weight: 700; }
+    .notice { color: #ffcf70; }
+    label { display: grid; gap: 6px; color: #b9c8db; }
+    input, select, button { border: 1px solid #42607f; border-radius: 8px; padding: 10px; background: #0b1729; color: #ecf4ff; }
+    button { cursor: pointer; background: #17466d; font-weight: 700; }
+    button:disabled { cursor: not-allowed; opacity: .45; }
+    .status { min-height: 1.5rem; }
+    code { color: #90c8ff; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Job Operations Console</h1>
+  <p>Spring MVC and Ktor share one PostgreSQL-authoritative job contract.</p>
+  <section class="card">
+    <h2>Submit deterministic work</h2>
+    <div class="controls">
+      <label>Tenant <input id="tenant" value="tenant-a" maxlength="64"></label>
+      <label>Submitter <input id="submitter" value="browser-user" maxlength="64"></label>
+      <label>Job type
+        <select id="jobType"><option value="document_export">Document export</option><option value="report_generation">Report generation</option></select>
+      </label>
+      <label>Work units <input id="workUnits" type="number" min="1" max="10000" value="20"></label>
+      <label>Failure fixture
+        <select id="failureMode"><option value="none">None</option><option value="retry_once">Retry once</option><option value="non_retryable">Non-retryable</option><option value="always_retryable">Always retryable</option></select>
+      </label>
+      <label>Idempotency key <input id="idempotencyKey" value="browser-demo-1"></label>
+    </div>
+    <p><button id="submitJob" type="button">Submit job</button> <button id="cancelJob" type="button" disabled>Cancel current job</button></p>
+    <p class="status" id="requestStatus" role="status">No job selected</p>
+  </section>
+  <div class="grid">
+    <section class="card"><h2>Queue</h2><div>Position</div><div class="value" id="position">—</div><div>Jobs ahead: <span id="jobsAhead">—</span></div></section>
+    <section class="card"><h2>ETA range</h2><div id="etaRange">insufficient data</div><div>Confidence / sample size: <span id="etaConfidence">insufficient_data / 0</span></div></section>
+    <section class="card"><h2>Progress</h2><div class="value" id="progress">0%</div><div>Checkpoint: <span id="checkpoint">—</span></div></section>
+    <section class="card"><h2>Cancellation</h2><div id="cancelAcknowledgement">No request</div></section>
+  </div>
+  <p class="notice">ETA is an estimate, not an SLA. SSE is notification-only; refresh the REST snapshot after an event.</p>
+  <p>Last snapshot update: <time id="lastSnapshotUpdate">—</time></p>
+  <h2>Operator view</h2>
+  <p>Redacted backlog, oldest wait, active leases, retries/dead letters, PostgreSQL readiness, and Redis degraded state only.</p>
+  <p>Demo headers are for local workshops and are not production authentication.</p>
+</main>
+<script>
+  const byId = (id) => document.getElementById(id);
+  let currentJobId = null;
+  let currentTerminal = false;
+  let eventAbort = null;
+
+  function demoHeaders(json = false) {
+    const headers = {
+      'X-Demo-Tenant': byId('tenant').value,
+      'X-Demo-Submitter': byId('submitter').value,
+    };
+    if (json) headers['Content-Type'] = 'application/json';
+    return headers;
+  }
+
+  function formatRange(range) {
+    if (!range) return 'insufficient data';
+    return `${new Date(range.earliest).toLocaleTimeString()} – ${new Date(range.latest).toLocaleTimeString()}`;
+  }
+
+  function render(snapshot) {
+    const queue = snapshot.queue;
+    byId('position').textContent = queue?.position ?? '—';
+    byId('jobsAhead').textContent = queue?.jobsAhead ?? '—';
+    byId('etaRange').textContent = queue ? `${formatRange(queue.estimatedStartRange)} / ${formatRange(queue.estimatedCompletionRange)}` : 'not queued';
+    byId('etaConfidence').textContent = queue ? `${queue.confidence} / ${queue.sampleSize}` : 'not queued';
+    byId('progress').textContent = `${snapshot.progress}%`;
+    byId('checkpoint').textContent = snapshot.checkpoint ?? '—';
+    byId('lastSnapshotUpdate').textContent = new Date(snapshot.updatedAt).toLocaleString();
+    byId('requestStatus').textContent = `Job ${snapshot.jobId}: ${snapshot.state}`;
+    currentTerminal = ['succeeded', 'failed', 'dead_lettered', 'cancelled'].includes(snapshot.state);
+    byId('cancelJob').disabled = currentTerminal;
+  }
+
+  async function api(path, options = {}) {
+    const response = await fetch(path, options);
+    const body = await response.json();
+    if (!response.ok) throw new Error(`${body.code ?? response.status}: ${body.title ?? 'request failed'}`);
+    return body;
+  }
+
+  async function refreshSnapshot() {
+    if (!currentJobId) return;
+    render(await api(`/v1/jobs/${currentJobId}`, { headers: demoHeaders() }));
+  }
+
+  async function watchEvents(jobId) {
+    eventAbort?.abort();
+    eventAbort = new AbortController();
+    try {
+      const response = await fetch(`/v1/jobs/${jobId}/events`, {
+        headers: { ...demoHeaders(), Accept: 'text/event-stream' },
+        signal: eventAbort.signal,
+      });
+      if (!response.ok || !response.body) throw new Error(`SSE failed: ${response.status}`);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      while (currentJobId === jobId) {
+        const chunk = await reader.read();
+        if (chunk.done) break;
+        buffer += decoder.decode(chunk.value, { stream: true });
+        const events = buffer.split(/\r?\n\r?\n/);
+        buffer = events.pop() ?? '';
+        for (const event of events) if (event.includes('event:')) await refreshSnapshot();
+      }
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        byId('requestStatus').textContent = `${error.message}; REST refresh remains authoritative`;
+        await refreshSnapshot();
+        if (currentJobId === jobId && !currentTerminal) setTimeout(() => void watchEvents(jobId), 1000);
+      }
+    }
+  }
+
+  byId('submitJob').addEventListener('click', async () => {
+    try {
+      const snapshot = await api('/v1/jobs', {
+        method: 'POST',
+        headers: { ...demoHeaders(true), 'Idempotency-Key': byId('idempotencyKey').value },
+        body: JSON.stringify({
+          jobType: byId('jobType').value,
+          workUnits: Number(byId('workUnits').value),
+          failureMode: byId('failureMode').value,
+        }),
+      });
+      currentJobId = snapshot.jobId;
+      byId('cancelAcknowledgement').textContent = 'No request';
+      render(snapshot);
+      void watchEvents(currentJobId);
+    } catch (error) {
+      byId('requestStatus').textContent = error.message;
+    }
+  });
+
+  byId('cancelJob').addEventListener('click', async () => {
+    if (!currentJobId) return;
+    try {
+      const snapshot = await api(`/v1/jobs/${currentJobId}/cancel`, { method: 'POST', headers: demoHeaders() });
+      byId('cancelAcknowledgement').textContent = `Durable request acknowledged: ${snapshot.state}`;
+      render(snapshot);
+    } catch (error) {
+      byId('cancelAcknowledgement').textContent = error.message;
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#23384d" flood-opacity="0.16"/>
+    </filter>
+    <marker id="arrow-blue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L13 7 L1 13 Z" fill="#397ca6" stroke="#397ca6" stroke-dasharray="none"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L13 7 L1 13 Z" fill="#4f8a55" stroke="#4f8a55" stroke-dasharray="none"/>
+    </marker>
+    <marker id="arrow-amber" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L13 7 L1 13 Z" fill="#b67a1d" stroke="#b67a1d" stroke-dasharray="none"/>
+    </marker>
+    <style>
+      .title { font: 48px 'Architects Daughter', cursive; fill: #16283a; }
+      .subtitle, .lane, .card-title { font-family: 'Architects Daughter', cursive; fill: #263b50; }
+      .subtitle { font-size: 22px; }
+      .lane { font-size: 27px; }
+      .card-title { font-size: 29px; }
+      .detail, .label, .legend { font-family: 'Comic Mono', monospace; fill: #43586d; }
+      .detail { font-size: 18px; }
+      .label { font-size: 17px; font-weight: 700; }
+      .legend { font-size: 16px; }
+      .card { fill: #fffefa; stroke-width: 2.5; filter: url(#shadow); }
+      .connector { fill: none; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+  </defs>
+  <rect x="18" y="18" width="1564" height="864" rx="28" fill="#f8faf9" stroke="#ccd9df" stroke-width="2"/>
+  <text x="800" y="78" text-anchor="middle" class="title">Job Operations Console Architecture</text>
+  <text x="800" y="112" text-anchor="middle" class="subtitle">One contract, two Java 25 adapters, PostgreSQL authority, advisory notifications</text>
+
+  <rect x="55" y="155" width="1490" height="150" rx="24" fill="#eaf3ff" stroke="#91b7d8" stroke-width="2.5"/>
+  <text x="82" y="190" class="lane">Caller boundary</text>
+  <g class="node" data-node="browser" data-card="browser">
+    <rect class="card" x="115" y="205" width="965" height="74" rx="16" stroke="#6da5cd"/>
+    <text x="598" y="237" text-anchor="middle" class="card-title">Browser Operations UI</text>
+    <text x="598" y="263" text-anchor="middle" class="detail">REST snapshot is source of truth; SSE triggers refresh</text>
+  </g>
+
+  <rect x="55" y="335" width="620" height="385" rx="24" fill="#edf7f0" stroke="#8fc39c" stroke-width="2.5"/>
+  <text x="82" y="374" class="lane">Framework adapters</text>
+  <g class="node" data-node="spring" data-card="spring">
+    <rect class="card" x="115" y="415" width="500" height="105" rx="16" stroke="#72a77c"/>
+    <text x="365" y="453" text-anchor="middle" class="card-title">Spring MVC Adapter</text>
+    <text x="365" y="483" text-anchor="middle" class="detail">SseEmitter + virtual-thread fan-out</text>
+    <text x="365" y="507" text-anchor="middle" class="detail">demo profile fails closed</text>
+  </g>
+  <g class="node" data-node="ktor" data-card="ktor">
+    <rect class="card" x="115" y="565" width="500" height="105" rx="16" stroke="#72a77c"/>
+    <text x="365" y="603" text-anchor="middle" class="card-title">Ktor Netty Adapter</text>
+    <text x="365" y="633" text-anchor="middle" class="detail">SSE channel + application-owned coroutine scope</text>
+    <text x="365" y="657" text-anchor="middle" class="detail">blocking core calls on Dispatchers.IO</text>
+  </g>
+
+  <rect x="715" y="335" width="420" height="385" rx="24" fill="#fff6e7" stroke="#d6ad62" stroke-width="2.5"/>
+  <text x="742" y="374" class="lane">Shared core</text>
+  <g class="node" data-node="core" data-card="core">
+    <rect class="card" x="770" y="430" width="310" height="205" rx="18" stroke="#c59238"/>
+    <text x="925" y="472" text-anchor="middle" class="card-title">Job Console Core</text>
+    <text x="925" y="508" text-anchor="middle" class="detail">state machine + idempotency</text>
+    <text x="925" y="536" text-anchor="middle" class="detail">FIFO lease worker + checkpoint</text>
+    <text x="925" y="564" text-anchor="middle" class="detail">queue / ETA + outbox</text>
+    <text x="925" y="592" text-anchor="middle" class="detail">shared DTO and UI assets</text>
+  </g>
+
+  <rect x="1175" y="335" width="370" height="385" rx="24" fill="#f2f4f7" stroke="#aebbc6" stroke-width="2.5"/>
+  <text x="1202" y="374" class="lane">Infrastructure</text>
+  <g class="node" data-node="postgres" data-card="postgres">
+    <rect class="card" x="1225" y="415" width="270" height="115" rx="16" stroke="#4f8a55"/>
+    <text x="1360" y="455" text-anchor="middle" class="card-title">PostgreSQL</text>
+    <text x="1360" y="486" text-anchor="middle" class="detail">authoritative queue, state,</text>
+    <text x="1360" y="510" text-anchor="middle" class="detail">lease, history, outbox</text>
+  </g>
+  <g class="node" data-node="redis" data-card="redis">
+    <rect class="card" x="1225" y="580" width="270" height="100" rx="16" stroke="#b67a1d"/>
+    <text x="1360" y="621" text-anchor="middle" class="card-title">Redis</text>
+    <text x="1360" y="652" text-anchor="middle" class="detail">advisory cancel wake-up only</text>
+  </g>
+
+  <path class="connector" d="M365 279 V415" stroke="#397ca6" marker-end="url(#arrow-blue)"/>
+  <path class="connector" d="M200 279 V300 Q200 310 190 310 H90 Q80 310 80 320 V608 Q80 618 90 618 H115" stroke="#397ca6" marker-end="url(#arrow-blue)"/>
+  <path class="connector" d="M615 468 H710 Q725 468 725 483 V510 Q725 525 740 525 H770" stroke="#4f8a55" marker-end="url(#arrow-green)"/>
+  <path class="connector" d="M615 618 H700 Q715 618 715 603 V570 Q715 555 730 555 H770" stroke="#4f8a55" marker-end="url(#arrow-green)"/>
+  <path class="connector" d="M1080 485 H1225" stroke="#4f8a55" marker-end="url(#arrow-green)"/>
+  <path class="connector" d="M1080 590 H1160 Q1175 590 1175 605 V630 Q1175 645 1190 645 H1225" stroke="#b67a1d" stroke-dasharray="10 8" marker-end="url(#arrow-amber)"/>
+
+  <g><rect x="1090" y="447" width="126" height="30" rx="10" fill="#f8faf9" stroke="#8eb694"/><text x="1153" y="468" text-anchor="middle" class="label">transactional</text></g>
+  <g><rect x="1095" y="600" width="116" height="30" rx="10" fill="#f8faf9" stroke="#d0a45b"/><text x="1153" y="621" text-anchor="middle" class="label">best effort</text></g>
+
+  <rect x="260" y="770" width="1080" height="70" rx="18" fill="#ffffff" stroke="#c7d4dc" stroke-width="2"/>
+  <line x1="310" y1="796" x2="375" y2="796" stroke="#4f8a55" stroke-width="4"/>
+  <text x="392" y="802" class="legend">durable state path</text>
+  <line x1="645" y1="796" x2="710" y2="796" stroke="#b67a1d" stroke-width="4" stroke-dasharray="10 8"/>
+  <text x="727" y="802" class="legend">loss-tolerant notification</text>
+  <text x="800" y="828" text-anchor="middle" class="legend">Java 25 is isolated to these three new modules; the repository default stays Java 21.</text>
+</svg>

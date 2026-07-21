@@ -235,6 +235,9 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Advanced | [`image-processing-advanced-workflow`](image-processing/advanced-workflow/) | `images-vips-java25`, `images-spring-boot`, `micrometer` | S3 or local storage | Upload → original storage → WebP variants → unsigned public URLs |
 | Advanced | [`image-processing-profile-image-moderation`](image-processing/profile-image-moderation/) | `images-spring-boot`, `coroutines`, `micrometer` | Local storage / S3-compatible | Profile upload → private original → blurred pending URL → moderation approval/default fallback |
 | Advanced | [`image-processing-ocr-api`](image-processing/ocr-api/) | `images-ocr`, `images`, `spring-boot4-core` | In-memory | Multipart OCR API with validated fallback and optional Tesseract |
+| Advanced | [`operations-job-console-core`](operations/job-console-core/) | `exposed-jdbc`, `lettuce`, `micrometer`, `testcontainers` | PostgreSQL + Redis (TC) | Durable FIFO jobs, leases, checkpoints, cancellation, retry budget, bounded ETA, and outbox |
+| Advanced | [`operations-job-console-spring`](operations/job-console-spring/) | `spring-boot4-core`, `virtualthread-jdk25` | PostgreSQL (TC) | Spring MVC REST/SSE adapter for the shared Java 25 job console contract |
+| Advanced | [`operations-job-console-ktor`](operations/job-console-ktor/) | `ktor`, `coroutines` | PostgreSQL (TC) | Ktor Netty REST/SSE adapter for the shared Java 25 job console contract |
 | Advanced | [`leader-leader-election`](leader/) | `coroutines`, `redis`, `testcontainers` | Redis (TC) | Distributed leader election: blocking, coroutine, virtual thread |
 | Advanced | [`leader-backend-comparison-lab`](leader/backend-comparison-lab/) | `leader-core`, `spring-boot4-core` | In-memory | Redis vs ZooKeeper vs Kubernetes Lease backend choice and failover lab |
 | Advanced | [`leader-k8s-lease-micrometer`](leader/k8s-lease-micrometer/) | `leader-k8s`, `micrometer`, `spring-boot4-core` | Kubernetes Lease (opt-in) | Kubernetes Lease leader election with Micrometer metrics |
@@ -251,6 +254,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 ./gradlew :aws-storage-abstraction:test
 ./gradlew :aws-s3-vectors-access-grants:test
 ./gradlew :image-processing-profile-image-moderation:test
+./scripts/smoke-validate.sh operations
 ./gradlew :leader-backend-comparison-lab:test
 ./gradlew :leader-tenant-scheduler:test
 ```
@@ -286,6 +290,7 @@ bluetape4k-workshop/
 ├── leader/                 # Distributed leader election
 ├── messaging/              # Kafka
 ├── observability/          # Micrometer Observation + Tracing
+├── operations/             # Durable job console core + Spring MVC/Ktor adapters
 ├── ratelimit/              # Bucket4j rate limiting
 ├── redis/                  # Redisson + Redis patterns
 ├── spring-boot/            # Spring Boot features

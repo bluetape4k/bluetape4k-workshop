@@ -116,6 +116,9 @@ jobs:
           :graph-recommendation:integrationTest
           :graph-knowledge-graph:integrationTest
           :graph-social-network:integrationTest
+          :operations-job-console-core:integrationTest
+          :operations-job-console-spring:integrationTest
+          :operations-job-console-ktor:integrationTest
           --continue
           --max-workers=1
       - name: Upload test results
@@ -128,6 +131,9 @@ jobs:
             graph/recommendation/build/test-results/integrationTest/*.xml
             graph/knowledge-graph/build/test-results/integrationTest/*.xml
             graph/social-network/build/test-results/integrationTest/*.xml
+            operations/job-console-core/build/test-results/integrationTest/*.xml
+            operations/job-console-spring/build/test-results/integrationTest/*.xml
+            operations/job-console-ktor/build/test-results/integrationTest/*.xml
           retention-days: 14
 
   nightly-status:

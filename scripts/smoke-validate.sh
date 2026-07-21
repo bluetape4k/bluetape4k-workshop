@@ -8,7 +8,7 @@
 #   ./scripts/smoke-validate.sh stale-check   # Gradle project count + README link check
 #   ./scripts/smoke-validate.sh diagram-qa    # changed README diagram QA evidence
 #
-# Groups: data-access  spring-boot  serialization  messaging  commerce  async  observability  aws  redis
+# Groups: data-access  spring-boot  serialization  messaging  commerce  operations  async  observability  aws  redis
 # Each group runs with --continue so a single failure does not abort the rest.
 
 set -euo pipefail
@@ -52,6 +52,7 @@ case "${1:-help}" in
       :graph-social-network:test \
       :kotlin-design-patterns:test \
       :micrometer-observation:test \
+      :operations-job-console-core:test \
       :spring-boot-application-event-demo:test \
       :spring-boot-cache-caffeine:test \
       :spring-boot-cbor-mvc:test \
@@ -148,6 +149,18 @@ case "${1:-help}" in
       :commerce-order-lifecycle-fulfillment:test \
       :commerce-reservation-control-plane:test \
       :commerce-promotion-voucher-campaign:test \
+      --continue --max-workers=1"
+    ;;
+
+  operations)
+    # Java 25; PostgreSQL/Redis integration tests run sequentially.
+    run "$GRADLEW \
+      :operations-job-console-core:test \
+      :operations-job-console-core:integrationTest \
+      :operations-job-console-spring:test \
+      :operations-job-console-spring:integrationTest \
+      :operations-job-console-ktor:test \
+      :operations-job-console-ktor:integrationTest \
       --continue --max-workers=1"
     ;;
 
@@ -253,6 +266,7 @@ case "${1:-help}" in
     echo "  serialization    Jackson / JSON / Okio"
     echo "  messaging        Kafka (Testcontainers)"
     echo "  commerce         Commerce lifecycles (PostgreSQL Testcontainers)"
+    echo "  operations       Job console core + Spring MVC/Ktor (PostgreSQL/Redis Testcontainers)"
     echo "  async            Coroutines / Vert.x"
     echo "  observability    Micrometer / Virtual Threads"
     echo "  aws              AWS local-first examples"
