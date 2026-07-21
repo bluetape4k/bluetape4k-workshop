@@ -77,6 +77,29 @@ internal class UnsafeScenarioAdapter {
                     event("STALE_WRITE_COMMITTED", JobExecutionState.COMMITTED, "stale assumptions reach business state"),
                 ),
         )
+
+    fun nonFenceableEffect(conflictKey: ConflictKey): ScenarioDraft =
+        ScenarioDraft(
+            expectedSummary = 1L,
+            finalSummary = 2L,
+            resource = ScenarioResource(conflictKey, summaryValue = 2L, lastAcceptedFence = FencingToken(42L)),
+            executions =
+                listOf(
+                    ScenarioExecution(
+                        JobName("effect-worker"),
+                        conflictKey,
+                        FencingToken(42L),
+                        JobExecutionState.FAILED,
+                    ),
+                ),
+            events =
+                listOf(
+                    event("PROVIDER_REQUEST_1", JobExecutionState.EFFECT_PENDING, "provider applies the first request"),
+                    event("RESPONSE_TIMEOUT", JobExecutionState.RECONCILIATION_REQUIRED, "worker cannot observe the result"),
+                    event("NEW_OPERATION_CREATED", JobExecutionState.EFFECT_PENDING, "unsafe retry invents another id"),
+                    event("DUPLICATE_EFFECT", JobExecutionState.FAILED, "provider applies both independent operations"),
+                ),
+        )
 }
 
 internal data class ScenarioDraft(

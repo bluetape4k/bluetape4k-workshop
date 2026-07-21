@@ -29,7 +29,7 @@ class JobSafetyScenarioService(
                 JobSafetyScenario.DYNAMIC_TENANT -> dynamicTenant(mode)
                 JobSafetyScenario.REGION_PARTITION -> regionPartition(mode)
                 JobSafetyScenario.MIXED_VERSION_ROLLOUT -> mixedVersionRollout(mode)
-                JobSafetyScenario.NON_FENCEABLE_EFFECT -> error("scenario_not_implemented:$scenario")
+                JobSafetyScenario.NON_FENCEABLE_EFFECT -> nonFenceableEffect(mode)
             }
         val numbered = draft.events.mapIndexed { index, event -> event.copy(sequence = index + 1) }
         return JobSafetyScenarioSnapshot(
@@ -154,6 +154,41 @@ class JobSafetyScenarioService(
                     event("CHECKPOINT_SCHEMA_2", JobExecutionState.RUNNING, "checkpoint schema advances after readers"),
                     event("MIN_WRITER_2", JobExecutionState.RUNNING, "minimum writer advances last"),
                     event("OLD_WRITER_REJECTED", JobExecutionState.REJECTED, "contract v1 can no longer commit"),
+                ),
+        )
+    }
+
+    private fun nonFenceableEffect(mode: ScenarioMode): ScenarioDraft {
+        if (mode == ScenarioMode.UNSAFE) return unsafe.nonFenceableEffect(CONFLICT_KEY)
+
+        return ScenarioDraft(
+            expectedSummary = 1L,
+            finalSummary = 1L,
+            resource = ScenarioResource(CONFLICT_KEY, summaryValue = 1L, lastAcceptedFence = FencingToken(42L)),
+            executions =
+                listOf(
+                    ScenarioExecution(
+                        JobName("effect-worker"),
+                        CONFLICT_KEY,
+                        FencingToken(42L),
+                        JobExecutionState.COMPLETED,
+                    ),
+                ),
+            events =
+                listOf(
+                    event("OUTBOX_COMMIT", JobExecutionState.COMMITTED, "business state and stable operation id commit together"),
+                    event("PROVIDER_APPLIED_TIMEOUT", JobExecutionState.EFFECT_PENDING, "provider applies but response is lost"),
+                    event(
+                        "RECONCILIATION_REQUIRED",
+                        JobExecutionState.RECONCILIATION_REQUIRED,
+                        "unknown is durable and never guessed",
+                    ),
+                    event(
+                        "QUERY_ORIGINAL_OPERATION",
+                        JobExecutionState.RECONCILIATION_REQUIRED,
+                        "worker queries the same operation id",
+                    ),
+                    event("RECEIPT_CONFIRMED", JobExecutionState.COMPLETED, "one provider receipt closes the operation"),
                 ),
         )
     }

@@ -2,18 +2,22 @@ package io.bluetape4k.workshop.leader.jobsafety.persistence
 
 import io.bluetape4k.workshop.leader.jobsafety.domain.ConflictKey
 import io.bluetape4k.workshop.leader.jobsafety.domain.ExecutionContractVersion
+import io.bluetape4k.workshop.leader.jobsafety.domain.EffectDeliveryState
+import io.bluetape4k.workshop.leader.jobsafety.domain.ExternalEffectResult
 import io.bluetape4k.workshop.leader.jobsafety.domain.FencingToken
 import io.bluetape4k.workshop.leader.jobsafety.domain.JobExecutionState
 import io.bluetape4k.workshop.leader.jobsafety.domain.JobRejectionReason
 import io.bluetape4k.workshop.leader.jobsafety.domain.JobRunRequest
 import io.bluetape4k.workshop.leader.jobsafety.domain.MembershipRevision
 import io.bluetape4k.workshop.leader.jobsafety.domain.NamespaceEpoch
+import io.bluetape4k.workshop.leader.jobsafety.domain.OperationId
 import io.bluetape4k.workshop.leader.jobsafety.domain.RegionEpoch
 import io.bluetape4k.workshop.leader.jobsafety.domain.RegionId
 import io.bluetape4k.workshop.leader.jobsafety.domain.TenantId
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
@@ -38,6 +42,18 @@ data class JobResourceSnapshot(
     val namespaceEpoch: NamespaceEpoch,
     val lastAcceptedFence: FencingToken?,
     val summaryValue: Long,
+)
+
+data class JobOutboxRecord(
+    val operationId: OperationId,
+    val state: EffectDeliveryState,
+    val attemptCount: Int,
+)
+
+data class JobEffectReceiptRecord(
+    val provider: String,
+    val operationId: OperationId,
+    val result: ExternalEffectResult,
 )
 
 class JobAssignmentRepository(
@@ -230,10 +246,128 @@ class JobOutboxRepository(
     }
 
     fun countRows(): Long = jdbc.transaction { withExposed { JobOutboxEntries.selectAll().count() } }
+
+    fun find(operationId: OperationId): JobOutboxRecord? =
+        jdbc.transaction {
+            withExposed {
+                JobOutboxEntries.selectAll()
+                    .where { JobOutboxEntries.operationId eq operationId.value }
+                    .singleOrNull()
+                    ?.toOutboxRecord()
+            }
+        }
+
+    fun claimNext(state: EffectDeliveryState): JobOutboxRecord? =
+        jdbc.transaction {
+            withExposed {
+                val row =
+                    JobOutboxEntries.selectAll()
+                        .where { JobOutboxEntries.status eq state.name }
+                        .orderBy(JobOutboxEntries.id to SortOrder.ASC)
+                        .limit(1)
+                        .forUpdate()
+                        .singleOrNull()
+                        ?: return@withExposed null
+                val id = row[JobOutboxEntries.id]
+                val nextAttempt = row[JobOutboxEntries.attemptCount] + 1
+                JobOutboxEntries.update({ JobOutboxEntries.id eq id }) {
+                    it[status] = EffectDeliveryState.CLAIMED.name
+                    it[attemptCount] = nextAttempt
+                    it[updatedAt] = Instant.now()
+                }
+                JobOutboxRecord(
+                    operationId = OperationId(row[JobOutboxEntries.operationId]),
+                    state = EffectDeliveryState.CLAIMED,
+                    attemptCount = nextAttempt,
+                )
+            }
+        }
+
+    internal fun complete(
+        transaction: JobSafetyJdbcTransaction,
+        operationId: OperationId,
+        state: EffectDeliveryState,
+    ) {
+        transaction.withExposed {
+            check(
+                JobOutboxEntries.update({ JobOutboxEntries.operationId eq operationId.value }) {
+                    it[status] = state.name
+                    it[updatedAt] = Instant.now()
+                } == 1,
+            ) { "outbox operation not found" }
+        }
+    }
+
+    internal fun <T> transaction(block: JobSafetyJdbcTransaction.() -> T): T = jdbc.transaction(block)
+
+    private fun org.jetbrains.exposed.v1.core.ResultRow.toOutboxRecord(): JobOutboxRecord =
+        JobOutboxRecord(
+            operationId = OperationId(this[JobOutboxEntries.operationId]),
+            state = EffectDeliveryState.valueOf(this[JobOutboxEntries.status]),
+            attemptCount = this[JobOutboxEntries.attemptCount],
+        )
 }
 
-class JobEffectReceiptRepository :
-    JobSafetyExposedJdbcRepository<JobEffectReceiptEntity, Long>(JobEffectReceiptEntity::class.java)
+class JobEffectReceiptRepository(
+    private val jdbc: JobSafetyJdbcExecutor,
+) : JobSafetyExposedJdbcRepository<JobEffectReceiptEntity, Long>(JobEffectReceiptEntity::class.java) {
+    fun find(provider: String, operationId: OperationId): JobEffectReceiptRecord? =
+        jdbc.transaction {
+            withExposed {
+                JobEffectReceipts.selectAll()
+                    .where {
+                        (JobEffectReceipts.provider eq provider) and
+                            (JobEffectReceipts.operationId eq operationId.value)
+                    }
+                    .singleOrNull()
+                    ?.let { row ->
+                        JobEffectReceiptRecord(
+                            provider = row[JobEffectReceipts.provider],
+                            operationId = OperationId(row[JobEffectReceipts.operationId]),
+                            result = ExternalEffectResult.valueOf(row[JobEffectReceipts.status]),
+                        )
+                    }
+            }
+        }
+
+    fun count(provider: String, operationId: OperationId): Long =
+        jdbc.transaction {
+            withExposed {
+                JobEffectReceipts.selectAll()
+                    .where {
+                        (JobEffectReceipts.provider eq provider) and
+                            (JobEffectReceipts.operationId eq operationId.value)
+                    }
+                    .count()
+            }
+        }
+
+    internal fun record(
+        transaction: JobSafetyJdbcTransaction,
+        provider: String,
+        operationId: OperationId,
+        result: ExternalEffectResult,
+    ) {
+        transaction.withExposed {
+            val exists =
+                JobEffectReceipts.selectAll()
+                    .where {
+                        (JobEffectReceipts.provider eq provider) and
+                            (JobEffectReceipts.operationId eq operationId.value)
+                    }
+                    .limit(1)
+                    .any()
+            if (!exists) {
+                JobEffectReceipts.insert {
+                    it[JobEffectReceipts.provider] = provider
+                    it[JobEffectReceipts.operationId] = operationId.value
+                    it[status] = result.name
+                    it[createdAt] = Instant.now()
+                }
+            }
+        }
+    }
+}
 
 class JobSafetyRepositories(jdbc: JobSafetyJdbcExecutor) {
     val assignment = JobAssignmentRepository(jdbc)
@@ -242,5 +376,5 @@ class JobSafetyRepositories(jdbc: JobSafetyJdbcExecutor) {
     val execution = JobExecutionRepository(jdbc)
     val checkpoint = JobCheckpointRepository(jdbc)
     val outbox = JobOutboxRepository(jdbc)
-    val effectReceipt = JobEffectReceiptRepository()
+    val effectReceipt = JobEffectReceiptRepository(jdbc)
 }
