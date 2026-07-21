@@ -14,17 +14,17 @@
   <line class="lifeline" x1="250" y1="237" x2="250" y2="885"/><line class="lifeline" x1="600" y1="237" x2="600" y2="885"/><line class="lifeline" x1="950" y1="237" x2="950" y2="885"/><line class="lifeline" x1="1300" y1="237" x2="1300" y2="885"/>
   <rect class="activation" x="592" y="290" width="16" height="245" rx="6"/><rect class="activation" x="942" y="510" width="16" height="170" rx="6"/><rect class="activation" x="1292" y="670" width="16" height="100" rx="6"/>
 
-  <rect class="label" x="325" y="272" width="210" height="38" rx="19"/><circle class="badge" cx="348" cy="291" r="14"/><text class="num" x="344" y="296">1</text><text class="labelText" x="370" y="296">purchase(idempotency key)</text>
+  <rect class="label labelPill" x="325" y="272" width="210" height="38" rx="19"/><circle class="badge" cx="348" cy="291" r="14"/><text class="num" x="344" y="296">1</text><text class="labelText" x="370" y="296">purchase(idempotency key)</text>
   <path class="call" d="M250 325 H600" marker-end="url(#seqArrow)"/>
-  <rect class="label" x="655" y="362" width="250" height="38" rx="19"/><circle class="badge" cx="678" cy="381" r="14"/><text class="num" x="674" y="386">2</text><text class="labelText" x="700" y="386">validate admission grant</text>
+  <rect class="label labelPill" x="655" y="362" width="250" height="38" rx="19"/><circle class="badge" cx="678" cy="381" r="14"/><text class="num" x="674" y="386">2</text><text class="labelText" x="700" y="386">validate admission grant</text>
   <path class="call" d="M600 415 H950" marker-end="url(#seqArrow)"/>
-  <rect class="label" x="330" y="452" width="250" height="38" rx="19"/><circle class="badge" cx="353" cy="471" r="14"/><text class="num" x="349" y="476">3</text><text class="labelText" x="375" y="476">commit hold + guards</text>
+  <rect class="label labelPill" x="330" y="452" width="250" height="38" rx="19"/><circle class="badge" cx="353" cy="471" r="14"/><text class="num" x="349" y="476">3</text><text class="labelText" x="375" y="476">commit hold + guards</text>
   <path class="return" d="M600 505 H250" marker-end="url(#seqReturn)"/>
-  <rect class="label" x="690" y="542" width="220" height="38" rx="19"/><circle class="badge" cx="713" cy="561" r="14"/><text class="num" x="709" y="566">4</text><text class="labelText" x="735" y="566">authorize(operation ID)</text>
+  <rect class="label labelPill" x="690" y="542" width="220" height="38" rx="19"/><circle class="badge" cx="713" cy="561" r="14"/><text class="num" x="709" y="566">4</text><text class="labelText" x="735" y="566">authorize(operation ID)</text>
   <path class="call" d="M600 595 H950" marker-end="url(#seqArrow)"/>
-  <rect class="label" x="1035" y="632" width="220" height="38" rx="19"/><circle class="badge" cx="1058" cy="651" r="14"/><text class="num" x="1054" y="656">5</text><text class="labelText" x="1080" y="656">issue(ticket ID)</text>
+  <rect class="label labelPill" x="1035" y="632" width="220" height="38" rx="19"/><circle class="badge" cx="1058" cy="651" r="14"/><text class="num" x="1054" y="656">5</text><text class="labelText" x="1080" y="656">issue(ticket ID)</text>
   <path class="call" d="M950 685 H1300" marker-end="url(#seqArrow)"/>
-  <rect class="label" x="720" y="722" width="230" height="38" rx="19"/><circle class="badge" cx="743" cy="741" r="14"/><text class="num" x="739" y="746">6</text><text class="labelText" x="765" y="746">snapshot: APPROVED</text>
+  <rect class="label labelPill" x="720" y="722" width="230" height="38" rx="19"/><circle class="badge" cx="743" cy="741" r="14"/><text class="num" x="739" y="746">6</text><text class="labelText" x="765" y="746">snapshot: APPROVED</text>
   <path class="return" d="M1300 775 H250" marker-end="url(#seqReturn)"/>
   <text class="subtitle" x="120" y="910">Every retry reuses the same operation/effect ID; receipts make duplicate provider effects observable.</text>
 </svg>
