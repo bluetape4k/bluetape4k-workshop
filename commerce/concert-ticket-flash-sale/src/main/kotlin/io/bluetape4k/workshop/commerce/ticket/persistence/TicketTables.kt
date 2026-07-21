@@ -311,6 +311,18 @@ object TicketTickets : LongIdTable("ticket_tickets") {
     val updatedAt = timestamp("updated_at")
 }
 
+@ExposedEntity
+class TicketTicketEntity(id: EntityID<Long>) : LongEntity(id) {
+    companion object : LongEntityClass<TicketTicketEntity>(TicketTickets)
+
+    var orderId by TicketTickets.orderId
+    var externalTicketDigest by TicketTickets.externalTicketDigest
+    var state by TicketTickets.state
+    var revision by TicketTickets.revision
+    var createdAt by TicketTickets.createdAt
+    var updatedAt by TicketTickets.updatedAt
+}
+
 object TicketEffectOperations : LongIdTable("ticket_effect_operations") {
     val effectKind = varchar("effect_kind", 16)
     val operationId = javaUUID("operation_id")
@@ -322,6 +334,39 @@ object TicketEffectOperations : LongIdTable("ticket_effect_operations") {
     val revision = long("revision")
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
+}
+
+@ExposedEntity
+class TicketEffectOperationEntity(id: EntityID<Long>) : LongEntity(id) {
+    companion object : LongEntityClass<TicketEffectOperationEntity>(TicketEffectOperations)
+
+    var effectKind by TicketEffectOperations.effectKind
+    var operationId by TicketEffectOperations.operationId
+    var orderId by TicketEffectOperations.orderId
+    var status by TicketEffectOperations.status
+    var claimToken by TicketEffectOperations.claimToken
+    var claimRevision by TicketEffectOperations.claimRevision
+    var claimUntil by TicketEffectOperations.claimUntil
+    var revision by TicketEffectOperations.revision
+    var createdAt by TicketEffectOperations.createdAt
+    var updatedAt by TicketEffectOperations.updatedAt
+}
+
+object TicketEffectReceipts : LongIdTable("ticket_effect_receipts") {
+    val consumerName = varchar("consumer_name", 80)
+    val operationId = javaUUID("operation_id")
+    val payloadDigest = binary("payload_digest", 32)
+    val createdAt = timestamp("created_at")
+}
+
+@ExposedEntity
+class TicketEffectReceiptEntity(id: EntityID<Long>) : LongEntity(id) {
+    companion object : LongEntityClass<TicketEffectReceiptEntity>(TicketEffectReceipts)
+
+    var consumerName by TicketEffectReceipts.consumerName
+    var operationId by TicketEffectReceipts.operationId
+    var payloadDigest by TicketEffectReceipts.payloadDigest
+    var createdAt by TicketEffectReceipts.createdAt
 }
 
 object TicketHttpIdempotencies : LongIdTable("ticket_http_idempotency") {
@@ -375,5 +420,8 @@ val ticketAuthorityTables = arrayOf(
     TicketActiveIdentityGuards,
     TicketOrders,
     TicketPaymentOperations,
+    TicketTickets,
+    TicketEffectOperations,
+    TicketEffectReceipts,
     TicketHttpIdempotencies,
 )

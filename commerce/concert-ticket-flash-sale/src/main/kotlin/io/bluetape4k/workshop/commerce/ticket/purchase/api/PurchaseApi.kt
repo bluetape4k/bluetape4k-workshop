@@ -54,6 +54,7 @@ data class ApplyPaymentOutcome(
 data class ApplyTicketOutcome(
     val orderId: UUID,
     val operationId: UUID,
+    val claimToken: UUID,
     val expectedRevision: Long,
     val outcome: TicketEffectOutcome,
     val disposition: TicketDisposition,
