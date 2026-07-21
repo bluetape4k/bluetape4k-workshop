@@ -38,6 +38,12 @@ stress evidence가 설정값을 그대로 기록하면 실제 queueing과 Hikari
 
 Hikari의 순간 pending peak도 active 15/16, acquisition wait 1ms, drain 0ms, leak 0인 정상 run에서 3까지 관측됐다. Connection handoff 순간의 waiter 수는 구조적 상한 1이 아니므로 report-only evidence로 남기고, acquisition deadline과 pending drain deadline을 hard gate로 유지한다.
 
+### Database timestamp 정밀도도 idempotency authority의 일부다
+
+PostgreSQL/JDBC는 nanosecond `Instant`를 microsecond로 반올림해 저장한다. Exact create recovery가 요청값만 `truncatedTo(MICROS)`로 자르면 500ns 이상인 값은 저장 record와 1마이크로초 어긋나 정상 replay도 `CREATE_FINGERPRINT_CONFLICT`가 된다.
+
+Campaign과 batch create를 다음 초로 반올림되는 `.999999789` 입력으로 고정하자 기존 구현이 2/2 RED가 됐다. 비교 양쪽을 PostgreSQL 저장 정밀도로 반올림하고 초 rollover를 정규화한 뒤 동일 테스트를 3회 반복 통과시켰다. Database가 authority인 exact replay에서는 business field뿐 아니라 **database가 실제 보존하는 표현**까지 fingerprint 비교 계약에 포함해야 한다.
+
 ### 복구 경로는 wiring까지 검증해야 한다
 
 migration runner, key preflight, worker trigger가 클래스와 단위 테스트로 존재하는 것만으로 production readiness가 되지 않는다. 실제 Spring bean과 기본 property가 켜져 있어야 한다.
@@ -75,6 +81,7 @@ git diff --check
 ## 다음 변경을 위한 guard
 
 - command UI는 success schema와 terminal/retryable semantics를 함께 검증하고 ambiguous outcome에서 key를 유지한다.
+- timestamp를 exact replay authority에 포함할 때는 database 저장 정밀도와 반올림 경계를 deterministic fixture로 검증한다.
 - lifecycle에 blocking I/O가 추가되면 shutdown과 마지막 registry mutation 사이의 race test를 추가한다.
 - stress evidence에는 실제 sample 수, 최대 wait, permit/Hikari drain과 leak 0을 포함한다.
 - 새 worker trigger는 Redis 없이도 PostgreSQL claim에서 재개되는 integration test를 가져야 한다.

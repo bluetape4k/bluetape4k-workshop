@@ -46,7 +46,6 @@ import java.security.SecureRandom
 import java.sql.Connection
 import java.sql.SQLException
 import java.time.Instant
-import java.time.temporal.ChronoUnit
 import java.util.ArrayDeque
 import java.util.Base64
 import java.util.Collections
@@ -1152,7 +1151,14 @@ private fun BatchRecord.hasNoProgress(): Boolean =
     acceptedCount == 0L && rejectedCount == 0L && checkpointDigest == null && lastFailureCode == null
 
 private fun Instant?.sameDatabaseInstant(other: Instant?): Boolean =
-    this?.truncatedTo(ChronoUnit.MICROS) == other?.truncatedTo(ChronoUnit.MICROS)
+    this?.toPostgresInstant() == other?.toPostgresInstant()
+
+private fun Instant.toPostgresInstant(): Instant {
+    val roundedMicros = (nano.toLong() + NANOS_PER_MICRO / 2) / NANOS_PER_MICRO
+    val normalizedSeconds = epochSecond + roundedMicros / MICROS_PER_SECOND
+    val microsOfSecond = roundedMicros % MICROS_PER_SECOND
+    return Instant.ofEpochSecond(normalizedSeconds, microsOfSecond * NANOS_PER_MICRO)
+}
 
 private fun DigestValue.secureEquals(other: DigestValue): Boolean =
     MessageDigest.isEqual(copyBytes(), other.copyBytes())
@@ -1182,6 +1188,8 @@ private const val MIN_IDEMPOTENCY_KEY_LENGTH = 8
 private const val MAX_IDEMPOTENCY_KEY_LENGTH = 200
 private const val MAX_CHUNK_ENTRIES = 500
 private const val MAX_BATCH_ENTRIES = 10_000L
+private const val NANOS_PER_MICRO = 1_000L
+private const val MICROS_PER_SECOND = 1_000_000L
 private const val MAX_JSON_PAYLOAD_BYTES = 4L * 1_024 * 1_024
 private const val GENERATED_ENTROPY_BYTES = 16
 private const val EVIDENCE_DIGEST_BYTES = 8

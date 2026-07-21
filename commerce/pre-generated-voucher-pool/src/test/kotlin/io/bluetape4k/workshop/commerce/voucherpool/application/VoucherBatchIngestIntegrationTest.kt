@@ -582,6 +582,7 @@ internal class VoucherBatchIngestIntegrationTest {
     fun `duplicate create with a new key cannot mutate the existing batch`() {
         val campaign = createCampaign("create-replay-authority")
         val original = createBatchCommand(campaign, "create-replay-authority", 2, listOf("CREATE-0"))
+            .withActivatesAt(POSTGRES_ROUNDING_INSTANT)
         val created = service.createImportBatch(original).applied()
         val exactReplay = CreateImportBatchCommand(
             tenantId = original.tenantId,
@@ -618,7 +619,10 @@ internal class VoucherBatchIngestIntegrationTest {
     @Test
     fun `concurrent exact campaign and batch creates with different keys converge on one effect`() {
         service = newService(repository = BarrierCreateRepository(JdbcVoucherPoolRepository(dataSource)))
-        val campaignCommand = createCampaignCommand("concurrent-create")
+        val campaignCommand = createCampaignCommand("concurrent-create").copy(
+            startsAt = POSTGRES_ROUNDING_INSTANT,
+            endsAt = POSTGRES_ROUNDING_INSTANT.plusSeconds(3_600),
+        )
         val secondCampaignCommand = campaignCommand.copy(idempotencyKey = key("concurrent-create-campaign-second"))
         val pool = Executors.newFixedThreadPool(2)
         try {
@@ -633,6 +637,7 @@ internal class VoucherBatchIngestIntegrationTest {
                 CampaignRevisionCommand(TENANT, draft.campaignId, draft.revision, key("concurrent-create-activate")),
             ).applied()
             val firstBatch = createBatchCommand(campaign, "concurrent-create", 1, listOf("CONCURRENT-0"))
+                .withActivatesAt(POSTGRES_ROUNDING_INSTANT.plusSeconds(60))
             val secondBatch = CreateImportBatchCommand(
                 firstBatch.tenantId,
                 firstBatch.batchId,
@@ -891,6 +896,21 @@ internal class VoucherBatchIngestIntegrationTest {
             activatesAt = Instant.now(),
             initialCodes = initial,
             idempotencyKey = key("create-batch-$suffix"),
+        )
+
+    private fun CreateImportBatchCommand.withActivatesAt(activatesAt: Instant) =
+        CreateImportBatchCommand(
+            tenantId = tenantId,
+            batchId = batchId,
+            campaignId = campaignId,
+            sourceKind = sourceKind,
+            manifestDigest = manifestDigest,
+            requestFingerprint = requestFingerprint,
+            expectedCount = expectedCount,
+            activatesAt = activatesAt,
+            expiresAt = expiresAt,
+            initialCodes = initialCodes,
+            idempotencyKey = idempotencyKey,
         )
 
     private fun import(
@@ -1213,6 +1233,7 @@ internal class VoucherBatchIngestIntegrationTest {
 
     companion object {
         private val postgres = PostgreSQLServer.Launcher.postgres
+        private val POSTGRES_ROUNDING_INSTANT = Instant.parse("2026-07-21T13:47:39.999999789Z")
         private const val TENANT = "tenant-ingest"
         private const val TERMINAL_RACE_THREAD = "failing-create-terminal-race"
     }

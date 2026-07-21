@@ -20,6 +20,7 @@
 | 안정성 | lifecycle의 SSE shutdown이 실제 stream/poller를 닫지 않음 | 실제 `VoucherPoolEventStream`이 shutdown contract를 구현하고 executor와 datasource보다 먼저 닫히는 순서를 검증했다. |
 | 안정성 | `close()`와 blocking initial snapshot 사이 race로 종료 후 poller 등록 가능 | poller registry lock 안에서 `closed`를 다시 검사한다. blocking initial과 concurrent close 회귀 테스트가 `SERVICE_SHUTTING_DOWN`, subscription 미생성, poller 0을 검증한다. |
 | 안정성/운영 | owner release가 DB timeout 한 번에 중단되고 operator timeout이 안전한 API 오류로 변환되지 않음 | owner release를 8회로 제한해 재시도하고, JDBC timeout을 `503 BACKEND_TIMEOUT`으로 변환하는 단위/HTTP 테스트를 추가했다. |
+| 안정성/복구 | PostgreSQL이 timestamp를 마이크로초로 반올림하지만 exact create replay는 요청 시각을 잘라 비교해 정상 재시도를 fingerprint conflict로 오판 | 요청과 저장 record를 PostgreSQL 정밀도로 반올림해 비교한다. 다음 초로 넘어가는 nanosecond 경계에서 campaign/batch exact replay를 RED/GREEN으로 고정하고 3회 반복 통과시켰다. |
 | 보안/복구 | restore가 manifest 누락 key reference를 허용 | 독립 key inventory와 manifest의 category별 완전성을 import 전에 비교하고 누락 시 `INCOMPLETE_MANIFEST`로 fail-closed한다. |
 | 보안/운영 | migration과 live referenced-key preflight가 production startup에 연결되지 않음 | migration 후 KEK/digest key reference를 bounded scan하고 readiness를 연다. checksum drift와 missing live key가 startup을 실패시키는 PostgreSQL 테스트를 추가했다. |
 | 운영/안정성 | durable worker trigger가 production에 없고 Redis 장애 시 claim이 진행되지 않음 | 250ms dispatcher가 PostgreSQL runnable claim을 찾는다. Redis leader는 advisory이며 미가용 시 PostgreSQL claim fencing으로 계속 진행한다. |
@@ -47,6 +48,7 @@
 | `:commerce-pre-generated-voucher-pool:koverXmlReport` | PASS, XML 1,058,448 bytes |
 | Kover | instruction 89.53%, branch 63.45%, line 92.43%, method 89.29%, class 93.53% |
 | post-CI hardening stress evidence | permit max 15, deadline violation 0; foreground max 237/201/204/201ms; worker max 1ms; SSE max 234/73/111/95ms; pending drain 0/11/6/5ms |
+| PostgreSQL timestamp rounding regression | RED 2/2 `CREATE_FINGERPRINT_CONFLICT`; rollover 경계 GREEN 2/2 × 3회; final module 362/362 PASS |
 | runtime dependency graph | JDK25 provider, Exposed JDBC, Lettuce, Bucket4j, leader present; JDK21 provider absent |
 | `./gradlew build -x test --parallel --continue` | PASS, 619 tasks |
 | project/stale/runbook/diagram/workflow checks | 108 projects; stale-check, runbook, architecture/sequence, actionlint, `bash -n` PASS |
