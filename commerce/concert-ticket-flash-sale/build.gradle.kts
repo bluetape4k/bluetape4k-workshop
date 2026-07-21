@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.gradle.api.tasks.testing.Test
 
 plugins {
     alias(libs.plugins.kotlin.spring)
@@ -80,4 +81,22 @@ tasks.test {
         excludeTags("stress")
     }
     usesService(gradle.sharedServices.registrations.named("test-mutex").get().service)
+}
+
+val ticketStressRun = providers.gradleProperty("ticketStressRun").orNull ?: "missing-ticket-stress-run"
+val ticketStressReport = layout.buildDirectory.dir("reports/ticket-stress/$ticketStressRun").get().asFile.absolutePath
+val ticketStressTest = tasks.register<Test>("ticketStressTest") {
+    description = "Runs opt-in hostile concurrency evidence for the ticket example."
+    group = "verification"
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform { includeTags("stress") }
+    usesService(gradle.sharedServices.registrations.named("test-mutex").get().service)
+    outputs.dir(ticketStressReport)
+    systemProperty("ticket.stress.run", ticketStressRun)
+    doFirst {
+        check(systemProperties["ticket.stress.run"] != "missing-ticket-stress-run") {
+            "-PticketStressRun=<unique-run-id> is required"
+        }
+    }
 }
