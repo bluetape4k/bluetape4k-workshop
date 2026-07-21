@@ -31,9 +31,12 @@ data class TicketDatabaseProperties(
 
 /** Redis admission lease timing. */
 data class TicketRedisProperties(
+    val uri: String = "redis://localhost:6379",
     val commandTimeout: Duration = Duration.ofMillis(500),
     val renewInterval: Duration = Duration.ofSeconds(2),
     val leaseTtl: Duration = Duration.ofSeconds(5),
+    val rateLimitCapacity: Long = 30,
+    val rateLimitPeriod: Duration = Duration.ofSeconds(1),
 )
 
 /** Background worker bounds. */
@@ -52,6 +55,7 @@ data class TicketSseProperties(
 enum class TicketStartupFailure {
     INVALID_DATABASE_CAPACITY,
     INVALID_DATABASE_TIMING,
+    INVALID_REDIS_CONFIGURATION,
     INVALID_REDIS_LEASE_TIMING,
     INVALID_WORKER_CAPACITY,
     INVALID_SSE_CAPACITY,
@@ -91,6 +95,9 @@ object TicketStartupValidator {
     }
 
     private fun validateRedis(redis: TicketRedisProperties) {
+        if (redis.uri.isBlank() || redis.rateLimitCapacity <= 0 || !redis.rateLimitPeriod.isPositive()) {
+            throw TicketStartupException(TicketStartupFailure.INVALID_REDIS_CONFIGURATION)
+        }
         if (!redis.commandTimeout.isPositive() || !redis.renewInterval.isPositive() || !redis.leaseTtl.isPositive() ||
             redis.commandTimeout >= redis.renewInterval ||
             redis.renewInterval.multipliedBy(2) >= redis.leaseTtl

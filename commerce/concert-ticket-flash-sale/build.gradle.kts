@@ -46,6 +46,7 @@ dependencies {
 
     implementation(libs.bluetape4k.lettuce)
     implementation(libs.bluetape4k.bucket4j)
+    implementation(libs.bucket4j.lettuce)
     implementation(libs.bluetape4k.leader.core)
     implementation(libs.bluetape4k.leader.micrometer)
     implementation(libs.bluetape4k.leader.redis.lettuce)

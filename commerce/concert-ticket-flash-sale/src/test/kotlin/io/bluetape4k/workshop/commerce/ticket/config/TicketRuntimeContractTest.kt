@@ -32,5 +32,6 @@ internal class TicketRuntimeContractTest {
         properties.getProperty("spring.datasource.hikari.maximum-pool-size") shouldBeEqualTo "20"
         properties.getProperty("workshop.ticket.db.foreground-permits") shouldBeEqualTo "12"
         properties.getProperty("workshop.ticket.redis.lease-ttl") shouldBeEqualTo "5s"
+        properties.getProperty("workshop.ticket.redis.rate-limit-capacity") shouldBeEqualTo "30"
     }
 }

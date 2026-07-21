@@ -55,4 +55,18 @@ internal class TicketStartupValidationTest {
 
         failure.code shouldBeEqualTo TicketStartupFailure.INVALID_REDIS_LEASE_TIMING
     }
+
+    @Test
+    fun `redis route limit is finite and explicitly configured`() {
+        val failure =
+            assertFailsWith<TicketStartupException> {
+                TicketStartupValidator.validate(
+                    TicketProperties(
+                        redis = TicketRedisProperties(rateLimitCapacity = 0),
+                    ),
+                )
+            }
+
+        failure.code shouldBeEqualTo TicketStartupFailure.INVALID_REDIS_CONFIGURATION
+    }
 }
