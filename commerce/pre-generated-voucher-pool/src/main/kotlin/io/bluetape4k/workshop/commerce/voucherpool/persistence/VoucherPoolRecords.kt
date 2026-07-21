@@ -207,6 +207,8 @@ internal data class ReservationRecord(
     val idempotencyOwnerDigest: DigestValue,
     val state: String,
     val expiresAt: Instant,
+    val entitlementRootId: UUID? = null,
+    val replacementOrdinal: Int = 0,
     val policyVersion: Long,
     val revision: Long,
 )
@@ -224,6 +226,35 @@ internal data class AllocationRecord(
     val expiresAt: Instant,
     val policyVersion: Long,
     val revision: Long,
+)
+
+internal data class ReservationGuards(
+    val campaign: CampaignRecord,
+    val batches: List<BatchRecord>,
+    val userLimit: UserLimitRecord,
+)
+
+internal data class LockedReservationChain(
+    val campaign: CampaignRecord,
+    val batch: BatchRecord,
+    val userLimit: UserLimitRecord,
+    val reservation: ReservationRecord,
+    val entry: EntryRecord,
+)
+
+internal data class LockedAllocationChain(
+    val campaign: CampaignRecord,
+    val batch: BatchRecord,
+    val userLimit: UserLimitRecord,
+    val reservation: ReservationRecord,
+    val allocation: AllocationRecord,
+    val entry: EntryRecord,
+)
+
+internal data class LockedReplacementChain(
+    val original: LockedAllocationChain,
+    val candidate: EntryRecord?,
+    val availableCandidateExists: Boolean,
 )
 
 internal data class CodeDedupRecord(

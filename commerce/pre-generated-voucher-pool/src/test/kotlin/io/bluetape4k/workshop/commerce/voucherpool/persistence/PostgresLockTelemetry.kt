@@ -24,13 +24,18 @@ internal fun DataSource.awaitLockWaiters(backendPids: Set<Int>, expected: Int): 
     return observed
 }
 
-internal fun DataSource.sharedLockHolders(backendPids: Set<Int>): Int = connection.use { connection ->
+internal fun DataSource.sharedLockHolders(
+    backendPids: Set<Int>,
+    relation: String = "voucher_pool_campaigns",
+): Int = connection.use { connection ->
+    require(relation in setOf("voucher_pool_campaigns", "voucher_pool_batches"))
     connection.prepareStatement(
         """SELECT count(DISTINCT pid) FROM pg_locks
-            WHERE granted AND mode='RowShareLock' AND relation='voucher_pool_campaigns'::regclass
+            WHERE granted AND mode='RowShareLock' AND relation=?::regclass
               AND pid=ANY(?)""",
     ).use { statement ->
-        statement.setArray(1, connection.createArrayOf("integer", backendPids.toTypedArray()))
+        statement.setString(1, relation)
+        statement.setArray(2, connection.createArrayOf("integer", backendPids.toTypedArray()))
         statement.executeQuery().use { result -> result.next(); result.getInt(1) }
     }
 }

@@ -259,6 +259,36 @@ internal class VoucherCryptoStorage(
     private val repository: VoucherPoolRepository,
     private val crypto: VoucherEnvelopeCrypto,
 ) {
+    /** Decrypts a caller-locked RESERVED entry for allocation digesting without consuming the reveal ciphertext. */
+    @Suppress("SwallowedException")
+    fun decryptRetained(
+        connection: Connection,
+        identity: EntryIdentity,
+        expectedRevision: Long,
+    ): VoucherCryptoStorageOutcome {
+        check(!connection.autoCommit) { "voucher crypto storage requires a caller-owned transaction" }
+        val locked = repository.lockReservedCryptoEntry(
+            connection,
+            identity.tenantId,
+            identity.campaignId,
+            identity.batchId,
+            identity.entryId,
+            identity.sourceOrdinal,
+            expectedRevision,
+        ) ?: error("reserved voucher entry is missing, stale, or quarantined")
+        return try {
+            VoucherCryptoStorageOutcome.Revealed(
+                crypto.decryptAndVerify(identity, locked.encrypted(), locked.stableDedup()),
+            )
+        } catch (failure: VoucherCryptoException) {
+            quarantine(connection, identity, locked, failure.reason)
+            VoucherCryptoStorageOutcome.Quarantined(failure.reason)
+        } catch (failure: IllegalArgumentException) {
+            quarantine(connection, identity, locked, VoucherCryptoFailureReason.INVALID_CIPHERTEXT)
+            VoucherCryptoStorageOutcome.Quarantined(VoucherCryptoFailureReason.INVALID_CIPHERTEXT)
+        }
+    }
+
     // Persist only the bounded quarantine reason; never expose malformed crypto material.
     @Suppress("SwallowedException")
     fun decryptAndErase(

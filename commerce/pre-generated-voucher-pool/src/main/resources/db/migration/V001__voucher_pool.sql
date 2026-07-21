@@ -93,6 +93,12 @@ CREATE TABLE voucher_pool_entries (
     CONSTRAINT voucher_pool_entry_verification_pair CHECK (
       (verification_digest IS NULL) = (verification_key_version IS NULL)
     ),
+    CONSTRAINT voucher_pool_entry_allocation_context CHECK (
+      allocation_id IS NULL OR (verification_digest IS NOT NULL AND reservation_id IS NOT NULL
+        AND user_digest IS NOT NULL AND reserved_at IS NOT NULL AND reservation_expires_at IS NOT NULL
+        AND allocated_at IS NOT NULL AND allocation_expires_at IS NOT NULL
+        AND allocation_policy_version IS NOT NULL AND entitlement_root_id IS NOT NULL)
+    ),
     CONSTRAINT voucher_pool_entry_cipher_contract CHECK (
       (revealed_at IS NULL AND code_ciphertext IS NOT NULL AND code_nonce IS NOT NULL
         AND wrapped_dek IS NOT NULL AND wrap_nonce IS NOT NULL AND kek_version IS NOT NULL)
@@ -138,6 +144,8 @@ CREATE TABLE voucher_pool_reservations (
     idempotency_owner_digest BYTEA NOT NULL,
     state VARCHAR(24) NOT NULL,
     reservation_expires_at TIMESTAMPTZ NOT NULL,
+    entitlement_root_id UUID,
+    replacement_ordinal INTEGER NOT NULL DEFAULT 0 CHECK (replacement_ordinal BETWEEN 0 AND 1),
     policy_version BIGINT NOT NULL CHECK (policy_version > 0),
     revision BIGINT NOT NULL DEFAULT 0 CHECK (revision >= 0),
     PRIMARY KEY (tenant_id, reservation_id),
@@ -146,10 +154,15 @@ CREATE TABLE voucher_pool_reservations (
     FOREIGN KEY (tenant_id,entry_id,campaign_id,batch_id)
       REFERENCES voucher_pool_entries(tenant_id,entry_id,campaign_id,batch_id),
     UNIQUE (tenant_id,reservation_id,campaign_id,batch_id,entry_id,user_digest),
+    CHECK ((replacement_ordinal=0 AND entitlement_root_id IS NULL)
+        OR (replacement_ordinal=1 AND entitlement_root_id IS NOT NULL)),
     CHECK (state IN ('ACTIVE','ALLOCATED','EXPIRED','RELEASED','REVOKED'))
 );
 CREATE UNIQUE INDEX uq_voucher_pool_reservation_active_entry
     ON voucher_pool_reservations(tenant_id,entry_id) WHERE state='ACTIVE';
+CREATE UNIQUE INDEX uq_voucher_pool_replacement_reservation
+    ON voucher_pool_reservations(tenant_id,campaign_id,user_digest,entitlement_root_id,replacement_ordinal)
+    WHERE entitlement_root_id IS NOT NULL;
 CREATE INDEX ix_voucher_pool_reservation_cursor ON voucher_pool_reservations(tenant_id,state,reservation_expires_at,reservation_id);
 
 CREATE TABLE voucher_pool_user_limits (
@@ -178,7 +191,7 @@ CREATE TABLE voucher_pool_allocations (
     policy_version BIGINT NOT NULL CHECK (policy_version > 0),
     revision BIGINT NOT NULL DEFAULT 0 CHECK (revision >= 0),
     PRIMARY KEY (tenant_id,allocation_id),
-    UNIQUE (tenant_id,allocation_id,campaign_id,batch_id,entry_id),
+    UNIQUE (tenant_id,allocation_id,reservation_id,campaign_id,batch_id,entry_id,user_digest),
     FOREIGN KEY (tenant_id,reservation_id,campaign_id,batch_id,entry_id,user_digest)
       REFERENCES voucher_pool_reservations(tenant_id,reservation_id,campaign_id,batch_id,entry_id,user_digest),
     FOREIGN KEY (tenant_id,campaign_id) REFERENCES voucher_pool_campaigns(tenant_id,campaign_id),
@@ -254,8 +267,8 @@ ALTER TABLE voucher_pool_entries
     REFERENCES voucher_pool_reservations(tenant_id,reservation_id,campaign_id,batch_id,entry_id,user_digest)
     DEFERRABLE INITIALLY DEFERRED;
 ALTER TABLE voucher_pool_entries
-    ADD FOREIGN KEY (tenant_id,allocation_id,campaign_id,batch_id,entry_id)
-    REFERENCES voucher_pool_allocations(tenant_id,allocation_id,campaign_id,batch_id,entry_id)
+    ADD FOREIGN KEY (tenant_id,allocation_id,reservation_id,campaign_id,batch_id,entry_id,user_digest)
+    REFERENCES voucher_pool_allocations(tenant_id,allocation_id,reservation_id,campaign_id,batch_id,entry_id,user_digest)
     DEFERRABLE INITIALLY DEFERRED;
 
 CREATE TABLE voucher_pool_code_dedup (
@@ -382,7 +395,7 @@ CREATE INDEX ix_voucher_pool_depth_campaign ON voucher_pool_pool_depth(tenant_id
 CREATE FUNCTION voucher_pool_touch_updated_at() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
-    NEW.updated_at = transaction_timestamp();
+    NEW.updated_at = GREATEST(OLD.updated_at, NEW.created_at, transaction_timestamp());
     RETURN NEW;
 END;
 $$;

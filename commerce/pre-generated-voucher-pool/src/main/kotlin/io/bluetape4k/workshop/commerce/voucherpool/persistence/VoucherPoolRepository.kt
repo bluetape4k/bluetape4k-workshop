@@ -1,4 +1,11 @@
-@file:Suppress("LongParameterList", "MagicNumber", "MaxLineLength", "TooManyFunctions", "UnusedParameter")
+@file:Suppress(
+    "LongParameterList",
+    "MagicNumber",
+    "MaxLineLength",
+    "ReturnCount", // Stale hint validation exits before any lower-order row lock is acquired.
+    "TooManyFunctions",
+    "UnusedParameter",
+)
 
 package io.bluetape4k.workshop.commerce.voucherpool.persistence
 
@@ -24,6 +31,7 @@ import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Proxy
+import java.security.MessageDigest
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.Timestamp
@@ -32,6 +40,7 @@ import java.util.UUID
 import javax.sql.DataSource
 
 internal interface VoucherPoolRepository {
+    fun transactionTime(connection: Connection): Instant
     fun createCampaign(connection: Connection, campaign: CampaignRecord): CampaignRecord
     fun lockCampaignForUpdate(connection: Connection, tenantId: String, campaignId: UUID): CampaignRecord?
     fun updateCampaign(connection: Connection, campaign: CampaignRecord, expectedRevision: Long): CampaignRecord
@@ -66,7 +75,76 @@ internal interface VoucherPoolRepository {
     fun lockCampaignForShare(connection: Connection, tenantId: String, campaignId: UUID): CampaignRecord
     fun lockBatchForShare(connection: Connection, tenantId: String, batchId: UUID): BatchRecord
     fun lockUserLimit(connection: Connection, tenantId: String, campaignId: UUID, userDigest: ByteArray): UserLimitRecord
-    fun selectAvailableEntrySkipLocked(connection: Connection, tenantId: String, campaignId: UUID): EntryRecord?
+    fun selectAvailableEntrySkipLocked(
+        connection: Connection,
+        tenantId: String,
+        campaignId: UUID,
+        lockedBatchIds: List<UUID>,
+    ): EntryRecord?
+    fun lockReservationGuards(
+        connection: Connection,
+        tenantId: String,
+        campaignId: UUID,
+        userDigest: ByteArray,
+    ): ReservationGuards?
+    fun hasAvailableEligibleEntry(
+        connection: Connection,
+        tenantId: String,
+        campaignId: UUID,
+        lockedBatchIds: List<UUID>,
+    ): Boolean
+    fun createReservation(
+        connection: Connection,
+        reservation: ReservationRecord,
+        entry: EntryRecord,
+        userLimit: UserLimitRecord,
+    ): ReservationRecord
+    fun lockReservationChain(
+        connection: Connection,
+        tenantId: String,
+        reservationId: UUID,
+        userDigest: ByteArray,
+    ): LockedReservationChain?
+    fun releaseReservation(connection: Connection, chain: LockedReservationChain): ReservationRecord
+    fun allocateReservation(
+        connection: Connection,
+        chain: LockedReservationChain,
+        allocation: AllocationRecord,
+        verificationDigest: ByteArray,
+        verificationKeyVersion: Int,
+    ): LockedAllocationChain
+    fun lockAllocationChain(
+        connection: Connection,
+        tenantId: String,
+        allocationId: UUID,
+        userDigest: ByteArray?,
+    ): LockedAllocationChain?
+    fun lockReplacementChain(
+        connection: Connection,
+        tenantId: String,
+        allocationId: UUID,
+        userDigest: ByteArray,
+    ): LockedReplacementChain?
+    fun replaceLostReveal(
+        connection: Connection,
+        chain: LockedReplacementChain,
+        reservation: ReservationRecord,
+    ): ReservationRecord
+    fun transitionAllocationTerminal(
+        connection: Connection,
+        chain: LockedAllocationChain,
+        state: EntryState,
+        reason: String,
+    ): LockedAllocationChain
+    fun lockReservedCryptoEntry(
+        connection: Connection,
+        tenantId: String,
+        campaignId: UUID,
+        batchId: UUID,
+        entryId: UUID,
+        sourceOrdinal: Long,
+        expectedRevision: Long,
+    ): LockedVoucherCryptoRecord?
     fun lockCanonicalChain(connection: Connection, candidate: WorkerCandidate): LockedWorkerChain?
     fun lockAllocatedCryptoEntry(
         connection: Connection,
@@ -78,6 +156,7 @@ internal interface VoucherPoolRepository {
         expectedRevision: Long,
     ): LockedVoucherCryptoRecord?
     fun eraseVoucherCiphertext(connection: Connection, tenantId: String, entryId: UUID, expectedRevision: Long)
+    fun advanceAllocationRevision(connection: Connection, allocation: AllocationRecord): AllocationRecord
     fun quarantineVoucherCrypto(
         connection: Connection,
         tenantId: String,
@@ -93,6 +172,12 @@ internal interface VoucherPoolRepository {
 @Suppress("LargeClass")
 internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : VoucherPoolRepository {
     private val database = Database.connect(dataSource)
+
+    override fun transactionTime(connection: Connection): Instant = connection.prepareStatement(
+        "SELECT transaction_timestamp()",
+    ).use { statement ->
+        statement.executeQuery().use { result -> result.next(); result.getTimestamp(1).toInstant() }
+    }
 
     override fun createCampaign(connection: Connection, campaign: CampaignRecord): CampaignRecord {
         connection.prepareStatement(
@@ -233,6 +318,10 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
                 statement.executeUpdate()
             }
         }
+        entries.groupingBy { it.tenantId to it.batchId }.eachCount().forEach { (scope, count) ->
+            ensurePoolDepthRows(connection, scope.first, scope.second)
+            incrementPoolDepth(connection, scope.first, scope.second, EntryState.AVAILABLE, count.toLong())
+        }
     }
 
     override fun committedOrdinalDigests(
@@ -349,12 +438,19 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
     }
 
     override fun lockCampaignForShare(connection: Connection, tenantId: String, campaignId: UUID): CampaignRecord =
+        checkNotNull(lockCampaignForShareOrNull(connection, tenantId, campaignId))
+
+    private fun lockCampaignForShareOrNull(
+        connection: Connection,
+        tenantId: String,
+        campaignId: UUID,
+    ): CampaignRecord? =
         connection.prepareStatement(
             "SELECT * FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=? FOR SHARE",
         ).use { statement ->
             statement.setString(1, tenantId)
             statement.setObject(2, campaignId)
-            statement.executeQuery().use { result -> check(result.next()); result.campaignRecord() }
+            statement.executeQuery().use { result -> if (result.next()) result.campaignRecord() else null }
         }
 
     override fun lockBatchForShare(connection: Connection, tenantId: String, batchId: UUID): BatchRecord =
@@ -402,13 +498,265 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         connection: Connection,
         tenantId: String,
         campaignId: UUID,
+        lockedBatchIds: List<UUID>,
     ): EntryRecord? {
-        lockEligibleCampaignForShare(connection, tenantId, campaignId) ?: return null
-        return eligibleBatchIds(connection, tenantId, campaignId).firstNotNullOfOrNull { batchId ->
-            lockEligibleBatchForShare(connection, tenantId, campaignId, batchId)
-                ?.let { selectAvailableEntryInBatch(connection, tenantId, batchId) }
+        if (lockedBatchIds.isEmpty()) return null
+        return connection.prepareStatement(
+        """SELECT e.* FROM voucher_pool_entries e JOIN voucher_pool_batches b
+              ON b.tenant_id=e.tenant_id AND b.batch_id=e.batch_id AND b.campaign_id=e.campaign_id
+            WHERE e.tenant_id=? AND e.campaign_id=? AND e.state='AVAILABLE' AND e.quarantined_at IS NULL
+              AND b.state='ACTIVE' AND b.activates_at<=transaction_timestamp()
+              AND (b.expires_at IS NULL OR b.expires_at>transaction_timestamp())
+              AND b.batch_id=ANY(?)
+            ORDER BY b.activates_at,b.batch_id,e.source_ordinal,e.entry_id
+            LIMIT 1 FOR UPDATE OF e SKIP LOCKED""",
+        ).use { statement ->
+        statement.setString(1, tenantId); statement.setObject(2, campaignId)
+        statement.setArray(3, connection.createArrayOf("uuid", lockedBatchIds.toTypedArray()))
+        statement.executeQuery().use { result -> if (result.next()) result.entryRecord() else null }
+    }
+    }
+
+    override fun lockReservationGuards(
+        connection: Connection,
+        tenantId: String,
+        campaignId: UUID,
+        userDigest: ByteArray,
+    ): ReservationGuards? {
+        val campaign = lockCampaignForShareOrNull(connection, tenantId, campaignId) ?: return null
+        val batches = campaignBatchIds(connection, tenantId, campaignId).map { batchId ->
+            lockBatchForShare(connection, tenantId, batchId)
+        }
+        return ReservationGuards(campaign, batches, lockUserLimit(connection, tenantId, campaignId, userDigest))
+    }
+
+    override fun hasAvailableEligibleEntry(
+        connection: Connection,
+        tenantId: String,
+        campaignId: UUID,
+        lockedBatchIds: List<UUID>,
+    ): Boolean {
+        if (lockedBatchIds.isEmpty()) return false
+        return connection.prepareStatement(
+            """SELECT EXISTS(SELECT 1 FROM voucher_pool_entries e JOIN voucher_pool_batches b
+                  ON b.tenant_id=e.tenant_id AND b.batch_id=e.batch_id AND b.campaign_id=e.campaign_id
+                WHERE e.tenant_id=? AND e.campaign_id=? AND e.state='AVAILABLE' AND e.quarantined_at IS NULL
+                  AND b.state='ACTIVE' AND b.activates_at<=transaction_timestamp()
+                  AND (b.expires_at IS NULL OR b.expires_at>transaction_timestamp())
+                  AND b.batch_id=ANY(?))""",
+        ).use { statement ->
+            statement.setString(1, tenantId); statement.setObject(2, campaignId)
+            statement.setArray(3, connection.createArrayOf("uuid", lockedBatchIds.toTypedArray()))
+            statement.executeQuery().use { result -> result.next(); result.getBoolean(1) }
         }
     }
+
+    override fun createReservation(
+        connection: Connection,
+        reservation: ReservationRecord,
+        entry: EntryRecord,
+        userLimit: UserLimitRecord,
+    ): ReservationRecord {
+        connection.prepareStatement(
+            """UPDATE voucher_pool_entries SET state='RESERVED',reservation_id=?,user_digest=?,reserved_at=transaction_timestamp(),
+                  reservation_expires_at=?,revision=revision+1 WHERE tenant_id=? AND entry_id=? AND revision=? AND state='AVAILABLE'""",
+        ).use { statement ->
+            statement.setObject(1, reservation.reservationId); statement.setBytes(2, reservation.userDigest.copyBytes())
+            statement.setTimestamp(3, Timestamp.from(reservation.expiresAt)); statement.setString(4, reservation.tenantId)
+            statement.setObject(5, entry.entryId); statement.setLong(6, entry.revision)
+            check(statement.executeUpdate() == 1) { "reservation entry transition lost its revision" }
+        }
+        transitionPoolDepth(connection, entry.tenantId, entry.batchId, EntryState.AVAILABLE, EntryState.RESERVED)
+        insertReservation(connection, reservation)
+        updateUserLimit(connection, userLimit, reservationsDelta = 1, allocationsDelta = 0, lifetimeDelta = 0)
+        return checkNotNull(lockReservationById(connection, reservation.tenantId, reservation.reservationId))
+    }
+
+    override fun lockReservationChain(
+        connection: Connection,
+        tenantId: String,
+        reservationId: UUID,
+        userDigest: ByteArray,
+    ): LockedReservationChain? {
+        val hint = findReservation(connection, tenantId, reservationId) ?: return null
+        if (!MessageDigest.isEqual(hint.userDigest.copyBytes(), userDigest)) return null
+        val campaign = lockCampaignForShare(connection, tenantId, hint.campaignId)
+        val batch = lockBatchForShare(connection, tenantId, hint.batchId)
+        val limit = lockUserLimit(connection, tenantId, hint.campaignId, userDigest)
+        val reservation = lockReservationById(connection, tenantId, reservationId) ?: return null
+        check(MessageDigest.isEqual(reservation.userDigest.copyBytes(), userDigest))
+        val entry = lockEntry(connection, tenantId, reservation.entryId)
+        return LockedReservationChain(campaign, batch, limit, reservation, entry)
+    }
+
+    override fun releaseReservation(connection: Connection, chain: LockedReservationChain): ReservationRecord {
+        check(chain.reservation.state == "ACTIVE" && chain.entry.state == EntryState.RESERVED)
+        updateReservationState(connection, chain.reservation, "RELEASED")
+        connection.prepareStatement(
+            """UPDATE voucher_pool_entries SET state='AVAILABLE',reservation_id=NULL,user_digest=NULL,reserved_at=NULL,
+                  reservation_expires_at=NULL,revision=revision+1 WHERE tenant_id=? AND entry_id=? AND revision=? AND state='RESERVED'""",
+        ).use { statement ->
+            statement.setString(1, chain.entry.tenantId); statement.setObject(2, chain.entry.entryId)
+            statement.setLong(3, chain.entry.revision); check(statement.executeUpdate() == 1)
+        }
+        transitionPoolDepth(connection, chain.entry.tenantId, chain.entry.batchId, EntryState.RESERVED, EntryState.AVAILABLE)
+        updateUserLimit(connection, chain.userLimit, -1, 0, 0)
+        return checkNotNull(lockReservationById(connection, chain.reservation.tenantId, chain.reservation.reservationId))
+    }
+
+    override fun allocateReservation(
+        connection: Connection,
+        chain: LockedReservationChain,
+        allocation: AllocationRecord,
+        verificationDigest: ByteArray,
+        verificationKeyVersion: Int,
+    ): LockedAllocationChain {
+        check(chain.reservation.state == "ACTIVE" && chain.entry.state == EntryState.RESERVED)
+        connection.prepareStatement(
+            """INSERT INTO voucher_pool_allocations
+                (tenant_id,allocation_id,reservation_id,campaign_id,batch_id,entry_id,user_digest,entitlement_root_id,
+                 replacement_ordinal,allocation_expires_at,policy_version,revision) VALUES (?,?,?,?,?,?,?,?,?,?,?,0)""",
+        ).use { statement ->
+            statement.setString(1, allocation.tenantId); statement.setObject(2, allocation.allocationId)
+            statement.setObject(3, allocation.reservationId); statement.setObject(4, allocation.campaignId)
+            statement.setObject(5, allocation.batchId); statement.setObject(6, allocation.entryId)
+            statement.setBytes(7, allocation.userDigest.copyBytes()); statement.setObject(8, allocation.entitlementRootId)
+            statement.setInt(9, allocation.replacementOrdinal); statement.setTimestamp(10, Timestamp.from(allocation.expiresAt))
+            statement.setLong(11, allocation.policyVersion); statement.executeUpdate()
+        }
+        updateReservationState(connection, chain.reservation, "ALLOCATED")
+        connection.prepareStatement(
+            """UPDATE voucher_pool_entries SET state='ALLOCATED',allocation_id=?,allocated_at=transaction_timestamp(),
+                  allocation_expires_at=?,allocation_policy_version=?,entitlement_root_id=?,replacement_count=?,
+                  verification_digest=?,verification_key_version=?,revision=revision+1
+                WHERE tenant_id=? AND entry_id=? AND revision=? AND state='RESERVED'""",
+        ).use { statement ->
+            statement.setObject(1, allocation.allocationId); statement.setTimestamp(2, Timestamp.from(allocation.expiresAt))
+            statement.setLong(3, allocation.policyVersion); statement.setObject(4, allocation.entitlementRootId)
+            statement.setInt(5, allocation.replacementOrdinal); statement.setBytes(6, verificationDigest)
+            statement.setInt(7, verificationKeyVersion); statement.setString(8, allocation.tenantId)
+            statement.setObject(9, allocation.entryId); statement.setLong(10, chain.entry.revision)
+            check(statement.executeUpdate() == 1) { "allocation entry transition lost its revision" }
+        }
+        transitionPoolDepth(connection, chain.entry.tenantId, chain.entry.batchId, EntryState.RESERVED, EntryState.ALLOCATED)
+        updateUserLimit(connection, chain.userLimit, -1, 1, if (allocation.replacementOrdinal == 0) 1 else 0)
+        return checkNotNull(lockAllocationChain(connection, allocation.tenantId, allocation.allocationId, allocation.userDigest.copyBytes()))
+    }
+
+    override fun lockAllocationChain(
+        connection: Connection,
+        tenantId: String,
+        allocationId: UUID,
+        userDigest: ByteArray?,
+    ): LockedAllocationChain? {
+        val hint = findAllocation(connection, tenantId, allocationId) ?: return null
+        if (userDigest != null && !MessageDigest.isEqual(hint.userDigest.copyBytes(), userDigest)) return null
+        val campaign = lockCampaignForShare(connection, tenantId, hint.campaignId)
+        val batch = lockBatchForShare(connection, tenantId, hint.batchId)
+        val digest = userDigest ?: hint.userDigest.copyBytes()
+        val limit = lockUserLimit(connection, tenantId, hint.campaignId, digest)
+        val reservation = lockReservationById(connection, tenantId, hint.reservationId) ?: return null
+        check(MessageDigest.isEqual(reservation.userDigest.copyBytes(), digest))
+        val entry = lockEntry(connection, tenantId, hint.entryId)
+        val allocation = lockAllocationById(connection, tenantId, allocationId) ?: return null
+        return LockedAllocationChain(campaign, batch, limit, reservation, allocation, entry)
+    }
+
+    override fun lockReplacementChain(
+        connection: Connection,
+        tenantId: String,
+        allocationId: UUID,
+        userDigest: ByteArray,
+    ): LockedReplacementChain? {
+        val hint = findAllocation(connection, tenantId, allocationId) ?: return null
+        if (!MessageDigest.isEqual(hint.userDigest.copyBytes(), userDigest)) return null
+        val campaign = lockCampaignForShare(connection, tenantId, hint.campaignId)
+        val batchIds = eligibleBatchIds(connection, tenantId, hint.campaignId)
+        val batches = batchIds.mapNotNull { lockEligibleBatchForShare(connection, tenantId, hint.campaignId, it) }
+        val lockedBatchIds = batches.map(BatchRecord::batchId)
+        val originalBatch = batches.firstOrNull { it.batchId == hint.batchId }
+            ?: lockBatchForShare(connection, tenantId, hint.batchId)
+        val limit = lockUserLimit(connection, tenantId, hint.campaignId, userDigest)
+        val reservation = lockReservationById(connection, tenantId, hint.reservationId) ?: return null
+        check(MessageDigest.isEqual(reservation.userDigest.copyBytes(), userDigest))
+        val entry = lockEntry(connection, tenantId, hint.entryId)
+        val allocation = lockAllocationById(connection, tenantId, allocationId) ?: return null
+        val original = LockedAllocationChain(campaign, originalBatch, limit, reservation, allocation, entry)
+        val candidate = selectAvailableEntrySkipLocked(connection, tenantId, hint.campaignId, lockedBatchIds)
+        return LockedReplacementChain(
+            original,
+            candidate,
+            candidate != null || hasAvailableEligibleEntry(connection, tenantId, hint.campaignId, lockedBatchIds),
+        )
+    }
+
+    override fun replaceLostReveal(
+        connection: Connection,
+        chain: LockedReplacementChain,
+        reservation: ReservationRecord,
+    ): ReservationRecord {
+        val candidate = checkNotNull(chain.candidate)
+        val original = chain.original
+        check(original.entry.state == EntryState.ALLOCATED && original.entry.revealedAt != null)
+        connection.prepareStatement(
+            """UPDATE voucher_pool_entries SET state='REVOKED',terminal_reason='LOST_REVEAL',revision=revision+1
+                WHERE tenant_id=? AND entry_id=? AND revision=? AND state='ALLOCATED'""",
+        ).use { statement ->
+            statement.setString(1, original.entry.tenantId); statement.setObject(2, original.entry.entryId)
+            statement.setLong(3, original.entry.revision); check(statement.executeUpdate() == 1)
+        }
+        advanceAllocationRevision(connection, original.allocation)
+        connection.prepareStatement(
+            """UPDATE voucher_pool_entries SET state='RESERVED',reservation_id=?,user_digest=?,reserved_at=transaction_timestamp(),
+                  reservation_expires_at=?,revision=revision+1 WHERE tenant_id=? AND entry_id=? AND revision=? AND state='AVAILABLE'""",
+        ).use { statement ->
+            statement.setObject(1, reservation.reservationId); statement.setBytes(2, reservation.userDigest.copyBytes())
+            statement.setTimestamp(3, Timestamp.from(reservation.expiresAt)); statement.setString(4, reservation.tenantId)
+            statement.setObject(5, candidate.entryId); statement.setLong(6, candidate.revision); check(statement.executeUpdate() == 1)
+        }
+        transitionReplacementPoolDepth(connection, original.entry, candidate)
+        insertReservation(connection, reservation)
+        updateUserLimit(connection, original.userLimit, 1, -1, 0)
+        return checkNotNull(lockReservationById(connection, reservation.tenantId, reservation.reservationId))
+    }
+
+    override fun transitionAllocationTerminal(
+        connection: Connection,
+        chain: LockedAllocationChain,
+        state: EntryState,
+        reason: String,
+    ): LockedAllocationChain {
+        require(state == EntryState.REDEEMED || state == EntryState.RELEASED || state == EntryState.REVOKED)
+        connection.prepareStatement(
+            """UPDATE voucher_pool_entries SET state=?,terminal_reason=?,redeemed_at=CASE WHEN ?='REDEEMED' THEN transaction_timestamp() ELSE redeemed_at END,
+                  revision=revision+1 WHERE tenant_id=? AND entry_id=? AND revision=? AND state='ALLOCATED'""",
+        ).use { statement ->
+            statement.setString(1, state.name); statement.setString(2, reason); statement.setString(3, state.name)
+            statement.setString(4, chain.entry.tenantId); statement.setObject(5, chain.entry.entryId)
+            statement.setLong(6, chain.entry.revision); check(statement.executeUpdate() == 1)
+        }
+        transitionPoolDepth(connection, chain.entry.tenantId, chain.entry.batchId, EntryState.ALLOCATED, state)
+        connection.prepareStatement(
+            "UPDATE voucher_pool_allocations SET revision=revision+1 WHERE tenant_id=? AND allocation_id=? AND revision=?",
+        ).use { statement ->
+            statement.setString(1, chain.allocation.tenantId); statement.setObject(2, chain.allocation.allocationId)
+            statement.setLong(3, chain.allocation.revision); check(statement.executeUpdate() == 1)
+        }
+        updateUserLimit(connection, chain.userLimit, 0, -1, 0)
+        return checkNotNull(lockAllocationChain(connection, chain.allocation.tenantId, chain.allocation.allocationId, chain.allocation.userDigest.copyBytes()))
+    }
+
+    override fun lockReservedCryptoEntry(
+        connection: Connection,
+        tenantId: String,
+        campaignId: UUID,
+        batchId: UUID,
+        entryId: UUID,
+        sourceOrdinal: Long,
+        expectedRevision: Long,
+    ): LockedVoucherCryptoRecord? = lockCryptoEntry(
+        connection, tenantId, campaignId, batchId, entryId, sourceOrdinal, expectedRevision, "RESERVED",
+    )
 
     @Suppress("ReturnCount") // Each stale revision must stop before a lower-order row is locked.
     override fun lockCanonicalChain(connection: Connection, candidate: WorkerCandidate): LockedWorkerChain? {
@@ -445,13 +793,26 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         entryId: UUID,
         sourceOrdinal: Long,
         expectedRevision: Long,
+    ): LockedVoucherCryptoRecord? = lockCryptoEntry(
+        connection, tenantId, campaignId, batchId, entryId, sourceOrdinal, expectedRevision, "ALLOCATED",
+    )
+
+    private fun lockCryptoEntry(
+        connection: Connection,
+        tenantId: String,
+        campaignId: UUID,
+        batchId: UUID,
+        entryId: UUID,
+        sourceOrdinal: Long,
+        expectedRevision: Long,
+        requiredState: String,
     ): LockedVoucherCryptoRecord? = connection.prepareStatement(
         """SELECT e.state,e.revision,e.stable_dedup_digest,d.key_version AS stable_dedup_key_version,
             e.code_ciphertext,e.code_nonce,e.wrapped_dek,e.wrap_nonce,e.kek_version
             FROM voucher_pool_entries e JOIN voucher_pool_code_dedup d
               ON d.tenant_id=e.tenant_id AND d.stable_dedup_digest=e.stable_dedup_digest
             WHERE e.tenant_id=? AND e.campaign_id=? AND e.batch_id=? AND e.entry_id=? AND e.source_ordinal=?
-              AND e.revision=? AND e.state='ALLOCATED'
+              AND e.revision=? AND e.state=?
               AND e.revealed_at IS NULL AND e.quarantined_at IS NULL FOR UPDATE OF e""",
     ).use { statement ->
         var parameterIndex = 1
@@ -460,7 +821,8 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         statement.setObject(parameterIndex++, batchId)
         statement.setObject(parameterIndex++, entryId)
         statement.setLong(parameterIndex++, sourceOrdinal)
-        statement.setLong(parameterIndex, expectedRevision)
+        statement.setLong(parameterIndex++, expectedRevision)
+        statement.setString(parameterIndex, requiredState)
         statement.executeQuery().use { result -> if (result.next()) result.lockedVoucherCryptoRecord() else null }
     }
 
@@ -487,6 +849,21 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             }
         }
         check(updated == 1) { "voucher ciphertext erase lost its revision" }
+    }
+
+    override fun advanceAllocationRevision(
+        connection: Connection,
+        allocation: AllocationRecord,
+    ): AllocationRecord {
+        connection.prepareStatement(
+            "UPDATE voucher_pool_allocations SET revision=revision+1 WHERE tenant_id=? AND allocation_id=? AND revision=?",
+        ).use { statement ->
+            statement.setString(1, allocation.tenantId)
+            statement.setObject(2, allocation.allocationId)
+            statement.setLong(3, allocation.revision)
+            check(statement.executeUpdate() == 1) { "allocation revision advance lost its revision" }
+        }
+        return checkNotNull(lockAllocationById(connection, allocation.tenantId, allocation.allocationId))
     }
 
     override fun quarantineVoucherCrypto(
@@ -607,6 +984,107 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             .orderBy(VoucherPoolDepthTable.state, SortOrder.ASC) to depth
     }
 
+    private fun transitionPoolDepth(
+        connection: Connection,
+        tenantId: String,
+        batchId: UUID,
+        from: EntryState,
+        to: EntryState,
+    ) {
+        val locked = connection.prepareStatement(
+            """SELECT state FROM voucher_pool_pool_depth
+                WHERE tenant_id=? AND batch_id=? AND state IN (?,?) ORDER BY state FOR UPDATE""",
+        ).use { statement ->
+            statement.setString(1, tenantId)
+            statement.setObject(2, batchId)
+            statement.setString(3, from.name)
+            statement.setString(4, to.name)
+            statement.executeQuery().use { result -> buildList { while (result.next()) add(result.getString(1)) } }
+        }
+        check(locked.size == 2) { "pool depth transition projections are missing" }
+        updatePoolDepth(connection, tenantId, batchId, from, -1)
+        updatePoolDepth(connection, tenantId, batchId, to, 1)
+    }
+
+    private fun ensurePoolDepthRows(connection: Connection, tenantId: String, batchId: UUID) {
+        EntryState.entries.sortedBy(EntryState::name).forEach { state ->
+            connection.prepareStatement(
+                """INSERT INTO voucher_pool_pool_depth(tenant_id,batch_id,state,entry_count,revision)
+                    VALUES (?,?,?,0,0) ON CONFLICT (tenant_id,batch_id,state) DO NOTHING""",
+            ).use { statement ->
+                statement.setString(1, tenantId)
+                statement.setObject(2, batchId)
+                statement.setString(3, state.name)
+                statement.executeUpdate()
+            }
+        }
+    }
+
+    private fun transitionReplacementPoolDepth(
+        connection: Connection,
+        original: EntryRecord,
+        candidate: EntryRecord,
+    ) {
+        val batchIds = setOf(original.batchId, candidate.batchId).sortedBy(UUID::toString)
+        val locked = connection.prepareStatement(
+            """SELECT batch_id,state FROM voucher_pool_pool_depth
+                WHERE tenant_id=? AND batch_id=ANY(?) ORDER BY batch_id,state FOR UPDATE""",
+        ).use { statement ->
+            statement.setString(1, original.tenantId)
+            statement.setArray(2, connection.createArrayOf("uuid", batchIds.toTypedArray()))
+            statement.executeQuery().use { result -> buildList { while (result.next()) add(Unit) } }
+        }
+        check(locked.size == batchIds.size * EntryState.entries.size) {
+            "replacement pool depth projections are missing"
+        }
+        updatePoolDepth(connection, original.tenantId, original.batchId, EntryState.ALLOCATED, -1)
+        updatePoolDepth(connection, original.tenantId, original.batchId, EntryState.REVOKED, 1)
+        updatePoolDepth(connection, candidate.tenantId, candidate.batchId, EntryState.AVAILABLE, -1)
+        updatePoolDepth(connection, candidate.tenantId, candidate.batchId, EntryState.RESERVED, 1)
+    }
+
+    private fun updatePoolDepth(
+        connection: Connection,
+        tenantId: String,
+        batchId: UUID,
+        state: EntryState,
+        delta: Long,
+    ) {
+        val updated = connection.prepareStatement(
+            """UPDATE voucher_pool_pool_depth SET entry_count=entry_count+?,revision=revision+1
+                WHERE tenant_id=? AND batch_id=? AND state=? AND entry_count+?>=0""",
+        ).use { statement ->
+            statement.setLong(1, delta)
+            statement.setString(2, tenantId)
+            statement.setObject(3, batchId)
+            statement.setString(4, state.name)
+            statement.setLong(5, delta)
+            statement.executeUpdate()
+        }
+        check(updated == 1) { "pool depth projection would become negative" }
+    }
+
+    private fun incrementPoolDepth(
+        connection: Connection,
+        tenantId: String,
+        batchId: UUID,
+        state: EntryState,
+        count: Long,
+    ) {
+        connection.prepareStatement(
+            """INSERT INTO voucher_pool_pool_depth(tenant_id,batch_id,state,entry_count,revision)
+                VALUES (?,?,?,?,0) ON CONFLICT (tenant_id,batch_id,state) DO UPDATE
+                SET entry_count=voucher_pool_pool_depth.entry_count+EXCLUDED.entry_count,
+                    revision=voucher_pool_pool_depth.revision+1""",
+        ).use { statement ->
+            statement.setString(1, tenantId)
+            statement.setObject(2, batchId)
+            statement.setString(3, state.name)
+            statement.setLong(4, count)
+            statement.executeUpdate()
+        }
+    }
+
     @Suppress("SpreadOperator")
     private fun <T> withExposed(connection: Connection, block: () -> T): T {
         val proxy = Proxy.newProxyInstance(
@@ -631,12 +1109,6 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             TransactionManager.closeAndUnregister(exposedDatabase)
         }
     }
-
-    private fun selectAvailableEntryInBatch(connection: Connection, tenantId: String, batchId: UUID): EntryRecord? =
-        connection.prepareStatement(ALLOCATION_CANDIDATE_SQL).use { statement ->
-            statement.setString(1, tenantId); statement.setObject(2, batchId)
-            statement.executeQuery().use { result -> if (result.next()) result.entryRecord() else null }
-        }
 
     private fun lockExpectedUserLimits(
         connection: Connection,
@@ -670,18 +1142,6 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.executeQuery().use { result -> if (result.next()) result.campaignRecord() else null }
         }
 
-    private fun lockEligibleCampaignForShare(
-        connection: Connection,
-        tenantId: String,
-        campaignId: UUID,
-    ): CampaignRecord? = connection.prepareStatement(
-        """SELECT * FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=? AND state='ACTIVE'
-            AND starts_at<=transaction_timestamp() AND ends_at>transaction_timestamp() FOR SHARE""",
-    ).use { statement ->
-        statement.setString(1, tenantId); statement.setObject(2, campaignId)
-        statement.executeQuery().use { result -> if (result.next()) result.campaignRecord() else null }
-    }
-
     private fun eligibleBatchIds(connection: Connection, tenantId: String, campaignId: UUID): List<UUID> =
         withExposed(connection) {
             VoucherPoolBatchTable.select(VoucherPoolBatchTable.batchId)
@@ -696,6 +1156,16 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
                     VoucherPoolBatchTable.activatesAt to SortOrder.ASC,
                     VoucherPoolBatchTable.batchId to SortOrder.ASC,
                 ).map { it[VoucherPoolBatchTable.batchId] }
+        }
+
+    private fun campaignBatchIds(connection: Connection, tenantId: String, campaignId: UUID): List<UUID> =
+        connection.prepareStatement(
+            """SELECT batch_id FROM voucher_pool_batches
+                WHERE tenant_id=? AND campaign_id=? ORDER BY batch_id""",
+        ).use { statement ->
+            statement.setString(1, tenantId)
+            statement.setObject(2, campaignId)
+            statement.executeQuery().use { result -> buildList { while (result.next()) add(result.getObject(1, UUID::class.java)) } }
         }
 
     private fun lockEligibleBatchForShare(
@@ -767,6 +1237,85 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.executeQuery().use { result -> if (result.next()) result.entryRecord() else null }
         }
 
+    private fun findReservation(connection: Connection, tenantId: String, reservationId: UUID): ReservationRecord? =
+        connection.prepareStatement(
+            "SELECT * FROM voucher_pool_reservations WHERE tenant_id=? AND reservation_id=?",
+        ).use { statement ->
+            statement.setString(1, tenantId); statement.setObject(2, reservationId)
+            statement.executeQuery().use { result -> if (result.next()) result.reservationRecord() else null }
+        }
+
+    private fun lockReservationById(connection: Connection, tenantId: String, reservationId: UUID): ReservationRecord? =
+        connection.prepareStatement(
+            "SELECT * FROM voucher_pool_reservations WHERE tenant_id=? AND reservation_id=? FOR UPDATE",
+        ).use { statement ->
+            statement.setString(1, tenantId); statement.setObject(2, reservationId)
+            statement.executeQuery().use { result -> if (result.next()) result.reservationRecord() else null }
+        }
+
+    private fun findAllocation(connection: Connection, tenantId: String, allocationId: UUID): AllocationRecord? =
+        connection.prepareStatement(
+            "SELECT * FROM voucher_pool_allocations WHERE tenant_id=? AND allocation_id=?",
+        ).use { statement ->
+            statement.setString(1, tenantId); statement.setObject(2, allocationId)
+            statement.executeQuery().use { result -> if (result.next()) result.allocationRecord() else null }
+        }
+
+    private fun lockAllocationById(connection: Connection, tenantId: String, allocationId: UUID): AllocationRecord? =
+        connection.prepareStatement(
+            "SELECT * FROM voucher_pool_allocations WHERE tenant_id=? AND allocation_id=? FOR UPDATE",
+        ).use { statement ->
+            statement.setString(1, tenantId); statement.setObject(2, allocationId)
+            statement.executeQuery().use { result -> if (result.next()) result.allocationRecord() else null }
+        }
+
+    private fun insertReservation(connection: Connection, reservation: ReservationRecord) {
+        connection.prepareStatement(
+            """INSERT INTO voucher_pool_reservations
+                (tenant_id,reservation_id,campaign_id,batch_id,entry_id,user_digest,idempotency_owner_digest,state,
+                 reservation_expires_at,entitlement_root_id,replacement_ordinal,policy_version,revision)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,0)""",
+        ).use { statement ->
+            statement.setString(1, reservation.tenantId); statement.setObject(2, reservation.reservationId)
+            statement.setObject(3, reservation.campaignId); statement.setObject(4, reservation.batchId)
+            statement.setObject(5, reservation.entryId); statement.setBytes(6, reservation.userDigest.copyBytes())
+            statement.setBytes(7, reservation.idempotencyOwnerDigest.copyBytes()); statement.setString(8, reservation.state)
+            statement.setTimestamp(9, Timestamp.from(reservation.expiresAt)); statement.setObject(10, reservation.entitlementRootId)
+            statement.setInt(11, reservation.replacementOrdinal); statement.setLong(12, reservation.policyVersion)
+            statement.executeUpdate()
+        }
+    }
+
+    private fun updateReservationState(connection: Connection, reservation: ReservationRecord, state: String) {
+        connection.prepareStatement(
+            """UPDATE voucher_pool_reservations SET state=?,revision=revision+1
+                WHERE tenant_id=? AND reservation_id=? AND revision=?""",
+        ).use { statement ->
+            statement.setString(1, state); statement.setString(2, reservation.tenantId)
+            statement.setObject(3, reservation.reservationId); statement.setLong(4, reservation.revision)
+            check(statement.executeUpdate() == 1) { "reservation transition lost its revision" }
+        }
+    }
+
+    private fun updateUserLimit(
+        connection: Connection,
+        limit: UserLimitRecord,
+        reservationsDelta: Int,
+        allocationsDelta: Int,
+        lifetimeDelta: Int,
+    ) {
+        connection.prepareStatement(
+            """UPDATE voucher_pool_user_limits SET active_reservations=active_reservations+?,
+                  active_allocations=active_allocations+?,lifetime_consumed=lifetime_consumed+?,revision=revision+1
+                WHERE tenant_id=? AND campaign_id=? AND user_digest=? AND revision=?""",
+        ).use { statement ->
+            statement.setInt(1, reservationsDelta); statement.setInt(2, allocationsDelta); statement.setInt(3, lifetimeDelta)
+            statement.setString(4, limit.tenantId); statement.setObject(5, limit.campaignId)
+            statement.setBytes(6, limit.userDigest.copyBytes()); statement.setLong(7, limit.revision)
+            check(statement.executeUpdate() == 1) { "user limit transition lost its revision" }
+        }
+    }
+
     private fun ResultSet.campaignRecord() = CampaignRecord(
         tenantId = getString("tenant_id"), campaignId = getObject("campaign_id", UUID::class.java),
         state = CampaignState.valueOf(getString("state")), policyVersion = getLong("policy_version"),
@@ -831,7 +1380,17 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         entryId = getObject("entry_id", UUID::class.java), userDigest = DigestValue.of(getBytes("user_digest")),
         idempotencyOwnerDigest = DigestValue.of(getBytes("idempotency_owner_digest")), state = getString("state"),
         expiresAt = getTimestamp("reservation_expires_at").toInstant(), policyVersion = getLong("policy_version"),
+        entitlementRootId = getObject("entitlement_root_id", UUID::class.java), replacementOrdinal = getInt("replacement_ordinal"),
         revision = getLong("revision"),
+    )
+
+    private fun ResultSet.allocationRecord() = AllocationRecord(
+        tenantId = getString("tenant_id"), allocationId = getObject("allocation_id", UUID::class.java),
+        reservationId = getObject("reservation_id", UUID::class.java), campaignId = getObject("campaign_id", UUID::class.java),
+        batchId = getObject("batch_id", UUID::class.java), entryId = getObject("entry_id", UUID::class.java),
+        userDigest = DigestValue.of(getBytes("user_digest")), entitlementRootId = getObject("entitlement_root_id", UUID::class.java),
+        replacementOrdinal = getInt("replacement_ordinal"), expiresAt = getTimestamp("allocation_expires_at").toInstant(),
+        policyVersion = getLong("policy_version"), revision = getLong("revision"),
     )
 
     internal companion object {

@@ -96,11 +96,11 @@ internal class VoucherPoolRepositoryIntegrationTest {
     @Test
     fun `foreground campaign guards are compatible shared locks with no exclusive waiter`() {
         val campaign = createCampaign(TENANT)
-        val acquired = CyclicBarrier(3)
-        val release = CyclicBarrier(3)
+        val acquired = CyclicBarrier(5)
+        val release = CyclicBarrier(5)
         val backendPids = ConcurrentLinkedQueue<Int>()
         Executors.newVirtualThreadPerTaskExecutor().use { executor ->
-            val holders = (1..2).map {
+            val holders = (1..4).map {
                 executor.submit {
                     dataSource.connection.use { connection ->
                         connection.autoCommit = false
@@ -113,7 +113,7 @@ internal class VoucherPoolRepositoryIntegrationTest {
                 }
             }
             acquired.await(2, TimeUnit.SECONDS)
-            dataSource.sharedLockHolders(backendPids.toSet()) shouldBeEqualTo 2
+            dataSource.sharedLockHolders(backendPids.toSet()) shouldBeEqualTo 4
             dataSource.lockWaiters(backendPids.toSet()) shouldBeEqualTo 0
             release.await(2, TimeUnit.SECONDS)
             holders.forEach { it.get(2, TimeUnit.SECONDS) }
@@ -155,7 +155,7 @@ internal class VoucherPoolRepositoryIntegrationTest {
             repository.lockEntry(blocker, TENANT, first)
             dataSource.connection.use { contender ->
                 contender.autoCommit = false
-                repository.selectAvailableEntrySkipLocked(contender, TENANT, campaign)?.entryId shouldBeEqualTo second
+                repository.selectAvailableEntrySkipLocked(contender, TENANT, campaign, listOf(batch))?.entryId shouldBeEqualTo second
                 contender.rollback()
             }
             blocker.rollback()
@@ -181,7 +181,12 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val expected = createAvailableEntry(TENANT, campaign, earlierBatch, 99)
         dataSource.connection.use { connection ->
             connection.autoCommit = false
-            repository.selectAvailableEntrySkipLocked(connection, TENANT, campaign)?.entryId shouldBeEqualTo expected
+            repository.selectAvailableEntrySkipLocked(
+                connection,
+                TENANT,
+                campaign,
+                listOf(earlierBatch, laterBatch),
+            )?.entryId shouldBeEqualTo expected
             connection.rollback()
         }
     }
@@ -210,6 +215,68 @@ internal class VoucherPoolRepositoryIntegrationTest {
                         decode(md5(random()::text),'hex'),1,decode('01','hex'),decode('02','hex'),
                         (SELECT code_nonce FROM voucher_pool_entries WHERE tenant_id='$TENANT' AND entry_id='$entry'),
                         decode(substr(md5(random()::text),1,24),'hex'),'test-kek')""",
+        )
+    }
+
+    @Test
+    fun `allocation-origin entries require a retained verification pair through terminal states`() {
+        val campaign = createCampaign(TENANT)
+        val batch = createBatch(TENANT, campaign)
+        val entry = createAvailableEntry(TENANT, campaign, batch, 12)
+        assertSqlFails(
+            """UPDATE voucher_pool_entries SET state='ALLOCATED',reservation_id=gen_random_uuid(),
+                allocation_id=gen_random_uuid(),user_digest=decode('01','hex'),reserved_at=now(),
+                reservation_expires_at=now()+interval '2 hours',allocated_at=now(),
+                allocation_expires_at=now()+interval '1 hour',allocation_policy_version=1,
+                entitlement_root_id=gen_random_uuid(),verification_digest=NULL,verification_key_version=NULL
+                WHERE tenant_id='$TENANT' AND entry_id='$entry'""",
+        )
+        assertSqlFails(
+            """UPDATE voucher_pool_entries SET state='REVOKED',allocation_id=gen_random_uuid(),
+                terminal_reason='TEST_REVOKE',verification_digest=NULL,verification_key_version=NULL
+                WHERE tenant_id='$TENANT' AND entry_id='$entry'""",
+        )
+        assertSqlFails(
+            """UPDATE voucher_pool_entries SET state='REVOKED',allocation_id=gen_random_uuid(),
+                terminal_reason='TEST_REVOKE',verification_digest=decode('01','hex'),verification_key_version=1
+                WHERE tenant_id='$TENANT' AND entry_id='$entry'""",
+        )
+    }
+
+    @Test
+    fun `updated at remains monotonic when a transaction clock precedes persisted time`() {
+        val campaign = createCampaign(TENANT)
+        val batch = createBatch(TENANT, campaign)
+        val entry = createAvailableEntry(TENANT, campaign, batch, 15)
+        executeSql(
+            "UPDATE voucher_pool_entries SET created_at=now()+interval '1 hour',updated_at=now()+interval '1 hour' " +
+                "WHERE tenant_id='$TENANT' AND entry_id='$entry'",
+        )
+        executeSql(
+            "UPDATE voucher_pool_entries SET revision=revision+1 WHERE tenant_id='$TENANT' AND entry_id='$entry'",
+        )
+    }
+
+    @Test
+    fun `allocation identity cannot cross its reservation entry or user`() {
+        val campaign = createCampaign(TENANT)
+        val batch = createBatch(TENANT, campaign)
+        val firstEntry = createAvailableEntry(TENANT, campaign, batch, 13)
+        val secondEntry = createAvailableEntry(TENANT, campaign, batch, 14)
+        val firstReservation = UUID.randomUUID()
+        val secondReservation = UUID.randomUUID()
+        executeSql(reservationInsert(firstReservation, campaign, batch, firstEntry, "ALLOCATED"))
+        executeSql(reservationInsert(secondReservation, campaign, batch, secondEntry, "ALLOCATED"))
+
+        assertSqlFails(
+            allocationInsert(firstReservation, secondEntry, AllocationScope(campaign, batch, UUID.randomUUID()), 0),
+        )
+        assertSqlFails(
+            """INSERT INTO voucher_pool_allocations
+                (tenant_id,allocation_id,reservation_id,campaign_id,batch_id,entry_id,user_digest,
+                 entitlement_root_id,replacement_ordinal,allocation_expires_at,policy_version,revision)
+                VALUES ('$TENANT',gen_random_uuid(),'$firstReservation','$campaign','$batch','$firstEntry',
+                        decode('03','hex'),gen_random_uuid(),0,now()+interval '1 hour',1,0)""",
         )
     }
 
