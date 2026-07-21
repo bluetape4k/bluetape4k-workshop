@@ -38,6 +38,7 @@ on:
       - 'kotlin/flow-extensions-search-pipeline/**'
       - 'leader/backend-comparison-lab/**'
       - 'leader/k8s-lease-micrometer/**'
+      - 'leader/job-safety-lab/**'
       - 'leader/tenant-scheduler/**'
       - 'messaging/kafka/**'
       - 'messaging/kafka-outbox-fallback/**'
@@ -86,6 +87,7 @@ on:
       - 'kotlin/flow-extensions-search-pipeline/**'
       - 'leader/backend-comparison-lab/**'
       - 'leader/k8s-lease-micrometer/**'
+      - 'leader/job-safety-lab/**'
       - 'leader/tenant-scheduler/**'
       - 'messaging/kafka/**'
       - 'messaging/kafka-outbox-fallback/**'
@@ -148,6 +150,7 @@ jobs:
       # - aws-eventbridge-scheduler: local EventBridge + Scheduler boundary path
       # - jackson/jsonview examples: serialization path
       # - operations-job-console-core: framework-neutral state machine and queue projections
+      # - leader-job-safety-lab: deterministic safety scenarios without container-backed integration tags
       - name: Run H2/default examples
         run: >-
           ./gradlew
@@ -173,6 +176,7 @@ jobs:
           :kotlin-flow-extensions-search-pipeline:test
           :leader-backend-comparison-lab:test
           :leader-k8s-lease-micrometer:test
+          :leader-job-safety-lab:test
           :leader-tenant-scheduler:test
           :operations-job-console-core:test
           :spring-modulith-module-boundaries:test
@@ -230,6 +234,8 @@ jobs:
             leader/backend-comparison-lab/build/reports/tests/test/
             leader/k8s-lease-micrometer/build/test-results/test/*.xml
             leader/k8s-lease-micrometer/build/reports/tests/test/
+            leader/job-safety-lab/build/test-results/test/*.xml
+            leader/job-safety-lab/build/reports/tests/test/
             leader/tenant-scheduler/build/test-results/test/*.xml
             leader/tenant-scheduler/build/reports/tests/test/
             operations/job-console-core/build/test-results/test/*.xml
@@ -301,6 +307,7 @@ jobs:
       # - commerce-concert-ticket-flash-sale: PostgreSQL-authoritative inventory with Redis waiting-room admission
       # - operations-job-console-*: shared PostgreSQL/Redis contract plus live Spring MVC and Ktor adapters
       # - commerce-pre-generated-voucher-pool: PostgreSQL-authoritative pre-generated voucher allocation and recovery
+      # - leader-job-safety-lab: real Redis fencing takeover plus PostgreSQL stale-writer rejection
       - name: Run container-backed examples
         run: >-
           ./gradlew
@@ -327,6 +334,7 @@ jobs:
           :operations-job-console-ktor:integrationTest
           :commerce-pre-generated-voucher-pool:test
           :commerce-pre-generated-voucher-pool:koverXmlReport
+          :leader-job-safety-lab:integrationTest
           --continue
           --max-workers=1
         env:
@@ -390,6 +398,8 @@ jobs:
             commerce/pre-generated-voucher-pool/build/test-results/test/*.xml
             commerce/pre-generated-voucher-pool/build/reports/tests/test/
             commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
+            leader/job-safety-lab/build/test-results/integrationTest/*.xml
+            leader/job-safety-lab/build/reports/tests/integrationTest/
           retention-days: 7
 
   examples-status:
