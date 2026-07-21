@@ -49,6 +49,34 @@ internal class UnsafeScenarioAdapter {
                 ),
             events = leaseOverrunEvents(finalState = JobExecutionState.COMMITTED),
         )
+
+    fun staleAuthority(
+        conflictKey: ConflictKey,
+        jobName: JobName,
+        committedValue: Long,
+        code: String,
+    ): ScenarioDraft =
+        ScenarioDraft(
+            expectedSummary = 0L,
+            finalSummary = committedValue,
+            resource = ScenarioResource(conflictKey, committedValue, FencingToken(committedValue)),
+            executions =
+                listOf(
+                    ScenarioExecution(
+                        jobName = jobName,
+                        conflictKey = conflictKey,
+                        fencingToken = FencingToken(committedValue),
+                        state = JobExecutionState.COMMITTED,
+                    ),
+                ),
+            events =
+                listOf(
+                    event("TRIGGER_FROM_SNAPSHOT", JobExecutionState.REQUESTED, "worker trusts a stale scheduler snapshot"),
+                    event(code, JobExecutionState.RUNNING, "authoritative topology changes before commit"),
+                    event("SKIP_DB_RECHECK", JobExecutionState.RUNNING, "unsafe path never reloads current authority"),
+                    event("STALE_WRITE_COMMITTED", JobExecutionState.COMMITTED, "stale assumptions reach business state"),
+                ),
+        )
 }
 
 internal data class ScenarioDraft(
