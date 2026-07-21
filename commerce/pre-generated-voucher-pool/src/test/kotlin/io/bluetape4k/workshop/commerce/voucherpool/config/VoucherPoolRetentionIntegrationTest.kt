@@ -6,6 +6,7 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeZero
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
@@ -56,18 +57,27 @@ internal class VoucherPoolRetentionIntegrationTest {
     )
     fun `retention boundary uses database time`(kind: RetentionKind, amount: Long, unit: String) {
         val tenantBefore = "before-${kind.name.lowercase()}"
-        seed(kind, tenantBefore, "$amount $unit - 1 second")
-
-        retention.purge(limit = 100)
-
-        retainedCount(kind, tenantBefore) shouldBeEqualTo expectedRows(kind)
-
         val tenantAt = "at-${kind.name.lowercase()}"
-        seed(kind, tenantAt, "$amount $unit")
+        try {
+            seed(kind, tenantBefore, "$amount $unit - 1 second")
 
-        retention.purge(limit = 100)
+            retention.purge(limit = 100)
 
-        retainedCount(kind, tenantAt) shouldBeEqualTo 0L
+            retainedCount(kind, tenantBefore) shouldBeEqualTo expectedRows(kind)
+
+            seed(kind, tenantAt, "$amount $unit")
+
+            retention.purge(limit = 100)
+
+            retainedCount(kind, tenantAt) shouldBeEqualTo 0L
+        } finally {
+            deleteFixtureTenant(tenantBefore)
+            deleteFixtureTenant(tenantAt)
+        }
+        queryLong(
+            "SELECT count(*) FROM voucher_pool_backup_inventory " +
+                "WHERE tenant_id IN ('$tenantBefore','$tenantAt')",
+        ).shouldBeZero()
     }
 
     @Test
@@ -345,6 +355,15 @@ internal class VoucherPoolRetentionIntegrationTest {
 
     private fun expectedRows(kind: RetentionKind): Long =
         if (kind == RetentionKind.TERMINAL_INBOX_CLAIM || kind == RetentionKind.TERMINAL_ENTRY_RESERVATION) 2L else 1L
+
+    private fun deleteFixtureTenant(tenant: String) {
+        if (queryLong("SELECT count(*) FROM voucher_pool_backup_inventory WHERE tenant_id='$tenant'") == 0L) return
+        execute(
+            "UPDATE voucher_pool_backup_inventory " +
+                "SET retained_until=statement_timestamp() WHERE tenant_id='$tenant'",
+        )
+        retention.deleteTenant(tenant).shouldBeTrue()
+    }
 
     private fun execute(sql: String) {
         dataSource.connection.use { connection -> connection.createStatement().use { it.execute(sql) } }

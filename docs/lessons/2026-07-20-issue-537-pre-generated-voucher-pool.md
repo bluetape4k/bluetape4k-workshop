@@ -86,6 +86,7 @@ git diff --check
 
 - command UI는 success schema와 terminal/retryable semantics를 함께 검증하고 ambiguous outcome에서 key를 유지한다.
 - timestamp를 exact replay authority에 포함할 때는 database 저장 정밀도와 반올림 경계를 deterministic fixture로 검증한다.
+- 공용 schema의 TTL 경계 fixture는 `finally`에서 tenant 단위로 제거한다. Awaitility나 더 긴 시간 여유는 후속 전역 purge로의 fixture 누수를 해결하지 않는다.
 - compile-only workflow에 custom `Test` task를 추가할 때는 `--dry-run` task graph와 전용 verification lane을 함께 확인한다.
 - lifecycle에 blocking I/O가 추가되면 shutdown과 마지막 registry mutation 사이의 race test를 추가한다.
 - stress evidence에는 실제 sample 수, 최대 wait, permit/Hikari drain과 leak 0을 포함한다.
