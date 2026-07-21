@@ -48,7 +48,7 @@ Branch: `feature/issue-521-concert-ticket-flash-sale`
 
 ## 검증 결과
 
-- `:commerce-concert-ticket-flash-sale:test`: PASS, 70 tests
+- `:commerce-concert-ticket-flash-sale:test`: PASS, 71 tests
 - `:commerce-concert-ticket-flash-sale:build`: PASS
 - Root `detekt`: PASS (`NO-SOURCE` 포함)
 - Commerce smoke lane: PASS

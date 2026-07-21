@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.ticket.persistence
 
 import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import io.bluetape4k.workshop.commerce.ticket.admission.internal.TicketAdmissionGrantRepository
@@ -57,11 +58,35 @@ internal class PersistenceArchitectureTest {
         violations.shouldBeEmpty()
     }
 
+    @Test
+    fun `shared authority fixture seeds through Exposed`() {
+        val fixture = Files.readString(
+            locateTestSourceRoot().resolve(
+                "io/bluetape4k/workshop/commerce/ticket/persistence/TicketDatabaseFixture.kt",
+            ),
+        )
+        val seedAuthority = fixture
+            .substringAfter("fun seedAuthority(")
+            .substringBefore("\n    fun seedSale(")
+
+        seedAuthority.contains("executor.transaction").shouldBeTrue()
+        seedAuthority.contains("TicketSaleEntity.new").shouldBeTrue()
+        seedAuthority.contains("INSERT INTO").shouldBeFalse()
+        seedAuthority.contains("execute(").shouldBeFalse()
+    }
+
     private fun locateSourceRoot(): Path {
         val current = Path.of("").toAbsolutePath()
         val moduleLocal = current.resolve("src/main/kotlin")
         if (Files.isDirectory(moduleLocal)) return moduleLocal
         return current.resolve("commerce/concert-ticket-flash-sale/src/main/kotlin")
+    }
+
+    private fun locateTestSourceRoot(): Path {
+        val current = Path.of("").toAbsolutePath()
+        val moduleLocal = current.resolve("src/test/kotlin")
+        if (Files.isDirectory(moduleLocal)) return moduleLocal
+        return current.resolve("commerce/concert-ticket-flash-sale/src/test/kotlin")
     }
 
     companion object {
