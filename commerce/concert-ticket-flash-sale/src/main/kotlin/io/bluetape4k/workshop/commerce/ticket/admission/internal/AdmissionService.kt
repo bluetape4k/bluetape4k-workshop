@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.ticket.admission.internal
 
 import io.bluetape4k.workshop.commerce.ticket.admission.api.AdmissionCommands
 import io.bluetape4k.workshop.commerce.ticket.admission.api.ConsumeGrant
+import io.bluetape4k.workshop.commerce.ticket.admission.api.TransactionalAdmissionCommands
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketJdbcExecutor
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketJdbcTransaction
 import java.io.Serial
@@ -20,12 +21,12 @@ class AdmissionExpired : IllegalStateException("admission_expired") {
 class AdmissionService(
     private val jdbc: TicketJdbcExecutor,
     private val clock: Clock,
-) : AdmissionCommands {
+) : AdmissionCommands, TransactionalAdmissionCommands {
     override fun consume(command: ConsumeGrant) {
         jdbc.transaction { consume(this, command) }
     }
 
-    fun consume(
+    override fun consume(
         transaction: TicketJdbcTransaction,
         command: ConsumeGrant,
     ) {

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.ticket.admission.api
 
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketJdbcTransaction
 import java.io.Serializable
 import java.util.UUID
 
@@ -19,4 +20,12 @@ data class ConsumeGrant(
 /** Transactional admission boundary. */
 fun interface AdmissionCommands {
     fun consume(command: ConsumeGrant)
+}
+
+/** Internal-transaction participation exposed without leaking the admission implementation. */
+fun interface TransactionalAdmissionCommands {
+    fun consume(
+        transaction: TicketJdbcTransaction,
+        command: ConsumeGrant,
+    )
 }
