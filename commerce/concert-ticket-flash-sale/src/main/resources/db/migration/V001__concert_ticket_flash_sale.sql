@@ -11,24 +11,26 @@ CREATE TABLE ticket_sales (
 );
 
 CREATE TABLE ticket_sale_policy_versions (
+    id BIGSERIAL PRIMARY KEY,
     sale_id UUID NOT NULL REFERENCES ticket_sales(sale_id),
     policy_version BIGINT NOT NULL,
     per_user_limit INTEGER NOT NULL,
     max_quantity INTEGER NOT NULL,
     hold_seconds BIGINT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (sale_id, policy_version),
+    UNIQUE (sale_id, policy_version),
     CHECK (policy_version > 0 AND per_user_limit > 0 AND max_quantity > 0 AND hold_seconds > 0)
 );
 
 CREATE TABLE ticket_inventory (
+    id BIGSERIAL PRIMARY KEY,
     sale_id UUID NOT NULL REFERENCES ticket_sales(sale_id),
     grade VARCHAR(32) NOT NULL,
     total_quantity INTEGER NOT NULL,
     held_quantity INTEGER NOT NULL DEFAULT 0,
     sold_quantity INTEGER NOT NULL DEFAULT 0,
     revision BIGINT NOT NULL DEFAULT 0,
-    PRIMARY KEY (sale_id, grade),
+    UNIQUE (sale_id, grade),
     CHECK (
         total_quantity >= 0 AND held_quantity >= 0 AND sold_quantity >= 0
         AND held_quantity + sold_quantity <= total_quantity
@@ -43,12 +45,13 @@ CREATE TABLE ticket_identity_subjects (
 );
 
 CREATE TABLE ticket_identity_aliases (
+    id BIGSERIAL PRIMARY KEY,
     identity_kind VARCHAR(8) NOT NULL CHECK (identity_kind IN ('USER', 'IP')),
     key_version INTEGER NOT NULL,
     digest BYTEA NOT NULL,
     subject_id UUID NOT NULL REFERENCES ticket_identity_subjects(subject_id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (identity_kind, key_version, digest),
+    UNIQUE (identity_kind, key_version, digest),
     CHECK (key_version > 0 AND octet_length(digest) = 32)
 );
 
@@ -87,12 +90,13 @@ CREATE INDEX ticket_admission_expiry_idx
     ON ticket_admission_grants(sale_id, expires_at, id) WHERE consumed_at IS NULL;
 
 CREATE TABLE ticket_buyer_sale_states (
+    id BIGSERIAL PRIMARY KEY,
     sale_id UUID NOT NULL REFERENCES ticket_sales(sale_id),
     user_subject_id UUID NOT NULL REFERENCES ticket_identity_subjects(subject_id),
     policy_version BIGINT NOT NULL,
     purchased_quantity INTEGER NOT NULL DEFAULT 0,
     revision BIGINT NOT NULL DEFAULT 0,
-    PRIMARY KEY (sale_id, user_subject_id),
+    UNIQUE (sale_id, user_subject_id),
     CHECK (purchased_quantity >= 0)
 );
 
@@ -126,12 +130,13 @@ ALTER TABLE ticket_admission_grants
     FOREIGN KEY (consumed_attempt_id) REFERENCES ticket_purchase_attempts(attempt_id);
 
 CREATE TABLE ticket_active_identity_guards (
+    id BIGSERIAL PRIMARY KEY,
     sale_id UUID NOT NULL REFERENCES ticket_sales(sale_id),
     identity_kind VARCHAR(8) NOT NULL CHECK (identity_kind IN ('USER', 'IP')),
     identity_subject_id UUID NOT NULL REFERENCES ticket_identity_subjects(subject_id),
     active_attempt_id UUID NOT NULL REFERENCES ticket_purchase_attempts(attempt_id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (sale_id, identity_kind, identity_subject_id)
+    UNIQUE (sale_id, identity_kind, identity_subject_id)
 );
 
 CREATE INDEX ticket_active_guard_attempt_idx

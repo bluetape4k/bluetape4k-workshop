@@ -41,7 +41,8 @@ data class CancelPurchase(
 data class ApplyPaymentOutcome(
     val attemptId: UUID,
     val operationId: UUID,
-    val expectedRevision: Long,
+    val claimToken: UUID,
+    val claimRevision: Long,
     val outcome: PaymentOutcome,
 ) : Serializable {
     companion object {
@@ -80,9 +81,14 @@ interface PurchaseCommands {
 
     fun cancel(command: CancelPurchase): PurchaseSnapshot
 
-    fun applyPaymentOutcome(command: ApplyPaymentOutcome): PurchaseSnapshot
-
     fun applyTicketOutcome(command: ApplyTicketOutcome): PurchaseSnapshot
+}
+
+enum class ApplyResult { APPLIED, STALE }
+
+/** Fenced payment-result boundary used only by the payment module. */
+fun interface PaymentOutcomeCommands {
+    fun applyPaymentOutcome(command: ApplyPaymentOutcome): ApplyResult
 }
 
 /** Stable after-commit request for payment authorization. */
