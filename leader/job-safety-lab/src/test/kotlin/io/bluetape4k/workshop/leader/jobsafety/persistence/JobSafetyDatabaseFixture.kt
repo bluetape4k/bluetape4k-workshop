@@ -9,6 +9,8 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.RegionEpoch
 import io.bluetape4k.workshop.leader.jobsafety.domain.RegionId
 import io.bluetape4k.workshop.leader.jobsafety.domain.TenantId
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.update
 import org.postgresql.ds.PGSimpleDataSource
 import java.time.Instant
 
@@ -74,6 +76,15 @@ internal class JobSafetyDatabaseFixture : AutoCloseable {
                 this.lastAcceptedFence = lastAcceptedFence
                 this.summaryValue = summaryValue
                 updatedAt = now
+            }
+        }
+    }
+
+    fun deactivateTenant(tenantId: TenantId, nextRevision: MembershipRevision) {
+        executor.transaction {
+            JobAssignments.update({ JobAssignments.tenantId eq tenantId.value }) {
+                it[active] = false
+                it[membershipRevision] = nextRevision.value
             }
         }
     }
