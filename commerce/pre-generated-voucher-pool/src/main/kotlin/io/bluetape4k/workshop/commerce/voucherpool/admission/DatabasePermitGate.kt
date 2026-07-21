@@ -3,8 +3,13 @@ package io.bluetape4k.workshop.commerce.voucherpool.admission
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import org.springframework.transaction.support.TransactionSynchronizationManager
+import java.time.Duration as JavaDuration
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -45,6 +50,7 @@ internal class NestedPermitException(
 ) : IllegalStateException("nested database permit acquisition is forbidden: $activeLane -> $requestedLane")
 
 /** Keeps virtual-thread concurrency within the bounded PostgreSQL connection budget. */
+@Suppress("TooManyFunctions")
 internal class DatabasePermitGate(
     hikariMaximumPoolSize: Int,
     configs: Map<PermitLane, PermitLaneConfig>,
@@ -52,6 +58,10 @@ internal class DatabasePermitGate(
     private val configs: Map<PermitLane, PermitLaneConfig> = configs.toMap()
     private val permits: Map<PermitLane, Semaphore>
     private val activeLane = ThreadLocal<PermitLane>()
+    private val activeThreads = ConcurrentHashMap.newKeySet<Thread>()
+    private val accepting = AtomicBoolean(true)
+    private val drainLock = ReentrantLock()
+    private val drained = drainLock.newCondition()
 
     init {
         require(hikariMaximumPoolSize > 0) { "hikariMaximumPoolSize must be positive" }
@@ -79,6 +89,32 @@ internal class DatabasePermitGate(
             waits = configs.mapValues { (_, config) -> config.wait },
         )
 
+    fun beginShutdown() {
+        accepting.set(false)
+        signalIfDrained()
+    }
+
+    fun isAccepting(): Boolean = accepting.get()
+
+    fun isDrained(): Boolean = inUseTotal() == 0
+
+    fun cancelActiveTransactions(): Int {
+        val threads = activeThreads.toList()
+        threads.forEach(Thread::interrupt)
+        return threads.size
+    }
+
+    fun awaitDrained(timeout: JavaDuration): Boolean {
+        require(!timeout.isNegative) { "timeout must not be negative" }
+        var remaining = timeout.toNanos()
+        drainLock.withLock {
+            while (inUseTotal() > 0 && remaining > 0L) {
+                remaining = drained.awaitNanos(remaining)
+            }
+            return inUseTotal() == 0
+        }
+    }
+
     private fun <T> withPermit(
         lane: PermitLane,
         block: () -> T,
@@ -86,21 +122,26 @@ internal class DatabasePermitGate(
         check(!TransactionSynchronizationManager.isActualTransactionActive()) {
             "database permit must be acquired before starting a transaction"
         }
+        if (!accepting.get()) throw PoolBusyException(lane)
         activeLane.get()?.let { held -> throw NestedPermitException(held, lane) }
         val semaphore = permits.getValue(lane)
         val wait = configs.getValue(lane).wait
         acquirePermit(lane, semaphore, wait)
 
         activeLane.set(lane)
+        activeThreads += Thread.currentThread()
         return try {
             block()
         } finally {
+            activeThreads -= Thread.currentThread()
             activeLane.remove()
             semaphore.release()
+            signalIfDrained()
             log.debug { "voucher_pool_db_permit_released lane=$lane" }
         }
     }
 
+    @Suppress("ThrowsCount")
     private fun acquirePermit(
         lane: PermitLane,
         semaphore: Semaphore,
@@ -118,10 +159,23 @@ internal class DatabasePermitGate(
             log.debug { "voucher_pool_db_permit_timed_out lane=$lane" }
             throw PoolBusyException(lane)
         }
+        if (!accepting.get()) {
+            semaphore.release()
+            signalIfDrained()
+            throw PoolBusyException(lane)
+        }
     }
 
     private fun inUse(lane: PermitLane): Int =
         configs.getValue(lane).capacity - permits.getValue(lane).availablePermits()
+
+    private fun inUseTotal(): Int = PermitLane.entries.sumOf(::inUse)
+
+    private fun signalIfDrained() {
+        if (inUseTotal() == 0) {
+            drainLock.withLock { drained.signalAll() }
+        }
+    }
 
     companion object : KLogging() {
         fun default(hikariMaximumPoolSize: Int): DatabasePermitGate =

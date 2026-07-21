@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
 import java.time.Duration
+import java.util.UUID
 import java.util.concurrent.ExecutorService
 import javax.sql.DataSource
 import kotlin.time.toKotlinDuration
@@ -41,6 +42,8 @@ private const val DEFAULT_SSE_LOCK_TIMEOUT_SECONDS = 5L
 @ConfigurationProperties(prefix = "workshop.voucher-pool")
 internal data class VoucherPoolProperties(
     val database: VoucherPoolDatabaseProperties = VoucherPoolDatabaseProperties(),
+    val redis: VoucherPoolRedisProperties = VoucherPoolRedisProperties(),
+    val workerInstanceId: String = "voucher-pool-${UUID.randomUUID()}",
 )
 
 internal data class VoucherPoolDatabaseProperties(
@@ -103,9 +106,6 @@ internal class VoucherPoolConfiguration {
                 ),
         )
     }
-
-    @Bean
-    fun voucherPoolJdbcMetrics(): VoucherPoolJdbcMetrics = VoucherPoolJdbcMetrics.NONE
 
     @Bean
     fun voucherPoolLockTimeoutApplier(): VoucherPoolLockTimeoutApplier =

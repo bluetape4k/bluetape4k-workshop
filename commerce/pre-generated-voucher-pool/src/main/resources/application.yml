@@ -18,7 +18,7 @@ spring:
     virtual:
       enabled: true
   lifecycle:
-    timeout-per-shutdown-phase: 30s
+    timeout-per-shutdown-phase: 45s
 
 server:
   address: ${VOUCHER_POOL_SERVER_ADDRESS:127.0.0.1}
@@ -33,9 +33,39 @@ management:
     web:
       exposure:
         include: health,prometheus
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,voucherPoolReadiness
+        liveness:
+          include: livenessState,voucherPoolLiveness
+      status:
+        order: down,out-of-service,unknown,degraded,recovering,up
+        http-mapping:
+          down: 503
+          out-of-service: 503
+          degraded: 200
+          recovering: 200
 
 workshop:
   voucher-pool:
+    worker-instance-id: ${VOUCHER_POOL_INSTANCE_ID:${random.uuid}}
+    redis:
+      enabled: ${VOUCHER_POOL_REDIS_ENABLED:false}
+      uri: ${VOUCHER_POOL_REDIS_URI:redis://127.0.0.1:6379}
+      command-timeout: 500ms
+      failure-threshold: 1
+      recovery-success-threshold: 3
+      probe-interval: 1s
+      max-in-flight-probes: 1
+      quota-period: 1m
+      bloom-expected-insertions: 100000
+      bloom-false-probability: 0.01
     database:
       foreground:
         capacity: 12
