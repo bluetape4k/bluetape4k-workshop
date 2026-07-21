@@ -55,6 +55,13 @@ internal class JobSafetyPropertiesTest {
             .run { context -> context.startupFailure.shouldNotBeNull() }
     }
 
+    @Test
+    fun `outbox claim timeout must be positive`() {
+        runner
+            .withPropertyValues("workshop.job-safety.outbox.claim-timeout=0s")
+            .run { context -> context.startupFailure.shouldNotBeNull() }
+    }
+
     @Configuration(proxyBeanMethods = false)
     @EnableConfigurationProperties(JobSafetyProperties::class)
     private class PropertiesConfiguration

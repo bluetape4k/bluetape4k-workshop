@@ -161,6 +161,7 @@ Database fencing cannot undo an email, payment authorization, or webhook that al
 - Commit the same stable `OperationId` with business state and outbox.
 - Claim an outbox row in a short transaction, then close the transaction.
 - Perform provider network I/O outside the database transaction.
+- If a worker dies after claiming, let `workshop.job-safety.outbox.claim-timeout` expire and query the original operation; never blindly execute it again.
 - On `UNKNOWN`, persist `RECONCILIATION_REQUIRED`; do not invent a new operation.
 - Query the original operation and store a receipt unique on `(provider, operationId)`.
 

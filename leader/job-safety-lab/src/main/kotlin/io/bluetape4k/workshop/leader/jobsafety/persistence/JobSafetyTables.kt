@@ -57,6 +57,10 @@ object JobOutboxEntries : LongIdTable("job_safety_outbox") {
     val nextAttemptAt = timestamp("next_attempt_at")
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
+
+    init {
+        index(false, status, nextAttemptAt)
+    }
 }
 
 object JobEffectReceipts : LongIdTable("job_safety_effect_receipts") {

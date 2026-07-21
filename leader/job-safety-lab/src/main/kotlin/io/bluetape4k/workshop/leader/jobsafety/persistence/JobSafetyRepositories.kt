@@ -17,11 +17,14 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.TenantId
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import java.time.Instant
+import java.time.Duration
 
 data class JobAssignmentSnapshot(
     val tenantId: TenantId,
@@ -257,12 +260,19 @@ class JobOutboxRepository(
             }
         }
 
-    fun claimNext(state: EffectDeliveryState): JobOutboxRecord? =
+    fun claimNext(
+        state: EffectDeliveryState,
+        now: Instant = Instant.now(),
+        claimTimeout: Duration = DEFAULT_CLAIM_TIMEOUT,
+    ): JobOutboxRecord? =
         jdbc.transaction {
             withExposed {
                 val row =
                     JobOutboxEntries.selectAll()
-                        .where { JobOutboxEntries.status eq state.name }
+                        .where {
+                            (JobOutboxEntries.status eq state.name) and
+                                (JobOutboxEntries.nextAttemptAt lessEq now)
+                        }
                         .orderBy(JobOutboxEntries.id to SortOrder.ASC)
                         .limit(1)
                         .forUpdate()
@@ -273,7 +283,43 @@ class JobOutboxRepository(
                 JobOutboxEntries.update({ JobOutboxEntries.id eq id }) {
                     it[status] = EffectDeliveryState.CLAIMED.name
                     it[attemptCount] = nextAttempt
-                    it[updatedAt] = Instant.now()
+                    it[nextAttemptAt] = now.plus(claimTimeout)
+                    it[updatedAt] = now
+                }
+                JobOutboxRecord(
+                    operationId = OperationId(row[JobOutboxEntries.operationId]),
+                    state = EffectDeliveryState.CLAIMED,
+                    attemptCount = nextAttempt,
+                )
+            }
+        }
+
+    fun claimNextForReconciliation(
+        now: Instant = Instant.now(),
+        claimTimeout: Duration = DEFAULT_CLAIM_TIMEOUT,
+    ): JobOutboxRecord? =
+        jdbc.transaction {
+            withExposed {
+                val row =
+                    JobOutboxEntries.selectAll()
+                        .where {
+                            ((JobOutboxEntries.status eq EffectDeliveryState.RECONCILIATION_REQUIRED.name) and
+                                (JobOutboxEntries.nextAttemptAt lessEq now)) or
+                                ((JobOutboxEntries.status eq EffectDeliveryState.CLAIMED.name) and
+                                    (JobOutboxEntries.nextAttemptAt lessEq now))
+                        }
+                        .orderBy(JobOutboxEntries.id to SortOrder.ASC)
+                        .limit(1)
+                        .forUpdate()
+                        .singleOrNull()
+                        ?: return@withExposed null
+                val id = row[JobOutboxEntries.id]
+                val nextAttempt = row[JobOutboxEntries.attemptCount] + 1
+                JobOutboxEntries.update({ JobOutboxEntries.id eq id }) {
+                    it[status] = EffectDeliveryState.CLAIMED.name
+                    it[attemptCount] = nextAttempt
+                    it[nextAttemptAt] = now.plus(claimTimeout)
+                    it[updatedAt] = now
                 }
                 JobOutboxRecord(
                     operationId = OperationId(row[JobOutboxEntries.operationId]),
@@ -289,10 +335,12 @@ class JobOutboxRepository(
         state: EffectDeliveryState,
     ) {
         transaction.withExposed {
+            val now = Instant.now()
             check(
                 JobOutboxEntries.update({ JobOutboxEntries.operationId eq operationId.value }) {
                     it[status] = state.name
-                    it[updatedAt] = Instant.now()
+                    it[nextAttemptAt] = now
+                    it[updatedAt] = now
                 } == 1,
             ) { "outbox operation not found" }
         }
@@ -306,6 +354,10 @@ class JobOutboxRepository(
             state = EffectDeliveryState.valueOf(this[JobOutboxEntries.status]),
             attemptCount = this[JobOutboxEntries.attemptCount],
         )
+
+    private companion object {
+        val DEFAULT_CLAIM_TIMEOUT: Duration = Duration.ofSeconds(30)
+    }
 }
 
 class JobEffectReceiptRepository(

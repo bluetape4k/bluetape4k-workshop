@@ -7,6 +7,8 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.ExternalEffectResult
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobSafetyDatabaseFixture
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobSafetyRepositories
 import org.junit.jupiter.api.Test
+import java.time.Duration
+import java.time.Instant
 
 internal class OutboxEffectWorkerTest {
     @Test
@@ -44,6 +46,38 @@ internal class OutboxEffectWorkerTest {
             val worker = OutboxEffectWorker(repositories.outbox, repositories.effectReceipt, provider)
 
             worker.deliverNext() shouldBeEqualTo EffectWorkResult.CONFIRMED
+        }
+    }
+
+    @Test
+    fun `expired claim is queried instead of executing the provider again`() {
+        JobSafetyDatabaseFixture().use { fixture ->
+            val operationId = OperationId("effect-expired-claim")
+            val claimedAt = Instant.parse("2026-07-22T00:00:00Z")
+            fixture.seedOutbox(operationId)
+            val repositories = JobSafetyRepositories(fixture.executor)
+            val provider = DeterministicExternalEffectAdapter()
+            provider.script(operationId, DeterministicEffect.APPLIED_BUT_TIMEOUT)
+
+            repositories.outbox.claimNext(
+                state = EffectDeliveryState.PENDING,
+                now = claimedAt,
+                claimTimeout = Duration.ofSeconds(5),
+            )
+            provider.execute(operationId)
+
+            val restartedWorker =
+                OutboxEffectWorker(
+                    outbox = repositories.outbox,
+                    receipts = repositories.effectReceipt,
+                    provider = provider,
+                    clock = { claimedAt.plusSeconds(6) },
+                )
+
+            restartedWorker.reconcileNext() shouldBeEqualTo EffectWorkResult.CONFIRMED
+            provider.executeCount(operationId) shouldBeEqualTo 1
+            provider.applicationCount(operationId) shouldBeEqualTo 1
+            repositories.effectReceipt.count(PROVIDER, operationId) shouldBeEqualTo 1L
         }
     }
 
