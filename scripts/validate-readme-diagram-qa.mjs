@@ -7,7 +7,7 @@ import path from "node:path";
 
 const root = process.cwd();
 const diagramDir = path.join(root, "docs/images/readme-diagrams");
-const skillAuditDir = process.env.DIAGRAM_QA_REFERENCE_AUDIT_DIR || "/Users/debop/.codex/skills/bluetape4k-diagram/references";
+const skillAuditDir = process.env.DIAGRAM_QA_REFERENCE_AUDIT_DIR || path.join(os.homedir(), ".codex/skills/bluetape-diagram/scripts");
 const localCairosvg = path.join(os.homedir(), ".local/bin/cairosvg");
 const cairosvg = process.env.CAIROSVG_BIN || (fs.existsSync(localCairosvg) ? localCairosvg : "cairosvg");
 const failures = [];
@@ -376,7 +376,9 @@ function auditConnectorGeometry(file, svg) {
   const scope = rel(file);
   const pathMatches = [...svg.matchAll(/<path\b([^>]*\bdata-connector="([^"]+)"[^>]*)\/?>/g)];
   if (pathMatches.length === 0) {
-    if (/class="edge"|data-edge=/.test(svg)) fail(scope, "fallback connector audit", "edge groups exist but data-connector paths=0");
+    if (!referenceAuditsAvailable() && /class="edge"|data-edge=/.test(svg)) {
+      fail(scope, "fallback connector audit", "edge groups exist but data-connector paths=0");
+    }
     return;
   }
 
@@ -432,6 +434,7 @@ function auditConnectorGeometry(file, svg) {
 function auditSequenceShape(file, svg) {
   const scope = rel(file);
   if (!path.basename(file).includes("sequence")) return;
+  if (fs.existsSync(path.join(skillAuditDir, "diagram-sequence-style-audit.py"))) return;
   const labels = [...svg.matchAll(/<rect\b[^>]*\bclass="[^"]*labelPill[^"]*"[^>]*>/g)].length;
   const numbers = [...svg.matchAll(/<text\b[^>]*\bclass="[^"]*\bnum\b[^"]*"[^>]*>(\d+)<\/text>/g)].map((match) => Number(match[1]));
   const altBodies = [...svg.matchAll(/<rect\b([^>]*\bclass="[^"]*\balt\b[^"]*"[^>]*)\/?>/g)];
@@ -446,6 +449,15 @@ function auditSequenceShape(file, svg) {
   } else {
     addRow(scope, "fallback sequence audit", `labels=${labels} numbers=${numbers.length} monotonic=true alt_fill_failures=0`);
   }
+}
+
+function referenceAuditsAvailable() {
+  return [
+    "diagram-geometry-audit.py",
+    "diagram-endpoint-audit.py",
+    "diagram-connector-audit.py",
+    "diagram-mixed-corner-audit.py",
+  ].every(script => fs.existsSync(path.join(skillAuditDir, script)));
 }
 
 function runSkillAudits(file, svg) {
@@ -471,9 +483,9 @@ function runSkillAudits(file, svg) {
       fail(scope, `${gate} reference audit`, evidence || `exit=${result.status}`);
       continue;
     }
-    const weakConnector = gate === "connector" && /connectors=0/.test(evidence);
+    const weakConnector = gate === "connector" && /(?:^|\s)connectors=0(?:\s|$)/.test(evidence);
     const weakMixed = gate === "mixed-corner" && /paths=0/.test(evidence) && /\bQ\b/.test(svg);
-    const weakCards = gate === "connector" && path.basename(file).includes("architecture") && /cards=0/.test(evidence);
+    const weakCards = gate === "connector" && path.basename(file).includes("architecture") && /(?:^|\s)cards=0(?:\s|$)/.test(evidence);
     const resultLabel = weakConnector || weakMixed || weakCards ? "WEAK" : "PASS";
     addRow(scope, `${gate} reference audit`, evidence.split("\n").at(-1) || "exit=0", resultLabel);
   }

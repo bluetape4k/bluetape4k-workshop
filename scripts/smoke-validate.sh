@@ -150,6 +150,7 @@ case "${1:-help}" in
       :commerce-reservation-control-plane:test \
       :commerce-promotion-voucher-campaign:test \
       :commerce-pre-generated-voucher-pool:test \
+      :commerce-concert-ticket-flash-sale:test \
       --continue --max-workers=1"
     ;;
 
