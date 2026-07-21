@@ -8,18 +8,24 @@ import io.bluetape4k.workshop.leader.jobsafety.persistence.JobOutboxRepository
 
 enum class EffectWorkResult { NO_WORK, CONFIRMED, DECLINED, RECONCILIATION_REQUIRED }
 
+interface EffectOperations {
+    fun deliverNext(): EffectWorkResult
+
+    fun reconcileNext(): EffectWorkResult
+}
+
 /** Claims briefly, calls the provider outside a transaction, then persists the observed result. */
 class OutboxEffectWorker(
     private val outbox: JobOutboxRepository,
     private val receipts: JobEffectReceiptRepository,
     private val provider: ExternalEffectPort,
-) {
-    fun deliverNext(): EffectWorkResult {
+) : EffectOperations {
+    override fun deliverNext(): EffectWorkResult {
         val claimed = outbox.claimNext(EffectDeliveryState.PENDING) ?: return EffectWorkResult.NO_WORK
         return finalize(claimed.operationId, provider.execute(claimed.operationId))
     }
 
-    fun reconcileNext(): EffectWorkResult {
+    override fun reconcileNext(): EffectWorkResult {
         val claimed =
             outbox.claimNext(EffectDeliveryState.RECONCILIATION_REQUIRED)
                 ?: return EffectWorkResult.NO_WORK
