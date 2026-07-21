@@ -1,6 +1,10 @@
 package io.bluetape4k.workshop.commerce.ticket.identity
 
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireNotEmpty
 import java.io.Serial
+import java.io.Serializable
 import java.net.InetAddress
 
 /** Invalid forwarded-address input from a trusted network hop. */
@@ -20,8 +24,8 @@ class TrustedClientAddressResolver(
     private val trustedNetworks = trustedCidrs.map(Cidr::parse)
 
     init {
-        require(trustedNetworks.isNotEmpty()) { "at least one trusted proxy CIDR is required" }
-        require(trustedNetworks.none { it.prefixLength == 0 }) { "wildcard trusted proxy CIDR is forbidden" }
+        trustedNetworks.requireNotEmpty("trustedNetworks")
+        trustedNetworks.none { it.prefixLength == 0 }.requireEquals(true, "trustedNetworks.hasNoWildcard")
     }
 
     fun resolve(
@@ -44,7 +48,7 @@ class TrustedClientAddressResolver(
 
     private fun parseAddress(value: String): InetAddress =
         try {
-            require(IP_LITERAL.matches(value))
+            IP_LITERAL.matches(value).requireEquals(true, "clientAddress.isIpLiteral")
             InetAddress.getByName(value)
         } catch (failure: Exception) {
             throw InvalidClientAddress(failure)
@@ -53,7 +57,7 @@ class TrustedClientAddressResolver(
     private data class Cidr(
         val network: ByteArray,
         val prefixLength: Int,
-    ) {
+    ) : Serializable {
         fun contains(address: InetAddress): Boolean {
             val candidate = address.address
             if (candidate.size != network.size) return false
@@ -68,18 +72,21 @@ class TrustedClientAddressResolver(
         companion object {
             fun parse(value: String): Cidr {
                 val parts = value.split('/')
-                require(parts.size == 2) { "trusted proxy must use CIDR notation" }
+                parts.size.requireEquals(2, "trustedProxy.parts.size")
                 val address =
                     try {
-                        require(IP_LITERAL.matches(parts[0]))
+                        IP_LITERAL.matches(parts[0]).requireEquals(true, "trustedProxy.address.isIpLiteral")
                         InetAddress.getByName(parts[0])
                     } catch (failure: Exception) {
                         throw IllegalArgumentException("invalid trusted proxy CIDR", failure)
                     }
                 val prefix = parts[1].toIntOrNull() ?: throw IllegalArgumentException("invalid CIDR prefix")
-                require(prefix in 0..address.address.size * 8) { "invalid CIDR prefix" }
+                prefix.requireInRange(0, address.address.size * 8, "trustedProxy.prefix")
                 return Cidr(address.address, prefix)
             }
+
+            @Serial
+            private const val serialVersionUID: Long = 1L
         }
     }
 

@@ -13,13 +13,20 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.io.Serial
+import java.io.Serializable
 import java.time.Clock
-import java.util.UUID
+import io.bluetape4k.idgenerators.uuid.Uuid
 
 data class OperatorReconcileRequest(
     @field:Min(1) @field:Max(50) val limit: Int,
     @field:Size(min = 8, max = 200) val reason: String,
-)
+) : Serializable {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 /** Bounded operator recovery API. Authorization is enforced by [TicketSecurityConfiguration]. */
 @RestController
@@ -32,6 +39,6 @@ class OperatorTicketController(
     @PostMapping("/reconciliation-runs")
     fun reconcile(@Valid @RequestBody request: OperatorReconcileRequest): ResponseEntity<ReconcileSummary> =
         ResponseEntity.accepted().body(
-            operations.reconcile(OperatorReconcile(UUID.randomUUID(), request.limit, clock.instant(), request.reason.trim())),
+            operations.reconcile(OperatorReconcile(Uuid.V7.nextId(), request.limit, clock.instant(), request.reason.trim())),
         )
 }

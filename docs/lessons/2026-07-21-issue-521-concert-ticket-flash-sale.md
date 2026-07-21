@@ -45,6 +45,18 @@ PostgreSQL의 `FOR UPDATE SKIP LOCKED`처럼 필요한 vendor 기능도 Exposed 
 `exec`로 제한한다. Schema bootstrap만 JDBC connection을 직접 사용하며 별도 migration class와
 architecture test가 그 예외를 설명한다.
 
+## Kotlin ecosystem 규칙도 실행 가능한 계약이어야 한다
+
+코드 리뷰 체크리스트만으로는 신규 파일에 `UUID.randomUUID`, Kotlin `require`, monitor 기반
+`synchronized`가 다시 들어오는 것을 막기 어렵다. 이 예제는 UUID v7 생성과 validation을 Bluetape
+helper로 통일하고, 동시성 의도를 `ReentrantLock`으로 드러낸다. 외부 provider와 Redis 장애 경계는
+민감한 token이나 payload를 남기지 않는 `KLogging` 이벤트로 관측한다.
+
+Production data class에는 `Serializable`과 명시적인 `serialVersionUID`를 요구한다. 소스 금지 패턴과
+컴파일된 data class의 직렬화 계약을 `KotlinPatternArchitectureTest`가 검사하므로, 규칙 위반은 문서와
+실제 구현이 벌어진 뒤가 아니라 PR 테스트 단계에서 실패한다. Exposed `insert`/`update` lambda에서는
+column과 이름이 겹치는 입력을 먼저 의미 있는 로컬 값으로 추출해 receiver shadowing을 피한다.
+
 ## 문서와 데모에서 배운 점
 
 Core의 bounded `TicketEventStream`은 snapshot-first subscription과 slow-consumer eviction을 검증하지만

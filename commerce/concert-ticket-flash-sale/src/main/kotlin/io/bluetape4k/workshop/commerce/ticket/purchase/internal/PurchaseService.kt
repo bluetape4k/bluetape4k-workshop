@@ -47,11 +47,13 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.transaction.annotation.Transactional
 import java.io.Serial
+import java.io.Serializable
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.time.Clock
 import java.time.Instant
+import io.bluetape4k.idgenerators.uuid.Uuid
 import java.util.UUID
 
 fun interface PurchaseEventPublisher {
@@ -120,7 +122,7 @@ class TicketPurchaseRepository(
 
         PurchaseCommit(
             PurchaseSnapshot(command.attemptId, PurchaseState.INVENTORY_HELD, 0, now),
-            AuthorizationRequested(UUID.randomUUID(), command.attemptId, command.authorizationOperationId),
+            AuthorizationRequested(Uuid.V7.nextId(), command.attemptId, command.authorizationOperationId),
         )
     }
 
@@ -400,7 +402,7 @@ class TicketPurchaseRepository(
 
     private fun insertOrder(attempt: AttemptRecord, authorizationOperationId: UUID, disposition: TicketDisposition) {
         val now = clock.instant()
-        val orderId = UUID.randomUUID()
+        val orderId = Uuid.V7.nextId()
         val refundOperationId = if (disposition == TicketDisposition.NEVER_ISSUED) stableOperationId("refund", orderId) else null
         TicketOrders.insert {
             it[id] = orderId
@@ -527,7 +529,12 @@ class TicketPurchaseRepository(
         return ByteBuffer.wrap(digest, 0, Long.SIZE_BYTES).long
     }
 
-    data class PurchaseCommit(val snapshot: PurchaseSnapshot, val event: AuthorizationRequested?)
+    data class PurchaseCommit(val snapshot: PurchaseSnapshot, val event: AuthorizationRequested?) : Serializable {
+        companion object {
+            @Serial
+            private const val serialVersionUID: Long = 1L
+        }
+    }
 
     private data class AttemptRecord(
         val attemptId: UUID,
@@ -539,13 +546,18 @@ class TicketPurchaseRepository(
         val state: PurchaseState,
         val revision: Long,
         val updatedAt: Instant,
-    ) {
+    ) : Serializable {
         fun snapshot(nextState: PurchaseState = state, at: Instant = updatedAt) = PurchaseSnapshot(
             attemptId = attemptId,
             state = nextState,
             revision = if (nextState == state) revision else revision + 1,
             updatedAt = at,
         )
+
+        companion object {
+            @Serial
+            private const val serialVersionUID: Long = 1L
+        }
     }
 
     private val InventoryRecord.available: Int get() = total - held - sold

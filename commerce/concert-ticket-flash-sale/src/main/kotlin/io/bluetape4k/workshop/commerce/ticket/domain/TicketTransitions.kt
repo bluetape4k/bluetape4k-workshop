@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.ticket.domain
 
 import java.io.Serial
+import java.io.Serializable
 import java.time.Instant
 
 /** Inputs required to decide whether a suspended sale can resume safely. */
@@ -9,7 +10,12 @@ data class SaleTransitionContext(
     val opensAt: Instant,
     val closesAt: Instant,
     val invariantsHealthy: Boolean,
-)
+) : Serializable {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 /** Rejects a sale command that is stale or unsafe for the current window. */
 class InvalidSaleTransition(

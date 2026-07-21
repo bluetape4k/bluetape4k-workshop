@@ -1,5 +1,9 @@
 package io.bluetape4k.workshop.commerce.ticket.identity
 
+import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.workshop.commerce.ticket.persistence.IdentityKind
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketExposedJdbcRepository
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketIdentityAliasEntity
@@ -9,11 +13,11 @@ import io.bluetape4k.workshop.commerce.ticket.persistence.TicketIdentitySubjects
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketJdbcExecutor
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
-import java.time.Instant
 import java.io.Serializable
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets.UTF_8
 import java.text.Normalizer
+import java.time.Instant
 import java.util.UUID
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -28,11 +32,11 @@ class IdentityKeyRing(
     private val keys: Map<Int, ByteArray> = keys.mapValues { it.value.copyOf() }
 
     init {
-        require(currentVersion in this.activeReadVersions) { "current identity key must be readable" }
-        require(this.activeReadVersions.isNotEmpty()) { "identity read ring must not be empty" }
-        require(this.activeReadVersions.all { version -> this.keys[version]?.size?.let { it >= 32 } == true }) {
-            "every active identity key must contain at least 32 bytes"
-        }
+        (currentVersion in this.activeReadVersions).requireEquals(true, "currentVersion.isReadable")
+        this.activeReadVersions.requireNotEmpty("activeReadVersions")
+        this.activeReadVersions
+            .all { version -> this.keys[version]?.size?.let { it >= 32 } == true }
+            .requireEquals(true, "activeReadVersions.keysAreStrong")
     }
 
     fun digest(
@@ -89,7 +93,7 @@ class IdentityAliasRepository(
                 candidates.entries
                     .sortedByDescending { it.key }
                     .firstNotNullOfOrNull { (version, digest) -> findSubject(kind, version, digest) }
-            val subject = existing ?: IdentitySubject(UUID.randomUUID(), kind).also { insertSubject(it) }
+            val subject = existing ?: IdentitySubject(Uuid.V7.nextId(), kind).also { insertSubject(it) }
             ensureAlias(subject, currentVersion, candidates.getValue(currentVersion))
             subject
         }
@@ -155,7 +159,7 @@ class IdentityService(
         canonical: String,
     ): IdentitySubject {
         val normalized = Normalizer.normalize(canonical.trim(), Normalizer.Form.NFC)
-        require(normalized.isNotEmpty()) { "canonical identity must not be blank" }
+        normalized.requireNotBlank("canonical")
         val candidates = keys.activeReadVersions.associateWith { keys.digest(it, kind, normalized) }
         return aliases.resolveOrCreate(kind, candidates, keys.currentVersion)
     }

@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.ticket.persistence
 
+import io.bluetape4k.support.requireGt
+import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serial
 import java.time.Duration
 import java.util.concurrent.Semaphore
@@ -71,8 +73,8 @@ class TicketJdbcExecutor(
     )
 
     init {
-        require(foregroundPermits > 0) { "foregroundPermits must be positive" }
-        require(permitTimeout.isPositive) { "permitTimeout must be positive" }
+        foregroundPermits.requirePositiveNumber("foregroundPermits")
+        permitTimeout.requireGt(Duration.ZERO, "permitTimeout")
     }
 
     fun <T> transaction(block: TicketJdbcTransaction.() -> T): T {

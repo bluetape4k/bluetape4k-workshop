@@ -10,6 +10,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import java.io.Serial
 import java.io.Serializable
 import java.time.Duration
 import java.time.Instant
@@ -31,13 +32,29 @@ data class IdempotencyScope(
 
 /** Result evaluated before sale state or Redis admission. */
 sealed interface IdempotencyDecision : Serializable {
-    data class Owner(val id: Long) : IdempotencyDecision
+    data class Owner(val id: Long) : IdempotencyDecision {
+        companion object {
+            @Serial
+            private const val serialVersionUID: Long = 1L
+        }
+    }
 
-    data class Replay(val attemptId: UUID, val completed: Boolean) : IdempotencyDecision
+    data class Replay(val attemptId: UUID, val completed: Boolean) : IdempotencyDecision {
+        companion object {
+            @Serial
+            private const val serialVersionUID: Long = 1L
+        }
+    }
 
-    data object InProgress : IdempotencyDecision
+    data object InProgress : IdempotencyDecision {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
 
-    data object Conflict : IdempotencyDecision
+    data object Conflict : IdempotencyDecision {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 /** PostgreSQL authority for principal-scoped replay and fingerprint conflicts. */

@@ -3,8 +3,11 @@ package io.bluetape4k.workshop.commerce.ticket.config
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireGt
+import io.bluetape4k.support.requireNotBlank
 import org.springframework.core.io.Resource
 import java.io.Serial
+import java.io.Serializable
 import java.security.MessageDigest
 import java.sql.Connection
 import java.sql.SQLException
@@ -17,9 +20,9 @@ import javax.sql.DataSource
 data class TicketMigration(
     val version: String,
     val resource: Resource,
-) {
+) : Serializable {
     init {
-        require(version.isNotBlank()) { "migration version must not be blank" }
+        version.requireNotBlank("version")
     }
 
     fun read(): TicketMigrationScript {
@@ -35,6 +38,11 @@ data class TicketMigration(
             sql = bytes.toString(Charsets.UTF_8),
         )
     }
+
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 /** Materialized migration input used inside one database transaction. */
@@ -42,7 +50,12 @@ data class TicketMigrationScript(
     val version: String,
     val checksum: String,
     val sql: String,
-)
+) : Serializable {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 /** Result of applying or replaying one migration. */
 enum class TicketMigrationResult {
@@ -89,7 +102,7 @@ class TicketMigrationRunner(
     private val readiness: TicketMigrationReadiness = TicketMigrationReadiness(),
 ) {
     init {
-        require(lockTimeout.isPositive) { "lockTimeout must be positive" }
+        lockTimeout.requireGt(Duration.ZERO, "lockTimeout")
     }
 
     fun migrate(): TicketMigrationResult {

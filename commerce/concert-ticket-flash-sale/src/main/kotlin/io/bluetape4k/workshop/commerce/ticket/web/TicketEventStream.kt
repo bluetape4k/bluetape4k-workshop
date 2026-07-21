@@ -1,5 +1,10 @@
 package io.bluetape4k.workshop.commerce.ticket.web
 
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireGe
+import io.bluetape4k.support.requireNotBlank
+import java.io.Serial
+import java.io.Serializable
 import java.time.Clock
 import java.time.Instant
 import java.util.ArrayDeque
@@ -8,10 +13,23 @@ import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Semaphore
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
-sealed interface StreamScope {
-    data class PublicSale(val saleId: UUID) : StreamScope
-    data class OwnerAttempt(val attemptId: UUID, val buyerSubjectId: UUID) : StreamScope
+sealed interface StreamScope : Serializable {
+    data class PublicSale(val saleId: UUID) : StreamScope {
+        companion object {
+            @Serial
+            private const val serialVersionUID: Long = 1L
+        }
+    }
+
+    data class OwnerAttempt(val attemptId: UUID, val buyerSubjectId: UUID) : StreamScope {
+        companion object {
+            @Serial
+            private const val serialVersionUID: Long = 1L
+        }
+    }
 }
 
 data class TicketStreamEvent(
@@ -19,13 +37,23 @@ data class TicketStreamEvent(
     val type: String,
     val payload: Map<String, String>,
     val serverTime: Instant,
-)
+) : Serializable {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 data class TicketStreamSnapshot(
     val payload: Map<String, String>,
     val highWater: Long,
     val serverTime: Instant,
-)
+) : Serializable {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 class TicketStreamCapacityExceeded : IllegalStateException("ticket_stream_capacity_exceeded")
 class TicketStreamSlowConsumer : IllegalStateException("ticket_stream_slow_consumer")
@@ -37,7 +65,7 @@ class TicketEventStream(
     private val retainedEvents: Int = 1_024,
     private val clock: Clock = Clock.systemUTC(),
 ) : AutoCloseable {
-    private val lock = Any()
+    private val lock = ReentrantLock()
     private val sequence = AtomicLong()
     private val permits = Semaphore(maxConnections, true)
     private val retained = ArrayDeque<ScopedEvent>()
@@ -45,13 +73,15 @@ class TicketEventStream(
     private val accepting = AtomicBoolean(true)
 
     init {
-        require(queueSize > 0 && maxConnections > 0 && retainedEvents >= queueSize)
+        queueSize.requireGe(1, "queueSize")
+        maxConnections.requireGe(1, "maxConnections")
+        retainedEvents.requireGe(queueSize, "retainedEvents")
     }
 
     fun publish(scope: StreamScope, type: String, payload: Map<String, String>): TicketStreamEvent {
-        require(type.isNotBlank())
-        require(payload.keys.none(SENSITIVE_FIELDS::contains)) { "stream payload contains a forbidden field" }
-        synchronized(lock) {
+        type.requireNotBlank("type")
+        payload.keys.none(SENSITIVE_FIELDS::contains).requireEquals(true, "payload.hasNoSensitiveFields")
+        lock.withLock {
             val event = TicketStreamEvent(sequence.incrementAndGet(), type, payload.toMap(), clock.instant())
             retained += ScopedEvent(scope, event)
             while (retained.size > retainedEvents) retained.removeFirst()
@@ -60,19 +90,19 @@ class TicketEventStream(
         }
     }
 
-    /** Registers before catch-up under one monitor, closing the snapshot-to-subscribe race. */
+    /** Registers before catch-up under one lock, closing the snapshot-to-subscribe race. */
     fun subscribe(scope: StreamScope, snapshot: () -> Map<String, String>): TicketSubscription {
         if (!accepting.get() || !permits.tryAcquire()) throw TicketStreamCapacityExceeded()
-        val highWater = synchronized(lock) { sequence.get() }
+        val highWater = lock.withLock { sequence.get() }
         val snapshotPayload = try {
             snapshot().toMap()
         } catch (failure: Exception) {
             permits.release()
             throw failure
         }
-        synchronized(lock) {
+        lock.withLock {
             val subscription = TicketSubscription(scope, queueSize, permits) {
-                synchronized(lock) { subscriptions.remove(it) }
+                lock.withLock { subscriptions.remove(it) }
             }
             subscriptions += subscription
             subscription.snapshot = TicketStreamSnapshot(snapshotPayload, highWater, clock.instant())
@@ -83,7 +113,7 @@ class TicketEventStream(
         }
     }
 
-    fun activeConnections(): Int = synchronized(lock) { subscriptions.size }
+    fun activeConnections(): Int = lock.withLock { subscriptions.size }
 
     fun stopNewConnections() {
         accepting.set(false)
@@ -91,10 +121,15 @@ class TicketEventStream(
 
     override fun close() {
         accepting.set(false)
-        synchronized(lock) { subscriptions.toList().forEach(TicketSubscription::close) }
+        lock.withLock { subscriptions.toList().forEach(TicketSubscription::close) }
     }
 
-    private data class ScopedEvent(val scope: StreamScope, val event: TicketStreamEvent)
+    private data class ScopedEvent(val scope: StreamScope, val event: TicketStreamEvent) : Serializable {
+        companion object {
+            @Serial
+            private const val serialVersionUID: Long = 1L
+        }
+    }
 
     companion object {
         private val SENSITIVE_FIELDS = setOf(

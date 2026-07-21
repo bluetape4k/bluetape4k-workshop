@@ -2,6 +2,11 @@ package io.bluetape4k.workshop.commerce.ticket.redis
 
 import io.bluetape4k.redis.lettuce.script.RedisScript
 import io.bluetape4k.redis.lettuce.script.RedisScriptRunner
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireGt
+import io.bluetape4k.support.requireNotEmpty
 import io.lettuce.core.RedisException
 import io.lettuce.core.ScriptOutputType
 import io.lettuce.core.api.sync.RedisCommands
@@ -15,8 +20,8 @@ data class LeaseKeys(
     val user: String,
 ) : Serializable {
     init {
-        require(ip != user) { "lease keys must be distinct" }
-        require(hashTag(ip) == hashTag(user)) { "lease keys must share one non-empty Redis hash tag" }
+        (ip != user).requireEquals(true, "leaseKeys.areDistinct")
+        hashTag(ip).requireEquals(hashTag(user), "leaseKeys.hashTag")
     }
 
     fun asArray(): Array<String> = arrayOf(ip, user)
@@ -40,10 +45,9 @@ data class LeaseOwner(
     val token: String,
 ) : Serializable {
     init {
-        require(version > 0) { "lease owner version must be positive" }
-        require(token.length == TOKEN_LENGTH && token.all { it.isLetterOrDigit() || it == '-' || it == '_' }) {
-            "lease owner token must be a 256-bit Base64URL value without padding"
-        }
+        version.requireGt(0, "version")
+        token.length.requireEquals(TOKEN_LENGTH, "token.length")
+        token.all { it.isLetterOrDigit() || it == '-' || it == '_' }.requireEquals(true, "token.isBase64Url")
     }
 
     val wireValue: String = "v$version:$token"
@@ -62,11 +66,10 @@ data class LeaseRequest(
     val ttl: Duration,
 ) : Serializable {
     init {
-        require(ownerCandidates.isNotEmpty()) { "at least one lease owner candidate is required" }
-        require(ownerCandidates.map { it.version }.distinct().size == ownerCandidates.size) {
-            "lease owner versions must be unique"
-        }
-        require(!ttl.isZero && !ttl.isNegative) { "lease ttl must be positive" }
+        ownerCandidates.requireNotEmpty("ownerCandidates")
+        ownerCandidates.map { it.version }.distinct().size
+            .requireEquals(ownerCandidates.size, "ownerCandidates.distinctVersions")
+        ttl.requireGt(Duration.ZERO, "ttl")
     }
 
     val currentOwner: LeaseOwner get() = ownerCandidates.first()
@@ -78,11 +81,24 @@ data class LeaseRequest(
 }
 
 sealed interface LeaseDecision : Serializable {
-    data class Acquired(val version: Int) : LeaseDecision
+    data class Acquired(val version: Int) : LeaseDecision {
+        companion object {
+            @Serial
+            private const val serialVersionUID: Long = 1L
+        }
+    }
 
-    data class AlreadyOwned(val version: Int) : LeaseDecision
+    data class AlreadyOwned(val version: Int) : LeaseDecision {
+        companion object {
+            @Serial
+            private const val serialVersionUID: Long = 1L
+        }
+    }
 
-    data object Busy : LeaseDecision
+    data object Busy : LeaseDecision {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 /** Narrow seam that can later be replaced by the reusable bluetape4k-lettuce feature tracked in #1065. */
@@ -251,6 +267,9 @@ class ForegroundLeaseGate(
                 else -> decision
             }
         } catch (failure: RedisException) {
+            log.warn(failure) { "foreground_lease_unavailable" }
             throw AdmissionTemporarilyUnavailable(failure)
         }
+
+    companion object : KLogging()
 }

@@ -15,8 +15,14 @@ import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
+import java.io.Serial
+import java.io.Serializable
 import java.time.Clock
 import java.time.Duration
+import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.info
+import io.bluetape4k.logging.warn
 import java.util.UUID
 
 data class PaymentClaim(
@@ -24,7 +30,12 @@ data class PaymentClaim(
     val attemptId: UUID,
     val claimToken: UUID,
     val revision: Long,
-)
+) : Serializable {
+    companion object {
+        @Serial
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 /** Fenced claims implemented on Bluetape4k [TicketExposedJdbcRepository]. */
 class PaymentOperationClaimRepository(
@@ -33,7 +44,7 @@ class PaymentOperationClaimRepository(
 ) : TicketExposedJdbcRepository<TicketPaymentOperationEntity, Long>(TicketPaymentOperationEntity::class.java) {
     fun claim(operationId: UUID, claimTtl: Duration): PaymentClaim? = jdbc.transaction {
         val now = clock.instant()
-        val token = UUID.randomUUID()
+        val token = Uuid.V7.nextId()
         val claimed = TicketPaymentOperations.update({
             (TicketPaymentOperations.operationId eq operationId) and
                 (TicketPaymentOperations.operationKind eq "authorize") and
@@ -92,9 +103,14 @@ class PaymentWorker(
         val outcome =
             provider.lookup(operationId) ?: try {
                 provider.authorize(operationId)
-            } catch (_: PaymentTimeout) {
+            } catch (failure: PaymentTimeout) {
+                log.warn(failure) { "payment_authorization_timed_out operationId=$operationId" }
                 PaymentOutcome.UNKNOWN
             }
-        return apply(claim, outcome)
+        return apply(claim, outcome).also {
+            log.info { "payment_outcome_applied operationId=$operationId outcome=$outcome result=$it" }
+        }
     }
+
+    companion object : KLogging()
 }

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.ticket.operations.internal
 
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.workshop.commerce.ticket.operations.api.OperationsCommands
 import io.bluetape4k.workshop.commerce.ticket.operations.api.OperatorReconcile
 import io.bluetape4k.workshop.commerce.ticket.operations.api.ReconcileSummary
@@ -21,8 +22,8 @@ class OperationsService(
     private val permits = Semaphore(operatorPermits, true)
 
     override fun reconcile(command: OperatorReconcile): ReconcileSummary {
-        require(command.limit in 1..maxBatchSize)
-        require(command.reason.length in 8..200)
+        command.limit.requireInRange(1, maxBatchSize, "command.limit")
+        command.reason.length.requireInRange(8, 200, "command.reason.length")
         check(permits.tryAcquire()) { "operator_reconciliation_busy" }
         try {
             val deadline = clock.instant().plus(runDeadline)
