@@ -3,6 +3,7 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.TestDescriptor
 import org.gradle.api.tasks.testing.TestListener
 import org.gradle.api.tasks.testing.TestResult
+import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.concurrent.atomic.AtomicLong
 
@@ -48,6 +49,10 @@ configurations {
 
 configurations.configureEach {
     exclude(group = "io.github.bluetape4k", module = "bluetape4k-virtualthread-jdk21")
+}
+
+val compatibility by sourceSets.creating {
+    java.srcDir("src/compatibility/java")
 }
 
 dependencies {
@@ -167,6 +172,29 @@ val migrationCompatibilityTest = tasks.register<Test>("migrationCompatibilityTes
     failOnZeroTests()
     verifyNonEmptyXmlResults()
     shouldRunAfter(tasks.test)
+}
+
+val previousVoucherPoolBinaryJar = tasks.register<Jar>("previousVoucherPoolBinaryJar") {
+    description = "Builds the pinned previous voucher-pool compatibility binary."
+    group = "build"
+    dependsOn(compatibility.classesTaskName)
+    archiveFileName.set("previous-voucher-pool-binary.jar")
+    destinationDirectory.set(layout.buildDirectory.dir("compatibility"))
+    from(compatibility.output)
+    isPreserveFileTimestamps = false
+    isReproducibleFileOrder = true
+    manifest {
+        attributes["Main-Class"] =
+            "io.bluetape4k.workshop.commerce.voucherpool.compatibility.PreviousVoucherPoolBinaryMain"
+    }
+}
+
+migrationCompatibilityTest.configure {
+    dependsOn(previousVoucherPoolBinaryJar)
+    systemProperty(
+        "voucherPool.previousBinary",
+        previousVoucherPoolBinaryJar.flatMap { it.archiveFile }.get().asFile.absolutePath,
+    )
 }
 
 val stressTest = tasks.register<Test>("stressTest") {

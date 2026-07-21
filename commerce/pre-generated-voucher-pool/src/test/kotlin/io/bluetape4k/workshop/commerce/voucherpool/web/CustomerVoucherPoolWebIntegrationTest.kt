@@ -13,6 +13,7 @@ import io.bluetape4k.workshop.commerce.voucherpool.application.CreateImportBatch
 import io.bluetape4k.workshop.commerce.voucherpool.application.applied
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolMigration
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolMigrationRunner
+import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolRetention
 import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolPolicy
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.DigestValue
 import org.junit.jupiter.api.BeforeEach
@@ -41,7 +42,9 @@ internal class CustomerVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             537_010L,
         ).migrate()
         dataSource.connection.use { connection ->
-            connection.createStatement().use { it.execute("TRUNCATE TABLE voucher_pool_campaigns CASCADE") }
+            connection.createStatement().use {
+                it.execute("TRUNCATE TABLE voucher_pool_backup_inventory,voucher_pool_campaigns CASCADE")
+            }
         }
     }
 
@@ -271,6 +274,40 @@ internal class CustomerVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             "\"0\"",
             principal = OTHER_PRINCIPAL,
         ).exchange().expectStatus().isNotFound
+    }
+
+    @Test
+    fun `post purge retry through the customer route returns the retained replay fence`() {
+        val fixture = activePool("post-purge", listOf("CUSTOMER-POST-PURGE-A"))
+        val idempotencyKey = "reserve-post-purge"
+        val reservation = reserve(fixture.campaignId, idempotencyKey).createdReservation()
+
+        dataSource.connection.use { connection ->
+            connection.createStatement().use { statement ->
+                statement.execute(
+                    """INSERT INTO voucher_pool_backup_inventory
+                        (backup_id,tenant_id,kek_versions,verification_versions,user_identity_versions,audit_versions,
+                         signature_versions,stable_dedup_version,command_tombstone_version,retained_until,
+                         restore_rehearsed_at)
+                        VALUES ('${UUID.randomUUID()}','$TENANT',ARRAY['kek-v1'],ARRAY['11'],ARRAY['12'],ARRAY['15'],
+                                ARRAY[]::text[],'1','2',statement_timestamp()+interval '1 day',statement_timestamp())""",
+                )
+                statement.execute(
+                    """UPDATE voucher_pool_http_idempotency
+                        SET completed_at=statement_timestamp()-interval '25 hours',
+                            expires_at=statement_timestamp()-interval '1 second'
+                        WHERE tenant_id='$TENANT' AND status='COMPLETED'""",
+                )
+            }
+        }
+
+        VoucherPoolRetention(dataSource).purge(limit = 100)
+
+        reserve(fixture.campaignId, idempotencyKey)
+            .exchange().expectStatus().isEqualTo(410)
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("REPLAY_WINDOW_EXPIRED")
+            .jsonPath("$.effectId").isEqualTo(reservation.reservationId.toString())
     }
 
     private fun activePool(

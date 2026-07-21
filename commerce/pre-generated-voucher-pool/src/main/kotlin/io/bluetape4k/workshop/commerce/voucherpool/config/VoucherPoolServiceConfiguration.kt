@@ -54,8 +54,18 @@ internal class VoucherPoolServiceConfiguration {
         AesGcmVoucherEnvelopeCrypto(kekRing, digests)
 
     @Bean
-    fun voucherPoolIdempotencyRepository(digests: VoucherDigestService): VoucherPoolIdempotencyRepository =
-        JdbcVoucherPoolIdempotencyRepository(digests)
+    fun voucherPoolRetentionPolicy(): VoucherPoolRetentionPolicy = VoucherPoolRetentionPolicy()
+
+    @Bean
+    fun voucherPoolRetention(dataSource: DataSource, policy: VoucherPoolRetentionPolicy): VoucherPoolRetention =
+        VoucherPoolRetention(dataSource, policy)
+
+    @Bean
+    fun voucherPoolIdempotencyRepository(
+        digests: VoucherDigestService,
+        policy: VoucherPoolRetentionPolicy,
+    ): VoucherPoolIdempotencyRepository =
+        JdbcVoucherPoolIdempotencyRepository(digests, descriptorRetention = policy.descriptor)
 
     @Bean
     fun voucherCryptoStorage(repository: VoucherPoolRepository, crypto: VoucherEnvelopeCrypto): VoucherCryptoStorage =

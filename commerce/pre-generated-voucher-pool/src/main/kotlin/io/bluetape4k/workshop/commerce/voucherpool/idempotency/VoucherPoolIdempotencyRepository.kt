@@ -308,6 +308,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
         val updated = connection.prepareStatement(
             """UPDATE voucher_pool_http_idempotency
                 SET status='COMPLETED',owner_token_digest=NULL,lease_until=NULL,descriptor=?::jsonb,
+                    completed_at=statement_timestamp(),
                     expires_at=statement_timestamp()+(? * interval '1 millisecond'),revision=revision+1
                 WHERE tenant_id=? AND operation=? AND scoped_key_digest=? AND fingerprint=?
                   AND status='OWNED' AND owner_token_digest=?
@@ -330,7 +331,8 @@ internal class JdbcVoucherPoolIdempotencyRepository(
     override fun releaseRetryable(owner: IdempotencyOwner): Boolean {
         val released = currentConnection().prepareStatement(
             """UPDATE voucher_pool_http_idempotency
-                SET status='RETRYABLE_FAILED',owner_token_digest=NULL,lease_until=NULL,revision=revision+1
+                SET status='RETRYABLE_FAILED',owner_token_digest=NULL,lease_until=NULL,completed_at=NULL,
+                    revision=revision+1
                 WHERE tenant_id=? AND operation=? AND scoped_key_digest=? AND fingerprint=?
                   AND status='OWNED' AND owner_token_digest=?""",
         ).use { statement ->
@@ -415,7 +417,7 @@ internal class JdbcVoucherPoolIdempotencyRepository(
         val updated = connection.prepareStatement(
             """UPDATE voucher_pool_http_idempotency
                 SET status='OWNED',owner_token_digest=?,lease_until=statement_timestamp()+(? * interval '1 millisecond'),
-                    command_deadline=statement_timestamp()+(? * interval '1 millisecond'),descriptor=NULL,
+                    command_deadline=statement_timestamp()+(? * interval '1 millisecond'),descriptor=NULL,completed_at=NULL,
                     expires_at=statement_timestamp()+(? * interval '1 millisecond'),revision=revision+1
                 WHERE tenant_id=? AND operation=? AND scoped_key_digest=? AND fingerprint=? AND revision=?
                   AND (status='RETRYABLE_FAILED' OR (status='OWNED' AND lease_until<=statement_timestamp()))""",

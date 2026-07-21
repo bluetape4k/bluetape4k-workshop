@@ -1,4 +1,4 @@
-CREATE TABLE voucher_pool_campaigns (
+CREATE TABLE IF NOT EXISTS voucher_pool_campaigns (
     tenant_id VARCHAR(64) NOT NULL,
     campaign_id UUID NOT NULL,
     state VARCHAR(24) NOT NULL,
@@ -291,6 +291,9 @@ CREATE UNIQUE INDEX uq_voucher_pool_dedup ON voucher_pool_code_dedup(tenant_id,s
 CREATE FUNCTION voucher_pool_reject_code_dedup_mutation() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
+    IF TG_OP = 'DELETE' AND current_setting('voucher_pool.retention_purge', true) = 'on' THEN
+        RETURN OLD;
+    END IF;
     RAISE EXCEPTION 'voucher_pool_code_dedup is tenant-lifetime immutable' USING ERRCODE = '55000';
 END;
 $$;
@@ -302,6 +305,7 @@ CREATE TABLE voucher_pool_http_idempotency (
     tenant_id VARCHAR(64) NOT NULL, operation VARCHAR(64) NOT NULL, scoped_key_digest BYTEA NOT NULL,
     fingerprint BYTEA NOT NULL, status VARCHAR(24) NOT NULL, owner_token_digest BYTEA,
     lease_until TIMESTAMPTZ, command_deadline TIMESTAMPTZ NOT NULL, descriptor JSONB,
+    completed_at TIMESTAMPTZ,
     expires_at TIMESTAMPTZ NOT NULL, revision BIGINT NOT NULL DEFAULT 0 CHECK (revision >= 0),
     PRIMARY KEY (tenant_id,operation,scoped_key_digest),
     CHECK (status IN ('OWNED','COMPLETED','RETRYABLE_FAILED')),
@@ -309,7 +313,8 @@ CREATE TABLE voucher_pool_http_idempotency (
     CHECK ((status='OWNED')=(owner_token_digest IS NOT NULL))
 );
 CREATE INDEX ix_voucher_pool_idempotency_lease ON voucher_pool_http_idempotency(status,lease_until,tenant_id,operation);
-CREATE INDEX ix_voucher_pool_idempotency_cleanup ON voucher_pool_http_idempotency(status,expires_at,tenant_id,operation);
+CREATE INDEX ix_voucher_pool_idempotency_cleanup
+    ON voucher_pool_http_idempotency(status,completed_at,tenant_id,operation);
 
 CREATE TABLE voucher_pool_command_tombstones (
     tenant_id VARCHAR(64) NOT NULL, operation VARCHAR(64) NOT NULL, key_version INTEGER NOT NULL CHECK(key_version>0),
@@ -321,6 +326,9 @@ CREATE TABLE voucher_pool_command_tombstones (
 CREATE FUNCTION voucher_pool_reject_command_tombstone_mutation() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
+    IF TG_OP = 'DELETE' AND current_setting('voucher_pool.retention_purge', true) = 'on' THEN
+        RETURN OLD;
+    END IF;
     RAISE EXCEPTION 'voucher_pool_command_tombstones is tenant-lifetime immutable' USING ERRCODE = '55000';
 END;
 $$;
@@ -333,6 +341,7 @@ CREATE TABLE voucher_pool_audits (
     aggregate_type VARCHAR(32) NOT NULL, aggregate_id UUID NOT NULL, revision BIGINT NOT NULL CHECK(revision>=0),
     policy_version BIGINT NOT NULL CHECK(policy_version>0), actor_type VARCHAR(32) NOT NULL,
     reason_code VARCHAR(64) NOT NULL, correlation_digest BYTEA, request_digest BYTEA,
+    audit_key_version INTEGER CHECK(audit_key_version IS NULL OR audit_key_version>0),
     before_count BIGINT, after_count BIGINT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
     UNIQUE (tenant_id,aggregate_type,aggregate_id,revision),
@@ -347,6 +356,9 @@ CREATE INDEX ix_voucher_pool_audit_tenant_cursor ON voucher_pool_audits(tenant_i
 CREATE FUNCTION voucher_pool_reject_audit_mutation() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
+    IF TG_OP = 'DELETE' AND current_setting('voucher_pool.retention_purge', true) = 'on' THEN
+        RETURN OLD;
+    END IF;
     RAISE EXCEPTION 'voucher_pool_audits is append-only' USING ERRCODE = '55000';
 END;
 $$;
@@ -378,6 +390,35 @@ CREATE TABLE voucher_pool_quarantines (
     CHECK ((resolved_at IS NULL AND resolution IS NULL) OR (resolved_at IS NOT NULL AND resolution IS NOT NULL))
 );
 CREATE INDEX ix_voucher_pool_quarantine_active ON voucher_pool_quarantines(detected_at,tenant_id,entry_id) WHERE resolved_at IS NULL;
+
+CREATE TABLE voucher_pool_legal_holds (
+    tenant_id VARCHAR(64) NOT NULL, hold_id BIGSERIAL NOT NULL, reason_code VARCHAR(64) NOT NULL,
+    hold_until TIMESTAMPTZ, released_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
+    PRIMARY KEY (tenant_id,hold_id),
+    CHECK (reason_code ~ '^[A-Z][A-Z0-9_]{0,63}$'),
+    CHECK (released_at IS NULL OR released_at>=created_at),
+    CHECK (hold_until IS NULL OR hold_until>created_at)
+);
+CREATE INDEX ix_voucher_pool_legal_hold_active
+    ON voucher_pool_legal_holds(tenant_id,hold_until) WHERE released_at IS NULL;
+
+CREATE TABLE voucher_pool_backup_inventory (
+    backup_id UUID PRIMARY KEY, tenant_id VARCHAR(64) NOT NULL,
+    kek_versions TEXT[] NOT NULL, verification_versions TEXT[] NOT NULL,
+    user_identity_versions TEXT[] NOT NULL, audit_versions TEXT[] NOT NULL, signature_versions TEXT[] NOT NULL,
+    stable_dedup_version VARCHAR(64) NOT NULL, command_tombstone_version VARCHAR(64) NOT NULL,
+    retained_until TIMESTAMPTZ NOT NULL, restore_rehearsed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
+    CHECK (cardinality(kek_versions)>0), CHECK (cardinality(verification_versions)>0),
+    CHECK (array_position(user_identity_versions,'') IS NULL),
+    CHECK (array_position(audit_versions,'') IS NULL), CHECK (array_position(signature_versions,'') IS NULL),
+    CHECK (stable_dedup_version<>''), CHECK (command_tombstone_version<>''),
+    CHECK (retained_until>=created_at),
+    CHECK (restore_rehearsed_at IS NULL OR restore_rehearsed_at>=created_at)
+);
+CREATE INDEX ix_voucher_pool_backup_retention
+    ON voucher_pool_backup_inventory(tenant_id,retained_until,restore_rehearsed_at);
 
 CREATE TABLE voucher_pool_revoke_preview_grants (
     tenant_id VARCHAR(64) NOT NULL, grant_id UUID NOT NULL,
