@@ -132,8 +132,8 @@ internal class JdbcVoucherPoolWorkers(
                 activeClaim = executor.workerTransaction {
                     val connection = currentConnection()
                     claims.requireCurrentInTransaction(connection, activeClaim)
-                    val chain = repository.lockCanonicalChain(connection, candidate.authority)
-                    if (chain != null && apply(connection, activeClaim.kind, chain)) effects++
+                    val chain = repository.lockCanonicalChain(candidate.authority)
+                    if (chain != null && apply(activeClaim.kind, chain)) effects++
                     claims.checkpointInTransaction(connection, activeClaim, candidate.cursorAfter)
                 }
             } catch (@Suppress("TooGenericExceptionCaught") failure: RuntimeException) {
@@ -214,7 +214,6 @@ internal class JdbcVoucherPoolWorkers(
         users.forEach { user -> if (reconcileUserLimit(connection, claim, scope.campaignId, user)) effects++ }
         if (effects > 0) {
             repository.appendAudit(
-                connection,
                 VoucherPoolAuditRecord(
                     claim.tenantId,
                     scope.campaignId,
@@ -318,19 +317,18 @@ internal class JdbcVoucherPoolWorkers(
     }
 
     private fun apply(
-        connection: Connection,
         kind: WorkerKind,
         chain: io.bluetape4k.workshop.commerce.voucherpool.persistence.LockedWorkerChain,
     ): Boolean = when (kind) {
-        WorkerKind.RESERVATION_EXPIRY -> repository.expireReservation(connection, chain)
+        WorkerKind.RESERVATION_EXPIRY -> repository.expireReservation(chain)
         WorkerKind.ALLOCATION_EXPIRY -> repository.terminalizeWorkerEntry(
-            connection, chain, EntryState.EXPIRED, "ALLOCATION_EXPIRED",
+            chain, EntryState.EXPIRED, "ALLOCATION_EXPIRED",
         )
         WorkerKind.BATCH_REVOKE -> repository.terminalizeWorkerEntry(
-            connection, chain, EntryState.REVOKED, "BATCH_REVOKED",
+            chain, EntryState.REVOKED, "BATCH_REVOKED",
         )
         WorkerKind.BATCH_EXPIRY -> repository.terminalizeWorkerEntry(
-            connection, chain, EntryState.EXPIRED, "BATCH_EXPIRED",
+            chain, EntryState.EXPIRED, "BATCH_EXPIRED",
         )
         else -> false
     }
@@ -348,7 +346,6 @@ internal class JdbcVoucherPoolWorkers(
             if (scope.batchState != terminal) {
                 updateBatchState(connection, claim, scope.batchRevision, terminal)
                 repository.appendAudit(
-                    connection,
                     VoucherPoolAuditRecord(
                         claim.tenantId,
                         scope.campaignId,
@@ -381,7 +378,7 @@ internal class JdbcVoucherPoolWorkers(
             campaignRevocationRemaining(connection, tenantId, campaignId) != 0L -> false
             else -> {
                 updateCampaignState(connection, tenantId, campaignId, campaign.revision, CampaignState.REVOKED)
-                appendCampaignAudit(connection, tenantId, campaignId, campaign, CampaignState.REVOKED)
+                appendCampaignAudit(tenantId, campaignId, campaign, CampaignState.REVOKED)
                 true
             }
         }
@@ -606,14 +603,12 @@ internal class JdbcVoucherPoolWorkers(
     }
 
     private fun appendCampaignAudit(
-        connection: Connection,
         tenantId: String,
         campaignId: UUID,
         campaign: LockedCampaignScope,
         state: CampaignState,
     ) {
         repository.appendAudit(
-            connection,
             VoucherPoolAuditRecord(
                 tenantId,
                 campaignId,

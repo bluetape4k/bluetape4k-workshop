@@ -1178,7 +1178,6 @@ internal class VoucherBatchIngestIntegrationTest {
             private set
 
         override fun committedOrdinalDigests(
-            connection: Connection,
             tenantId: String,
             batchId: UUID,
             firstOrdinal: Long,
@@ -1186,7 +1185,7 @@ internal class VoucherBatchIngestIntegrationTest {
         ): List<CommittedOrdinalDigest> {
             requestCount++
             maximumRequestedCount = maxOf(maximumRequestedCount, count)
-            return delegate.committedOrdinalDigests(connection, tenantId, batchId, firstOrdinal, count)
+            return delegate.committedOrdinalDigests(tenantId, batchId, firstOrdinal, count)
         }
     }
 
@@ -1196,14 +1195,14 @@ internal class VoucherBatchIngestIntegrationTest {
         private val campaignBarrier = CyclicBarrier(2)
         private val batchBarrier = CyclicBarrier(2)
 
-        override fun createCampaign(connection: Connection, campaign: CampaignRecord): CampaignRecord {
+        override fun createCampaign(campaign: CampaignRecord): CampaignRecord {
             campaignBarrier.await(10, TimeUnit.SECONDS)
-            return delegate.createCampaign(connection, campaign)
+            return delegate.createCampaign(campaign)
         }
 
-        override fun createBatch(connection: Connection, batch: BatchRecord): BatchRecord {
+        override fun createBatch(batch: BatchRecord): BatchRecord {
             batchBarrier.await(10, TimeUnit.SECONDS)
-            return delegate.createBatch(connection, batch)
+            return delegate.createBatch(batch)
         }
     }
 
@@ -1214,7 +1213,7 @@ internal class VoucherBatchIngestIntegrationTest {
         private val winnerCommitted = CountDownLatch(1)
         private val campaignLockCalls = ThreadLocal.withInitial { 0 }
 
-        override fun lockCampaignForShare(connection: Connection, tenantId: String, campaignId: UUID): CampaignRecord {
+        override fun lockCampaignForShare(tenantId: String, campaignId: UUID): CampaignRecord {
             if (Thread.currentThread().name == TERMINAL_RACE_THREAD) {
                 val call = campaignLockCalls.get() + 1
                 campaignLockCalls.set(call)
@@ -1223,7 +1222,7 @@ internal class VoucherBatchIngestIntegrationTest {
                     check(winnerCommitted.await(10, TimeUnit.SECONDS)) { "different-authority winner did not commit" }
                 }
             }
-            return delegate.lockCampaignForShare(connection, tenantId, campaignId)
+            return delegate.lockCampaignForShare(tenantId, campaignId)
         }
 
         fun awaitTerminalRecovery(): Boolean = terminalRecoveryStarted.await(10, TimeUnit.SECONDS)

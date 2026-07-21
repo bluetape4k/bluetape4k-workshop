@@ -268,7 +268,6 @@ internal class VoucherCryptoStorage(
     ): VoucherCryptoStorageOutcome {
         check(!connection.autoCommit) { "voucher crypto storage requires a caller-owned transaction" }
         val locked = repository.lockReservedCryptoEntry(
-            connection,
             identity.tenantId,
             identity.campaignId,
             identity.batchId,
@@ -281,10 +280,10 @@ internal class VoucherCryptoStorage(
                 crypto.decryptAndVerify(identity, locked.encrypted(), locked.stableDedup()),
             )
         } catch (failure: VoucherCryptoException) {
-            quarantine(connection, identity, locked, failure.reason)
+            quarantine(identity, locked, failure.reason)
             VoucherCryptoStorageOutcome.Quarantined(failure.reason)
         } catch (failure: IllegalArgumentException) {
-            quarantine(connection, identity, locked, VoucherCryptoFailureReason.INVALID_CIPHERTEXT)
+            quarantine(identity, locked, VoucherCryptoFailureReason.INVALID_CIPHERTEXT)
             VoucherCryptoStorageOutcome.Quarantined(VoucherCryptoFailureReason.INVALID_CIPHERTEXT)
         }
     }
@@ -298,7 +297,6 @@ internal class VoucherCryptoStorage(
     ): VoucherCryptoStorageOutcome {
         check(!connection.autoCommit) { "voucher crypto storage requires a caller-owned transaction" }
         val locked = repository.lockAllocatedCryptoEntry(
-            connection,
             identity.tenantId,
             identity.campaignId,
             identity.batchId,
@@ -309,24 +307,22 @@ internal class VoucherCryptoStorage(
             ?: error("encrypted voucher entry is missing, stale, revealed, or already quarantined")
         return try {
             val code = crypto.decryptAndVerify(identity, locked.encrypted(), locked.stableDedup())
-            repository.eraseVoucherCiphertext(connection, identity.tenantId, identity.entryId, expectedRevision)
+            repository.eraseVoucherCiphertext(identity.tenantId, identity.entryId, expectedRevision)
             VoucherCryptoStorageOutcome.Revealed(code)
         } catch (failure: VoucherCryptoException) {
-            quarantine(connection, identity, locked, failure.reason)
+            quarantine(identity, locked, failure.reason)
             VoucherCryptoStorageOutcome.Quarantined(failure.reason)
         } catch (failure: IllegalArgumentException) {
-            quarantine(connection, identity, locked, VoucherCryptoFailureReason.INVALID_CIPHERTEXT)
+            quarantine(identity, locked, VoucherCryptoFailureReason.INVALID_CIPHERTEXT)
             VoucherCryptoStorageOutcome.Quarantined(VoucherCryptoFailureReason.INVALID_CIPHERTEXT)
         }
     }
 
     private fun quarantine(
-        connection: Connection,
         identity: EntryIdentity,
         locked: LockedVoucherCryptoRecord,
         reason: VoucherCryptoFailureReason,
     ) = repository.quarantineVoucherCrypto(
-        connection,
         identity.tenantId,
         identity.entryId,
         locked.state,

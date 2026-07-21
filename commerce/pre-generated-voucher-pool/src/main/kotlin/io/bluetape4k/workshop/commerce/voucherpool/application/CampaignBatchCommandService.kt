@@ -311,17 +311,17 @@ internal class JdbcCampaignBatchCommandService(
         MutationLane.OPERATOR,
         failureMapper = ::classifyIntegrityFailure,
         createRecovery = { connection ->
-            repository.lockCampaignForUpdate(connection, command.tenantId, command.campaignId)
+            repository.lockCampaignForUpdate(command.tenantId, command.campaignId)
                 ?.takeIf { it.sameCreateAuthority(requestedCampaign(command)) }
                 ?.snapshot()
         },
     ) { connection ->
         val requested = requestedCampaign(command)
-        repository.lockCampaignForUpdate(connection, command.tenantId, command.campaignId)?.let { existing ->
+        repository.lockCampaignForUpdate(command.tenantId, command.campaignId)?.let { existing ->
             if (!existing.sameCreateAuthority(requested)) fail(BatchCommandFailure.CREATE_FINGERPRINT_CONFLICT)
             return@executeIdempotent existing.snapshot()
         }
-        repository.createCampaign(connection, requested).snapshot()
+        repository.createCampaign(requested).snapshot()
     }
 
     override fun updatePolicy(command: UpdateCampaignPolicyCommand): MutationResult<CampaignSnapshot> = executeIdempotent(
@@ -334,14 +334,13 @@ internal class JdbcCampaignBatchCommandService(
         "CAMPAIGN_POLICY_UPDATED",
         MutationLane.OPERATOR,
     ) { connection ->
-        val current = repository.lockCampaignForUpdate(connection, command.tenantId, command.campaignId)
+        val current = repository.lockCampaignForUpdate(command.tenantId, command.campaignId)
             ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
         requireRevision(current.revision, command.expectedRevision)
         if (current.state !in setOf(CampaignState.DRAFT, CampaignState.PAUSED)) {
             fail(BatchCommandFailure.INVALID_STATE)
         }
         repository.updateCampaign(
-            connection,
             current.copy(
                 perUserLimit = command.policy.perUserLimit,
                 reservationTtlSeconds = command.policy.reservationTtl.inWholeSeconds,
@@ -363,13 +362,13 @@ internal class JdbcCampaignBatchCommandService(
         "CAMPAIGN_ACTIVATED",
         MutationLane.OPERATOR,
     ) { connection ->
-        val current = repository.lockCampaignForUpdate(connection, command.tenantId, command.campaignId)
+        val current = repository.lockCampaignForUpdate(command.tenantId, command.campaignId)
             ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
         requireRevision(current.revision, command.expectedRevision)
         if (!CampaignPolicy.canTransition(current.state, CampaignState.ACTIVE)) {
             fail(BatchCommandFailure.INVALID_STATE)
         }
-        repository.updateCampaign(connection, current.copy(state = CampaignState.ACTIVE), current.revision).snapshot()
+        repository.updateCampaign(current.copy(state = CampaignState.ACTIVE), current.revision).snapshot()
     }
 
     override fun pauseCampaign(command: CampaignRevisionCommand): MutationResult<CampaignSnapshot> =
@@ -390,9 +389,8 @@ internal class JdbcCampaignBatchCommandService(
             "BATCH_CREATED",
             MutationLane.OPERATOR,
             failureMapper = ::classifyIntegrityFailure,
-            terminalEffect = { connection, failure ->
+            terminalEffect = { _, failure ->
                 markTerminalBatchFailure(
-                    connection,
                     command.tenantId,
                     command.campaignId,
                     command.batchId,
@@ -402,26 +400,26 @@ internal class JdbcCampaignBatchCommandService(
                 ) { campaign -> requestedBatch(command, campaign.policyVersion) }
             },
             createRecovery = { connection ->
-                val campaign = repository.lockCampaignForShare(connection, command.tenantId, command.campaignId)
-                repository.lockBatchForUpdate(connection, command.tenantId, command.batchId)
+                val campaign = repository.lockCampaignForShare(command.tenantId, command.campaignId)
+                repository.lockBatchForUpdate(command.tenantId, command.batchId)
                     ?.takeIf { existing ->
                         existing.sameCreateAuthority(requestedBatch(command, campaign.policyVersion)) &&
-                            (prepared.totalCount == 0 || committedReplayExact(connection, existing, prepared))
+                            (prepared.totalCount == 0 || committedReplayExact(existing, prepared))
                     }
                     ?.snapshot()
             },
         ) { connection ->
-                val campaign = repository.lockCampaignForShare(connection, command.tenantId, command.campaignId)
+                val campaign = repository.lockCampaignForShare(command.tenantId, command.campaignId)
                 if (campaign.state != CampaignState.ACTIVE) fail(BatchCommandFailure.INVALID_STATE)
                 val requested = requestedBatch(command, campaign.policyVersion)
-                repository.lockBatchForUpdate(connection, command.tenantId, command.batchId)?.let { existing ->
+                repository.lockBatchForUpdate(command.tenantId, command.batchId)?.let { existing ->
                     if (!existing.sameCreateAuthority(requested)) fail(BatchCommandFailure.CREATE_FINGERPRINT_CONFLICT)
-                    if (prepared.totalCount > 0) replayCommitted(connection, existing, prepared)
+                    if (prepared.totalCount > 0) replayCommitted(existing, prepared)
                     return@executeIdempotent existing.snapshot()
                 }
-                var batch = repository.createBatch(connection, requested)
+                var batch = repository.createBatch(requested)
                 if (prepared.totalCount > 0) {
-                    batch = commitPrepared(connection, batch, command.manifestDigest, prepared)
+                    batch = commitPrepared(batch, command.manifestDigest, prepared)
                 }
                 batch.snapshot()
         }
@@ -468,14 +466,14 @@ internal class JdbcCampaignBatchCommandService(
         "BATCH_ACTIVATED",
         MutationLane.OPERATOR,
     ) { connection ->
-        val campaign = repository.lockCampaignForShare(connection, command.tenantId, command.campaignId)
+        val campaign = repository.lockCampaignForShare(command.tenantId, command.campaignId)
         if (campaign.state != CampaignState.ACTIVE) fail(BatchCommandFailure.INVALID_STATE)
-        val batch = repository.lockBatchForUpdate(connection, command.tenantId, command.batchId)
+        val batch = repository.lockBatchForUpdate(command.tenantId, command.batchId)
             ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
         requireBatchScope(batch, command.campaignId)
         requireRevision(batch.revision, command.expectedRevision)
-        val coverage = repository.batchOrdinalCoverage(connection, command.tenantId, command.batchId)
-        val canonicalCheckpoint = canonicalCheckpoint(connection, batch, batch.expectedCount)
+        val coverage = repository.batchOrdinalCoverage(command.tenantId, command.batchId)
+        val canonicalCheckpoint = canonicalCheckpoint(batch, batch.expectedCount)
         val complete = batch.state == BatchState.STAGING &&
             batch.nextSourceOrdinal == batch.expectedCount &&
             batch.acceptedCount == batch.expectedCount &&
@@ -488,7 +486,7 @@ internal class JdbcCampaignBatchCommandService(
         if (!complete || !BatchPolicy.canTransition(batch.state, BatchState.ACTIVE)) {
             fail(BatchCommandFailure.ACTIVATION_INCOMPLETE)
         }
-        repository.activateBatch(connection, batch).snapshot()
+        repository.activateBatch(batch).snapshot()
     }
 
     override fun pauseBatch(command: BatchRevisionCommand): MutationResult<BatchSnapshot> =
@@ -512,11 +510,11 @@ internal class JdbcCampaignBatchCommandService(
         outcome,
         MutationLane.OPERATOR,
     ) { connection ->
-        val campaign = repository.lockCampaignForUpdate(connection, command.tenantId, command.campaignId)
+        val campaign = repository.lockCampaignForUpdate(command.tenantId, command.campaignId)
             ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
         requireRevision(campaign.revision, command.expectedRevision)
         if (!CampaignPolicy.canTransition(campaign.state, target)) fail(BatchCommandFailure.INVALID_STATE)
-        repository.updateCampaign(connection, campaign.copy(state = target), campaign.revision).snapshot()
+        repository.updateCampaign(campaign.copy(state = target), campaign.revision).snapshot()
     }
 
     private fun transitionBatch(
@@ -534,13 +532,13 @@ internal class JdbcCampaignBatchCommandService(
         outcome,
         MutationLane.OPERATOR,
     ) { connection ->
-        repository.lockCampaignForShare(connection, command.tenantId, command.campaignId)
-        val batch = repository.lockBatchForUpdate(connection, command.tenantId, command.batchId)
+        repository.lockCampaignForShare(command.tenantId, command.campaignId)
+        val batch = repository.lockBatchForUpdate(command.tenantId, command.batchId)
             ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
         requireBatchScope(batch, command.campaignId)
         requireRevision(batch.revision, command.expectedRevision)
         if (!BatchPolicy.canTransition(batch.state, target)) fail(BatchCommandFailure.INVALID_STATE)
-        repository.updateBatchState(connection, batch, target).snapshot()
+        repository.updateBatchState(batch, target).snapshot()
     }
 
     private fun ingest(
@@ -563,9 +561,8 @@ internal class JdbcCampaignBatchCommandService(
         "BATCH_CHECKPOINTED",
         MutationLane.WORKER,
         failureMapper = ::classifyIntegrityFailure,
-        terminalEffect = { connection, failure ->
+        terminalEffect = { _, failure ->
             markTerminalBatchFailure(
-                connection,
                 tenantId,
                 campaignId,
                 batchId,
@@ -574,18 +571,17 @@ internal class JdbcCampaignBatchCommandService(
                 prepared.firstOrdinal,
             )
         },
-    ) { connection ->
-            repository.lockCampaignForShare(connection, tenantId, campaignId)
-            val batch = repository.lockBatchForUpdate(connection, tenantId, batchId)
+    ) {
+            repository.lockCampaignForShare(tenantId, campaignId)
+            val batch = repository.lockBatchForUpdate(tenantId, batchId)
                 ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
             requireBatchScope(batch, campaignId)
             requireRevision(batch.revision, expectedRevision)
             if (batch.sourceKind != expectedSource.name) fail(BatchCommandFailure.INVALID_STATE)
-            commitPrepared(connection, batch, manifestDigest, prepared).snapshot()
+            commitPrepared(batch, manifestDigest, prepared).snapshot()
     }
 
     private fun commitPrepared(
-        connection: Connection,
         batch: BatchRecord,
         manifestDigest: DigestValue,
         prepared: PreparedChunk,
@@ -595,7 +591,7 @@ internal class JdbcCampaignBatchCommandService(
         }
         val chunkEnd = prepared.firstOrdinal + prepared.totalCount
         if (chunkEnd > batch.expectedCount) fail(BatchCommandFailure.ORDINAL_GAP)
-        if (prepared.firstOrdinal < batch.nextSourceOrdinal) return replayCommitted(connection, batch, prepared)
+        if (prepared.firstOrdinal < batch.nextSourceOrdinal) return replayCommitted(batch, prepared)
         if (prepared.firstOrdinal > batch.nextSourceOrdinal) fail(BatchCommandFailure.ORDINAL_GAP)
         if (batch.state != BatchState.STAGING) fail(BatchCommandFailure.INVALID_STATE)
 
@@ -606,12 +602,11 @@ internal class JdbcCampaignBatchCommandService(
                 nextSourceOrdinal = chunkEnd,
             )
         }
-        repository.insertPreparedEntries(connection, prepared.entries)
+        repository.insertPreparedEntries(prepared.entries)
         val nextCheckpoint = prepared.entries.fold(batch.checkpointDigest ?: initialCheckpoint(batch)) { previous, entry ->
             advanceCheckpoint(previous, entry.sourceOrdinal, entry.stableDedupDigest)
         }
         return repository.updateBatchCheckpoint(
-            connection = connection,
             batch = batch,
             nextSourceOrdinal = chunkEnd,
             acceptedCount = batch.acceptedCount + prepared.entries.size,
@@ -622,25 +617,16 @@ internal class JdbcCampaignBatchCommandService(
         )
     }
 
-    private fun replayCommitted(
-        connection: Connection,
-        batch: BatchRecord,
-        prepared: PreparedChunk,
-    ): BatchRecord {
+    private fun replayCommitted(batch: BatchRecord, prepared: PreparedChunk): BatchRecord {
         if (prepared.rejections.isNotEmpty() || prepared.firstOrdinal + prepared.totalCount > batch.nextSourceOrdinal) {
             fail(BatchCommandFailure.CHUNK_FINGERPRINT_CONFLICT)
         }
-        if (!committedReplayExact(connection, batch, prepared)) fail(BatchCommandFailure.CHUNK_FINGERPRINT_CONFLICT)
+        if (!committedReplayExact(batch, prepared)) fail(BatchCommandFailure.CHUNK_FINGERPRINT_CONFLICT)
         return batch
     }
 
-    private fun committedReplayExact(
-        connection: Connection,
-        batch: BatchRecord,
-        prepared: PreparedChunk,
-    ): Boolean {
+    private fun committedReplayExact(batch: BatchRecord, prepared: PreparedChunk): Boolean {
         val stored = repository.committedOrdinalDigests(
-            connection,
             batch.tenantId,
             batch.batchId,
             prepared.firstOrdinal,
@@ -692,14 +678,13 @@ internal class JdbcCampaignBatchCommandService(
         return PreparedChunk(firstOrdinal, codes.size, entries, rejections)
     }
 
-    private fun canonicalCheckpoint(connection: Connection, batch: BatchRecord, count: Long): DigestValue {
+    private fun canonicalCheckpoint(batch: BatchRecord, count: Long): DigestValue {
         require(count in 0..MAX_BATCH_ENTRIES)
         var checkpoint = initialCheckpoint(batch)
         var firstOrdinal = 0L
         while (firstOrdinal < count) {
             val windowCount = minOf(CHECKPOINT_WINDOW_SIZE.toLong(), count - firstOrdinal).toInt()
             val authority = repository.committedOrdinalDigests(
-                connection,
                 batch.tenantId,
                 batch.batchId,
                 firstOrdinal,
@@ -858,7 +843,6 @@ internal class JdbcCampaignBatchCommandService(
     }
 
     private fun markTerminalBatchFailure(
-        connection: Connection,
         tenantId: String,
         campaignId: UUID,
         batchId: UUID,
@@ -868,13 +852,12 @@ internal class JdbcCampaignBatchCommandService(
         missingBatchFactory: ((CampaignRecord) -> BatchRecord)? = null,
     ) {
         if (failure.reason !in setOf(BatchCommandFailure.DUPLICATE_CODE, BatchCommandFailure.VALIDATION_REJECTED)) return
-        val campaign = repository.lockCampaignForShare(connection, tenantId, campaignId)
+        val campaign = repository.lockCampaignForShare(tenantId, campaignId)
         val requestedBatch = missingBatchFactory?.invoke(campaign)
-        val existingBatch = repository.lockBatchForUpdate(connection, tenantId, batchId)
+        val existingBatch = repository.lockBatchForUpdate(tenantId, batchId)
         val lockedBatch = when {
-            existingBatch == null -> requestedBatch?.let { repository.createBatch(connection, it) }
+            existingBatch == null -> requestedBatch?.let { repository.createBatch(it) }
             !matchesTerminalAuthority(
-                connection,
                 existingBatch,
                 campaignId,
                 expectedManifest,
@@ -888,7 +871,6 @@ internal class JdbcCampaignBatchCommandService(
                 val rejected = failure as? PreparedChunkRejectedException
                 check(rejected == null || rejected.nextSourceOrdinal == batch.nextSourceOrdinal + rejected.rejectedCount)
                 repository.markBatchTerminalFailure(
-                    connection,
                     batch,
                     rejected?.rejectedCount ?: 0L,
                     rejected?.evidenceCode ?: "DUPLICATE_CODE",
@@ -898,7 +880,6 @@ internal class JdbcCampaignBatchCommandService(
     }
 
     private fun matchesTerminalAuthority(
-        connection: Connection,
         existingBatch: BatchRecord,
         campaignId: UUID,
         expectedManifest: DigestValue,
@@ -911,7 +892,6 @@ internal class JdbcCampaignBatchCommandService(
         if (requestedBatch == null) return true
         if (!existingBatch.sameCreateAuthority(requestedBatch) || !existingBatch.hasNoProgress()) return false
         return repository.batchOrdinalCoverage(
-            connection,
             existingBatch.tenantId,
             existingBatch.batchId,
         ).entryCount == 0L

@@ -40,23 +40,21 @@ import java.util.UUID
 import javax.sql.DataSource
 
 internal interface VoucherPoolRepository {
-    fun transactionTime(connection: Connection): Instant
-    fun createCampaign(connection: Connection, campaign: CampaignRecord): CampaignRecord
-    fun lockCampaignForUpdate(connection: Connection, tenantId: String, campaignId: UUID): CampaignRecord?
-    fun userIdentityKeyVersion(connection: Connection, tenantId: String, campaignId: UUID): Int?
-    fun updateCampaign(connection: Connection, campaign: CampaignRecord, expectedRevision: Long): CampaignRecord
-    fun createBatch(connection: Connection, batch: BatchRecord): BatchRecord
-    fun lockBatchForUpdate(connection: Connection, tenantId: String, batchId: UUID): BatchRecord?
-    fun insertPreparedEntries(connection: Connection, entries: List<PreparedVoucherEntryRecord>)
+    fun transactionTime(): Instant
+    fun createCampaign(campaign: CampaignRecord): CampaignRecord
+    fun lockCampaignForUpdate(tenantId: String, campaignId: UUID): CampaignRecord?
+    fun userIdentityKeyVersion(tenantId: String, campaignId: UUID): Int?
+    fun updateCampaign(campaign: CampaignRecord, expectedRevision: Long): CampaignRecord
+    fun createBatch(batch: BatchRecord): BatchRecord
+    fun lockBatchForUpdate(tenantId: String, batchId: UUID): BatchRecord?
+    fun insertPreparedEntries(entries: List<PreparedVoucherEntryRecord>)
     fun committedOrdinalDigests(
-        connection: Connection,
         tenantId: String,
         batchId: UUID,
         firstOrdinal: Long,
         count: Int,
     ): List<CommittedOrdinalDigest>
     fun updateBatchCheckpoint(
-        connection: Connection,
         batch: BatchRecord,
         nextSourceOrdinal: Long,
         acceptedCount: Long,
@@ -66,80 +64,68 @@ internal interface VoucherPoolRepository {
         lastFailureCode: String?,
     ): BatchRecord
     fun markBatchTerminalFailure(
-        connection: Connection,
         batch: BatchRecord,
         rejectedCount: Long,
         failureCode: String,
     ): BatchRecord
-    fun batchOrdinalCoverage(connection: Connection, tenantId: String, batchId: UUID): BatchOrdinalCoverage
-    fun activateBatch(connection: Connection, batch: BatchRecord): BatchRecord
-    fun updateBatchState(connection: Connection, batch: BatchRecord, state: BatchState): BatchRecord
-    fun lockCampaignForShare(connection: Connection, tenantId: String, campaignId: UUID): CampaignRecord
-    fun lockBatchForShare(connection: Connection, tenantId: String, batchId: UUID): BatchRecord
-    fun lockUserLimit(connection: Connection, tenantId: String, campaignId: UUID, userDigest: ByteArray): UserLimitRecord
+    fun batchOrdinalCoverage(tenantId: String, batchId: UUID): BatchOrdinalCoverage
+    fun activateBatch(batch: BatchRecord): BatchRecord
+    fun updateBatchState(batch: BatchRecord, state: BatchState): BatchRecord
+    fun lockCampaignForShare(tenantId: String, campaignId: UUID): CampaignRecord
+    fun lockBatchForShare(tenantId: String, batchId: UUID): BatchRecord
+    fun lockUserLimit(tenantId: String, campaignId: UUID, userDigest: ByteArray): UserLimitRecord
     fun selectAvailableEntrySkipLocked(
-        connection: Connection,
         tenantId: String,
         campaignId: UUID,
         lockedBatchIds: List<UUID>,
     ): EntryRecord?
     fun lockReservationGuards(
-        connection: Connection,
         tenantId: String,
         campaignId: UUID,
         userDigest: ByteArray,
     ): ReservationGuards?
     fun hasAvailableEligibleEntry(
-        connection: Connection,
         tenantId: String,
         campaignId: UUID,
         lockedBatchIds: List<UUID>,
     ): Boolean
     fun createReservation(
-        connection: Connection,
         reservation: ReservationRecord,
         entry: EntryRecord,
         userLimit: UserLimitRecord,
     ): ReservationRecord
     fun lockReservationChain(
-        connection: Connection,
         tenantId: String,
         reservationId: UUID,
         userDigest: ByteArray,
     ): LockedReservationChain?
-    fun releaseReservation(connection: Connection, chain: LockedReservationChain): ReservationRecord
+    fun releaseReservation(chain: LockedReservationChain): ReservationRecord
     fun allocateReservation(
-        connection: Connection,
         chain: LockedReservationChain,
         allocation: AllocationRecord,
         verificationDigest: ByteArray,
         verificationKeyVersion: Int,
     ): LockedAllocationChain
     fun lockAllocationChain(
-        connection: Connection,
         tenantId: String,
         allocationId: UUID,
         userDigest: ByteArray?,
     ): LockedAllocationChain?
     fun lockReplacementChain(
-        connection: Connection,
         tenantId: String,
         allocationId: UUID,
         userDigest: ByteArray,
     ): LockedReplacementChain?
     fun replaceLostReveal(
-        connection: Connection,
         chain: LockedReplacementChain,
         reservation: ReservationRecord,
     ): ReservationRecord
     fun transitionAllocationTerminal(
-        connection: Connection,
         chain: LockedAllocationChain,
         state: EntryState,
         reason: String,
     ): LockedAllocationChain
     fun lockReservedCryptoEntry(
-        connection: Connection,
         tenantId: String,
         campaignId: UUID,
         batchId: UUID,
@@ -147,16 +133,14 @@ internal interface VoucherPoolRepository {
         sourceOrdinal: Long,
         expectedRevision: Long,
     ): LockedVoucherCryptoRecord?
-    fun lockCanonicalChain(connection: Connection, candidate: WorkerCandidate): LockedWorkerChain?
-    fun expireReservation(connection: Connection, chain: LockedWorkerChain): Boolean
+    fun lockCanonicalChain(candidate: WorkerCandidate): LockedWorkerChain?
+    fun expireReservation(chain: LockedWorkerChain): Boolean
     fun terminalizeWorkerEntry(
-        connection: Connection,
         chain: LockedWorkerChain,
         targetState: EntryState,
         reasonCode: String,
     ): Boolean
     fun lockAllocatedCryptoEntry(
-        connection: Connection,
         tenantId: String,
         campaignId: UUID,
         batchId: UUID,
@@ -164,31 +148,39 @@ internal interface VoucherPoolRepository {
         sourceOrdinal: Long,
         expectedRevision: Long,
     ): LockedVoucherCryptoRecord?
-    fun eraseVoucherCiphertext(connection: Connection, tenantId: String, entryId: UUID, expectedRevision: Long)
-    fun advanceAllocationRevision(connection: Connection, allocation: AllocationRecord): AllocationRecord
+    fun eraseVoucherCiphertext(tenantId: String, entryId: UUID, expectedRevision: Long)
+    fun advanceAllocationRevision(allocation: AllocationRecord): AllocationRecord
     fun quarantineVoucherCrypto(
-        connection: Connection,
         tenantId: String,
         entryId: UUID,
         sourceState: EntryState,
         sourceRevision: Long,
         reasonCode: String,
     )
-    fun appendAudit(connection: Connection, event: VoucherPoolAuditRecord)
+    fun appendAudit(event: VoucherPoolAuditRecord)
 }
 
 /** PostgreSQL authority repository; raw JDBC is limited to explicit row-lock syntax. */
 @Suppress("LargeClass")
 internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : VoucherPoolRepository {
     private val database = Database.connect(dataSource)
+    private val connection: Connection
+        get() = checkNotNull(TransactionManager.currentOrNull()?.connection?.connection as? Connection) {
+            "voucher pool repository requires an active JDBC transaction"
+        }
 
-    override fun transactionTime(connection: Connection): Instant = connection.prepareStatement(
+    internal fun <T> withExistingConnection(
+        connection: Connection,
+        block: JdbcVoucherPoolRepository.() -> T,
+    ): T = withExposed(connection) { block() }
+
+    override fun transactionTime(): Instant = connection.prepareStatement(
         "SELECT transaction_timestamp()",
     ).use { statement ->
         statement.executeQuery().use { result -> result.next(); result.getTimestamp(1).toInstant() }
     }
 
-    override fun createCampaign(connection: Connection, campaign: CampaignRecord): CampaignRecord {
+    override fun createCampaign(campaign: CampaignRecord): CampaignRecord {
         connection.prepareStatement(
             """INSERT INTO voucher_pool_campaigns
                 (tenant_id,campaign_id,state,starts_at,ends_at,per_user_limit,reservation_ttl_seconds,
@@ -209,11 +201,10 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.setLong(12, campaign.revision)
             statement.executeUpdate()
         }
-        return checkNotNull(lockCampaignForUpdate(connection, campaign.tenantId, campaign.campaignId))
+        return checkNotNull(lockCampaignForUpdate(campaign.tenantId, campaign.campaignId))
     }
 
     override fun lockCampaignForUpdate(
-        connection: Connection,
         tenantId: String,
         campaignId: UUID,
     ): CampaignRecord? = connection.prepareStatement(
@@ -224,7 +215,7 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         statement.executeQuery().use { result -> if (result.next()) result.campaignRecord() else null }
     }
 
-    override fun userIdentityKeyVersion(connection: Connection, tenantId: String, campaignId: UUID): Int? =
+    override fun userIdentityKeyVersion(tenantId: String, campaignId: UUID): Int? =
         connection.prepareStatement(
             "SELECT user_identity_key_version FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=?",
         ).use { statement ->
@@ -234,7 +225,6 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         }
 
     override fun updateCampaign(
-        connection: Connection,
         campaign: CampaignRecord,
         expectedRevision: Long,
     ): CampaignRecord {
@@ -259,10 +249,10 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.executeUpdate()
         }
         check(updated == 1) { "campaign update lost its revision" }
-        return checkNotNull(lockCampaignForUpdate(connection, campaign.tenantId, campaign.campaignId))
+        return checkNotNull(lockCampaignForUpdate(campaign.tenantId, campaign.campaignId))
     }
 
-    override fun createBatch(connection: Connection, batch: BatchRecord): BatchRecord {
+    override fun createBatch(batch: BatchRecord): BatchRecord {
         connection.prepareStatement(
             """INSERT INTO voucher_pool_batches
                 (tenant_id,batch_id,campaign_id,state,source_kind,provenance_digest,request_fingerprint,
@@ -289,10 +279,10 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.setLong(17, batch.revision)
             statement.executeUpdate()
         }
-        return checkNotNull(lockBatchForUpdate(connection, batch.tenantId, batch.batchId))
+        return checkNotNull(lockBatchForUpdate(batch.tenantId, batch.batchId))
     }
 
-    override fun lockBatchForUpdate(connection: Connection, tenantId: String, batchId: UUID): BatchRecord? =
+    override fun lockBatchForUpdate(tenantId: String, batchId: UUID): BatchRecord? =
         connection.prepareStatement(
             "SELECT * FROM voucher_pool_batches WHERE tenant_id=? AND batch_id=? FOR UPDATE",
         ).use { statement ->
@@ -301,7 +291,7 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.executeQuery().use { result -> if (result.next()) result.batchRecord() else null }
         }
 
-    override fun insertPreparedEntries(connection: Connection, entries: List<PreparedVoucherEntryRecord>) {
+    override fun insertPreparedEntries(entries: List<PreparedVoucherEntryRecord>) {
         entries.forEach { entry ->
             connection.prepareStatement(
                 """INSERT INTO voucher_pool_code_dedup
@@ -344,7 +334,6 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
     }
 
     override fun committedOrdinalDigests(
-        connection: Connection,
         tenantId: String,
         batchId: UUID,
         firstOrdinal: Long,
@@ -368,7 +357,6 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
     }
 
     override fun updateBatchCheckpoint(
-        connection: Connection,
         batch: BatchRecord,
         nextSourceOrdinal: Long,
         acceptedCount: Long,
@@ -395,11 +383,10 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.executeUpdate()
         }
         check(updated == 1) { "batch checkpoint lost its revision" }
-        return checkNotNull(lockBatchForUpdate(connection, batch.tenantId, batch.batchId))
+        return checkNotNull(lockBatchForUpdate(batch.tenantId, batch.batchId))
     }
 
     override fun markBatchTerminalFailure(
-        connection: Connection,
         batch: BatchRecord,
         rejectedCount: Long,
         failureCode: String,
@@ -419,11 +406,10 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.executeUpdate()
         }
         check(updated == 1) { "batch terminal failure lost its revision" }
-        return checkNotNull(lockBatchForUpdate(connection, batch.tenantId, batch.batchId))
+        return checkNotNull(lockBatchForUpdate(batch.tenantId, batch.batchId))
     }
 
     override fun batchOrdinalCoverage(
-        connection: Connection,
         tenantId: String,
         batchId: UUID,
     ): BatchOrdinalCoverage = connection.prepareStatement(
@@ -442,7 +428,7 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         }
     }
 
-    override fun activateBatch(connection: Connection, batch: BatchRecord): BatchRecord {
+    override fun activateBatch(batch: BatchRecord): BatchRecord {
         val updated = connection.prepareStatement(
             """UPDATE voucher_pool_batches SET state='ACTIVE',revision=revision+1,updated_at=statement_timestamp()
                 WHERE tenant_id=? AND batch_id=? AND revision=? AND state='STAGING'""",
@@ -453,10 +439,10 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.executeUpdate()
         }
         check(updated == 1) { "batch activation lost its revision" }
-        return checkNotNull(lockBatchForUpdate(connection, batch.tenantId, batch.batchId))
+        return checkNotNull(lockBatchForUpdate(batch.tenantId, batch.batchId))
     }
 
-    override fun updateBatchState(connection: Connection, batch: BatchRecord, state: BatchState): BatchRecord {
+    override fun updateBatchState(batch: BatchRecord, state: BatchState): BatchRecord {
         val updated = connection.prepareStatement(
             """UPDATE voucher_pool_batches SET state=?,revision=revision+1,updated_at=statement_timestamp()
                 WHERE tenant_id=? AND batch_id=? AND revision=?""",
@@ -468,10 +454,10 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.executeUpdate()
         }
         check(updated == 1) { "batch state update lost its revision" }
-        return checkNotNull(lockBatchForUpdate(connection, batch.tenantId, batch.batchId))
+        return checkNotNull(lockBatchForUpdate(batch.tenantId, batch.batchId))
     }
 
-    override fun lockCampaignForShare(connection: Connection, tenantId: String, campaignId: UUID): CampaignRecord =
+    override fun lockCampaignForShare(tenantId: String, campaignId: UUID): CampaignRecord =
         checkNotNull(lockCampaignForShareOrNull(connection, tenantId, campaignId))
 
     private fun lockCampaignForShareOrNull(
@@ -487,7 +473,7 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.executeQuery().use { result -> if (result.next()) result.campaignRecord() else null }
         }
 
-    override fun lockBatchForShare(connection: Connection, tenantId: String, batchId: UUID): BatchRecord =
+    override fun lockBatchForShare(tenantId: String, batchId: UUID): BatchRecord =
         connection.prepareStatement(
             "SELECT * FROM voucher_pool_batches WHERE tenant_id=? AND batch_id=? FOR SHARE",
         ).use { statement ->
@@ -497,7 +483,6 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         }
 
     override fun lockUserLimit(
-        connection: Connection,
         tenantId: String,
         campaignId: UUID,
         userDigest: ByteArray,
@@ -529,7 +514,6 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
     }
 
     override fun selectAvailableEntrySkipLocked(
-        connection: Connection,
         tenantId: String,
         campaignId: UUID,
         lockedBatchIds: List<UUID>,
@@ -552,20 +536,18 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
     }
 
     override fun lockReservationGuards(
-        connection: Connection,
         tenantId: String,
         campaignId: UUID,
         userDigest: ByteArray,
     ): ReservationGuards? {
         val campaign = lockCampaignForShareOrNull(connection, tenantId, campaignId) ?: return null
         val batches = campaignBatchIds(connection, tenantId, campaignId).map { batchId ->
-            lockBatchForShare(connection, tenantId, batchId)
+            lockBatchForShare(tenantId, batchId)
         }
-        return ReservationGuards(campaign, batches, lockUserLimit(connection, tenantId, campaignId, userDigest))
+        return ReservationGuards(campaign, batches, lockUserLimit(tenantId, campaignId, userDigest))
     }
 
     override fun hasAvailableEligibleEntry(
-        connection: Connection,
         tenantId: String,
         campaignId: UUID,
         lockedBatchIds: List<UUID>,
@@ -586,7 +568,6 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
     }
 
     override fun createReservation(
-        connection: Connection,
         reservation: ReservationRecord,
         entry: EntryRecord,
         userLimit: UserLimitRecord,
@@ -607,23 +588,22 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
     }
 
     override fun lockReservationChain(
-        connection: Connection,
         tenantId: String,
         reservationId: UUID,
         userDigest: ByteArray,
     ): LockedReservationChain? {
         val hint = findReservation(connection, tenantId, reservationId) ?: return null
         if (!MessageDigest.isEqual(hint.userDigest.copyBytes(), userDigest)) return null
-        val campaign = lockCampaignForShare(connection, tenantId, hint.campaignId)
-        val batch = lockBatchForShare(connection, tenantId, hint.batchId)
-        val limit = lockUserLimit(connection, tenantId, hint.campaignId, userDigest)
+        val campaign = lockCampaignForShare(tenantId, hint.campaignId)
+        val batch = lockBatchForShare(tenantId, hint.batchId)
+        val limit = lockUserLimit(tenantId, hint.campaignId, userDigest)
         val reservation = lockReservationById(connection, tenantId, reservationId) ?: return null
         check(MessageDigest.isEqual(reservation.userDigest.copyBytes(), userDigest))
         val entry = lockEntry(connection, tenantId, reservation.entryId)
         return LockedReservationChain(campaign, batch, limit, reservation, entry)
     }
 
-    override fun releaseReservation(connection: Connection, chain: LockedReservationChain): ReservationRecord {
+    override fun releaseReservation(chain: LockedReservationChain): ReservationRecord {
         check(chain.reservation.state == "ACTIVE" && chain.entry.state == EntryState.RESERVED)
         updateReservationState(connection, chain.reservation, "RELEASED")
         connection.prepareStatement(
@@ -639,7 +619,6 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
     }
 
     override fun allocateReservation(
-        connection: Connection,
         chain: LockedReservationChain,
         allocation: AllocationRecord,
         verificationDigest: ByteArray,
@@ -674,21 +653,20 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         }
         transitionPoolDepth(connection, chain.entry.tenantId, chain.entry.batchId, EntryState.RESERVED, EntryState.ALLOCATED)
         updateUserLimit(connection, chain.userLimit, -1, 1, if (allocation.replacementOrdinal == 0) 1 else 0)
-        return checkNotNull(lockAllocationChain(connection, allocation.tenantId, allocation.allocationId, allocation.userDigest.copyBytes()))
+        return checkNotNull(lockAllocationChain(allocation.tenantId, allocation.allocationId, allocation.userDigest.copyBytes()))
     }
 
     override fun lockAllocationChain(
-        connection: Connection,
         tenantId: String,
         allocationId: UUID,
         userDigest: ByteArray?,
     ): LockedAllocationChain? {
         val hint = findAllocation(connection, tenantId, allocationId) ?: return null
         if (userDigest != null && !MessageDigest.isEqual(hint.userDigest.copyBytes(), userDigest)) return null
-        val campaign = lockCampaignForShare(connection, tenantId, hint.campaignId)
-        val batch = lockBatchForShare(connection, tenantId, hint.batchId)
+        val campaign = lockCampaignForShare(tenantId, hint.campaignId)
+        val batch = lockBatchForShare(tenantId, hint.batchId)
         val digest = userDigest ?: hint.userDigest.copyBytes()
-        val limit = lockUserLimit(connection, tenantId, hint.campaignId, digest)
+        val limit = lockUserLimit(tenantId, hint.campaignId, digest)
         val reservation = lockReservationById(connection, tenantId, hint.reservationId) ?: return null
         check(MessageDigest.isEqual(reservation.userDigest.copyBytes(), digest))
         val entry = lockEntry(connection, tenantId, hint.entryId)
@@ -697,35 +675,33 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
     }
 
     override fun lockReplacementChain(
-        connection: Connection,
         tenantId: String,
         allocationId: UUID,
         userDigest: ByteArray,
     ): LockedReplacementChain? {
         val hint = findAllocation(connection, tenantId, allocationId) ?: return null
         if (!MessageDigest.isEqual(hint.userDigest.copyBytes(), userDigest)) return null
-        val campaign = lockCampaignForShare(connection, tenantId, hint.campaignId)
+        val campaign = lockCampaignForShare(tenantId, hint.campaignId)
         val batchIds = eligibleBatchIds(connection, tenantId, hint.campaignId)
         val batches = batchIds.mapNotNull { lockEligibleBatchForShare(connection, tenantId, hint.campaignId, it) }
         val lockedBatchIds = batches.map(BatchRecord::batchId)
         val originalBatch = batches.firstOrNull { it.batchId == hint.batchId }
-            ?: lockBatchForShare(connection, tenantId, hint.batchId)
-        val limit = lockUserLimit(connection, tenantId, hint.campaignId, userDigest)
+            ?: lockBatchForShare(tenantId, hint.batchId)
+        val limit = lockUserLimit(tenantId, hint.campaignId, userDigest)
         val reservation = lockReservationById(connection, tenantId, hint.reservationId) ?: return null
         check(MessageDigest.isEqual(reservation.userDigest.copyBytes(), userDigest))
         val entry = lockEntry(connection, tenantId, hint.entryId)
         val allocation = lockAllocationById(connection, tenantId, allocationId) ?: return null
         val original = LockedAllocationChain(campaign, originalBatch, limit, reservation, allocation, entry)
-        val candidate = selectAvailableEntrySkipLocked(connection, tenantId, hint.campaignId, lockedBatchIds)
+        val candidate = selectAvailableEntrySkipLocked(tenantId, hint.campaignId, lockedBatchIds)
         return LockedReplacementChain(
             original,
             candidate,
-            candidate != null || hasAvailableEligibleEntry(connection, tenantId, hint.campaignId, lockedBatchIds),
+            candidate != null || hasAvailableEligibleEntry(tenantId, hint.campaignId, lockedBatchIds),
         )
     }
 
     override fun replaceLostReveal(
-        connection: Connection,
         chain: LockedReplacementChain,
         reservation: ReservationRecord,
     ): ReservationRecord {
@@ -739,7 +715,7 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.setString(1, original.entry.tenantId); statement.setObject(2, original.entry.entryId)
             statement.setLong(3, original.entry.revision); check(statement.executeUpdate() == 1)
         }
-        advanceAllocationRevision(connection, original.allocation)
+        advanceAllocationRevision(original.allocation)
         connection.prepareStatement(
             """UPDATE voucher_pool_entries SET state='RESERVED',reservation_id=?,user_digest=?,reserved_at=transaction_timestamp(),
                   reservation_expires_at=?,revision=revision+1 WHERE tenant_id=? AND entry_id=? AND revision=? AND state='AVAILABLE'""",
@@ -755,7 +731,6 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
     }
 
     override fun transitionAllocationTerminal(
-        connection: Connection,
         chain: LockedAllocationChain,
         state: EntryState,
         reason: String,
@@ -777,11 +752,10 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.setLong(3, chain.allocation.revision); check(statement.executeUpdate() == 1)
         }
         updateUserLimit(connection, chain.userLimit, 0, -1, 0)
-        return checkNotNull(lockAllocationChain(connection, chain.allocation.tenantId, chain.allocation.allocationId, chain.allocation.userDigest.copyBytes()))
+        return checkNotNull(lockAllocationChain(chain.allocation.tenantId, chain.allocation.allocationId, chain.allocation.userDigest.copyBytes()))
     }
 
     override fun lockReservedCryptoEntry(
-        connection: Connection,
         tenantId: String,
         campaignId: UUID,
         batchId: UUID,
@@ -793,21 +767,21 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
     )
 
     @Suppress("ReturnCount") // Each stale revision must stop before a lower-order row is locked.
-    override fun lockCanonicalChain(connection: Connection, candidate: WorkerCandidate): LockedWorkerChain? {
-        val campaign = lockCampaignForUpdate(connection, candidate) ?: return null
-        val batch = lockBatchForUpdate(connection, candidate) ?: return null
+    override fun lockCanonicalChain(candidate: WorkerCandidate): LockedWorkerChain? {
+        val campaign = lockCampaignForUpdate(candidate) ?: return null
+        val batch = lockBatchForUpdate(candidate) ?: return null
         val userLimits = lockExpectedUserLimits(connection, candidate) ?: return null
         val reservations = lockExpectedReservations(connection, candidate) ?: return null
         val entry = lockEntryForUpdate(connection, candidate) ?: return null
         return LockedWorkerChain(campaign, batch, entry, userLimits, reservations)
     }
 
-    override fun expireReservation(connection: Connection, chain: LockedWorkerChain): Boolean {
+    override fun expireReservation(chain: LockedWorkerChain): Boolean {
         val reservation = chain.reservations.singleOrNull() ?: return false
         val userLimit = chain.userLimits.singleOrNull() ?: return false
         if (
             chain.entry.state != EntryState.RESERVED || reservation.state != "ACTIVE" ||
-            reservation.expiresAt > transactionTime(connection)
+            reservation.expiresAt > transactionTime()
         ) {
             return false
         }
@@ -825,7 +799,6 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         transitionPoolDepth(connection, chain.entry.tenantId, chain.entry.batchId, EntryState.RESERVED, EntryState.AVAILABLE)
         updateUserLimit(connection, userLimit, -1, 0, 0)
         appendAudit(
-            connection,
             VoucherPoolAuditRecord(
                 reservation.tenantId,
                 reservation.campaignId,
@@ -841,7 +814,6 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
     }
 
     override fun terminalizeWorkerEntry(
-        connection: Connection,
         chain: LockedWorkerChain,
         targetState: EntryState,
         reasonCode: String,
@@ -850,7 +822,7 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         if (chain.entry.state !in setOf(EntryState.AVAILABLE, EntryState.RESERVED, EntryState.ALLOCATED)) return false
         if (reasonCode == "ALLOCATION_EXPIRED" && chain.entry.state == EntryState.ALLOCATED) {
             val expiresAt = chain.entry.allocationExpiresAt ?: return false
-            if (expiresAt > transactionTime(connection)) return false
+            if (expiresAt > transactionTime()) return false
         }
         val audit = when (chain.entry.state) {
             EntryState.AVAILABLE -> workerEntryAudit(chain, reasonCode)
@@ -871,11 +843,11 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             check(statement.executeUpdate() == 1)
         }
         transitionPoolDepth(connection, chain.entry.tenantId, chain.entry.batchId, chain.entry.state, targetState)
-        appendAudit(connection, audit)
+        appendAudit(audit)
         return true
     }
 
-    override fun appendAudit(connection: Connection, event: VoucherPoolAuditRecord) {
+    override fun appendAudit(event: VoucherPoolAuditRecord) {
         withExposed(connection) {
             VoucherPoolAuditTable.insert {
                 it[tenantId] = event.tenantId
@@ -895,7 +867,6 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
     }
 
     override fun lockAllocatedCryptoEntry(
-        connection: Connection,
         tenantId: String,
         campaignId: UUID,
         batchId: UUID,
@@ -936,7 +907,6 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
     }
 
     override fun eraseVoucherCiphertext(
-        connection: Connection,
         tenantId: String,
         entryId: UUID,
         expectedRevision: Long,
@@ -961,7 +931,6 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
     }
 
     override fun advanceAllocationRevision(
-        connection: Connection,
         allocation: AllocationRecord,
     ): AllocationRecord {
         connection.prepareStatement(
@@ -976,7 +945,6 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
     }
 
     override fun quarantineVoucherCrypto(
-        connection: Connection,
         tenantId: String,
         entryId: UUID,
         sourceState: EntryState,
@@ -1241,7 +1209,7 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         return locked
     }
 
-    private fun lockCampaignForUpdate(connection: Connection, candidate: WorkerCandidate): CampaignRecord? =
+    private fun lockCampaignForUpdate(candidate: WorkerCandidate): CampaignRecord? =
         connection.prepareStatement(
             """SELECT * FROM voucher_pool_campaigns
                 WHERE tenant_id=? AND campaign_id=? AND revision=? FOR UPDATE""",
@@ -1291,7 +1259,7 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         statement.executeQuery().use { result -> if (result.next()) result.batchRecord() else null }
     }
 
-    private fun lockBatchForUpdate(connection: Connection, candidate: WorkerCandidate): BatchRecord? =
+    private fun lockBatchForUpdate(candidate: WorkerCandidate): BatchRecord? =
         connection.prepareStatement(
             """SELECT * FROM voucher_pool_batches
                 WHERE tenant_id=? AND batch_id=? AND campaign_id=? AND revision=? FOR UPDATE""",

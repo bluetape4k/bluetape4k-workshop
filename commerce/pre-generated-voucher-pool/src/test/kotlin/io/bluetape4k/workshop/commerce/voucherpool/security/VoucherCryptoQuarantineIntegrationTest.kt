@@ -39,7 +39,8 @@ internal class VoucherCryptoQuarantineIntegrationTest {
         VoucherKekRing.of(VoucherKek.of("k1", ByteArray(32) { (31 + it).toByte() })),
         digests,
     )
-    private val storage = VoucherCryptoStorage(JdbcVoucherPoolRepository(dataSource), crypto)
+    private val repository = JdbcVoucherPoolRepository(dataSource)
+    private val storage = VoucherCryptoStorage(repository, crypto)
 
     @BeforeAll
     fun migrate() {
@@ -63,7 +64,9 @@ internal class VoucherCryptoQuarantineIntegrationTest {
 
         dataSource.connection.use { connection ->
             connection.autoCommit = false
-            val rolledBack = storage.decryptAndErase(connection, identity, expectedRevision = 0)
+            val rolledBack = repository.withExistingConnection(connection) {
+                storage.decryptAndErase(connection, identity, expectedRevision = 0)
+            }
             (rolledBack as VoucherCryptoStorageOutcome.Revealed).code shouldBeEqualTo code
             connection.rollback()
         }
@@ -341,7 +344,9 @@ internal class VoucherCryptoQuarantineIntegrationTest {
     private fun <T> committedTransaction(block: (Connection) -> T): T = dataSource.connection.use { connection ->
         connection.autoCommit = false
         try {
-            block(connection).also { connection.commit() }
+            repository.withExistingConnection(connection) {
+                block(connection)
+            }.also { connection.commit() }
         } catch (failure: Throwable) {
             runCatching { connection.rollback() }
             throw failure

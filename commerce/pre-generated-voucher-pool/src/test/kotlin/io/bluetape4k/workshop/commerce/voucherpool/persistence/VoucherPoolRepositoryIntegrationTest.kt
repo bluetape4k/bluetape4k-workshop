@@ -104,11 +104,13 @@ internal class VoucherPoolRepositoryIntegrationTest {
                 executor.submit {
                     dataSource.connection.use { connection ->
                         connection.autoCommit = false
-                        backendPids += backendPid(connection)
-                        repository.lockCampaignForShare(connection, TENANT, campaign)
-                        acquired.await(2, TimeUnit.SECONDS)
-                        release.await(2, TimeUnit.SECONDS)
-                        connection.commit()
+                        repository.withExistingConnection(connection) {
+                            backendPids += backendPid(connection)
+                            lockCampaignForShare(TENANT, campaign)
+                            acquired.await(2, TimeUnit.SECONDS)
+                            release.await(2, TimeUnit.SECONDS)
+                            connection.commit()
+                        }
                     }
                 }
             }
@@ -125,21 +127,23 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val campaign = createCampaign(TENANT)
         dataSource.connection.use { reader ->
             reader.autoCommit = false
-            repository.lockCampaignForShare(reader, TENANT, campaign)
-            Executors.newVirtualThreadPerTaskExecutor().use { executor ->
-                val updaterReady = CountDownLatch(1)
-                val updaterPids = ConcurrentLinkedQueue<Int>()
-                val update = executor.submit<Int> {
-                    updateCampaignPolicy(TENANT, campaign) { pid ->
-                        updaterPids += pid
-                        updaterReady.countDown()
+            repository.withExistingConnection(reader) {
+                lockCampaignForShare(TENANT, campaign)
+                Executors.newVirtualThreadPerTaskExecutor().use { executor ->
+                    val updaterReady = CountDownLatch(1)
+                    val updaterPids = ConcurrentLinkedQueue<Int>()
+                    val update = executor.submit<Int> {
+                        updateCampaignPolicy(TENANT, campaign) { pid ->
+                            updaterPids += pid
+                            updaterReady.countDown()
+                        }
                     }
+                    updaterReady.await(2, TimeUnit.SECONDS) shouldBeEqualTo true
+                    dataSource.awaitLockWaiters(updaterPids.toSet(), expected = 1) shouldBeEqualTo 1
+                    update.isDone shouldBeEqualTo false
+                    reader.commit()
+                    update.get(2, TimeUnit.SECONDS) shouldBeEqualTo 1
                 }
-                updaterReady.await(2, TimeUnit.SECONDS) shouldBeEqualTo true
-                dataSource.awaitLockWaiters(updaterPids.toSet(), expected = 1) shouldBeEqualTo 1
-                update.isDone shouldBeEqualTo false
-                reader.commit()
-                update.get(2, TimeUnit.SECONDS) shouldBeEqualTo 1
             }
         }
     }
@@ -155,7 +159,9 @@ internal class VoucherPoolRepositoryIntegrationTest {
             repository.lockEntry(blocker, TENANT, first)
             dataSource.connection.use { contender ->
                 contender.autoCommit = false
-                repository.selectAvailableEntrySkipLocked(contender, TENANT, campaign, listOf(batch))?.entryId shouldBeEqualTo second
+                repository.withExistingConnection(contender) {
+                    selectAvailableEntrySkipLocked(TENANT, campaign, listOf(batch))?.entryId shouldBeEqualTo second
+                }
                 contender.rollback()
             }
             blocker.rollback()
@@ -181,12 +187,13 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val expected = createAvailableEntry(TENANT, campaign, earlierBatch, 99)
         dataSource.connection.use { connection ->
             connection.autoCommit = false
-            repository.selectAvailableEntrySkipLocked(
-                connection,
-                TENANT,
-                campaign,
-                listOf(earlierBatch, laterBatch),
-            )?.entryId shouldBeEqualTo expected
+            repository.withExistingConnection(connection) {
+                selectAvailableEntrySkipLocked(
+                    TENANT,
+                    campaign,
+                    listOf(earlierBatch, laterBatch),
+                )?.entryId shouldBeEqualTo expected
+            }
             connection.rollback()
         }
     }
@@ -309,10 +316,9 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val campaign = createCampaign(TENANT)
         dataSource.connection.use { connection ->
             connection.autoCommit = false
-            repository.appendAudit(
-                connection,
-                VoucherPoolAuditRecord(TENANT, campaign, "CAMPAIGN", campaign, 0, 1, "SYSTEM", "CREATED"),
-            )
+            repository.withExistingConnection(connection) {
+                appendAudit(VoucherPoolAuditRecord(TENANT, campaign, "CAMPAIGN", campaign, 0, 1, "SYSTEM", "CREATED"))
+            }
             connection.commit()
         }
         assertSqlFails("UPDATE voucher_pool_audits SET reason_code='CHANGED' WHERE campaign_id='$campaign'")
@@ -403,19 +409,18 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val entry = createAvailableEntry(TENANT, campaign, batch, 30)
         dataSource.connection.use { connection ->
             connection.autoCommit = false
-            repository.lockCanonicalChain(
-                connection,
-                WorkerCandidate(TENANT, campaign, batch, entry, 0, 0, 0),
-            )?.entry?.entryId shouldBeEqualTo entry
+            repository.withExistingConnection(connection) {
+                lockCanonicalChain(WorkerCandidate(TENANT, campaign, batch, entry, 0, 0, 0))
+                    ?.entry?.entryId shouldBeEqualTo entry
+            }
             connection.rollback()
         }
         executeSql("UPDATE voucher_pool_entries SET revision=1 WHERE tenant_id='$TENANT' AND entry_id='$entry'")
         dataSource.connection.use { connection ->
             connection.autoCommit = false
-            repository.lockCanonicalChain(
-                connection,
-                WorkerCandidate(TENANT, campaign, batch, entry, 0, 0, 0),
-            ) shouldBeEqualTo null
+            repository.withExistingConnection(connection) {
+                lockCanonicalChain(WorkerCandidate(TENANT, campaign, batch, entry, 0, 0, 0)) shouldBeEqualTo null
+            }
             connection.rollback()
         }
     }
@@ -435,25 +440,26 @@ internal class VoucherPoolRepositoryIntegrationTest {
         executeSql(reservationInsert(secondReservation, campaign, batch, entry, "EXPIRED"))
         dataSource.connection.use { connection ->
             connection.autoCommit = false
-            val chain = repository.lockCanonicalChain(
-                connection,
-                WorkerCandidate(
-                    TENANT,
-                    campaign,
-                    batch,
-                    entry,
-                    0,
-                    0,
-                    0,
-                    userLimits = listOf(ExpectedUserLimit(secondUser, 0), ExpectedUserLimit(firstUser, 0)),
-                    reservations = listOf(
-                        ExpectedReservation(secondReservation, 0),
-                        ExpectedReservation(firstReservation, 0),
+            repository.withExistingConnection(connection) {
+                val chain = lockCanonicalChain(
+                    WorkerCandidate(
+                        TENANT,
+                        campaign,
+                        batch,
+                        entry,
+                        0,
+                        0,
+                        0,
+                        userLimits = listOf(ExpectedUserLimit(secondUser, 0), ExpectedUserLimit(firstUser, 0)),
+                        reservations = listOf(
+                            ExpectedReservation(secondReservation, 0),
+                            ExpectedReservation(firstReservation, 0),
+                        ),
                     ),
-                ),
-            )
-            chain?.userLimits?.map { it.userDigest } shouldBeEqualTo listOf(firstUser, secondUser)
-            chain?.reservations?.map { it.reservationId } shouldBeEqualTo listOf(firstReservation, secondReservation)
+                )
+                chain?.userLimits?.map { it.userDigest } shouldBeEqualTo listOf(firstUser, secondUser)
+                chain?.reservations?.map { it.reservationId } shouldBeEqualTo listOf(firstReservation, secondReservation)
+            }
             connection.rollback()
         }
     }
@@ -468,19 +474,20 @@ internal class VoucherPoolRepositoryIntegrationTest {
         executeSql(reservationInsert(otherReservation, campaign, batch, otherEntry, "ACTIVE"))
         dataSource.connection.use { connection ->
             connection.autoCommit = false
-            repository.lockCanonicalChain(
-                connection,
-                WorkerCandidate(
-                    TENANT,
-                    campaign,
-                    batch,
-                    targetEntry,
-                    0,
-                    0,
-                    0,
-                    reservations = listOf(ExpectedReservation(otherReservation, 0)),
-                ),
-            ) shouldBeEqualTo null
+            repository.withExistingConnection(connection) {
+                lockCanonicalChain(
+                    WorkerCandidate(
+                        TENANT,
+                        campaign,
+                        batch,
+                        targetEntry,
+                        0,
+                        0,
+                        0,
+                        reservations = listOf(ExpectedReservation(otherReservation, 0)),
+                    ),
+                ) shouldBeEqualTo null
+            }
             connection.rollback()
         }
     }
@@ -504,10 +511,9 @@ internal class VoucherPoolRepositoryIntegrationTest {
         val campaign = createCampaign(TENANT)
         dataSource.connection.use { connection ->
             connection.autoCommit = false
-            repository.appendAudit(
-                connection,
-                VoucherPoolAuditRecord(TENANT, campaign, "CAMPAIGN", campaign, 0, 1, "SYSTEM", "CREATED"),
-            )
+            repository.withExistingConnection(connection) {
+                appendAudit(VoucherPoolAuditRecord(TENANT, campaign, "CAMPAIGN", campaign, 0, 1, "SYSTEM", "CREATED"))
+            }
             queryLong(connection, "SELECT count(*) FROM voucher_pool_audits WHERE campaign_id='$campaign'") shouldBeEqualTo 1L
             connection.rollback()
         }

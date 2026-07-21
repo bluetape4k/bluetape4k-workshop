@@ -99,16 +99,16 @@ internal class JdbcReservationService(
             LIFECYCLE_HTTP_CREATED,
             LifecycleLane.FOREGROUND,
         ) { connection, owner ->
-            val keyVersion = repository.userIdentityKeyVersion(connection, command.tenantId, command.campaignId)
+            val keyVersion = repository.userIdentityKeyVersion(command.tenantId, command.campaignId)
                 ?: fail(VoucherPoolErrorCode.CAMPAIGN_NOT_ACTIVE)
             val userDigest = digests.userIdentity(
                 command.tenantId, command.campaignId, command.canonicalUser, keyVersion,
             )
             val guards = repository.lockReservationGuards(
-                connection, command.tenantId, command.campaignId, userDigest.copyBytes(),
+                command.tenantId, command.campaignId, userDigest.copyBytes(),
             ) ?: fail(VoucherPoolErrorCode.CAMPAIGN_NOT_ACTIVE)
             requireActive(guards.campaign.state)
-            val transactionTime = repository.transactionTime(connection)
+            val transactionTime = repository.transactionTime()
             if (transactionTime < guards.campaign.startsAt || transactionTime >= guards.campaign.endsAt) {
                 fail(VoucherPoolErrorCode.CAMPAIGN_NOT_ACTIVE)
             }
@@ -119,14 +119,12 @@ internal class JdbcReservationService(
                 fail(VoucherPoolErrorCode.USER_LIMIT_REACHED)
             }
             val entry = repository.selectAvailableEntrySkipLocked(
-                connection,
                 command.tenantId,
                 command.campaignId,
                 lockedEligibleBatchIds,
             )
                 ?: fail(
                     if (repository.hasAvailableEligibleEntry(
-                            connection,
                             command.tenantId,
                             command.campaignId,
                             lockedEligibleBatchIds,
@@ -139,7 +137,6 @@ internal class JdbcReservationService(
                 )
             val expiresAt = transactionTime.plusSeconds(guards.campaign.reservationTtlSeconds)
             val saved = repository.createReservation(
-                connection,
                 ReservationRecord(
                     command.tenantId,
                     command.reservationId,
@@ -157,7 +154,6 @@ internal class JdbcReservationService(
                 guards.userLimit,
             )
             repository.appendLifecycleAudit(
-                connection,
                 saved.tenantId,
                 saved.campaignId,
                 "RESERVATION",
@@ -201,20 +197,19 @@ internal class JdbcReservationService(
             LIFECYCLE_HTTP_OK,
             LifecycleLane.FOREGROUND,
         ) { connection, _ ->
-            val keyVersion = repository.userIdentityKeyVersion(connection, command.tenantId, command.campaignId)
+            val keyVersion = repository.userIdentityKeyVersion(command.tenantId, command.campaignId)
                 ?: fail(VoucherPoolErrorCode.WRONG_OWNER)
             val digest = digests.userIdentity(command.tenantId, command.campaignId, command.canonicalUser, keyVersion)
             val chain = repository.lockReservationChain(
-                connection, command.tenantId, command.reservationId, digest.copyBytes(),
+                command.tenantId, command.reservationId, digest.copyBytes(),
             ) ?: fail(VoucherPoolErrorCode.WRONG_OWNER)
             requireCampaignUsable(chain.campaign.state)
             requireBatchUsable(chain.batch.state)
             if (chain.reservation.revision != command.expectedRevision) fail(VoucherPoolErrorCode.STALE_REVISION)
             if (chain.reservation.state != ReservationState.ACTIVE.name) fail(VoucherPoolErrorCode.STALE_REVISION)
-            if (chain.reservation.expiresAt <= repository.transactionTime(connection)) fail(VoucherPoolErrorCode.RESERVATION_EXPIRED)
-            val released = repository.releaseReservation(connection, chain)
+            if (chain.reservation.expiresAt <= repository.transactionTime()) fail(VoucherPoolErrorCode.RESERVATION_EXPIRED)
+            val released = repository.releaseReservation(chain)
             repository.appendLifecycleAudit(
-                connection,
                 released.tenantId,
                 released.campaignId,
                 "RESERVATION",
@@ -408,7 +403,6 @@ internal fun failCommitted(code: VoucherPoolErrorCode): Nothing =
     throw CommitLifecycleFailure(VoucherPoolLifecycleException(code))
 
 internal fun VoucherPoolRepository.appendLifecycleAudit(
-    connection: Connection,
     tenantId: String,
     campaignId: UUID,
     aggregateType: String,
@@ -418,7 +412,6 @@ internal fun VoucherPoolRepository.appendLifecycleAudit(
     reasonCode: String,
     actorType: String,
 ) = appendAudit(
-    connection,
     VoucherPoolAuditRecord(
         tenantId = tenantId,
         campaignId = campaignId,

@@ -258,19 +258,17 @@ internal class JdbcVoucherPoolRevocationService(
         connection: Connection,
         command: RevokeCommand,
     ): RevokeProgressSnapshot {
-        val now = repository.transactionTime(connection)
+        val now = repository.transactionTime()
         return when (command.aggregateType) {
             RevokeAggregateType.CAMPAIGN -> {
-                val campaign = checkNotNull(repository.lockCampaignForUpdate(connection, command.tenantId, command.aggregateId))
+                val campaign = checkNotNull(repository.lockCampaignForUpdate(command.tenantId, command.aggregateId))
                 val updated = repository.updateCampaign(
-                    connection,
                     campaign.copy(state = CampaignState.REVOKING),
                     campaign.revision,
                 )
                 val workerCount = campaignWorkerCount(connection, command.tenantId, command.aggregateId)
                 val terminal = if (workerCount == 0) {
                     repository.updateCampaign(
-                        connection,
                         updated.copy(state = CampaignState.REVOKED),
                         updated.revision,
                     )
@@ -293,8 +291,8 @@ internal class JdbcVoucherPoolRevocationService(
                 )
             }
             RevokeAggregateType.BATCH -> {
-                val batch = checkNotNull(repository.lockBatchForUpdate(connection, command.tenantId, command.aggregateId))
-                val updated = repository.updateBatchState(connection, batch, BatchState.REVOKING)
+                val batch = checkNotNull(repository.lockBatchForUpdate(command.tenantId, command.aggregateId))
+                val updated = repository.updateBatchState(batch, BatchState.REVOKING)
                 claims.ensureClaimInTransaction(
                     connection,
                     command.tenantId,
@@ -412,7 +410,7 @@ internal class JdbcVoucherPoolRevocationService(
         aggregateId: UUID,
     ): LockedAggregate = when (aggregateType) {
         RevokeAggregateType.CAMPAIGN -> {
-            val campaign = repository.lockCampaignForUpdate(connection, tenantId, aggregateId)
+            val campaign = repository.lockCampaignForUpdate(tenantId, aggregateId)
                 ?: fail(RevocationCommandFailure.SCOPE_NOT_FOUND)
             LockedAggregate(campaign.state.name, campaign.revision)
         }
@@ -429,8 +427,8 @@ internal class JdbcVoucherPoolRevocationService(
                 if (result.next()) result.getObject(1, UUID::class.java) else null
             }
         } ?: fail(RevocationCommandFailure.SCOPE_NOT_FOUND)
-        repository.lockCampaignForShare(connection, tenantId, campaignId)
-        val batch = repository.lockBatchForUpdate(connection, tenantId, batchId)
+        repository.lockCampaignForShare(tenantId, campaignId)
+        val batch = repository.lockBatchForUpdate(tenantId, batchId)
             ?: fail(RevocationCommandFailure.SCOPE_NOT_FOUND)
         return LockedAggregate(batch.state.name, batch.revision)
     }
@@ -471,7 +469,7 @@ internal class JdbcVoucherPoolRevocationService(
             counts.getValue(EntryState.RESERVED) + activeAllocations
         val terminalCount = counts.getValue(EntryState.REDEEMED) + counts.getValue(EntryState.RELEASED) +
             counts.getValue(EntryState.REVOKED) + counts.getValue(EntryState.EXPIRED)
-        val observedAt = repository.transactionTime(connection)
+        val observedAt = repository.transactionTime()
         val digest = impactDigest(
             aggregateType,
             aggregateId,

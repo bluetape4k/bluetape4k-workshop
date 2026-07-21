@@ -874,12 +874,11 @@ private class GuardProbeVoucherPoolRepository(
     private val probe: ReservationGuardProbe,
 ) : VoucherPoolRepository by delegate {
     override fun lockReservationGuards(
-        connection: Connection,
         tenantId: String,
         campaignId: UUID,
         userDigest: ByteArray,
-    ): ReservationGuards? = delegate.lockReservationGuards(connection, tenantId, campaignId, userDigest)?.also {
-        probe.enter(connection)
+    ): ReservationGuards? = delegate.lockReservationGuards(tenantId, campaignId, userDigest)?.also {
+        probe.enter(currentConnection())
     }
 }
 
