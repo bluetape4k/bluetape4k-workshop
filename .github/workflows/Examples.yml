@@ -298,6 +298,7 @@ jobs:
       # - commerce-order-lifecycle-fulfillment: PostgreSQL durable lifecycle and replay path
       # - commerce-reservation-control-plane: PostgreSQL-authoritative reservation and advisory Redis path
       # - commerce-promotion-voucher-campaign: PostgreSQL-authoritative capacity with advisory Redis admission
+      # - commerce-concert-ticket-flash-sale: PostgreSQL-authoritative inventory with Redis waiting-room admission
       # - operations-job-console-*: shared PostgreSQL/Redis contract plus live Spring MVC and Ktor adapters
       - name: Run container-backed examples
         run: >-
@@ -319,6 +320,7 @@ jobs:
           :commerce-order-lifecycle-fulfillment:test
           :commerce-reservation-control-plane:test
           :commerce-promotion-voucher-campaign:test
+          :commerce-concert-ticket-flash-sale:test
           :operations-job-console-core:integrationTest
           :operations-job-console-spring:integrationTest
           :operations-job-console-ktor:integrationTest
@@ -369,6 +371,8 @@ jobs:
             commerce/reservation-control-plane/build/reports/tests/test/
             commerce/promotion-voucher-campaign/build/test-results/test/*.xml
             commerce/promotion-voucher-campaign/build/reports/tests/test/
+            commerce/concert-ticket-flash-sale/build/test-results/test/*.xml
+            commerce/concert-ticket-flash-sale/build/reports/tests/test/
             operations/job-console-core/build/test-results/integrationTest/*.xml
             operations/job-console-core/build/reports/tests/integrationTest/
             operations/job-console-spring/build/test-results/integrationTest/*.xml

@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="960" viewBox="0 0 1600 960">
   <defs>
     <style>.bg{fill:#f8fafc}.title{font:34px 'Architects Daughter','Comic Sans MS',cursive;fill:#18212f}.subtitle{font:16px 'Comic Mono','Courier New',monospace;fill:#64748b}.zone{stroke-width:1.5}.zone-title{font:23px 'Architects Daughter','Comic Sans MS',cursive;fill:#243044}.card{fill:#fff;stroke:#cbd5e1;stroke-width:1.5}.card-title{font:19px 'Architects Daughter','Comic Sans MS',cursive;fill:#111827}.body{font:13px 'Comic Mono','Courier New',monospace;fill:#475569}.edge{fill:none;stroke:#2563eb;stroke-width:2.5;stroke-linecap:round}.event{fill:none;stroke:#7c3aed;stroke-width:2.5;stroke-dasharray:8 6}.rule{font:bold 15px 'Comic Mono','Courier New',monospace;fill:#1e293b}</style>
-    <marker id="extractArrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L13 7 L1 13 Z" fill="#2563eb"/></marker>
-    <marker id="eventArrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L13 7 L1 13 Z" fill="#7c3aed"/></marker>
+    <marker id="extractArrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L13 7 L1 13 Z" fill="#2563eb" stroke="#2563eb" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="eventArrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L13 7 L1 13 Z" fill="#7c3aed" stroke="#7c3aed" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
   </defs>
   <rect class="bg" width="1600" height="960"/><text class="title" x="70" y="62">Microservice Extraction — Preserve Contracts, Split Ownership</text><text class="subtitle" x="72" y="91">Start with the tested Modulith boundaries; extract one authority and its data at a time.</text>
   <rect class="zone" x="60" y="125" width="430" height="690" rx="24" fill="#f0fdf4" stroke="#bbf7d0"/><text class="zone-title" x="90" y="165">Today: Spring Modulith</text>
