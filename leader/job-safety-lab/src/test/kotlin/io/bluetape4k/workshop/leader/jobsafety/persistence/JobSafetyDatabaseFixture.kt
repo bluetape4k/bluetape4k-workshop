@@ -2,9 +2,11 @@ package io.bluetape4k.workshop.leader.jobsafety.persistence
 
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.leader.jobsafety.domain.ExecutionContractVersion
+import io.bluetape4k.workshop.leader.jobsafety.domain.EffectDeliveryState
 import io.bluetape4k.workshop.leader.jobsafety.domain.ConflictKey
 import io.bluetape4k.workshop.leader.jobsafety.domain.MembershipRevision
 import io.bluetape4k.workshop.leader.jobsafety.domain.NamespaceEpoch
+import io.bluetape4k.workshop.leader.jobsafety.domain.OperationId
 import io.bluetape4k.workshop.leader.jobsafety.domain.RegionEpoch
 import io.bluetape4k.workshop.leader.jobsafety.domain.RegionId
 import io.bluetape4k.workshop.leader.jobsafety.domain.TenantId
@@ -34,7 +36,7 @@ internal class JobSafetyDatabaseFixture : AutoCloseable {
                 user = postgres.username ?: PostgreSQLServer.USERNAME
                 password = postgres.password ?: PostgreSQLServer.PASSWORD
             }
-        executor = JobSafetyJdbcExecutor(dataSource, foregroundPermits = 2)
+        executor = JobSafetyJdbcExecutor(dataSource, foregroundPermits = 1)
         executor.transaction {
             SchemaUtils.drop(*JOB_SAFETY_TABLES.reversedArray())
             SchemaUtils.createMissingTablesAndColumns(*JOB_SAFETY_TABLES)
@@ -85,6 +87,31 @@ internal class JobSafetyDatabaseFixture : AutoCloseable {
             JobAssignments.update({ JobAssignments.tenantId eq tenantId.value }) {
                 it[active] = false
                 it[membershipRevision] = nextRevision.value
+            }
+        }
+    }
+
+    fun seedOutbox(operationId: OperationId) {
+        val effectOperationId = operationId
+        val now = Instant.now()
+        executor.transaction {
+            JobOutboxEntity.new {
+                this.operationId = effectOperationId.value
+                effectType = "SUMMARY_PUBLISHED"
+                status = EffectDeliveryState.PENDING.name
+                attemptCount = 0
+                nextAttemptAt = now
+                createdAt = now
+                updatedAt = now
+            }
+        }
+    }
+
+    fun requeueOutbox(operationId: OperationId) {
+        executor.transaction {
+            JobOutboxEntries.update({ JobOutboxEntries.operationId eq operationId.value }) {
+                it[status] = EffectDeliveryState.PENDING.name
+                it[updatedAt] = Instant.now()
             }
         }
     }
