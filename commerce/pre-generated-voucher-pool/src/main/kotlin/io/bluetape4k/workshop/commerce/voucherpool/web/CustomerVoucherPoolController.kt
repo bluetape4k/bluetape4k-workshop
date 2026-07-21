@@ -219,12 +219,15 @@ internal data class RevealResponse(
     val code: String?,
     val observedAt: Instant,
     val requestId: String,
+    val safeRequestId: String,
+    val replacementAvailable: Boolean,
     val nextAction: String,
 ) : Serializable {
     override fun toString(): String =
         "RevealResponse(allocationId=$allocationId,outcome=$outcome,revision=$revision," +
             "codeAvailable=$codeAvailable,code=[REDACTED],observedAt=$observedAt," +
-            "requestId=$requestId,nextAction=$nextAction)"
+            "requestId=$requestId,safeRequestId=$safeRequestId," +
+            "replacementAvailable=$replacementAvailable,nextAction=$nextAction)"
 
     companion object {
         private const val serialVersionUID: Long = 1L

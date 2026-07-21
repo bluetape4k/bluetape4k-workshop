@@ -259,6 +259,11 @@ internal class VoucherPoolHttpCommandExecutor(
         val descriptor = outcome.descriptor
         val stableOutcome = reveal?.outcome ?: VoucherPoolErrorCode.ALREADY_REVEALED.name
         val code = reveal?.code?.withRawValue { it }
+        val replacementAvailable =
+            code == null &&
+                stableOutcome == VoucherPoolErrorCode.ALREADY_REVEALED.name &&
+                read.replacementOrdinal == 0 &&
+                (queries.campaign(principal.tenantId, read.campaignId)?.replacementAllowance ?: 0) >= 1
         val response = RevealResponse(
             allocationId = allocationId,
             outcome = stableOutcome,
@@ -267,7 +272,13 @@ internal class VoucherPoolHttpCommandExecutor(
             code = code,
             observedAt = read.observedAt,
             requestId = requestId,
-            nextAction = if (code == null) "CONFIRM_REPLACEMENT_OR_REFRESH" else "COPY_ONCE_OR_REDEEM",
+            safeRequestId = requestId,
+            replacementAvailable = replacementAvailable,
+            nextAction = when {
+                code != null -> "COPY_ONCE_OR_REDEEM"
+                replacementAvailable -> "CONFIRM_REPLACEMENT_OR_REFRESH"
+                else -> "CONTACT_OPERATOR_WITH_REQUEST_ID"
+            },
         )
         val duplicate = outcome.replayed || stableOutcome == VoucherPoolErrorCode.ALREADY_REVEALED.name
         return ResponseEntity.status(HttpStatus.OK)

@@ -89,6 +89,8 @@ internal class CustomerVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
         RedeemVoucherRequest("CUSTOMER-LIFECYCLE-A").toString().contains("CUSTOMER-LIFECYCLE-A") shouldBeEqualTo false
         firstReveal.codeAvailable shouldBeEqualTo true
         firstReveal.outcome shouldBeEqualTo "VOUCHER_REVEALED"
+        firstReveal.replacementAvailable shouldBeEqualTo false
+        firstReveal.safeRequestId shouldBeEqualTo firstReveal.requestId
 
         mutation("/api/v1/allocations/${allocation.allocationId}/code-reveals", "reveal-lifecycle", 0)
             .exchange().expectStatus().isOk
@@ -97,6 +99,9 @@ internal class CustomerVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             .jsonPath("$.code").doesNotExist()
             .jsonPath("$.codeAvailable").isEqualTo(false)
             .jsonPath("$.outcome").isEqualTo("ALREADY_REVEALED")
+            .jsonPath("$.replacementAvailable").isEqualTo(true)
+            .jsonPath("$.safeRequestId").isNotEmpty
+            .jsonPath("$.nextAction").isEqualTo("CONFIRM_REPLACEMENT_OR_REFRESH")
 
         customerGet("/api/v1/allocations/${allocation.allocationId}")
             .exchange().expectStatus().isOk
@@ -159,6 +164,36 @@ internal class CustomerVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
             .exchange().expectStatus().isOk
             .expectBody()
             .jsonPath("$.state").isEqualTo("RELEASED")
+    }
+
+    @Test
+    fun `reveal recovery advertises escalation when campaign policy forbids replacement`() {
+        val fixture = activePool("replacement-unavailable", listOf("NO-REPLACEMENT-A"), replacementAllowance = 0)
+        val reservation = reserve(fixture.campaignId, "reserve-no-replacement").createdReservation()
+        val allocation =
+            mutation(
+                "/api/v1/reservations/${reservation.reservationId}/allocate",
+                "allocate-no-replacement",
+                reservation.revision,
+            ).okAllocation()
+        val revealed =
+            mutation(
+                "/api/v1/allocations/${allocation.allocationId}/code-reveals",
+                "reveal-no-replacement",
+                allocation.revision,
+            ).okReveal()
+
+        val duplicate =
+            mutation(
+                "/api/v1/allocations/${allocation.allocationId}/code-reveals",
+                "reveal-no-replacement-again",
+                revealed.revision,
+            ).okReveal()
+
+        duplicate.outcome shouldBeEqualTo "ALREADY_REVEALED"
+        duplicate.replacementAvailable shouldBeEqualTo false
+        duplicate.safeRequestId shouldBeEqualTo duplicate.requestId
+        duplicate.nextAction shouldBeEqualTo "CONTACT_OPERATOR_WITH_REQUEST_ID"
     }
 
     @Test
@@ -238,7 +273,11 @@ internal class CustomerVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
         ).exchange().expectStatus().isNotFound
     }
 
-    private fun activePool(name: String, codes: List<String>): CustomerFixture {
+    private fun activePool(
+        name: String,
+        codes: List<String>,
+        replacementAllowance: Int = 1,
+    ): CustomerFixture {
         val now = Instant.now()
         val campaignId = UUID.randomUUID()
         val batchId = UUID.randomUUID()
@@ -249,7 +288,7 @@ internal class CustomerVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
                     campaignId = campaignId,
                     startsAt = now.minusSeconds(60),
                     endsAt = now.plusSeconds(3_600),
-                    policy = VoucherPoolPolicy.of(4, 5.minutes, 30.minutes, 1),
+                    policy = VoucherPoolPolicy.of(4, 5.minutes, 30.minutes, replacementAllowance),
                     idempotencyKey = "web-create-campaign-$name",
                 ),
             ).applied()

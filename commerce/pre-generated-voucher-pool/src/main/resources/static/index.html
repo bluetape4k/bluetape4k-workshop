@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Pre-generated Voucher Pool Console</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#workspace">Skip to voucher workspace</a>
+<header class="hero">
+    <p class="eyebrow">bluetape4k workshop · PostgreSQL authority</p>
+    <h1>Pre-generated voucher pool</h1>
+    <p>Practice one-time reveal, replacement, revocation, and recovery without storing voucher or operator secrets.</p>
+</header>
+
+<nav class="view-switcher" aria-label="Console views">
+    <button id="show-customer" type="button" aria-controls="customer-view" aria-pressed="true">Customer view</button>
+    <button id="show-operator" type="button" aria-controls="operator-view" aria-pressed="false">Operator view</button>
+    <button id="logout" class="secondary" type="button">Clear session</button>
+</nav>
+
+<main id="workspace" tabindex="-1">
+    <section id="customer-view" aria-labelledby="customer-title">
+        <div class="panel heading-panel">
+            <p class="section-index">01 / Customer</p>
+            <h2 id="customer-title" tabindex="-1">Reservation and one-time reveal</h2>
+            <p>Customer commands use owner headers. Voucher code text exists only in this page's memory until cleared.</p>
+        </div>
+
+        <form id="customer-scope" class="panel form-grid">
+            <label>Tenant
+                <input id="tenant" required maxlength="64" autocomplete="off">
+            </label>
+            <label>Customer principal
+                <input id="principal" required maxlength="64" autocomplete="off">
+            </label>
+            <label>Campaign ID
+                <input id="campaign-id" required maxlength="64" autocomplete="off">
+            </label>
+            <button type="submit">Load customer snapshot</button>
+        </form>
+
+        <section class="status-grid" aria-label="Customer workflow status">
+            <article class="metric"><span class="status-label">Connection</span><strong id="connection-status">Not connected</strong></article>
+            <article class="metric"><span class="status-label">Reservation</span><strong id="reservation-status" tabindex="-1">Not reserved</strong></article>
+            <article class="metric"><span class="status-label">Allocation</span><strong id="allocation-status">Not allocated</strong></article>
+            <article class="metric"><span class="status-label">Event transport</span><strong id="transport-status">Disconnected</strong></article>
+        </section>
+
+        <section class="panel" aria-labelledby="customer-actions-title">
+            <h3 id="customer-actions-title">Customer actions</h3>
+            <div class="button-row" role="group" aria-label="Customer voucher actions">
+                <button id="reserve-voucher" type="button" disabled>Reserve voucher</button>
+                <button id="allocate-voucher" type="button" disabled>Allocate reserved voucher</button>
+                <button id="reveal-voucher" type="button" aria-label="Reveal voucher code" disabled>Reveal voucher code</button>
+                <button id="redeem-voucher" type="button" disabled>Redeem revealed voucher</button>
+            </div>
+            <p id="customer-action-help" class="help">Load a customer snapshot first.</p>
+            <div class="secret-output" aria-labelledby="revealed-code-label">
+                <span id="revealed-code-label">One-time voucher code</span>
+                <code id="revealed-code">Not revealed</code>
+                <button id="clear-revealed-code" class="secondary" type="button">Clear revealed code</button>
+            </div>
+        </section>
+
+        <section id="replacement-help" class="panel" hidden aria-labelledby="replacement-title">
+            <h3 id="replacement-title">Reveal recovery</h3>
+            <p id="replacement-message">A replacement needs explicit confirmation.</p>
+            <p>Safe request ID: <code id="safe-request-id">Unavailable</code></p>
+            <button id="request-replacement" type="button">Confirm replacement</button>
+            <button id="operator-escalation" class="secondary" type="button">Open operator escalation</button>
+        </section>
+    </section>
+
+    <section id="operator-view" aria-labelledby="operator-title" hidden>
+        <div class="panel heading-panel">
+            <p class="section-index">02 / Operator</p>
+            <h2 id="operator-title" tabindex="-1">Preview before revoke</h2>
+            <p>The operator secret and single-use preview token remain memory-only and are cleared on navigation.</p>
+        </div>
+
+        <form id="operator-scope" class="panel form-grid">
+            <label>Tenant
+                <input id="operator-tenant" required maxlength="64" autocomplete="off">
+            </label>
+            <label for="operator-secret">Operator secret
+                <input id="operator-secret" type="password" required autocomplete="off" aria-label="Operator secret">
+            </label>
+            <label for="operator-guard">Operator guard
+                <input id="operator-guard" type="password" required autocomplete="off" aria-label="Operator guard">
+            </label>
+            <label>Aggregate type
+                <select id="aggregate-type">
+                    <option value="batches">Batch</option>
+                    <option value="campaigns">Campaign</option>
+                </select>
+            </label>
+            <label>Aggregate identity
+                <input id="aggregate-id" required maxlength="64" autocomplete="off">
+            </label>
+            <label>Expected revision
+                <input id="aggregate-revision" required type="number" min="0" inputmode="numeric" autocomplete="off">
+            </label>
+            <button id="revoke-preview" type="submit">Preview revoke impact</button>
+        </form>
+
+        <section class="panel" aria-labelledby="preview-title">
+            <h3 id="preview-title">Authoritative revoke preview</h3>
+            <dl class="preview-grid">
+                <div><dt>Aggregate identity</dt><dd id="revoke-identity">Not previewed</dd></div>
+                <div><dt>Revision</dt><dd id="revoke-revision">—</dd></div>
+                <div><dt>Affected count</dt><dd id="revoke-affected-count">—</dd></div>
+            </dl>
+            <label for="typed-aggregate-identity">Type the aggregate identity to confirm
+                <input id="typed-aggregate-identity" autocomplete="off" aria-describedby="revoke-match-help">
+            </label>
+            <p id="revoke-match-help" class="help">The typed identity must exactly match the preview.</p>
+            <button id="revoke-aggregate" class="danger" type="button" disabled>Revoke previewed vouchers</button>
+        </section>
+    </section>
+</main>
+
+<div id="live-status" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+<dialog id="reveal-confirmation" aria-labelledby="reveal-confirmation-title" aria-describedby="reveal-confirmation-description">
+    <form method="dialog">
+        <h2 id="reveal-confirmation-title">Reveal voucher code</h2>
+        <p id="reveal-confirmation-description">Reveal this voucher once?</p>
+        <div class="button-row">
+            <button value="cancel">Cancel</button>
+            <button id="reveal-confirmation-accept" value="confirm">Reveal once</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="replacement-confirmation" aria-labelledby="replacement-confirmation-title" aria-describedby="replacement-confirmation-description">
+    <form method="dialog">
+        <h2 id="replacement-confirmation-title">Replace lost reveal</h2>
+        <p id="replacement-confirmation-description">This abandons the exposed allocation and creates a new reservation.</p>
+        <div class="button-row">
+            <button value="cancel">Cancel</button>
+            <button id="replacement-confirmation-accept" value="confirm">Create replacement</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="revoke-confirmation" aria-labelledby="revoke-confirmation-title" aria-describedby="revoke-confirmation-description">
+    <form method="dialog">
+        <h2 id="revoke-confirmation-title">Confirm revoke</h2>
+        <p id="revoke-confirmation-description">No revoke preview is active.</p>
+        <div class="button-row">
+            <button value="cancel">Cancel</button>
+            <button id="revoke-confirmation-accept" class="danger" value="confirm">Revoke vouchers</button>
+        </div>
+    </form>
+</dialog>
+</body>
+</html>
