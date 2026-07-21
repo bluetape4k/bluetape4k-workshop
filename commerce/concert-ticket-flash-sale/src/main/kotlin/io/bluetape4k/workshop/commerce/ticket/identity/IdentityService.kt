@@ -1,7 +1,15 @@
 package io.bluetape4k.workshop.commerce.ticket.identity
 
 import io.bluetape4k.workshop.commerce.ticket.persistence.IdentityKind
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketExposedJdbcRepository
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketIdentityAliasEntity
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketIdentityAliases
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketIdentitySubjectEntity
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketIdentitySubjects
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketJdbcExecutor
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import java.time.Instant
 import java.io.Serializable
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets.UTF_8
@@ -59,9 +67,13 @@ data class IdentitySubject(
 }
 
 /** PostgreSQL alias authority serialized by advisory locks over every active digest. */
+class IdentitySubjectRepository :
+    TicketExposedJdbcRepository<TicketIdentitySubjectEntity, UUID>(TicketIdentitySubjectEntity::class.java)
+
 class IdentityAliasRepository(
     private val jdbc: TicketJdbcExecutor,
-) {
+    private val subjects: IdentitySubjectRepository = IdentitySubjectRepository(),
+) : TicketExposedJdbcRepository<TicketIdentityAliasEntity, Long>(TicketIdentityAliasEntity::class.java) {
     fun resolveOrCreate(
         kind: IdentityKind,
         candidates: Map<Int, ByteArray>,
@@ -69,17 +81,14 @@ class IdentityAliasRepository(
     ): IdentitySubject =
         jdbc.transaction {
             val lockKeys = candidates.values.map(::advisoryKey).distinct().sorted()
-            connection.prepareStatement("SELECT pg_advisory_xact_lock(?)").use { statement ->
-                lockKeys.forEach { key ->
-                    statement.setLong(1, key)
-                    statement.executeQuery().use { result -> check(result.next()) }
-                }
+            lockKeys.forEach { key ->
+                exposed.exec("SELECT pg_advisory_xact_lock($key)") { result -> check(result.next()) }
             }
 
             val existing =
                 candidates.entries
                     .sortedByDescending { it.key }
-                    .firstNotNullOfOrNull { (version, digest) -> find(kind, version, digest) }
+                    .firstNotNullOfOrNull { (version, digest) -> findSubject(kind, version, digest) }
             val subject = existing ?: IdentitySubject(UUID.randomUUID(), kind).also { insertSubject(it) }
             ensureAlias(subject, currentVersion, candidates.getValue(currentVersion))
             subject
@@ -87,64 +96,50 @@ class IdentityAliasRepository(
 
     fun aliasVersions(subjectId: UUID): Set<Int> =
         jdbc.transaction {
-            connection.prepareStatement(
-                "SELECT key_version FROM ticket_identity_aliases WHERE subject_id = ? ORDER BY key_version",
-            ).use { statement ->
-                statement.setObject(1, subjectId)
-                statement.executeQuery().use { result ->
-                    buildSet { while (result.next()) add(result.getInt(1)) }
-                }
-            }
+            findAll { TicketIdentityAliases.subjectId eq subjectId }
+                .mapTo(linkedSetOf()) { it.keyVersion }
         }
 
-    private fun io.bluetape4k.workshop.commerce.ticket.persistence.TicketJdbcTransaction.find(
+    private fun findSubject(
         kind: IdentityKind,
         version: Int,
         digest: ByteArray,
-    ): IdentitySubject? =
-        connection.prepareStatement(
-            """
-            SELECT subject_id FROM ticket_identity_aliases
-            WHERE identity_kind = ? AND key_version = ? AND digest = ?
-            """.trimIndent(),
-        ).use { statement ->
-            statement.setString(1, kind.name)
-            statement.setInt(2, version)
-            statement.setBytes(3, digest)
-            statement.executeQuery().use { result ->
-                if (result.next()) IdentitySubject(result.getObject(1, UUID::class.java), kind) else null
-            }
-        }
+    ): IdentitySubject? = findAll {
+        (TicketIdentityAliases.identityKind eq kind.name) and
+            (TicketIdentityAliases.keyVersion eq version) and
+            (TicketIdentityAliases.digest eq digest)
+    }.singleOrNull()?.let { IdentitySubject(it.subjectId, kind) }
 
-    private fun io.bluetape4k.workshop.commerce.ticket.persistence.TicketJdbcTransaction.insertSubject(
-        subject: IdentitySubject,
-    ) {
-        connection.prepareStatement(
-            "INSERT INTO ticket_identity_subjects(subject_id, identity_kind) VALUES (?, ?)",
-        ).use { statement ->
-            statement.setObject(1, subject.subjectId)
-            statement.setString(2, subject.kind.name)
-            statement.executeUpdate()
+    private fun insertSubject(subject: IdentitySubject) {
+        val entity = TicketIdentitySubjectEntity.new(subject.subjectId) {
+            identityKind = subject.kind.name
+            createdAt = Instant.now()
         }
+        subjects.save(entity)
     }
 
-    private fun io.bluetape4k.workshop.commerce.ticket.persistence.TicketJdbcTransaction.ensureAlias(
+    private fun ensureAlias(
         subject: IdentitySubject,
         version: Int,
         digest: ByteArray,
     ) {
-        connection.prepareStatement(
-            """
-            INSERT INTO ticket_identity_aliases(identity_kind, key_version, digest, subject_id)
-            VALUES (?, ?, ?, ?) ON CONFLICT (identity_kind, key_version, digest) DO NOTHING
-            """.trimIndent(),
-        ).use { statement ->
-            statement.setString(1, subject.kind.name)
-            statement.setInt(2, version)
-            statement.setBytes(3, digest)
-            statement.setObject(4, subject.subjectId)
-            statement.executeUpdate()
+        if (exists {
+                (TicketIdentityAliases.identityKind eq subject.kind.name) and
+                    (TicketIdentityAliases.keyVersion eq version) and
+                    (TicketIdentityAliases.digest eq digest)
+            }
+        ) {
+            return
         }
+        save(
+            TicketIdentityAliasEntity.new {
+                identityKind = subject.kind.name
+                keyVersion = version
+                this.digest = digest
+                subjectId = subject.subjectId
+                createdAt = Instant.now()
+            },
+        )
     }
 
     private fun advisoryKey(digest: ByteArray): Long = ByteBuffer.wrap(digest, 0, Long.SIZE_BYTES).long

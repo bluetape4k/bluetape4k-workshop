@@ -1,233 +1,183 @@
 package io.bluetape4k.workshop.commerce.ticket.persistence
 
-import java.sql.ResultSet
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.statements.StatementType
+import org.jetbrains.exposed.v1.core.vendors.ForUpdateOption
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.plus
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
+import java.time.Instant
 import java.util.UUID
 
-/** PostgreSQL inventory authority accessed only through a bounded transaction. */
+/** PostgreSQL inventory authority backed by Bluetape4k [TicketExposedJdbcRepository]. */
 class TicketInventoryRepository(
     private val jdbc: TicketJdbcExecutor,
-) {
-    fun get(
-        saleId: UUID,
-        grade: String,
-    ): InventoryRecord =
+) : TicketExposedJdbcRepository<TicketInventoryEntity, Long>(TicketInventoryEntity::class.java) {
+
+    fun get(saleId: UUID, grade: String): InventoryRecord =
         jdbc.transaction {
-            connection.prepareStatement(
-                """
-                SELECT sale_id, grade, total_quantity, held_quantity, sold_quantity, revision
-                FROM ticket_inventory WHERE sale_id = ? AND grade = ?
-                """.trimIndent(),
-            ).use { statement ->
-                statement.setObject(1, saleId)
-                statement.setString(2, grade)
-                statement.executeQuery().use { result ->
-                    check(result.next()) { "inventory not found" }
-                    result.toInventoryRecord()
-                }
-            }
+            findAll { (TicketInventories.saleId eq saleId) and (TicketInventories.grade eq grade) }
+                .singleOrNull()
+                ?.toRecord()
+                ?: error("inventory not found")
         }
 
-    fun forceQuantities(
-        saleId: UUID,
-        grade: String,
-        held: Int,
-        sold: Int,
-    ) {
+    fun forceQuantities(saleId: UUID, grade: String, held: Int, sold: Int) {
         jdbc.transaction {
             acquire(TicketLockRank.INVENTORY)
-            connection.prepareStatement(
-                "UPDATE ticket_inventory SET held_quantity = ?, sold_quantity = ?, revision = revision + 1 " +
-                    "WHERE sale_id = ? AND grade = ?",
-            ).use { statement ->
-                statement.setInt(1, held)
-                statement.setInt(2, sold)
-                statement.setObject(3, saleId)
-                statement.setString(4, grade)
-                check(statement.executeUpdate() == 1) { "inventory not found" }
-            }
+            check(
+                TicketInventories.update({
+                    (TicketInventories.saleId eq saleId) and (TicketInventories.grade eq grade)
+                }) {
+                    it[heldQuantity] = held
+                    it[soldQuantity] = sold
+                    it[revision] = revision + 1
+                } == 1,
+            ) { "inventory not found" }
         }
     }
 
-    fun lock(
-        transaction: TicketJdbcTransaction,
-        saleId: UUID,
-        grade: String,
-    ): InventoryRecord =
+    fun lock(transaction: TicketJdbcTransaction, saleId: UUID, grade: String): InventoryRecord =
         with(transaction) {
             acquire(TicketLockRank.INVENTORY)
-            connection.prepareStatement(
-                """
-                SELECT sale_id, grade, total_quantity, held_quantity, sold_quantity, revision
-                FROM ticket_inventory WHERE sale_id = ? AND grade = ? FOR UPDATE
-                """.trimIndent(),
-            ).use { statement ->
-                statement.setObject(1, saleId)
-                statement.setString(2, grade)
-                statement.executeQuery().use { result ->
-                    check(result.next()) { "inventory not found" }
-                    result.toInventoryRecord()
+            TicketInventories.selectAll()
+                .where { (TicketInventories.saleId eq saleId) and (TicketInventories.grade eq grade) }
+                .forUpdate()
+                .singleOrNull()
+                ?.let {
+                    InventoryRecord(
+                        saleId = it[TicketInventories.saleId],
+                        grade = it[TicketInventories.grade],
+                        total = it[TicketInventories.totalQuantity],
+                        held = it[TicketInventories.heldQuantity],
+                        sold = it[TicketInventories.soldQuantity],
+                        revision = it[TicketInventories.revision],
+                    )
                 }
-            }
+                ?: error("inventory not found")
         }
-
-    private fun ResultSet.toInventoryRecord(): InventoryRecord =
-        InventoryRecord(
-            saleId = getObject("sale_id", UUID::class.java),
-            grade = getString("grade"),
-            total = getInt("total_quantity"),
-            held = getInt("held_quantity"),
-            sold = getInt("sold_quantity"),
-            revision = getLong("revision"),
-        )
 }
 
-/** Durable USER/IP guard authority. */
+/** Durable USER/IP guard authority backed by Bluetape4k [TicketExposedJdbcRepository]. */
 class TicketIdentityGuardRepository(
     private val jdbc: TicketJdbcExecutor,
+) : TicketExposedJdbcRepository<TicketActiveIdentityGuardEntity, Long>(
+    TicketActiveIdentityGuardEntity::class.java,
 ) {
-    fun insert(
-        saleId: UUID,
-        kind: IdentityKind,
-        subjectId: UUID,
-        attemptId: UUID,
-    ) {
+    fun insert(saleId: UUID, kind: IdentityKind, subjectId: UUID, attemptId: UUID) {
         jdbc.transaction {
             acquire(if (kind == IdentityKind.USER) TicketLockRank.USER_GUARD else TicketLockRank.IP_GUARD)
-            connection.prepareStatement(
-                """
-                INSERT INTO ticket_active_identity_guards(
-                    sale_id, identity_kind, identity_subject_id, active_attempt_id
-                ) VALUES (?, ?, ?, ?)
-                """.trimIndent(),
-            ).use { statement ->
-                statement.setObject(1, saleId)
-                statement.setString(2, kind.name)
-                statement.setObject(3, subjectId)
-                statement.setObject(4, attemptId)
-                statement.executeUpdate()
+            TicketActiveIdentityGuards.insert {
+                it[TicketActiveIdentityGuards.saleId] = saleId
+                it[identityKind] = kind.name
+                it[identitySubjectId] = subjectId
+                it[activeAttemptId] = attemptId
             }
         }
     }
 }
 
-/** Durable FIFO queue using sequence then row id as canonical order. */
+/** Durable FIFO queue backed by Bluetape4k [TicketExposedJdbcRepository]. */
 class TicketWaitingRoomRepository(
     private val jdbc: TicketJdbcExecutor,
+) : TicketExposedJdbcRepository<TicketWaitingRoomEntryEntity, Long>(
+    TicketWaitingRoomEntryEntity::class.java,
 ) {
-    fun join(
-        saleId: UUID,
-        userSubjectId: UUID,
-        sequence: Long,
-    ): UUID {
+    fun join(saleId: UUID, userSubjectId: UUID, sequence: Long): UUID {
         val entryId = UUID.randomUUID()
+        val now = Instant.now()
         jdbc.transaction {
-            connection.prepareStatement(
-                """
-                INSERT INTO ticket_waiting_room_entries(entry_id, sale_id, user_subject_id, sequence)
-                VALUES (?, ?, ?, ?)
-                """.trimIndent(),
-            ).use { statement ->
-                statement.setObject(1, entryId)
-                statement.setObject(2, saleId)
-                statement.setObject(3, userSubjectId)
-                statement.setLong(4, sequence)
-                statement.executeUpdate()
+            TicketWaitingRoomEntries.insert {
+                it[TicketWaitingRoomEntries.entryId] = entryId
+                it[TicketWaitingRoomEntries.saleId] = saleId
+                it[TicketWaitingRoomEntries.userSubjectId] = userSubjectId
+                it[state] = "waiting"
+                it[TicketWaitingRoomEntries.sequence] = sequence
+                it[revision] = 0
+                it[createdAt] = now
+                it[updatedAt] = now
             }
         }
         return entryId
     }
 
-    fun claimBatch(
-        saleId: UUID,
-        limit: Int,
-    ): List<WaitingEntryRecord> =
+    fun claimBatch(saleId: UUID, limit: Int): List<WaitingEntryRecord> =
         jdbc.transaction {
-            connection.prepareStatement(
-                """
-                SELECT id, entry_id, sale_id, user_subject_id, sequence
-                FROM ticket_waiting_room_entries
-                WHERE sale_id = ? AND state = 'waiting'
-                ORDER BY sequence, id
-                LIMIT ? FOR UPDATE SKIP LOCKED
-                """.trimIndent(),
-            ).use { statement ->
-                statement.setObject(1, saleId)
-                statement.setInt(2, limit)
-                statement.executeQuery().use { result ->
-                    buildList {
-                        while (result.next()) {
-                            add(
-                                WaitingEntryRecord(
-                                    id = result.getLong("id"),
-                                    entryId = result.getObject("entry_id", UUID::class.java),
-                                    saleId = result.getObject("sale_id", UUID::class.java),
-                                    userSubjectId = result.getObject("user_subject_id", UUID::class.java),
-                                    sequence = result.getLong("sequence"),
-                                ),
-                            )
-                        }
-                    }
+            TicketWaitingRoomEntries.selectAll()
+                .where {
+                    (TicketWaitingRoomEntries.saleId eq saleId) and
+                        (TicketWaitingRoomEntries.state eq "waiting")
                 }
-            }
+                .orderBy(TicketWaitingRoomEntries.sequence to SortOrder.ASC, TicketWaitingRoomEntries.id to SortOrder.ASC)
+                .limit(limit)
+                .forUpdate(
+                    ForUpdateOption.PostgreSQL.ForUpdate(ForUpdateOption.PostgreSQL.MODE.SKIP_LOCKED),
+                )
+                .map {
+                    WaitingEntryRecord(
+                        id = it[TicketWaitingRoomEntries.id].value,
+                        entryId = it[TicketWaitingRoomEntries.entryId],
+                        saleId = it[TicketWaitingRoomEntries.saleId],
+                        userSubjectId = it[TicketWaitingRoomEntries.userSubjectId],
+                        sequence = it[TicketWaitingRoomEntries.sequence],
+                    )
+                }
         }
 
+    /** PostgreSQL-specific EXPLAIN is intentionally isolated from normal CRUD. */
     fun explainClaim(saleId: UUID): List<String> =
         jdbc.transaction {
-            connection.createStatement().use { it.execute("SET LOCAL enable_seqscan = off") }
-            connection.prepareStatement(
+            exposed.exec("SET LOCAL enable_seqscan = off")
+            exposed.exec(
                 """
                 EXPLAIN SELECT id FROM ticket_waiting_room_entries
-                WHERE sale_id = ? AND state = 'waiting'
+                WHERE sale_id = '$saleId'::uuid AND state = 'waiting'
                 ORDER BY sequence, id LIMIT 50 FOR UPDATE SKIP LOCKED
                 """.trimIndent(),
-            ).use { statement ->
-                statement.setObject(1, saleId)
-                statement.executeQuery().use { result ->
-                    buildList { while (result.next()) add(result.getString(1)) }
-                }
-            }
+                explicitStatementType = StatementType.SELECT,
+            ) { result -> buildList { while (result.next()) add(result.getString(1)) } } ?: emptyList()
         }
 }
 
-/** Stable payment-operation ledger and reconciliation discovery index. */
+/** Payment-operation ledger backed by Bluetape4k [TicketExposedJdbcRepository]. */
 class TicketPaymentOperationRepository(
     private val jdbc: TicketJdbcExecutor,
+) : TicketExposedJdbcRepository<TicketPaymentOperationEntity, Long>(
+    TicketPaymentOperationEntity::class.java,
 ) {
-    fun insertAuthorization(
-        provider: String,
-        operationId: UUID,
-        attemptId: UUID,
-    ) {
+    fun insertAuthorization(provider: String, operationId: UUID, attemptId: UUID) {
+        val now = Instant.now()
         jdbc.transaction {
             acquire(TicketLockRank.EFFECT)
-            connection.prepareStatement(
-                """
-                INSERT INTO ticket_payment_operations(
-                    provider, operation_id, attempt_id, operation_kind, status, next_reconcile_at
-                ) VALUES (?, ?, ?, 'authorize', 'pending', CURRENT_TIMESTAMP)
-                """.trimIndent(),
-            ).use { statement ->
-                statement.setString(1, provider)
-                statement.setObject(2, operationId)
-                statement.setObject(3, attemptId)
-                statement.executeUpdate()
+            TicketPaymentOperations.insert {
+                it[TicketPaymentOperations.provider] = provider
+                it[TicketPaymentOperations.operationId] = operationId
+                it[TicketPaymentOperations.attemptId] = attemptId
+                it[operationKind] = "authorize"
+                it[status] = "pending"
+                it[nextReconcileAt] = now
+                it[claimRevision] = 0
+                it[revision] = 0
+                it[createdAt] = now
+                it[updatedAt] = now
             }
         }
     }
 
+    /** PostgreSQL-specific EXPLAIN is intentionally isolated from normal CRUD. */
     fun explainDue(): List<String> =
         jdbc.transaction {
-            connection.createStatement().use { it.execute("SET LOCAL enable_seqscan = off") }
-            connection.prepareStatement(
+            exposed.exec("SET LOCAL enable_seqscan = off")
+            exposed.exec(
                 """
                 EXPLAIN SELECT id FROM ticket_payment_operations
                 WHERE status = 'pending' AND next_reconcile_at <= CURRENT_TIMESTAMP
                 ORDER BY next_reconcile_at, id LIMIT 50
                 """.trimIndent(),
-            ).use { statement ->
-                statement.executeQuery().use { result ->
-                    buildList { while (result.next()) add(result.getString(1)) }
-                }
-            }
+                explicitStatementType = StatementType.SELECT,
+            ) { result -> buildList { while (result.next()) add(result.getString(1)) } } ?: emptyList()
         }
 }

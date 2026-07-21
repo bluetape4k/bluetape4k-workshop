@@ -40,6 +40,7 @@ dependencies {
     runtimeOnly(libs.bluetape4k.virtualthread.jdk25)
 
     implementation(libs.exposed.core)
+    implementation(libs.exposed.dao)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.spring.boot.jdbc)
     implementation(libs.exposed.spring.modulith)

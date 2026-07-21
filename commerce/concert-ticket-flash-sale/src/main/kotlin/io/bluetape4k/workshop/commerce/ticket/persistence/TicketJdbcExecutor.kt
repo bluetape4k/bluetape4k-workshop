@@ -1,11 +1,14 @@
 package io.bluetape4k.workshop.commerce.ticket.persistence
 
 import java.io.Serial
-import java.sql.Connection
 import java.time.Duration
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
+import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 /** Global row-lock acquisition order for all ticket transactions. */
 enum class TicketLockRank {
@@ -38,9 +41,9 @@ class TicketDatabasePermitUnavailable : IllegalStateException("ticket_database_p
     }
 }
 
-/** One connection-bound transaction that records lock acquisition order. */
+/** One Exposed transaction that records lock acquisition order. */
 class TicketJdbcTransaction internal constructor(
-    val connection: Connection,
+    val exposed: JdbcTransaction,
 ) {
     private var lastRank: TicketLockRank? = null
 
@@ -53,13 +56,19 @@ class TicketJdbcTransaction internal constructor(
     }
 }
 
-/** Acquires a bounded permit before opening a JDBC transaction. */
+/** Acquires a bounded permit before opening an Exposed JDBC transaction. */
 class TicketJdbcExecutor(
-    private val dataSource: DataSource,
+    dataSource: DataSource,
     foregroundPermits: Int,
     private val permitTimeout: Duration = Duration.ofMillis(250),
 ) {
     private val permits = Semaphore(foregroundPermits, true)
+    private val database = Database.connect(
+        datasource = dataSource,
+        databaseConfig = DatabaseConfig {
+            defaultMaxAttempts = 1
+        },
+    )
 
     init {
         require(foregroundPermits > 0) { "foregroundPermits must be positive" }
@@ -71,16 +80,8 @@ class TicketJdbcExecutor(
             throw TicketDatabasePermitUnavailable()
         }
         try {
-            return dataSource.connection.use { connection ->
-                connection.autoCommit = false
-                try {
-                    val result = TicketJdbcTransaction(connection).block()
-                    connection.commit()
-                    result
-                } catch (failure: Throwable) {
-                    runCatching { connection.rollback() }
-                    throw failure
-                }
+            return transaction(database) {
+                TicketJdbcTransaction(this).block()
             }
         } finally {
             permits.release()

@@ -3,13 +3,19 @@ package io.bluetape4k.workshop.commerce.ticket.admission.internal
 import io.bluetape4k.workshop.commerce.ticket.admission.api.AdmissionCommands
 import io.bluetape4k.workshop.commerce.ticket.admission.api.ConsumeGrant
 import io.bluetape4k.workshop.commerce.ticket.admission.api.TransactionalAdmissionCommands
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketAdmissionGrantEntity
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketAdmissionGrants
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketExposedJdbcRepository
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketJdbcExecutor
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketJdbcTransaction
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.jdbc.update
 import java.io.Serial
 import java.time.Clock
-import java.time.ZoneOffset
 
-/** A grant was expired, mismatched, or already consumed. */
 class AdmissionExpired : IllegalStateException("admission_expired") {
     companion object {
         @Serial
@@ -17,39 +23,38 @@ class AdmissionExpired : IllegalStateException("admission_expired") {
     }
 }
 
-/** Consumes a buyer-bound grant with one conditional PostgreSQL update. */
+/** Admission authority implemented as a Bluetape4k Exposed JDBC repository. */
+class TicketAdmissionGrantRepository :
+    TicketExposedJdbcRepository<TicketAdmissionGrantEntity, Long>(TicketAdmissionGrantEntity::class.java) {
+    fun consume(transaction: TicketJdbcTransaction, command: ConsumeGrant, now: java.time.Instant) {
+        with(transaction) {
+            val updated = TicketAdmissionGrants.update({
+                (TicketAdmissionGrants.saleId eq command.saleId) and
+                    (TicketAdmissionGrants.grantNonce eq command.grantNonce) and
+                    (TicketAdmissionGrants.buyerSubjectId eq command.buyerSubjectId) and
+                    (TicketAdmissionGrants.policyVersion eq command.policyVersion) and
+                    TicketAdmissionGrants.consumedAttemptId.isNull() and
+                    (TicketAdmissionGrants.expiresAt greater now)
+            }) {
+                it[consumedAttemptId] = command.attemptId
+                it[consumedAt] = now
+            }
+            if (updated != 1) throw AdmissionExpired()
+        }
+    }
+}
+
+/** Consumes a buyer-bound grant with one conditional Exposed update. */
 class AdmissionService(
     private val jdbc: TicketJdbcExecutor,
     private val clock: Clock,
+    private val grants: TicketAdmissionGrantRepository = TicketAdmissionGrantRepository(),
 ) : AdmissionCommands, TransactionalAdmissionCommands {
     override fun consume(command: ConsumeGrant) {
         jdbc.transaction { consume(this, command) }
     }
 
-    override fun consume(
-        transaction: TicketJdbcTransaction,
-        command: ConsumeGrant,
-    ) {
-        with(transaction) {
-            connection.prepareStatement(
-                """
-                UPDATE ticket_admission_grants
-                SET consumed_attempt_id = ?, consumed_at = ?,
-                    expires_at = expires_at
-                WHERE sale_id = ? AND grant_nonce = ? AND buyer_subject_id = ?
-                  AND policy_version = ? AND consumed_attempt_id IS NULL AND expires_at > ?
-                """.trimIndent(),
-            ).use { statement ->
-                val now = clock.instant()
-                statement.setObject(1, command.attemptId)
-                statement.setObject(2, now.atOffset(ZoneOffset.UTC))
-                statement.setObject(3, command.saleId)
-                statement.setObject(4, command.grantNonce)
-                statement.setObject(5, command.buyerSubjectId)
-                statement.setLong(6, command.policyVersion)
-                statement.setObject(7, now.atOffset(ZoneOffset.UTC))
-                if (statement.executeUpdate() != 1) throw AdmissionExpired()
-            }
-        }
+    override fun consume(transaction: TicketJdbcTransaction, command: ConsumeGrant) {
+        grants.consume(transaction, command, clock.instant())
     }
 }

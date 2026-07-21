@@ -1,12 +1,18 @@
 package io.bluetape4k.workshop.commerce.ticket.idempotency
 
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketExposedJdbcRepository
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketHttpIdempotencies
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketHttpIdempotencyEntity
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketJdbcExecutor
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketLockRank
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import java.io.Serializable
-import java.sql.SQLException
 import java.time.Duration
 import java.time.Instant
-import java.time.ZoneOffset
 import java.util.UUID
 
 /** Complete owner-scoped HTTP idempotency key. */
@@ -38,7 +44,7 @@ sealed interface IdempotencyDecision : Serializable {
 class HttpIdempotencyRepository(
     private val jdbc: TicketJdbcExecutor,
     private val retention: Duration = Duration.ofHours(24),
-) {
+) : TicketExposedJdbcRepository<TicketHttpIdempotencyEntity, Long>(TicketHttpIdempotencyEntity::class.java) {
     fun acquire(
         scope: IdempotencyScope,
         fingerprint: TicketDigest,
@@ -47,29 +53,22 @@ class HttpIdempotencyRepository(
         try {
             jdbc.transaction {
                 acquire(TicketLockRank.IDEMPOTENCY)
-                connection.prepareStatement(
-                    """
-                    INSERT INTO ticket_http_idempotency(
-                        principal_subject_id, http_method, canonical_route, resource_id, operation,
-                        idempotency_key_digest, request_fingerprint, status, expires_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, 'in_progress', ?) RETURNING id
-                    """.trimIndent(),
-                ).use { statement ->
-                    statement.setObject(1, scope.principalSubjectId)
-                    statement.setString(2, scope.httpMethod)
-                    statement.setString(3, scope.canonicalRoute)
-                    statement.setString(4, scope.resourceId)
-                    statement.setString(5, scope.operation)
-                    statement.setBytes(6, scope.keyDigest.bytes())
-                    statement.setBytes(7, fingerprint.bytes())
-                    statement.setObject(8, now.plus(retention).atOffset(ZoneOffset.UTC))
-                    statement.executeQuery().use { result ->
-                        check(result.next())
-                        IdempotencyDecision.Owner(result.getLong(1))
-                    }
-                }
+                val id = TicketHttpIdempotencies.insertAndGetId {
+                    it[principalSubjectId] = scope.principalSubjectId
+                    it[httpMethod] = scope.httpMethod
+                    it[canonicalRoute] = scope.canonicalRoute
+                    it[resourceId] = scope.resourceId
+                    it[operation] = scope.operation
+                    it[idempotencyKeyDigest] = scope.keyDigest.bytes()
+                    it[requestFingerprint] = fingerprint.bytes()
+                    it[status] = "in_progress"
+                    it[expiresAt] = now.plus(retention)
+                    it[createdAt] = now
+                    it[updatedAt] = now
+                }.value
+                IdempotencyDecision.Owner(id)
             }
-        } catch (failure: SQLException) {
+        } catch (failure: ExposedSQLException) {
             if (failure.sqlState != UNIQUE_VIOLATION) throw failure
             existing(scope, fingerprint)
         }
@@ -80,13 +79,10 @@ class HttpIdempotencyRepository(
     ) {
         jdbc.transaction {
             acquire(TicketLockRank.IDEMPOTENCY)
-            connection.prepareStatement(
-                "UPDATE ticket_http_idempotency SET attempt_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
-            ).use { statement ->
-                statement.setObject(1, attemptId)
-                statement.setLong(2, id)
-                check(statement.executeUpdate() == 1) { "idempotency row not found" }
-            }
+            val entity = findById(id).orElseThrow { IllegalStateException("idempotency row not found") }
+            entity.attemptId = attemptId
+            entity.updatedAt = Instant.now()
+            save(entity)
         }
     }
 
@@ -96,34 +92,24 @@ class HttpIdempotencyRepository(
     ): IdempotencyDecision =
         jdbc.transaction {
             acquire(TicketLockRank.IDEMPOTENCY)
-            connection.prepareStatement(
-                """
-                SELECT request_fingerprint, status, attempt_id
-                FROM ticket_http_idempotency
-                WHERE principal_subject_id = ? AND http_method = ? AND canonical_route = ?
-                  AND resource_id = ? AND operation = ? AND idempotency_key_digest = ?
-                FOR UPDATE
-                """.trimIndent(),
-            ).use { statement ->
-                statement.setObject(1, scope.principalSubjectId)
-                statement.setString(2, scope.httpMethod)
-                statement.setString(3, scope.canonicalRoute)
-                statement.setString(4, scope.resourceId)
-                statement.setString(5, scope.operation)
-                statement.setBytes(6, scope.keyDigest.bytes())
-                statement.executeQuery().use { result ->
-                    check(result.next()) { "idempotency winner disappeared" }
-                    if (!result.getBytes("request_fingerprint").contentEquals(fingerprint.bytes())) {
-                        IdempotencyDecision.Conflict
-                    } else {
-                        val attemptId = result.getObject("attempt_id", UUID::class.java)
-                        when {
-                            attemptId != null ->
-                                IdempotencyDecision.Replay(attemptId, result.getString("status") == "completed")
-                            else -> IdempotencyDecision.InProgress
-                        }
-                    }
+            val entity = TicketHttpIdempotencies.selectAll()
+                .where {
+                    (TicketHttpIdempotencies.principalSubjectId eq scope.principalSubjectId) and
+                        (TicketHttpIdempotencies.httpMethod eq scope.httpMethod) and
+                        (TicketHttpIdempotencies.canonicalRoute eq scope.canonicalRoute) and
+                        (TicketHttpIdempotencies.resourceId eq scope.resourceId) and
+                        (TicketHttpIdempotencies.operation eq scope.operation) and
+                        (TicketHttpIdempotencies.idempotencyKeyDigest eq scope.keyDigest.bytes())
                 }
+                .forUpdate()
+                .singleOrNull()
+                ?.let { findById(it[TicketHttpIdempotencies.id].value).orElse(null) }
+                ?: error("idempotency winner disappeared")
+            if (!entity.requestFingerprint.contentEquals(fingerprint.bytes())) {
+                IdempotencyDecision.Conflict
+            } else {
+                entity.attemptId?.let { IdempotencyDecision.Replay(it, entity.status == "completed") }
+                    ?: IdempotencyDecision.InProgress
             }
         }
 

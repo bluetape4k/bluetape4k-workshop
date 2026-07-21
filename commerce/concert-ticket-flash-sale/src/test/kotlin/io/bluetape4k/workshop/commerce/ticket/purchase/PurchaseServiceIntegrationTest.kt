@@ -103,6 +103,7 @@ internal class PurchaseFixture(
     val opensAt: Instant = NOW.minusSeconds(1),
 ) : AutoCloseable {
     private val database = TicketDatabaseFixture()
+    val executor get() = database.executor
     val saleId: UUID = UUID.randomUUID()
     val sharedIp: UUID = UUID.randomUUID()
     val events = mutableListOf<AuthorizationRequested>()
@@ -210,6 +211,16 @@ internal class PurchaseFixture(
                 statement.executeQuery(sql).use { result ->
                     check(result.next())
                     result.getInt(1)
+                }
+            }
+        }
+
+    fun queryString(sql: String): String =
+        database.dataSource.connection.use { connection ->
+            connection.createStatement().use { statement ->
+                statement.executeQuery(sql).use { result ->
+                    check(result.next())
+                    result.getString(1)
                 }
             }
         }

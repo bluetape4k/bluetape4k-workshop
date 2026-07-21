@@ -72,11 +72,14 @@ fun transition(
     outcome: PaymentOutcome,
 ): PurchaseTransition =
     when (state to outcome) {
+        PurchaseState.INVENTORY_HELD to PaymentOutcome.UNKNOWN,
         PurchaseState.PAYMENT_AUTHORIZING to PaymentOutcome.UNKNOWN ->
             PurchaseTransition(PurchaseState.RECONCILIATION_REQUIRED, 0, 0, false)
+        PurchaseState.INVENTORY_HELD to PaymentOutcome.APPROVED,
         PurchaseState.PAYMENT_AUTHORIZING to PaymentOutcome.APPROVED,
         PurchaseState.RECONCILIATION_REQUIRED to PaymentOutcome.APPROVED,
         -> PurchaseTransition(PurchaseState.APPROVED, -1, 1, true, TicketDisposition.PENDING)
+        PurchaseState.INVENTORY_HELD to PaymentOutcome.DECLINED,
         PurchaseState.PAYMENT_AUTHORIZING to PaymentOutcome.DECLINED,
         PurchaseState.RECONCILIATION_REQUIRED to PaymentOutcome.DECLINED,
         -> PurchaseTransition(PurchaseState.DECLINED, -1, 0, true)
