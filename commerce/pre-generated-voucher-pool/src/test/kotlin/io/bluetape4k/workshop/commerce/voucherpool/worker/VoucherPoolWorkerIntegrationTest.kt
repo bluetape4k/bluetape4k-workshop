@@ -284,12 +284,18 @@ internal class VoucherPoolWorkerIntegrationTest {
     fun `campaign revoke fans out through batch claims then reaches terminal state`() {
         val fixture = harness.activePool("campaign-revoke", listOf("CAMPAIGN-1", "CAMPAIGN-2"))
 
-        workers.beginCampaignRevocation(harness.tenant, fixture.campaign.campaignId) shouldBeEqualTo
-            listOf(fixture.batch.batchId)
-        harness.campaignState(fixture.campaign.campaignId) shouldBeEqualTo CampaignState.REVOKING
+        harness.setCampaignState(fixture.campaign.campaignId, CampaignState.REVOKING)
+        workers.run(
+            WorkerRunRequest(
+                harness.tenant,
+                WorkerKind.CAMPAIGN_REVOKE,
+                fixture.campaign.campaignId,
+                "campaign-coordinator",
+                requestedLimit = 1,
+            ),
+        ).state shouldBeEqualTo WorkerRunState.COMPLETED
         runToCompletion(WorkerKind.BATCH_REVOKE, fixture.batch.batchId)
 
-        workers.completeCampaignRevocation(harness.tenant, fixture.campaign.campaignId) shouldBeEqualTo true
         harness.campaignState(fixture.campaign.campaignId) shouldBeEqualTo CampaignState.REVOKED
     }
 

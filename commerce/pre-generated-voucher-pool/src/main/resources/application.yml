@@ -19,6 +19,10 @@ spring:
       enabled: true
   lifecycle:
     timeout-per-shutdown-phase: 45s
+  jackson:
+    default-property-inclusion: non_null
+    deserialization:
+      fail-on-unknown-properties: true
 
 server:
   address: ${VOUCHER_POOL_SERVER_ADDRESS:127.0.0.1}
@@ -55,6 +59,18 @@ management:
 workshop:
   voucher-pool:
     worker-instance-id: ${VOUCHER_POOL_INSTANCE_ID:${random.uuid}}
+    http:
+      max-tenant-length: 64
+      max-principal-length: 64
+      max-scalar-bytes: 256
+      max-cursor-bytes: 512
+      max-payload-bytes: 4194304
+      min-idempotency-key-length: 8
+      max-idempotency-key-length: 200
+      operator-secret: ${VOUCHER_POOL_OPERATOR_SECRET}
+      operator-guard: ${VOUCHER_POOL_OPERATOR_GUARD}
+      allowed-hosts: 127.0.0.1,localhost,::1
+      demo-auth-enabled: ${VOUCHER_POOL_DEMO_AUTH_ENABLED:true}
     redis:
       enabled: ${VOUCHER_POOL_REDIS_ENABLED:false}
       uri: ${VOUCHER_POOL_REDIS_URI:redis://127.0.0.1:6379}
@@ -66,9 +82,21 @@ workshop:
       quota-period: 1m
       bloom-expected-insertions: 100000
       bloom-false-probability: 0.01
+    sse:
+      max-subscribers: 32
+      max-subscribers-per-scope: 8
+      queue-size: 64
+      max-queue-bytes: 262144
+      max-poll-rows: 100
+      max-poll-bytes: 524288
+      max-customer-campaigns: 64
+      poll-interval: 250ms
+      max-idle-interval: 2s
+      heartbeat-interval: 15s
+      write-timeout: 5s
     database:
       foreground:
-        capacity: 12
+        capacity: 11
         permit-wait: 250ms
         transaction-timeout: 5s
         lock-timeout: 5s

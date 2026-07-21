@@ -43,6 +43,7 @@ internal interface VoucherPoolRepository {
     fun transactionTime(connection: Connection): Instant
     fun createCampaign(connection: Connection, campaign: CampaignRecord): CampaignRecord
     fun lockCampaignForUpdate(connection: Connection, tenantId: String, campaignId: UUID): CampaignRecord?
+    fun userIdentityKeyVersion(connection: Connection, tenantId: String, campaignId: UUID): Int?
     fun updateCampaign(connection: Connection, campaign: CampaignRecord, expectedRevision: Long): CampaignRecord
     fun createBatch(connection: Connection, batch: BatchRecord): BatchRecord
     fun lockBatchForUpdate(connection: Connection, tenantId: String, batchId: UUID): BatchRecord?
@@ -72,6 +73,7 @@ internal interface VoucherPoolRepository {
     ): BatchRecord
     fun batchOrdinalCoverage(connection: Connection, tenantId: String, batchId: UUID): BatchOrdinalCoverage
     fun activateBatch(connection: Connection, batch: BatchRecord): BatchRecord
+    fun updateBatchState(connection: Connection, batch: BatchRecord, state: BatchState): BatchRecord
     fun lockCampaignForShare(connection: Connection, tenantId: String, campaignId: UUID): CampaignRecord
     fun lockBatchForShare(connection: Connection, tenantId: String, batchId: UUID): BatchRecord
     fun lockUserLimit(connection: Connection, tenantId: String, campaignId: UUID, userDigest: ByteArray): UserLimitRecord
@@ -190,8 +192,8 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         connection.prepareStatement(
             """INSERT INTO voucher_pool_campaigns
                 (tenant_id,campaign_id,state,starts_at,ends_at,per_user_limit,reservation_ttl_seconds,
-                 allocation_ttl_seconds,replacement_allowance,policy_version,revision)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+                 allocation_ttl_seconds,replacement_allowance,user_identity_key_version,policy_version,revision)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?)""",
         ).use { statement ->
             statement.setString(1, campaign.tenantId)
             statement.setObject(2, campaign.campaignId)
@@ -202,8 +204,9 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.setLong(7, campaign.reservationTtlSeconds)
             statement.setLong(8, campaign.allocationTtlSeconds)
             statement.setInt(9, campaign.replacementAllowance)
-            statement.setLong(10, campaign.policyVersion)
-            statement.setLong(11, campaign.revision)
+            statement.setInt(10, campaign.userIdentityKeyVersion)
+            statement.setLong(11, campaign.policyVersion)
+            statement.setLong(12, campaign.revision)
             statement.executeUpdate()
         }
         return checkNotNull(lockCampaignForUpdate(connection, campaign.tenantId, campaign.campaignId))
@@ -220,6 +223,15 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         statement.setObject(2, campaignId)
         statement.executeQuery().use { result -> if (result.next()) result.campaignRecord() else null }
     }
+
+    override fun userIdentityKeyVersion(connection: Connection, tenantId: String, campaignId: UUID): Int? =
+        connection.prepareStatement(
+            "SELECT user_identity_key_version FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=?",
+        ).use { statement ->
+            statement.setString(1, tenantId)
+            statement.setObject(2, campaignId)
+            statement.executeQuery().use { result -> if (result.next()) result.getInt(1) else null }
+        }
 
     override fun updateCampaign(
         connection: Connection,
@@ -441,6 +453,21 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.executeUpdate()
         }
         check(updated == 1) { "batch activation lost its revision" }
+        return checkNotNull(lockBatchForUpdate(connection, batch.tenantId, batch.batchId))
+    }
+
+    override fun updateBatchState(connection: Connection, batch: BatchRecord, state: BatchState): BatchRecord {
+        val updated = connection.prepareStatement(
+            """UPDATE voucher_pool_batches SET state=?,revision=revision+1,updated_at=statement_timestamp()
+                WHERE tenant_id=? AND batch_id=? AND revision=?""",
+        ).use { statement ->
+            statement.setString(1, state.name)
+            statement.setString(2, batch.tenantId)
+            statement.setObject(3, batch.batchId)
+            statement.setLong(4, batch.revision)
+            statement.executeUpdate()
+        }
+        check(updated == 1) { "batch state update lost its revision" }
         return checkNotNull(lockBatchForUpdate(connection, batch.tenantId, batch.batchId))
     }
 
@@ -1468,6 +1495,7 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         startsAt = getTimestamp("starts_at").toInstant(), endsAt = getTimestamp("ends_at").toInstant(),
         perUserLimit = getInt("per_user_limit"), reservationTtlSeconds = getLong("reservation_ttl_seconds"),
         allocationTtlSeconds = getLong("allocation_ttl_seconds"), replacementAllowance = getInt("replacement_allowance"),
+        userIdentityKeyVersion = getInt("user_identity_key_version"),
         revision = getLong("revision"), createdAt = getTimestamp("created_at").toInstant(),
         updatedAt = getTimestamp("updated_at").toInstant(),
     )

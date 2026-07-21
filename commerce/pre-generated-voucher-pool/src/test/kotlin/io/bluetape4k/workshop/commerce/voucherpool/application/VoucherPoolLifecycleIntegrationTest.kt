@@ -684,6 +684,13 @@ internal class LifecycleHarness(private val suffix: String) {
         campaignId,
     ) { CampaignState.valueOf(it.getString(1)) }
 
+    fun setCampaignState(campaignId: UUID, state: CampaignState) {
+        execute(
+            "UPDATE voucher_pool_campaigns SET state='${state.name}',revision=revision+1 " +
+                "WHERE tenant_id='$tenant' AND campaign_id='$campaignId'",
+        )
+    }
+
     fun corruptPoolDepth(batchId: UUID, state: EntryState, count: Long) {
         execute(
             "UPDATE voucher_pool_pool_depth SET entry_count=$count " +

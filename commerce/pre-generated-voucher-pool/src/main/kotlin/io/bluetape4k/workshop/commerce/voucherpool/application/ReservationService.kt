@@ -99,7 +99,11 @@ internal class JdbcReservationService(
             LIFECYCLE_HTTP_CREATED,
             LifecycleLane.FOREGROUND,
         ) { connection, owner ->
-            val userDigest = digests.userIdentity(command.tenantId, command.campaignId, command.canonicalUser)
+            val keyVersion = repository.userIdentityKeyVersion(connection, command.tenantId, command.campaignId)
+                ?: fail(VoucherPoolErrorCode.CAMPAIGN_NOT_ACTIVE)
+            val userDigest = digests.userIdentity(
+                command.tenantId, command.campaignId, command.canonicalUser, keyVersion,
+            )
             val guards = repository.lockReservationGuards(
                 connection, command.tenantId, command.campaignId, userDigest.copyBytes(),
             ) ?: fail(VoucherPoolErrorCode.CAMPAIGN_NOT_ACTIVE)
@@ -197,7 +201,9 @@ internal class JdbcReservationService(
             LIFECYCLE_HTTP_OK,
             LifecycleLane.FOREGROUND,
         ) { connection, _ ->
-            val digest = digests.userIdentity(command.tenantId, command.campaignId, command.canonicalUser)
+            val keyVersion = repository.userIdentityKeyVersion(connection, command.tenantId, command.campaignId)
+                ?: fail(VoucherPoolErrorCode.WRONG_OWNER)
+            val digest = digests.userIdentity(command.tenantId, command.campaignId, command.canonicalUser, keyVersion)
             val chain = repository.lockReservationChain(
                 connection, command.tenantId, command.reservationId, digest.copyBytes(),
             ) ?: fail(VoucherPoolErrorCode.WRONG_OWNER)

@@ -15,6 +15,7 @@ import java.util.UUID
 internal enum class WorkerKind {
     RESERVATION_EXPIRY,
     ALLOCATION_EXPIRY,
+    CAMPAIGN_REVOKE,
     BATCH_REVOKE,
     BATCH_EXPIRY,
     RECONCILIATION,
@@ -204,6 +205,73 @@ internal class JdbcVoucherPoolWorkerRepository(
     override fun snapshot(tenantId: String, kind: WorkerKind, scopeId: UUID): WorkerClaimSnapshot? =
         executor.workerTransaction { selectSnapshot(currentConnection(), tenantId, kind, scopeId, forUpdate = false) }
 
+    internal fun ensureClaimInTransaction(
+        connection: Connection,
+        tenantId: String,
+        kind: WorkerKind,
+        scopeId: UUID,
+    ): Boolean = insertClaimIfMissing(connection, tenantId, kind, scopeId)
+
+    internal fun scheduleReconciliationInTransaction(
+        connection: Connection,
+        tenantId: String,
+        scopeId: UUID,
+    ): Boolean {
+        val inserted = insertClaimIfMissing(connection, tenantId, WorkerKind.RECONCILIATION, scopeId)
+        if (inserted) return true
+        val current = lockSnapshot(connection, tenantId, WorkerKind.RECONCILIATION, scopeId)
+        val completed = current != null && current.owner == null && current.cursor == 0L && current.attempt == 0 &&
+            current.poisonReason == null && current.checkpoint > 0L
+        return completed && connection.prepareStatement(
+            """UPDATE voucher_pool_worker_claims
+                SET checkpoint=0,next_attempt_at=transaction_timestamp(),revision=revision+1
+                WHERE tenant_id=? AND worker_type=? AND scope_id=? AND revision=?""",
+        ).use { statement ->
+            statement.setString(1, tenantId)
+            statement.setString(2, WorkerKind.RECONCILIATION.name)
+            statement.setObject(3, scopeId)
+            statement.setLong(4, checkNotNull(current).revision)
+            statement.executeUpdate() == 1
+        }
+    }
+
+    internal fun ensureBatchRevokeClaimsForCampaignInTransaction(
+        connection: Connection,
+        tenantId: String,
+        campaignId: UUID,
+        limit: Int,
+    ): Int = connection.prepareStatement(
+        """INSERT INTO voucher_pool_worker_claims(tenant_id,worker_type,scope_id)
+            SELECT b.tenant_id,?,b.batch_id FROM voucher_pool_batches b
+            WHERE b.tenant_id=? AND b.campaign_id=? AND b.state NOT IN ('REVOKED','EXPIRED')
+              AND NOT EXISTS (SELECT 1 FROM voucher_pool_worker_claims w
+                  WHERE w.tenant_id=b.tenant_id AND w.worker_type=? AND w.scope_id=b.batch_id)
+            ORDER BY b.batch_id LIMIT ? ON CONFLICT DO NOTHING""",
+    ).use { statement ->
+        statement.setString(1, WorkerKind.BATCH_REVOKE.name)
+        statement.setString(2, tenantId)
+        statement.setObject(3, campaignId)
+        statement.setString(4, WorkerKind.BATCH_REVOKE.name)
+        statement.setInt(5, limit)
+        statement.executeUpdate()
+    }
+
+    internal fun hasUnscheduledBatchRevokesInTransaction(
+        connection: Connection,
+        tenantId: String,
+        campaignId: UUID,
+    ): Boolean = connection.prepareStatement(
+        """SELECT EXISTS (SELECT 1 FROM voucher_pool_batches b
+            WHERE b.tenant_id=? AND b.campaign_id=? AND b.state NOT IN ('REVOKED','EXPIRED')
+              AND NOT EXISTS (SELECT 1 FROM voucher_pool_worker_claims w
+                  WHERE w.tenant_id=b.tenant_id AND w.worker_type=? AND w.scope_id=b.batch_id))""",
+    ).use { statement ->
+        statement.setString(1, tenantId)
+        statement.setObject(2, campaignId)
+        statement.setString(3, WorkerKind.BATCH_REVOKE.name)
+        statement.executeQuery().use { result -> result.next(); result.getBoolean(1) }
+    }
+
     private fun complete(claim: WorkerClaim, resetCursor: Boolean): WorkerClaimSnapshot =
         executor.workerTransaction { completeInTransaction(currentConnection(), claim, resetCursor) }
 
@@ -245,7 +313,7 @@ internal class JdbcVoucherPoolWorkerRepository(
         return minOf(exponential, policy.maximumBackoff.seconds)
     }
 
-    private fun insertClaimIfMissing(connection: Connection, tenantId: String, kind: WorkerKind, scopeId: UUID) {
+    private fun insertClaimIfMissing(connection: Connection, tenantId: String, kind: WorkerKind, scopeId: UUID): Boolean =
         connection.prepareStatement(
             """INSERT INTO voucher_pool_worker_claims(tenant_id,worker_type,scope_id)
                 VALUES (?,?,?) ON CONFLICT DO NOTHING""",
@@ -253,9 +321,8 @@ internal class JdbcVoucherPoolWorkerRepository(
             statement.setString(1, tenantId)
             statement.setString(2, kind.name)
             statement.setObject(3, scopeId)
-            statement.executeUpdate()
+            statement.executeUpdate() == 1
         }
-    }
 
     private fun lockSnapshot(connection: Connection, tenantId: String, kind: WorkerKind, scopeId: UUID): WorkerClaimSnapshot? =
         selectSnapshot(connection, tenantId, kind, scopeId, forUpdate = true)

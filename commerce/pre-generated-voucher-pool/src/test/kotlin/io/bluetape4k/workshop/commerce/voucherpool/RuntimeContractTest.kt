@@ -52,7 +52,7 @@ internal class RuntimeContractTest {
         properties.getProperty("spring.threads.virtual.enabled") shouldBeEqualTo "true"
         properties.getProperty("spring.datasource.hikari.maximum-pool-size") shouldBeEqualTo "16"
         properties.getProperty("spring.datasource.hikari.connection-timeout") shouldBeEqualTo "2000"
-        properties.getProperty("workshop.voucher-pool.database.foreground.capacity") shouldBeEqualTo "12"
+        properties.getProperty("workshop.voucher-pool.database.foreground.capacity") shouldBeEqualTo "11"
         properties.getProperty("workshop.voucher-pool.database.foreground.permit-wait") shouldBeEqualTo "250ms"
         properties.getProperty("workshop.voucher-pool.database.foreground.transaction-timeout") shouldBeEqualTo "5s"
         properties.getProperty("workshop.voucher-pool.database.foreground.lock-timeout") shouldBeEqualTo "5s"
@@ -62,6 +62,8 @@ internal class RuntimeContractTest {
         properties.getProperty("workshop.voucher-pool.database.worker.lock-timeout") shouldBeEqualTo "10s"
         properties.getProperty("workshop.voucher-pool.database.sse.capacity") shouldBeEqualTo "3"
         properties.getProperty("workshop.voucher-pool.database.sse.permit-wait") shouldBeEqualTo "1s"
+        properties.getProperty("workshop.voucher-pool.database.sse.transaction-timeout") shouldBeEqualTo "5s"
+        properties.getProperty("workshop.voucher-pool.database.sse.lock-timeout") shouldBeEqualTo "5s"
     }
 
     @Test
@@ -110,9 +112,29 @@ internal class RuntimeContractTest {
                 foregroundTransaction = Duration.ofSeconds(5),
                 operatorTransaction = Duration.ofSeconds(5),
                 workerChunkTransaction = Duration.ofSeconds(10),
+                sseTransaction = Duration.ofSeconds(5),
                 foregroundLock = Duration.ofSeconds(5),
                 operatorLock = Duration.ofSeconds(5),
+                sseLock = Duration.ofSeconds(5),
             )
+    }
+
+    @Test
+    fun `JDBC timeout configuration maps and validates the SSE lane`() {
+        val timeouts =
+            VoucherPoolJdbcTimeouts(
+                sseTransaction = Duration.ofSeconds(7),
+                sseLock = Duration.ofSeconds(3),
+            )
+
+        timeouts.transactionTimeout(JdbcExecutionLane.SSE) shouldBeEqualTo Duration.ofSeconds(7)
+        timeouts.lockTimeout(JdbcExecutionLane.SSE) shouldBeEqualTo Duration.ofSeconds(3)
+        assertFailsWith<IllegalArgumentException> {
+            VoucherPoolJdbcTimeouts(sseTransaction = Duration.ZERO)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            VoucherPoolJdbcTimeouts(sseLock = Duration.ofNanos(1))
+        }
     }
 
     @Test
@@ -267,7 +289,7 @@ internal class RuntimeContractTest {
     fun `JDBC executor maps permit timeout and records one metric`() {
         val gate =
             DatabasePermitGate(
-                hikariMaximumPoolSize = 3,
+                hikariMaximumPoolSize = 4,
                 configs =
                     mapOf(
                         PermitLane.FOREGROUND to PermitLaneConfig(1, 25.milliseconds),
@@ -297,6 +319,50 @@ internal class RuntimeContractTest {
                 failure.phase shouldBeEqualTo JdbcTimeoutPhase.PERMIT
                 metrics.timeouts shouldBeEqualTo
                     listOf(JdbcExecutionLane.FOREGROUND to JdbcTimeoutPhase.PERMIT)
+            } finally {
+                holderRelease.countDown()
+                holder.get(5, TimeUnit.SECONDS)
+            }
+        }
+    }
+
+    @Test
+    fun `SSE JDBC lane is isolated from foreground permits and reports SSE timeout metrics`() {
+        val gate =
+            DatabasePermitGate(
+                hikariMaximumPoolSize = 4,
+                configs =
+                    mapOf(
+                        PermitLane.FOREGROUND to PermitLaneConfig(1, 25.milliseconds),
+                        PermitLane.WORKER to PermitLaneConfig(1, 1.seconds),
+                        PermitLane.SSE to PermitLaneConfig(1, 25.milliseconds),
+                    ),
+            )
+        val metrics = RecordingJdbcMetrics()
+        val executor = jdbcExecutor(gate = gate, metrics = metrics)
+        val holderEntered = CountDownLatch(1)
+        val holderRelease = CountDownLatch(1)
+
+        VirtualThreads.executorService().use { virtualExecutor ->
+            val holder =
+                virtualExecutor.submit {
+                    gate.withSsePermit {
+                        holderEntered.countDown()
+                        holderRelease.await(5, TimeUnit.SECONDS).shouldBeTrue()
+                    }
+                }
+            holderEntered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            try {
+                executor.foregroundTransaction { "foreground" } shouldBeEqualTo "foreground"
+
+                val failure =
+                    assertFailsWith<VoucherPoolJdbcTimeoutException> {
+                        executor.sseTransaction<Unit> { error("SSE permit unexpectedly acquired") }
+                    }
+                failure.lane shouldBeEqualTo JdbcExecutionLane.SSE
+                failure.phase shouldBeEqualTo JdbcTimeoutPhase.PERMIT
+                metrics.timeouts shouldBeEqualTo
+                    listOf(JdbcExecutionLane.SSE to JdbcTimeoutPhase.PERMIT)
             } finally {
                 holderRelease.countDown()
                 holder.get(5, TimeUnit.SECONDS)

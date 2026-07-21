@@ -28,6 +28,20 @@ internal class VoucherDigestServiceTest {
     }
 
     @Test
+    fun `retained user identity key preserves ownership and limit identity during rotation`() {
+        val before = digestService(verificationVersion = 1, userIdentityVersion = 1)
+        val after = digestService(
+            verificationVersion = 1,
+            userIdentityVersion = 2,
+            retainUserIdentityVersion = 1,
+        )
+
+        val original = before.userIdentity(TENANT, CAMPAIGN, "customer-a")
+        (original == after.userIdentity(TENANT, CAMPAIGN, "customer-a")) shouldBeEqualTo false
+        original shouldBeEqualTo after.userIdentity(TENANT, CAMPAIGN, "customer-a", original.keyVersion)
+    }
+
+    @Test
     fun `purpose and scope are part of the canonical digest`() {
         val service = digestService(verificationVersion = 1)
         val code = CanonicalVoucherCode.of("same-material")
@@ -64,6 +78,8 @@ internal class VoucherDigestServiceTest {
     private fun digestService(
         verificationVersion: Int,
         retainVerificationVersion: Int? = null,
+        userIdentityVersion: Int = 3,
+        retainUserIdentityVersion: Int? = null,
     ): VoucherDigestService {
         val verificationKeys = buildList {
             add(DigestKey.of(verificationVersion, keyBytes(verificationVersion)))
@@ -74,7 +90,10 @@ internal class VoucherDigestServiceTest {
             commandTombstoneKey = DigestKey.of(4, keyBytes(4)),
             rotatingKeys = mapOf(
                 DigestPurpose.VERIFICATION to DigestKeyRing.of(verificationKeys.first(), verificationKeys.drop(1)),
-                DigestPurpose.USER_IDENTITY to DigestKeyRing.of(DigestKey.of(3, keyBytes(3))),
+                DigestPurpose.USER_IDENTITY to DigestKeyRing.of(
+                    DigestKey.of(userIdentityVersion, keyBytes(userIdentityVersion)),
+                    retainUserIdentityVersion?.let { listOf(DigestKey.of(it, keyBytes(it))) }.orEmpty(),
+                ),
                 DigestPurpose.REDIS_SIGNAL to DigestKeyRing.of(DigestKey.of(5, keyBytes(5))),
                 DigestPurpose.AUDIT to DigestKeyRing.of(DigestKey.of(6, keyBytes(6))),
             ),

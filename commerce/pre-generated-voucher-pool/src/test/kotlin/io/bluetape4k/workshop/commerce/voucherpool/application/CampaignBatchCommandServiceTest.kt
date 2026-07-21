@@ -21,7 +21,7 @@ internal class CampaignBatchCommandServiceTest {
             importChunk(codes = List(501) { "CODE-$it" })
         }
         assertFailsWith<IllegalArgumentException> {
-            GenerateChunkCommand(TENANT, BATCH, CAMPAIGN, 0, MANIFEST, 501, IDEMPOTENCY_KEY)
+            GenerateChunkCommand(TENANT, BATCH, CAMPAIGN, 0, MANIFEST, 501, REVISION, IDEMPOTENCY_KEY)
         }
         assertFailsWith<IllegalArgumentException> {
             importChunk(codes = listOf("x".repeat(4 * 1_024 * 1_024 + 1)))
@@ -33,10 +33,16 @@ internal class CampaignBatchCommandServiceTest {
         assertFailsWith<IllegalArgumentException> { importChunk(firstOrdinal = -1) }
         assertFailsWith<IllegalArgumentException> { importChunk(codes = emptyList()) }
         assertFailsWith<IllegalArgumentException> {
-            GenerateChunkCommand(TENANT, BATCH, CAMPAIGN, -1, MANIFEST, 1, IDEMPOTENCY_KEY)
+            GenerateChunkCommand(TENANT, BATCH, CAMPAIGN, -1, MANIFEST, 1, REVISION, IDEMPOTENCY_KEY)
         }
         assertFailsWith<IllegalArgumentException> {
-            GenerateChunkCommand(TENANT, BATCH, CAMPAIGN, 0, MANIFEST, 0, IDEMPOTENCY_KEY)
+            GenerateChunkCommand(TENANT, BATCH, CAMPAIGN, 0, MANIFEST, 0, REVISION, IDEMPOTENCY_KEY)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            importChunk(expectedRevision = -1)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            GenerateChunkCommand(TENANT, BATCH, CAMPAIGN, 0, MANIFEST, 1, -1, IDEMPOTENCY_KEY)
         }
     }
 
@@ -102,13 +108,15 @@ internal class CampaignBatchCommandServiceTest {
     private fun importChunk(
         firstOrdinal: Long = 0,
         codes: List<String> = listOf("CODE-0"),
-    ) = ImportChunkCommand(TENANT, BATCH, CAMPAIGN, firstOrdinal, MANIFEST, codes, IDEMPOTENCY_KEY)
+        expectedRevision: Long = REVISION,
+    ) = ImportChunkCommand(TENANT, BATCH, CAMPAIGN, firstOrdinal, MANIFEST, codes, expectedRevision, IDEMPOTENCY_KEY)
 
     companion object {
         private const val TENANT = "tenant-a"
         private val CAMPAIGN = UUID.fromString("11111111-1111-1111-1111-111111111111")
         private val BATCH = UUID.fromString("22222222-2222-2222-2222-222222222222")
         private val MANIFEST = DigestValue.of(ByteArray(32) { 1 })
+        private const val REVISION = 3L
         private const val IDEMPOTENCY_KEY = "unit-idempotency-key"
     }
 }

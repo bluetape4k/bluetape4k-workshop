@@ -188,6 +188,7 @@ internal class ImportChunkCommand(
     val firstOrdinal: Long,
     val manifestDigest: DigestValue,
     codes: List<String>,
+    val expectedRevision: Long,
     val idempotencyKey: String,
 ) {
     val codes: List<String> = codes.toList()
@@ -195,6 +196,7 @@ internal class ImportChunkCommand(
     init {
         requireTenant(tenantId)
         require(firstOrdinal >= 0) { "firstOrdinal must not be negative" }
+        require(expectedRevision >= 0) { "expectedRevision must not be negative" }
         validateChunkPayload(this.codes)
     }
 }
@@ -206,12 +208,14 @@ internal data class GenerateChunkCommand(
     val firstOrdinal: Long,
     val manifestDigest: DigestValue,
     val count: Int,
+    val expectedRevision: Long,
     val idempotencyKey: String,
 ) {
     init {
         requireTenant(tenantId)
         require(firstOrdinal >= 0) { "firstOrdinal must not be negative" }
         require(count in 1..MAX_CHUNK_ENTRIES) { "generation count must be in 1..$MAX_CHUNK_ENTRIES" }
+        require(expectedRevision >= 0) { "expectedRevision must not be negative" }
     }
 }
 
@@ -253,10 +257,14 @@ internal interface CampaignBatchCommandService {
     fun createCampaign(command: CreateCampaignCommand): MutationResult<CampaignSnapshot>
     fun updatePolicy(command: UpdateCampaignPolicyCommand): MutationResult<CampaignSnapshot>
     fun activateCampaign(command: CampaignRevisionCommand): MutationResult<CampaignSnapshot>
+    fun pauseCampaign(command: CampaignRevisionCommand): MutationResult<CampaignSnapshot>
+    fun resumeCampaign(command: CampaignRevisionCommand): MutationResult<CampaignSnapshot>
     fun createImportBatch(command: CreateImportBatchCommand): MutationResult<BatchSnapshot>
     fun importChunk(command: ImportChunkCommand): MutationResult<BatchSnapshot>
     fun generateChunk(command: GenerateChunkCommand): MutationResult<BatchSnapshot>
     fun activateBatch(command: BatchRevisionCommand): MutationResult<BatchSnapshot>
+    fun pauseBatch(command: BatchRevisionCommand): MutationResult<BatchSnapshot>
+    fun resumeBatch(command: BatchRevisionCommand): MutationResult<BatchSnapshot>
 }
 
 /** Bounded application orchestration; all parsing and encryption precedes JDBC admission. */
@@ -348,6 +356,12 @@ internal class JdbcCampaignBatchCommandService(
         repository.updateCampaign(connection, current.copy(state = CampaignState.ACTIVE), current.revision).snapshot()
     }
 
+    override fun pauseCampaign(command: CampaignRevisionCommand): MutationResult<CampaignSnapshot> =
+        transitionCampaign(command, CampaignState.PAUSED, OP_PAUSE_CAMPAIGN, "CAMPAIGN_PAUSED")
+
+    override fun resumeCampaign(command: CampaignRevisionCommand): MutationResult<CampaignSnapshot> =
+        transitionCampaign(command, CampaignState.ACTIVE, OP_RESUME_CAMPAIGN, "CAMPAIGN_RESUMED")
+
     override fun createImportBatch(command: CreateImportBatchCommand): MutationResult<BatchSnapshot> {
         val prepared = prepare(command.tenantId, command.campaignId, command.batchId, 0, command.initialCodes)
         return executeIdempotent(
@@ -399,13 +413,33 @@ internal class JdbcCampaignBatchCommandService(
 
     override fun importChunk(command: ImportChunkCommand): MutationResult<BatchSnapshot> {
         val prepared = prepare(command.tenantId, command.campaignId, command.batchId, command.firstOrdinal, command.codes)
-        return ingest(command.tenantId, command.campaignId, command.batchId, command.idempotencyKey, command.fingerprint(prepared), command.manifestDigest, prepared, BatchSourceKind.IMPORTED)
+        return ingest(
+            command.tenantId,
+            command.campaignId,
+            command.batchId,
+            command.expectedRevision,
+            command.idempotencyKey,
+            command.fingerprint(prepared),
+            command.manifestDigest,
+            prepared,
+            BatchSourceKind.IMPORTED,
+        )
     }
 
     override fun generateChunk(command: GenerateChunkCommand): MutationResult<BatchSnapshot> {
         val codes = List(command.count) { generatedCodes.nextCode() }
         val prepared = prepare(command.tenantId, command.campaignId, command.batchId, command.firstOrdinal, codes)
-        return ingest(command.tenantId, command.campaignId, command.batchId, command.idempotencyKey, command.fingerprint(), command.manifestDigest, prepared, BatchSourceKind.GENERATED)
+        return ingest(
+            command.tenantId,
+            command.campaignId,
+            command.batchId,
+            command.expectedRevision,
+            command.idempotencyKey,
+            command.fingerprint(),
+            command.manifestDigest,
+            prepared,
+            BatchSourceKind.GENERATED,
+        )
     }
 
     override fun activateBatch(command: BatchRevisionCommand): MutationResult<BatchSnapshot> = executeIdempotent(
@@ -441,10 +475,63 @@ internal class JdbcCampaignBatchCommandService(
         repository.activateBatch(connection, batch).snapshot()
     }
 
+    override fun pauseBatch(command: BatchRevisionCommand): MutationResult<BatchSnapshot> =
+        transitionBatch(command, BatchState.PAUSED, OP_PAUSE_BATCH, "BATCH_PAUSED")
+
+    override fun resumeBatch(command: BatchRevisionCommand): MutationResult<BatchSnapshot> =
+        transitionBatch(command, BatchState.ACTIVE, OP_RESUME_BATCH, "BATCH_RESUMED")
+
+    private fun transitionCampaign(
+        command: CampaignRevisionCommand,
+        target: CampaignState,
+        operation: String,
+        outcome: String,
+    ): MutationResult<CampaignSnapshot> = executeIdempotent(
+        command.tenantId,
+        command.idempotencyKey,
+        operation,
+        command.fingerprint(operation),
+        command.campaignId,
+        HTTP_OK,
+        outcome,
+        MutationLane.OPERATOR,
+    ) { connection ->
+        val campaign = repository.lockCampaignForUpdate(connection, command.tenantId, command.campaignId)
+            ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
+        requireRevision(campaign.revision, command.expectedRevision)
+        if (!CampaignPolicy.canTransition(campaign.state, target)) fail(BatchCommandFailure.INVALID_STATE)
+        repository.updateCampaign(connection, campaign.copy(state = target), campaign.revision).snapshot()
+    }
+
+    private fun transitionBatch(
+        command: BatchRevisionCommand,
+        target: BatchState,
+        operation: String,
+        outcome: String,
+    ): MutationResult<BatchSnapshot> = executeIdempotent(
+        command.tenantId,
+        command.idempotencyKey,
+        operation,
+        command.fingerprint(operation),
+        command.batchId,
+        HTTP_OK,
+        outcome,
+        MutationLane.OPERATOR,
+    ) { connection ->
+        repository.lockCampaignForShare(connection, command.tenantId, command.campaignId)
+        val batch = repository.lockBatchForUpdate(connection, command.tenantId, command.batchId)
+            ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
+        requireBatchScope(batch, command.campaignId)
+        requireRevision(batch.revision, command.expectedRevision)
+        if (!BatchPolicy.canTransition(batch.state, target)) fail(BatchCommandFailure.INVALID_STATE)
+        repository.updateBatchState(connection, batch, target).snapshot()
+    }
+
     private fun ingest(
         tenantId: String,
         campaignId: UUID,
         batchId: UUID,
+        expectedRevision: Long,
         idempotencyKey: String,
         fingerprint: CommandFingerprint,
         manifestDigest: DigestValue,
@@ -476,6 +563,7 @@ internal class JdbcCampaignBatchCommandService(
             val batch = repository.lockBatchForUpdate(connection, tenantId, batchId)
                 ?: fail(BatchCommandFailure.SCOPE_NOT_FOUND)
             requireBatchScope(batch, campaignId)
+            requireRevision(batch.revision, expectedRevision)
             if (batch.sourceKind != expectedSource.name) fail(BatchCommandFailure.INVALID_STATE)
             commitPrepared(connection, batch, manifestDigest, prepared).snapshot()
     }
@@ -860,6 +948,7 @@ internal class JdbcCampaignBatchCommandService(
         reservationTtlSeconds = command.policy.reservationTtl.inWholeSeconds,
         allocationTtlSeconds = command.policy.allocationTtl.inWholeSeconds,
         replacementAllowance = command.policy.replacementAllowance,
+        userIdentityKeyVersion = digests.currentUserIdentityKeyVersion,
         policyVersion = 1,
         revision = 0,
     )
@@ -934,6 +1023,7 @@ internal class JdbcCampaignBatchCommandService(
             "firstOrdinal" to firstOrdinal.toString(),
             "manifestDigest" to manifestDigest.copyBytes().toHex(),
             "chunk" to prepared.requestDigest(),
+            "expectedRevision" to expectedRevision.toString(),
         ),
     )
 
@@ -945,11 +1035,13 @@ internal class JdbcCampaignBatchCommandService(
             "firstOrdinal" to firstOrdinal.toString(),
             "manifestDigest" to manifestDigest.copyBytes().toHex(),
             "count" to count.toString(),
+            "expectedRevision" to expectedRevision.toString(),
         ),
     )
 
-    private fun BatchRevisionCommand.fingerprint(): CommandFingerprint = VoucherPoolFingerprint.command(
-        OP_ACTIVATE_BATCH,
+    private fun BatchRevisionCommand.fingerprint(operation: String = OP_ACTIVATE_BATCH): CommandFingerprint =
+        VoucherPoolFingerprint.command(
+        operation,
         mapOf(
             "batchId" to batchId.toString(),
             "campaignId" to campaignId.toString(),
@@ -1088,10 +1180,14 @@ private const val HTTP_CONFLICT = 409
 private const val OP_CREATE_CAMPAIGN = "campaign-create"
 private const val OP_UPDATE_CAMPAIGN_POLICY = "campaign-policy-update"
 private const val OP_ACTIVATE_CAMPAIGN = "campaign-activate"
+private const val OP_PAUSE_CAMPAIGN = "campaign-pause"
+private const val OP_RESUME_CAMPAIGN = "campaign-resume"
 private const val OP_CREATE_BATCH = "batch-create"
 private const val OP_IMPORT_CHUNK = "batch-import-chunk"
 private const val OP_GENERATE_CHUNK = "batch-generate-chunk"
 private const val OP_ACTIVATE_BATCH = "batch-activate"
+private const val OP_PAUSE_BATCH = "batch-pause"
+private const val OP_RESUME_BATCH = "batch-resume"
 private val STABLE_DEDUP_CONSTRAINTS = setOf(
     "pk_voucher_pool_code_dedup",
     "uq_voucher_pool_dedup",

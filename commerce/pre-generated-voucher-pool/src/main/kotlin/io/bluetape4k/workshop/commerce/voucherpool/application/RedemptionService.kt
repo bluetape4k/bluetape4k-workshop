@@ -74,7 +74,11 @@ internal class JdbcRedemptionService(
             LIFECYCLE_HTTP_OK,
             LifecycleLane.FOREGROUND,
         ) { connection, _ ->
-            val userDigest = digests.userIdentity(command.tenantId, command.campaignId, command.canonicalUser)
+            val keyVersion = repository.userIdentityKeyVersion(connection, command.tenantId, command.campaignId)
+                ?: fail(VoucherPoolErrorCode.WRONG_OWNER)
+            val userDigest = digests.userIdentity(
+                command.tenantId, command.campaignId, command.canonicalUser, keyVersion,
+            )
             val chain = repository.lockAllocationChain(
                 connection, command.tenantId, command.allocationId, userDigest.copyBytes(),
             ) ?: fail(VoucherPoolErrorCode.WRONG_OWNER)
@@ -134,7 +138,11 @@ internal class JdbcRedemptionService(
             LIFECYCLE_HTTP_OK,
             LifecycleLane.FOREGROUND,
         ) { connection, _ ->
-            val userDigest = digests.userIdentity(command.tenantId, command.campaignId, command.canonicalUser)
+            val keyVersion = repository.userIdentityKeyVersion(connection, command.tenantId, command.campaignId)
+                ?: fail(VoucherPoolErrorCode.WRONG_OWNER)
+            val userDigest = digests.userIdentity(
+                command.tenantId, command.campaignId, command.canonicalUser, keyVersion,
+            )
             val chain = repository.lockAllocationChain(
                 connection,
                 command.tenantId,

@@ -7,13 +7,18 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.client.reactive.JdkClientHttpConnector
 import org.springframework.test.annotation.DirtiesContext
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
+import org.springframework.context.annotation.Import
+import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolTestKeyMaterialConfiguration
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.net.http.HttpClient
 import java.time.Duration
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("voucher-pool-test")
+@Import(VoucherPoolTestKeyMaterialConfiguration::class)
 @Execution(ExecutionMode.SAME_THREAD)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @Suppress("UnnecessaryAbstractClass") // Shared JUnit fixture must not be discovered as a concrete test class.
@@ -42,6 +47,8 @@ internal abstract class AbstractVoucherPoolIntegrationTest {
             registry.add("spring.datasource.username") { postgres.username ?: PostgreSQLServer.USERNAME }
             registry.add("spring.datasource.password") { postgres.password ?: PostgreSQLServer.PASSWORD }
             registry.add("management.server.port") { 0 }
+            registry.add("workshop.voucher-pool.http.operator-secret") { "test-operator-secret-0000000000000001" }
+            registry.add("workshop.voucher-pool.http.operator-guard") { "test-voucher-pool-operator-guard" }
         }
     }
 }

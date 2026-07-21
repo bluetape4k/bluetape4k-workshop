@@ -53,7 +53,7 @@ internal class DatabasePermitGateTest {
 
         gate.snapshot().capacities shouldBeEqualTo
             mapOf(
-                PermitLane.FOREGROUND to 12,
+                PermitLane.FOREGROUND to 11,
                 PermitLane.WORKER to 1,
                 PermitLane.SSE to 3,
             )
@@ -217,7 +217,7 @@ internal class DatabasePermitGateTest {
 
     private fun gate(workerWaitSeconds: Int = 1): DatabasePermitGate =
         DatabasePermitGate(
-            hikariMaximumPoolSize = 3,
+            hikariMaximumPoolSize = 4,
             configs =
                 mapOf(
                     PermitLane.FOREGROUND to PermitLaneConfig(1, 25.milliseconds),

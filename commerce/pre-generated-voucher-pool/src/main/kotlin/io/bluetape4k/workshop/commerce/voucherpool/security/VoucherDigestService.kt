@@ -84,6 +84,7 @@ internal class VoucherKeyMaterialUnavailableException :
     IllegalStateException("required voucher key material is unavailable")
 
 /** Computes purpose-separated, versioned HMAC-SHA256 digests over canonical length-prefixed fields. */
+@Suppress("TooManyFunctions") // One cohesive facade keeps every digest purpose behind the same key boundary.
 internal class VoucherDigestService(
     private val stableDedupKey: DigestKey,
     private val commandTombstoneKey: DigestKey,
@@ -93,6 +94,8 @@ internal class VoucherDigestService(
 
     /** Fixed tenant-lifetime command digest authority version; key material remains encapsulated. */
     val commandTombstoneKeyVersion: Int get() = commandTombstoneKey.version
+    val currentUserIdentityKeyVersion: Int
+        get() = checkNotNull(rotatingKeys[DigestPurpose.USER_IDENTITY]).current.version
 
     init {
         require(rotatingKeys.keys == ROTATING_PURPOSES) {
@@ -132,7 +135,21 @@ internal class VoucherDigestService(
     )
 
     fun userIdentity(tenantId: String, campaignId: UUID, canonicalUser: String): VoucherDigest =
-        rotatingDigest(DigestPurpose.USER_IDENTITY, tenantId.bytes(), campaignId.bytes(), canonicalUser.bytes())
+        userIdentity(tenantId, campaignId, canonicalUser, currentUserIdentityKeyVersion)
+
+    fun userIdentity(
+        tenantId: String,
+        campaignId: UUID,
+        canonicalUser: String,
+        keyVersion: Int,
+    ): VoucherDigest =
+        digestWithKey(
+            DigestPurpose.USER_IDENTITY,
+            checkNotNull(rotatingKeys[DigestPurpose.USER_IDENTITY]).require(keyVersion),
+            tenantId.bytes(),
+            campaignId.bytes(),
+            canonicalUser.bytes(),
+        )
 
     fun commandTombstone(tenantId: String, operation: String, rawIdempotencyKey: String): VoucherDigest =
         digestWithKey(
@@ -154,6 +171,19 @@ internal class VoucherDigestService(
 
     fun audit(tenantId: String, operation: String, requestMaterial: String): VoucherDigest =
         rotatingDigest(DigestPurpose.AUDIT, tenantId.bytes(), operation.bytes(), requestMaterial.bytes())
+
+    fun matchesAudit(
+        tenantId: String,
+        operation: String,
+        requestMaterial: String,
+        expected: VoucherDigest,
+    ): Boolean = matches(
+        DigestPurpose.AUDIT,
+        expected,
+        tenantId.bytes(),
+        operation.bytes(),
+        requestMaterial.bytes(),
+    )
 
     fun matchesStableDedup(tenantId: String, code: CanonicalVoucherCode, expected: VoucherDigest): Boolean {
         if (expected.purpose != DigestPurpose.STABLE_DEDUP) return false

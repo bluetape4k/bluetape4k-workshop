@@ -29,6 +29,7 @@ internal data class CampaignRecord(
     val reservationTtlSeconds: Long = 1,
     val allocationTtlSeconds: Long = 1,
     val replacementAllowance: Int = 0,
+    val userIdentityKeyVersion: Int,
     val policyVersion: Long,
     val revision: Long,
     val createdAt: Instant = Instant.EPOCH,

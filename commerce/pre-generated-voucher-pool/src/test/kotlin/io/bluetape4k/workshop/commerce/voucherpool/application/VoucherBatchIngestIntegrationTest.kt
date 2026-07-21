@@ -125,9 +125,9 @@ internal class VoucherBatchIngestIntegrationTest {
         second.acceptedCount shouldBeEqualTo 4
         (second.checkpointDigest == first.checkpointDigest) shouldBeEqualTo false
 
-        service.importChunk(import(fixture, 0, codes(0, 2))).applied().nextSourceOrdinal shouldBeEqualTo 4
+        service.importChunk(import(fixture, 0, codes(0, 2), second.revision)).applied().nextSourceOrdinal shouldBeEqualTo 4
         assertFailsWith<BatchCommandException> {
-            service.importChunk(import(fixture, 0, listOf("CHANGED-0", "CHANGED-1")))
+            service.importChunk(import(fixture, 0, listOf("CHANGED-0", "CHANGED-1"), second.revision))
         }.reason shouldBeEqualTo BatchCommandFailure.IDEMPOTENCY_FINGERPRINT_CONFLICT
         assertFailsWith<BatchCommandException> {
             service.importChunk(
@@ -138,6 +138,7 @@ internal class VoucherBatchIngestIntegrationTest {
                     0,
                     manifest("resume"),
                     listOf("CHANGED-0", "CHANGED-1"),
+                    second.revision,
                     key("changed-committed-chunk"),
                 ),
             )
@@ -176,6 +177,7 @@ internal class VoucherBatchIngestIntegrationTest {
             1,
             manifest("all-mutations"),
             listOf("ALL-1"),
+            batch.revision,
             key("chunk-all-mutations"),
         )
         val completed = service.importChunk(chunk).applied()
@@ -199,10 +201,148 @@ internal class VoucherBatchIngestIntegrationTest {
             0,
             manifest("all-mutations-generated"),
             1,
+            generatedBatch.revision,
             key("generate-all-mutations"),
         )
         val generated = service.generateChunk(generate).applied()
         service.generateChunk(generate).shouldReplay(generatedBatch.batchId, generated.revision, "BATCH_CHECKPOINTED")
+    }
+
+    @Test
+    fun `import expected revision participates in the idempotency fingerprint`() {
+        val fixture = campaignAndBatch("import-revision-fingerprint", expected = 2, initial = listOf("IMPORT-FP-0"))
+        val command = ImportChunkCommand(
+            TENANT,
+            fixture.batch.batchId,
+            fixture.campaign.campaignId,
+            1,
+            manifest("import-revision-fingerprint"),
+            listOf("IMPORT-FP-1"),
+            fixture.batch.revision,
+            key("import-revision-fingerprint"),
+        )
+        val applied = service.importChunk(command).applied()
+
+        assertFailsWith<BatchCommandException> {
+            service.importChunk(
+                ImportChunkCommand(
+                    command.tenantId,
+                    command.batchId,
+                    command.campaignId,
+                    command.firstOrdinal,
+                    command.manifestDigest,
+                    command.codes,
+                    applied.revision,
+                    command.idempotencyKey,
+                ),
+            )
+        }.reason shouldBeEqualTo BatchCommandFailure.IDEMPOTENCY_FINGERPRINT_CONFLICT
+    }
+
+    @Test
+    fun `generation expected revision participates in the idempotency fingerprint`() {
+        val campaign = createCampaign("generate-revision-fingerprint")
+        val batch = createBatch(
+            campaign,
+            "generate-revision-fingerprint",
+            expected = 1,
+            initial = emptyList(),
+            sourceKind = BatchSourceKind.GENERATED,
+        )
+        val command = GenerateChunkCommand(
+            TENANT,
+            batch.batchId,
+            campaign.campaignId,
+            0,
+            manifest("generate-revision-fingerprint"),
+            1,
+            batch.revision,
+            key("generate-revision-fingerprint"),
+        )
+        val applied = service.generateChunk(command).applied()
+
+        assertFailsWith<BatchCommandException> {
+            service.generateChunk(command.copy(expectedRevision = applied.revision))
+        }.reason shouldBeEqualTo BatchCommandFailure.IDEMPOTENCY_FINGERPRINT_CONFLICT
+    }
+
+    @Test
+    fun `same import revision admits one concurrent chunk and rejects the other as stale`() {
+        val fixture = campaignAndBatch("concurrent-import-revision", expected = 3, initial = listOf("IMPORT-INITIAL"))
+        val commands = listOf(
+            ImportChunkCommand(
+                TENANT,
+                fixture.batch.batchId,
+                fixture.campaign.campaignId,
+                1,
+                manifest("concurrent-import-revision"),
+                listOf("IMPORT-WINNER-A"),
+                fixture.batch.revision,
+                key("concurrent-import-revision-a"),
+            ),
+            ImportChunkCommand(
+                TENANT,
+                fixture.batch.batchId,
+                fixture.campaign.campaignId,
+                1,
+                manifest("concurrent-import-revision"),
+                listOf("IMPORT-WINNER-B"),
+                fixture.batch.revision,
+                key("concurrent-import-revision-b"),
+            ),
+        )
+
+        val outcomes = executeConcurrently(commands) { service.importChunk(it).applied() }
+
+        outcomes.filterIsInstance<BatchSnapshot>().size shouldBeEqualTo 1
+        outcomes.count { it == BatchCommandFailure.STALE_REVISION } shouldBeEqualTo 1
+        val stored = batchRow(fixture.batch.batchId)
+        stored.revision shouldBeEqualTo fixture.batch.revision + 1
+        stored.nextSourceOrdinal shouldBeEqualTo 2
+        entryCount(fixture.batch.batchId) shouldBeEqualTo 2
+    }
+
+    @Test
+    fun `same generation revision admits one concurrent chunk and rejects the other as stale`() {
+        val campaign = createCampaign("concurrent-generate-revision")
+        val batch = createBatch(
+            campaign,
+            "concurrent-generate-revision",
+            expected = 3,
+            initial = emptyList(),
+            sourceKind = BatchSourceKind.GENERATED,
+        )
+        val commands = listOf(
+            GenerateChunkCommand(
+                TENANT,
+                batch.batchId,
+                campaign.campaignId,
+                0,
+                manifest("concurrent-generate-revision"),
+                1,
+                batch.revision,
+                key("concurrent-generate-revision-a"),
+            ),
+            GenerateChunkCommand(
+                TENANT,
+                batch.batchId,
+                campaign.campaignId,
+                0,
+                manifest("concurrent-generate-revision"),
+                2,
+                batch.revision,
+                key("concurrent-generate-revision-b"),
+            ),
+        )
+
+        val outcomes = executeConcurrently(commands) { service.generateChunk(it).applied() }
+
+        outcomes.filterIsInstance<BatchSnapshot>().size shouldBeEqualTo 1
+        outcomes.count { it == BatchCommandFailure.STALE_REVISION } shouldBeEqualTo 1
+        val stored = batchRow(batch.batchId)
+        stored.revision shouldBeEqualTo batch.revision + 1
+        stored.nextSourceOrdinal shouldBeEqualTo stored.acceptedCount
+        entryCount(batch.batchId) shouldBeEqualTo stored.acceptedCount
     }
 
     @Test
@@ -366,6 +506,7 @@ internal class VoucherBatchIngestIntegrationTest {
             1,
             manifest("crypto-rejection"),
             listOf(rawSecret),
+            before.revision,
             key("crypto-rejection-chunk"),
         )
 
@@ -420,7 +561,16 @@ internal class VoucherBatchIngestIntegrationTest {
 
         val failure = assertFailsWith<BatchCommandException> {
             service.importChunk(
-                ImportChunkCommand(TENANT, batch.batchId, campaign.campaignId, 1, manifest("duplicate-b"), listOf("GLOBAL-CODE"), key("duplicate-code")),
+                ImportChunkCommand(
+                    TENANT,
+                    batch.batchId,
+                    campaign.campaignId,
+                    1,
+                    manifest("duplicate-b"),
+                    listOf("GLOBAL-CODE"),
+                    batch.revision,
+                    key("duplicate-code"),
+                ),
             )
         }
         failure.reason shouldBeEqualTo BatchCommandFailure.DUPLICATE_CODE
@@ -570,6 +720,7 @@ internal class VoucherBatchIngestIntegrationTest {
                     1,
                     manifest("nonce-collision"),
                     listOf("NONCE-1"),
+                    fixture.batch.revision,
                     key("nonce-collision-chunk"),
                 ),
             )
@@ -587,6 +738,7 @@ internal class VoucherBatchIngestIntegrationTest {
             1,
             manifest("unknown-integrity"),
             listOf("UNKNOWN-1"),
+            unknown.batch.revision,
             key("unknown-integrity-chunk"),
         )
         val failure = assertFailsWith<RuntimeException> { service.importChunk(unknownCommand) }
@@ -616,11 +768,33 @@ internal class VoucherBatchIngestIntegrationTest {
         )
         installOrdinalFailureTrigger(1)
         assertFailsWith<RuntimeException> {
-            service.generateChunk(GenerateChunkCommand(TENANT, batch.batchId, campaign.campaignId, 0, manifest("generated"), 2, key("generate-0")))
+            service.generateChunk(
+                GenerateChunkCommand(
+                    TENANT,
+                    batch.batchId,
+                    campaign.campaignId,
+                    0,
+                    manifest("generated"),
+                    2,
+                    batch.revision,
+                    key("generate-0"),
+                ),
+            )
         }
         dropOrdinalFailureTrigger()
 
-        service.generateChunk(GenerateChunkCommand(TENANT, batch.batchId, campaign.campaignId, 0, manifest("generated"), 2, key("generate-0"))).applied()
+        service.generateChunk(
+            GenerateChunkCommand(
+                TENANT,
+                batch.batchId,
+                campaign.campaignId,
+                0,
+                manifest("generated"),
+                2,
+                batch.revision,
+                key("generate-0"),
+            ),
+        ).applied()
         entryCount(batch.batchId) shouldBeEqualTo 2
         rawStorageContains("GEN-A") shouldBeEqualTo false
         rawStorageContains("GEN-C") shouldBeEqualTo false
@@ -654,7 +828,7 @@ internal class VoucherBatchIngestIntegrationTest {
         val fixture = campaignAndBatch("ten-thousand", expected = 10_000, initial = codes(0, 500))
         var snapshot = fixture.batch
         for (start in 500 until 10_000 step 500) {
-            snapshot = service.importChunk(import(fixture, start.toLong(), codes(start, 500))).applied()
+            snapshot = service.importChunk(import(fixture, start.toLong(), codes(start, 500), snapshot.revision)).applied()
         }
 
         snapshot.nextSourceOrdinal shouldBeEqualTo 10_000
@@ -719,13 +893,19 @@ internal class VoucherBatchIngestIntegrationTest {
             idempotencyKey = key("create-batch-$suffix"),
         )
 
-    private fun import(fixture: Fixture, firstOrdinal: Long, codes: List<String>) = ImportChunkCommand(
+    private fun import(
+        fixture: Fixture,
+        firstOrdinal: Long,
+        codes: List<String>,
+        expectedRevision: Long = fixture.batch.revision,
+    ) = ImportChunkCommand(
         TENANT,
         fixture.batch.batchId,
         fixture.campaign.campaignId,
         firstOrdinal,
         manifest(fixtureSuffix(fixture)),
         codes,
+        expectedRevision,
         key("import-${fixtureSuffix(fixture)}-$firstOrdinal"),
     )
 
@@ -902,6 +1082,25 @@ internal class VoucherBatchIngestIntegrationTest {
         replay.descriptor.effectId shouldBeEqualTo effectId
         replay.descriptor.revision shouldBeEqualTo revision
         replay.descriptor.outcome shouldBeEqualTo outcome
+    }
+
+    private fun <T> executeConcurrently(commands: List<T>, action: (T) -> BatchSnapshot): List<Any> {
+        val pool = Executors.newFixedThreadPool(commands.size)
+        val start = CyclicBarrier(commands.size)
+        return try {
+            commands.map { command ->
+                pool.submit<Any> {
+                    start.await(10, TimeUnit.SECONDS)
+                    try {
+                        action(command)
+                    } catch (failure: BatchCommandException) {
+                        failure.reason
+                    }
+                }
+            }.map { it.get(15, TimeUnit.SECONDS) }
+        } finally {
+            pool.shutdownNow()
+        }
     }
 
     private fun adminConnection(): Connection = DriverManager.getConnection(

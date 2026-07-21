@@ -52,7 +52,7 @@ internal class VoucherPoolMigrationRunnerTest {
         runner.migrate() shouldBeEqualTo VoucherPoolMigrationResult.ALREADY_APPLIED
         queryLong(
             """SELECT count(*) FROM information_schema.tables WHERE table_schema='$schema' AND table_name LIKE 'voucher_pool_%'""",
-        ) shouldBeEqualTo 15L
+        ) shouldBeEqualTo 16L
         dataSource.connection.use { connection ->
             connection.prepareStatement("UPDATE voucher_pool_schema_history SET checksum='drift' WHERE version='001'").executeUpdate()
         }

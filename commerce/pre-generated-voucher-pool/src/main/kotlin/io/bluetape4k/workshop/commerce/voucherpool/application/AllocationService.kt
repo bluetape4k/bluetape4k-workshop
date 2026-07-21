@@ -23,6 +23,7 @@ import io.bluetape4k.workshop.commerce.voucherpool.security.EntryIdentity
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherCryptoStorage
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherCryptoStorageOutcome
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigestService
+import java.sql.Connection
 import java.time.Instant
 import java.util.UUID
 
@@ -122,7 +123,7 @@ internal class JdbcAllocationService(
             LIFECYCLE_HTTP_OK,
             LifecycleLane.FOREGROUND,
         ) { connection, _ ->
-            val userDigest = digests.userIdentity(command.tenantId, command.campaignId, command.canonicalUser)
+            val userDigest = userIdentity(connection, command.tenantId, command.campaignId, command.canonicalUser)
             val chain = repository.lockReservationChain(
                 connection, command.tenantId, command.reservationId, userDigest.copyBytes(),
             ) ?: fail(VoucherPoolErrorCode.WRONG_OWNER)
@@ -203,7 +204,7 @@ internal class JdbcAllocationService(
             LIFECYCLE_HTTP_OK,
             LifecycleLane.FOREGROUND,
         ) { connection, _ ->
-            val digest = digests.userIdentity(command.tenantId, command.campaignId, command.canonicalUser)
+            val digest = userIdentity(connection, command.tenantId, command.campaignId, command.canonicalUser)
             val chain = repository.lockAllocationChain(connection, command.tenantId, command.allocationId, digest.copyBytes())
                 ?: fail(VoucherPoolErrorCode.WRONG_OWNER)
             requireCampaignUsable(chain.campaign.state)
@@ -288,7 +289,7 @@ internal class JdbcAllocationService(
             LIFECYCLE_HTTP_CREATED,
             LifecycleLane.FOREGROUND,
         ) { connection, owner ->
-            val digest = digests.userIdentity(command.tenantId, command.campaignId, command.canonicalUser)
+            val digest = userIdentity(connection, command.tenantId, command.campaignId, command.canonicalUser)
             val chain = repository.lockReplacementChain(
                 connection, command.tenantId, command.allocationId, digest.copyBytes(),
             ) ?: fail(VoucherPoolErrorCode.WRONG_OWNER)
@@ -299,7 +300,8 @@ internal class JdbcAllocationService(
                     original.allocation.allocationId,
                     original.allocation.revision,
                 )
-            }
+    }
+
             if (original.allocation.revision != command.expectedRevision) fail(VoucherPoolErrorCode.STALE_REVISION)
             requireCampaignUsable(original.campaign.state)
             requireBatchUsable(original.batch.state)
@@ -356,6 +358,15 @@ internal class JdbcAllocationService(
             )
             replacement.snapshot()
         }
+
+    private fun userIdentity(connection: Connection, tenantId: String, campaignId: UUID, canonicalUser: String) =
+        digests.userIdentity(
+            tenantId,
+            campaignId,
+            canonicalUser,
+            repository.userIdentityKeyVersion(connection, tenantId, campaignId)
+                ?: fail(VoucherPoolErrorCode.WRONG_OWNER),
+        )
 }
 
 private fun requireCurrentPolicy(reservation: ReservationRecord, campaignPolicyVersion: Long) {

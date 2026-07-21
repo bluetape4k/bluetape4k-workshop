@@ -5,6 +5,7 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcMetrics
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolLockTimeoutApplier
+import io.bluetape4k.workshop.commerce.voucherpool.web.VoucherPoolHttpProperties
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.springframework.transaction.PlatformTransactionManager
@@ -19,7 +20,7 @@ internal class VoucherPoolConfigurationTest {
         HikariDataSource().use { dataSource ->
             dataSource.maximumPoolSize = 16
             dataSource.connectionTimeout = 4_321
-            val properties = VoucherPoolProperties()
+            val properties = testProperties()
 
             val gate = configuration.databasePermitGate(dataSource, properties)
             val timeouts = configuration.voucherPoolJdbcTimeouts(dataSource, properties)
@@ -32,7 +33,7 @@ internal class VoucherPoolConfigurationTest {
                     timeouts = timeouts,
                 )
 
-            gate.snapshot().capacities.values.sum() shouldBeEqualTo dataSource.maximumPoolSize
+            gate.snapshot().capacities.values.sum() shouldBeEqualTo dataSource.maximumPoolSize - 1
             executor.timeouts.connectionAcquisition shouldBeEqualTo Duration.ofMillis(4_321)
         }
     }
@@ -43,9 +44,45 @@ internal class VoucherPoolConfigurationTest {
             dataSource.maximumPoolSize = 15
 
             assertFailsWith<IllegalArgumentException> {
-                configuration.databasePermitGate(dataSource, VoucherPoolProperties())
+                configuration.databasePermitGate(dataSource, testProperties())
             }
         }
+    }
+
+    @Test
+    fun `SSE database properties map to JDBC transaction and lock timeouts`() {
+        HikariDataSource().use { dataSource ->
+            dataSource.maximumPoolSize = 16
+            val properties =
+                VoucherPoolProperties(
+                    http = testHttpProperties(),
+                    database =
+                        VoucherPoolDatabaseProperties(
+                            sse =
+                                VoucherPoolLaneProperties(
+                                    capacity = 3,
+                                    permitWait = Duration.ofSeconds(1),
+                                    transactionTimeout = Duration.ofSeconds(7),
+                                    lockTimeout = Duration.ofSeconds(3),
+                                ),
+                        ),
+                )
+
+            val timeouts = configuration.voucherPoolJdbcTimeouts(dataSource, properties)
+
+            timeouts.sseTransaction shouldBeEqualTo Duration.ofSeconds(7)
+            timeouts.sseLock shouldBeEqualTo Duration.ofSeconds(3)
+        }
+    }
+
+    @Test
+    fun `configuration representations redact operator credentials`() {
+        val properties = testProperties()
+
+        properties.http.toString().contains("test-operator-secret") shouldBeEqualTo false
+        properties.http.toString().contains("test-voucher-pool-operator-guard") shouldBeEqualTo false
+        properties.toString().contains("test-operator-secret") shouldBeEqualTo false
+        properties.toString().contains("test-voucher-pool-operator-guard") shouldBeEqualTo false
     }
 
     @Test
@@ -54,11 +91,19 @@ internal class VoucherPoolConfigurationTest {
 
         val failure =
             assertFailsWith<IllegalStateException> {
-                configuration.databasePermitGate(dataSource, VoucherPoolProperties())
+                configuration.databasePermitGate(dataSource, testProperties())
             }
 
         failure.message shouldBeEqualTo
             "pre-generated-voucher-pool requires HikariDataSource so the live pool size and connection timeout " +
             "remain authoritative"
     }
+
+    private fun testProperties(): VoucherPoolProperties = VoucherPoolProperties(http = testHttpProperties())
+
+    private fun testHttpProperties(): VoucherPoolHttpProperties =
+        VoucherPoolHttpProperties(
+            operatorSecret = "test-operator-secret-0000000000000001",
+            operatorGuard = "test-voucher-pool-operator-guard",
+        )
 }

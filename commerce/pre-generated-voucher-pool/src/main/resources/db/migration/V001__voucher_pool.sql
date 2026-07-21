@@ -8,6 +8,7 @@ CREATE TABLE voucher_pool_campaigns (
     reservation_ttl_seconds BIGINT NOT NULL DEFAULT 300 CHECK (reservation_ttl_seconds > 0),
     allocation_ttl_seconds BIGINT NOT NULL DEFAULT 3600 CHECK (allocation_ttl_seconds > 0),
     replacement_allowance INTEGER NOT NULL DEFAULT 1 CHECK (replacement_allowance BETWEEN 0 AND 1),
+    user_identity_key_version INTEGER NOT NULL CHECK (user_identity_key_version > 0),
     policy_version BIGINT NOT NULL CHECK (policy_version > 0),
     revision BIGINT NOT NULL DEFAULT 0 CHECK (revision >= 0),
     created_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
@@ -164,6 +165,8 @@ CREATE UNIQUE INDEX uq_voucher_pool_replacement_reservation
     ON voucher_pool_reservations(tenant_id,campaign_id,user_digest,entitlement_root_id,replacement_ordinal)
     WHERE entitlement_root_id IS NOT NULL;
 CREATE INDEX ix_voucher_pool_reservation_cursor ON voucher_pool_reservations(tenant_id,state,reservation_expires_at,reservation_id);
+CREATE INDEX ix_voucher_pool_reservation_owner
+    ON voucher_pool_reservations(tenant_id,campaign_id,user_digest,reservation_expires_at,reservation_id);
 
 CREATE TABLE voucher_pool_user_limits (
     tenant_id VARCHAR(64) NOT NULL,
@@ -202,6 +205,8 @@ CREATE TABLE voucher_pool_allocations (
 );
 CREATE UNIQUE INDEX uq_voucher_pool_allocation_entry ON voucher_pool_allocations(tenant_id,entry_id);
 CREATE INDEX ix_voucher_pool_allocation_cursor ON voucher_pool_allocations(tenant_id,allocation_expires_at,allocation_id);
+CREATE INDEX ix_voucher_pool_allocation_owner
+    ON voucher_pool_allocations(tenant_id,campaign_id,user_digest,allocation_expires_at,allocation_id);
 
 CREATE FUNCTION voucher_pool_require_original_entitlement() RETURNS trigger
 LANGUAGE plpgsql AS $$
@@ -337,6 +342,7 @@ CREATE TABLE voucher_pool_audits (
     CHECK (before_count IS NULL OR (before_count>=0 AND after_count>=0))
 );
 CREATE INDEX ix_voucher_pool_audit_cursor ON voucher_pool_audits(tenant_id,campaign_id,id);
+CREATE INDEX ix_voucher_pool_audit_tenant_cursor ON voucher_pool_audits(tenant_id,id);
 
 CREATE FUNCTION voucher_pool_reject_audit_mutation() RETURNS trigger
 LANGUAGE plpgsql AS $$
@@ -373,6 +379,21 @@ CREATE TABLE voucher_pool_quarantines (
 );
 CREATE INDEX ix_voucher_pool_quarantine_active ON voucher_pool_quarantines(detected_at,tenant_id,entry_id) WHERE resolved_at IS NULL;
 
+CREATE TABLE voucher_pool_revoke_preview_grants (
+    tenant_id VARCHAR(64) NOT NULL, grant_id UUID NOT NULL,
+    aggregate_type VARCHAR(16) NOT NULL, aggregate_id UUID NOT NULL,
+    aggregate_revision BIGINT NOT NULL CHECK(aggregate_revision>=0),
+    impact_digest BYTEA NOT NULL, affected_count BIGINT NOT NULL CHECK(affected_count>=0),
+    signature_key_version INTEGER NOT NULL CHECK(signature_key_version>0), signature_digest BYTEA NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL, consumed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
+    PRIMARY KEY(tenant_id,grant_id),
+    CHECK (aggregate_type IN ('CAMPAIGN','BATCH')),
+    CHECK (expires_at>created_at), CHECK (consumed_at IS NULL OR consumed_at>=created_at)
+);
+CREATE INDEX ix_voucher_pool_revoke_preview_scope
+    ON voucher_pool_revoke_preview_grants(tenant_id,aggregate_type,aggregate_id,expires_at);
+
 CREATE TABLE voucher_pool_worker_claims (
     tenant_id VARCHAR(64) NOT NULL, worker_type VARCHAR(32) NOT NULL, scope_id UUID NOT NULL,
     owner_id VARCHAR(128), claim_until TIMESTAMPTZ, cursor BIGINT NOT NULL DEFAULT 0 CHECK(cursor>=0),
@@ -380,7 +401,7 @@ CREATE TABLE voucher_pool_worker_claims (
     next_attempt_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
     checkpoint BIGINT NOT NULL DEFAULT 0 CHECK(checkpoint>=0), poison_reason VARCHAR(64),
     revision BIGINT NOT NULL DEFAULT 0 CHECK(revision>=0), PRIMARY KEY(tenant_id,worker_type,scope_id),
-    CHECK (worker_type IN ('RESERVATION_EXPIRY','ALLOCATION_EXPIRY','BATCH_REVOKE','BATCH_EXPIRY','RECONCILIATION','PURGE')),
+    CHECK (worker_type IN ('RESERVATION_EXPIRY','ALLOCATION_EXPIRY','CAMPAIGN_REVOKE','BATCH_REVOKE','BATCH_EXPIRY','RECONCILIATION','PURGE')),
     CHECK ((owner_id IS NULL)=(claim_until IS NULL)),
     CHECK (poison_reason IS NULL OR attempt > 0)
 );

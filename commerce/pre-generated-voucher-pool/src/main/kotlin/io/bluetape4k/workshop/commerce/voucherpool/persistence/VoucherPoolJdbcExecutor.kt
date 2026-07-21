@@ -20,9 +20,11 @@ private const val DEFAULT_CONNECTION_ACQUISITION_TIMEOUT_SECONDS = 2L
 private const val DEFAULT_FOREGROUND_TRANSACTION_TIMEOUT_SECONDS = 5L
 private const val DEFAULT_OPERATOR_TRANSACTION_TIMEOUT_SECONDS = 5L
 private const val DEFAULT_WORKER_TRANSACTION_TIMEOUT_SECONDS = 10L
+private const val DEFAULT_SSE_TRANSACTION_TIMEOUT_SECONDS = 5L
 private const val DEFAULT_FOREGROUND_LOCK_TIMEOUT_SECONDS = 5L
 private const val DEFAULT_OPERATOR_LOCK_TIMEOUT_SECONDS = 5L
 private const val DEFAULT_WORKER_LOCK_TIMEOUT_SECONDS = 10L
+private const val DEFAULT_SSE_LOCK_TIMEOUT_SECONDS = 5L
 private const val MILLIS_PER_SECOND = 1_000L
 private const val MILLIS_CEILING_OFFSET = MILLIS_PER_SECOND - 1L
 private const val MINIMUM_TIMEOUT_SECONDS = 1L
@@ -64,6 +66,7 @@ internal enum class JdbcExecutionLane {
     FOREGROUND,
     OPERATOR,
     WORKER,
+    SSE,
 }
 
 internal enum class JdbcTimeoutPhase {
@@ -78,9 +81,11 @@ internal data class VoucherPoolJdbcTimeouts(
     val foregroundTransaction: Duration = Duration.ofSeconds(DEFAULT_FOREGROUND_TRANSACTION_TIMEOUT_SECONDS),
     val operatorTransaction: Duration = Duration.ofSeconds(DEFAULT_OPERATOR_TRANSACTION_TIMEOUT_SECONDS),
     val workerChunkTransaction: Duration = Duration.ofSeconds(DEFAULT_WORKER_TRANSACTION_TIMEOUT_SECONDS),
+    val sseTransaction: Duration = Duration.ofSeconds(DEFAULT_SSE_TRANSACTION_TIMEOUT_SECONDS),
     val foregroundLock: Duration = Duration.ofSeconds(DEFAULT_FOREGROUND_LOCK_TIMEOUT_SECONDS),
     val operatorLock: Duration = Duration.ofSeconds(DEFAULT_OPERATOR_LOCK_TIMEOUT_SECONDS),
     val workerLock: Duration = Duration.ofSeconds(DEFAULT_WORKER_LOCK_TIMEOUT_SECONDS),
+    val sseLock: Duration = Duration.ofSeconds(DEFAULT_SSE_LOCK_TIMEOUT_SECONDS),
 ) {
     init {
         require(
@@ -89,12 +94,14 @@ internal data class VoucherPoolJdbcTimeouts(
                 foregroundTransaction,
                 operatorTransaction,
                 workerChunkTransaction,
+                sseTransaction,
                 foregroundLock,
                 operatorLock,
                 workerLock,
+                sseLock,
             ).all { !it.isNegative && !it.isZero },
         ) { "JDBC timeouts must be positive" }
-        require(listOf(foregroundLock, operatorLock, workerLock).all { it.toMillis() >= 1L }) {
+        require(listOf(foregroundLock, operatorLock, workerLock, sseLock).all { it.toMillis() >= 1L }) {
             "JDBC lock timeouts must be at least one millisecond"
         }
     }
@@ -104,6 +111,7 @@ internal data class VoucherPoolJdbcTimeouts(
             JdbcExecutionLane.FOREGROUND -> foregroundTransaction
             JdbcExecutionLane.OPERATOR -> operatorTransaction
             JdbcExecutionLane.WORKER -> workerChunkTransaction
+            JdbcExecutionLane.SSE -> sseTransaction
         }
 
     fun lockTimeout(lane: JdbcExecutionLane): Duration =
@@ -111,6 +119,7 @@ internal data class VoucherPoolJdbcTimeouts(
             JdbcExecutionLane.FOREGROUND -> foregroundLock
             JdbcExecutionLane.OPERATOR -> operatorLock
             JdbcExecutionLane.WORKER -> workerLock
+            JdbcExecutionLane.SSE -> sseLock
         }
 }
 
@@ -152,6 +161,8 @@ internal class VoucherPoolJdbcExecutor(
     fun <T> operatorTransaction(block: () -> T): T = execute(JdbcExecutionLane.OPERATOR, block)
 
     fun <T> workerTransaction(block: () -> T): T = execute(JdbcExecutionLane.WORKER, block)
+
+    fun <T> sseTransaction(block: () -> T): T = execute(JdbcExecutionLane.SSE, block)
 
     fun afterCommit(action: () -> Unit) {
         check(TransactionSynchronizationManager.isSynchronizationActive()) {
@@ -202,6 +213,7 @@ internal class VoucherPoolJdbcExecutor(
             -> gate.withForegroundPermit(block)
 
             JdbcExecutionLane.WORKER -> gate.withWorkerPermit(block)
+            JdbcExecutionLane.SSE -> gate.withSsePermit(block)
         }
 
     private fun timeoutFailure(

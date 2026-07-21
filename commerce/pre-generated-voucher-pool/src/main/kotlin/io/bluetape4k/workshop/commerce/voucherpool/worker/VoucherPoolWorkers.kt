@@ -58,7 +58,6 @@ internal interface VoucherPoolWorkers {
         request: WorkerRunRequest,
         continueRunning: () -> Boolean = { !Thread.currentThread().isInterrupted },
     ): WorkerRunOutcome
-    fun beginCampaignRevocation(tenantId: String, campaignId: UUID): List<UUID>
     fun completeCampaignRevocation(tenantId: String, campaignId: UUID): Boolean
 }
 
@@ -115,10 +114,10 @@ internal class JdbcVoucherPoolWorkers(
         require(claim.kind != WorkerKind.PURGE) { "purge retention belongs to Task 12" }
         val limit = requestedLimit.coerceAtMost(maximumLimit(claim.kind))
         require(limit > 0)
-        return if (claim.kind == WorkerKind.RECONCILIATION) {
-            runReconciliation(claim, limit)
-        } else {
-            runEntryChunk(claim, limit)
+        return when (claim.kind) {
+            WorkerKind.RECONCILIATION -> runReconciliation(claim, limit)
+            WorkerKind.CAMPAIGN_REVOKE -> runCampaignRevoke(claim, limit)
+            else -> runEntryChunk(claim, limit)
         }
     }
 
@@ -175,46 +174,36 @@ internal class JdbcVoucherPoolWorkers(
             reasonCode,
         )
 
-    override fun beginCampaignRevocation(tenantId: String, campaignId: UUID): List<UUID> =
-        executor.workerTransaction {
-            val connection = currentConnection()
-            val campaign = lockCampaignScope(connection, tenantId, campaignId)
-            if (campaign.state == CampaignState.REVOKED) return@workerTransaction emptyList()
-            if (campaign.state != CampaignState.REVOKING) {
-                check(campaign.state in setOf(CampaignState.DRAFT, CampaignState.ACTIVE, CampaignState.PAUSED))
-                updateCampaignState(connection, tenantId, campaignId, campaign.revision, CampaignState.REVOKING)
-                appendCampaignAudit(connection, tenantId, campaignId, campaign, CampaignState.REVOKING)
-            }
-            connection.prepareStatement(
-                """SELECT batch_id FROM voucher_pool_batches
-                    WHERE tenant_id=? AND campaign_id=? AND state NOT IN ('REVOKED','EXPIRED')
-                    ORDER BY batch_id""",
-            ).use { statement ->
-                statement.setString(1, tenantId)
-                statement.setObject(2, campaignId)
-                statement.executeQuery().use { result -> buildList { while (result.next()) add(result.getObject(1, UUID::class.java)) } }
-            }
-        }
-
     override fun completeCampaignRevocation(tenantId: String, campaignId: UUID): Boolean =
         executor.workerTransaction {
-            val connection = currentConnection()
-            val campaign = lockCampaignScope(connection, tenantId, campaignId)
-            if (campaign.state == CampaignState.REVOKED) return@workerTransaction true
-            check(campaign.state == CampaignState.REVOKING)
-            val remaining = connection.prepareStatement(
-                """SELECT count(*) FROM voucher_pool_batches
-                    WHERE tenant_id=? AND campaign_id=? AND state NOT IN ('REVOKED','EXPIRED')""",
-            ).use { statement ->
-                statement.setString(1, tenantId)
-                statement.setObject(2, campaignId)
-                statement.executeQuery().use { result -> result.next(); result.getLong(1) }
-            }
-            if (remaining != 0L) return@workerTransaction false
-            updateCampaignState(connection, tenantId, campaignId, campaign.revision, CampaignState.REVOKED)
-            appendCampaignAudit(connection, tenantId, campaignId, campaign, CampaignState.REVOKED)
-            true
+            completeCampaignRevocationInTransaction(currentConnection(), tenantId, campaignId)
         }
+
+    private fun runCampaignRevoke(claim: WorkerClaim, limit: Int): WorkerChunkOutcome = executor.workerTransaction {
+        val connection = currentConnection()
+        claims.requireCurrentInTransaction(connection, claim)
+        val campaign = lockCampaignScope(connection, claim.tenantId, claim.scopeId)
+        check(campaign.state in setOf(CampaignState.REVOKING, CampaignState.REVOKED))
+        if (campaign.state == CampaignState.REVOKED) {
+            claims.completeInTransaction(connection, claim)
+            return@workerTransaction WorkerChunkOutcome(null, 0, 0, completed = true)
+        }
+        val inserted = claims.ensureBatchRevokeClaimsForCampaignInTransaction(
+            connection,
+            claim.tenantId,
+            claim.scopeId,
+            limit,
+        )
+        val renewed = claims.checkpointInTransaction(connection, claim, claim.cursor + inserted)
+        val more = claims.hasUnscheduledBatchRevokesInTransaction(connection, claim.tenantId, claim.scopeId)
+        if (more) {
+            WorkerChunkOutcome(renewed, inserted, inserted, completed = false)
+        } else {
+            completeCampaignRevocationInTransaction(connection, claim.tenantId, claim.scopeId)
+            claims.completeInTransaction(connection, renewed)
+            WorkerChunkOutcome(null, inserted, inserted, completed = true)
+        }
+    }
 
     private fun runReconciliation(claim: WorkerClaim, limit: Int): WorkerChunkOutcome = executor.workerTransaction {
         val connection = currentConnection()
@@ -372,10 +361,41 @@ internal class JdbcVoucherPoolWorkers(
                     ),
                 )
             }
+            if (claim.kind == WorkerKind.BATCH_REVOKE) {
+                completeCampaignRevocationInTransaction(connection, claim.tenantId, scope.campaignId)
+            }
         }
         claims.completeInTransaction(connection, claim)
         WorkerChunkOutcome(null, 0, 0, completed = true)
     }
+
+    private fun completeCampaignRevocationInTransaction(
+        connection: Connection,
+        tenantId: String,
+        campaignId: UUID,
+    ): Boolean {
+        val campaign = lockCampaignScope(connection, tenantId, campaignId)
+        return when {
+            campaign.state == CampaignState.REVOKED -> true
+            campaign.state != CampaignState.REVOKING -> false
+            campaignRevocationRemaining(connection, tenantId, campaignId) != 0L -> false
+            else -> {
+                updateCampaignState(connection, tenantId, campaignId, campaign.revision, CampaignState.REVOKED)
+                appendCampaignAudit(connection, tenantId, campaignId, campaign, CampaignState.REVOKED)
+                true
+            }
+        }
+    }
+
+    private fun campaignRevocationRemaining(connection: Connection, tenantId: String, campaignId: UUID): Long =
+        connection.prepareStatement(
+            """SELECT count(*) FROM voucher_pool_batches
+                WHERE tenant_id=? AND campaign_id=? AND state NOT IN ('REVOKED','EXPIRED')""",
+        ).use { statement ->
+            statement.setString(1, tenantId)
+            statement.setObject(2, campaignId)
+            statement.executeQuery().use { result -> result.next(); result.getLong(1) }
+        }
 
     private fun lockBatchScope(connection: Connection, claim: WorkerClaim): LockedBatchScope {
         val campaignId = connection.prepareStatement(
@@ -624,7 +644,8 @@ internal class JdbcVoucherPoolWorkers(
         return WorkerEntryCandidate(authority, getLong("source_ordinal") + 1)
     }
 
-    private fun maximumLimit(kind: WorkerKind): Int = if (kind == WorkerKind.RECONCILIATION) 50 else 100
+    private fun maximumLimit(kind: WorkerKind): Int =
+        if (kind in setOf(WorkerKind.RECONCILIATION, WorkerKind.CAMPAIGN_REVOKE)) 50 else 100
 
     private fun currentConnection(): Connection =
         checkNotNull(TransactionManager.currentOrNull()?.connection?.connection as? Connection)

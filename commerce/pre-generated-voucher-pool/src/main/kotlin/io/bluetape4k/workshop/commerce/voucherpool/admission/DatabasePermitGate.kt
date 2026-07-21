@@ -14,10 +14,11 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-private const val DEFAULT_FOREGROUND_CAPACITY = 12
+private const val DEFAULT_FOREGROUND_CAPACITY = 11
 private const val DEFAULT_WORKER_CAPACITY = 1
 private const val DEFAULT_SSE_CAPACITY = 3
 private const val DEFAULT_FOREGROUND_WAIT_MILLIS = 250
+private const val RESERVED_UNGATED_CONNECTIONS = 1
 
 internal enum class PermitLane {
     FOREGROUND,
@@ -68,8 +69,9 @@ internal class DatabasePermitGate(
         require(this.configs.keys == PermitLane.entries.toSet()) { "all permit lanes must be configured" }
         require(this.configs.values.all { it.capacity > 0 }) { "permit capacities must be positive" }
         require(this.configs.values.all { it.wait > Duration.ZERO }) { "permit waits must be positive" }
-        require(this.configs.values.sumOf(PermitLaneConfig::capacity) <= hikariMaximumPoolSize) {
-            "permit capacity must not exceed the Hikari pool"
+        val admittedCapacity = hikariMaximumPoolSize - RESERVED_UNGATED_CONNECTIONS
+        require(this.configs.values.sumOf(PermitLaneConfig::capacity) <= admittedCapacity) {
+            "permit capacity must leave one Hikari connection for readiness and lifecycle probes"
         }
         permits = this.configs.mapValues { (_, config) -> Semaphore(config.capacity, true) }
     }
