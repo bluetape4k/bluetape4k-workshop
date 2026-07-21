@@ -84,6 +84,17 @@ internal class PurchaseServiceIntegrationTest {
                 DurableState(attempts = 1, guards = 2, held = 1, consumedGrants = 1, boundIdempotency = 1)
         }
     }
+
+    @Test
+    fun `owner query hides an attempt from another buyer`() {
+        PurchaseFixture().use { fixture ->
+            val command = fixture.command()
+            fixture.service.start(command)
+
+            fixture.service.owned(command.attemptId, command.buyerSubjectId)?.attemptId shouldBeEqualTo command.attemptId
+            fixture.service.owned(command.attemptId, UUID.randomUUID()) shouldBeEqualTo null
+        }
+    }
 }
 
 internal data class DurableState(
