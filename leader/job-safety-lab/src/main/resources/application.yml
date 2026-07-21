@@ -10,6 +10,12 @@ spring:
   transaction:
     default-timeout: 1s
 
+management:
+  datadog:
+    metrics:
+      export:
+        enabled: false
+
 workshop:
   job-safety:
     region: region-a

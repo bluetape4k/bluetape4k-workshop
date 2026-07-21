@@ -4,42 +4,33 @@ import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.leader.LeaderElector
 import io.bluetape4k.leader.lettuce.LettuceLeaderElector
 import io.bluetape4k.workshop.leader.jobsafety.coordination.FencingLeasePort
+import io.bluetape4k.workshop.leader.jobsafety.coordination.JobRunCoordinator
 import io.bluetape4k.workshop.leader.jobsafety.coordination.LeaderElectionPort
 import io.bluetape4k.workshop.leader.jobsafety.coordination.redis.RedisJobFencingLeaseAdapter
 import io.bluetape4k.workshop.leader.jobsafety.coordination.redis.RedisLeaderElectionAdapter
 import io.bluetape4k.workshop.leader.jobsafety.domain.NamespaceEpoch
+import io.bluetape4k.workshop.leader.jobsafety.effect.DeterministicExternalEffectAdapter
+import io.bluetape4k.workshop.leader.jobsafety.effect.EffectOperations
+import io.bluetape4k.workshop.leader.jobsafety.effect.ExternalEffectPort
+import io.bluetape4k.workshop.leader.jobsafety.effect.OutboxEffectWorker
+import io.bluetape4k.workshop.leader.jobsafety.execution.FencedJobExecutionService
+import io.bluetape4k.workshop.leader.jobsafety.persistence.JOB_SAFETY_TABLES
+import io.bluetape4k.workshop.leader.jobsafety.persistence.JobSafetyJdbcExecutor
+import io.bluetape4k.workshop.leader.jobsafety.persistence.JobSafetyRepositories
+import io.bluetape4k.workshop.leader.jobsafety.scenario.JobSafetyScenarioService
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.codec.StringCodec
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.boot.ApplicationRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import java.time.Duration
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import javax.sql.DataSource
 import kotlin.time.toKotlinDuration
-
-@ConfigurationProperties("workshop.job-safety")
-data class JobSafetyProperties(
-    val region: String = "region-a",
-    val namespaceEpoch: Long = 1L,
-    val timelineLimit: Int = 128,
-    val defaultTimeout: Duration = Duration.ofSeconds(1),
-    val fencing: Fencing = Fencing(),
-    val redis: Redis = Redis(),
-) {
-    data class Fencing(
-        val leaseTtl: Duration = Duration.ofSeconds(5),
-        val renewInterval: Duration = Duration.ofSeconds(2),
-    )
-
-    data class Redis(
-        val uri: String = "redis://localhost:6379",
-        val timeout: Duration = Duration.ofSeconds(1),
-    )
-}
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(JobSafetyProperties::class)
@@ -51,7 +42,9 @@ class JobSafetyConfiguration {
     @Bean(destroyMethod = "close")
     fun jobSafetyRedisConnection(
         @Qualifier("jobSafetyRedisClient") client: RedisClient,
-    ): StatefulRedisConnection<String, String> = client.connect(StringCodec.UTF8)
+        properties: JobSafetyProperties,
+    ): StatefulRedisConnection<String, String> =
+        client.connect(StringCodec.UTF8).also { it.setTimeout(properties.redis.commandTimeout) }
 
     @Bean
     fun jobSafetyLeaderElector(
@@ -86,4 +79,44 @@ class JobSafetyConfiguration {
             commands = connection.sync(),
             namespaceEpoch = NamespaceEpoch(properties.namespaceEpoch),
         )
+
+    @Bean
+    fun jobRunCoordinator(
+        leaderElection: LeaderElectionPort,
+        fencingLease: FencingLeasePort,
+        properties: JobSafetyProperties,
+    ): JobRunCoordinator = JobRunCoordinator(leaderElection, fencingLease, properties.fencing.leaseTtl)
+
+    @Bean
+    fun jobSafetyJdbcExecutor(dataSource: DataSource): JobSafetyJdbcExecutor = JobSafetyJdbcExecutor(dataSource)
+
+    @Bean
+    fun jobSafetyRepositories(jdbc: JobSafetyJdbcExecutor): JobSafetyRepositories = JobSafetyRepositories(jdbc)
+
+    @Bean
+    fun fencedJobExecutionService(
+        jdbc: JobSafetyJdbcExecutor,
+        repositories: JobSafetyRepositories,
+    ): FencedJobExecutionService = FencedJobExecutionService(jdbc, repositories)
+
+    @Bean
+    fun jobSafetyScenarioService(properties: JobSafetyProperties): JobSafetyScenarioService =
+        JobSafetyScenarioService(properties.timelineLimit)
+
+    @Bean
+    fun externalEffectPort(): ExternalEffectPort = DeterministicExternalEffectAdapter()
+
+    @Bean
+    fun effectOperations(
+        repositories: JobSafetyRepositories,
+        provider: ExternalEffectPort,
+    ): EffectOperations = OutboxEffectWorker(repositories.outbox, repositories.effectReceipt, provider)
+
+    @Bean
+    fun jobSafetySchemaInitializer(jdbc: JobSafetyJdbcExecutor): ApplicationRunner =
+        ApplicationRunner {
+            jdbc.transaction {
+                withExposed { SchemaUtils.createMissingTablesAndColumns(*JOB_SAFETY_TABLES) }
+            }
+        }
 }
