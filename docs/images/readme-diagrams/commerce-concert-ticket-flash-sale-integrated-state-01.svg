@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1040" viewBox="0 0 1600 1040">
+  <defs>
+    <style>.bg{fill:#f8fafc}.title{font:34px 'Architects Daughter','Comic Sans MS',cursive;fill:#18212f}.subtitle{font:17px 'Comic Mono','Courier New',monospace;fill:#64748b}.lane{fill:#fff;stroke:#cbd5e1;stroke-width:1.5}.lane-title{font:23px 'Architects Daughter','Comic Sans MS',cursive;fill:#334155}.card{fill:#fff;stroke:#cbd5e1;stroke-width:1.5}.card-title{font:18px 'Architects Daughter','Comic Sans MS',cursive;fill:#111827}.body{font:14px 'Comic Mono','Courier New',monospace;fill:#475569}.state{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}</style>
+    <marker id="stateArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb"/></marker>
+    <marker id="riskArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b45309"/></marker>
+  </defs>
+  <rect class="bg" width="1600" height="1040"/>
+  <text class="title" x="70" y="62">Integrated Sale, Purchase, Payment, and Ticket States</text>
+  <text class="subtitle" x="72" y="91">Customer action follows durable PostgreSQL state — never a guessed provider response.</text>
+
+  <rect class="lane" x="60" y="125" width="1480" height="190" rx="22" fill="#eff6ff"/>
+  <text class="lane-title" x="90" y="164">Sale lifecycle</text>
+  <rect class="card" x="150" y="205" width="190" height="70" rx="16"/><text class="card-title" x="198" y="247">DRAFT</text>
+  <rect class="card" x="420" y="205" width="190" height="70" rx="16"/><text class="card-title" x="451" y="247">SCHEDULED</text>
+  <rect class="card" x="690" y="205" width="190" height="70" rx="16" fill="#ecfdf5" stroke="#86efac"/><text class="card-title" x="752" y="247">OPEN</text>
+  <rect class="card" x="960" y="205" width="190" height="70" rx="16" fill="#fff7ed" stroke="#fdba74"/><text class="card-title" x="1002" y="247">SUSPENDED</text>
+  <rect class="card" x="1230" y="205" width="190" height="70" rx="16"/><text class="card-title" x="1284" y="247">CLOSED</text>
+  <path class="state" d="M340 240 H420" stroke="#2563eb" marker-end="url(#stateArrow)"/><path class="state" d="M610 240 H690" stroke="#2563eb" marker-end="url(#stateArrow)"/><path class="state" d="M880 240 H960" stroke="#b45309" marker-end="url(#riskArrow)"/><path class="state" d="M1150 240 H1230" stroke="#2563eb" marker-end="url(#stateArrow)"/>
+  <path class="state" d="M1055 205 V185 Q1055 175 1045 175 H795 Q785 175 785 185 V205" stroke="#2563eb" marker-end="url(#stateArrow)"/><text class="body" x="876" y="168">resume if healthy</text>
+
+  <rect class="lane" x="60" y="345" width="1480" height="340" rx="22" fill="#f0fdf4"/>
+  <text class="lane-title" x="90" y="384">Purchase and payment lifecycle</text>
+  <rect class="card" x="100" y="435" width="220" height="76" rx="16"/><text class="card-title" x="132" y="465">INVENTORY_HELD</text><text class="body" x="132" y="491">held + USER/IP guard</text>
+  <rect class="card" x="390" y="435" width="230" height="76" rx="16"/><text class="card-title" x="417" y="465">PAYMENT_AUTHORIZING</text><text class="body" x="417" y="491">stable operation ID</text>
+  <rect class="card" x="690" y="435" width="250" height="76" rx="16" fill="#fff7ed" stroke="#fdba74"/><text class="card-title" x="718" y="465">RECONCILIATION_REQUIRED</text><text class="body" x="718" y="491">lookup before retry</text>
+  <rect class="card" x="1010" y="435" width="200" height="76" rx="16" fill="#ecfdf5" stroke="#86efac"/><text class="card-title" x="1064" y="465">APPROVED</text><text class="body" x="1046" y="491">ticket issue allowed</text>
+  <rect class="card" x="1280" y="435" width="190" height="76" rx="16"/><text class="card-title" x="1325" y="465">DECLINED</text><text class="body" x="1310" y="491">release hold</text>
+  <path class="state" d="M320 473 H390" stroke="#2563eb" marker-end="url(#stateArrow)"/><path class="state" d="M620 473 H690" stroke="#b45309" marker-end="url(#riskArrow)"/><path class="state" d="M940 455 H1010" stroke="#2563eb" marker-end="url(#stateArrow)"/><path class="state" d="M940 493 H965 Q975 493 975 503 V525 Q975 535 985 535 H1365 Q1375 535 1375 525 V511" stroke="#2563eb" marker-end="url(#stateArrow)"/>
+  <rect class="card" x="390" y="565" width="230" height="76" rx="16" fill="#fff7ed" stroke="#fdba74"/><text class="card-title" x="407" y="595">CANCELLATION_REQUESTED</text><text class="body" x="424" y="621">wait for final lookup</text>
+  <rect class="card" x="690" y="565" width="250" height="76" rx="16" fill="#fff7ed" stroke="#fdba74"/><text class="card-title" x="738" y="595">REFUND_PENDING</text><text class="body" x="722" y="621">late approval; no ticket</text>
+  <rect class="card" x="1010" y="565" width="200" height="76" rx="16" fill="#ecfdf5" stroke="#86efac"/><text class="card-title" x="1060" y="595">REFUNDED</text><text class="body" x="1030" y="621">restock now safe</text>
+  <rect class="card" x="1280" y="565" width="190" height="76" rx="16"/><text class="card-title" x="1327" y="595">CANCELLED</text><text class="body" x="1306" y="621">release hold</text>
+  <path class="state" d="M505 511 V565" stroke="#b45309" marker-end="url(#riskArrow)"/><path class="state" d="M620 603 H690" stroke="#b45309" marker-end="url(#riskArrow)"/><path class="state" d="M940 603 H1010" stroke="#2563eb" marker-end="url(#stateArrow)"/><path class="state" d="M505 641 V660 Q505 670 515 670 H1365 Q1375 670 1375 660 V641" stroke="#2563eb" marker-end="url(#stateArrow)"/>
+
+  <rect class="lane" x="60" y="715" width="1480" height="250" rx="22" fill="#faf5ff"/>
+  <text class="lane-title" x="90" y="754">Ticket effect lifecycle</text>
+  <rect class="card" x="150" y="815" width="210" height="76" rx="16"/><text class="card-title" x="184" y="845">ISSUE_PENDING</text><text class="body" x="184" y="871">receipt before effect</text>
+  <rect class="card" x="440" y="815" width="190" height="76" rx="16"/><text class="card-title" x="478" y="845">ISSUE_RETRY</text><text class="body" x="467" y="871">bounded retry</text>
+  <rect class="card" x="710" y="815" width="180" height="76" rx="16" fill="#ecfdf5" stroke="#86efac"/><text class="card-title" x="763" y="845">ISSUED</text><text class="body" x="741" y="871">customer may use</text>
+  <rect class="card" x="970" y="815" width="210" height="76" rx="16" fill="#fff7ed" stroke="#fdba74"/><text class="card-title" x="1005" y="845">REVOKE_PENDING</text><text class="body" x="997" y="871">do not restock yet</text>
+  <rect class="card" x="1260" y="815" width="190" height="76" rx="16" fill="#ecfdf5" stroke="#86efac"/><text class="card-title" x="1304" y="845">REVOKED</text><text class="body" x="1288" y="871">restock eligible</text>
+  <path class="state" d="M360 853 H440" stroke="#b45309" marker-end="url(#riskArrow)"/><path class="state" d="M630 853 H710" stroke="#2563eb" marker-end="url(#stateArrow)"/><path class="state" d="M890 853 H970" stroke="#b45309" marker-end="url(#riskArrow)"/><path class="state" d="M1180 853 H1260" stroke="#2563eb" marker-end="url(#stateArrow)"/>
+  <text class="body" x="100" y="1005">Rule: inventory returns only after payment and ticket disposition are both conclusively safe.</text>
+</svg>

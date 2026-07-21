@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="920" viewBox="0 0 1600 920">
+  <defs>
+    <style>.bg{fill:#f8fafc}.title{font:34px 'Architects Daughter','Comic Sans MS',cursive;fill:#18212f}.lane-title{font:24px 'Architects Daughter','Comic Sans MS',cursive;fill:#344154}.card-title{font:22px 'Architects Daughter','Comic Sans MS',cursive;fill:#101827}.body{font:15px 'Comic Mono','Courier New',monospace;fill:#475569}.card{fill:#fff;stroke:#cbd5e1;stroke-width:1.5}.flow{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}</style>
+    <marker id="blue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L13 7 L1 13 Z" fill="#2563eb"/></marker>
+    <marker id="green" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L13 7 L1 13 Z" fill="#059669"/></marker>
+    <marker id="amber" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L13 7 L1 13 Z" fill="#b7791f"/></marker>
+  </defs>
+  <rect class="bg" width="1600" height="920"/><text class="title" x="70" y="62">Concert Ticket Flash Sale — Spring Modulith Architecture</text>
+  <rect x="60" y="100" width="1480" height="150" rx="22" fill="#eff6ff" stroke="#bfdbfe"/><text class="lane-title" x="90" y="138">HTTP and observation boundary</text>
+  <rect class="card" x="120" y="165" width="300" height="62" rx="16"/><text class="card-title" x="145" y="194">Customer API + SSE</text><text class="body" x="145" y="216">owner-scoped, no-store</text>
+  <rect class="card" x="650" y="165" width="300" height="62" rx="16"/><text class="card-title" x="675" y="194">Security + Problems</text><text class="body" x="675" y="216">fail closed, redacted</text>
+  <rect class="card" x="1180" y="165" width="300" height="62" rx="16"/><text class="card-title" x="1205" y="194">Operator API</text><text class="body" x="1205" y="216">bounded reconciliation</text>
+
+  <rect x="60" y="300" width="1480" height="300" rx="22" fill="#f0fdf4" stroke="#bbf7d0"/><text class="lane-title" x="90" y="338">Spring Modulith business modules</text>
+  <rect class="card" x="100" y="390" width="210" height="105" rx="16"/><text class="card-title" x="125" y="425">salecontrol</text><text class="body" x="125" y="451">window + policy</text><text class="body" x="125" y="474">authoritative lock</text>
+  <rect class="card" x="345" y="390" width="210" height="105" rx="16"/><text class="card-title" x="370" y="425">admission</text><text class="body" x="370" y="451">waiting room</text><text class="body" x="370" y="474">single-use grant</text>
+  <rect class="card" x="590" y="370" width="260" height="145" rx="16" fill="#fff7ed" stroke="#fed7aa"/><text class="card-title" x="615" y="408">purchase</text><text class="body" x="615" y="436">hold + USER/IP guards</text><text class="body" x="615" y="459">inventory + order</text><text class="body" x="615" y="482">one Exposed transaction</text>
+  <rect class="card" x="885" y="390" width="210" height="105" rx="16"/><text class="card-title" x="910" y="425">payment</text><text class="body" x="910" y="451">fenced claim</text><text class="body" x="910" y="474">lookup-first</text>
+  <rect class="card" x="1130" y="390" width="210" height="105" rx="16"/><text class="card-title" x="1155" y="425">ticketing</text><text class="body" x="1155" y="451">issue / revoke</text><text class="body" x="1155" y="474">effect receipt</text>
+  <rect class="card" x="1375" y="390" width="125" height="105" rx="16"/><text class="card-title" x="1393" y="425">ops</text><text class="body" x="1393" y="451">health</text><text class="body" x="1393" y="474">metrics</text>
+
+  <path class="flow" d="M270 227 V280 Q270 290 280 290 H710 Q720 290 720 300 V370" stroke="#2563eb" marker-end="url(#blue)"/>
+  <path class="flow" d="M310 442 H345" stroke="#059669" marker-end="url(#green)"/><path class="flow" d="M555 442 H590" stroke="#059669" marker-end="url(#green)"/>
+  <path class="flow" d="M850 420 H885" stroke="#b7791f" marker-end="url(#amber)"/><path class="flow" d="M1095 464 H1130" stroke="#b7791f" marker-end="url(#amber)"/>
+  <path class="flow" d="M1338 442 H1375" stroke="#2563eb" marker-end="url(#blue)"/>
+
+  <rect x="60" y="650" width="1480" height="180" rx="22" fill="#faf5ff" stroke="#ddd6fe"/><text class="lane-title" x="90" y="688">Infrastructure authority</text>
+  <rect class="card" x="190" y="735" width="420" height="66" rx="16"/><text class="card-title" x="220" y="765">PostgreSQL + ExposedJdbcRepository</text><text class="body" x="220" y="789">durable truth, locks, claims, receipts</text>
+  <rect class="card" x="870" y="735" width="420" height="66" rx="16"/><text class="card-title" x="900" y="765">Redis + bluetape4k-lettuce</text><text class="body" x="900" y="789">temporary admission lease + rate limit</text>
+  <path class="flow" d="M720 515 V620 Q720 630 710 630 H400 Q390 630 390 650 V735" stroke="#059669" marker-end="url(#green)"/>
+  <path class="flow" d="M450 495 V610 Q450 620 460 620 H1080 Q1090 620 1090 630 V735" stroke="#2563eb" stroke-dasharray="8 6" marker-end="url(#blue)"/>
+  <line x1="170" y1="870" x2="220" y2="870" stroke="#2563eb" stroke-width="2.5" marker-end="url(#blue)"/><text class="body" x="235" y="876">request / observation</text>
+  <line x1="540" y1="870" x2="590" y2="870" stroke="#059669" stroke-width="2.5" marker-end="url(#green)"/><text class="body" x="605" y="876">authoritative transaction</text>
+  <line x1="980" y1="870" x2="1030" y2="870" stroke="#b7791f" stroke-width="2.5" marker-end="url(#amber)"/><text class="body" x="1045" y="876">external effect</text>
+</svg>

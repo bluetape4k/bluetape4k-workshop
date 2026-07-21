@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Concert Ticket Flash Sale</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body data-transport="snapshot">
+<main>
+  <header>
+    <p class="eyebrow">Bluetape4k Workshop · Issue #521</p>
+    <h1>Concert Ticket Flash Sale</h1>
+    <p>Explore restart-safe purchase recovery without mistaking Redis or a timeout for durable truth.</p>
+    <p class="doc-links"><a href="README.md">English guide</a> · <a href="README.ko.md">한국어 가이드</a></p>
+  </header>
+
+  <section class="panel" aria-labelledby="recovery-title">
+    <h2 id="recovery-title">Owner-safe recovery lookup</h2>
+    <p>This page exercises the implemented recovery endpoint. Purchase creation and network SSE are documented extension points.</p>
+    <form id="recovery-form">
+      <label>Demo buyer UUID <input id="buyer-id" autocomplete="off" value="11111111-1111-1111-1111-111111111111"></label>
+      <label>Purchase attempt UUID <input id="attempt-id" autocomplete="off" placeholder="Paste a seeded attempt ID"></label>
+      <button type="submit">Refresh durable snapshot</button>
+    </form>
+  </section>
+
+  <section class="status-grid" aria-label="Purchase lifecycle">
+    <article class="status-card" data-status="waiting"><span class="status-icon" aria-label="Waiting">◷</span><h2>Waiting room</h2><p>Temporary grant; not inventory ownership.</p></article>
+    <article class="status-card" data-status="processing"><span class="status-icon" aria-label="Processing">↻</span><h2>Processing</h2><p>Timeout means unknown. Reuse the same operation ID.</p></article>
+    <article class="status-card" data-status="recovery"><span class="status-icon" aria-label="Recovery required">!</span><h2>Recovery</h2><p>Look up PostgreSQL state before the next action.</p></article>
+    <article class="status-card" data-status="safe"><span class="status-icon" aria-label="Safe terminal state">✓</span><h2>Safe terminal</h2><p>Restock only after refund and ticket disposition agree.</p></article>
+  </section>
+
+  <section class="panel" aria-labelledby="transport-title">
+    <div class="panel-heading"><h2 id="transport-title">Observation transport</h2><span id="transport-state" class="transport">Snapshot first</span></div>
+    <p data-polling-fallback hidden>Live stream disconnected. The browser is polling the owner-safe, no-store snapshot.</p>
+    <pre id="snapshot">No purchase attempt selected.</pre>
+    <ol id="activity" aria-live="polite"></ol>
+  </section>
+
+  <section class="panel warning">
+    <h2>Security boundary</h2>
+    <p><code>X-Demo-Buyer</code> works only with the loopback <code>demo</code> profile. Production remains fail closed until an upstream IdP supplies an authenticated principal.</p>
+  </section>
+</main>
+<script src="/app.js" defer></script>
+</body>
+</html>
