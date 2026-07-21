@@ -122,7 +122,7 @@ internal class JdbcAllocationService(
             command.allocationId,
             LIFECYCLE_HTTP_OK,
             LifecycleLane.FOREGROUND,
-        ) { connection, _ ->
+        ) { _, _ ->
             val userDigest = userIdentity(command.tenantId, command.campaignId, command.canonicalUser)
             val chain = repository.lockReservationChain(
                 command.tenantId, command.reservationId, userDigest.copyBytes(),
@@ -145,7 +145,7 @@ internal class JdbcAllocationService(
                 chain.entry.entryId,
                 chain.entry.sourceOrdinal,
             )
-            val code = when (val decrypted = cryptoStorage.decryptRetained(connection, identity, chain.entry.revision)) {
+            val code = when (val decrypted = cryptoStorage.decryptRetained(identity, chain.entry.revision)) {
                 is VoucherCryptoStorageOutcome.Revealed -> decrypted.code
                 is VoucherCryptoStorageOutcome.Quarantined -> failCommitted(VoucherPoolErrorCode.CIPHERTEXT_INVALID)
             }
@@ -201,7 +201,7 @@ internal class JdbcAllocationService(
             command.allocationId,
             LIFECYCLE_HTTP_OK,
             LifecycleLane.FOREGROUND,
-        ) { connection, _ ->
+        ) { _, _ ->
             val digest = userIdentity(command.tenantId, command.campaignId, command.canonicalUser)
             val chain = repository.lockAllocationChain(command.tenantId, command.allocationId, digest.copyBytes())
                 ?: fail(VoucherPoolErrorCode.WRONG_OWNER)
@@ -219,7 +219,6 @@ internal class JdbcAllocationService(
             }
             if (chain.allocation.revision != command.expectedRevision) fail(VoucherPoolErrorCode.STALE_REVISION)
             val outcome = cryptoStorage.decryptAndErase(
-                connection,
                 EntryIdentity(
                     chain.entry.tenantId,
                     chain.entry.campaignId,
@@ -285,7 +284,7 @@ internal class JdbcAllocationService(
             command.reservationId,
             LIFECYCLE_HTTP_CREATED,
             LifecycleLane.FOREGROUND,
-        ) { connection, owner ->
+        ) { _, owner ->
             val digest = userIdentity(command.tenantId, command.campaignId, command.canonicalUser)
             val chain = repository.lockReplacementChain(
                 command.tenantId, command.allocationId, digest.copyBytes(),

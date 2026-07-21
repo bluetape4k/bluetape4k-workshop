@@ -618,7 +618,7 @@ internal class VoucherBatchIngestIntegrationTest {
 
     @Test
     fun `concurrent exact campaign and batch creates with different keys converge on one effect`() {
-        service = newService(repository = BarrierCreateRepository(JdbcVoucherPoolRepository(dataSource)))
+        service = newService(repository = BarrierCreateRepository(JdbcVoucherPoolRepository()))
         val campaignCommand = createCampaignCommand("concurrent-create").copy(
             startsAt = POSTGRES_ROUNDING_INSTANT,
             endsAt = POSTGRES_ROUNDING_INSTANT.plusSeconds(3_600),
@@ -670,7 +670,7 @@ internal class VoucherBatchIngestIntegrationTest {
             1,
             listOf("bad\ncreate"),
         )
-        val raceRepository = TerminalRecoveryRaceRepository(JdbcVoucherPoolRepository(dataSource))
+        val raceRepository = TerminalRecoveryRaceRepository(JdbcVoucherPoolRepository())
         val failingService = newService(repository = raceRepository)
         val pool = Executors.newSingleThreadExecutor()
         try {
@@ -828,7 +828,7 @@ internal class VoucherBatchIngestIntegrationTest {
 
     @Test
     fun `ten thousand entry batch finalizes through bounded chunks`() {
-        val tracking = TrackingVoucherPoolRepository(JdbcVoucherPoolRepository(dataSource))
+        val tracking = TrackingVoucherPoolRepository(JdbcVoucherPoolRepository())
         service = newService(repository = tracking)
         val fixture = campaignAndBatch("ten-thousand", expected = 10_000, initial = codes(0, 500))
         var snapshot = fixture.batch
@@ -943,7 +943,7 @@ internal class VoucherBatchIngestIntegrationTest {
         source: GeneratedVoucherCodeSource = SecureRandomVoucherCodeSource(),
         runtimeProfile: VoucherPoolRuntimeProfile = VoucherPoolRuntimeProfile.PRODUCTION,
         envelopeCrypto: VoucherEnvelopeCrypto = crypto,
-        repository: VoucherPoolRepository = JdbcVoucherPoolRepository(dataSource),
+        repository: VoucherPoolRepository = JdbcVoucherPoolRepository(),
     ): JdbcCampaignBatchCommandService {
         val manager = SpringTransactionManager(dataSource, DatabaseConfig {}, false)
         return JdbcCampaignBatchCommandService(

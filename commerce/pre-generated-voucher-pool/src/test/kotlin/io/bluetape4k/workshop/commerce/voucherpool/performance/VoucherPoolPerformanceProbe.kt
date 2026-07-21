@@ -784,7 +784,7 @@ private class ServiceGraph(
         SpringTransactionManager(dataSource, DatabaseConfig {}, false),
         metrics = metrics,
     )
-    val repository = JdbcVoucherPoolRepository(dataSource)
+    val repository = JdbcVoucherPoolRepository()
     val digests = digestService()
     private val idempotency = JdbcVoucherPoolIdempotencyRepository(digests)
     private val crypto = AesGcmVoucherEnvelopeCrypto(

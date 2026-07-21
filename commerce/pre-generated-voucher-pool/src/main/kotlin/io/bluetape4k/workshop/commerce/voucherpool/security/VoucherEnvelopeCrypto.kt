@@ -11,7 +11,6 @@ import java.nio.charset.CodingErrorAction
 import java.nio.charset.StandardCharsets
 import java.security.GeneralSecurityException
 import java.security.SecureRandom
-import java.sql.Connection
 import java.util.UUID
 import javax.crypto.AEADBadTagException
 import javax.crypto.Cipher
@@ -262,11 +261,9 @@ internal class VoucherCryptoStorage(
     /** Decrypts a caller-locked RESERVED entry for allocation digesting without consuming the reveal ciphertext. */
     @Suppress("SwallowedException")
     fun decryptRetained(
-        connection: Connection,
         identity: EntryIdentity,
         expectedRevision: Long,
     ): VoucherCryptoStorageOutcome {
-        check(!connection.autoCommit) { "voucher crypto storage requires a caller-owned transaction" }
         val locked = repository.lockReservedCryptoEntry(
             identity.tenantId,
             identity.campaignId,
@@ -291,11 +288,9 @@ internal class VoucherCryptoStorage(
     // Persist only the bounded quarantine reason; never expose malformed crypto material.
     @Suppress("SwallowedException")
     fun decryptAndErase(
-        connection: Connection,
         identity: EntryIdentity,
         expectedRevision: Long,
     ): VoucherCryptoStorageOutcome {
-        check(!connection.autoCommit) { "voucher crypto storage requires a caller-owned transaction" }
         val locked = repository.lockAllocatedCryptoEntry(
             identity.tenantId,
             identity.campaignId,

@@ -9,6 +9,7 @@ import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolMigration
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolMigrationRunner
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CanonicalVoucherCode
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.JdbcVoucherPoolRepository
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.withExistingJdbcTransaction
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -39,7 +40,7 @@ internal class VoucherCryptoQuarantineIntegrationTest {
         VoucherKekRing.of(VoucherKek.of("k1", ByteArray(32) { (31 + it).toByte() })),
         digests,
     )
-    private val repository = JdbcVoucherPoolRepository(dataSource)
+    private val repository = JdbcVoucherPoolRepository()
     private val storage = VoucherCryptoStorage(repository, crypto)
 
     @BeforeAll
@@ -64,16 +65,16 @@ internal class VoucherCryptoQuarantineIntegrationTest {
 
         dataSource.connection.use { connection ->
             connection.autoCommit = false
-            val rolledBack = repository.withExistingConnection(connection) {
-                storage.decryptAndErase(connection, identity, expectedRevision = 0)
+            val rolledBack = withExistingJdbcTransaction(connection) {
+                storage.decryptAndErase(identity, expectedRevision = 0)
             }
             (rolledBack as VoucherCryptoStorageOutcome.Revealed).code shouldBeEqualTo code
             connection.rollback()
         }
         assertCiphertextPresent(identity, expectedRevision = 0)
 
-        val revealed = committedTransaction { connection ->
-            storage.decryptAndErase(connection, identity, expectedRevision = 0)
+        val revealed = committedTransaction {
+            storage.decryptAndErase(identity, expectedRevision = 0)
         }
         (revealed as VoucherCryptoStorageOutcome.Revealed).code shouldBeEqualTo code
         assertCiphertextErased(identity)
@@ -85,8 +86,8 @@ internal class VoucherCryptoQuarantineIntegrationTest {
         val code = CanonicalVoucherCode.of("POOL-QUARANTINE-$corruption")
         val identity = insertEncryptedEntry(code, corruption)
 
-        val outcome = committedTransaction { connection ->
-            storage.decryptAndErase(connection, identity, expectedRevision = 0)
+        val outcome = committedTransaction {
+            storage.decryptAndErase(identity, expectedRevision = 0)
         }
         (outcome as VoucherCryptoStorageOutcome.Quarantined).reason shouldBeEqualTo corruption.reason
 
@@ -116,11 +117,11 @@ internal class VoucherCryptoQuarantineIntegrationTest {
     @Test
     fun `resolved quarantine can be reactivated after corruption recurs`() {
         val identity = insertEncryptedEntry(CanonicalVoucherCode.of("POOL-REQUARANTINE"), CryptoCorruption.TAG)
-        val first = committedTransaction { connection -> storage.decryptAndErase(connection, identity, 0) }
+        val first = committedTransaction { storage.decryptAndErase(identity, 0) }
         (first as VoucherCryptoStorageOutcome.Quarantined).reason shouldBeEqualTo VoucherCryptoFailureReason.INVALID_TAG
         resolveQuarantine(identity)
 
-        val second = committedTransaction { connection -> storage.decryptAndErase(connection, identity, 1) }
+        val second = committedTransaction { storage.decryptAndErase(identity, 1) }
         (second as VoucherCryptoStorageOutcome.Quarantined).reason shouldBeEqualTo VoucherCryptoFailureReason.INVALID_TAG
 
         dataSource.connection.use { connection ->
@@ -341,12 +342,10 @@ internal class VoucherCryptoQuarantineIntegrationTest {
         connection.commit()
     }
 
-    private fun <T> committedTransaction(block: (Connection) -> T): T = dataSource.connection.use { connection ->
+    private fun <T> committedTransaction(block: () -> T): T = dataSource.connection.use { connection ->
         connection.autoCommit = false
         try {
-            repository.withExistingConnection(connection) {
-                block(connection)
-            }.also { connection.commit() }
+            withExistingJdbcTransaction(connection, block).also { connection.commit() }
         } catch (failure: Throwable) {
             runCatching { connection.rollback() }
             throw failure

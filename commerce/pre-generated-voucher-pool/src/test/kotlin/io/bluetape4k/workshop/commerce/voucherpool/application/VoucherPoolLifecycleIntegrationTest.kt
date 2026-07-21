@@ -793,7 +793,7 @@ internal class LifecycleHarness(private val suffix: String) {
     private fun rebuildServices(
         repositoryTransform: (VoucherPoolRepository) -> VoucherPoolRepository = { it },
     ) {
-        val repository = repositoryTransform(JdbcVoucherPoolRepository(dataSource))
+        val repository = repositoryTransform(JdbcVoucherPoolRepository())
         val executor = VoucherPoolJdbcExecutor(DatabasePermitGate.default(32), SpringTransactionManager(dataSource, DatabaseConfig {}, false))
         voucherRepository = repository
         jdbcExecutor = executor

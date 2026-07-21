@@ -80,7 +80,7 @@ internal class VoucherPoolServiceConfiguration {
     ): VoucherPoolStartupInitializer = VoucherPoolStartupInitializer(migration, keyPreflight, health)
 
     @Bean
-    fun voucherPoolRepository(dataSource: DataSource): VoucherPoolRepository = JdbcVoucherPoolRepository(dataSource)
+    fun voucherPoolRepository(): VoucherPoolRepository = JdbcVoucherPoolRepository()
 
     @Bean
     fun voucherEnvelopeCrypto(kekRing: VoucherKekRing, digests: VoucherDigestService): VoucherEnvelopeCrypto =

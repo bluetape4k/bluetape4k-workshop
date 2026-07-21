@@ -21,23 +21,18 @@ import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.core.sum
-import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import java.lang.reflect.InvocationTargetException
-import java.lang.reflect.Proxy
 import java.security.MessageDigest
 import java.sql.Connection
 import java.sql.ResultSet
 import java.sql.Timestamp
 import java.time.Instant
 import java.util.UUID
-import javax.sql.DataSource
 
 internal interface VoucherPoolRepository {
     fun transactionTime(): Instant
@@ -160,19 +155,18 @@ internal interface VoucherPoolRepository {
     fun appendAudit(event: VoucherPoolAuditRecord)
 }
 
-/** PostgreSQL authority repository; raw JDBC is limited to explicit row-lock syntax. */
+/**
+ * Transaction-bound PostgreSQL authority repository.
+ *
+ * Like bluetape4k [io.bluetape4k.exposed.jdbc.repository.JdbcRepository], callers provide the active Exposed
+ * transaction. Raw JDBC is limited to PostgreSQL row-lock syntax that the Exposed DSL cannot express directly.
+ */
 @Suppress("LargeClass")
-internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : VoucherPoolRepository {
-    private val database = Database.connect(dataSource)
+internal class JdbcVoucherPoolRepository : VoucherPoolRepository {
     private val connection: Connection
         get() = checkNotNull(TransactionManager.currentOrNull()?.connection?.connection as? Connection) {
             "voucher pool repository requires an active JDBC transaction"
         }
-
-    internal fun <T> withExistingConnection(
-        connection: Connection,
-        block: JdbcVoucherPoolRepository.() -> T,
-    ): T = withExposed(connection) { block() }
 
     override fun transactionTime(): Instant = connection.prepareStatement(
         "SELECT transaction_timestamp()",
@@ -487,16 +481,14 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         campaignId: UUID,
         userDigest: ByteArray,
     ): UserLimitRecord {
-        withExposed(connection) {
-            VoucherPoolUserLimitTable.insertIgnore {
-                it[VoucherPoolUserLimitTable.tenantId] = tenantId
-                it[VoucherPoolUserLimitTable.campaignId] = campaignId
-                it[VoucherPoolUserLimitTable.userDigest] = userDigest.copyOf()
-                it[activeReservations] = 0
-                it[activeAllocations] = 0
-                it[lifetimeConsumed] = 0
-                it[revision] = 0
-            }
+        VoucherPoolUserLimitTable.insertIgnore {
+            it[VoucherPoolUserLimitTable.tenantId] = tenantId
+            it[VoucherPoolUserLimitTable.campaignId] = campaignId
+            it[VoucherPoolUserLimitTable.userDigest] = userDigest.copyOf()
+            it[activeReservations] = 0
+            it[activeAllocations] = 0
+            it[lifetimeConsumed] = 0
+            it[revision] = 0
         }
         return connection.prepareStatement(
             "SELECT * FROM voucher_pool_user_limits WHERE tenant_id=? AND campaign_id=? AND user_digest=? FOR UPDATE",
@@ -682,7 +674,7 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         val hint = findAllocation(connection, tenantId, allocationId) ?: return null
         if (!MessageDigest.isEqual(hint.userDigest.copyBytes(), userDigest)) return null
         val campaign = lockCampaignForShare(tenantId, hint.campaignId)
-        val batchIds = eligibleBatchIds(connection, tenantId, hint.campaignId)
+        val batchIds = eligibleBatchIds(tenantId, hint.campaignId)
         val batches = batchIds.mapNotNull { lockEligibleBatchForShare(connection, tenantId, hint.campaignId, it) }
         val lockedBatchIds = batches.map(BatchRecord::batchId)
         val originalBatch = batches.firstOrNull { it.batchId == hint.batchId }
@@ -848,21 +840,19 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
     }
 
     override fun appendAudit(event: VoucherPoolAuditRecord) {
-        withExposed(connection) {
-            VoucherPoolAuditTable.insert {
-                it[tenantId] = event.tenantId
-                it[campaignId] = event.campaignId
-                it[aggregateType] = event.aggregateType
-                it[aggregateId] = event.aggregateId
-                it[revision] = event.revision
-                it[policyVersion] = event.policyVersion
-                it[actorType] = event.actorType
-                it[reasonCode] = event.reasonCode
-                it[correlationDigest] = event.correlationDigest?.copyBytes()
-                it[requestDigest] = event.requestDigest?.copyBytes()
-                it[beforeCount] = event.beforeCount
-                it[afterCount] = event.afterCount
-            }
+        VoucherPoolAuditTable.insert {
+            it[tenantId] = event.tenantId
+            it[campaignId] = event.campaignId
+            it[aggregateType] = event.aggregateType
+            it[aggregateId] = event.aggregateId
+            it[revision] = event.revision
+            it[policyVersion] = event.policyVersion
+            it[actorType] = event.actorType
+            it[reasonCode] = event.reasonCode
+            it[correlationDigest] = event.correlationDigest?.copyBytes()
+            it[requestDigest] = event.requestDigest?.copyBytes()
+            it[beforeCount] = event.beforeCount
+            it[afterCount] = event.afterCount
         }
     }
 
@@ -911,21 +901,19 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         entryId: UUID,
         expectedRevision: Long,
     ) {
-        val updated = withExposed(connection) {
-            VoucherPoolEntryTable.update({
-                (VoucherPoolEntryTable.tenantId eq tenantId) and
-                    (VoucherPoolEntryTable.entryId eq entryId) and
-                    (VoucherPoolEntryTable.revision eq expectedRevision) and
-                    VoucherPoolEntryTable.quarantinedAt.isNull()
-            }) {
-                it[revealedAt] = CurrentTimestamp
-                it[codeCiphertext] = null
-                it[codeNonce] = null
-                it[wrappedDek] = null
-                it[wrapNonce] = null
-                it[kekVersion] = null
-                it[revision] = expectedRevision + 1
-            }
+        val updated = VoucherPoolEntryTable.update({
+            (VoucherPoolEntryTable.tenantId eq tenantId) and
+                (VoucherPoolEntryTable.entryId eq entryId) and
+                (VoucherPoolEntryTable.revision eq expectedRevision) and
+                VoucherPoolEntryTable.quarantinedAt.isNull()
+        }) {
+            it[revealedAt] = CurrentTimestamp
+            it[codeCiphertext] = null
+            it[codeNonce] = null
+            it[wrappedDek] = null
+            it[wrapNonce] = null
+            it[kekVersion] = null
+            it[revision] = expectedRevision + 1
         }
         check(updated == 1) { "voucher ciphertext erase lost its revision" }
     }
@@ -951,38 +939,36 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         sourceRevision: Long,
         reasonCode: String,
     ) {
-        withExposed(connection) {
-            val entryUpdated = VoucherPoolEntryTable.update({
-                (VoucherPoolEntryTable.tenantId eq tenantId) and
-                    (VoucherPoolEntryTable.entryId eq entryId) and
-                    (VoucherPoolEntryTable.revision eq sourceRevision) and
-                    VoucherPoolEntryTable.quarantinedAt.isNull()
-            }) {
-                it[quarantinedAt] = CurrentTimestamp
-                it[revision] = sourceRevision + 1
-            }
-            check(entryUpdated == 1) { "voucher quarantine lost its revision" }
+        val entryUpdated = VoucherPoolEntryTable.update({
+            (VoucherPoolEntryTable.tenantId eq tenantId) and
+                (VoucherPoolEntryTable.entryId eq entryId) and
+                (VoucherPoolEntryTable.revision eq sourceRevision) and
+                VoucherPoolEntryTable.quarantinedAt.isNull()
+        }) {
+            it[quarantinedAt] = CurrentTimestamp
+            it[revision] = sourceRevision + 1
+        }
+        check(entryUpdated == 1) { "voucher quarantine lost its revision" }
 
-            val reactivated = VoucherPoolQuarantineTable.update({
-                (VoucherPoolQuarantineTable.tenantId eq tenantId) and
-                    (VoucherPoolQuarantineTable.entryId eq entryId) and
-                    VoucherPoolQuarantineTable.resolvedAt.isNotNull()
-            }) {
+        val reactivated = VoucherPoolQuarantineTable.update({
+            (VoucherPoolQuarantineTable.tenantId eq tenantId) and
+                (VoucherPoolQuarantineTable.entryId eq entryId) and
+                VoucherPoolQuarantineTable.resolvedAt.isNotNull()
+        }) {
+            it[VoucherPoolQuarantineTable.sourceState] = sourceState.name
+            it[VoucherPoolQuarantineTable.sourceRevision] = sourceRevision
+            it[VoucherPoolQuarantineTable.reasonCode] = reasonCode
+            it[detectedAt] = CurrentTimestamp
+            it[resolvedAt] = null
+            it[resolution] = null
+        }
+        if (reactivated == 0) {
+            VoucherPoolQuarantineTable.insert {
+                it[VoucherPoolQuarantineTable.tenantId] = tenantId
+                it[VoucherPoolQuarantineTable.entryId] = entryId
                 it[VoucherPoolQuarantineTable.sourceState] = sourceState.name
                 it[VoucherPoolQuarantineTable.sourceRevision] = sourceRevision
                 it[VoucherPoolQuarantineTable.reasonCode] = reasonCode
-                it[detectedAt] = CurrentTimestamp
-                it[resolvedAt] = null
-                it[resolution] = null
-            }
-            if (reactivated == 0) {
-                VoucherPoolQuarantineTable.insert {
-                    it[VoucherPoolQuarantineTable.tenantId] = tenantId
-                    it[VoucherPoolQuarantineTable.entryId] = entryId
-                    it[VoucherPoolQuarantineTable.sourceState] = sourceState.name
-                    it[VoucherPoolQuarantineTable.sourceRevision] = sourceRevision
-                    it[VoucherPoolQuarantineTable.reasonCode] = reasonCode
-                }
             }
         }
     }
@@ -996,23 +982,22 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         }
 
     internal fun selectWorkerCandidates(
-        connection: Connection,
         tenantId: String,
         batchId: UUID,
         limit: Int,
-    ): List<WorkerCandidate> = withExposed(connection) {
+    ): List<WorkerCandidate> {
         val batch = VoucherPoolBatchTable.select(
             VoucherPoolBatchTable.campaignId,
             VoucherPoolBatchTable.revision,
         ).where {
             (VoucherPoolBatchTable.tenantId eq tenantId) and (VoucherPoolBatchTable.batchId eq batchId)
-        }.singleOrNull() ?: return@withExposed emptyList()
+        }.singleOrNull() ?: return emptyList()
         val campaignId = batch[VoucherPoolBatchTable.campaignId]
         val campaignRevision = VoucherPoolCampaignTable.select(VoucherPoolCampaignTable.revision).where {
             (VoucherPoolCampaignTable.tenantId eq tenantId) and
                 (VoucherPoolCampaignTable.campaignId eq campaignId)
         }.single()[VoucherPoolCampaignTable.revision]
-        workerEntryQuery(tenantId, batchId, limit).map { row ->
+        return workerEntryQuery(tenantId, batchId, limit).map { row ->
             WorkerCandidate(
                 tenantId = row[VoucherPoolEntryTable.tenantId],
                 campaignId = row[VoucherPoolEntryTable.campaignId],
@@ -1025,17 +1010,16 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         }
     }
 
-    internal fun poolDepth(tenantId: String, batchId: UUID): Map<EntryState, Long> = transaction(database) {
+    internal fun poolDepth(tenantId: String, batchId: UUID): Map<EntryState, Long> {
         val (query, depth) = poolDepthQuery(tenantId, batchId)
-        query
-            .associate { it[VoucherPoolDepthTable.state] to checkNotNull(it[depth]) }
+        return query.associate { it[VoucherPoolDepthTable.state] to checkNotNull(it[depth]) }
     }
 
-    internal fun workerCandidatePlanSql(connection: Connection, tenantId: String, batchId: UUID, limit: Int): String =
-        withExposed(connection) { workerEntryQuery(tenantId, batchId, limit).prepareSQL(TransactionManager.current(), false) }
+    internal fun workerCandidatePlanSql(tenantId: String, batchId: UUID, limit: Int): String =
+        workerEntryQuery(tenantId, batchId, limit).prepareSQL(TransactionManager.current(), false)
 
-    internal fun poolDepthPlanSql(connection: Connection, tenantId: String, batchId: UUID): String =
-        withExposed(connection) { poolDepthQuery(tenantId, batchId).first.prepareSQL(TransactionManager.current(), false) }
+    internal fun poolDepthPlanSql(tenantId: String, batchId: UUID): String =
+        poolDepthQuery(tenantId, batchId).first.prepareSQL(TransactionManager.current(), false)
 
     private fun workerEntryQuery(tenantId: String, batchId: UUID, limit: Int) =
         VoucherPoolEntryTable.select(
@@ -1162,31 +1146,6 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         }
     }
 
-    @Suppress("SpreadOperator")
-    private fun <T> withExposed(connection: Connection, block: () -> T): T {
-        val proxy = Proxy.newProxyInstance(
-            Connection::class.java.classLoader,
-            arrayOf(Connection::class.java),
-        ) { _, method, arguments ->
-            when (method.name) {
-                "close", "commit", "rollback", "abort", "setAutoCommit", "setReadOnly", "setTransactionIsolation",
-                "setCatalog", "setSchema", "setNetworkTimeout",
-                -> null
-                else -> try {
-                    method.invoke(connection, *(arguments ?: emptyArray()))
-                } catch (e: InvocationTargetException) {
-                    throw e.targetException
-                }
-            }
-        } as Connection
-        val exposedDatabase = Database.connect(getNewConnection = { proxy })
-        return try {
-            transaction(exposedDatabase) { block() }
-        } finally {
-            TransactionManager.closeAndUnregister(exposedDatabase)
-        }
-    }
-
     private fun lockExpectedUserLimits(
         connection: Connection,
         candidate: WorkerCandidate,
@@ -1219,21 +1178,19 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.executeQuery().use { result -> if (result.next()) result.campaignRecord() else null }
         }
 
-    private fun eligibleBatchIds(connection: Connection, tenantId: String, campaignId: UUID): List<UUID> =
-        withExposed(connection) {
-            VoucherPoolBatchTable.select(VoucherPoolBatchTable.batchId)
-                .where {
-                    (VoucherPoolBatchTable.tenantId eq tenantId) and
-                        (VoucherPoolBatchTable.campaignId eq campaignId) and
-                        (VoucherPoolBatchTable.state eq BatchState.ACTIVE) and
-                        (VoucherPoolBatchTable.activatesAt lessEq CurrentTimestamp) and
-                        (VoucherPoolBatchTable.expiresAt.isNull() or
-                            (VoucherPoolBatchTable.expiresAt greater CurrentTimestamp))
-                }.orderBy(
-                    VoucherPoolBatchTable.activatesAt to SortOrder.ASC,
-                    VoucherPoolBatchTable.batchId to SortOrder.ASC,
-                ).map { it[VoucherPoolBatchTable.batchId] }
-        }
+    private fun eligibleBatchIds(tenantId: String, campaignId: UUID): List<UUID> =
+        VoucherPoolBatchTable.select(VoucherPoolBatchTable.batchId)
+            .where {
+                (VoucherPoolBatchTable.tenantId eq tenantId) and
+                    (VoucherPoolBatchTable.campaignId eq campaignId) and
+                    (VoucherPoolBatchTable.state eq BatchState.ACTIVE) and
+                    (VoucherPoolBatchTable.activatesAt lessEq CurrentTimestamp) and
+                    (VoucherPoolBatchTable.expiresAt.isNull() or
+                        (VoucherPoolBatchTable.expiresAt greater CurrentTimestamp))
+            }.orderBy(
+                VoucherPoolBatchTable.activatesAt to SortOrder.ASC,
+                VoucherPoolBatchTable.batchId to SortOrder.ASC,
+            ).map { it[VoucherPoolBatchTable.batchId] }
 
     private fun campaignBatchIds(connection: Connection, tenantId: String, campaignId: UUID): List<UUID> =
         connection.prepareStatement(
