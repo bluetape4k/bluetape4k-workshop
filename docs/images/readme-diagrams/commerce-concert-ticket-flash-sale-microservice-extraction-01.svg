@@ -22,9 +22,9 @@
   <rect class="card" x="1090" y="340" width="400" height="110" rx="17" fill="#ecfdf5" stroke="#86efac"/><text class="card-title" x="1120" y="375">Purchase Service</text><text class="body" x="1120" y="401">owns inventory and attempt DB</text><text class="body" x="1120" y="424">publishes durable intent</text>
   <rect class="card" x="1090" y="480" width="400" height="110" rx="17"/><text class="card-title" x="1120" y="515">Payment Service</text><text class="body" x="1120" y="541">owns PG operations/refunds</text><text class="body" x="1120" y="564">reports conclusive outcome</text>
   <rect class="card" x="1090" y="620" width="400" height="110" rx="17"/><text class="card-title" x="1120" y="655">Ticket Service</text><text class="body" x="1120" y="681">owns issue/revoke lifecycle</text><text class="body" x="1120" y="704">reports safe disposition</text>
-  <path class="edge" d="M445 257 H600" marker-end="url(#extractArrow)"/><path class="edge" d="M930 257 H1090" marker-end="url(#extractArrow)"/>
-  <path class="edge" d="M445 397 H600" marker-end="url(#extractArrow)"/><path class="edge" d="M930 397 H1090" marker-end="url(#extractArrow)"/>
-  <path class="edge" d="M445 537 H600" marker-end="url(#extractArrow)"/><path class="edge" d="M930 537 H1090" marker-end="url(#extractArrow)"/>
-  <path class="edge" d="M445 677 H600" marker-end="url(#extractArrow)"/><path class="edge" d="M930 677 H1090" marker-end="url(#extractArrow)"/>
+  <path class="edge" data-connector="admission-to-command" d="M445 257 H600" marker-end="url(#extractArrow)"/><path class="edge" data-connector="command-to-admission-service" d="M930 257 H1090" marker-end="url(#extractArrow)"/>
+  <path class="edge" data-connector="purchase-to-event" d="M445 397 H600" marker-end="url(#extractArrow)"/><path class="edge" data-connector="event-to-purchase-service" d="M930 397 H1090" marker-end="url(#extractArrow)"/>
+  <path class="edge" data-connector="payment-to-recovery" d="M445 537 H600" marker-end="url(#extractArrow)"/><path class="edge" data-connector="recovery-to-payment-service" d="M930 537 H1090" marker-end="url(#extractArrow)"/>
+  <path class="edge" data-connector="ticketing-to-delivery" d="M445 677 H600" marker-end="url(#extractArrow)"/><path class="edge" data-connector="delivery-to-ticket-service" d="M930 677 H1090" marker-end="url(#extractArrow)"/>
   <rect x="185" y="850" width="1230" height="70" rx="20" fill="#fff" stroke="#cbd5e1"/><text class="rule" x="245" y="880">Do not share tables across services. Move the invariant owner, its data, and recovery contract together.</text><text class="body" x="245" y="904">Keep synchronous purchase latency bounded; use durable events for payment and ticket convergence.</text>
 </svg>
