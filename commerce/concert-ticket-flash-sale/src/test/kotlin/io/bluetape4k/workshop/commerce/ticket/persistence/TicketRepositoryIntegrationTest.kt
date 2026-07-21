@@ -13,13 +13,7 @@ internal class TicketRepositoryIntegrationTest {
         TicketDatabaseFixture().use { fixture ->
             val repository = TicketInventoryRepository(fixture.executor)
             val saleId = UUID.randomUUID()
-            fixture.execute(
-                """
-                INSERT INTO ticket_sales(sale_id, state, current_policy_version, opens_at, closes_at)
-                VALUES ('$saleId', 'open', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '1 hour');
-                INSERT INTO ticket_inventory(sale_id, grade, total_quantity) VALUES ('$saleId', 'GENERAL', 1)
-                """.trimIndent(),
-            )
+            fixture.seedSale(saleId, totalQuantity = 1)
 
             assertFailsWith<SQLException> {
                 repository.forceQuantities(saleId, "GENERAL", held = 1, sold = 1)
@@ -54,18 +48,11 @@ internal class TicketRepositoryIntegrationTest {
     fun `waiting room claim uses canonical fifo index`() {
         TicketDatabaseFixture().use { fixture ->
             val saleId = UUID.randomUUID()
-            fixture.execute(
-                """
-                INSERT INTO ticket_sales(sale_id, state, current_policy_version, opens_at, closes_at)
-                VALUES ('$saleId', 'open', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP + INTERVAL '1 hour')
-                """.trimIndent(),
-            )
+            fixture.seedSale(saleId)
             val repository = TicketWaitingRoomRepository(fixture.executor)
             repeat(8) { index ->
                 val subjectId = UUID.randomUUID()
-                fixture.execute(
-                    "INSERT INTO ticket_identity_subjects(subject_id, identity_kind) VALUES ('$subjectId', 'USER')",
-                )
+                fixture.seedIdentitySubject(subjectId)
                 repository.join(saleId, subjectId, sequence = 100L - index)
             }
 
