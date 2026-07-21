@@ -146,6 +146,13 @@ internal interface VoucherPoolRepository {
         expectedRevision: Long,
     ): LockedVoucherCryptoRecord?
     fun lockCanonicalChain(connection: Connection, candidate: WorkerCandidate): LockedWorkerChain?
+    fun expireReservation(connection: Connection, chain: LockedWorkerChain): Boolean
+    fun terminalizeWorkerEntry(
+        connection: Connection,
+        chain: LockedWorkerChain,
+        targetState: EntryState,
+        reasonCode: String,
+    ): Boolean
     fun lockAllocatedCryptoEntry(
         connection: Connection,
         tenantId: String,
@@ -768,6 +775,79 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
         return LockedWorkerChain(campaign, batch, entry, userLimits, reservations)
     }
 
+    override fun expireReservation(connection: Connection, chain: LockedWorkerChain): Boolean {
+        val reservation = chain.reservations.singleOrNull() ?: return false
+        val userLimit = chain.userLimits.singleOrNull() ?: return false
+        if (
+            chain.entry.state != EntryState.RESERVED || reservation.state != "ACTIVE" ||
+            reservation.expiresAt > transactionTime(connection)
+        ) {
+            return false
+        }
+        updateReservationState(connection, reservation, "EXPIRED")
+        connection.prepareStatement(
+            """UPDATE voucher_pool_entries SET state='AVAILABLE',reservation_id=NULL,user_digest=NULL,reserved_at=NULL,
+                  reservation_expires_at=NULL,revision=revision+1
+                WHERE tenant_id=? AND entry_id=? AND revision=? AND state='RESERVED'""",
+        ).use { statement ->
+            statement.setString(1, chain.entry.tenantId)
+            statement.setObject(2, chain.entry.entryId)
+            statement.setLong(3, chain.entry.revision)
+            check(statement.executeUpdate() == 1)
+        }
+        transitionPoolDepth(connection, chain.entry.tenantId, chain.entry.batchId, EntryState.RESERVED, EntryState.AVAILABLE)
+        updateUserLimit(connection, userLimit, -1, 0, 0)
+        appendAudit(
+            connection,
+            VoucherPoolAuditRecord(
+                reservation.tenantId,
+                reservation.campaignId,
+                "RESERVATION",
+                reservation.reservationId,
+                reservation.revision + 1,
+                reservation.policyVersion,
+                "WORKER",
+                "RESERVATION_EXPIRED",
+            ),
+        )
+        return true
+    }
+
+    override fun terminalizeWorkerEntry(
+        connection: Connection,
+        chain: LockedWorkerChain,
+        targetState: EntryState,
+        reasonCode: String,
+    ): Boolean {
+        require(targetState == EntryState.REVOKED || targetState == EntryState.EXPIRED)
+        if (chain.entry.state !in setOf(EntryState.AVAILABLE, EntryState.RESERVED, EntryState.ALLOCATED)) return false
+        if (reasonCode == "ALLOCATION_EXPIRED" && chain.entry.state == EntryState.ALLOCATED) {
+            val expiresAt = chain.entry.allocationExpiresAt ?: return false
+            if (expiresAt > transactionTime(connection)) return false
+        }
+        val audit = when (chain.entry.state) {
+            EntryState.AVAILABLE -> workerEntryAudit(chain, reasonCode)
+            EntryState.RESERVED -> terminalizeWorkerReservation(connection, chain, targetState, reasonCode)
+            EntryState.ALLOCATED -> terminalizeWorkerAllocation(connection, chain, targetState, reasonCode)
+            else -> return false
+        }
+        connection.prepareStatement(
+            """UPDATE voucher_pool_entries SET state=?,terminal_reason=?,revision=revision+1
+                WHERE tenant_id=? AND entry_id=? AND revision=? AND state=?""",
+        ).use { statement ->
+            statement.setString(1, targetState.name)
+            statement.setString(2, reasonCode)
+            statement.setString(3, chain.entry.tenantId)
+            statement.setObject(4, chain.entry.entryId)
+            statement.setLong(5, chain.entry.revision)
+            statement.setString(6, chain.entry.state.name)
+            check(statement.executeUpdate() == 1)
+        }
+        transitionPoolDepth(connection, chain.entry.tenantId, chain.entry.batchId, chain.entry.state, targetState)
+        appendAudit(connection, audit)
+        return true
+    }
+
     override fun appendAudit(connection: Connection, event: VoucherPoolAuditRecord) {
         withExposed(connection) {
             VoucherPoolAuditTable.insert {
@@ -781,6 +861,8 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
                 it[reasonCode] = event.reasonCode
                 it[correlationDigest] = event.correlationDigest?.copyBytes()
                 it[requestDigest] = event.requestDigest?.copyBytes()
+                it[beforeCount] = event.beforeCount
+                it[afterCount] = event.afterCount
             }
         }
     }
@@ -1284,6 +1366,70 @@ internal class JdbcVoucherPoolRepository(private val dataSource: DataSource) : V
             statement.setInt(11, reservation.replacementOrdinal); statement.setLong(12, reservation.policyVersion)
             statement.executeUpdate()
         }
+    }
+
+    private fun workerEntryAudit(chain: LockedWorkerChain, reasonCode: String) = VoucherPoolAuditRecord(
+        chain.entry.tenantId,
+        chain.entry.campaignId,
+        "ENTRY",
+        chain.entry.entryId,
+        chain.entry.revision + 1,
+        chain.batch.policyVersion,
+        "WORKER",
+        reasonCode,
+    )
+
+    private fun terminalizeWorkerReservation(
+        connection: Connection,
+        chain: LockedWorkerChain,
+        targetState: EntryState,
+        reasonCode: String,
+    ): VoucherPoolAuditRecord {
+        val reservation = checkNotNull(chain.reservations.singleOrNull())
+        val userLimit = checkNotNull(chain.userLimits.singleOrNull())
+        check(reservation.state == "ACTIVE")
+        updateReservationState(connection, reservation, targetState.name)
+        updateUserLimit(connection, userLimit, -1, 0, 0)
+        return VoucherPoolAuditRecord(
+            reservation.tenantId,
+            reservation.campaignId,
+            "RESERVATION",
+            reservation.reservationId,
+            reservation.revision + 1,
+            reservation.policyVersion,
+            "WORKER",
+            reasonCode,
+        )
+    }
+
+    private fun terminalizeWorkerAllocation(
+        connection: Connection,
+        chain: LockedWorkerChain,
+        targetState: EntryState,
+        reasonCode: String,
+    ): VoucherPoolAuditRecord {
+        val allocationId = checkNotNull(chain.entry.allocationId)
+        val userLimit = checkNotNull(chain.userLimits.singleOrNull())
+        val allocation = checkNotNull(lockAllocationById(connection, chain.entry.tenantId, allocationId))
+        connection.prepareStatement(
+            "UPDATE voucher_pool_allocations SET revision=revision+1 WHERE tenant_id=? AND allocation_id=? AND revision=?",
+        ).use { statement ->
+            statement.setString(1, allocation.tenantId)
+            statement.setObject(2, allocation.allocationId)
+            statement.setLong(3, allocation.revision)
+            check(statement.executeUpdate() == 1)
+        }
+        updateUserLimit(connection, userLimit, 0, -1, 0)
+        return VoucherPoolAuditRecord(
+            allocation.tenantId,
+            allocation.campaignId,
+            "ALLOCATION",
+            allocation.allocationId,
+            allocation.revision + 1,
+            allocation.policyVersion,
+            "WORKER",
+            reasonCode,
+        )
     }
 
     private fun updateReservationState(connection: Connection, reservation: ReservationRecord, state: String) {

@@ -168,6 +168,8 @@ internal object VoucherPoolAuditTable : Table("voucher_pool_audits") {
     val reasonCode = varchar("reason_code", 64)
     val correlationDigest = binary("correlation_digest").nullable()
     val requestDigest = binary("request_digest").nullable()
+    val beforeCount = long("before_count").nullable()
+    val afterCount = long("after_count").nullable()
     val createdAt = timestamp("created_at")
     override val primaryKey = PrimaryKey(id)
 }

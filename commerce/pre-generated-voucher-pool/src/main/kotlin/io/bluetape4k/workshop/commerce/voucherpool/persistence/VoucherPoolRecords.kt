@@ -195,6 +195,8 @@ internal data class VoucherPoolAuditRecord(
     val reasonCode: String,
     val correlationDigest: DigestValue? = null,
     val requestDigest: DigestValue? = null,
+    val beforeCount: Long? = null,
+    val afterCount: Long? = null,
 )
 
 internal data class ReservationRecord(

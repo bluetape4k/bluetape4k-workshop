@@ -9,6 +9,8 @@ import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucherpool.admission.DatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolMigration
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolMigrationRunner
+import io.bluetape4k.workshop.commerce.voucherpool.domain.BatchState
+import io.bluetape4k.workshop.commerce.voucherpool.domain.CampaignState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CanonicalVoucherCode
 import io.bluetape4k.workshop.commerce.voucherpool.domain.EntryState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.ReservationState
@@ -440,6 +442,8 @@ internal class LifecycleHarness(private val suffix: String) {
     }
     private lateinit var digests: VoucherDigestService
     private lateinit var commandService: JdbcCampaignBatchCommandService
+    private lateinit var jdbcExecutor: VoucherPoolJdbcExecutor
+    private lateinit var voucherRepository: VoucherPoolRepository
     lateinit var reservations: JdbcReservationService
     lateinit var allocations: JdbcAllocationService
     lateinit var redemptions: JdbcRedemptionService
@@ -641,9 +645,97 @@ internal class LifecycleHarness(private val suffix: String) {
     fun expireAllocation(allocationId: UUID) {
         execute(
             "UPDATE voucher_pool_allocations SET allocation_expires_at=now()-interval '1 second' " +
+                "WHERE tenant_id='$tenant' AND allocation_id='$allocationId'; " +
+                "UPDATE voucher_pool_entries SET allocated_at=now()-interval '2 seconds', " +
+                "allocation_expires_at=now()-interval '1 second' " +
                 "WHERE tenant_id='$tenant' AND allocation_id='$allocationId'",
         )
     }
+
+    fun expireReservation(reservationId: UUID) {
+        execute(
+            "UPDATE voucher_pool_reservations SET reservation_expires_at=now()-interval '1 second' " +
+                "WHERE tenant_id='$tenant' AND reservation_id='$reservationId'; " +
+                "UPDATE voucher_pool_entries SET reserved_at=now()-interval '2 seconds', " +
+                "reservation_expires_at=now()-interval '1 second' " +
+                "WHERE tenant_id='$tenant' AND reservation_id='$reservationId'",
+        )
+    }
+
+    fun reservationState(reservationId: UUID): ReservationState = query(
+        "SELECT state FROM voucher_pool_reservations WHERE tenant_id=? AND reservation_id=?",
+        reservationId,
+    ) { ReservationState.valueOf(it.getString(1)) }
+
+    fun batchState(batchId: UUID): BatchState = query(
+        "SELECT state FROM voucher_pool_batches WHERE tenant_id=? AND batch_id=?",
+        batchId,
+    ) { BatchState.valueOf(it.getString(1)) }
+
+    fun expireBatch(batchId: UUID) {
+        execute(
+            "UPDATE voucher_pool_batches SET expires_at=now()-interval '1 second' " +
+                "WHERE tenant_id='$tenant' AND batch_id='$batchId'",
+        )
+    }
+
+    fun campaignState(campaignId: UUID): CampaignState = query(
+        "SELECT state FROM voucher_pool_campaigns WHERE tenant_id=? AND campaign_id=?",
+        campaignId,
+    ) { CampaignState.valueOf(it.getString(1)) }
+
+    fun corruptPoolDepth(batchId: UUID, state: EntryState, count: Long) {
+        execute(
+            "UPDATE voucher_pool_pool_depth SET entry_count=$count " +
+                "WHERE tenant_id='$tenant' AND batch_id='$batchId' AND state='${state.name}'",
+        )
+    }
+
+    fun corruptUserCounts(campaignId: UUID, user: String, reservations: Int, allocations: Int, lifetime: Int) {
+        val userDigest = digests.userIdentity(tenant, campaignId, user)
+        dataSource.connection.use { connection ->
+            connection.prepareStatement(
+                """UPDATE voucher_pool_user_limits SET active_reservations=?,active_allocations=?,lifetime_consumed=?
+                    WHERE tenant_id=? AND campaign_id=? AND user_digest=?""",
+            ).use { statement ->
+                statement.setInt(1, reservations)
+                statement.setInt(2, allocations)
+                statement.setInt(3, lifetime)
+                statement.setString(4, tenant)
+                statement.setObject(5, campaignId)
+                statement.setBytes(6, userDigest.copyBytes())
+                statement.executeUpdate()
+            }
+        }
+    }
+
+    fun auditCount(aggregateType: String, aggregateId: UUID, reasonCode: String): Long = dataSource.connection.use { connection ->
+        connection.prepareStatement(
+            "SELECT count(*) FROM voucher_pool_audits WHERE tenant_id=? AND aggregate_type=? AND aggregate_id=? AND reason_code=?",
+        ).use { statement ->
+            statement.setString(1, tenant)
+            statement.setString(2, aggregateType)
+            statement.setObject(3, aggregateId)
+            statement.setString(4, reasonCode)
+            statement.executeQuery().use { result -> result.next(); result.getLong(1) }
+        }
+    }
+
+    fun reconciliationAuditCounts(batchId: UUID): Pair<Long, Long> = dataSource.connection.use { connection ->
+        connection.prepareStatement(
+            """SELECT before_count,after_count FROM voucher_pool_audits
+                WHERE tenant_id=? AND aggregate_type='RECONCILIATION' AND aggregate_id=?
+                ORDER BY revision DESC LIMIT 1""",
+        ).use { statement ->
+            statement.setString(1, tenant)
+            statement.setObject(2, batchId)
+            statement.executeQuery().use { result -> result.next(); result.getLong(1) to result.getLong(2) }
+        }
+    }
+
+    fun workerExecutor(): VoucherPoolJdbcExecutor = jdbcExecutor
+
+    fun workerRepository(): VoucherPoolRepository = voucherRepository
 
     fun tamperCiphertext(entryId: UUID) {
         execute(
@@ -696,6 +788,8 @@ internal class LifecycleHarness(private val suffix: String) {
     ) {
         val repository = repositoryTransform(JdbcVoucherPoolRepository(dataSource))
         val executor = VoucherPoolJdbcExecutor(DatabasePermitGate.default(32), SpringTransactionManager(dataSource, DatabaseConfig {}, false))
+        voucherRepository = repository
+        jdbcExecutor = executor
         val idempotency = JdbcVoucherPoolIdempotencyRepository(digests)
         val crypto = AesGcmVoucherEnvelopeCrypto(VoucherKekRing.of(VoucherKek.of("test-kek", keyBytes(11))), digests)
         commandService = JdbcCampaignBatchCommandService(executor, repository, idempotency, digests, crypto)

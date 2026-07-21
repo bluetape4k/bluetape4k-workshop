@@ -328,10 +328,13 @@ CREATE TABLE voucher_pool_audits (
     aggregate_type VARCHAR(32) NOT NULL, aggregate_id UUID NOT NULL, revision BIGINT NOT NULL CHECK(revision>=0),
     policy_version BIGINT NOT NULL CHECK(policy_version>0), actor_type VARCHAR(32) NOT NULL,
     reason_code VARCHAR(64) NOT NULL, correlation_digest BYTEA, request_digest BYTEA,
+    before_count BIGINT, after_count BIGINT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
     UNIQUE (tenant_id,aggregate_type,aggregate_id,revision),
     FOREIGN KEY (tenant_id,campaign_id) REFERENCES voucher_pool_campaigns(tenant_id,campaign_id),
-    CHECK (actor_type IN ('CUSTOMER','OPERATOR','WORKER','SYSTEM'))
+    CHECK (actor_type IN ('CUSTOMER','OPERATOR','WORKER','SYSTEM')),
+    CHECK ((before_count IS NULL)=(after_count IS NULL)),
+    CHECK (before_count IS NULL OR (before_count>=0 AND after_count>=0))
 );
 CREATE INDEX ix_voucher_pool_audit_cursor ON voucher_pool_audits(tenant_id,campaign_id,id);
 
