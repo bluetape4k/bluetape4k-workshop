@@ -75,3 +75,16 @@ tasks.test {
     }
     usesService(gradle.sharedServices.registrations.named("test-mutex").get().service)
 }
+
+tasks.register<Test>("integrationTest") {
+    description = "Runs PostgreSQL and Redis integration tests for the job safety lab."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    setJvmArgs((tasks.test.get().jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
+    useJUnitPlatform {
+        includeTags("integration")
+    }
+    shouldRunAfter(tasks.test)
+    usesService(gradle.sharedServices.registrations.named("test-mutex").get().service)
+}

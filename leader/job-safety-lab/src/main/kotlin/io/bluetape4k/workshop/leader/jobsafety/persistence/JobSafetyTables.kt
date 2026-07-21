@@ -4,7 +4,7 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.javatime.timestamp
 
-object JobAssignments : LongIdTable("job_safety_assignments") {
+object JobAssignments : LongIdTable("job_safety_tenant_assignments") {
     val tenantId = varchar("tenant_id", 80).uniqueIndex()
     val membershipRevision = long("membership_revision")
     val regionId = varchar("region_id", 48)
