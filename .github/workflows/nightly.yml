@@ -45,7 +45,7 @@ jobs:
         with:
           gradle-version: wrapper
       - name: Build (compile only)
-        run: ./gradlew build -x test --parallel --continue
+        run: ./gradlew build -x test -x stressTest -x migrationCompatibilityTest --parallel --continue
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 

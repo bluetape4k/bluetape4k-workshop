@@ -44,6 +44,10 @@ PostgreSQL/JDBC는 nanosecond `Instant`를 microsecond로 반올림해 저장한
 
 Campaign과 batch create를 다음 초로 반올림되는 `.999999789` 입력으로 고정하자 기존 구현이 2/2 RED가 됐다. 비교 양쪽을 PostgreSQL 저장 정밀도로 반올림하고 초 rollover를 정규화한 뒤 동일 테스트를 3회 반복 통과시켰다. Database가 authority인 exact replay에서는 business field뿐 아니라 **database가 실제 보존하는 표현**까지 fingerprint 비교 계약에 포함해야 한다.
 
+### `-x test`는 custom `Test` task를 제외하지 않는다
+
+CI의 compile-only lane은 `build -x test --parallel`을 사용했지만 새 `stressTest`와 `migrationCompatibilityTest`는 이름이 다른 `Test` task라 그대로 실행됐다. 그 결과 repo 전체 AOT/compile 부하와 stress가 경쟁해, 전용 sequential Container lane에서는 통과한 SSE permit deadline이 compile lane에서만 실패했다. `--dry-run`으로 task graph를 먼저 RED로 확인하고 CI/nightly compile lane에서 두 custom verification task를 명시적으로 제외했다. Resource-sensitive 검증은 이미 존재하는 전용 sequential lane에서 실행해야 하며, task type이 같다는 이유만으로 `-x test`에 포함된다고 가정하면 안 된다.
+
 ### 복구 경로는 wiring까지 검증해야 한다
 
 migration runner, key preflight, worker trigger가 클래스와 단위 테스트로 존재하는 것만으로 production readiness가 되지 않는다. 실제 Spring bean과 기본 property가 켜져 있어야 한다.
@@ -74,7 +78,7 @@ migration runner, key preflight, worker trigger가 클래스와 단위 테스트
 EXPECTED_GRADLE_PROJECTS=108 ./scripts/smoke-validate.sh stale-check
 node scripts/validate-voucher-pool-runbook.mjs
 actionlint .github/workflows/Examples.yml .github/workflows/nightly.yml
-./gradlew build -x test --parallel --continue --no-daemon
+./gradlew build -x test -x stressTest -x migrationCompatibilityTest --parallel --continue --no-daemon
 git diff --check
 ```
 
@@ -82,6 +86,7 @@ git diff --check
 
 - command UI는 success schema와 terminal/retryable semantics를 함께 검증하고 ambiguous outcome에서 key를 유지한다.
 - timestamp를 exact replay authority에 포함할 때는 database 저장 정밀도와 반올림 경계를 deterministic fixture로 검증한다.
+- compile-only workflow에 custom `Test` task를 추가할 때는 `--dry-run` task graph와 전용 verification lane을 함께 확인한다.
 - lifecycle에 blocking I/O가 추가되면 shutdown과 마지막 registry mutation 사이의 race test를 추가한다.
 - stress evidence에는 실제 sample 수, 최대 wait, permit/Hikari drain과 leak 0을 포함한다.
 - 새 worker trigger는 Redis 없이도 PostgreSQL claim에서 재개되는 integration test를 가져야 한다.

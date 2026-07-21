@@ -49,8 +49,9 @@
 | Kover | instruction 89.53%, branch 63.45%, line 92.43%, method 89.29%, class 93.53% |
 | post-CI hardening stress evidence | permit max 15, deadline violation 0; foreground max 237/201/204/201ms; worker max 1ms; SSE max 234/73/111/95ms; pending drain 0/11/6/5ms |
 | PostgreSQL timestamp rounding regression | RED 2/2 `CREATE_FINGERPRINT_CONFLICT`; rollover 경계 GREEN 2/2 × 3회; final module 362/362 PASS |
+| compile-only workflow isolation | 기존 `build -x test` dry-run이 `stressTest`와 `migrationCompatibilityTest`를 포함하는 RED 확인; CI/nightly compile lane에서 두 custom verification task를 명시적으로 제외하고 전용 sequential lane은 유지 |
 | runtime dependency graph | JDK25 provider, Exposed JDBC, Lettuce, Bucket4j, leader present; JDK21 provider absent |
-| `./gradlew build -x test --parallel --continue` | PASS, 619 tasks |
+| `./gradlew build -x test -x stressTest -x migrationCompatibilityTest --parallel --continue` | PASS, 611 tasks |
 | project/stale/runbook/diagram/workflow checks | 108 projects; stale-check, runbook, architecture/sequence, actionlint, `bash -n` PASS |
 | Commerce lane | PASS, 네 PostgreSQL-backed commerce module 27 tasks |
 | forbidden scan | 운영/테스트 위반 0; compatibility CLI의 의도된 stdout 1건만 별도 source set에 존재 |
