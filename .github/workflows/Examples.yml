@@ -299,6 +299,7 @@ jobs:
       # - commerce-reservation-control-plane: PostgreSQL-authoritative reservation and advisory Redis path
       # - commerce-promotion-voucher-campaign: PostgreSQL-authoritative capacity with advisory Redis admission
       # - operations-job-console-*: shared PostgreSQL/Redis contract plus live Spring MVC and Ktor adapters
+      # - commerce-pre-generated-voucher-pool: PostgreSQL-authoritative pre-generated voucher allocation and recovery
       - name: Run container-backed examples
         run: >-
           ./gradlew
@@ -322,12 +323,19 @@ jobs:
           :operations-job-console-core:integrationTest
           :operations-job-console-spring:integrationTest
           :operations-job-console-ktor:integrationTest
+          :commerce-pre-generated-voucher-pool:test
+          :commerce-pre-generated-voucher-pool:koverXmlReport
           --continue
           --max-workers=1
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
           TESTCONTAINERS_RYUK_DISABLED: "true"
           DOCKER_HOST: "unix:///var/run/docker.sock"
+
+      - name: Verify voucher pool test and coverage reports
+        run: |
+          test -n "$(find commerce/pre-generated-voucher-pool/build/test-results/test -name '*.xml' -print -quit)"
+          test -s commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
 
       - name: Upload container example test results
         if: always()
@@ -375,6 +383,9 @@ jobs:
             operations/job-console-spring/build/reports/tests/integrationTest/
             operations/job-console-ktor/build/test-results/integrationTest/*.xml
             operations/job-console-ktor/build/reports/tests/integrationTest/
+            commerce/pre-generated-voucher-pool/build/test-results/test/*.xml
+            commerce/pre-generated-voucher-pool/build/reports/tests/test/
+            commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
           retention-days: 7
 
   examples-status:

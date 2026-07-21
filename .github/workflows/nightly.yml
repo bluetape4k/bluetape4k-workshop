@@ -113,6 +113,7 @@ jobs:
         run: >-
           ./gradlew
           test
+          :commerce-pre-generated-voucher-pool:koverXmlReport
           :graph-recommendation:integrationTest
           :graph-knowledge-graph:integrationTest
           :graph-social-network:integrationTest
@@ -121,6 +122,10 @@ jobs:
           :operations-job-console-ktor:integrationTest
           --continue
           --max-workers=1
+      - name: Verify voucher pool test and coverage reports
+        run: |
+          test -n "$(find commerce/pre-generated-voucher-pool/build/test-results/test -name '*.xml' -print -quit)"
+          test -s commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7
@@ -134,6 +139,7 @@ jobs:
             operations/job-console-core/build/test-results/integrationTest/*.xml
             operations/job-console-spring/build/test-results/integrationTest/*.xml
             operations/job-console-ktor/build/test-results/integrationTest/*.xml
+            commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
           retention-days: 14
 
   nightly-status:

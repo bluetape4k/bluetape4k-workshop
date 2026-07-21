@@ -13,6 +13,7 @@ operator-visible recovery paths.
 | [`order-lifecycle-fulfillment`](order-lifecycle-fulfillment/) | Independent order, payment, inventory, fulfillment, and refund lifecycles | PostgreSQL (Testcontainers) |
 | [`reservation-control-plane`](reservation-control-plane/) | PostgreSQL-authoritative reservations, idempotent retries, waitlist offers, and expiry | PostgreSQL + Redis (Testcontainers) |
 | [`promotion-voucher-campaign`](promotion-voucher-campaign/) | Campaign capacity, voucher allocation/redemption, review, SSE, and reconciliation | PostgreSQL + Redis (Testcontainers) |
+| [`pre-generated-voucher-pool`](pre-generated-voucher-pool/) | PostgreSQL-authoritative pre-generated voucher reservation, one-time reveal/replacement, revoke, and reconciliation | PostgreSQL + Redis (Testcontainers) |
 
 The modules use Java 25 virtual threads for blocking Spring MVC and Exposed JDBC
 work. Database concurrency remains bounded by HikariCP; virtual threads increase
@@ -24,5 +25,6 @@ request concurrency, not PostgreSQL capacity.
 ./gradlew :commerce-order-lifecycle-fulfillment:test --max-workers=1
 ./gradlew :commerce-reservation-control-plane:test --max-workers=1
 ./gradlew :commerce-promotion-voucher-campaign:test --max-workers=1
+./gradlew :commerce-pre-generated-voucher-pool:test --max-workers=1
 ./scripts/smoke-validate.sh commerce
 ```

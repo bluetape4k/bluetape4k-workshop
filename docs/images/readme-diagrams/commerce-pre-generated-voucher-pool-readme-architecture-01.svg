@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1500" viewBox="0 0 1800 1500" role="img" aria-labelledby="title desc">
+  <title id="title">Pre-generated Voucher Pool Architecture</title>
+  <desc id="desc">Browser and live integration-test traffic enters Spring MVC on Java 25 virtual threads. Redis admission and Bloom hints are advisory. Every command, worker, and SSE query acquires a dedicated database permit before using Exposed JDBC repositories, while PostgreSQL remains the sole authority for voucher lifecycle, idempotency, audit, and recovery.</desc>
+  <defs>
+    <style>
+      .bg{fill:#F8FAF7}.title{font-family:"Architects Daughter";font-size:44px;fill:#263238}.subtitle,.body,.small,.legend{font-family:"Comic Mono";fill:#3E4C59}.subtitle{font-size:18px}.layerTitle{font-family:"Architects Daughter";font-size:26px;fill:#344154}.cardTitle{font-family:"Architects Daughter";font-size:22px;fill:#16202A}.body{font-size:15px}.small{font-size:13px;fill:#5B6975}.layer{fill:#FFFFFF;stroke:#CAD6DF;stroke-width:2}.card{stroke-width:2.2}.blue{fill:#EFF6FF;stroke:#4F86C6}.green{fill:#F0F8F0;stroke:#6E8F4F}.amber{fill:#FFF7E8;stroke:#9B7D54}.red{fill:#FFF0F0;stroke:#B86868}.teal{fill:#EBFAF8;stroke:#2D948C}.store{fill:#FFFAF2;stroke:#8C6F33}.connector{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.http{stroke:#4F86C6;marker-end:url(#arrow-blue)}.db{stroke:#6E8F4F;marker-end:url(#arrow-green)}.advisory{stroke:#9B7D54;stroke-dasharray:9 7;marker-end:url(#arrow-amber)}.durable{stroke:#9B7D54;marker-end:url(#arrow-amber)}.read{stroke:#2D948C;marker-end:url(#arrow-teal)}.observe{stroke:#B86868;stroke-dasharray:9 7;marker-end:url(#arrow-red)}.legendBox{fill:#FFFFFF;stroke:#CAD6DF;stroke-width:1.8}.legend{font-size:14px}
+    </style>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#263238" flood-opacity="0.12"/></filter>
+    <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#9B7D54" stroke="#9B7D54" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-teal" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#2D948C" stroke="#2D948C" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="#B86868" stroke="#B86868" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+  </defs>
+  <rect class="bg" width="1800" height="1500"/>
+  <text id="diagram-title" class="title" x="900" y="66" text-anchor="middle">Pre-generated Voucher Pool Architecture</text>
+  <text class="subtitle" x="900" y="102" text-anchor="middle">PostgreSQL decides every lifecycle outcome; Redis, workers, and streaming remain bounded helpers.</text>
+
+  <rect class="layer" x="70" y="140" width="1660" height="245" rx="24"/>
+  <text class="layerTitle" x="105" y="180">HTTP and test boundary</text>
+  <g class="node" data-node="browser" filter="url(#shadow)"><rect class="card blue" x="115" y="205" width="500" height="70" rx="15"/><text class="cardTitle" x="365" y="235" text-anchor="middle">Browser console</text><text class="body" x="365" y="260" text-anchor="middle">customer + guarded operator + snapshot-first SSE</text></g>
+  <g class="node" data-node="webtestclient" filter="url(#shadow)"><rect class="card blue" x="115" y="295" width="500" height="70" rx="15"/><text class="cardTitle" x="365" y="325" text-anchor="middle">Live WebTestClient</text><text class="body" x="365" y="350" text-anchor="middle">RANDOM_PORT + real Tomcat + PostgreSQL / Redis</text></g>
+  <g class="node" data-node="tomcat" filter="url(#shadow)"><rect class="card blue" x="980" y="225" width="650" height="105" rx="15"/><text class="cardTitle" x="1305" y="260" text-anchor="middle">Spring MVC / Java 25 virtual threads</text><text class="body" x="1305" y="286" text-anchor="middle">customer and operator HTTP boundaries</text><text class="small" x="1305" y="310" text-anchor="middle">bounded headers, async work, readiness, and shutdown</text></g>
+  <path data-connector="browser-tomcat" class="connector http" d="M615 240 H900 Q925 240 925 265 V267 Q925 277 935 277 H980"/>
+  <path data-connector="webtestclient-tomcat" class="connector http" d="M615 330 H875 Q900 330 900 305 V297 Q900 287 910 287 H980"/>
+
+  <rect class="layer" x="70" y="420" width="1660" height="320" rx="24"/>
+  <text class="layerTitle" x="105" y="460">Application and admission boundary</text>
+  <g class="node" data-node="redis-admission" filter="url(#shadow)"><rect class="card amber" x="105" y="500" width="330" height="125" rx="15"/><text class="cardTitle" x="270" y="534" text-anchor="middle">Redis admission + Bloom</text><text class="body" x="270" y="562" text-anchor="middle">Lettuce / Bucket4j keyed hints</text><text class="small" x="270" y="589" text-anchor="middle">timeout uses bounded node-local fallback</text><text class="small" x="270" y="611" text-anchor="middle">never a terminal voucher authority</text></g>
+  <g class="node" data-node="idempotency" filter="url(#shadow)"><rect class="card green" x="485" y="500" width="350" height="125" rx="15"/><text class="cardTitle" x="660" y="534" text-anchor="middle">HTTP idempotency</text><text class="body" x="660" y="562" text-anchor="middle">fingerprint + owner lease</text><text class="small" x="660" y="589" text-anchor="middle">closed response or retryable owner release</text><text class="small" x="660" y="611" text-anchor="middle">same-key replay without duplicate effect</text></g>
+  <g class="node" data-node="commands" filter="url(#shadow)"><rect class="card green" x="885" y="485" width="430" height="155" rx="15"/><text class="cardTitle" x="1100" y="522" text-anchor="middle">Voucher command services</text><text class="body" x="1100" y="551" text-anchor="middle">import / generate / reserve / allocate / reveal</text><text class="body" x="1100" y="578" text-anchor="middle">redeem / release / replace / revoke / reconcile</text><text class="small" x="1100" y="607" text-anchor="middle">campaign-first locks + deterministic SKIP LOCKED</text><text class="small" x="1100" y="629" text-anchor="middle">envelope encryption before reveal; digest-only after</text></g>
+  <g class="node" data-node="query-sse" filter="url(#shadow)"><rect class="card teal" x="1365" y="500" width="330" height="125" rx="15"/><text class="cardTitle" x="1530" y="534" text-anchor="middle">Query + SSE</text><text class="body" x="1530" y="562" text-anchor="middle">code-free snapshots + audit cursor</text><text class="small" x="1530" y="589" text-anchor="middle">shared poller / reset / polling fallback</text><text class="small" x="1530" y="611" text-anchor="middle">no JDBC permit during network writes</text></g>
+  <path data-connector="tomcat-idempotency" class="connector http" d="M1130 330 V390 Q1130 410 1110 410 H660 Q640 410 640 430 V500"/>
+  <path data-connector="tomcat-query" class="connector read" d="M1475 330 V500"/>
+  <path data-connector="redis-idempotency" class="connector advisory" d="M435 550 H485"/>
+  <path data-connector="idempotency-commands" class="connector db" d="M835 562 H885"/>
+
+  <rect class="layer" x="70" y="775" width="1660" height="350" rx="24"/>
+  <text class="layerTitle" x="105" y="815">Persistence and bounded recovery boundary</text>
+  <g class="node" data-node="permit-gate" filter="url(#shadow)"><rect class="card green" x="510" y="850" width="650" height="88" rx="15"/><text class="cardTitle" x="835" y="883" text-anchor="middle">Always-on DatabasePermitGate before JDBC</text><text class="body" x="835" y="911" text-anchor="middle">11 foreground / 1 worker / 3 SSE / total 15 / Hikari max 16</text></g>
+  <g class="node" data-node="repositories" filter="url(#shadow)"><rect class="card green" x="175" y="990" width="930" height="95" rx="15"/><text class="cardTitle" x="640" y="1024" text-anchor="middle">Bluetape Exposed / JDBC repositories</text><text class="body" x="640" y="1052" text-anchor="middle">campaign / batch / entry / reservation / allocation / idempotency / audit / inbox</text><text class="small" x="640" y="1074" text-anchor="middle">short transactions, global lock order, revision and owner CAS</text></g>
+  <g class="node" data-node="workers" filter="url(#shadow)"><rect class="card amber" x="1260" y="970" width="400" height="125" rx="15"/><text class="cardTitle" x="1460" y="1005" text-anchor="middle">Leader + manual recovery workers</text><text class="body" x="1460" y="1033" text-anchor="middle">expiry / revocation / reconciliation / purge</text><text class="small" x="1460" y="1060" text-anchor="middle">claim owner + revision CAS / bounded chunks</text><text class="small" x="1460" y="1082" text-anchor="middle">lease renewal, checkpoint, stale-finalize reject</text></g>
+  <path data-connector="commands-permit" class="connector db" d="M1100 640 V770 Q1100 795 1075 795 H875 Q850 795 850 820 V850"/>
+  <path data-connector="query-permit" class="connector read" d="M1530 625 V750 Q1530 775 1505 775 H1210 Q1185 775 1185 800 V855 Q1185 880 1165 880 H1160"/>
+  <path data-connector="workers-permit" class="connector durable" d="M1260 1015 H1220 Q1195 1015 1195 990 V935 Q1195 910 1170 910 H1160"/>
+  <path data-connector="permit-repositories" class="connector db" d="M835 938 V990"/>
+
+  <rect class="layer" x="70" y="1160" width="1660" height="155" rx="24"/>
+  <text class="layerTitle" x="105" y="1201">Sole correctness authority</text>
+  <g class="node" data-node="postgresql" filter="url(#shadow)"><rect class="card store" x="185" y="1220" width="1430" height="65" rx="15"/><text class="cardTitle" x="900" y="1248" text-anchor="middle">PostgreSQL</text><text class="body" x="900" y="1273" text-anchor="middle">voucher lifecycle + time + capacity + durable replay + audit + recovery cursors</text></g>
+  <path data-connector="repositories-postgresql" class="connector db" d="M640 1085 V1130 Q640 1150 660 1150 H760 Q780 1150 780 1170 V1220"/>
+  <path data-connector="workers-postgresql" class="connector durable" d="M1460 1095 V1140 Q1460 1160 1440 1160 H1400 Q1380 1160 1380 1180 V1220"/>
+
+  <g class="node" data-node="observability" filter="url(#shadow)"><rect class="card red" x="355" y="1345" width="1090" height="68" rx="15"/><text class="cardTitle" x="900" y="1374" text-anchor="middle">Operational health, metrics, and redacted diagnostics</text><text class="body" x="900" y="1399" text-anchor="middle">bounded outcome/reason tags / no raw code, user, idempotency key, secret, or request payload</text></g>
+  <path data-connector="postgresql-observability" class="connector observe" d="M900 1285 V1345"/>
+
+  <rect class="legendBox" x="190" y="1440" width="1420" height="38" rx="14"/>
+  <text class="legend" x="250" y="1465">Blue: HTTP</text><text class="legend" x="520" y="1465">Green: authoritative DB path</text><text class="legend" x="900" y="1465">Amber solid: durable</text><text class="legend" x="1190" y="1465">Amber dashed: advisory</text><text class="legend" x="1480" y="1465">Teal: query / SSE</text>
+</svg>
