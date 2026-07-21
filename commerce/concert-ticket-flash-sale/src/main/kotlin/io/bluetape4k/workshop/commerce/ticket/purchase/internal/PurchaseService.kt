@@ -33,6 +33,7 @@ import io.bluetape4k.workshop.commerce.ticket.purchase.api.AuthorizationRequeste
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.CancelPurchase
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.PaymentOutcomeCommands
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.PurchaseCommands
+import io.bluetape4k.workshop.commerce.ticket.purchase.api.PurchaseQueries
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.PurchaseSnapshot
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.StartPurchase
 import io.bluetape4k.workshop.commerce.ticket.salecontrol.api.SalePurchaseAuthority
@@ -89,6 +90,13 @@ class TicketPurchaseRepository(
     private val clock: Clock,
 ) : TicketExposedJdbcRepository<TicketPurchaseAttemptEntity, UUID>(TicketPurchaseAttemptEntity::class.java) {
     private val inventories = TicketInventoryRepository(jdbc)
+
+    fun owned(attemptId: UUID, buyerSubjectId: UUID): PurchaseSnapshot? = jdbc.transaction {
+        findAll {
+            (TicketPurchaseAttempts.id eq attemptId) and
+                (TicketPurchaseAttempts.userSubjectId eq buyerSubjectId)
+        }.singleOrNull()?.toRecord()?.snapshot()
+    }
 
     fun start(command: StartPurchase): PurchaseCommit = jdbc.transaction {
         val now = clock.instant()
@@ -552,7 +560,7 @@ class PurchaseService(
     clock: Clock,
     private val events: PurchaseEventPublisher,
     private val purchases: TicketPurchaseRepository = TicketPurchaseRepository(jdbc, sale, admission, clock),
-) : PurchaseCommands, PaymentOutcomeCommands {
+) : PurchaseCommands, PurchaseQueries, PaymentOutcomeCommands {
     override fun start(command: StartPurchase): PurchaseSnapshot {
         validate(command)
         val committed = purchases.start(command)
@@ -566,6 +574,10 @@ class PurchaseService(
 
     override fun applyTicketOutcome(command: ApplyTicketOutcome): PurchaseSnapshot =
         purchases.applyTicketOutcome(command)
+
+    @Transactional(readOnly = true)
+    override fun owned(attemptId: UUID, buyerSubjectId: UUID): PurchaseSnapshot? =
+        purchases.owned(attemptId, buyerSubjectId)
 
     private fun validate(command: StartPurchase) {
         if (command.idempotencyOwnerId <= 0 || command.grade.isBlank() || command.quantity <= 0 ||

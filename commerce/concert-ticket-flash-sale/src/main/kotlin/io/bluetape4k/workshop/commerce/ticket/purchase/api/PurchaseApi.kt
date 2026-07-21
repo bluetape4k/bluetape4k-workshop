@@ -85,6 +85,11 @@ interface PurchaseCommands {
     fun applyTicketOutcome(command: ApplyTicketOutcome): PurchaseSnapshot
 }
 
+/** Owner-scoped read boundary; a foreign owner is indistinguishable from a missing attempt. */
+fun interface PurchaseQueries {
+    fun owned(attemptId: UUID, buyerSubjectId: UUID): PurchaseSnapshot?
+}
+
 enum class ApplyResult { APPLIED, STALE }
 
 /** Fenced payment-result boundary used only by the payment module. */
