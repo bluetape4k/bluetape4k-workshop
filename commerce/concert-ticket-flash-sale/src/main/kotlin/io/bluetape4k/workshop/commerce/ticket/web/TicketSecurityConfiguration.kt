@@ -41,7 +41,7 @@ internal class TicketSecurityConfiguration {
         .csrf { it.disable() }
         .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
         .authorizeHttpRequests {
-            it.requestMatchers("/actuator/health/**").permitAll()
+            it.requestMatchers("/", "/index.html", "/app.js", "/styles.css", "/actuator/health/**").permitAll()
                 .requestMatchers("/api/v1/operator/**").hasRole("OPERATOR")
                 .anyRequest().authenticated()
         }

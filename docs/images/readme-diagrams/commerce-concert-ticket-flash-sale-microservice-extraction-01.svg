@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="960" viewBox="0 0 1600 960">
+  <defs>
+    <style>.bg{fill:#f8fafc}.title{font:34px 'Architects Daughter','Comic Sans MS',cursive;fill:#18212f}.subtitle{font:16px 'Comic Mono','Courier New',monospace;fill:#64748b}.zone{stroke-width:1.5}.zone-title{font:23px 'Architects Daughter','Comic Sans MS',cursive;fill:#243044}.card{fill:#fff;stroke:#cbd5e1;stroke-width:1.5}.card-title{font:19px 'Architects Daughter','Comic Sans MS',cursive;fill:#111827}.body{font:13px 'Comic Mono','Courier New',monospace;fill:#475569}.edge{fill:none;stroke:#2563eb;stroke-width:2.5;stroke-linecap:round}.event{fill:none;stroke:#7c3aed;stroke-width:2.5;stroke-dasharray:8 6}.rule{font:bold 15px 'Comic Mono','Courier New',monospace;fill:#1e293b}</style>
+    <marker id="extractArrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L13 7 L1 13 Z" fill="#2563eb"/></marker>
+    <marker id="eventArrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L13 7 L1 13 Z" fill="#7c3aed"/></marker>
+  </defs>
+  <rect class="bg" width="1600" height="960"/><text class="title" x="70" y="62">Microservice Extraction — Preserve Contracts, Split Ownership</text><text class="subtitle" x="72" y="91">Start with the tested Modulith boundaries; extract one authority and its data at a time.</text>
+  <rect class="zone" x="60" y="125" width="430" height="690" rx="24" fill="#f0fdf4" stroke="#bbf7d0"/><text class="zone-title" x="90" y="165">Today: Spring Modulith</text>
+  <rect class="card" x="105" y="210" width="340" height="95" rx="17"/><text class="card-title" x="135" y="245">salecontrol + admission</text><text class="body" x="135" y="271">waiting room and sale policy</text><text class="body" x="135" y="291">Redis coordination</text>
+  <rect class="card" x="105" y="350" width="340" height="95" rx="17" fill="#ecfdf5" stroke="#86efac"/><text class="card-title" x="135" y="385">purchase</text><text class="body" x="135" y="411">inventory + USER/IP guards</text><text class="body" x="135" y="431">transactional authority</text>
+  <rect class="card" x="105" y="490" width="340" height="95" rx="17"/><text class="card-title" x="135" y="525">payment</text><text class="body" x="135" y="551">operation lookup + refund</text><text class="body" x="135" y="571">fenced claims</text>
+  <rect class="card" x="105" y="630" width="340" height="95" rx="17"/><text class="card-title" x="135" y="665">ticketing</text><text class="body" x="135" y="691">issue/revoke receipts</text><text class="body" x="135" y="711">bounded retries</text>
+
+  <rect class="zone" x="555" y="125" width="420" height="690" rx="24" fill="#fff7ed" stroke="#fed7aa"/><text class="zone-title" x="585" y="165">Extraction contracts</text>
+  <rect class="card" x="600" y="210" width="330" height="95" rx="17"/><text class="card-title" x="630" y="245">Stable commands</text><text class="body" x="630" y="271">idempotency key + owner</text><text class="body" x="630" y="291">explicit deadline</text>
+  <rect class="card" x="600" y="350" width="330" height="95" rx="17"/><text class="card-title" x="630" y="385">Stable events</text><text class="body" x="630" y="411">operation/effect ID</text><text class="body" x="630" y="431">schema version</text>
+  <rect class="card" x="600" y="490" width="330" height="95" rx="17"/><text class="card-title" x="630" y="525">Recovery query</text><text class="body" x="630" y="551">lookup by stable ID</text><text class="body" x="630" y="571">owner-safe projection</text>
+  <rect class="card" x="600" y="630" width="330" height="95" rx="17"/><text class="card-title" x="630" y="665">Delivery boundary</text><text class="body" x="630" y="691">transactional outbox</text><text class="body" x="630" y="711">consumer dedup receipt</text>
+
+  <rect class="zone" x="1040" y="125" width="500" height="690" rx="24" fill="#eff6ff" stroke="#bfdbfe"/><text class="zone-title" x="1070" y="165">Target: independently owned services</text>
+  <rect class="card" x="1090" y="200" width="400" height="110" rx="17"/><text class="card-title" x="1120" y="235">Admission Service</text><text class="body" x="1120" y="261">Redis + grant ledger</text><text class="body" x="1120" y="284">no inventory decisions</text>
+  <rect class="card" x="1090" y="340" width="400" height="110" rx="17" fill="#ecfdf5" stroke="#86efac"/><text class="card-title" x="1120" y="375">Purchase Service</text><text class="body" x="1120" y="401">owns inventory and attempt DB</text><text class="body" x="1120" y="424">publishes durable intent</text>
+  <rect class="card" x="1090" y="480" width="400" height="110" rx="17"/><text class="card-title" x="1120" y="515">Payment Service</text><text class="body" x="1120" y="541">owns PG operations/refunds</text><text class="body" x="1120" y="564">reports conclusive outcome</text>
+  <rect class="card" x="1090" y="620" width="400" height="110" rx="17"/><text class="card-title" x="1120" y="655">Ticket Service</text><text class="body" x="1120" y="681">owns issue/revoke lifecycle</text><text class="body" x="1120" y="704">reports safe disposition</text>
+  <path class="edge" d="M445 257 H600" marker-end="url(#extractArrow)"/><path class="edge" d="M930 257 H1090" marker-end="url(#extractArrow)"/>
+  <path class="edge" d="M445 397 H600" marker-end="url(#extractArrow)"/><path class="edge" d="M930 397 H1090" marker-end="url(#extractArrow)"/>
+  <path class="edge" d="M445 537 H600" marker-end="url(#extractArrow)"/><path class="edge" d="M930 537 H1090" marker-end="url(#extractArrow)"/>
+  <path class="edge" d="M445 677 H600" marker-end="url(#extractArrow)"/><path class="edge" d="M930 677 H1090" marker-end="url(#extractArrow)"/>
+  <rect x="185" y="850" width="1230" height="70" rx="20" fill="#fff" stroke="#cbd5e1"/><text class="rule" x="245" y="880">Do not share tables across services. Move the invariant owner, its data, and recovery contract together.</text><text class="body" x="245" y="904">Keep synchronous purchase latency bounded; use durable events for payment and ticket convergence.</text>
+</svg>
