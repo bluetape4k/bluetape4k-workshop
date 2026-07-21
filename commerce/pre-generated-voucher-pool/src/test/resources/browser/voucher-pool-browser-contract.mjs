@@ -300,10 +300,14 @@ class BrowserHarness {
         await this.settle();
     }
 
-    jsonResponse(payload, ok = true, status = ok ? 200 : 500) {
+    jsonResponse(payload, ok = true, status = ok ? 200 : 500, headers = {}) {
+        const normalizedHeaders = new Map(
+            Object.entries(headers).map(([name, value]) => [name.toLowerCase(), String(value)]),
+        );
         return {
             ok,
             status,
+            headers: { get: name => normalizedHeaders.get(String(name).toLowerCase()) ?? null },
             json: async () => payload,
         };
     }
@@ -938,6 +942,72 @@ async function ambiguousCommandRetryIdempotencyContract() {
         assert.equal(browser.requests.some(request => request.path.includes(firstKey)), false);
         assert.equal(browser.attributeWrites.some(write => write.includes(firstKey)), false);
         assert.deepEqual(browser.forbiddenAccesses, []);
+
+        const malformed = new BrowserHarness(source, htmlElements);
+        malformed.evaluate(`
+            state.tenant = "tenant-a";
+            state.principal = "customer-a";
+            state.scopeReady = true;
+            ${testCase.setup};
+            refreshCustomerActions();
+            refreshOperatorActions();
+        `);
+        let malformedAttempt = 0;
+        malformed.fetchHandler = async () => {
+            malformedAttempt += 1;
+            if (malformedAttempt === 1) {
+                return {
+                    ok: true,
+                    status: 200,
+                    headers: { get: () => null },
+                    json: async () => { throw new SyntaxError("truncated committed response"); },
+                };
+            }
+            return malformed.jsonResponse(testCase.response);
+        };
+        await assert.rejects(
+            malformed.call(testCase.command),
+            failure => failure?.name === "SyntaxError",
+            `${testCase.name} malformed success must remain ambiguous`,
+        );
+        await malformed.call(testCase.command);
+        assert.equal(
+            malformed.requests[1].options.headers["Idempotency-Key"],
+            malformed.requests[0].options.headers["Idempotency-Key"],
+            `${testCase.name} malformed success retry must reuse the exact key`,
+        );
+
+        const retryable = new BrowserHarness(source, htmlElements);
+        retryable.evaluate(`
+            state.tenant = "tenant-a";
+            state.principal = "customer-a";
+            state.scopeReady = true;
+            ${testCase.setup};
+            refreshCustomerActions();
+            refreshOperatorActions();
+        `);
+        let retryableAttempt = 0;
+        retryable.fetchHandler = async () => {
+            retryableAttempt += 1;
+            if (retryableAttempt === 1) {
+                const payload = testCase.name === "reserve"
+                    ? { code: "BACKEND_TIMEOUT", requestId: "request-retryable" }
+                    : { code: "BACKEND_TIMEOUT", requestId: "request-retryable", retryAfterSeconds: 1 };
+                return retryable.jsonResponse(payload, false, 503, { "Retry-After": "1" });
+            }
+            return retryable.jsonResponse(testCase.response);
+        };
+        await assert.rejects(
+            retryable.call(testCase.command),
+            failure => failure?.definitiveResponse === false && failure?.retryAfterSeconds === 1,
+            `${testCase.name} retryable response must preserve the logical intent`,
+        );
+        await retryable.call(testCase.command);
+        assert.equal(
+            retryable.requests[1].options.headers["Idempotency-Key"],
+            retryable.requests[0].options.headers["Idempotency-Key"],
+            `${testCase.name} retryable response must reuse the exact key`,
+        );
     }
 
     const terminal = new BrowserHarness(source, htmlElements);

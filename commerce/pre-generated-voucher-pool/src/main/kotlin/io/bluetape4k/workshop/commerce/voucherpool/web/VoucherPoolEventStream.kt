@@ -762,6 +762,7 @@ internal class VoucherPoolEventStream(
         }
         try {
             val registration = registryLock.withLock {
+                if (closed.get()) throw serviceShuttingDown()
                 val existing = pollers[scope]
                 val poller = existing ?: ScopePoller(
                     scope,

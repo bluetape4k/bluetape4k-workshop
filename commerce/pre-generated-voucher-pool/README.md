@@ -38,7 +38,7 @@ There are no default operator credentials or key materials. `VOUCHER_POOL_OPERAT
 | Management | `127.0.0.1:8081` | `VOUCHER_POOL_MANAGEMENT_PORT` |
 | PostgreSQL | `jdbc:postgresql://localhost:5432/voucher_pool` | `VOUCHER_POOL_DATABASE_URL`, `VOUCHER_POOL_DATABASE_USERNAME`, `VOUCHER_POOL_DATABASE_PASSWORD` |
 | Hikari | max 16, min idle 4, acquisition 2s | Do not increase the pool as the first saturation response |
-| Foreground lane | 11 permits, wait 250ms, transaction/lock 5s | Customer and operator commands |
+| Foreground lane | 11 permits, wait 200ms, transaction/lock 5s | Customer and operator commands; observed stress gate remains 250ms |
 | Worker lane | 1 permit, wait 1s, transaction/lock 10s | Revoke, expiry, reconciliation, retention |
 | SSE lane | 3 permits, wait 1s, transaction/lock 5s | Snapshot and cursor polling |
 | Redis | disabled, command timeout 500ms | `VOUCHER_POOL_REDIS_ENABLED`, `VOUCHER_POOL_REDIS_URI` |

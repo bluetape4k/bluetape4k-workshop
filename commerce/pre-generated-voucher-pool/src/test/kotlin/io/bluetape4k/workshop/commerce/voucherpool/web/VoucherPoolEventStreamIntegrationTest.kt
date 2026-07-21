@@ -38,8 +38,11 @@ import java.net.http.HttpResponse
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import javax.sql.DataSource
 import kotlin.time.Duration.Companion.minutes
 
@@ -144,6 +147,52 @@ internal class VoucherPoolEventStreamIntegrationTest : AbstractVoucherPoolIntegr
         val reset = checkNotNull(subscription.next(Duration.ZERO))
         check(reset.type == "reset" && reset.terminal)
         subscription.close()
+    }
+
+    @Test
+    fun `close racing a blocked initial snapshot prevents late poller registration`() {
+        val source = ClosingRaceEventSource()
+        val properties = VoucherPoolProperties(
+            sse = VoucherPoolSseProperties(
+                pollInterval = Duration.ofMillis(1),
+                maxIdleInterval = Duration.ofMillis(5),
+                heartbeatInterval = Duration.ofSeconds(1),
+            ),
+            http = VoucherPoolHttpProperties(operatorSecret = OPERATOR_SECRET, operatorGuard = OPERATOR_GUARD),
+        )
+        VirtualThreads.executorService().use { executor ->
+            val stream = VoucherPoolEventStream(
+                source,
+                Jackson.defaultJsonMapper,
+                executor,
+                properties,
+                VoucherPoolMetrics(SimpleMeterRegistry()),
+            )
+            val subscription = AtomicReference<VoucherPoolEventStream.StreamSubscription?>()
+            val failure = AtomicReference<RuntimeException?>()
+            val opening = Thread.ofVirtual().start {
+                try {
+                    subscription.set(stream.openCustomer(TENANT, PRINCIPAL, null))
+                } catch (caught: RuntimeException) {
+                    failure.set(caught)
+                }
+            }
+            try {
+                check(source.initialEntered.await(2, TimeUnit.SECONDS))
+                stream.close()
+                source.releaseInitial.countDown()
+                opening.join(Duration.ofSeconds(2))
+
+                val shutdown = failure.get()
+                check(shutdown is VoucherPoolApiException && shutdown.stableCode == "SERVICE_SHUTTING_DOWN")
+                check(subscription.get() == null)
+                check(stream.activePollers() == 0)
+            } finally {
+                source.releaseInitial.countDown()
+                subscription.get()?.close()
+                stream.close()
+            }
+        }
     }
 
     @Test
@@ -428,6 +477,29 @@ internal class VoucherPoolEventStreamIntegrationTest : AbstractVoucherPoolIntegr
             "OPERATOR", null, null, emptyList(), emptyList(), emptyList(), emptyList(),
             counts, false, Instant.EPOCH,
         )
+    }
+
+    private class ClosingRaceEventSource : VoucherPoolEventSource {
+        val initialEntered = CountDownLatch(1)
+        val releaseInitial = CountDownLatch(1)
+        private val snapshot = VoucherPoolSnapshotResponse(
+            "CUSTOMER", null, null, emptyList(), emptyList(), emptyList(), emptyList(),
+            emptyMap(), false, Instant.EPOCH,
+        )
+
+        override fun snapshot(scope: VoucherPoolStreamScope): VoucherPoolSnapshotResponse = snapshot
+
+        override fun initial(
+            scope: VoucherPoolStreamScope,
+            cursor: VoucherPoolEventCursor?,
+        ): VoucherPoolStreamInitial {
+            initialEntered.countDown()
+            check(releaseInitial.await(2, TimeUnit.SECONDS))
+            return VoucherPoolStreamInitial(snapshot, VoucherPoolEventCursor(0, 0), false)
+        }
+
+        override fun poll(scope: VoucherPoolStreamScope, afterId: Long): VoucherPoolStreamBatch =
+            VoucherPoolStreamBatch(snapshot, emptyList(), afterId)
     }
 
     private companion object {

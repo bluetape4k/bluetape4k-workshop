@@ -106,6 +106,13 @@ function safeIdentifier(value) {
     return /^[A-Za-z0-9._:-]{1,128}$/.test(candidate) ? candidate : "unavailable";
 }
 
+function retryAfterSeconds(response, payload) {
+    const candidate = payload.retryAfterSeconds ?? response.headers?.get?.("Retry-After");
+    if (candidate === null || candidate === undefined || candidate === "") return null;
+    const seconds = Number(candidate);
+    return Number.isSafeInteger(seconds) && seconds >= 0 ? seconds : null;
+}
+
 function randomKey() {
     const bytes = new Uint8Array(12);
     crypto.getRandomValues(bytes);
@@ -167,24 +174,30 @@ async function api(path, options = {}) {
     try {
         const response = await fetch(path, { cache: "no-store", ...options, signal: controller.signal });
         let payload;
+        let payloadConfirmed = true;
         try {
             payload = await awaitWithAbort(response.json(), controller.signal);
         } catch (failure) {
             if (controller.signal.aborted || isAbortFailure(failure)) throw failure;
             if (failure?.name !== "SyntaxError") throw failure;
+            if (response.ok) throw failure;
+            payloadConfirmed = false;
             payload = {};
         }
         if (timedOut) throw new RequestTimeoutError();
         if (!response.ok) {
             const code = safeIdentifier(payload.code || `HTTP_${response.status}`);
             const requestId = safeIdentifier(payload.requestId);
+            const retryDelaySeconds = retryAfterSeconds(response, payload);
             const failure = new Error(`Request failed (${code}; request ${requestId})`);
             failure.code = code;
             failure.safeRequestId = requestId;
-            failure.definitiveResponse = true;
+            failure.definitiveResponse = payloadConfirmed && retryDelaySeconds === null;
+            failure.retryAfterSeconds = retryDelaySeconds;
             failure.payload = {
                 code,
                 requestId,
+                retryAfterSeconds: retryDelaySeconds,
                 replacementAvailable: payload.replacementAvailable === true,
             };
             throw failure;

@@ -38,7 +38,7 @@ Operator credential과 key material에는 기본값이 없습니다. Test profil
 | Management | `127.0.0.1:8081` | `VOUCHER_POOL_MANAGEMENT_PORT` |
 | PostgreSQL | `jdbc:postgresql://localhost:5432/voucher_pool` | `VOUCHER_POOL_DATABASE_URL`, `VOUCHER_POOL_DATABASE_USERNAME`, `VOUCHER_POOL_DATABASE_PASSWORD` |
 | Hikari | max 16, min idle 4, acquisition 2s | 포화 시 첫 대응으로 pool을 늘리지 않음 |
-| Foreground lane | permit 11개, wait 250ms, transaction/lock 5s | Customer와 operator command |
+| Foreground lane | permit 11개, wait 200ms, transaction/lock 5s | Customer와 operator command, 관측 stress gate는 250ms 유지 |
 | Worker lane | permit 1개, wait 1s, transaction/lock 10s | Revoke, expiry, reconciliation, retention |
 | SSE lane | permit 3개, wait 1s, transaction/lock 5s | Snapshot과 cursor polling |
 | Redis | disabled, command timeout 500ms | `VOUCHER_POOL_REDIS_ENABLED`, `VOUCHER_POOL_REDIS_URI` |

@@ -136,7 +136,7 @@ private fun assertVoucherPoolStressHardGates(evidence: VoucherPoolStressEvidence
     (evidence.hikariActiveMax <= 16).shouldBeTrue()
     (evidence.hikariAcquisitionWaitSamples > 0).shouldBeTrue()
     (evidence.hikariAcquisitionWaitMaxMillis <= 2_000).shouldBeTrue()
-    (evidence.totalPermitHoldersMax <= 16).shouldBeTrue()
+    (evidence.totalPermitHoldersMax <= 15).shouldBeTrue()
     (evidence.foregroundWaitSamples > 0).shouldBeTrue()
     (evidence.foregroundWaitMaxMillis <= 250).shouldBeTrue()
     (evidence.workerWaitSamples > 0).shouldBeTrue()
