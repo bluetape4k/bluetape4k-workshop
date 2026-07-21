@@ -8,16 +8,18 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.Duration.Companion.seconds
 
 private const val DEFAULT_FOREGROUND_CAPACITY = 11
 private const val DEFAULT_WORKER_CAPACITY = 1
 private const val DEFAULT_SSE_CAPACITY = 3
-private const val DEFAULT_FOREGROUND_WAIT_MILLIS = 250
+private const val DEFAULT_FOREGROUND_WAIT_MILLIS = 200
 private const val RESERVED_UNGATED_CONNECTIONS = 1
 
 internal enum class PermitLane {
@@ -37,6 +39,8 @@ internal data class PermitSnapshot(
     val sseInUse: Int,
     val capacities: Map<PermitLane, Int>,
     val waits: Map<PermitLane, Duration>,
+    val observedWaitMax: Map<PermitLane, Duration>,
+    val observedWaitSamples: Map<PermitLane, Long>,
 )
 
 internal class PoolBusyException(
@@ -60,6 +64,8 @@ internal class DatabasePermitGate(
     private val permits: Map<PermitLane, Semaphore>
     private val activeLane = ThreadLocal<PermitLane>()
     private val activeThreads = ConcurrentHashMap.newKeySet<Thread>()
+    private val waitSamples = PermitLane.entries.associateWith { AtomicLong() }
+    private val waitMaxNanos = PermitLane.entries.associateWith { AtomicLong() }
     private val accepting = AtomicBoolean(true)
     private val drainLock = ReentrantLock()
     private val drained = drainLock.newCondition()
@@ -89,7 +95,15 @@ internal class DatabasePermitGate(
             sseInUse = inUse(PermitLane.SSE),
             capacities = configs.mapValues { (_, config) -> config.capacity },
             waits = configs.mapValues { (_, config) -> config.wait },
+            observedWaitMax = waitMaxNanos.mapValues { (_, value) -> value.get().nanoseconds },
+            observedWaitSamples = waitSamples.mapValues { (_, value) -> value.get() },
         )
+
+    fun resetWaitObservations() {
+        check(isDrained()) { "permit wait observations can only be reset while the gate is drained" }
+        waitSamples.values.forEach { it.set(0L) }
+        waitMaxNanos.values.forEach { it.set(0L) }
+    }
 
     fun beginShutdown() {
         accepting.set(false)
@@ -149,6 +163,7 @@ internal class DatabasePermitGate(
         semaphore: Semaphore,
         wait: Duration,
     ) {
+        val startedAt = System.nanoTime()
         val acquired =
             try {
                 semaphore.tryAcquire(wait.inWholeNanoseconds, TimeUnit.NANOSECONDS)
@@ -156,6 +171,8 @@ internal class DatabasePermitGate(
                 Thread.currentThread().interrupt()
                 log.debug { "voucher_pool_db_permit_interrupted lane=$lane" }
                 throw PoolBusyException(lane = lane, interrupted = true, cause = interrupted)
+            } finally {
+                recordWait(lane, System.nanoTime() - startedAt)
             }
         if (!acquired) {
             log.debug { "voucher_pool_db_permit_timed_out lane=$lane" }
@@ -166,6 +183,11 @@ internal class DatabasePermitGate(
             signalIfDrained()
             throw PoolBusyException(lane)
         }
+    }
+
+    private fun recordWait(lane: PermitLane, elapsedNanos: Long) {
+        waitSamples.getValue(lane).incrementAndGet()
+        waitMaxNanos.getValue(lane).accumulateAndGet(elapsedNanos.coerceAtLeast(0L), ::maxOf)
     }
 
     private fun inUse(lane: PermitLane): Int =

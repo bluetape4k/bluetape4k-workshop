@@ -59,6 +59,43 @@ internal data class VoucherPoolAvailableKeys(
     companion object { private const val serialVersionUID: Long = 1L }
 }
 
+/** Key references extracted from backup metadata and content independently from the supplied manifest. */
+internal data class VoucherPoolBackupKeyInventory(
+    val kekVersions: Set<String>,
+    val verificationVersions: Set<String>,
+    val stableDedupVersions: Set<String>,
+    val commandTombstoneVersions: Set<String>,
+    val userIdentityVersions: Set<String>,
+    val auditVersions: Set<String>,
+    val signatureVersions: Set<String>,
+) : Serializable {
+    init {
+        require(
+            listOf(
+                kekVersions,
+                verificationVersions,
+                stableDedupVersions,
+                commandTombstoneVersions,
+                userIdentityVersions,
+                auditVersions,
+                signatureVersions,
+            ).all { versions -> versions.isNotEmpty() && versions.none(String::isBlank) },
+        ) { "backup key inventory categories must be complete" }
+    }
+
+    fun missingFrom(manifest: BackupKeyManifest): Set<String> = buildSet {
+        addAll(kekVersions - manifest.kekVersions)
+        addAll(verificationVersions - manifest.verificationVersions)
+        addAll(userIdentityVersions - manifest.userIdentityVersions)
+        addAll(auditVersions - manifest.auditVersions)
+        addAll(signatureVersions - manifest.signatureVersions)
+        addAll(stableDedupVersions - setOf(manifest.stableDedupVersion))
+        addAll(commandTombstoneVersions - setOf(manifest.commandTombstoneVersion))
+    }
+
+    companion object { private const val serialVersionUID: Long = 1L }
+}
+
 internal data class VoucherPoolRestoreSmokeResult(
     val ciphertextReadableOrQuarantined: Boolean,
     val countersConsistent: Boolean,
@@ -75,6 +112,7 @@ internal data class VoucherPoolRestoreSmokeResult(
 }
 
 internal enum class VoucherPoolRestoreFailureCode {
+    INCOMPLETE_MANIFEST,
     MISSING_KEY,
     SMOKE_FAILED,
 }
@@ -88,16 +126,24 @@ internal class VoucherPoolRestoreCoordinator(
 ) {
     fun restore(
         manifest: BackupKeyManifest,
+        inventory: VoucherPoolBackupKeyInventory,
         importer: () -> Unit,
         smoke: () -> VoucherPoolRestoreSmokeResult,
     ): VoucherPoolRestoreSmokeResult {
-        if (availableKeys.missing(manifest).isNotEmpty()) {
-            throw VoucherPoolRestoreException(VoucherPoolRestoreFailureCode.MISSING_KEY)
-        }
+        requirePreflight(manifest, inventory)
         importer()
         val result = smoke()
         if (!result.passed) throw VoucherPoolRestoreException(VoucherPoolRestoreFailureCode.SMOKE_FAILED)
         return result
+    }
+
+    private fun requirePreflight(manifest: BackupKeyManifest, inventory: VoucherPoolBackupKeyInventory) {
+        if (inventory.missingFrom(manifest).isNotEmpty()) {
+            throw VoucherPoolRestoreException(VoucherPoolRestoreFailureCode.INCOMPLETE_MANIFEST)
+        }
+        if (availableKeys.missing(manifest).isNotEmpty()) {
+            throw VoucherPoolRestoreException(VoucherPoolRestoreFailureCode.MISSING_KEY)
+        }
     }
 }
 

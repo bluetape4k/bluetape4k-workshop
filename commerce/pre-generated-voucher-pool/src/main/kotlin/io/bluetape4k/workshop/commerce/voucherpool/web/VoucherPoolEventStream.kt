@@ -8,6 +8,7 @@ import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolMetrics
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolProperties
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolSseProperties
+import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolStreamShutdown
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcExecutor
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigestService
 import jakarta.annotation.PreDestroy
@@ -678,7 +679,7 @@ internal class VoucherPoolEventStream(
     private val executor: ExecutorService,
     properties: VoucherPoolProperties,
     private val metrics: VoucherPoolMetrics,
-) : AutoCloseable {
+) : AutoCloseable, VoucherPoolStreamShutdown {
     private val config: VoucherPoolSseProperties = properties.sse
     private val registryLock = ReentrantLock()
     private val pollers = HashMap<VoucherPoolStreamScope, ScopePoller>()
@@ -731,6 +732,8 @@ internal class VoucherPoolEventStream(
     }
 
     internal fun activePollers(): Int = registryLock.withLock { pollers.size }
+
+    override fun closeSseAndPoller() = close()
 
     @PreDestroy
     override fun close() {

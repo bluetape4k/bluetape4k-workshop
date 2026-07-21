@@ -29,7 +29,7 @@ import javax.sql.DataSource
 import kotlin.time.toKotlinDuration
 
 private const val DEFAULT_FOREGROUND_CAPACITY = 11
-private const val DEFAULT_FOREGROUND_PERMIT_WAIT_MILLIS = 250L
+private const val DEFAULT_FOREGROUND_PERMIT_WAIT_MILLIS = 200L
 private const val DEFAULT_FOREGROUND_TRANSACTION_TIMEOUT_SECONDS = 5L
 private const val DEFAULT_FOREGROUND_LOCK_TIMEOUT_SECONDS = 5L
 private const val DEFAULT_WORKER_CAPACITY = 1

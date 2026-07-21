@@ -47,6 +47,7 @@ internal abstract class AbstractVoucherPoolIntegrationTest {
             registry.add("spring.datasource.username") { postgres.username ?: PostgreSQLServer.USERNAME }
             registry.add("spring.datasource.password") { postgres.password ?: PostgreSQLServer.PASSWORD }
             registry.add("management.server.port") { 0 }
+            registry.add("workshop.voucher-pool.worker-dispatcher-enabled") { false }
             registry.add("workshop.voucher-pool.http.operator-secret") { "test-operator-secret-0000000000000001" }
             registry.add("workshop.voucher-pool.http.operator-guard") { "test-voucher-pool-operator-guard" }
         }

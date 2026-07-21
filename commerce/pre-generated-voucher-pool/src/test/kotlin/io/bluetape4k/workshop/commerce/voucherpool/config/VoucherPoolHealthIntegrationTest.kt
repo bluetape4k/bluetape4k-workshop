@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.web.server.LocalManagementPort
 import org.springframework.http.HttpStatus
 import java.time.Duration
+import javax.sql.DataSource
 
 @Suppress("VarCouldBeVal")
 internal class VoucherPoolHealthIntegrationTest : AbstractVoucherPoolIntegrationTest() {
@@ -27,6 +28,27 @@ internal class VoucherPoolHealthIntegrationTest : AbstractVoucherPoolIntegration
 
     @Autowired
     private lateinit var meterRegistry: MeterRegistry
+
+    @Autowired
+    private lateinit var dataSource: DataSource
+
+    @Test
+    fun `startup applies the authoritative migration before readiness opens`() {
+        val applied = dataSource.connection.use { connection ->
+            connection.prepareStatement(
+                "SELECT count(*) FROM voucher_pool_schema_history WHERE version='001'",
+            ).executeQuery().use { result ->
+                result.next()
+                result.getLong(1)
+            }
+        }
+
+        applied shouldBeEqualTo 1L
+        management.get().uri("/actuator/health/readiness").exchange()
+            .expectStatus().isOk
+            .expectBody()
+            .jsonPath("$.status").isEqualTo("UP")
+    }
 
     @Test
     fun `management uses the common sixty second timeout and exposes only health and metrics`() {

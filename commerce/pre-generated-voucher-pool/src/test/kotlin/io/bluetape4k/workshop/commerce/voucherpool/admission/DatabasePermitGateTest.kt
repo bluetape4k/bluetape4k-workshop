@@ -59,7 +59,7 @@ internal class DatabasePermitGateTest {
             )
         gate.snapshot().waits shouldBeEqualTo
             mapOf(
-                PermitLane.FOREGROUND to 250.milliseconds,
+                PermitLane.FOREGROUND to 200.milliseconds,
                 PermitLane.WORKER to 1.seconds,
                 PermitLane.SSE to 1.seconds,
             )
@@ -74,6 +74,16 @@ internal class DatabasePermitGateTest {
             failure.requestedLane shouldBeEqualTo PermitLane.SSE
             gate.snapshot().sseInUse shouldBeEqualTo 0
         }
+    }
+
+    @Test
+    fun `permit snapshot reports observed wait instead of configured deadline`() {
+        val gate = gate()
+
+        gate.withForegroundPermit { "acquired" } shouldBeEqualTo "acquired"
+
+        (gate.snapshot().observedWaitMax.getValue(PermitLane.FOREGROUND) < 25.milliseconds).shouldBeTrue()
+        gate.snapshot().observedWaitSamples.getValue(PermitLane.FOREGROUND) shouldBeEqualTo 1L
     }
 
     @Test

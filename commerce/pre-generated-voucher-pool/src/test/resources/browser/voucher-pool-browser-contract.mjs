@@ -863,6 +863,133 @@ async function commandLatchContract() {
     }
 }
 
+async function ambiguousCommandRetryIdempotencyContract() {
+    const cases = [
+        {
+            name: "reserve", command: "reserveVoucher()",
+            setup: 'state.campaignId = "campaign-a"',
+            response: { reservationId: "reservation-a", state: "ACTIVE", revision: 0 },
+        },
+        {
+            name: "allocate", command: "allocateVoucher()",
+            setup: 'state.reservationId = "reservation-a"; state.reservationRevision = 1',
+            response: { allocationId: "allocation-a", state: "ALLOCATED", revision: 0 },
+        },
+        {
+            name: "reveal", command: "revealVoucherCode()",
+            setup: 'state.allocationId = "allocation-a"; state.allocationRevision = 1',
+            response: { outcome: "VOUCHER_REVEALED", revision: 2, code: "RAW-CODE" },
+        },
+        {
+            name: "replacement", command: "replaceLostReveal()",
+            setup: 'state.allocationId = "allocation-a"; state.allocationRevision = 2; state.replacementAvailable = true',
+            response: { reservationId: "reservation-b", state: "ACTIVE", revision: 0 },
+        },
+        {
+            name: "redeem", command: "redeemVoucher()",
+            setup: 'state.allocationId = "allocation-a"; state.allocationRevision = 2; secretState.revealedCode = "RAW-CODE"',
+            response: { state: "REDEEMED", revision: 3 },
+        },
+        {
+            name: "revoke", command: "runRevoke()",
+            setup: `state.revokePreview = {
+                aggregateType: "batches", aggregateIdentity: "batch-a", revision: 4,
+                affectedCount: 2, previewToken: "preview-a"
+            }; secretState.previewToken = "preview-a"`,
+            response: { accepted: true },
+        },
+    ];
+
+    for (const testCase of cases) {
+        const browser = new BrowserHarness(source, htmlElements);
+        browser.evaluate(`
+            state.tenant = "tenant-a";
+            state.principal = "customer-a";
+            state.scopeReady = true;
+            ${testCase.setup};
+            refreshCustomerActions();
+            refreshOperatorActions();
+        `);
+        const committedEffects = new Set();
+        let attempt = 0;
+        browser.fetchHandler = async request => {
+            const idempotencyKey = request.options.headers["Idempotency-Key"];
+            assert.ok(idempotencyKey, `${testCase.name} must send an idempotency key`);
+            committedEffects.add(idempotencyKey);
+            attempt += 1;
+            if (attempt === 1) throw new TypeError("response lost after commit");
+            return browser.jsonResponse(testCase.response);
+        };
+
+        await assert.rejects(browser.call(testCase.command), /response lost after commit/);
+        await browser.call(testCase.command);
+
+        assert.equal(browser.requests.length, 2, `${testCase.name} retry must issue a second request`);
+        const firstKey = browser.requests[0].options.headers["Idempotency-Key"];
+        const retryKey = browser.requests[1].options.headers["Idempotency-Key"];
+        assert.equal(retryKey, firstKey, `${testCase.name} ambiguous retry must reuse the exact key`);
+        assert.equal(committedEffects.size, 1, `${testCase.name} ambiguous retry must preserve one logical effect`);
+
+        browser.evaluate(`${testCase.setup}; refreshCustomerActions(); refreshOperatorActions();`);
+        await browser.call(testCase.command);
+        const nextIntentKey = browser.requests[2].options.headers["Idempotency-Key"];
+        assert.notEqual(nextIntentKey, retryKey, `${testCase.name} definitive success must clear the completed intent`);
+        assert.equal(committedEffects.size, 2, `${testCase.name} next intent must receive a fresh effect identity`);
+        assert.equal(browser.requests.some(request => request.path.includes(firstKey)), false);
+        assert.equal(browser.attributeWrites.some(write => write.includes(firstKey)), false);
+        assert.deepEqual(browser.forbiddenAccesses, []);
+    }
+
+    const terminal = new BrowserHarness(source, htmlElements);
+    terminal.evaluate(`
+        state.tenant = "tenant-a";
+        state.principal = "customer-a";
+        state.campaignId = "campaign-a";
+        state.scopeReady = true;
+        refreshCustomerActions();
+    `);
+    terminal.fetchHandler = async () => terminal.requests.length === 1
+        ? terminal.jsonResponse({ code: "USER_LIMIT_REACHED", requestId: "request-terminal" }, false, 409)
+        : terminal.jsonResponse({ reservationId: "reservation-terminal", state: "ACTIVE", revision: 0 });
+    await assert.rejects(terminal.call("reserveVoucher()"), /USER_LIMIT_REACHED/);
+    await terminal.call("reserveVoucher()");
+    assert.notEqual(
+        terminal.requests[1].options.headers["Idempotency-Key"],
+        terminal.requests[0].options.headers["Idempotency-Key"],
+        "a definitive HTTP error must clear the completed intent",
+    );
+
+    const reset = new BrowserHarness(source, htmlElements);
+    reset.evaluate(`
+        state.tenant = "tenant-a";
+        state.principal = "customer-a";
+        state.campaignId = "campaign-a";
+        state.scopeReady = true;
+        refreshCustomerActions();
+    `);
+    let resetAttempt = 0;
+    reset.fetchHandler = async () => {
+        resetAttempt += 1;
+        if (resetAttempt === 1) throw new TypeError("response lost after commit");
+        return reset.jsonResponse({ reservationId: "reservation-reset", state: "ACTIVE", revision: 0 });
+    };
+    await assert.rejects(reset.call("reserveVoucher()"), /response lost after commit/);
+    reset.evaluate(`
+        resetCustomerScope();
+        state.tenant = "tenant-a";
+        state.principal = "customer-a";
+        state.campaignId = "campaign-a";
+        state.scopeReady = true;
+        refreshCustomerActions();
+    `);
+    await reset.call("reserveVoucher()");
+    assert.notEqual(
+        reset.requests[1].options.headers["Idempotency-Key"],
+        reset.requests[0].options.headers["Idempotency-Key"],
+        "explicit scope reset must discard ambiguous command intent state",
+    );
+}
+
 async function controllerSeparationContract() {
     const survivesTransportTimeout = new BrowserHarness(source, htmlElements);
     const scopeController = new AbortController();
@@ -976,6 +1103,7 @@ await eventStreamContract();
 await eventStreamTimeoutContract();
 await customerScopeResetContract();
 await commandLatchContract();
+await ambiguousCommandRetryIdempotencyContract();
 await controllerSeparationContract();
 await reconnectContract();
 console.log("voucher-pool browser behavior contract passed");

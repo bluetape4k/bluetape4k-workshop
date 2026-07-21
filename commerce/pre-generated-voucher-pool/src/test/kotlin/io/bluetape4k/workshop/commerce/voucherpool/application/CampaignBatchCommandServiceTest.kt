@@ -3,6 +3,9 @@ package io.bluetape4k.workshop.commerce.voucherpool.application
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.DigestValue
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.JdbcExecutionLane
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.JdbcTimeoutPhase
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcTimeoutException
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.postgresql.util.PSQLException
@@ -10,6 +13,8 @@ import org.postgresql.util.ServerErrorMessage
 import java.sql.SQLException
 import java.time.Instant
 import java.util.UUID
+import java.util.concurrent.TimeoutException
+import java.util.concurrent.atomic.AtomicInteger
 
 internal class CampaignBatchCommandServiceTest {
     @Test
@@ -92,6 +97,31 @@ internal class CampaignBatchCommandServiceTest {
             .postgresConstraintName() shouldBeEqualTo null
     }
 
+    @Test
+    fun `retryable owner release survives bounded JDBC timeouts`() {
+        val attempts = AtomicInteger()
+
+        releaseRetryableOwner {
+            if (attempts.incrementAndGet() < 4) throw jdbcTimeout()
+        }
+
+        attempts.get() shouldBeEqualTo 4
+    }
+
+    @Test
+    fun `retryable owner release fails after its bounded retry budget`() {
+        val attempts = AtomicInteger()
+
+        assertFailsWith<VoucherPoolJdbcTimeoutException> {
+            releaseRetryableOwner {
+                attempts.incrementAndGet()
+                throw jdbcTimeout()
+            }
+        }
+
+        attempts.get() shouldBeEqualTo 8
+    }
+
     private fun importBatch(expectedCount: Long) = CreateImportBatchCommand(
         tenantId = TENANT,
         batchId = BATCH,
@@ -110,6 +140,13 @@ internal class CampaignBatchCommandServiceTest {
         codes: List<String> = listOf("CODE-0"),
         expectedRevision: Long = REVISION,
     ) = ImportChunkCommand(TENANT, BATCH, CAMPAIGN, firstOrdinal, MANIFEST, codes, expectedRevision, IDEMPOTENCY_KEY)
+
+    private fun jdbcTimeout() =
+        VoucherPoolJdbcTimeoutException(
+            JdbcExecutionLane.OPERATOR,
+            JdbcTimeoutPhase.TRANSACTION,
+            TimeoutException("owner release timeout"),
+        )
 
     companion object {
         private const val TENANT = "tenant-a"

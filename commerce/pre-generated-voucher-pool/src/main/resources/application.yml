@@ -59,6 +59,8 @@ management:
 workshop:
   voucher-pool:
     worker-instance-id: ${VOUCHER_POOL_INSTANCE_ID:${random.uuid}}
+    startup-initializer-enabled: ${VOUCHER_POOL_STARTUP_INITIALIZER_ENABLED:true}
+    worker-dispatcher-enabled: ${VOUCHER_POOL_WORKER_DISPATCHER_ENABLED:true}
     http:
       max-tenant-length: 64
       max-principal-length: 64
@@ -97,7 +99,7 @@ workshop:
     database:
       foreground:
         capacity: 11
-        permit-wait: 250ms
+        permit-wait: 200ms
         transaction-timeout: 5s
         lock-timeout: 5s
       worker:

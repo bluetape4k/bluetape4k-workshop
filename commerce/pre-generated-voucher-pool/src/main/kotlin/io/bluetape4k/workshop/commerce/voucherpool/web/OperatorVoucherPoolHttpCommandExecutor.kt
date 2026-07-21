@@ -31,6 +31,7 @@ import io.bluetape4k.workshop.commerce.voucherpool.application.VoucherPoolReconc
 import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolErrorCode
 import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolPolicy
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.DigestValue
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcTimeoutException
 import io.bluetape4k.workshop.commerce.voucherpool.query.VoucherPoolQueryService
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigestService
 import org.springframework.http.HttpStatus
@@ -464,6 +465,8 @@ internal class OperatorVoucherPoolHttpCommandExecutor(
             throw failure.toApiException()
         } catch (failure: ReconciliationCommandException) {
             throw failure.toApiException()
+        } catch (_: VoucherPoolJdbcTimeoutException) {
+            throw apiFailure(VoucherPoolErrorCode.BACKEND_TIMEOUT)
         } catch (_: IllegalArgumentException) {
             throw invalidRequest()
         }

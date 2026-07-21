@@ -462,7 +462,7 @@ internal class LifecycleHarness(private val suffix: String) {
     fun reset() {
         dataSource.connection.use { connection ->
             connection.createStatement().execute(
-                "TRUNCATE voucher_pool_audits,voucher_pool_http_idempotency,voucher_pool_command_tombstones,voucher_pool_allocations,voucher_pool_reservations,voucher_pool_user_limits,voucher_pool_entries,voucher_pool_code_dedup,voucher_pool_batches,voucher_pool_campaigns CASCADE",
+                "TRUNCATE voucher_pool_worker_claims,voucher_pool_audits,voucher_pool_http_idempotency,voucher_pool_command_tombstones,voucher_pool_allocations,voucher_pool_reservations,voucher_pool_user_limits,voucher_pool_entries,voucher_pool_code_dedup,voucher_pool_batches,voucher_pool_campaigns CASCADE",
             )
         }
         rebuildServices()

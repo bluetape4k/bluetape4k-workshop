@@ -113,10 +113,14 @@ internal data class VoucherPoolStressEvidence(
     val entryCount: Int,
     val hikariActiveMax: Int,
     val hikariAcquisitionWaitMaxMillis: Long,
+    val hikariAcquisitionWaitSamples: Long,
     val totalPermitHoldersMax: Int,
     val foregroundWaitMaxMillis: Long,
+    val foregroundWaitSamples: Long,
     val workerWaitMaxMillis: Long,
+    val workerWaitSamples: Long,
     val sseWaitMaxMillis: Long,
+    val sseWaitSamples: Long,
     val acquisitionTimeouts: Int,
     val acquisitionTimeoutTerminalDescriptors: Int,
     val deadlineViolations: Int,
@@ -128,7 +132,7 @@ internal data class VoucherPoolStressEvidence(
     val counterDrift: Long,
 ) : Serializable {
     companion object {
-        private const val serialVersionUID: Long = 1L
+        private const val serialVersionUID: Long = 2L
     }
 }
 
@@ -344,8 +348,10 @@ private class ActualVoucherPoolStressHarness(
     val campaignId: UUID = UUID.nameUUIDFromBytes("$profile-campaign".toByteArray(StandardCharsets.UTF_8))
     val batchId: UUID = UUID.nameUUIDFromBytes("$profile-batch".toByteArray(StandardCharsets.UTF_8))
     private val metrics = RecordingJdbcMetrics()
+    private val hikariAcquisitionWaits = ObservedWaitRecorder()
+    private val measuredDataSource = ObservedWaitDataSource(dataSource, hikariAcquisitionWaits)
     private val gate = DatabasePermitGate.default(HIKARI_POOL_SIZE)
-    private val graph = ServiceGraph(dataSource, gate, metrics, tenant, campaignId)
+    private val graph = ServiceGraph(measuredDataSource, gate, metrics, tenant, campaignId)
     private val redisProperties = redisProperties(redisServer, clients, redisMode)
     private val redisResources = openRedisResources(redisServer, redisProperties, redisMode)
     private val admission =
@@ -419,6 +425,8 @@ private class ActualVoucherPoolStressHarness(
         workerLoad: Boolean,
         sseSubscribers: Int,
     ): StressProfileRun {
+        hikariAcquisitionWaits.reset()
+        gate.resetWaitObservations()
         val samplerRunning = AtomicBoolean(true)
         val permitHoldersMax = AtomicInteger()
         val hikariActiveMax = AtomicInteger()
@@ -548,6 +556,7 @@ private class ActualVoucherPoolStressHarness(
                     val drainMillis = elapsedMillis(drainStarted)
                     val counts = authoritativeCounts()
                     val permitSnapshot = gate.snapshot()
+                    val hikariAcquisitionWait = hikariAcquisitionWaits.snapshot()
                     val permitLeaks = permitSnapshot.foregroundInUse + permitSnapshot.workerInUse + permitSnapshot.sseInUse
                     return StressProfileRun(
                         evidence = VoucherPoolStressEvidence(
@@ -562,11 +571,15 @@ private class ActualVoucherPoolStressHarness(
                             stateCountSum = counts.stateCountSum,
                             entryCount = entries,
                             hikariActiveMax = hikariActiveMax.get(),
-                            hikariAcquisitionWaitMaxMillis = dataSource.connectionTimeout,
+                            hikariAcquisitionWaitMaxMillis = hikariAcquisitionWait.maxMillis,
+                            hikariAcquisitionWaitSamples = hikariAcquisitionWait.samples,
                             totalPermitHoldersMax = permitHoldersMax.get(),
-                            foregroundWaitMaxMillis = permitSnapshot.waits.getValue(PermitLane.FOREGROUND).inWholeMilliseconds,
-                            workerWaitMaxMillis = permitSnapshot.waits.getValue(PermitLane.WORKER).inWholeMilliseconds,
-                            sseWaitMaxMillis = permitSnapshot.waits.getValue(PermitLane.SSE).inWholeMilliseconds,
+                            foregroundWaitMaxMillis = permitSnapshot.observedWaitMax.getValue(PermitLane.FOREGROUND).ceilingMillis(),
+                            foregroundWaitSamples = permitSnapshot.observedWaitSamples.getValue(PermitLane.FOREGROUND),
+                            workerWaitMaxMillis = permitSnapshot.observedWaitMax.getValue(PermitLane.WORKER).ceilingMillis(),
+                            workerWaitSamples = permitSnapshot.observedWaitSamples.getValue(PermitLane.WORKER),
+                            sseWaitMaxMillis = permitSnapshot.observedWaitMax.getValue(PermitLane.SSE).ceilingMillis(),
+                            sseWaitSamples = permitSnapshot.observedWaitSamples.getValue(PermitLane.SSE),
                             acquisitionTimeouts = metrics.acquisitionTimeouts.get(),
                             acquisitionTimeoutTerminalDescriptors = counts.acquisitionTimeoutTerminalDescriptors,
                             deadlineViolations = deadlineViolations.get() + metrics.deadlineTimeouts.get(),
@@ -841,6 +854,74 @@ private class RecordingJdbcMetrics : VoucherPoolJdbcMetrics {
     }
 }
 
+private data class ObservedWaitSnapshot(
+    val samples: Long,
+    val maxMillis: Long,
+)
+
+private class ObservedWaitRecorder {
+    private val samples = AtomicLong()
+    private val maxNanos = AtomicLong()
+
+    fun record(startedAtNanos: Long) {
+        val elapsedNanos = (System.nanoTime() - startedAtNanos).coerceAtLeast(0L)
+        samples.incrementAndGet()
+        maxNanos.accumulateAndGet(elapsedNanos, ::maxOf)
+    }
+
+    fun reset() {
+        samples.set(0L)
+        maxNanos.set(0L)
+    }
+
+    fun snapshot(): ObservedWaitSnapshot =
+        ObservedWaitSnapshot(
+            samples = samples.get(),
+            maxMillis = maxNanos.get().ceilingMillisFromNanos(),
+        )
+}
+
+private class ObservedWaitDataSource(
+    private val delegate: DataSource,
+    private val waits: ObservedWaitRecorder,
+) : DataSource {
+    override fun getConnection(): Connection {
+        val startedAt = System.nanoTime()
+        return try {
+            delegate.connection
+        } finally {
+            waits.record(startedAt)
+        }
+    }
+
+    override fun getConnection(username: String?, password: String?): Connection {
+        val startedAt = System.nanoTime()
+        return try {
+            delegate.getConnection(username, password)
+        } finally {
+            waits.record(startedAt)
+        }
+    }
+
+    override fun getLogWriter(): PrintWriter? = delegate.logWriter
+
+    override fun setLogWriter(out: PrintWriter?) {
+        delegate.logWriter = out
+    }
+
+    override fun setLoginTimeout(seconds: Int) {
+        delegate.loginTimeout = seconds
+    }
+
+    override fun getLoginTimeout(): Int = delegate.loginTimeout
+
+    override fun getParentLogger(): Logger = delegate.parentLogger
+
+    override fun <T : Any?> unwrap(iface: Class<T>): T = delegate.unwrap(iface)
+
+    override fun isWrapperFor(iface: Class<*>): Boolean = delegate.isWrapperFor(iface)
+}
+
 private class OneShotAcquisitionTimeoutDataSource(
     private val delegate: HikariDataSource,
     private val connectionsToHold: Int,
@@ -911,6 +992,13 @@ private class OneShotAcquisitionTimeoutDataSource(
         private const val HOLDER_STOP_SECONDS = 2L
     }
 }
+
+private fun kotlin.time.Duration.ceilingMillis(): Long = inWholeNanoseconds.ceilingMillisFromNanos()
+
+private fun Long.ceilingMillisFromNanos(): Long =
+    this / NANOS_PER_MILLI + if (this % NANOS_PER_MILLI == 0L) 0L else 1L
+
+private const val NANOS_PER_MILLI = 1_000_000L
 
 internal class StressEvidenceWriter(private val outputRoot: Path) {
     fun write(evidence: VoucherPoolStressEvidence, threadDump: String) {

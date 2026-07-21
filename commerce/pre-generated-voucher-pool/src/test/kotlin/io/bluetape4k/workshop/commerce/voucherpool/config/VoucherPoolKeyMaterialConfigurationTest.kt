@@ -278,6 +278,10 @@ internal class VoucherPoolKeyMaterialConfigurationTest {
 
     private fun baseServiceContext(): ApplicationContextRunner =
         ApplicationContextRunner()
+            .withPropertyValues(
+                "workshop.voucher-pool.startup-initializer-enabled=false",
+                "workshop.voucher-pool.worker-dispatcher-enabled=false",
+            )
             .withBean(ObjectMapper::class.java, Supplier { MAPPER })
             .withBean(DataSource::class.java, Supplier { mockk(relaxed = true) })
             .withBean(VoucherPoolJdbcExecutor::class.java, Supplier { mockk(relaxed = true) })

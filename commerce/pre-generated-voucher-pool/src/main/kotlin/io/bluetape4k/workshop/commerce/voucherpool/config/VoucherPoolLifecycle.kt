@@ -85,6 +85,11 @@ internal interface VoucherPoolLifecycleActions {
     fun closeDataSource()
 }
 
+/** Closes application-owned SSE subscriptions and their shared pollers before infrastructure teardown. */
+internal fun interface VoucherPoolStreamShutdown {
+    fun closeSseAndPoller()
+}
+
 /** Deterministic, idempotent shutdown coordinator with injected deadlines for verification. */
 internal class VoucherPoolLifecycleCoordinator(
     private val actions: VoucherPoolLifecycleActions,
@@ -250,7 +255,6 @@ internal class VoucherPoolRuntimeControl {
         }
     }
 
-    fun closeSseAndPoller() = Unit
 }
 
 /** Runs application-owned shutdown before Spring destroys infrastructure beans. */
@@ -261,6 +265,7 @@ internal class VoucherPoolLifecycle(
     gate: DatabasePermitGate,
     runtime: VoucherPoolRuntimeControl,
     health: VoucherPoolHealthState,
+    streamShutdown: ObjectProvider<VoucherPoolStreamShutdown>,
     redis: ObjectProvider<VoucherPoolRedisResources>,
     @Qualifier("voucherPoolExecutor") executor: ObjectProvider<ExecutorService>,
     dataSource: DataSource,
@@ -295,7 +300,9 @@ internal class VoucherPoolLifecycle(
 
                 override fun awaitClaimRelease(timeout: Duration): Boolean = runtime.awaitClaimRelease(timeout)
 
-                override fun closeSseAndPoller() = runtime.closeSseAndPoller()
+                override fun closeSseAndPoller() {
+                    streamShutdown.ifAvailable?.closeSseAndPoller()
+                }
 
                 override fun closeAdvisoryResources() {
                     redis.ifAvailable?.close()

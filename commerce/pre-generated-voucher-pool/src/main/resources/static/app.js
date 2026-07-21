@@ -10,6 +10,7 @@ const MAX_SSE_BUFFER_CHARS = 64 * 1024;
 const MAX_SSE_EVENT_CHARS = 48 * 1024;
 
 const pendingCommands = new Set();
+const idempotencyKeys = new Map();
 
 const secretState = {
     revealedCode: null,
@@ -111,6 +112,26 @@ function randomKey() {
     return Array.from(bytes, value => value.toString(16).padStart(2, "0")).join("");
 }
 
+function idempotencyIntent(name, ...identity) {
+    return JSON.stringify([name, ...identity.map(value => String(value))]);
+}
+
+async function withIdempotencyIntent(intent, command) {
+    let idempotencyKey = idempotencyKeys.get(intent);
+    if (!idempotencyKey) {
+        idempotencyKey = randomKey();
+        idempotencyKeys.set(intent, idempotencyKey);
+    }
+    try {
+        const result = await command(idempotencyKey);
+        idempotencyKeys.delete(intent);
+        return result;
+    } catch (failure) {
+        if (failure?.definitiveResponse === true) idempotencyKeys.delete(intent);
+        throw failure;
+    }
+}
+
 function customerHeaders(extra = {}) {
     return {
         "Content-Type": "application/json",
@@ -160,6 +181,7 @@ async function api(path, options = {}) {
             const failure = new Error(`Request failed (${code}; request ${requestId})`);
             failure.code = code;
             failure.safeRequestId = requestId;
+            failure.definitiveResponse = true;
             failure.payload = {
                 code,
                 requestId,
@@ -216,6 +238,7 @@ function clearRevealedCode() {
 }
 
 function clearSensitiveState() {
+    idempotencyKeys.clear();
     clearRevealedCode();
     secretState.operatorSecret = null;
     secretState.operatorGuard = null;
@@ -344,12 +367,15 @@ async function reserveVoucher() {
     return withCommandLatch("reserve", [elements.reserveVoucher], async () => {
         if (!state.scopeReady || !state.campaignId) return;
         const scopeVersion = state.scopeVersion;
-        const reservation = await api(`/api/v1/campaigns/${encodeURIComponent(state.campaignId)}/reservations`, {
-            method: "POST",
-            headers: customerHeaders({ "Idempotency-Key": randomKey(), "If-None-Match": "*" }),
-            body: "{}",
-            signal: state.scopeController?.signal,
-        });
+        const intent = idempotencyIntent("reserve", state.tenant, state.principal, state.campaignId);
+        const reservation = await withIdempotencyIntent(intent, idempotencyKey =>
+            api(`/api/v1/campaigns/${encodeURIComponent(state.campaignId)}/reservations`, {
+                method: "POST",
+                headers: customerHeaders({ "Idempotency-Key": idempotencyKey, "If-None-Match": "*" }),
+                body: "{}",
+                signal: state.scopeController?.signal,
+            }),
+        );
         if (scopeVersion !== state.scopeVersion) return;
         state.reservationId = reservation.reservationId;
         state.reservationRevision = reservation.revision;
@@ -365,14 +391,17 @@ async function allocateVoucher() {
         const scopeVersion = state.scopeVersion;
         const reservationId = state.reservationId;
         const reservationRevision = state.reservationRevision;
-        const allocation = await api(`/api/v1/reservations/${encodeURIComponent(reservationId)}/allocate`, {
-            method: "POST",
-            headers: customerHeaders({
-                "Idempotency-Key": randomKey(),
-                "If-Match": `"${reservationRevision}"`,
+        const intent = idempotencyIntent("allocate", state.tenant, state.principal, reservationId, reservationRevision);
+        const allocation = await withIdempotencyIntent(intent, idempotencyKey =>
+            api(`/api/v1/reservations/${encodeURIComponent(reservationId)}/allocate`, {
+                method: "POST",
+                headers: customerHeaders({
+                    "Idempotency-Key": idempotencyKey,
+                    "If-Match": `"${reservationRevision}"`,
+                }),
+                signal: state.scopeController?.signal,
             }),
-            signal: state.scopeController?.signal,
-        });
+        );
         if (scopeVersion !== state.scopeVersion) return;
         state.allocationId = allocation.allocationId;
         state.allocationRevision = allocation.revision;
@@ -396,14 +425,17 @@ async function revealVoucherCode() {
         const scopeVersion = state.scopeVersion;
         const allocationId = state.allocationId;
         const allocationRevision = state.allocationRevision;
-        const result = await api(`/api/v1/allocations/${encodeURIComponent(allocationId)}/code-reveals`, {
-            method: "POST",
-            headers: customerHeaders({
-                "Idempotency-Key": randomKey(),
-                "If-Match": `"${allocationRevision}"`,
+        const intent = idempotencyIntent("reveal", state.tenant, state.principal, allocationId, allocationRevision);
+        const result = await withIdempotencyIntent(intent, idempotencyKey =>
+            api(`/api/v1/allocations/${encodeURIComponent(allocationId)}/code-reveals`, {
+                method: "POST",
+                headers: customerHeaders({
+                    "Idempotency-Key": idempotencyKey,
+                    "If-Match": `"${allocationRevision}"`,
+                }),
+                signal: state.scopeController?.signal,
             }),
-            signal: state.scopeController?.signal,
-        });
+        );
         if (scopeVersion !== state.scopeVersion) return;
         state.allocationRevision = result.revision;
         if (result.outcome === "ALREADY_REVEALED") {
@@ -446,15 +478,18 @@ async function replaceLostReveal() {
         const scopeVersion = state.scopeVersion;
         const allocationId = state.allocationId;
         const allocationRevision = state.allocationRevision;
-        const replacement = await api(`/api/v1/allocations/${encodeURIComponent(allocationId)}/replacements`, {
-            method: "POST",
-            headers: customerHeaders({
-                "Idempotency-Key": randomKey(),
-                "If-Match": `"${allocationRevision}"`,
+        const intent = idempotencyIntent("replacement", state.tenant, state.principal, allocationId, allocationRevision);
+        const replacement = await withIdempotencyIntent(intent, idempotencyKey =>
+            api(`/api/v1/allocations/${encodeURIComponent(allocationId)}/replacements`, {
+                method: "POST",
+                headers: customerHeaders({
+                    "Idempotency-Key": idempotencyKey,
+                    "If-Match": `"${allocationRevision}"`,
+                }),
+                body: JSON.stringify({ confirmLostReveal: true }),
+                signal: state.scopeController?.signal,
             }),
-            body: JSON.stringify({ confirmLostReveal: true }),
-            signal: state.scopeController?.signal,
-        });
+        );
         if (scopeVersion !== state.scopeVersion) return;
         navigateToReservation(replacement);
     });
@@ -482,15 +517,18 @@ async function redeemVoucher() {
         const scopeVersion = state.scopeVersion;
         const allocationId = state.allocationId;
         const allocationRevision = state.allocationRevision;
-        const allocation = await api(`/api/v1/allocations/${encodeURIComponent(allocationId)}/redeem`, {
-            method: "POST",
-            headers: customerHeaders({
-                "Idempotency-Key": randomKey(),
-                "If-Match": `"${allocationRevision}"`,
+        const intent = idempotencyIntent("redeem", state.tenant, state.principal, allocationId, allocationRevision);
+        const allocation = await withIdempotencyIntent(intent, idempotencyKey =>
+            api(`/api/v1/allocations/${encodeURIComponent(allocationId)}/redeem`, {
+                method: "POST",
+                headers: customerHeaders({
+                    "Idempotency-Key": idempotencyKey,
+                    "If-Match": `"${allocationRevision}"`,
+                }),
+                body: JSON.stringify({ code }),
+                signal: state.scopeController?.signal,
             }),
-            body: JSON.stringify({ code }),
-            signal: state.scopeController?.signal,
-        });
+        );
         if (scopeVersion !== state.scopeVersion) return;
         clearRevealedCode();
         state.allocationRevision = allocation.revision;
@@ -744,16 +782,26 @@ async function runRevoke() {
             previewToken: preview.previewToken,
             [confirmedField]: preview.aggregateIdentity,
         };
-        await api(
-            `/operator/api/v1/${preview.aggregateType}/${encodeURIComponent(preview.aggregateIdentity)}/revoke`,
-            {
-                method: "POST",
-                headers: operatorHeaders({
-                    "Idempotency-Key": randomKey(),
-                    "If-Match": `"${preview.revision}"`,
-                }),
-                body: JSON.stringify(body),
-            },
+        const intent = idempotencyIntent(
+            "revoke",
+            elements.operatorTenant.value.trim(),
+            preview.aggregateType,
+            preview.aggregateIdentity,
+            preview.revision,
+        );
+        await withIdempotencyIntent(
+            intent,
+            idempotencyKey => api(
+                `/operator/api/v1/${preview.aggregateType}/${encodeURIComponent(preview.aggregateIdentity)}/revoke`,
+                {
+                    method: "POST",
+                    headers: operatorHeaders({
+                        "Idempotency-Key": idempotencyKey,
+                        "If-Match": `"${preview.revision}"`,
+                    }),
+                    body: JSON.stringify(body),
+                },
+            ),
         );
         secretState.previewToken = null;
         state.revokePreview = null;

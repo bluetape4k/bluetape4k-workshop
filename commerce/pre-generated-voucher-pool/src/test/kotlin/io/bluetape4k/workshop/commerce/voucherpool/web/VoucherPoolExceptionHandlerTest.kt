@@ -1,9 +1,13 @@
 package io.bluetape4k.workshop.commerce.voucherpool.web
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.workshop.commerce.voucherpool.application.CampaignBatchCommandService
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.JdbcExecutionLane
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.JdbcTimeoutPhase
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcTimeoutException
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.springframework.mock.web.MockHttpServletRequest
 import java.time.Duration
@@ -34,6 +38,48 @@ internal class VoucherPoolExceptionHandlerTest {
                 requestId = "request-timeout",
                 retryAfterSeconds = 1,
             )
+    }
+
+    @Test
+    fun `operator command translates JDBC timeout before it escapes the command boundary`() {
+        val service = mockk<CampaignBatchCommandService>()
+        every { service.createCampaign(any()) } throws
+            VoucherPoolJdbcTimeoutException(
+                JdbcExecutionLane.OPERATOR,
+                JdbcTimeoutPhase.TRANSACTION,
+                TimeoutException("sensitive backend details"),
+            )
+        val commands =
+            OperatorVoucherPoolHttpCommandExecutor(
+                service = service,
+                queries = mockk(),
+                digests = mockk(),
+                revocations = mockk(),
+                reconciliations = mockk(),
+            )
+        val startsAt = Instant.parse("2026-07-21T00:00:00Z")
+
+        val failure = assertFailsWith<VoucherPoolApiException> {
+            commands.createCampaign(
+                tenantId = "tenant-a",
+                idempotencyKey = "operator-timeout-key",
+                ifNoneMatch = "*",
+                request =
+                    OperatorCreateCampaignRequest(
+                        campaignId = UUID.randomUUID(),
+                        startsAt = startsAt,
+                        endsAt = startsAt.plusSeconds(3_600),
+                        perUserLimit = 1,
+                        reservationTtlSeconds = 60,
+                        allocationTtlSeconds = 60,
+                        replacementAllowance = 1,
+                    ),
+                requestId = "request-timeout",
+            )
+        }
+
+        failure.status shouldBeEqualTo 503
+        failure.stableCode shouldBeEqualTo "BACKEND_TIMEOUT"
     }
 
     @Test

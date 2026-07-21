@@ -92,9 +92,16 @@ internal data class WorkerFailure(
     val backoffSeconds: Long,
 )
 
+internal data class WorkerClaimCandidate(
+    val tenantId: String,
+    val kind: WorkerKind,
+    val scopeId: UUID,
+)
+
 internal class StaleWorkerClaimException : IllegalStateException("worker claim owner or revision is stale")
 
 internal interface VoucherPoolWorkerRepository {
+    fun findRunnable(limit: Int): List<WorkerClaimCandidate>
     fun claim(tenantId: String, kind: WorkerKind, scopeId: UUID, owner: String): WorkerClaim?
     fun checkpoint(claim: WorkerClaim, cursor: Long): WorkerClaim
     fun fail(claim: WorkerClaim, reason: String): WorkerFailure
@@ -108,6 +115,33 @@ internal class JdbcVoucherPoolWorkerRepository(
     private val policy: WorkerPolicy = WorkerPolicy(),
 ) : VoucherPoolWorkerRepository {
 
+    override fun findRunnable(limit: Int): List<WorkerClaimCandidate> {
+        require(limit in 1..MAX_RUNNABLE_CANDIDATES)
+        return executor.workerTransaction {
+            currentConnection().prepareStatement(
+                """SELECT tenant_id,worker_type,scope_id FROM voucher_pool_worker_claims
+                    WHERE poison_reason IS NULL AND next_attempt_at <= transaction_timestamp()
+                      AND (owner_id IS NULL OR claim_until <= transaction_timestamp())
+                    ORDER BY next_attempt_at,worker_type,tenant_id,scope_id LIMIT ?""",
+            ).use { statement ->
+                statement.setInt(1, limit)
+                statement.executeQuery().use { result ->
+                    buildList {
+                        while (result.next()) {
+                            add(
+                                WorkerClaimCandidate(
+                                    tenantId = result.getString("tenant_id"),
+                                    kind = WorkerKind.valueOf(result.getString("worker_type")),
+                                    scopeId = result.getObject("scope_id", UUID::class.java),
+                                ),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     override fun claim(tenantId: String, kind: WorkerKind, scopeId: UUID, owner: String): WorkerClaim? {
         require(tenantId.isNotBlank())
         require(owner.isNotBlank() && owner.length <= MAX_OWNER_LENGTH)
@@ -117,7 +151,9 @@ internal class JdbcVoucherPoolWorkerRepository(
             val current = lockSnapshot(connection, tenantId, kind, scopeId) ?: return@workerTransaction null
             val now = transactionTime(connection)
             if (current.poisonReason != null) return@workerTransaction null
-            if (current.nextAttemptAt > now) return@workerTransaction null
+            if (current.nextAttemptAt > now && current.nextAttemptAt != COMPLETED_NEXT_ATTEMPT) {
+                return@workerTransaction null
+            }
             if (current.owner != null && checkNotNull(current.claimUntil) > now) return@workerTransaction null
             connection.prepareStatement(
                 """UPDATE voucher_pool_worker_claims SET owner_id=?,claim_until=?::timestamptz,revision=revision+1
@@ -287,7 +323,7 @@ internal class JdbcVoucherPoolWorkerRepository(
                 WHERE tenant_id=? AND worker_type=? AND scope_id=? AND revision=? AND owner_id=?""",
         ).use { statement ->
             statement.setLong(1, if (resetCursor) 0L else current.cursor)
-            statement.setTimestamp(2, Timestamp.from(now))
+            statement.setTimestamp(2, Timestamp.from(if (resetCursor) COMPLETED_NEXT_ATTEMPT else now))
             statement.setString(3, claim.tenantId)
             statement.setString(4, claim.kind.name)
             statement.setObject(5, claim.scopeId)
@@ -384,6 +420,8 @@ internal class JdbcVoucherPoolWorkerRepository(
     private companion object {
         const val MAX_OWNER_LENGTH = 128
         const val MAX_BACKOFF_SHIFT = 30
+        const val MAX_RUNNABLE_CANDIDATES = 64
+        val COMPLETED_NEXT_ATTEMPT: Instant = Instant.parse("9999-12-31T23:59:59Z")
         val BOUNDED_REASON = Regex("[A-Z0-9_]{1,64}")
     }
 }

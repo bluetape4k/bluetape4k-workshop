@@ -15,6 +15,9 @@ import io.bluetape4k.workshop.commerce.voucherpool.domain.ReservationState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolErrorCode
 import io.bluetape4k.workshop.commerce.voucherpool.application.RedeemVoucherCommand
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CampaignState
+import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolRuntimeControl
+import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolWorkerDispatcher
+import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolWorkerTrigger
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -175,6 +178,29 @@ internal class VoucherPoolWorkerIntegrationTest {
         )
         workers.runChunk(duplicate).completed shouldBeEqualTo true
         harness.auditCount("BATCH", fixture.batch.batchId, "REVOKED") shouldBeEqualTo 1L
+    }
+
+    @Test
+    fun `postgres dispatcher resumes durable work without Redis`() {
+        val fixture = harness.activePool("postgres-dispatch", listOf("DISPATCH-1", "DISPATCH-2", "DISPATCH-3"))
+        harness.expireBatch(fixture.batch.batchId)
+        val original = checkNotNull(
+            claims.claim(harness.tenant, WorkerKind.BATCH_EXPIRY, fixture.batch.batchId, "departed-owner"),
+        )
+        val first = workers.runChunk(original, requestedLimit = 1)
+        claims.release(checkNotNull(first.claim))
+        val dispatcher = VoucherPoolWorkerDispatcher(
+            claims,
+            VoucherPoolWorkerTrigger(workers, VoucherPoolRuntimeControl()),
+            "replacement-owner",
+        )
+
+        val outcomes = dispatcher.runOnce()
+
+        outcomes.single().state shouldBeEqualTo WorkerRunState.COMPLETED
+        harness.batchState(fixture.batch.batchId).name shouldBeEqualTo "EXPIRED"
+        harness.poolDepth(fixture.batch.batchId, EntryState.EXPIRED) shouldBeEqualTo 3L
+        claims.findRunnable(10) shouldBeEqualTo emptyList()
     }
 
     @Test

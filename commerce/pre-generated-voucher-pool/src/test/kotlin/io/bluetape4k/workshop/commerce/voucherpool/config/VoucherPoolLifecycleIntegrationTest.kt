@@ -1,11 +1,17 @@
 package io.bluetape4k.workshop.commerce.voucherpool.config
 
+import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.commerce.voucherpool.admission.DatabasePermitGate
+import io.mockk.mockk
+import io.mockk.verifyOrder
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.support.StaticListableBeanFactory
+import org.springframework.context.ApplicationContext
 import java.time.Duration
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -88,6 +94,40 @@ internal class VoucherPoolLifecycleIntegrationTest {
         release.countDown()
         runtime.awaitClaimRelease(Duration.ofSeconds(2)).shouldBeTrue()
         thread.join(Duration.ofSeconds(2))
+    }
+
+    @Test
+    fun `application lifecycle closes event stream before executor and data source`() {
+        val stream = mockk<VoucherPoolStreamShutdown>(relaxed = true)
+        val executor = mockk<ExecutorService>(relaxed = true)
+        val dataSource = mockk<HikariDataSource>(relaxed = true)
+        val beans =
+            StaticListableBeanFactory(
+                mapOf(
+                    "voucherPoolStreamShutdown" to stream,
+                    "voucherPoolExecutor" to executor,
+                ),
+            )
+        val lifecycle =
+            VoucherPoolLifecycle(
+                applicationContext = mockk<ApplicationContext>(relaxed = true),
+                gate = DatabasePermitGate.default(16),
+                runtime = VoucherPoolRuntimeControl(),
+                health = VoucherPoolHealthState(),
+                streamShutdown = beans.getBeanProvider(VoucherPoolStreamShutdown::class.java),
+                redis = beans.getBeanProvider(VoucherPoolRedisResources::class.java),
+                executor = beans.getBeanProvider(ExecutorService::class.java),
+                dataSource = dataSource,
+            )
+
+        lifecycle.start()
+        lifecycle.stop()
+
+        verifyOrder {
+            stream.closeSseAndPoller()
+            executor.shutdown()
+            dataSource.close()
+        }
     }
 
     private class RecordingLifecycleActions(

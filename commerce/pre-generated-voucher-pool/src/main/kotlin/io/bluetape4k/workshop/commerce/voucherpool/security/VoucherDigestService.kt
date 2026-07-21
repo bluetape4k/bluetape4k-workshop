@@ -97,6 +97,18 @@ internal class VoucherDigestService(
     val currentUserIdentityKeyVersion: Int
         get() = checkNotNull(rotatingKeys[DigestPurpose.USER_IDENTITY]).current.version
 
+    /** Fails closed when persisted data references a key version this process cannot read. */
+    fun requireAvailable(purpose: DigestPurpose, version: Int) {
+        require(version > 0) { "digest key version must be positive" }
+        when (purpose) {
+            DigestPurpose.STABLE_DEDUP ->
+                if (stableDedupKey.version != version) throw VoucherKeyMaterialUnavailableException()
+            DigestPurpose.COMMAND_TOMBSTONE ->
+                if (commandTombstoneKey.version != version) throw VoucherKeyMaterialUnavailableException()
+            else -> checkNotNull(rotatingKeys[purpose]).require(version)
+        }
+    }
+
     init {
         require(rotatingKeys.keys == ROTATING_PURPOSES) {
             "every rotating digest purpose requires an explicit key ring"

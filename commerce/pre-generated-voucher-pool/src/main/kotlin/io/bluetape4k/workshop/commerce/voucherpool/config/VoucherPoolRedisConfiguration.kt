@@ -253,11 +253,17 @@ internal class VoucherPoolLeaderTrigger(
 internal class VoucherPoolWorkerTrigger(
     private val workers: VoucherPoolWorkers,
     private val runtime: VoucherPoolRuntimeControl,
-    private val leader: VoucherPoolLeaderTrigger,
+    private val leader: VoucherPoolLeaderTrigger? = null,
 ) {
-    fun runScheduled(request: WorkerRunRequest): LeaderRunResult<WorkerRunOutcome>? {
+    fun runScheduled(request: WorkerRunRequest): WorkerRunOutcome? {
         if (!runtime.triggersRunning() || !runtime.claimsAccepted()) return null
-        return leader.run("voucher-pool-${request.kind.name.lowercase()}") { runShared(request) }
+        val lockName = "voucher-pool-${request.kind.name.lowercase()}"
+        return when (val leaderResult = leader?.run(lockName) { runShared(request) }) {
+            null -> runShared(request)
+            is LeaderRunResult.Elected -> leaderResult.value
+            LeaderRunResult.Skipped -> null
+            is LeaderRunResult.ActionFailed -> null
+        }
     }
 
     fun runManual(request: WorkerRunRequest): WorkerRunOutcome = runShared(request)

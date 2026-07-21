@@ -29,6 +29,7 @@ import io.bluetape4k.workshop.commerce.voucherpool.persistence.DigestValue
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.PreparedVoucherEntryRecord
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.RejectedVoucherEntryRecord
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcExecutor
+import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcTimeoutException
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolRepository
 import io.bluetape4k.workshop.commerce.voucherpool.security.EntryIdentity
 import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherCryptoException
@@ -53,6 +54,22 @@ import java.util.IdentityHashMap
 import java.util.UUID
 
 internal enum class BatchSourceKind { IMPORTED, GENERATED }
+
+internal fun releaseRetryableOwner(release: () -> Unit) {
+    var lastTimeout: VoucherPoolJdbcTimeoutException? = null
+    repeat(MAX_OWNER_RELEASE_ATTEMPTS) {
+        try {
+            release()
+            return
+        } catch (failure: VoucherPoolJdbcTimeoutException) {
+            lastTimeout = failure
+            Thread.yield()
+        }
+    }
+    throw checkNotNull(lastTimeout)
+}
+
+private const val MAX_OWNER_RELEASE_ATTEMPTS = 8
 
 internal enum class BatchCommandFailure {
     SCOPE_NOT_FOUND,
@@ -831,7 +848,9 @@ internal class JdbcCampaignBatchCommandService(
     }
 
     private fun releaseRetryable(owner: IdempotencyOwner, lane: MutationLane) {
-        transaction(lane) { idempotency.releaseRetryable(owner) }
+        releaseRetryableOwner {
+            transaction(lane) { idempotency.releaseRetryable(owner) }
+        }
     }
 
     private fun <T> transaction(lane: MutationLane, block: () -> T): T = when (lane) {

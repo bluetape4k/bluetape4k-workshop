@@ -50,9 +50,35 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
         missingCases.forEach { available ->
             val failure = assertFailsWith<VoucherPoolRestoreException> {
                 VoucherPoolRestoreCoordinator(available)
-                    .restore(manifest(), { imported.incrementAndGet() }, ::passingSmoke)
+                    .restore(manifest(), backupInventory(), { imported.incrementAndGet() }, ::passingSmoke)
             }
             failure.code shouldBeEqualTo VoucherPoolRestoreFailureCode.MISSING_KEY
+        }
+
+        imported.get() shouldBeEqualTo 0
+    }
+
+    @Test
+    fun `restore rejects a manifest that omits keys referenced by backup content`() {
+        val imported = AtomicInteger()
+        val complete = manifest()
+        val incompleteCases =
+            listOf(
+                complete.copy(userIdentityVersions = emptySet()),
+                complete.copy(auditVersions = emptySet()),
+                complete.copy(signatureVersions = emptySet()),
+            )
+
+        incompleteCases.forEach { incomplete ->
+            val failure = assertFailsWith<VoucherPoolRestoreException> {
+                VoucherPoolRestoreCoordinator(availableKeys()).restore(
+                    incomplete,
+                    backupInventory(),
+                    { imported.incrementAndGet() },
+                    ::passingSmoke,
+                )
+            }
+            failure.code shouldBeEqualTo VoucherPoolRestoreFailureCode.INCOMPLETE_MANIFEST
         }
 
         imported.get() shouldBeEqualTo 0
@@ -63,7 +89,7 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
         val effectCount = AtomicInteger(1)
         val coordinator = VoucherPoolRestoreCoordinator(availableKeys())
 
-        val restored = coordinator.restore(manifest(), {}, ::passingSmoke)
+        val restored = coordinator.restore(manifest(), backupInventory(), {}, ::passingSmoke)
         val retryCode = if (restored.replayFenceRetained) VoucherPoolErrorCode.REPLAY_WINDOW_EXPIRED else null
 
         retryCode shouldBeEqualTo VoucherPoolErrorCode.REPLAY_WINDOW_EXPIRED
@@ -87,7 +113,7 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
         val coordinator = VoucherPoolRestoreCoordinator(availableKeys())
 
         val failure = assertFailsWith<VoucherPoolRestoreException> {
-            coordinator.restore(manifest(), {}) { passingSmoke().copy(cursorRestarted = false) }
+            coordinator.restore(manifest(), backupInventory(), {}) { passingSmoke().copy(cursorRestarted = false) }
         }
 
         failure.code shouldBeEqualTo VoucherPoolRestoreFailureCode.SMOKE_FAILED
@@ -105,6 +131,7 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
 
             val restored = coordinator.restore(
                 manifest(),
+                backupInventory(),
                 {
                     restoreLogicalBackup(dataSource, fixture)
                 },
@@ -160,6 +187,17 @@ internal class VoucherPoolBackupRestoreIntegrationTest {
         auditVersions = setOf("6"),
         signatureVersions = setOf("7"),
     )
+
+    private fun backupInventory() =
+        VoucherPoolBackupKeyInventory(
+            kekVersions = setOf("kek-v1"),
+            verificationVersions = setOf("2"),
+            stableDedupVersions = setOf("1"),
+            commandTombstoneVersions = setOf("4"),
+            userIdentityVersions = setOf("3"),
+            auditVersions = setOf("6"),
+            signatureVersions = setOf("7"),
+        )
 
     private fun passingSmoke() =
         VoucherPoolRestoreSmokeResult(

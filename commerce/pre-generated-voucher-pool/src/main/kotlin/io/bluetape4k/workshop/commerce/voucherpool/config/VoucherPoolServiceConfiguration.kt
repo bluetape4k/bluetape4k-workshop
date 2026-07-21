@@ -31,11 +31,16 @@ import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherKekRing
 import io.bluetape4k.workshop.commerce.voucherpool.worker.JdbcVoucherPoolWorkerRepository
 import io.bluetape4k.workshop.commerce.voucherpool.worker.JdbcVoucherPoolWorkers
 import io.bluetape4k.workshop.commerce.voucherpool.worker.VoucherPoolWorkers
+import org.springframework.beans.factory.ObjectProvider
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.io.ClassPathResource
+import org.springframework.scheduling.annotation.EnableScheduling
 import javax.sql.DataSource
 
 @Configuration(proxyBeanMethods = false)
+@EnableScheduling
 internal class VoucherPoolServiceConfiguration {
     @Bean
     fun voucherPoolRuntimeKeys(provider: VoucherPoolKeyMaterialProvider): VoucherPoolRuntimeKeys = provider.load()
@@ -45,6 +50,34 @@ internal class VoucherPoolServiceConfiguration {
 
     @Bean
     fun voucherKekRing(keys: VoucherPoolRuntimeKeys): VoucherKekRing = keys.kekRing
+
+    @Bean
+    fun voucherPoolMigrationRunner(dataSource: DataSource): VoucherPoolMigrationRunner =
+        VoucherPoolMigrationRunner(
+            dataSource = dataSource,
+            migration = VoucherPoolMigration("001", ClassPathResource("db/migration/V001__voucher_pool.sql")),
+            advisoryLockKey = VOUCHER_POOL_MIGRATION_LOCK_KEY,
+        )
+
+    @Bean
+    fun voucherPoolReferencedKeyPreflight(
+        dataSource: DataSource,
+        digests: VoucherDigestService,
+        kekRing: VoucherKekRing,
+    ): VoucherPoolReferencedKeyPreflight = VoucherPoolReferencedKeyPreflight(dataSource, digests, kekRing)
+
+    @Bean
+    @ConditionalOnProperty(
+        prefix = "workshop.voucher-pool",
+        name = ["startup-initializer-enabled"],
+        havingValue = "true",
+        matchIfMissing = true,
+    )
+    fun voucherPoolStartupInitializer(
+        migration: VoucherPoolMigrationRunner,
+        keyPreflight: VoucherPoolReferencedKeyPreflight,
+        health: VoucherPoolHealthState,
+    ): VoucherPoolStartupInitializer = VoucherPoolStartupInitializer(migration, keyPreflight, health)
 
     @Bean
     fun voucherPoolRepository(dataSource: DataSource): VoucherPoolRepository = JdbcVoucherPoolRepository(dataSource)
@@ -144,4 +177,34 @@ internal class VoucherPoolServiceConfiguration {
         claims: JdbcVoucherPoolWorkerRepository,
         repository: VoucherPoolRepository,
     ): VoucherPoolWorkers = JdbcVoucherPoolWorkers(executor, claims, repository)
+
+    @Bean
+    @ConditionalOnProperty(
+        prefix = "workshop.voucher-pool",
+        name = ["worker-dispatcher-enabled"],
+        havingValue = "true",
+        matchIfMissing = true,
+    )
+    fun voucherPoolWorkerTrigger(
+        workers: VoucherPoolWorkers,
+        runtime: VoucherPoolRuntimeControl,
+        leaders: ObjectProvider<VoucherPoolLeaderTrigger>,
+    ): VoucherPoolWorkerTrigger = VoucherPoolWorkerTrigger(workers, runtime, leaders.ifAvailable)
+
+    @Bean
+    @ConditionalOnProperty(
+        prefix = "workshop.voucher-pool",
+        name = ["worker-dispatcher-enabled"],
+        havingValue = "true",
+        matchIfMissing = true,
+    )
+    fun voucherPoolWorkerDispatcher(
+        claims: JdbcVoucherPoolWorkerRepository,
+        trigger: VoucherPoolWorkerTrigger,
+        properties: VoucherPoolProperties,
+    ): VoucherPoolWorkerDispatcher = VoucherPoolWorkerDispatcher(claims, trigger, properties.workerInstanceId)
+
+    private companion object {
+        const val VOUCHER_POOL_MIGRATION_LOCK_KEY = 537_001L
+    }
 }

@@ -142,16 +142,36 @@ internal class VoucherPoolWorkerRepositoryTest {
         ).cursor shouldBeEqualTo 17L
     }
 
+    @Test
+    fun `runnable scan includes released and stale claims but excludes completed claims`() {
+        val releasedScope = UUID.randomUUID()
+        val staleScope = UUID.randomUUID()
+        val completedScope = UUID.randomUUID()
+        repository.release(
+            checkNotNull(repository.claim(tenant, WorkerKind.BATCH_REVOKE, releasedScope, "released-owner")),
+        )
+        repository.claim(tenant, WorkerKind.RECONCILIATION, staleScope, "stale-owner")
+        updateClaim("claim_until=transaction_timestamp()-interval '1 second'", staleScope)
+        repository.finalize(
+            checkNotNull(repository.claim(tenant, WorkerKind.BATCH_EXPIRY, completedScope, "completed-owner")),
+        )
+
+        repository.findRunnable(10).toSet() shouldBeEqualTo setOf(
+            WorkerClaimCandidate(tenant, WorkerKind.BATCH_REVOKE, releasedScope),
+            WorkerClaimCandidate(tenant, WorkerKind.RECONCILIATION, staleScope),
+        )
+    }
+
     private fun expireLease() = updateClaim("claim_until=transaction_timestamp()-interval '1 second'")
 
     private fun makeDue() = updateClaim("next_attempt_at=transaction_timestamp()-interval '1 second'")
 
-    private fun updateClaim(setClause: String) {
+    private fun updateClaim(setClause: String, targetScopeId: UUID = scopeId) {
         dataSource.connection.use { connection ->
             connection.createStatement().use { statement ->
                 statement.executeUpdate(
                     "UPDATE voucher_pool_worker_claims SET $setClause " +
-                        "WHERE tenant_id='$tenant' AND scope_id='$scopeId'",
+                        "WHERE tenant_id='$tenant' AND scope_id='$targetScopeId'",
                 )
             }
         }

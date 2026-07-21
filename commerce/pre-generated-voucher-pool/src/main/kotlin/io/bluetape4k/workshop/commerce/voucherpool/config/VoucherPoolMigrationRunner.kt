@@ -5,9 +5,15 @@ package io.bluetape4k.workshop.commerce.voucherpool.config
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
+import io.bluetape4k.workshop.commerce.voucherpool.security.DigestPurpose
+import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherDigestService
+import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherKekRing
+import io.bluetape4k.workshop.commerce.voucherpool.security.VoucherKeyMaterialUnavailableException
+import org.springframework.beans.factory.SmartInitializingSingleton
 import org.springframework.core.io.Resource
 import java.security.MessageDigest
 import java.sql.Connection
+import java.sql.ResultSet
 import java.sql.SQLException
 import java.time.Duration
 import java.util.concurrent.locks.LockSupport
@@ -247,4 +253,89 @@ internal class VoucherPoolMigrationRunner(
         current.toString().trim().takeIf(String::isNotEmpty)?.let(statements::add)
         return statements
     }
+}
+
+/** Bounded purpose-aware verification of key versions referenced by live PostgreSQL authority rows. */
+internal class VoucherPoolReferencedKeyPreflight(
+    private val dataSource: DataSource,
+    private val digests: VoucherDigestService,
+    private val kekRing: VoucherKekRing,
+) {
+    fun verify() {
+        referencedStrings(KEK_SQL).forEach(kekRing::require)
+        referencedInts(VERIFICATION_SQL).forEach { digests.requireAvailable(DigestPurpose.VERIFICATION, it) }
+        referencedInts(USER_IDENTITY_SQL).forEach { digests.requireAvailable(DigestPurpose.USER_IDENTITY, it) }
+        referencedInts(AUDIT_SQL).forEach { digests.requireAvailable(DigestPurpose.AUDIT, it) }
+        referencedInts(STABLE_DEDUP_SQL).forEach { digests.requireAvailable(DigestPurpose.STABLE_DEDUP, it) }
+        referencedInts(COMMAND_TOMBSTONE_SQL).forEach {
+            digests.requireAvailable(DigestPurpose.COMMAND_TOMBSTONE, it)
+        }
+    }
+
+    private fun referencedInts(sql: String): List<Int> = referenced(sql) { it.getInt(1) }
+
+    private fun referencedStrings(sql: String): List<String> = referenced(sql) { it.getString(1) }
+
+    private fun <T> referenced(sql: String, read: (ResultSet) -> T): List<T> =
+        dataSource.connection.use { connection ->
+            connection.prepareStatement(sql).use { statement ->
+                statement.setInt(1, MAX_REFERENCED_VERSIONS + 1)
+                statement.executeQuery().use { result ->
+                    buildList {
+                        while (result.next()) add(read(result))
+                    }.also { versions ->
+                        if (versions.size > MAX_REFERENCED_VERSIONS) throw VoucherKeyMaterialUnavailableException()
+                    }
+                }
+            }
+        }
+
+    private companion object {
+        const val MAX_REFERENCED_VERSIONS = 64
+        const val KEK_SQL =
+            "SELECT DISTINCT kek_version FROM voucher_pool_entries WHERE kek_version IS NOT NULL ORDER BY 1 LIMIT ?"
+        const val VERIFICATION_SQL =
+            "SELECT DISTINCT verification_key_version FROM voucher_pool_entries " +
+                "WHERE verification_key_version IS NOT NULL ORDER BY 1 LIMIT ?"
+        const val USER_IDENTITY_SQL =
+            "SELECT DISTINCT user_identity_key_version FROM voucher_pool_campaigns ORDER BY 1 LIMIT ?"
+        const val AUDIT_SQL =
+            "SELECT version FROM (SELECT audit_key_version AS version FROM voucher_pool_audits " +
+                "WHERE audit_key_version IS NOT NULL UNION SELECT signature_key_version AS version " +
+                "FROM voucher_pool_revoke_preview_grants) referenced ORDER BY 1 LIMIT ?"
+        const val STABLE_DEDUP_SQL =
+            "SELECT DISTINCT key_version FROM voucher_pool_code_dedup ORDER BY 1 LIMIT ?"
+        const val COMMAND_TOMBSTONE_SQL =
+            "SELECT DISTINCT key_version FROM voucher_pool_command_tombstones ORDER BY 1 LIMIT ?"
+    }
+}
+
+/** Opens readiness only after migration and live referenced-key verification complete. */
+internal class VoucherPoolStartupInitializer(
+    private val migration: VoucherPoolMigrationRunner,
+    private val keyPreflight: VoucherPoolReferencedKeyPreflight,
+    private val health: VoucherPoolHealthState,
+) : SmartInitializingSingleton {
+    override fun afterSingletonsInstantiated() {
+        try {
+            migration.migrate()
+            health.recover(VoucherPoolHealthComponent.MIGRATION)
+        } catch (failure: RuntimeException) {
+            health.fail(VoucherPoolHealthComponent.MIGRATION, VoucherPoolHealthReason.MIGRATION_UNAVAILABLE)
+            throw failure
+        }
+        try {
+            keyPreflight.verify()
+            health.recover(VoucherPoolHealthComponent.REFERENCED_KEYS)
+        } catch (failure: RuntimeException) {
+            health.fail(
+                VoucherPoolHealthComponent.REFERENCED_KEYS,
+                VoucherPoolHealthReason.REFERENCED_KEY_UNAVAILABLE,
+            )
+            throw failure
+        }
+        log.info { "voucher_pool_startup_authority_ready migration=001 referencedKeys=verified" }
+    }
+
+    companion object : KLogging()
 }
