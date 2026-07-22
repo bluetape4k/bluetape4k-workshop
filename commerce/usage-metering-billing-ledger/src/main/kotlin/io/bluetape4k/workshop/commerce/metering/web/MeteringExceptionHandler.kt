@@ -32,9 +32,9 @@ internal object MeteringErrorStatus {
                 else -> HttpStatus.BAD_REQUEST
             }
             is IllegalStateException -> when {
-                message.contains("not_found") -> HttpStatus.NOT_FOUND
                 message.contains("not_ready") || message.contains("price_not_found") ->
                     HttpStatus.UNPROCESSABLE_CONTENT
+                message.contains("not_found") -> HttpStatus.NOT_FOUND
                 else -> HttpStatus.CONFLICT
             }
             else -> HttpStatus.INTERNAL_SERVER_ERROR
