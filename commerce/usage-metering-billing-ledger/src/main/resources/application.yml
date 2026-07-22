@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: commerce-usage-metering-billing-ledger
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    hikari:
+      maximum-pool-size: 12
+  transaction:
+    default-timeout: 2s
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  datadog:
+    metrics:
+      export:
+        enabled: false
+
+workshop:
+  metering:
+    command-receipt:
+      lease: 30s
+      retention: 24h
+      terminal-response-bytes: 16384
+    allowed-lateness: 48h
+    occurred-at-retention: 400d
+    occurred-at-future-skew: 5m
+    close:
+      batch-size: 200
+      max-batch-size: 1000
+      max-batches-per-tick: 5
+      scheduler-delay: 5s
+      scheduler-enabled: true
+    reconciliation:
+      page-size: 200
+      max-page-size: 500
+    schema-initializer-enabled: false
+    demo-enabled: false

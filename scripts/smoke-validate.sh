@@ -152,6 +152,7 @@ case "${1:-help}" in
       :commerce-promotion-voucher-campaign:test \
       :commerce-pre-generated-voucher-pool:test \
       :commerce-concert-ticket-flash-sale:test \
+      :commerce-usage-metering-billing-ledger:integrationTest \
       --continue --max-workers=1"
     ;;
 
