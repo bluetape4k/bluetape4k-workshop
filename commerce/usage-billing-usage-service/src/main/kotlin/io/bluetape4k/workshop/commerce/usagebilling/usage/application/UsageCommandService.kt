@@ -55,14 +55,15 @@ class UsageCommandService(
             occurredAt = command.occurredAt,
             recordedAt = now,
         )
+        val wirePayload = envelope.wirePayload()
         journal.append(
             usage,
             UsageOutboxRecord(
                 eventId,
                 envelope.eventType,
                 envelope.partitionKey(),
-                envelope.payload,
-                envelope.payloadDigest,
+                wirePayload,
+                envelope.wirePayloadDigest(),
                 now,
             ),
         )

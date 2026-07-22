@@ -17,6 +17,7 @@ import java.util.UUID
 
 @Tag("integration")
 @SpringBootTest
+@Suppress("VarCouldBeVal") // Spring injects these mutable lateinit collaborators after construction.
 class InvoiceInboxPostgresIntegrationTest {
     @Autowired
     private lateinit var inbox: InvoiceInboxService

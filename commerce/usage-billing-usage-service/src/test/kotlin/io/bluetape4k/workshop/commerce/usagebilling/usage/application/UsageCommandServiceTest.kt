@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.usagebilling.usage.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.AcceptUsageCommand
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidence
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageAcceptanceJournal
@@ -28,6 +29,8 @@ class UsageCommandServiceTest {
         journal.usages.single().sourceEventId shouldBeEqualTo "source-usage-1"
         journal.outbox.single().eventType shouldBeEqualTo "UsageAccepted"
         journal.outbox.single().partitionKey shouldBeEqualTo "tenant-a|Usage|source-usage-1"
+        val wire = Jackson.defaultJsonMapper.readTree(journal.outbox.single().payload)
+        requireNotNull(wire.get("eventId")).asString() shouldBeEqualTo result.eventId.toString()
     }
 
     @Test
@@ -47,7 +50,7 @@ class UsageCommandServiceTest {
 
         val failure = runCatching { service.accept(command(quantity = BigDecimal.TWO)) }.exceptionOrNull()
 
-        failure!!::class.simpleName shouldBeEqualTo "UsageSourceConflict"
+        requireNotNull(failure)::class.simpleName shouldBeEqualTo "UsageSourceConflict"
         journal.usages.size shouldBeEqualTo 1
     }
 
@@ -55,7 +58,7 @@ class UsageCommandServiceTest {
     fun `missing local price evidence is rejected without an outbox record`() {
         val failure = runCatching { service.accept(command()) }.exceptionOrNull()
 
-        failure!!::class.simpleName shouldBeEqualTo "MissingPriceEvidence"
+        requireNotNull(failure)::class.simpleName shouldBeEqualTo "MissingPriceEvidence"
         journal.outbox.size shouldBeEqualTo 0
     }
 
