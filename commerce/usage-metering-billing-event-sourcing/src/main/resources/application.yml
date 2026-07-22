@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: usage-metering-billing-event-sourcing
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    hikari:
+      maximum-pool-size: 16
+  exposed:
+    generate-ddl: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+workshop:
+  metering-events:
+    projection:
+      enabled: true
