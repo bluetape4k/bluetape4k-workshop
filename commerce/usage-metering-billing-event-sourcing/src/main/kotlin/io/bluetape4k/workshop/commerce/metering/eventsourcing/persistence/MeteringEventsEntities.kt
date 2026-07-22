@@ -81,3 +81,34 @@ class ProjectionGenerationEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var createdAt by ProjectionGenerations.createdAt
     var updatedAt by ProjectionGenerations.updatedAt
 }
+
+class BillingReadModelEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<BillingReadModelEntity>(BillingReadModels)
+
+    var projectionName by BillingReadModels.projectionName
+    var generation by BillingReadModels.generation
+    var tenantId by BillingReadModels.tenantId
+    var modelType by BillingReadModels.modelType
+    var entryId by BillingReadModels.entryId
+    var eventType by BillingReadModels.eventType
+    var globalPosition by BillingReadModels.globalPosition
+    var quantity by BillingReadModels.quantity
+    var amount by BillingReadModels.amount
+    var currency by BillingReadModels.currency
+    var provenance by BillingReadModels.provenance
+    var occurredAt by BillingReadModels.occurredAt
+}
+
+class ProjectionFailureEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<ProjectionFailureEntity>(ProjectionFailures)
+
+    var projectionName by ProjectionFailures.projectionName
+    var generation by ProjectionFailures.generation
+    var eventId by ProjectionFailures.eventId
+    var eventType by ProjectionFailures.eventType
+    var globalPosition by ProjectionFailures.globalPosition
+    var errorDigest by ProjectionFailures.errorDigest
+    var attemptCount by ProjectionFailures.attemptCount
+    var firstFailedAt by ProjectionFailures.firstFailedAt
+    var lastFailedAt by ProjectionFailures.lastFailedAt
+}

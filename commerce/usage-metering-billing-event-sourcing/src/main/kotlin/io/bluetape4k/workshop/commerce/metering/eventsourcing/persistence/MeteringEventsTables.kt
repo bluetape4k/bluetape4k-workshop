@@ -118,6 +118,43 @@ object ProjectionAppliedEvents : UUIDTable("metering_projection_applied_events",
     }
 }
 
+object BillingReadModels : UUIDTable("metering_billing_read_models", "read_model_id") {
+    val projectionName = varchar("projection_name", 96)
+    val generation = integer("generation")
+    val tenantId = varchar("tenant_id", 64)
+    val modelType = varchar("model_type", 32)
+    val entryId = varchar("entry_id", 160)
+    val eventType = varchar("event_type", 128)
+    val globalPosition = long("global_position")
+    val quantity = decimal("quantity", 19, 4).nullable()
+    val amount = decimal("amount", 19, 4).nullable()
+    val currency = varchar("currency", 3).nullable()
+    val provenance = varchar("provenance", 160).nullable()
+    val occurredAt = timestamp("occurred_at")
+
+    init {
+        uniqueIndex(projectionName, generation, tenantId, modelType, entryId)
+        index("idx_billing_read_model_position", false, projectionName, generation, tenantId, globalPosition)
+    }
+}
+
+object ProjectionFailures : UUIDTable("metering_projection_failures", "failure_id") {
+    val projectionName = varchar("projection_name", 96)
+    val generation = integer("generation")
+    val eventId = javaUUID("event_id")
+    val eventType = varchar("event_type", 128)
+    val globalPosition = long("global_position")
+    val errorDigest = varchar("error_digest", 128)
+    val attemptCount = integer("attempt_count")
+    val firstFailedAt = timestamp("first_failed_at")
+    val lastFailedAt = timestamp("last_failed_at")
+
+    init {
+        uniqueIndex(projectionName, generation, eventId)
+        index("idx_projection_failure_position", false, projectionName, generation, globalPosition)
+    }
+}
+
 val METERING_EVENT_TABLES = arrayOf(
     EventStreamHeads,
     DomainEvents,
@@ -126,4 +163,6 @@ val METERING_EVENT_TABLES = arrayOf(
     ProjectionAliases,
     ProjectionGenerations,
     ProjectionAppliedEvents,
+    BillingReadModels,
+    ProjectionFailures,
 )
