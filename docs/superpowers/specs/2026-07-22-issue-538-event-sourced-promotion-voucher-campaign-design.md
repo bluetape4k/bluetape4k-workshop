@@ -296,7 +296,10 @@ handler 자체가 delivery 순서나 단일 전달을 신뢰하지 않도록 검
 - duplicate event는 processed identity로 no-op 처리한다.
 - aggregate version gap은 적용하지 않고 retryable delayed state로 기록한다.
 - process 중단은 row 변경과 checkpoint를 함께 rollback한다.
-- query는 `projectionPosition`, `streamPosition`, `lag`, generation을 반환한다.
+- query는 `projectionPosition`, `streamPosition`, `lagEvents`, `lastProjectedAt`,
+  `caughtUp`, generation을 반환한다. `lagEvents`는
+  `streamPosition - projectionPosition`인 아직 적용되지 않은 event 수이며 시간 지연과 섞지
+  않는다.
 - optional bounded wait가 timeout되면 최신인 척하지 않고 `PROJECTION_PENDING`을 반환한다.
 - SSE는 현재 projection snapshot을 먼저 보내고 projection/stream position이 포함된 change와
   lag/rebuild 상태를 전송한다.
@@ -307,6 +310,13 @@ handler 자체가 delivery 순서나 단일 전달을 신뢰하지 않도록 검
 `X-Min-Stream-Position` header로 최대 5초 bounded wait를 요청한다. 그 안에 projection이
 도달하지 못하면 HTTP 202, stable code `PROJECTION_PENDING`, `Retry-After: 1`, 현재 두
 position과 lag가 포함된 error body를 받는다. header가 없으면 현재 projection을 즉시 읽는다.
+
+browser/caller는 GET의 202를 일반 2xx domain snapshot과 별도로 처리한다. 마지막으로 확인된
+projection을 계속 표시하면서 `command committed, view catching up` 상태, `lagEvents`를
+`12 events behind` 같은 text, `lastProjectedAt`, caught-up 여부로 보여 준다. 같은
+`X-Min-Stream-Position`과 server의 `Retry-After`로 GET만 최대 5회 재시도하며 command를 다시
+제출하지 않는다. bounded retry가 끝나면 stale 표시와 명시적 수동 refresh를 제공한다.
+pending 완료, timeout, manual refresh는 #534 browser helper의 generic 2xx 처리보다 먼저 분기한다.
 
 ## Snapshot
 
@@ -340,6 +350,25 @@ idempotency key와 expected active-generation token을 요구하며 stale token�
 이전 generation은 24시간, 최대 2개만 유지한다. per-tenant 동시 rebuild는 하나이고 전체
 module 동시 rebuild도 하나다. replay page는 최대 200 events/2 MiB, transaction은 최대 2초,
 전체 rebuild는 100,000 events 기준 10분 예산과 cancellation checkpoint를 가진다.
+
+operator UI는 현재 service 중인 active generation과 새 rebuild generation을 별도 panel로
+표시하며 다음 상태/action 계약을 따른다.
+
+| 상태 | 사용자 표시 | mutation/recovery action |
+|---|---|---|
+| `CAUGHT_UP` | active generation, `0 events behind`, 마지막 진행 시각 | business mutation 허용, rebuild 시작 허용 |
+| `CATCHING_UP` | active generation, `N events behind`, 마지막 진행 시각 | stale projected revision 기반 business mutation은 disable하고 refresh 이유를 표시 |
+| `DEGRADED` | active generation과 poison position/reason class | business mutation은 affected aggregate에 대해 fail closed, 원인 수정 뒤 poison retry 또는 rebuild 선택 |
+| `BUILDING` | active와 building generation, 시작/현재/target position | 중복 rebuild disable, status/cancel만 허용 |
+| `VALIDATING` | active와 candidate generation, 검증 항목 진행률 | activation/rebuild 중복 action disable, status/cancel만 허용 |
+| `FAILED` | active generation 유지, bounded failure summary와 resume 가능 여부 | retryable failure는 resume, invariant/digest failure는 원인 수정 후 새 rebuild |
+
+poison event의 handler/upcaster가 수정됐고 현재 generation을 이어 갈 수 있으면 targeted retry를
+우선한다. invariant/digest 불일치, 넓은 schema 변경, generation 손상이면 full rebuild를 선택한다.
+projection recovery와 business reconciliation은 서로 다른 panel/action으로 표시한다. 모든
+mutation action은 진행 중 중복 클릭을 disable하고 idempotency key와 expected generation token을
+유지한다. 412 stale token/revision은 최신 generation/revision을 다시 읽고 기존 입력을 자동
+재제출하지 않으며 사용자가 다시 확인하도록 설명한다.
 
 ## 자원과 성능 예산
 
@@ -463,8 +492,15 @@ projection lag 때문에 #534가 즉시 일관성으로 보이던 query 결과�
 - projection convergence는 Awaitility로 검증하며 `Thread.sleep`을 사용하지 않는다.
 - SSE cursor, reconnect, snapshot-first, bounded queue/payload
 - operator health, lag, rebuild, poison event, redaction
+- GET 202 pending 전용 분기, 마지막 projection 유지, bounded GET-only retry, manual refresh
+- operator 상태/action matrix, 412 reload, duplicate-action disable, retry와 rebuild 선택 기준
+- `aria-live`, text status, disabled-action reason을 유지하고 lag/rebuild/degraded/pending 전환을
+  색상이나 숫자만이 아니라 screen reader가 인식할 수 있는 문구로 검증
 - hostile oversized/deep JSON, replay cap, rebuild quota, operator stale-generation/idempotency
 - idempotency scope 간 principal/operation/resource 격리와 key rotation replay
+- erasure fixture는 subject의 surrogate A를 기록한 뒤 원본/mapping을 삭제하고 reverse lookup이
+  실패하며, 같은 raw identity 재등록 시 다른 surrogate B가 발급되고 기존 event/projection/API로
+  mapping 또는 raw identity를 복구할 수 없음을 검증
 - application DB role과 mutation-denying trigger가 event update/delete를 거부하는지 검증
 - upcaster golden fixture, 반복 결정성, chain hard cap
 - static browser contract와 executable scenario
@@ -526,6 +562,12 @@ module에 새로 실행한다. 문서는 실제 migration을 다음 단계로 �
 14. idempotency principal scope, key rotation replay, operator fencing, append-only DB guard가
     hostile fixture에서 fail closed한다.
 15. bounded replay/rebuild와 foreground/background permit 예산이 starvation 없이 지켜진다.
+16. browser가 `PROJECTION_PENDING`을 snapshot으로 렌더링하지 않고 마지막 projection을 유지한 채
+    GET만 bounded retry하며 command를 중복 제출하지 않는다.
+17. operator UI가 projection 상태별 허용 action, stale token/revision, retry/rebuild 선택,
+    접근 가능한 status와 disabled reason을 일관되게 표현한다.
+18. subject mapping 삭제가 기존 surrogate의 reverse lookup을 차단하고 재등록된 identity에 새
+    surrogate를 발급한다.
 
 ## Definition of Done
 
