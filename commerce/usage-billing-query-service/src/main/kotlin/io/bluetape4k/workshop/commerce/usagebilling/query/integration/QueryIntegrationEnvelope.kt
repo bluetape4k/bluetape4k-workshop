@@ -1,3 +1,5 @@
+@file:Suppress("LongParameterList") // A versioned integration envelope mirrors its fixed wire contract.
+
 package io.bluetape4k.workshop.commerce.usagebilling.query.integration
 
 import io.bluetape4k.support.requireNotBlank
@@ -37,7 +39,9 @@ class QueryIntegrationEnvelope private constructor(
             )
 
         private fun digestOf(payload: String): String =
-            HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(payload.toByteArray(UTF_8)))
+            HexFormat.of().formatHex(
+                MessageDigest.getInstance("SHA-256").digest(payload.toByteArray(UTF_8)),
+            )
     }
 }
 
@@ -57,6 +61,14 @@ class QueryEnvelopeCodecRegistry {
     }
 }
 
-data class QueryEnvelopeSchema(val eventType: String, val schemaVersion: Int)
-class UnsupportedQueryEnvelopeVersion(eventType: String, schemaVersion: Int) : IllegalArgumentException("unsupported_query_envelope:$eventType:$schemaVersion")
+data class QueryEnvelopeSchema(
+    val eventType: String,
+    val schemaVersion: Int,
+)
+
+class UnsupportedQueryEnvelopeVersion(
+    eventType: String,
+    schemaVersion: Int,
+) : IllegalArgumentException("unsupported_query_envelope:$eventType:$schemaVersion")
+
 class InvalidQueryEnvelopeDigest(eventId: UUID) : IllegalArgumentException("invalid_query_envelope_digest:$eventId")
