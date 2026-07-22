@@ -153,6 +153,7 @@ jobs:
       # - leader-job-safety-lab: deterministic safety scenarios without container-backed integration tags
       # - commerce-usage-metering-billing-ledger: container-free domain and architecture contracts
       # - commerce-usage-metering-billing-event-sourcing: container-free reducer, hash, upcast, and architecture contracts
+      # - commerce-usage-billing-*: five independently deployable service contracts and Kafka/PostgreSQL composition proof
       - name: Run H2/default examples
         run: >-
           ./gradlew
@@ -181,6 +182,12 @@ jobs:
           :leader-job-safety-lab:test
           :commerce-usage-metering-billing-ledger:test
           :commerce-usage-metering-billing-event-sourcing:test
+          :commerce-usage-billing-meter-service:test
+          :commerce-usage-billing-usage-service:test
+          :commerce-usage-billing-billing-service:test
+          :commerce-usage-billing-invoice-service:test
+          :commerce-usage-billing-query-service:test
+          :commerce-usage-billing-microservices-composition-tests:test
           :leader-tenant-scheduler:test
           :operations-job-console-core:test
           :spring-modulith-module-boundaries:test
@@ -318,6 +325,7 @@ jobs:
       # - leader-job-safety-lab: real Redis fencing takeover plus PostgreSQL stale-writer rejection
       # - commerce-usage-metering-billing-ledger: PostgreSQL-authoritative metering, close, invoice, and reconciliation
       # - commerce-usage-metering-billing-event-sourcing: PostgreSQL event store, replay, fenced projections, and correction
+      # - commerce-usage-billing-microservices: five PostgreSQL-owned services connected through Kafka outbox/inbox delivery
       - name: Run container-backed examples
         run: >-
           ./gradlew
@@ -349,6 +357,12 @@ jobs:
           :commerce-usage-metering-billing-ledger:koverXmlReport
           :commerce-usage-metering-billing-event-sourcing:integrationTest
           :commerce-usage-metering-billing-event-sourcing:koverXmlReport
+          :commerce-usage-billing-meter-service:integrationTest
+          :commerce-usage-billing-usage-service:integrationTest
+          :commerce-usage-billing-billing-service:integrationTest
+          :commerce-usage-billing-invoice-service:integrationTest
+          :commerce-usage-billing-query-service:integrationTest
+          :commerce-usage-billing-microservices-composition-tests:integrationTest
           --continue
           --max-workers=1
         env:
@@ -364,6 +378,7 @@ jobs:
           test -s commerce/usage-metering-billing-ledger/build/reports/kover/report.xml
           test -n "$(find commerce/usage-metering-billing-event-sourcing/build/test-results/integrationTest -name '*.xml' -print -quit)"
           test -s commerce/usage-metering-billing-event-sourcing/build/reports/kover/report.xml
+          test -n "$(find commerce/usage-billing-microservices-composition-tests/build/test-results/integrationTest -name '*.xml' -print -quit)"
 
       - name: Upload container example test results
         if: always()
@@ -424,6 +439,18 @@ jobs:
             commerce/usage-metering-billing-event-sourcing/build/test-results/integrationTest/*.xml
             commerce/usage-metering-billing-event-sourcing/build/reports/tests/integrationTest/
             commerce/usage-metering-billing-event-sourcing/build/reports/kover/report.xml
+            commerce/usage-billing-meter-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-meter-service/build/reports/tests/integrationTest/
+            commerce/usage-billing-usage-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-usage-service/build/reports/tests/integrationTest/
+            commerce/usage-billing-billing-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-billing-service/build/reports/tests/integrationTest/
+            commerce/usage-billing-invoice-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-invoice-service/build/reports/tests/integrationTest/
+            commerce/usage-billing-query-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-query-service/build/reports/tests/integrationTest/
+            commerce/usage-billing-microservices-composition-tests/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-microservices-composition-tests/build/reports/tests/integrationTest/
           retention-days: 7
 
   examples-status:

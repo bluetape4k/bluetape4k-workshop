@@ -17,6 +17,7 @@ workflow를 다룹니다.
 | [`concert-ticket-flash-sale`](concert-ticket-flash-sale/) | 대기실 admission, USER/IP 구매 guard, 결제/환불 복구, 티켓 상태 기반 restock | PostgreSQL + Redis (Testcontainers) |
 | [`usage-metering-billing-ledger`](usage-metering-billing-ledger/) | 멱등 usage, 시간 버전 가격, 재시작 가능한 close, 불변 ledger/invoice | PostgreSQL (Testcontainers) |
 | [`usage-metering-billing-event-sourcing`](usage-metering-billing-event-sourcing/) | Event append/replay/upcast, snapshot, fenced projection rebuild, correction/reconciliation | PostgreSQL (Testcontainers) |
+| [`usage-billing-microservices`](usage-billing-microservices-composition-tests/) | local outbox/inbox와 명시적 Kafka delivery boundary를 가진 독립 Spring Boot 서비스 5개 | PostgreSQL + Kafka (Testcontainers) |
 
 각 모듈은 blocking Spring MVC와 Exposed JDBC 작업에 Java 25 virtual thread를
 사용합니다. 요청 동시성은 virtual thread로 확장하지만, PostgreSQL 동시성은
@@ -33,5 +34,6 @@ HikariCP로 제한합니다.
 ./gradlew :commerce-usage-metering-billing-ledger:integrationTest --max-workers=1
 ./gradlew :commerce-usage-metering-billing-event-sourcing:integrationTest --max-workers=1
 ./gradlew :commerce-usage-metering-billing-event-sourcing:stressTest --max-workers=1
+./gradlew :commerce-usage-billing-microservices-composition-tests:integrationTest --max-workers=1
 ./scripts/smoke-validate.sh commerce
 ```

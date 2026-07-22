@@ -155,6 +155,13 @@ case "${1:-help}" in
       :commerce-usage-metering-billing-ledger:integrationTest \
       :commerce-usage-metering-billing-event-sourcing:integrationTest \
       :commerce-usage-metering-billing-event-sourcing:stressTest \
+      :commerce-usage-billing-meter-service:test \
+      :commerce-usage-billing-usage-service:test \
+      :commerce-usage-billing-billing-service:test \
+      :commerce-usage-billing-invoice-service:test \
+      :commerce-usage-billing-query-service:test \
+      :commerce-usage-billing-microservices-composition-tests:test \
+      :commerce-usage-billing-microservices-composition-tests:integrationTest \
       --continue --max-workers=1"
     ;;
 
@@ -266,6 +273,7 @@ case "${1:-help}" in
 
   diagram-qa)
     run "node scripts/validate-readme-diagram-qa.mjs"
+    run "node scripts/validate-usage-billing-microservices-readme.mjs"
     ;;
 
   help|*)
