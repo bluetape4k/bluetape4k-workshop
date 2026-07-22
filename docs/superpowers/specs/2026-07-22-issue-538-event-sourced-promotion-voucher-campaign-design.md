@@ -233,8 +233,13 @@ backup/restore 검증에서 다시 계산한다. DB administrator가 malicious�
   retryable rows
 - projection read models: tenant/campaign/voucher별 public lookup과 active-generation prefix
 
-대표 seed에서 stream tail, global scan, latest snapshot, dedup, retry scan을
-`EXPLAIN (ANALYZE, BUFFERS)`로 확인한다.
+대표 seed는 100 tenants, 1,000 campaigns, 10,000 streams, 100,000 events와 projection
+100,000 rows를 가진다. warm-up 뒤 stream tail, global scan, latest snapshot, dedup, retry
+scan을 `EXPLAIN (ANALYZE, BUFFERS)`로 확인한다. 각 핵심 lookup/scan은 의도한
+`Index Scan`/`Index Only Scan`을 사용하고 unexpected `Seq Scan`이 없어야 하며, query당
+shared read buffers 512 이하와 execution time 100 ms 이하를 dedicated PostgreSQL profile의
+회귀 기준으로 둔다. CI correctness gate는 plan shape와 index 사용을 검증하고 환경 민감한
+buffer/time ceiling은 dedicated performance profile에서 판정한다.
 
 ## Event-store port 계약
 
@@ -340,6 +345,10 @@ module 동시 rebuild도 하나다. replay page는 최대 200 events/2 MiB, tran
 
 - Hikari pool 기본 20: foreground 14 permits, projector 3, rebuild 1, maintenance/readiness 2
 - virtual thread도 DB permit을 얻기 전에는 connection을 요청하지 않는다.
+- foreground DB bulkhead는 permit 보유자와 대기자를 합쳐 최대 128 requests로 제한하고 permit
+  대기는 최대 250 ms다. admission 초과나 acquire timeout은 stable code
+  `DATABASE_BULKHEAD_REJECTED`/503, `Retry-After: 1`로 fail fast하며 connection pool wait로
+  넘기지 않는다.
 - foreground lock timeout 500 ms, statement timeout 3 s
 - projector/rebuild batch 최대 200 events 또는 2 MiB, transaction 최대 2 s
 - idle poll backoff 100 ms에서 2 s 사이, lag 증가 시 projector 우선순위를 높이되 foreground
@@ -348,13 +357,27 @@ module 동시 rebuild도 하나다. replay page는 최대 200 events/2 MiB, tran
 - rebuild는 projection lag가 10,000 events를 넘거나 foreground permit saturation이 80%를
   넘으면 새 batch 시작을 throttling한다.
 
-성능 profile은 64 concurrent virtual-thread clients, 단일 campaign 1,000 allocation command를
-기준으로 최소 20 terminal operations/s, p95 2초 이하, p99 5초 이하, lock/statement timeout
-1% 이하를 목표로 한다. same-version conflict fixture는 성공 1건과 명시적 409를 별도 집계해
-business conflict를 timeout 실패와 섞지 않는다. #534와 같은 workload의 throughput/latency,
-Hikari wait, append-fence wait, stream-head wait를 함께 기록한다. CI correctness gate는 모든
-request가 60초 안에 terminal result로 수렴하고 connection starvation이 없음을 검증하며,
-환경 민감한 percentile target은 dedicated performance profile에서 판정한다.
+성능 profile은 terminal response와 committed append를 별도 metric으로 기록하고 다음 두
+workload를 분리한다.
+
+- **Hot campaign profile:** 64 concurrent virtual-thread clients가 단일 campaign에 1,000개
+  allocation command를 보낸다. 각 client는 최신 revision을 다시 읽고 bounded retry해 실제
+  append 경로를 부하하며, same-version conflict fixture는 별도로 실행한다. terminal
+  operations/s, successfully appended operations/s, append 성공 비율, 409 비율, stream-head
+  wait p95/p99를 각각 기록한다. acceptance는 최소 20 successfully appended operations/s,
+  전체 command의 95% 이상이 bounded retry 안에 append 성공, p95 2초 이하, p99 5초 이하,
+  lock/statement timeout 1% 이하로 고정한다.
+- **Independent streams profile:** 64 concurrent clients를 32개 독립 campaign에 균등 분배해
+  campaign-head 경합과 무관하게 global append fence를 통과시킨다. 최소 40 successfully
+  appended operations/s, append-fence wait p95 100 ms 이하/p99 500 ms 이하,
+  lock/statement timeout 1% 이하를 acceptance로 고정한다.
+
+same-version conflict fixture는 성공 1건과 명시적 409를 별도 집계해 business conflict를
+timeout 실패나 append throughput과 섞지 않는다. 두 profile 모두 terminal operations/s와
+successfully appended operations/s, Hikari wait, append-fence wait, stream-head wait를 함께
+보고한다. CI correctness gate는 모든 request가 60초 안에 terminal result로 수렴하고 bounded
+bulkhead와 connection starvation 없음만 검증하며, 환경 민감한 throughput/percentile target은
+dedicated PostgreSQL performance profile에서 판정한다.
 
 ## 장애 처리
 
@@ -376,12 +399,16 @@ poison event를 넘어 checkpoint를 몰래 이동시키지 않는다. 원본 ev
 
 ## 보안과 개인정보
 
-- raw user/device/IP는 request boundary에서 tenant-scoped digest 또는 surrogate id로 바꾼다.
-- 상관관계가 필요한 저엔트로 값은 purpose별 versioned HMAC-SHA256과 tenant/domain separation을
-  사용한다. 상관관계가 필요 없는 값은 random surrogate id를 사용한다.
-- HMAC key version은 event/descriptor에 저장하고 active-read key ring, rotation, 최대
-  retention 뒤 retirement 계약을 적용한다. erasure는 원본 식별정보와 lookup mapping을
-  삭제해 이후 digest를 개인과 연결할 수 없게 한다.
+- raw user/device/IP는 request boundary에서 tenant-scoped pseudonym 또는 surrogate id로 바꾼다.
+- retention 동안 안정적인 상관관계가 필요한 저엔트로 값은 purpose별 versioned HMAC-SHA256과
+  tenant/domain separation을 사용한다. HMAC은 key와 원본 후보가 남아 있는 동안 다시 연결할
+  수 있는 pseudonymization이며 erasure로 간주하지 않는다.
+- subject erasure가 필요한 event identity는 random per-subject surrogate id를 저장하고 원본과
+  surrogate의 lookup mapping을 event store 밖의 deletable mapping에 둔다. erasure는 이 mapping과
+  원본을 삭제해 event의 surrogate에서 subject로 가는 연결을 끊는다.
+- HMAC key version은 event/descriptor에 저장하고 active-read key ring, rotation, 최대 retention
+  뒤 retirement 계약을 적용한다. shared HMAC digest의 연결 가능성은 retention/key retirement까지
+  유지된다는 점을 개인정보 문서와 operator UI에 명시한다.
 - raw voucher code와 idempotency key는 event, snapshot, projection, log, metric에 기록하지
   않는다.
 - failure record는 event metadata, bounded reason, exception classification만 저장한다.
@@ -405,7 +432,7 @@ poison event를 넘어 checkpoint를 몰래 이동시키지 않는다. 원본 ev
 
 projection lag 때문에 #534가 즉시 일관성으로 보이던 query 결과를 최신이라고 가장하지
 않는다. command terminal response는 즉시 반환하고 query는 lag metadata 또는
-`projection_pending`을 명시한다.
+`PROJECTION_PENDING`을 명시한다.
 
 ## 테스트 전략
 
