@@ -9,9 +9,13 @@ data class InvoiceInboxEvent(
     val eventType: String,
     val correctionOf: UUID?,
     val amount: BigDecimal,
+    val tenantId: String = "tenant-a",
+    val payloadDigest: String = eventId.toString(),
 ) {
     init {
         eventType.requireNotBlank("eventType")
+        tenantId.requireNotBlank("tenantId")
+        payloadDigest.requireNotBlank("payloadDigest")
     }
 }
 
@@ -23,12 +27,19 @@ data class InvoiceLine(
 
 data class InvoiceInboxResult(
     val created: Boolean,
+    val outcome: InvoiceInboxOutcome,
 )
+
+enum class InvoiceInboxOutcome {
+    APPLIED,
+    DUPLICATE,
+    QUARANTINED,
+}
 
 interface InvoiceJournal {
     val lines: List<InvoiceLine>
 
     fun findLine(sourceEventId: UUID): InvoiceLine?
 
-    fun append(line: InvoiceLine)
+    fun apply(event: InvoiceInboxEvent): InvoiceInboxOutcome
 }

@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.usagebilling.invoice.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceInboxEvent
+import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceInboxOutcome
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceJournal
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceLine
 import org.junit.jupiter.api.Test
@@ -31,6 +32,18 @@ class InvoiceInboxServiceTest {
     }
 
     @Test
+    fun `same invoice event identifier with a conflicting payload is quarantined`() {
+        val event = chargeRated()
+        service.handle(event)
+
+        val result = service.handle(event.copy(payloadDigest = "conflicting-digest"))
+
+        result.created shouldBeEqualTo false
+        result.outcome shouldBeEqualTo InvoiceInboxOutcome.QUARANTINED
+        journal.lines.size shouldBeEqualTo 1
+    }
+
+    @Test
     fun `AdjustmentPosted appends a correction line without mutating original charge line`() {
         val original = chargeRated()
         service.handle(original)
@@ -51,8 +64,20 @@ class InvoiceInboxServiceTest {
         override fun findLine(sourceEventId: UUID): InvoiceLine? =
             lines.firstOrNull { it.sourceEventId == sourceEventId }
 
-        override fun append(line: InvoiceLine) {
-            lines += line
+        private val digestByEvent = mutableMapOf<UUID, String>()
+
+        override fun apply(event: InvoiceInboxEvent): InvoiceInboxOutcome {
+            val existingDigest = digestByEvent[event.eventId]
+            if (existingDigest != null) {
+                return if (existingDigest == event.payloadDigest) {
+                    InvoiceInboxOutcome.DUPLICATE
+                } else {
+                    InvoiceInboxOutcome.QUARANTINED
+                }
+            }
+            digestByEvent[event.eventId] = event.payloadDigest
+            lines += InvoiceLine(event.eventId, event.correctionOf, event.amount)
+            return InvoiceInboxOutcome.APPLIED
         }
     }
 }

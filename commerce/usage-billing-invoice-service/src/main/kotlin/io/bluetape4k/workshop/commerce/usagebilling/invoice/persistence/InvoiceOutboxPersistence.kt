@@ -2,6 +2,8 @@
 
 package io.bluetape4k.workshop.commerce.usagebilling.invoice.persistence
 
+import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceInboxEvent
+import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceInboxOutcome
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceJournal
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceLine
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
@@ -9,12 +11,15 @@ import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityIn
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.jdbc.insertIgnore
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
@@ -52,6 +57,18 @@ object InvoiceLines : UUIDTable("invoice_line", "invoice_line_id") {
     }
 }
 
+object InvoiceInboxEvents : UUIDTable("invoice_inbox_event", "inbox_event_id") {
+    val eventId = javaUUID("event_id")
+    val tenantId = varchar("tenant_id", 64)
+    val eventType = varchar("event_type", 128)
+    val payloadDigest = varchar("payload_digest", 64)
+    val createdAt = timestamp("created_at")
+
+    init {
+        uniqueIndex(tenantId, eventId)
+    }
+}
+
 class InvoiceOutboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<InvoiceOutboxEventEntity>(InvoiceOutboxEvents)
 
@@ -81,6 +98,16 @@ class InvoiceLineEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var amount by InvoiceLines.amount
 }
 
+class InvoiceInboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<InvoiceInboxEventEntity>(InvoiceInboxEvents)
+
+    var eventId by InvoiceInboxEvents.eventId
+    var tenantId by InvoiceInboxEvents.tenantId
+    var eventType by InvoiceInboxEvents.eventType
+    var payloadDigest by InvoiceInboxEvents.payloadDigest
+    var createdAt by InvoiceInboxEvents.createdAt
+}
+
 abstract class InvoiceExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(ExposedEntityInformationImpl(domainClass))
@@ -108,6 +135,10 @@ class InvoiceLineRepository :
     AppendOnlyInvoiceExposedJdbcRepository<InvoiceLineEntity, UUID>(InvoiceLineEntity::class.java)
 
 @Repository
+class InvoiceInboxRepository :
+    AppendOnlyInvoiceExposedJdbcRepository<InvoiceInboxEventEntity, UUID>(InvoiceInboxEventEntity::class.java)
+
+@Repository
 class ExposedInvoiceJournal : InvoiceJournal {
     override val lines: List<InvoiceLine>
         get() = InvoiceLineEntity.all().map { InvoiceLine(it.sourceEventId, it.correctionOf, it.amount) }
@@ -117,11 +148,29 @@ class ExposedInvoiceJournal : InvoiceJournal {
             .firstOrNull()
             ?.let { InvoiceLine(it.sourceEventId, it.correctionOf, it.amount) }
 
-    override fun append(line: InvoiceLine) {
-        InvoiceLineEntity.new {
-            sourceEventId = line.sourceEventId
-            correctionOf = line.correctionOf
-            amount = line.amount
+    override fun apply(event: InvoiceInboxEvent): InvoiceInboxOutcome {
+        val inserted = InvoiceInboxEvents.insertIgnore {
+            it[eventId] = event.eventId
+            it[tenantId] = event.tenantId
+            it[eventType] = event.eventType
+            it[payloadDigest] = event.payloadDigest
+            it[createdAt] = java.time.Instant.now()
+        }.insertedCount == 1
+        if (!inserted) {
+            val existing = InvoiceInboxEvents.selectAll().where {
+                (InvoiceInboxEvents.tenantId eq event.tenantId) and
+                    (InvoiceInboxEvents.eventId eq event.eventId)
+            }.singleOrNull()
+            return when (existing?.get(InvoiceInboxEvents.payloadDigest)) {
+                event.payloadDigest -> InvoiceInboxOutcome.DUPLICATE
+                else -> InvoiceInboxOutcome.QUARANTINED
+            }
         }
+        InvoiceLineEntity.new {
+            sourceEventId = event.eventId
+            correctionOf = event.correctionOf
+            amount = event.amount
+        }
+        return InvoiceInboxOutcome.APPLIED
     }
 }
