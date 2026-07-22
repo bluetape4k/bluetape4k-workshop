@@ -23,6 +23,12 @@ tasks.withType<Detekt>().configureEach {
 }
 
 dependencies {
+    kover(project(":commerce-usage-billing-meter-service"))
+    kover(project(":commerce-usage-billing-usage-service"))
+    kover(project(":commerce-usage-billing-billing-service"))
+    kover(project(":commerce-usage-billing-invoice-service"))
+    kover(project(":commerce-usage-billing-query-service"))
+
     testImplementation(project(":shared"))
     testImplementation(project(":commerce-usage-billing-meter-service"))
     testImplementation(project(":commerce-usage-billing-usage-service"))

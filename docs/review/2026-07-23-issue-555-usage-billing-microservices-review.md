@@ -68,17 +68,18 @@ Kafka + PostgreSQL container suite는 다음을 실행했다.
 | 명령 | 결과 |
 | --- | --- |
 | `./gradlew --no-daemon :commerce-usage-billing-microservices-composition-tests:test --tests '...PersistenceArchitectureTest' --max-workers=1` | PASS |
-| `./gradlew --no-daemon :commerce-usage-billing-microservices-composition-tests:integrationTest --max-workers=1` | PASS, 11 tests across 10 composition scenarios |
+| `./gradlew :commerce-usage-billing-microservices-composition-tests:cleanIntegrationTest :commerce-usage-billing-microservices-composition-tests:integrationTest :commerce-usage-billing-microservices-composition-tests:koverXmlReport -Pkotlin.incremental=false --no-build-cache --max-workers=1 --no-daemon` | PASS, 11 tests across 10 composition scenarios; failures/errors/skipped 0 |
 | `./gradlew --no-daemon :commerce-usage-billing-microservices-composition-tests:integrationTest --tests '...CorrectionIntegrationTest' --max-workers=1` | PASS |
+| `./gradlew :commerce-usage-billing-microservices-composition-tests:koverXmlReport -Pkotlin.incremental=false --no-build-cache --max-workers=1 --no-daemon` | PASS, service aggregation: line 2167 covered/188 missed, class 240 covered/19 missed |
+| `./scripts/smoke-validate.sh commerce` | PASS, 89 tasks |
+| `./gradlew detekt detektTest -Pkotlin.incremental=false --no-build-cache --max-workers=1 --no-daemon` | PASS, 68 tasks |
 | `node scripts/validate-usage-billing-microservices-readme.mjs` | PASS |
 | `./scripts/smoke-validate.sh diagram-qa` | PASS |
 | `git diff --check` | PASS |
 
-로컬 Gradle daemon을 재사용하면서 `cleanIntegrationTest`를 같은 invocation에 묶으면 test result binary의
-`in-progress-results-generic.bin`에 대한 Gradle 9.6 파일 경합이 관찰됐다. 검증은 result directory를
-동시에 clean하지 않는 `--no-daemon` invocation으로 재실행해 성공 XML과 task 결과를 확인했다. 이는
-예제 구현 failure가 아니라 local test-result lifecycle 이슈이며, CI는 clean task를 같은 invocation에
-결합하지 않는다.
+composition module은 production source가 없으므로 자체 Kover report만 생성하면 counter가 0이다. 최종
+구성은 Meter, Usage, Billing, Invoice, Query의 Kover artifact를 composition report에 집계한다. 따라서 위
+수치는 composition test가 실제 서비스 class를 실행한 결과이며, 빈 XML을 coverage 증거로 사용하지 않는다.
 
 ## 남는 의도적 범위
 
