@@ -9,21 +9,32 @@ import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingPriceE
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingPriceEvidenceEvent
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingPriceEvidenceOutcome
 import io.bluetape4k.workshop.commerce.usagebilling.billing.integration.BillingIntegrationEnvelope
+import io.bluetape4k.workshop.commerce.usagebilling.billing.messaging.BillingOutboxJournal
+import io.bluetape4k.workshop.commerce.usagebilling.billing.messaging.BillingOutboxLease
+import io.bluetape4k.workshop.commerce.usagebilling.billing.messaging.BillingOutboxStatus
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
+import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 
@@ -355,5 +366,84 @@ class ExposedBillingInboxJournal : BillingInboxJournal {
             createdAt = now
             updatedAt = now
         }
+    }
+}
+
+@Repository
+class ExposedBillingOutboxJournal : BillingOutboxJournal {
+    @Transactional
+    override fun claim(owner: String, now: Instant, limit: Int): List<BillingOutboxLease> =
+        BillingOutboxEvents.selectAll()
+            .where { claimableAt(now) }
+            .orderBy(BillingOutboxEvents.createdAt to SortOrder.ASC, BillingOutboxEvents.id to SortOrder.ASC)
+            .limit(limit)
+            .mapNotNull { row ->
+                val eventId = row[BillingOutboxEvents.eventId]
+                val claimed = BillingOutboxEvents.update({
+                    (BillingOutboxEvents.eventId eq eventId) and claimableAt(now)
+                }) {
+                    it[status] = BillingOutboxStatus.CLAIMED.name
+                    it[claimOwner] = owner
+                    it[claimUntil] = now.plus(CLAIM_LEASE)
+                    it[updatedAt] = now
+                }
+                if (claimed != 1) return@mapNotNull null
+                BillingOutboxEvents.selectAll()
+                    .where { BillingOutboxEvents.eventId eq eventId }
+                    .singleOrNull()
+                    ?.let { claimedRow ->
+                        BillingOutboxLease(
+                            claimedRow[BillingOutboxEvents.eventId],
+                            claimedRow[BillingOutboxEvents.partitionKey],
+                            claimedRow[BillingOutboxEvents.payload],
+                        )
+                    }
+            }
+
+    @Transactional
+    override fun markPublished(eventId: UUID, owner: String, now: Instant): Boolean =
+        BillingOutboxEvents.update({ claimedBy(owner, eventId, now) }) {
+            it[status] = BillingOutboxStatus.PUBLISHED.name
+            it[claimOwner] = null
+            it[claimUntil] = null
+            it[nextAttemptAt] = null
+            it[updatedAt] = now
+        } == 1
+
+    @Transactional
+    override fun markRetryWait(eventId: UUID, owner: String, now: Instant): Boolean =
+        BillingOutboxEvents.selectAll().where { claimedBy(owner, eventId, now) }.singleOrNull()?.let { row ->
+            val attempts = row[BillingOutboxEvents.attempt] + 1
+            BillingOutboxEvents.update({ claimedBy(owner, eventId, now) }) {
+                it[attempt] = attempts
+                it[status] = if (attempts >= MAX_ATTEMPTS) {
+                    BillingOutboxStatus.QUARANTINED.name
+                } else {
+                    BillingOutboxStatus.RETRY_WAIT.name
+                }
+                it[claimOwner] = null
+                it[claimUntil] = null
+                it[nextAttemptAt] = now.plus(RETRY_DELAY)
+                it[updatedAt] = now
+            } == 1
+        } ?: false
+
+    private fun claimableAt(now: Instant): Op<Boolean> =
+        (BillingOutboxEvents.status eq BillingOutboxStatus.PENDING.name) or
+            ((BillingOutboxEvents.status eq BillingOutboxStatus.RETRY_WAIT.name) and
+                (BillingOutboxEvents.nextAttemptAt lessEq now)) or
+            ((BillingOutboxEvents.status eq BillingOutboxStatus.CLAIMED.name) and
+                (BillingOutboxEvents.claimUntil lessEq now))
+
+    private fun claimedBy(owner: String, eventId: UUID, now: Instant): Op<Boolean> =
+        (BillingOutboxEvents.eventId eq eventId) and
+            (BillingOutboxEvents.status eq BillingOutboxStatus.CLAIMED.name) and
+            (BillingOutboxEvents.claimOwner eq owner) and
+            (BillingOutboxEvents.claimUntil greater now)
+
+    private companion object {
+        val CLAIM_LEASE: Duration = Duration.ofSeconds(30)
+        val RETRY_DELAY: Duration = Duration.ofSeconds(1)
+        const val MAX_ATTEMPTS = 3
     }
 }
