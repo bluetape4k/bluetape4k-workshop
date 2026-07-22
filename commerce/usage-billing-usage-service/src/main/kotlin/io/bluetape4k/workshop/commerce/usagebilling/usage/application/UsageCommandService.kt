@@ -51,7 +51,7 @@ class UsageCommandService(
             tenantId = command.tenantId,
             aggregateId = command.sourceEventId,
             aggregateVersion = 1,
-            payload = """{"usageId":"${usage.usageId}"}""",
+            payload = usageAcceptedPayload(usage),
             occurredAt = command.occurredAt,
             recordedAt = now,
         )
@@ -69,4 +69,11 @@ class UsageCommandService(
         )
         return UsageAcceptanceResult(usage.usageId, eventId, replayed = false)
     }
+
+    private fun usageAcceptedPayload(usage: UsageRecord): String =
+        """{"usageId":"${usage.usageId}",""" +
+            """"meterCode":"${usage.meterCode}",""" +
+            """"currency":"${usage.currency}",""" +
+            """"quantity":"${usage.quantity}",""" +
+            """"unitPrice":"${usage.unitPrice}"}"""
 }
