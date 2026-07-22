@@ -2,6 +2,9 @@ package io.bluetape4k.workshop.commerce.metering
 
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
+import io.bluetape4k.workshop.commerce.metering.contract.ContractHttpClient
+import io.bluetape4k.workshop.commerce.metering.contract.ContractHttpResponse
+import io.bluetape4k.workshop.commerce.metering.contract.UsageBillingHttpContract
 import io.bluetape4k.workshop.commerce.metering.persistence.BillingCalendarEntity
 import io.bluetape4k.workshop.commerce.metering.persistence.METERING_TABLES
 import io.bluetape4k.workshop.commerce.metering.persistence.MeteringJdbcExecutor
@@ -42,9 +45,11 @@ import javax.sql.DataSource
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MeteringHttpIntegrationTest {
     @LocalServerPort
+    @Suppress("VarCouldBeVal") // Spring injects the random port after construction.
     private var port: Int = 0
 
     @Autowired
+    @Suppress("VarCouldBeVal") // Spring injects the managed datasource after construction.
     private lateinit var dataSource: DataSource
 
     private lateinit var executor: MeteringJdbcExecutor
@@ -85,37 +90,28 @@ class MeteringHttpIntegrationTest {
 
     @Test
     fun `live HTTP preserves replay conflict and tenant isolation contracts`() {
-        registerMeter(TENANT_A, "meter-request", "request")
-            .exchange()
-            .expectStatus().isCreated
-
-        registerMeter(TENANT_A, "meter-request", "request")
-            .exchange()
-            .expectStatus().isCreated
-            .expectHeader().valueEquals("Idempotency-Replayed", "true")
-
-        registerMeter(TENANT_A, "meter-request", "call")
-            .exchange()
-            .expectStatus().isEqualTo(409)
-
-        registerMeter("tenant-b", "cross-tenant", "request")
-            .exchange()
-            .expectStatus().isBadRequest
-            .expectBody()
-            .jsonPath("$.code").isEqualTo("tenant_mismatch")
+        UsageBillingHttpContract.verifyRegistrationAndRetry(
+            ContractHttpClient { path, username, idempotencyKey, body ->
+                val response = client.post()
+                    .uri(path)
+                    .headers { headers ->
+                        headers.setBasicAuth(username, PASSWORD)
+                        idempotencyKey?.let { headers.set("Idempotency-Key", it) }
+                    }
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(body)
+                    .exchange()
+                    .returnResult(String::class.java)
+                ContractHttpResponse(
+                    status = response.status.value(),
+                    headers = mapOf(
+                        "Idempotency-Replayed" to response.responseHeaders.get("Idempotency-Replayed").orEmpty(),
+                    ),
+                    body = response.responseBody.blockFirst().orEmpty(),
+                )
+            },
+        )
     }
-
-    private fun registerMeter(
-        tenantId: String,
-        idempotencyKey: String,
-        unit: String,
-    ): WebTestClient.RequestHeadersSpec<*> =
-        client.post()
-            .uri("/api/v1/tenants/$tenantId/meters")
-            .headers { it.setBasicAuth(TENANT_A, PASSWORD) }
-            .header("Idempotency-Key", idempotencyKey)
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue("""{"code":"api_calls","unit":"$unit"}""")
 
     @TestConfiguration(proxyBeanMethods = false)
     class TestUsers {

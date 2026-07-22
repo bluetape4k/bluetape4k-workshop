@@ -7,6 +7,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.concurrent.atomic.AtomicLong
 
 plugins {
+    `java-test-fixtures`
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
     alias(libs.plugins.detekt)
@@ -96,6 +97,8 @@ dependencies {
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.awaitility.kotlin)
     testImplementation(libs.mockk)
+
+    testFixturesImplementation(libs.kotlinx.coroutines.core.lib)
 }
 
 fun Test.failOnZeroTests() {
