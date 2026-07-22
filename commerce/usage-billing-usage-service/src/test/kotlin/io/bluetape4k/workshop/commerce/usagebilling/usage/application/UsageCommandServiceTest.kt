@@ -31,6 +31,9 @@ class UsageCommandServiceTest {
         journal.outbox.single().partitionKey shouldBeEqualTo "tenant-a|Usage|source-usage-1"
         val wire = Jackson.defaultJsonMapper.readTree(journal.outbox.single().payload)
         requireNotNull(wire.get("eventId")).asString() shouldBeEqualTo result.eventId.toString()
+        val payload = Jackson.defaultJsonMapper.readTree(requireNotNull(wire.get("payload")).asString())
+        requireNotNull(payload.get("meterCode")).asString() shouldBeEqualTo "api_calls"
+        requireNotNull(payload.get("unitPrice")).asString() shouldBeEqualTo "0.10"
     }
 
     @Test
