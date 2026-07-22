@@ -4,12 +4,15 @@ import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.metering.persistence.BillingCalendarEntity
 import io.bluetape4k.workshop.commerce.metering.persistence.METERING_TABLES
+import io.bluetape4k.workshop.commerce.metering.persistence.MeteringJdbcExecutor
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -27,6 +30,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import java.net.http.HttpClient
 import java.time.Duration
 import java.time.Instant
+import javax.sql.DataSource
 
 @Tag("integration")
 @SpringBootTest(
@@ -40,6 +44,11 @@ class MeteringHttpIntegrationTest {
     @LocalServerPort
     private var port: Int = 0
 
+    @Autowired
+    private lateinit var dataSource: DataSource
+
+    private lateinit var executor: MeteringJdbcExecutor
+
     private val client: WebTestClient by lazy {
         val httpClient = HttpClient.newBuilder().connectTimeout(HTTP_TIMEOUT).build()
         WebTestClient.bindToServer(JdkClientHttpConnector(httpClient))
@@ -48,18 +57,30 @@ class MeteringHttpIntegrationTest {
             .build()
     }
 
+    @BeforeAll
+    fun connectExposed() {
+        executor = MeteringJdbcExecutor(dataSource)
+    }
+
     @BeforeEach
     @Suppress("DEPRECATION") // A disposable PostgreSQL schema keeps the HTTP boundary test self-contained.
     fun resetSchema() {
-        transaction {
-            SchemaUtils.drop(*METERING_TABLES.reversedArray())
-            SchemaUtils.createMissingTablesAndColumns(*METERING_TABLES)
-            BillingCalendarEntity.new(Uuid.V7.nextId()) {
-                tenantId = TENANT_A
-                currency = "USD"
-                createdAt = Instant.now()
+        executor.transaction {
+            withExposed {
+                SchemaUtils.drop(*METERING_TABLES.reversedArray())
+                SchemaUtils.createMissingTablesAndColumns(*METERING_TABLES)
+                BillingCalendarEntity.new(Uuid.V7.nextId()) {
+                    tenantId = TENANT_A
+                    currency = "USD"
+                    createdAt = Instant.now()
+                }
             }
         }
+    }
+
+    @AfterAll
+    fun disconnectExposed() {
+        executor.close()
     }
 
     @Test
