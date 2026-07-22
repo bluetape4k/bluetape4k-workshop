@@ -20,7 +20,7 @@
 - Bluetape 의존성 버전은 root의 `bluetape4k-dependencies` BOM만 사용한다. 개별 BOM이나 명시적 Bluetape version을 추가하지 않는다.
 - 모든 concrete JDBC repository는 `EventSourcedExposedJdbcRepository` 또는 append-only 파생형을 통해 `ExposedJdbcRepository`를 구현한다. service가 transaction을 소유하고 repository 함수마다 `Connection`을 받지 않는다.
 - 일반 persistence와 test fixture는 Exposed DAO/DSL을 사용한다. `JdbcTemplate`, raw `Connection`, `PreparedStatement`, `Statement`를 사용하지 않는다.
-- `Transaction.exec`는 PostgreSQL role/GRANT, append-only trigger, session-local timeout처럼 Exposed가 표현하지 못하는 DDL과 session setting에만 별도 initializer 안에서 허용한다. event CRUD에는 사용하지 않는다.
+- `Transaction.exec`는 PostgreSQL owner/application role, REVOKE/GRANT, append-only trigger, session-local timeout처럼 Exposed가 표현하지 못하는 DDL과 session setting에만 별도 initializer 안에서 허용한다. event CRUD에는 사용하지 않는다.
 - event log는 append-only다. `(tenantId, streamType, streamId, streamVersion)` unique constraint와 expected-version CAS가 단일 stream concurrency authority다.
 - global position은 append fence를 잠근 transaction 안에서 연속 범위를 발급한다. projector는 committed head까지만 읽어 concurrent commit-order inversion에서 누락하지 않는다.
 - idempotency scope는 tenant+principal digest+operation+resource+key digest다. same fingerprint는 terminal response를 replay하고 다른 fingerprint는 거부한다.
@@ -120,8 +120,8 @@
 
 ### Task 1: Java 25 module과 검증 task를 등록한다
 
-**복잡도:** 중간  
-**의존:** 승인된 spec/plan  
+**복잡도:** 중간
+**의존:** 승인된 spec/plan
 **write scope:** module build/runtime/test resources만
 
 - [ ] **RED:** `Runtime.version().feature() == 25`, Kotlin/JVM target 25, preview 미사용, Boot main class, virtual-thread runtime을 검사하는 `EventSourcedRuntimeContractTest`를 먼저 작성한다.
@@ -134,12 +134,13 @@
 
 ### Task 2: event schema, aggregate reducer, upcaster를 순수 domain으로 잠근다
 
-**복잡도:** 높음  
-**의존:** Task 1  
+**복잡도:** 높음
+**의존:** Task 1
 **write scope:** `domain/**`와 domain tests
 
 - [ ] **RED:** campaign 생성/활성화/용량 변경, voucher issue/redeem/cancel/expire, 잘못된 전이, version gap, unknown type/version, upcast 결과를 `bluetape4k-assertions`로 검사한다.
-- [ ] event envelope에 tenant, stream type/id/version, global position, event id/type/schema version, occurred/recorded time, correlation/causation, actor surrogate, payload digest를 정의한다.
+- [ ] event envelope에 UUID v7 event id, tenant, stream type/id/version, global position, event type/schema version, occurred/recorded time, correlation/causation, actor surrogate, canonical checksum을 정의한다.
+- [ ] JSON payload 64 KiB/depth 16/string 8 KiB, snapshot 1 MiB, upcaster 4단계 hard cap과 `(eventType, fromVersion, toVersion)` immutable golden fixture를 고정한다.
 - [ ] command decision은 immutable event list만 반환하고 aggregate mutation은 reducer 한 곳에서 수행한다.
 - [ ] registry가 `(eventType, schemaVersion)` decoder/upcaster를 exhaustive하게 선택하고 원문 민감정보를 payload에 허용하지 않는다.
 - [ ] property-style replay 순서, duplicate event id, empty decision edge를 검증한다.
@@ -149,24 +150,24 @@
 
 ### Task 3: Exposed schema와 append-only repository contract를 만든다
 
-**복잡도:** 높음  
-**의존:** Task 2  
+**복잡도:** 높음
+**의존:** Task 2
 **write scope:** persistence tables/entities/repository base/schema initializer와 repository contract tests
 
 - [ ] **RED:** 모든 concrete repository의 `ExposedJdbcRepository` assignability, connection-free method signature, append-only generic mutation 거부, required unique/check/index를 검사한다.
 - [ ] `EventSourcedExposedJdbcRepository<E, ID>`는 `SimpleExposedJdbcRepository` delegate를 사용하고 `AppendOnlyEventSourcedRepository`는 `save/delete*`를 final override로 거부한다.
 - [ ] event log, stream head, append fence, idempotency receipt, snapshot, projection generation/checkpoint/lease/dedup/read model, subject mapping, operator audit table을 Exposed로 선언한다.
 - [ ] production fixture와 tests가 Exposed DAO/DSL로만 authority row를 생성하도록 architecture test를 둔다.
-- [ ] `EventStoreSchemaInitializer`의 bounded `Transaction.exec`는 PostgreSQL application role의 UPDATE/DELETE 차단 trigger와 GRANT, session timeout에만 사용하고 SQL literal allowlist test를 둔다.
-- [ ] Testcontainers PostgreSQL에서 direct UPDATE/DELETE가 DB 권한/trigger로 실패하고 전용 append가 성공함을 증명한다.
-- [ ] `integrationTest --tests '*EventStoreRepositoryContractTest'`와 `detekt detektTest`를 통과시킨다.
+- [ ] `EventStoreSchemaInitializer`의 bounded `Transaction.exec`는 PostgreSQL owner/application role 분리, UPDATE/DELETE/TRUNCATE 차단 trigger·REVOKE/GRANT, session timeout에만 사용하고 SQL literal allowlist test를 둔다.
+- [ ] Testcontainers PostgreSQL에서 application role의 direct UPDATE/DELETE/TRUNCATE가 권한/trigger로 실패하고 전용 append가 성공함을 hostile test로 증명한다.
+- [ ] `./gradlew :commerce-event-sourced-promotion-voucher-campaign:integrationTest --tests '*EventStoreRepositoryContractTest' :commerce-event-sourced-promotion-voucher-campaign:detekt :commerce-event-sourced-promotion-voucher-campaign:detektTest --console=plain`을 통과시킨다.
 - [ ] rollback: initializer 적용 전/후 role과 trigger 존재를 검사하는 teardown-safe fixture를 유지한다.
 - [ ] Lore commit: `Keep event authority append-only below the service layer`.
 
 ### Task 4: expected-version append와 commit-safe global position을 원자화한다
 
-**복잡도:** 매우 높음  
-**의존:** Task 3  
+**복잡도:** 매우 높음
+**의존:** Task 3
 **write scope:** event-store port/repository/transaction runner와 append integration tests
 
 - [ ] **RED:** same expected version 경쟁, multi-stream all-or-nothing, rollback gap, commit-order inversion, head-bounded read를 PostgreSQL barrier test로 재현한다.
@@ -175,21 +176,21 @@
 - [ ] committed head는 append transaction 마지막에 갱신하며 projector가 미완료 position을 읽지 않게 한다.
 - [ ] duplicate event id와 stream-version unique violation을 domain conflict로 변환하고 다른 SQL 오류는 숨기지 않는다.
 - [ ] 32/64 independent stream과 one-hot-stream 경쟁에서 duplicate version/position, partial append가 없음을 검증한다.
-- [ ] `integrationTest --tests '*EventStoreAppendIntegrationTest'`를 3회 연속 실행한다.
+- [ ] `./gradlew :commerce-event-sourced-promotion-voucher-campaign:integrationTest --tests '*EventStoreAppendIntegrationTest' --console=plain`을 3회 연속 실행한다.
 - [ ] rollback: append algorithm 교체 시 기존 event row를 rewrite하지 않고 port implementation만 되돌린다.
 - [ ] Lore commit: `Preserve stream and global order across concurrent commits`.
 
 ### Task 5: principal-scoped idempotency와 command orchestration을 구현한다
 
-**복잡도:** 매우 높음  
-**의존:** Task 4  
+**복잡도:** 매우 높음
+**의존:** Task 4
 **write scope:** idempotency repository와 command services/tests
 
-- [ ] **RED:** same key/same fingerprint replay, fingerprint conflict, owner lease takeover, stale owner finalize, principal separation, key rotation replay, event append rollback을 검사한다.
+- [ ] **RED:** same key/same fingerprint replay, fingerprint conflict, owner lease takeover, stale owner finalize, principal separation, key rotation replay/unavailable, event append rollback을 검사한다.
 - [ ] fingerprint는 canonical request와 tenant/principal digest/operation/resource를 포함하며 raw key와 identity를 저장하지 않는다.
-- [ ] command service가 transaction runner를 소유하고 receipt acquire, snapshot+tail rehydrate, decision, `appendAll`, terminal response finalize를 한 foreground transaction 경계로 조정한다.
+- [ ] receipt acquire를 짧은 transaction으로 commit한 뒤 active transaction 밖에서 bounded snapshot+tail rehydrate와 pure decision을 수행한다. 이어 짧은 foreground transaction에서 owner digest/lease/deadline/fingerprint를 재검증하고 stream lock, `appendAll`, terminal descriptor finalize를 원자적으로 수행한다.
 - [ ] expected-version conflict와 domain rejection을 #534 error model로 안정적으로 매핑한다.
-- [ ] terminal descriptor 크기/deadline/lease를 bound하고 takeover는 owner-token digest CAS를 요구한다.
+- [ ] terminal descriptor에 allocation identity와 generation/verification key version을 저장하고 크기/deadline/lease를 bound한다. takeover는 owner-token digest CAS를 요구하며 replay key가 retired/unavailable이면 `IDEMPOTENCY_REPLAY_KEY_UNAVAILABLE`/503으로 fail closed한다.
 - [ ] test double이 아닌 PostgreSQL 경쟁 test로 duplicate event가 0개임을 증명한다.
 - [ ] targeted unit/integration tests와 `detektTest`를 통과시킨다.
 - [ ] rollback: receipt schema를 유지한 채 command adapter만 이전 구현으로 교체 가능하게 port 경계를 보존한다.
@@ -197,13 +198,13 @@
 
 ### Task 6: snapshot과 bounded rehydration을 추가한다
 
-**복잡도:** 높음  
-**의존:** Task 5  
+**복잡도:** 높음
+**의존:** Task 5
 **write scope:** snapshot repository/service와 replay tests
 
 - [ ] **RED:** no snapshot, valid snapshot+tail, corrupt/stale snapshot fallback, digest mismatch, key-version rotation, replay cap 초과를 검사한다.
 - [ ] snapshot에 stream version, canonical state digest, schema/key version, created time을 저장하고 append 권위와 분리한다.
-- [ ] snapshot cadence와 tail/replay byte/event cap을 properties로 bound한다.
+- [ ] snapshot threshold 250, foreground replay 최대 10,000 events/2초, 200-event position page, snapshot 1 MiB를 properties hard cap으로 고정한다.
 - [ ] snapshot write 실패는 command append를 rollback하지 않고 metric/audit에 기록하며 다음 replay가 full/tail fallback한다.
 - [ ] full replay와 snapshot+tail의 aggregate version/canonical digest가 동일함을 random sequence로 검증한다.
 - [ ] coroutine helper가 필요하면 dispatcher를 주입하고 cancellation을 삼키지 않으며 cleanup만 `NonCancellable`에 한정한다.
@@ -213,14 +214,15 @@
 
 ### Task 7: fenced asynchronous projection을 구현한다
 
-**복잡도:** 매우 높음  
-**의존:** Tasks 4, 6  
+**복잡도:** 매우 높음
+**의존:** Tasks 4, 6
 **write scope:** projection model/repository/handlers/lease/worker와 projection tests
 
 - [ ] **RED:** duplicate, delayed batch, handler interruption, poison event, lease expiry, stale fencing token, checkpoint crash-before/after-commit을 검사한다.
 - [ ] lease TTL 15초/renew 5초와 monotonically increasing fencing token을 PostgreSQL CAS로 발급한다.
 - [ ] handler는 `(generation, eventId)` dedup과 read-model mutation, checkpoint advance를 같은 transaction에서 수행한다.
 - [ ] projector는 committed head까지 keyset batch로 읽고 token/revision을 모든 mutation predicate에 포함한다.
+- [ ] projection batch는 최대 200 events 또는 2 MiB, transaction 2초, idle poll backoff 100ms–2초를 hard cap으로 둔다.
 - [ ] poison event는 bounded retry 뒤 checkpoint를 유지하고 DEGRADED 상태, event metadata, operator action을 노출한다.
 - [ ] worker loop는 injected scheduler/dispatcher와 cooperative cancellation을 사용하고 `Thread.sleep`을 사용하지 않는다.
 - [ ] Awaitility로 수렴을 기다리고 exact row count/version/digest를 assertions로 확인한다.
@@ -230,15 +232,17 @@
 
 ### Task 8: generation rebuild와 restart recovery를 구현한다
 
-**복잡도:** 매우 높음  
-**의존:** Task 7  
+**복잡도:** 매우 높음
+**의존:** Task 7
 **write scope:** rebuild service/repository와 rebuild lifecycle tests
 
-- [ ] **RED:** BUILDING 중 active query 유지, cancel/resume, crash/restart, stale worker, corrupt digest, activation race, retention cleanup을 검사한다.
+- [ ] **RED:** `BUILDING -> VALIDATING -> ACTIVE`, `BUILDING|VALIDATING -> CANCELLING -> CANCELLED`, retryable `FAILED -> BUILDING`, cancel 직후 process-kill/restart, stale worker, corrupt digest, activation race, retention cleanup을 검사한다.
 - [ ] rebuild가 새 generation/checkpoint/token으로 position 0부터 bounded replay하고 active generation을 건드리지 않게 한다.
-- [ ] head 도달 후 row count, aggregate version, canonical digest를 검증한 generation만 pointer CAS로 ACTIVE 전환한다.
+- [ ] rebuild page는 최대 200 events/2 MiB, transaction 2초, module/tenant 동시성 1, 100,000 events/10분으로 제한하고 lag >10,000 또는 foreground saturation >80%이면 새 batch를 throttle한다.
+- [ ] head 도달 후 VALIDATING에서 row count, aggregate version, canonical digest를 검증하고 target head를 다시 읽은 generation만 pointer CAS로 ACTIVE 전환한다.
 - [ ] cancellation revision과 fencing token을 batch마다 확인해 cancelled worker가 checkpoint/read model을 갱신하지 못하게 한다.
-- [ ] startup recovery가 BUILDING/ACTIVATING 상태를 분류하고 safe resume 또는 FAILED로 전환한다.
+- [ ] startup recovery가 BUILDING/VALIDATING/CANCELLING/CANCELLED/FAILED를 분류한다. CANCELLING은 새 token으로 idempotent CANCELLED에 수렴하고, resume은 schema/upcaster/checksum/token 계약이 같은 retryable state만 BUILDING으로 되돌린다.
+- [ ] cancel과 activation 경쟁에서 cancel 선행은 stale batch/activation rollback, activation 선행은 `REBUILD_ALREADY_ACTIVATED`/409를 반환하도록 검증한다.
 - [ ] 이전 generation은 retention 뒤 maintenance worker가 bounded page로 삭제한다.
 - [ ] Awaitility 기반 restart Testcontainers test와 concurrent activation test를 통과시킨다.
 - [ ] rollback: previous active generation pointer를 보존하고 activation audit로 수동 복귀 가능성을 문서화한다.
@@ -246,70 +250,73 @@
 
 ### Task 9: permit budget, lifecycle, health, metrics, immutable operator audit을 연결한다
 
-**복잡도:** 높음  
-**의존:** Tasks 7, 8  
+**복잡도:** 높음
+**의존:** Tasks 7, 8
 **write scope:** `operations/**`, configuration, operational tests
 
 - [ ] **RED:** foreground/background/readiness starvation, startup DB failure, recoverable projection lag, global event-store failure, graceful shutdown, maintenance flood, audit immutability를 검사한다.
-- [ ] permit gate를 foreground 14, projection 3, rebuild 1, maintenance 1, readiness 1로 분리하고 acquire timeout/queue metric을 노출한다.
+- [ ] Hikari 20을 foreground 14, projection 3, rebuild 1, maintenance 1, readiness 1 permit으로 분리한다. foreground holders+waiters 128, permit wait 250ms, lock 500ms, statement 3초를 hard cap으로 두고 acquire timeout/queue metric을 노출한다.
 - [ ] liveness는 process-local, readiness는 event-store authority와 reserved permit, projection은 detail/degraded 상태로 분리한다.
 - [ ] lifecycle은 intake 차단 → worker cancellation → in-flight drain → lease release 순서로 종료하고 cancellation을 전파한다.
+- [ ] shutdown은 readiness를 먼저 REFUSING_TRAFFIC으로 바꾸고 10초 bounded drain 뒤 남은 transaction rollback, lease/permit/connection cleanup을 검증한다.
 - [ ] Micrometer tag는 bounded enum/operation만 사용하고 tenant, stream id, event id, principal을 tag에 넣지 않는다.
-- [ ] 모든 operator mutation은 actor surrogate, action, target digest, before/after revision, outcome을 append-only audit에 남긴다.
+- [ ] poison 즉시, checkpoint stall 30초 즉시, lag age 60초가 5분 지속, rebuild FAILED/10분 초과, readiness DOWN 1분, bulkhead rejection 5분간 1% 초과 alert 계약을 metric test와 runbook에 연결한다.
+- [ ] 모든 operator mutation은 actor digest, tenant, request/idempotency digest, action, target projection/generation, expected fencing token, before/after state, checkpoint/stream position, outcome, bounded reason class, occurred-at을 mutation과 같은 transaction의 append-only audit에 남긴다. audit insert 실패 시 mutation도 rollback한다.
 - [ ] virtual-time unit test와 Awaitility integration test를 모두 통과시킨다.
 - [ ] rollback: worker별 enable property와 permit default를 문서화해 operational disable이 가능하게 한다.
 - [ ] Lore commit: `Reserve database capacity for commands and readiness`.
 
 ### Task 10: #534-compatible HTTP/query/error 계약을 제공한다
 
-**복잡도:** 높음  
-**의존:** Tasks 5, 7, 9  
+**복잡도:** 높음
+**의존:** Tasks 5, 7, 9
 **write scope:** API models/controllers/exception handler와 HTTP integration tests
 
-- [ ] **RED:** #534 command 성공/실패 fixture, same-key replay, conflict, validation, not-found, projection pending, operator authorization을 live WebTestClient로 검사한다.
-- [ ] command response에 authoritative stream/global position을 포함하고 기존 #534 status/error code/response shape를 유지한다.
-- [ ] query가 required position보다 뒤처지면 `202 PROJECTION_PENDING`과 retry hint/current position을 반환하며 stale snapshot을 성공으로 위장하지 않는다.
+- [ ] **RED:** #534 command 성공/실패 fixture, same-key replay, conflict, validation, not-found, projection pending, rebuild start/status/cancel/resume, stale token 412, activation 선행 cancel 409를 live WebTestClient로 검사한다.
+- [ ] 기존 #534 body와 ETag를 바꾸지 않고 additive `X-Stream-Position`, `X-Projection-Position`, `X-Projection-Lag` header만 추가한다.
+- [ ] query의 선택적 `X-Min-Stream-Position`은 최대 5초 기다린다. 미도달 시 `202 PROJECTION_PENDING`, `Retry-After: 1`, 현재 position/lag를 반환하며 GET caller만 최대 5회 retry하고 command를 재제출하지 않는다.
+- [ ] rebuild start/status/cancel/resume endpoint는 idempotency key와 expected active-generation token을 요구하며 stale token 412와 activation 선행 cancel 409를 안정적으로 반환한다.
 - [ ] management와 application WebTestClient 모두 JDK connector와 공통 `HTTP_TIMEOUT = 60.seconds`를 사용한다.
 - [ ] controller는 service transaction을 누설하지 않고 request/response DTO만 변환한다.
 - [ ] exception handler가 SQL/internal token/digest/PII를 노출하지 않는지 negative test를 둔다.
-- [ ] `integrationTest --tests '*HttpIntegrationTest'`를 통과시킨다.
+- [ ] `./gradlew :commerce-event-sourced-promotion-voucher-campaign:integrationTest --tests '*HttpIntegrationTest' --console=plain`을 통과시킨다.
 - [ ] rollback: #534 fixture가 adapter 교체 전후 같은 normalized descriptor를 생성하게 유지한다.
 - [ ] Lore commit: `Keep voucher clients stable while projections catch up`.
 
 ### Task 11: SSE와 accessible operator browser를 projection 상태에 맞춘다
 
-**복잡도:** 높음  
-**의존:** Task 10  
+**복잡도:** 높음
+**의존:** Task 10
 **write scope:** SSE/filter/static UI/browser tests
 
-- [ ] **RED:** SSE resume/heartbeat/overflow, projection pending UI, last-known projection 유지, state별 action, stale revision/token, retry-vs-rebuild 안내, keyboard/ARIA를 검사한다.
+- [ ] **RED:** SSE resume/heartbeat/overflow, projection pending UI, last-known projection 유지, GET-only 최대 5회 retry, state별 action, stale revision/token, retry-vs-rebuild 안내, keyboard/ARIA를 검사한다.
 - [ ] SSE event는 bounded public descriptor만 포함하고 stream/global/projection position을 구분한다.
 - [ ] browser는 `PROJECTION_PENDING`을 성공 snapshot으로 렌더링하지 않고 마지막 verified projection과 lag banner를 유지한다.
 - [ ] poison/rebuild/lag 상태별 허용 operator action과 destructive confirmation을 명시하고 stale token/revision을 재조회로 처리한다.
-- [ ] operator filter는 role과 CSRF/mutation method를 검증하고 audit actor surrogate를 request scope에 전달한다.
+- [ ] operator filter는 #534의 loopback/allowed-host, constant-time secret+guard, same-origin, JSON content, role/CSRF/mutation method, bounded pagination/admission을 fail closed로 검증하고 audit actor surrogate를 request scope에 전달한다.
 - [ ] deterministic browser contract test와 live SSE integration test를 통과시킨다.
 - [ ] rollback: static UI 없이도 HTTP/SSE API가 완전하게 동작하도록 progressive enhancement를 유지한다.
 - [ ] Lore commit: `Show projection truth instead of hiding asynchronous lag`.
 
 ### Task 12: subject surrogate, erasure, redaction, key rotation을 검증한다
 
-**복잡도:** 높음  
-**의존:** Tasks 5, 9, 11  
+**복잡도:** 높음
+**의존:** Tasks 5, 9, 11
 **write scope:** security service/repository tests와 cross-cutting redaction tests
 
 - [ ] **RED:** subject mapping deletion, reverse lookup 차단, same identity 재등록 새 surrogate, digest key rotation replay, log/event/metric/API redaction을 검사한다.
-- [ ] raw subject는 별도 mapping table에만 암호화/hashed lookup으로 저장하고 event에는 opaque surrogate만 기록한다.
+- [ ] erasure 대상 identity는 random per-subject surrogate와 event-store 밖 deletable mapping을 사용한다. 안정적 상관관계가 필요한 저엔트로 값은 purpose/version/tenant/domain-separated HMAC-SHA256만 사용하고 plain hash를 금지한다.
 - [ ] erasure는 immutable event를 rewrite하지 않고 mapping을 삭제해 기존 surrogate의 reverse lookup을 차단한다.
-- [ ] key ring은 active+retired verification key version을 지원하고 retention 종료 뒤 retired key를 제거한다.
-- [ ] Logback capture와 serialized payload scan으로 email/token/idempotency key/authorization header가 없는지 검사한다.
+- [ ] event/terminal descriptor에 HMAC/generation/verification key version을 저장한다. active+retired verification key ring을 retention과 결합하고 unavailable key replay가 503으로 fail closed함을 검사한다.
+- [ ] HMAC은 erasure가 아님을 문서화하고 Logback/event/snapshot/projection/failure/SSE/API/metric scan으로 raw user/device/IP/voucher code/token/idempotency key/authorization header가 없는지 검사한다.
 - [ ] operator security negative cases와 immutable audit 연결을 통과시킨다.
 - [ ] rollback: key removal 전 replay coverage와 mapping backup/restore runbook을 README에 남긴다.
 - [ ] Lore commit: `Separate immutable voucher history from reversible identity mapping`.
 
 ### Task 13: #534 black-box compatibility와 adversarial PostgreSQL suite를 고정한다
 
-**복잡도:** 매우 높음  
-**의존:** Tasks 10–12  
+**복잡도:** 매우 높음
+**의존:** Tasks 10–12
 **write scope:** fixture/compatibility/concurrency/restart/adversarial tests
 
 - [ ] normalized #534 fixture를 test source로 복제하지 말고 shared descriptor/contract adapter로 재사용한다.
@@ -317,29 +324,33 @@
 - [ ] concurrent append, projector lease loss, rebuild cancellation, process restart, poison recovery, DB unavailable/recovery를 실제 PostgreSQL로 검증한다.
 - [ ] PostgreSQL capability test가 unique constraint, row lock, trigger/role, advisory/row lease behavior와 query plan index usage를 증명한다.
 - [ ] integration suite는 serialized Testcontainers mutex를 지키고 각 scenario를 Awaitility로 bounded wait한다.
-- [ ] `integrationTest` 3회 반복, `git diff --check`, architecture forbidden-pattern scan을 통과시킨다.
+- [ ] `./gradlew :commerce-event-sourced-promotion-voucher-campaign:integrationTest --console=plain`을 3회 반복하고 `git diff --check`, architecture forbidden-pattern scan을 통과시킨다.
 - [ ] rollback: compatibility fixture mismatch는 public adapter 변경을 revert하고 authority event를 삭제/수정하지 않는다.
 - [ ] Lore commit: `Prove event sourcing preserves the normalized voucher contract`.
 
 ### Task 14: 성능·안정성 budget을 별도 profile로 증명한다
 
-**복잡도:** 높음  
-**의존:** Task 13  
+**복잡도:** 높음
+**의존:** Task 13
 **write scope:** stress tests, Gradle stress task, metrics assertions
 
-- [ ] hot campaign과 32/64 independent streams, projection catch-up, rebuild+foreground competition, maintenance flood profile을 작성한다.
-- [ ] successful append latency/throughput을 conflicts와 terminal rejection에서 분리해 측정한다.
+- [ ] hot profile은 64 virtual-thread clients/단일 campaign/1,000 commands에서 ≥20 successful appends/s, append 성공률 ≥95%, p95 ≤2초, p99 ≤5초, lock/statement timeout ≤1%를 판정한다.
+- [ ] independent profile은 64 clients/32 campaigns에서 ≥40 successful appends/s, append-fence p95 ≤100ms/p99 ≤500ms, timeout ≤1%를 판정한다.
+- [ ] terminal/committed throughput, 409, Hikari wait, append-fence wait, stream-head wait를 분리 집계하고 CI correctness profile은 모든 request의 60초 내 terminal 결과와 starvation 0을 검사한다.
+- [ ] snapshot/replay 250/10,000/2초/200, projection/rebuild 200 events 또는 2MiB/2초, rebuild 100,000 events/10분, lag 10,000 또는 foreground saturation 80% throttle 경계를 각각 정상/초과 test로 고정한다.
+- [ ] maintenance queue 64, 100 rows/2MiB, 2초, 100ms–5초 backoff와 readiness permit 비침범을 flood profile로 검증한다.
 - [ ] replay event/byte cap, projection batch, queue wait, permit utilization, lag, rebuild ETA metric의 cardinality를 검사한다.
-- [ ] PostgreSQL `EXPLAIN` evidence로 event tail, global position scan, projection query, checkpoint lookup의 intended index를 고정한다.
-- [ ] CI-safe default와 opt-in soak property를 분리하고 임계값은 machine variability를 고려한 budget/range로 둔다.
+- [ ] 100 tenants/1,000 campaigns/10,000 streams/100,000 events와 projection 100,000 rows를 seed/warm-up하고 stream tail, global scan, latest snapshot, dedup, retry scan에 `EXPLAIN (ANALYZE, BUFFERS)`를 실행한다.
+- [ ] CI는 unexpected `Seq Scan` 금지와 index plan shape를 판정하고 dedicated profile은 shared read buffers ≤512, execution ≤100ms 및 위 throughput/percentile 수치를 판정한다.
+- [ ] CI-safe correctness profile과 opt-in dedicated/soak property를 분리한다.
 - [ ] `./gradlew :commerce-event-sourced-promotion-voucher-campaign:stressTest -PeventSourcedStress=true --console=plain`을 통과시킨다.
 - [ ] rollback: stress profile은 production defaults를 바꾸지 않고 test property override만 사용한다.
 - [ ] Lore commit: `Measure committed appends under realistic contention`.
 
 ### Task 15: README, diagram, workflow, validator, lesson을 함께 등록한다
 
-**복잡도:** 중간  
-**의존:** Tasks 1–14  
+**복잡도:** 중간
+**의존:** Tasks 1–14
 **write scope:** module/root/commerce docs, diagram assets/scripts, workflow/smoke/nightly, lesson
 
 - [ ] module README 영문/국문에 실행법, Java 25, architecture, event envelope, consistency/lag, rebuild, security, failure injection, performance profile을 같은 구조로 기록한다.
@@ -355,8 +366,8 @@
 
 ### Task 16: 전체 gate, 코드 리뷰, PR/CI handoff를 완료한다
 
-**복잡도:** 높음  
-**의존:** Tasks 1–15  
+**복잡도:** 높음
+**의존:** Tasks 1–15
 **write scope:** 검증으로 발견된 module-local 결함, lesson evidence, PR metadata
 
 - [ ] targeted unit tests → module `test` → `integrationTest` → `stressTest` 순으로 실행한다.
