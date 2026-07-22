@@ -30,6 +30,9 @@ class MeterOutboxPostgresIntegrationTest {
     private lateinit var outbox: MeterOutboxRepository
 
     @Autowired
+    private lateinit var outboxJournal: ExposedMeterOutboxJournal
+
+    @Autowired
     private lateinit var transactionManager: PlatformTransactionManager
 
     @Test
@@ -67,6 +70,17 @@ class MeterOutboxPostgresIntegrationTest {
 
         transaction { priceVersions.findAll().count() } shouldBeEqualTo priceVersionCount
         transaction { outbox.findAll().count() } shouldBeEqualTo outboxCount
+    }
+
+    @Test
+    fun `an expired outbox claim can be safely reclaimed by a later worker`() {
+        val result = service.activatePrice(activation("lease-${UUID.randomUUID()}", "lease-meter", Instant.EPOCH))
+        val claimedAt = Instant.parse("2026-07-22T00:00:00Z")
+
+        outboxJournal.claim("worker-a", claimedAt, 100).map { it.eventId }.contains(result.eventId) shouldBeEqualTo true
+        outboxJournal.claim("worker-b", claimedAt.plusSeconds(31), 100)
+            .first { it.eventId == result.eventId }
+            .claimOwner shouldBeEqualTo "worker-b"
     }
 
     private fun activation(
