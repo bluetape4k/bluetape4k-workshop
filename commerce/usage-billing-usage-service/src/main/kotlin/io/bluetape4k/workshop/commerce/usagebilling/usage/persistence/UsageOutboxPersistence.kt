@@ -3,6 +3,8 @@
 package io.bluetape4k.workshop.commerce.usagebilling.usage.persistence
 
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidence
+import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidenceInboxEvent
+import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidenceInboxOutcome
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageAcceptanceJournal
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageOutboxRecord
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageRecord
@@ -14,6 +16,8 @@ import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.jdbc.insertIgnore
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
@@ -54,6 +58,17 @@ object UsagePriceEvidence : UUIDTable("usage_price_evidence", "price_evidence_id
 
     init {
         uniqueIndex(tenantId, meterCode, currency, effectiveAt)
+    }
+}
+
+object UsagePriceEvidenceInboxEvents : UUIDTable("usage_price_evidence_inbox_event", "price_evidence_inbox_event_id") {
+    val eventId = javaUUID("event_id")
+    val tenantId = varchar("tenant_id", 64)
+    val payloadDigest = varchar("payload_digest", 64)
+    val createdAt = timestamp("created_at")
+
+    init {
+        uniqueIndex(tenantId, eventId)
     }
 }
 
@@ -105,6 +120,15 @@ class UsagePriceEvidenceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var effectiveAt by UsagePriceEvidence.effectiveAt
 }
 
+class UsagePriceEvidenceInboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<UsagePriceEvidenceInboxEventEntity>(UsagePriceEvidenceInboxEvents)
+
+    var eventId by UsagePriceEvidenceInboxEvents.eventId
+    var tenantId by UsagePriceEvidenceInboxEvents.tenantId
+    var payloadDigest by UsagePriceEvidenceInboxEvents.payloadDigest
+    var createdAt by UsagePriceEvidenceInboxEvents.createdAt
+}
+
 class UsageRecordEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<UsageRecordEntity>(UsageRecords)
 
@@ -153,6 +177,41 @@ class UsagePriceEvidenceRepository :
             unitPrice = evidence.unitPrice
             effectiveAt = evidence.effectiveAt
         }
+    }
+}
+
+@Repository
+class UsagePriceEvidenceInboxRepository :
+    AppendOnlyUsageExposedJdbcRepository<UsagePriceEvidenceInboxEventEntity, UUID>(
+        UsagePriceEvidenceInboxEventEntity::class.java,
+    ) {
+    fun record(event: PriceEvidenceInboxEvent): PriceEvidenceInboxOutcome {
+        val inserted =
+            UsagePriceEvidenceInboxEvents.insertIgnore {
+                it[eventId] = event.eventId
+                it[tenantId] = event.tenantId
+                it[payloadDigest] = event.payloadDigest
+                it[createdAt] = event.evidence.effectiveAt
+            }.insertedCount == 1
+        if (!inserted) {
+            val existing = UsagePriceEvidenceInboxEvents.selectAll()
+                .where {
+                    (UsagePriceEvidenceInboxEvents.tenantId eq event.tenantId) and
+                        (UsagePriceEvidenceInboxEvents.eventId eq event.eventId)
+                }.singleOrNull()
+            return when (existing?.get(UsagePriceEvidenceInboxEvents.payloadDigest)) {
+                event.payloadDigest -> PriceEvidenceInboxOutcome.DUPLICATE
+                else -> PriceEvidenceInboxOutcome.QUARANTINED
+            }
+        }
+        UsagePriceEvidenceEntity.new {
+            tenantId = event.evidence.tenantId
+            meterCode = event.evidence.meterCode
+            currency = event.evidence.currency
+            unitPrice = event.evidence.unitPrice
+            effectiveAt = event.evidence.effectiveAt
+        }
+        return PriceEvidenceInboxOutcome.APPLIED
     }
 }
 
