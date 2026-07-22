@@ -6,6 +6,9 @@ import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterCommandJou
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterCommandReceipt
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterOutboxRecord
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterPriceVersion
+import io.bluetape4k.workshop.commerce.usagebilling.meter.messaging.MeterOutboxJournal
+import io.bluetape4k.workshop.commerce.usagebilling.meter.messaging.MeterOutboxLease
+import io.bluetape4k.workshop.commerce.usagebilling.meter.messaging.MeterOutboxStatus
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
@@ -18,6 +21,9 @@ import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
+import java.time.Duration
+import java.time.Instant
 import java.util.UUID
 
 object MeterOutboxEvents : UUIDTable("meter_outbox_event", "outbox_event_id") {
@@ -196,5 +202,69 @@ class ExposedMeterCommandJournal : MeterCommandJournal {
             eventId = receipt.result.eventId
             createdAt = outboxRecord.createdAt
         }
+    }
+}
+
+@Repository
+class ExposedMeterOutboxJournal : MeterOutboxJournal {
+    @Transactional
+    override fun claim(owner: String, now: Instant, limit: Int): List<MeterOutboxLease> =
+        MeterOutboxEventEntity.all()
+            .filter { event -> event.isClaimable(now) }
+            .sortedBy { it.createdAt }
+            .take(limit)
+            .map { event ->
+                event.status = MeterOutboxStatus.CLAIMED.name
+                event.claimOwner = owner
+                event.claimUntil = now.plus(CLAIM_LEASE)
+                event.updatedAt = now
+                MeterOutboxLease(event.eventId, event.partitionKey, event.payload, MeterOutboxStatus.CLAIMED, owner)
+            }
+
+    @Transactional
+    override fun markPublished(eventId: UUID, owner: String, now: Instant): Boolean =
+        claimedBy(eventId, owner)?.let { event ->
+            event.status = MeterOutboxStatus.PUBLISHED.name
+            event.claimOwner = null
+            event.claimUntil = null
+            event.nextAttemptAt = null
+            event.updatedAt = now
+            true
+        } ?: false
+
+    @Transactional
+    override fun markRetryWait(eventId: UUID, owner: String, now: Instant): Boolean =
+        claimedBy(eventId, owner)?.let { event ->
+            val attempts = event.attempt + 1
+            event.attempt = attempts
+            event.status = if (attempts >= MAX_ATTEMPTS) {
+                MeterOutboxStatus.QUARANTINED.name
+            } else {
+                MeterOutboxStatus.RETRY_WAIT.name
+            }
+            event.claimOwner = null
+            event.claimUntil = null
+            event.nextAttemptAt = now.plus(RETRY_DELAY)
+            event.updatedAt = now
+            true
+        } ?: false
+
+    private fun MeterOutboxEventEntity.isClaimable(now: Instant): Boolean {
+        val nextAttempt = nextAttemptAt
+        val claimDeadline = claimUntil
+        return status == MeterOutboxStatus.PENDING.name ||
+            (status == MeterOutboxStatus.RETRY_WAIT.name && (nextAttempt == null || nextAttempt <= now)) ||
+            (status == MeterOutboxStatus.CLAIMED.name && claimDeadline != null && claimDeadline <= now)
+    }
+
+    private fun claimedBy(eventId: UUID, owner: String): MeterOutboxEventEntity? =
+        MeterOutboxEventEntity.find { MeterOutboxEvents.eventId eq eventId }
+            .firstOrNull()
+            ?.takeIf { it.status == MeterOutboxStatus.CLAIMED.name && it.claimOwner == owner }
+
+    private companion object {
+        val CLAIM_LEASE: Duration = Duration.ofSeconds(30)
+        val RETRY_DELAY: Duration = Duration.ofSeconds(1)
+        const val MAX_ATTEMPTS = 3
     }
 }
