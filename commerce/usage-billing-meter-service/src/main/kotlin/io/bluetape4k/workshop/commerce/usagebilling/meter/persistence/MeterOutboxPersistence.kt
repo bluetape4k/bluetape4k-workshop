@@ -2,16 +2,22 @@
 
 package io.bluetape4k.workshop.commerce.usagebilling.meter.persistence
 
+import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterCommandJournal
+import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterCommandReceipt
+import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterOutboxRecord
+import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterPriceVersion
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.javatime.timestamp
+import org.springframework.stereotype.Repository
 import java.util.UUID
 
 object MeterOutboxEvents : UUIDTable("meter_outbox_event", "outbox_event_id") {
@@ -38,6 +44,31 @@ object MeterOutboxEvents : UUIDTable("meter_outbox_event", "outbox_event_id") {
     }
 }
 
+object MeterPriceVersions : UUIDTable("meter_price_version", "price_version_id") {
+    val tenantId = varchar("tenant_id", 64)
+    val meterCode = varchar("meter_code", 64)
+    val currency = varchar("currency", 3)
+    val unitPrice = decimal("unit_price", 19, 6)
+    val effectiveAt = timestamp("effective_at")
+    val createdAt = timestamp("created_at")
+
+    init {
+        uniqueIndex(tenantId, meterCode, currency, effectiveAt)
+    }
+}
+
+object MeterCommandReceipts : UUIDTable("meter_command_receipt", "receipt_id") {
+    val idempotencyKey = varchar("idempotency_key", 128)
+    val fingerprint = varchar("fingerprint", 64)
+    val priceVersionId = javaUUID("price_version_id")
+    val eventId = javaUUID("event_id")
+    val createdAt = timestamp("created_at")
+
+    init {
+        uniqueIndex(idempotencyKey)
+    }
+}
+
 class MeterOutboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<MeterOutboxEventEntity>(MeterOutboxEvents)
 
@@ -59,6 +90,27 @@ class MeterOutboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by MeterOutboxEvents.updatedAt
 }
 
+class MeterPriceVersionEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<MeterPriceVersionEntity>(MeterPriceVersions)
+
+    var tenantId by MeterPriceVersions.tenantId
+    var meterCode by MeterPriceVersions.meterCode
+    var currency by MeterPriceVersions.currency
+    var unitPrice by MeterPriceVersions.unitPrice
+    var effectiveAt by MeterPriceVersions.effectiveAt
+    var createdAt by MeterPriceVersions.createdAt
+}
+
+class MeterCommandReceiptEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<MeterCommandReceiptEntity>(MeterCommandReceipts)
+
+    var idempotencyKey by MeterCommandReceipts.idempotencyKey
+    var fingerprint by MeterCommandReceipts.fingerprint
+    var priceVersionId by MeterCommandReceipts.priceVersionId
+    var eventId by MeterCommandReceipts.eventId
+    var createdAt by MeterCommandReceipts.createdAt
+}
+
 abstract class MeterExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(ExposedEntityInformationImpl(domainClass))
@@ -77,5 +129,72 @@ abstract class AppendOnlyMeterExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     protected fun <T> immutableMutation(): T = throw UnsupportedOperationException("append-only repository")
 }
 
+@Repository
 class MeterOutboxRepository :
     AppendOnlyMeterExposedJdbcRepository<MeterOutboxEventEntity, UUID>(MeterOutboxEventEntity::class.java)
+
+@Repository
+class MeterPriceVersionRepository :
+    AppendOnlyMeterExposedJdbcRepository<MeterPriceVersionEntity, UUID>(MeterPriceVersionEntity::class.java)
+
+@Repository
+class MeterCommandReceiptRepository :
+    AppendOnlyMeterExposedJdbcRepository<MeterCommandReceiptEntity, UUID>(MeterCommandReceiptEntity::class.java)
+
+@Repository
+class ExposedMeterCommandJournal : MeterCommandJournal {
+    override fun findReceipt(idempotencyKey: String): MeterCommandReceipt? =
+        MeterCommandReceiptEntity.find { MeterCommandReceipts.idempotencyKey eq idempotencyKey }
+            .firstOrNull()
+            ?.let { entity ->
+                MeterCommandReceipt(
+                    idempotencyKey = entity.idempotencyKey,
+                    fingerprint = entity.fingerprint,
+                    result = io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterActivationResult(
+                        priceVersionId = entity.priceVersionId,
+                        eventId = entity.eventId,
+                        replayed = false,
+                    ),
+                )
+            }
+
+    override fun append(
+        receipt: MeterCommandReceipt,
+        priceVersion: MeterPriceVersion,
+        outboxRecord: MeterOutboxRecord,
+    ) {
+        MeterPriceVersionEntity.new(priceVersion.priceVersionId) {
+            tenantId = priceVersion.tenantId
+            meterCode = priceVersion.meterCode
+            currency = priceVersion.currency
+            unitPrice = priceVersion.unitPrice
+            effectiveAt = priceVersion.effectiveAt
+            createdAt = priceVersion.createdAt
+        }
+        MeterOutboxEventEntity.new {
+            eventId = outboxRecord.eventId
+            tenantId = priceVersion.tenantId
+            eventType = outboxRecord.eventType
+            aggregateType = "Meter"
+            aggregateId = priceVersion.meterCode
+            aggregateVersion = 1
+            partitionKey = outboxRecord.partitionKey
+            payload = outboxRecord.payload
+            payloadDigest = outboxRecord.payloadDigest
+            status = "PENDING"
+            attempt = 0
+            nextAttemptAt = null
+            claimOwner = null
+            claimUntil = null
+            createdAt = outboxRecord.createdAt
+            updatedAt = outboxRecord.createdAt
+        }
+        MeterCommandReceiptEntity.new {
+            idempotencyKey = receipt.idempotencyKey
+            fingerprint = receipt.fingerprint
+            priceVersionId = receipt.result.priceVersionId
+            eventId = receipt.result.eventId
+            createdAt = outboxRecord.createdAt
+        }
+    }
+}
