@@ -99,3 +99,18 @@ object InvoiceReducer : AggregateReducer<InvoiceState> {
         else -> state
     }
 }
+
+sealed interface AdjustmentState {
+    data object Empty : AdjustmentState
+    data class Posted(val adjustment: AdjustmentPosted) : AdjustmentState
+}
+
+object AdjustmentReducer : AggregateReducer<AdjustmentState> {
+    override fun evolve(state: AdjustmentState, event: DomainEvent): AdjustmentState = when (event) {
+        is AdjustmentPosted -> {
+            check(state == AdjustmentState.Empty) { "adjustment_already_posted" }
+            AdjustmentState.Posted(event)
+        }
+        else -> state
+    }
+}
