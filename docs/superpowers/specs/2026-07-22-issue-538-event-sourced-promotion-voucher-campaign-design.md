@@ -205,6 +205,8 @@ event insert와 head 갱신을 같은 transaction에서 commit한다. lock은 co
 - `es_projection_checkpoints`: projection generation별 last applied global position
 - `es_projection_processed_events`: projection generation과 event id deduplication
 - `es_projection_failures`: failed position, bounded reason, attempt, retry state
+- `es_projection_leases`: projection/generation lease key, DB-time expiry, monotonic fencing token
+- `es_operator_audit`: redacted immutable operator mutation decision record
 - generation-keyed campaign, voucher, review, audit projection tables
 
 event payload, snapshot, idempotency response에는 plaintext voucher code를 저장하지 않는다.
@@ -293,6 +295,12 @@ production reader는 global position 순서를 유지한다. duplicate와 delaye
 같은 projection handler 앞에 deterministic fault-injection dispatcher를 두어 재현하며,
 handler 자체가 delivery 순서나 단일 전달을 신뢰하지 않도록 검증한다.
 
+lease key는 `(projectionName, generation)`이고 PostgreSQL server time 기준 TTL 15초, renew
+주기 5초를 사용한다. takeover는 DB row를 lock하고 fencing token을 단조 증가시킨 뒤 새 owner와
+expiry를 commit한다. 모든 projection batch transaction은 lease row를 함께 lock해 현재 owner,
+token, unexpired DB time을 검증한 뒤에만 projection row, processed identity, failure state,
+checkpoint를 변경한다. predicate가 맞지 않으면 stale owner의 batch 전체를 rollback한다.
+
 - duplicate event는 processed identity로 no-op 처리한다.
 - aggregate version gap은 적용하지 않고 retryable delayed state로 기록한다.
 - process 중단은 row 변경과 checkpoint를 함께 rollback한다.
@@ -351,6 +359,24 @@ idempotency key와 expected active-generation token을 요구하며 stale token�
 module 동시 rebuild도 하나다. replay page는 최대 200 events/2 MiB, transaction은 최대 2초,
 전체 rebuild는 100,000 events 기준 10분 예산과 cancellation checkpoint를 가진다.
 
+rebuild durable state는 `BUILDING -> VALIDATING -> ACTIVE` 또는
+`BUILDING|VALIDATING -> CANCELLING -> CANCELLED`, 그리고 `FAILED`를 가진다. start/status 외에
+cancel/resume endpoint를 제공한다. cancel transaction은 generation row를 lock하고
+`CANCELLING`으로 바꾸면서 fencing token을 증가시킨다. 각 batch와 activation transaction은 같은
+row를 lock해 state와 token을 검증한다. cancel이 먼저 commit하면 stale worker batch/activation은
+전체 rollback하고, activation이 먼저 commit하면 cancel은 성공을 가장하지 않고 409
+`REBUILD_ALREADY_ACTIVATED`를 반환한다. 중단된 batch는 projection row와 checkpoint를 함께
+rollback하며 마지막 committed checkpoint는 보존한다.
+
+worker가 `CANCELLING`을 관찰하면 새 batch를 시작하지 않고 현재 transaction을 bounded drain 또는
+rollback한 뒤 `CANCELLED`를 commit한다. resume은 새 lease/fencing token을 발급한다. active
+generation token, projection schema/upcaster set, existing candidate checksum이 cancel 시점과 같을
+때만 동일 generation/checkpoint를 재사용하고, 하나라도 다르면 새 generation rebuild를 요구한다.
+
+poison retry는 원인 수정 배포 후 operator가 실행하며 최대 5회, 1초에서 30초 사이 exponential
+backoff를 적용한다. failure row는 retry 성공 전까지 지우지 않는다. 성공 transaction에서
+projection 변경, processed identity, checkpoint, failure `RESOLVED` 상태를 원자적으로 commit한다.
+
 operator UI는 현재 service 중인 active generation과 새 rebuild generation을 별도 panel로
 표시하며 다음 상태/action 계약을 따른다.
 
@@ -361,6 +387,8 @@ operator UI는 현재 service 중인 active generation과 새 rebuild generation
 | `DEGRADED` | active generation과 poison position/reason class | business mutation은 affected aggregate에 대해 fail closed, 원인 수정 뒤 poison retry 또는 rebuild 선택 |
 | `BUILDING` | active와 building generation, 시작/현재/target position | 중복 rebuild disable, status/cancel만 허용 |
 | `VALIDATING` | active와 candidate generation, 검증 항목 진행률 | activation/rebuild 중복 action disable, status/cancel만 허용 |
+| `CANCELLING` | active generation 유지, cancel drain 상태 | 모든 candidate mutation disable, status만 허용 |
+| `CANCELLED` | active generation 유지, 보존 checkpoint와 resume 가능 여부 | 계약이 맞을 때 resume, 아니면 새 rebuild만 허용 |
 | `FAILED` | active generation 유지, bounded failure summary와 resume 가능 여부 | retryable failure는 resume, invariant/digest failure는 원인 수정 후 새 rebuild |
 
 poison event의 handler/upcaster가 수정됐고 현재 generation을 이어 갈 수 있으면 targeted retry를
@@ -370,9 +398,15 @@ mutation action은 진행 중 중복 클릭을 disable하고 idempotency key와 
 유지한다. 412 stale token/revision은 최신 generation/revision을 다시 읽고 기존 입력을 자동
 재제출하지 않으며 사용자가 다시 확인하도록 설명한다.
 
+operator runbook 순서는 `health/failure와 affected position 확인 -> 원인 수정 및 배포 ->
+targeted retry 또는 full rebuild 선택 -> checkpoint/state digest 검증 -> candidate activation 또는
+active generation 유지/rollback -> reconciliation 별도 실행`으로 고정한다. projection recovery와
+reconciliation 결과는 각각 audit record를 남긴다.
+
 ## 자원과 성능 예산
 
-- Hikari pool 기본 20: foreground 14 permits, projector 3, rebuild 1, maintenance/readiness 2
+- Hikari pool 기본 20: foreground 14 permits, projector 3, rebuild 1, maintenance 1,
+  readiness 전용 1
 - virtual thread도 DB permit을 얻기 전에는 connection을 요청하지 않는다.
 - foreground DB bulkhead는 permit 보유자와 대기자를 합쳐 최대 128 requests로 제한하고 permit
   대기는 최대 250 ms다. admission 초과나 acquire timeout은 stable code
@@ -385,6 +419,10 @@ mutation action은 진행 중 중복 클릭을 disable하고 idempotency key와 
 - projector는 projection별 단일 owner lease와 fencing token을 사용한다.
 - rebuild는 projection lag가 10,000 events를 넘거나 foreground permit saturation이 80%를
   넘으면 새 batch 시작을 throttling한다.
+- snapshot/retention cleanup은 capacity 64의 bounded maintenance queue와 stream별 coalescing을
+  사용한다. 최대 100 rows/2 MiB, statement/transaction timeout 2초, 단일 owner lease,
+  100 ms~5초 backoff를 적용하며 readiness permit을 사용할 수 없다. admission 초과는 최신
+  stream request만 남기고 coalesce하며 shutdown에서 새 작업을 거부하고 queued work를 취소한다.
 
 성능 profile은 terminal response와 committed append를 별도 metric으로 기록하고 다음 두
 workload를 분리한다.
@@ -408,6 +446,40 @@ successfully appended operations/s, Hikari wait, append-fence wait, stream-head 
 bulkhead와 connection starvation 없음만 검증하며, 환경 민감한 throughput/percentile target은
 dedicated PostgreSQL performance profile에서 판정한다.
 
+## Process lifecycle과 health
+
+application-owned lifecycle scope가 projector, rebuild, snapshot/cleanup task를 소유한다.
+startup은 migration 완료와 event schema/upcaster registry integrity, PostgreSQL/event-store
+read/write probe가 성공한 뒤 background worker를 시작하고 traffic readiness를 허용한다.
+shutdown은 먼저 readiness를 `REFUSING_TRAFFIC`으로 바꾸고 새 lease/batch/admission을 중단한 뒤
+polling task를 cancel한다. in-flight transaction은 최대 10초 drain하고 기한을 넘으면 rollback,
+lease release, permit/connection 정리를 보장한다. `CancellationException`은 삼키지 않고 lifecycle
+scope까지 전파하며 `finally`에서 lease와 local resource를 정리한다.
+
+| 조건 | Liveness | Readiness | Custom health/동작 |
+|---|---|---|---|
+| startup migration/integrity 진행 중 | `UP` | `OUT_OF_SERVICE` | traffic와 background worker 시작 금지 |
+| startup integrity 또는 global PostgreSQL/event-store probe 실패 | `UP` | `DOWN` | 원인 노출, append/query traffic 거부 |
+| 특정 aggregate rehydration 실패 | `UP` | `UP` | `DEGRADED`, affected aggregate command만 fail closed |
+| projection poison 또는 bounded lag 초과 | `UP` | `UP` | projection `DEGRADED`, stale metadata와 recovery action 노출 |
+| rebuild `BUILDING`/`VALIDATING`/`CANCELLED`/`FAILED` | `UP` | `UP` | active generation 계속 제공, rebuild health 별도 노출 |
+| graceful shutdown | `UP` until termination | `REFUSING_TRAFFIC` | 새 work 금지, bounded drain/rollback |
+
+recoverable projection/rebuild 장애는 liveness를 내리지 않는다. Actuator liveness/readiness group과
+custom aggregate/projection/rebuild health를 각각 검증한다.
+
+운영 metric은 `voucher_projection_lag_events`, `voucher_projection_lag_age_seconds`,
+`voucher_projection_checkpoint_stalled_seconds`, `voucher_projection_poison_events`,
+`voucher_projection_retry_total`, `voucher_rebuild_progress_ratio`,
+`voucher_rebuild_duration_seconds`, `voucher_db_bulkhead_active`,
+`voucher_db_bulkhead_queued`, `voucher_db_bulkhead_rejected_total`과 Hikari pending/active,
+readiness state를 제공한다. label은 bounded `projection`, `state`, `outcome`, `reasonClass`만
+허용하고 tenant/generation/campaign/user/voucher/event id를 금지한다.
+
+poison count가 0보다 크면 즉시, lag가 있으면서 checkpoint가 30초 이상 멈추면 즉시,
+lag age가 60초를 5분간 넘으면, rebuild가 `FAILED` 또는 10분 예산을 넘으면, readiness `DOWN`이
+1분 이상이면, bulkhead rejection이 5분간 1%를 넘으면 alert한다.
+
 ## 장애 처리
 
 | 장애 | 동작 | 복구 |
@@ -425,6 +497,12 @@ dedicated PostgreSQL performance profile에서 판정한다.
 
 poison event를 넘어 checkpoint를 몰래 이동시키지 않는다. 원본 event 수정과 무감사 skip은
 지원하지 않는다.
+
+operator audit은 rebuild start/cancel/resume/activate, poison retry, reconciliation을 모두
+기록한다. 필수 field는 actor digest, tenant, request/idempotency digest, action, target
+projection/generation, expected fencing token, before/after state, checkpoint/stream position,
+outcome, bounded reason class, occurred-at이다. raw secret/identity/payload는 저장하지 않으며 audit
+insert는 operator mutation의 같은 transaction에서 immutable하게 commit한다.
 
 ## 보안과 개인정보
 
@@ -480,7 +558,9 @@ projection lag 때문에 #534가 즉시 일관성으로 보이던 query 결과�
 - idempotency acquire/finalize cut point와 response-loss replay
 - duplicate, delayed, interrupted projection delivery
 - poison event 정지와 retry 복구
-- rebuild interruption/resume와 generation activation race
+- projector lease expiry/takeover 뒤 stale worker 재개가 projection/checkpoint write를 rollback
+- rebuild interruption/resume와 `BUILDING`/`VALIDATING`/activation 전후 cancel race
+- cancel 성공 뒤 stale worker activation 거부, activation 선행 시 cancel 409
 - full replay와 snapshot+tail 동등성
 - PostgreSQL Testcontainers를 권위 환경으로 사용한다.
 
@@ -493,7 +573,8 @@ projection lag 때문에 #534가 즉시 일관성으로 보이던 query 결과�
 - SSE cursor, reconnect, snapshot-first, bounded queue/payload
 - operator health, lag, rebuild, poison event, redaction
 - GET 202 pending 전용 분기, 마지막 projection 유지, bounded GET-only retry, manual refresh
-- operator 상태/action matrix, 412 reload, duplicate-action disable, retry와 rebuild 선택 기준
+- operator 상태/action matrix, start/status/cancel/resume, 412 reload, duplicate-action disable,
+  retry와 rebuild 선택 기준
 - `aria-live`, text status, disabled-action reason을 유지하고 lag/rebuild/degraded/pending 전환을
   색상이나 숫자만이 아니라 screen reader가 인식할 수 있는 문구로 검증
 - hostile oversized/deep JSON, replay cap, rebuild quota, operator stale-generation/idempotency
@@ -503,6 +584,10 @@ projection lag 때문에 #534가 즉시 일관성으로 보이던 query 결과�
   mapping 또는 raw identity를 복구할 수 없음을 검증
 - application DB role과 mutation-denying trigger가 event update/delete를 거부하는지 검증
 - upcaster golden fixture, 반복 결정성, chain hard cap
+- Actuator liveness/readiness group과 aggregate/projection/rebuild custom health 상태표
+- 실제 process kill/restart, graceful shutdown bounded drain/rollback, worker/permit/connection cleanup
+- metric label cardinality와 alert threshold, operator audit action/field coverage
+- maintenance queue bound/coalescing과 readiness 전용 permit 비침범
 - static browser contract와 executable scenario
 
 ### 저장소 검증
@@ -568,6 +653,14 @@ module에 새로 실행한다. 문서는 실제 migration을 다음 단계로 �
     접근 가능한 status와 disabled reason을 일관되게 표현한다.
 18. subject mapping 삭제가 기존 surrogate의 reverse lookup을 차단하고 재등록된 identity에 새
     surrogate를 발급한다.
+19. stale projector와 cancelled rebuild worker가 fencing token을 우회해 projection/checkpoint를
+    쓰거나 candidate를 활성화하지 못한다.
+20. startup, recoverable degradation, global event-store failure, graceful shutdown이 정의된
+    liveness/readiness 상태를 내고 restart 뒤 마지막 committed checkpoint에서 수렴한다.
+21. maintenance 폭주에도 readiness permit이 보존되고 lifecycle shutdown이 background resource를
+    bounded drain 또는 rollback한다.
+22. operator mutation 전부가 redacted immutable audit을 남기며 poison/rebuild/lag/readiness alert
+    계약이 bounded label로 검증된다.
 
 ## Definition of Done
 
