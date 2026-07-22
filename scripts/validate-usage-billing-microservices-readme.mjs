@@ -11,7 +11,11 @@ const docs = ["README.md", "README.ko.md"].map((name) => ({
 }));
 const diagrams = [
   "usage-billing-microservices-architecture-01",
-  "usage-billing-microservices-state-01",
+  "usage-billing-microservices-outbox-inbox-state-01",
+  "usage-billing-microservices-delivery-01",
+  "usage-billing-microservices-poison-recovery-01",
+  "usage-billing-microservices-correction-01",
+  "usage-billing-microservices-extraction-01",
 ];
 const failures = [];
 
@@ -45,8 +49,16 @@ for (const [file, required] of [
   ["commerce/README.md", "usage-billing-microservices"],
   ["commerce/README.ko.md", "usage-billing-microservices"],
   ["scripts/smoke-validate.sh", ":commerce-usage-billing-microservices-composition-tests:integrationTest"],
+  ["scripts/smoke-validate.sh", ":commerce-usage-billing-microservices-composition-tests:koverXmlReport"],
   [".github/workflows/Examples.yml", ":commerce-usage-billing-microservices-composition-tests:integrationTest"],
+  [".github/workflows/Examples.yml", ":commerce-usage-billing-microservices-composition-tests:koverXmlReport"],
+  [".github/workflows/Examples.yml", "commerce/usage-billing-microservices-composition-tests/build/reports/kover/report.xml"],
   [".github/workflows/nightly.yml", ":commerce-usage-billing-microservices-composition-tests:integrationTest"],
+  [".github/workflows/nightly.yml", ":commerce-usage-billing-microservices-composition-tests:koverXmlReport"],
+  [".github/workflows/nightly.yml", "commerce/usage-billing-microservices-composition-tests/build/reports/kover/report.xml"],
+  ["scripts/generate-usage-billing-microservices-diagrams.mjs", "generated usage billing diagrams"],
+  ["docs/lessons/2026-07-23-issue-555-usage-billing-microservices.md", "Local database가 correctness authority다"],
+  ["docs/review/2026-07-22-issue-555-usage-billing-microservices-implementation-review.md", "여섯 관점 검토"],
 ]) {
   if (!fs.readFileSync(path.join(root, file), "utf8").includes(required)) {
     failures.push(`${file}: missing ${required}`);

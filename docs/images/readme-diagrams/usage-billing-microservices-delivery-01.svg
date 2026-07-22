@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="920" viewBox="0 0 1600 920" role="img" aria-labelledby="title desc">
+  <title id="title">At-least-once delivery without double billing</title>
+  <desc id="desc">A local commit survives relay delay; a durable inbox absorbs replay before applying another effect.</desc>
+  <defs>
+    <marker id="blueArrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L14,7 L0,14 Z" fill="#356a91" stroke="#356a91"/></marker>
+    <style>
+      .title{font:700 36px 'Architects Daughter',sans-serif;fill:#213447}.subtitle{font:18px 'Comic Mono',monospace;fill:#496273}.card{fill:#fff;stroke:#6f9fbe;stroke-width:3}.cardTitle{font:700 22px 'Architects Daughter',sans-serif;fill:#213447}.cardText{font:16px 'Comic Mono',monospace;fill:#385164}.step{fill:#356a91}.stepText{font:700 16px 'Comic Mono',monospace;fill:#fff}.flow{fill:none;stroke:#356a91;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#blueArrow)}.note{font:17px 'Comic Mono',monospace;fill:#526675}.bandTitle{font:700 22px 'Architects Daughter',sans-serif;fill:#213447}
+    </style>
+  </defs>
+  <rect width="1600" height="920" fill="#f8fbfd"/>
+  <text x="70" y="78" class="title">At-least-once delivery without double billing</text>
+  <text x="70" y="116" class="subtitle">A local commit survives relay delay; a durable inbox absorbs replay before applying another effect.</text>
+  <rect x="60" y="175" width="1480" height="420" rx="28" fill="#eaf3f9" stroke="#b9d0df" stroke-width="2"/>
+  <text x="90" y="225" class="bandTitle">Decision path</text>
+  <g>
+    <path class="flow" d="M335 375 H366"/>
+    <path class="flow" d="M630 375 H661"/>
+    <path class="flow" d="M925 375 H956"/>
+    <path class="flow" d="M1220 375 H1251"/>
+    <g>
+      <rect class="card" x="85" y="285" width="250" height="180" rx="20"/>
+      <circle cx="119" cy="321" r="18" class="step"/>
+      <text x="119" y="328" text-anchor="middle" class="stepText">1</text>
+      <text x="149" y="329" class="cardTitle">Local commit</text>
+      <text x="109" y="375" class="cardText">fact + outbox</text>
+      <text x="109" y="403" class="cardText">one transaction</text>
+    </g>
+    <g>
+      <rect class="card" x="380" y="285" width="250" height="180" rx="20"/>
+      <circle cx="414" cy="321" r="18" class="step"/>
+      <text x="414" y="328" text-anchor="middle" class="stepText">2</text>
+      <text x="444" y="329" class="cardTitle">Relay claim</text>
+      <text x="404" y="375" class="cardText">owner + lease</text>
+      <text x="404" y="403" class="cardText">fenced completion</text>
+    </g>
+    <g>
+      <rect class="card" x="675" y="285" width="250" height="180" rx="20"/>
+      <circle cx="709" cy="321" r="18" class="step"/>
+      <text x="709" y="328" text-anchor="middle" class="stepText">3</text>
+      <text x="739" y="329" class="cardTitle">Kafka</text>
+      <text x="699" y="375" class="cardText">publish may repeat</text>
+      <text x="699" y="403" class="cardText">offset is not truth</text>
+    </g>
+    <g>
+      <rect class="card" x="970" y="285" width="250" height="180" rx="20"/>
+      <circle cx="1004" cy="321" r="18" class="step"/>
+      <text x="1004" y="328" text-anchor="middle" class="stepText">4</text>
+      <text x="1034" y="329" class="cardTitle">Durable inbox</text>
+      <text x="994" y="375" class="cardText">event ID + digest</text>
+      <text x="994" y="403" class="cardText">duplicate = success</text>
+    </g>
+    <g>
+      <rect class="card" x="1265" y="285" width="250" height="180" rx="20"/>
+      <circle cx="1299" cy="321" r="18" class="step"/>
+      <text x="1299" y="328" text-anchor="middle" class="stepText">5</text>
+      <text x="1329" y="329" class="cardTitle">Local effect</text>
+      <text x="1289" y="375" class="cardText">apply once</text>
+      <text x="1289" y="403" class="cardText">commit then offset</text>
+    </g>
+  </g>
+  <rect x="120" y="660" width="1360" height="120" rx="22" fill="#edf6ed" stroke="#c1d7c1" stroke-width="2"/>
+  <text x="160" y="710" class="bandTitle">Operational invariant</text>
+  <text x="160" y="748" class="note">A crash after broker acceptance can replay the event; it must not recreate the financial fact.</text>
+  <text x="70" y="870" class="note">PostgreSQL owns durable decisions. Kafka transports replayable facts between service boundaries.</text>
+</svg>

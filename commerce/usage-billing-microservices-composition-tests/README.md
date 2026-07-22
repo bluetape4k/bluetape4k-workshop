@@ -34,11 +34,19 @@ Start with [`usage-metering-billing-ledger`](../usage-metering-billing-ledger/) 
 
 Kafka is transport, not financial correctness authority. Every producer commits its local fact and a `PENDING` outbox row in one Exposed transaction. A relay claims that row with an owner-and-lease predicate, publishes, then marks it `PUBLISHED`. A crash after Kafka accepts a record but before the mark is deliberately recoverable as a duplicate delivery.
 
-![Outbox and inbox state machines](../../docs/images/readme-diagrams/usage-billing-microservices-state-01.png)
+![Outbox and inbox state machines](../../docs/images/readme-diagrams/usage-billing-microservices-outbox-inbox-state-01.png)
 
-[State diagram SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-state-01.svg)
+[State diagram SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-outbox-inbox-state-01.svg)
 
 The receiver first validates its own JSON envelope contract, then durably records `(tenantId, eventId, payloadDigest)` before applying a local effect. Same ID/same digest is a duplicate; same ID/different digest is a correctness conflict and is quarantined. A retryable database failure is propagated to Kafka for redelivery. An unknown schema or digest mismatch becomes a durable Query quarantine entry so unrelated records can keep progressing.
+
+![At-least-once delivery path](../../docs/images/readme-diagrams/usage-billing-microservices-delivery-01.png)
+
+[Delivery SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-delivery-01.svg)
+
+![Poison isolation and redrive](../../docs/images/readme-diagrams/usage-billing-microservices-poison-recovery-01.png)
+
+[Poison recovery SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-poison-recovery-01.svg)
 
 ## Run the evidence
 
@@ -96,12 +104,20 @@ outbox retry assertion stable without pretending that pausing a local Docker bro
 - Query has no financial command endpoint. It owns read projection/checkpoint/quarantine visibility and operator redrive audit only.
 - Offset commit follows a successful durable inbox/quarantine decision. It never follows a best-effort log line.
 
+![Append-only correction path](../../docs/images/readme-diagrams/usage-billing-microservices-correction-01.png)
+
+[Correction SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-correction-01.svg)
+
 ## Staged extraction and rollback
 
 1. Keep the ledger/modular-monolith as source of truth; extract Meter and Usage first while dual-checking accepted-usage counts and price evidence.
 2. Add Billing's replicated price evidence and rated-charge parity checks. Drain its outbox before routing downstream traffic.
 3. Add Invoice document materialization and Query read models last. Compare immutable source-event IDs and totals, not mutable rows.
 4. Roll back traffic routing only. Do not copy a service database backwards or rewrite published financial history; leave durable events, outboxes, inboxes, and quarantine audit records intact for reconciliation.
+
+![Staged extraction and rollback](../../docs/images/readme-diagrams/usage-billing-microservices-extraction-01.png)
+
+[Extraction SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-extraction-01.svg)
 
 An operator should first inspect outbox backlog/state, oldest retry, inbox/quarantine reason, and the affected aggregate key. Redrive preserves the stored payload and creates audit evidence; it is not an edit surface for amounts or prices.
 

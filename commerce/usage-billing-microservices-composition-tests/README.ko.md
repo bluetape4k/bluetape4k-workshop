@@ -20,9 +20,17 @@
 | poison event가 partition 전체를 멈추면? | permanent contract 오류는 Query quarantine으로 기록한 뒤 offset을 진행한다. transient DB 오류만 Kafka redelivery를 위해 전파한다. |
 | 가격의 authority는 누구인가? | Meter가 원본 가격 authority이며, Billing은 자신의 DB에 복제한 pricing evidence로만 rating한다. |
 
-![Outbox와 Inbox 상태 전이](../../docs/images/readme-diagrams/usage-billing-microservices-state-01.png)
+![Outbox와 Inbox 상태 전이](../../docs/images/readme-diagrams/usage-billing-microservices-outbox-inbox-state-01.png)
 
-[State diagram SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-state-01.svg)
+[State diagram SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-outbox-inbox-state-01.svg)
+
+![At-least-once 전달 경로](../../docs/images/readme-diagrams/usage-billing-microservices-delivery-01.png)
+
+[Delivery SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-delivery-01.svg)
+
+![Poison 격리와 redrive](../../docs/images/readme-diagrams/usage-billing-microservices-poison-recovery-01.png)
+
+[Poison recovery SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-poison-recovery-01.svg)
 
 ## 언제 선택해야 하나
 
@@ -34,6 +42,10 @@
 2. Billing의 replicated price evidence와 charge total parity를 확인하고, outbox backlog를 비운 뒤 downstream routing을 전환한다.
 3. Invoice와 Query는 마지막에 추가한다. mutable row가 아니라 immutable source event ID와 total을 비교한다.
 4. rollback은 traffic routing만 되돌린다. 서비스 DB 복사, published financial history rewrite, 금액/가격 수정은 하지 않는다.
+
+![단계적 extraction과 rollback](../../docs/images/readme-diagrams/usage-billing-microservices-extraction-01.png)
+
+[Extraction SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-extraction-01.svg)
 
 운영자는 먼저 outbox backlog/state, oldest retry, inbox/quarantine reason, aggregate key를 확인한다. redrive는 저장된 payload를 수정하지 않고 audit을 남기는 재전달 요청이지, 재무 상태 수정 API가 아니다.
 
@@ -83,3 +95,7 @@ benchmark가 아니라, 장애 모드를 실행 가능한 형태로 보여 주�
 test-only Meter fault switch는 의도적으로 결정적이다. composition fixture가 실행되는 동안만 production Kafka
 transport를 감싸고, 복구 시에는 동일한 실제 Kafka transport에 위임한다. 이 방식은 local Docker broker를
 pause하는 것이 모든 outage를 대표한다고 과장하지 않으면서 outbox retry를 안정적으로 검증한다.
+
+![Append-only correction 경로](../../docs/images/readme-diagrams/usage-billing-microservices-correction-01.png)
+
+[Correction SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-correction-01.svg)
