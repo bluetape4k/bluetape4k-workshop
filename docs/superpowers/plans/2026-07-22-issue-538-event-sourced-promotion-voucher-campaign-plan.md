@@ -138,15 +138,15 @@
 **의존:** Task 1
 **write scope:** `domain/**`와 domain tests
 
-- [ ] **RED:** campaign 생성/활성화/용량 변경, voucher issue/redeem/cancel/expire, 잘못된 전이, version gap, unknown type/version, upcast 결과를 `bluetape4k-assertions`로 검사한다.
-- [ ] event envelope에 UUID v7 event id, tenant, stream type/id/version, global position, event type/schema version, occurred/recorded time, correlation/causation, actor surrogate, canonical checksum을 정의한다.
-- [ ] JSON payload 64 KiB/depth 16/string 8 KiB, snapshot 1 MiB, upcaster 4단계 hard cap과 `(eventType, fromVersion, toVersion)` immutable golden fixture를 고정한다.
-- [ ] command decision은 immutable event list만 반환하고 aggregate mutation은 reducer 한 곳에서 수행한다.
-- [ ] registry가 `(eventType, schemaVersion)` decoder/upcaster를 exhaustive하게 선택하고 원문 민감정보를 payload에 허용하지 않는다.
-- [ ] property-style replay 순서, duplicate event id, empty decision edge를 검증한다.
-- [ ] `./gradlew :commerce-event-sourced-promotion-voucher-campaign:test --tests '*domain.*' :commerce-event-sourced-promotion-voucher-campaign:detektTest`를 통과시킨다.
-- [ ] rollback: event contract 변경은 registry/upcaster와 fixture version을 함께 되돌린다.
-- [ ] Lore commit: `Make voucher history deterministic before persistence`.
+- [x] **RED:** campaign 생성/활성화/용량 변경, voucher issue/redeem/cancel/expire, 잘못된 전이, version gap, unknown type/version, upcast 결과를 `bluetape4k-assertions`로 검사한다.
+- [x] event envelope에 UUID v7 event id, tenant, stream type/id/version, global position, event type/schema version, occurred/recorded time, correlation/causation, actor surrogate, canonical checksum을 정의한다.
+- [x] JSON payload 64 KiB/depth 16/string 8 KiB, snapshot 1 MiB, upcaster 4단계 hard cap과 `(eventType, fromVersion, toVersion)` immutable golden fixture를 고정한다.
+- [x] command decision은 immutable event list만 반환하고 aggregate mutation은 reducer 한 곳에서 수행한다.
+- [x] registry가 `(eventType, schemaVersion)` decoder/upcaster를 exhaustive하게 선택하고 원문 민감정보를 payload에 허용하지 않는다.
+- [x] property-style replay 순서, duplicate event id, empty decision edge를 검증한다.
+- [x] `./gradlew :commerce-event-sourced-promotion-voucher-campaign:test --tests '*domain.*' :commerce-event-sourced-promotion-voucher-campaign:detektTest`를 통과시킨다.
+- [x] rollback: event contract 변경은 registry/upcaster와 fixture version을 함께 되돌린다.
+- [x] Lore commit: `Make voucher history deterministic before persistence`.
 
 ### Task 3: Exposed schema와 append-only repository contract를 만든다
 
