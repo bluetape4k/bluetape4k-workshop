@@ -17,6 +17,7 @@ operator-visible recovery paths.
 | [`concert-ticket-flash-sale`](concert-ticket-flash-sale/) | Waiting-room admission, USER/IP purchase guards, payment/refund recovery, and ticket-safe restock | PostgreSQL + Redis (Testcontainers) |
 | [`usage-metering-billing-ledger`](usage-metering-billing-ledger/) | Idempotent usage, time-versioned pricing, restartable close, and immutable ledger/invoice | PostgreSQL (Testcontainers) |
 | [`usage-metering-billing-event-sourcing`](usage-metering-billing-event-sourcing/) | Event append/replay/upcasting, snapshots, fenced projection rebuilds, correction, and reconciliation | PostgreSQL (Testcontainers) |
+| [`usage-billing-microservices`](usage-billing-microservices-composition-tests/) | Five independently deployable Spring Boot services with local outbox/inbox and explicit Kafka delivery boundaries | PostgreSQL + Kafka (Testcontainers) |
 
 The modules use Java 25 virtual threads for blocking Spring MVC and Exposed JDBC
 work. Database concurrency remains bounded by HikariCP; virtual threads increase
@@ -33,5 +34,6 @@ request concurrency, not PostgreSQL capacity.
 ./gradlew :commerce-usage-metering-billing-ledger:integrationTest --max-workers=1
 ./gradlew :commerce-usage-metering-billing-event-sourcing:integrationTest --max-workers=1
 ./gradlew :commerce-usage-metering-billing-event-sourcing:stressTest --max-workers=1
+./gradlew :commerce-usage-billing-microservices-composition-tests:integrationTest --max-workers=1
 ./scripts/smoke-validate.sh commerce
 ```

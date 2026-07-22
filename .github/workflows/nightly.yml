@@ -119,6 +119,12 @@ jobs:
           :commerce-usage-metering-billing-event-sourcing:integrationTest
           :commerce-usage-metering-billing-event-sourcing:stressTest
           :commerce-usage-metering-billing-event-sourcing:koverXmlReport
+          :commerce-usage-billing-meter-service:integrationTest
+          :commerce-usage-billing-usage-service:integrationTest
+          :commerce-usage-billing-billing-service:integrationTest
+          :commerce-usage-billing-invoice-service:integrationTest
+          :commerce-usage-billing-query-service:integrationTest
+          :commerce-usage-billing-microservices-composition-tests:integrationTest
           :graph-recommendation:integrationTest
           :graph-knowledge-graph:integrationTest
           :graph-social-network:integrationTest
@@ -136,6 +142,7 @@ jobs:
           test -n "$(find commerce/usage-metering-billing-event-sourcing/build/test-results/integrationTest -name '*.xml' -print -quit)"
           test -n "$(find commerce/usage-metering-billing-event-sourcing/build/test-results/stressTest -name '*.xml' -print -quit)"
           test -s commerce/usage-metering-billing-event-sourcing/build/reports/kover/report.xml
+          test -n "$(find commerce/usage-billing-microservices-composition-tests/build/test-results/integrationTest -name '*.xml' -print -quit)"
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7
@@ -155,6 +162,12 @@ jobs:
             commerce/usage-metering-billing-event-sourcing/build/test-results/integrationTest/*.xml
             commerce/usage-metering-billing-event-sourcing/build/test-results/stressTest/*.xml
             commerce/usage-metering-billing-event-sourcing/build/reports/kover/report.xml
+            commerce/usage-billing-meter-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-usage-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-billing-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-invoice-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-query-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-microservices-composition-tests/build/test-results/integrationTest/*.xml
           retention-days: 14
 
   nightly-status:

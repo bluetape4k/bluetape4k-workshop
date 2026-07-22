@@ -5,8 +5,9 @@
 **Parent Epic**: #76
 **Status**: Active
 
-> Current graph amendment (2026-07-22, #553): this checkout registers 112 projects in Gradle after adding
-> `:commerce-usage-metering-billing-event-sourcing`. The 23/33 classification below remains the original
+> Current graph amendment (2026-07-23, #555): this checkout registers 118 projects in Gradle after adding
+> the five `:commerce-usage-billing-*-service` modules and
+> `:commerce-usage-billing-microservices-composition-tests`. The 23/33 classification below remains the original
 > #91 baseline rather than a mechanically incremented inventory. Current executable lanes are
 > maintained in `scripts/smoke-validate.sh` and `.github/workflows/Examples.yml`.
 
@@ -161,6 +162,7 @@ Run via `scripts/smoke-validate.sh <group>` or directly:
   :commerce-reservation-control-plane:test \
   :commerce-promotion-voucher-campaign:test \
   :commerce-concert-ticket-flash-sale:test \
+  :commerce-usage-billing-microservices-composition-tests:integrationTest \
   --continue --max-workers=1
 ```
 
@@ -170,7 +172,7 @@ Run via `scripts/smoke-validate.sh <group>` or directly:
 
 ```bash
 # Verify the current Gradle project graph and README references
-EXPECTED_GRADLE_PROJECTS=108 ./scripts/smoke-validate.sh stale-check
+EXPECTED_GRADLE_PROJECTS=118 ./scripts/smoke-validate.sh stale-check
 # Expected: 108 (as of 2026-07-21 after #521; 107 before the module was added)
 
 # Verify removed modules are not referenced in any README

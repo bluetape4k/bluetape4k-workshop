@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="920" viewBox="0 0 1600 920" role="img" aria-labelledby="title desc">
+  <title id="title">Usage billing microservice ownership</title>
+  <desc id="desc">Five Spring Boot services own separate PostgreSQL databases and communicate through Kafka topics.</desc>
+  <defs>
+    <marker id="blueArrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L14,7 L0,14 Z" fill="#356a91"/></marker>
+    <marker id="greenArrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L14,7 L0,14 Z" fill="#4f7b59"/></marker>
+    <style>
+      .title{font:700 34px 'Architects Daughter',sans-serif;fill:#213447}.subtitle{font:18px 'Comic Mono',monospace;fill:#496273}.cardTitle{font:700 22px 'Architects Daughter',sans-serif;fill:#213447}.cardText{font:16px 'Comic Mono',monospace;fill:#385164}.dbText{font:16px 'Comic Mono',monospace;fill:#465b4b}.topic{font:700 18px 'Comic Mono',monospace;fill:#fff}.note{font:15px 'Comic Mono',monospace;fill:#526675}.flow{fill:none;stroke:#356a91;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#blueArrow)}.authority{fill:none;stroke:#4f7b59;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#greenArrow)}
+    </style>
+  </defs>
+  <rect width="1600" height="920" fill="#f8fbfd"/>
+  <text x="70" y="70" class="title">Event-sourced usage billing: ownership before transport</text>
+  <text x="70" y="104" class="subtitle">Each service owns one PostgreSQL authority; Kafka carries replayable facts, never cross-database transactions.</text>
+  <rect x="60" y="145" width="1480" height="265" rx="24" fill="#eaf3f9" stroke="#b9d0df" stroke-width="2"/>
+  <text x="90" y="185" class="cardTitle">Spring Boot services</text>
+  <g>
+    <rect x="95" y="220" width="250" height="135" rx="18" fill="#fff" stroke="#6f9fbe" stroke-width="2"/><text x="120" y="260" class="cardTitle">Meter</text><text x="120" y="292" class="cardText">price authority</text><text x="120" y="320" class="cardText">PriceActivated</text>
+    <rect x="385" y="220" width="250" height="135" rx="18" fill="#fff" stroke="#6f9fbe" stroke-width="2"/><text x="410" y="260" class="cardTitle">Usage</text><text x="410" y="292" class="cardText">receipt + acceptance</text><text x="410" y="320" class="cardText">UsageAccepted</text>
+    <rect x="675" y="220" width="250" height="135" rx="18" fill="#fff" stroke="#6f9fbe" stroke-width="2"/><text x="700" y="260" class="cardTitle">Billing</text><text x="700" y="292" class="cardText">rating authority</text><text x="700" y="320" class="cardText">ChargeRated</text>
+    <rect x="965" y="220" width="250" height="135" rx="18" fill="#fff" stroke="#6f9fbe" stroke-width="2"/><text x="990" y="260" class="cardTitle">Invoice</text><text x="990" y="292" class="cardText">immutable documents</text><text x="990" y="320" class="cardText">invoice lines</text>
+    <rect x="1255" y="220" width="250" height="135" rx="18" fill="#fff" stroke="#6f9fbe" stroke-width="2"/><text x="1280" y="260" class="cardTitle">Query</text><text x="1280" y="292" class="cardText">projection + quarantine</text><text x="1280" y="320" class="cardText">operator visibility</text>
+  </g>
+  <rect x="60" y="455" width="1480" height="145" rx="24" fill="#394f63"/>
+  <text x="90" y="495" class="topic">Kafka transport (at-least-once)</text>
+  <text x="310" y="548" class="topic">meter.events.v1</text><text x="700" y="548" class="topic">usage.events.v1</text><text x="1070" y="548" class="topic">billing.events.v1</text>
+  <path class="flow" d="M220 355 V425 Q220 440 235 440 H320 Q335 440 335 454 V455"/>
+  <path class="flow" d="M510 355 V425 Q510 440 525 440 H610 Q625 440 625 454 V455"/>
+  <path class="flow" d="M800 355 V425 Q800 440 815 440 H900 Q915 440 915 454 V455"/>
+  <rect x="60" y="650" width="1480" height="205" rx="24" fill="#edf6ed" stroke="#c1d7c1" stroke-width="2"/>
+  <text x="90" y="690" class="cardTitle">Local correctness boundary: PostgreSQL + Exposed</text>
+  <g>
+    <rect x="95" y="730" width="250" height="75" rx="15" fill="#fff" stroke="#83aa89" stroke-width="2"/><text x="120" y="776" class="dbText">meter-db + outbox</text>
+    <rect x="385" y="730" width="250" height="75" rx="15" fill="#fff" stroke="#83aa89" stroke-width="2"/><text x="410" y="776" class="dbText">usage-db + inbox/outbox</text>
+    <rect x="675" y="730" width="250" height="75" rx="15" fill="#fff" stroke="#83aa89" stroke-width="2"/><text x="700" y="776" class="dbText">billing-db + inbox/outbox</text>
+    <rect x="965" y="730" width="250" height="75" rx="15" fill="#fff" stroke="#83aa89" stroke-width="2"/><text x="990" y="776" class="dbText">invoice-db + inbox</text>
+    <rect x="1255" y="730" width="250" height="75" rx="15" fill="#fff" stroke="#83aa89" stroke-width="2"/><text x="1280" y="776" class="dbText">query-db + quarantine</text>
+  </g>
+  <path class="authority" d="M220 730 V680"/><path class="authority" d="M510 730 V680"/><path class="authority" d="M800 730 V680"/><path class="authority" d="M1090 730 V680"/><path class="authority" d="M1380 730 V680"/>
+  <text x="70" y="890" class="note">Financial effects are local commits. A duplicate Kafka record is an expected recovery path, not a second charge.</text>
+</svg>
