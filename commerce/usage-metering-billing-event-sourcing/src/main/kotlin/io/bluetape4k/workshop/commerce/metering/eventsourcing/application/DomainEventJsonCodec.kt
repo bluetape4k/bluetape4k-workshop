@@ -15,9 +15,11 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageRated
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventCodecRegistry
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.module.kotlin.jacksonObjectMapper
+import org.springframework.stereotype.Component
 import java.time.Instant
 import java.util.UUID
 
+@Component
 class DomainEventJsonCodec(
     private val mapper: ObjectMapper = jacksonObjectMapper(),
 ) {

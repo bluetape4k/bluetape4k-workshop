@@ -11,6 +11,10 @@ spring:
     generate-ddl: false
 
 management:
+  datadog:
+    metrics:
+      export:
+        enabled: false
   endpoints:
     web:
       exposure:
