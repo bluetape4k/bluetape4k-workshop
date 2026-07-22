@@ -7,6 +7,7 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.Optimis
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.StreamAppend
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -104,6 +105,27 @@ class EventStorePostgresIntegrationTest {
         assertThrows(UnsupportedOperationException::class.java) {
             fixture.executor.transaction { repository.save(DomainEventEntity[stored.eventId]) }
         }
+    }
+
+    @Test
+    fun `global position keyset tolerates sequence gaps`() {
+        fixture.reset()
+        val firstStream = StreamKey("tenant-a", "Usage", "first")
+        val rolledBackStream = StreamKey("tenant-a", "Usage", "rolled-back")
+        val laterStream = StreamKey("tenant-a", "Usage", "later")
+        val first = fixture.executor.transaction { repository.append(firstStream, 0, listOf(event("first"))).single() }
+        assertThrows(IllegalStateException::class.java) {
+            fixture.executor.transaction {
+                repository.append(rolledBackStream, 0, listOf(event("rolled-back")))
+                error("rollback after consuming a sequence value")
+            }
+        }
+        val later = fixture.executor.transaction { repository.append(laterStream, 0, listOf(event("later"))).single() }
+
+        val page = fixture.executor.transaction { repository.loadAfterGlobalPosition(first.globalPosition, 10) }
+
+        assertEquals(listOf(later.eventId), page.map { it.eventId })
+        assertTrue(later.globalPosition > first.globalPosition + 1)
     }
 
     private fun event(sourceId: String): NewEvent = NewEvent(

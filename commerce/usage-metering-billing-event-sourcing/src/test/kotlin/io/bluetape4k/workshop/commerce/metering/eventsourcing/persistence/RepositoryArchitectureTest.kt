@@ -11,6 +11,8 @@ class RepositoryArchitectureTest {
             EventStoreRepository::class.java,
             CommandReceiptRepository::class.java,
             SnapshotRepository::class.java,
+            ProjectionGenerationRepository::class.java,
+            ProjectionCheckpointRepository::class.java,
         )
         assertTrue(repositories.all(ExposedJdbcRepository::class.java::isAssignableFrom))
     }

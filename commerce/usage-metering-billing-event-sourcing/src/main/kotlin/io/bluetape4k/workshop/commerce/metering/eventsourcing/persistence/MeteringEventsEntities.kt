@@ -65,3 +65,19 @@ class AggregateSnapshotEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var lastEventHash by AggregateSnapshots.lastEventHash
     var createdAt by AggregateSnapshots.createdAt
 }
+
+class ProjectionGenerationEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<ProjectionGenerationEntity>(ProjectionGenerations)
+
+    var projectionName by ProjectionGenerations.projectionName
+    var generation by ProjectionGenerations.generation
+    var state by ProjectionGenerations.state
+    var checkpoint by ProjectionGenerations.checkpoint
+    var highWatermark by ProjectionGenerations.highWatermark
+    var ownerToken by ProjectionGenerations.ownerToken
+    var leaseUntil by ProjectionGenerations.leaseUntil
+    var failedPosition by ProjectionGenerations.failedPosition
+    var failureDigest by ProjectionGenerations.failureDigest
+    var createdAt by ProjectionGenerations.createdAt
+    var updatedAt by ProjectionGenerations.updatedAt
+}

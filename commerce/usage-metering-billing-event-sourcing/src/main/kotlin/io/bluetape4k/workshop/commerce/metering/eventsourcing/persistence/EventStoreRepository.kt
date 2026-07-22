@@ -152,5 +152,39 @@ class EventStoreRepository(
                 )
             }
 
+    override fun loadAfterGlobalPosition(afterPosition: Long, limit: Int): List<PersistedEvent> {
+        require(afterPosition >= 0) { "global_position_invalid" }
+        require(limit in 1..MAX_EVENT_PAGE_SIZE) { "event_page_size_invalid" }
+        return DomainEvents.selectAll()
+            .where { DomainEvents.globalPosition greater afterPosition }
+            .orderBy(DomainEvents.globalPosition to SortOrder.ASC)
+            .limit(limit)
+            .map { row ->
+                val stream = StreamKey(
+                    row[DomainEvents.tenantId],
+                    row[DomainEvents.streamType],
+                    row[DomainEvents.streamId],
+                )
+                PersistedEvent(
+                    eventId = row[DomainEvents.id].value,
+                    stream = stream,
+                    streamVersion = row[DomainEvents.streamVersion],
+                    globalPosition = row[DomainEvents.globalPosition],
+                    eventType = row[DomainEvents.eventType],
+                    schemaVersion = row[DomainEvents.schemaVersion],
+                    payload = row[DomainEvents.payload],
+                    metadata = row[DomainEvents.metadata],
+                    previousHash = row[DomainEvents.previousHash],
+                    eventHash = row[DomainEvents.eventHash],
+                    occurredAt = row[DomainEvents.occurredAt],
+                    recordedAt = row[DomainEvents.recordedAt],
+                )
+            }
+    }
+
     private data class LockedHead(val version: Long, val latestHash: String?)
+
+    private companion object {
+        const val MAX_EVENT_PAGE_SIZE = 1_000
+    }
 }
