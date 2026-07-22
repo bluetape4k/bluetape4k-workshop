@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.usagebilling.billing.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.usagebilling.billing.application.BillingInboxService
 import io.bluetape4k.workshop.commerce.usagebilling.billing.application.BillingPricingEvidenceService
@@ -18,6 +19,7 @@ import java.util.UUID
 
 @Tag("integration")
 @SpringBootTest
+@Suppress("VarCouldBeVal") // Spring injects these mutable lateinit collaborators after construction.
 class BillingInboxPostgresIntegrationTest {
     @Autowired
     private lateinit var pricingEvidence: BillingPricingEvidenceService
@@ -48,6 +50,9 @@ class BillingInboxPostgresIntegrationTest {
         transaction { charges.findAll().count() } shouldBeEqualTo chargeCount + 1
         transaction { outbox.findAll().count() } shouldBeEqualTo outboxCount + 1
         transaction { outbox.findAll().last().status } shouldBeEqualTo "PENDING"
+        val payload = transaction { outbox.findAll().last().payload }
+        requireNotNull(Jackson.defaultJsonMapper.readTree(payload).get("eventType")).asString() shouldBeEqualTo
+            "ChargeRated"
     }
 
     private fun <T : Any> transaction(block: () -> T): T =

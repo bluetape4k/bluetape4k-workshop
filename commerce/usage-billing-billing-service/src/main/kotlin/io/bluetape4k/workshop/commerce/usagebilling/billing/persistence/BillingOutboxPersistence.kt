@@ -5,6 +5,7 @@ package io.bluetape4k.workshop.commerce.usagebilling.billing.persistence
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxJournal
+import io.bluetape4k.workshop.commerce.usagebilling.billing.integration.BillingIntegrationEnvelope
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
@@ -207,16 +208,28 @@ class ExposedBillingInboxJournal : BillingInboxJournal {
             aggregateVersion = event.aggregateVersion
             createdAt = now
         }
+        val outboxEventId = Uuid.V7.nextId()
+        val envelope = BillingIntegrationEnvelope.create(
+            eventId = outboxEventId,
+            eventType = "ChargeRated",
+            schemaVersion = 1,
+            tenantId = event.tenantId,
+            aggregateId = event.aggregateId,
+            aggregateVersion = event.aggregateVersion,
+            payload = """{"sourceEventId":"${event.eventId}"}""",
+            occurredAt = now,
+            recordedAt = now,
+        )
         BillingOutboxEventEntity.new {
-            eventId = Uuid.V7.nextId()
+            eventId = outboxEventId
             tenantId = event.tenantId
-            eventType = "ChargeRated"
-            aggregateType = "Charge"
+            eventType = envelope.eventType
+            aggregateType = envelope.aggregateType
             aggregateId = event.aggregateId
             aggregateVersion = event.aggregateVersion
-            partitionKey = "${event.tenantId}|Charge|${event.aggregateId}"
-            payload = """{"sourceEventId":"${event.eventId}"}"""
-            payloadDigest = event.payloadDigest
+            partitionKey = envelope.partitionKey()
+            payload = envelope.wirePayload()
+            payloadDigest = envelope.wirePayloadDigest()
             status = "PENDING"
             attempt = 0
             nextAttemptAt = null
