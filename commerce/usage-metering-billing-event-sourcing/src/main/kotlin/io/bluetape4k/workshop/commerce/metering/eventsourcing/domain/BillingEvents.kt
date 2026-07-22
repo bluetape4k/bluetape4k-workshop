@@ -17,6 +17,16 @@ data class BillingCloseStarted(val cutoff: Instant) : DomainEvent {
     override val schemaVersion: Int = 1
 }
 
+data class BillingCloseBatchRated(
+    val throughOccurredAt: Instant,
+    val throughEventId: String,
+    val batchAmount: BigDecimal,
+    val currency: String,
+) : DomainEvent {
+    override val eventType: String = "billing-period.close-batch-rated"
+    override val schemaVersion: Int = 1
+}
+
 data class BillingPeriodFinalized(val total: BigDecimal, val currency: String) : DomainEvent {
     override val eventType: String = "billing-period.finalized"
     override val schemaVersion: Int = 1
