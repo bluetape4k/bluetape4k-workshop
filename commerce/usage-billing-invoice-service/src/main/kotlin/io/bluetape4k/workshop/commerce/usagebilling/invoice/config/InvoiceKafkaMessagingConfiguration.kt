@@ -31,6 +31,9 @@ class InvoiceKafkaMessagingConfiguration {
                 ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG to StringSerializer::class.java,
                 ProducerConfig.ACKS_CONFIG to "all",
                 ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG to true,
+                ProducerConfig.MAX_BLOCK_MS_CONFIG to PRODUCER_FAILURE_TIMEOUT_MS,
+                ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG to PRODUCER_REQUEST_TIMEOUT_MS,
+                ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG to PRODUCER_FAILURE_TIMEOUT_MS,
             ),
         )
 
@@ -59,6 +62,11 @@ class InvoiceKafkaMessagingConfiguration {
             factory.setConsumerFactory(invoiceConsumerFactory)
             factory.containerProperties.ackMode = ContainerProperties.AckMode.RECORD
         }
+
+    private companion object {
+        const val PRODUCER_FAILURE_TIMEOUT_MS = 5_000
+        const val PRODUCER_REQUEST_TIMEOUT_MS = 3_000
+    }
 }
 
 @ConfigurationProperties("usage-billing.invoice.kafka")

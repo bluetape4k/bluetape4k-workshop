@@ -28,6 +28,24 @@ class QueryKafkaConsumerTest {
     }
 
     @Test
+    fun `decodes additive schema v2 through the compatibility boundary`() {
+        val event = decoder.decode(envelope("InvoiceIssued", schemaVersion = 2))
+
+        event.eventType shouldBeEqualTo "InvoiceIssued"
+        event.aggregateVersion shouldBeEqualTo 1L
+    }
+
+    @Test
+    fun `unknown mandatory schema retains metadata for durable quarantine`() {
+        val failure = assertFailsWith<PermanentQueryInboundException> {
+            decoder.decode(envelope("InvoiceIssued", schemaVersion = 99))
+        }
+
+        failure.quarantine.eventType shouldBeEqualTo "InvoiceIssued"
+        failure.quarantine.reason shouldBeEqualTo "unsupported_schema:99"
+    }
+
+    @Test
     fun `rejects altered payload with enough metadata for durable quarantine`() {
         val failure = assertFailsWith<PermanentQueryInboundException> {
             decoder.decode(envelope("InvoiceIssued", payloadDigest = "0".repeat(64)))
@@ -80,12 +98,13 @@ class QueryKafkaConsumerTest {
     private fun envelope(
         eventType: String,
         payloadDigest: String = digestOf(PAYLOAD),
+        schemaVersion: Int = 1,
     ): String =
         Jackson.defaultJsonMapper.writeValueAsString(
             linkedMapOf(
                 "eventId" to "018f4a40-7d3e-7b3a-8c5b-7f0f9b2e1a01",
                 "eventType" to eventType,
-                "schemaVersion" to 1,
+                "schemaVersion" to schemaVersion,
                 "tenantId" to "tenant-a",
                 "aggregateType" to "Invoice",
                 "aggregateId" to "invoice-1",

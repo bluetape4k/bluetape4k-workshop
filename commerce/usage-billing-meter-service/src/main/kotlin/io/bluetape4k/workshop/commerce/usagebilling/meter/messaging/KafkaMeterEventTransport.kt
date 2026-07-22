@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.usagebilling.meter.messaging
 
+import org.springframework.kafka.KafkaException
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Component
 import java.util.concurrent.ExecutionException
@@ -16,6 +17,8 @@ class KafkaMeterEventTransport(
         } catch (failure: TimeoutException) {
             throw MeterEventTransportFailure(failure)
         } catch (failure: ExecutionException) {
+            throw MeterEventTransportFailure(failure)
+        } catch (failure: KafkaException) {
             throw MeterEventTransportFailure(failure)
         } catch (failure: InterruptedException) {
             Thread.currentThread().interrupt()
