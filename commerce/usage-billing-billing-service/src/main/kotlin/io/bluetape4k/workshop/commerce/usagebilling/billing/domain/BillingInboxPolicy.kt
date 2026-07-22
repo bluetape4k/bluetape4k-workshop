@@ -44,6 +44,22 @@ data class BillingPriceEvidence(
     }
 }
 
+data class BillingPriceEvidenceEvent(
+    val eventId: UUID,
+    val payloadDigest: String,
+    val evidence: BillingPriceEvidence,
+) {
+    init {
+        payloadDigest.requireNotBlank("payloadDigest")
+    }
+}
+
+enum class BillingPriceEvidenceOutcome {
+    APPLIED,
+    DUPLICATE,
+    QUARANTINED,
+}
+
 enum class BillingInboxOutcome {
     APPLIED,
     DUPLICATE,
