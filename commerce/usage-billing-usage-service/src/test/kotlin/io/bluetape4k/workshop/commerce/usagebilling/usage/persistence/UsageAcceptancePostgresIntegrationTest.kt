@@ -40,6 +40,9 @@ class UsageAcceptancePostgresIntegrationTest {
     private lateinit var priceEvidenceInbox: UsagePriceEvidenceInboxRepository
 
     @Autowired
+    private lateinit var outboxJournal: ExposedUsageOutboxJournal
+
+    @Autowired
     private lateinit var transactionManager: PlatformTransactionManager
 
     @Test
@@ -83,6 +86,29 @@ class UsageAcceptancePostgresIntegrationTest {
             PriceEvidenceInboxOutcome.QUARANTINED
 
         transaction { priceEvidenceInbox.findAll().count() } shouldBeEqualTo 1
+    }
+
+    @Test
+    fun `an expired Usage outbox claim can be reclaimed while an active claim cannot`() {
+        val meterCode = "api_calls_${UUID.randomUUID()}"
+        priceEvidence.record(PriceEvidence("tenant-a", meterCode, "USD", BigDecimal("0.10"), NOW))
+        val result = usage.accept(
+            AcceptUsageCommand(
+                tenantId = "tenant-a",
+                sourceSystem = "meter-agent",
+                sourceEventId = "source_${UUID.randomUUID()}",
+                meterCode = meterCode,
+                currency = "USD",
+                quantity = BigDecimal.ONE,
+                occurredAt = NOW,
+            ),
+        )
+
+        outboxJournal.claim("worker-a", NOW, 100).map { it.eventId }.contains(result.eventId) shouldBeEqualTo true
+        outboxJournal.claim("worker-b", NOW, 100).map { it.eventId }.contains(result.eventId) shouldBeEqualTo false
+        outboxJournal.claim("worker-b", NOW.plusSeconds(31), 100)
+            .map { it.eventId }
+            .contains(result.eventId) shouldBeEqualTo true
     }
 
     private fun <T : Any> transaction(block: () -> T): T =
