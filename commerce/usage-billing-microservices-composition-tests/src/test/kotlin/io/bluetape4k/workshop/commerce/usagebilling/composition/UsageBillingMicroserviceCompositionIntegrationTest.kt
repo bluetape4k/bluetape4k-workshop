@@ -27,9 +27,58 @@ class UsageBillingMicroserviceCompositionIntegrationTest {
         }
     }
 
+    @Test
+    fun `duplicate Usage delivery leaves one Billing financial effect`() {
+        UsageBillingMicroserviceFixture().use { fixture ->
+            fixture.start()
+            fixture.activatePrice(DUPLICATE_TENANT, METER_CODE, BigDecimal("0.10"))
+            fixture.publishMeterEvents()
+            await().atMost(TIMEOUT).untilAsserted {
+                checkNotNull(fixture.priceEvidence(DUPLICATE_TENANT, METER_CODE))
+                fixture.billingHasPriceEvidence(DUPLICATE_TENANT, METER_CODE) shouldBeEqualTo true
+            }
+            fixture.acceptUsage(DUPLICATE_TENANT, METER_CODE, DUPLICATE_SOURCE_EVENT_ID)
+            fixture.publishUsageEvents()
+            await().atMost(TIMEOUT).untilAsserted { fixture.chargeCount() shouldBeEqualTo 1L }
+
+            fixture.redeliverLatestUsageEvent()
+
+            await().during(Duration.ofSeconds(2)).atMost(TIMEOUT).untilAsserted {
+                fixture.chargeCount() shouldBeEqualTo 1L
+            }
+        }
+    }
+
+    @Test
+    fun `price and usage produce one charge one invoice line and Query projections across Kafka`() {
+        UsageBillingMicroserviceFixture().use { fixture ->
+            fixture.start()
+            fixture.activatePrice(PARITY_TENANT, METER_CODE, BigDecimal("0.10"))
+            fixture.publishMeterEvents()
+            await().atMost(TIMEOUT).untilAsserted {
+                checkNotNull(fixture.priceEvidence(PARITY_TENANT, METER_CODE))
+                fixture.billingHasPriceEvidence(PARITY_TENANT, METER_CODE) shouldBeEqualTo true
+            }
+
+            fixture.acceptUsage(PARITY_TENANT, METER_CODE)
+            fixture.publishUsageEvents()
+            await().atMost(TIMEOUT).untilAsserted { fixture.chargeCount() shouldBeEqualTo 1L }
+
+            fixture.publishBillingEvents()
+            await().atMost(TIMEOUT).untilAsserted { fixture.invoiceLineCount() shouldBeEqualTo 1L }
+
+            fixture.publishInvoiceEvents()
+            await().atMost(TIMEOUT).untilAsserted { check(fixture.queryAppliedEventCount() >= 4) }
+        }
+    }
+
     private companion object {
+        val TIMEOUT: Duration = Duration.ofSeconds(20)
         const val METER_TOPIC = "meter.events.v1"
         const val TENANT = "tenant-composition"
+        const val DUPLICATE_TENANT = "tenant-duplicate"
+        const val PARITY_TENANT = "tenant-parity"
         const val METER_CODE = "api_calls"
+        const val DUPLICATE_SOURCE_EVENT_ID = "source-duplicate-1"
     }
 }
