@@ -16,6 +16,7 @@ class MeterPriceEvidenceDecoderTest {
         val evidence = decoder.decode(wirePayload())
 
         evidence.tenantId shouldBeEqualTo "tenant-a"
+        evidence.payloadDigest shouldBeEqualTo digestOf(PAYLOAD)
         evidence.evidence.meterCode shouldBeEqualTo "api_calls"
         evidence.evidence.unitPrice.toPlainString() shouldBeEqualTo "0.10"
     }
