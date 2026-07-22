@@ -5,6 +5,7 @@ package io.bluetape4k.workshop.commerce.usagebilling.billing.persistence
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxJournal
+import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingPriceEvidence
 import io.bluetape4k.workshop.commerce.usagebilling.billing.integration.BillingIntegrationEnvelope
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
@@ -47,10 +48,14 @@ object BillingOutboxEvents : UUIDTable("billing_outbox_event", "outbox_event_id"
 }
 
 object BillingPricingEvidence : UUIDTable("billing_pricing_evidence", "pricing_evidence_id") {
+    val tenantId = varchar("tenant_id", 64)
     val meterCode = varchar("meter_code", 64)
+    val currency = varchar("currency", 3)
+    val unitPrice = decimal("unit_price", 19, 6)
+    val effectiveAt = timestamp("effective_at")
 
     init {
-        uniqueIndex(meterCode)
+        uniqueIndex(tenantId, meterCode, currency, effectiveAt)
     }
 }
 
@@ -74,6 +79,10 @@ object BillingCharges : UUIDTable("billing_charge", "charge_id") {
     val tenantId = varchar("tenant_id", 64)
     val aggregateId = varchar("aggregate_id", 128)
     val aggregateVersion = long("aggregate_version")
+    val currency = varchar("currency", 3)
+    val unitPrice = decimal("unit_price", 19, 6)
+    val quantity = decimal("quantity", 19, 6)
+    val amount = decimal("amount", 19, 6)
     val createdAt = timestamp("created_at")
 
     init {
@@ -105,7 +114,11 @@ class BillingOutboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
 class BillingPricingEvidenceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<BillingPricingEvidenceEntity>(BillingPricingEvidence)
 
+    var tenantId by BillingPricingEvidence.tenantId
     var meterCode by BillingPricingEvidence.meterCode
+    var currency by BillingPricingEvidence.currency
+    var unitPrice by BillingPricingEvidence.unitPrice
+    var effectiveAt by BillingPricingEvidence.effectiveAt
 }
 
 class BillingInboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -127,6 +140,10 @@ class BillingChargeEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var tenantId by BillingCharges.tenantId
     var aggregateId by BillingCharges.aggregateId
     var aggregateVersion by BillingCharges.aggregateVersion
+    var currency by BillingCharges.currency
+    var unitPrice by BillingCharges.unitPrice
+    var quantity by BillingCharges.quantity
+    var amount by BillingCharges.amount
     var createdAt by BillingCharges.createdAt
 }
 
@@ -162,8 +179,24 @@ class BillingPricingEvidenceRepository :
         BillingPricingEvidenceEntity::class.java,
     ) {
     fun append(meterCode: String) {
+        append(
+            BillingPriceEvidence(
+                tenantId = "tenant-a",
+                meterCode = meterCode,
+                currency = "USD",
+                unitPrice = java.math.BigDecimal.ONE,
+                effectiveAt = Instant.EPOCH,
+            ),
+        )
+    }
+
+    fun append(evidence: BillingPriceEvidence) {
         BillingPricingEvidenceEntity.new {
-            this.meterCode = meterCode
+            tenantId = evidence.tenantId
+            meterCode = evidence.meterCode
+            currency = evidence.currency
+            unitPrice = evidence.unitPrice
+            effectiveAt = evidence.effectiveAt
         }
     }
 }
@@ -174,11 +207,23 @@ class BillingInboxRepository :
 
 @Repository
 class ExposedBillingInboxJournal : BillingInboxJournal {
-    override val pricingMeters: Set<String>
-        get() = BillingPricingEvidenceEntity.all().map { it.meterCode }.toSet()
-
     override val appliedEventIds: Set<UUID>
         get() = BillingInboxEventEntity.find { BillingInboxEvents.status eq "APPLIED" }.map { it.eventId }.toSet()
+
+    override fun priceEvidence(tenantId: String, meterCode: String, currency: String): BillingPriceEvidence? =
+        BillingPricingEvidenceEntity.find {
+            (BillingPricingEvidence.tenantId eq tenantId) and
+                (BillingPricingEvidence.meterCode eq meterCode) and
+                (BillingPricingEvidence.currency eq currency)
+        }.firstOrNull()?.let { evidence ->
+            BillingPriceEvidence(
+                tenantId = evidence.tenantId,
+                meterCode = evidence.meterCode,
+                currency = evidence.currency,
+                unitPrice = evidence.unitPrice,
+                effectiveAt = evidence.effectiveAt,
+            )
+        }
 
     override fun digestFor(eventId: UUID): String? =
         BillingInboxEventEntity.find { BillingInboxEvents.eventId eq eventId }.firstOrNull()?.payloadDigest
@@ -192,6 +237,10 @@ class ExposedBillingInboxJournal : BillingInboxJournal {
 
     override fun apply(event: BillingInboxEvent) {
         val now = Instant.now()
+        val price = checkNotNull(priceEvidence(event.tenantId, event.meterCode, event.currency)) {
+            "pricing evidence must exist before rating"
+        }
+        val amount = price.unitPrice.multiply(event.quantity)
         BillingInboxEventEntity.new {
             eventId = event.eventId
             tenantId = event.tenantId
@@ -206,6 +255,10 @@ class ExposedBillingInboxJournal : BillingInboxJournal {
             tenantId = event.tenantId
             aggregateId = event.aggregateId
             aggregateVersion = event.aggregateVersion
+            currency = event.currency
+            unitPrice = price.unitPrice
+            quantity = event.quantity
+            this.amount = amount
             createdAt = now
         }
         val outboxEventId = Uuid.V7.nextId()
@@ -216,7 +269,9 @@ class ExposedBillingInboxJournal : BillingInboxJournal {
             tenantId = event.tenantId,
             aggregateId = event.aggregateId,
             aggregateVersion = event.aggregateVersion,
-            payload = """{"sourceEventId":"${event.eventId}"}""",
+            payload = """{"sourceEventId":"${event.eventId}",""" +
+                """"currency":"${event.currency}",""" +
+                """"amount":"$amount"}""",
             occurredAt = now,
             recordedAt = now,
         )

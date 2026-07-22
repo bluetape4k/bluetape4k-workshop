@@ -21,7 +21,9 @@ class BillingInboxService(
         } ?: handleUnseen(event)
 
     private fun handleUnseen(event: BillingInboxEvent): BillingInboxOutcome {
-        if (event.meterCode !in journal.pricingMeters) return BillingInboxOutcome.DEFERRED
+        if (journal.priceEvidence(event.tenantId, event.meterCode, event.currency) == null) {
+            return BillingInboxOutcome.DEFERRED
+        }
         return when (event.aggregateVersion) {
             journal.expectedVersion(event.tenantId, event.aggregateId) -> {
                 journal.apply(event)
