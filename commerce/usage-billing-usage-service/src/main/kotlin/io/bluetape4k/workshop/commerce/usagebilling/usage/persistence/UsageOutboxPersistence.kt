@@ -8,21 +8,33 @@ import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidenceIn
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageAcceptanceJournal
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageOutboxRecord
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageRecord
+import io.bluetape4k.workshop.commerce.usagebilling.usage.messaging.UsageOutboxJournal
+import io.bluetape4k.workshop.commerce.usagebilling.usage.messaging.UsageOutboxLease
+import io.bluetape4k.workshop.commerce.usagebilling.usage.messaging.UsageOutboxStatus
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.springframework.stereotype.Repository
+import org.springframework.transaction.annotation.Transactional
+import java.time.Duration
+import java.time.Instant
 import java.util.UUID
 
 object UsageOutboxEvents : UUIDTable("usage_outbox_event", "outbox_event_id") {
@@ -271,5 +283,87 @@ class ExposedUsageAcceptanceJournal : UsageAcceptanceJournal {
             createdAt = outboxRecord.createdAt
             updatedAt = outboxRecord.createdAt
         }
+    }
+}
+
+@Repository
+class ExposedUsageOutboxJournal : UsageOutboxJournal {
+    @Transactional
+    override fun claim(owner: String, now: Instant, limit: Int): List<UsageOutboxLease> =
+        UsageOutboxEvents.selectAll()
+            .where { claimableAt(now) }
+            .orderBy(UsageOutboxEvents.createdAt to SortOrder.ASC, UsageOutboxEvents.id to SortOrder.ASC)
+            .limit(limit)
+            .mapNotNull { row ->
+                val eventId = row[UsageOutboxEvents.eventId]
+                val claimed = UsageOutboxEvents.update({
+                    (UsageOutboxEvents.eventId eq eventId) and claimableAt(now)
+                }) {
+                    it[status] = UsageOutboxStatus.CLAIMED.name
+                    it[claimOwner] = owner
+                    it[claimUntil] = now.plus(CLAIM_LEASE)
+                    it[updatedAt] = now
+                }
+                if (claimed != 1) return@mapNotNull null
+                UsageOutboxEvents.selectAll()
+                    .where { UsageOutboxEvents.eventId eq eventId }
+                    .singleOrNull()
+                    ?.let { claimedRow ->
+                        UsageOutboxLease(
+                            eventId = claimedRow[UsageOutboxEvents.eventId],
+                            partitionKey = claimedRow[UsageOutboxEvents.partitionKey],
+                            payload = claimedRow[UsageOutboxEvents.payload],
+                        )
+                    }
+            }
+
+    @Transactional
+    override fun markPublished(eventId: UUID, owner: String, now: Instant): Boolean =
+        UsageOutboxEvents.update({ claimedBy(owner, eventId, now) }) {
+            it[status] = UsageOutboxStatus.PUBLISHED.name
+            it[claimOwner] = null
+            it[claimUntil] = null
+            it[nextAttemptAt] = null
+            it[updatedAt] = now
+        } == 1
+
+    @Transactional
+    override fun markRetryWait(eventId: UUID, owner: String, now: Instant): Boolean =
+        UsageOutboxEvents.selectAll()
+            .where { claimedBy(owner, eventId, now) }
+            .singleOrNull()
+            ?.let { row ->
+                val attempts = row[UsageOutboxEvents.attempt] + 1
+                UsageOutboxEvents.update({ claimedBy(owner, eventId, now) }) {
+                    it[attempt] = attempts
+                    it[status] = if (attempts >= MAX_ATTEMPTS) {
+                        UsageOutboxStatus.QUARANTINED.name
+                    } else {
+                        UsageOutboxStatus.RETRY_WAIT.name
+                    }
+                    it[claimOwner] = null
+                    it[claimUntil] = null
+                    it[nextAttemptAt] = now.plus(RETRY_DELAY)
+                    it[updatedAt] = now
+                } == 1
+            } ?: false
+
+    private fun claimableAt(now: Instant): Op<Boolean> =
+        (UsageOutboxEvents.status eq UsageOutboxStatus.PENDING.name) or
+            ((UsageOutboxEvents.status eq UsageOutboxStatus.RETRY_WAIT.name) and
+                (UsageOutboxEvents.nextAttemptAt lessEq now)) or
+            ((UsageOutboxEvents.status eq UsageOutboxStatus.CLAIMED.name) and
+                (UsageOutboxEvents.claimUntil lessEq now))
+
+    private fun claimedBy(owner: String, eventId: UUID, now: Instant): Op<Boolean> =
+        (UsageOutboxEvents.eventId eq eventId) and
+            (UsageOutboxEvents.status eq UsageOutboxStatus.CLAIMED.name) and
+            (UsageOutboxEvents.claimOwner eq owner) and
+            (UsageOutboxEvents.claimUntil greater now)
+
+    private companion object {
+        val CLAIM_LEASE: Duration = Duration.ofSeconds(30)
+        val RETRY_DELAY: Duration = Duration.ofSeconds(1)
+        const val MAX_ATTEMPTS = 3
     }
 }
