@@ -4,7 +4,10 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxJournal
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxOutcome
+import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingPriceEvidence
 import org.junit.jupiter.api.Test
+import java.math.BigDecimal
+import java.time.Instant
 import java.util.UUID
 
 class BillingInboxServiceTest {
@@ -51,10 +54,13 @@ class BillingInboxServiceTest {
         BillingInboxEvent(eventId, "tenant-a", "Usage", "usage-1", version, digest, meterCode)
 
     private class InMemoryBillingInboxJournal : BillingInboxJournal {
-        override val pricingMeters: Set<String> = setOf("api_calls")
         override val appliedEventIds = mutableSetOf<UUID>()
         private val digests = mutableMapOf<UUID, String>()
         private var expectedVersion = 1L
+
+        override fun priceEvidence(tenantId: String, meterCode: String, currency: String): BillingPriceEvidence? =
+            BillingPriceEvidence(tenantId, meterCode, currency, BigDecimal("0.10"), Instant.EPOCH)
+                .takeIf { meterCode == "api_calls" }
 
         override fun digestFor(eventId: UUID): String? = digests[eventId]
 

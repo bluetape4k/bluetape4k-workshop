@@ -7,6 +7,7 @@ import io.bluetape4k.workshop.commerce.usagebilling.billing.application.BillingI
 import io.bluetape4k.workshop.commerce.usagebilling.billing.application.BillingPricingEvidenceService
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxOutcome
+import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingPriceEvidence
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -15,6 +16,8 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
+import java.math.BigDecimal
+import java.time.Instant
 import java.util.UUID
 
 @Tag("integration")
@@ -39,15 +42,21 @@ class BillingInboxPostgresIntegrationTest {
     @Test
     fun `accepted usage event creates one append-only charge and one pending outbox event`() {
         val meterCode = "api_calls_${UUID.randomUUID()}"
-        pricingEvidence.record(meterCode)
+        pricingEvidence.record(
+            BillingPriceEvidence("tenant-a", meterCode, "USD", BigDecimal("0.10"), Instant.EPOCH),
+        )
         val chargeCount = transaction { charges.findAll().count() }
         val outboxCount = transaction { outbox.findAll().count() }
-        val event = BillingInboxEvent(UUID.randomUUID(), "tenant-a", "Usage", "usage-1", 1, "digest-a", meterCode)
+        val event = BillingInboxEvent(
+            UUID.randomUUID(), "tenant-a", "Usage", "usage-1", 1, "digest-a", meterCode,
+            quantity = BigDecimal.TWO,
+        )
 
         inbox.handle(event) shouldBeEqualTo BillingInboxOutcome.APPLIED
         inbox.handle(event) shouldBeEqualTo BillingInboxOutcome.DUPLICATE
 
         transaction { charges.findAll().count() } shouldBeEqualTo chargeCount + 1
+        transaction { charges.findAll().last().amount } shouldBeEqualTo BigDecimal("0.20")
         transaction { outbox.findAll().count() } shouldBeEqualTo outboxCount + 1
         transaction { outbox.findAll().last().status } shouldBeEqualTo "PENDING"
         val payload = transaction { outbox.findAll().last().payload }
