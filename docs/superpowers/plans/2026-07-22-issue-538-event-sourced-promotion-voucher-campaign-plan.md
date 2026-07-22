@@ -220,6 +220,7 @@
 
 - [ ] **RED:** duplicate, delayed batch, handler interruption, poison event, lease expiry, stale fencing token, checkpoint crash-before/after-commit을 검사한다.
 - [ ] lease TTL 15초/renew 5초와 monotonically increasing fencing token을 PostgreSQL CAS로 발급한다.
+- [ ] renew/release도 `(owner, fencingToken)` CAS로만 수행하고 release 때 lease row/token을 삭제·초기화하지 않는다. takeover 뒤 이전 process의 shutdown release가 새 owner lease를 바꾸지 못함을 PostgreSQL test로 증명한다.
 - [ ] handler는 `(generation, eventId)` dedup과 read-model mutation, checkpoint advance를 같은 transaction에서 수행한다.
 - [ ] projector는 committed head까지 keyset batch로 읽고 token/revision을 모든 mutation predicate에 포함한다.
 - [ ] projection batch는 최대 200 events 또는 2 MiB, transaction 2초, idle poll backoff 100ms–2초를 hard cap으로 둔다.
@@ -254,14 +255,18 @@
 **의존:** Tasks 7, 8
 **write scope:** `operations/**`, configuration, operational tests
 
-- [ ] **RED:** foreground/background/readiness starvation, startup DB failure, recoverable projection lag, global event-store failure, graceful shutdown, maintenance flood, audit immutability를 검사한다.
-- [ ] Hikari 20을 foreground 14, projection 3, rebuild 1, maintenance 1, readiness 1 permit으로 분리한다. foreground holders+waiters 128, permit wait 250ms, lock 500ms, statement 3초를 hard cap으로 두고 acquire timeout/queue metric을 노출한다.
-- [ ] liveness는 process-local, readiness는 event-store authority와 reserved permit, projection은 detail/degraded 상태로 분리한다.
-- [ ] lifecycle은 intake 차단 → worker cancellation → in-flight drain → lease release 순서로 종료하고 cancellation을 전파한다.
+- [ ] **RED:** foreground/background/readiness starvation, startup 진행/DB·schema failure, aggregate 단독 degradation, projection degradation, 모든 rebuild state, graceful shutdown, maintenance flood, 각 operator action audit 원자성을 검사한다.
+- [ ] Hikari 20을 foreground 14, projection 3, rebuild 1, maintenance 1, readiness 1 permit으로 분리한다. virtual thread도 connection 요청 전에 permit을 얻고, foreground holders+waiters 128, permit wait 250ms, lock 500ms, statement 3초를 hard cap으로 둔다.
+- [ ] admission/250ms 초과는 Hikari wait로 넘기지 않고 `DATABASE_BULKHEAD_REJECTED`/503과 `Retry-After: 1`로 종료한다. saturation test는 permit 전 Hikari pending/active 불변과 readiness reserved connection 비침범을 증명한다.
+- [ ] management endpoint matrix로 startup 진행은 liveness UP/readiness OUT_OF_SERVICE, startup integrity/DB failure는 UP/DOWN, aggregate/projection degradation과 모든 rebuild state는 UP/UP+custom DEGRADED, shutdown은 UP/OUT_OF_SERVICE임을 고정한다.
+- [ ] application-owned lifecycle scope가 projector/rebuild/maintenance를 소유한다. migration, schema/upcaster integrity, PostgreSQL read/write probe 성공 뒤에만 worker와 readiness를 시작한다.
+- [ ] shutdown은 새 lease/batch/admission 차단 → worker cancellation → in-flight drain → fenced lease release 순서로 수행하고 `CancellationException`을 재전파하며 `finally`에서 local resource를 정리한다.
 - [ ] shutdown은 readiness를 먼저 REFUSING_TRAFFIC으로 바꾸고 10초 bounded drain 뒤 남은 transaction rollback, lease/permit/connection cleanup을 검증한다.
-- [ ] Micrometer tag는 bounded enum/operation만 사용하고 tenant, stream id, event id, principal을 tag에 넣지 않는다.
+- [ ] `voucher_projection_lag_events`, `voucher_projection_lag_age_seconds`, `voucher_projection_checkpoint_stalled_seconds`, `voucher_projection_poison_events`, `voucher_projection_retry_total`, `voucher_rebuild_progress_ratio`, `voucher_rebuild_duration_seconds`, `voucher_db_bulkhead_active`, `voucher_db_bulkhead_queued`, `voucher_db_bulkhead_rejected_total`과 Hikari/readiness metric을 제공한다.
+- [ ] Micrometer tag는 bounded `projection/state/outcome/reasonClass`만 사용하고 tenant, generation, campaign, stream/event/principal id를 넣지 않는다.
 - [ ] poison 즉시, checkpoint stall 30초 즉시, lag age 60초가 5분 지속, rebuild FAILED/10분 초과, readiness DOWN 1분, bulkhead rejection 5분간 1% 초과 alert 계약을 metric test와 runbook에 연결한다.
-- [ ] 모든 operator mutation은 actor digest, tenant, request/idempotency digest, action, target projection/generation, expected fencing token, before/after state, checkpoint/stream position, outcome, bounded reason class, occurred-at을 mutation과 같은 transaction의 append-only audit에 남긴다. audit insert 실패 시 mutation도 rollback한다.
+- [ ] rebuild start/cancel/resume/activate, poison retry, reconciliation 각각 actor digest, tenant, request/idempotency digest, action, target projection/generation, expected fencing token, before/after state, checkpoint/stream position, outcome, bounded reason class, occurred-at을 mutation과 같은 transaction의 append-only audit에 남긴다.
+- [ ] 각 action의 field coverage와 audit insert 실패 시 domain mutation도 rollback되는 PostgreSQL negative test를 둔다.
 - [ ] virtual-time unit test와 Awaitility integration test를 모두 통과시킨다.
 - [ ] rollback: worker별 enable property와 permit default를 문서화해 operational disable이 가능하게 한다.
 - [ ] Lore commit: `Reserve database capacity for commands and readiness`.
@@ -272,10 +277,11 @@
 **의존:** Tasks 5, 7, 9
 **write scope:** API models/controllers/exception handler와 HTTP integration tests
 
-- [ ] **RED:** #534 command 성공/실패 fixture, same-key replay, conflict, validation, not-found, projection pending, rebuild start/status/cancel/resume, stale token 412, activation 선행 cancel 409를 live WebTestClient로 검사한다.
+- [ ] **RED:** #534 command 성공/실패 fixture, same-key replay, conflict, validation, not-found, projection pending, rebuild start/status/cancel/resume, poison retry, reconciliation, stale token 412, activation 선행 cancel 409를 live WebTestClient로 검사한다.
 - [ ] 기존 #534 body와 ETag를 바꾸지 않고 additive `X-Stream-Position`, `X-Projection-Position`, `X-Projection-Lag` header만 추가한다.
 - [ ] query의 선택적 `X-Min-Stream-Position`은 최대 5초 기다린다. 미도달 시 `202 PROJECTION_PENDING`, `Retry-After: 1`, 현재 position/lag를 반환하며 GET caller만 최대 5회 retry하고 command를 재제출하지 않는다.
 - [ ] rebuild start/status/cancel/resume endpoint는 idempotency key와 expected active-generation token을 요구하며 stale token 412와 activation 선행 cancel 409를 안정적으로 반환한다.
+- [ ] poison retry는 최대 5회, 1–30초 exponential backoff를 적용하고 성공 전 failure row를 보존한다. 성공 transaction은 projection row, dedup identity, checkpoint, failure `RESOLVED`, operator audit을 원자 commit한다.
 - [ ] management와 application WebTestClient 모두 JDK connector와 공통 `HTTP_TIMEOUT = 60.seconds`를 사용한다.
 - [ ] controller는 service transaction을 누설하지 않고 request/response DTO만 변환한다.
 - [ ] exception handler가 SQL/internal token/digest/PII를 노출하지 않는지 negative test를 둔다.
@@ -289,10 +295,13 @@
 **의존:** Task 10
 **write scope:** SSE/filter/static UI/browser tests
 
-- [ ] **RED:** SSE resume/heartbeat/overflow, projection pending UI, last-known projection 유지, GET-only 최대 5회 retry, state별 action, stale revision/token, retry-vs-rebuild 안내, keyboard/ARIA를 검사한다.
-- [ ] SSE event는 bounded public descriptor만 포함하고 stream/global/projection position을 구분한다.
+- [ ] **RED:** #534 snapshot-first SSE와 cursor reconnect, heartbeat/overflow, projection pending UI, last-known projection 유지, GET-only 최대 5회 retry, state별 action, stale revision/token, retry-vs-rebuild 안내, keyboard/ARIA를 검사한다.
+- [ ] SSE event는 bounded public descriptor만 포함하고 snapshot을 먼저 보낸 뒤 cursor 기반 reconnect에서 stream/global/projection position을 구분한다.
+- [ ] `X-Min-Stream-Position`이 없으면 즉시 query한다. 있으면 browser가 pending/manual-refresh 분기를 generic 2xx보다 먼저 수행하며 retry 소진 뒤 stale 표시와 수동 refresh를 제공한다.
 - [ ] browser는 `PROJECTION_PENDING`을 성공 snapshot으로 렌더링하지 않고 마지막 verified projection과 lag banner를 유지한다.
-- [ ] poison/rebuild/lag 상태별 허용 operator action과 destructive confirmation을 명시하고 stale token/revision을 재조회로 처리한다.
+- [ ] poison/rebuild/lag 상태별 허용 operator action과 destructive confirmation을 명시한다. 412는 최신 state를 다시 읽되 기존 mutation을 자동 재제출하지 않고 사용자 재확인을 요구한다.
+- [ ] 진행 중 중복 action을 disable하고 같은 idempotency key/token을 유지한다. projection recovery와 business reconciliation은 별도 panel/action으로 표시한다.
+- [ ] `aria-live`, text status, disabled-action reason과 색상·숫자에 의존하지 않는 screen-reader 문구를 keyboard-only/ARIA contract test로 검증한다.
 - [ ] operator filter는 #534의 loopback/allowed-host, constant-time secret+guard, same-origin, JSON content, role/CSRF/mutation method, bounded pagination/admission을 fail closed로 검증하고 audit actor surrogate를 request scope에 전달한다.
 - [ ] deterministic browser contract test와 live SSE integration test를 통과시킨다.
 - [ ] rollback: static UI 없이도 HTTP/SSE API가 완전하게 동작하도록 progressive enhancement를 유지한다.
@@ -354,11 +363,13 @@
 **write scope:** module/root/commerce docs, diagram assets/scripts, workflow/smoke/nightly, lesson
 
 - [ ] module README 영문/국문에 실행법, Java 25, architecture, event envelope, consistency/lag, rebuild, security, failure injection, performance profile을 같은 구조로 기록한다.
+- [ ] README/API 표에 position headers, 202 body/retry/manual refresh, SSE snapshot/cursor, rebuild/retry/reconciliation endpoint와 state-action matrix를 기록하고 validator가 실제 route/error constant와 대조한다.
 - [ ] `bluetape-diagram` contract로 architecture, command→projection, rebuild state diagram의 SVG/PNG와 generator를 만든다.
 - [ ] root/commerce README의 module table과 commands를 양 언어에서 갱신한다.
 - [ ] validator가 README parity, image reference/assets, module registration, Java 25, BOM-only dependency, workflow/smoke/nightly/Kover artifact registration을 검사한다.
 - [ ] `scripts/smoke-validate.sh`에는 container-free `test`, Examples full/nightly에는 `integrationTest`와 Kover/JUnit artifact를 등록한다.
 - [ ] repo `AGENTS.md`는 per-module 목록을 갖지 않으므로 변경하지 않고 validator/lesson에 N/A 근거를 기록한다. `settings.gradle.kts`도 auto-registration 검증만 하고 수정하지 않는다.
+- [ ] README runbook에 `health/failure 확인 → fix/deploy → targeted retry 또는 rebuild → checkpoint/digest 검증 → activation/active 유지·rollback → reconciliation`을 기록하고 alert threshold와 operator audit 조회를 연결한다.
 - [ ] lesson에 adopted/rejected approach, PostgreSQL proof, review findings, rerun commands, rollback boundary를 한국어로 기록한다.
 - [ ] generator/validator, `./gradlew projects`, README link/image check, `git diff --check`를 통과시킨다.
 - [ ] rollback: module row/workflow group/artifact/diagram reference를 한 세트로 revert한다.
