@@ -144,11 +144,12 @@ case "${1:-help}" in
     ;;
 
   commerce)
-    # Testcontainers: PostgreSQL, Java 25 virtual threads
+    # Testcontainers: PostgreSQL and Redis, Java 25 virtual threads
     run "$GRADLEW \
       :commerce-order-lifecycle-fulfillment:test \
       :commerce-reservation-control-plane:test \
       :commerce-promotion-voucher-campaign:test \
+      :commerce-pre-generated-voucher-pool:test \
       :commerce-concert-ticket-flash-sale:test \
       --continue --max-workers=1"
     ;;

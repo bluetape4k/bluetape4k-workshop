@@ -1,0 +1,20 @@
+CREATE TABLE voucher_pool_campaigns (
+    tenant_id VARCHAR(64) NOT NULL,
+    campaign_id UUID NOT NULL,
+    state VARCHAR(24) NOT NULL,
+    starts_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
+    ends_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp() + interval '365 days',
+    per_user_limit INTEGER NOT NULL DEFAULT 1 CHECK (per_user_limit > 0),
+    reservation_ttl_seconds BIGINT NOT NULL DEFAULT 300 CHECK (reservation_ttl_seconds > 0),
+    allocation_ttl_seconds BIGINT NOT NULL DEFAULT 3600 CHECK (allocation_ttl_seconds > 0),
+    replacement_allowance INTEGER NOT NULL DEFAULT 1 CHECK (replacement_allowance BETWEEN 0 AND 1),
+    user_identity_key_version INTEGER NOT NULL CHECK (user_identity_key_version > 0),
+    policy_version BIGINT NOT NULL CHECK (policy_version > 0),
+    revision BIGINT NOT NULL DEFAULT 0 CHECK (revision >= 0),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT transaction_timestamp(),
+    CONSTRAINT pk_voucher_pool_campaigns PRIMARY KEY (tenant_id, campaign_id),
+    CHECK (state IN ('DRAFT','ACTIVE','PAUSED','REVOKING','REVOKED')),
+    CHECK (starts_at < ends_at),
+    CHECK (created_at <= updated_at)
+);

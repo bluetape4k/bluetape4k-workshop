@@ -130,6 +130,7 @@ gatling = "3.15.1"  # https://mvnrepository.com/artifact/io.gatling/gatling-app
 
 # Plugin versions
 detekt = "1.23.8"  # https://mvnrepository.com/artifact/io.gitlab.arturbosch.detekt/detekt-gradle-plugin
+kover = "0.9.8"  # https://plugins.gradle.org/plugin/org.jetbrains.kotlinx.kover
 dependency-management = "1.1.7"  # https://mvnrepository.com/artifact/io.spring.gradle/dependency-management-plugin
 dokka = "2.2.0"  # https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
 test-logger = "4.0.0"  # https://mvnrepository.com/artifact/com.adarshr/gradle-test-logger-plugin
@@ -151,6 +152,7 @@ kotlinx-atomicfu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "kotli
 kotlinx-benchmark = { id = "org.jetbrains.kotlinx.benchmark", version.ref = "kotlinx-benchmark" }
 
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 dependency-management = { id = "io.spring.dependency-management", version.ref = "dependency-management" }
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot4" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }

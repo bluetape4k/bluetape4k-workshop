@@ -1,0 +1,114 @@
+spring:
+  application:
+    name: pre-generated-voucher-pool
+  datasource:
+    url: ${VOUCHER_POOL_DATABASE_URL:jdbc:postgresql://localhost:5432/voucher_pool}
+    username: ${VOUCHER_POOL_DATABASE_USERNAME:vouchers}
+    password: ${VOUCHER_POOL_DATABASE_PASSWORD:vouchers}
+    hikari:
+      pool-name: pre-generated-voucher-pool
+      maximum-pool-size: 16
+      minimum-idle: 4
+      connection-timeout: 2000
+      validation-timeout: 1000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      keepalive-time: 120000
+  threads:
+    virtual:
+      enabled: true
+  lifecycle:
+    timeout-per-shutdown-phase: 45s
+  jackson:
+    default-property-inclusion: non_null
+    deserialization:
+      fail-on-unknown-properties: true
+
+server:
+  address: ${VOUCHER_POOL_SERVER_ADDRESS:127.0.0.1}
+  port: ${VOUCHER_POOL_SERVER_PORT:8080}
+  shutdown: graceful
+
+management:
+  server:
+    address: 127.0.0.1
+    port: ${VOUCHER_POOL_MANAGEMENT_PORT:8081}
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,voucherPoolReadiness
+        liveness:
+          include: livenessState,voucherPoolLiveness
+      status:
+        order: down,out-of-service,unknown,degraded,recovering,up
+        http-mapping:
+          down: 503
+          out-of-service: 503
+          degraded: 200
+          recovering: 200
+
+workshop:
+  voucher-pool:
+    worker-instance-id: ${VOUCHER_POOL_INSTANCE_ID:${random.uuid}}
+    startup-initializer-enabled: ${VOUCHER_POOL_STARTUP_INITIALIZER_ENABLED:true}
+    worker-dispatcher-enabled: ${VOUCHER_POOL_WORKER_DISPATCHER_ENABLED:true}
+    http:
+      max-tenant-length: 64
+      max-principal-length: 64
+      max-scalar-bytes: 256
+      max-cursor-bytes: 512
+      max-payload-bytes: 4194304
+      min-idempotency-key-length: 8
+      max-idempotency-key-length: 200
+      operator-secret: ${VOUCHER_POOL_OPERATOR_SECRET}
+      operator-guard: ${VOUCHER_POOL_OPERATOR_GUARD}
+      allowed-hosts: 127.0.0.1,localhost,::1
+      demo-auth-enabled: ${VOUCHER_POOL_DEMO_AUTH_ENABLED:true}
+    redis:
+      enabled: ${VOUCHER_POOL_REDIS_ENABLED:false}
+      uri: ${VOUCHER_POOL_REDIS_URI:redis://127.0.0.1:6379}
+      command-timeout: 500ms
+      failure-threshold: 1
+      recovery-success-threshold: 3
+      probe-interval: 1s
+      max-in-flight-probes: 1
+      quota-period: 1m
+      bloom-expected-insertions: 100000
+      bloom-false-probability: 0.01
+    sse:
+      max-subscribers: 32
+      max-subscribers-per-scope: 8
+      queue-size: 64
+      max-queue-bytes: 262144
+      max-poll-rows: 100
+      max-poll-bytes: 524288
+      max-customer-campaigns: 64
+      poll-interval: 250ms
+      max-idle-interval: 2s
+      heartbeat-interval: 15s
+      write-timeout: 5s
+    database:
+      foreground:
+        capacity: 11
+        permit-wait: 200ms
+        transaction-timeout: 5s
+        lock-timeout: 5s
+      worker:
+        capacity: 1
+        permit-wait: 1s
+        transaction-timeout: 10s
+        lock-timeout: 10s
+      sse:
+        capacity: 3
+        permit-wait: 1s
+        transaction-timeout: 5s
+        lock-timeout: 5s
