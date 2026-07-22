@@ -68,7 +68,7 @@ HTTP/SSE, failure fixture를 유지하면서, append-only event stream을 유일
 
 ### 제외
 
-- #534를 event sourcing으로 전환하거나 그 module에 speculative TODO를 남기는 작업
+- #534를 event sourcing으로 전환하거나 그 module에 speculative placeholder를 남기는 작업
 - #537 pre-generated voucher pool 변경
 - generic event-store 또는 다른 module이 의존하는 event-sourcing library
 - Kafka, Redis Streams, 외부 broker, CDC 또는 distributed transaction
@@ -213,6 +213,9 @@ command를 application이 자동 재실행하지 않는다. command response는 
 
 projector는 global position 순서로 bounded batch를 읽는다. projection row 변경,
 processed-event identity 기록, checkpoint 이동은 하나의 background transaction이다.
+production reader는 global position 순서를 유지한다. duplicate와 delayed delivery 계약은
+같은 projection handler 앞에 deterministic fault-injection dispatcher를 두어 재현하며,
+handler 자체가 delivery 순서나 단일 전달을 신뢰하지 않도록 검증한다.
 
 - duplicate event는 processed identity로 no-op 처리한다.
 - aggregate version gap은 적용하지 않고 retryable delayed state로 기록한다.
