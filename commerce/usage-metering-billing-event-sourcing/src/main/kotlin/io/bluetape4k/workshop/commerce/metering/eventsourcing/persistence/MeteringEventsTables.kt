@@ -80,4 +80,50 @@ object AggregateSnapshots : UUIDTable("metering_aggregate_snapshots", "snapshot_
     }
 }
 
-val METERING_EVENT_TABLES = arrayOf(EventStreamHeads, DomainEvents, CommandReceipts, AggregateSnapshots)
+object ProjectionAliases : UUIDTable("metering_projection_aliases", "alias_id") {
+    val projectionName = varchar("projection_name", 96).uniqueIndex()
+    val activeGeneration = integer("active_generation")
+    val updatedAt = timestamp("updated_at")
+}
+
+object ProjectionGenerations : UUIDTable("metering_projection_generations", "projection_generation_id") {
+    val projectionName = varchar("projection_name", 96)
+    val generation = integer("generation")
+    val state = varchar("state", 16)
+    val checkpoint = long("checkpoint").default(0L)
+    val highWatermark = long("high_watermark").default(0L)
+    val ownerToken = javaUUID("owner_token").nullable()
+    val leaseUntil = timestamp("lease_until").nullable()
+    val failedPosition = long("failed_position").nullable()
+    val failureDigest = varchar("failure_digest", 128).nullable()
+    val createdAt = timestamp("created_at")
+    val updatedAt = timestamp("updated_at")
+
+    init {
+        uniqueIndex(projectionName, generation)
+        index(false, projectionName, state, generation)
+    }
+}
+
+object ProjectionAppliedEvents : UUIDTable("metering_projection_applied_events", "marker_id") {
+    val projectionName = varchar("projection_name", 96)
+    val generation = integer("generation")
+    val eventId = javaUUID("event_id")
+    val globalPosition = long("global_position")
+    val appliedAt = timestamp("applied_at")
+
+    init {
+        uniqueIndex(projectionName, generation, eventId)
+        index(false, projectionName, generation, globalPosition)
+    }
+}
+
+val METERING_EVENT_TABLES = arrayOf(
+    EventStreamHeads,
+    DomainEvents,
+    CommandReceipts,
+    AggregateSnapshots,
+    ProjectionAliases,
+    ProjectionGenerations,
+    ProjectionAppliedEvents,
+)
