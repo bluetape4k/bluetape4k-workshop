@@ -1,4 +1,5 @@
 import io.gitlab.arturbosch.detekt.Detekt
+import org.gradle.api.tasks.testing.Test
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -71,4 +72,13 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform { excludeTags("integration") }
+}
+
+tasks.register<Test>("integrationTest") {
+    description = "Runs PostgreSQL-backed Query service integration tests."
+    group = "verification"
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    shouldRunAfter(tasks.test)
+    useJUnitPlatform { includeTags("integration") }
 }
