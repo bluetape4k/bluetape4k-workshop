@@ -1,3 +1,5 @@
+@file:Suppress("LongParameterList") // A versioned integration envelope mirrors its fixed wire contract.
+
 package io.bluetape4k.workshop.commerce.usagebilling.invoice.integration
 
 import io.bluetape4k.support.requireNotBlank
@@ -36,12 +38,17 @@ class InvoiceIntegrationEnvelope private constructor(
             )
 
         private fun digestOf(payload: String): String =
-            HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(payload.toByteArray(UTF_8)))
+            HexFormat.of().formatHex(
+                MessageDigest.getInstance("SHA-256").digest(payload.toByteArray(UTF_8)),
+            )
     }
 }
 
 class InvoiceEnvelopeCodecRegistry {
-    private val supportedSchemas = setOf(InvoiceEnvelopeSchema("InvoiceIssued", 1), InvoiceEnvelopeSchema("InvoiceCorrectionIssued", 1))
+    private val supportedSchemas = setOf(
+        InvoiceEnvelopeSchema("InvoiceIssued", 1),
+        InvoiceEnvelopeSchema("InvoiceCorrectionIssued", 1),
+    )
 
     fun validate(envelope: InvoiceIntegrationEnvelope): InvoiceIntegrationEnvelope {
         if (!envelope.hasValidPayloadDigest()) throw InvalidInvoiceEnvelopeDigest(envelope.eventId)
@@ -52,6 +59,14 @@ class InvoiceEnvelopeCodecRegistry {
     }
 }
 
-data class InvoiceEnvelopeSchema(val eventType: String, val schemaVersion: Int)
-class UnsupportedInvoiceEnvelopeVersion(eventType: String, schemaVersion: Int) : IllegalArgumentException("unsupported_invoice_envelope:$eventType:$schemaVersion")
+data class InvoiceEnvelopeSchema(
+    val eventType: String,
+    val schemaVersion: Int,
+)
+
+class UnsupportedInvoiceEnvelopeVersion(
+    eventType: String,
+    schemaVersion: Int,
+) : IllegalArgumentException("unsupported_invoice_envelope:$eventType:$schemaVersion")
+
 class InvalidInvoiceEnvelopeDigest(eventId: UUID) : IllegalArgumentException("invalid_invoice_envelope_digest:$eventId")

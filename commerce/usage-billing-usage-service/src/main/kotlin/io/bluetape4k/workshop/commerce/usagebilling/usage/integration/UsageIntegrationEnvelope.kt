@@ -1,3 +1,5 @@
+@file:Suppress("LongParameterList") // A versioned integration envelope mirrors its fixed wire contract.
+
 package io.bluetape4k.workshop.commerce.usagebilling.usage.integration
 
 import io.bluetape4k.support.requireNotBlank
@@ -45,12 +47,18 @@ class UsageIntegrationEnvelope private constructor(
             )
 
         private fun digestOf(payload: String): String =
-            HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(payload.toByteArray(UTF_8)))
+            HexFormat.of().formatHex(
+                MessageDigest.getInstance("SHA-256").digest(payload.toByteArray(UTF_8)),
+            )
     }
 }
 
 class UsageEnvelopeCodecRegistry {
-    private val supportedSchemas = setOf(UsageEnvelopeSchema("UsageAccepted", 1), UsageEnvelopeSchema("UsageRejected", 1), UsageEnvelopeSchema("UsageCorrected", 1))
+    private val supportedSchemas = setOf(
+        UsageEnvelopeSchema("UsageAccepted", 1),
+        UsageEnvelopeSchema("UsageRejected", 1),
+        UsageEnvelopeSchema("UsageCorrected", 1),
+    )
 
     fun validate(envelope: UsageIntegrationEnvelope): UsageIntegrationEnvelope {
         if (!envelope.hasValidPayloadDigest()) throw InvalidUsageEnvelopeDigest(envelope.eventId)
@@ -61,6 +69,14 @@ class UsageEnvelopeCodecRegistry {
     }
 }
 
-data class UsageEnvelopeSchema(val eventType: String, val schemaVersion: Int)
-class UnsupportedUsageEnvelopeVersion(eventType: String, schemaVersion: Int) : IllegalArgumentException("unsupported_usage_envelope:$eventType:$schemaVersion")
+data class UsageEnvelopeSchema(
+    val eventType: String,
+    val schemaVersion: Int,
+)
+
+class UnsupportedUsageEnvelopeVersion(
+    eventType: String,
+    schemaVersion: Int,
+) : IllegalArgumentException("unsupported_usage_envelope:$eventType:$schemaVersion")
+
 class InvalidUsageEnvelopeDigest(eventId: UUID) : IllegalArgumentException("invalid_usage_envelope_digest:$eventId")

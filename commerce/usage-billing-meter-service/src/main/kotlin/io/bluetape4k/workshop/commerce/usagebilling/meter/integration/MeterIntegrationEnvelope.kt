@@ -1,3 +1,5 @@
+@file:Suppress("LongParameterList") // A versioned integration envelope mirrors its fixed wire contract.
+
 package io.bluetape4k.workshop.commerce.usagebilling.meter.integration
 
 import io.bluetape4k.support.requireNotBlank
@@ -65,7 +67,9 @@ class MeterIntegrationEnvelope private constructor(
             )
 
         private fun digestOf(payload: String): String =
-            HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(payload.toByteArray(UTF_8)))
+            HexFormat.of().formatHex(
+                MessageDigest.getInstance("SHA-256").digest(payload.toByteArray(UTF_8)),
+            )
     }
 }
 
