@@ -300,6 +300,9 @@ lease key는 `(projectionName, generation)`이고 PostgreSQL server time 기준 
 expiry를 commit한다. 모든 projection batch transaction은 lease row를 함께 lock해 현재 owner,
 token, unexpired DB time을 검증한 뒤에만 projection row, processed identity, failure state,
 checkpoint를 변경한다. predicate가 맞지 않으면 stale owner의 batch 전체를 rollback한다.
+renew와 release도 `(owner, fencingToken)` CAS predicate가 맞을 때만 expiry를 변경한다. lease
+row와 fencing token은 release 때 삭제하거나 초기화하지 않아 다음 takeover의 token 단조성을
+보존하며, stale shutdown release는 새 owner lease에 영향을 주지 못한다.
 
 - duplicate event는 processed identity로 no-op 처리한다.
 - aggregate version gap은 적용하지 않고 retryable delayed state로 기록한다.
@@ -359,9 +362,12 @@ idempotency key와 expected active-generation token을 요구하며 stale token�
 module 동시 rebuild도 하나다. replay page는 최대 200 events/2 MiB, transaction은 최대 2초,
 전체 rebuild는 100,000 events 기준 10분 예산과 cancellation checkpoint를 가진다.
 
-rebuild durable state는 `BUILDING -> VALIDATING -> ACTIVE` 또는
-`BUILDING|VALIDATING -> CANCELLING -> CANCELLED`, 그리고 `FAILED`를 가진다. start/status 외에
-cancel/resume endpoint를 제공한다. cancel transaction은 generation row를 lock하고
+rebuild durable state는 `BUILDING -> VALIDATING -> ACTIVE`,
+`BUILDING|VALIDATING -> CANCELLING -> CANCELLED`, 그리고
+`BUILDING|VALIDATING -> FAILED`를 가진다. retryable infrastructure failure의 `FAILED`는 아래
+재사용 조건을 만족하면 resume으로 `BUILDING`에 돌아가고, invariant/digest/schema failure는
+resume할 수 없어 새 generation을 요구한다. start/status 외에 cancel/resume endpoint를 제공한다.
+cancel transaction은 generation row를 lock하고
 `CANCELLING`으로 바꾸면서 fencing token을 증가시킨다. 각 batch와 activation transaction은 같은
 row를 lock해 state와 token을 검증한다. cancel이 먼저 commit하면 stale worker batch/activation은
 전체 rollback하고, activation이 먼저 commit하면 cancel은 성공을 가장하지 않고 409
@@ -370,8 +376,12 @@ rollback하며 마지막 committed checkpoint는 보존한다.
 
 worker가 `CANCELLING`을 관찰하면 새 batch를 시작하지 않고 현재 transaction을 bounded drain 또는
 rollback한 뒤 `CANCELLED`를 commit한다. resume은 새 lease/fencing token을 발급한다. active
-generation token, projection schema/upcaster set, existing candidate checksum이 cancel 시점과 같을
-때만 동일 generation/checkpoint를 재사용하고, 하나라도 다르면 새 generation rebuild를 요구한다.
+generation token, projection schema/upcaster set, existing candidate checksum이 마지막 committed
+checkpoint의 cancel/failure record와 같을 때만 `CANCELLED` 또는 retryable `FAILED`의 동일
+generation/checkpoint를 재사용하고, 하나라도 다르면 새 generation rebuild를 요구한다.
+startup recovery worker도 durable `CANCELLING` generation을 검색한다. 새 fencing token으로 이전
+lease를 takeover해 active in-flight owner가 없음을 확인한 뒤 `CANCELLED`로 idempotent하게
+수렴시킨다. 반복 restart에도 같은 transition을 안전하게 재실행한다.
 
 poison retry는 원인 수정 배포 후 operator가 실행하며 최대 5회, 1초에서 30초 사이 exponential
 backoff를 적용한다. failure row는 retry 성공 전까지 지우지 않는다. 성공 transaction에서
@@ -456,17 +466,18 @@ polling task를 cancel한다. in-flight transaction은 최대 10초 drain하고 
 lease release, permit/connection 정리를 보장한다. `CancellationException`은 삼키지 않고 lifecycle
 scope까지 전파하며 `finally`에서 lease와 local resource를 정리한다.
 
-| 조건 | Liveness | Readiness | Custom health/동작 |
-|---|---|---|---|
-| startup migration/integrity 진행 중 | `UP` | `OUT_OF_SERVICE` | traffic와 background worker 시작 금지 |
-| startup integrity 또는 global PostgreSQL/event-store probe 실패 | `UP` | `DOWN` | 원인 노출, append/query traffic 거부 |
-| 특정 aggregate rehydration 실패 | `UP` | `UP` | `DEGRADED`, affected aggregate command만 fail closed |
-| projection poison 또는 bounded lag 초과 | `UP` | `UP` | projection `DEGRADED`, stale metadata와 recovery action 노출 |
-| rebuild `BUILDING`/`VALIDATING`/`CANCELLED`/`FAILED` | `UP` | `UP` | active generation 계속 제공, rebuild health 별도 노출 |
-| graceful shutdown | `UP` until termination | `REFUSING_TRAFFIC` | 새 work 금지, bounded drain/rollback |
+| 조건 | Liveness state/group | Readiness availability | Readiness health group | Custom health/동작 |
+|---|---|---|---|---|
+| startup migration/integrity 진행 중 | `CORRECT` / `UP` | `REFUSING_TRAFFIC` | `OUT_OF_SERVICE` | traffic와 background worker 시작 금지 |
+| startup integrity 또는 global PostgreSQL/event-store probe 실패 | `CORRECT` / `UP` | `REFUSING_TRAFFIC` | `DOWN` | 원인 노출, append/query traffic 거부 |
+| 특정 aggregate rehydration 실패 | `CORRECT` / `UP` | `ACCEPTING_TRAFFIC` | `UP` | `DEGRADED`, affected aggregate command만 fail closed |
+| projection poison 또는 bounded lag 초과 | `CORRECT` / `UP` | `ACCEPTING_TRAFFIC` | `UP` | projection `DEGRADED`, stale metadata와 recovery action 노출 |
+| rebuild `BUILDING`/`VALIDATING`/`CANCELLING`/`CANCELLED`/`FAILED` | `CORRECT` / `UP` | `ACCEPTING_TRAFFIC` | `UP` | active generation 계속 제공, rebuild health 별도 노출 |
+| graceful shutdown | `CORRECT` / `UP` until termination | `REFUSING_TRAFFIC` | `OUT_OF_SERVICE` | 새 work 금지, bounded drain/rollback |
 
 recoverable projection/rebuild 장애는 liveness를 내리지 않는다. Actuator liveness/readiness group과
-custom aggregate/projection/rebuild health를 각각 검증한다.
+availability state, custom aggregate/projection/rebuild health를 서로 다른 field/endpoint contract로
+노출하고 각각 검증한다.
 
 운영 metric은 `voucher_projection_lag_events`, `voucher_projection_lag_age_seconds`,
 `voucher_projection_checkpoint_stalled_seconds`, `voucher_projection_poison_events`,
@@ -534,7 +545,7 @@ insert는 operator mutation의 같은 transaction에서 immutable하게 commit�
 
 - command response의 authoritative stream position
 - query/SSE의 projection position, stream position, lag, generation
-- projection health, failure, retry, rebuild start/status endpoint
+- projection health, failure, retry, rebuild start/status/cancel/resume endpoint
 - normalized-state baseline과 event-sourced variant 비교 fixture/report
 
 projection lag 때문에 #534가 즉시 일관성으로 보이던 query 결과를 최신이라고 가장하지
@@ -559,8 +570,10 @@ projection lag 때문에 #534가 즉시 일관성으로 보이던 query 결과�
 - duplicate, delayed, interrupted projection delivery
 - poison event 정지와 retry 복구
 - projector lease expiry/takeover 뒤 stale worker 재개가 projection/checkpoint write를 rollback
+- takeover 뒤 이전 process의 shutdown release가 새 owner lease를 변경하지 못함
 - rebuild interruption/resume와 `BUILDING`/`VALIDATING`/activation 전후 cancel race
 - cancel 성공 뒤 stale worker activation 거부, activation 선행 시 cancel 409
+- cancel commit 직후 process kill과 반복 restart가 `CANCELLING`을 `CANCELLED`로 수렴
 - full replay와 snapshot+tail 동등성
 - PostgreSQL Testcontainers를 권위 환경으로 사용한다.
 
@@ -654,9 +667,10 @@ module에 새로 실행한다. 문서는 실제 migration을 다음 단계로 �
 18. subject mapping 삭제가 기존 surrogate의 reverse lookup을 차단하고 재등록된 identity에 새
     surrogate를 발급한다.
 19. stale projector와 cancelled rebuild worker가 fencing token을 우회해 projection/checkpoint를
-    쓰거나 candidate를 활성화하지 못한다.
+    쓰거나 candidate를 활성화하지 못하고 stale lease release도 새 owner를 방해하지 않는다.
 20. startup, recoverable degradation, global event-store failure, graceful shutdown이 정의된
-    liveness/readiness 상태를 내고 restart 뒤 마지막 committed checkpoint에서 수렴한다.
+    liveness/readiness 상태를 내고 restart 뒤 마지막 committed checkpoint와 durable
+    `CANCELLING` generation을 수렴시킨다.
 21. maintenance 폭주에도 readiness permit이 보존되고 lifecycle shutdown이 background resource를
     bounded drain 또는 rollback한다.
 22. operator mutation 전부가 redacted immutable audit을 남기며 poison/rebuild/lag/readiness alert
