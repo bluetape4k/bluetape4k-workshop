@@ -3,6 +3,9 @@
 package io.bluetape4k.workshop.commerce.usagebilling.billing.persistence
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingAdjustmentCommand
+import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingAdjustmentJournal
+import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingAdjustmentOutcome
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxJournal
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingPriceEvidence
@@ -210,6 +213,58 @@ class BillingOutboxRepository :
 @Repository
 class BillingChargeRepository :
     AppendOnlyBillingExposedJdbcRepository<BillingChargeEntity, UUID>(BillingChargeEntity::class.java)
+
+@Repository
+class ExposedBillingAdjustmentJournal : BillingAdjustmentJournal {
+    override fun post(command: BillingAdjustmentCommand): BillingAdjustmentOutcome {
+        BillingOutboxEventEntity.find { BillingOutboxEvents.eventId eq command.adjustmentEventId }
+            .firstOrNull()
+            ?.let { return BillingAdjustmentOutcome.DUPLICATE }
+        val original = requireNotNull(
+            BillingOutboxEventEntity.find {
+                (BillingOutboxEvents.eventId eq command.correctionOf) and
+                    (BillingOutboxEvents.tenantId eq command.tenantId) and
+                    (BillingOutboxEvents.eventType eq "ChargeRated")
+            }.firstOrNull(),
+        ) { "original_charge_event_not_found:${command.correctionOf}" }
+        val now = Instant.now()
+        val nextVersion = BillingOutboxEventEntity.find {
+            (BillingOutboxEvents.tenantId eq command.tenantId) and
+                (BillingOutboxEvents.aggregateId eq original.aggregateId)
+        }.count() + 1L
+        val envelope = BillingIntegrationEnvelope.create(
+            eventId = command.adjustmentEventId,
+            eventType = "AdjustmentPosted",
+            schemaVersion = 1,
+            tenantId = command.tenantId,
+            aggregateId = original.aggregateId,
+            aggregateVersion = nextVersion,
+            payload = """{"correctionOf":"${command.correctionOf}",""" +
+                """"currency":"${command.currency}","amount":"${command.amount}"}""",
+            occurredAt = now,
+            recordedAt = now,
+        )
+        BillingOutboxEventEntity.new {
+            eventId = command.adjustmentEventId
+            tenantId = command.tenantId
+            eventType = envelope.eventType
+            aggregateType = envelope.aggregateType
+            aggregateId = original.aggregateId
+            aggregateVersion = nextVersion
+            partitionKey = envelope.partitionKey()
+            payload = envelope.wirePayload()
+            payloadDigest = envelope.wirePayloadDigest()
+            status = BillingOutboxStatus.PENDING.name
+            attempt = 0
+            nextAttemptAt = null
+            claimOwner = null
+            claimUntil = null
+            createdAt = now
+            updatedAt = now
+        }
+        return BillingAdjustmentOutcome.APPLIED
+    }
+}
 
 @Repository
 class BillingPricingEvidenceRepository :

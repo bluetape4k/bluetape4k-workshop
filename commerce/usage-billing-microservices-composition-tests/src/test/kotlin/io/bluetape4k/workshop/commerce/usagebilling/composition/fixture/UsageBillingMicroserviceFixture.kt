@@ -1,11 +1,19 @@
+@file:Suppress("LongParameterList") // Test wire envelopes deliberately mirror the fixed inter-service contract.
+
 package io.bluetape4k.workshop.commerce.usagebilling.composition.fixture
 
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.workshop.commerce.usagebilling.billing.BillingServiceApplication
+import io.bluetape4k.workshop.commerce.usagebilling.billing.application.BillingAdjustmentService
+import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingAdjustmentCommand
+import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingAdjustmentOutcome
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxJournal
 import io.bluetape4k.workshop.commerce.usagebilling.billing.messaging.BillingOutboxPublisher
 import io.bluetape4k.workshop.commerce.usagebilling.billing.persistence.BillingChargeRepository
+import io.bluetape4k.workshop.commerce.usagebilling.billing.persistence.BillingOutboxRepository
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.InvoiceServiceApplication
+import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceJournal
+import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceLine
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.messaging.InvoiceOutboxPublisher
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.persistence.InvoiceLineRepository
 import io.bluetape4k.workshop.commerce.usagebilling.meter.MeterServiceApplication
@@ -171,6 +179,22 @@ class UsageBillingMicroserviceFixture : AutoCloseable {
         usageKafkaTemplate().send(INVOICE_TOPIC, "$tenantId|Invoice|$eventId", wirePayload).get()
     }
 
+    fun postBillingAdjustment(
+        tenantId: String,
+        correctionOf: UUID,
+        amount: BigDecimal,
+        eventId: UUID = UUID.randomUUID(),
+    ): BillingAdjustmentOutcome =
+        billingContext.getBean(BillingAdjustmentService::class.java).post(
+            BillingAdjustmentCommand(
+                adjustmentEventId = eventId,
+                tenantId = tenantId,
+                correctionOf = correctionOf,
+                amount = amount,
+                currency = "USD",
+            ),
+        )
+
     fun restartUsageContext() {
         usageContext.close()
         usageContext = startContext(UsageServiceApplication::class.java, "usage", usageDatabase)
@@ -209,9 +233,24 @@ class UsageBillingMicroserviceFixture : AutoCloseable {
             billingContext.getBean(BillingChargeRepository::class.java).findAll().count().toLong()
         }
 
+    fun chargeAmounts(): List<BigDecimal> =
+        transaction(billingContext) {
+            billingContext.getBean(BillingChargeRepository::class.java).findAll().map { it.amount }
+        }
+
+    fun latestBillingEventId(): UUID =
+        transaction(billingContext) {
+            billingContext.getBean(BillingOutboxRepository::class.java).findAll().last().eventId
+        }
+
     fun invoiceLineCount(): Long =
         transaction(invoiceContext) {
             invoiceContext.getBean(InvoiceLineRepository::class.java).findAll().count().toLong()
+        }
+
+    fun invoiceLines(): List<InvoiceLine> =
+        transaction(invoiceContext) {
+            invoiceContext.getBean(InvoiceJournal::class.java).lines
         }
 
     fun queryAppliedEventCount(): Int =
@@ -341,9 +380,11 @@ class UsageBillingMicroserviceFixture : AutoCloseable {
         val TOPICS = listOf(
             METER_TOPIC,
             USAGE_TOPIC,
-            "billing.events.v1",
+            BILLING_TOPIC,
             INVOICE_TOPIC,
         )
+
+        const val BILLING_TOPIC = "billing.events.v1"
 
         fun digestOf(value: String): String =
             HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
