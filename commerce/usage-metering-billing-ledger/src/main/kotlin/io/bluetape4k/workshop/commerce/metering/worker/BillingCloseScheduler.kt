@@ -15,12 +15,7 @@ class BillingCloseScheduler(
     @Scheduled(fixedDelayString = "\${workshop.metering.close.scheduler-delay:PT5S}")
     fun process(): Unit {
         if (!properties.close.schedulerEnabled) return
-        try {
-            val processed = service.processAvailable()
-            metrics.close(if (processed == 0) "idle" else "processed")
-        } catch (failure: RuntimeException) {
-            metrics.close("failed")
-            throw failure
-        }
+        val processed = service.processAvailable()
+        metrics.close(if (processed == 0) "idle" else "processed")
     }
 }

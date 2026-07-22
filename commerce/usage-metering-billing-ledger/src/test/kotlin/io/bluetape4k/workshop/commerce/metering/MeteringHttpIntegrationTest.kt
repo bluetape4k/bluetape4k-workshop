@@ -120,7 +120,7 @@ class MeteringHttpIntegrationTest {
     @TestConfiguration(proxyBeanMethods = false)
     class TestUsers {
         @Bean
-        fun testUsers(): UserDetailsService =
+        fun userDetailsService(): UserDetailsService =
             InMemoryUserDetailsManager(
                 User.withUsername(TENANT_A).password("{noop}$PASSWORD").roles("TENANT").build(),
                 User.withUsername("operator").password("{noop}$PASSWORD").roles("OPERATOR").build(),
