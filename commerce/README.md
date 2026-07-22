@@ -15,6 +15,8 @@ operator-visible recovery paths.
 | [`promotion-voucher-campaign`](promotion-voucher-campaign/) | Campaign capacity, voucher allocation/redemption, review, SSE, and reconciliation | PostgreSQL + Redis (Testcontainers) |
 | [`pre-generated-voucher-pool`](pre-generated-voucher-pool/) | PostgreSQL-authoritative pre-generated voucher reservation, one-time reveal/replacement, revoke, and reconciliation | PostgreSQL + Redis (Testcontainers) |
 | [`concert-ticket-flash-sale`](concert-ticket-flash-sale/) | Waiting-room admission, USER/IP purchase guards, payment/refund recovery, and ticket-safe restock | PostgreSQL + Redis (Testcontainers) |
+| [`usage-metering-billing-ledger`](usage-metering-billing-ledger/) | Idempotent usage, time-versioned pricing, restartable close, and immutable ledger/invoice | PostgreSQL (Testcontainers) |
+| [`usage-metering-billing-event-sourcing`](usage-metering-billing-event-sourcing/) | Event append/replay/upcasting, snapshots, fenced projection rebuilds, correction, and reconciliation | PostgreSQL (Testcontainers) |
 
 The modules use Java 25 virtual threads for blocking Spring MVC and Exposed JDBC
 work. Database concurrency remains bounded by HikariCP; virtual threads increase
@@ -28,5 +30,8 @@ request concurrency, not PostgreSQL capacity.
 ./gradlew :commerce-promotion-voucher-campaign:test --max-workers=1
 ./gradlew :commerce-pre-generated-voucher-pool:test --max-workers=1
 ./gradlew :commerce-concert-ticket-flash-sale:test --max-workers=1
+./gradlew :commerce-usage-metering-billing-ledger:integrationTest --max-workers=1
+./gradlew :commerce-usage-metering-billing-event-sourcing:integrationTest --max-workers=1
+./gradlew :commerce-usage-metering-billing-event-sourcing:stressTest --max-workers=1
 ./scripts/smoke-validate.sh commerce
 ```

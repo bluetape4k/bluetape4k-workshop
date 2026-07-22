@@ -116,6 +116,9 @@ jobs:
           :commerce-pre-generated-voucher-pool:koverXmlReport
           :commerce-usage-metering-billing-ledger:integrationTest
           :commerce-usage-metering-billing-ledger:koverXmlReport
+          :commerce-usage-metering-billing-event-sourcing:integrationTest
+          :commerce-usage-metering-billing-event-sourcing:stressTest
+          :commerce-usage-metering-billing-event-sourcing:koverXmlReport
           :graph-recommendation:integrationTest
           :graph-knowledge-graph:integrationTest
           :graph-social-network:integrationTest
@@ -130,6 +133,9 @@ jobs:
           test -s commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
           test -n "$(find commerce/usage-metering-billing-ledger/build/test-results/integrationTest -name '*.xml' -print -quit)"
           test -s commerce/usage-metering-billing-ledger/build/reports/kover/report.xml
+          test -n "$(find commerce/usage-metering-billing-event-sourcing/build/test-results/integrationTest -name '*.xml' -print -quit)"
+          test -n "$(find commerce/usage-metering-billing-event-sourcing/build/test-results/stressTest -name '*.xml' -print -quit)"
+          test -s commerce/usage-metering-billing-event-sourcing/build/reports/kover/report.xml
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7
@@ -146,6 +152,9 @@ jobs:
             commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
             commerce/usage-metering-billing-ledger/build/test-results/integrationTest/*.xml
             commerce/usage-metering-billing-ledger/build/reports/kover/report.xml
+            commerce/usage-metering-billing-event-sourcing/build/test-results/integrationTest/*.xml
+            commerce/usage-metering-billing-event-sourcing/build/test-results/stressTest/*.xml
+            commerce/usage-metering-billing-event-sourcing/build/reports/kover/report.xml
           retention-days: 14
 
   nightly-status:

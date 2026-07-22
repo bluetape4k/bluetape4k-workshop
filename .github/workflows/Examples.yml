@@ -152,6 +152,7 @@ jobs:
       # - operations-job-console-core: framework-neutral state machine and queue projections
       # - leader-job-safety-lab: deterministic safety scenarios without container-backed integration tags
       # - commerce-usage-metering-billing-ledger: container-free domain and architecture contracts
+      # - commerce-usage-metering-billing-event-sourcing: container-free reducer, hash, upcast, and architecture contracts
       - name: Run H2/default examples
         run: >-
           ./gradlew
@@ -179,6 +180,7 @@ jobs:
           :leader-k8s-lease-micrometer:test
           :leader-job-safety-lab:test
           :commerce-usage-metering-billing-ledger:test
+          :commerce-usage-metering-billing-event-sourcing:test
           :leader-tenant-scheduler:test
           :operations-job-console-core:test
           :spring-modulith-module-boundaries:test
@@ -240,6 +242,8 @@ jobs:
             leader/job-safety-lab/build/reports/tests/test/
             commerce/usage-metering-billing-ledger/build/test-results/test/*.xml
             commerce/usage-metering-billing-ledger/build/reports/tests/test/
+            commerce/usage-metering-billing-event-sourcing/build/test-results/test/*.xml
+            commerce/usage-metering-billing-event-sourcing/build/reports/tests/test/
             leader/tenant-scheduler/build/test-results/test/*.xml
             leader/tenant-scheduler/build/reports/tests/test/
             operations/job-console-core/build/test-results/test/*.xml
@@ -313,6 +317,7 @@ jobs:
       # - commerce-pre-generated-voucher-pool: PostgreSQL-authoritative pre-generated voucher allocation and recovery
       # - leader-job-safety-lab: real Redis fencing takeover plus PostgreSQL stale-writer rejection
       # - commerce-usage-metering-billing-ledger: PostgreSQL-authoritative metering, close, invoice, and reconciliation
+      # - commerce-usage-metering-billing-event-sourcing: PostgreSQL event store, replay, fenced projections, and correction
       - name: Run container-backed examples
         run: >-
           ./gradlew
@@ -342,6 +347,8 @@ jobs:
           :leader-job-safety-lab:integrationTest
           :commerce-usage-metering-billing-ledger:integrationTest
           :commerce-usage-metering-billing-ledger:koverXmlReport
+          :commerce-usage-metering-billing-event-sourcing:integrationTest
+          :commerce-usage-metering-billing-event-sourcing:koverXmlReport
           --continue
           --max-workers=1
         env:
@@ -355,6 +362,8 @@ jobs:
           test -s commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
           test -n "$(find commerce/usage-metering-billing-ledger/build/test-results/integrationTest -name '*.xml' -print -quit)"
           test -s commerce/usage-metering-billing-ledger/build/reports/kover/report.xml
+          test -n "$(find commerce/usage-metering-billing-event-sourcing/build/test-results/integrationTest -name '*.xml' -print -quit)"
+          test -s commerce/usage-metering-billing-event-sourcing/build/reports/kover/report.xml
 
       - name: Upload container example test results
         if: always()
@@ -412,6 +421,9 @@ jobs:
             commerce/usage-metering-billing-ledger/build/test-results/integrationTest/*.xml
             commerce/usage-metering-billing-ledger/build/reports/tests/integrationTest/
             commerce/usage-metering-billing-ledger/build/reports/kover/report.xml
+            commerce/usage-metering-billing-event-sourcing/build/test-results/integrationTest/*.xml
+            commerce/usage-metering-billing-event-sourcing/build/reports/tests/integrationTest/
+            commerce/usage-metering-billing-event-sourcing/build/reports/kover/report.xml
           retention-days: 7
 
   examples-status:
