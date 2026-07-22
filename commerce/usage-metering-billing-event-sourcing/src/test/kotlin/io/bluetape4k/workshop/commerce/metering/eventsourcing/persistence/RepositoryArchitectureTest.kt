@@ -13,6 +13,8 @@ class RepositoryArchitectureTest {
             SnapshotRepository::class.java,
             ProjectionGenerationRepository::class.java,
             ProjectionCheckpointRepository::class.java,
+            BillingReadModelRepository::class.java,
+            ProjectionFailureRepository::class.java,
         )
         assertTrue(repositories.all(ExposedJdbcRepository::class.java::isAssignableFrom))
     }
