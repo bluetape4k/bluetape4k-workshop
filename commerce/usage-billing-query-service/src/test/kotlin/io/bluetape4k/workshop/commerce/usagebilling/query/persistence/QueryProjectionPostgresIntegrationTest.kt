@@ -3,7 +3,10 @@ package io.bluetape4k.workshop.commerce.usagebilling.query.persistence
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryInboxService
+import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryQuarantineService
+import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryRecoveryService
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryInboxEvent
+import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryQuarantineEvent
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -12,6 +15,7 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
+import java.time.Instant
 import java.util.UUID
 
 @Tag("integration")
@@ -31,6 +35,15 @@ class QueryProjectionPostgresIntegrationTest {
     private lateinit var checkpoints: QueryCheckpointRepository
 
     @Autowired
+    private lateinit var recovery: QueryRecoveryService
+
+    @Autowired
+    private lateinit var quarantine: QueryQuarantineService
+
+    @Autowired
+    private lateinit var redriveAudits: QueryRedriveAuditRepository
+
+    @Autowired
     private lateinit var transactionManager: PlatformTransactionManager
 
     @Test
@@ -46,6 +59,20 @@ class QueryProjectionPostgresIntegrationTest {
         transaction { inboxEvents.findAll().count() } shouldBeEqualTo inboxCount + 1
         transaction { readModels.findAll().count() } shouldBeEqualTo readModelCount + 1
         transaction { checkpoints.findAll().single().position } shouldBeEqualTo checkpoint + 1
+    }
+
+    @Test
+    fun `redrive creates an immutable audit without mutating a financial projection`() {
+        val auditCount = transaction { redriveAudits.findAll().count() }
+        val eventId = UUID.randomUUID()
+        quarantine.record(
+            QueryQuarantineEvent(eventId, "tenant-a", "InvoiceIssued", "unsupported_schema", Instant.now()),
+        )
+
+        recovery.redrive(eventId, "operator-a", "correlation-a").requested shouldBeEqualTo true
+
+        transaction { redriveAudits.findAll().count() } shouldBeEqualTo auditCount + 1
+        transaction { requireNotNull(redriveAudits.findAll().last()).currentState } shouldBeEqualTo "REDRIVE_REQUESTED"
     }
 
     private fun <T : Any> transaction(block: () -> T): T =

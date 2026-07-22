@@ -6,9 +6,17 @@ import org.junit.jupiter.api.Test
 
 class QueryRepositoryArchitectureTest {
     @Test
-    fun `query inbox repository implements ExposedJdbcRepository`() {
-        ExposedJdbcRepository::class.java.isAssignableFrom(
-            Class.forName("io.bluetape4k.workshop.commerce.usagebilling.query.persistence.QueryInboxRepository"),
-        ) shouldBeEqualTo true
+    fun `every query persistence repository implements ExposedJdbcRepository`() {
+        listOf(
+            "QueryInboxRepository",
+            "QueryReadModelRepository",
+            "QueryCheckpointRepository",
+            "QueryQuarantineRepository",
+            "QueryRedriveAuditRepository",
+        ).all { repository ->
+            ExposedJdbcRepository::class.java.isAssignableFrom(
+                Class.forName("io.bluetape4k.workshop.commerce.usagebilling.query.persistence.$repository"),
+            )
+        } shouldBeEqualTo true
     }
 }
