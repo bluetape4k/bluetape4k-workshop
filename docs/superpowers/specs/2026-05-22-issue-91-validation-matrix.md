@@ -5,8 +5,8 @@
 **Parent Epic**: #76
 **Status**: Active
 
-> Current graph amendment (2026-07-22, #552): this checkout registers 111 projects in Gradle after adding
-> `:commerce-usage-metering-billing-ledger`. The 23/33 classification below remains the original
+> Current graph amendment (2026-07-22, #553): this checkout registers 112 projects in Gradle after adding
+> `:commerce-usage-metering-billing-event-sourcing`. The 23/33 classification below remains the original
 > #91 baseline rather than a mechanically incremented inventory. Current executable lanes are
 > maintained in `scripts/smoke-validate.sh` and `.github/workflows/Examples.yml`.
 
