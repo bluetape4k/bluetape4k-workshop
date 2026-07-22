@@ -3,6 +3,7 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence
 
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.javatime.timestamp
 
 object EventStreamHeads : UUIDTable("metering_event_stream_heads", "head_id") {
@@ -42,4 +43,25 @@ object DomainEvents : UUIDTable("metering_domain_events", "event_id") {
     }
 }
 
-val METERING_EVENT_TABLES = arrayOf(EventStreamHeads, DomainEvents)
+object CommandReceipts : UUIDTable("metering_command_receipts", "receipt_id") {
+    val tenantId = varchar("tenant_id", 64)
+    val operation = varchar("operation", 64)
+    val keyDigest = varchar("key_digest", 64)
+    val fingerprint = varchar("fingerprint", 64)
+    val status = varchar("status", 24)
+    val ownerToken = javaUUID("owner_token")
+    val leaseUntil = timestamp("lease_until")
+    val retentionUntil = timestamp("retention_until")
+    val httpStatus = integer("http_status").nullable()
+    val response = text("response").nullable()
+    val terminalAt = timestamp("terminal_at").nullable()
+    val createdAt = timestamp("created_at")
+    val updatedAt = timestamp("updated_at")
+
+    init {
+        uniqueIndex(tenantId, operation, keyDigest)
+        index(false, status, retentionUntil, id)
+    }
+}
+
+val METERING_EVENT_TABLES = arrayOf(EventStreamHeads, DomainEvents, CommandReceipts)

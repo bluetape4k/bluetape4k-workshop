@@ -34,3 +34,21 @@ class DomainEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var occurredAt by DomainEvents.occurredAt
     var recordedAt by DomainEvents.recordedAt
 }
+
+class CommandReceiptEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<CommandReceiptEntity>(CommandReceipts)
+
+    var tenantId by CommandReceipts.tenantId
+    var operation by CommandReceipts.operation
+    var keyDigest by CommandReceipts.keyDigest
+    var fingerprint by CommandReceipts.fingerprint
+    var status by CommandReceipts.status
+    var ownerToken by CommandReceipts.ownerToken
+    var leaseUntil by CommandReceipts.leaseUntil
+    var retentionUntil by CommandReceipts.retentionUntil
+    var httpStatus by CommandReceipts.httpStatus
+    var response by CommandReceipts.response
+    var terminalAt by CommandReceipts.terminalAt
+    var createdAt by CommandReceipts.createdAt
+    var updatedAt by CommandReceipts.updatedAt
+}

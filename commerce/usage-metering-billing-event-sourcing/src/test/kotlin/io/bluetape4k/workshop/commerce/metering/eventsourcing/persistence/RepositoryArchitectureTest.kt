@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 class RepositoryArchitectureTest {
     @Test
     fun `every concrete event store repository implements ExposedJdbcRepository`() {
-        assertTrue(ExposedJdbcRepository::class.java.isAssignableFrom(EventStoreRepository::class.java))
+        val repositories = listOf(EventStoreRepository::class.java, CommandReceiptRepository::class.java)
+        assertTrue(repositories.all(ExposedJdbcRepository::class.java::isAssignableFrom))
     }
 }
