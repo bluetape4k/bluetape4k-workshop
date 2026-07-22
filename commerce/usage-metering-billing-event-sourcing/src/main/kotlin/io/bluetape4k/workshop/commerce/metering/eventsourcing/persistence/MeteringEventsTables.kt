@@ -4,6 +4,7 @@ package io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence
 
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
 
 object EventStreamHeads : UUIDTable("metering_event_stream_heads", "head_id") {
@@ -33,7 +34,7 @@ object DomainEvents : UUIDTable("metering_domain_events", "event_id") {
     val previousHash = varchar("previous_hash", 64).nullable()
     val eventHash = varchar("event_hash", 64)
     val occurredAt = timestamp("occurred_at")
-    val recordedAt = timestamp("recorded_at")
+    val recordedAt = timestamp("recorded_at").defaultExpression(CurrentTimestamp)
 
     init {
         uniqueIndex(tenantId, streamType, streamId, streamVersion)

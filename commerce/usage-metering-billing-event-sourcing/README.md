@@ -53,7 +53,7 @@ Aggregates remain small. Meter, Usage, Billing Period, Invoice, and Adjustment o
 
 ## Event envelope, hash chain, and schema evolution
 
-Event-store authority is `(tenantId, streamType, streamId, streamVersion)` plus monotonically increasing `globalPosition`. The envelope carries event ID/type/schema version, canonical payload/metadata, `occurredAt`, `recordedAt`, `previousHash`, and `eventHash`.
+Event-store authority is `(tenantId, streamType, streamId, streamVersion)` plus monotonically increasing `globalPosition`. The envelope carries event ID/type/schema version, canonical payload/metadata, `occurredAt`, PostgreSQL-owned `recordedAt`, `previousHash`, and `eventHash`. Bounded metadata records `commandId`, `correlationId`, `causationId`, and `actorId`; it never stores credentials or request bodies.
 
 One transaction checks the stream head and appends only at the expected version. The hash covers canonical material, so changed payload, metadata, or order fails replay closed. Stored payloads are never rewritten. `EventCodecRegistry` applies schema-version decoders and contiguous one-step upcasters before today's reducer. A missing upcast path is an error, not a skipped event.
 
@@ -110,6 +110,20 @@ Reconciliation compares authoritative replay totals with ACTIVE projection total
 Tenant commands and queries live under `/api/v1/tenants/{tenantId}` and require the principal name to match the path tenant. Writes require `TENANT_BILLING_WRITE`, reads require `TENANT_BILLING_READ`, and `/api/admin/event-sourcing/**` requires `ROLE_OPERATOR`. The Basic Auth users are local demonstrations; production should connect the organization's JWT/OAuth2 provider.
 
 `POST /meters` requires `Idempotency-Key`. Query responses expose `Projection-Position` and `Projection-Lag`. A client holding a command's global position may request a bounded read-your-write wait with `X-Wait-For-Position`. The maximum wait is 100ms; timeout returns `409 projection_not_caught_up` instead of waiting forever or querying the event store as a fallback.
+
+Operator endpoints expose recovery without granting event-history mutation:
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/admin/event-sourcing/projections/{name}` | Inspect ACTIVE checkpoint, high watermark, lag, and quarantine |
+| `GET /api/admin/event-sourcing/projections/{name}/generations/{generation}` | Inspect BUILDING/FAILED/RETIRED generation state |
+| `POST /api/admin/event-sourcing/projections/{name}/rebuilds` | Start one fenced rebuild; requires `Idempotency-Key` and rejects a concurrent BUILDING generation |
+| `GET /api/admin/event-sourcing/reconciliation?...` | Compare authoritative financial events with the ACTIVE projection |
+| `GET /actuator/metrics/**` | Read bounded-tag Micrometer data as `ROLE_OPERATOR` |
+
+The bounded scheduler runs ACTIVE and BUILDING generations under independent leases. A BUILDING generation switches only after a fresh event-store high watermark is still fully caught up; otherwise the next cycle continues from its checkpoint.
+
+Health status is public for orchestration, while detailed projection/quarantine fields are visible only to `ROLE_OPERATOR`.
 
 ## Operational signals and failure runbook
 

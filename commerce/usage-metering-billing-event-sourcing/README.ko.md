@@ -53,7 +53,7 @@ Aggregate는 크게 만들지 않는다. Meter, Usage, Billing Period, Invoice, 
 
 ## Event envelope, hash chain, schema 진화
 
-event store authority는 `(tenantId, streamType, streamId, streamVersion)`과 단조 증가 `globalPosition`이다. 저장 envelope에는 event ID/type/schema version, canonical payload/metadata, `occurredAt`, `recordedAt`, `previousHash`, `eventHash`가 들어간다.
+event store authority는 `(tenantId, streamType, streamId, streamVersion)`과 단조 증가 `globalPosition`이다. 저장 envelope에는 event ID/type/schema version, canonical payload/metadata, `occurredAt`, PostgreSQL이 기록하는 `recordedAt`, `previousHash`, `eventHash`가 들어간다. bounded metadata에는 `commandId`, `correlationId`, `causationId`, `actorId`를 기록하고 credential이나 request body는 저장하지 않는다.
 
 한 transaction이 stream head를 확인하고 expected version과 일치할 때만 event를 append한다. Hash는 canonical material에 대해 계산하므로 payload, metadata, 순서가 바뀌면 replay가 fail closed한다. 과거 payload는 절대 덮어쓰지 않는다. `EventCodecRegistry`가 schema-version별 decoder와 한 단계씩 연결된 upcaster를 적용해 오늘의 reducer 입력으로 바꾼다. upcast 경로가 끊기면 임의로 건너뛰지 않는다.
 
@@ -110,6 +110,20 @@ Reconciliation은 authoritative replay total과 ACTIVE projection의 total/prove
 Tenant command/query는 `/api/v1/tenants/{tenantId}` 아래에 있고 principal name이 path tenant와 같아야 한다. 쓰기는 `TENANT_BILLING_WRITE`, 읽기는 `TENANT_BILLING_READ`, `/api/admin/event-sourcing/**`는 `ROLE_OPERATOR`가 필요하다. 예제의 Basic Auth 사용자는 local demonstration용이며 실제 배포는 조직의 JWT/OAuth2 provider로 교체한다.
 
 `POST /meters`는 `Idempotency-Key`가 필수다. query response는 `Projection-Position`, `Projection-Lag`를 제공한다. client가 command response의 global position을 알고 있으면 `X-Wait-For-Position`으로 최대 100ms의 bounded read-your-write wait를 요청할 수 있다. 시간 안에 catch-up하지 못하면 `409 projection_not_caught_up`을 반환하며 무한 대기하거나 event store를 query fallback으로 사용하지 않는다.
+
+운영 API는 event history 수정 권한을 주지 않고 복구 절차만 노출한다.
+
+| Endpoint | 용도 |
+|---|---|
+| `GET /api/admin/event-sourcing/projections/{name}` | ACTIVE checkpoint, high watermark, lag, quarantine 조회 |
+| `GET /api/admin/event-sourcing/projections/{name}/generations/{generation}` | BUILDING/FAILED/RETIRED generation 상태 조회 |
+| `POST /api/admin/event-sourcing/projections/{name}/rebuilds` | `Idempotency-Key`가 필요한 fenced rebuild 시작. 동시에 두 BUILDING generation은 거부 |
+| `GET /api/admin/event-sourcing/reconciliation?...` | authoritative financial event와 ACTIVE projection 비교 |
+| `GET /actuator/metrics/**` | `ROLE_OPERATOR`로 bounded-tag Micrometer 지표 조회 |
+
+bounded scheduler는 ACTIVE와 BUILDING generation을 서로 다른 lease로 실행한다. BUILDING은 최신 event-store high watermark까지 따라잡은 상태가 switch 직전에도 유지될 때만 ACTIVE가 되며, 그렇지 않으면 다음 cycle이 checkpoint부터 이어서 처리한다.
+
+orchestration을 위한 health status는 공개하지만 projection/quarantine 상세 정보는 `ROLE_OPERATOR`에게만 보여준다.
 
 ## 운영 신호와 장애 runbook
 

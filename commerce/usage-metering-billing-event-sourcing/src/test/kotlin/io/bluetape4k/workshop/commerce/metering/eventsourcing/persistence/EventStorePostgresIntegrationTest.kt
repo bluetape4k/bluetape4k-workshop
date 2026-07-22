@@ -12,7 +12,9 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
+import java.time.Clock
 import java.time.Instant
+import java.time.ZoneOffset
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -37,6 +39,24 @@ class EventStorePostgresIntegrationTest {
         assertThrows(OptimisticConcurrencyException::class.java) {
             fixture.executor.transaction { repository.append(stream, 0, listOf(event("stale"))) }
         }
+    }
+
+    @Test
+    fun `recorded time comes from PostgreSQL instead of the application clock`() {
+        fixture.reset()
+        val applicationTime = Instant.EPOCH
+        val databaseTimedRepository = EventStoreRepository(Clock.fixed(applicationTime, ZoneOffset.UTC))
+        val stream = StreamKey("tenant-a", "Usage", "database-time")
+
+        val persisted = fixture.executor.transaction {
+            databaseTimedRepository.append(stream, 0, listOf(event("database-time"))).single()
+        }
+
+        assertTrue(persisted.recordedAt > Instant.parse("2020-01-01T00:00:00Z"))
+        assertEquals(
+            persisted.recordedAt,
+            fixture.executor.transaction { databaseTimedRepository.load(stream).single().recordedAt },
+        )
     }
 
     @Test

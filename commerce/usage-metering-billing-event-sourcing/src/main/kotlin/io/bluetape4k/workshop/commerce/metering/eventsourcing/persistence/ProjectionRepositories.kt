@@ -37,6 +37,26 @@ class ProjectionGenerationRepository :
         insertGeneration(projectionName, generation, ProjectionGenerationState.BUILDING, highWatermark, now)
     }
 
+    fun createNextBuilding(projectionName: String, highWatermark: Long, now: Instant): ProjectionGeneration {
+        require(highWatermark >= 0) { "projection_high_watermark_invalid" }
+        val alias = ProjectionAliases.selectAll()
+            .where { ProjectionAliases.projectionName eq projectionName }
+            .forUpdate()
+            .singleOrNull()
+            ?: error("active_projection_missing:$projectionName")
+        val latest = ProjectionGenerations.selectAll()
+            .where { ProjectionGenerations.projectionName eq projectionName }
+            .orderBy(ProjectionGenerations.generation to org.jetbrains.exposed.v1.core.SortOrder.DESC)
+            .limit(1)
+            .single()
+            .toProjectionGeneration()
+        check(latest.state != ProjectionGenerationState.BUILDING) { "rebuild_already_in_progress:$projectionName" }
+        check(alias[ProjectionAliases.activeGeneration] > 0) { "active_projection_missing:$projectionName" }
+        val nextGeneration = latest.generation + 1
+        insertGeneration(projectionName, nextGeneration, ProjectionGenerationState.BUILDING, highWatermark, now)
+        return checkNotNull(get(projectionName, nextGeneration))
+    }
+
     fun get(projectionName: String, generation: Int): ProjectionGeneration? =
         projectionGenerationRow(projectionName, generation)?.toProjectionGeneration()
 
@@ -126,6 +146,21 @@ class ProjectionGenerationRepository :
             it[updatedAt] = now
         }
     }
+}
+
+@Repository
+class ProjectionGenerationQueryRepository :
+    EventSourcingExposedJdbcRepository<ProjectionGenerationEntity, UUID>(ProjectionGenerationEntity::class.java) {
+
+    fun building(projectionName: String): ProjectionGeneration? = ProjectionGenerations.selectAll()
+        .where {
+            (ProjectionGenerations.projectionName eq projectionName) and
+                (ProjectionGenerations.state eq ProjectionGenerationState.BUILDING.name)
+        }
+        .orderBy(ProjectionGenerations.generation to org.jetbrains.exposed.v1.core.SortOrder.DESC)
+        .limit(1)
+        .singleOrNull()
+        ?.toProjectionGeneration()
 }
 
 @Repository

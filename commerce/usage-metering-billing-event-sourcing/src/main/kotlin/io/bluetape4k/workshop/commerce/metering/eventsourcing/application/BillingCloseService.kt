@@ -15,6 +15,7 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventSt
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventTypeQuery
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.OccurredEventCursor
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.OptimisticConcurrencyException
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.ReplayTelemetry
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.StreamAppend
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -22,15 +23,25 @@ import java.time.Instant
 
 enum class BillingCloseBatchResult { APPLIED, FINALIZED, ALREADY_FINALIZED, RETRY }
 
+interface BillingTelemetry : ReplayTelemetry {
+    fun recordCloseBatch(outcome: String, size: Int)
+    fun recordReconciliation(kind: String)
+}
+
 @Service
 class BillingCloseService(
     private val eventStore: EventStore,
     private val codec: DomainEventJsonCodec,
+    private val metrics: BillingTelemetry? = null,
 ) {
+    private val replayRuntime = ReplayRuntime(eventStore, codec, metrics)
+
     fun closeNextBatch(tenantId: String, periodId: String, batchSize: Int, now: Instant): BillingCloseBatchResult {
         val periodStream = StreamKey(tenantId, "BillingPeriod", periodId)
-        val period = replay(periodStream, BillingPeriodState.Empty, BillingPeriodReducer, codec, eventStore)
-        if (period.state is BillingPeriodState.Finalized) return BillingCloseBatchResult.ALREADY_FINALIZED
+        val period = replay(periodStream, BillingPeriodState.Empty, BillingPeriodReducer, replayRuntime)
+        if (period.state is BillingPeriodState.Finalized) {
+            return BillingCloseBatchResult.ALREADY_FINALIZED.also { metrics?.recordCloseBatch(it.metricValue, 0) }
+        }
         val closing = period.state as? BillingPeriodState.Closing ?: error("billing_period_not_closing")
         val cursor = closing.throughOccurredAt?.let {
             OccurredEventCursor(it, java.util.UUID.fromString(checkNotNull(closing.throughEventId)))
@@ -43,7 +54,7 @@ class BillingCloseService(
             else rateBatch(periodStream, period.streamVersion, closing, usages, now)
         } catch (_: OptimisticConcurrencyException) {
             BillingCloseBatchResult.RETRY
-        }
+        }.also { metrics?.recordCloseBatch(it.metricValue, usages.size) }
     }
 
     private fun rateBatch(
@@ -60,7 +71,7 @@ class BillingCloseService(
                 persisted.payload,
             ) as UsageAccepted
             val meterStream = StreamKey(persisted.stream.tenantId, "Meter", usage.meterCode)
-            val meter = replay(meterStream, MeterState.Empty, MeterReducer, codec, eventStore).state
+            val meter = replay(meterStream, MeterState.Empty, MeterReducer, replayRuntime).state
             val price = meter.priceAt(usage.occurredAt)
             val amount = usage.quantity.multiply(price.unitPrice)
             val event = UsageRated(
@@ -98,3 +109,6 @@ class BillingCloseService(
         return BillingCloseBatchResult.FINALIZED
     }
 }
+
+private val BillingCloseBatchResult.metricValue: String
+    get() = name.lowercase()

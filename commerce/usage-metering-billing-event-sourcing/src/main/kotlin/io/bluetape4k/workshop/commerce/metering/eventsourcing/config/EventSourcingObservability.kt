@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.config
 
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.BillingTelemetry
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionFailureRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionGenerationRepository
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionTelemetry
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Timer
 import org.springframework.boot.health.contributor.Health
@@ -16,18 +18,18 @@ import java.util.concurrent.TimeUnit
 @Component
 class EventSourcingMetrics(
     private val registry: MeterRegistry,
-) {
+) : BillingTelemetry, ProjectionTelemetry {
     fun recordAppend(outcome: String, duration: Duration) {
         timer("billing.event.append", "outcome", outcome).record(duration)
     }
 
-    fun recordReplay(outcome: String, eventCount: Int, duration: Duration) {
+    override fun recordReplay(outcome: String, eventCount: Int, duration: Duration) {
         registry.counter("billing.event.replay", "outcome", outcome).increment()
         registry.summary("billing.event.replay.events", "outcome", outcome).record(eventCount.toDouble())
         timer("billing.event.replay.duration", "outcome", outcome).record(duration)
     }
 
-    fun recordSnapshotFallback(reason: String) {
+    override fun recordSnapshotFallback(reason: String) {
         registry.counter("billing.snapshot.fallback", "reason", reason).increment()
     }
 
@@ -36,7 +38,7 @@ class EventSourcingMetrics(
         registry.summary("billing.projection.lag", "outcome", outcome).record(lag.toDouble())
     }
 
-    fun recordRebuild(outcome: String) {
+    override fun recordRebuild(outcome: String) {
         registry.counter("billing.projection.rebuild", "outcome", outcome).increment()
     }
 
@@ -44,12 +46,12 @@ class EventSourcingMetrics(
         registry.counter("billing.projection.quarantine", "event.type", eventType).increment()
     }
 
-    fun recordCloseBatch(outcome: String, size: Int) {
+    override fun recordCloseBatch(outcome: String, size: Int) {
         registry.counter("billing.close.batch", "outcome", outcome).increment()
         registry.summary("billing.close.batch.size", "outcome", outcome).record(size.toDouble())
     }
 
-    fun recordReconciliation(kind: String) {
+    override fun recordReconciliation(kind: String) {
         registry.counter("billing.reconciliation.finding", "kind", kind).increment()
     }
 

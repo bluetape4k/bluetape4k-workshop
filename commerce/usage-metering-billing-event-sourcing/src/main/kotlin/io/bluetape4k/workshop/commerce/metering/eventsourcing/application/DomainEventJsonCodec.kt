@@ -6,6 +6,7 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.BillingClos
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.BillingPeriodFinalized
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.BillingPeriodOpened
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.DomainEvent
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.EventMetadata
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.InvoiceIssued
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.MeterRegistered
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.NewEvent
@@ -16,6 +17,7 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventCo
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.stereotype.Component
+import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Instant
 import java.util.UUID
 
@@ -36,13 +38,18 @@ class DomainEventJsonCodec(
         register<AdjustmentPosted>()
     }
 
-    fun encode(event: DomainEvent, occurredAt: Instant, eventId: UUID = UUID.randomUUID()): NewEvent = NewEvent(
-        eventId = eventId,
-        event = event,
-        payload = mapper.writeValueAsString(event),
-        metadata = "{}",
-        occurredAt = occurredAt,
-    )
+    fun encode(
+        event: DomainEvent,
+        occurredAt: Instant,
+        eventId: UUID = UUID.randomUUID(),
+        metadata: EventMetadata = EventMetadata.system(eventId),
+    ): NewEvent {
+        val payloadJson = mapper.writeValueAsString(event)
+        val metadataJson = mapper.writeValueAsString(metadata)
+        require(payloadJson.toByteArray(UTF_8).size <= MAX_PAYLOAD_BYTES) { "event_payload_too_large" }
+        require(metadataJson.toByteArray(UTF_8).size <= MAX_METADATA_BYTES) { "event_metadata_too_large" }
+        return NewEvent(eventId, event, payloadJson, metadataJson, occurredAt)
+    }
 
     private inline fun <reified E : DomainEvent> EventCodecRegistry.register() {
         val sampleType = eventTypeOf(E::class.java)
@@ -61,5 +68,10 @@ class DomainEventJsonCodec(
         InvoiceIssued::class.java -> "invoice.issued"
         AdjustmentPosted::class.java -> "adjustment.posted"
         else -> error("unsupported_event_type:${type.name}")
+    }
+
+    private companion object {
+        const val MAX_PAYLOAD_BYTES = 64 * 1024
+        const val MAX_METADATA_BYTES = 4 * 1024
     }
 }
