@@ -45,16 +45,20 @@ Kafka + PostgreSQL container suite는 다음을 실행했다.
 
 ## Diagram checklist ledger
 
-대상은 다음 두 SVG/PNG 쌍이다.
+대상은 다음 여섯 SVG/PNG 쌍이다.
 
 - `usage-billing-microservices-architecture-01`
-- `usage-billing-microservices-state-01`
+- `usage-billing-microservices-outbox-inbox-state-01`
+- `usage-billing-microservices-delivery-01`
+- `usage-billing-microservices-poison-recovery-01`
+- `usage-billing-microservices-correction-01`
+- `usage-billing-microservices-extraction-01`
 
 `./scripts/smoke-validate.sh diagram-qa`를 실행했고, 두 쌍 모두 다음 검사를 통과했다.
 
 | 검사 | 결과 |
 | --- | --- |
-| SVG marker fill/stroke 및 endpoint marker audit | PASS (architecture 8, state 9 marker) |
+| SVG marker fill/stroke 및 endpoint marker audit | PASS (6 targets, marker failures 0) |
 | connector geometry, endpoint, mixed-corner audit | PASS |
 | rounded orthogonal connector / spline 금지 | PASS |
 | CairoSVG PNG 재생성 뒤 SVG/PNG arrowhead 방향 비교 | PASS |
@@ -71,7 +75,7 @@ Kafka + PostgreSQL container suite는 다음을 실행했다.
 | `./gradlew :commerce-usage-billing-microservices-composition-tests:cleanIntegrationTest :commerce-usage-billing-microservices-composition-tests:integrationTest :commerce-usage-billing-microservices-composition-tests:koverXmlReport -Pkotlin.incremental=false --no-build-cache --max-workers=1 --no-daemon` | PASS, 11 tests across 10 composition scenarios; failures/errors/skipped 0 |
 | `./gradlew --no-daemon :commerce-usage-billing-microservices-composition-tests:integrationTest --tests '...CorrectionIntegrationTest' --max-workers=1` | PASS |
 | `./gradlew :commerce-usage-billing-microservices-composition-tests:koverXmlReport -Pkotlin.incremental=false --no-build-cache --max-workers=1 --no-daemon` | PASS, service aggregation: line 2167 covered/188 missed, class 240 covered/19 missed |
-| `./scripts/smoke-validate.sh commerce` | PASS, 89 tasks |
+| `./scripts/smoke-validate.sh commerce` | PASS, 107 tasks including aggregated Kover |
 | `./gradlew detekt detektTest -Pkotlin.incremental=false --no-build-cache --max-workers=1 --no-daemon` | PASS, 68 tasks |
 | `node scripts/validate-usage-billing-microservices-readme.mjs` | PASS |
 | `./scripts/smoke-validate.sh diagram-qa` | PASS |

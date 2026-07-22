@@ -162,6 +162,7 @@ case "${1:-help}" in
       :commerce-usage-billing-query-service:test \
       :commerce-usage-billing-microservices-composition-tests:test \
       :commerce-usage-billing-microservices-composition-tests:integrationTest \
+      :commerce-usage-billing-microservices-composition-tests:koverXmlReport \
       --continue --max-workers=1"
     ;;
 

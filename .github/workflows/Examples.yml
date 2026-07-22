@@ -363,6 +363,7 @@ jobs:
           :commerce-usage-billing-invoice-service:integrationTest
           :commerce-usage-billing-query-service:integrationTest
           :commerce-usage-billing-microservices-composition-tests:integrationTest
+          :commerce-usage-billing-microservices-composition-tests:koverXmlReport
           --continue
           --max-workers=1
         env:
@@ -379,6 +380,7 @@ jobs:
           test -n "$(find commerce/usage-metering-billing-event-sourcing/build/test-results/integrationTest -name '*.xml' -print -quit)"
           test -s commerce/usage-metering-billing-event-sourcing/build/reports/kover/report.xml
           test -n "$(find commerce/usage-billing-microservices-composition-tests/build/test-results/integrationTest -name '*.xml' -print -quit)"
+          test -s commerce/usage-billing-microservices-composition-tests/build/reports/kover/report.xml
 
       - name: Upload container example test results
         if: always()
@@ -451,6 +453,7 @@ jobs:
             commerce/usage-billing-query-service/build/reports/tests/integrationTest/
             commerce/usage-billing-microservices-composition-tests/build/test-results/integrationTest/*.xml
             commerce/usage-billing-microservices-composition-tests/build/reports/tests/integrationTest/
+            commerce/usage-billing-microservices-composition-tests/build/reports/kover/report.xml
           retention-days: 7
 
   examples-status:
