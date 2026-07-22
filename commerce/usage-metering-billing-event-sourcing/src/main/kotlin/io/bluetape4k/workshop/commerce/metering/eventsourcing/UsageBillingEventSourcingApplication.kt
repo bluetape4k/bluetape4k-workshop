@@ -6,6 +6,7 @@ import org.springframework.boot.runApplication
 @SpringBootApplication
 class UsageBillingEventSourcingApplication
 
+@Suppress("SpreadOperator") // Spring Boot's idiomatic Kotlin entry point requires varargs.
 fun main(args: Array<String>) {
     runApplication<UsageBillingEventSourcingApplication>(*args)
 }
