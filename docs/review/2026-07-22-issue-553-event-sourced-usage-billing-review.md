@@ -20,14 +20,16 @@
 | P1 | 입력 경계 | allowlisted event type이어도 serialized payload byte 상한이 없음 | payload 64 KiB, metadata 4 KiB UTF-8 상한을 codec 경계에서 검사하고 회귀 테스트 추가 |
 | P1 | 운영 정보 | public health와 operator metric endpoint의 공개 범위가 불명확 | health status는 public, detail과 `/actuator/metrics/**`는 `ROLE_OPERATOR`로 제한하고 통합 테스트 추가 |
 | P1 | PNG diagram | architecture의 projection 진입/이탈 connector가 같은 하단 통로에 과도하게 붙고, correction의 multi-segment marker 화살촉이 SVG/PNG에서 방향 drift 가능 | connector 포트를 분리한 rounded-corner route로 재배치하고, correction의 세 화살촉을 선 endpoint에 고정한 direct polygon으로 교체; 방향·색·dash·marker override를 QA에서 검증 |
+| P1 | Diagram 생성 계약 | 위 correction만 direct polygon으로 바꿔도 나머지 generated edge가 `marker orient=auto`를 쓰면 같은 SVG/PNG 방향 drift와 renderer 문자 대체가 재발 | 생성기의 모든 connector 54개를 endpoint/최종 tangent 기반 direct polygon으로 통일하고, eight-asset QA가 direct head·terminal clearance·renderer-safe ASCII를 전수 검증하도록 확장 |
 
-## PNG authoritative 재검수
+## PNG authoritative 전수 재검수
 
-- 최초 diagram PASS 판정은 이 두 자산의 full-size PNG에서 connector 통로 분리와 cross-renderer arrowhead parity를 충분히 입증하지 못했으므로 철회한다.
+- 최초 diagram PASS 판정은 일부 자산만 full-size PNG에서 connector 통로 분리와 cross-renderer arrowhead parity를 입증했으므로 철회한다. 개별 correction이 아니라 생성 계약 전체를 수정했다.
 - architecture는 event store → projection route를 projection 좌측 포트로 종료하고, projection → read model은 별도 하단 좌측 포트와 독립 corridor로 분리했다. connector audit은 `crossings=0`, `shared_segments=0`, `q_bends=8`, `failures=0`이다.
-- correction의 `original-view`, `adjust-view`, `original-reconcile`은 CSS `marker-end`를 명시적으로 끄고 endpoint-tip direct polygon을 사용한다. QA는 connector endpoint와 tip의 일치, 최종 선분 방향, semantic stroke 색, dash 차단을 모두 검사한다.
-- generator 재생성, SVG XML parse, CairoSVG PNG render, geometry/endpoint/connector/mixed-corner audit, QA wrapper, PNG full-size inspection을 두 자산에 각각 다시 수행했다. correction direct-head audit은 `heads=3 failures=0`이다.
-- CairoSVG가 `±` glyph을 대체 문자로 렌더링하는 것도 같은 재검수에서 발견해 `+/-`로 치환했다. rendered PNG가 source SVG와 달라질 수 있는 문자/marker는 PNG 기준으로 계속 검사한다.
+- generated SVG 여덟 개의 모든 connector는 CSS `marker-end`를 명시적으로 끄고 endpoint-tip direct polygon을 사용한다. QA는 connector endpoint와 tip의 일치, 최종 선분 방향, semantic stroke 색, dash 차단을 모두 검사한다.
+- generator 재생성, SVG XML parse, CairoSVG PNG render, text normalize, geometry/endpoint/connector/mixed-corner audit, QA wrapper, full-size PNG inspection을 여덟 자산 각각에 다시 수행했다. direct-head audit 합계는 `heads=54 failures=0`이고 connector audit은 모든 자산에서 `intrusions=0 crossings=0 shared_segments=0`이다.
+- terminal clearance도 전수 검사했다. architecture의 `store-projection`과 microservices의 `kafka-projection`은 마지막 직선 구간을 각각 `20px`로 조정해 최소 `16px` 요구를 충족한다.
+- CairoSVG가 `→`, `≥`, `•`, `±` 같은 glyph을 대체 문자로 렌더링할 수 있는 것을 확인했다. generator가 SVG 출력 단계에서 `->`, `>=`, `;`, `+/-`로 정규화하므로 SVG와 PNG는 동일한 renderer-safe ASCII 문자 집합을 사용한다.
 
 ## 6관점 결과
 
