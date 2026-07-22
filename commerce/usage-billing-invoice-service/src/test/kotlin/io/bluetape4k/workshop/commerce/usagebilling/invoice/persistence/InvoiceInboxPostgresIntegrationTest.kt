@@ -26,11 +26,18 @@ class InvoiceInboxPostgresIntegrationTest {
     private lateinit var lines: InvoiceLineRepository
 
     @Autowired
+    private lateinit var outbox: InvoiceOutboxRepository
+
+    @Autowired
+    private lateinit var outboxJournal: ExposedInvoiceOutboxJournal
+
+    @Autowired
     private lateinit var transactionManager: PlatformTransactionManager
 
     @Test
     fun `charge replay preserves one original line while adjustment appends a correction line`() {
         val initialCount = transaction { lines.findAll().count() }
+        val initialOutboxCount = transaction { outbox.findAll().count() }
         val chargeEventId = UUID.randomUUID()
         val charge = InvoiceInboxEvent(chargeEventId, "ChargeRated", null, BigDecimal("0.10"))
 
@@ -41,6 +48,20 @@ class InvoiceInboxPostgresIntegrationTest {
 
         transaction { lines.findAll().count() } shouldBeEqualTo initialCount + 2
         transaction { requireNotNull(lines.findAll().last().correctionOf) } shouldBeEqualTo chargeEventId
+        transaction { outbox.findAll().count() } shouldBeEqualTo initialOutboxCount + 2
+        transaction { outbox.findAll().last().eventType } shouldBeEqualTo "InvoiceCorrectionIssued"
+    }
+
+    @Test
+    fun `Invoice outbox claim and published mark remain fenced by owner`() {
+        val event = InvoiceInboxEvent(UUID.randomUUID(), "ChargeRated", null, BigDecimal("1.00"))
+        inbox.handle(event)
+        val now = java.time.Instant.parse("2026-07-23T00:00:00Z")
+
+        val lease = outboxJournal.claim("owner-a", now, 1).single()
+
+        outboxJournal.markPublished(lease.eventId, "owner-b", now) shouldBeEqualTo false
+        outboxJournal.markPublished(lease.eventId, "owner-a", now) shouldBeEqualTo true
     }
 
     private fun <T : Any> transaction(block: () -> T): T =
