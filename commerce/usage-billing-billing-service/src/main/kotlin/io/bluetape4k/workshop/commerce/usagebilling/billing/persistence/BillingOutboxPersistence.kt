@@ -6,6 +6,8 @@ import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxJournal
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingPriceEvidence
+import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingPriceEvidenceEvent
+import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingPriceEvidenceOutcome
 import io.bluetape4k.workshop.commerce.usagebilling.billing.integration.BillingIntegrationEnvelope
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
@@ -19,6 +21,8 @@ import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.jdbc.insertIgnore
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
 import java.time.Instant
 import java.util.UUID
@@ -56,6 +60,20 @@ object BillingPricingEvidence : UUIDTable("billing_pricing_evidence", "pricing_e
 
     init {
         uniqueIndex(tenantId, meterCode, currency, effectiveAt)
+    }
+}
+
+object BillingPriceEvidenceInboxEvents : UUIDTable(
+    "billing_price_evidence_inbox_event",
+    "price_evidence_inbox_event_id",
+) {
+    val eventId = javaUUID("event_id")
+    val tenantId = varchar("tenant_id", 64)
+    val payloadDigest = varchar("payload_digest", 64)
+    val createdAt = timestamp("created_at")
+
+    init {
+        uniqueIndex(tenantId, eventId)
     }
 }
 
@@ -119,6 +137,15 @@ class BillingPricingEvidenceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var currency by BillingPricingEvidence.currency
     var unitPrice by BillingPricingEvidence.unitPrice
     var effectiveAt by BillingPricingEvidence.effectiveAt
+}
+
+class BillingPriceEvidenceInboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<BillingPriceEvidenceInboxEventEntity>(BillingPriceEvidenceInboxEvents)
+
+    var eventId by BillingPriceEvidenceInboxEvents.eventId
+    var tenantId by BillingPriceEvidenceInboxEvents.tenantId
+    var payloadDigest by BillingPriceEvidenceInboxEvents.payloadDigest
+    var createdAt by BillingPriceEvidenceInboxEvents.createdAt
 }
 
 class BillingInboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
@@ -198,6 +225,41 @@ class BillingPricingEvidenceRepository :
             unitPrice = evidence.unitPrice
             effectiveAt = evidence.effectiveAt
         }
+    }
+}
+
+@Repository
+class BillingPriceEvidenceInboxRepository :
+    AppendOnlyBillingExposedJdbcRepository<BillingPriceEvidenceInboxEventEntity, UUID>(
+        BillingPriceEvidenceInboxEventEntity::class.java,
+    ) {
+    fun record(event: BillingPriceEvidenceEvent): BillingPriceEvidenceOutcome {
+        val evidence = event.evidence
+        val inserted = BillingPriceEvidenceInboxEvents.insertIgnore {
+            it[eventId] = event.eventId
+            it[tenantId] = evidence.tenantId
+            it[payloadDigest] = event.payloadDigest
+            it[createdAt] = evidence.effectiveAt
+        }.insertedCount == 1
+        if (!inserted) {
+            val existing = BillingPriceEvidenceInboxEvents.selectAll()
+                .where {
+                    (BillingPriceEvidenceInboxEvents.tenantId eq evidence.tenantId) and
+                        (BillingPriceEvidenceInboxEvents.eventId eq event.eventId)
+                }.singleOrNull()
+            return when (existing?.get(BillingPriceEvidenceInboxEvents.payloadDigest)) {
+                event.payloadDigest -> BillingPriceEvidenceOutcome.DUPLICATE
+                else -> BillingPriceEvidenceOutcome.QUARANTINED
+            }
+        }
+        BillingPricingEvidenceEntity.new {
+            tenantId = evidence.tenantId
+            meterCode = evidence.meterCode
+            currency = evidence.currency
+            unitPrice = evidence.unitPrice
+            effectiveAt = evidence.effectiveAt
+        }
+        return BillingPriceEvidenceOutcome.APPLIED
     }
 }
 
