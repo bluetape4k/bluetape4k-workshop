@@ -91,18 +91,18 @@ internal class JobSafetyDatabaseFixture : AutoCloseable {
         }
     }
 
-    fun seedOutbox(operationId: OperationId) {
+    fun seedOutbox(operationId: OperationId, now: Instant = Instant.now()) {
         val effectOperationId = operationId
-        val now = Instant.now()
+        val seedTime = now
         executor.transaction {
             JobOutboxEntity.new {
                 this.operationId = effectOperationId.value
                 effectType = "SUMMARY_PUBLISHED"
                 status = EffectDeliveryState.PENDING.name
                 attemptCount = 0
-                nextAttemptAt = now
-                createdAt = now
-                updatedAt = now
+                nextAttemptAt = seedTime
+                createdAt = seedTime
+                updatedAt = seedTime
             }
         }
     }

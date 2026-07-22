@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.leader.jobsafety.effect
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.leader.jobsafety.domain.OperationId
 import io.bluetape4k.workshop.leader.jobsafety.domain.EffectDeliveryState
 import io.bluetape4k.workshop.leader.jobsafety.domain.ExternalEffectResult
@@ -54,16 +55,18 @@ internal class OutboxEffectWorkerTest {
         JobSafetyDatabaseFixture().use { fixture ->
             val operationId = OperationId("effect-expired-claim")
             val claimedAt = Instant.parse("2026-07-22T00:00:00Z")
-            fixture.seedOutbox(operationId)
+            fixture.seedOutbox(operationId, claimedAt)
             val repositories = JobSafetyRepositories(fixture.executor)
             val provider = DeterministicExternalEffectAdapter()
             provider.script(operationId, DeterministicEffect.APPLIED_BUT_TIMEOUT)
 
-            repositories.outbox.claimNext(
-                state = EffectDeliveryState.PENDING,
-                now = claimedAt,
-                claimTimeout = Duration.ofSeconds(5),
-            )
+            repositories.outbox
+                .claimNext(
+                    state = EffectDeliveryState.PENDING,
+                    now = claimedAt,
+                    claimTimeout = Duration.ofSeconds(5),
+                ).shouldNotBeNull()
+                .operationId shouldBeEqualTo operationId
             provider.execute(operationId)
 
             val restartedWorker =
@@ -71,6 +74,7 @@ internal class OutboxEffectWorkerTest {
                     outbox = repositories.outbox,
                     receipts = repositories.effectReceipt,
                     provider = provider,
+                    claimTimeout = Duration.ofSeconds(5),
                     clock = { claimedAt.plusSeconds(6) },
                 )
 
