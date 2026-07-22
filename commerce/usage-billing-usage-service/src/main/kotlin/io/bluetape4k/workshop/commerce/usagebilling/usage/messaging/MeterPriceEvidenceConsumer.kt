@@ -37,7 +37,7 @@ class MeterPriceEvidenceDecoder {
         return PriceEvidenceInboxEvent(
             eventId = eventId,
             tenantId = tenantId,
-            payloadDigest = digestOf(wirePayload),
+            payloadDigest = payloadDigest,
             evidence = PriceEvidence(
                 tenantId = tenantId,
                 meterCode = price.requiredText("meterCode"),
