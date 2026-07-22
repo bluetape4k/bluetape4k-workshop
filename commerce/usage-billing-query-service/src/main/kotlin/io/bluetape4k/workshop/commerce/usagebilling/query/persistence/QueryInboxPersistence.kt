@@ -4,6 +4,9 @@ package io.bluetape4k.workshop.commerce.usagebilling.query.persistence
 
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryInboxEvent
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryProjectionJournal
+import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryQuarantineEvent
+import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryRecoveryJournal
+import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryRecoverySnapshot
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
@@ -61,6 +64,30 @@ object QueryCheckpoints : UUIDTable("query_checkpoint", "checkpoint_id") {
     }
 }
 
+object QueryQuarantineEvents : UUIDTable("query_quarantine_event", "quarantine_id") {
+    val eventId = javaUUID("event_id")
+    val tenantId = varchar("tenant_id", 64)
+    val eventType = varchar("event_type", 128)
+    val reason = varchar("reason", 128)
+    val state = varchar("state", 32)
+    val quarantinedAt = timestamp("quarantined_at")
+    val updatedAt = timestamp("updated_at")
+
+    init {
+        uniqueIndex(eventId)
+        index(false, state, quarantinedAt)
+    }
+}
+
+object QueryRedriveAudits : UUIDTable("query_redrive_audit", "redrive_audit_id") {
+    val eventId = javaUUID("event_id")
+    val actor = varchar("actor", 128)
+    val correlationId = varchar("correlation_id", 128)
+    val previousState = varchar("previous_state", 32)
+    val currentState = varchar("current_state", 32)
+    val requestedAt = timestamp("requested_at")
+}
+
 class QueryInboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<QueryInboxEventEntity>(QueryInboxEvents)
 
@@ -97,6 +124,29 @@ class QueryCheckpointEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var position by QueryCheckpoints.position
 }
 
+class QueryQuarantineEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<QueryQuarantineEventEntity>(QueryQuarantineEvents)
+
+    var eventId by QueryQuarantineEvents.eventId
+    var tenantId by QueryQuarantineEvents.tenantId
+    var eventType by QueryQuarantineEvents.eventType
+    var reason by QueryQuarantineEvents.reason
+    var state by QueryQuarantineEvents.state
+    var quarantinedAt by QueryQuarantineEvents.quarantinedAt
+    var updatedAt by QueryQuarantineEvents.updatedAt
+}
+
+class QueryRedriveAuditEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<QueryRedriveAuditEntity>(QueryRedriveAudits)
+
+    var eventId by QueryRedriveAudits.eventId
+    var actor by QueryRedriveAudits.actor
+    var correlationId by QueryRedriveAudits.correlationId
+    var previousState by QueryRedriveAudits.previousState
+    var currentState by QueryRedriveAudits.currentState
+    var requestedAt by QueryRedriveAudits.requestedAt
+}
+
 abstract class QueryExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(ExposedEntityInformationImpl(domainClass))
@@ -126,6 +176,14 @@ class QueryReadModelRepository :
 @Repository
 class QueryCheckpointRepository :
     AppendOnlyQueryExposedJdbcRepository<QueryCheckpointEntity, UUID>(QueryCheckpointEntity::class.java)
+
+@Repository
+class QueryQuarantineRepository :
+    AppendOnlyQueryExposedJdbcRepository<QueryQuarantineEventEntity, UUID>(QueryQuarantineEventEntity::class.java)
+
+@Repository
+class QueryRedriveAuditRepository :
+    AppendOnlyQueryExposedJdbcRepository<QueryRedriveAuditEntity, UUID>(QueryRedriveAuditEntity::class.java)
 
 @Repository
 class ExposedQueryProjectionJournal : QueryProjectionJournal {
@@ -170,5 +228,54 @@ class ExposedQueryProjectionJournal : QueryProjectionJournal {
             eventType = event.eventType
         }
         checkpoint += 1
+    }
+}
+
+@Repository
+class ExposedQueryRecoveryJournal : QueryRecoveryJournal {
+    override fun snapshot(): QueryRecoverySnapshot {
+        val quarantines = QueryQuarantineEventEntity.all().filter { it.state == QUARANTINED }
+        return QueryRecoverySnapshot(
+            quarantineCount = quarantines.size.toLong(),
+            oldestQuarantineAt = quarantines.minOfOrNull { it.quarantinedAt },
+        )
+    }
+
+    override fun quarantine(event: QueryQuarantineEvent) {
+        if (QueryQuarantineEventEntity.find { QueryQuarantineEvents.eventId eq event.eventId }.firstOrNull() != null) {
+            return
+        }
+        QueryQuarantineEventEntity.new {
+            eventId = event.eventId
+            tenantId = event.tenantId
+            eventType = event.eventType
+            reason = event.reason
+            state = QUARANTINED
+            quarantinedAt = event.quarantinedAt
+            updatedAt = event.quarantinedAt
+        }
+    }
+
+    override fun requestRedrive(eventId: UUID, actor: String, correlationId: String): Boolean =
+        QueryQuarantineEventEntity.find { QueryQuarantineEvents.eventId eq eventId }
+            .firstOrNull()
+            ?.takeIf { it.state == QUARANTINED }
+            ?.let {
+                it.state = REDRIVE_REQUESTED
+                QueryRedriveAuditEntity.new {
+                    this.eventId = eventId
+                    this.actor = actor
+                    this.correlationId = correlationId
+                    previousState = QUARANTINED
+                    currentState = REDRIVE_REQUESTED
+                    requestedAt = java.time.Instant.now()
+                }
+                true
+            }
+            ?: false
+
+    private companion object {
+        const val QUARANTINED = "QUARANTINED"
+        const val REDRIVE_REQUESTED = "REDRIVE_REQUESTED"
     }
 }

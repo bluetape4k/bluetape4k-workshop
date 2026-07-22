@@ -33,6 +33,29 @@ data class QueryApplyResult(
     val applied: Boolean,
 )
 
+data class QueryQuarantineEvent(
+    val eventId: UUID,
+    val tenantId: String,
+    val eventType: String,
+    val reason: String,
+    val quarantinedAt: Instant,
+) {
+    init {
+        tenantId.requireNotBlank("tenantId")
+        eventType.requireNotBlank("eventType")
+        reason.requireNotBlank("reason")
+    }
+}
+
+data class QueryRecoverySnapshot(
+    val quarantineCount: Long,
+    val oldestQuarantineAt: Instant?,
+)
+
+data class QueryRedriveResult(
+    val requested: Boolean,
+)
+
 interface QueryProjectionJournal {
     val readModelEventIds: Set<UUID>
     var checkpoint: Long
@@ -40,4 +63,12 @@ interface QueryProjectionJournal {
     fun hasEvent(eventId: UUID): Boolean
 
     fun apply(event: QueryInboxEvent)
+}
+
+interface QueryRecoveryJournal {
+    fun snapshot(): QueryRecoverySnapshot
+
+    fun quarantine(event: QueryQuarantineEvent)
+
+    fun requestRedrive(eventId: UUID, actor: String, correlationId: String): Boolean
 }
