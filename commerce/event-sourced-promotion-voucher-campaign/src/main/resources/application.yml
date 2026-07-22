@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: commerce-event-sourced-promotion-voucher-campaign
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+

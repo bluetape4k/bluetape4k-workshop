@@ -124,13 +124,13 @@
 **의존:** 승인된 spec/plan
 **write scope:** module build/runtime/test resources만
 
-- [ ] **RED:** `Runtime.version().feature() == 25`, Kotlin/JVM target 25, preview 미사용, Boot main class, virtual-thread runtime을 검사하는 `EventSourcedRuntimeContractTest`를 먼저 작성한다.
-- [ ] module directory가 없어서 targeted test가 실패하는 증거를 남긴다.
-- [ ] #534 module build를 최소한으로 재사용해 Java/Kotlin 25, Boot 4 MVC/JDBC/Security/Actuator, Exposed, PostgreSQL, Testcontainers, Awaitility, assertions를 versionless alias로 선언한다.
-- [ ] `test`는 container-free, `integrationTest`는 `integration`, `stressTest`는 `stress` tag만 실행하고 test mutex·zero-test guard·JUnit XML guard를 적용한다.
-- [ ] `./gradlew projects | rg 'commerce-event-sourced-promotion-voucher-campaign'`와 runtime contract를 통과시킨다.
-- [ ] rollback: module directory만 제거하면 자동 등록 전 상태로 돌아가도록 root build/settings를 수정하지 않는다.
-- [ ] Lore commit: `Run the event-sourced voucher example on Java 25`.
+- [x] **RED:** `Runtime.version().feature() == 25`, Kotlin/JVM target 25, preview 미사용, Boot main class, virtual-thread runtime을 검사하는 `EventSourcedRuntimeContractTest`를 먼저 작성한다.
+- [x] module directory가 없어서 targeted test가 실패하는 증거를 남긴다.
+- [x] #534 module build를 최소한으로 재사용해 Java/Kotlin 25, Boot 4 MVC/JDBC/Security/Actuator, Exposed, PostgreSQL, Testcontainers, Awaitility, assertions를 versionless alias로 선언한다.
+- [x] `test`는 container-free, `integrationTest`는 `integration`, `stressTest`는 `stress` tag만 실행하고 test mutex·zero-test guard·JUnit XML guard를 적용한다.
+- [x] `./gradlew projects | rg 'commerce-event-sourced-promotion-voucher-campaign'`와 runtime contract를 통과시킨다.
+- [x] rollback: module directory만 제거하면 자동 등록 전 상태로 돌아가도록 root build/settings를 수정하지 않는다.
+- [x] Lore commit: `Run the event-sourced voucher example on Java 25`.
 
 ### Task 2: event schema, aggregate reducer, upcaster를 순수 domain으로 잠근다
 
