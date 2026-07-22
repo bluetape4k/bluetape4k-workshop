@@ -1,0 +1,127 @@
+@file:Suppress("MagicNumber") // SQL column sizes are schema declarations.
+
+package io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence
+
+import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
+import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
+import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.dao.Entity
+import org.jetbrains.exposed.v1.dao.java.UUIDEntity
+import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
+import org.jetbrains.exposed.v1.javatime.timestamp
+import java.util.UUID
+
+private const val DIGEST_LENGTH = 64
+
+internal object EventLog : UUIDTable("voucher_event_log", "event_id") {
+    val tenantId = varchar("tenant_id", DIGEST_LENGTH)
+    val streamType = varchar("stream_type", 64)
+    val streamId = javaUUID("stream_id")
+    val streamVersion = long("stream_version")
+    val globalPosition = long("global_position")
+    val eventType = varchar("event_type", 128)
+    val schemaVersion = integer("schema_version")
+    val occurredAt = timestamp("occurred_at")
+    val recordedAt = timestamp("recorded_at")
+    val payload = text("payload")
+    val canonicalChecksum = varchar("canonical_checksum", 64)
+
+    init {
+        uniqueIndex(streamId, streamVersion)
+        uniqueIndex(globalPosition)
+        index(false, tenantId, streamType, streamId, streamVersion)
+    }
+}
+
+internal object StreamHeads : UUIDTable("voucher_stream_head", "stream_id") {
+    val tenantId = varchar("tenant_id", 64)
+    val streamType = varchar("stream_type", 64)
+    val version = long("version")
+    val updatedAt = timestamp("updated_at")
+
+    init {
+        uniqueIndex(tenantId, streamType, id)
+    }
+}
+
+internal object AppendFences : UUIDTable("voucher_append_fence", "fence_id") {
+    val nextGlobalPosition = long("next_global_position")
+}
+
+internal object IdempotencyReceipts : UUIDTable("voucher_idempotency_receipt", "receipt_id") {
+    val tenantId = varchar("tenant_id", 64)
+    val principalDigest = varchar("principal_digest", 64)
+    val operation = varchar("operation", 64)
+    val keyDigest = varchar("key_digest", 64)
+    val fingerprint = varchar("fingerprint", 64)
+    val status = varchar("status", 24)
+    val leaseDeadline = timestamp("lease_deadline")
+    val createdAt = timestamp("created_at")
+
+    init {
+        uniqueIndex(tenantId, principalDigest, operation, keyDigest)
+    }
+}
+
+internal object EventSnapshots : UUIDTable("voucher_event_snapshot", "snapshot_id") {
+    val tenantId = varchar("tenant_id", 64)
+    val streamId = javaUUID("stream_id")
+    val streamVersion = long("stream_version")
+    val schemaVersion = integer("schema_version")
+    val canonicalDigest = varchar("canonical_digest", 64)
+    val payload = text("payload")
+    val createdAt = timestamp("created_at")
+
+    init {
+        uniqueIndex(streamId, streamVersion)
+    }
+}
+
+internal object ProjectionCheckpoints : UUIDTable("voucher_projection_checkpoint", "checkpoint_id") {
+    val projection = varchar("projection", 64)
+    val generation = long("generation")
+    val position = long("position")
+    val fencingToken = long("fencing_token")
+    val updatedAt = timestamp("updated_at")
+
+    init {
+        uniqueIndex(projection, generation)
+    }
+}
+
+internal class EventLogEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<EventLogEntity>(EventLog)
+}
+
+internal abstract class EventSourcedExposedJdbcRepository<E : Entity<ID>, ID : Any>(
+    domainClass: Class<E>,
+) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(
+        ExposedEntityInformationImpl(domainClass),
+    )
+
+internal abstract class AppendOnlyEventSourcedRepository<E : Entity<ID>, ID : Any>(
+    domainClass: Class<E>,
+) : EventSourcedExposedJdbcRepository<E, ID>(domainClass) {
+    final override fun <S : E> save(entity: S): S = immutableMutation()
+
+    final override fun <S : E> saveAll(entities: Iterable<S>): List<S> = immutableMutation()
+
+    final override fun deleteById(id: ID): Unit = immutableMutation()
+
+    final override fun delete(entity: E): Unit = immutableMutation()
+
+    final override fun deleteAllById(ids: Iterable<ID>): Unit = immutableMutation()
+
+    final override fun deleteAll(entities: Iterable<E>): Unit = immutableMutation()
+
+    final override fun deleteAll(): Unit = immutableMutation()
+
+    protected fun <T> immutableMutation(): T =
+        throw UnsupportedOperationException("append-only repository")
+}
+
+internal class EventLogRepository :
+    AppendOnlyEventSourcedRepository<EventLogEntity, UUID>(EventLogEntity::class.java)
