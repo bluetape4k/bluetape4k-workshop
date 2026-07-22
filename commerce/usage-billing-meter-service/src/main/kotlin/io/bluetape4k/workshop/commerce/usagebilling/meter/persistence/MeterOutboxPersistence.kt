@@ -14,12 +14,20 @@ import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityIn
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.lessEq
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
@@ -209,58 +217,78 @@ class ExposedMeterCommandJournal : MeterCommandJournal {
 class ExposedMeterOutboxJournal : MeterOutboxJournal {
     @Transactional
     override fun claim(owner: String, now: Instant, limit: Int): List<MeterOutboxLease> =
-        MeterOutboxEventEntity.all()
-            .filter { event -> event.isClaimable(now) }
-            .sortedBy { it.createdAt }
+        MeterOutboxEvents.selectAll()
+            .where { claimableAt(now) }
+            .orderBy(MeterOutboxEvents.createdAt to SortOrder.ASC, MeterOutboxEvents.id to SortOrder.ASC)
             .take(limit)
-            .map { event ->
-                event.status = MeterOutboxStatus.CLAIMED.name
-                event.claimOwner = owner
-                event.claimUntil = now.plus(CLAIM_LEASE)
-                event.updatedAt = now
-                MeterOutboxLease(event.eventId, event.partitionKey, event.payload, MeterOutboxStatus.CLAIMED, owner)
+            .mapNotNull { row ->
+                val eventId = row[MeterOutboxEvents.eventId]
+                val claimed = MeterOutboxEvents.update({
+                    (MeterOutboxEvents.eventId eq eventId) and claimableAt(now)
+                }) {
+                    it[status] = MeterOutboxStatus.CLAIMED.name
+                    it[claimOwner] = owner
+                    it[claimUntil] = now.plus(CLAIM_LEASE)
+                    it[updatedAt] = now
+                }
+                if (claimed != 1) return@mapNotNull null
+                MeterOutboxEvents.selectAll()
+                    .where { MeterOutboxEvents.eventId eq eventId }
+                    .singleOrNull()
+                    ?.let { claimedRow ->
+                        MeterOutboxLease(
+                            eventId = claimedRow[MeterOutboxEvents.eventId],
+                            partitionKey = claimedRow[MeterOutboxEvents.partitionKey],
+                            payload = claimedRow[MeterOutboxEvents.payload],
+                            status = MeterOutboxStatus.CLAIMED,
+                            claimOwner = owner,
+                        )
+                    }
             }
 
     @Transactional
     override fun markPublished(eventId: UUID, owner: String, now: Instant): Boolean =
-        claimedBy(eventId, owner)?.let { event ->
-            event.status = MeterOutboxStatus.PUBLISHED.name
-            event.claimOwner = null
-            event.claimUntil = null
-            event.nextAttemptAt = null
-            event.updatedAt = now
-            true
-        } ?: false
+        MeterOutboxEvents.update({ claimedBy(owner, eventId, now) }) {
+            it[status] = MeterOutboxStatus.PUBLISHED.name
+            it[claimOwner] = null
+            it[claimUntil] = null
+            it[nextAttemptAt] = null
+            it[updatedAt] = now
+        } == 1
 
     @Transactional
     override fun markRetryWait(eventId: UUID, owner: String, now: Instant): Boolean =
-        claimedBy(eventId, owner)?.let { event ->
-            val attempts = event.attempt + 1
-            event.attempt = attempts
-            event.status = if (attempts >= MAX_ATTEMPTS) {
-                MeterOutboxStatus.QUARANTINED.name
-            } else {
-                MeterOutboxStatus.RETRY_WAIT.name
-            }
-            event.claimOwner = null
-            event.claimUntil = null
-            event.nextAttemptAt = now.plus(RETRY_DELAY)
-            event.updatedAt = now
-            true
-        } ?: false
+        MeterOutboxEvents.selectAll()
+            .where { claimedBy(owner, eventId, now) }
+            .singleOrNull()
+            ?.let { row ->
+                val attempts = row[MeterOutboxEvents.attempt] + 1
+                MeterOutboxEvents.update({ claimedBy(owner, eventId, now) }) {
+                    it[attempt] = attempts
+                    it[status] = if (attempts >= MAX_ATTEMPTS) {
+                        MeterOutboxStatus.QUARANTINED.name
+                    } else {
+                        MeterOutboxStatus.RETRY_WAIT.name
+                    }
+                    it[claimOwner] = null
+                    it[claimUntil] = null
+                    it[nextAttemptAt] = now.plus(RETRY_DELAY)
+                    it[updatedAt] = now
+                } == 1
+            } ?: false
 
-    private fun MeterOutboxEventEntity.isClaimable(now: Instant): Boolean {
-        val nextAttempt = nextAttemptAt
-        val claimDeadline = claimUntil
-        return status == MeterOutboxStatus.PENDING.name ||
-            (status == MeterOutboxStatus.RETRY_WAIT.name && (nextAttempt == null || nextAttempt <= now)) ||
-            (status == MeterOutboxStatus.CLAIMED.name && claimDeadline != null && claimDeadline <= now)
-    }
+    private fun claimableAt(now: Instant): Op<Boolean> =
+        (MeterOutboxEvents.status eq MeterOutboxStatus.PENDING.name) or
+            ((MeterOutboxEvents.status eq MeterOutboxStatus.RETRY_WAIT.name) and
+                (MeterOutboxEvents.nextAttemptAt lessEq now)) or
+            ((MeterOutboxEvents.status eq MeterOutboxStatus.CLAIMED.name) and
+                (MeterOutboxEvents.claimUntil lessEq now))
 
-    private fun claimedBy(eventId: UUID, owner: String): MeterOutboxEventEntity? =
-        MeterOutboxEventEntity.find { MeterOutboxEvents.eventId eq eventId }
-            .firstOrNull()
-            ?.takeIf { it.status == MeterOutboxStatus.CLAIMED.name && it.claimOwner == owner }
+    private fun claimedBy(owner: String, eventId: UUID, now: Instant): Op<Boolean> =
+        (MeterOutboxEvents.eventId eq eventId) and
+            (MeterOutboxEvents.status eq MeterOutboxStatus.CLAIMED.name) and
+            (MeterOutboxEvents.claimOwner eq owner) and
+            (MeterOutboxEvents.claimUntil greater now)
 
     private companion object {
         val CLAIM_LEASE: Duration = Duration.ofSeconds(30)

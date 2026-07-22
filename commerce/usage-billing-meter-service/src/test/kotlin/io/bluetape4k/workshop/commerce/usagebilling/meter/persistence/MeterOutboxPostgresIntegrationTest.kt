@@ -83,6 +83,18 @@ class MeterOutboxPostgresIntegrationTest {
             .claimOwner shouldBeEqualTo "worker-b"
     }
 
+    @Test
+    fun `conditional claim prevents a second worker from leasing an active event`() {
+        val result =
+            service.activatePrice(activation("active-${UUID.randomUUID()}", "active-meter", Instant.EPOCH))
+        val claimedAt = Instant.parse("2026-07-22T00:00:00Z")
+
+        outboxJournal.claim("worker-a", claimedAt, 100).map { it.eventId }.contains(result.eventId) shouldBeEqualTo
+            true
+        outboxJournal.claim("worker-b", claimedAt, 100).map { it.eventId }.contains(result.eventId) shouldBeEqualTo
+            false
+    }
+
     private fun activation(
         idempotencyKey: String,
         meterCode: String,

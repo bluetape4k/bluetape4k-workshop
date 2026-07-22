@@ -2,6 +2,7 @@
 
 package io.bluetape4k.workshop.commerce.usagebilling.meter.integration
 
+import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import java.nio.charset.StandardCharsets.UTF_8
@@ -37,6 +38,24 @@ class MeterIntegrationEnvelope private constructor(
     fun partitionKey(): String = "$tenantId|$aggregateType|$aggregateId"
 
     fun hasValidPayloadDigest(): Boolean = payloadDigest == digestOf(payload)
+
+    fun wirePayload(): String = Jackson.defaultJsonMapper.writeValueAsString(
+        linkedMapOf(
+            "eventId" to eventId.toString(),
+            "eventType" to eventType,
+            "schemaVersion" to schemaVersion,
+            "tenantId" to tenantId,
+            "aggregateType" to aggregateType,
+            "aggregateId" to aggregateId,
+            "aggregateVersion" to aggregateVersion,
+            "payload" to payload,
+            "payloadDigest" to payloadDigest,
+            "occurredAt" to occurredAt.toString(),
+            "recordedAt" to recordedAt.toString(),
+        ),
+    )
+
+    fun wirePayloadDigest(): String = digestOf(wirePayload())
 
     companion object {
         const val AGGREGATE_TYPE = "Meter"
