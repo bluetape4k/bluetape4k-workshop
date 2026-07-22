@@ -52,3 +52,16 @@ class CommandReceiptEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var createdAt by CommandReceipts.createdAt
     var updatedAt by CommandReceipts.updatedAt
 }
+
+class AggregateSnapshotEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<AggregateSnapshotEntity>(AggregateSnapshots)
+
+    var tenantId by AggregateSnapshots.tenantId
+    var streamType by AggregateSnapshots.streamType
+    var streamId by AggregateSnapshots.streamId
+    var streamVersion by AggregateSnapshots.streamVersion
+    var reducerVersion by AggregateSnapshots.reducerVersion
+    var statePayload by AggregateSnapshots.statePayload
+    var lastEventHash by AggregateSnapshots.lastEventHash
+    var createdAt by AggregateSnapshots.createdAt
+}

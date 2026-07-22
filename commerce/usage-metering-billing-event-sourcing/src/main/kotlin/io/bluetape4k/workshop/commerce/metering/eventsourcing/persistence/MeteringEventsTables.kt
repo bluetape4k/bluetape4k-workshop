@@ -64,4 +64,20 @@ object CommandReceipts : UUIDTable("metering_command_receipts", "receipt_id") {
     }
 }
 
-val METERING_EVENT_TABLES = arrayOf(EventStreamHeads, DomainEvents, CommandReceipts)
+object AggregateSnapshots : UUIDTable("metering_aggregate_snapshots", "snapshot_id") {
+    val tenantId = varchar("tenant_id", 64)
+    val streamType = varchar("stream_type", 64)
+    val streamId = varchar("stream_id", 128)
+    val streamVersion = long("stream_version")
+    val reducerVersion = integer("reducer_version")
+    val statePayload = text("state_payload")
+    val lastEventHash = varchar("last_event_hash", 64)
+    val createdAt = timestamp("created_at")
+
+    init {
+        uniqueIndex(tenantId, streamType, streamId, streamVersion, reducerVersion)
+        index(false, tenantId, streamType, streamId, reducerVersion, streamVersion)
+    }
+}
+
+val METERING_EVENT_TABLES = arrayOf(EventStreamHeads, DomainEvents, CommandReceipts, AggregateSnapshots)
