@@ -2,9 +2,9 @@
   <title id="title">Outbox and inbox recovery state machines</title>
   <desc id="desc">Outbox and inbox state transitions provide replay-safe Kafka delivery.</desc>
   <defs>
-    <marker id="navy" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L14,7 L0,14 Z" fill="#356a91"/></marker>
-    <marker id="amber" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L14,7 L0,14 Z" fill="#a67331"/></marker>
-    <marker id="red" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L14,7 L0,14 Z" fill="#9a4b4b"/></marker>
+    <marker id="navy" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L14,7 L0,14 Z" fill="#356a91" stroke="#356a91"/></marker>
+    <marker id="amber" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L14,7 L0,14 Z" fill="#a67331" stroke="#a67331"/></marker>
+    <marker id="red" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L14,7 L0,14 Z" fill="#9a4b4b" stroke="#9a4b4b"/></marker>
     <style>.title{font:700 34px 'Architects Daughter',sans-serif;fill:#213447}.head{font:700 26px 'Architects Daughter',sans-serif;fill:#213447}.state{font:700 20px 'Comic Mono',monospace;fill:#263f52}.note{font:16px 'Comic Mono',monospace;fill:#526675}.flow{fill:none;stroke:#356a91;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#navy)}.retry{fill:none;stroke:#a67331;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#amber)}.stop{fill:none;stroke:#9a4b4b;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#red)}</style>
   </defs>
   <rect width="1600" height="850" fill="#f8fbfd"/>
