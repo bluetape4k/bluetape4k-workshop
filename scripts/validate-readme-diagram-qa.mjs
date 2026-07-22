@@ -292,12 +292,11 @@ function auditDirectHeads(file, svg) {
   if (heads.size === 0) return;
 
   let failures = 0;
-  for (const [id, pathAttrs] of paths) {
-    if (id.startsWith("seq-")) continue;
-    const head = heads.get(id);
-    if (!head) {
+  for (const [id, head] of heads) {
+    const pathAttrs = paths.get(id);
+    if (!pathAttrs) {
       failures += 1;
-      fail(scope, "direct-head audit", `${id} missing data-connector-head polygon`);
+      fail(scope, "direct-head audit", `${id} has no matching data-connector path`);
       continue;
     }
     const points = parsePathEndPoints(pathAttrs.d || "");
@@ -315,6 +314,7 @@ function auditDirectHeads(file, svg) {
     const headVector = { x: tip.x - base.x, y: tip.y - base.y };
     const stroke = resolveStroke(pathAttrs, styles);
     const dot = finalVector.x * headVector.x + finalVector.y * headVector.y;
+    const markerOverride = pathAttrs.style || "";
     if (distance(tip, end) > 0.2) {
       failures += 1;
       fail(scope, "direct-head audit", `${id} head tip=${tip.x},${tip.y} endpoint=${end.x},${end.y}`);
@@ -322,6 +322,10 @@ function auditDirectHeads(file, svg) {
     if (dot <= 0) {
       failures += 1;
       fail(scope, "direct-head audit", `${id} head direction opposes final connector segment`);
+    }
+    if (!markerOverride.includes("marker-end:none")) {
+      failures += 1;
+      fail(scope, "direct-head audit", `${id} does not disable its CSS marker-end`);
     }
     if (!stroke || head.fill !== stroke || head.stroke !== stroke) {
       failures += 1;
