@@ -18,9 +18,21 @@ data class StreamAppend(
     val events: List<NewEvent>,
 )
 
+data class OccurredEventCursor(val occurredAt: java.time.Instant, val eventId: java.util.UUID)
+
+data class EventTypeQuery(
+    val tenantId: String,
+    val eventType: String,
+    val startsAt: java.time.Instant,
+    val endsAt: java.time.Instant,
+    val after: OccurredEventCursor? = null,
+    val limit: Int,
+)
+
 interface EventStore {
     fun append(stream: StreamKey, expectedVersion: Long, events: List<NewEvent>): List<PersistedEvent>
     fun appendAll(appends: List<StreamAppend>): List<PersistedEvent>
     fun load(stream: StreamKey, afterVersion: Long = 0): List<PersistedEvent>
     fun loadAfterGlobalPosition(afterPosition: Long, limit: Int): List<PersistedEvent>
+    fun loadByType(query: EventTypeQuery): List<PersistedEvent>
 }

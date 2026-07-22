@@ -7,11 +7,16 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.StreamKey
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.CanonicalEventHash
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventStore
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.OptimisticConcurrencyException
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.OccurredEventCursor
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventTypeQuery
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.StreamAppend
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.greaterEq
+import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -180,6 +185,48 @@ class EventStoreRepository(
                     recordedAt = row[DomainEvents.recordedAt],
                 )
             }
+    }
+
+    override fun loadByType(query: EventTypeQuery): List<PersistedEvent> {
+        require(query.startsAt < query.endsAt) { "event_range_invalid" }
+        require(query.limit in 1..MAX_EVENT_PAGE_SIZE) { "event_page_size_invalid" }
+        val cursor = query.after?.let {
+            (DomainEvents.occurredAt greater it.occurredAt) or
+                ((DomainEvents.occurredAt eq it.occurredAt) and
+                    (DomainEvents.id greater it.eventId))
+        }
+        return DomainEvents.selectAll()
+            .where {
+                (DomainEvents.tenantId eq query.tenantId) and
+                    (DomainEvents.eventType eq query.eventType) and
+                    (DomainEvents.occurredAt greaterEq query.startsAt) and
+                    (DomainEvents.occurredAt less query.endsAt) and
+                    (cursor ?: org.jetbrains.exposed.v1.core.Op.TRUE)
+            }
+            .orderBy(
+                DomainEvents.occurredAt to SortOrder.ASC,
+                DomainEvents.id to SortOrder.ASC,
+            )
+            .limit(query.limit)
+            .map(::toPersistedEvent)
+    }
+
+    private fun toPersistedEvent(row: org.jetbrains.exposed.v1.core.ResultRow): PersistedEvent {
+        val stream = StreamKey(row[DomainEvents.tenantId], row[DomainEvents.streamType], row[DomainEvents.streamId])
+        return PersistedEvent(
+            row[DomainEvents.id].value,
+            stream,
+            row[DomainEvents.streamVersion],
+            row[DomainEvents.globalPosition],
+            row[DomainEvents.eventType],
+            row[DomainEvents.schemaVersion],
+            row[DomainEvents.payload],
+            row[DomainEvents.metadata],
+            row[DomainEvents.previousHash],
+            row[DomainEvents.eventHash],
+            row[DomainEvents.occurredAt],
+            row[DomainEvents.recordedAt],
+        )
     }
 
     private data class LockedHead(val version: Long, val latestHash: String?)
