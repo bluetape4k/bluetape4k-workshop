@@ -15,7 +15,7 @@
   <rect x="400" y="390" width="180" height="70" rx="18" fill="#fff" stroke="#83aa89" stroke-width="2"/><text x="425" y="434" class="state">PUBLISHED</text>
   <rect x="140" y="390" width="180" height="70" rx="18" fill="#fff" stroke="#d1a963" stroke-width="2"/><text x="160" y="434" class="state">RETRY_WAIT</text>
   <rect x="270" y="570" width="180" height="70" rx="18" fill="#fff" stroke="#c97979" stroke-width="2"/><text x="276" y="614" class="state">QUARANTINED</text>
-  <path class="flow" d="M320 255 H385"/><path class="flow" d="M490 290 V375"/><path class="retry" d="M400 425 H345 Q330 425 330 410 V305 Q330 290 345 290 H385"/><path class="retry" d="M230 290 V375"/><path class="stop" d="M230 460 V535 Q230 550 245 550 H255 Q270 550 270 565 V570"/>
+  <path class="flow" d="M320 255 H385"/><path class="flow" d="M490 290 V375"/><path class="retry" d="M400 270 H365 Q350 270 350 285 V410 Q350 425 335 425"/><path class="retry" d="M140 425 H105 Q90 425 90 410 V200 Q90 185 105 185 H475 Q490 185 490 200 V205"/><path class="stop" d="M230 460 V535 Q230 550 245 550 H255 Q270 550 270 565 V570"/>
   <text x="120" y="700" class="note">Owner + lease predicates fence claim/complete.</text><text x="120" y="730" class="note">Crash after broker send may replay after lease expiry.</text>
   <rect x="835" y="120" width="700" height="650" rx="26" fill="#edf6ed" stroke="#c1d7c1" stroke-width="2"/><text x="870" y="168" class="head">Consumer inbox</text>
   <rect x="910" y="220" width="180" height="70" rx="18" fill="#fff" stroke="#83aa89" stroke-width="2"/><text x="944" y="264" class="state">RECEIVED</text>

@@ -23,12 +23,12 @@ class ParityIntegrationTest {
             fixture.acceptUsage(TENANT, METER_CODE)
             fixture.publishUsageEvents()
             await().atMost(TIMEOUT).untilAsserted {
-                fixture.chargeAmounts() shouldBeEqualTo listOf(EXPECTED_TOTAL)
+                fixture.chargeAmounts().single().compareTo(EXPECTED_TOTAL) shouldBeEqualTo 0
             }
 
             fixture.publishBillingEvents()
             await().atMost(TIMEOUT).untilAsserted {
-                fixture.invoiceLines().map { it.amount } shouldBeEqualTo listOf(EXPECTED_TOTAL)
+                fixture.invoiceLines().single().amount.compareTo(EXPECTED_TOTAL) shouldBeEqualTo 0
             }
             fixture.publishInvoiceEvents()
             await().atMost(TIMEOUT).untilAsserted {

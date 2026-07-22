@@ -65,6 +65,29 @@ JDK 25 and a Docker-compatible container runtime are required for PostgreSQL/Kaf
 
 Default tests are container-free and lock service-local decoder, envelope, idempotency, state, and repository contracts. Integration tests use Bluetape Testcontainers PostgreSQL fixtures to prove Exposed uniqueness, atomic local effect/outbox writes, replay, digest conflict, and fenced outbox completion.
 
+## Composition evidence and operational meaning
+
+The composition module starts one Kafka broker and five isolated PostgreSQL containers. It deliberately does not
+share a Spring context, a database, a decoder, or a producer DTO between services. The suite is a runnable
+failure-mode catalogue, not a benchmark and not an exactly-once proof.
+
+| Scenario | What the test proves | Production response it teaches |
+| --- | --- | --- |
+| delayed publication | a committed Meter price remains in its local outbox until relay recovery | inspect the outbox first; do not reconstruct a price from another service database |
+| duplicate delivery | a replayed `UsageAccepted` produces one Billing financial effect | retain the event ID and digest; duplicate is a normal success path |
+| out-of-order aggregate versions | version 2 is deferred until version 1 is available, then can be retried | keep the aggregate key/version visible; do not silently rate a gap |
+| transport outage | a deterministic Meter transport fault moves the claimed row to `RETRY_WAIT`, then the normal Kafka transport delivers it | recover by retrying the existing row, never by recreating the financial fact |
+| service restart | Usage restarts with price evidence still present and continues publication | local PostgreSQL, not process memory or a consumer offset, is the recovery authority |
+| poison contract | one unsupported Query record is quarantined while an independent valid record progresses; redrive is recorded | isolate permanent failures and preserve the original payload for operator review |
+| schema evolution | Query accepts additive v2 and quarantines unsupported v99 | make compatibility an explicit decoder decision, not an accidental Jackson default |
+| tenant isolation | a Query principal with `TENANT_a` cannot access tenant `b` | authorize the target tenant at the read boundary, even for projections |
+| correction | `AdjustmentPosted` appends a second Invoice line and emits an invoice correction without rewriting the original line | repair financial history with a new fact and a reference to the original event |
+| raw-access guard | service source is scanned for raw JDBC/SQL execution APIs | keep persistence inside Exposed repositories; test fixtures get no exception |
+
+The test-only Meter fault switch is intentionally deterministic. It wraps the production Kafka transport only while
+the composition fixture is running, then delegates to the same real Kafka transport for recovery. This keeps the
+outbox retry assertion stable without pretending that pausing a local Docker broker is an exhaustive outage model.
+
 ## Production decision rules
 
 - Price selection is Billing's local replicated evidence; Meter remains the authoritative publisher of price history.
