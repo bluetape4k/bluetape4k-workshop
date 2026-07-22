@@ -10,6 +10,10 @@ enum class ProjectionGenerationState {
     RETIRED,
 }
 
+interface ProjectionTelemetry {
+    fun recordRebuild(outcome: String)
+}
+
 object ProjectionGenerationTransitions {
     fun allows(from: ProjectionGenerationState, to: ProjectionGenerationState): Boolean = when (from) {
         ProjectionGenerationState.ACTIVE -> to == ProjectionGenerationState.RETIRED

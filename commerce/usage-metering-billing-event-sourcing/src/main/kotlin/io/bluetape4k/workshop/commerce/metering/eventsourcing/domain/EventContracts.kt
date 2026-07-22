@@ -31,6 +31,30 @@ sealed interface DomainEvent {
     val schemaVersion: Int
 }
 
+data class EventMetadata(
+    val commandId: String,
+    val correlationId: String,
+    val causationId: String,
+    val actorId: String,
+) {
+    init {
+        require(commandId.isNotBlank() && commandId.length <= MAX_VALUE_LENGTH) { "command_id_invalid" }
+        require(correlationId.isNotBlank() && correlationId.length <= MAX_VALUE_LENGTH) { "correlation_id_invalid" }
+        require(causationId.isNotBlank() && causationId.length <= MAX_VALUE_LENGTH) { "causation_id_invalid" }
+        require(actorId.isNotBlank() && actorId.length <= MAX_VALUE_LENGTH) { "actor_id_invalid" }
+    }
+
+    companion object {
+        fun system(eventId: UUID): EventMetadata {
+            val id = eventId.toString()
+            return EventMetadata(id, id, id, SYSTEM_ACTOR)
+        }
+
+        private const val MAX_VALUE_LENGTH = 128
+        private const val SYSTEM_ACTOR = "system"
+    }
+}
+
 data class NewEvent(
     val eventId: UUID,
     val event: DomainEvent,

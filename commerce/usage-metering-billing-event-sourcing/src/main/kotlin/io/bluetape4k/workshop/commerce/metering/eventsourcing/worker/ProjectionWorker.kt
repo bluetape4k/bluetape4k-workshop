@@ -84,10 +84,11 @@ class ProjectionBatchProcessor(
 
     fun applyBatch(lease: ProjectionLease, limit: Int): ProjectionBatchResult {
         val generation = checkpoints.requireOwnership(lease)
+        val observedHead = eventStore.latestGlobalPosition()
         val events = eventStore.loadAfterGlobalPosition(generation.checkpoint, limit)
         events.forEach { persisted -> applier.apply(lease, persisted) }
         val checkpoint = events.lastOrNull()?.globalPosition ?: generation.checkpoint
-        val highWatermark = maxOf(generation.highWatermark, checkpoint)
+        val highWatermark = maxOf(generation.highWatermark, observedHead, checkpoint)
         checkpoints.raiseHighWatermark(lease, highWatermark, clock.instant())
         checkpoints.releaseLease(lease, clock.instant())
         return ProjectionBatchResult(

@@ -15,6 +15,7 @@ class EventSourcingSecurityConfiguration {
         .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
         .authorizeHttpRequests {
             it.requestMatchers("/actuator/health", "/actuator/info").permitAll()
+                .requestMatchers("/actuator/metrics/**").hasRole("OPERATOR")
                 .requestMatchers("/api/admin/event-sourcing/**").hasRole("OPERATOR")
                 .requestMatchers("/api/v1/tenants/*/meters/**").hasAuthority("TENANT_BILLING_WRITE")
                 .requestMatchers("/api/v1/tenants/*/billing/**").hasAuthority("TENANT_BILLING_READ")

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
+import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 
@@ -40,11 +41,17 @@ class AggregateReplayTest {
     fun `invalid snapshot falls back to genesis replay`() {
         val events = events()
         val invalid = AggregateSnapshotSeed<MeterState>(MeterState.Empty, 1, "wrong-hash", 1)
+        val telemetry = RecordingReplayTelemetry()
 
-        val restored = AggregateReplayer.replay(events, MeterState.Empty, MeterReducer, invalid, policy)
+        val restored = AggregateReplayer.replay(
+            AggregateReplayRequest(events, MeterState.Empty, MeterReducer, invalid, policy),
+            telemetry,
+        )
 
         assertEquals(2L, restored.streamVersion)
         assertEquals("api_calls", (restored.state as MeterState.Active).meterCode)
+        assertEquals(listOf("invalid"), telemetry.snapshotFallbacks)
+        assertEquals(listOf("success" to 2), telemetry.replays)
     }
 
     @Test
@@ -69,5 +76,19 @@ class AggregateReplayTest {
             UUID.randomUUID(), stream, version, version, type, 1, payload, "{}", previousHash,
             CanonicalEventHash.sha256(material), Instant.EPOCH, Instant.EPOCH,
         )
+    }
+
+    private class RecordingReplayTelemetry : ReplayTelemetry {
+        val replays = mutableListOf<Pair<String, Int>>()
+        val snapshotFallbacks = mutableListOf<String>()
+
+        override fun recordReplay(outcome: String, eventCount: Int, duration: Duration) {
+            check(!duration.isNegative)
+            replays += outcome to eventCount
+        }
+
+        override fun recordSnapshotFallback(reason: String) {
+            snapshotFallbacks += reason
+        }
     }
 }

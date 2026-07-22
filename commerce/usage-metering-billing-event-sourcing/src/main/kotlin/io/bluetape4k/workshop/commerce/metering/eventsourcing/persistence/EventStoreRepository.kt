@@ -48,7 +48,7 @@ class EventStoreRepository(
 
         var previousHash = head.latestHash
         val appended = events.mapIndexed { index, event ->
-            insertEvent(stream, expectedVersion + index + 1L, event, previousHash, now)
+            insertEvent(stream, expectedVersion + index + 1L, event, previousHash)
                 .also { previousHash = it.eventHash }
         }
         updateHead(stream, expectedVersion, events.size, previousHash, now)
@@ -79,7 +79,6 @@ class EventStoreRepository(
         version: Long,
         event: NewEvent,
         previousHash: String?,
-        now: java.time.Instant,
     ): PersistedEvent {
         val hash = CanonicalEventHash.sha256(
             EventHashMaterial(
@@ -100,12 +99,14 @@ class EventStoreRepository(
             it[DomainEvents.previousHash] = previousHash
             it[eventHash] = hash
             it[occurredAt] = event.occurredAt
-            it[recordedAt] = now
         }
+        val recordedAt = DomainEvents.selectAll()
+            .where { DomainEvents.id eq event.eventId }
+            .single()[DomainEvents.recordedAt]
         return PersistedEvent(
             event.eventId, stream, version, insert[DomainEvents.globalPosition],
             event.event.eventType, event.event.schemaVersion, event.payload, event.metadata,
-            previousHash, hash, event.occurredAt, now,
+            previousHash, hash, event.occurredAt, recordedAt,
         )
     }
 
@@ -156,6 +157,13 @@ class EventStoreRepository(
                     recordedAt = row[DomainEvents.recordedAt],
                 )
             }
+
+    override fun latestGlobalPosition(): Long = DomainEvents.selectAll()
+        .orderBy(DomainEvents.globalPosition to SortOrder.DESC)
+        .limit(1)
+        .singleOrNull()
+        ?.get(DomainEvents.globalPosition)
+        ?: 0L
 
     override fun loadAfterGlobalPosition(afterPosition: Long, limit: Int): List<PersistedEvent> {
         require(afterPosition >= 0) { "global_position_invalid" }

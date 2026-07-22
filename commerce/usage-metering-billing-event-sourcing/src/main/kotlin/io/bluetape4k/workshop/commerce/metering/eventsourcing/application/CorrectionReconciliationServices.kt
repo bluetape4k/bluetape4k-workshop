@@ -10,6 +10,7 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageRated
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventStore
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventTypeQuery
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.OccurredEventCursor
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.ReplayTelemetry
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.BillingReadModelRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionGenerationRepository
 import org.springframework.stereotype.Service
@@ -22,10 +23,13 @@ import java.time.Instant
 class AdjustmentCommandService(
     private val eventStore: EventStore,
     private val codec: DomainEventJsonCodec,
+    private val metrics: ReplayTelemetry? = null,
 ) {
+    private val replayRuntime = ReplayRuntime(eventStore, codec, metrics)
+
     fun post(tenantId: String, adjustmentId: String, adjustment: AdjustmentPosted, now: Instant): Boolean {
         val stream = StreamKey(tenantId, "Adjustment", adjustmentId)
-        val current = replay(stream, AdjustmentState.Empty, AdjustmentReducer, codec, eventStore)
+        val current = replay(stream, AdjustmentState.Empty, AdjustmentReducer, replayRuntime)
         if (current.state is AdjustmentState.Posted) {
             check(current.state.adjustment == adjustment) { "adjustment_conflict" }
             return false
@@ -59,6 +63,7 @@ class ReconciliationService(
     private val codec: DomainEventJsonCodec,
     private val generations: ProjectionGenerationRepository,
     private val readModels: BillingReadModelRepository,
+    private val metrics: BillingTelemetry? = null,
 ) {
     fun inspect(query: ReconciliationQuery): ReconciliationFinding? {
         val active = checkNotNull(generations.active(query.projectionName)) { "active_projection_missing" }
@@ -90,7 +95,7 @@ class ReconciliationService(
             active.generation,
             active.checkpoint,
             sha256(material),
-        )
+        ).also { metrics?.recordReconciliation(it.type.name.lowercase()) }
     }
 
     fun isStillCurrent(query: ReconciliationQuery, finding: ReconciliationFinding): Boolean =

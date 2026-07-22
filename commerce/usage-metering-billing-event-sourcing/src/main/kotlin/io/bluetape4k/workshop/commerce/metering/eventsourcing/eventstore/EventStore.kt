@@ -33,6 +33,7 @@ interface EventStore {
     fun append(stream: StreamKey, expectedVersion: Long, events: List<NewEvent>): List<PersistedEvent>
     fun appendAll(appends: List<StreamAppend>): List<PersistedEvent>
     fun load(stream: StreamKey, afterVersion: Long = 0): List<PersistedEvent>
+    fun latestGlobalPosition(): Long
     fun loadAfterGlobalPosition(afterPosition: Long, limit: Int): List<PersistedEvent>
     fun loadByType(query: EventTypeQuery): List<PersistedEvent>
 }
