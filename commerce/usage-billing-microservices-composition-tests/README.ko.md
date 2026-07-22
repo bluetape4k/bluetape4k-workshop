@@ -60,3 +60,26 @@
 ```
 
 기본 test는 container 없이 envelope/decoder/idempotency/state/repository boundary를 검증한다. PostgreSQL integration test는 Bluetape Testcontainers fixture로 Exposed unique constraint, local effect+outbox atomicity, replay, digest conflict, fenced outbox completion을 검증한다.
+
+## Composition 검증과 운영 의미
+
+composition module은 Kafka broker 하나와 서로 분리된 PostgreSQL container 다섯 개를 시작한다. 서비스끼리
+Spring context, 데이터베이스, decoder, producer DTO를 공유하지 않는다. 이 suite는 exactly-once를 증명하는
+benchmark가 아니라, 장애 모드를 실행 가능한 형태로 보여 주는 카탈로그다.
+
+| 시나리오 | 테스트가 증명하는 것 | 운영에서의 대응 |
+| --- | --- | --- |
+| publication 지연 | commit된 Meter price는 relay가 복구될 때까지 local outbox에 남는다 | 다른 서비스 DB에서 가격을 재구성하지 말고 outbox부터 확인한다 |
+| duplicate delivery | `UsageAccepted` 재전달은 Billing financial effect를 하나만 만든다 | event ID와 digest를 보존하고 duplicate를 정상 성공 경로로 다룬다 |
+| aggregate 순서 역전 | version 2는 version 1이 올 때까지 defer되고 이후 retry할 수 있다 | aggregate key/version을 관측하고 gap 상태에서 임의 rating하지 않는다 |
+| transport 장애 | 결정적인 Meter transport fault는 claimed row를 `RETRY_WAIT`로 옮기고, 정상 Kafka transport가 이후 전달한다 | 재시도는 기존 row로 수행하고 financial fact를 새로 만들지 않는다 |
+| 서비스 재시작 | Usage 재시작 뒤에도 price evidence가 남아 있고 publication을 계속한다 | process memory나 consumer offset이 아니라 local PostgreSQL이 복구 authority다 |
+| poison contract | 지원하지 않는 Query record 하나는 quarantine되고, 독립 valid record는 계속 처리되며 redrive가 기록된다 | permanent failure를 격리하고 원본 payload를 운영 검토용으로 보존한다 |
+| schema evolution | Query는 additive v2를 수용하고 v99는 quarantine한다 | compatibility를 Jackson 기본 동작이 아니라 decoder의 명시적 결정으로 둔다 |
+| tenant isolation | `TENANT_a` principal은 tenant `b` projection에 접근할 수 없다 | projection도 read boundary에서 target tenant를 authorize한다 |
+| correction | `AdjustmentPosted`는 기존 line을 바꾸지 않고 두 번째 Invoice line과 correction event를 추가한다 | financial history는 원본 event를 참조하는 새 fact로 보정한다 |
+| raw-access guard | service source에서 raw JDBC/SQL 실행 API를 탐지한다 | persistence는 Exposed repository 안에만 두고 test fixture도 예외로 만들지 않는다 |
+
+test-only Meter fault switch는 의도적으로 결정적이다. composition fixture가 실행되는 동안만 production Kafka
+transport를 감싸고, 복구 시에는 동일한 실제 Kafka transport에 위임한다. 이 방식은 local Docker broker를
+pause하는 것이 모든 outage를 대표한다고 과장하지 않으면서 outbox retry를 안정적으로 검증한다.
