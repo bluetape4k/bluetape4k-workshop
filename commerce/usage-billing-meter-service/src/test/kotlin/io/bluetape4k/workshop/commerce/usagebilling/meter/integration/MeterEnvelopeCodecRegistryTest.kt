@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.usagebilling.meter.integration
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.jackson3.Jackson
 import org.junit.jupiter.api.Test
 import java.time.Instant
 import java.util.UUID
@@ -21,6 +22,17 @@ class MeterEnvelopeCodecRegistryTest {
         assertFailsWith<UnsupportedMeterEnvelopeVersion> {
             MeterEnvelopeCodecRegistry().validate(envelope)
         }.message shouldBeEqualTo "unsupported_meter_envelope:PriceActivated:99"
+    }
+
+    @Test
+    fun `wire payload retains the envelope identity and payload digest`() {
+        val envelope = meterEnvelope(eventType = "PriceActivated", schemaVersion = 1)
+
+        val wire = Jackson.defaultJsonMapper.readTree(envelope.wirePayload())
+
+        requireNotNull(wire.get("eventId")).asString() shouldBeEqualTo envelope.eventId.toString()
+        requireNotNull(wire.get("tenantId")).asString() shouldBeEqualTo "tenant-a"
+        requireNotNull(wire.get("payloadDigest")).asString() shouldBeEqualTo envelope.payloadDigest
     }
 
     private fun meterEnvelope(eventType: String, schemaVersion: Int): MeterIntegrationEnvelope =

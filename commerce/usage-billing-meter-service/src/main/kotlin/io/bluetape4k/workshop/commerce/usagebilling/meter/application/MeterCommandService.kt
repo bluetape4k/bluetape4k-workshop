@@ -50,6 +50,7 @@ class MeterCommandService(
             occurredAt = command.effectiveAt,
             recordedAt = now,
         )
+        val wirePayload = envelope.wirePayload()
         val result = MeterActivationResult(priceVersion.priceVersionId, eventId, replayed = false)
         journal.append(
             receipt = MeterCommandReceipt(command.idempotencyKey, fingerprint, result),
@@ -58,8 +59,8 @@ class MeterCommandService(
                 eventId = eventId,
                 eventType = envelope.eventType,
                 partitionKey = envelope.partitionKey(),
-                payload = envelope.payload,
-                payloadDigest = envelope.payloadDigest,
+                payload = wirePayload,
+                payloadDigest = envelope.wirePayloadDigest(),
                 createdAt = now,
             ),
         )
