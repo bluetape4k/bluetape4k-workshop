@@ -227,6 +227,8 @@ function auditMarkers(file, svg) {
   let match;
   while ((match = pathRe.exec(svg))) {
     const attrs = parseAttrs(match[1]);
+    const inlineStyle = attrs.style || "";
+    if (inlineStyle.includes("marker-end:none")) continue;
     const classes = (attrs.class || "").split(/\s+/).filter(Boolean);
     let stroke = attrs.stroke;
     let marker = (attrs["marker-end"] || "").match(/url\(#([^)]+)\)/)?.[1];
@@ -263,8 +265,13 @@ function auditMarkers(file, svg) {
       fail(scope, "marker audit", `${marker} uses context-stroke`);
     }
   }
-  if (checked === 0 && /marker-end\s*:|marker-end=/.test(svg)) {
-    fail(scope, "marker audit", "marker-end exists but no marker paths were checked");
+  if (checked === 0) {
+    const directHeads = [...svg.matchAll(/<polygon\b[^>]*\bdata-connector-head="[^"]+"[^>]*\/?>/g)].length;
+    if (directHeads > 0) {
+      addRow(scope, "marker audit", `markers_checked=0 direct_heads=${directHeads} marker_failures=0`);
+    } else if (/marker-end\s*:|marker-end=/.test(svg)) {
+      fail(scope, "marker audit", "marker-end exists but no marker paths were checked");
+    }
   } else if (markerFailures === 0) {
     addRow(scope, "marker audit", `markers_checked=${checked} marker_failures=0`);
   }

@@ -8,6 +8,14 @@ const output = path.join(root, "docs/images/readme-diagrams");
 const check = process.argv.includes("--check");
 const onlyIndex = process.argv.indexOf("--only");
 const only = onlyIndex >= 0 ? process.argv[onlyIndex + 1] : undefined;
+const edgeColors = {
+  blueEdge: "#4F86C6",
+  greenEdge: "#6E8F4F",
+  amberEdge: "#9B7D54",
+  redEdge: "#B86868",
+  purpleEdge: "#8065A8",
+  tealEdge: "#2D948C",
+};
 
 const diagrams = new Map([
   ["usage-billing-event-sourcing-architecture-01.svg", architecture()],
@@ -22,17 +30,22 @@ const diagrams = new Map([
 
 fs.mkdirSync(output, { recursive: true });
 for (const [name, svg] of diagrams) {
+  const cairoSafeSvg = cairoSafe(svg);
   if (only && name !== only) continue;
   const target = path.join(output, name);
   if (check) {
-    if (!fs.existsSync(target) || fs.readFileSync(target, "utf8") !== svg) {
+    if (!fs.existsSync(target) || fs.readFileSync(target, "utf8") !== cairoSafeSvg) {
       throw new Error(`diagram is stale: ${name}`);
     }
     console.log(`checked ${name}`);
   } else {
-    fs.writeFileSync(target, svg);
+    fs.writeFileSync(target, cairoSafeSvg);
     console.log(`generated ${name}`);
   }
+}
+
+function cairoSafe(svg) {
+  return svg.replaceAll("→", "->").replaceAll("≥", ">=").replaceAll("•", ";");
 }
 
 function marker(id, color, size = 14) {
@@ -54,12 +67,43 @@ function card(id, x, y, w, h, title, lines, css = "card") {
   return `<g class="node" data-node="${id}" filter="url(#shadow)"><rect class="card ${css}" x="${x}" y="${y}" width="${w}" height="${h}" rx="15"/><text class="cardTitle" x="${x + w / 2}" y="${y + 33}" text-anchor="middle">${title}</text>${text}</g>`;
 }
 
-function edge(id, label, css, d) {
-  return `<g class="edge" data-edge="${id}" data-label="${label}"><path data-connector="${id}" class="edgePath ${css}" d="${d}"/></g>`;
+function connectorArrow(d) {
+  const tokens = d.match(/[MLQ]|-?\d+(?:\.\d+)?/g) || [];
+  let index = 0;
+  let current = { x: 0, y: 0 };
+  let tangentStart = current;
+
+  while (index < tokens.length) {
+    const command = tokens[index++];
+    if (command === "M" || command === "L") {
+      tangentStart = current;
+      current = { x: Number(tokens[index++]), y: Number(tokens[index++]) };
+    } else if (command === "Q") {
+      const control = { x: Number(tokens[index++]), y: Number(tokens[index++]) };
+      tangentStart = control;
+      current = { x: Number(tokens[index++]), y: Number(tokens[index++]) };
+    } else {
+      throw new Error(`unsupported connector command in ${d}`);
+    }
+  }
+
+  const dx = current.x - tangentStart.x;
+  const dy = current.y - tangentStart.y;
+  const halfWidth = 8;
+  const depth = 14;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    if (dx >= 0) return { direction: "right", points: `${current.x},${current.y} ${current.x - depth},${current.y - halfWidth} ${current.x - depth},${current.y + halfWidth}` };
+    return { direction: "left", points: `${current.x},${current.y} ${current.x + depth},${current.y - halfWidth} ${current.x + depth},${current.y + halfWidth}` };
+  }
+  if (dy >= 0) return { direction: "down", points: `${current.x},${current.y} ${current.x - halfWidth},${current.y - depth} ${current.x + halfWidth},${current.y - depth}` };
+  return { direction: "up", points: `${current.x},${current.y} ${current.x - halfWidth},${current.y + depth} ${current.x + halfWidth},${current.y + depth}` };
 }
 
-function directEdge(id, label, css, d, color, points, direction) {
-  return `<g class="edge" data-edge="${id}" data-label="${label}"><path data-connector="${id}" class="edgePath ${css}" style="marker-end:none" d="${d}"/><polygon data-connector-head="${id}" data-arrow-direction="${direction}" points="${points}" fill="${color}" stroke="${color}" stroke-dasharray="none" style="stroke-dasharray:none"/></g>`;
+function edge(id, label, css, d) {
+  const color = css.split(" ").map((className) => edgeColors[className]).find(Boolean);
+  if (!color) throw new Error(`missing edge color for ${id}: ${css}`);
+  const arrow = connectorArrow(d);
+  return `<g class="edge" data-edge="${id}" data-label="${label}"><path data-connector="${id}" class="edgePath ${css}" style="marker-end:none" d="${d}"/><polygon data-connector-head="${id}" data-arrow-direction="${arrow.direction}" points="${arrow.points}" fill="${color}" stroke="${color}" stroke-dasharray="none" style="stroke-dasharray:none"/></g>`;
 }
 
 function zone(x, y, w, h, title, css) {
@@ -78,7 +122,7 @@ function message(number, x1, x2, y, label, css) {
 }
 
 function architecture() {
-  return `${start("Event-Sourced Usage Billing - Authority Map", "Commands append facts; replay and projections derive every current view.")}${zone(70,130,1460,170,"HTTP and application boundary","blueZone")}${card("tenant-api",120,205,300,75,"Tenant API",["command receipt + security"],"blueCard")}${card("commands",650,205,300,75,"Command services",["replay before append"],"greenCard")}${card("operator",1180,205,300,75,"Operator API",["rebuild, rollback, reconcile"],"amberCard")}${zone(70,340,1460,260,"Correctness authority","purpleZone")}${card("event-store",130,445,360,100,"Append-only event store",["stream version + hash chain","global position keyset"],"purpleCard")}${card("snapshot",620,445,360,100,"Optional snapshots",["validated acceleration only","corrupt means replay genesis"],"amberCard")}${card("projection",1110,445,360,100,"Projection generations",["lease + owner fencing","marker + view + checkpoint"],"greenCard")}${zone(70,640,1460,200,"Derived query and operations","greenZone")}${card("reconcile",180,720,340,90,"Reconciliation",["event replay vs ACTIVE view"],"amberCard")}${card("read-model",630,720,340,90,"Billing read model",["tenant + generation scoped"],"greenCard")}${card("health",1080,720,340,90,"Health and metrics",["lag, failure, quarantine"],"blueCard")}${edge("api-command","authenticated command","blueEdge","M420 243 L650 243")}${edge("command-store","append expected version","greenEdge","M800 280 L800 320 Q 800 330 790 330 L310 330 Q 300 330 300 340 L300 445")}${edge("operator-projection","bounded recovery","amberEdge","M1330 280 L1330 445")}${edge("store-snapshot","validated seed","amberEdge","M490 495 L620 495")}${edge("store-projection","global position feed","purpleEdge","M490 525 L520 525 Q 535 525 535 540 L535 565 Q 535 580 550 580 L1075 580 Q 1090 580 1090 565 L1090 520 Q 1090 505 1105 505 L1110 505")}${edge("projection-read","active alias","greenEdge","M1200 545 L1200 650 Q 1200 665 1185 665 L815 665 Q 800 665 800 680 L800 720")}${edge("projection-health","lag and failure","blueEdge","M1350 545 L1350 720")}${edge("store-reconcile","authoritative replay","amberEdge dashed","M300 545 L300 720")}${edge("read-reconcile","actual total","amberEdge","M630 765 L520 765")}<text class="footer" x="800" y="895" text-anchor="middle">PostgreSQL + JetBrains Exposed + ExposedJdbcRepository; no raw SQL and no mutable billing truth.</text></svg>`;
+  return `${start("Event-Sourced Usage Billing - Authority Map", "Commands append facts; replay and projections derive every current view.")}${zone(70,130,1460,170,"HTTP and application boundary","blueZone")}${card("tenant-api",120,205,300,75,"Tenant API",["command receipt + security"],"blueCard")}${card("commands",650,205,300,75,"Command services",["replay before append"],"greenCard")}${card("operator",1180,205,300,75,"Operator API",["rebuild, rollback, reconcile"],"amberCard")}${zone(70,340,1460,260,"Correctness authority","purpleZone")}${card("event-store",130,445,360,100,"Append-only event store",["stream version + hash chain","global position keyset"],"purpleCard")}${card("snapshot",620,445,360,100,"Optional snapshots",["validated acceleration only","corrupt means replay genesis"],"amberCard")}${card("projection",1110,445,360,100,"Projection generations",["lease + owner fencing","marker + view + checkpoint"],"greenCard")}${zone(70,640,1460,200,"Derived query and operations","greenZone")}${card("reconcile",180,720,340,90,"Reconciliation",["event replay vs ACTIVE view"],"amberCard")}${card("read-model",630,720,340,90,"Billing read model",["tenant + generation scoped"],"greenCard")}${card("health",1080,720,340,90,"Health and metrics",["lag, failure, quarantine"],"blueCard")}${edge("api-command","authenticated command","blueEdge","M420 243 L650 243")}${edge("command-store","append expected version","greenEdge","M800 280 L800 320 Q 800 330 790 330 L310 330 Q 300 330 300 340 L300 445")}${edge("operator-projection","bounded recovery","amberEdge","M1330 280 L1330 445")}${edge("store-snapshot","validated seed","amberEdge","M490 495 L620 495")}${edge("store-projection","global position feed","purpleEdge","M490 525 L520 525 Q 535 525 535 540 L535 565 Q 535 580 550 580 L1070 580 Q 1080 580 1080 570 L1080 520 Q 1080 505 1090 505 L1110 505")}${edge("projection-read","active alias","greenEdge","M1200 545 L1200 650 Q 1200 665 1185 665 L815 665 Q 800 665 800 680 L800 720")}${edge("projection-health","lag and failure","blueEdge","M1350 545 L1350 720")}${edge("store-reconcile","authoritative replay","amberEdge dashed","M300 545 L300 720")}${edge("read-reconcile","actual total","amberEdge","M630 765 L520 765")}<text class="footer" x="800" y="895" text-anchor="middle">PostgreSQL + JetBrains Exposed + ExposedJdbcRepository; no raw SQL and no mutable billing truth.</text></svg>`;
 }
 
 function aggregateState() {
@@ -102,9 +146,9 @@ function rebuild() {
 }
 
 function correction() {
-  return `${start("Billing Correction Without History Rewrite", "Late facts add debit or credit evidence; issued history remains immutable.")}${zone(70,140,1460,650,"Append-only correction flow","amberZone")}${card("original",110,280,300,110,"Original rated usage",["UsageRated + provenance","never updated"],"purpleCard")}${card("finding",520,280,300,110,"Operator finding",["late usage or overcharge","digest + observed position"],"amberCard")}${card("adjust",930,280,300,110,"Adjustment stream",["DEBIT or CREDIT","reason + source link"],"blueCard")}${card("view",1240,550,270,110,"ACTIVE projection",["original +/- adjustment","generation scoped"],"greenCard")}${card("reconcile",690,550,320,110,"Reconciliation",["replay expected total","compare provenance"],"amberCard")}${edge("original-finding","inspect immutable evidence","amberEdge dashed","M410 335 L520 335")}${edge("finding-adjust","digest still current","blueEdge","M820 335 L930 335")}${directEdge("original-view","project debit","greenEdge","M260 390 L260 685 Q 260 700 275 700 L1360 700 Q 1375 700 1375 685 L1375 660","#6E8F4F","1375,660 1367,674 1383,674","up")}${directEdge("adjust-view","project signed delta","greenEdge","M1080 390 L1080 480 Q 1080 495 1095 495 L1355 495 Q 1370 495 1370 550","#6E8F4F","1370,550 1362,536 1378,536","down")}${edge("view-reconcile","actual total","amberEdge","M1240 605 L1010 605")}${directEdge("original-reconcile","replay expected","purpleEdge","M350 390 L350 590 Q 350 605 365 605 L690 605","#8065A8","690,605 676,597 676,613","right")}<text class="footer" x="800" y="860" text-anchor="middle">Repair never overwrites a read-model row: append evidence or rebuild a clean projection generation.</text></svg>`;
+  return `${start("Billing Correction Without History Rewrite", "Late facts add debit or credit evidence; issued history remains immutable.")}${zone(70,140,1460,650,"Append-only correction flow","amberZone")}${card("original",110,280,300,110,"Original rated usage",["UsageRated + provenance","never updated"],"purpleCard")}${card("finding",520,280,300,110,"Operator finding",["late usage or overcharge","digest + observed position"],"amberCard")}${card("adjust",930,280,300,110,"Adjustment stream",["DEBIT or CREDIT","reason + source link"],"blueCard")}${card("view",1240,550,270,110,"ACTIVE projection",["original +/- adjustment","generation scoped"],"greenCard")}${card("reconcile",690,550,320,110,"Reconciliation",["replay expected total","compare provenance"],"amberCard")}${edge("original-finding","inspect immutable evidence","amberEdge dashed","M410 335 L520 335")}${edge("finding-adjust","digest still current","blueEdge","M820 335 L930 335")}${edge("original-view","project debit","greenEdge","M260 390 L260 685 Q 260 700 275 700 L1360 700 Q 1375 700 1375 685 L1375 660")}${edge("adjust-view","project signed delta","greenEdge","M1080 390 L1080 480 Q 1080 495 1095 495 L1355 495 Q 1370 495 1370 550")}${edge("view-reconcile","actual total","amberEdge","M1240 605 L1010 605")}${edge("original-reconcile","replay expected","purpleEdge","M350 390 L350 590 Q 350 605 365 605 L690 605")}<text class="footer" x="800" y="860" text-anchor="middle">Repair never overwrites a read-model row: append evidence or rebuild a clean projection generation.</text></svg>`;
 }
 
 function microservices() {
-  return `${start("Microservice Extraction Guide", "Separate database ownership and versioned events replace shared tables; no XA and no broker exactly-once claim.")}${zone(60,135,1480,580,"Service-owned authority","greenZone")}${card("meter",90,235,250,110,"Meter Service",["meter + price streams","own PostgreSQL"],"blueCard")}${card("usage",390,235,250,110,"Usage Service",["usage streams + inbox","own PostgreSQL"],"greenCard")}${card("billing",690,235,250,110,"Billing Service",["period + rating streams","own PostgreSQL"],"purpleCard")}${card("invoice",990,235,250,110,"Invoice Service",["invoice + adjustment","own PostgreSQL"],"amberCard")}${card("projection",1290,235,220,110,"Query Service",["generation views","rebuildable DB"],"greenCard")}${card("kafka",470,505,660,105,"Kafka event transport",["transactional outbox → at-least-once → tenant/event inbox dedup","schema compatibility + replayable provenance"],"purpleCard")}${edge("meter-kafka","PriceActivated","blueEdge","M215 345 L215 530 Q 215 545 230 545 L470 545")}${edge("usage-kafka","UsageAccepted","greenEdge","M515 345 L515 505")}${edge("billing-kafka","UsageRated / Finalized","purpleEdge","M815 345 L815 505")}${edge("invoice-kafka","InvoiceIssued / Adjustment","amberEdge","M1115 345 L1115 450 Q 1115 465 1100 465 L980 465 Q 965 465 965 505")}${edge("kafka-projection","consume with inbox dedup","greenEdge","M1130 555 L1240 555 Q 1255 555 1255 390 Q 1255 375 1270 375 L1385 375 Q 1400 375 1400 360 L1400 345")}<rect class="frame" x="180" y="755" width="1240" height="76" rx="14"/><text class="body" x="800" y="785" text-anchor="middle">No shared database • no distributed transaction • no claim of end-to-end exactly-once</text><text class="small" x="800" y="813" text-anchor="middle">Each service commits domain event + outbox locally; consumers make effects idempotent with inbox receipts.</text><text class="footer" x="800" y="880" text-anchor="middle">Follow-up boundary and failure analysis: GitHub issue #555.</text></svg>`;
+  return `${start("Microservice Extraction Guide", "Separate database ownership and versioned events replace shared tables; no XA and no broker exactly-once claim.")}${zone(60,135,1480,580,"Service-owned authority","greenZone")}${card("meter",90,235,250,110,"Meter Service",["meter + price streams","own PostgreSQL"],"blueCard")}${card("usage",390,235,250,110,"Usage Service",["usage streams + inbox","own PostgreSQL"],"greenCard")}${card("billing",690,235,250,110,"Billing Service",["period + rating streams","own PostgreSQL"],"purpleCard")}${card("invoice",990,235,250,110,"Invoice Service",["invoice + adjustment","own PostgreSQL"],"amberCard")}${card("projection",1290,235,220,110,"Query Service",["generation views","rebuildable DB"],"greenCard")}${card("kafka",470,505,660,105,"Kafka event transport",["transactional outbox → at-least-once → tenant/event inbox dedup","schema compatibility + replayable provenance"],"purpleCard")}${edge("meter-kafka","PriceActivated","blueEdge","M215 345 L215 530 Q 215 545 230 545 L470 545")}${edge("usage-kafka","UsageAccepted","greenEdge","M515 345 L515 505")}${edge("billing-kafka","UsageRated / Finalized","purpleEdge","M815 345 L815 505")}${edge("invoice-kafka","InvoiceIssued / Adjustment","amberEdge","M1115 345 L1115 450 Q 1115 465 1100 465 L980 465 Q 965 465 965 505")}${edge("kafka-projection","consume with inbox dedup","greenEdge","M1130 555 L1240 555 Q 1255 555 1255 390 Q 1255 375 1270 375 L1385 375 Q 1400 375 1400 365 L1400 345")}<rect class="frame" x="180" y="755" width="1240" height="76" rx="14"/><text class="body" x="800" y="785" text-anchor="middle">No shared database • no distributed transaction • no claim of end-to-end exactly-once</text><text class="small" x="800" y="813" text-anchor="middle">Each service commits domain event + outbox locally; consumers make effects idempotent with inbox receipts.</text><text class="footer" x="800" y="880" text-anchor="middle">Follow-up boundary and failure analysis: GitHub issue #555.</text></svg>`;
 }
