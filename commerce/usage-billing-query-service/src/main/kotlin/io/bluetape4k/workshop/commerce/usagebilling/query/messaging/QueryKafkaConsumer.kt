@@ -25,7 +25,7 @@ class QueryInboundEventDecoder {
         if (eventType !in SUPPORTED_EVENT_TYPES) {
             fail(eventId, tenantId, eventType, "unsupported_schema:$schemaVersion")
         }
-        if (schemaVersion != SCHEMA_VERSION) {
+        if (schemaVersion !in SUPPORTED_SCHEMA_VERSIONS) {
             fail(eventId, tenantId, eventType, "unsupported_schema:$schemaVersion")
         }
         val payload = envelope.requiredText("payload", eventId, tenantId, eventType)
@@ -72,7 +72,7 @@ class QueryInboundEventDecoder {
         HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
 
     private companion object {
-        const val SCHEMA_VERSION = 1
+        val SUPPORTED_SCHEMA_VERSIONS = setOf(1, 2)
         val UNKNOWN_EVENT_ID: UUID = UUID(0, 0)
         val SUPPORTED_EVENT_TYPES = setOf(
             "PriceActivated", "UsageAccepted", "UsageCorrected", "ChargeRated", "AdjustmentPosted",

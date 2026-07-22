@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.usagebilling.composition.fixture
 
+import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.workshop.commerce.usagebilling.billing.BillingServiceApplication
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxJournal
 import io.bluetape4k.workshop.commerce.usagebilling.billing.messaging.BillingOutboxPublisher
@@ -14,7 +15,10 @@ import io.bluetape4k.workshop.commerce.usagebilling.meter.messaging.MeterOutboxP
 import io.bluetape4k.workshop.commerce.usagebilling.meter.messaging.MeterOutboxStatus
 import io.bluetape4k.workshop.commerce.usagebilling.meter.persistence.MeterOutboxRepository
 import io.bluetape4k.workshop.commerce.usagebilling.query.QueryServiceApplication
+import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryRecoveryService
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryProjectionJournal
+import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryRecoverySnapshot
+import io.bluetape4k.workshop.commerce.usagebilling.query.web.QueryTenantAuthorizer
 import io.bluetape4k.workshop.commerce.usagebilling.usage.UsageServiceApplication
 import io.bluetape4k.workshop.commerce.usagebilling.usage.application.UsageCommandService
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.AcceptUsageCommand
@@ -27,18 +31,22 @@ import org.apache.kafka.clients.admin.NewTopic
 import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.kafka.core.KafkaTemplate
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import org.testcontainers.kafka.KafkaContainer
 import org.testcontainers.postgresql.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import java.math.BigDecimal
+import java.nio.charset.StandardCharsets.UTF_8
+import java.security.MessageDigest
 import java.time.Instant
 import java.util.Properties
+import java.util.HexFormat
 import java.util.UUID
 
 class UsageBillingMicroserviceFixture : AutoCloseable {
-    private val failures = KafkaFailureController()
     private val kafka = KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"))
     private val meterDatabase = PostgreSQLContainer(DockerImageName.parse("postgres:16-alpine"))
     private val usageDatabase = PostgreSQLContainer(DockerImageName.parse("postgres:16-alpine"))
@@ -67,9 +75,15 @@ class UsageBillingMicroserviceFixture : AutoCloseable {
         return this
     }
 
-    fun blockTopic(topic: String) = failures.block(topic)
+    fun blockTopic(topic: String) {
+        require(topic == METER_TOPIC) { "unsupported_transport_topic:$topic" }
+        meterContext.getBean(MeterTransportFailureSwitch::class.java).isFailing = true
+    }
 
-    fun unblockTopic(topic: String) = failures.unblock(topic)
+    fun unblockTopic(topic: String) {
+        require(topic == METER_TOPIC) { "unsupported_transport_topic:$topic" }
+        meterContext.getBean(MeterTransportFailureSwitch::class.java).isFailing = false
+    }
 
     fun activatePrice(tenantId: String, meterCode: String, amount: BigDecimal) =
         meterContext.getBean(MeterCommandService::class.java).activatePrice(
@@ -83,11 +97,8 @@ class UsageBillingMicroserviceFixture : AutoCloseable {
             ),
         )
 
-    fun publishMeterEvents() {
-        if (!failures.isBlocked(METER_TOPIC)) {
-            meterContext.getBean(MeterOutboxPublisher::class.java).publishPending()
-        }
-    }
+    fun publishMeterEvents() =
+        meterContext.getBean(MeterOutboxPublisher::class.java).publishPending()
 
     fun acceptUsage(tenantId: String, meterCode: String, sourceEventId: String = UUID.randomUUID().toString()) =
         usageContext.getBean(UsageCommandService::class.java).accept(
@@ -112,6 +123,57 @@ class UsageBillingMicroserviceFixture : AutoCloseable {
 
     fun publishInvoiceEvents() {
         invoiceContext.getBean(InvoiceOutboxPublisher::class.java).publishPending()
+    }
+
+    fun sendUsageEvent(
+        tenantId: String,
+        meterCode: String,
+        aggregateId: String,
+        aggregateVersion: Long,
+        eventId: UUID = UUID.randomUUID(),
+    ) {
+        val payload = """{"meterCode":"$meterCode","currency":"USD","quantity":"1"}"""
+        val envelope = envelope(
+            WireEvent(
+                eventId = eventId,
+                eventType = "UsageAccepted",
+                tenantId = tenantId,
+                aggregateType = "Usage",
+                aggregateId = aggregateId,
+                aggregateVersion = aggregateVersion,
+                payload = payload,
+            ),
+        )
+        usageKafkaTemplate().send(USAGE_TOPIC, "$tenantId|Usage|$aggregateId", envelope).get()
+    }
+
+    fun sendQueryEvent(
+        eventId: UUID,
+        tenantId: String,
+        eventType: String,
+        schemaVersion: Int = 1,
+        validDigest: Boolean = true,
+    ) {
+        val payload = "{}"
+        val wirePayload = envelope(
+            WireEvent(
+                eventId = eventId,
+                eventType = eventType,
+                tenantId = tenantId,
+                aggregateType = "Invoice",
+                aggregateId = eventId.toString(),
+                aggregateVersion = 1,
+                payload = payload,
+                schemaVersion = schemaVersion,
+                payloadDigest = if (validDigest) digestOf(payload) else "0".repeat(64),
+            ),
+        )
+        usageKafkaTemplate().send(INVOICE_TOPIC, "$tenantId|Invoice|$eventId", wirePayload).get()
+    }
+
+    fun restartUsageContext() {
+        usageContext.close()
+        usageContext = startContext(UsageServiceApplication::class.java, "usage", usageDatabase)
     }
 
     fun redeliverLatestUsageEvent() {
@@ -157,6 +219,27 @@ class UsageBillingMicroserviceFixture : AutoCloseable {
             queryContext.getBean(QueryProjectionJournal::class.java).readModelEventIds.size
         }
 
+    fun queryRecoverySnapshot(): QueryRecoverySnapshot =
+        transaction(queryContext) {
+            queryContext.getBean(QueryRecoveryService::class.java).snapshot()
+        }
+
+    fun redriveQueryEvent(eventId: UUID): Boolean =
+        queryContext.getBean(QueryRecoveryService::class.java)
+            .redrive(eventId, "composition-operator", "correlation-$eventId")
+            .requested
+
+    fun queryTenantAccessAllowed(authenticationTenant: String, targetTenant: String): Boolean {
+        val authentication = UsernamePasswordAuthenticationToken.authenticated(
+            "composition-user",
+            "n/a",
+            listOf(SimpleGrantedAuthority("TENANT_$authenticationTenant")),
+        )
+        return runCatching {
+            queryContext.getBean(QueryTenantAuthorizer::class.java).requireAccess(authentication, targetTenant)
+        }.isSuccess
+    }
+
     override fun close() {
         if (::queryContext.isInitialized) queryContext.close()
         if (::invoiceContext.isInitialized) invoiceContext.close()
@@ -182,8 +265,13 @@ class UsageBillingMicroserviceFixture : AutoCloseable {
         application: Class<*>,
         service: String,
         database: PostgreSQLContainer,
-    ): ConfigurableApplicationContext =
-        SpringApplicationBuilder(application)
+    ): ConfigurableApplicationContext {
+        val sources = if (service == "meter") {
+            arrayOf(application, MeterCompositionTestConfiguration::class.java)
+        } else {
+            arrayOf(application)
+        }
+        return SpringApplicationBuilder(*sources)
             .properties(
                 "server.port=0",
                 "spring.datasource.url=${database.jdbcUrl}",
@@ -192,8 +280,12 @@ class UsageBillingMicroserviceFixture : AutoCloseable {
                 "usage-billing.$service.kafka.bootstrap-servers=${kafka.bootstrapServers}",
                 "usage-billing.$service.kafka.listener-auto-startup=true",
                 "management.datadog.metrics.export.enabled=false",
+                "spring.kafka.producer.properties.delivery.timeout.ms=5000",
+                "spring.kafka.producer.properties.request.timeout.ms=1000",
+                "spring.kafka.producer.properties.max.block.ms=3000",
             )
             .run()
+    }
 
     private fun <T : Any> meterTransaction(block: () -> T): T =
         transaction(meterContext, block)
@@ -213,14 +305,47 @@ class UsageBillingMicroserviceFixture : AutoCloseable {
     private fun <T : Any> transaction(context: ConfigurableApplicationContext, block: () -> T): T =
         requireNotNull(TransactionTemplate(context.getBean(PlatformTransactionManager::class.java)).execute { block() })
 
+    private fun envelope(event: WireEvent): String =
+        Jackson.defaultJsonMapper.writeValueAsString(
+            linkedMapOf(
+                "eventId" to event.eventId.toString(),
+                "eventType" to event.eventType,
+                "schemaVersion" to event.schemaVersion,
+                "tenantId" to event.tenantId,
+                "aggregateType" to event.aggregateType,
+                "aggregateId" to event.aggregateId,
+                "aggregateVersion" to event.aggregateVersion,
+                "payload" to event.payload,
+                "payloadDigest" to event.payloadDigest,
+                "occurredAt" to "2026-07-23T00:00:00Z",
+                "recordedAt" to "2026-07-23T00:00:01Z",
+            ),
+        )
+
+    private data class WireEvent(
+        val eventId: UUID,
+        val eventType: String,
+        val tenantId: String,
+        val aggregateType: String,
+        val aggregateId: String,
+        val aggregateVersion: Long,
+        val payload: String,
+        val schemaVersion: Int = 1,
+        val payloadDigest: String = digestOf(payload),
+    )
+
     private companion object {
         const val METER_TOPIC = "meter.events.v1"
         const val USAGE_TOPIC = "usage.events.v1"
+        const val INVOICE_TOPIC = "invoice.events.v1"
         val TOPICS = listOf(
             METER_TOPIC,
             USAGE_TOPIC,
             "billing.events.v1",
-            "invoice.events.v1",
+            INVOICE_TOPIC,
         )
+
+        fun digestOf(value: String): String =
+            HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
     }
 }

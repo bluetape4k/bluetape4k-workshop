@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.usagebilling.invoice.messaging
 
+import org.springframework.kafka.KafkaException
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Component
 import java.util.concurrent.ExecutionException
@@ -16,6 +17,8 @@ class KafkaInvoiceEventTransport(
         } catch (failure: TimeoutException) {
             throw InvoiceEventTransportFailure(failure)
         } catch (failure: ExecutionException) {
+            throw InvoiceEventTransportFailure(failure)
+        } catch (failure: KafkaException) {
             throw InvoiceEventTransportFailure(failure)
         } catch (failure: InterruptedException) {
             Thread.currentThread().interrupt()
