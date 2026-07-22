@@ -6,6 +6,8 @@ import io.bluetape4k.workshop.commerce.usagebilling.usage.application.PriceEvide
 import io.bluetape4k.workshop.commerce.usagebilling.usage.application.UsageCommandService
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.AcceptUsageCommand
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidence
+import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidenceInboxEvent
+import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidenceInboxOutcome
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,6 +37,9 @@ class UsageAcceptancePostgresIntegrationTest {
     private lateinit var outbox: UsageOutboxRepository
 
     @Autowired
+    private lateinit var priceEvidenceInbox: UsagePriceEvidenceInboxRepository
+
+    @Autowired
     private lateinit var transactionManager: PlatformTransactionManager
 
     @Test
@@ -59,6 +64,25 @@ class UsageAcceptancePostgresIntegrationTest {
         transaction { usageRecords.findAll().count() } shouldBeEqualTo usageCount + 1
         transaction { outbox.findAll().count() } shouldBeEqualTo outboxCount + 1
         transaction { outbox.findAll().last().status } shouldBeEqualTo "PENDING"
+    }
+
+    @Test
+    fun `price evidence inbox atomically absorbs duplicate delivery and quarantines digest conflicts`() {
+        val meterCode = "api_calls_${UUID.randomUUID()}"
+        val eventId = UUID.randomUUID()
+        val event = PriceEvidenceInboxEvent(
+            eventId = eventId,
+            tenantId = "tenant-a",
+            payloadDigest = "a".repeat(64),
+            evidence = PriceEvidence("tenant-a", meterCode, "USD", BigDecimal("0.10"), NOW),
+        )
+
+        priceEvidence.record(event) shouldBeEqualTo PriceEvidenceInboxOutcome.APPLIED
+        priceEvidence.record(event) shouldBeEqualTo PriceEvidenceInboxOutcome.DUPLICATE
+        priceEvidence.record(event.copy(payloadDigest = "b".repeat(64))) shouldBeEqualTo
+            PriceEvidenceInboxOutcome.QUARANTINED
+
+        transaction { priceEvidenceInbox.findAll().count() } shouldBeEqualTo 1
     }
 
     private fun <T : Any> transaction(block: () -> T): T =

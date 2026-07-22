@@ -6,9 +6,16 @@ import org.junit.jupiter.api.Test
 
 class UsageRepositoryArchitectureTest {
     @Test
-    fun `usage outbox repository implements ExposedJdbcRepository`() {
-        ExposedJdbcRepository::class.java.isAssignableFrom(
-            Class.forName("io.bluetape4k.workshop.commerce.usagebilling.usage.persistence.UsageOutboxRepository"),
-        ) shouldBeEqualTo true
+    fun `usage durable repositories implement ExposedJdbcRepository`() {
+        listOf(
+            "UsageOutboxRepository",
+            "UsagePriceEvidenceRepository",
+            "UsagePriceEvidenceInboxRepository",
+            "UsageRecordRepository",
+        ).all { repository ->
+            ExposedJdbcRepository::class.java.isAssignableFrom(
+                Class.forName("io.bluetape4k.workshop.commerce.usagebilling.usage.persistence.$repository"),
+            )
+        } shouldBeEqualTo true
     }
 }

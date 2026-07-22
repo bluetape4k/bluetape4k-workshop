@@ -35,6 +35,25 @@ data class PriceEvidence(
     val effectiveAt: Instant,
 )
 
+data class PriceEvidenceInboxEvent(
+    val eventId: UUID,
+    val tenantId: String,
+    val payloadDigest: String,
+    val evidence: PriceEvidence,
+) {
+    init {
+        tenantId.requireNotBlank("tenantId")
+        payloadDigest.requireNotBlank("payloadDigest")
+        require(tenantId == evidence.tenantId) { "price evidence tenant must match its inbox tenant" }
+    }
+}
+
+enum class PriceEvidenceInboxOutcome {
+    APPLIED,
+    DUPLICATE,
+    QUARANTINED,
+}
+
 data class UsageRecord(
     val usageId: UUID,
     val eventId: UUID,
