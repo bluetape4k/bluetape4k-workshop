@@ -134,13 +134,13 @@ class ReconciliationService(
         if (limit <= 0) return emptyList()
         val findings = mutableListOf<FindingCandidate>()
         var cursor: UUID? = null
-        while (findings.size < limit) {
+        var exhausted = false
+        while (findings.size < limit && !exhausted) {
             val page = UsageEventEntity.find {
                 val tenant = UsageEvents.tenantId eq tenantId
                 cursor?.let { tenant and (UsageEvents.id greater it) } ?: tenant
             }.orderBy(UsageEvents.id to SortOrder.ASC).limit(SCAN_PAGE_SIZE).toList()
-            if (page.isEmpty()) break
-            cursor = page.last().id.value
+            page.lastOrNull()?.let { cursor = it.id.value }
             page.mapNotNullTo(findings) { usage ->
                 val servicePeriod = BillingPeriodEntity.find {
                     (BillingPeriods.tenantId eq tenantId) and
@@ -162,7 +162,7 @@ class ReconciliationService(
                     }
                 FindingCandidate(type, USAGE_EVENT, usage.id.value.toString(), usageDigest(usage), null)
             }
-            if (page.size < SCAN_PAGE_SIZE) break
+            exhausted = page.size < SCAN_PAGE_SIZE
         }
         return findings.take(limit)
     }
@@ -171,17 +171,17 @@ class ReconciliationService(
         if (limit <= 0) return emptyList()
         val findings = mutableListOf<FindingCandidate>()
         var cursor: UUID? = null
-        while (findings.size < limit) {
+        var exhausted = false
+        while (findings.size < limit && !exhausted) {
             val page = LedgerEntryEntity.find {
                 val tenant = LedgerEntries.tenantId eq tenantId
                 cursor?.let { tenant and (LedgerEntries.id greater it) } ?: tenant
             }.orderBy(LedgerEntries.id to SortOrder.ASC).limit(SCAN_PAGE_SIZE).toList()
-            if (page.isEmpty()) break
-            cursor = page.last().id.value
+            page.lastOrNull()?.let { cursor = it.id.value }
             page.flatMapTo(findings) { entry ->
                 listOfNotNull(priceFinding(tenantId, entry), authorityFinding(entry))
             }
-            if (page.size < SCAN_PAGE_SIZE) break
+            exhausted = page.size < SCAN_PAGE_SIZE
         }
         return findings.take(limit)
     }
@@ -230,13 +230,13 @@ class ReconciliationService(
         if (limit <= 0) return emptyList()
         val findings = mutableListOf<FindingCandidate>()
         var cursor: UUID? = null
-        while (findings.size < limit) {
+        var exhausted = false
+        while (findings.size < limit && !exhausted) {
             val page = InvoiceLineEntity.find {
                 val tenant = InvoiceLines.tenantId eq tenantId
                 cursor?.let { tenant and (InvoiceLines.id greater it) } ?: tenant
             }.orderBy(InvoiceLines.id to SortOrder.ASC).limit(SCAN_PAGE_SIZE).toList()
-            if (page.isEmpty()) break
-            cursor = page.last().id.value
+            page.lastOrNull()?.let { cursor = it.id.value }
             page.mapNotNullTo(findings) { line ->
                 val entries = InvoiceLineEntries.selectAll()
                     .where { InvoiceLineEntries.invoiceLineId eq line.id.value }
@@ -255,7 +255,7 @@ class ReconciliationService(
                     actual,
                 )
             }
-            if (page.size < SCAN_PAGE_SIZE) break
+            exhausted = page.size < SCAN_PAGE_SIZE
         }
         return findings.take(limit)
     }
@@ -264,13 +264,13 @@ class ReconciliationService(
         if (limit <= 0) return emptyList()
         val findings = mutableListOf<FindingCandidate>()
         var cursor: UUID? = null
-        while (findings.size < limit) {
+        var exhausted = false
+        while (findings.size < limit && !exhausted) {
             val page = InvoiceEntity.find {
                 val tenant = Invoices.tenantId eq tenantId
                 cursor?.let { tenant and (Invoices.id greater it) } ?: tenant
             }.orderBy(Invoices.id to SortOrder.ASC).limit(SCAN_PAGE_SIZE).toList()
-            if (page.isEmpty()) break
-            cursor = page.last().id.value
+            page.lastOrNull()?.let { cursor = it.id.value }
             page.mapNotNullTo(findings) { invoice ->
                 val lineTotal = InvoiceLineEntity.find { InvoiceLines.invoiceId eq invoice.id.value }
                     .fold(java.math.BigDecimal.ZERO) { sum, line -> sum + line.amount }
@@ -282,7 +282,7 @@ class ReconciliationService(
                     Sha256Digest.of(invoice.totalAmount.toPlainString()).value,
                 )
             }
-            if (page.size < SCAN_PAGE_SIZE) break
+            exhausted = page.size < SCAN_PAGE_SIZE
         }
         return findings.take(limit)
     }
