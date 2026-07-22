@@ -42,6 +42,9 @@ class BillingInboxPostgresIntegrationTest {
     private lateinit var priceEvidenceInbox: BillingPriceEvidenceInboxRepository
 
     @Autowired
+    private lateinit var outboxJournal: ExposedBillingOutboxJournal
+
+    @Autowired
     private lateinit var transactionManager: PlatformTransactionManager
 
     @Test
@@ -88,6 +91,27 @@ class BillingInboxPostgresIntegrationTest {
         pricingEvidence.record(event.copy(payloadDigest = "b".repeat(64))) shouldBeEqualTo
             BillingPriceEvidenceOutcome.QUARANTINED
         transaction { priceEvidenceInbox.findAll().count() } shouldBeEqualTo 1
+    }
+
+    @Test
+    fun `Billing outbox claim and published mark remain fenced by owner`() {
+        val meterCode = "compute_${UUID.randomUUID()}"
+        pricingEvidence.record(
+            BillingPriceEvidence("tenant-a", meterCode, "USD", BigDecimal("0.30"), Instant.EPOCH),
+        )
+        inbox.handle(
+            BillingInboxEvent(
+                UUID.randomUUID(), "tenant-a", "Usage", UUID.randomUUID().toString(), 1,
+                "digest-${UUID.randomUUID()}", meterCode,
+            ),
+        ) shouldBeEqualTo BillingInboxOutcome.APPLIED
+        val eventId = transaction { outbox.findAll().last().eventId }
+        val now = Instant.now()
+
+        outboxJournal.claim("billing-publisher-a", now, 100).any { it.eventId == eventId } shouldBeEqualTo true
+        outboxJournal.markPublished(eventId, "billing-publisher-b", now) shouldBeEqualTo false
+        outboxJournal.markPublished(eventId, "billing-publisher-a", now) shouldBeEqualTo true
+        transaction { outbox.findAll().last { it.eventId == eventId }.status } shouldBeEqualTo "PUBLISHED"
     }
 
     private fun <T : Any> transaction(block: () -> T): T =
