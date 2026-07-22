@@ -2,16 +2,23 @@
 
 package io.bluetape4k.workshop.commerce.usagebilling.usage.persistence
 
+import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidence
+import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageAcceptanceJournal
+import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageOutboxRecord
+import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageRecord
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityInformationImpl
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntity
 import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.javatime.timestamp
+import org.springframework.stereotype.Repository
 import java.util.UUID
 
 object UsageOutboxEvents : UUIDTable("usage_outbox_event", "outbox_event_id") {
@@ -38,6 +45,35 @@ object UsageOutboxEvents : UUIDTable("usage_outbox_event", "outbox_event_id") {
     }
 }
 
+object UsagePriceEvidence : UUIDTable("usage_price_evidence", "price_evidence_id") {
+    val tenantId = varchar("tenant_id", 64)
+    val meterCode = varchar("meter_code", 64)
+    val currency = varchar("currency", 3)
+    val unitPrice = decimal("unit_price", 19, 6)
+    val effectiveAt = timestamp("effective_at")
+
+    init {
+        uniqueIndex(tenantId, meterCode, currency, effectiveAt)
+    }
+}
+
+object UsageRecords : UUIDTable("usage_record", "usage_id") {
+    val tenantId = varchar("tenant_id", 64)
+    val sourceSystem = varchar("source_system", 64)
+    val sourceEventId = varchar("source_event_id", 128)
+    val fingerprint = varchar("fingerprint", 256)
+    val eventId = javaUUID("event_id")
+    val meterCode = varchar("meter_code", 64)
+    val currency = varchar("currency", 3)
+    val quantity = decimal("quantity", 19, 6)
+    val unitPrice = decimal("unit_price", 19, 6)
+    val occurredAt = timestamp("occurred_at")
+
+    init {
+        uniqueIndex(tenantId, sourceSystem, sourceEventId)
+    }
+}
+
 class UsageOutboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<UsageOutboxEventEntity>(UsageOutboxEvents)
 
@@ -59,6 +95,31 @@ class UsageOutboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var updatedAt by UsageOutboxEvents.updatedAt
 }
 
+class UsagePriceEvidenceEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<UsagePriceEvidenceEntity>(UsagePriceEvidence)
+
+    var tenantId by UsagePriceEvidence.tenantId
+    var meterCode by UsagePriceEvidence.meterCode
+    var currency by UsagePriceEvidence.currency
+    var unitPrice by UsagePriceEvidence.unitPrice
+    var effectiveAt by UsagePriceEvidence.effectiveAt
+}
+
+class UsageRecordEntity(id: EntityID<UUID>) : UUIDEntity(id) {
+    companion object : UUIDEntityClass<UsageRecordEntity>(UsageRecords)
+
+    var tenantId by UsageRecords.tenantId
+    var sourceSystem by UsageRecords.sourceSystem
+    var sourceEventId by UsageRecords.sourceEventId
+    var fingerprint by UsageRecords.fingerprint
+    var eventId by UsageRecords.eventId
+    var meterCode by UsageRecords.meterCode
+    var currency by UsageRecords.currency
+    var quantity by UsageRecords.quantity
+    var unitPrice by UsageRecords.unitPrice
+    var occurredAt by UsageRecords.occurredAt
+}
+
 abstract class UsageExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(ExposedEntityInformationImpl(domainClass))
@@ -77,5 +138,79 @@ abstract class AppendOnlyUsageExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     protected fun <T> immutableMutation(): T = throw UnsupportedOperationException("append-only repository")
 }
 
+@Repository
 class UsageOutboxRepository :
     AppendOnlyUsageExposedJdbcRepository<UsageOutboxEventEntity, UUID>(UsageOutboxEventEntity::class.java)
+
+@Repository
+class UsagePriceEvidenceRepository :
+    AppendOnlyUsageExposedJdbcRepository<UsagePriceEvidenceEntity, UUID>(UsagePriceEvidenceEntity::class.java) {
+    fun append(evidence: PriceEvidence) {
+        UsagePriceEvidenceEntity.new {
+            tenantId = evidence.tenantId
+            meterCode = evidence.meterCode
+            currency = evidence.currency
+            unitPrice = evidence.unitPrice
+            effectiveAt = evidence.effectiveAt
+        }
+    }
+}
+
+@Repository
+class UsageRecordRepository :
+    AppendOnlyUsageExposedJdbcRepository<UsageRecordEntity, UUID>(UsageRecordEntity::class.java)
+
+@Repository
+class ExposedUsageAcceptanceJournal : UsageAcceptanceJournal {
+    override fun priceEvidence(tenantId: String, meterCode: String, currency: String): PriceEvidence? =
+        UsagePriceEvidenceEntity.find {
+            (UsagePriceEvidence.tenantId eq tenantId) and
+                (UsagePriceEvidence.meterCode eq meterCode) and
+                (UsagePriceEvidence.currency eq currency)
+        }.firstOrNull()?.let { PriceEvidence(it.tenantId, it.meterCode, it.currency, it.unitPrice, it.effectiveAt) }
+
+    override fun findUsage(tenantId: String, sourceSystem: String, sourceEventId: String): UsageRecord? =
+        UsageRecordEntity.find {
+            (UsageRecords.tenantId eq tenantId) and
+                (UsageRecords.sourceSystem eq sourceSystem) and
+                (UsageRecords.sourceEventId eq sourceEventId)
+        }.firstOrNull()?.let {
+            UsageRecord(
+                it.id.value, it.eventId, it.tenantId, it.sourceSystem, it.sourceEventId, it.fingerprint,
+                it.meterCode, it.currency, it.quantity, it.unitPrice, it.occurredAt,
+            )
+        }
+
+    override fun append(usage: UsageRecord, outboxRecord: UsageOutboxRecord) {
+        UsageRecordEntity.new(usage.usageId) {
+            tenantId = usage.tenantId
+            sourceSystem = usage.sourceSystem
+            sourceEventId = usage.sourceEventId
+            fingerprint = usage.fingerprint
+            eventId = usage.eventId
+            meterCode = usage.meterCode
+            currency = usage.currency
+            quantity = usage.quantity
+            unitPrice = usage.unitPrice
+            occurredAt = usage.occurredAt
+        }
+        UsageOutboxEventEntity.new {
+            eventId = outboxRecord.eventId
+            tenantId = usage.tenantId
+            eventType = outboxRecord.eventType
+            aggregateType = "Usage"
+            aggregateId = usage.sourceEventId
+            aggregateVersion = 1
+            partitionKey = outboxRecord.partitionKey
+            payload = outboxRecord.payload
+            payloadDigest = outboxRecord.payloadDigest
+            status = "PENDING"
+            attempt = 0
+            nextAttemptAt = null
+            claimOwner = null
+            claimUntil = null
+            createdAt = outboxRecord.createdAt
+            updatedAt = outboxRecord.createdAt
+        }
+    }
+}
