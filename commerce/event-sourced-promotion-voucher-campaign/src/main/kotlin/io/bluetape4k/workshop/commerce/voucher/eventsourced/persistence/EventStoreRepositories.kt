@@ -89,9 +89,11 @@ internal object IdempotencyReceipts : UUIDTable("voucher_idempotency_receipt", "
 
 internal object EventSnapshots : UUIDTable("voucher_event_snapshot", "snapshot_id") {
     val tenantId = varchar("tenant_id", 64)
+    val streamType = varchar("stream_type", 64)
     val streamId = javaUUID("stream_id")
     val streamVersion = long("stream_version")
     val schemaVersion = integer("schema_version")
+    val keyVersion = integer("key_version")
     val canonicalDigest = varchar("canonical_digest", 64)
     val payload = text("payload")
     val createdAt = timestamp("created_at")
