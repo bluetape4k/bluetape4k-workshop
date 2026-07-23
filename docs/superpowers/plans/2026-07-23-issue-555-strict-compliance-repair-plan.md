@@ -44,8 +44,8 @@
 - [x] Update English/Korean README embeds and prose to match the corrected source and diagram set.
 - [x] Replace the incorrect diagram ledger with per-asset checklist evidence and list every inspection.
 - [x] Update the lesson with the failure mode: mechanical SVG checks do not prove diagram-kind or PNG readability.
-- [ ] Run README validator, workflow/module stale checks, actionlint, `git diff --check`, and a six-lens inline review.
-- [ ] Commit the repaired scope with Lore trailers, push the exact head, and refresh PR #557’s final `## DoD Status`; keep it draft until live CI and review converge.
+- [x] Run README validator, workflow/module stale checks, actionlint, `git diff --check`, and a six-lens inline review.
+- [x] Commit the repaired scope with Lore trailers, push the exact head, and refresh PR #557’s final `## DoD Status`; keep it draft until live CI and review converge.
 
 ## Validation order
 

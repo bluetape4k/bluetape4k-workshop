@@ -62,6 +62,10 @@ Kafka + PostgreSQL container suite는 다음 11개 시나리오, 12개 test를 �
 `CorrectionIntegrationTest`는 Billing의 original event ID를 `correctionOf`로 전달하여 기존 line 하나가
 두 line으로 바뀌는 것이 아니라 새로운 correction line이 추가되는 것을 검증한다.
 
+`BrokerPathRecoveryIntegrationTest`는 price activation의 event ID를 보존해 toxic 직후 동일 row의
+`RETRY_WAIT`/attempt 1과 복구 뒤 동일 row의 `PUBLISHED`/attempt 1을 직접 검증한다. 따라서 backlog 수나
+publisher result만으로 row identity를 추정하지 않는다.
+
 ## Diagram checklist ledger
 
 대상은 다음 여섯 SVG/PNG 쌍이다.
@@ -117,7 +121,8 @@ composition module은 production source가 없으므로 자체 Kover report만 �
 
 - 이 예제는 Kafka broker failover, multi-region replication, schema registry 운영, 실제 IAM/JWT issuer를
   구현하지 않는다. README는 이를 운영 확장 과제로 남기며 exactly-once를 주장하지 않는다.
-- durable poison quarantine/redrive의 concrete operator workflow는 Query service에 구현한다. 다른 consumer의
-  permanent contract policy를 동일하게 일반화했다고 주장하지 않는다.
+- Query는 durable poison quarantine과 redrive request audit만 구현한다. immutable original envelope의
+  retrieval/republication은 external retained source의 별도 workflow이며, 다른 consumer의 permanent contract
+  policy를 동일하게 일반화했다고 주장하지 않는다.
 - transport outage는 deterministic test switch와 실제 Kafka recovery를 조합해 검증한다. Docker network
   partition 전체를 재현했다는 주장은 하지 않는다.
