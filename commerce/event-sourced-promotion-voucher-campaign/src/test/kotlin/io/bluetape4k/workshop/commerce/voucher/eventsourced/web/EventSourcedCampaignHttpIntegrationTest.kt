@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.web
 
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload
@@ -50,6 +51,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
+import java.net.Socket
 import java.net.http.HttpClient
 import java.time.Clock
 import java.time.Duration
@@ -66,13 +68,17 @@ internal class EventSourcedCampaignHttpIntegrationTest
         private val registration: EventSourcedExposedDatabaseRegistration,
         dataSource: DataSource,
         private val clock: Clock,
+        private val sseProperties: EventSourcedSseProperties,
         @LocalServerPort port: Int,
     ) {
     private val database get() = registration.database
     private val client: WebTestClient
+    private val operatorOrigin: String
+    private val serverPort: Int = port
 
     init {
         check(dataSource is HikariDataSource) { "live HTTP integration must use Spring's Hikari DataSource" }
+        operatorOrigin = "http://127.0.0.1:$port"
         val httpClient = HttpClient.newBuilder().connectTimeout(HTTP_TIMEOUT).build()
         client =
             WebTestClient
@@ -386,6 +392,70 @@ internal class EventSourcedCampaignHttpIntegrationTest
             .jsonPath("$.exception").doesNotExist()
     }
 
+    @Test
+    fun `live operator boundary rejects ambient credentials and untrusted origins before dispatch`() {
+        client
+            .post()
+            .uri("/operator/api/v1/campaigns")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue("""{}""")
+            .exchange()
+            .expectStatus().isForbidden
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("OPERATOR_ACCESS_DENIED")
+
+        client
+            .post()
+            .uri("/operator/api/v1/campaigns")
+            .contentType(MediaType.APPLICATION_JSON)
+            .header("X-Workshop-Operator-Secret", "wrong-secret")
+            .header("X-Workshop-Operator-Guard", "workshop-operator-guard")
+            .header("X-Workshop-Operator-Role", "OPERATOR")
+            .header("Origin", "https://untrusted.example")
+            .header(TENANT_HEADER, TENANT)
+            .bodyValue("""{}""")
+            .exchange()
+            .expectStatus().isForbidden
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("OPERATOR_ACCESS_DENIED")
+    }
+
+    @Test
+    fun `live SSE starts with snapshot and reconnects with separate position cursor`() {
+        sseProperties.heartbeatInterval shouldBeEqualTo Duration.ofMillis(100)
+        val first = firstSseEvent()
+        val cursor = first.single { line -> line.startsWith("id:") }.substringAfter("id:")
+
+        first.any { line -> line == "event:snapshot" }.shouldBeTrue()
+        first.any { line -> line.contains("\"campaignId\":\"$CAMPAIGN_ID\"") }.shouldBeTrue()
+        cursor.split(':').size shouldBeEqualTo 3
+
+        val resumed = firstSseEvent(cursor)
+
+        resumed.any { line -> line == "event:snapshot" }.shouldBeTrue()
+        resumed.single { line -> line.startsWith("id:") }.substringAfter("id:") shouldBeEqualTo cursor
+    }
+
+    private fun firstSseEvent(lastEventId: String? = null): List<String> =
+        Socket("127.0.0.1", serverPort).use { socket ->
+            socket.soTimeout = SSE_EVENT_TIMEOUT.toMillis().toInt()
+            socket.getOutputStream().bufferedWriter().apply {
+                append("GET /api/v1/campaigns/$CAMPAIGN_ID/events HTTP/1.1\r\n")
+                append("Host: 127.0.0.1:$serverPort\r\n")
+                append("Accept: ${MediaType.TEXT_EVENT_STREAM_VALUE}\r\n")
+                append("$TENANT_HEADER: $TENANT\r\n")
+                append("$PRINCIPAL_HEADER: sse-client\r\n")
+                lastEventId?.let { cursor -> append("Last-Event-ID: $cursor\r\n") }
+                append("Connection: close\r\n\r\n")
+                flush()
+            }
+            socket.getInputStream().bufferedReader().let { reader ->
+                val responseHeaders = generateSequence(reader::readLine).takeWhile(String::isNotEmpty).toList()
+                responseHeaders.first().contains(" 200 ").shouldBeTrue()
+                generateSequence(reader::readLine).takeWhile(String::isNotEmpty).toList()
+            }
+        }
+
     private fun getCampaign(minimumPosition: Long): WebTestClient.RequestHeadersSpec<*> =
         client
             .get()
@@ -407,6 +477,7 @@ internal class EventSourcedCampaignHttpIntegrationTest
             .header(PRINCIPAL_HEADER, "operator-a")
             .header(IDEMPOTENCY_HEADER, idempotencyKey)
             .header("If-None-Match", "*")
+            .operatorAccessHeaders()
             .bodyValue(
                 """
                 {
@@ -450,6 +521,7 @@ internal class EventSourcedCampaignHttpIntegrationTest
         client
             .post()
             .uri("/operator/api/v1/projections/$PROJECTION/rebuilds/$generation/$action")
+            .contentType(MediaType.APPLICATION_JSON)
             .rebuildHeaders(idempotencyKey, expectedToken)
 
     private fun retryPoison(
@@ -462,6 +534,7 @@ internal class EventSourcedCampaignHttpIntegrationTest
                 "/operator/api/v1/projections/$PROJECTION/generations/$GENERATION/" +
                     "poison-events/$POISON_EVENT_ID/retry",
             )
+            .contentType(MediaType.APPLICATION_JSON)
             .rebuildHeaders(idempotencyKey, expectedToken)
 
     private fun reconcile(
@@ -471,6 +544,7 @@ internal class EventSourcedCampaignHttpIntegrationTest
         client
             .post()
             .uri("/operator/api/v1/projections/$PROJECTION/generations/$GENERATION/reconciliation")
+            .contentType(MediaType.APPLICATION_JSON)
             .rebuildHeaders(idempotencyKey, expectedToken)
 
     private fun appendCapacityChangeAndPoison(poisonedAt: Instant) {
@@ -513,6 +587,13 @@ internal class EventSourcedCampaignHttpIntegrationTest
             .header(PRINCIPAL_HEADER, "operator-a")
             .header(IDEMPOTENCY_HEADER, idempotencyKey)
             .header(EXPECTED_GENERATION_TOKEN_HEADER, expectedToken.toString())
+            .operatorAccessHeaders()
+
+    private fun <S: WebTestClient.RequestHeadersSpec<S>> S.operatorAccessHeaders(): S =
+        header(OPERATOR_SECRET_HEADER, OPERATOR_SECRET)
+            .header(OPERATOR_GUARD_HEADER, OPERATOR_GUARD)
+            .header(OPERATOR_ROLE_HEADER, "OPERATOR")
+            .header("Origin", operatorOrigin)
 
     private fun event(
         eventId: String,
@@ -532,6 +613,7 @@ internal class EventSourcedCampaignHttpIntegrationTest
     companion object {
         private val POSTGRES = PostgreSQLServer.Launcher.postgres
         private val HTTP_TIMEOUT: Duration = Duration.ofSeconds(60)
+        private val SSE_EVENT_TIMEOUT: Duration = Duration.ofSeconds(5)
         private const val TENANT = "tenant-a"
         private const val PROJECTION = "voucher-lifecycle"
         private const val GENERATION = 1L
@@ -539,6 +621,8 @@ internal class EventSourcedCampaignHttpIntegrationTest
         private const val EVENT_ACTIVATED_ID = "0198a1b2-c3d4-7e5f-8123-456789abc302"
         private const val POISON_EVENT_ID = "0198a1b2-c3d4-7e5f-8123-456789abc303"
         private const val POISON_READY_AGE_SECONDS = 20L
+        private const val OPERATOR_SECRET = "workshop-operator-secret"
+        private const val OPERATOR_GUARD = "workshop-operator-guard"
         private val CAMPAIGN_ID = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc300")
         private val CREATE_CAMPAIGN_ID = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc399")
         private val NOW = Instant.parse("2026-07-23T00:00:00Z")
@@ -566,6 +650,7 @@ internal class EventSourcedCampaignHttpIntegrationTest
             registry.add("spring.datasource.username") { POSTGRES.username.shouldNotBeNull() }
             registry.add("spring.datasource.password") { POSTGRES.password.shouldNotBeNull() }
             registry.add("management.datadog.metrics.export.enabled") { "false" }
+            registry.add("voucher.sse.heartbeat-interval") { "100ms" }
         }
     }
 }

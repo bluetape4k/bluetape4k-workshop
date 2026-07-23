@@ -18,6 +18,18 @@ management:
         include: health,info,prometheus
 
 voucher:
+  sse:
+    max-subscriptions: ${VOUCHER_SSE_MAX_SUBSCRIPTIONS:32}
+    queue-size: ${VOUCHER_SSE_QUEUE_SIZE:32}
+    poll-interval: ${VOUCHER_SSE_POLL_INTERVAL:250ms}
+    heartbeat-interval: ${VOUCHER_SSE_HEARTBEAT_INTERVAL:10s}
+    write-timeout: ${VOUCHER_SSE_WRITE_TIMEOUT:2s}
+  operator:
+    secret: ${VOUCHER_OPERATOR_SECRET:workshop-operator-secret}
+    guard: ${VOUCHER_OPERATOR_GUARD:workshop-operator-guard}
+    allowed-hosts:
+      - 127.0.0.1
+      - localhost
   projection:
     worker:
       enabled: true

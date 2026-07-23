@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.web
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -7,9 +8,10 @@ import org.springframework.security.web.SecurityFilterChain
 
 /**
  * Customer compatibility endpoints use the bounded workshop identity headers validated by their
- * adapters. Operator authentication is added independently with the Task 12 audit boundary.
+ * adapters. Operator routes are fenced independently by [EventSourcedOperatorAccessFilter].
  */
 @Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties(EventSourcedOperatorProperties::class)
 internal class EventSourcedSecurityConfiguration {
 
     @Bean

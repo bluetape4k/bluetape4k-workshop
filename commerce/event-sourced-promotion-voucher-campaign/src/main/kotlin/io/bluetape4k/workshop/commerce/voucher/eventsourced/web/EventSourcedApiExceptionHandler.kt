@@ -20,6 +20,11 @@ internal data class EventSourcedApiError(
 /** Never serializes database, token, digest, or request payload details to API clients. */
 @RestControllerAdvice
 internal class EventSourcedApiExceptionHandler {
+    @ExceptionHandler(EventSourcedStreamRejected::class)
+    fun eventStreamRejected(failure: EventSourcedStreamRejected): ResponseEntity<EventSourcedApiError> =
+        ResponseEntity.status(failure.httpStatus)
+            .body(EventSourcedApiError(failure.stableCode, failure.safeReason))
+
     @ExceptionHandler(DatabaseBulkheadRejected::class)
     fun databaseBusy(): ResponseEntity<EventSourcedApiError> =
         ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)

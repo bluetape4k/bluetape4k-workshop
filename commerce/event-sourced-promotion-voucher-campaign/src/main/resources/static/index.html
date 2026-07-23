@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Event-sourced voucher operations</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<main>
+    <h1>Event-sourced voucher operations</h1>
+    <p id="projection-status" class="status-label" aria-live="polite" aria-atomic="true">
+        No verified projection loaded.
+    </p>
+    <p id="projection-lag-banner" hidden>Projection data is behind the event stream.</p>
+    <p id="disabled-action-reason" aria-live="polite"></p>
+
+    <form id="campaign-query">
+        <label for="campaign-id">Campaign ID</label>
+        <input id="campaign-id" name="campaignId" required>
+        <button type="submit">Load campaign</button>
+        <button id="manual-refresh" type="button">Refresh verified projection</button>
+    </form>
+
+    <section aria-labelledby="verified-heading">
+        <h2 id="verified-heading">Last verified projection</h2>
+        <dl id="verified-projection"></dl>
+    </section>
+
+    <section aria-labelledby="recovery-heading">
+        <h2 id="recovery-heading">Projection recovery</h2>
+        <form id="operator-context">
+            <label for="operator-tenant">Tenant</label>
+            <input id="operator-tenant" value="tenant-a" required>
+            <label for="projection-name">Projection</label>
+            <input id="projection-name" value="voucher-lifecycle" required>
+            <label for="projection-generation">Generation</label>
+            <input id="projection-generation" type="number" min="1" value="1" required>
+            <label for="expected-generation-token">Expected generation token</label>
+            <input id="expected-generation-token" type="number" min="1" value="1" required>
+            <label for="poison-event-id">Poison event ID</label>
+            <input id="poison-event-id">
+            <label for="operator-secret">Operator secret</label>
+            <input id="operator-secret" type="password" autocomplete="off" required>
+            <label for="operator-guard">Operator guard</label>
+            <input id="operator-guard" type="password" autocomplete="off" required>
+        </form>
+        <button id="retry-poison" type="button">Retry poison event</button>
+        <button id="start-rebuild" type="button">Start rebuild</button>
+        <button id="run-reconciliation" type="button">Run reconciliation</button>
+    </section>
+
+    <dialog id="confirm-destructive-action" aria-labelledby="confirmation-title">
+        <h2 id="confirmation-title">Confirm operator action</h2>
+        <p>This action uses the latest observed generation token and is never automatically resubmitted.</p>
+        <button id="confirm-action" type="button">Confirm</button>
+        <button id="cancel-action" type="button">Cancel</button>
+    </dialog>
+    <span class="sr-only">Status changes are announced without relying on color.</span>
+</main>
+<script src="/app.js" defer></script>
+</body>
+</html>
