@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
+import com.zaxxer.hikari.HikariDataSource
 import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -18,6 +19,16 @@ internal class EventSourcedOperationsConfiguration {
         EventSourcedDatabasePermitGate(metrics = metrics).also(metrics::bind)
 
     @Bean
+    fun eventSourcedHikariMetricsBinding(
+        metrics: EventSourcedMetrics,
+        dataSource: DataSource,
+    ): EventSourcedHikariMetricsBinding {
+        val hikari = checkNotNull(dataSource as? HikariDataSource) { "event-sourced datasource must use HikariCP" }
+        metrics.bind(hikari)
+        return EventSourcedHikariMetricsBinding
+    }
+
+    @Bean
     fun eventSourcedStartupProbe(dataSource: DataSource): EventSourcedStartupProbe =
         EventSourcedStartupProbe {
             dataSource.connection.use(::verifyAuthoritySchema)
@@ -32,3 +43,5 @@ internal class EventSourcedOperationsConfiguration {
         }
     }
 }
+
+internal data object EventSourcedHikariMetricsBinding

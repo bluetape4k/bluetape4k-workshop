@@ -15,7 +15,10 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import java.time.Instant
+import java.time.Duration
 import java.util.UUID
+import kotlin.time.TimeSource
+import kotlin.time.toJavaDuration
 
 private val EVENT_STORE_FENCE_ID = UUID.fromString("00000000-0000-0000-0000-000000000001")
 
@@ -36,6 +39,7 @@ internal class ExposedEventStoreTransactionRunner(
  */
 internal class EventStoreRepository(
     private val reads: EventStoreTransactionRunner,
+    private val metrics: EventStoreAppendMetrics = EventStoreAppendMetrics.NONE,
 ) : EventStorePort {
 
     override fun load(read: EventStoreRead): EventPage =
@@ -64,7 +68,9 @@ internal class EventStoreRepository(
         val eventIds = ordered.flatMap { it.events }.map(EventToAppend::eventId)
         eventIds.toSet().size.requireEquals(eventIds.size, "uniqueEventIds.size")
 
+        val streamHeadStarted = TimeSource.Monotonic.markNow()
         val heads = ordered.associate { append -> append.stream to lockHead(append.stream) }
+        metrics.streamHeadWait(streamHeadStarted.elapsedNow().toJavaDuration())
         val conflict = ordered.firstOrNull { append -> heads.getValue(append.stream) != append.expectedVersion }
         if (conflict != null) {
             return AppendResult.Conflict(
@@ -80,7 +86,9 @@ internal class EventStoreRepository(
         ordered: List<ExpectedAppend>,
         eventIds: List<UUID>,
     ): AppendResult {
+        val appendFenceStarted = TimeSource.Monotonic.markNow()
         val firstPosition = lockFence()
+        metrics.appendFenceWait(appendFenceStarted.elapsedNow().toJavaDuration())
         eventIds.firstOrNull(::eventAlreadyRecorded)?.let { return AppendResult.DuplicateEvent(it) }
         reserveGlobalPositions(firstPosition, eventIds.size)
         var globalPosition = firstPosition
@@ -224,4 +232,19 @@ internal class EventStoreRepository(
             payload = io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload(row[EventLog.payload]),
             actorHmacKeyVersion = row[EventLog.actorHmacKeyVersion],
         )
+}
+
+internal interface EventStoreAppendMetrics {
+    fun streamHeadWait(duration: Duration)
+
+    fun appendFenceWait(duration: Duration)
+
+    companion object {
+        val NONE =
+            object : EventStoreAppendMetrics {
+                override fun streamHeadWait(duration: Duration) = Unit
+
+                override fun appendFenceWait(duration: Duration) = Unit
+            }
+    }
 }

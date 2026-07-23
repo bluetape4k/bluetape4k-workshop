@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.application
 
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.EventSourcedIdempotencyRepository
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabasePermitGate
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedMetrics
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventSourcedExposedDatabaseRegistration
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventStoreRepository
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ExposedEventStoreTransactionRunner
@@ -20,22 +21,28 @@ internal class EventSourcedCommandConfiguration {
         EventSourcedIdempotencyRepository()
 
     @Bean
-    fun eventStoreRepository(registration: EventSourcedExposedDatabaseRegistration): EventStoreRepository =
-        EventStoreRepository(ExposedEventStoreTransactionRunner(registration.database))
+    fun eventStoreRepository(
+        registration: EventSourcedExposedDatabaseRegistration,
+        metrics: EventSourcedMetrics,
+    ): EventStoreRepository =
+        EventStoreRepository(ExposedEventStoreTransactionRunner(registration.database), metrics)
 
     @Bean
+    @Suppress("LongParameterList") // Explicit Spring bean dependencies document the command commit boundary.
     fun eventSourcedCommandService(
         registration: EventSourcedExposedDatabaseRegistration,
         permits: EventSourcedDatabasePermitGate,
         receipts: EventSourcedIdempotencyRepository,
         events: EventStoreRepository,
         keyRing: EventSourcedHmacKeyRing,
+        metrics: EventSourcedMetrics,
     ): EventSourcedCommandService =
         EventSourcedCommandService(
             transactions = ExposedCommandTransactionRunner(registration.database, permits),
             receipts = receipts,
             eventStore = events,
             keyVersionAvailable = keyRing::isAvailable,
+            metrics = metrics,
         )
 
     @Bean

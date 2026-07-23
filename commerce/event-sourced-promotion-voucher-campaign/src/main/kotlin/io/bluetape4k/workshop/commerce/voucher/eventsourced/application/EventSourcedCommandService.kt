@@ -17,6 +17,9 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSour
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedPermitTransactionRunner
 import org.jetbrains.exposed.v1.jdbc.Database
 import java.time.Instant
+import java.time.Duration
+import kotlin.time.TimeSource
+import kotlin.time.toJavaDuration
 
 /** Owns the two transaction cuts: a committed receipt acquire, then atomic append plus terminal finalize. */
 internal interface CommandTransactionRunner {
@@ -65,13 +68,15 @@ internal class EventSourcedCommandService(
     private val receipts: EventSourcedIdempotencyRepository,
     private val eventStore: EventStorePort,
     private val keyVersionAvailable: (Int) -> Boolean = { true },
+    private val metrics: EventSourcedCommandMetrics = EventSourcedCommandMetrics.NONE,
 ) {
     fun execute(command: EventSourcedCommand): CommandExecutionResult {
+        val started = TimeSource.Monotonic.markNow()
         val acquired =
             transactions.inTransaction {
                 receipts.acquire(command.scope, command.fingerprint, command.acquiredAt)
             }
-        return when (acquired) {
+        val result = when (acquired) {
             is ReceiptAcquireResult.Owner -> completeOwner(command, acquired)
             is ReceiptAcquireResult.Replay ->
                 when (val replay = acquired.descriptor.replayWith(keyVersionAvailable)) {
@@ -81,6 +86,13 @@ internal class EventSourcedCommandService(
             is ReceiptAcquireResult.InProgress -> CommandExecutionResult.InProgress()
             ReceiptAcquireResult.FingerprintConflict -> CommandExecutionResult.FingerprintConflict()
         }
+        val duration = started.elapsedNow().toJavaDuration()
+        metrics.commandTerminal(result.status(), duration)
+        if (result is CommandExecutionResult.Executed && result.append != null) {
+            val eventCount = result.append.lastGlobalPosition - result.append.firstGlobalPosition + 1
+            metrics.appendCommitted(eventCount.toInt(), duration)
+        }
+        return result
     }
 
     private fun completeOwner(
@@ -130,3 +142,42 @@ internal class EventSourcedCommandService(
         private const val CONFLICT_STATUS = 409
     }
 }
+
+internal interface EventSourcedCommandMetrics {
+    fun commandTerminal(
+        status: Int,
+        duration: Duration,
+    )
+
+    fun appendCommitted(
+        eventCount: Int,
+        duration: Duration,
+    )
+
+    companion object {
+        val NONE =
+            object : EventSourcedCommandMetrics {
+                override fun commandTerminal(
+                    status: Int,
+                    duration: Duration,
+                ) = Unit
+
+                override fun appendCommitted(
+                    eventCount: Int,
+                    duration: Duration,
+                ) = Unit
+            }
+    }
+}
+
+private fun CommandExecutionResult.status(): Int =
+    when (this) {
+        is CommandExecutionResult.Executed -> descriptor.status
+        is CommandExecutionResult.Replayed -> descriptor.status
+        is CommandExecutionResult.InProgress -> CONFLICT_STATUS
+        is CommandExecutionResult.FingerprintConflict -> CONFLICT_STATUS
+        is CommandExecutionResult.KeyUnavailable -> UNAVAILABLE_STATUS
+    }
+
+private const val CONFLICT_STATUS = 409
+private const val UNAVAILABLE_STATUS = 503

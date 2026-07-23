@@ -162,6 +162,10 @@ tasks.register<Test>("stressTest") {
     classpath = sourceSets["test"].runtimeClasspath
     configureEventSourcedTestRuntime()
     useJUnitPlatform { includeTags("stress") }
+    systemProperty(
+        "eventSourcedStress",
+        providers.gradleProperty("eventSourcedStress").getOrElse("false"),
+    )
     failOnZeroTests()
     verifyNonEmptyXmlResults()
     shouldRunAfter(tasks.test)
