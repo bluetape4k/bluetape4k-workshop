@@ -26,6 +26,9 @@ internal object EventLog : UUIDTable("voucher_event_log", "event_id") {
     val schemaVersion = integer("schema_version")
     val occurredAt = timestamp("occurred_at")
     val recordedAt = timestamp("recorded_at")
+    val correlationId = varchar("correlation_id", 128)
+    val causationId = varchar("causation_id", 128).nullable()
+    val actorSurrogate = varchar("actor_surrogate", DIGEST_LENGTH)
     val payload = text("payload")
     val canonicalChecksum = varchar("canonical_checksum", 64)
 

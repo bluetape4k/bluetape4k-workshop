@@ -1,0 +1,219 @@
+package io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence
+
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertIgnore
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
+import java.time.Instant
+import java.util.UUID
+
+private val EVENT_STORE_FENCE_ID = UUID.fromString("00000000-0000-0000-0000-000000000001")
+
+/** Opens independent read transactions while leaving foreground append ownership to the caller. */
+internal interface EventStoreTransactionRunner {
+    fun <T> readTransaction(block: () -> T): T
+}
+
+internal class ExposedEventStoreTransactionRunner(
+    private val database: Database,
+) : EventStoreTransactionRunner {
+    override fun <T> readTransaction(block: () -> T): T = transaction(database) { block() }
+}
+
+/**
+ * PostgreSQL event authority. Appends deliberately use the caller's transaction so command
+ * idempotency finalization and event persistence share one commit boundary.
+ */
+internal class EventStoreRepository(
+    private val reads: EventStoreTransactionRunner,
+) : EventStorePort {
+
+    override fun load(read: EventStoreRead): EventPage =
+        reads.readTransaction {
+            val events =
+                EventLog
+                    .selectAll()
+                    .where {
+                        (EventLog.tenantId eq read.stream.tenantId.value) and
+                            (EventLog.streamType eq read.stream.streamType) and
+                            (EventLog.streamId eq read.stream.streamId) and
+                            (EventLog.streamVersion greater read.afterVersion)
+                    }.orderBy(EventLog.streamVersion to SortOrder.ASC)
+                    .limit(read.limit)
+                    .map(::toEnvelope)
+            val committedHead = headVersion(read.stream)
+            EventPage(events, committedHead)
+        }
+
+    override fun appendAll(appends: List<ExpectedAppend>): AppendResult {
+        TransactionManager.current()
+        require(appends.isNotEmpty()) { "appends must not be empty" }
+
+        val ordered = appends.sortedBy(ExpectedAppend::stream)
+        require(ordered.map(ExpectedAppend::stream).toSet().size == ordered.size) {
+            "appends must contain each stream at most once"
+        }
+        val eventIds = ordered.flatMap { it.events }.map(EventToAppend::eventId)
+        require(eventIds.toSet().size == eventIds.size) { "one append transaction must not repeat an eventId" }
+
+        val heads = ordered.associate { append -> append.stream to lockHead(append.stream) }
+        val conflict = ordered.firstOrNull { append -> heads.getValue(append.stream) != append.expectedVersion }
+        val duplicateEventId = eventIds.firstOrNull(::eventAlreadyRecorded)
+        return when {
+            conflict != null ->
+                AppendResult.Conflict(
+                    stream = conflict.stream,
+                    expectedVersion = conflict.expectedVersion,
+                    actualVersion = heads.getValue(conflict.stream),
+                )
+            duplicateEventId != null -> AppendResult.DuplicateEvent(duplicateEventId)
+            else -> appendCommitted(ordered, eventIds.size)
+        }
+    }
+
+    private fun appendCommitted(
+        ordered: List<ExpectedAppend>,
+        eventCount: Int,
+    ): AppendResult.Appended {
+        val firstPosition = lockFenceAndReserve(eventCount)
+        var globalPosition = firstPosition
+        val now = Instant.now()
+        ordered.forEach { append ->
+            append.events.forEachIndexed { index, event ->
+                val envelope = event.toEnvelope(append.stream, append.expectedVersion + index + 1L, globalPosition, now)
+                EventLog.insert { row ->
+                    row[EventLog.id] = envelope.eventId
+                    row[EventLog.tenantId] = envelope.tenantId.value
+                    row[EventLog.streamType] = envelope.stream.type
+                    row[EventLog.streamId] = envelope.stream.id
+                    row[EventLog.streamVersion] = envelope.stream.version
+                    row[EventLog.globalPosition] = envelope.globalPosition
+                    row[EventLog.eventType] = envelope.eventType
+                    row[EventLog.schemaVersion] = envelope.schemaVersion
+                    row[EventLog.occurredAt] = envelope.occurredAt
+                    row[EventLog.recordedAt] = envelope.recordedAt
+                    row[EventLog.correlationId] = envelope.correlationId
+                    row[EventLog.causationId] = envelope.causationId
+                    row[EventLog.actorSurrogate] = envelope.actorSurrogate
+                    row[EventLog.payload] = envelope.payload.canonicalJson
+                    row[EventLog.canonicalChecksum] = envelope.canonicalChecksum
+                }
+                globalPosition += 1
+            }
+            StreamHeads.update(where = { StreamHeads.id eq append.stream.streamId }) { row ->
+                row[StreamHeads.version] = append.nextVersion()
+                row[StreamHeads.updatedAt] = now
+            }
+        }
+
+        return AppendResult.Appended(
+            finalVersions = ordered.associate { append -> append.stream to append.nextVersion() },
+            firstGlobalPosition = firstPosition,
+            lastGlobalPosition = globalPosition - 1,
+        )
+    }
+
+    private fun lockHead(stream: StreamKey): Long {
+        StreamHeads.insertIgnore { row ->
+            row[StreamHeads.id] = stream.streamId
+            row[StreamHeads.tenantId] = stream.tenantId.value
+            row[StreamHeads.streamType] = stream.streamType
+            row[StreamHeads.version] = 0
+            row[StreamHeads.updatedAt] = Instant.now()
+        }
+        return StreamHeads
+            .selectAll()
+            .where {
+                (StreamHeads.id eq stream.streamId) and
+                    (StreamHeads.tenantId eq stream.tenantId.value) and
+                    (StreamHeads.streamType eq stream.streamType)
+            }.forUpdate()
+            .single()[StreamHeads.version]
+    }
+
+    private fun headVersion(stream: StreamKey): Long =
+        StreamHeads
+            .selectAll()
+            .where {
+                (StreamHeads.id eq stream.streamId) and
+                    (StreamHeads.tenantId eq stream.tenantId.value) and
+                    (StreamHeads.streamType eq stream.streamType)
+            }.singleOrNull()
+            ?.get(StreamHeads.version)
+            ?: 0
+
+    private fun eventAlreadyRecorded(eventId: UUID): Boolean =
+        EventLog.selectAll().where { EventLog.id eq eventId }.limit(1).any()
+
+    private fun lockFenceAndReserve(eventCount: Int): Long {
+        AppendFences.insertIgnore { row ->
+            row[AppendFences.id] = EVENT_STORE_FENCE_ID
+            row[AppendFences.nextGlobalPosition] = 1
+        }
+        val fence =
+            AppendFences
+                .selectAll()
+                .where { AppendFences.id eq EVENT_STORE_FENCE_ID }
+                .forUpdate()
+                .single()
+        val firstPosition = fence[AppendFences.nextGlobalPosition]
+        AppendFences.update(where = { AppendFences.id eq EVENT_STORE_FENCE_ID }) { row ->
+            row[AppendFences.nextGlobalPosition] = firstPosition + eventCount
+        }
+        return firstPosition
+    }
+
+    private fun EventToAppend.toEnvelope(
+        stream: StreamKey,
+        streamVersion: Long,
+        globalPosition: Long,
+        recordedAt: Instant,
+    ) =
+        io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventEnvelope(
+            eventId = eventId,
+            tenantId = stream.tenantId,
+            stream =
+                io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.StreamReference(
+                    stream.streamType,
+                    stream.streamId,
+                    streamVersion,
+                ),
+            globalPosition = globalPosition,
+            eventType = eventType,
+            schemaVersion = schemaVersion,
+            occurredAt = occurredAt,
+            recordedAt = recordedAt,
+            correlationId = correlationId,
+            causationId = causationId,
+            actorSurrogate = actorSurrogate,
+            payload = payload,
+        )
+
+    private fun toEnvelope(row: org.jetbrains.exposed.v1.core.ResultRow) =
+        io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventEnvelope(
+            eventId = row[EventLog.id].value,
+            tenantId = io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId(row[EventLog.tenantId]),
+            stream =
+                io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.StreamReference(
+                    row[EventLog.streamType],
+                    row[EventLog.streamId],
+                    row[EventLog.streamVersion],
+                ),
+            globalPosition = row[EventLog.globalPosition],
+            eventType = row[EventLog.eventType],
+            schemaVersion = row[EventLog.schemaVersion],
+            occurredAt = row[EventLog.occurredAt],
+            recordedAt = row[EventLog.recordedAt],
+            correlationId = row[EventLog.correlationId],
+            causationId = row[EventLog.causationId],
+            actorSurrogate = row[EventLog.actorSurrogate],
+            payload = io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload(row[EventLog.payload]),
+        )
+}
