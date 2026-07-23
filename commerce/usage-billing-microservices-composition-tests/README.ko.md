@@ -84,7 +84,8 @@ benchmark가 아니라, 장애 모드를 실행 가능한 형태로 보여 주�
 | publication 지연 | commit된 Meter price는 relay가 복구될 때까지 local outbox에 남는다 | 다른 서비스 DB에서 가격을 재구성하지 말고 outbox부터 확인한다 |
 | duplicate delivery | `UsageAccepted` 재전달은 Billing financial effect를 하나만 만든다 | event ID와 digest를 보존하고 duplicate를 정상 성공 경로로 다룬다 |
 | aggregate 순서 역전 | version 2는 version 1이 올 때까지 defer되고 이후 retry할 수 있다 | aggregate key/version을 관측하고 gap 상태에서 임의 rating하지 않는다 |
-| transport 장애 | 결정적인 Meter transport fault는 claimed row를 `RETRY_WAIT`로 옮기고, 정상 Kafka transport가 이후 전달한다 | 재시도는 기존 row로 수행하고 financial fact를 새로 만들지 않는다 |
+| 결정적 transport fault | test-only Meter fault는 claimed row를 `RETRY_WAIT`로 옮기고, 정상 Kafka transport가 이후 전달한다 | 빠른 기본 증명은 결정적으로 유지하고, 기존 row를 재시도하며 financial fact를 새로 만들지 않는다 |
+| 실제 broker-path 장애 | Toxiproxy가 host-JVM service와 Kafka custom listener 사이 TCP 양방향을 끊으면 기존 Meter outbox row가 `RETRY_WAIT`가 되고, 경로 복구 뒤 전달된다 | outbox를 recovery authority로 사용하고, 예외 simulation만이 아니라 실제 client route를 검증한다 |
 | 서비스 재시작 | Usage 재시작 뒤에도 price evidence가 남아 있고 publication을 계속한다 | process memory나 consumer offset이 아니라 local PostgreSQL이 복구 authority다 |
 | poison contract | 지원하지 않는 Query record 하나는 quarantine되고, 독립 valid record는 계속 처리되며 redrive가 기록된다 | permanent failure를 격리하고 원본 payload를 운영 검토용으로 보존한다 |
 | schema evolution | Query는 additive v2를 수용하고 v99는 quarantine한다 | compatibility를 Jackson 기본 동작이 아니라 decoder의 명시적 결정으로 둔다 |
@@ -93,8 +94,15 @@ benchmark가 아니라, 장애 모드를 실행 가능한 형태로 보여 주�
 | raw-access guard | service source에서 raw JDBC/SQL 실행 API를 탐지한다 | persistence는 Exposed repository 안에만 두고 test fixture도 예외로 만들지 않는다 |
 
 test-only Meter fault switch는 의도적으로 결정적이다. composition fixture가 실행되는 동안만 production Kafka
-transport를 감싸고, 복구 시에는 동일한 실제 Kafka transport에 위임한다. 이 방식은 local Docker broker를
-pause하는 것이 모든 outage를 대표한다고 과장하지 않으면서 outbox retry를 안정적으로 검증한다.
+transport를 감싸고, 복구 시에는 동일한 실제 Kafka transport에 위임한다. 이 방식은 빠른 outbox retry 증명을
+안정적으로 유지한다.
+
+`BrokerPathRecoveryIntegrationTest`는 이를 보완하는 nightly 증명이다. Toxiproxy와 Kafka를 하나의 Docker
+network에서 시작하고, Kafka custom listener가 proxy mapped endpoint를 advertise하도록 만든 뒤 proxy 양방향을
+끊는다. 따라서 Spring Kafka client는 metadata가 돌려준 direct broker endpoint로 우회해 복구할 수 없다. toxic을
+제거한 뒤에는 같은 outbox row를 재시도하고 Usage price evidence가 도착할 때까지 기다린다. 이는 single-broker TCP
+path recovery이지 Kafka leader election, ISR, replication, cluster failover 증명이 아니며, 그 범위는 독립 multi-broker
+reference에 둔다.
 
 ![Append-only correction 경로](../../docs/images/readme-diagrams/usage-billing-microservices-correction-01.png)
 
