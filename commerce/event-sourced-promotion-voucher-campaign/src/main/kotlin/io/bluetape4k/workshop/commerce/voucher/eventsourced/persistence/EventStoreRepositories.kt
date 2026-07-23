@@ -58,14 +58,32 @@ internal object IdempotencyReceipts : UUIDTable("voucher_idempotency_receipt", "
     val tenantId = varchar("tenant_id", 64)
     val principalDigest = varchar("principal_digest", 64)
     val operation = varchar("operation", 64)
+    val resourceId = varchar("resource_id", 128)
     val keyDigest = varchar("key_digest", 64)
     val fingerprint = varchar("fingerprint", 64)
-    val status = varchar("status", 24)
-    val leaseDeadline = timestamp("lease_deadline")
+    val status =
+        enumerationByName<io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptStatus>(
+            "status",
+            24,
+        )
+    val ownerTokenDigest = varchar("owner_token_digest", 64).nullable()
+    val leaseDeadline = timestamp("lease_deadline").nullable()
+    val commandDeadline = timestamp("command_deadline")
+    val terminalOutcome =
+        enumerationByName<io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptOutcome>(
+            "terminal_outcome",
+            48,
+        ).nullable()
+    val terminalStatus = integer("terminal_status").nullable()
+    val allocationId = javaUUID("allocation_id").nullable()
+    val generationKeyVersion = integer("generation_key_version").nullable()
+    val verificationKeyVersion = integer("verification_key_version").nullable()
     val createdAt = timestamp("created_at")
+    val updatedAt = timestamp("updated_at")
 
     init {
-        uniqueIndex(tenantId, principalDigest, operation, keyDigest)
+        uniqueIndex(tenantId, principalDigest, operation, resourceId, keyDigest)
+        index(false, status, commandDeadline)
     }
 }
 
