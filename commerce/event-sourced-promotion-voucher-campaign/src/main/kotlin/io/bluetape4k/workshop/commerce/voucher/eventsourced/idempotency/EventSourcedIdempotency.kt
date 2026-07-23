@@ -142,10 +142,10 @@ internal data class TerminalDescriptor private constructor(
             keyVersions: TerminalKeyVersions = TerminalKeyVersions(),
             allocationId: UUID? = null,
         ): TerminalDescriptor {
-            status.requireInRange(MIN_HTTP_STATUS, MAX_HTTP_STATUS, "status")
+            val validStatus = status.requireInRange(MIN_HTTP_STATUS, MAX_HTTP_STATUS, "status")
             (keyVersions.generationKeyVersion == null || allocationId != null)
                 .requireEquals(true, "keyVersions.haveAllocationIdentity")
-            return TerminalDescriptor(outcome, status, keyVersions, allocationId, null, null)
+            return TerminalDescriptor(outcome, validStatus, keyVersions, allocationId, null, null)
         }
     }
 
@@ -183,7 +183,21 @@ internal data class TerminalDescriptor private constructor(
 
 internal enum class ReceiptOutcome {
     CAMPAIGN_CREATED,
+    CAMPAIGN_ACTIVATED,
+    CAMPAIGN_NOT_FOUND,
+    CAMPAIGN_NOT_ACTIVE,
+    CAMPAIGN_NOT_STARTED,
+    CAMPAIGN_ENDED,
+    CAPACITY_EXHAUSTED,
+    PER_USER_LIMIT_REACHED,
+    STALE_REVISION,
     VOUCHER_ALLOCATED,
+    VOUCHER_REDEEMED,
+    VOUCHER_RELEASED,
+    VOUCHER_NOT_FOUND,
+    INVALID_VOUCHER_CODE,
+    VOUCHER_EXPIRED,
+    INVALID_TRANSITION,
     CONCURRENT_MODIFICATION,
     DOMAIN_REJECTED,
 }

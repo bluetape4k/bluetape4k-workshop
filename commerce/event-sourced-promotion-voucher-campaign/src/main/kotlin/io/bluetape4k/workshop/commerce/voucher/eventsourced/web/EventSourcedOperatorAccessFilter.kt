@@ -23,23 +23,26 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 
 internal const val OPERATOR_SECRET_HEADER = "X-Workshop-Operator-Secret"
-internal const val OPERATOR_GUARD_HEADER = "X-Workshop-Operator-Guard"
+internal const val OPERATOR_GUARD_HEADER = "X-Workshop-Guard"
 internal const val OPERATOR_ROLE_HEADER = "X-Workshop-Operator-Role"
 internal const val OPERATOR_ACTOR_SURROGATE_ATTRIBUTE = "eventSourcedOperatorActorSurrogate"
 private const val FILTER_ORDER_OFFSET = 10
 
 @ConfigurationProperties("voucher.operator")
-internal data class EventSourcedOperatorProperties(
-    val secret: String,
-    val guard: String,
-    val allowedHosts: Set<String> = setOf("127.0.0.1", "localhost"),
+internal class EventSourcedOperatorProperties(
+    secret: String,
+    guard: String,
+    allowedHosts: Set<String> = setOf("127.0.0.1", "localhost"),
 ) {
-    init {
-        secret.requireNotBlank("voucher.operator.secret")
-        guard.requireNotBlank("voucher.operator.guard")
-        allowedHosts.requireNotEmpty("voucher.operator.allowed-hosts").requireNotNull("voucher.operator.allowed-hosts")
-        allowedHosts.forEach { host -> host.requireNotBlank("voucher.operator.allowed-hosts") }
-    }
+    val secret: String = secret.requireNotBlank("voucher.operator.secret")
+    val guard: String = guard.requireNotBlank("voucher.operator.guard")
+    val allowedHosts: Set<String> =
+        allowedHosts
+            .requireNotEmpty("voucher.operator.allowed-hosts")
+            .requireNotNull("voucher.operator.allowed-hosts")
+            .mapTo(linkedSetOf()) { host ->
+                host.requireNotBlank("voucher.operator.allowed-hosts").lowercase()
+            }
 }
 
 /** Fail-closed workshop trust boundary for mutation-capable operator routes. */
@@ -84,7 +87,7 @@ internal class EventSourcedOperatorAccessFilter(
         hasSingleValuedHeaders(request) &&
             request.method in ALLOWED_METHODS &&
             request.remoteAddr in LOOPBACK_ADDRESSES &&
-            request.serverName.lowercase() in properties.allowedHosts.map(String::lowercase) &&
+            request.serverName.lowercase() in properties.allowedHosts &&
             constantTimeEquals(request.singleHeader(OPERATOR_SECRET_HEADER), properties.secret) &&
             constantTimeEquals(request.singleHeader(OPERATOR_GUARD_HEADER), properties.guard) &&
             request.singleHeader(OPERATOR_ROLE_HEADER) == "OPERATOR" &&

@@ -96,7 +96,7 @@ internal class EventSourcedCampaignHttpIntegrationTest
     @BeforeEach
     fun createProjection() {
         transaction(database) {
-            SchemaUtils.create(*TABLES)
+            SchemaUtils.create(*EVENT_SOURCED_HTTP_TABLES)
             ProjectionRebuildRepository().initializeActive(PROJECTION, NOW)
         }
         val eventStore = EventStoreRepository(ExposedEventStoreTransactionRunner(database))
@@ -136,7 +136,7 @@ internal class EventSourcedCampaignHttpIntegrationTest
     }
 
     @AfterEach
-    fun dropProjection() = transaction(database) { SchemaUtils.drop(*TABLES) }
+    fun dropProjection() = transaction(database) { SchemaUtils.drop(*EVENT_SOURCED_HTTP_TABLES) }
 
     @Test
     fun `live campaign GET preserves the compatible body and adds projection headers`() {
@@ -149,8 +149,8 @@ internal class EventSourcedCampaignHttpIntegrationTest
             .expectBody()
             .jsonPath("$.campaignId").isEqualTo(CAMPAIGN_ID.toString())
             .jsonPath("$.state").isEqualTo("ACTIVE")
-            .jsonPath("$.revision").isEqualTo(2)
-            .jsonPath("$.policyVersion").isEqualTo(1)
+            .jsonPath("$.revision").isEqualTo(1)
+            .jsonPath("$.policyVersion").isEqualTo(0)
             .jsonPath("$.capacity").isEqualTo(100)
             .jsonPath("$.allocatedCount").isEqualTo(0)
             .jsonPath("$.remainingCapacity").isEqualTo(100)
@@ -179,19 +179,19 @@ internal class EventSourcedCampaignHttpIntegrationTest
             .expectHeader().valueEquals(STREAM_POSITION_HEADER, "3")
             .expectHeader().valueEquals(PROJECTION_POSITION_HEADER, "2")
             .expectHeader().valueEquals(PROJECTION_LAG_HEADER, "1")
-            .expectHeader().valueEquals("X-Idempotent-Replay", "false")
+            .expectHeader().valueEquals("Idempotency-Replayed", "false")
             .expectBody()
             .jsonPath("$.campaignId").isEqualTo(CREATE_CAMPAIGN_ID.toString())
             .jsonPath("$.state").isEqualTo("DRAFT")
-            .jsonPath("$.revision").isEqualTo(1)
-            .jsonPath("$.policyVersion").isEqualTo(1)
+            .jsonPath("$.revision").isEqualTo(0)
+            .jsonPath("$.policyVersion").isEqualTo(0)
             .jsonPath("$.remainingCapacity").isEqualTo(20)
 
         postCampaign(CREATE_CAMPAIGN_ID, "create-key-001")
             .exchange()
             .expectStatus().isCreated
             .expectHeader().valueEquals(STREAM_POSITION_HEADER, "3")
-            .expectHeader().valueEquals("X-Idempotent-Replay", "true")
+            .expectHeader().valueEquals("Idempotency-Replayed", "true")
 
         transaction(database) {
             val event =
@@ -694,24 +694,6 @@ internal class EventSourcedCampaignHttpIntegrationTest
         private val CREATE_CAMPAIGN_ID = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc399")
         private val SECOND_CREATE_CAMPAIGN_ID = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc398")
         private val NOW = Instant.parse("2026-07-23T00:00:00Z")
-        private val TABLES =
-            arrayOf(
-                EventLog,
-                SubjectIdentityMappings,
-                StreamHeads,
-                AppendFences,
-                IdempotencyReceipts,
-                OperatorAudits,
-                ProjectionGenerations,
-                ActiveProjectionGenerations,
-                ProjectionLeases,
-                ProjectionProcessedEvents,
-                ProjectionPoisonEvents,
-                ProjectionReadModels,
-                CampaignProjectionReadModels,
-                ProjectionCheckpoints,
-            )
-
         @JvmStatic
         @DynamicPropertySource
         fun postgresProperties(registry: DynamicPropertyRegistry) {

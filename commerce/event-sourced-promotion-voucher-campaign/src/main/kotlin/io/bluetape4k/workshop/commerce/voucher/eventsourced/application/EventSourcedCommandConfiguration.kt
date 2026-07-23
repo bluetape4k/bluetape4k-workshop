@@ -41,14 +41,46 @@ internal class EventSourcedCommandConfiguration {
     @Bean
     fun eventSourcedCampaignCommands(
         commands: EventSourcedCommandService,
+        events: EventStoreRepository,
         identities: SubjectIdentityService,
         keyRing: EventSourcedHmacKeyRing,
         clock: Clock,
-    ): EventSourcedCampaignCommands = DefaultEventSourcedCampaignCommands(commands, identities, keyRing, clock)
+    ): EventSourcedCampaignCommands = DefaultEventSourcedCampaignCommands(commands, events, identities, keyRing, clock)
+
+    @Bean
+    fun eventSourcedVoucherCommands(
+        commands: EventSourcedCommandService,
+        events: EventStoreRepository,
+        identities: SubjectIdentityService,
+        keyRing: EventSourcedHmacKeyRing,
+        clock: Clock,
+    ): EventSourcedVoucherCommands = DefaultEventSourcedVoucherCommands(commands, events, identities, keyRing, clock)
+
+    @Bean
+    fun eventSourcedVoucherLifecycleCommands(
+        commands: EventSourcedCommandService,
+        identities: SubjectIdentityService,
+        keyRing: EventSourcedHmacKeyRing,
+        vouchers: EventSourcedVoucherCommands,
+        clock: Clock,
+    ): EventSourcedVoucherLifecycleCommands =
+        DefaultEventSourcedVoucherLifecycleCommands(commands, identities, keyRing, vouchers, clock)
 
     @Bean
     fun campaignCommandHttpService(
         commands: EventSourcedCampaignCommands,
         snapshots: CampaignProjectionSnapshotReader,
     ): CampaignCommandHttpService = CampaignCommandHttpService(commands, snapshots)
+
+    @Bean
+    fun voucherCommandHttpService(
+        commands: EventSourcedVoucherCommands,
+        lifecycle: EventSourcedVoucherLifecycleCommands,
+        snapshots: CampaignProjectionSnapshotReader,
+    ): io.bluetape4k.workshop.commerce.voucher.eventsourced.web.VoucherCommandHttpService =
+        io.bluetape4k.workshop.commerce.voucher.eventsourced.web.VoucherCommandHttpService(
+            commands,
+            lifecycle,
+            snapshots,
+        )
 }

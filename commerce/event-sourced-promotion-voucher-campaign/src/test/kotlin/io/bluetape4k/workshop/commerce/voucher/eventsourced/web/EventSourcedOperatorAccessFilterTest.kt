@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.web
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeEqualTo
@@ -22,7 +23,34 @@ internal class EventSourcedOperatorAccessFilterTest {
             EventSourcedHmacKeyRing(
                 EventSourcedHmacKey(1, "operator-test-key-material-at-least-32-bytes".toByteArray()),
             ),
-        )
+    )
+
+    @Test
+    fun `operator properties retain only validated normalized values`() {
+        val properties =
+            EventSourcedOperatorProperties(
+                secret = SECRET,
+                guard = GUARD,
+                allowedHosts = setOf("LOCALHOST", "127.0.0.1"),
+            )
+
+        properties.secret shouldBeEqualTo SECRET
+        properties.guard shouldBeEqualTo GUARD
+        properties.allowedHosts shouldBeEqualTo setOf("localhost", "127.0.0.1")
+
+        assertFailsWith<IllegalArgumentException> {
+            EventSourcedOperatorProperties(" ", GUARD)
+        }
+        assertFailsWith<IllegalArgumentException> {
+            EventSourcedOperatorProperties(SECRET, " ")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            EventSourcedOperatorProperties(SECRET, GUARD, emptySet())
+        }
+        assertFailsWith<IllegalArgumentException> {
+            EventSourcedOperatorProperties(SECRET, GUARD, setOf(" "))
+        }
+    }
 
     @Test
     fun `valid same origin mutation forwards only the actor surrogate`() {

@@ -8,6 +8,8 @@ internal data class VoucherAggregate(
     val campaignId: UUID?,
     val voucherId: UUID?,
     val subjectId: UUID?,
+    val generationKeyVersion: Int?,
+    val verificationKeyVersion: Int?,
     val state: VoucherState,
     val policyVersion: Long,
     val expiresAt: Instant?,
@@ -22,6 +24,8 @@ internal data class VoucherAggregate(
                     campaignId = event.campaignId,
                     voucherId = event.voucherId,
                     subjectId = event.subjectId,
+                    generationKeyVersion = event.codeKeyVersions.generation,
+                    verificationKeyVersion = event.codeKeyVersions.verification,
                     version = version + 1,
                 )
             }
@@ -79,6 +83,8 @@ internal data class VoucherAggregate(
                 campaignId = null,
                 voucherId = null,
                 subjectId = null,
+                generationKeyVersion = null,
+                verificationKeyVersion = null,
                 state = VoucherState.ELIGIBLE,
                 policyVersion = 0,
                 expiresAt = null,

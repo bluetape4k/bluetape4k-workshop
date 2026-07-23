@@ -110,8 +110,8 @@ private fun CampaignProjectionReadModel.toHttp(clock: Clock): CampaignHttpRespon
     CampaignHttpResponse(
         campaignId = campaignId,
         state = state.name,
-        revision = streamVersion,
-        policyVersion = policyVersion,
+        revision = streamVersion - 1,
+        policyVersion = policyVersion - 1,
         capacity = capacity,
         allocatedCount = allocatedCount,
         remainingCapacity = (capacity - allocatedCount).coerceAtLeast(0),

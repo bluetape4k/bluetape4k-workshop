@@ -87,11 +87,11 @@ internal class EventSourcedCommandService(
         command: EventSourcedCommand,
         owner: ReceiptAcquireResult.Owner,
     ): CommandExecutionResult {
-        val decision = command.decideAfterRehydrate()
         return transactions.inTransaction {
             check(receipts.isOwner(command.scope, command.fingerprint, owner.token, command.acquiredAt)) {
                 "receipt ownership was lost before append"
             }
+            val decision = command.decideAfterRehydrate()
             val append =
                 if (decision.appends.isEmpty()) {
                     null

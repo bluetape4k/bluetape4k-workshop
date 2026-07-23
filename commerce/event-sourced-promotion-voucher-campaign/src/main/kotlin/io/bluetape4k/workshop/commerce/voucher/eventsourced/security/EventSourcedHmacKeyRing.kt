@@ -24,6 +24,7 @@ internal enum class HmacPurpose(
     IDEMPOTENCY_KEY("idempotency-key"),
     OPERATOR_ACTOR("operator-actor"),
     OPERATOR_REQUEST("operator-request"),
+    VOUCHER_CODE("voucher-code"),
 }
 
 /**

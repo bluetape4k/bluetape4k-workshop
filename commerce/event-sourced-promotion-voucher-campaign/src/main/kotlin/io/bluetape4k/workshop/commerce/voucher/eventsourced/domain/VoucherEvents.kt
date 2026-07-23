@@ -10,10 +10,18 @@ import java.util.UUID
 private const val TENANT_ID_MAX_LENGTH = 64
 
 @JvmInline
-value class TenantId(val value: String) {
-    init {
-        value.requireNotBlank("tenantId")
-        value.length.requireInRange(1, TENANT_ID_MAX_LENGTH, "tenantId.length")
+value class TenantId private constructor(val value: String) {
+    companion object {
+        operator fun invoke(value: String): TenantId {
+            val validValue = value.requireNotBlank("tenantId")
+            val validLength =
+                validValue.length.requireInRange(
+                    1,
+                    TENANT_ID_MAX_LENGTH,
+                    "tenantId.length",
+                )
+            return TenantId(validValue.take(validLength))
+        }
     }
 }
 
@@ -69,13 +77,49 @@ internal enum class VoucherState {
     REVOKED,
 }
 
+@ConsistentCopyVisibility
+internal data class VoucherCodeKeyVersions private constructor(
+    val generation: Int,
+    val verification: Int,
+) {
+    companion object {
+        operator fun invoke(
+            generation: Int = 1,
+            verification: Int = generation,
+        ): VoucherCodeKeyVersions =
+            VoucherCodeKeyVersions(
+                generation = generation.requirePositiveNumber("generationKeyVersion"),
+                verification = verification.requirePositiveNumber("verificationKeyVersion"),
+            )
+    }
+}
+
 internal sealed interface VoucherEvent {
-    data class VoucherIssued(
+    @ConsistentCopyVisibility
+    data class VoucherIssued private constructor(
         val tenantId: TenantId,
         val campaignId: UUID,
         val voucherId: UUID,
         val subjectId: UUID,
-    ) : VoucherEvent
+        val codeKeyVersions: VoucherCodeKeyVersions,
+    ) : VoucherEvent {
+        companion object {
+            operator fun invoke(
+                tenantId: TenantId,
+                campaignId: UUID,
+                voucherId: UUID,
+                subjectId: UUID,
+                codeKeyVersions: VoucherCodeKeyVersions = VoucherCodeKeyVersions(),
+            ): VoucherIssued =
+                VoucherIssued(
+                    tenantId = tenantId,
+                    campaignId = campaignId,
+                    voucherId = voucherId,
+                    subjectId = subjectId,
+                    codeKeyVersions = codeKeyVersions,
+                )
+        }
+    }
 
     data class VoucherAllocated(
         val policyVersion: Long,
