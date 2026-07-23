@@ -350,6 +350,76 @@ function auditDirectHeads(file, svg) {
   if (failures === 0) addRow(scope, "direct-head audit", `heads=${heads.size} failures=0`);
 }
 
+function auditTerminalArrowClearance(file, svg) {
+  const scope = rel(file);
+  const paths = new Map();
+  const heads = new Map();
+
+  for (const match of svg.matchAll(/<path\b([^>]*\bdata-connector="([^"]+)"[^>]*)\/?>/g)) {
+    paths.set(match[2], parseAttrs(match[1]));
+  }
+  for (const match of svg.matchAll(/<polygon\b([^>]*\bdata-connector-head="([^"]+)"[^>]*)\/?>/g)) {
+    heads.set(match[2], parseAttrs(match[1]));
+  }
+  if (heads.size === 0) return;
+
+  let failures = 0;
+  let bent = 0;
+  const terminalSegments = [];
+  for (const [id, head] of heads) {
+    const pathAttrs = paths.get(id);
+    if (!pathAttrs) continue;
+    const steps = parsePathSteps(pathAttrs.d || "");
+    const finalStep = steps.at(-1);
+    const headPoints = polygonPoints(head.points || "");
+    const [tip, base1, base2] = headPoints;
+    if (!finalStep || !tip || !base1 || !base2) continue;
+
+    const hasBend = steps.some((step) => step.command === "Q");
+    if (!hasBend) continue;
+    bent += 1;
+
+    const base = { x: (base1.x + base2.x) / 2, y: (base1.y + base2.y) / 2 };
+    const arrowDepth = distance(tip, base);
+    const minimum = arrowDepth * 2;
+    const terminalLength = distance(finalStep.from, finalStep);
+    const direction = head["data-arrow-direction"];
+    const dx = finalStep.x - finalStep.from.x;
+    const dy = finalStep.y - finalStep.from.y;
+    const directionMatches =
+      (direction === "right" && finalStep.command === "H" && dx > 0) ||
+      (direction === "left" && finalStep.command === "H" && dx < 0) ||
+      (direction === "down" && finalStep.command === "V" && dy > 0) ||
+      (direction === "up" && finalStep.command === "V" && dy < 0);
+
+    terminalSegments.push(`${id}:${terminalLength.toFixed(1)}/${minimum.toFixed(1)}`);
+    if (!directionMatches) {
+      failures += 1;
+      fail(
+        scope,
+        "terminal arrow clearance audit",
+        `${id} final_command=${finalStep.command} does not provide a straight shaft aligned ${direction}`,
+      );
+    }
+    if (terminalLength + 0.2 < minimum) {
+      failures += 1;
+      fail(
+        scope,
+        "terminal arrow clearance audit",
+        `${id} terminal_segment_px=${terminalLength.toFixed(1)} minimum=${minimum.toFixed(1)} arrow_depth=${arrowDepth.toFixed(1)}`,
+      );
+    }
+  }
+
+  if (bent > 0 && failures === 0) {
+    addRow(
+      scope,
+      "terminal arrow clearance audit",
+      `bent_heads=${bent} terminal_segments=[${terminalSegments.join(",")}] failures=0`,
+    );
+  }
+}
+
 function auditRoundedBendDirection(file, svg) {
   const scope = rel(file);
   let qBends = 0;
@@ -545,6 +615,7 @@ for (const file of targets) {
   }
   auditMarkers(file, svg);
   auditDirectHeads(file, svg);
+  auditTerminalArrowClearance(file, svg);
   auditRoundedBendDirection(file, svg);
   runSkillAudits(file, svg);
   auditConnectorGeometry(file, svg);

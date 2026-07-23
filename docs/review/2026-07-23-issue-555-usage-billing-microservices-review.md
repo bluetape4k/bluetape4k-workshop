@@ -81,8 +81,8 @@ generator와 explicit-target QA wrapper를 실행했고, 각 asset을 full-size 
 
 | Asset | PNG size | Source and visual contract | Result |
 | --- | --- | --- | --- |
-| architecture | 4800×2700 | four local authorities, public Kafka topics, Query read-side ownership, official Kafka/PostgreSQL icons | PASS, direct heads 16 / connectors 16 / cards 14 / intrusions 0 / crossings 0 |
-| outbox-inbox-state | 4800×2700 | producer lease states and receiver durable decisions in separate bounded regions | PASS, direct heads 8 / connectors 8 / cards 9 / intrusions 0 / crossings 0 |
+| architecture | 4800×2700 | four local authorities, public Kafka topics, Query read-side ownership, official Kafka/PostgreSQL icons | PASS, direct heads 16 / connectors 16 / cards 14 / intrusions 0 / crossings 0 / bent terminal shafts 45px ≥ 28px |
+| outbox-inbox-state | 4800×2700 | producer lease states and receiver durable decisions in separate bounded regions | PASS, direct heads 8 / connectors 8 / cards 9 / intrusions 0 / crossings 0 / bent terminal shafts 40–100px ≥ 28px |
 | delivery | 5200×3000 | 5 participants, lifelines, 4 activations, 8 numbered messages, 2 transparent frames | PASS, direct heads 8 / connectors 8 |
 | poison-recovery | 5200×3000 | 5 participants, lifelines, 3 activations, 8 numbered messages, 2 transparent frames | PASS, direct heads 8 / connectors 8 |
 | correction | 5200×3000 | 5 participants, lifelines, 4 activations, 8 numbered messages, 2 transparent frames | PASS, direct heads 8 / connectors 8 |
@@ -92,6 +92,7 @@ generator와 explicit-target QA wrapper를 실행했고, 각 asset을 full-size 
 | --- | --- |
 | SVG XML과 CairoSVG `-s 2` 재생성 | PASS (6 targets) |
 | marker/direct-head 및 endpoint audit | PASS (markers 0, endpoint-bound direct heads 56, failures 0) |
+| 화살촉 앞 terminal shaft audit | PASS (모든 bent connector의 마지막 명령은 화살촉 방향과 일치하는 `H`/`V`; 길이는 arrow depth 14px의 2배 이상, architecture 45px, state 40–100px) |
 | connector geometry / endpoint / mixed-corner reference audit | PASS (intrusions 0, crossings 0, shared segments 0, geometry failures 0) |
 | rounded orthogonal connector / spline 금지 | PASS (architecture/state의 모든 bend는 `Q`, reverse/fake-axis failures 0) |
 | sequence 구조 fallback audit | PASS (각 asset의 1..8 순번, lifeline, activation, transparent frame 확인) |
@@ -103,7 +104,9 @@ QA wrapper가 이를 `WEAK`으로 기록하고, `data-diagram-kind="sequence"` �
 base64로 포함한다.
 
 따라서 diagram은 SVG만 맞는 상태로 끝내지 않았다. marker 변환에 의존하지 않고 connector endpoint와
-동일 좌표의 direct polygon head를 사용했으며, CairoSVG로 재생성한 PNG 원본을 asset별로 확인했다.
+동일 좌표의 direct polygon head를 사용했으며, 꺾인 선은 마지막 bend 뒤에 화살촉 깊이의 2배 이상인
+직선 terminal shaft를 확보했다. CairoSVG로 재생성한 PNG 원본과 화살촉 확대 crop을 확인해 선이
+화살촉 옆면이 아니라 밑변 중앙으로 연결되는 것도 검수했다.
 
 ## 검증 명령과 결과
 

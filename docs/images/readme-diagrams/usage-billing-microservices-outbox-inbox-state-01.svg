@@ -79,11 +79,11 @@
     <polygon data-connector-head="outbox-retry-wait" data-arrow-direction="down" points="620,670 613,656 627,656" fill="#B57E2A" stroke="#B57E2A" stroke-dasharray="none" style="stroke-dasharray:none"/>
   </g>
   <g class="edge" data-edge="outbox-reclaim" data-label="retry time reached or lease expired">
-    <path data-connector="outbox-reclaim" class="edgePath" style="marker-end:none" d="M510 730 H420 Q400 730 400 710 V490 Q400 470 420 470 H580 Q600 470 600 450" stroke="#4F86C6"/>
+    <path data-connector="outbox-reclaim" class="edgePath" style="marker-end:none" d="M510 730 H420 Q400 730 400 710 V530 Q400 510 420 510 H580 Q600 510 600 490 V450" stroke="#4F86C6"/>
     <polygon data-connector-head="outbox-reclaim" data-arrow-direction="up" points="600,450 593,464 607,464" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/>
   </g>
   <g class="edge" data-edge="outbox-quarantine" data-label="permanent or exhausted failure">
-    <path data-connector="outbox-quarantine" class="edgePath" style="marker-end:none" d="M780 420 H810 Q830 420 830 440 V710 Q830 730 850 730 H870" stroke="#B75B5B"/>
+    <path data-connector="outbox-quarantine" class="edgePath" style="marker-end:none" d="M780 420 H800 Q815 420 815 435 V715 Q815 730 830 730 H870" stroke="#B75B5B"/>
     <polygon data-connector-head="outbox-quarantine" data-arrow-direction="right" points="870,730 856,723 856,737" fill="#B75B5B" stroke="#B75B5B" stroke-dasharray="none" style="stroke-dasharray:none"/>
   </g>
   <rect x="150" y="910" width="930" height="210" rx="24" fill="#FFFDFC" stroke="#C9D5DF" stroke-width="2"/>
