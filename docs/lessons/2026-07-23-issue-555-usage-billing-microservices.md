@@ -41,18 +41,26 @@ CairoSVG PNG로 함께 관리한다. README validator는 두 locale과 6개 asse
 marker, endpoint, connector intrusion/crossing, mixed-corner, PNG render를 검사한다. SVG만 맞고 raster가
 뒤집히거나 잘리는 상태를 완료로 보지 않는다.
 
+### Broker path 단절은 bootstrap proxy만으로 증명되지 않는다
+
+Host JVM client 앞에 proxy를 두더라도 Kafka metadata가 direct broker endpoint를 advertise하면 이후 연결은
+proxy를 우회할 수 있다. `BrokerPathRecoveryIntegrationTest`는 Toxiproxy와 Kafka custom listener를 같은 Docker
+network에 두고 custom listener의 advertised endpoint를 proxy mapped port로 고정한다. 양방향 toxic을 끊어
+`RETRY_WAIT`와 기존 outbox backlog를 확인한 뒤, toxic 제거 후 같은 row를 재시도해 Usage price evidence를
+관측한다. 이 단일 broker TCP path recovery는 leader election, ISR, replication, cluster failover 증명이 아니다.
+
 ## Outcome
 
 - Java 25 / Spring Boot 4 기반 독립 서비스 5개와 composition test module
 - 서비스별 PostgreSQL, Exposed repository, 독립 wire decoder
 - Transactional outbox, durable inbox/quarantine, lease/fencing, replay-safe handler
 - Append-only adjustment와 immutable Invoice correction history
-- Kafka 1개와 PostgreSQL 5개를 사용하는 11개 composition integration test
+- Kafka 1개와 PostgreSQL 5개를 사용하는 12개 composition integration test
 - 단계적 extraction과 route-only rollback을 설명하는 영문/국문 README와 다이어그램 6종
 
 ## Verification
 
-- Composition: 11 tests, failures/errors/skipped 0
+- Composition: 12 tests, failures/errors/skipped 0, including real broker-path recovery
 - Aggregated Kover: line 2167 covered/188 missed, class 240 covered/19 missed
 - Repository commerce smoke: 107 tasks PASS including aggregated Kover
 - Repo-wide `detekt detektTest`: 68 tasks PASS
@@ -66,5 +74,7 @@ marker, endpoint, connector intrusion/crossing, mixed-corner, PNG render를 검�
 - Service를 추가하면 composition Kover aggregation, smoke/full workflow, README validator, diagram generator를
   같은 branch에서 갱신한다.
 - Broker 장애를 이유로 financial fact를 다시 만들지 말고 기존 outbox row와 lease를 복구한다.
+- TCP path recovery와 multi-broker failover를 같은 증거로 취급하지 않는다. 후자는 #558에서 leader change와
+  replication health를 별도로 증명한다.
 - Quarantine payload를 수정해 재사용하지 말고 원본 보존과 redrive audit을 유지한다.
 - Rollback은 routing만 되돌린다. 서비스 DB를 역복사하거나 published financial history를 rewrite하지 않는다.

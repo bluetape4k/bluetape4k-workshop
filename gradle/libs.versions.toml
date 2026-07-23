@@ -740,6 +740,7 @@ testcontainers-mongodb = { module = "org.testcontainers:testcontainers-mongodb" 
 testcontainers-mysql = { module = "org.testcontainers:testcontainers-mysql" }
 testcontainers-neo4j = { module = "org.testcontainers:testcontainers-neo4j", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql" }
+testcontainers-toxiproxy = { module = "org.testcontainers:testcontainers-toxiproxy" }
 
 jna-lib = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 jna-platform = { module = "net.java.dev.jna:jna-platform", version.ref = "jna" }

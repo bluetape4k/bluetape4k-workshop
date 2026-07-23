@@ -42,6 +42,7 @@ dependencies {
     testImplementation(libs.exposed.spring.boot.jdbc)
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.kafka)
+    testImplementation(libs.testcontainers.toxiproxy)
     testImplementation(libs.awaitility.kotlin)
     testImplementation(libs.spring.kafka.lib)
     testImplementation(libs.kafka.clients)

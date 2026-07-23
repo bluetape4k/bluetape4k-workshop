@@ -144,6 +144,7 @@ jobs:
           test -n "$(find commerce/usage-metering-billing-event-sourcing/build/test-results/stressTest -name '*.xml' -print -quit)"
           test -s commerce/usage-metering-billing-event-sourcing/build/reports/kover/report.xml
           test -n "$(find commerce/usage-billing-microservices-composition-tests/build/test-results/integrationTest -name '*.xml' -print -quit)"
+          test -s commerce/usage-billing-microservices-composition-tests/build/test-results/integrationTest/TEST-io.bluetape4k.workshop.commerce.usagebilling.composition.BrokerPathRecoveryIntegrationTest.xml
           test -s commerce/usage-billing-microservices-composition-tests/build/reports/kover/report.xml
       - name: Upload test results
         if: always()

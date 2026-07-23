@@ -2,6 +2,9 @@
 
 package io.bluetape4k.workshop.commerce.usagebilling.composition.fixture
 
+import eu.rekawek.toxiproxy.ToxiproxyClient
+import eu.rekawek.toxiproxy.Proxy
+import eu.rekawek.toxiproxy.model.ToxicDirection
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.workshop.commerce.usagebilling.billing.BillingServiceApplication
 import io.bluetape4k.workshop.commerce.usagebilling.billing.application.BillingAdjustmentService
@@ -43,8 +46,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
+import org.testcontainers.containers.Network
 import org.testcontainers.kafka.KafkaContainer
 import org.testcontainers.postgresql.PostgreSQLContainer
+import org.testcontainers.toxiproxy.ToxiproxyContainer
 import org.testcontainers.utility.DockerImageName
 import java.math.BigDecimal
 import java.nio.charset.StandardCharsets.UTF_8
@@ -54,8 +59,19 @@ import java.util.Properties
 import java.util.HexFormat
 import java.util.UUID
 
-class UsageBillingMicroserviceFixture : AutoCloseable {
-    private val kafka = KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0"))
+class UsageBillingMicroserviceFixture(
+    private val brokerPathProxy: Boolean = false,
+) : AutoCloseable {
+    private val brokerPathNetwork: Network by lazy { Network.newNetwork() }
+    private val toxiproxy: ToxiproxyContainer by lazy {
+        ToxiproxyContainer("ghcr.io/shopify/toxiproxy:2.5.0").withNetwork(brokerPathNetwork)
+    }
+    private val kafka = KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0")).apply {
+        if (brokerPathProxy) {
+            withNetwork(brokerPathNetwork)
+            withListener("$KAFKA_NETWORK_ALIAS:$KAFKA_PROXY_TARGET_PORT") { brokerPathBootstrapServers() }
+        }
+    }
     private val meterDatabase = PostgreSQLContainer(DockerImageName.parse("postgres:16-alpine"))
     private val usageDatabase = PostgreSQLContainer(DockerImageName.parse("postgres:16-alpine"))
     private val billingDatabase = PostgreSQLContainer(DockerImageName.parse("postgres:16-alpine"))
@@ -66,8 +82,11 @@ class UsageBillingMicroserviceFixture : AutoCloseable {
     private lateinit var billingContext: ConfigurableApplicationContext
     private lateinit var invoiceContext: ConfigurableApplicationContext
     private lateinit var queryContext: ConfigurableApplicationContext
+    private lateinit var brokerPath: Proxy
+    private var isBrokerPathCut: Boolean = false
 
     fun start(): UsageBillingMicroserviceFixture {
+        startBrokerPathProxy()
         kafka.start()
         meterDatabase.start()
         usageDatabase.start()
@@ -91,6 +110,22 @@ class UsageBillingMicroserviceFixture : AutoCloseable {
     fun unblockTopic(topic: String) {
         require(topic == METER_TOPIC) { "unsupported_transport_topic:$topic" }
         meterContext.getBean(MeterTransportFailureSwitch::class.java).isFailing = false
+    }
+
+    fun cutBrokerPath() {
+        require(brokerPathProxy) { "broker_path_proxy_not_enabled" }
+        check(!isBrokerPathCut) { "broker_path_already_cut" }
+        brokerPath.toxics().bandwidth(CUT_UPSTREAM, ToxicDirection.UPSTREAM, 0)
+        brokerPath.toxics().bandwidth(CUT_DOWNSTREAM, ToxicDirection.DOWNSTREAM, 0)
+        isBrokerPathCut = true
+    }
+
+    fun restoreBrokerPath() {
+        require(brokerPathProxy) { "broker_path_proxy_not_enabled" }
+        if (!isBrokerPathCut) return
+        brokerPath.toxics().get(CUT_UPSTREAM).remove()
+        brokerPath.toxics().get(CUT_DOWNSTREAM).remove()
+        isBrokerPathCut = false
     }
 
     fun activatePrice(tenantId: String, meterCode: String, amount: BigDecimal) =
@@ -280,6 +315,7 @@ class UsageBillingMicroserviceFixture : AutoCloseable {
     }
 
     override fun close() {
+        if (brokerPathProxy && isBrokerPathCut) restoreBrokerPath()
         if (::queryContext.isInitialized) queryContext.close()
         if (::invoiceContext.isInitialized) invoiceContext.close()
         if (::billingContext.isInitialized) billingContext.close()
@@ -291,10 +327,14 @@ class UsageBillingMicroserviceFixture : AutoCloseable {
         usageDatabase.stop()
         meterDatabase.stop()
         kafka.stop()
+        if (brokerPathProxy) {
+            toxiproxy.stop()
+            brokerPathNetwork.close()
+        }
     }
 
     private fun createTopics() {
-        val properties = Properties().also { it["bootstrap.servers"] = kafka.bootstrapServers }
+        val properties = Properties().also { it["bootstrap.servers"] = brokerBootstrapServers() }
         Admin.create(properties).use { admin ->
             admin.createTopics(TOPICS.map { NewTopic(it, 1, 1.toShort()) }).all().get()
         }
@@ -316,7 +356,7 @@ class UsageBillingMicroserviceFixture : AutoCloseable {
                 "spring.datasource.url=${database.jdbcUrl}",
                 "spring.datasource.username=${database.username}",
                 "spring.datasource.password=${database.password}",
-                "usage-billing.$service.kafka.bootstrap-servers=${kafka.bootstrapServers}",
+                "usage-billing.$service.kafka.bootstrap-servers=${brokerBootstrapServers()}",
                 "usage-billing.$service.kafka.listener-auto-startup=true",
                 "management.datadog.metrics.export.enabled=false",
                 "spring.kafka.producer.properties.delivery.timeout.ms=5000",
@@ -324,6 +364,23 @@ class UsageBillingMicroserviceFixture : AutoCloseable {
                 "spring.kafka.producer.properties.max.block.ms=3000",
             )
             .run()
+    }
+
+    private fun startBrokerPathProxy() {
+        if (!brokerPathProxy) return
+        toxiproxy.start()
+        brokerPath = ToxiproxyClient(toxiproxy.host, toxiproxy.controlPort).createProxy(
+            "kafka-broker-path",
+            "0.0.0.0:$TOXIPROXY_LISTEN_PORT",
+            "$KAFKA_NETWORK_ALIAS:$KAFKA_PROXY_TARGET_PORT",
+        )
+    }
+
+    private fun brokerBootstrapServers(): String =
+        if (brokerPathProxy) brokerPathBootstrapServers() else kafka.bootstrapServers
+
+    private fun brokerPathBootstrapServers(): String {
+        return "${toxiproxy.host}:${toxiproxy.getMappedPort(TOXIPROXY_LISTEN_PORT)}"
     }
 
     private fun <T : Any> meterTransaction(block: () -> T): T =
@@ -374,6 +431,11 @@ class UsageBillingMicroserviceFixture : AutoCloseable {
     )
 
     private companion object {
+        const val KAFKA_NETWORK_ALIAS = "kafka"
+        const val KAFKA_PROXY_TARGET_PORT = 19092
+        const val TOXIPROXY_LISTEN_PORT = 8666
+        const val CUT_UPSTREAM = "cut-kafka-upstream"
+        const val CUT_DOWNSTREAM = "cut-kafka-downstream"
         const val METER_TOPIC = "meter.events.v1"
         const val USAGE_TOPIC = "usage.events.v1"
         const val INVOICE_TOPIC = "invoice.events.v1"

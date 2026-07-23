@@ -38,6 +38,8 @@ for (const doc of docs) {
     "inbox",
     "exactly-once",
     "rollback",
+    "Toxiproxy",
+    "BrokerPathRecoveryIntegrationTest",
   ]) {
     if (!doc.text.includes(required)) failures.push(`${doc.name}: missing contract ${required}`);
   }

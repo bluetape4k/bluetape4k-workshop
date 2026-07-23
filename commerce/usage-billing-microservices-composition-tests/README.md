@@ -84,7 +84,8 @@ failure-mode catalogue, not a benchmark and not an exactly-once proof.
 | delayed publication | a committed Meter price remains in its local outbox until relay recovery | inspect the outbox first; do not reconstruct a price from another service database |
 | duplicate delivery | a replayed `UsageAccepted` produces one Billing financial effect | retain the event ID and digest; duplicate is a normal success path |
 | out-of-order aggregate versions | version 2 is deferred until version 1 is available, then can be retried | keep the aggregate key/version visible; do not silently rate a gap |
-| transport outage | a deterministic Meter transport fault moves the claimed row to `RETRY_WAIT`, then the normal Kafka transport delivers it | recover by retrying the existing row, never by recreating the financial fact |
+| deterministic transport fault | a test-only Meter fault moves the claimed row to `RETRY_WAIT`, then the normal Kafka transport delivers it | keep the fast default proof deterministic; recover by retrying the existing row, never by recreating the financial fact |
+| real broker-path outage | Toxiproxy cuts both TCP directions between the host-JVM services and the Kafka custom listener; the existing Meter outbox row becomes `RETRY_WAIT`, then is delivered after the path is restored | use the outbox as recovery authority and verify the actual client route, not only a simulated exception |
 | service restart | Usage restarts with price evidence still present and continues publication | local PostgreSQL, not process memory or a consumer offset, is the recovery authority |
 | poison contract | one unsupported Query record is quarantined while an independent valid record progresses; redrive is recorded | isolate permanent failures and preserve the original payload for operator review |
 | schema evolution | Query accepts additive v2 and quarantines unsupported v99 | make compatibility an explicit decoder decision, not an accidental Jackson default |
@@ -94,7 +95,14 @@ failure-mode catalogue, not a benchmark and not an exactly-once proof.
 
 The test-only Meter fault switch is intentionally deterministic. It wraps the production Kafka transport only while
 the composition fixture is running, then delegates to the same real Kafka transport for recovery. This keeps the
-outbox retry assertion stable without pretending that pausing a local Docker broker is an exhaustive outage model.
+fast outbox retry assertion stable.
+
+`BrokerPathRecoveryIntegrationTest` is the complementary nightly proof. It starts Toxiproxy and Kafka on one Docker
+network, makes Kafka advertise the proxy mapped endpoint for its custom listener, then cuts both proxy directions.
+Consequently the Spring Kafka client cannot recover by using a metadata-returned direct broker endpoint. After toxic
+removal, the test retries the same outbox row and waits for Usage price evidence. This is a single-broker TCP path
+recovery scenario, not a Kafka leader-election, ISR, replication, or cluster-failover claim; those behaviors belong
+to the dedicated multi-broker reference.
 
 ## Production decision rules
 
