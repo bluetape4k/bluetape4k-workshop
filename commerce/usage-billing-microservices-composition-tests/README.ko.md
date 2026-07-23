@@ -10,6 +10,8 @@
 
 각 서비스는 자신의 PostgreSQL과 integration decoder를 소유한다. 모든 DB 접근은 JetBrains Exposed와 `bluetape4k-exposed-jdbc`만 사용하고, concrete repository는 `ExposedJdbcRepository`를 구현한다. 공유 DB, raw SQL/JDBC, XA, end-to-end exactly-once 주장은 없다.
 
+각 decoder는 required envelope field에 Bluetape validation helper를 사용하고, durable boundary payload type은 명시적인 serialization ID를 둔다. debug outcome log에는 event ID, event type, quarantine reason처럼 안정적인 운영 필드만 기록하며 raw financial payload는 남기지 않는다.
+
 ## 핵심 원칙
 
 | 질문 | 답 |
@@ -47,7 +49,7 @@
 
 [Extraction SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-extraction-01.svg)
 
-운영자는 먼저 outbox backlog/state, oldest retry, inbox/quarantine reason, aggregate key를 확인한다. redrive는 저장된 payload를 수정하지 않고 audit을 남기는 재전달 요청이지, 재무 상태 수정 API가 아니다.
+운영자는 먼저 outbox backlog/state, oldest retry, inbox/quarantine reason, aggregate key를 확인한다. Query의 redrive는 audit을 남기는 요청이며, immutable original envelope의 조회·재발행은 외부 retained source가 수행한다. 이는 재무 상태 수정 API가 아니다.
 
 ## 검증 실행
 
@@ -87,7 +89,7 @@ benchmark가 아니라, 장애 모드를 실행 가능한 형태로 보여 주�
 | 결정적 transport fault | test-only Meter fault는 claimed row를 `RETRY_WAIT`로 옮기고, 정상 Kafka transport가 이후 전달한다 | 빠른 기본 증명은 결정적으로 유지하고, 기존 row를 재시도하며 financial fact를 새로 만들지 않는다 |
 | 실제 broker-path 장애 | Toxiproxy가 host-JVM service와 Kafka custom listener 사이 TCP 양방향을 끊으면 기존 Meter outbox row가 `RETRY_WAIT`가 되고, 경로 복구 뒤 전달된다 | outbox를 recovery authority로 사용하고, 예외 simulation만이 아니라 실제 client route를 검증한다 |
 | 서비스 재시작 | Usage 재시작 뒤에도 price evidence가 남아 있고 publication을 계속한다 | process memory나 consumer offset이 아니라 local PostgreSQL이 복구 authority다 |
-| poison contract | 지원하지 않는 Query record 하나는 quarantine되고, 독립 valid record는 계속 처리되며 redrive가 기록된다 | permanent failure를 격리하고 원본 payload를 운영 검토용으로 보존한다 |
+| poison contract | 지원하지 않는 Query record 하나는 quarantine되고, 독립 valid record는 계속 처리되며 redrive request가 audit된다 | permanent failure를 격리하고 replay 전에는 external retained source에서 immutable original envelope을 조회한다 |
 | schema evolution | Query는 additive v2를 수용하고 v99는 quarantine한다 | compatibility를 Jackson 기본 동작이 아니라 decoder의 명시적 결정으로 둔다 |
 | tenant isolation | `TENANT_a` principal은 tenant `b` projection에 접근할 수 없다 | projection도 read boundary에서 target tenant를 authorize한다 |
 | correction | `AdjustmentPosted`는 기존 line을 바꾸지 않고 두 번째 Invoice line과 correction event를 추가한다 | financial history는 원본 event를 참조하는 새 fact로 보정한다 |

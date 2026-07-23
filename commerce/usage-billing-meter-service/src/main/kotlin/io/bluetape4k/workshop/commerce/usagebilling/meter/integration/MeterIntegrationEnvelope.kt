@@ -6,11 +6,17 @@ import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import java.nio.charset.StandardCharsets.UTF_8
+import java.io.Serializable
 import java.security.MessageDigest
 import java.time.Instant
 import java.util.HexFormat
 import java.util.UUID
 
+/**
+ * Versioned Meter event contract persisted in the local outbox before Kafka publication.
+ *
+ * The envelope owns its digest so a consumer can reject tampered payloads without trusting transport metadata.
+ */
 class MeterIntegrationEnvelope private constructor(
     val eventId: UUID,
     val eventType: String,
@@ -23,7 +29,7 @@ class MeterIntegrationEnvelope private constructor(
     val payloadDigest: String,
     val occurredAt: Instant,
     val recordedAt: Instant,
-) {
+) : Serializable {
     init {
         eventType.requireNotBlank("eventType")
         tenantId.requireNotBlank("tenantId")
@@ -59,6 +65,7 @@ class MeterIntegrationEnvelope private constructor(
 
     companion object {
         const val AGGREGATE_TYPE = "Meter"
+        private const val serialVersionUID: Long = 1L
 
         fun create(
             eventId: UUID,
@@ -112,7 +119,11 @@ class MeterEnvelopeCodecRegistry {
 data class MeterEnvelopeSchema(
     val eventType: String,
     val schemaVersion: Int,
-)
+) : Serializable {
+    private companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 class UnsupportedMeterEnvelopeVersion(
     eventType: String,

@@ -11,7 +11,7 @@ import java.util.UUID
 @Tag("integration")
 class PoisonIntegrationTest {
     @Test
-    fun `poison event is quarantined while an independent aggregate progresses and can be redriven`() {
+    fun `poison event is quarantined while an independent aggregate progresses and records a redrive request`() {
         UsageBillingMicroserviceFixture().use { fixture ->
             fixture.start()
             fixture.sendQueryEvent(POISON_EVENT_ID, TENANT, "UnsupportedInvoiceFact")

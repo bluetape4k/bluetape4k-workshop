@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.io.Serializable
 import java.util.UUID
 
 @Component
@@ -27,7 +28,11 @@ class QueryTenantAuthorizer {
 data class QueryReadModelSummary(
     val appliedEventCount: Int,
     val checkpoint: Long,
-)
+) : Serializable {
+    private companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 @RestController
 @RequestMapping("/api/v1/tenants/{tenantId}/query")

@@ -1,6 +1,10 @@
 package io.bluetape4k.workshop.commerce.usagebilling.usage.messaging
 
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.commerce.usagebilling.usage.application.PriceEvidenceService
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidence
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidenceInboxEvent
@@ -27,7 +31,7 @@ class MeterPriceEvidenceDecoder {
         }
         val tenantId = envelope.requiredText("tenantId")
         val aggregateVersion = envelope.requiredLong("aggregateVersion")
-        require(aggregateVersion > 0) { "meter price evidence aggregate version must be positive" }
+        aggregateVersion.requirePositiveNumber("aggregateVersion")
         val payload = envelope.requiredText("payload")
         val payloadDigest = envelope.requiredText("payloadDigest")
         if (payloadDigest != digestOf(payload)) {
@@ -52,15 +56,16 @@ class MeterPriceEvidenceDecoder {
         HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
 
     private fun JsonNode.requiredText(name: String): String =
-        requireNotNull(get(name)) { "missing_meter_envelope_field:$name" }.asString().also {
-            require(it.isNotBlank()) { "blank_meter_envelope_field:$name" }
-        }
+        requiredNode(name).asString().requireNotBlank("meterEnvelope.$name")
 
     private fun JsonNode.requiredInt(name: String): Int =
-        requireNotNull(get(name)) { "missing_meter_envelope_field:$name" }.asInt()
+        requiredNode(name).asInt()
 
     private fun JsonNode.requiredLong(name: String): Long =
-        requireNotNull(get(name)) { "missing_meter_envelope_field:$name" }.asLong()
+        requiredNode(name).asLong()
+
+    private fun JsonNode.requiredNode(name: String): JsonNode =
+        get(name) ?: throw InvalidMeterPriceEvidenceEnvelope(UUID(0, 0))
 
     private companion object {
         const val PRICE_ACTIVATED = "PriceActivated"
@@ -88,10 +93,12 @@ class KafkaUsagePriceEvidenceListener(
         autoStartup = "\${usage-billing.usage.kafka.listener-auto-startup:false}",
     )
     fun consume(wirePayload: String) {
-        priceEvidence.record(decoder.decode(wirePayload))
+        val event = decoder.decode(wirePayload)
+        priceEvidence.record(event)
+        log.debug { "usage.inbound.price_activated eventId=${event.eventId}" }
     }
 
-    private companion object {
+    private companion object : KLogging() {
         const val METER_TOPIC = "meter.events.v1"
     }
 }

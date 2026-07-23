@@ -1,10 +1,12 @@
 package io.bluetape4k.workshop.commerce.usagebilling.meter.application
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.ActivatePriceCommand
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterCommandJournal
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterCommandReceipt
+import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterIdempotencyConflict
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterOutboxRecord
 import io.bluetape4k.workshop.commerce.usagebilling.meter.domain.MeterPriceVersion
 import org.junit.jupiter.api.Test
@@ -51,9 +53,11 @@ class MeterCommandServiceTest {
     fun `same idempotency key with a different fingerprint is rejected`() {
         service.activatePrice(command())
 
-        val failure = runCatching { service.activatePrice(command(unitPrice = BigDecimal("0.20"))) }.exceptionOrNull()
+        val failure = assertFailsWith<MeterIdempotencyConflict> {
+            service.activatePrice(command(unitPrice = BigDecimal("0.20")))
+        }
 
-        requireNotNull(failure)::class.simpleName shouldBeEqualTo "MeterIdempotencyConflict"
+        failure::class.simpleName shouldBeEqualTo "MeterIdempotencyConflict"
         journal.priceVersions.size shouldBeEqualTo 1
         journal.outboxRecords.size shouldBeEqualTo 1
     }

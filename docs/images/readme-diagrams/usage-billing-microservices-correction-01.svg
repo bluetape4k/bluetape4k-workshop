@@ -1,65 +1,80 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="920" viewBox="0 0 1600 920" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" width="1700" height="1020" viewBox="0 0 1700 1020" role="img" aria-labelledby="title desc" data-diagram-kind="sequence">
   <title id="title">Financial correction appends a compensating fact</title>
-  <desc id="desc">Billing owns the adjustment command and Invoice preserves the original immutable line.</desc>
+  <desc id="desc">Billing owns the idempotent adjustment; Invoice preserves the original line and appends its correction.</desc>
   <defs>
-    <marker id="blueArrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L14,7 L0,14 Z" fill="#356a91" stroke="#356a91"/></marker>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L12,6 L0,12 Z" fill="#356a91" stroke="#356a91"/></marker>
+    <marker id="amberArrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L12,6 L0,12 Z" fill="#a67331" stroke="#a67331"/></marker>
+    <marker id="greenArrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L12,6 L0,12 Z" fill="#4f7b59" stroke="#4f7b59"/></marker>
     <style>
-      .title{font:700 36px 'Architects Daughter',sans-serif;fill:#213447}.subtitle{font:18px 'Comic Mono',monospace;fill:#496273}.card{fill:#fff;stroke:#6f9fbe;stroke-width:3}.cardTitle{font:700 22px 'Architects Daughter',sans-serif;fill:#213447}.cardText{font:16px 'Comic Mono',monospace;fill:#385164}.step{fill:#356a91}.stepText{font:700 16px 'Comic Mono',monospace;fill:#fff}.flow{fill:none;stroke:#356a91;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#blueArrow)}.note{font:17px 'Comic Mono',monospace;fill:#526675}.bandTitle{font:700 22px 'Architects Daughter',sans-serif;fill:#213447}
+      .title{font:700 36px 'Architects Daughter',sans-serif;fill:#20384b}.subtitle{font:18px 'Comic Mono',monospace;fill:#536d80}.heading{font:700 23px 'Architects Daughter',sans-serif;fill:#20384b}.label{font:700 18px 'Comic Mono',monospace;fill:#20384b}.whiteLabel{font:700 18px 'Comic Mono',monospace;fill:#fff}.whiteSmall{font:14px 'Comic Mono',monospace;fill:#dce8f0}.copy{font:16px 'Comic Mono',monospace;fill:#405a6e}.small{font:14px 'Comic Mono',monospace;fill:#536d80}.flow{fill:none;stroke:#356a91;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow)}.recovery{fill:none;stroke:#a67331;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#amberArrow)}.local{fill:none;stroke:#4f7b59;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#greenArrow)}.lifeline{stroke:#92a7b7;stroke-width:2;stroke-dasharray:8 8}.activation{fill:#c5dfec;stroke:#356a91;stroke-width:2}.frame{stroke:#6f9fbe;stroke-width:2}.frameLabel{font:700 15px 'Comic Mono',monospace;fill:#20384b}.labelPill{fill:#f8fbfd;stroke:#6f9fbe;stroke-width:1.5}.num{font:700 13px 'Comic Mono',monospace;fill:#20384b}.message{font:13px 'Comic Mono',monospace;fill:#405a6e}
     </style>
   </defs>
-  <rect width="1600" height="920" fill="#f8fbfd"/>
-  <text x="70" y="78" class="title">Financial correction appends a compensating fact</text>
-  <text x="70" y="116" class="subtitle">Billing owns the adjustment command and Invoice preserves the original immutable line.</text>
-  <rect x="60" y="175" width="1480" height="420" rx="28" fill="#eaf3f9" stroke="#b9d0df" stroke-width="2"/>
-  <text x="90" y="225" class="bandTitle">Decision path</text>
+  <rect width="1700" height="1020" fill="#f8fbfd"/>
+  <text x="70" y="72" class="title">Financial correction appends a compensating fact</text>
+  <text x="70" y="108" class="subtitle">Billing owns the idempotent adjustment; Invoice preserves the original line and appends its correction.</text>
+  <rect x="70" y="125" width="1560" height="810" rx="28" fill="#eef5f9" stroke="#b9d0df" stroke-width="2"/>
   <g>
-    <path class="flow" d="M335 375 H366"/>
-    <path class="flow" d="M630 375 H661"/>
-    <path class="flow" d="M925 375 H956"/>
-    <path class="flow" d="M1220 375 H1251"/>
-    <g>
-      <rect class="card" x="85" y="285" width="250" height="180" rx="20"/>
-      <circle cx="119" cy="321" r="18" class="step"/>
-      <text x="119" y="328" text-anchor="middle" class="stepText">1</text>
-      <text x="149" y="329" class="cardTitle">ChargeRated</text>
-      <text x="109" y="375" class="cardText">original event ID</text>
-      <text x="109" y="403" class="cardText">immutable amount</text>
-    </g>
-    <g>
-      <rect class="card" x="380" y="285" width="250" height="180" rx="20"/>
-      <circle cx="414" cy="321" r="18" class="step"/>
-      <text x="414" y="328" text-anchor="middle" class="stepText">2</text>
-      <text x="444" y="329" class="cardTitle">Adjustment</text>
-      <text x="404" y="375" class="cardText">Billing authority</text>
-      <text x="404" y="403" class="cardText">idempotent command</text>
-    </g>
-    <g>
-      <rect class="card" x="675" y="285" width="250" height="180" rx="20"/>
-      <circle cx="709" cy="321" r="18" class="step"/>
-      <text x="709" y="328" text-anchor="middle" class="stepText">3</text>
-      <text x="739" y="329" class="cardTitle">AdjustmentPosted</text>
-      <text x="699" y="375" class="cardText">correctionOf</text>
-      <text x="699" y="403" class="cardText">durable outbox</text>
-    </g>
-    <g>
-      <rect class="card" x="970" y="285" width="250" height="180" rx="20"/>
-      <circle cx="1004" cy="321" r="18" class="step"/>
-      <text x="1004" y="328" text-anchor="middle" class="stepText">4</text>
-      <text x="1034" y="329" class="cardTitle">Invoice</text>
-      <text x="994" y="375" class="cardText">append new line</text>
-      <text x="994" y="403" class="cardText">never overwrite</text>
-    </g>
-    <g>
-      <rect class="card" x="1265" y="285" width="250" height="180" rx="20"/>
-      <circle cx="1299" cy="321" r="18" class="step"/>
-      <text x="1299" y="328" text-anchor="middle" class="stepText">5</text>
-      <text x="1329" y="329" class="cardTitle">Query</text>
-      <text x="1289" y="375" class="cardText">original + repair</text>
-      <text x="1289" y="403" class="cardText">visible history</text>
-    </g>
+    <rect x="25" y="150" width="210" height="72" rx="14" fill="#fff" stroke="#6f9fbe" stroke-width="2"/>
+    <text x="130" y="180" text-anchor="middle" class="label">Billing API</text>
+    <text x="130" y="204" text-anchor="middle" class="small">durable boundary</text>
+    <line x1="130" y1="222" x2="130" y2="900" class="lifeline"/>
   </g>
-  <rect x="120" y="660" width="1360" height="120" rx="22" fill="#edf6ed" stroke="#c1d7c1" stroke-width="2"/>
-  <text x="160" y="710" class="bandTitle">Operational invariant</text>
-  <text x="160" y="748" class="note">The correction references the original charge; history remains explainable and replay-safe.</text>
-  <text x="70" y="870" class="note">PostgreSQL owns durable decisions. Kafka transports replayable facts between service boundaries.</text>
+<g>
+    <rect x="385" y="150" width="210" height="72" rx="14" fill="#fff" stroke="#6f9fbe" stroke-width="2"/>
+    <text x="490" y="180" text-anchor="middle" class="label">Billing DB + outbox</text>
+    <text x="490" y="204" text-anchor="middle" class="small">durable boundary</text>
+    <line x1="490" y1="222" x2="490" y2="900" class="lifeline"/>
+  </g>
+<g>
+    <rect x="745" y="150" width="210" height="72" rx="14" fill="#fff" stroke="#6f9fbe" stroke-width="2"/>
+    <text x="850" y="180" text-anchor="middle" class="label">Kafka</text>
+    <text x="850" y="204" text-anchor="middle" class="small">Kafka topic</text>
+    <line x1="850" y1="222" x2="850" y2="900" class="lifeline"/>
+  </g>
+<g>
+    <rect x="1105" y="150" width="210" height="72" rx="14" fill="#fff" stroke="#6f9fbe" stroke-width="2"/>
+    <text x="1210" y="180" text-anchor="middle" class="label">Invoice</text>
+    <text x="1210" y="204" text-anchor="middle" class="small">durable boundary</text>
+    <line x1="1210" y1="222" x2="1210" y2="900" class="lifeline"/>
+  </g>
+<g>
+    <rect x="1465" y="150" width="210" height="72" rx="14" fill="#fff" stroke="#6f9fbe" stroke-width="2"/>
+    <text x="1570" y="180" text-anchor="middle" class="label">Invoice DB</text>
+    <text x="1570" y="204" text-anchor="middle" class="small">durable boundary</text>
+    <line x1="1570" y1="222" x2="1570" y2="900" class="lifeline"/>
+  </g>
+  <rect x="100" y="270" width="1500" height="570" rx="12" class="frame" fill="none"/>
+  <path d="M100 270 H245 V302 H100" fill="#eaf3f9" stroke="#6f9fbe" stroke-width="2"/>
+  <text x="118" y="292" class="frameLabel">opt  adjustmentEventId is first seen</text>
+  <rect x="123" y="340" width="14" height="45" class="activation"/>
+      <path class="flow" d="M140 362 H480"/>
+      <rect x="153" y="312" width="314" height="26" rx="13" class="labelPill"/>
+      <text x="168" y="329" text-anchor="middle" class="num">1</text>
+      <text x="184" y="329" class="message">post negative adjustment(correctionOf)</text>
+<rect x="483" y="425" width="14" height="45" class="activation"/>
+      <path class="flow" d="M500 447 H840"/>
+      <rect x="534" y="397" width="272" height="26" rx="13" class="labelPill"/>
+      <text x="549" y="414" text-anchor="middle" class="num">2</text>
+      <text x="565" y="414" class="message">commit AdjustmentPosted + outbox</text>
+<rect x="843" y="510" width="14" height="45" class="activation"/>
+      <path class="flow" d="M860 532 H1200"/>
+      <rect x="918.5" y="482" width="223" height="26" rx="13" class="labelPill"/>
+      <text x="933.5" y="499" text-anchor="middle" class="num">3</text>
+      <text x="949.5" y="499" class="message">deliver billing.events.v1</text>
+<rect x="1203" y="595" width="14" height="45" class="activation"/>
+      <path class="flow" d="M1220 617 H1560"/>
+      <rect x="1261" y="567" width="258" height="26" rx="13" class="labelPill"/>
+      <text x="1276" y="584" text-anchor="middle" class="num">4</text>
+      <text x="1292" y="584" class="message">append correction invoice line</text>
+<rect x="1563" y="680" width="14" height="45" class="activation"/>
+      <path class="recovery" d="M1560 702 H1220"/>
+      <rect x="1275" y="652" width="230" height="26" rx="13" class="labelPill"/>
+      <text x="1290" y="669" text-anchor="middle" class="num">5</text>
+      <text x="1306" y="669" class="message">APPLIED / DUPLICATE result</text>
+<rect x="1203" y="765" width="14" height="45" class="activation"/>
+      <path class="recovery" d="M1200 787 H860"/>
+      <rect x="915" y="737" width="230" height="26" rx="13" class="labelPill"/>
+      <text x="930" y="754" text-anchor="middle" class="num">6</text>
+      <text x="946" y="754" class="message">commit offset after append</text>
+  <text x="110" y="910" class="small">Messages are numbered by durable decision order. A Kafka offset advances only after the receiver commits its local inbox or quarantine decision.</text>
 </svg>

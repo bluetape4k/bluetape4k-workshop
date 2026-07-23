@@ -1,12 +1,15 @@
 package io.bluetape4k.workshop.commerce.usagebilling.usage.application
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.AcceptUsageCommand
+import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.MissingPriceEvidence
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.PriceEvidence
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageAcceptanceJournal
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageOutboxRecord
 import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageRecord
+import io.bluetape4k.workshop.commerce.usagebilling.usage.domain.UsageSourceConflict
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Clock
@@ -51,17 +54,21 @@ class UsageCommandServiceTest {
         journal.evidence += PriceEvidence("tenant-a", "api_calls", "USD", BigDecimal("0.10"), now)
         service.accept(command())
 
-        val failure = runCatching { service.accept(command(quantity = BigDecimal.TWO)) }.exceptionOrNull()
+        val failure = assertFailsWith<UsageSourceConflict> {
+            service.accept(command(quantity = BigDecimal.TWO))
+        }
 
-        requireNotNull(failure)::class.simpleName shouldBeEqualTo "UsageSourceConflict"
+        failure::class.simpleName shouldBeEqualTo "UsageSourceConflict"
         journal.usages.size shouldBeEqualTo 1
     }
 
     @Test
     fun `missing local price evidence is rejected without an outbox record`() {
-        val failure = runCatching { service.accept(command()) }.exceptionOrNull()
+        val failure = assertFailsWith<MissingPriceEvidence> {
+            service.accept(command())
+        }
 
-        requireNotNull(failure)::class.simpleName shouldBeEqualTo "MissingPriceEvidence"
+        failure::class.simpleName shouldBeEqualTo "MissingPriceEvidence"
         journal.outbox.size shouldBeEqualTo 0
     }
 

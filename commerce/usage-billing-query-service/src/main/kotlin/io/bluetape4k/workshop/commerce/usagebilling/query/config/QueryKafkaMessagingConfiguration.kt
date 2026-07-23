@@ -11,6 +11,7 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
 import org.springframework.kafka.core.ConsumerFactory
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
 import org.springframework.kafka.listener.ContainerProperties
+import java.io.Serializable
 
 @Configuration(proxyBeanMethods = false)
 @EnableKafka
@@ -43,4 +44,8 @@ class QueryKafkaMessagingConfiguration {
 data class QueryKafkaProperties(
     val bootstrapServers: String = "localhost:9092",
     val consumerGroup: String = "usage-billing-query-service",
-)
+) : Serializable {
+    private companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}

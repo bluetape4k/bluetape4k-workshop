@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.commerce.usagebilling.usage.domain
 
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requirePositiveNumber
 import java.math.BigDecimal
+import java.io.Serializable
 import java.time.Instant
 import java.util.UUID
 
@@ -14,7 +16,7 @@ data class AcceptUsageCommand(
     val currency: String,
     val quantity: BigDecimal,
     val occurredAt: Instant,
-) {
+) : Serializable {
     init {
         tenantId.requireNotBlank("tenantId")
         sourceSystem.requireNotBlank("sourceSystem")
@@ -25,6 +27,10 @@ data class AcceptUsageCommand(
     }
 
     fun fingerprint(): String = "$meterCode|$currency|$quantity|$occurredAt"
+
+    private companion object {
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 data class PriceEvidence(
@@ -33,18 +39,26 @@ data class PriceEvidence(
     val currency: String,
     val unitPrice: BigDecimal,
     val effectiveAt: Instant,
-)
+) : Serializable {
+    private companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 data class PriceEvidenceInboxEvent(
     val eventId: UUID,
     val tenantId: String,
     val payloadDigest: String,
     val evidence: PriceEvidence,
-) {
+) : Serializable {
     init {
         tenantId.requireNotBlank("tenantId")
         payloadDigest.requireNotBlank("payloadDigest")
-        require(tenantId == evidence.tenantId) { "price evidence tenant must match its inbox tenant" }
+        tenantId.requireEquals(evidence.tenantId, "evidence.tenantId")
+    }
+
+    private companion object {
+        private const val serialVersionUID: Long = 1L
     }
 }
 
@@ -66,7 +80,11 @@ data class UsageRecord(
     val quantity: BigDecimal,
     val unitPrice: BigDecimal,
     val occurredAt: Instant,
-)
+) : Serializable {
+    private companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 data class UsageOutboxRecord(
     val eventId: UUID,
@@ -75,13 +93,21 @@ data class UsageOutboxRecord(
     val payload: String,
     val payloadDigest: String,
     val createdAt: Instant,
-)
+) : Serializable {
+    private companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 data class UsageAcceptanceResult(
     val usageId: UUID,
     val eventId: UUID,
     val replayed: Boolean,
-)
+) : Serializable {
+    private companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 interface UsageAcceptanceJournal {
     fun priceEvidence(tenantId: String, meterCode: String, currency: String): PriceEvidence?

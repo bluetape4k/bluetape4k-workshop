@@ -6,16 +6,22 @@ import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import java.nio.charset.StandardCharsets.UTF_8
+import java.io.Serializable
 import java.security.MessageDigest
 import java.time.Instant
 import java.util.HexFormat
 import java.util.UUID
 
+/**
+ * Versioned Invoice event contract emitted from the local invoice outbox.
+ *
+ * A receiver validates its schema and digest before recording an inbox outcome.
+ */
 class InvoiceIntegrationEnvelope private constructor(
     val eventId: UUID, val eventType: String, val schemaVersion: Int, val tenantId: String,
     val aggregateType: String, val aggregateId: String, val aggregateVersion: Long,
     val payload: String, val payloadDigest: String, val occurredAt: Instant, val recordedAt: Instant,
-) {
+) : Serializable {
     init {
         eventType.requireNotBlank("eventType")
         tenantId.requireNotBlank("tenantId")
@@ -47,6 +53,7 @@ class InvoiceIntegrationEnvelope private constructor(
     fun wirePayloadDigest(): String = digestOf(wirePayload())
 
     companion object {
+        private const val serialVersionUID: Long = 1L
         fun create(
             eventId: UUID, eventType: String, schemaVersion: Int, tenantId: String, aggregateId: String,
             aggregateVersion: Long, payload: String, occurredAt: Instant, recordedAt: Instant,
@@ -81,7 +88,11 @@ class InvoiceEnvelopeCodecRegistry {
 data class InvoiceEnvelopeSchema(
     val eventType: String,
     val schemaVersion: Int,
-)
+) : Serializable {
+    private companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 class UnsupportedInvoiceEnvelopeVersion(
     eventType: String,

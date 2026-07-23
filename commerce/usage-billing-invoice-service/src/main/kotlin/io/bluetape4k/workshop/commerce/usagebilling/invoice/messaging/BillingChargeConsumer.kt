@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.commerce.usagebilling.invoice.messaging
 
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.application.InvoiceInboxService
 import io.bluetape4k.workshop.commerce.usagebilling.invoice.domain.InvoiceInboxEvent
 import org.springframework.kafka.annotation.KafkaListener
@@ -41,12 +44,13 @@ class BillingChargeDecoder {
         HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
 
     private fun JsonNode.requiredText(name: String): String =
-        requireNotNull(get(name)) { "missing_invoice_envelope_field:$name" }.asString().also {
-            require(it.isNotBlank()) { "blank_invoice_envelope_field:$name" }
-        }
+        requiredNode(name).asString().requireNotBlank("billingChargeEnvelope.$name")
 
     private fun JsonNode.requiredInt(name: String): Int =
-        requireNotNull(get(name)) { "missing_invoice_envelope_field:$name" }.asInt()
+        requiredNode(name).asInt()
+
+    private fun JsonNode.requiredNode(name: String): JsonNode =
+        get(name) ?: throw InvalidBillingChargeEnvelope(UUID(0, 0))
 
     private fun JsonNode.optionalUuid(name: String): UUID? =
         get(name)?.asString()?.takeIf(String::isNotBlank)?.let(UUID::fromString)
@@ -75,10 +79,12 @@ class KafkaBillingChargeListener(
         autoStartup = "\${usage-billing.invoice.kafka.listener-auto-startup:false}",
     )
     fun consume(wirePayload: String) {
-        inbox.handle(decoder.decode(wirePayload))
+        val event = decoder.decode(wirePayload)
+        inbox.handle(event)
+        log.debug { "invoice.inbound.billing_charge eventId=${event.eventId} eventType=${event.eventType}" }
     }
 
-    private companion object {
+    private companion object : KLogging() {
         const val TOPIC = "billing.events.v1"
     }
 }

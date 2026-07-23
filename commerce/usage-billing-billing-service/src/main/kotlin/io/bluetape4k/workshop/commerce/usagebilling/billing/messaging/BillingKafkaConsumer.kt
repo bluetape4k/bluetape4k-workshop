@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.commerce.usagebilling.billing.messaging
 
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.commerce.usagebilling.billing.application.BillingInboxService
 import io.bluetape4k.workshop.commerce.usagebilling.billing.application.BillingPricingEvidenceService
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingInboxEvent
@@ -9,6 +12,7 @@ import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingPriceE
 import org.springframework.kafka.annotation.KafkaListener
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
+import java.io.Serializable
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.time.Instant
@@ -16,10 +20,18 @@ import java.util.HexFormat
 import java.util.UUID
 import tools.jackson.databind.JsonNode
 
-sealed interface BillingInboundEvent {
-    data class PriceActivated(val event: BillingPriceEvidenceEvent) : BillingInboundEvent
+sealed interface BillingInboundEvent : Serializable {
+    data class PriceActivated(val event: BillingPriceEvidenceEvent) : BillingInboundEvent {
+        private companion object {
+            private const val serialVersionUID: Long = 1L
+        }
+    }
 
-    data class UsageAccepted(val event: BillingInboxEvent) : BillingInboundEvent
+    data class UsageAccepted(val event: BillingInboxEvent) : BillingInboundEvent {
+        private companion object {
+            private const val serialVersionUID: Long = 1L
+        }
+    }
 }
 
 /** Parses producer JSON locally so Billing owns its own compatibility decision. */
@@ -82,15 +94,16 @@ class BillingInboundEventDecoder {
         HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.toByteArray(UTF_8)))
 
     private fun JsonNode.requiredText(name: String): String =
-        requireNotNull(get(name)) { "missing_billing_envelope_field:$name" }.asString().also {
-            require(it.isNotBlank()) { "blank_billing_envelope_field:$name" }
-        }
+        requiredNode(name).asString().requireNotBlank("billingEnvelope.$name")
 
     private fun JsonNode.requiredInt(name: String): Int =
-        requireNotNull(get(name)) { "missing_billing_envelope_field:$name" }.asInt()
+        requiredNode(name).asInt()
 
     private fun JsonNode.requiredLong(name: String): Long =
-        requireNotNull(get(name)) { "missing_billing_envelope_field:$name" }.asLong()
+        requiredNode(name).asLong()
+
+    private fun JsonNode.requiredNode(name: String): JsonNode =
+        get(name) ?: throw InvalidBillingInboundEnvelope(UUID(0, 0))
 
     private companion object {
         const val PRICE_ACTIVATED = "PriceActivated"
@@ -119,12 +132,18 @@ class KafkaBillingIntegrationListener(
     )
     fun consume(wirePayload: String) {
         when (val event = decoder.decode(wirePayload)) {
-            is BillingInboundEvent.PriceActivated -> pricingEvidence.record(event.event)
-            is BillingInboundEvent.UsageAccepted -> inbox.handle(event.event)
+            is BillingInboundEvent.PriceActivated -> {
+                pricingEvidence.record(event.event)
+                log.debug { "billing.inbound.price_activated eventId=${event.event.eventId}" }
+            }
+            is BillingInboundEvent.UsageAccepted -> {
+                inbox.handle(event.event)
+                log.debug { "billing.inbound.usage_accepted eventId=${event.event.eventId}" }
+            }
         }
     }
 
-    private companion object {
+    private companion object : KLogging() {
         const val METER_TOPIC = "meter.events.v1"
         const val USAGE_TOPIC = "usage.events.v1"
     }
