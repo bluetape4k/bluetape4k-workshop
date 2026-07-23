@@ -40,9 +40,7 @@ internal value class ReceiptDigest private constructor(
 
     init {
         value.length.requireEquals(SHA_256_DIGEST_LENGTH, "digest.length")
-        require(value.all { it in '0'..'9' || it in 'a'..'f' }) {
-            "digest must be a lowercase SHA-256 hex value"
-        }
+        value.all { it in '0'..'9' || it in 'a'..'f' }.requireEquals(true, "digest.lowercaseHex")
     }
 }
 
@@ -95,45 +93,59 @@ internal data class ReceiptScope private constructor(
     }
 }
 
+@ConsistentCopyVisibility
+internal data class TerminalKeyVersions private constructor(
+    val hmac: Int,
+    val generationKeyVersion: Int?,
+    val verificationKeyVersion: Int?,
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+
+        operator fun invoke(
+            hmac: Int = 1,
+            generationKeyVersion: Int? = null,
+            verificationKeyVersion: Int? = null,
+        ): TerminalKeyVersions {
+            val validHmac = hmac.requirePositiveNumber("hmacKeyVersion")
+            ((generationKeyVersion == null) == (verificationKeyVersion == null))
+                .requireEquals(true, "keyVersions.storedTogether")
+            return TerminalKeyVersions(
+                hmac = validHmac,
+                generationKeyVersion = generationKeyVersion?.requirePositiveNumber("generationKeyVersion"),
+                verificationKeyVersion = verificationKeyVersion?.requirePositiveNumber("verificationKeyVersion"),
+            )
+        }
+    }
+}
+
 /** Closed response descriptor; it deliberately stores allocation identity and key versions, never a voucher code. */
 @ConsistentCopyVisibility
 internal data class TerminalDescriptor private constructor(
     val outcome: ReceiptOutcome,
     val status: Int,
+    val keyVersions: TerminalKeyVersions,
     val allocationId: UUID?,
-    val generationKeyVersion: Int?,
-    val verificationKeyVersion: Int?,
     val observedAt: Instant?,
     val streamPosition: Long?,
 ) : Serializable {
+    val hmacKeyVersion: Int get() = keyVersions.hmac
+    val generationKeyVersion: Int? get() = keyVersions.generationKeyVersion
+    val verificationKeyVersion: Int? get() = keyVersions.verificationKeyVersion
+
     companion object {
         private const val serialVersionUID: Long = 1L
 
         operator fun invoke(
             outcome: ReceiptOutcome,
             status: Int,
+            keyVersions: TerminalKeyVersions = TerminalKeyVersions(),
             allocationId: UUID? = null,
-            generationKeyVersion: Int? = null,
-            verificationKeyVersion: Int? = null,
         ): TerminalDescriptor {
             status.requireInRange(MIN_HTTP_STATUS, MAX_HTTP_STATUS, "status")
-            require((generationKeyVersion == null) == (verificationKeyVersion == null)) {
-                "generation and verification key versions must be stored together"
-            }
-            require(generationKeyVersion == null || allocationId != null) {
-                "key versions require an allocation identity"
-            }
-            generationKeyVersion?.requirePositiveNumber("generationKeyVersion")
-            verificationKeyVersion?.requirePositiveNumber("verificationKeyVersion")
-            return TerminalDescriptor(
-                outcome,
-                status,
-                allocationId,
-                generationKeyVersion,
-                verificationKeyVersion,
-                null,
-                null,
-            )
+            (keyVersions.generationKeyVersion == null || allocationId != null)
+                .requireEquals(true, "keyVersions.haveAllocationIdentity")
+            return TerminalDescriptor(outcome, status, keyVersions, allocationId, null, null)
         }
     }
 
@@ -141,9 +153,8 @@ internal data class TerminalDescriptor private constructor(
         TerminalDescriptor(
             outcome = outcome,
             status = status,
+            keyVersions = keyVersions,
             allocationId = allocationId,
-            generationKeyVersion = generationKeyVersion,
-            verificationKeyVersion = verificationKeyVersion,
             observedAt = instant,
             streamPosition = streamPosition,
         )
@@ -152,19 +163,22 @@ internal data class TerminalDescriptor private constructor(
         TerminalDescriptor(
             outcome = outcome,
             status = status,
+            keyVersions = keyVersions,
             allocationId = allocationId,
-            generationKeyVersion = generationKeyVersion,
-            verificationKeyVersion = verificationKeyVersion,
             observedAt = observedAt,
             streamPosition = position.requirePositiveNumber("streamPosition"),
         )
 
-    fun replayWith(keyVersionAvailable: (Int) -> Boolean): TerminalReplay =
-        if (generationKeyVersion == null || keyVersionAvailable(generationKeyVersion)) {
+    fun replayWith(keyVersionAvailable: (Int) -> Boolean): TerminalReplay {
+        val generationVersion = generationKeyVersion
+        return if (keyVersionAvailable(hmacKeyVersion) &&
+            (generationVersion == null || keyVersionAvailable(generationVersion))
+        ) {
             TerminalReplay.Replay(this)
         } else {
             TerminalReplay.KeyUnavailable
         }
+    }
 }
 
 internal enum class ReceiptOutcome {

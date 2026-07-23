@@ -102,6 +102,7 @@ internal class EventStoreRepository(
                     row[EventLog.correlationId] = envelope.correlationId
                     row[EventLog.causationId] = envelope.causationId
                     row[EventLog.actorSurrogate] = envelope.actorSurrogate
+                    row[EventLog.actorHmacKeyVersion] = envelope.actorHmacKeyVersion
                     row[EventLog.payload] = envelope.payload.canonicalJson
                     row[EventLog.canonicalChecksum] = envelope.canonicalChecksum
                 }
@@ -199,6 +200,7 @@ internal class EventStoreRepository(
             causationId = causationId,
             actorSurrogate = actorSurrogate,
             payload = payload,
+            actorHmacKeyVersion = actorHmacKeyVersion,
         )
 
     private fun toEnvelope(row: org.jetbrains.exposed.v1.core.ResultRow) =
@@ -220,5 +222,6 @@ internal class EventStoreRepository(
             causationId = row[EventLog.causationId],
             actorSurrogate = row[EventLog.actorSurrogate],
             payload = io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload(row[EventLog.payload]),
+            actorHmacKeyVersion = row[EventLog.actorHmacKeyVersion],
         )
 }

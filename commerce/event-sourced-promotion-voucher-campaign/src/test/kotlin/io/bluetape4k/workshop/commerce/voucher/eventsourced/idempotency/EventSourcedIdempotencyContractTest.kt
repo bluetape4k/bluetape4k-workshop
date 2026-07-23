@@ -33,8 +33,11 @@ internal class EventSourcedIdempotencyContractTest {
                 outcome = ReceiptOutcome.VOUCHER_ALLOCATED,
                 status = 201,
                 allocationId = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc001"),
-                generationKeyVersion = 3,
-                verificationKeyVersion = 3,
+                keyVersions =
+                    TerminalKeyVersions(
+                        generationKeyVersion = 3,
+                        verificationKeyVersion = 3,
+                    ),
             )
 
         // When

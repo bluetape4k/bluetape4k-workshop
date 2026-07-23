@@ -178,6 +178,7 @@ internal class EventSourcedIdempotencyRepository {
                 row[IdempotencyReceipts.terminalOutcome] = descriptor.outcome
                 row[IdempotencyReceipts.terminalStatus] = descriptor.status
                 row[IdempotencyReceipts.allocationId] = descriptor.allocationId
+                row[IdempotencyReceipts.hmacKeyVersion] = descriptor.hmacKeyVersion
                 row[IdempotencyReceipts.generationKeyVersion] = descriptor.generationKeyVersion
                 row[IdempotencyReceipts.verificationKeyVersion] = descriptor.verificationKeyVersion
                 row[IdempotencyReceipts.terminalObservedAt] = descriptor.observedAt
@@ -223,9 +224,13 @@ private fun toStoredReceipt(row: ResultRow): StoredReceipt {
             TerminalDescriptor(
                 outcome = checkNotNull(row[IdempotencyReceipts.terminalOutcome]),
                 status = checkNotNull(row[IdempotencyReceipts.terminalStatus]),
+                keyVersions =
+                    TerminalKeyVersions(
+                        hmac = checkNotNull(row[IdempotencyReceipts.hmacKeyVersion]),
+                        generationKeyVersion = row[IdempotencyReceipts.generationKeyVersion],
+                        verificationKeyVersion = row[IdempotencyReceipts.verificationKeyVersion],
+                    ),
                 allocationId = row[IdempotencyReceipts.allocationId],
-                generationKeyVersion = row[IdempotencyReceipts.generationKeyVersion],
-                verificationKeyVersion = row[IdempotencyReceipts.verificationKeyVersion],
             ).let { descriptor ->
                 row[IdempotencyReceipts.terminalObservedAt]?.let(descriptor::withObservedAt) ?: descriptor
             }.let { descriptor ->

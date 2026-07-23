@@ -5,6 +5,8 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSour
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventSourcedExposedDatabaseRegistration
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventStoreRepository
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ExposedEventStoreTransactionRunner
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.EventSourcedHmacKeyRing
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.SubjectIdentityService
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.web.CampaignCommandHttpService
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.web.CampaignProjectionSnapshotReader
 import org.springframework.context.annotation.Bean
@@ -27,18 +29,22 @@ internal class EventSourcedCommandConfiguration {
         permits: EventSourcedDatabasePermitGate,
         receipts: EventSourcedIdempotencyRepository,
         events: EventStoreRepository,
+        keyRing: EventSourcedHmacKeyRing,
     ): EventSourcedCommandService =
         EventSourcedCommandService(
             transactions = ExposedCommandTransactionRunner(registration.database, permits),
             receipts = receipts,
             eventStore = events,
+            keyVersionAvailable = keyRing::isAvailable,
         )
 
     @Bean
     fun eventSourcedCampaignCommands(
         commands: EventSourcedCommandService,
+        identities: SubjectIdentityService,
+        keyRing: EventSourcedHmacKeyRing,
         clock: Clock,
-    ): EventSourcedCampaignCommands = DefaultEventSourcedCampaignCommands(commands, clock)
+    ): EventSourcedCampaignCommands = DefaultEventSourcedCampaignCommands(commands, identities, keyRing, clock)
 
     @Bean
     fun campaignCommandHttpService(

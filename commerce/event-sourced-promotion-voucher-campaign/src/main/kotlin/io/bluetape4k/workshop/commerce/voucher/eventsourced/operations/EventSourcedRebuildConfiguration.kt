@@ -6,6 +6,7 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.Projectio
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRecoveryStore
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRebuildRepository
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRepository
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.EventSourcedHmacKeyRing
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.time.Clock
@@ -38,40 +39,43 @@ internal class EventSourcedRebuildConfiguration {
         )
 
     @Bean
-    fun eventSourcedRebuildManagementService(
+    fun eventSourcedForegroundTransactionRunner(
         registration: EventSourcedExposedDatabaseRegistration,
         permits: EventSourcedDatabasePermitGate,
+    ): EventSourcedPermitTransactionRunner =
+        EventSourcedPermitTransactionRunner(
+            registration.database,
+            permits,
+            EventSourcedDatabaseLane.FOREGROUND,
+        )
+
+    @Bean
+    fun eventSourcedRebuildManagementService(
+        transactions: EventSourcedPermitTransactionRunner,
         rebuilds: ProjectionRebuildRepository,
         audits: OperatorAuditRepository,
+        hmacKeyRing: EventSourcedHmacKeyRing,
         clock: Clock,
     ): EventSourcedRebuildManagementService =
         EventSourcedRebuildManagementService(
-            transactions =
-                EventSourcedPermitTransactionRunner(
-                    registration.database,
-                    permits,
-                    EventSourcedDatabaseLane.FOREGROUND,
-                ),
+            transactions = transactions,
             rebuilds = rebuilds,
             audits = audits,
+            hmacKeyRing = hmacKeyRing,
             clock = clock,
         )
 
     @Bean
     fun projectionRecoveryManagementService(
-        registration: EventSourcedExposedDatabaseRegistration,
-        permits: EventSourcedDatabasePermitGate,
+        transactions: EventSourcedPermitTransactionRunner,
         persistence: ProjectionRecoveryPersistence,
+        hmacKeyRing: EventSourcedHmacKeyRing,
         clock: Clock,
     ): ProjectionRecoveryManagementService =
         ProjectionRecoveryManagementService(
-            transactions =
-                EventSourcedPermitTransactionRunner(
-                    registration.database,
-                    permits,
-                    EventSourcedDatabaseLane.FOREGROUND,
-                ),
+            transactions = transactions,
             persistence = persistence,
+            hmacKeyRing = hmacKeyRing,
             clock = clock,
         )
 }

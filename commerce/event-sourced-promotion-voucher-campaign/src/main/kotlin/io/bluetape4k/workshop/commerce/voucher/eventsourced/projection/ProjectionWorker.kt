@@ -293,4 +293,5 @@ internal fun toProjectionEnvelope(row: org.jetbrains.exposed.v1.core.ResultRow):
         causationId = row[EventLog.causationId],
         actorSurrogate = row[EventLog.actorSurrogate],
         payload = EventPayload(row[EventLog.payload]),
+        actorHmacKeyVersion = row[EventLog.actorHmacKeyVersion],
     )

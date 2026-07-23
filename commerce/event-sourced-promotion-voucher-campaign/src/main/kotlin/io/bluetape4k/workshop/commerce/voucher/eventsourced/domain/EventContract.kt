@@ -35,9 +35,7 @@ internal data class EventPayload(val canonicalJson: String) {
     init {
         canonicalJson.requireNotBlank("payload")
         payloadByteSize().requireLe(MAX_EVENT_PAYLOAD_BYTES, "payload.bytes")
-        require(SENSITIVE_FIELD_NAMES.none(::containsField)) {
-            "payload contains a raw sensitive field"
-        }
+        SENSITIVE_FIELD_NAMES.none(::containsField).requireEquals(true, "payload.excludesSensitiveFields")
         validateJsonBounds(canonicalJson)
     }
 
@@ -48,7 +46,22 @@ internal data class EventPayload(val canonicalJson: String) {
 
     private companion object {
         val SENSITIVE_FIELD_NAMES =
-            setOf("voucherCode", "email", "phone", "accessToken", "idempotencyKey")
+            setOf(
+                "voucherCode",
+                "email",
+                "phone",
+                "accessToken",
+                "token",
+                "idempotencyKey",
+                "authorization",
+                "authorizationHeader",
+                "user",
+                "userId",
+                "device",
+                "deviceId",
+                "ip",
+                "ipAddress",
+            )
 
         fun validateJsonBounds(json: String) {
             var depth = 0
@@ -74,7 +87,7 @@ internal data class EventPayload(val canonicalJson: String) {
                     if (char == '"') inString = true
                 }
             }
-            require(!inString && depth == 0) { "payload has unbalanced JSON structure" }
+            (!inString && depth == 0).requireEquals(true, "payload.balancedJson")
         }
 
         private fun updateDepth(char: Char, depth: Int): Int {
@@ -104,6 +117,7 @@ internal data class EventEnvelope(
     val causationId: String?,
     val actorSurrogate: String,
     val payload: EventPayload,
+    val actorHmacKeyVersion: Int = 1,
 ) {
     val canonicalChecksum: String
         get() = checksumOf(canonicalFields())
@@ -115,6 +129,7 @@ internal data class EventEnvelope(
         schemaVersion.requireInRange(1, Int.MAX_VALUE, "schemaVersion")
         correlationId.requireNotBlank("correlationId")
         actorSurrogate.requireNotBlank("actorSurrogate")
+        actorHmacKeyVersion.requirePositiveNumber("actorHmacKeyVersion")
         recordedAt.requireGe(occurredAt, "recordedAt")
     }
 
@@ -133,6 +148,7 @@ internal data class EventEnvelope(
             correlationId,
             causationId.orEmpty(),
             actorSurrogate,
+            actorHmacKeyVersion,
             payload.canonicalJson,
         )
 

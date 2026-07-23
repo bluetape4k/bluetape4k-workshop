@@ -17,6 +17,7 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.Projectio
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRecoveryStore
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRepository
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.findGeneration
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.EventSourcedHmacKeyRing
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -79,6 +80,7 @@ private data class PoisonRetryResources(
 internal class ProjectionRecoveryManagementService(
     private val transactions: EventSourcedPermitTransactionRunner,
     private val persistence: ProjectionRecoveryPersistence,
+    private val hmacKeyRing: EventSourcedHmacKeyRing,
     private val clock: Clock,
 ) {
     fun retryPoison(request: PoisonRetryRequest): PoisonRetryResult =
@@ -86,6 +88,7 @@ internal class ProjectionRecoveryManagementService(
             val expectedToken = request.expectedToken.requirePositiveNumber("expectedToken")
             val auditIdentity =
                 request.identity.toAuditIdentity(
+                    hmacKeyRing,
                     "POISON_RETRY",
                     listOf(request.key.projection, request.key.generation, request.eventId, expectedToken)
                         .joinToString("\u0000"),
@@ -208,6 +211,7 @@ internal class ProjectionRecoveryManagementService(
             val expectedToken = request.expectedToken.requirePositiveNumber("expectedToken")
             val auditIdentity =
                 request.identity.toAuditIdentity(
+                    hmacKeyRing,
                     "RECONCILIATION",
                     listOf(request.key.projection, request.key.generation, expectedToken)
                         .joinToString("\u0000"),

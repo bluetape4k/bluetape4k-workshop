@@ -18,6 +18,11 @@ management:
         include: health,info,prometheus
 
 voucher:
+  security:
+    hmac:
+      active-version: ${VOUCHER_HMAC_ACTIVE_VERSION:1}
+      # Workshop fallback only. Production must inject a stable secret and retain old keys until replay retention expires.
+      active-key-base64: ${VOUCHER_HMAC_ACTIVE_KEY_BASE64:d29ya3Nob3Atb25seS1obWFjLWtleS1tYXRlcmlhbC0zMmJ5dGVzIQ==}
   sse:
     max-subscriptions: ${VOUCHER_SSE_MAX_SUBSCRIPTIONS:32}
     queue-size: ${VOUCHER_SSE_QUEUE_SIZE:32}

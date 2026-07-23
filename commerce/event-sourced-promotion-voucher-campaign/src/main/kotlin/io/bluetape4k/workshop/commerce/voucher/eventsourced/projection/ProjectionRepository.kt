@@ -277,9 +277,10 @@ private data class ProjectionMutationCount(
 private fun validateBatch(events: List<EventEnvelope>) {
     events.size.requireLe(MAX_PROJECTION_BATCH_EVENTS, "projection batch size")
     events.map(EventEnvelope::eventId).toSet().size.requireEquals(events.size, "uniqueEventIds.size")
-    require(events.zipWithNext().all { (current, next) -> current.globalPosition < next.globalPosition }) {
-        "projection batch must be globally ordered"
-    }
+    events
+        .zipWithNext()
+        .all { (current, next) -> current.globalPosition < next.globalPosition }
+        .requireEquals(true, "projectionBatch.globallyOrdered")
     val payloadBytes = events.sumOf { event -> event.payload.canonicalJson.toByteArray(StandardCharsets.UTF_8).size }
     payloadBytes.requireLe(MAX_PROJECTION_BATCH_BYTES, "projection batch payload bytes")
 }

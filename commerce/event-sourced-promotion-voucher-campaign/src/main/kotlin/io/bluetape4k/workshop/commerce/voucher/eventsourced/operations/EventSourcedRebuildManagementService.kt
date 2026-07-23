@@ -4,6 +4,7 @@ import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.support.requireZeroOrPositiveNumber
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptDigest
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionGeneration
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionGenerationState
@@ -12,6 +13,8 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.Projectio
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.findActive
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.findBuildingGeneration
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.findGeneration
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.EventSourcedHmacKeyRing
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.HmacPurpose
 import java.time.Clock
 
 private const val MIN_IDEMPOTENCY_KEY_LENGTH = 8
@@ -71,12 +74,18 @@ internal class EventSourcedRebuildManagementService(
     private val transactions: EventSourcedPermitTransactionRunner,
     private val rebuilds: ProjectionRebuildRepository,
     private val audits: OperatorAuditRepository,
+    private val hmacKeyRing: EventSourcedHmacKeyRing,
     private val clock: Clock = Clock.systemUTC(),
 ) {
     fun start(request: StartRebuildRequest): RebuildManagementResult =
         transactions.inTransaction {
             val validRequest = request.validated()
-            val identity = validRequest.identity.toAuditIdentity("REBUILD_START", validRequest.fingerprintMaterial())
+            val identity =
+                validRequest.identity.toAuditIdentity(
+                    hmacKeyRing,
+                    "REBUILD_START",
+                    validRequest.fingerprintMaterial(),
+                )
             audits.find(identity.tenant, identity.requestDigest, OperatorAuditAction.REBUILD_STARTED)
                 ?.let { return@inTransaction replay(it) }
             val active = checkNotNull(findActive(validRequest.projection)) { "active projection does not exist" }
@@ -121,7 +130,11 @@ internal class EventSourcedRebuildManagementService(
     fun status(request: RebuildGenerationRequest): RebuildManagementResult =
         transactions.inTransaction {
             val validRequest = request.validated()
-            validRequest.identity.toAuditIdentity("REBUILD_STATUS", validRequest.fingerprintMaterial())
+            validRequest.identity.toAuditIdentity(
+                hmacKeyRing,
+                "REBUILD_STATUS",
+                validRequest.fingerprintMaterial(),
+            )
             val generation = findGeneration(validRequest.key) ?: return@inTransaction RebuildManagementResult.NotFound
             if (generation.fencingToken != validRequest.expectedToken) {
                 RebuildManagementResult.StaleToken(generation.fencingToken)
@@ -156,7 +169,12 @@ internal class EventSourcedRebuildManagementService(
     ): RebuildManagementResult =
         transactions.inTransaction {
             val validRequest = request.validated()
-            val identity = validRequest.identity.toAuditIdentity(action.name, validRequest.fingerprintMaterial())
+            val identity =
+                validRequest.identity.toAuditIdentity(
+                    hmacKeyRing,
+                    action.name,
+                    validRequest.fingerprintMaterial(),
+                )
             audits.find(identity.tenant, identity.requestDigest, action)
                 ?.let { return@inTransaction replay(it) }
             val before = findGeneration(validRequest.key) ?: return@inTransaction RebuildManagementResult.NotFound
@@ -274,6 +292,7 @@ internal class EventSourcedRebuildManagementService(
 }
 
 internal fun RebuildRequestIdentity.toAuditIdentity(
+    hmacKeyRing: EventSourcedHmacKeyRing,
     action: String,
     fingerprintMaterial: String,
 ): OperatorAuditIdentity {
@@ -285,13 +304,26 @@ internal fun RebuildRequestIdentity.toAuditIdentity(
         "Idempotency-Key.length",
     )
     val validIdempotencyKey = idempotencyKey.requireNotBlank("idempotencyKey")
+    val tenantId = TenantId(validTenant)
     return OperatorAuditIdentity(
-        actorDigest = ReceiptDigest.sha256("voucher-operator-v1\u0000$validPrincipal"),
+        actorDigest =
+            ReceiptDigest.of(
+                hmacKeyRing.digest(
+                    purpose = HmacPurpose.OPERATOR_ACTOR,
+                    tenantId = tenantId,
+                    domain = "operator-audit",
+                    value = validPrincipal,
+                ).value,
+            ),
         tenant = validTenant,
         requestDigest =
-            ReceiptDigest.sha256(
-                listOf("voucher-rebuild-request-v1", validTenant, action, fingerprintMaterial, validIdempotencyKey)
-                    .joinToString("\u0000"),
+            ReceiptDigest.of(
+                hmacKeyRing.digest(
+                    purpose = HmacPurpose.OPERATOR_REQUEST,
+                    tenantId = tenantId,
+                    domain = action.requireNotBlank("operator.action"),
+                    value = listOf(fingerprintMaterial, validIdempotencyKey).joinToString("\u0000"),
+                ).value,
             ),
     )
 }

@@ -93,7 +93,20 @@ internal class EventContractTest {
 
     @Test
     fun `payload bounds reject raw sensitive field names and excessive depth`() {
-        assertFailsWith<IllegalArgumentException> { EventPayload("{\"voucherCode\":\"secret\"}") }
+        listOf(
+            "voucherCode",
+            "accessToken",
+            "token",
+            "idempotencyKey",
+            "authorization",
+            "userId",
+            "deviceId",
+            "ipAddress",
+        ).forEach { fieldName ->
+            assertFailsWith<IllegalArgumentException> {
+                EventPayload("""{"$fieldName":"raw-sensitive-value"}""")
+            }
+        }
         assertFailsWith<IllegalArgumentException> { EventPayload("{".repeat(17) + "}".repeat(17)) }
     }
 }

@@ -41,6 +41,7 @@ internal data class EventToAppend(
     val correlationId: String = eventId.toString(),
     val causationId: String? = null,
     val actorSurrogate: String = "system",
+    val actorHmacKeyVersion: Int = 1,
 ) {
     init {
         eventId.version().requireEquals(UUID_V7, "eventId.version")
@@ -48,6 +49,7 @@ internal data class EventToAppend(
         schemaVersion.requirePositiveNumber("schemaVersion")
         correlationId.requireNotBlank("correlationId")
         actorSurrogate.requireNotBlank("actorSurrogate")
+        actorHmacKeyVersion.requirePositiveNumber("actorHmacKeyVersion")
     }
 }
 

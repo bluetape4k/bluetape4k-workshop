@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
+import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.support.requireZeroOrPositiveNumber
@@ -93,9 +94,8 @@ internal data class OperatorAuditTransition private constructor(
         ): OperatorAuditTransition {
             val validCheckpoint = checkpointPosition.requireZeroOrPositiveNumber("checkpointPosition")
             val validStreamPosition = streamPosition.requireZeroOrPositiveNumber("streamPosition")
-            require(reasonClass == null || REASON_CLASS.matches(reasonClass)) {
-                "reasonClass must be a bounded stable code"
-            }
+            (reasonClass == null || REASON_CLASS.matches(reasonClass))
+                .requireEquals(true, "reasonClass.boundedStableCode")
             return OperatorAuditTransition(beforeState, afterState, validCheckpoint, validStreamPosition, reasonClass)
         }
     }

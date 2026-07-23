@@ -6,6 +6,8 @@ import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.EventSourcedHmacKey
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.EventSourcedHmacKeyRing
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 import org.springframework.mock.web.MockFilterChain
@@ -17,6 +19,9 @@ internal class EventSourcedOperatorAccessFilterTest {
         EventSourcedOperatorAccessFilter(
             EventSourcedOperatorProperties(SECRET, GUARD),
             Jackson.defaultJsonMapper,
+            EventSourcedHmacKeyRing(
+                EventSourcedHmacKey(1, "operator-test-key-material-at-least-32-bytes".toByteArray()),
+            ),
         )
 
     @Test
@@ -33,6 +38,18 @@ internal class EventSourcedOperatorAccessFilterTest {
         surrogate.length shouldBeEqualTo SHA_256_HEX_LENGTH
         surrogate shouldNotBeEqualTo PRINCIPAL
         surrogate.all { character -> character.isDigit() || character in 'a'..'f' }.shouldBeTrue()
+    }
+
+    @Test
+    fun `actor surrogate is tenant separated`() {
+        val tenantA = validRequest(tenant = "tenant-a")
+        val tenantB = validRequest(tenant = "tenant-b")
+
+        filter.doFilter(tenantA, MockHttpServletResponse(), MockFilterChain())
+        filter.doFilter(tenantB, MockHttpServletResponse(), MockFilterChain())
+
+        tenantA.getAttribute(OPERATOR_ACTOR_SURROGATE_ATTRIBUTE) shouldNotBeEqualTo
+            tenantB.getAttribute(OPERATOR_ACTOR_SURROGATE_ATTRIBUTE)
     }
 
     @Test
@@ -84,14 +101,17 @@ internal class EventSourcedOperatorAccessFilterTest {
         chain.request.shouldNotBeNull()
     }
 
-    private fun validRequest(method: String = "POST"): MockHttpServletRequest =
+    private fun validRequest(
+        method: String = "POST",
+        tenant: String = "tenant-a",
+    ): MockHttpServletRequest =
         MockHttpServletRequest(method, "/operator/api/v1/projections/voucher-lifecycle/rebuilds").apply {
             remoteAddr = "127.0.0.1"
             serverName = "127.0.0.1"
             serverPort = PORT
             contentType = MediaType.APPLICATION_JSON_VALUE
             addHeader("Origin", ORIGIN)
-            addHeader(TENANT_HEADER, "tenant-a")
+            addHeader(TENANT_HEADER, tenant)
             addHeader(PRINCIPAL_HEADER, PRINCIPAL)
             addHeader(OPERATOR_SECRET_HEADER, SECRET)
             addHeader(OPERATOR_GUARD_HEADER, GUARD)

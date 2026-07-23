@@ -4,6 +4,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.EventSourcedIdempotencyRepository
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptAcquireResult
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.TerminalReplay
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptDigest
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptOutcome
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptScope
@@ -55,12 +56,15 @@ internal sealed interface CommandExecutionResult {
     class InProgress : CommandExecutionResult
 
     class FingerprintConflict : CommandExecutionResult
+
+    class KeyUnavailable : CommandExecutionResult
 }
 
 internal class EventSourcedCommandService(
     private val transactions: CommandTransactionRunner,
     private val receipts: EventSourcedIdempotencyRepository,
     private val eventStore: EventStorePort,
+    private val keyVersionAvailable: (Int) -> Boolean = { true },
 ) {
     fun execute(command: EventSourcedCommand): CommandExecutionResult {
         val acquired =
@@ -69,7 +73,11 @@ internal class EventSourcedCommandService(
             }
         return when (acquired) {
             is ReceiptAcquireResult.Owner -> completeOwner(command, acquired)
-            is ReceiptAcquireResult.Replay -> CommandExecutionResult.Replayed(acquired.descriptor)
+            is ReceiptAcquireResult.Replay ->
+                when (val replay = acquired.descriptor.replayWith(keyVersionAvailable)) {
+                    is TerminalReplay.Replay -> CommandExecutionResult.Replayed(replay.descriptor)
+                    TerminalReplay.KeyUnavailable -> CommandExecutionResult.KeyUnavailable()
+                }
             is ReceiptAcquireResult.InProgress -> CommandExecutionResult.InProgress()
             ReceiptAcquireResult.FingerprintConflict -> CommandExecutionResult.FingerprintConflict()
         }

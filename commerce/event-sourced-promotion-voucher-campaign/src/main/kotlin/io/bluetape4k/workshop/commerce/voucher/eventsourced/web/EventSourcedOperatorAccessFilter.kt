@@ -5,6 +5,9 @@ import io.bluetape4k.logging.warn
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.EventSourcedHmacKeyRing
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.HmacPurpose
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -45,6 +48,7 @@ internal data class EventSourcedOperatorProperties(
 internal class EventSourcedOperatorAccessFilter(
     private val properties: EventSourcedOperatorProperties,
     private val mapper: ObjectMapper,
+    private val hmacKeyRing: EventSourcedHmacKeyRing,
 ) : OncePerRequestFilter() {
     override fun shouldNotFilter(request: HttpServletRequest): Boolean =
         !request.requestURI.startsWith("/operator/")
@@ -66,7 +70,12 @@ internal class EventSourcedOperatorAccessFilter(
         }
         request.setAttribute(
             OPERATOR_ACTOR_SURROGATE_ATTRIBUTE,
-            digest(request.singleHeader(PRINCIPAL_HEADER).requireNotNull(PRINCIPAL_HEADER)),
+            hmacKeyRing.digest(
+                purpose = HmacPurpose.OPERATOR_ACTOR,
+                tenantId = TenantId(request.singleHeader(TENANT_HEADER).requireNotNull(TENANT_HEADER)),
+                domain = "operator-access",
+                value = request.singleHeader(PRINCIPAL_HEADER).requireNotNull(PRINCIPAL_HEADER),
+            ).value,
         )
         filterChain.doFilter(request, response)
     }
@@ -110,11 +119,6 @@ internal class EventSourcedOperatorAccessFilter(
             actual?.toByteArray(UTF_8) ?: ByteArray(0),
             expected.toByteArray(UTF_8),
         )
-
-    private fun digest(value: String): String =
-        MessageDigest.getInstance("SHA-256")
-            .digest("voucher-operator-v1\u0000$value".toByteArray(UTF_8))
-            .joinToString("") { byte -> "%02x".format(byte) }
 
     private companion object : KLogging() {
         const val HTTP_PORT = 80

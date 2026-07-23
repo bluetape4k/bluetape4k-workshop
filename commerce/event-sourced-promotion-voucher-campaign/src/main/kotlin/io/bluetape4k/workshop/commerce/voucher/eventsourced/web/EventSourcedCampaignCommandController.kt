@@ -101,6 +101,7 @@ internal class CampaignCommandHttpService(
             CampaignCommandExecution.FingerprintConflict ->
                 CampaignCreateHttpResult.Conflict("IDEMPOTENCY_FINGERPRINT_CONFLICT")
             CampaignCommandExecution.InProgress -> CampaignCreateHttpResult.InProgress
+            CampaignCommandExecution.KeyUnavailable -> CampaignCreateHttpResult.KeyUnavailable
         }
 }
 
@@ -114,6 +115,8 @@ internal sealed interface CampaignCreateHttpResult {
     data class Conflict(val code: String) : CampaignCreateHttpResult
 
     data object InProgress : CampaignCreateHttpResult
+
+    data object KeyUnavailable : CampaignCreateHttpResult
 }
 
 @RestController
@@ -159,4 +162,8 @@ private fun CampaignCreateHttpResult.toResponse(): ResponseEntity<Any> =
             ResponseEntity.status(HttpStatus.CONFLICT)
                 .header(HttpHeaders.RETRY_AFTER, "1")
                 .body(EventSourcedApiError("COMMAND_IN_PROGRESS", "command is already in progress"))
+
+        CampaignCreateHttpResult.KeyUnavailable ->
+            ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(EventSourcedApiError("REPLAY_KEY_UNAVAILABLE", "command replay key is unavailable"))
     }

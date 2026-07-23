@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.web
 
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
@@ -33,10 +34,13 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.Projectio
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionPoisonState
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRebuildRepository
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRepository
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.SubjectIdentityMappings
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.SubjectIdentityService
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -69,6 +73,7 @@ internal class EventSourcedCampaignHttpIntegrationTest
         dataSource: DataSource,
         private val clock: Clock,
         private val sseProperties: EventSourcedSseProperties,
+        private val identities: SubjectIdentityService,
         @LocalServerPort port: Int,
     ) {
     private val database get() = registration.database
@@ -189,10 +194,16 @@ internal class EventSourcedCampaignHttpIntegrationTest
             .expectHeader().valueEquals("X-Idempotent-Replay", "true")
 
         transaction(database) {
-            EventLog.selectAll()
+            val event =
+                EventLog.selectAll()
                 .where { EventLog.streamId eq CREATE_CAMPAIGN_ID }
-                .count()
-                .shouldBeEqualTo(1L)
+                .single()
+            event[EventLog.actorSurrogate] shouldNotBeEqualTo "operator-a"
+            event[EventLog.actorHmacKeyVersion] shouldBeEqualTo 1
+            SubjectIdentityMappings.selectAll().count() shouldBeEqualTo 1L
+            SubjectIdentityMappings.selectAll().single()[SubjectIdentityMappings.identityDigest] shouldNotBeEqualTo
+                "operator-a"
+            IdempotencyReceipts.selectAll().single()[IdempotencyReceipts.hmacKeyVersion] shouldBeEqualTo 1
         }
     }
 
@@ -208,6 +219,62 @@ internal class EventSourcedCampaignHttpIntegrationTest
             .expectBody()
             .jsonPath("$.code").isEqualTo("IDEMPOTENCY_FINGERPRINT_CONFLICT")
             .jsonPath("$.reason").isEqualTo("command conflicts with current state")
+            .jsonPath("$.exception").doesNotExist()
+    }
+
+    @Test
+    fun `identity erasure preserves immutable history and re-registration creates a new surrogate`() {
+        postCampaign(CREATE_CAMPAIGN_ID, "erase-key-001")
+            .exchange()
+            .expectStatus().isCreated
+
+        val firstSurrogate =
+            transaction(database) {
+                EventLog.selectAll()
+                    .where { EventLog.streamId eq CREATE_CAMPAIGN_ID }
+                    .single()[EventLog.actorSurrogate]
+            }
+
+        identities.erase(TenantId(TENANT), "campaign-principal", "operator-a") shouldBeEqualTo 1
+        transaction(database) {
+            SubjectIdentityMappings.selectAll().count() shouldBeEqualTo 0L
+            EventLog.selectAll()
+                .where { EventLog.streamId eq CREATE_CAMPAIGN_ID }
+                .single()[EventLog.actorSurrogate] shouldBeEqualTo firstSurrogate
+        }
+
+        postCampaign(SECOND_CREATE_CAMPAIGN_ID, "erase-key-002")
+            .exchange()
+            .expectStatus().isCreated
+
+        val secondSurrogate =
+            transaction(database) {
+                EventLog.selectAll()
+                    .where { EventLog.streamId eq SECOND_CREATE_CAMPAIGN_ID }
+                    .single()[EventLog.actorSurrogate]
+            }
+        secondSurrogate shouldNotBeEqualTo firstSurrogate
+    }
+
+    @Test
+    fun `idempotent replay fails closed when its retained HMAC key is unavailable`() {
+        postCampaign(CREATE_CAMPAIGN_ID, "replay-key-001")
+            .exchange()
+            .expectStatus().isCreated
+
+        transaction(database) {
+            IdempotencyReceipts.update(
+                where = { IdempotencyReceipts.resourceId eq CREATE_CAMPAIGN_ID.toString() },
+            ) { row ->
+                row[IdempotencyReceipts.hmacKeyVersion] = 99
+            }
+        }
+
+        postCampaign(CREATE_CAMPAIGN_ID, "replay-key-001")
+            .exchange()
+            .expectStatus().isEqualTo(503)
+            .expectBody()
+            .jsonPath("$.code").isEqualTo("REPLAY_KEY_UNAVAILABLE")
             .jsonPath("$.exception").doesNotExist()
     }
 
@@ -625,10 +692,12 @@ internal class EventSourcedCampaignHttpIntegrationTest
         private const val OPERATOR_GUARD = "workshop-operator-guard"
         private val CAMPAIGN_ID = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc300")
         private val CREATE_CAMPAIGN_ID = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc399")
+        private val SECOND_CREATE_CAMPAIGN_ID = UUID.fromString("0198a1b2-c3d4-7e5f-8123-456789abc398")
         private val NOW = Instant.parse("2026-07-23T00:00:00Z")
         private val TABLES =
             arrayOf(
                 EventLog,
+                SubjectIdentityMappings,
                 StreamHeads,
                 AppendFences,
                 IdempotencyReceipts,

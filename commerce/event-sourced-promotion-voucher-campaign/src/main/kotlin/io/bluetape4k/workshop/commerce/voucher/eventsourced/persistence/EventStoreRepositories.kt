@@ -29,6 +29,7 @@ internal object EventLog : UUIDTable("voucher_event_log", "event_id") {
     val correlationId = varchar("correlation_id", 128)
     val causationId = varchar("causation_id", 128).nullable()
     val actorSurrogate = varchar("actor_surrogate", DIGEST_LENGTH)
+    val actorHmacKeyVersion = integer("actor_hmac_key_version")
     val payload = text("payload")
     val canonicalChecksum = varchar("canonical_checksum", 64)
 
@@ -76,6 +77,7 @@ internal object IdempotencyReceipts : UUIDTable("voucher_idempotency_receipt", "
         ).nullable()
     val terminalStatus = integer("terminal_status").nullable()
     val allocationId = javaUUID("allocation_id").nullable()
+    val hmacKeyVersion = integer("hmac_key_version").nullable()
     val generationKeyVersion = integer("generation_key_version").nullable()
     val verificationKeyVersion = integer("verification_key_version").nullable()
     val terminalObservedAt = timestamp("terminal_observed_at").nullable()

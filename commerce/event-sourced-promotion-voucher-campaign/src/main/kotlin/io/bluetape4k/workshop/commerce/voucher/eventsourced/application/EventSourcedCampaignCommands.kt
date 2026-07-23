@@ -11,9 +11,14 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptD
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptOutcome
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptScope
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.TerminalDescriptor
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.TerminalKeyVersions
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventToAppend
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ExpectedAppend
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamKey
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.EventSourcedHmacKeyRing
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.HmacPurpose
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.SubjectIdentity
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.SubjectIdentityService
 import java.time.Clock
 import java.time.Instant
 import java.util.UUID
@@ -45,6 +50,8 @@ internal sealed interface CampaignCommandExecution {
     data object InProgress : CampaignCommandExecution
 
     data object FingerprintConflict : CampaignCommandExecution
+
+    data object KeyUnavailable : CampaignCommandExecution
 }
 
 internal fun interface EventSourcedCampaignCommands {
@@ -54,35 +61,41 @@ internal fun interface EventSourcedCampaignCommands {
 /** Converts one validated campaign command into the generic receipt plus append orchestration boundary. */
 internal class DefaultEventSourcedCampaignCommands(
     private val commands: EventSourcedCommandService,
+    private val identities: SubjectIdentityService,
+    private val keyRing: EventSourcedHmacKeyRing,
     private val clock: Clock = Clock.systemUTC(),
 ) : EventSourcedCampaignCommands {
     private val mapper = jsonMapper { }
 
     override fun create(input: CreateCampaignCommandInput): CampaignCommandExecution {
-        validate(input)
+        val command = input.validated()
         val now = clock.instant()
-        val tenantId = TenantId(input.tenant)
-        val principalDigest = ReceiptDigest.sha256("voucher-principal-v1\u0000${input.principal}")
+        val tenantId = TenantId(command.tenant)
+        val subject = identities.resolve(tenantId, "campaign-principal", command.principal)
+        val principalDigest =
+            keyRing.digest(
+                purpose = HmacPurpose.PRINCIPAL_SCOPE,
+                tenantId = tenantId,
+                domain = "campaign-create",
+                value = command.principal,
+            )
+        val idempotencyDigest =
+            keyRing.digest(
+                purpose = HmacPurpose.IDEMPOTENCY_KEY,
+                tenantId = tenantId,
+                domain = "campaign-create:${command.campaignId}:${principalDigest.value}",
+                value = command.idempotencyKey,
+            )
         val scope =
             ReceiptScope(
                 tenantId = tenantId,
-                principalDigest = principalDigest,
+                principalDigest = ReceiptDigest.of(principalDigest.value),
                 operation = "CAMPAIGN_CREATE",
-                resourceId = input.campaignId.toString(),
-                keyDigest =
-                    ReceiptDigest.sha256(
-                        listOf(
-                            "voucher-idempotency-key-v1",
-                            input.tenant,
-                            principalDigest.value,
-                            "CAMPAIGN_CREATE",
-                            input.campaignId,
-                            input.idempotencyKey,
-                        ).joinToString("\u0000"),
-                    ),
+                resourceId = command.campaignId.toString(),
+                keyDigest = ReceiptDigest.of(idempotencyDigest.value),
             )
-        val fingerprint = fingerprint(input)
-        val created = input.toEvent(tenantId)
+        val fingerprint = fingerprint(command)
+        val created = command.toEvent(tenantId)
         return commands.execute(
             EventSourcedCommand(
                 scope = scope,
@@ -93,15 +106,16 @@ internal class DefaultEventSourcedCampaignCommands(
                         appends =
                             listOf(
                                 ExpectedAppend(
-                                    stream = StreamKey(tenantId, CAMPAIGN_STREAM_TYPE, input.campaignId),
+                                    stream = StreamKey(tenantId, CAMPAIGN_STREAM_TYPE, command.campaignId),
                                     expectedVersion = 0,
-                                    events = listOf(created.toAppend(principalDigest, now)),
+                                    events = listOf(created.toAppend(subject, now)),
                                 ),
                             ),
                         descriptor =
                             TerminalDescriptor(
                                 outcome = ReceiptOutcome.CAMPAIGN_CREATED,
                                 status = CAMPAIGN_CREATED_STATUS,
+                                keyVersions = TerminalKeyVersions(hmac = principalDigest.keyVersion),
                             ).withObservedAt(now),
                     )
                 },
@@ -124,7 +138,7 @@ internal class DefaultEventSourcedCampaignCommands(
         )
 
     private fun CampaignEvent.CampaignCreated.toAppend(
-        principalDigest: ReceiptDigest,
+        subject: SubjectIdentity,
         occurredAt: Instant,
     ): EventToAppend {
         val eventId = Uuid.V7.nextUUID()
@@ -146,7 +160,8 @@ internal class DefaultEventSourcedCampaignCommands(
                 ),
             occurredAt = occurredAt,
             correlationId = eventId.toString(),
-            actorSurrogate = principalDigest.value,
+            actorSurrogate = subject.surrogate.toString(),
+            actorHmacKeyVersion = subject.hmacKeyVersion,
         )
     }
 }
@@ -176,14 +191,19 @@ private fun CommandExecutionResult.toCampaignExecution(): CampaignCommandExecuti
         is CommandExecutionResult.Replayed -> CampaignCommandExecution.Completed(descriptor, replayed = true)
         is CommandExecutionResult.InProgress -> CampaignCommandExecution.InProgress
         is CommandExecutionResult.FingerprintConflict -> CampaignCommandExecution.FingerprintConflict
+        is CommandExecutionResult.KeyUnavailable -> CampaignCommandExecution.KeyUnavailable
     }
 
-private fun validate(input: CreateCampaignCommandInput) {
-    input.tenant.requireNotBlank("tenant")
-    input.principal.requireNotBlank("principal")
-    input.idempotencyKey.length.requireInRange(
+private fun CreateCampaignCommandInput.validated(): CreateCampaignCommandInput {
+    val validKey = idempotencyKey.requireNotBlank("Idempotency-Key")
+    validKey.length.requireInRange(
         MIN_IDEMPOTENCY_KEY_LENGTH,
         MAX_IDEMPOTENCY_KEY_LENGTH,
         "Idempotency-Key.length",
+    )
+    return copy(
+        tenant = tenant.requireNotBlank("tenant"),
+        principal = principal.requireNotBlank("principal"),
+        idempotencyKey = validKey,
     )
 }
