@@ -7,6 +7,9 @@ spring:
   datasource:
     hikari:
       maximum-pool-size: 20
+      connection-timeout: 250
+      data-source-properties:
+        options: "-c lock_timeout=500ms -c statement_timeout=3s"
 
 management:
   endpoints:

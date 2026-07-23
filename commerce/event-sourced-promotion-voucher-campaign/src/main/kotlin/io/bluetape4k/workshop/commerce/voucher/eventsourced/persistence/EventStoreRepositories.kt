@@ -210,6 +210,44 @@ internal object ActiveProjectionGenerations : UUIDTable("voucher_active_projecti
     }
 }
 
+internal object OperatorAudits : UUIDTable("voucher_operator_audit", "audit_id") {
+    val actorDigest = varchar("actor_digest", DIGEST_LENGTH)
+    val tenant = varchar("tenant", 64)
+    val requestDigest = varchar("request_digest", DIGEST_LENGTH)
+    val action =
+        enumerationByName<io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.OperatorAuditAction>(
+            "action",
+            32,
+        )
+    val projection = varchar("projection", 64)
+    val generation = long("generation")
+    val expectedFencingToken = long("expected_fencing_token")
+    val beforeState =
+        enumerationByName<io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionGenerationState>(
+            "before_state",
+            16,
+        ).nullable()
+    val afterState =
+        enumerationByName<io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionGenerationState>(
+            "after_state",
+            16,
+        ).nullable()
+    val checkpointPosition = long("checkpoint_position")
+    val streamPosition = long("stream_position")
+    val outcome =
+        enumerationByName<io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.OperatorAuditOutcome>(
+            "outcome",
+            16,
+        )
+    val reasonClass = varchar("reason_class", 64).nullable()
+    val occurredAt = timestamp("occurred_at")
+
+    init {
+        uniqueIndex(tenant, requestDigest, action)
+        index(false, projection, generation, occurredAt)
+    }
+}
+
 internal class EventLogEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<EventLogEntity>(EventLog)
 }

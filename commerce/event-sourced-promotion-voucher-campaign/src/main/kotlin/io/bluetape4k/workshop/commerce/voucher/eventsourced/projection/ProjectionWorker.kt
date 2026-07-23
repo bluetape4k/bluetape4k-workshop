@@ -4,6 +4,9 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventEnvelope
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.StreamReference
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabaseLane
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabasePermitGate
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedPermitTransactionRunner
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventLog
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.greater
@@ -104,8 +107,12 @@ internal interface ProjectionTransactionRunner {
 
 internal class ExposedProjectionTransactionRunner(
     private val database: Database,
+    permits: EventSourcedDatabasePermitGate,
 ) : ProjectionTransactionRunner {
-    override fun <T> inTransaction(block: () -> T): T = transaction(database) { block() }
+    private val transactions =
+        EventSourcedPermitTransactionRunner(database, permits, EventSourcedDatabaseLane.PROJECTION)
+
+    override fun <T> inTransaction(block: () -> T): T = transactions.inTransaction(block)
 }
 
 /** One bounded poll; callers own scheduling and cooperative cancellation. */

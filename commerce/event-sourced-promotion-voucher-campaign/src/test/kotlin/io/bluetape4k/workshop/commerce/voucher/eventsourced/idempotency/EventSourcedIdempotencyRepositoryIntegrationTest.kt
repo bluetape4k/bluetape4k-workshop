@@ -24,6 +24,7 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ExposedE
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.IdempotencyReceipts
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamHeads
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamKey
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabasePermitGate
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -58,7 +59,12 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
                 password = requireNotNull(postgres.password),
             )
         store = EventStoreRepository(ExposedEventStoreTransactionRunner(database))
-        commands = EventSourcedCommandService(ExposedCommandTransactionRunner(database), repository, store)
+        commands =
+            EventSourcedCommandService(
+                ExposedCommandTransactionRunner(database, EventSourcedDatabasePermitGate()),
+                repository,
+                store,
+            )
     }
 
     @BeforeEach

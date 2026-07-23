@@ -11,8 +11,10 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.Terminal
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.AppendResult
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventStorePort
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ExpectedAppend
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabaseLane
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabasePermitGate
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedPermitTransactionRunner
 import org.jetbrains.exposed.v1.jdbc.Database
-import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.Instant
 
 /** Owns the two transaction cuts: a committed receipt acquire, then atomic append plus terminal finalize. */
@@ -22,8 +24,12 @@ internal interface CommandTransactionRunner {
 
 internal class ExposedCommandTransactionRunner(
     private val database: Database,
+    permits: EventSourcedDatabasePermitGate,
 ) : CommandTransactionRunner {
-    override fun <T> inTransaction(block: () -> T): T = transaction(database) { block() }
+    private val transactions =
+        EventSourcedPermitTransactionRunner(database, permits, EventSourcedDatabaseLane.FOREGROUND)
+
+    override fun <T> inTransaction(block: () -> T): T = transactions.inTransaction(block)
 }
 
 internal class EventSourcedCommand(

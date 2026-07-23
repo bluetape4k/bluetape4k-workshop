@@ -41,6 +41,22 @@ internal class EventSourcedRuntimeContractTest {
         PropertySourcesPropertyResolver(sources).getProperty("spring.threads.virtual.enabled") shouldBeEqualTo "true"
     }
 
+    @Test
+    fun `database configuration bounds pool wait lock wait and statement execution`() {
+        val sources =
+            MutablePropertySources().apply {
+                YamlPropertySourceLoader()
+                    .load("event-sourced-voucher", ClassPathResource("application.yml"))
+                    .forEach(::addLast)
+            }
+        val properties = PropertySourcesPropertyResolver(sources)
+
+        properties.getProperty("spring.datasource.hikari.maximum-pool-size") shouldBeEqualTo "20"
+        properties.getProperty("spring.datasource.hikari.connection-timeout") shouldBeEqualTo "250"
+        properties.getProperty("spring.datasource.hikari.data-source-properties.options") shouldBeEqualTo
+            "-c lock_timeout=500ms -c statement_timeout=3s"
+    }
+
     private fun classFileMajorVersion(type: Class<*>): Int {
         val resourceName = "/${type.name.replace('.', '/')}.class"
         return DataInputStream(requireNotNull(type.getResourceAsStream(resourceName))).use { input ->
