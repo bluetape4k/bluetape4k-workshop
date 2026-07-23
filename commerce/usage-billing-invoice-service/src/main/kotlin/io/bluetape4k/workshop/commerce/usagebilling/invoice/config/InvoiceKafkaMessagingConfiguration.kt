@@ -16,6 +16,7 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.core.ProducerFactory
 import org.springframework.kafka.listener.ContainerProperties
+import java.io.Serializable
 
 @Configuration(proxyBeanMethods = false)
 @EnableKafka
@@ -74,4 +75,8 @@ data class InvoiceKafkaProperties(
     val bootstrapServers: String = "localhost:9092",
     val consumerGroup: String = "usage-billing-invoice-service",
     val producerClientId: String = "usage-billing-invoice-service",
-)
+) : Serializable {
+    private companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}

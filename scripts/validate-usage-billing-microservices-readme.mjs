@@ -17,6 +17,12 @@ const diagrams = [
   "usage-billing-microservices-correction-01",
   "usage-billing-microservices-extraction-01",
 ];
+const sequenceDiagrams = [
+  "usage-billing-microservices-delivery-01",
+  "usage-billing-microservices-poison-recovery-01",
+  "usage-billing-microservices-correction-01",
+  "usage-billing-microservices-extraction-01",
+];
 const failures = [];
 
 for (const doc of docs) {
@@ -43,6 +49,31 @@ for (const doc of docs) {
   ]) {
     if (!doc.text.includes(required)) failures.push(`${doc.name}: missing contract ${required}`);
   }
+}
+
+const diagramDirectory = path.join(root, "docs/images/readme-diagrams");
+const architectureSvg = fs.readFileSync(path.join(diagramDirectory, "usage-billing-microservices-architecture-01.svg"), "utf8");
+if (!architectureSvg.includes('data-diagram-kind="architecture"')) {
+  failures.push("architecture SVG: missing architecture kind marker");
+}
+for (const required of ["projection + audit", "quarantine", "query-db +"]) {
+  if (!architectureSvg.includes(required)) failures.push(`architecture SVG: missing readable Query responsibility ${required}`);
+}
+for (const diagram of sequenceDiagrams) {
+  const svg = fs.readFileSync(path.join(diagramDirectory, `${diagram}.svg`), "utf8");
+  for (const required of [
+    'data-diagram-kind="sequence"',
+    'class="labelPill"',
+    'class="num"',
+    'class="message"',
+    'class="frame" fill="none"',
+  ]) {
+    if (!svg.includes(required)) failures.push(`${diagram}.svg: missing sequence contract ${required}`);
+  }
+}
+const extractionSvg = fs.readFileSync(path.join(diagramDirectory, "usage-billing-microservices-extraction-01.svg"), "utf8");
+if (!extractionSvg.includes("one boundary at a time") || extractionSvg.includes("boundaryt")) {
+  failures.push("extraction SVG: rollback subtitle must state one boundary at a time");
 }
 
 for (const [file, required] of [

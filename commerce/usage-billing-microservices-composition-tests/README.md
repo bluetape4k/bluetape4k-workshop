@@ -12,14 +12,14 @@ Each service owns its database and its own integration decoder. JetBrains Expose
 
 ## Choose this only when the boundary is real
 
-Start with [`usage-metering-billing-ledger`](../usage-metering-billing-ledger/) when one PostgreSQL transaction is sufficient. Use this example when independent deployment, ownership, or scaling boundaries are real requirements and the team can operate replay, backlogs, redrive, and cross-service contract evolution.
+Start with [`usage-metering-billing-ledger`](../usage-metering-billing-ledger/) when one PostgreSQL transaction is sufficient. Use this example when independent deployment, ownership, or scaling boundaries are real requirements and the team can operate replay, backlogs, quarantine audit requests, and cross-service contract evolution.
 
 | Concern | Modular monolith / ledger | This microservice reference |
 | --- | --- | --- |
 | Financial authority | One PostgreSQL authority | One local authority per service |
 | Delivery | In-process transaction | Kafka at-least-once plus local outbox/inbox |
 | Replay | Re-run one process | Re-deliver wire event; receiver absorbs it |
-| Failure recovery | Transaction retry | Lease expiry, retry wait, quarantine, operator redrive |
+| Failure recovery | Transaction retry | Lease expiry, retry wait, quarantine, operator redrive request |
 | Operational cost | Lower | Higher: topic, lag, compatibility, five databases |
 
 ## Ownership and topics
@@ -39,6 +39,8 @@ Kafka is transport, not financial correctness authority. Every producer commits 
 [State diagram SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-outbox-inbox-state-01.svg)
 
 The receiver first validates its own JSON envelope contract, then durably records `(tenantId, eventId, payloadDigest)` before applying a local effect. Same ID/same digest is a duplicate; same ID/different digest is a correctness conflict and is quarantined. A retryable database failure is propagated to Kafka for redelivery. An unknown schema or digest mismatch becomes a durable Query quarantine entry so unrelated records can keep progressing.
+
+Local decoders use Bluetape validation helpers for required envelope fields, and durable boundary payload types keep explicit serialization IDs. Debug outcome logs contain only stable operational fields such as event ID, event type, and quarantine reason; they never emit the raw financial payload.
 
 ![At-least-once delivery path](../../docs/images/readme-diagrams/usage-billing-microservices-delivery-01.png)
 
@@ -87,7 +89,7 @@ failure-mode catalogue, not a benchmark and not an exactly-once proof.
 | deterministic transport fault | a test-only Meter fault moves the claimed row to `RETRY_WAIT`, then the normal Kafka transport delivers it | keep the fast default proof deterministic; recover by retrying the existing row, never by recreating the financial fact |
 | real broker-path outage | Toxiproxy cuts both TCP directions between the host-JVM services and the Kafka custom listener; the existing Meter outbox row becomes `RETRY_WAIT`, then is delivered after the path is restored | use the outbox as recovery authority and verify the actual client route, not only a simulated exception |
 | service restart | Usage restarts with price evidence still present and continues publication | local PostgreSQL, not process memory or a consumer offset, is the recovery authority |
-| poison contract | one unsupported Query record is quarantined while an independent valid record progresses; redrive is recorded | isolate permanent failures and preserve the original payload for operator review |
+| poison contract | one unsupported Query record is quarantined while an independent valid record progresses; a redrive request is audited | isolate permanent failures and retrieve the immutable original envelope from its retained source before any replay |
 | schema evolution | Query accepts additive v2 and quarantines unsupported v99 | make compatibility an explicit decoder decision, not an accidental Jackson default |
 | tenant isolation | a Query principal with `TENANT_a` cannot access tenant `b` | authorize the target tenant at the read boundary, even for projections |
 | correction | `AdjustmentPosted` appends a second Invoice line and emits an invoice correction without rewriting the original line | repair financial history with a new fact and a reference to the original event |
@@ -127,7 +129,7 @@ to the dedicated multi-broker reference.
 
 [Extraction SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-extraction-01.svg)
 
-An operator should first inspect outbox backlog/state, oldest retry, inbox/quarantine reason, and the affected aggregate key. Redrive preserves the stored payload and creates audit evidence; it is not an edit surface for amounts or prices.
+An operator should first inspect outbox backlog/state, oldest retry, inbox/quarantine reason, and the affected aggregate key. Query records an auditable redrive request; retrieving and republishing an immutable original envelope remains an external retained-source operation, never an edit surface for amounts or prices.
 
 ## Module map
 

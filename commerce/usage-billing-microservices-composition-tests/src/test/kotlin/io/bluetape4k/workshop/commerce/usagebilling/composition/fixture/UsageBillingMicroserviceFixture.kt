@@ -6,6 +6,7 @@ import eu.rekawek.toxiproxy.ToxiproxyClient
 import eu.rekawek.toxiproxy.Proxy
 import eu.rekawek.toxiproxy.model.ToxicDirection
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.support.requireEquals
 import io.bluetape4k.workshop.commerce.usagebilling.billing.BillingServiceApplication
 import io.bluetape4k.workshop.commerce.usagebilling.billing.application.BillingAdjustmentService
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingAdjustmentCommand
@@ -43,6 +44,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
@@ -58,6 +60,11 @@ import java.time.Instant
 import java.util.Properties
 import java.util.HexFormat
 import java.util.UUID
+
+data class MeterOutboxState(
+    val status: MeterOutboxStatus,
+    val attempt: Int,
+)
 
 class UsageBillingMicroserviceFixture(
     private val brokerPathProxy: Boolean = false,
@@ -103,17 +110,17 @@ class UsageBillingMicroserviceFixture(
     }
 
     fun blockTopic(topic: String) {
-        require(topic == METER_TOPIC) { "unsupported_transport_topic:$topic" }
+        topic.requireEquals(METER_TOPIC, "topic")
         meterContext.getBean(MeterTransportFailureSwitch::class.java).isFailing = true
     }
 
     fun unblockTopic(topic: String) {
-        require(topic == METER_TOPIC) { "unsupported_transport_topic:$topic" }
+        topic.requireEquals(METER_TOPIC, "topic")
         meterContext.getBean(MeterTransportFailureSwitch::class.java).isFailing = false
     }
 
     fun cutBrokerPath() {
-        require(brokerPathProxy) { "broker_path_proxy_not_enabled" }
+        brokerPathProxy.requireEquals(true, "brokerPathProxy")
         check(!isBrokerPathCut) { "broker_path_already_cut" }
         brokerPath.toxics().bandwidth(CUT_UPSTREAM, ToxicDirection.UPSTREAM, 0)
         brokerPath.toxics().bandwidth(CUT_DOWNSTREAM, ToxicDirection.DOWNSTREAM, 0)
@@ -121,7 +128,7 @@ class UsageBillingMicroserviceFixture(
     }
 
     fun restoreBrokerPath() {
-        require(brokerPathProxy) { "broker_path_proxy_not_enabled" }
+        brokerPathProxy.requireEquals(true, "brokerPathProxy")
         if (!isBrokerPathCut) return
         brokerPath.toxics().get(CUT_UPSTREAM).remove()
         brokerPath.toxics().get(CUT_DOWNSTREAM).remove()
@@ -243,13 +250,20 @@ class UsageBillingMicroserviceFixture(
     }
 
     fun outboxBacklog(service: String): Long {
-        require(service == "meter") { "unsupported_outbox_service:$service" }
+        service.requireEquals("meter", "service")
         return meterTransaction {
             meterContext.getBean(MeterOutboxRepository::class.java).findAll()
                 .count { it.status != MeterOutboxStatus.PUBLISHED.name }
                 .toLong()
         }
     }
+
+    fun meterOutboxState(eventId: UUID): MeterOutboxState? =
+        meterTransaction {
+            meterContext.getBean(MeterOutboxRepository::class.java).findAll()
+                .singleOrNull { it.eventId == eventId }
+                ?.let { MeterOutboxState(MeterOutboxStatus.valueOf(it.status), it.attempt) }
+        }
 
     fun priceEvidence(tenantId: String, meterCode: String): PriceEvidence? =
         usageTransactionNullable {
@@ -309,9 +323,12 @@ class UsageBillingMicroserviceFixture(
             "n/a",
             listOf(SimpleGrantedAuthority("TENANT_$authenticationTenant")),
         )
-        return runCatching {
+        return try {
             queryContext.getBean(QueryTenantAuthorizer::class.java).requireAccess(authentication, targetTenant)
-        }.isSuccess
+            true
+        } catch (_: AccessDeniedException) {
+            false
+        }
     }
 
     override fun close() {

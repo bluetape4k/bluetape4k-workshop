@@ -19,8 +19,8 @@ durable하게 만든다. Consumer offset이나 broker ack를 재무 완료 증�
 ### Duplicate와 poison은 서로 다른 정상 복구 경로다
 
 같은 event ID와 같은 digest는 성공한 duplicate다. 같은 ID와 다른 digest, 지원하지 않는 mandatory
-schema는 correctness conflict이므로 Query quarantine에 원본 payload와 이유를 보존한다. Permanent failure가
-독립 aggregate의 진행을 막지 않게 하되, redrive는 payload 편집이 아닌 audited replay request로 제한한다.
+schema는 correctness conflict이므로 Query quarantine에 event metadata와 이유를 보존한다. Permanent failure가
+독립 aggregate의 진행을 막지 않게 하되, redrive는 payload 편집이나 자동 재전달이 아닌 audited request로 제한한다.
 
 ### Correction은 원본 갱신이 아니라 새 사실이다
 
@@ -40,6 +40,20 @@ Architecture, outbox/inbox state, delivery, poison recovery, correction, extract
 CairoSVG PNG로 함께 관리한다. README validator는 두 locale과 6개 asset pair를 요구하고, diagram QA는
 marker, endpoint, connector intrusion/crossing, mixed-corner, PNG render를 검사한다. SVG만 맞고 raster가
 뒤집히거나 잘리는 상태를 완료로 보지 않는다.
+
+### 기계적 diagram 검사에는 구조 의미도 포함해야 한다
+
+XML과 connector 검사만 통과해도 sequence를 가장한 generic card가 남을 수 있다. 따라서 architecture와
+temporal sequence를 구분하는 SVG kind marker를 두고, sequence에는 participant label pill, lifeline,
+activation, numbered message, branch frame을 validator가 요구해야 한다. 각 SVG/PNG asset을 source path와
+pixel size까지 ledger로 남기면, 이름만 맞는 중복 asset이나 raster에서 잘린 label을 완료로 오인하지 않는다.
+
+### 경계 계약은 코드 스타일이 아니라 재처리 안전성이다
+
+각 서비스의 durable data model에 명시적인 serialization ID를 두고, 외부 decoder는 Bluetape validation
+helper로 required field를 검증하며, debug consumer log에는 raw financial payload 대신 event ID/type/reason만 남긴다.
+이 세 가지를 architecture test로 고정하면 복사된 decoder가 validation·관측·재처리 contract를 조금씩
+잃는 drift를 조기에 막을 수 있다.
 
 ### Broker path 단절은 bootstrap proxy만으로 증명되지 않는다
 
@@ -61,7 +75,7 @@ network에 두고 custom listener의 advertised endpoint를 proxy mapped port로
 ## Verification
 
 - Composition: 12 tests, failures/errors/skipped 0, including real broker-path recovery
-- Aggregated Kover: line 2167 covered/188 missed, class 240 covered/19 missed
+- Aggregated Kover: line 2177 covered/188 missed, class 240 covered/19 missed
 - Repository commerce smoke: 107 tasks PASS including aggregated Kover
 - Repo-wide `detekt detektTest`: 68 tasks PASS
 - README validator: locales 2, diagrams 6
@@ -76,5 +90,5 @@ network에 두고 custom listener의 advertised endpoint를 proxy mapped port로
 - Broker 장애를 이유로 financial fact를 다시 만들지 말고 기존 outbox row와 lease를 복구한다.
 - TCP path recovery와 multi-broker failover를 같은 증거로 취급하지 않는다. 후자는 #558에서 leader change와
   replication health를 별도로 증명한다.
-- Quarantine payload를 수정해 재사용하지 말고 원본 보존과 redrive audit을 유지한다.
+- Query quarantine을 raw-envelope 보관소로 오인하지 말고, external retained source의 immutable envelope 조회와 redrive audit을 분리한다.
 - Rollback은 routing만 되돌린다. 서비스 DB를 역복사하거나 published financial history를 rewrite하지 않는다.

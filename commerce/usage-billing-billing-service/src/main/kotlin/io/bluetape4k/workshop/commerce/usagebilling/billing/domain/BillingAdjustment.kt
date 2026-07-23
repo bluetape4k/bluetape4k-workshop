@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.commerce.usagebilling.billing.domain
 
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNegativeNumber
+import java.io.Serializable
 import java.math.BigDecimal
 import java.util.UUID
 
@@ -10,11 +12,15 @@ data class BillingAdjustmentCommand(
     val correctionOf: UUID,
     val amount: BigDecimal,
     val currency: String,
-) {
+) : Serializable {
     init {
         tenantId.requireNotBlank("tenantId")
         currency.requireNotBlank("currency")
-        require(amount.signum() < 0) { "adjustment amount must be negative" }
+        amount.requireNegativeNumber("amount")
+    }
+
+    private companion object {
+        private const val serialVersionUID: Long = 1L
     }
 }
 

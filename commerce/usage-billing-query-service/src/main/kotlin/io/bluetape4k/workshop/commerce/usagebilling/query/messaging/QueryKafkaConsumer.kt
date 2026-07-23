@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.commerce.usagebilling.query.messaging
 
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryInboxService
 import io.bluetape4k.workshop.commerce.usagebilling.query.application.QueryQuarantineService
 import io.bluetape4k.workshop.commerce.usagebilling.query.domain.QueryInboxEvent
@@ -98,9 +100,17 @@ class KafkaQueryIntegrationListener(
     )
     fun consume(wirePayload: String) {
         try {
-            inbox.apply(decoder.decode(wirePayload))
+            val event = decoder.decode(wirePayload)
+            inbox.apply(event)
+            log.debug { "query.inbound.applied eventId=${event.eventId} eventType=${event.eventType}" }
         } catch (failure: PermanentQueryInboundException) {
             quarantine.record(failure.quarantine)
+            log.warn(
+                "query.inbound.quarantined eventId=${failure.quarantine.eventId} " +
+                    "reason=${failure.quarantine.reason}",
+            )
         }
     }
+
+    private companion object : KLogging()
 }

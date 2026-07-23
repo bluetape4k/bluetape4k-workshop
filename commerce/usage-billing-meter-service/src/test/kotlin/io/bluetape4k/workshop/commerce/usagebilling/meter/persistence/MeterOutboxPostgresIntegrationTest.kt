@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.usagebilling.meter.persistence
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.usagebilling.meter.application.MeterCommandService
@@ -65,8 +66,9 @@ class MeterOutboxPostgresIntegrationTest {
         val priceVersionCount = transaction { priceVersions.findAll().count() }
         val outboxCount = transaction { outbox.findAll().count() }
 
-        runCatching { service.activatePrice(activation("postgres-atomic-2", meterCode, effectiveAt)) }
-            .isFailure shouldBeEqualTo true
+        assertFailsWith<Exception> {
+            service.activatePrice(activation("postgres-atomic-2", meterCode, effectiveAt))
+        }
 
         transaction { priceVersions.findAll().count() } shouldBeEqualTo priceVersionCount
         transaction { outbox.findAll().count() } shouldBeEqualTo outboxCount

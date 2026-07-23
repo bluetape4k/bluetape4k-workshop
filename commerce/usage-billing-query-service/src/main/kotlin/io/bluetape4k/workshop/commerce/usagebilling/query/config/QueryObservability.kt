@@ -7,6 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.health.contributor.Health
 import org.springframework.boot.health.contributor.HealthIndicator
 import org.springframework.stereotype.Component
+import java.io.Serializable
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -15,7 +16,11 @@ import java.time.Instant
 data class QueryProperties(
     val maxQuarantineBacklog: Long = 0,
     val maxOldestQuarantineAge: Duration = DEFAULT_MAX_OLDEST_QUARANTINE_AGE,
-)
+) : Serializable {
+    private companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 private const val DEFAULT_MAX_OLDEST_QUARANTINE_AGE_MINUTES = 15L
 private val DEFAULT_MAX_OLDEST_QUARANTINE_AGE: Duration =
@@ -26,8 +31,8 @@ class QueryMetrics(
     private val registry: MeterRegistry,
 ) {
     fun inboxOutcome(outcome: String, eventType: String) {
-        require(outcome in OUTCOMES) { "unsupported_query_inbox_outcome:$outcome" }
-        require(eventType in EVENT_TYPES) { "unsupported_query_event_type:$eventType" }
+        check(outcome in OUTCOMES) { "unsupported_query_inbox_outcome:$outcome" }
+        check(eventType in EVENT_TYPES) { "unsupported_query_event_type:$eventType" }
         Counter.builder("usage_billing_inbox_outcome_total")
             .tag("service", "query")
             .tag("outcome", outcome)
@@ -37,7 +42,7 @@ class QueryMetrics(
     }
 
     fun redrive(outcome: String) {
-        require(outcome in REDRIVE_OUTCOMES) { "unsupported_query_redrive_outcome:$outcome" }
+        check(outcome in REDRIVE_OUTCOMES) { "unsupported_query_redrive_outcome:$outcome" }
         Counter.builder("usage_billing_redrive_total")
             .tag("service", "query")
             .tag("outcome", outcome)

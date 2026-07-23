@@ -4,6 +4,7 @@ import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
 import org.springframework.stereotype.Component
+import java.io.Serializable
 import java.time.Clock
 import java.time.Instant
 import java.util.UUID
@@ -22,13 +23,21 @@ data class MeterOutboxLease(
     val payload: String,
     val status: MeterOutboxStatus,
     val claimOwner: String? = null,
-)
+) : Serializable {
+    private companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 data class MeterOutboxPublishResult(
     val claimed: Int = 0,
     val published: Int = 0,
     val retryWait: Int = 0,
-)
+) : Serializable {
+    private companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 interface MeterOutboxJournal {
     fun claim(owner: String, now: Instant, limit: Int): List<MeterOutboxLease>

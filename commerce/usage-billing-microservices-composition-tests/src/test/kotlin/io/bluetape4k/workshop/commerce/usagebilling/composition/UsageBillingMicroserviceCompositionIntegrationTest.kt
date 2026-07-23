@@ -22,7 +22,7 @@ class UsageBillingMicroserviceCompositionIntegrationTest {
             fixture.unblockTopic(METER_TOPIC)
             fixture.publishMeterEvents()
             await().atMost(Duration.ofSeconds(15)).untilAsserted {
-                checkNotNull(fixture.priceEvidence(TENANT, METER_CODE))
+                (fixture.priceEvidence(TENANT, METER_CODE) != null) shouldBeEqualTo true
             }
         }
     }
@@ -34,7 +34,7 @@ class UsageBillingMicroserviceCompositionIntegrationTest {
             fixture.activatePrice(DUPLICATE_TENANT, METER_CODE, BigDecimal("0.10"))
             fixture.publishMeterEvents()
             await().atMost(TIMEOUT).untilAsserted {
-                checkNotNull(fixture.priceEvidence(DUPLICATE_TENANT, METER_CODE))
+                (fixture.priceEvidence(DUPLICATE_TENANT, METER_CODE) != null) shouldBeEqualTo true
                 fixture.billingHasPriceEvidence(DUPLICATE_TENANT, METER_CODE) shouldBeEqualTo true
             }
             fixture.acceptUsage(DUPLICATE_TENANT, METER_CODE, DUPLICATE_SOURCE_EVENT_ID)
@@ -56,7 +56,7 @@ class UsageBillingMicroserviceCompositionIntegrationTest {
             fixture.activatePrice(PARITY_TENANT, METER_CODE, BigDecimal("0.10"))
             fixture.publishMeterEvents()
             await().atMost(TIMEOUT).untilAsserted {
-                checkNotNull(fixture.priceEvidence(PARITY_TENANT, METER_CODE))
+                (fixture.priceEvidence(PARITY_TENANT, METER_CODE) != null) shouldBeEqualTo true
                 fixture.billingHasPriceEvidence(PARITY_TENANT, METER_CODE) shouldBeEqualTo true
             }
 
@@ -68,7 +68,9 @@ class UsageBillingMicroserviceCompositionIntegrationTest {
             await().atMost(TIMEOUT).untilAsserted { fixture.invoiceLineCount() shouldBeEqualTo 1L }
 
             fixture.publishInvoiceEvents()
-            await().atMost(TIMEOUT).untilAsserted { check(fixture.queryAppliedEventCount() >= 4) }
+            await().atMost(TIMEOUT).untilAsserted {
+                (fixture.queryAppliedEventCount() >= 4) shouldBeEqualTo true
+            }
         }
     }
 

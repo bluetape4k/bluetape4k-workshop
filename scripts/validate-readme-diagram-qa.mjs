@@ -180,7 +180,10 @@ function changedSvgTargets() {
   const files = diff.stdout
     .split("\n")
     .filter((name) => name.startsWith("docs/images/readme-diagrams/") && name.endsWith(".svg"))
-    .map((name) => path.join(root, name));
+    .map((name) => path.join(root, name))
+    // A removed SVG has no raster pair to inspect. README validation owns the
+    // broken-reference check; diagram QA must only validate renderable assets.
+    .filter((file) => fs.existsSync(file));
 
   return [...new Set(files)].sort();
 }

@@ -10,6 +10,7 @@ import org.springframework.kafka.annotation.EnableKafka
 import org.springframework.kafka.core.DefaultKafkaProducerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.kafka.core.ProducerFactory
+import java.io.Serializable
 
 @Configuration(proxyBeanMethods = false)
 @EnableKafka
@@ -45,4 +46,8 @@ class MeterKafkaMessagingConfiguration {
 data class MeterKafkaProperties(
     val bootstrapServers: String = "localhost:9092",
     val clientId: String = "usage-billing-meter-service",
-)
+) : Serializable {
+    private companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}

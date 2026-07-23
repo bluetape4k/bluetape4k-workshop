@@ -52,7 +52,9 @@ class CorrectionIntegrationTest {
                 lines.last().amount shouldBeEqualTo BigDecimal("-0.10")
             }
             fixture.publishInvoiceEvents()
-            await().atMost(TIMEOUT).untilAsserted { check(fixture.queryAppliedEventCount() >= 6) }
+            await().atMost(TIMEOUT).untilAsserted {
+                (fixture.queryAppliedEventCount() >= 6) shouldBeEqualTo true
+            }
         }
     }
 
