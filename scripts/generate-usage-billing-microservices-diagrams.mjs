@@ -256,7 +256,7 @@ function architectureDiagram() {
     .map((index) => {
       const startX = serviceXs[index] + 410;
       const targetX = serviceXs[index + 1];
-      const corridorX = serviceXs[index] + 500;
+      const corridorX = serviceXs[index] + 480;
       const targetY = 280 + index * 24;
       return connector({
         id: `consume-${services[index].id}-${services[index + 1].id}`,
@@ -369,7 +369,7 @@ function stateDiagram() {
   ${connector({ id: "outbox-retry-wait", d: "M620 450 V670", endX: 620, endY: 670, direction: "down", color: colors.amber, label: "retryable transport failure" })}
   ${connector({
     id: "outbox-reclaim",
-    d: "M510 730 H420 Q400 730 400 710 V490 Q400 470 420 470 H580 Q600 470 600 450",
+    d: "M510 730 H420 Q400 730 400 710 V530 Q400 510 420 510 H580 Q600 510 600 490 V450",
     endX: 600,
     endY: 450,
     direction: "up",
@@ -378,7 +378,7 @@ function stateDiagram() {
   })}
   ${connector({
     id: "outbox-quarantine",
-    d: "M780 420 H810 Q830 420 830 440 V710 Q830 730 850 730 H870",
+    d: "M780 420 H800 Q815 420 815 435 V715 Q815 730 830 730 H870",
     endX: 870,
     endY: 730,
     direction: "right",

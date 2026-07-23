@@ -150,15 +150,15 @@
     <polygon data-connector-head="publish-invoice" data-arrow-direction="down" points="1970,665 1963,651 1977,651" fill="#B57E2A" stroke="#B57E2A" stroke-dasharray="none" style="stroke-dasharray:none"/>
   </g>
   <g class="edge" data-edge="consume-meter-usage" data-label="Usage consumes meter.events.v1">
-    <path data-connector="consume-meter-usage" class="edgePath" style="marker-end:none" d="M530 721 H600 Q620 721 620 701 V300 Q620 280 640 280 H665" stroke="#4F86C6"/>
+    <path data-connector="consume-meter-usage" class="edgePath" style="marker-end:none" d="M530 721 H580 Q600 721 600 701 V300 Q600 280 620 280 H665" stroke="#4F86C6"/>
     <polygon data-connector-head="consume-meter-usage" data-arrow-direction="right" points="665,280 651,273 651,287" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/>
   </g>
 <g class="edge" data-edge="consume-usage-billing" data-label="Billing consumes usage.events.v1">
-    <path data-connector="consume-usage-billing" class="edgePath" style="marker-end:none" d="M1075 721 H1145 Q1165 721 1165 701 V324 Q1165 304 1185 304 H1210" stroke="#4F86C6"/>
+    <path data-connector="consume-usage-billing" class="edgePath" style="marker-end:none" d="M1075 721 H1125 Q1145 721 1145 701 V324 Q1145 304 1165 304 H1210" stroke="#4F86C6"/>
     <polygon data-connector-head="consume-usage-billing" data-arrow-direction="right" points="1210,304 1196,297 1196,311" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/>
   </g>
 <g class="edge" data-edge="consume-billing-invoice" data-label="Invoice consumes billing.events.v1">
-    <path data-connector="consume-billing-invoice" class="edgePath" style="marker-end:none" d="M1620 721 H1690 Q1710 721 1710 701 V348 Q1710 328 1730 328 H1755" stroke="#4F86C6"/>
+    <path data-connector="consume-billing-invoice" class="edgePath" style="marker-end:none" d="M1620 721 H1670 Q1690 721 1690 701 V348 Q1690 328 1710 328 H1755" stroke="#4F86C6"/>
     <polygon data-connector-head="consume-billing-invoice" data-arrow-direction="right" points="1755,328 1741,321 1741,335" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/>
   </g>
   <rect x="82" y="930" width="2236" height="292" rx="28" fill="#F1EDF7" stroke="#8065A8" stroke-width="2.5"/>
