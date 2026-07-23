@@ -65,24 +65,23 @@ internal class EventStoreRepository(
 
         val heads = ordered.associate { append -> append.stream to lockHead(append.stream) }
         val conflict = ordered.firstOrNull { append -> heads.getValue(append.stream) != append.expectedVersion }
-        val duplicateEventId = eventIds.firstOrNull(::eventAlreadyRecorded)
-        return when {
-            conflict != null ->
-                AppendResult.Conflict(
-                    stream = conflict.stream,
-                    expectedVersion = conflict.expectedVersion,
-                    actualVersion = heads.getValue(conflict.stream),
-                )
-            duplicateEventId != null -> AppendResult.DuplicateEvent(duplicateEventId)
-            else -> appendCommitted(ordered, eventIds.size)
+        if (conflict != null) {
+            return AppendResult.Conflict(
+                stream = conflict.stream,
+                expectedVersion = conflict.expectedVersion,
+                actualVersion = heads.getValue(conflict.stream),
+            )
         }
+        return appendCommitted(ordered, eventIds)
     }
 
     private fun appendCommitted(
         ordered: List<ExpectedAppend>,
-        eventCount: Int,
-    ): AppendResult.Appended {
-        val firstPosition = lockFenceAndReserve(eventCount)
+        eventIds: List<UUID>,
+    ): AppendResult {
+        val firstPosition = lockFence()
+        eventIds.firstOrNull(::eventAlreadyRecorded)?.let { return AppendResult.DuplicateEvent(it) }
+        reserveGlobalPositions(firstPosition, eventIds.size)
         var globalPosition = firstPosition
         val now = Instant.now()
         ordered.forEach { append ->
@@ -152,7 +151,7 @@ internal class EventStoreRepository(
     private fun eventAlreadyRecorded(eventId: UUID): Boolean =
         EventLog.selectAll().where { EventLog.id eq eventId }.limit(1).any()
 
-    private fun lockFenceAndReserve(eventCount: Int): Long {
+    private fun lockFence(): Long {
         AppendFences.insertIgnore { row ->
             row[AppendFences.id] = EVENT_STORE_FENCE_ID
             row[AppendFences.nextGlobalPosition] = 1
@@ -163,11 +162,16 @@ internal class EventStoreRepository(
                 .where { AppendFences.id eq EVENT_STORE_FENCE_ID }
                 .forUpdate()
                 .single()
-        val firstPosition = fence[AppendFences.nextGlobalPosition]
+        return fence[AppendFences.nextGlobalPosition]
+    }
+
+    private fun reserveGlobalPositions(
+        firstPosition: Long,
+        eventCount: Int,
+    ) {
         AppendFences.update(where = { AppendFences.id eq EVENT_STORE_FENCE_ID }) { row ->
             row[AppendFences.nextGlobalPosition] = firstPosition + eventCount
         }
-        return firstPosition
     }
 
     private fun EventToAppend.toEnvelope(

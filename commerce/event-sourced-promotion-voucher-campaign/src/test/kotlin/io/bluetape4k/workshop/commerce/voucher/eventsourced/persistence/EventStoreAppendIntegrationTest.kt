@@ -202,6 +202,36 @@ internal class EventStoreAppendIntegrationTest {
     }
 
     @Test
+    fun `simultaneous duplicate event identifiers return a domain result without a SQL failure`() {
+        val eventId = "0198a1b2-c3d4-7e5f-8123-456789abc031"
+        val barrier = CyclicBarrier(2)
+        val results = ConcurrentLinkedQueue<AppendResult>()
+
+        MultithreadingTester()
+            .workers(2)
+            .rounds(1)
+            .add {
+                barrier.await(5, TimeUnit.SECONDS)
+                results.add(
+                    transaction(database) {
+                        store.appendAll(
+                            listOf(
+                                ExpectedAppend(
+                                    StreamKey(TenantId("tenant-a"), "campaign", UUID.randomUUID()),
+                                    expectedVersion = 0,
+                                    events = listOf(event(eventId)),
+                                ),
+                            ),
+                        )
+                    },
+                )
+            }.run()
+
+        results.count { it is AppendResult.Appended } shouldBeEqualTo 1
+        results.count { it is AppendResult.DuplicateEvent } shouldBeEqualTo 1
+    }
+
+    @Test
     fun `multi stream append commits every stream in one contiguous range`() {
         val campaign = StreamKey(TenantId("tenant-a"), "campaign", UUID.randomUUID())
         val voucher = StreamKey(TenantId("tenant-a"), "voucher", UUID.randomUUID())
@@ -233,16 +263,17 @@ internal class EventStoreAppendIntegrationTest {
             .workers(streams.size)
             .rounds(1)
             .add {
-                val stream = streams.poll() ?: return@add
-                results.add(
-                    transaction(database) {
-                        store.appendAll(
-                            listOf(
-                                ExpectedAppend(stream, 0, listOf(event(nextV7EventId()))),
-                            ),
-                        )
-                    },
-                )
+                streams.poll()?.let { stream ->
+                    results.add(
+                        transaction(database) {
+                            store.appendAll(
+                                listOf(
+                                    ExpectedAppend(stream, 0, listOf(event(nextV7EventId()))),
+                                ),
+                            )
+                        },
+                    )
+                }
             }.run()
 
         results.count { it is AppendResult.Appended } shouldBeEqualTo 32
