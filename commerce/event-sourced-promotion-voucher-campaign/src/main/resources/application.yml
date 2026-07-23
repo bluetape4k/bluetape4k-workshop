@@ -14,3 +14,7 @@ management:
       exposure:
         include: health,info,prometheus
 
+voucher:
+  projection:
+    worker:
+      enabled: true

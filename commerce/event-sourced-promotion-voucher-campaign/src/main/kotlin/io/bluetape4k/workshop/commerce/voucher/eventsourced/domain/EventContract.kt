@@ -215,8 +215,7 @@ internal class EventSchemaRegistry(
 
     private fun decodeWithSchema(schema: EventSchema<*>, event: SerializedEvent): Any {
         val payload = upcast(event, schema.currentVersion)
-        @Suppress("UNCHECKED_CAST")
-        return (schema.decode as (EventPayload) -> Any).invoke(payload)
+        return schema.decode(payload)
     }
 
     private fun upcast(event: SerializedEvent, targetVersion: Int): EventPayload {

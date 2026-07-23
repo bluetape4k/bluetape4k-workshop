@@ -90,6 +90,7 @@ internal data class CampaignAggregate(
     }
 }
 
+@ConsistentCopyVisibility
 internal data class EventDecision<E : Any> private constructor(val events: List<E>) {
     companion object {
         fun <E : Any> of(events: List<E>): EventDecision<E> = EventDecision(events.toList())

@@ -115,6 +115,67 @@ internal object ProjectionCheckpoints : UUIDTable("voucher_projection_checkpoint
     }
 }
 
+internal object ProjectionLeases : UUIDTable("voucher_projection_lease", "lease_id") {
+    val projection = varchar("projection", 64)
+    val generation = long("generation")
+    val ownerDigest = varchar("owner_digest", DIGEST_LENGTH)
+    val leaseDeadline = timestamp("lease_deadline")
+    val fencingToken = long("fencing_token")
+    val updatedAt = timestamp("updated_at")
+
+    init {
+        uniqueIndex(projection, generation)
+    }
+}
+
+internal object ProjectionProcessedEvents : UUIDTable("voucher_projection_processed_event", "processed_id") {
+    val projection = varchar("projection", 64)
+    val generation = long("generation")
+    val eventId = javaUUID("event_id")
+    val globalPosition = long("global_position")
+    val processedAt = timestamp("processed_at")
+
+    init {
+        uniqueIndex(projection, generation, eventId)
+        index(false, projection, generation, globalPosition)
+    }
+}
+
+internal object ProjectionReadModels : UUIDTable("voucher_projection_read_model", "read_model_id") {
+    val projection = varchar("projection", 64)
+    val generation = long("generation")
+    val tenantId = varchar("tenant_id", 64)
+    val streamType = varchar("stream_type", 64)
+    val streamId = javaUUID("stream_id")
+    val streamVersion = long("stream_version")
+    val globalPosition = long("global_position")
+    val eventType = varchar("event_type", 128)
+    val payloadDigest = varchar("payload_digest", DIGEST_LENGTH)
+    val fencingToken = long("fencing_token")
+    val updatedAt = timestamp("updated_at")
+
+    init {
+        uniqueIndex(projection, generation, tenantId, streamType, streamId)
+        index(false, projection, generation, globalPosition)
+    }
+}
+
+internal object ProjectionPoisonEvents : UUIDTable("voucher_projection_poison_event", "poison_id") {
+    val projection = varchar("projection", 64)
+    val generation = long("generation")
+    val eventId = javaUUID("event_id")
+    val globalPosition = long("global_position")
+    val eventType = varchar("event_type", 128)
+    val reasonClass = varchar("reason_class", 64)
+    val attempts = integer("attempts")
+    val occurredAt = timestamp("occurred_at")
+    val updatedAt = timestamp("updated_at")
+
+    init {
+        uniqueIndex(projection, generation, eventId)
+    }
+}
+
 internal class EventLogEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<EventLogEntity>(EventLog)
 }
