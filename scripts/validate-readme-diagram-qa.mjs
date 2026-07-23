@@ -417,7 +417,7 @@ function auditConnectorGeometry(file, svg) {
       if (dir === "diagonal") diagonalSegments += 1;
     }
     const turns = directions.filter((dir, i) => i > 0 && dir !== "zero" && directions[i - 1] !== "zero" && dir !== directions[i - 1]).length;
-    const hasQ = /\bQ\b/.test(d);
+    const hasQ = points.some((point) => point.command === "Q");
     if (turns > 0) {
       bentConnectors += 1;
       if (hasQ) roundedBentConnectors += 1;
