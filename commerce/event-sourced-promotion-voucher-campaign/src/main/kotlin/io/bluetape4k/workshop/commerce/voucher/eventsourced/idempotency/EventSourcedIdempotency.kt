@@ -22,6 +22,9 @@ internal value class ReceiptDigest private constructor(
     companion object {
         private const val serialVersionUID: Long = 1L
 
+        /** Reconstitutes a canonical digest that was previously validated before persistence. */
+        fun of(value: String): ReceiptDigest = ReceiptDigest(value)
+
         fun sha256(value: String): ReceiptDigest =
             value
                 .requireNotBlank("digestMaterial")

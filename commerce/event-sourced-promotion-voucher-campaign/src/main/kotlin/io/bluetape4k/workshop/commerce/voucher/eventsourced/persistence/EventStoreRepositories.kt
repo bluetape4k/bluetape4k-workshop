@@ -176,6 +176,40 @@ internal object ProjectionPoisonEvents : UUIDTable("voucher_projection_poison_ev
     }
 }
 
+internal object ProjectionGenerations : UUIDTable("voucher_projection_generation", "generation_id") {
+    val projection = varchar("projection", 64)
+    val generation = long("generation")
+    val state =
+        enumerationByName<io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionGenerationState>(
+            "state",
+            16,
+        )
+    val targetPosition = long("target_position")
+    val currentPosition = long("current_position")
+    val fencingToken = long("fencing_token")
+    val cancellationRevision = long("cancellation_revision")
+    val canonicalDigest = varchar("canonical_digest", DIGEST_LENGTH).nullable()
+    val retryableFailure = bool("retryable_failure")
+    val createdAt = timestamp("created_at")
+    val updatedAt = timestamp("updated_at")
+
+    init {
+        uniqueIndex(projection, generation)
+        index(false, projection, state)
+    }
+}
+
+internal object ActiveProjectionGenerations : UUIDTable("voucher_active_projection_generation", "active_id") {
+    val projection = varchar("projection", 64)
+    val generation = long("generation")
+    val revision = long("revision")
+    val updatedAt = timestamp("updated_at")
+
+    init {
+        uniqueIndex(projection)
+    }
+}
+
 internal class EventLogEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<EventLogEntity>(EventLog)
 }

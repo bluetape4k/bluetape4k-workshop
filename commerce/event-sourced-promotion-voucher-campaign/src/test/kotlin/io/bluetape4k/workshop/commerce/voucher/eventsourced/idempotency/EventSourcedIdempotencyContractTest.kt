@@ -19,6 +19,13 @@ internal class EventSourcedIdempotencyContractTest {
     }
 
     @Test
+    fun `receipt digest restores the persisted canonical representation`() {
+        val digest = ReceiptDigest.sha256("projection-generation")
+
+        ReceiptDigest.of(digest.value) shouldBeEqualTo digest
+    }
+
+    @Test
     fun `terminal replay fails closed when its generation key is unavailable`() {
         // Given
         val descriptor =
