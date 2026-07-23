@@ -258,11 +258,11 @@ class UsageBillingMicroserviceFixture(
         }
     }
 
-    fun meterOutboxState(eventId: UUID): MeterOutboxState? =
+    fun meterOutboxState(eventId: UUID): MeterOutboxState =
         meterTransaction {
             meterContext.getBean(MeterOutboxRepository::class.java).findAll()
-                .singleOrNull { it.eventId == eventId }
-                ?.let { MeterOutboxState(MeterOutboxStatus.valueOf(it.status), it.attempt) }
+                .single { it.eventId == eventId }
+                .let { MeterOutboxState(MeterOutboxStatus.valueOf(it.status), it.attempt) }
         }
 
     fun priceEvidence(tenantId: String, meterCode: String): PriceEvidence? =

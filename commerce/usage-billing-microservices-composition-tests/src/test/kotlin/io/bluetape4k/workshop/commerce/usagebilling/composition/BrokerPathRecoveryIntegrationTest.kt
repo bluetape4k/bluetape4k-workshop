@@ -24,13 +24,13 @@ class BrokerPathRecoveryIntegrationTest {
                 fixture.restoreBrokerPath()
             }
             fixture.outboxBacklog("meter") shouldBeEqualTo 1L
-            fixture.meterOutboxState(activation.result.eventId) shouldBeEqualTo
+            fixture.meterOutboxState(activation.eventId) shouldBeEqualTo
                 MeterOutboxState(MeterOutboxStatus.RETRY_WAIT, attempt = 1)
 
             await().pollInterval(Duration.ofSeconds(1)).atMost(TIMEOUT).untilAsserted {
                 fixture.publishMeterEvents().published shouldBeEqualTo 1
             }
-            fixture.meterOutboxState(activation.result.eventId) shouldBeEqualTo
+            fixture.meterOutboxState(activation.eventId) shouldBeEqualTo
                 MeterOutboxState(MeterOutboxStatus.PUBLISHED, attempt = 1)
             await().atMost(TIMEOUT).untilAsserted {
                 (fixture.priceEvidence(TENANT, METER_CODE) != null) shouldBeEqualTo true
