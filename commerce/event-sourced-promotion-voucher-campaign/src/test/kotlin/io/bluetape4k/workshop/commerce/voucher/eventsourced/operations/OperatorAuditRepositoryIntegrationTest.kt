@@ -9,11 +9,13 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.Operator
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionGenerations
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionGenerationState
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRebuildRepository
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.support.EventSourcedPostgresTestDatabase
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -26,6 +28,7 @@ import java.time.Instant
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class OperatorAuditRepositoryIntegrationTest {
     private val postgres = PostgreSQLServer.Launcher.postgres
+    private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
     private lateinit var database: Database
     private val rebuilds = ProjectionRebuildRepository()
     private val audits = OperatorAuditRepository()
@@ -33,13 +36,8 @@ internal class OperatorAuditRepositoryIntegrationTest {
 
     @BeforeAll
     fun connectPostgres() {
-        database =
-            Database.connect(
-                url = postgres.jdbcUrl,
-                driver = "org.postgresql.Driver",
-                user = requireNotNull(postgres.username),
-                password = requireNotNull(postgres.password),
-            )
+        postgresDatabase = EventSourcedPostgresTestDatabase(postgres, "issue-538-operator-audit")
+        database = postgresDatabase.database
         operator =
             EventSourcedRebuildOperator(
                 EventSourcedPermitTransactionRunner(
@@ -51,6 +49,9 @@ internal class OperatorAuditRepositoryIntegrationTest {
                 audits,
             )
     }
+
+    @AfterAll
+    fun closeDataSource() = postgresDatabase.close()
 
     @BeforeEach
     fun setUp() {

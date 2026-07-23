@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventEnvelope
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload
@@ -20,10 +21,12 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.Projecti
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionReadModels
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamHeads
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamKey
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.support.EventSourcedPostgresTestDatabase
 import org.awaitility.Awaitility.await
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -40,20 +43,19 @@ import java.util.UUID
 internal class ProjectionWorkerIntegrationTest {
     private val postgres = PostgreSQLServer.Launcher.postgres
     private val leases = ProjectionLeaseRepository()
+    private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
     private lateinit var database: Database
     private lateinit var events: EventStoreRepository
 
     @BeforeAll
     fun connectPostgres() {
-        database =
-            Database.connect(
-                url = postgres.jdbcUrl,
-                driver = "org.postgresql.Driver",
-                user = requireNotNull(postgres.username),
-                password = requireNotNull(postgres.password),
-            )
+        postgresDatabase = EventSourcedPostgresTestDatabase(postgres, "issue-538-projection-worker")
+        database = postgresDatabase.database
         events = EventStoreRepository(ExposedEventStoreTransactionRunner(database))
     }
+
+    @AfterAll
+    fun closeDataSource() = postgresDatabase.close()
 
     @BeforeEach
     fun createSchema() = transaction(database) { SchemaUtils.create(*TABLES) }
@@ -126,7 +128,7 @@ internal class ProjectionWorkerIntegrationTest {
     }
 
     private fun acquireLease(): ProjectionLease =
-        requireNotNull(transaction(database) { leases.acquire(PROJECTION, GENERATION, "owner-a", NOW) })
+        transaction(database) { leases.acquire(PROJECTION, GENERATION, "owner-a", NOW) }.shouldNotBeNull()
 
     private object RejectingHandler : ProjectionEventHandler {
         override fun verify(event: EventEnvelope) {

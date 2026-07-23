@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 
+import io.bluetape4k.support.requireLe
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventEnvelope
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.StreamReference
@@ -29,8 +32,8 @@ internal data class CommittedProjectionBatch(
     val committedHead: Long,
 ) {
     init {
-        require(events.size <= MAX_PROJECTION_BATCH_EVENTS) { "projection batch exceeds event cap" }
-        require(committedHead >= 0) { "committed head must be non-negative" }
+        events.size.requireLe(MAX_PROJECTION_BATCH_EVENTS, "events.size")
+        committedHead.requireZeroOrPositiveNumber("committedHead")
     }
 }
 
@@ -42,14 +45,14 @@ internal interface ProjectionEventReader {
 internal class ExposedProjectionEventReader : ProjectionEventReader {
     override fun loadAfter(globalPosition: Long): CommittedProjectionBatch {
         TransactionManager.current()
-        require(globalPosition >= 0) { "global position must be non-negative" }
+        globalPosition.requireZeroOrPositiveNumber("globalPosition")
         val events =
             EventLog
                 .selectAll()
                 .where { EventLog.globalPosition greater globalPosition }
                 .orderBy(EventLog.globalPosition to SortOrder.ASC)
                 .limit(MAX_PROJECTION_BATCH_EVENTS)
-                .map(::toEnvelope)
+                .map(::toProjectionEnvelope)
                 .takeWithinByteCap()
         val committedHead =
             EventLog
@@ -75,7 +78,7 @@ internal class ProjectionPoisonException(
     val reasonClass: String,
 ) : IllegalArgumentException("projection event cannot be handled: $reasonClass") {
     init {
-        require(reasonClass.isNotBlank()) { "reason class must not be blank" }
+        reasonClass.requireNotBlank("reasonClass")
     }
 }
 
@@ -276,7 +279,7 @@ private fun List<EventEnvelope>.takeWithinByteCap(): List<EventEnvelope> {
     }
 }
 
-private fun toEnvelope(row: org.jetbrains.exposed.v1.core.ResultRow): EventEnvelope =
+internal fun toProjectionEnvelope(row: org.jetbrains.exposed.v1.core.ResultRow): EventEnvelope =
     EventEnvelope(
         eventId = row[EventLog.id].value,
         tenantId = TenantId(row[EventLog.tenantId]),

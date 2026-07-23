@@ -2,13 +2,16 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.snapshot
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventSnapshots
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamKey
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.support.EventSourcedPostgresTestDatabase
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -23,18 +26,17 @@ import java.util.UUID
 internal class EventSnapshotRepositoryIntegrationTest {
     private val postgres = PostgreSQLServer.Launcher.postgres
     private val repository = EventSnapshotRepository()
+    private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
     private lateinit var database: Database
 
     @BeforeAll
     fun connectPostgres() {
-        database =
-            Database.connect(
-                url = postgres.jdbcUrl,
-                driver = "org.postgresql.Driver",
-                user = requireNotNull(postgres.username),
-                password = requireNotNull(postgres.password),
-            )
+        postgresDatabase = EventSourcedPostgresTestDatabase(postgres, "issue-538-event-snapshot")
+        database = postgresDatabase.database
     }
+
+    @AfterAll
+    fun closeDataSource() = postgresDatabase.close()
 
     @BeforeEach
     fun createSchema() = transaction(database) { SchemaUtils.create(EventSnapshots) }
@@ -50,7 +52,7 @@ internal class EventSnapshotRepositoryIntegrationTest {
         transaction(database) { repository.save(snapshot(stream, 250, "state-250")) }
         val latest = transaction(database) { repository.latest(stream) }
 
-        requireNotNull(latest).metadata.streamVersion shouldBeEqualTo 250L
+        latest.shouldNotBeNull().metadata.streamVersion shouldBeEqualTo 250L
         latest.canonicalState shouldBeEqualTo "state-250"
     }
 

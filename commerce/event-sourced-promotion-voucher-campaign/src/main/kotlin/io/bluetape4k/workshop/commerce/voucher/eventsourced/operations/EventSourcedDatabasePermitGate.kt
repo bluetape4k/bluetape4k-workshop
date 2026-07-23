@@ -2,6 +2,9 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireGe
+import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requirePositiveNumber
 import java.time.Duration
 import java.util.concurrent.Semaphore
@@ -55,18 +58,19 @@ internal data class EventSourcedDatabasePermitBudget private constructor(
             maintenance: Int = 1,
             readiness: Int = 1,
         ): EventSourcedDatabasePermitBudget {
-            listOf(foreground, projection, rebuild, maintenance, readiness).forEach {
-                it.requirePositiveNumber("permitCapacity")
-            }
-            require(foreground + projection + rebuild + maintenance + readiness == HIKARI_CONNECTION_BUDGET) {
-                "database permit capacities must reserve exactly $HIKARI_CONNECTION_BUDGET connections"
-            }
+            val validForeground = foreground.requirePositiveNumber("foreground")
+            val validProjection = projection.requirePositiveNumber("projection")
+            val validRebuild = rebuild.requirePositiveNumber("rebuild")
+            val validMaintenance = maintenance.requirePositiveNumber("maintenance")
+            val validReadiness = readiness.requirePositiveNumber("readiness")
+            (validForeground + validProjection + validRebuild + validMaintenance + validReadiness)
+                .requireEquals(HIKARI_CONNECTION_BUDGET, "permitCapacity.sum")
             return EventSourcedDatabasePermitBudget(
-                foreground,
-                projection,
-                rebuild,
-                maintenance,
-                readiness,
+                validForeground,
+                validProjection,
+                validRebuild,
+                validMaintenance,
+                validReadiness,
             )
         }
     }
@@ -85,9 +89,10 @@ internal data class EventSourcedDatabasePermitSnapshot(
  */
 internal class EventSourcedDatabasePermitGate(
     private val budget: EventSourcedDatabasePermitBudget = EventSourcedDatabasePermitBudget(),
-    private val acquireTimeout: Duration = DEFAULT_ACQUIRE_TIMEOUT,
+    acquireTimeout: Duration = DEFAULT_ACQUIRE_TIMEOUT,
     private val metrics: EventSourcedDatabasePermitMetrics = EventSourcedDatabasePermitMetrics.NONE,
 ) {
+    private val acquireTimeout = acquireTimeout.requireGt(Duration.ZERO, "acquireTimeout")
     private val capacities =
         mapOf(
             EventSourcedDatabaseLane.FOREGROUND to budget.foreground,
@@ -107,10 +112,6 @@ internal class EventSourcedDatabasePermitGate(
     private var accepting = true
 
     private var activePermits = 0
-
-    init {
-        require(!acquireTimeout.isNegative && !acquireTimeout.isZero) { "acquireTimeout must be positive" }
-    }
 
     fun <T> withPermit(
         lane: EventSourcedDatabaseLane,
@@ -132,8 +133,8 @@ internal class EventSourcedDatabasePermitGate(
     }
 
     fun awaitDrained(timeout: Duration): Boolean {
-        require(!timeout.isNegative) { "timeout must not be negative" }
-        var remaining = timeout.toNanos()
+        val validTimeout = timeout.requireGe(Duration.ZERO, "timeout")
+        var remaining = validTimeout.toNanos()
         lifecycleLock.withLock {
             while (activePermits > 0 && remaining > 0) {
                 remaining = drained.awaitNanos(remaining)

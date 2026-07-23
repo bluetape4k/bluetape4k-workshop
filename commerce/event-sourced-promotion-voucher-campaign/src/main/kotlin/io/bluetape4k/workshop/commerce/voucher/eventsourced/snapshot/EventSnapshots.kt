@@ -4,6 +4,10 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventSna
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamKey
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireLe
+import io.bluetape4k.support.requirePositiveNumber
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
@@ -27,9 +31,9 @@ internal class SnapshotMetadata(
     val keyVersion: Int,
 ) {
     init {
-        require(streamVersion >= 0) { "streamVersion must not be negative" }
-        require(schemaVersion > 0) { "schemaVersion must be positive" }
-        require(keyVersion > 0) { "keyVersion must be positive" }
+        streamVersion.requireZeroOrPositiveNumber("streamVersion")
+        schemaVersion.requirePositiveNumber("schemaVersion")
+        keyVersion.requirePositiveNumber("keyVersion")
     }
 }
 
@@ -41,8 +45,8 @@ internal class EventSnapshot(
     val createdAt: Instant = Instant.now(),
 ) {
     init {
-        require(canonicalState.toByteArray(UTF_8).size <= MAX_SNAPSHOT_BYTES) { "snapshot exceeds the hard cap" }
-        require(canonicalDigest == snapshotDigest(canonicalState)) { "snapshot digest does not match canonical state" }
+        canonicalState.toByteArray(UTF_8).size.requireLe(MAX_SNAPSHOT_BYTES, "snapshot.bytes")
+        canonicalDigest.requireEquals(snapshotDigest(canonicalState), "canonicalDigest")
     }
 }
 

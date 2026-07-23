@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionGenerationState
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionKey
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRebuildRepository
@@ -28,13 +29,13 @@ internal data class RebuildCancellationCommand private constructor(
             streamPosition: Long,
             occurredAt: Instant,
         ): RebuildCancellationCommand {
-            require(checkpointPosition >= 0) { "checkpointPosition must be non-negative" }
-            require(streamPosition >= 0) { "streamPosition must be non-negative" }
+            val validCheckpoint = checkpointPosition.requireZeroOrPositiveNumber("checkpointPosition")
+            val validStreamPosition = streamPosition.requireZeroOrPositiveNumber("streamPosition")
             return RebuildCancellationCommand(
                 identity = identity,
                 target = target,
-                checkpointPosition = checkpointPosition,
-                streamPosition = streamPosition,
+                checkpointPosition = validCheckpoint,
+                streamPosition = validStreamPosition,
                 occurredAt = occurredAt,
             )
         }
@@ -58,7 +59,7 @@ internal class EventSourcedRebuildOperator(
 ) {
     fun cancel(command: RebuildCancellationCommand): RebuildCancellationOutcome =
         transactions.inTransaction {
-            val before = requireNotNull(findGeneration(command.key)) { "rebuild generation does not exist" }
+            val before = checkNotNull(findGeneration(command.key)) { "rebuild generation does not exist" }
             val after = cancellationResult(command, before.state, before.fencingToken)
             val outcome =
                 if (after.fencingToken != before.fencingToken) OperatorAuditOutcome.APPLIED
@@ -88,9 +89,9 @@ internal class EventSourcedRebuildOperator(
         observedFencingToken: Long,
     ) =
         if (command.target.expectedFencingToken != observedFencingToken || beforeState !in CANCELLABLE_STATES) {
-            requireNotNull(findGeneration(command.key)) { "rebuild generation disappeared" }
+            checkNotNull(findGeneration(command.key)) { "rebuild generation disappeared" }
         } else {
-            requireNotNull(rebuilds.requestCancellation(command.key, command.occurredAt)) {
+            checkNotNull(rebuilds.requestCancellation(command.key, command.occurredAt)) {
                 "rebuild generation disappeared during cancellation"
             }
         }

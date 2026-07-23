@@ -1,6 +1,11 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 
+import io.bluetape4k.support.requireGe
+import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
+import io.bluetape4k.support.requireNull
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptDigest
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ActiveProjectionGenerations
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionGenerations
@@ -72,9 +77,9 @@ internal data class ProjectionGenerationProgress private constructor(
             fencingToken: Long,
             cancellationRevision: Long,
         ): ProjectionGenerationProgress {
-            require(targetPosition >= currentPosition) { "target position must not precede current position" }
-            require(fencingToken > 0) { "fencing token must be positive" }
-            require(cancellationRevision >= 0) { "cancellation revision must be non-negative" }
+            targetPosition.requireGe(currentPosition, "targetPosition")
+            fencingToken.requirePositiveNumber("fencingToken")
+            cancellationRevision.requireZeroOrPositiveNumber("cancellationRevision")
             return ProjectionGenerationProgress(targetPosition, currentPosition, fencingToken, cancellationRevision)
         }
     }
@@ -96,8 +101,8 @@ internal data class ActiveProjectionGeneration private constructor(
         ): ActiveProjectionGeneration {
             return ActiveProjectionGeneration(
                 projection = projection.requireNotBlank("projection"),
-                generation = generation.also { require(it > 0) { "generation must be positive" } },
-                revision = revision.also { require(it > 0) { "revision must be positive" } },
+                generation = generation.requirePositiveNumber("generation"),
+                revision = revision.requirePositiveNumber("revision"),
             )
         }
     }
@@ -119,10 +124,10 @@ internal data class ProjectionRebuildCursor private constructor(
             expectedPosition: Long,
             position: Long,
         ): ProjectionRebuildCursor {
-            require(fencingToken > 0) { "fencing token must be positive" }
-            require(cancellationRevision >= 0) { "cancellation revision must be non-negative" }
-            require(expectedPosition >= 0) { "expected position must be non-negative" }
-            require(position > expectedPosition) { "position must advance the generation cursor" }
+            fencingToken.requirePositiveNumber("fencingToken")
+            cancellationRevision.requireZeroOrPositiveNumber("cancellationRevision")
+            expectedPosition.requireZeroOrPositiveNumber("expectedPosition")
+            position.requireGt(expectedPosition, "position")
             return ProjectionRebuildCursor(fencingToken, cancellationRevision, expectedPosition, position)
         }
     }
@@ -158,7 +163,7 @@ internal class ProjectionRebuildRepository {
         if (inserted) {
             insertInitialProjectionGeneration(projection, now)
         }
-        return requireNotNull(findActive(projection)) { "active projection pointer disappeared" }
+        return checkNotNull(findActive(projection)) { "active projection pointer disappeared" }
     }
 
     fun start(
@@ -167,9 +172,9 @@ internal class ProjectionRebuildRepository {
         now: Instant,
     ): ProjectionGeneration {
         TransactionManager.current()
-        require(targetPosition >= 0) { "target position must be non-negative" }
+        targetPosition.requireZeroOrPositiveNumber("targetPosition")
         requireLockedActive(projection)
-        require(findBuildingGeneration(projection) == null) { "projection already has a building generation" }
+        findBuildingGeneration(projection).requireNull("buildingGeneration")
         val generation = latestProjectionGeneration(projection) + 1
         ProjectionGenerations.insert { row ->
             row[ProjectionGenerations.projection] = projection
@@ -185,7 +190,7 @@ internal class ProjectionRebuildRepository {
             row[ProjectionGenerations.updatedAt] = now
         }
         val key = ProjectionKey(projection, generation)
-        return requireNotNull(findGeneration(key)) { "building generation was not persisted" }
+        return checkNotNull(findGeneration(key)) { "building generation was not persisted" }
     }
 
     fun advance(
@@ -216,7 +221,7 @@ internal class ProjectionRebuildRepository {
         now: Instant,
     ): Boolean {
         TransactionManager.current()
-        require(cancellationRevision >= 0) { "cancellation revision must be non-negative" }
+        cancellationRevision.requireZeroOrPositiveNumber("cancellationRevision")
         return ProjectionGenerations.update(
             where = {
                 generationPredicate(key) and
@@ -241,7 +246,7 @@ internal class ProjectionRebuildRepository {
     ): ProjectionActivationResult {
         TransactionManager.current()
         val pointer = requireLockedActive(key.projection)
-        val candidate = requireNotNull(lockProjectionGeneration(key)) { "candidate generation disappeared" }
+        val candidate = checkNotNull(lockProjectionGeneration(key)) { "candidate generation disappeared" }
         return when {
             pointer.revision != expectedPointerRevision -> ProjectionActivationResult.StalePointer
             candidate.state != ProjectionGenerationState.VALIDATING ||
@@ -277,7 +282,7 @@ internal class ProjectionRebuildRepository {
                     row[ProjectionGenerations.cancellationRevision] = current.cancellationRevision + 1
                     row[ProjectionGenerations.updatedAt] = now
                 }
-                requireNotNull(findGeneration(key)) { "cancelling generation disappeared" }
+                checkNotNull(findGeneration(key)) { "cancelling generation disappeared" }
             }
         }
     }
@@ -334,7 +339,7 @@ internal class ProjectionRebuildRepository {
                     row[ProjectionGenerations.fencingToken] = current.fencingToken + 1
                     row[ProjectionGenerations.updatedAt] = now
                 }
-                requireNotNull(findGeneration(key)) { "resumed generation disappeared" }
+                checkNotNull(findGeneration(key)) { "resumed generation disappeared" }
             }
         }
     }

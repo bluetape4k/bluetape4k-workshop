@@ -1,10 +1,9 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventLog
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.support.EventSourcedPostgresTestDatabase
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -20,23 +19,15 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class EventSourcedStartupProbeIntegrationTest {
     private val postgres = PostgreSQLServer.Launcher.postgres
-    private lateinit var dataSource: HikariDataSource
+    private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
     private lateinit var database: Database
     private lateinit var probe: EventSourcedStartupProbe
 
     @BeforeAll
     fun connectPostgres() {
-        dataSource =
-            HikariDataSource(
-                HikariConfig().apply {
-                    jdbcUrl = postgres.jdbcUrl
-                    username = requireNotNull(postgres.username)
-                    password = requireNotNull(postgres.password)
-                    maximumPoolSize = 1
-                },
-            )
-        database = Database.connect(dataSource)
-        probe = EventSourcedOperationsConfiguration().eventSourcedStartupProbe(dataSource)
+        postgresDatabase = EventSourcedPostgresTestDatabase(postgres, "issue-538-startup-probe", maximumPoolSize = 1)
+        database = postgresDatabase.database
+        probe = EventSourcedOperationsConfiguration().eventSourcedStartupProbe(postgresDatabase.dataSource)
     }
 
     @BeforeEach
@@ -50,9 +41,7 @@ internal class EventSourcedStartupProbeIntegrationTest {
     }
 
     @AfterAll
-    fun closeDataSource() {
-        dataSource.close()
-    }
+    fun closeDataSource() = postgresDatabase.close()
 
     @Test
     fun `probe rejects a missing event authority schema and accepts it after creation`() {

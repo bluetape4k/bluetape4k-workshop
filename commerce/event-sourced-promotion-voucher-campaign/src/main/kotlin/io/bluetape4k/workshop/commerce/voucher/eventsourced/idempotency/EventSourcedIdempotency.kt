@@ -1,11 +1,15 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency
 
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
 import java.io.Serializable
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.security.SecureRandom
+import java.time.Instant
 import java.util.HexFormat
 import java.util.UUID
 
@@ -35,7 +39,8 @@ internal value class ReceiptDigest private constructor(
     }
 
     init {
-        require(value.length == SHA_256_DIGEST_LENGTH && value.all { it in '0'..'9' || it in 'a'..'f' }) {
+        value.length.requireEquals(SHA_256_DIGEST_LENGTH, "digest.length")
+        require(value.all { it in '0'..'9' || it in 'a'..'f' }) {
             "digest must be a lowercase SHA-256 hex value"
         }
     }
@@ -98,6 +103,8 @@ internal data class TerminalDescriptor private constructor(
     val allocationId: UUID?,
     val generationKeyVersion: Int?,
     val verificationKeyVersion: Int?,
+    val observedAt: Instant?,
+    val streamPosition: Long?,
 ) : Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
@@ -109,22 +116,48 @@ internal data class TerminalDescriptor private constructor(
             generationKeyVersion: Int? = null,
             verificationKeyVersion: Int? = null,
         ): TerminalDescriptor {
-            require(status in MIN_HTTP_STATUS..MAX_HTTP_STATUS) { "status must be a valid HTTP status" }
+            status.requireInRange(MIN_HTTP_STATUS, MAX_HTTP_STATUS, "status")
             require((generationKeyVersion == null) == (verificationKeyVersion == null)) {
                 "generation and verification key versions must be stored together"
             }
             require(generationKeyVersion == null || allocationId != null) {
                 "key versions require an allocation identity"
             }
-            require(generationKeyVersion == null || generationKeyVersion > 0) {
-                "generationKeyVersion must be positive"
-            }
-            require(verificationKeyVersion == null || verificationKeyVersion > 0) {
-                "verificationKeyVersion must be positive"
-            }
-            return TerminalDescriptor(outcome, status, allocationId, generationKeyVersion, verificationKeyVersion)
+            generationKeyVersion?.requirePositiveNumber("generationKeyVersion")
+            verificationKeyVersion?.requirePositiveNumber("verificationKeyVersion")
+            return TerminalDescriptor(
+                outcome,
+                status,
+                allocationId,
+                generationKeyVersion,
+                verificationKeyVersion,
+                null,
+                null,
+            )
         }
     }
+
+    fun withObservedAt(instant: Instant): TerminalDescriptor =
+        TerminalDescriptor(
+            outcome = outcome,
+            status = status,
+            allocationId = allocationId,
+            generationKeyVersion = generationKeyVersion,
+            verificationKeyVersion = verificationKeyVersion,
+            observedAt = instant,
+            streamPosition = streamPosition,
+        )
+
+    fun withStreamPosition(position: Long): TerminalDescriptor =
+        TerminalDescriptor(
+            outcome = outcome,
+            status = status,
+            allocationId = allocationId,
+            generationKeyVersion = generationKeyVersion,
+            verificationKeyVersion = verificationKeyVersion,
+            observedAt = observedAt,
+            streamPosition = position.requirePositiveNumber("streamPosition"),
+        )
 
     fun replayWith(keyVersionAvailable: (Int) -> Boolean): TerminalReplay =
         if (generationKeyVersion == null || keyVersionAvailable(generationKeyVersion)) {

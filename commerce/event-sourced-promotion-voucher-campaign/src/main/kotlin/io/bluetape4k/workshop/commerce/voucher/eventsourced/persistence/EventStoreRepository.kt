@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence
 
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireNotEmpty
+import io.bluetape4k.support.requireNotNull
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -54,14 +57,12 @@ internal class EventStoreRepository(
 
     override fun appendAll(appends: List<ExpectedAppend>): AppendResult {
         TransactionManager.current()
-        require(appends.isNotEmpty()) { "appends must not be empty" }
+        val validAppends = appends.requireNotEmpty("appends").requireNotNull("appends")
 
-        val ordered = appends.sortedBy(ExpectedAppend::stream)
-        require(ordered.map(ExpectedAppend::stream).toSet().size == ordered.size) {
-            "appends must contain each stream at most once"
-        }
+        val ordered = validAppends.sortedBy(ExpectedAppend::stream)
+        ordered.map(ExpectedAppend::stream).toSet().size.requireEquals(ordered.size, "uniqueStreams.size")
         val eventIds = ordered.flatMap { it.events }.map(EventToAppend::eventId)
-        require(eventIds.toSet().size == eventIds.size) { "one append transaction must not repeat an eventId" }
+        eventIds.toSet().size.requireEquals(eventIds.size, "uniqueEventIds.size")
 
         val heads = ordered.associate { append -> append.stream to lockHead(append.stream) }
         val conflict = ordered.firstOrNull { append -> heads.getValue(append.stream) != append.expectedVersion }

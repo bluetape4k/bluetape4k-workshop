@@ -6,9 +6,11 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.support.EventSourcedPostgresTestDatabase
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -25,20 +27,19 @@ import io.bluetape4k.junit5.concurrency.MultithreadingTester
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class EventStoreAppendIntegrationTest {
     private val postgres = PostgreSQLServer.Launcher.postgres
+    private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
     private lateinit var database: Database
     private lateinit var store: EventStoreRepository
 
     @BeforeAll
     fun connectPostgres() {
-        database =
-            Database.connect(
-                url = postgres.jdbcUrl,
-                driver = "org.postgresql.Driver",
-                user = requireNotNull(postgres.username),
-                password = requireNotNull(postgres.password),
-            )
+        postgresDatabase = EventSourcedPostgresTestDatabase(postgres, "issue-538-event-store")
+        database = postgresDatabase.database
         store = EventStoreRepository(ExposedEventStoreTransactionRunner(database))
     }
+
+    @AfterAll
+    fun closeDataSource() = postgresDatabase.close()
 
     @BeforeEach
     fun createSchema() =

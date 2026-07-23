@@ -67,7 +67,6 @@ dependencies {
     implementation(libs.exposed.jackson3)
     implementation(libs.exposed.spring.boot.jdbc)
     implementation(libs.jetbrains.exposed.java.time)
-    implementation(libs.jetbrains.exposed.spring7.transaction)
     testImplementation(libs.exposed.jdbc.tests) {
         exclude(group = "org.jetbrains.exposed", module = "exposed-spring-boot4-starter")
     }

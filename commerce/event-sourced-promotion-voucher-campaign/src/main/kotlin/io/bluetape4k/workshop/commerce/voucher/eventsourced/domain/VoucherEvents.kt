@@ -1,7 +1,9 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.domain
 
 import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireLt
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
 import java.time.Instant
 import java.util.UUID
 
@@ -33,10 +35,10 @@ internal sealed interface CampaignEvent {
         val redemptionTtlSeconds: Long,
     ) : CampaignEvent {
         init {
-            require(startsAt.isBefore(endsAt)) { "campaign start must be before end" }
-            require(capacity > 0) { "capacity must be positive" }
-            require(perUserLimit > 0) { "perUserLimit must be positive" }
-            require(redemptionTtlSeconds > 0) { "redemptionTtlSeconds must be positive" }
+            startsAt.requireLt(endsAt, "startsAt")
+            capacity.requirePositiveNumber("capacity")
+            perUserLimit.requirePositiveNumber("perUserLimit")
+            redemptionTtlSeconds.requirePositiveNumber("redemptionTtlSeconds")
         }
     }
 
@@ -44,7 +46,7 @@ internal sealed interface CampaignEvent {
 
     data class CampaignCapacityChanged(val capacity: Int) : CampaignEvent {
         init {
-            require(capacity > 0) { "capacity must be positive" }
+            capacity.requirePositiveNumber("capacity")
         }
     }
 
@@ -53,7 +55,7 @@ internal sealed interface CampaignEvent {
         val policyVersion: Long,
     ) : CampaignEvent {
         init {
-            require(policyVersion > 0) { "policyVersion must be positive" }
+            policyVersion.requirePositiveNumber("policyVersion")
         }
     }
 }
@@ -80,7 +82,7 @@ internal sealed interface VoucherEvent {
         val expiresAt: Instant,
     ) : VoucherEvent {
         init {
-            require(policyVersion > 0) { "policyVersion must be positive" }
+            policyVersion.requirePositiveNumber("policyVersion")
         }
     }
 

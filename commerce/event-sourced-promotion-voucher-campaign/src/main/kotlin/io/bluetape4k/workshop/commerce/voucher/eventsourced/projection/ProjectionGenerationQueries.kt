@@ -23,7 +23,7 @@ internal fun findActive(projection: String): ActiveProjectionGeneration? =
         ?.let(::toActiveGeneration)
 
 internal fun requireLockedActive(projection: String): ActiveProjectionGeneration =
-    requireNotNull(
+    checkNotNull(
         ActiveProjectionGenerations
             .selectAll()
             .where { ActiveProjectionGenerations.projection eq projection }

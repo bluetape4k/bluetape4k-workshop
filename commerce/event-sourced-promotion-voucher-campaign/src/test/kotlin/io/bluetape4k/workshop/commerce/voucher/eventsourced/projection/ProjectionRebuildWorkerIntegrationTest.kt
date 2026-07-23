@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
@@ -21,9 +22,11 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.Projecti
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionReadModels
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamHeads
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamKey
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.support.EventSourcedPostgresTestDatabase
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -39,20 +42,19 @@ internal class ProjectionRebuildWorkerIntegrationTest {
     private val postgres = PostgreSQLServer.Launcher.postgres
     private val leases = ProjectionLeaseRepository()
     private val rebuilds = ProjectionRebuildRepository()
+    private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
     private lateinit var database: Database
     private lateinit var events: EventStoreRepository
 
     @BeforeAll
     fun connectPostgres() {
-        database =
-            Database.connect(
-                url = postgres.jdbcUrl,
-                driver = "org.postgresql.Driver",
-                user = requireNotNull(postgres.username),
-                password = requireNotNull(postgres.password),
-            )
+        postgresDatabase = EventSourcedPostgresTestDatabase(postgres, "issue-538-rebuild-worker")
+        database = postgresDatabase.database
         events = EventStoreRepository(ExposedEventStoreTransactionRunner(database))
     }
+
+    @AfterAll
+    fun closeDataSource() = postgresDatabase.close()
 
     @BeforeEach
     fun createSchema() = transaction(database) { SchemaUtils.create(*TABLES) }
@@ -66,9 +68,8 @@ internal class ProjectionRebuildWorkerIntegrationTest {
         val active = transaction(database) { rebuilds.initializeActive(PROJECTION, NOW) }
         val candidate = transaction(database) { rebuilds.start(PROJECTION, TARGET_POSITION, NOW) }
         val lease =
-            requireNotNull(
-                transaction(database) { leases.acquire(PROJECTION, candidate.key.generation, OWNER, NOW) },
-            )
+            transaction(database) { leases.acquire(PROJECTION, candidate.key.generation, OWNER, NOW) }
+                .shouldNotBeNull()
         val projections = ProjectionRepository(leases)
         val worker = ProjectionRebuildWorker(rebuilds, projections, ExposedProjectionEventReader())
 
@@ -87,9 +88,8 @@ internal class ProjectionRebuildWorkerIntegrationTest {
         transaction(database) { rebuilds.initializeActive(PROJECTION, NOW) }
         val candidate = transaction(database) { rebuilds.start(PROJECTION, TARGET_POSITION, NOW) }
         val lease =
-            requireNotNull(
-                transaction(database) { leases.acquire(PROJECTION, candidate.key.generation, OWNER, NOW) },
-            )
+            transaction(database) { leases.acquire(PROJECTION, candidate.key.generation, OWNER, NOW) }
+                .shouldNotBeNull()
         transaction(database) { rebuilds.requestCancellation(candidate.key, NOW) }
         val projections = ProjectionRepository(leases)
         val worker = ProjectionRebuildWorker(rebuilds, projections, ExposedProjectionEventReader())

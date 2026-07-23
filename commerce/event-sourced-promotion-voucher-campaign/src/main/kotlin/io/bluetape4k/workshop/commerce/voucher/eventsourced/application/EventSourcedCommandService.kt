@@ -90,11 +90,12 @@ internal class EventSourcedCommandService(
                 } else {
                     eventStore.appendAll(decision.appends)
                 }
-            val descriptor = if (append is AppendResult.Conflict || append is AppendResult.DuplicateEvent) {
-                concurrentModificationDescriptor()
-            } else {
-                decision.descriptor
-            }
+            val descriptor =
+                when (append) {
+                    is AppendResult.Appended -> decision.descriptor.withStreamPosition(append.lastGlobalPosition)
+                    is AppendResult.Conflict, is AppendResult.DuplicateEvent -> concurrentModificationDescriptor()
+                    null -> decision.descriptor
+                }
             finalize(command, owner, descriptor)
             log.debug { "voucher_command_executed operation=${command.scope.operation}" }
             CommandExecutionResult.Executed(append as? AppendResult.Appended, descriptor)

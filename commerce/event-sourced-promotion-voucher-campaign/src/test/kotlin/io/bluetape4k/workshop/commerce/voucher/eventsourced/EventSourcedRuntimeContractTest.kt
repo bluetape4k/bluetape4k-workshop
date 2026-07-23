@@ -1,8 +1,9 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldNotContain
 import org.junit.jupiter.api.Test
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.env.YamlPropertySourceLoader
@@ -59,7 +60,7 @@ internal class EventSourcedRuntimeContractTest {
 
     private fun classFileMajorVersion(type: Class<*>): Int {
         val resourceName = "/${type.name.replace('.', '/')}.class"
-        return DataInputStream(requireNotNull(type.getResourceAsStream(resourceName))).use { input ->
+        return DataInputStream(type.getResourceAsStream(resourceName).shouldNotBeNull()).use { input ->
             input.readInt() shouldBeEqualTo 0xCAFEBABE.toInt()
             input.readUnsignedShort()
             input.readUnsignedShort()

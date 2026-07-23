@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionGenerations
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -34,7 +35,7 @@ internal class ProjectionRebuildMaintenance {
                     row[ProjectionGenerations.state] = ProjectionGenerationState.CANCELLED
                     row[ProjectionGenerations.updatedAt] = now
                 }
-                requireNotNull(findGeneration(key)) { "recovered generation disappeared" }
+                checkNotNull(findGeneration(key)) { "recovered generation disappeared" }
             }
         }
     }
@@ -46,9 +47,7 @@ internal class ProjectionRebuildMaintenance {
     ): Int {
         TransactionManager.current()
         projection.requireNotBlank("projection")
-        require(batchSize in 1..MAX_REBUILD_RETENTION_BATCH_SIZE) {
-            "batch size must be between 1 and $MAX_REBUILD_RETENTION_BATCH_SIZE"
-        }
+        batchSize.requireInRange(1, MAX_REBUILD_RETENTION_BATCH_SIZE, "batchSize")
         return ProjectionGenerations
             .selectAll()
             .where {

@@ -3,6 +3,9 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireGt
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionLeases
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
@@ -28,8 +31,8 @@ internal data class ProjectionLease(
     val leaseDeadline: Instant,
 ) {
     init {
-        require(ownerDigest.isNotBlank()) { "owner digest must not be blank" }
-        require(fencingToken > 0) { "fencing token must be positive" }
+        ownerDigest.requireNotBlank("ownerDigest")
+        fencingToken.requirePositiveNumber("fencingToken")
     }
 }
 
@@ -216,10 +219,10 @@ private fun validateLeaseRequest(
     ownerDigest: String,
     lease: Duration,
 ) {
-    require(projection.isNotBlank()) { "projection must not be blank" }
-    require(generation > 0) { "generation must be positive" }
-    require(ownerDigest.isNotBlank()) { "owner digest must not be blank" }
-    require(lease > Duration.ZERO) { "lease must be positive" }
+    projection.requireNotBlank("projection")
+    generation.requirePositiveNumber("generation")
+    ownerDigest.requireNotBlank("ownerDigest")
+    lease.requireGt(Duration.ZERO, "lease")
 }
 
 internal fun ProjectionLease.isRenewalDue(now: Instant): Boolean {

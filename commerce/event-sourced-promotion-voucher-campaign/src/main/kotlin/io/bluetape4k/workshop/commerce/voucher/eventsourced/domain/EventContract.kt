@@ -1,7 +1,12 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.domain
 
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireGe
 import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireLe
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.time.Instant
@@ -22,16 +27,14 @@ internal data class StreamReference(
 ) {
     init {
         type.requireNotBlank("stream.type")
-        require(version >= 0) { "stream.version must be non-negative" }
+        version.requireZeroOrPositiveNumber("stream.version")
     }
 }
 
 internal data class EventPayload(val canonicalJson: String) {
     init {
         canonicalJson.requireNotBlank("payload")
-        require(payloadByteSize() <= MAX_EVENT_PAYLOAD_BYTES) {
-            "payload exceeds $MAX_EVENT_PAYLOAD_BYTES bytes"
-        }
+        payloadByteSize().requireLe(MAX_EVENT_PAYLOAD_BYTES, "payload.bytes")
         require(SENSITIVE_FIELD_NAMES.none(::containsField)) {
             "payload contains a raw sensitive field"
         }
@@ -63,9 +66,7 @@ internal data class EventPayload(val canonicalJson: String) {
                         }
                         else -> {
                             stringBytes += char.toString().toByteArray(StandardCharsets.UTF_8).size
-                            require(stringBytes <= MAX_EVENT_PAYLOAD_STRING_BYTES) {
-                                "payload string exceeds $MAX_EVENT_PAYLOAD_STRING_BYTES bytes"
-                            }
+                            stringBytes.requireLe(MAX_EVENT_PAYLOAD_STRING_BYTES, "payload.stringBytes")
                         }
                     }
                 } else {
@@ -83,11 +84,9 @@ internal data class EventPayload(val canonicalJson: String) {
                     '}', ']' -> depth - 1
                     else -> depth
                 }
-            require(nextDepth >= 0) { "payload has unbalanced nesting" }
-            require(nextDepth <= MAX_EVENT_PAYLOAD_DEPTH) {
-                "payload exceeds depth $MAX_EVENT_PAYLOAD_DEPTH"
-            }
             return nextDepth
+                .requireZeroOrPositiveNumber("payload.depth")
+                .requireLe(MAX_EVENT_PAYLOAD_DEPTH, "payload.depth")
         }
     }
 }
@@ -110,15 +109,13 @@ internal data class EventEnvelope(
         get() = checksumOf(canonicalFields())
 
     init {
-        require(eventId.version() == UUID_V7) { "eventId must be UUID v7" }
-        require(globalPosition > 0) { "globalPosition must be positive" }
+        eventId.version().requireEquals(UUID_V7, "eventId.version")
+        globalPosition.requirePositiveNumber("globalPosition")
         eventType.requireNotBlank("eventType")
         schemaVersion.requireInRange(1, Int.MAX_VALUE, "schemaVersion")
         correlationId.requireNotBlank("correlationId")
         actorSurrogate.requireNotBlank("actorSurrogate")
-        require(!recordedAt.isBefore(occurredAt)) {
-            "recordedAt must not precede occurredAt"
-        }
+        recordedAt.requireGe(occurredAt, "recordedAt")
     }
 
     private fun canonicalFields(): List<Any> =
@@ -162,9 +159,8 @@ internal data class EventUpcaster(
     val transform: (EventPayload) -> EventPayload,
 ) {
     init {
-        require(fromVersion > 0 && toVersion == fromVersion + 1) {
-            "upcaster must advance exactly one schema version"
-        }
+        fromVersion.requirePositiveNumber("fromVersion")
+        toVersion.requireEquals(fromVersion + 1, "toVersion")
     }
 }
 
@@ -176,9 +172,8 @@ internal data class UpcastGoldenFixture(
     val expected: EventPayload,
 ) {
     init {
-        require(fromVersion > 0 && toVersion == fromVersion + 1) {
-            "fixture must advance exactly one schema version"
-        }
+        fromVersion.requirePositiveNumber("fromVersion")
+        toVersion.requireEquals(fromVersion + 1, "toVersion")
     }
 }
 
@@ -189,7 +184,7 @@ internal data class EventSchema<T : Any>(
 ) {
     init {
         eventType.requireNotBlank("eventType")
-        require(currentVersion > 0) { "currentVersion must be positive" }
+        currentVersion.requirePositiveNumber("currentVersion")
     }
 }
 
@@ -203,8 +198,8 @@ internal class EventSchemaRegistry(
     private val upcastersByStep = upcasters.associateBy(::stepKey)
 
     init {
-        require(schemasByType.size == schemas.size) { "event schemas must be unique by type" }
-        require(upcastersByStep.size == upcasters.size) { "upcasters must be unique by step" }
+        schemasByType.size.requireEquals(schemas.size, "schemasByType.size")
+        upcastersByStep.size.requireEquals(upcasters.size, "upcastersByStep.size")
     }
 
     fun decode(event: SerializedEvent): Any = decodeWithSchema(requireSchema(event), event)
@@ -240,9 +235,7 @@ internal class EventSchemaRegistry(
 
 internal object EventReplay {
     fun ordered(events: List<EventEnvelope>): List<EventEnvelope> {
-        require(events.map { it.eventId }.toSet().size == events.size) {
-            "event identifiers must be unique"
-        }
+        events.map(EventEnvelope::eventId).toSet().size.requireEquals(events.size, "uniqueEventIds.size")
         return events.sortedBy { it.globalPosition }
     }
 }

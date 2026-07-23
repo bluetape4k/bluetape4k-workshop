@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionGenerationState
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Test
@@ -32,9 +33,9 @@ internal class EventSourcedMetricsTest {
         registry.get("voucher_projection_retry_total").counter().count() shouldBeEqualTo 1.0
         registry.get("voucher_rebuild_progress_ratio").gauge().value() shouldBeEqualTo 0.5
         registry.get("voucher_rebuild_duration_seconds").timer().count() shouldBeEqualTo 1L
-        requireNotNull(
-            registry.find("voucher_rebuild_duration_seconds").tag("outcome", "APPLIED").timer(),
-        ).count() shouldBeEqualTo 1L
+        registry.find("voucher_rebuild_duration_seconds").tag("outcome", "APPLIED").timer()
+            .shouldNotBeNull()
+            .count() shouldBeEqualTo 1L
         registry.get("voucher_db_bulkhead_queued").gauge().value().shouldBeGreaterOrEqualTo(0.0)
     }
 }

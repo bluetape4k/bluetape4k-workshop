@@ -1,10 +1,16 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptDigest
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.OperatorAudits
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionGenerationState
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.io.Serializable
 import java.time.Instant
@@ -55,9 +61,13 @@ internal data class OperatorAuditTarget private constructor(
             generation: Long,
             expectedFencingToken: Long,
         ): OperatorAuditTarget {
-            require(generation > 0) { "generation must be positive" }
-            require(expectedFencingToken > 0) { "expectedFencingToken must be positive" }
-            return OperatorAuditTarget(projection.requireNotBlank("projection"), generation, expectedFencingToken)
+            val validGeneration = generation.requirePositiveNumber("generation")
+            val validToken = expectedFencingToken.requirePositiveNumber("expectedFencingToken")
+            return OperatorAuditTarget(
+                projection.requireNotBlank("projection"),
+                validGeneration,
+                validToken,
+            )
         }
     }
 }
@@ -81,12 +91,12 @@ internal data class OperatorAuditTransition private constructor(
             streamPosition: Long,
             reasonClass: String?,
         ): OperatorAuditTransition {
-            require(checkpointPosition >= 0) { "checkpointPosition must be non-negative" }
-            require(streamPosition >= 0) { "streamPosition must be non-negative" }
+            val validCheckpoint = checkpointPosition.requireZeroOrPositiveNumber("checkpointPosition")
+            val validStreamPosition = streamPosition.requireZeroOrPositiveNumber("streamPosition")
             require(reasonClass == null || REASON_CLASS.matches(reasonClass)) {
                 "reasonClass must be a bounded stable code"
             }
-            return OperatorAuditTransition(beforeState, afterState, checkpointPosition, streamPosition, reasonClass)
+            return OperatorAuditTransition(beforeState, afterState, validCheckpoint, validStreamPosition, reasonClass)
         }
     }
 }
@@ -136,6 +146,22 @@ internal data class OperatorAuditEntry private constructor(
  * callers must persist audit evidence in the same fenced mutation transaction they describe.
  */
 internal class OperatorAuditRepository {
+    fun find(
+        tenant: String,
+        requestDigest: ReceiptDigest,
+        action: OperatorAuditAction,
+    ): OperatorAuditEntry? {
+        TransactionManager.current()
+        return OperatorAudits
+            .selectAll()
+            .where {
+                (OperatorAudits.tenant eq tenant) and
+                    (OperatorAudits.requestDigest eq requestDigest.value) and
+                    (OperatorAudits.action eq action)
+            }.singleOrNull()
+            ?.let(::toAuditEntry)
+    }
+
     fun append(entry: OperatorAuditEntry): OperatorAuditEntry {
         TransactionManager.current()
         OperatorAudits.insert { row ->
@@ -157,3 +183,33 @@ internal class OperatorAuditRepository {
         return entry
     }
 }
+
+private fun toAuditEntry(row: ResultRow): OperatorAuditEntry =
+    OperatorAuditEntry(
+        identity =
+            OperatorAuditIdentity(
+                actorDigest = ReceiptDigest.of(row[OperatorAudits.actorDigest]),
+                tenant = row[OperatorAudits.tenant],
+                requestDigest = ReceiptDigest.of(row[OperatorAudits.requestDigest]),
+            ),
+        action = row[OperatorAudits.action],
+        target =
+            OperatorAuditTarget(
+                projection = row[OperatorAudits.projection],
+                generation = row[OperatorAudits.generation],
+                expectedFencingToken = row[OperatorAudits.expectedFencingToken],
+            ),
+        transition =
+            OperatorAuditTransition(
+                beforeState = row[OperatorAudits.beforeState],
+                afterState = row[OperatorAudits.afterState],
+                checkpointPosition = row[OperatorAudits.checkpointPosition],
+                streamPosition = row[OperatorAudits.streamPosition],
+                reasonClass = row[OperatorAudits.reasonClass],
+            ),
+        result =
+            OperatorAuditResult(
+                outcome = row[OperatorAudits.outcome],
+                occurredAt = row[OperatorAudits.occurredAt],
+            ),
+    )

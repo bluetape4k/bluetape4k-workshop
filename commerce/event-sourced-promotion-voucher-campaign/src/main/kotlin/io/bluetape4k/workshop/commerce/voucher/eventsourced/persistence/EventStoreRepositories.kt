@@ -78,6 +78,8 @@ internal object IdempotencyReceipts : UUIDTable("voucher_idempotency_receipt", "
     val allocationId = javaUUID("allocation_id").nullable()
     val generationKeyVersion = integer("generation_key_version").nullable()
     val verificationKeyVersion = integer("verification_key_version").nullable()
+    val terminalObservedAt = timestamp("terminal_observed_at").nullable()
+    val terminalStreamPosition = long("terminal_stream_position").nullable()
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
 
@@ -160,6 +162,34 @@ internal object ProjectionReadModels : UUIDTable("voucher_projection_read_model"
     }
 }
 
+internal object CampaignProjectionReadModels : UUIDTable("voucher_campaign_projection", "campaign_projection_id") {
+    val projection = varchar("projection", 64)
+    val generation = long("generation")
+    val tenantId = varchar("tenant_id", 64)
+    val campaignId = javaUUID("campaign_id")
+    val state =
+        enumerationByName<io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.CampaignState>(
+            "state",
+            16,
+        )
+    val streamVersion = long("stream_version")
+    val globalPosition = long("global_position")
+    val policyVersion = long("policy_version")
+    val capacity = integer("capacity")
+    val allocatedCount = integer("allocated_count")
+    val perUserLimit = integer("per_user_limit")
+    val redemptionTtlSeconds = long("redemption_ttl_seconds")
+    val startsAt = timestamp("starts_at")
+    val endsAt = timestamp("ends_at")
+    val fencingToken = long("fencing_token")
+    val updatedAt = timestamp("updated_at")
+
+    init {
+        uniqueIndex(projection, generation, tenantId, campaignId)
+        index(false, projection, generation, globalPosition)
+    }
+}
+
 internal object ProjectionPoisonEvents : UUIDTable("voucher_projection_poison_event", "poison_id") {
     val projection = varchar("projection", 64)
     val generation = long("generation")
@@ -168,6 +198,13 @@ internal object ProjectionPoisonEvents : UUIDTable("voucher_projection_poison_ev
     val eventType = varchar("event_type", 128)
     val reasonClass = varchar("reason_class", 64)
     val attempts = integer("attempts")
+    val state =
+        enumerationByName<io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionPoisonState>(
+            "state",
+            16,
+        )
+    val nextRetryAt = timestamp("next_retry_at")
+    val resolvedAt = timestamp("resolved_at").nullable()
     val occurredAt = timestamp("occurred_at")
     val updatedAt = timestamp("updated_at")
 

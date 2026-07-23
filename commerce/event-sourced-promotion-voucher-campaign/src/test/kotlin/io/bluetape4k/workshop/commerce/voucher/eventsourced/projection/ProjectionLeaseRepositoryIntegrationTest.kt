@@ -2,11 +2,14 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionLeases
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.support.EventSourcedPostgresTestDatabase
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -20,18 +23,17 @@ import java.time.Instant
 internal class ProjectionLeaseRepositoryIntegrationTest {
     private val postgres = PostgreSQLServer.Launcher.postgres
     private val leases = ProjectionLeaseRepository()
+    private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
     private lateinit var database: Database
 
     @BeforeAll
     fun connectPostgres() {
-        database =
-            Database.connect(
-                url = postgres.jdbcUrl,
-                driver = "org.postgresql.Driver",
-                user = requireNotNull(postgres.username),
-                password = requireNotNull(postgres.password),
-            )
+        postgresDatabase = EventSourcedPostgresTestDatabase(postgres, "issue-538-projection-lease")
+        database = postgresDatabase.database
     }
+
+    @AfterAll
+    fun closeDataSource() = postgresDatabase.close()
 
     @BeforeEach
     fun createSchema() = transaction(database) { SchemaUtils.create(ProjectionLeases) }
@@ -42,13 +44,11 @@ internal class ProjectionLeaseRepositoryIntegrationTest {
     @Test
     fun `expired takeover increments fencing token and stale release cannot clear the new owner`() {
         val first =
-            requireNotNull(transaction(database) { leases.acquire(PROJECTION, GENERATION, "owner-a", NOW) })
+            transaction(database) { leases.acquire(PROJECTION, GENERATION, "owner-a", NOW) }.shouldNotBeNull()
         val second =
-            requireNotNull(
-                transaction(database) {
-                    leases.acquire(PROJECTION, GENERATION, "owner-b", NOW.plusSeconds(LEASE_TAKEOVER_SECONDS))
-                },
-            )
+            transaction(database) {
+                leases.acquire(PROJECTION, GENERATION, "owner-b", NOW.plusSeconds(LEASE_TAKEOVER_SECONDS))
+            }.shouldNotBeNull()
 
         // Then
         (second.fencingToken > first.fencingToken).shouldBeTrue()
@@ -63,7 +63,7 @@ internal class ProjectionLeaseRepositoryIntegrationTest {
     @Test
     fun `renewal becomes due five seconds after a fifteen second lease was acquired`() {
         val lease =
-            requireNotNull(transaction(database) { leases.acquire(PROJECTION, GENERATION, "owner-a", NOW) })
+            transaction(database) { leases.acquire(PROJECTION, GENERATION, "owner-a", NOW) }.shouldNotBeNull()
 
         lease.isRenewalDue(NOW.plusSeconds(PROJECTION_LEASE_RENEW_SECONDS - 1)).shouldBeFalse()
         lease.isRenewalDue(NOW.plusSeconds(PROJECTION_LEASE_RENEW_SECONDS)).shouldBeTrue()

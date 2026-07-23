@@ -1,7 +1,11 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireLe
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventEnvelope
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionCheckpoints
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionPoisonEvents
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionProcessedEvents
@@ -20,7 +24,7 @@ import java.time.Instant
 import java.util.UUID
 
 internal const val MAX_PROJECTION_BATCH_EVENTS = 200
-internal const val MAX_PROJECTION_POISON_ATTEMPTS = 3
+internal const val MAX_PROJECTION_POISON_ATTEMPTS = 5
 private const val KIBIBYTE = 1024
 internal const val MAX_PROJECTION_BATCH_BYTES = 2 * KIBIBYTE * KIBIBYTE
 
@@ -30,7 +34,7 @@ internal data class ProjectionKey(
 ) {
     init {
         projection.requireNotBlank("projection")
-        require(generation > 0) { "generation must be positive" }
+        generation.requirePositiveNumber("generation")
     }
 }
 
@@ -62,7 +66,15 @@ internal data class ProjectionPoisonRecord(
     val globalPosition: Long,
     val reasonClass: String,
     val attempts: Int,
+    val state: ProjectionPoisonState,
+    val nextRetryAt: Instant,
+    val resolvedAt: Instant?,
 )
+
+internal enum class ProjectionPoisonState {
+    FAILED,
+    RESOLVED,
+}
 
 /**
  * Projection state remains disposable: event identity, read-model mutation, and checkpoint advance
@@ -70,6 +82,8 @@ internal data class ProjectionPoisonRecord(
  */
 internal class ProjectionRepository(
     private val leases: ProjectionLeaseRepository,
+    private val campaigns: CampaignProjectionStore = CampaignProjectionStore(),
+    private val poisons: ProjectionPoisonStore = ProjectionPoisonStore(),
 ) {
 
     fun applyBatch(
@@ -114,6 +128,15 @@ internal class ProjectionRepository(
             ?.let(::toReadModel)
     }
 
+    fun campaign(
+        key: ProjectionKey,
+        tenantId: TenantId,
+        campaignId: UUID,
+    ): CampaignProjectionReadModel? {
+        TransactionManager.current()
+        return campaigns.find(key, tenantId, campaignId)
+    }
+
     fun poison(
         key: ProjectionKey,
         lease: ProjectionLease,
@@ -122,37 +145,25 @@ internal class ProjectionRepository(
         now: Instant,
     ): ProjectionPoisonRecord {
         TransactionManager.current()
-        reasonClass.requireNotBlank("reasonClass")
+        val validReasonClass = reasonClass.requireNotBlank("reasonClass")
         leases.requireActive(key.projection, key.generation, lease, now)
-        val inserted =
-            ProjectionPoisonEvents.insertIgnore { row ->
-                row[ProjectionPoisonEvents.projection] = key.projection
-                row[ProjectionPoisonEvents.generation] = key.generation
-                row[ProjectionPoisonEvents.eventId] = event.eventId
-                row[ProjectionPoisonEvents.globalPosition] = event.globalPosition
-                row[ProjectionPoisonEvents.eventType] = event.eventType
-                row[ProjectionPoisonEvents.reasonClass] = reasonClass
-                row[ProjectionPoisonEvents.attempts] = FIRST_POISON_ATTEMPT
-                row[ProjectionPoisonEvents.occurredAt] = now
-                row[ProjectionPoisonEvents.updatedAt] = now
-            }.insertedCount == 1
-        if (!inserted) {
-            val current = requireNotNull(findPoison(key, event.eventId)) { "poison event disappeared" }
-            if (current.attempts < MAX_PROJECTION_POISON_ATTEMPTS) {
-                ProjectionPoisonEvents.update(
-                    where = {
-                        keyPredicate(ProjectionPoisonEvents.projection, ProjectionPoisonEvents.generation, key) and
-                            (ProjectionPoisonEvents.eventId eq event.eventId) and
-                            (ProjectionPoisonEvents.attempts eq current.attempts)
-                    },
-                ) { row ->
-                    row[ProjectionPoisonEvents.attempts] = current.attempts + 1
-                    row[ProjectionPoisonEvents.reasonClass] = reasonClass
-                    row[ProjectionPoisonEvents.updatedAt] = now
-                }
-            }
-        }
-        return requireNotNull(findPoison(key, event.eventId)) { "poison event was not persisted" }
+        return poisons.recordFailure(key, event, validReasonClass, now)
+    }
+
+    fun resolvePoison(
+        key: ProjectionKey,
+        lease: ProjectionLease,
+        event: EventEnvelope,
+        now: Instant,
+    ): ProjectionApplyResult {
+        TransactionManager.current()
+        val poison = checkNotNull(poisons.find(key, event.eventId)) { "poison event does not exist" }
+        check(poison.state == ProjectionPoisonState.FAILED) { "poison event is already resolved" }
+        check(poison.attempts <= MAX_PROJECTION_POISON_ATTEMPTS) { "poison retry limit is exhausted" }
+        check(!now.isBefore(poison.nextRetryAt)) { "poison retry backoff has not elapsed" }
+        val result = applyBatch(key, lease, listOf(event), now)
+        poisons.resolve(key, event.eventId, now)
+        return result
     }
 
     private fun applyEvent(
@@ -174,6 +185,7 @@ internal class ProjectionRepository(
             return count.duplicate()
         }
         upsertReadModel(key, lease, event, now)
+        campaigns.apply(key, lease, event, now)
         return count.applied()
     }
 
@@ -251,20 +263,7 @@ internal class ProjectionRepository(
         checkpoint(key)
             ?: ProjectionCheckpoint(position = 0, fencingToken = lease.fencingToken, updatedAt = now)
 
-    private fun findPoison(
-        key: ProjectionKey,
-        eventId: UUID,
-    ): ProjectionPoisonRecord? =
-        ProjectionPoisonEvents
-            .selectAll()
-            .where {
-                keyPredicate(ProjectionPoisonEvents.projection, ProjectionPoisonEvents.generation, key) and
-                    (ProjectionPoisonEvents.eventId eq eventId)
-            }.singleOrNull()
-            ?.let(::toPoisonRecord)
 }
-
-private const val FIRST_POISON_ATTEMPT = 1
 
 private data class ProjectionMutationCount(
     val applied: Int = 0,
@@ -276,13 +275,13 @@ private data class ProjectionMutationCount(
 }
 
 private fun validateBatch(events: List<EventEnvelope>) {
-    require(events.size <= MAX_PROJECTION_BATCH_EVENTS) { "projection batch exceeds event cap" }
-    require(events.map(EventEnvelope::eventId).toSet().size == events.size) { "projection batch repeats an event id" }
+    events.size.requireLe(MAX_PROJECTION_BATCH_EVENTS, "projection batch size")
+    events.map(EventEnvelope::eventId).toSet().size.requireEquals(events.size, "uniqueEventIds.size")
     require(events.zipWithNext().all { (current, next) -> current.globalPosition < next.globalPosition }) {
         "projection batch must be globally ordered"
     }
     val payloadBytes = events.sumOf { event -> event.payload.canonicalJson.toByteArray(StandardCharsets.UTF_8).size }
-    require(payloadBytes <= MAX_PROJECTION_BATCH_BYTES) { "projection batch exceeds byte cap" }
+    payloadBytes.requireLe(MAX_PROJECTION_BATCH_BYTES, "projection batch payload bytes")
 }
 
 private fun checkpointPredicate(key: ProjectionKey) =
@@ -312,12 +311,4 @@ private fun toReadModel(row: ResultRow): ProjectionReadModel =
         eventType = row[ProjectionReadModels.eventType],
         payloadDigest = row[ProjectionReadModels.payloadDigest],
         fencingToken = row[ProjectionReadModels.fencingToken],
-    )
-
-private fun toPoisonRecord(row: ResultRow): ProjectionPoisonRecord =
-    ProjectionPoisonRecord(
-        eventId = row[ProjectionPoisonEvents.eventId],
-        globalPosition = row[ProjectionPoisonEvents.globalPosition],
-        reasonClass = row[ProjectionPoisonEvents.reasonClass],
-        attempts = row[ProjectionPoisonEvents.attempts],
     )

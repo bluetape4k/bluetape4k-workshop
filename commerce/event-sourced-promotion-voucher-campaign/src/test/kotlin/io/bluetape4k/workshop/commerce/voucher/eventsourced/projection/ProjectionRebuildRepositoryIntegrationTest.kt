@@ -4,13 +4,16 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptDigest
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ActiveProjectionGenerations
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionGenerations
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.support.EventSourcedPostgresTestDatabase
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -28,18 +31,17 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
     private val postgres = PostgreSQLServer.Launcher.postgres
     private val repository = ProjectionRebuildRepository()
     private val maintenance = ProjectionRebuildMaintenance()
+    private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
     private lateinit var database: Database
 
     @BeforeAll
     fun connectPostgres() {
-        database =
-            Database.connect(
-                url = postgres.jdbcUrl,
-                driver = "org.postgresql.Driver",
-                user = requireNotNull(postgres.username),
-                password = requireNotNull(postgres.password),
-            )
+        postgresDatabase = EventSourcedPostgresTestDatabase(postgres, "issue-538-projection-rebuild")
+        database = postgresDatabase.database
     }
+
+    @AfterAll
+    fun closeDataSource() = postgresDatabase.close()
 
     @BeforeEach
     fun createSchema() =
@@ -169,7 +171,7 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
         val candidate = transaction(database) { repository.start(PROJECTION, TARGET_POSITION, NOW) }
         val cancelling = transaction(database) { repository.requestCancellation(candidate.key, NOW) }
 
-        requireNotNull(cancelling).fencingToken shouldBeEqualTo candidate.fencingToken + 1
+        cancelling.shouldNotBeNull().fencingToken shouldBeEqualTo candidate.fencingToken + 1
         transaction(database) {
             repository.completeCancellation(candidate.key, candidate.fencingToken, NOW).shouldBeFalse()
         }
@@ -210,7 +212,7 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
 
         val recovered = transaction(database) { restartedMaintenance.recover(candidate.key, NOW.plusSeconds(1)) }
 
-        requireNotNull(recovered).state shouldBeEqualTo ProjectionGenerationState.CANCELLED
+        recovered.shouldNotBeNull().state shouldBeEqualTo ProjectionGenerationState.CANCELLED
         recovered.fencingToken shouldBeEqualTo candidate.fencingToken + 1
     }
 
@@ -229,7 +231,7 @@ internal class ProjectionRebuildRepositoryIntegrationTest {
         }
         val resumed = transaction(database) { repository.resume(candidate.key, NOW) }
 
-        requireNotNull(resumed).state shouldBeEqualTo ProjectionGenerationState.BUILDING
+        resumed.shouldNotBeNull().state shouldBeEqualTo ProjectionGenerationState.BUILDING
         resumed.fencingToken shouldBeEqualTo candidate.fencingToken + 1
     }
 

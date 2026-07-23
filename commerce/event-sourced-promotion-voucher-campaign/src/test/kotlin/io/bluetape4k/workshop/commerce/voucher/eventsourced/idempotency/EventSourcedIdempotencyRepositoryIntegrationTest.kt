@@ -25,9 +25,11 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.Idempote
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamHeads
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamKey
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabasePermitGate
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.support.EventSourcedPostgresTestDatabase
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -44,6 +46,7 @@ import java.util.concurrent.TimeUnit
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class EventSourcedIdempotencyRepositoryIntegrationTest {
     private val postgres = PostgreSQLServer.Launcher.postgres
+    private lateinit var postgresDatabase: EventSourcedPostgresTestDatabase
     private lateinit var database: Database
     private val repository = EventSourcedIdempotencyRepository()
     private lateinit var store: EventStoreRepository
@@ -51,13 +54,8 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
 
     @BeforeAll
     fun connectPostgres() {
-        database =
-            Database.connect(
-                url = postgres.jdbcUrl,
-                driver = "org.postgresql.Driver",
-                user = requireNotNull(postgres.username),
-                password = requireNotNull(postgres.password),
-            )
+        postgresDatabase = EventSourcedPostgresTestDatabase(postgres, "issue-538-idempotency")
+        database = postgresDatabase.database
         store = EventStoreRepository(ExposedEventStoreTransactionRunner(database))
         commands =
             EventSourcedCommandService(
@@ -66,6 +64,9 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
                 store,
             )
     }
+
+    @AfterAll
+    fun closeDataSource() = postgresDatabase.close()
 
     @BeforeEach
     fun createSchema() =

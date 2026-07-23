@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireGt
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
@@ -29,18 +30,15 @@ internal class EventSourcedLifecycleCoordinator(
     private val state: EventSourcedOperationalState,
     private val gate: EventSourcedDatabasePermitGate,
     private val workers: EventSourcedWorkerShutdown,
-    private val graceDeadline: Duration = DEFAULT_GRACE_DEADLINE,
+    graceDeadline: Duration = DEFAULT_GRACE_DEADLINE,
 ) {
+    private val graceDeadline = graceDeadline.requireGt(Duration.ZERO, "graceDeadline")
     private val shuttingDown = AtomicBoolean()
     private val eventLock = ReentrantLock()
     private val recordedEvents = mutableListOf<EventSourcedShutdownEvent>()
 
     @Volatile
     private var drainForced = false
-
-    init {
-        require(!graceDeadline.isNegative && !graceDeadline.isZero) { "graceDeadline must be positive" }
-    }
 
     fun shutdown() {
         if (!shuttingDown.compareAndSet(false, true)) return

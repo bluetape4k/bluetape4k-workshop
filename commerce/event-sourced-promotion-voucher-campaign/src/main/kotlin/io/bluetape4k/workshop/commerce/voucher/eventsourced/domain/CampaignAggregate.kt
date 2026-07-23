@@ -23,7 +23,7 @@ internal data class CampaignAggregate(
 
     fun canReserveCapacity(): Boolean = state == CampaignState.ACTIVE && allocatedCount < capacity
 
-    private fun apply(event: CampaignEvent): CampaignAggregate =
+    internal fun evolve(event: CampaignEvent): CampaignAggregate =
         when (event) {
             is CampaignEvent.CampaignCreated -> {
                 if (campaignId != null) fail("campaign is already created")
@@ -70,7 +70,7 @@ internal data class CampaignAggregate(
 
     companion object {
         fun replay(events: List<CampaignEvent>): CampaignAggregate = events.fold(empty()) { aggregate, event ->
-            aggregate.apply(event)
+            aggregate.evolve(event)
         }
 
         private fun empty(): CampaignAggregate =

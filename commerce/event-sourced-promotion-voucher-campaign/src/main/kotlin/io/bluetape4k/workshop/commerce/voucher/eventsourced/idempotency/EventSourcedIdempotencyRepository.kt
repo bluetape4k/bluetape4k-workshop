@@ -12,6 +12,8 @@ import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.update
+import io.bluetape4k.support.requireGt
+import io.bluetape4k.support.requireLt
 import java.time.Duration
 import java.time.Instant
 
@@ -79,7 +81,7 @@ internal class EventSourcedIdempotencyRepository {
         val fingerprint = request.fingerprint
         val now = request.now
         val ownerToken = request.ownerToken
-        val current = requireNotNull(find(scope)) { "idempotency receipt disappeared after duplicate acquire" }
+        val current = checkNotNull(find(scope)) { "idempotency receipt disappeared after duplicate acquire" }
         val currentLease = current.leaseDeadline
         return when {
             current.fingerprint != fingerprint.value -> {
@@ -87,7 +89,7 @@ internal class EventSourcedIdempotencyRepository {
                 ReceiptAcquireResult.FingerprintConflict
             }
             current.descriptor != null -> ReceiptAcquireResult.Replay(current.descriptor)
-            requireNotNull(currentLease) { "in-progress receipt must have a lease" }.isAfter(now) ->
+            checkNotNull(currentLease) { "in-progress receipt must have a lease" }.isAfter(now) ->
                 ReceiptAcquireResult.InProgress(Duration.between(now, currentLease))
             reclaimExpiredLease(request, current, leaseDeadline) -> {
                 log.warn { "voucher_receipt_lease_taken_over operation=${scope.operation}" }
@@ -106,7 +108,7 @@ internal class EventSourcedIdempotencyRepository {
         val now = request.now
         val ownerToken = request.ownerToken
         val commandTimeout = request.commandTimeout
-        val currentLease = requireNotNull(current.leaseDeadline) { "in-progress receipt must have a lease" }
+        val currentLease = checkNotNull(current.leaseDeadline) { "in-progress receipt must have a lease" }
         return IdempotencyReceipts.update(
                 where = {
                     scopePredicate(scope) and
@@ -126,10 +128,10 @@ internal class EventSourcedIdempotencyRepository {
         scope: ReceiptScope,
         now: Instant,
     ): ReceiptAcquireResult {
-        val retried = requireNotNull(find(scope)) { "idempotency receipt disappeared after lease takeover race" }
+        val retried = checkNotNull(find(scope)) { "idempotency receipt disappeared after lease takeover race" }
         return retried.descriptor?.let(ReceiptAcquireResult::Replay)
             ?: ReceiptAcquireResult.InProgress(
-                Duration.between(now, requireNotNull(retried.leaseDeadline)).coerceAtLeast(Duration.ZERO),
+                Duration.between(now, checkNotNull(retried.leaseDeadline)).coerceAtLeast(Duration.ZERO),
             )
     }
 
@@ -178,6 +180,8 @@ internal class EventSourcedIdempotencyRepository {
                 row[IdempotencyReceipts.allocationId] = descriptor.allocationId
                 row[IdempotencyReceipts.generationKeyVersion] = descriptor.generationKeyVersion
                 row[IdempotencyReceipts.verificationKeyVersion] = descriptor.verificationKeyVersion
+                row[IdempotencyReceipts.terminalObservedAt] = descriptor.observedAt
+                row[IdempotencyReceipts.terminalStreamPosition] = descriptor.streamPosition
                 row[IdempotencyReceipts.ownerTokenDigest] = null
                 row[IdempotencyReceipts.leaseDeadline] = null
                 row[IdempotencyReceipts.updatedAt] = now
@@ -217,12 +221,16 @@ private fun toStoredReceipt(row: ResultRow): StoredReceipt {
             null
         } else {
             TerminalDescriptor(
-                outcome = requireNotNull(row[IdempotencyReceipts.terminalOutcome]),
-                status = requireNotNull(row[IdempotencyReceipts.terminalStatus]),
+                outcome = checkNotNull(row[IdempotencyReceipts.terminalOutcome]),
+                status = checkNotNull(row[IdempotencyReceipts.terminalStatus]),
                 allocationId = row[IdempotencyReceipts.allocationId],
                 generationKeyVersion = row[IdempotencyReceipts.generationKeyVersion],
                 verificationKeyVersion = row[IdempotencyReceipts.verificationKeyVersion],
-            )
+            ).let { descriptor ->
+                row[IdempotencyReceipts.terminalObservedAt]?.let(descriptor::withObservedAt) ?: descriptor
+            }.let { descriptor ->
+                row[IdempotencyReceipts.terminalStreamPosition]?.let(descriptor::withStreamPosition) ?: descriptor
+            }
         }
     return StoredReceipt(
         fingerprint = row[IdempotencyReceipts.fingerprint],
@@ -236,8 +244,7 @@ private fun validateTiming(
     lease: Duration,
     commandTimeout: Duration,
 ) {
-    require(lease > Duration.ZERO) { "lease must be positive" }
-    require(commandTimeout > Duration.ZERO && commandTimeout < lease) {
-        "command timeout must be positive and shorter than lease"
-    }
+    lease.requireGt(Duration.ZERO, "lease")
+    commandTimeout.requireGt(Duration.ZERO, "commandTimeout")
+    commandTimeout.requireLt(lease, "commandTimeout")
 }

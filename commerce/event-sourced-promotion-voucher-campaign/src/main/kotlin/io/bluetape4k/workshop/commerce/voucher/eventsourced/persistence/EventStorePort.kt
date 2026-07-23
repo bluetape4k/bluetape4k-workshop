@@ -1,6 +1,13 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence
 
+import io.bluetape4k.support.requireGe
+import io.bluetape4k.support.requireEquals
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireLe
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requireNotEmpty
+import io.bluetape4k.support.requirePositiveNumber
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventEnvelope
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
@@ -36,9 +43,9 @@ internal data class EventToAppend(
     val actorSurrogate: String = "system",
 ) {
     init {
-        require(eventId.version() == UUID_V7) { "eventId must be UUID v7" }
+        eventId.version().requireEquals(UUID_V7, "eventId.version")
         eventType.requireNotBlank("eventType")
-        require(schemaVersion > 0) { "schemaVersion must be positive" }
+        schemaVersion.requirePositiveNumber("schemaVersion")
         correlationId.requireNotBlank("correlationId")
         actorSurrogate.requireNotBlank("actorSurrogate")
     }
@@ -50,11 +57,9 @@ internal data class ExpectedAppend(
     val events: List<EventToAppend>,
 ) {
     init {
-        require(expectedVersion >= 0) { "expectedVersion must be non-negative" }
-        require(events.isNotEmpty()) { "events must not be empty" }
-        require(events.map(EventToAppend::eventId).toSet().size == events.size) {
-            "events must not repeat an eventId"
-        }
+        expectedVersion.requireZeroOrPositiveNumber("expectedVersion")
+        events.requireNotEmpty("events")
+        events.map(EventToAppend::eventId).toSet().size.requireEquals(events.size, "uniqueEventIds.size")
     }
 }
 
@@ -65,10 +70,8 @@ internal data class EventStoreRead(
     val limit: Int = MAX_EVENT_STORE_PAGE_SIZE,
 ) {
     init {
-        require(afterVersion >= 0) { "afterVersion must be non-negative" }
-        require(limit in 1..MAX_EVENT_STORE_PAGE_SIZE) {
-            "limit must be between 1 and $MAX_EVENT_STORE_PAGE_SIZE"
-        }
+        afterVersion.requireZeroOrPositiveNumber("afterVersion")
+        limit.requireInRange(1, MAX_EVENT_STORE_PAGE_SIZE, "limit")
     }
 }
 
@@ -77,8 +80,8 @@ internal data class EventPage(
     val committedHead: Long,
 ) {
     init {
-        require(events.size <= MAX_EVENT_STORE_PAGE_SIZE) { "event page exceeds the hard cap" }
-        require(committedHead >= 0) { "committedHead must be non-negative" }
+        events.size.requireLe(MAX_EVENT_STORE_PAGE_SIZE, "events.size")
+        committedHead.requireZeroOrPositiveNumber("committedHead")
     }
 }
 
@@ -89,9 +92,9 @@ internal sealed interface AppendResult {
         val lastGlobalPosition: Long,
     ) : AppendResult {
         init {
-            require(finalVersions.isNotEmpty()) { "finalVersions must not be empty" }
-            require(firstGlobalPosition > 0) { "firstGlobalPosition must be positive" }
-            require(lastGlobalPosition >= firstGlobalPosition) { "global positions must be ordered" }
+            finalVersions.requireNotEmpty("finalVersions")
+            firstGlobalPosition.requirePositiveNumber("firstGlobalPosition")
+            lastGlobalPosition.requireGe(firstGlobalPosition, "lastGlobalPosition")
         }
     }
 
