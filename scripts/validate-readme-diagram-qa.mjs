@@ -388,6 +388,7 @@ function auditRoundedBendDirection(file, svg) {
 
 function auditConnectorGeometry(file, svg) {
   const scope = rel(file);
+  if (referenceAuditsAvailable()) return;
   const pathMatches = [...svg.matchAll(/<path\b([^>]*\bdata-connector="([^"]+)"[^>]*)\/?>/g)];
   if (pathMatches.length === 0) {
     if (!referenceAuditsAvailable() && /class="edge"|data-edge=/.test(svg)) {
@@ -447,10 +448,11 @@ function auditConnectorGeometry(file, svg) {
 
 function auditSequenceShape(file, svg) {
   const scope = rel(file);
-  if (!path.basename(file).includes("sequence")) return;
-  if (fs.existsSync(path.join(skillAuditDir, "diagram-sequence-style-audit.py"))) return;
+  if (!svg.includes('data-diagram-kind="sequence"')) return;
   const labels = [...svg.matchAll(/<rect\b[^>]*\bclass="[^"]*labelPill[^"]*"[^>]*>/g)].length;
   const numbers = [...svg.matchAll(/<text\b[^>]*\bclass="[^"]*\bnum\b[^"]*"[^>]*>(\d+)<\/text>/g)].map((match) => Number(match[1]));
+  const lifelines = [...svg.matchAll(/<(?:line|path)\b[^>]*\bclass="[^"]*\blifeline\b[^"]*"[^>]*>/g)].length;
+  const activations = [...svg.matchAll(/<rect\b[^>]*\bclass="[^"]*\bactivation\b[^"]*"[^>]*>/g)].length;
   const altBodies = [...svg.matchAll(/<rect\b([^>]*\bclass="[^"]*\balt\b[^"]*"[^>]*)\/?>/g)];
   let altFillFailures = 0;
   for (const alt of altBodies) {
@@ -458,10 +460,18 @@ function auditSequenceShape(file, svg) {
     if (attrs.fill && attrs.fill !== "none") altFillFailures += 1;
   }
   const monotonic = numbers.every((value, index) => value === index + 1);
-  if (labels === 0 || numbers.length === 0 || !monotonic || altFillFailures > 0) {
-    fail(scope, "fallback sequence audit", `labels=${labels} numbers=${numbers.join(",")} monotonic=${monotonic} alt_fill_failures=${altFillFailures}`);
+  if (labels !== numbers.length || numbers.length === 0 || !monotonic || lifelines < 2 || activations === 0 || altBodies.length === 0 || altFillFailures > 0) {
+    fail(
+      scope,
+      "fallback sequence audit",
+      `labels=${labels} numbers=${numbers.join(",")} monotonic=${monotonic} lifelines=${lifelines} activations=${activations} frames=${altBodies.length} alt_fill_failures=${altFillFailures}`,
+    );
   } else {
-    addRow(scope, "fallback sequence audit", `labels=${labels} numbers=${numbers.length} monotonic=true alt_fill_failures=0`);
+    addRow(
+      scope,
+      "fallback sequence audit",
+      `labels=${labels} numbers=${numbers.length} monotonic=true lifelines=${lifelines} activations=${activations} frames=${altBodies.length} alt_fill_failures=0`,
+    );
   }
 }
 
@@ -510,6 +520,8 @@ if (targets.length === 0) {
   console.log("diagram QA wrapper: PASS targets=0");
   process.exit(0);
 }
+const sequenceTargets = targets.filter((file) => fs.readFileSync(file, "utf8").includes('data-diagram-kind="sequence"'));
+const namedSequenceTargets = targets.filter((file) => path.basename(file).includes("sequence"));
 
 for (const file of targets) {
   const scope = rel(file);
@@ -542,15 +554,19 @@ for (const file of targets) {
 if (targets.some((file) => path.basename(file).includes("architecture"))) {
   runRequired("diagram-set", "architecture validator", "node", ["scripts/validate-readme-architecture-diagrams.mjs"]);
 }
-if (targets.some((file) => path.basename(file).includes("sequence"))) {
+if (namedSequenceTargets.length > 0) {
   runRequired("diagram-set", "sequence validator", "node", ["scripts/validate-sequence-diagrams.mjs"]);
+}
+if (sequenceTargets.length > 0) {
   const sequenceStyle = path.join(skillAuditDir, "diagram-sequence-style-audit.py");
   if (fs.existsSync(sequenceStyle)) {
-    const sequenceTargets = targets.filter((file) => path.basename(file).includes("sequence")).map(rel);
-    const result = run("python3", [sequenceStyle, ...sequenceTargets]);
+    const result = run("python3", [sequenceStyle, ...sequenceTargets.map(rel)]);
     const evidence = [result.stdout, result.stderr].filter(Boolean).join("\n").trim() || `exit=${result.status}`;
     if (result.status !== 0) fail("diagram-set", "sequence style reference audit", evidence);
-    else addRow("diagram-set", "sequence style reference audit", evidence.split("\n").at(-1) || "exit=0");
+    else {
+      const resultLabel = /sequence_files=0/.test(evidence) ? "WEAK" : "PASS";
+      addRow("diagram-set", "sequence style reference audit", evidence.split("\n").at(-1) || "exit=0", resultLabel);
+    }
   }
 }
 

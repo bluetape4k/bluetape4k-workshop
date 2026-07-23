@@ -1,80 +1,147 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1700" height="1020" viewBox="0 0 1700 1020" role="img" aria-labelledby="title desc" data-diagram-kind="sequence">
-  <title id="title">Poison isolation and audited redrive</title>
-  <desc id="desc">Query makes a permanent schema or digest failure durable, while unrelated aggregates keep moving.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="2600" height="1500" viewBox="0 0 2600 1500" role="img" aria-labelledby="title desc" data-diagram-kind="sequence">
+  <title id="title">Poison Isolation and Audited Redrive</title>
+  <desc id="desc">A permanent contract failure becomes durable Query state; retrieving and republishing the original envelope stays external.</desc>
   <defs>
-    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L12,6 L0,12 Z" fill="#356a91" stroke="#356a91"/></marker>
-    <marker id="amberArrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L12,6 L0,12 Z" fill="#a67331" stroke="#a67331"/></marker>
-    <marker id="greenArrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M0,0 L12,6 L0,12 Z" fill="#4f7b59" stroke="#4f7b59"/></marker>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#243447" flood-opacity=".10"/>
+    </filter>
     <style>
-      .title{font:700 36px 'Architects Daughter',sans-serif;fill:#20384b}.subtitle{font:18px 'Comic Mono',monospace;fill:#536d80}.heading{font:700 23px 'Architects Daughter',sans-serif;fill:#20384b}.label{font:700 18px 'Comic Mono',monospace;fill:#20384b}.whiteLabel{font:700 18px 'Comic Mono',monospace;fill:#fff}.whiteSmall{font:14px 'Comic Mono',monospace;fill:#dce8f0}.copy{font:16px 'Comic Mono',monospace;fill:#405a6e}.small{font:14px 'Comic Mono',monospace;fill:#536d80}.flow{fill:none;stroke:#356a91;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow)}.recovery{fill:none;stroke:#a67331;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#amberArrow)}.local{fill:none;stroke:#4f7b59;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#greenArrow)}.lifeline{stroke:#92a7b7;stroke-width:2;stroke-dasharray:8 8}.activation{fill:#c5dfec;stroke:#356a91;stroke-width:2}.frame{stroke:#6f9fbe;stroke-width:2}.frameLabel{font:700 15px 'Comic Mono',monospace;fill:#20384b}.labelPill{fill:#f8fbfd;stroke:#6f9fbe;stroke-width:1.5}.num{font:700 13px 'Comic Mono',monospace;fill:#20384b}.message{font:13px 'Comic Mono',monospace;fill:#405a6e}
+      .canvas{fill:#F7F9FB}
+      .outer{fill:#FFFDFC;stroke:#C9D5DF;stroke-width:3}
+      .title{font:700 48px 'Architects Daughter',sans-serif;fill:#243447}
+      .subtitle{font:22px 'Comic Mono',monospace;fill:#526579}
+      .regionTitle{font:700 30px 'Architects Daughter',sans-serif;fill:#243447}
+      .cardTitle{font:700 28px 'Architects Daughter',sans-serif;fill:#243447}
+      .participant{font:700 25px 'Architects Daughter',sans-serif;fill:#243447}
+      .body{font:19px 'Comic Mono',monospace;fill:#526579}
+      .small{font:17px 'Comic Mono',monospace;fill:#526579}
+      .micro{font:15px 'Comic Mono',monospace;fill:#526579}
+      .footer{font:19px 'Comic Mono',monospace;fill:#526579}
+      .card{fill:#FFFDFC;stroke-width:3}
+      .lifeline{stroke:#8FA1B2;stroke-width:2;stroke-dasharray:10 10}
+      .activation{fill:#EAF2FB;stroke:#4F86C6;stroke-width:2}
+      .edgePath{fill:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+      .labelPill{fill:#FFFDFC;stroke-width:2}
+      .num{font:700 16px 'Comic Mono',monospace}
+      .message{font:17px 'Comic Mono',monospace;fill:#243447}
+      .frame{fill:none;stroke-width:2.5}
+      .frameLabel{font:700 19px 'Architects Daughter',sans-serif}
+      .legend{font:17px 'Comic Mono',monospace;fill:#526579}
     </style>
   </defs>
-  <rect width="1700" height="1020" fill="#f8fbfd"/>
-  <text x="70" y="72" class="title">Poison isolation and audited redrive</text>
-  <text x="70" y="108" class="subtitle">Query makes a permanent schema or digest failure durable, while unrelated aggregates keep moving.</text>
-  <rect x="70" y="125" width="1560" height="810" rx="28" fill="#eef5f9" stroke="#b9d0df" stroke-width="2"/>
-  <g>
-    <rect x="25" y="150" width="210" height="72" rx="14" fill="#fff" stroke="#6f9fbe" stroke-width="2"/>
-    <text x="130" y="180" text-anchor="middle" class="label">Kafka ingress</text>
-    <text x="130" y="204" text-anchor="middle" class="small">durable boundary</text>
-    <line x1="130" y1="222" x2="130" y2="900" class="lifeline"/>
+  <rect class="canvas" width="2600" height="1500"/>
+  <rect class="outer" x="28" y="24" width="2544" height="1452" rx="28"/>
+  <text x="1300" y="88" text-anchor="middle" class="title">Poison Isolation and Audited Redrive</text>
+  <text x="1300" y="124" text-anchor="middle" class="subtitle">A permanent contract failure becomes durable Query state; retrieving and republishing the original envelope stays external.</text>
+  <g class="node" data-node="Kafka" data-card="Kafka">
+    <rect class="card" x="55" y="180" width="410" height="105" rx="18" fill="#FFFDFC" stroke="#B57E2A" filter="url(#shadow)"/>
+    <image href="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjRDIyMTI4IiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+QXBhY2hlIEthZmthPC90aXRsZT48cGF0aCBkPSJNOS43MSAyLjEzNmExLjQzIDEuNDMgMCAwIDAtMi4wNDcgMGgtLjAwN2ExLjQ4IDEuNDggMCAwIDAtLjQyMSAxLjA0MmMwIC40MS4xNjEuNzc3LjQyMiAxLjAzOWwuMDA3LjAwN2MuMjU3LjI2NC42MTYuNDI2IDEuMDE5LjQyNi40MDQgMCAuNzY2LS4xNjIgMS4wMjctLjQyNmwuMDAzLS4wMDdjLjI2MS0uMjYyLjQyMS0uNjI5LjQyMS0xLjAzOSAwLS40MDgtLjE1OS0uNzc3LS40MjEtMS4wNDJIOS43MXpNOC42ODMgMjIuMjk1Yy40MDQgMCAuNzY2LS4xNjcgMS4wMjctLjQyOWwuMDAzLS4wMDhjLjI2MS0uMjYxLjQyMS0uNjMxLjQyMS0xLjAzNiAwLS40MS0uMTU5LS43NzgtLjQyMS0xLjA0NEg5LjcxYTEuNDIgMS40MiAwIDAgMC0xLjAyNy0uNDMyIDEuNCAxLjQgMCAwIDAtMS4wMi40MzJoLS4wMDdjLS4yNi4yNjYtLjQyMi42MzQtLjQyMiAxLjA0NCAwIC40MDYuMTYxLjc3NS40MjIgMS4wMzZsLjAwNy4wMDhjLjI1OC4yNjIuNjE3LjQyOSAxLjAyLjQyOXptNy44OS00LjQ2MmMuMzU5LS4wOTYuNjgzLS4zMy44ODItLjY4NGwuMDI3LS4wNTJhMS40NyAxLjQ3IDAgMCAwIC4xMTQtMS4wNjcgMS40NTQgMS40NTQgMCAwIDAtLjY3NS0uODk2bC0uMDIxLS4wMTRhMS40MjUgMS40MjUgMCAwIDAtMS4wNzgtLjEzMmMtLjM2LjA5MS0uNjg0LjMzNS0uODgxLjY4Ni0uMi4zNDktLjI0MS43NS0uMTQ2IDEuMTE5LjA5OS4zNjMuMzMuNjkxLjY3NS44OTZoLjAwMmMuMzQ2LjIwMy43MzcuMjM5IDEuMTAxLjE0NHptLTYuNDA1LTcuMzQyYTIuMDgzIDIuMDgzIDAgMCAwLTEuNDg1LS42MjdjLS41OCAwLTEuMTAzLjI0Mi0xLjQ4Mi42MjctLjM3OC4zODUtLjYxMi45MTYtLjYxMiAxLjUwN3MuMjMzIDEuMTI0LjYxMiAxLjUxNGEyLjA4IDIuMDggMCAwIDAgMi45NjcgMGMuMzc5LS4zOS42MTItLjkyMy42MTItMS41MTRzLS4yMzMtMS4xMjItLjYxMi0xLjUwN3ptLS44MzUtMi41MWMuODQzLjE0MSAxLjYuNTUyIDIuMTc4IDEuMTQ0aC4wMDRjLjA5Mi4wOTMuMTgyLjE5Ni4yNjUuMjk5bDEuNDQ2LS44NTFhMy4xNzYgMy4xNzYgMCAwIDEtLjA0Ny0xLjgwOCAzLjE0OSAzLjE0OSAwIDAgMSAxLjQ1Ni0xLjkyNmwuMDI1LS4wMTZhMy4wNjIgMy4wNjIgMCAwIDEgMi4zNDUtLjMwNmMuNzcuMjEgMS40NjUuNzIxIDEuODk4IDEuNDgydi4wMDJjLjQzMS43NTcuNTE4IDEuNjI2LjMxMyAyLjQwOGEzLjE0NSAzLjE0NSAwIDAgMS0xLjQ1NiAxLjkyOGwtLjE5OC4xMThoLS4wMmEzLjA5NSAzLjA5NSAwIDAgMS0yLjE1NC4yMDEgMy4xMjcgMy4xMjcgMCAwIDEtMS41MTQtLjk0NGwtMS40NDQuODQ4YTQuMTYyIDQuMTYyIDAgMCAxIDAgMi44NzlsMS40NDQuODQ2Yy40MTMtLjQ3LjkzOS0uNzg5IDEuNTE0LS45NDRhMy4wNDEgMy4wNDEgMCAwIDEgMi4zNzEuMzE5bC4wNDguMDIzdi4wMDJhMy4xNyAzLjE3IDAgMCAxIDEuNDA4IDEuOTA2IDMuMjE1IDMuMjE1IDAgMCAxLS4zMTMgMi40MDVsLS4wMjYuMDUzLS4wMDMtLjAwNWEzLjE0NyAzLjE0NyAwIDAgMS0xLjg2NyAxLjQzNiAzLjA5NiAzLjA5NiAwIDAgMS0yLjM3MS0uMzE4di0uMDA2YTMuMTU2IDMuMTU2IDAgMCAxLTEuNDU2LTEuOTI3IDMuMTc1IDMuMTc1IDAgMCAxIC4wNDctMS44MDVsLTEuNDQ2LS44NDhhMy45MDUgMy45MDUgMCAwIDEtLjI2NS4yOTRsLS4wMDQuMDA1YTMuOTM4IDMuOTM4IDAgMCAxLTIuMTc4IDEuMTM4djEuNjk5YTMuMDkgMy4wOSAwIDAgMSAxLjU2Ljg2MmwuMDAyLjAwNGMuNTY1LjU3Mi45MTQgMS4zNjguOTE0IDIuMjQzIDAgLjg3My0uMzUgMS42NjQtLjkxNCAyLjIzOWwtLjAwMi4wMDlhMy4xIDMuMSAwIDAgMS0yLjIxLjkzMSAzLjEgMy4xIDAgMCAxLTIuMjA2LS45M2gtLjAwMnYtLjAwOWEzLjE4NiAzLjE4NiAwIDAgMS0uOTE2LTIuMjM5YzAtLjg3NS4zNS0xLjY3Mi45MTYtMi4yNDN2LS4wMDRoLjAwMmEzLjEgMy4xIDAgMCAxIDEuNTU4LS44NjJ2LTEuNjk5YTMuOTI2IDMuOTI2IDAgMCAxLTIuMTc2LTEuMTM4bC0uMDA2LS4wMDVhNC4wOTggNC4wOTggMCAwIDEtMS4xNzMtMi44NzRjMC0xLjEyMi40NTItMi4xMzYgMS4xNzMtMi44NzJoLjAwNmEzLjk0NyAzLjk0NyAwIDAgMSAyLjE3Ni0xLjE0NFY2LjI4OWEzLjEzNyAzLjEzNyAwIDAgMS0xLjU1OC0uODY0aC0uMDAydi0uMDA0YTMuMTkyIDMuMTkyIDAgMCAxLS45MTYtMi4yNDNjMC0uODcxLjM1LTEuNjY5LjkxNi0yLjI0M2wuMDAyLS4wMDJBMy4wODQgMy4wODQgMCAwIDEgOC42ODMgMGMuODYxIDAgMS42NDEuMzU1IDIuMjEuOTMydi4wMDJoLjAwMmMuNTY1LjU3NC45MTQgMS4zNzIuOTE0IDIuMjQzIDAgLjg3Ni0uMzUgMS42NjctLjkxNCAyLjI0M2wtLjAwMi4wMDVhMy4xNDIgMy4xNDIgMCAwIDEtMS41Ni44NjR2MS42OTJ6bTguMTIxLTEuMTI5bC0uMDEyLS4wMTlhMS40NTIgMS40NTIgMCAwIDAtLjg3LS42NjggMS40MyAxLjQzIDAgMCAwLTEuMTAzLjE0NmguMDAyYy0uMzQ3LjItLjU4LjUyOS0uNjc3Ljg5Ni0uMDk1LjM2NS0uMDU0Ljc2OC4xNDYgMS4xMTlsLjAwNy4wMDljLjIuMzQ3LjUxOS41NzkuODc0LjY3My4zNTcuMTAzLjc1NS4wNTkgMS4wOTgtLjE0NGwuMDE5LS4wMDlhMS40NyAxLjQ3IDAgMCAwIC42NTctLjg4NSAxLjQ5MyAxLjQ5MyAwIDAgMC0uMTQxLTEuMTE4Ii8+PC9zdmc+" x="148" y="206" width="48" height="48"/>
+    <text x="312" y="222" text-anchor="middle" class="participant">Kafka</text>
+    <text x="312" y="255" text-anchor="middle" class="small">public topic</text>
+    <line x1="260" y1="285" x2="260" y2="1430" class="lifeline"/>
   </g>
-<g>
-    <rect x="385" y="150" width="210" height="72" rx="14" fill="#fff" stroke="#6f9fbe" stroke-width="2"/>
-    <text x="490" y="180" text-anchor="middle" class="label">Query decoder</text>
-    <text x="490" y="204" text-anchor="middle" class="small">durable boundary</text>
-    <line x1="490" y1="222" x2="490" y2="900" class="lifeline"/>
+<g class="node" data-node="Query consumer" data-card="Query consumer">
+    <rect class="card" x="575" y="180" width="410" height="105" rx="18" fill="#FFFDFC" stroke="#4F86C6" filter="url(#shadow)"/>
+
+    <text x="780" y="222" text-anchor="middle" class="participant">Query consumer</text>
+    <text x="780" y="255" text-anchor="middle" class="small">local decoder contract</text>
+    <line x1="780" y1="285" x2="780" y2="1430" class="lifeline"/>
   </g>
-<g>
-    <rect x="745" y="150" width="210" height="72" rx="14" fill="#fff" stroke="#6f9fbe" stroke-width="2"/>
-    <text x="850" y="180" text-anchor="middle" class="label">Query DB</text>
-    <text x="850" y="204" text-anchor="middle" class="small">Kafka topic</text>
-    <line x1="850" y1="222" x2="850" y2="900" class="lifeline"/>
+<g class="node" data-node="Query DB" data-card="Query DB">
+    <rect class="card" x="1095" y="180" width="410" height="105" rx="18" fill="#FFFDFC" stroke="#8065A8" filter="url(#shadow)"/>
+    <image href="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjNDE2OUUxIiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+UG9zdGdyZVNRTDwvdGl0bGU+PHBhdGggZD0iTTIzLjU1OTQgMTQuNzIyOGEuNTI2OS41MjY5IDAgMCAwLS4wNTYzLS4xMTkxYy0uMTM5LS4yNjMyLS40NzY4LS4zNDE4LTEuMDA3NC0uMjMyMS0xLjY1MzMuMzQxMS0yLjI5MzUuMTMxMi0yLjUyNTYtLjAxOTEgMS4zNDItMi4wNDgyIDIuNDQ1LTQuNTIyIDMuMDQxMS02LjgyOTcuMjcxNC0xLjA1MDcuNzk4Mi0zLjUyMzcuMTIyMi00LjczMTZhMS41NjQxIDEuNTY0MSAwIDAgMC0uMTUwOS0uMjM1QzIxLjY5MzEuOTA4NiAxOS44MDA3LjAyNDggMTcuNTA5OS4wMDA1Yy0xLjQ5NDctLjAxNTgtMi43NzA1LjM0NjEtMy4xMTYxLjQ3OTRhOS40NDkgOS40NDkgMCAwIDAtLjUxNTktLjA4MTYgOC4wNDQgOC4wNDQgMCAwIDAtMS4zMTE0LS4xMjc4Yy0xLjE4MjItLjAxODQtMi4yMDM4LjI2NDItMy4wNDk4Ljg0MDYtLjg1NzMtLjMyMTEtNC43ODg4LTEuNjQ1LTcuMjIxOS4wNzg4Qy45MzU5IDIuMTUyNi4zMDg2IDMuODczMy40MzAyIDYuMzA0M2MuMDQwOS44MTguNTA2OSAzLjMzNCAxLjI0MjMgNS43NDM2LjQ1OTggMS41MDY1LjkzODcgMi43MDE5IDEuNDMzNCAzLjU4Mi41NTMuOTk0MiAxLjEyNTkgMS41OTMzIDEuNzE0MyAxLjc4OTUuNDQ3NC4xNDkxIDEuMTMyNy4xNDQxIDEuODU4MS0uNzI3OS44MDEyLS45NjM1IDEuNTkwMy0xLjgyNTggMS45NDQ2LTIuMjA2OS40MzUxLjIzNTUuOTA2NC4zNjI1IDEuMzkuMzc3MmEuMDU2OS4wNTY5IDAgMCAwIC4wMDA0LjAwNDEgMTEuMDMxMiAxMS4wMzEyIDAgMCAwLS4yNDcyLjMwNTRjLS4zMzg5LjQzMDItLjQwOTQuNTE5Ny0xLjUwMDIuNzQ0My0uMzEwMi4wNjQtMS4xMzQ0LjIzMzktMS4xNDY0LjgxMTUtLjAwMjUuMTIyNC4wMzI5LjIzMDkuMDkxOS4zMjY4LjIyNjkuNDIzMS45MjE2LjYwOTcgMS4wMTUuNjMzMSAxLjMzNDUuMzMzNSAyLjUwNDQuMDkyIDMuMzcxNC0uNjc4Ny0uMDE3IDIuMjMxLjA3NzUgNC40MTc0LjM0NTQgNS4wODc0LjIyMTIuNTUyOS43NjE4IDEuOTA0NSAyLjQ2OTIgMS45MDQzLjI1MDUgMCAuNTI2My0uMDI5MS44Mjk2LS4wOTQxIDEuNzgxOS0uMzgyMSAyLjU1NTctMS4xNjk2IDIuODU1LTIuOTA1OS4xNTAzLS44NzA3LjQwMTYtMi44NzUzLjUzODgtNC4xMDEyLjAxNjktLjA3MDMuMDM1Ny0uMTIwNy4wNTctLjEzNjIuMDAwNy0uMDAwNS4wNjk3LS4wNDcxLjQyNzIuMDMwN2EuMzY3My4zNjczIDAgMCAwIC4wNDQzLjAwNjhsLjI1MzkuMDIyMy4wMTQ5LjAwMWMuODQ2OC4wMzg0IDEuOTExNC0uMTQyNiAyLjUzMTItLjQzMDguNjQzOC0uMjk4OCAxLjgwNTctMS4wMzIzIDEuNTk1MS0xLjY2OTh6TTIuMzcxIDExLjg3NjVjLS43NDM1LTIuNDM1OC0xLjE3NzktNC44ODUxLTEuMjEyMy01LjU3MTktLjEwODYtMi4xNzE0LjQxNzEtMy42ODI5IDEuNTYyMy00LjQ5MjcgMS44MzY3LTEuMjk4NiA0LjgzOTgtLjU0MDggNi4xMDgtLjEzLS4wMDMyLjAwMzItLjAwNjYuMDA2MS0uMDA5OC4wMDk0LTIuMDIzOCAyLjA0NC0xLjk3NTggNS41MzYtMS45NzA4IDUuNzQ5NS0uMDAwMi4wODIzLjAwNjYuMTk4OS4wMTYyLjM1OTMuMDM0OC41ODczLjA5OTYgMS42ODA0LS4wNzM1IDIuOTE4NC0uMTYwOSAxLjE1MDQuMTkzNyAyLjI3NjQuOTcyOCAzLjA4OTIuMDgwNi4wODQxLjE2NDguMTYzMS4yNTE4LjIzNzQtLjM0NjguMzcxNC0xLjEwMDQgMS4xOTI2LTEuOTAyNSAyLjE1NzYtLjU2NzcuNjgyNS0uOTU5Ny41NTE3LTEuMDg4Ni41MDg3LS4zOTE5LS4xMzA3LS44MTMtLjU4NzEtMS4yMzgxLTEuMzIyMy0uNDc5Ni0uODM5LS45NjM1LTIuMDMxNy0xLjQxNTUtMy41MTI2em02LjAwNzIgNS4wODcxYy0uMTcxMS0uMDQyOC0uMzI3MS0uMTEzMi0uNDMyMi0uMTc3Mi4wODg5LS4wMzk0LjIzNzQtLjA5MDIuNDgzMy0uMTQwOSAxLjI4MzMtLjI2NDEgMS40ODE1LS40NTA2IDEuOTE0My0xLjAwMDIuMDk5Mi0uMTI2LjIxMTYtLjI2ODcuMzY3My0uNDQyNmEuMzU0OS4zNTQ5IDAgMCAwIC4wNzM3LS4xMjk4Yy4xNzA4LS4xNTEzLjI3MjQtLjEwOTkuNDM2OS0uMDQxNy4xNTYuMDY0Ni4zMDc4LjI2LjM2OTUuNDc1Mi4wMjkxLjEwMTYuMDYxOS4yOTQ1LS4wNDUyLjQ0NDQtLjkwNDMgMS4yNjU4LTIuMjIxNiAxLjI0OTQtMy4xNjc2IDEuMDEyOHptMi4wOTQtMy45ODgtLjA1MjUuMTQxYy0uMTMzLjM1NjYtLjI1NjcuNjg4MS0uMzMzNCAxLjAwMy0uNjY3NC0uMDAyMS0xLjMxNjgtLjI4NzItMS44MTA1LS44MDI0LS42Mjc5LS42NTUxLS45MTMxLTEuNTY2NC0uNzgyNS0yLjUwMDQuMTgyOC0xLjMwNzkuMTE1My0yLjQ0NjguMDc5LTMuMDU4Ni0uMDA1LS4wODU3LS4wMDk1LS4xNjA3LS4wMTIyLS4yMTk5LjI5NTctLjI2MjEgMS42NjU5LS45OTYyIDIuNjQyOS0uNzcyNC40NDU5LjEwMjIuNzE3Ni40MDU3LjgzMDUuOTI4LjU4NDYgMi43MDM4LjA3NzQgMy44MzA3LS4zMzAyIDQuNzM2My0uMDg0LjE4NjYtLjE2MzMuMzYyOS0uMjMxMS41NDU0em03LjM2MzcgNC41NzI1Yy0uMDE2OS4xNzY4LS4wMzU4LjM3Ni0uMDYxOC41OTU5bC0uMTQ2LjQzODNhLjM1NDcuMzU0NyAwIDAgMC0uMDE4Mi4xMDc3Yy0uMDA1OS40NzQ3LS4wNTQuNjQ4OS0uMTE1Ljg2OTMtLjA2MzQuMjI5Mi0uMTM1My40ODkxLS4xNzk0IDEuMDU3NS0uMTEgMS40MTQzLS44NzgyIDIuMjI2Ny0yLjQxNzIgMi41NTY1LTEuNTE1NS4zMjUxLTEuNzg0My0uNDk2OC0yLjAyMTItMS4yMjE3YTYuNTgyNCA2LjU4MjQgMCAwIDAtLjA3NjktLjIyNjZjLS4yMTU0LS41ODU4LS4xOTExLTEuNDExOS0uMTU3NC0yLjU1NTEuMDE2NS0uNTYxMi0uMDI0OS0xLjkwMTMtLjMzMDItMi42NDYyLjAwNDQtLjI5MzIuMDEwNi0uNTkwOS4wMTktLjg5MThhLjM1MjkuMzUyOSAwIDAgMC0uMDE1My0uMTEyNiAxLjQ5MjcgMS40OTI3IDAgMCAwLS4wNDM5LS4yMDhjLS4xMjI2LS40MjgzLS40MjEzLS43ODY2LS43Nzk3LS45MzUxLS4xNDI0LS4wNTktLjQwMzgtLjE2NzItLjcxNzgtLjA4NjkuMDY3LS4yNzYuMTgzMS0uNTg3NS4zMDktLjkyNDlsLjA1MjktLjE0MmMuMDU5NS0uMTYuMTM0LS4zMjU3LjIxMy0uNTAxMi40MjY1LS45NDc2IDEuMDEwNi0yLjI0NTMuMzc2Ni01LjE3NzItLjIzNzQtMS4wOTgxLTEuMDMwNC0xLjYzNDMtMi4yMzI0LTEuNTA5OC0uNzIwNy4wNzQ2LTEuMzc5OS4zNjU0LTEuNzA4OC41MzIxYTUuNjcxNiA1LjY3MTYgMCAwIDAtLjE5NTguMTA0MWMuMDkxOC0xLjEwNjQuNDM4Ni0zLjE3NDEgMS43MzU3LTQuNDgyM2E0LjAzMDYgNC4wMzA2IDAgMCAxIC4zMDMzLS4yNzYuMzUzMi4zNTMyIDAgMCAwIC4xNDQ3LS4wNjQ0Yy43NTI0LS41NzA2IDEuNjk0NS0uODUwNiAyLjgwMi0uODMyNS40MDkxLjAwNjcuODAxNy4wMzM5IDEuMTc0Mi4wODEgMS45MzkuMzU0NCAzLjI0MzkgMS40NDY4IDQuMDM1OSAyLjM4MjcuODE0My45NjIzIDEuMjU1MiAxLjkzMTUgMS40MzEyIDIuNDU0My0xLjMyMzItLjEzNDYtMi4yMjM0LjEyNjgtMi42Nzk3Ljc3OS0uOTkyNiAxLjQxODkuNTQzIDQuMTcyOSAxLjI4MTEgNS40OTY0LjEzNTMuMjQyNi4yNTIyLjQ1MjIuMjg4OS41NDEzLjI0MDMuNTgyNS41NTE1Ljk3MTMuNzc4NyAxLjI1NTIuMDY5Ni4wODcuMTM3Mi4xNzE0LjE4ODUuMjQ1LS40MDA4LjExNTUtMS4xMjA4LjM4MjUtMS4wNTUyIDEuNzE3LS4wMTIzLjE1NjMtLjA0MjMuNDQ2OS0uMDgzNC44MTQ4LS4wNDYxLjIwNzctLjA3MDIuNDYwMy0uMDk5NC43NjYyem0uODkwNS0xLjYyMTFjLS4wNDA1LS44MzE2LjI2OTEtLjkxODUuNTk2Ny0xLjAxMDVhMi44NTY2IDIuODU2NiAwIDAgMCAuMTM1LS4wNDA2IDEuMjAyIDEuMjAyIDAgMCAwIC4xMzQyLjEwM2MuNTcwMy4zNzY1IDEuNTgyMy40MjEzIDMuMDA2OC4xMzQ0LS4yMDE2LjE3NjktLjUxODkuMzk5NC0uOTUzMy42MDExLS40MDk4LjE5MDMtMS4wOTU3LjMzMy0xLjc0NzMuMzYzNi0uNzE5Ny4wMzM2LTEuMDg1OS0uMDgwNy0xLjE3MjEtLjE1MXptLjU2OTUtOS4yNzEyYy0uMDA1OS4zNTA4LS4wNTQyLjY2OTItLjEwNTQgMS4wMDE3LS4wNTUuMzU3Ni0uMTEyLjcyNzQtLjEyNjQgMS4xNzYyLS4wMTQyLjQzNjguMDQwNC44OTA5LjA5MzIgMS4zMzAxLjEwNjYuODg3LjIxNiAxLjgwMDMtLjIwNzUgMi43MDE0YTMuNTI3MiAzLjUyNzIgMCAwIDEtLjE4NzYtLjM4NTZjLS4wNTI3LS4xMjc2LS4xNjY5LS4zMzI2LS4zMjUxLS42MTYyLS42MTU2LTEuMTA0MS0yLjA1NzQtMy42ODk2LTEuMzE5My00Ljc0NDYuMzc5NS0uNTQyNyAxLjM0MDgtLjU2NjEgMi4xNzgxLS40NjN6bS4yMjg0IDcuMDEzN2ExMi4zNzYyIDEyLjM3NjIgMCAwIDAtLjA4NTMtLjEwNzRsLS4wMzU1LS4wNDQ0Yy43MjYyLTEuMTk5NS41ODQyLTIuMzg2Mi40NTc4LTMuNDM4NS0uMDUxOS0uNDMxOC0uMTAwOS0uODM5Ni0uMDg4NS0xLjIyMjYuMDEyOS0uNDA2MS4wNjY2LS43NTQzLjExODUtMS4wOTExLjA2MzktLjQxNS4xMjg4LS44NDQzLjExMDktMS4zNTA1LjAxMzQtLjA1MzEuMDE4OC0uMTE1OC4wMTE4LS4xOTAyLS4wNDU3LS40ODU1LS41OTk5LTEuOTM4LTEuNzI5NC0zLjI1My0uNjA3Ni0uNzA3My0xLjQ4OTYtMS40OTcyLTIuNjg4OS0yLjAzOTUuNTI1MS0uMTA2NiAxLjIzMjgtLjIwMzUgMi4wMjQ0LS4xODU5IDIuMDUxNS4wNDU2IDMuNjc0Ni44MTM1IDQuODI0MiAyLjI4MjRhLjkwOC45MDggMCAwIDEgLjA2NjcuMTAwMmMuNzIzMSAxLjM1NTYtLjI3NjIgNi4yNzUxLTIuOTg2NyAxMC41NDA1em0tOC44MTY2LTYuMTE2MmMtLjAyNS4xNzk0LS4zMDg5LjQyMjUtLjYyMTEuNDIyNWEuNTgyMS41ODIxIDAgMCAxLS4wODA5LS4wMDU2Yy0uMTg3My0uMDI2LS4zNzY1LS4xNDQtLjUwNTktLjMxNTYtLjA0NTgtLjA2MDUtLjEyMDMtLjE3OC0uMTA1NS0uMjg0NC4wMDU1LS4wNDAxLjAyNjEtLjA5ODUuMDkyNS0uMTQ4OC4xMTgyLS4wODk0LjM1MTgtLjEyMjYuNjA5Ni0uMDg2Ny4zMTYzLjA0NDEuNjQyNi4xOTM4LjYxMTMuNDE4NnptNy45MzA1LS40MTE0Yy4wMTExLjA3OTItLjA0OS4yMDEtLjE1MzEuMzEwMi0uMDY4My4wNzE3LS4yMTIuMTk2MS0uNDA3OS4yMjMyYS41NDU2LjU0NTYgMCAwIDEtLjA3NS4wMDUyYy0uMjkzNSAwLS41NDE0LS4yMzQ0LS41NjA3LS4zNzE3LS4wMjQtLjE3NjUuMjY0MS0uMzEwNi41NjExLS4zNTIuMjk3LS4wNDE0LjYxMTEuMDA4OC42MzU2LjE4NTF6Ii8+PC9zdmc+" x="1188" y="206" width="48" height="48"/>
+    <text x="1352" y="222" text-anchor="middle" class="participant">Query DB</text>
+    <text x="1352" y="255" text-anchor="middle" class="small">PostgreSQL quarantine + audit</text>
+    <line x1="1300" y1="285" x2="1300" y2="1430" class="lifeline"/>
   </g>
-<g>
-    <rect x="1105" y="150" width="210" height="72" rx="14" fill="#fff" stroke="#6f9fbe" stroke-width="2"/>
-    <text x="1210" y="180" text-anchor="middle" class="label">Operator</text>
-    <text x="1210" y="204" text-anchor="middle" class="small">durable boundary</text>
-    <line x1="1210" y1="222" x2="1210" y2="900" class="lifeline"/>
+<g class="node" data-node="Operator" data-card="Operator">
+    <rect class="card" x="1615" y="180" width="410" height="105" rx="18" fill="#FFFDFC" stroke="#2D948C" filter="url(#shadow)"/>
+
+    <text x="1820" y="222" text-anchor="middle" class="participant">Operator</text>
+    <text x="1820" y="255" text-anchor="middle" class="small">authenticated recovery actor</text>
+    <line x1="1820" y1="285" x2="1820" y2="1430" class="lifeline"/>
   </g>
-<g>
-    <rect x="1465" y="150" width="210" height="72" rx="14" fill="#fff" stroke="#6f9fbe" stroke-width="2"/>
-    <text x="1570" y="180" text-anchor="middle" class="label">Retained source</text>
-    <text x="1570" y="204" text-anchor="middle" class="small">durable boundary</text>
-    <line x1="1570" y1="222" x2="1570" y2="900" class="lifeline"/>
+<g class="node" data-node="Retained source" data-card="Retained source">
+    <rect class="card" x="2135" y="180" width="410" height="105" rx="18" fill="#FFFDFC" stroke="#B57E2A" filter="url(#shadow)"/>
+
+    <text x="2340" y="222" text-anchor="middle" class="participant">Retained source</text>
+    <text x="2340" y="255" text-anchor="middle" class="small">external immutable envelope</text>
+    <line x1="2340" y1="285" x2="2340" y2="1430" class="lifeline"/>
   </g>
-  <rect x="100" y="270" width="1500" height="570" rx="12" class="frame" fill="none"/>
-  <path d="M100 270 H245 V302 H100" fill="#eaf3f9" stroke="#6f9fbe" stroke-width="2"/>
-  <text x="118" y="292" class="frameLabel">alt  permanent contract failure</text>
-  <rect x="123" y="340" width="14" height="45" class="activation"/>
-      <path class="flow" d="M140 362 H480"/>
-      <rect x="149.5" y="312" width="321" height="26" rx="13" class="labelPill"/>
-      <text x="164.5" y="329" text-anchor="middle" class="num">1</text>
-      <text x="180.5" y="329" class="message">deliver unsupported schema / bad digest</text>
-<rect x="483" y="425" width="14" height="45" class="activation"/>
-      <path class="flow" d="M500 447 H840"/>
-      <rect x="527" y="397" width="286" height="26" rx="13" class="labelPill"/>
-      <text x="542" y="414" text-anchor="middle" class="num">2</text>
-      <text x="558" y="414" class="message">store quarantine metadata + reason</text>
-<rect x="843" y="510" width="14" height="45" class="activation"/>
-      <path class="recovery" d="M840 532 H140"/>
-      <rect x="361" y="482" width="258" height="26" rx="13" class="labelPill"/>
-      <text x="376" y="499" text-anchor="middle" class="num">3</text>
-      <text x="392" y="499" class="message">commit offset after quarantine</text>
-<rect x="1203" y="595" width="14" height="45" class="activation"/>
-      <path class="flow" d="M1200 617 H860"/>
-      <rect x="894" y="567" width="272" height="26" rx="13" class="labelPill"/>
-      <text x="909" y="584" text-anchor="middle" class="num">4</text>
-      <text x="925" y="584" class="message">inspect backlog; request redrive</text>
-<rect x="843" y="680" width="14" height="45" class="activation"/>
-      <path class="recovery" d="M860 702 H1560"/>
-      <rect x="1046" y="652" width="328" height="26" rx="13" class="labelPill"/>
-      <text x="1061" y="669" text-anchor="middle" class="num">5</text>
-      <text x="1077" y="669" class="message">record auditable retained-source request</text>
-<rect x="1563" y="765" width="14" height="45" class="activation"/>
-      <path class="recovery" d="M1560 787 H500"/>
-      <rect x="865" y="737" width="330" height="26" rx="13" class="labelPill"/>
-      <text x="880" y="754" text-anchor="middle" class="num">6</text>
-      <text x="896" y="754" class="message">external retrieval/republication (not implemented)</text>
-  <text x="110" y="910" class="small">Messages are numbered by durable decision order. A Kafka offset advances only after the receiver commits its local inbox or quarantine decision.</text>
+  <rect x="60" y="350" width="1510" height="540" rx="18" class="frame alt" fill="none" stroke="#B75B5B"/>
+        <rect x="60" y="350" width="663" height="38" rx="18" fill="#FFFDFC" stroke="#B75B5B" stroke-width="2"/>
+        <text x="80" y="377" class="frameLabel" fill="#B75B5B">alt — unsupported schema or payload digest conflict</text>
+
+<rect x="55" y="920" width="2520" height="430" rx="18" class="frame alt" fill="none" stroke="#B57E2A"/>
+        <rect x="55" y="920" width="741" height="38" rx="18" fill="#FFFDFC" stroke="#B57E2A" stroke-width="2"/>
+        <text x="75" y="947" class="frameLabel" fill="#B57E2A">recovery — audit locally, replay from the retained source</text>
+
+  <rect class="activation" x="770" y="400" width="20" height="500" rx="8" fill="#EAF2FB" stroke="#4F86C6"/>
+<rect class="activation" x="1290" y="515" width="20" height="700" rx="8" fill="#F1EDF7" stroke="#8065A8"/>
+<rect class="activation" x="1810" y="880" width="20" height="350" rx="8" fill="#E8F5F3" stroke="#2D948C"/>
+  <rect x="271" y="408" width="498" height="42" rx="21" class="labelPill" stroke="#B75B5B"/>
+    <circle cx="295" cy="429" r="15" fill="#FFFDFC" stroke="#B75B5B" stroke-width="3"/>
+    <text x="295" y="435" text-anchor="middle" class="num" fill="#B75B5B">1</text>
+    <text x="321" y="436" class="message">deliver unsupported schema or bad digest</text>
+      <g class="edge" data-edge="message-1" data-label="deliver unsupported schema or bad digest">
+    <path data-connector="message-1" class="edgePath" style="marker-end:none" d="M260 470 H780" stroke="#B75B5B"/>
+    <polygon data-connector-head="message-1" data-arrow-direction="right" points="780,470 764,462 764,478" fill="#B75B5B" stroke="#B75B5B" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+<rect x="791" y="528" width="498" height="42" rx="21" class="labelPill" stroke="#B75B5B"/>
+    <circle cx="815" cy="549" r="15" fill="#FFFDFC" stroke="#B75B5B" stroke-width="3"/>
+    <text x="815" y="555" text-anchor="middle" class="num" fill="#B75B5B">2</text>
+    <text x="841" y="556" class="message">store event metadata + quarantine reason</text>
+      <g class="edge" data-edge="message-2" data-label="store event metadata + quarantine reason">
+    <path data-connector="message-2" class="edgePath" style="marker-end:none" d="M780 590 H1300" stroke="#B75B5B"/>
+    <polygon data-connector-head="message-2" data-arrow-direction="right" points="1300,590 1284,582 1284,598" fill="#B75B5B" stroke="#B75B5B" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+<rect x="827.75" y="648" width="424.5" height="42" rx="21" class="labelPill" stroke="#2D948C"/>
+    <circle cx="851.75" cy="669" r="15" fill="#FFFDFC" stroke="#2D948C" stroke-width="3"/>
+    <text x="851.75" y="675" text-anchor="middle" class="num" fill="#2D948C">3</text>
+    <text x="877.75" y="676" class="message">QUARANTINED is a durable decision</text>
+      <g class="edge" data-edge="message-3" data-label="QUARANTINED is a durable decision">
+    <path data-connector="message-3" class="edgePath" style="marker-end:none" d="M1300 710 H780" stroke="#2D948C"/>
+    <polygon data-connector-head="message-3" data-arrow-direction="left" points="780,710 796,702 796,718" fill="#2D948C" stroke="#2D948C" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+<rect x="323.5" y="768" width="393" height="42" rx="21" class="labelPill" stroke="#2D948C"/>
+    <circle cx="347.5" cy="789" r="15" fill="#FFFDFC" stroke="#2D948C" stroke-width="3"/>
+    <text x="347.5" y="795" text-anchor="middle" class="num" fill="#2D948C">4</text>
+    <text x="373.5" y="796" class="message">commit offset after quarantine</text>
+      <g class="edge" data-edge="message-4" data-label="commit offset after quarantine">
+    <path data-connector="message-4" class="edgePath" style="marker-end:none" d="M780 830 H260" stroke="#2D948C"/>
+    <polygon data-connector-head="message-4" data-arrow-direction="left" points="260,830 276,822 276,838" fill="#2D948C" stroke="#2D948C" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+<rect x="1310" y="938" width="500" height="42" rx="21" class="labelPill" stroke="#8065A8"/>
+    <circle cx="1334" cy="959" r="15" fill="#FFFDFC" stroke="#8065A8" stroke-width="3"/>
+    <text x="1334" y="965" text-anchor="middle" class="num" fill="#8065A8">5</text>
+    <text x="1360" y="966" class="message">request redrive with actor + correlationId</text>
+      <g class="edge" data-edge="message-5" data-label="request redrive with actor + correlationId">
+    <path data-connector="message-5" class="edgePath" style="marker-end:none" d="M1820 1000 H1300" stroke="#8065A8"/>
+    <polygon data-connector-head="message-5" data-arrow-direction="left" points="1300,1000 1316,992 1316,1008" fill="#8065A8" stroke="#8065A8" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+<rect x="1310" y="1038" width="500" height="42" rx="21" class="labelPill" stroke="#2D948C"/>
+    <circle cx="1334" cy="1059" r="15" fill="#FFFDFC" stroke="#2D948C" stroke-width="3"/>
+    <text x="1334" y="1065" text-anchor="middle" class="num" fill="#2D948C">6</text>
+    <text x="1360" y="1066" class="message">audit request recorded; payload unchanged</text>
+      <g class="edge" data-edge="message-6" data-label="audit request recorded; payload unchanged">
+    <path data-connector="message-6" class="edgePath" style="marker-end:none" d="M1300 1100 H1820" stroke="#2D948C"/>
+    <polygon data-connector-head="message-6" data-arrow-direction="right" points="1820,1100 1804,1092 1804,1108" fill="#2D948C" stroke="#2D948C" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+<rect x="1836.25" y="1138" width="487.5" height="42" rx="21" class="labelPill" stroke="#B57E2A"/>
+    <circle cx="1860.25" cy="1159" r="15" fill="#FFFDFC" stroke="#B57E2A" stroke-width="3"/>
+    <text x="1860.25" y="1165" text-anchor="middle" class="num" fill="#B57E2A">7</text>
+    <text x="1886.25" y="1166" class="message">retrieve the retained original envelope</text>
+      <g class="edge" data-edge="message-7" data-label="retrieve the retained original envelope">
+    <path data-connector="message-7" class="edgePath" style="marker-end:none" d="M1820 1200 H2340" stroke="#B57E2A"/>
+    <polygon data-connector-head="message-7" data-arrow-direction="right" points="2340,1200 2324,1192 2324,1208" fill="#B57E2A" stroke="#B57E2A" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+<rect x="1061.5" y="1258" width="477" height="42" rx="21" class="labelPill" stroke="#B57E2A"/>
+    <circle cx="1085.5" cy="1279" r="15" fill="#FFFDFC" stroke="#B57E2A" stroke-width="3"/>
+    <text x="1085.5" y="1285" text-anchor="middle" class="num" fill="#B57E2A">8</text>
+    <text x="1111.5" y="1286" class="message">republish the exact immutable envelope</text>
+      <g class="edge" data-edge="message-8" data-label="republish the exact immutable envelope">
+    <path data-connector="message-8" class="edgePath" style="marker-end:none" d="M2340 1320 H260" stroke="#B57E2A" stroke-dasharray="12 10"/>
+    <polygon data-connector-head="message-8" data-arrow-direction="left" points="260,1320 276,1312 276,1328" fill="#B57E2A" stroke="#B57E2A" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <text x="1300" y="1442" text-anchor="middle" class="footer">Redrive never edits amount, price, eventId, or digest; it reintroduces retained source evidence.</text>
 </svg>
