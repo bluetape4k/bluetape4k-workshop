@@ -81,23 +81,29 @@ generator와 explicit-target QA wrapper를 실행했고, 각 asset을 full-size 
 
 | Asset | PNG size | Source and visual contract | Result |
 | --- | --- | --- | --- |
-| architecture | 3400×1840 | source-backed responsibility cards and orthogonal Kafka/DB connections | PASS, markers 14 / connectors 9 / cards 10 |
-| outbox-inbox-state | 3200×1700 | canonical state machine retained; obsolete `state-01` pair removed | PASS, markers 9 / connectors 4 |
-| delivery | 3400×2040 | participants, lifelines, activations, numbered messages, branch frame | PASS, markers 6 / connectors 4 |
-| poison-recovery | 3400×2040 | participants, lifelines, activations, numbered messages, branch frame | PASS, markers 6 / connectors 3 |
-| correction | 3400×2040 | participants, lifelines, activations, numbered messages, branch frame | PASS, markers 6 / connectors 4 |
-| extraction | 3400×2040 | participants, lifelines, activations, numbered messages, branch frame | PASS, markers 6 / connectors 4 |
+| architecture | 4800×2700 | four local authorities, public Kafka topics, Query read-side ownership, official Kafka/PostgreSQL icons | PASS, direct heads 16 / connectors 16 / cards 14 / intrusions 0 / crossings 0 |
+| outbox-inbox-state | 4800×2700 | producer lease states and receiver durable decisions in separate bounded regions | PASS, direct heads 8 / connectors 8 / cards 9 / intrusions 0 / crossings 0 |
+| delivery | 5200×3000 | 5 participants, lifelines, 4 activations, 8 numbered messages, 2 transparent frames | PASS, direct heads 8 / connectors 8 |
+| poison-recovery | 5200×3000 | 5 participants, lifelines, 3 activations, 8 numbered messages, 2 transparent frames | PASS, direct heads 8 / connectors 8 |
+| correction | 5200×3000 | 5 participants, lifelines, 4 activations, 8 numbered messages, 2 transparent frames | PASS, direct heads 8 / connectors 8 |
+| extraction | 5200×3000 | 5 participants, lifelines, 5 activations, 8 numbered messages, 3 transparent frames | PASS, direct heads 8 / connectors 8 |
 
 | 검사 | 결과 |
 | --- | --- |
-| SVG marker fill/stroke 및 endpoint marker audit | PASS (6 targets, marker failures 0) |
-| connector geometry, endpoint, mixed-corner audit | PASS |
-| rounded orthogonal connector / spline 금지 | PASS |
-| CairoSVG PNG 재생성 뒤 SVG marker/endpoint audit 및 PNG 원본 육안 대조 | PASS |
-| full-size PNG 육안 검사 | PASS (table의 6 assets, clipped text/arrowhead reversal 없음) |
+| SVG XML과 CairoSVG `-s 2` 재생성 | PASS (6 targets) |
+| marker/direct-head 및 endpoint audit | PASS (markers 0, endpoint-bound direct heads 56, failures 0) |
+| connector geometry / endpoint / mixed-corner reference audit | PASS (intrusions 0, crossings 0, shared segments 0, geometry failures 0) |
+| rounded orthogonal connector / spline 금지 | PASS (architecture/state의 모든 bend는 `Q`, reverse/fake-axis failures 0) |
+| sequence 구조 fallback audit | PASS (각 asset의 1..8 순번, lifeline, activation, transparent frame 확인) |
+| full-size PNG 원본 육안 검사 | PASS (6 assets, clipped text, frame-label overlap, 연결선 겹침, SVG/PNG 화살촉 역전 없음) |
 
-따라서 diagram은 SVG만 맞는 상태로 끝내지 않았다. raster 화살촉 방향은 SVG marker/endpoint audit 뒤
-재생성한 PNG 원본을 개별적으로 대조해 확인했으며, 픽셀 비교기가 있다고 과장하지 않는다.
+reference sequence audit는 filename에 `sequence`가 없는 네 asset을 `sequence_files=0`으로 보고하므로
+QA wrapper가 이를 `WEAK`으로 기록하고, `data-diagram-kind="sequence"` 기반 fallback audit를 반드시
+실행하도록 보강했다. Kafka/PostgreSQL 아이콘은 bluetape4k-wiki의 공식 catalog source를 generator가
+base64로 포함한다.
+
+따라서 diagram은 SVG만 맞는 상태로 끝내지 않았다. marker 변환에 의존하지 않고 connector endpoint와
+동일 좌표의 direct polygon head를 사용했으며, CairoSVG로 재생성한 PNG 원본을 asset별로 확인했다.
 
 ## 검증 명령과 결과
 
