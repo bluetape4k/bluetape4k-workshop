@@ -5,7 +5,7 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSour
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedMetrics
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventSourcedExposedDatabaseRegistration
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventStoreRepository
-import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ExposedEventStoreTransactionRunner
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.PermittedEventStoreTransactionRunner
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.EventSourcedHmacKeyRing
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.SubjectIdentityService
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.web.CampaignCommandHttpService
@@ -23,9 +23,10 @@ internal class EventSourcedCommandConfiguration {
     @Bean
     fun eventStoreRepository(
         registration: EventSourcedExposedDatabaseRegistration,
+        permits: EventSourcedDatabasePermitGate,
         metrics: EventSourcedMetrics,
     ): EventStoreRepository =
-        EventStoreRepository(ExposedEventStoreTransactionRunner(registration.database), metrics)
+        EventStoreRepository(PermittedEventStoreTransactionRunner(registration.database, permits), metrics)
 
     @Bean
     @Suppress("LongParameterList") // Explicit Spring bean dependencies document the command commit boundary.

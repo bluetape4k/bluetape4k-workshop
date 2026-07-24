@@ -56,7 +56,7 @@ one transaction. The response exposes the authoritative and observed positions:
 | `X-Projection-Position` | Position currently represented by the read model |
 | `X-Projection-Lag` | `stream - projection` |
 | `X-Min-Stream-Position` | Optional query fence supplied by the caller |
-| `Idempotency-Replayed` / `X-Idempotent-Replay` | The stored terminal response was replayed |
+| `Idempotency-Replayed` / `X-Idempotent-Replay` | A stored terminal outcome was replayed; the representation may reflect newer aggregate state |
 | `Retry-After` | Safe delay before retrying an in-progress command or lagging projection |
 
 `GET /api/v1/campaigns/{campaignId}` returns `200` when the projection has
@@ -66,8 +66,9 @@ projection has not caught up. The caller should retry the GET or refresh
 manually; it must not repeat a non-idempotent command to repair read lag.
 
 SSE starts with a `snapshot` event and then emits public descriptors ordered by
-the opaque `Last-Event-ID` cursor. Reconnect with the last cursor. An invalid or
-expired cursor is rejected with a stable safe error; queue overflow emits a
+the opaque `Last-Event-ID` cursor. Reconnect with the last cursor. A malformed
+cursor or one ahead of current positions is rejected with a stable safe error;
+an older valid cursor resumes from a fresh snapshot. Queue overflow emits a
 terminal `reset`, after which the client fetches a fresh snapshot.
 
 ## HTTP Contract
@@ -79,7 +80,7 @@ workshop operator secret/guard/role headers and rebuild mutations require
 
 | Method and route | Success | Retry or operator action |
 |---|---|---|
-| `POST /operator/api/v1/campaigns` | `201`; replay may return stored terminal response | `409 COMMAND_IN_PROGRESS`, then retry with the same idempotency key |
+| `POST /operator/api/v1/campaigns` | `201`; replay returns the stored terminal outcome and may render newer aggregate state | `409 COMMAND_IN_PROGRESS`, then retry with the same idempotency key |
 | `POST /operator/api/v1/campaigns/{campaignId}/activate` | `200` | Resolve revision conflict; do not blind retry with a new key |
 | `POST /api/v1/campaigns/{campaignId}/claims` | `201` | Same-key retry for in-progress/transport uncertainty |
 | `POST /api/v1/claims/{claimId}/redeem` | `200` | Inspect stable conflict code before retry |
@@ -89,7 +90,7 @@ workshop operator secret/guard/role headers and rebuild mutations require
 | `POST /operator/api/v1/projections/{projection}/rebuilds` | `202` | Poll status; use returned generation/token |
 | `GET /operator/api/v1/projections/{projection}/rebuilds/{generation}` | `200` | Diagnose state and checkpoint |
 | `POST .../rebuilds/{generation}/cancel` | `200` | Poll until `CANCELLED` |
-| `POST .../rebuilds/{generation}/resume` | `200` | Resume only retryable `FAILED`/cancelled work |
+| `POST .../rebuilds/{generation}/resume` | `200` | Resume only retryable `FAILED` work; start a new rebuild after cancellation |
 | `POST .../poison-events/{eventId}/retry` | `200` | Respect `409 POISON_RETRY_BACKOFF` and `Retry-After` |
 | `POST .../reconciliation` | `200` | Verify lag, failed poison count, and digest before activation |
 
@@ -119,7 +120,7 @@ failed event.
 Rebuild creates a new generation in `BUILDING`, catches up to a fixed target,
 enters `VALIDATING`, and becomes `ACTIVE` only after position and canonical
 digest checks. The active pointer changes by fenced compare-and-set; the prior
-generation is retained as `RETIRED` for rollback. Cancel/resume increments the
+generation is retained as `RETIRED` for audit and bounded cleanup. Cancel/resume increments the
 cancellation revision so stale workers cannot continue writing.
 
 ## Security
@@ -139,7 +140,7 @@ erasure deletion journal before restore readiness.
 ## Failure Injection
 
 Integration fixtures can pause or fail command phases, projection application,
-snapshot maintenance, and rebuild processing. Use them to prove rollback,
+snapshot maintenance, and rebuild processing. Use them to prove active-generation preservation,
 idempotent retry, lease takeover, poison-event degradation, stale-fence
 rejection, and active-generation preservation. They are test-only hooks and do
 not alter production defaults.
@@ -172,8 +173,9 @@ These profiles are regression evidence, not production capacity guarantees.
    canonical projection digest. Run reconciliation and inspect the operator
    audit record.
 5. Activate only a validated candidate. Keep the current `ACTIVE` generation
-   when validation fails; rollback by restoring the retained previous
-   generation pointer, never by rewriting events.
+   when validation fails. To replace a bad active generation, fix the handler
+   and start a new rebuild from event authority; do not rewrite events or
+   manually restore a retained pointer.
 6. Re-run reconciliation and keep alerts open until lag and failed poison count
    return to zero.
 

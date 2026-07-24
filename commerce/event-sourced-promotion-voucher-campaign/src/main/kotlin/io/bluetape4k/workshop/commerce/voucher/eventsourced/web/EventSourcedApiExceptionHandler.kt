@@ -6,6 +6,7 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.DatabaseB
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.MissingRequestHeaderException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -41,6 +42,7 @@ internal class EventSourcedApiExceptionHandler {
         MissingRequestHeaderException::class,
         MethodArgumentNotValidException::class,
         MethodArgumentTypeMismatchException::class,
+        HttpMessageNotReadableException::class,
     )
     fun invalidInput(failure: Exception): ResponseEntity<EventSourcedApiError> {
         log.warn { "event_sourced_http_rejected category=INVALID_REQUEST failure=${failure.javaClass.simpleName}" }

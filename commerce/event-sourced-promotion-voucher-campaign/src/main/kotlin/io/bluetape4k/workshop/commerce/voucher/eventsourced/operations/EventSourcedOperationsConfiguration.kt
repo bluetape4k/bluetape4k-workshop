@@ -1,10 +1,11 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
 import com.zaxxer.hikari.HikariDataSource
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventSourcedExposedDatabaseRegistration
 import io.micrometer.core.instrument.MeterRegistry
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import java.sql.Connection
 import javax.sql.DataSource
 
 /** Wires the bounded database admission gate and its low-cardinality operational meters. */
@@ -29,19 +30,21 @@ internal class EventSourcedOperationsConfiguration {
     }
 
     @Bean
-    fun eventSourcedStartupProbe(dataSource: DataSource): EventSourcedStartupProbe =
+    fun eventSourcedStartupProbe(
+        registration: EventSourcedExposedDatabaseRegistration,
+    ): EventSourcedStartupProbe =
         EventSourcedStartupProbe {
-            dataSource.connection.use(::verifyAuthoritySchema)
-        }
-
-    private fun verifyAuthoritySchema(connection: Connection) {
-        connection.createStatement().use { statement ->
-            statement.execute("SELECT 1")
-            statement.executeQuery("SELECT to_regclass('voucher_event_log')").use { result ->
-                check(result.next() && result.getString(1) != null) { "voucher_event_log schema is unavailable" }
+            transaction(registration.database) {
+                exec("SELECT 1")
+                val authorityAvailable =
+                    exec("SELECT to_regclass('voucher_event_log')") { result ->
+                        result.next() && result.getString(1) != null
+                    } ?: false
+                check(authorityAvailable) {
+                    "voucher_event_log schema is unavailable"
+                }
             }
         }
-    }
 }
 
 internal data object EventSourcedHikariMetricsBinding

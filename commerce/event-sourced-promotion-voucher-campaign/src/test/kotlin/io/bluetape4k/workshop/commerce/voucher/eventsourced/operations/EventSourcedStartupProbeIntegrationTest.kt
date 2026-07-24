@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventLog
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventSourcedExposedDatabaseRegistration
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.support.EventSourcedPostgresTestDatabase
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -27,7 +28,9 @@ internal class EventSourcedStartupProbeIntegrationTest {
     fun connectPostgres() {
         postgresDatabase = EventSourcedPostgresTestDatabase(postgres, "issue-538-startup-probe", maximumPoolSize = 1)
         database = postgresDatabase.database
-        probe = EventSourcedOperationsConfiguration().eventSourcedStartupProbe(postgresDatabase.dataSource)
+        probe =
+            EventSourcedOperationsConfiguration()
+                .eventSourcedStartupProbe(EventSourcedExposedDatabaseRegistration(database))
     }
 
     @BeforeEach

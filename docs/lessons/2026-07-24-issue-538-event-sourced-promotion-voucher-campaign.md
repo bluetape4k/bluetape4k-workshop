@@ -10,17 +10,19 @@ Spring-managed HikariCP, Exposed JDBC, PostgreSQL을 사용한다.
 
 ## Decision or Finding
 
-- `EventStoreRepository`는 `ExposedJdbcRepository`를 사용해 stream head lock, event append,
-  idempotency descriptor, snapshot을 PostgreSQL transaction으로 묶었다.
+- `EventStoreRepository`는 generic CRUD를 노출하지 않는 semantic transaction boundary로 stream
+  head lock, event append, idempotency descriptor, snapshot을 PostgreSQL transaction으로 묶었다.
+  bluetape4k `ExposedJdbcRepository`는 append-only mutation을 차단한 `EventLogRepository`처럼
+  generic 조회 계약이 안전한 보조 표면에만 제한했다.
 - projection persistence는 generic CRUD repository를 노출하지 않았다. Lease/fencing, dedup,
   checkpoint, read model 갱신을 하나의 semantic transaction으로 유지하지 않으면 stale worker가
   fencing을 우회할 수 있기 때문이다.
 - rebuild도 generation token과 state transition을 전용 persistence boundary에서 검증한다.
   `BUILDING -> VALIDATING -> ACTIVE -> RETIRED` 전환과 cancel/resume은 현재 generation을 확인한
   writer만 수행한다.
-- 테스트의 `Database`는 직접 `Database.connect()`로 임의 생성하지 않고 Spring Boot가 관리하는
-  Hikari `DataSource`와 Exposed Spring Boot integration을 사용한다. Testcontainers PostgreSQL은
-  connection source만 제공하고 application transaction 경계는 production과 동일하게 유지한다.
+- Spring context 테스트는 Boot가 관리하는 Hikari `DataSource`와 bluetape4k Exposed Spring Boot
+  integration을 사용한다. PostgreSQL 권한·query plan 같은 저수준 capability 테스트만 별도 Hikari
+  pool을 Exposed `Database`에 등록하며, production semantic transaction 경계는 사용하지 않는다.
 - 호출자 입력 검증은 bluetape4k `require*` helper를 사용하고, 정규화 또는 검증된 반환값을 이후
   persistence와 descriptor fingerprint에 전달한다.
 - HTTP query는 `X-Stream-Position`, `X-Projection-Position`, `X-Projection-Lag`를 함께 반환한다.
@@ -53,7 +55,8 @@ delivery를 전제로 event dedup과 checkpoint를 같은 transaction에서 처�
 저장된 결과로 수렴한다. 다른 stream은 global position fence 아래 연속적인 위치를 받는다.
 Projection worker가 lease를 잃거나 재시작해도 stale fencing token은 read model과 checkpoint를
 변경할 수 없다. Rebuild는 새 generation을 검증한 뒤에만 active pointer를 전환하므로 조회가
-부분 재생 상태를 관찰하지 않는다.
+부분 재생 상태를 관찰하지 않는다. Rebuild 검증 중 active checkpoint가 target을 앞서가면 fenced
+전이로 candidate target을 확장하고 `BUILDING`으로 돌아가므로 `VALIDATING`에 영구 정체되지 않는다.
 
 README EN/KO는 architecture, command-to-projection sequence, rebuild state diagram을 같은
 generator에서 만들고 실제 controller route/header/error constant를 validator로 대조한다.
@@ -81,6 +84,14 @@ projection lease/fencing/dedup/checkpoint, rebuild generation, poison retry와 r
 transaction으로 검증한다. 호출자·developer API·운영 관점 리뷰에서 드러난 generic CRUD,
 raw validation, 직접 database connection, 모호한 lag/rebuild 계약은 구현과 문서 양쪽에서
 제거했다.
+
+Task 16의 fresh module evidence는 unit 62건, PostgreSQL integration 73건, explicit stress 9건과
+`build`, `detekt`, `detektTest`, Kover gate 통과다. README validator는 locale 2개, diagram 3개,
+route 8개, source file 6개, heading 11개를 검증했고 diagram QA, stale-reference/image 검사,
+`actionlint`, `git diff --check`도 통과했다. `scripts/smoke-validate.sh commerce`에서는 이 module과
+usage-metering regression이 통과했지만, 범위 밖 기존
+`commerce-concert-ticket-flash-sale`의 payment reconciliation 테스트 3건이 실패했다. #538에서
+해당 module을 수정하지 않고 repository-level known gap으로 남겼다.
 
 ## Rollback Boundary
 

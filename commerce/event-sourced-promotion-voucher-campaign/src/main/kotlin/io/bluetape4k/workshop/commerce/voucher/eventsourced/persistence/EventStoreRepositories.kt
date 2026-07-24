@@ -34,20 +34,20 @@ internal object EventLog : UUIDTable("voucher_event_log", "event_id") {
     val canonicalChecksum = varchar("canonical_checksum", 64)
 
     init {
-        uniqueIndex(streamId, streamVersion)
+        uniqueIndex(tenantId, streamType, streamId, streamVersion)
         uniqueIndex(globalPosition)
-        index(false, tenantId, streamType, streamId, streamVersion)
     }
 }
 
-internal object StreamHeads : UUIDTable("voucher_stream_head", "stream_id") {
+internal object StreamHeads : UUIDTable("voucher_stream_head", "head_id") {
+    val streamId = javaUUID("stream_id")
     val tenantId = varchar("tenant_id", 64)
     val streamType = varchar("stream_type", 64)
     val version = long("version")
     val updatedAt = timestamp("updated_at")
 
     init {
-        uniqueIndex(tenantId, streamType, id)
+        uniqueIndex(tenantId, streamType, streamId)
     }
 }
 

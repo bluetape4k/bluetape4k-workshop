@@ -55,7 +55,7 @@ commit한다. Response는 authoritative position과 read-model position을 함�
 | `X-Projection-Position` | 현재 read model에 반영된 position |
 | `X-Projection-Lag` | `stream - projection` |
 | `X-Min-Stream-Position` | Caller가 선택적으로 지정하는 query fence |
-| `Idempotency-Replayed` / `X-Idempotent-Replay` | 저장된 terminal response replay 여부 |
+| `Idempotency-Replayed` / `X-Idempotent-Replay` | 저장된 terminal outcome replay 여부. 표현은 더 최신 aggregate 상태를 반영할 수 있음 |
 | `Retry-After` | 진행 중 command 또는 지연된 projection을 다시 확인할 안전한 대기 시간 |
 
 `GET /api/v1/campaigns/{campaignId}`는 projection이
@@ -65,8 +65,9 @@ projection이 아직 따라오지 못하면 position header와 `Retry-After: 1`�
 하며, read lag를 고치려고 non-idempotent command를 반복하면 안 된다.
 
 SSE는 `snapshot` event를 먼저 보내고 opaque `Last-Event-ID` cursor 순서로 public
-descriptor를 전송한다. 재연결할 때 마지막 cursor를 사용한다. 유효하지 않거나
-만료된 cursor는 stable safe error로 거부한다. Queue overflow는 terminal `reset`을
+descriptor를 전송한다. 재연결할 때 마지막 cursor를 사용한다. 형식이 잘못되었거나
+현재 position보다 앞선 cursor는 stable safe error로 거부하고, 오래되었지만
+유효한 cursor는 새 snapshot부터 재개한다. Queue overflow는 terminal `reset`을
 보내며, client는 그 뒤 새 snapshot을 조회한다.
 
 ## HTTP Contract
@@ -78,7 +79,7 @@ secret/guard/role header를 추가로 요구하고 rebuild mutation에는
 
 | Method와 route | 성공 | 재시도 또는 operator action |
 |---|---|---|
-| `POST /operator/api/v1/campaigns` | `201`; replay는 저장된 terminal response 반환 가능 | `409 COMMAND_IN_PROGRESS`이면 같은 idempotency key로 재시도 |
+| `POST /operator/api/v1/campaigns` | `201`; replay는 저장된 terminal outcome을 반환하며 표현은 최신 aggregate 상태일 수 있음 | `409 COMMAND_IN_PROGRESS`이면 같은 idempotency key로 재시도 |
 | `POST /operator/api/v1/campaigns/{campaignId}/activate` | `200` | Revision conflict를 해결하고 새 key로 blind retry하지 않음 |
 | `POST /api/v1/campaigns/{campaignId}/claims` | `201` | 진행 중이거나 transport가 불확실하면 같은 key로 재시도 |
 | `POST /api/v1/claims/{claimId}/redeem` | `200` | 재시도 전 stable conflict code 확인 |
@@ -88,7 +89,7 @@ secret/guard/role header를 추가로 요구하고 rebuild mutation에는
 | `POST /operator/api/v1/projections/{projection}/rebuilds` | `202` | Status를 poll하고 반환된 generation/token 사용 |
 | `GET /operator/api/v1/projections/{projection}/rebuilds/{generation}` | `200` | State와 checkpoint 진단 |
 | `POST .../rebuilds/{generation}/cancel` | `200` | `CANCELLED`까지 poll |
-| `POST .../rebuilds/{generation}/resume` | `200` | Retryable `FAILED`/cancelled 작업만 재개 |
+| `POST .../rebuilds/{generation}/resume` | `200` | Retryable `FAILED`만 재개. 취소 후에는 새 rebuild 시작 |
 | `POST .../poison-events/{eventId}/retry` | `200` | `409 POISON_RETRY_BACKOFF`, `Retry-After` 준수 |
 | `POST .../reconciliation` | `200` | Activation 전 lag, failed poison count, digest 검증 |
 
@@ -117,7 +118,7 @@ event를 건너뛰지 않고 operator가 확인할 수 있는 degraded 경로로
 Rebuild는 새 generation을 `BUILDING`으로 생성하고 고정 target까지 따라간 뒤
 `VALIDATING`에 들어간다. Position과 canonical digest를 검증한 뒤에만 `ACTIVE`가
 된다. Active pointer는 fenced compare-and-set으로 변경하며 이전 generation은
-rollback을 위해 `RETIRED`로 보존한다. Cancel/resume은 cancellation revision을
+audit과 bounded cleanup을 위해 `RETIRED`로 보존한다. Cancel/resume은 cancellation revision을
 증가시켜 stale worker의 write를 차단한다.
 
 ## Security
@@ -136,7 +137,7 @@ deletion journal을 반영해야 한다.
 ## Failure Injection
 
 Integration fixture는 command phase, projection apply, snapshot maintenance,
-rebuild processing을 일시 정지하거나 실패시킬 수 있다. 이를 이용해 rollback,
+rebuild processing을 일시 정지하거나 실패시킬 수 있다. 이를 이용해 active generation 보존,
 idempotent retry, lease takeover, poison-event degradation, stale-fence rejection,
 active-generation 보존을 증명한다. 모두 test-only hook이며 production default를
 바꾸지 않는다.
@@ -167,8 +168,9 @@ machine-sensitive threshold를 분리한다.
 4. Checkpoint가 목표 stream position과 같은지 확인하고 canonical projection
    digest를 비교한다. Reconciliation을 실행하고 operator audit record를 조회한다.
 5. 검증된 candidate만 activate한다. Validation이 실패하면 현재 `ACTIVE`
-   generation을 유지한다. Rollback은 event rewrite가 아니라 보존된 이전
-   generation pointer 복원으로 수행한다.
+   generation을 유지한다. 잘못된 active generation을 교체하려면 handler를
+   수정하고 event authority에서 새 rebuild를 시작한다. Event를 rewrite하거나
+   보존된 pointer를 수동 복원하지 않는다.
 6. Reconciliation을 다시 실행하고 lag와 failed poison count가 0이 될 때까지
    alert를 유지한다.
 

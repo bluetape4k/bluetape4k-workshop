@@ -3,6 +3,9 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence
 import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabaseLane
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabasePermitGate
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedPermitTransactionRunner
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -33,31 +36,48 @@ internal class ExposedEventStoreTransactionRunner(
     override fun <T> readTransaction(block: () -> T): T = transaction(database) { block() }
 }
 
+/** Production reads acquire the foreground permit before asking HikariCP for a connection. */
+internal class PermittedEventStoreTransactionRunner(
+    database: Database,
+    permits: EventSourcedDatabasePermitGate,
+) : EventStoreTransactionRunner {
+    private val transactions =
+        EventSourcedPermitTransactionRunner(
+            database,
+            permits,
+            EventSourcedDatabaseLane.FOREGROUND,
+        )
+
+    override fun <T> readTransaction(block: () -> T): T = transactions.inTransaction(block)
+}
+
 /**
  * PostgreSQL event authority. Appends deliberately use the caller's transaction so command
  * idempotency finalization and event persistence share one commit boundary.
  */
+@Suppress("TooManyFunctions")
 internal class EventStoreRepository(
     private val reads: EventStoreTransactionRunner,
     private val metrics: EventStoreAppendMetrics = EventStoreAppendMetrics.NONE,
 ) : EventStorePort {
 
-    override fun load(read: EventStoreRead): EventPage =
-        reads.readTransaction {
-            val events =
-                EventLog
-                    .selectAll()
-                    .where {
-                        (EventLog.tenantId eq read.stream.tenantId.value) and
-                            (EventLog.streamType eq read.stream.streamType) and
-                            (EventLog.streamId eq read.stream.streamId) and
-                            (EventLog.streamVersion greater read.afterVersion)
-                    }.orderBy(EventLog.streamVersion to SortOrder.ASC)
-                    .limit(read.limit)
-                    .map(::toEnvelope)
-            val committedHead = headVersion(read.stream)
-            EventPage(events, committedHead)
-        }
+    override fun load(read: EventStoreRead): EventPage = reads.readTransaction { loadInCurrentTransaction(read) }
+
+    override fun loadInCurrentTransaction(read: EventStoreRead): EventPage {
+        TransactionManager.current()
+        val events =
+            EventLog
+                .selectAll()
+                .where {
+                    (EventLog.tenantId eq read.stream.tenantId.value) and
+                        (EventLog.streamType eq read.stream.streamType) and
+                        (EventLog.streamId eq read.stream.streamId) and
+                        (EventLog.streamVersion greater read.afterVersion)
+                }.orderBy(EventLog.streamVersion to SortOrder.ASC)
+                .limit(read.limit)
+                .map(::toEnvelope)
+        return EventPage(events, headVersion(read.stream))
+    }
 
     override fun appendAll(appends: List<ExpectedAppend>): AppendResult {
         TransactionManager.current()
@@ -116,7 +136,7 @@ internal class EventStoreRepository(
                 }
                 globalPosition += 1
             }
-            StreamHeads.update(where = { StreamHeads.id eq append.stream.streamId }) { row ->
+            StreamHeads.update(where = { streamHeadPredicate(append.stream) }) { row ->
                 row[StreamHeads.version] = append.nextVersion()
                 row[StreamHeads.updatedAt] = now
             }
@@ -131,7 +151,7 @@ internal class EventStoreRepository(
 
     private fun lockHead(stream: StreamKey): Long {
         StreamHeads.insertIgnore { row ->
-            row[StreamHeads.id] = stream.streamId
+            row[StreamHeads.streamId] = stream.streamId
             row[StreamHeads.tenantId] = stream.tenantId.value
             row[StreamHeads.streamType] = stream.streamType
             row[StreamHeads.version] = 0
@@ -139,24 +159,23 @@ internal class EventStoreRepository(
         }
         return StreamHeads
             .selectAll()
-            .where {
-                (StreamHeads.id eq stream.streamId) and
-                    (StreamHeads.tenantId eq stream.tenantId.value) and
-                    (StreamHeads.streamType eq stream.streamType)
-            }.forUpdate()
+            .where { streamHeadPredicate(stream) }
+            .forUpdate()
             .single()[StreamHeads.version]
     }
 
     private fun headVersion(stream: StreamKey): Long =
         StreamHeads
             .selectAll()
-            .where {
-                (StreamHeads.id eq stream.streamId) and
-                    (StreamHeads.tenantId eq stream.tenantId.value) and
-                    (StreamHeads.streamType eq stream.streamType)
-            }.singleOrNull()
+            .where { streamHeadPredicate(stream) }
+            .singleOrNull()
             ?.get(StreamHeads.version)
             ?: 0
+
+    private fun streamHeadPredicate(stream: StreamKey) =
+        (StreamHeads.tenantId eq stream.tenantId.value) and
+            (StreamHeads.streamType eq stream.streamType) and
+            (StreamHeads.streamId eq stream.streamId)
 
     private fun eventAlreadyRecorded(eventId: UUID): Boolean =
         EventLog.selectAll().where { EventLog.id eq eventId }.limit(1).any()

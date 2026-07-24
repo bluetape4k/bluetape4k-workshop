@@ -11,6 +11,7 @@ import io.bluetape4k.testcontainers.database.getHikariDataSource
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedOperationsConfiguration
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.support.EventSourcedPostgresTestDatabase
 import org.awaitility.Awaitility.await
+import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -22,7 +23,6 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.sql.Connection
-import java.sql.SQLTransientConnectionException
 import java.time.Duration
 
 @Tag("integration")
@@ -135,14 +135,15 @@ internal class EventStorePostgresCapabilityIntegrationTest {
         applicationDataSource: HikariDataSource,
         role: String,
     ) {
+        val applicationDatabase = Database.connect(applicationDataSource)
         val probe =
             EventSourcedOperationsConfiguration()
-                .eventSourcedStartupProbe(applicationDataSource)
+                .eventSourcedStartupProbe(EventSourcedExposedDatabaseRegistration(applicationDatabase))
         probe.verify()
 
         executeAsAdmin("ALTER ROLE $role NOLOGIN")
         applicationDataSource.hikariPoolMXBean.softEvictConnections()
-        assertFailsWith<SQLTransientConnectionException> { probe.verify() }
+        assertFailsWith<ExposedSQLException> { probe.verify() }
 
         executeAsAdmin("ALTER ROLE $role LOGIN")
         await().atMost(LOCK_TIMEOUT).untilAsserted { probe.verify() }
@@ -202,7 +203,7 @@ internal class EventStorePostgresCapabilityIntegrationTest {
             FROM pg_indexes
             WHERE schemaname = current_schema()
               AND tablename = 'voucher_event_log'
-              AND indexdef LIKE '%(stream_id, stream_version)%'
+              AND indexdef LIKE '%(tenant_id, stream_type, stream_id, stream_version)%'
             """.trimIndent(),
         ).use { statement ->
             statement.executeQuery().use { result ->

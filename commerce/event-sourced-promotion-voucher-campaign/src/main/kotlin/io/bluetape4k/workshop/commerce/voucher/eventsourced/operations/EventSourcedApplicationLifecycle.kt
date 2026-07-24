@@ -14,10 +14,21 @@ internal fun interface EventSourcedStartupProbe {
     fun verify()
 }
 
+internal interface EventSourcedRuntimeWorkers {
+    fun start()
+
+    fun stopProjection()
+
+    fun stopRebuild()
+
+    fun stopMaintenance()
+
+    fun releaseFencedLeases()
+}
+
 /**
  * Owns the application readiness transition and invokes the graceful coordinator before Spring
- * destroys shared infrastructure. Worker callbacks are empty until the Task 10 HTTP/runtime
- * composition registers concrete projector, rebuild, and maintenance workers.
+ * destroys shared infrastructure.
  */
 @Component
 internal class EventSourcedApplicationLifecycle(
@@ -25,19 +36,26 @@ internal class EventSourcedApplicationLifecycle(
     private val state: EventSourcedOperationalState,
     gate: EventSourcedDatabasePermitGate,
     private val probe: EventSourcedStartupProbe,
+    private val workers: EventSourcedRuntimeWorkers,
 ) : SmartLifecycle {
     private val running = AtomicBoolean()
     private val coordinator =
         EventSourcedLifecycleCoordinator(
             state,
             gate,
-            EventSourcedWorkerShutdown({}, {}, {}, {}),
+            EventSourcedWorkerShutdown(
+                projection = workers::stopProjection,
+                rebuild = workers::stopRebuild,
+                maintenance = workers::stopMaintenance,
+                releaseFencedLeases = workers::releaseFencedLeases,
+            ),
         )
 
     override fun start() {
         if (!running.compareAndSet(false, true)) return
         runCatching(probe::verify)
             .onSuccess {
+                workers.start()
                 state.markReady()
                 AvailabilityChangeEvent.publish(applicationContext, ReadinessState.ACCEPTING_TRAFFIC)
             }.onFailure { failure ->

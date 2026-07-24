@@ -86,4 +86,5 @@ internal class EventSourcedCampaignHttpContractTest {
         stream: Long = 12,
         projection: Long = 12,
     ): ProjectionPositions = ProjectionPositions(stream, projection)
+
 }

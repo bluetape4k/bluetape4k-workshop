@@ -133,6 +133,29 @@ internal data class ProjectionRebuildCursor private constructor(
     }
 }
 
+@ConsistentCopyVisibility
+internal data class ProjectionValidationTargetExtension private constructor(
+    val fencingToken: Long,
+    val cancellationRevision: Long,
+    val currentTargetPosition: Long,
+    val newTargetPosition: Long,
+) {
+    companion object {
+        operator fun invoke(
+            fencingToken: Long,
+            cancellationRevision: Long,
+            currentTargetPosition: Long,
+            newTargetPosition: Long,
+        ): ProjectionValidationTargetExtension =
+            ProjectionValidationTargetExtension(
+                fencingToken = fencingToken.requirePositiveNumber("fencingToken"),
+                cancellationRevision = cancellationRevision.requireZeroOrPositiveNumber("cancellationRevision"),
+                currentTargetPosition = currentTargetPosition.requireZeroOrPositiveNumber("currentTargetPosition"),
+                newTargetPosition = newTargetPosition.requireGt(currentTargetPosition, "newTargetPosition"),
+            )
+    }
+}
+
 internal sealed interface ProjectionActivationResult {
     data object Activated : ProjectionActivationResult
 
@@ -174,7 +197,7 @@ internal class ProjectionRebuildRepository {
         TransactionManager.current()
         targetPosition.requireZeroOrPositiveNumber("targetPosition")
         requireLockedActive(projection)
-        findBuildingGeneration(projection).requireNull("buildingGeneration")
+        findInProgressGeneration(projection).requireNull("inProgressGeneration")
         val generation = latestProjectionGeneration(projection) + 1
         ProjectionGenerations.insert { row ->
             row[ProjectionGenerations.projection] = projection
@@ -233,6 +256,29 @@ internal class ProjectionRebuildRepository {
         ) { row ->
             row[ProjectionGenerations.state] = ProjectionGenerationState.VALIDATING
             row[ProjectionGenerations.canonicalDigest] = canonicalDigest.value
+            row[ProjectionGenerations.updatedAt] = now
+        } == 1
+    }
+
+    fun extendValidationTarget(
+        key: ProjectionKey,
+        extension: ProjectionValidationTargetExtension,
+        now: Instant,
+    ): Boolean {
+        TransactionManager.current()
+        return ProjectionGenerations.update(
+            where = {
+                generationPredicate(key) and
+                    (ProjectionGenerations.state eq ProjectionGenerationState.VALIDATING) and
+                    (ProjectionGenerations.fencingToken eq extension.fencingToken) and
+                    (ProjectionGenerations.cancellationRevision eq extension.cancellationRevision) and
+                    (ProjectionGenerations.targetPosition eq extension.currentTargetPosition) and
+                    (ProjectionGenerations.currentPosition eq extension.currentTargetPosition)
+            },
+        ) { row ->
+            row[ProjectionGenerations.state] = ProjectionGenerationState.BUILDING
+            row[ProjectionGenerations.targetPosition] = extension.newTargetPosition
+            row[ProjectionGenerations.canonicalDigest] = null
             row[ProjectionGenerations.updatedAt] = now
         } == 1
     }

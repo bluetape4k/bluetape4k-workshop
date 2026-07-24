@@ -213,7 +213,7 @@ internal class DefaultEventSourcedCampaignCommands(
         now: Instant,
     ): EventSourcedCommandDecision {
         val stream = StreamKey(tenantId, CAMPAIGN_STREAM_TYPE, command.campaignId)
-        val page = events.load(EventStoreRead(stream, afterVersion = 0))
+        val page = events.loadInCurrentTransaction(EventStoreRead(stream, afterVersion = 0))
         return when {
             page.committedHead == 0L ->
                 rejectedDecision(ReceiptOutcome.CAMPAIGN_NOT_FOUND, hmacKeyVersion, now)

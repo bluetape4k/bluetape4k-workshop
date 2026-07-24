@@ -6,6 +6,9 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.DatabaseBulkheadRejected
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabasePermitBudget
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.support.EventSourcedPostgresTestDatabase
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -17,9 +20,12 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.time.Duration
 import java.util.UUID
 import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.CyclicBarrier
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 
@@ -253,6 +259,86 @@ internal class EventStoreAppendIntegrationTest {
         appended.lastGlobalPosition shouldBeEqualTo 2L
         store.load(EventStoreRead(campaign, afterVersion = 0)).committedHead shouldBeEqualTo 1L
         store.load(EventStoreRead(voucher, afterVersion = 0)).committedHead shouldBeEqualTo 1L
+    }
+
+    @Test
+    fun `same client UUID remains isolated across tenant and stream type`() {
+        val sharedId = UUID.randomUUID()
+        val tenantCampaign = StreamKey(TenantId("tenant-a"), "campaign", sharedId)
+        val otherTenantCampaign = StreamKey(TenantId("tenant-b"), "campaign", sharedId)
+        val tenantVoucher = StreamKey(TenantId("tenant-a"), "voucher", sharedId)
+
+        val result =
+            transaction(database) {
+                store.appendAll(
+                    listOf(
+                        ExpectedAppend(
+                            tenantCampaign,
+                            0,
+                            listOf(event("0198a1b2-c3d4-7e5f-8123-456789abc042")),
+                        ),
+                        ExpectedAppend(
+                            otherTenantCampaign,
+                            0,
+                            listOf(event("0198a1b2-c3d4-7e5f-8123-456789abc043")),
+                        ),
+                        ExpectedAppend(
+                            tenantVoucher,
+                            0,
+                            listOf(event("0198a1b2-c3d4-7e5f-8123-456789abc044")),
+                        ),
+                    ),
+                )
+            }
+
+        (result is AppendResult.Appended).shouldBeTrue()
+        listOf(tenantCampaign, otherTenantCampaign, tenantVoucher).forEach { stream ->
+            store.load(EventStoreRead(stream, afterVersion = 0)).committedHead shouldBeEqualTo 1L
+        }
+    }
+
+    @Test
+    fun `foreground event reads reject before waiting on Hikari when their permit is occupied`() {
+        val permits =
+            EventSourcedDatabasePermitGate(
+                budget =
+                    EventSourcedDatabasePermitBudget(
+                        foreground = 1,
+                        projection = 16,
+                        rebuild = 1,
+                        maintenance = 1,
+                        readiness = 1,
+                    ),
+                acquireTimeout = Duration.ofMillis(25),
+            )
+        val runner = PermittedEventStoreTransactionRunner(database, permits)
+        val permittedStore = EventStoreRepository(runner)
+        val entered = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        val executor = Executors.newSingleThreadExecutor()
+        val holding =
+            executor.submit {
+                runner.readTransaction {
+                    entered.countDown()
+                    release.await(5, TimeUnit.SECONDS)
+                }
+            }
+
+        try {
+            entered.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            assertFailsWith<DatabaseBulkheadRejected> {
+                permittedStore.load(
+                    EventStoreRead(
+                        StreamKey(TenantId("tenant-a"), "campaign", UUID.randomUUID()),
+                        afterVersion = 0,
+                    ),
+                )
+            }
+        } finally {
+            release.countDown()
+            holding.get(5, TimeUnit.SECONDS)
+            executor.shutdownNow()
+        }
     }
 
     @Test

@@ -157,7 +157,7 @@ internal class DefaultEventSourcedVoucherLifecycleCommands(
         subject: SubjectIdentity,
     ): VoucherLifecycleAuthority {
         val stream = StreamKey(tenantId, "voucher", voucherId)
-        val voucher = vouchers.voucher(tenantId.value, voucherId)
+        val voucher = vouchers.voucherInCurrentTransaction(tenantId.value, voucherId)
         return VoucherLifecycleAuthority(stream, voucher, subject)
     }
 

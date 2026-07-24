@@ -110,24 +110,23 @@ function commandProjectionSequence() {
 }
 
 function rebuildState() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1100" viewBox="0 0 1800 1100" role="img" aria-labelledby="title desc"><title id="title">Projection Rebuild Generation State</title><desc id="desc">Fenced rebuild generation transitions, validation, active pointer swap, cancellation, failure, resume, and retained rollback generation.</desc>${defs()}<rect class="bg" width="1800" height="1100"/><text class="title" x="900" y="66" text-anchor="middle">Projection Rebuild - Candidate Before Pointer Swap</text><text class="subtitle" x="900" y="102" text-anchor="middle">The current ACTIVE generation remains readable until a candidate reaches its target and passes digest validation.</text>
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1100" viewBox="0 0 1800 1100" role="img" aria-labelledby="title desc"><title id="title">Projection Rebuild Generation State</title><desc id="desc">Fenced rebuild generation transitions, validation, active pointer swap, cancellation, retryable failure resume, and retained audit history.</desc>${defs()}<rect class="bg" width="1800" height="1100"/><text class="title" x="900" y="66" text-anchor="middle">Projection Rebuild - Candidate Before Pointer Swap</text><text class="subtitle" x="900" y="102" text-anchor="middle">The current ACTIVE generation remains readable until a candidate reaches its target and passes digest validation.</text>
   <rect class="layer blueLayer" x="80" y="145" width="1640" height="330" rx="22"/><text class="layerTitle" x="115" y="190">Normal activation path</text>
   ${card("building", 135, 280, 300, 105, "BUILDING", ["fenced replay", "fixed target position"], "blueCard")}
   ${card("validating", 575, 280, 300, 105, "VALIDATING", ["position reached", "canonical digest check"], "amberCard")}
   ${card("active", 1015, 280, 300, 105, "ACTIVE", ["CAS generation pointer", "serves query and SSE"], "greenCard")}
-  ${card("retired", 1455, 280, 220, 105, "RETIRED", ["retained rollback", "no new writes"], "purpleCard")}
+  ${card("retired", 1455, 280, 220, 105, "RETIRED", ["audit retention", "no new writes"], "purpleCard")}
   ${edge("building-validating", "greenEdge", "M435 332 L575 332")}
   ${edge("validating-active", "greenEdge", "M875 332 L1015 332")}
   ${edge("active-retired", "purpleEdge", "M1315 332 L1455 332")}
   <rect class="layer amberLayer" x="80" y="535" width="1640" height="390" rx="22"/><text class="layerTitle" x="115" y="580">Cancellation, failure, and recovery</text>
   ${card("cancelling", 145, 690, 280, 105, "CANCELLING", ["increment cancellation revision", "reject stale worker"], "amberCard")}
-  ${card("cancelled", 535, 690, 280, 105, "CANCELLED", ["checkpoint retained", "explicit resume only"], "redCard")}
+  ${card("cancelled", 535, 690, 280, 105, "CANCELLED", ["checkpoint retained", "start a new rebuild"], "redCard")}
   ${card("failed", 925, 690, 280, 105, "FAILED", ["poison or validation gap", "retryable resumes BUILDING"], "redCard")}
   ${card("still-active", 1315, 690, 300, 105, "CURRENT ACTIVE", ["pointer unchanged", "read availability preserved"], "greenCard")}
   ${edge("building-cancelling", "amberEdge", "M285 385 L285 690")}
   ${edge("cancelling-cancelled", "redEdge", "M425 742 L535 742")}
-  ${edge("validating-failed", "redEdge", "M725 385 L725 510 Q725 525 740 525 L1050 525 Q1065 525 1065 540 L1065 690")}
-  ${edge("cancelled-resume", "purpleEdge", "M675 795 L675 850 Q675 865 660 865 L115 865 Q100 865 100 850 L100 347 Q100 332 115 332 L135 332")}
+  ${edge("validating-failed", "redEdge", "M725 385 L725 510 Q 725 525 740 525 L1050 525 Q 1065 525 1065 540 L1065 690")}
   ${edge("failed-active-preserved", "greenEdge dashed", "M1205 742 L1315 742")}
-  <rect class="frame" x="180" y="965" width="1440" height="70" rx="15"/><text class="body" x="900" y="994" text-anchor="middle">All mutation endpoints require X-Expected-Generation-Token; stale tokens return 412 and cannot move the active pointer.</text><text class="small" x="900" y="1022" text-anchor="middle">Rollback restores a retained generation pointer after verification; immutable event rows are never edited.</text></svg>`;
+  <rect class="frame" x="180" y="965" width="1440" height="70" rx="15"/><text class="body" x="900" y="994" text-anchor="middle">All mutation endpoints require X-Expected-Generation-Token; stale tokens return 412 and cannot move the active pointer.</text><text class="small" x="900" y="1022" text-anchor="middle">Replace a bad active generation with a new validated rebuild; immutable event rows are never edited.</text></svg>`;
 }

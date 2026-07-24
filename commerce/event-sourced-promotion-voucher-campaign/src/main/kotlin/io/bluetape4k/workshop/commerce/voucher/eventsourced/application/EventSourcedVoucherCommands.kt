@@ -19,6 +19,7 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.Terminal
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.TerminalKeyVersions
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventStorePort
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventStoreRead
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventPage
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventToAppend
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ExpectedAppend
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamKey
@@ -79,8 +80,14 @@ internal interface EventSourcedVoucherCommands {
         tenant: String,
         voucherId: UUID,
     ): VoucherAggregate?
+
+    fun voucherInCurrentTransaction(
+        tenant: String,
+        voucherId: UUID,
+    ): VoucherAggregate? = voucher(tenant, voucherId)
 }
 
+@Suppress("TooManyFunctions")
 internal class DefaultEventSourcedVoucherCommands(
     private val commands: EventSourcedCommandService,
     private val events: EventStorePort,
@@ -151,10 +158,21 @@ internal class DefaultEventSourcedVoucherCommands(
     override fun voucher(
         tenant: String,
         voucherId: UUID,
+    ): VoucherAggregate? = loadVoucher(tenant, voucherId, events::load)
+
+    override fun voucherInCurrentTransaction(
+        tenant: String,
+        voucherId: UUID,
+    ): VoucherAggregate? = loadVoucher(tenant, voucherId, events::loadInCurrentTransaction)
+
+    private fun loadVoucher(
+        tenant: String,
+        voucherId: UUID,
+        load: (EventStoreRead) -> EventPage,
     ): VoucherAggregate? {
         val tenantId = TenantId(tenant.validCommandIdentity("tenant"))
         val page =
-            events.load(
+            load(
                 EventStoreRead(
                     StreamKey(tenantId, VOUCHER_STREAM_TYPE, voucherId),
                     afterVersion = 0,
@@ -174,7 +192,7 @@ internal class DefaultEventSourcedVoucherCommands(
         now: Instant,
     ): EventSourcedCommandDecision {
         val campaignStream = StreamKey(tenantId, CAMPAIGN_STREAM_TYPE, command.campaignId)
-        val campaignPage = events.load(EventStoreRead(campaignStream, afterVersion = 0))
+        val campaignPage = events.loadInCurrentTransaction(EventStoreRead(campaignStream, afterVersion = 0))
         return when {
             campaignPage.committedHead == 0L ->
                 rejected(ReceiptOutcome.CAMPAIGN_NOT_FOUND, NOT_FOUND_STATUS, hmacKeyVersion, now)
@@ -191,7 +209,7 @@ internal class DefaultEventSourcedVoucherCommands(
                             CAMPAIGN_SUBJECT_STREAM_TYPE,
                             subjectStreamId(command.campaignId, subject.surrogate),
                         )
-                    val subjectPage = events.load(EventStoreRead(subjectStream, afterVersion = 0))
+                    val subjectPage = events.loadInCurrentTransaction(EventStoreRead(subjectStream, afterVersion = 0))
                     if (subjectPage.committedHead >= campaign.perUserLimit) {
                         rejected(ReceiptOutcome.PER_USER_LIMIT_REACHED, CONFLICT_STATUS, hmacKeyVersion, now)
                     } else {

@@ -112,6 +112,14 @@ internal sealed interface AppendResult {
 internal interface EventStorePort {
     fun load(read: EventStoreRead): EventPage
 
+    /**
+     * Loads through the transaction already owned by command orchestration.
+     *
+     * Implementations may override this to avoid opening a second transaction or acquiring a
+     * nested database permit. Test doubles default to their ordinary bounded load.
+     */
+    fun loadInCurrentTransaction(read: EventStoreRead): EventPage = load(read)
+
     fun appendAll(appends: List<ExpectedAppend>): AppendResult
 }
 

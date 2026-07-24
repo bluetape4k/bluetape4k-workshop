@@ -9,6 +9,7 @@ import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.OperatorAuditAction
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedRuntimeWorkers
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ActiveProjectionGenerations
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.AppendFences
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.CampaignProjectionReadModels
@@ -29,6 +30,7 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.Projecti
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamHeads
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.StreamKey
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ExposedProjectionEventReader
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.EventSourcedProjectionRuntime
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionKey
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionLeaseRepository
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionPoisonState
@@ -64,7 +66,10 @@ import java.util.UUID
 import javax.sql.DataSource
 
 @Tag("integration")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = ["voucher.projection.worker.enabled=false"],
+)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class EventSourcedCampaignHttpIntegrationTest
     @Autowired
@@ -294,6 +299,45 @@ internal class EventSourcedCampaignHttpIntegrationTest
             .jsonPath("$.code").isEqualTo("INVALID_REQUEST")
             .jsonPath("$.reason").isEqualTo("request validation failed")
             .jsonPath("$.exception").doesNotExist()
+    }
+
+    @Test
+    fun `live campaign create maps malformed JSON and incompatible body types to redacted client errors`(
+        @Autowired runtimeWorkers: EventSourcedRuntimeWorkers,
+    ) {
+        check(runtimeWorkers is EventSourcedProjectionRuntime) {
+            "Spring must compose the concrete projection runtime"
+        }
+        listOf(
+            """{"campaignId":""",
+            """
+            {
+              "campaignId": "$CREATE_CAMPAIGN_ID",
+              "startsAt": "2026-08-01T00:00:00Z",
+              "endsAt": "2026-08-31T00:00:00Z",
+              "capacity": "not-a-number",
+              "perUserLimit": 2,
+              "redemptionTtlSeconds": 3600
+            }
+            """.trimIndent(),
+        ).forEachIndexed { index, body ->
+            client
+                .post()
+                .uri("/operator/api/v1/campaigns")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(TENANT_HEADER, TENANT)
+                .header(PRINCIPAL_HEADER, "operator-a")
+                .header(IDEMPOTENCY_HEADER, "malformed-body-$index")
+                .header("If-None-Match", "*")
+                .operatorAccessHeaders()
+                .bodyValue(body)
+                .exchange()
+                .expectStatus().isBadRequest
+                .expectBody()
+                .jsonPath("$.code").isEqualTo("INVALID_REQUEST")
+                .jsonPath("$.reason").isEqualTo("request validation failed")
+                .jsonPath("$.exception").doesNotExist()
+        }
     }
 
     @Test

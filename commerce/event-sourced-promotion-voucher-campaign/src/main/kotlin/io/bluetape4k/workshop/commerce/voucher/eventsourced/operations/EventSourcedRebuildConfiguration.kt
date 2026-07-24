@@ -2,16 +2,21 @@ package io.bluetape4k.workshop.commerce.voucher.eventsourced.operations
 
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.EventSourcedExposedDatabaseRegistration
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionLeaseRepository
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.EventSourcedProjectionRuntime
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionPoisonStore
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRecoveryStore
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRebuildRepository
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRepository
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRuntimeResources
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionWorkerProperties
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.EventSourcedHmacKeyRing
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.time.Clock
 
 @Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties(ProjectionWorkerProperties::class)
 internal class EventSourcedRebuildConfiguration {
     @Bean
     fun projectionRebuildRepository(): ProjectionRebuildRepository = ProjectionRebuildRepository()
@@ -76,6 +81,34 @@ internal class EventSourcedRebuildConfiguration {
             transactions = transactions,
             persistence = persistence,
             hmacKeyRing = hmacKeyRing,
+            clock = clock,
+        )
+
+    @Bean
+    fun projectionRuntimeResources(
+        registration: EventSourcedExposedDatabaseRegistration,
+        permits: EventSourcedDatabasePermitGate,
+        leases: ProjectionLeaseRepository,
+        projections: ProjectionRepository,
+        rebuilds: ProjectionRebuildRepository,
+    ): ProjectionRuntimeResources =
+        ProjectionRuntimeResources(
+            database = registration.database,
+            permits = permits,
+            leases = leases,
+            projections = projections,
+            rebuilds = rebuilds,
+        )
+
+    @Bean
+    fun eventSourcedRuntimeWorkers(
+        resources: ProjectionRuntimeResources,
+        properties: ProjectionWorkerProperties,
+        clock: Clock,
+    ): EventSourcedRuntimeWorkers =
+        EventSourcedProjectionRuntime(
+            resources = resources,
+            properties = properties,
             clock = clock,
         )
 }

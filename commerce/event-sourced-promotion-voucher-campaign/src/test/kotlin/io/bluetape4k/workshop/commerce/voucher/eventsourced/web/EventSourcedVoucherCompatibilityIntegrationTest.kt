@@ -46,7 +46,10 @@ import java.util.concurrent.TimeUnit
 import javax.sql.DataSource
 
 @Tag("integration")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = ["voucher.projection.worker.enabled=false"],
+)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 internal class EventSourcedVoucherCompatibilityIntegrationTest
     @Autowired
@@ -137,6 +140,24 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
             postLifecycle(scenario, allocation)
                 .assertNormalizedLifecycle(scenario.expectedReplay)
         }
+    }
+
+    @Test
+    fun `allocation replay preserves the terminal outcome while rendering current voucher state`() {
+        val scenario = VoucherCampaignBlackBoxContract.lifecycleScenarios.first()
+        val allocation = createAllocation(scenario)
+        postLifecycle(scenario, allocation)
+            .assertNormalizedLifecycle(scenario.expectedFirst)
+
+        client
+            .postVoucherAllocationContract(scenario.allocation.replay)
+            .exchange()
+            .expectStatus().isCreated
+            .expectHeader().valueEquals("Idempotency-Replayed", "true")
+            .expectBody()
+            .jsonPath("$.claimId").isEqualTo(allocation.claimId.toString())
+            .jsonPath("$.state").isEqualTo("REDEEMED")
+            .jsonPath("$.revision").isEqualTo(1)
     }
 
     @Test
