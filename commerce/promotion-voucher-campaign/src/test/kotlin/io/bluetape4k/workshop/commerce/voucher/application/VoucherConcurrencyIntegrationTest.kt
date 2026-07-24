@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.ZoneOffset
@@ -8,7 +9,6 @@ import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import kotlin.test.assertTrue
 
 internal class VoucherConcurrencyIntegrationTest : VoucherCommandTestSupport() {
     @Test
@@ -150,7 +150,7 @@ internal class VoucherConcurrencyIntegrationTest : VoucherCommandTestSupport() {
             ).use { statement ->
                 statement.setString(1, TENANT_ID)
                 statement.setObject(2, CAMPAIGN_ID)
-                statement.executeQuery().use { result -> assertTrue(result.next()) }
+                statement.executeQuery().use { result -> result.next().shouldBeTrue() }
             }
 
             Executors.newVirtualThreadPerTaskExecutor().use { executor ->
@@ -163,11 +163,8 @@ internal class VoucherConcurrencyIntegrationTest : VoucherCommandTestSupport() {
                     }.get(8, TimeUnit.SECONDS)
                 val elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAt)
 
-                assertTrue(failure != null, "the contending allocation must fail on PostgreSQL lock_timeout")
-                assertTrue(
-                    elapsedMillis in 4_500..7_500,
-                    "expected the lock timeout near 5 seconds, elapsed=${elapsedMillis}ms",
-                )
+                (failure != null).shouldBeTrue()
+                (elapsedMillis in 4_500..7_500).shouldBeTrue()
             }
             blocker.rollback()
         }

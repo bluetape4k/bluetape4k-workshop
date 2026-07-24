@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabaseLane
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitGate
@@ -7,7 +8,6 @@ import io.bluetape4k.workshop.commerce.voucher.admission.DatabasePermitRejected
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherLifecycleCoordinator
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherShutdownEvent
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherShutdownReason
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.util.concurrent.CountDownLatch
@@ -39,7 +39,7 @@ internal class VoucherLifecycleIntegrationTest {
 
         val closeThread = Thread.ofPlatform().start(coordinator::shutdown)
         check(coordinator.awaitEvent(VoucherShutdownEvent.AWAIT_DB, Duration.ofSeconds(1)))
-        assertThrows<DatabasePermitRejected> {
+        assertFailsWith<DatabasePermitRejected> {
             gate.withPermit(DatabaseLane.FOREGROUND) { error("new work must not start") }
         }
         release.countDown()

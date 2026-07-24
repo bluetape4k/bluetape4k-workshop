@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.commerce.voucher.reconciliation
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.concurrent.virtualthread.VirtualThreads
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.voucher.application.VoucherCommandTestSupport
@@ -18,8 +20,6 @@ import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
 
 internal class VoucherReconciliationServiceTest : VoucherCommandTestSupport() {
     private lateinit var mutableClock: MutableClock
@@ -129,7 +129,7 @@ internal class VoucherReconciliationServiceTest : VoucherCommandTestSupport() {
 
         val result = reconciliation.runBatch(50, Duration.ZERO)
 
-        assertTrue(result.deadlineReached)
+        result.deadlineReached.shouldBeTrue()
         result.processed shouldBeEqualTo 0
         queryLong("SELECT count(*) FROM campaign_event_inbox WHERE status = 'PENDING'") shouldBeEqualTo 3L
     }
@@ -171,7 +171,7 @@ internal class VoucherReconciliationServiceTest : VoucherCommandTestSupport() {
 
         val result = reconciliation.runBatch(50, Duration.ofMillis(200))
 
-        assertTrue(result.deadlineReached)
+        result.deadlineReached.shouldBeTrue()
         queryLong("SELECT count(*) FROM voucher_audits") shouldBeEqualTo 0L
         inboxRecord(event.eventId).status shouldBeEqualTo InboxStatus.PENDING
         service(AuditingVoucherDelayedEventHandler(audits))
