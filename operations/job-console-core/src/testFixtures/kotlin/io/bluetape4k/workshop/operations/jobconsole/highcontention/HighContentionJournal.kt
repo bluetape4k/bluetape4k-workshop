@@ -19,6 +19,8 @@ import java.security.MessageDigest
 enum class HighContentionJournalEvent {
     PHASE_TRANSITION,
     RESOURCE_TRANSITION,
+    DOCKER_CREATE_INTENT,
+    DOCKER_RESOURCE_CREATED,
     REPORT_SERIALIZATION_FALLBACK,
 }
 
@@ -121,6 +123,7 @@ class HighContentionJournal private constructor(
                 if (!realPath.startsWith(trustedRoot)) {
                     throw HighContentionArtifactException("journal escaped its trusted artifact root")
                 }
+                HighContentionArtifactPaths.forceDirectory(realPath.parent)
                 HighContentionJournal(
                     path = realPath,
                     channel = channel,
