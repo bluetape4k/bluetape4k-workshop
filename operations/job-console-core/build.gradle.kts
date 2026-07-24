@@ -52,6 +52,7 @@ dependencies {
 
     testFixturesImplementation(libs.bluetape4k.assertions)
     testFixturesImplementation(libs.bluetape4k.jackson3)
+    testFixturesImplementation(libs.bluetape4k.lettuce)
     testFixturesImplementation(libs.bluetape4k.testcontainers)
     testFixturesImplementation(libs.testcontainers.postgresql)
     testFixturesImplementation(libs.testcontainers.toxiproxy)

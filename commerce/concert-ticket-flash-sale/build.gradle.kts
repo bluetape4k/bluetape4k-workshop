@@ -77,6 +77,11 @@ dependencies {
 
 tasks.test {
     setJvmArgs((jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
+    inputs.dir(rootProject.layout.projectDirectory.dir("profiles/high-contention/v1"))
+    systemProperty(
+        "highContentionContractRoot",
+        rootProject.layout.projectDirectory.dir("profiles/high-contention/v1").asFile.absolutePath,
+    )
     useJUnitPlatform {
         excludeTags("stress")
     }
