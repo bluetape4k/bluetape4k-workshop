@@ -258,6 +258,29 @@ class HighContentionSuiteTaskTest {
         }
     }
 
+    @Test
+    fun `ticket child finalization removes its transient journal between profiles`(
+        @org.junit.jupiter.api.io.TempDir runRoot: Path,
+    ) {
+        val trustedRunRoot = runRoot.toRealPath()
+        listOf("burst", "duplicate-storm").forEach { profileId ->
+            val child = HighContentionChildKey(profileId, "ticket-spring")
+            val legacyReport = trustedRunRoot.resolve("ticket-spring-$profileId-report.json")
+            val transientJournal = trustedRunRoot.resolve("ticket-topology.jsonl")
+            Files.writeString(legacyReport, """{"profileId":"$profileId"}""")
+            Files.writeString(transientJournal, """{"event":"TOPOLOGY"}""")
+
+            HighContentionChildArtifactFinalizer.finalize(trustedRunRoot, child)
+
+            assertFalse(Files.exists(legacyReport))
+            assertFalse(Files.exists(transientJournal))
+            assertEquals(
+                """{"profileId":"$profileId"}""",
+                Files.readString(trustedRunRoot.resolve("reports/ticket-spring/$profileId.json")),
+            )
+        }
+    }
+
     private class MutableClock {
         private var now = 0L
 

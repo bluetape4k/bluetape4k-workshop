@@ -544,6 +544,34 @@ internal class HighContentionChildProcessRunner(
     }
 }
 
+internal object HighContentionChildArtifactFinalizer {
+    fun finalize(
+        runRoot: Path,
+        child: HighContentionChildKey,
+    ) {
+        if (child.implementation != "ticket-spring") {
+            return
+        }
+        val legacyReport = runRoot.resolve(
+            "ticket-spring-${child.profileId}-report.json",
+        )
+        if (Files.isRegularFile(legacyReport, NOFOLLOW_LINKS) && !Files.isSymbolicLink(legacyReport)) {
+            val canonicalReport = runRoot.resolve(
+                "reports/${child.implementation}/${child.profileId}.json",
+            )
+            createTrustedDirectories(canonicalReport.parent)
+            try {
+                Files.move(legacyReport, canonicalReport, ATOMIC_MOVE)
+            } catch (_: AtomicMoveNotSupportedException) {
+                Files.move(legacyReport, canonicalReport)
+            }
+            forceDirectory(canonicalReport.parent)
+        }
+        Files.deleteIfExists(runRoot.resolve("ticket-topology.jsonl"))
+        forceDirectory(runRoot)
+    }
+}
+
 @DisableCachingByDefault(because = "Runs heavyweight child profiles in isolated external Gradle processes.")
 abstract class HighContentionSuiteTask : DefaultTask() {
 
@@ -713,7 +741,7 @@ abstract class HighContentionSuiteTask : DefaultTask() {
                 )
                 Files.deleteIfExists(workerPidFile)
                 forceDirectory(workerPidFile.parent)
-                canonicalizeTicketReport(runRoot, child)
+                HighContentionChildArtifactFinalizer.finalize(runRoot, child)
                 val report = reportPath(runRoot, child)
                 val reportExists =
                     Files.isRegularFile(report, NOFOLLOW_LINKS) && !Files.isSymbolicLink(report)
@@ -939,27 +967,6 @@ abstract class HighContentionSuiteTask : DefaultTask() {
                 ),
             ).plus("\n").toByteArray(),
         )
-    }
-
-    private fun canonicalizeTicketReport(
-        runRoot: Path,
-        child: HighContentionChildKey,
-    ) {
-        if (child.implementation != "ticket-spring") {
-            return
-        }
-        val legacy = runRoot.resolve("ticket-spring-${child.profileId}-report.json")
-        if (!Files.isRegularFile(legacy, NOFOLLOW_LINKS) || Files.isSymbolicLink(legacy)) {
-            return
-        }
-        val canonical = reportPath(runRoot, child)
-        createTrustedDirectories(canonical.parent)
-        try {
-            Files.move(legacy, canonical, ATOMIC_MOVE)
-        } catch (_: AtomicMoveNotSupportedException) {
-            Files.move(legacy, canonical)
-        }
-        forceDirectory(canonical.parent)
     }
 
     private fun readStatus(report: Path): HighContentionChildStatus {
