@@ -46,6 +46,7 @@ dependencies {
     testImplementation(libs.mockk)
 
     testFixturesImplementation(libs.bluetape4k.assertions)
+    testFixturesImplementation(libs.bluetape4k.jackson3)
     testFixturesImplementation(libs.bluetape4k.testcontainers)
     testFixturesImplementation(libs.testcontainers.postgresql)
 }
@@ -81,6 +82,11 @@ fun Test.useJobConsoleTestRuntime() {
 
 tasks.test {
     useJobConsoleTestRuntime()
+    inputs.dir(rootProject.layout.projectDirectory.dir("profiles/high-contention/v1"))
+    systemProperty(
+        "highContentionContractRoot",
+        rootProject.layout.projectDirectory.dir("profiles/high-contention/v1").asFile.absolutePath,
+    )
     useJUnitPlatform { excludeTags("integration") }
 }
 

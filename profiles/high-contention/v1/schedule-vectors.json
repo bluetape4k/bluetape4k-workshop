@@ -28,21 +28,21 @@
           "stableOrdinal": 1,
           "identityOrdinal": 1,
           "attemptOrdinal": 0,
-          "authorityOrdinal": 0
+          "authorityOrdinal": 1
         },
         {
           "offsetNanos": 0,
           "stableOrdinal": 2,
           "identityOrdinal": 2,
           "attemptOrdinal": 0,
-          "authorityOrdinal": 1
+          "authorityOrdinal": 0
         },
         {
           "offsetNanos": 0,
           "stableOrdinal": 3,
           "identityOrdinal": 3,
           "attemptOrdinal": 0,
-          "authorityOrdinal": 0
+          "authorityOrdinal": 1
         }
       ]
     },
@@ -88,7 +88,7 @@
           "stableOrdinal": 2,
           "identityOrdinal": 2,
           "attemptOrdinal": 0,
-          "authorityOrdinal": 1
+          "authorityOrdinal": 0
         },
         {
           "offsetNanos": 1000,
@@ -126,47 +126,47 @@
         {
           "offsetNanos": 0,
           "stableOrdinal": 0,
-          "identityOrdinal": 0,
+          "identityOrdinal": 1,
           "attemptOrdinal": 0,
-          "authorityOrdinal": 0
+          "authorityOrdinal": 1
         },
         {
           "offsetNanos": 150,
           "stableOrdinal": 1,
-          "identityOrdinal": 0,
+          "identityOrdinal": 1,
           "attemptOrdinal": 1,
-          "authorityOrdinal": 0
+          "authorityOrdinal": 1
         },
         {
           "offsetNanos": 300,
           "stableOrdinal": 2,
-          "identityOrdinal": 0,
+          "identityOrdinal": 1,
           "attemptOrdinal": 2,
-          "authorityOrdinal": 0
+          "authorityOrdinal": 1
         },
         {
           "offsetNanos": 450,
           "stableOrdinal": 3,
-          "identityOrdinal": 1,
+          "identityOrdinal": 0,
           "attemptOrdinal": 0,
-          "authorityOrdinal": 1
+          "authorityOrdinal": 0
         },
         {
           "offsetNanos": 600,
           "stableOrdinal": 4,
-          "identityOrdinal": 1,
+          "identityOrdinal": 0,
           "attemptOrdinal": 1,
-          "authorityOrdinal": 1
+          "authorityOrdinal": 0
         },
         {
           "offsetNanos": 750,
           "stableOrdinal": 5,
-          "identityOrdinal": 1,
+          "identityOrdinal": 0,
           "attemptOrdinal": 2,
-          "authorityOrdinal": 1
+          "authorityOrdinal": 0
         }
       ]
     }
   ],
-  "vectorsSha256": "326bb90ac436063b77cca407e802ad6659405bea59aa13ad40f6219eec6a3530"
+  "vectorsSha256": "040210ff3ace6e73bf45460363057da7a020b26809b7a2c563245c9e4d21d7ae"
 }
