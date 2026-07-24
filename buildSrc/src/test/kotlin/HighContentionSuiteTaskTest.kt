@@ -11,6 +11,33 @@ import kotlin.test.assertTrue
 class HighContentionSuiteTaskTest {
 
     @Test
+    fun `child failure diagnostic identifies tuple bounds output and redacts capabilities`(
+        @org.junit.jupiter.api.io.TempDir root: Path,
+    ) {
+        val outputLog = root.resolve("child.log")
+        val capability = "capability-secret"
+        val ownerToken = "owner-token-secret"
+        Files.writeString(
+            outputLog,
+            (1..45).joinToString("\n") { line ->
+                "line-$line $capability $ownerToken"
+            } + "\nThere were failing tests\n",
+        )
+
+        val diagnostic = HighContentionChildFailureDiagnostic.describe(
+            child = HighContentionChildKey("worker-restart", "ticket-spring"),
+            outputLog = outputLog,
+            secrets = listOf(capability, ownerToken),
+        )
+
+        assertTrue(diagnostic.startsWith("ticket-spring/worker-restart: CHILD_TEST_FAILURE"))
+        assertTrue("line-1 [REDACTED]" !in diagnostic)
+        assertTrue("line-45 [REDACTED] [REDACTED]" in diagnostic)
+        assertTrue(capability !in diagnostic)
+        assertTrue(ownerToken !in diagnostic)
+    }
+
+    @Test
     fun `selection preserves manifest profile and implementation order`() {
         val entries = listOf(
             HighContentionMatrixEntry("burst", listOf("job-core", "job-spring")),

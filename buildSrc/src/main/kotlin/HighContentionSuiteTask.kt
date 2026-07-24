@@ -757,6 +757,55 @@ internal object HighContentionChildArtifactFinalizer {
     }
 }
 
+internal object HighContentionChildFailureDiagnostic {
+    fun describe(
+        child: HighContentionChildKey,
+        outputLog: Path,
+        secrets: List<String>,
+    ): String {
+        val output = if (
+            Files.isRegularFile(outputLog, NOFOLLOW_LINKS) &&
+            Files.size(outputLog) <= MAX_OUTPUT_BYTES
+        ) {
+            Files.readString(outputLog)
+        } else {
+            ""
+        }
+        val classification = when {
+            "not bound to its live parent" in output -> "PARENT_CAPABILITY_MISMATCH"
+            "capability digest does not match" in output -> "CAPABILITY_DIGEST_MISMATCH"
+            "capability channel is incomplete" in output -> "CAPABILITY_CHANNEL_INCOMPLETE"
+            "source worktree must be clean" in output -> "DIRTY_SOURCE"
+            "Compilation error" in output -> "CHILD_COMPILATION_ERROR"
+            "There were failing tests" in output -> "CHILD_TEST_FAILURE"
+            else -> "CHILD_EXECUTION_ERROR"
+        }
+        val excerpt = output
+            .lines()
+            .takeLast(MAX_EXCERPT_LINES)
+            .joinToString("\n")
+            .takeLast(MAX_EXCERPT_CHARS)
+        val redacted = secrets.fold(excerpt) { sanitized, secret ->
+            if (secret.isBlank()) sanitized else sanitized.replace(secret, "[REDACTED]")
+        }
+        return buildString {
+            append(child.implementation)
+            append("/")
+            append(child.profileId)
+            append(": ")
+            append(classification)
+            if (redacted.isNotBlank()) {
+                append("\n--- bounded child output tail ---\n")
+                append(redacted)
+            }
+        }
+    }
+
+    private const val MAX_OUTPUT_BYTES = 4L * 1024 * 1024
+    private const val MAX_EXCERPT_LINES = 40
+    private const val MAX_EXCERPT_CHARS = 16 * 1024
+}
+
 @DisableCachingByDefault(because = "Runs heavyweight child profiles in isolated external Gradle processes.")
 abstract class HighContentionSuiteTask : DefaultTask() {
 
@@ -960,7 +1009,13 @@ abstract class HighContentionSuiteTask : DefaultTask() {
                     )
                     if (result.exitCode != 0) {
                         throw GradleException(
-                            "high-contention child failed: ${classifyChildFailure(outputLog)}",
+                            "high-contention child failed: ${
+                                HighContentionChildFailureDiagnostic.describe(
+                                    child = child,
+                                    outputLog = outputLog,
+                                    secrets = listOf(capability, ownerToken),
+                                )
+                            }",
                         )
                     }
                     Files.deleteIfExists(workerPidFile)
@@ -1172,25 +1227,6 @@ abstract class HighContentionSuiteTask : DefaultTask() {
         ByteArray(32)
             .also(SecureRandom()::nextBytes)
             .let(Base64.getUrlEncoder().withoutPadding()::encodeToString)
-
-    private fun classifyChildFailure(outputLog: Path): String {
-        val output = if (
-            Files.isRegularFile(outputLog, NOFOLLOW_LINKS) &&
-            Files.size(outputLog) <= 4 * 1024 * 1024
-        ) {
-            Files.readString(outputLog)
-        } else {
-            ""
-        }
-        return when {
-            "not bound to its live parent" in output -> "PARENT_CAPABILITY_MISMATCH"
-            "capability digest does not match" in output -> "CAPABILITY_DIGEST_MISMATCH"
-            "capability channel is incomplete" in output -> "CAPABILITY_CHANNEL_INCOMPLETE"
-            "source worktree must be clean" in output -> "DIRTY_SOURCE"
-            "Compilation error" in output -> "CHILD_COMPILATION_ERROR"
-            else -> "CHILD_EXECUTION_ERROR"
-        }
-    }
 
     private fun writeChildJournal(
         runRoot: Path,
