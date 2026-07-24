@@ -5,10 +5,8 @@ import ch.qos.logback.classic.Logger
 import ch.qos.logback.core.read.ListAppender
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotEquals
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -22,7 +20,7 @@ internal class VoucherCodeServiceTest {
     fun `generated code has version payload checksum and a separate storage verifier`() {
         val issued = service.issue(fixedGenerationInput())
 
-        assertTrue(issued.code.matches(Regex("V7-[1-9A-HJ-NP-Za-km-z]{22}[1-9A-HJ-NP-Za-km-z]{2}")))
+        issued.code.matches(Regex("V7-[1-9A-HJ-NP-Za-km-z]{22}[1-9A-HJ-NP-Za-km-z]{2}")).shouldBeTrue()
         service.verify(issued.code, issued.verifier, verificationKeyVersion = 7).shouldBeTrue()
         issued.verifier.contentEquals(issued.code.toByteArray()).shouldBeFalse()
         issued.generationKeyVersion shouldBeEqualTo 5
@@ -53,7 +51,7 @@ internal class VoucherCodeServiceTest {
     fun `invalid code forms fail with one redacted result`(candidate: String) {
         val captured = captureLogs { service.verifyExternal(candidate) shouldBeEqualTo VerificationResult.INVALID_CODE }
 
-        if (candidate.isNotEmpty()) assertFalse(captured.contains(candidate))
+        if (candidate.isNotEmpty()) captured.contains(candidate).shouldBeFalse()
     }
 
     @Test
@@ -61,15 +59,11 @@ internal class VoucherCodeServiceTest {
         val input = fixedGenerationInput()
         val baseline = service.issue(input)
 
-        assertNotEquals(baseline.code, service.issue(input.copy(tenantId = "tenant-b")).code)
-        assertNotEquals(
-            baseline.code,
-            service.issue(input.copy(campaignId = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ac"))).code,
-        )
-        assertNotEquals(
-            baseline.code,
-            service.issue(input.copy(allocationId = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ce"))).code,
-        )
+        baseline.code shouldNotBeEqualTo service.issue(input.copy(tenantId = "tenant-b")).code
+        baseline.code shouldNotBeEqualTo
+            service.issue(input.copy(campaignId = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ac"))).code
+        baseline.code shouldNotBeEqualTo
+            service.issue(input.copy(allocationId = UUID.fromString("018f1f2e-3d4c-7b6a-8f90-1234567890ce"))).code
     }
 
     @Test
