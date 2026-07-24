@@ -1,0 +1,59 @@
+{
+  "contractSchemaVersion": 1,
+  "reportSchemaVersion": 1,
+  "results": [
+    "PASS",
+    "FAIL",
+    "ERROR",
+    "UNAVAILABLE"
+  ],
+  "errorCodes": [
+    "NONE",
+    "CONFIGURATION_INVALID",
+    "INVALID_REALIZATION",
+    "PROFILE_TIMEOUT",
+    "INFRASTRUCTURE_UNAVAILABLE",
+    "CLEANUP_FAILED",
+    "CHILD_PROCESS_LEAK",
+    "ARTIFACT_INVALID",
+    "REPORT_SERIALIZATION"
+  ],
+  "submissionDispositions": [
+    "COMPLETED",
+    "CANCELLED",
+    "TIMED_OUT",
+    "LOCALLY_REJECTED"
+  ],
+  "scheduleObservations": [
+    "ON_TIME",
+    "MISSED_DEADLINE"
+  ],
+  "cleanupResults": [
+    "PASS",
+    "FAIL"
+  ],
+  "requiredTopLevelFields": [
+    "reportSchemaVersion",
+    "runId",
+    "mode",
+    "profileId",
+    "implementation",
+    "sourceCommit",
+    "effectiveConfiguration",
+    "result",
+    "errorCode",
+    "correctness",
+    "observations",
+    "schedule",
+    "resources",
+    "cleanup",
+    "knownLimitations"
+  ],
+  "forbiddenEvidencePatterns": [
+    "postgresql://",
+    "redis://",
+    "toxiproxyControlEndpoint",
+    "password",
+    "authorization"
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "suiteSchemaVersion": 1,
+  "profileSchemaVersion": 1,
+  "reportSchemaVersion": 1,
+  "childDescriptorSchemaVersion": 1,
+  "runDeadlineMs": 3600000,
+  "runCleanupActionBudgetsMs": {
+    "childProcesses": 30000,
+    "dockerDiscovery": 60000,
+    "artifactFinalization": 15000
+  },
+  "runJournalFinalizeReserveMs": 15000,
+  "runCleanupReserveMs": 150000,
+  "dockerCleanupPollIntervalMs": 250,
+  "dockerCleanupQuietPeriodMs": 1000,
+  "implementations": [
+    "job-core",
+    "job-spring",
+    "job-ktor",
+    "ticket-spring"
+  ],
+  "entries": [
+    {
+      "mode": "ci-correctness",
+      "profileId": "burst",
+      "profileFile": "profiles/ci-correctness/burst.json",
+      "implementations": ["job-core", "job-spring", "job-ktor", "ticket-spring"]
+    },
+    {
+      "mode": "ci-correctness",
+      "profileId": "duplicate-storm",
+      "profileFile": "profiles/ci-correctness/duplicate-storm.json",
+      "implementations": ["job-core", "job-spring", "job-ktor", "ticket-spring"]
+    },
+    {
+      "mode": "ci-correctness",
+      "profileId": "redis-path-outage",
+      "profileFile": "profiles/ci-correctness/redis-path-outage.json",
+      "implementations": ["job-core", "job-spring", "job-ktor", "ticket-spring"]
+    },
+    {
+      "mode": "ci-correctness",
+      "profileId": "redis-key-loss",
+      "profileFile": "profiles/ci-correctness/redis-key-loss.json",
+      "implementations": ["job-core", "job-spring", "job-ktor", "ticket-spring"]
+    },
+    {
+      "mode": "ci-correctness",
+      "profileId": "slow-provider",
+      "profileFile": "profiles/ci-correctness/slow-provider.json",
+      "implementations": ["job-core", "job-spring", "job-ktor", "ticket-spring"]
+    },
+    {
+      "mode": "ci-correctness",
+      "profileId": "worker-restart",
+      "profileFile": "profiles/ci-correctness/worker-restart.json",
+      "implementations": ["job-core", "job-spring", "job-ktor", "ticket-spring"]
+    },
+    {
+      "mode": "ci-correctness",
+      "profileId": "duplicate-delivery",
+      "profileFile": "profiles/ci-correctness/duplicate-delivery.json",
+      "implementations": ["job-core", "job-spring", "job-ktor", "ticket-spring"]
+    },
+    {
+      "mode": "local-reference",
+      "profileId": "burst",
+      "profileFile": "profiles/local-reference/burst.json",
+      "implementations": ["job-core", "job-spring", "job-ktor", "ticket-spring"]
+    },
+    {
+      "mode": "local-reference",
+      "profileId": "duplicate-storm",
+      "profileFile": "profiles/local-reference/duplicate-storm.json",
+      "implementations": ["job-core", "job-spring", "job-ktor", "ticket-spring"]
+    },
+    {
+      "mode": "local-reference",
+      "profileId": "redis-path-outage",
+      "profileFile": "profiles/local-reference/redis-path-outage.json",
+      "implementations": ["job-core", "job-spring", "job-ktor", "ticket-spring"]
+    },
+    {
+      "mode": "local-reference",
+      "profileId": "redis-key-loss",
+      "profileFile": "profiles/local-reference/redis-key-loss.json",
+      "implementations": ["job-core", "job-spring", "job-ktor", "ticket-spring"]
+    },
+    {
+      "mode": "local-reference",
+      "profileId": "slow-provider",
+      "profileFile": "profiles/local-reference/slow-provider.json",
+      "implementations": ["job-core", "job-spring", "job-ktor", "ticket-spring"]
+    },
+    {
+      "mode": "local-reference",
+      "profileId": "worker-restart",
+      "profileFile": "profiles/local-reference/worker-restart.json",
+      "implementations": ["job-core", "job-spring", "job-ktor", "ticket-spring"]
+    },
+    {
+      "mode": "local-reference",
+      "profileId": "duplicate-delivery",
+      "profileFile": "profiles/local-reference/duplicate-delivery.json",
+      "implementations": ["job-core", "job-spring", "job-ktor", "ticket-spring"]
+    }
+  ]
+}
