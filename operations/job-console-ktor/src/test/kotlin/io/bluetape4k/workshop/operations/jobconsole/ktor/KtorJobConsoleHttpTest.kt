@@ -49,4 +49,9 @@ class KtorJobConsoleHttpTest {
     fun `live REST submit is completed by the owned worker lifecycle`() {
         JobConsoleV1LiveContract(URI("http://127.0.0.1:$port")).verifyOwnedWorkerLifecycle("ktor-key")
     }
+
+    @Test
+    fun `live problem request IDs use UUID version seven`() {
+        JobConsoleV1LiveContract(URI("http://127.0.0.1:$port")).verifyProblemRequestIdUsesUuidV7()
+    }
 }

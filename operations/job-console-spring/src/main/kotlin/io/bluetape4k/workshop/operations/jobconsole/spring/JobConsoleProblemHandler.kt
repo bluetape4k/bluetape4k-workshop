@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.operations.jobconsole.spring
 
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.operations.jobconsole.api.JobProblem
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepositoryException
@@ -8,7 +9,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
-import java.util.UUID
 
 @RestControllerAdvice
 class JobConsoleProblemHandler {
@@ -29,5 +29,5 @@ class JobConsoleProblemHandler {
         ResponseEntity.badRequest().body(problem(HttpStatus.BAD_REQUEST, JobProblemCode.VALIDATION_FAILED))
 
     private fun problem(status: HttpStatus, code: JobProblemCode): JobProblem =
-        JobProblem(status.value(), code, status.reasonPhrase, UUID.randomUUID().toString())
+        JobProblem(status.value(), code, status.reasonPhrase, Uuid.V7.nextId().toString())
 }

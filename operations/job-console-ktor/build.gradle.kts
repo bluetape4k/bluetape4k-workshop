@@ -27,6 +27,7 @@ configurations.configureEach {
 dependencies {
     implementation(platform(libs.ktor.bom))
     implementation(project(":operations-job-console-core"))
+    implementation(libs.bluetape4k.idgenerators)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.content.negotiation)

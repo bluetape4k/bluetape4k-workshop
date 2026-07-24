@@ -24,6 +24,11 @@ class SpringJobConsoleHttpTest {
         JobConsoleV1LiveContract(URI("http://127.0.0.1:$port")).verifyOwnedWorkerLifecycle("spring-key")
     }
 
+    @Test
+    fun `live problem request IDs use UUID version seven`() {
+        JobConsoleV1LiveContract(URI("http://127.0.0.1:$port")).verifyProblemRequestIdUsesUuidV7()
+    }
+
     companion object {
         private val fixture = JobConsoleContainerFixture.shared().also { it.createSchema() }
 

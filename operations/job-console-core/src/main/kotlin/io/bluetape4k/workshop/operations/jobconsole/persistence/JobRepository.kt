@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.operations.jobconsole.persistence
 
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import io.bluetape4k.workshop.operations.jobconsole.api.FailureMode
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
@@ -137,7 +138,7 @@ class JobRepository(
 
                 advisoryLock(connection, "queue:${scope.tenantId}")
                 val sequence = nextEnqueueSequence(connection, scope.tenantId)
-                val jobId = UUID.randomUUID()
+                val jobId = Uuid.V7.nextId()
                 insertJob(connection, scope, request, jobId, sequence, now)
                 insertRequest(connection, scope, keyHash, fingerprint, jobId, now)
                 insertOutbox(connection, jobId, now)
@@ -633,10 +634,10 @@ class JobRepository(
             VALUES (?, ?, 'job.updated', 1, 1, ?), (?, ?, 'queue.updated', 1, 1, ?)
             """.trimIndent(),
         ).use { statement ->
-            statement.setObject(1, UUID.randomUUID())
+            statement.setObject(1, Uuid.V7.nextId())
             statement.setObject(2, jobId)
             statement.setTimestamp(3, Timestamp.from(now))
-            statement.setObject(4, UUID.randomUUID())
+            statement.setObject(4, Uuid.V7.nextId())
             statement.setObject(5, jobId)
             statement.setTimestamp(6, Timestamp.from(now))
             statement.executeUpdate()
@@ -647,7 +648,7 @@ class JobRepository(
         connection.prepareStatement(
             "INSERT INTO job_history(history_id, job_id, from_state, to_state, reason_code, resource_version, occurred_at) VALUES (?, ?, NULL, ?, ?, 1, ?)",
         ).use { statement ->
-            statement.setObject(1, UUID.randomUUID())
+            statement.setObject(1, Uuid.V7.nextId())
             statement.setObject(2, jobId)
             statement.setString(3, JobState.QUEUED.wireValue)
             statement.setString(4, "submitted")
@@ -722,7 +723,7 @@ class JobRepository(
         expectedState: JobState?,
     ): ClaimedJob {
         require(!leaseDuration.isNegative && !leaseDuration.isZero) { "lease duration must be positive" }
-        val token = UUID.randomUUID()
+        val token = Uuid.V7.nextId()
         val sql =
             buildString {
                 append(
@@ -829,7 +830,7 @@ class JobRepository(
         connection.prepareStatement(
             "INSERT INTO job_history(history_id, job_id, from_state, to_state, reason_code, resource_version, occurred_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT DO NOTHING",
         ).use { statement ->
-            statement.setObject(1, UUID.randomUUID())
+            statement.setObject(1, Uuid.V7.nextId())
             statement.setObject(2, jobId)
             statement.setString(3, from?.wireValue)
             statement.setString(4, to.wireValue)
@@ -846,8 +847,8 @@ class JobRepository(
             WHERE jobs.job_id = ?
             """.trimIndent(),
         ).use { statement ->
-            statement.setObject(1, UUID.randomUUID())
-            statement.setObject(2, UUID.randomUUID())
+            statement.setObject(1, Uuid.V7.nextId())
+            statement.setObject(2, Uuid.V7.nextId())
             statement.setObject(3, jobId)
             statement.executeUpdate()
         }

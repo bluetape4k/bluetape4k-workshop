@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.operations.jobconsole.persistence
 
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.operations.jobconsole.api.JobEvent
 import io.bluetape4k.workshop.operations.jobconsole.api.JobEventType
 import java.sql.Connection
@@ -20,7 +21,7 @@ class JobOutboxRepository(
         inTransaction { connection ->
             require(!claimDuration.isNegative && !claimDuration.isZero) { "claimDuration must be positive" }
             val boundedSize = batchSize.coerceIn(1, MAX_BATCH_SIZE)
-            val token = UUID.randomUUID()
+            val token = Uuid.V7.nextId()
             val events =
                 connection.prepareStatement(
                     """

@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.operations.jobconsole.ktor
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.operations.jobconsole.api.JobProblem
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import io.bluetape4k.workshop.operations.jobconsole.application.BoundedJobEventFanout
@@ -80,19 +81,19 @@ fun Application.jobConsoleModule(
                     JobProblemCode.IDEMPOTENCY_KEY_REUSED -> HttpStatusCode.Conflict
                     else -> HttpStatusCode.Conflict
                 }
-            call.respondJson(status, JobProblem(status.value, failure.code, status.description, UUID.randomUUID().toString()))
+            call.respondJson(status, JobProblem(status.value, failure.code, status.description, Uuid.V7.nextId().toString()))
         }
         exception<IllegalArgumentException> { call, _ ->
             call.respondJson(
                 HttpStatusCode.BadRequest,
-                JobProblem(400, JobProblemCode.VALIDATION_FAILED, "Bad Request", UUID.randomUUID().toString()),
+                JobProblem(400, JobProblemCode.VALIDATION_FAILED, "Bad Request", Uuid.V7.nextId().toString()),
             )
         }
         exception<CancellationException> { _, failure -> throw failure }
         exception<Throwable> { call, _ ->
             call.respondJson(
                 HttpStatusCode.InternalServerError,
-                JobProblem(500, JobProblemCode.DEPENDENCY_UNAVAILABLE, "Internal Server Error", UUID.randomUUID().toString()),
+                JobProblem(500, JobProblemCode.DEPENDENCY_UNAVAILABLE, "Internal Server Error", Uuid.V7.nextId().toString()),
             )
         }
     }
@@ -185,7 +186,7 @@ private fun Application.installJobConsoleRoutes(service: JobConsoleService, fano
             val jobId = UUID.fromString(requireNotNull(call.parameters["jobId"]))
             withContext(Dispatchers.IO) { service.snapshot(call.demoScope(), jobId) }
             val channel = Channel<io.bluetape4k.workshop.operations.jobconsole.api.JobEvent>(capacity = 16)
-            val subscription = fanout.subscribe("ktor-${UUID.randomUUID()}") { if (it.jobId == jobId) channel.trySend(it) }
+            val subscription = fanout.subscribe("ktor-${Uuid.V7.nextId().toString()}") { if (it.jobId == jobId) channel.trySend(it) }
             try {
                 send(ServerSentEvent(data = "{}", event = "heartbeat"))
                 while (true) {
