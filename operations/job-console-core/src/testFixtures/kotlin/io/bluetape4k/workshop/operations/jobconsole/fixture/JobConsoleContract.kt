@@ -66,6 +66,14 @@ class JobConsoleV1LiveContract(
         awaitState(cancellableJobId, "cancelled")
     }
 
+    fun verifyProblemRequestIdUsesUuidV7() {
+        val problem = request("POST", "/v1/jobs", INVALID_SUBMIT_BODY, "invalid-key")
+
+        check(problem.statusCode() == 400)
+        val requestId = requireNotNull(REQUEST_ID.find(problem.body())?.groupValues?.get(1))
+        check(UUID.fromString(requestId).version() == 7) { "requestId must use UUID v7: $requestId" }
+    }
+
     private fun verifyHeartbeat(jobId: String) {
         val request =
             HttpRequest.newBuilder(baseUri.resolve("/v1/jobs/$jobId/events"))
@@ -113,7 +121,9 @@ class JobConsoleV1LiveContract(
 
     private companion object {
         val JOB_ID = Regex("\\\"jobId\\\":\\\"([^\\\"]+)")
+        val REQUEST_ID = Regex("\\\"requestId\\\":\\\"([^\\\"]+)")
         const val SUBMIT_BODY = """{"jobType":"document_export","workUnits":3,"failureMode":"none"}"""
+        const val INVALID_SUBMIT_BODY = """{"jobType":"document_export","workUnits":0,"failureMode":"none"}"""
         const val CANCELLABLE_BODY = """{"jobType":"document_export","workUnits":1000,"failureMode":"none"}"""
     }
 }

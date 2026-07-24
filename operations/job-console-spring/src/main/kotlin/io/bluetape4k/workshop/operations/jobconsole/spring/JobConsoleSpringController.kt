@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.operations.jobconsole.spring
 
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.operations.jobconsole.api.JobEvent
 import io.bluetape4k.workshop.operations.jobconsole.api.JobSnapshot
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
@@ -73,7 +74,7 @@ class JobConsoleSpringController(
         service.snapshot(DemoCallerScope(tenant, submitter), jobId)
         val emitter = SseEmitter(30_000)
         val subscription =
-            fanout.subscribe("spring-${UUID.randomUUID()}") { event ->
+            fanout.subscribe("spring-${Uuid.V7.nextId().toString()}") { event ->
                 if (event.jobId == jobId) send(emitter, event)
             }
         emitter.onCompletion(subscription::close)

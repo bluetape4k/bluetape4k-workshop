@@ -55,6 +55,28 @@ class JobOutboxRepositoryTest {
         }
     }
 
+    @Test
+    fun `durable job and outbox identities use UUID version seven`() {
+        JobConsoleDatabaseFixture().use { fixture ->
+            fixture.migrate()
+            val jobs = JobRepository(fixture.dataSource)
+            val submitted =
+                jobs.submit(
+                    SCOPE,
+                    "v7-key",
+                    SubmitJobRequest(JobType.DOCUMENT_EXPORT, 1),
+                    NOW,
+                )
+            val lease = requireNotNull(jobs.claimNext(SCOPE.tenantId, Duration.ofSeconds(30)))
+            val claimed = JobOutboxRepository(fixture.dataSource).claim(10, Duration.ofSeconds(30))
+
+            submitted.jobId.version() shouldBeEqualTo 7
+            lease.lease.token.version() shouldBeEqualTo 7
+            claimed.token.version() shouldBeEqualTo 7
+            claimed.events.map { it.eventId.version() }.toSet() shouldBeEqualTo setOf(7)
+        }
+    }
+
     companion object {
         private val NOW = Instant.parse("2026-07-21T00:00:00Z")
         private val SCOPE = DemoCallerScope("tenant-a", "submitter-a")
