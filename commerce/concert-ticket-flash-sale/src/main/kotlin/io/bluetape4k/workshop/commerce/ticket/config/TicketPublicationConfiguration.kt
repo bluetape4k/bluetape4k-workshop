@@ -27,7 +27,11 @@ internal class TicketPublicationConfiguration {
 
     @Bean
     fun ticketJdbcExecutor(dataSource: DataSource, properties: TicketProperties): TicketJdbcExecutor =
-        TicketJdbcExecutor(dataSource, properties.db.foregroundPermits)
+        TicketJdbcExecutor(
+            dataSource = dataSource,
+            foregroundPermits = properties.db.foregroundPermits,
+            permitTimeout = properties.db.permitTimeout,
+        )
 
     @Bean
     fun ticketSaleService(): SaleService = SaleService()

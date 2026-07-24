@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.ticket.highcontention
 
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.ticket.admission.internal.AdmissionService
@@ -44,6 +45,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.core.io.ClassPathResource
 import java.sql.DriverManager
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
@@ -53,6 +55,7 @@ internal class TicketHighContentionProfileApplication private constructor(
     private var applicationContext: ConfigurableApplicationContext,
     private val schema: String,
     private val redisUri: String,
+    private val databasePermitTimeout: Duration,
     private val events: MutableList<AuthorizationRequested>,
 ) : AutoCloseable {
     val dataSource: HikariDataSource
@@ -192,7 +195,7 @@ internal class TicketHighContentionProfileApplication private constructor(
 
     fun restart() {
         applicationContext.close()
-        applicationContext = startContext(schema, redisUri, events)
+        applicationContext = startContext(schema, redisUri, databasePermitTimeout, events)
     }
 
     override fun close() {
@@ -206,8 +209,13 @@ internal class TicketHighContentionProfileApplication private constructor(
     internal companion object {
         private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
 
-        fun start(redisUri: String): TicketHighContentionProfileApplication {
+        fun start(
+            redisUri: String,
+            databasePermitTimeout: Duration = Duration.ofMillis(250),
+        ): TicketHighContentionProfileApplication {
             val validRedisUri = redisUri.requireNotBlank("redisUri")
+            val validDatabasePermitTimeout =
+                databasePermitTimeout.requireGt(Duration.ZERO, "databasePermitTimeout")
             val schema = "ticket_hc_${Base58.randomString(8).lowercase()}"
             adminConnection().use { connection ->
                 connection.createStatement().use { it.execute("CREATE SCHEMA $schema") }
@@ -215,9 +223,15 @@ internal class TicketHighContentionProfileApplication private constructor(
             val events = CopyOnWriteArrayList<AuthorizationRequested>()
             return try {
                 TicketHighContentionProfileApplication(
-                    applicationContext = startContext(schema, validRedisUri, events),
+                    applicationContext = startContext(
+                        schema,
+                        validRedisUri,
+                        validDatabasePermitTimeout,
+                        events,
+                    ),
                     schema = schema,
                     redisUri = validRedisUri,
+                    databasePermitTimeout = validDatabasePermitTimeout,
                     events = events,
                 )
             } catch (error: Throwable) {
@@ -229,6 +243,7 @@ internal class TicketHighContentionProfileApplication private constructor(
         private fun startContext(
             schema: String,
             redisUri: String,
+            databasePermitTimeout: Duration,
             events: MutableList<AuthorizationRequested>,
         ): ConfigurableApplicationContext =
             SpringApplicationBuilder(ProfileSpringApplication::class.java)
@@ -243,6 +258,7 @@ internal class TicketHighContentionProfileApplication private constructor(
                     "--spring.datasource.hikari.maximum-pool-size=20",
                     "--spring.datasource.hikari.schema=$schema",
                     "--spring.main.banner-mode=off",
+                    "--workshop.ticket.db.permit-timeout=${databasePermitTimeout.toMillis()}ms",
                     "--workshop.ticket.redis.uri=$redisUri",
                 )
 

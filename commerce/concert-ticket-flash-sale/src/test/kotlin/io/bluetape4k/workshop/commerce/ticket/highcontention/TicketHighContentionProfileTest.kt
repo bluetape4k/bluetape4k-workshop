@@ -128,7 +128,10 @@ private class TicketLiveProfileAdapter(
     private val profile: TicketHighContentionProfile,
     private val topology: TicketProxiedTopology,
 ) : TicketHighContentionWorkloadAdapter, AutoCloseable {
-    private val application = TicketHighContentionProfileApplication.start(topology.redisUri)
+    private val application = TicketHighContentionProfileApplication.start(
+        redisUri = topology.redisUri,
+        databasePermitTimeout = Duration.ofMillis(profile.operationTimeoutMs),
+    )
     private val measuredSale = application.createSale(
         namespace = "hc:$runId:${profile.profileId}:measured",
         inventory = measuredInventory(),
