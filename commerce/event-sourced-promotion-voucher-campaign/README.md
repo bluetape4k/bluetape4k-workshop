@@ -1,77 +1,213 @@
-# Event-sourced promotion voucher campaign
+# Event-Sourced Promotion Voucher Campaign
 
-이 예제는 PostgreSQL을 event authority로 사용하고, Spring Boot의 HikariCP
-`DataSource`와 bluetape4k Exposed Spring transaction manager를 연결한다.
+[한국어](README.ko.md) | English
 
-## Identity erasure와 HMAC
+This Java 25 and Spring Boot 4 example keeps campaign and voucher history in an
+append-only PostgreSQL event store. Commands use expected stream versions and
+idempotency receipts; independently leased projections build the public read
+model and can be rebuilt without replacing the event authority.
 
-immutable event에는 원본 사용자 식별자를 저장하지 않는다. command boundary는
-사용자별 random UUIDv7 surrogate를 발급하고, 삭제 가능한
-`voucher_subject_identity_mapping`에만 identity HMAC과 surrogate의 연결을
-저장한다. erasure는 이 mapping을 삭제하며 `voucher_event_log`를 수정하지 않는다.
-같은 사용자가 다시 등록되면 새 surrogate가 발급된다.
+## Architecture
 
-HMAC은 erasure가 아니다. HMAC은 저엔트로 identity와 idempotency key를 plain
-hash rainbow-table 공격에서 보호하는 stable correlation 수단일 뿐이다. 실제
-erasure 경계는 mapping 삭제다. HMAC 입력은 version, purpose, tenant, domain으로
-분리되며 event와 terminal receipt에는 사용한 key version을 기록한다.
+![Event-sourced voucher architecture](../../docs/images/readme-diagrams/event-sourced-promotion-voucher-architecture-01.png)
 
-로컬 실행은 `application.yml`의 workshop 전용 fallback key를 사용한다. 운영
-환경에서는 반드시 안정적인 32-byte 이상 key를 Base64로 주입한다.
+Spring MVC runs blocking work on Java 25 virtual threads, while a Spring-managed
+HikariCP pool bounds PostgreSQL concurrency. Command, projection, rebuild, and
+readiness lanes reserve separate permits. The event store, stream heads,
+idempotency receipts, snapshots, projection checkpoints, poison records,
+generation pointers, and operator audit records remain in PostgreSQL.
+
+Repositories use bluetape4k `ExposedJdbcRepository` where generic CRUD is safe.
+The event store and projection recovery boundaries deliberately expose semantic
+operations instead of inherited CRUD, so callers cannot bypass append fencing,
+lease ownership, checkpoint, deduplication, or read-model atomicity.
+
+## Event Envelope
+
+Every `EventEnvelope` contains:
+
+| Field | Contract |
+|---|---|
+| `eventId` | UUIDv7 identity |
+| `tenantId` | Tenant isolation key |
+| `stream.type`, `stream.id`, `stream.version` | Aggregate stream and expected ordering |
+| `globalPosition` | Monotonic cross-stream projection cursor |
+| `eventType`, `schemaVersion` | Stable type and upcast version |
+| `occurredAt`, `recordedAt` | Domain time and durable recording time |
+| `correlationId`, `causationId` | Traceable command/event relationship |
+| `actorSurrogate`, `actorHmacKeyVersion` | Erasable identity indirection, never raw identity |
+| `payload`, `canonicalChecksum` | Bounded canonical JSON and tamper-evident checksum |
+
+Payloads are limited to 64 KiB, depth 16, and 8 KiB per string. Voucher codes,
+raw user identifiers, idempotency keys, authorization values, device/IP data,
+and other sensitive fields are rejected before append. Unknown schemas and
+upcast chains longer than four steps fail closed.
+
+## Consistency and Lag
+
+![Command to projection sequence](../../docs/images/readme-diagrams/event-sourced-promotion-voucher-command-projection-sequence-01.png)
+
+A successful command commits event rows and its terminal idempotency receipt in
+one transaction. The response exposes the authoritative and observed positions:
+
+| Header | Meaning |
+|---|---|
+| `X-Stream-Position` | Latest committed event-store position relevant to the response |
+| `X-Projection-Position` | Position currently represented by the read model |
+| `X-Projection-Lag` | `stream - projection` |
+| `X-Min-Stream-Position` | Optional query fence supplied by the caller |
+| `Idempotency-Replayed` / `X-Idempotent-Replay` | The stored terminal response was replayed |
+| `Retry-After` | Safe delay before retrying an in-progress command or lagging projection |
+
+`GET /api/v1/campaigns/{campaignId}` returns `200` when the projection has
+reached `X-Min-Stream-Position`. It returns `202 PROJECTION_PENDING` with
+position headers and `Retry-After: 1` when the write is committed but the
+projection has not caught up. The caller should retry the GET or refresh
+manually; it must not repeat a non-idempotent command to repair read lag.
+
+SSE starts with a `snapshot` event and then emits public descriptors ordered by
+the opaque `Last-Event-ID` cursor. Reconnect with the last cursor. An invalid or
+expired cursor is rejected with a stable safe error; queue overflow emits a
+terminal `reset`, after which the client fetches a fresh snapshot.
+
+## HTTP Contract
+
+All API calls require `X-Workshop-Tenant` and `X-Workshop-Principal`. Commands
+also require `Idempotency-Key`. Operator routes additionally require the
+workshop operator secret/guard/role headers and rebuild mutations require
+`X-Expected-Generation-Token`.
+
+| Method and route | Success | Retry or operator action |
+|---|---|---|
+| `POST /operator/api/v1/campaigns` | `201`; replay may return stored terminal response | `409 COMMAND_IN_PROGRESS`, then retry with the same idempotency key |
+| `POST /operator/api/v1/campaigns/{campaignId}/activate` | `200` | Resolve revision conflict; do not blind retry with a new key |
+| `POST /api/v1/campaigns/{campaignId}/claims` | `201` | Same-key retry for in-progress/transport uncertainty |
+| `POST /api/v1/claims/{claimId}/redeem` | `200` | Inspect stable conflict code before retry |
+| `POST /api/v1/claims/{claimId}/release` | `200` | Inspect stable conflict code before retry |
+| `GET /api/v1/campaigns/{campaignId}` | `200` fresh body | `202` means retry GET or manually refresh |
+| `GET /api/v1/campaigns/{campaignId}/events` | SSE `snapshot` plus cursor events | Reconnect with `Last-Event-ID`; fetch a new snapshot after `reset` |
+| `POST /operator/api/v1/projections/{projection}/rebuilds` | `202` | Poll status; use returned generation/token |
+| `GET /operator/api/v1/projections/{projection}/rebuilds/{generation}` | `200` | Diagnose state and checkpoint |
+| `POST .../rebuilds/{generation}/cancel` | `200` | Poll until `CANCELLED` |
+| `POST .../rebuilds/{generation}/resume` | `200` | Resume only retryable `FAILED`/cancelled work |
+| `POST .../poison-events/{eventId}/retry` | `200` | Respect `409 POISON_RETRY_BACKOFF` and `Retry-After` |
+| `POST .../reconciliation` | `200` | Verify lag, failed poison count, and digest before activation |
+
+Campaign actions are state constrained:
+
+| Current state | Allowed action | Rejected action |
+|---|---|---|
+| `DRAFT` | activate, capacity change | allocate/redeem before activation |
+| `ACTIVE` | allocate, redeem, release, capacity change | second activation or capacity below allocations |
+| `PAUSED` | release and operator recovery | new allocation |
+| `ENDED` | reconciliation and historical reads | new allocation or activation |
+
+Voucher transitions are one-way from `ELIGIBLE` to `ALLOCATED`, then to
+`REDEEMED`, `RELEASED`, `EXPIRED`, or `REVOKED`. Expected revisions and
+idempotency receipts make concurrent callers converge on one terminal result.
+
+## Projection Recovery
+
+![Projection rebuild state](../../docs/images/readme-diagrams/event-sourced-promotion-voucher-rebuild-state-01.png)
+
+A projection worker owns a 15-second lease, renews every five seconds, and
+applies at most 200 events or 2 MiB per transaction. Checkpoint, deduplication,
+read-model mutation, and lease fencing commit atomically. A poison event moves
+the projection to a degraded, operator-visible path without advancing past the
+failed event.
+
+Rebuild creates a new generation in `BUILDING`, catches up to a fixed target,
+enters `VALIDATING`, and becomes `ACTIVE` only after position and canonical
+digest checks. The active pointer changes by fenced compare-and-set; the prior
+generation is retained as `RETIRED` for rollback. Cancel/resume increments the
+cancellation revision so stale workers cannot continue writing.
+
+## Security
+
+Immutable events never contain raw user identities. The command boundary maps
+an identity HMAC to a random UUIDv7 surrogate in the deletable
+`voucher_subject_identity_mapping`; erasure deletes that mapping without
+rewriting event history. HMAC inputs are separated by version, purpose, tenant,
+and domain.
+
+Production must inject a stable Base64 key of at least 32 bytes. Retired keys
+remain available through the maximum receipt/snapshot replay window. Removing a
+required key causes `503 REPLAY_KEY_UNAVAILABLE`, not a guessed response.
+Mapping backups use a separate encrypted access class and must apply the
+erasure deletion journal before restore readiness.
+
+## Failure Injection
+
+Integration fixtures can pause or fail command phases, projection application,
+snapshot maintenance, and rebuild processing. Use them to prove rollback,
+idempotent retry, lease takeover, poison-event degradation, stale-fence
+rejection, and active-generation preservation. They are test-only hooks and do
+not alter production defaults.
+
+## Performance Profiles
+
+Default `test` is container-free. `integrationTest` uses PostgreSQL
+Testcontainers and a Spring-managed HikariCP datasource. The opt-in
+`stressTest` separates correctness from machine-sensitive thresholds:
+
+- hot stream: 64 virtual-thread clients, one campaign, 1,000 commands;
+- independent streams: 64 clients, 32 campaigns, 1,000 commands;
+- query plans: 100 tenants, 1,000 campaigns, 10,000 streams, 100,000 events,
+  and 100,000 projection rows with `EXPLAIN (ANALYZE, BUFFERS)`;
+- budgets: no unexpected sequential scan, bounded buffers/latency, zero
+  starvation, and separately reported terminal, committed, conflict, Hikari,
+  stream-head, and append-fence measurements.
+
+These profiles are regression evidence, not production capacity guarantees.
+
+## Runbook
+
+1. Check health, projection lag, failed poison count, rebuild state, Hikari
+   waiting, stream-head wait, and append-fence wait.
+2. Fix the event handler, schema/upcaster, key availability, or deployment
+   fault before changing projection state.
+3. Retry one poison event when the failure is isolated; start or resume a
+   rebuild when the generation is incomplete or broadly inconsistent.
+4. Verify checkpoint equals the intended stream position and compare the
+   canonical projection digest. Run reconciliation and inspect the operator
+   audit record.
+5. Activate only a validated candidate. Keep the current `ACTIVE` generation
+   when validation fails; rollback by restoring the retained previous
+   generation pointer, never by rewriting events.
+6. Re-run reconciliation and keep alerts open until lag and failed poison count
+   return to zero.
+
+Alert when projection lag reaches 10,000 events, foreground permit utilization
+reaches 80%, any poison event reaches `FAILED`, rebuild ETA exceeds ten minutes,
+or lock/statement timeouts exceed 1%. Operator audit lookup is the source for
+who requested retry, rebuild, cancel, resume, reconciliation, and activation.
+
+## Run
+
+```bash
+./gradlew :commerce-event-sourced-promotion-voucher-campaign:test --console=plain
+./gradlew :commerce-event-sourced-promotion-voucher-campaign:integrationTest --console=plain
+./gradlew :commerce-event-sourced-promotion-voucher-campaign:koverXmlReport --console=plain
+./gradlew :commerce-event-sourced-promotion-voucher-campaign:stressTest \
+  -PeventSourcedStress=true --console=plain
+node scripts/validate-event-sourced-voucher-readme.mjs
+EXPECTED_GRADLE_PROJECTS=112 ./scripts/smoke-validate.sh stale-check
+```
+
+Start the application with a PostgreSQL datasource and production HMAC key:
 
 ```bash
 export VOUCHER_HMAC_ACTIVE_VERSION=2
 export VOUCHER_HMAC_ACTIVE_KEY_BASE64='<base64-secret>'
+./gradlew :commerce-event-sourced-promotion-voucher-campaign:bootRun
 ```
 
-## Key rotation과 rollback
+## Production Boundary
 
-1. 새 active key를 배포하기 전에 기존 key로 생성된 event, snapshot, terminal
-   receipt의 최대 replay retention을 확인한다.
-2. 기존 key를 `voucher.security.hmac.retired`에 `version`, `key-base64`,
-   `retain-until`과 함께 등록하고 새 active key를 배포한다.
-3. 이전 key version으로 저장된 terminal receipt와 snapshot replay test를
-   실행한다. 이 검증이 통과하기 전에는 기존 key를 제거하지 않는다.
-4. `retain-until` 이후 key를 제거하면 해당 version replay는 의도적으로 HTTP
-   503 `REPLAY_KEY_UNAVAILABLE`로 fail closed한다.
-5. rotation 문제가 생기면 새 write를 중지하고 직전 active key를 다시 active로
-   배포한다. immutable event나 terminal receipt를 수정해서 복구하지 않는다.
-
-예시:
-
-```yaml
-voucher:
-  security:
-    hmac:
-      active-version: 2
-      active-key-base64: ${VOUCHER_HMAC_ACTIVE_KEY_BASE64}
-      retired:
-        - version: 1
-          key-base64: ${VOUCHER_HMAC_RETIRED_KEY_1_BASE64}
-          retain-until: 2027-01-01T00:00:00Z
-```
-
-## Mapping backup과 restore
-
-mapping backup은 event-store backup과 별도 보안 등급으로 암호화하고 접근을
-제한한다. 원본 identity는 어느 backup에도 포함하지 않는다.
-
-```bash
-pg_dump \
-  --table=voucher_subject_identity_mapping \
-  --data-only \
-  --format=custom \
-  --file=voucher-subject-mapping.dump \
-  "$BACKUP_DATABASE_URL"
-
-pg_restore \
-  --data-only \
-  --table=voucher_subject_identity_mapping \
-  --dbname="$RESTORE_DATABASE_URL" \
-  voucher-subject-mapping.dump
-```
-
-restore 후에는 tenant별 row count, surrogate unique constraint, HMAC key version
-가용성을 확인하고 representative reverse lookup test를 실행한다. erasure가
-완료된 mapping을 오래된 backup에서 되살리지 않도록 erasure tombstone 또는
-backup 생성 시점 이후의 deletion journal을 복원 절차에 반드시 반영한다.
+This workshop demonstrates one PostgreSQL event authority, bounded synchronous
+projection workers, generation-safe rebuild, and stable HTTP compatibility
+with the normalized voucher example. It does not provide multi-region event
+replication, schema deployment automation, tax/payment handling, or a Kafka
+read-model transport. Add broker delivery only after preserving expected
+version, idempotency, fencing, checkpoint, deduplication, and active-pointer
+semantics.

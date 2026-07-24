@@ -151,6 +151,7 @@ jobs:
       # - jackson/jsonview examples: serialization path
       # - operations-job-console-core: framework-neutral state machine and queue projections
       # - leader-job-safety-lab: deterministic safety scenarios without container-backed integration tags
+      # - commerce-event-sourced-promotion-voucher-campaign: container-free domain and web contract tests
       # - commerce-usage-metering-billing-ledger: container-free domain and architecture contracts
       # - commerce-usage-metering-billing-event-sourcing: container-free reducer, hash, upcast, and architecture contracts
       # - commerce-usage-billing-*: five independently deployable service contracts and Kafka/PostgreSQL composition proof
@@ -180,6 +181,7 @@ jobs:
           :leader-backend-comparison-lab:test
           :leader-k8s-lease-micrometer:test
           :leader-job-safety-lab:test
+          :commerce-event-sourced-promotion-voucher-campaign:test
           :commerce-usage-metering-billing-ledger:test
           :commerce-usage-metering-billing-event-sourcing:test
           :commerce-usage-billing-meter-service:test
@@ -318,6 +320,7 @@ jobs:
       # - messaging-kafka-outbox-fallback: PostgreSQL + Kafka fallback relay path
       # - commerce-order-lifecycle-fulfillment: PostgreSQL durable lifecycle and replay path
       # - commerce-reservation-control-plane: PostgreSQL-authoritative reservation and advisory Redis path
+      # - commerce-event-sourced-promotion-voucher-campaign: PostgreSQL append, projection, rebuild, and recovery path
       # - commerce-promotion-voucher-campaign: PostgreSQL-authoritative capacity with advisory Redis admission
       # - commerce-concert-ticket-flash-sale: PostgreSQL-authoritative inventory with Redis waiting-room admission
       # - operations-job-console-*: shared PostgreSQL/Redis contract plus live Spring MVC and Ktor adapters
@@ -345,6 +348,8 @@ jobs:
           :messaging-kafka-outbox-fallback:test
           :commerce-order-lifecycle-fulfillment:test
           :commerce-reservation-control-plane:test
+          :commerce-event-sourced-promotion-voucher-campaign:integrationTest
+          :commerce-event-sourced-promotion-voucher-campaign:koverXmlReport
           :commerce-promotion-voucher-campaign:test
           :commerce-concert-ticket-flash-sale:test
           :operations-job-console-core:integrationTest
@@ -371,8 +376,10 @@ jobs:
           TESTCONTAINERS_RYUK_DISABLED: "true"
           DOCKER_HOST: "unix:///var/run/docker.sock"
 
-      - name: Verify voucher pool test and coverage reports
+      - name: Verify commerce integration and coverage reports
         run: |
+          test -n "$(find commerce/event-sourced-promotion-voucher-campaign/build/test-results/integrationTest -name '*.xml' -print -quit)"
+          test -s commerce/event-sourced-promotion-voucher-campaign/build/reports/kover/report.xml
           test -n "$(find commerce/pre-generated-voucher-pool/build/test-results/test -name '*.xml' -print -quit)"
           test -s commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
           test -n "$(find commerce/usage-metering-billing-ledger/build/test-results/integrationTest -name '*.xml' -print -quit)"
@@ -420,6 +427,9 @@ jobs:
             commerce/order-lifecycle-fulfillment/build/reports/tests/test/
             commerce/reservation-control-plane/build/test-results/test/*.xml
             commerce/reservation-control-plane/build/reports/tests/test/
+            commerce/event-sourced-promotion-voucher-campaign/build/test-results/integrationTest/*.xml
+            commerce/event-sourced-promotion-voucher-campaign/build/reports/tests/integrationTest/
+            commerce/event-sourced-promotion-voucher-campaign/build/reports/kover/report.xml
             commerce/promotion-voucher-campaign/build/test-results/test/*.xml
             commerce/promotion-voucher-campaign/build/reports/tests/test/
             commerce/concert-ticket-flash-sale/build/test-results/test/*.xml

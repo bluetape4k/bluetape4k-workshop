@@ -16,6 +16,7 @@ directory unless they have been deliberately promoted.
 
 Recent delivery lessons:
 
+- [Issue #538 event-sourced promotion voucher campaign](2026-07-24-issue-538-event-sourced-promotion-voucher-campaign.md)
 - [Issue #555 usage billing microservices](2026-07-23-issue-555-usage-billing-microservices.md)
 - [Issue #553 event-sourced usage billing](2026-07-22-issue-553-event-sourced-usage-billing.md)
 - [Issue #548 job safety lab](2026-07-22-issue-548-job-safety-lab.md)
