@@ -160,6 +160,11 @@ machine-sensitive threshold를 분리한다.
 
 ## Runbook
 
+`voucher_projection_poison_events{reasonClass=...}`는 `ACTIVE` generation과
+현재 in-progress rebuild generation에서 DB에 남아 있는 `FAILED` poison row
+수를 나타내는 Gauge다. 같은 poison을 반복 poll해도 증가하지 않으며 resolve하거나
+해당 generation이 monitored scope를 벗어나면 0으로 돌아간다.
+
 1. Health, projection lag, failed poison count, rebuild state, Hikari waiting,
    stream-head wait, append-fence wait를 확인한다.
 2. Projection state를 바꾸기 전에 event handler, schema/upcaster, key availability,

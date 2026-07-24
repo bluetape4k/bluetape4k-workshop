@@ -141,6 +141,56 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
         }
     }
 
+    @Test
+    fun `runtime keeps rebuild poison degraded without inflating the failed poison gauge`() {
+        appendEvents()
+        val leases = ProjectionLeaseRepository()
+        val rebuilds = ProjectionRebuildRepository()
+        val projections = ProjectionRepository(leases)
+        val operationalState = EventSourcedOperationalState()
+        val registry = SimpleMeterRegistry()
+        val runtime =
+            runtimeWithRebuildHandler(
+                leases = leases,
+                rebuilds = rebuilds,
+                projections = projections,
+                telemetry = ProjectionRuntimeTelemetry(operationalState, EventSourcedMetrics(registry)),
+                rebuildHandler = ProjectionEventHandler {
+                    throw ProjectionPoisonException("HANDLER_REJECTED")
+                },
+            )
+
+        try {
+            runtime.start()
+            awaitActiveCheckpoint(projections, INITIAL_TARGET_POSITION)
+            val candidate =
+                transaction(database) {
+                    rebuilds.start(VOUCHER_LIFECYCLE_PROJECTION, INITIAL_TARGET_POSITION, Clock.systemUTC().instant())
+                }
+
+            await().atMost(RUNTIME_TIMEOUT).untilAsserted {
+                operationalState.isProjectionDegraded() shouldBeEqualTo true
+                transaction(database) { findGeneration(candidate.key)?.state } shouldBeEqualTo
+                    ProjectionGenerationState.BUILDING
+                registry.get("voucher_projection_poison_events")
+                    .tag("reasonClass", "HANDLER_REJECTED")
+                    .gauge()
+                    .value() shouldBeEqualTo 1.0
+            }
+            await().pollDelay(Duration.ofMillis(300)).atMost(RUNTIME_TIMEOUT).untilAsserted {
+                registry.get("voucher_projection_poison_events")
+                    .tag("reasonClass", "HANDLER_REJECTED")
+                    .gauge()
+                    .value() shouldBeEqualTo 1.0
+            }
+        } finally {
+            runtime.stopProjection()
+            runtime.stopRebuild()
+            runtime.stopMaintenance()
+            runtime.releaseFencedLeases()
+        }
+    }
+
     private fun appendThirdEvent() {
         val events = EventStoreRepository(ExposedEventStoreTransactionRunner(database))
         transaction(database) {
@@ -191,6 +241,28 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
                     projections = projections,
                     rebuilds = rebuilds,
                     eventReader = eventReader,
+                ),
+            properties = ProjectionWorkerProperties(enabled = true),
+            clock = Clock.systemUTC(),
+            telemetry = telemetry,
+        )
+
+    private fun runtimeWithRebuildHandler(
+        leases: ProjectionLeaseRepository,
+        rebuilds: ProjectionRebuildRepository,
+        projections: ProjectionRepository,
+        telemetry: ProjectionRuntimeTelemetry,
+        rebuildHandler: ProjectionEventHandler,
+    ): EventSourcedProjectionRuntime =
+        EventSourcedProjectionRuntime(
+            resources =
+                ProjectionRuntimeResources(
+                    database = database,
+                    permits = EventSourcedDatabasePermitGate(),
+                    leases = leases,
+                    projections = projections,
+                    rebuilds = rebuilds,
+                    rebuildHandler = rebuildHandler,
                 ),
             properties = ProjectionWorkerProperties(enabled = true),
             clock = Clock.systemUTC(),

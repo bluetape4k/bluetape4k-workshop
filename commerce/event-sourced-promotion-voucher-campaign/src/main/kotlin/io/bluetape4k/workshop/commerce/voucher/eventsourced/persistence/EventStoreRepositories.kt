@@ -212,6 +212,7 @@ internal object ProjectionPoisonEvents : UUIDTable("voucher_projection_poison_ev
 
     init {
         uniqueIndex(projection, generation, eventId)
+        index(false, projection, generation, state, reasonClass)
     }
 }
 

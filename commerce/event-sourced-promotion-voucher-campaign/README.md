@@ -165,6 +165,12 @@ These profiles are regression evidence, not production capacity guarantees.
 
 ## Runbook
 
+`voucher_projection_poison_events{reasonClass=...}` is a gauge of the current
+database-backed `FAILED` poison rows across the `ACTIVE` generation and the
+current in-progress rebuild generation. It does not count repeated polls of the
+same poison and returns to zero after resolution or after that generation
+leaves the monitored scope.
+
 1. Check health, projection lag, failed poison count, rebuild state, Hikari
    waiting, stream-head wait, and append-fence wait.
 2. Fix the event handler, schema/upcaster, key availability, or deployment

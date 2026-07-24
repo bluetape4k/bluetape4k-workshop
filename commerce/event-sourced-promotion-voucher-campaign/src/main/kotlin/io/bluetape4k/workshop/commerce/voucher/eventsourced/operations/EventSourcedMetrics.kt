@@ -32,7 +32,7 @@ internal class EventSourcedMetrics(
     private val rebuildProgressMicros = AtomicLong()
     private val maintenanceQueueDepth = AtomicLong()
     private val rebuildEtaSeconds = AtomicLong()
-    private val poisonCounters = ConcurrentHashMap<String, Counter>()
+    private val failedPoisonGauges = ConcurrentHashMap<String, AtomicLong>()
     private val rebuildTimers = ConcurrentHashMap<OperatorAuditOutcome, Timer>()
     private val rebuildStates = ProjectionGenerationState.entries.associateWith { AtomicLong() }
     private val retries = Counter.builder("voucher_projection_retry_total").register(registry)
@@ -105,12 +105,23 @@ internal class EventSourcedMetrics(
         checkpointStalledSeconds.set(checkpointStalled.seconds.coerceAtLeast(0))
     }
 
-    fun poisoned(reasonClass: String) {
-        poisonCounters.computeIfAbsent(reasonClass.boundedReasonClass()) {
-            Counter.builder("voucher_projection_poison_events")
-                .tag("reasonClass", it)
-                .register(registry)
-        }.increment()
+    fun failedPoisons(countsByReasonClass: Map<String, Long>) {
+        val boundedCounts =
+            countsByReasonClass.entries
+                .groupingBy { (reasonClass) -> reasonClass.boundedReasonClass() }
+                .fold(0L) { count, (_, value) ->
+                    count + value.requireZeroOrPositiveNumber("failed poison count")
+                }
+        failedPoisonGauges.values.forEach { it.set(0) }
+        boundedCounts.forEach { (reasonClass, count) ->
+            failedPoisonGauges.computeIfAbsent(reasonClass) {
+                AtomicLong().also { value ->
+                    Gauge.builder("voucher_projection_poison_events", value) { it.get().toDouble() }
+                        .tag("reasonClass", reasonClass)
+                        .register(registry)
+                }
+            }.set(count)
+        }
     }
 
     fun retried() {

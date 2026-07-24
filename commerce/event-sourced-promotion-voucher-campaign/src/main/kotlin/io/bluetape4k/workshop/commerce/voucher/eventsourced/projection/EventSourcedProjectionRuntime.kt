@@ -32,6 +32,8 @@ internal data class ProjectionRuntimeResources(
     val projections: ProjectionRepository,
     val rebuilds: ProjectionRebuildRepository,
     val eventReader: ProjectionEventReader = ExposedProjectionEventReader(),
+    val rebuildHandler: ProjectionEventHandler = AcceptingProjectionEventHandler,
+    val poisonStatus: ProjectionPoisonStatusQuery = ProjectionPoisonStatusQuery(),
 )
 
 internal class ProjectionRuntimeTelemetry(
@@ -63,11 +65,35 @@ internal class ProjectionRuntimeTelemetry(
             }
 
             is ProjectionPollResult.Degraded -> {
-                metrics.poisoned(result.reasonClass)
                 operationalState.projectionHealth(degraded = true)
                 false
             }
         }
+
+    fun observeRebuild(result: ProjectionRebuildPollResult): Boolean =
+        when (result) {
+            is ProjectionRebuildPollResult.Degraded -> {
+                operationalState.projectionHealth(
+                    degraded = true,
+                    rebuildState = ProjectionGenerationState.BUILDING,
+                )
+                false
+            }
+
+            is ProjectionRebuildPollResult.Applied,
+            ProjectionRebuildPollResult.Idle,
+            ProjectionRebuildPollResult.StaleWorker,
+            -> true
+        }
+
+    fun observeFailedPoisons(countsByReasonClass: Map<String, Long>): Boolean {
+        metrics.failedPoisons(countsByReasonClass)
+        if (countsByReasonClass.isNotEmpty()) {
+            operationalState.projectionHealth(degraded = true)
+            return false
+        }
+        return true
+    }
 
     fun observeRebuild(generation: ProjectionGeneration) {
         operationalState.rebuildState(generation.state)
@@ -131,6 +157,7 @@ internal class EventSourcedProjectionRuntime(
 ) : EventSourcedRuntimeWorkers {
     private val projections = resources.projections
     private val rebuilds = resources.rebuilds
+    private val poisonStatus = resources.poisonStatus
     private val projectionTransactions =
         EventSourcedPermitTransactionRunner(
             resources.database,
@@ -151,7 +178,7 @@ internal class EventSourcedProjectionRuntime(
         )
     private val projectionWorker = ProjectionWorker(projections, resources.eventReader)
     private val rebuildWorker =
-        ProjectionRebuildWorker(rebuilds, projections, resources.eventReader)
+        ProjectionRebuildWorker(rebuilds, projections, resources.eventReader, resources.rebuildHandler)
     private val runtimeLeases =
         ProjectionRuntimeLeaseCoordinator(
             database = resources.database,
@@ -211,8 +238,14 @@ internal class EventSourcedProjectionRuntime(
     private fun tickSafely() {
         runCatching {
             val projectionHealthy = !projectionEnabled.get() || pollActive()
-            if (rebuildEnabled.get()) pollRebuild()
-            if (projectionHealthy) telemetry.recovered()
+            val rebuildHealthy = !rebuildEnabled.get() || pollRebuild()
+            val poisonFree =
+                maintenanceTransactions.inTransaction {
+                    telemetry.observeFailedPoisons(
+                        poisonStatus.failedCountsByReasonClass(VOUCHER_LIFECYCLE_PROJECTION),
+                    )
+                }
+            if (projectionHealthy && rebuildHealthy && poisonFree) telemetry.recovered()
         }.onFailure { failure ->
             telemetry.failed()
             log.warn { "voucher_projection_runtime_tick_failed cause=${failure.javaClass.simpleName}" }
@@ -228,34 +261,43 @@ internal class EventSourcedProjectionRuntime(
             owned?.let { telemetry.observeActive(key, projectionWorker.poll(key, it.lease, now), now) } ?: true
         }
 
-    private fun pollRebuild() {
+    private fun pollRebuild(): Boolean =
         rebuildTransactions.inTransaction {
             val now = clock.instant()
             when (val generation = findInProgressGeneration(VOUCHER_LIFECYCLE_PROJECTION)) {
-                null -> runtimeLeases.releaseRebuild(now)
+                null -> {
+                    runtimeLeases.releaseRebuild(now)
+                    true
+                }
                 else -> {
                     telemetry.observeRebuild(generation)
                     when (generation.state) {
                         ProjectionGenerationState.BUILDING -> pollBuilding(generation, now)
-                        ProjectionGenerationState.VALIDATING -> validateAndActivate(generation, now)
+                        ProjectionGenerationState.VALIDATING -> {
+                            validateAndActivate(generation, now)
+                            true
+                        }
                         ProjectionGenerationState.CANCELLING -> {
                             maintenance.recover(generation.key, now)
                             runtimeLeases.releaseRebuild(now)
+                            true
                         }
-                        else -> Unit
+                        else -> true
                     }
                 }
             }
         }
-    }
 
     private fun pollBuilding(
         generation: ProjectionGeneration,
         now: Instant,
-    ) {
+    ): Boolean {
         val owned = runtimeLeases.acquireRebuild(generation.key, now)
-        owned?.let { rebuildWorker.poll(generation.key, it.lease, now) }
-        val current = findGeneration(generation.key) ?: return
+        val healthy =
+            owned?.let {
+                telemetry.observeRebuild(rebuildWorker.poll(generation.key, it.lease, now))
+            } ?: true
+        val current = findGeneration(generation.key) ?: return healthy
         if (current.state == ProjectionGenerationState.BUILDING &&
             current.currentPosition == current.targetPosition
         ) {
@@ -267,6 +309,7 @@ internal class EventSourcedProjectionRuntime(
                 now = now,
             )
         }
+        return healthy
     }
 
     private fun validateAndActivate(

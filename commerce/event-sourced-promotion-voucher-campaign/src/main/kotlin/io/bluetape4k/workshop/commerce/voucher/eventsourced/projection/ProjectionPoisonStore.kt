@@ -1,13 +1,19 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
 
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventEnvelope
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ProjectionPoisonEvents
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.count
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.jdbc.andWhere
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.time.Instant
 import java.util.UUID
 
@@ -73,6 +79,23 @@ internal class ProjectionPoisonStore {
         }
     }
 
+    fun failedCountsByReasonClass(
+        projection: String,
+        generations: List<Long>,
+    ): Map<String, Long> {
+        if (generations.isEmpty()) return emptyMap()
+        val failedCount = ProjectionPoisonEvents.id.count()
+        return ProjectionPoisonEvents
+            .select(ProjectionPoisonEvents.reasonClass, failedCount)
+            .where { ProjectionPoisonEvents.projection eq projection }
+            .andWhere { ProjectionPoisonEvents.generation inList generations }
+            .andWhere { ProjectionPoisonEvents.state eq ProjectionPoisonState.FAILED }
+            .groupBy(ProjectionPoisonEvents.reasonClass)
+            .associate { row ->
+                row[ProjectionPoisonEvents.reasonClass] to row[failedCount]
+            }
+    }
+
     private fun incrementFailure(
         key: ProjectionKey,
         eventId: UUID,
@@ -98,6 +121,21 @@ internal class ProjectionPoisonStore {
             row[ProjectionPoisonEvents.nextRetryAt] = nextRetryAt(now, nextAttempt)
             row[ProjectionPoisonEvents.updatedAt] = now
         }
+    }
+}
+
+internal class ProjectionPoisonStatusQuery(
+    private val poisons: ProjectionPoisonStore = ProjectionPoisonStore(),
+) {
+    fun failedCountsByReasonClass(projection: String): Map<String, Long> {
+        TransactionManager.current()
+        val validProjection = projection.requireNotBlank("projection")
+        val generations =
+            listOfNotNull(
+                findActive(validProjection)?.generation,
+                findInProgressGeneration(validProjection)?.key?.generation,
+            ).distinct()
+        return poisons.failedCountsByReasonClass(validProjection, generations)
     }
 }
 

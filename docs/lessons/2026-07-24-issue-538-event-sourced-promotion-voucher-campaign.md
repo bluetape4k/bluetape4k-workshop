@@ -85,7 +85,7 @@ transaction으로 검증한다. 호출자·developer API·운영 관점 리뷰�
 raw validation, 직접 database connection, 모호한 lag/rebuild 계약은 구현과 문서 양쪽에서
 제거했다.
 
-Task 16의 fresh module evidence는 unit 62건, PostgreSQL integration 76건, explicit stress 9건과
+Task 16의 fresh module evidence는 unit 63건, PostgreSQL integration 77건, explicit stress 9건과
 `build`, `detekt`, `detektTest`, Kover gate 통과다. README validator는 locale 2개, diagram 3개,
 route 8개, source file 6개, heading 11개를 검증했고 diagram QA, stale-reference/image 검사,
 `actionlint`, `git diff --check`도 통과했다. `scripts/smoke-validate.sh commerce`에서는 이 module과
@@ -97,7 +97,9 @@ Exact-head review에서 추가로 발견된 세 경계도 닫았다. Startup aut
 permit을 Hikari connection보다 먼저 획득한다. Snapshot identity와 unique index는
 tenant/type/id/version 전체를 사용한다. Runtime tick 실패는 projection health를 `DEGRADED`로
 전환하고 retry 성공 시 복구하며, active lag/batch와 rebuild progress/ETA meter를 실제 worker
-경로에서 갱신한다.
+경로에서 갱신한다. Rebuild poison 결과도 health 복구 조건에 포함하고, poison meter는 `ACTIVE`와
+현재 in-progress rebuild generation의 DB `FAILED` row를 집계하는 현재값 Gauge로 바꿔 동일
+poison의 반복 poll이 값을 부풀리지 않도록 했다.
 
 ## Rollback Boundary
 
