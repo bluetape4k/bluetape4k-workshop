@@ -315,6 +315,34 @@ internal class TicketHighContentionContractTest {
     }
 
     @Test
+    fun `parent-owned Ticket artifact store opens only an existing trusted run root`(@TempDir tempDir: Path) {
+        val trustedRoot = tempDir.toRealPath()
+        Files.createDirectory(trustedRoot.resolve("parent-run"))
+        val store = TicketHighContentionArtifactStore.create(
+            outputRoot = trustedRoot,
+            runId = "parent-run",
+            parentOwnedRun = true,
+        )
+        val report = terminalReport() + ("runId" to "parent-run")
+        val path = store.writeTerminalReport(
+            implementation = "ticket-spring",
+            profileId = "burst",
+            report = report,
+            requiredFields = report.keys,
+            forbiddenPatterns = emptyList(),
+        )
+
+        Files.isRegularFile(path).shouldBeTrue()
+        assertFailsWith<TicketHighContentionArtifactException> {
+            TicketHighContentionArtifactStore.create(
+                outputRoot = trustedRoot,
+                runId = "missing-parent-run",
+                parentOwnedRun = true,
+            )
+        }
+    }
+
+    @Test
     fun `journal validates its chain and ignores only a torn final record`(@TempDir tempDir: Path) {
         val store = TicketHighContentionArtifactStore.create(tempDir.toRealPath(), "journal-contract")
         val path = store.journalPath

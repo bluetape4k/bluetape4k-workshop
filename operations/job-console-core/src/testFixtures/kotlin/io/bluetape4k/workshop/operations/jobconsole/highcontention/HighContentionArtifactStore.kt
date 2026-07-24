@@ -145,6 +145,7 @@ class HighContentionArtifactStore private constructor(
         fun create(
             outputRoot: Path,
             runId: String,
+            parentOwnedRun: Boolean = false,
             forbiddenSentinels: Set<String> = emptySet(),
             reportSerializer: HighContentionReportSerializer = HighContentionReportSerializer {
                 Jackson.createDefaultJsonMapper().writeValueAsBytes(it)
@@ -152,7 +153,11 @@ class HighContentionArtifactStore private constructor(
         ): HighContentionArtifactStore {
             val validRunId = HighContentionArtifactPaths.requireIdentifier(runId, "runId")
             val root = HighContentionArtifactPaths.ensureTrustedDirectory(outputRoot)
-            val runRoot = HighContentionArtifactPaths.createNewTrustedDirectory(root, validRunId)
+            val runRoot = if (parentOwnedRun) {
+                HighContentionArtifactPaths.openExistingTrustedDirectory(root, validRunId)
+            } else {
+                HighContentionArtifactPaths.createNewTrustedDirectory(root, validRunId)
+            }
             return HighContentionArtifactStore(
                 runRoot = runRoot,
                 runId = validRunId,
@@ -272,6 +277,22 @@ internal object HighContentionArtifactPaths {
             throw HighContentionArtifactException("artifact run directory escaped its trusted root")
         }
         forceDirectory(trustedRoot)
+        return real
+    }
+
+    fun openExistingTrustedDirectory(
+        root: Path,
+        name: String,
+    ): Path {
+        val trustedRoot = ensureTrustedDirectory(root)
+        val target = trustedRoot.resolve(requireIdentifier(name, "directory name"))
+        if (!Files.isDirectory(target, NOFOLLOW_LINKS) || Files.isSymbolicLink(target)) {
+            throw HighContentionArtifactException("parent-owned run directory is not trusted")
+        }
+        val real = target.toRealPath(NOFOLLOW_LINKS)
+        if (real.parent != trustedRoot) {
+            throw HighContentionArtifactException("parent-owned run directory escaped its trusted root")
+        }
         return real
     }
 

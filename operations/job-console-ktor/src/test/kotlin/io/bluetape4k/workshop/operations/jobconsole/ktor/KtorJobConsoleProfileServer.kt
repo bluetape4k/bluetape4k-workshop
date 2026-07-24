@@ -31,6 +31,7 @@ import io.lettuce.core.RedisClient
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import java.net.InetSocketAddress
+import java.net.ProxySelector
 import java.net.ServerSocket
 import java.net.URI
 import java.net.http.HttpClient
@@ -801,6 +802,7 @@ private class KtorJobConsoleHttpSnapshot(
 private class KtorJobConsoleHttpClient(
     private val baseUri: URI,
     private val client: HttpClient = HttpClient.newBuilder()
+        .proxy(ProxySelector.of(null))
         .connectTimeout(Duration.ofSeconds(5))
         .build(),
 ) {

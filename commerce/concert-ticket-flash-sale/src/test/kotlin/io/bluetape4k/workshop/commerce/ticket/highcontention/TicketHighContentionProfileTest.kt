@@ -47,6 +47,7 @@ internal class TicketHighContentionProfileTest {
         val artifacts = TicketHighContentionArtifactStore.create(
             Path.of(requiredProperty("highContentionOutputRoot")),
             runId,
+            requiredProperty("highContentionParentOwnedRun").toBooleanStrict(),
         )
         val startedAt = Instant.now()
         val startedNanos = System.nanoTime()

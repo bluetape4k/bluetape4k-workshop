@@ -112,20 +112,34 @@ internal class TicketHighContentionArtifactStore private constructor(
         )
         private const val JOURNAL_FILE_NAME = "ticket-topology.jsonl"
 
-        fun create(outputRoot: Path, runId: String): TicketHighContentionArtifactStore {
+        fun create(
+            outputRoot: Path,
+            runId: String,
+            parentOwnedRun: Boolean = false,
+        ): TicketHighContentionArtifactStore {
             val root = outputRoot.toAbsolutePath().normalize()
             createDirectoriesWithoutLinks(root)
             val runRoot = root.resolve(identifier(runId, "runId"))
-            try {
-                Files.createDirectory(runRoot)
-                rejectLinks(root, runRoot)
-                if (!runRoot.toRealPath(NOFOLLOW_LINKS).startsWith(root.toRealPath(NOFOLLOW_LINKS))) {
-                    throw TicketHighContentionArtifactException("run root escaped output root")
+            if (parentOwnedRun) {
+                if (!Files.isDirectory(runRoot, NOFOLLOW_LINKS) || Files.isSymbolicLink(runRoot)) {
+                    throw TicketHighContentionArtifactException("parent-owned run root is not trusted")
                 }
-            } catch (error: TicketHighContentionArtifactException) {
-                throw error
-            } catch (error: Exception) {
-                throw TicketHighContentionArtifactException("run root must be created exactly once", error)
+                rejectLinks(root, runRoot)
+                if (runRoot.toRealPath(NOFOLLOW_LINKS).parent != root.toRealPath(NOFOLLOW_LINKS)) {
+                    throw TicketHighContentionArtifactException("parent-owned run root escaped output root")
+                }
+            } else {
+                try {
+                    Files.createDirectory(runRoot)
+                    rejectLinks(root, runRoot)
+                    if (!runRoot.toRealPath(NOFOLLOW_LINKS).startsWith(root.toRealPath(NOFOLLOW_LINKS))) {
+                        throw TicketHighContentionArtifactException("run root escaped output root")
+                    }
+                } catch (error: TicketHighContentionArtifactException) {
+                    throw error
+                } catch (error: Exception) {
+                    throw TicketHighContentionArtifactException("run root must be created exactly once", error)
+                }
             }
             return TicketHighContentionArtifactStore(runRoot)
         }

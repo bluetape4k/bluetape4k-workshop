@@ -102,6 +102,7 @@ class JobConsoleLiveProfileRunner(
         val reportPath = HighContentionArtifactStore.create(
             outputRoot = Path.of(requiredProperty("highContentionOutputRoot")),
             runId = runId,
+            parentOwnedRun = requiredProperty("highContentionParentOwnedRun").toBooleanStrict(),
         ).writeTerminalReport(
             implementation = implementation,
             profileId = profileId,

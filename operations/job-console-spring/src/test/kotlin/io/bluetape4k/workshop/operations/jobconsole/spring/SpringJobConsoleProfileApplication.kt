@@ -34,6 +34,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Import
+import java.net.ProxySelector
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -839,6 +840,7 @@ private class SpringJobConsoleHttpSnapshot(
 private class SpringJobConsoleHttpClient(
     private val baseUri: URI,
     private val client: HttpClient = HttpClient.newBuilder()
+        .proxy(ProxySelector.of(null))
         .connectTimeout(Duration.ofSeconds(5))
         .build(),
 ) {

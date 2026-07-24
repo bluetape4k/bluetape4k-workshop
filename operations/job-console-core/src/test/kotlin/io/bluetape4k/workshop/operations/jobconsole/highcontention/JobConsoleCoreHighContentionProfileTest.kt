@@ -10,7 +10,6 @@ import java.nio.file.Path
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 
-@Tag("integration")
 @Tag("high-contention")
 class JobConsoleCoreHighContentionProfileTest {
 
@@ -90,6 +89,7 @@ class JobConsoleCoreHighContentionProfileTest {
         val reportPath = HighContentionArtifactStore.create(
             outputRoot = Path.of(requiredProperty("highContentionOutputRoot")),
             runId = runId,
+            parentOwnedRun = requiredProperty("highContentionParentOwnedRun").toBooleanStrict(),
         ).writeTerminalReport(
             implementation = implementation,
             profileId = profileId,

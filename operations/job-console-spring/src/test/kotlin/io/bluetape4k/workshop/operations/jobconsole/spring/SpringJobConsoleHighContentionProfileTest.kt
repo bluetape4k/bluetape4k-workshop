@@ -4,7 +4,6 @@ import io.bluetape4k.workshop.operations.jobconsole.highcontention.JobConsoleLiv
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
-@Tag("integration")
 @Tag("high-contention")
 class SpringJobConsoleHighContentionProfileTest {
 

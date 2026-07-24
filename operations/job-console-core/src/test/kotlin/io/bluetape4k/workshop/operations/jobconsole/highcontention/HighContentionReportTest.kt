@@ -299,6 +299,30 @@ class HighContentionReportTest {
     }
 
     @Test
+    fun `parent-owned artifact store opens only an existing trusted run root`() {
+        Files.createDirectory(tempDir.resolve("parent-run"))
+        val store = HighContentionArtifactStore.create(
+            outputRoot = tempDir,
+            runId = "parent-run",
+            parentOwnedRun = true,
+        )
+        val path = store.writeTerminalReport(
+            "job-core",
+            "burst",
+            report().copy(runId = "parent-run"),
+        )
+
+        Files.isRegularFile(path) shouldBeEqualTo true
+        assertFailsWith<HighContentionArtifactException> {
+            HighContentionArtifactStore.create(
+                outputRoot = tempDir,
+                runId = "missing-parent-run",
+                parentOwnedRun = true,
+            )
+        }
+    }
+
+    @Test
     fun `serialization failure is preserved as a redacted fallback journal record`() {
         val journalPath = tempDir.resolve("journal.jsonl")
         val store = HighContentionArtifactStore.create(

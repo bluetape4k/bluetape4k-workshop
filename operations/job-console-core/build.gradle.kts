@@ -95,7 +95,7 @@ tasks.test {
         "highContentionContractRoot",
         rootProject.layout.projectDirectory.dir("profiles/high-contention/v1").asFile.absolutePath,
     )
-    useJUnitPlatform { excludeTags("integration", "process-probe") }
+    useJUnitPlatform { excludeTags("integration", "process-probe", "high-contention") }
 }
 
 val integrationTest = tasks.register<Test>("integrationTest") {
@@ -113,8 +113,6 @@ val integrationTest = tasks.register<Test>("integrationTest") {
 
 registerHighContentionProfileTask(
     name = "highContentionCiProfile",
-    mode = "ci-correctness",
-    implementation = "job-core",
 ).configure {
     testClassesDirs = tasks.test.get().testClassesDirs
     classpath = tasks.test.get().classpath
@@ -123,8 +121,6 @@ registerHighContentionProfileTask(
 
 registerHighContentionProfileTask(
     name = "highContentionLocalReferenceProfile",
-    mode = "local-reference",
-    implementation = "job-core",
 ).configure {
     testClassesDirs = tasks.test.get().testClassesDirs
     classpath = tasks.test.get().classpath
