@@ -10,6 +10,10 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.time.Duration
 import java.util.UUID
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import java.util.concurrent.locks.LockSupport
 
 interface JobConsoleHttpDriver {
@@ -74,7 +78,7 @@ class JobConsoleV1LiveContract(
         check(UUID.fromString(requestId).version() == 7) { "requestId must use UUID v7: $requestId" }
     }
 
-    private fun verifyHeartbeat(jobId: String) {
+    fun verifyHeartbeat(jobId: String) {
         val request =
             HttpRequest.newBuilder(baseUri.resolve("/v1/jobs/$jobId/events"))
                 .header("Accept", "text/event-stream")
@@ -84,9 +88,27 @@ class JobConsoleV1LiveContract(
                 .build()
         val response = client.send(request, HttpResponse.BodyHandlers.ofInputStream())
         check(response.statusCode() == 200)
-        response.body().bufferedReader().use { reader ->
-            val lines = generateSequence(reader::readLine).take(4).toList()
-            check(lines.any { it.replace(" ", "") == "event:heartbeat" }) { "heartbeat event was not received: $lines" }
+        val lines = CopyOnWriteArrayList<String>()
+        response.body().use { body ->
+            Executors.newVirtualThreadPerTaskExecutor().use { executor ->
+                val heartbeat =
+                    executor.submit<Boolean> {
+                        body.bufferedReader().useLines { stream ->
+                            stream
+                                .onEach(lines::add)
+                                .any { it.replace(" ", "") == "event:heartbeat" }
+                        }
+                    }
+                val received =
+                    try {
+                        heartbeat.get(HEARTBEAT_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)
+                    } catch (_: TimeoutException) {
+                        body.close()
+                        heartbeat.cancel(true)
+                        false
+                    }
+                check(received) { "heartbeat event was not received within $HEARTBEAT_TIMEOUT: $lines" }
+            }
         }
     }
 
@@ -122,6 +144,7 @@ class JobConsoleV1LiveContract(
     private companion object {
         val JOB_ID = Regex("\\\"jobId\\\":\\\"([^\\\"]+)")
         val REQUEST_ID = Regex("\\\"requestId\\\":\\\"([^\\\"]+)")
+        val HEARTBEAT_TIMEOUT: Duration = Duration.ofSeconds(5)
         const val SUBMIT_BODY = """{"jobType":"document_export","workUnits":3,"failureMode":"none"}"""
         const val INVALID_SUBMIT_BODY = """{"jobType":"document_export","workUnits":0,"failureMode":"none"}"""
         const val CANCELLABLE_BODY = """{"jobType":"document_export","workUnits":1000,"failureMode":"none"}"""

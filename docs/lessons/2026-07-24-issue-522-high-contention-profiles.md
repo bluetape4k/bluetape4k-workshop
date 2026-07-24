@@ -96,6 +96,16 @@ replacement 결과를 `Claimed`와 `Completed`의 닫힌 outcome으로 모델링
 Spring high-contention test에서는 worker 주기를 1ms로 줄여 이 경쟁을 반복적으로 실행한다. timeout을
 늘려 race를 숨기지 않고 PostgreSQL terminal state를 두 번째 성공 증거로 사용한다.
 
+### SSE contract는 heartbeat가 첫 event라고 가정하지 않는다
+
+Spring `SseEmitter`는 fanout 구독과 초기 heartbeat 전송 사이에 production worker event를 받을 수
+있다. 이때 `job.updated`가 heartbeat보다 먼저 전달되는 것은 정상적인 동시성 결과다. 공용 live
+contract가 첫 SSE frame만 검사하면 hosted runner의 scheduling 차이를 adapter 실패로 오판한다.
+
+검증기는 선행 업무 event를 건너뛰고 제한시간 안에서 heartbeat를 찾으며, 제한시간이 끝나면 input
+stream과 virtual thread를 함께 종료한다. 서버에서 구독 순서를 heartbeat 뒤로 옮기는 방식은 그
+사이의 업무 event를 잃을 수 있으므로 채택하지 않았다.
+
 ## Adopted and Rejected
 
 채택한 방식은 root coordinator가 한 번에 하나의 격리된 child JVM을 실행하고, 각 모듈의
