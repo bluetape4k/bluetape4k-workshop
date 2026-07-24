@@ -115,11 +115,12 @@ Projection worker는 15초 lease를 가지고 5초마다 갱신하며 transactio
 mutation, lease fencing은 원자적으로 commit한다. Poison event가 생기면 실패한
 event를 건너뛰지 않고 operator가 확인할 수 있는 degraded 경로로 전환한다.
 
-Rebuild는 새 generation을 `BUILDING`으로 생성하고 고정 target까지 따라간 뒤
-`VALIDATING`에 들어간다. Position과 canonical digest를 검증한 뒤에만 `ACTIVE`가
-된다. Active pointer는 fenced compare-and-set으로 변경하며 이전 generation은
-audit과 bounded cleanup을 위해 `RETIRED`로 보존한다. Cancel/resume은 cancellation revision을
-증가시켜 stale worker의 write를 차단한다.
+Rebuild는 새 generation을 `BUILDING`으로 생성하고 현재 target까지 따라간 뒤
+`VALIDATING`에 들어간다. Validation 중 active checkpoint가 전진하면 fenced 전이로
+candidate target을 확장하고 `BUILDING`으로 되돌린다. Position과 canonical digest를
+검증한 뒤에만 `ACTIVE`가 된다. Active pointer는 fenced compare-and-set으로 변경하며
+이전 generation은 audit과 bounded cleanup을 위해 `RETIRED`로 보존한다. Cancel/resume은
+cancellation revision을 증가시켜 stale worker의 write를 차단한다.
 
 ## Security
 
@@ -175,9 +176,9 @@ machine-sensitive threshold를 분리한다.
    alert를 유지한다.
 
 Projection lag 10,000 events, foreground permit utilization 80%, poison event
-`FAILED`, rebuild ETA 10분 초과, lock/statement timeout 1% 초과에 alert를 건다.
-Retry, rebuild, cancel, resume, reconciliation, activation 요청자는 operator audit
-lookup으로 확인한다.
+`FAILED`, runtime batch scheduling 기반 rebuild ETA 10분 초과, lock/statement
+timeout 1% 초과에 alert를 건다. Retry, rebuild, cancel, resume, reconciliation,
+activation 요청자는 operator audit lookup으로 확인한다.
 
 ## Run
 
@@ -188,7 +189,7 @@ lookup으로 확인한다.
 ./gradlew :commerce-event-sourced-promotion-voucher-campaign:stressTest \
   -PeventSourcedStress=true --console=plain
 node scripts/validate-event-sourced-voucher-readme.mjs
-EXPECTED_GRADLE_PROJECTS=112 ./scripts/smoke-validate.sh stale-check
+EXPECTED_GRADLE_PROJECTS=119 ./scripts/smoke-validate.sh stale-check
 ```
 
 PostgreSQL datasource와 production HMAC key를 준비한 뒤 application을 실행한다.

@@ -103,7 +103,7 @@ internal object EventSnapshots : UUIDTable("voucher_event_snapshot", "snapshot_i
     val createdAt = timestamp("created_at")
 
     init {
-        uniqueIndex(streamId, streamVersion)
+        uniqueIndex(tenantId, streamType, streamId, streamVersion)
     }
 }
 

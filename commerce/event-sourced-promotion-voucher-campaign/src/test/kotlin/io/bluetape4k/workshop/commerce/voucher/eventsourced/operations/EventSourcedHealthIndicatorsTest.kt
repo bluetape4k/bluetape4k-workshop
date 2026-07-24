@@ -32,7 +32,7 @@ internal class EventSourcedHealthIndicatorsTest {
         state.degradeAggregate()
         aggregate.health().status shouldBeEqualTo EVENT_SOURCED_DEGRADED_STATUS
         readiness.health().status shouldBeEqualTo Status.UP
-        state.degradeProjection(ProjectionGenerationState.FAILED)
+        state.projectionHealth(degraded = true, rebuildState = ProjectionGenerationState.FAILED)
         projection.health().status shouldBeEqualTo EVENT_SOURCED_DEGRADED_STATUS
         readiness.health().status shouldBeEqualTo Status.UP
 

@@ -9,6 +9,7 @@ import io.bluetape4k.codec.Base58
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.database.getHikariDataSource
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedOperationsConfiguration
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabasePermitGate
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.support.EventSourcedPostgresTestDatabase
 import org.awaitility.Awaitility.await
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
@@ -138,7 +139,10 @@ internal class EventStorePostgresCapabilityIntegrationTest {
         val applicationDatabase = Database.connect(applicationDataSource)
         val probe =
             EventSourcedOperationsConfiguration()
-                .eventSourcedStartupProbe(EventSourcedExposedDatabaseRegistration(applicationDatabase))
+                .eventSourcedStartupProbe(
+                    EventSourcedExposedDatabaseRegistration(applicationDatabase),
+                    EventSourcedDatabasePermitGate(),
+                )
         probe.verify()
 
         executeAsAdmin("ALTER ROLE $role NOLOGIN")

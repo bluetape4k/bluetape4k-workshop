@@ -218,7 +218,9 @@ internal class EventSourcedQueryPlanStressTest {
                 """
                 SELECT *
                   FROM voucher_event_snapshot
-                 WHERE stream_id = md5('9999')::uuid
+                 WHERE tenant_id = 'tenant-99'
+                   AND stream_type = 'campaign'
+                   AND stream_id = md5('9999')::uuid
                  ORDER BY stream_version DESC
                  LIMIT 1
                 """.trimIndent(),

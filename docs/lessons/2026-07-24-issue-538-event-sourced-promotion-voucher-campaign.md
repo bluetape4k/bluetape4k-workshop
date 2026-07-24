@@ -60,7 +60,7 @@ Projection worker가 lease를 잃거나 재시작해도 stale fencing token은 r
 
 README EN/KO는 architecture, command-to-projection sequence, rebuild state diagram을 같은
 generator에서 만들고 실제 controller route/header/error constant를 validator로 대조한다.
-Gradle 자동 등록은 112-project graph로 검증했으며 `settings.gradle.kts`에는 module별 include를
+Gradle 자동 등록은 119-project graph로 검증했으며 `settings.gradle.kts`에는 module별 include를
 추가하지 않았다. Repository `AGENTS.md`도 module inventory를 소유하지 않으므로 변경 대상이
 아니다.
 
@@ -85,13 +85,19 @@ transaction으로 검증한다. 호출자·developer API·운영 관점 리뷰�
 raw validation, 직접 database connection, 모호한 lag/rebuild 계약은 구현과 문서 양쪽에서
 제거했다.
 
-Task 16의 fresh module evidence는 unit 62건, PostgreSQL integration 73건, explicit stress 9건과
+Task 16의 fresh module evidence는 unit 62건, PostgreSQL integration 76건, explicit stress 9건과
 `build`, `detekt`, `detektTest`, Kover gate 통과다. README validator는 locale 2개, diagram 3개,
 route 8개, source file 6개, heading 11개를 검증했고 diagram QA, stale-reference/image 검사,
 `actionlint`, `git diff --check`도 통과했다. `scripts/smoke-validate.sh commerce`에서는 이 module과
 usage-metering regression이 통과했지만, 범위 밖 기존
 `commerce-concert-ticket-flash-sale`의 payment reconciliation 테스트 3건이 실패했다. #538에서
 해당 module을 수정하지 않고 repository-level known gap으로 남겼다.
+
+Exact-head review에서 추가로 발견된 세 경계도 닫았다. Startup authority probe는 `READINESS`
+permit을 Hikari connection보다 먼저 획득한다. Snapshot identity와 unique index는
+tenant/type/id/version 전체를 사용한다. Runtime tick 실패는 projection health를 `DEGRADED`로
+전환하고 retry 성공 시 복구하며, active lag/batch와 rebuild progress/ETA meter를 실제 worker
+경로에서 갱신한다.
 
 ## Rollback Boundary
 

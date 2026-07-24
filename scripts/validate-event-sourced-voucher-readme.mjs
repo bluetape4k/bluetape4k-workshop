@@ -159,7 +159,7 @@ const repositorySurfaces = [
   ["scripts/smoke-validate.sh", ":commerce-event-sourced-promotion-voucher-campaign:test"],
   [".github/workflows/Examples.yml", ":commerce-event-sourced-promotion-voucher-campaign:integrationTest"],
   [".github/workflows/nightly.yml", ":commerce-event-sourced-promotion-voucher-campaign:integrationTest"],
-  ["docs/superpowers/specs/2026-05-22-issue-91-validation-matrix.md", "registers 112 projects"],
+  ["docs/superpowers/specs/2026-05-22-issue-91-validation-matrix.md", "registers 119 projects"],
 ];
 for (const [file, needle] of repositorySurfaces) requireText(file, read(path.join(root, file)), needle);
 

@@ -86,7 +86,10 @@ internal sealed interface ProjectionPollResult {
     data class Applied(
         val appliedEventCount: Int,
         val duplicateEventCount: Int,
+        val processedBytes: Int,
+        val checkpointPosition: Long,
         val lag: Long,
+        val lagAge: Duration,
     ) : ProjectionPollResult
 
     data object Idle : ProjectionPollResult
@@ -152,7 +155,7 @@ internal class ProjectionWorker(
                 return poison.toDegradedResult(exception.reasonClass)
             }
         }
-        return repository.applyBatch(key, lease, batch.events, now).toPollResult(batch.committedHead)
+        return repository.applyBatch(key, lease, batch.events, now).toPollResult(batch, now)
     }
 }
 
@@ -248,12 +251,29 @@ private data class PollOutcome(
     val continuePolling: Boolean = true,
 )
 
-private fun ProjectionApplyResult.toPollResult(committedHead: Long): ProjectionPollResult.Applied =
-    ProjectionPollResult.Applied(
+private fun ProjectionApplyResult.toPollResult(
+    batch: CommittedProjectionBatch,
+    now: Instant,
+): ProjectionPollResult.Applied {
+    val lag = (batch.committedHead - checkpoint.position).coerceAtLeast(0)
+    val lagAge =
+        if (lag == 0L) {
+            Duration.ZERO
+        } else {
+            Duration.between(batch.events.last().recordedAt, now).coerceAtLeast(Duration.ZERO)
+        }
+    return ProjectionPollResult.Applied(
         appliedEventCount = appliedEventCount,
         duplicateEventCount = duplicateEventCount,
-        lag = (committedHead - checkpoint.position).coerceAtLeast(0),
+        processedBytes =
+            batch.events.sumOf { event ->
+                event.payload.canonicalJson.toByteArray(StandardCharsets.UTF_8).size
+            },
+        checkpointPosition = checkpoint.position,
+        lag = lag,
+        lagAge = lagAge,
     )
+}
 
 private fun ProjectionPoisonRecord.toDegradedResult(reasonClass: String): ProjectionPollResult.Degraded =
     ProjectionPollResult.Degraded(

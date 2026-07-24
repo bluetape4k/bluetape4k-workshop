@@ -5,6 +5,8 @@ import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.EventPayload
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.domain.TenantId
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabasePermitGate
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedMetrics
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedOperationalState
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.ActiveProjectionGenerations
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.AppendFences
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.persistence.CampaignProjectionReadModels
@@ -26,6 +28,7 @@ import org.awaitility.Awaitility.await
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
@@ -36,6 +39,9 @@ import org.junit.jupiter.api.TestInstance
 import java.time.Clock
 import java.time.Duration
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -65,7 +71,10 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
         val leases = ProjectionLeaseRepository()
         val rebuilds = ProjectionRebuildRepository()
         val projections = ProjectionRepository(leases)
-        val runtime = runtime(leases, rebuilds, projections)
+        val operationalState = EventSourcedOperationalState()
+        val registry = SimpleMeterRegistry()
+        val telemetry = ProjectionRuntimeTelemetry(operationalState, EventSourcedMetrics(registry))
+        val runtime = runtime(leases, rebuilds, projections, telemetry)
 
         try {
             runtime.start()
@@ -80,9 +89,51 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
             transaction(database) {
                 findGeneration(candidate.key)?.targetPosition
             } shouldBeEqualTo FINAL_TARGET_POSITION
+            operationalState.isProjectionDegraded() shouldBeEqualTo false
+            operationalState.rebuildState() shouldBeEqualTo ProjectionGenerationState.ACTIVE
+            registry.get("voucher_projection_batch_events").summary().count() shouldBeEqualTo 2L
+            registry.get("voucher_rebuild_progress_ratio").gauge().value() shouldBeEqualTo 1.0
             val cancelled = requestCancellation(rebuilds)
             awaitCancelled(cancelled)
         } finally {
+            runtime.stopProjection()
+            runtime.stopRebuild()
+            runtime.stopMaintenance()
+            runtime.releaseFencedLeases()
+        }
+    }
+
+    @Test
+    fun `runtime degrades projection health on a failed tick and recovers after a successful retry`() {
+        appendEvents()
+        val leases = ProjectionLeaseRepository()
+        val rebuilds = ProjectionRebuildRepository()
+        val projections = ProjectionRepository(leases)
+        val operationalState = EventSourcedOperationalState()
+        val reader = RecoverableProjectionEventReader()
+        val runtime =
+            runtime(
+                leases,
+                rebuilds,
+                projections,
+                ProjectionRuntimeTelemetry(operationalState, EventSourcedMetrics(SimpleMeterRegistry())),
+                reader,
+            )
+
+        try {
+            runtime.start()
+            check(reader.failureObserved.await(5, TimeUnit.SECONDS)) { "runtime failure was not observed" }
+            await().atMost(RUNTIME_TIMEOUT).untilAsserted {
+                operationalState.isProjectionDegraded() shouldBeEqualTo true
+            }
+
+            reader.allowRecovery.countDown()
+            awaitActiveCheckpoint(projections, INITIAL_TARGET_POSITION)
+            await().atMost(RUNTIME_TIMEOUT).untilAsserted {
+                operationalState.isProjectionDegraded() shouldBeEqualTo false
+            }
+        } finally {
+            reader.allowRecovery.countDown()
             runtime.stopProjection()
             runtime.stopRebuild()
             runtime.stopMaintenance()
@@ -128,19 +179,23 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
         leases: ProjectionLeaseRepository,
         rebuilds: ProjectionRebuildRepository,
         projections: ProjectionRepository,
+        telemetry: ProjectionRuntimeTelemetry,
+        eventReader: ProjectionEventReader = ExposedProjectionEventReader(),
     ): EventSourcedProjectionRuntime =
-            EventSourcedProjectionRuntime(
-                resources =
-                    ProjectionRuntimeResources(
-                        database = database,
-                        permits = EventSourcedDatabasePermitGate(),
-                        leases = leases,
-                        projections = projections,
-                        rebuilds = rebuilds,
-                    ),
-                properties = ProjectionWorkerProperties(enabled = true),
-                clock = Clock.systemUTC(),
-            )
+        EventSourcedProjectionRuntime(
+            resources =
+                ProjectionRuntimeResources(
+                    database = database,
+                    permits = EventSourcedDatabasePermitGate(),
+                    leases = leases,
+                    projections = projections,
+                    rebuilds = rebuilds,
+                    eventReader = eventReader,
+                ),
+            properties = ProjectionWorkerProperties(enabled = true),
+            clock = Clock.systemUTC(),
+            telemetry = telemetry,
+        )
 
     private fun awaitActiveCheckpoint(
         projections: ProjectionRepository,
@@ -212,5 +267,21 @@ internal class EventSourcedProjectionRuntimeIntegrationTest {
                 ProjectionGenerations,
                 ActiveProjectionGenerations,
             )
+    }
+}
+
+private class RecoverableProjectionEventReader : ProjectionEventReader {
+    val failureObserved = CountDownLatch(1)
+    val allowRecovery = CountDownLatch(1)
+    private val first = AtomicBoolean(true)
+    private val delegate = ExposedProjectionEventReader()
+
+    override fun loadAfter(globalPosition: Long): CommittedProjectionBatch {
+        if (first.compareAndSet(true, false)) {
+            failureObserved.countDown()
+            error("synthetic projection reader failure")
+        }
+        check(allowRecovery.await(5, TimeUnit.SECONDS)) { "projection recovery was not released" }
+        return delegate.loadAfter(globalPosition)
     }
 }

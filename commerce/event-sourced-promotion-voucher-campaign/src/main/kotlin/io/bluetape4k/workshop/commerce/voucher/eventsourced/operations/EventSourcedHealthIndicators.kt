@@ -40,9 +40,12 @@ internal class EventSourcedOperationalState {
         aggregateDegraded.set(true)
     }
 
-    fun degradeProjection(rebuildState: ProjectionGenerationState) {
-        projectionDegraded.set(true)
-        rebuild.set(rebuildState)
+    fun projectionHealth(
+        degraded: Boolean,
+        rebuildState: ProjectionGenerationState? = null,
+    ) {
+        projectionDegraded.set(degraded)
+        rebuildState?.let(rebuild::set)
     }
 
     fun rebuildState(state: ProjectionGenerationState) {

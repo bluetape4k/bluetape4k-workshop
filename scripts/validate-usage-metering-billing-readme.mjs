@@ -56,7 +56,7 @@ const repositorySurfaces = [
   ["scripts/smoke-validate.sh", ":commerce-usage-metering-billing-ledger:integrationTest"],
   [".github/workflows/Examples.yml", ":commerce-usage-metering-billing-ledger:integrationTest"],
   [".github/workflows/nightly.yml", ":commerce-usage-metering-billing-ledger:integrationTest"],
-  ["docs/superpowers/specs/2026-05-22-issue-91-validation-matrix.md", "112 projects"],
+  ["docs/superpowers/specs/2026-05-22-issue-91-validation-matrix.md", "119 projects"],
 ];
 for (const [file, needle] of repositorySurfaces) {
   const text = fs.readFileSync(path.join(root, file), "utf8");

@@ -117,11 +117,13 @@ read-model mutation, and lease fencing commit atomically. A poison event moves
 the projection to a degraded, operator-visible path without advancing past the
 failed event.
 
-Rebuild creates a new generation in `BUILDING`, catches up to a fixed target,
-enters `VALIDATING`, and becomes `ACTIVE` only after position and canonical
-digest checks. The active pointer changes by fenced compare-and-set; the prior
-generation is retained as `RETIRED` for audit and bounded cleanup. Cancel/resume increments the
-cancellation revision so stale workers cannot continue writing.
+Rebuild creates a new generation in `BUILDING`, catches up to its current
+target, enters `VALIDATING`, and becomes `ACTIVE` only after position and
+canonical digest checks. If the active checkpoint advances during validation,
+a fenced transition extends the candidate target and returns it to `BUILDING`.
+The active pointer changes by fenced compare-and-set; the prior generation is
+retained as `RETIRED` for audit and bounded cleanup. Cancel/resume increments
+the cancellation revision so stale workers cannot continue writing.
 
 ## Security
 
@@ -180,9 +182,10 @@ These profiles are regression evidence, not production capacity guarantees.
    return to zero.
 
 Alert when projection lag reaches 10,000 events, foreground permit utilization
-reaches 80%, any poison event reaches `FAILED`, rebuild ETA exceeds ten minutes,
-or lock/statement timeouts exceed 1%. Operator audit lookup is the source for
-who requested retry, rebuild, cancel, resume, reconciliation, and activation.
+reaches 80%, any poison event reaches `FAILED`, the runtime batch-scheduling
+rebuild ETA exceeds ten minutes, or lock/statement timeouts exceed 1%. Operator
+audit lookup is the source for who requested retry, rebuild, cancel, resume,
+reconciliation, and activation.
 
 ## Run
 
@@ -193,7 +196,7 @@ who requested retry, rebuild, cancel, resume, reconciliation, and activation.
 ./gradlew :commerce-event-sourced-promotion-voucher-campaign:stressTest \
   -PeventSourcedStress=true --console=plain
 node scripts/validate-event-sourced-voucher-readme.mjs
-EXPECTED_GRADLE_PROJECTS=112 ./scripts/smoke-validate.sh stale-check
+EXPECTED_GRADLE_PROJECTS=119 ./scripts/smoke-validate.sh stale-check
 ```
 
 Start the application with a PostgreSQL datasource and production HMAC key:

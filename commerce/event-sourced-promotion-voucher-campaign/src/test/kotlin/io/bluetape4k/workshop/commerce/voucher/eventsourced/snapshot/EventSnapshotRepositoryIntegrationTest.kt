@@ -67,6 +67,26 @@ internal class EventSnapshotRepositoryIntegrationTest {
         transaction(database) { repository.latest(stream) }?.metadata?.streamVersion shouldBeEqualTo 500L
     }
 
+    @Test
+    fun `same client UUID and version remain isolated across tenant and stream type`() {
+        val streamId = UUID.randomUUID()
+        val streams =
+            listOf(
+                StreamKey(TenantId("tenant-a"), "campaign", streamId) to "tenant-a-campaign",
+                StreamKey(TenantId("tenant-b"), "campaign", streamId) to "tenant-b-campaign",
+                StreamKey(TenantId("tenant-a"), "voucher", streamId) to "tenant-a-voucher",
+            )
+        transaction(database) {
+            streams.forEach { (stream, state) ->
+                repository.save(snapshot(stream, 250, state))
+            }
+        }
+
+        streams.forEach { (stream, state) ->
+            transaction(database) { repository.latest(stream) }?.canonicalState shouldBeEqualTo state
+        }
+    }
+
     private fun stream() = StreamKey(TenantId("tenant-a"), "campaign", UUID.randomUUID())
 
     private fun snapshot(stream: StreamKey, version: Long, state: String) =

@@ -8,6 +8,7 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.Projectio
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRebuildRepository
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRepository
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRuntimeResources
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionRuntimeTelemetry
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.ProjectionWorkerProperties
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.security.EventSourcedHmacKeyRing
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -105,10 +106,13 @@ internal class EventSourcedRebuildConfiguration {
         resources: ProjectionRuntimeResources,
         properties: ProjectionWorkerProperties,
         clock: Clock,
+        operationalState: EventSourcedOperationalState,
+        metrics: EventSourcedMetrics,
     ): EventSourcedRuntimeWorkers =
         EventSourcedProjectionRuntime(
             resources = resources,
             properties = properties,
             clock = clock,
+            telemetry = ProjectionRuntimeTelemetry(operationalState, metrics),
         )
 }
