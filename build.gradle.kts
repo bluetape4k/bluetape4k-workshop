@@ -365,7 +365,11 @@ fun registerHighContentionSuiteTask(
                         prefixedCamelSystemProperties.get().keys,
                 environmentNames =
                     prefixedPublicEnvironment.get().keys +
-                        prefixedInternalEnvironment.get().keys,
+                    prefixedInternalEnvironment.get().keys,
+            )
+            HighContentionBootstrapFailure.prepare(
+                uploadRoot = uploadRoot.get().asFile.toPath(),
+                runId = runId.get(),
             )
         }
     }

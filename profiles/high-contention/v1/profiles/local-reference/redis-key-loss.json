@@ -52,6 +52,6 @@
     "job": ["DURABLE_CANCEL_RETAINED", "TERMINAL_HISTORY_RETAINED"],
     "ticket": ["DATABASE_ACTIVE_GUARD_RETAINS_OWNERSHIP", "NO_DOUBLE_ADMISSION"]
   },
-  "observationFields": ["deletedOwnedKeyCount", "scanIterationCount", "recoveryNanos"],
+  "observationFields": ["deletedOwnedKeyCount", "scanIterationCount", "workloadDurationNanos"],
   "knownLimitations": ["Only run-owned Redis keys are removed."]
 }

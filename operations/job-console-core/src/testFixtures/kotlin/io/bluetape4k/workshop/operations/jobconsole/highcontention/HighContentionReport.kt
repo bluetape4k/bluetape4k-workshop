@@ -374,10 +374,24 @@ data class HighContentionEnvironmentEvidence(
 
 data class HighContentionReportObservations(
     val realizedAuthorityKeyCardinality: Int = 0,
+    val profileFields: Map<String, Any> = emptyMap(),
 ) {
     fun validate(): HighContentionReportObservations =
         apply {
             realizedAuthorityKeyCardinality.requireZeroOrPositiveNumber("realizedAuthorityKeyCardinality")
+            profileFields.forEach { (field, value) ->
+                field.requireNotBlank("profile observation field")
+                when (value) {
+                    is Number -> require(value.toDouble().isFinite() && value.toDouble() >= 0.0) {
+                        "numeric profile observation must be finite and non-negative"
+                    }
+
+                    is String -> value.requireNotBlank("profile observation value")
+                    else -> throw IllegalArgumentException(
+                        "profile observation value must be a number or string",
+                    )
+                }
+            }
         }
 }
 
@@ -538,6 +552,47 @@ data class HighContentionCleanupSummary(
             }
             result.requireEquals(expectedResult, "cleanup result")
         }
+}
+
+fun HighContentionTerminalReport.finalizeAfterSuccessfulCleanup(
+    completedNanos: Long = System.nanoTime(),
+    completedAt: Instant = Instant.now(),
+): HighContentionTerminalReport {
+    val profileDeadline = deadlines.singleOrNull { it.phase == "profile" } ?: deadlines.single()
+    val startedNanos = profileDeadline.absoluteDeadlineNanos - profileDeadline.configuredBudgetNanos
+    val actualDurationNanos = (completedNanos - startedNanos).coerceAtLeast(0L)
+    val expired = completedNanos > profileDeadline.absoluteDeadlineNanos
+    return copy(
+        endedAt = completedAt,
+        deadlines = deadlines.map { deadline ->
+            if (deadline == profileDeadline) {
+                deadline.copy(
+                    actualDurationNanos = actualDurationNanos,
+                    expired = expired,
+                    timeoutOrigin = if (expired) {
+                        HighContentionTimeoutOrigin.PROFILE_EXECUTION
+                    } else {
+                        HighContentionTimeoutOrigin.NONE
+                    },
+                )
+            } else {
+                deadline
+            }
+        },
+        result = if (expired) {
+            HighContentionTerminalResult(
+                terminalStatus = HighContentionTerminalStatus.ERROR,
+                correctness = HighContentionCorrectness.PASS,
+                errorCode = HighContentionErrorCode.WORKLOAD_TIMEOUT,
+                failedPhase = profileDeadline.phase,
+                failedInvariantIds = emptyList(),
+                redactedErrorClass = null,
+            )
+        } else {
+            result
+        },
+        cleanup = HighContentionCleanupSummary(HighContentionCleanupResult.PASS),
+    )
 }
 
 data class HighContentionTerminalReport(

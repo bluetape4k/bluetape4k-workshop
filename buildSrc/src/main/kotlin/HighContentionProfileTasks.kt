@@ -17,9 +17,13 @@ import java.nio.file.StandardOpenOption.CREATE_NEW
 import java.nio.file.StandardOpenOption.READ
 import java.nio.file.StandardOpenOption.WRITE
 import java.security.MessageDigest
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 internal const val HIGH_CONTENTION_CHILD_DESCRIPTOR_ENV =
     "BLUETAPE_HIGH_CONTENTION_CHILD_DESCRIPTOR"
+internal const val HIGH_CONTENTION_CHILD_CAPABILITY_ENV =
+    "BLUETAPE_HIGH_CONTENTION_CHILD_CAPABILITY"
 
 internal data class HighContentionProfileSelection(
     val runId: String,
@@ -119,7 +123,7 @@ internal object HighContentionCallerBoundary {
         projectPropertyNames: Set<String>,
         systemPropertyNames: Set<String>,
         environmentNames: Set<String>,
-        allowDescriptorChannel: Boolean = false,
+        allowChildChannel: Boolean = false,
     ) {
         val forbiddenProjectProperty = projectPropertyNames.firstOrNull {
             it.startsWith("highContention") && it !in allowedProjectProperties
@@ -133,7 +137,7 @@ internal object HighContentionCallerBoundary {
                 (
                     it in reservedChildSystemProperties &&
                         !(
-                            allowDescriptorChannel &&
+                            allowChildChannel &&
                                 it in setOf(
                                     "highContentionProcessOwner",
                                     "highContentionWorkerPidFile",
@@ -147,7 +151,13 @@ internal object HighContentionCallerBoundary {
 
         val forbiddenEnvironment = environmentNames.firstOrNull {
             isReservedEnvironment(it) &&
-                !(allowDescriptorChannel && it == HIGH_CONTENTION_CHILD_DESCRIPTOR_ENV)
+                !(
+                    allowChildChannel &&
+                        it in setOf(
+                            HIGH_CONTENTION_CHILD_DESCRIPTOR_ENV,
+                            HIGH_CONTENTION_CHILD_CAPABILITY_ENV,
+                        )
+                    )
         }
         if (forbiddenEnvironment != null) {
             throw GradleException("caller supplied a reserved high-contention environment channel")
@@ -191,6 +201,7 @@ fun Project.registerHighContentionProfileTask(
     val runId = providers.gradleProperty("highContentionRunId").orElse("")
     val profileId = providers.gradleProperty("highContentionProfileId").orElse("burst")
     val descriptorPath = providers.environmentVariable(HIGH_CONTENTION_CHILD_DESCRIPTOR_ENV)
+    val childCapability = providers.environmentVariable(HIGH_CONTENTION_CHILD_CAPABILITY_ENV)
     val javaToolchains = extensions.getByType<JavaToolchainService>()
     val prefixedProjectProperties =
         providers.gradlePropertiesPrefixedBy("highContention")
@@ -247,8 +258,10 @@ fun Project.registerHighContentionProfileTask(
 
         doFirst {
             val internalDescriptor = descriptorPath.orNull
+            val internalCapability = childCapability.orNull
             val internalProcessOwner =
                 providers.systemProperty("highContentionProcessOwner").orNull
+            val childChannelPresent = internalDescriptor != null || internalCapability != null
             HighContentionCallerBoundary.validate(
                 projectPropertyNames = prefixedProjectProperties.get().keys,
                 systemPropertyNames =
@@ -257,8 +270,11 @@ fun Project.registerHighContentionProfileTask(
                 environmentNames =
                     prefixedPublicEnvironment.get().keys +
                         prefixedInternalEnvironment.get().keys,
-                allowDescriptorChannel = internalDescriptor != null,
+                allowChildChannel = internalDescriptor != null && internalCapability != null,
             )
+            if (childChannelPresent && (internalDescriptor == null || internalCapability == null)) {
+                throw GradleException("high-contention child capability channel is incomplete")
+            }
             val selection = HighContentionProfileSelection.validate(
                 runId = runId.get(),
                 profileId = profileId.get(),
@@ -280,11 +296,13 @@ fun Project.registerHighContentionProfileTask(
                     runRoot = selectedRunRoot,
                     selection = selection,
                     identity = identity,
+                    capability = requireNotNull(internalCapability),
                 )
-                val descriptorDigest = sha256(
-                    Files.readAllBytes(Path.of(internalDescriptor)),
-                )
-                if (internalProcessOwner != descriptorDigest) {
+                if (internalProcessOwner != hmacSha256(
+                        key = internalCapability,
+                        bytes = Files.readAllBytes(Path.of(internalDescriptor)),
+                    )
+                ) {
                     throw GradleException(
                         "high-contention process owner does not match its child descriptor",
                     )
@@ -426,7 +444,9 @@ internal object HighContentionChildDescriptorValidator {
         "implementation",
         "parentManifestDigest",
         "resourceLabels",
-        "descriptorDigest",
+        "parentPid",
+        "parentStartEpochMillis",
+        "capabilityDigest",
     )
     private val requiredLabelKeys = setOf(
         "io.bluetape4k.high-contention.run-id",
@@ -446,6 +466,7 @@ internal object HighContentionChildDescriptorValidator {
         runRoot: Path,
         selection: HighContentionProfileSelection,
         identity: HighContentionTaskIdentity,
+        capability: String,
     ) {
         val trustedOutputRoot = requireTrustedDirectory(outputRoot)
         val trustedRunRoot = requireExistingChildDirectory(trustedOutputRoot, runRoot)
@@ -464,7 +485,8 @@ internal object HighContentionChildDescriptorValidator {
             throw GradleException("high-contention child descriptor fields are invalid")
         }
         requireDescriptorTuple(fields, selection, identity)
-        requireDescriptorDigest(fields)
+        requireParentIdentity(fields)
+        requireCapabilityDigest(fields, capability)
         requireParentManifestDigest(fields, trustedRunRoot)
         requireResourceLabels(fields, selection)
 
@@ -504,21 +526,49 @@ internal object HighContentionChildDescriptorValidator {
         }
     }
 
-    private fun requireDescriptorDigest(fields: Map<*, *>) {
-        val supplied = fields["descriptorDigest"] as? String
-            ?: throw GradleException("high-contention child descriptor digest is missing")
-        if (supplied != descriptorDigest(fields)) {
-            throw GradleException("high-contention child descriptor digest does not match")
+    private fun requireParentIdentity(fields: Map<*, *>) {
+        val expectedPid = (fields["parentPid"] as? Number)?.toLong()
+            ?: throw GradleException("high-contention child parent pid is missing")
+        val expectedStart = (fields["parentStartEpochMillis"] as? Number)?.toLong()
+            ?: throw GradleException("high-contention child parent start time is missing")
+        val coordinator = generateSequence(ProcessHandle.current().parent().orElse(null)) { process ->
+            process.parent().orElse(null)
+        }
+            .take(MAX_COORDINATOR_ANCESTOR_DEPTH)
+            .firstOrNull { process ->
+                process.isAlive &&
+                    process.pid() == expectedPid &&
+                    process.info().startInstant().orElse(null)?.toEpochMilli() == expectedStart
+            }
+        if (coordinator == null) {
+            throw GradleException("high-contention child capability is not bound to its live parent")
         }
     }
 
-    fun descriptorDigest(fields: Map<*, *>): String {
+    private fun requireCapabilityDigest(
+        fields: Map<*, *>,
+        capability: String,
+    ) {
+        if (capability.length !in 32..256) {
+            throw GradleException("high-contention child capability is invalid")
+        }
+        val supplied = fields["capabilityDigest"] as? String
+            ?: throw GradleException("high-contention child capability digest is missing")
+        if (supplied != capabilityDigest(fields, capability)) {
+            throw GradleException("high-contention child capability digest does not match")
+        }
+    }
+
+    fun capabilityDigest(
+        fields: Map<*, *>,
+        capability: String,
+    ): String {
         val canonical = buildString {
-            allowedFields.filterNot { it == "descriptorDigest" }.sorted().forEach { key ->
+            allowedFields.filterNot { it == "capabilityDigest" }.sorted().forEach { key ->
                 append(key).append('=').append(canonicalValue(fields[key])).append('\n')
             }
         }
-        return sha256(canonical.toByteArray())
+        return hmacSha256(capability, canonical.toByteArray())
     }
 
     private fun requireParentManifestDigest(
@@ -582,6 +632,8 @@ internal object HighContentionChildDescriptorValidator {
         is List<*> -> value.joinToString(prefix = "[", postfix = "]") { canonicalValue(it) }
         else -> value.toString()
     }
+
+    private const val MAX_COORDINATOR_ANCESTOR_DEPTH = 4
 }
 
 private fun requireTrustedDirectory(path: Path): Path {
@@ -663,6 +715,15 @@ private fun requireAbsentContainedTarget(
 private fun sha256(bytes: ByteArray): String =
     MessageDigest.getInstance("SHA-256")
         .digest(bytes)
+        .joinToString("") { "%02x".format(it) }
+
+private fun hmacSha256(
+    key: String,
+    bytes: ByteArray,
+): String =
+    Mac.getInstance("HmacSHA256")
+        .apply { init(SecretKeySpec(key.toByteArray(), "HmacSHA256")) }
+        .doFinal(bytes)
         .joinToString("") { "%02x".format(it) }
 
 private fun forceDirectory(directory: Path) {

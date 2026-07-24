@@ -223,36 +223,31 @@ class JobConsoleProxiedTopology private constructor(
     }
 
     private fun awaitToxiproxyClient(server: ToxiproxyServer): ToxiproxyClient {
-        val deadline = System.nanoTime() + READINESS_TIMEOUT.toNanos()
-        var lastFailure: Throwable? = null
-        while (System.nanoTime() < deadline) {
+        return HighContentionAwait.value(
+            timeout = READINESS_TIMEOUT,
+            pollInterval = READINESS_POLL_INTERVAL,
+            description = "Toxiproxy control API did not become ready",
+        ) {
             val client = ToxiproxyClient(server.host, server.controlPort)
             try {
                 client.version()
-                return client
-            } catch (error: Exception) {
-                lastFailure = error
-                Thread.sleep(READINESS_POLL_INTERVAL.toMillis())
+                client
+            } catch (_: Exception) {
+                null
             }
         }
-        throw IllegalStateException("Toxiproxy control API did not become ready", lastFailure)
     }
 
     private fun awaitProxiedRedis() {
-        val deadline = System.nanoTime() + READINESS_TIMEOUT.toNanos()
-        var lastFailure: Throwable? = null
-        while (System.nanoTime() < deadline) {
-            try {
-                openRedisConnection().use {
-                    check(it.ping() == "PONG") { "proxied Redis path returned an invalid PING response" }
-                }
-                return
-            } catch (error: Exception) {
-                lastFailure = error
-                Thread.sleep(READINESS_POLL_INTERVAL.toMillis())
+        HighContentionAwait.condition(
+            timeout = READINESS_TIMEOUT,
+            pollInterval = READINESS_POLL_INTERVAL,
+            description = "proxied Redis path did not become ready",
+        ) {
+            openRedisConnection().use {
+                it.ping() == "PONG"
             }
         }
-        throw IllegalStateException("proxied Redis path did not become ready", lastFailure)
     }
 
     private fun createNetwork(resource: HighContentionDockerResource): Network {

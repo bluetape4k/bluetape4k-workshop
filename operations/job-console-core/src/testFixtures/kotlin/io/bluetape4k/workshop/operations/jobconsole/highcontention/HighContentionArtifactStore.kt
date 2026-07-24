@@ -226,29 +226,26 @@ internal object HighContentionArtifactPaths {
 
     fun ensureTrustedDirectory(path: Path): Path {
         val absolute = path.toAbsolutePath().normalize()
-        if (Files.isSymbolicLink(absolute)) {
-            throw HighContentionArtifactException("artifact directory must not be a symlink")
-        }
-        val missingNames = ArrayDeque<Path>()
-        var current: Path? = absolute
-        while (current != null && !Files.exists(current, NOFOLLOW_LINKS)) {
-            missingNames.addFirst(current.fileName)
-            current = current.parent
-        }
-        if (current == null) {
-            throw HighContentionArtifactException("artifact directory has no trusted existing ancestor")
-        }
-        var trusted = current.toRealPath()
-        if (!Files.isDirectory(trusted, NOFOLLOW_LINKS)) {
-            throw HighContentionArtifactException("artifact ancestor must be a directory")
-        }
-        missingNames.forEach { name ->
+        var trusted = absolute.root
+            ?: throw HighContentionArtifactException("artifact directory must be absolute")
+        absolute.root.relativize(absolute).forEachIndexed { index, name ->
             trusted = trusted.resolve(name)
-            try {
-                Files.createDirectory(trusted)
-            } catch (error: FileAlreadyExistsException) {
-                if (Files.isSymbolicLink(trusted) || !Files.isDirectory(trusted, NOFOLLOW_LINKS)) {
-                    throw HighContentionArtifactException("artifact directory raced with an unsafe path", error)
+            if (Files.exists(trusted, NOFOLLOW_LINKS)) {
+                if (Files.isSymbolicLink(trusted) && index == 0) {
+                    trusted = trusted.toRealPath()
+                } else if (Files.isSymbolicLink(trusted) || !Files.isDirectory(trusted, NOFOLLOW_LINKS)) {
+                    throw HighContentionArtifactException("artifact path contains an unsafe component")
+                }
+            } else {
+                try {
+                    Files.createDirectory(trusted)
+                } catch (error: FileAlreadyExistsException) {
+                    if (Files.isSymbolicLink(trusted) || !Files.isDirectory(trusted, NOFOLLOW_LINKS)) {
+                        throw HighContentionArtifactException(
+                            "artifact directory raced with an unsafe path",
+                            error,
+                        )
+                    }
                 }
             }
         }

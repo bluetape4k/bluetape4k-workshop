@@ -202,9 +202,15 @@ class HighContentionSuiteTaskTest {
         assertFailsWith<IllegalStateException> {
             HighContentionDockerCleanup(
                 docker = object : HighContentionDockerCli {
-                    override fun find(labels: Map<String, String>) = listOf(persistent)
+                    override fun find(
+                        labels: Map<String, String>,
+                        absoluteDeadlineNanos: Long,
+                    ) = listOf(persistent)
 
-                    override fun delete(resource: HighContentionDockerObject) = Unit
+                    override fun delete(
+                        resource: HighContentionDockerObject,
+                        absoluteDeadlineNanos: Long,
+                    ) = true
                 },
                 nanoTime = clock::nanoTime,
                 sleepMillis = clock::advanceMillis,
@@ -215,6 +221,61 @@ class HighContentionSuiteTaskTest {
                 pollIntervalMillis = 10,
             )
         }
+    }
+
+    @Test
+    fun `docker discovery tolerates exact inspect disappearance`() {
+        val id = "a".repeat(12)
+        val executor = SequencedDockerCommandExecutor(
+            ArrayDeque(
+                listOf(
+                    HighContentionDockerCommandResult(0, "$id\n"),
+                    HighContentionDockerCommandResult(0, ""),
+                    HighContentionDockerCommandResult(1, "error: no such object: $id\n"),
+                ),
+            ),
+        )
+
+        val discovered = JdkHighContentionDockerCli(
+            nanoTime = { 0L },
+            commandExecutor = executor,
+        ).find(
+            labels = mapOf("io.bluetape4k.high-contention.run-id" to "run-1"),
+            absoluteDeadlineNanos = 1_000_000_000,
+        )
+
+        assertTrue(discovered.isEmpty())
+        assertEquals(3, executor.commands.size)
+    }
+
+    @Test
+    fun `docker deletion tolerates exact resource disappearance`() {
+        val id = "b".repeat(12)
+        val executor = SequencedDockerCommandExecutor(
+            ArrayDeque(
+                listOf(
+                    HighContentionDockerCommandResult(
+                        1,
+                        "Error response from daemon: No such container: $id\n",
+                    ),
+                ),
+            ),
+        )
+        val deleted = JdkHighContentionDockerCli(
+            nanoTime = { 0L },
+            commandExecutor = executor,
+        ).delete(
+            HighContentionDockerObject(
+                id = id,
+                labels = mapOf(
+                    "io.bluetape4k.high-contention.resource-type" to "container",
+                ),
+            ),
+            absoluteDeadlineNanos = 1_000_000_000,
+        )
+
+        assertFalse(deleted)
+        assertEquals(listOf("docker", "rm", "-f", id), executor.commands.single())
     }
 
     @Test
@@ -305,13 +366,34 @@ class HighContentionSuiteTaskTest {
         val deleted = mutableListOf<String>()
         var queryCount = 0
 
-        override fun find(labels: Map<String, String>): List<HighContentionDockerObject> {
+        override fun find(
+            labels: Map<String, String>,
+            absoluteDeadlineNanos: Long,
+        ): List<HighContentionDockerObject> {
             queryCount += 1
             return discoveries.removeFirstOrNull() ?: emptyList()
         }
 
-        override fun delete(resource: HighContentionDockerObject) {
+        override fun delete(
+            resource: HighContentionDockerObject,
+            absoluteDeadlineNanos: Long,
+        ): Boolean {
             deleted += resource.id
+            return true
+        }
+    }
+
+    private class SequencedDockerCommandExecutor(
+        private val results: ArrayDeque<HighContentionDockerCommandResult>,
+    ) : HighContentionDockerCommandExecutor {
+        val commands = mutableListOf<List<String>>()
+
+        override fun execute(
+            arguments: List<String>,
+            timeoutMillis: Long,
+        ): HighContentionDockerCommandResult {
+            commands += arguments
+            return results.removeFirst()
         }
     }
 }

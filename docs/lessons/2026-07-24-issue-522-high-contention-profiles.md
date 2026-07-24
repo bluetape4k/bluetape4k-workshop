@@ -94,6 +94,9 @@ production adapter가 module-local authority를 검증한 terminal report를 생
   Docker cleanup을 machine evidence로 남긴다.
 - Hosted artifact는 exact workflow run/attempt, digest allowlist, redaction, regular-file 검사를
   통과한 canonical file만 보존한다.
+- 선택된 profile의 failure step, invariant ID, observation field를 report와 다시 대조하고,
+  latency·duration·count는 non-negative typed number로, terminal disposition은 closed vocabulary로
+  검증한다. 같은 임의 문자열로 여러 측정값을 채운 report는 거절한다.
 - 영문/국문 runbook은 JDK 25, Docker, 4 GiB memory, command, report path, 증거 해석 한계를 같은
   내용으로 설명한다.
 

@@ -250,9 +250,17 @@ case "${1:-help}" in
       echo "HIGH_CONTENTION_RUN_ID is required and must be unique."
       exit 2
     fi
-    run "$GRADLEW highContentionCi \
-      -PhighContentionRunId=$HIGH_CONTENTION_RUN_ID \
-      --max-workers=1"
+    if [[ ! "$HIGH_CONTENTION_RUN_ID" =~ ^[a-z0-9][a-z0-9._-]{0,63}$ ]] ||
+      [[ "$HIGH_CONTENTION_RUN_ID" == "." || "$HIGH_CONTENTION_RUN_ID" == ".." ]]; then
+      echo "HIGH_CONTENTION_RUN_ID must be a bounded identifier."
+      exit 2
+    fi
+    high_contention_run_id="$HIGH_CONTENTION_RUN_ID"
+    unset HIGH_CONTENTION_RUN_ID
+    echo "▶ $GRADLEW highContentionCi -PhighContentionRunId=$high_contention_run_id --max-workers=1"
+    "$GRADLEW" highContentionCi \
+      "-PhighContentionRunId=$high_contention_run_id" \
+      --max-workers=1
     ;;
 
   stale-check)

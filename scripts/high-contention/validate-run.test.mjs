@@ -104,8 +104,19 @@ function validReport() {
             },
         },
         failureInjection: { type: "none", steps: [] },
-        invariantResults: [],
-        observations: {},
+        invariantResults: [
+            { invariantId: "tenant-fifo", status: "PASS" },
+            { invariantId: "one-active-job", status: "PASS" },
+            { invariantId: "queue-version-converges", status: "PASS" },
+        ],
+        observations: {
+            profileFields: {
+                throughputOpsPerSecond: 1.0,
+                latencyP50Nanos: 1,
+                latencyP95Nanos: 1,
+                latencyP99Nanos: 1,
+            },
+        },
         deadlines: [],
         observationScope: "test",
         crossImplementationComparable: false,
@@ -157,6 +168,67 @@ test("workflow identity mismatch between manifest and report fails closed", asyn
         await assert.rejects(validateRun(contractRoot, runRoot), /workflow run and attempt/);
     } finally {
         await rm(root, { force: true, recursive: true });
+    }
+});
+
+test("profile failure, invariant, and observation evidence is mandatory", async () => {
+    const failureFixture = await fixture();
+    try {
+        const reportPath = join(failureFixture.runRoot, "reports/job-core/burst.json");
+        const report = JSON.parse(await readFile(reportPath, "utf8"));
+        report.failureInjection.type = "worker-restart";
+        await writeJson(reportPath, report);
+        await assert.rejects(
+            validateRun(contractRoot, failureFixture.runRoot),
+            /failure injection does not match/,
+        );
+    } finally {
+        await rm(failureFixture.root, { force: true, recursive: true });
+    }
+
+    const invariantFixture = await fixture();
+    try {
+        const reportPath = join(invariantFixture.runRoot, "reports/job-core/burst.json");
+        const report = JSON.parse(await readFile(reportPath, "utf8"));
+        report.invariantResults.pop();
+        await writeJson(reportPath, report);
+        await assert.rejects(
+            validateRun(contractRoot, invariantFixture.runRoot),
+            /invariant evidence does not match/,
+        );
+    } finally {
+        await rm(invariantFixture.root, { force: true, recursive: true });
+    }
+
+    const observationFixture = await fixture();
+    try {
+        const reportPath = join(observationFixture.runRoot, "reports/job-core/burst.json");
+        const report = JSON.parse(await readFile(reportPath, "utf8"));
+        delete report.observations.profileFields.latencyP99Nanos;
+        await writeJson(reportPath, report);
+        await assert.rejects(
+            validateRun(contractRoot, observationFixture.runRoot),
+            /missing declared observation field latencyP99Nanos/,
+        );
+    } finally {
+        await rm(observationFixture.root, { force: true, recursive: true });
+    }
+
+    const typedObservationFixture = await fixture();
+    try {
+        const reportPath = join(
+            typedObservationFixture.runRoot,
+            "reports/job-core/burst.json",
+        );
+        const report = JSON.parse(await readFile(reportPath, "utf8"));
+        report.observations.profileFields.latencyP95Nanos = "not-a-measurement";
+        await writeJson(reportPath, report);
+        await assert.rejects(
+            validateRun(contractRoot, typedObservationFixture.runRoot),
+            /latencyP95Nanos must be a non-negative safe integer/,
+        );
+    } finally {
+        await rm(typedObservationFixture.root, { force: true, recursive: true });
     }
 });
 
@@ -257,6 +329,25 @@ test("symlinked run root is rejected", async (context) => {
     try {
         await symlink(runRoot, linked, "dir");
         await assert.rejects(validateRun(contractRoot, linked), /trusted directory/);
+    } finally {
+        await rm(root, { force: true, recursive: true });
+    }
+});
+
+test("symlinked artifact parent is rejected before parsing", async (context) => {
+    if (process.platform === "win32") {
+        context.skip("symlink creation is not portable on Windows");
+        return;
+    }
+    const { root, runRoot } = await fixture();
+    try {
+        const reports = join(runRoot, "reports");
+        const outside = join(root, "outside-reports");
+        await cp(reports, outside, { recursive: true });
+        await rm(reports, { recursive: true });
+        await symlink(outside, reports, "dir");
+
+        await assert.rejects(validateRun(contractRoot, runRoot), /trusted parent|symbolic link/);
     } finally {
         await rm(root, { force: true, recursive: true });
     }

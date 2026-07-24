@@ -3,9 +3,12 @@ import { constants as fsConstants } from "node:fs";
 import {
     lstat,
     mkdir,
+    mkdtemp,
     open,
     readdir,
     realpath,
+    rename,
+    rm,
 } from "node:fs/promises";
 import { basename, dirname, join, normalize, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -57,34 +60,42 @@ export async function selectUpload({
         expectedWorkflowRunAndAttempt,
         "expected workflow run and attempt",
     );
-    const runRoot = await trustedDirectory(runRootValue, "run root");
+    const requestedRunRoot = resolve(runRootValue);
     const failureRoot = await trustedDirectory(failureRootValue, "failure root");
-    const stagingRoot = await createTrustedStagingRoot(stagingRootValue);
+    const staging = await createTrustedStagingRoot(stagingRootValue);
     const policy = artifactPolicy(mode, runId);
-    const manifestState = await pathState(join(runRoot, MANIFEST_FILE));
+    const manifestState = await pathState(join(requestedRunRoot, MANIFEST_FILE));
     const fallbackState = await pathState(join(failureRoot, FAILURE_FILE));
 
-    if (manifestState === "file") {
-        if (fallbackState !== "absent") {
-            throw new Error("constants-only fallback must not accompany a canonical upload manifest");
+    try {
+        if (manifestState === "file") {
+            if (fallbackState !== "absent") {
+                throw new Error("constants-only fallback must not accompany a canonical upload manifest");
+            }
+            const runRoot = await trustedDirectory(requestedRunRoot, "run root");
+            await stageCanonical({
+                runRoot,
+                stagingRoot: staging.quarantineRoot,
+                mode,
+                runId,
+                workflowRunAndAttempt,
+            });
+            await publishStagingRoot(staging);
+            return { ...policy, source: "canonical" };
         }
-        await stageCanonical({
-            runRoot,
-            stagingRoot,
-            mode,
-            runId,
-            workflowRunAndAttempt,
-        });
-        return { ...policy, source: "canonical" };
+        if (manifestState !== "absent") {
+            throw new Error("upload manifest must be a regular file, not a symbolic link");
+        }
+        if (fallbackState === "file") {
+            await stageFallback(failureRoot, staging.quarantineRoot);
+            await publishStagingRoot(staging);
+            return { ...policy, source: "constants-only-fallback" };
+        }
+        throw new Error("upload manifest or constants-only fallback is required");
+    } catch (error) {
+        await rm(staging.quarantineRoot, { recursive: true, force: true });
+        throw error;
     }
-    if (manifestState !== "absent") {
-        throw new Error("upload manifest must be a regular file, not a symbolic link");
-    }
-    if (fallbackState === "file") {
-        await stageFallback(failureRoot, stagingRoot);
-        return { ...policy, source: "constants-only-fallback" };
-    }
-    throw new Error("upload manifest or constants-only fallback is required");
 }
 
 async function stageCanonical({
@@ -314,12 +325,19 @@ async function trustedDirectory(value, label) {
 async function createTrustedStagingRoot(value) {
     const requested = resolve(value);
     const parent = await trustedDirectory(dirname(requested), "staging parent");
-    const absolute = join(parent, basename(requested));
-    if (await pathState(absolute) !== "absent") {
+    const publishedRoot = join(parent, basename(requested));
+    if (await pathState(publishedRoot) !== "absent") {
         throw new Error("staging root must not already exist");
     }
-    await mkdir(absolute);
-    return trustedDirectory(absolute, "staging root");
+    const quarantineRoot = await mkdtemp(join(parent, `.${basename(requested)}.quarantine-`));
+    return {
+        quarantineRoot: await trustedDirectory(quarantineRoot, "staging quarantine"),
+        publishedRoot,
+    };
+}
+
+async function publishStagingRoot({ quarantineRoot, publishedRoot }) {
+    await rename(quarantineRoot, publishedRoot);
 }
 
 async function readTrustedFile(root, relativePath) {

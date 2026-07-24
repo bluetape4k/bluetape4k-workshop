@@ -139,6 +139,8 @@ class HighContentionProfileTasksTest {
     fun `parent child descriptor verifies tuple manifest digest labels and absent targets`(
         @TempDir outputRoot: Path,
     ) {
+        val capability = "test-capability-that-is-at-least-thirty-two-bytes"
+        val liveParent = ProcessHandle.current().parent().orElseThrow()
         val runRoot = outputRoot.resolve("run-1")
         val descriptorRoot = runRoot.resolve("internal/children")
         Files.createDirectories(descriptorRoot)
@@ -151,13 +153,16 @@ class HighContentionProfileTasksTest {
             "mode" to "ci-correctness",
             "implementation" to "job-core",
             "parentManifestDigest" to sha256(Files.readAllBytes(parentManifest)),
+            "parentPid" to liveParent.pid(),
+            "parentStartEpochMillis" to liveParent.info().startInstant().orElseThrow().toEpochMilli(),
             "resourceLabels" to listOf(
                 resourceLabels("run-1", "burst", "network", "network"),
                 resourceLabels("run-1", "burst", "redis", "container"),
                 resourceLabels("run-1", "burst", "toxiproxy", "container"),
             ),
         )
-        fields["descriptorDigest"] = HighContentionChildDescriptorValidator.descriptorDigest(fields)
+        fields["capabilityDigest"] =
+            HighContentionChildDescriptorValidator.capabilityDigest(fields, capability)
         val descriptor = descriptorRoot.resolve("job-core-burst.json")
         descriptor.writeText(JsonOutput.toJson(fields))
 
@@ -171,6 +176,7 @@ class HighContentionProfileTasksTest {
                 implementation = "job-core",
                 profileClass = JOB_CORE_PROFILE_CLASS,
             ),
+            capability = capability,
         )
 
         val journal = runRoot.resolve("children/job-core/burst/child-journal.jsonl")
@@ -187,6 +193,7 @@ class HighContentionProfileTasksTest {
                     implementation = "job-core",
                     profileClass = JOB_CORE_PROFILE_CLASS,
                 ),
+                capability = capability,
             )
         }
         Files.delete(journal)
@@ -204,6 +211,53 @@ class HighContentionProfileTasksTest {
                     implementation = "job-core",
                     profileClass = JOB_CORE_PROFILE_CLASS,
                 ),
+                capability = capability,
+            )
+        }
+    }
+
+    @Test
+    fun `caller-created child descriptor cannot impersonate the live coordinator`(
+        @TempDir outputRoot: Path,
+    ) {
+        val capability = "caller-capability-that-is-at-least-thirty-two-bytes"
+        val runRoot = outputRoot.resolve("run-1")
+        val descriptorRoot = runRoot.resolve("internal/children")
+        Files.createDirectories(descriptorRoot)
+        val parentManifest = runRoot.resolve("run-manifest.json")
+        parentManifest.writeText("""{"schemaVersion":1}""")
+        val fields = linkedMapOf<String, Any?>(
+            "childDescriptorSchemaVersion" to 1,
+            "runId" to "run-1",
+            "profileId" to "burst",
+            "mode" to "ci-correctness",
+            "implementation" to "job-core",
+            "parentManifestDigest" to sha256(Files.readAllBytes(parentManifest)),
+            "parentPid" to ProcessHandle.current().pid(),
+            "parentStartEpochMillis" to ProcessHandle.current().info().startInstant().orElseThrow().toEpochMilli(),
+            "resourceLabels" to listOf(
+                resourceLabels("run-1", "burst", "network", "network"),
+                resourceLabels("run-1", "burst", "redis", "container"),
+                resourceLabels("run-1", "burst", "toxiproxy", "container"),
+            ),
+        )
+        fields["capabilityDigest"] =
+            HighContentionChildDescriptorValidator.capabilityDigest(fields, capability)
+        val descriptor = descriptorRoot.resolve("job-core-burst.json")
+        descriptor.writeText(JsonOutput.toJson(fields))
+
+        assertFailsWith<GradleException> {
+            HighContentionChildDescriptorValidator.validate(
+                descriptorValue = descriptor.toString(),
+                outputRoot = outputRoot,
+                runRoot = runRoot,
+                selection = HighContentionProfileSelection("run-1", "burst"),
+                identity = HighContentionTaskIdentity(
+                    mode = "ci-correctness",
+                    implementation = "job-core",
+                    profileClass = JOB_CORE_PROFILE_CLASS,
+                ),
+                capability = capability,
             )
         }
     }

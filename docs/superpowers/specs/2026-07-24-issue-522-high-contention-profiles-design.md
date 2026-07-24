@@ -269,6 +269,15 @@ correctness gate는 동일하고 latency·throughput을 추가로 기록한다. 
 | `worker-restart` | lease expiry 뒤 checkpoint 재개, stale commit 거절 | same operation ID 재개, duplicate issue/refund 없음 |
 | `duplicate-delivery` | stable event ID당 effect 한 번 | ticket/refund effect와 receipt 한 번 |
 
+`slow-provider`의 failure step은 특정 Ticket provider API를 공통 계약으로 가장하지 않는다.
+`ARM_SLOW_BOUNDARY`, `ADVANCE_AUTHORITY_CLOCK`, `RECONCILE_OR_TAKEOVER`,
+`RELEASE_STALE_RESPONSE`의 domain-neutral vocabulary를 사용한다. Job 구현은 lease/checkpoint
+takeover를, Ticket 구현은 payment reconciliation을 실행하며, 둘 다 typed duration과
+`IGNORED_FENCED` disposition을 report에 기록한다.
+현재 공통 workload engine이 직접 측정하는 시간은 operation latency와 end-to-end
+`workloadDurationNanos`뿐이다. 별도 boundary timestamp를 수집하지 않는
+`failureDetectionNanos`, `recoveryNanos`, `takeoverNanos`는 보고하지 않는다.
+
 ## 8. 실행 흐름
 
 각 application/profile 조합은 fresh topology에서 다음 순서로 실행한다.

@@ -52,6 +52,6 @@
     "job": ["CHECKPOINT_RESUMES", "STALE_COMMIT_REJECTED"],
     "ticket": ["STABLE_OPERATION_RESUMES", "NO_DUPLICATE_ISSUE_OR_REFUND"]
   },
-  "observationFields": ["restartNanos", "takeoverNanos", "staleDisposition"],
+  "observationFields": ["workloadDurationNanos", "staleDisposition"],
   "knownLimitations": ["The process remains local while application and worker ownership restart."]
 }

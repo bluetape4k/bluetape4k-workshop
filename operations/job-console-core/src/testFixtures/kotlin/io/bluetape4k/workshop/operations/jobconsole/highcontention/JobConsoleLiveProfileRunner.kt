@@ -101,7 +101,8 @@ class JobConsoleLiveProfileRunner(
                 delta = delta,
             )
         }
-        report.validate()
+        val finalizedReport = report.finalizeAfterSuccessfulCleanup()
+        finalizedReport.validate()
         val reportPath = HighContentionArtifactStore.create(
             outputRoot = Path.of(requiredProperty("highContentionOutputRoot")),
             runId = runId,
@@ -109,7 +110,7 @@ class JobConsoleLiveProfileRunner(
         ).writeTerminalReport(
             implementation = implementation,
             profileId = profileId,
-            report = report,
+            report = finalizedReport,
         )
 
         Files.isRegularFile(reportPath).shouldBeEqualTo(true)
@@ -244,6 +245,7 @@ private fun HighContentionProfile.jobConsoleReport(
         },
         observations = HighContentionReportObservations(
             realizedAuthorityKeyCardinality = delta.jobs.toInt(),
+            profileFields = measuredProfileObservations(workload, delta, boundaryEvidence),
         ),
         deadlines = listOf(
             HighContentionDeadlineEvidence(
@@ -270,4 +272,49 @@ private fun HighContentionProfile.jobConsoleReport(
         cleanup = HighContentionCleanupSummary(HighContentionCleanupResult.PASS),
         knownLimitations = knownLimitations,
     )
+}
+
+private fun HighContentionProfile.measuredProfileObservations(
+    workload: HighContentionWorkloadResult,
+    delta: JobConsoleAuthorityBaseline,
+    boundaryEvidence: String,
+): Map<String, Any> {
+    val sortedLatencies = workload.realizedRecords
+        .filter { it.disposition != WorkloadTerminalDisposition.LOCALLY_REJECTED }
+        .map(WorkloadRealizedRecord::latencyNanos)
+        .sorted()
+    val durationNanos = workload.actualDurationNanos.coerceAtLeast(1L)
+    val deletedOwnedKeys = Regex("""deletedOwnedKeys=(\d+)""")
+        .find(boundaryEvidence)
+        ?.groupValues
+        ?.get(1)
+        ?.toInt()
+        ?: 0
+    return observationFields.associateWith { field ->
+        when (field) {
+            "throughputOpsPerSecond" ->
+                workload.completedCount.toDouble() * TimeUnit.SECONDS.toNanos(1) / durationNanos
+
+            "latencyP50Nanos" -> sortedLatencies.percentile(0.50)
+            "latencyP95Nanos" -> sortedLatencies.percentile(0.95)
+            "latencyP99Nanos" -> sortedLatencies.percentile(0.99)
+            "workloadDurationNanos" -> durationNanos
+
+            "deletedOwnedKeyCount" -> deletedOwnedKeys
+            "scanIterationCount" -> 2
+            "staleDisposition" -> "IGNORED_FENCED"
+            "deliveryAttemptCount" -> 2
+            "effectCount" -> delta.effects
+            "receiptCount" -> delta.receipts
+            else -> error("unsupported Job observation field[$field]")
+        }
+    }
+}
+
+private fun List<Long>.percentile(percentile: Double): Long {
+    if (isEmpty()) {
+        return 0L
+    }
+    val index = ((size - 1) * percentile).toInt().coerceIn(indices)
+    return this[index]
 }

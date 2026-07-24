@@ -31,6 +31,7 @@ data class WorkloadRealizedRecord(
     val token: ScheduleToken,
     val disposition: WorkloadTerminalDisposition,
     val missedDeadline: Boolean,
+    val latencyNanos: Long = 0L,
 )
 
 interface HighContentionWorkloadAdapter {
@@ -57,6 +58,7 @@ data class HighContentionWorkloadResult(
     val expectedScheduleDigest: String,
     val realizedScheduleDigest: String,
     val realizedRecords: List<WorkloadRealizedRecord>,
+    val actualDurationNanos: Long = 0L,
 )
 
 class HighContentionWorkloadEngine(
@@ -145,6 +147,7 @@ class HighContentionWorkloadEngine(
                                 executionPermits.acquire()
                                 try {
                                     val dispatchDelay = elapsedSince(startNanos) - token.offsetNanos
+                                    val executionStartedNanos = System.nanoTime()
                                     val disposition = adapter.execute(
                                         token,
                                         WorkloadIdentity(validMeasuredNamespace, token.identityOrdinal),
@@ -158,6 +161,7 @@ class HighContentionWorkloadEngine(
                                             token = token,
                                             disposition = disposition,
                                             missedDeadline = dispatchDelay > maxScheduleDelayNanos,
+                                            latencyNanos = elapsedSince(executionStartedNanos),
                                         ),
                                     )
                                 } finally {
@@ -204,6 +208,7 @@ class HighContentionWorkloadEngine(
             expectedScheduleDigest = DeterministicSchedule.digest(orderedSchedule),
             realizedScheduleDigest = DeterministicSchedule.digest(realized.map(WorkloadRealizedRecord::token)),
             realizedRecords = realized,
+            actualDurationNanos = elapsedSince(startNanos),
         )
     }
 

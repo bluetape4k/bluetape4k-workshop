@@ -26,8 +26,12 @@ import java.nio.file.StandardOpenOption.CREATE_NEW
 import java.nio.file.StandardOpenOption.READ
 import java.nio.file.StandardOpenOption.WRITE
 import java.security.MessageDigest
+import java.security.SecureRandom
+import java.util.Base64
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 internal data class HighContentionMatrixEntry(
     val profileId: String,
@@ -250,9 +254,15 @@ internal data class HighContentionDockerObject(
 )
 
 internal interface HighContentionDockerCli {
-    fun find(labels: Map<String, String>): List<HighContentionDockerObject>
+    fun find(
+        labels: Map<String, String>,
+        absoluteDeadlineNanos: Long,
+    ): List<HighContentionDockerObject>
 
-    fun delete(resource: HighContentionDockerObject)
+    fun delete(
+        resource: HighContentionDockerObject,
+        absoluteDeadlineNanos: Long,
+    ): Boolean
 }
 
 internal class HighContentionDockerCleanup(
@@ -278,7 +288,7 @@ internal class HighContentionDockerCleanup(
         var quietSinceNanos: Long? = null
         var deletedCount = 0
         while (nanoTime() < absoluteDeadlineNanos) {
-            val discovered = docker.find(commonLabels)
+            val discovered = docker.find(commonLabels, absoluteDeadlineNanos)
             val duplicates = discovered.groupBy(HighContentionDockerObject::labels)
                 .filterValues { it.size > 1 }
             check(duplicates.isEmpty()) { "high-contention Docker label collision detected" }
@@ -302,11 +312,20 @@ internal class HighContentionDockerCleanup(
                         expectedByLabels.getValue(it.labels).resourceType == "container"
                     }
                     .forEach {
-                        docker.delete(it)
-                        deletedCount += 1
+                        check(nanoTime() < absoluteDeadlineNanos) {
+                            "high-contention Docker cleanup deadline expired during deletion"
+                        }
+                        if (docker.delete(it, absoluteDeadlineNanos)) {
+                            deletedCount += 1
+                        }
                     }
             }
-            sleepMillis(pollIntervalMillis)
+            val remainingMillis = TimeUnit.NANOSECONDS.toMillis(
+                (absoluteDeadlineNanos - nanoTime()).coerceAtLeast(0L),
+            )
+            if (remainingMillis > 0L) {
+                sleepMillis(minOf(pollIntervalMillis, remainingMillis))
+            }
         }
         error("high-contention Docker cleanup did not converge to stable zero")
     }
@@ -315,68 +334,96 @@ internal class HighContentionDockerCleanup(
 internal class JdkHighContentionDockerCli(
     private val executable: String = "docker",
     private val commandTimeoutMillis: Long = 10_000,
+    private val nanoTime: () -> Long = System::nanoTime,
+    private val commandExecutor: HighContentionDockerCommandExecutor =
+        JdkHighContentionDockerCommandExecutor(),
 ) : HighContentionDockerCli {
 
-    override fun find(labels: Map<String, String>): List<HighContentionDockerObject> {
+    override fun find(
+        labels: Map<String, String>,
+        absoluteDeadlineNanos: Long,
+    ): List<HighContentionDockerObject> {
         require(labels.isNotEmpty()) { "Docker discovery labels must not be empty" }
         val filters = labels.entries
             .sortedBy(Map.Entry<String, String>::key)
             .flatMap { (key, value) -> listOf("--filter", "label=$key=$value") }
         val containers = command(
             listOf(executable, "ps", "-aq") + filters,
-        ).lineSequence().filter(String::isNotBlank).map { id ->
-            inspectContainer(id)
+            absoluteDeadlineNanos,
+        ).orEmpty().lineSequence().filter(String::isNotBlank).mapNotNull { id ->
+            inspectContainer(id, absoluteDeadlineNanos)
         }
         val networks = command(
             listOf(executable, "network", "ls", "-q") + filters,
-        ).lineSequence().filter(String::isNotBlank).map { id ->
-            inspectNetwork(id)
+            absoluteDeadlineNanos,
+        ).orEmpty().lineSequence().filter(String::isNotBlank).mapNotNull { id ->
+            inspectNetwork(id, absoluteDeadlineNanos)
         }
         return (containers + networks).toList()
     }
 
-    override fun delete(resource: HighContentionDockerObject) {
+    override fun delete(
+        resource: HighContentionDockerObject,
+        absoluteDeadlineNanos: Long,
+    ): Boolean =
         when (
             resource.labels["io.bluetape4k.high-contention.resource-type"]
         ) {
-            "container" -> command(listOf(executable, "rm", "-f", resource.id))
-            "network" -> command(listOf(executable, "network", "rm", resource.id))
+            "container" ->
+                command(
+                    listOf(executable, "rm", "-f", resource.id),
+                    absoluteDeadlineNanos,
+                    missingObjectId = resource.id,
+                ) != null
+
+            "network" ->
+                command(
+                    listOf(executable, "network", "rm", resource.id),
+                    absoluteDeadlineNanos,
+                    missingObjectId = resource.id,
+                ) != null
+
             else -> error("Docker resource type is outside the cleanup allowlist")
         }
+
+    private fun inspectContainer(
+        id: String,
+        absoluteDeadlineNanos: Long,
+    ): HighContentionDockerObject? {
+        val validId = requireDockerId(id)
+        val labels = command(
+            listOf(
+                executable,
+                "inspect",
+                "--format",
+                "{{json .Config.Labels}}",
+                validId,
+            ),
+            absoluteDeadlineNanos,
+            missingObjectId = validId,
+        ) ?: return null
+        return HighContentionDockerObject(validId, parseLabels(labels))
     }
 
-    private fun inspectContainer(id: String): HighContentionDockerObject =
-        HighContentionDockerObject(
-            id = requireDockerId(id),
-            labels = parseLabels(
-                command(
-                    listOf(
-                        executable,
-                        "inspect",
-                        "--format",
-                        "{{json .Config.Labels}}",
-                        id,
-                    ),
-                ),
+    private fun inspectNetwork(
+        id: String,
+        absoluteDeadlineNanos: Long,
+    ): HighContentionDockerObject? {
+        val validId = requireDockerId(id)
+        val labels = command(
+            listOf(
+                executable,
+                "network",
+                "inspect",
+                "--format",
+                "{{json .Labels}}",
+                validId,
             ),
-        )
-
-    private fun inspectNetwork(id: String): HighContentionDockerObject =
-        HighContentionDockerObject(
-            id = requireDockerId(id),
-            labels = parseLabels(
-                command(
-                    listOf(
-                        executable,
-                        "network",
-                        "inspect",
-                        "--format",
-                        "{{json .Labels}}",
-                        id,
-                    ),
-                ),
-            ),
-        )
+            absoluteDeadlineNanos,
+            missingObjectId = validId,
+        ) ?: return null
+        return HighContentionDockerObject(validId, parseLabels(labels))
+    }
 
     private fun parseLabels(json: String): Map<String, String> {
         val labels = JsonSlurper().parseText(json.trim()) as? Map<*, *>
@@ -396,34 +443,112 @@ internal class JdkHighContentionDockerCli(
         return id
     }
 
-    private fun command(arguments: List<String>): String {
-        val outputFile = Files.createTempFile("high-contention-docker-", ".log")
-        try {
-            val process = ProcessBuilder(arguments)
-                .redirectErrorStream(true)
-                .redirectOutput(outputFile.toFile())
-                .start()
-            if (!process.waitFor(commandTimeoutMillis, TimeUnit.MILLISECONDS)) {
-                process.destroyForcibly()
-                process.waitFor(500, TimeUnit.MILLISECONDS)
-                error("Docker cleanup command timed out")
-            }
-            if (Files.size(outputFile) > MAX_OUTPUT_CHARS) {
-                error("Docker cleanup command output exceeded its bound")
-            }
-            val output = Files.readString(outputFile)
-            if (process.exitValue() != 0) {
-                error("Docker cleanup command failed")
-            }
-            return output
-        } finally {
-            Files.deleteIfExists(outputFile)
+    private fun command(
+        arguments: List<String>,
+        absoluteDeadlineNanos: Long,
+        missingObjectId: String? = null,
+    ): String? {
+        val remainingNanos = absoluteDeadlineNanos - nanoTime()
+        check(remainingNanos > 0L) {
+            "Docker cleanup deadline expired before command execution"
         }
+        val effectiveTimeoutMillis = minOf(
+            commandTimeoutMillis,
+            TimeUnit.NANOSECONDS.toMillis(remainingNanos).coerceAtLeast(1L),
+        )
+        val result = commandExecutor.execute(arguments, effectiveTimeoutMillis)
+        check(result.output.length <= MAX_OUTPUT_CHARS) {
+            "Docker cleanup command output exceeded its bound"
+        }
+        if (result.exitCode != 0) {
+            if (
+                missingObjectId != null &&
+                HighContentionDockerNotFound.matches(result.output, missingObjectId)
+            ) {
+                return null
+            }
+            error("Docker cleanup command failed")
+        }
+        return result.output
     }
 
     private companion object {
         val DOCKER_ID = Regex("[0-9a-f]{12,64}")
         const val MAX_OUTPUT_CHARS = 65_536L
+    }
+}
+
+internal data class HighContentionDockerCommandResult(
+    val exitCode: Int,
+    val output: String,
+)
+
+internal fun interface HighContentionDockerCommandExecutor {
+    fun execute(
+        arguments: List<String>,
+        timeoutMillis: Long,
+    ): HighContentionDockerCommandResult
+}
+
+internal class JdkHighContentionDockerCommandExecutor : HighContentionDockerCommandExecutor {
+    override fun execute(
+        arguments: List<String>,
+        timeoutMillis: Long,
+    ): HighContentionDockerCommandResult {
+        val outputFile = Files.createTempFile("high-contention-docker-", ".log")
+        var process: Process? = null
+        try {
+            process = ProcessBuilder(arguments)
+                .redirectErrorStream(true)
+                .redirectOutput(outputFile.toFile())
+                .start()
+            if (!process.waitFor(timeoutMillis, TimeUnit.MILLISECONDS)) {
+                process.destroyForcibly()
+                check(process.waitFor(500, TimeUnit.MILLISECONDS)) {
+                    "Docker cleanup command did not terminate after timeout"
+                }
+                error("Docker cleanup command timed out")
+            }
+            check(Files.size(outputFile) <= MAX_OUTPUT_BYTES) {
+                "Docker cleanup command output exceeded its bound"
+            }
+            return HighContentionDockerCommandResult(
+                exitCode = process.exitValue(),
+                output = Files.readString(outputFile),
+            )
+        } catch (error: InterruptedException) {
+            process?.destroyForcibly()
+            val terminated = process?.waitFor(500, TimeUnit.MILLISECONDS) ?: true
+            Thread.currentThread().interrupt()
+            check(terminated) {
+                "Docker cleanup command did not terminate after interruption"
+            }
+            throw IllegalStateException("Docker cleanup command was interrupted", error)
+        } finally {
+            process?.takeIf(Process::isAlive)?.destroyForcibly()
+            Files.deleteIfExists(outputFile)
+        }
+    }
+
+    private companion object {
+        const val MAX_OUTPUT_BYTES = 65_536L
+    }
+}
+
+internal object HighContentionDockerNotFound {
+    fun matches(
+        output: String,
+        expectedId: String,
+    ): Boolean {
+        val escapedId = Regex.escape(expectedId)
+        val options = setOf(RegexOption.IGNORE_CASE)
+        return output.lineSequence().any { line ->
+            line.trim().matches(
+                Regex(""".*No such (?:object|container):?\s+$escapedId\s*""", options),
+            ) || line.trim().matches(
+                Regex(""".*network\s+$escapedId\s+not found\s*""", options),
+            )
+        }
     }
 }
 
@@ -461,6 +586,40 @@ internal object HighContentionRunRoot {
         forceDirectory(trustedRoot)
         return target.toRealPath(NOFOLLOW_LINKS)
     }
+
+    fun openExisting(
+        outputRoot: Path,
+        runId: String,
+    ): Path {
+        val trustedRoot = outputRoot.toAbsolutePath().normalize().toRealPath(NOFOLLOW_LINKS)
+        val target = trustedRoot.resolve(
+            HighContentionProfileSelection.validate(
+                runId = runId,
+                profileId = "burst",
+                allowedProfiles = setOf("burst"),
+            ).runId,
+        )
+        if (
+            !Files.isDirectory(target, NOFOLLOW_LINKS) ||
+            Files.isSymbolicLink(target) ||
+            target.toRealPath(NOFOLLOW_LINKS).parent != trustedRoot
+        ) {
+            throw IllegalStateException("high-contention run directory is not trusted")
+        }
+        return target.toRealPath(NOFOLLOW_LINKS)
+    }
+}
+
+object HighContentionBootstrapFailure {
+    fun prepare(
+        uploadRoot: Path,
+        runId: String,
+    ) {
+        val configuredRoot = uploadRoot.toAbsolutePath().normalize()
+        createTrustedDirectories(configuredRoot)
+        val failureRoot = HighContentionRunRoot.create(configuredRoot, runId)
+        HighContentionArtifactValidator.writeFailureFallback(failureRoot)
+    }
 }
 
 internal data class HighContentionChildProcessResult(
@@ -491,18 +650,9 @@ internal class HighContentionChildProcessRunner(
             .redirectOutput(outputLog.toFile())
             .apply { environment().putAll(environment) }
             .start()
-        val completed = process.waitFor(timeoutMillis, TimeUnit.MILLISECONDS)
         val ownedRoots = mutableListOf<HighContentionProcessRef>(
             JdkHighContentionProcessRef(process.toHandle()),
         )
-        val recordedWorkerPid = readWorkerPid(workerPidFile)
-        recordedWorkerPid?.let { pid ->
-            findHighContentionOwnedProcess(
-                pid = pid,
-                propertyName = PROCESS_OWNER_PROPERTY,
-                ownerToken = ownerToken,
-            )?.let(ownedRoots::add)
-        }
         val reaper = HighContentionProcessReaper(
             discoverOwned = {
                 discoverHighContentionOwnedProcesses(
@@ -511,16 +661,42 @@ internal class HighContentionChildProcessRunner(
                 )
             },
         )
-        val observed = reaper.reap(
-            rootProcesses = ownedRoots,
-            gracefulTimeoutMillis = if (completed) 0 else GRACEFUL_TIMEOUT_MILLIS,
-            absoluteDeadlineNanos = Math.addExact(
-                nanoTime(),
-                TimeUnit.MILLISECONDS.toNanos(cleanupTimeoutMillis),
-            ),
-            quietPeriodMillis = STABLE_ZERO_QUIET_PERIOD_MILLIS,
-            pollIntervalMillis = POLL_INTERVAL_MILLIS,
-        )
+        var completed = false
+        var recordedWorkerPid: Long? = null
+        var observed = emptySet<Long>()
+        var primaryFailure: Throwable? = null
+        try {
+            completed = process.waitFor(timeoutMillis, TimeUnit.MILLISECONDS)
+            recordedWorkerPid = readWorkerPid(workerPidFile)
+            recordedWorkerPid?.let { pid ->
+                findHighContentionOwnedProcess(
+                    pid = pid,
+                    propertyName = PROCESS_OWNER_PROPERTY,
+                    ownerToken = ownerToken,
+                )?.let(ownedRoots::add)
+            }
+        } catch (error: Throwable) {
+            primaryFailure = error
+            throw error
+        } finally {
+            try {
+                observed = reaper.reap(
+                    rootProcesses = ownedRoots,
+                    gracefulTimeoutMillis = if (completed) 0 else GRACEFUL_TIMEOUT_MILLIS,
+                    absoluteDeadlineNanos = Math.addExact(
+                        nanoTime(),
+                        TimeUnit.MILLISECONDS.toNanos(cleanupTimeoutMillis),
+                    ),
+                    quietPeriodMillis = STABLE_ZERO_QUIET_PERIOD_MILLIS,
+                    pollIntervalMillis = POLL_INTERVAL_MILLIS,
+                )
+            } catch (cleanupFailure: Throwable) {
+                if (primaryFailure == null) {
+                    throw cleanupFailure
+                }
+                primaryFailure.addSuppressed(cleanupFailure)
+            }
+        }
         return HighContentionChildProcessResult(
             timedOut = !completed,
             exitCode = if (completed) process.exitValue() else null,
@@ -659,7 +835,7 @@ abstract class HighContentionSuiteTask : DefaultTask() {
         val runRoot = HighContentionRunRoot.create(configuredOutputRoot, selectedRunId)
         val configuredUploadRoot = uploadRoot.get().asFile.toPath().toAbsolutePath().normalize()
         createTrustedDirectories(configuredUploadRoot)
-        val runUploadRoot = HighContentionRunRoot.create(configuredUploadRoot, selectedRunId)
+        val runUploadRoot = HighContentionRunRoot.openExisting(configuredUploadRoot, selectedRunId)
         val configuredWorkRoot = coordinatorWorkRoot.get().asFile.toPath().toAbsolutePath().normalize()
         createTrustedDirectories(configuredWorkRoot)
         val workRoot = HighContentionRunRoot.create(configuredWorkRoot, selectedRunId)
@@ -707,76 +883,108 @@ abstract class HighContentionSuiteTask : DefaultTask() {
                     )
                 }
                 val resources = allocator.allocate(selectedRunId, child.profileId)
-                val descriptor = writeChildDescriptor(
-                    runRoot = runRoot,
-                    runId = selectedRunId,
-                    mode = selectedMode,
-                    child = child,
-                    parentManifestDigest = parentManifestDigest,
-                    resources = resources,
-                )
-                appendJournal(
-                    runJournal,
-                    mapOf(
-                        "schemaVersion" to 1,
-                        "event" to "CHILD_STARTING",
-                        "ordinal" to index,
-                        "profileId" to child.profileId,
-                        "implementation" to child.implementation,
-                    ),
-                )
-                val ownerToken = sha256(Files.readAllBytes(descriptor))
                 val workerPidFile = workerPidPath(runRoot, child)
                 val projectCache = Files.createDirectory(workRoot.resolve("project-cache-$index"))
                 val outputLog = workRoot.resolve("child-$index.log")
-                val command = childCommand(
-                    wrapper = wrapper,
-                    child = child,
-                    mode = selectedMode,
-                    runId = selectedRunId,
-                    projectCache = projectCache,
-                    ownerToken = ownerToken,
-                )
-                val result = HighContentionChildProcessRunner().run(
-                    command = command,
-                    environment = mapOf(
-                        HIGH_CONTENTION_CHILD_DESCRIPTOR_ENV to descriptor.toString(),
-                    ),
-                    workingDirectory = repository,
-                    outputLog = outputLog,
-                    workerPidFile = workerPidFile,
-                    ownerToken = ownerToken,
-                    timeoutMillis = profileDeadlineMillis,
-                    cleanupTimeoutMillis = manifest.childProcessCleanupMillis,
-                )
-                Files.deleteIfExists(workerPidFile)
-                forceDirectory(workerPidFile.parent)
-                HighContentionChildArtifactFinalizer.finalize(runRoot, child)
-                val report = reportPath(runRoot, child)
+                var parentDeletedResourceCount = 0
+                var parentCleanupSucceeded = false
+                var resourcesReleased = false
+                fun cleanupAllocatedResources() {
+                    if (resourcesReleased) {
+                        return
+                    }
+                    try {
+                        parentDeletedResourceCount = HighContentionDockerCleanup(
+                            docker = JdkHighContentionDockerCli(),
+                        ).cleanup(
+                            expectedResources = resources,
+                            absoluteDeadlineNanos = Math.addExact(
+                                System.nanoTime(),
+                                TimeUnit.MILLISECONDS.toNanos(
+                                    manifest.dockerDiscoveryMillis,
+                                ),
+                            ),
+                            quietPeriodMillis = manifest.dockerCleanupQuietPeriodMillis,
+                            pollIntervalMillis = manifest.dockerCleanupPollIntervalMillis,
+                        )
+                        parentCleanupSucceeded = true
+                    } finally {
+                        allocator.release(selectedRunId, child.profileId)
+                        resourcesReleased = true
+                    }
+                }
+                val result: HighContentionChildProcessResult
+                val report: Path
+                try {
+                    val capability = childCapability()
+                    val descriptor = writeChildDescriptor(
+                        runRoot = runRoot,
+                        runId = selectedRunId,
+                        mode = selectedMode,
+                        child = child,
+                        parentManifestDigest = parentManifestDigest,
+                        resources = resources,
+                        capability = capability,
+                    )
+                    appendJournal(
+                        runJournal,
+                        mapOf(
+                            "schemaVersion" to 1,
+                            "event" to "CHILD_STARTING",
+                            "ordinal" to index,
+                            "profileId" to child.profileId,
+                            "implementation" to child.implementation,
+                        ),
+                    )
+                    val ownerToken = hmacSha256(capability, Files.readAllBytes(descriptor))
+                    val command = childCommand(
+                        wrapper = wrapper,
+                        child = child,
+                        mode = selectedMode,
+                        runId = selectedRunId,
+                        projectCache = projectCache,
+                        ownerToken = ownerToken,
+                    )
+                    result = HighContentionChildProcessRunner().run(
+                        command = command,
+                        environment = mapOf(
+                            HIGH_CONTENTION_CHILD_DESCRIPTOR_ENV to descriptor.toString(),
+                            HIGH_CONTENTION_CHILD_CAPABILITY_ENV to capability,
+                        ),
+                        workingDirectory = repository,
+                        outputLog = outputLog,
+                        workerPidFile = workerPidFile,
+                        ownerToken = ownerToken,
+                        timeoutMillis = profileDeadlineMillis,
+                        cleanupTimeoutMillis = manifest.childProcessCleanupMillis,
+                    )
+                    if (result.exitCode != 0) {
+                        throw GradleException(
+                            "high-contention child failed: ${classifyChildFailure(outputLog)}",
+                        )
+                    }
+                    Files.deleteIfExists(workerPidFile)
+                    forceDirectory(workerPidFile.parent)
+                    HighContentionChildArtifactFinalizer.finalize(runRoot, child)
+                    report = reportPath(runRoot, child)
+                    cleanupAllocatedResources()
+                } catch (error: Throwable) {
+                    try {
+                        cleanupAllocatedResources()
+                    } catch (cleanupFailure: Throwable) {
+                        error.addSuppressed(cleanupFailure)
+                    } finally {
+                        if (!resourcesReleased) {
+                            allocator.release(selectedRunId, child.profileId)
+                            resourcesReleased = true
+                        }
+                    }
+                    throw error
+                }
                 val reportExists =
                     Files.isRegularFile(report, NOFOLLOW_LINKS) && !Files.isSymbolicLink(report)
                 val status = readStatus(report)
                 val errorCode = readErrorCode(report)
-                var parentDeletedResourceCount = 0
-                var parentCleanupSucceeded = false
-                try {
-                    parentDeletedResourceCount = HighContentionDockerCleanup(
-                        docker = JdkHighContentionDockerCli(),
-                    ).cleanup(
-                        expectedResources = resources,
-                        absoluteDeadlineNanos = Math.addExact(
-                            System.nanoTime(),
-                            TimeUnit.MILLISECONDS.toNanos(
-                                manifest.dockerDiscoveryMillis,
-                            ),
-                        ),
-                        quietPeriodMillis = manifest.dockerCleanupQuietPeriodMillis,
-                        pollIntervalMillis = manifest.dockerCleanupPollIntervalMillis,
-                    )
-                    parentCleanupSucceeded = true
-                } finally {
-                    allocator.release(selectedRunId, child.profileId)
-                }
                 writeChildJournal(
                     runRoot = runRoot,
                     child = child,
@@ -856,6 +1064,9 @@ abstract class HighContentionSuiteTask : DefaultTask() {
             runCatching { deleteTree(runRoot.resolve("internal")) }
             runCatching { Files.deleteIfExists(runRoot.resolve("ticket-topology.jsonl")) }
             try {
+                Files.deleteIfExists(
+                    runUploadRoot.resolve(HighContentionArtifactValidator.FAILURE_FILE),
+                )
                 HighContentionArtifactValidator(
                     nodeExecutable = Path.of("node"),
                     script = validationScript.get().asFile.toPath().toRealPath(NOFOLLOW_LINKS),
@@ -919,6 +1130,7 @@ abstract class HighContentionSuiteTask : DefaultTask() {
         child: HighContentionChildKey,
         parentManifestDigest: String,
         resources: List<HighContentionResourceAllocation>,
+        capability: String,
     ): Path {
         val descriptorRoot = runRoot.resolve("internal/children")
         createTrustedDirectories(descriptorRoot)
@@ -930,6 +1142,12 @@ abstract class HighContentionSuiteTask : DefaultTask() {
             "mode" to mode,
             "implementation" to child.implementation,
             "parentManifestDigest" to parentManifestDigest,
+            "parentPid" to ProcessHandle.current().pid(),
+            "parentStartEpochMillis" to ProcessHandle.current().info().startInstant()
+                .orElseThrow {
+                    GradleException("high-contention coordinator start time is unavailable")
+                }
+                .toEpochMilli(),
             "resourceLabels" to resources.map { resource ->
                 mapOf(
                     "resourceKey" to resource.resourceKey,
@@ -938,8 +1156,8 @@ abstract class HighContentionSuiteTask : DefaultTask() {
                 )
             },
         )
-        fields["descriptorDigest"] =
-            HighContentionChildDescriptorValidator.descriptorDigest(fields)
+        fields["capabilityDigest"] =
+            HighContentionChildDescriptorValidator.capabilityDigest(fields, capability)
         val descriptor = descriptorRoot.resolve(
             "${child.implementation}-${child.profileId}.json",
         )
@@ -948,6 +1166,30 @@ abstract class HighContentionSuiteTask : DefaultTask() {
             JsonOutput.toJson(fields).plus("\n").toByteArray(),
         )
         return descriptor
+    }
+
+    private fun childCapability(): String =
+        ByteArray(32)
+            .also(SecureRandom()::nextBytes)
+            .let(Base64.getUrlEncoder().withoutPadding()::encodeToString)
+
+    private fun classifyChildFailure(outputLog: Path): String {
+        val output = if (
+            Files.isRegularFile(outputLog, NOFOLLOW_LINKS) &&
+            Files.size(outputLog) <= 4 * 1024 * 1024
+        ) {
+            Files.readString(outputLog)
+        } else {
+            ""
+        }
+        return when {
+            "not bound to its live parent" in output -> "PARENT_CAPABILITY_MISMATCH"
+            "capability digest does not match" in output -> "CAPABILITY_DIGEST_MISMATCH"
+            "capability channel is incomplete" in output -> "CAPABILITY_CHANNEL_INCOMPLETE"
+            "source worktree must be clean" in output -> "DIRTY_SOURCE"
+            "Compilation error" in output -> "CHILD_COMPILATION_ERROR"
+            else -> "CHILD_EXECUTION_ERROR"
+        }
     }
 
     private fun writeChildJournal(
@@ -1204,6 +1446,15 @@ private fun deleteTree(root: Path) {
 private fun sha256(bytes: ByteArray): String =
     MessageDigest.getInstance("SHA-256")
         .digest(bytes)
+        .joinToString("") { "%02x".format(it) }
+
+private fun hmacSha256(
+    key: String,
+    bytes: ByteArray,
+): String =
+    Mac.getInstance("HmacSHA256")
+        .apply { init(SecretKeySpec(key.toByteArray(), "HmacSHA256")) }
+        .doFinal(bytes)
         .joinToString("") { "%02x".format(it) }
 
 private fun forceDirectory(path: Path) {

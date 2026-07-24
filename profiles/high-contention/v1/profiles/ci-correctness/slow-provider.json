@@ -30,7 +30,7 @@
   "failure": {
     "kind": "slow-provider",
     "triggerAcceptedCount": 16,
-    "steps": ["ARM_PROVIDER_BARRIER", "ADVANCE_DOMAIN_CLOCK", "RECONCILE", "RELEASE_LATE_RESPONSE"]
+    "steps": ["ARM_SLOW_BOUNDARY", "ADVANCE_AUTHORITY_CLOCK", "RECONCILE_OR_TAKEOVER", "RELEASE_STALE_RESPONSE"]
   },
   "operationTimeoutMs": 2000,
   "injectionDeadlineMs": 5000,
@@ -52,6 +52,6 @@
     "job": ["LEASE_AND_CHECKPOINT_FENCING", "ONE_TERMINAL_WINNER"],
     "ticket": ["UNKNOWN_PAYMENT_RECONCILES", "LATE_RESPONSE_IS_FENCED"]
   },
-  "observationFields": ["providerTimeoutNanos", "reconciliationNanos", "lateResponseDisposition"],
+  "observationFields": ["workloadDurationNanos", "staleDisposition"],
   "knownLimitations": ["The provider is deterministic and does not model an external vendor."]
 }

@@ -223,34 +223,31 @@ internal class TicketProxiedTopology private constructor(
     }
 
     private fun awaitClient(server: ToxiproxyServer): ToxiproxyClient {
-        val deadline = System.nanoTime() + READINESS_TIMEOUT.toNanos()
-        var lastFailure: Throwable? = null
-        while (System.nanoTime() < deadline) {
+        return TicketHighContentionAwait.value(
+            timeout = READINESS_TIMEOUT,
+            pollInterval = READINESS_POLL,
+            description = "Toxiproxy control API did not become ready",
+        ) {
             val client = ToxiproxyClient(server.host, server.controlPort)
             try {
                 client.version()
-                return client
-            } catch (error: Exception) {
-                lastFailure = error
-                Thread.sleep(READINESS_POLL.toMillis())
+                client
+            } catch (_: Exception) {
+                null
             }
         }
-        throw IllegalStateException("Toxiproxy control API did not become ready", lastFailure)
     }
 
     private fun awaitRedis() {
-        val deadline = System.nanoTime() + READINESS_TIMEOUT.toNanos()
-        var lastFailure: Throwable? = null
-        while (System.nanoTime() < deadline) {
-            try {
-                openConnection().use { check(it.ping() == "PONG") }
-                return
-            } catch (error: Exception) {
-                lastFailure = error
-                Thread.sleep(READINESS_POLL.toMillis())
+        TicketHighContentionAwait.condition(
+            timeout = READINESS_TIMEOUT,
+            pollInterval = READINESS_POLL,
+            description = "proxied Ticket Redis did not become ready",
+        ) {
+            openConnection().use {
+                it.ping() == "PONG"
             }
         }
-        throw IllegalStateException("proxied Ticket Redis did not become ready", lastFailure)
     }
 
     internal companion object {

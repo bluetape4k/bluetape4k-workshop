@@ -272,6 +272,24 @@ class HighContentionReportTest {
     }
 
     @Test
+    fun `successful cleanup finalization cannot preserve PASS after the profile deadline`() {
+        val original = report()
+        val deadline = original.deadlines.single()
+
+        val finalized = original.finalizeAfterSuccessfulCleanup(
+            completedNanos = deadline.absoluteDeadlineNanos + 1,
+        )
+
+        finalized.deadlines.single().expired shouldBeEqualTo true
+        finalized.deadlines.single().timeoutOrigin shouldBeEqualTo
+            HighContentionTimeoutOrigin.PROFILE_EXECUTION
+        finalized.result.terminalStatus shouldBeEqualTo HighContentionTerminalStatus.ERROR
+        finalized.result.errorCode shouldBeEqualTo HighContentionErrorCode.WORKLOAD_TIMEOUT
+        finalized.cleanup.result shouldBeEqualTo HighContentionCleanupResult.PASS
+        finalized.validate()
+    }
+
+    @Test
     fun `artifact store validates run paths redacts sentinels and never replaces reports`() {
         val store = HighContentionArtifactStore.create(tempDir, "run-01")
         val report = report()
@@ -292,6 +310,15 @@ class HighContentionReportTest {
         Files.createSymbolicLink(linkedRoot, outside)
         assertFailsWith<HighContentionArtifactException> {
             HighContentionArtifactStore.create(linkedRoot, "run-03")
+        }
+        val linkedAncestor = tempDir.resolve("linked-ancestor")
+        Files.createDirectory(linkedAncestor)
+        Files.createSymbolicLink(linkedAncestor.resolve("reports"), outside)
+        assertFailsWith<HighContentionArtifactException> {
+            HighContentionArtifactStore.create(
+                linkedAncestor.resolve("reports/high-contention"),
+                "run-04",
+            )
         }
         assertFailsWith<HighContentionRedactionException> {
             store.verifyRedaction(Files.readString(path) + " sentinel-token")

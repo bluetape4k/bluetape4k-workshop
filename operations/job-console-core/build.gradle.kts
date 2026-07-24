@@ -55,6 +55,7 @@ dependencies {
     testFixturesImplementation(libs.bluetape4k.lettuce)
     testFixturesImplementation(libs.bluetape4k.testcontainers)
     testFixturesImplementation(libs.hikaricp)
+    testFixturesImplementation(libs.awaitility.kotlin)
     testFixturesImplementation(libs.testcontainers.postgresql)
     testFixturesImplementation(libs.testcontainers.toxiproxy)
 }

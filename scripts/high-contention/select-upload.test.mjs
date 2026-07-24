@@ -165,6 +165,10 @@ test("digest mismatch and redaction leak fail closed", async () => {
     try {
         await writeFile(join(first.runRoot, "summary.json"), json({ tampered: true }));
         await assert.rejects(select(first), /digest mismatch/);
+        await assert.rejects(
+            lstat(first.stagingRoot),
+            (error) => error?.code === "ENOENT",
+        );
     } finally {
         await rm(first.root, { recursive: true, force: true });
     }
@@ -183,6 +187,10 @@ test("digest mismatch and redaction leak fail closed", async () => {
         await writeFile(manifestPath, json(manifest));
 
         await assert.rejects(select(second), /forbidden evidence/);
+        await assert.rejects(
+            lstat(second.stagingRoot),
+            (error) => error?.code === "ENOENT",
+        );
     } finally {
         await rm(second.root, { recursive: true, force: true });
     }
@@ -232,7 +240,7 @@ test("UNAVAILABLE report is preserved without being promoted to PASS", async () 
 test("constants-only fallback stages no raw run evidence", async () => {
     const paths = await fixture();
     try {
-        await rm(join(paths.runRoot, "upload-manifest.json"));
+        await rm(paths.runRoot, { recursive: true });
         await writeFile(join(paths.failureRoot, "upload-failure-summary.json"), UPLOAD_FAILURE_BYTES);
 
         const selected = await select(paths);

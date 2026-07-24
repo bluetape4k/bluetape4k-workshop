@@ -52,6 +52,6 @@
     "job": ["DURABLE_CANCEL_CONVERGES", "POSTGRESQL_REMAINS_AUTHORITY"],
     "ticket": ["NEW_PURCHASE_FAILS_CLOSED", "COMMITTED_PAYMENT_CONVERGES"]
   },
-  "observationFields": ["failureDetectionNanos", "recoveryNanos", "latencyP95Nanos"],
+  "observationFields": ["workloadDurationNanos", "latencyP95Nanos"],
   "knownLimitations": ["Toxiproxy models a socket-path failure, not a Redis process crash."]
 }

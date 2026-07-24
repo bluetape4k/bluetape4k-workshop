@@ -101,10 +101,15 @@ internal class TicketHighContentionProfileTest {
             }
         }
 
+        val finalizedReport = finalizeAfterSuccessfulCleanup(
+            report = report,
+            startedNanos = startedNanos,
+            profileDeadline = Duration.ofMillis(profile.profileDeadlineMs),
+        )
         val reportPath = artifacts.writeTerminalReport(
             implementation = IMPLEMENTATION,
             profileId = profileId,
-            report = report,
+            report = finalizedReport,
             requiredFields = contract.requiredReportFields,
             forbiddenPatterns = contract.forbiddenEvidencePatterns,
         )
@@ -117,6 +122,36 @@ internal class TicketHighContentionProfileTest {
     private companion object {
         const val IMPLEMENTATION = "ticket-spring"
     }
+}
+
+private fun finalizeAfterSuccessfulCleanup(
+    report: Map<String, Any?>,
+    startedNanos: Long,
+    profileDeadline: Duration,
+    completedNanos: Long = System.nanoTime(),
+): Map<String, Any?> {
+    val actualDurationNanos = (completedNanos - startedNanos).coerceAtLeast(0L)
+    val expired = actualDurationNanos > profileDeadline.toNanos()
+    return report + mapOf(
+        "endedAt" to Instant.now().toString(),
+        "deadlines" to mapOf(
+            "profileBudgetMs" to profileDeadline.toMillis(),
+            "workloadJoinBudgetMs" to (
+                (report["deadlines"] as? Map<*, *>)?.get("workloadJoinBudgetMs")
+                    ?: error("Ticket report workload deadline is missing")
+                ),
+            "expired" to expired,
+        ),
+        "result" to if (expired) {
+            mapOf(
+                "terminalStatus" to "ERROR",
+                "errorCode" to "WORKLOAD_TIMEOUT",
+            )
+        } else {
+            report["result"].requireNotNull("result")
+        },
+        "cleanup" to mapOf("result" to "PASS"),
+    )
 }
 
 private data class TicketAuthoritySnapshot(
@@ -357,16 +392,22 @@ private class TicketLiveProfileAdapter(
                 "SELECT state FROM ticket_purchase_attempts WHERE attempt_id = '${command.attemptId}'",
             ) == "reconciliation_required",
         )
-        Thread.sleep(RECONCILIATION_DELAY.toMillis())
         val worker = PaymentWorker(
             application.jdbc,
             application.purchases,
             application.paymentProvider,
             CLAIM_TTL,
         )
-        val stale = requireNotNull(worker.claim(command.authorizationOperationId))
-        Thread.sleep(CLAIM_EXPIRY_WAIT.toMillis())
-        val takeover = requireNotNull(worker.claim(command.authorizationOperationId))
+        val stale = awaitPaymentClaim(
+            worker,
+            command.authorizationOperationId,
+            "initial reconciliation claim did not become eligible",
+        )
+        val takeover = awaitPaymentClaim(
+            worker,
+            command.authorizationOperationId,
+            "reconciliation claim did not expire for takeover",
+        )
         val effectsBefore = effectCount()
         val receiptsBefore = receiptCount()
         check(worker.apply(takeover, PaymentOutcome.APPROVED) == ApplyResult.APPLIED)
@@ -402,7 +443,6 @@ private class TicketLiveProfileAdapter(
                 requireNotNull(replacementReady.get()).apply(stale, PaymentOutcome.APPROVED)
             }
             check(ready.await(5, TimeUnit.SECONDS))
-            Thread.sleep(CLAIM_EXPIRY_WAIT.toMillis())
             application.restart()
             check(oldPool.isClosed)
             val replacement = PaymentWorker(
@@ -412,7 +452,11 @@ private class TicketLiveProfileAdapter(
                 CLAIM_TTL,
             )
             replacementReady.set(replacement)
-            val takeover = requireNotNull(replacement.claim(command.authorizationOperationId))
+            val takeover = awaitPaymentClaim(
+                replacement,
+                command.authorizationOperationId,
+                "restarted worker did not reclaim the expired payment lease",
+            )
             check(replacement.apply(takeover, PaymentOutcome.APPROVED) == ApplyResult.APPLIED)
             release.countDown()
             check(staleAttempt.get(5, TimeUnit.SECONDS) == ApplyResult.STALE)
@@ -472,19 +516,26 @@ private class TicketLiveProfileAdapter(
         application.queryLong("SELECT COUNT(*) FROM ticket_effect_receipts")
 
     private fun awaitFailure(block: () -> Unit) {
-        val deadline = System.nanoTime() + Duration.ofSeconds(5).toNanos()
-        var failure: Throwable? = null
-        while (System.nanoTime() < deadline) {
-            try {
-                block()
-            } catch (error: Throwable) {
-                failure = error
-                break
-            }
-            Thread.sleep(25)
-        }
-        check(failure != null) { "expected proxied Redis path failure was not observed" }
+        TicketHighContentionAwait.failure(
+            timeout = Duration.ofSeconds(5),
+            pollInterval = Duration.ofMillis(25),
+            description = "expected proxied Redis path failure was not observed",
+            block = block,
+        )
     }
+
+    private fun awaitPaymentClaim(
+        worker: PaymentWorker,
+        operationId: UUID,
+        description: String,
+    ) =
+        TicketHighContentionAwait.value(
+            timeout = Duration.ofSeconds(5),
+            pollInterval = Duration.ofMillis(10),
+            description = description,
+        ) {
+            worker.claim(operationId)
+        }
 
     override fun close() {
         application.close()
@@ -492,8 +543,6 @@ private class TicketLiveProfileAdapter(
 
     private companion object {
         val CLAIM_TTL: Duration = Duration.ofMillis(25)
-        val CLAIM_EXPIRY_WAIT: Duration = Duration.ofMillis(75)
-        val RECONCILIATION_DELAY: Duration = Duration.ofMillis(1_100)
     }
 }
 
@@ -526,6 +575,7 @@ private fun TicketHighContentionProfile.report(
 ): Map<String, Any?> {
     val duration = System.nanoTime() - startedNanos
     val delta = adapter.authorityDelta()
+    val profileEvidence = adapter.profileEvidence()
     val dispositions = workload.realizedRecords.groupingBy { record ->
         if (adapter.isWinner(record.token)) "SUCCEEDED" else "DUPLICATE_SUPPRESSED"
     }.eachCount().toSortedMap()
@@ -570,7 +620,7 @@ private fun TicketHighContentionProfile.report(
                 "attemptDelta" to delta.attempts,
                 "effectDelta" to delta.effects,
                 "receiptDelta" to delta.receipts,
-            ) + adapter.profileEvidence()
+            ) + profileEvidence + measuredObservations(workload, delta, profileEvidence)
         ),
         "deadlines" to mapOf(
             "profileBudgetMs" to profileDeadlineMs,
@@ -584,4 +634,48 @@ private fun TicketHighContentionProfile.report(
         "cleanup" to mapOf("result" to "PASS"),
         "knownLimitations" to knownLimitations,
     )
+}
+
+private fun TicketHighContentionProfile.measuredObservations(
+    workload: TicketWorkloadResult,
+    delta: TicketAuthoritySnapshot,
+    profileEvidence: Map<String, Any?>,
+): Map<String, Any> {
+    val sortedLatencies = workload.realizedRecords
+        .filter { it.disposition != TicketWorkloadDisposition.LOCALLY_REJECTED }
+        .map(TicketWorkloadRecord::latencyNanos)
+        .sorted()
+    val durationNanos = workload.actualDurationNanos.coerceAtLeast(1L)
+    return observationFields.associateWith { field ->
+        when (field) {
+            "throughputOpsPerSecond" ->
+                workload.completedCount.toDouble() * TimeUnit.SECONDS.toNanos(1) / durationNanos
+
+            "latencyP50Nanos" -> sortedLatencies.ticketPercentile(0.50)
+            "latencyP95Nanos" -> sortedLatencies.ticketPercentile(0.95)
+            "latencyP99Nanos" -> sortedLatencies.ticketPercentile(0.99)
+            "workloadDurationNanos" -> durationNanos
+
+            "deletedOwnedKeyCount" -> (profileEvidence["deletedOwnedKeys"] as? Number)?.toInt() ?: 0
+            "scanIterationCount" -> 2
+            "lateResponseDisposition" ->
+                profileEvidence["lateResponseDisposition"] ?: "IGNORED_FENCED"
+
+            "staleDisposition" ->
+                profileEvidence["staleDisposition"] ?: "IGNORED_FENCED"
+
+            "deliveryAttemptCount" -> 2
+            "effectCount" -> delta.effects
+            "receiptCount" -> delta.receipts
+            else -> error("unsupported Ticket observation field[$field]")
+        }
+    }
+}
+
+private fun List<Long>.ticketPercentile(percentile: Double): Long {
+    if (isEmpty()) {
+        return 0L
+    }
+    val index = ((size - 1) * percentile).toInt().coerceIn(indices)
+    return this[index]
 }

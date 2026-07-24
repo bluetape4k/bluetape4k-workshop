@@ -152,39 +152,6 @@ internal class HighContentionArtifactValidator(
         }
     }
 
-    private fun writeFailureFallback(uploadRoot: Path) {
-        val trustedUploadRoot = requireTrustedDirectory(uploadRoot, "upload root")
-        val target = trustedUploadRoot.resolve(FAILURE_FILE)
-        if (Files.exists(target, NOFOLLOW_LINKS)) {
-            if (
-                Files.isRegularFile(target, NOFOLLOW_LINKS) &&
-                !Files.isSymbolicLink(target) &&
-                Files.readAllBytes(target).contentEquals(FAILURE_BYTES)
-            ) {
-                return
-            }
-            throw IllegalStateException("high-contention validation fallback already exists")
-        }
-        val temporary = trustedUploadRoot.resolve(".$FAILURE_FILE.tmp")
-        FileChannel.open(temporary, CREATE_NEW, WRITE).use { channel ->
-            val buffer = ByteBuffer.wrap(FAILURE_BYTES)
-            while (buffer.hasRemaining()) {
-                channel.write(buffer)
-            }
-            channel.force(true)
-        }
-        try {
-            try {
-                Files.move(temporary, target, ATOMIC_MOVE)
-            } catch (_: AtomicMoveNotSupportedException) {
-                Files.move(temporary, target)
-            }
-            forceDirectory(trustedUploadRoot)
-        } finally {
-            Files.deleteIfExists(temporary)
-        }
-    }
-
     private fun requireTrustedDirectory(
         path: Path,
         description: String,
@@ -196,15 +163,59 @@ internal class HighContentionArtifactValidator(
         return absolute.toRealPath(NOFOLLOW_LINKS)
     }
 
-    private fun forceDirectory(path: Path) {
-        try {
-            FileChannel.open(path, READ).use { it.force(true) }
-        } catch (_: UnsupportedOperationException) {
-            // Directory fsync is not supported by every file provider.
-        }
-    }
-
     companion object {
+        fun writeFailureFallback(uploadRoot: Path) {
+            val trustedUploadRoot = requireTrustedDirectoryStatic(uploadRoot, "upload root")
+            val target = trustedUploadRoot.resolve(FAILURE_FILE)
+            if (Files.exists(target, NOFOLLOW_LINKS)) {
+                if (
+                    Files.isRegularFile(target, NOFOLLOW_LINKS) &&
+                    !Files.isSymbolicLink(target) &&
+                    Files.readAllBytes(target).contentEquals(FAILURE_BYTES)
+                ) {
+                    return
+                }
+                throw IllegalStateException("high-contention validation fallback already exists")
+            }
+            val temporary = trustedUploadRoot.resolve(".$FAILURE_FILE.tmp")
+            FileChannel.open(temporary, CREATE_NEW, WRITE).use { channel ->
+                val buffer = ByteBuffer.wrap(FAILURE_BYTES)
+                while (buffer.hasRemaining()) {
+                    channel.write(buffer)
+                }
+                channel.force(true)
+            }
+            try {
+                try {
+                    Files.move(temporary, target, ATOMIC_MOVE)
+                } catch (_: AtomicMoveNotSupportedException) {
+                    Files.move(temporary, target)
+                }
+                forceDirectory(trustedUploadRoot)
+            } finally {
+                Files.deleteIfExists(temporary)
+            }
+        }
+
+        private fun requireTrustedDirectoryStatic(
+            path: Path,
+            description: String,
+        ): Path {
+            val absolute = path.toAbsolutePath().normalize()
+            if (!Files.isDirectory(absolute, NOFOLLOW_LINKS) || Files.isSymbolicLink(absolute)) {
+                throw IllegalStateException("$description is not a trusted directory")
+            }
+            return absolute.toRealPath(NOFOLLOW_LINKS)
+        }
+
+        private fun forceDirectory(path: Path) {
+            try {
+                FileChannel.open(path, READ).use { it.force(true) }
+            } catch (_: UnsupportedOperationException) {
+                // Directory fsync is not supported by every file provider.
+            }
+        }
+
         const val FAILURE_FILE = "upload-failure-summary.json"
         val FAILURE_BYTES: ByteArray =
             """

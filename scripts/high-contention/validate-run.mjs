@@ -5,17 +5,15 @@ import {
     lstat,
     mkdir,
     open,
-    readFile,
     realpath,
     rm,
 } from "node:fs/promises";
-import { dirname, isAbsolute, join, normalize, resolve, sep } from "node:path";
+import { dirname, isAbsolute, join, normalize, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import {
     canonicalJson,
     parseStrictJson,
-    readStrictJson,
     validateContractRoot,
 } from "./validate-contract.mjs";
 
@@ -85,6 +83,38 @@ const FORBIDDEN_PATTERNS = [
     /credential/iu,
     /token=|token%3d/iu,
 ];
+const MAX_ARTIFACT_BYTES = 16 * 1024 * 1024;
+const NON_NEGATIVE_INTEGER_OBSERVATIONS = new Set([
+    "latencyP50Nanos",
+    "latencyP95Nanos",
+    "latencyP99Nanos",
+    "failureDetectionNanos",
+    "recoveryNanos",
+    "deletedOwnedKeyCount",
+    "providerTimeoutNanos",
+    "reconciliationNanos",
+    "slowBoundaryTimeoutNanos",
+    "convergenceNanos",
+    "restartNanos",
+    "takeoverNanos",
+    "effectCount",
+    "receiptCount",
+    "workloadDurationNanos",
+]);
+const POSITIVE_INTEGER_OBSERVATIONS = new Set([
+    "scanIterationCount",
+    "deliveryAttemptCount",
+]);
+const DISPOSITION_OBSERVATIONS = new Set([
+    "lateResponseDisposition",
+    "staleDisposition",
+]);
+const OBSERVED_DISPOSITIONS = new Set([
+    "IGNORED_FENCED",
+    "APPLIED",
+    "FAILED_CLOSED",
+    "DUPLICATE_SUPPRESSED",
+]);
 
 function exactObject(value, fields, label) {
     if (value === null || typeof value !== "object" || Array.isArray(value)) {
@@ -167,13 +197,10 @@ async function trustedDirectory(path, label) {
     return realpath(absolute);
 }
 
-async function readJsonl(root, relativePath) {
-    const absolute = join(root, normalizedDescendant(relativePath, relativePath));
-    const metadata = await lstat(absolute);
-    if (!metadata.isFile() || metadata.isSymbolicLink()) {
-        throw new Error(`${relativePath} must be a regular file`);
-    }
-    const text = await readFile(absolute, "utf8");
+async function readJsonl(root, relativePath, artifactBytes) {
+    const bytes = await readTrustedFile(root, relativePath);
+    artifactBytes.set(relativePath, bytes);
+    const text = bytes.toString("utf8");
     if (!text.endsWith("\n")) throw new Error(`${relativePath} must end with a complete record`);
     assertNoRedactionLeak(text, relativePath);
     const records = [];
@@ -219,6 +246,130 @@ function validateSchedule(report, label) {
     ) {
         throw new Error(`${label} realized schedule digest does not match`);
     }
+}
+
+function normalizedInvariantId(value, label) {
+    if (typeof value !== "string" || value.length === 0) {
+        throw new Error(`${label} must be a non-empty string`);
+    }
+    return value.toLowerCase().replaceAll("_", "-");
+}
+
+async function loadExpectedEvidence(contractRoot, mode, child) {
+    const suiteBytes = await readTrustedFile(contractRoot, "suite-manifest.json");
+    const suite = parseStrictJson(suiteBytes.toString("utf8"), "suite-manifest.json");
+    const entry = array(suite.entries, "suite-manifest.json entries").find(
+        (candidate) =>
+            candidate.mode === mode &&
+            candidate.profileId === child.profileId &&
+            array(candidate.implementations, "suite manifest implementations")
+                .includes(child.implementation),
+    );
+    if (!entry) {
+        throw new Error("run manifest child is outside the validated suite matrix");
+    }
+    const profilePath = normalizedDescendant(entry.profileFile, "profileFile");
+    const profileBytes = await readTrustedFile(contractRoot, profilePath);
+    const profile = parseStrictJson(profileBytes.toString("utf8"), profilePath);
+    if (profile.profileId !== child.profileId || profile.mode !== mode) {
+        throw new Error(`${profilePath} tuple does not match its suite entry`);
+    }
+    const expectedInvariantIds = array(
+        child.implementation === "ticket-spring"
+            ? profile.expectedInvariants?.ticket
+            : profile.expectedInvariants?.job,
+        `${profilePath} expected invariants`,
+    ).map((value, index) =>
+        normalizedInvariantId(value, `${profilePath} invariant ${index}`),
+    );
+    return {
+        failureType: profile.failure?.kind,
+        failureSteps: array(profile.failure?.steps, `${profilePath} failure steps`),
+        invariantIds: expectedInvariantIds,
+        observationFields: array(
+            profile.observationFields,
+            `${profilePath} observation fields`,
+        ),
+    };
+}
+
+function validateProfileEvidence(report, expected, label) {
+    if (
+        report.failureInjection?.type !== expected.failureType ||
+        canonicalJson(report.failureInjection?.steps) !== canonicalJson(expected.failureSteps)
+    ) {
+        throw new Error(`${label} failure injection does not match the selected profile`);
+    }
+    const invariantResults = array(report.invariantResults, `${label} invariantResults`);
+    const reportedInvariantIds = invariantResults.map((result, index) => {
+        if (result === null || typeof result !== "object" || Array.isArray(result)) {
+            throw new Error(`${label} invariantResults[${index}] must be an object`);
+        }
+        if (report.result?.terminalStatus === "PASS" && result.status !== "PASS") {
+            throw new Error(`${label} PASS report contains a non-PASS invariant`);
+        }
+        return normalizedInvariantId(
+            result.invariantId,
+            `${label} invariantResults[${index}].invariantId`,
+        );
+    });
+    if (
+        new Set(reportedInvariantIds).size !== reportedInvariantIds.length ||
+        canonicalJson([...reportedInvariantIds].sort()) !==
+            canonicalJson([...expected.invariantIds].sort())
+    ) {
+        throw new Error(`${label} invariant evidence does not match the selected profile`);
+    }
+    const observations = report.observations;
+    if (
+        observations === null ||
+        typeof observations !== "object" ||
+        Array.isArray(observations)
+    ) {
+        throw new Error(`${label} observations must be an object`);
+    }
+    const profileFields = observations.profileFields ?? observations;
+    if (
+        profileFields === null ||
+        typeof profileFields !== "object" ||
+        Array.isArray(profileFields)
+    ) {
+        throw new Error(`${label} profile observations must be an object`);
+    }
+    expected.observationFields.forEach((field) => {
+        if (
+            !Object.hasOwn(profileFields, field) ||
+            profileFields[field] === null ||
+            profileFields[field] === ""
+        ) {
+            throw new Error(`${label} is missing declared observation field ${field}`);
+        }
+        const value = profileFields[field];
+        if (
+            NON_NEGATIVE_INTEGER_OBSERVATIONS.has(field) &&
+            (!Number.isSafeInteger(value) || value < 0)
+        ) {
+            throw new Error(`${label} observation ${field} must be a non-negative safe integer`);
+        }
+        if (
+            POSITIVE_INTEGER_OBSERVATIONS.has(field) &&
+            (!Number.isSafeInteger(value) || value < 1)
+        ) {
+            throw new Error(`${label} observation ${field} must be a positive safe integer`);
+        }
+        if (
+            field === "throughputOpsPerSecond" &&
+            (typeof value !== "number" || !Number.isFinite(value) || value <= 0)
+        ) {
+            throw new Error(`${label} throughput observation must be a positive finite number`);
+        }
+        if (
+            DISPOSITION_OBSERVATIONS.has(field) &&
+            !OBSERVED_DISPOSITIONS.has(value)
+        ) {
+            throw new Error(`${label} observation ${field} has an invalid disposition`);
+        }
+    });
 }
 
 function walkEvidenceReferences(value, references = []) {
@@ -363,9 +514,10 @@ async function writeNoReplaceJson(path, value) {
     const parent = dirname(path);
     await mkdir(parent, { recursive: true });
     const temporary = join(parent, `.${path.split(sep).at(-1)}.tmp`);
+    const bytes = Buffer.from(`${canonicalJson(value)}\n`, "utf8");
     const handle = await open(temporary, fsConstants.O_CREAT | fsConstants.O_EXCL | fsConstants.O_WRONLY, 0o600);
     try {
-        await handle.writeFile(`${canonicalJson(value)}\n`, "utf8");
+        await handle.writeFile(bytes);
         await handle.sync();
     } finally {
         await handle.close();
@@ -375,14 +527,18 @@ async function writeNoReplaceJson(path, value) {
     } finally {
         await rm(temporary, { force: true });
     }
+    return bytes;
 }
 
 export async function validateRun(contractRootValue, runRootValue) {
     const contractRoot = await trustedDirectory(contractRootValue, "contract root");
     const runRoot = await trustedDirectory(runRootValue, "run root");
     await validateContractRoot(contractRoot);
+    const artifactBytes = new Map();
 
-    const manifest = await readStrictJson(runRoot, "run-manifest.json");
+    const manifestBytes = await readTrustedFile(runRoot, "run-manifest.json");
+    artifactBytes.set("run-manifest.json", manifestBytes);
+    const manifest = parseStrictJson(manifestBytes.toString("utf8"), "run-manifest.json");
     exactObject(
         manifest,
         ["schemaVersion", "runId", "mode", "workflowRunAndAttempt", "expectedChildren"],
@@ -421,7 +577,7 @@ export async function validateRun(contractRootValue, runRootValue) {
         throw new Error("run manifest contains duplicate child tuples");
     }
 
-    const runJournal = await readJsonl(runRoot, "run-journal.jsonl");
+    const runJournal = await readJsonl(runRoot, "run-journal.jsonl", artifactBytes);
     const { runResult, finishes } = validateRunJournal(runJournal, expectedChildren);
     const statuses = [];
     const artifactFiles = ["run-manifest.json", "run-journal.jsonl"];
@@ -429,14 +585,16 @@ export async function validateRun(contractRootValue, runRootValue) {
         const journalPath =
             `children/${child.implementation}/${child.profileId}/child-journal.jsonl`;
         const reportPath = `reports/${child.implementation}/${child.profileId}.json`;
-        const childJournal = await readJsonl(runRoot, journalPath);
+        const childJournal = await readJsonl(runRoot, journalPath, artifactBytes);
         if (childJournal.length !== 1) throw new Error(`${journalPath} must contain one terminal record`);
         validateChildJournal(childJournal[0], child);
 
-        const report = await readStrictJson(runRoot, reportPath);
+        const reportBytes = await readTrustedFile(runRoot, reportPath);
+        artifactBytes.set(reportPath, reportBytes);
+        const reportText = reportBytes.toString("utf8");
+        const report = parseStrictJson(reportText, reportPath);
         exactObject(report, REPORT_FIELDS, reportPath);
-        const rawReport = await readFile(join(runRoot, reportPath), "utf8");
-        assertNoRedactionLeak(rawReport, reportPath);
+        assertNoRedactionLeak(reportText, reportPath);
         if (
             report.runId !== runId ||
             report.profileId !== child.profileId ||
@@ -453,7 +611,9 @@ export async function validateRun(contractRootValue, runRootValue) {
         ) {
             throw new Error(`${reportPath} workflow run and attempt does not match the run manifest`);
         }
+        const expectedEvidence = await loadExpectedEvidence(contractRoot, manifest.mode, child);
         validateSchedule(report, reportPath);
+        validateProfileEvidence(report, expectedEvidence, reportPath);
         walkEvidenceReferences(report).forEach((reference) => {
             if (!reference.startsWith("evidence/")) {
                 throw new Error(`${reportPath} evidenceReference is outside the allowlist`);
@@ -493,7 +653,10 @@ export async function validateRun(contractRootValue, runRootValue) {
         maxActiveTopologies: 1,
         cleanupZeroLive: true,
     };
-    await writeNoReplaceJson(join(runRoot, "summary.json"), summary);
+    artifactBytes.set(
+        "summary.json",
+        await writeNoReplaceJson(join(runRoot, "summary.json"), summary),
+    );
     artifactFiles.push("summary.json");
     const uploadManifest = {
         schemaVersion: 1,
@@ -505,12 +668,57 @@ export async function validateRun(contractRootValue, runRootValue) {
                 .sort()
                 .map(async (path) => ({
                     path,
-                    sha256: sha256(await readFile(join(runRoot, path))),
+                    sha256: sha256(artifactBytes.get(path)),
                 })),
         ),
     };
     await writeNoReplaceJson(join(runRoot, "upload-manifest.json"), uploadManifest);
     return { result: "PASS" };
+}
+
+async function readTrustedFile(root, relativePath) {
+    const normalized = normalizedDescendant(relativePath, relativePath);
+    const target = join(root, normalized);
+    await requireTrustedParents(root, target);
+    const metadata = await lstat(target);
+    if (metadata.isSymbolicLink()) {
+        throw new Error(`${relativePath} must not be a symbolic link`);
+    }
+    if (!metadata.isFile() || metadata.size > MAX_ARTIFACT_BYTES) {
+        throw new Error(`${relativePath} must be a bounded regular file`);
+    }
+    const resolved = await realpath(target);
+    if (resolved !== root && !resolved.startsWith(`${root}${sep}`)) {
+        throw new Error(`${relativePath} escaped its trusted root`);
+    }
+    const handle = await open(target, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+    try {
+        const before = await handle.stat();
+        const bytes = await handle.readFile();
+        const after = await handle.stat();
+        if (
+            before.dev !== after.dev ||
+            before.ino !== after.ino ||
+            before.size !== after.size ||
+            before.mtimeMs !== after.mtimeMs
+        ) {
+            throw new Error(`${relativePath} changed while being validated`);
+        }
+        return bytes;
+    } finally {
+        await handle.close();
+    }
+}
+
+async function requireTrustedParents(root, target) {
+    let current = root;
+    for (const component of relative(root, dirname(target)).split(sep).filter(Boolean)) {
+        current = join(current, component);
+        const metadata = await lstat(current);
+        if (!metadata.isDirectory() || metadata.isSymbolicLink()) {
+            throw new Error(`${current} is not a trusted parent directory`);
+        }
+    }
 }
 
 async function main() {

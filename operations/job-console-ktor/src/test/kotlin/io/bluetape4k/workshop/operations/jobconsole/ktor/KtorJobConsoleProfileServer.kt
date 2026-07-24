@@ -12,6 +12,7 @@ import io.bluetape4k.workshop.operations.jobconsole.fixture.JobConsoleBarrier
 import io.bluetape4k.workshop.operations.jobconsole.fixture.JobConsoleContainerFixture
 import io.bluetape4k.workshop.operations.jobconsole.fixture.JobConsoleScenario
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.HighContentionDockerResource
+import io.bluetape4k.workshop.operations.jobconsole.highcontention.HighContentionAwait
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.HighContentionJournal
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.HighContentionProfile
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.JobConsoleAuthorityBaseline
@@ -485,12 +486,13 @@ internal class KtorJobConsoleLiveAdapter private constructor(
     private fun awaitReplacementClaim(
         tenantId: String,
     ): io.bluetape4k.workshop.operations.jobconsole.persistence.ClaimedJob {
-        val deadline = System.nanoTime() + Duration.ofSeconds(10).toNanos()
-        do {
-            application.runtime.repository.reclaimExpired(tenantId, Duration.ofSeconds(5))?.let { return it }
-            Thread.sleep(10)
-        } while (System.nanoTime() < deadline)
-        error("replacement Ktor worker did not reclaim the expired lease")
+        return HighContentionAwait.value(
+            timeout = Duration.ofSeconds(10),
+            pollInterval = Duration.ofMillis(10),
+            description = "replacement Ktor worker did not reclaim the expired lease",
+        ) {
+            application.runtime.repository.reclaimExpired(tenantId, Duration.ofSeconds(5))
+        }
     }
 
     private fun assertStaleAttemptEvidence() {
@@ -517,7 +519,13 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         val newFailure = fails {
             topology.openRedisConnection().use { it.ping() }
         }
-        Thread.sleep(250)
+        HighContentionAwait.condition(
+            timeout = Duration.ofSeconds(10),
+            pollInterval = Duration.ofMillis(10),
+            description = "Ktor durable cancel was not observed during the Redis outage",
+        ) {
+            durableCancelsDuringOutage.get() > 0
+        }
         topology.restoreExistingConnections()
         topology.enableNewConnections()
         outageActive.set(false)
@@ -533,19 +541,19 @@ internal class KtorJobConsoleLiveAdapter private constructor(
     }
 
     private fun awaitRedisRecovery(): Boolean {
-        val deadline = System.nanoTime() + Duration.ofSeconds(10).toNanos()
-        do {
-            try {
+        return runCatching {
+            HighContentionAwait.condition(
+                timeout = Duration.ofSeconds(10),
+                pollInterval = Duration.ofMillis(25),
+                description = "Ktor Redis path did not recover",
+            ) {
                 topology.openRedisConnection().use { connection ->
-                    if (connection.ping() == "PONG" && application.runtime.redisSignal?.isAvailable() == true) {
-                        return true
-                    }
+                    connection.ping() == "PONG" &&
+                        application.runtime.redisSignal?.isAvailable() == true
                 }
-            } catch (_: Exception) {
-                Thread.sleep(25)
             }
-        } while (System.nanoTime() < deadline)
-        return false
+            true
+        }.getOrDefault(false)
     }
 
     private fun seedOwnedRedisKeys() {

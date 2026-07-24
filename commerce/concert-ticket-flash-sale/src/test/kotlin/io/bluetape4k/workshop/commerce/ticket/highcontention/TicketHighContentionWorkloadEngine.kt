@@ -31,6 +31,7 @@ internal data class TicketWorkloadRecord(
     val token: TicketScheduleToken,
     val disposition: TicketWorkloadDisposition,
     val missedDeadline: Boolean,
+    val latencyNanos: Long = 0L,
 )
 
 internal interface TicketHighContentionWorkloadAdapter {
@@ -57,6 +58,7 @@ internal data class TicketWorkloadResult(
     val expectedScheduleDigest: String,
     val realizedScheduleDigest: String,
     val realizedRecords: List<TicketWorkloadRecord>,
+    val actualDurationNanos: Long = 0L,
 )
 
 internal class TicketHighContentionWorkloadEngine(
@@ -133,6 +135,7 @@ internal class TicketHighContentionWorkloadEngine(
                                 executionPermits.acquire()
                                 try {
                                     val dispatchDelay = elapsedSince(startNanos) - token.offsetNanos
+                                    val executionStartedNanos = System.nanoTime()
                                     val disposition = adapter.execute(
                                         token,
                                         TicketWorkloadIdentity(validMeasuredNamespace, token.identityOrdinal),
@@ -146,6 +149,7 @@ internal class TicketHighContentionWorkloadEngine(
                                             token,
                                             disposition,
                                             dispatchDelay > maxScheduleDelayNanos,
+                                            elapsedSince(executionStartedNanos),
                                         ),
                                     )
                                 } finally {
@@ -186,6 +190,7 @@ internal class TicketHighContentionWorkloadEngine(
             expectedScheduleDigest = TicketDeterministicSchedule.digest(orderedSchedule),
             realizedScheduleDigest = TicketDeterministicSchedule.digest(realized.map(TicketWorkloadRecord::token)),
             realizedRecords = realized,
+            actualDurationNanos = elapsedSince(startNanos),
         )
     }
 
