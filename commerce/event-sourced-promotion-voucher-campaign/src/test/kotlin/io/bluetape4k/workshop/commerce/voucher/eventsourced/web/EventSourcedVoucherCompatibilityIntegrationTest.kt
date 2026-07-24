@@ -66,13 +66,7 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
         check(dataSource is HikariDataSource) {
             "voucher compatibility integration must use Spring's Hikari DataSource"
         }
-        val httpClient = HttpClient.newBuilder().connectTimeout(HTTP_TIMEOUT).build()
-        client =
-            WebTestClient
-                .bindToServer(JdkClientHttpConnector(httpClient))
-                .baseUrl(origin)
-                .responseTimeout(HTTP_TIMEOUT)
-                .build()
+        client = testClient()
     }
 
     @BeforeEach
@@ -199,7 +193,7 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
                 val worker = barrier.await(5, TimeUnit.SECONDS)
                 val principal = "capacity-customer-$worker"
                 val response =
-                    client
+                    testClient()
                         .postVoucherAllocationContract(
                             VoucherAllocationBlackBoxRequest(
                                 tenant = create.tenant,
@@ -345,6 +339,15 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
             .header(PRINCIPAL_HEADER, request.principal)
             .header(IDEMPOTENCY_HEADER, scenario.transitionIdempotencyKey)
             .bodyValue(body)
+    }
+
+    private fun testClient(): WebTestClient {
+        val httpClient = HttpClient.newBuilder().connectTimeout(HTTP_TIMEOUT).build()
+        return WebTestClient
+            .bindToServer(JdkClientHttpConnector(httpClient))
+            .baseUrl(origin)
+            .responseTimeout(HTTP_TIMEOUT)
+            .build()
     }
 
     private fun WebTestClient.RequestHeadersSpec<*>.assertNormalizedLifecycle(
