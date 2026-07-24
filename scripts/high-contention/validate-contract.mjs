@@ -85,6 +85,62 @@ const FORBIDDEN_DESCRIPTOR_FIELDS = [
     "toxiproxyControlEndpoint",
 ];
 const REPORT_RESULTS = ["PASS", "FAIL", "ERROR", "UNAVAILABLE"];
+const REPORT_ERROR_CODES = [
+    "NONE",
+    "INVALID_PROFILE",
+    "INVALID_REALIZATION",
+    "KEY_SCOPE_VIOLATION",
+    "EXECUTION_ERROR",
+    "INJECTION_TIMEOUT",
+    "FAILURE_DETECTION_TIMEOUT",
+    "WORKLOAD_TIMEOUT",
+    "RECOVERY_TIMEOUT",
+    "CLEANUP_TIMEOUT",
+    "REPORT_SERIALIZATION",
+    "JOURNAL_ERROR",
+    "PARENT_CLEANUP_ERROR",
+    "PREFLIGHT_UNAVAILABLE",
+];
+const REPORT_SUBMISSION_DISPOSITIONS = [
+    "SUCCEEDED",
+    "FAILED_CLOSED",
+    "EXECUTION_FAILED",
+    "LOCALLY_REJECTED",
+    "CANCELLED",
+    "TIMED_OUT",
+    "DUPLICATE_SUPPRESSED",
+    "IGNORED_FENCED",
+];
+const REPORT_FAILURE_POINTS = [
+    "NONE",
+    "BEFORE_AUTHORITY",
+    "AFTER_AUTHORITY",
+    "UNKNOWN",
+];
+const REPORT_REQUIRED_TOP_LEVEL_FIELDS = [
+    "reportSchemaVersion",
+    "suiteSchemaVersion",
+    "profileSchemaVersion",
+    "runId",
+    "profileId",
+    "mode",
+    "implementation",
+    "startedAt",
+    "endedAt",
+    "environment",
+    "phaseDurationsNanos",
+    "workload",
+    "failureInjection",
+    "invariantResults",
+    "observations",
+    "deadlines",
+    "observationScope",
+    "crossImplementationComparable",
+    "productionCapacityClaim",
+    "result",
+    "cleanup",
+    "knownLimitations",
+];
 
 class StrictJsonParser {
     constructor(text, source) {
@@ -413,6 +469,7 @@ function validateReportContract(contract) {
             "results",
             "errorCodes",
             "submissionDispositions",
+            "failurePoints",
             "scheduleObservations",
             "cleanupResults",
             "requiredTopLevelFields",
@@ -423,14 +480,25 @@ function validateReportContract(contract) {
     assertInteger(contract.contractSchemaVersion, "report contract contractSchemaVersion", { min: 1, max: 1 });
     assertInteger(contract.reportSchemaVersion, "report contract reportSchemaVersion", { min: 1, max: 1 });
     assertExactStringArray(contract.results, REPORT_RESULTS, "report contract results");
-    for (const field of [
-        "errorCodes",
-        "submissionDispositions",
-        "scheduleObservations",
-        "cleanupResults",
-        "requiredTopLevelFields",
-        "forbiddenEvidencePatterns",
-    ]) {
+    assertExactStringArray(contract.errorCodes, REPORT_ERROR_CODES, "report contract errorCodes");
+    assertExactStringArray(
+        contract.submissionDispositions,
+        REPORT_SUBMISSION_DISPOSITIONS,
+        "report contract submissionDispositions",
+    );
+    assertExactStringArray(contract.failurePoints, REPORT_FAILURE_POINTS, "report contract failurePoints");
+    assertExactStringArray(
+        contract.scheduleObservations,
+        ["ON_TIME", "MISSED_DEADLINE"],
+        "report contract scheduleObservations",
+    );
+    assertExactStringArray(contract.cleanupResults, ["PASS", "FAIL"], "report contract cleanupResults");
+    assertExactStringArray(
+        contract.requiredTopLevelFields,
+        REPORT_REQUIRED_TOP_LEVEL_FIELDS,
+        "report contract requiredTopLevelFields",
+    );
+    for (const field of ["forbiddenEvidencePatterns"]) {
         assertStringArray(contract[field], `report contract ${field}`);
     }
 }

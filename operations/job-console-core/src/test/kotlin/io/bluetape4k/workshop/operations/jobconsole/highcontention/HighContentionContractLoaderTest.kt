@@ -96,6 +96,28 @@ class HighContentionContractLoaderTest {
     }
 
     @Test
+    fun `report vocabulary is checked independently`(@TempDir tempDir: Path) {
+        val copiedRoot = copyContract(tempDir.resolve("report-vocabulary"))
+        copiedRoot.resolve("report-contract.json").replaceText(
+            "\"INVALID_PROFILE\"",
+            "\"SURPRISE_ERROR\"",
+        )
+
+        assertFailsWith<HighContentionContractException> {
+            HighContentionContractLoader().load(copiedRoot, HighContentionMode.CI_CORRECTNESS)
+        }
+
+        val failurePointRoot = copyContract(tempDir.resolve("failure-point-vocabulary"))
+        failurePointRoot.resolve("report-contract.json").replaceText(
+            "\"BEFORE_AUTHORITY\"",
+            "\"DURING_AUTHORITY\"",
+        )
+        assertFailsWith<HighContentionContractException> {
+            HighContentionContractLoader().load(failurePointRoot, HighContentionMode.CI_CORRECTNESS)
+        }
+    }
+
+    @Test
     fun `negative and overflowing numeric values fail closed`(@TempDir tempDir: Path) {
         val negativeRoot = copyContract(tempDir.resolve("negative"))
         negativeRoot.resolve("profiles/ci-correctness/burst.json").replaceText(

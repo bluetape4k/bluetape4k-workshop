@@ -73,6 +73,7 @@ data class HighContentionReportContract(
     val results: List<String>,
     val errorCodes: List<String>,
     val submissionDispositions: List<String>,
+    val failurePoints: List<String>,
     val scheduleObservations: List<String>,
     val cleanupResults: List<String>,
     val requiredTopLevelFields: List<String>,

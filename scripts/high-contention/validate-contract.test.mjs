@@ -126,6 +126,29 @@ test("unknown closed enum values are rejected", async () => {
     }, /failure.kind/);
 });
 
+test("report vocabulary and required top-level fields are exact", async () => {
+    await expectInvalid(async (contractRoot) => {
+        const reportContractPath = join(contractRoot, "report-contract.json");
+        const reportContract = await readJson(reportContractPath);
+        reportContract.errorCodes[1] = "SURPRISE_ERROR";
+        await writeJson(reportContractPath, reportContract);
+    }, /report contract errorCodes/);
+
+    await expectInvalid(async (contractRoot) => {
+        const reportContractPath = join(contractRoot, "report-contract.json");
+        const reportContract = await readJson(reportContractPath);
+        reportContract.failurePoints[1] = "DURING_AUTHORITY";
+        await writeJson(reportContractPath, reportContract);
+    }, /report contract failurePoints/);
+
+    await expectInvalid(async (contractRoot) => {
+        const reportContractPath = join(contractRoot, "report-contract.json");
+        const reportContract = await readJson(reportContractPath);
+        reportContract.requiredTopLevelFields.pop();
+        await writeJson(reportContractPath, reportContract);
+    }, /report contract requiredTopLevelFields/);
+});
+
 test("unknown profile fields are rejected", async () => {
     await expectInvalid(async (contractRoot) => {
         const profilePath = join(contractRoot, "profiles/ci-correctness/burst.json");

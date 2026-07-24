@@ -227,6 +227,22 @@ class HighContentionContractLoader(
         profileContract.profileSchemaVersion.requireEquals(1, "profile schema version")
         reportContract.contractSchemaVersion.requireEquals(1, "report contract schema version")
         reportContract.reportSchemaVersion.requireEquals(1, "report schema version")
+        reportContract.results.requireEquals(REPORT_RESULTS, "report results")
+        reportContract.errorCodes.requireEquals(REPORT_ERROR_CODES, "report error codes")
+        reportContract.submissionDispositions.requireEquals(
+            REPORT_SUBMISSION_DISPOSITIONS,
+            "report submission dispositions",
+        )
+        reportContract.failurePoints.requireEquals(REPORT_FAILURE_POINTS, "report failure points")
+        reportContract.scheduleObservations.requireEquals(
+            REPORT_SCHEDULE_OBSERVATIONS,
+            "report schedule observations",
+        )
+        reportContract.cleanupResults.requireEquals(REPORT_CLEANUP_RESULTS, "report cleanup results")
+        reportContract.requiredTopLevelFields.requireEquals(
+            REPORT_REQUIRED_TOP_LEVEL_FIELDS,
+            "report required top-level fields",
+        )
         descriptorContract.contractSchemaVersion.requireEquals(1, "descriptor contract schema version")
         descriptorContract.childDescriptorSchemaVersion.requireEquals(1, "child descriptor schema version")
         scheduleVectors.schemaVersion.requireEquals(1, "schedule vector schema version")
@@ -467,6 +483,65 @@ class HighContentionContractLoader(
         private const val SCHEDULE_ALGORITHM = "hc-v1-sha256-unsigned-rank"
 
         private val IMPLEMENTATIONS = listOf("job-core", "job-spring", "job-ktor", "ticket-spring")
+        private val REPORT_RESULTS = listOf("PASS", "FAIL", "ERROR", "UNAVAILABLE")
+        private val REPORT_ERROR_CODES = listOf(
+            "NONE",
+            "INVALID_PROFILE",
+            "INVALID_REALIZATION",
+            "KEY_SCOPE_VIOLATION",
+            "EXECUTION_ERROR",
+            "INJECTION_TIMEOUT",
+            "FAILURE_DETECTION_TIMEOUT",
+            "WORKLOAD_TIMEOUT",
+            "RECOVERY_TIMEOUT",
+            "CLEANUP_TIMEOUT",
+            "REPORT_SERIALIZATION",
+            "JOURNAL_ERROR",
+            "PARENT_CLEANUP_ERROR",
+            "PREFLIGHT_UNAVAILABLE",
+        )
+        private val REPORT_SUBMISSION_DISPOSITIONS = listOf(
+            "SUCCEEDED",
+            "FAILED_CLOSED",
+            "EXECUTION_FAILED",
+            "LOCALLY_REJECTED",
+            "CANCELLED",
+            "TIMED_OUT",
+            "DUPLICATE_SUPPRESSED",
+            "IGNORED_FENCED",
+        )
+        private val REPORT_FAILURE_POINTS = listOf(
+            "NONE",
+            "BEFORE_AUTHORITY",
+            "AFTER_AUTHORITY",
+            "UNKNOWN",
+        )
+        private val REPORT_SCHEDULE_OBSERVATIONS = listOf("ON_TIME", "MISSED_DEADLINE")
+        private val REPORT_CLEANUP_RESULTS = listOf("PASS", "FAIL")
+        private val REPORT_REQUIRED_TOP_LEVEL_FIELDS = listOf(
+            "reportSchemaVersion",
+            "suiteSchemaVersion",
+            "profileSchemaVersion",
+            "runId",
+            "profileId",
+            "mode",
+            "implementation",
+            "startedAt",
+            "endedAt",
+            "environment",
+            "phaseDurationsNanos",
+            "workload",
+            "failureInjection",
+            "invariantResults",
+            "observations",
+            "deadlines",
+            "observationScope",
+            "crossImplementationComparable",
+            "productionCapacityClaim",
+            "result",
+            "cleanup",
+            "knownLimitations",
+        )
         private val PROFILE_IDS = listOf(
             "burst",
             "duplicate-storm",
