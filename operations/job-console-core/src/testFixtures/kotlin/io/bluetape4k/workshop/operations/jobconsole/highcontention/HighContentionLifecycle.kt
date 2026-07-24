@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.min
 
+@ConsistentCopyVisibility
 data class HighContentionDeadlines private constructor(
     val absoluteProfileDeadlineNanos: Long,
     val profileExecutionDeadlineNanos: Long,
