@@ -45,6 +45,11 @@ internal interface TicketHighContentionWorkloadAdapter {
     ): TicketWorkloadDisposition
 }
 
+internal enum class TicketFaultObserverTiming {
+    SCHEDULE_THRESHOLD,
+    WORKLOAD_COMPLETION,
+}
+
 internal data class TicketWorkloadResult(
     val baseline: String,
     val expectedTokenCount: Int,
@@ -74,6 +79,8 @@ internal class TicketHighContentionWorkloadEngine(
         maxScheduleDelayNanos: Long,
         adapter: TicketHighContentionWorkloadAdapter,
         faultObserverStartAfterScheduledCount: Int = schedule.size,
+        faultObserverTiming: TicketFaultObserverTiming =
+            TicketFaultObserverTiming.SCHEDULE_THRESHOLD,
         faultObserver: () -> Unit = {},
     ): TicketWorkloadResult {
         val orderedSchedule = validateExpectedSchedule(schedule)
@@ -98,6 +105,12 @@ internal class TicketHighContentionWorkloadEngine(
             orderedSchedule.size,
             "faultObserverStartAfterScheduledCount",
         )
+        require(
+            faultObserverTiming != TicketFaultObserverTiming.WORKLOAD_COMPLETION ||
+                faultObserverStartAfterScheduledCount == orderedSchedule.size,
+        ) {
+            "workload-completion observer timing requires the end-of-schedule threshold"
+        }
         require(!workloadJoinTimeout.isZero && !workloadJoinTimeout.isNegative) {
             "workloadJoinTimeout must be positive"
         }
@@ -114,9 +127,15 @@ internal class TicketHighContentionWorkloadEngine(
 
         VirtualThreads.executorService().use { workloadExecutor ->
             VirtualThreads.executorService().use { observerExecutor ->
+                val observeAfterWorkload =
+                    faultObserverTiming == TicketFaultObserverTiming.WORKLOAD_COMPLETION
                 var observerFuture: Future<*>? = null
                 fun startObserver(scheduledCount: Int) {
-                    if (observerFuture == null && scheduledCount >= faultObserverStartAfterScheduledCount) {
+                    if (
+                        !observeAfterWorkload &&
+                        observerFuture == null &&
+                        scheduledCount >= faultObserverStartAfterScheduledCount
+                    ) {
                         observerFuture = observerExecutor.submit(faultObserver)
                     }
                 }
@@ -163,7 +182,15 @@ internal class TicketHighContentionWorkloadEngine(
                     startObserver(index + 1)
                 }
                 startObserver(orderedSchedule.size)
-                awaitAll(futures, observerFuture)
+                awaitAll(
+                    futures = futures,
+                    observerFuture = observerFuture,
+                    deferredObserver = if (observeAfterWorkload) {
+                        { observerExecutor.submit(faultObserver) }
+                    } else {
+                        null
+                    },
+                )
             }
         }
 
@@ -194,19 +221,26 @@ internal class TicketHighContentionWorkloadEngine(
         )
     }
 
-    private fun awaitAll(futures: List<Future<*>>, observerFuture: Future<*>?) {
+    private fun awaitAll(
+        futures: List<Future<*>>,
+        observerFuture: Future<*>?,
+        deferredObserver: (() -> Future<*>)?,
+    ) {
         val started = System.nanoTime()
         val timeoutNanos = workloadJoinTimeout.toNanos()
+        var activeObserver = observerFuture
         try {
-            observerFuture?.get(remainingNanos(started, timeoutNanos), TimeUnit.NANOSECONDS)
+            activeObserver?.get(remainingNanos(started, timeoutNanos), TimeUnit.NANOSECONDS)
             futures.forEach { it.get(remainingNanos(started, timeoutNanos), TimeUnit.NANOSECONDS) }
+            activeObserver = deferredObserver?.invoke()
+            activeObserver?.get(remainingNanos(started, timeoutNanos), TimeUnit.NANOSECONDS)
         } catch (error: TimeoutException) {
             futures.forEach { it.cancel(true) }
-            observerFuture?.cancel(true)
+            activeObserver?.cancel(true)
             throw IllegalStateException("Ticket workload did not join before its deadline", error)
         } catch (error: ExecutionException) {
             futures.forEach { it.cancel(true) }
-            observerFuture?.cancel(true)
+            activeObserver?.cancel(true)
             throw IllegalStateException("Ticket workload execution failed", error.cause ?: error)
         }
     }

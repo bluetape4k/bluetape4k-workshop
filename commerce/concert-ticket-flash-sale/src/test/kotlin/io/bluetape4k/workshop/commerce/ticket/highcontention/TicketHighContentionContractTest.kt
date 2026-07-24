@@ -2,7 +2,9 @@ package io.bluetape4k.workshop.commerce.ticket.highcontention
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.concurrent.virtualthread.VirtualThreads
 import io.bluetape4k.testcontainers.storage.RedisServer
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
@@ -17,6 +19,9 @@ import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 import java.nio.file.StandardOpenOption.APPEND
 import java.time.Duration
 import java.util.UUID
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 internal class TicketHighContentionContractTest {
     @Test
@@ -215,6 +220,100 @@ internal class TicketHighContentionContractTest {
         result.dispatchedCount shouldBeEqualTo 3
         result.completedCount shouldBeEqualTo 3
         result.expectedScheduleDigest shouldBeEqualTo result.realizedScheduleDigest
+    }
+
+    @Test
+    fun `schedule threshold fault observer overlaps measured work`() {
+        val entered = CountDownLatch(2)
+        val release = CountDownLatch(1)
+        val completed = AtomicInteger()
+        val observerCompletedCount = AtomicInteger(-1)
+        val adapter = object : TicketHighContentionWorkloadAdapter {
+            override fun warmUp(identity: TicketWorkloadIdentity) = Unit
+
+            override fun snapshotBaseline(): String = "baseline"
+
+            override fun execute(
+                token: TicketScheduleToken,
+                identity: TicketWorkloadIdentity,
+            ): TicketWorkloadDisposition {
+                entered.countDown()
+                check(release.await(5, TimeUnit.SECONDS))
+                completed.incrementAndGet()
+                return TicketWorkloadDisposition.COMPLETED
+            }
+        }
+
+        TicketHighContentionWorkloadEngine(Duration.ofSeconds(5)).run(
+            schedule = burstSchedule(operationCount = 2),
+            warmupOperationCount = 0,
+            warmupNamespace = "ticket:warmup:",
+            measuredNamespace = "ticket:measured:",
+            concurrency = 2,
+            dispatcherBacklogCapacity = 0,
+            maxScheduleDelayNanos = Long.MAX_VALUE,
+            adapter = adapter,
+            faultObserverStartAfterScheduledCount = 2,
+            faultObserver = {
+                check(entered.await(5, TimeUnit.SECONDS))
+                observerCompletedCount.set(completed.get())
+                release.countDown()
+            },
+        )
+
+        observerCompletedCount.get() shouldBeEqualTo 0
+    }
+
+    @Test
+    fun `end of schedule fault observer starts after measured work completes`() {
+        val entered = CountDownLatch(2)
+        val release = CountDownLatch(1)
+        val observerStarted = CountDownLatch(1)
+        val completed = AtomicInteger()
+        val observerCompletedCount = AtomicInteger(-1)
+        val adapter = object : TicketHighContentionWorkloadAdapter {
+            override fun warmUp(identity: TicketWorkloadIdentity) = Unit
+
+            override fun snapshotBaseline(): String = "baseline"
+
+            override fun execute(
+                token: TicketScheduleToken,
+                identity: TicketWorkloadIdentity,
+            ): TicketWorkloadDisposition {
+                entered.countDown()
+                check(release.await(5, TimeUnit.SECONDS))
+                completed.incrementAndGet()
+                return TicketWorkloadDisposition.COMPLETED
+            }
+        }
+
+        VirtualThreads.executorService().use { controller ->
+            val observerStartedBeforeRelease = controller.submit<Boolean> {
+                check(entered.await(5, TimeUnit.SECONDS))
+                observerStarted.await(250, TimeUnit.MILLISECONDS).also {
+                    release.countDown()
+                }
+            }
+            TicketHighContentionWorkloadEngine(Duration.ofSeconds(5)).run(
+                schedule = burstSchedule(operationCount = 2),
+                warmupOperationCount = 0,
+                warmupNamespace = "ticket:warmup:",
+                measuredNamespace = "ticket:measured:",
+                concurrency = 2,
+                dispatcherBacklogCapacity = 0,
+                maxScheduleDelayNanos = Long.MAX_VALUE,
+                adapter = adapter,
+                faultObserverStartAfterScheduledCount = 2,
+                faultObserverTiming = TicketFaultObserverTiming.WORKLOAD_COMPLETION,
+                faultObserver = {
+                    observerCompletedCount.set(completed.get())
+                    observerStarted.countDown()
+                },
+            )
+
+            observerStartedBeforeRelease.get(5, TimeUnit.SECONDS).shouldBeFalse()
+        }
+        observerCompletedCount.get() shouldBeEqualTo 2
     }
 
     @Test

@@ -77,6 +77,12 @@ internal class TicketHighContentionProfileTest {
                         maxScheduleDelayNanos = TimeUnit.MILLISECONDS.toNanos(profile.maxScheduleDelayMs),
                         adapter = adapter,
                         faultObserverStartAfterScheduledCount = injectAfter,
+                        faultObserverTiming =
+                            if (profile.failure.kind == TicketFailureKind.WORKER_RESTART) {
+                                TicketFaultObserverTiming.WORKLOAD_COMPLETION
+                            } else {
+                                TicketFaultObserverTiming.SCHEDULE_THRESHOLD
+                            },
                         faultObserver = adapter::injectDeclaredFailure,
                     )
                     adapter.assertProfileInvariants()
