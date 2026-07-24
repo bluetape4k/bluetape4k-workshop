@@ -328,12 +328,12 @@ class JobConsoleHighContentionAdapter private constructor(
             val replacement = awaitReplacementClaim(scenario.scope.tenantId)
             val checkpoint = repository.checkpoint(replacement.lease, completedChunk = 1, progress = 100)
             repository.complete(checkpoint.lease, JobSignal.SUCCESS)
-            val beforeRelease = authorityBaseline()
+            val beforeRelease = authorityBaseline(submitted.jobId)
             barrier.release()
             val staleCode = staleAttempt.get(5, TimeUnit.SECONDS)
             check(staleCode == JobProblemCode.LEASE_LOST)
             check(repository.load(submitted.jobId)?.state?.terminal == true)
-            val afterRelease = authorityBaseline()
+            val afterRelease = authorityBaseline(submitted.jobId)
             staleAttemptEvidence = JobConsoleStaleAttemptEvidence(
                 pausedConnections = pausedConnections,
                 pausedTransactions = 0,
@@ -376,6 +376,15 @@ class JobConsoleHighContentionAdapter private constructor(
             )
         }
 
+    private fun authorityBaseline(jobId: UUID): JobConsoleAuthorityBaseline =
+        dataSource.connection.use { connection ->
+            JobConsoleAuthorityBaseline(
+                jobs = connection.countRows("jobs", jobId),
+                effects = connection.countRows("job_history", jobId),
+                receipts = connection.countRows("job_outbox", jobId),
+            )
+        }
+
     override fun close() {
         dataSource.close()
         fixture.dropSchema()
@@ -408,6 +417,15 @@ class JobConsoleHighContentionAdapter private constructor(
 private fun java.sql.Connection.countRows(table: String): Long =
     createStatement().use { statement ->
         statement.executeQuery("SELECT count(*) FROM $table").use { result ->
+            check(result.next())
+            result.getLong(1)
+        }
+    }
+
+private fun java.sql.Connection.countRows(table: String, jobId: UUID): Long =
+    prepareStatement("SELECT count(*) FROM $table WHERE job_id = ?").use { statement ->
+        statement.setObject(1, jobId)
+        statement.executeQuery().use { result ->
             check(result.next())
             result.getLong(1)
         }

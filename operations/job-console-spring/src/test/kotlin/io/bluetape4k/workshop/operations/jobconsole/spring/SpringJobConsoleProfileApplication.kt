@@ -479,12 +479,12 @@ internal class SpringJobConsoleLiveAdapter private constructor(
             application.repository.complete(checkpoint.lease, JobSignal.SUCCESS)
             val converged = application.http.snapshot(submitted.jobId, scenario)
             check(converged.state == "succeeded")
-            val beforeRelease = authorityBaseline()
+            val beforeRelease = authorityBaseline(submitted.jobId)
 
             barrier.release()
             val staleCode = staleAttempt.get(10, TimeUnit.SECONDS)
             check(staleCode == JobProblemCode.LEASE_LOST)
-            val afterRelease = authorityBaseline()
+            val afterRelease = authorityBaseline(submitted.jobId)
             staleAttemptEvidence = SpringJobConsoleStaleAttemptEvidence(
                 pausedConnections = pausedConnections,
                 pausedTransactions = 0,
@@ -672,6 +672,15 @@ internal class SpringJobConsoleLiveAdapter private constructor(
                 jobs = connection.countRows("jobs"),
                 effects = connection.countRows("job_history"),
                 receipts = connection.countRows("job_outbox"),
+            )
+        }
+
+    private fun authorityBaseline(jobId: UUID): JobConsoleAuthorityBaseline =
+        application.dataSource.connection.use { connection ->
+            JobConsoleAuthorityBaseline(
+                jobs = connection.countRows("jobs", jobId),
+                effects = connection.countRows("job_history", jobId),
+                receipts = connection.countRows("job_outbox", jobId),
             )
         }
 
@@ -951,6 +960,15 @@ private class SpringJobConsoleHttpClient(
 private fun java.sql.Connection.countRows(table: String): Long =
     createStatement().use { statement ->
         statement.executeQuery("SELECT count(*) FROM $table").use { result ->
+            check(result.next())
+            result.getLong(1)
+        }
+    }
+
+private fun java.sql.Connection.countRows(table: String, jobId: UUID): Long =
+    prepareStatement("SELECT count(*) FROM $table WHERE job_id = ?").use { statement ->
+        statement.setObject(1, jobId)
+        statement.executeQuery().use { result ->
             check(result.next())
             result.getLong(1)
         }
