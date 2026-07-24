@@ -5,7 +5,7 @@
     </filter>
     <marker id="arrow-blue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L13 7 L1 13 Z" fill="#397ca6" stroke="#397ca6"/></marker>
     <marker id="arrow-green" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L13 7 L1 13 Z" fill="#4f8a55" stroke="#4f8a55"/></marker>
-    <marker id="arrow-fault" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L13 7 L1 13 Z" fill="#b95855" stroke="#b95855"/></marker>
+    <marker id="arrow-fault" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L13 7 L1 13 Z" fill="#b95855" stroke="#b95855" stroke-dasharray="none"/></marker>
     <marker id="arrow-purple" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M1 1 L13 7 L1 13 Z" fill="#7563a8" stroke="#7563a8"/></marker>
     <style>
       .title { font: 48px 'Architects Daughter', cursive; fill: #16283a; }
@@ -55,12 +55,12 @@
   <g data-node="toxiproxy"><rect class="card" x="815" y="742" width="235" height="58" rx="15" stroke="#b95855"/><text x="932" y="769" text-anchor="middle" class="card-title">Toxiproxy</text><text x="932" y="792" text-anchor="middle" class="detail">cut / restore Redis path</text></g>
   <g data-node="redis"><rect class="card" x="1125" y="742" width="220" height="58" rx="15" stroke="#b67a1d"/><text x="1235" y="769" text-anchor="middle" class="card-title">Redis</text><text x="1235" y="792" text-anchor="middle" class="detail">advisory coordination only</text></g>
 
-  <path class="connector" d="M550 236 H610" stroke="#397ca6" marker-end="url(#arrow-blue)"/><path class="connector" d="M1025 236 H1085" stroke="#397ca6" marker-end="url(#arrow-blue)"/>
-  <path class="connector" d="M1285 267 V305 Q1285 315 1275 315 H272 Q262 315 262 325 V405" stroke="#397ca6" marker-end="url(#arrow-blue)"/>
-  <path class="connector" d="M420 490 H475" stroke="#397ca6" marker-end="url(#arrow-blue)"/><path class="connector" d="M1120 490 H1170" stroke="#7563a8" marker-end="url(#arrow-purple)"/>
-  <path class="connector" d="M655 620 V670 Q655 685 640 685 H510 Q495 685 495 700 V742" stroke="#4f8a55" marker-end="url(#arrow-green)"/>
-  <path class="connector" d="M935 620 V742" stroke="#b95855" stroke-dasharray="10 8" marker-end="url(#arrow-fault)"/><path class="connector" d="M1050 771 H1125" stroke="#b95855" stroke-dasharray="10 8" marker-end="url(#arrow-fault)"/>
-  <path class="connector" d="M1328 575 V655 Q1328 670 1313 670 H1145" stroke="#7563a8"/><text x="1215" y="655" text-anchor="middle" class="label">process + container reaping</text>
+  <path class="connector" data-connector="contract-to-build-logic" d="M550 236 H610" stroke="#397ca6" marker-end="url(#arrow-blue)"/><path class="connector" data-connector="build-logic-to-entrypoints" d="M1025 236 H1085" stroke="#397ca6" marker-end="url(#arrow-blue)"/>
+  <path class="connector" data-connector="entrypoints-to-coordinator" d="M1285 267 V305 Q1285 315 1275 315 H272 Q262 315 262 325 V405" stroke="#397ca6" marker-end="url(#arrow-blue)"/>
+  <path class="connector" data-connector="coordinator-to-child" d="M420 490 H475" stroke="#397ca6" marker-end="url(#arrow-blue)"/><path class="connector" data-connector="child-to-evidence" d="M1120 490 H1170" stroke="#7563a8" marker-end="url(#arrow-purple)"/>
+  <path class="connector" data-connector="child-to-postgres" d="M655 620 V670 Q655 685 640 685 H510 Q495 685 495 700 V742" stroke="#4f8a55" marker-end="url(#arrow-green)"/>
+  <path class="connector" data-connector="child-to-toxiproxy" d="M935 620 V742" stroke="#b95855" stroke-dasharray="10 8" marker-end="url(#arrow-fault)"/><path class="connector" data-connector="toxiproxy-to-redis" d="M1050 771 H1125" stroke="#b95855" stroke-dasharray="10 8" marker-end="url(#arrow-fault)"/>
+  <path class="connector" data-connector="evidence-to-cleanup" d="M1328 575 V655 Q1328 670 1313 670 H1145" stroke="#7563a8"/><text x="1215" y="655" text-anchor="middle" class="label">process + container reaping</text>
 
   <rect x="260" y="840" width="1080" height="42" rx="16" fill="#ffffff" stroke="#c7d4dc" stroke-width="2"/>
   <line x1="300" y1="861" x2="355" y2="861" stroke="#397ca6" stroke-width="4"/><text x="370" y="867" class="legend">control / selection</text>
