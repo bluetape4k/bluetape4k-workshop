@@ -8,6 +8,7 @@ import java.nio.file.StandardOpenOption.READ
 
 plugins {
     `java-test-fixtures`
+    id("io.bluetape4k.workshop.high-contention-profile")
 }
 
 java {
@@ -112,17 +113,13 @@ val integrationTest = tasks.register<Test>("integrationTest") {
     shouldRunAfter(tasks.test)
 }
 
-registerHighContentionProfileTask(
-    name = "highContentionCiProfile",
-).configure {
+tasks.named<Test>("highContentionCiProfile") {
     testClassesDirs = tasks.test.get().testClassesDirs
     classpath = tasks.test.get().classpath
     useJobConsoleTestRuntime()
 }
 
-registerHighContentionProfileTask(
-    name = "highContentionLocalReferenceProfile",
-).configure {
+tasks.named<Test>("highContentionLocalReferenceProfile") {
     testClassesDirs = tasks.test.get().testClassesDirs
     classpath = tasks.test.get().classpath
     useJobConsoleTestRuntime()
@@ -214,13 +211,4 @@ val highContentionProcessProbeChild = tasks.register<Test>("highContentionProces
         systemProperty("highContentionProbeDeadlineEpochMillis", deadlineEpochMillis.toString())
         systemProperty("highContentionProcessOwner", processOwner)
     }
-}
-
-tasks.register<HighContentionProcessProbeTask>("highContentionProcessProbe") {
-    description = "Proves that a timed-out nested Gradle test worker and its descendant are completely reaped."
-    group = "verification"
-    repositoryRoot.set(rootProject.layout.projectDirectory)
-    gradleWrapper.set(rootProject.layout.projectDirectory.file("gradlew"))
-    childTaskPath.set(":operations-job-console-core:highContentionProcessProbeChild")
-    probeBaseDirectory.set(rootProject.layout.buildDirectory.dir("high-contention/process-probe"))
 }

@@ -1,3 +1,5 @@
+package io.bluetape4k.workshop.buildlogic.highcontention
+
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import org.gradle.api.DefaultTask

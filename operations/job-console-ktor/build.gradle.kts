@@ -2,6 +2,7 @@ import org.gradle.api.tasks.testing.Test
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
+    id("io.bluetape4k.workshop.high-contention-profile")
     application
 }
 
@@ -93,17 +94,13 @@ val integrationTest = tasks.register<Test>("integrationTest") {
     shouldRunAfter(tasks.test)
 }
 
-registerHighContentionProfileTask(
-    name = "highContentionCiProfile",
-).configure {
+tasks.named<Test>("highContentionCiProfile") {
     testClassesDirs = tasks.test.get().testClassesDirs
     classpath = tasks.test.get().classpath
     useJobConsoleTestRuntime()
 }
 
-registerHighContentionProfileTask(
-    name = "highContentionLocalReferenceProfile",
-).configure {
+tasks.named<Test>("highContentionLocalReferenceProfile") {
     testClassesDirs = tasks.test.get().testClassesDirs
     classpath = tasks.test.get().classpath
     useJobConsoleTestRuntime()

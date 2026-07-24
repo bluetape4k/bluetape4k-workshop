@@ -39,7 +39,7 @@ test("hosted parent and nested child Gradle runtimes stay within runner memory",
     const examples = await readFile(".github/workflows/Examples.yml", "utf8");
     const nightly = await readFile(".github/workflows/nightly.yml", "utf8");
     const coordinator = await readFile(
-        "buildSrc/src/main/kotlin/HighContentionSuiteTask.kt",
+        "build-logic/src/main/kotlin/io/bluetape4k/workshop/buildlogic/highcontention/HighContentionSuiteTask.kt",
         "utf8",
     );
 
@@ -47,11 +47,72 @@ test("hosted parent and nested child Gradle runtimes stay within runner memory",
         assert.match(workflow, /GRADLE_OPTS: "-Dorg\.gradle\.jvmargs=-Xmx2g/u);
         assert.match(workflow, /-Pkotlin\.compiler\.execution\.strategy=in-process/u);
     }
+    assert.equal(
+        [...examples.matchAll(/- ['"]build-logic\/\*\*['"]/gu)].length,
+        2,
+        "push and pull_request filters must watch the included build",
+    );
     assert.match(coordinator, /"-Dorg\.gradle\.jvmargs=-Xmx2g"/u);
     assert.match(
         coordinator,
         /"-Pkotlin\.compiler\.execution\.strategy=in-process"/u,
     );
+});
+
+test("high-contention Gradle code is isolated in an explicitly applied included plugin build", async () => {
+    const settings = await readFile("settings.gradle.kts", "utf8");
+    const rootBuild = await readFile("build.gradle.kts", "utf8");
+    const moduleBuilds = await Promise.all(
+        [
+            "operations/job-console-core/build.gradle.kts",
+            "operations/job-console-spring/build.gradle.kts",
+            "operations/job-console-ktor/build.gradle.kts",
+            "commerce/concert-ticket-flash-sale/build.gradle.kts",
+        ].map((path) => readFile(path, "utf8")),
+    );
+
+    assert.match(settings, /includeBuild\("build-logic"\)/u);
+    assert.match(
+        rootBuild,
+        /id\("io\.bluetape4k\.workshop\.high-contention-root"\)/u,
+    );
+    for (const moduleBuild of moduleBuilds) {
+        assert.match(
+            moduleBuild,
+            /id\("io\.bluetape4k\.workshop\.high-contention-profile"\)/u,
+        );
+    }
+    for (const file of [
+        "HighContentionArtifactValidator.kt",
+        "HighContentionProcessProbeTask.kt",
+        "HighContentionProfileTasks.kt",
+        "HighContentionSuiteTask.kt",
+    ]) {
+        await assert.rejects(
+            readFile(`buildSrc/src/main/kotlin/${file}`, "utf8"),
+            { code: "ENOENT" },
+        );
+    }
+});
+
+test("PR-gated high-contention validation checks the shared diagram artifacts", async () => {
+    const examples = await readFile(".github/workflows/Examples.yml", "utf8");
+    const smoke = await readFile("scripts/smoke-validate.sh", "utf8");
+    const readmeValidator = await readFile("scripts/validate-high-contention-readme.mjs", "utf8");
+
+    assert.match(
+        examples,
+        /\.\/scripts\/smoke-validate\.sh high-contention-contract/u,
+    );
+    assert.match(
+        smoke,
+        /node scripts\/validate-high-contention-readme\.mjs/u,
+    );
+    assert.match(
+        readmeValidator,
+        /high-contention-profile-runner-architecture-01\.svg/u,
+    );
+    assert.match(readmeValidator, /\blstat\b/u);
 });
 
 async function kotlinFiles(root) {

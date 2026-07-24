@@ -1,3 +1,5 @@
+package io.bluetape4k.workshop.buildlogic.highcontention
+
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.readText

@@ -35,6 +35,8 @@ export JOB_CONSOLE_DEMO=true
 
 ## 고경합 증거
 
+![고경합 profile runner 아키텍처](../../docs/images/readme-diagrams/high-contention-profile-runner-architecture-01.png)
+
 Docker daemon이 실행 중이고 JDK 25를 사용하며 Gradle과 container가 사용할
 수 있는 메모리가 최소 4 GiB인 환경에서 core와 Ktor adapter profile을
 실행합니다.

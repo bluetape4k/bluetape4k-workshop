@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFile } from "node:fs/promises";
+import { lstat, readFile } from "node:fs/promises";
 
 const DOCUMENTS = [
     ["operations/job-console-core/README.md", "en"],
@@ -13,6 +13,11 @@ const DOCUMENTS = [
     ["commerce/concert-ticket-flash-sale/README.ko.md", "ko"],
 ];
 
+const DIAGRAM_ASSETS = [
+    "docs/images/readme-diagrams/high-contention-profile-runner-architecture-01.png",
+    "docs/images/readme-diagrams/high-contention-profile-runner-architecture-01.svg",
+];
+
 const COMMON_REQUIREMENTS = new Map([
     ["CI correctness command", /(?:^|\s)\.\/gradlew highContentionCi(?:\s|$)/u],
     ["local reference command", /(?:^|\s)\.\/gradlew highContentionLocalReference(?:\s|$)/u],
@@ -21,6 +26,10 @@ const COMMON_REQUIREMENTS = new Map([
     ["JDK 25 prerequisite", /\bJDK 25\b/u],
     ["memory prerequisite", /\b4 GiB\b/u],
     ["canonical report path", /build\/reports\/high-contention\/<run-id>\//u],
+    [
+        "runner architecture diagram",
+        /docs\/images\/readme-diagrams\/high-contention-profile-runner-architecture-01\.png/u,
+    ],
 ]);
 
 const LANGUAGE_REQUIREMENTS = {
@@ -60,6 +69,17 @@ const MODULE_REQUIREMENTS = new Map([
 ]);
 
 const failures = [];
+for (const path of DIAGRAM_ASSETS) {
+    try {
+        const metadata = await lstat(path);
+        if (!metadata.isFile() || metadata.size === 0) {
+            failures.push({ path, missing: "regular non-empty diagram asset" });
+        }
+    } catch {
+        failures.push({ path, missing: "regular non-empty diagram asset" });
+    }
+}
+
 for (const [path, language] of DOCUMENTS) {
     const content = await readFile(path, "utf8");
     for (const [label, pattern] of [

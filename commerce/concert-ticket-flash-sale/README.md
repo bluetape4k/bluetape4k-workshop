@@ -218,6 +218,8 @@ node scripts/validate-sequence-diagrams.mjs
 
 ## High-contention evidence
 
+![High-contention profile runner architecture](../../docs/images/readme-diagrams/high-contention-profile-runner-architecture-01.png)
+
 Run the Ticket and Job Console profiles with a running Docker daemon, JDK 25,
 and at least 4 GiB of memory available to Gradle and the containers:
 

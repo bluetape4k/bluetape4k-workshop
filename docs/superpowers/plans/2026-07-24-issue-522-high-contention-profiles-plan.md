@@ -268,9 +268,9 @@
 
 **Files:**
 
-- Create: `buildSrc/src/main/kotlin/HighContentionProcessProbeTask.kt`
-- Create: `buildSrc/src/test/kotlin/HighContentionProcessProbeTaskTest.kt`
-- Modify: `buildSrc/build.gradle.kts`
+- Create: `build-logic/src/main/kotlin/io/bluetape4k/workshop/buildlogic/highcontention/HighContentionProcessProbeTask.kt`
+- Create: `build-logic/src/test/kotlin/io/bluetape4k/workshop/buildlogic/highcontention/HighContentionProcessProbeTaskTest.kt`
+- Modify: `build-logic/build.gradle.kts`
 - Modify: `operations/job-console-core/build.gradle.kts`
 - Create: `operations/job-console-core/src/test/kotlin/io/bluetape4k/workshop/operations/jobconsole/highcontention/HighContentionProcessProbeTest.kt`
 - Create: `operations/job-console-core/src/test/kotlin/io/bluetape4k/workshop/operations/jobconsole/highcontention/HighContentionProcessProbeChild.kt`
@@ -285,7 +285,7 @@
 
 - [ ] **Step 2: Implement the smallest injectable JDK process boundary**
 
-  Keep `buildSrc` Gradle/JDK-only. Use small injectable process/filesystem ports and JDK `ProcessHandle`; do not add
+  Keep the isolated `build-logic` plugin build Gradle/JDK-only. Use small injectable process/filesystem ports and JDK `ProcessHandle`; do not add
   Jackson, Testcontainers, Docker client, or version pins. The parent times out, terminates and reaps the recorded
   worker PID and its journaled/discovered descendant tree, then terminates the wrapper invocation. Prove stable-zero
   live processes and no Gradle cache/build lock remains. The internal child task rejects direct invocation without
@@ -294,7 +294,7 @@
 - [ ] **Step 3: Verify the spike without Docker**
 
   ```bash
-  ./gradlew -p buildSrc test --tests '*HighContentionProcessProbeTaskTest'
+  ./gradlew -p build-logic test --tests '*HighContentionProcessProbeTaskTest'
   ./gradlew :operations-job-console-core:highContentionProcessProbe --max-workers=1
   ```
 
@@ -304,7 +304,7 @@
 - [ ] **Step 4: Commit the reusable boundary**
 
   ```bash
-  git add buildSrc operations/job-console-core
+  git add build-logic operations/job-console-core
   git commit -m "Prove child worker cleanup before allocating topology"
   ```
 
@@ -407,9 +407,9 @@
 
 **Files:**
 
-- Create: `buildSrc/src/main/kotlin/HighContentionProfileTasks.kt`
-- Create: `buildSrc/src/test/kotlin/HighContentionProfileTasksTest.kt`
-- Modify: `buildSrc/build.gradle.kts`
+- Create: `build-logic/src/main/kotlin/io/bluetape4k/workshop/buildlogic/highcontention/HighContentionProfileTasks.kt`
+- Create: `build-logic/src/test/kotlin/io/bluetape4k/workshop/buildlogic/highcontention/HighContentionProfileTasksTest.kt`
+- Modify: `build-logic/build.gradle.kts`
 - Modify: `operations/job-console-core/build.gradle.kts`
 - Create: `operations/job-console-core/src/testFixtures/kotlin/io/bluetape4k/workshop/operations/jobconsole/highcontention/JobConsoleHighContentionAdapter.kt`
 - Create: `operations/job-console-core/src/test/kotlin/io/bluetape4k/workshop/operations/jobconsole/highcontention/JobConsoleCoreHighContentionProfileTest.kt`
@@ -438,7 +438,7 @@
 
 - [ ] **Step 4: Register and run the core profile tasks**
 
-  First TDD a buildSrc registration helper that owns the complete dedicated-task contract: fixed repository
+  First TDD an included-build plugin registration helper that owns the complete dedicated-task contract: fixed repository
   contract input, root-project output root, internal/final system-property injection, caller spoof rejection,
   allowlisted selection, Java 25 launcher/runtime assertion, `high-contention` tag only, JUnit parallel disabled,
   `maxParallelForks=1`, and `test-mutex`. Register `highContentionCiProfile` and
@@ -446,7 +446,7 @@
   opt-in profile never joins the ordinary integration suite.
 
   ```bash
-  ./gradlew -p buildSrc test --tests '*HighContentionProfileTasksTest'
+  ./gradlew -p build-logic test --tests '*HighContentionProfileTasksTest'
   ./gradlew :operations-job-console-core:highContentionCiProfile \
     -PhighContentionRunId=plan-job-core-1 \
     -PhighContentionProfileId=worker-restart \
@@ -458,7 +458,7 @@
 - [ ] **Step 5: Commit**
 
   ```bash
-  git add buildSrc operations/job-console-core
+  git add build-logic operations/job-console-core
   git commit -m "Prove Job authority survives hostile worker timing"
   ```
 
@@ -771,13 +771,13 @@
 
 **Files:**
 
-- Create: `buildSrc/src/main/kotlin/HighContentionSuiteTask.kt`
-- Create: `buildSrc/src/main/kotlin/HighContentionArtifactValidator.kt`
-- Create: `buildSrc/src/test/kotlin/HighContentionSuiteTaskTest.kt`
-- Create: `buildSrc/src/test/kotlin/HighContentionArtifactValidatorTest.kt`
+- Create: `build-logic/src/main/kotlin/io/bluetape4k/workshop/buildlogic/highcontention/HighContentionSuiteTask.kt`
+- Create: `build-logic/src/main/kotlin/io/bluetape4k/workshop/buildlogic/highcontention/HighContentionArtifactValidator.kt`
+- Create: `build-logic/src/test/kotlin/io/bluetape4k/workshop/buildlogic/highcontention/HighContentionSuiteTaskTest.kt`
+- Create: `build-logic/src/test/kotlin/io/bluetape4k/workshop/buildlogic/highcontention/HighContentionArtifactValidatorTest.kt`
 - Create: `scripts/high-contention/validate-run.mjs`
 - Create: `scripts/high-contention/validate-run.test.mjs`
-- Modify: `buildSrc/build.gradle.kts`
+- Modify: `build-logic/build.gradle.kts`
 - Modify: `build.gradle.kts`
 
 - [ ] **Step 1: Write failing build-logic tests**
@@ -835,7 +835,7 @@
   `maxActiveTopologies == 1`. Write `summary.json` and `upload-manifest.json` once. If validation/redaction cannot
   complete, write only constants-only `upload-failure-summary.json` under a separate upload directory.
 
-  Keep `buildSrc` Gradle/JDK-only: no Jackson, Testcontainers, Docker client, or dependency version pins. Reuse the
+  Keep the isolated `build-logic` plugin build Gradle/JDK-only: no Jackson, Testcontainers, Docker client, or dependency version pins. Reuse the
   dependency-free repository Node validator for JSON artifact checks. `HighContentionArtifactValidator` invokes it
   with a bounded JDK process, fixed script path, fixed argument vector, captured/sanitized result, and no shell.
   If Node is unavailable, process creation fails, the process times out/crashes/exits nonzero, its result is
@@ -854,7 +854,7 @@
 - [ ] **Step 5: Verify task discovery and one filtered run**
 
   ```bash
-  ./gradlew -p buildSrc test
+  ./gradlew -p build-logic test
   node --test scripts/high-contention/validate-run.test.mjs
   ./gradlew tasks --all | rg '^highContention(Ci|LocalReference)'
   ./gradlew highContentionCi \
@@ -870,7 +870,7 @@
 - [ ] **Step 6: Commit**
 
   ```bash
-  git add buildSrc build.gradle.kts scripts/high-contention
+  git add build-logic build.gradle.kts scripts/high-contention
   git commit -m "Keep heavyweight profiles sequential and recoverable from child failure"
   ```
 
@@ -884,7 +884,7 @@
   `operations/job-console-ktor/**`,
   `commerce/concert-ticket-flash-sale/**`,
   `profiles/high-contention/v1/**`,
-  `buildSrc/**`
+  `build-logic/**`
 
 - [ ] **Step 1: Run each implementation/profile CI matrix through the root coordinator**
 
@@ -916,7 +916,7 @@
   local-reference run:
 
   ```bash
-  git add operations commerce profiles buildSrc build.gradle.kts
+  git add operations commerce profiles build-logic build.gradle.kts
   git commit -m "Close gaps exposed by the complete contention matrix"
   ```
 
@@ -1011,18 +1011,23 @@
 - Modify: `operations/job-console-ktor/README.ko.md`
 - Modify: `commerce/concert-ticket-flash-sale/README.md`
 - Modify: `commerce/concert-ticket-flash-sale/README.ko.md`
+- Create: `docs/images/readme-diagrams/high-contention-profile-runner-architecture-01.svg`
+- Create: `docs/images/readme-diagrams/high-contention-profile-runner-architecture-01.png`
 - Create: `docs/lessons/2026-07-24-issue-522-high-contention-profiles.md`
 - Create: `scripts/validate-high-contention-readme.mjs`
 
 - [ ] **Step 1: Write the README validator first**
 
-  Require both root commands, Docker/JDK 25/memory prerequisites, report path, correctness/observation distinction,
-  Toxiproxy scope, PostgreSQL authority, no framework ranking, and no production capacity claim in both languages.
+  Require both root commands, Docker/JDK 25/memory prerequisites, report path, runner architecture diagram,
+  correctness/observation distinction, Toxiproxy scope, PostgreSQL authority, no framework ranking, and no
+  production capacity claim in both languages.
 
 - [ ] **Step 2: Update module runbooks**
 
   Public English READMEs describe commands and operational boundaries. Korean companions mirror the same facts.
-  Do not add benchmark rankings or charts.
+  Add one shared architecture diagram that shows the versioned contract, included build logic, isolated child
+  boundary, four adapters, PostgreSQL authority, Toxiproxy-scoped Redis path, evidence validation, and zero-live
+  cleanup gate. Do not add benchmark rankings or charts.
 
 - [ ] **Step 3: Record the lesson in Korean**
 
@@ -1045,6 +1050,7 @@
   ```bash
   git add operations/job-console-core/README* operations/job-console-spring/README* \
     operations/job-console-ktor/README* commerce/concert-ticket-flash-sale/README* \
+    docs/images/readme-diagrams/high-contention-profile-runner-architecture-01.* \
     docs/lessons/2026-07-24-issue-522-high-contention-profiles.md \
     scripts/validate-high-contention-readme.mjs
   git commit -m "Make contention evidence interpretable without capacity claims"
@@ -1102,11 +1108,11 @@
     operations/job-console-* commerce/concert-ticket-flash-sale \
     --glob '**/highcontention/**'
   rg -n 'jackson|testcontainers|docker-java|com\\.github\\.docker|:[0-9]+\\.[0-9]+' \
-    buildSrc/build.gradle.kts buildSrc/src
+    build-logic/build.gradle.kts build-logic/src
   ```
 
   Expected: no individual Bluetape BOM/version pin, raw Toxiproxy/singleton/flush/sleep, or profile-path
-  `PGSimpleDataSource`/per-test `Database.connect()` usage. `buildSrc` remains Gradle/JDK-only with no JSON,
+  `PGSimpleDataSource`/per-test `Database.connect()` usage. `build-logic` remains Gradle/JDK-only with no JSON,
   Testcontainers, Docker-client, or pinned-version dependency/import.
 
 - [ ] **Step 5: Run six independent code-review perspectives**

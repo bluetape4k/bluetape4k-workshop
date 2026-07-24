@@ -34,6 +34,8 @@ export SPRING_PROFILES_ACTIVE=demo
 
 ## High-contention evidence
 
+![High-contention profile runner architecture](../../docs/images/readme-diagrams/high-contention-profile-runner-architecture-01.png)
+
 Run the shared core and Spring adapter profiles with a running Docker daemon,
 JDK 25, and at least 4 GiB of memory available to Gradle and the containers:
 

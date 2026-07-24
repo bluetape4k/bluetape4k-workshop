@@ -1,3 +1,5 @@
+package io.bluetape4k.workshop.buildlogic.highcontention
+
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel

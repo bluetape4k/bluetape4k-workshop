@@ -47,6 +47,7 @@ on:
       - 'spring-modulith/module-boundaries/**'
       - 'shared/**'
       - 'buildSrc/**'
+      - 'build-logic/**'
       - 'gradle/**'
       - '*.gradle.kts'
       - 'settings.gradle.kts'
@@ -98,6 +99,7 @@ on:
       - 'spring-modulith/module-boundaries/**'
       - 'shared/**'
       - 'buildSrc/**'
+      - 'build-logic/**'
       - 'gradle/**'
       - '*.gradle.kts'
       - 'settings.gradle.kts'
@@ -485,6 +487,8 @@ jobs:
         with:
           gradle-version: wrapper
           cache-read-only: true
+      - name: Validate high-contention contract and runbooks
+        run: ./scripts/smoke-validate.sh high-contention-contract
       - name: Run the CI correctness matrix
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx2g -Dorg.gradle.daemon=false"

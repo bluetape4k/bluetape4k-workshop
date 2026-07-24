@@ -239,7 +239,9 @@ case "${1:-help}" in
 
   high-contention-contract)
     run "node --test scripts/high-contention/validate-contract.test.mjs scripts/high-contention/validate-run.test.mjs scripts/high-contention/select-upload.test.mjs"
-    run "$GRADLEW :buildSrc:test \
+    run "node scripts/validate-high-contention-readme.mjs"
+    run "$GRADLEW -p build-logic test"
+    run "$GRADLEW \
       :operations-job-console-core:test \
       :commerce-concert-ticket-flash-sale:test \
       --max-workers=1"

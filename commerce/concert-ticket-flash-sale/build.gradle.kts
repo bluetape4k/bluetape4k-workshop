@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.gradle.api.tasks.testing.Test
 
 plugins {
+    id("io.bluetape4k.workshop.high-contention-profile")
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
 }
@@ -90,17 +91,13 @@ tasks.test {
     usesService(gradle.sharedServices.registrations.named("test-mutex").get().service)
 }
 
-registerHighContentionProfileTask(
-    name = "highContentionCiProfile",
-).configure {
+tasks.named<Test>("highContentionCiProfile") {
     testClassesDirs = tasks.test.get().testClassesDirs
     classpath = tasks.test.get().classpath
     setJvmArgs((jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
 }
 
-registerHighContentionProfileTask(
-    name = "highContentionLocalReferenceProfile",
-).configure {
+tasks.named<Test>("highContentionLocalReferenceProfile") {
     testClassesDirs = tasks.test.get().testClassesDirs
     classpath = tasks.test.get().classpath
     setJvmArgs((jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })

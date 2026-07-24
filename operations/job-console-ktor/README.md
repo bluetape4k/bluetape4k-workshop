@@ -35,6 +35,8 @@ export JOB_CONSOLE_DEMO=true
 
 ## High-contention evidence
 
+![High-contention profile runner architecture](../../docs/images/readme-diagrams/high-contention-profile-runner-architecture-01.png)
+
 Run the shared core and Ktor adapter profiles with a running Docker daemon,
 JDK 25, and at least 4 GiB of memory available to Gradle and the containers:
 

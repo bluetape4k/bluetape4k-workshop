@@ -1,3 +1,5 @@
+package io.bluetape4k.workshop.buildlogic.highcontention
+
 import groovy.json.JsonOutput
 import org.gradle.api.GradleException
 import org.gradle.testfixtures.ProjectBuilder
@@ -329,7 +331,7 @@ class HighContentionProfileTasksTest {
                 tasks.register("verifyClean") {
                     doLast {
                         def sourceStateClass = Class.forName(
-                            "HighContentionSourceState",
+                            "io.bluetape4k.workshop.buildlogic.highcontention.HighContentionSourceState",
                             true,
                             this.class.classLoader,
                         )

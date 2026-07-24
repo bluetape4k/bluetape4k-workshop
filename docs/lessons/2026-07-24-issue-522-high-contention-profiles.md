@@ -66,6 +66,25 @@ workload adapter와 invariant query는 Job Core, Spring, Ktor, Ticket 모듈에 
 module의 Spring bean, coroutine dispatcher, Exposed transaction, Redis namespace ownership을
 그대로 사용하면서도 공통 report로 결과를 검증한다.
 
+### 대형 Gradle 실행기는 `buildSrc`가 아니라 included build에 격리한다
+
+초기 구현은 coordinator, process reaper, artifact validator를 `buildSrc`에 두었다. 이 코드는 단순한
+몇 줄짜리 공용 helper가 아니라 독립적으로 테스트되는 실행기였고, `buildSrc` 변경은 모든 build
+script classpath와 configuration을 불필요하게 무효화할 수 있었다.
+
+`build-logic` included build에 root/profile plugin을 두고 필요한 project만 명시적으로 적용하도록
+바꿨다. Task 이름과 report 계약은 유지하면서 registration 책임을 plugin에 모았고, 실제 module의
+JVM/Hikari/Testcontainers 설정은 각 build script에 남겨 production adapter 특성을 보존했다.
+
+### 공통 실행 경계는 문장만이 아니라 한 장의 architecture로 고정한다
+
+네 구현이 같은 profile contract를 사용한다는 사실만 적으면 coordinator, child JVM, PostgreSQL
+authority, Redis fault path, evidence/cleanup gate의 소유 관계를 빠르게 검토하기 어렵다. 공통
+architecture diagram을 영문·국문 README 모두에 연결하고 validator가 image link를 강제하도록
+했다. Validator는 PNG/SVG가 실제 regular non-empty file인지도 확인하며 PR의
+`high-contention-contract` smoke gate에서 실행된다. Diagram은 Toxiproxy가 Redis path만 끊으며
+PostgreSQL failover를 흉내 내지 않는다는 범위도 시각적으로 분리한다.
+
 ## Adopted and Rejected
 
 채택한 방식은 root coordinator가 한 번에 하나의 격리된 child JVM을 실행하고, 각 모듈의
@@ -99,6 +118,8 @@ production adapter가 module-local authority를 검증한 terminal report를 생
   검증한다. 같은 임의 문자열로 여러 측정값을 채운 report는 거절한다.
 - 영문/국문 runbook은 JDK 25, Docker, 4 GiB memory, command, report path, 증거 해석 한계를 같은
   내용으로 설명한다.
+- 실행기 build logic은 `build-logic` included build로 격리하고, 공통 architecture diagram을 네
+  예제의 영문·국문 README에서 함께 사용한다.
 
 ## Verification
 

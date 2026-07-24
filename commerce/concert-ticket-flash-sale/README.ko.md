@@ -1,6 +1,6 @@
 # 콘서트 티켓 Flash Sale
 
-[English](README.md)
+[English](README.md) | 한국어
 
 이 Spring Boot 4 / Kotlin 예제는 대규모 티켓 오픈에서 자주 만나는 실패 경계를 다룬다. 대기실 입장, 사용자/IP별 구매 제한, PostgreSQL 재고 직렬화, 결과를 알 수 없는 결제 timeout, 뒤늦은 승인, 환불, 티켓 발급·회수, 운영자 복구가 하나의 상태 모델로 이어진다.
 
@@ -215,6 +215,8 @@ node scripts/validate-sequence-diagrams.mjs
 ```
 
 ## 고경합 증거
+
+![고경합 profile runner 아키텍처](../../docs/images/readme-diagrams/high-contention-profile-runner-architecture-01.png)
 
 Docker daemon이 실행 중이고 JDK 25를 사용하며 Gradle과 container가 사용할
 수 있는 메모리가 최소 4 GiB인 환경에서 Ticket과 Job Console profile을
