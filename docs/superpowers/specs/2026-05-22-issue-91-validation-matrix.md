@@ -5,9 +5,10 @@
 **Parent Epic**: #76
 **Status**: Active
 
-> Current graph amendment (2026-07-23, #555): this checkout registers 118 projects in Gradle after adding
-> the five `:commerce-usage-billing-*-service` modules and
-> `:commerce-usage-billing-microservices-composition-tests`. The 23/33 classification below remains the original
+> Current graph amendment (2026-07-24, #538 after #555): this checkout registers 119 projects in Gradle after adding
+> the five `:commerce-usage-billing-*-service` modules,
+> `:commerce-usage-billing-microservices-composition-tests`, and
+> `:commerce-event-sourced-promotion-voucher-campaign`. The 23/33 classification below remains the original
 > #91 baseline rather than a mechanically incremented inventory. Current executable lanes are
 > maintained in `scripts/smoke-validate.sh` and `.github/workflows/Examples.yml`.
 
@@ -17,7 +18,7 @@
 
 | Tier | Trigger | Scope | Docker required |
 |------|---------|-------|-----------------|
-| **T1 Compile** | Every push / PR | `./gradlew build -x test` across the current 108-project graph | No |
+| **T1 Compile** | Every push / PR | `./gradlew build -x test` across the current 119-project graph | No |
 | **T2 Smoke** | Every weekday (nightly) | In-memory modules only (no Testcontainers) | No |
 | **T3 Full** | Examples container lane and full local groups | Current container-backed modules, including Commerce | Yes |
 | **T4 Local group** | Developer convenience | Per-domain `scripts/smoke-validate.sh <group>` | Depends |
@@ -172,7 +173,7 @@ Run via `scripts/smoke-validate.sh <group>` or directly:
 
 ```bash
 # Verify the current Gradle project graph and README references
-EXPECTED_GRADLE_PROJECTS=118 ./scripts/smoke-validate.sh stale-check
+EXPECTED_GRADLE_PROJECTS=119 ./scripts/smoke-validate.sh stale-check
 # Expected: 108 (as of 2026-07-21 after #521; 107 before the module was added)
 
 # Verify removed modules are not referenced in any README

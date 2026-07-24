@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: commerce-event-sourced-promotion-voucher-campaign
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    hikari:
+      maximum-pool-size: 20
+      connection-timeout: 250
+      data-source-properties:
+        options: "-c lock_timeout=500ms -c statement_timeout=3s"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+voucher:
+  security:
+    hmac:
+      active-version: ${VOUCHER_HMAC_ACTIVE_VERSION:1}
+      # Workshop fallback only. Production must inject a stable secret and retain old keys until replay retention expires.
+      active-key-base64: ${VOUCHER_HMAC_ACTIVE_KEY_BASE64:d29ya3Nob3Atb25seS1obWFjLWtleS1tYXRlcmlhbC0zMmJ5dGVzIQ==}
+  sse:
+    max-subscriptions: ${VOUCHER_SSE_MAX_SUBSCRIPTIONS:32}
+    queue-size: ${VOUCHER_SSE_QUEUE_SIZE:32}
+    poll-interval: ${VOUCHER_SSE_POLL_INTERVAL:250ms}
+    heartbeat-interval: ${VOUCHER_SSE_HEARTBEAT_INTERVAL:10s}
+    write-timeout: ${VOUCHER_SSE_WRITE_TIMEOUT:2s}
+  operator:
+    secret: ${VOUCHER_OPERATOR_SECRET:workshop-operator-secret}
+    guard: ${VOUCHER_OPERATOR_GUARD:workshop-operator-guard}
+    allowed-hosts:
+      - 127.0.0.1
+      - localhost
+  projection:
+    worker:
+      enabled: true

@@ -1,0 +1,438 @@
+package io.bluetape4k.workshop.commerce.voucher.eventsourced.projection
+
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.info
+import io.bluetape4k.logging.warn
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.idempotency.ReceiptDigest
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabaseLane
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedDatabasePermitGate
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedMetrics
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedOperationalState
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedPermitTransactionRunner
+import io.bluetape4k.workshop.commerce.voucher.eventsourced.operations.EventSourcedRuntimeWorkers
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.time.Clock
+import java.time.Duration
+import java.time.Instant
+import java.util.UUID
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+
+internal const val VOUCHER_LIFECYCLE_PROJECTION = "voucher-lifecycle"
+private const val RUNTIME_POLL_INTERVAL_MILLIS = 100L
+
+internal data class ProjectionRuntimeResources(
+    val database: Database,
+    val permits: EventSourcedDatabasePermitGate,
+    val leases: ProjectionLeaseRepository,
+    val projections: ProjectionRepository,
+    val rebuilds: ProjectionRebuildRepository,
+    val eventReader: ProjectionEventReader = ExposedProjectionEventReader(),
+    val rebuildHandler: ProjectionEventHandler = AcceptingProjectionEventHandler,
+    val poisonStatus: ProjectionPoisonStatusQuery = ProjectionPoisonStatusQuery(),
+)
+
+internal class ProjectionRuntimeTelemetry(
+    private val operationalState: EventSourcedOperationalState,
+    private val metrics: EventSourcedMetrics,
+) {
+    private var lastActiveKey: ProjectionKey? = null
+    private var lastActivePosition: Long = 0
+    private var lastActiveAdvanceAt: Instant? = null
+
+    fun observeActive(
+        key: ProjectionKey,
+        result: ProjectionPollResult,
+        now: Instant,
+    ): Boolean =
+        when (result) {
+            is ProjectionPollResult.Applied -> {
+                metrics.projectionBatch(
+                    events = result.appliedEventCount + result.duplicateEventCount,
+                    bytes = result.processedBytes,
+                )
+                metrics.projectionLag(result.lag, result.lagAge, checkpointStalled(key, result.checkpointPosition, now))
+                true
+            }
+
+            ProjectionPollResult.Idle -> {
+                metrics.projectionLag(0, Duration.ZERO, Duration.ZERO)
+                true
+            }
+
+            is ProjectionPollResult.Degraded -> {
+                operationalState.projectionHealth(degraded = true)
+                false
+            }
+        }
+
+    fun observeRebuild(result: ProjectionRebuildPollResult): Boolean =
+        when (result) {
+            is ProjectionRebuildPollResult.Degraded -> {
+                operationalState.projectionHealth(
+                    degraded = true,
+                    rebuildState = ProjectionGenerationState.BUILDING,
+                )
+                false
+            }
+
+            is ProjectionRebuildPollResult.Applied,
+            ProjectionRebuildPollResult.Idle,
+            ProjectionRebuildPollResult.StaleWorker,
+            -> true
+        }
+
+    fun observeFailedPoisons(countsByReasonClass: Map<String, Long>): Boolean {
+        metrics.failedPoisons(countsByReasonClass)
+        if (countsByReasonClass.isNotEmpty()) {
+            operationalState.projectionHealth(degraded = true)
+            return false
+        }
+        return true
+    }
+
+    fun observeRebuild(generation: ProjectionGeneration) {
+        operationalState.rebuildState(generation.state)
+        val progress =
+            if (generation.targetPosition == 0L) {
+                1.0
+            } else {
+                generation.currentPosition.toDouble() / generation.targetPosition
+            }
+        metrics.rebuildProgress(progress, generation.state)
+        val remainingEvents = (generation.targetPosition - generation.currentPosition).coerceAtLeast(0)
+        val remainingBatches =
+            (remainingEvents + MAX_PROJECTION_BATCH_EVENTS - 1) / MAX_PROJECTION_BATCH_EVENTS
+        metrics.rebuildEta(Duration.ofMillis(remainingBatches * RUNTIME_POLL_INTERVAL_MILLIS))
+    }
+
+    fun activated() {
+        operationalState.rebuildState(ProjectionGenerationState.ACTIVE)
+        metrics.rebuildProgress(1.0, ProjectionGenerationState.ACTIVE)
+        metrics.rebuildEta(Duration.ZERO)
+    }
+
+    fun failed() {
+        operationalState.projectionHealth(degraded = true)
+        metrics.retried()
+    }
+
+    fun recovered() {
+        operationalState.projectionHealth(degraded = false)
+    }
+
+    private fun checkpointStalled(
+        key: ProjectionKey,
+        position: Long,
+        now: Instant,
+    ): Duration {
+        if (lastActiveKey != key || lastActivePosition != position) {
+            lastActiveKey = key
+            lastActivePosition = position
+            lastActiveAdvanceAt = now
+            return Duration.ZERO
+        }
+        return Duration.between(lastActiveAdvanceAt ?: now, now).coerceAtLeast(Duration.ZERO)
+    }
+}
+
+/**
+ * Spring-owned runtime for the active projector and one durable rebuild candidate.
+ *
+ * Every poll enters its reserved database lane before requesting a Hikari connection. Candidate
+ * activation occurs only after both generations have the target checkpoint and equal semantic
+ * digests. Cancellation is recovered durably even after a process restart.
+ */
+internal class EventSourcedProjectionRuntime(
+    resources: ProjectionRuntimeResources,
+    private val properties: ProjectionWorkerProperties,
+    private val clock: Clock,
+    private val telemetry: ProjectionRuntimeTelemetry,
+    private val digest: ProjectionGenerationDigest = ProjectionGenerationDigest(),
+    private val maintenance: ProjectionRebuildMaintenance = ProjectionRebuildMaintenance(),
+) : EventSourcedRuntimeWorkers {
+    private val projections = resources.projections
+    private val rebuilds = resources.rebuilds
+    private val poisonStatus = resources.poisonStatus
+    private val projectionTransactions =
+        EventSourcedPermitTransactionRunner(
+            resources.database,
+            resources.permits,
+            EventSourcedDatabaseLane.PROJECTION,
+        )
+    private val rebuildTransactions =
+        EventSourcedPermitTransactionRunner(
+            resources.database,
+            resources.permits,
+            EventSourcedDatabaseLane.REBUILD,
+        )
+    private val maintenanceTransactions =
+        EventSourcedPermitTransactionRunner(
+            resources.database,
+            resources.permits,
+            EventSourcedDatabaseLane.MAINTENANCE,
+        )
+    private val projectionWorker = ProjectionWorker(projections, resources.eventReader)
+    private val rebuildWorker =
+        ProjectionRebuildWorker(rebuilds, projections, resources.eventReader, resources.rebuildHandler)
+    private val runtimeLeases =
+        ProjectionRuntimeLeaseCoordinator(
+            database = resources.database,
+            leases = resources.leases,
+            ownerDigest = ReceiptDigest.sha256("voucher-projection-runtime\u0000${UUID.randomUUID()}").value,
+            clock = clock,
+        )
+    private val started = AtomicBoolean()
+    private val projectionEnabled = AtomicBoolean()
+    private val rebuildEnabled = AtomicBoolean()
+
+    @Volatile
+    private var executor: ScheduledExecutorService? = null
+
+    @Volatile
+    private var scheduled: ScheduledFuture<*>? = null
+
+    override fun start() {
+        if (!properties.enabled || !started.compareAndSet(false, true)) return
+        maintenanceTransactions.inTransaction {
+            rebuilds.initializeActive(VOUCHER_LIFECYCLE_PROJECTION, clock.instant())
+        }
+        projectionEnabled.set(true)
+        rebuildEnabled.set(true)
+        val runtimeExecutor =
+            Executors.newSingleThreadScheduledExecutor(
+                Thread.ofVirtual().name("voucher-projection-runtime-", 0).factory(),
+            )
+        executor = runtimeExecutor
+        scheduled =
+            runtimeExecutor.scheduleWithFixedDelay(
+                ::tickSafely,
+                0,
+                RUNTIME_POLL_INTERVAL_MILLIS,
+                TimeUnit.MILLISECONDS,
+            )
+        log.info { "voucher_projection_runtime_started" }
+    }
+
+    override fun stopProjection() {
+        projectionEnabled.set(false)
+    }
+
+    override fun stopRebuild() {
+        rebuildEnabled.set(false)
+    }
+
+    override fun stopMaintenance() {
+        scheduled?.cancel(false)
+        executor?.shutdown()
+    }
+
+    override fun releaseFencedLeases() {
+        runtimeLeases.releaseAll()
+    }
+
+    private fun tickSafely() {
+        runCatching {
+            val projectionHealthy = !projectionEnabled.get() || pollActive()
+            val rebuildHealthy = !rebuildEnabled.get() || pollRebuild()
+            val poisonFree =
+                maintenanceTransactions.inTransaction {
+                    telemetry.observeFailedPoisons(
+                        poisonStatus.failedCountsByReasonClass(VOUCHER_LIFECYCLE_PROJECTION),
+                    )
+                }
+            if (projectionHealthy && rebuildHealthy && poisonFree) telemetry.recovered()
+        }.onFailure { failure ->
+            telemetry.failed()
+            log.warn { "voucher_projection_runtime_tick_failed cause=${failure.javaClass.simpleName}" }
+        }
+    }
+
+    private fun pollActive(): Boolean =
+        projectionTransactions.inTransaction {
+            val now = clock.instant()
+            val pointer = findActive(VOUCHER_LIFECYCLE_PROJECTION) ?: return@inTransaction true
+            val key = ProjectionKey(pointer.projection, pointer.generation)
+            val owned = runtimeLeases.acquireActive(key, now)
+            owned?.let { telemetry.observeActive(key, projectionWorker.poll(key, it.lease, now), now) } ?: true
+        }
+
+    private fun pollRebuild(): Boolean =
+        rebuildTransactions.inTransaction {
+            val now = clock.instant()
+            when (val generation = findInProgressGeneration(VOUCHER_LIFECYCLE_PROJECTION)) {
+                null -> {
+                    runtimeLeases.releaseRebuild(now)
+                    true
+                }
+                else -> {
+                    telemetry.observeRebuild(generation)
+                    when (generation.state) {
+                        ProjectionGenerationState.BUILDING -> pollBuilding(generation, now)
+                        ProjectionGenerationState.VALIDATING -> {
+                            validateAndActivate(generation, now)
+                            true
+                        }
+                        ProjectionGenerationState.CANCELLING -> {
+                            maintenance.recover(generation.key, now)
+                            runtimeLeases.releaseRebuild(now)
+                            true
+                        }
+                        else -> true
+                    }
+                }
+            }
+        }
+
+    private fun pollBuilding(
+        generation: ProjectionGeneration,
+        now: Instant,
+    ): Boolean {
+        val owned = runtimeLeases.acquireRebuild(generation.key, now)
+        val healthy =
+            owned?.let {
+                telemetry.observeRebuild(rebuildWorker.poll(generation.key, it.lease, now))
+            } ?: true
+        val current = findGeneration(generation.key) ?: return healthy
+        if (current.state == ProjectionGenerationState.BUILDING &&
+            current.currentPosition == current.targetPosition
+        ) {
+            rebuilds.beginValidation(
+                key = current.key,
+                fencingToken = current.fencingToken,
+                cancellationRevision = current.cancellationRevision,
+                canonicalDigest = digest.compute(current.key),
+                now = now,
+            )
+        }
+        return healthy
+    }
+
+    private fun validateAndActivate(
+        candidate: ProjectionGeneration,
+        now: Instant,
+    ) {
+        val pointer = findActive(candidate.key.projection) ?: return
+        val activeKey = ProjectionKey(pointer.projection, pointer.generation)
+        val activePosition = projections.checkpoint(activeKey)?.position ?: 0L
+        val candidatePosition = projections.checkpoint(candidate.key)?.position ?: 0L
+        val checkpointsMatch =
+            activePosition == candidate.targetPosition && candidatePosition == candidate.targetPosition
+        when {
+            activePosition > candidate.targetPosition ->
+                rebuilds.extendValidationTarget(
+                    key = candidate.key,
+                    extension =
+                        ProjectionValidationTargetExtension(
+                            fencingToken = candidate.fencingToken,
+                            cancellationRevision = candidate.cancellationRevision,
+                            currentTargetPosition = candidate.targetPosition,
+                            newTargetPosition = activePosition,
+                        ),
+                    now = now,
+                )
+
+            checkpointsMatch -> {
+                val candidateDigest = checkNotNull(candidate.canonicalDigest)
+                if (digest.compute(activeKey) == candidateDigest) {
+                    if (rebuilds.activateCandidate(pointer, candidate, candidateDigest, now)) {
+                        runtimeLeases.releaseRebuild(now)
+                        telemetry.activated()
+                        log.info {
+                            "voucher_projection_rebuild_activated generation=${candidate.key.generation}"
+                        }
+                    }
+                } else {
+                    log.warn {
+                        "voucher_projection_validation_mismatch generation=${candidate.key.generation}"
+                    }
+                }
+            }
+        }
+    }
+
+    private companion object : KLogging()
+}
+
+private data class OwnedProjectionLease(
+    val key: ProjectionKey,
+    val lease: ProjectionLease,
+)
+
+private fun ProjectionRebuildRepository.activateCandidate(
+    pointer: ActiveProjectionGeneration,
+    candidate: ProjectionGeneration,
+    candidateDigest: ReceiptDigest,
+    now: Instant,
+): Boolean =
+    activate(
+        key = candidate.key,
+        expectedPointerRevision = pointer.revision,
+        targetHead = candidate.targetPosition,
+        canonicalDigest = candidateDigest,
+        now = now,
+    ) == ProjectionActivationResult.Activated
+
+private class ProjectionRuntimeLeaseCoordinator(
+    private val database: Database,
+    private val leases: ProjectionLeaseRepository,
+    private val ownerDigest: String,
+    private val clock: Clock,
+) {
+    private var active: OwnedProjectionLease? = null
+    private var rebuild: OwnedProjectionLease? = null
+
+    fun acquireActive(
+        key: ProjectionKey,
+        now: Instant,
+    ): OwnedProjectionLease? = refresh(active, key, now).also { active = it }
+
+    fun acquireRebuild(
+        key: ProjectionKey,
+        now: Instant,
+    ): OwnedProjectionLease? = refresh(rebuild, key, now).also { rebuild = it }
+
+    fun releaseRebuild(now: Instant) {
+        rebuild?.release(now)
+        rebuild = null
+    }
+
+    fun releaseAll() {
+        val observedActive = active
+        val observedRebuild = rebuild
+        transaction(database) {
+            observedActive?.release(clock.instant())
+            observedRebuild?.takeUnless { it.key == observedActive?.key }?.release(clock.instant())
+        }
+        active = null
+        rebuild = null
+    }
+
+    private fun refresh(
+        current: OwnedProjectionLease?,
+        key: ProjectionKey,
+        now: Instant,
+    ): OwnedProjectionLease? {
+        current?.takeIf { it.key != key }?.release(now)
+        val matching = current?.takeIf { it.key == key }
+        val lease =
+            matching
+                ?.let { owned ->
+                    if (owned.lease.isRenewalDue(now)) {
+                        leases.renewLease(key.projection, key.generation, owned.lease, now)
+                    } else {
+                        owned.lease
+                    }
+                }
+                ?: leases.acquire(key.projection, key.generation, ownerDigest, now)
+        return lease?.let { OwnedProjectionLease(key, it) }
+    }
+
+    private fun OwnedProjectionLease.release(now: Instant) {
+        leases.release(key.projection, key.generation, lease, now)
+    }
+}

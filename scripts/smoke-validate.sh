@@ -145,8 +145,9 @@ case "${1:-help}" in
     ;;
 
   commerce)
-    # Testcontainers: PostgreSQL and Redis, Java 25 virtual threads
+    # The event-sourced module's test task is container-free; the remaining tasks use Testcontainers.
     run "$GRADLEW \
+      :commerce-event-sourced-promotion-voucher-campaign:test \
       :commerce-order-lifecycle-fulfillment:test \
       :commerce-reservation-control-plane:test \
       :commerce-promotion-voucher-campaign:test \

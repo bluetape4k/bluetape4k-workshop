@@ -114,6 +114,8 @@ jobs:
           ./gradlew
           test
           :commerce-pre-generated-voucher-pool:koverXmlReport
+          :commerce-event-sourced-promotion-voucher-campaign:integrationTest
+          :commerce-event-sourced-promotion-voucher-campaign:koverXmlReport
           :commerce-usage-metering-billing-ledger:integrationTest
           :commerce-usage-metering-billing-ledger:koverXmlReport
           :commerce-usage-metering-billing-event-sourcing:integrationTest
@@ -134,8 +136,10 @@ jobs:
           :operations-job-console-ktor:integrationTest
           --continue
           --max-workers=1
-      - name: Verify voucher pool test and coverage reports
+      - name: Verify commerce integration and coverage reports
         run: |
+          test -n "$(find commerce/event-sourced-promotion-voucher-campaign/build/test-results/integrationTest -name '*.xml' -print -quit)"
+          test -s commerce/event-sourced-promotion-voucher-campaign/build/reports/kover/report.xml
           test -n "$(find commerce/pre-generated-voucher-pool/build/test-results/test -name '*.xml' -print -quit)"
           test -s commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
           test -n "$(find commerce/usage-metering-billing-ledger/build/test-results/integrationTest -name '*.xml' -print -quit)"
@@ -160,6 +164,8 @@ jobs:
             operations/job-console-spring/build/test-results/integrationTest/*.xml
             operations/job-console-ktor/build/test-results/integrationTest/*.xml
             commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
+            commerce/event-sourced-promotion-voucher-campaign/build/test-results/integrationTest/*.xml
+            commerce/event-sourced-promotion-voucher-campaign/build/reports/kover/report.xml
             commerce/usage-metering-billing-ledger/build/test-results/integrationTest/*.xml
             commerce/usage-metering-billing-ledger/build/reports/kover/report.xml
             commerce/usage-metering-billing-event-sourcing/build/test-results/integrationTest/*.xml
