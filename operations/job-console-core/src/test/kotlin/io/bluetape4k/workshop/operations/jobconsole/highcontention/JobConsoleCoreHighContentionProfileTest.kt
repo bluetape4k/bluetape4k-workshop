@@ -15,6 +15,7 @@ class JobConsoleCoreHighContentionProfileTest {
 
     @Test
     fun `selected Job core profile preserves PostgreSQL authority and writes a validated report`() {
+        HighContentionWorkerPid.publishIfConfigured()
         Runtime.version().feature().shouldBeEqualTo(
             System.getProperty("highContentionExpectedJavaVersion")
                 .requireNotNull("highContentionExpectedJavaVersion")

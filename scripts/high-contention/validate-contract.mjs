@@ -289,7 +289,11 @@ class StrictJsonParser {
     }
 }
 
-function canonicalJson(value) {
+export function parseStrictJson(text, source = "JSON") {
+    return new StrictJsonParser(text, source).parse();
+}
+
+export function canonicalJson(value) {
     if (Array.isArray(value)) {
         return `[${value.map(canonicalJson).join(",")}]`;
     }
@@ -302,7 +306,7 @@ function canonicalJson(value) {
     return JSON.stringify(value);
 }
 
-function sha256(value) {
+export function sha256(value) {
     return createHash("sha256").update(value).digest("hex");
 }
 
@@ -385,7 +389,7 @@ function assertNormalizedDescendantPath(value, label) {
     return path;
 }
 
-async function readStrictJson(contractRoot, relativePath) {
+export async function readStrictJson(contractRoot, relativePath) {
     const safeRelativePath = assertNormalizedDescendantPath(relativePath, relativePath);
     const rootPath = resolve(contractRoot);
     const rootMetadata = await lstat(rootPath);
@@ -421,7 +425,7 @@ async function readStrictJson(contractRoot, relativePath) {
         ) {
             throw new Error(`${safeRelativePath} changed while being read`);
         }
-        return new StrictJsonParser(text, safeRelativePath).parse();
+        return parseStrictJson(text, safeRelativePath);
     } finally {
         await fileHandle.close();
     }

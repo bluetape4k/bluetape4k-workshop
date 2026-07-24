@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 internal class TicketHighContentionProfileTest {
     @Test
     fun `run selected Ticket high contention profile`() {
+        TicketHighContentionWorkerPid.publishIfConfigured()
         Runtime.version().feature() shouldBeEqualTo requiredProperty("highContentionExpectedJavaVersion").toInt()
         val runId = requiredProperty("highContentionRunId")
         val profileId = requiredProperty("highContentionProfileId")

@@ -110,6 +110,8 @@ internal object HighContentionCallerBoundary {
         "highContentionImplementation",
         "highContentionExpectedJavaVersion",
         "highContentionParentOwnedRun",
+        "highContentionProcessOwner",
+        "highContentionWorkerPidFile",
     )
 
     fun validate(
@@ -126,7 +128,17 @@ internal object HighContentionCallerBoundary {
         }
 
         val forbiddenSystemProperty = systemPropertyNames.firstOrNull {
-            it.startsWith("high.contention.") || it in reservedChildSystemProperties
+            it.startsWith("high.contention.") ||
+                (
+                    it in reservedChildSystemProperties &&
+                        !(
+                            allowDescriptorChannel &&
+                                it in setOf(
+                                    "highContentionProcessOwner",
+                                    "highContentionWorkerPidFile",
+                                )
+                            )
+                    )
         }
         if (forbiddenSystemProperty != null) {
             throw GradleException("caller supplied a reserved high-contention system property")
@@ -201,7 +213,20 @@ fun Project.registerHighContentionProfileTask(
         inputs.dir(contractRoot)
         inputs.property("highContentionRunId", runId)
         inputs.property("highContentionProfileId", profileId)
-        outputs.dir(outputRoot)
+        outputs.file(
+            runId.zip(profileId) { selectedRunId, selectedProfileId ->
+                val selectedRunRoot = outputRoot.get().asFile.resolve(selectedRunId)
+                if (identity.implementation == "ticket-spring") {
+                    selectedRunRoot.resolve(
+                        "${identity.implementation}-$selectedProfileId-report.json",
+                    )
+                } else {
+                    selectedRunRoot.resolve(
+                        "reports/${identity.implementation}/$selectedProfileId.json",
+                    )
+                }
+            },
+        )
         outputs.upToDateWhen { false }
         javaLauncher.set(javaToolchains.launcherFor {
             languageVersion.set(JavaLanguageVersion.of(25))
@@ -221,6 +246,8 @@ fun Project.registerHighContentionProfileTask(
 
         doFirst {
             val internalDescriptor = descriptorPath.orNull
+            val internalProcessOwner =
+                providers.systemProperty("highContentionProcessOwner").orNull
             HighContentionCallerBoundary.validate(
                 projectPropertyNames = prefixedProjectProperties.get().keys,
                 systemPropertyNames =
@@ -253,6 +280,16 @@ fun Project.registerHighContentionProfileTask(
                     selection = selection,
                     identity = identity,
                 )
+                val descriptorDigest = sha256(
+                    Files.readAllBytes(Path.of(internalDescriptor)),
+                )
+                if (internalProcessOwner != descriptorDigest) {
+                    throw GradleException(
+                        "high-contention process owner does not match its child descriptor",
+                    )
+                }
+                Files.delete(Path.of(internalDescriptor))
+                forceDirectory(Path.of(internalDescriptor).parent)
                 true
             }
 
@@ -274,6 +311,15 @@ fun Project.registerHighContentionProfileTask(
                 "highContentionParentOwnedRun",
                 parentOwnedRun.toString(),
             )
+            internalProcessOwner?.let {
+                systemProperty("highContentionProcessOwner", it)
+                val workerPidFile = trustedOutputRoot.resolve(
+                    "${selection.runId}/children/${identity.implementation}/" +
+                        "${selection.profileId}/worker.pid",
+                )
+                requireAbsentContainedTarget(selectedRunRoot.toRealPath(NOFOLLOW_LINKS), workerPidFile)
+                systemProperty("highContentionWorkerPidFile", workerPidFile.toString())
+            }
         }
 
         doLast {
@@ -429,6 +475,10 @@ internal object HighContentionChildDescriptorValidator {
                 "reports/${identity.implementation}/${selection.profileId}.json",
             )
         }
+        val workerPidFile = trustedRunRoot.resolve(
+            "children/${identity.implementation}/${selection.profileId}/worker.pid",
+        )
+        requireAbsentContainedTarget(trustedRunRoot, workerPidFile)
         requireAbsentContainedTarget(trustedRunRoot, childJournal)
         requireAbsentContainedTarget(trustedRunRoot, report)
     }

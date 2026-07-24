@@ -28,6 +28,7 @@ class JobConsoleLiveProfileRunner(
     private val implementation = implementation.requireNotBlank("implementation")
 
     fun run() {
+        HighContentionWorkerPid.publishIfConfigured()
         Runtime.version().feature().shouldBeEqualTo(
             requiredProperty("highContentionExpectedJavaVersion").toInt(),
         )

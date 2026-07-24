@@ -132,7 +132,7 @@ internal class HighContentionProcessReaper(
     }
 }
 
-private class JdkHighContentionProcessRef(
+internal class JdkHighContentionProcessRef(
     private val delegate: ProcessHandle,
 ) : HighContentionProcessRef {
 
@@ -157,6 +157,42 @@ private class JdkHighContentionProcessRef(
     override fun destroyForcibly() {
         delegate.destroyForcibly()
     }
+}
+
+internal fun discoverHighContentionOwnedProcesses(
+    propertyName: String,
+    ownerToken: String,
+): List<HighContentionProcessRef> {
+    val ownerArgument = "-D$propertyName=$ownerToken"
+    return ProcessHandle.allProcesses()
+        .filter { process ->
+            val info = process.info()
+            info.arguments()
+                .map { arguments -> arguments.any { it == ownerArgument } }
+                .orElse(false) ||
+                info.commandLine()
+                    .map { commandLine -> commandLine.contains(ownerArgument) }
+                    .orElse(false)
+        }
+        .map(::JdkHighContentionProcessRef)
+        .toList()
+}
+
+internal fun findHighContentionOwnedProcess(
+    pid: Long,
+    propertyName: String,
+    ownerToken: String,
+): HighContentionProcessRef? {
+    val process = ProcessHandle.of(pid).orElse(null) ?: return null
+    val ownerArgument = "-D$propertyName=$ownerToken"
+    val info = process.info()
+    val owned = info.arguments()
+        .map { arguments -> arguments.any { it == ownerArgument } }
+        .orElse(false) ||
+        info.commandLine()
+            .map { commandLine -> commandLine.contains(ownerArgument) }
+            .orElse(false)
+    return if (owned) JdkHighContentionProcessRef(process) else null
 }
 
 @DisableCachingByDefault(because = "This verification task intentionally creates and reaps a live nested build.")
@@ -389,19 +425,7 @@ abstract class HighContentionProcessProbeTask : DefaultTask() {
     }
 
     private fun discoverOwnedProcesses(probeId: String): List<HighContentionProcessRef> {
-        val ownerArgument = "-D$PROCESS_OWNER_PROPERTY=$probeId"
-        return ProcessHandle.allProcesses()
-            .filter { process ->
-                val info = process.info()
-                info.arguments()
-                    .map { arguments -> arguments.any { it == ownerArgument } }
-                    .orElse(false) ||
-                    info.commandLine()
-                        .map { commandLine -> commandLine.contains(ownerArgument) }
-                        .orElse(false)
-            }
-            .map(::JdkHighContentionProcessRef)
-            .toList()
+        return discoverHighContentionOwnedProcesses(PROCESS_OWNER_PROPERTY, probeId)
     }
 
     private fun writeCreateNewAndForce(path: Path, content: String) {
