@@ -34,6 +34,7 @@ class JobConsoleLiveProfileRunner(
         )
         val runId = requiredProperty("highContentionRunId")
         val profileId = requiredProperty("highContentionProfileId")
+        val workflowRunAndAttempt = requiredProperty("highContentionWorkflowRunAndAttempt")
         requiredProperty("highContentionImplementation").shouldBeEqualTo(implementation)
         val mode = HighContentionMode.entries.single {
             it.wireValue == requiredProperty("highContentionMode")
@@ -92,6 +93,7 @@ class JobConsoleLiveProfileRunner(
                 contract = contract,
                 runId = runId,
                 implementation = implementation,
+                workflowRunAndAttempt = workflowRunAndAttempt,
                 startedAt = startedAt,
                 startedNanos = startedNanos,
                 workload = workload,
@@ -145,6 +147,7 @@ private fun HighContentionProfile.jobConsoleReport(
     contract: LoadedHighContentionContract,
     runId: String,
     implementation: String,
+    workflowRunAndAttempt: String,
     startedAt: Instant,
     startedNanos: Long,
     workload: HighContentionWorkloadResult,
@@ -191,6 +194,7 @@ private fun HighContentionProfile.jobConsoleReport(
             sourceCommit = "local-worktree",
             sourceDirty = true,
             sourceReproducible = false,
+            workflowRunAndAttempt = workflowRunAndAttempt,
         ),
         phaseDurationsNanos = mapOf("workload" to actualDurationNanos),
         workload = HighContentionWorkloadEvidence(

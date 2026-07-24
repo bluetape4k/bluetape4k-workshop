@@ -108,6 +108,7 @@ internal object HighContentionCallerBoundary {
         "highContentionProfileId",
         "highContentionMode",
         "highContentionImplementation",
+        "highContentionWorkflowRunAndAttempt",
         "highContentionExpectedJavaVersion",
         "highContentionParentOwnedRun",
         "highContentionProcessOwner",
@@ -306,6 +307,10 @@ fun Project.registerHighContentionProfileTask(
             systemProperty("highContentionProfileId", selection.profileId)
             systemProperty("highContentionMode", identity.mode)
             systemProperty("highContentionImplementation", identity.implementation)
+            systemProperty(
+                "highContentionWorkflowRunAndAttempt",
+                HighContentionWorkflowIdentity.fromRunId(selection.runId),
+            )
             systemProperty("highContentionExpectedJavaVersion", "25")
             systemProperty(
                 "highContentionParentOwnedRun",

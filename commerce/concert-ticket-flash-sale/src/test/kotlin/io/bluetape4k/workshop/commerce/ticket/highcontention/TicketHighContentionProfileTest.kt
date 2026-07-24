@@ -34,6 +34,7 @@ internal class TicketHighContentionProfileTest {
         Runtime.version().feature() shouldBeEqualTo requiredProperty("highContentionExpectedJavaVersion").toInt()
         val runId = requiredProperty("highContentionRunId")
         val profileId = requiredProperty("highContentionProfileId")
+        val workflowRunAndAttempt = requiredProperty("highContentionWorkflowRunAndAttempt")
         requiredProperty("highContentionImplementation") shouldBeEqualTo IMPLEMENTATION
         val mode = TicketHighContentionMode.entries.single {
             it.wireValue == requiredProperty("highContentionMode")
@@ -90,6 +91,7 @@ internal class TicketHighContentionProfileTest {
                     profile.report(
                         contract = contract,
                         runId = runId,
+                        workflowRunAndAttempt = workflowRunAndAttempt,
                         startedAt = startedAt,
                         startedNanos = startedNanos,
                         workload = workload,
@@ -516,6 +518,7 @@ private fun TicketHighContentionProfile.scheduleVector(): TicketScheduleVector =
 private fun TicketHighContentionProfile.report(
     contract: LoadedTicketHighContentionContract,
     runId: String,
+    workflowRunAndAttempt: String,
     startedAt: Instant,
     startedNanos: Long,
     workload: TicketWorkloadResult,
@@ -540,6 +543,9 @@ private fun TicketHighContentionProfile.report(
             "javaFeature" to Runtime.version().feature(),
             "databasePool" to "HikariCP",
             "redisPath" to "proxied",
+            "workflowRunAndAttempt" to workflowRunAndAttempt.requireNotBlank(
+                "workflowRunAndAttempt",
+            ),
         ),
         "phaseDurationsNanos" to mapOf("workload" to duration),
         "workload" to mapOf(

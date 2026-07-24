@@ -350,14 +350,26 @@ data class HighContentionEnvironmentEvidence(
     val sourceCommit: String,
     val sourceDirty: Boolean,
     val sourceReproducible: Boolean,
+    val workflowRunAndAttempt: String,
 ) {
     fun validate(): HighContentionEnvironmentEvidence =
         apply {
             sourceCommit.requireNotBlank("sourceCommit")
+            workflowRunAndAttempt.requireNotBlank("workflowRunAndAttempt")
+            require(
+                workflowRunAndAttempt == "local-0" ||
+                    WORKFLOW_RUN_AND_ATTEMPT.matches(workflowRunAndAttempt),
+            ) {
+                "workflowRunAndAttempt must be local-0 or a hosted workflow run and attempt"
+            }
             if (sourceDirty && sourceReproducible) {
                 throw IllegalArgumentException("dirty source cannot be reproducible")
             }
         }
+
+    private companion object {
+        val WORKFLOW_RUN_AND_ATTEMPT = Regex("[0-9]+-[1-9][0-9]*")
+    }
 }
 
 data class HighContentionReportObservations(

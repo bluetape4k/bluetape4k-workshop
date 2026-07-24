@@ -21,6 +21,7 @@ async function fixture() {
         schemaVersion: 1,
         runId: "run-1",
         mode: "ci-correctness",
+        workflowRunAndAttempt: "local-0",
         expectedChildren: [expectedChild],
     });
     await writeJsonl(join(runRoot, "run-journal.jsonl"), [
@@ -94,7 +95,7 @@ function validReport() {
         implementation: "job-core",
         startedAt: "2026-07-24T00:00:00Z",
         endedAt: "2026-07-24T00:00:01Z",
-        environment: {},
+        environment: { workflowRunAndAttempt: "local-0" },
         phaseDurationsNanos: { workload: 1 },
         workload: {
             schedule: {
@@ -135,7 +136,25 @@ test("valid closed run writes one summary and upload manifest", async () => {
         const upload = JSON.parse(await readFile(join(runRoot, "upload-manifest.json"), "utf8"));
         assert.equal(summary.result, "PASS");
         assert.equal(summary.maxActiveTopologies, 1);
-        assert.ok(upload.files.includes("reports/job-core/burst.json"));
+        assert.equal(summary.workflowRunAndAttempt, "local-0");
+        assert.equal(upload.mode, "ci-correctness");
+        assert.equal(upload.workflowRunAndAttempt, "local-0");
+        assert.ok(upload.files.some((entry) => entry.path === "reports/job-core/burst.json"));
+        assert.ok(upload.files.every((entry) => /^[0-9a-f]{64}$/u.test(entry.sha256)));
+    } finally {
+        await rm(root, { force: true, recursive: true });
+    }
+});
+
+test("workflow identity mismatch between manifest and report fails closed", async () => {
+    const { root, runRoot } = await fixture();
+    try {
+        const reportPath = join(runRoot, "reports/job-core/burst.json");
+        const report = JSON.parse(await readFile(reportPath, "utf8"));
+        report.environment.workflowRunAndAttempt = "123-2";
+        await writeJson(reportPath, report);
+
+        await assert.rejects(validateRun(contractRoot, runRoot), /workflow run and attempt/);
     } finally {
         await rm(root, { force: true, recursive: true });
     }

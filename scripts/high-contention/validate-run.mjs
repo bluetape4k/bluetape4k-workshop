@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { constants as fsConstants } from "node:fs";
 import {
     link,
@@ -19,6 +20,8 @@ import {
 } from "./validate-contract.mjs";
 
 const IDENTIFIER = /^[a-z0-9][a-z0-9._-]{0,63}$/u;
+const HOSTED_RUN_ID = /^(?:examples|nightly)-([0-9]+)-([1-9][0-9]*)$/u;
+const HOSTED_WORKFLOW_IDENTITY = /^[0-9]+-[1-9][0-9]*$/u;
 const IMPLEMENTATIONS = ["job-core", "job-spring", "job-ktor", "ticket-spring"];
 const TERMINAL_STATUSES = ["PASS", "FAIL", "ERROR", "UNAVAILABLE"];
 const ERROR_CODES = [
@@ -110,6 +113,23 @@ function array(value, label) {
 function enumValue(value, allowed, label) {
     if (!allowed.includes(value)) throw new Error(`${label} is outside its closed vocabulary`);
     return value;
+}
+
+function workflowIdentity(runId, value) {
+    const hosted = HOSTED_RUN_ID.exec(runId);
+    const expected = hosted ? `${hosted[1]}-${hosted[2]}` : "local-0";
+    if (
+        typeof value !== "string" ||
+        (value !== "local-0" && !HOSTED_WORKFLOW_IDENTITY.test(value)) ||
+        value !== expected
+    ) {
+        throw new Error("workflow run and attempt does not match the run identifier");
+    }
+    return value;
+}
+
+function sha256(bytes) {
+    return createHash("sha256").update(bytes).digest("hex");
 }
 
 function assertNoRedactionLeak(text, label) {
@@ -365,7 +385,7 @@ export async function validateRun(contractRootValue, runRootValue) {
     const manifest = await readStrictJson(runRoot, "run-manifest.json");
     exactObject(
         manifest,
-        ["schemaVersion", "runId", "mode", "expectedChildren"],
+        ["schemaVersion", "runId", "mode", "workflowRunAndAttempt", "expectedChildren"],
         "run-manifest.json",
     );
     if (
@@ -375,6 +395,10 @@ export async function validateRun(contractRootValue, runRootValue) {
         throw new Error("run manifest schema or mode is invalid");
     }
     const runId = identifier(manifest.runId, "run manifest runId");
+    const workflowRunAndAttempt = workflowIdentity(
+        runId,
+        manifest.workflowRunAndAttempt,
+    );
     const expectedChildren = array(manifest.expectedChildren, "run manifest expectedChildren").map(
         (child, index) => {
             exactObject(child, ["profileId", "implementation"], `expectedChildren[${index}]`);
@@ -421,6 +445,14 @@ export async function validateRun(contractRootValue, runRootValue) {
         ) {
             throw new Error(`${reportPath} tuple does not match the run manifest`);
         }
+        if (
+            report.environment === null ||
+            typeof report.environment !== "object" ||
+            Array.isArray(report.environment) ||
+            report.environment.workflowRunAndAttempt !== workflowRunAndAttempt
+        ) {
+            throw new Error(`${reportPath} workflow run and attempt does not match the run manifest`);
+        }
         validateSchedule(report, reportPath);
         walkEvidenceReferences(report).forEach((reference) => {
             if (!reference.startsWith("evidence/")) {
@@ -449,6 +481,7 @@ export async function validateRun(contractRootValue, runRootValue) {
         schemaVersion: 1,
         runId,
         mode: manifest.mode,
+        workflowRunAndAttempt,
         result: derivedResult,
         childCount: expectedChildren.length,
         terminalStatusCounts: Object.fromEntries(
@@ -460,12 +493,22 @@ export async function validateRun(contractRootValue, runRootValue) {
         maxActiveTopologies: 1,
         cleanupZeroLive: true,
     };
+    await writeNoReplaceJson(join(runRoot, "summary.json"), summary);
+    artifactFiles.push("summary.json");
     const uploadManifest = {
         schemaVersion: 1,
         runId,
-        files: [...artifactFiles, "summary.json", "upload-manifest.json"].sort(),
+        mode: manifest.mode,
+        workflowRunAndAttempt,
+        files: await Promise.all(
+            artifactFiles
+                .sort()
+                .map(async (path) => ({
+                    path,
+                    sha256: sha256(await readFile(join(runRoot, path))),
+                })),
+        ),
     };
-    await writeNoReplaceJson(join(runRoot, "summary.json"), summary);
     await writeNoReplaceJson(join(runRoot, "upload-manifest.json"), uploadManifest);
     return { result: "PASS" };
 }

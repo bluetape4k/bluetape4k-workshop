@@ -368,6 +368,7 @@ class HighContentionReportTest {
                 sourceCommit = "0123456789abcdef",
                 sourceDirty = false,
                 sourceReproducible = true,
+                workflowRunAndAttempt = "local-0",
             ),
             phaseDurationsNanos = mapOf("workload" to 1_000_000_000),
             workload = HighContentionWorkloadEvidence(

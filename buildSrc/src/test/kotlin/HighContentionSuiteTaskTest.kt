@@ -35,6 +35,14 @@ class HighContentionSuiteTaskTest {
     }
 
     @Test
+    fun `workflow identity is derived only from exact hosted run ids`() {
+        assertEquals("123-2", HighContentionWorkflowIdentity.fromRunId("examples-123-2"))
+        assertEquals("456-1", HighContentionWorkflowIdentity.fromRunId("nightly-456-1"))
+        assertEquals("local-0", HighContentionWorkflowIdentity.fromRunId("developer-run"))
+        assertEquals("local-0", HighContentionWorkflowIdentity.fromRunId("examples-spoof-2"))
+    }
+
+    @Test
     fun `exact filters reject zero selection`() {
         assertFailsWith<IllegalArgumentException> {
             HighContentionSuiteSelection.select(

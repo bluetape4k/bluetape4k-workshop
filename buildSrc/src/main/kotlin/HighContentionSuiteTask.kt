@@ -39,6 +39,15 @@ internal data class HighContentionChildKey(
     val implementation: String,
 )
 
+internal object HighContentionWorkflowIdentity {
+    private val HOSTED_RUN_ID = Regex("""^(?:examples|nightly)-([0-9]+)-([1-9][0-9]*)$""")
+
+    fun fromRunId(runId: String): String =
+        HOSTED_RUN_ID.matchEntire(runId)
+            ?.let { match -> "${match.groupValues[1]}-${match.groupValues[2]}" }
+            ?: "local-0"
+}
+
 object HighContentionRootCallerBoundary {
     private val allowedProjectProperties = setOf(
         "highContentionRunId",
@@ -667,6 +676,7 @@ abstract class HighContentionSuiteTask : DefaultTask() {
         val manifestBytes = runManifestBytes(
             runId = selectedRunId,
             mode = selectedMode,
+            workflowRunAndAttempt = HighContentionWorkflowIdentity.fromRunId(selectedRunId),
             children = selectedChildren,
         )
         writeNoReplace(runRoot.resolve("run-manifest.json"), manifestBytes)
@@ -1014,6 +1024,7 @@ abstract class HighContentionSuiteTask : DefaultTask() {
     private fun runManifestBytes(
         runId: String,
         mode: String,
+        workflowRunAndAttempt: String,
         children: List<HighContentionChildKey>,
     ): ByteArray =
         JsonOutput.toJson(
@@ -1021,6 +1032,7 @@ abstract class HighContentionSuiteTask : DefaultTask() {
                 "schemaVersion" to 1,
                 "runId" to runId,
                 "mode" to mode,
+                "workflowRunAndAttempt" to workflowRunAndAttempt,
                 "expectedChildren" to children.map {
                     mapOf(
                         "profileId" to it.profileId,
