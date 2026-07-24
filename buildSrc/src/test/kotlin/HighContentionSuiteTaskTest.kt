@@ -27,6 +27,7 @@ class HighContentionSuiteTaskTest {
         val diagnostic = HighContentionChildFailureDiagnostic.describe(
             child = HighContentionChildKey("worker-restart", "ticket-spring"),
             outputLog = outputLog,
+            exitCode = 1,
             secrets = listOf(capability, ownerToken),
         )
 
@@ -35,6 +36,34 @@ class HighContentionSuiteTaskTest {
         assertTrue("line-45 [REDACTED] [REDACTED]" in diagnostic)
         assertTrue(capability !in diagnostic)
         assertTrue(ownerToken !in diagnostic)
+    }
+
+    @Test
+    fun `nested Gradle runtime bounds heap and avoids a second Kotlin daemon`() {
+        assertEquals(
+            listOf(
+                "-Dorg.gradle.jvmargs=-Xmx2g",
+                "-Pkotlin.compiler.execution.strategy=in-process",
+            ),
+            HighContentionChildGradleRuntime.arguments,
+        )
+    }
+
+    @Test
+    fun `abrupt Linux child termination is classified as a killed process`(
+        @org.junit.jupiter.api.io.TempDir root: Path,
+    ) {
+        val outputLog = root.resolve("child.log")
+        Files.writeString(outputLog, "> Task :operations-job-console-core:highContentionCiProfile\n")
+
+        val diagnostic = HighContentionChildFailureDiagnostic.describe(
+            child = HighContentionChildKey("burst", "job-core"),
+            outputLog = outputLog,
+            exitCode = 137,
+            secrets = emptyList(),
+        )
+
+        assertTrue(diagnostic.startsWith("job-core/burst: CHILD_PROCESS_KILLED"))
     }
 
     @Test

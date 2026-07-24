@@ -35,6 +35,25 @@ test("high-contention sources keep polling and infrastructure behind approved bo
     assert.deepEqual(violations, []);
 });
 
+test("hosted parent and nested child Gradle runtimes stay within runner memory", async () => {
+    const examples = await readFile(".github/workflows/Examples.yml", "utf8");
+    const nightly = await readFile(".github/workflows/nightly.yml", "utf8");
+    const coordinator = await readFile(
+        "buildSrc/src/main/kotlin/HighContentionSuiteTask.kt",
+        "utf8",
+    );
+
+    for (const workflow of [examples, nightly]) {
+        assert.match(workflow, /GRADLE_OPTS: "-Dorg\.gradle\.jvmargs=-Xmx2g/u);
+        assert.match(workflow, /-Pkotlin\.compiler\.execution\.strategy=in-process/u);
+    }
+    assert.match(coordinator, /"-Dorg\.gradle\.jvmargs=-Xmx2g"/u);
+    assert.match(
+        coordinator,
+        /"-Pkotlin\.compiler\.execution\.strategy=in-process"/u,
+    );
+});
+
 async function kotlinFiles(root) {
     const files = [];
     for (const entry of await readdir(root, { withFileTypes: true })) {

@@ -487,13 +487,14 @@ jobs:
           cache-read-only: true
       - name: Run the CI correctness matrix
         env:
-          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx2g -Dorg.gradle.daemon=false"
           TESTCONTAINERS_RYUK_DISABLED: "true"
           DOCKER_HOST: "unix:///var/run/docker.sock"
         run: >-
           ./gradlew
           highContentionCi
           -PhighContentionRunId=examples-${{ github.run_id }}-${{ github.run_attempt }}
+          -Pkotlin.compiler.execution.strategy=in-process
           --max-workers=1
           --stacktrace
       - name: Validate and stage bounded evidence

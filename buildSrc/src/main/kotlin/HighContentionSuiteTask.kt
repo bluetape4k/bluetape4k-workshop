@@ -761,6 +761,7 @@ internal object HighContentionChildFailureDiagnostic {
     fun describe(
         child: HighContentionChildKey,
         outputLog: Path,
+        exitCode: Int?,
         secrets: List<String>,
     ): String {
         val output = if (
@@ -778,6 +779,7 @@ internal object HighContentionChildFailureDiagnostic {
             "source worktree must be clean" in output -> "DIRTY_SOURCE"
             "Compilation error" in output -> "CHILD_COMPILATION_ERROR"
             "There were failing tests" in output -> "CHILD_TEST_FAILURE"
+            exitCode == 137 -> "CHILD_PROCESS_KILLED"
             else -> "CHILD_EXECUTION_ERROR"
         }
         val excerpt = output
@@ -804,6 +806,13 @@ internal object HighContentionChildFailureDiagnostic {
     private const val MAX_OUTPUT_BYTES = 4L * 1024 * 1024
     private const val MAX_EXCERPT_LINES = 40
     private const val MAX_EXCERPT_CHARS = 16 * 1024
+}
+
+internal object HighContentionChildGradleRuntime {
+    val arguments = listOf(
+        "-Dorg.gradle.jvmargs=-Xmx2g",
+        "-Pkotlin.compiler.execution.strategy=in-process",
+    )
 }
 
 @DisableCachingByDefault(because = "Runs heavyweight child profiles in isolated external Gradle processes.")
@@ -1013,6 +1022,7 @@ abstract class HighContentionSuiteTask : DefaultTask() {
                                 HighContentionChildFailureDiagnostic.describe(
                                     child = child,
                                     outputLog = outputLog,
+                                    exitCode = result.exitCode,
                                     secrets = listOf(capability, ownerToken),
                                 )
                             }",
@@ -1165,6 +1175,7 @@ abstract class HighContentionSuiteTask : DefaultTask() {
             }
             add(wrapper.toString())
             add("-D${HighContentionChildProcessRunner.PROCESS_OWNER_PROPERTY}=$ownerToken")
+            addAll(HighContentionChildGradleRuntime.arguments)
             add("$projectPath:$task")
             add("--no-daemon")
             add("--no-watch-fs")
