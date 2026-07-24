@@ -35,7 +35,7 @@
 Run:
 
 ```bash
-./gradlew :observability-observability-basic:dependencyInsight \
+./gradlew :observability-basic:dependencyInsight \
   --dependency bluetape4k-micrometer \
   --configuration runtimeClasspath \
   --console=plain
