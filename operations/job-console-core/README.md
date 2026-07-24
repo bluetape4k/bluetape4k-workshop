@@ -32,3 +32,26 @@ black-box contract used by both adapters.
 ./gradlew :operations-job-console-core:test
 ./gradlew :operations-job-console-core:integrationTest --max-workers=1
 ```
+
+## High-contention evidence
+
+Run the repository-wide profiles with a running Docker daemon, JDK 25, and at
+least 4 GiB of memory available to Gradle and the containers:
+
+```bash
+CI_RUN_ID=developer-ci-001
+REFERENCE_RUN_ID=developer-reference-001
+./gradlew highContentionCi -PhighContentionRunId="$CI_RUN_ID" --max-workers=1
+./gradlew highContentionLocalReference -PhighContentionRunId="$REFERENCE_RUN_ID" --max-workers=1
+```
+
+The correctness gate is `highContentionCi`. `highContentionLocalReference`
+records environment-specific execution observations; it does not rank
+frameworks and does not establish production capacity. Canonical reports are
+written under `build/reports/high-contention/<run-id>/`. Use a new run ID for
+every command; local-reference execution also requires a clean worktree.
+
+PostgreSQL remains the authority for leases, fencing, checkpoints, deduplication,
+and terminal state. Toxiproxy is limited to cutting and restoring the Redis path,
+including old and newly opened connections; it does not simulate PostgreSQL
+authority or database failover.

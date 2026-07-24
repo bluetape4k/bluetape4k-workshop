@@ -213,3 +213,28 @@ node scripts/validate-readme-diagram-qa.mjs
 node scripts/validate-sequence-diagrams.mjs
 ./gradlew :commerce-concert-ticket-flash-sale:test --max-workers=1
 ```
+
+## 고경합 증거
+
+Docker daemon이 실행 중이고 JDK 25를 사용하며 Gradle과 container가 사용할
+수 있는 메모리가 최소 4 GiB인 환경에서 Ticket과 Job Console profile을
+실행합니다.
+
+```bash
+CI_RUN_ID=developer-ci-001
+REFERENCE_RUN_ID=developer-reference-001
+./gradlew highContentionCi -PhighContentionRunId="$CI_RUN_ID" --max-workers=1
+./gradlew highContentionLocalReference -PhighContentionRunId="$REFERENCE_RUN_ID" --max-workers=1
+```
+
+정확성 게이트는 `highContentionCi`입니다. `highContentionLocalReference`는
+해당 환경의 실행 관찰값을 기록할 뿐이며, 프레임워크 순위를 매기지 않는다.
+또한 운영 용량을 입증하지 않는다. Canonical report는
+`build/reports/high-contention/<run-id>/` 아래에 기록됩니다. 명령마다 새 run
+ID를 사용해야 하며 local-reference 실행에는 clean worktree도 필요합니다.
+
+Ticket adapter는 Spring-managed HikariCP pool을 사용하지만 inventory,
+purchase fencing, payment reconciliation, deduplication, receipt의 권위는
+PostgreSQL이 유지합니다. Toxiproxy는 기존 connection과 새 connection을
+포함한 Redis admission 경로의 단절·복구에만 사용하며 PostgreSQL 권위를
+대체하거나 broker, database, host failover를 증명하지 않습니다.

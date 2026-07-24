@@ -17,6 +17,7 @@ directory unless they have been deliberately promoted.
 Recent delivery lessons:
 
 - [Issue #573 commerce shared boundary](2026-07-24-issue-573-commerce-shared-boundary.md)
+- [Issue #522 high-contention profiles](2026-07-24-issue-522-high-contention-profiles.md)
 - [Issue #538 event-sourced promotion voucher campaign](2026-07-24-issue-538-event-sourced-promotion-voucher-campaign.md)
 - [Issue #555 usage billing microservices](2026-07-23-issue-555-usage-billing-microservices.md)
 - [Issue #553 event-sourced usage billing](2026-07-22-issue-553-event-sourced-usage-billing.md)
