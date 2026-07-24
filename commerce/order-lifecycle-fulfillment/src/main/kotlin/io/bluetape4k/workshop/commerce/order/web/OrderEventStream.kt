@@ -4,6 +4,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.commerce.order.query.OrderLifecycleQueryService
 import org.springframework.beans.factory.DisposableBean
 import org.springframework.core.env.Environment
@@ -18,6 +19,8 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 internal class StreamCapacityExceeded : IllegalStateException("SSE connection capacity exceeded")
 
@@ -49,15 +52,15 @@ internal class OrderEventStream(
         )
     private val maxConnections = environment.getProperty("order-lifecycle.sse.max-connections", Int::class.java, 1_000)
     private val maxConcurrentPolls =
-        environment.getProperty("order-lifecycle.sse.max-concurrent-polls", Int::class.java, 4).also {
-            require(it > 0) { "order-lifecycle.sse.max-concurrent-polls must be positive" }
-        }
+        environment
+            .getProperty("order-lifecycle.sse.max-concurrent-polls", Int::class.java, 4)
+            .requirePositiveNumber("order-lifecycle.sse.max-concurrent-polls")
     private val pollPermits = Semaphore(maxConcurrentPolls, true)
     private val activeConnections = AtomicInteger()
     private val connections = ConcurrentHashMap<SseEmitter, StreamConnection>()
     private val feeds = ConcurrentHashMap<UUID, OrderFeed>()
     private val draining = AtomicBoolean()
-    private val lifecycleLock = Any()
+    private val lifecycleLock = ReentrantLock()
 
     fun open(
         orderId: UUID,
@@ -65,7 +68,7 @@ internal class OrderEventStream(
     ): SseEmitter {
         val emitter = SseEmitter(timeout.toMillis())
         val connection = StreamConnection(emitter, orderId, lastEventId, heartbeatInterval)
-        synchronized(lifecycleLock) {
+        lifecycleLock.withLock {
             if (draining.get()) throw StreamShuttingDown()
             if (activeConnections.incrementAndGet() > maxConnections) {
                 activeConnections.decrementAndGet()
@@ -98,12 +101,12 @@ internal class OrderEventStream(
                     .data(snapshot)
             )
 
-            synchronized(lifecycleLock) {
+            lifecycleLock.withLock {
                 if (draining.get()) throw StreamShuttingDown()
                 val feed =
-                    feeds.compute(orderId) { _, current ->
+                    checkNotNull(feeds.compute(orderId) { _, current ->
                         current?.takeUnless { it.closed.get() } ?: OrderFeed(orderId)
-                    }!!
+                    }) { "feed creation must return an OrderFeed" }
                 connection.feed = feed
                 feed.connections[emitter] = connection
                 start(feed)
@@ -122,7 +125,7 @@ internal class OrderEventStream(
 
     override fun destroy() {
         val (drainingConnections, drainingFeeds) =
-            synchronized(lifecycleLock) {
+            lifecycleLock.withLock {
                 if (!draining.compareAndSet(false, true)) return
                 val registeredConnections = connections.values.toList()
                 registeredConnections.forEach { connection ->

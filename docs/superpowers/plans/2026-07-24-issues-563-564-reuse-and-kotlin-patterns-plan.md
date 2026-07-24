@@ -4,7 +4,7 @@
 
 **Goal:** 릴리스 기반 재사용 경계를 기록하고, virtual-thread SSE P1 위반을 수정하며, 남은 Kotlin pattern P2를 독립적으로 검증 가능한 이슈로 분해한다.
 
-**Architecture:** 이 coordination branch는 #563의 재사용 matrix, #564의 severity evidence, Order Lifecycle SSE P1 수정만 소유한다. `shared` API를 추가하지 않고, existing released API 또는 provider issue를 선택한다. Job Console UUID 및 대규모 test assertion migration은 파일·module 검증 범위가 독립적이므로 linked follow-up issue로 분리한다.
+**Architecture:** 이 coordination branch는 #563의 재사용 matrix, #564의 severity evidence, Order Lifecycle SSE P1 수정과 SSE poll configuration의 exact released-helper 전환만 소유한다. `shared` API를 추가하지 않고, existing released API 또는 provider issue를 선택한다. Job Console UUID, 대규모 test assertion migration, 남은 validation migration은 파일·module 검증 범위가 독립적이므로 linked follow-up issue로 분리한다.
 
 **Tech Stack:** Kotlin 2.4, Java 21 virtual threads, Spring MVC `SseEmitter`, Gradle, `bluetape4k-dependencies` BOM, `bluetape4k-core`, `bluetape4k-assertions`, `bluetape4k-junit5`, GitHub CLI.
 
@@ -163,13 +163,12 @@ Expected: the scan produces no matches, all `OrderEventStreamTest` cases pass,
 and no capacity leak, duplicate poller, shutdown timeout, or open/shutdown race
 regression appears.
 
-## Task 3: Adopt released validation helpers only where their contract matches (#564)
+## Task 3: Adopt an exact released validation helper and isolate the remaining validation work (#564)
 
 **Files:**
-- Potentially modify the seven Order Lifecycle caller-validation files listed in
-  **Files and Artifacts**.
-- Test the matching existing domain/application test files only when a source
-  change is made.
+- Modify: `OrderEventStream.kt` and `OrderEventStreamTest.kt` for the
+  `maxConcurrentPolls` exact positive-number contract.
+- Create one follow-up issue for the remaining Order Lifecycle validation sites.
 
 - [ ] **Step 1: Inspect exact released `RequireSupportKt` signatures.**
 
@@ -183,19 +182,26 @@ javap -classpath <resolved-bluetape4k-core-jar> \
 Expected: identify exact available `requireInRange`, `requirePositiveNumber`,
 and related overloads. Do not infer regex/length helpers from provider `develop`.
 
-- [ ] **Step 2: Convert only semantic matches.**
+- [ ] **Step 2: Convert the exact SSE positive-number match.**
 
-For numeric caller inputs, retain the validated value and preserve
-`IllegalArgumentException`:
+First add and observe a failing module-local structural test that reads the
+target source and requires
+`requirePositiveNumber("order-lifecycle.sse.max-concurrent-polls")`. This is
+limited to release-helper adoption; the monitor invariant itself is proven by
+reflection rather than source text.
+
+Replace the `maxConcurrentPolls` raw predicate with the released helper while
+retaining the validated value and `IllegalArgumentException` contract:
 
 ```kotlin
 val validMaxConcurrentPolls = maxConcurrentPolls.requirePositiveNumber("maxConcurrentPolls")
 ```
 
-For range checks, use the released helper only when the inclusive/exclusive
-boundary and message policy match. Leave regex/length rules unchanged when
-`bluetape4k-core` has no released equivalent; link `bluetape4k-projects#1079`
-instead of creating a Workshop helper.
+Do not broaden this coordination change into the remaining range, regex, and
+length checks. Open a dedicated Order Lifecycle validation issue; it must use
+range helpers only where inclusive boundaries and diagnostics match, and link
+`bluetape4k-projects#1079` for unavailable regex/length APIs rather than adding
+a Workshop helper.
 
 - [ ] **Step 3: Run targeted validation-contract tests.**
 
@@ -238,9 +244,9 @@ Create three issues, each with the exact candidate files listed below and no
 cross-module implementation scope:
 
 ```text
-:commerce-usage-metering-billing-event-sourcing (18 files)
+:commerce-usage-metering-billing-event-sourcing (21 files)
 :commerce-reservation-control-plane (7 files)
-:commerce-promotion-voucher-campaign (3 files)
+:commerce-promotion-voucher-campaign (4 files)
 ```
 
 Each issue requires `io.bluetape4k.assertions.assertFailsWith`, intent-specific
@@ -251,7 +257,7 @@ framework wrapper.
 - [ ] **Step 3: Update #564 with severity convergence.**
 
 Post an English comment that marks the SSE P1 as fixed only after its fresh
-module validation passes; links the four P2 issues; and reports all clean scan
+module validation passes; links the five P2 issues; and reports all clean scan
 categories as N/A with concrete searches. Do not close #564 while linked P2
 issues remain open.
 

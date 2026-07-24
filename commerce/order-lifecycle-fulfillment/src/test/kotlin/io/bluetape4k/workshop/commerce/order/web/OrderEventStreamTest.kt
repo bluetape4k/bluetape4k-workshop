@@ -2,19 +2,20 @@ package io.bluetape4k.workshop.commerce.order.web
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.workshop.commerce.order.query.OrderLifecycleQueryService
 import io.mockk.every
 import io.mockk.mockk
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
-import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertTimeout
 import org.springframework.boot.convert.ApplicationConversionService
 import org.springframework.mock.env.MockEnvironment
 import org.springframework.web.servlet.mvc.method.annotation.TestSseEmitterHandler
 import org.springframework.web.servlet.mvc.method.annotation.attachTestHandler
+import java.nio.file.Files
+import java.nio.file.Path
 import java.time.Duration
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
@@ -22,8 +23,28 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.ReentrantLock
 
 internal class OrderEventStreamTest {
+    @Test
+    fun `lifecycle coordination uses an explicit lock`() {
+        val lifecycleLock = OrderEventStream::class.java.getDeclaredField("lifecycleLock")
+
+        ReentrantLock::class.java.isAssignableFrom(lifecycleLock.type) shouldBeEqualTo true
+    }
+
+    @Test
+    fun `SSE poll configuration uses the released positive-number helper`() {
+        val source =
+            Files.readString(
+                Path.of(
+                    "src/main/kotlin/io/bluetape4k/workshop/commerce/order/web/OrderEventStream.kt"
+                )
+            )
+
+        source.contains("requirePositiveNumber(\"order-lifecycle.sse.max-concurrent-polls\")") shouldBeEqualTo true
+    }
+
     @Test
     fun `shutdown rejects an open racing with the initial snapshot`() {
         val queries = mockk<OrderLifecycleQueryService>()
@@ -46,7 +67,7 @@ internal class OrderEventStreamTest {
             releaseSnapshot.countDown()
 
             val failure = assertFailsWith<ExecutionException> { opening.get(1, TimeUnit.SECONDS) }
-            assertInstanceOf(StreamShuttingDown::class.java, failure.cause)
+            failure.cause shouldBeInstanceOf StreamShuttingDown::class
             assertFailsWith<StreamShuttingDown> { stream.open(UUID.randomUUID(), 0) }
         } finally {
             releaseSnapshot.countDown()
@@ -142,9 +163,11 @@ internal class OrderEventStreamTest {
         every { queries.snapshot(any()) } returns mockk(relaxed = true)
         val polls = AtomicInteger()
         val firstPoll = CountDownLatch(1)
+        val releasePoll = CountDownLatch(1)
         every { queries.auditAfter(any(), any()) } answers {
             polls.incrementAndGet()
             firstPoll.countDown()
+            releasePoll.await()
             emptyList()
         }
         val executor = Executors.newVirtualThreadPerTaskExecutor()
@@ -161,9 +184,11 @@ internal class OrderEventStreamTest {
             repeat(3) { stream.open(orderId, 0) }
 
             firstPoll.await(1, TimeUnit.SECONDS) shouldBeEqualTo true
-            Thread.sleep(100)
-            polls.get() shouldBeEqualTo 1
+            await.during(Duration.ofMillis(100)).atMost(Duration.ofMillis(500)).untilAsserted {
+                polls.get() shouldBeEqualTo 1
+            }
         } finally {
+            releasePoll.countDown()
             stream.destroy()
             executor.shutdownNow()
         }
@@ -180,6 +205,7 @@ internal class OrderEventStreamTest {
             emptyList()
         }
         val executor = Executors.newVirtualThreadPerTaskExecutor()
+        val shutdownExecutor = Executors.newVirtualThreadPerTaskExecutor()
         val stream =
             OrderEventStream(
                 queries,
@@ -192,11 +218,10 @@ internal class OrderEventStreamTest {
             repeat(3) { stream.open(UUID.randomUUID(), 0) }
             entered.await(1, TimeUnit.SECONDS) shouldBeEqualTo true
 
-            assertTimeout(Duration.ofMillis(500)) {
-                stream.destroy()
-            }
+            shutdownExecutor.submit { stream.destroy() }.get(500, TimeUnit.MILLISECONDS)
         } finally {
             stream.destroy()
+            shutdownExecutor.shutdownNow()
             executor.shutdownNow()
         }
     }
