@@ -40,6 +40,7 @@ import io.ktor.server.sse.sse
 import io.ktor.sse.ServerSentEvent
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -58,6 +59,23 @@ fun Application.jobConsoleModule(
     demoEnabled: Boolean = false,
     redisUri: String? = null,
 ) {
+    jobConsoleModule(
+        dataSource = dataSource,
+        demoEnabled = demoEnabled,
+        redisUri = redisUri,
+        workerEnabled = demoEnabled,
+    )
+}
+
+internal fun Application.jobConsoleModule(
+    dataSource: DataSource,
+    demoEnabled: Boolean,
+    redisUri: String?,
+    workerEnabled: Boolean,
+    outboxStartGate: suspend () -> Unit = {},
+    workerStartGate: suspend () -> Unit = {},
+    runtimeObserver: (JobConsoleKtorRuntime) -> Unit = {},
+) {
     JobMigrationRunner(
         dataSource,
         listOf(JobMigration.classpath("001", "db/job-console/V001__job_console.sql")),
@@ -67,7 +85,8 @@ fun Application.jobConsoleModule(
     val redisSignal = redisUri?.takeIf(String::isNotBlank)?.let { runCatching { LettuceCancelSignal(it) }.getOrNull() }
     val service = JobConsoleService(repository, redisSignal ?: NoOpCancelSignal)
     val fanout = BoundedJobEventFanout(Duration.ofSeconds(2))
-    val poller = JobOutboxPoller(JobOutboxRepository(dataSource), fanout)
+    val outboxRepository = JobOutboxRepository(dataSource)
+    val poller = JobOutboxPoller(outboxRepository, fanout)
     val workerEngine = JobWorkerEngine(repository, DeterministicJobWorkload())
 
     install(CallLogging)
@@ -101,6 +120,7 @@ fun Application.jobConsoleModule(
     if (demoEnabled) installJobConsoleRoutes(service, fanout)
 
     val outboxJob = launch(Dispatchers.IO) {
+        outboxStartGate()
         while (isActive) {
             try {
                 poller.pollOnce()
@@ -113,8 +133,9 @@ fun Application.jobConsoleModule(
         }
     }
     val workerJob =
-        if (demoEnabled) {
+        if (workerEnabled) {
             launch(Dispatchers.IO) {
+                workerStartGate()
                 while (isActive) {
                     try {
                         workerEngine.runOnce()
@@ -129,12 +150,34 @@ fun Application.jobConsoleModule(
         } else {
             null
         }
+    runtimeObserver(
+        JobConsoleKtorRuntime(
+            repository = repository,
+            outboxRepository = outboxRepository,
+            workerEngine = workerEngine,
+            outboxJob = outboxJob,
+            workerJob = workerJob,
+            redisSignal = redisSignal,
+        ),
+    )
     monitor.subscribe(ApplicationStopped) {
         workerJob?.cancel()
         outboxJob.cancel()
         redisSignal?.close()
         (dataSource as? AutoCloseable)?.close()
     }
+}
+
+internal class JobConsoleKtorRuntime(
+    val repository: JobRepository,
+    val outboxRepository: JobOutboxRepository,
+    val workerEngine: JobWorkerEngine,
+    private val outboxJob: Job,
+    private val workerJob: Job?,
+    val redisSignal: LettuceCancelSignal?,
+) {
+    val backgroundJobsStopped: Boolean
+        get() = !outboxJob.isActive && workerJob?.isActive != true
 }
 
 private fun Application.installJobConsoleRoutes(service: JobConsoleService, fanout: BoundedJobEventFanout) {

@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.operations.jobconsole.spring
+package io.bluetape4k.workshop.operations.jobconsole.ktor
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
@@ -15,25 +15,23 @@ import io.bluetape4k.workshop.operations.jobconsole.highcontention.HighContentio
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.HighContentionJournal
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.HighContentionProfile
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.JobConsoleAuthorityBaseline
-import io.bluetape4k.workshop.operations.jobconsole.highcontention.JobConsoleLiveProfileAdapter
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.JobConsoleDockerResources
+import io.bluetape4k.workshop.operations.jobconsole.highcontention.JobConsoleLiveProfileAdapter
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.JobConsoleProxiedTopology
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.OwnedRedisNamespace
+import io.bluetape4k.workshop.operations.jobconsole.highcontention.OwnedRedisWriterBarrier
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.ScheduleToken
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.WorkloadIdentity
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.WorkloadTerminalDisposition
-import io.bluetape4k.workshop.operations.jobconsole.persistence.JobOutboxRepository
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepository
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepositoryException
-import io.bluetape4k.workshop.operations.jobconsole.signal.CancelSignal
-import io.bluetape4k.workshop.operations.jobconsole.signal.LettuceCancelSignal
-import io.bluetape4k.workshop.operations.jobconsole.worker.JobWorkerEngine
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.netty.Netty
 import io.lettuce.core.RedisClient
-import org.springframework.boot.SpringApplication
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration
-import org.springframework.context.ConfigurableApplicationContext
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Import
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.runBlocking
+import java.net.InetSocketAddress
+import java.net.ServerSocket
 import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
@@ -41,32 +39,16 @@ import java.net.http.HttpResponse
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
-import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantReadWriteLock
-import javax.sql.DataSource
 import kotlin.concurrent.read
 import kotlin.concurrent.write
 
-@Configuration(proxyBeanMethods = false)
-@EnableAutoConfiguration
-@Import(
-    JobConsoleSpringConfiguration::class,
-    JobConsoleSpringController::class,
-    JobConsoleOutboxSchedule::class,
-    JobConsoleWorkerSchedule::class,
-    JobConsoleSpringQueueController::class,
-    JobConsoleSpringOperationsController::class,
-    JobConsoleProblemHandler::class,
-)
-internal class SpringJobConsoleProfileApplication
-
-internal enum class SpringJobConsoleProfileAction(
+internal enum class KtorJobConsoleProfileAction(
     val profileId: String,
 ) {
     BURST("burst"),
@@ -79,27 +61,28 @@ internal enum class SpringJobConsoleProfileAction(
     ;
 
     companion object {
-        fun resolve(profileId: String): SpringJobConsoleProfileAction {
+        fun resolve(profileId: String): KtorJobConsoleProfileAction {
             val validProfileId = profileId.requireNotBlank("profileId")
             return entries.singleOrNull { it.profileId == validProfileId }
-                ?: throw IllegalArgumentException("unsupported Spring Job Console profile[$validProfileId]")
+                ?: throw IllegalArgumentException("unsupported Ktor Job Console profile[$validProfileId]")
         }
     }
 }
 
-internal class SpringJobConsoleStaleAttemptEvidence(
+private class KtorStaleAttemptEvidence(
     val pausedConnections: Int,
     val pausedTransactions: Int,
     val pausedLocks: Int,
     val oldLeaseToken: String,
     val pendingCompletedChunk: Long,
     val staleErrorCode: JobProblemCode,
-    val contextExecutorStopped: Boolean,
+    val serverJobsStopped: Boolean,
+    val oldPortReleased: Boolean,
     val lateEffectCount: Long,
     val lateReceiptCount: Long,
 )
 
-internal class SpringRedisPathEvidence(
+private class KtorRedisPathEvidence(
     val effectiveEndpointRoutedThroughProxy: Boolean,
     val oldConnectionFailureObserved: Boolean,
     val newConnectionFailureObserved: Boolean,
@@ -107,12 +90,12 @@ internal class SpringRedisPathEvidence(
     val durableCancelsDuringOutage: Int,
 )
 
-internal class SpringRedisKeyLossEvidence(
+private class KtorRedisKeyLossEvidence(
     val deletedKeyCount: Int,
     val durableCancelsAfterKeyLoss: Int,
 )
 
-internal class SpringJobConsoleLiveAdapter private constructor(
+internal class KtorJobConsoleLiveAdapter private constructor(
     private val runId: String,
     private val profile: HighContentionProfile,
     private val fixture: JobConsoleContainerFixture,
@@ -121,7 +104,7 @@ internal class SpringJobConsoleLiveAdapter private constructor(
     private val journalRoot: Path,
 ) : JobConsoleLiveProfileAdapter {
 
-    private val action = SpringJobConsoleProfileAction.resolve(profile.profileId)
+    private val action = KtorJobConsoleProfileAction.resolve(profile.profileId)
     private val lifecycleLock = ReentrantReadWriteLock(true)
     private val winners = ConcurrentHashMap<Int, Boolean>()
     private val jobIdsByIdentity = ConcurrentHashMap<Int, UUID>()
@@ -132,36 +115,35 @@ internal class SpringJobConsoleLiveAdapter private constructor(
     private val outageActive = AtomicBoolean()
     private val durableCancelsDuringOutage = AtomicInteger()
     private val durableCancelsAfterKeyLoss = AtomicInteger()
-    private val ownedRedisNamespace =
-        "hc:v1:$runId:job-spring:redis-key-loss:"
+    private val ownedRedisNamespace = "hc:v1:$runId:job-ktor:redis-key-loss:"
 
     @Volatile
     private var measuredBaseline: JobConsoleAuthorityBaseline? = null
 
     @Volatile
-    private var application: RunningSpringJobConsole = startApplication()
+    private var application: RunningKtorJobConsole = startApplication()
 
     @Volatile
-    var staleAttemptEvidence: SpringJobConsoleStaleAttemptEvidence? = null
-        private set
+    private var staleAttemptEvidence: KtorStaleAttemptEvidence? = null
 
     @Volatile
-    var redisPathEvidence: SpringRedisPathEvidence? = null
-        private set
+    private var redisPathEvidence: KtorRedisPathEvidence? = null
 
     @Volatile
-    var redisKeyLossEvidence: SpringRedisKeyLossEvidence? = null
-        private set
+    private var redisKeyLossEvidence: KtorRedisKeyLossEvidence? = null
 
     init {
         check(application.redisUri == topology.redisUri) {
-            "Spring Redis endpoint differs from the proxied endpoint"
+            "Ktor Redis endpoint differs from the proxied endpoint"
         }
-        check(application.cancelSignal is LettuceCancelSignal) {
-            "Spring did not create the Lettuce cancel signal"
+        val redisSignal = checkNotNull(application.runtime.redisSignal) {
+            "Ktor did not create the Lettuce cancel signal"
         }
-        check(application.cancelSignal.isAvailable()) {
-            "Spring cancel signal is not connected through the proxy"
+        check(redisSignal.isAvailable()) {
+            "Ktor cancel signal is not connected through the proxy"
+        }
+        check(application.dataSource.maximumPoolSize == profile.concurrency.coerceAtLeast(4)) {
+            "Ktor Hikari pool limit differs from the selected profile"
         }
     }
 
@@ -177,7 +159,7 @@ internal class SpringJobConsoleLiveAdapter private constructor(
     override fun snapshotBaseline(): String =
         lifecycleLock.write {
             authorityBaseline().also { measuredBaseline = it }.encode().also {
-                if (action == SpringJobConsoleProfileAction.REDIS_KEY_LOSS) {
+                if (action == KtorJobConsoleProfileAction.REDIS_KEY_LOSS) {
                     seedOwnedRedisKeys()
                 }
             }
@@ -188,7 +170,7 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         identity: WorkloadIdentity,
     ): WorkloadTerminalDisposition =
         when (action) {
-            SpringJobConsoleProfileAction.WORKER_RESTART ->
+            KtorJobConsoleProfileAction.WORKER_RESTART ->
                 if (restartStarted.compareAndSet(false, true)) {
                     lifecycleLock.write {
                         runFencedAttemptScenario(restartApplication = true, identity = identity)
@@ -199,7 +181,7 @@ internal class SpringJobConsoleLiveAdapter private constructor(
                     lifecycleLock.read { submitAndComplete(token, identity) }
                 }
 
-            SpringJobConsoleProfileAction.SLOW_PROVIDER ->
+            KtorJobConsoleProfileAction.SLOW_PROVIDER ->
                 lifecycleLock.read {
                     if (slowProviderStarted.compareAndSet(false, true)) {
                         runFencedAttemptScenario(restartApplication = false, identity = identity)
@@ -215,8 +197,8 @@ internal class SpringJobConsoleLiveAdapter private constructor(
 
     override fun injectDeclaredFailure() {
         when (action) {
-            SpringJobConsoleProfileAction.REDIS_PATH_OUTAGE -> injectRedisPathOutage()
-            SpringJobConsoleProfileAction.REDIS_KEY_LOSS -> deleteOwnedRedisKeys()
+            KtorJobConsoleProfileAction.REDIS_PATH_OUTAGE -> injectRedisPathOutage()
+            KtorJobConsoleProfileAction.REDIS_KEY_LOSS -> deleteOwnedRedisKeys()
             else -> Unit
         }
     }
@@ -236,8 +218,8 @@ internal class SpringJobConsoleLiveAdapter private constructor(
 
     override fun profileEvidence(): String =
         lifecycleLock.read {
-            val profileEvidence = when (action) {
-                SpringJobConsoleProfileAction.REDIS_PATH_OUTAGE ->
+            val actionEvidence = when (action) {
+                KtorJobConsoleProfileAction.REDIS_PATH_OUTAGE ->
                     redisPathEvidence?.let {
                         ",oldConnectionFailure=${it.oldConnectionFailureObserved}," +
                             "newConnectionFailure=${it.newConnectionFailureObserved}," +
@@ -245,24 +227,25 @@ internal class SpringJobConsoleLiveAdapter private constructor(
                             "durableCancelsDuringOutage=${it.durableCancelsDuringOutage}"
                     }.orEmpty()
 
-                SpringJobConsoleProfileAction.REDIS_KEY_LOSS ->
+                KtorJobConsoleProfileAction.REDIS_KEY_LOSS ->
                     redisKeyLossEvidence?.let {
                         ",deletedOwnedKeys=${it.deletedKeyCount}," +
                             "durableCancelsAfterKeyLoss=${it.durableCancelsAfterKeyLoss}"
                     }.orEmpty()
 
-                SpringJobConsoleProfileAction.SLOW_PROVIDER,
-                SpringJobConsoleProfileAction.WORKER_RESTART,
+                KtorJobConsoleProfileAction.SLOW_PROVIDER,
+                KtorJobConsoleProfileAction.WORKER_RESTART,
                 -> staleAttemptEvidence?.let {
                     ",staleCode=${it.staleErrorCode}," +
-                        "contextExecutorStopped=${it.contextExecutorStopped}," +
+                        "serverJobsStopped=${it.serverJobsStopped}," +
+                        "oldPortReleased=${it.oldPortReleased}," +
                         "lateEffects=${it.lateEffectCount},lateReceipts=${it.lateReceiptCount}"
                 }.orEmpty()
 
                 else -> ""
             }
             "hikari=true,maxPool=${application.dataSource.maximumPoolSize}," +
-                "redisProxy=${application.redisUri == topology.redisUri}$profileEvidence"
+                "redisProxy=${application.redisUri == topology.redisUri}$actionEvidence"
         }
 
     override fun assertProfileInvariants(delta: JobConsoleAuthorityBaseline) {
@@ -273,13 +256,13 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         jobIdsByIdentity.forEach { (identityOrdinal, jobId) ->
             val scenario = scenariosByIdentity.getValue(identityOrdinal)
             val http = application.http.snapshot(jobId, scenario)
-            val stored = checkNotNull(application.repository.load(jobId))
+            val stored = checkNotNull(application.runtime.repository.load(jobId))
             check(http.state == stored.state.wireValue) {
-                "HTTP snapshot and PostgreSQL authority diverged for job[$jobId]"
+                "Ktor HTTP snapshot and PostgreSQL authority diverged for job[$jobId]"
             }
         }
         when (action) {
-            SpringJobConsoleProfileAction.BURST -> {
+            KtorJobConsoleProfileAction.BURST -> {
                 check(delta.jobs == profile.operationCount.toLong())
                 check(jobIdsByIdentity.size == profile.operationCount)
                 check(burstQueueViolationCount() == 0L)
@@ -287,15 +270,15 @@ internal class SpringJobConsoleLiveAdapter private constructor(
                 check(queueVersionDivergenceCount() == 0L)
             }
 
-            SpringJobConsoleProfileAction.DUPLICATE_STORM -> {
+            KtorJobConsoleProfileAction.DUPLICATE_STORM -> {
                 check(delta.jobs == profile.contentionShape.identityCount.toLong())
                 check(jobIdsByIdentity.size == profile.contentionShape.identityCount)
             }
 
-            SpringJobConsoleProfileAction.REDIS_PATH_OUTAGE -> {
+            KtorJobConsoleProfileAction.REDIS_PATH_OUTAGE -> {
                 val evidence = checkNotNull(redisPathEvidence)
                 val finalCancelsDuringOutage = durableCancelsDuringOutage.get()
-                redisPathEvidence = SpringRedisPathEvidence(
+                redisPathEvidence = KtorRedisPathEvidence(
                     effectiveEndpointRoutedThroughProxy = evidence.effectiveEndpointRoutedThroughProxy,
                     oldConnectionFailureObserved = evidence.oldConnectionFailureObserved,
                     newConnectionFailureObserved = evidence.newConnectionFailureObserved,
@@ -309,10 +292,10 @@ internal class SpringJobConsoleLiveAdapter private constructor(
                 check(finalCancelsDuringOutage > 0)
             }
 
-            SpringJobConsoleProfileAction.REDIS_KEY_LOSS -> {
+            KtorJobConsoleProfileAction.REDIS_KEY_LOSS -> {
                 val evidence = checkNotNull(redisKeyLossEvidence)
                 val finalCancelsAfterKeyLoss = durableCancelsAfterKeyLoss.get()
-                redisKeyLossEvidence = SpringRedisKeyLossEvidence(
+                redisKeyLossEvidence = KtorRedisKeyLossEvidence(
                     deletedKeyCount = evidence.deletedKeyCount,
                     durableCancelsAfterKeyLoss = finalCancelsAfterKeyLoss,
                 )
@@ -320,11 +303,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
                 check(finalCancelsAfterKeyLoss > 0)
             }
 
-            SpringJobConsoleProfileAction.SLOW_PROVIDER,
-            SpringJobConsoleProfileAction.WORKER_RESTART,
+            KtorJobConsoleProfileAction.SLOW_PROVIDER,
+            KtorJobConsoleProfileAction.WORKER_RESTART,
             -> assertStaleAttemptEvidence()
 
-            SpringJobConsoleProfileAction.DUPLICATE_DELIVERY ->
+            KtorJobConsoleProfileAction.DUPLICATE_DELIVERY ->
                 check(deliveredEventIds.isNotEmpty() && duplicateOutboxLogicalEventCount() == 0L) {
                     "duplicate delivery created a duplicate durable outbox event"
                 }
@@ -359,49 +342,45 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         val winner = jobIdsByIdentity.putIfAbsent(identity.ordinal, submitted.jobId) == null
         winners[token.stableOrdinal] = winner
         check(jobIdsByIdentity.getValue(identity.ordinal) == submitted.jobId) {
-            "stable HTTP identity resolved to different jobs"
+            "stable Ktor HTTP identity resolved to different jobs"
         }
 
-        return when (action) {
-            SpringJobConsoleProfileAction.REDIS_PATH_OUTAGE -> {
+        when (action) {
+            KtorJobConsoleProfileAction.REDIS_PATH_OUTAGE -> {
                 val beganDuringOutage = outageActive.get()
                 application.http.cancel(submitted.jobId, scenario)
                 if (beganDuringOutage) durableCancelsDuringOutage.incrementAndGet()
-                WorkloadTerminalDisposition.COMPLETED
             }
 
-            SpringJobConsoleProfileAction.REDIS_KEY_LOSS -> {
+            KtorJobConsoleProfileAction.REDIS_KEY_LOSS -> {
                 application.http.cancel(submitted.jobId, scenario)
                 if (redisKeyLossEvidence != null) durableCancelsAfterKeyLoss.incrementAndGet()
-                WorkloadTerminalDisposition.COMPLETED
             }
 
-            SpringJobConsoleProfileAction.DUPLICATE_DELIVERY -> {
+            KtorJobConsoleProfileAction.DUPLICATE_DELIVERY -> {
                 if (winner) {
                     completeThroughOwnedWorker(submitted.jobId)
-                    val claim = application.outboxRepository.claim(16, Duration.ofSeconds(5))
+                    val claim = application.runtime.outboxRepository.claim(16, Duration.ofSeconds(5))
                     claim.events.forEach { event ->
-                        check(application.outboxRepository.markPublished(claim.token, event.eventId))
-                        check(application.outboxRepository.markPublished(claim.token, event.eventId))
+                        check(application.runtime.outboxRepository.markPublished(claim.token, event.eventId))
+                        check(application.runtime.outboxRepository.markPublished(claim.token, event.eventId))
                         deliveredEventIds += event.eventId
                     }
                 }
-                WorkloadTerminalDisposition.COMPLETED
             }
 
-            SpringJobConsoleProfileAction.BURST -> {
+            KtorJobConsoleProfileAction.BURST -> {
                 if (token.stableOrdinal == 0) application.http.verifyHeartbeat(submitted.jobId, scenario)
                 if (winner) completeThroughOwnedWorker(submitted.jobId)
-                WorkloadTerminalDisposition.COMPLETED
             }
 
-            SpringJobConsoleProfileAction.DUPLICATE_STORM -> {
+            KtorJobConsoleProfileAction.DUPLICATE_STORM -> {
                 if (winner) completeThroughOwnedWorker(submitted.jobId)
-                WorkloadTerminalDisposition.COMPLETED
             }
 
             else -> error("profile action[$action] must use its dedicated lifecycle path")
         }
+        return WorkloadTerminalDisposition.COMPLETED
     }
 
     private fun submitAndComplete(
@@ -420,11 +399,11 @@ internal class SpringJobConsoleLiveAdapter private constructor(
     private fun completeThroughOwnedWorker(jobId: UUID) {
         val deadline = System.nanoTime() + Duration.ofSeconds(10).toNanos()
         do {
-            val stored = application.repository.load(jobId)
+            val stored = application.runtime.repository.load(jobId)
             if (stored?.state?.terminal == true) return
-            application.workerEngine.runOnce()
+            application.runtime.workerEngine.runOnce()
         } while (System.nanoTime() < deadline)
-        error("context-owned worker did not complete job[$jobId]")
+        error("application-owned Ktor worker did not complete job[$jobId]")
     }
 
     private fun runFencedAttemptScenario(
@@ -436,7 +415,7 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         val submitted = application.http.submit(scenario)
         jobIdsByIdentity.putIfAbsent(identity.ordinal, submitted.jobId)
         val oldClaim = checkNotNull(
-            application.repository.claimNext(scenario.scope.tenantId, Duration.ofMillis(10)),
+            application.runtime.repository.claimNext(scenario.scope.tenantId, Duration.ofMillis(10)),
         )
         val staleDataSource = createProfileOwnedDataSource()
         val staleRepository = JobRepository(staleDataSource)
@@ -445,36 +424,37 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         try {
             val staleAttempt = staleExecutor.submit<JobProblemCode> {
                 check(barrier.readyAndAwait(Duration.ofSeconds(10))) {
-                    "stale Spring attempt barrier timed out"
+                    "stale Ktor attempt barrier timed out"
                 }
                 try {
                     staleRepository.checkpoint(oldClaim.lease, completedChunk = 1, progress = 100)
-                    error("stale Spring checkpoint unexpectedly committed")
+                    error("stale Ktor checkpoint unexpectedly committed")
                 } catch (failure: JobRepositoryException) {
                     failure.code
                 }
             }
             check(barrier.awaitReady(Duration.ofSeconds(10))) {
-                "stale Spring attempt did not reach its transaction-free pause"
+                "stale Ktor attempt did not reach its transaction-free pause"
             }
             val pausedConnections = staleDataSource.hikariPoolMXBean.activeConnections
             val oldLeaseToken = oldClaim.lease.token.toString()
-            var contextExecutorStopped = false
+            var serverJobsStopped = true
+            var oldPortReleased = true
             if (restartApplication) {
                 val oldApplication = application
                 closeApplication(oldApplication)
-                contextExecutorStopped = oldApplication.workerExecutor.isShutdown &&
-                    oldApplication.dataSource.isClosed
+                serverJobsStopped = oldApplication.runtime.backgroundJobsStopped
+                oldPortReleased = canBind(oldApplication.port)
                 application = startApplication()
             }
 
             val replacement = awaitReplacementClaim(scenario.scope.tenantId)
-            val checkpoint = application.repository.checkpoint(
+            val checkpoint = application.runtime.repository.checkpoint(
                 replacement.lease,
                 completedChunk = 1,
                 progress = 100,
             )
-            application.repository.complete(checkpoint.lease, JobSignal.SUCCESS)
+            application.runtime.repository.complete(checkpoint.lease, JobSignal.SUCCESS)
             val converged = application.http.snapshot(submitted.jobId, scenario)
             check(converged.state == "succeeded")
             val beforeRelease = authorityBaseline()
@@ -483,14 +463,15 @@ internal class SpringJobConsoleLiveAdapter private constructor(
             val staleCode = staleAttempt.get(10, TimeUnit.SECONDS)
             check(staleCode == JobProblemCode.LEASE_LOST)
             val afterRelease = authorityBaseline()
-            staleAttemptEvidence = SpringJobConsoleStaleAttemptEvidence(
+            staleAttemptEvidence = KtorStaleAttemptEvidence(
                 pausedConnections = pausedConnections,
                 pausedTransactions = 0,
                 pausedLocks = 0,
                 oldLeaseToken = oldLeaseToken,
                 pendingCompletedChunk = 1,
                 staleErrorCode = staleCode,
-                contextExecutorStopped = !restartApplication || contextExecutorStopped,
+                serverJobsStopped = serverJobsStopped,
+                oldPortReleased = oldPortReleased,
                 lateEffectCount = afterRelease.effects - beforeRelease.effects,
                 lateReceiptCount = afterRelease.receipts - beforeRelease.receipts,
             )
@@ -505,10 +486,10 @@ internal class SpringJobConsoleLiveAdapter private constructor(
     ): io.bluetape4k.workshop.operations.jobconsole.persistence.ClaimedJob {
         val deadline = System.nanoTime() + Duration.ofSeconds(10).toNanos()
         do {
-            application.repository.reclaimExpired(tenantId, Duration.ofSeconds(5))?.let { return it }
+            application.runtime.repository.reclaimExpired(tenantId, Duration.ofSeconds(5))?.let { return it }
             Thread.sleep(10)
         } while (System.nanoTime() < deadline)
-        error("replacement Spring worker did not reclaim the expired lease")
+        error("replacement Ktor worker did not reclaim the expired lease")
     }
 
     private fun assertStaleAttemptEvidence() {
@@ -519,7 +500,8 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         check(evidence.oldLeaseToken.isNotBlank())
         check(evidence.pendingCompletedChunk == 1L)
         check(evidence.staleErrorCode == JobProblemCode.LEASE_LOST)
-        check(evidence.contextExecutorStopped)
+        check(evidence.serverJobsStopped)
+        check(evidence.oldPortReleased)
         check(evidence.lateEffectCount == 0L)
         check(evidence.lateReceiptCount == 0L)
     }
@@ -540,7 +522,7 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         outageActive.set(false)
         oldConnection.close()
         val recovered = awaitRedisRecovery()
-        redisPathEvidence = SpringRedisPathEvidence(
+        redisPathEvidence = KtorRedisPathEvidence(
             effectiveEndpointRoutedThroughProxy = application.redisUri == topology.redisUri,
             oldConnectionFailureObserved = oldFailure,
             newConnectionFailureObserved = newFailure,
@@ -554,7 +536,7 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         do {
             try {
                 topology.openRedisConnection().use { connection ->
-                    if (connection.ping() == "PONG" && application.cancelSignal.isAvailable()) {
+                    if (connection.ping() == "PONG" && application.runtime.redisSignal?.isAvailable() == true) {
                         return true
                     }
                 }
@@ -582,10 +564,8 @@ internal class SpringJobConsoleLiveAdapter private constructor(
                     namespace = ownedRedisNamespace,
                     deleteUpperBound = profile.operationCount,
                     commands = connection.sync(),
-                ).deleteOwnedKeys(
-                    writerBarrier = io.bluetape4k.workshop.operations.jobconsole.highcontention.OwnedRedisWriterBarrier.NONE,
-                )
-                redisKeyLossEvidence = SpringRedisKeyLossEvidence(
+                ).deleteOwnedKeys(OwnedRedisWriterBarrier.NONE)
+                redisKeyLossEvidence = KtorRedisKeyLossEvidence(
                     deletedKeyCount = result.deletedKeys.size,
                     durableCancelsAfterKeyLoss = durableCancelsAfterKeyLoss.get(),
                 )
@@ -593,68 +573,60 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         }
     }
 
-    private fun startApplication(): RunningSpringJobConsole {
-        val context = SpringApplication(SpringJobConsoleProfileApplication::class.java).apply {
-            setAdditionalProfiles("demo")
-            setDefaultProperties(
-                mapOf(
-                    "server.port" to "0",
-                    "server.shutdown" to "immediate",
-                    "spring.main.banner-mode" to "off",
-                    "spring.jmx.enabled" to "false",
-                    "spring.lifecycle.timeout-per-shutdown-phase" to "5s",
-                    "spring.datasource.url" to fixture.jdbcUrl,
-                    "spring.datasource.username" to fixture.databaseUsername,
-                    "spring.datasource.password" to fixture.databasePassword,
-                    "spring.datasource.hikari.schema" to fixture.schema,
-                    "spring.datasource.hikari.maximum-pool-size" to profile.concurrency.coerceAtLeast(4).toString(),
-                    "job-console.redis-uri" to topology.redisUri,
-                    "management.datadog.metrics.export.enabled" to "false",
-                ),
-            )
-        }.run()
-        return try {
-            val dataSource = context.getBean(DataSource::class.java) as? HikariDataSource
-                ?: error("Spring profile requires a HikariDataSource bean")
-            val redisUri = context.environment.getRequiredProperty("job-console.redis-uri")
-            val port = context.environment.getRequiredProperty("local.server.port", Int::class.java)
-            RunningSpringJobConsole(
-                context = context,
+    private fun startApplication(): RunningKtorJobConsole {
+        val dataSource = createProfileOwnedDataSource("job-ktor-${Uuid.V7.nextId()}")
+        val workerGate = CompletableDeferred<Unit>()
+        val outboxGate = CompletableDeferred<Unit>()
+        var runtime: JobConsoleKtorRuntime? = null
+        val server = embeddedServer(Netty, host = "127.0.0.1", port = 0) {
+            jobConsoleModule(
                 dataSource = dataSource,
-                repository = context.getBean(JobRepository::class.java),
-                outboxRepository = JobOutboxRepository(dataSource),
-                workerEngine = context.getBean(JobWorkerEngine::class.java),
-                workerExecutor = context.getBean("jobWorkerExecutor", ExecutorService::class.java),
-                cancelSignal = context.getBean(CancelSignal::class.java),
-                redisUri = redisUri,
-                http = SpringJobConsoleHttpClient(URI("http://127.0.0.1:$port")),
+                demoEnabled = true,
+                redisUri = topology.redisUri,
+                workerEnabled = true,
+                outboxStartGate = outboxGate::await,
+                workerStartGate = workerGate::await,
+                runtimeObserver = { runtime = it },
+            )
+        }
+        return try {
+            server.start(wait = false)
+            val port = runBlocking { server.engine.resolvedConnectors().single().port }
+            RunningKtorJobConsole(
+                dataSource = dataSource,
+                runtime = checkNotNull(runtime) { "Ktor runtime observer was not invoked" },
+                redisUri = topology.redisUri,
+                port = port,
+                http = KtorJobConsoleHttpClient(URI("http://127.0.0.1:$port")),
+                stop = { server.stop(gracePeriodMillis = 0, timeoutMillis = 5_000) },
             )
         } catch (error: Throwable) {
-            context.close()
+            server.stop(gracePeriodMillis = 0, timeoutMillis = 5_000)
+            if (!dataSource.isClosed) dataSource.close()
             throw error
         }
     }
 
-    private fun closeApplication(running: RunningSpringJobConsole) {
-        if (!running.context.isActive) return
-        VirtualThreads.executorService().use { closer ->
-            val close = closer.submit(running.context::close)
-            close.get(10, TimeUnit.SECONDS)
+    private fun closeApplication(running: RunningKtorJobConsole) {
+        if (!running.dataSource.isClosed) {
+            running.stop()
         }
-        check(!running.context.isActive) { "Spring context remained active after bounded close" }
-        check(running.workerExecutor.isShutdown) { "context-owned worker executor remained active" }
-        check(running.dataSource.isClosed) { "context-owned Hikari pool remained active" }
+        check(running.dataSource.isClosed) { "Ktor-owned Hikari pool remained active" }
+        check(running.runtime.backgroundJobsStopped) { "Ktor application jobs remained active" }
+        check(canBind(running.port)) { "Ktor port[${running.port}] remained bound after stop" }
     }
 
-    private fun createProfileOwnedDataSource(): HikariDataSource =
+    private fun createProfileOwnedDataSource(
+        poolName: String = "job-ktor-stale-attempt",
+    ): HikariDataSource =
         HikariDataSource(
             HikariConfig().apply {
                 jdbcUrl = fixture.jdbcUrl
                 username = fixture.databaseUsername
                 password = fixture.databasePassword
                 schema = fixture.schema
-                maximumPoolSize = 2
-                poolName = "job-spring-stale-attempt"
+                maximumPoolSize = profile.concurrency.coerceAtLeast(4)
+                this.poolName = poolName
             },
         )
 
@@ -668,24 +640,17 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         }
 
     private fun duplicateOutboxLogicalEventCount(): Long =
-        application.dataSource.connection.use { connection ->
-            connection.createStatement().use { statement ->
-                statement.executeQuery(
-                    """
-                    SELECT count(*)
-                    FROM (
-                        SELECT job_id, event_type, resource_version
-                        FROM job_outbox
-                        GROUP BY job_id, event_type, resource_version
-                        HAVING count(*) > 1
-                    ) duplicates
-                    """.trimIndent(),
-                ).use { result ->
-                    check(result.next())
-                    result.getLong(1)
-                }
-            }
-        }
+        scalarCount(
+            """
+            SELECT count(*)
+            FROM (
+                SELECT job_id, event_type, resource_version
+                FROM job_outbox
+                GROUP BY job_id, event_type, resource_version
+                HAVING count(*) > 1
+            ) duplicates
+            """.trimIndent(),
+        )
 
     private fun burstQueueViolationCount(): Long =
         scalarCount(
@@ -721,7 +686,7 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         identity: WorkloadIdentity,
     ): JobConsoleScenario {
         val identityScenario = JobConsoleScenario.fromSeed(profile.seed, identity.ordinal, workUnits = 1)
-        if (action != SpringJobConsoleProfileAction.BURST) {
+        if (action != KtorJobConsoleProfileAction.BURST) {
             return identityScenario
         }
         val authorityScope = JobConsoleScenario.fromSeed(
@@ -740,9 +705,9 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         fun create(
             runId: String,
             profile: HighContentionProfile,
-        ): SpringJobConsoleLiveAdapter {
+        ): KtorJobConsoleLiveAdapter {
             val validRunId = runId.requireNotBlank("runId")
-            val journalRoot = Files.createTempDirectory("job-spring-high-contention-")
+            val journalRoot = Files.createTempDirectory("job-ktor-high-contention-")
             val journal = HighContentionJournal.open(journalRoot, Path.of("topology.ndjson"))
             val resources = dockerResources(validRunId, profile.profileId)
             var topology: JobConsoleProxiedTopology? = null
@@ -757,7 +722,7 @@ internal class SpringJobConsoleLiveAdapter private constructor(
                     redisUri = topology.redisUri,
                     schema = "job_console_hc_${Uuid.V7.nextId().toString().replace("-", "")}",
                 ).also(JobConsoleContainerFixture::createSchema)
-                SpringJobConsoleLiveAdapter(
+                KtorJobConsoleLiveAdapter(
                     runId = validRunId,
                     profile = profile,
                     fixture = fixture,
@@ -795,9 +760,9 @@ internal class SpringJobConsoleLiveAdapter private constructor(
             profileId: String,
         ): JobConsoleDockerResources =
             JobConsoleDockerResources(
-                network = dockerResource(runId, profileId, "spring-redis-network", "network"),
-                redis = dockerResource(runId, profileId, "spring-redis-primary", "container"),
-                toxiproxy = dockerResource(runId, profileId, "spring-redis-toxiproxy", "container"),
+                network = dockerResource(runId, profileId, "ktor-redis-network", "network"),
+                redis = dockerResource(runId, profileId, "ktor-redis-primary", "container"),
+                toxiproxy = dockerResource(runId, profileId, "ktor-redis-toxiproxy", "container"),
             )
 
         private fun dockerResource(
@@ -819,31 +784,28 @@ internal class SpringJobConsoleLiveAdapter private constructor(
     }
 }
 
-private class RunningSpringJobConsole(
-    val context: ConfigurableApplicationContext,
+private class RunningKtorJobConsole(
     val dataSource: HikariDataSource,
-    val repository: JobRepository,
-    val outboxRepository: JobOutboxRepository,
-    val workerEngine: JobWorkerEngine,
-    val workerExecutor: ExecutorService,
-    val cancelSignal: CancelSignal,
+    val runtime: JobConsoleKtorRuntime,
     val redisUri: String,
-    val http: SpringJobConsoleHttpClient,
+    val port: Int,
+    val http: KtorJobConsoleHttpClient,
+    val stop: () -> Unit,
 )
 
-private class SpringJobConsoleHttpSnapshot(
+private class KtorJobConsoleHttpSnapshot(
     val jobId: UUID,
     val state: String,
 )
 
-private class SpringJobConsoleHttpClient(
+private class KtorJobConsoleHttpClient(
     private val baseUri: URI,
     private val client: HttpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(5))
         .build(),
 ) {
 
-    fun submit(scenario: JobConsoleScenario): SpringJobConsoleHttpSnapshot =
+    fun submit(scenario: JobConsoleScenario): KtorJobConsoleHttpSnapshot =
         request(
             method = "POST",
             path = "/v1/jobs",
@@ -856,7 +818,7 @@ private class SpringJobConsoleHttpClient(
     fun snapshot(
         jobId: UUID,
         scenario: JobConsoleScenario,
-    ): SpringJobConsoleHttpSnapshot =
+    ): KtorJobConsoleHttpSnapshot =
         request(
             method = "GET",
             path = "/v1/jobs/$jobId",
@@ -867,7 +829,7 @@ private class SpringJobConsoleHttpClient(
     fun cancel(
         jobId: UUID,
         scenario: JobConsoleScenario,
-    ): SpringJobConsoleHttpSnapshot =
+    ): KtorJobConsoleHttpSnapshot =
         request(
             method = "POST",
             path = "/v1/jobs/$jobId/cancel",
@@ -888,7 +850,7 @@ private class SpringJobConsoleHttpClient(
         response.body().bufferedReader().use { reader ->
             val lines = generateSequence(reader::readLine).take(3).toList()
             check(lines.any { it.replace(" ", "") == "event:heartbeat" }) {
-                "Spring SSE heartbeat was not observed"
+                "Ktor SSE heartbeat was not observed"
             }
         }
     }
@@ -911,7 +873,7 @@ private class SpringJobConsoleHttpClient(
         }
         return client.send(builder.build(), HttpResponse.BodyHandlers.ofString()).also { response ->
             check(response.statusCode() == expectedStatus) {
-                "Spring HTTP $method $path returned ${response.statusCode()}: ${response.body()}"
+                "Ktor HTTP $method $path returned ${response.statusCode()}: ${response.body()}"
             }
         }
     }
@@ -925,12 +887,12 @@ private class SpringJobConsoleHttpClient(
             .header("X-Demo-Tenant", scenario.scope.tenantId)
             .header("X-Demo-Submitter", scenario.scope.submitterHash)
 
-    private fun HttpResponse<String>.toSnapshot(): SpringJobConsoleHttpSnapshot {
+    private fun HttpResponse<String>.toSnapshot(): KtorJobConsoleHttpSnapshot {
         val jobId = JOB_ID.find(body())?.groupValues?.get(1)
-            ?: error("Spring response omitted jobId")
+            ?: error("Ktor response omitted jobId")
         val state = STATE.find(body())?.groupValues?.get(1)
-            ?: error("Spring response omitted state")
-        return SpringJobConsoleHttpSnapshot(UUID.fromString(jobId), state)
+            ?: error("Ktor response omitted state")
+        return KtorJobConsoleHttpSnapshot(UUID.fromString(jobId), state)
     }
 
     private companion object {
@@ -953,6 +915,17 @@ private inline fun fails(action: () -> Unit): Boolean =
         false
     } catch (_: Exception) {
         true
+    }
+
+private fun canBind(port: Int): Boolean =
+    try {
+        ServerSocket().use { socket ->
+            socket.reuseAddress = true
+            socket.bind(InetSocketAddress("127.0.0.1", port))
+        }
+        true
+    } catch (_: Exception) {
+        false
     }
 
 private fun deleteDirectory(directory: Path) {

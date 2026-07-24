@@ -43,6 +43,9 @@ dependencies {
     testImplementation(testFixtures(project(":operations-job-console-core")))
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.bluetape4k.assertions)
+    testImplementation(libs.bluetape4k.lettuce)
+    testImplementation(libs.bluetape4k.testcontainers)
+    testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.kotlinx.coroutines.test.lib)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.ktor.client.core)
@@ -66,15 +69,43 @@ fun Test.useJobConsoleTestRuntime() {
 
 tasks.test {
     useJobConsoleTestRuntime()
+    inputs.dir(rootProject.layout.projectDirectory.dir("profiles/high-contention/v1"))
+    systemProperty(
+        "highContentionContractRoot",
+        rootProject.layout.projectDirectory.dir("profiles/high-contention/v1").asFile.absolutePath,
+    )
     useJUnitPlatform { excludeTags("integration") }
 }
 
-val integrationTest by tasks.registering(Test::class) {
+val integrationTest = tasks.register<Test>("integrationTest") {
     description = "Runs live Ktor job console integration tests."
     group = "verification"
     useJobConsoleTestRuntime()
     testClassesDirs = tasks.test.get().testClassesDirs
     classpath = tasks.test.get().classpath
-    useJUnitPlatform { includeTags("integration") }
+    useJUnitPlatform {
+        includeTags("integration")
+        excludeTags("high-contention")
+    }
     shouldRunAfter(tasks.test)
+}
+
+registerHighContentionProfileTask(
+    name = "highContentionCiProfile",
+    mode = "ci-correctness",
+    implementation = "job-ktor",
+).configure {
+    testClassesDirs = tasks.test.get().testClassesDirs
+    classpath = tasks.test.get().classpath
+    useJobConsoleTestRuntime()
+}
+
+registerHighContentionProfileTask(
+    name = "highContentionLocalReferenceProfile",
+    mode = "local-reference",
+    implementation = "job-ktor",
+).configure {
+    testClassesDirs = tasks.test.get().testClassesDirs
+    classpath = tasks.test.get().classpath
+    useJobConsoleTestRuntime()
 }
