@@ -1,34 +1,37 @@
 package io.bluetape4k.workshop.commerce.ticket.persistence
 
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.ticket.config.TicketMigration
 import io.bluetape4k.workshop.commerce.ticket.config.TicketMigrationRunner
 import io.bluetape4k.workshop.commerce.ticket.domain.PurchaseState
 import io.bluetape4k.workshop.commerce.ticket.domain.SaleState
-import org.postgresql.ds.PGSimpleDataSource
 import org.springframework.core.io.ClassPathResource
 import java.sql.DriverManager
 import java.time.Instant
 import java.util.UUID
-import javax.sql.DataSource
 
 internal class TicketDatabaseFixture : AutoCloseable {
     private val schema = "ticket_repository_${Base58.randomString(8).lowercase()}"
-    val dataSource: DataSource
+    val dataSource: HikariDataSource
     val executor: TicketJdbcExecutor
 
     init {
         adminConnection().use { connection ->
             connection.createStatement().use { it.execute("CREATE SCHEMA $schema") }
         }
-        dataSource =
-            PGSimpleDataSource().apply {
-                setURL(postgres.jdbcUrl)
-                user = postgres.username ?: PostgreSQLServer.USERNAME
+        dataSource = HikariDataSource(
+            HikariConfig().apply {
+                jdbcUrl = postgres.jdbcUrl
+                username = postgres.username ?: PostgreSQLServer.USERNAME
                 password = postgres.password ?: PostgreSQLServer.PASSWORD
-                currentSchema = schema
-            }
+                schema = this@TicketDatabaseFixture.schema
+                maximumPoolSize = MAXIMUM_POOL_SIZE
+                poolName = "ticket-test-$schema"
+            },
+        )
         TicketMigrationRunner(
             dataSource = dataSource,
             migration = TicketMigration("001", ClassPathResource("db/migration/V001__concert_ticket_flash_sale.sql")),
@@ -155,8 +158,12 @@ internal class TicketDatabaseFixture : AutoCloseable {
     }
 
     override fun close() {
-        adminConnection().use { connection ->
-            connection.createStatement().use { it.execute("DROP SCHEMA IF EXISTS $schema CASCADE") }
+        try {
+            dataSource.close()
+        } finally {
+            adminConnection().use { connection ->
+                connection.createStatement().use { it.execute("DROP SCHEMA IF EXISTS $schema CASCADE") }
+            }
         }
     }
 
@@ -168,6 +175,7 @@ internal class TicketDatabaseFixture : AutoCloseable {
         )
 
     companion object {
+        const val MAXIMUM_POOL_SIZE = 8
         private val postgres: PostgreSQLServer by lazy { PostgreSQLServer.Launcher.postgres }
     }
 }

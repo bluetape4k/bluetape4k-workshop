@@ -73,6 +73,7 @@ dependencies {
     testImplementation(libs.bluetape4k.assertions)
     testImplementation(libs.bluetape4k.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.testcontainers.toxiproxy)
 }
 
 tasks.test {
@@ -84,8 +85,29 @@ tasks.test {
     )
     useJUnitPlatform {
         excludeTags("stress")
+        excludeTags("high-contention")
     }
     usesService(gradle.sharedServices.registrations.named("test-mutex").get().service)
+}
+
+registerHighContentionProfileTask(
+    name = "highContentionCiProfile",
+    mode = "ci-correctness",
+    implementation = "ticket-spring",
+).configure {
+    testClassesDirs = tasks.test.get().testClassesDirs
+    classpath = tasks.test.get().classpath
+    setJvmArgs((jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
+}
+
+registerHighContentionProfileTask(
+    name = "highContentionLocalReferenceProfile",
+    mode = "local-reference",
+    implementation = "ticket-spring",
+).configure {
+    testClassesDirs = tasks.test.get().testClassesDirs
+    classpath = tasks.test.get().classpath
+    setJvmArgs((jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
 }
 
 val ticketStressRun = providers.gradleProperty("ticketStressRun").orNull ?: "missing-ticket-stress-run"
