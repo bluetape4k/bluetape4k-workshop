@@ -85,6 +85,17 @@ architecture diagram을 영문·국문 README 모두에 연결하고 validator�
 `high-contention-contract` smoke gate에서 실행된다. Diagram은 Toxiproxy가 Redis path만 끊으며
 PostgreSQL failover를 흉내 내지 않는다는 범위도 시각적으로 분리한다.
 
+### 실제 runtime worker와 test harness의 takeover 경쟁을 성공 조건에 포함한다
+
+Spring profile은 production `@Scheduled` worker를 그대로 실행하므로 test harness가 만료 lease를
+직접 reclaim하는 경로와 경쟁한다. background worker가 먼저 reclaim하고 정상 완료한 경우도 올바른
+takeover인데, harness가 자신의 claim만 기다리면 hosted runner의 scheduling 차이에서 timeout이
+발생한다.
+
+replacement 결과를 `Claimed`와 `Completed`의 닫힌 outcome으로 모델링해 두 경로를 모두 검증하고,
+Spring high-contention test에서는 worker 주기를 1ms로 줄여 이 경쟁을 반복적으로 실행한다. timeout을
+늘려 race를 숨기지 않고 PostgreSQL terminal state를 두 번째 성공 증거로 사용한다.
+
 ## Adopted and Rejected
 
 채택한 방식은 root coordinator가 한 번에 하나의 격리된 child JVM을 실행하고, 각 모듈의

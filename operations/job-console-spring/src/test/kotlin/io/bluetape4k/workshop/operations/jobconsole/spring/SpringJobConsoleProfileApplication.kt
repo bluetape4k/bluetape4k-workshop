@@ -23,6 +23,7 @@ import io.bluetape4k.workshop.operations.jobconsole.highcontention.OwnedRedisNam
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.ScheduleToken
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.WorkloadIdentity
 import io.bluetape4k.workshop.operations.jobconsole.highcontention.WorkloadTerminalDisposition
+import io.bluetape4k.workshop.operations.jobconsole.persistence.ClaimedJob
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobOutboxRepository
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepository
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepositoryException
@@ -67,6 +68,27 @@ import kotlin.concurrent.write
     JobConsoleProblemHandler::class,
 )
 internal class SpringJobConsoleProfileApplication
+
+internal sealed interface SpringReplacementOutcome {
+    data class Claimed(val job: ClaimedJob) : SpringReplacementOutcome
+
+    data object Completed : SpringReplacementOutcome
+}
+
+internal fun awaitSpringReplacement(
+    timeout: Duration,
+    pollInterval: Duration,
+    reclaim: () -> ClaimedJob?,
+    isCompleted: () -> Boolean,
+): SpringReplacementOutcome =
+    HighContentionAwait.value(
+        timeout = timeout,
+        pollInterval = pollInterval,
+        description = "replacement Spring worker did not reclaim or complete the expired lease",
+    ) {
+        reclaim()?.let { SpringReplacementOutcome.Claimed(it) }
+            ?: if (isCompleted()) SpringReplacementOutcome.Completed else null
+    }
 
 internal enum class SpringJobConsoleProfileAction(
     val profileId: String,
@@ -470,13 +492,18 @@ internal class SpringJobConsoleLiveAdapter private constructor(
                 application = startApplication()
             }
 
-            val replacement = awaitReplacementClaim(scenario.scope.tenantId)
-            val checkpoint = application.repository.checkpoint(
-                replacement.lease,
-                completedChunk = 1,
-                progress = 100,
-            )
-            application.repository.complete(checkpoint.lease, JobSignal.SUCCESS)
+            when (val replacement = awaitReplacement(scenario.scope.tenantId, submitted.jobId)) {
+                is SpringReplacementOutcome.Claimed -> {
+                    val checkpoint = application.repository.checkpoint(
+                        replacement.job.lease,
+                        completedChunk = 1,
+                        progress = 100,
+                    )
+                    application.repository.complete(checkpoint.lease, JobSignal.SUCCESS)
+                }
+
+                SpringReplacementOutcome.Completed -> Unit
+            }
             val converged = application.http.snapshot(submitted.jobId, scenario)
             check(converged.state == "succeeded")
             val beforeRelease = authorityBaseline(submitted.jobId)
@@ -502,17 +529,16 @@ internal class SpringJobConsoleLiveAdapter private constructor(
         }
     }
 
-    private fun awaitReplacementClaim(
+    private fun awaitReplacement(
         tenantId: String,
-    ): io.bluetape4k.workshop.operations.jobconsole.persistence.ClaimedJob {
-        return HighContentionAwait.value(
+        jobId: UUID,
+    ): SpringReplacementOutcome =
+        awaitSpringReplacement(
             timeout = Duration.ofSeconds(10),
             pollInterval = Duration.ofMillis(10),
-            description = "replacement Spring worker did not reclaim the expired lease",
-        ) {
-            application.repository.reclaimExpired(tenantId, Duration.ofSeconds(5))
-        }
-    }
+            reclaim = { application.repository.reclaimExpired(tenantId, Duration.ofSeconds(5)) },
+            isCompleted = { application.repository.load(jobId)?.state?.terminal == true },
+        )
 
     private fun assertStaleAttemptEvidence() {
         val evidence = checkNotNull(staleAttemptEvidence)
@@ -617,6 +643,7 @@ internal class SpringJobConsoleLiveAdapter private constructor(
                     "spring.datasource.hikari.schema" to fixture.schema,
                     "spring.datasource.hikari.maximum-pool-size" to profile.concurrency.coerceAtLeast(4).toString(),
                     "job-console.redis-uri" to topology.redisUri,
+                    "job-console.worker-delay-ms" to "1",
                     "management.datadog.metrics.export.enabled" to "false",
                 ),
             )
