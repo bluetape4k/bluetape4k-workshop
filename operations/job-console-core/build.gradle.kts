@@ -54,6 +54,7 @@ dependencies {
     testFixturesImplementation(libs.bluetape4k.jackson3)
     testFixturesImplementation(libs.bluetape4k.lettuce)
     testFixturesImplementation(libs.bluetape4k.testcontainers)
+    testFixturesImplementation(libs.hikaricp)
     testFixturesImplementation(libs.testcontainers.postgresql)
     testFixturesImplementation(libs.testcontainers.toxiproxy)
 }
@@ -103,8 +104,31 @@ val integrationTest = tasks.register<Test>("integrationTest") {
     useJobConsoleTestRuntime()
     testClassesDirs = tasks.test.get().testClassesDirs
     classpath = tasks.test.get().classpath
-    useJUnitPlatform { includeTags("integration") }
+    useJUnitPlatform {
+        includeTags("integration")
+        excludeTags("high-contention")
+    }
     shouldRunAfter(tasks.test)
+}
+
+registerHighContentionProfileTask(
+    name = "highContentionCiProfile",
+    mode = "ci-correctness",
+    implementation = "job-core",
+).configure {
+    testClassesDirs = tasks.test.get().testClassesDirs
+    classpath = tasks.test.get().classpath
+    useJobConsoleTestRuntime()
+}
+
+registerHighContentionProfileTask(
+    name = "highContentionLocalReferenceProfile",
+    mode = "local-reference",
+    implementation = "job-core",
+).configure {
+    testClassesDirs = tasks.test.get().testClassesDirs
+    classpath = tasks.test.get().classpath
+    useJobConsoleTestRuntime()
 }
 
 val highContentionProcessProbeChild = tasks.register<Test>("highContentionProcessProbeChild") {
