@@ -15,4 +15,11 @@ class JobConsoleBarrier(parties: Int) {
 
     fun releaseWhenReady(timeout: Duration): Boolean =
         ready.await(timeout.toMillis(), TimeUnit.MILLISECONDS).also { if (it) start.countDown() }
+
+    fun awaitReady(timeout: Duration): Boolean =
+        ready.await(timeout.toMillis(), TimeUnit.MILLISECONDS)
+
+    fun release() {
+        start.countDown()
+    }
 }

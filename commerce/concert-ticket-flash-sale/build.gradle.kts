@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.gradle.api.tasks.testing.Test
 
 plugins {
+    id("io.bluetape4k.workshop.high-contention-profile")
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
 }
@@ -73,30 +74,31 @@ dependencies {
     testImplementation(libs.bluetape4k.assertions)
     testImplementation(libs.bluetape4k.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.testcontainers.toxiproxy)
 }
 
 tasks.test {
     setJvmArgs((jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
+    inputs.dir(rootProject.layout.projectDirectory.dir("profiles/high-contention/v1"))
+    systemProperty(
+        "highContentionContractRoot",
+        rootProject.layout.projectDirectory.dir("profiles/high-contention/v1").asFile.absolutePath,
+    )
     useJUnitPlatform {
         excludeTags("stress")
+        excludeTags("high-contention")
     }
     usesService(gradle.sharedServices.registrations.named("test-mutex").get().service)
 }
 
-val ticketStressRun = providers.gradleProperty("ticketStressRun").orNull ?: "missing-ticket-stress-run"
-val ticketStressReport = layout.buildDirectory.dir("reports/ticket-stress/$ticketStressRun").get().asFile.absolutePath
-val ticketStressTest = tasks.register<Test>("ticketStressTest") {
-    description = "Runs opt-in hostile concurrency evidence for the ticket example."
-    group = "verification"
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    useJUnitPlatform { includeTags("stress") }
-    usesService(gradle.sharedServices.registrations.named("test-mutex").get().service)
-    outputs.dir(ticketStressReport)
-    systemProperty("ticket.stress.run", ticketStressRun)
-    doFirst {
-        check(systemProperties["ticket.stress.run"] != "missing-ticket-stress-run") {
-            "-PticketStressRun=<unique-run-id> is required"
-        }
-    }
+tasks.named<Test>("highContentionCiProfile") {
+    testClassesDirs = tasks.test.get().testClassesDirs
+    classpath = tasks.test.get().classpath
+    setJvmArgs((jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
+}
+
+tasks.named<Test>("highContentionLocalReferenceProfile") {
+    testClassesDirs = tasks.test.get().testClassesDirs
+    classpath = tasks.test.get().classpath
+    setJvmArgs((jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
 }

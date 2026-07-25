@@ -7,6 +7,8 @@
 #   ./scripts/smoke-validate.sh compile       # compile-only (no tests)
 #   ./scripts/smoke-validate.sh stale-check   # Gradle project count + README link check
 #   ./scripts/smoke-validate.sh diagram-qa    # changed README diagram QA evidence
+#   ./scripts/smoke-validate.sh high-contention-contract
+#   HIGH_CONTENTION_RUN_ID=<unique-id> ./scripts/smoke-validate.sh high-contention-ci
 #
 # Groups: data-access  spring-boot  serialization  messaging  commerce  operations  async  observability  aws  redis
 # Each group runs with --continue so a single failure does not abort the rest.
@@ -235,6 +237,34 @@ case "${1:-help}" in
       --continue --max-workers=1"
     ;;
 
+  high-contention-contract)
+    run "node --test scripts/high-contention/validate-contract.test.mjs scripts/high-contention/validate-run.test.mjs scripts/high-contention/select-upload.test.mjs"
+    run "node scripts/validate-high-contention-readme.mjs"
+    run "$GRADLEW -p build-logic test"
+    run "$GRADLEW \
+      :operations-job-console-core:test \
+      :commerce-concert-ticket-flash-sale:test \
+      --max-workers=1"
+    ;;
+
+  high-contention-ci)
+    if [ -z "${HIGH_CONTENTION_RUN_ID:-}" ]; then
+      echo "HIGH_CONTENTION_RUN_ID is required and must be unique."
+      exit 2
+    fi
+    if [[ ! "$HIGH_CONTENTION_RUN_ID" =~ ^[a-z0-9][a-z0-9._-]{0,63}$ ]] ||
+      [[ "$HIGH_CONTENTION_RUN_ID" == "." || "$HIGH_CONTENTION_RUN_ID" == ".." ]]; then
+      echo "HIGH_CONTENTION_RUN_ID must be a bounded identifier."
+      exit 2
+    fi
+    high_contention_run_id="$HIGH_CONTENTION_RUN_ID"
+    unset HIGH_CONTENTION_RUN_ID
+    echo "▶ $GRADLEW highContentionCi -PhighContentionRunId=$high_contention_run_id --max-workers=1"
+    "$GRADLEW" highContentionCi \
+      "-PhighContentionRunId=$high_contention_run_id" \
+      --max-workers=1
+    ;;
+
   stale-check)
     echo "=== Gradle project count ==="
     count=$("$GRADLEW" projects --console=plain 2>/dev/null | grep -Ec "Project ':" || true)
@@ -296,6 +326,8 @@ case "${1:-help}" in
     echo "  observability    Micrometer / Virtual Threads"
     echo "  aws              AWS local-first examples"
     echo "  redis            Redis / Redisson / Rate Limit"
+    echo "  high-contention-contract  Contract and producer tests (not part of all-smoke)"
+    echo "  high-contention-ci        Full CI matrix; requires a unique HIGH_CONTENTION_RUN_ID"
     echo "  stale-check      Gradle project count + README link check"
     echo "  diagram-qa       Changed README diagram QA evidence"
     ;;

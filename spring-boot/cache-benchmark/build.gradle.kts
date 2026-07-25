@@ -60,8 +60,9 @@ benchmark {
     configurations {
         // Disable the default 'main' configuration
         named("main") {
-            warmups = 0
-            iterations = 0
+            exclude(".*")
+            warmups = 1
+            iterations = 1
         }
         // Profile 1: no cache baseline
         register("noCache") {

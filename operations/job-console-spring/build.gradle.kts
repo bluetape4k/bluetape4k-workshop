@@ -2,6 +2,7 @@ import org.gradle.api.tasks.testing.Test
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
+    id("io.bluetape4k.workshop.high-contention-profile")
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
 }
@@ -44,6 +45,9 @@ dependencies {
     testImplementation(testFixtures(project(":operations-job-console-core")))
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.bluetape4k.assertions)
+    testImplementation(libs.bluetape4k.lettuce)
+    testImplementation(libs.bluetape4k.testcontainers)
+    testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
@@ -70,15 +74,38 @@ fun Test.useJobConsoleTestRuntime() {
 
 tasks.test {
     useJobConsoleTestRuntime()
-    useJUnitPlatform { excludeTags("integration") }
+    inputs.dir(rootProject.layout.projectDirectory.dir("profiles/high-contention/v1"))
+    systemProperty(
+        "highContentionContractRoot",
+        rootProject.layout.projectDirectory.dir("profiles/high-contention/v1").asFile.absolutePath,
+    )
+    useJUnitPlatform {
+        excludeTags("integration")
+        excludeTags("high-contention")
+    }
 }
 
-val integrationTest by tasks.registering(Test::class) {
+val integrationTest = tasks.register<Test>("integrationTest") {
     description = "Runs live Spring job console integration tests."
     group = "verification"
     useJobConsoleTestRuntime()
     testClassesDirs = tasks.test.get().testClassesDirs
     classpath = tasks.test.get().classpath
-    useJUnitPlatform { includeTags("integration") }
+    useJUnitPlatform {
+        includeTags("integration")
+        excludeTags("high-contention")
+    }
     shouldRunAfter(tasks.test)
+}
+
+tasks.named<Test>("highContentionCiProfile") {
+    testClassesDirs = tasks.test.get().testClassesDirs
+    classpath = tasks.test.get().classpath
+    useJobConsoleTestRuntime()
+}
+
+tasks.named<Test>("highContentionLocalReferenceProfile") {
+    testClassesDirs = tasks.test.get().testClassesDirs
+    classpath = tasks.test.get().classpath
+    useJobConsoleTestRuntime()
 }

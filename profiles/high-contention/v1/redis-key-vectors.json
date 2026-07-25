@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "vectors": [
+    {
+      "name": "job-owned-namespace",
+      "namespace": "hc:v1:run-123:job-core:redis-key-loss:",
+      "deleteUpperBound": 8,
+      "cases": [
+        {
+          "name": "owned-key",
+          "key": "hc:v1:run-123:job-core:redis-key-loss:cancel:job-1",
+          "expectedOwned": true
+        },
+        {
+          "name": "namespace-root-is-not-a-key",
+          "key": "hc:v1:run-123:job-core:redis-key-loss:",
+          "expectedOwned": false
+        },
+        {
+          "name": "adjacent-prefix",
+          "key": "hc:v1:run-123:job-core:redis-key-loss-extra:cancel:job-1",
+          "expectedOwned": false
+        },
+        {
+          "name": "foreign-sentinel",
+          "key": "hc:v1:foreign:sentinel",
+          "expectedOwned": false
+        },
+        {
+          "name": "malformed-owner-key",
+          "key": "hc:v1:run-123:job-core:redis-key-loss",
+          "expectedOwned": false
+        }
+      ]
+    },
+    {
+      "name": "ticket-owned-namespace",
+      "namespace": "hc:v1:run-123:ticket-spring:redis-key-loss:",
+      "deleteUpperBound": 8,
+      "cases": [
+        {
+          "name": "owned-key",
+          "key": "hc:v1:run-123:ticket-spring:redis-key-loss:lease:user-1",
+          "expectedOwned": true
+        },
+        {
+          "name": "adjacent-implementation",
+          "key": "hc:v1:run-123:ticket-spring-extra:redis-key-loss:lease:user-1",
+          "expectedOwned": false
+        },
+        {
+          "name": "foreign-run",
+          "key": "hc:v1:run-999:ticket-spring:redis-key-loss:lease:user-1",
+          "expectedOwned": false
+        }
+      ]
+    }
+  ],
+  "vectorsSha256": "406278bff9c644546cadea9ffc9919a36f1066d5958043fc196269faa6c8a774"
+}

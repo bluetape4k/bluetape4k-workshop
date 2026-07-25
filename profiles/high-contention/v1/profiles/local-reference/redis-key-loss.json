@@ -1,0 +1,57 @@
+{
+  "profileSchemaVersion": 1,
+  "profileId": "redis-key-loss",
+  "mode": "local-reference",
+  "seed": "issue-522-local-redis-key-loss-v1",
+  "arrivalCurve": "step",
+  "operationCount": 400,
+  "concurrency": 96,
+  "dispatcherBacklogCapacity": 400,
+  "maxScheduleDelayMs": 1000,
+  "warmupOperationCount": 32,
+  "workloadDurationMs": 8000,
+  "epochs": [
+    {"durationMs": 4000, "operationCount": 200},
+    {"durationMs": 4000, "operationCount": 200}
+  ],
+  "retryShape": null,
+  "contentionShape": {
+    "authorityCount": 8,
+    "hotAuthorityCount": 2,
+    "identityCount": 400,
+    "sameIdentityRatioPermille": 250
+  },
+  "expectedSubmissionOutcomes": {
+    "minimumDispatched": 400,
+    "minimumCompleted": 400,
+    "maximumLocalRejected": 0,
+    "maximumMissedDeadline": 0
+  },
+  "failure": {
+    "kind": "redis-key-loss",
+    "triggerAcceptedCount": 200,
+    "steps": ["PAUSE_WRITER", "DELETE_OWNED_KEYS", "VERIFY_NAMESPACE", "RESUME_WRITER"]
+  },
+  "operationTimeoutMs": 5000,
+  "injectionDeadlineMs": 10000,
+  "failureDetectionDeadlineMs": 10000,
+  "workloadJoinDeadlineMs": 30000,
+  "recoveryDeadlineMs": 30000,
+  "cleanupActionBudgetsMs": {
+    "application": 5000,
+    "clients": 5000,
+    "toxiproxy": 4000,
+    "redis": 4000,
+    "postgresql": 7000,
+    "network": 2000
+  },
+  "reportFinalizeReserveMs": 4000,
+  "cleanupReserveMs": 35000,
+  "profileDeadlineMs": 180000,
+  "expectedInvariants": {
+    "job": ["DURABLE_CANCEL_RETAINED", "TERMINAL_HISTORY_RETAINED"],
+    "ticket": ["DATABASE_ACTIVE_GUARD_RETAINS_OWNERSHIP", "NO_DOUBLE_ADMISSION"]
+  },
+  "observationFields": ["deletedOwnedKeyCount", "scanIterationCount", "workloadDurationNanos"],
+  "knownLimitations": ["Only run-owned Redis keys are removed."]
+}

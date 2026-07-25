@@ -1,6 +1,6 @@
 # 콘서트 티켓 Flash Sale
 
-[English](README.md)
+[English](README.md) | 한국어
 
 이 Spring Boot 4 / Kotlin 예제는 대규모 티켓 오픈에서 자주 만나는 실패 경계를 다룬다. 대기실 입장, 사용자/IP별 구매 제한, PostgreSQL 재고 직렬화, 결과를 알 수 없는 결제 timeout, 뒤늦은 승인, 환불, 티켓 발급·회수, 운영자 복구가 하나의 상태 모델로 이어진다.
 
@@ -213,3 +213,30 @@ node scripts/validate-readme-diagram-qa.mjs
 node scripts/validate-sequence-diagrams.mjs
 ./gradlew :commerce-concert-ticket-flash-sale:test --max-workers=1
 ```
+
+## 고경합 증거
+
+![고경합 profile runner 아키텍처](../../docs/images/readme-diagrams/high-contention-profile-runner-architecture-01.png)
+
+Docker daemon이 실행 중이고 JDK 25를 사용하며 Gradle과 container가 사용할
+수 있는 메모리가 최소 4 GiB인 환경에서 Ticket과 Job Console profile을
+실행합니다.
+
+```bash
+CI_RUN_ID=developer-ci-001
+REFERENCE_RUN_ID=developer-reference-001
+./gradlew highContentionCi -PhighContentionRunId="$CI_RUN_ID" --max-workers=1
+./gradlew highContentionLocalReference -PhighContentionRunId="$REFERENCE_RUN_ID" --max-workers=1
+```
+
+정확성 게이트는 `highContentionCi`입니다. `highContentionLocalReference`는
+해당 환경의 실행 관찰값을 기록할 뿐이며, 프레임워크 순위를 매기지 않는다.
+또한 운영 용량을 입증하지 않는다. Canonical report는
+`build/reports/high-contention/<run-id>/` 아래에 기록됩니다. 명령마다 새 run
+ID를 사용해야 하며 local-reference 실행에는 clean worktree도 필요합니다.
+
+Ticket adapter는 Spring-managed HikariCP pool을 사용하지만 inventory,
+purchase fencing, payment reconciliation, deduplication, receipt의 권위는
+PostgreSQL이 유지합니다. Toxiproxy는 기존 connection과 새 connection을
+포함한 Redis admission 경로의 단절·복구에만 사용하며 PostgreSQL 권위를
+대체하거나 broker, database, host failover를 증명하지 않습니다.

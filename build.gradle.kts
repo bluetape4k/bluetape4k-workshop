@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     base
+    id("io.bluetape4k.workshop.high-contention-root")
     // jacoco
     alias(libs.plugins.kotlin.jvm)
 

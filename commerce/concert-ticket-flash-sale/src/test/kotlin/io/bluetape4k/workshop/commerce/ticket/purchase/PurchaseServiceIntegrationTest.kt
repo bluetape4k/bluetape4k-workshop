@@ -27,6 +27,13 @@ import java.util.UUID
 
 internal class PurchaseServiceIntegrationTest {
     @Test
+    fun `integration fixture uses a bounded Hikari pool`() {
+        TicketDatabaseFixture().use { fixture ->
+            fixture.dataSource.maximumPoolSize shouldBeEqualTo TicketDatabaseFixture.MAXIMUM_POOL_SIZE
+        }
+    }
+
+    @Test
     fun `one nanosecond before opensAt creates no purchase row or consumed grant`() {
         PurchaseFixture(opensAt = NOW.plusNanos(1)).use { fixture ->
             val command = fixture.command()

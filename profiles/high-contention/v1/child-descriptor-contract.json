@@ -1,0 +1,34 @@
+{
+  "contractSchemaVersion": 1,
+  "childDescriptorSchemaVersion": 1,
+  "allowedFields": [
+    "childDescriptorSchemaVersion",
+    "runId",
+    "profileId",
+    "mode",
+    "implementation",
+    "parentManifestDigest",
+    "resourceLabels",
+    "descriptorDigest"
+  ],
+  "resourceLabelFields": [
+    "resourceKey",
+    "resourceType",
+    "labels"
+  ],
+  "requiredLabelKeys": [
+    "io.bluetape4k.high-contention.run-id",
+    "io.bluetape4k.high-contention.profile-id",
+    "io.bluetape4k.high-contention.resource-key",
+    "io.bluetape4k.high-contention.resource-type"
+  ],
+  "forbiddenConfigurationFields": [
+    "contractRoot",
+    "outputRoot",
+    "modeOverride",
+    "implementationOverride",
+    "profileFile",
+    "dockerHost",
+    "toxiproxyControlEndpoint"
+  ]
+}

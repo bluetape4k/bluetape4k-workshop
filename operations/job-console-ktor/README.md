@@ -32,3 +32,29 @@ export JOB_CONSOLE_DEMO=true
 ./gradlew :operations-job-console-ktor:test
 ./gradlew :operations-job-console-ktor:integrationTest --max-workers=1
 ```
+
+## High-contention evidence
+
+![High-contention profile runner architecture](../../docs/images/readme-diagrams/high-contention-profile-runner-architecture-01.png)
+
+Run the shared core and Ktor adapter profiles with a running Docker daemon,
+JDK 25, and at least 4 GiB of memory available to Gradle and the containers:
+
+```bash
+CI_RUN_ID=developer-ci-001
+REFERENCE_RUN_ID=developer-reference-001
+./gradlew highContentionCi -PhighContentionRunId="$CI_RUN_ID" --max-workers=1
+./gradlew highContentionLocalReference -PhighContentionRunId="$REFERENCE_RUN_ID" --max-workers=1
+```
+
+The correctness gate is `highContentionCi`. `highContentionLocalReference`
+records environment-specific execution observations; it does not rank
+frameworks and does not establish production capacity. Canonical reports are
+written under `build/reports/high-contention/<run-id>/`. Use a new run ID for
+every command; local-reference execution also requires a clean worktree.
+
+The Ktor adapter keeps blocking work on its application-owned dispatcher, while
+PostgreSQL remains authoritative for leases, fencing, checkpoints,
+deduplication, and terminal state. Toxiproxy cuts and restores only the advisory
+Redis path, including old and newly opened connections; it does not replace
+PostgreSQL authority or database failover.

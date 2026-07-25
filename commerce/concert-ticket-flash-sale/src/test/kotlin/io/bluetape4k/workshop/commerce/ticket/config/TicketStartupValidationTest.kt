@@ -5,6 +5,8 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import org.junit.jupiter.api.Test
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.jdbc.datasource.AbstractDataSource
+import java.sql.Connection
 import java.time.Duration
 
 internal class TicketStartupValidationTest {
@@ -35,6 +37,24 @@ internal class TicketStartupValidationTest {
 
         failure.code shouldBeEqualTo TicketStartupFailure.INVALID_DATABASE_CAPACITY
         failure.message shouldBeEqualTo TicketStartupFailure.INVALID_DATABASE_CAPACITY.name
+    }
+
+    @Test
+    fun `publication wiring applies the configured database permit timeout`() {
+        val configuredTimeout = Duration.ofSeconds(5)
+        val executor = TicketPublicationConfiguration().ticketJdbcExecutor(
+            dataSource = object : AbstractDataSource() {
+                override fun getConnection(): Connection = error("connection must remain lazy")
+
+                override fun getConnection(username: String?, password: String?): Connection =
+                    error("connection must remain lazy")
+            },
+            properties = TicketProperties(
+                db = TicketDatabaseProperties(permitTimeout = configuredTimeout),
+            ),
+        )
+
+        executor.permitTimeout shouldBeEqualTo configuredTimeout
     }
 
     @Test

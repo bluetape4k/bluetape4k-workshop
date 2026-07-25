@@ -62,7 +62,7 @@ class TicketJdbcTransaction internal constructor(
 class TicketJdbcExecutor(
     dataSource: DataSource,
     foregroundPermits: Int,
-    private val permitTimeout: Duration = Duration.ofMillis(250),
+    internal val permitTimeout: Duration = Duration.ofMillis(250),
 ) {
     private val permits = Semaphore(foregroundPermits, true)
     private val database = Database.connect(

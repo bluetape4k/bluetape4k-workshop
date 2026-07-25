@@ -2,6 +2,9 @@ package io.bluetape4k.workshop.operations.jobconsole.fixture
 
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.storage.RedisServer
+import io.bluetape4k.workshop.operations.jobconsole.highcontention.HighContentionJournal
+import io.bluetape4k.workshop.operations.jobconsole.highcontention.JobConsoleDockerResources
+import io.bluetape4k.workshop.operations.jobconsole.highcontention.JobConsoleProxiedTopology
 import java.sql.DriverManager
 import java.util.UUID
 
@@ -25,6 +28,12 @@ data class JobConsoleContainerFixture(
     }
 
     companion object {
+        fun proxiedRedis(
+            journal: HighContentionJournal,
+            resources: JobConsoleDockerResources,
+        ): JobConsoleProxiedTopology =
+            JobConsoleProxiedTopology.start(journal, resources)
+
         fun shared(): JobConsoleContainerFixture {
             val postgres = PostgreSQLServer.Launcher.postgres
             val redis = RedisServer.Launcher.redis

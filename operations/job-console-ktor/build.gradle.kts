@@ -2,6 +2,7 @@ import org.gradle.api.tasks.testing.Test
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
+    id("io.bluetape4k.workshop.high-contention-profile")
     application
 }
 
@@ -43,6 +44,9 @@ dependencies {
     testImplementation(testFixtures(project(":operations-job-console-core")))
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.bluetape4k.assertions)
+    testImplementation(libs.bluetape4k.lettuce)
+    testImplementation(libs.bluetape4k.testcontainers)
+    testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.kotlinx.coroutines.test.lib)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.ktor.client.core)
@@ -66,15 +70,38 @@ fun Test.useJobConsoleTestRuntime() {
 
 tasks.test {
     useJobConsoleTestRuntime()
-    useJUnitPlatform { excludeTags("integration") }
+    inputs.dir(rootProject.layout.projectDirectory.dir("profiles/high-contention/v1"))
+    systemProperty(
+        "highContentionContractRoot",
+        rootProject.layout.projectDirectory.dir("profiles/high-contention/v1").asFile.absolutePath,
+    )
+    useJUnitPlatform {
+        excludeTags("integration")
+        excludeTags("high-contention")
+    }
 }
 
-val integrationTest by tasks.registering(Test::class) {
+val integrationTest = tasks.register<Test>("integrationTest") {
     description = "Runs live Ktor job console integration tests."
     group = "verification"
     useJobConsoleTestRuntime()
     testClassesDirs = tasks.test.get().testClassesDirs
     classpath = tasks.test.get().classpath
-    useJUnitPlatform { includeTags("integration") }
+    useJUnitPlatform {
+        includeTags("integration")
+        excludeTags("high-contention")
+    }
     shouldRunAfter(tasks.test)
+}
+
+tasks.named<Test>("highContentionCiProfile") {
+    testClassesDirs = tasks.test.get().testClassesDirs
+    classpath = tasks.test.get().classpath
+    useJobConsoleTestRuntime()
+}
+
+tasks.named<Test>("highContentionLocalReferenceProfile") {
+    testClassesDirs = tasks.test.get().testClassesDirs
+    classpath = tasks.test.get().classpath
+    useJobConsoleTestRuntime()
 }

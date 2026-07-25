@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "algorithm": "hc-v1-sha256-unsigned-rank",
+  "vectors": [
+    {
+      "name": "burst-four-two-authorities",
+      "profileSchemaVersion": 1,
+      "seed": "vector-burst",
+      "curve": "burst",
+      "operationCount": 4,
+      "durationNanos": 1000,
+      "authorityWeights": [
+        3,
+        1
+      ],
+      "epochs": [],
+      "retryShape": null,
+      "expectedTokens": [
+        {
+          "offsetNanos": 0,
+          "stableOrdinal": 0,
+          "identityOrdinal": 0,
+          "attemptOrdinal": 0,
+          "authorityOrdinal": 0
+        },
+        {
+          "offsetNanos": 0,
+          "stableOrdinal": 1,
+          "identityOrdinal": 1,
+          "attemptOrdinal": 0,
+          "authorityOrdinal": 1
+        },
+        {
+          "offsetNanos": 0,
+          "stableOrdinal": 2,
+          "identityOrdinal": 2,
+          "attemptOrdinal": 0,
+          "authorityOrdinal": 0
+        },
+        {
+          "offsetNanos": 0,
+          "stableOrdinal": 3,
+          "identityOrdinal": 3,
+          "attemptOrdinal": 0,
+          "authorityOrdinal": 1
+        }
+      ]
+    },
+    {
+      "name": "step-half-open-epochs",
+      "profileSchemaVersion": 1,
+      "seed": "vector-step",
+      "curve": "step",
+      "operationCount": 5,
+      "durationNanos": 2000,
+      "authorityWeights": [
+        2,
+        1
+      ],
+      "epochs": [
+        {
+          "durationNanos": 1000,
+          "operationCount": 3
+        },
+        {
+          "durationNanos": 1000,
+          "operationCount": 2
+        }
+      ],
+      "retryShape": null,
+      "expectedTokens": [
+        {
+          "offsetNanos": 0,
+          "stableOrdinal": 0,
+          "identityOrdinal": 0,
+          "attemptOrdinal": 0,
+          "authorityOrdinal": 0
+        },
+        {
+          "offsetNanos": 333,
+          "stableOrdinal": 1,
+          "identityOrdinal": 1,
+          "attemptOrdinal": 0,
+          "authorityOrdinal": 0
+        },
+        {
+          "offsetNanos": 666,
+          "stableOrdinal": 2,
+          "identityOrdinal": 2,
+          "attemptOrdinal": 0,
+          "authorityOrdinal": 0
+        },
+        {
+          "offsetNanos": 1000,
+          "stableOrdinal": 3,
+          "identityOrdinal": 3,
+          "attemptOrdinal": 0,
+          "authorityOrdinal": 0
+        },
+        {
+          "offsetNanos": 1500,
+          "stableOrdinal": 4,
+          "identityOrdinal": 4,
+          "attemptOrdinal": 0,
+          "authorityOrdinal": 1
+        }
+      ]
+    },
+    {
+      "name": "retry-storm-ranked-identities",
+      "profileSchemaVersion": 1,
+      "seed": "vector-retry",
+      "curve": "retry-storm",
+      "operationCount": 6,
+      "durationNanos": 900,
+      "authorityWeights": [
+        1,
+        1
+      ],
+      "epochs": [],
+      "retryShape": {
+        "identityCount": 2,
+        "attemptsPerIdentity": 3
+      },
+      "expectedTokens": [
+        {
+          "offsetNanos": 0,
+          "stableOrdinal": 0,
+          "identityOrdinal": 1,
+          "attemptOrdinal": 0,
+          "authorityOrdinal": 1
+        },
+        {
+          "offsetNanos": 150,
+          "stableOrdinal": 1,
+          "identityOrdinal": 1,
+          "attemptOrdinal": 1,
+          "authorityOrdinal": 1
+        },
+        {
+          "offsetNanos": 300,
+          "stableOrdinal": 2,
+          "identityOrdinal": 1,
+          "attemptOrdinal": 2,
+          "authorityOrdinal": 1
+        },
+        {
+          "offsetNanos": 450,
+          "stableOrdinal": 3,
+          "identityOrdinal": 0,
+          "attemptOrdinal": 0,
+          "authorityOrdinal": 0
+        },
+        {
+          "offsetNanos": 600,
+          "stableOrdinal": 4,
+          "identityOrdinal": 0,
+          "attemptOrdinal": 1,
+          "authorityOrdinal": 0
+        },
+        {
+          "offsetNanos": 750,
+          "stableOrdinal": 5,
+          "identityOrdinal": 0,
+          "attemptOrdinal": 2,
+          "authorityOrdinal": 0
+        }
+      ]
+    }
+  ],
+  "vectorsSha256": "040210ff3ace6e73bf45460363057da7a020b26809b7a2c563245c9e4d21d7ae"
+}
