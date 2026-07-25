@@ -165,5 +165,9 @@ actionlint .github/workflows/Examples.yml .github/workflows/nightly.yml
 - Spring 예제의 database test는 production과 같은 Spring-managed HikariCP bean을 우선 사용한다.
 - 새 implementation을 추가하면 module-local adapter, closed manifest, golden schedule, report
   validator, cleanup label을 같은 변경에서 갱신한다.
+- Workflow-level `paths`는 workflow 시작 여부만 결정하므로, diagram·runbook·validator 변경과 실제
+  module 변경이 같은 workflow에 들어오면 먼저 변경 경로를 분류하고 각 job을 독립적으로 gate한다.
+  문서·script-only 변경은 소유한 QA만 실행하고 JVM smoke/container matrix는 실행하지 않되,
+  schedule·수동 실행과 workflow 자체 변경은 전체 검증을 유지한다.
 - Broker failover, PostgreSQL failover, host loss는 이 suite의 Redis path 증거를 재사용해
   주장하지 말고 별도의 topology와 acceptance criteria로 검증한다.

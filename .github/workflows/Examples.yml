@@ -53,6 +53,7 @@ on:
       - 'settings.gradle.kts'
       - 'docs/images/readme-diagrams/**'
       - 'scripts/validate-readme-diagram-qa.mjs'
+      - 'scripts/validate-high-contention-readme.mjs'
       - 'scripts/smoke-validate.sh'
       - '.github/workflows/Examples.yml'
   pull_request:
@@ -105,6 +106,7 @@ on:
       - 'settings.gradle.kts'
       - 'docs/images/readme-diagrams/**'
       - 'scripts/validate-readme-diagram-qa.mjs'
+      - 'scripts/validate-high-contention-readme.mjs'
       - 'scripts/smoke-validate.sh'
       - '.github/workflows/Examples.yml'
   workflow_dispatch:
@@ -122,10 +124,99 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
+  changes:
+    name: Detect Example Changes
+    runs-on: ubuntu-latest
+    outputs:
+      diagram: ${{ steps.paths.outputs.diagram }}
+      examples: ${{ steps.paths.outputs.examples }}
+      high_contention: ${{ steps.paths.outputs.high_contention }}
+      gradle: ${{ steps.paths.outputs.gradle }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Classify changed paths
+        id: paths
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          diagram=false
+          examples=false
+          high_contention=false
+          gradle=false
+
+          if [[ "$EVENT_NAME" == "schedule" || "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            diagram=true
+            examples=true
+            high_contention=true
+            gradle=true
+          else
+            if [[ "$EVENT_NAME" == "pull_request" ]]; then
+              range="$BASE_SHA...$HEAD_SHA"
+            elif [[ -n "$BEFORE_SHA" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then
+              range="$BEFORE_SHA...$HEAD_SHA"
+            else
+              range="$HEAD_SHA^...$HEAD_SHA"
+            fi
+
+            while IFS= read -r path; do
+              case "$path" in
+                .github/workflows/Examples.yml)
+                  diagram=true
+                  examples=true
+                  high_contention=true
+                  gradle=true
+                  ;;
+                *.md|docs/**)
+                  diagram=true
+                  ;;
+                scripts/validate-readme-diagram-qa.mjs)
+                  diagram=true
+                  ;;
+                scripts/validate-high-contention-readme.mjs)
+                  high_contention=true
+                  gradle=true
+                  ;;
+                scripts/smoke-validate.sh)
+                  diagram=true
+                  high_contention=true
+                  gradle=true
+                  ;;
+                profiles/high-contention/**|scripts/high-contention/**)
+                  high_contention=true
+                  gradle=true
+                  ;;
+                commerce/**|operations/**)
+                  examples=true
+                  high_contention=true
+                  gradle=true
+                  ;;
+                *)
+                  examples=true
+                  gradle=true
+                  ;;
+              esac
+            done < <(git diff --name-only "$range")
+          fi
+
+          {
+            echo "diagram=$diagram"
+            echo "examples=$examples"
+            echo "high_contention=$high_contention"
+            echo "gradle=$gradle"
+          } | tee -a "$GITHUB_OUTPUT"
+
   validate-wrapper:
     name: Validate Gradle Wrapper
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    needs: changes
+    if: needs.changes.outputs.gradle == 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: gradle/actions/wrapper-validation@v6
@@ -134,7 +225,13 @@ jobs:
     name: Smoke Examples (H2/default)
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    needs: validate-wrapper
+    needs:
+      - changes
+      - validate-wrapper
+    if: >-
+      always() &&
+      needs.changes.outputs.examples == 'true' &&
+      needs.validate-wrapper.result == 'success'
     steps:
       - uses: actions/checkout@v7
 
@@ -271,7 +368,8 @@ jobs:
     name: Diagram QA
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: validate-wrapper
+    needs: changes
+    if: needs.changes.outputs.diagram == 'true'
     steps:
       - uses: actions/checkout@v7
         with:
@@ -295,7 +393,13 @@ jobs:
     name: Container Examples (sequential)
     runs-on: ubuntu-latest
     timeout-minutes: 35
-    needs: validate-wrapper
+    needs:
+      - changes
+      - validate-wrapper
+    if: >-
+      always() &&
+      needs.changes.outputs.examples == 'true' &&
+      needs.validate-wrapper.result == 'success'
     steps:
       - uses: actions/checkout@v7
 
@@ -475,7 +579,13 @@ jobs:
   high-contention-correctness:
     name: High-contention CI correctness
     runs-on: ubuntu-latest
-    needs: validate-wrapper
+    needs:
+      - changes
+      - validate-wrapper
+    if: >-
+      always() &&
+      needs.changes.outputs.high_contention == 'true' &&
+      needs.validate-wrapper.result == 'success'
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7
@@ -525,6 +635,8 @@ jobs:
     name: Examples Status
     runs-on: ubuntu-latest
     needs:
+      - changes
+      - validate-wrapper
       - diagram-qa
       - smoke-examples
       - container-examples
