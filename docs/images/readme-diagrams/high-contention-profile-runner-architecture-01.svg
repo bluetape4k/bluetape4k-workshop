@@ -31,9 +31,9 @@
   <rect x="55" y="325" width="1490" height="335" rx="24" fill="#edf7f0" stroke="#8fc39c" stroke-width="2.5"/>
   <text x="82" y="364" class="lane">Isolated execution boundary</text>
   <g data-node="coordinator">
-    <rect class="card" x="105" y="405" width="315" height="170" rx="18" stroke="#397ca6"/>
+    <rect class="card" x="105" y="405" width="315" height="200" rx="18" stroke="#397ca6"/>
     <text x="262" y="443" text-anchor="middle" class="card-title">Root coordinator</text>
-    <text x="262" y="475" text-anchor="middle" class="detail">selects one matrix tuple</text><text x="262" y="501" text-anchor="middle" class="detail">allocates exact labels</text><text x="262" y="527" text-anchor="middle" class="detail">enforces deadline reserves</text><text x="262" y="553" text-anchor="middle" class="detail">max active topology = 1</text>
+    <text x="262" y="475" text-anchor="middle" class="detail">selects one matrix tuple</text><text x="262" y="501" text-anchor="middle" class="detail">allocates exact labels</text><text x="262" y="527" text-anchor="middle" class="detail">enforces deadline reserves</text><text x="262" y="553" text-anchor="middle" class="detail">max active topology = 1</text><text x="262" y="579" text-anchor="middle" class="detail">process + container reaping</text>
   </g>
   <g data-node="child-boundary">
     <rect x="475" y="390" width="645" height="230" rx="20" fill="#f7fcf8" stroke="#72a77c" stroke-width="2.5" stroke-dasharray="10 7"/>
@@ -60,8 +60,6 @@
   <path class="connector" data-connector="coordinator-to-child" d="M420 490 H475" stroke="#397ca6" marker-end="url(#arrow-blue)"/><path class="connector" data-connector="child-to-evidence" d="M1120 490 H1170" stroke="#7563a8" marker-end="url(#arrow-purple)"/>
   <path class="connector" data-connector="child-to-postgres" d="M655 620 V670 Q655 685 640 685 H510 Q495 685 495 700 V742" stroke="#4f8a55" marker-end="url(#arrow-green)"/>
   <path class="connector" data-connector="child-to-toxiproxy" d="M935 620 V742" stroke="#b95855" stroke-dasharray="10 8" marker-end="url(#arrow-fault)"/><path class="connector" data-connector="toxiproxy-to-redis" d="M1050 771 H1125" stroke="#b95855" stroke-dasharray="10 8" marker-end="url(#arrow-fault)"/>
-  <path class="connector" data-connector="evidence-to-cleanup" d="M1328 575 V655 Q1328 670 1313 670 H1145" stroke="#7563a8"/><text x="1215" y="655" text-anchor="middle" class="label">process + container reaping</text>
-
   <rect x="260" y="840" width="1080" height="42" rx="16" fill="#ffffff" stroke="#c7d4dc" stroke-width="2"/>
   <line x1="300" y1="861" x2="355" y2="861" stroke="#397ca6" stroke-width="4"/><text x="370" y="867" class="legend">control / selection</text>
   <line x1="575" y1="861" x2="630" y2="861" stroke="#4f8a55" stroke-width="4"/><text x="645" y="867" class="legend">authoritative path</text>

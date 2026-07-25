@@ -113,6 +113,10 @@ test("PR-gated high-contention validation checks the shared diagram artifacts", 
         /high-contention-profile-runner-architecture-01\.svg/u,
     );
     assert.match(readmeValidator, /\blstat\b/u);
+    assert.match(readmeValidator, /data-connector/u);
+    assert.match(readmeValidator, /marker-end/u);
+    assert.match(readmeValidator, /process \\?\+ container reaping/u);
+    assert.match(readmeValidator, /evidence-to-cleanup/u);
 });
 
 async function kotlinFiles(root) {

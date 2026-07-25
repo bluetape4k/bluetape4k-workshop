@@ -17,6 +17,8 @@ const DIAGRAM_ASSETS = [
     "docs/images/readme-diagrams/high-contention-profile-runner-architecture-01.png",
     "docs/images/readme-diagrams/high-contention-profile-runner-architecture-01.svg",
 ];
+const DIAGRAM_SVG = DIAGRAM_ASSETS[1];
+const EXPECTED_DIRECTIONAL_CONNECTORS = 8;
 
 const COMMON_REQUIREMENTS = new Map([
     ["CI correctness command", /(?:^|\s)\.\/gradlew highContentionCi(?:\s|$)/u],
@@ -78,6 +80,38 @@ for (const path of DIAGRAM_ASSETS) {
     } catch {
         failures.push({ path, missing: "regular non-empty diagram asset" });
     }
+}
+
+const diagramSvg = await readFile(DIAGRAM_SVG, "utf8");
+const directionalConnectors = [
+    ...diagramSvg.matchAll(/<path\b([^>]*\bdata-connector="([^"]+)"[^>]*)\/?>/gu),
+];
+if (directionalConnectors.length !== EXPECTED_DIRECTIONAL_CONNECTORS) {
+    failures.push({
+        path: DIAGRAM_SVG,
+        missing: `exactly ${EXPECTED_DIRECTIONAL_CONNECTORS} directional connectors`,
+    });
+}
+for (const connector of directionalConnectors) {
+    if (!/marker-end="url\(#[^)]+\)"/u.test(connector[1])) {
+        failures.push({
+            path: DIAGRAM_SVG,
+            missing: `${connector[2]} attached directional endpoint`,
+        });
+    }
+}
+const coordinator = /<g data-node="coordinator">([\s\S]*?)<\/g>/u.exec(diagramSvg)?.[1] ?? "";
+if (!/process \+ container reaping/u.test(coordinator)) {
+    failures.push({
+        path: DIAGRAM_SVG,
+        missing: "root coordinator process and container reaping ownership",
+    });
+}
+if (diagramSvg.includes('data-connector="evidence-to-cleanup"')) {
+    failures.push({
+        path: DIAGRAM_SVG,
+        missing: "cleanup ownership must not float out of the evidence gate",
+    });
 }
 
 for (const [path, language] of DOCUMENTS) {
