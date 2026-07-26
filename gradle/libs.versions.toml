@@ -90,7 +90,7 @@ ignite = "2.18.0"  # https://mvnrepository.com/artifact/org.apache.ignite/ignite
 hazelcast = "5.7.0"  # https://mvnrepository.com/artifact/com.hazelcast/hazelcast
 
 cassandra = "4.19.3"  # https://mvnrepository.com/artifact/org.apache.cassandra/java-driver-core
-elasticsearch = "9.4.2"  # https://mvnrepository.com/artifact/org.elasticsearch.client/elasticsearch-rest-client
+elasticsearch = "9.4.4"  # https://mvnrepository.com/artifact/org.elasticsearch.client/elasticsearch-rest-client
 
 kafka = "4.2.0"  # https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients
 spring-kafka4 = "4.1.0"  # https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka
