@@ -22,7 +22,7 @@ netty = "4.2.15.Final"  # https://mvnrepository.com/artifact/io.netty/netty-bom
 aws2 = "2.46.17"  # https://mvnrepository.com/artifact/software.amazon.awssdk/bom
 aws2-crt = "0.45.3"  # https://mvnrepository.com/artifact/software.amazon.awssdk.crt/aws-crt
 aws-kotlin = "1.6.102"  # https://mvnrepository.com/artifact/aws.sdk.kotlin/aws-core
-aws-spring-cloud = "4.0.2"  # https://mvnrepository.com/artifact/io.awspring.cloud/spring-cloud-aws-s3
+aws-spring-cloud = "4.1.0"  # https://mvnrepository.com/artifact/io.awspring.cloud/spring-cloud-aws-s3
 
 grpc = "1.81.0"  # https://mvnrepository.com/artifact/io.grpc/grpc-bom
 grpc-kotlin = "1.5.0"  # https://mvnrepository.com/artifact/io.grpc/grpc-kotlin-stub
