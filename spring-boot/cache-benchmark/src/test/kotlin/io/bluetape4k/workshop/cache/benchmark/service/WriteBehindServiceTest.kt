@@ -1,13 +1,13 @@
 package io.bluetape4k.workshop.cache.benchmark.service
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.cache.benchmark.AbstractCacheBenchmarkTest
 import io.bluetape4k.workshop.cache.benchmark.domain.Product
 import io.bluetape4k.workshop.cache.benchmark.domain.ProductRepository
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
-import org.awaitility.kotlin.until
+import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.math.BigDecimal
@@ -16,34 +16,32 @@ import java.time.Duration
 class WriteBehindServiceTest(
     @Autowired private val service: WriteBehindService,
     @Autowired private val productRepository: ProductRepository,
-): AbstractCacheBenchmarkTest() {
+) : AbstractCacheBenchmarkTest() {
 
     @Test
-    fun `save new entity persists to DB and populates cache`() {
+    fun `save rejects generated id inserts because write behind enqueue needs a stable key`() {
         val product = Product(name = "WBNew", category = "Test", price = BigDecimal("7.99"), stock = 6)
-        val saved = service.save(product)
 
-        // New entity: ID must be DB-assigned (> 0)
-        (saved.id > 0L).shouldBeTrue()
-        // Cache should hold the value immediately
-        service.findById(saved.id) shouldBeEqualTo saved
-        // DB must already have the record (synchronous save for new entities)
-        productRepository.findById(saved.id).orElse(null) shouldBeEqualTo saved
+        assertFailsWith<IllegalArgumentException> {
+            service.save(product)
+        }
     }
 
     @Test
-    fun `save update writes cache immediately and flushes DB asynchronously`() {
+    fun `save update writes cache immediately and Redisson flushes DB asynchronously`() {
         val existing = productRepository.findAll().first()
+        service.evict(existing.id)
+        service.findById(existing.id) shouldBeEqualTo existing
+
         val updated = existing.copy(name = "WBUpdated-${System.nanoTime()}")
 
         service.save(updated)
 
-        // Cache must be updated immediately (synchronous write)
         service.findById(existing.id) shouldBeEqualTo updated
+        productRepository.findById(existing.id).orElse(null)?.name shouldBeEqualTo existing.name
 
-        // DB flush is async — poll up to 5 s for the write-behind flush to complete
-        await atMost Duration.ofSeconds(5) until {
-            productRepository.findById(existing.id).orElse(null)?.name == updated.name
+        await atMost Duration.ofSeconds(5) untilAsserted {
+            productRepository.findById(existing.id).orElse(null)?.name shouldBeEqualTo updated.name
         }
     }
 

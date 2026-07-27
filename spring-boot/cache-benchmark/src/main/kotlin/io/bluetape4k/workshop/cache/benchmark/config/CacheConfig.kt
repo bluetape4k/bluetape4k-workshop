@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.cache.benchmark.config
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.qualifiedCacheName
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.cache.CacheManager
 import org.springframework.cache.caffeine.CaffeineCacheManager
 import org.springframework.context.annotation.Bean
@@ -10,7 +12,7 @@ import org.springframework.context.annotation.Primary
 import org.springframework.data.redis.cache.RedisCacheConfiguration
 import org.springframework.data.redis.cache.RedisCacheManager
 import org.springframework.data.redis.connection.RedisConnectionFactory
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
+import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer
 import org.springframework.data.redis.serializer.RedisSerializationContext
 import java.time.Duration
 import java.util.concurrent.TimeUnit
@@ -35,12 +37,16 @@ class CacheConfig {
     @Bean("redisCacheManager")
     fun redisCacheManager(
         redisConnectionFactory: RedisConnectionFactory,
+        @Value("\${cache.benchmark.namespace:cache-benchmark}") namespace: String,
     ): CacheManager {
         val config = RedisCacheConfiguration.defaultCacheConfig()
             .entryTtl(Duration.ofSeconds(60))
+            .prefixCacheNameWith("${qualifiedCacheName(namespace, "spring-cache")}:")
             .serializeValuesWith(
                 RedisSerializationContext.SerializationPair.fromSerializer(
-                    GenericJackson2JsonRedisSerializer()
+                    GenericJacksonJsonRedisSerializer.builder()
+                        .enableUnsafeDefaultTyping()
+                        .build()
                 )
             )
         return RedisCacheManager.builder(redisConnectionFactory)

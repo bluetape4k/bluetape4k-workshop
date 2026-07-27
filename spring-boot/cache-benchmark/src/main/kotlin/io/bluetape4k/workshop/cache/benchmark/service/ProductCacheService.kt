@@ -12,7 +12,13 @@ interface ProductCacheService {
     /** Find a product by ID. Returns null when not found. */
     fun findById(id: Long): Product?
 
-    /** Save or update a product. Returns the persisted entity. */
+    /**
+     * Save or update a product.
+     *
+     * Writer-backed Redisson profiles require an existing stable [Product.id]
+     * because the map key is the write contract. Generated-ID inserts are not
+     * part of the canonical write-through/write-behind benchmark path.
+     */
     fun save(product: Product): Product
 
     /** Remove a product from cache and storage. */

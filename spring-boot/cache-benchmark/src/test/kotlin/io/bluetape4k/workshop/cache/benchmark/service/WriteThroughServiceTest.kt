@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.cache.benchmark.service
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.cache.benchmark.AbstractCacheBenchmarkTest
 import io.bluetape4k.workshop.cache.benchmark.domain.Product
 import io.bluetape4k.workshop.cache.benchmark.domain.ProductRepository
@@ -15,16 +15,24 @@ class WriteThroughServiceTest(
 ) : AbstractCacheBenchmarkTest() {
 
     @Test
-    fun `save writes to both cache and DB synchronously`() {
-        val product = Product(name = "WTTest", category = "Test", price = BigDecimal("6.99"), stock = 8)
-        val saved = service.save(product)
-        (saved.id > 0L).shouldBeTrue()
+    fun `save updates existing product through Redisson writer before returning`() {
+        val existing = productRepository.findAll().first()
+        val updated = existing.copy(name = "WTUpdated-${System.nanoTime()}", price = BigDecimal("6.99"), stock = 8)
 
-        // Cache hit
-        service.findById(saved.id) shouldBeEqualTo saved
+        val saved = service.save(updated)
 
-        // DB persisted
-        productRepository.findById(saved.id).orElse(null) shouldBeEqualTo saved
+        saved shouldBeEqualTo updated
+        service.findById(existing.id) shouldBeEqualTo updated
+        productRepository.findById(existing.id).orElse(null) shouldBeEqualTo updated
+    }
+
+    @Test
+    fun `save rejects generated id inserts because map writer needs a stable key`() {
+        val product = Product(name = "WTNew", category = "Test", price = BigDecimal("6.99"), stock = 8)
+
+        assertFailsWith<IllegalArgumentException> {
+            service.save(product)
+        }
     }
 
     @Test

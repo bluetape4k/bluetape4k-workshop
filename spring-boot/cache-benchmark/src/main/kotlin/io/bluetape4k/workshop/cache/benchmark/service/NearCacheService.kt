@@ -1,11 +1,13 @@
 package io.bluetape4k.workshop.cache.benchmark.service
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.qualifiedCacheName
 import io.bluetape4k.workshop.cache.benchmark.domain.Product
 import io.bluetape4k.workshop.cache.benchmark.domain.ProductRepository
 import org.redisson.api.RLocalCachedMap
 import org.redisson.api.RedissonClient
 import org.redisson.api.options.LocalCachedMapOptions
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.Duration
 
@@ -23,13 +25,14 @@ import java.time.Duration
 class NearCacheService(
     private val productRepository: ProductRepository,
     redissonClient: RedissonClient,
+    @Value("\${cache.benchmark.namespace:cache-benchmark}") namespace: String,
 ) : ProductCacheService {
     companion object : KLoggingChannel() {
         const val CACHE_NAME = "products-near-cache"
     }
 
     private val nearCache: RLocalCachedMap<Long, Product> = run {
-        val options = LocalCachedMapOptions.name<Long, Product>(CACHE_NAME)
+        val options = LocalCachedMapOptions.name<Long, Product>(qualifiedCacheName(namespace, CACHE_NAME))
             .cacheSize(10_000)
             .evictionPolicy(LocalCachedMapOptions.EvictionPolicy.LRU)
             .maxIdle(Duration.ofSeconds(60))

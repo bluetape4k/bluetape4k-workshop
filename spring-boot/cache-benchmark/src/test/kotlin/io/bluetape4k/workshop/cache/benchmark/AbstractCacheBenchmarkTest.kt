@@ -12,10 +12,12 @@ import org.springframework.test.context.DynamicPropertySource
 abstract class AbstractCacheBenchmarkTest {
     companion object : KLoggingChannel() {
         val redis: RedisServer by lazy { RedisServer.Launcher.redis }
+        private val namespace = "test-${System.nanoTime()}"
 
         @JvmStatic
         @DynamicPropertySource
         fun redisProperties(registry: DynamicPropertyRegistry) {
+            registry.add("cache.benchmark.namespace") { namespace }
             registry.add("spring.data.redis.host") { redis.host }
             registry.add("spring.data.redis.port") { redis.port.toString() }
             registry.add("REDIS_HOST") { redis.host }
