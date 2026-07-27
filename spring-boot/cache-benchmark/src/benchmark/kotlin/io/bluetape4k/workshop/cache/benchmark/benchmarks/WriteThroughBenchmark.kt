@@ -11,18 +11,13 @@ import kotlinx.benchmark.Scope
 import kotlinx.benchmark.Setup
 import kotlinx.benchmark.State
 import kotlinx.benchmark.Warmup
-import java.math.BigDecimal
 import java.util.concurrent.TimeUnit
 
 /**
  * Profile 6 — Write-Through Cache.
  *
- * Profile 6 — Write-Through Cache.
- *
- * Measures write throughput when both Redis and DB are updated synchronously
- * on every [save] call.
- *
- * Also measures read throughput (cache-warmed) to compare with write cost.
+ * Measures stable-ID updates through Redisson WRITE_THROUGH. Each [save]
+ * returns only after MapWriter persistence is complete.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
@@ -31,27 +26,30 @@ import java.util.concurrent.TimeUnit
 @Measurement(iterations = 5, time = 1)
 class WriteThroughBenchmark : AbstractCacheBenchmark() {
     private lateinit var service: WriteThroughService
+    private lateinit var targetProducts: List<Product>
     private var counter = 0
 
     @Setup
     override fun setup() {
         super.setup()
         service = context.getBean(WriteThroughService::class.java)
-        // Pre-populate
-        repeat(5) { service.findById(1L) }
+        targetProducts = (1..100).map { id ->
+            requireNotNull(service.findById(id.toLong())) { "Missing benchmark product id=$id" }
+        }
     }
 
     @Benchmark
-    fun findById() = service.findById(1L)
+    fun findByIdHit() = service.findById(1L)
 
     @Benchmark
-    fun saveAndRead(): Product {
-        val product = Product(
-            name = "BenchProduct-${counter++}",
-            category = "Benchmark",
-            price = BigDecimal("9.99"),
-            stock = 10,
+    fun updateExisting(): Product {
+        val revision = counter++
+        val product = targetProducts[revision % targetProducts.size]
+        return service.save(
+            product.copy(
+                name = "${product.name}-wt-$revision",
+                stock = product.stock + revision,
+            )
         )
-        return service.save(product)
     }
 }

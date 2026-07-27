@@ -31,14 +31,6 @@ spring:
     caffeine:
       spec: maximumSize=10000,expireAfterWrite=60s
 
-  # Async for write-behind
-  task:
-    execution:
-      pool:
-        core-size: 4
-        max-size: 16
-        queue-capacity: 500
-
 logging:
   level:
     io.bluetape4k.workshop.cache.benchmark: DEBUG

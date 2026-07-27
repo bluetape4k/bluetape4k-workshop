@@ -16,10 +16,9 @@ import java.util.concurrent.TimeUnit
 /**
  * Profile 5 — Read-Through Cache.
  *
- * Profile 5 — Read-Through Cache.
- *
- * Read path: Redis cache-first with explicit DB fallback; cache is populated on miss.
- * Write path remains application-managed (cache-aside) in this service.
+ * Read path: Redisson map backed by MapLoader-owned DB miss loading.
+ * [findByIdHit] measures warmed cache reads. [findByIdMiss] evicts the target
+ * key first so the MapLoader path is measured separately.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
@@ -40,5 +39,11 @@ class ReadThroughBenchmark : AbstractCacheBenchmark() {
     }
 
     @Benchmark
-    fun findById() = service.findById(productId)
+    fun findByIdHit() = service.findById(productId)
+
+    @Benchmark
+    fun findByIdMiss() =
+        service.evict(productId).let {
+            service.findById(productId)
+        }
 }
