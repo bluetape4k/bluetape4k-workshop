@@ -19,10 +19,10 @@ import kotlin.time.Duration.Companion.seconds
 import kotlin.time.measureTime
 
 /**
- * TimeLimiter — slow response timeout verification.
+ * TimeLimiter — slow response timeout 검증입니다.
  *
- * Verifies that [io.github.resilience4j.timelimiter.TimeLimiter] correctly enforces timeout
- * on slow calls and that configured fallback methods handle the `TimeoutException`.
+ * [io.github.resilience4j.timelimiter.TimeLimiter] 가 slow call 에 timeout 을 올바르게 강제하고,
+ * 설정된 fallback method 가 `TimeoutException` 을 처리하는지 검증합니다.
  *
  * ## Configuration (application.yml)
  * ```yaml
@@ -36,11 +36,11 @@ import kotlin.time.measureTime
  *       baseConfig: default
  * ```
  *
- * ## Behavior / Contract
- * - `@TimeLimiter` applies only to `Mono`, `Flux`, and `CompletableFuture` return types.
- * - Coroutine `suspend` functions: use `withTimeout {}` instead of `@TimeLimiter`.
- * - When the timeout fires, `TimeoutException` is thrown.
- * - If `fallbackMethod` is specified, the fallback is invoked; otherwise the error propagates as 5xx.
+ * ## 동작 / 계약
+ * - `@TimeLimiter` 는 `Mono`, `Flux`, `CompletableFuture` return type 에만 적용됩니다.
+ * - Coroutine `suspend` function 에는 `@TimeLimiter` 대신 `withTimeout {}` 을 사용합니다.
+ * - timeout 이 발생하면 `TimeoutException` 이 throw 됩니다.
+ * - `fallbackMethod` 를 지정하면 fallback 이 호출되고, 없으면 error 가 5xx 로 전파됩니다.
  */
 class TimeLimiterTest : AbstractResilienceTest() {
 
@@ -73,7 +73,7 @@ class TimeLimiterTest : AbstractResilienceTest() {
 
     @Test
     fun `monoTimeout endpoint returns fallback response when slow call exceeds 2s`() = runSuspendIO {
-        // monoTimeout delays 3s; TimeLimiter fires at 2s → triggers monoFallback
+        // monoTimeout 은 3초 지연되고 TimeLimiter 는 2초에 동작하므로 monoFallback 이 실행됩니다.
         val response = webClient
             .httpGet("/$BACKEND_A/monoTimeout")
             .expectStatus().is2xxSuccessful
@@ -81,14 +81,14 @@ class TimeLimiterTest : AbstractResilienceTest() {
             .returnResult().responseBody
             .shouldNotBeNull()
 
-        // Fallback returns "Recovered Mono Exception: ..."
+        // Fallback 은 "Recovered Mono Exception: ..." 을 반환합니다.
         response shouldStartWith "Recovered"
         log.debug { "TimeLimiter fallback response: $response" }
     }
 
     @Test
     fun `fluxTimeout endpoint returns fallback response when slow flux exceeds 2s`() = runSuspendIO {
-        // fluxTimeout delays 3s per element; TimeLimiter fires at 2s → triggers fluxFallback
+        // fluxTimeout 은 element 마다 3초 지연되고 TimeLimiter 는 2초에 동작하므로 fluxFallback 이 실행됩니다.
         val response = webClient
             .httpGet("/$BACKEND_A/fluxTimeout")
             .expectStatus().is2xxSuccessful
@@ -102,7 +102,7 @@ class TimeLimiterTest : AbstractResilienceTest() {
 
     @Test
     fun `futureTimeout endpoint returns fallback response when blocking future exceeds 2s`() = runSuspendIO {
-        // futureTimeout sleeps 5s; TimeLimiter fires at 2s → triggers futureFallback(TimeoutException)
+        // futureTimeout 은 5초 sleep 하고 TimeLimiter 는 2초에 동작하므로 futureFallback(TimeoutException)이 실행됩니다.
         val response = webClient
             .httpGet("/$BACKEND_A/futureTimeout")
             .expectStatus().is2xxSuccessful
@@ -150,14 +150,14 @@ class TimeLimiterTest : AbstractResilienceTest() {
 
     @Test
     fun `coroutine suspend — @TimeLimiter annotation is silently ignored for suspend functions`() = runSuspendIO {
-        // @TimeLimiter does NOT apply to suspend functions — it is silently ignored.
-        // The delay(3s) completes without any timeout, returning the normal result.
+        // @TimeLimiter 는 suspend function 에 적용되지 않으며 조용히 무시됩니다.
+        // delay(3초)는 timeout 없이 완료되어 정상 result 를 반환합니다.
         //
-        // KNOWN LIMITATION: @CircuitBreaker(fallbackMethod) also does not reliably invoke the
-        // fallback for Kotlin suspend functions in Resilience4j 2.4.x + Spring Boot 4 + Kotlin 2.x.
+        // KNOWN LIMITATION: Resilience4j 2.4.x + Spring Boot 4 + Kotlin 2.x 조합에서
+        // @CircuitBreaker(fallbackMethod) 도 Kotlin suspend function 의 fallback 을 안정적으로 호출하지 못합니다.
         //
-        // RECOMMENDED: Use bluetape4k SuspendDecorators programmatic API for
-        // suspend timeout + fallback (see SuspendDecoratorsTest for working examples).
+        // RECOMMENDED: suspend timeout + fallback 에는 bluetape4k SuspendDecorators programmatic API 를 사용합니다.
+        // 동작 예제는 SuspendDecoratorsTest 를 참고합니다.
         val response = webClient
             .httpGet("/coroutines/$BACKEND_A/suspendTimeout")
             .expectStatus().is2xxSuccessful
@@ -165,7 +165,7 @@ class TimeLimiterTest : AbstractResilienceTest() {
             .returnResult().responseBody
             .shouldNotBeNull()
 
-        // @TimeLimiter is ignored → delay(3s) completes → normal result, no fallback
+        // @TimeLimiter 는 무시되므로 delay(3초)가 완료되고 fallback 없이 정상 result 를 반환합니다.
         response shouldBeEqualTo "Hello World from backend A Coroutines"
         log.debug { "Suspend timeout completes normally (no @TimeLimiter enforcement): $response" }
     }

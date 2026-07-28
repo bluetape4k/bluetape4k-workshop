@@ -14,10 +14,10 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
 /**
- * Bulkhead — concurrent call limit verification.
+ * Bulkhead — concurrent call limit 검증입니다.
  *
- * Verifies that [io.github.resilience4j.bulkhead.Bulkhead] correctly limits concurrent
- * in-flight calls and throws [BulkheadFullException] when the limit is exceeded.
+ * [io.github.resilience4j.bulkhead.Bulkhead] 가 concurrent in-flight call 을 올바르게 제한하고,
+ * limit 을 넘으면 [BulkheadFullException] 을 throw 하는지 검증합니다.
  *
  * ## Configuration (application.yml)
  * ```yaml
@@ -30,10 +30,10 @@ import org.springframework.beans.factory.annotation.Autowired
  *       maxWaitDuration: 10ms
  * ```
  *
- * ## Behavior / Contract
- * - Up to `maxConcurrentCalls` permits can be acquired simultaneously.
- * - Any call beyond the limit is rejected with [BulkheadFullException].
- * - Releasing a permit makes a slot available for the next caller.
+ * ## 동작 / 계약
+ * - `maxConcurrentCalls` 개 permit 까지만 동시에 획득할 수 있습니다.
+ * - limit 을 넘는 call 은 [BulkheadFullException] 으로 거부됩니다.
+ * - permit 을 release 하면 다음 caller 가 사용할 slot 이 생깁니다.
  */
 class BulkheadTest : AbstractResilienceTest() {
 
@@ -55,20 +55,20 @@ class BulkheadTest : AbstractResilienceTest() {
 
         var acquired = 0
         try {
-            // Acquire all permits
+            // 모든 permit 을 획득합니다.
             repeat(maxCalls) {
                 bulkhead.tryAcquirePermission().shouldBeTrue()
                 acquired++
             }
 
-            // Next acquire must fail — bulkhead is full
+            // bulkhead 가 가득 찼으므로 다음 acquire 는 실패해야 합니다.
             bulkhead.tryAcquirePermission().shouldBeFalse()
             log.debug { "Bulkhead correctly rejected call beyond maxConcurrentCalls=$maxCalls" }
         } finally {
             repeat(acquired) { bulkhead.releasePermission() }
         }
 
-        // After release, permit is available again
+        // release 후 permit 을 다시 사용할 수 있습니다.
         bulkhead.tryAcquirePermission().shouldBeTrue()
         bulkhead.releasePermission()
     }
@@ -80,8 +80,8 @@ class BulkheadTest : AbstractResilienceTest() {
 
         maxCalls shouldBeEqualTo MAX_CONCURRENT_CALLS_BACKEND_B
 
-        // Snapshot currently available slots — other tests may have acquired some permits.
-        // We saturate only the remaining available slots so the test is idempotent.
+        // 현재 사용 가능한 slot 을 snapshot 합니다. 다른 test 가 일부 permit 을 획득했을 수 있습니다.
+        // test 가 idempotent 하도록 남아 있는 slot 만 채웁니다.
         val available = bulkhead.metrics.availableConcurrentCalls
         log.debug { "backendB initial available=$available maxConcurrentCalls=$maxCalls" }
 
@@ -92,7 +92,7 @@ class BulkheadTest : AbstractResilienceTest() {
                 acquired++
             }
 
-            // Bulkhead is now full — next acquire must fail
+            // 이제 bulkhead 가 가득 찼으므로 다음 acquire 는 실패해야 합니다.
             bulkhead.tryAcquirePermission().shouldBeFalse()
             log.debug { "Bulkhead correctly rejected call beyond maxConcurrentCalls=$maxCalls" }
         } finally {
@@ -106,7 +106,7 @@ class BulkheadTest : AbstractResilienceTest() {
         val available = bulkhead.metrics.availableConcurrentCalls
         log.debug { "backendA initial available=$available" }
 
-        // Saturate the bulkhead — track actual acquisitions to avoid over-releasing in finally
+        // bulkhead 를 포화시킵니다. finally 에서 과도하게 release 하지 않도록 실제 acquire 를 추적합니다.
         var acquired = 0
         var exceptionThrown = false
         try {
@@ -134,7 +134,7 @@ class BulkheadTest : AbstractResilienceTest() {
 
         initialAvailable shouldBeGreaterOrEqualTo 0
 
-        // Acquire one permit — assert it succeeds, then verify metrics update
+        // permit 하나를 acquire 하고 성공을 확인한 뒤 metrics update 를 검증합니다.
         val acquired = bulkhead.tryAcquirePermission()
         acquired.shouldBeTrue()
         try {
