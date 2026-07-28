@@ -4,7 +4,7 @@ import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 
 /**
- * Normalized tenant identifier used in every isolation boundary.
+ * 모든 isolation boundary 에서 사용하는 normalized tenant identifier 입니다.
  */
 @JvmInline
 value class TenantId(val value: String) : Serializable {
@@ -17,7 +17,7 @@ value class TenantId(val value: String) : Serializable {
     }
 
     /**
-     * Returns the stable prefix used for tenant-scoped keys.
+     * tenant-scoped key 에 사용하는 안정적인 prefix 를 반환합니다.
      */
     fun keyPrefix(): String = "tenant:$value"
 

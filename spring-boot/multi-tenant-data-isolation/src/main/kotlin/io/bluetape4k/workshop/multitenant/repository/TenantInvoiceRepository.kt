@@ -18,9 +18,9 @@ import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Repository
 
 /**
- * Tenant-safe invoice repository backed by Bluetape4k's Exposed JDBC repository helper.
+ * Bluetape4k Exposed JDBC repository helper 를 기반으로 하는 tenant-safe invoice repository 입니다.
  *
- * Callers execute repository operations inside a Spring-managed transaction.
+ * caller 는 Spring-managed transaction 안에서 repository 작업을 실행합니다.
  */
 @Repository
 class TenantInvoiceRepository : LongJdbcRepository<InvoiceRecord> {
@@ -34,7 +34,7 @@ class TenantInvoiceRepository : LongJdbcRepository<InvoiceRecord> {
     override fun ResultRow.toEntity(): InvoiceRecord = toInvoiceRecord()
 
     /**
-     * Inserts an invoice and returns the persisted record.
+     * invoice 를 삽입하고 저장된 record 를 반환합니다.
      */
     fun saveInvoice(invoice: InvoiceRecord): InvoiceRecord {
         val id = InvoiceTable.insertAndGetId {
@@ -49,7 +49,7 @@ class TenantInvoiceRepository : LongJdbcRepository<InvoiceRecord> {
     }
 
     /**
-     * Finds an invoice only when both tenant and ID match.
+     * tenant 와 ID 가 모두 일치할 때만 invoice 를 찾습니다.
      */
     fun findByTenantAndId(tenantId: TenantId, invoiceId: Long): InvoiceRecord? =
         InvoiceTable
@@ -61,7 +61,7 @@ class TenantInvoiceRepository : LongJdbcRepository<InvoiceRecord> {
             ?.toInvoiceRecord()
 
     /**
-     * Lists invoices for a single tenant only.
+     * 단일 tenant 의 invoice 만 나열합니다.
      */
     fun findAllByTenant(tenantId: TenantId): List<InvoiceRecord> =
         InvoiceTable
@@ -71,7 +71,7 @@ class TenantInvoiceRepository : LongJdbcRepository<InvoiceRecord> {
             .map { it.toInvoiceRecord() }
 
     /**
-     * Updates invoice status only when the tenant predicate also matches.
+     * tenant predicate 도 일치할 때만 invoice status 를 갱신합니다.
      */
     fun updateStatus(tenantId: TenantId, invoiceId: Long, status: InvoiceStatus): Boolean =
         InvoiceTable.update({
@@ -81,7 +81,7 @@ class TenantInvoiceRepository : LongJdbcRepository<InvoiceRecord> {
         } == 1
 
     /**
-     * Removes all workshop data.
+     * 모든 workshop data 를 제거합니다.
      */
     fun deleteAllInvoices() {
         InvoiceTable.deleteAll()

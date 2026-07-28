@@ -4,7 +4,7 @@ import java.io.Serializable
 import java.math.BigDecimal
 
 /**
- * Invoice record persisted by the tenant-scoped Exposed repository.
+ * tenant-scoped Exposed repository 가 저장하는 invoice record 입니다.
  */
 data class InvoiceRecord(
     val id: Long = 0L,
@@ -20,7 +20,7 @@ data class InvoiceRecord(
 }
 
 /**
- * Minimal invoice lifecycle for isolation tests.
+ * isolation test 를 위한 최소 invoice lifecycle 입니다.
  */
 enum class InvoiceStatus {
     OPEN,

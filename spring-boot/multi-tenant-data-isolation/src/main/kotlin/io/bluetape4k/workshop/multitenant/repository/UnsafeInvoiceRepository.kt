@@ -8,15 +8,15 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
 
 /**
- * Baseline repository that intentionally omits tenant predicates.
+ * tenant predicate 를 의도적으로 생략하는 baseline repository 입니다.
  *
- * This class exists only to make leakage risk executable in tests.
+ * 이 class 는 leakage risk 를 테스트에서 실행 가능한 형태로 보여주기 위해서만 존재합니다.
  */
 @Repository
 class UnsafeInvoiceRepository {
 
     /**
-     * Finds by invoice ID alone, allowing a caller from another tenant to read the row.
+     * invoice ID 만으로 조회하여 다른 tenant 의 caller 가 row 를 읽을 수 있게 합니다.
      */
     fun findByIdWithoutTenant(invoiceId: Long): InvoiceRecord? =
         InvoiceTable

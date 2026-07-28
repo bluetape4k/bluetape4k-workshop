@@ -27,23 +27,23 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.springmockk)
 
-    // Bluetape4k
+    // Bluetape4k 의존성
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.logging)
     implementation(libs.bluetape4k.spring.boot4.core)
     implementation(libs.bluetape4k.micrometer)
 
-    // Exposed
+    // Exposed 의존성
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.jetbrains.exposed.spring.boot4.starter)
     implementation(libs.jetbrains.exposed.spring7.transaction)
 
-    // DB
+    // DB 의존성
     implementation(libs.hikaricp)
     runtimeOnly(libs.h2.v2)
 
-    // Spring Boot
+    // Spring Boot 의존성
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
@@ -59,6 +59,6 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
-    // Observability
+    // Observability 의존성
     implementation(libs.micrometer.core)
 }

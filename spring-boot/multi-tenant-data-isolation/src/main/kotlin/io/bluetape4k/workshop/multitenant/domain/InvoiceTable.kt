@@ -4,7 +4,7 @@ import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 
 /**
- * Shared invoice table. Tenant isolation is enforced by repository predicates.
+ * 공유 invoice table 입니다. tenant isolation 은 repository predicate 로 강제합니다.
  */
 object InvoiceTable : LongIdTable("tenant_invoices") {
     val tenantId = varchar("tenant_id", 64)
@@ -14,7 +14,7 @@ object InvoiceTable : LongIdTable("tenant_invoices") {
 }
 
 /**
- * Maps an Exposed row to an [InvoiceRecord].
+ * Exposed row 를 [InvoiceRecord] 로 mapping 합니다.
  */
 fun ResultRow.toInvoiceRecord(): InvoiceRecord =
     InvoiceRecord(
