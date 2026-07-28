@@ -1,28 +1,28 @@
-# Gateway Orders Ecosystem Review
+# Gateway Orders 생태계 리뷰
 
-## Scope
+## 범위
 
-- Module: `:orders`
-- Review type: 7-Tier code review and bluetape4k ecosystem usage pass
-- Branch: `refactor/gateway-orders-ecosystem-patterns`
+- 모듈: `:orders`
+- 리뷰 유형: 7-Tier code review 및 bluetape4k 생태계 사용 점검
+- 브랜치: `refactor/gateway-orders-ecosystem-patterns`
 
-## Findings Repaired
+## 복구한 발견 사항
 
-| Tier | Status | Evidence |
+| Tier | 상태 | 근거 |
 |---|---|---|
-| 1. Correctness | PASS | Order and product endpoint tests verify sample response shape, amounts, names, and generated IDs. |
-| 2. Security | PASS | Unrestricted controller CORS was removed and actuator exposure is restricted to `health,info`. |
-| 3. Architecture | PASS | `OrderCatalogService` owns sample data generation; controllers expose only HTTP contracts; Swagger configuration uses constructor injection. |
-| 4. Code Quality | PASS | Startup log names the correct service; serializable models define `serialVersionUID` and validate blank/non-positive inputs with bluetape4k support. |
-| 5. Performance | PASS | UUID v7 generation remains local to the sample catalog; no blocking or broad coroutine anti-patterns were introduced. |
-| 6. Documentation | PASS | English and Korean README files now document `OrderCatalogService`, health/info actuator exposure, validation, and test coverage. |
-| 7. Verification | PASS | Targeted compile/test, stale-check, and `git diff --check` passed. |
+| 1. Correctness | PASS | order 및 product endpoint test는 sample response shape, amount, name, generated ID를 검증한다. |
+| 2. Security | PASS | unrestricted controller CORS를 제거했고 actuator exposure는 `health,info`로 제한했다. |
+| 3. Architecture | PASS | `OrderCatalogService`가 sample data generation을 소유하고 controller는 HTTP contract만 노출하며 Swagger configuration은 constructor injection을 사용한다. |
+| 4. Code Quality | PASS | startup log는 올바른 service 이름을 사용한다. serializable model은 `serialVersionUID`를 정의하고 bluetape4k support로 blank/non-positive input을 검증한다. |
+| 5. Performance | PASS | UUID v7 generation은 sample catalog 내부에 머물며 blocking 또는 broad coroutine anti-pattern을 도입하지 않았다. |
+| 6. Documentation | PASS | English 및 Korean README file은 이제 `OrderCatalogService`, health/info actuator exposure, validation, test coverage를 문서화한다. |
+| 7. Verification | PASS | targeted compile/test, stale-check, `git diff --check`가 통과했다. |
 
-## Verification
+## 검증
 
 - `repo-test-summary -- ./gradlew :orders:compileKotlin :orders:compileTestKotlin :orders:cleanTest :orders:test --warning-mode all`
-  - PASS, 6 tests.
+  - PASS, 6개 test.
 - `repo-test-summary -- ./scripts/smoke-validate.sh stale-check`
-  - PASS, 101 active modules, no stale refs, no broken README image links.
+  - PASS, active module 101개, stale ref 없음, 깨진 README image link 없음.
 - `git diff --check`
   - PASS.
