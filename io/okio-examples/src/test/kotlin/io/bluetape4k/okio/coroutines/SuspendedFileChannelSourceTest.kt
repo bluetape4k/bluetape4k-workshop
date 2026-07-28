@@ -41,11 +41,11 @@ class SuspendedFileChannelSourceTest: AbstractOkioTest() {
     fun `read should return -1 at EOF`() = runSuspendIO {
         val buffer = Buffer()
 
-        // Read all bytes
+        // 모든 byte 를 읽습니다.
         val source = createSuspendedSource()
         source.read(buffer, Int.MAX_VALUE.toLong())
 
-        // Try to read again, should return -1
+        // 다시 읽기를 시도하면 -1 을 반환해야 합니다.
         val eof = source.read(buffer, 1)
         eof shouldBeEqualTo -1L
     }

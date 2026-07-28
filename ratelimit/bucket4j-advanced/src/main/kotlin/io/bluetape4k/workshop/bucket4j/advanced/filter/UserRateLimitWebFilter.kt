@@ -21,14 +21,14 @@ import reactor.core.publisher.Mono
 import java.util.concurrent.TimeUnit
 
 /**
- * WebFilter that applies user ID-based rate limiting to `/api/authenticated/` requests.
+ * `/api/authenticated/` 요청에 user ID 기반 rate limiting을 적용하는 [WebFilter]입니다.
  *
- * ## Behavior / Contract
- * - Only intercepts requests whose path starts with `/api/authenticated`.
- * - User ID is read from the `X-User-ID` request header.
- * - When the header is absent, responds with HTTP 401 (authentication required).
- * - When the bucket is exhausted, responds with HTTP 429 and a `Retry-After` header.
- * - On internal errors, fails open to avoid service disruption.
+ * ## 동작 계약
+ * - path가 `/api/authenticated`로 시작하는 요청만 가로챕니다.
+ * - user ID는 `X-User-ID` request header에서 읽습니다.
+ * - header가 없으면 HTTP 401(authentication required)로 응답합니다.
+ * - bucket이 소진되면 HTTP 429와 `Retry-After` header로 응답합니다.
+ * - 내부 오류가 나면 서비스 중단을 피하려고 fail-open으로 통과시킵니다.
  */
 @Component
 @Order(11)

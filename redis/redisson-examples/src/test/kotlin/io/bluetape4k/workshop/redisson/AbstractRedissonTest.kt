@@ -32,13 +32,13 @@ abstract class AbstractRedissonTest {
                 useSingleServer()
                     .setAddress(redis.url)
                     .setConnectionPoolSize(128)
-                    .setConnectionMinimumIdleSize(32) // Keep enough idle connections to avoid latency spikes.
-                    .setIdleConnectionTimeout(100_000)  // Keep idle connections for 100 seconds.
+                    .setConnectionMinimumIdleSize(32) // 지연 급증을 피하려고 충분한 idle connection을 유지합니다.
+                    .setIdleConnectionTimeout(100_000)  // idle connection을 100초 동안 유지합니다.
                     .setTimeout(5000)
                     .setRetryAttempts(3)
                     .setRetryDelay { attempt -> Duration.ofMillis((attempt + 1) * 10L) }
 
-                    .setDnsMonitoringInterval(5000)  // Detect DNS changes in cloud environments.
+                    .setDnsMonitoringInterval(5000)  // cloud 환경의 DNS 변경을 감지합니다.
 
                 executor = VirtualThreadExecutor
                 threads = 256
@@ -71,7 +71,7 @@ abstract class AbstractRedissonTest {
 
     protected val redisson: Redisson get() = redissonClient
 
-    // Lettuce is used for raw Redis commands.
+    // raw Redis command 실행에는 Lettuce를 사용합니다.
     protected val commands by lazy {
         RedisServer.Launcher.LettuceLib.getRedisCommands(redis.host, redis.port)
     }
@@ -96,8 +96,8 @@ abstract class AbstractRedissonTest {
 
     @BeforeAll
     fun beforeAll() {
-        // See: [Redis Keyspace notifications](https://redis.io/docs/latest/develop/use/keyspace-notifications/)
-        // Use Lettuce for the raw Redis `config set` command.
+        // 참고: [Redis Keyspace notifications](https://redis.io/docs/latest/develop/use/keyspace-notifications/)
+        // raw Redis `config set` command 실행에는 Lettuce를 사용합니다.
         commands.configSet("notify-keyspace-events", "AKE")
     }
 }

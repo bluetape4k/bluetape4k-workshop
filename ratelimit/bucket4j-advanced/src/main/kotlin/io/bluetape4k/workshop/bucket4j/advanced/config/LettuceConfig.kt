@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
- * Provides a Lettuce [RedisClient] bean wired from `spring.data.redis.url`.
+ * `spring.data.redis.url`에서 설정한 Lettuce [RedisClient] bean을 제공합니다.
  */
 @Configuration(proxyBeanMethods = false)
 class LettuceConfig {

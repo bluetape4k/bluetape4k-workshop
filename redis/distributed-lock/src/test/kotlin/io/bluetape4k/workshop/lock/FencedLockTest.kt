@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Verifies [FencedResource] and [io.bluetape4k.workshop.lock.service.FencedInventoryService] behaviour.
+ * [FencedResource]와 [io.bluetape4k.workshop.lock.service.FencedInventoryService]의 동작을 검증합니다.
  */
 class FencedLockTest : AbstractDistributedLockTest() {
 
@@ -51,9 +51,9 @@ class FencedLockTest : AbstractDistributedLockTest() {
         val resource = FencedResource(99L)
 
         resource.apply(5L) { "ok" }.shouldNotBeNull()
-        resource.apply(3L) { "should reject" }.shouldBeNull()     // stale: 3 < 5
-        resource.apply(5L) { "same ok" }.shouldNotBeNull()        // equal token allowed (re-entry)
-        resource.apply(4L) { "also reject" }.shouldBeNull()       // stale: 4 < 5
+        resource.apply(3L) { "should reject" }.shouldBeNull()     // 오래된 token: 3 < 5
+        resource.apply(5L) { "same ok" }.shouldNotBeNull()        // 동일 token은 재진입으로 허용합니다.
+        resource.apply(4L) { "also reject" }.shouldBeNull()       // 오래된 token: 4 < 5
     }
 
     @Test
@@ -75,8 +75,8 @@ class FencedLockTest : AbstractDistributedLockTest() {
 
     @Test
     fun `FencedInventoryService - 구 토큰으로 차감 시도 시 Rejected 반환`() {
-        // Pre-seed the shared FencedResource with a very high token.
-        // Any new Redisson lock token (starting from 1) will be strictly less than 9999 → Rejected.
+        // 공유 FencedResource에 매우 큰 token을 먼저 심어 둡니다.
+        // 새 Redisson lock token은 1부터 시작하므로 9999보다 작아 Rejected가 됩니다.
         fencedResources.forResource(inventoryId).apply(9999L) { Unit }
 
         val result = fencedService.deduct(inventoryId, 10, waitMs = 2000L, leaseMs = 5000L)
@@ -86,7 +86,7 @@ class FencedLockTest : AbstractDistributedLockTest() {
 
     @Test
     fun `FencedInventoryService - 락 획득 실패 시 LockNotAcquired 반환`() {
-        // RFencedLock is reentrant — must hold from a DIFFERENT thread to block main-thread acquisition.
+        // RFencedLock은 reentrant이므로 main thread의 획득을 막으려면 다른 thread에서 보유해야 합니다.
         val lockName = "inventory:fenced:$inventoryId"
         val holderLock = redisson.getFencedLock(lockName)
         val acquireLatch = java.util.concurrent.CountDownLatch(1)
@@ -101,7 +101,7 @@ class FencedLockTest : AbstractDistributedLockTest() {
             }
         }
         holder.start()
-        acquireLatch.await()  // wait until holder thread has the fenced lock
+        acquireLatch.await()  // holder thread가 fenced lock을 보유할 때까지 기다립니다.
 
         try {
             val result = fencedService.deduct(inventoryId, 10, waitMs = 0L, leaseMs = 1000L)

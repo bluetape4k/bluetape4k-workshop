@@ -33,7 +33,7 @@ class CompressableSinkSourceTest: AbstractOkioTest() {
 
         val sink = Buffer()
         val compressSink = sink.asCompressSink(compressor)
-        // Write data to compressable sink
+        // compressable sink 에 data 를 씁니다.
         compressSink.write(data, data.size)
         compressSink.flush()
 
@@ -41,7 +41,7 @@ class CompressableSinkSourceTest: AbstractOkioTest() {
         val decompressableSource = sink.asDecompressSource(compressor)
         decompressableSource.read(source, sink.size)
 
-        // Verify the decompressed data matches the original
+        // decompressed data 가 original 과 일치하는지 검증합니다.
         source.readUtf8() shouldBeEqualTo original
     }
 
@@ -53,7 +53,7 @@ class CompressableSinkSourceTest: AbstractOkioTest() {
 
         val sink = Buffer()
         val compressSink = sink.asCompressSink(compressor)
-        // Write data to compressable sink
+        // compressable sink 에 data 를 씁니다.
         compressSink.write(data, data.size)
         compressSink.flush()
 
@@ -61,7 +61,7 @@ class CompressableSinkSourceTest: AbstractOkioTest() {
         val decompressableSource = sink.asDecompressSource(compressor)
         decompressableSource.read(source, sink.size)
 
-        // Verify the decompressed data matches the original
+        // decompressed data 가 original 과 일치하는지 검증합니다.
         source.readUtf8() shouldBeEqualTo original
     }
 
@@ -74,7 +74,7 @@ class CompressableSinkSourceTest: AbstractOkioTest() {
         val sink = Buffer()
         val compressSink = sink.asCompressSink(compressor)
 
-        // Write data to compressable sink
+        // compressable sink 에 data 를 씁니다.
         compressSink.write(data, data.size)
         compressSink.flush()
 
@@ -82,7 +82,7 @@ class CompressableSinkSourceTest: AbstractOkioTest() {
         val decompressableSource = sink.asDecompressSource(compressor)
         decompressableSource.read(source, sink.size)
 
-        // Verify the decompressed data matches the original
+        // decompressed data 가 original 과 일치하는지 검증합니다.
         source.readByteString() shouldBeEqualTo original
     }
 }

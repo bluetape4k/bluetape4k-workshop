@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.time.Instant
 
 /**
- * Demo controller with three endpoints, each protected by a distinct rate-limit strategy.
+ * 서로 다른 rate-limit 전략으로 보호되는 세 endpoint를 제공하는 demo controller입니다.
  *
  * | Path | Strategy | Required headers |
  * |---|---|---|
@@ -15,8 +15,8 @@ import java.time.Instant
  * | `/api/authenticated/hello` | userId-based | `X-User-ID` |
  * | `/api/sensitive/hello` | Combined IP + userId | `X-User-ID` |
  *
- * Rate-limit response headers (`X-RateLimit-Remaining`, `Retry-After`) are set by
- * the corresponding [WebFilter][org.springframework.web.server.WebFilter], not here.
+ * rate-limit 응답 header(`X-RateLimit-Remaining`, `Retry-After`)는 여기서가 아니라
+ * 각 [WebFilter][org.springframework.web.server.WebFilter]에서 설정합니다.
  */
 @RestController
 class RateLimitDemoController {
@@ -24,9 +24,9 @@ class RateLimitDemoController {
     companion object : KLoggingChannel()
 
     /**
-     * Anonymous endpoint — protected by IP-based rate limiting only.
+     * 익명 endpoint입니다. IP 기반 rate limiting만 적용합니다.
      *
-     * No authentication is required. The client IP (see `ratelimit.trust-proxy`) determines quota.
+     * 인증은 필요하지 않습니다. client IP(`ratelimit.trust-proxy` 참고)가 quota를 결정합니다.
      */
     @GetMapping("/api/anonymous/hello")
     suspend fun anonymousHello(): Map<String, String> {
@@ -39,9 +39,9 @@ class RateLimitDemoController {
     }
 
     /**
-     * Authenticated endpoint — protected by userId-based rate limiting.
+     * 인증 endpoint입니다. userId 기반 rate limiting을 적용합니다.
      *
-     * Requires the `X-User-ID` request header. Each user ID has its own independent quota.
+     * `X-User-ID` request header가 필요합니다. user ID마다 독립 quota를 가집니다.
      */
     @GetMapping("/api/authenticated/hello")
     suspend fun authenticatedHello(): Map<String, String> {
@@ -54,10 +54,10 @@ class RateLimitDemoController {
     }
 
     /**
-     * Sensitive endpoint — protected by combined IP+userId rate limiting.
+     * 민감 endpoint입니다. combined IP+userId rate limiting을 적용합니다.
      *
-     * Requires the `X-User-ID` request header. The bucket key is `"combined:$ip:$userId"`,
-     * so each (IP, user) pair has its own independent quota.
+     * `X-User-ID` request header가 필요합니다. bucket key는 `"combined:$ip:$userId"`이므로
+     * 각 (IP, user) 쌍이 독립 quota를 가집니다.
      */
     @GetMapping("/api/sensitive/hello")
     suspend fun sensitiveHello(): Map<String, String> {

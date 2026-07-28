@@ -18,24 +18,24 @@ import org.springframework.context.annotation.Configuration
 import java.time.Duration
 
 /**
- * Configures three distinct rate-limit strategies:
+ * 서로 다른 세 가지 rate-limit 전략을 설정합니다.
  *
- * - **IP-based** (`ipRateLimiter`): limits by client IP address.
- *   Suitable for anonymous endpoints that should not be hammered from one origin.
- * - **User-based** (`userRateLimiter`): limits by authenticated user ID.
- *   Authenticated users get a higher ceiling than anonymous IPs.
- * - **Combined** (`combinedRateLimiter`): uses a composite `"ip:userId"` bucket key.
- *   A single bucket is maintained per (IP, userId) pair, so a user can exhaust only
- *   their own combined quota — not the global IP quota — and vice-versa.
+ * - **IP 기반**(`ipRateLimiter`): client IP 주소별로 제한합니다.
+ *   한 출발지에서 익명 endpoint를 과도하게 호출하지 못하게 할 때 적합합니다.
+ * - **User 기반**(`userRateLimiter`): 인증된 user ID별로 제한합니다.
+ *   인증 사용자는 익명 IP보다 높은 한도를 받습니다.
+ * - **Combined**(`combinedRateLimiter`): `"ip:userId"` 복합 bucket key를 사용합니다.
+ *   (IP, userId) 쌍마다 하나의 bucket을 유지하므로, 사용자는 자신의 combined quota만 소진하고
+ *   전역 IP quota나 다른 사용자의 quota를 소진하지 않습니다. 반대 방향도 동일합니다.
  *
- * All three share the same [ProxyManager] and therefore the same Redis instance,
- * but each limiter uses a distinct [BucketConfiguration] with different capacities.
+ * 세 전략은 같은 [ProxyManager]와 같은 Redis instance를 공유하지만,
+ * 각 limiter는 capacity가 다른 별도 [BucketConfiguration]을 사용합니다.
  */
 @Configuration(proxyBeanMethods = false)
 class RateLimitConfig {
 
     // ------------------------------------------------------------------
-    // Shared Redis proxy manager
+    // 공유 Redis proxy manager
     // ------------------------------------------------------------------
 
     @Bean
@@ -51,10 +51,10 @@ class RateLimitConfig {
     }
 
     // ------------------------------------------------------------------
-    // BucketConfiguration per strategy
+    // 전략별 BucketConfiguration
     // ------------------------------------------------------------------
 
-    /** IP-based bucket: 20 tokens per 10 s, 100 tokens per minute (anonymous traffic). */
+    /** IP 기반 bucket입니다. 익명 traffic에 10초당 20 token, 분당 100 token을 허용합니다. */
     @Bean
     @Qualifier("ipBucketConfiguration")
     fun ipBucketConfiguration(): BucketConfiguration = bucketConfiguration {
@@ -62,7 +62,7 @@ class RateLimitConfig {
         addLimit { it.capacity(100).refillGreedy(10, Duration.ofMinutes(1)) }
     }
 
-    /** User-based bucket: 50 tokens per 10 s, 200 tokens per minute (authenticated traffic). */
+    /** User 기반 bucket입니다. 인증 traffic에 10초당 50 token, 분당 200 token을 허용합니다. */
     @Bean
     @Qualifier("userBucketConfiguration")
     fun userBucketConfiguration(): BucketConfiguration = bucketConfiguration {
@@ -70,7 +70,7 @@ class RateLimitConfig {
         addLimit { it.capacity(200).refillGreedy(20, Duration.ofMinutes(1)) }
     }
 
-    /** Combined (IP+userId) bucket: 10 tokens per 10 s, 50 tokens per minute. */
+    /** Combined(IP+userId) bucket입니다. 10초당 10 token, 분당 50 token을 허용합니다. */
     @Bean
     @Qualifier("combinedBucketConfiguration")
     fun combinedBucketConfiguration(): BucketConfiguration = bucketConfiguration {
@@ -79,7 +79,7 @@ class RateLimitConfig {
     }
 
     // ------------------------------------------------------------------
-    // AsyncBucketProxyProvider per strategy
+    // 전략별 AsyncBucketProxyProvider
     // ------------------------------------------------------------------
 
     @Bean
@@ -107,7 +107,7 @@ class RateLimitConfig {
         AsyncBucketProxyProvider(proxyManager.asAsync(), combinedBucketConfiguration)
 
     // ------------------------------------------------------------------
-    // DistributedSuspendRateLimiter per strategy
+    // 전략별 DistributedSuspendRateLimiter
     // ------------------------------------------------------------------
 
     @Bean

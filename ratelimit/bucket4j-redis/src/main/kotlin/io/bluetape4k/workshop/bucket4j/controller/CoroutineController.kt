@@ -8,10 +8,10 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * Coroutine WebFlux endpoints protected by the Bucket4j Redis filter.
+ * Bucket4j Redis filter로 보호되는 coroutine WebFlux endpoint입니다.
  *
- * The handlers stay intentionally small so the example highlights coroutine
- * controller compatibility with the starter-managed Redis bucket store.
+ * 예제가 starter 관리 Redis bucket store와 coroutine controller의 호환성에 집중하도록
+ * handler를 의도적으로 작게 유지합니다.
  */
 @RestController
 @RequestMapping("/coroutines")

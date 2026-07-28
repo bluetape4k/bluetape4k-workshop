@@ -22,14 +22,14 @@ import reactor.core.publisher.Mono
 import java.util.concurrent.TimeUnit
 
 /**
- * WebFilter that applies IP-based rate limiting to `/api/anonymous/` requests.
+ * `/api/anonymous/` 요청에 IP 기반 rate limiting을 적용하는 [WebFilter]입니다.
  *
- * ## Behavior / Contract
- * - Only intercepts requests whose path starts with `/api/anonymous`.
- * - Client IP is derived from [RequestUtils.extractIp] with [trustProxy] config.
- * - When the bucket is exhausted, responds with HTTP 429 and a `Retry-After` header.
- * - On extraction failure (no IP), responds with HTTP 400.
- * - On internal errors, fails open (request passes through) to avoid service disruption.
+ * ## 동작 계약
+ * - path가 `/api/anonymous`로 시작하는 요청만 가로챕니다.
+ * - client IP는 [trustProxy] 설정을 반영해 [RequestUtils.extractIp]에서 추출합니다.
+ * - bucket이 소진되면 HTTP 429와 `Retry-After` header로 응답합니다.
+ * - IP를 추출하지 못하면 HTTP 400으로 응답합니다.
+ * - 내부 오류가 나면 서비스 중단을 피하려고 fail-open으로 통과시킵니다.
  */
 @Component
 @Order(10)
@@ -53,9 +53,8 @@ class IpRateLimitWebFilter(
                 val ip = RequestUtils.extractIp(exchange, trustProxy)
                 log.trace { "IP rate limit: path=$path, ip=$ip" }
 
-                // Use "unknown" as fallback when IP cannot be determined (e.g. mock clients in tests
-                // or requests arriving without a remote address). A shared "unknown" bucket applies
-                // rate limiting rather than blocking or failing open.
+                // IP를 알 수 없으면 "unknown"을 fallback으로 사용합니다(테스트 mock client나 remote address가 없는 요청 등).
+                // 공유 "unknown" bucket을 적용해 차단하거나 fail-open하지 않고 rate limiting을 유지합니다.
                 val effectiveIp = ip?.takeIf { it.isNotBlank() } ?: "unknown"
                 try {
                     val key = "ip:$effectiveIp"

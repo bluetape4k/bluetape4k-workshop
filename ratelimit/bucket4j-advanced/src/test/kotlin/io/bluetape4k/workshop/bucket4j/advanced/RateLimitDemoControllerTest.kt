@@ -15,16 +15,16 @@ import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.http.HttpStatus
 
 /**
- * Integration tests for [RateLimitDemoController] validating all three rate-limit strategies.
+ * 세 가지 rate-limit 전략을 모두 검증하는 [RateLimitDemoController] 통합 테스트입니다.
  *
- * Tests are ordered so that non-exhausting checks run before tests that drain the bucket.
- * This is necessary because all IP-based tests share the same `127.0.0.1` Redis bucket key.
- * User-based and combined tests always use unique random user IDs, so they are independent.
+ * bucket을 소진하지 않는 검사를 먼저 실행하고, bucket을 비우는 테스트를 뒤에 실행하도록 순서를 고정합니다.
+ * 모든 IP 기반 테스트가 같은 `127.0.0.1` Redis bucket key를 공유하기 때문에 필요합니다.
+ * User 기반과 combined 테스트는 항상 고유한 random user ID를 사용하므로 서로 독립적입니다.
  *
- * Bucket capacities (per [RateLimitConfig]):
- * - IP-based   : 20 tokens / 10 s
- * - User-based : 50 tokens / 10 s
- * - Combined   : 10 tokens / 10 s
+ * Bucket capacity([RateLimitConfig] 기준):
+ * - IP 기반   : 10초당 20 token
+ * - User 기반 : 10초당 50 token
+ * - Combined  : 10초당 10 token
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
@@ -36,7 +36,7 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
     }
 
     // ------------------------------------------------------------------
-    // IP-based rate limit tests  (non-exhausting first, exhausting last)
+    // IP 기반 rate limit 테스트입니다(소진하지 않는 테스트 먼저, 소진 테스트 마지막).
     // ------------------------------------------------------------------
 
     @Test
@@ -59,10 +59,9 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
     @Test
     @Order(11)
     fun `IP rate limit - X-Forwarded-For is ignored when trust-proxy is false (default)`() = runSuspendIO {
-        // When trust-proxy=false, the X-Forwarded-For header is ignored.
-        // The real TCP remote address (127.0.0.1) is used instead.
-        // We verify that the spoofed IP has no effect: response is 200 or 429 (real-IP bucket),
-        // never 400/500.
+        // trust-proxy=false이면 X-Forwarded-For header를 무시합니다.
+        // 대신 실제 TCP remote address(127.0.0.1)를 사용합니다.
+        // 위조 IP가 영향을 주지 않는지 검증합니다. 응답은 실제 IP bucket 기준의 200 또는 429이며, 400/500은 아니어야 합니다.
         val result = client.get()
             .uri(ANONYMOUS_PATH)
             .header(HeaderConstants.X_FORWARDED_FOR, "1.2.3.4, 5.6.7.8")
@@ -74,7 +73,7 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
     }
 
     @Test
-    @Order(99)  // runs last — drains the shared 127.0.0.1 IP bucket
+    @Order(99)  // 마지막에 실행해 공유 127.0.0.1 IP bucket을 비웁니다.
     fun `IP rate limit - exhausts bucket and returns 429`() = runSuspendIO {
         var exhausted = false
         repeat(30) {
@@ -93,9 +92,9 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
     }
 
     @Test
-    @Order(100) // runs after exhaustion — verifies Retry-After is in the 429 response
+    @Order(100) // 소진 후 실행해 429 응답에 Retry-After가 있는지 검증합니다.
     fun `IP rate limit - 429 response includes Retry-After header`() = runSuspendIO {
-        // Bucket is already exhausted from previous test; any request should return 429.
+        // 이전 테스트에서 bucket이 이미 소진되었으므로 어떤 요청도 429를 반환해야 합니다.
         repeat(30) {
             val result = client.get()
                 .uri(ANONYMOUS_PATH)
@@ -111,7 +110,7 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
     }
 
     // ------------------------------------------------------------------
-    // userId-based rate limit tests  (always use unique userId — fully isolated)
+    // userId 기반 rate limit 테스트입니다(항상 고유 userId를 사용해 완전히 격리).
     // ------------------------------------------------------------------
 
     @Test
@@ -178,7 +177,7 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
     }
 
     // ------------------------------------------------------------------
-    // Combined IP+userId rate limit tests  (always use unique userId — fully isolated)
+    // Combined IP+userId rate limit 테스트입니다(항상 고유 userId를 사용해 완전히 격리).
     // ------------------------------------------------------------------
 
     @Test
@@ -209,7 +208,7 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
         val userId1 = "combo-a-" + Base58.randomString(6)
         val userId2 = "combo-b-" + Base58.randomString(6)
 
-        // Exhaust userId1's combined bucket (capacity = 10)
+        // userId1의 combined bucket을 소진합니다(capacity = 10).
         repeat(12) {
             client.get()
                 .uri(SENSITIVE_PATH)
@@ -217,7 +216,7 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
                 .exchange()
         }
 
-        // userId2 should still be allowed — separate bucket key
+        // userId2는 별도 bucket key를 사용하므로 여전히 허용되어야 합니다.
         client.get()
             .uri(SENSITIVE_PATH)
             .header(HeaderConstants.X_USER_ID, userId2)

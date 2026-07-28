@@ -12,12 +12,12 @@ import java.time.Duration
 import java.util.concurrent.TimeUnit.MILLISECONDS
 
 /**
- * Smoke tests for lock failure scenarios.
+ * lock 실패 시나리오용 smoke test입니다.
  *
- * **Excluded from default CI** via `junit.jupiter.execution.exclude.tags=smoke`
- * because they rely on real-time lease expiry (timing-sensitive).
+ * 실제 시간 기반 lease 만료에 의존해 시간에 민감하므로
+ * `junit.jupiter.execution.exclude.tags=smoke` 설정으로 기본 CI에서는 제외합니다.
  *
- * Run with: `./gradlew :redis-distributed-lock:test -Djunit.jupiter.execution.exclude.tags=`
+ * 실행 명령: `./gradlew :redis-distributed-lock:test -Djunit.jupiter.execution.exclude.tags=`
  */
 @Tag("smoke")
 class LockFailureTest : AbstractDistributedLockTest() {

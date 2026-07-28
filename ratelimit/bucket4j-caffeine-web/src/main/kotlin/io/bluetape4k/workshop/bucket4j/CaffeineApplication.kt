@@ -6,10 +6,10 @@ import org.springframework.boot.runApplication
 import org.springframework.cache.annotation.EnableCaching
 
 /**
- * Spring Boot entry point for the local Caffeine-backed Bucket4j WebMVC example.
+ * local Caffeine 기반 Bucket4j WebMVC 예제의 Spring Boot entry point입니다.
  *
- * The application enables Spring Cache so the Bucket4j starter can store servlet
- * rate-limit buckets in the configured Caffeine JCache cache.
+ * Bucket4j starter가 servlet rate-limit bucket을 설정된 Caffeine JCache cache에 저장할 수 있도록
+ * Spring Cache를 활성화합니다.
  */
 @SpringBootApplication(proxyBeanMethods = false)
 @EnableCaching

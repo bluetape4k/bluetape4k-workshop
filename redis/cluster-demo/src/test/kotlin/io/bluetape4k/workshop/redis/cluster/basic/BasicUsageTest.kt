@@ -36,7 +36,7 @@ class BasicUsageTest(
     }
 
     /**
-     * Operation executed on a single node and slot.
+     * 단일 node 와 slot 에서 실행되는 operation 입니다.
      *
      * ```
      * -> SLOT 5798 served by 127.0.0.1:30002
@@ -54,7 +54,7 @@ class BasicUsageTest(
     }
 
     /**
-     * Operation executed on a multiple nodes and slots.
+     * 여러 node 와 slot 에 걸쳐 실행되는 operation 입니다.
      *
      * ```
      * -> SLOT 5798 served by 127.0.0.1:30002
@@ -77,7 +77,7 @@ class BasicUsageTest(
     }
 
     /**
-     * Operation executed on a single node and slot because of pinned slot key.
+     * pinned slot key 때문에 단일 node 와 slot 에서 실행되는 operation 입니다.
      *
      * ```
      * -> SLOT 5798 served by 127.0.0.1:30002
@@ -99,7 +99,7 @@ class BasicUsageTest(
     }
 
     /**
-     * Operation executed across the cluster to retrieve cumulated result.
+     * 누적 result 를 조회하기 위해 cluster 전체에서 실행되는 operation 입니다.
      *
      * ```
      * -> KEY age served by 127.0.0.1:30001
@@ -124,7 +124,7 @@ class BasicUsageTest(
             multiGet(listOf(key1, key2, key3)).shouldNotBeNull() shouldContainSame listOf(value1, value2, value3)
         }
 
-        // NOTE: This no longer works on lettuce-core 7.x.
+        // 참고: lettuce-core 7.x 에서는 더 이상 동작하지 않습니다.
         // operations.keys("*").shouldNotBeNull() shouldContainAll setOf(key1, key2, key3)
     }
 }

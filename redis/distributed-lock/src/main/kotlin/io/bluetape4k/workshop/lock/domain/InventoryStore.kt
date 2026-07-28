@@ -5,13 +5,13 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * In-memory inventory store backed by a [ConcurrentHashMap].
+ * [ConcurrentHashMap] 기반 in-memory inventory store 입니다.
  *
  * ## Behavior / Contract
- * - [register] overwrites any existing stock for the given inventory id.
- * - [applyChange] uses `addAndGet` (atomic), enabling intentional race demos in [UnsafeInventoryService].
- * - [resetAll] clears all registered inventories; used in `@BeforeEach` for test isolation.
- * - Accessing an unregistered id throws [IllegalArgumentException].
+ * - [register] 는 주어진 inventory id 의 기존 stock 을 덮어씁니다.
+ * - [applyChange] 는 `addAndGet`(atomic)을 사용하므로 [UnsafeInventoryService] 에서 의도적인 race demo 가 가능합니다.
+ * - [resetAll] 은 등록된 모든 inventory 를 지웁니다. test isolation 을 위해 `@BeforeEach` 에서 사용합니다.
+ * - 등록되지 않은 id 에 접근하면 [IllegalArgumentException] 이 발생합니다.
  */
 class InventoryStore {
 
@@ -33,7 +33,7 @@ class InventoryStore {
         store[id]?.set(value) ?: throw IllegalArgumentException("Inventory $id not registered")
     }
 
-    /** Clears all registered inventories. Used for `@BeforeEach` test isolation. */
+    /** 등록된 모든 inventory 를 지웁니다. `@BeforeEach` test isolation 에 사용합니다. */
     fun resetAll() {
         store.clear()
     }

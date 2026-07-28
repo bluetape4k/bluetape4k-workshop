@@ -33,7 +33,7 @@ class JsonViewExample: AbstractJacksonTest() {
 
     @Test
     fun `Public View 를 적용한 Writer 를 이용하여 Json 변환`() {
-        // Public View
+        // public view 입니다.
         val publicJson = publicViewWriter.writeValueAsString(user)
         log.debug { "Public View: $publicJson" }
         publicJson shouldNotContain "email"
@@ -41,7 +41,7 @@ class JsonViewExample: AbstractJacksonTest() {
 
     @Test
     fun `Internal View 를 가진 Writer 를 이용하여 Json 변환`() {
-        // Internal View
+        // internal view 입니다.
         val internalViewJson = internalViewWriter.writeValueAsString(user)
         log.debug { "Internal View: $internalViewJson" }
         internalViewJson shouldContain "email"

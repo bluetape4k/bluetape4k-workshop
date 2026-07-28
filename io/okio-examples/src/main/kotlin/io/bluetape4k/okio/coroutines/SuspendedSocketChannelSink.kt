@@ -28,7 +28,7 @@ class SuspendedSocketChannelSink(
     }
 
     override suspend fun flush() {
-        // Nothing to do here
+        // 여기서는 수행할 작업이 없습니다.
     }
 
     override suspend fun close() = coroutineScope {

@@ -17,8 +17,8 @@ java {
     }
 }
 
-// Smoke tests are timing-sensitive (lease expiry) — exclude from default CI run.
-// To include: ./gradlew :redis-distributed-lock:test -Djunit.jupiter.execution.exclude.tags=
+// smoke test 는 lease expiry 때문에 timing-sensitive 하므로 기본 CI 실행에서 제외합니다.
+// 포함해서 실행하려면 ./gradlew :redis-distributed-lock:test -Djunit.jupiter.execution.exclude.tags= 를 사용합니다.
 tasks.named<Test>("test") {
     useJUnitPlatform {
         excludeTags("smoke")
@@ -26,25 +26,25 @@ tasks.named<Test>("test") {
 }
 
 dependencies {
-    // Logging
+    // logging 의존성입니다.
     implementation(libs.bluetape4k.logging)
 
-    // Redisson (bluetape4k-redisson uses bluetape4k-idgenerators for getLockId; add explicitly)
+    // Redisson 의존성입니다. bluetape4k-redisson 은 getLockId 에 bluetape4k-idgenerators 를 사용하므로 명시적으로 추가합니다.
     implementation(libs.bluetape4k.redis)
     implementation(libs.bluetape4k.redisson)
     implementation(libs.bluetape4k.idgenerators)
     implementation(libs.redisson.lib)
     implementation(libs.redisson.spring.boot.starter)
 
-    // Coroutines
+    // coroutine 의존성입니다.
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
 
-    // Spring Boot
+    // Spring Boot 의존성입니다.
     implementation(libs.spring.boot.autoconfigure.lib)
     implementation(libs.spring.boot.starter.actuator)
 
-    // Tests
+    // test 의존성입니다.
     testImplementation(project(":shared"))
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.bluetape4k.testcontainers)

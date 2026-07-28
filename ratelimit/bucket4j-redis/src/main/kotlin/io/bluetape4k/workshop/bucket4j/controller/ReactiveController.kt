@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
 
 /**
- * Reactive WebFlux endpoints protected by the Bucket4j Redis filter.
+ * Bucket4j Redis filter로 보호되는 reactive WebFlux endpoint입니다.
  *
- * The handlers return [Mono] values directly to demonstrate that the same
- * starter configuration covers both reactive and coroutine controllers.
+ * 같은 starter 설정이 reactive controller와 coroutine controller를 모두 포괄한다는 점을 보여주려고
+ * handler가 [Mono] 값을 직접 반환합니다.
  */
 @RestController
 @RequestMapping("/reactive")

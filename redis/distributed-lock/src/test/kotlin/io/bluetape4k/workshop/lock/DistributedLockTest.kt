@@ -16,8 +16,8 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Verifies that [io.bluetape4k.workshop.lock.service.LockedInventoryService]
- * prevents over-sell under concurrent load using [org.redisson.api.RLock].
+ * [io.bluetape4k.workshop.lock.service.LockedInventoryService]가 [org.redisson.api.RLock]으로
+ * 동시 부하의 oversell을 막는지 검증합니다.
  */
 class DistributedLockTest : AbstractDistributedLockTest() {
 
@@ -62,7 +62,7 @@ class DistributedLockTest : AbstractDistributedLockTest() {
 
     @Test
     fun `락 획득 실패 시 LockNotAcquired 반환`() {
-        // RLock is reentrant — must hold from a DIFFERENT thread to block main-thread acquisition.
+        // RLock은 reentrant이므로 main thread의 획득을 막으려면 다른 thread에서 보유해야 합니다.
         val lockName = "inventory:lock:$inventoryId"
         val holderLock = redisson.getLock(lockName)
         val acquireLatch = java.util.concurrent.CountDownLatch(1)
@@ -77,7 +77,7 @@ class DistributedLockTest : AbstractDistributedLockTest() {
             }
         }
         holder.start()
-        acquireLatch.await()  // wait until holder thread has the lock
+        acquireLatch.await()  // holder thread가 lock을 보유할 때까지 기다립니다.
 
         try {
             val result = lockedService.deduct(inventoryId, 10, waitMs = 0L, leaseMs = 1000L)

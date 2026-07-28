@@ -11,7 +11,7 @@ class CoroutineController {
     companion object : KLoggingChannel()
 
     /**
-     * Applies rate limiting to `/api/v1/coroutines/...`.
+     * `/api/v1/coroutines/...`에 rate limiting을 적용합니다.
      */
     @GetMapping("/api/v1/coroutines/hello")
     suspend fun helloV1(): String {
@@ -19,7 +19,7 @@ class CoroutineController {
     }
 
     /**
-     * Leaves `/api/v2/coroutines/...` outside Bucket4j rate limiting.
+     * `/api/v2/coroutines/...`는 Bucket4j rate limiting 대상에서 제외합니다.
      */
     @GetMapping("/api/v2/coroutines/hello")
     suspend fun helloV2(): String {

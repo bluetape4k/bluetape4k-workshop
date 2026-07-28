@@ -17,7 +17,7 @@ class SuspendedSocketSink(socket: Socket): SuspendedSink {
     companion object: KLoggingChannel()
 
     private val channel = socket.channel
-    // private val cursor = Buffer.UnsafeCursor()
+    // private val cursor = Buffer.UnsafeCursor() 는 필요 시 unsafe cursor 최적화에 사용합니다.
 
     override suspend fun write(source: Buffer, byteCount: Long) {
         byteCount.requireZeroOrPositiveNumber("byteCount")
@@ -40,7 +40,7 @@ class SuspendedSocketSink(socket: Socket): SuspendedSink {
     }
 
     override suspend fun flush() {
-        // Nothing to do
+        // 수행할 작업이 없습니다.
     }
 
     override suspend fun close() = coroutineScope {

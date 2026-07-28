@@ -81,7 +81,7 @@ internal class SelectorThread: Thread("okio selector") {
                     }
                 }
             } catch (e: Throwable) {
-                // log error
+                // error 를 log 합니다.
                 log.error(e) { "Error in SelectorThread" }
             }
         }
