@@ -1,42 +1,38 @@
 # Gateway README Diagram Refresh
 
-## Context
+## 배경
 
-The gateway root README described a generic workshop slice and linked a child
-module scenario image instead of explaining the actual gateway system boundary.
-Legacy Graphviz artifacts also remained beside the README image.
+gateway root README는 실제 gateway system boundary를 설명하는 대신 generic workshop
+slice를 설명하고 child module scenario image를 연결하고 있었다. legacy Graphviz artifact도
+README image 옆에 남아 있었다.
 
-## Decision
+## 결정
 
-Treat the root `gateway` README as a runtime overview for the three runnable
-applications. Show only the public gateway, downstream WebFlux services, and
-Redis-backed Bucket4j support path. Keep controller and module-specific details
-for the child module READMEs.
+root `gateway` README를 세 runnable application의 runtime overview로 다룬다. public
+gateway, downstream WebFlux service, Redis-backed Bucket4j support path만 보여준다.
+controller와 module-specific detail은 child module README에 둔다.
 
-## Outcome
+## 결과
 
-The README now documents the real ports and route prefixes from
-`application.yml`: `8080` gateway, `8081` customer service, `8082` order
-service, `/customer-service/**`, `/order-service/**`, Swagger UI, and the
-optional `/echo` route.
+README는 이제 `application.yml`의 실제 port와 route prefix를 문서화한다. 항목은
+`8080` gateway, `8081` customer service, `8082` order service,
+`/customer-service/**`, `/order-service/**`, Swagger UI, optional `/echo` route다.
 
-## Verification
+## 검증
 
-- Read gateway, customer, and order application resources and controllers.
-- Rendered the SVG diagram to PNG with CairoSVG.
-- Visually inspected the rendered PNG and fixed footer overlap before commit.
-- Checked README image links, Graphviz references, SVG XML, connector endpoints,
-  and `git diff --check`.
+- gateway, customer, order application resource와 controller를 읽었다.
+- SVG diagram을 CairoSVG로 PNG로 렌더링했다.
+- rendered PNG를 시각 검사하고 commit 전에 footer overlap을 수정했다.
+- README image link, Graphviz reference, SVG XML, connector endpoint, `git diff --check`를
+  확인했다.
 
-## Future Guidance
+## 향후 지침
 
-Do not make a parent README reuse a child module scenario diagram. Parent
-diagrams should explain orchestration and runtime boundaries; child diagrams
-should explain service internals.
+parent README가 child module scenario diagram을 재사용하게 하지 않는다. parent diagram은
+orchestration과 runtime boundary를 설명하고, child diagram은 service internal을 설명해야 한다.
 
-For `gateway/api-gateway`, keep README claims tied to `application.yml` rather
-than older Spring Cloud Gateway examples. The current routes use localhost
-targets, `/customer-service/**`, `/order-service/**`, `/v3/api-docs/**`, and
-`/echo`; do not document `lb://...` routes unless the source changes. Sequence
-diagrams should keep the root redirect branch separate from the service-route
-Bucket4j and rewrite branch.
+`gateway/api-gateway`에서는 README claim을 오래된 Spring Cloud Gateway 예제가 아니라
+`application.yml`에 묶어 둔다. 현재 route는 localhost target, `/customer-service/**`,
+`/order-service/**`, `/v3/api-docs/**`, `/echo`를 사용한다. source가 바뀌지 않았다면
+`lb://...` route를 문서화하지 않는다. sequence diagram은 root redirect branch를
+service-route Bucket4j 및 rewrite branch와 분리해야 한다.

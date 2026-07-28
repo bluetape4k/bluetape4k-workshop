@@ -1,99 +1,91 @@
 # Exposed README diagram refresh
 
-## Context
+## 배경
 
-The exposed root README still described a generic Graphviz-era architecture and
-listed only three modules, while the source tree contains four runnable Exposed
-modules: `javers-audit`, `mvc-jdbc`, `mvc-virtualthread`, and
-`webflux-r2dbc`.
+exposed root README는 source tree에 `javers-audit`, `mvc-jdbc`, `mvc-virtualthread`,
+`webflux-r2dbc` 네 개의 runnable Exposed module이 있음에도 generic Graphviz-era
+architecture를 설명하고 세 모듈만 나열하고 있었다.
 
-## Decision
+## 결정
 
-Use a module-selection architecture diagram instead of a generic layered graph.
-Keep one vertical column per module so the source-backed relationships remain
-straight: module entrypoint, transaction boundary, and persistence runtime.
-Add a compact ERD because the root README's domain section otherwise forces the
-reader to infer FK ownership from ASCII arrows and source files.
+generic layered graph 대신 module-selection architecture diagram을 사용한다. source-backed
+relationship이 직선으로 유지되도록 module마다 하나의 vertical column을 둔다. 관계는 module
+entrypoint, transaction boundary, persistence runtime이다. root README의 domain section이
+reader에게 ASCII arrow와 source file만으로 FK ownership을 추론하게 만들지 않도록 compact
+ERD를 추가한다.
 
-For `exposed/mvc-jdbc`, split the reader contract into two visuals. The
-architecture diagram should stay static: MVC controllers, service transaction
-ownership, inherited repositories, explicit order repositories, and PostgreSQL
-tables. The lock ordering, `SELECT FOR UPDATE`, order-line insert, stock
-decrement, and rollback path belong in a sequence diagram. The schema section
-needs a separate ERD because column names, types, keys, and FK ownership are
-reader-facing information, not prose-only metadata.
+`exposed/mvc-jdbc`는 reader contract를 두 시각 자료로 나눈다. architecture diagram은
+MVC controller, service transaction ownership, inherited repository, explicit order
+repository, PostgreSQL table을 보여주는 static view로 유지한다. lock ordering,
+`SELECT FOR UPDATE`, order-line insert, stock decrement, rollback path는 sequence
+diagram에 둔다. column name, type, key, FK ownership은 reader-facing information이며
+prose-only metadata가 아니므로 schema section에는 별도 ERD가 필요하다.
 
-For `exposed/mvc-virtualthread`, keep the README centered on the virtual-thread
-boundary rather than generic CRUD. The architecture diagram should show Tomcat,
-the shared `ExecutorService`, repository `VirtualFuture<T>` methods, the
-service-owned order transaction, exception unwrapping, and PostgreSQL tables.
-Use a sequence diagram for `Future.get()`, `transaction(db)`, row locking,
-rollback, and exception unwrap behavior. Use a separate ERD because this module
-uses plain Exposed `Table` definitions without the MVC JDBC audit columns.
+`exposed/mvc-virtualthread`는 generic CRUD가 아니라 virtual-thread boundary를 중심에
+둔다. architecture diagram은 Tomcat, shared `ExecutorService`, repository
+`VirtualFuture<T>` method, service-owned order transaction, exception unwrapping,
+PostgreSQL table을 보여주어야 한다. `Future.get()`, `transaction(db)`, row locking,
+rollback, exception unwrap behavior는 sequence diagram을 사용한다. 이 모듈은 MVC JDBC
+audit column 없이 plain Exposed `Table` definition을 사용하므로 별도 ERD를 둔다.
 
-For `exposed/webflux-r2dbc`, keep transaction ownership explicit in the service
-layer. The architecture diagram should separate suspend WebFlux controllers,
-service-owned `suspendTransaction`, thin Flow repositories, R2DBC pool/database
-configuration, JDBC-only schema initialization, and PostgreSQL tables. The
-sequence diagram should show Flow/repository calls inside the coroutine R2DBC
-transaction, not a Reactor-style or blocking-thread story.
+`exposed/webflux-r2dbc`는 transaction ownership을 service layer에 명시한다. architecture
+diagram은 suspend WebFlux controller, service-owned `suspendTransaction`, thin Flow
+repository, R2DBC pool/database configuration, JDBC-only schema initialization,
+PostgreSQL table을 분리해 보여주어야 한다. sequence diagram은 Reactor-style 또는
+blocking-thread 이야기가 아니라 coroutine R2DBC transaction 내부의 Flow/repository call을
+보여주어야 한다.
 
-For `exposed/javers-audit`, keep the architecture focused on the service-level
-audit boundary. The useful reader contract is that `ProductAuditService` writes
-JaVers snapshots first, then mutates the Exposed current row; `diff` stays
-value-only and does not write to either store. A single-table ERD is still useful
-when it clarifies that relational storage is only the latest `products` row and
-not JaVers history.
+`exposed/javers-audit`는 architecture를 service-level audit boundary에 집중시킨다.
+유용한 reader contract는 `ProductAuditService`가 JaVers snapshot을 먼저 쓰고, 그 다음
+Exposed current row를 변경한다는 점이다. `diff`는 value-only로 유지되며 어느 store에도
+write하지 않는다. relational storage가 JaVers history가 아니라 최신 `products` row만
+담는다는 점을 명확히 할 때 single-table ERD도 여전히 유용하다.
 
-## Verification
+## 검증
 
-- Source checked for `@Transactional`, `virtualFuture { transaction(db) }`,
-  `suspendTransaction`, and JaVers commit/upsert behavior.
-- ERD columns checked against Exposed table definitions for MVC JDBC, WebFlux
-  R2DBC, and the JaVers audit product table.
-- Diagram rendered from SVG to PNG with CairoSVG and visually inspected.
-- README image links were checked for both English and Korean files.
-- `exposed/mvc-jdbc` Graphviz `.dot`, `.plain`, `*-graphviz.*`, and stale
-  non-README architecture assets were removed after the README switched to
-  `docs/images/readme-diagrams/*readme-*` diagrams.
-- `exposed/mvc-jdbc` architecture connectors were adjusted so endpoints enter
-  the target card edge; sequence canvas was expanded after visual review showed
-  cramped right and bottom margins.
-- Branch-level README diagrams were re-rendered with the same fixed-size
-  arrowhead family: `15px` primary, `13.5px` return/secondary, and `12px`
-  small schema links.
-- `exposed/mvc-virtualthread` Graphviz artifacts were removed, README image
-  links were switched to `docs/images/readme-diagrams/*readme-*`, and
-  architecture, sequence, and ERD PNGs were rendered with CairoSVG and visually
-  inspected as a contact sheet.
-- `exposed/webflux-r2dbc` Graphviz artifacts were removed, README image links
-  were switched to `docs/images/readme-diagrams/*readme-*`, and architecture,
-  sequence, and ERD PNGs were rendered with CairoSVG and visually inspected as a
-  contact sheet.
-- `exposed/javers-audit` stale non-README architecture assets were removed, the
-  architecture and sequence diagrams were redrawn from `ProductAuditService` and
-  `ProductTable`, a single-table ERD was added, and the rendered contact sheet
-  plus high-risk sequence/architecture PNGs were visually inspected.
+- `@Transactional`, `virtualFuture { transaction(db) }`, `suspendTransaction`, JaVers
+  commit/upsert behavior를 source에서 확인했다.
+- MVC JDBC, WebFlux R2DBC, JaVers audit product table의 Exposed table definition과 ERD
+  column을 대조했다.
+- diagram을 SVG에서 PNG로 CairoSVG 렌더링하고 시각 검사했다.
+- English와 Korean 파일 모두에서 README image link를 확인했다.
+- README가 `docs/images/readme-diagrams/*readme-*` diagram으로 전환된 뒤
+  `exposed/mvc-jdbc` Graphviz `.dot`, `.plain`, `*-graphviz.*`, stale non-README
+  architecture asset을 제거했다.
+- endpoint가 target card edge로 들어가도록 `exposed/mvc-jdbc` architecture connector를
+  조정했다. visual review에서 오른쪽과 아래 margin이 좁게 보인 뒤 sequence canvas를
+  확장했다.
+- branch-level README diagram은 같은 fixed-size arrowhead family로 다시 렌더링했다.
+  기준은 `15px` primary, `13.5px` return/secondary, `12px` small schema link다.
+- `exposed/mvc-virtualthread` Graphviz artifact를 제거하고, README image link를
+  `docs/images/readme-diagrams/*readme-*`로 전환했으며, architecture, sequence, ERD PNG를
+  CairoSVG로 렌더링해 contact sheet로 시각 검사했다.
+- `exposed/webflux-r2dbc` Graphviz artifact를 제거하고, README image link를
+  `docs/images/readme-diagrams/*readme-*`로 전환했으며, architecture, sequence, ERD PNG를
+  CairoSVG로 렌더링해 contact sheet로 시각 검사했다.
+- `exposed/javers-audit` stale non-README architecture asset을 제거하고,
+  `ProductAuditService`와 `ProductTable`을 기준으로 architecture/sequence diagram을 다시
+  그렸으며, single-table ERD를 추가했다. rendered contact sheet와 high-risk
+  sequence/architecture PNG를 시각 검사했다.
 
-## Future guidance
+## 향후 지침
 
-For root workshop READMEs, explain how a reader should choose a submodule.
-Avoid reusing a submodule sequence diagram as the root visual unless the root
-README is specifically about that scenario.
-After a root module pass, scan direct child README files before moving to a
-different top-level module; root diagrams do not replace submodule README
-refreshes when each child has its own runnable artifact and Graphviz remnants.
-For locking examples, do not compress the lock/rollback behavior into an
-architecture box. Keep repository ownership static in the architecture diagram
-and show transaction ordering in a sequence diagram with transparent branches.
-For module schemas, add an ERD when the README otherwise relies on a prose table
-to explain FK ownership. Keep relationship lines outside column text corridors.
-When arrowhead size changes, re-check path endpoints numerically and visually.
-A line can look plausible at a glance while its endpoint lands beside a card,
-especially after marker `refX` or marker width changes.
-If a persistence layer looks cramped, increase the canvas and the layer/card
-height together instead of only shrinking text or moving the label. The layer
-title area counts as real visual space when judging top and bottom margins.
-If an architecture diagram needs call-order hints, prefer card text and sequence
-diagrams over route chips. Remove chips that sit on top of connector lines even
-when the chip text is accurate.
+root workshop README에서는 reader가 submodule을 선택하는 방법을 설명한다. root README가
+특정 scenario 자체를 다루는 경우가 아니라면 submodule sequence diagram을 root visual로
+재사용하지 않는다.
+root module pass 이후 다른 top-level module로 이동하기 전에 direct child README file을
+scan한다. child마다 runnable artifact와 Graphviz 잔재가 있다면 root diagram이 submodule
+README refresh를 대체하지 않는다.
+locking example에서는 lock/rollback behavior를 architecture box로 압축하지 않는다.
+architecture diagram에는 repository ownership을 static하게 유지하고, transaction ordering은
+transparent branch가 있는 sequence diagram으로 보여준다.
+module schema에서는 README가 prose table만으로 FK ownership을 설명하고 있다면 ERD를
+추가한다. relationship line은 column text corridor 밖에 둔다.
+arrowhead size가 바뀌면 path endpoint를 수치와 시각 양쪽으로 다시 확인한다. 특히 marker
+`refX` 또는 marker width가 변경된 뒤에는, line이 얼핏 그럴듯해 보여도 endpoint가 card 옆에
+떨어질 수 있다.
+persistence layer가 답답해 보이면 text를 줄이거나 label만 옮기지 말고 canvas와 layer/card
+height를 함께 키운다. top/bottom margin을 판단할 때 layer title area도 실제 visual space로
+계산한다.
+architecture diagram에 call-order hint가 필요하면 route chip보다 card text와 sequence
+diagram을 우선한다. chip text가 정확해도 connector line 위에 놓인 chip은 제거한다.

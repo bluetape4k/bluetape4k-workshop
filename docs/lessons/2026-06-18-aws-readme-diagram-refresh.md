@@ -1,44 +1,39 @@
 # AWS README diagram refresh
 
-## Context
+## 배경
 
-The AWS workshop README refresh replaced Graphviz-era assets with source-backed
-README diagrams for the root `aws` module, `s3-spring-cloud`, and
-`storage-abstraction`.
+AWS workshop README refresh는 Graphviz-era asset을 root `aws` module,
+`s3-spring-cloud`, `storage-abstraction`의 source-backed README diagram으로 교체했다.
 
-## Decision
+## 결정
 
-- Keep README diagrams under the repository's `docs/images/readme-diagrams/`
-  asset directory, but remove obsolete Graphviz `.dot`, `.plain`, and
-  `*-graphviz.*` assets.
-- Use official AWS service icons for S3 cards and shared wiki icons for
-  Testcontainers/Floci runtime cards.
-- Treat sequence diagrams as behavior views, not architecture diagrams. Use the
-  `leader-core-sequence-02` visual family for participant headers, lifelines,
-  branch frames, numbered message labels, and restrained arrows.
+- README diagram은 repository의 `docs/images/readme-diagrams/` asset directory 아래에
+  유지하되, obsolete Graphviz `.dot`, `.plain`, `*-graphviz.*` asset은 제거한다.
+- S3 card에는 official AWS service icon을 사용하고, Testcontainers/Floci runtime card에는
+  shared wiki icon을 사용한다.
+- sequence diagram은 architecture diagram이 아니라 behavior view로 다룬다. participant
+  header, lifeline, branch frame, numbered message label, 절제된 arrow에는
+  `leader-core-sequence-02` visual family를 사용한다.
 
-## Outcome
+## 결과
 
-The AWS module README now explains the two local-first S3 paths from the reader
-viewpoint. The S3 sequence omits low-value log-only participants and shows the
-actual bucket/object flow through `S3Client`, `S3Template`, S3, and Floci.
-The storage abstraction module now pairs a static profile-selection architecture
-view with a request sequence that keeps `alt` regions translucent so lifelines,
-calls, and labels remain readable through the branch frame.
+AWS module README는 이제 reader viewpoint에서 두 가지 local-first S3 path를 설명한다.
+S3 sequence는 낮은 가치의 log-only participant를 생략하고, `S3Client`, `S3Template`,
+S3, Floci를 통과하는 실제 bucket/object flow를 보여준다. storage abstraction module은
+static profile-selection architecture view와 request sequence를 함께 제공하며, `alt`
+region을 반투명하게 유지해 lifeline, call, label이 branch frame 너머로도 읽히게 한다.
 
-## Verification
+## 검증
 
-- Rendered changed SVG assets to PNG with CairoSVG.
-- Visually inspected the AWS overview, S3 architecture, S3 sequence, and storage
-  abstraction diagrams.
-- Verified README image links, SVG XML parsing, absence of Graphviz remnants,
-  and `git diff --check`.
+- 변경된 SVG asset을 CairoSVG로 PNG로 렌더링했다.
+- AWS overview, S3 architecture, S3 sequence, storage abstraction diagram을 시각 검사했다.
+- README image link, SVG XML parsing, Graphviz 잔재 없음, `git diff --check`를 검증했다.
 
-## Next agents
+## 다음 작업자 지침
 
-Before accepting a README diagram refresh, inspect the final PNG, not only the
-SVG source. Icons can easily cover labels after a late layout change; resize or
-move the card before committing.
-When a layer has title/detail text, reserve that label band before centering the
-inner cards. Equal outer layer margins are not enough if the cards visually
-crowd or cover the label area.
+README diagram refresh를 수용하기 전에는 SVG source만 보지 말고 최종 PNG를 검사한다.
+late layout change 이후 icon이 label을 쉽게 가릴 수 있으므로 commit 전에 card를
+resize하거나 이동한다.
+layer에 title/detail text가 있으면 inner card를 가운데 정렬하기 전에 해당 label band를
+예약한다. card가 시각적으로 crowd되거나 label area를 덮는다면 같은 outer layer margin만으로는
+충분하지 않다.
