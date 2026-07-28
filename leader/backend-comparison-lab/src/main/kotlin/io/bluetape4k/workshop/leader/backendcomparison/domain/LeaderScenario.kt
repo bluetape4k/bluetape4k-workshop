@@ -4,7 +4,7 @@ import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 
 /**
- * Deterministic leader-election scenario supported by the comparison lab.
+ * comparison lab이 지원하는 결정적인 leader-election scenario입니다.
  */
 enum class LeaderScenarioKind {
     STEADY_LEADER,
@@ -14,7 +14,7 @@ enum class LeaderScenarioKind {
 }
 
 /**
- * Request value for a local, deterministic leader failover scenario.
+ * local deterministic leader failover scenario의 요청 값입니다.
  */
 data class LeaderScenario(
     val backendId: String,

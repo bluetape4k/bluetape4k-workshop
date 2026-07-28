@@ -5,7 +5,7 @@ import io.bluetape4k.support.requireNotEmpty
 import java.io.Serializable
 
 /**
- * One event emitted by a deterministic leader scenario.
+ * deterministic leader scenario가 내보내는 event 하나입니다.
  */
 data class LeaderScenarioEvent(
     val actor: String,
@@ -25,7 +25,7 @@ data class LeaderScenarioEvent(
 }
 
 /**
- * Learner-facing report for a deterministic leader scenario run.
+ * deterministic leader scenario 실행에 대한 학습자용 report입니다.
  */
 data class LeaderScenarioReport(
     val backendId: String,

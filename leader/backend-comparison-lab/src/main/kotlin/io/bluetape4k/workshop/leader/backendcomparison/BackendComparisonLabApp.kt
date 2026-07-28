@@ -4,7 +4,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 /**
- * Spring Boot entry point for the leader backend comparison lab.
+ * leader backend comparison lab의 Spring Boot 진입점입니다.
  */
 @SpringBootApplication
 class BackendComparisonLabApp
