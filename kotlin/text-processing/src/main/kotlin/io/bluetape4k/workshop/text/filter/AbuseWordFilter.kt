@@ -9,18 +9,14 @@ import io.bluetape4k.text.search.SearchOptions
 import io.bluetape4k.text.search.ahoCorasick
 
 /**
- * Thread-safe abuse-word filter backed by an AhoCorasick automaton.
+ * AhoCorasick automaton 을 기반으로 하는 thread-safe abuse-word filter 입니다.
  *
- * All registered words are matched case-insensitively and under NFC normalization
- * so that variations of the same Unicode sequence are unified before comparison.
- * Overlapping matches are allowed to surface all violations in a single pass.
+ * 등록된 모든 단어는 case-insensitive 방식과 NFC normalization 아래에서 matching 되므로 같은 Unicode sequence 의 변형을 비교 전에 통합합니다. overlapping match 를 허용해 한 번의 pass 에서 모든 위반을 드러냅니다.
  *
  * ## Behavior / Contract
- * - Construction is O(total keyword length); each subsequent call to [containsAbuse],
- *   [filterText], or [findMatches] is O(text length + number of matches).
- * - [filterText] replaces each matched span with a string of `*` characters equal in
- *   length to the match span, preserving non-abusive text unchanged.
- * - Returns an empty list / unchanged text when [abuseWords] is empty.
+ * - construction 비용은 O(total keyword length) 입니다. 이후 [containsAbuse], [filterText], [findMatches] 호출은 O(text length + number of matches) 입니다.
+ * - [filterText] 는 matched span 마다 span 길이와 같은 개수의 `*` 문자열로 바꾸며, abuse 가 아닌 text 는 그대로 보존합니다.
+ * - [abuseWords] 가 empty 이면 empty list 또는 변경되지 않은 text 를 반환합니다.
  *
  * ```kotlin
  * val filter = AbuseWordFilter(listOf("badword", "spam"))
@@ -28,7 +24,7 @@ import io.bluetape4k.text.search.ahoCorasick
  * filter.filterText("No spam allowed")            // "No **** allowed"
  * ```
  *
- * @param abuseWords collection of words to flag as abusive
+ * @param abuseWords abuse 로 표시할 단어 collection 입니다.
  */
 class AbuseWordFilter(abuseWords: Collection<String>) {
 
@@ -42,11 +38,11 @@ class AbuseWordFilter(abuseWords: Collection<String>) {
     }
 
     /**
-     * Returns `true` if [text] contains at least one registered abuse word.
+     * [text] 가 등록된 abuse word 를 하나 이상 포함하면 `true` 를 반환합니다.
      *
-     * Uses the automaton's built-in early-exit path for efficiency.
+     * 효율을 위해 automaton 의 built-in early-exit path 를 사용합니다.
      *
-     * @param text input text to inspect
+     * @param text 검사할 입력 text 입니다.
      */
     fun containsAbuse(text: String): Boolean {
         val result = automaton.containsMatch(text)
@@ -55,13 +51,12 @@ class AbuseWordFilter(abuseWords: Collection<String>) {
     }
 
     /**
-     * Replaces every matched abuse word in [text] with `*` characters and returns the result.
+     * [text] 안에서 match 된 모든 abuse word 를 `*` 문자로 바꾼 결과를 반환합니다.
      *
-     * Each matched span is replaced by a string of `*` of equal byte length, so the
-     * returned string has the same length as [text].
+     * 각 matched span 은 같은 byte length 의 `*` 문자열로 대체되므로 반환 문자열은 [text] 와 같은 길이를 가집니다.
      *
-     * @param text input text to filter
-     * @return text with all abuse-word occurrences masked
+     * @param text filter 할 입력 text 입니다.
+     * @return 모든 abuse-word occurrence 가 masking 된 text 입니다.
      */
     fun filterText(text: String): String {
         val filtered = automaton.replaceAll(text) { match ->
@@ -72,11 +67,11 @@ class AbuseWordFilter(abuseWords: Collection<String>) {
     }
 
     /**
-     * Returns all [AhoCorasickMatch] objects found in [text].
+     * [text] 에서 찾은 모든 [AhoCorasickMatch] object 를 반환합니다.
      *
-     * Results are ordered by start position ascending. Overlapping matches are all included.
+     * 결과는 start position ascending 순서입니다. overlapping match 도 모두 포함합니다.
      *
-     * @param text input text to search
+     * @param text 검색할 입력 text 입니다.
      */
     fun findMatches(text: String): List<AhoCorasickMatch<String>> {
         val matches = automaton.parseText(text)

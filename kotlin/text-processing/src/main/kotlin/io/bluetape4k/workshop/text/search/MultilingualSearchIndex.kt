@@ -18,9 +18,9 @@ import io.bluetape4k.workshop.text.normalize.TextNormalizer
 import java.io.Serializable
 
 /**
- * Immutable search document accepted by [MultilingualSearchIndex].
+ * [MultilingualSearchIndex] 가 받는 immutable search document 입니다.
  *
- * The factory trims caller input and rejects blank fields before the document is indexed.
+ * factory 는 document 를 indexing 하기 전에 caller input 을 trim 하고 blank field 를 거부합니다.
  */
 class SearchDocument private constructor(
     val id: String,
@@ -44,7 +44,7 @@ class SearchDocument private constructor(
         private const val serialVersionUID: Long = 1L
 
         /**
-         * Creates a validated [SearchDocument] after trimming caller-provided fields.
+         * caller 가 제공한 field 를 trim 한 뒤 검증된 [SearchDocument] 를 생성합니다.
          */
         fun of(
             id: String,
@@ -53,7 +53,7 @@ class SearchDocument private constructor(
         ): SearchDocument = invoke(id, title, text)
 
         /**
-         * Creates a validated [SearchDocument] after trimming caller-provided fields.
+         * caller 가 제공한 field 를 trim 한 뒤 검증된 [SearchDocument] 를 생성합니다.
          */
         operator fun invoke(
             id: String,
@@ -78,7 +78,7 @@ class SearchDocument private constructor(
 }
 
 /**
- * Document materialized into the language and token set used by the index.
+ * index 가 사용하는 language 와 token set 으로 materialize 된 document 입니다.
  */
 data class IndexedDocument(
     val document: SearchDocument,
@@ -91,7 +91,7 @@ data class IndexedDocument(
 }
 
 /**
- * Search match span returned with a hit.
+ * hit 와 함께 반환되는 search match span 입니다.
  */
 data class SearchHighlightMatch(
     val term: String,
@@ -105,7 +105,7 @@ data class SearchHighlightMatch(
 }
 
 /**
- * Ranked hit returned by [MultilingualSearchIndex.search].
+ * [MultilingualSearchIndex.search] 가 반환하는 ranked hit 입니다.
  */
 data class SearchHighlightHit(
     val document: SearchDocument,
@@ -120,16 +120,14 @@ data class SearchHighlightHit(
 }
 
 /**
- * In-memory multilingual search index backed by Lingua, Korean/Japanese tokenizers,
- * English normalization, and Aho-Corasick highlighting.
+ * Lingua, Korean/Japanese tokenizer, English normalization, Aho-Corasick highlighting 을 기반으로 하는 in-memory multilingual search index 입니다.
  *
  * ## Behavior / Contract
- * - Documents are detected once at index construction time and tokenized by detected language.
- * - Korean text uses [KoreanProcessor] normalization plus noun-oriented tokenization.
- * - Japanese text uses [JapaneseProcessor] noun filtering.
- * - English and unknown text use [TextNormalizer] keyword extraction.
- * - Search first narrows candidates through an inverted index, then uses Aho-Corasick to
- *   return original-text match spans and deterministic non-overlapping `<mark>` highlights.
+ * - document 는 index construction 시점에 한 번 language detection 되고 detected language 기준으로 tokenize 됩니다.
+ * - Korean text 는 [KoreanProcessor] normalization 과 noun-oriented tokenization 을 사용합니다.
+ * - Japanese text 는 [JapaneseProcessor] noun filtering 을 사용합니다.
+ * - English 와 unknown text 는 [TextNormalizer] keyword extraction 을 사용합니다.
+ * - search 는 먼저 inverted index 로 candidate 를 좁힌 뒤 Aho-Corasick 으로 original-text match span 과 deterministic non-overlapping `<mark>` highlight 를 반환합니다.
  *
  * ```kotlin
  * val index = MultilingualSearchIndex.indexOf(
@@ -156,10 +154,9 @@ class MultilingualSearchIndex private constructor(
         buildSearchInvertedIndex(indexedDocuments)
 
     /**
-     * Searches the index and returns ranked hits with source offsets and highlighted text.
+     * index 를 검색하고 source offset 과 highlighted text 를 포함한 ranked hit 를 반환합니다.
      *
-     * Returns an empty list when [query] is blank, no query terms can be extracted, or no
-     * indexed document contains any query term.
+     * [query] 가 blank 이거나 query term 을 추출할 수 없거나 어떤 indexed document 도 query term 을 포함하지 않으면 empty list 를 반환합니다.
      */
     fun search(query: String, limit: Int = DEFAULT_LIMIT): List<SearchHighlightHit> {
         if (query.isBlank()) return emptyList()
@@ -207,10 +204,9 @@ class MultilingualSearchIndex private constructor(
         private const val DEFAULT_LIMIT = 10
 
         /**
-         * Builds a reusable [MultilingualSearchIndex] from non-empty [documents] with unique ids.
+         * unique id 를 가진 non-empty [documents] 로 재사용 가능한 [MultilingualSearchIndex] 를 생성합니다.
          *
-         * Pass an existing [LanguageDetectionService] when the application already owns one;
-         * this avoids rebuilding Lingua language models for every index.
+         * application 이 이미 [LanguageDetectionService] 를 소유하고 있으면 기존 instance 를 전달합니다. 이렇게 하면 index 마다 Lingua language model 을 다시 build 하지 않습니다.
          */
         fun indexOf(
             documents: Collection<SearchDocument>,
