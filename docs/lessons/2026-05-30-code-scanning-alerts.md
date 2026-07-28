@@ -1,28 +1,28 @@
 # Code scanning alerts
 
-## Context
+## 배경
 
-GitHub CodeQL reported workflow token permission alerts for CI and Nightly, plus
-JavaScript alerts in sample static resources and checked-in Gatling reports.
+GitHub CodeQL은 CI와 Nightly workflow token permission alert를 보고했고, sample
+static resource와 check-in된 Gatling report의 JavaScript alert도 보고했다.
 
-## Decision
+## 결정
 
-Declare explicit workflow-level `contents: read` permissions first, then fix or
-remove static resources that CodeQL can prove unsafe.
+먼저 workflow-level `contents: read` permission을 명시하고, 그 다음 CodeQL이 unsafe로
+증명할 수 있는 static resource를 수정하거나 제거한다.
 
-## Outcome
+## 결과
 
-Workflow token defaults are now least-privilege for checkout-based jobs. Static
-resource fixes stay scoped to the alerted files.
+workflow token default는 이제 checkout 기반 job에 대해 least-privilege다. static
+resource 수정은 alert가 발생한 파일로 범위를 제한했다.
 
-## Verification
+## 검증
 
 - `actionlint .github/workflows/ci.yml .github/workflows/nightly.yml`
 - `yq` inspection of workflow permissions
 - `git diff --check`
 
-## Future guard
+## 향후 guard
 
-Do not commit generated performance reports with bundled legacy JavaScript
-unless they are intentionally published artifacts and security review accepts
-the static risk.
+의도적으로 publish하는 artifact이고 security review가 static risk를 수용한 경우가
+아니라면, bundled legacy JavaScript가 포함된 generated performance report를 commit하지
+않는다.
