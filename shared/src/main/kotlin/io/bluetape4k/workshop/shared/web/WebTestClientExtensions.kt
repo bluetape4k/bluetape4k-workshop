@@ -8,7 +8,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.body
 
 /**
- * Exchanges a GET request and optionally verifies the expected status.
+ * GET request를 exchange하고 필요하면 expected status를 검증한다.
  */
 fun WebTestClient.httpGet(
     uri: String,
@@ -24,7 +24,7 @@ fun WebTestClient.httpGet(
         }
 
 /**
- * Exchanges a HEAD request and optionally verifies the expected status.
+ * HEAD request를 exchange하고 필요하면 expected status를 검증한다.
  */
 fun WebTestClient.httpHead(
     uri: String,
@@ -40,7 +40,7 @@ fun WebTestClient.httpHead(
         }
 
 /**
- * Exchanges a POST request with an optional object body.
+ * optional object body가 있는 POST request를 exchange한다.
  */
 fun WebTestClient.httpPost(
     uri: String,
@@ -62,7 +62,7 @@ fun WebTestClient.httpPost(
         }
 
 /**
- * Exchanges a POST request with a reactive-streams body.
+ * reactive-streams body가 있는 POST request를 exchange한다.
  */
 inline fun <reified T: Any> WebTestClient.httpPost(
     uri: String,
@@ -84,7 +84,7 @@ inline fun <reified T: Any> WebTestClient.httpPost(
         }
 
 /**
- * Exchanges a POST request with a Kotlin [Flow] body.
+ * Kotlin [Flow] body가 있는 POST request를 exchange한다.
  */
 inline fun <reified T: Any> WebTestClient.httpPost(
     uri: String,
@@ -106,7 +106,7 @@ inline fun <reified T: Any> WebTestClient.httpPost(
         }
 
 /**
- * Exchanges a PUT request with an optional object body.
+ * optional object body가 있는 PUT request를 exchange한다.
  */
 fun WebTestClient.httpPut(
     uri: String,
@@ -128,7 +128,7 @@ fun WebTestClient.httpPut(
         }
 
 /**
- * Exchanges a PUT request with a reactive-streams body.
+ * reactive-streams body가 있는 PUT request를 exchange한다.
  */
 inline fun <reified T: Any> WebTestClient.httpPut(
     uri: String,
@@ -150,7 +150,7 @@ inline fun <reified T: Any> WebTestClient.httpPut(
         }
 
 /**
- * Exchanges a PUT request with a Kotlin [Flow] body.
+ * Kotlin [Flow] body가 있는 PUT request를 exchange한다.
  */
 inline fun <reified T: Any> WebTestClient.httpPut(
     uri: String,
@@ -172,7 +172,7 @@ inline fun <reified T: Any> WebTestClient.httpPut(
         }
 
 /**
- * Exchanges a PATCH request with an optional object body.
+ * optional object body가 있는 PATCH request를 exchange한다.
  */
 fun WebTestClient.httpPatch(
     uri: String,
@@ -194,7 +194,7 @@ fun WebTestClient.httpPatch(
         }
 
 /**
- * Exchanges a DELETE request and optionally verifies the expected status.
+ * DELETE request를 exchange하고 필요하면 expected status를 검증한다.
  */
 fun WebTestClient.httpDelete(
     uri: String,

@@ -6,7 +6,7 @@ import org.springframework.http.MediaType
 import org.springframework.web.client.RestClient
 
 /**
- * Starts a GET request and optionally applies an `Accept` header.
+ * GET request를 시작하고 필요하면 `Accept` header를 적용한다.
  */
 fun RestClient.httpGet(
     uri: String,
@@ -18,7 +18,7 @@ fun RestClient.httpGet(
         .retrieve()
 
 /**
- * Starts a HEAD request and optionally applies an `Accept` header.
+ * HEAD request를 시작하고 필요하면 `Accept` header를 적용한다.
  */
 fun RestClient.httpHead(
     uri: String,
@@ -30,7 +30,7 @@ fun RestClient.httpHead(
         .retrieve()
 
 /**
- * Starts a POST request with an optional object body.
+ * optional object body가 있는 POST request를 시작한다.
  */
 fun RestClient.httpPost(
     uri: String,
@@ -48,7 +48,7 @@ fun RestClient.httpPost(
         .retrieve()
 
 /**
- * Starts a POST request with a reactive-streams body.
+ * reactive-streams body가 있는 POST request를 시작한다.
  */
 inline fun <reified T: Any> RestClient.httpPost(
     uri: String,
@@ -66,7 +66,7 @@ inline fun <reified T: Any> RestClient.httpPost(
         .retrieve()
 
 /**
- * Starts a POST request with a Kotlin [Flow] body.
+ * Kotlin [Flow] body가 있는 POST request를 시작한다.
  */
 inline fun <reified T: Any> RestClient.httpPost(
     uri: String,
@@ -84,7 +84,7 @@ inline fun <reified T: Any> RestClient.httpPost(
         .retrieve()
 
 /**
- * Starts a PUT request with an optional object body.
+ * optional object body가 있는 PUT request를 시작한다.
  */
 fun RestClient.httpPut(
     uri: String,
@@ -102,7 +102,7 @@ fun RestClient.httpPut(
         .retrieve()
 
 /**
- * Starts a PUT request with a reactive-streams body.
+ * reactive-streams body가 있는 PUT request를 시작한다.
  */
 inline fun <reified T: Any> RestClient.httpPut(
     uri: String,
@@ -120,7 +120,7 @@ inline fun <reified T: Any> RestClient.httpPut(
         .retrieve()
 
 /**
- * Starts a PUT request with a Kotlin [Flow] body.
+ * Kotlin [Flow] body가 있는 PUT request를 시작한다.
  */
 inline fun <reified T: Any> RestClient.httpPut(
     uri: String,
@@ -138,7 +138,7 @@ inline fun <reified T: Any> RestClient.httpPut(
         .retrieve()
 
 /**
- * Starts a PATCH request with an optional object body.
+ * optional object body가 있는 PATCH request를 시작한다.
  */
 fun RestClient.httpPatch(
     uri: String,
@@ -156,7 +156,7 @@ fun RestClient.httpPatch(
         .retrieve()
 
 /**
- * Starts a DELETE request and optionally applies an `Accept` header.
+ * DELETE request를 시작하고 필요하면 `Accept` header를 적용한다.
  */
 fun RestClient.httpDelete(
     uri: String,
