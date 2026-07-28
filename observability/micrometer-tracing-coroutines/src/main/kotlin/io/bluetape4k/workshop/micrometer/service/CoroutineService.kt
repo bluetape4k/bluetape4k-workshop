@@ -29,7 +29,7 @@ class CoroutineService(
 
     suspend fun getName(): String {
         log.debug { "Get fake name in coroutine service." }
-        // pre-processing
+        // 전처리 단계입니다.
         withObservationSuspending("pre-processing-get-name", observationRegistry) {
             log.debug { "pre-processing-get-name ..." }
             delay(100)
@@ -40,7 +40,7 @@ class CoroutineService(
             delay(100)
             faker.name().fullName()
         }
-        // post-processing
+        // 후처리 단계입니다.
         withObservationSuspending("post-processing-get-name", observationRegistry) {
             log.debug { "psot-processing-get-name ..." }
             delay(100)

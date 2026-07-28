@@ -13,14 +13,13 @@ import kotlinx.coroutines.CancellationException
 import org.springframework.stereotype.Service
 
 /**
- * Orchestrates user retrieval using a Redis cache-aside pattern with DB fallback.
+ * DB fallback 을 가진 Redis cache-aside pattern 으로 user retrieval 을 조율합니다.
  *
  * ## Behavior / Contract
- * - All public operations are wrapped in manual Observation spans.
- * - Redis failures are soft-failed: `CancellationException` is rethrown; other exceptions
- *   are logged as warnings and treated as cache misses.
- * - Does not use `runCatching {}` — explicit try/catch preserves structured concurrency.
- * - Requires `micrometer-context-propagation` for span continuity across dispatcher boundaries.
+ * - 모든 public operation 은 manual Observation span 으로 감쌉니다.
+ * - Redis failure 는 soft-fail 로 처리합니다. `CancellationException` 은 다시 throw 하고, 다른 exception 은 warning 으로 log 한 뒤 cache miss 로 취급합니다.
+ * - structured concurrency 를 보존하기 위해 `runCatching {}` 대신 명시적 try/catch 를 사용합니다.
+ * - dispatcher boundary 를 넘어 span continuity 를 유지하려면 `micrometer-context-propagation` 이 필요합니다.
  */
 @Service
 class UserService(
@@ -31,16 +30,16 @@ class UserService(
     companion object : KLogging()
 
     /**
-     * Retrieves a [User] by [id] using cache-aside pattern.
+     * cache-aside pattern 으로 [id] 에 해당하는 [User] 를 조회합니다.
      *
-     * Cache hit: returns cached value, skips DB span.
-     * Cache miss: fetches from DB, stores in cache.
-     * Redis error: logs warning, falls back to DB.
+     * cache hit: cached value 를 반환하고 DB span 은 건너뜁니다.
+     * cache miss: DB 에서 조회한 뒤 cache 에 저장합니다.
+     * Redis error: warning 을 log 하고 DB 로 fallback 합니다.
      */
     suspend fun getById(id: Long): User? =
         observed("user.service.get", observationRegistry) {
             val validId = id.requirePositiveNumber("id")
-            // Cache read with soft-fail
+            // soft-fail 을 적용해 cache 를 읽습니다.
             val cached = try {
                 cache.get(validId)
             } catch (e: CancellationException) {
@@ -55,12 +54,12 @@ class UserService(
                 return@observed cached
             }
 
-            // DB fetch
+            // DB 에서 조회합니다.
             val user = observed("user.db.find", observationRegistry) {
                 repo.findById(validId)
             }
 
-            // Cache write with soft-fail
+            // soft-fail 을 적용해 cache 에 씁니다.
             if (user != null) {
                 try {
                     cache.put(user)
@@ -75,7 +74,7 @@ class UserService(
         }
 
     /**
-     * Creates and persists a new [User], returning the saved entity.
+     * 새 [User] 를 생성하고 persist 한 뒤 saved entity 를 반환합니다.
      */
     suspend fun create(user: User): User {
         observed("user.service.create", observationRegistry) {

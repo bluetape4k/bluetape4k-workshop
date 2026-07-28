@@ -13,12 +13,12 @@ import org.springframework.stereotype.Repository
 import java.util.concurrent.TimeUnit
 
 /**
- * Redis cache repository for [User] objects using Redisson `RMapCache`.
+ * Redisson `RMapCache` 를 사용하는 [User] object 용 Redis cache repository 입니다.
  *
  * ## Behavior / Contract
- * - Cache reads/writes are instrumented with manual Observation spans via [observed].
- * - Uses [observed] (Observation OUTER) with `withContext(Dispatchers.IO)` inside.
- * - TTL defaults to 60 seconds per cached entry.
+ * - cache read/write 는 [observed] 를 통한 manual Observation span 으로 instrumentation 됩니다.
+ * - [observed](Observation OUTER)를 사용하고 내부에서 `withContext(Dispatchers.IO)` 를 호출합니다.
+ * - cached entry 의 TTL 기본값은 60초입니다.
  */
 @Repository
 class UserCacheRepository(
@@ -32,9 +32,9 @@ class UserCacheRepository(
     }
 
     /**
-     * Retrieves a [User] from the cache by [id].
+     * [id] 로 cache 에서 [User] 를 조회합니다.
      *
-     * Returns `null` on cache miss.
+     * cache miss 이면 `null` 을 반환합니다.
      */
     suspend fun get(id: Long): User? =
         observed("user.cache.get", observationRegistry) {
@@ -45,13 +45,13 @@ class UserCacheRepository(
         }
 
     /**
-     * Stores a [User] in the cache with the given [ttlSeconds] TTL.
+     * 주어진 [ttlSeconds] TTL 로 [User] 를 cache 에 저장합니다.
      */
     suspend fun put(user: User, ttlSeconds: Long = 60L) {
         observed("user.cache.put", observationRegistry) {
             val ttl = ttlSeconds.requirePositiveNumber("ttlSeconds")
             withContext(Dispatchers.IO) {
-                // RMapCache.put() returns the previous value (V?); discard it
+                // RMapCache.put() 은 previous value(V?) 를 반환하므로 버립니다.
                 cache.put(user.id, user, ttl, TimeUnit.SECONDS)
                 Unit
             }
@@ -59,7 +59,7 @@ class UserCacheRepository(
     }
 
     /**
-     * Removes a [User] from the cache by [id]. Used for test isolation; not instrumented.
+     * [id] 로 cache 에서 [User] 를 제거합니다. test isolation 용도이므로 instrumentation 하지 않습니다.
      */
     suspend fun delete(id: Long) = withContext(Dispatchers.IO) {
         cache.remove(id.requirePositiveNumber("id"))

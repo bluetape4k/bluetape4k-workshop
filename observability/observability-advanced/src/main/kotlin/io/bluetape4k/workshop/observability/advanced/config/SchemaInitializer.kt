@@ -11,11 +11,11 @@ import org.springframework.boot.ApplicationRunner
 import org.springframework.stereotype.Component
 
 /**
- * Initializes the database schema on application startup.
+ * application startup 시 database schema 를 초기화합니다.
  *
  * ## Behavior / Contract
- * - Creates the `users` table if it does not exist.
- * - Fails fast on error — silent swallowing is prohibited.
+ * - `users` table 이 없으면 생성합니다.
+ * - error 발생 시 fail-fast 하며 silent swallowing 은 금지합니다.
  */
 @Component
 class SchemaInitializer : ApplicationRunner {

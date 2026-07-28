@@ -6,16 +6,14 @@ import io.micrometer.observation.ObservationRegistry
 import kotlinx.coroutines.CancellationException
 
 /**
- * Runs [block] under a named Micrometer Observation, always stopping the observation on exit.
+ * 이름이 지정된 Micrometer Observation 아래에서 [block] 을 실행하고 exit 시 항상 observation 을 stop 합니다.
  *
  * ## Behavior / Contract
- * - Creates and starts a new Observation with [name] in [registry].
- * - Calls `observation.stop()` in a `finally` block — guarantees stop on both success and failure.
- * - Records the throwable via `observation.error(e)` before stopping on non-cancellation errors.
- * - Rethrows [CancellationException] immediately (before error recording) to preserve structured
- *   concurrency; `stop()` still runs via `finally`.
- * - Exists because the upstream `withObservationSuspending` coroutine helper is missing
- *   `finally { observation.stop() }` on the happy path (verified in 1.8.0-SNAPSHOT and 1.9.1).
+ * - [registry] 안에서 [name] 을 가진 새 Observation 을 생성하고 시작합니다.
+ * - success/failure 양쪽 모두에서 stop 을 보장하도록 `finally` block 안에서 `observation.stop()` 을 호출합니다.
+ * - non-cancellation error 에서는 stop 전에 `observation.error(e)` 로 throwable 을 기록합니다.
+ * - structured concurrency 를 보존하려고 [CancellationException] 은 error recording 전에 즉시 다시 throw 합니다. `stop()` 은 여전히 `finally` 로 실행됩니다.
+ * - upstream `withObservationSuspending` coroutine helper 의 happy path 에 `finally { observation.stop() }` 이 없어서 이 helper 가 필요합니다. 1.8.0-SNAPSHOT 과 1.9.1 에서 확인했습니다.
  *
  * ```kotlin
  * val order: Order? = observed("order.service.fetch", registry) {
@@ -23,10 +21,10 @@ import kotlinx.coroutines.CancellationException
  * }
  * ```
  *
- * @param name Observation name (must be non-blank).
- * @param registry [ObservationRegistry] to register the observation with.
- * @param block Suspend block to execute under the observation.
- * @return The result of [block].
+ * @param name Observation 이름입니다. blank 일 수 없습니다.
+ * @param registry observation 을 등록할 [ObservationRegistry] 입니다.
+ * @param block observation 아래에서 실행할 suspend block 입니다.
+ * @return [block] 의 실행 결과입니다.
  */
 suspend fun <T> observed(
     name: String,

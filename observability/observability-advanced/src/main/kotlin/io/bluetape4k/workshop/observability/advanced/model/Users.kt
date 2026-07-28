@@ -4,7 +4,7 @@ import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
 
 /**
- * Exposed SQL DSL table definition for the `users` table.
+ * `users` table 을 위한 Exposed SQL DSL table definition 입니다.
  */
 object Users : Table("users") {
     val id = long("id")
@@ -15,7 +15,7 @@ object Users : Table("users") {
 }
 
 /**
- * Converts a [ResultRow] to a [User] domain object.
+ * [ResultRow] 를 [User] domain object 로 변환합니다.
  */
 fun ResultRow.toUser(): User = User(
     id = this[Users.id],
