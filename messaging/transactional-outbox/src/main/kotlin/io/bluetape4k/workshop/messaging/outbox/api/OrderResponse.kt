@@ -5,15 +5,15 @@ import java.io.Serializable
 import java.time.LocalDateTime
 
 /**
- * HTTP response body representing a single order.
+ * 단일 order 를 표현하는 HTTP response body 입니다.
  *
- * @property id         Primary key of the order.
- * @property customerId Identifier of the ordering customer.
- * @property product    Product name.
- * @property quantity   Number of units ordered.
- * @property status     Current [OrderStatus].
- * @property createdAt  Wall-clock time of order creation.
- * @property updatedAt  Wall-clock time of last status change.
+ * @property id order 의 primary key 입니다.
+ * @property customerId 주문 customer 의 identifier 입니다.
+ * @property product product name 입니다.
+ * @property quantity 주문된 unit 수입니다.
+ * @property status 현재 [OrderStatus] 입니다.
+ * @property createdAt order 생성 wall-clock time 입니다.
+ * @property updatedAt 마지막 status change wall-clock time 입니다.
  */
 data class OrderResponse(
     val id: Long,

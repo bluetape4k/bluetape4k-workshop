@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import java.io.Serializable
 
 /**
- * Sanitizes validation errors for workshop REST endpoints.
+ * workshop REST endpoint 의 validation error 를 sanitize 합니다.
  */
 @RestControllerAdvice
 class RestExceptionHandler {
@@ -35,7 +35,7 @@ class RestExceptionHandler {
 }
 
 /**
- * Safe error response that does not echo rejected user input.
+ * 거부된 user input 을 echo 하지 않는 safe error response 입니다.
  */
 data class ApiErrorResponse(
     val error: String,

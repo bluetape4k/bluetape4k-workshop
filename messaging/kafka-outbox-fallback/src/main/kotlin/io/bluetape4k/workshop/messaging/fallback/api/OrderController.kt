@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.net.URI
 
 /**
- * REST endpoints for the Kafka-first outbox fallback order flow.
+ * Kafka-first outbox fallback order flow 를 위한 REST endpoint 입니다.
  */
 @RestController
 @RequestMapping("/api/orders")

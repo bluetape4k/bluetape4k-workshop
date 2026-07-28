@@ -4,7 +4,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.stereotype.Component
 
 /**
- * Micrometer metric helper for direct publish, fallback, relay, and reconciliation outcomes.
+ * direct publish, fallback, relay, reconciliation outcome 을 기록하는 Micrometer metric helper 입니다.
  */
 @Component
 class OutboxMetrics(

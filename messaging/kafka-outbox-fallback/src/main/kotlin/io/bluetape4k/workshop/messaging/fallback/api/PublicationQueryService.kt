@@ -4,7 +4,7 @@ import io.bluetape4k.workshop.messaging.fallback.publication.EventPublicationRep
 import org.springframework.stereotype.Service
 
 /**
- * Provides payload-free publication state for demo inspection.
+ * demo inspection 을 위해 payload 를 제외한 publication state 를 제공합니다.
  */
 @Service
 class PublicationQueryService(

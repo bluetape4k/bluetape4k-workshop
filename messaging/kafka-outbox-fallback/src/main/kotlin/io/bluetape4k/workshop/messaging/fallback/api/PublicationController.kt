@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * Demo publication inspection and opt-in admin actions.
+ * demo publication inspection 과 opt-in admin action 을 제공합니다.
  */
 @RestController
 @RequestMapping("/api/publications")

@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size
 import java.io.Serializable
 
 /**
- * Request body for placing a workshop order.
+ * workshop order 를 place 하기 위한 request body 입니다.
  */
 data class OrderRequest(
     @field:NotBlank

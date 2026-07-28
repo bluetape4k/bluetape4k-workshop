@@ -4,7 +4,7 @@ import java.io.Serializable
 import java.time.LocalDateTime
 
 /**
- * Internal immutable projection for an order row.
+ * order row 를 위한 internal immutable projection 입니다.
  */
 data class OrderRecord(
     val id: Long,

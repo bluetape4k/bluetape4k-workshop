@@ -8,11 +8,9 @@ import io.bluetape4k.workshop.messaging.fallback.publication.OrderPlacedEvent
 import org.springframework.stereotype.Service
 
 /**
- * Public order placement boundary.
+ * public order placement boundary 입니다.
  *
- * Persists the order in the hot transaction, then asks [OrderEventPublisher] to
- * either publish the deterministic `OrderPlaced` event directly to Kafka or
- * store a durable fallback row when direct publish is disabled or fails.
+ * hot transaction 안에서 order 를 persist 한 뒤 [OrderEventPublisher] 에게 deterministic `OrderPlaced` event 를 Kafka 로 직접 publish 하거나, direct publish 가 비활성화되거나 실패하면 durable fallback row 를 저장하도록 요청합니다.
  */
 @Service
 class PlaceOrderUseCase(

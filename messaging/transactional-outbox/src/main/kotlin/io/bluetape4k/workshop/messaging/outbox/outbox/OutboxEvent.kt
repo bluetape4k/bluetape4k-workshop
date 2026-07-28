@@ -4,19 +4,19 @@ import java.io.Serializable
 import java.time.LocalDateTime
 
 /**
- * DTO projection of an [io.bluetape4k.workshop.messaging.outbox.domain.OutboxEventTable] row.
+ * [io.bluetape4k.workshop.messaging.outbox.domain.OutboxEventTable] row 의 DTO projection 입니다.
  *
- * Carried by [OutboxPublisher] from the database to Kafka.
+ * [OutboxPublisher] 가 database 에서 Kafka 로 옮기는 값입니다.
  *
- * @property id            Primary key from `outbox_events`
- * @property aggregateType Domain type, e.g. `"Order"`
- * @property aggregateId   String representation of the aggregate PK
- * @property eventType     Discriminator string, e.g. `"OrderPlaced"`
- * @property payload       JSON-serialised event body
- * @property status        Current [OutboxStatus]
- * @property retryCount    Number of failed publish attempts
- * @property createdAt     Row creation time
- * @property processedAt   Time of successful publish, or null
+ * @property id `outbox_events` 의 primary key 입니다.
+ * @property aggregateType domain type 입니다. 예: `"Order"`
+ * @property aggregateId aggregate PK 의 string representation 입니다.
+ * @property eventType discriminator string 입니다. 예: `"OrderPlaced"`
+ * @property payload JSON-serialized event body 입니다.
+ * @property status 현재 [OutboxStatus] 입니다.
+ * @property retryCount failed publish attempt 수입니다.
+ * @property createdAt row creation time 입니다.
+ * @property processedAt successful publish time 입니다. 아직 publish 되지 않았으면 null 입니다.
  */
 data class OutboxEvent(
     val id: Long,

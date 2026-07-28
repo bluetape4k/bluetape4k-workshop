@@ -7,7 +7,7 @@ import tools.jackson.databind.ObjectMapper
 import tools.jackson.module.kotlin.jacksonObjectMapper
 
 /**
- * Kafka/Jackson configuration for the fallback outbox workshop module.
+ * fallback outbox workshop module 을 위한 Kafka/Jackson configuration 입니다.
  */
 @Configuration(proxyBeanMethods = false)
 @EnableKafka

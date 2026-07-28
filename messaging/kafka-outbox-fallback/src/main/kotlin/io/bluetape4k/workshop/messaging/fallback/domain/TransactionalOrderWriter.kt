@@ -13,10 +13,9 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 /**
- * Internal transactional writer for order domain rows.
+ * order domain row 를 위한 internal transactional writer 입니다.
  *
- * This class intentionally writes only [OrderTable]. Publication fallback rows
- * are handled after the domain transaction by higher-level orchestration.
+ * 이 class 는 의도적으로 [OrderTable] 만 씁니다. publication fallback row 는 domain transaction 이후 higher-level orchestration 이 처리합니다.
  */
 @Service
 class TransactionalOrderWriter {

@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 /**
- * Publishes order events directly to Kafka and falls back to durable rows.
+ * order event 를 Kafka 로 직접 publish 하고 필요하면 durable row 로 fallback 합니다.
  */
 @Component
 class OrderEventPublisher(

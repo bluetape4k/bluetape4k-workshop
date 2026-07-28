@@ -5,16 +5,16 @@ import org.jetbrains.exposed.v1.javatime.CurrentDateTime
 import org.jetbrains.exposed.v1.javatime.datetime
 
 /**
- * Exposed table for [Order] entities.
+ * [Order] entity 를 위한 Exposed table 입니다.
  *
  * ## Schema
- * - `id`          — auto-increment Long primary key
- * - `customer_id` — identifier of the placing customer
- * - `product`     — product name
- * - `quantity`    — ordered quantity (positive)
- * - `status`      — current [OrderStatus], defaults to [OrderStatus.PENDING]
- * - `created_at`  — wall-clock time of row creation
- * - `updated_at`  — wall-clock time of last update
+ * - `id` — auto-increment Long primary key 입니다.
+ * - `customer_id` — placing customer 의 identifier 입니다.
+ * - `product` — product name 입니다.
+ * - `quantity` — ordered quantity 입니다. 양수여야 합니다.
+ * - `status` — 현재 [OrderStatus] 입니다. 기본값은 [OrderStatus.PENDING] 입니다.
+ * - `created_at` — row creation wall-clock time 입니다.
+ * - `updated_at` — 마지막 update wall-clock time 입니다.
  */
 object OrderTable : LongIdTable("orders") {
     val customerId = varchar("customer_id", 100)
