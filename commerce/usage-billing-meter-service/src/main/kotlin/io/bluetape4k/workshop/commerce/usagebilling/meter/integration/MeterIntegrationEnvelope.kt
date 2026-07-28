@@ -13,9 +13,9 @@ import java.util.HexFormat
 import java.util.UUID
 
 /**
- * Versioned Meter event contract persisted in the local outbox before Kafka publication.
+ * Kafka publication 전에 local outbox에 저장되는 Versioned Meter event contract입니다.
  *
- * The envelope owns its digest so a consumer can reject tampered payloads without trusting transport metadata.
+ * envelope가 digest를 소유하므로 consumer는 transport metadata를 신뢰하지 않고 tampered payload를 거부할 수 있습니다.
  */
 class MeterIntegrationEnvelope private constructor(
     val eventId: UUID,

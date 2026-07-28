@@ -18,7 +18,7 @@ import java.util.HexFormat
 import java.util.UUID
 import tools.jackson.databind.JsonNode
 
-/** Decodes Meter's published JSON without introducing a shared runtime message dependency. */
+/** shared runtime message dependency를 도입하지 않고 Meter가 publish한 JSON을 decode합니다. */
 @Component
 class MeterPriceEvidenceDecoder {
     fun decode(wirePayload: String): PriceEvidenceInboxEvent {

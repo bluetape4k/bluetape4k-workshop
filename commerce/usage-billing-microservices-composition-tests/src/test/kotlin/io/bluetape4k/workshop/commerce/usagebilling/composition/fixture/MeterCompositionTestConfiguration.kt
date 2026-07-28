@@ -7,7 +7,7 @@ import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Primary
 
-/** Deterministic transport fault injection for composition tests; normal delivery still uses Kafka. */
+/** composition test를 위한 deterministic transport fault injection입니다. 정상 delivery는 계속 Kafka를 사용합니다. */
 @TestConfiguration(proxyBeanMethods = false)
 class MeterCompositionTestConfiguration {
     @Bean

@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
 import java.time.Instant
 
-/** Periodically bounds terminal HTTP idempotency evidence without deleting recoverable leases. */
+/** recoverable lease를 삭제하지 않고 terminal HTTP idempotency evidence를 주기적으로 제한합니다. */
 @Service
 internal class IdempotencyCleanupService(
     private val repository: HttpIdempotencyRepository,

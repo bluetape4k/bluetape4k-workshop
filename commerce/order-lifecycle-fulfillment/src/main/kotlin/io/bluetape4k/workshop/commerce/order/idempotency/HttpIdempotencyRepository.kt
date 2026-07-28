@@ -220,7 +220,7 @@ internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<Idempoten
             }.firstOrNull()
             ?.let { with(this) { it.toEntity() } }
 
-    /** Deletes a bounded batch of expired terminal responses while preserving recoverable owners. */
+    /** recoverable owner는 보존하면서 만료된 terminal response를 bounded batch로 삭제합니다. */
     fun deleteExpiredTerminal(
         now: Instant,
         limit: Int,

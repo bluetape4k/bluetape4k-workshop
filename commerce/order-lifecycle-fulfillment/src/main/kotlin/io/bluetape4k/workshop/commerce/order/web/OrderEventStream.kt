@@ -88,8 +88,8 @@ internal class OrderEventStream(
         try {
             val snapshot = queries.snapshot(orderId)
             if (draining.get()) throw StreamShuttingDown()
-            // The snapshot already contains the current audit view, so its cursor is authoritative.
-            // Trusting an arbitrary future Last-Event-ID would suppress valid subsequent events.
+            // snapshot은 이미 현재 audit view를 포함하므로 해당 cursor가 authoritative입니다.
+            // 임의의 미래 Last-Event-ID를 신뢰하면 이후의 유효한 event가 억제됩니다.
             val snapshotCursor = snapshot.audit.maxOfOrNull { it.id } ?: 0L
             connection.cursor.set(snapshotCursor)
             emitter.send(
@@ -137,8 +137,8 @@ internal class OrderEventStream(
                 registeredFeeds.forEach { it.closed.set(true) }
                 registeredConnections to registeredFeeds
             }
-        // Cancel every poller before completing emitters so shutdown has one bounded deadline,
-        // independent of the number of connected clients.
+        // emitter를 완료하기 전에 모든 poller를 취소해,
+        // 연결된 client 수와 무관하게 shutdown이 하나의 bounded deadline을 갖도록 합니다.
         drainingFeeds.forEach { it.future?.cancel(true) }
         drainingConnections.forEach { it.emitter.complete() }
         connections.clear()

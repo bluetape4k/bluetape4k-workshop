@@ -13,9 +13,9 @@ import java.util.HexFormat
 import java.util.UUID
 
 /**
- * Versioned event contract accepted by Query for tenant-scoped projection and recovery audit.
+ * tenant-scoped projection과 recovery audit를 위해 Query가 수락하는 Versioned event contract입니다.
  *
- * It carries the immutable payload digest that distinguishes a harmless replay from a quarantined conflict.
+ * harmless replay와 quarantined conflict를 구분하는 immutable payload digest를 담습니다.
  */
 class QueryIntegrationEnvelope private constructor(
     val eventId: UUID, val eventType: String, val schemaVersion: Int, val tenantId: String,
