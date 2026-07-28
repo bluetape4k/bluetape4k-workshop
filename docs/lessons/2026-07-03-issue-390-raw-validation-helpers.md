@@ -1,34 +1,45 @@
 # Issue 390 Raw Validation Helper Cleanup
 
-## Context
+## 배경
 
-Issue #390 cleaned up raw caller-input validation in workshop examples after the milestone 1.3.1 review found inconsistent use of bluetape4k ecosystem helpers.
+milestone 1.3.1 review가 bluetape4k ecosystem helper 사용의 불일치를 발견한 뒤,
+Issue #390은 workshop example의 raw caller-input validation을 정리했다.
 
-## Decisions
+## 결정
 
-- Convert only simple caller-input checks to bluetape4k helpers: blank strings, non-empty collections, positive/zero-positive numbers, and bounded numeric ranges.
-- Keep raw `require(...)` for security predicates, parser boundary checks, domain invariants, and user-facing messages that must preserve exact detail text or avoid echoing sensitive input.
-- Keep exact `BigDecimal` comparisons raw until a decimal-specific helper exists; generic numeric helpers can lose precision through numeric conversion.
-- Add direct `implementation(libs.bluetape4k.core)` to modules whose production code imports `io.bluetape4k.support`.
+- blank string, non-empty collection, positive/zero-positive number, bounded numeric range 같은
+  단순 caller-input check만 bluetape4k helper로 변환한다.
+- security predicate, parser boundary check, domain invariant, 정확한 detail text를 보존해야
+  하거나 sensitive input echo를 피해야 하는 user-facing message에는 raw `require(...)`를
+  유지한다.
+- decimal-specific helper가 생길 때까지 exact `BigDecimal` comparison은 raw로 유지한다.
+  generic numeric helper는 numeric conversion 과정에서 precision을 잃을 수 있다.
+- production code가 `io.bluetape4k.support`를 import하는 module에는 direct
+  `implementation(libs.bluetape4k.core)`를 추가한다.
 
-## Outcome
+## 결과
 
-- `src/main` raw `require(...)` count moved from `151` to `111`.
-- Affected production-file raw `require(...)` count moved from `92` to `52`.
-- The redaction pipeline blank-text check stayed raw because `requireNotBlank` includes the raw blank value in the exception message and violates the non-echoing test contract.
-- The OCR controller kept the existing oversize message because HTTP error detail is covered by tests.
+- `src/main` raw `require(...)` count는 `151`에서 `111`로 줄었다.
+- 영향받은 production file의 raw `require(...)` count는 `92`에서 `52`로 줄었다.
+- redaction pipeline의 blank-text check는 raw로 유지했다. `requireNotBlank`가 exception
+  message에 raw blank value를 포함해 non-echoing test contract를 위반하기 때문이다.
+- OCR controller는 기존 oversize message를 유지했다. HTTP error detail이 test로 보호되기
+  때문이다.
 
-## Verification
+## 검증
 
-- Baseline before work: full `./gradlew build --max-workers=1 --console=plain` passed on clean `develop`.
-- Affected-module `compileKotlin` passed with `--max-workers=1 --warning-mode all`.
-- Affected-module `test` passed with `--max-workers=1 --warning-mode all`.
-- Post-work full `./gradlew build --max-workers=1 --warning-mode all --console=plain` passed after review fixes.
-- `git diff --check` passed.
+- 작업 전 baseline: clean `develop`에서 full
+  `./gradlew build --max-workers=1 --console=plain`이 통과했다.
+- affected-module `compileKotlin`은 `--max-workers=1 --warning-mode all`로 통과했다.
+- affected-module `test`는 `--max-workers=1 --warning-mode all`로 통과했다.
+- review fix 이후 post-work full
+  `./gradlew build --max-workers=1 --warning-mode all --console=plain`이 통과했다.
+- `git diff --check`가 통과했다.
 
-## Future Guard
+## 향후 guard
 
-Do not mechanically replace every raw `require(...)`. First classify the predicate:
+모든 raw `require(...)`를 기계적으로 교체하지 않는다. 먼저 predicate를 분류한다.
 
-- helper: simple caller input validation,
-- explicit raw require: security, parser, domain invariant, exact public error message, or sensitive-value non-echoing contract.
+- helper: 단순 caller input validation.
+- explicit raw require: security, parser, domain invariant, exact public error message 또는
+  sensitive-value non-echoing contract.

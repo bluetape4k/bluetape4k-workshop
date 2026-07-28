@@ -2,33 +2,44 @@
 
 Date: 2026-07-03
 
-## Context
+## 배경
 
-The milestone 1.3.1 review asked for a pass over existing workshop code to ensure examples actively use bluetape4k ecosystem helpers instead of raw JDK or generic test APIs.
+milestone 1.3.1 review는 기존 workshop code가 raw JDK 또는 generic test API 대신
+bluetape4k ecosystem helper를 적극적으로 사용하는지 확인하는 pass를 요청했다.
 
-## Decision
+## 결정
 
-Use narrow, source-backed substitutions first, then run a repository-wide scan before declaring the cleanup complete:
+먼저 좁고 source-backed한 대체를 적용한 뒤, cleanup 완료를 선언하기 전에 repository-wide
+scan을 실행한다.
 
 - Opaque string ids use `Base58.randomString(8)` instead of embedding `UUID.randomUUID()`.
 - Touched tests use `io.bluetape4k.assertions.assertFailsWith` instead of `kotlin.test.assertFailsWith`.
 - Touched value-object validation uses `bluetape4k.support.require*` helpers.
 - Production null assertions use `requireNotNull` / `requireNotBlank` for caller-facing values and `checkNotNull` for persistence, observation, and singleton invariants.
-- Runtime debug output uses bluetape4k lazy logging instead of `println`.
+- runtime debug output은 `println` 대신 bluetape4k lazy logging을 사용한다.
 
-## Outcome
+## 결과
 
-The original issue modules plus the broader safe-production sweep now align with the code-pattern skill for UUID generation, touched assertions, touched validation, production `!!`, runtime `println`, and stale commented examples.
+원래 issue module과 더 넓은 safe-production sweep은 이제 UUID generation, touched assertion,
+touched validation, production `!!`, runtime `println`, stale commented example에 대해
+code-pattern skill과 정렬된다.
 
-## Future Guard
+## 향후 guard
 
-Before changing raw Testcontainers usage, check whether the test intentionally needs an isolated container, a custom Docker network, a network alias, or an explicit failure mode. Record the exception when a launcher singleton would weaken the test.
+raw Testcontainers 사용을 변경하기 전에 test가 isolated container, custom Docker network,
+network alias, explicit failure mode를 의도적으로 필요로 하는지 확인한다. launcher singleton이
+test를 약화한다면 exception을 기록한다.
 
-Do not claim a repo-wide code-pattern cleanup from a narrow grep. At minimum, scan all tracked Kotlin files for `!!`, raw `require`, `Thread.sleep`, `runBlocking`, raw Testcontainers constructors, legacy assertion imports, and raw UUID generation. Split behavior-sensitive examples such as virtual-thread sleeps, blocking-to-suspend bridges, and test assertion rewrites into focused issues; this pass created #390, #391, and #392.
+좁은 grep만으로 repo-wide code-pattern cleanup을 주장하지 않는다. 최소한 모든 tracked Kotlin
+file에서 `!!`, raw `require`, `Thread.sleep`, `runBlocking`, raw Testcontainers constructor,
+legacy assertion import, raw UUID generation을 scan한다. virtual-thread sleep,
+blocking-to-suspend bridge, test assertion rewrite처럼 behavior-sensitive한 예제는 focused
+issue로 분리한다. 이 pass는 #390, #391, #392를 만들었다.
 
-## Verification
+## 검증
 
-- Repository scan covered 1,473 Kotlin files. After fixes, production `!!`, raw `GenericContainer`, legacy assertion imports, and raw UUID generation are 0.
-- Targeted compile passed for 11 touched modules.
-- Targeted tests passed for 11 touched modules in one serial Gradle run.
-- `git diff --check` passed.
+- repository scan은 Kotlin file 1,473개를 다뤘다. 수정 후 production `!!`, raw
+  `GenericContainer`, legacy assertion import, raw UUID generation은 0건이다.
+- touched module 11개에 대한 targeted compile이 통과했다.
+- touched module 11개에 대한 targeted test가 하나의 serial Gradle run에서 통과했다.
+- `git diff --check`가 통과했다.
