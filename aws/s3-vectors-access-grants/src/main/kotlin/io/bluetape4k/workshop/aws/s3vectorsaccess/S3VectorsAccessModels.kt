@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.aws.s3vectorsaccess
 import java.io.Serializable
 
 /**
- * Request body for publishing a document vector into the local workshop index.
+ * 문서 벡터를 로컬 워크숍 인덱스에 발행하는 요청 본문입니다.
  */
 data class VectorDocumentUpsertRequest(
     val documentId: String,
@@ -18,7 +18,7 @@ data class VectorDocumentUpsertRequest(
 }
 
 /**
- * Request body for ranking locally stored vectors and optionally requesting an S3 Access Grant.
+ * 로컬 저장 벡터 순위를 계산하고 선택적으로 S3 Access Grant를 요청하는 요청 본문입니다.
  */
 data class VectorSearchRequest(
     val query: List<Float>,
@@ -31,7 +31,7 @@ data class VectorSearchRequest(
 }
 
 /**
- * Result returned after the sample stores document metadata and crosses the S3 Vectors boundary.
+ * 예제가 문서 메타데이터를 저장하고 S3 Vectors 경계를 통과한 뒤 반환하는 결과입니다.
  */
 data class VectorDocumentReport(
     val documentId: String,
@@ -46,7 +46,7 @@ data class VectorDocumentReport(
 }
 
 /**
- * Search response containing the vector boundary state, ranked matches, and access-grant decision.
+ * 벡터 경계 상태, 순위화된 매치, access-grant 결정을 담은 검색 응답입니다.
  */
 data class VectorSearchReport(
     val query: BoundaryStatus,
@@ -59,7 +59,7 @@ data class VectorSearchReport(
 }
 
 /**
- * Ranked document match produced by the local cosine-similarity example.
+ * 로컬 코사인 유사도 예제가 만든 순위화된 문서 매치입니다.
  */
 data class VectorSearchMatch(
     val documentId: String,
@@ -74,7 +74,7 @@ data class VectorSearchMatch(
 }
 
 /**
- * Status for an AWS boundary call without exposing credentials or raw SDK details.
+ * 자격 증명이나 원시 SDK 세부 정보를 노출하지 않는 AWS 경계 호출 상태입니다.
  */
 data class BoundaryStatus(
     val state: BoundaryState,
@@ -96,7 +96,7 @@ data class BoundaryStatus(
 }
 
 /**
- * Redacted decision for an S3 Access Grants data-access request.
+ * S3 Access Grants 데이터 접근 요청의 마스킹된 결정입니다.
  */
 data class AccessGrantDecision(
     val state: BoundaryState,
@@ -128,7 +128,7 @@ data class AccessGrantDecision(
 }
 
 /**
- * Configuration summary surfaced by the demo boundary endpoint.
+ * 데모 경계 엔드포인트가 노출하는 설정 요약입니다.
  */
 data class S3VectorsBoundarySummary(
     val vectorBucketName: String,
@@ -143,7 +143,7 @@ data class S3VectorsBoundarySummary(
 }
 
 /**
- * Coarse state used for learner-facing AWS boundary responses.
+ * 학습자 대상 AWS 경계 응답에 사용하는 대략적인 상태입니다.
  */
 enum class BoundaryState {
     PUBLISHED,

@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * HTTP API for the local S3 Vectors and Access Grants workshop flow.
+ * 로컬 S3 Vectors와 Access Grants 워크숍 흐름용 HTTP API입니다.
  */
 @RestController
 @RequestMapping("/aws/s3-vectors")

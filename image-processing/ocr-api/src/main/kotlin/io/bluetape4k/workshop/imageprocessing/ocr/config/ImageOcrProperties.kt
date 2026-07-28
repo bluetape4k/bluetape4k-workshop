@@ -9,7 +9,7 @@ import java.time.Duration
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
- * Configuration properties for the OCR API workshop module.
+ * OCR API 워크숍 모듈의 설정 속성입니다.
  */
 @ConfigurationProperties(prefix = "workshop.ocr")
 data class ImageOcrProperties(

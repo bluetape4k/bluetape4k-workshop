@@ -9,20 +9,20 @@ import org.springframework.stereotype.Component
 import java.io.Serializable
 
 /**
- * Contract for asynchronous profile-image moderation decisions.
+ * 비동기 프로필 이미지 검수 결정 계약입니다.
  */
 interface ImageModerationProvider {
     suspend fun moderate(request: ModerationRequest): ModerationResult
 }
 
 /**
- * Profile-image moderation policy provider for banned symbols and text.
+ * 금지 심볼과 텍스트에 대한 프로필 이미지 검수 정책 제공자입니다.
  *
- * The workshop ships with deterministic demo detections so it can run without
- * cloud credentials. Production deployments should replace [detect] with AWS
- * Rekognition moderation labels, a Custom Labels model for local policy symbols,
- * OCR/text moderation, or a human-review queue while keeping the policy decision
- * mapping and profile-image state flow intact.
+ * 워크숍은 결정적 데모 감지를 포함하므로
+ * 클라우드 자격 증명 없이 실행할 수 있습니다. 프로덕션 배포에서는 [detect]를 AWS
+ * Rekognition 검수 라벨, 로컬 정책 심볼용 Custom Labels 모델,
+ * OCR/텍스트 검수 또는 사람 검토 큐로 대체하되 정책 결정
+ * 매핑과 프로필 이미지 상태 흐름은 유지해야 합니다.
  */
 @Component
 class ProfileImageModerationPolicyProvider(

@@ -13,11 +13,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import io.bluetape4k.codec.Base58
 
 /**
- * Integration tests for [ImageAssetRepository] low-level operations.
+ * [ImageAssetRepository] 저수준 작업의 통합 테스트입니다.
  *
- * Uses [ImagePersistenceService.recordJobStart] to create rows in a realistic way
- * (respecting UserContext and auditing) instead of calling the repository directly,
- * which would require an open transaction and a UserContext block set up manually.
+ * [ImagePersistenceService.recordJobStart]를 사용해 실제에 가까운 방식으로 행을 만들고
+ * 저장소를 직접 호출하지 않고 [UserContext]와 감사를 반영한 방식으로 행을 만듭니다.
+ * 저장소 직접 호출에 필요한 열린 트랜잭션과 수동 [UserContext] 설정을 피합니다.
  */
 class ImageAssetRepositoryTest : AbstractImagePersistenceTest() {
 

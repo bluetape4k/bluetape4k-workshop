@@ -12,12 +12,12 @@ import io.bluetape4k.workshop.imageprocessing.advanced.persistence.schema.ImageP
 import org.jetbrains.exposed.v1.core.ResultRow
 
 /**
- * Maps an [ImageAssetTable] [ResultRow] to an [ImageAssetDTO].
+ * [ImageAssetTable] [ResultRow]를 [ImageAssetDTO]로 매핑합니다.
  *
- * ## Behavior / Contract
- * - [ImageAssetTable.createdAt] and [updatedAt] are `Instant?`; converted to
- *   `LocalDateTime?` via [java.time.Instant.atOffset] with UTC offset.
- * - [ImageAssetTable.id] is an `EntityID<Long>`; unwrapped via `.value`.
+ * ## 동작 / 계약
+ * - [ImageAssetTable.createdAt]과 [updatedAt]은 `Instant?`이며 UTC offset으로
+ *   [java.time.Instant.atOffset]을 거쳐 `LocalDateTime?`으로 변환합니다.
+ * - [ImageAssetTable.id]는 `EntityID<Long>`이며 `.value`로 꺼냅니다.
  */
 fun ResultRow.toImageAssetDTO(): ImageAssetDTO = ImageAssetDTO(
     id = this[ImageAssetTable.id].value,
@@ -36,10 +36,10 @@ fun ResultRow.toImageAssetDTO(): ImageAssetDTO = ImageAssetDTO(
 )
 
 /**
- * Maps an [ImageObjectTable] [ResultRow] to an [ImageObjectDTO].
+ * [ImageObjectTable] [ResultRow]를 [ImageObjectDTO]로 매핑합니다.
  *
- * ## Behavior / Contract
- * - [ImageObjectTable.imageAssetId] is an `EntityID<Long>` FK; unwrapped via `.value`.
+ * ## 동작 / 계약
+ * - [ImageObjectTable.imageAssetId]는 `EntityID<Long>` FK이며 `.value`로 꺼냅니다.
  */
 fun ResultRow.toImageObjectDTO(): ImageObjectDTO = ImageObjectDTO(
     id = this[ImageObjectTable.id].value,
@@ -55,12 +55,12 @@ fun ResultRow.toImageObjectDTO(): ImageObjectDTO = ImageObjectDTO(
 )
 
 /**
- * Maps an [ImageProcessingJobTable] [ResultRow] to an [ImageProcessingJobDTO].
+ * [ImageProcessingJobTable] [ResultRow]를 [ImageProcessingJobDTO]로 매핑합니다.
  *
- * ## Behavior / Contract
- * - [ImageProcessingJobTable.startedAt] is non-nullable `Instant`; converted to `LocalDateTime` (UTC).
- * - [ImageProcessingJobTable.finishedAt] is nullable `Instant?`; converted to `LocalDateTime?` (UTC).
- * - [ImageProcessingJobTable.requestedVariants] is deserialized from JSONB by the `jacksonb` column.
+ * ## 동작 / 계약
+ * - [ImageProcessingJobTable.startedAt]은 non-null `Instant`이며 `LocalDateTime`(UTC)으로 변환합니다.
+ * - [ImageProcessingJobTable.finishedAt]은 nullable `Instant?`이며 `LocalDateTime?`(UTC)으로 변환합니다.
+ * - [ImageProcessingJobTable.requestedVariants]는 `jacksonb` 컬럼이 JSONB에서 역직렬화합니다.
  */
 fun ResultRow.toImageProcessingJobDTO(): ImageProcessingJobDTO = ImageProcessingJobDTO(
     id = this[ImageProcessingJobTable.id].value,
@@ -77,11 +77,11 @@ fun ResultRow.toImageProcessingJobDTO(): ImageProcessingJobDTO = ImageProcessing
 )
 
 /**
- * Maps an [ImageProcessingEventTable] [ResultRow] to an [ImageProcessingEventDTO].
+ * [ImageProcessingEventTable] [ResultRow]를 [ImageProcessingEventDTO]로 매핑합니다.
  *
- * ## Behavior / Contract
- * - [ImageProcessingEventTable.createdAt] is non-nullable `Instant`; converted to `LocalDateTime` (UTC).
- * - [ImageProcessingEventTable.payloadJson] is nullable JSONB; may be null.
+ * ## 동작 / 계약
+ * - [ImageProcessingEventTable.createdAt]은 non-null `Instant`이며 `LocalDateTime`(UTC)으로 변환합니다.
+ * - [ImageProcessingEventTable.payloadJson]은 nullable JSONB이므로 null일 수 있습니다.
  */
 fun ResultRow.toImageProcessingEventDTO(): ImageProcessingEventDTO = ImageProcessingEventDTO(
     id = this[ImageProcessingEventTable.id].value,

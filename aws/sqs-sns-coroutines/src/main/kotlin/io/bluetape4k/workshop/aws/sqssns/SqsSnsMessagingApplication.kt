@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
 
 /**
- * Spring Boot entry point for the local-first SQS/SNS coroutine messaging workshop.
+ * 로컬 우선 SQS/SNS 코루틴 메시징 워크숍의 Spring Boot 진입점입니다.
  */
 @SpringBootApplication
 @EnableConfigurationProperties(SqsSnsMessagingProperties::class)

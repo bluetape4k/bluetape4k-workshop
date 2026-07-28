@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.runApplication
 
 /**
- * Spring Boot entry point for the EventBridge Scheduler workshop module.
+ * EventBridge Scheduler 워크숍 모듈의 Spring Boot 진입점입니다.
  */
 @SpringBootApplication
 @EnableConfigurationProperties(OrderWorkflowProperties::class)

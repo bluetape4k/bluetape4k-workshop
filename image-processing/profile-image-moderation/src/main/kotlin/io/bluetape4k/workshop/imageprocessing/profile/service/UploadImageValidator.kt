@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component
 
 @Component
 /**
- * Validates declared profile-image metadata and magic bytes before storage.
+ * 저장 전에 선언된 프로필 이미지 메타데이터와 magic byte를 검증합니다.
  */
 class UploadImageValidator(
     private val properties: ProfileImageModerationProperties,

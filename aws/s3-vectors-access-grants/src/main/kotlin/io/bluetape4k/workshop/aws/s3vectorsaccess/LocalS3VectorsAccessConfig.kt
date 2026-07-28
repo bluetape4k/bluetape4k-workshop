@@ -34,7 +34,7 @@ import software.amazon.awssdk.services.s3vectors.model.QueryVectorsRequest
 import software.amazon.awssdk.services.s3vectors.model.QueryVectorsResponse
 
 /**
- * Local AWS boundary adapters used when the sample runs without real AWS credentials.
+ * 예제가 실제 AWS 자격 증명 없이 실행될 때 사용하는 로컬 AWS 경계 어댑터입니다.
  */
 @Configuration(proxyBeanMethods = false)
 @Profile("!real-aws")

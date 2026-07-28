@@ -19,12 +19,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import io.bluetape4k.codec.Base58
 
 /**
- * Integration tests for [ImagePersistenceService] — covers all saga steps and query paths.
+ * [ImagePersistenceService] 통합 테스트입니다. 모든 사가 단계와 조회 경로를 다룹니다.
  *
- * ## Isolation strategy
- * Each test uses a unique checksum so tests do not share rows.
- * Transaction rollback is NOT used here because [ImagePersistenceServiceImpl] commits
- * inside its own PROPAGATION_REQUIRES_NEW transactions.
+ * ## 격리 전략
+ * 각 테스트는 고유 checksum을 사용하므로 행을 공유하지 않습니다.
+ * 여기서는 transaction rollback을 사용하지 않습니다. [ImagePersistenceServiceImpl]이
+ * 자체 PROPAGATION_REQUIRES_NEW 트랜잭션 안에서 commit하기 때문입니다.
  */
 class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
 
@@ -32,7 +32,7 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
     private lateinit var service: ImagePersistenceService
 
     // -------------------------------------------------------------------------
-    // T1 — recordJobStart variants
+    // T1 — recordJobStart 변형
     // -------------------------------------------------------------------------
 
     @Test
@@ -173,7 +173,7 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
     }
 
     // -------------------------------------------------------------------------
-    // findAssetByExternalId — null path
+    // findAssetByExternalId — null 경로
     // -------------------------------------------------------------------------
 
     @Test
@@ -182,7 +182,7 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
     }
 
     // -------------------------------------------------------------------------
-    // findAssetHistory — null path
+    // findAssetHistory — null 경로
     // -------------------------------------------------------------------------
 
     @Test
@@ -191,7 +191,7 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
     }
 
     // -------------------------------------------------------------------------
-    // findAssetHistory — full job + event history
+    // findAssetHistory — 전체 작업과 이벤트 이력
     // -------------------------------------------------------------------------
 
     @Test

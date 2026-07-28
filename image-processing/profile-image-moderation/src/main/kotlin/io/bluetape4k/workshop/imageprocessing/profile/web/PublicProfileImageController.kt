@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/public-images")
 /**
- * Serves pending and approved local profile-image objects while denying private originals.
+ * 비공개 원본은 거부하고 대기 및 승인된 로컬 프로필 이미지 객체를 제공합니다.
  */
 class PublicProfileImageController(
     private val storage: ImageStorage,

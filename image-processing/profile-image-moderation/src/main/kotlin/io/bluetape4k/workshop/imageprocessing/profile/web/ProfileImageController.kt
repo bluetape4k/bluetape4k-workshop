@@ -16,7 +16,7 @@ import org.springframework.web.multipart.MultipartFile
 @RestController
 @RequestMapping("/api/users/{userId}/profile-image")
 /**
- * REST API for uploading and polling a user's effective profile image.
+ * 사용자의 유효 프로필 이미지를 업로드하고 polling하는 REST API입니다.
  */
 class ProfileImageController(
     private val service: ProfileImageService,

@@ -13,47 +13,47 @@ import io.bluetape4k.workshop.imageprocessing.advanced.persistence.schema.ImageP
 import org.springframework.transaction.support.TransactionTemplate
 
 /**
- * Service contract for the image persistence saga.
+ * 이미지 영속화 사가의 서비스 계약입니다.
  *
- * ## Transaction contract
- * Each method runs in its own `REQUIRES_NEW` transaction via programmatic
- * [TransactionTemplate]. No `@Transactional` is placed on this interface or
- * its implementation — callers must NOT assume outer-transaction participation.
+ * ## 트랜잭션 계약
+ * 각 메서드는 프로그래밍 방식의 [TransactionTemplate]으로 자체 `REQUIRES_NEW`
+ * 트랜잭션에서 실행됩니다. 이 인터페이스나 구현에는 `@Transactional`을 두지
+ * 않으므로 호출자는 외부 트랜잭션에 참여한다고 가정하면 안 됩니다.
  *
- * ## Audit user
- * All write methods must be called within a [UserContext.withUser] block.
- * The implementation wraps the entire method body so callers do not need
- * to set the user context themselves.
+ * ## 감사 사용자
+ * 모든 쓰기 메서드는 [UserContext.withUser] 블록 안에서 호출해야 합니다.
+ * 구현은 메서드 본문 전체를 감싸므로 호출자가 직접 사용자 컨텍스트를
+ * 설정할 필요가 없습니다.
  */
 interface ImagePersistenceService {
 
     /**
-     * T1: Starts a new processing job for the given checksum/metadata.
+     * T1: 지정한 checksum/metadata로 새 처리 job을 시작합니다.
      *
-     * Returns a [JobStartResult] describing whether a new asset was created,
-     * an existing READY asset was found ([JobStartResult.AlreadyReady]), etc.
-     * Handles [org.springframework.dao.DataIntegrityViolationException] for concurrent inserts.
+     * 새 asset 생성 여부, 기존 READY asset 발견 여부 등을 설명하는 [JobStartResult]를
+     * 반환합니다([JobStartResult.AlreadyReady] 포함).
+     * 동시 insert에서 발생하는 [org.springframework.dao.DataIntegrityViolationException]을 처리합니다.
      */
     fun recordJobStart(metadata: AssetMetadataInput): JobStartResult
 
     /**
-     * T2: Marks a job as succeeded, upserts image objects, and updates asset status to READY.
+     * T2: job을 성공으로 표시하고 이미지 객체를 upsert한 뒤 asset 상태를 READY로 바꿉니다.
      */
     fun recordJobSuccess(identity: JobIdentity, objects: List<ImageObjectInput>)
 
     /**
-     * T3: Marks a job as failed and updates asset status to FAILED.
+     * T3: job을 실패로 표시하고 asset 상태를 FAILED로 바꿉니다.
      *
-     * Stores sanitized error info only — no raw stack traces.
-     * The [kotlinx.coroutines.NonCancellable] + [kotlinx.coroutines.Dispatchers.IO] wrapping
-     * is the CALLER's responsibility.
+     * 정제된 오류 정보만 저장하며 원시 stack trace는 저장하지 않습니다.
+     * [kotlinx.coroutines.NonCancellable] + [kotlinx.coroutines.Dispatchers.IO] 래핑은
+     * 호출자의 책임입니다.
      */
     fun recordJobFailure(identity: JobIdentity, reason: JobFailureReason, durationMs: Long)
 
     /**
-     * Appends a single processing event row.
+     * 처리 이벤트 행 하나를 추가합니다.
      *
-     * Exceptions propagate to caller — no suppression inside implementation.
+     * 예외는 호출자에게 전파되며 구현 내부에서 억제하지 않습니다.
      */
     fun appendEvent(
         jobId: Long,
@@ -64,16 +64,16 @@ interface ImagePersistenceService {
     )
 
     /**
-     * Returns asset detail (original + variants) by [externalId].
+     * [externalId]로 asset 상세(원본 + 변형)를 반환합니다.
      *
-     * Returns null if no asset exists for the given ID.
+     * 지정한 ID에 해당하는 asset이 없으면 null을 반환합니다.
      */
     fun findAssetByExternalId(externalId: String): ImageAssetDetailResponse?
 
     /**
-     * Returns the full job + event history for the asset identified by [externalId].
+     * [externalId]로 식별한 asset의 전체 job + 이벤트 이력을 반환합니다.
      *
-     * Returns null if no asset exists.
+     * asset이 없으면 null을 반환합니다.
      */
     fun findAssetHistory(externalId: String): ImageAssetHistoryResponse?
 }

@@ -17,7 +17,7 @@ import java.time.Clock
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
- * Coordinates local CloudWatch metrics, logs, Micrometer meter publication, and IMDS reads.
+ * 로컬 CloudWatch 메트릭, 로그, Micrometer meter 발행, IMDS 읽기를 조율합니다.
  */
 @Service
 class OrderTelemetryService(
@@ -31,7 +31,7 @@ class OrderTelemetryService(
 ) {
 
     /**
-     * Records an order telemetry event and returns each boundary result independently.
+     * 주문 텔레메트리 이벤트를 기록하고 각 경계 결과를 독립적으로 반환합니다.
      */
     suspend fun recordOrder(request: OrderTelemetryRequest): OrderTelemetryReport {
         validate(request)
@@ -66,7 +66,7 @@ class OrderTelemetryService(
     }
 
     /**
-     * Reads safe local metadata through the configured IMDS operations.
+     * 설정된 IMDS 작업으로 안전한 로컬 메타데이터를 읽습니다.
      */
     suspend fun readMetadata(): MetadataSnapshot =
         try {

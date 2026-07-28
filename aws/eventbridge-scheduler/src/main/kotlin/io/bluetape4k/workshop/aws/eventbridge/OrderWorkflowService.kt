@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
- * Coordinates the local EventBridge publish and Scheduler request flow.
+ * 로컬 EventBridge 발행과 Scheduler 요청 흐름을 조율합니다.
  */
 @Service
 class OrderWorkflowService(
@@ -20,7 +20,7 @@ class OrderWorkflowService(
 ) {
 
     /**
-     * Starts an order workflow and reports each external boundary independently.
+     * 주문 처리 흐름을 시작하고 각 외부 경계를 독립적으로 보고합니다.
      */
     suspend fun startWorkflow(request: OrderWorkflowRequest): OrderWorkflowReport {
         validate(request)

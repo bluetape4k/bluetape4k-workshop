@@ -26,7 +26,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Local in-memory AWS messaging beans for default `bootRun` and smoke tests.
+ * 기본 `bootRun`과 smoke 테스트용 로컬 인메모리 AWS 메시징 bean입니다.
  */
 @Configuration(proxyBeanMethods = false)
 class LocalAwsMessagingConfig {
@@ -43,7 +43,7 @@ class LocalAwsMessagingConfig {
 }
 
 /**
- * In-memory SNS operations used only when a real bean is not provided.
+ * 실제 bean이 제공되지 않을 때만 사용하는 인메모리 SNS 작업입니다.
  */
 class LocalSnsOperations: SnsOperations {
     val publishedRequests: MutableList<SnsPublishRequest> = CopyOnWriteArrayList()
@@ -95,7 +95,7 @@ class LocalSnsOperations: SnsOperations {
 }
 
 /**
- * In-memory SQS operations used only when a real bean is not provided.
+ * 실제 bean이 제공되지 않을 때만 사용하는 인메모리 SQS 작업입니다.
  */
 class LocalSqsOperations: SqsOperations {
     private val messagesByQueue: MutableMap<String, CopyOnWriteArrayList<Message>> = ConcurrentHashMap()

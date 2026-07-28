@@ -1,15 +1,15 @@
 package io.bluetape4k.workshop.storage
 
 /**
- * Storage abstraction interface that supports local filesystem and AWS S3 backends.
+ * 로컬 파일시스템과 AWS S3 백엔드를 지원하는 스토리지 추상화 인터페이스입니다.
  *
- * ## Behavior / Contract
- * - `upload` stores the content and returns a URL to access the stored object.
- * - `download` retrieves the raw bytes stored under the given key.
- * - `getUrl` returns a local file URL, endpoint-neutral S3 object URI, or pre-signed URL.
- * - `delete` removes the object; implementations should be idempotent (no error if key is absent).
- * - Object keys must be relative forward-slash keys; blank, absolute, backslash, and traversal keys fail fast.
- * - Implementations are selected via Spring Profile: `local`, `s3`, or `s3-presigned`.
+ * ## 동작 / 계약
+ * - `upload`는 콘텐츠를 저장하고 저장된 객체에 접근할 URL을 반환합니다.
+ * - `download`는 지정한 키 아래에 저장된 원시 바이트를 가져옵니다.
+ * - `getUrl`은 로컬 파일 URL, 엔드포인트 중립 S3 객체 URI, 또는 pre-signed URL을 반환합니다.
+ * - `delete`는 객체를 삭제하며, 구현은 키가 없어도 오류가 나지 않도록 멱등이어야 합니다.
+ * - 객체 키는 상대 슬래시 키여야 하며, 공백/절대 경로/백슬래시/경로 순회 키는 조기 실패합니다.
+ * - 구현은 Spring Profile `local`, `s3`, `s3-presigned`로 선택됩니다.
  *
  * ```kotlin
  * val url = storageService.upload("docs/readme.txt", content, "text/plain")
@@ -20,37 +20,37 @@ package io.bluetape4k.workshop.storage
  */
 interface StorageService {
     /**
-     * Uploads [content] under the given [key] and returns a URL to access it.
+     * 지정한 [key] 아래에 [content]를 업로드하고 접근 URL을 반환합니다.
      *
-     * @param key object key (e.g. "folder/file.txt")
-     * @param content raw bytes to store
-     * @param contentType MIME type (e.g. "text/plain", "image/png")
-     * @return URL string pointing to the stored object
+     * @param key 객체 키입니다(예: "folder/file.txt").
+     * @param content 저장할 원시 바이트입니다.
+     * @param contentType MIME 유형입니다(예: "text/plain", "image/png").
+     * @return 저장된 객체를 가리키는 URL 문자열입니다.
      */
     suspend fun upload(key: String, content: ByteArray, contentType: String): String
 
     /**
-     * Downloads the object stored under [key] and returns its raw bytes.
+     * [key] 아래에 저장된 객체를 내려받아 원시 바이트를 반환합니다.
      *
-     * @param key object key
-     * @return raw bytes of the stored object
+     * @param key 객체 키입니다.
+     * @return 저장된 객체의 원시 바이트입니다.
      */
     suspend fun download(key: String): ByteArray
 
     /**
-     * Returns a URL to access the object stored under [key].
-     * For S3 presigned profile this is a time-limited pre-signed GET URL.
+     * [key] 아래에 저장된 객체에 접근할 URL을 반환합니다.
+     * S3 presigned profile에서는 시간 제한이 있는 pre-signed GET URL입니다.
      *
-     * @param key object key
-     * @return URL string
+     * @param key 객체 키입니다.
+     * @return URL 문자열입니다.
      */
     suspend fun getUrl(key: String): String
 
     /**
-     * Deletes the object stored under [key].
-     * Implementations should be idempotent.
+     * [key] 아래에 저장된 객체를 삭제합니다.
+     * 구현은 멱등이어야 합니다.
      *
-     * @param key object key
+     * @param key 객체 키입니다.
      */
     suspend fun delete(key: String)
 }

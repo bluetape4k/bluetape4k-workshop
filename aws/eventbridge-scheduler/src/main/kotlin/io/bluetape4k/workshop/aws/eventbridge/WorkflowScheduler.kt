@@ -4,17 +4,17 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * Schedules delayed workflow invocations.
+ * 지연된 처리 흐름 호출을 예약합니다.
  */
 interface WorkflowScheduler {
     /**
-     * Schedules a workflow request and returns a boundary status.
+     * 처리 흐름 요청을 예약하고 경계 상태를 반환합니다.
      */
     suspend fun schedule(request: SchedulerWorkflowRequest): BoundaryStatus
 }
 
 /**
- * In-memory Scheduler adapter for local workshop runs.
+ * 로컬 워크숍 실행용 인메모리 Scheduler 어댑터입니다.
  */
 @Component
 class LocalWorkflowScheduler : WorkflowScheduler {
@@ -27,7 +27,7 @@ class LocalWorkflowScheduler : WorkflowScheduler {
     }
 
     /**
-     * Returns a stable copy of captured schedule requests.
+     * 캡처한 스케줄 요청의 안정적인 복사본을 반환합니다.
      */
     fun snapshot(): List<SchedulerWorkflowRequest> =
         scheduledRequests.toList()

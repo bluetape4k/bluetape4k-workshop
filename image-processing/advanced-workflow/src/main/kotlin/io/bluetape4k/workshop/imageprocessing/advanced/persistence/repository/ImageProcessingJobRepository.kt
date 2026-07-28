@@ -15,12 +15,12 @@ import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Repository
 
 /**
- * Repository for [ImageProcessingJobTable] rows.
+ * [ImageProcessingJobTable] 행 저장소입니다.
  *
- * ## Behavior / Contract
- * - All methods must be called inside an Exposed `transaction {}` or equivalent.
- * - No auditing columns — timing is tracked via [ImageProcessingJobTable.startedAt]
- *   and [ImageProcessingJobTable.finishedAt].
+ * ## 동작 / 계약
+ * - 모든 메서드는 Exposed `transaction {}` 또는 동등한 경계 안에서 호출해야 합니다.
+ * - 감사 컬럼은 없습니다. 시간은 [ImageProcessingJobTable.startedAt]
+ *   및 [ImageProcessingJobTable.finishedAt]으로 추적합니다.
  */
 @Repository
 class ImageProcessingJobRepository : LongJdbcRepository<ImageProcessingJobDTO> {
@@ -32,13 +32,13 @@ class ImageProcessingJobRepository : LongJdbcRepository<ImageProcessingJobDTO> {
     override fun ResultRow.toEntity(): ImageProcessingJobDTO = toImageProcessingJobDTO()
 
     /**
-     * Inserts a new processing job for [assetId] with RUNNING status and returns the new job ID.
+     * [assetId]에 RUNNING 상태의 새 처리 job을 삽입하고 새 job ID를 반환합니다.
      *
-     * [ImageProcessingJobTable.startedAt] is set by the DB default (`CURRENT_TIMESTAMP`).
+     * [ImageProcessingJobTable.startedAt]은 DB 기본값(`CURRENT_TIMESTAMP`)으로 설정됩니다.
      *
-     * @param assetId the parent asset's primary key
-     * @param requestedVariants variant names requested for this job (may be empty)
-     * @return the generated job primary key
+     * @param assetId 부모 asset의 기본 키입니다.
+     * @param requestedVariants 이 job이 요청한 변형 이름 목록입니다. 비어 있을 수 있습니다.
+     * @return 생성된 job 기본 키입니다.
      */
     fun insertJob(assetId: Long, requestedVariants: List<String>): Long =
         ImageProcessingJobTable.insertAndGetId {
@@ -48,10 +48,10 @@ class ImageProcessingJobRepository : LongJdbcRepository<ImageProcessingJobDTO> {
         }.value
 
     /**
-     * Marks the job identified by [jobId] as SUCCEEDED.
+     * [jobId]로 식별한 job을 SUCCEEDED로 표시합니다.
      *
-     * Sets [ImageProcessingJobTable.finishedAt] to `CURRENT_TIMESTAMP` and
-     * stores [durationMs] for observability.
+     * [ImageProcessingJobTable.finishedAt]을 `CURRENT_TIMESTAMP`로 설정하고
+     * 관측성을 위해 [durationMs]를 저장합니다.
      */
     fun markSucceeded(jobId: Long, durationMs: Long) {
         ImageProcessingJobTable.update({ ImageProcessingJobTable.id eq jobId }) {
@@ -62,10 +62,10 @@ class ImageProcessingJobRepository : LongJdbcRepository<ImageProcessingJobDTO> {
     }
 
     /**
-     * Marks the job identified by [jobId] as FAILED.
+     * [jobId]로 식별한 job을 FAILED로 표시합니다.
      *
-     * Stores sanitized [errorCode] and [errorMessage] alongside the timing information.
-     * Callers are responsible for sanitizing error strings before passing them in.
+     * 정제된 [errorCode]와 [errorMessage]를 시간 정보와 함께 저장합니다.
+     * 오류 문자열을 전달하기 전에 정제하는 책임은 호출자에게 있습니다.
      */
     fun markFailed(jobId: Long, errorCode: String, errorMessage: String, durationMs: Long) {
         ImageProcessingJobTable.update({ ImageProcessingJobTable.id eq jobId }) {
@@ -78,7 +78,7 @@ class ImageProcessingJobRepository : LongJdbcRepository<ImageProcessingJobDTO> {
     }
 
     /**
-     * Returns all jobs for the asset identified by [assetId], ordered by [ImageProcessingJobTable.startedAt] DESC.
+     * [assetId]로 식별한 asset의 모든 job을 [ImageProcessingJobTable.startedAt] DESC 순서로 반환합니다.
      */
     fun findByAssetId(assetId: Long): List<ImageProcessingJobDTO> =
         ImageProcessingJobTable.selectAll()
