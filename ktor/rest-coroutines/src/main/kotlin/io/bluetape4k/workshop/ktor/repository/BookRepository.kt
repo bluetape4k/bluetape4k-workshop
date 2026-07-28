@@ -5,48 +5,47 @@ import io.bluetape4k.workshop.ktor.domain.DomainError
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Repository abstraction for book catalog operations.
+ * book catalog operation 을 위한 repository abstraction 입니다.
  *
  * ## Behavior / Contract
- * - [save] throws [DomainError.Conflict] when a book with the same id already exists.
- * - [update] throws [DomainError.NotFound] when the target id does not exist.
- * - [delete] throws [DomainError.NotFound] when the target id does not exist.
- * - [stream] returns a hot [kotlinx.coroutines.flow.SharedFlow] — only events emitted after
- *   subscription are delivered. No replay buffer.
+ * - 같은 id 의 book 이 이미 있으면 [save] 는 [DomainError.Conflict] 를 throw 합니다.
+ * - target id 가 없으면 [update] 는 [DomainError.NotFound] 를 throw 합니다.
+ * - target id 가 없으면 [delete] 는 [DomainError.NotFound] 를 throw 합니다.
+ * - [stream] 은 hot [kotlinx.coroutines.flow.SharedFlow] 를 반환합니다. subscription 이후 방출된 event 만 전달하며 replay buffer 는 없습니다.
  */
 interface BookRepository {
 
-    /** Returns all books in the catalog. */
+    /** catalog 의 모든 book 을 반환합니다. */
     suspend fun findAll(): List<Book>
 
-    /** Returns the book with the given [id], or `null` if it does not exist. */
+    /** 주어진 [id] 의 book 을 반환합니다. 존재하지 않으면 `null` 입니다. */
     suspend fun findById(id: String): Book?
 
     /**
-     * Persists [book] and emits it to the live stream.
+     * [book] 을 persist 하고 live stream 으로 방출합니다.
      *
-     * @throws DomainError.Conflict if a book with [Book.id] already exists.
+     * @throws DomainError.Conflict [Book.id] 를 가진 book 이 이미 있으면 발생합니다.
      */
     suspend fun save(book: Book): Book
 
     /**
-     * Replaces the book at [id] with [book].
+     * [id] 위치의 book 을 [book] 으로 교체합니다.
      *
-     * @throws DomainError.NotFound if [id] does not exist.
+     * @throws DomainError.NotFound [id] 가 존재하지 않으면 발생합니다.
      */
     suspend fun update(id: String, book: Book): Book
 
     /**
-     * Removes the book at [id].
+     * [id] 위치의 book 을 제거합니다.
      *
-     * @throws DomainError.NotFound if [id] does not exist.
+     * @throws DomainError.NotFound [id] 가 존재하지 않으면 발생합니다.
      */
     suspend fun delete(id: String)
 
     /**
-     * Returns a hot [Flow] of books emitted whenever a book is saved or updated.
+     * book 이 save 또는 update 될 때마다 방출되는 book 의 hot [Flow] 를 반환합니다.
      *
-     * Backed by a [kotlinx.coroutines.flow.MutableSharedFlow] — live-only delivery, no replay.
+     * [kotlinx.coroutines.flow.MutableSharedFlow] 기반이며 live-only delivery 입니다. replay 는 없습니다.
      */
     fun stream(): Flow<Book>
 }

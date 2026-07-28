@@ -9,11 +9,11 @@ import io.bluetape4k.workshop.ktor.repository.BookRepository
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Application service for the book catalog.
+ * book catalog 를 위한 application service 입니다.
  *
  * ## Behavior / Contract
- * - [create] validates all fields via bluetape4k `require*` extensions before delegating to the repository.
- * - [stream] is non-suspend and returns the repository's hot [Flow].
+ * - [create] 는 repository 에 위임하기 전에 bluetape4k `require*` extension 으로 모든 field 를 검증합니다.
+ * - [stream] 은 non-suspend 이며 repository 의 hot [Flow] 를 반환합니다.
  */
 class BookService(private val repository: BookRepository) {
 
@@ -24,22 +24,22 @@ class BookService(private val repository: BookRepository) {
         val YEAR_RANGE = 1..3000
     }
 
-    /** Returns all books in the catalog. */
+    /** catalog 의 모든 book 을 반환합니다. */
     suspend fun list(): List<Book> = repository.findAll()
 
     /**
-     * Returns the book with [id], or `null` if not found.
+     * [id] 의 book 을 반환합니다. 찾지 못하면 `null` 입니다.
      *
-     * @throws DomainError.NotFound if the book does not exist.
+     * @throws DomainError.NotFound book 이 존재하지 않으면 발생합니다.
      */
     suspend fun get(id: String): Book =
         repository.findById(id) ?: throw DomainError.NotFound(id)
 
     /**
-     * Validates and creates a new book.
+     * 새 book 을 검증하고 생성합니다.
      *
-     * @throws IllegalArgumentException if any field is blank, too long, or year is out of range.
-     * @throws DomainError.Conflict if a book with the same id already exists.
+     * @throws IllegalArgumentException 어떤 field 가 blank 이거나 너무 길거나 year 가 range 를 벗어나면 발생합니다.
+     * @throws DomainError.Conflict 같은 id 의 book 이 이미 있으면 발생합니다.
      */
     suspend fun create(book: Book): Book {
         validateBook(book)
@@ -47,10 +47,10 @@ class BookService(private val repository: BookRepository) {
     }
 
     /**
-     * Validates and updates an existing book.
+     * 기존 book 을 검증하고 갱신합니다.
      *
-     * @throws IllegalArgumentException if any field is blank or out of range.
-     * @throws DomainError.NotFound if the book does not exist.
+     * @throws IllegalArgumentException 어떤 field 가 blank 이거나 range 를 벗어나면 발생합니다.
+     * @throws DomainError.NotFound book 이 존재하지 않으면 발생합니다.
      */
     suspend fun update(id: String, book: Book): Book {
         validateBook(book)
@@ -58,16 +58,16 @@ class BookService(private val repository: BookRepository) {
     }
 
     /**
-     * Deletes the book with [id].
+     * [id] 의 book 을 삭제합니다.
      *
-     * @throws DomainError.NotFound if the book does not exist.
+     * @throws DomainError.NotFound book 이 존재하지 않으면 발생합니다.
      */
     suspend fun delete(id: String) = repository.delete(id)
 
     /**
-     * Returns a hot [Flow] of books emitted on each [create] or [update].
+     * 각 [create] 또는 [update] 때 방출되는 book 의 hot [Flow] 를 반환합니다.
      *
-     * Live-only; no replay for late subscribers.
+     * live-only 이며 늦게 구독한 subscriber 에 대한 replay 는 없습니다.
      */
     fun stream(): Flow<Book> = repository.stream()
 
