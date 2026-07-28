@@ -31,14 +31,14 @@ import kotlin.io.path.isDirectory
 import kotlin.io.path.isRegularFile
 
 /**
- * Workshop pipeline that imports a small CSV graph and exports it as NDJSON or GraphML.
+ * 작은 CSV 그래프를 가져와 NDJSON 또는 GraphML로 내보내는 워크숍 pipeline입니다.
  *
- * The pipeline keeps the graph-io adapter contracts visible for learners:
- * CSV uses separate vertex and edge files, export labels are explicit, duplicate
- * vertex ids fail fast, missing edge endpoints fail fast, and GraphML rejects
- * unsupported constructs instead of silently skipping them.
+ * 이 pipeline은 학습자가 graph-io 어댑터 계약을 직접 확인할 수 있게 합니다.
+ * CSV는 정점 파일과 간선 파일을 분리하고, 내보낼 label은 명시하며, 중복
+ * 정점 ID와 누락된 간선 endpoint는 조기 실패합니다. GraphML도 지원하지 않는
+ * 구조를 조용히 건너뛰지 않고 거부합니다.
  *
- * Example:
+ * 예:
  *
  * ```kotlin
  * val pipeline = GraphIoPipeline(tinkerGraphOperations)
@@ -51,16 +51,15 @@ class GraphIoPipeline(
 ) {
 
     /**
-     * Imports vertices and edges from deterministic CSV files.
+     * 결정적인 CSV 파일에서 정점과 간선을 가져옵니다.
      *
-     * The vertex file must contain `id` and `label` columns, and the edge file
-     * must contain `from` and `to` endpoint columns. The original CSV id is
-     * preserved in `_graphIoExternalId` for documentation and inspection. CSV
-     * rows are imported into a scratch TinkerGraph first, then copied into the
-     * target graph only after the adapter returns `COMPLETED`.
+     * 정점 파일에는 `id`와 `label` 열이 있어야 하고, 간선 파일에는 `from`과
+     * `to` endpoint 열이 있어야 합니다. 원본 CSV ID는 문서화와 점검을 위해
+     * `_graphIoExternalId`에 보존합니다. CSV 행은 먼저 scratch TinkerGraph로
+     * 가져온 뒤, 어댑터가 `COMPLETED`를 반환한 경우에만 대상 그래프로 복사합니다.
      *
-     * @return import report from the scratch graph-io adapter; callers should
-     * check `GraphIoStatus.COMPLETED` and empty `failures` before continuing.
+     * @return scratch graph-io 어댑터의 import report입니다. 호출자는 계속하기 전에
+     * `GraphIoStatus.COMPLETED`와 빈 `failures`를 확인해야 합니다.
      */
     fun importCsv(vertices: Path, edges: Path): GraphImportReport {
         val readableVertices = requireReadableFile(vertices, "vertices")
@@ -83,14 +82,13 @@ class GraphIoPipeline(
     }
 
     /**
-     * Exports the current workshop graph to Jackson 3 NDJSON.
+     * 현재 워크숍 그래프를 Jackson 3 NDJSON으로 내보냅니다.
      *
-     * Only the labels used by this example are exported, making the output
-     * deterministic and small enough for focused round-trip tests. The target
-     * path is normalized and must not point at an existing directory.
+     * 이 예제에서 쓰는 label만 내보내므로 출력이 결정적이고 집중적인 round-trip
+     * 테스트에 충분히 작습니다. 대상 경로는 정규화되며 기존 디렉터리를 가리키면 안 됩니다.
      *
-     * @return export report; callers should check `GraphIoStatus.COMPLETED` and
-     * empty `failures` before using the generated NDJSON file.
+     * @return export report입니다. 호출자는 생성된 NDJSON 파일을 사용하기 전에
+     * `GraphIoStatus.COMPLETED`와 빈 `failures`를 확인해야 합니다.
      */
     fun exportJackson3NdJson(target: Path): GraphExportReport =
         Jackson3NdJsonBulkExporter().exportGraph(
@@ -100,14 +98,14 @@ class GraphIoPipeline(
         )
 
     /**
-     * Imports a Jackson 3 NDJSON export back into the graph.
+     * Jackson 3 NDJSON export를 다시 그래프로 가져옵니다.
      *
-     * The same fail-fast duplicate and missing-endpoint policies are used as
-     * the CSV import path so learners see one consistent import contract. The
-     * source path is normalized and must exist as a regular file.
+     * CSV import 경로와 같은 중복 조기 실패 및 누락 endpoint 정책을 사용하므로
+     * 학습자는 일관된 import 계약 하나를 확인할 수 있습니다. 소스 경로는 정규화되며
+     * 일반 파일로 존재해야 합니다.
      *
-     * @return import report; callers should check `GraphIoStatus.COMPLETED` and
-     * empty `failures` before reading from the target graph.
+     * @return import report입니다. 호출자는 대상 그래프에서 읽기 전에
+     * `GraphIoStatus.COMPLETED`와 빈 `failures`를 확인해야 합니다.
      */
     fun importJackson3NdJson(source: Path): GraphImportReport =
         Jackson3NdJsonBulkImporter().importGraph(
@@ -117,14 +115,14 @@ class GraphIoPipeline(
         )
 
     /**
-     * Exports the current workshop graph to GraphML.
+     * 현재 워크숍 그래프를 GraphML로 내보냅니다.
      *
-     * GraphML keeps labels and properties in a single XML document while the
-     * export filter still uses the same explicit vertex and edge label sets.
-     * The target path is normalized and must not point at an existing directory.
+     * GraphML은 label과 속성을 하나의 XML 문서에 담지만, export filter는 동일하게
+     * 명시적인 정점 및 간선 label 집합을 사용합니다. 대상 경로는 정규화되며 기존
+     * 디렉터리를 가리키면 안 됩니다.
      *
-     * @return export report; callers should check `GraphIoStatus.COMPLETED` and
-     * empty `failures` before sharing the generated GraphML file.
+     * @return export report입니다. 호출자는 생성된 GraphML 파일을 공유하기 전에
+     * `GraphIoStatus.COMPLETED`와 빈 `failures`를 확인해야 합니다.
      */
     fun exportGraphMl(target: Path): GraphExportReport =
         GraphMlBulkExporter().exportGraph(
@@ -134,14 +132,14 @@ class GraphIoPipeline(
         )
 
     /**
-     * Imports GraphML using strict unsupported-element handling.
+     * 지원하지 않는 요소를 엄격히 처리하며 GraphML을 가져옵니다.
      *
-     * Unsupported GraphML constructs such as `port` are reported as failures
-     * instead of being skipped, which keeps workshop smoke tests deterministic.
-     * The source path is normalized and must exist as a regular file.
+     * `port` 같은 지원하지 않는 GraphML 구조는 건너뛰지 않고 실패로 보고하므로
+     * 워크숍 smoke test가 결정적으로 유지됩니다. 소스 경로는 정규화되며 일반 파일로
+     * 존재해야 합니다.
      *
-     * @return import report; callers should check `GraphIoStatus.COMPLETED` and
-     * empty `failures` before reading from the target graph.
+     * @return import report입니다. 호출자는 대상 그래프에서 읽기 전에
+     * `GraphIoStatus.COMPLETED`와 빈 `failures`를 확인해야 합니다.
      */
     fun importGraphMl(source: Path): GraphImportReport =
         GraphMlBulkImporter().importGraph(
