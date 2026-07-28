@@ -6,17 +6,15 @@ import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
 
 /**
- * A ranked product recommendation produced by the collaborative filtering algorithm.
+ * collaborative filtering 알고리즘이 만든 순위화된 상품 추천입니다.
  *
- * ## Behavior / Contract
- * - [score] equals the number of distinct co-buyers who purchased both the seed user's
- *   products and [product]. Higher is better.
- * - [sharedBuyers] contains the actual co-buyer vertices that drove the score.
- *   Its size equals [score].
- * - Results are sorted by [score] descending, then by `productId` ascending for
- *   deterministic tie-breaking.
+ * ## 동작 / 계약
+ * - [score]는 seed 사용자의 상품과 [product]를 모두 구매한 서로 다른 co-buyer 수입니다.
+ *   값이 클수록 더 좋은 추천입니다.
+ * - [sharedBuyers]에는 score를 만든 실제 co-buyer 정점이 들어갑니다. 크기는 [score]와 같습니다.
+ * - 결과는 [score] 내림차순, `productId` 오름차순으로 정렬해 tie-breaking을 결정적으로 만듭니다.
  *
- * ## Usage
+ * ## 사용 예
  * ```kotlin
  * val recs = service.recommendProducts(alice.id)
  * recs.forEach { rec ->
@@ -25,11 +23,11 @@ import java.io.Serializable
  * ```
  */
 data class ProductRecommendation(
-    /** The recommended product vertex. */
+    /** 추천된 Product 정점입니다. */
     val product: GraphVertex,
-    /** Count of distinct co-buyers who purchased both [product] and at least one of the seed user's products. */
+    /** [product]와 seed 사용자의 상품 중 하나 이상을 모두 구매한 서로 다른 co-buyer 수입니다. */
     val score: Int,
-    /** Distinct co-buyer vertices that drove the [score]. */
+    /** [score]를 만든 서로 다른 co-buyer 정점입니다. */
     val sharedBuyers: List<GraphVertex>,
 ) : Serializable {
     init {

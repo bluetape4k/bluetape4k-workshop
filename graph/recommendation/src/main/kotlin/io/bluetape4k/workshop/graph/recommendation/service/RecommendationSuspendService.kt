@@ -32,32 +32,33 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 
 /**
- * Coroutine-based graph service for e-commerce product and social follow recommendations.
+ * e-commerce 상품 추천과 social follow 추천을 제공하는 coroutine 기반 그래프 서비스입니다.
  *
- * Mirrors the API of [RecommendationService] with suspend return types for non-blocking
- * use in coroutine contexts.
+ * coroutine context에서 non-blocking으로 사용할 수 있도록 [RecommendationService] API를
+ * suspend 반환 형태로 대응시킵니다.
  *
- * ## Behavior / Contract
- * - [initialize] must be called once before any other method to ensure the named graph exists.
- * - Vertex mutators ([addUser], [addProduct]) are idempotent: find-by-domain-key or create.
- * - [purchase] and [follow] are NOT idempotent — repeated calls create additional edges.
- * - [purchase] validates User → Product endpoints; [follow] validates User → User endpoints.
- * - [recommendProducts] returns `emptyList()` when [userVertexId] is not found or has no purchases.
- * - [recommendFollows] returns `emptyList()` when [userVertexId] is not found or has no follows.
- * - [follow] throws [IllegalArgumentException] when follower equals followee.
- * - Never wrap suspend calls in `runCatching` — [kotlinx.coroutines.CancellationException] must propagate.
- *   This class propagates `CancellationException` correctly; whether underlying [GraphSuspendOperations]
- *   implementations do the same depends on their own coroutine contracts.
+ * ## 동작 / 계약
+ * - named graph가 존재하도록 다른 메서드보다 먼저 [initialize]를 한 번 호출해야 합니다.
+ * - 정점 변경 메서드([addUser], [addProduct])는 멱등입니다. 도메인 키로 찾고 없으면 생성합니다.
+ * - [purchase]와 [follow]는 멱등이 아닙니다. 반복 호출하면 간선이 추가로 생성됩니다.
+ * - [purchase]는 User -> Product endpoint를 검증하고, [follow]는 User -> User endpoint를 검증합니다.
+ * - [recommendProducts]는 [userVertexId]를 찾을 수 없거나 구매가 없으면 `emptyList()`를 반환합니다.
+ * - [recommendFollows]는 [userVertexId]를 찾을 수 없거나 follow가 없으면 `emptyList()`를 반환합니다.
+ * - [follow]는 follower와 followee가 같으면 [IllegalArgumentException]을 던집니다.
+ * - suspend 호출을 `runCatching`으로 감싸지 않습니다. [kotlinx.coroutines.CancellationException]은 전파되어야 합니다.
+ *   이 클래스는 `CancellationException`을 올바르게 전파합니다. 내부 [GraphSuspendOperations]
+ *   구현도 같은지는 각 구현의 coroutine 계약에 따릅니다.
  *
- * ## Known Limitations (workshop demo scope)
- * - **N+1 traversal**: [recommendProducts] issues one neighbor query per seed product and one per
- *   co-buyer; [recommendFollows] issues one outgoing neighbor query per direct follow. The `limit`
- *   parameter bounds output count, not I/O calls. For large graphs, replace with native
- *   Cypher/Gremlin queries.
- * - **TOCTOU in [initialize]**: The `graphExists → createGraph` check is not atomic and assumes
- *   a single-instance deployment. Concurrent callers may attempt duplicate creation — acceptable
- *   for this demo; production code should use advisory locking or server-side upsert semantics.
- * ## Usage
+ * ## 알려진 제한(워크숍 demo 범위)
+ * - **N+1 traversal**: [recommendProducts]는 seed 상품마다 neighbor 조회 1회와 co-buyer마다
+ *   조회 1회를 실행합니다. [recommendFollows]는 direct follow마다 outgoing neighbor 조회 1회를 실행합니다.
+ *   `limit` 인자는 출력 개수만 제한하며 I/O 호출 수를 제한하지 않습니다. 큰 그래프에서는 native
+ *   Cypher/Gremlin query로 교체합니다.
+ * - **[initialize]의 TOCTOU**: `graphExists -> createGraph` 검사는 원자적이지 않고 단일 instance
+ *   배포를 가정합니다. 동시 호출자는 중복 생성을 시도할 수 있습니다. 이 demo에서는 허용하지만,
+ *   production code는 advisory locking 또는 server-side upsert 의미론을 사용해야 합니다.
+ *
+ * ## 사용 예
  * ```kotlin
  * val service = RecommendationSuspendService(ops, "recommendation")
  * service.initialize()
@@ -78,7 +79,7 @@ class RecommendationSuspendService(
     companion object : KLoggingChannel()
 
     /**
-     * Ensures the named graph exists. Safe to call multiple times — no-op when already created.
+     * named graph가 존재하도록 보장합니다. 여러 번 호출해도 안전하며, 이미 생성되어 있으면 no-op입니다.
      */
     suspend fun initialize() {
         if (!ops.graphExists(graphName)) {
@@ -88,14 +89,14 @@ class RecommendationSuspendService(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Vertex mutators (find-or-create by domain key)
+    // 정점 변경 메서드(도메인 키 기준 find-or-create)
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Finds an existing User vertex by [userId] or creates a new one.
+     * [userId]로 기존 User 정점을 찾거나 새로 만듭니다.
      *
-     * @param userId stable domain key (opaque string, e.g. username or UUID)
-     * @param name display name
+     * @param userId 안정적인 도메인 키입니다. username이나 UUID처럼 내부 구조를 드러내지 않는 문자열입니다.
+     * @param name 표시 이름입니다.
      */
     suspend fun addUser(userId: String, name: String): GraphVertex {
         userId.requireNotBlank("userId")
@@ -112,11 +113,11 @@ class RecommendationSuspendService(
     }
 
     /**
-     * Finds an existing Product vertex by [productId] or creates a new one.
+     * [productId]로 기존 Product 정점을 찾거나 새로 만듭니다.
      *
-     * @param productId stable domain key (opaque string, e.g. SKU or UUID)
-     * @param name display name
-     * @param category product category (optional)
+     * @param productId 안정적인 도메인 키입니다. SKU나 UUID처럼 내부 구조를 드러내지 않는 문자열입니다.
+     * @param name 표시 이름입니다.
+     * @param category 상품 category입니다. 선택 값입니다.
      */
     suspend fun addProduct(productId: String, name: String, category: String = ""): GraphVertex {
         productId.requireNotBlank("productId")
@@ -134,19 +135,19 @@ class RecommendationSuspendService(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Edge mutators
+    // 간선 변경 메서드
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Creates a PURCHASED edge from a User vertex to a Product vertex.
+     * User 정점에서 Product 정점으로 향하는 `PURCHASED` 간선을 만듭니다.
      *
-     * Not idempotent — repeated calls create additional edges.
+     * 멱등이 아닙니다. 반복 호출하면 간선이 추가로 생성됩니다.
      *
-     * @param userVertexId graph ID of the User vertex
-     * @param productVertexId graph ID of the Product vertex
-     * @param rating purchase rating 0–5; 0 means unrated (stored only when > 0)
-     * @param purchasedAt ISO-8601 timestamp (optional)
-     * @throws IllegalArgumentException when endpoints are missing or not User → Product.
+     * @param userVertexId User 정점의 graph ID입니다.
+     * @param productVertexId Product 정점의 graph ID입니다.
+     * @param rating 구매 평점입니다. 범위는 0-5이며, 0은 미평가를 뜻하고 0보다 클 때만 저장합니다.
+     * @param purchasedAt ISO-8601 타임스탬프입니다. 선택 값입니다.
+     * @throws IllegalArgumentException endpoint가 없거나 User -> Product 관계가 아니면 발생합니다.
      */
     suspend fun purchase(
         userVertexId: GraphElementId,
@@ -165,13 +166,13 @@ class RecommendationSuspendService(
     }
 
     /**
-     * Creates a unidirectional FOLLOWS edge from [followerVertexId] to [followeeVertexId].
+     * [followerVertexId]에서 [followeeVertexId]로 향하는 단방향 `FOLLOWS` 간선을 만듭니다.
      *
-     * Not idempotent — repeated calls create additional edges.
+     * 멱등이 아닙니다. 반복 호출하면 간선이 추가로 생성됩니다.
      *
-     * @param followerVertexId graph ID of the User who follows
-     * @param followeeVertexId graph ID of the User being followed
-     * @throws IllegalArgumentException when endpoints are equal, missing, or not User → User.
+     * @param followerVertexId follow하는 User의 graph ID입니다.
+     * @param followeeVertexId follow 대상 User의 graph ID입니다.
+     * @throws IllegalArgumentException endpoint가 같거나, 누락되었거나, User -> User 관계가 아니면 발생합니다.
      */
     suspend fun follow(followerVertexId: GraphElementId, followeeVertexId: GraphElementId): GraphEdge {
         requireDistinctEndpoints(followerVertexId, followeeVertexId, "followerVertexId", "followeeVertexId")
@@ -181,28 +182,27 @@ class RecommendationSuspendService(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Recommendation queries
+    // 추천 조회
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Returns products bought by co-buyers of the seed user's products,
-     * ranked by distinct co-buyer count (score).
+     * seed 사용자의 상품을 산 co-buyer들이 구매한 상품을 반환하며,
+     * 서로 다른 co-buyer 수(score) 기준으로 순위를 매깁니다.
      *
-     * Already-purchased products are excluded from results.
+     * 이미 구매한 상품은 결과에서 제외합니다.
      *
-     * **N+1 warning**: issues one neighbor query per product and one per co-buyer.
+     * **N+1 경고**: 상품마다 neighbor 조회 1회와 co-buyer마다 조회 1회를 실행합니다.
      *
-     * @param userVertexId GraphVertex.id returned by [addUser]
-     * @param limit 1..[MAX_RECOMMENDATION_LIMIT]
-     * @return ranked list of [ProductRecommendation]; `emptyList()` when user not found or has no purchases
+     * @param userVertexId [addUser]가 반환한 GraphVertex.id입니다.
+     * @param limit 1..[MAX_RECOMMENDATION_LIMIT] 범위의 반환 상한입니다.
+     * @return 순위화된 [ProductRecommendation] 목록입니다. User를 찾을 수 없거나 구매가 없으면 `emptyList()`입니다.
      */
     suspend fun recommendProducts(userVertexId: GraphElementId, limit: Int = DEFAULT_RECOMMENDATION_LIMIT): List<ProductRecommendation> {
         return explainProductRecommendations(userVertexId, limit).map { it.recommendation }
     }
 
     /**
-     * Returns product recommendations with the concrete co-buyer paths and exclusion rules
-     * that explain each score.
+     * 각 score를 설명하는 구체적인 co-buyer path와 제외 규칙을 포함한 상품 추천을 반환합니다.
      */
     suspend fun explainProductRecommendations(
         userVertexId: GraphElementId,
@@ -216,7 +216,7 @@ class RecommendationSuspendService(
         val myProductIds = myProducts.map { it.id }.toSet()
         val excludedCandidates = myProducts.map { CandidateExclusion(it.id, ALREADY_PURCHASED) }
 
-        // candidateMap: candidateProductId → (candidateVertex, evidence paths)
+        // candidateMap: candidateProductId -> (candidateVertex, evidence path)
         val candidateMap = mutableMapOf<GraphElementId, Pair<GraphVertex, MutableList<ProductEvidencePath>>>()
 
         for (product in myProducts) {
@@ -258,22 +258,22 @@ class RecommendationSuspendService(
     }
 
     /**
-     * Recommends users to follow based on 2-hop FOLLOWS traversal (FOAF).
+     * 2-hop `FOLLOWS` 순회(FOAF)를 기반으로 follow할 User를 추천합니다.
      *
-     * Already-followed users and the seed user itself are excluded from results.
+     * 이미 follow한 User와 seed 사용자 자신은 결과에서 제외합니다.
      *
-     * **N+1 warning**: issues one OUTGOING neighbor query per direct follow.
+     * **N+1 경고**: direct follow마다 OUTGOING neighbor 조회 1회를 실행합니다.
      *
-     * @param userVertexId GraphVertex.id returned by [addUser]
-     * @param limit 1..[MAX_RECOMMENDATION_LIMIT]
-     * @return ranked list of [FollowRecommendation]; `emptyList()` when user not found or has no follows
+     * @param userVertexId [addUser]가 반환한 GraphVertex.id입니다.
+     * @param limit 1..[MAX_RECOMMENDATION_LIMIT] 범위의 반환 상한입니다.
+     * @return 순위화된 [FollowRecommendation] 목록입니다. User를 찾을 수 없거나 follow가 없으면 `emptyList()`입니다.
      */
     suspend fun recommendFollows(userVertexId: GraphElementId, limit: Int = DEFAULT_RECOMMENDATION_LIMIT): List<FollowRecommendation> {
         return explainFollowRecommendations(userVertexId, limit).map { it.recommendation }
     }
 
     /**
-     * Returns follow recommendations with FOAF evidence and excluded candidate rules.
+     * FOAF 증거와 제외된 후보 규칙을 포함한 follow 추천을 반환합니다.
      */
     suspend fun explainFollowRecommendations(
         userVertexId: GraphElementId,

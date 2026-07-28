@@ -31,12 +31,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 /**
- * Abstract test suite for [RecommendationSuspendService].
+ * [RecommendationSuspendService]용 추상 테스트 suite입니다.
  *
- * Concrete subclasses supply [ops] and [service] backed by a specific graph backend.
- * Each test runs against a clean graph — [cleanGraph] drops and re-initializes before every test.
+ * 구체 하위 클래스는 특정 그래프 backend가 뒷받침하는 [ops]와 [service]를 제공합니다.
+ * 각 테스트는 깨끗한 그래프에서 실행됩니다. [cleanGraph]가 매 테스트 전에 그래프를 drop하고 다시 초기화합니다.
  *
- * ## Seed topology (see [seedRecommendation])
+ * ## Seed 토폴로지([seedRecommendation] 참고)
  * ```
  * PURCHASED (13 edges):
  *   alice   → laptop(5), phone(4), tablet(3)
@@ -55,7 +55,7 @@ import org.junit.jupiter.api.TestInstance
  *   frank → alice, bob
  * ```
  *
- * ## Expected results for alice
+ * ## alice의 기대 결과
  * - recommendProducts: [headphones(3), keyboard(1), mouse(1)]
  * - recommendFollows:  [dave(1), eve(1)]
  */
@@ -73,7 +73,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 1. Vertex mutators
+    // 1. 정점 변경 메서드
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
@@ -112,7 +112,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 2. Input validation
+    // 2. 입력 검증
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
@@ -247,7 +247,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // 3. Edge mutators
+    // 3. 간선 변경 메서드
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
@@ -320,7 +320,7 @@ abstract class AbstractRecommendationSuspendTest {
         val results = service.recommendProducts(seed.alice.id)
         val productIds = results.map { it.product.properties["productId"]?.toString() }
 
-        // headphones(3) > keyboard(1) = mouse(1); tie-break: keyboard < mouse alphabetically
+        // headphones(3) > keyboard(1) = mouse(1); tie-break는 사전순으로 keyboard < mouse입니다.
         productIds shouldBeEqualTo listOf(PROD_HEADPHONES, PROD_KEYBOARD, PROD_MOUSE)
     }
 
@@ -414,7 +414,7 @@ abstract class AbstractRecommendationSuspendTest {
         val results = service.recommendFollows(seed.alice.id)
         val userIds = results.map { it.person.properties[UserLabel.userId.name] as? String }
 
-        // dave(1) = eve(1); tie-break: dave < eve alphabetically
+        // dave(1) = eve(1); tie-break는 사전순으로 dave < eve입니다.
         userIds shouldBeEqualTo listOf(USER_DAVE, USER_EVE)
     }
 
@@ -435,7 +435,7 @@ abstract class AbstractRecommendationSuspendTest {
         val results = service.recommendFollows(seed.alice.id)
         val personIds = results.map { it.person.id }
 
-        // alice follows bob and carol — they must not appear in recommendations
+        // alice는 bob과 carol을 follow하므로 추천에 나타나면 안 됩니다.
         personIds shouldNotContain seed.bob.id
         personIds shouldNotContain seed.carol.id
     }
