@@ -1,25 +1,25 @@
-# exposed-domain JDBC helper test dependency
+# exposed-domain JDBC 헬퍼 테스트 의존성
 
 ## Context
 
-`exposed-domain` tests import `io.bluetape4k.exposed.jdbc.selectImplicitAll` while
-also depending on `bluetape4k-exposed-jdbc-tests`.
+`exposed-domain` 테스트는 `bluetape4k-exposed-jdbc-tests`에도 의존하면서
+`io.bluetape4k.exposed.jdbc.selectImplicitAll`을 import한다.
 
 ## Decision or Finding
 
-The `*-jdbc-tests` artifact provides shared test contracts and fixtures, but it
-does not replace the main `bluetape4k-exposed-jdbc` artifact that owns JDBC
-helper extensions.
+`*-jdbc-tests` 아티팩트는 공유 테스트 계약과 픽스처를 제공하지만, JDBC
+헬퍼 extension을 소유한 main `bluetape4k-exposed-jdbc` 아티팩트를 대체하지
+않는다.
 
 ## Outcome
 
-The version catalog now exposes `bluetape4k-exposed-jdbc`, and
-`exposed-domain` declares it as a test dependency alongside
-`bluetape4k-exposed-jdbc-tests`.
+version catalog는 이제 `bluetape4k-exposed-jdbc`를 노출하고,
+`exposed-domain`은 `bluetape4k-exposed-jdbc-tests`와 함께 이를 테스트
+의존성으로 선언한다.
 
 ## Verification
 
-Run:
+실행:
 
 ```bash
 ./gradlew :exposed-domain:compileTestKotlin --continue
@@ -27,6 +27,6 @@ Run:
 
 ## Future Guidance
 
-When a workshop test imports production helper extensions from a bluetape4k
-module, declare the production artifact explicitly. Do not assume a `*-tests`
-artifact exports production helpers transitively.
+workshop 테스트가 bluetape4k 모듈의 production 헬퍼 extension을 import하면
+production 아티팩트를 명시적으로 선언한다. `*-tests` 아티팩트가 production
+헬퍼를 transitively export한다고 가정하지 않는다.
