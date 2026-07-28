@@ -1,15 +1,17 @@
 # Issue 305 Self Review
 
-## Findings
+## 발견 사항
 
-No P0/P1 findings from implementation self-review.
+implementation self-review에서 P0/P1 finding은 없다.
 
-## Notes
+## 참고
 
-- Race tests assert loser cancellation with source lifecycle callbacks.
-- Merge tests assert source and attribute sets because arrival order is intentionally not stable.
-- Materialize tests preserve the original exception object.
+- race test는 source lifecycle callback으로 loser cancellation을 assertion한다.
+- merge test는 arrival order가 의도적으로 안정적이지 않으므로 source와 attribute set을
+  assertion한다.
+- materialize test는 원래 exception object를 보존한다.
 
-## Residual risk
+## 잔여 위험
 
-Full repository tests are not required for the PR scope and are not planned unless CI exposes cross-module failures.
+full repository test는 PR scope에 필요하지 않으며, CI가 cross-module failure를 드러내지 않는 한
+계획하지 않는다.

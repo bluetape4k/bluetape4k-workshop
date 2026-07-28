@@ -1,14 +1,15 @@
 # Issue 287 Graph IO Pipeline Code Review
 
-## Scope
+## 범위
 
 - Issue: #287, `graph-io-pipeline`
 - Branch: `feat/issue-287-graph-io-pipeline`
-- Slice: new `graph/io-pipeline` module, README pair, diagrams, smoke/Examples workflow wiring, diagram validators, and supporting docs.
+- Slice: 새 `graph/io-pipeline` module, README pair, diagram, smoke/Examples workflow wiring,
+  diagram validator, supporting docs.
 
-## Six-Lane Review Result
+## Six-Lane 리뷰 결과
 
-| Lane | Initial Result | Final Result |
+| Lane | 초기 결과 | 최종 결과 |
 |---|---:|---:|
 | Performance | P0=0, P1=0 | P0=0, P1=0 |
 | Stability | P0=0, P1=1 | P0=0, P1=0 |
@@ -17,28 +18,32 @@
 | Developer/API | P0=0, P1=1 | P0=0, P1=0 |
 | User/Caller Docs | P0=0, P1=1 | P0=0, P1=0 |
 
-## Closed Findings
+## 종료된 finding
 
-| Priority | Area | Resolution |
+| 우선순위 | 영역 | 해결 |
 |---|---|---|
-| P1 | Stability | CSV import now writes into a scratch `TinkerGraphOperations` and copies to the target graph only after `GraphIoStatus.COMPLETED`; missing-endpoint tests assert target graph 0/0. |
-| P1 | Ops | Fresh `:graph-io-pipeline:test --rerun-tasks` passes 7 tests, and spec stale-check guidance now matches `79 -> 80`. |
-| P1 | Developer/API | Diagram validators use explicit legacy slug allowlists instead of git-state-based generic skips. |
-| P1 | User docs | NDJSON and GraphML README snippets use real fixture paths and check the CSV seed report before export. |
-| P2 | Developer/API | Public KDoc now states path/report contracts for every public method. |
-| P3 | Tests | Boolean assertions now use `shouldBeTrue()` / `shouldBeFalse()` where applicable. |
+| P1 | Stability | CSV import는 이제 scratch `TinkerGraphOperations`에 기록하고 `GraphIoStatus.COMPLETED` 이후에만 target graph로 copy한다. missing-endpoint test는 target graph 0/0을 assertion한다. |
+| P1 | Ops | fresh `:graph-io-pipeline:test --rerun-tasks`는 7개 test를 통과하고, spec stale-check guidance는 이제 `79 -> 80`과 일치한다. |
+| P1 | Developer/API | diagram validator는 git-state 기반 generic skip 대신 explicit legacy slug allowlist를 사용한다. |
+| P1 | User docs | NDJSON 및 GraphML README snippet은 실제 fixture path를 사용하고 export 전에 CSV seed report를 확인한다. |
+| P2 | Developer/API | public KDoc은 이제 모든 public method의 path/report contract를 명시한다. |
+| P3 | Tests | boolean assertion은 적용 가능한 곳에서 `shouldBeTrue()` / `shouldBeFalse()`를 사용한다. |
 
-## Verification Evidence
+## 검증 증거
 
-- `./gradlew :graph-io-pipeline:test --rerun-tasks --console=plain --no-daemon`: `SUCCESS: Executed 7 tests`, `BUILD SUCCESSFUL`.
-- `./scripts/smoke-validate.sh all-smoke`: includes `:graph-io-pipeline:test`, `BUILD SUCCESSFUL in 12s`.
-- `./scripts/smoke-validate.sh stale-check`: `Active modules: 80 (expected: 80)`, no stale README refs, no broken image links.
+- `./gradlew :graph-io-pipeline:test --rerun-tasks --console=plain --no-daemon`:
+  `SUCCESS: Executed 7 tests`, `BUILD SUCCESSFUL`.
+- `./scripts/smoke-validate.sh all-smoke`: `:graph-io-pipeline:test`를 포함했고
+  `BUILD SUCCESSFUL in 12s`.
+- `./scripts/smoke-validate.sh stale-check`: `Active modules: 80 (expected: 80)`, stale
+  README ref 없음, broken image link 없음.
 - `node scripts/validate-readme-architecture-diagrams.mjs`: `checked=93`, `legacySkipped=92`, `failures=0`.
 - `node scripts/validate-sequence-diagrams.mjs`: `checked=70`, `legacySkipped=61`, `failures=0`.
-- `node scripts/validate-readme-parity.mjs && node scripts/validate-readme-language.mjs`: `failures=0`, `offenders=0`.
-- `actionlint .github/workflows/Examples.yml`: pass.
-- `git diff --check`: pass.
+- `node scripts/validate-readme-parity.mjs && node scripts/validate-readme-language.mjs`:
+  `failures=0`, `offenders=0`.
+- `actionlint .github/workflows/Examples.yml`: 통과.
+- `git diff --check`: 통과.
 
-## Final Gate
+## 최종 gate
 
-Step 6-R final result: `P0 = 0`, `P1 = 0`.
+Step 6-R 최종 결과: `P0 = 0`, `P1 = 0`.
