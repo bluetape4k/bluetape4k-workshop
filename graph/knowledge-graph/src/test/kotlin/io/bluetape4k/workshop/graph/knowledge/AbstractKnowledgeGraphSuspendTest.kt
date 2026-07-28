@@ -16,10 +16,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 /**
- * Abstract suspend test suite for [KnowledgeGraphSuspendService].
+ * [KnowledgeGraphSuspendService]용 추상 suspend 테스트 suite입니다.
  *
- * Concrete subclasses supply [ops] backed by a specific graph backend.
- * See [AbstractKnowledgeGraphTest] for the seed topology.
+ * 구체 하위 클래스는 특정 그래프 backend가 뒷받침하는 [ops]를 제공합니다.
+ * seed 토폴로지는 [AbstractKnowledgeGraphTest]를 참고합니다.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractKnowledgeGraphSuspendTest {
@@ -42,7 +42,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // MENTIONS traversal
+    // MENTIONS 순회
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -64,7 +64,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // RELATED_TO traversal
+    // RELATED_TO 순회
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -89,7 +89,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // IS_A classification
+    // IS_A 분류
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -111,7 +111,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // Path inference
+    // Path 추론
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -170,7 +170,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // Round-trip (H-4 fix)
+    // Round-trip(H-4 수정)
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -185,7 +185,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // Input validation
+    // 입력 검증
     // ─────────────────────────────────────────────────────────────────────
 
     @Test

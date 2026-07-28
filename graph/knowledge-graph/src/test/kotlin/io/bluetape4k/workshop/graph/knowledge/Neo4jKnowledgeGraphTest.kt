@@ -14,9 +14,9 @@ import org.neo4j.driver.Driver
 import org.neo4j.driver.GraphDatabase
 
 /**
- * [AbstractKnowledgeGraphTest] backed by a Neo4j Testcontainer.
+ * Neo4j Testcontainer가 뒷받침하는 [AbstractKnowledgeGraphTest]입니다.
  *
- * Requires Docker. Run with: `./gradlew :graph-knowledge-graph:integrationTest`
+ * Docker가 필요합니다. 실행: `./gradlew :graph-knowledge-graph:integrationTest`
  */
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -43,9 +43,9 @@ class Neo4jKnowledgeGraphTest : AbstractKnowledgeGraphTest() {
 }
 
 /**
- * [AbstractKnowledgeGraphSuspendTest] backed by a Neo4j Testcontainer.
+ * Neo4j Testcontainer가 뒷받침하는 [AbstractKnowledgeGraphSuspendTest]입니다.
  *
- * Requires Docker. Run with: `./gradlew :graph-knowledge-graph:integrationTest`
+ * Docker가 필요합니다. 실행: `./gradlew :graph-knowledge-graph:integrationTest`
  */
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
