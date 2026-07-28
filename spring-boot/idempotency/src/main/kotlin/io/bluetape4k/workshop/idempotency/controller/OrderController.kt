@@ -17,13 +17,13 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 
 /**
- * REST controller for idempotent order creation.
+ * idempotent order creation 을 처리하는 REST controller 입니다.
  *
- * ## Behavior / Contract
- * - `POST /api/orders` requires an `Idempotency-Key` header.
- * - A missing or blank `Idempotency-Key` returns HTTP 400.
- * - First request with a key returns HTTP 201 with the new [OrderResponse].
- * - Repeated request with the same key within the TTL returns HTTP 200 with the original [OrderResponse].
+ * ## 동작 / 계약
+ * - `POST /api/orders` 는 `Idempotency-Key` header 를 요구합니다.
+ * - `Idempotency-Key` 가 없거나 비어 있으면 HTTP 400 을 반환합니다.
+ * - 특정 key 의 첫 요청은 새 [OrderResponse] 와 함께 HTTP 201 을 반환합니다.
+ * - TTL 안에서 같은 key 로 반복 요청하면 원래 [OrderResponse] 와 함께 HTTP 200 을 반환합니다.
  */
 @RestController
 @RequestMapping("/api/orders")
@@ -34,10 +34,10 @@ class OrderController(private val idempotencyService: IdempotencyService) {
     }
 
     /**
-     * Creates an order in a duplicate-safe manner.
+     * 중복에 안전한 방식으로 주문을 생성합니다.
      *
-     * Clients must supply an `Idempotency-Key` header (UUID recommended).
-     * Retrying the request with the same key within 5 minutes returns the original response.
+     * client 는 `Idempotency-Key` header 를 제공해야 합니다(UUID 권장).
+     * 5분 안에 같은 key 로 요청을 재시도하면 원래 response 를 반환합니다.
      */
     @PostMapping
     suspend fun createOrder(

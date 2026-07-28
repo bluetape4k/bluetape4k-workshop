@@ -6,17 +6,17 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 /**
- * Idempotency Key workshop application.
+ * Idempotency Key workshop application 입니다.
  *
- * Demonstrates duplicate-safe command handling using Redis (Redisson RMapCache)
- * and Spring Boot WebFlux with Kotlin coroutines.
+ * Redis(Redisson RMapCache)와 Kotlin coroutine 기반 Spring Boot WebFlux 로
+ * 중복에 안전한 command handling 을 보여줍니다.
  */
 @SpringBootApplication(proxyBeanMethods = false)
 class IdempotencyApplication {
 
     companion object : KLogging() {
         /**
-         * Singleton Redis server started via Testcontainers for local development and tests.
+         * local development 와 test 를 위해 Testcontainers 로 시작되는 singleton Redis server 입니다.
          */
         @JvmStatic
         val redisServer: RedisServer = RedisServer.Launcher.redis
