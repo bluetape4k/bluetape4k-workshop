@@ -14,7 +14,7 @@ class TomcatConfig {
 
     companion object : KLogging()
 
-    /** Shared virtual thread executor — injected into all repos/services */
+    /** 모든 repo/service에 주입되는 공유 virtual thread executor이다. */
     @Bean(destroyMethod = "shutdown")
     fun virtualThreadExecutor(): ExecutorService =
         Executors.newVirtualThreadPerTaskExecutor().apply {

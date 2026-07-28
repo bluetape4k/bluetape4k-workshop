@@ -48,7 +48,7 @@ class ConcurrentPlaceOrderTest : AbstractWebfluxR2dbcTest() {
     @Test
     fun `concurrent orders deplete stock correctly without overselling`() = runSuspendIO {
         val totalStock = 10
-        val concurrency = 20  // more requests than stock
+        val concurrency = 20  // 재고보다 많은 요청 수이다.
         val product = createProduct(stock = totalStock)
         val statuses = ConcurrentLinkedQueue<Int>()
         val customerSeq = AtomicLong(1L)

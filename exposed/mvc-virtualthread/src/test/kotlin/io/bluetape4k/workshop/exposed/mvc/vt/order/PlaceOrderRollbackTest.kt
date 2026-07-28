@@ -38,7 +38,7 @@ class PlaceOrderRollbackTest : AbstractMvcVirtualThreadTest() {
             customerId = 1L,
             lines = listOf(
                 OrderLineRequest(productId = productId, quantity = 1),
-                OrderLineRequest(productId = 99999L, quantity = 1),  // nonexistent
+                OrderLineRequest(productId = 99999L, quantity = 1),  // 존재하지 않는 상품이다.
             )
         )
         webTestClient.post()
