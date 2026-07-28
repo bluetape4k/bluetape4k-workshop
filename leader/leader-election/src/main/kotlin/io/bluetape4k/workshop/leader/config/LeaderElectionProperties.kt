@@ -7,33 +7,33 @@ import java.io.Serializable
 import java.time.Duration
 
 /**
- * Configuration properties for the leader election workshop module.
+ * leader election 워크숍 모듈의 configuration property입니다.
  *
- * Bound from the `leader.*` property prefix.
+ * `leader.*` property prefix에서 바인딩됩니다.
  *
- * ## Behavior / Contract
- * - [leaseTime] must be greater than or equal to [waitTime]; an [IllegalArgumentException] is thrown otherwise.
- * - [redis] defaults to `redis://localhost:6379`.
- * - [jobFixedDelay] is a Spring Duration string (e.g., `"PT10S"` or `"10s"`); defaults to 10 seconds.
+ * ## 동작 / 계약
+ * - [leaseTime]은 [waitTime]보다 크거나 같아야 하며, 그렇지 않으면 [IllegalArgumentException]을 던집니다.
+ * - [redis] 기본값은 `redis://localhost:6379`입니다.
+ * - [jobFixedDelay]는 `"PT10S"` 또는 `"10s"` 같은 Spring Duration 문자열이며, 기본값은 10초입니다.
  */
 @ConfigurationProperties(prefix = "leader")
 data class LeaderElectionProperties(
     val redis: RedisConfig = RedisConfig(),
-    /** How long to wait for the distributed lock before giving up. Bound as java.time.Duration. */
+    /** distributed lock을 포기하기 전에 기다릴 시간입니다. java.time.Duration으로 바인딩됩니다. */
     val waitTime: Duration = Duration.ofSeconds(2),
-    /** How long the lock is held (TTL). Bound as java.time.Duration. */
+    /** lock을 보유하는 시간(TTL)입니다. java.time.Duration으로 바인딩됩니다. */
     val leaseTime: Duration = Duration.ofSeconds(30),
-    /** Fixed delay between scheduled job invocations (Spring Duration string). */
+    /** scheduled job 호출 사이의 fixed delay입니다(Spring Duration 문자열). */
     val jobFixedDelay: String = "PT10S",
 ) : Serializable {
 
     init {
-        // Use Duration comparison directly to avoid toMillis() overflow for large values
+        // 큰 값에서 toMillis() overflow를 피하려고 Duration 비교를 직접 사용합니다.
         leaseTime.requireGe(waitTime, "leaseTime must be >= waitTime")
     }
 
     /**
-     * Redis connection configuration nested inside [LeaderElectionProperties].
+     * [LeaderElectionProperties] 안에 중첩된 Redis connection configuration입니다.
      */
     data class RedisConfig(
         val url: String = "redis://localhost:6379",

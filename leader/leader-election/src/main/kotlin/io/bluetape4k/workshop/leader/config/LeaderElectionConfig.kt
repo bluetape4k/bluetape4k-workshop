@@ -16,22 +16,23 @@ import org.springframework.context.annotation.Configuration
 import kotlin.time.toKotlinDuration
 
 /**
- * Spring Boot configuration for the leader election infrastructure.
+ * leader election infrastructure를 위한 Spring Boot configuration입니다.
  *
- * Wires [RedisClient], [StatefulRedisConnection], [ListeningLeaderElector], and
- * [LettuceSuspendLeaderElector] as Spring beans.
+ * [RedisClient], [StatefulRedisConnection], [ListeningLeaderElector],
+ * [LettuceSuspendLeaderElector]를 Spring bean으로 연결합니다.
  *
- * ## Behavior / Contract
- * - [redisClient] is shut down via `destroyMethod = "shutdown"` on context close.
- * - [lettuceConnection] and [lettuceSuspendConnection] are closed via `destroyMethod = "close"`.
- * - The primary [leaderElector] bean is a [ListeningLeaderElector] wrapping a
- *   [LettuceLeaderElector]. All `runIfLeader` calls emit [io.bluetape4k.leader.LeaderElectionEvent]s
- *   observable via [ListeningLeaderElector.events] or [io.bluetape4k.leader.LeaderElectionListener].
- * - [suspendLeaderElector] opens a second dedicated connection to avoid shared pipelined
- *   command state with the blocking elector.
- * - [LeaderElectionOptions] requires `kotlin.time.Duration`; [LeaderElectionProperties] carries
- *   `java.time.Duration` (Spring `@ConfigurationProperties` binding). `toKotlinDuration()`
- *   conversion is applied explicitly here.
+ * ## 동작 / 계약
+ * - context가 닫힐 때 [redisClient]는 `destroyMethod = "shutdown"`으로 종료합니다.
+ * - [lettuceConnection]과 [lettuceSuspendConnection]은 `destroyMethod = "close"`로 닫습니다.
+ * - primary [leaderElector] bean은 [LettuceLeaderElector]를 감싼 [ListeningLeaderElector]입니다.
+ *   모든 `runIfLeader` 호출은 [ListeningLeaderElector.events] 또는
+ *   [io.bluetape4k.leader.LeaderElectionListener]로 관찰 가능한
+ *   [io.bluetape4k.leader.LeaderElectionEvent]를 내보냅니다.
+ * - [suspendLeaderElector]는 blocking elector와 pipelined command state를 공유하지 않도록
+ *   두 번째 dedicated connection을 엽니다.
+ * - [LeaderElectionOptions]는 `kotlin.time.Duration`을 요구하고, [LeaderElectionProperties]는
+ *   Spring `@ConfigurationProperties` binding용 `java.time.Duration`을 보관합니다.
+ *   여기서 `toKotlinDuration()` 변환을 명시적으로 적용합니다.
  */
 @Configuration
 @EnableConfigurationProperties(LeaderElectionProperties::class)
@@ -40,8 +41,8 @@ class LeaderElectionConfig {
     companion object : KLogging()
 
     /**
-     * Creates a [RedisClient] using the URL from [LeaderElectionProperties].
-     * Shut down via `destroyMethod = "shutdown"` on Spring context close.
+     * [LeaderElectionProperties]의 URL을 사용해 [RedisClient]를 만듭니다.
+     * Spring context가 닫힐 때 `destroyMethod = "shutdown"`으로 종료합니다.
      */
     @Bean(destroyMethod = "shutdown")
     fun redisClient(props: LeaderElectionProperties): RedisClient {
@@ -50,35 +51,34 @@ class LeaderElectionConfig {
     }
 
     /**
-     * Opens the primary [StatefulRedisConnection] for the blocking [LettuceLeaderElector].
-     * Closed via `destroyMethod = "close"` on Spring context close.
+     * blocking [LettuceLeaderElector]용 primary [StatefulRedisConnection]을 엽니다.
+     * Spring context가 닫힐 때 `destroyMethod = "close"`로 닫습니다.
      */
     @Bean(destroyMethod = "close")
     fun lettuceConnection(client: RedisClient): StatefulRedisConnection<String, String> =
         client.connect(StringCodec.UTF8)
 
     /**
-     * Opens a dedicated [StatefulRedisConnection] for [LettuceSuspendLeaderElector].
+     * [LettuceSuspendLeaderElector]용 dedicated [StatefulRedisConnection]을 엽니다.
      *
-     * A separate connection prevents the blocking and suspend electors from sharing
-     * pipelined command state, which can cause ordering issues under concurrent use.
+     * 별도 connection은 blocking elector와 suspend elector가 pipelined command state를
+     * 공유하지 않게 해 concurrent use에서 발생할 수 있는 ordering issue를 막습니다.
      */
     @Bean(name = ["lettuceSuspendConnection"], destroyMethod = "close")
     fun lettuceSuspendConnection(client: RedisClient): StatefulRedisConnection<String, String> =
         client.connect(StringCodec.UTF8)
 
     /**
-     * Creates a [ListeningLeaderElector] that wraps a [LettuceLeaderElector].
+     * [LettuceLeaderElector]를 감싸는 [ListeningLeaderElector]를 만듭니다.
      *
-     * Using [ListeningLeaderElector] as the primary [io.bluetape4k.leader.LeaderElector] bean
-     * ensures all `runIfLeader` calls — including those in
-     * [io.bluetape4k.workshop.leader.job.LeaderScheduledJobService] — emit
-     * [io.bluetape4k.leader.LeaderElectionEvent]s observable by
-     * [io.bluetape4k.workshop.leader.service.LeaderEventListenerService].
+     * [ListeningLeaderElector]를 primary [io.bluetape4k.leader.LeaderElector] bean으로 사용하면
+     * [io.bluetape4k.workshop.leader.job.LeaderScheduledJobService] 안의 호출을 포함한
+     * 모든 `runIfLeader` 호출이 [io.bluetape4k.workshop.leader.service.LeaderEventListenerService]에서
+     * 관찰 가능한 [io.bluetape4k.leader.LeaderElectionEvent]를 내보냅니다.
      *
-     * IMPORTANT: [LeaderElectionOptions] requires `kotlin.time.Duration`, while
-     * [LeaderElectionProperties] stores `java.time.Duration` (Spring binding).
-     * Explicit `toKotlinDuration()` conversion is mandatory.
+     * 중요: [LeaderElectionOptions]는 `kotlin.time.Duration`을 요구하고,
+     * [LeaderElectionProperties]는 Spring binding용 `java.time.Duration`을 저장합니다.
+     * 명시적인 `toKotlinDuration()` 변환이 필수입니다.
      */
     @Bean
     fun leaderElector(
@@ -95,10 +95,10 @@ class LeaderElectionConfig {
     )
 
     /**
-     * Creates a [LettuceSuspendLeaderElector] for coroutine-based leader election.
+     * coroutine 기반 leader election을 위한 [LettuceSuspendLeaderElector]를 만듭니다.
      *
-     * Uses a dedicated [lettuceSuspendConnection] to avoid sharing pipelined command state
-     * with the blocking [leaderElector].
+     * blocking [leaderElector]와 pipelined command state를 공유하지 않도록
+     * dedicated [lettuceSuspendConnection]을 사용합니다.
      */
     @Bean
     fun suspendLeaderElector(

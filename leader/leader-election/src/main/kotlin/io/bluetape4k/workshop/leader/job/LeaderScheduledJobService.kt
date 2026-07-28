@@ -6,20 +6,19 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
 /**
- * Spring service that dispatches registered [LeaderGuardedJob] beans on a fixed schedule.
+ * 등록된 [LeaderGuardedJob] bean을 fixed schedule로 dispatch하는 Spring service입니다.
  *
- * Only the elected leader instance executes each job. Other instances skip silently.
+ * 선출된 leader instance만 각 job을 실행합니다. 다른 instance는 조용히 skip합니다.
  *
- * ## Behavior / Contract
- * - Duplicate [LeaderGuardedJob.lockName] values are detected in `init {}` and cause an
- *   [IllegalStateException] at startup — failing fast prevents silent split-brain execution.
- * - If no jobs are registered, a warning is logged (not an error).
- * - Each job is wrapped in an individual `try/catch`: one failing job does NOT prevent
- *   subsequent jobs from running.
- * - `runIfLeader` returns `null` when this instance did not win the lock (skipped);
- *   a non-null return indicates successful execution on the leader.
+ * ## 동작 / 계약
+ * - 중복된 [LeaderGuardedJob.lockName] 값은 `init {}`에서 감지하고 startup 때
+ *   [IllegalStateException]을 발생시킵니다. 빠른 실패가 조용한 split-brain 실행을 막습니다.
+ * - 등록된 job이 없으면 error가 아니라 warning을 log로 남깁니다.
+ * - 각 job은 개별 `try/catch`로 감쌉니다. 한 job의 실패가 이후 job 실행을 막지 않습니다.
+ * - 이 instance가 lock을 얻지 못하면 `runIfLeader`는 `null`을 반환합니다(skipped).
+ *   non-null 반환은 leader에서 성공적으로 실행되었음을 뜻합니다.
  *
- * ## Usage example
+ * ## 사용 예
  * ```
  * # application.yml
  * leader:
@@ -46,8 +45,8 @@ class LeaderScheduledJobService(
     }
 
     /**
-     * Runs all registered [LeaderGuardedJob] instances on a fixed delay.
-     * Only the leader instance executes each job body; others skip.
+     * 등록된 모든 [LeaderGuardedJob] instance를 fixed delay로 실행합니다.
+     * leader instance만 각 job body를 실행하고, 나머지는 skip합니다.
      */
     @Scheduled(fixedDelayString = "\${leader.job-fixed-delay:PT10S}")
     fun runJobs() {

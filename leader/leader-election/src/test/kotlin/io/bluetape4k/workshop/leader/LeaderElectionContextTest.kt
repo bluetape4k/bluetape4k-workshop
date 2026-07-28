@@ -14,14 +14,14 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 
 /**
- * T0: Spring Boot context loading test.
+ * T0: Spring Boot context loading test입니다.
  *
- * Verifies that the full application context starts correctly with all leader election beans.
- * Catches `@Component` omissions, `Duration` type mismatches, and `@ConfigurationProperties`
- * binding failures at runtime before they reach production.
+ * 전체 application context가 모든 leader election bean과 함께 올바르게 시작되는지 검증합니다.
+ * `@Component` 누락, `Duration` type mismatch, `@ConfigurationProperties` binding 실패를
+ * production에 도달하기 전에 runtime에서 잡습니다.
  *
- * Uses `@DynamicPropertySource` to inject the Testcontainers Redis URL — the
- * `@TestPropertySource(properties = ["...${redis.port}"])` pattern is broken for this use case.
+ * Testcontainers Redis URL을 주입하려고 `@DynamicPropertySource`를 사용합니다.
+ * 이 use case에서는 `@TestPropertySource(properties = ["...${redis.port}"])` pattern이 깨집니다.
  */
 @SpringBootTest
 class LeaderElectionContextTest(

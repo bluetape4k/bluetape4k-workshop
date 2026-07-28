@@ -25,13 +25,13 @@ import java.time.Duration
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Tests for [LeaderEventListenerService] and the [ListeningLeaderElector] event API.
+ * [LeaderEventListenerService]와 [ListeningLeaderElector] event API의 테스트입니다.
  *
- * ## Key behaviours verified
- * - [LeaderElectionListener.onElected] is called when the lock is acquired.
- * - [LeaderElectionListener.onSkipped] is called when the lock is not acquired.
- * - [ListeningLeaderElector.events] Flow emits [LeaderElectionEvent.Elected] on acquisition.
- * - [LeaderEventListenerService] wires both the listener and the Flow collector correctly.
+ * ## 검증하는 주요 동작
+ * - lock을 획득하면 [LeaderElectionListener.onElected]가 호출됩니다.
+ * - lock을 획득하지 못하면 [LeaderElectionListener.onSkipped]가 호출됩니다.
+ * - [ListeningLeaderElector.events] Flow는 획득 시 [LeaderElectionEvent.Elected]를 emit합니다.
+ * - [LeaderEventListenerService]가 listener와 Flow collector를 모두 올바르게 연결합니다.
  */
 class LeaderEventListenerTest : AbstractLeaderElectionTest() {
 
@@ -68,7 +68,7 @@ class LeaderEventListenerTest : AbstractLeaderElectionTest() {
             }
         })
 
-        // Leader holds the lock while follower tries to acquire and gets skipped.
+        // follower가 획득을 시도하고 skip되는 동안 leader가 lock을 보유합니다.
         val leaderElector = newElector()
         leaderElector.runIfLeader(lockName) {
             followerElector.runIfLeader(lockName) { "should-skip" }
@@ -92,7 +92,7 @@ class LeaderEventListenerTest : AbstractLeaderElectionTest() {
 
         listeningElector.runIfLeader(lockName) { "work" }
 
-        // Allow the shared flow emission to propagate to the collector.
+        // shared flow emission이 collector로 전파될 시간을 줍니다.
         val received = withTimeoutOrNull(2_000) { receivedEvents.receive() }
 
         received.shouldNotBeNull()

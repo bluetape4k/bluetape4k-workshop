@@ -6,10 +6,10 @@ import org.junit.jupiter.api.Test
 import io.bluetape4k.codec.Base58
 
 /**
- * T4: Multiple jobs with independent lock names.
+ * T4: 독립 lock name을 가진 multiple job 테스트입니다.
  *
- * A single elector can hold multiple locks simultaneously (one per lockName).
- * Both jobs should be executed when run sequentially by the same instance.
+ * 단일 elector는 lockName마다 하나씩 여러 lock을 동시에 보유할 수 있습니다.
+ * 같은 instance가 순차 실행하면 두 job 모두 실행되어야 합니다.
  */
 class MultiJobIndependenceTest : AbstractLeaderElectionTest() {
 
