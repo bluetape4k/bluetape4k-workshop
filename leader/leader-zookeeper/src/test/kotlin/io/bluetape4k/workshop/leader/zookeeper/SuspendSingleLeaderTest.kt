@@ -12,17 +12,16 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
 
 /**
- * T3: Single-coroutine and concurrent suspend leader election tests for
- * [io.bluetape4k.leader.zookeeper.ZooKeeperSuspendLeaderElector].
+ * T3: [io.bluetape4k.leader.zookeeper.ZooKeeperSuspendLeaderElector]의
+ * 단일 코루틴 및 동시 suspend 리더 선출 테스트이다.
  *
- * ## Behavior verified
- * - A single suspending caller wins leadership and the action returns `"done"`.
- * - When 8 coroutines compete via [SuspendedJobTester] using a shared elector,
- *   `peakConcurrent` never exceeds 1 (strict mutual exclusion) and at least 3
- *   coroutines eventually execute the action body.
+ * ## 검증하는 동작
+ * - 단일 suspending 호출자가 리더십을 획득하고 작업이 `"done"`을 반환한다.
+ * - 8개 코루틴이 [SuspendedJobTester]와 공유 elector를 통해 경쟁할 때
+ *   `peakConcurrent`는 1을 넘지 않으며(엄격한 상호 배제), 최소 3개 코루틴이 결국 작업 본문을 실행한다.
  *
- * NOTE: The concurrent test uses `runSuspendIO` (NOT `runTest`) because real ZooKeeper
- * network I/O does not cooperate with the test virtual-time scheduler used by `runTest`.
+ * 참고: 동시성 테스트는 `runTest`가 아니라 `runSuspendIO`를 사용한다. 실제 ZooKeeper 네트워크 I/O는
+ * `runTest`가 사용하는 테스트 가상 시간 scheduler와 협력하지 않기 때문이다.
  */
 class SuspendSingleLeaderTest : AbstractLeaderZookeeperTest() {
 
@@ -38,7 +37,7 @@ class SuspendSingleLeaderTest : AbstractLeaderZookeeperTest() {
     @Test
     fun `peakConcurrent never exceeds 1 across 8 concurrent coroutines`(): Unit = runSuspendIO {
         val lockName = randomLockName("t3-concurrent")
-        // Shared single suspend elector created ONCE outside the worker block.
+        // worker들이 같은 대상에서 경쟁하도록 공유 단일 suspend elector를 worker 블록 밖에서 한 번만 만든다.
         val elector = newSuspendElector()
 
         val executed = AtomicInteger(0)
@@ -54,7 +53,7 @@ class SuspendSingleLeaderTest : AbstractLeaderZookeeperTest() {
                     peakConcurrent.updateAndGet { max(it, c) }
                     try {
                         executed.incrementAndGet()
-                        // Hold briefly so workers contend yet several can serialize through.
+                        // worker들이 경합하면서도 여러 개가 순차 진입할 수 있도록 잠깐 유지한다.
                         delay(30)
                     } finally {
                         current.decrementAndGet()

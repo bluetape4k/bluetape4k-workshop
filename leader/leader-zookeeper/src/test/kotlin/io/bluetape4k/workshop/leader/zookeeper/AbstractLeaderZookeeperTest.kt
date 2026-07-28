@@ -16,13 +16,13 @@ import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * Abstract base for ZooKeeper leader election tests.
+ * ZooKeeper 리더 선출 테스트의 추상 기반 클래스이다.
  *
- * Uses a single shared [CuratorFramework] in the companion object (initialized lazily once per JVM).
- * InterProcessMutex ownership is keyed on Thread, not ZooKeeper session, so all workers
- * competing via the same [curator] instance will correctly contend for the lock.
+ * companion object에서 하나의 공유 [CuratorFramework]를 사용하며, JVM마다 한 번 lazy 초기화한다.
+ * InterProcessMutex 소유권은 ZooKeeper 세션이 아니라 Thread를 기준으로 관리되므로,
+ * 같은 [curator] 인스턴스로 경쟁하는 모든 worker가 lock을 두고 올바르게 경합한다.
  *
- * Lazy initialization ensures the ZooKeeper container is started before the first test accesses it.
+ * lazy 초기화는 첫 테스트가 접근하기 전에 ZooKeeper 컨테이너가 시작되도록 보장한다.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractLeaderZookeeperTest {
@@ -30,7 +30,7 @@ abstract class AbstractLeaderZookeeperTest {
     companion object : KLogging() {
         val zookeeper: ZooKeeperServer = ZooKeeperServer.Launcher.zookeeper
 
-        /** Shared CuratorFramework — safe to share across threads/coroutines (InterProcessMutex is Thread-keyed). */
+        /** 공유 [CuratorFramework]이다. InterProcessMutex가 Thread 기준이므로 스레드/코루틴 사이에 공유해도 안전하다. */
         val curator: CuratorFramework by lazy {
             ZooKeeperServer.Launcher.getCuratorFramework(zookeeper).also {
                 it.start()
@@ -42,7 +42,7 @@ abstract class AbstractLeaderZookeeperTest {
         }
     }
 
-    // waitTime = 500ms: provides margin for CI timing jitter
+    // waitTime = 500ms: CI 타이밍 흔들림을 흡수할 여유 시간을 둔다.
     fun newElector(basePath: String = "/test/single") =
         ZooKeeperLeaderElector(curator, basePath, LeaderElectionOptions(waitTime = 500.milliseconds))
 

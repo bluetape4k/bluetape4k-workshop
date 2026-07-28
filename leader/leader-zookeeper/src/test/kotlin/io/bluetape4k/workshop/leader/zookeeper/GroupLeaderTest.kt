@@ -9,17 +9,16 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
 
 /**
- * T4 — Verifies that the ZooKeeper group-leader elector admits exactly [maxLeaders] simultaneous
- * holders under concurrent contention.
+ * T4 - 동시 경합 상황에서 ZooKeeper 그룹 리더 elector가 동시에 정확히 [maxLeaders]개 holder만
+ * 허용하는지 검증한다.
  *
- * ## Behavior / Contract
- * - Uses a `CountDownLatch(maxLeaders)` handshake to assert peak concurrency *inside* the action body.
- *   Sampling after `MultithreadingTester.run()` returns is too late — by then all holders have released.
- * - The orchestrator thread MUST start BEFORE `MultithreadingTester.run()` (which is blocking).
- *   If it starts after `run()`, workers would block forever on `releaseLatch.await` since
- *   `run()` only returns after every worker finishes — classic deadlock.
- * - `peakConcurrent` is updated via `AtomicInteger.updateAndGet(max(...))` to safely sample the
- *   maximum across worker threads.
+ * ## 동작 / 계약
+ * - `CountDownLatch(maxLeaders)` 핸드셰이크로 작업 본문 *내부*의 최대 동시 실행 수를 단언한다.
+ *   `MultithreadingTester.run()`이 반환된 뒤 샘플링하면 이미 모든 holder가 해제된 뒤라 너무 늦다.
+ * - orchestrator 스레드는 블로킹 호출인 `MultithreadingTester.run()` **전에** 반드시 시작해야 한다.
+ *   `run()` 뒤에 시작하면 `run()`은 모든 worker가 끝난 뒤에야 반환되므로,
+ *   worker가 `releaseLatch.await`에서 영원히 막히는 전형적인 deadlock이 발생한다.
+ * - `peakConcurrent`는 `AtomicInteger.updateAndGet(max(...))`로 갱신해 여러 worker 스레드의 최댓값을 안전하게 샘플링한다.
  */
 class GroupLeaderTest: AbstractLeaderZookeeperTest() {
 
@@ -37,8 +36,8 @@ class GroupLeaderTest: AbstractLeaderZookeeperTest() {
         val peakConcurrent = AtomicInteger(0)
         val current = AtomicInteger(0)
 
-        // CRITICAL: orchestrator MUST start BEFORE MultithreadingTester.run() (which is blocking).
-        // Otherwise workers would block forever on releaseLatch.await, causing deadlock.
+        // 중요: orchestrator는 블로킹 호출인 MultithreadingTester.run() 전에 반드시 시작해야 한다.
+        // 그렇지 않으면 worker가 releaseLatch.await에서 영원히 막혀 deadlock이 발생한다.
         val orchestrator = Thread {
             check(enteredLatch.await(5, TimeUnit.SECONDS)) {
                 "Not enough workers entered — CI too slow or maxLeaders not reached"

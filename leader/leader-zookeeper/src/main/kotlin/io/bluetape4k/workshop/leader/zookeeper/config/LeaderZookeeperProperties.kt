@@ -8,23 +8,23 @@ import java.io.Serializable
 import java.time.Duration
 
 /**
- * Configuration properties for the ZooKeeper-based leader election workshop module.
+ * ZooKeeper 기반 리더 선출 워크숍 모듈의 설정 프로퍼티이다.
  *
- * ## Behavior / Contract (R16 — ZooKeeper has no TTL)
- * ZooKeeper uses session-bound ephemeral znodes for leader election.
- * Unlike Redis-based election:
- * - There is no lease TTL; leadership is held until the ZooKeeper session expires or is explicitly closed.
- * - `leaseTime` and `autoExtend` are intentionally absent from this class.
- *   Setting `LeaderElectionOptions.autoExtend = true` emits a WARN log and is silently ignored.
- * - Session expiry (e.g., due to network partition or process crash) automatically removes
- *   the ephemeral election node, triggering re-election among competing candidates.
- * - Tune [ZooKeeperConfig.sessionTimeoutMs] relative to your job interval for acceptable failover latency.
+ * ## 동작 / 계약 (R16 - ZooKeeper에는 TTL이 없다)
+ * ZooKeeper는 리더 선출에 세션에 묶인 ephemeral znode를 사용한다.
+ * Redis 기반 선출과 다른 점은 다음과 같다.
+ * - lease TTL이 없으며, ZooKeeper 세션이 만료되거나 명시적으로 닫힐 때까지 리더십을 유지한다.
+ * - 이 클래스에는 `leaseTime`과 `autoExtend`가 의도적으로 없다.
+ *   `LeaderElectionOptions.autoExtend = true`를 설정하면 WARN 로그를 남기고 조용히 무시한다.
+ * - 네트워크 분리나 프로세스 크래시 등으로 세션이 만료되면 ephemeral 선출 노드가 자동으로 제거되고,
+ *   경쟁 후보 사이에서 재선출이 발생한다.
+ * - 허용 가능한 failover 지연 시간에 맞춰 작업 주기 대비 [ZooKeeperConfig.sessionTimeoutMs]를 조정한다.
  *
- * ## Production Considerations
- * - Default [ZooKeeperConfig.connectString] is `localhost:2181` (development only).
- * - Default [ZooKeeperConfig.sessionTimeoutMs] is 60 000 ms — the failover window on hard crash.
- * - ACL and TLS are omitted in this workshop; production deployments should configure an ACLProvider
- *   and SASL/TLS via `CuratorFrameworkFactory.builder()`.
+ * ## 운영 고려사항
+ * - 기본 [ZooKeeperConfig.connectString]은 개발 전용인 `localhost:2181`이다.
+ * - 기본 [ZooKeeperConfig.sessionTimeoutMs]는 60 000 ms이며, 강제 종료 시 failover 대기 구간이 된다.
+ * - 이 워크숍에서는 ACL과 TLS를 생략한다. 운영 배포에서는 `CuratorFrameworkFactory.builder()`로
+ *   ACLProvider와 SASL/TLS를 구성해야 한다.
  */
 @ConfigurationProperties(prefix = "leader.zookeeper")
 data class LeaderZookeeperProperties(
@@ -36,7 +36,7 @@ data class LeaderZookeeperProperties(
     val suspendJobFixedDelay: String = "PT12S",
     val groupJobFixedDelay: String = "PT15S",
     val suspendGroupJobFixedDelay: String = "PT18S",
-    // NOTE: leaseTime / autoExtend intentionally absent — R16: ZooKeeper has no TTL
+    // 참고: R16에 따라 ZooKeeper에는 TTL이 없으므로 leaseTime / autoExtend를 의도적으로 두지 않는다.
 ) : Serializable {
     companion object : KLogging() {
         private const val serialVersionUID = 1L
@@ -45,16 +45,16 @@ data class LeaderZookeeperProperties(
     init {
         basePath.requireNotBlank("basePath")
         groupMaxLeaders.requirePositiveNumber("groupMaxLeaders")
-        // connectString validated inside ZooKeeperConfig.init
+        // connectString은 ZooKeeperConfig.init 내부에서 검증한다.
     }
 
     /**
-     * ZooKeeper connection configuration.
+     * ZooKeeper 연결 설정이다.
      *
-     * @property connectString ZooKeeper connection string (host:port or host:port,host:port,...).
-     * @property sessionTimeoutMs ZooKeeper session timeout in milliseconds. Controls failover latency on crash.
-     * @property connectionTimeoutMs ZooKeeper connection establishment timeout in milliseconds.
-     * @property blockUntilConnectedSeconds Maximum seconds to wait for initial ZooKeeper connection.
+     * @property connectString ZooKeeper 연결 문자열이다. `host:port` 또는 `host:port,host:port,...` 형식을 사용한다.
+     * @property sessionTimeoutMs ZooKeeper 세션 타임아웃을 밀리초 단위로 지정한다. 크래시 시 failover 지연 시간을 좌우한다.
+     * @property connectionTimeoutMs ZooKeeper 연결 수립 타임아웃을 밀리초 단위로 지정한다.
+     * @property blockUntilConnectedSeconds 초기 ZooKeeper 연결을 기다릴 최대 시간을 초 단위로 지정한다.
      */
     data class ZooKeeperConfig(
         val connectString: String = "localhost:2181",

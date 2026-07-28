@@ -11,13 +11,13 @@ import java.util.concurrent.CompletableFuture
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * T1: Single-instance leader election test for the blocking [ZooKeeperLeaderElector].
+ * T1: 블로킹 [ZooKeeperLeaderElector]의 단일 인스턴스 리더 선출 테스트이다.
  *
- * ## Behavior verified
- * - `runIfLeader` returns the action result when a single instance acquires the lock.
- * - `runAsyncIfLeader` returns a [CompletableFuture] whose value matches the action result.
- * - `runIfLeader` returns `null` when a second elector cannot acquire the lock within
- *   its `waitTime` because the first elector is holding it.
+ * ## 검증하는 동작
+ * - 단일 인스턴스가 lock을 획득하면 `runIfLeader`가 작업 결과를 반환한다.
+ * - `runAsyncIfLeader`는 작업 결과와 같은 값을 담은 [CompletableFuture]를 반환한다.
+ * - 첫 번째 elector가 lock을 보유 중이라 두 번째 elector가 자신의 `waitTime` 안에 획득하지 못하면
+ *   `runIfLeader`는 `null`을 반환한다.
  */
 class BlockingSingleLeaderTest : AbstractLeaderZookeeperTest() {
 
@@ -48,10 +48,10 @@ class BlockingSingleLeaderTest : AbstractLeaderZookeeperTest() {
     @Test
     fun `runIfLeader returns null when the lock is held by another elector`() {
         val lockName = randomLockName()
-        // Two distinct electors competing for the same lock.
-        // elector1 (on the main test thread) holds the lock; elector2 has waitTime = 0ms.
-        // InterProcessMutex ownership is keyed on Thread.currentThread(), so elector2
-        // MUST run on a different thread or it would be granted the lock reentrantly.
+        // 서로 다른 두 elector가 같은 lock을 두고 경쟁한다.
+        // elector1은 메인 테스트 스레드에서 lock을 보유하고, elector2는 waitTime = 0ms를 사용한다.
+        // InterProcessMutex 소유권은 Thread.currentThread() 기준이므로, elector2는 반드시
+        // 다른 스레드에서 실행해야 한다. 그렇지 않으면 재진입으로 lock을 획득한다.
         val elector1: ZooKeeperLeaderElector = newElector()
         val elector2 = ZooKeeperLeaderElector(
             curator,
@@ -61,7 +61,7 @@ class BlockingSingleLeaderTest : AbstractLeaderZookeeperTest() {
 
         val result2Ref = java.util.concurrent.atomic.AtomicReference<String?>("not-set")
         val result1 = elector1.runIfLeader(lockName) {
-            // Run elector2 on a separate thread so it does NOT reentrantly own elector1's lock.
+            // elector2가 elector1의 lock을 재진입으로 소유하지 않도록 별도 스레드에서 실행한다.
             val follower = Thread {
                 result2Ref.set(elector2.runIfLeader(lockName) { "follower" })
             }

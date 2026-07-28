@@ -12,13 +12,12 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Blocking single-leader workshop service backed by [ZooKeeperLeaderElector].
+ * [ZooKeeperLeaderElector]를 사용하는 블로킹 단일 리더 워크숍 서비스이다.
  *
- * ## Behavior / Contract
- * - [runLeaderWork] returns the action result when this instance is elected, or `null` when skipped.
- * - The `@Scheduled` entry point logs and swallows non-cancellation exceptions to avoid
- *   killing the Spring scheduler thread.
- * - [executionCount] is exposed for testing; not for production use.
+ * ## 동작 / 계약
+ * - 이 인스턴스가 리더로 선출되면 [runLeaderWork]는 작업 결과를 반환하고, 건너뛰면 `null`을 반환한다.
+ * - `@Scheduled` 진입점은 Spring scheduler 스레드가 중단되지 않도록 취소가 아닌 예외를 로그로 남기고 삼킨다.
+ * - [executionCount]는 테스트 확인용으로만 노출하며 운영 코드에서 사용하지 않는다.
  */
 @Service
 class BlockingLeaderService(
@@ -29,13 +28,13 @@ class BlockingLeaderService(
         const val LOCK_NAME = "workshop:blocking-job"
     }
 
-    /** Number of times this instance was elected and executed the leader action. */
+    /** 이 인스턴스가 리더로 선출되어 리더 작업을 실행한 횟수이다. */
     val executionCount = AtomicInteger(0)
 
     /**
-     * Acquires leadership for [lockName] and executes the work body if elected.
+     * [lockName]에 대한 리더십 획득을 시도하고, 선출된 경우 작업 본문을 실행한다.
      *
-     * @return `"done"` when this instance won the lock, `null` when skipped.
+     * @return 이 인스턴스가 lock을 획득하면 `"done"`, 건너뛰면 `null`이다.
      */
     fun runLeaderWork(lockName: String = LOCK_NAME): String? {
         lockName.requireNotBlank("lockName")
@@ -49,8 +48,9 @@ class BlockingLeaderService(
     }
 
     /**
-     * Scheduled entry point. Catches non-cancellation exceptions so the Spring
-     * scheduler thread remains healthy across invocations.
+     * 스케줄러 진입점이다.
+     *
+     * Spring scheduler 스레드가 반복 실행 사이에도 정상 상태를 유지하도록 취소가 아닌 예외를 잡는다.
      */
     @Scheduled(fixedDelayString = "\${leader.zookeeper.job-fixed-delay:PT10S}")
     fun runScheduled() {

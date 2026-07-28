@@ -13,15 +13,15 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Blocking group-leader workshop service backed by [ZooKeeperLeaderGroupElector].
+ * [ZooKeeperLeaderGroupElector]를 사용하는 블로킹 그룹 리더 워크숍 서비스이다.
  *
- * ## Behavior / Contract
- * - Up to `maxLeaders` instances may simultaneously execute the action body.
- * - [runLeaderWork] returns the action result when this instance entered a slot, or `null`
- *   when all slots were taken within the wait time.
- * - [inspectState] returns the current [LeaderGroupState] for a lock — useful in tests
- *   to verify `activeCount` and `availableSlots`.
- * - [executionCount] is exposed for testing; not for production use.
+ * ## 동작 / 계약
+ * - 최대 `maxLeaders`개 인스턴스가 동시에 작업 본문을 실행할 수 있다.
+ * - 이 인스턴스가 slot에 진입하면 [runLeaderWork]는 작업 결과를 반환하고,
+ *   대기 시간 안에 모든 slot이 사용 중이면 `null`을 반환한다.
+ * - [inspectState]는 lock의 현재 [LeaderGroupState]를 반환한다. 테스트에서
+ *   `activeCount`와 `availableSlots`를 검증할 때 유용하다.
+ * - [executionCount]는 테스트 확인용으로만 노출하며 운영 코드에서 사용하지 않는다.
  */
 @Service
 class GroupLeaderService(
@@ -32,13 +32,13 @@ class GroupLeaderService(
         const val LOCK_NAME = "workshop:group-job"
     }
 
-    /** Number of times this instance entered a leader slot. */
+    /** 이 인스턴스가 leader slot에 진입한 횟수이다. */
     val executionCount = AtomicInteger(0)
 
     /**
-     * Attempts to enter a leader slot for [lockName] and executes the work body if admitted.
+     * [lockName]에 대한 leader slot 진입을 시도하고, 허용된 경우 작업 본문을 실행한다.
      *
-     * @return `"done"` when this instance entered a slot, `null` when no slot was available.
+     * @return 이 인스턴스가 slot에 진입하면 `"done"`, 사용할 수 있는 slot이 없으면 `null`이다.
      */
     fun runLeaderWork(lockName: String = LOCK_NAME): String? {
         lockName.requireNotBlank("lockName")
@@ -52,9 +52,9 @@ class GroupLeaderService(
     }
 
     /**
-     * Inspects the current group-election state for [lockName].
+     * [lockName]의 현재 그룹 선출 상태를 조회한다.
      *
-     * Surfaces `activeCount` and `availableSlots` for tests and operational dashboards.
+     * 테스트와 운영 대시보드가 사용할 수 있도록 `activeCount`와 `availableSlots`를 드러낸다.
      */
     fun inspectState(lockName: String = LOCK_NAME): LeaderGroupState {
         lockName.requireNotBlank("lockName")
@@ -62,8 +62,9 @@ class GroupLeaderService(
     }
 
     /**
-     * Scheduled entry point. Catches non-cancellation exceptions so the Spring
-     * scheduler thread remains healthy across invocations.
+     * 스케줄러 진입점이다.
+     *
+     * Spring scheduler 스레드가 반복 실행 사이에도 정상 상태를 유지하도록 취소가 아닌 예외를 잡는다.
      */
     @Scheduled(fixedDelayString = "\${leader.zookeeper.group-job-fixed-delay:PT15S}")
     fun runScheduled() {
