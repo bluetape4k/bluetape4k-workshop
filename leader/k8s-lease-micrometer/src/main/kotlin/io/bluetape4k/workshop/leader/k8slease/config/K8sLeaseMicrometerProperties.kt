@@ -10,13 +10,13 @@ import java.time.Duration
 import kotlin.time.toKotlinDuration
 
 /**
- * Configuration properties for the Kubernetes Lease Micrometer workshop.
+ * Kubernetes Lease Micrometer 워크숍의 configuration property입니다.
  *
- * ## Behavior / Contract
- * - [enabled] keeps the real Kubernetes client opt-in; default tests never require a cluster.
- * - [identity] maps to `LeaderElectionOptions.nodeId` for Kubernetes Lease audit metadata.
- * - [namespace] and [leaseName] identify the Kubernetes `coordination.k8s.io/v1` Lease.
- * - [leaseTime] must be greater than or equal to [waitTime].
+ * ## 동작 / 계약
+ * - [enabled]는 실제 Kubernetes client를 opt-in으로 유지합니다. 기본 테스트는 cluster를 요구하지 않습니다.
+ * - [identity]는 Kubernetes Lease audit metadata를 위해 `LeaderElectionOptions.nodeId`에 매핑됩니다.
+ * - [namespace]와 [leaseName]은 Kubernetes `coordination.k8s.io/v1` Lease를 식별합니다.
+ * - [leaseTime]은 [waitTime]보다 크거나 같아야 합니다.
  */
 @ConfigurationProperties(prefix = "workshop.leader.k8s")
 data class K8sLeaseMicrometerProperties(
@@ -45,7 +45,7 @@ data class K8sLeaseMicrometerProperties(
     }
 
     /**
-     * Converts Spring-bound Java durations to the Kotlin durations required by `bluetape4k-leader-k8s`.
+     * Spring이 바인딩한 Java duration을 `bluetape4k-leader-k8s`가 요구하는 Kotlin duration으로 변환합니다.
      */
     fun toKubernetesLeaseOptions(): KubernetesLeaseOptions =
         KubernetesLeaseOptions(

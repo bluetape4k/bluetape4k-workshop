@@ -4,7 +4,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 /**
- * Spring Boot entry point for the Kubernetes Lease and Micrometer workshop.
+ * Kubernetes Lease와 Micrometer 워크숍의 Spring Boot 진입점입니다.
  */
 @SpringBootApplication
 class K8sLeaseMicrometerApp

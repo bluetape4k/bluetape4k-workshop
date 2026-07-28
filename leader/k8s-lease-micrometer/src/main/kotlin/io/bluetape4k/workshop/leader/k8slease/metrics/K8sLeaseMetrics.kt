@@ -13,7 +13,7 @@ import kotlin.time.Duration
 import kotlin.time.toJavaDuration
 
 /**
- * Stable tag set used by the workshop-specific Kubernetes Lease meters.
+ * 워크숍 전용 Kubernetes Lease meter가 사용하는 안정적인 tag 집합입니다.
  */
 data class LeaseMetricTags(
     val lockName: String,
@@ -31,10 +31,10 @@ data class LeaseMetricTags(
 }
 
 /**
- * Registers and records Micrometer meters for the Kubernetes Lease workshop.
+ * Kubernetes Lease 워크숍의 Micrometer meter를 등록하고 기록합니다.
  *
- * The meters are intentionally application-level signals. Library-level
- * `leader-micrometer` decorator meters are still available on the real elector path.
+ * 이 meter들은 의도적으로 application-level signal입니다. Library-level
+ * `leader-micrometer` decorator meter는 실제 elector path에서 계속 사용할 수 있습니다.
  */
 class K8sLeaseMetrics(
     private val registry: MeterRegistry,

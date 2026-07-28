@@ -5,17 +5,17 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 
 /**
- * Application boundary for running a coroutine task only when this instance is elected leader.
+ * 이 instance가 leader로 선출된 경우에만 coroutine task를 실행하는 application boundary입니다.
  */
 interface LeaderCoordinator {
     /**
-     * Executes [action] when this instance owns [lockName], or returns `null` when skipped.
+     * 이 instance가 [lockName]을 소유하면 [action]을 실행하고, skip되면 `null`을 반환합니다.
      */
     suspend fun <T> runIfLeader(lockName: String, action: suspend () -> T): T?
 }
 
 /**
- * Smoke-safe coordinator used when the real Kubernetes Lease backend is disabled.
+ * 실제 Kubernetes Lease backend가 비활성화됐을 때 사용하는 smoke-safe coordinator입니다.
  */
 class DisabledLeaderCoordinator : LeaderCoordinator {
     override suspend fun <T> runIfLeader(lockName: String, action: suspend () -> T): T? {
@@ -27,7 +27,7 @@ class DisabledLeaderCoordinator : LeaderCoordinator {
 }
 
 /**
- * Coordinator backed by a `bluetape4k-leader` coroutine elector.
+ * `bluetape4k-leader` coroutine elector가 뒷받침하는 coordinator입니다.
  */
 class ElectorLeaderCoordinator(
     private val elector: SuspendLeaderElector,
