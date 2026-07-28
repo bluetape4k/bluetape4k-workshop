@@ -23,16 +23,16 @@ import io.bluetape4k.workshop.graph.eventlineage.schema.EventLabel
 import io.bluetape4k.workshop.graph.eventlineage.schema.SupersedesLabel
 
 /**
- * Blocking graph service for business event lineage and audit reconstruction.
+ * 비즈니스 이벤트 lineage와 감사 재구성을 위한 블로킹 그래프 서비스입니다.
  *
- * ## Behavior / Contract
- * - [initialize] must be called before graph mutation or query operations.
- * - Vertex mutators are idempotent by domain key.
- * - Edge mutators create direct graph edges and do not deduplicate repeated calls.
- * - Query methods return empty results for unknown IDs and fail fast for blank IDs.
- * - Causal traversal follows `Event -CAUSED_BY-> upstream Event` and is bounded by [maxDepth].
+ * ## 동작 / 계약
+ * - 그래프 변경 또는 조회 작업 전에 [initialize]를 호출해야 합니다.
+ * - 정점 변경 메서드는 도메인 키 기준으로 멱등입니다.
+ * - 간선 변경 메서드는 직접 그래프 간선을 만들며 반복 호출을 중복 제거하지 않습니다.
+ * - 조회 메서드는 알 수 없는 ID에는 빈 결과를 반환하고, 빈 ID에는 조기 실패합니다.
+ * - 인과 순회는 `Event -CAUSED_BY-> upstream Event`를 따르며 [maxDepth]로 제한됩니다.
  *
- * ## Usage
+ * ## 사용 예
  * ```kotlin
  * val service = EventLineageService(ops, "event_lineage")
  * service.initialize()
@@ -50,7 +50,7 @@ class EventLineageService(
     }
 
     /**
-     * Ensures the named graph exists. Safe to call more than once.
+     * named graph가 존재하도록 보장합니다. 여러 번 호출해도 안전합니다.
      */
     fun initialize() {
         if (!ops.graphExists(graphName)) {
@@ -60,7 +60,7 @@ class EventLineageService(
     }
 
     /**
-     * Finds or creates an aggregate state vertex.
+     * aggregate 상태 정점을 찾거나 새로 만듭니다.
      */
     fun addAggregate(
         aggregateId: String,
@@ -85,7 +85,7 @@ class EventLineageService(
     }
 
     /**
-     * Finds or creates an event vertex.
+     * event 정점을 찾거나 새로 만듭니다.
      */
     fun addEvent(
         eventId: String,
@@ -110,7 +110,7 @@ class EventLineageService(
     }
 
     /**
-     * Finds or creates an actor vertex.
+     * actor 정점을 찾거나 새로 만듭니다.
      */
     fun addActor(actorId: String, displayName: String, role: String): GraphVertex {
         actorId.requireNotBlank("actorId")
@@ -128,7 +128,7 @@ class EventLineageService(
     }
 
     /**
-     * Finds or creates a decision vertex.
+     * decision 정점을 찾거나 새로 만듭니다.
      */
     fun addDecision(
         decisionId: String,
@@ -153,37 +153,37 @@ class EventLineageService(
     }
 
     /**
-     * Creates an Aggregate -> Event `EMITS` edge.
+     * Aggregate -> Event `EMITS` 간선을 만듭니다.
      */
     fun emit(aggregateVertexId: GraphElementId, eventVertexId: GraphElementId): GraphEdge =
         ops.createEdge(aggregateVertexId, eventVertexId, EmitsLabel.label, emptyMap())
 
     /**
-     * Creates an Event -> upstream Event `CAUSED_BY` edge.
+     * Event -> upstream Event `CAUSED_BY` 간선을 만듭니다.
      */
     fun causedBy(eventVertexId: GraphElementId, upstreamEventVertexId: GraphElementId): GraphEdge =
         ops.createEdge(eventVertexId, upstreamEventVertexId, CausedByLabel.label, emptyMap())
 
     /**
-     * Creates an Event -> Decision `APPROVED_BY` edge.
+     * Event -> Decision `APPROVED_BY` 간선을 만듭니다.
      */
     fun approvedBy(eventVertexId: GraphElementId, decisionVertexId: GraphElementId): GraphEdge =
         ops.createEdge(eventVertexId, decisionVertexId, ApprovedByLabel.label, emptyMap())
 
     /**
-     * Creates a Decision -> Actor `DECIDED_BY` edge.
+     * Decision -> Actor `DECIDED_BY` 간선을 만듭니다.
      */
     fun decidedBy(decisionVertexId: GraphElementId, actorVertexId: GraphElementId): GraphEdge =
         ops.createEdge(decisionVertexId, actorVertexId, DecidedByLabel.label, emptyMap())
 
     /**
-     * Creates an Event -> previous Event `SUPERSEDES` edge.
+     * Event -> previous Event `SUPERSEDES` 간선을 만듭니다.
      */
     fun supersedes(eventVertexId: GraphElementId, previousEventVertexId: GraphElementId): GraphEdge =
         ops.createEdge(eventVertexId, previousEventVertexId, SupersedesLabel.label, emptyMap())
 
     /**
-     * Counts edges by label for workshop validation and diagnostics.
+     * 워크숍 검증과 진단을 위해 레이블별 간선 수를 셉니다.
      */
     fun edgeCount(edgeLabel: String): Long {
         edgeLabel.requireNotBlank("edgeLabel")
@@ -191,13 +191,13 @@ class EventLineageService(
     }
 
     /**
-     * Returns a graph-element lookup result for an event vertex ID.
+     * event 정점 ID에 대한 그래프 요소 조회 결과를 반환합니다.
      */
     fun findEvent(eventVertexId: GraphElementId): List<LineageNode> =
         listOfNotNull(ops.findVertexById(EventLabel.label, eventVertexId)?.toLineageNode())
 
     /**
-     * Returns aggregate-emitted events sorted by `occurredAt`, then `eventId`.
+     * aggregate가 발행한 이벤트를 `occurredAt`, `eventId` 순서로 정렬해 반환합니다.
      */
     fun eventsForAggregate(aggregateId: String): List<LineageNode> {
         aggregateId.requireNotBlank("aggregateId")
@@ -208,7 +208,7 @@ class EventLineageService(
     }
 
     /**
-     * Returns a bounded causal path from [eventId] back to [rootEventId].
+     * [eventId]에서 [rootEventId]까지 되짚는 제한된 인과 경로를 반환합니다.
      */
     fun causalPath(
         eventId: String,
@@ -229,7 +229,7 @@ class EventLineageService(
     }
 
     /**
-     * Reconstructs emitted events, root causes, and approval evidence for an aggregate.
+     * aggregate의 발행 이벤트, root cause, 승인 증거를 재구성합니다.
      */
     fun auditTrailForAggregate(aggregateId: String): AggregateAuditTrail {
         aggregateId.requireNotBlank("aggregateId")
@@ -252,7 +252,7 @@ class EventLineageService(
     }
 
     /**
-     * Follows `SUPERSEDES` edges from newest event to previous events.
+     * 최신 이벤트에서 이전 이벤트 방향으로 `SUPERSEDES` 간선을 따라갑니다.
      */
     fun supersededChain(eventId: String, maxDepth: Int = MAX_TRAVERSAL_DEPTH): List<LineageNode> {
         eventId.requireNotBlank("eventId")
@@ -274,7 +274,7 @@ class EventLineageService(
     }
 
     /**
-     * Returns emitted events that are neither recognized root events nor linked to an upstream cause.
+     * 인지된 root 이벤트도 아니고 upstream cause에도 연결되지 않은 발행 이벤트를 반환합니다.
      */
     fun missingCausalLinks(aggregateId: String): List<LineageNode> {
         aggregateId.requireNotBlank("aggregateId")

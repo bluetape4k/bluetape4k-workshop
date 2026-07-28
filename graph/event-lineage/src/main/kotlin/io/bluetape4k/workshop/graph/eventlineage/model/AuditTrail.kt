@@ -5,7 +5,7 @@ import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 
 /**
- * Reader-facing graph node snapshot with a stable domain identifier.
+ * 안정적인 도메인 식별자를 가진 독자 대상 그래프 노드 스냅샷입니다.
  */
 @ConsistentCopyVisibility
 data class LineageNode private constructor(
@@ -42,11 +42,11 @@ data class LineageNode private constructor(
 }
 
 /**
- * Directed event lineage path.
+ * 방향이 있는 이벤트 lineage 경로입니다.
  *
- * [nodes] are ordered from the current event toward the requested root event.
- * [edgeLabels] has one fewer entry than [nodes] and records the traversed edge
- * type for each hop.
+ * [nodes]는 현재 이벤트에서 요청한 root 이벤트 방향으로 정렬됩니다.
+ * [edgeLabels]는 [nodes]보다 항목이 하나 적으며, 각 hop에서 순회한 간선
+ * 유형을 기록합니다.
  */
 data class LineagePath(
     val nodes: List<LineageNode>,
@@ -66,7 +66,7 @@ data class LineagePath(
 }
 
 /**
- * Approval evidence linking an event, decision, and deciding actor.
+ * 이벤트, 결정, 결정 주체를 연결하는 승인 증거입니다.
  */
 data class ApprovalEvidence(
     val event: LineageNode,
@@ -79,7 +79,7 @@ data class ApprovalEvidence(
 }
 
 /**
- * Audit trail reconstructed for an aggregate.
+ * aggregate에 대해 재구성한 감사 추적입니다.
  */
 data class AggregateAuditTrail(
     val aggregate: LineageNode,
