@@ -17,7 +17,7 @@ interface EffectOperations {
     fun reconcileNext(): EffectWorkResult
 }
 
-/** Claims briefly, calls the provider outside a transaction, then persists the observed result. */
+/** 짧게 claim하고 transaction 밖에서 provider를 호출한 뒤 관찰한 결과를 영속화합니다. */
 class OutboxEffectWorker(
     private val outbox: JobOutboxRepository,
     private val receipts: JobEffectReceiptRepository,

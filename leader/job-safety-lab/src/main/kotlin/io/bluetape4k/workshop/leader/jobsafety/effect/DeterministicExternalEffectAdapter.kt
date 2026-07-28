@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 enum class DeterministicEffect { CONFIRMED, DECLINED, APPLIED_BUT_TIMEOUT }
 
-/** Thread-safe fake that models idempotent provider execution and ambiguous responses. */
+/** 멱등 provider 실행과 애매한 응답을 모델링하는 thread-safe fake입니다. */
 class DeterministicExternalEffectAdapter(
     private val beforeExecute: () -> Unit = {},
 ) : ExternalEffectPort {

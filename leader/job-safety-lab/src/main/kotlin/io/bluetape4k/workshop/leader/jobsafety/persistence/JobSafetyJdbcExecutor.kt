@@ -54,7 +54,7 @@ class JobSafetyJdbcExecutor(
         }
     }
 
-    /** Removes Exposed's process-wide registration before Spring closes the DataSource. */
+    /** Spring이 DataSource를 닫기 전에 Exposed의 process-wide registration을 제거합니다. */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             TransactionManager.closeAndUnregister(database)

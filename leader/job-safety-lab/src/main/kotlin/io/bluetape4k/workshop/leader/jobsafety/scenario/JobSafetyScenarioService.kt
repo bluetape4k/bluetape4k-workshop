@@ -11,7 +11,7 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.JobRejectionReason
 import io.bluetape4k.workshop.leader.jobsafety.domain.TenantId
 import java.time.YearMonth
 
-/** Produces deterministic unsafe/safe comparisons without wall-clock sleeps. */
+/** wall-clock sleep 없이 결정적인 unsafe/safe 비교를 생성합니다. */
 class JobSafetyScenarioService(
     private val timelineLimit: Int = 128,
 ) {
