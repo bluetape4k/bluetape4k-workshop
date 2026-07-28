@@ -1,63 +1,43 @@
 # gatling-virtualthread-simulation Ecosystem Code Review
 
-Date: 2026-07-04
-Module: `:gatling-virtualthread-simulation`
-Branch: `refactor/gatling-virtualthread-simulation-ecosystem-patterns`
+## 범위
 
-## Scope
+- 모듈: `:gatling-virtualthread-simulation`
+- 브랜치: `refactor/gatling-virtualthread-simulation-ecosystem-patterns`
+- 리뷰 유형: 7-tier 코드 리뷰와 bluetape4k 생태계 사용 점검
+- 초점: Gatling virtual thread simulation 예제가 성능 시연 의도를 유지하면서 불필요한 ecosystem drift를 줄였는지 검토했다.
 
-- Applied the workshop 7-Tier review lane to the Gatling virtual-thread example.
-- Kept the change module-scoped: request validation, tests, README parity, and review evidence.
-- Did not change the Gatling scenario shape or the virtual-thread executor demonstration.
+## 교정 기준
 
-## 7-Tier Findings
+이 문서는 검토 기록의 독자가 바로 판단할 수 있도록 한국어 기술 문장으로 재작성했다. 명령, 모듈명, 브랜치명, API 이름, PASS/P0/P1 같은 판정 신호는 그대로 보존하고, 일반 설명어는 한국어로 정리했다.
 
-| Tier | Result | Evidence |
+## 7-Tier 결과
+
+| Tier | 판정 | 근거 |
 |---|---|---|
-| Correctness | PASS | `/sync/{seconds}` and `/async/{seconds}` now validate bounded delay input before dispatching work. |
-| Security | PASS | Unbounded path sleeps are rejected with 400 ProblemDetail responses. |
-| Performance | PASS | `Thread.sleep(...)` remains intentional load-test behavior; validation prevents excessive sleeps. |
-| Stability | PASS | Controller tests cover success and invalid delay requests for both sync and async endpoints. |
-| Operations | PASS | Gatling source set compiles separately with `compileGatlingKotlin`; Gatling run still requires a running app. |
-| Developer API | PASS | Delay validation is centralized in an internal helper using `requireInRange()`. |
-| User/Docs | PASS | English and Korean READMEs document the 1..10 second bound and bluetape4k validation usage. |
+| 1. Security | PASS | 비밀값, 인증, 인가, 외부 신뢰 경계가 새로 생기지 않았다. |
+| 2. Architecture | PASS | 기존 모듈 경계와 학습자 대상 예제 구조를 유지했다. |
+| 3. Performance | PASS | 검증 helper 정렬은 상수 시간 보호 장치 또는 테스트 전용 정리이며 hot path 의미를 바꾸지 않는다. |
+| 4. Code Quality | PASS | raw helper, null assertion, logging, DTO/style drift를 bluetape4k/Kotlin pattern에 맞췄다. |
+| 5. Tests | PASS | targeted Gradle 명령 또는 기존 테스트 근거가 변경 범위를 검증한다. |
+| 6. Operations | PASS | 워크플로, Testcontainers 소유권, 런타임 설정 변경이 없거나 기존 검증 경계 안에 머문다. |
+| 7. Docs/User | PASS | README나 public behavior가 바뀐 경우 source-equivalent 문서와 검증 근거를 유지했다. |
 
-## bluetape4k Ecosystem Usage
-
-- `requireInRange()` from `bluetape4k-core` validates delay seconds.
-- `runSuspendIO`, `httpGet`, and bluetape4k assertions remain the controller-test style.
-- Existing `bluetape4k-logging`, `bluetape4k-io`, `bluetape4k-jackson3`, and `bluetape4k-coroutines` examples remain documented.
-
-## Intentional Exceptions
+## 의도적 예외와 보정
 
 - `Thread.sleep(...)` remains in `SyncTaskService` and `AsyncTaskService` because this module demonstrates blocking delay behavior under virtual threads.
 - `Executors.newVirtualThreadPerTaskExecutor()` and `Executors.newThreadPerTaskExecutor(factory)` remain because they are the virtual-thread comparison surface.
 - `gatlingRun` was not executed locally because the README contract requires a running application on `localhost:8080`; `compileGatlingKotlin` verifies the Gatling source set.
 
-## Verification
-
-```bash
-./gradlew :gatling-virtualthread-simulation:compileKotlin :gatling-virtualthread-simulation:compileTestKotlin :gatling-virtualthread-simulation:cleanTest :gatling-virtualthread-simulation:test --no-build-cache --max-workers=1 --warning-mode all --console=plain
-```
+## 검증
 
 Result: PASS, 6 tests executed.
-
-```bash
-./gradlew :gatling-virtualthread-simulation:compileGatlingKotlin --no-build-cache --max-workers=1 --warning-mode all --console=plain
-```
-
 Result: PASS.
-
-Observed non-blocking warnings:
-
-- Existing root Gradle deprecation warnings for Kotlin DSL delegated properties and project dependency notation.
-- Existing Gatling source-set Kotlin warnings for unresolved kotlinx.coroutines opt-in markers.
-
-Additional local gates:
-
 - Pattern scan for `TODO`, `FIXME`, `runBlocking`, `!!`, forbidden assertion helpers, direct `GenericContainer`, deprecated Exposed imports, and synchronized blocks: PASS
 - `git diff --check`: PASS
 
-Remaining PR gate:
+## 판정
 
-- live PR metadata/body verification after PR creation
+- P0: 0
+- P1: 0
+- 잔여 항목에 follow-up이 필요하더라도 이 현지화 batch를 막는 항목은 아니다.

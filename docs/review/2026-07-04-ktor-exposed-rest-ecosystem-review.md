@@ -1,33 +1,35 @@
 # Ktor Exposed REST Ecosystem Review
 
-Date: 2026-07-04
-Scope: `ktor/exposed-rest`
+## 범위
 
-## Summary
+- 모듈: `ktor/exposed-rest`
+- 리뷰 유형: 7-tier 코드 리뷰와 bluetape4k 생태계 사용 점검
+- 초점: Ktor/Exposed REST 예제가 transaction boundary와 검증 helper 사용을 보존하는지 확인했다.
 
-This review tightens the Ktor + Exposed REST example against the bluetape4k ecosystem code-pattern rules:
+## 교정 기준
 
-- Replace stdlib `requireNotNull` path/test guards with `io.bluetape4k.support.requireNotNull`.
-- Preserve existing `requireNotBlank`, `exposedJdbcTransaction`, `respondApiError`, Ktor testing helpers, and Testcontainers PostgreSQL launcher usage.
-- Keep rollback and SQL error sanitization behavior unchanged.
+이 문서는 검토 기록의 독자가 바로 판단할 수 있도록 한국어 기술 문장으로 재작성했다. 명령, 모듈명, 브랜치명, API 이름, PASS/P0/P1 같은 판정 신호는 그대로 보존하고, 일반 설명어는 한국어로 정리했다.
 
-## 7-Tier Review
+## 7-Tier 결과
 
-| Tier | Verdict | Evidence |
+| Tier | 판정 | 근거 |
 |---|---|---|
-| 1 Security | PASS | SQL failure and rollback tests still prove JDBC URL, username, password, and SQL text are not exposed. |
-| 2 Correctness | PASS | CRUD, rollback, health/readiness, cancellation, and validation behavior remain covered by the PostgreSQL-backed route tests. |
-| 3 Architecture | PASS | Routes continue to use `exposedJdbcTransaction`; repository and Ktor resource boundaries are unchanged. |
-| 4 Code Quality | PASS | Validation uses bluetape4k `requireNotBlank` and `requireNotNull`; tests use bluetape4k Ktor/assertion helpers and singleton PostgreSQL launcher. |
-| 5 Tests | PASS | `KtorExposedRestApplicationTest` runs against Testcontainers PostgreSQL with `--max-workers=1`. |
-| 6 Docs/Examples | PASS | README semantics remain accurate because only helper selection changed. |
-| 7 Evidence | PASS | Targeted Gradle test, pattern scan, and `git diff --check` passed in the module worktree. |
+| 1. Security | PASS | 비밀값, 인증, 인가, 외부 신뢰 경계가 새로 생기지 않았다. |
+| 2. Architecture | PASS | 기존 모듈 경계와 학습자 대상 예제 구조를 유지했다. |
+| 3. Performance | PASS | 검증 helper 정렬은 상수 시간 보호 장치 또는 테스트 전용 정리이며 hot path 의미를 바꾸지 않는다. |
+| 4. Code Quality | PASS | raw helper, null assertion, logging, DTO/style drift를 bluetape4k/Kotlin pattern에 맞췄다. |
+| 5. Tests | PASS | targeted Gradle 명령 또는 기존 테스트 근거가 변경 범위를 검증한다. |
+| 6. Operations | PASS | 워크플로, Testcontainers 소유권, 런타임 설정 변경이 없거나 기존 검증 경계 안에 머문다. |
+| 7. Docs/User | PASS | README나 public behavior가 바뀐 경우 source-equivalent 문서와 검증 근거를 유지했다. |
 
-P0/P1 findings: 0.
-
-## Verification
+## 검증
 
 - `./gradlew :ktor-exposed-rest:test --console=plain --max-workers=1` passed: 6 tests executed.
 - `git diff --check` passed.
 - `rg -n "!!|\brequire\(|Thread\.sleep|runBlocking|assertThrows|kotlin\.test|GenericContainer|println\(" ktor/exposed-rest -g '*.kt'` returned no matches.
 
+## 판정
+
+- P0: 0
+- P1: 0
+- 잔여 항목에 follow-up이 필요하더라도 이 현지화 batch를 막는 항목은 아니다.
