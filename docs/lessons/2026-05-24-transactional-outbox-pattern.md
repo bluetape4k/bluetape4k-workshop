@@ -1,28 +1,38 @@
 # Transactional Outbox Pattern — Issue #99
 
-## Context
+## 배경
 
-Adding a workshop example showing how to atomically publish domain events to Kafka using the Transactional Outbox pattern.
+Transactional Outbox pattern을 사용해 domain event를 Kafka에 원자적으로 publish하는
+방법을 보여주는 workshop 예제를 추가한다.
 
-## Problem
+## 문제
 
-Naive approach: write to DB then publish to Kafka — if Kafka fails after DB commit, the event is lost. If DB fails after Kafka send, duplicate events occur.
+순진한 접근은 DB에 쓴 뒤 Kafka에 publish하는 것이다. DB commit 이후 Kafka가
+실패하면 event가 유실된다. Kafka send 이후 DB가 실패하면 duplicate event가 발생한다.
 
-## Solution (Outbox Pattern)
+## 해결책(Outbox Pattern)
 
-1. Write domain state + outbox event in **one DB transaction**
-2. Background scheduler polls `outbox_events` table for PENDING events
-3. Publishes to Kafka, marks event PUBLISHED
-4. On failure: increment retryCount; after MAX_RETRY → DEAD_LETTER
+1. domain state + outbox event를 **하나의 DB transaction**에 쓴다.
+2. background scheduler가 `outbox_events` table에서 PENDING event를 poll한다.
+3. Kafka에 publish하고 event를 PUBLISHED로 표시한다.
+4. 실패 시 retryCount를 증가시키고, MAX_RETRY 이후에는 DEAD_LETTER로 보낸다.
 
-## Key Decisions
+## 핵심 결정
 
-- **`@MockkBean(relaxed = true)`** instead of `@MockkSpyBean` — Spring Boot auto-configured `KafkaTemplate` uses type erasure; spy cannot match `KafkaTemplate<String, String>` by exact generic type
-- **`tools.jackson.databind.ObjectMapper`** — Jackson 3.x changed package from `com.fasterxml.jackson` to `tools.jackson`; must import from correct package
-- **`@Bean fun objectMapper()`** — Spring Boot 4 starter (`webmvc.lib` alias) does not always auto-configure `tools.jackson.databind.ObjectMapper`; explicit bean avoids `UnsatisfiedDependencyException`
-- **Single `.where { cond1 and cond2 }`** — Exposed v1 `andWhere {}` returns a type that breaks `.map { it[...] }` receiver inference; combine all conditions in one `.where {}` block
+- **`@MockkSpyBean` 대신 `@MockkBean(relaxed = true)`** — Spring Boot가
+  auto-configure한 `KafkaTemplate`은 type erasure를 사용하므로 spy가
+  `KafkaTemplate<String, String>`을 정확한 generic type으로 match하지 못한다.
+- **`tools.jackson.databind.ObjectMapper`** — Jackson 3.x는 package를
+  `com.fasterxml.jackson`에서 `tools.jackson`으로 변경했으므로 올바른 package에서
+  import해야 한다.
+- **`@Bean fun objectMapper()`** — Spring Boot 4 starter(`webmvc.lib` alias)가
+  항상 `tools.jackson.databind.ObjectMapper`를 auto-configure하지는 않는다. 명시적
+  bean은 `UnsatisfiedDependencyException`을 피한다.
+- **단일 `.where { cond1 and cond2 }`** — Exposed v1 `andWhere {}`는
+  `.map { it[...] }` receiver inference를 깨뜨리는 type을 반환한다. 모든 조건을
+  하나의 `.where {}` block에 결합한다.
 
-## Verification
+## 검증
 
 ```
 7 tests passing (10.7s)
