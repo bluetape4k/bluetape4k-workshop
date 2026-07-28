@@ -1,47 +1,51 @@
 # Issue 368 Diagram QA Review
 
-Date: 2026-07-03
-Scope: milestone 1.3.1 README diagram QA hardening for architecture, sequence, and state SVG/PNG assets.
+날짜: 2026-07-03
+범위: milestone 1.3.1 README diagram QA hardening for architecture, sequence, state SVG/PNG assets.
 
 ## 7-Tier Findings
 
-P0/P1: none remaining.
+남은 P0/P1: 없음.
 
-Resolved before PR:
+PR 전에 해결됨:
 
-- Several generated SVGs passed visually but lacked audit-detectable connector/card metadata. Added `card`, `flow`, marker, and `data-connector` metadata without changing learner-facing content.
-- Sequence diagrams had inconsistent label-pill classes and marker styling. Normalized numbered labels, transparent alt regions, branch-specific call colors, and marker/path color parity.
-- Kotlin Flow event aggregation sequence was rebuilt into the current best-practices layout with framed title/subtitle, participant headers, activation bars, numbered call labels, and light label pills.
-- Kafka fallback sequence had black call-label pills because the rendered class did not match the CSS rule. Added explicit `labelPill` styling and re-rendered the PNG.
-- Architecture connector checks were strengthened by converting sharp mixed-corner bends to rounded bends where the checklist expected them.
+- 여러 generated SVG가 시각적으로는 통과했지만 audit가 감지할 수 있는 connector/card metadata가 부족했다. learner-facing content를 바꾸지 않고 `card`, `flow`, marker, `data-connector` metadata를 추가했다.
+- Sequence diagram에는 label-pill class와 marker styling이 일관되지 않았다. numbered label, transparent alt region, branch-specific call color, marker/path color parity를 정규화했다.
+- Kotlin Flow event aggregation sequence는 framed title/subtitle, participant header, activation bar, numbered call label, light label pill을 갖춘 현재 best-practices layout으로 재구성했다.
+- Kafka fallback sequence는 rendered class가 CSS rule과 맞지 않아 black call-label pill을 표시했다. 명시적 `labelPill` styling을 추가하고 PNG를 다시 rendering했다.
+- Architecture connector check는 checklist가 기대하는 위치에서 sharp mixed-corner bend를 rounded bend로 변환하여 강화했다.
 
-## Evidence
+## 근거
 
 - `node scripts/validate-readme-diagram-qa.mjs $(git diff --name-only 10c6a1078..develop -- 'docs/images/readme-diagrams/*.svg')`
-  - Result: PASS
-  - Scope: 37 SVG targets
+  - 결과: PASS
+  - 범위: 37 SVG targets
   - Weak reference rows: 0
   - Architecture validator: PASS, checked 113
   - Sequence validator: PASS, checked 88
   - Sequence style reference audit: PASS, sequence files 16
 - `python3 /Users/debop/.codex/skills/bluetape4k-diagram/references/diagram-sequence-style-audit.py $(git diff --name-only 10c6a1078..develop -- 'docs/images/readme-diagrams/*sequence*.svg')`
-  - Result: PASS, sequence files 16
+  - 결과: PASS, sequence files 16
 - `git diff --check`: PASS
 - Rendered PNG eye check:
-  - `aws-cloudwatch-imds-observability-readme-architecture-01.png`: PASS, no broken icons, labels centered, legend visible.
-  - `aws-cloudwatch-imds-observability-readme-sequence-01.png`: PASS, alt region transparent, branch labels readable, marker colors match paths.
-  - `aws-s3-vectors-access-grants-readme-architecture-01.png`: PASS, vertical layer flow clear, rounded bends correct, legend visible.
-  - `kafka-outbox-fallback-readme-architecture-01.png`: PASS, cards aligned, connector metadata detected, no PNG arrow mismatch.
-  - `kafka-outbox-fallback-readme-sequence-01.png`: PASS after label-pill styling repair; labels no longer render as black blocks.
-  - `kafka-outbox-fallback-readme-state-01.png`: PASS, lifecycle paths are legible with no sharp-bend or arrowhead defects.
-  - `kotlin-flow-extensions-event-aggregation-readme-architecture-01.png`: PASS, rounded fan-out connectors and layer spacing are legible.
-  - `kotlin-flow-extensions-event-aggregation-readme-sequence-01.png`: PASS, best-practices sequence layout applied.
-  - `kotlin-flow-extensions-metrics-sampling-readme-architecture-01.png`: PASS, centered cards and simple vertical flow.
-  - `kotlin-flow-extensions-metrics-sampling-readme-sequence-01.png`: PASS, labels, alt frames, and dashed calls are readable.
-  - `kotlin-text-processing-readme-architecture-01.png`: PASS, metadata repair did not change visual layout.
-  - `spring-boot-text-moderation-api-readme-architecture-01.png`: PASS, connectors are readable and aligned.
-  - `spring-boot-text-moderation-api-readme-sequence-01.png`: PASS, transparent alt region and branch colors preserved.
+  - `aws-cloudwatch-imds-observability-readme-architecture-01.png`: PASS, broken icon 없음, label centered, legend visible.
+  - `aws-cloudwatch-imds-observability-readme-sequence-01.png`: PASS, alt region transparent, branch label readable, marker color matches paths.
+  - `aws-s3-vectors-access-grants-readme-architecture-01.png`: PASS, vertical layer flow clear, rounded bend correct, legend visible.
+  - `kafka-outbox-fallback-readme-architecture-01.png`: PASS, card aligned, connector metadata detected, PNG arrow mismatch 없음.
+  - `kafka-outbox-fallback-readme-sequence-01.png`: label-pill styling repair 이후 PASS, label이 더 이상 black block으로 render되지 않음.
+  - `kafka-outbox-fallback-readme-state-01.png`: PASS, lifecycle path가 legible하며 sharp-bend나 arrowhead defect 없음.
+  - `kotlin-flow-extensions-event-aggregation-readme-architecture-01.png`: PASS, rounded fan-out connector와 layer spacing이 legible.
+  - `kotlin-flow-extensions-event-aggregation-readme-sequence-01.png`: PASS, best-practices sequence layout 적용.
+  - `kotlin-flow-extensions-metrics-sampling-readme-architecture-01.png`: PASS, centered card와 simple vertical flow.
+  - `kotlin-flow-extensions-metrics-sampling-readme-sequence-01.png`: PASS, label, alt frame, dashed call이 readable.
+  - `kotlin-text-processing-readme-architecture-01.png`: PASS, metadata repair가 visual layout을 바꾸지 않음.
+  - `spring-boot-text-moderation-api-readme-architecture-01.png`: PASS, connector가 readable하고 aligned.
+  - `spring-boot-text-moderation-api-readme-sequence-01.png`: PASS, transparent alt region과 branch color가 보존됨.
 
-## Residual Risk
+## 검토 메모
 
-- #368 is scoped to diagram QA/style. Kafka outbox semantic follow-up work remains tracked separately in #369.
+이 review는 단순히 그림이 렌더링되는지만 본 것이 아니라, 이후 자동 감사가 같은 결함을 다시 잡을 수 있도록 SVG 내부 metadata와 시각적 규칙을 함께 정렬했는지 확인했다. 따라서 검증 근거는 validator 통과와 full-size PNG eye check를 모두 포함한다.
+
+## 잔여 위험
+
+- #368은 diagram QA/style에 한정된다. Kafka outbox semantic follow-up은 #369에서 별도로 추적한다.
