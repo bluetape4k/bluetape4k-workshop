@@ -10,10 +10,10 @@ springBoot {
 }
 
 allOpen {
-    // kotlinx-benchmark requires @State classes to be open
+    // kotlinx-benchmark 는 @State class 가 open 이어야 합니다.
     annotation("org.openjdk.jmh.annotations.State")
     annotation("kotlinx.benchmark.State")
-    // Spring annotations
+    // Spring annotation
     annotation("org.springframework.stereotype.Service")
     annotation("org.springframework.stereotype.Component")
     annotation("org.springframework.stereotype.Repository")
@@ -58,13 +58,13 @@ benchmark {
         register("benchmark")
     }
     configurations {
-        // Disable the default 'main' configuration
+        // 기본 'main' 설정을 비활성화합니다.
         named("main") {
             exclude(".*")
             warmups = 1
             iterations = 1
         }
-        // Profile 1: no cache baseline
+        // Profile 1: cache 없는 baseline
         register("noCache") {
             include(".*NoCacheBenchmark.*")
             warmups = 2
@@ -120,7 +120,7 @@ benchmark {
             iterationTime = 1
             iterationTimeUnit = "s"
         }
-        // All profiles combined
+        // 모든 profile 조합
         register("allProfiles") {
             include(".*Benchmark.*")
             warmups = 2
@@ -132,16 +132,16 @@ benchmark {
 }
 
 dependencies {
-    // Spring Boot Web (minimal — no embedded server needed for benchmark)
+    // Spring Boot Web (benchmark 에 embedded server 가 필요 없는 최소 구성)
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
 
-    // JPA + H2 (in-memory DB for benchmarks)
+    // JPA + H2 (benchmark 용 in-memory DB)
     implementation(libs.spring.boot.starter.data.jpa.lib)
     runtimeOnly(libs.h2.lib)
 
-    // Spring Cache
+    // Spring Cache 의존성
     implementation(libs.spring.boot.starter.cache.lib)
     testImplementation(libs.spring.boot.starter.cache.test)
 
@@ -158,21 +158,21 @@ dependencies {
     implementation(libs.redisson.lib)
     implementation(libs.redisson.spring.boot.starter)
 
-    // bluetape4k utilities
+    // bluetape4k utility
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.cache.core)
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.bluetape4k.testcontainers)
 
-    // Coroutines
+    // 코루틴
     implementation(libs.kotlinx.coroutines.core.lib)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    // Testcontainers (Redis for benchmarks and tests)
+    // Testcontainers (benchmark 와 test 용 Redis)
     testImplementation(libs.testcontainers.junit.jupiter)
 
-    // Testing
+    // 테스트
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.awaitility.kotlin)
     testImplementation(libs.spring.boot.starter.test) {
@@ -182,7 +182,7 @@ dependencies {
     }
     testImplementation(libs.mockk)
 
-    // kotlinx-benchmark runtime (for benchmark source set)
+    // kotlinx-benchmark runtime (benchmark source set 용)
     add("benchmarkImplementation", libs.kotlinx.benchmark.runtime)
     add("benchmarkImplementation", libs.jmh.core)
 }

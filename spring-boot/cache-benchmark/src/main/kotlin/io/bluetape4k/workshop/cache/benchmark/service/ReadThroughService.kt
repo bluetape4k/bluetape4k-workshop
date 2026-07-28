@@ -9,14 +9,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
- * Profile 5 — Read-Through Cache.
+ * Profile 5 — Read-Through Cache 입니다.
  *
- * Read strategy: Redisson map with [ProductMapLoader]-owned database misses.
+ * Read strategy 는 database miss 를 [ProductMapLoader] 가 소유하는 Redisson map 입니다.
  *
- * - On cache hit: return cached value (no DB access).
- * - On cache miss: Redisson invokes the map loader and populates the map.
- * - Writes are intentionally unsupported because this profile demonstrates
- *   read-through ownership only; use write-through or write-behind for writes.
+ * - cache hit: cached value 를 반환합니다(DB 접근 없음).
+ * - cache miss: Redisson 이 map loader 를 호출하고 map 을 채웁니다.
+ * - 이 profile 은 read-through ownership 만 보여주므로 write 는 의도적으로 지원하지 않습니다.
+ *   write 에는 write-through 또는 write-behind 를 사용합니다.
  */
 @Service
 class ReadThroughService(

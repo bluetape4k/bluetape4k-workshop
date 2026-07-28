@@ -9,10 +9,10 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 
 /**
- * Profile 2 — Caffeine Local Cache.
+ * Profile 2 — Caffeine Local Cache 입니다.
  *
- * Uses Spring's `@Cacheable` with a Caffeine-backed [CacheManager].
- * Cache is local (in-JVM), so reads are extremely fast but not shared across instances.
+ * Caffeine 기반 [CacheManager] 와 Spring `@Cacheable` 을 사용합니다.
+ * cache 는 local(in-JVM)이므로 read 는 매우 빠르지만 instance 사이에 공유되지 않습니다.
  */
 @Service
 class CaffeineService(private val productRepository: ProductRepository) : ProductCacheService {

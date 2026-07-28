@@ -14,10 +14,10 @@ import kotlinx.benchmark.Warmup
 import java.util.concurrent.TimeUnit
 
 /**
- * Profile 6 — Write-Through Cache.
+ * Profile 6 — Write-Through Cache 입니다.
  *
- * Measures stable-ID updates through Redisson WRITE_THROUGH. Each [save]
- * returns only after MapWriter persistence is complete.
+ * Redisson WRITE_THROUGH 를 통한 stable-ID update 를 측정합니다.
+ * 각 [save] 는 MapWriter persistence 가 완료된 뒤에만 반환됩니다.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)

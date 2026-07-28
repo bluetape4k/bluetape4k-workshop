@@ -14,11 +14,11 @@ import kotlinx.benchmark.Warmup
 import java.util.concurrent.TimeUnit
 
 /**
- * Profile 3 — Redis distributed cache.
+ * Profile 3 — Redis distributed cache 입니다.
  *
- * Uses Spring's [@Cacheable] with a Redis-backed [CacheManager].
- * Expected: lower throughput than Caffeine (network round-trip to Redis) but
- * higher than no-cache baseline; cache is shared across JVM instances.
+ * Redis 기반 [CacheManager] 와 Spring [@Cacheable] 을 사용합니다.
+ * 예상: Redis network round-trip 때문에 Caffeine 보다 throughput 은 낮지만 no-cache baseline 보다 높고,
+ * cache 는 JVM instance 사이에서 공유됩니다.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)

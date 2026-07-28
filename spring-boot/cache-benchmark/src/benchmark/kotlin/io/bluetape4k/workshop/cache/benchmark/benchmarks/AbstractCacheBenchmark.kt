@@ -10,29 +10,28 @@ import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.context.ConfigurableApplicationContext
 
 /**
- * Base benchmark state providing a shared Spring Boot context and Testcontainers Redis.
+ * 공유 Spring Boot context 와 Testcontainers Redis 를 제공하는 benchmark 기본 state 입니다.
  *
  * ## Lifecycle
- * Subclasses must call [setup] from their own `@Setup`-annotated override.
- * The inherited [teardown] closes the Spring context once after each trial.
+ * subclass 는 각자의 `@Setup` override 에서 [setup] 을 호출해야 합니다.
+ * 상속된 [teardown] 은 각 trial 뒤 Spring context 를 한 번 닫습니다.
  *
- * **No `@Setup` annotation here** — annotating both the abstract parent and each
- * concrete override causes JMH's scanner to invoke setup twice per trial, starting
- * two Spring contexts. Concrete benchmarks do not override [teardown], so its single
- * inherited annotation is safe.
+ * **여기에는 `@Setup` annotation 을 두지 않습니다**. abstract parent 와 concrete override 양쪽에
+ * annotation 을 붙이면 JMH scanner 가 trial 마다 setup 을 두 번 호출해 Spring context 두 개를 시작합니다.
+ * concrete benchmark 는 [teardown] 을 override 하지 않으므로, 상속된 단일 annotation 은 안전합니다.
  *
- * Redis is started via bluetape4k's [RedisServer.Launcher] singleton — the container
- * is shared across all benchmarks in the same JVM.
+ * Redis 는 bluetape4k 의 [RedisServer.Launcher] singleton 으로 시작하며,
+ * 같은 JVM 의 모든 benchmark 가 container 를 공유합니다.
  */
 abstract class AbstractCacheBenchmark {
     companion object : KLoggingChannel() {
-        /** Shared Redis container — started once for the entire JVM. */
+        /** 전체 JVM 에서 한 번 시작되는 공유 Redis container 입니다. */
         val redis: RedisServer by lazy { RedisServer.Launcher.redis }
     }
 
     protected lateinit var context: ConfigurableApplicationContext
 
-    /** Call from the concrete subclass's `@Setup`-annotated method. */
+    /** concrete subclass 의 `@Setup` annotated method 에서 호출합니다. */
     open fun setup() {
         val redisHost = redis.host
         val redisPort = redis.port
@@ -54,7 +53,7 @@ abstract class AbstractCacheBenchmark {
         log.info { "Spring context started. Redis: $redisHost:$redisPort" }
     }
 
-    /** Close the benchmark Spring context after each trial. */
+    /** 각 trial 뒤 benchmark Spring context 를 닫습니다. */
     @TearDown
     open fun teardown() {
         beforeTeardown()
@@ -64,9 +63,9 @@ abstract class AbstractCacheBenchmark {
         }
     }
 
-    /** Allow a benchmark to finish strategy-specific work before the context closes. */
+    /** context 가 닫히기 전 benchmark 가 strategy-specific 작업을 마칠 수 있게 합니다. */
     protected open fun beforeTeardown() = Unit
 
-    /** Returns a valid product ID within the initialized dataset (1..DataInitConfig.PRODUCT_COUNT). */
+    /** 초기화된 dataset 범위(1..DataInitConfig.PRODUCT_COUNT)의 유효한 product ID 를 반환합니다. */
     protected fun sampleId(iteration: Int): Long = ((iteration % DataInitConfig.PRODUCT_COUNT) + 1).toLong()
 }

@@ -42,7 +42,7 @@ class CaffeineServiceTest(
         val existing = productRepository.findAll().first()
         service.findById(existing.id)   // populate cache
         service.evict(existing.id)
-        // After evict, next call goes to DB — should still return the record
+        // evict 이후 다음 호출은 DB 로 가므로 여전히 record 를 반환해야 합니다.
         service.findById(existing.id) shouldBeEqualTo existing
     }
 }

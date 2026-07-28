@@ -14,10 +14,9 @@ import kotlinx.benchmark.Warmup
 import java.util.concurrent.TimeUnit
 
 /**
- * Profile 1 — Baseline: no cache, direct DB access.
+ * Profile 1 — Baseline: cache 없이 DB 에 직접 접근합니다.
  *
- * All reads go through JPA → H2. This is the performance floor all cache
- * profiles are measured against.
+ * 모든 read 는 JPA -> H2 를 거칩니다. 모든 cache profile 을 비교하는 성능 하한선입니다.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
