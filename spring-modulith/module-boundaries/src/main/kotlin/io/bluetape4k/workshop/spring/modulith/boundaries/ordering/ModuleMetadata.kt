@@ -6,6 +6,6 @@ import org.springframework.modulith.PackageInfo
 @ApplicationModule(allowedDependencies = ["catalog :: api"])
 @PackageInfo
 /**
- * Spring Modulith metadata for the ordering application module.
+ * ordering application module 을 위한 Spring Modulith metadata 입니다.
  */
 class ModuleMetadata

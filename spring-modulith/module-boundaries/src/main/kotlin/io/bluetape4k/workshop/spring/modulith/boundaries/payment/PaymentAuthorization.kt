@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.spring.modulith.boundaries.payment
 import java.io.Serializable
 
 /**
- * Payment module state created after an order event is authorized.
+ * order event 가 authorize 된 뒤 생성되는 payment module state 입니다.
  */
 data class PaymentAuthorization(
     val orderId: String,

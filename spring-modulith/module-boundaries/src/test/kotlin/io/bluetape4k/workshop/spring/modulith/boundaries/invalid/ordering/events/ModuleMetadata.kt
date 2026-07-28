@@ -6,6 +6,6 @@ import org.springframework.modulith.PackageInfo
 @NamedInterface("events")
 @PackageInfo
 /**
- * Test-only metadata for the invalid ordering event named interface.
+ * invalid ordering event named interface 를 위한 test-only metadata 입니다.
  */
 class ModuleMetadata

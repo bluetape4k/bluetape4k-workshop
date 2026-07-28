@@ -4,7 +4,7 @@ import java.io.Serializable
 import java.time.Instant
 
 /**
- * Event contract exported by the ordering module after an order is accepted.
+ * 주문 수락 후 ordering module 이 export 하는 event contract 입니다.
  */
 data class OrderPlacedEvent(
     val orderId: String,

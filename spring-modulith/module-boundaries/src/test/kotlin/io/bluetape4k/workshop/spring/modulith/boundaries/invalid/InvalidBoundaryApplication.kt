@@ -4,6 +4,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 
 @SpringBootApplication
 /**
- * Test-only application root used to verify rejected module dependencies.
+ * 거부되어야 하는 module dependency 를 검증하는 test-only application root 입니다.
  */
 class InvalidBoundaryApplication

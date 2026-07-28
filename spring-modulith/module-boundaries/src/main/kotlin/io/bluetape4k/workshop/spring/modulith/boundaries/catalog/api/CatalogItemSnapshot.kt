@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.spring.modulith.boundaries.catalog.api
 import java.io.Serializable
 
 /**
- * Read-only item data exported by the catalog module.
+ * catalog module 이 export 하는 read-only item data 입니다.
  */
 data class CatalogItemSnapshot(
     val sku: String,

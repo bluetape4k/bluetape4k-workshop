@@ -5,7 +5,7 @@ import io.bluetape4k.workshop.spring.modulith.boundaries.catalog.api.CatalogLook
 import org.springframework.stereotype.Component
 
 /**
- * Deterministic catalog data store for the workshop scenario.
+ * workshop scenario 를 위한 결정적 catalog data store 입니다.
  */
 @Component
 class InMemoryCatalogRepository : CatalogLookup {

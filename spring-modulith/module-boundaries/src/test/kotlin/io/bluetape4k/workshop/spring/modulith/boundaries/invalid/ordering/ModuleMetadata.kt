@@ -4,6 +4,6 @@ import org.springframework.modulith.PackageInfo
 
 @PackageInfo
 /**
- * Test-only metadata for the invalid ordering module fixture.
+ * invalid ordering module fixture 를 위한 test-only metadata 입니다.
  */
 class ModuleMetadata

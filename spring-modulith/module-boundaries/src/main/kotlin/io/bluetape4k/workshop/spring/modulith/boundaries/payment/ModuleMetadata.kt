@@ -6,6 +6,6 @@ import org.springframework.modulith.PackageInfo
 @ApplicationModule(allowedDependencies = ["ordering :: events"])
 @PackageInfo
 /**
- * Spring Modulith metadata for the payment application module.
+ * payment application module 을 위한 Spring Modulith metadata 입니다.
  */
 class ModuleMetadata
