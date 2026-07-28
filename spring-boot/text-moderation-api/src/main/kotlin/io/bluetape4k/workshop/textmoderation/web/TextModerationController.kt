@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * HTTP boundary for text moderation requests.
+ * text moderation request 를 처리하는 HTTP boundary 입니다.
  */
 @RestController
 @RequestMapping("/api/moderation", produces = [MediaType.APPLICATION_JSON_VALUE])

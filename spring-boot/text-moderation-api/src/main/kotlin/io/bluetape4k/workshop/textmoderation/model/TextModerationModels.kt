@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.textmoderation.model
 import java.io.Serializable
 
 /**
- * JSON request for a text moderation analysis.
+ * text moderation analysis 를 위한 JSON request 입니다.
  */
 data class ModerationRequest(
     val text: String = "",
@@ -14,7 +14,7 @@ data class ModerationRequest(
 }
 
 /**
- * Normalized text moderation response returned by the API.
+ * API 가 반환하는 normalized text moderation response 입니다.
  */
 data class ModerationResponse(
     val detectedLanguage: String?,
@@ -29,7 +29,7 @@ data class ModerationResponse(
 }
 
 /**
- * Stable error response for moderation request failures.
+ * moderation request failure 에 대한 안정적인 error response 입니다.
  */
 data class ModerationErrorResponse(
     val status: Int,
