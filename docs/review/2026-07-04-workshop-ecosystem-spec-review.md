@@ -1,44 +1,44 @@
-# Workshop Ecosystem Code Patterns Spec Review
+# Workshop Ecosystem Code Patterns 사양 리뷰
 
-Date: 2026-07-04
-Scope: `docs/superpowers/specs/2026-07-04-workshop-ecosystem-code-patterns-design.md`
-Review gate: Step 2-R, 7-Tier spec review
+날짜: 2026-07-04
+범위: `docs/superpowers/specs/2026-07-04-workshop-ecosystem-code-patterns-design.md`
+리뷰 게이트: Step 2-R, 7-Tier spec review
 
-## Reviewed Evidence
+## 검토한 근거
 
 - `./gradlew projects --console=plain`: `BUILD SUCCESSFUL in 11s`.
 - `./gradlew build --max-workers=1 --console=plain`: `BUILD SUCCESSFUL in 2m 44s`.
-- GitHub state at discovery: no open issues, no open PRs.
-- Prior completed work checked: PR #379, PR #389, PR #393; issues #390, #391, #392, and #380.
-- GNO evidence checked for prior workshop ecosystem-pattern and coverage/validation matrix work.
-- Initial pattern scan: 62 of 100 registered Gradle projects had at least one candidate pattern.
+- 탐색 시점의 GitHub 상태: 열린 issue 없음, 열린 PR 없음.
+- 이전 완료 작업 확인: PR #379, PR #389, PR #393; issue #390, #391, #392, #380.
+- 이전 workshop ecosystem-pattern 및 coverage/validation matrix 작업에 대한 GNO 근거를 확인했다.
+- 초기 pattern scan: 등록된 Gradle project 100개 중 62개가 하나 이상의 후보 pattern을 갖고 있었다.
 
-## Review Lanes
+## 리뷰 Lane
 
-| Lane | Initial Verdict | Findings | Resolution |
+| Lane | 초기 판정 | 발견 사항 | 해결 |
 |---|---|---|---|
-| Performance | PASS | P2/P3: hot-path prioritization, blocking/sleep classification, benchmark/perf-demo rules, wave-boundary definition | Added cache/gatling candidates, blocking classification table, perf-demo validation, fixed wave-boundary rule |
-| Stability | BLOCK | P1: no-op stability evidence gap; Testcontainers cross-worktree parallel risk. P2/P3: cancellation/lifecycle, per-wave refresh, orphan residue, no-op schema | Added no-op 7-Tier P0/P1 requirement, serial Testcontainers queue, stability-affecting edit rule, per-wave refresh, residue inspection, matrix schema |
-| Security | BLOCK | P1: non-echoing sensitive/public error contracts and token/key leakage scan missing. P2: unsafe deserialization/default typing criteria missing | Added security acceptance criteria, leak scan, deserialization boundary severity |
-| Operator/Ops | BLOCK | P1: no one-module-one-branch runbook; live CI/check evidence missing. P2: no-op matrix path/schema, observability evidence, rollback/supersede rules | Added branch/PR runbook, live metadata/check gates, matrix path/schema, observability criteria, rollback/supersede rules |
-| Developer/API | PASS | P2: teaching-intent blocking/demo code and snippets need explicit carve-out. P3: no-op matrix schema | Added blocking/teaching-intent classification table and matrix schema |
-| User/Caller | BLOCK | P1: README/KDoc language policy missing. P2: PR body does not require learner-facing teaching value | Added README/KDoc policy, grep-check rule, and `What this teaches` PR body requirement |
+| Performance | PASS | P2/P3: hot-path 우선순위, blocking/sleep 분류, benchmark/perf-demo 규칙, wave-boundary 정의 | cache/gatling 후보, blocking 분류표, perf-demo 검증을 추가하고 wave-boundary 규칙을 보정했다. |
+| Stability | BLOCK | P1: no-op 안정성 근거 공백, Testcontainers cross-worktree 병렬 위험. P2/P3: cancellation/lifecycle, per-wave refresh, orphan residue, no-op schema | no-op 7-Tier P0/P1 요구사항, 직렬 Testcontainers queue, 안정성 영향 edit 규칙, per-wave refresh, residue inspection, matrix schema를 추가했다. |
+| Security | BLOCK | P1: 민감/public error contract의 non-echoing 보장과 token/key leakage scan 누락. P2: unsafe deserialization/default typing 기준 누락 | security acceptance criteria, leak scan, deserialization boundary severity를 추가했다. |
+| Operator/Ops | BLOCK | P1: one-module-one-branch runbook 없음, live CI/check 근거 누락. P2: no-op matrix path/schema, observability evidence, rollback/supersede rules | branch/PR runbook, live metadata/check gate, matrix path/schema, observability 기준, rollback/supersede rule을 추가했다. |
+| Developer/API | PASS | P2: teaching-intent blocking/demo code와 snippet에 명시적 예외가 필요함. P3: no-op matrix schema | blocking/teaching-intent 분류표와 matrix schema를 추가했다. |
+| User/Caller | BLOCK | P1: README/KDoc 언어 정책 누락. P2: PR 본문이 learner-facing teaching value를 요구하지 않음 | README/KDoc 정책, grep-check 규칙, `What this teaches` PR 본문 요구사항을 추가했다. |
 
-## Rerun Result
+## 재실행 결과
 
-Affected lanes rerun after spec edits:
+사양 수정 후 영향 lane을 재실행했다.
 
-| Lane | Rerun Verdict | Evidence |
+| Lane | 재실행 판정 | 근거 |
 |---|---|---|
-| Stability | PASS | Prior P1/P2/P3 resolved by spec sections for no-op stability review, Testcontainers serial rule, classification table, per-wave refresh, residue inspection, and matrix schema |
-| Security | PASS | Prior P1/P2 resolved by security acceptance criteria for non-echoing contracts, sensitive value scan, and unsafe deserialization |
-| Operator/Ops | PASS | Prior P1/P2 resolved by branch/PR runbook, live PR/CI gates, no-op matrix path/schema, observability criteria, and rollback/supersede rules |
-| User/Caller | PASS | Prior P1/P2 resolved by README/KDoc policy and PR `What this teaches` requirement |
+| Stability | PASS | no-op stability review, Testcontainers 직렬 규칙, 분류표, per-wave refresh, residue inspection, matrix schema 사양 섹션으로 기존 P1/P2/P3를 해결했다. |
+| Security | PASS | non-echoing contract, 민감 값 scan, unsafe deserialization에 대한 security acceptance criteria로 기존 P1/P2를 해결했다. |
+| Operator/Ops | PASS | branch/PR runbook, live PR/CI gate, no-op matrix path/schema, observability criteria, rollback/supersede rule로 기존 P1/P2를 해결했다. |
+| User/Caller | PASS | README/KDoc 정책과 PR `What this teaches` 요구사항으로 기존 P1/P2를 해결했다. |
 
-## Integrated Verdict
+## 통합 판정
 
 P0: 0
 P1: 0
-P2/P3: incorporated into the spec or deferred into implementation-plan checks.
+P2/P3: 사양에 반영했거나 implementation-plan 점검으로 이관했다.
 
-Step 2-R status: PASS.
+Step 2-R 상태: PASS.
