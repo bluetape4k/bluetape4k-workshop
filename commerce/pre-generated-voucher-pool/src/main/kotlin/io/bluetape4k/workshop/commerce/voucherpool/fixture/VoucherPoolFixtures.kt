@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 
-/** Closed catalog of deterministic voucher-pool recovery demonstrations. */
+/** deterministic voucher-pool recovery demonstration의 닫힌 catalog입니다. */
 internal enum class FixtureScenario(val slug: String) {
     REDIS_OUTAGE("redis-outage"),
     BLOOM_FALSE_POSITIVE("bloom-false-positive"),
@@ -23,7 +23,7 @@ internal enum class FixtureScenario(val slug: String) {
     RESTORE_SMOKE("restore-smoke"),
 }
 
-/** Serializable snapshot of one process-local fixture signal. */
+/** process-local fixture signal 하나의 serializable snapshot입니다. */
 internal data class FixtureState(
     val scenario: FixtureScenario,
     val armed: Boolean,
@@ -48,10 +48,10 @@ internal data class FixtureState(
 }
 
 /**
- * Transaction-aware fixture signals for deterministic failure-path demonstrations.
+ * deterministic failure-path demonstration을 위한 transaction-aware fixture signal입니다.
  *
- * Configuration and arming are applied only after the enclosing database transaction commits.
- * Each armed signal can be consumed once and remains consumed until it is configured again.
+ * configuration과 arming은 감싸는 database transaction이 commit된 뒤에만 적용됩니다.
+ * 각 armed signal은 한 번만 소비할 수 있고 다시 configure될 때까지 consumed 상태로 남습니다.
  */
 @Component
 @Profile("test")

@@ -22,7 +22,7 @@ import java.io.Serializable
 import java.time.Instant
 import java.util.UUID
 
-/** Customer-owned reservation and allocation HTTP workflow. */
+/** customer-owned reservation 및 allocation HTTP workflow입니다. */
 @RestController
 @RequestMapping("/api/v1")
 internal class CustomerVoucherPoolController(
@@ -139,14 +139,14 @@ internal class CustomerVoucherPoolController(
     }
 }
 
-/** Closed JSON object for reservation creation. */
+/** reservation 생성을 위한 닫힌 JSON object입니다. */
 internal class ReserveVoucherRequest : Serializable {
     companion object {
         private const val serialVersionUID: Long = 1L
     }
 }
 
-/** Explicit acknowledgement that a one-time reveal response was lost. */
+/** one-time reveal response가 손실되었음을 명시적으로 acknowledge합니다. */
 internal data class ReplaceLostRevealRequest(
     @field:AssertTrue
     val confirmLostReveal: Boolean,
@@ -156,7 +156,7 @@ internal data class ReplaceLostRevealRequest(
     }
 }
 
-/** Voucher code supplied only to the verification-backed redemption command. */
+/** verification-backed redemption command에만 제공되는 voucher code입니다. */
 internal data class RedeemVoucherRequest(
     @field:NotBlank
     @field:Size(max = 512)
@@ -169,7 +169,7 @@ internal data class RedeemVoucherRequest(
     }
 }
 
-/** Code-free customer reservation representation. */
+/** code-free customer reservation representation입니다. */
 internal data class ReservationResponse(
     val reservationId: UUID,
     val campaignId: UUID,
@@ -189,7 +189,7 @@ internal data class ReservationResponse(
     }
 }
 
-/** Code-free customer allocation representation. */
+/** code-free customer allocation representation입니다. */
 internal data class AllocationResponse(
     val allocationId: UUID,
     val reservationId: UUID,
@@ -210,7 +210,7 @@ internal data class AllocationResponse(
     }
 }
 
-/** One-time reveal representation; [code] is absent after the first committed delivery. */
+/** one-time reveal representation입니다. 첫 committed delivery 이후에는 [code]가 없습니다. */
 internal data class RevealResponse(
     val allocationId: UUID,
     val outcome: String,

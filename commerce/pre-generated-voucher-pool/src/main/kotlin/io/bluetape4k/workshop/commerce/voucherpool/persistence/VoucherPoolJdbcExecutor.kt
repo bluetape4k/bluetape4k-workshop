@@ -148,7 +148,7 @@ internal fun interface VoucherPoolLockTimeoutApplier {
     }
 }
 
-/** Executes JDBC/Exposed work only after admission and within a Spring transaction. */
+/** admission 이후, Spring transaction 안에서만 JDBC/Exposed work를 실행합니다. */
 internal class VoucherPoolJdbcExecutor(
     private val gate: DatabasePermitGate,
     private val transactionManager: PlatformTransactionManager,

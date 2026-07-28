@@ -20,7 +20,7 @@ import java.net.URI
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 
-/** Applies the local operator trust boundary before any operator route is dispatched. */
+/** operator route가 dispatch되기 전에 local operator trust boundary를 적용합니다. */
 @Component
 @Order(OPERATOR_FILTER_ORDER)
 internal class OperatorAccessFilter(
@@ -114,7 +114,7 @@ internal fun interface FixedLengthDigestComparator {
     fun matches(actualDigest: ByteArray, expectedDigest: ByteArray): Boolean
 }
 
-/** Hashes both credentials before comparison so missing and variable-length inputs share a fixed comparison shape. */
+/** missing 및 variable-length input도 고정 comparison shape를 공유하도록 비교 전에 두 credential을 모두 hash합니다. */
 internal class OperatorCredentialVerifier(
     private val comparator: FixedLengthDigestComparator = FixedLengthDigestComparator(MessageDigest::isEqual),
 ) {

@@ -85,12 +85,12 @@ internal interface VoucherPoolLifecycleActions {
     fun closeDataSource()
 }
 
-/** Closes application-owned SSE subscriptions and their shared pollers before infrastructure teardown. */
+/** infrastructure teardown 전에 application-owned SSE subscription과 공유 poller를 닫습니다. */
 internal fun interface VoucherPoolStreamShutdown {
     fun closeSseAndPoller()
 }
 
-/** Deterministic, idempotent shutdown coordinator with injected deadlines for verification. */
+/** 검증용 injected deadline을 가진 deterministic, idempotent shutdown coordinator입니다. */
 internal class VoucherPoolLifecycleCoordinator(
     private val actions: VoucherPoolLifecycleActions,
     private val deadlines: VoucherPoolShutdownDeadlines = VoucherPoolShutdownDeadlines(),
@@ -191,7 +191,7 @@ internal class VoucherPoolLifecycleCoordinator(
     companion object : KLogging()
 }
 
-/** Shared rejection/cancellation state for scheduled workers and the Task 8 claim path. */
+/** scheduled worker와 Task 8 claim path가 공유하는 rejection/cancellation state입니다. */
 @Component
 internal class VoucherPoolRuntimeControl {
     private val acceptingCommands = AtomicBoolean(true)
@@ -257,7 +257,7 @@ internal class VoucherPoolRuntimeControl {
 
 }
 
-/** Runs application-owned shutdown before Spring destroys infrastructure beans. */
+/** Spring이 infrastructure bean을 destroy하기 전에 application-owned shutdown을 실행합니다. */
 @Component
 @Suppress("LongParameterList")
 internal class VoucherPoolLifecycle(

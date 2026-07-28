@@ -49,7 +49,7 @@ internal class VoucherPoolHealthSnapshot(
     val lastErrorAt: Instant?,
 )
 
-/** Keeps health reasons allowlisted and independent from exception messages or tenant data. */
+/** health reason을 allowlist로 제한하고 exception message나 tenant data와 독립적으로 유지합니다. */
 @Component
 internal class VoucherPoolHealthState(
     private val clock: Clock = Clock.systemUTC(),
@@ -110,7 +110,7 @@ internal class VoucherPoolHealthState(
     )
 }
 
-/** PostgreSQL plus required migration/key state are the readiness authority. */
+/** PostgreSQL과 필수 migration/key state가 readiness authority입니다. */
 @Component("voucherPoolReadinessHealthIndicator")
 internal class VoucherPoolReadinessHealthIndicator(
     private val dataSource: DataSource,
@@ -151,7 +151,7 @@ internal class VoucherPoolReadinessHealthIndicator(
     }
 }
 
-/** Liveness is process-only; dependency degradation belongs to readiness. */
+/** liveness는 process-only입니다. dependency degradation은 readiness에 속합니다. */
 @Component("voucherPoolLivenessHealthIndicator")
 internal class VoucherPoolLivenessHealthIndicator : HealthIndicator {
     override fun health(): Health = Health.up().withDetail("reason", "PROCESS_RUNNING").build()

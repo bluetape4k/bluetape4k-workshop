@@ -63,7 +63,7 @@ internal interface VoucherPoolReconciliationCommandService {
     fun progress(tenantId: String, batchId: UUID): ReconciliationProgressSnapshot?
 }
 
-/** Creates one durable batch-scoped reconciliation claim behind the shared idempotency fence. */
+/** 공유 idempotency fence 뒤에서 durable batch-scoped reconciliation claim 하나를 생성합니다. */
 internal class JdbcVoucherPoolReconciliationCommandService(
     private val executor: VoucherPoolJdbcExecutor,
     private val repository: VoucherPoolRepository,
@@ -124,7 +124,7 @@ internal class JdbcVoucherPoolReconciliationCommandService(
         try {
             executor.operatorTransaction { idempotency.releaseRetryable(owner) }
         } catch (_: RuntimeException) {
-            // The command failure remains authoritative; the owner lease expires safely.
+            // command failure는 authoritative로 남고, owner lease는 안전하게 만료됩니다.
         }
     }
 

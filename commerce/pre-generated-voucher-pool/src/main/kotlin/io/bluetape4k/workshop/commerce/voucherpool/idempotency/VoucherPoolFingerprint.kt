@@ -5,7 +5,7 @@ import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 
-/** Immutable SHA-256 command fingerprint whose source fields are never retained. */
+/** source field를 절대 보존하지 않는 immutable SHA-256 command fingerprint입니다. */
 internal class CommandFingerprint private constructor(private val bytes: ByteArray) {
     fun copyBytes(): ByteArray = bytes.copyOf()
 
@@ -24,7 +24,7 @@ internal class CommandFingerprint private constructor(private val bytes: ByteArr
     }
 }
 
-/** Builds domain-separated fingerprints from bounded semantic command fields. */
+/** bounded semantic command field에서 domain-separated fingerprint를 생성합니다. */
 internal object VoucherPoolFingerprint {
     fun command(operation: String, fields: Map<String, String?>): CommandFingerprint {
         val validOperation = operation.requireNotBlank("operation")

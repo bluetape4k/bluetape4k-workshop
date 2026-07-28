@@ -156,10 +156,10 @@ internal interface VoucherPoolRepository {
 }
 
 /**
- * Transaction-bound PostgreSQL authority repository.
+ * transaction-bound PostgreSQL authority repository입니다.
  *
- * Like bluetape4k [io.bluetape4k.exposed.jdbc.repository.JdbcRepository], callers provide the active Exposed
- * transaction. Raw JDBC is limited to PostgreSQL row-lock syntax that the Exposed DSL cannot express directly.
+ * bluetape4k [io.bluetape4k.exposed.jdbc.repository.JdbcRepository]처럼 caller가 active Exposed transaction을 제공합니다.
+ * raw JDBC는 Exposed DSL이 직접 표현할 수 없는 PostgreSQL row-lock syntax로 제한합니다.
  */
 @Suppress("LargeClass")
 internal class JdbcVoucherPoolRepository : VoucherPoolRepository {
