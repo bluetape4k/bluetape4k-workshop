@@ -27,10 +27,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 /**
- * Abstract test suite for [AbuserDetectionService].
+ * [AbuserDetectionService]용 추상 테스트 suite입니다.
  *
- * Concrete subclasses supply [ops] and [service] backed by a specific graph backend.
- * Each test runs against a clean graph — [cleanGraph] drops and re-initializes before every test.
+ * 구체 하위 클래스는 특정 그래프 백엔드가 뒷받침하는 [ops]와 [service]를 제공합니다.
+ * 각 테스트는 깨끗한 그래프에서 실행됩니다. [cleanGraph]가 매 테스트 전에 drop 후 다시 초기화합니다.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractAbuserDetectionTest {
@@ -46,7 +46,7 @@ abstract class AbstractAbuserDetectionTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // Vertex mutator tests
+    // 정점 변경 메서드 테스트
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -107,7 +107,7 @@ abstract class AbstractAbuserDetectionTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // findAbuseCluster tests
+    // findAbuseCluster 테스트
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -148,7 +148,7 @@ abstract class AbstractAbuserDetectionTest {
 
         val cluster = service.findAbuseCluster(seed.unrelatedUser.id)
 
-        // unrelatedUser shares no identifiers with the cluster users
+        // unrelatedUser는 클러스터 사용자와 식별자를 공유하지 않습니다.
         cluster.users.shouldBeEmpty()
     }
 
@@ -163,7 +163,7 @@ abstract class AbstractAbuserDetectionTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // explainSuspicion tests
+    // explainSuspicion 테스트
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -172,7 +172,7 @@ abstract class AbstractAbuserDetectionTest {
 
         val paths = service.explainSuspicion(seed.user1.id)
 
-        // user1 has USES_DEVICE (deviceA) and USES_IP (ipA) edges
+        // user1은 USES_DEVICE(deviceA)와 USES_IP(ipA) 간선을 가집니다.
         paths shouldHaveSize 2
         val identifierIds = paths.map { it.identifierVertexId }
         identifierIds shouldContain seed.deviceA.id
@@ -185,9 +185,9 @@ abstract class AbstractAbuserDetectionTest {
 
         val paths = service.explainSuspicion(seed.unrelatedUser.id)
 
-        // unrelatedUser has only deviceB — no shared identifiers with cluster users
-        // but explainSuspicion returns ALL outgoing identifier edges, so deviceB appears
-        // The test verifies no null/crash, and that no cluster device appears
+        // unrelatedUser는 deviceB만 가지며 클러스터 사용자와 공유 식별자가 없습니다.
+        // 하지만 explainSuspicion은 모든 outgoing 식별자 간선을 반환하므로 deviceB가 나타납니다.
+        // 이 테스트는 null/crash가 없고 클러스터 디바이스가 나타나지 않는지 검증합니다.
         val identifierIds = paths.map { it.identifierVertexId }
         identifierIds shouldNotContain seed.deviceA.id
         identifierIds shouldNotContain seed.ipA.id
@@ -203,7 +203,7 @@ abstract class AbstractAbuserDetectionTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // detectReferralLoops tests
+    // detectReferralLoops 테스트
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -218,7 +218,7 @@ abstract class AbstractAbuserDetectionTest {
 
     @Test
     fun `detectReferralLoops returns empty list when no cycles exist`() {
-        // No referral links added
+        // 추천 링크를 추가하지 않았습니다.
         service.addUser("u-a", "KR")
         service.addUser("u-b", "KR")
 
@@ -228,7 +228,7 @@ abstract class AbstractAbuserDetectionTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // rankSuspiciousUsers tests
+    // rankSuspiciousUsers 테스트
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -274,13 +274,13 @@ abstract class AbstractAbuserDetectionTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // initialize idempotency test
+    // initialize 멱등성 테스트
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
     fun `initialize is idempotent - calling twice does not throw`() {
         service.initialize()
         service.initialize()
-        // no exception = success
+        // 예외가 없으면 성공입니다.
     }
 }

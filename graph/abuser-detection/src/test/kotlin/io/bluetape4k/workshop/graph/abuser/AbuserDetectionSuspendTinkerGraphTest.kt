@@ -8,11 +8,11 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.TestInstance
 
 /**
- * [AbuserDetectionSuspendService] tests backed by TinkerGraph (in-memory, no Docker required).
+ * TinkerGraph가 뒷받침하는 [AbuserDetectionSuspendService] 테스트입니다(인메모리, Docker 불필요).
  *
- * All 16 tests from [AbstractAbuserDetectionSuspendTest] run against an in-process
- * TinkerGraphSuspendOperations instance. The graph is cleared and re-initialized before
- * each test via the base [cleanGraph] setup.
+ * [AbstractAbuserDetectionSuspendTest]의 16개 테스트를 in-process
+ * TinkerGraphSuspendOperations 인스턴스에서 실행합니다. 그래프는 매 테스트 전에 정리하고 다시 초기화합니다.
+ * base [cleanGraph] 설정을 통해 각 테스트 전에 실행됩니다.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AbuserDetectionSuspendTinkerGraphTest : AbstractAbuserDetectionSuspendTest() {
