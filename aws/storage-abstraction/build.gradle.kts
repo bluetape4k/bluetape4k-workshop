@@ -13,20 +13,20 @@ configurations {
 }
 
 dependencies {
-    // bluetape4k
+    // bluetape4k 공통 의존성
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.bluetape4k.aws)
 
-    // AWS SDK v2
+    // AWS SDK v2 의존성
     implementation(libs.aws2.s3.lib)
 
-    // Testcontainers for LocalStack (also needed at runtime for embedded test config)
+    // LocalStack용 Testcontainers 의존성이다. embedded test config가 런타임에도 필요로 한다.
     implementation(libs.bluetape4k.testcontainers)
     implementation(libs.testcontainers.localstack)
 
-    // Spring Boot
+    // Spring Boot 구성
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
@@ -41,11 +41,11 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
-    // Coroutines
+    // 코루틴 의존성
     implementation(libs.kotlinx.coroutines.core.lib)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    // Jackson
+    // Jackson 직렬화 의존성
     implementation(libs.jackson3.databind)
     implementation(libs.jackson3.module.kotlin)
 }

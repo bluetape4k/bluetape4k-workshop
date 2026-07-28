@@ -38,7 +38,7 @@ tasks.withType<Test>().configureEach {
         languageVersion.set(JavaLanguageVersion.of(25))
     })
     jvmArgs("--enable-native-access=ALL-UNNAMED")
-    // FFM libvips runtime initialization is process-wide; isolate tests that opt into native execution.
+    // FFM libvips 런타임 초기화는 프로세스 전체에 적용되므로 native 실행을 선택한 테스트를 격리한다.
     forkEvery = 1
     maxParallelForks = 1
     System.getProperty("vips.enabled")?.let { systemProperty("vips.enabled", it) }
@@ -56,17 +56,17 @@ dependencies {
     implementation(libs.bluetape4k.micrometer)
     implementation(libs.bluetape4k.jackson3)
 
-    // Exposed ORM (bluetape4k wrappers)
+    // Exposed ORM: bluetape4k wrapper 사용
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.jackson3)
 
-    // JetBrains Exposed
+    // JetBrains Exposed 의존성
     implementation(libs.jetbrains.exposed.java.time)
     implementation(libs.jetbrains.exposed.spring.boot4.starter)
     implementation(libs.jetbrains.exposed.spring7.transaction)
 
-    // Database
+    // 데이터베이스 의존성
     implementation(libs.hikaricp)
     runtimeOnly(libs.postgresql.driver)
 
