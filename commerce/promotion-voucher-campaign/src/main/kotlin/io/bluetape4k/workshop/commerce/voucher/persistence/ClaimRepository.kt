@@ -14,7 +14,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
-/** Persists claim verifiers and key versions without ever accepting plaintext voucher codes. */
+/** plaintext voucher code를 절대 받지 않고 claim verifier와 key version을 저장합니다. */
 @Repository
 internal class ClaimRepository(
     private val gate: DatabasePermitGate,

@@ -71,7 +71,7 @@ internal class EventInboxRepository(
         return findById(id)
     }
 
-    /** Inserts once by tenant/event id and returns the durable winner after a unique-key race. */
+    /** tenant/event id별로 한 번 insert하고, unique-key race 뒤 durable winner를 반환합니다. */
     fun insertIfAbsent(record: EventInboxRecord): InboxInsertResult {
         gate.requireHeld()
         val inserted =
@@ -126,7 +126,7 @@ internal class EventInboxRepository(
             .map { with(this) { it.toEntity() } }
     }
 
-    /** Claims one due row without waiting behind a row already owned by another worker. */
+    /** 다른 worker가 이미 소유한 row 뒤에서 기다리지 않고 due row 하나를 claim합니다. */
     fun claimNext(
         now: Instant,
         owner: String,
@@ -156,7 +156,7 @@ internal class EventInboxRepository(
         return findById(id)
     }
 
-    /** Claims the just-inserted row for synchronous acceptance without selecting unrelated backlog. */
+    /** 관련 없는 backlog를 선택하지 않고 방금 insert한 row를 synchronous acceptance 용도로 claim합니다. */
     fun claimById(
         id: Long,
         now: Instant,
@@ -181,7 +181,7 @@ internal class EventInboxRepository(
         return findById(id)
     }
 
-    /** Serializes decisions for one tenant/aggregate without adding another authority table. */
+    /** 별도 authority table을 추가하지 않고 한 tenant/aggregate의 decision을 직렬화합니다. */
     fun lockAggregate(record: EventInboxRecord) {
         gate.requireHeld()
         val material = "${record.tenantId}:${record.aggregateType}:${record.aggregateId}"

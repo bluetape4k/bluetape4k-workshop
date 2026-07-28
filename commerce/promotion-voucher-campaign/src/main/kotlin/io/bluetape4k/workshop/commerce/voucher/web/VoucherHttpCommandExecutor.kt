@@ -25,7 +25,7 @@ internal data class ExecutedHttpCommand(
     val replayed: Boolean,
 )
 
-/** Adapts the application-owned idempotency contract to closed HTTP response descriptors. */
+/** application-owned idempotency contract를 닫힌 HTTP response descriptor에 맞게 adapter 처리합니다. */
 @Component
 internal class VoucherHttpCommandExecutor(
     private val commands: IdempotentVoucherCommandService,

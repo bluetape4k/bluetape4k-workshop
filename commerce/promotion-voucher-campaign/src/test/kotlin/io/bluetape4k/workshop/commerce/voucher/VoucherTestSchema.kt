@@ -4,7 +4,7 @@ import io.bluetape4k.codec.Base58
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import java.sql.DriverManager
 
-/** Creates a PostgreSQL schema that isolates application-context tests from Exposed `withTables` fixtures. */
+/** application-context test를 Exposed `withTables` fixture에서 격리하는 PostgreSQL schema를 생성합니다. */
 internal object VoucherTestSchema {
     private val postgres: PostgreSQLServer = PostgreSQLServer.Launcher.postgres
 

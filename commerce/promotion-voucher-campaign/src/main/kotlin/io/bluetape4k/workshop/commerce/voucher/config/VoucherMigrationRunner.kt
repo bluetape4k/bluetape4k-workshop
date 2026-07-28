@@ -57,7 +57,7 @@ internal class VoucherMigrationException(
     cause: Throwable? = null,
 ) : RuntimeException(code.name, cause)
 
-/** Applies the application-owned schema exactly once under a PostgreSQL transaction advisory lock. */
+/** application-owned schema를 PostgreSQL transaction advisory lock 아래에서 정확히 한 번 적용합니다. */
 internal class VoucherMigrationRunner(
     private val dataSource: DataSource,
     private val migration: VoucherMigration,

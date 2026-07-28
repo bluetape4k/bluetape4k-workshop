@@ -17,7 +17,7 @@ internal class VoucherPolicyException(
     val code: VoucherPolicyFailure,
 ) : RuntimeException(code.name)
 
-/** Pure transition policy shared by HTTP commands, reviews, and reconciliation workers. */
+/** HTTP command, review, reconciliation worker가 공유하는 순수 transition policy입니다. */
 internal object VoucherPolicies : KLogging() {
     fun activateCampaign(
         campaign: CampaignSnapshot,

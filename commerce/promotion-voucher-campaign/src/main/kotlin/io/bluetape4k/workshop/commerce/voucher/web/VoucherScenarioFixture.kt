@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.nio.charset.StandardCharsets.UTF_8
 import java.util.UUID
 
-/** Server-owned deterministic signals used only by loopback demo and integration-test profiles. */
+/** loopback demo와 integration-test profile에서만 사용하는 server-owned deterministic signal입니다. */
 @Component
 @Profile("local", "demo", "test")
 internal class VoucherScenarioFixture(
@@ -112,7 +112,7 @@ internal data class VoucherFixtureResponse(
 
 internal data class VoucherFixtureResetResponse(val clearedSignals: Int, val deletedRows: Int)
 
-/** Guarded fixture API; the entire controller is absent from production profiles. */
+/** guarded fixture API입니다. production profile에는 controller 전체가 없습니다. */
 @RestController
 @Profile("local", "demo", "test")
 @RequestMapping("/operator/api/v1/fixtures")

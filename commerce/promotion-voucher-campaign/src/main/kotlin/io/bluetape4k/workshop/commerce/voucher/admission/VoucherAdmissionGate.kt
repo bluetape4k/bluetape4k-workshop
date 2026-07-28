@@ -44,10 +44,10 @@ internal data class AdmissionRecoveryPolicy(
 }
 
 /**
- * Uses Redis only to shed load. Backend failures always degrade to PostgreSQL-authoritative work.
+ * Redis는 load shedding 용도로만 사용합니다. backend failure는 항상 PostgreSQL-authoritative work로 degrade됩니다.
  *
- * Recovery probes are request-driven and single-flight by default, so no scheduler or JDBC permit
- * is retained while Redis is unavailable.
+ * recovery probe는 기본적으로 request-driven single-flight 방식이므로,
+ * Redis를 사용할 수 없는 동안 scheduler나 JDBC permit을 보유하지 않습니다.
  */
 internal class VoucherAdmissionGate(
     private val rateLimiter: RateLimiter<String>?,

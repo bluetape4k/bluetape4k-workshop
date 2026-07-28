@@ -9,7 +9,7 @@ import java.security.SecureRandom
 import java.util.Base64
 import java.util.Locale
 
-/** Immutable SHA-256 or HMAC-sized value encoded as canonical Base64URL without padding. */
+/** padding 없는 canonical Base64URL로 인코딩한 immutable SHA-256 또는 HMAC 크기 값입니다. */
 @JvmInline
 internal value class Digest private constructor(
     val base64Url: String,
@@ -27,7 +27,7 @@ internal value class Digest private constructor(
     }
 }
 
-/** Secret acquisition capability. Persistence receives only [digest], never this raw token. */
+/** secret acquisition capability입니다. persistence는 이 raw token이 아니라 [digest]만 받습니다. */
 @JvmInline
 internal value class OwnerToken private constructor(
     val base64Url: String,
@@ -50,7 +50,7 @@ internal value class OwnerToken private constructor(
     }
 }
 
-/** Closed scalar schema used to canonicalize the bounded voucher command DTO. */
+/** bounded voucher command DTO를 canonicalize하는 데 사용하는 닫힌 scalar schema입니다. */
 internal sealed interface CanonicalField {
     val nullable: kotlin.Boolean
     val nullEquivalentToOmitted: kotlin.Boolean
@@ -100,7 +100,7 @@ internal data class ClosedRequestSchema(
     }
 }
 
-/** Builds a domain-separated request fingerprint without retaining request body or raw keys. */
+/** request body나 raw key를 보존하지 않고 domain-separated request fingerprint를 생성합니다. */
 internal object IdempotencyFingerprint {
     private val mapper = jsonMapper { }
 

@@ -29,10 +29,10 @@ internal fun interface DatabasePermitMetrics {
 }
 
 /**
- * Keeps virtual-thread concurrency outside the bounded JDBC connection pool.
+ * virtual-thread concurrency를 bounded JDBC connection pool 바깥에서 제어합니다.
  *
- * Each lane owns a fair semaphore so interactive traffic, the reconciliation worker, and SSE
- * maintenance cannot consume one another's reserved database capacity.
+ * 각 lane은 fair semaphore를 소유하므로 interactive traffic, reconciliation worker, SSE maintenance가
+ * 서로의 예약된 database capacity를 소비하지 못합니다.
  */
 internal class DatabasePermitGate(
     foregroundPermits: Int = 12,
@@ -107,7 +107,7 @@ internal class DatabasePermitGate(
         }
     }
 
-    /** Atomically rejects future acquisitions while allowing already admitted work to drain. */
+    /** 이미 admission된 work는 drain되도록 두면서 이후 acquisition을 atomic하게 거부합니다. */
     fun beginShutdown() {
         lifecycleLock.withLock {
             accepting = false
@@ -132,16 +132,16 @@ internal class DatabasePermitGate(
         check(heldLane.get() != null) { "JDBC access requires a database permit" }
     }
 
-    /** Allows a transaction facade to join its own foreground boundary without reacquiring a permit. */
+    /** transaction facade가 permit을 다시 얻지 않고 자신의 foreground boundary에 참여할 수 있게 합니다. */
     fun isHeld(lane: DatabaseLane): Boolean = heldLane.get() == lane
 
-    /** Exposes lane-local capacity for health probes and deterministic leak tests. */
+    /** health probe와 결정적 leak test를 위해 lane-local capacity를 노출합니다. */
     fun availablePermits(lane: DatabaseLane): Int = semaphores.getValue(lane).availablePermits()
 
-    /** Exposes lane-local occupancy without acquiring a permit. */
+    /** permit을 얻지 않고 lane-local occupancy를 노출합니다. */
     fun inUsePermits(lane: DatabaseLane): Int = permitCapacities.getValue(lane) - availablePermits(lane)
 
-    /** Exposes the fair semaphore queue depth for bounded operational sampling. */
+    /** bounded operational sampling을 위해 fair semaphore queue depth를 노출합니다. */
     fun waitingThreads(lane: DatabaseLane): Int = semaphores.getValue(lane).queueLength
 
     companion object : KLogging() {

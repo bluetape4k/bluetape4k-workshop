@@ -7,7 +7,7 @@ import io.bluetape4k.workshop.commerce.voucher.config.VoucherMigrationRunner
 import org.springframework.core.io.ClassPathResource
 import org.springframework.jdbc.datasource.DriverManagerDataSource
 
-/** Isolated packaged-artifact entry point used only by the migration compatibility verification task. */
+/** migration compatibility verification task에서만 사용하는 격리된 packaged-artifact entry point입니다. */
 internal object VoucherCompatibilityCli : KLogging() {
     private const val MODE_PREFIX = "--voucher-compatibility-mode="
 

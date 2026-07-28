@@ -13,7 +13,7 @@ internal interface VoucherTransactionRunner {
     fun <T> foregroundTransaction(block: () -> T): T
 }
 
-/** Opens the Spring/Exposed transaction only after the matching local JDBC permit is held. */
+/** 일치하는 local JDBC permit을 보유한 뒤에만 Spring/Exposed transaction을 엽니다. */
 internal class VoucherJdbcExecutor(
     private val gate: DatabasePermitGate,
     private val transactionManager: PlatformTransactionManager,
@@ -31,7 +31,7 @@ internal class VoucherJdbcExecutor(
     fun <T> workerTransaction(block: () -> T): T =
         transaction(DatabaseLane.WORKER, applyLockTimeout = false, block = block)
 
-    /** Applies both Spring and PostgreSQL timeouts to a deadline-bounded worker row. */
+    /** deadline-bounded worker row에 Spring timeout과 PostgreSQL timeout을 모두 적용합니다. */
     fun <T> workerTransaction(
         timeout: Duration,
         block: () -> T,

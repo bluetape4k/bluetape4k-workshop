@@ -71,7 +71,7 @@ internal data class AllocationResult(
     val reviewId: Long?,
 )
 
-/** Creates an allocated or review-required claim under the canonical campaign row lock. */
+/** canonical campaign row lock 아래에서 allocated 또는 review-required claim을 생성합니다. */
 @Service
 internal class AllocationService(
     private val transactions: VoucherTransactionRunner,

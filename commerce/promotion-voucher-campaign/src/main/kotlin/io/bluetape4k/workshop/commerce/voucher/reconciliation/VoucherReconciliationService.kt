@@ -58,7 +58,7 @@ internal data class ReconciliationResult(
     val deadlineReached: Boolean,
 ) : Serializable
 
-/** Stable, non-sensitive event emitted only after a delayed event effect has been applied. */
+/** delayed event effect가 적용된 뒤에만 발행되는 안정적이고 민감하지 않은 event입니다. */
 internal data class VoucherInboxAppliedEvent(
     val eventId: UUID,
     val tenantId: String,
@@ -103,7 +103,7 @@ internal fun interface VoucherDelayedEventHandler {
     fun handle(record: EventInboxRecord): DelayedEventDecision
 }
 
-/** Durable application fixture: an applied delayed event produces one append-only audit effect. */
+/** durable application fixture입니다. 적용된 delayed event는 append-only audit effect 하나를 만듭니다. */
 internal class AuditingVoucherDelayedEventHandler(
     private val audits: AuditRepository,
     private val events: VoucherEventPublisher = VoucherEventPublisher.NONE,
@@ -136,7 +136,7 @@ internal class AuditingVoucherDelayedEventHandler(
     }
 }
 
-/** Completes the Modulith publication asynchronously after the reconciliation transaction commits. */
+/** reconciliation transaction이 commit된 뒤 Modulith publication을 비동기로 완료합니다. */
 internal open class VoucherInboxAppliedEventListener {
     @ApplicationModuleListener
     open fun on(event: VoucherInboxAppliedEvent) {
@@ -149,7 +149,7 @@ internal open class VoucherInboxAppliedEventListener {
     companion object : KLogging()
 }
 
-/** Test seam placed after the authoritative effect and before inbox finalization. */
+/** authoritative effect 이후, inbox finalization 이전에 둔 test seam입니다. */
 internal fun interface ReconciliationFaultInjector {
     fun afterEffect(record: EventInboxRecord)
 
@@ -159,8 +159,8 @@ internal fun interface ReconciliationFaultInjector {
 }
 
 /**
- * Reconciles one inbox row per transaction so claim, effect, and terminal outcome commit atomically.
- * Redis and leader state never participate in the decision.
+ * transaction 하나당 inbox row 하나를 reconcile해 claim, effect, terminal outcome이 atomic하게 commit되도록 합니다.
+ * Redis와 leader state는 decision에 절대 참여하지 않습니다.
  */
 internal class VoucherReconciliationService(
     private val jdbc: VoucherJdbcExecutor,

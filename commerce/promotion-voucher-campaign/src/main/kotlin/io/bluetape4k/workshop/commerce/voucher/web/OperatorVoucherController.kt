@@ -103,7 +103,7 @@ internal data class ReconciliationBacklogHttpItem(
     val createdAt: Instant?,
 )
 
-/** Live operator API behind [OperatorAccessFilter] and route-specific preconditions. */
+/** [OperatorAccessFilter]와 route-specific precondition 뒤에 있는 live operator API입니다. */
 @RestController
 @RequestMapping("/operator/api/v1")
 internal class OperatorVoucherController(

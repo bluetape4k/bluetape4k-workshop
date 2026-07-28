@@ -17,7 +17,7 @@ internal data class VoucherRetentionCutoffs(
     val appliedEventBefore: Instant,
 )
 
-/** Computes retention watermarks without permitting terminal replay to expire before a voucher. */
+/** voucher보다 terminal replay가 먼저 만료되지 않도록 retention watermark를 계산합니다. */
 internal class VoucherRetentionPolicy(
     private val properties: VoucherRetentionProperties,
 ) {
@@ -41,7 +41,7 @@ internal class VoucherRetentionPolicy(
     }
 }
 
-/** Reads every persisted generation/verification key reference before startup accepts a key ring. */
+/** startup이 key ring을 수락하기 전에 persisted generation/verification key reference를 모두 읽습니다. */
 internal class PostgresReferencedKeyVersionSource(
     private val dataSource: DataSource,
 ) : ReferencedKeyVersionSource {
@@ -62,7 +62,7 @@ internal class PostgresReferencedKeyVersionSource(
         return ReferencedKeyVersions(generation, verification)
     }
 
-    /** A fresh database is validated before the migration callback runs and therefore has no references yet. */
+    /** fresh database는 migration callback 실행 전에 검증되므로 아직 reference가 없습니다. */
     private fun java.sql.Connection.hasReferenceTables(): Boolean =
         prepareStatement(REFERENCE_TABLES_SQL).use { statement ->
             statement.executeQuery().use { rows ->
@@ -91,7 +91,7 @@ internal class PostgresReferencedKeyVersionSource(
     }
 }
 
-/** Rejects removal of a key version while any durable claim or replay row still references it. */
+/** durable claim이나 replay row가 참조하는 동안 key version 제거를 거부합니다. */
 internal class VoucherKeyRotationPolicy(
     private val references: ReferencedKeyVersionSource,
 ) {

@@ -28,7 +28,7 @@ internal enum class InboxStatus {
     FAILED,
 }
 
-/** Tenant-scoped campaign capacity authority with an in-row capacity invariant. */
+/** in-row capacity invariant를 가진 tenant-scoped campaign capacity authority입니다. */
 internal object CampaignTable : AuditableLongIdTable("voucher_campaigns") {
     val tenantId = varchar("tenant_id", 64)
     val campaignId = javaUUID("campaign_id")
@@ -51,7 +51,7 @@ internal object CampaignTable : AuditableLongIdTable("voucher_campaigns") {
     }
 }
 
-/** Stores only opaque-code verifiers and version references; plaintext code has no column. */
+/** opaque-code verifier와 version reference만 저장합니다. plaintext code column은 없습니다. */
 internal object ClaimTable : AuditableLongIdTable("voucher_claims") {
     val tenantId = varchar("tenant_id", 64)
     val campaignRowId = reference("campaign_row_id", CampaignTable, onDelete = ReferenceOption.RESTRICT)

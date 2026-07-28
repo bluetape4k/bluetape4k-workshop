@@ -13,7 +13,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
-/** Append-only audit repository with tenant and aggregate revision uniqueness. */
+/** tenant와 aggregate revision uniqueness를 보장하는 append-only audit repository입니다. */
 @Repository
 internal class AuditRepository(
     private val gate: DatabasePermitGate,
@@ -101,7 +101,7 @@ internal class AuditRepository(
             ?.let { with(this) { it.toEntity() } }
     }
 
-    /** Reads one bounded campaign stream page in globally monotonic audit-id order. */
+    /** 전역적으로 단조 증가하는 audit-id 순서로 bounded campaign stream page 하나를 읽습니다. */
     fun findCampaignAfter(
         tenantId: String,
         campaignId: UUID,
