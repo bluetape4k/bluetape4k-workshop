@@ -15,13 +15,13 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.upsert
 
 /**
- * Service that writes JaVers snapshots to Redis and the current order row to Exposed.
+ * JaVers snapshot은 Redis에 쓰고 현재 order row는 Exposed에 쓰는 서비스이다.
  *
- * ## Behavior / Contract
- * - [place] commits the initial [Order] snapshot before upserting the current row.
- * - [markPaid] commits an updated snapshot before materializing the paid state.
- * - [getHistory] reads Redis-backed JaVers snapshots oldest-first.
- * - [delete] writes a terminal snapshot before removing the current row.
+ * ## 동작 / 계약
+ * - [place]는 현재 row를 upsert하기 전에 초기 [Order] snapshot을 commit한다.
+ * - [markPaid]는 paid 상태를 materialize하기 전에 갱신 snapshot을 commit한다.
+ * - [getHistory]는 Redis-backed JaVers snapshot을 오래된 순서로 읽는다.
+ * - [delete]는 현재 row를 제거하기 전에 terminal snapshot을 쓴다.
  *
  * ```kotlin
  * val service = RedisOrderAuditFactory.create("orders", redisson)
@@ -35,7 +35,7 @@ class OrderAuditService(
     companion object: KLogging()
 
     /**
-     * Commits [order] to JaVers and upserts the current Exposed row.
+     * [order]를 JaVers에 commit하고 현재 Exposed row를 upsert한다.
      */
     fun place(author: String, order: Order) {
         author.requireNotBlank("author")
@@ -52,7 +52,7 @@ class OrderAuditService(
     }
 
     /**
-     * Marks the current order as [OrderStatus.PAID] and records an update snapshot.
+     * 현재 order를 [OrderStatus.PAID]로 표시하고 update snapshot을 기록한다.
      */
     fun markPaid(author: String, orderId: String): Order {
         author.requireNotBlank("author")
@@ -76,7 +76,7 @@ class OrderAuditService(
     }
 
     /**
-     * Finds the current materialized order row, or `null` when it was never placed or was deleted.
+     * 현재 materialized order row를 찾는다. 아직 place되지 않았거나 삭제된 경우 `null`을 반환한다.
      */
     fun findCurrent(orderId: String): Order? {
         orderId.requireNotBlank("orderId")
@@ -89,7 +89,7 @@ class OrderAuditService(
     }
 
     /**
-     * Returns all JaVers snapshots for [orderId], oldest-first.
+     * [orderId]의 모든 JaVers snapshot을 오래된 순서로 반환한다.
      */
     fun getHistory(orderId: String): List<CdoSnapshot> {
         orderId.requireNotBlank("orderId")
@@ -100,7 +100,7 @@ class OrderAuditService(
     }
 
     /**
-     * Returns the latest JaVers snapshot for [orderId], or `null` if no commits exist.
+     * [orderId]의 최신 JaVers snapshot을 반환하고, commit이 없으면 `null`을 반환한다.
      */
     fun getLatestSnapshot(orderId: String): CdoSnapshot? {
         orderId.requireNotBlank("orderId")
@@ -108,13 +108,13 @@ class OrderAuditService(
     }
 
     /**
-     * Computes a JaVers [Diff] without persisting either order instance.
+     * 두 order 인스턴스 중 어느 것도 영속화하지 않고 JaVers [Diff]를 계산한다.
      */
     fun diff(oldOrder: Order, newOrder: Order): Diff =
         javers.compare(oldOrder, newOrder)
 
     /**
-     * Records a terminal JaVers snapshot and removes the current row.
+     * terminal JaVers snapshot을 기록하고 현재 row를 제거한다.
      */
     fun delete(author: String, orderId: String) {
         author.requireNotBlank("author")

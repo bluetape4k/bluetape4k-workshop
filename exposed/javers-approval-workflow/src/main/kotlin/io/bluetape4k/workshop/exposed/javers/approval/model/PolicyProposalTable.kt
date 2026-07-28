@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.exposed.javers.approval.model
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 
 /**
- * Approval proposal and decision record.
+ * 승인 제안과 그 결정 내역을 저장하는 record이다.
  */
 object PolicyProposalTable: LongIdTable("policy_proposals") {
     val policyId = long("policy_id").index()

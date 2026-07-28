@@ -8,12 +8,12 @@ import java.io.Serializable
 import java.math.BigDecimal
 
 /**
- * A product entity tracked by JaVers for change-history auditing.
+ * 변경 이력 감사를 위해 JaVers가 추적하는 product entity이다.
  *
- * ## Behavior / Contract
- * - [id] is the JaVers entity key; snapshots are keyed by this value.
- * - [price] must be non-negative.
- * - All instances are immutable value objects; create a new [Product] for updates.
+ * ## 동작 / 계약
+ * - [id]는 JaVers entity key이며 snapshot은 이 값으로 식별된다.
+ * - [price]는 음수일 수 없다.
+ * - 모든 인스턴스는 불변 value object이므로 update에는 새 [Product]를 만든다.
  *
  * ```kotlin
  * val product = Product(id = 1L, name = "Widget", price = BigDecimal("9.99"), category = "Tools")
@@ -32,7 +32,7 @@ data class Product private constructor(
         private const val serialVersionUID: Long = 1L
 
         /**
-         * Creates a validated product value for Exposed persistence and JaVers auditing.
+         * Exposed 영속화와 JaVers 감사를 위한 검증된 product 값을 만든다.
          */
         operator fun invoke(
             id: Long,

@@ -13,17 +13,17 @@ exposed {
 }
 
 dependencies {
-    // bluetape4k JaVers integration
+    // bluetape4k JaVers 통합 의존성
     implementation(libs.bluetape4k.javers.core)
 
-    // JetBrains Exposed
+    // JetBrains Exposed 의존성
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
 
-    // H2 in-memory database
+    // H2 in-memory 데이터베이스
     runtimeOnly(libs.h2.v2)
 
-    // Test
+    // 테스트 의존성
     testImplementation(libs.bluetape4k.assertions)
     testImplementation(libs.exposed.jdbc.tests)
 }

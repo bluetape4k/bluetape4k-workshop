@@ -3,12 +3,12 @@ package io.bluetape4k.workshop.exposed.javers.model
 import org.jetbrains.exposed.v1.core.Table
 
 /**
- * Exposed table definition for [Product] persistence.
+ * [Product] 영속화를 위한 Exposed table 정의이다.
  *
- * ## Behavior / Contract
- * - Uses H2-compatible column types.
- * - [id] is the primary key; uniqueness is enforced at the DB level.
- * - [price] stored as DECIMAL(19,4) to avoid floating-point rounding.
+ * ## 동작 / 계약
+ * - H2 호환 column type을 사용한다.
+ * - [id]는 primary key이며 uniqueness는 DB level에서 강제된다.
+ * - floating-point 반올림을 피하기 위해 [price]를 DECIMAL(19,4)로 저장한다.
  *
  * ```kotlin
  * transaction {

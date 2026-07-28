@@ -6,12 +6,12 @@ import java.io.Serializable
 import java.math.BigDecimal
 
 /**
- * Product policy aggregate reviewed before it becomes approved current state.
+ * 승인된 현재 상태가 되기 전에 review되는 product policy aggregate이다.
  *
- * ## Behavior / Contract
- * - [id] is the JaVers aggregate id.
- * - [pricing] is a nested value object so JaVers can show nested review diffs.
- * - Only approved proposals are committed as JaVers snapshots.
+ * ## 동작 / 계약
+ * - [id]는 JaVers aggregate id이다.
+ * - [pricing]은 JaVers가 중첩 review diff를 보여 줄 수 있도록 둔 중첩 value object이다.
+ * - 승인된 제안만 JaVers snapshot으로 commit된다.
  */
 @TypeName("ProductPolicy")
 data class ProductPolicy(
@@ -27,7 +27,7 @@ data class ProductPolicy(
 }
 
 /**
- * Nested pricing policy value object.
+ * 중첩 pricing policy value object이다.
  */
 data class PricingPolicy(
     val currency: String,
@@ -40,7 +40,7 @@ data class PricingPolicy(
 }
 
 /**
- * Current product policy lifecycle state.
+ * 현재 product policy의 lifecycle 상태이다.
  */
 enum class PolicyStatus {
     DRAFT,
@@ -49,7 +49,7 @@ enum class PolicyStatus {
 }
 
 /**
- * Approval proposal lifecycle state.
+ * 승인 제안의 lifecycle 상태이다.
  */
 enum class ProposalStatus {
     PENDING,
@@ -58,7 +58,7 @@ enum class ProposalStatus {
 }
 
 /**
- * One reader-facing JaVers diff summary row.
+ * 독자에게 보여 줄 JaVers diff 요약 row 하나이다.
  */
 data class ChangedField(
     val path: String,
@@ -71,7 +71,7 @@ data class ChangedField(
 }
 
 /**
- * Stored approval proposal and decision.
+ * 저장된 승인 제안과 결정 정보이다.
  */
 data class PolicyProposal(
     val id: Long,
