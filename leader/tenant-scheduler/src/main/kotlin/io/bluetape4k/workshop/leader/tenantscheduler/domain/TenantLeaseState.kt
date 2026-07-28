@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.leader.tenantscheduler.domain
 import java.io.Serializable
 
 /**
- * Lease state for one tenant-local scheduled job.
+ * tenant-local scheduled job 하나의 lease 상태이다.
  */
 data class TenantLeaseState(
     val tenantId: TenantId,

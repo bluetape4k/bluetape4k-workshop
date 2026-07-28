@@ -3,10 +3,9 @@ package io.bluetape4k.workshop.leader.tenantscheduler.domain
 import java.io.Serializable
 
 /**
- * Tenant-local scheduled job name used before tenant namespace expansion.
+ * tenant namespace 확장 전에 사용하는 tenant-local scheduled job 이름이다.
  *
- * The backend lock name must be derived through `TenantLockNamespace`, not by
- * manual string concatenation.
+ * backend lock 이름은 수동 문자열 결합이 아니라 `TenantLockNamespace`를 통해 도출해야 한다.
  */
 @ConsistentCopyVisibility
 data class TenantJobName private constructor(
@@ -17,7 +16,7 @@ data class TenantJobName private constructor(
         private const val serialVersionUID: Long = 1L
 
         /**
-         * Creates a safe tenant-local job name.
+         * 안전한 tenant-local job 이름을 만든다.
          */
         operator fun invoke(raw: String): TenantJobName =
             TenantJobName(normalizeTenantAlias(raw, "jobName"))

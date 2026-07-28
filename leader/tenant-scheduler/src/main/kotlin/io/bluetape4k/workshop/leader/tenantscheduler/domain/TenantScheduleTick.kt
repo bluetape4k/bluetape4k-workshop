@@ -4,7 +4,7 @@ import io.bluetape4k.support.requireNotEmpty
 import java.io.Serializable
 
 /**
- * Deterministic input for one logical scheduler tick.
+ * logical scheduler tick 하나에 대한 결정적 입력이다.
  */
 data class TenantScheduleTick(
     val tick: TenantLogicalTick,
