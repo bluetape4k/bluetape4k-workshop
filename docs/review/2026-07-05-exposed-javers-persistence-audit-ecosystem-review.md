@@ -1,51 +1,46 @@
-# exposed-javers-persistence-audit ecosystem code review
+# exposed-javers-persistence-audit 생태계 코드 리뷰
 
-Module: `:exposed-javers-persistence-audit`
-Branch: `refactor/exposed-javers-persistence-audit-ecosystem-patterns`
-Date: 2026-07-05
+모듈: `:exposed-javers-persistence-audit`
+브랜치: `refactor/exposed-javers-persistence-audit-ecosystem-patterns`
+날짜: 2026-07-05
 
-## Scope
+## 범위
 
-7-Tier review and remediation for the Redis-backed JaVers persistence audit
-example, focused on bluetape4k validation helpers, Redis test isolation,
-JaVers persistence boundaries, and regression evidence.
+이 문서는 Redis-backed JaVers persistence audit example을 bluetape4k validation helper, Redis test isolation, JaVers persistence boundary, regression evidence 기준으로 점검한 7-Tier review와 remediation 결과다.
 
-## 7-Tier Result
+## 7-Tier 결과
 
-| Tier | Status | Evidence |
+| Tier | 상태 | 근거 |
 |---|---|---|
-| API and domain boundaries | PASS | `Order.totalAmount` now uses bluetape4k `requireZeroOrPositiveNumber`; existing id/customer validation remains. |
-| Correctness and audit persistence | PASS | Redis-backed JaVers snapshots, Exposed current-state rows, terminal delete, and sink failure behavior remain covered. |
-| Redis/Testcontainers isolation | PASS | Tests delete only `javers:workshop:order-audit:*` keys instead of flushing the whole shared Redis DB. |
-| bluetape4k ecosystem usage | PASS | Uses bluetape4k JaVers Redis repository, Testcontainers launcher, assertions, and validation helpers. |
-| Kotlin style and safety | PASS | No `!!`, deprecated Exposed imports, `runCatching`, raw `flushdb`, or boolean assertion anti-patterns in touched code. |
-| Tests and regression coverage | PASS | Existing persistence rebuild, diff, terminal delete, and audit sink failure tests pass after scoped cleanup changes. |
-| Documentation and maintainability | PASS | Review artifact records module evidence and no open P0/P1/P2/P3 findings. |
+| API와 domain boundary | PASS | `Order.totalAmount`는 이제 bluetape4k `requireZeroOrPositiveNumber`를 사용하고, 기존 id/customer validation은 유지된다. |
+| Correctness와 audit persistence | PASS | Redis-backed JaVers snapshot, Exposed current-state row, terminal delete, sink failure 동작은 계속 커버된다. |
+| Redis/Testcontainers isolation | PASS | test는 전체 shared Redis DB를 flush하지 않고 `javers:workshop:order-audit:*` key만 삭제한다. |
+| bluetape4k 생태계 사용 | PASS | bluetape4k JaVers Redis repository, Testcontainers launcher, assertion, validation helper를 사용한다. |
+| Kotlin style과 safety | PASS | 수정된 code에는 `!!`, deprecated Exposed import, `runCatching`, raw `flushdb`, boolean assertion anti-pattern이 없다. |
+| Test와 regression coverage | PASS | 기존 persistence rebuild, diff, terminal delete, audit sink failure test는 scoped cleanup 변경 후에도 통과한다. |
+| Documentation과 maintainability | PASS | review artifact는 module evidence와 열린 P0/P1/P2/P3 finding이 없음을 기록한다. |
 
-## Findings
+## 발견 사항
 
 - P0: 0
 - P1: 0
 - P2: 0
 - P3: 0
 
-## Verification
+## 검증
 
 - `repo-test-summary -- ./gradlew :exposed-javers-persistence-audit:compileKotlin :exposed-javers-persistence-audit:compileTestKotlin :exposed-javers-persistence-audit:cleanTest :exposed-javers-persistence-audit:test --no-build-cache --warning-mode all --console=plain --max-workers=1`
-  - PASS, 4 tests.
+  - PASS, 4개 test.
 - `MAX_WORKERS=1 repo-test-summary -- ./scripts/smoke-validate.sh data-access-full`
   - PASS, Gradle exit 0.
 - `repo-test-summary -- ./scripts/smoke-validate.sh stale-check`
-  - PASS, 101 active modules, no stale references, no broken image links.
+  - PASS, active module 101개, stale reference 없음, 깨진 image link 없음.
 - `git diff --check`
   - PASS.
-- Static scan for forbidden assertion style, deprecated Exposed imports,
-  `runCatching`, `!!`, and raw `flushdb`
-  - PASS, no hits in touched paths.
-- Native code-reviewer re-review
+- 금지된 assertion style, deprecated Exposed import, `runCatching`, `!!`, raw `flushdb`에 대한 static scan
+  - PASS, 수정된 path에서 hit 없음.
+- Native code-reviewer 재리뷰
   - APPROVE, P0/P1/P2/P3 = 0.
 
-IntelliJ diagnostics were not available in this Codex surface; Gradle
-compile/test was used as the fallback diagnostics evidence. The full data-access
-smoke emitted Redis shutdown noise after successful test completion, but the
-command exited 0.
+이 Codex surface에서는 IntelliJ diagnostics를 사용할 수 없어 Gradle compile/test를 fallback diagnostics evidence로 사용했다. full data-access
+smoke는 test 성공 후 Redis shutdown noise를 출력했지만 command exit code는 0이었다.
