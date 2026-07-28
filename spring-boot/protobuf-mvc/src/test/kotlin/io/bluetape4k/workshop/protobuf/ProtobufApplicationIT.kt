@@ -135,7 +135,7 @@ class ProtobufApplicationIT {
             .httpGet("/courses/1", MediaType.APPLICATION_PROTOBUF)
             .awaitBody<Course>()
 
-        // JSON Format Text
+        // Protobuf 메시지를 JSON 문자열로 직렬화한 결과입니다.
         val jsonText = course1.toJson()
         log.debug { "jsonText=$jsonText" }
         jsonText shouldContain "Kotlin Programming"

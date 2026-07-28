@@ -16,18 +16,18 @@ configurations {
 dependencies {
     testImplementation(libs.bluetape4k.junit5)
 
-    // Problem
+    // Problem 의존성
     implementation(libs.problem.jackson.datatype)
     implementation(libs.problem.spring.webflux)
 
     api(libs.jakarta.validation.api)
 
-    // Resilience4j
+    // Resilience4j 의존성
     implementation(libs.bluetape4k.resilience4j)
     implementation(libs.resilience4j.all)
     implementation(libs.resilience4j.kotlin)
 
-    // Spring Boot
+    // Spring Boot 의존성
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
@@ -44,16 +44,16 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
-    // Jackson 3
+    // Jackson 3 의존성
     implementation(libs.jackson3.module.kotlin)
 
-    // Coroutines
+    // 코루틴
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactor)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    // Reactor
+    // Reactor 의존성
     implementation(libs.netty.all)
     implementation(libs.reactor.netty)
     implementation(libs.reactor.kotlin.extensions)

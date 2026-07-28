@@ -20,31 +20,31 @@ dependencies {
     testImplementation(libs.bluetape4k.junit5)
     implementation(libs.bluetape4k.testcontainers)
 
-    // Codecs
+    // 코덱
     implementation(libs.kryo)
     implementation(libs.fory.kotlin)
 
-    // Compressor
+    // 압축기
     implementation(libs.commons.compress)
     implementation(libs.lz4.java)
     implementation(libs.snappy.java)
     implementation(libs.zstd.jni)
 
-    // Coroutines
+    // 코루틴
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactor)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    // Reactor
+    // Reactor 의존성
     implementation(libs.reactor.kotlin.extensions)
     testImplementation(libs.reactor.test)
 
-    // Lettuce
+    // Lettuce 의존성
     implementation(libs.lettuce.core)
     implementation(libs.commons.pool2)
 
-    // Netty
+    // Netty 의존성
     implementation(platform(libs.netty.bom))
     implementation(libs.netty.all)
     implementation(libs.netty.transport.native.epoll)

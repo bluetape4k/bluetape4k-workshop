@@ -21,10 +21,10 @@ dependencies {
 
     api(libs.jakarta.annotation.api)
 
-    // Jackson 3
+    // Jackson 3 의존성
     implementation(libs.jackson3.module.kotlin)
 
-    // Spring Boot
+    // Spring Boot 의존성
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
@@ -37,7 +37,7 @@ dependencies {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
     }
 
-    // Websocket
+    // WebSocket 의존성
     implementation(libs.webjar.webjars.locator.core)
     implementation(libs.webjar.sockjs.client)
     implementation(libs.webjar.stomp.websocket)
@@ -45,13 +45,13 @@ dependencies {
     implementation(libs.webjar.jquery)
     implementation(libs.webjar.font.awesome)
 
-    // Coroutines
+    // 코루틴
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactor)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    // Reactor
+    // Reactor 의존성
     implementation(libs.netty.all)
     implementation(libs.reactor.netty)
     implementation(libs.reactor.kotlin.extensions)

@@ -44,7 +44,11 @@ class ProtobufConverterTest {
     }
 
     /**
-     * Json:
+     * JSON 입력 예제입니다.
+     *
+     * 아래 블록은 변환 대상이 되는 원본 JSON 문서 구조를 그대로 보여줍니다.
+     * 필드 이름과 문자열 값은 Protobuf 스키마, 테스트 픽스처, 직렬화 규칙을
+     * 검증하는 코드-facing 예제이므로 원문 식별자를 유지합니다.
      * ```json
      * {
      *   "id": 2,
@@ -64,7 +68,12 @@ class ProtobufConverterTest {
      * }
      * ```
      *
-     * Protobuf Message:
+     * 변환된 Protobuf Message 예제입니다.
+     *
+     * 아래 블록은 `Struct` 형태로 해석된 Protobuf 메시지의 대표 출력입니다.
+     * `fields`, `key`, `value`, `string_value`, `number_value` 같은 토큰은
+     * Protobuf 텍스트 포맷에서 정한 필드명이므로 번역하지 않습니다.
+     * 이 예제는 JSON 필드가 중첩 리스트와 구조체로 보존되는지 확인하는 기준입니다.
      * ```protobuf
      * fields {
      *   key: "courseName"

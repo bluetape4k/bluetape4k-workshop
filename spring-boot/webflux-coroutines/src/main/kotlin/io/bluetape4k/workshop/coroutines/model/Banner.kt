@@ -4,7 +4,7 @@ import io.bluetape4k.codec.Base58
 import java.io.Serializable
 
 /**
- * Banner DTO
+ * 화면 배너 응답에 사용하는 단순 DTO입니다.
  */
 data class Banner(
     val title: String,
