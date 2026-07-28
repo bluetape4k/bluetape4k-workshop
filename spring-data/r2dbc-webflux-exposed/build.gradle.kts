@@ -32,23 +32,23 @@ dependencies {
     testRuntimeOnly(libs.mysql.connector.j)
     testRuntimeOnly(libs.postgresql.driver)
 
-    // R2DBC
+    // R2DBC 의존성
     implementation(libs.r2dbc.h2)
     implementation(libs.r2dbc.pool)
 
     implementation(libs.h2.v2)
 
-    // Exposed R2dbc
+    // Exposed R2DBC 의존성
     implementation(libs.exposed.r2dbc)
     implementation(libs.jetbrains.exposed.r2dbc)
 
-    // Spring Boot
+    // Spring Boot 의존성
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
     runtimeOnly(libs.spring.boot.devtools)
 
-    // Spring Boot
+    // Spring Boot 의존성
     implementation(libs.spring.boot.starter.actuator)
     implementation(libs.spring.boot.starter.aspectj)
     implementation(libs.spring.boot.starter.data.r2dbc.lib)
@@ -61,14 +61,14 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
-    // Coroutines
+    // 코루틴
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactive)
     implementation(libs.kotlinx.coroutines.reactor)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    // Reactor
+    // Reactor 의존성
     implementation(libs.reactor.core)
     implementation(libs.reactor.kotlin.extensions)
     testImplementation(libs.reactor.test)

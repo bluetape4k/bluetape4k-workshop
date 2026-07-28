@@ -26,17 +26,17 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
-    // Mongo Driver
+    // Mongo 드라이버
     implementation(libs.mongodb.driver.kotlin.sync)
     implementation(libs.mongodb.driver.kotlin.coroutine)
     implementation(libs.mongodb.driver.kotlin.extensions)
 
-    // MongoDB Testcontainers
+    // MongoDB Testcontainers 의존성
     implementation(libs.bluetape4k.testcontainers)
     implementation(libs.testcontainers.lib)
     implementation(libs.testcontainers.mongodb)
 
-    // Coroutines
+    // 코루틴
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactive)

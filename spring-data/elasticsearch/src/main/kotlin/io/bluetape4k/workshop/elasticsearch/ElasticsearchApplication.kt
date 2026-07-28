@@ -20,7 +20,7 @@ class ElasticsearchApplication(
 ) {
 
     companion object : KLogging() {
-        // Elasticsearch Server
+        // Elasticsearch 서버
         val elasticsearch = ElasticsearchOssServer.Launcher.elasticsearchOssServer
     }
 
@@ -28,7 +28,7 @@ class ElasticsearchApplication(
     fun insertSampleData() {
         operations.indexOps<Conference>().refresh()
 
-        // Save sample data
+        // 예제 데이터를 저장합니다.
         val documents = listOf(
             Conference(
                 date = "2014-11-06",

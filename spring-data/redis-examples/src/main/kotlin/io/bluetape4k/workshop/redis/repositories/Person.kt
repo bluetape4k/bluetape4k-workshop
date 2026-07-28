@@ -10,9 +10,9 @@ import org.springframework.data.redis.core.RedisHash
 import org.springframework.data.redis.core.index.Indexed
 
 /**
- * [Person] object stored inside a Redis `HASH`.
+ * Redis `HASH` 안에 저장되는 [Person] 객체입니다.
  *
- * Sample (key = persons:9b0ed8ee-14be-46ec-b5fa-79570aadb91d):
+ * 예제 (key = persons:9b0ed8ee-14be-46ec-b5fa-79570aadb91d):
  *
  * ```
  * _class := example.springdata.redis.domain.Person
@@ -46,14 +46,14 @@ class Person: AbstractValueObject() {
 
 
     /**
-     * The [id] and [RedisHash#toString()] build up the `key` for the Redis `HASH`.
+     * [id] 와 [RedisHash#toString()] 으로 Redis `HASH` 의 `key` 를 구성합니다.
      *
      * ```
      * RedisHash.value() + ":" + Person.id
-     * //eg. persons:9b0ed8ee-14be-46ec-b5fa-79570aadb91d
+     * // 예: persons:9b0ed8ee-14be-46ec-b5fa-79570aadb91d
      * ```
      *
-     * **Note: empty [id] fields are automatically assigned during save operation.**
+     * **참고: 비어 있는 [id] 필드는 저장 작업 중 자동으로 할당됩니다.**
      */
     @Id
     var id: String? = null
@@ -61,12 +61,12 @@ class Person: AbstractValueObject() {
     val identifier: String get() = id.requireNotBlank("id")
 
     /**
-     * Using [Indexed] marks the property as for indexing which uses Redis `SET` to keep track of
-     * `ids` for objects with matching values.
+     * [Indexed] 를 사용하면 이 속성을 인덱싱 대상으로 표시합니다.
+     * Redis `SET` 으로 값이 일치하는 객체의 `ids` 를 추적합니다.
      *
      * ```
      * RedisHash.value() + ":" + Field.getName() + ":" + Field.get(Object)
-     * //eg. persons:firstname:eddard
+     * // 예: persons:firstname:eddard
      * ```
      */
     @Indexed
@@ -78,13 +78,13 @@ class Person: AbstractValueObject() {
     var gender: Gender = Gender.UNKNOWN
 
     /**
-     * Since [Indexed] is used on [Address.city], index structures for `persons:address:city` are maintained.
+     * [Address.city] 에 [Indexed] 를 사용하므로 `persons:address:city` 인덱스 구조가 유지됩니다.
      */
     var address: Address? = null
 
     /**
-     * Using [Reference] allows to link to existing objects via their `key`.
-     * The values stored in the objects `HASH` looks like:
+     * [Reference] 를 사용하면 기존 객체를 해당 `key` 로 연결할 수 있습니다.
+     * 객체의 `HASH` 에 저장되는 값은 다음과 같습니다.
      *
      * ```
      * children.[0] := persons:41436096-aabe-42fa-bd5a-9a517fbf0260
