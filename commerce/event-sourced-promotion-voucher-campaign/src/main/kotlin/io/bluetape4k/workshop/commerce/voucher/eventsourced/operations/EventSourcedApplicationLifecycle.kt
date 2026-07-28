@@ -9,7 +9,7 @@ import org.springframework.context.SmartLifecycle
 import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** Verifies the PostgreSQL authority before allowing this process to accept traffic. */
+/** 이 process가 traffic을 받기 전에 PostgreSQL authority를 검증합니다. */
 internal fun interface EventSourcedStartupProbe {
     fun verify()
 }
@@ -27,8 +27,8 @@ internal interface EventSourcedRuntimeWorkers {
 }
 
 /**
- * Owns the application readiness transition and invokes the graceful coordinator before Spring
- * destroys shared infrastructure.
+ * application readiness transition을 소유하고,
+ * Spring이 shared infrastructure를 destroy하기 전에 graceful coordinator를 호출합니다.
  */
 @Component
 internal class EventSourcedApplicationLifecycle(

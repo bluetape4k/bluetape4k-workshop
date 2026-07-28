@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import javax.sql.DataSource
 
-/** Wires the bounded database admission gate and its low-cardinality operational meters. */
+/** bounded database admission gate와 low-cardinality operational meter를 연결합니다. */
 @Configuration(proxyBeanMethods = false)
 internal class EventSourcedOperationsConfiguration {
 

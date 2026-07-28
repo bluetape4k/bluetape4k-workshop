@@ -50,7 +50,7 @@ internal class ProjectionLeaseRepositoryIntegrationTest {
                 leases.acquire(PROJECTION, GENERATION, "owner-b", NOW.plusSeconds(LEASE_TAKEOVER_SECONDS))
             }.shouldNotBeNull()
 
-        // Then
+        // 검증
         (second.fencingToken > first.fencingToken).shouldBeTrue()
         transaction(database) {
             leases.release(PROJECTION, GENERATION, first, NOW.plusSeconds(RENEW_SECONDS)).shouldBeFalse()

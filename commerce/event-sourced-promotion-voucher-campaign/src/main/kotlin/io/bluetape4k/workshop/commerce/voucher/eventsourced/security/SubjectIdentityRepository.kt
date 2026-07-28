@@ -66,10 +66,9 @@ internal data class SubjectIdentity private constructor(
 }
 
 /**
- * Transaction-bound persistence boundary for reversible identity mappings.
+ * reversible identity mapping을 위한 transaction-bound persistence boundary입니다.
  *
- * It deliberately does not expose generic CRUD because erasure and key-ring
- * lookup are the only supported mutation paths.
+ * erasure와 key-ring lookup만 지원되는 mutation path이므로 generic CRUD를 의도적으로 노출하지 않습니다.
  */
 internal class SubjectIdentityRepository(
     private val keyRing: EventSourcedHmacKeyRing,

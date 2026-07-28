@@ -34,8 +34,8 @@ internal data class CampaignProjectionReadModel(
 )
 
 /**
- * Semantic campaign state is reachable only through the fenced projection coordinator.
- * This deliberately exposes no generic CRUD or independent transaction entry point.
+ * semantic campaign state는 fenced projection coordinator를 통해서만 접근할 수 있습니다.
+ * generic CRUD나 독립 transaction entry point를 의도적으로 노출하지 않습니다.
  */
 internal class CampaignProjectionStore(
     private val events: CampaignProjectionEventDecoder = CampaignProjectionEventDecoder(),

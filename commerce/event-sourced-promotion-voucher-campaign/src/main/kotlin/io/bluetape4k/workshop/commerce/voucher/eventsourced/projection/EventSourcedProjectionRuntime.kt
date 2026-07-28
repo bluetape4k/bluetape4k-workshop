@@ -141,11 +141,11 @@ internal class ProjectionRuntimeTelemetry(
 }
 
 /**
- * Spring-owned runtime for the active projector and one durable rebuild candidate.
+ * active projector와 durable rebuild candidate 하나를 위한 Spring-owned runtime입니다.
  *
- * Every poll enters its reserved database lane before requesting a Hikari connection. Candidate
- * activation occurs only after both generations have the target checkpoint and equal semantic
- * digests. Cancellation is recovered durably even after a process restart.
+ * 모든 poll은 Hikari connection을 요청하기 전에 예약된 database lane에 들어갑니다.
+ * candidate activation은 두 generation 모두 target checkpoint와 동일한 semantic digest를 가진 뒤에만 발생합니다.
+ * cancellation은 process restart 뒤에도 durable하게 복구됩니다.
  */
 internal class EventSourcedProjectionRuntime(
     resources: ProjectionRuntimeResources,

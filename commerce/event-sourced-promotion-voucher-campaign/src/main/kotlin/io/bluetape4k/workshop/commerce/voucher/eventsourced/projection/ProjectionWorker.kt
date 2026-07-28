@@ -41,7 +41,7 @@ internal interface ProjectionEventReader {
     fun loadAfter(globalPosition: Long): CommittedProjectionBatch
 }
 
-/** Reads one committed keyset page while the caller owns the projection transaction. */
+/** caller가 projection transaction을 소유하는 동안 committed keyset page 하나를 읽습니다. */
 internal class ExposedProjectionEventReader : ProjectionEventReader {
     override fun loadAfter(globalPosition: Long): CommittedProjectionBatch {
         TransactionManager.current()
@@ -121,7 +121,7 @@ internal class ExposedProjectionTransactionRunner(
     override fun <T> inTransaction(block: () -> T): T = transactions.inTransaction(block)
 }
 
-/** One bounded poll; callers own scheduling and cooperative cancellation. */
+/** bounded poll 하나입니다. scheduling과 cooperative cancellation은 caller가 소유합니다. */
 internal class ProjectionWorker(
     private val repository: ProjectionRepository,
     private val reader: ProjectionEventReader,

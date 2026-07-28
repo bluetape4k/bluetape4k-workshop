@@ -25,7 +25,7 @@ internal data class EventSourcedWorkerShutdown(
     val releaseFencedLeases: () -> Unit,
 )
 
-/** Coordinates graceful shutdown without letting stale workers release a newer lease. */
+/** stale worker가 더 새로운 lease를 release하지 못하게 하면서 graceful shutdown을 조율합니다. */
 internal class EventSourcedLifecycleCoordinator(
     private val state: EventSourcedOperationalState,
     private val gate: EventSourcedDatabasePermitGate,

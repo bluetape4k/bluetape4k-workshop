@@ -50,7 +50,7 @@ internal class EventSnapshot(
     }
 }
 
-/** Snapshot rows accelerate rehydration but never replace event-log authority. */
+/** snapshot row는 rehydration을 가속하지만 event-log authority를 절대 대체하지 않습니다. */
 internal class EventSnapshotRepository {
     fun save(snapshot: EventSnapshot) {
         TransactionManager.current()
@@ -95,7 +95,7 @@ internal class EventSnapshotRepository {
     }
 }
 
-/** Writes optional acceleration state after the authoritative append transaction has committed. */
+/** authoritative append transaction이 commit된 뒤 optional acceleration state를 씁니다. */
 internal interface SnapshotTransactionRunner {
     fun <T> inTransaction(block: () -> T): T
 }

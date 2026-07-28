@@ -165,8 +165,8 @@ internal sealed interface ProjectionActivationResult {
 }
 
 /**
- * Durable generation authority. The active pointer changes only after a candidate has reached a
- * validated target head; all caller mutations run in the foreground PostgreSQL transaction.
+ * durable generation authority입니다. candidate가 검증된 target head에 도달한 뒤에만 active pointer가 바뀝니다.
+ * 모든 caller mutation은 foreground PostgreSQL transaction에서 실행됩니다.
  */
 internal class ProjectionRebuildRepository {
 

@@ -28,10 +28,10 @@ internal enum class HmacPurpose(
 }
 
 /**
- * One versioned HMAC key. Key material is copied on ingress and is never exposed.
+ * versioned HMAC key 하나입니다. key material은 ingress에서 복사되며 절대 노출하지 않습니다.
  *
- * JCA is intentionally wrapped here because bluetape4k's Tink helper owns an
- * internally generated key and cannot compute with externally versioned key material.
+ * bluetape4k의 Tink helper는 내부 생성 key를 소유하고 externally versioned key material로 계산할 수 없으므로,
+ * 여기서 JCA를 의도적으로 감쌉니다.
  */
 internal class EventSourcedHmacKey(
     version: Int,
@@ -75,7 +75,7 @@ internal class EventSourcedKeyUnavailableException(
     val keyVersion: Int,
 ) : IllegalStateException("HMAC key version $keyVersion is unavailable")
 
-/** Active plus retention-bound retired keys used for stable, domain-separated correlation. */
+/** 안정적인 domain-separated correlation에 사용하는 active key와 retention-bound retired key입니다. */
 internal class EventSourcedHmacKeyRing(
     private val active: EventSourcedHmacKey,
     retired: List<EventSourcedHmacKey> = emptyList(),

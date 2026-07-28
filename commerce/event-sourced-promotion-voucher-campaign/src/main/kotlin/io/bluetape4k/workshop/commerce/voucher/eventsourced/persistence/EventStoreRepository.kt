@@ -25,7 +25,7 @@ import kotlin.time.toJavaDuration
 
 private val EVENT_STORE_FENCE_ID = UUID.fromString("00000000-0000-0000-0000-000000000001")
 
-/** Opens independent read transactions while leaving foreground append ownership to the caller. */
+/** foreground append ownership은 caller에게 남겨 두고 독립 read transaction을 엽니다. */
 internal interface EventStoreTransactionRunner {
     fun <T> readTransaction(block: () -> T): T
 }
@@ -36,7 +36,7 @@ internal class ExposedEventStoreTransactionRunner(
     override fun <T> readTransaction(block: () -> T): T = transaction(database) { block() }
 }
 
-/** Production reads acquire the foreground permit before asking HikariCP for a connection. */
+/** production read는 HikariCP에 connection을 요청하기 전에 foreground permit을 획득합니다. */
 internal class PermittedEventStoreTransactionRunner(
     database: Database,
     permits: EventSourcedDatabasePermitGate,
@@ -52,8 +52,8 @@ internal class PermittedEventStoreTransactionRunner(
 }
 
 /**
- * PostgreSQL event authority. Appends deliberately use the caller's transaction so command
- * idempotency finalization and event persistence share one commit boundary.
+ * PostgreSQL event authority입니다. append는 의도적으로 caller의 transaction을 사용해
+ * command idempotency finalization과 event persistence가 하나의 commit boundary를 공유하게 합니다.
  */
 @Suppress("TooManyFunctions")
 internal class EventStoreRepository(

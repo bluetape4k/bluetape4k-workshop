@@ -27,7 +27,7 @@ internal class RehydratedState<T : Any>(
     val replayedEvents: Int,
 )
 
-/** Snapshots are optional accelerators; invalid, stale, or retired-key snapshots fall back to events. */
+/** snapshot은 optional accelerator입니다. invalid, stale, retired-key snapshot은 event로 fallback합니다. */
 internal class BoundedRehydrator(
     private val eventStore: EventStorePort,
     private val snapshotLoader: (StreamKey) -> EventSnapshot?,

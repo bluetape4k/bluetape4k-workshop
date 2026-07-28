@@ -7,8 +7,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.web.SecurityFilterChain
 
 /**
- * Customer compatibility endpoints use the bounded workshop identity headers validated by their
- * adapters. Operator routes are fenced independently by [EventSourcedOperatorAccessFilter].
+ * customer compatibility endpoint는 adapter가 검증한 bounded workshop identity header를 사용합니다.
+ * operator route는 [EventSourcedOperatorAccessFilter]가 독립적으로 fence 처리합니다.
  */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(EventSourcedOperatorProperties::class)

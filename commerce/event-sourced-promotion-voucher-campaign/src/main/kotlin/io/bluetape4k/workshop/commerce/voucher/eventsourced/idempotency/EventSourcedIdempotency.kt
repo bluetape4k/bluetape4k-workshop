@@ -18,7 +18,7 @@ private const val OWNER_TOKEN_BYTES = 32
 private const val MIN_HTTP_STATUS = 100
 private const val MAX_HTTP_STATUS = 599
 
-/** Canonical SHA-256 hex digest; raw identity, key, and owner-token material never reaches persistence. */
+/** canonical SHA-256 hex digest입니다. raw identity, key, owner-token material은 persistence에 도달하지 않습니다. */
 @JvmInline
 internal value class ReceiptDigest private constructor(
     val value: String,
@@ -26,7 +26,7 @@ internal value class ReceiptDigest private constructor(
     companion object {
         private const val serialVersionUID: Long = 1L
 
-        /** Reconstitutes a canonical digest that was previously validated before persistence. */
+        /** persistence 전에 이미 검증된 canonical digest를 재구성합니다. */
         fun of(value: String): ReceiptDigest = ReceiptDigest(value)
 
         fun sha256(value: String): ReceiptDigest =
@@ -44,7 +44,7 @@ internal value class ReceiptDigest private constructor(
     }
 }
 
-/** Secret acquisition capability. Only [digest] is persisted. */
+/** secret acquisition capability입니다. [digest]만 저장합니다. */
 @JvmInline
 internal value class ReceiptOwnerToken private constructor(
     private val value: String,
@@ -64,7 +64,7 @@ internal value class ReceiptOwnerToken private constructor(
     }
 }
 
-/** Immutable identity of one idempotent command receipt; never persist raw credentials. */
+/** idempotent command receipt 하나의 immutable identity입니다. raw credential은 절대 저장하지 않습니다. */
 @ConsistentCopyVisibility
 internal data class ReceiptScope private constructor(
     val tenantId: TenantId,
@@ -119,7 +119,7 @@ internal data class TerminalKeyVersions private constructor(
     }
 }
 
-/** Closed response descriptor; it deliberately stores allocation identity and key versions, never a voucher code. */
+/** 닫힌 response descriptor입니다. voucher code가 아니라 allocation identity와 key version만 의도적으로 저장합니다. */
 @ConsistentCopyVisibility
 internal data class TerminalDescriptor private constructor(
     val outcome: ReceiptOutcome,

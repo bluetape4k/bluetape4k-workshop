@@ -23,7 +23,7 @@ internal const val PROJECTION_LEASE_RENEW_SECONDS = 5L
 private val DEFAULT_PROJECTION_LEASE: Duration = Duration.ofSeconds(PROJECTION_LEASE_TTL_SECONDS)
 
 /**
- * Fenced ownership for one projection generation. A newer owner must always hold a larger token.
+ * projection generation 하나의 fenced ownership입니다. 더 새로운 owner는 항상 더 큰 token을 보유해야 합니다.
  */
 internal data class ProjectionLease(
     val ownerDigest: String,
@@ -37,7 +37,7 @@ internal data class ProjectionLease(
 }
 
 /**
- * PostgreSQL lease authority. Callers must perform projection writes with the returned fencing token.
+ * PostgreSQL lease authority입니다. caller는 반환된 fencing token으로 projection write를 수행해야 합니다.
  */
 internal class ProjectionLeaseRepository {
 
@@ -119,7 +119,7 @@ internal class ProjectionLeaseRepository {
         return released
     }
 
-    /** Holds the lease row lock until the caller's transaction commits. */
+    /** caller의 transaction이 commit될 때까지 lease row lock을 보유합니다. */
     fun requireActive(
         projection: String,
         generation: Long,

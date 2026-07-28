@@ -17,7 +17,7 @@ import java.util.UUID
 internal const val MAX_EVENT_STORE_PAGE_SIZE = 200
 private const val UUID_V7 = 7
 
-/** A globally unique aggregate stream within the event authority. */
+/** event authority 안에서 전역적으로 유일한 aggregate stream입니다. */
 internal data class StreamKey(
     val tenantId: TenantId,
     val streamType: String,
@@ -31,7 +31,7 @@ internal data class StreamKey(
         compareValuesBy(this, other, { it.tenantId.value }, StreamKey::streamType, StreamKey::streamId)
 }
 
-/** The event material known before the event store assigns stream and global positions. */
+/** event store가 stream position과 global position을 배정하기 전에 알고 있는 event material입니다. */
 internal data class EventToAppend(
     val eventId: UUID,
     val eventType: String,
@@ -65,7 +65,7 @@ internal data class ExpectedAppend(
     }
 }
 
-/** A bounded request for a stream tail. */
+/** stream tail을 위한 bounded request입니다. */
 internal data class EventStoreRead(
     val stream: StreamKey,
     val afterVersion: Long,
@@ -113,10 +113,10 @@ internal interface EventStorePort {
     fun load(read: EventStoreRead): EventPage
 
     /**
-     * Loads through the transaction already owned by command orchestration.
+     * command orchestration이 이미 소유한 transaction을 통해 load합니다.
      *
-     * Implementations may override this to avoid opening a second transaction or acquiring a
-     * nested database permit. Test doubles default to their ordinary bounded load.
+     * 구현체는 두 번째 transaction을 열거나 nested database permit을 얻지 않도록 이를 override할 수 있습니다.
+     * test double은 기본적으로 일반 bounded load를 사용합니다.
      */
     fun loadInCurrentTransaction(read: EventStoreRead): EventPage = load(read)
 

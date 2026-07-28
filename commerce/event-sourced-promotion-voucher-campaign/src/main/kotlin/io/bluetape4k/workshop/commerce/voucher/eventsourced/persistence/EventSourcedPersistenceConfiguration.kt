@@ -28,10 +28,10 @@ internal data class EventSourcedExposedDatabaseRegistration(
 internal class EventSourcedPersistenceConfiguration {
 
     /**
-     * Bridges Boot's DataSource ordering gap while retaining the bluetape4k Exposed factory.
+     * bluetape4k Exposed factory를 유지하면서 Boot의 DataSource ordering gap을 메웁니다.
      *
-     * The published auto-configuration currently evaluates `@ConditionalOnBean(DataSource::class)`
-     * before Boot 4 registers its Hikari DataSource in this application.
+     * published auto-configuration은 현재 이 application에서 Boot 4가 Hikari DataSource를 등록하기 전에
+     * `@ConditionalOnBean(DataSource::class)`를 평가합니다.
      */
     @Bean("springTransactionManager")
     fun springTransactionManager(dataSource: DataSource): PlatformTransactionManager =
