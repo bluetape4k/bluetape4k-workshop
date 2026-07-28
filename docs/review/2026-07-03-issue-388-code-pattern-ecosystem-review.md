@@ -1,68 +1,68 @@
 # Issue #388 Code Pattern Ecosystem Review
 
-Date: 2026-07-03
-Scope: repository-wide Kotlin pattern scan, with safe fixes in 11 workshop modules
+날짜: 2026-07-03
+범위: repository-wide Kotlin pattern scan과 11개 workshop module의 safe fix.
 
-## Summary
+## 요약
 
-This review checks the residual ecosystem-use drift found after the milestone 1.3.1 examples and the broader follow-up scan requested after the initial PR was too narrow:
+이 review는 milestone 1.3.1 example 이후 남은 ecosystem-use drift와, 초기 PR 범위가 너무 좁았다는 후속 scan 요청을 확인한다.
 
-- Replace opaque string ID generation in `OrderId.newId()` with `Base58.randomString(8)`.
-- Replace `kotlin.test.assertFailsWith` with `io.bluetape4k.assertions.assertFailsWith`.
-- Prefer `bluetape4k.support` validation helpers in touched domain value objects.
-- Remove production `!!` from the scanned source tree by replacing it with `requireNotNull`, `requireNotBlank`, or `checkNotNull` according to caller-input vs invariant intent.
-- Replace a runtime `println` with bluetape4k lazy logging.
-- Remove a stale commented projection example that still taught `!!`.
+- `OrderId.newId()`의 opaque string ID generation을 `Base58.randomString(8)`로 교체한다.
+- `kotlin.test.assertFailsWith`를 `io.bluetape4k.assertions.assertFailsWith`로 교체한다.
+- touched domain value object에서 `bluetape4k.support` validation helper를 선호한다.
+- scanned source tree의 production `!!`를 제거하고, caller-input과 invariant 의도에 따라 `requireNotNull`, `requireNotBlank`, `checkNotNull`로 대체한다.
+- runtime `println`을 bluetape4k lazy logging으로 교체한다.
+- 여전히 `!!`를 가르치던 오래된 commented projection example을 제거한다.
 
 ## Repository Pattern Scan
 
-The wide scan covered 1,473 tracked Kotlin files.
+wide scan은 tracked Kotlin file 1,473개를 다뤘다.
 
-| Pattern | Total | `src/main` | Disposition |
+| Pattern | Total | `src/main` | 처리 |
 |---|---:|---:|---|
-| `!!` | 176 | 0 | Production code fixed; remaining matches are tests/examples and are tracked by #392. |
-| Raw `require(...)` | 155 | 151 | Broad domain-validation cleanup remains; many are constructor/domain invariant sites and need module-by-module intent checks in #390. |
-| Raw `check(...)` | 33 | 15 | Mostly invariant checks; no mechanical replacement. |
-| `Thread.sleep(...)` | 113 | 31 | Many are virtual-thread/blocking demonstration examples; production/service sleeps are tracked by #391. |
-| `runBlocking { ... }` | 6 | 6 | All production matches are blocking-to-suspend bridge examples; cancellation/dispatcher review is tracked by #391. |
-| Raw `println(...)` | 12 | 7 | Runtime usage fixed; remaining production matches are KDoc examples. |
-| Raw `GenericContainer` | 0 | 0 | No violation found. |
-| Direct `XxxServer(...)` constructor | 7 | 1 | Main match is covered by issue #382 / PR #387; test matches are documented custom-container exceptions. |
-| Legacy assertion imports | 0 | 0 | No `kotlin.test`, JUnit assertion, AssertJ, or Kluent imports remain. |
-| `UUID.randomUUID()` | 0 | 0 | No remaining UUID generation drift. |
+| `!!` | 176 | 0 | Production code는 수정됨. 남은 match는 test/example이며 #392에서 추적한다. |
+| Raw `require(...)` | 155 | 151 | 넓은 domain-validation cleanup은 남아 있다. 많은 항목이 constructor/domain invariant site이며 #390에서 module-by-module intent check가 필요하다. |
+| Raw `check(...)` | 33 | 15 | 대부분 invariant check이므로 mechanical replacement를 하지 않는다. |
+| `Thread.sleep(...)` | 113 | 31 | 상당수는 virtual-thread/blocking demonstration example이다. production/service sleep은 #391에서 추적한다. |
+| `runBlocking { ... }` | 6 | 6 | 모든 production match는 blocking-to-suspend bridge example이다. cancellation/dispatcher review는 #391에서 추적한다. |
+| Raw `println(...)` | 12 | 7 | runtime usage는 수정됨. 남은 production match는 KDoc example이다. |
+| Raw `GenericContainer` | 0 | 0 | 위반 없음. |
+| Direct `XxxServer(...)` constructor | 7 | 1 | main match는 issue #382 / PR #387에서 다룬다. test match는 documented custom-container exception이다. |
+| Legacy assertion imports | 0 | 0 | `kotlin.test`, JUnit assertion, AssertJ, Kluent import는 남아 있지 않다. |
+| `UUID.randomUUID()` | 0 | 0 | 남은 UUID generation drift 없음. |
 
 ## 7-Tier Review
 
-| Tier | Verdict | Evidence |
+| Tier | 판정 | 근거 |
 |---|---|---|
-| 1 Security | PASS | The generated order identifier remains an opaque synthetic example id and does not include PII. |
-| 2 Correctness | PASS | `OrderId.newId()` still produces non-blank `order-*` ids; validation keeps caller-input failures as `IllegalArgumentException`, while persisted-id/observation/singleton assumptions now fail as explicit invariants. |
-| 3 Architecture | PASS | No module boundaries or public workflows changed; the diff only swaps raw JDK/test helpers and unsafe null assertions for bluetape4k ecosystem helpers or explicit Kotlin invariants. |
-| 4 Code Quality | PASS | `Base58.randomString`, `requireNotBlank`, `requireNotEmpty`, `requireNotNull`, `requirePositiveNumber`, `requireZeroOrPositiveNumber`, `checkNotNull`, lazy logging, and `bluetape4k.assertions.assertFailsWith` are used in the touched code. |
-| 5 Tests | PASS | Compile and tests pass for all touched modules plus the original issue modules. |
-| 6 Docs/Examples | PASS | No README behavior changed; review and lesson artifacts capture the ecosystem rule and exceptions. |
-| 7 Evidence | PASS | Pattern grep, compile, tests, and `git diff --check` were run on the feature branch. |
+| 1 Security | PASS | 생성된 order identifier는 opaque synthetic example id로 남으며 PII를 포함하지 않는다. |
+| 2 Correctness | PASS | `OrderId.newId()`는 계속 non-blank `order-*` id를 생성한다. validation은 caller-input failure를 `IllegalArgumentException`으로 유지하고, persisted-id/observation/singleton assumption은 이제 명시적 invariant로 실패한다. |
+| 3 Architecture | PASS | module boundary나 public workflow는 변경되지 않았다. diff는 raw JDK/test helper와 unsafe null assertion을 bluetape4k ecosystem helper 또는 명시적 Kotlin invariant로 바꾼다. |
+| 4 Code Quality | PASS | touched code는 `Base58.randomString`, `requireNotBlank`, `requireNotEmpty`, `requireNotNull`, `requirePositiveNumber`, `requireZeroOrPositiveNumber`, `checkNotNull`, lazy logging, `bluetape4k.assertions.assertFailsWith`를 사용한다. |
+| 5 Tests | PASS | touched module 전체와 original issue module에서 compile/test가 통과했다. |
+| 6 Docs/Examples | PASS | README behavior는 변경되지 않았다. review와 lesson artifact가 ecosystem rule 및 exception을 기록한다. |
+| 7 Evidence | PASS | Pattern grep, compile, test, `git diff --check`를 feature branch에서 실행했다. |
 
-P0/P1 findings: 0.
+P0/P1 발견사항: 0.
 
-## Exceptions Checked
+## 확인된 예외
 
-- `leader/leader-election/src/test/.../RedisFailureTest.kt` keeps a dedicated `RedisServer` because the test intentionally stops Redis and must not stop the shared launcher singleton.
-- `spring-boot/cache-resilience/src/test/.../ResilientCacheServiceTest.kt` keeps a dedicated `RedisServer` because the Redis container must join the same Docker network as Toxiproxy with the `redis` alias.
-- `spring-data/elasticsearch*/src/test/.../ElasticsearchServerTest.kt` intentionally constructs a server with a non-default password to verify server wrapper behavior.
-- `ratelimit/bucker4j-bluetape4k-webflux/.../TestRedisConfig.kt` is handled by the separate issue #382 / PR #387 branch.
-- Production `Thread.sleep` and `runBlocking` matches were not changed mechanically because several modules are explicit blocking, virtual-thread, or leader-bridge examples. They need behavior-preserving module issues.
-- Follow-up issues created from this pass: #390 raw validation helpers, #391 blocking/sleep boundaries, #392 test null assertions.
+- `leader/leader-election/src/test/.../RedisFailureTest.kt`는 test가 Redis를 의도적으로 중지해야 하며 shared launcher singleton을 멈추면 안 되므로 dedicated `RedisServer`를 유지한다.
+- `spring-boot/cache-resilience/src/test/.../ResilientCacheServiceTest.kt`는 Redis container가 Toxiproxy와 같은 Docker network에 `redis` alias로 참여해야 하므로 dedicated `RedisServer`를 유지한다.
+- `spring-data/elasticsearch*/src/test/.../ElasticsearchServerTest.kt`는 non-default password로 server wrapper behavior를 검증하기 위해 server를 의도적으로 직접 생성한다.
+- `ratelimit/bucker4j-bluetape4k-webflux/.../TestRedisConfig.kt`는 별도 issue #382 / PR #387 branch에서 다룬다.
+- Production `Thread.sleep` 및 `runBlocking` match는 여러 module이 explicit blocking, virtual-thread, leader-bridge example이므로 기계적으로 변경하지 않았다. behavior-preserving module issue가 필요하다.
+- 이 pass에서 생성한 follow-up issue: #390 raw validation helpers, #391 blocking/sleep boundaries, #392 test null assertions.
 
-## Verification
+## 검증
 
-- `rg -n "UUID\\.randomUUID\\(\\)|import java\\.util\\.UUID|import kotlin\\.test|kotlin\\.test\\.assertFailsWith|assertThrows\\(|org\\.junit\\.jupiter\\.api\\.Assertions" spring-modulith/ddd-order-audit kotlin/flow-extensions-parallel-enrichment -g '*.kt'` returned no matches.
-- Repository scan after fixes: production `!!` = 0, raw `GenericContainer` = 0, legacy assertion imports = 0, `UUID.randomUUID()` = 0.
-- `./gradlew :spring-modulith-ddd-order-audit:compileKotlin :spring-modulith-ddd-order-audit:compileTestKotlin :kotlin-flow-extensions-parallel-enrichment:compileKotlin :kotlin-flow-extensions-parallel-enrichment:compileTestKotlin :spring-data-jpa-querydsl:compileKotlin :spring-data-jpa-querydsl:compileTestKotlin :spring-data-redis-examples:compileKotlin :spring-data-redis-examples:compileTestKotlin :spring-data-elasticsearch-webflux:compileKotlin :spring-data-elasticsearch-webflux:compileTestKotlin :spring-data-mongodb-transactions:compileKotlin :spring-data-mongodb-transactions:compileTestKotlin :exposed-webflux-r2dbc:compileKotlin :exposed-webflux-r2dbc:compileTestKotlin :bucket4j-redis:compileKotlin :bucket4j-redis:compileTestKotlin :spring-modulith-jpa-demo:compileKotlin :spring-modulith-jpa-demo:compileTestKotlin :micrometer-observation:compileKotlin :micrometer-observation:compileTestKotlin :kotlin-design-patterns:compileKotlin :kotlin-design-patterns:compileTestKotlin --warning-mode all --max-workers=1 --console=plain` passed.
-- `./gradlew :spring-modulith-ddd-order-audit:test :kotlin-flow-extensions-parallel-enrichment:test :spring-data-jpa-querydsl:test :spring-data-redis-examples:test :spring-data-elasticsearch-webflux:test :spring-data-mongodb-transactions:test :exposed-webflux-r2dbc:test :bucket4j-redis:test :spring-modulith-jpa-demo:test :micrometer-observation:test :kotlin-design-patterns:test --max-workers=1 --console=plain` passed.
-- `git diff --check` passed.
+- `rg -n "UUID\\.randomUUID\\(\\)|import java\\.util\\.UUID|import kotlin\\.test|kotlin\\.test\\.assertFailsWith|assertThrows\\(|org\\.junit\\.jupiter\\.api\\.Assertions" spring-modulith/ddd-order-audit kotlin/flow-extensions-parallel-enrichment -g '*.kt'`는 match를 반환하지 않았다.
+- 수정 후 repository scan: production `!!` = 0, raw `GenericContainer` = 0, legacy assertion imports = 0, `UUID.randomUUID()` = 0.
+- `./gradlew :spring-modulith-ddd-order-audit:compileKotlin :spring-modulith-ddd-order-audit:compileTestKotlin :kotlin-flow-extensions-parallel-enrichment:compileKotlin :kotlin-flow-extensions-parallel-enrichment:compileTestKotlin :spring-data-jpa-querydsl:compileKotlin :spring-data-jpa-querydsl:compileTestKotlin :spring-data-redis-examples:compileKotlin :spring-data-redis-examples:compileTestKotlin :spring-data-elasticsearch-webflux:compileKotlin :spring-data-elasticsearch-webflux:compileTestKotlin :spring-data-mongodb-transactions:compileKotlin :spring-data-mongodb-transactions:compileTestKotlin :exposed-webflux-r2dbc:compileKotlin :exposed-webflux-r2dbc:compileTestKotlin :bucket4j-redis:compileKotlin :bucket4j-redis:compileTestKotlin :spring-modulith-jpa-demo:compileKotlin :spring-modulith-jpa-demo:compileTestKotlin :micrometer-observation:compileKotlin :micrometer-observation:compileTestKotlin :kotlin-design-patterns:compileKotlin :kotlin-design-patterns:compileTestKotlin --warning-mode all --max-workers=1 --console=plain` 통과.
+- `./gradlew :spring-modulith-ddd-order-audit:test :kotlin-flow-extensions-parallel-enrichment:test :spring-data-jpa-querydsl:test :spring-data-redis-examples:test :spring-data-elasticsearch-webflux:test :spring-data-mongodb-transactions:test :exposed-webflux-r2dbc:test :bucket4j-redis:test :spring-modulith-jpa-demo:test :micrometer-observation:test :kotlin-design-patterns:test --max-workers=1 --console=plain` 통과.
+- `git diff --check` 통과.
 
-Residual risks:
+잔여 위험:
 
-- The Spring Modulith test run logs PostgreSQL/JPA shutdown warnings after successful tests; this is existing container lifecycle noise and not introduced by the code-pattern refactor.
-- Test sources still contain many `!!` and `Thread.sleep` usages. These are visible debt and should be handled as separate focused issues because several tests need assertion-intent and Awaitility/coroutine-helper rewrites rather than mechanical replacement.
+- Spring Modulith test run은 성공 후 PostgreSQL/JPA shutdown warning을 기록한다. 이는 기존 container lifecycle noise이며 code-pattern refactor가 도입한 것이 아니다.
+- Test source에는 여전히 많은 `!!`와 `Thread.sleep` usage가 있다. 여러 테스트는 기계적 교체가 아니라 assertion intent와 Awaitility/coroutine-helper rewrite가 필요하므로 별도 focused issue로 처리해야 하는 visible debt다.
