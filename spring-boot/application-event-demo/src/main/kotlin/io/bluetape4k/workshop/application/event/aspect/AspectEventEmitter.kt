@@ -4,10 +4,10 @@ import org.springframework.context.ApplicationEvent
 import kotlin.reflect.KClass
 
 /**
- * Publishes an [ApplicationEvent] after the annotated method returns.
+ * annotation 이 붙은 method 가 반환된 뒤 [ApplicationEvent] 를 publish 합니다.
  *
- * [params] may contain a SpEL expression such as `#{#root.id}`. When omitted,
- * the intercepted method result is passed to the event constructor.
+ * [params] 에는 `#{#root.id}` 같은 SpEL expression 을 넣을 수 있습니다.
+ * 생략하면 intercept 된 method result 를 event constructor 로 전달합니다.
  */
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FUNCTION)

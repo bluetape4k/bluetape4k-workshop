@@ -13,7 +13,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser
 import org.springframework.stereotype.Component
 
 /**
- * Publishes events declared by [AspectEventEmitter] through [ApplicationEventPublisher].
+ * [AspectEventEmitter] 로 선언된 event 를 [ApplicationEventPublisher] 로 publish 합니다.
  */
 @Component
 @Aspect
@@ -37,10 +37,10 @@ class AspectEventPublisherAspect : ApplicationEventPublisherAware {
         publisher = applicationEventPublisher
     }
 
-    // The named pointcut lets @Around bind the annotation argument.
+    // named pointcut 으로 @Around 가 annotation argument 를 binding 할 수 있게 합니다.
     @Pointcut("@annotation(aspectEventEmitter)")
     fun pointcut(aspectEventEmitter: AspectEventEmitter) {
-        // Do nothing
+        // 아무 작업도 하지 않습니다.
     }
 
     @Around(
@@ -66,7 +66,7 @@ class AspectEventPublisherAspect : ApplicationEventPublisherAware {
     ) {
         val event = when {
             aspectEventEmitter.params.isSpel() -> {
-                // Parse params and provide the evaluated value as the event constructor argument.
+                // params 를 parse 하고 평가된 값을 event constructor argument 로 제공합니다.
                 val spel = aspectEventEmitter.params.replace(spelRegex, "$1")
                 log.debug { "spel=$spel" }
                 val arg = expressionParser.parseExpression(spel).getValue(result)
@@ -75,7 +75,7 @@ class AspectEventPublisherAspect : ApplicationEventPublisherAware {
             }
 
             else                               -> {
-                // By default, pass the intercepted method result to the event constructor.
+                // 기본적으로 intercept 된 method result 를 event constructor 로 전달합니다.
                 log.debug { "build event[${aspectEventEmitter.eventType.simpleName}] with result=$result" }
                 aspectEventEmitter.eventType.constructors.first().call(joinPoint.target, result)
             }

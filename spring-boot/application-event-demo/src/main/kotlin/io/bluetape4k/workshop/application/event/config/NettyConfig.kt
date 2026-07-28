@@ -16,9 +16,9 @@ import reactor.netty.resources.LoopResources
 import java.time.Duration
 
 /**
- * Provides Netty settings for the WebFlux application.
+ * WebFlux application 을 위한 Netty 설정을 제공합니다.
  *
- * Tune these options when the example needs higher connection concurrency.
+ * 예제가 더 높은 connection concurrency 를 요구할 때 이 옵션을 조정합니다.
  */
 @Configuration(proxyBeanMethods = false)
 class NettyConfig {

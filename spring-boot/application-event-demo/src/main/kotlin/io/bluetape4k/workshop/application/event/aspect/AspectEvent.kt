@@ -4,7 +4,7 @@ import org.springframework.context.ApplicationEvent
 import java.io.Serializable
 
 /**
- * Application event emitted by [AspectEventEmitter] advice.
+ * [AspectEventEmitter] advice 가 발생시키는 application event 입니다.
  */
 data class AspectEvent(
     val src: Any,
