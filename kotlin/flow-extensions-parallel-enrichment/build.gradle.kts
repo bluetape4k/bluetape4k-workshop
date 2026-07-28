@@ -7,7 +7,7 @@ configurations {
 }
 
 dependencies {
-    // Core coroutine extensions and shared test utilities
+    // 핵심 coroutine 확장과 공유 테스트 유틸리티입니다.
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)

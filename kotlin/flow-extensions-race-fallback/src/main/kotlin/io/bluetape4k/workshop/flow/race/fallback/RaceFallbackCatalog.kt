@@ -17,16 +17,14 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.isActive
 
 /**
- * Demonstrates bluetape4k Flow source-composition operators for multi-source catalog reads.
+ * multi-source catalog read 에서 bluetape4k Flow source-composition operator 사용법을 보여줍니다.
  *
- * The methods are intentionally thin wrappers around the Flow extension APIs so the workshop can
- * focus on operator selection: fastest-wins race, ordered fallback, eager fallback, merge, and
- * error-as-value handling.
+ * 이 메서드들은 Flow extension API 를 얇게 감싼 wrapper 로 남겨 두어 workshop 이 fastest-wins race, ordered fallback, eager fallback, merge, error-as-value 처리에서 어떤 operator 를 고를지에 집중하게 합니다.
  */
 class RaceFallbackCatalog {
 
     /**
-     * Builds a cold source Flow with optional lifecycle callbacks for deterministic tests.
+     * deterministic test 를 위한 선택적 lifecycle callback 을 가진 cold source Flow 를 만듭니다.
      */
     fun source(
         result: SourceResult,
@@ -54,7 +52,7 @@ class RaceFallbackCatalog {
     }
 
     /**
-     * Selects the first source that emits a value and cancels losing sources.
+     * 값을 먼저 방출한 source 를 선택하고 경쟁에서 진 source 를 취소합니다.
      */
     fun fastestHealthy(sources: Iterable<Flow<SourceResult>>): Flow<SourceResult> =
         sources.toList()
@@ -62,7 +60,7 @@ class RaceFallbackCatalog {
             .race()
 
     /**
-     * Collects fallback sources strictly in the provided order.
+     * fallback source 를 전달된 순서 그대로 엄격하게 collect 합니다.
      */
     fun orderedFallback(sources: Iterable<Flow<SourceResult>>): Flow<SourceResult> =
         sources.toList()
@@ -70,7 +68,7 @@ class RaceFallbackCatalog {
             .concat()
 
     /**
-     * Starts all fallback sources immediately while preserving source emission order.
+     * source emission order 를 보존하면서 모든 fallback source 를 즉시 시작합니다.
      */
     fun eagerFallback(vararg sources: Flow<SourceResult>): Flow<SourceResult> {
         sources.requireNotEmpty("sources")
@@ -78,7 +76,7 @@ class RaceFallbackCatalog {
     }
 
     /**
-     * Maps source identifiers to eager fallback probes while preserving source order.
+     * source order 를 보존하면서 source identifier 를 eager fallback probe 로 매핑합니다.
      */
     fun eagerFallbackBySource(
         sources: Flow<CatalogSource>,
@@ -86,7 +84,7 @@ class RaceFallbackCatalog {
     ): Flow<SourceResult> = sources.concatMapEager(sourceFactory)
 
     /**
-     * Merges all source contributions by arrival order.
+     * 모든 source contribution 을 도착 순서대로 merge 합니다.
      */
     fun mergeContributions(vararg sources: Flow<SourceResult>): Flow<SourceResult> {
         sources.requireNotEmpty("sources")
@@ -94,7 +92,7 @@ class RaceFallbackCatalog {
     }
 
     /**
-     * Converts terminal errors and completion into value events.
+     * terminal error 와 completion 을 value event 로 변환합니다.
      */
     fun materialized(source: Flow<SourceResult>): Flow<FlowEvent<SourceResult>> = source.materialize()
 

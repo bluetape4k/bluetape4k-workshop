@@ -27,24 +27,18 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 
 /**
- * Realtime search/autocomplete Flow pipeline.
+ * realtime search/autocomplete Flow pipeline 입니다.
  *
- * `settings` should be a seeded hot/state-like Flow, such as
- * `MutableStateFlow(initialSettings)`. Queries emitted before the first
- * settings value are intentionally dropped by `withLatestFrom`.
+ * `settings` 는 `MutableStateFlow(initialSettings)` 처럼 seed 값이 있는 hot/state-like Flow 여야 합니다. 첫 settings 값 이전에 방출된 query 는 `withLatestFrom` 에 의해 의도적으로 버려집니다.
  */
 class SearchPipeline(
     private val adapter: SearchAdapter,
 ) {
 
     /**
-     * Builds a search result stream from raw query input, latest settings, and
-     * a session stop signal.
+     * raw query input, latest settings, session stop signal 로 search result stream 을 만듭니다.
      *
-     * Newer queries cancel stale in-flight searches through `flatMapLatest`.
-     * Session close is normalized into one shared signal and races every
-     * adapter call, so closing the session cancels suspended search work instead
-     * of only suppressing downstream output.
+     * 새 query 는 `flatMapLatest` 를 통해 오래된 in-flight search 를 취소합니다. session close 는 하나의 shared signal 로 정규화되어 모든 adapter call 과 경쟁하므로, downstream output 만 억제하는 대신 중단된 search 작업 자체를 취소합니다.
      */
     @OptIn(ExperimentalCoroutinesApi::class)
     fun search(

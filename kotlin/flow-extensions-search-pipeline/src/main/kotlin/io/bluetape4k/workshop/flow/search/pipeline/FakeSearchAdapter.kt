@@ -5,11 +5,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 
 /**
- * Deterministic in-memory adapter used by the workshop README and tests.
+ * workshop README 와 test 에서 사용하는 deterministic in-memory adapter 입니다.
  *
- * It uses a fixed catalog and literal string matching only. No regex, script,
- * SQL-like expression, reflection, or dynamic query DSL is built from caller
- * input.
+ * 고정 catalog 와 literal string matching 만 사용합니다. caller input 으로 regex, script, SQL-like expression, reflection, dynamic query DSL 을 만들지 않습니다.
  */
 class FakeSearchAdapter(
     private val latencyMillis: Long = 0L,

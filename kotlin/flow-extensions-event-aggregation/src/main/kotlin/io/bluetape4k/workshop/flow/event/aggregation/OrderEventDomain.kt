@@ -9,10 +9,9 @@ import java.time.Instant
 import java.util.Objects
 
 /**
- * Order lifecycle event consumed by the in-memory aggregation examples.
+ * in-memory aggregation 예제가 소비하는 order lifecycle event 입니다.
  *
- * Implementations are regular validated classes instead of data classes so
- * generated `copy(...)` methods cannot bypass trimming or safe rendering.
+ * 구현체는 data class 가 아니라 검증된 일반 class 입니다. 생성된 `copy(...)` 메서드가 trimming 이나 safe rendering 을 우회하지 못하게 하기 위함입니다.
  */
 sealed interface OrderEvent: Serializable {
     val orderId: String
@@ -21,7 +20,7 @@ sealed interface OrderEvent: Serializable {
 }
 
 /**
- * A new order entered the event stream.
+ * 새 order 가 event stream 에 진입했음을 나타냅니다.
  */
 class OrderCreated private constructor(
     override val orderId: String,
@@ -56,7 +55,7 @@ class OrderCreated private constructor(
 }
 
 /**
- * A line item was added to an order.
+ * order 에 line item 이 추가되었음을 나타냅니다.
  */
 class LineAdded private constructor(
     override val orderId: String,
@@ -96,7 +95,7 @@ class LineAdded private constructor(
 }
 
 /**
- * Payment was authorized for an order.
+ * order 결제가 승인되었음을 나타냅니다.
  */
 class PaymentAuthorized private constructor(
     override val orderId: String,
@@ -133,7 +132,7 @@ class PaymentAuthorized private constructor(
 }
 
 /**
- * Fulfillment started for an order.
+ * order fulfillment 가 시작되었음을 나타냅니다.
  */
 class ShipmentStarted private constructor(
     override val orderId: String,
@@ -176,7 +175,7 @@ class ShipmentStarted private constructor(
 }
 
 /**
- * Order cancellation entered the projection stream.
+ * order cancellation 이 projection stream 에 진입했음을 나타냅니다.
  */
 class OrderCancelled private constructor(
     override val orderId: String,
@@ -211,7 +210,7 @@ class OrderCancelled private constructor(
 }
 
 /**
- * Projected order lifecycle status.
+ * projection 된 order lifecycle status 입니다.
  */
 enum class OrderStatus {
     NEW,
@@ -222,7 +221,7 @@ enum class OrderStatus {
 }
 
 /**
- * Current read model for one order.
+ * 하나의 order 에 대한 현재 read model 입니다.
  */
 data class OrderState(
     val orderId: String,
