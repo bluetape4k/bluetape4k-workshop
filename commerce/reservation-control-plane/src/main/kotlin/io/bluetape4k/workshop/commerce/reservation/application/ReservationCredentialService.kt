@@ -8,10 +8,10 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 /**
- * Converts caller credentials into domain-separated HMAC digests.
+ * caller credential을 domain-separated HMAC digest로 변환합니다.
  *
- * Raw owner, operator, and idempotency credentials are compared at the boundary and are never
- * persisted or written to operational logs.
+ * raw owner, operator, idempotency credential은 boundary에서 비교하며
+ * 저장하거나 operational log에 기록하지 않습니다.
  */
 internal class ReservationCredentialService(
     secret: String,

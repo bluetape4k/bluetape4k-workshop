@@ -8,8 +8,8 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 /**
- * Deterministic fake provider that fails a configured number of attempts and applies each delivery once.
- * It models provider retry and deduplication semantics without introducing an external delivery service.
+ * 설정한 횟수만큼 실패하고 각 delivery를 한 번만 적용하는 결정적 fake provider입니다.
+ * 외부 delivery service를 도입하지 않고 provider retry와 deduplication semantic을 모델링합니다.
  */
 internal class FailFirstDeduplicatingNotificationProvider(
     private val failFirstAttempts: Int = 1,

@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.io.Serializable
 import java.time.Instant
 
-/** HTTP boundary for hold commands; every mutation passes admission, suppression, and durable idempotency. */
+/** hold command용 HTTP boundary입니다. 모든 mutation은 admission, suppression, durable idempotency를 거칩니다. */
 @RestController
 @RequestMapping("/api")
 internal class ReservationController(

@@ -16,10 +16,10 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
 
 /**
- * Persists the capacity counter that acts as the reservation correctness boundary.
+ * reservation correctness boundary로 동작하는 capacity counter를 저장합니다.
  *
- * Occupy and release operations combine state, revision, and capacity predicates in one SQL update
- * so callers never authorize capacity from a stale read.
+ * occupy와 release operation은 state, revision, capacity predicate를 단일 SQL update로 결합하므로
+ * caller가 stale read에서 capacity를 authorize하지 못합니다.
  */
 @Repository
 internal class CapacityResourceRepository :
@@ -96,7 +96,7 @@ internal class CapacityResourceRepository :
 
     fun snapshots(): List<CapacityResourceRecord> = table.selectAll().map { with(this) { it.toEntity() } }
 
-    /** Acquires the canonical first lock for every transaction that may transfer capacity ownership. */
+    /** capacity ownership을 이전할 수 있는 모든 transaction에서 canonical first lock을 획득합니다. */
     fun findByIdForUpdate(id: Long): CapacityResourceRecord =
         table
             .selectAll()

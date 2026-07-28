@@ -22,10 +22,10 @@ import java.time.Duration
 import java.time.Instant
 
 /**
- * Finalizes expired holds and offers one resource transaction at a time.
+ * expired hold와 offer를 resource transaction 하나씩 finalize합니다.
  *
- * Each transaction locks the resource first, applies revision CAS transitions, records audit rows,
- * and either promotes the FIFO head or releases capacity before commit.
+ * 각 transaction은 resource를 먼저 lock하고, revision CAS transition을 적용하고, audit row를 기록한 뒤,
+ * commit 전에 FIFO head를 promote하거나 capacity를 release합니다.
  */
 @Service
 internal class ReservationResourceTransactionService(
@@ -36,7 +36,7 @@ internal class ReservationResourceTransactionService(
     private val handoff: ReservationCapacityHandoffService,
     private val audits: ReservationAuditRepository,
 ) {
-    /** Merges hold and offer expiry streams globally before deduplication and batch limiting. */
+    /** deduplication과 batch limiting 전에 hold와 offer expiry stream을 전역적으로 병합합니다. */
     @Transactional(readOnly = true)
     fun expiredResourceIds(
         now: Instant,
@@ -48,7 +48,7 @@ internal class ReservationResourceTransactionService(
             .take(limit)
             .map { it.resourceId }
 
-    /** Finalizes one resource using the canonical resource -> hold -> waitlist -> outbox lock order. */
+    /** canonical resource -> hold -> waitlist -> outbox lock order로 resource 하나를 finalize합니다. */
     @Transactional
     fun finalizeExpiredResource(
         resourceId: Long,
@@ -114,7 +114,7 @@ internal class ReservationResourceTransactionService(
     companion object : KLogging()
 }
 
-/** Executes bounded PostgreSQL sweep work behind the background JDBC bulkhead. */
+/** background JDBC bulkhead 뒤에서 bounded PostgreSQL sweep work를 실행합니다. */
 @Component
 internal class PostgresReservationSweepWork(
     private val transactions: ReservationResourceTransactionService,

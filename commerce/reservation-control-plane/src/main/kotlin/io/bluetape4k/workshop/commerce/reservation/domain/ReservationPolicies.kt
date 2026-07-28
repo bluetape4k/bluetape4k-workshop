@@ -5,9 +5,9 @@ import io.bluetape4k.logging.debug
 import java.time.Instant
 
 /**
- * Evaluates deterministic hold transition policy without performing persistence.
+ * persistence를 수행하지 않고 결정적인 hold transition policy를 평가합니다.
  *
- * A successful decision is advisory until the repository applies the matching PostgreSQL CAS.
+ * 성공 decision은 repository가 일치하는 PostgreSQL CAS를 적용할 때까지 advisory입니다.
  */
 object ReservationPolicies : KLogging() {
     fun confirm(

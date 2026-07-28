@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.io.Serializable
 
-/** Returns owner-scoped waitlist position and active-offer state without exposing stored credential digests. */
+/** 저장된 credential digest를 노출하지 않고 owner-scoped waitlist position과 active-offer state를 반환합니다. */
 @Service
 internal class WaitlistQueryService(
     private val waitlists: WaitlistEntryRepository,

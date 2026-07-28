@@ -21,10 +21,10 @@ import java.time.Clock
 import java.time.Duration
 
 /**
- * Coordinates FIFO waitlist entries and their short-lived offers.
+ * FIFO waitlist entry와 그 short-lived offer를 조율합니다.
  *
- * Mutations that can transfer occupied capacity lock the resource row before reading dependent
- * waitlist or offer rows. This makes promotion, acceptance, expiry, and release share one lock order.
+ * 점유된 capacity를 이전할 수 있는 mutation은 종속 waitlist 또는 offer row를 읽기 전에 resource row를 lock합니다.
+ * 이로써 promotion, acceptance, expiry, release가 하나의 lock order를 공유합니다.
  */
 @Service
 internal class WaitlistCommandService(
@@ -93,7 +93,7 @@ internal class WaitlistCommandService(
         }
     }
 
-    /** Caller transaction should lock the resource before invoking this operation. */
+    /** caller transaction은 이 operation을 호출하기 전에 resource를 lock해야 합니다. */
     @Transactional
     fun promote(resourceId: Long): ReservationOfferRecord? {
         resources?.findByIdForUpdate(resourceId)
@@ -127,7 +127,7 @@ internal class WaitlistCommandService(
     @Transactional
     fun accept(command: AcceptOfferCommand): AcceptedOffer {
         val offerSnapshot = offers.findById(command.offerId)
-        // Re-read the offer after taking the resource lock; the first read is only a lock locator.
+        // resource lock을 잡은 뒤 offer를 다시 읽습니다. 첫 번째 read는 lock locator 역할만 합니다.
         val resource = resources?.findByIdForUpdate(offerSnapshot.resourceId)
         val offer = offers.findById(command.offerId)
         requireOwner(command.ownerToken, offer.ownerDigest, offer.revision)

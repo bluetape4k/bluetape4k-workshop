@@ -29,10 +29,10 @@ sealed interface DatabaseBulkheadOutcome<out T> : Serializable {
 }
 
 /**
- * Protects the bounded JDBC pool independently of Redis health.
+ * Redis health와 독립적으로 bounded JDBC pool을 보호합니다.
  *
- * Foreground commands and background workers deliberately use separate permits so a sweep cannot
- * consume the connection headroom reserved for interactive traffic.
+ * sweep이 interactive traffic용으로 예약된 connection headroom을 소비하지 못하도록
+ * foreground command와 background worker는 의도적으로 별도 permit을 사용합니다.
  */
 class NodeLocalDatabaseBulkhead(
     foregroundPermits: Int = 5,

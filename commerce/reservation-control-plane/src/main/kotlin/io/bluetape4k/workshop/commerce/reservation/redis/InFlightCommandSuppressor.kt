@@ -29,13 +29,13 @@ fun interface CommandSuppressionLease : AutoCloseable {
 }
 
 interface CommandSuppressionBackend {
-    /** Returns a lease when acquired, or `null` when another command currently owns it. */
+    /** lease를 획득하면 반환하고, 다른 command가 현재 소유 중이면 `null`을 반환합니다. */
     fun tryAcquire(opaqueCommandId: String): CommandSuppressionLease?
 }
 
 /**
- * Suppresses duplicate in-flight work when Redis is healthy and delegates correctness to the
- * PostgreSQL idempotency record whenever Redis is unavailable.
+ * Redis가 정상일 때 duplicate in-flight work를 억제하고,
+ * Redis를 사용할 수 없으면 correctness를 PostgreSQL idempotency record에 위임합니다.
  */
 class InFlightCommandSuppressor(
     private val backend: CommandSuppressionBackend? = null,
@@ -81,8 +81,8 @@ class InFlightCommandSuppressor(
 }
 
 /**
- * Token-checked two-second suppression leases backed by `bluetape4k-lettuce:1.11.0`.
- * [opaqueCommandId] must be a bounded HMAC-derived identifier, never a raw idempotency key or owner token.
+ * `bluetape4k-lettuce:1.11.0`으로 구현한 token-checked 2초 suppression lease입니다.
+ * [opaqueCommandId]는 bounded HMAC-derived identifier여야 하며, raw idempotency key나 owner token이면 안 됩니다.
  */
 class LettuceLockSuppressionBackend(
     private val connection: StatefulRedisConnection<String, String>,

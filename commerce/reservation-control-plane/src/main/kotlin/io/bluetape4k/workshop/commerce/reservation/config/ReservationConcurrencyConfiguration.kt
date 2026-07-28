@@ -31,9 +31,9 @@ import java.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Wires always-on local JDBC protection and optional distributed coordination.
+ * 항상 켜져 있는 local JDBC protection과 optional distributed coordination을 연결합니다.
  *
- * Missing Redis beans intentionally degrade to PostgreSQL-backed execution instead of preventing startup.
+ * Redis bean이 없으면 startup을 막는 대신 의도적으로 PostgreSQL-backed execution으로 degrade합니다.
  */
 @Configuration(proxyBeanMethods = false)
 internal class ReservationConcurrencyConfiguration {
@@ -82,8 +82,8 @@ internal class ReservationConcurrencyConfiguration {
 }
 
 /**
- * Creates Lettuce admission, suppression, and leader adapters only when Redis is enabled and reachable.
- * These beans are advisory; returning `null` keeps PostgreSQL commands available during Redis outages.
+ * Redis가 활성화되어 있고 접근 가능할 때만 Lettuce admission, suppression, leader adapter를 생성합니다.
+ * 이 bean들은 advisory입니다. `null`을 반환하면 Redis outage 중에도 PostgreSQL command를 계속 사용할 수 있습니다.
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(prefix = "reservation.redis", name = ["enabled"], havingValue = "true")
