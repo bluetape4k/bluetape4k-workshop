@@ -29,7 +29,7 @@ class SaleClosed : SaleAdmissionFailure("sale_closed")
 class SaleNotOpen : SaleAdmissionFailure("sale_not_open")
 class StaleSalePolicy : SaleAdmissionFailure("stale_sale_policy")
 
-/** Sale authority implemented as a Bluetape4k Exposed JDBC repository. */
+/** Bluetape4k Exposed JDBC repository로 구현한 sale authority입니다. */
 class TicketSaleRepository : TicketExposedJdbcRepository<TicketSaleEntity, UUID>(TicketSaleEntity::class.java) {
     fun requireOpen(
         transaction: TicketJdbcTransaction,
@@ -69,7 +69,7 @@ class TicketSaleRepository : TicketExposedJdbcRepository<TicketSaleEntity, UUID>
     }
 }
 
-/** Revalidates the sale window and immutable policy inside the purchase transaction. */
+/** purchase transaction 안에서 sale window와 immutable policy를 다시 검증합니다. */
 class SaleService(
     private val sales: TicketSaleRepository = TicketSaleRepository(),
 ) : SalePurchaseAuthority {

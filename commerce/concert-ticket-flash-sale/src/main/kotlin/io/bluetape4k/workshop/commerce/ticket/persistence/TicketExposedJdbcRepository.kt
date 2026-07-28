@@ -6,11 +6,10 @@ import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJd
 import org.jetbrains.exposed.v1.dao.Entity
 
 /**
- * Concrete workshop adapter for Bluetape4k's Spring Data [ExposedJdbcRepository].
+ * Bluetape4k Spring Data [ExposedJdbcRepository]를 사용하는 workshop concrete adapter입니다.
  *
- * Tests construct repositories directly, while production can expose the same
- * repository contract through Spring. Every operation still runs inside
- * [TicketJdbcExecutor]'s bounded Exposed transaction.
+ * 테스트는 repository를 직접 생성하고, production은 같은 repository contract를 Spring을 통해 노출할 수 있습니다.
+ * 모든 operation은 여전히 [TicketJdbcExecutor]의 bounded Exposed transaction 안에서 실행됩니다.
  */
 abstract class TicketExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,

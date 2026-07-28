@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletResponse
 import org.springframework.web.filter.OncePerRequestFilter
 import io.bluetape4k.idgenerators.uuid.Uuid
 
-/** Logs only an explicit metadata allowlist; headers, identities, keys, bodies, and query strings are excluded. */
+/** 명시적인 metadata allowlist만 로그로 남깁니다. header, identity, key, body, query string은 제외합니다. */
 class RequestLoggingFilter : OncePerRequestFilter() {
     override fun doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, chain: FilterChain) {
         val correlationId = request.getHeader("X-Correlation-Id")?.takeIf { it.length in 8..64 }

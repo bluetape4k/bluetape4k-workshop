@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.commerce.ticket.domain
 
 import java.io.Serializable
 
-/** Stable sale lifecycle codes persisted by PostgreSQL. */
+/** PostgreSQL에 저장되는 안정적인 sale lifecycle code입니다. */
 enum class SaleState(val code: String) {
     DRAFT("draft"),
     SCHEDULED("scheduled"),
@@ -11,10 +11,10 @@ enum class SaleState(val code: String) {
     CLOSED("closed"),
 }
 
-/** Explicit operator or scheduler commands for the sale lifecycle. */
+/** sale lifecycle을 위한 명시적인 operator 또는 scheduler command입니다. */
 enum class SaleCommand { SCHEDULE, OPEN, SUSPEND, RESUME, CLOSE }
 
-/** Stable purchase lifecycle codes persisted by PostgreSQL. */
+/** PostgreSQL에 저장되는 안정적인 purchase lifecycle code입니다. */
 enum class PurchaseState(val code: String) {
     INVENTORY_HELD("inventory_held"),
     PAYMENT_AUTHORIZING("payment_authorizing"),
@@ -29,10 +29,10 @@ enum class PurchaseState(val code: String) {
     REFUND_QUARANTINED("refund_quarantined"),
 }
 
-/** Provider outcome interpreted only when the matching operation is fenced. */
+/** 일치하는 operation이 fenced 상태일 때만 해석되는 provider outcome입니다. */
 enum class PaymentOutcome { APPROVED, DECLINED, UNKNOWN, CANCELLATION_REQUESTED, EXPIRED }
 
-/** Durable proof of whether an issued ticket can permit inventory restock. */
+/** 발급된 ticket이 inventory restock을 허용할 수 있는지에 대한 durable proof입니다. */
 enum class TicketDisposition(val code: String) {
     PENDING("pending"),
     NEVER_ISSUED("never_issued"),
@@ -40,7 +40,7 @@ enum class TicketDisposition(val code: String) {
     REVOKED("revoked"),
 }
 
-/** Stable external-ticket effect lifecycle. */
+/** 안정적인 external-ticket effect lifecycle입니다. */
 enum class TicketState(val code: String) {
     ISSUE_PENDING("issue_pending"),
     ISSUE_RETRY("issue_retry"),
@@ -50,10 +50,10 @@ enum class TicketState(val code: String) {
     QUARANTINED("quarantined"),
 }
 
-/** Deterministic result of one external ticket effect. */
+/** 단일 external ticket effect의 결정적 결과입니다. */
 enum class TicketEffectOutcome { SUCCEEDED, RETRYABLE_FAILURE, RETRY_BUDGET_EXHAUSTED }
 
-/** Inventory and guard effects that must be committed with a purchase transition. */
+/** purchase transition과 함께 commit해야 하는 inventory 및 guard effect입니다. */
 data class PurchaseTransition(
     val next: PurchaseState,
     val heldDelta: Int,

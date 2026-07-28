@@ -37,7 +37,7 @@ data class PaymentClaim(
     }
 }
 
-/** Fenced claims implemented on Bluetape4k [TicketExposedJdbcRepository]. */
+/** Bluetape4k [TicketExposedJdbcRepository] 위에 구현한 fenced claim입니다. */
 class PaymentOperationClaimRepository(
     private val jdbc: TicketJdbcExecutor,
     private val clock: Clock,
@@ -73,7 +73,7 @@ class PaymentOperationClaimRepository(
     }
 }
 
-/** Claims briefly in PostgreSQL, calls the provider outside locks, then applies with fencing. */
+/** PostgreSQL에서 짧게 claim하고, lock 밖에서 provider를 호출한 뒤 fencing으로 적용합니다. */
 class PaymentWorker(
     jdbc: TicketJdbcExecutor,
     private val outcomes: PaymentOutcomeCommands,

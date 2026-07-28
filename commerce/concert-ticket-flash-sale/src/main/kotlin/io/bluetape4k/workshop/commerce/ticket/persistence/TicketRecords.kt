@@ -3,10 +3,10 @@ package io.bluetape4k.workshop.commerce.ticket.persistence
 import java.io.Serializable
 import java.util.UUID
 
-/** Stable identity categories guarded independently per sale. */
+/** sale별로 독립적으로 보호되는 안정적인 identity category입니다. */
 enum class IdentityKind { USER, IP }
 
-/** Locked inventory projection. */
+/** lock이 적용된 inventory projection입니다. */
 data class InventoryRecord(
     val saleId: UUID,
     val grade: String,
@@ -20,7 +20,7 @@ data class InventoryRecord(
     }
 }
 
-/** Canonical waiting-room row ordered by database sequence and id. */
+/** database sequence와 id로 정렬되는 canonical waiting-room row입니다. */
 data class WaitingEntryRecord(
     val id: Long,
     val entryId: UUID,

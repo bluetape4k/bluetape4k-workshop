@@ -84,7 +84,7 @@ class IdempotencyOwnershipLost : IllegalStateException("idempotency_ownership_lo
     companion object { @Serial private const val serialVersionUID: Long = 1L }
 }
 
-/** Purchase aggregate persistence implemented on Bluetape4k [TicketExposedJdbcRepository]. */
+/** Bluetape4k [TicketExposedJdbcRepository] 위에 구현한 purchase aggregate persistence입니다. */
 class TicketPurchaseRepository(
     private val jdbc: TicketJdbcExecutor,
     private val sale: SalePurchaseAuthority,
@@ -563,7 +563,7 @@ class TicketPurchaseRepository(
     private val InventoryRecord.available: Int get() = total - held - sold
 }
 
-/** Application service; all database work is delegated to [TicketPurchaseRepository]. */
+/** application service입니다. 모든 database work는 [TicketPurchaseRepository]에 위임합니다. */
 @Transactional
 class PurchaseService(
     jdbc: TicketJdbcExecutor,

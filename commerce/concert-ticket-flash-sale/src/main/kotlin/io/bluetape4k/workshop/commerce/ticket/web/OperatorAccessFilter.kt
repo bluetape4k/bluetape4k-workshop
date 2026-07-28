@@ -9,7 +9,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.web.filter.OncePerRequestFilter
 
-/** Demo-only operator authentication; rejects the credential unless the TCP peer is loopback. */
+/** demo 전용 operator authentication입니다. TCP peer가 loopback이 아니면 credential을 거부합니다. */
 class OperatorAccessFilter(private val expectedToken: String) : OncePerRequestFilter() {
     init {
         expectedToken.length.requireGe(32, "expectedToken.length")

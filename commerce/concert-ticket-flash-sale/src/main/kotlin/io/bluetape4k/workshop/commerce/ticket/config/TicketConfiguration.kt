@@ -15,7 +15,7 @@ import java.io.Serializable
 import java.time.Duration
 import javax.sql.DataSource
 
-/** Closed configuration contract for the concert ticket example. */
+/** concert ticket 예제의 닫힌 configuration contract입니다. */
 @ConfigurationProperties(prefix = "workshop.ticket", ignoreUnknownFields = false)
 data class TicketProperties(
     val db: TicketDatabaseProperties = TicketDatabaseProperties(),
@@ -29,7 +29,7 @@ data class TicketProperties(
     }
 }
 
-/** Database pool and workload-lane capacity. */
+/** database pool과 workload lane capacity입니다. */
 data class TicketDatabaseProperties(
     val maxPoolSize: Int = 20,
     val foregroundPermits: Int = 12,
@@ -45,7 +45,7 @@ data class TicketDatabaseProperties(
     }
 }
 
-/** Redis admission lease timing. */
+/** Redis admission lease timing입니다. */
 data class TicketRedisProperties(
     val uri: String = "redis://localhost:6379",
     val commandTimeout: Duration = Duration.ofMillis(500),
@@ -60,7 +60,7 @@ data class TicketRedisProperties(
     }
 }
 
-/** Background worker bounds. */
+/** background worker의 실행 한계입니다. */
 data class TicketWorkerProperties(
     val batchSize: Int = 50,
     val runDeadline: Duration = Duration.ofSeconds(10),
@@ -71,7 +71,7 @@ data class TicketWorkerProperties(
     }
 }
 
-/** Server-sent event capacity. */
+/** server-sent event capacity입니다. */
 data class TicketSseProperties(
     val queueSize: Int = 32,
     val maxConnections: Int = 512,
@@ -82,7 +82,7 @@ data class TicketSseProperties(
     }
 }
 
-/** Stable startup failure codes safe to expose in diagnostics. */
+/** diagnostics에 노출해도 안전한 안정적인 startup failure code입니다. */
 enum class TicketStartupFailure {
     INVALID_DATABASE_CAPACITY,
     INVALID_DATABASE_TIMING,
@@ -92,7 +92,7 @@ enum class TicketStartupFailure {
     INVALID_SSE_CAPACITY,
 }
 
-/** Fails startup without leaking raw configuration values. */
+/** raw configuration value를 누출하지 않고 startup을 실패시킵니다. */
 class TicketStartupException(
     val code: TicketStartupFailure,
 ) : IllegalStateException(code.name) {
@@ -102,7 +102,7 @@ class TicketStartupException(
     }
 }
 
-/** Validates cross-field capacity and timing invariants. */
+/** field 간 capacity와 timing invariant를 검증합니다. */
 object TicketStartupValidator {
     private const val RESERVED_DATABASE_CONNECTIONS = 2
 
@@ -150,7 +150,7 @@ object TicketStartupValidator {
     }
 }
 
-/** Installs the startup validation gate. */
+/** startup validation gate를 설치합니다. */
 @Configuration(proxyBeanMethods = false)
 internal class TicketConfiguration {
     @Bean

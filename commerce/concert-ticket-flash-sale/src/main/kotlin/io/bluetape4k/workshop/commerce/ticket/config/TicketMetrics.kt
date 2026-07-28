@@ -5,7 +5,7 @@ import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tags
 
-/** Low-cardinality metrics facade; sale, buyer, IP, operation, and attempt IDs are forbidden as tags. */
+/** low-cardinality metrics facade입니다. sale, buyer, IP, operation, attempt ID는 tag로 금지합니다. */
 class TicketMetrics(private val registry: MeterRegistry) {
     private val outcomes = mutableMapOf<String, Counter>()
 

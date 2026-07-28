@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.commerce.ticket.web
 import org.springframework.security.core.Authentication
 import java.util.UUID
 
-/** Maps an authenticated principal to the stable internal subject ID used by persistence. */
+/** 인증된 principal을 persistence가 사용하는 안정적인 internal subject ID로 매핑합니다. */
 fun interface AuthenticatedBuyerResolver {
     fun resolve(authentication: Authentication): UUID
 }

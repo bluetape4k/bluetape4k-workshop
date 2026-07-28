@@ -181,7 +181,7 @@ class TicketRefundRepository(
     }
 }
 
-/** Lookup-first refund reconciliation; all DB work stays inside Exposed repository boundaries. */
+/** lookup-first refund reconciliation입니다. 모든 DB work는 Exposed repository boundary 안에 머뭅니다. */
 class RefundService(
     jdbc: TicketJdbcExecutor,
     private val provider: RefundProvider,

@@ -6,7 +6,7 @@ import java.io.Serializable
 import java.time.Instant
 import java.util.UUID
 
-/** Immutable sale policy exposed to admission and purchase. */
+/** admission과 purchase에 노출되는 immutable sale policy입니다. */
 data class SalePolicySnapshot(
     val saleId: UUID,
     val state: SaleState,
@@ -19,12 +19,12 @@ data class SalePolicySnapshot(
     }
 }
 
-/** Read boundary for authoritative sale policy. */
+/** authoritative sale policy의 read boundary입니다. */
 fun interface SaleQueries {
     fun get(saleId: UUID): SalePolicySnapshot?
 }
 
-/** Purchase limits read under the authoritative sale row's shared lock. */
+/** authoritative sale row의 shared lock 아래에서 읽는 purchase limit입니다. */
 data class SalePurchasePolicy(
     val saleId: UUID,
     val policyVersion: Long,
@@ -37,7 +37,7 @@ data class SalePurchasePolicy(
     }
 }
 
-/** Transaction-aware sale revalidation boundary used by purchase. */
+/** purchase에서 사용하는 transaction-aware sale revalidation boundary입니다. */
 fun interface SalePurchaseAuthority {
     fun requireOpen(
         transaction: TicketJdbcTransaction,

@@ -16,7 +16,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 
-/** Complete owner-scoped HTTP idempotency key. */
+/** owner scope가 완전하게 포함된 HTTP idempotency key입니다. */
 data class IdempotencyScope(
     val principalSubjectId: UUID,
     val httpMethod: String,
@@ -30,7 +30,7 @@ data class IdempotencyScope(
     }
 }
 
-/** Result evaluated before sale state or Redis admission. */
+/** sale state나 Redis admission보다 먼저 평가되는 결과입니다. */
 sealed interface IdempotencyDecision : Serializable {
     data class Owner(val id: Long) : IdempotencyDecision {
         companion object {
@@ -57,7 +57,7 @@ sealed interface IdempotencyDecision : Serializable {
     }
 }
 
-/** PostgreSQL authority for principal-scoped replay and fingerprint conflicts. */
+/** principal scope replay와 fingerprint conflict를 담당하는 PostgreSQL authority입니다. */
 class HttpIdempotencyRepository(
     private val jdbc: TicketJdbcExecutor,
     private val retention: Duration = Duration.ofHours(24),

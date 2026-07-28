@@ -58,7 +58,7 @@ data class TicketStreamSnapshot(
 class TicketStreamCapacityExceeded : IllegalStateException("ticket_stream_capacity_exceeded")
 class TicketStreamSlowConsumer : IllegalStateException("ticket_stream_slow_consumer")
 
-/** Snapshot-first, bounded broadcaster. No JDBC resource is retained while a client is connected. */
+/** snapshot-first bounded broadcaster입니다. client가 연결된 동안 JDBC resource를 보유하지 않습니다. */
 class TicketEventStream(
     private val queueSize: Int,
     maxConnections: Int,
@@ -90,7 +90,7 @@ class TicketEventStream(
         }
     }
 
-    /** Registers before catch-up under one lock, closing the snapshot-to-subscribe race. */
+    /** 단일 lock 아래에서 catch-up 전에 등록해 snapshot-to-subscribe race를 닫습니다. */
     fun subscribe(scope: StreamScope, snapshot: () -> Map<String, String>): TicketSubscription {
         if (!accepting.get() || !permits.tryAcquire()) throw TicketStreamCapacityExceeded()
         val highWater = lock.withLock { sequence.get() }

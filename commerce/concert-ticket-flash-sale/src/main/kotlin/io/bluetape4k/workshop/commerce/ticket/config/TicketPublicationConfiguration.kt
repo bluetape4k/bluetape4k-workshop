@@ -19,7 +19,7 @@ import org.springframework.modulith.events.ApplicationModuleListener
 import java.time.Clock
 import javax.sql.DataSource
 
-/** Wires transaction-coupled Modulith publication to lookup-first effect workers. */
+/** transaction-coupled Modulith publication을 lookup-first effect worker에 연결합니다. */
 @Configuration(proxyBeanMethods = false)
 internal class TicketPublicationConfiguration {
     @Bean

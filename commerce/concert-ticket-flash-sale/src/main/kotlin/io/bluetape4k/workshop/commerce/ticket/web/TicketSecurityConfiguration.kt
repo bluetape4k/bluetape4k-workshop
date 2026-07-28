@@ -21,12 +21,12 @@ internal class TicketSecurityConfiguration {
     @Bean
     fun authenticatedBuyerResolver(): AuthenticatedBuyerResolver = PrincipalSubjectResolver()
 
-    /** Production remains fail-closed until the deployment supplies an authenticated principal upstream. */
+    /** deployment가 upstream에서 authenticated principal을 제공할 때까지 production은 fail-closed로 유지됩니다. */
     @Bean
     @Profile("!demo")
     fun productionTicketSecurity(http: HttpSecurity): SecurityFilterChain = baseSecurity(http).build()
 
-    /** Header identity is deliberately isolated to loopback demo runs. */
+    /** header identity는 loopback demo 실행으로 의도적으로 격리합니다. */
     @Bean
     @Profile("demo")
     fun demoTicketSecurity(

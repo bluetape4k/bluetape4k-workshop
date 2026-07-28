@@ -13,7 +13,7 @@ import java.util.Locale
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
-/** Canonical 256-bit digest safe for persistence and equality. */
+/** persistence와 equality 비교에 안전한 canonical 256-bit digest입니다. */
 @JvmInline
 value class TicketDigest private constructor(
     val base64Url: String,
@@ -29,7 +29,7 @@ value class TicketDigest private constructor(
     }
 }
 
-/** Builds domain-separated key and closed purchase-request fingerprints. */
+/** domain-separated key와 닫힌 purchase-request fingerprint를 생성합니다. */
 object IdempotencyFingerprint {
     private val mapper = jsonMapper { }
 

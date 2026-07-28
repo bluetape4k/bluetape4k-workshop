@@ -11,7 +11,7 @@ import java.util.concurrent.Semaphore
 enum class ReconciliationResult { CONVERGED, RETRY, QUARANTINED }
 fun interface ReconciliationJob { fun run(): ReconciliationResult? }
 
-/** Runs operator recovery under independent concurrency, batch, and wall-clock bounds. */
+/** 독립적인 concurrency, batch, wall-clock 한계 아래에서 operator recovery를 실행합니다. */
 class OperationsService(
     private val jobs: List<ReconciliationJob>,
     operatorPermits: Int,

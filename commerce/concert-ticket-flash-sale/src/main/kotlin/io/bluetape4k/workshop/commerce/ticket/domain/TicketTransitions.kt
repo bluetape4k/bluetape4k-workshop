@@ -4,7 +4,7 @@ import java.io.Serial
 import java.io.Serializable
 import java.time.Instant
 
-/** Inputs required to decide whether a suspended sale can resume safely. */
+/** suspended sale을 안전하게 resume할 수 있는지 판단하는 데 필요한 input입니다. */
 data class SaleTransitionContext(
     val now: Instant,
     val opensAt: Instant,
@@ -17,7 +17,7 @@ data class SaleTransitionContext(
     }
 }
 
-/** Rejects a sale command that is stale or unsafe for the current window. */
+/** 현재 window에 대해 오래되었거나 안전하지 않은 sale command를 거부합니다. */
 class InvalidSaleTransition(
     val state: SaleState,
     val command: SaleCommand,
@@ -28,7 +28,7 @@ class InvalidSaleTransition(
     }
 }
 
-/** Rejects a provider outcome that does not match the expected purchase state. */
+/** 예상 purchase state와 일치하지 않는 provider outcome을 거부합니다. */
 class InvalidPurchaseTransition(
     val state: PurchaseState,
     val outcome: PaymentOutcome,
@@ -39,7 +39,7 @@ class InvalidPurchaseTransition(
     }
 }
 
-/** Rejects an external ticket outcome that does not match the current effect state. */
+/** 현재 effect state와 일치하지 않는 external ticket outcome을 거부합니다. */
 class InvalidTicketTransition(
     val state: TicketState,
     val outcome: TicketEffectOutcome,
@@ -50,7 +50,7 @@ class InvalidTicketTransition(
     }
 }
 
-/** Evaluates the pure sale lifecycle without performing persistence. */
+/** persistence를 수행하지 않고 순수 sale lifecycle을 평가합니다. */
 fun saleTransition(
     state: SaleState,
     command: SaleCommand,
@@ -72,7 +72,7 @@ fun saleTransition(
         else -> invalidSale(state, command)
     }
 
-/** Evaluates a fenced payment outcome and its atomic inventory delta. */
+/** fenced payment outcome과 해당 atomic inventory delta를 평가합니다. */
 fun transition(
     state: PurchaseState,
     outcome: PaymentOutcome,
@@ -101,7 +101,7 @@ fun transition(
         else -> throw InvalidPurchaseTransition(state, outcome)
     }
 
-/** Finalizes restock only when refund and ticket disposition both prove safety. */
+/** refund와 ticket disposition이 모두 안전성을 증명할 때만 restock을 확정합니다. */
 fun refundTransition(
     state: PurchaseState,
     disposition: TicketDisposition,
@@ -119,7 +119,7 @@ fun refundTransition(
     }
 }
 
-/** Evaluates the pure issue/revoke effect lifecycle. */
+/** 순수 issue/revoke effect lifecycle을 평가합니다. */
 fun ticketTransition(
     state: TicketState,
     outcome: TicketEffectOutcome,

@@ -5,7 +5,7 @@ import java.io.Serializable
 import java.time.Instant
 import java.util.UUID
 
-/** Operations-safe payment projection without provider secrets. */
+/** provider secret이 없는 operations-safe payment projection입니다. */
 data class PaymentOperationSnapshot(
     val operationId: UUID,
     val outcome: PaymentOutcome?,
@@ -17,7 +17,7 @@ data class PaymentOperationSnapshot(
     }
 }
 
-/** Read boundary for payment reconciliation state. */
+/** payment reconciliation state의 read boundary입니다. */
 fun interface PaymentQueries {
     fun operation(operationId: UUID): PaymentOperationSnapshot?
 }
