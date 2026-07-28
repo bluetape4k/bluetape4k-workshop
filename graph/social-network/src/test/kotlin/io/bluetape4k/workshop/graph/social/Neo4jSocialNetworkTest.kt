@@ -13,10 +13,10 @@ import org.neo4j.driver.Driver
 import org.neo4j.driver.GraphDatabase
 
 /**
- * [SocialNetworkService] integration tests backed by a Neo4j Testcontainer.
+ * Neo4j Testcontainer가 뒷받침하는 [SocialNetworkService] 통합 테스트입니다.
  *
- * Requires Docker. Run with: `./gradlew :graph-social-network:integrationTest`
- * The default `:test` task excludes this class via `@Tag("integration")`.
+ * Docker가 필요합니다. 실행: `./gradlew :graph-social-network:integrationTest`
+ * 기본 `:test` task는 `@Tag("integration")`으로 이 클래스를 제외합니다.
  */
 @Tag("integration")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

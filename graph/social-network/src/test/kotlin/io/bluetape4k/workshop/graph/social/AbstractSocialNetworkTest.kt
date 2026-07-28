@@ -21,12 +21,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 /**
- * Abstract test suite for [SocialNetworkService].
+ * [SocialNetworkService]용 추상 테스트 suite입니다.
  *
- * Concrete subclasses supply [ops] and [service] backed by a specific graph backend.
- * Each test runs against a clean graph — [cleanGraph] drops and re-initializes before every test.
+ * 구체 하위 클래스는 특정 그래프 backend가 뒷받침하는 [ops]와 [service]를 제공합니다.
+ * 각 테스트는 깨끗한 그래프에서 실행됩니다. [cleanGraph]가 매 테스트 전에 그래프를 drop하고 다시 초기화합니다.
  *
- * ## Seed topology
+ * ## Seed 토폴로지
  * ```
  * alice ──KNOWS──► bob
  * bob   ──KNOWS──► carol
@@ -51,7 +51,7 @@ abstract class AbstractSocialNetworkTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // 1. Vertex mutators
+    // 1. 정점 변경 메서드
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -92,7 +92,7 @@ abstract class AbstractSocialNetworkTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // 2. Input validation
+    // 2. 입력 검증
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -195,18 +195,18 @@ abstract class AbstractSocialNetworkTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // 3. Edge mutators
+    // 3. 간선 변경 메서드
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
     fun `connect creates bidirectional KNOWS edges`() {
         val seed: SocialNetworkSeed = seedSocialNetwork(service)
 
-        // Alice's direct connections should include bob
+        // Alice의 direct connection에는 bob이 포함되어야 합니다.
         val aliceNeighbors = service.getDirectConnections(seed.alice.id)
         aliceNeighbors.map { it.id } shouldContain seed.bob.id
 
-        // Bob's direct connections should include alice (bidirectional)
+        // Bob의 direct connection에는 alice가 포함되어야 합니다(양방향).
         val bobNeighbors = service.getDirectConnections(seed.bob.id)
         bobNeighbors.map { it.id } shouldContain seed.alice.id
     }
@@ -229,9 +229,9 @@ abstract class AbstractSocialNetworkTest {
     fun `follow creates unidirectional FOLLOWS edge`() {
         val seed = seedSocialNetwork(service)
 
-        // Eve follows alice via FOLLOWS edge
+        // Eve는 FOLLOWS 간선으로 alice를 follow합니다.
         val aliceNeighbors = service.getDirectConnections(seed.alice.id)
-        // eve should NOT appear as alice's KNOWS connection
+        // eve는 alice의 KNOWS connection으로 나타나면 안 됩니다.
         aliceNeighbors.map { it.id } shouldNotContain seed.eve.id
     }
 
@@ -270,7 +270,7 @@ abstract class AbstractSocialNetworkTest {
         val connections = service.getDirectConnections(seed.alice.id)
 
         connections.map { it.id } shouldContain seed.bob.id
-        // carol and dave are not direct connections of alice
+        // carol과 dave는 alice의 direct connection이 아닙니다.
         connections.map { it.id } shouldNotContain seed.carol.id
         connections.map { it.id } shouldNotContain seed.dave.id
     }
@@ -332,7 +332,7 @@ abstract class AbstractSocialNetworkTest {
         val secondDegree = service.getNthDegreeConnections(seed.alice.id, degree = 2)
         val ids = secondDegree.map { it.id }
 
-        // bob is 1st-degree, must not appear in 2nd-degree result
+        // bob은 1st-degree이므로 2nd-degree 결과에 나타나면 안 됩니다.
         ids shouldNotContain seed.bob.id
         ids shouldContain seed.carol.id
         ids shouldContain seed.dave.id
@@ -348,7 +348,7 @@ abstract class AbstractSocialNetworkTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // 8. recommendConnections (FOAF)
+    // 8. recommendConnections(FOAF)
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -371,7 +371,7 @@ abstract class AbstractSocialNetworkTest {
         val recs = service.recommendConnections(seed.alice.id)
         val personIds = recs.map { it.person.properties[PersonLabel.personId.name] as? String }
 
-        // carol and dave both have mutualCount=1; sorted by personId asc: carol < dave
+        // carol과 dave는 모두 mutualCount=1입니다. personId 오름차순으로 carol < dave입니다.
         personIds shouldBeEqualTo listOf("carol", "dave")
     }
 
@@ -382,7 +382,7 @@ abstract class AbstractSocialNetworkTest {
         val recs = service.recommendConnections(seed.alice.id)
         val recPersonIds = recs.map { it.person.id }
 
-        // bob is alice's direct connection — must not appear in recommendations
+        // bob은 alice의 direct connection이므로 추천에 나타나면 안 됩니다.
         recPersonIds shouldNotContain seed.bob.id
     }
 
@@ -390,7 +390,7 @@ abstract class AbstractSocialNetworkTest {
     fun `recommendConnections returns empty for person with no connections`() {
         val seed = seedSocialNetwork(service)
 
-        // eve has no KNOWS connections, so no FOAF candidates
+        // eve는 KNOWS connection이 없으므로 FOAF 후보도 없습니다.
         val recs = service.recommendConnections(seed.eve.id)
 
         recs.shouldBeEmpty()
@@ -406,9 +406,9 @@ abstract class AbstractSocialNetworkTest {
 
         val colleagues = service.findColleagues(seed.alice.id)
 
-        // alice and bob both work at acme
+        // alice와 bob은 모두 acme에서 일합니다.
         colleagues.map { it.id } shouldContain seed.bob.id
-        // carol works at startup, not acme
+        // carol은 acme가 아니라 startup에서 일합니다.
         colleagues.map { it.id } shouldNotContain seed.carol.id
     }
 
@@ -431,7 +431,7 @@ abstract class AbstractSocialNetworkTest {
 
         val path = service.findConnectionPath(seed.alice.id, seed.bob.id)
 
-        // vertices.size works for both vertex-only and vertex+edge paths (vertices.size = hops + 1)
+        // vertices.size는 vertex-only path와 vertex+edge path 모두에서 동작합니다(vertices.size = hops + 1).
         path.shouldNotBeNull().vertices.size shouldBeEqualTo 2
     }
 
@@ -449,7 +449,7 @@ abstract class AbstractSocialNetworkTest {
         val alice = service.addPerson("alice", "Alice Smith")
         val isolated = service.addPerson("isolated", "Isolated Person")
 
-        // no KNOWS edges added — no path between alice and isolated
+        // KNOWS 간선을 추가하지 않았으므로 alice와 isolated 사이에 path가 없습니다.
         val path = service.findConnectionPath(alice.id, isolated.id)
 
         path shouldBeEqualTo null
@@ -463,7 +463,7 @@ abstract class AbstractSocialNetworkTest {
     fun `findAllConnectionPaths returns all paths within maxDepth`() {
         val seed = seedSocialNetwork(service)
 
-        // maxDepth=3 should find both alice→bob→dave (2 hops) and alice→bob→carol→dave (3 hops)
+        // maxDepth=3은 alice -> bob -> dave(2 hop)와 alice -> bob -> carol -> dave(3 hop)를 모두 찾아야 합니다.
         val paths = service.findAllConnectionPaths(seed.alice.id, seed.dave.id, maxDepth = 3)
 
         paths.shouldNotBeEmpty()
@@ -487,7 +487,7 @@ abstract class AbstractSocialNetworkTest {
     fun `findMutualConnections returns shared direct connections`() {
         val seed = seedSocialNetwork(service)
 
-        // alice's direct friends: [bob]; dave's direct friends: [bob, carol]
+        // alice의 direct friend: [bob], dave의 direct friend: [bob, carol]
         // mutual = [bob]
         val mutual = service.findMutualConnections(seed.alice.id, seed.dave.id)
 
@@ -498,7 +498,7 @@ abstract class AbstractSocialNetworkTest {
     fun `findMutualConnections returns empty for non-overlapping networks`() {
         val seed = seedSocialNetwork(service)
 
-        // eve has no KNOWS connections → no mutual friends with alice
+        // eve는 KNOWS connection이 없으므로 alice와 mutual friend가 없습니다.
         val mutual = service.findMutualConnections(seed.alice.id, seed.eve.id)
 
         mutual.shouldBeEmpty()
