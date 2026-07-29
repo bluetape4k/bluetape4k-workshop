@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 
 /**
- * Handles ping requests and sends Kafka reply messages.
+ * ping request 를 처리하고 Kafka reply message 를 전송합니다.
  */
 @Component
 class PongHandler {

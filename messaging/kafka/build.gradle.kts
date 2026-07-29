@@ -16,13 +16,13 @@ configurations {
 dependencies {
     implementation(platform(libs.spring.boot4.dependencies))
     
-    // Kafka
+    // Kafka 의존성입니다.
     implementation(libs.bluetape4k.kafka4)
     implementation(libs.kafka.clients)
     implementation(libs.spring.kafka.lib)
     testImplementation(libs.spring.kafka.test)
 
-    // Testcontainers
+    // Testcontainers 의존성입니다.
     implementation(libs.bluetape4k.testcontainers)
     implementation(libs.testcontainers.kafka)
 
@@ -44,13 +44,13 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
-    // Observability
+    // observability 의존성입니다.
     implementation(libs.micrometer.core)
     implementation(libs.micrometer.registry.prometheus)
     implementation(libs.micrometer.observation.lib)
     testImplementation(libs.micrometer.observation.test)
 
-    // Coroutines
+    // coroutine 의존성입니다.
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactor)
@@ -59,6 +59,6 @@ dependencies {
     implementation(libs.reactor.kotlin.extensions)
     testImplementation(libs.reactor.test)
 
-    // SpringDoc - OpenAPI 3.0
+    // SpringDoc - OpenAPI 3.0 문서화 의존성입니다.
     implementation(libs.springdoc.openapi.starter.webflux.ui)
 }

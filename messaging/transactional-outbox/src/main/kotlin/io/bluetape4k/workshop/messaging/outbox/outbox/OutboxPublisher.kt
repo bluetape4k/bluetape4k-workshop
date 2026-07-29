@@ -19,18 +19,13 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
 /**
- * Scheduled background component that polls [OutboxEventTable] for [OutboxStatus.PENDING]
- * (and [OutboxStatus.FAILED]) events and publishes them to Kafka.
+ * [OutboxEventTable] 에서 [OutboxStatus.PENDING] 및 [OutboxStatus.FAILED] event 를 polling 하고 Kafka 로 publish 하는 scheduled background component 입니다.
  *
  * ## Retry semantics
- * On a failed publish attempt, [retryCount] is incremented in a **separate**
- * `REQUIRES_NEW` transaction so the counter survives the outer transaction rollback.
- * Once [retryCount] reaches [MAX_RETRY] the event transitions to [OutboxStatus.DEAD_LETTER].
+ * publish attempt 가 실패하면 [retryCount] 는 **별도** `REQUIRES_NEW` transaction 에서 증가하므로 outer transaction rollback 뒤에도 counter 가 유지됩니다. [retryCount] 가 [MAX_RETRY] 에 도달하면 event 는 [OutboxStatus.DEAD_LETTER] 로 transition 합니다.
  *
  * ## Idempotency
- * [publishEvent] returns `false` immediately when the event is not in a publishable
- * state ([OutboxStatus.PENDING] or [OutboxStatus.FAILED]), so calling it twice on the
- * same already-published event is safe.
+ * event 가 publish 가능한 상태([OutboxStatus.PENDING] 또는 [OutboxStatus.FAILED])가 아니면 [publishEvent] 는 즉시 `false` 를 반환합니다. 따라서 이미 published 된 같은 event 에 두 번 호출해도 안전합니다.
  */
 @Component
 class OutboxPublisher(
@@ -42,10 +37,9 @@ class OutboxPublisher(
     }
 
     /**
-     * Polls for publishable outbox events every 2 seconds and publishes each one.
+     * 2초마다 publish 가능한 outbox event 를 polling 하고 각 event 를 publish 합니다.
      *
-     * Runs inside a read-only transaction to load the batch; each event is published
-     * via [publishEvent] which manages its own transaction.
+     * batch 를 load 하기 위해 read-only transaction 안에서 실행됩니다. 각 event 는 자체 transaction 을 관리하는 [publishEvent] 를 통해 publish 됩니다.
      */
     @Scheduled(fixedDelay = 2000)
     @Transactional(readOnly = true)
@@ -70,15 +64,11 @@ class OutboxPublisher(
     }
 
     /**
-     * Publishes a single outbox event identified by [eventId].
+     * [eventId] 로 식별되는 단일 outbox event 를 publish 합니다.
      *
-     * The Kafka send is performed **before** the database status update; if the send
-     * throws, the surrounding transaction rolls back and the row remains PENDING/FAILED
-     * for the next poll.  A [REQUIRES_NEW] transaction is used so that a retry-counter
-     * increment (on failure) is always persisted independently.
+     * Kafka send 는 database status update **전에** 수행됩니다. send 가 throw 하면 주변 transaction 이 rollback 되고 row 는 다음 poll 을 위해 PENDING/FAILED 상태로 남습니다. failure 시 retry-counter increment 가 항상 독립적으로 persist 되도록 [REQUIRES_NEW] transaction 을 사용합니다.
      *
-     * @return `true` if the event was successfully sent and marked [OutboxStatus.PUBLISHED];
-     *         `false` if the event was already published (idempotent duplicate call).
+     * @return event 가 성공적으로 sent 되고 [OutboxStatus.PUBLISHED] 로 표시되면 `true` 입니다. event 가 이미 published 된 경우, 즉 idempotent duplicate call 이면 `false` 입니다.
      */
     @Transactional
     fun publishEvent(eventId: Long): Boolean {
@@ -103,7 +93,7 @@ class OutboxPublisher(
         val payload = row[OutboxEventTable.payload]
 
         return try {
-            // Synchronous get() so we know the send succeeded before updating status
+            // status 를 update 하기 전에 send 성공을 알 수 있도록 synchronous get() 을 사용합니다.
             kafkaTemplate.send(TOPIC, aggregateId, payload).get()
             markPublished(eventId)
             log.debug { "Published outbox event id=$eventId to topic=$TOPIC" }
@@ -116,7 +106,7 @@ class OutboxPublisher(
         }
     }
 
-    // ── Private status-update helpers (each runs in own REQUIRES_NEW tx) ────
+    // ── private status-update helper 입니다. 각각 자체 REQUIRES_NEW tx 에서 실행됩니다. ────
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     fun markPublished(eventId: Long) {

@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 /**
- * Relays durable fallback rows to Kafka with claim-based duplicate protection.
+ * claim 기반 duplicate protection 으로 durable fallback row 를 Kafka 로 relay 합니다.
  */
 @Component
 class EventPublicationRelay(
@@ -101,7 +101,7 @@ class EventPublicationRelay(
 }
 
 /**
- * Summary returned by one relay pass.
+ * relay pass 한 번이 반환하는 summary 입니다.
  */
 data class RelayResult(
     val claimed: Int = 0,

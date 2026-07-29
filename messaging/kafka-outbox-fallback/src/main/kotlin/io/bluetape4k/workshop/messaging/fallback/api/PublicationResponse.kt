@@ -6,7 +6,7 @@ import java.io.Serializable
 import java.time.LocalDateTime
 
 /**
- * Safe read model for demo publication state.
+ * demo publication state 를 위한 safe read model 입니다.
  */
 data class PublicationResponse(
     val eventId: String,

@@ -10,7 +10,7 @@ import java.io.Serializable
 import java.time.Duration
 
 /**
- * Validated configuration for the Kafka-first outbox fallback workshop module.
+ * Kafka-first outbox fallback workshop module 을 위한 검증된 configuration 입니다.
  */
 @Validated
 @ConfigurationProperties("workshop.kafka-outbox-fallback")

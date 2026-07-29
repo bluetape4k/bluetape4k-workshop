@@ -29,7 +29,7 @@ import java.time.Clock
 import java.time.LocalDateTime
 
 /**
- * Repository for durable fallback publication rows.
+ * durable fallback publication row 를 위한 repository 입니다.
  */
 @Repository
 class EventPublicationRepository(
@@ -188,10 +188,9 @@ class EventPublicationRepository(
         EventPublicationTable.selectAll().map { row -> toRecord(row) }
 
     /**
-     * Finds old order events that still have no durable publication row.
+     * 아직 durable publication row 가 없는 오래된 order event 를 찾습니다.
      *
-     * The cutoff and missing-row check stay in SQL so the reconciler does not
-     * pull broad order sets into memory before filtering.
+     * cutoff 과 missing-row check 는 SQL 안에 남겨 reconciler 가 filtering 전에 넓은 order set 을 memory 로 가져오지 않게 합니다.
      */
     @Transactional(readOnly = true)
     fun findOrdersWithoutPublicationsCreatedOnOrBefore(cutoff: LocalDateTime): List<OrderPlacedEvent> {
@@ -265,7 +264,7 @@ class EventPublicationRepository(
 }
 
 /**
- * Immutable projection of a fallback publication row.
+ * fallback publication row 의 immutable projection 입니다.
  */
 data class EventPublicationRecord(
     val id: Long,

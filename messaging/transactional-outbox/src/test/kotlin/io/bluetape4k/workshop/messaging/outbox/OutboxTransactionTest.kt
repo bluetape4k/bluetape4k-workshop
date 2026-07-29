@@ -31,19 +31,18 @@ import org.springframework.transaction.support.TransactionTemplate
 import java.util.concurrent.CompletableFuture
 
 /**
- * Integration tests for the Transactional Outbox pattern.
+ * Transactional Outbox pattern 의 integration test 입니다.
  *
- * Uses `@MockkBean` for `KafkaTemplate` to avoid generic-type-erasure issues
- * with `@MockkSpyBean` and to control publish success/failure per test.
+ * `@MockkSpyBean` 의 generic-type-erasure 문제를 피하고 test 별 publish success/failure 를 제어하기 위해 `KafkaTemplate` 에 `@MockkBean` 을 사용합니다.
  *
  * ## Test coverage
- * 1. Place order → both order row and outbox event row created atomically
- * 2. HTTP POST → order created, HTTP 201 returned
- * 3. HTTP PUT → order status updated
- * 4. publishEvent → event marked PUBLISHED
- * 5. Failed publish → retryCount incremented, status FAILED
- * 6. Max-retry exceeded → status transitions to DEAD_LETTER
- * 7. Duplicate publish call → idempotent (returns false, status unchanged)
+ * 1. order place → order row 와 outbox event row 가 atomically 생성됩니다.
+ * 2. HTTP POST → order 가 생성되고 HTTP 201 이 반환됩니다.
+ * 3. HTTP PUT → order status 가 update 됩니다.
+ * 4. publishEvent → event 가 PUBLISHED 로 표시됩니다.
+ * 5. failed publish → retryCount 가 증가하고 status 가 FAILED 가 됩니다.
+ * 6. max-retry exceeded → status 가 DEAD_LETTER 로 transition 합니다.
+ * 7. duplicate publish call → idempotent 합니다. false 를 반환하고 status 는 바뀌지 않습니다.
  */
 class OutboxTransactionTest : AbstractOutboxTest() {
     companion object : KLogging()
@@ -62,13 +61,13 @@ class OutboxTransactionTest : AbstractOutboxTest() {
 
     @BeforeEach
     fun stubSuccessfulSend() {
-        // Default: Kafka send succeeds
+        // 기본값: Kafka send 는 성공합니다.
         val successFuture: CompletableFuture<SendResult<String, String>> =
             CompletableFuture.completedFuture(mockk())
         every { kafkaTemplate.send(any<String>(), any<String>(), any<String>()) } returns successFuture
     }
 
-    // ── 1. Atomic creation ──────────────────────────────────────────────────
+    // ── 1. atomic creation ──────────────────────────────────────────────────
 
     @Test
     fun `placeOrder creates order and outbox event in same transaction`() {
@@ -129,7 +128,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
             .value { it.shouldNotBeNull().status shouldBeEqualTo OrderStatus.CONFIRMED }
     }
 
-    // ── 4. Publish succeeds ──────────────────────────────────────────────────
+    // ── 4. publish succeeds ──────────────────────────────────────────────────
 
     @Test
     fun `publishEvent publishes to Kafka and marks event PUBLISHED`() {
@@ -158,7 +157,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
         status shouldBeEqualTo OutboxStatus.PUBLISHED
     }
 
-    // ── 5. Failed publish → FAILED + retryCount++ ─────────────────────────
+    // ── 5. failed publish → FAILED + retryCount++ ─────────────────────────
 
     @Test
     fun `failed publish increments retry count and sets status FAILED`() {
@@ -192,7 +191,7 @@ class OutboxTransactionTest : AbstractOutboxTest() {
         row.second shouldBeEqualTo OutboxStatus.FAILED
     }
 
-    // ── 6. Max retry → DEAD_LETTER ───────────────────────────────────────────
+    // ── 6. max retry → DEAD_LETTER ───────────────────────────────────────────
 
     @Test
     fun `event exceeding max retries moves to DEAD_LETTER`() {

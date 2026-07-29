@@ -21,16 +21,16 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * REST controller exposing order management and outbox demo endpoints.
+ * order management 와 outbox demo endpoint 를 노출하는 REST controller 입니다.
  *
  * ## Endpoints
- * | Method | Path                          | Description                         |
+ * | Method | Path                          | 설명                                |
  * |--------|-------------------------------|-------------------------------------|
- * | POST   | `/api/orders`                 | Place a new order                   |
- * | PUT    | `/api/orders/{id}/status`     | Update an order's status            |
- * | GET    | `/api/orders/{id}`            | Get a single order                  |
- * | GET    | `/api/orders`                 | List all orders                     |
- * | GET    | `/api/orders/outbox/pending`  | List pending outbox events (demo)   |
+ * | POST   | `/api/orders`                 | 새 order 를 place 합니다.           |
+ * | PUT    | `/api/orders/{id}/status`     | order status 를 update 합니다.      |
+ * | GET    | `/api/orders/{id}`            | 단일 order 를 조회합니다.           |
+ * | GET    | `/api/orders`                 | 모든 order 를 list 합니다.          |
+ * | GET    | `/api/orders/outbox/pending`  | pending outbox event 를 list 합니다(demo). |
  */
 @RestController
 @RequestMapping("/api/orders")
@@ -39,31 +39,31 @@ class OrderController(
 ) {
     companion object : KLogging()
 
-    /** Place a new order; returns HTTP 201 with the created [OrderResponse]. */
+    /** 새 order 를 place 하고 생성된 [OrderResponse] 와 함께 HTTP 201 을 반환합니다. */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun placeOrder(@Valid @RequestBody request: OrderRequest): OrderResponse =
         orderService.placeOrder(request.customerId, request.product, request.quantity)
 
-    /** Transition an existing order to a new status. */
+    /** 기존 order 를 새 status 로 transition 합니다. */
     @PutMapping("/{id}/status")
     fun updateStatus(
         @PathVariable id: Long,
         @RequestBody request: UpdateStatusRequest,
     ): OrderResponse = orderService.updateStatus(id, request.status)
 
-    /** Get a single order by its primary key. */
+    /** primary key 로 단일 order 를 조회합니다. */
     @GetMapping("/{id}")
     fun getOrder(@PathVariable id: Long): OrderResponse = orderService.getOrder(id)
 
-    /** List all orders. */
+    /** 모든 order 를 list 합니다. */
     @GetMapping
     fun getAllOrders(): List<OrderResponse> = orderService.getAllOrders()
 
     /**
-     * Demo endpoint: returns outbox events that are still pending or failed.
+     * demo endpoint 입니다. 아직 pending 또는 failed 상태인 outbox event 를 반환합니다.
      *
-     * Useful for observing the outbox table state before the scheduler runs.
+     * scheduler 실행 전 outbox table state 를 관찰할 때 유용합니다.
      */
     @GetMapping("/outbox/pending")
     @Transactional(readOnly = true)

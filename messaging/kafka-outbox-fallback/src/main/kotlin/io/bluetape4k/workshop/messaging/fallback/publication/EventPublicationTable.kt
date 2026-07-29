@@ -5,7 +5,7 @@ import org.jetbrains.exposed.v1.javatime.CurrentDateTime
 import org.jetbrains.exposed.v1.javatime.datetime
 
 /**
- * Fallback table that stores only failed or reconstructed publications.
+ * failed 또는 reconstructed publication 만 저장하는 fallback table 입니다.
  */
 object EventPublicationTable : LongIdTable("event_publications") {
     val eventId = varchar("event_id", 160).uniqueIndex()

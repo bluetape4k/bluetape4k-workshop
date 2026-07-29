@@ -28,37 +28,37 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.springmockk)
 
-    // Logging
+    // logging 의존성입니다.
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.logging)
 
-    // Exposed — transactional DB access
+    // Exposed — transactional DB access 의존성입니다.
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.jetbrains.exposed.java.time)
     implementation(libs.jetbrains.exposed.spring.boot4.starter)
     implementation(libs.jetbrains.exposed.spring7.transaction)
 
-    // DB
+    // DB 의존성입니다.
     implementation(libs.hikaricp)
     runtimeOnly(libs.postgresql.driver)
 
-    // Kafka
+    // Kafka 의존성입니다.
     implementation(libs.kafka.clients)
     implementation(libs.spring.kafka.lib)
     testImplementation(libs.spring.kafka.test)
 
-    // Testcontainers
+    // Testcontainers 의존성입니다.
     testImplementation(libs.bluetape4k.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.kafka)
 
-    // Serialization
+    // serialization 의존성입니다.
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.jackson3.module.kotlin)
     implementation(libs.jackson3.module.blackbird)
 
-    // Spring Boot
+    // Spring Boot 의존성입니다.
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
@@ -74,7 +74,7 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
-    // Coroutines
+    // coroutine 의존성입니다.
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     testImplementation(libs.kotlinx.coroutines.test.lib)
