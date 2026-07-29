@@ -23,12 +23,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 /**
- * Abstract test suite for [SocialNetworkSuspendService].
+ * [SocialNetworkSuspendService]용 추상 테스트 suite입니다.
  *
- * Concrete subclasses supply [ops] and [service] backed by a specific graph backend.
- * Each test runs against a clean graph — [cleanGraph] drops and re-initializes before every test.
+ * 구체 하위 클래스는 특정 그래프 backend가 뒷받침하는 [ops]와 [service]를 제공합니다.
+ * 각 테스트는 깨끗한 그래프에서 실행됩니다. [cleanGraph]가 매 테스트 전에 그래프를 drop하고 다시 초기화합니다.
  *
- * ## Seed topology
+ * ## Seed 토폴로지
  * ```
  * alice ──KNOWS──► bob
  * bob   ──KNOWS──► carol
@@ -53,7 +53,7 @@ abstract class AbstractSocialNetworkSuspendTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // 1. Vertex mutators
+    // 1. 정점 변경 메서드
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -94,7 +94,7 @@ abstract class AbstractSocialNetworkSuspendTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // 2. Input validation
+    // 2. 입력 검증
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -198,7 +198,7 @@ abstract class AbstractSocialNetworkSuspendTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // 3. Edge mutators
+    // 3. 간선 변경 메서드
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -345,7 +345,7 @@ abstract class AbstractSocialNetworkSuspendTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // 8. recommendConnections (FOAF)
+    // 8. recommendConnections(FOAF)
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -423,7 +423,7 @@ abstract class AbstractSocialNetworkSuspendTest {
 
         val path = service.findConnectionPath(seed.alice.id, seed.bob.id)
 
-        // vertices.size works for both vertex-only and vertex+edge paths (vertices.size = hops + 1)
+        // vertices.size는 vertex-only path와 vertex+edge path 모두에서 동작합니다(vertices.size = hops + 1).
         path.shouldNotBeNull().vertices.size shouldBeEqualTo 2
     }
 

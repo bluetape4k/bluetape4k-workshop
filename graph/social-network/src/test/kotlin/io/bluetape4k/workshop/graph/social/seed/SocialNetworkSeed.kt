@@ -6,9 +6,9 @@ import io.bluetape4k.workshop.graph.social.service.SocialNetworkSuspendService
 import java.io.Serializable
 
 /**
- * Snapshot of all vertices created by [seedSocialNetwork].
+ * [seedSocialNetwork]가 생성한 모든 정점의 스냅샷입니다.
  *
- * Graph structure:
+ * 그래프 구조:
  * ```
  * alice ──KNOWS──► bob   (strength=8, since=2024-01-01)
  * bob   ──KNOWS──► carol (strength=6, since=2024-03-15)
@@ -22,16 +22,16 @@ import java.io.Serializable
  * carol ──WORKS_AT──► startup (role="Developer", isCurrent=true)
  * ```
  *
- * All KNOWS edges are stored bidirectionally (A→B **and** B→A).
+ * 모든 `KNOWS` 간선은 양방향으로 저장됩니다(A -> B **및** B -> A).
  *
- * Key traversal expectations:
- * - alice's 1st-degree connections: [bob]
- * - alice's 2nd-degree connections: [carol, dave]
- * - FOAF recommendations for alice: carol (mutual=[bob], count=1), dave (mutual=[bob], count=1)
- *   sorted by mutualCount desc then personId asc → [carol, dave]
- * - alice's colleagues: [bob]  (both work at acme)
- * - findMutualConnections(alice, dave) → [bob]
- * - findConnectionPath(alice, dave) → alice→bob→dave (length 2)
+ * 주요 순회 기대값:
+ * - alice의 1st-degree connection: [bob]
+ * - alice의 2nd-degree connection: [carol, dave]
+ * - alice의 FOAF 추천: carol(mutual=[bob], count=1), dave(mutual=[bob], count=1)
+ *   mutualCount 내림차순, personId 오름차순으로 정렬 -> [carol, dave]
+ * - alice의 colleague: [bob](둘 다 acme에서 근무)
+ * - findMutualConnections(alice, dave) -> [bob]
+ * - findConnectionPath(alice, dave) -> alice -> bob -> dave(길이 2)
  */
 data class SocialNetworkSeed(
     val alice: GraphVertex,
@@ -48,13 +48,13 @@ data class SocialNetworkSeed(
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Blocking helpers (T7a)
+// 블로킹 helper(T7a)
 // ─────────────────────────────────────────────────────────────────────────
 
 /**
- * Populates the social network with a deterministic five-person graph using [service].
+ * [service]를 사용해 결정적인 5명 Person 그래프로 social network를 채웁니다.
  *
- * See [SocialNetworkSeed] for the full graph topology and traversal expectations.
+ * 전체 그래프 토폴로지와 순회 기대값은 [SocialNetworkSeed]를 참고합니다.
  */
 fun seedSocialNetwork(service: SocialNetworkService): SocialNetworkSeed {
     val alice = service.addPerson("alice", "Alice Smith", title = "Engineer", location = "Seoul")
@@ -66,13 +66,13 @@ fun seedSocialNetwork(service: SocialNetworkService): SocialNetworkSeed {
     val acme = service.addCompany("acme", "Acme Corp", industry = "Technology", location = "Seoul")
     val startup = service.addCompany("startup", "Startup Inc", industry = "Software", location = "Busan")
 
-    // Bidirectional KNOWS connections
+    // 양방향 KNOWS connection
     service.connect(alice.id, bob.id, since = "2024-01-01", strength = 8)
     service.connect(bob.id, carol.id, since = "2024-03-15", strength = 6)
     service.connect(bob.id, dave.id, since = "2024-06-01", strength = 7)
     service.connect(carol.id, dave.id, since = "2024-07-01", strength = 5)
 
-    // Unidirectional FOLLOWS (eve follows alice; no KNOWS)
+    // 단방향 FOLLOWS(eve가 alice를 follow하고 KNOWS는 없음)
     service.follow(eve.id, alice.id)
 
     // Work experience
@@ -84,11 +84,11 @@ fun seedSocialNetwork(service: SocialNetworkService): SocialNetworkSeed {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Coroutine helpers (T7b)
+// Coroutine helper(T7b)
 // ─────────────────────────────────────────────────────────────────────────
 
 /**
- * Suspend variant of [seedSocialNetwork].
+ * [seedSocialNetwork]의 suspend 변형입니다.
  */
 suspend fun seedSocialNetwork(service: SocialNetworkSuspendService): SocialNetworkSeed {
     val alice = service.addPerson("alice", "Alice Smith", title = "Engineer", location = "Seoul")
@@ -100,13 +100,13 @@ suspend fun seedSocialNetwork(service: SocialNetworkSuspendService): SocialNetwo
     val acme = service.addCompany("acme", "Acme Corp", industry = "Technology", location = "Seoul")
     val startup = service.addCompany("startup", "Startup Inc", industry = "Software", location = "Busan")
 
-    // Bidirectional KNOWS connections
+    // 양방향 KNOWS connection
     service.connect(alice.id, bob.id, since = "2024-01-01", strength = 8)
     service.connect(bob.id, carol.id, since = "2024-03-15", strength = 6)
     service.connect(bob.id, dave.id, since = "2024-06-01", strength = 7)
     service.connect(carol.id, dave.id, since = "2024-07-01", strength = 5)
 
-    // Unidirectional FOLLOWS (eve follows alice; no KNOWS)
+    // 단방향 FOLLOWS(eve가 alice를 follow하고 KNOWS는 없음)
     service.follow(eve.id, alice.id)
 
     // Work experience
