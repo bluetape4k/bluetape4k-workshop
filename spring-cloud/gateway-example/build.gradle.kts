@@ -33,7 +33,7 @@ dependencies {
     testImplementation(libs.bluetape4k.junit5)
     implementation(libs.bluetape4k.testcontainers)
 
-    // Redis Cache
+    // Redis Cache 의존성
     implementation(libs.bluetape4k.cache.core)
 
     api(libs.jakarta.servlet.api)
@@ -43,7 +43,7 @@ dependencies {
     implementation(libs.resilience4j.kotlin)
     implementation(libs.resilience4j.spring.boot4) 
 
-    // Spring Cloud
+    // Spring Cloud 구성
     implementation(libs.spring.cloud.starter.gateway.server.webflux)
     implementation(libs.spring.cloud.starter.circuitbreaker.reactor.resilience4j)
     testImplementation(libs.spring.cloud.starter.loadbalancer)
@@ -51,17 +51,17 @@ dependencies {
     testImplementation(libs.spring.cloud.gateway.server.webflux.get().toString() + "::tests")
     testImplementation(libs.jmh.core)
 
-    // Spring Data Redis
+    // Spring Data Redis 의존성
     implementation(libs.bluetape4k.redis)
     implementation(libs.spring.boot.starter.data.redis.lib)
     testImplementation(libs.spring.boot.starter.data.redis.test)
     implementation(libs.lettuce.core)
     implementation(libs.commons.pool2)
 
-    // Spring Boot Security
+    // Spring Boot Security 의존성
     // implementation(libs.spring.boot.starter.security)
 
-    // Spring Boot
+    // Spring Boot 구성
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
@@ -82,23 +82,23 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
-    // Coroutines
+    // 코루틴 의존성
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactive)
     implementation(libs.kotlinx.coroutines.reactor)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    // Reactor
+    // Reactor 의존성
     implementation(libs.reactor.netty)
     implementation(libs.reactor.kotlin.extensions)
     testImplementation(libs.reactor.test)
 
-    // Observability
+    // 관측성 의존성
     implementation(libs.micrometer.core)
     implementation(libs.micrometer.observation.lib)
     testImplementation(libs.micrometer.observation.test)
 
-    // SpringDoc - OpenAPI 3.0
+    // SpringDoc - OpenAPI 3.0 문서화 의존성
     implementation(libs.springdoc.openapi.starter.webflux.ui)
 }

@@ -15,7 +15,7 @@ configurations {
 
 dependencies {
 
-    // AWS S3
+    // AWS S3 의존성
     implementation(libs.spring.cloud.aws.starter)
     implementation(libs.spring.cloud.aws.s3)
     implementation(libs.aws2.s3.lib)
@@ -23,17 +23,17 @@ dependencies {
     implementation(libs.aws2.aws.crt.client)
     implementation(libs.bluetape4k.aws)
 
-    // AWS Testcontainers
+    // AWS Testcontainers 의존성
     implementation(libs.bluetape4k.testcontainers)
     implementation(libs.testcontainers.localstack)
 
-    // Jackson
+    // Jackson 직렬화 의존성
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.jackson3.databind)
     implementation(libs.jackson3.module.kotlin)
     implementation(libs.jackson3.module.blackbird)
 
-    // Spring Boot
+    // Spring Boot 구성
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
