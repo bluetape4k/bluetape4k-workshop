@@ -1,29 +1,29 @@
-# messaging-kafka Ecosystem Review
+# messaging-kafka 생태계 리뷰
 
-Date: 2026-07-05
-Module: `:messaging-kafka`
-Branch: `refactor/messaging-kafka-ecosystem-patterns`
+날짜: 2026-07-05
+모듈: `:messaging-kafka`
+브랜치: `refactor/messaging-kafka-ecosystem-patterns`
 
-## Scope
+## 범위
 
-- Reuse bluetape4k support validation helpers for greeting input boundaries.
-- Declare direct `bluetape4k-core` dependency for the support helper usage.
-- Add `serialVersionUID` to Serializable greeting DTOs.
+- greeting input boundary에 bluetape4k support validation helper를 재사용했다.
+- support helper 사용을 위해 direct `bluetape4k-core` dependency를 선언했다.
+- Serializable greeting DTO에 `serialVersionUID`를 추가했다.
 
-## 7-Tier Review
+## 7-Tier 리뷰
 
-| Tier | Lens | Verdict | Evidence |
+| Tier | 관점 | 판정 | 근거 |
 |---|---|---|---|
-| 1 | Security/input | PASS | `message`, `GreetingRequest.name`, and `GreetingResult.message` use `requireNotBlank`. |
-| 2 | Architecture | PASS | No API topology or module registration change; only explicit existing BOM-governed dependency alias added. |
-| 3 | Data/serialization | PASS | Serializable DTOs now define `serialVersionUID`; Jackson constructor shape remains unchanged. |
-| 4 | Code quality | PASS | Kotlin spacing fixed in touched controller; no raw validation added. |
-| 5 | Tests | PASS | `./gradlew :messaging-kafka:test --console=plain --max-workers=1` passed. |
-| 6 | Operations | PASS | No workflow, runtime port, or deployment configuration changed. |
-| 7 | Evidence/docs | PASS | `git diff --check` passed; CodeGraph review context reported low risk and 0 impacted nodes. |
+| 1 | Security/input | PASS | `message`, `GreetingRequest.name`, `GreetingResult.message`는 `requireNotBlank`를 사용한다. |
+| 2 | Architecture | PASS | API topology나 module registration 변경은 없다. 기존 BOM-governed dependency alias만 명시적으로 추가했다. |
+| 3 | Data/serialization | PASS | Serializable DTO는 이제 `serialVersionUID`를 정의하고 Jackson constructor shape는 변경 없다. |
+| 4 | Code quality | PASS | 수정된 controller의 Kotlin spacing을 고쳤고 raw validation은 추가하지 않았다. |
+| 5 | Tests | PASS | `./gradlew :messaging-kafka:test --console=plain --max-workers=1`가 통과했다. |
+| 6 | Operations | PASS | workflow, runtime port, deployment configuration은 변경하지 않았다. |
+| 7 | 근거/docs | PASS | `git diff --check`가 통과했고 CodeGraph review context는 low risk 및 impacted node 0개를 보고했다. |
 
-## P0/P1 Gate
+## P0/P1 게이트
 
 - P0: 0
 - P1: 0
-- Deferred: existing `companion object:` spacing remains in untouched files and is outside this PR slice.
+- Deferred: 기존 `companion object:` spacing은 수정하지 않은 file에 남아 있으며 이 PR slice 범위 밖이다.

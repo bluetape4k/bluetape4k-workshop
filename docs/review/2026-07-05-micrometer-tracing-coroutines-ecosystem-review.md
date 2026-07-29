@@ -1,29 +1,29 @@
-# micrometer-tracing-coroutines Ecosystem Review
+# micrometer-tracing-coroutines 생태계 리뷰
 
-Date: 2026-07-05
-Module: `:micrometer-tracing-coroutines`
-Branch: `refactor/micrometer-tracing-coroutines-ecosystem-patterns`
+날짜: 2026-07-05
+모듈: `:micrometer-tracing-coroutines`
+브랜치: `refactor/micrometer-tracing-coroutines-ecosystem-patterns`
 
-## Scope
+## 범위
 
-- Declare direct `bluetape4k-core` dependency for support helper usage.
-- Validate sync todo ids with bluetape4k `requirePositiveNumber`.
-- Keep the deliberate sync-boundary blocking demonstration while naming the simulated blocking work.
+- support helper 사용을 위해 direct `bluetape4k-core` dependency를 선언했다.
+- sync todo id를 bluetape4k `requirePositiveNumber`로 검증했다.
+- 의도적인 sync-boundary blocking demonstration을 유지하되 simulated blocking work에 이름을 붙였다.
 
-## 7-Tier Review
+## 7-Tier 리뷰
 
-| Tier | Lens | Verdict | Evidence |
+| Tier | 관점 | 판정 | 근거 |
 |---|---|---|---|
-| 1 | Security/input | PASS | Controller and service reject non-positive todo ids before logging, WebClient calls, or observation spans. |
-| 2 | Architecture | PASS | Sync/coroutine comparison shape, controller/service split, and tracing application wiring remain unchanged. |
-| 3 | Coroutines/tracing | PASS | `runBlocking(Dispatchers.VT)` remains only at the sync boundary; coroutine service path was not changed. |
-| 4 | Code quality | PASS | Repeated sleep literal was centralized behind `simulateBlockingWork`; touched Kotlin spacing was normalized. |
-| 5 | Tests | PASS | `./gradlew :micrometer-tracing-coroutines:test --console=plain --max-workers=1` passed. |
-| 6 | Operations | PASS | Zipkin launcher/test behavior and runtime configuration remain unchanged. |
-| 7 | Evidence/docs | PASS | `git diff --check` passed; Gradle test output executed 11 tests with 1 intentional skip. |
+| 1 | Security/input | PASS | controller와 service는 logging, WebClient call, observation span 전에 non-positive todo id를 거부한다. |
+| 2 | Architecture | PASS | sync/coroutine comparison shape, controller/service split, tracing application wiring은 변경 없다. |
+| 3 | Coroutines/tracing | PASS | `runBlocking(Dispatchers.VT)`는 sync boundary에만 남아 있고 coroutine service path는 변경하지 않았다. |
+| 4 | Code quality | PASS | 반복 sleep literal은 `simulateBlockingWork` 뒤로 중앙화했고 수정된 Kotlin spacing을 정규화했다. |
+| 5 | Tests | PASS | `./gradlew :micrometer-tracing-coroutines:test --console=plain --max-workers=1`가 통과했다. |
+| 6 | Operations | PASS | Zipkin launcher/test behavior와 runtime configuration은 변경 없다. |
+| 7 | 근거/docs | PASS | `git diff --check`가 통과했고 Gradle test output은 11개 test와 의도된 skip 1개를 실행했다. |
 
-## P0/P1 Gate
+## P0/P1 게이트
 
 - P0: 0
 - P1: 0
-- Deferred: commented teaching snippets still mention `Thread.sleep` and `runBlocking`; active blocking calls are named as simulated sync work.
+- Deferred: commented teaching snippet은 여전히 `Thread.sleep`과 `runBlocking`을 언급한다. active blocking call은 simulated sync work로 이름 붙였다.
