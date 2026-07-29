@@ -14,17 +14,17 @@ import org.springframework.stereotype.Service
 import java.time.Duration
 
 /**
- * Product service with Redis primary cache and Caffeine fallback.
+ * Redis primary cache 와 Caffeine fallback 을 사용하는 product service 입니다.
  *
- * ## Cache strategy:
- * - GET: CircuitBreaker wraps the Redis read. On OPEN, falls back to Caffeine.
- * - PUT: Writes to both Redis and Caffeine; best-effort (Redis write failure is logged, not thrown).
- * - EVICT: Removes from both stores.
+ * ## Cache strategy
+ * - GET: CircuitBreaker 가 Redis read 를 감쌉니다. OPEN 상태에서는 Caffeine 으로 fallback 합니다.
+ * - PUT: Redis 와 Caffeine 양쪽에 write 합니다. best-effort 이며 Redis write failure 는 throw 하지 않고 log 합니다.
+ * - EVICT: 두 store 에서 모두 제거합니다.
  *
- * ## Circuit breaker states:
- * - **CLOSED** — all reads go to Redis.
- * - **OPEN** — reads fall back to Caffeine (stale-while-revalidate).
- * - **HALF-OPEN** — probe calls attempt Redis; success → CLOSED, failure → OPEN.
+ * ## Circuit breaker states
+ * - **CLOSED** — 모든 read 가 Redis 로 갑니다.
+ * - **OPEN** — read 가 Caffeine 으로 fallback 합니다(stale-while-revalidate).
+ * - **HALF-OPEN** — probe call 이 Redis 를 시도합니다. 성공하면 CLOSED, 실패하면 OPEN 입니다.
  */
 @Service
 class ResilientProductService(
@@ -38,10 +38,10 @@ class ResilientProductService(
     }
 
     /**
-     * Retrieves a product by ID.
+     * ID 로 product 를 조회합니다.
      *
-     * Attempts Redis via CircuitBreaker; falls back to Caffeine when the circuit is OPEN.
-     * Returns `null` when neither cache holds the value.
+     * CircuitBreaker 를 통해 Redis 를 시도하고, circuit 이 OPEN 이면 Caffeine 으로 fallback 합니다.
+     * 어느 cache 에도 값이 없으면 `null` 을 반환합니다.
      */
     suspend fun getProduct(id: String): String? {
         val redisKey = "$REDIS_KEY_PREFIX$id"
@@ -67,15 +67,15 @@ class ResilientProductService(
     }
 
     /**
-     * Stores a product in both Redis and Caffeine.
+     * product 를 Redis 와 Caffeine 양쪽에 저장합니다.
      *
-     * Redis write failures are caught and logged; the local cache is always updated
-     * so at least the in-process replica stays consistent.
+     * Redis write failure 는 catch 해서 log 합니다. local cache 는 항상 갱신하므로
+     * 최소한 in-process replica 는 일관성을 유지합니다.
      */
     suspend fun putProduct(id: String, value: String) {
         val redisKey = "$REDIS_KEY_PREFIX$id"
 
-        // Always update local cache first — best-effort Redis write follows
+        // local cache 를 항상 먼저 갱신하고 best-effort Redis write 를 이어서 수행합니다.
         localCache.put(id, value)
         log.debug { "Stored product[$id] in local cache" }
 
@@ -88,7 +88,7 @@ class ResilientProductService(
     }
 
     /**
-     * Evicts a product from both Redis and the local cache.
+     * Redis 와 local cache 양쪽에서 product 를 evict 합니다.
      */
     suspend fun evictProduct(id: String) {
         val redisKey = "$REDIS_KEY_PREFIX$id"
@@ -101,9 +101,9 @@ class ResilientProductService(
         }
     }
 
-    /** Returns the current circuit breaker state for observability endpoints. */
+    /** observability endpoint 에서 사용할 현재 circuit breaker state 를 반환합니다. */
     fun circuitBreakerState(): CircuitBreaker.State = circuitBreaker.state
 
-    /** Returns circuit breaker metrics snapshot. */
+    /** circuit breaker metrics snapshot 을 반환합니다. */
     fun circuitBreakerMetrics(): CircuitBreaker.Metrics = circuitBreaker.metrics
 }

@@ -18,12 +18,12 @@ import org.springframework.data.redis.serializer.StringRedisSerializer
 import java.time.Duration
 
 /**
- * Resilient cache configuration.
+ * resilient cache 설정입니다.
  *
- * Sets up:
- * - Lettuce Redis connection factory (primary cache)
- * - Caffeine local cache (fallback when Redis circuit is OPEN)
- * - CircuitBreaker for Redis calls with fast-trip settings for demos
+ * 다음 component 를 설정합니다.
+ * - Lettuce Redis connection factory(primary cache)
+ * - Caffeine local cache(Redis circuit 이 OPEN 일 때 fallback)
+ * - demo 용 fast-trip 설정을 가진 Redis call CircuitBreaker
  */
 @Configuration(proxyBeanMethods = false)
 @EnableCaching
@@ -59,9 +59,9 @@ class ResilientCacheConfig {
     }
 
     /**
-     * Caffeine local cache used as fallback when the Redis circuit breaker is OPEN.
+     * Redis circuit breaker 가 OPEN 일 때 fallback 으로 사용하는 Caffeine local cache 입니다.
      *
-     * Short TTL (30 s) so stale data is evicted once Redis recovers.
+     * Redis 가 복구된 뒤 stale data 가 제거되도록 짧은 TTL(30초)을 사용합니다.
      */
     @Bean(LOCAL_CACHE_NAME)
     fun localCache(): com.github.benmanes.caffeine.cache.Cache<String, String> {
@@ -72,10 +72,10 @@ class ResilientCacheConfig {
     }
 
     /**
-     * Resilience4j CircuitBreaker for Redis calls.
+     * Redis call 을 위한 Resilience4j CircuitBreaker 입니다.
      *
-     * Tuned for fast demo: opens after 3 failures in a 5-call window,
-     * waits 5 s in OPEN, probes with 2 calls in HALF-OPEN.
+     * 빠른 demo 를 위해 5-call window 안에서 3번 실패하면 OPEN 됩니다.
+     * OPEN 에서 5초 대기하고 HALF-OPEN 에서 2번의 call 로 probe 합니다.
      */
     @Bean
     fun redisCacheCircuitBreaker(registry: CircuitBreakerRegistry): CircuitBreaker {
