@@ -4,17 +4,14 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 
 /**
- * Lightweight, stateless text normalizer for pre-processing text before indexing or search.
+ * indexing 또는 search 전에 text 를 전처리하는 lightweight, stateless normalizer 입니다.
  *
- * All operations return a new string and never mutate the input. This object is safe to call
- * from multiple threads concurrently.
+ * 모든 operation 은 새 string 을 반환하고 input 을 mutate 하지 않습니다. 이 object 는 여러 thread 에서 동시에 호출해도 안전합니다.
  *
  * ## Behavior / Contract
- * - [normalize] lower-cases the text and collapses runs of whitespace to a single space,
- *   then trims leading and trailing whitespace.
- * - [extractKeywords] tokenizes on whitespace after normalization and removes tokens shorter
- *   than [minKeywordLength], returning a deduplicated list in encounter order.
- * - Blank input always returns an empty string / empty list.
+ * - [normalize] 는 text 를 lowercase 로 바꾸고 연속 whitespace 를 single space 로 접은 뒤 leading/trailing whitespace 를 trim 합니다.
+ * - [extractKeywords] 는 normalization 이후 whitespace 기준으로 tokenize 하고 [minKeywordLength] 보다 짧은 token 을 제거한 뒤, encounter order 를 보존하는 deduplicated list 를 반환합니다.
+ * - blank input 은 항상 empty string 또는 empty list 를 반환합니다.
  *
  * ```kotlin
  * TextNormalizer.normalize("  Hello   World  ")  // "hello world"
@@ -26,10 +23,10 @@ object TextNormalizer : KLogging() {
     private val whitespaceRegex = Regex("\\s+")
 
     /**
-     * Normalizes [text] by lower-casing and collapsing consecutive whitespace.
+     * [text] 를 lowercase 로 바꾸고 연속 whitespace 를 접어 normalize 합니다.
      *
-     * @param text input string to normalize
-     * @return normalized string, or an empty string when [text] is blank
+     * @param text normalize 할 입력 string 입니다.
+     * @return normalized string 입니다. [text] 가 blank 이면 empty string 입니다.
      */
     fun normalize(text: String): String {
         if (text.isBlank()) return ""
@@ -39,14 +36,13 @@ object TextNormalizer : KLogging() {
     }
 
     /**
-     * Extracts deduplicated keywords from [text] after normalization.
+     * normalization 이후 [text] 에서 deduplicated keyword 를 추출합니다.
      *
-     * Tokens shorter than [minKeywordLength] are discarded. The returned list preserves
-     * first-encounter order and contains no duplicates.
+     * [minKeywordLength] 보다 짧은 token 은 버립니다. 반환 list 는 first-encounter order 를 보존하고 duplicate 를 포함하지 않습니다.
      *
-     * @param text input string to tokenize
-     * @param minKeywordLength minimum token length to include (default: 2)
-     * @return ordered, deduplicated list of keywords
+     * @param text tokenize 할 입력 string 입니다.
+     * @param minKeywordLength 포함할 minimum token length 입니다. 기본값은 2입니다.
+     * @return 순서가 보존된 deduplicated keyword list 입니다.
      */
     fun extractKeywords(text: String, minKeywordLength: Int = 2): List<String> {
         if (text.isBlank()) return emptyList()

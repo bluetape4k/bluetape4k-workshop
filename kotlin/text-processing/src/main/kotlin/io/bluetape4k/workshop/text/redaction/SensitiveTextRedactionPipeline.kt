@@ -19,12 +19,12 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 /**
- * Half-open source range for sensitive text spans.
+ * 민감 text span 을 가리키는 half-open source range 입니다.
  *
  * ## Behavior / Contract
- * - [startInclusive] is zero-based and inclusive.
- * - [endExclusive] is exclusive and must be greater than [startInclusive].
- * - The range uses original Kotlin `String` code-unit offsets, not normalized offsets.
+ * - [startInclusive] 는 zero-based inclusive offset 입니다.
+ * - [endExclusive] 는 exclusive offset 이며 [startInclusive] 보다 커야 합니다.
+ * - 이 range 는 normalized offset 이 아니라 원본 Kotlin `String` code-unit offset 을 사용합니다.
  */
 @ConsistentCopyVisibility
 data class SensitiveTextRange private constructor(
@@ -42,7 +42,7 @@ data class SensitiveTextRange private constructor(
         private const val serialVersionUID: Long = 1L
 
         /**
-         * Creates a validated half-open range.
+         * 검증된 half-open range 를 생성합니다.
          */
         fun of(startInclusive: Int, endExclusive: Int): SensitiveTextRange {
             startInclusive.requireInRange(0, Int.MAX_VALUE, "startInclusive")
@@ -53,12 +53,12 @@ data class SensitiveTextRange private constructor(
 }
 
 /**
- * Detector rule used by [SensitiveTextRedactionPipeline].
+ * [SensitiveTextRedactionPipeline] 이 사용하는 detector rule 입니다.
  *
  * ## Behavior / Contract
- * - [id] and [category] are safe metadata slugs and never contain caller secrets.
- * - Keyword rules are matched with the bluetape4k Aho-Corasick detector under NFC normalization.
- * - Regex rules reject unsafe expressions that commonly create ambiguous or slow matching.
+ * - [id] 와 [category] 는 안전한 metadata slug 이며 caller secret 을 절대 포함하지 않습니다.
+ * - keyword rule 은 NFC normalization 아래에서 bluetape4k Aho-Corasick detector 로 match 합니다.
+ * - regex rule 은 ambiguous 하거나 느린 matching 을 흔히 만드는 unsafe expression 을 거부합니다.
  */
 class SensitiveRedactionRule private constructor(
     val id: String,
@@ -78,7 +78,7 @@ class SensitiveRedactionRule private constructor(
         private const val MAX_PRIORITY = 1_000
 
         /**
-         * Creates a keyword redaction rule.
+         * keyword redaction rule 을 생성합니다.
          */
         fun keyword(
             id: String,
@@ -99,7 +99,7 @@ class SensitiveRedactionRule private constructor(
         }
 
         /**
-         * Creates a regular-expression redaction rule after applying safety checks.
+         * safety check 를 적용한 뒤 regular-expression redaction rule 을 생성합니다.
          */
         fun regex(
             id: String,
@@ -162,12 +162,12 @@ class SensitiveRedactionRule private constructor(
 }
 
 /**
- * Immutable redaction policy snapshot.
+ * immutable redaction policy snapshot 입니다.
  *
  * ## Behavior / Contract
- * - Rules are copied on construction so later caller mutations cannot change a pipeline.
- * - [maskChar] must be a visible non-whitespace character.
- * - [maxTextLength] protects the example pipeline from unbounded caller input.
+ * - rule 은 construction 시점에 copy 되므로 이후 caller mutation 이 pipeline 을 바꿀 수 없습니다.
+ * - [maskChar] 는 visible non-whitespace character 여야 합니다.
+ * - [maxTextLength] 는 example pipeline 을 unbounded caller input 으로부터 보호합니다.
  */
 class SensitiveRedactionPolicy private constructor(
     val rules: List<SensitiveRedactionRule>,
@@ -183,7 +183,7 @@ class SensitiveRedactionPolicy private constructor(
         const val DEFAULT_MAX_TEXT_LENGTH: Int = 4_096
 
         /**
-         * Creates an immutable policy snapshot.
+         * immutable policy snapshot 을 생성합니다.
          */
         fun of(
             rules: Collection<SensitiveRedactionRule>,
@@ -201,7 +201,7 @@ class SensitiveRedactionPolicy private constructor(
         }
 
         /**
-         * Creates the workshop default policy for contact, token, and support-keyword masking.
+         * contact, token, support-keyword masking 을 위한 workshop default policy 를 생성합니다.
          */
         fun default(): SensitiveRedactionPolicy =
             of(
@@ -236,12 +236,12 @@ class SensitiveRedactionPolicy private constructor(
 }
 
 /**
- * Redacted sensitive span metadata.
+ * redaction 된 sensitive span metadata 입니다.
  *
  * ## Behavior / Contract
- * - [range] points into the original source text.
- * - [ruleIds] contains safe rule metadata only and is ordered deterministically.
- * - No raw matched text is stored.
+ * - [range] 는 원본 source text 내부를 가리킵니다.
+ * - [ruleIds] 는 안전한 rule metadata 만 포함하며 deterministic order 를 가집니다.
+ * - raw matched text 는 저장하지 않습니다.
  */
 @ConsistentCopyVisibility
 data class SensitiveSpan private constructor(
@@ -271,12 +271,12 @@ data class SensitiveSpan private constructor(
 }
 
 /**
- * Result returned by [SensitiveTextRedactionPipeline.redact].
+ * [SensitiveTextRedactionPipeline.redact] 가 반환하는 result 입니다.
  *
  * ## Behavior / Contract
- * - [redactedText] always has the same length as the original input.
- * - [spans] contains merged non-overlapping half-open ranges.
- * - [detectedLanguage] and [bestConfidence] are optional, safe metadata for learners.
+ * - [redactedText] 는 항상 원본 input 과 같은 길이를 가집니다.
+ * - [spans] 는 merge 된 non-overlapping half-open range 를 포함합니다.
+ * - [detectedLanguage] 와 [bestConfidence] 는 학습자를 위한 선택적 safe metadata 입니다.
  */
 @ConsistentCopyVisibility
 data class SensitiveRedactionResult internal constructor(
@@ -300,13 +300,13 @@ data class SensitiveRedactionResult internal constructor(
 }
 
 /**
- * Thread-safe sensitive text redaction pipeline for the workshop text-processing examples.
+ * workshop text-processing 예제를 위한 thread-safe sensitive text redaction pipeline 입니다.
  *
  * ## Behavior / Contract
- * - Uses regex rules for structured secrets and Aho-Corasick keyword rules for configured terms.
- * - Merges overlapping spans while keeping adjacent spans separate.
- * - Masks each source code unit with [SensitiveRedactionPolicy.maskChar] so offsets remain stable.
- * - Serializes access to the shared Lingua detector through an explicit lock.
+ * - structured secret 에는 regex rule 을 사용하고 configured term 에는 Aho-Corasick keyword rule 을 사용합니다.
+ * - adjacent span 은 분리해 유지하면서 overlapping span 은 merge 합니다.
+ * - offset 이 안정적으로 유지되도록 각 source code unit 을 [SensitiveRedactionPolicy.maskChar] 로 masking 합니다.
+ * - 명시적 lock 으로 shared Lingua detector 접근을 직렬화합니다.
  */
 class SensitiveTextRedactionPipeline private constructor(
     private val policy: SensitiveRedactionPolicy,
@@ -334,7 +334,7 @@ class SensitiveTextRedactionPipeline private constructor(
             }
 
     /**
-     * Redacts sensitive values from [text] and returns safe metadata.
+     * [text] 에서 sensitive value 를 redaction 하고 safe metadata 를 반환합니다.
      */
     fun redact(text: String): SensitiveRedactionResult {
         text.trim().length.requireInRange(1, Int.MAX_VALUE, "text.trimmed.length")
