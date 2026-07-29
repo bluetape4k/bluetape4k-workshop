@@ -17,7 +17,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
-/** Tenant-scoped campaign repository; every entry point requires a previously acquired DB permit. */
+/** tenant-scoped campaign repository입니다. 모든 entry point는 미리 획득한 DB permit을 요구합니다. */
 @Repository
 internal class CampaignRepository(
     private val gate: DatabasePermitGate,
@@ -83,7 +83,7 @@ internal class CampaignRepository(
             ?.let { with(this) { it.toEntity() } }
     }
 
-    /** Acquires the canonical first row lock for every capacity-changing command. */
+    /** capacity를 변경하는 모든 command에 대해 canonical first row lock을 획득합니다. */
     fun findPublicForUpdate(
         tenantId: String,
         campaignId: UUID,

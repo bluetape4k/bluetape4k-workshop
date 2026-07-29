@@ -41,7 +41,7 @@ internal data class ClaimTransitionCommand(
     val expectedRevision: Long,
 )
 
-/** Applies redemption and terminal transitions under campaign -> claim lock order. */
+/** campaign -> claim lock 순서 아래에서 redemption과 terminal transition을 적용합니다. */
 @Service
 internal class ClaimCommandService(
     private val transactions: VoucherTransactionRunner,

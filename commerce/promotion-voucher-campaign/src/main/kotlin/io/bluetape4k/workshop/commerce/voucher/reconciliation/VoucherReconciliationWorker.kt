@@ -19,7 +19,7 @@ internal fun interface VoucherLeaderRunner {
     fun run(action: () -> ReconciliationResult): LeaderRunResult<ReconciliationResult>
 }
 
-/** Lazily resolves Lettuce so a missing leader backend never blocks application startup. */
+/** leader backend가 없어도 application startup을 막지 않도록 Lettuce를 lazy하게 해석합니다. */
 internal class LettuceVoucherLeaderRunner(
     private val electorProvider: () -> LettuceLeaderElector?,
     instanceId: String,
@@ -55,7 +55,7 @@ internal sealed interface WorkerRunResult {
     data object LocalRunInProgress : WorkerRunResult
 }
 
-/** Shares one local single-flight guard between scheduled and operator-triggered runs. */
+/** scheduled 실행과 operator-triggered 실행 사이에서 local single-flight guard 하나를 공유합니다. */
 internal class VoucherReconciliationWorker(
     private val reconciliation: VoucherReconciliationService,
     private val properties: VoucherWorkerProperties,
@@ -130,7 +130,7 @@ internal class VoucherReconciliationWorker(
     companion object : KLogging()
 }
 
-/** Triggers the shared single-flight worker path on Spring's Java 25 virtual-thread scheduler. */
+/** Spring Java 25 virtual-thread scheduler에서 공유 single-flight worker path를 trigger합니다. */
 internal class VoucherReconciliationScheduler(
     private val worker: VoucherReconciliationWorker,
 ) {

@@ -145,7 +145,7 @@ internal fun sanitizedStartupCode(failure: Throwable): StartupFailureCode {
     return StartupFailureCode.UNEXPECTED_STARTUP_FAILURE
 }
 
-/** Applies fail-closed production checks without exposing secret values in the exception. */
+/** exception에 secret value를 노출하지 않고 fail-closed production check를 적용합니다. */
 internal class VoucherStartupValidator(
     private val referencedKeyVersions: ReferencedKeyVersionSource = ReferencedKeyVersionSource.NONE,
 ) {
@@ -326,12 +326,12 @@ internal class VoucherStartupValidator(
     }
 }
 
-/** Provides the Java 25 executor, Exposed transaction boundary, and bounded JDBC lanes. */
+/** Java 25 executor, Exposed transaction boundary, bounded JDBC lane을 제공합니다. */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(VoucherProperties::class)
 internal class VoucherConfiguration {
     init {
-        // Spring Framework 7 disables body-stream flushes by default; SSE requires each event to reach the network.
+        // Spring Framework 7은 기본적으로 body-stream flush를 비활성화합니다. SSE는 각 event가 network에 도달해야 합니다.
         SpringProperties.setProperty(SPRING_HTTP_RESPONSE_FLUSH_ENABLED, "true")
     }
 
@@ -455,7 +455,7 @@ internal class VoucherConfiguration {
     }
 }
 
-/** Removes the Exposed process-wide database registration when its Spring context closes. */
+/** Spring context가 닫힐 때 Exposed process-wide database registration을 제거합니다. */
 internal class VoucherExposedDatabaseRegistration(
     private val database: Database,
 ) : AutoCloseable {
@@ -472,7 +472,7 @@ internal class VoucherExposedDatabaseRegistration(
     }
 }
 
-/** Gives the application-owned virtual-thread executor a bounded shutdown. */
+/** application-owned virtual-thread executor에 bounded shutdown을 적용합니다. */
 internal class VoucherExecutorShutdown(
     private val executor: ExecutorService,
     private val timeout: Duration = Duration.ofSeconds(10),

@@ -16,7 +16,7 @@ import java.net.URI
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 
-/** Enforces the explicit loopback demo trust boundary before operator controllers are invoked. */
+/** operator controller가 호출되기 전에 명시적인 loopback demo trust boundary를 강제합니다. */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
 internal class OperatorAccessFilter(

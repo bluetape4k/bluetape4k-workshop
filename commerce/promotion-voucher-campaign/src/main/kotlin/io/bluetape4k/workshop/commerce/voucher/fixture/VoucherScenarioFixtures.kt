@@ -30,7 +30,7 @@ internal enum class FixtureRiskOperation {
     REDEMPTION,
 }
 
-/** Closed, deterministic cookbook shared by the guarded fixture API and browser console. */
+/** 보호된 fixture API와 browser console이 공유하는 닫힌 결정적 cookbook입니다. */
 @Component
 @Profile("local", "demo", "test")
 internal class VoucherScenarioFixtures {
@@ -75,7 +75,7 @@ internal class VoucherScenarioFixtures {
         return signals.size
     }
 
-    /** Keeps process-local demo signals consistent with the enclosing PostgreSQL transaction. */
+    /** process-local demo signal을 감싸는 PostgreSQL transaction과 일관되게 유지합니다. */
     private fun afterCommit(action: () -> Unit) {
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
             action()

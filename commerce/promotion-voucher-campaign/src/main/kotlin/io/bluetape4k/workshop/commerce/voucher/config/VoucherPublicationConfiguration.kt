@@ -28,7 +28,7 @@ import org.springframework.modulith.events.core.EventSerializer
 import org.springframework.scheduling.annotation.EnableScheduling
 import java.time.Clock
 
-/** Wires durable Spring Modulith publication and the PostgreSQL-authoritative reconciliation path. */
+/** durable Spring Modulith publication과 PostgreSQL-authoritative reconciliation path를 연결합니다. */
 @Configuration(proxyBeanMethods = false)
 @EnableScheduling
 internal class VoucherPublicationConfiguration {

@@ -28,7 +28,7 @@ internal data class ClaimReplayDescriptor(
     val reviewId: Long?,
 )
 
-/** Provides side-effect-free, tenant- and owner-scoped HTTP read models. */
+/** side-effect가 없는 tenant- 및 owner-scoped HTTP read model을 제공합니다. */
 @Service
 internal class VoucherQueryService(
     private val transactions: VoucherTransactionRunner,
@@ -84,7 +84,7 @@ internal class VoucherQueryService(
     ): List<EventInboxRecord> =
         transactions.foregroundTransaction { inbox.findBacklogPage(tenantId, afterId, limit) }
 
-    /** Reconstructs a code only for an allocated claim and verifies it against the persisted digest. */
+    /** allocated claim에 대해서만 code를 재구성하고 persisted digest와 대조해 검증합니다. */
     fun activeCode(
         tenantId: String,
         claimId: UUID,

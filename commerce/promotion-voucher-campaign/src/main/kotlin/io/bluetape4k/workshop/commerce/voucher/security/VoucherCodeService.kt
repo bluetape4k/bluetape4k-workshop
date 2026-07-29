@@ -58,7 +58,7 @@ internal enum class VerificationResult {
     INVALID_CODE,
 }
 
-/** Generates replayable opaque codes while persisting only a domain-separated verifier. */
+/** domain-separated verifier만 저장하면서 replay 가능한 opaque code를 생성합니다. */
 internal class VoucherCodeService(
     private val keyRing: VoucherCodeKeyRing,
 ) {
@@ -71,7 +71,7 @@ internal class VoucherCodeService(
             ),
         ) { "current voucher keys disappeared after key-ring validation" }
 
-    /** Reconstructs a committed code only while both recorded key versions remain available. */
+    /** 기록된 key version 둘 다 사용할 수 있을 때만 committed code를 재구성합니다. */
     fun reconstruct(
         input: VoucherGenerationInput,
         generationKeyVersion: Int,
@@ -94,7 +94,7 @@ internal class VoucherCodeService(
         )
     }
 
-    /** Converts a canonical external code into the opaque tenant-scoped lookup material. */
+    /** canonical external code를 opaque tenant-scoped lookup material로 변환합니다. */
     fun lookup(candidate: String): VoucherLookupMaterial? {
         val parsed = parse(candidate)
         val key = parsed?.let { keyRing.verificationKeys[it.verificationKeyVersion] } ?: DUMMY_KEY

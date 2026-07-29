@@ -35,7 +35,7 @@ internal enum class IdempotencyStatus {
     FAILED,
 }
 
-/** Closed response variants are persisted instead of arbitrary serialized bodies. */
+/** 임의 serialized body 대신 닫힌 response variant를 저장합니다. */
 internal enum class VoucherResponseKind {
     CAMPAIGN_CREATED,
     CAMPAIGN_ACTIVATED,
@@ -194,7 +194,7 @@ internal object HttpIdempotencyTable : AuditableLongIdTable("voucher_http_idempo
 }
 
 internal interface VoucherIdempotencyStore {
-    /** Returns only terminal replay/conflict state; an in-progress row is handled by [acquire]. */
+    /** terminal replay/conflict state만 반환합니다. in-progress row는 [acquire]가 처리합니다. */
     fun lookup(
         scope: IdempotencyScope,
         fingerprint: Digest,
@@ -236,7 +236,7 @@ internal interface VoucherIdempotencyStore {
     ): Int
 }
 
-/** PostgreSQL authority for scoped HTTP idempotency, lease takeover, and terminal replay. */
+/** scoped HTTP idempotency, lease takeover, terminal replay를 담당하는 PostgreSQL authority입니다. */
 @Repository
 internal class HttpIdempotencyRepository(
     private val gate: DatabasePermitGate,

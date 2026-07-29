@@ -10,7 +10,7 @@ import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
-/** Adds a bounded correlation id, browser hardening headers, and secret-free access logs. */
+/** bounded correlation id, browser hardening header, secret-free access log를 추가합니다. */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 internal class RequestLoggingFilter : OncePerRequestFilter() {

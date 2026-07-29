@@ -19,7 +19,7 @@ internal enum class VoucherLeaderState(val metricValue: Int) {
     DEGRADED(3),
 }
 
-/** Registers the bounded-cardinality operational contract used by dashboards and alerts. */
+/** dashboard와 alert가 사용하는 bounded-cardinality operational contract를 등록합니다. */
 @Component
 internal class VoucherMetrics(
     private val registry: MeterRegistry,

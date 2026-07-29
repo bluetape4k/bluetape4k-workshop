@@ -33,7 +33,7 @@ internal enum class VoucherShutdownReason {
     DB_DRAIN_DEADLINE,
 }
 
-/** Deterministic shutdown state machine with a single injected grace deadline. */
+/** 단일 주입 grace deadline을 사용하는 결정적 shutdown state machine입니다. */
 internal class VoucherLifecycleCoordinator(
     private val gate: DatabasePermitGate,
     private val readinessDown: () -> Unit = {},
@@ -112,7 +112,7 @@ internal class VoucherLifecycleCoordinator(
     companion object : KLogging()
 }
 
-/** Runs the application-owned shutdown sequence before Spring destroys infrastructure beans. */
+/** Spring이 infrastructure bean을 destroy하기 전에 application-owned shutdown sequence를 실행합니다. */
 @Component
 internal class VoucherLifecycle(
     applicationContext: ApplicationContext,

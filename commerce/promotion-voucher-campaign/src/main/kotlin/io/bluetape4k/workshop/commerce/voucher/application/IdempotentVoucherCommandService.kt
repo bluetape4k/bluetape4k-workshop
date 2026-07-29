@@ -49,7 +49,7 @@ internal enum class IdempotencyCutPoint {
     AFTER_COMMIT_BEFORE_RESPONSE,
 }
 
-/** Signals a retryable command outcome so the enclosing business transaction rolls back. */
+/** 감싸는 business transaction이 rollback되도록 retryable command outcome을 신호합니다. */
 internal class RetryableVoucherCommand(
     val response: StoredHttpResponse,
 ) : RuntimeException(response.responseKind.name) {
@@ -71,8 +71,8 @@ internal class RetryableVoucherCommand(
 }
 
 /**
- * Separates replay, admission, acquisition, and business transactions so virtual threads never
- * wait on Redis/risk work while retaining a JDBC permit or connection.
+ * replay, admission, acquisition, business transaction을 분리해 virtual thread가
+ * JDBC permit이나 connection을 보유한 채 Redis/risk work를 기다리지 않게 합니다.
  */
 @Service
 internal class IdempotentVoucherCommandService(
@@ -89,9 +89,9 @@ internal class IdempotentVoucherCommandService(
     ): IdempotentCommandResult = executeOwned(command, admission, transactionalBusiness = true, business)
 
     /**
-     * Runs a command whose business operation owns smaller independent transactions, such as a
-     * bounded reconciliation batch. Owner validation and terminal replay persistence remain
-     * PostgreSQL-authoritative, but no foreground permit is retained across the external work.
+     * bounded reconciliation batch처럼 business operation이 더 작은 독립 transaction을 소유하는 command를 실행합니다.
+     * owner validation과 terminal replay persistence는 PostgreSQL-authoritative로 유지하지만,
+     * external work 전체에 foreground permit을 보유하지 않습니다.
      */
     fun executeExternal(
         command: IdempotentVoucherCommand,

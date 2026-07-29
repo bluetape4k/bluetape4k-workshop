@@ -39,7 +39,7 @@ internal data class CreateCampaignCommand(
     val redemptionTtlSeconds: Long,
 )
 
-/** Applies operator campaign commands while holding the same canonical campaign lock as claims. */
+/** claim과 같은 canonical campaign lock을 보유한 상태에서 operator campaign command를 적용합니다. */
 @Service
 internal class CampaignCommandService(
     private val transactions: VoucherTransactionRunner,

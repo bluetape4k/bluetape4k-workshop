@@ -38,7 +38,7 @@ internal data class VoucherStressEvidence(
     val capacityInvariant: Boolean,
 )
 
-/** Counts JDBC connection and statement execution boundaries without changing repository code. */
+/** repository code를 바꾸지 않고 JDBC connection과 statement execution boundary를 계산합니다. */
 internal class VoucherJdbcProbeDataSource(
     private val delegate: DataSource,
 ) : DataSource by delegate {
@@ -109,10 +109,10 @@ internal class VoucherJdbcProbeDataSource(
 }
 
 /**
- * Samples bounded pool, permit, PostgreSQL, Lettuce, allocation, and GC evidence for one profile.
+ * 단일 profile에 대해 bounded pool, permit, PostgreSQL, Lettuce, allocation, GC evidence를 sampling합니다.
  *
- * Latency values are deliberately report-only. Correctness gates use capacity, permit, leak, and
- * deterministic lock-timeout contracts instead of machine-dependent wall-clock thresholds.
+ * latency 값은 의도적으로 report-only입니다. correctness gate는 machine-dependent wall-clock threshold 대신
+ * capacity, permit, leak, deterministic lock-timeout contract를 사용합니다.
  */
 internal class VoucherPerformanceProbe(
     private val reportDirectory: Path,

@@ -26,7 +26,7 @@ internal data class AcknowledgeVoucherCodeResult(
     val code: String,
 )
 
-/** Delivers a review-approved code once, with same-key response-loss recovery delegated to idempotency. */
+/** review-approved code를 한 번 전달하고, same-key response-loss recovery는 idempotency에 위임합니다. */
 @Service
 internal class VoucherCodeAcknowledgementService(
     private val transactions: VoucherTransactionRunner,

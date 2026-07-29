@@ -75,7 +75,7 @@ internal class LettuceBloomRiskBackend(
     override fun mightContain(digest: String): Boolean = bloomFilter.contains(digest)
 }
 
-/** Treats Bloom positives as advisory review signals and every backend error as UNKNOWN. */
+/** Bloom positive를 advisory review signal로, 모든 backend error를 UNKNOWN으로 처리합니다. */
 internal class RiskSignalService(
     private val keys: VoucherAdmissionKeyFactory,
     private val backend: VoucherRiskBackend?,

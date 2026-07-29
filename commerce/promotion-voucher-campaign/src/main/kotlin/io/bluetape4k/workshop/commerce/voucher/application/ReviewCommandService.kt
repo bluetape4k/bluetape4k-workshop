@@ -35,7 +35,7 @@ internal data class ReviewDecisionResult(
     val oneTimeCode: String?,
 )
 
-/** Applies review decisions under campaign -> claim -> review lock order. */
+/** campaign -> claim -> review lock 순서 아래에서 review decision을 적용합니다. */
 @Service
 internal class ReviewCommandService(
     private val transactions: VoucherTransactionRunner,

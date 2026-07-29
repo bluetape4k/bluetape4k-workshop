@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.commerce.voucher.web
 import io.bluetape4k.codec.Base58
 import java.nio.charset.StandardCharsets.UTF_8
 
-/** Bounded demo HTTP surface; these limits are enforced before application services run. */
+/** bounded demo HTTP surface입니다. 이 limit은 application service 실행 전에 강제됩니다. */
 internal data class VoucherHttpProperties(
     val maxHeaderLength: Int = 64,
     val maxScalarBytes: Int = 256,

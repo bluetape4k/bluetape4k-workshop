@@ -7,7 +7,7 @@ import io.bluetape4k.workshop.commerce.voucher.idempotency.VoucherResponseKind
 import java.time.Instant
 import java.util.UUID
 
-/** Closed, bounded metadata used to reproduce the original HTTP body without storing raw JSON. */
+/** raw JSON을 저장하지 않고 원래 HTTP body를 재현하는 데 사용하는 닫힌 bounded metadata입니다. */
 internal fun CampaignSnapshot.storedCampaignResponse(
     kind: VoucherResponseKind,
     status: Int,

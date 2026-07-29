@@ -95,7 +95,7 @@ internal data class VoucherStreamBatch(
     val events: List<Pair<EventCursor, VoucherAuditHttpEvent>>,
 )
 
-/** Source boundary that keeps database work outside subscriber queues and network writes. */
+/** database work를 subscriber queue와 network write 바깥에 두는 source boundary입니다. */
 internal interface VoucherEventSource {
     fun initial(
         tenantId: String,
@@ -110,7 +110,7 @@ internal interface VoucherEventSource {
     ): VoucherStreamBatch
 }
 
-/** Reads snapshot and audit pages while holding only the reserved SSE-maintenance DB permit. */
+/** 예약된 SSE-maintenance DB permit만 보유한 채 snapshot과 audit page를 읽습니다. */
 @Component
 internal class PostgresVoucherEventSource(
     private val jdbc: VoucherJdbcExecutor,
@@ -184,8 +184,8 @@ internal class PostgresVoucherEventSource(
 }
 
 /**
- * Shares one bounded virtual-thread poller per tenant/campaign and one bounded queue per subscriber.
- * Database permits are returned before any queue or network write can block.
+ * tenant/campaign마다 bounded virtual-thread poller 하나를, subscriber마다 bounded queue 하나를 공유합니다.
+ * queue나 network write가 block될 수 있기 전에 database permit을 반환합니다.
  */
 @Component
 internal class VoucherEventStream(
@@ -458,7 +458,7 @@ internal class SseCapacityRejected(
 
 internal class VoucherServiceShuttingDown : RuntimeException("SERVICE_SHUTTING_DOWN")
 
-/** Header-authenticated SSE endpoint used by the same-origin browser fetch stream. */
+/** same-origin browser fetch stream이 사용하는 header-authenticated SSE endpoint입니다. */
 @RestController
 internal class VoucherEventStreamController(
     private val streams: VoucherEventStream,

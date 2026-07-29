@@ -88,7 +88,7 @@ internal data class VoucherCodeHttpResponse(
     val code: String,
 )
 
-/** Live customer API; GET operations never reconstruct or disclose voucher codes. */
+/** live customer API입니다. GET operation은 voucher code를 재구성하거나 노출하지 않습니다. */
 @RestController
 @RequestMapping("/api/v1")
 internal class CustomerVoucherController(

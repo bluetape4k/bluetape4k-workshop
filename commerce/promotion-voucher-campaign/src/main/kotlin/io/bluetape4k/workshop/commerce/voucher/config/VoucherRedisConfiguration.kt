@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-/** Owns optional Redis resources without allowing their absence to block PostgreSQL commands. */
+/** optional Redis resource를 소유하되, 부재가 PostgreSQL command를 막지 못하게 합니다. */
 internal class VoucherRedisResources private constructor(
     val client: RedisClient,
     private val bloomConnection: StatefulRedisConnection<String, String>?,
@@ -50,7 +50,7 @@ internal class VoucherRedisResources private constructor(
     @Volatile
     private var leaderElector: LettuceLeaderElector? = null
 
-    /** Reuses one lazily connected Lettuce elector and retries after an unavailable startup backend. */
+    /** lazy하게 연결되는 Lettuce elector 하나를 재사용하고, startup backend가 없으면 이후 재시도합니다. */
     fun leaderElector(): LettuceLeaderElector? =
         leaderLock.withLock {
             leaderElector ?: try {
@@ -138,7 +138,7 @@ internal fun voucherDistributedRateLimiter(
     )
 }
 
-/** Lazily recreates the Bucket4j adapter so a boot-time Redis outage can recover in-place. */
+/** boot 시점 Redis outage가 in-place로 복구될 수 있도록 Bucket4j adapter를 lazy하게 재생성합니다. */
 internal class RecoverableVoucherRateLimiter(
     private val client: RedisClient,
     private val properties: VoucherRedisProperties,

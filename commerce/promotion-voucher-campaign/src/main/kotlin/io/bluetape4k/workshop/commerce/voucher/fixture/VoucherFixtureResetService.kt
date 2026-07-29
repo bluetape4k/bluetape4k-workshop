@@ -16,7 +16,7 @@ internal data class VoucherFixtureResetResult(
     val deletedRows: Int,
 )
 
-/** Deletes only the selected workshop tenant and never crosses into production profiles. */
+/** 선택된 workshop tenant만 삭제하며 production profile로 넘어가지 않습니다. */
 @Service
 @Profile("local", "demo", "test")
 internal class VoucherFixtureResetService(

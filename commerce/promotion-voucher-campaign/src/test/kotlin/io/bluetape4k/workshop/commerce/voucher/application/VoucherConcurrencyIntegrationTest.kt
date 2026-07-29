@@ -15,8 +15,7 @@ internal class VoucherConcurrencyIntegrationTest : VoucherCommandTestSupport() {
     fun `capacity storm has exactly N winners and never oversells`() {
         createCampaign(capacity = 3, perUserLimit = 1)
         val outcomes =
-            race(
-                *(1..12).map { index ->
+            race(*(1..12).map { index ->
                     { allocation.allocate(AllocateVoucherCommand(TENANT_ID, CAMPAIGN_ID, "user-$index")) }
                 }.toTypedArray(),
             )
