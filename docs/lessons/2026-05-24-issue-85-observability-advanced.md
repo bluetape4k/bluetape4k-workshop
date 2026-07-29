@@ -1,99 +1,111 @@
-# Issue #85 — Observability/Performance Advanced README Enhancements
+# Issue #85 — Observability/Performance Advanced README 개선
 
 **Date**: 2026-05-24
 **Branch**: `docs/issue-85-observability-advanced`
 **Modules**: 5 modules updated
 
-## Summary
+## 요약
 
-Enhanced 5 module READMEs with advanced content: `Used bluetape4k Features` tables, Before/After
-code comparisons, Mermaid architecture/sequence diagrams, Gatling simulation execution guides,
-Virtual Thread performance comparison tables, and `withObservationSuspending` coroutine span
-propagation explanations.
+5개 모듈 README에 advanced content를 보강했다. 범위에는
+`Used bluetape4k Features` 표, Before/After code comparison, Mermaid
+architecture/sequence diagram, Gatling simulation 실행 가이드, Virtual Thread 성능
+비교 표, `withObservationSuspending` coroutine span propagation 설명이 포함된다.
 
-## Modules Updated
+## 갱신한 모듈
 
 ### 1. `observability/micrometer-observation`
 
-Added:
-- Mermaid `flowchart TD` architecture diagram showing `@Observed` AOP chain
-- `observeOrNull` Before/After pattern (null-safe observation wrapper from `ObservationSupport`)
-- Observation propagation across layers section (outer → service → nested span)
-- Running commands (`bootRun`, `test`)
+추가 항목:
+
+- `@Observed` AOP chain을 보여주는 Mermaid `flowchart TD` architecture diagram
+- `observeOrNull` Before/After pattern(`ObservationSupport`의 null-safe observation wrapper)
+- layer 간 observation propagation 섹션(outer → service → nested span)
+- 실행 명령(`bootRun`, `test`)
 
 ### 2. `observability/micrometer-tracing-coroutines`
 
-Added:
-- Mermaid `flowchart TD` architecture diagram (3 service types → ObservationRegistry → OTel → Zipkin)
-- Mermaid `sequenceDiagram` showing coroutine span propagation across suspension points
-- `CancellationException` safety section with simplified `withObservationSuspending` internals
-- Trace propagation across coroutine boundaries explanation
-- Prerequisites section (Docker, JDK 25, Zipkin auto-start)
+추가 항목:
+
+- Mermaid `flowchart TD` architecture diagram(3 service types → ObservationRegistry → OTel → Zipkin)
+- suspension point를 가로지르는 coroutine span propagation을 보여주는 Mermaid
+  `sequenceDiagram`
+- 단순화한 `withObservationSuspending` 내부 구조가 포함된 `CancellationException`
+  safety 섹션
+- coroutine boundary를 가로지르는 trace propagation 설명
+- prerequisites 섹션(Docker, JDK 25, Zipkin auto-start)
 
 ### 3. `gatling/virtualthread-simulation`
 
-Added:
-- Mermaid `flowchart TD` architecture diagram (Gatling → Spring Boot → MongoDB)
-- Simulation structure table (class, endpoint, injection profile, description)
-- Step-by-step simulation execution guide (bootRun → gatlingRun → report)
-- Report interpretation guide (key metrics, good/investigate thresholds)
-- Virtual Thread impact explanation (platform vs virtual thread under 400 concurrent)
-- Stop condition assertions code example
-- Prerequisites section
+추가 항목:
+
+- Mermaid `flowchart TD` architecture diagram(Gatling → Spring Boot → MongoDB)
+- simulation structure table(class, endpoint, injection profile, description)
+- 단계별 simulation 실행 가이드(bootRun → gatlingRun → report)
+- report 해석 가이드(key metrics, good/investigate threshold)
+- Virtual Thread impact 설명(400 concurrent에서 platform vs virtual thread)
+- stop condition assertion code example
+- prerequisites 섹션
 
 ### 4. `virtualthreads/spring-mvc-tomcat`
 
-Added:
-- Mermaid `flowchart TD` architecture diagram (Client → Tomcat → VT → bluetape4k APIs → DB)
+추가 항목:
+
+- Mermaid `flowchart TD` architecture diagram(Client → Tomcat → VT → bluetape4k APIs → DB)
 - Virtual Thread vs Platform Thread performance comparison table
-- Scenario explanation (400 concurrent DB queries, queue wait analysis)
-- Gatling load testing execution guide with stop conditions
-- Prerequisites section
+- scenario 설명(400 concurrent DB query, queue wait analysis)
+- stop condition이 포함된 Gatling load testing 실행 가이드
+- prerequisites 섹션
 
 ### 5. `virtualthreads/spring-webflux`
 
-Added:
-- Mermaid `flowchart TD` architecture diagram (Netty → 4 dispatcher paths → `Dispatchers.VT`)
-- Dispatcher comparison table (Default, IO, Custom 16, VT) with thread model and best-fit scenarios
-- Virtual Thread vs Platform Thread performance comparison table
-- Throughput comparison table (indicative numbers, 400 concurrent users)
-- Gatling 4-simulation table (DefaultCoroutineSimulation, IOCoroutineSimulation, etc.)
-- Step-by-step Gatling execution guide with stop conditions
-- Prerequisites section
+추가 항목:
 
-## Key Patterns Documented
+- Mermaid `flowchart TD` architecture diagram(Netty → 4 dispatcher paths → `Dispatchers.VT`)
+- thread model과 best-fit scenario가 포함된 dispatcher comparison table(Default, IO,
+  Custom 16, VT)
+- Virtual Thread vs Platform Thread performance comparison table
+- throughput comparison table(indicative number, 400 concurrent users)
+- Gatling 4-simulation table(DefaultCoroutineSimulation, IOCoroutineSimulation 등)
+- stop condition이 포함된 단계별 Gatling 실행 가이드
+- prerequisites 섹션
+
+## 문서화한 주요 pattern
 
 ### `withObservationSuspending` CancellationException Safety
 
-The critical pattern: `CancellationException` must never be recorded as a span error.
-`withObservationSuspending` handles this by rethrowing `CancellationException` before the
-`obs.error(e)` call. Document and test this explicitly when using Micrometer in coroutine code.
+핵심 pattern은 `CancellationException`을 span error로 기록하면 안 된다는 것이다.
+`withObservationSuspending`은 `obs.error(e)` 호출 전에 `CancellationException`을
+다시 던져 이를 처리한다. coroutine code에서 Micrometer를 사용할 때 이 동작을
+명시적으로 문서화하고 테스트한다.
 
 ### Span Propagation Across Coroutine Boundaries
 
-Thread-local-based context does not survive coroutine suspension points. Micrometer's
-`ObservationRegistry` uses a thread-local by default. `withObservationSuspending` solves this by
-storing the observation in the coroutine context element, restoring it on resumption regardless
-of which carrier thread the coroutine resumes on.
+thread-local 기반 context는 coroutine suspension point를 통과해 살아남지 않는다.
+Micrometer의 `ObservationRegistry`는 기본적으로 thread-local을 사용한다.
+`withObservationSuspending`은 observation을 coroutine context element에 저장하고,
+coroutine이 어떤 carrier thread에서 재개되든 복원함으로써 이를 해결한다.
 
 ### Virtual Thread Suitability
 
-Virtual Threads improve throughput only for I/O-bound workloads. For CPU-bound work,
-`Dispatchers.Default` is still preferred. Document this distinction in all Virtual Thread READMEs
-to prevent misapplication.
+Virtual Thread는 I/O-bound workload에서만 throughput을 개선한다. CPU-bound 작업에는
+여전히 `Dispatchers.Default`가 적합하다. 오용을 막기 위해 모든 Virtual Thread
+README에 이 구분을 문서화한다.
 
 ### Gatling Stop Conditions
 
-Always add `.assertions()` blocks in production Gatling simulations to catch regressions:
+production Gatling simulation에는 regression을 잡기 위해 항상 `.assertions()` block을
+추가한다.
+
 - `global().responseTime().percentile(95.0).lt(500)` — p95 < 500ms
 - `global().successfulRequests().percent().gt(99.0)` — error rate < 1%
 
-Without these, a simulation completes "successfully" even when all requests are failing.
+이 assertion이 없으면 모든 요청이 실패해도 simulation이 "성공적으로" 끝날 수 있다.
 
-## Decisions
+## 결정
 
-- Used Mermaid `flowchart TD` for architecture (renders in GitHub, IntelliJ, Obsidian)
-- Used Mermaid `sequenceDiagram` for the coroutine span propagation sequence
-- Performance numbers in comparison tables are indicative/relative, not benchmarked from this repo
-- Kept Korean module description lines at the top of each README (project convention)
-- All new section headers and table content are English (CLAUDE.md policy)
+- architecture에는 Mermaid `flowchart TD`를 사용했다(GitHub, IntelliJ, Obsidian에서 렌더링).
+- coroutine span propagation sequence에는 Mermaid `sequenceDiagram`을 사용했다.
+- comparison table의 performance number는 이 repo에서 benchmark한 값이 아니라
+  indicative/relative 값이다.
+- 각 README 상단의 한국어 module description line은 project convention에 따라 유지했다.
+- 모든 신규 section header와 table content는 CLAUDE.md policy에 따라 English로 유지했다.

@@ -1,45 +1,48 @@
-# Lessons: cache-resilience module with ToxiproxyServer
+# Lessons: ToxiproxyServer를 사용한 cache-resilience module
 
 **Date**: 2026-05-24  
 **Module**: `spring-boot/cache-resilience`  
 **PR**: #187
 
-## Root cause / context
+## 근본 원인 / 배경
 
-Issue #84 requested Spring Boot Advanced examples including "Redis failure paths + CircuitBreaker fallback".
-The goal was to show the full CB state machine (CLOSED→OPEN→HALF-OPEN→CLOSED) driven by real network
-failures — without mocking Redis.
+Issue #84는 "Redis failure paths + CircuitBreaker fallback"을 포함한 Spring Boot
+Advanced 예제를 요청했다. 목표는 Redis를 mocking하지 않고 실제 network failure로
+구동되는 전체 CB state machine(CLOSED→OPEN→HALF-OPEN→CLOSED)을 보여주는 것이었다.
 
-## Key decisions
+## 주요 결정
 
-### 1. ToxiproxyServer for chaos injection
+### 1. chaos injection에 ToxiproxyServer 사용
 
-`bluetape4k-testcontainers` exposes `ToxiproxyServer` wrapping the Shopify Toxiproxy container.
-The proxy sits between the test's Lettuce client and the in-Docker Redis server:
+`bluetape4k-testcontainers`는 Shopify Toxiproxy container를 감싼
+`ToxiproxyServer`를 제공한다. proxy는 테스트의 Lettuce client와 Docker 내부
+Redis server 사이에 위치한다.
 
 ```
 Lettuce → toxiproxy (host:proxyPort) → redis (docker-network:6379)
 ```
 
-All containers join a shared `Network.newNetwork()` so Redis is reachable via Docker alias `redis`.
+모든 container는 공유 `Network.newNetwork()`에 참여하므로 Redis는 Docker alias
+`redis`로 접근할 수 있다.
 
-### 2. `limitData(0)` vs `timeout(1ms)` — the one-shot pitfall
+### 2. `limitData(0)` vs `timeout(1ms)` — one-shot 함정
 
-**First attempt**: `proxy.toxics().limitData("cut", ToxicDirection.DOWNSTREAM, 0)`  
-**Problem**: `limitData` is a **one-shot toxic** — it fires once (after 0 bytes pass) and then auto-removes
-itself. After the first connection drop, Lettuce reconnects; the toxic is already gone, so subsequent
-calls succeed. CB never accumulated enough failures.
+**첫 시도**: `proxy.toxics().limitData("cut", ToxicDirection.DOWNSTREAM, 0)`
+**문제**: `limitData`는 **one-shot toxic**이다. 한 번 발동한 뒤(0 byte 통과 후)
+자동 제거된다. 첫 connection drop 이후 Lettuce가 reconnect하면 toxic은 이미
+사라져 있어 이후 호출이 성공한다. CB는 충분한 failure를 누적하지 못했다.
 
-**Fix**: `proxy.toxics().timeout("drop-connections", ToxicDirection.UPSTREAM, 1)` — persistent toxic that
-closes every new connection after 1 ms. CB sees repeated failures on every reconnect attempt.
+**수정**: `proxy.toxics().timeout("drop-connections", ToxicDirection.UPSTREAM, 1)`을
+사용한다. 이는 새 connection을 1ms 뒤마다 닫는 persistent toxic이다. CB는 모든
+reconnect 시도에서 반복 failure를 관측한다.
 
-### 3. Lettuce command timeout must be set explicitly
+### 3. Lettuce command timeout은 명시적으로 설정해야 한다
 
-Lettuce's default command timeout is **60 seconds**. With 4 × 60s = 4 minutes of waiting, the test was
-slow but ultimately had the wrong CB state because `limitData` was one-shot (see above).
+Lettuce의 기본 command timeout은 **60초**다. 4 × 60초 = 4분을 기다리므로 테스트가
+느렸고, 결국 `limitData`가 one-shot이어서 잘못된 CB state가 만들어졌다.
 
-After switching to `timeout(1ms)` toxic, the calls still took ~3s each because Lettuce's 60s
-commandTimeout was the ceiling. Fix: set a short `commandTimeout`:
+`timeout(1ms)` toxic으로 전환한 뒤에도 Lettuce의 60초 commandTimeout이 상한으로
+작동해 각 호출이 약 3초씩 걸렸다. 짧은 `commandTimeout`을 설정한다.
 
 ```kotlin
 val clientConfig = LettuceClientConfiguration.builder()
@@ -48,17 +51,20 @@ val clientConfig = LettuceClientConfiguration.builder()
 factory = LettuceConnectionFactory(connectionConfig, clientConfig)
 ```
 
-Result: 4 × 3s = 12s for the failure-injection phase → total test time 41s.
+결과적으로 failure-injection 구간은 4 × 3초 = 12초가 되었고, 전체 테스트 시간은
+41초가 되었다.
 
-### 4. `Proxy.setEnabled(false)` does not exist in this toxiproxy-java version
+### 4. 이 toxiproxy-java version에는 `Proxy.setEnabled(false)`가 없다
 
-Attempting to use `proxy.setEnabled(false)` caused a compile error — the method is not available in the
-version of `eu.rekawek.toxiproxy:toxiproxy-java` bundled with `org.testcontainers:testcontainers-toxiproxy:2.0.5`.
-Use toxics API (`timeout`, `bandwidth`, `limitData`) instead.
+`proxy.setEnabled(false)`를 사용하려 하자 compile error가 발생했다. 이 method는
+`org.testcontainers:testcontainers-toxiproxy:2.0.5`에 포함된
+`eu.rekawek.toxiproxy:toxiproxy-java` version에서 사용할 수 없다. 대신 toxics
+API(`timeout`, `bandwidth`, `limitData`)를 사용한다.
 
-### 5. `ToxiproxyServer.withNetwork()` returns `ToxiproxyContainer`, not `ToxiproxyServer`
+### 5. `ToxiproxyServer.withNetwork()`는 `ToxiproxyServer`가 아니라 `ToxiproxyContainer`를 반환한다
 
-Builder chaining (`ToxiproxyServer().withNetwork(network)`) returns the parent type. Use `also {}`:
+builder chaining(`ToxiproxyServer().withNetwork(network)`)은 parent type을 반환한다.
+`also {}`를 사용한다.
 
 ```kotlin
 toxiproxyServer = ToxiproxyServer().also {
@@ -66,10 +72,11 @@ toxiproxyServer = ToxiproxyServer().also {
 }
 ```
 
-### 6. `testcontainers-toxiproxy` module name in 2.x
+### 6. 2.x의 `testcontainers-toxiproxy` module name
 
-In testcontainers 2.x, the module was renamed from `org.testcontainers:toxiproxy` to
-`org.testcontainers:testcontainers-toxiproxy`. Declare explicitly (not in catalog):
+testcontainers 2.x에서 module은 `org.testcontainers:toxiproxy`에서
+`org.testcontainers:testcontainers-toxiproxy`로 이름이 바뀌었다. catalog가 아니라
+명시적으로 선언한다.
 
 ```kotlin
 testImplementation("org.testcontainers:testcontainers-toxiproxy") {
@@ -77,19 +84,23 @@ testImplementation("org.testcontainers:testcontainers-toxiproxy") {
 }
 ```
 
-## Outcome / verification
+## 결과 / 검증
 
-- 4 tests passing in 41 seconds:
-  - happy path (CB CLOSED, Redis read)
-  - failure injection (timeout toxic → CB OPEN → Caffeine fallback)
-  - recovery (remove toxic → CB HALF-OPEN → CLOSED)
-  - cache miss (null returned)
-- Architecture diagram (SVG + PNG) committed
-- README.md + README.ko.md with Used Bluetape4k Features table
+- 4개 테스트가 41초 안에 통과:
+  - happy path(CB CLOSED, Redis read)
+  - failure injection(timeout toxic → CB OPEN → Caffeine fallback)
+  - recovery(remove toxic → CB HALF-OPEN → CLOSED)
+  - cache miss(null returned)
+- Architecture diagram(SVG + PNG) 커밋
+- Used Bluetape4k Features 표가 포함된 README.md + README.ko.md
 
-## Future guidance
+## 향후 지침
 
-- When using Toxiproxy toxics, prefer **persistent** toxics (`timeout`, `bandwidth`) over one-shot toxics (`limitData`) for CB failure injection tests.
-- Always set a short `commandTimeout` on the Lettuce client used in tests; the default 60s makes chaos tests very slow.
-- `ToxiproxyServer` requires `testcontainers-toxiproxy` (2.x name) as an EXPLICIT test dependency because `bluetape4k-testcontainers` declares it `compileOnly`.
-- Check the `toxiproxy-java` API version before using enable/disable methods; use toxics API instead.
+- Toxiproxy toxics를 사용할 때 CB failure injection test에는 one-shot toxic
+  (`limitData`)보다 **persistent** toxic(`timeout`, `bandwidth`)을 우선한다.
+- 테스트에서 사용하는 Lettuce client에는 항상 짧은 `commandTimeout`을 설정한다.
+  기본 60초는 chaos test를 매우 느리게 만든다.
+- `bluetape4k-testcontainers`가 이를 `compileOnly`로 선언하므로 `ToxiproxyServer`
+  사용 시 `testcontainers-toxiproxy`(2.x 이름)를 명시적 test dependency로 추가해야 한다.
+- enable/disable method를 쓰기 전에 `toxiproxy-java` API version을 확인하고, 가능하면
+  toxics API를 사용한다.
