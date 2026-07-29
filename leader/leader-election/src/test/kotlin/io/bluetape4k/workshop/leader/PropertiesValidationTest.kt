@@ -7,10 +7,10 @@ import java.time.Duration
 import io.bluetape4k.assertions.assertFailsWith
 
 /**
- * P3-13: [LeaderElectionProperties] `init {}` validation test.
+ * P3-13: [LeaderElectionProperties] `init {}` validation test입니다.
  *
- * Verifies that invalid configurations (leaseTime < waitTime) are rejected at construction time.
- * No Spring context or Redis required — pure unit test.
+ * 잘못된 configuration(leaseTime < waitTime)이 construction time에 거부되는지 검증합니다.
+ * Spring context나 Redis가 필요 없는 순수 unit test입니다.
  */
 class PropertiesValidationTest {
 

@@ -10,13 +10,13 @@ import org.junit.jupiter.api.Test
 import io.bluetape4k.codec.Base58
 
 /**
- * Tests for [LockAssertJob] and the [LockAssert] API.
+ * [LockAssertJob]과 [LockAssert] API의 테스트입니다.
  *
- * ## Key behaviours verified
- * - [LockAssert.assertLocked] passes silently inside `runIfLeader`.
- * - [LockAssert.assertLocked] throws [IllegalStateException] outside any leader scope.
- * - [LockAssert.isLocked] returns `true` inside scope and `false` outside.
- * - [LockAssertJob.execute] completes without error when running as leader.
+ * ## 검증하는 주요 동작
+ * - [LockAssert.assertLocked]는 `runIfLeader` 안에서 조용히 통과합니다.
+ * - [LockAssert.assertLocked]는 leader scope 밖에서 [IllegalStateException]을 던집니다.
+ * - [LockAssert.isLocked]는 scope 안에서 `true`, 밖에서 `false`를 반환합니다.
+ * - [LockAssertJob.execute]는 leader로 실행될 때 error 없이 완료됩니다.
  */
 class LockAssertTest : AbstractLeaderElectionTest() {
 

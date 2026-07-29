@@ -8,12 +8,12 @@ import org.junit.jupiter.api.Test
 import io.bluetape4k.assertions.assertFailsWith
 
 /**
- * P3-11: Duplicate lockName detection unit test.
+ * P3-11: 중복 lockName 감지 unit test입니다.
  *
- * Verifies that [LeaderScheduledJobService] detects duplicate [LeaderGuardedJob.lockName]
- * values at startup and throws [IllegalStateException].
+ * [LeaderScheduledJobService]가 startup 때 중복 [LeaderGuardedJob.lockName] 값을 감지하고
+ * [IllegalStateException]을 던지는지 검증합니다.
  *
- * No Redis container required — pure unit test.
+ * Redis container가 필요 없는 순수 unit test입니다.
  */
 class DuplicateLockNameTest {
 
@@ -46,7 +46,7 @@ class DuplicateLockNameTest {
             override fun execute() {}
         }
 
-        // Must not throw
+        // 예외가 발생하면 안 됩니다.
         val service = LeaderScheduledJobService(elector, listOf(job1, job2))
         service.shouldNotBeNull()
     }

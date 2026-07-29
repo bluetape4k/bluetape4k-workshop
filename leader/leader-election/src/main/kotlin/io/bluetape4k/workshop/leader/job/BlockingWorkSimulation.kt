@@ -5,7 +5,7 @@ import java.time.Duration
 import java.util.concurrent.locks.LockSupport
 
 /**
- * Parks the current blocking worker to simulate leader-only work.
+ * leader-only work를 simulation하기 위해 현재 blocking worker를 대기시킵니다.
  */
 internal fun simulateBlockingWork(duration: Duration) {
     val nanoseconds = duration.toNanos()

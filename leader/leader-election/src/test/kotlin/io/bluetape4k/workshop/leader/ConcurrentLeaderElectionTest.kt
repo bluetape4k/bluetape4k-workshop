@@ -10,14 +10,14 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * T2: Concurrent leader election — exactly one winner among N instances.
+ * T2: Concurrent leader election - N개 instance 중 정확히 하나만 winner가 됩니다.
  *
- * Runs 3 workers in parallel, each with its own Lettuce connection and [LettuceLeaderElector].
- * Asserts that:
- * 1. All 3 workers attempted `runIfLeader` (attempt count = 3).
- * 2. Exactly 1 worker executed the action body (execution count = 1).
+ * 각자 Lettuce connection과 [LettuceLeaderElector]를 가진 worker 3개를 병렬 실행합니다.
+ * 다음을 검증합니다.
+ * 1. worker 3개 모두 `runIfLeader`를 시도했습니다(attempt count = 3).
+ * 2. 정확히 worker 1개만 action body를 실행했습니다(execution count = 1).
  *
- * Uses [MultithreadingTester] (bluetape4k-junit5) — raw Thread/Executors/CyclicBarrier forbidden.
+ * [MultithreadingTester](bluetape4k-junit5)를 사용합니다. raw Thread/Executors/CyclicBarrier는 금지합니다.
  */
 class ConcurrentLeaderElectionTest : AbstractLeaderElectionTest() {
 
@@ -40,9 +40,8 @@ class ConcurrentLeaderElectionTest : AbstractLeaderElectionTest() {
                 attemptCount.incrementAndGet()
                 elector.runIfLeader(lockName) {
                     executions.incrementAndGet()
-                    // Hold the lock long enough for the other 2 workers to attempt (waitTime=100ms)
-                    // and give up. Without this sleep, the winner releases instantly and another
-                    // worker can acquire the lock before its waitTime expires.
+                    // 다른 worker 2개가 시도하고 포기할 만큼(waitTime=100ms) lock을 유지합니다.
+                    // 이 sleep이 없으면 winner가 즉시 release하고 다른 worker가 waitTime 만료 전에 lock을 획득할 수 있습니다.
                     Thread.sleep(500)
                 }
             }

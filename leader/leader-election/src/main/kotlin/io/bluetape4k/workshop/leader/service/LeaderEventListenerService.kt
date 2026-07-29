@@ -18,20 +18,19 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Service that observes leader election events emitted by [ListeningLeaderElector].
+ * [ListeningLeaderElector]가 내보내는 leader election event를 관찰하는 service입니다.
  *
- * Demonstrates two complementary event consumption patterns:
- * 1. **[LeaderElectionListener]** — callback interface added via [ListeningLeaderElector.addListener].
- *    Runs synchronously on the thread that calls `runIfLeader`; suitable for lightweight side effects
- *    such as metrics updates or state flags.
- * 2. **[ListeningLeaderElector.events] Flow** — cold-to-hot shared flow collected in a background
- *    coroutine. Suitable for async fan-out, reactive pipelines, or SSE streams.
+ * 두 가지 상호 보완적인 event consumption pattern을 보여줍니다.
+ * 1. **[LeaderElectionListener]** - [ListeningLeaderElector.addListener]로 추가하는 callback interface입니다.
+ *    `runIfLeader`를 호출한 thread에서 동기 실행되며, metrics update나 state flag 같은 가벼운 side effect에 적합합니다.
+ * 2. **[ListeningLeaderElector.events] Flow** - background coroutine에서 collect하는 cold-to-hot shared flow입니다.
+ *    async fan-out, reactive pipeline, SSE stream에 적합합니다.
  *
- * ## Behavior / Contract
- * - The [LeaderElectionListener] is registered in [init] and removed in [close].
- * - The Flow collection coroutine is started in [init] and cancelled in [close].
- * - [electedCount], [revokedCount], and [skippedCount] are exposed for testing.
- * - Errors in the Flow collector are logged and do not propagate to the elector.
+ * ## 동작 / 계약
+ * - [LeaderElectionListener]는 [init]에서 등록하고 [close]에서 제거합니다.
+ * - Flow collection coroutine은 [init]에서 시작하고 [close]에서 cancel합니다.
+ * - [electedCount], [revokedCount], [skippedCount]는 테스트를 위해 노출합니다.
+ * - Flow collector의 error는 log로 남기고 elector로 전파하지 않습니다.
  */
 @Service
 class LeaderEventListenerService(
@@ -47,11 +46,11 @@ class LeaderEventListenerService(
     companion object : KLogging()
 
     /**
-     * Registers the callback listener and starts the Flow collector after bean construction.
+     * bean 생성 뒤 callback listener를 등록하고 Flow collector를 시작합니다.
      */
     @PostConstruct
     fun init() {
-        // Pattern 1: LeaderElectionListener callback — synchronous, lightweight
+        // Pattern 1: LeaderElectionListener callback - 동기적이고 가볍습니다.
         listenerHandle = listeningLeaderElector.addListener(object : LeaderElectionListener {
             override fun onElected(lockName: String) {
                 electedCount.incrementAndGet()
@@ -69,7 +68,7 @@ class LeaderEventListenerService(
             }
         })
 
-        // Pattern 2: Flow collection — async, fan-out capable
+        // Pattern 2: Flow collection - async이며 fan-out이 가능합니다.
         scope.launch {
             try {
                 listeningLeaderElector.events.collect { event ->
@@ -93,7 +92,7 @@ class LeaderEventListenerService(
     }
 
     /**
-     * Removes the listener and cancels the Flow collector on Spring context close.
+     * Spring context가 닫힐 때 listener를 제거하고 Flow collector를 cancel합니다.
      */
     @PreDestroy
     fun close() {
