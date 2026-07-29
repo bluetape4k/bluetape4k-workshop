@@ -4,10 +4,9 @@ import io.bluetape4k.support.requireZeroOrPositiveNumber
 import java.io.Serializable
 
 /**
- * Logical scheduler tick used by the deterministic lab.
+ * 결정적 lab에서 사용하는 논리 scheduler tick이다.
  *
- * The lab never reads wall-clock time; every lease transition is derived from
- * this explicit tick value.
+ * lab은 wall-clock 시간을 읽지 않는다. 모든 lease 전이는 이 명시적 tick 값에서 도출된다.
  */
 @ConsistentCopyVisibility
 data class TenantLogicalTick private constructor(
@@ -28,7 +27,7 @@ data class TenantLogicalTick private constructor(
         private const val serialVersionUID: Long = 1L
 
         /**
-         * Creates a non-negative logical tick.
+         * 음수가 아닌 logical tick을 만든다.
          */
         operator fun invoke(value: Int): TenantLogicalTick {
             value.requireZeroOrPositiveNumber("tick")

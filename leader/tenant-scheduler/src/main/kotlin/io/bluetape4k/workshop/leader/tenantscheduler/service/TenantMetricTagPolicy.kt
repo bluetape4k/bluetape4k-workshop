@@ -6,11 +6,10 @@ import java.io.Serializable
 import kotlin.math.min
 
 /**
- * Decides whether a workshop report may expose per-tenant metric tags.
+ * 워크숍 report가 tenant별 metric tag를 노출해도 되는지 결정한다.
  *
- * The local lab may show small bounded tenant sets, but it intentionally
- * degrades to `tenant=bounded` when the requested or actual cardinality is too
- * high for a safe example.
+ * local lab은 작고 제한된 tenant 집합을 보여 줄 수 있다.
+ * 하지만 요청 cardinality나 실제 cardinality가 안전한 예제 범위를 넘으면 의도적으로 `tenant=bounded`로 낮춘다.
  */
 data class TenantMetricTagPolicy(
     val maxTenantTagValues: Int = DEFAULT_MAX_TENANT_TAG_VALUES,
@@ -21,7 +20,7 @@ data class TenantMetricTagPolicy(
     }
 
     /**
-     * Builds bounded metric-tag rows for the supplied tenant set.
+     * 전달된 tenant 집합에 대해 제한된 metric-tag row를 만든다.
      */
     fun decide(tenants: Collection<TenantId>): TenantMetricTagDecision {
         val distinctTenants = tenants.distinctBy { it.value }
@@ -53,7 +52,7 @@ data class TenantMetricTagPolicy(
 }
 
 /**
- * Result of applying [TenantMetricTagPolicy] to a tenant set.
+ * tenant 집합에 [TenantMetricTagPolicy]를 적용한 결과이다.
  */
 data class TenantMetricTagDecision(
     val cardinalityLimited: Boolean,
@@ -67,7 +66,7 @@ data class TenantMetricTagDecision(
 }
 
 /**
- * Bounded metric tag row used by README examples and deterministic tests.
+ * README 예제와 결정적 테스트에서 사용하는 제한된 metric tag row이다.
  */
 data class TenantMetricRow(
     val tags: Map<String, String>,

@@ -3,11 +3,10 @@ package io.bluetape4k.workshop.leader.tenantscheduler.domain
 import java.io.Serializable
 
 /**
- * Non-sensitive tenant alias used in lock names, reports, and metric examples.
+ * lock 이름, report, metric 예제에서 사용하는 민감하지 않은 tenant alias이다.
  *
- * The value is canonicalized to a lowercase metric/log-safe alias. Customer
- * names, emails, account ids, and other sensitive identifiers must be mapped to
- * a stable alias before constructing this value.
+ * 값은 metric/log에 안전한 소문자 alias로 canonicalize된다.
+ * 고객명, 이메일, account id, 기타 민감 식별자는 이 값을 만들기 전에 안정적인 alias로 매핑해야 한다.
  */
 @ConsistentCopyVisibility
 data class TenantId private constructor(
@@ -18,8 +17,7 @@ data class TenantId private constructor(
         private const val serialVersionUID: Long = 1L
 
         /**
-         * Creates a tenant alias after validating and canonicalizing caller
-         * input.
+         * 호출자 입력을 검증하고 canonicalize한 뒤 tenant alias를 만든다.
          */
         operator fun invoke(raw: String): TenantId =
             TenantId(normalizeTenantAlias(raw, "tenantId"))

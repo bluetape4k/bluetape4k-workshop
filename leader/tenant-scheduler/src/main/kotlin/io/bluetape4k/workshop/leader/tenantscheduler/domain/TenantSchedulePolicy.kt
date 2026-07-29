@@ -6,7 +6,7 @@ import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
 
 /**
- * Immutable configuration for a deterministic tenant scheduler scenario.
+ * 결정적 tenant scheduler scenario의 불변 설정이다.
  */
 data class TenantSchedulePolicy(
     val jobName: TenantJobName,
