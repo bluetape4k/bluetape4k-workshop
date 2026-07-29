@@ -1,48 +1,46 @@
 # Workshop README diagram refresh
 
-## Context
+## 배경
 
-The workshop README refresh replaced generated or template-like README content
-with source-backed module explanations and diagrams. The work covered Spring,
-AWS, Exposed, graph, Vert.x, virtual-thread, and related example modules.
+workshop README refresh는 generated 또는 template-like README content를 source-backed
+module explanation과 diagram으로 교체했다. 작업 범위는 Spring, AWS, Exposed, graph,
+Vert.x, virtual-thread 및 관련 example module을 포함했다.
 
-## Decision
+## 결정
 
-- Keep README images under `docs/images/readme-diagrams/` and remove obsolete
-  Graphviz `.dot`, `.plain`, and `*-graphviz.*` outputs.
-- Prefer reader-facing headings such as `Architecture`, `Request Flow`,
-  `Module Guide`, and domain-specific seed-data names over generated headings
-  such as `Example Scenario` and `Sequence Diagram`.
-- Render every changed SVG to PNG and inspect the PNG before committing.
-- Use readable card layouts with `Architects Daughter` labels, restrained
-  arrows, same-color arrowheads, and enough image size to avoid card/text/line
-  overlap.
-- Do not keep generators that can reintroduce old README templates after the
-  hand-reviewed module documents have been corrected.
+- README image는 `docs/images/readme-diagrams/` 아래에 유지하고 obsolete Graphviz
+  `.dot`, `.plain`, `*-graphviz.*` output은 제거한다.
+- `Example Scenario`, `Sequence Diagram` 같은 generated heading보다 `Architecture`,
+  `Request Flow`, `Module Guide`, domain-specific seed-data name 같은 reader-facing heading을
+  선호한다.
+- 변경된 모든 SVG를 PNG로 렌더링하고 commit 전에 PNG를 검사한다.
+- `Architects Daughter` label, 절제된 arrow, 같은 색 arrowhead, card/text/line overlap을
+  피할 만큼 충분한 image size를 가진 읽기 쉬운 card layout을 사용한다.
+- hand-reviewed module document가 수정된 뒤 오래된 README template을 다시 도입할 수 있는
+  generator는 유지하지 않는다.
 
-## Outcome
+## 결과
 
-The branch now has module-level commits for the README and diagram refresh. The
-remaining virtual-thread modules were completed with source-backed diagrams for
-the usage rules, Spring MVC on Tomcat, and Spring WebFlux dispatcher comparison.
-Residual generated section names were removed from root/group READMEs, and the
-legacy `README_KO.md` plus stale README generator were deleted.
+branch에는 이제 README와 diagram refresh를 위한 module-level commit이 있다. 남은
+virtual-thread module은 usage rule, Spring MVC on Tomcat, Spring WebFlux dispatcher
+comparison에 대한 source-backed diagram으로 완료했다. root/group README에서 residual
+generated section name을 제거했고, legacy `README_KO.md`와 stale README generator를
+삭제했다.
 
-## Verification
+## 검증
 
-- Rendered changed SVG assets to PNG with CairoSVG.
-- Visually inspected the newly rendered diagrams before committing.
-- Verified global README image links.
-- Verified all `docs/images/readme-diagrams/*.svg` files parse with `xmllint`.
-- Verified no README-facing Graphviz artifacts remain in `docs/images/readme-diagrams`.
-- Verified stale template strings outside historical lessons no longer appear.
-- Ran `git diff --check`.
+- 변경된 SVG asset을 CairoSVG로 PNG로 렌더링했다.
+- commit 전에 새로 렌더링한 diagram을 시각 검사했다.
+- global README image link를 검증했다.
+- 모든 `docs/images/readme-diagrams/*.svg` file이 `xmllint`로 parse되는지 확인했다.
+- `docs/images/readme-diagrams`에 README-facing Graphviz artifact가 남지 않았음을 확인했다.
+- historical lesson 밖에 stale template string이 더 이상 나타나지 않음을 확인했다.
+- `git diff --check`를 실행했다.
 
-## Next agents
+## 다음 작업자 지침
 
-For future README diagram work, do not rely on SVG source inspection alone.
-Render the PNG and check it visually for label overflow, card crowding,
-arrowhead size, connector/card contact, line-label overlap, and unequal visual
-margins inside labeled layers. If a diagram still looks like a PPT mockup, use
-the better existing repository examples as the baseline before editing more
-labels.
+향후 README diagram 작업에서는 SVG source inspection에만 의존하지 않는다. PNG를
+렌더링하고 label overflow, card crowding, arrowhead size, connector/card contact,
+line-label overlap, labeled layer 안의 unequal visual margin을 시각적으로 확인한다.
+diagram이 여전히 PPT mockup처럼 보이면 label을 더 편집하기 전에 repository 안의 더 나은
+기존 예제를 baseline으로 사용한다.

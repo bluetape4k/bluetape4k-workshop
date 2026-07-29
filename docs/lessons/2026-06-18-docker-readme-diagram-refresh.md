@@ -1,46 +1,44 @@
 # Docker README Diagram Refresh
 
-## Context
+## 배경
 
-`docker/compose-demo` still exposed Graphviz wording and a README `FIXME` even
-though the source already made the useful reader contract clear: each JUnit test
-loads a module-local Docker Compose file through Testcontainers
-`DockerComposeContainer`.
+`docker/compose-demo`는 source가 이미 유용한 reader contract를 명확히 보여주고
+있었음에도 Graphviz 표현과 README `FIXME`를 여전히 노출하고 있었다. contract는 각
+JUnit test가 Testcontainers `DockerComposeContainer`를 통해 module-local Docker Compose
+file을 load한다는 것이다.
 
-## Decision
+## 결정
 
-Explain the active Compose services directly from the source files. Show
-`docker-compose-redis.yml`, `docker-compose-postgres.yml`, and
-`docker-compose-multiple.yml` as different service sets, and keep the commented
-Redis branch in `multiple.yml` visually distinct from active Redis in the
-single-service test.
+source file에서 active Compose service를 직접 설명한다. `docker-compose-redis.yml`,
+`docker-compose-postgres.yml`, `docker-compose-multiple.yml`을 서로 다른 service set으로
+보여주고, `multiple.yml`의 주석 처리된 Redis branch는 single-service test의 active
+Redis와 시각적으로 구분한다.
 
-Use service icon cards for Docker/Testcontainers, Redis, PostgreSQL, and
-Elasticsearch. Remove Graphviz assets and old non-README diagrams in the module
-pass instead of leaving stale alternatives beside the README assets.
+Docker/Testcontainers, Redis, PostgreSQL, Elasticsearch에는 service icon card를 사용한다.
+README asset 옆에 stale alternative를 남기지 말고, module pass에서 Graphviz asset과
+old non-README diagram을 제거한다.
 
-## Outcome
+## 결과
 
-The README now presents the module as a Compose service exposure example, not a
-generic test infrastructure slice. The sequence diagram shows the actual
-`DockerComposeContainer` lifecycle: load file, declare exposed service, wait for
-listening port, resolve mapped port, and assert client behavior.
+README는 이제 이 모듈을 generic test infrastructure slice가 아니라 Compose service
+exposure example로 제시한다. sequence diagram은 실제 `DockerComposeContainer` lifecycle을
+보여준다. file load, exposed service 선언, listening port 대기, mapped port resolve,
+client behavior assertion 순서다.
 
-For `docker/compose-plugin-demo`, the useful contract is different: Gradle owns
-the Compose lifecycle through `dockerCompose`, then exposes service host/port
-data to the test JVM. Keep Redis/PostgreSQL as the wired test services, and show
-Elasticsearch as a present compose file only when it is not part of
-`useComposeFiles`.
+`docker/compose-plugin-demo`의 유용한 contract는 다르다. Gradle이 `dockerCompose`를
+통해 Compose lifecycle을 소유한 뒤, service host/port data를 test JVM에 노출한다.
+Redis/PostgreSQL은 wired test service로 유지하고, Elasticsearch는 `useComposeFiles`의
+일부가 아닐 때만 present compose file로 보여준다.
 
-## Verification
+## 검증
 
-- Read the README, Kotlin tests, Gradle dependencies, and all compose files.
-- Rendered SVG diagrams to PNG with CairoSVG.
-- Visually inspected the rendered architecture and sequence as a contact sheet.
-- Checked README image links, Graphviz references, SVG XML, and `git diff --check`.
+- README, Kotlin test, Gradle dependency, 모든 compose file을 읽었다.
+- SVG diagram을 CairoSVG로 PNG로 렌더링했다.
+- rendered architecture와 sequence를 contact sheet로 시각 검사했다.
+- README image link, Graphviz reference, SVG XML, `git diff --check`를 확인했다.
 
-## Future Guidance
+## 향후 지침
 
-Do not keep `FIXME` or work-log language in user-facing READMEs. If a legacy API
-is unreliable but still documented for understanding, describe the maintained
-alternative and the source-backed contract the example still teaches.
+user-facing README에 `FIXME`나 work-log language를 남기지 않는다. legacy API가
+신뢰하기 어렵지만 이해를 위해 여전히 문서화한다면, maintained alternative와 해당 예제가
+여전히 가르치는 source-backed contract를 설명한다.
