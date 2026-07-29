@@ -31,7 +31,7 @@ internal object TicketHighContentionWorkerPid {
         try {
             FileChannel.open(parent, READ).use { it.force(true) }
         } catch (_: UnsupportedOperationException) {
-            // Directory fsync is not supported by every file provider.
+            // directory fsync는 모든 file provider가 지원하지 않습니다.
         }
     }
 

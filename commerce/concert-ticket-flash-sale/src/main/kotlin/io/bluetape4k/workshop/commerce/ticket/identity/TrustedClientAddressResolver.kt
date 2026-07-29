@@ -7,7 +7,7 @@ import java.io.Serial
 import java.io.Serializable
 import java.net.InetAddress
 
-/** Invalid forwarded-address input from a trusted network hop. */
+/** 신뢰된 network hop에서 들어온 forwarded-address input이 유효하지 않음을 나타냅니다. */
 class InvalidClientAddress(
     cause: Throwable? = null,
 ) : IllegalArgumentException("invalid_client_address", cause) {
@@ -17,7 +17,7 @@ class InvalidClientAddress(
     }
 }
 
-/** Resolves the client by removing only configured trusted proxies from the right. */
+/** 오른쪽에서 설정된 trusted proxy만 제거해 client를 해석합니다. */
 class TrustedClientAddressResolver(
     trustedCidrs: List<String>,
 ) {

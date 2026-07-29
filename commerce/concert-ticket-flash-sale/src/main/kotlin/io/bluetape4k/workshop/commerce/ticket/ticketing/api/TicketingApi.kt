@@ -5,7 +5,7 @@ import java.io.Serializable
 import java.time.Instant
 import java.util.UUID
 
-/** Operations-safe ticket effect projection. */
+/** operations-safe ticket effect projection입니다. */
 data class TicketEffectSnapshot(
     val operationId: UUID,
     val state: TicketState,
@@ -17,7 +17,7 @@ data class TicketEffectSnapshot(
     }
 }
 
-/** Read boundary for ticket effect state. */
+/** ticket effect state의 read boundary입니다. */
 fun interface TicketingQueries {
     fun effect(operationId: UUID): TicketEffectSnapshot?
 }

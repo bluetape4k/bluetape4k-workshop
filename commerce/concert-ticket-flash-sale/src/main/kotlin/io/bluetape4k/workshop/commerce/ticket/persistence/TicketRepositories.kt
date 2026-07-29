@@ -13,7 +13,7 @@ import java.time.Instant
 import io.bluetape4k.idgenerators.uuid.Uuid
 import java.util.UUID
 
-/** PostgreSQL inventory authority backed by Bluetape4k [TicketExposedJdbcRepository]. */
+/** Bluetape4k [TicketExposedJdbcRepository]로 뒷받침되는 PostgreSQL inventory authority입니다. */
 class TicketInventoryRepository(
     private val jdbc: TicketJdbcExecutor,
 ) : TicketExposedJdbcRepository<TicketInventoryEntity, Long>(TicketInventoryEntity::class.java) {
@@ -62,7 +62,7 @@ class TicketInventoryRepository(
         }
 }
 
-/** Durable USER/IP guard authority backed by Bluetape4k [TicketExposedJdbcRepository]. */
+/** Bluetape4k [TicketExposedJdbcRepository]로 뒷받침되는 durable USER/IP guard authority입니다. */
 class TicketIdentityGuardRepository(
     private val jdbc: TicketJdbcExecutor,
 ) : TicketExposedJdbcRepository<TicketActiveIdentityGuardEntity, Long>(
@@ -81,7 +81,7 @@ class TicketIdentityGuardRepository(
     }
 }
 
-/** Durable FIFO queue backed by Bluetape4k [TicketExposedJdbcRepository]. */
+/** Bluetape4k [TicketExposedJdbcRepository]로 뒷받침되는 durable FIFO queue입니다. */
 class TicketWaitingRoomRepository(
     private val jdbc: TicketJdbcExecutor,
 ) : TicketExposedJdbcRepository<TicketWaitingRoomEntryEntity, Long>(
@@ -128,7 +128,7 @@ class TicketWaitingRoomRepository(
                 }
         }
 
-    /** PostgreSQL-specific EXPLAIN is intentionally isolated from normal CRUD. */
+    /** PostgreSQL-specific EXPLAIN은 normal CRUD에서 의도적으로 격리합니다. */
     fun explainClaim(saleId: UUID): List<String> =
         jdbc.transaction {
             exposed.exec("SET LOCAL enable_seqscan = off")
@@ -143,7 +143,7 @@ class TicketWaitingRoomRepository(
         }
 }
 
-/** Payment-operation ledger backed by Bluetape4k [TicketExposedJdbcRepository]. */
+/** Bluetape4k [TicketExposedJdbcRepository]로 뒷받침되는 payment-operation ledger입니다. */
 class TicketPaymentOperationRepository(
     private val jdbc: TicketJdbcExecutor,
 ) : TicketExposedJdbcRepository<TicketPaymentOperationEntity, Long>(
@@ -171,7 +171,7 @@ class TicketPaymentOperationRepository(
         }
     }
 
-    /** PostgreSQL-specific EXPLAIN is intentionally isolated from normal CRUD. */
+    /** PostgreSQL-specific EXPLAIN은 normal CRUD에서 의도적으로 격리합니다. */
     fun explainDue(): List<String> =
         jdbc.transaction {
             exposed.exec("SET LOCAL enable_seqscan = off")

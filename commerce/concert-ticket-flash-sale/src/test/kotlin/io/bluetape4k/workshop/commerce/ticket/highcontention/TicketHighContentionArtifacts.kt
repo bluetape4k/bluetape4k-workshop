@@ -311,7 +311,7 @@ internal class TicketHighContentionJournal private constructor(
                     }
                     val buffer = ByteBuffer.allocate(channel.size().toInt())
                     while (buffer.hasRemaining() && channel.read(buffer) >= 0) {
-                        // Read the stable file handle completely.
+                        // 안정적인 file handle을 끝까지 읽습니다.
                     }
                     buffer.flip()
                     ByteArray(buffer.remaining()).also(buffer::get)

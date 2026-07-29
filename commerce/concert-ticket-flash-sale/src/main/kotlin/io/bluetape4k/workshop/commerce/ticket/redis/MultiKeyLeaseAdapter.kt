@@ -14,7 +14,7 @@ import java.io.Serial
 import java.io.Serializable
 import java.time.Duration
 
-/** Two Redis keys that must share one Redis Cluster hash slot. */
+/** 하나의 Redis Cluster hash slot을 공유해야 하는 두 Redis key입니다. */
 data class LeaseKeys(
     val ip: String,
     val user: String,
@@ -39,7 +39,7 @@ data class LeaseKeys(
     }
 }
 
-/** Opaque, versioned PRF output. The token must not contain a raw identity or request key. */
+/** opaque하고 versioned된 PRF output입니다. token은 raw identity나 request key를 포함하면 안 됩니다. */
 data class LeaseOwner(
     val version: Int,
     val token: String,
@@ -59,7 +59,7 @@ data class LeaseOwner(
     }
 }
 
-/** Current owner first, followed by retained read-key owners for response-loss recovery. */
+/** 현재 owner를 먼저 두고, response-loss recovery를 위해 보존한 read-key owner를 뒤에 둡니다. */
 data class LeaseRequest(
     val keys: LeaseKeys,
     val ownerCandidates: List<LeaseOwner>,
@@ -101,12 +101,12 @@ sealed interface LeaseDecision : Serializable {
     }
 }
 
-/** Narrow seam that can later be replaced by the reusable bluetape4k-lettuce feature tracked in #1065. */
+/** #1065에서 추적하는 재사용 가능한 bluetape4k-lettuce feature로 나중에 교체할 수 있는 좁은 seam입니다. */
 fun interface MultiKeyLeasePort {
     fun acquire(request: LeaseRequest): LeaseDecision
 }
 
-/** Application-owned two-key lease implemented with atomic Redis Lua scripts. */
+/** atomic Redis Lua script로 구현한 application-owned two-key lease입니다. */
 class MultiKeyLeaseAdapter(
     private val commandsProvider: () -> RedisCommands<String, String>,
 ) : MultiKeyLeasePort {
@@ -240,7 +240,7 @@ class MultiKeyLeaseAdapter(
     }
 }
 
-/** New-purchase admission errors are stable and intentionally separate from Redis details. */
+/** new-purchase admission error는 안정적이며 Redis 세부사항과 의도적으로 분리합니다. */
 class AdmissionTemporarilyUnavailable(cause: Throwable) :
     IllegalStateException("admission_temporarily_unavailable", cause) {
     companion object {
@@ -256,7 +256,7 @@ class PurchaseApprovalInProgress : IllegalStateException("purchase_approval_in_p
     }
 }
 
-/** Applies fail-closed behavior only to new foreground purchase admission. */
+/** 새 foreground purchase admission에만 fail-closed 동작을 적용합니다. */
 class ForegroundLeaseGate(
     private val lease: MultiKeyLeasePort,
 ) {

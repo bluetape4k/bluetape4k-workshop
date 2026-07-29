@@ -32,7 +32,7 @@ data class TicketProblem(
     }
 }
 
-/** Stable allowlist problem responses; exception messages and raw input never cross the HTTP boundary. */
+/** 안정적인 allowlist problem response입니다. exception message와 raw input은 HTTP boundary를 넘지 않습니다. */
 @RestControllerAdvice
 class ApiExceptionHandler {
     @ExceptionHandler(PurchaseNotFound::class)

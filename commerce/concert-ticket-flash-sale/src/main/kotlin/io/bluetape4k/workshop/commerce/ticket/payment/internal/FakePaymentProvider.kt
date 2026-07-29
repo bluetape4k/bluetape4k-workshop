@@ -19,7 +19,7 @@ class PaymentTimeout : IllegalStateException("payment_timeout") {
     }
 }
 
-/** Deterministic provider that deduplicates effects by stable operation ID. */
+/** 안정적인 operation ID로 effect를 deduplicate하는 결정적 provider입니다. */
 class FakePaymentProvider : PaymentProvider {
     private val outcomes = ConcurrentHashMap<UUID, PaymentOutcome>()
     private val calls = ConcurrentHashMap<UUID, AtomicInteger>()

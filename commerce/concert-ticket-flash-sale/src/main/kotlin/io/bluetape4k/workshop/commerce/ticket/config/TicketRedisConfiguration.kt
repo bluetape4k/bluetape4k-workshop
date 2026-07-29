@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-/** Owns a lazy, reconnectable Lettuce command connection without making Redis a startup authority. */
+/** Redis를 startup authority로 만들지 않고 lazy하고 재연결 가능한 Lettuce command connection을 소유합니다. */
 internal class TicketRedisResources private constructor(
     val client: RedisClient,
 ) : AutoCloseable {
@@ -58,7 +58,7 @@ internal class TicketRedisResources private constructor(
     }
 }
 
-/** Wires Bluetape4k Lettuce, Lua, and Bucket4j adapters at the Redis boundary only. */
+/** Redis boundary에서만 Bluetape4k Lettuce, Lua, Bucket4j adapter를 연결합니다. */
 @Configuration(proxyBeanMethods = false)
 internal class TicketRedisConfiguration {
     @Bean(destroyMethod = "close")

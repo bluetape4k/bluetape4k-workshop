@@ -4,7 +4,7 @@ import java.io.Serializable
 import java.time.Instant
 import java.util.UUID
 
-/** Bounded manual reconciliation request. */
+/** 한계가 정해진 manual reconciliation request입니다. */
 data class OperatorReconcile(
     val commandId: UUID,
     val limit: Int,
@@ -16,7 +16,7 @@ data class OperatorReconcile(
     }
 }
 
-/** Sanitized result of one bounded recovery run. */
+/** 단일 bounded recovery 실행의 sanitize된 결과입니다. */
 data class ReconcileSummary(
     val processed: Int,
     val converged: Int,
@@ -27,7 +27,7 @@ data class ReconcileSummary(
     }
 }
 
-/** Operator command boundary. */
+/** operator command boundary입니다. */
 fun interface OperationsCommands {
     fun reconcile(command: OperatorReconcile): ReconcileSummary
 }

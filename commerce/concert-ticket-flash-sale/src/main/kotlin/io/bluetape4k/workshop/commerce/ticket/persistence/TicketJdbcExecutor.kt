@@ -12,7 +12,7 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
-/** Global row-lock acquisition order for all ticket transactions. */
+/** 모든 ticket transaction에 적용되는 전역 row-lock 획득 순서입니다. */
 enum class TicketLockRank {
     SALE,
     IDEMPOTENCY,
@@ -24,7 +24,7 @@ enum class TicketLockRank {
     EFFECT,
 }
 
-/** Rejects code paths that could create a reverse-order deadlock. */
+/** 역순 deadlock을 만들 수 있는 code path를 거부합니다. */
 class TicketLockOrderViolation(
     val previous: TicketLockRank,
     val requested: TicketLockRank,
@@ -35,7 +35,7 @@ class TicketLockOrderViolation(
     }
 }
 
-/** Rejects database work before a JDBC connection is acquired. */
+/** JDBC connection을 얻기 전 database work를 거부합니다. */
 class TicketDatabasePermitUnavailable : IllegalStateException("ticket_database_permit_unavailable") {
     companion object {
         @Serial
@@ -43,7 +43,7 @@ class TicketDatabasePermitUnavailable : IllegalStateException("ticket_database_p
     }
 }
 
-/** One Exposed transaction that records lock acquisition order. */
+/** lock 획득 순서를 기록하는 단일 Exposed transaction입니다. */
 class TicketJdbcTransaction internal constructor(
     val exposed: JdbcTransaction,
 ) {
@@ -58,7 +58,7 @@ class TicketJdbcTransaction internal constructor(
     }
 }
 
-/** Acquires a bounded permit before opening an Exposed JDBC transaction. */
+/** Exposed JDBC transaction을 열기 전에 bounded permit을 획득합니다. */
 class TicketJdbcExecutor(
     dataSource: DataSource,
     foregroundPermits: Int,

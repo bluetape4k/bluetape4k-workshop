@@ -406,7 +406,7 @@ class TicketHttpIdempotencyEntity(id: EntityID<Long>) : LongEntity(id) {
     var updatedAt by TicketHttpIdempotencies.updatedAt
 }
 
-/** Tables that back the currently implemented repository boundaries. */
+/** 현재 구현된 repository boundary를 뒷받침하는 table입니다. */
 val ticketAuthorityTables = arrayOf(
     TicketSales,
     TicketSalePolicies,

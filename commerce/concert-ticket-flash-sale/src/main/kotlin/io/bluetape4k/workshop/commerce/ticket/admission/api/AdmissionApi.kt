@@ -4,7 +4,7 @@ import io.bluetape4k.workshop.commerce.ticket.persistence.TicketJdbcTransaction
 import java.io.Serializable
 import java.util.UUID
 
-/** Single-use waiting-room grant consumed inside the purchase transaction. */
+/** purchase transaction 안에서 소비되는 1회용 waiting-room grant입니다. */
 data class ConsumeGrant(
     val saleId: UUID,
     val grantNonce: UUID,
@@ -17,12 +17,12 @@ data class ConsumeGrant(
     }
 }
 
-/** Transactional admission boundary. */
+/** transaction을 보장하는 admission boundary입니다. */
 fun interface AdmissionCommands {
     fun consume(command: ConsumeGrant)
 }
 
-/** Internal-transaction participation exposed without leaking the admission implementation. */
+/** admission 구현을 노출하지 않고 internal transaction 참여 지점을 제공합니다. */
 fun interface TransactionalAdmissionCommands {
     fun consume(
         transaction: TicketJdbcTransaction,

@@ -17,7 +17,7 @@ class TicketRedisHealthIndicator(private val probe: TicketRedisHealthProbe) : He
         )
 }
 
-/** Liveness deliberately excludes Redis and downstream providers. */
+/** liveness는 Redis와 downstream provider를 의도적으로 제외합니다. */
 class TicketLivenessHealthIndicator : HealthIndicator {
     override fun health(): Health = Health.up().build()
 }

@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.LockSupport
 import javax.sql.DataSource
 
-/** One versioned, checksummed schema resource. */
+/** version과 checksum이 있는 단일 schema resource입니다. */
 data class TicketMigration(
     val version: String,
     val resource: Resource,
@@ -45,7 +45,7 @@ data class TicketMigration(
     }
 }
 
-/** Materialized migration input used inside one database transaction. */
+/** 단일 database transaction 안에서 사용하는 materialized migration input입니다. */
 data class TicketMigrationScript(
     val version: String,
     val checksum: String,
@@ -57,13 +57,13 @@ data class TicketMigrationScript(
     }
 }
 
-/** Result of applying or replaying one migration. */
+/** migration 하나를 적용하거나 replay한 결과입니다. */
 enum class TicketMigrationResult {
     APPLIED,
     ALREADY_APPLIED,
 }
 
-/** Sanitized migration failure categories. */
+/** sanitize된 migration failure category입니다. */
 enum class TicketMigrationFailure {
     LOCK_TIMEOUT,
     CHECKSUM_MISMATCH,
@@ -71,7 +71,7 @@ enum class TicketMigrationFailure {
     RESOURCE_UNAVAILABLE,
 }
 
-/** Migration failure safe for startup diagnostics. */
+/** startup diagnostics에 노출해도 안전한 migration failure입니다. */
 class TicketMigrationException(
     val code: TicketMigrationFailure,
     cause: Throwable? = null,
@@ -82,7 +82,7 @@ class TicketMigrationException(
     }
 }
 
-/** Readiness gate that opens only after migration checksum verification completes. */
+/** migration checksum verification이 끝난 뒤에만 열리는 readiness gate입니다. */
 class TicketMigrationReadiness {
     private val ready = AtomicBoolean(false)
 
@@ -93,7 +93,7 @@ class TicketMigrationReadiness {
     }
 }
 
-/** Applies an application-owned migration under a PostgreSQL transaction advisory lock. */
+/** application-owned migration을 PostgreSQL transaction advisory lock 아래에서 적용합니다. */
 class TicketMigrationRunner(
     private val dataSource: DataSource,
     private val migration: TicketMigration,

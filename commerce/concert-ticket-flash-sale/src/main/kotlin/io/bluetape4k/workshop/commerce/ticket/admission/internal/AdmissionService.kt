@@ -23,7 +23,7 @@ class AdmissionExpired : IllegalStateException("admission_expired") {
     }
 }
 
-/** Admission authority implemented as a Bluetape4k Exposed JDBC repository. */
+/** Bluetape4k Exposed JDBC repository로 구현한 admission authority입니다. */
 class TicketAdmissionGrantRepository :
     TicketExposedJdbcRepository<TicketAdmissionGrantEntity, Long>(TicketAdmissionGrantEntity::class.java) {
     fun consume(transaction: TicketJdbcTransaction, command: ConsumeGrant, now: java.time.Instant) {
@@ -44,7 +44,7 @@ class TicketAdmissionGrantRepository :
     }
 }
 
-/** Consumes a buyer-bound grant with one conditional Exposed update. */
+/** buyer에 귀속된 grant를 단일 조건부 Exposed update로 소비합니다. */
 class AdmissionService(
     private val jdbc: TicketJdbcExecutor,
     private val clock: Clock,

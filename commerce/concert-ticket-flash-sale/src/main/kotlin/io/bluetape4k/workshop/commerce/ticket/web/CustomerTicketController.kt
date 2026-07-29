@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.util.UUID
 
-/** Owner-safe purchase recovery endpoints; foreign IDs deliberately return the same 404 as absent IDs. */
+/** owner-safe purchase recovery endpoint입니다. 다른 owner의 ID는 없는 ID와 동일하게 404를 반환합니다. */
 @RestController
 @RequestMapping("/api/v1/purchase-attempts")
 class CustomerTicketController(

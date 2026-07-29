@@ -28,7 +28,7 @@ data class OperatorReconcileRequest(
     }
 }
 
-/** Bounded operator recovery API. Authorization is enforced by [TicketSecurityConfiguration]. */
+/** bounded operator recovery API입니다. authorization은 [TicketSecurityConfiguration]이 강제합니다. */
 @RestController
 @RequestMapping("/api/v1/operator")
 @ConditionalOnBean(OperationsCommands::class)

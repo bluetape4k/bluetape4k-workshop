@@ -10,7 +10,7 @@ import java.io.Serializable
 import java.time.Instant
 import java.util.UUID
 
-/** Starts one owner-scoped purchase under the referenced sale policy. */
+/** 참조한 sale policy 아래에서 owner-scoped purchase 하나를 시작합니다. */
 data class StartPurchase(
     val attemptId: UUID,
     val authorizationOperationId: UUID,
@@ -27,7 +27,7 @@ data class StartPurchase(
     }
 }
 
-/** Requests an owner-scoped cancellation without assuming the provider outcome. */
+/** provider outcome을 가정하지 않고 owner-scoped cancellation을 요청합니다. */
 data class CancelPurchase(
     val attemptId: UUID,
     val buyerSubjectId: UUID,
@@ -37,7 +37,7 @@ data class CancelPurchase(
     }
 }
 
-/** Applies one fenced provider outcome to a purchase. */
+/** fenced provider outcome 하나를 purchase에 적용합니다. */
 data class ApplyPaymentOutcome(
     val attemptId: UUID,
     val operationId: UUID,
@@ -50,7 +50,7 @@ data class ApplyPaymentOutcome(
     }
 }
 
-/** Applies one deduplicated ticket effect outcome. */
+/** deduplicate된 ticket effect outcome 하나를 적용합니다. */
 data class ApplyTicketOutcome(
     val orderId: UUID,
     val operationId: UUID,
@@ -64,7 +64,7 @@ data class ApplyTicketOutcome(
     }
 }
 
-/** Owner-safe purchase projection. */
+/** owner-safe purchase projection입니다. */
 data class PurchaseSnapshot(
     val attemptId: UUID,
     val state: PurchaseState,
@@ -76,7 +76,7 @@ data class PurchaseSnapshot(
     }
 }
 
-/** Commands owned by the purchase module. */
+/** purchase module이 소유하는 command입니다. */
 interface PurchaseCommands {
     fun start(command: StartPurchase): PurchaseSnapshot
 
@@ -85,19 +85,19 @@ interface PurchaseCommands {
     fun applyTicketOutcome(command: ApplyTicketOutcome): PurchaseSnapshot
 }
 
-/** Owner-scoped read boundary; a foreign owner is indistinguishable from a missing attempt. */
+/** owner-scoped read boundary입니다. 다른 owner의 시도는 존재하지 않는 시도와 구분하지 않습니다. */
 fun interface PurchaseQueries {
     fun owned(attemptId: UUID, buyerSubjectId: UUID): PurchaseSnapshot?
 }
 
 enum class ApplyResult { APPLIED, STALE }
 
-/** Fenced payment-result boundary used only by the payment module. */
+/** payment module에서만 사용하는 fenced payment-result boundary입니다. */
 fun interface PaymentOutcomeCommands {
     fun applyPaymentOutcome(command: ApplyPaymentOutcome): ApplyResult
 }
 
-/** Stable after-commit request for payment authorization. */
+/** payment authorization을 위한 안정적인 after-commit request입니다. */
 data class AuthorizationRequested(
     val eventId: UUID,
     val attemptId: UUID,
@@ -108,7 +108,7 @@ data class AuthorizationRequested(
     }
 }
 
-/** Stable after-commit request for a ticket effect. */
+/** ticket effect를 위한 안정적인 after-commit request입니다. */
 data class TicketEffectRequested(
     val eventId: UUID,
     val orderId: UUID,

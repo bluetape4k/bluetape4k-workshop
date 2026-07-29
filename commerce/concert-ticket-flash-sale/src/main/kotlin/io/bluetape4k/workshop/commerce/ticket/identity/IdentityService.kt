@@ -22,7 +22,7 @@ import java.util.UUID
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
-/** Active HMAC read ring plus the one current write version. */
+/** active HMAC read ring과 현재 write version 하나입니다. */
 class IdentityKeyRing(
     val currentVersion: Int,
     activeReadVersions: Set<Int>,
@@ -60,7 +60,7 @@ class IdentityKeyRing(
     }
 }
 
-/** Stable internal subject with no raw identifier. */
+/** raw identifier를 포함하지 않는 안정적인 internal subject입니다. */
 data class IdentitySubject(
     val subjectId: UUID,
     val kind: IdentityKind,
@@ -70,7 +70,7 @@ data class IdentitySubject(
     }
 }
 
-/** PostgreSQL alias authority serialized by advisory locks over every active digest. */
+/** 모든 active digest 위의 advisory lock으로 직렬화되는 PostgreSQL alias authority입니다. */
 class IdentitySubjectRepository :
     TicketExposedJdbcRepository<TicketIdentitySubjectEntity, UUID>(TicketIdentitySubjectEntity::class.java)
 
@@ -149,7 +149,7 @@ class IdentityAliasRepository(
     private fun advisoryKey(digest: ByteArray): Long = ByteBuffer.wrap(digest, 0, Long.SIZE_BYTES).long
 }
 
-/** Resolves raw request identity to a stable database subject through every active read key. */
+/** 모든 active read key를 통해 raw request identity를 안정적인 database subject로 해석합니다. */
 class IdentityService(
     private val keys: IdentityKeyRing,
     private val aliases: IdentityAliasRepository,
