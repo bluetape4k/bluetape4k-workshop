@@ -1,0 +1,1390 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:,">
+  <title>이벤트 소싱 바우처 캠페인 시각화</title>
+  <script>
+    (() => {
+      const storageKey = "starlight-theme";
+      const storedTheme = localStorage.getItem(storageKey);
+      const systemTheme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.dataset.theme =
+        storedTheme === "light" || storedTheme === "dark" ? storedTheme : systemTheme;
+    })();
+  </script>
+  <style>
+    :root, :root[data-theme="dark"] {
+      --bg: #07111f;
+      --panel: rgba(13, 24, 43, .86);
+      --panel-strong: rgba(20, 35, 60, .94);
+      --line: rgba(174, 195, 224, .24);
+      --line-strong: rgba(174, 195, 224, .42);
+      --text: #edf5ff;
+      --muted: #9db0c7;
+      --cyan: #55d6e6;
+      --blue: #6da5ff;
+      --violet: #ad8cff;
+      --green: #70dfac;
+      --amber: #ffc96b;
+      --red: #ff8292;
+      --shadow: 0 22px 60px rgba(0, 0, 0, .28);
+      --radius: 18px;
+    }
+
+    :root[data-theme="light"] {
+      --bg: #f4f7fb;
+      --panel: rgba(255, 255, 255, .92);
+      --panel-strong: rgba(247, 250, 255, .98);
+      --line: rgba(49, 75, 108, .20);
+      --line-strong: rgba(49, 75, 108, .36);
+      --text: #162337;
+      --muted: #53677f;
+      --cyan: #087f91;
+      --blue: #3169ba;
+      --violet: #7251b5;
+      --green: #16865e;
+      --amber: #a96800;
+      --red: #c63f54;
+      --shadow: 0 22px 60px rgba(36, 60, 91, .14);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 9% -10%, rgba(85, 214, 230, .18), transparent 34rem),
+        radial-gradient(circle at 91% 3%, rgba(173, 140, 255, .17), transparent 32rem),
+        linear-gradient(180deg, #07111f 0%, #0a1323 48%, #09101c 100%);
+      font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    :root[data-theme="light"] body {
+      background:
+        radial-gradient(circle at 9% -10%, rgba(8, 127, 145, .12), transparent 34rem),
+        radial-gradient(circle at 91% 3%, rgba(114, 81, 181, .12), transparent 32rem),
+        linear-gradient(180deg, #f7f9fc 0%, #f1f5fa 48%, #edf2f7 100%);
+    }
+
+    a { color: inherit; text-underline-offset: 3px; }
+    .source-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      margin-top: 14px;
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 750;
+    }
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      color: #d9ebff;
+    }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 80px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      border-bottom: 1px solid var(--line);
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(14px);
+    }
+    .topbar-inner {
+      display: flex;
+      width: min(1180px, calc(100% - 32px));
+      min-height: 54px;
+      margin: 0 auto;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .brand {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .topbar-actions,
+    .topnav {
+      display: flex;
+      align-items: center;
+    }
+    .topbar-actions { gap: 14px; }
+    .topnav {
+      gap: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .topnav a { text-decoration: none; }
+    .topnav a:hover { color: var(--cyan); }
+    .theme-toggle {
+      display: inline-grid;
+      width: 36px;
+      height: 36px;
+      flex: 0 0 auto;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      color: var(--text);
+      background: var(--panel);
+      cursor: pointer;
+    }
+    .theme-toggle:hover { border-color: var(--line-strong); }
+    .theme-toggle:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--cyan) 38%, transparent);
+      outline-offset: 2px;
+    }
+    .theme-toggle svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+    }
+    :root[data-theme="dark"] .theme-icon-sun,
+    :root[data-theme="light"] .theme-icon-moon { display: none; }
+    section[id] { scroll-margin-top: 72px; }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(320px, .92fr);
+      gap: 22px;
+      min-height: 620px;
+      align-items: stretch;
+      padding: 44px 0 24px;
+    }
+
+    .hero-copy {
+      align-self: center;
+      padding: 24px 0;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--cyan);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 { margin: 0; line-height: 1.12; }
+    h1 {
+      margin-top: 18px;
+      max-width: 720px;
+      font-size: clamp(44px, 7vw, 86px);
+      letter-spacing: 0;
+      word-break: keep-all;
+    }
+    h2 { font-size: clamp(28px, 4.2vw, 46px); letter-spacing: 0; }
+    h3 { font-size: 17px; letter-spacing: 0; }
+    p { margin: 0; }
+
+    .lead {
+      max-width: 700px;
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, .04);
+      color: #cfe2f8;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .hero-map {
+      position: relative;
+      min-height: 580px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background:
+        linear-gradient(145deg, rgba(85, 214, 230, .10), transparent 42%),
+        linear-gradient(315deg, rgba(173, 140, 255, .14), transparent 48%),
+        rgba(12, 23, 42, .72);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .hero-map::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(174, 195, 224, .08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(174, 195, 224, .08) 1px, transparent 1px);
+      background-size: 36px 36px;
+      mask-image: linear-gradient(180deg, rgba(0,0,0,.9), rgba(0,0,0,.15));
+    }
+
+    .map-node {
+      position: absolute;
+      width: 190px;
+      min-height: 96px;
+      padding: 16px;
+      border: 1px solid var(--line-strong);
+      border-radius: 18px;
+      background: rgba(9, 20, 36, .78);
+      box-shadow: 0 12px 36px rgba(0,0,0,.23);
+      backdrop-filter: blur(14px);
+    }
+    .map-node strong { display: block; font-size: 15px; }
+    .map-node span { display: block; margin-top: 7px; color: var(--muted); font-size: 12px; }
+    .map-node.command { left: 34px; top: 48px; border-color: rgba(85, 214, 230, .55); }
+    .map-node.store { right: 38px; top: 142px; border-color: rgba(109, 165, 255, .58); }
+    .map-node.projection { left: 74px; bottom: 118px; border-color: rgba(112, 223, 172, .55); }
+    .map-node.operator { right: 48px; bottom: 62px; border-color: rgba(255, 201, 107, .58); }
+
+    .map-path {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .section {
+      padding: 72px 0 0;
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+    .section-head p {
+      max-width: 560px;
+      color: var(--muted);
+    }
+
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .concept-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      background: rgba(255, 255, 255, .045);
+    }
+    .concept-card .number {
+      display: inline-flex;
+      width: 30px;
+      height: 30px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+      border: 1px solid rgba(85, 214, 230, .42);
+      border-radius: 9px;
+      color: var(--cyan);
+      background: rgba(85, 214, 230, .09);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .concept-card p {
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .run-modes {
+      display: grid;
+      grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .run-mode {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      background: rgba(255,255,255,.04);
+    }
+    .run-mode.primary { border-color: rgba(85, 214, 230, .42); }
+    .run-mode p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .command-block {
+      max-width: 100%;
+      margin-top: 13px;
+      padding: 13px 14px;
+      overflow-x: auto;
+      border: 1px solid rgba(109, 165, 255, .25);
+      border-radius: 12px;
+      color: #dcecff;
+      background: #08111f;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .run-flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .run-step {
+      position: relative;
+      min-height: 228px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(11, 23, 42, .72);
+    }
+    .run-step::after {
+      content: "→";
+      position: absolute;
+      top: 50%;
+      right: -14px;
+      z-index: 2;
+      transform: translateY(-50%);
+      color: var(--cyan);
+      font-size: 21px;
+      font-weight: 800;
+    }
+    .run-step:last-child::after { display: none; }
+    .run-step .step-no {
+      display: block;
+      margin-bottom: 11px;
+      color: var(--cyan);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .run-step p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .run-step code {
+      display: block;
+      margin-top: 12px;
+      padding-top: 11px;
+      border-top: 1px solid var(--line);
+      color: #dcecff;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+    .observe-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .observe-strip div {
+      padding: 13px 14px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(255,255,255,.035);
+    }
+    .observe-strip strong {
+      display: block;
+      color: var(--green);
+      font-size: 12px;
+    }
+    .observe-strip span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .scenario-line {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-top: 16px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(8, 17, 31, .58);
+    }
+    .scenario-line .node {
+      min-height: 96px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+    }
+    .scenario-line .node strong { display: block; }
+    .scenario-line .node span {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .scenario-line .arrow {
+      color: var(--cyan);
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .direction-grid {
+      display: grid;
+      grid-template-columns: .82fr 1.18fr;
+      gap: 16px;
+    }
+    .direction-side {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px;
+      background: rgba(255,255,255,.04);
+    }
+    .direction-side.risk {
+      border-color: rgba(255, 122, 138, .34);
+      background: rgba(255, 122, 138, .055);
+    }
+    .direction-side.authority {
+      border-color: rgba(112, 223, 172, .38);
+      background: rgba(112, 223, 172, .055);
+    }
+    .decision-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .decision {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 12px;
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+    }
+    .decision strong { color: var(--cyan); font-size: 13px; }
+    .decision span { color: var(--muted); font-size: 13px; }
+
+    .implementation-stack {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      align-items: stretch;
+    }
+    .implementation-layer {
+      position: relative;
+      min-height: 188px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(11, 23, 42, .72);
+    }
+    .implementation-layer::after {
+      content: "→";
+      position: absolute;
+      top: 50%;
+      right: -14px;
+      z-index: 2;
+      transform: translateY(-50%);
+      color: var(--blue);
+      font-size: 21px;
+      font-weight: 800;
+    }
+    .implementation-layer:last-child::after { display: none; }
+    .implementation-layer .label {
+      display: inline-block;
+      margin-bottom: 12px;
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .implementation-layer p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .implementation-note {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-left: 3px solid var(--amber);
+      color: var(--muted);
+      background: rgba(255, 201, 107, .07);
+      font-size: 13px;
+    }
+
+    .file-kicker {
+      display: block;
+      margin-bottom: 9px;
+      color: var(--cyan);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 11px;
+      overflow-wrap: anywhere;
+    }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .problem {
+      min-height: 190px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      background: rgba(255,255,255,.04);
+    }
+    .problem .symptom {
+      display: block;
+      margin-bottom: 12px;
+      color: var(--red);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .problem .answer {
+      display: block;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      color: var(--green);
+      font-size: 13px;
+    }
+
+    .lanes {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      overflow: hidden;
+      background: rgba(255,255,255,.04);
+      box-shadow: var(--shadow);
+    }
+
+    .lane-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 14px;
+      border-right: 1px solid var(--line);
+      background: rgba(8, 17, 31, .58);
+    }
+    .lane-nav button {
+      width: 100%;
+      border: 1px solid transparent;
+      border-radius: 14px;
+      padding: 12px 13px;
+      color: var(--muted);
+      background: transparent;
+      text-align: left;
+      font: inherit;
+      cursor: pointer;
+    }
+    .lane-nav button[aria-pressed="true"] {
+      color: var(--text);
+      background: rgba(85, 214, 230, .13);
+      border-color: rgba(85, 214, 230, .38);
+    }
+
+    .lane-stage {
+      min-height: 520px;
+      padding: 22px;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+    .step {
+      position: relative;
+      min-height: 150px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      background: rgba(11, 23, 42, .72);
+    }
+    .step::after {
+      content: "→";
+      position: absolute;
+      right: -16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--cyan);
+      font-size: 24px;
+      font-weight: 800;
+    }
+    .step:last-child::after { display: none; }
+    .step .tag {
+      display: inline-block;
+      margin-bottom: 12px;
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .step p {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .scenario {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      background: var(--panel);
+    }
+    .panel h3 { margin-bottom: 12px; }
+    .timeline {
+      display: grid;
+      gap: 10px;
+    }
+    .event {
+      display: grid;
+      grid-template-columns: 44px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.035);
+      font-size: 13px;
+    }
+    .event .pos {
+      color: var(--cyan);
+      font-weight: 800;
+    }
+    .event .type { color: #dcecff; }
+    .event .state { color: var(--muted); font-size: 12px; }
+
+    .lag-meter {
+      position: relative;
+      height: 20px;
+      margin: 18px 0 12px;
+      border-radius: 999px;
+      background: rgba(174, 195, 224, .16);
+      overflow: hidden;
+    }
+    .lag-meter span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--green), var(--amber));
+      transition: width .2s ease;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .controls button {
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      padding: 9px 13px;
+      color: var(--text);
+      background: rgba(255,255,255,.06);
+      font: inherit;
+      cursor: pointer;
+    }
+    .controls button:hover { border-color: rgba(85,214,230,.62); }
+
+    .matrix {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .matrix .panel {
+      min-height: 190px;
+      border-top: 3px solid var(--line-strong);
+    }
+    .matrix .panel:nth-child(1) { border-top-color: var(--cyan); }
+    .matrix .panel:nth-child(2) { border-top-color: var(--blue); }
+    .matrix .panel:nth-child(3) { border-top-color: var(--green); }
+    .matrix .panel:nth-child(4) { border-top-color: var(--amber); }
+    .matrix ul {
+      margin: 12px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .matrix li + li { margin-top: 7px; }
+
+    .source-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .source-list {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .source-list li + li { margin-top: 7px; }
+
+    footer {
+      padding-top: 70px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    :root[data-theme="light"] code,
+    :root[data-theme="light"] .run-step code,
+    :root[data-theme="light"] .event .type {
+      color: #244f87;
+    }
+    :root[data-theme="light"] .pill {
+      color: #3e5b7a;
+      background: rgba(255, 255, 255, .72);
+    }
+    :root[data-theme="light"] .map-node {
+      color: #edf5ff;
+      border-color: rgba(201, 217, 236, .48);
+      background: rgba(13, 28, 48, .90);
+    }
+    :root[data-theme="light"] .map-node span { color: #bdcde0; }
+    :root[data-theme="light"] .run-step,
+    :root[data-theme="light"] .scenario-line,
+    :root[data-theme="light"] .scenario-line .node,
+    :root[data-theme="light"] .implementation-layer,
+    :root[data-theme="light"] .lane-nav,
+    :root[data-theme="light"] .step {
+      background: var(--panel-strong);
+    }
+    :root[data-theme="light"] .concept-card,
+    :root[data-theme="light"] .run-mode,
+    :root[data-theme="light"] .observe-strip div,
+    :root[data-theme="light"] .direction-side,
+    :root[data-theme="light"] .problem,
+    :root[data-theme="light"] .lanes {
+      background: rgba(255, 255, 255, .72);
+    }
+
+    @media (max-width: 980px) {
+      .hero { grid-template-columns: 1fr; min-height: auto; }
+      .hero-map { min-height: 520px; }
+      .concept-grid, .matrix, .source-grid, .problem-grid { grid-template-columns: 1fr 1fr; }
+      .implementation-stack { grid-template-columns: 1fr 1fr; }
+      .implementation-layer::after { display: none; }
+      .run-flow { grid-template-columns: 1fr 1fr; }
+      .run-step::after { display: none; }
+      .flow { grid-template-columns: 1fr 1fr; }
+      .step:nth-child(2)::after { display: none; }
+    }
+
+    @media (max-width: 720px) {
+      .topbar-inner { width: min(100% - 22px, 1180px); min-height: 48px; }
+      .topnav { display: none; }
+      .shell { width: min(100% - 22px, 1180px); }
+      h1 { font-size: 42px; letter-spacing: 0; }
+      .hero-map { min-height: 620px; }
+      .map-node { width: calc(100% - 48px); left: 24px !important; right: auto !important; }
+      .map-node.command { top: 24px; }
+      .map-node.store { top: 160px; }
+      .map-node.projection { bottom: 176px; }
+      .map-node.operator { bottom: 36px; }
+      .section-head { display: block; }
+      .section-head p { margin-top: 12px; }
+      .concept-grid, .matrix, .source-grid, .scenario, .problem-grid, .direction-grid, .implementation-stack, .run-modes, .run-flow, .observe-strip { grid-template-columns: minmax(0, 1fr); }
+      .scenario-line { grid-template-columns: 1fr; }
+      .scenario-line .arrow { transform: rotate(90deg); justify-self: center; }
+      .decision { grid-template-columns: 1fr; gap: 5px; }
+      .lanes { grid-template-columns: 1fr; }
+      .lane-nav {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .flow { grid-template-columns: 1fr; }
+      .step::after {
+        content: "↓";
+        right: 18px;
+        top: auto;
+        bottom: -22px;
+        transform: none;
+      }
+      .step:last-child::after { display: none; }
+      .event { grid-template-columns: 38px 1fr; }
+      .event .state { grid-column: 2; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top">bluetape4k-workshop · Visual Companion</a>
+      <div class="topbar-actions">
+        <nav class="topnav" aria-label="문서 목차">
+          <a href="#concept">예제 구상</a>
+          <a href="#design-direction">설계 방향</a>
+          <a href="#simulation">실행</a>
+          <a href="#implementation">구현</a>
+          <a href="#problems">해결 문제</a>
+        </nav>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="다크 테마로 전환" title="다크 테마로 전환">
+          <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path>
+          </svg>
+          <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+  <main class="shell" id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">설계·구현 시각화 · Issue #538</div>
+        <h1>이벤트 소싱 바우처 캠페인</h1>
+        <p class="lead">
+          `commerce/event-sourced-promotion-voucher-campaign`은 캠페인과 바우처의
+          모든 변경 이력을 PostgreSQL 이벤트 저장소에 순서대로 기록한다.
+          쿠폰을 단순 CRUD로 구현하면 동시 요청, 재시도, 조회 모델 반영 지연,
+          운영 중 복구를 제대로 처리하기 어렵다. 이 예제는 명령 처리와 조회 모델 갱신을
+          분리해 이러한 문제를 해결하는 방법을 코드로 보여준다.
+        </p>
+        <div class="meta">
+          <span class="pill">Spring Boot 4 MVC</span>
+          <span class="pill">Java 25 가상 스레드</span>
+          <span class="pill">PostgreSQL 이벤트 저장소</span>
+          <span class="pill">예상 버전 + 멱등성</span>
+          <span class="pill">Fencing 기반 프로젝션 재구축</span>
+        </div>
+      </div>
+      <div class="hero-map" aria-label="이벤트 소싱 바우처 캠페인의 데이터 흐름">
+        <svg class="map-path" viewBox="0 0 520 580" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M120 118 C250 72 315 112 405 183" fill="none" stroke="rgba(85,214,230,.64)" stroke-width="3"/>
+          <path d="M410 236 C364 312 284 354 164 410" fill="none" stroke="rgba(112,223,172,.60)" stroke-width="3"/>
+          <path d="M196 462 C296 520 388 494 432 430" fill="none" stroke="rgba(255,201,107,.62)" stroke-width="3"/>
+          <path d="M436 374 C456 298 453 244 423 210" fill="none" stroke="rgba(173,140,255,.52)" stroke-width="2" stroke-dasharray="7 8"/>
+        </svg>
+        <div class="map-node command">
+          <strong>명령 처리</strong>
+          <span>멱등성 확인, 애그리거트 복원, 예상 버전 검사, 응답 결과 저장</span>
+        </div>
+        <div class="map-node store">
+          <strong>상태 변경의 최종 기록</strong>
+          <span>스트림 헤드 잠금, 전역 순번을 예약하는 append fence, 수정불가한 이벤트</span>
+        </div>
+        <div class="map-node projection">
+          <strong>조회 모델 갱신</strong>
+          <span>리스, 펜싱 토큰(fencing token), 중복 방지, 체크포인트, 조회 모델</span>
+        </div>
+        <div class="map-node operator">
+          <strong>장애 복구</strong>
+          <span>실패 이벤트 재처리, 세대별 재구축, 결과 검증, 활성 세대 교체</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="concept">
+      <div class="section-head">
+        <h2>예제 구상</h2>
+        <p>하나의 프로모션 캠페인에서 바우처를 발급하고 사용하고 회수하면서, 실제 운영에서 부딪히는 네 가지 문제를 해결한다.</p>
+      </div>
+      <div class="concept-grid">
+        <article class="concept-card">
+          <span class="number">01</span>
+          <h3>동시성 충돌</h3>
+          <p>같은 캠페인과 바우처에 할당(claim), 사용(redeem), 회수(release) 요청이 겹쳐도 처리 순서를 하나로 확정해야 한다.</p>
+        </article>
+        <article class="concept-card">
+          <span class="number">02</span>
+          <h3>응답 유실 후 재시도</h3>
+          <p>응답을 받지 못한 클라이언트가 같은 요청을 다시 보내도 이벤트를 중복 저장하지 않고 이전 결과를 반환해야 한다.</p>
+        </article>
+        <article class="concept-card">
+          <span class="number">03</span>
+          <h3>프로젝션 지연</h3>
+          <p>쓰기 작업이 끝나도 조회 모델 반영은 지연될 수 있다. API는 현재 처리 위치와 지연 정도를 응답에 담아야 한다.</p>
+        </article>
+        <article class="concept-card">
+          <span class="number">04</span>
+          <h3>무중단 복구</h3>
+          <p>처리 불가 이벤트, 프로젝터 재시작, 전체 재구축, 개인정보 삭제를 서비스 중단 없이 처리해야 한다.</p>
+        </article>
+      </div>
+      <div class="scenario-line" aria-label="바우처 캠페인 업무 흐름">
+        <div class="node"><strong>캠페인 생성·활성화</strong><span>예산, 기간, 발급 정책을 이벤트 스트림에 기록한다.</span></div>
+        <span class="arrow">→</span>
+        <div class="node"><strong>바우처 할당·사용·회수</strong><span>업무 규칙과 예상 버전을 검사한 뒤 상태를 변경한다.</span></div>
+        <span class="arrow">→</span>
+        <div class="node"><strong>조회·감사·복구</strong><span>조회와 운영 기능도 같은 이벤트 기록을 기준으로 동작한다.</span></div>
+      </div>
+      <div class="implementation-note">
+        “할인 쿠폰”은 익숙한 업무 개념이지만, 실제 시스템에서는 낙관적 동시성 제어, 멱등성,
+        최종적 일관성, 프로젝션 재구축, 개인정보 삭제를 함께 고려해야 한다. 이 예제는 각 기술 요소가 하나의 업무 흐름에서 어떻게 연결되는지 보여준다.
+      </div>
+    </section>
+
+    <section class="section" id="design-direction">
+      <div class="section-head">
+        <h2>설계 방향</h2>
+        <p>여러 테이블에 동시에 입력해 일관성을 맞추는 방식 대신, 모든 상태 변경을 이벤트로 먼저 기록한다. 현재 상태와 조회 모델은 이 이벤트 스트림에서 계산한다.</p>
+      </div>
+      <div class="direction-grid">
+        <article class="direction-side risk">
+          <h3>단순 CRUD 방식의 한계</h3>
+          <div class="decision-list">
+            <div class="decision"><strong>동시 갱신</strong><span>나중에 저장된 값이 앞서 처리한 상태 변경을 덮어쓴다.</span></div>
+            <div class="decision"><strong>이중 쓰기</strong><span>업무 상태와 조회 테이블 중 한쪽만 저장될 수 있다.</span></div>
+            <div class="decision"><strong>비멱등 재시도</strong><span>응답이 유실되면 같은 명령을 두 번 처리할 수 있다.</span></div>
+            <div class="decision"><strong>이력 직접 수정</strong><span>감사 이력을 보존하면서 개인정보만 삭제하기 어렵다.</span></div>
+          </div>
+        </article>
+        <article class="direction-side authority">
+          <h3>설계 원칙</h3>
+          <div class="decision-list">
+            <div class="decision"><strong>이벤트 우선 기록</strong><span>PostgreSQL 이벤트 스트림을 상태 변경의 최종 기록으로 사용한다.</span></div>
+            <div class="decision"><strong>원자적 저장</strong><span>이벤트와 멱등성 처리 결과를 같은 트랜잭션에서 저장한다.</span></div>
+            <div class="decision"><strong>비동기 프로젝션</strong><span>조회 모델은 이벤트로 재구성할 수 있으며 현재 반영 위치를 함께 제공한다.</span></div>
+            <div class="decision"><strong>세대별 재구축</strong><span>새 프로젝션 세대를 별도로 구축하고 검증을 통과한 뒤 활성 세대로 교체한다.</span></div>
+            <div class="decision"><strong>민감정보 분리</strong><span>수정불가한 이벤트에는 원본 사용자 정보와 바우처 코드를 남기지 않는다.</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="implementation-direction">
+      <div class="section-head">
+        <h2>구현 방향</h2>
+        <p>업무 규칙과 저장 메커니즘을 분리하되, 트랜잭션 경계와 이벤트 처리 위치는 코드에 명시한다.</p>
+      </div>
+      <div class="implementation-stack">
+        <article class="implementation-layer">
+          <span class="label">도메인</span>
+          <h3>애그리거트와 리듀서</h3>
+          <p>이벤트를 재생해 현재 상태를 복원하고, 명령을 검사해 새로 기록할 이벤트를 결정한다.</p>
+        </article>
+        <article class="implementation-layer">
+          <span class="label">응용 계층</span>
+          <h3>명령 처리 서비스</h3>
+          <p>멱등성 확인, 상태 복원, 업무 판단, 이벤트 저장, 최종 응답 저장을 한 유스케이스에서 순서대로 처리한다.</p>
+        </article>
+        <article class="implementation-layer">
+          <span class="label">저장 계층</span>
+          <h3>PostgreSQL 이벤트 저장소</h3>
+          <p>스트림 잠금, `append fence`, 이벤트 본문, 전역 처리 위치를 한 트랜잭션에서 기록한다.</p>
+        </article>
+        <article class="implementation-layer">
+          <span class="label">조회 모델</span>
+          <h3>리스와 체크포인트</h3>
+          <p>저장된 이벤트를 묶음으로 읽고, 중복 제거와 조회 모델 갱신, 체크포인트 이동을 한 트랜잭션에서 처리한다.</p>
+        </article>
+        <article class="implementation-layer">
+          <span class="label">운영</span>
+          <h3>복구와 관측성</h3>
+          <p>실패 이벤트 재처리와 정합성 검사, 세대별 재구축 기능을 제공하고 커넥션 풀 사용량과 처리 지연을 측정한다.</p>
+        </article>
+      </div>
+      <div class="implementation-note">
+        스냅숏은 이벤트 재생 비용을 줄이는 최적화 수단이다. 메타데이터 검증에 실패했거나 HMAC 키 버전을 사용할 수 없는 스냅숏은 폐기하고 전체 이벤트를 재생한다. 스냅숏은 최종 데이터가 아니다.
+      </div>
+    </section>
+
+    <section class="section" id="simulation">
+      <div class="section-head">
+        <h2>예제 실행과 확인</h2>
+        <p>먼저 Testcontainers 통합 테스트로 핵심 동작을 검증한다. 전체 흐름은 애플리케이션을 PostgreSQL에 연결하고 HTTP 변경 요청과 조회 요청을 차례로 보내 확인한다.</p>
+      </div>
+      <div class="run-modes">
+        <article class="run-mode">
+          <h3>통합 테스트 실행</h3>
+          <p>로컬 PostgreSQL을 따로 구성하지 않아도 명령 처리, 멱등성, 조회 모델 갱신, 장애 복구 동작을 검증할 수 있다.</p>
+          <div class="command-block">./gradlew \
+:commerce-event-sourced-promotion-voucher-campaign:integrationTest \
+--console=plain</div>
+        </article>
+        <article class="run-mode primary">
+          <h3>애플리케이션 실행</h3>
+          <p>PostgreSQL 데이터소스와 HMAC 비밀 키를 환경 변수로 설정한다. 예제에 포함된 기본 키는 로컬 실행용이며 운영 환경에서 사용해서는 안 된다.</p>
+          <div class="command-block">export SPRING_DATASOURCE_URL='jdbc:postgresql://localhost:5432/&lt;database&gt;'
+export SPRING_DATASOURCE_USERNAME='&lt;username&gt;'
+export SPRING_DATASOURCE_PASSWORD='&lt;password&gt;'
+export VOUCHER_HMAC_ACTIVE_VERSION=2
+export VOUCHER_HMAC_ACTIVE_KEY_BASE64='&lt;base64-secret&gt;'
+./gradlew :commerce-event-sourced-promotion-voucher-campaign:bootRun</div>
+        </article>
+      </div>
+      <div class="implementation-note">
+        모든 API 요청에는 `X-Workshop-Tenant`와 `X-Workshop-Principal` 헤더가 필요하다. 상태를 바꾸는 요청에는
+        `Idempotency-Key`도 포함한다. `/operator/**` API는 localhost에서 호출해야 하며,
+        `X-Workshop-Operator-Secret`, `X-Workshop-Guard`, `X-Workshop-Operator-Role: OPERATOR` 헤더를 추가로 요구한다.
+      </div>
+      <div class="run-flow" aria-label="예제 실행 절차">
+        <article class="run-step">
+          <span class="step-no">01 · 생성</span>
+          <h3>캠페인 생성</h3>
+          <p>운영자 API에 공통 인증 헤더, 멱등성 키, `If-None-Match: *`를 넣어 새 캠페인을 만든다.</p>
+          <code>POST /operator/api/v1/campaigns<br>{ campaignId, startsAt, endsAt, capacity, perUserLimit, redemptionTtlSeconds }</code>
+        </article>
+        <article class="run-step">
+          <span class="step-no">02 · 활성화</span>
+          <h3>캠페인 활성화</h3>
+          <p>생성 응답의 `revision`을 `expectedRevision`으로 보내 다른 요청이 먼저 상태를 바꿨는지 확인한다.</p>
+          <code>POST /operator/api/v1/campaigns/{campaignId}/activate<br>{ "expectedRevision": 0 }</code>
+        </article>
+        <article class="run-step">
+          <span class="step-no">03 · 할당</span>
+          <h3>바우처 할당</h3>
+          <p>사용자 참조를 HMAC 기반 대체 식별자로 변환하고, 애그리거트에서 전체 발급 한도와 사용자별 한도를 검사한다.</p>
+          <code>POST /api/v1/campaigns/{campaignId}/claims<br>{ "userRef": "member-42" }</code>
+        </article>
+        <article class="run-step">
+          <span class="step-no">04 · 조회</span>
+          <h3>조회 모델 확인</h3>
+          <p>변경 요청 응답의 스트림 위치를 최소 반영 위치로 보낸다. 직전 변경 사항을 조회 모델에서 확인하기 위한 조건이다.</p>
+          <code>GET /api/v1/campaigns/{campaignId}<br>X-Min-Stream-Position: {position}</code>
+        </article>
+        <article class="run-step">
+          <span class="step-no">05 · 복구</span>
+          <h3>복구 상태 확인</h3>
+          <p>조회 모델 반영이 지연되면 GET만 재시도한다. 조회 모델 전체가 이벤트 기록과 어긋났으면 운영자 API로 재구축하고 정합성을 검사한다.</p>
+          <code>POST /operator/api/v1/projections/{projection}/rebuilds<br>GET .../rebuilds/{generation}</code>
+        </article>
+      </div>
+      <div class="observe-strip">
+        <div><strong>명령 처리 결과</strong><span>`Idempotency-Replayed`와 `X-Stream-Position`으로 새 요청을 처리했는지 이전 결과를 반환했는지 확인한다.</span></div>
+        <div><strong>조회 결과</strong><span>`200`이면 최신 상태다. `202`이면 `Retry-After`와 `X-Projection-Lag`를 확인하고 GET 요청만 다시 보낸다.</span></div>
+        <div><strong>운영 상태</strong><span>`/actuator/health`, Prometheus의 처리 지연·실패 이벤트·커넥션 풀 사용량 메트릭, 재구축 상태와 감사 기록을 함께 확인한다.</span></div>
+      </div>
+    </section>
+
+    <section class="section" id="lanes">
+      <div class="section-head">
+        <h2>실제 코드의 처리 흐름</h2>
+        <p>명령 처리, 조회 모델 갱신, 재구축, 보안·운영 기능을 분리해 구현했다. 모든 상태 변경은 PostgreSQL 이벤트 기록을 거친다.</p>
+      </div>
+      <div class="lanes">
+        <nav class="lane-nav" aria-label="처리 흐름 선택">
+          <button type="button" data-lane="command" aria-pressed="true">명령 처리</button>
+          <button type="button" data-lane="projection" aria-pressed="false">조회 모델</button>
+          <button type="button" data-lane="rebuild" aria-pressed="false">재구축</button>
+          <button type="button" data-lane="security" aria-pressed="false">보안·운영</button>
+        </nav>
+        <div class="lane-stage" id="lane-stage"></div>
+      </div>
+    </section>
+
+    <section class="section" id="scenario">
+      <div class="section-head">
+        <h2>명령 처리와 조회 모델의 시간 차</h2>
+        <p>변경 요청이 성공하면 이벤트와 멱등성 처리 결과가 먼저 저장된다. 조회 모델은 프로젝션 체크포인트가 해당 이벤트까지 이동한 뒤에 최신 상태가 된다.</p>
+      </div>
+      <div class="scenario">
+        <div class="panel">
+          <h3>이벤트 스트림</h3>
+          <div class="timeline" id="event-stream"></div>
+          <div class="controls">
+            <button type="button" id="append-event">명령 처리</button>
+            <button type="button" id="project-event">조회 모델 반영</button>
+            <button type="button" id="reset-scenario">초기화</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>조회 모델의 최신 상태</h3>
+          <p id="freshness-copy">조회 모델의 처리가 지연되면 `202 PROJECTION_PENDING`을 반환한다.</p>
+          <div class="lag-meter" aria-label="조회 모델 처리 지연">
+            <span id="lag-fill" style="width: 0%"></span>
+          </div>
+          <div class="event">
+            <span class="pos">S</span>
+            <span class="type">X-Stream-Position</span>
+            <span class="state" id="stream-position">0</span>
+          </div>
+          <div class="event" style="margin-top: 10px;">
+            <span class="pos">P</span>
+            <span class="type">X-Projection-Position</span>
+            <span class="state" id="projection-position">0</span>
+          </div>
+          <div class="event" style="margin-top: 10px;">
+            <span class="pos">L</span>
+            <span class="type">X-Projection-Lag</span>
+            <span class="state" id="projection-lag">0</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="implementation">
+      <div class="section-head">
+        <h2>실제 구현된 모습</h2>
+        <p>다음 Kotlin 클래스는 앞에서 설명한 트랜잭션 범위와 상태 변경 규칙을 구현한다.</p>
+      </div>
+      <div class="matrix">
+        <article class="panel">
+          <span class="file-kicker">EventStoreRepository.kt</span>
+          <h3>이벤트 저장</h3>
+          <ul>
+            <li>`StreamHeads`를 먼저 잠그고 예상 스트림 버전이 현재 값과 같은지 검사한다.</li>
+            <li>`AppendFences`로 커밋된 이벤트에 빈 구간이 없는 전역 순번을 부여한다.</li>
+            <li>이벤트 추가와 스트림 헤드 갱신을 같은 트랜잭션에서 처리한다.</li>
+          </ul>
+        </article>
+        <article class="panel">
+          <span class="file-kicker">EventSourcedCommandService.kt</span>
+          <h3>명령의 멱등성</h3>
+          <ul>
+            <li>멱등성 키 선점과 최종 응답 저장을 명령 서비스의 트랜잭션 안에서 처리한다.</li>
+            <li>요청 지문이 같으면 앞서 저장한 최종 응답을 그대로 반환한다.</li>
+            <li>응답 복원에 필요한 키를 사용할 수 없으면 요청을 fail-closed 처리하고 `503`을 반환한다.</li>
+          </ul>
+        </article>
+        <article class="panel">
+          <span class="file-kicker">ProjectionWorker.kt</span>
+          <h3>조회 모델 작업자</h3>
+          <ul>
+            <li>프로젝션 리스는 소유자와 펜싱 토큰을 확인하며 갱신한다.</li>
+            <li>이벤트 중복 제거, 조회 모델 갱신, 체크포인트 이동을 한 트랜잭션에서 처리한다.</li>
+            <li>처리 불가 이벤트를 건너뛰지 않고 별도의 복구 대상으로 격리한다.</li>
+          </ul>
+        </article>
+        <article class="panel">
+          <span class="file-kicker">EventSourcedProjectionRuntime.kt</span>
+          <h3>조회 모델 재구축</h3>
+          <ul>
+            <li>새로 만든 조회 모델을 검증한 뒤에만 활성 세대로 전환한다.</li>
+            <li>취소·재개와 유효하지 않은 작업자의 쓰기 차단에 리비전과 펜싱 토큰을 사용한다.</li>
+            <li>현재 서비스 중인 조회 모델과 재구축 중인 조회 모델을 서로 독립적으로 운용한다.</li>
+          </ul>
+        </article>
+      </div>
+      <div class="source-grid" style="margin-top: 14px;">
+        <article class="panel">
+          <span class="file-kicker">CampaignProjectionQueryService.kt</span>
+          <h3>조회 모델 반영 상태</h3>
+          <p>이벤트 스트림 위치와 조회 모델 처리 위치를 함께 읽는다. 요청한 위치까지 반영되지 않았으면 설정된 대기 시간 동안 기다린 뒤 `202 PROJECTION_PENDING`과 지연 정보를 응답 헤더에 담는다.</p>
+        </article>
+        <article class="panel">
+          <span class="file-kicker">SubjectIdentityRepository.kt · BoundedRehydrator.kt</span>
+          <h3>개인정보 삭제와 상태 복원</h3>
+          <p>원본 사용자 정보는 삭제할 수 있는 HMAC 기반 대체 식별자 매핑에 보관한다. 스냅숏은 유효성 검사를 통과한 경우에만 이벤트 재생 시작점으로 사용한다.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="problems">
+      <div class="section-head">
+        <h2>예제가 해결하는 기술적 문제</h2>
+        <p>실패 상태를 API 응답과 운영 정보에 명시한다. 호출자는 응답 코드와 처리 위치로 상태를 판단하고, 운영자는 재시도와 재구축 절차로 복구할 수 있다.</p>
+      </div>
+      <div class="problem-grid">
+        <article class="problem">
+          <span class="symptom">동시 갱신 유실</span>
+          <h3>동시에 들어온 요청이 서로의 변경을 덮어쓴다</h3>
+          <span class="answer">예상 스트림 버전과 스트림 헤드 잠금으로 한 요청만 이벤트를 추가하고, 나머지는 충돌 응답을 반환한다.</span>
+        </article>
+        <article class="problem">
+          <span class="symptom">중복 처리</span>
+          <h3>응답 유실 뒤 재시도가 중복 적용된다</h3>
+          <span class="answer">멱등성 처리 범위와 요청 지문, 최종 응답을 저장해 같은 요청에는 이전 결과를 반환한다.</span>
+        </article>
+        <article class="problem">
+          <span class="symptom">갱신 전 조회 결과</span>
+          <h3>변경 직후 조회하면 이전 상태가 보인다</h3>
+          <span class="answer">이벤트와 조회 모델의 처리 위치, 지연 정도를 함께 제공하고 아직 반영되지 않은 조회에는 `202 PROJECTION_PENDING`을 반환한다.</span>
+        </article>
+        <article class="problem">
+          <span class="symptom">프로젝터 장애</span>
+          <h3>이벤트 중복 전달과 처리 실패로 체크포인트가 어긋난다</h3>
+          <span class="answer">리스와 펜싱 토큰, 이벤트 중복 제거, 트랜잭션 체크포인트, 실패 이벤트 격리와 제한된 재시도로 복구한다.</span>
+        </article>
+        <article class="problem">
+          <span class="symptom">안전하지 않은 재구축</span>
+          <h3>검증하지 않은 조회 모델이 서비스에 노출된다</h3>
+          <span class="answer">`BUILDING` 세대를 별도로 갱신하고 다이제스트 검증을 마친 뒤 CAS(Compare-and-Set)로 활성 세대를 전환한다.</span>
+        </article>
+        <article class="problem">
+          <span class="symptom">이벤트에 남은 개인정보</span>
+          <h3>수정불가한 이벤트 이력에 개인정보가 남는다</h3>
+          <span class="answer">이벤트에는 HMAC 기반 대체 식별자만 남긴다. 원본 정보와 연결하는 매핑을 삭제하면 이벤트 이력을 다시 쓰지 않고도 원본 개인정보와의 연결을 제거할 수 있다.</span>
+        </article>
+      </div>
+    </section>
+
+    <footer>
+      변경 요청의 성공은 이벤트가 저장됐다는 뜻이다. 조회 결과가 최신이라는 뜻은 아니다. 두 상태를 구분해야 클라이언트의 재시도와 운영 복구 절차를 정확하게 설계할 수 있다.
+      <p class="source-links"
+         data-status="approved"
+         data-source="2026-07-22-issue-538-event-sourced-promotion-voucher-campaign-design.md"
+         data-baseline="80c1f95eee175cc3bff4d27280f6dd2bb7d0f5f2">
+        <a href="2026-07-22-issue-538-event-sourced-promotion-voucher-campaign-design.md">설계 문서</a>
+        <a href="2026-07-30-concert-ticket-flash-sale-visual-companion.html">다음 시각 자료</a>
+        <a href="2026-07-29-event-sourced-promotion-voucher-visual-companion.en.html">English</a>
+      </p>
+    </footer>
+  </main>
+
+  <script>
+    const themeStorageKey = "starlight-theme";
+    const themeMedia = matchMedia("(prefers-color-scheme: dark)");
+    const themeToggle = document.getElementById("theme-toggle");
+
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      const nextTheme = theme === "dark" ? "light" : "dark";
+      themeToggle.setAttribute("aria-label", `${nextTheme === "dark" ? "다크" : "라이트"} 테마로 전환`);
+      themeToggle.title = themeToggle.getAttribute("aria-label");
+    }
+
+    themeToggle.addEventListener("click", () => {
+      const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+      localStorage.setItem(themeStorageKey, nextTheme);
+      applyTheme(nextTheme);
+    });
+
+    themeMedia.addEventListener("change", (event) => {
+      const storedTheme = localStorage.getItem(themeStorageKey);
+      if (storedTheme !== "light" && storedTheme !== "dark") {
+        applyTheme(event.matches ? "dark" : "light");
+      }
+    });
+
+    addEventListener("storage", (event) => {
+      if (event.key === themeStorageKey && (event.newValue === "light" || event.newValue === "dark")) {
+        applyTheme(event.newValue);
+      }
+    });
+
+    applyTheme(document.documentElement.dataset.theme);
+
+    const lanes = {
+      command: {
+        title: "명령 처리 흐름",
+        steps: [
+          ["HTTP 요청 검사", "테넌트, 요청자, `Idempotency-Key`, 요청 본문의 예상 리비전을 API 진입점에서 검사한다."],
+          ["멱등성 결과 확인", "멱등성 처리 범위와 요청 지문이 같으면 저장된 최종 응답을 반환하고, 다르면 충돌로 처리한다."],
+          ["현재 상태 복원", "스냅숏 이후 이벤트 또는 전체 이벤트를 재생해 애그리거트를 복원하고, 새로 저장할 이벤트 목록을 만든다."],
+          ["이벤트와 응답 저장", "예상 스트림 버전 검사, 전체 순번 예약, 이벤트 추가, 최종 응답 저장을 같은 트랜잭션에서 처리한다."]
+        ]
+      },
+      projection: {
+        title: "조회 모델 갱신 흐름",
+        steps: [
+          ["리스 획득", "프로젝션 세대의 리스와 펜싱 토큰을 PostgreSQL의 CAS(Compare-and-Set)로 획득한다."],
+          ["새 이벤트 읽기", "마지막 체크포인트 다음부터 커밋된 이벤트만 키셋 페이지 방식으로 읽는다."],
+          ["조회 모델 반영", "이벤트 중복 제거, 조회 모델 갱신, 체크포인트 이동을 한 트랜잭션에서 처리한다."],
+          ["최신 상태 확인", "조회 API는 이벤트 위치, 조회 모델 위치, 지연 정도를 제공하고 필요하면 `202`를 반환한다."]
+        ]
+      },
+      rebuild: {
+        title: "조회 모델 재구축 흐름",
+        steps: [
+          ["새 세대 생성", "`BUILDING` 세대는 현재 활성 조회 모델과 분리해 첫 이벤트부터 다시 반영한다."],
+          ["재구축 결과 검증", "목표 이벤트 위치, 행 수, 애그리거트 버전, 정규화한 조회 결과의 다이제스트를 현재 활성 세대와 비교한다."],
+          ["활성 세대 교체", "검증을 통과한 세대만 `ACTIVE`로 바꾸고 이전 세대는 `RETIRED` 상태로 보존한다."],
+          ["취소와 재개", "취소 리비전과 펜싱 토큰으로 유효하지 않은 작업자의 결과 덮어쓰기를 차단한다."]
+        ]
+      },
+      security: {
+        title: "보안과 운영 흐름",
+        steps: [
+          ["민감정보 제외", "이벤트 본문과 최종 응답 기록에는 원본 바우처 코드, 사용자 정보, IP, 기기 신호를 저장하지 않는다."],
+          ["대체 식별자 사용", "원본 사용자 정보는 HMAC 기반 대체 식별자 매핑에 연결하고, 개인정보 삭제 요청이 오면 이 매핑을 삭제한다."],
+          ["커넥션 풀 사용량 분리", "일반 요청, 조회 모델 갱신, 재구축, 유지보수, 상태 확인에 커넥션 풀 할당량을 분리해 HikariCP 고갈을 방지한다."],
+          ["운영 메트릭 제공", "처리 지연, 실패 이벤트, 재구축 상태, `append fence` 대기 시간, 커넥션 풀 사용률을 각각 측정한다."]
+        ]
+      }
+    };
+
+    function renderLane(name) {
+      const lane = lanes[name];
+      const stage = document.getElementById("lane-stage");
+      stage.innerHTML = `
+        <h3>${lane.title}</h3>
+        <div class="flow" style="margin-top: 18px;">
+          ${lane.steps.map((step, index) => `
+            <article class="step">
+              <span class="tag">${String(index + 1).padStart(2, "0")}</span>
+              <h3>${step[0]}</h3>
+              <p>${step[1]}</p>
+            </article>
+          `).join("")}
+        </div>
+      `;
+      document.querySelectorAll(".lane-nav button").forEach((button) => {
+        button.setAttribute("aria-pressed", String(button.dataset.lane === name));
+      });
+    }
+
+    document.querySelectorAll(".lane-nav button").forEach((button) => {
+      button.addEventListener("click", () => renderLane(button.dataset.lane));
+    });
+    renderLane("command");
+
+    const eventTypes = [
+      "CampaignCreated",
+      "CampaignActivated",
+      "VoucherAllocated",
+      "VoucherRedeemed",
+      "ProjectionCheckpointed"
+    ];
+    let streamPosition = 0;
+    let projectionPosition = 0;
+
+    function updateScenario() {
+      const stream = document.getElementById("event-stream");
+      const events = Array.from({ length: streamPosition }, (_, i) => i + 1);
+      stream.innerHTML = events.length
+        ? events.map((position) => `
+            <div class="event">
+              <span class="pos">#${position}</span>
+              <span class="type">${eventTypes[(position - 1) % eventTypes.length]}</span>
+              <span class="state">${position <= projectionPosition ? "조회 모델 반영" : "이벤트만 저장"}</span>
+            </div>
+          `).join("")
+        : `<div class="event"><span class="pos">0</span><span class="type">저장된 이벤트 없음</span><span class="state">대기 중</span></div>`;
+      const lag = Math.max(0, streamPosition - projectionPosition);
+      document.getElementById("stream-position").textContent = String(streamPosition);
+      document.getElementById("projection-position").textContent = String(projectionPosition);
+      document.getElementById("projection-lag").textContent = String(lag);
+      document.getElementById("lag-fill").style.width = `${Math.min(100, lag * 24)}%`;
+      document.getElementById("freshness-copy").textContent = lag === 0
+        ? "조회 모델이 최신 이벤트까지 반영했다. 조회 API는 최신 상태와 함께 `200`을 반환한다."
+        : "이벤트는 저장됐지만 조회 모델에는 아직 반영되지 않았다. 조회 API는 현재 처리 위치, `Retry-After`, `202 PROJECTION_PENDING`을 반환한다.";
+    }
+
+    document.getElementById("append-event").addEventListener("click", () => {
+      streamPosition = Math.min(streamPosition + 1, 8);
+      updateScenario();
+    });
+    document.getElementById("project-event").addEventListener("click", () => {
+      projectionPosition = Math.min(projectionPosition + 1, streamPosition);
+      updateScenario();
+    });
+    document.getElementById("reset-scenario").addEventListener("click", () => {
+      streamPosition = 0;
+      projectionPosition = 0;
+      updateScenario();
+    });
+    updateScenario();
+  </script>
+</body>
+</html>

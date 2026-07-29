@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "repository": "bluetape4k/bluetape4k-workshop",
+  "documents": [
+    {
+      "id": "event-sourced-promotion-voucher",
+      "source": "docs/superpowers/specs/2026-07-22-issue-538-event-sourced-promotion-voucher-campaign-design.md",
+      "status": "approved",
+      "public": true,
+      "presentation": {
+        "mode": "simulation",
+        "defaultView": "simulation",
+        "views": [
+          "simulation"
+        ]
+      },
+      "locales": {
+        "en": {
+          "title": "Event-sourced Promotion Voucher Campaign",
+          "html": "docs/superpowers/specs/2026-07-29-event-sourced-promotion-voucher-visual-companion.en.html"
+        },
+        "ko": {
+          "title": "이벤트 소싱 프로모션 바우처 캠페인",
+          "html": "docs/superpowers/specs/2026-07-29-event-sourced-promotion-voucher-visual-companion.html"
+        }
+      }
+    },
+    {
+      "id": "concert-ticket-flash-sale",
+      "source": "docs/superpowers/specs/2026-07-21-concert-ticket-flash-sale-design.md",
+      "status": "approved",
+      "public": true,
+      "presentation": {
+        "mode": "simulation",
+        "defaultView": "simulation",
+        "views": [
+          "simulation"
+        ]
+      },
+      "locales": {
+        "en": {
+          "title": "Concert Ticket Flash Sale",
+          "html": "docs/superpowers/specs/2026-07-30-concert-ticket-flash-sale-visual-companion.en.html"
+        },
+        "ko": {
+          "title": "콘서트 티켓 Flash Sale",
+          "html": "docs/superpowers/specs/2026-07-30-concert-ticket-flash-sale-visual-companion.html"
+        }
+      }
+    }
+  ]
+}
