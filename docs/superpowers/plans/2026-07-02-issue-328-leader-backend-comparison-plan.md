@@ -1,69 +1,69 @@
-# Leader Backend Comparison Lab Implementation Plan
+# 리더 백엔드 비교 연구실 구현 계획
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build `leader/backend-comparison-lab`, a deterministic workshop module that compares Redis, ZooKeeper, and Kubernetes Lease leader-election backends without replacing existing runnable backend modules.
+**목표:** 기존 실행 가능한 백엔드 모듈을 교체하지 않고 Redis, ZooKeeper 및 Kubernetes 임대 리더 선택 백엔드를 비교하는 결정론적 워크숍 모듈인 `leader/backend-comparison-lab`을 빌드합니다.
 
-**Architecture:** The module uses immutable backend profiles plus a small deterministic failover lab service. Production code explains learner-visible backend behavior; tests prove the catalog and scenario reports without starting Redis, ZooKeeper, or Kubernetes. README diagrams carry the architecture and sequence explanations, while existing backend modules remain the real integration practice path.
+**아키텍처:** 이 모듈은 변경할 수 없는 백엔드 프로필과 소규모의 결정적 장애 조치 랩 서비스를 사용합니다. 프로덕션 코드는 학습자가 볼 수 있는 백엔드 동작을 설명합니다. 테스트는 Redis, ZooKeeper 또는 Kubernetes을 시작하지 않고 카탈로그 및 시나리오 보고서를 증명합니다. README 다이어그램은 아키텍처와 순서 설명을 전달하는 반면 기존 백엔드 모듈은 실제 통합 실행 경로로 유지됩니다.
 
-**Tech Stack:** Kotlin 2.4, Java 21, Spring Boot 4, bluetape4k leader/core/logging/assertions/junit5, Micrometer terminology from the existing K8s module, generated SVG+PNG README diagrams, GitHub Actions smoke validation.
+**기술 스택:** Kotlin 2.4, Java 21, Spring Boot 4, bluetape4k leader/core/logging/assertions/junit5, Micrometer 기존 K8s 모듈의 용어, 생성된 SVG+PNG README 다이어그램, GitHub 액션 연기 검증.
 
 ---
 
-## File Structure
+## 파일 구조
 
-- Create `leader/backend-comparison-lab/build.gradle.kts`
-  - Spring Boot 4 application module.
-  - Versionless dependencies only.
-  - Production dependencies stay limited to the deterministic comparison lab.
-    Backend-specific Redis/ZooKeeper/Kubernetes modules remain linked practice
-    targets, not unused transitive runtime dependencies.
-  - Default `test` task is deterministic and excludes future backend-heavy tags if added.
-- Create `leader/backend-comparison-lab/README.md`
-  - English learner guide, backend matrix, scenario flow, test/run commands, real backend links.
-- Create `leader/backend-comparison-lab/README.ko.md`
-  - Korean source-equivalent learner guide.
-- Create `leader/backend-comparison-lab/src/main/kotlin/io/bluetape4k/workshop/leader/backendcomparison/BackendComparisonLabApp.kt`
-  - Minimal Spring Boot entry point.
-- Create `leader/backend-comparison-lab/src/main/kotlin/io/bluetape4k/workshop/leader/backendcomparison/domain/BackendProfile.kt`
-  - Serializable immutable backend profile and support enums.
-- Create `leader/backend-comparison-lab/src/main/kotlin/io/bluetape4k/workshop/leader/backendcomparison/domain/BackendCapability.kt`
-  - Serializable immutable backend capability value type.
-- Create `leader/backend-comparison-lab/src/main/kotlin/io/bluetape4k/workshop/leader/backendcomparison/domain/LeaderScenario.kt`
-  - Serializable scenario request/value types.
-- Create `leader/backend-comparison-lab/src/main/kotlin/io/bluetape4k/workshop/leader/backendcomparison/domain/LeaderScenarioReport.kt`
-  - Serializable report/event value types.
-- Create `leader/backend-comparison-lab/src/main/kotlin/io/bluetape4k/workshop/leader/backendcomparison/service/LeaderBackendCatalog.kt`
-  - Source-backed catalog for Redis, ZooKeeper, and Kubernetes Lease.
-- Create `leader/backend-comparison-lab/src/main/kotlin/io/bluetape4k/workshop/leader/backendcomparison/service/LeaderFailoverLab.kt`
-  - Deterministic report generator for steady leader, contention skip, action failure, and backend-loss handoff scenarios.
-- Create test files under `leader/backend-comparison-lab/src/test/kotlin/io/bluetape4k/workshop/leader/backendcomparison/service/`.
-- Create `src/test/resources/junit-platform.properties` and `logback-test.xml`.
-- Create diagrams:
+- `leader/backend-comparison-lab/build.gradle.kts` 생성
+  - Spring Boot 4 애플리케이션 모듈.
+  - 버전 없는 종속성만 해당됩니다.
+  - 생산 종속성은 결정론적 비교 연구실로 제한됩니다.
+    백엔드별 Redis/ZooKeeper/Kubernetes 모듈은 연결된 방식으로 유지됩니다.
+    사용되지 않는 전이적 런타임 종속성이 아닌 대상입니다.
+  - 기본 `test` 작업은 결정적이며 향후 백엔드가 많은 태그가 추가되면 제외됩니다.
+- `leader/backend-comparison-lab/README.md` 생성
+  - 영어 학습자 가이드, 백엔드 매트릭스, 시나리오 흐름, test/run 명령, 실제 백엔드 링크.
+- `leader/backend-comparison-lab/README.ko.md` 생성
+  - 한국어 소스에 해당하는 학습자 가이드입니다.
+- `leader/backend-comparison-lab/src/main/kotlin/io/bluetape4k/workshop/leader/backendcomparison/BackendComparisonLabApp.kt` 생성
+  - 최소 Spring Boot 진입점.
+- `leader/backend-comparison-lab/src/main/kotlin/io/bluetape4k/workshop/leader/backendcomparison/domain/BackendProfile.kt` 생성
+  - 직렬화 가능 불변 백엔드 프로필 및 지원 열거형.
+- `leader/backend-comparison-lab/src/main/kotlin/io/bluetape4k/workshop/leader/backendcomparison/domain/BackendCapability.kt` 생성
+  - 직렬화 가능 불변 백엔드 기능 값 유형입니다.
+- `leader/backend-comparison-lab/src/main/kotlin/io/bluetape4k/workshop/leader/backendcomparison/domain/LeaderScenario.kt` 생성
+  - 직렬화 가능한 시나리오 request/value 유형.
+- `leader/backend-comparison-lab/src/main/kotlin/io/bluetape4k/workshop/leader/backendcomparison/domain/LeaderScenarioReport.kt` 생성
+  - 직렬화 가능한 report/event 값 유형.
+- `leader/backend-comparison-lab/src/main/kotlin/io/bluetape4k/workshop/leader/backendcomparison/service/LeaderBackendCatalog.kt` 생성
+  - Redis, ZooKeeper 및 Kubernetes 임대를 위한 소스 기반 카탈로그입니다.
+- `leader/backend-comparison-lab/src/main/kotlin/io/bluetape4k/workshop/leader/backendcomparison/service/LeaderFailoverLab.kt` 생성
+  - 꾸준한 리더, 경합 건너뛰기, 작업 실패 및 백엔드 손실 핸드오프 시나리오를 위한 결정적 보고서 생성기입니다.
+- `leader/backend-comparison-lab/src/test/kotlin/io/bluetape4k/workshop/leader/backendcomparison/service/` 아래에 테스트 파일을 만듭니다.
+- `src/test/resources/junit-platform.properties` 및 `logback-test.xml`를 생성합니다.
+- 다이어그램 만들기:
   - `docs/images/readme-diagrams/leader-backend-comparison-lab-readme-architecture-01.svg`
   - `docs/images/readme-diagrams/leader-backend-comparison-lab-readme-architecture-01.png`
   - `docs/images/readme-diagrams/leader-backend-comparison-lab-readme-sequence-01.svg`
   - `docs/images/readme-diagrams/leader-backend-comparison-lab-readme-sequence-01.png`
-- Modify root `README.md` and `README.ko.md`.
-- Modify `scripts/smoke-validate.sh`.
-- Modify `.github/workflows/Examples.yml`.
-- Modify `.github/workflows/nightly.yml` only if smoke path coverage requires it after workflow scan.
-- Create `docs/review/2026-07-02-issue-328-leader-backend-comparison-code-review.md`.
-- Create `docs/lessons/2026-07-02-issue-328-leader-backend-comparison.md`.
+- 루트 `README.md` 및 `README.ko.md`을 수정합니다.
+- `scripts/smoke-validate.sh`을 수정하세요.
+- `.github/workflows/Examples.yml`을 수정하세요.
+- 워크플로우 스캔 후 연기 경로 적용이 필요한 경우에만 `.github/workflows/nightly.yml`을 수정하십시오.
+- `docs/review/2026-07-02-issue-328-leader-backend-comparison-code-review.md`를 생성합니다.
+- `docs/lessons/2026-07-02-issue-328-leader-backend-comparison.md`를 생성합니다.
 
-## Task 1: Build Skeleton And Failing Catalog Tests
+## 작업 1: 뼈대 빌드 및 카탈로그 테스트 실패
 
-**Complexity:** medium
+**복잡성:** 중간
 
-**Applies:** `$bluetape4k-code-patterns`, `$test-driven-development`
+**적용:** `$bluetape4k-code-patterns`, `$test-driven-development`
 
-**Files:**
-- Create: `leader/backend-comparison-lab/build.gradle.kts`
-- Create: `leader/backend-comparison-lab/src/test/resources/junit-platform.properties`
-- Create: `leader/backend-comparison-lab/src/test/resources/logback-test.xml`
-- Create: `leader/backend-comparison-lab/src/test/kotlin/io/bluetape4k/workshop/leader/backendcomparison/service/LeaderBackendCatalogTest.kt`
+**파일:**
+- 생성: `leader/backend-comparison-lab/build.gradle.kts`
+- 생성: `leader/backend-comparison-lab/src/test/resources/junit-platform.properties`
+- 생성: `leader/backend-comparison-lab/src/test/resources/logback-test.xml`
+- 생성: `leader/backend-comparison-lab/src/test/kotlin/io/bluetape4k/workshop/leader/backendcomparison/service/LeaderBackendCatalogTest.kt`
 
-- [ ] **Step 1: Add module build skeleton**
+- [ ] **1단계: 모듈 빌드 뼈대 추가**
 
 ```kotlin
 plugins {
@@ -107,7 +107,7 @@ dependencies {
 }
 ```
 
-- [ ] **Step 2: Add test resources**
+- [ ] **2단계: 테스트 리소스 추가**
 
 `junit-platform.properties`:
 
@@ -133,7 +133,7 @@ junit.jupiter.testinstance.lifecycle.default=per_class
 </configuration>
 ```
 
-- [ ] **Step 3: Write failing catalog tests before production code**
+- [ ] **3단계: 프로덕션 코드 이전에 실패한 카탈로그 테스트 작성**
 
 ```kotlin
 package io.bluetape4k.workshop.leader.backendcomparison.service
@@ -188,29 +188,29 @@ class LeaderBackendCatalogTest {
 }
 ```
 
-- [ ] **Step 4: Run RED check**
+- [ ] **4단계: RED 확인 실행**
 
-Run:
+달리다:
 
 ```bash
 ./gradlew :leader-backend-comparison-lab:test --tests '*LeaderBackendCatalogTest' --no-build-cache --rerun-tasks
 ```
 
-Expected: FAIL because `LeaderBackendCatalog`, `BackendStatus`, and profile types do not exist.
+예상: `LeaderBackendCatalog`, `BackendStatus` 및 프로필 유형이 없기 때문에 FAIL입니다.
 
-## Task 2: Implement Backend Catalog
+## 작업 2: 백엔드 카탈로그 구현
 
-**Complexity:** medium
+**복잡성:** 중간
 
-**Applies:** `$bluetape4k-code-patterns`
+**적용:** `$bluetape4k-code-patterns`
 
-**Files:**
-- Create: `BackendComparisonLabApp.kt`
-- Create: `domain/BackendCapability.kt`
-- Create: `domain/BackendProfile.kt`
-- Create: `service/LeaderBackendCatalog.kt`
+**파일:**
+- 생성: `BackendComparisonLabApp.kt`
+- 생성: `domain/BackendCapability.kt`
+- 생성: `domain/BackendProfile.kt`
+- 생성: `service/LeaderBackendCatalog.kt`
 
-- [ ] **Step 1: Implement app entrypoint**
+- [ ] **1단계: 앱 진입점 구현**
 
 ```kotlin
 package io.bluetape4k.workshop.leader.backendcomparison
@@ -226,7 +226,7 @@ fun main(args: Array<String>) {
 }
 ```
 
-- [ ] **Step 2: Implement backend capability model**
+- [ ] **2단계: 백엔드 기능 모델 구현**
 
 ```kotlin
 package io.bluetape4k.workshop.leader.backendcomparison.domain
@@ -250,7 +250,7 @@ data class BackendCapability(
 }
 ```
 
-- [ ] **Step 3: Implement backend profile model**
+- [ ] **3단계: 백엔드 프로필 모델 구현**
 
 ```kotlin
 package io.bluetape4k.workshop.leader.backendcomparison.domain
@@ -296,7 +296,7 @@ data class BackendProfile(
 }
 ```
 
-- [ ] **Step 4: Implement source-backed catalog**
+- [ ] **4단계: 소스 기반 카탈로그 구현**
 
 ```kotlin
 package io.bluetape4k.workshop.leader.backendcomparison.service
@@ -374,29 +374,29 @@ class LeaderBackendCatalog {
 }
 ```
 
-- [ ] **Step 5: Run GREEN check**
+- [ ] **5단계: GREEN 확인 실행**
 
-Run:
+달리다:
 
 ```bash
 ./gradlew :leader-backend-comparison-lab:test --tests '*LeaderBackendCatalogTest' --no-build-cache --rerun-tasks
 ```
 
-Expected: PASS.
+예상: PASS.
 
-## Task 3: Add Failing Failover Scenario Tests
+## 작업 3: 실패한 장애 조치 시나리오 테스트 추가
 
-**Complexity:** medium
+**복잡성:** 중간
 
-**Applies:** `$bluetape4k-code-patterns`, `$test-driven-development`
+**적용:** `$bluetape4k-code-patterns`, `$test-driven-development`
 
-**Files:**
-- Create: `domain/LeaderScenario.kt`
-- Create: `domain/LeaderScenarioReport.kt`
-- Create: `service/LeaderFailoverLab.kt`
-- Create: `src/test/kotlin/.../LeaderFailoverLabTest.kt`
+**파일:**
+- 생성: `domain/LeaderScenario.kt`
+- 생성: `domain/LeaderScenarioReport.kt`
+- 생성: `service/LeaderFailoverLab.kt`
+- 생성: `src/test/kotlin/.../LeaderFailoverLabTest.kt`
 
-- [ ] **Step 1: Write failing scenario tests**
+- [ ] **1단계: 실패하는 시나리오 테스트 작성**
 
 ```kotlin
 package io.bluetape4k.workshop.leader.backendcomparison.service
@@ -441,28 +441,28 @@ class LeaderFailoverLabTest {
 }
 ```
 
-- [ ] **Step 2: Run RED check**
+- [ ] **2단계: RED 확인 실행**
 
-Run:
+달리다:
 
 ```bash
 ./gradlew :leader-backend-comparison-lab:test --tests '*LeaderFailoverLabTest' --no-build-cache --rerun-tasks
 ```
 
-Expected: FAIL because scenario/report/lab types do not exist.
+예상: scenario/report/lab 유형이 존재하지 않기 때문에 FAIL입니다.
 
-## Task 4: Implement Deterministic Failover Lab
+## 작업 4: 결정적 장애 조치 랩 구현
 
-**Complexity:** high
+**복잡성:** 높음
 
-**Applies:** `$bluetape4k-code-patterns`
+**적용:** `$bluetape4k-code-patterns`
 
-**Files:**
-- Create: `domain/LeaderScenario.kt`
-- Create: `domain/LeaderScenarioReport.kt`
-- Create: `service/LeaderFailoverLab.kt`
+**파일:**
+- 생성: `domain/LeaderScenario.kt`
+- 생성: `domain/LeaderScenarioReport.kt`
+- 생성: `service/LeaderFailoverLab.kt`
 
-- [ ] **Step 1: Implement scenario value object**
+- [ ] **1단계: 시나리오 값 개체 구현**
 
 ```kotlin
 package io.bluetape4k.workshop.leader.backendcomparison.domain
@@ -505,7 +505,7 @@ data class LeaderScenario(
 }
 ```
 
-- [ ] **Step 2: Implement report model**
+- [ ] **2단계: 보고서 모델 구현**
 
 ```kotlin
 package io.bluetape4k.workshop.leader.backendcomparison.domain
@@ -551,7 +551,7 @@ data class LeaderScenarioReport(
 }
 ```
 
-- [ ] **Step 3: Implement lab service**
+- [ ] **3단계: 랩 서비스 구현**
 
 ```kotlin
 package io.bluetape4k.workshop.leader.backendcomparison.service
@@ -667,145 +667,145 @@ class LeaderFailoverLab(
 }
 ```
 
-Do not start real backend clients in this service. It is a deterministic
-comparison model backed by source-verified semantics from the real modules.
+이 서비스에서 실제 백엔드 클라이언트를 시작하지 마세요. 결정론적이다
+실제 모듈의 소스 검증 의미론을 기반으로 하는 비교 모델입니다.
 
-- [ ] **Step 4: Run GREEN check**
+- [ ] **4단계: GREEN 확인 실행**
 
-Run:
+달리다:
 
 ```bash
 ./gradlew :leader-backend-comparison-lab:test --tests '*LeaderFailoverLabTest' --no-build-cache --rerun-tasks
 ```
 
-Expected: PASS.
+예상: PASS.
 
-## Task 5: README Locale Set And Diagrams
+## 작업 5: README 로케일 세트 및 다이어그램
 
-**Complexity:** high
+**복잡성:** 높음
 
-**Applies:** `$bluetape4k-blog`, `$bluetape4k-diagram`
+**적용:** `$bluetape4k-blog`, `$bluetape4k-diagram`
 
-**Files:**
-- Create: module `README.md`
-- Create: module `README.ko.md`
-- Create: two SVG+PNG diagram pairs under `docs/images/readme-diagrams/`
-- Modify: root `README.md`
-- Modify: root `README.ko.md`
+**파일:**
+- 생성: 모듈 `README.md`
+- 생성: 모듈 `README.ko.md`
+- 생성: `docs/images/readme-diagrams/` 아래에 두 개의 SVG+PNG 다이어그램 쌍
+- 수정: 루트 `README.md`
+- 수정: 루트 `README.ko.md`
 
-- [ ] **Step 1: Create architecture diagram**
+- [ ] **1단계: 아키텍처 다이어그램 만들기**
 
-Use the current best-practices architecture family as reference and render:
+현재 모범 사례 아키텍처 제품군을 참조 및 렌더링으로 사용합니다.
 
 ```bash
 ~/.local/bin/cairosvg docs/images/readme-diagrams/leader-backend-comparison-lab-readme-architecture-01.svg \
   -o docs/images/readme-diagrams/leader-backend-comparison-lab-readme-architecture-01.png -s 2
 ```
 
-Required checks:
+필수 확인사항:
 
-- full-size PNG visual inspection;
-- XML parse;
-- card text alignment;
-- connector legend if solid/dashed styles differ;
-- rounded connector and terminal-segment checks;
-- no card intrusion, no unnecessary crossings, no broken icon links.
+- 전체 크기 PNG 육안 검사;
+- XML 구문 분석;
+- 카드 텍스트 정렬;
+- solid/dashed 스타일이 다른 경우 커넥터 범례;
+- 둥근 커넥터 및 터미널 세그먼트 검사;
+- 카드 침입이 없고, 불필요한 교차가 없으며, 아이콘 링크가 끊어지지 않습니다.
 
-- [ ] **Step 2: Create sequence diagram**
+- [ ] **2단계: 시퀀스 다이어그램 만들기**
 
-Use best-practices sequence references and render:
+모범 사례 시퀀스 참조를 사용하고 렌더링합니다.
 
 ```bash
 ~/.local/bin/cairosvg docs/images/readme-diagrams/leader-backend-comparison-lab-readme-sequence-01.svg \
   -o docs/images/readme-diagrams/leader-backend-comparison-lab-readme-sequence-01.png -s 2
 ```
 
-Required checks:
+필수 확인사항:
 
-- numbered visible call labels above their own call lines;
-- labels do not cover lines;
-- arrowhead colors match call lines in PNG;
-- transparent `alt`/`else` bodies;
-- muted best-practices palette;
-- participant headers, lifelines, activation bars, row height, and branch colors match reference style.
+- 자체 통화 회선 위에 번호가 매겨진 가시적 통화 라벨;
+- 레이블은 선을 덮지 않습니다.
+- 화살촉 색상은 PNG의 호출 라인과 일치합니다.
+- 투명한 `alt`/`else` 몸체;
+- 음소거된 모범 사례 팔레트;
+- 참가자 헤더, 수명선, 활성화 막대, 행 높이 및 분기 색상이 참조 스타일과 일치합니다.
 
-- [ ] **Step 3: Write README files**
+- [ ] **3단계: README 파일 쓰기**
 
-`README.md` must include:
+`README.md`에는 다음이 포함되어야 합니다.
 
-- language switch;
-- purpose and non-replacement note;
-- architecture and sequence images;
-- backend selection matrix;
-- failover/handoff scenario table;
-- metric/event comparison table;
-- run/test commands;
-- links to `leader-election`, `leader-zookeeper`, and `k8s-lease-micrometer`.
+- 언어 스위치;
+- 목적 및 비대체 메모;
+- 아키텍처 및 시퀀스 이미지;
+- 백엔드 선택 매트릭스;
+- failover/handoff 시나리오 테이블;
+- metric/event 비교표;
+- run/test 명령;
+- `leader-election`, `leader-zookeeper` 및 `k8s-lease-micrometer`에 대한 링크입니다.
 
-`README.ko.md` must be source-equivalent and natural Korean.
+`README.ko.md`은 소스가 동일하고 자연스러운 한국어여야 합니다.
 
-- [ ] **Step 4: Update root module catalog**
+- [ ] **4단계: 루트 모듈 카탈로그 업데이트**
 
-Add `leader-backend-comparison-lab` to root README locale tables near the other
-leader examples.
+다른 근처의 루트 README 로케일 테이블에 `leader-backend-comparison-lab` 추가
+리더의 예.
 
-## Task 6: CI, Smoke, And Validation Registration
+## 작업 6: CI, Smoke 및 유효성 검사 등록
 
-**Complexity:** medium
+**복잡성:** 중간
 
-**Applies:** `$bluetape4k-code-patterns`
+**적용:** `$bluetape4k-code-patterns`
 
-**Files:**
-- Modify: `scripts/smoke-validate.sh`
-- Modify: `.github/workflows/Examples.yml`
-- Modify: `.github/workflows/nightly.yml` if needed
+**파일:**
+- 수정: `scripts/smoke-validate.sh`
+- 수정: `.github/workflows/Examples.yml`
+- 수정: 필요한 경우 `.github/workflows/nightly.yml`
 
-- [ ] **Step 1: Register module in smoke validation**
+- [ ] **1단계: 연기 검증에 모듈 등록**
 
-Add `:leader-backend-comparison-lab:test` to `all-smoke`, and update expected
-project count in `stale-check` after `./gradlew projects --console=plain`
-confirms the count.
+`all-smoke`에 `:leader-backend-comparison-lab:test`을 추가하고 업데이트가 예상됩니다.
+`./gradlew projects --console=plain` 이후 `stale-check`의 프로젝트 수
+카운트를 확인합니다.
 
-- [ ] **Step 2: Register Examples workflow paths and smoke job**
+- [ ] **2단계: 예제 워크플로 경로 및 스모크 작업 등록**
 
-Add:
+추가하다:
 
 ```yaml
 - 'leader/backend-comparison-lab/**'
 ```
 
-to push and pull request path filters, add `:leader-backend-comparison-lab:test`
-to the smoke examples Gradle command, and add its test result artifact paths.
+요청 경로 필터를 푸시 및 풀하려면 `:leader-backend-comparison-lab:test`을 추가합니다.
+smoke example Gradle 명령에 테스트 결과 아티팩트 경로를 추가합니다.
 
-- [ ] **Step 3: Run workflow validation**
+- [ ] **3단계: 워크플로 유효성 검사 실행**
 
-Run:
+달리다:
 
 ```bash
 rg -n "\\\\'" .github/workflows
 actionlint .github/workflows/Examples.yml .github/workflows/nightly.yml .github/workflows/ci.yml
 ```
 
-Expected: no escaped workflow expression quotes and actionlint PASS.
+예상: 이스케이프된 워크플로 표현식 인용부호와 actionlint PASS가 없습니다.
 
-## Task 7: Full Verification And Review
+## 작업 7: 전체 확인 및 검토
 
-**Complexity:** high
+**복잡성:** 높음
 
-**Applies:** `$verification-before-completion`, `$bluetape4k-code-patterns`, `$bluetape4k-diagram`
+**적용:** `$verification-before-completion`, `$bluetape4k-code-patterns`, `$bluetape4k-diagram`
 
-**Files:**
-- Create: `docs/review/2026-07-02-issue-328-leader-backend-comparison-code-review.md`
-- Create: `docs/lessons/2026-07-02-issue-328-leader-backend-comparison.md`
+**파일:**
+- 생성: `docs/review/2026-07-02-issue-328-leader-backend-comparison-code-review.md`
+- 생성: `docs/lessons/2026-07-02-issue-328-leader-backend-comparison.md`
 
-- [ ] **Step 1: Run targeted module verification**
+- [ ] **1단계: 대상 모듈 확인 실행**
 
 ```bash
 ./gradlew :leader-backend-comparison-lab:compileKotlin :leader-backend-comparison-lab:compileTestKotlin --warning-mode all
 ./gradlew :leader-backend-comparison-lab:test --no-build-cache --rerun-tasks
 ```
 
-- [ ] **Step 2: Run repo validation**
+- [ ] **2단계: 저장소 유효성 검사 실행**
 
 ```bash
 ./gradlew projects --console=plain
@@ -816,57 +816,57 @@ node scripts/validate-readme-language.mjs
 git diff --check
 ```
 
-- [ ] **Step 3: Run Step 6-R review**
+- [ ] **3단계: 6-R단계 검토 실행**
 
-Review diff from `origin/develop...HEAD` across performance, stability,
-security, operator, developer/API, user/caller, and current-session integration.
-Record P0/P1/P2/P3 counts in
+성능, 안정성, 측면에서 `origin/develop...HEAD`의 차이점을 검토하세요.
+보안, 운영자, developer/API, user/caller 및 현재 세션 통합.
+레코드 P0/P1/P2/P3이(가) 포함됩니다.
 `docs/review/2026-07-02-issue-328-leader-backend-comparison-code-review.md`.
-P0/P1 must be zero before PR.
+P0/P1은 PR 앞에 0이어야 합니다.
 
-- [ ] **Step 4: Write and commit lessons**
+- [ ] **4단계: 강의 작성 및 커밋**
 
-Create `docs/lessons/2026-07-02-issue-328-leader-backend-comparison.md` with
-source-backed decisions, diagram/validation evidence, and future guidance.
+다음을 사용하여 `docs/lessons/2026-07-02-issue-328-leader-backend-comparison.md` 만들기
+소스 기반 결정, diagram/validation 증거 및 향후 지침.
 
-## Task 8: Commit, PR, CI, And DoD
+## 작업 8: 커밋, PR, CI 및 DoD
 
-**Complexity:** medium
+**복잡성:** 중간
 
-**Applies:** `$verification-before-completion`, `$bluetape4k-workflow`
+**적용:** `$verification-before-completion`, `$bluetape4k-workflow`
 
-**Files:**
-- PR body temp file following `bluetape4k-workflow/templates/pr-body-step-dod.md`
+**파일:**
+- `bluetape4k-workflow/templates/pr-body-step-dod.md` 다음의 PR 신체 임시 파일
 
-- [ ] **Step 1: Commit with Lore trailers**
+- [ ] **1단계: Lore 예고편으로 커밋**
 
-Use English commit messages and include `Tested:` / `Not-tested:` trailers.
+영어 커밋 메시지를 사용하고 `Tested:` / `Not-tested:` 예고편을 포함하세요.
 
-- [ ] **Step 2: Push branch and create PR**
+- [ ] **2단계: 분기 푸시 및 PR 생성**
 
-PR requirements:
+PR 요구사항:
 
-- title in English;
+- 영어 제목;
 - `Closes #328`;
-- assignee `debop`;
-- milestone `1.3.1`;
-- issue labels mirrored where GitHub supports them;
-- final PR body section is `## DoD Status`.
+- 양수인 `debop`;
+- 마일스톤 `1.3.1`;
+- GitHub이 지원하는 경우 미러링된 이슈 라벨;
+- 마지막 PR 본문 섹션은 `## DoD Status`입니다.
 
-- [ ] **Step 3: Verify live PR metadata/body**
+- [ ] **3단계: 실시간 확인 PR metadata/body**
 
 ```bash
 gh pr view <number> --repo bluetape4k/bluetape4k-workshop --json body,assignees,labels,milestone
 ```
 
-Expected: final Markdown `##` heading is `## DoD Status`.
+예상: 최종 Markdown `##` 제목은 `## DoD Status`입니다.
 
-- [ ] **Step 4: Run post-PR review and CI gate**
+- [ ] **4단계: post-PR 검토 및 CI 게이트 실행**
 
-Run Step 7-R against the actual PR diff, then verify CI with:
+실제 PR diff에 대해 7-R단계를 실행한 후 다음을 사용하여 CI을 확인합니다.
 
 ```bash
 gh pr view <number> --repo bluetape4k/bluetape4k-workshop --json statusCheckRollup
 ```
 
-Expected: all required checks `SUCCESS` or `SKIPPED`.
+예상: 모든 필수 검사 `SUCCESS` 또는 `SKIPPED`.
