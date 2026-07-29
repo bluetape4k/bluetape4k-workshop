@@ -14,7 +14,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
 import java.time.Instant
 
-/** Applies owner-, state-, and revision-checked hold mutations through Exposed JDBC CAS updates. */
+/** owner, state, revision을 확인하는 hold mutation을 Exposed JDBC CAS update로 적용합니다. */
 @Repository
 internal class ReservationHoldRepository : LongAuditableJdbcRepository<ReservationHoldRecord, ReservationHoldTable> {
     override val table = ReservationHoldTable
@@ -92,7 +92,7 @@ internal class ReservationHoldRepository : LongAuditableJdbcRepository<Reservati
             log.debug { "reservation_hold_extended holdId=$id expectedRevision=$expectedRevision updated=$updated" }
         } == 1
 
-    /** Returns bounded candidates; the transaction service performs the final global hold/offer ordering. */
+    /** bounded candidate를 반환합니다. 최종 global hold/offer ordering은 transaction service가 수행합니다. */
     fun expiredResourceCandidates(
         now: Instant,
         limit: Int,

@@ -13,7 +13,7 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneId
 
-/** Projects authoritative resource counters with one observation timestamp and resource-local calendar time. */
+/** 단일 observation timestamp와 resource-local calendar time으로 authoritative resource counter를 project합니다. */
 @Service
 internal class ReservationQueryService(
     private val resources: CapacityResourceRepository,

@@ -50,7 +50,7 @@ internal data class IdempotencyRecord(
     }
 }
 
-/** Distinguishes a new owner, expired-lease takeover, durable replay, and retry conflicts. */
+/** new owner, expired-lease takeover, durable replay, retry conflict를 구분합니다. */
 internal sealed interface AcquireResult : Serializable {
     data class New(
         val record: IdempotencyRecord,
@@ -90,10 +90,10 @@ internal sealed interface AcquireResult : Serializable {
 }
 
 /**
- * Owns application-level HTTP idempotency in PostgreSQL.
+ * application-level HTTP idempotency를 PostgreSQL에서 소유합니다.
  *
- * A scoped unique row elects one command owner. Completed responses are replayed, while an expired
- * in-progress lease can be reclaimed only by matching its previous token and deadline in one CAS.
+ * scoped unique row가 command owner 하나를 선출합니다. 완료된 response는 replay되고,
+ * 만료된 in-progress lease는 이전 token과 deadline이 단일 CAS에서 일치할 때만 reclaim할 수 있습니다.
  */
 @Repository
 internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<IdempotencyRecord, HttpIdempotencyTable> {
@@ -167,7 +167,7 @@ internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<Idempoten
             return AcquireResult.InProgress(Duration.between(now, current.leaseUntil))
         }
 
-        // Compare both the previous owner token and lease deadline so only one contender can take over.
+        // 이전 owner token과 lease deadline을 모두 비교해 하나의 contender만 takeover할 수 있게 합니다.
         val reclaimed =
             auditedUpdateAll(
                 predicate = {

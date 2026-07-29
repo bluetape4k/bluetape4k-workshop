@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletResponse
 import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
-/** Prevents reservation and owner-specific browser state from being cached or embedded by other origins. */
+/** reservation 및 owner-specific browser state가 cache되거나 다른 origin에 embedded되지 못하게 합니다. */
 @Component
 internal class SecurityHeadersFilter : OncePerRequestFilter() {
     override fun doFilterInternal(

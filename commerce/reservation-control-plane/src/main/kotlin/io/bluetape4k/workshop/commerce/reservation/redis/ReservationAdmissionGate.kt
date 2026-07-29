@@ -41,8 +41,8 @@ interface AdmissionPermitBackend {
 }
 
 /**
- * Applies the always-on local JDBC bulkhead before the optional distributed advisory permit.
- * PostgreSQL remains the correctness authority when Redis is absent or unavailable.
+ * optional distributed advisory permit 전에 항상 켜져 있는 local JDBC bulkhead를 적용합니다.
+ * Redis가 없거나 사용할 수 없을 때도 PostgreSQL이 correctness authority로 남습니다.
  */
 class ReservationAdmissionGate(
     private val localBulkhead: NodeLocalDatabaseBulkhead,
@@ -91,7 +91,7 @@ class ReservationAdmissionGate(
                 backend.release()
                 log.debug { "reservation_admission_released mode=REDIS_ADVISORY" }
             } catch (_: Exception) {
-                // Redis is advisory. A release failure must not replace the authoritative DB outcome.
+                // Redis는 advisory입니다. release failure가 authoritative DB outcome을 대체하면 안 됩니다.
                 log.warn { "reservation_admission_release_failed reason=REDIS_UNAVAILABLE" }
             }
         }
@@ -99,10 +99,10 @@ class ReservationAdmissionGate(
 }
 
 /**
- * Adapter for the published `bluetape4k-lettuce:1.11.0` semaphore API.
+ * published `bluetape4k-lettuce:1.11.0` semaphore API용 adapter입니다.
  *
- * Version 1.11.0 has no expiring permit/owner lease. Therefore callers must release in `finally`,
- * must never use this semaphore as reservation capacity authority, and must tolerate Redis reset.
+ * version 1.11.0에는 expiring permit/owner lease가 없습니다. 따라서 caller는 `finally`에서 release해야 하고,
+ * 이 semaphore를 reservation capacity authority로 사용하면 안 되며, Redis reset을 견뎌야 합니다.
  */
 class LettuceSemaphoreAdmissionBackend(
     connection: StatefulRedisConnection<String, String>,
@@ -125,7 +125,7 @@ class LettuceSemaphoreAdmissionBackend(
 
     override fun tryAcquire(waitTime: Duration): Boolean {
         require(!waitTime.isNegative) { "waitTime must not be negative" }
-        // SET NX is idempotent and also restores the advisory counter after Redis flush/restart.
+        // SET NX는 idempotent이며 Redis flush/restart 뒤 advisory counter도 복원합니다.
         semaphore.initialize()
         val deadline = System.nanoTime() + waitTime.toNanos()
         do {

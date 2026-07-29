@@ -12,7 +12,7 @@ import java.time.Duration
 import java.util.concurrent.CancellationException
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** Bounded work summary used for scheduler logs and deterministic sweep assertions. */
+/** scheduler log와 결정적 sweep assertion에 사용하는 bounded work summary입니다. */
 data class SweepBatchSummary(
     val scannedResources: Int,
     val expiredHolds: Int,
@@ -34,7 +34,7 @@ data class SweepBatchSummary(
     }
 }
 
-/** PostgreSQL-owned expiry batch invoked only after advisory scheduling gates succeed. */
+/** advisory scheduling gate가 성공한 뒤에만 호출되는 PostgreSQL-owned expiry batch입니다. */
 fun interface ReservationSweepWork {
     fun sweep(
         maxResources: Int,
@@ -42,7 +42,7 @@ fun interface ReservationSweepWork {
     ): SweepBatchSummary
 }
 
-/** Adapter boundary that preserves the leader library's elected, skipped, and failed outcomes. */
+/** leader library의 elected, skipped, failed outcome을 보존하는 adapter boundary입니다. */
 fun interface SweepLeaderGate {
     fun run(
         slot: LeaderSlot,
@@ -50,7 +50,7 @@ fun interface SweepLeaderGate {
     ): LeaderRunResult<SweepBatchSummary>
 }
 
-/** Calls the published leader 0.4.0 result API without collapsing elected-null and skipped. */
+/** elected-null과 skipped를 합치지 않고 published leader 0.4.0 result API를 호출합니다. */
 class LeaderElectorSweepGate(
     private val elector: LeaderElector,
 ) : SweepLeaderGate {
@@ -62,10 +62,10 @@ class LeaderElectorSweepGate(
     ): LeaderRunResult<SweepBatchSummary> = elector.runIfLeaderResult(slot, action)
 }
 
-/** Stable operational failure categories; none implies that PostgreSQL correctness was weakened. */
+/** 안정적인 operational failure category입니다. 어떤 category도 PostgreSQL correctness 약화를 의미하지 않습니다. */
 enum class SweepFailureCode { LEADER_BACKEND_UNAVAILABLE, ACTION_FAILED, EMPTY_RESULT }
 
-/** One scheduler tick outcome, including local suppression and distributed leader skips. */
+/** local suppression과 distributed leader skip을 포함하는 scheduler tick outcome 하나입니다. */
 sealed interface SweepTickOutcome : Serializable {
     data class Completed(
         val summary: SweepBatchSummary,
@@ -89,8 +89,8 @@ sealed interface SweepTickOutcome : Serializable {
 }
 
 /**
- * Runs one bounded expiry batch only when the local single-flight and distributed leader gates agree.
- * PostgreSQL CAS and unique constraints remain responsible for duplicate safety.
+ * local single-flight gate와 distributed leader gate가 동의할 때만 bounded expiry batch 하나를 실행합니다.
+ * duplicate safety는 계속 PostgreSQL CAS와 unique constraint가 담당합니다.
  */
 class ReservationExpirySweeper(
     private val leaderGate: SweepLeaderGate,

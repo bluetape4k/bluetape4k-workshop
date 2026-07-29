@@ -7,7 +7,7 @@ import io.bluetape4k.workshop.commerce.reservation.domain.ResourceState
 import java.io.Serializable
 import java.time.Instant
 
-/** Exposed repository projection of the authoritative capacity row. */
+/** authoritative capacity row의 Exposed repository projection입니다. */
 internal data class CapacityResourceRecord(
     val id: Long,
     val code: String,
@@ -28,7 +28,7 @@ internal data class CapacityResourceRecord(
     }
 }
 
-/** Exposed repository projection of a durable, revisioned hold. */
+/** durable하고 revisioned된 hold의 Exposed repository projection입니다. */
 internal data class ReservationHoldRecord(
     val id: Long,
     val resourceId: Long,

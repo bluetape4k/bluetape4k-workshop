@@ -30,7 +30,7 @@ internal sealed interface LocalTimeResolution : Serializable {
     }
 }
 
-/** Keeps local-time ambiguity out of reservation commands by requiring an explicit offset during DST overlap. */
+/** DST overlap 동안 명시적 offset을 요구해 local-time ambiguity가 reservation command에 들어오지 못하게 합니다. */
 internal object ReservationTimePolicy : KLogging() {
     fun project(
         instant: Instant,

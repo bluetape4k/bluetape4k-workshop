@@ -17,10 +17,10 @@ import java.time.Clock
 import java.time.Duration
 
 /**
- * Owns durable hold state transitions.
+ * durable hold state transition을 소유합니다.
  *
- * PostgreSQL revisions and row locks decide every command outcome. Admission controls may reduce
- * contention before this service, but they never authorize or finalize a reservation.
+ * PostgreSQL revision과 row lock이 모든 command outcome을 결정합니다. admission control은 이 service 앞에서
+ * contention을 줄일 수 있지만, reservation을 authorize하거나 finalize하지 않습니다.
  */
 @Service
 internal class ReservationCommandService(
@@ -38,7 +38,7 @@ internal class ReservationCommandService(
         if (resource.policyVersion != command.policyVersion) {
             throw ReservationCommandException("POLICY_VERSION_MISMATCH", resource.revision, false)
         }
-        // The capacity CAS and hold insert share this transaction, so a failed insert cannot leak occupancy.
+        // capacity CAS와 hold insert가 이 transaction을 공유하므로, insert 실패가 occupancy를 누수하지 않습니다.
         if (!resources.tryOccupy(resource.id, command.expectedResourceRevision)) {
             throw ReservationCommandException("CAPACITY_EXHAUSTED_OR_STALE", resource.revision, true)
         }
@@ -98,7 +98,7 @@ internal class ReservationCommandService(
     fun forceRelease(command: ForceReleaseHoldCommand): ReservationHoldRecord {
         val now = clock.instant()
         val snapshot = holds.findById(command.holdId)
-        // Lock the resource first so every capacity handoff follows the same global lock order.
+        // 모든 capacity handoff가 같은 global lock order를 따르도록 resource를 먼저 lock합니다.
         resources.findByIdForUpdate(snapshot.resourceId)
         val current = holds.findById(command.holdId)
         if (current.revision != command.expectedRevision) {
@@ -133,7 +133,7 @@ internal class ReservationCommandService(
         val now = clock.instant()
         val holdLocator = holds.findById(command.holdId)
         if (target == HoldState.CANCELLED) {
-            // Cancellation may hand capacity to a waiter, therefore it joins the resource-first lock order.
+            // cancellation은 capacity를 waiter에게 넘길 수 있으므로 resource-first lock order에 참여합니다.
             resources.findByIdForUpdate(holdLocator.resourceId)
         }
         val current = holds.findById(command.holdId)

@@ -25,7 +25,7 @@ internal data class IdempotentCommandResult<T>(
     }
 }
 
-/** Persists the command mutation and its replayable HTTP body in one PostgreSQL transaction. */
+/** command mutation과 replay 가능한 HTTP body를 단일 PostgreSQL transaction에 저장합니다. */
 @Service
 internal class IdempotentReservationCommandService(
     private val repository: HttpIdempotencyRepository,

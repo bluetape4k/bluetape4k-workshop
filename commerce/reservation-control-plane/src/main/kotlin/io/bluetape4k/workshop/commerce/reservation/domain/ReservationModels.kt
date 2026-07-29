@@ -3,19 +3,19 @@ package io.bluetape4k.workshop.commerce.reservation.domain
 import java.io.Serializable
 import java.time.Instant
 
-/** Availability lifecycle controlled independently from current occupancy. */
+/** current occupancy와 독립적으로 제어되는 availability lifecycle입니다. */
 enum class ResourceState { OPEN, PAUSED, CLOSED }
 
-/** Durable lifecycle of a capacity-owning reservation hold. */
+/** capacity를 소유하는 reservation hold의 durable lifecycle입니다. */
 enum class HoldState { HELD, CONFIRMED, EXPIRED, CANCELLED, RELEASED_BY_OPERATOR }
 
-/** Durable FIFO entry lifecycle; `OFFERED` means the capacity slot remains reserved for this entry. */
+/** durable FIFO entry lifecycle입니다. `OFFERED`는 capacity slot이 이 entry에 계속 예약되어 있음을 뜻합니다. */
 enum class WaitlistState { WAITING, OFFERED, ACCEPTED, EXPIRED, CANCELLED }
 
-/** Short-lived offer lifecycle paired with an `OFFERED` waitlist entry. */
+/** `OFFERED` waitlist entry와 짝을 이루는 short-lived offer lifecycle입니다. */
 enum class OfferState { ACTIVE, ACCEPTED, EXPIRED, CANCELLED }
 
-/** Stable rejection vocabulary returned to callers and recorded in audit events. */
+/** caller에게 반환하고 audit event에 기록하는 안정적인 rejection vocabulary입니다. */
 enum class TransitionReason {
     OWNER_MISMATCH,
     STALE_REVISION,
@@ -28,7 +28,7 @@ enum class TransitionReason {
     INVALID_STATE,
 }
 
-/** Immutable input used to evaluate capacity policy outside a database transaction. */
+/** database transaction 바깥에서 capacity policy를 평가할 때 사용하는 immutable input입니다. */
 data class CapacityResourceSnapshot(
     val id: Long,
     val capacity: Int,
@@ -48,7 +48,7 @@ data class CapacityResourceSnapshot(
     }
 }
 
-/** Immutable hold state consumed by [ReservationPolicies]. */
+/** [ReservationPolicies]가 소비하는 immutable hold state입니다. */
 data class ReservationHoldSnapshot(
     val id: Long,
     val resourceId: Long,
@@ -63,7 +63,7 @@ data class ReservationHoldSnapshot(
     }
 }
 
-/** Policy result that must still be committed with the corresponding repository CAS. */
+/** 해당 repository CAS와 함께 commit되어야 하는 policy result입니다. */
 sealed interface TransitionOutcome {
     data class Applied(
         val hold: ReservationHoldSnapshot,

@@ -6,10 +6,10 @@ import org.jetbrains.exposed.v1.jdbc.insertIgnore
 import org.springframework.stereotype.Repository
 
 /**
- * Appends one idempotent audit outcome per aggregate revision.
+ * aggregate revision별로 idempotent audit outcome 하나를 append합니다.
  *
- * The composite primary key and `insertIgnore` make command retries observable without duplicating
- * the durable transition record.
+ * composite primary key와 `insertIgnore` 덕분에 durable transition record를 중복하지 않으면서
+ * command retry를 관측할 수 있습니다.
  */
 @Repository
 internal class ReservationAuditRepository {

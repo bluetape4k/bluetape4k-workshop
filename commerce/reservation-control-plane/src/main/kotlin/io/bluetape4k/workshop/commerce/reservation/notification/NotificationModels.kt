@@ -68,7 +68,7 @@ internal enum class RedriveDisposition {
     NOT_EXHAUSTED,
 }
 
-/** Provider result vocabulary that keeps duplicate acceptance distinct from retryable failure. */
+/** duplicate acceptance와 retryable failure를 구분하는 provider result vocabulary입니다. */
 internal sealed interface ProviderSendResult {
     data object Accepted : ProviderSendResult
 

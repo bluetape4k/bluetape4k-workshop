@@ -10,8 +10,8 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 /**
- * Deterministic outbox fixture with token-like claims, bounded retry, exhaustion, and idempotent redrive.
- * Production command paths use [NotificationDeliveryRepository]; this fixture exercises delivery contracts.
+ * token-like claim, bounded retry, exhaustion, idempotent redrive를 제공하는 결정적 outbox fixture입니다.
+ * production command path는 [NotificationDeliveryRepository]를 사용하며, 이 fixture는 delivery contract를 검증합니다.
  */
 internal class InMemoryNotificationOutbox {
     private val lock = ReentrantLock()
@@ -52,7 +52,7 @@ internal class InMemoryNotificationOutbox {
 
     fun size(): Int = lock.withLock { deliveries.size }
 
-    /** Claims only pending, due, or expired-lease work so concurrent workers cannot both finalize it. */
+    /** concurrent worker가 동시에 finalize하지 못하도록 pending, due, expired-lease work만 claim합니다. */
     fun claim(
         deliveryId: String,
         owner: String,

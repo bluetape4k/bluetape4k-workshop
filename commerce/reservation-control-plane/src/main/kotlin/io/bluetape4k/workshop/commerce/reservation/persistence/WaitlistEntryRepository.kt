@@ -35,10 +35,10 @@ internal data class WaitlistEntryRecord(
 }
 
 /**
- * Stores FIFO sequence and lifecycle state for each resource's waitlist.
+ * resource별 waitlist의 FIFO sequence와 lifecycle state를 저장합니다.
  *
- * Sequence allocation assumes the caller already holds the resource lock; transition updates remain
- * owner- and revision-checked so retries cannot advance the same entry twice.
+ * sequence allocation은 caller가 이미 resource lock을 보유한다고 가정합니다.
+ * transition update는 owner와 revision을 계속 확인하므로 retry가 같은 entry를 두 번 advance하지 못합니다.
  */
 @Repository
 internal class WaitlistEntryRepository : LongAuditableJdbcRepository<WaitlistEntryRecord, WaitlistEntryTable> {
@@ -61,8 +61,8 @@ internal class WaitlistEntryRepository : LongAuditableJdbcRepository<WaitlistEnt
         )
 
     /**
-     * The caller must serialize joins for the same resource (normally by locking the resource row).
-     * This keeps FIFO sequence allocation and the insert in the caller's PostgreSQL transaction.
+     * caller는 같은 resource에 대한 join을 직렬화해야 합니다(보통 resource row lock으로 수행).
+     * 이렇게 해야 FIFO sequence allocation과 insert가 caller의 PostgreSQL transaction 안에 머뭅니다.
      */
     fun join(
         resourceId: Long,
@@ -108,7 +108,7 @@ internal class WaitlistEntryRepository : LongAuditableJdbcRepository<WaitlistEnt
             .orderBy(table.sequence to SortOrder.ASC, table.id to SortOrder.ASC)
             .map { with(this) { it.toEntity() } }
 
-    /** Selects the stable FIFO head by sequence and id while the caller holds the resource lock. */
+    /** caller가 resource lock을 보유하는 동안 sequence와 id 기준으로 안정적인 FIFO head를 선택합니다. */
     fun oldestWaiting(resourceId: Long): WaitlistEntryRecord? =
         table
             .selectAll()

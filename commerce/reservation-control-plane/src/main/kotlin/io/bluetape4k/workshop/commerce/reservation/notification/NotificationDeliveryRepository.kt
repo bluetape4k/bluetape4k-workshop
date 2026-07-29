@@ -15,7 +15,7 @@ import org.springframework.stereotype.Repository
 import java.io.Serializable
 import java.time.Instant
 
-/** Durable outbox rows keyed by a stable delivery id for enqueue deduplication. */
+/** enqueue deduplication을 위해 안정적인 delivery id로 keying되는 durable outbox row입니다. */
 internal object NotificationDeliveryTable : AuditableLongIdTable("reservation_notification_deliveries") {
     val deliveryId = varchar("delivery_id", 160).uniqueIndex()
     val channel = enumerationByName<NotificationChannel>("channel", 24)
@@ -47,7 +47,7 @@ internal data class NotificationDeliveryRecord(
     }
 }
 
-/** Persists notification intent in the caller's PostgreSQL transaction before any provider effect occurs. */
+/** provider effect가 발생하기 전에 caller의 PostgreSQL transaction에 notification intent를 저장합니다. */
 @Repository
 internal class NotificationDeliveryRepository :
     LongAuditableJdbcRepository<NotificationDeliveryRecord, NotificationDeliveryTable> {
@@ -106,5 +106,5 @@ internal class NotificationDeliveryRepository :
     companion object : KLogging()
 }
 
-/** Application-owned table reference used by schema bootstrap and PostgreSQL fixtures. */
+/** schema bootstrap과 PostgreSQL fixture에서 사용하는 application-owned table reference입니다. */
 internal val reservationNotificationDeliveryTable = NotificationDeliveryTable

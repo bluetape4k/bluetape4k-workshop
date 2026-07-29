@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.commerce.reservation.idempotency
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 
-/** Builds domain-separated SHA-256 fingerprints without retaining caller idempotency keys or payloads. */
+/** caller idempotency key나 payload를 보존하지 않고 domain-separated SHA-256 fingerprint를 생성합니다. */
 internal object IdempotencyFingerprint {
     fun key(
         tenantId: String,

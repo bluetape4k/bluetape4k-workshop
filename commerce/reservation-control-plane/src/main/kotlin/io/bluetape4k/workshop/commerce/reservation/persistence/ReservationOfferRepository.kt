@@ -37,10 +37,10 @@ internal data class ReservationOfferRecord(
 }
 
 /**
- * Persists the single short-lived offer associated with a promoted waitlist entry.
+ * promoted waitlist entry와 연결된 단일 short-lived offer를 저장합니다.
  *
- * The unique entry reference prevents duplicate offers, while revision CAS prevents accept and expiry
- * from both finalizing the same offer.
+ * unique entry reference는 duplicate offer를 막고,
+ * revision CAS는 accept와 expiry가 같은 offer를 동시에 finalize하지 못하게 합니다.
  */
 @Repository
 internal class ReservationOfferRepository : LongAuditableJdbcRepository<ReservationOfferRecord, ReservationOfferTable> {
@@ -106,7 +106,7 @@ internal class ReservationOfferRepository : LongAuditableJdbcRepository<Reservat
             .singleOrNull()
             ?.let { with(this) { it.toEntity() } }
 
-    /** Returns bounded candidates; the transaction service merges these with expired holds by timestamp. */
+    /** bounded candidate를 반환합니다. transaction service는 이를 expired hold와 timestamp 기준으로 병합합니다. */
     fun expiredResourceCandidates(
         now: Instant,
         limit: Int,

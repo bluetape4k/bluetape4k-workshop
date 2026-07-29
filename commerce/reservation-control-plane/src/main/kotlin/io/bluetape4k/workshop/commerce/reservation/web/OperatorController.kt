@@ -25,8 +25,8 @@ import java.io.Serializable
 import java.time.Duration
 
 /**
- * Authenticated operator boundary for force release and bounded manual sweep commands.
- * Force release remains revision-checked, audited, and idempotent like a user command.
+ * force release와 bounded manual sweep command를 위한 authenticated operator boundary입니다.
+ * force release는 user command처럼 revision-checked, audited, idempotent 상태로 유지됩니다.
  */
 @RestController
 @RequestMapping("/api/operator")

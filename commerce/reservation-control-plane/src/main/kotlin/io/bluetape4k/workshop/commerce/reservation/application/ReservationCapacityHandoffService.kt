@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service
 import java.time.Instant
 
 /**
- * Transfers one already-occupied capacity slot to the FIFO waitlist head, or releases it when no waiter exists.
- * The caller owns the transaction and must lock the resource before invoking this service.
+ * 이미 점유된 capacity slot 하나를 FIFO waitlist head로 이전하거나, 대기자가 없으면 해제합니다.
+ * caller가 transaction을 소유하며, 이 service를 호출하기 전에 resource를 lock해야 합니다.
  */
 @Service
 internal class ReservationCapacityHandoffService(

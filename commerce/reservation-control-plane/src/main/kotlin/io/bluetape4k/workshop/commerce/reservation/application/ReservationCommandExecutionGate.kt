@@ -8,8 +8,8 @@ import io.bluetape4k.workshop.commerce.reservation.redis.ReservationAdmissionGat
 import io.bluetape4k.workshop.commerce.reservation.redis.SuppressionOutcome
 
 /**
- * Applies local/Redis admission and short duplicate suppression before PostgreSQL idempotency.
- * PostgreSQL still owns every durable command outcome.
+ * PostgreSQL idempotency 전에 local/Redis admission과 짧은 duplicate suppression을 적용합니다.
+ * 모든 durable command outcome은 여전히 PostgreSQL이 소유합니다.
  */
 internal class ReservationCommandExecutionGate(
     private val admission: ReservationAdmissionGate,

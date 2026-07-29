@@ -12,7 +12,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 
-/** Logs the HTTP boundary without logging command bodies or credentials. */
+/** command body나 credential을 기록하지 않고 HTTP boundary를 로그로 남깁니다. */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 internal class RequestLoggingFilter : OncePerRequestFilter() {
