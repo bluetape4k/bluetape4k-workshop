@@ -1,35 +1,35 @@
-# Bucket4j Advanced Ecosystem Review
+# Bucket4j Advanced 생태계 리뷰
 
-Date: 2026-07-05
-Module: `:bucket4j-advanced`
-Branch: `refactor/bucket4j-advanced-ecosystem-patterns`
+날짜: 2026-07-05
+모듈: `:bucket4j-advanced`
+브랜치: `refactor/bucket4j-advanced-ecosystem-patterns`
 
-## Scope
+## 범위
 
-- Review the advanced Redis-backed Bucket4j WebFlux filters against the bluetape4k 7-Tier checklist.
-- Preserve the public endpoint contract and example quotas.
-- Use bluetape4k coroutine cancellation rules before soft-failing Redis/rate-limit errors.
+- advanced Redis-backed Bucket4j WebFlux filter를 bluetape4k 7-Tier checklist 기준으로 검토했다.
+- public endpoint contract와 example quota를 보존했다.
+- Redis/rate-limit error를 soft-fail 처리하기 전에 bluetape4k coroutine cancellation rule을 적용했다.
 
-## 7-Tier Review
+## 7-Tier 리뷰
 
-| Tier | Lens | Verdict | Evidence |
+| Tier | 관점 | 판정 | 근거 |
 |---|---|---|---|
-| 1 | Correctness | PASS | Filter paths, header behavior, and HTTP status contracts are unchanged. |
-| 2 | API / UX | PASS | Existing `/api/anonymous`, `/api/authenticated`, and `/api/sensitive` semantics remain stable. |
-| 3 | Architecture | PASS | Redis-backed `DistributedSuspendRateLimiter` usage remains the module boundary. |
-| 4 | Concurrency | PASS | `CancellationException` is rethrown before non-cancellation soft-fail handling. |
-| 5 | Resilience | PASS | Non-cancellation rate-limit failures still fail open as documented. |
-| 6 | Tests | PASS | `./gradlew :bucket4j-advanced:test --console=plain --max-workers=1` executed 12 tests successfully. |
-| 7 | Maintainability | PASS | Removed a redundant `run` block and made exception boundaries explicit. |
+| 1 | Correctness | PASS | filter path, header behavior, HTTP status contract는 변경 없다. |
+| 2 | API / UX | PASS | 기존 `/api/anonymous`, `/api/authenticated`, `/api/sensitive` 의미는 안정적으로 유지된다. |
+| 3 | Architecture | PASS | Redis-backed `DistributedSuspendRateLimiter` 사용은 module boundary로 유지된다. |
+| 4 | Concurrency | PASS | `CancellationException`은 non-cancellation soft-fail handling 전에 다시 던진다. |
+| 5 | Resilience | PASS | non-cancellation rate-limit failure는 문서화된 대로 계속 fail open 한다. |
+| 6 | Tests | PASS | `./gradlew :bucket4j-advanced:test --console=plain --max-workers=1`가 12개 test를 성공적으로 실행했다. |
+| 7 | Maintainability | PASS | 중복 `run` block을 제거하고 exception boundary를 명시적으로 만들었다. |
 
-## P0/P1 Gate
+## P0/P1 게이트
 
 - P0: 0
 - P1: 0
-- Deferred: Existing Gradle deprecation warnings are repository/tooling level and outside this module cleanup.
+- Deferred: 기존 Gradle deprecation warning은 repository/tooling level 문제라 이 module cleanup 범위 밖이다.
 
-## DoD Status
+## DoD 상태
 
 - `git diff --check`: PASS
-- Targeted test: `:bucket4j-advanced:test`: PASS, 12 tests
-- CodeGraph: queried changed filters; risk fan-out is broad due WebFlux/Spring graph edges, so target integration tests were used as the contract proof.
+- targeted test: `:bucket4j-advanced:test`: PASS, 12개 test
+- CodeGraph: 변경된 filter를 조회했다. WebFlux/Spring graph edge 때문에 risk fan-out이 넓어 target integration test를 contract proof로 사용했다.
