@@ -4,7 +4,7 @@ import org.springframework.http.MediaType
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.function.Consumer
 
-/** Test-only bridge that exercises the real emitter callbacks without a servlet container. */
+/** servlet container 없이 실제 emitter callback을 실행하는 test-only bridge입니다. */
 internal class TestSseEmitterHandler : ResponseBodyEmitter.Handler {
     val sent = CopyOnWriteArrayList<String>()
     private var timeoutCallback: Runnable? = null

@@ -5,7 +5,7 @@ import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityIn
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
 import org.jetbrains.exposed.v1.dao.Entity
 
-/** Mandatory Bluetape Spring Data repository delegate for this example. */
+/** 이 예제에 필요한 Bluetape Spring Data repository delegate입니다. */
 abstract class MeteringExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(
@@ -13,8 +13,8 @@ abstract class MeteringExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     )
 
 /**
- * Blocks generic Spring Data mutation paths for financial and source records.
- * Concrete repositories expose narrowly named append/query operations instead.
+ * financial 및 source record에 대한 generic Spring Data mutation path를 차단합니다.
+ * 대신 concrete repository가 좁게 이름 붙인 append/query operation을 노출합니다.
  */
 abstract class AppendOnlyMeteringExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,

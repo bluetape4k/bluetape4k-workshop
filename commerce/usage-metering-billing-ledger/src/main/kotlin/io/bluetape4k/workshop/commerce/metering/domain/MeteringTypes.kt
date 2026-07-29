@@ -38,7 +38,7 @@ value class SourceEventId(val value: String) {
 }
 
 /**
- * Raw idempotency keys exist only at the HTTP boundary and must be digested before persistence or logging.
+ * raw idempotency key는 HTTP boundary에만 존재하며 persistence나 logging 전에 digest해야 합니다.
  */
 @JvmInline
 value class IdempotencyKey(val value: String) {

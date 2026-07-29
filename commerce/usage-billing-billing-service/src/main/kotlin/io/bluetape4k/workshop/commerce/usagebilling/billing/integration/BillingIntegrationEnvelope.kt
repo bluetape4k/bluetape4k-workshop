@@ -13,9 +13,9 @@ import java.util.HexFormat
 import java.util.UUID
 
 /**
- * Versioned Billing event contract persisted with its local outbox transaction.
+ * local outbox transaction과 함께 저장되는 Versioned Billing event contract입니다.
  *
- * The immutable payload and digest let receivers make a durable replay decision independently of Kafka delivery.
+ * immutable payload와 digest 덕분에 receiver는 Kafka delivery와 독립적으로 durable replay decision을 내릴 수 있습니다.
  */
 class BillingIntegrationEnvelope private constructor(
     val eventId: UUID, val eventType: String, val schemaVersion: Int, val tenantId: String,

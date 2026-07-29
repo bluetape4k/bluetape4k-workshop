@@ -34,7 +34,7 @@ sealed interface BillingInboundEvent : Serializable {
     }
 }
 
-/** Parses producer JSON locally so Billing owns its own compatibility decision. */
+/** Billing이 자체 compatibility decision을 소유하도록 producer JSON을 local에서 parse합니다. */
 @Component
 class BillingInboundEventDecoder {
     fun decode(wirePayload: String): BillingInboundEvent {

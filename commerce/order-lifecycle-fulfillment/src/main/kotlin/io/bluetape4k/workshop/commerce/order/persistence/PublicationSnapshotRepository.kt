@@ -26,10 +26,10 @@ internal data class PublicationStatusSummary(
 }
 
 /**
- * Reads publication operations data without materializing event payloads.
+ * event payload를 materialize하지 않고 publication operations data를 읽습니다.
  *
- * Grouping by status and completion presence bounds the result to at most two rows per status while preserving the
- * incomplete-publication predicate used by Spring Modulith's publication repository.
+ * status와 completion presence로 group 처리해 Spring Modulith publication repository가 사용하는
+ * incomplete-publication predicate를 보존하면서 결과를 status별 최대 두 row로 제한합니다.
  */
 @Repository
 @OptIn(ExperimentalUuidApi::class)

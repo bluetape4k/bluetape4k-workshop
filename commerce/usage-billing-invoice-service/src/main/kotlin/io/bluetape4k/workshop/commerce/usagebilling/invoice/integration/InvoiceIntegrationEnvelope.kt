@@ -13,9 +13,9 @@ import java.util.HexFormat
 import java.util.UUID
 
 /**
- * Versioned Invoice event contract emitted from the local invoice outbox.
+ * local invoice outbox에서 발행되는 Versioned Invoice event contract입니다.
  *
- * A receiver validates its schema and digest before recording an inbox outcome.
+ * receiver는 inbox outcome을 기록하기 전에 schema와 digest를 검증합니다.
  */
 class InvoiceIntegrationEnvelope private constructor(
     val eventId: UUID, val eventType: String, val schemaVersion: Int, val tenantId: String,

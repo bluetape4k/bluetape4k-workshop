@@ -13,9 +13,9 @@ import java.util.HexFormat
 import java.util.UUID
 
 /**
- * Versioned Usage event contract persisted in the local outbox before Kafka publication.
+ * Kafka publication 전에 local outbox에 저장되는 Versioned Usage event contract입니다.
  *
- * The payload digest is part of the durable contract and is validated by each receiving service.
+ * payload digest는 durable contract의 일부이며 각 receiving service가 검증합니다.
  */
 class UsageIntegrationEnvelope private constructor(
     val eventId: UUID,

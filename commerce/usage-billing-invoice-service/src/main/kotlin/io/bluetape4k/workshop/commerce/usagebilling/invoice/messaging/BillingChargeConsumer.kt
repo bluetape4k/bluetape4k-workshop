@@ -15,7 +15,7 @@ import java.util.HexFormat
 import java.util.UUID
 import tools.jackson.databind.JsonNode
 
-/** Maps Billing's wire contract into Invoice-owned inbox data without sharing producer types. */
+/** producer type을 공유하지 않고 Billing의 wire contract를 Invoice-owned inbox data로 매핑합니다. */
 @Component
 class BillingChargeDecoder {
     fun decode(wirePayload: String): InvoiceInboxEvent {
