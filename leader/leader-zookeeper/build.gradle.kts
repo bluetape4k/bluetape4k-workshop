@@ -13,25 +13,25 @@ configurations {
 
 tasks.test {
     useJUnitPlatform {
-        // Exclude @Tag("smoke") from the default test run.
+        // 기본 테스트 실행에서는 @Tag("smoke") 테스트를 제외한다.
         excludeTags("smoke")
     }
 }
 
 dependencies {
-    // bluetape4k-leader-zookeeper (Apache Curator 5.9.0 transitive)
+    // bluetape4k-leader-zookeeper 의존성: Apache Curator 5.9.0은 전이 의존성으로 제공된다.
     implementation(libs.bluetape4k.leader.zookeeper)
 
     implementation(libs.bluetape4k.logging)
 
-    // Spring Boot
+    // Spring Boot 구성
     implementation(libs.spring.boot.autoconfigure.lib)
     implementation(libs.spring.boot.starter.actuator)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
     runtimeOnly(libs.spring.boot.devtools)
 
-    // Test
+    // 테스트 의존성
     testImplementation(project(":shared"))
     testImplementation(libs.bluetape4k.coroutines)
     testImplementation(libs.bluetape4k.junit5)
@@ -44,5 +44,5 @@ dependencies {
         exclude(module = "mockito-core")
     }
     testImplementation(libs.mockk)
-    // logback-classic for T7 ListAppender<ILoggingEvent> (provided via spring-boot-starter-test transitively)
+    // T7의 ListAppender<ILoggingEvent> 검증에 필요한 logback-classic은 spring-boot-starter-test가 전이 제공한다.
 }

@@ -18,16 +18,16 @@ import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 
 /**
- * T0: Spring Boot context loading test for the leader-zookeeper workshop module.
+ * T0: leader-zookeeper 워크숍 모듈의 Spring Boot context 로딩 테스트이다.
  *
- * Verifies that all 4 elector beans and 4 leader service beans are wired correctly.
- * Catches `@Component`/`@Bean` omissions, type mismatches, and configuration property
- * binding failures at runtime before they reach production.
+ * 네 개 elector 빈과 네 개 리더 서비스 빈이 모두 올바르게 연결되는지 검증한다.
+ * `@Component`/`@Bean` 누락, 타입 불일치, 설정 프로퍼티 바인딩 실패가 운영에 도달하기 전에
+ * 런타임에서 포착한다.
  *
- * Uses `@DynamicPropertySource` to inject the Testcontainers ZooKeeper URL.
+ * `@DynamicPropertySource`로 Testcontainers ZooKeeper URL을 주입한다.
  *
- * NOTE: The Spring property key is `leader.zookeeper.zookeeper.connect-string`
- * (the outer `leader.zookeeper` prefix + the inner nested `zookeeper.connectString` field).
+ * 참고: Spring 프로퍼티 키는 `leader.zookeeper.zookeeper.connect-string`이다.
+ * 이는 바깥 `leader.zookeeper` prefix와 안쪽 중첩 `zookeeper.connectString` 필드를 결합한 형태이다.
  */
 @SpringBootTest
 class LeaderZookeeperContextTest(
