@@ -18,7 +18,7 @@ internal data class EventSourcedApiError(
     val reason: String,
 )
 
-/** Never serializes database, token, digest, or request payload details to API clients. */
+/** database, token, digest, request payload 세부사항을 API client에 절대 serialize하지 않습니다. */
 @RestControllerAdvice
 internal class EventSourcedApiExceptionHandler {
     @ExceptionHandler(EventSourcedStreamRejected::class)

@@ -21,7 +21,7 @@ internal const val STREAM_POSITION_HEADER = "X-Stream-Position"
 internal const val PROJECTION_POSITION_HEADER = "X-Projection-Position"
 internal const val PROJECTION_LAG_HEADER = "X-Projection-Lag"
 
-/** #534-compatible campaign body; event-sourcing metadata is deliberately carried in headers. */
+/** #534-compatible campaign body입니다. event-sourcing metadata는 의도적으로 header에 담습니다. */
 internal data class CampaignHttpResponse(
     val campaignId: UUID,
     val state: String,
@@ -80,7 +80,7 @@ internal fun interface CampaignProjectionQuery {
     fun campaign(request: CampaignProjectionRequest): CampaignProjectionResult
 }
 
-/** GET query adapter: commands never retry or pass through this projection-consistency path. */
+/** GET query adapter입니다. command는 이 projection-consistency path를 retry하거나 통과하지 않습니다. */
 @RestController
 @RequestMapping("/api/v1")
 internal class EventSourcedCampaignQueryController(

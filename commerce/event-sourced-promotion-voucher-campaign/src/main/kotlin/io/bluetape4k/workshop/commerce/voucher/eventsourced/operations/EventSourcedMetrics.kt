@@ -17,8 +17,8 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
 /**
- * Bounded operational telemetry. No tenant, campaign, generation, stream, event, or principal
- * identifier is ever used as a Micrometer tag.
+ * bounded operational telemetry입니다. tenant, campaign, generation, stream, event, principal
+ * identifier는 Micrometer tag로 절대 사용하지 않습니다.
  */
 @Suppress("TooManyFunctions") // Metrics facade keeps one bounded vocabulary for all runtime lanes.
 internal class EventSourcedMetrics(

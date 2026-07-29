@@ -30,7 +30,7 @@ internal enum class OperatorAuditOutcome {
     REJECTED,
 }
 
-/** Immutable operator mutation evidence. It stores only digests for actor and request identity. */
+/** immutable operator mutation evidence입니다. actor와 request identity의 digest만 저장합니다. */
 @ConsistentCopyVisibility
 internal data class OperatorAuditIdentity private constructor(
     val actorDigest: ReceiptDigest,
@@ -142,8 +142,8 @@ internal data class OperatorAuditEntry private constructor(
 }
 
 /**
- * Transaction-bound append-only audit boundary. It deliberately has no generic CRUD API because
- * callers must persist audit evidence in the same fenced mutation transaction they describe.
+ * transaction-bound append-only audit boundary입니다. caller가 자신이 설명하는 fenced mutation transaction과 같은 transaction에
+ * audit evidence를 저장해야 하므로 generic CRUD API를 의도적으로 제공하지 않습니다.
  */
 internal class OperatorAuditRepository {
     fun find(

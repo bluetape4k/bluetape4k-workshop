@@ -33,8 +33,8 @@ private data class ReceiptAcquireRequest(
 )
 
 /**
- * PostgreSQL receipt authority. Every mutating call requires the active foreground transaction;
- * command orchestration owns the short acquire transaction and append/finalize transaction boundary.
+ * PostgreSQL receipt authority입니다. 모든 mutating call은 active foreground transaction을 요구합니다.
+ * command orchestration은 짧은 acquire transaction과 append/finalize transaction boundary를 소유합니다.
  */
 internal class EventSourcedIdempotencyRepository {
 

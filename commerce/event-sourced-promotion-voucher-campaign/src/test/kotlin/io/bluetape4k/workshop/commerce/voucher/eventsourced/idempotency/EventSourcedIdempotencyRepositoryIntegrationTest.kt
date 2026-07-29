@@ -82,38 +82,38 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
 
     @Test
     fun `same scope and fingerprint replays one terminal descriptor`() {
-        // Given
+        // 준비
         val scope = scope()
         val fingerprint = ReceiptDigest.sha256("canonical-request")
         val owner = transaction(database) { repository.acquire(scope, fingerprint, NOW) } as ReceiptAcquireResult.Owner
 
-        // When
+        // 실행
         transaction(database) { repository.finalize(scope, fingerprint, owner.token, NOW.plusSeconds(1), DESCRIPTOR) }
         val replay = transaction(database) { repository.acquire(scope, fingerprint, NOW.plusSeconds(2)) }
 
-        // Then
+        // 검증
         replay shouldBeEqualTo ReceiptAcquireResult.Replay(DESCRIPTOR)
     }
 
     @Test
     fun `same scope and changed fingerprint conflicts`() {
-        // Given
+        // 준비
         val scope = scope()
         transaction(database) { repository.acquire(scope, ReceiptDigest.sha256("first"), NOW) }
 
-        // When
+        // 실행
         val result =
             transaction(database) {
                 repository.acquire(scope, ReceiptDigest.sha256("second"), NOW.plusSeconds(1))
             }
 
-        // Then
+        // 검증
         result shouldBeEqualTo ReceiptAcquireResult.FingerprintConflict
     }
 
     @Test
     fun `expired lease permits takeover and rejects stale owner finalize`() {
-        // Given
+        // 준비
         val scope = scope()
         val fingerprint = ReceiptDigest.sha256("canonical-request")
         val first = transaction(database) { repository.acquire(scope, fingerprint, NOW) } as ReceiptAcquireResult.Owner
@@ -122,7 +122,7 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
                 repository.acquire(scope, fingerprint, NOW.plusSeconds(91))
             } as ReceiptAcquireResult.Owner
 
-        // When
+        // 실행
         val staleFinalized =
             transaction(database) {
                 repository.finalize(scope, fingerprint, first.token, NOW.plusSeconds(92), DESCRIPTOR)
@@ -132,36 +132,36 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
                 repository.finalize(scope, fingerprint, second.token, NOW.plusSeconds(92), DESCRIPTOR)
             }
 
-        // Then
+        // 검증
         staleFinalized.shouldBeFalse()
         currentFinalized.shouldBeTrue()
     }
 
     @Test
     fun `same key is isolated by principal digest`() {
-        // Given
+        // 준비
         val fingerprint = ReceiptDigest.sha256("canonical-request")
         val firstScope = scope(principal = "principal-a")
         val secondScope = scope(principal = "principal-b")
 
-        // When
+        // 실행
         val first = transaction(database) { repository.acquire(firstScope, fingerprint, NOW) }
         val second = transaction(database) { repository.acquire(secondScope, fingerprint, NOW) }
 
-        // Then
+        // 검증
         (first is ReceiptAcquireResult.Owner).shouldBeTrue()
         (second is ReceiptAcquireResult.Owner).shouldBeTrue()
     }
 
     @Test
     fun `event append and terminal receipt finalize roll back together`() {
-        // Given
+        // 준비
         val scope = scope()
         val fingerprint = ReceiptDigest.sha256("canonical-request")
         val owner = transaction(database) { repository.acquire(scope, fingerprint, NOW) } as ReceiptAcquireResult.Owner
         val stream = StreamKey(TenantId("tenant-a"), "campaign", UUID.randomUUID())
 
-        // When
+        // 실행
         assertFailsWith<IllegalStateException> {
             transaction(database) {
                 val append = store.appendAll(listOf(ExpectedAppend(stream, 0, listOf(event()))))
@@ -171,7 +171,7 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
             }
         }
 
-        // Then
+        // 검증
         store.load(EventStoreRead(stream, afterVersion = 0)).events shouldBeEqualTo emptyList()
         val afterRollback = transaction(database) { repository.acquire(scope, fingerprint, NOW.plusSeconds(2)) }
         (afterRollback is ReceiptAcquireResult.InProgress).shouldBeTrue()
@@ -179,7 +179,7 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
 
     @Test
     fun `concurrent same receipt appends one event and replays one descriptor`() {
-        // Given
+        // 준비
         val scope = scope()
         val fingerprint = ReceiptDigest.sha256("canonical-request")
         val stream = StreamKey(TenantId("tenant-a"), "campaign", UUID.randomUUID())
@@ -195,7 +195,7 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
         val barrier = CyclicBarrier(2)
         val results = ConcurrentLinkedQueue<CommandExecutionResult>()
 
-        // When
+        // 실행
         MultithreadingTester()
             .workers(2)
             .rounds(1)
@@ -204,7 +204,7 @@ internal class EventSourcedIdempotencyRepositoryIntegrationTest {
                 results.add(commands.execute(command))
             }.run()
 
-        // Then
+        // 검증
         results.count { it is CommandExecutionResult.Executed } shouldBeEqualTo 1
         store.load(EventStoreRead(stream, afterVersion = 0)).events.size shouldBeEqualTo 1
         val replay = transaction(database) { repository.acquire(scope, fingerprint, NOW.plusSeconds(1)) }

@@ -45,7 +45,7 @@ internal class EventSourcedOperatorProperties(
             }
 }
 
-/** Fail-closed workshop trust boundary for mutation-capable operator routes. */
+/** mutation-capable operator route를 위한 fail-closed workshop trust boundary입니다. */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + FILTER_ORDER_OFFSET)
 internal class EventSourcedOperatorAccessFilter(

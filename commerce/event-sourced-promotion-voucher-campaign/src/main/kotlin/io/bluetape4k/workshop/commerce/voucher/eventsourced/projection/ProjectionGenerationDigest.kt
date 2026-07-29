@@ -10,10 +10,10 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 
 /**
- * Computes a generation-independent digest from semantic read-model fields.
+ * semantic read-model field에서 generation-independent digest를 계산합니다.
  *
- * Fencing tokens, generation numbers, and timestamps are intentionally excluded so an active
- * generation and a rebuilt candidate can be compared without weakening either write fence.
+ * active generation과 rebuilt candidate를 비교할 때 어느 write fence도 약화하지 않도록
+ * fencing token, generation number, timestamp는 의도적으로 제외합니다.
  */
 internal class ProjectionGenerationDigest {
     fun compute(key: ProjectionKey): ReceiptDigest {

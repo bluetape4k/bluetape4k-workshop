@@ -21,7 +21,7 @@ import java.time.Duration
 import kotlin.time.TimeSource
 import kotlin.time.toJavaDuration
 
-/** Owns the two transaction cuts: a committed receipt acquire, then atomic append plus terminal finalize. */
+/** 두 transaction 경계를 소유합니다. 먼저 committed receipt를 acquire하고, 이후 atomic append와 terminal finalize를 수행합니다. */
 internal interface CommandTransactionRunner {
     fun <T> inTransaction(block: () -> T): T
 }

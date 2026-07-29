@@ -86,7 +86,7 @@ internal interface EventSourcedCampaignCommands {
     ): CampaignAggregate?
 }
 
-/** Converts one validated campaign command into the generic receipt plus append orchestration boundary. */
+/** 검증된 campaign command 하나를 generic receipt와 append orchestration boundary로 변환합니다. */
 internal class DefaultEventSourcedCampaignCommands(
     private val commands: EventSourcedCommandService,
     private val events: EventStorePort,

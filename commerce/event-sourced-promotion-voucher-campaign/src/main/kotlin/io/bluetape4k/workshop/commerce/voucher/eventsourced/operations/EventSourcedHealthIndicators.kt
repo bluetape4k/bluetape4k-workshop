@@ -16,7 +16,7 @@ internal enum class EventSourcedReadinessState {
     STOPPING,
 }
 
-/** Separates process readiness from advisory aggregate/projection/rebuild degradation. */
+/** process readiness를 advisory aggregate/projection/rebuild degradation과 분리합니다. */
 @Component
 internal class EventSourcedOperationalState {
     private val readiness = AtomicReference(EventSourcedReadinessState.STARTING)
@@ -93,7 +93,7 @@ internal class EventSourcedProjectionHealthIndicator(
             .build()
 }
 
-/** Liveness reports only process-local health; external authority belongs to readiness. */
+/** liveness는 process-local health만 보고합니다. external authority는 readiness에 속합니다. */
 @Component("eventSourcedLivenessHealthIndicator")
 internal class EventSourcedLivenessHealthIndicator : HealthIndicator {
     override fun health(): Health = Health.up().build()

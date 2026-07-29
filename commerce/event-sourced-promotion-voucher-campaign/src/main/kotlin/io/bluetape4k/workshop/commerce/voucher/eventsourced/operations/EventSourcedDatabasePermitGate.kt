@@ -84,8 +84,8 @@ internal data class EventSourcedDatabasePermitSnapshot(
 )
 
 /**
- * Reserves the Hikari 20-connection budget before a virtual thread can request JDBC access.
- * The independent readiness lane remains available while foreground traffic is saturated.
+ * virtual thread가 JDBC access를 요청하기 전에 Hikari 20-connection budget을 예약합니다.
+ * foreground traffic이 포화되어도 독립 readiness lane은 계속 사용할 수 있습니다.
  */
 internal class EventSourcedDatabasePermitGate(
     private val budget: EventSourcedDatabasePermitBudget = EventSourcedDatabasePermitBudget(),

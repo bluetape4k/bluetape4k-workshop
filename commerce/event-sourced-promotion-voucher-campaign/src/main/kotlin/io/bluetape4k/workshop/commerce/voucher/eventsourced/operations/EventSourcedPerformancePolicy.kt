@@ -25,10 +25,10 @@ private const val MAINTENANCE_MIN_BACKOFF_MILLIS = 100L
 private const val MAINTENANCE_MAX_BACKOFF_SECONDS = 5L
 
 /**
- * One immutable authority for correctness and dedicated performance profile limits.
+ * correctness와 dedicated performance profile limit을 위한 단일 immutable authority입니다.
  *
- * Environment-sensitive throughput and percentile targets remain stress-test assertions;
- * runtime safety limits are shared by normal and stress profiles.
+ * environment-sensitive throughput과 percentile target은 stress-test assertion으로만 유지합니다.
+ * runtime safety limit은 normal profile과 stress profile이 공유합니다.
  */
 internal class EventSourcedRuntimeBudget {
     val snapshotEveryEvents: Int = SNAPSHOT_EVERY_EVENTS
@@ -128,8 +128,8 @@ internal enum class MaintenanceOffer {
 }
 
 /**
- * Bounded stream-coalescing queue. A newer request for an existing stream replaces stale work
- * without consuming another slot; distinct work beyond capacity fails fast.
+ * bounded stream-coalescing queue입니다. 기존 stream의 새 request는 추가 slot을 소비하지 않고 stale work를 대체합니다.
+ * capacity를 초과한 서로 다른 work는 fast-fail합니다.
  */
 internal class SnapshotMaintenanceQueue(
     capacity: Int = EventSourcedRuntimeBudget().maintenanceQueueCapacity,

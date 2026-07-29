@@ -77,7 +77,7 @@ internal data class EventSourcedStreamCursor(
     }
 }
 
-/** Public event shape intentionally excludes event payload, subject, token, digest, and fencing data. */
+/** public event shape는 event payload, subject, token, digest, fencing data를 의도적으로 제외합니다. */
 internal data class EventSourcedPublicEventDescriptor(
     val campaignId: UUID,
     val state: String,
@@ -167,8 +167,8 @@ internal class ProjectionSnapshotEventSource(
 }
 
 /**
- * Each admitted connection owns one bounded virtual-thread poller and one bounded queue.
- * Snapshot-reader transactions finish before queue or network writes begin.
+ * admission된 각 connection은 bounded virtual-thread poller 하나와 bounded queue 하나를 소유합니다.
+ * snapshot-reader transaction은 queue 또는 network write가 시작되기 전에 끝납니다.
  */
 @Component
 internal class EventSourcedEventStream(

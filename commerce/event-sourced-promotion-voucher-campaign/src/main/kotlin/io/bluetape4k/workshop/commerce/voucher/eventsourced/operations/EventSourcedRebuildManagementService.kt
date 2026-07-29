@@ -68,7 +68,7 @@ private data class RebuildAuditMutation(
 )
 
 /**
- * Fenced rebuild control boundary. Every mutation and its bounded operator audit commit together.
+ * fenced rebuild control boundary입니다. 모든 mutation과 bounded operator audit이 함께 commit됩니다.
  */
 internal class EventSourcedRebuildManagementService(
     private val transactions: EventSourcedPermitTransactionRunner,

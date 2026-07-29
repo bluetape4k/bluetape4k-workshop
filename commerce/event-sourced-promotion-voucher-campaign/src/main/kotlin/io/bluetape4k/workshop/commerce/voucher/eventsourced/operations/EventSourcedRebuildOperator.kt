@@ -8,7 +8,7 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.projection.findGener
 import java.io.Serializable
 import java.time.Instant
 
-/** A fenced operator request whose mutation and immutable evidence share one transaction. */
+/** mutation과 immutable evidence가 transaction 하나를 공유하는 fenced operator request입니다. */
 @ConsistentCopyVisibility
 internal data class RebuildCancellationCommand private constructor(
     val identity: OperatorAuditIdentity,
@@ -48,9 +48,9 @@ internal data class RebuildCancellationOutcome(
 )
 
 /**
- * Keeps rebuild cancellation, fencing verification, and its operator evidence inseparable.
- * It intentionally exposes no generic mutation API: callers cannot advance the rebuild state
- * without writing the matching audit record in the same foreground database transaction.
+ * rebuild cancellation, fencing verification, operator evidence를 분리할 수 없게 유지합니다.
+ * generic mutation API를 의도적으로 노출하지 않습니다. caller는 같은 foreground database transaction에서
+ * 일치하는 audit record를 쓰지 않으면 rebuild state를 advance할 수 없습니다.
  */
 internal class EventSourcedRebuildOperator(
     private val transactions: EventSourcedPermitTransactionRunner,

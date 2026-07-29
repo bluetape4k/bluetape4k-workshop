@@ -10,11 +10,11 @@ internal class EventSourcedIdempotencyContractTest {
 
     @Test
     fun `receipt scope separates principals and resources`() {
-        // Given
+        // 준비
         val first = scope(principal = "principal-a")
         val second = scope(principal = "principal-b")
 
-        // When / Then
+        // 실행 / 검증
         (first == second).shouldBeFalse()
     }
 
@@ -27,7 +27,7 @@ internal class EventSourcedIdempotencyContractTest {
 
     @Test
     fun `terminal replay fails closed when its generation key is unavailable`() {
-        // Given
+        // 준비
         val descriptor =
             TerminalDescriptor(
                 outcome = ReceiptOutcome.VOUCHER_ALLOCATED,
@@ -40,10 +40,10 @@ internal class EventSourcedIdempotencyContractTest {
                     ),
             )
 
-        // When
+        // 실행
         val replay = descriptor.replayWith { version -> version != 3 }
 
-        // Then
+        // 검증
         replay shouldBeEqualTo TerminalReplay.KeyUnavailable
     }
 

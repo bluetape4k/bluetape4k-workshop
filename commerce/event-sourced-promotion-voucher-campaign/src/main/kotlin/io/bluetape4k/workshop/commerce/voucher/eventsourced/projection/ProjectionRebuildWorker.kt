@@ -24,9 +24,8 @@ internal sealed interface ProjectionRebuildPollResult {
 }
 
 /**
- * Replays bounded pages into a non-active generation. The generation row lock is held through the
- * candidate read-model mutation and cursor advance, so cancellation cannot leave a stale batch
- * committed after its fencing token or cancellation revision has changed.
+ * bounded page를 non-active generation으로 replay합니다. generation row lock은 candidate read-model mutation과
+ * cursor advance 동안 유지되므로, fencing token이나 cancellation revision이 바뀐 뒤 stale batch가 commit된 채 남지 않습니다.
  */
 internal class ProjectionRebuildWorker(
     private val rebuilds: ProjectionRebuildRepository,

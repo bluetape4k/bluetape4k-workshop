@@ -77,8 +77,8 @@ internal enum class ProjectionPoisonState {
 }
 
 /**
- * Projection state remains disposable: event identity, read-model mutation, and checkpoint advance
- * commit together only while the current fenced owner holds the PostgreSQL lease row lock.
+ * projection state는 disposable로 유지합니다. current fenced owner가 PostgreSQL lease row lock을 보유하는 동안에만
+ * event identity, read-model mutation, checkpoint advance가 함께 commit됩니다.
  */
 internal class ProjectionRepository(
     private val leases: ProjectionLeaseRepository,

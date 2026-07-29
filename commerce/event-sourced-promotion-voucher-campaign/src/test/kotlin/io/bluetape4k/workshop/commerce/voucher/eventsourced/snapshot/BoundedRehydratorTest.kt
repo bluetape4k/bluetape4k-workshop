@@ -53,13 +53,13 @@ internal class BoundedRehydratorTest {
 
     @Test
     fun `snapshot newer than the committed head falls back to full replay`() {
-        // Given
+        // 준비
         val stale = snapshot(version = 5, state = "5")
 
-        // When
+        // 실행
         val result = rehydrator(stale).rehydrate(request())
 
-        // Then
+        // 검증
         result.state shouldBeEqualTo 4
         result.snapshotVersion shouldBeEqualTo 0L
     }
