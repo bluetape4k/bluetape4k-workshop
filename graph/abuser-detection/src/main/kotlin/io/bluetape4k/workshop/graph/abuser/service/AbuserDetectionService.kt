@@ -32,19 +32,19 @@ import io.bluetape4k.workshop.graph.abuser.schema.UsesIpLabel
 import io.bluetape4k.workshop.graph.abuser.schema.UsesPaymentLabel
 
 /**
- * Blocking graph service for abuser detection.
+ * 어뷰저 감지용 블로킹 그래프 서비스입니다.
  *
- * Uses a named graph on the given [GraphOperations] backend to manage user identity graphs
- * and detect fraudulent sharing patterns.
+ * 지정한 [GraphOperations] 백엔드의 named graph를 사용해 사용자 신원 그래프를 관리하고
+ * 부정 공유 패턴을 감지합니다.
  *
- * ## Behavior / Contract
- * - [initialize] must be called before any other method to ensure the named graph exists.
- * - Vertex mutators are idempotent: they find an existing vertex by domain key or create one.
- * - Edge mutators call [GraphOperations.createEdge] directly; callers must avoid duplicate links.
- * - [findAbuseCluster] excludes the seed user from [AbuseCluster.users].
- * - [rankSuspiciousUsers] ranks User vertices by PageRank score; the [limit] applies directly to users.
+ * ## 동작 / 계약
+ * - named graph 존재를 보장하려면 다른 메서드보다 먼저 [initialize]를 호출해야 합니다.
+ * - 정점 변경 메서드는 멱등입니다. 도메인 키로 기존 정점을 찾거나 새로 만듭니다.
+ * - 간선 변경 메서드는 [GraphOperations.createEdge]를 직접 호출하므로 호출자는 중복 링크를 피해야 합니다.
+ * - [findAbuseCluster]는 seed 사용자를 [AbuseCluster.users]에서 제외합니다.
+ * - [rankSuspiciousUsers]는 User 정점을 PageRank 점수로 순위화하며 [limit]은 사용자 수에 직접 적용됩니다.
  *
- * ## Usage
+ * ## 사용 예
  * ```kotlin
  * val service = AbuserDetectionService(ops, "my_graph")
  * service.initialize()
@@ -65,10 +65,10 @@ class AbuserDetectionService(
 
     companion object : KLogging() {
         /**
-         * Maps identifier vertex label → [IdentifierEdgeLabel] for reverse traversal.
+         * 역방향 순회를 위해 식별자 정점 레이블을 [IdentifierEdgeLabel]로 매핑합니다.
          *
-         * Used in [findAbuseCluster] to look up which INCOMING edge label to follow from an
-         * identifier vertex back to its connected users.
+         * [findAbuseCluster]에서 식별자 정점에서 연결된 사용자로 돌아갈 때 따라갈 INCOMING 간선 레이블을
+         * 찾는 데 사용합니다.
          */
         private val VERTEX_LABEL_TO_EDGE_LABEL: Map<String, IdentifierEdgeLabel> = mapOf(
             DeviceLabel.label        to IdentifierEdgeLabel.USES_DEVICE,
@@ -79,11 +79,11 @@ class AbuserDetectionService(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Lifecycle
+    // 생명주기
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Ensures the named graph exists. Safe to call multiple times — no-op when already created.
+     * named graph가 존재하도록 보장합니다. 여러 번 호출해도 안전하며, 이미 생성되어 있으면 no-op입니다.
      */
     fun initialize() {
         if (!ops.graphExists(graphName)) {
@@ -93,14 +93,14 @@ class AbuserDetectionService(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Vertex mutators (find-or-create by domain key)
+    // 정점 변경 메서드(도메인 키 기준 조회 또는 생성)
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Finds an existing User vertex by [userId] or creates a new one.
+     * [userId]로 기존 User 정점을 찾거나 새로 만듭니다.
      *
-     * @param userId stable user identifier (opaque string, e.g. UUID)
-     * @param country ISO-3166-1 alpha-2 country code
+     * @param userId 안정적인 사용자 식별자입니다(불투명 문자열, 예: UUID).
+     * @param country ISO-3166-1 alpha-2 국가 코드입니다.
      */
     fun addUser(userId: String, country: String): GraphVertex {
         userId.requireNotBlank("userId")
@@ -114,10 +114,10 @@ class AbuserDetectionService(
     }
 
     /**
-     * Finds an existing Device vertex by [deviceId] or creates a new one.
+     * [deviceId]로 기존 Device 정점을 찾거나 새로 만듭니다.
      *
-     * @param deviceId unique device fingerprint
-     * @param platform OS/platform string, e.g. `"android"`, `"ios"`, `"web"`
+     * @param deviceId 고유 디바이스 fingerprint입니다.
+     * @param platform OS/platform 문자열입니다. 예: `"android"`, `"ios"`, `"web"`.
      */
     fun addDevice(deviceId: String, platform: String): GraphVertex {
         deviceId.requireNotBlank("deviceId")
@@ -131,9 +131,9 @@ class AbuserDetectionService(
     }
 
     /**
-     * Finds an existing IpAddress vertex by [ip] or creates a new one.
+     * [ip]로 기존 IpAddress 정점을 찾거나 새로 만듭니다.
      *
-     * @param ip IPv4 or IPv6 address string
+     * @param ip IPv4 또는 IPv6 주소 문자열입니다.
      */
     fun addIpAddress(ip: String): GraphVertex {
         ip.requireNotBlank("ip")
@@ -143,12 +143,12 @@ class AbuserDetectionService(
     }
 
     /**
-     * Finds an existing PhoneNumber vertex by hashed phone or creates a new one.
+     * 해시 처리된 전화번호로 기존 PhoneNumber 정점을 찾거나 새로 만듭니다.
      *
-     * **Security**: [hashedPhone] MUST be an E.164-format SHA-256 hex hash.
-     * Raw phone numbers MUST NOT be passed to this method.
+     * **보안**: [hashedPhone] MUST be an E.164-format SHA-256 hex hash.
+     * 원시 전화번호는 이 메서드에 전달하면 안 됩니다.
      *
-     * @param hashedPhone E.164 SHA-256 hex of the phone number
+     * @param hashedPhone 전화번호의 E.164 SHA-256 hex입니다.
      */
     fun addPhoneNumber(hashedPhone: String): GraphVertex {
         hashedPhone.requireNotBlank("hashedPhone")
@@ -158,12 +158,12 @@ class AbuserDetectionService(
     }
 
     /**
-     * Finds an existing PaymentMethod vertex by [paymentToken] or creates a new one.
+     * [paymentToken]으로 기존 PaymentMethod 정점을 찾거나 새로 만듭니다.
      *
-     * **Security**: [paymentToken] MUST be a PCI-safe processor token.
-     * Raw PAN or CVV MUST NOT be passed to this method.
+     * **보안**: [paymentToken] 반드시 PCI-safe processor token이어야 합니다.
+     * 원시 PAN 또는 CVV는 이 메서드에 전달하면 안 됩니다.
      *
-     * @param paymentToken processor-issued payment token (never a raw PAN or CVV)
+     * @param paymentToken processor가 발급한 결제 토큰입니다(원시 PAN 또는 CVV 아님).
      */
     fun addPaymentMethod(paymentToken: String): GraphVertex {
         paymentToken.requireNotBlank("paymentToken")
@@ -179,15 +179,15 @@ class AbuserDetectionService(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Edge mutators
+    // 간선 변경 메서드
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Links a user to a device with a `USES_DEVICE` edge.
+     * `USES_DEVICE` 간선으로 사용자를 디바이스에 연결합니다.
      *
-     * @param userVertexId graph ID of the User vertex
-     * @param deviceVertexId graph ID of the Device vertex
-     * @param occurredAt ISO-8601 timestamp of the first login from this device
+     * @param userVertexId User 정점의 그래프 ID입니다.
+     * @param deviceVertexId Device 정점의 그래프 ID입니다.
+     * @param occurredAt 이 디바이스에서 처음 로그인한 ISO-8601 타임스탬프입니다.
      */
     fun linkDevice(userVertexId: GraphElementId, deviceVertexId: GraphElementId, occurredAt: String): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
@@ -202,11 +202,11 @@ class AbuserDetectionService(
     }
 
     /**
-     * Links a user to an IP address with a `USES_IP` edge.
+     * `USES_IP` 간선으로 사용자를 IP 주소에 연결합니다.
      *
-     * @param userVertexId graph ID of the User vertex
-     * @param ipVertexId graph ID of the IpAddress vertex
-     * @param occurredAt ISO-8601 timestamp of the first observed connection
+     * @param userVertexId User 정점의 그래프 ID입니다.
+     * @param ipVertexId IpAddress 정점의 그래프 ID입니다.
+     * @param occurredAt 최초 관측 접속의 ISO-8601 타임스탬프입니다.
      */
     fun linkIp(userVertexId: GraphElementId, ipVertexId: GraphElementId, occurredAt: String): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
@@ -221,11 +221,11 @@ class AbuserDetectionService(
     }
 
     /**
-     * Links a user to a phone number with a `HAS_PHONE` edge.
+     * `HAS_PHONE` 간선으로 사용자를 전화번호에 연결합니다.
      *
-     * @param userVertexId graph ID of the User vertex
-     * @param phoneVertexId graph ID of the PhoneNumber vertex
-     * @param occurredAt ISO-8601 timestamp of the first association
+     * @param userVertexId User 정점의 그래프 ID입니다.
+     * @param phoneVertexId PhoneNumber 정점의 그래프 ID입니다.
+     * @param occurredAt 최초 연결 시점의 ISO-8601 타임스탬프입니다.
      */
     fun linkPhone(userVertexId: GraphElementId, phoneVertexId: GraphElementId, occurredAt: String): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
@@ -240,11 +240,11 @@ class AbuserDetectionService(
     }
 
     /**
-     * Links a user to a payment method with a `USES_PAYMENT` edge.
+     * `USES_PAYMENT` 간선으로 사용자를 결제 수단에 연결합니다.
      *
-     * @param userVertexId graph ID of the User vertex
-     * @param paymentVertexId graph ID of the PaymentMethod vertex
-     * @param occurredAt ISO-8601 timestamp of the first payment attempt
+     * @param userVertexId User 정점의 그래프 ID입니다.
+     * @param paymentVertexId PaymentMethod 정점의 그래프 ID입니다.
+     * @param occurredAt 최초 결제 시도 시점의 ISO-8601 타임스탬프입니다.
      */
     fun linkPayment(userVertexId: GraphElementId, paymentVertexId: GraphElementId, occurredAt: String): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
@@ -259,11 +259,11 @@ class AbuserDetectionService(
     }
 
     /**
-     * Records a referral relationship from [referrerVertexId] to [referredVertexId].
+     * [referrerVertexId]에서 [referredVertexId]로 향하는 추천 관계를 기록합니다.
      *
-     * @param referrerVertexId graph ID of the referring User vertex
-     * @param referredVertexId graph ID of the referred User vertex
-     * @param occurredAt ISO-8601 timestamp of the referral event
+     * @param referrerVertexId 추천한 User 정점의 그래프 ID입니다.
+     * @param referredVertexId 추천받은 User 정점의 그래프 ID입니다.
+     * @param occurredAt 추천 이벤트의 ISO-8601 타임스탬프입니다.
      */
     fun linkReferral(referrerVertexId: GraphElementId, referredVertexId: GraphElementId, occurredAt: String): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
@@ -278,20 +278,20 @@ class AbuserDetectionService(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Query algorithms
+    // 조회 알고리즘
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Finds all users that share at least one identifier with the given seed user.
+     * 지정한 seed 사용자와 하나 이상의 식별자를 공유하는 모든 사용자를 찾습니다.
      *
-     * Algorithm:
-     * 1. Collect all identifier vertices reachable from [seedUserId] via OUTGOING identifier edges.
-     * 2. For each identifier vertex, collect INCOMING users via the same identifier edge type.
-     * 3. Remove the seed user itself from the result.
+     * 알고리즘:
+     * 1. [seedUserId]에서 OUTGOING 식별자 간선으로 도달할 수 있는 모든 식별자 정점을 수집합니다.
+     * 2. 각 식별자 정점에서 같은 식별자 간선 유형을 따라 INCOMING 사용자를 수집합니다.
+     * 3. 결과에서 seed 사용자 자신을 제거합니다.
      *
-     * @param seedUserId graph vertex ID of the seed user
-     * @return [AbuseCluster] where [AbuseCluster.users] excludes the seed user.
-     *         Returns an empty cluster if the seed user does not exist.
+     * @param seedUserId seed 사용자의 그래프 정점 ID입니다.
+     * @return [AbuseCluster.users]에서 seed 사용자를 제외한 [AbuseCluster]입니다.
+     *         seed 사용자가 없으면 빈 클러스터를 반환합니다.
      */
     fun findAbuseCluster(seedUserId: GraphElementId): AbuseCluster {
         val emptyCluster = AbuseCluster(seedUserId, emptyList(), emptyList())
@@ -301,7 +301,7 @@ class AbuserDetectionService(
             return emptyCluster
         }
 
-        // Step 1: traverse OUTGOING identifier edges to gather shared identifiers
+        // 1단계: OUTGOING 식별자 간선을 순회해 공유 식별자를 모읍니다.
         val seedIdentifiers = IdentifierEdgeLabel.all.flatMap { edgeLabel ->
             ops.neighbors(seedUserId, NeighborOptions(edgeLabel.value, Direction.OUTGOING, 1))
         }
@@ -310,7 +310,7 @@ class AbuserDetectionService(
             return emptyCluster
         }
 
-        // Step 2: reverse-traverse from each identifier to find co-connected users
+        // 2단계: 각 식별자에서 역방향으로 순회해 함께 연결된 사용자를 찾습니다.
         val clusterUsers = mutableListOf<GraphVertex>()
         for (identifierVertex in seedIdentifiers) {
             val reverseLabel = VERTEX_LABEL_TO_EDGE_LABEL[identifierVertex.label]
@@ -332,12 +332,12 @@ class AbuserDetectionService(
     }
 
     /**
-     * Returns the user's outgoing identifier paths used as suspicion inputs.
+     * 의심 입력으로 사용하는 사용자의 outgoing 식별자 경로를 반환합니다.
      *
-     * Each [AbusePath] describes one identifier vertex and the edge type connecting the user to it.
+     * 각 [AbusePath]는 식별자 정점 하나와 사용자를 그 정점에 연결하는 간선 유형을 설명합니다.
      *
-     * @param userId graph vertex ID of the user to explain
-     * @return list of outgoing [AbusePath] entries; empty if the user has no identifier edges
+     * @param userId 설명할 사용자의 그래프 정점 ID입니다.
+     * @return outgoing [AbusePath] 항목 목록입니다. 사용자에게 식별자 간선이 없으면 비어 있습니다.
      */
     fun explainSuspicion(userId: GraphElementId): List<AbusePath> {
         val paths = mutableListOf<AbusePath>()
@@ -354,11 +354,11 @@ class AbuserDetectionService(
     }
 
     /**
-     * Detects referral loops — cycles among User vertices via REFERRED_BY edges.
+     * REFERRED_BY 간선을 통한 User 정점 사이의 cycle인 추천 루프를 감지합니다.
      *
-     * @param maxDepth maximum traversal depth when searching for cycles (default 6)
-     * @param maxCycles maximum number of cycles to return (default 100)
-     * @return list of detected [GraphCycle]s; empty if no loops exist
+     * @param maxDepth cycle 검색 시 최대 순회 깊이입니다(기본값 6).
+     * @param maxCycles 반환할 최대 cycle 수입니다(기본값 100).
+     * @return 감지된 [GraphCycle] 목록입니다. 루프가 없으면 비어 있습니다.
      */
     fun detectReferralLoops(maxDepth: Int = 6, maxCycles: Int = 100): List<GraphCycle> {
         maxDepth.requirePositiveNumber("maxDepth")
@@ -374,19 +374,19 @@ class AbuserDetectionService(
     }
 
     /**
-     * Ranks users by PageRank score descending.
+     * 사용자를 PageRank 점수 내림차순으로 순위화합니다.
      *
-     * PageRank is computed over all graph vertices and edges; results are then filtered to the
-     * User label. Higher score indicates a user is more highly connected in the identity graph,
-     * which correlates with shared-identifier abuse risk.
+     * PageRank는 모든 그래프 정점과 간선을 대상으로 계산한 뒤 결과를
+     * User label로 필터링합니다. 점수가 높을수록 사용자가 신원 그래프에서 더 많이 연결되어 있으며,
+     * 이는 공유 식별자 어뷰저 위험과 상관됩니다.
      *
-     * @param limit maximum number of [SuspiciousUserScore] entries to return (default 20, must be > 0)
-     * @return list sorted descending by score with 1-based [SuspiciousUserScore.rank]
+     * @param limit 반환할 [SuspiciousUserScore] 항목의 최대 개수입니다(기본값 20, 0보다 커야 함).
+     * @return 점수 내림차순으로 정렬된 목록이며 [SuspiciousUserScore.rank]는 1부터 시작합니다.
      */
     fun rankSuspiciousUsers(limit: Int = 20): List<SuspiciousUserScore> {
         limit.requirePositiveNumber("limit")
-        // vertexLabel = UserLabel.label ensures PageRank is computed and ranked
-        // among User vertices only — so topK = limit applies directly to users.
+        // vertexLabel = UserLabel.label은 PageRank 계산과 순위화가
+        // User 정점에만 적용되게 하므로 topK = limit이 사용자 수에 직접 적용됩니다.
         return ops.pageRank(PageRankOptions(vertexLabel = UserLabel.label, topK = limit))
             .withIndex()
             .map { (index, pageRankScore) ->

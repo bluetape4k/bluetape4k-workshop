@@ -8,15 +8,15 @@ import java.io.Serializable
 private const val SEED_TIMESTAMP = "2026-01-01T00:00:00Z"
 
 /**
- * Snapshot of all vertices created by [seedSharedIdentifiers].
+ * [seedSharedIdentifiers]가 생성한 모든 정점의 스냅샷입니다.
  *
- * @property user1 first cluster member (shares deviceA and ipA with user2)
- * @property user2 second cluster member (shares deviceA and ipA with user1; shares deviceA with user3)
- * @property user3 third cluster member (shares only deviceA with user1 and user2)
- * @property deviceA shared device — connects user1, user2, and user3
- * @property ipA shared IP address — connects user1 and user2 only
- * @property unrelatedUser isolated user with no shared identifiers
- * @property deviceB private device belonging only to unrelatedUser
+ * @property user1 첫 번째 클러스터 구성원입니다(user2와 deviceA 및 ipA 공유).
+ * @property user2 두 번째 클러스터 구성원입니다(user1과 deviceA 및 ipA 공유, user3과 deviceA 공유).
+ * @property user3 세 번째 클러스터 구성원입니다(user1 및 user2와 deviceA만 공유).
+ * @property deviceA 공유 디바이스입니다. user1, user2, user3을 연결합니다.
+ * @property ipA 공유 IP 주소입니다. user1과 user2만 연결합니다.
+ * @property unrelatedUser 공유 식별자가 없는 격리 사용자입니다.
+ * @property deviceB unrelatedUser에만 속한 비공개 디바이스입니다.
  */
 data class AbuserDetectionSeed(
     val user1: GraphVertex,
@@ -33,13 +33,13 @@ data class AbuserDetectionSeed(
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Blocking helpers
+// 블로킹 헬퍼
 // ─────────────────────────────────────────────────────────────────────────
 
 /**
- * Creates a cluster of users sharing device/IP identifiers plus one isolated user.
+ * device/IP 식별자를 공유하는 사용자 클러스터와 격리 사용자 하나를 생성합니다.
  *
- * Graph structure:
+ * 그래프 구조:
  * ```
  * user1 ──USES_DEVICE──► deviceA ◄──USES_DEVICE── user2
  * user1 ──USES_IP──────► ipA     ◄──USES_IP─────  user2
@@ -57,21 +57,21 @@ fun seedSharedIdentifiers(service: AbuserDetectionService): AbuserDetectionSeed 
     val ipA = service.addIpAddress("192.168.1.1")
     val deviceB = service.addDevice("device-B", "ios")
 
-    // Cluster edges
+    // 클러스터 edge
     service.linkDevice(user1.id, deviceA.id, SEED_TIMESTAMP)
     service.linkDevice(user2.id, deviceA.id, SEED_TIMESTAMP)
     service.linkDevice(user3.id, deviceA.id, SEED_TIMESTAMP)
     service.linkIp(user1.id, ipA.id, SEED_TIMESTAMP)
     service.linkIp(user2.id, ipA.id, SEED_TIMESTAMP)
 
-    // Isolated user edge (private device — no sharing)
+    // 격리 사용자 edge(비공개 디바이스 — 공유 없음)
     service.linkDevice(unrelatedUser.id, deviceB.id, SEED_TIMESTAMP)
 
     return AbuserDetectionSeed(user1, user2, user3, deviceA, ipA, unrelatedUser, deviceB)
 }
 
 /**
- * Adds a REFERRED_BY cycle on top of an existing [seed]: user1 → user2 → user3 → user1.
+ * 기존 [seed] 위에 REFERRED_BY cycle을 추가합니다: user1 → user2 → user3 → user1.
  */
 fun seedReferralLoop(service: AbuserDetectionService, seed: AbuserDetectionSeed) {
     service.linkReferral(seed.user1.id, seed.user2.id, SEED_TIMESTAMP)
@@ -80,11 +80,11 @@ fun seedReferralLoop(service: AbuserDetectionService, seed: AbuserDetectionSeed)
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Coroutine helpers
+// 코루틴 헬퍼
 // ─────────────────────────────────────────────────────────────────────────
 
 /**
- * Suspend variant of [seedSharedIdentifiers].
+ * [seedSharedIdentifiers]의 suspend 변형입니다.
  */
 suspend fun seedSharedIdentifiers(service: AbuserDetectionSuspendService): AbuserDetectionSeed {
     val user1 = service.addUser("user-1", "KR")
@@ -96,21 +96,21 @@ suspend fun seedSharedIdentifiers(service: AbuserDetectionSuspendService): Abuse
     val ipA = service.addIpAddress("192.168.1.1")
     val deviceB = service.addDevice("device-B", "ios")
 
-    // Cluster edges
+    // 클러스터 edge
     service.linkDevice(user1.id, deviceA.id, SEED_TIMESTAMP)
     service.linkDevice(user2.id, deviceA.id, SEED_TIMESTAMP)
     service.linkDevice(user3.id, deviceA.id, SEED_TIMESTAMP)
     service.linkIp(user1.id, ipA.id, SEED_TIMESTAMP)
     service.linkIp(user2.id, ipA.id, SEED_TIMESTAMP)
 
-    // Isolated user edge
+    // 격리 사용자 edge
     service.linkDevice(unrelatedUser.id, deviceB.id, SEED_TIMESTAMP)
 
     return AbuserDetectionSeed(user1, user2, user3, deviceA, ipA, unrelatedUser, deviceB)
 }
 
 /**
- * Suspend variant of [seedReferralLoop].
+ * [seedReferralLoop]의 suspend 변형입니다.
  */
 suspend fun seedReferralLoop(service: AbuserDetectionSuspendService, seed: AbuserDetectionSeed) {
     service.linkReferral(seed.user1.id, seed.user2.id, SEED_TIMESTAMP)
