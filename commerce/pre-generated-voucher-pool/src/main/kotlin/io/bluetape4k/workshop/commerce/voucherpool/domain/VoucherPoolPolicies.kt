@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.commerce.voucherpool.domain
 
 import java.io.Serializable
 
-/** Allowed campaign lifecycle transitions. */
+/** 허용된 campaign lifecycle transition입니다. */
 object CampaignPolicy {
     private val transitions =
         setOf(
@@ -15,14 +15,14 @@ object CampaignPolicy {
             CampaignState.REVOKING to CampaignState.REVOKED,
         )
 
-    /** Returns whether [from] may transition directly to [to]. */
+    /** [from]이 [to]로 직접 transition할 수 있는지 반환합니다. */
     fun canTransition(
         from: CampaignState,
         to: CampaignState,
     ): Boolean = from to to in transitions
 }
 
-/** Allowed batch checkpoint and terminal lifecycle transitions. */
+/** 허용된 batch checkpoint 및 terminal lifecycle transition입니다. */
 object BatchPolicy {
     private val transitions =
         setOf(
@@ -42,14 +42,14 @@ object BatchPolicy {
             BatchState.REVOKING to BatchState.REVOKED,
         )
 
-    /** Returns whether [from] may transition directly to [to]. */
+    /** [from]이 [to]로 직접 transition할 수 있는지 반환합니다. */
     fun canTransition(
         from: BatchState,
         to: BatchState,
     ): Boolean = from to to in transitions
 }
 
-/** Allowed entry transitions that preserve voucher non-reuse. */
+/** voucher non-reuse를 보존하는 허용된 entry transition입니다. */
 object EntryPolicy {
     private val transitions =
         setOf(
@@ -66,14 +66,14 @@ object EntryPolicy {
             EntryState.ALLOCATED to EntryState.REVOKED,
         )
 
-    /** Returns whether [from] may transition directly to [to]. */
+    /** [from]이 [to]로 직접 transition할 수 있는지 반환합니다. */
     fun canTransition(
         from: EntryState,
         to: EntryState,
     ): Boolean = from to to in transitions
 }
 
-/** Allowed reservation transitions; every target state is terminal. */
+/** 허용된 reservation transition입니다. 모든 target state는 terminal입니다. */
 object ReservationPolicy {
     private val transitions =
         setOf(
@@ -83,14 +83,14 @@ object ReservationPolicy {
             ReservationState.ACTIVE to ReservationState.REVOKED,
         )
 
-    /** Returns whether [from] may transition directly to [to]. */
+    /** [from]이 [to]로 직접 transition할 수 있는지 반환합니다. */
     fun canTransition(
         from: ReservationState,
         to: ReservationState,
     ): Boolean = from to to in transitions
 }
 
-/** Persistence action for the full safe response descriptor. */
+/** full safe response descriptor를 위한 persistence action입니다. */
 enum class DescriptorAction {
     NONE,
     RELEASE,
@@ -98,14 +98,14 @@ enum class DescriptorAction {
     STORE_SAFE,
 }
 
-/** Persistence action for the tenant-lifetime command tombstone. */
+/** tenant-lifetime command tombstone을 위한 persistence action입니다. */
 enum class TombstoneAction {
     NONE,
     STORE,
     RETAIN,
 }
 
-/** Stable caller recovery guidance associated with an error response. */
+/** error response와 연결된 안정적인 caller recovery guidance입니다. */
 enum class CallerRecovery {
     RETRY_AFTER,
     CHANGE_PAYLOAD_OR_KEY,
@@ -121,7 +121,7 @@ enum class CallerRecovery {
     USE_REPLACEMENT_FLOW,
 }
 
-/** HTTP, replay, persistence, and recovery semantics for one stable error code. */
+/** 안정적인 error code 하나에 대한 HTTP, replay, persistence, recovery semantic입니다. */
 data class VoucherPoolErrorSemantics(
     val httpStatus: Int,
     val retryable: Boolean,
@@ -134,7 +134,7 @@ data class VoucherPoolErrorSemantics(
     }
 }
 
-/** Complete stable error catalog shared by HTTP handlers and workers. */
+/** HTTP handler와 worker가 공유하는 완전하고 안정적인 error catalog입니다. */
 object VoucherPoolErrorCatalog {
     private const val HTTP_OK = 200
     private const val HTTP_NOT_FOUND = 404
@@ -256,11 +256,11 @@ object VoucherPoolErrorCatalog {
             }
         }
 
-    /** The exact set of public error codes represented by this catalog. */
+    /** 이 catalog가 나타내는 public error code의 정확한 집합입니다. */
     val codes: Set<VoucherPoolErrorCode>
         get() = semanticsByCode.keys
 
-    /** Returns the stable semantics for [code]. */
+    /** [code]의 안정적인 semantic을 반환합니다. */
     operator fun get(code: VoucherPoolErrorCode): VoucherPoolErrorSemantics =
         semanticsByCode.getValue(code)
 

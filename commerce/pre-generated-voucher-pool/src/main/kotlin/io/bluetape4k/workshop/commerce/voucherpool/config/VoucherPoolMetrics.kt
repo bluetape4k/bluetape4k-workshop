@@ -49,7 +49,7 @@ internal object VoucherPoolAlertPolicy {
     operator fun get(alert: VoucherPoolAlert): VoucherPoolAlertWindow = windows.getValue(alert)
 }
 
-/** Registers only bounded-tag operational metrics for the voucher pool. */
+/** voucher pool을 위한 bounded-tag operational metric만 등록합니다. */
 @Component
 @Suppress("TooManyFunctions")
 internal class VoucherPoolMetrics(

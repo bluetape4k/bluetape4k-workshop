@@ -41,7 +41,7 @@ import java.net.URI
 import java.util.UUID
 import kotlin.time.Duration.Companion.seconds
 
-/** Maps operator HTTP preconditions to tenant-scoped campaign and batch commands. */
+/** operator HTTP precondition을 tenant-scoped campaign 및 batch command로 매핑합니다. */
 @Component
 internal class OperatorVoucherPoolHttpCommandExecutor(
     private val service: CampaignBatchCommandService,

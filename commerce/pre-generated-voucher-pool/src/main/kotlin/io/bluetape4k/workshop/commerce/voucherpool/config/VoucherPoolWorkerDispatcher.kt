@@ -9,7 +9,7 @@ import io.bluetape4k.workshop.commerce.voucherpool.worker.WorkerRunRequest
 import io.bluetape4k.workshop.commerce.voucherpool.worker.WorkerRunState
 import org.springframework.scheduling.annotation.Scheduled
 
-/** Polls PostgreSQL-authoritative claims; Redis leadership only suppresses duplicate trigger attempts. */
+/** PostgreSQL-authoritative claim을 poll합니다. Redis leadership은 duplicate trigger attempt만 억제합니다. */
 internal class VoucherPoolWorkerDispatcher(
     private val claims: JdbcVoucherPoolWorkerRepository,
     private val trigger: VoucherPoolWorkerTrigger,

@@ -118,7 +118,7 @@ internal interface VoucherPoolRevocationService {
     fun progress(tenantId: String, aggregateType: RevokeAggregateType, aggregateId: UUID): RevokeProgressSnapshot?
 }
 
-/** Issues single-use signed preview grants and atomically hands accepted revocations to durable workers. */
+/** single-use signed preview grant를 발급하고, accepted revocation을 durable worker에 atomic하게 넘깁니다. */
 internal class JdbcVoucherPoolRevocationService(
     private val executor: VoucherPoolJdbcExecutor,
     private val repository: VoucherPoolRepository,
@@ -250,7 +250,7 @@ internal class JdbcVoucherPoolRevocationService(
         try {
             executor.operatorTransaction { idempotency.releaseRetryable(owner) }
         } catch (_: RuntimeException) {
-            // The original command failure remains authoritative; ownership expiry is a safe fallback.
+            // 원래 command failure는 authoritative로 남고, ownership expiry는 안전한 fallback입니다.
         }
     }
 

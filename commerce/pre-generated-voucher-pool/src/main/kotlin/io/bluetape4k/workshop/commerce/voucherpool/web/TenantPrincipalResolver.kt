@@ -15,7 +15,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 import java.io.Serializable
 import java.net.InetAddress
 
-/** Identity established by the server-side authentication boundary. */
+/** server-side authentication boundary에서 확립한 identity입니다. */
 internal data class TenantPrincipal(
     val tenantId: String,
     val principalId: String,
@@ -23,7 +23,7 @@ internal data class TenantPrincipal(
     companion object { private const val serialVersionUID: Long = 1L }
 }
 
-/** Production authentication integration point; implementations must derive both values from trusted server state. */
+/** production authentication integration point입니다. 구현체는 두 값을 모두 trusted server state에서 도출해야 합니다. */
 internal fun interface VoucherPoolProductionAuthAdapter {
     fun resolve(request: HttpServletRequest): TenantPrincipal?
 }
@@ -98,7 +98,7 @@ internal class TenantPrincipalResolver(
     private fun serverAddress(): String = environment.getProperty("server.address", "127.0.0.1")
 }
 
-/** Prevents an unauthenticated workshop adapter from becoming reachable on a public bind. */
+/** unauthenticated workshop adapter가 public bind에서 접근 가능해지지 못하게 합니다. */
 @Component
 internal class VoucherPoolAuthStartupValidator(
     private val properties: VoucherPoolProperties,

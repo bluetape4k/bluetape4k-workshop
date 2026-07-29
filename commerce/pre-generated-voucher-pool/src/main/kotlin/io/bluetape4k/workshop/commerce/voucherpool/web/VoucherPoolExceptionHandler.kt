@@ -104,7 +104,7 @@ private fun HttpServletRequest.allowJsonError() {
     removeAttribute(HandlerMapping.PRODUCIBLE_MEDIA_TYPES_ATTRIBUTE)
 }
 
-/** Adds a bounded request id and response hardening headers without logging request bodies or credentials. */
+/** request body나 credential을 로그로 남기지 않고 bounded request id와 response hardening header를 추가합니다. */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 internal class VoucherPoolRequestSecurityFilter(
@@ -152,7 +152,7 @@ internal class VoucherPoolRequestSecurityFilter(
     }
 }
 
-/** Rejects transport-boundary values before controller deserialization and application work. */
+/** controller deserialization과 application work 전에 transport-boundary value를 거부합니다. */
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE + 20)
 internal class VoucherPoolInputBoundaryFilter(

@@ -6,7 +6,7 @@ import io.bluetape4k.workshop.commerce.voucherpool.domain.EntryState
 import java.time.Instant
 import java.util.UUID
 
-/** Immutable binary value with content equality and defensive ingress/egress copies. */
+/** content equality와 defensive ingress/egress copy를 가진 immutable binary value입니다. */
 internal class DigestValue private constructor(private val value: ByteArray) {
     fun copyBytes(): ByteArray = value.copyOf()
     override fun equals(other: Any?): Boolean = other is DigestValue && value.contentEquals(other.value)
@@ -18,7 +18,7 @@ internal class DigestValue private constructor(private val value: ByteArray) {
     }
 }
 
-/** Immutable campaign snapshot returned while the campaign row lock is held. */
+/** campaign row lock을 보유하는 동안 반환되는 immutable campaign snapshot입니다. */
 internal data class CampaignRecord(
     val tenantId: String,
     val campaignId: UUID,
@@ -36,7 +36,7 @@ internal data class CampaignRecord(
     val updatedAt: Instant = Instant.EPOCH,
 )
 
-/** Immutable batch snapshot returned while the batch row lock is held. */
+/** batch row lock을 보유하는 동안 반환되는 immutable batch snapshot입니다. */
 internal data class BatchRecord(
     val tenantId: String,
     val batchId: UUID,
@@ -59,7 +59,7 @@ internal data class BatchRecord(
     val updatedAt: Instant = Instant.EPOCH,
 )
 
-/** Immutable entry snapshot used by bounded allocation and worker queries. */
+/** bounded allocation과 worker query에서 사용하는 immutable entry snapshot입니다. */
 internal data class EntryRecord(
     val tenantId: String,
     val entryId: UUID,
@@ -68,7 +68,7 @@ internal data class EntryRecord(
     val sourceOrdinal: Long,
     val state: EntryState,
     val stableDedupDigest: DigestValue,
-    /** Null while staged; Task 7 sets the allocation-scoped digest and version together. */
+    /** staged 상태에서는 null입니다. Task 7이 allocation-scoped digest와 version을 함께 설정합니다. */
     val verificationDigest: DigestValue?,
     val verificationKeyVersion: Int?,
     val codeCiphertext: DigestValue? = null,
@@ -95,7 +95,7 @@ internal data class EntryRecord(
     val updatedAt: Instant = Instant.EPOCH,
 )
 
-/** Fully validated and encrypted entry buffer ready for one bounded chunk transaction. */
+/** bounded chunk transaction 하나에 사용할 준비가 끝난, 완전히 검증되고 암호화된 entry buffer입니다. */
 internal data class PreparedVoucherEntryRecord(
     val tenantId: String,
     val campaignId: UUID,
@@ -111,27 +111,27 @@ internal data class PreparedVoucherEntryRecord(
     val kekVersion: String,
 )
 
-/** Redacted validation evidence retained without source material. */
+/** source material 없이 보존하는 redacted validation evidence입니다. */
 internal data class RejectedVoucherEntryRecord(
     val sourceOrdinal: Long,
     val reasonCode: String,
     val payloadDigest: DigestValue,
 )
 
-/** Stable digest authority for an already committed source ordinal. */
+/** 이미 commit된 source ordinal에 대한 stable digest authority입니다. */
 internal data class CommittedOrdinalDigest(
     val sourceOrdinal: Long,
     val stableDedupDigest: DigestValue,
 )
 
-/** Physical ordinal coverage used by the activation gate. */
+/** activation gate가 사용하는 physical ordinal coverage입니다. */
 internal data class BatchOrdinalCoverage(
     val entryCount: Long,
     val minimumOrdinal: Long?,
     val maximumOrdinal: Long?,
 )
 
-/** Crypto material returned while the allocated entry row lock is held. */
+/** allocated entry row lock을 보유하는 동안 반환되는 crypto material입니다. */
 internal data class LockedVoucherCryptoRecord(
     val state: EntryState,
     val revision: Long,
@@ -144,7 +144,7 @@ internal data class LockedVoucherCryptoRecord(
     val kekVersion: String?,
 )
 
-/** Immutable user-limit projection locked after campaign and batch guards. */
+/** campaign과 batch guard 이후 lock되는 immutable user-limit projection입니다. */
 internal data class UserLimitRecord(
     val tenantId: String,
     val campaignId: UUID,

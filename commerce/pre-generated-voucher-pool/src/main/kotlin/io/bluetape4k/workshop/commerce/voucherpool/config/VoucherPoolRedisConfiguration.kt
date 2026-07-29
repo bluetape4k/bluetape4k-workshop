@@ -68,7 +68,7 @@ internal class VoucherPoolRedisProperties(
     }
 }
 
-/** Owns optional Lettuce, Bloom, and leader resources as advisory infrastructure. */
+/** optional Lettuce, Bloom, leader resource를 advisory infrastructure로 소유합니다. */
 internal class VoucherPoolRedisResources private constructor(
     val client: RedisClient,
     private val bloomConnection: StatefulRedisConnection<String, String>?,
@@ -214,7 +214,7 @@ internal class RecoverableVoucherPoolAdmissionBackend(
         }
 }
 
-/** Executes the existing Task 8 worker action only when this node owns the advisory leader slot. */
+/** 이 node가 advisory leader slot을 소유할 때만 기존 Task 8 worker action을 실행합니다. */
 internal class VoucherPoolLeaderTrigger(
     private val electorProvider: () -> LettuceLeaderElector?,
     private val instanceId: String,
@@ -249,7 +249,7 @@ internal class VoucherPoolLeaderTrigger(
     }
 }
 
-/** Routes scheduled and manual triggers through the same durable Task 8 worker entry point. */
+/** scheduled trigger와 manual trigger를 같은 durable Task 8 worker entry point로 라우팅합니다. */
 internal class VoucherPoolWorkerTrigger(
     private val workers: VoucherPoolWorkers,
     private val runtime: VoucherPoolRuntimeControl,

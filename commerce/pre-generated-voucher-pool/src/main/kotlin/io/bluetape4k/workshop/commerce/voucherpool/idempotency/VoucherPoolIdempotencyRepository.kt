@@ -33,7 +33,7 @@ import java.sql.ResultSet
 import java.time.Duration
 import java.util.UUID
 
-/** Tenant and operation boundary for an idempotent command. */
+/** idempotent command의 tenant 및 operation boundary입니다. */
 internal data class CommandScope(
     val tenantId: String,
     val operation: String,
@@ -52,7 +52,7 @@ internal data class CommandScope(
     }
 }
 
-/** Closed, code-free response shape retained during the replay window. */
+/** replay window 동안 보존되는 닫힌 code-free response shape입니다. */
 @ConsistentCopyVisibility
 internal data class SafeResponseDescriptor private constructor(
     val status: Int,
@@ -109,7 +109,7 @@ internal data class SafeResponseDescriptor private constructor(
     }
 }
 
-/** Minimal tenant-lifetime outcome retained after the full descriptor expires. */
+/** full descriptor가 만료된 뒤 보존되는 minimal tenant-lifetime outcome입니다. */
 @ConsistentCopyVisibility
 internal data class EffectReference private constructor(
     val effectId: UUID?,
@@ -128,7 +128,7 @@ internal data class EffectReference private constructor(
     }
 }
 
-/** Secret owner capability; diagnostics and persistence expose only its digest. */
+/** secret owner capability입니다. diagnostics와 persistence는 digest만 노출합니다. */
 internal class IdempotencyOwner internal constructor(
     val scope: CommandScope,
     scopedKeyDigest: ByteArray,
@@ -208,10 +208,10 @@ internal class IdempotencyTombstoneIntegrityException :
     IllegalStateException("idempotency tombstone integrity check failed")
 
 /**
- * PostgreSQL authority for owner leases, safe replay descriptors, and tenant-lifetime command fences.
+ * owner lease, safe replay descriptor, tenant-lifetime command fence를 담당하는 PostgreSQL authority입니다.
  *
- * Raw JDBC keeps PostgreSQL lock and JSONB operations on the caller's existing Exposed/Spring transaction;
- * no connection, commit, or rollback ownership crosses this repository boundary.
+ * raw JDBC는 PostgreSQL lock과 JSONB operation을 caller의 기존 Exposed/Spring transaction 안에 유지합니다.
+ * connection, commit, rollback ownership은 이 repository boundary를 넘지 않습니다.
  */
 internal class JdbcVoucherPoolIdempotencyRepository(
     private val digests: VoucherDigestService,

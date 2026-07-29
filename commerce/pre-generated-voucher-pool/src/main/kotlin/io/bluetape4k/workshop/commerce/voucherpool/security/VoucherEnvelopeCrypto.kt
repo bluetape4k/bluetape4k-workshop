@@ -134,7 +134,7 @@ internal interface VoucherEnvelopeCrypto {
     ): CanonicalVoucherCode
 }
 
-/** JDK AES-GCM envelope encryption with a random per-entry DEK and versioned KEK wrapping. */
+/** entry별 random DEK와 versioned KEK wrapping을 사용하는 JDK AES-GCM envelope encryption입니다. */
 internal class AesGcmVoucherEnvelopeCrypto(
     private val kekRing: VoucherKekRing,
     private val digests: VoucherDigestService,
@@ -253,12 +253,12 @@ internal class AesGcmVoucherEnvelopeCrypto(
         .toString()
 }
 
-/** Entry-lock crypto primitive composed inside the caller-owned reveal transaction. */
+/** caller-owned reveal transaction 안에서 compose되는 entry-lock crypto primitive입니다. */
 internal class VoucherCryptoStorage(
     private val repository: VoucherPoolRepository,
     private val crypto: VoucherEnvelopeCrypto,
 ) {
-    /** Decrypts a caller-locked RESERVED entry for allocation digesting without consuming the reveal ciphertext. */
+    /** reveal ciphertext를 소비하지 않고 allocation digesting을 위해 caller-locked RESERVED entry를 decrypt합니다. */
     @Suppress("SwallowedException")
     fun decryptRetained(
         identity: EntryIdentity,
@@ -285,7 +285,7 @@ internal class VoucherCryptoStorage(
         }
     }
 
-    // Persist only the bounded quarantine reason; never expose malformed crypto material.
+    // bounded quarantine reason만 저장하고 malformed crypto material은 절대 노출하지 않습니다.
     @Suppress("SwallowedException")
     fun decryptAndErase(
         identity: EntryIdentity,

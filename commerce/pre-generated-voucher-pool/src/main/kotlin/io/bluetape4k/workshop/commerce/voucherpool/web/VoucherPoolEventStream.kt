@@ -162,7 +162,7 @@ internal interface VoucherPoolEventSource {
     fun poll(scope: VoucherPoolStreamScope, afterId: Long): VoucherPoolStreamBatch
 }
 
-/** PostgreSQL-authoritative, code-free snapshot and audit reader using only the reserved SSE lane. */
+/** 예약된 SSE lane만 사용하는 PostgreSQL-authoritative, code-free snapshot 및 audit reader입니다. */
 @Component
 internal class PostgresVoucherPoolEventSource(
     private val executor: VoucherPoolJdbcExecutor,
@@ -671,7 +671,7 @@ internal class PostgresVoucherPoolEventSource(
     private class ResolvedOperatorScope(val campaignId: UUID?, val batchId: UUID?)
 }
 
-/** Shared bounded pollers keep JDBC permits outside subscriber queues and network writes. */
+/** 공유 bounded poller는 JDBC permit을 subscriber queue와 network write 바깥에 둡니다. */
 @Component
 internal class VoucherPoolEventStream(
     private val source: VoucherPoolEventSource,

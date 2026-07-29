@@ -44,7 +44,7 @@ internal enum class VoucherPoolKeyProvenance {
     TEST_FIXTURE,
 }
 
-/** Fully constructed runtime keys; no raw key bytes cross this boundary. */
+/** 완전히 구성된 runtime key입니다. raw key byte는 이 boundary를 넘지 않습니다. */
 internal class VoucherPoolRuntimeKeys(
     val digests: VoucherDigestService,
     val kekRing: VoucherKekRing,
@@ -71,7 +71,7 @@ internal class VoucherPoolKeyMaterialException(
     val code: VoucherPoolKeyMaterialFailureCode,
 ) : IllegalStateException("VOUCHER_POOL_KEY_MATERIAL_${code.name}")
 
-/** Loads one permission-restricted mounted secret selected only by environment indirection. */
+/** environment indirection으로만 선택한 permission-restricted mounted secret 하나를 load합니다. */
 internal class MountedSecretVoucherPoolKeyMaterialProvider(
     private val locator: VoucherPoolKeyFileLocator,
     private val mapper: ObjectMapper,

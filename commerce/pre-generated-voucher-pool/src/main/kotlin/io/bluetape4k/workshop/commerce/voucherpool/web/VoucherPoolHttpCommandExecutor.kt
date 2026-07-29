@@ -31,7 +31,7 @@ import org.springframework.stereotype.Component
 import java.net.URI
 import java.util.UUID
 
-/** Maps customer HTTP preconditions and safe replay descriptors onto authoritative application services. */
+/** customer HTTP precondition과 safe replay descriptor를 authoritative application service에 매핑합니다. */
 @Component
 internal class VoucherPoolHttpCommandExecutor(
     private val reservations: ReservationService,
@@ -325,7 +325,7 @@ internal class VoucherPoolHttpCommandExecutor(
         is MutationResult.Expired -> throw apiFailure(VoucherPoolErrorCode.REPLAY_WINDOW_EXPIRED, effectId)
     }
 
-    // Caller validation failures are intentionally normalized to the safe HTTP vocabulary.
+    // caller validation failure는 안전한 HTTP vocabulary로 의도적으로 normalize합니다.
     @Suppress("SwallowedException")
     private fun <T> translate(block: () -> T): T =
         try {

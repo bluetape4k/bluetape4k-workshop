@@ -6,7 +6,7 @@ import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 
-/** Builds opaque, operation-separated keys for advisory Redis state. */
+/** advisory Redis state를 위한 opaque하고 operation-separated된 key를 생성합니다. */
 internal class VoucherPoolRedisSignalKeyFactory(
     private val version: Int = 1,
 ) {

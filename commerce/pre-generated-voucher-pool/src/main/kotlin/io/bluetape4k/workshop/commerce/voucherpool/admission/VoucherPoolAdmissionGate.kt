@@ -77,10 +77,10 @@ internal class AdmissionRecoveryPolicy(
 }
 
 /**
- * Uses Redis only for advisory load shedding and falls back to a bounded node-local policy.
+ * Redis는 advisory load shedding에만 사용하고 bounded node-local policy로 fallback합니다.
  *
- * PostgreSQL commands still pass through [DatabasePermitGate], so Redis availability never decides
- * a voucher's terminal outcome.
+ * PostgreSQL command는 여전히 [DatabasePermitGate]를 통과하므로,
+ * Redis availability가 voucher의 terminal outcome을 결정하지 않습니다.
  */
 @Suppress("TooManyFunctions")
 internal class VoucherPoolAdmissionGate(

@@ -49,7 +49,7 @@ internal class VoucherPoolMigrationException(
     cause: Throwable? = null,
 ) : RuntimeException(code.name, cause)
 
-/** Applies versioned SQL under a transaction advisory lock and fails closed on checksum drift. */
+/** versioned SQL을 transaction advisory lock 아래에서 적용하고 checksum drift가 있으면 fail-closed합니다. */
 internal class VoucherPoolMigrationRunner(
     private val dataSource: DataSource,
     private val migration: VoucherPoolMigration,
@@ -255,7 +255,7 @@ internal class VoucherPoolMigrationRunner(
     }
 }
 
-/** Bounded purpose-aware verification of key versions referenced by live PostgreSQL authority rows. */
+/** live PostgreSQL authority row가 참조하는 key version에 대한 bounded purpose-aware verification입니다. */
 internal class VoucherPoolReferencedKeyPreflight(
     private val dataSource: DataSource,
     private val digests: VoucherDigestService,
@@ -310,7 +310,7 @@ internal class VoucherPoolReferencedKeyPreflight(
     }
 }
 
-/** Opens readiness only after migration and live referenced-key verification complete. */
+/** migration과 live referenced-key verification이 완료된 뒤에만 readiness를 엽니다. */
 internal class VoucherPoolStartupInitializer(
     private val migration: VoucherPoolMigrationRunner,
     private val keyPreflight: VoucherPoolReferencedKeyPreflight,

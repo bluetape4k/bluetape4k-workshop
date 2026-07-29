@@ -26,7 +26,7 @@ private data class DiagnosticKey(
     companion object { private const val serialVersionUID: Long = 1L }
 }
 
-/** Retains only bounded, code-free request metadata for short-lived operator diagnostics. */
+/** short-lived operator diagnostics를 위해 bounded, code-free request metadata만 보존합니다. */
 @Component
 internal class VoucherPoolDiagnosticRegistry internal constructor(
     private val now: () -> Instant,
@@ -37,7 +37,7 @@ internal class VoucherPoolDiagnosticRegistry internal constructor(
     private val records = ConcurrentHashMap<DiagnosticKey, VoucherPoolDiagnosticRecord>()
     private val insertionOrder = ConcurrentLinkedQueue<DiagnosticKey>()
 
-    // The bounded registry validates explicit transport metadata as one audit observation.
+    // bounded registry는 명시적인 transport metadata를 audit observation 하나로 검증합니다.
     @Suppress("LongParameterList")
     fun record(
         requestId: String,

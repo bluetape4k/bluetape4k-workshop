@@ -59,7 +59,7 @@ internal data class VoucherPoolAvailableKeys(
     companion object { private const val serialVersionUID: Long = 1L }
 }
 
-/** Key references extracted from backup metadata and content independently from the supplied manifest. */
+/** 제공된 manifest와 독립적으로 backup metadata와 content에서 추출한 key reference입니다. */
 internal data class VoucherPoolBackupKeyInventory(
     val kekVersions: Set<String>,
     val verificationVersions: Set<String>,
@@ -120,7 +120,7 @@ internal enum class VoucherPoolRestoreFailureCode {
 internal class VoucherPoolRestoreException(val code: VoucherPoolRestoreFailureCode) :
     IllegalStateException("VOUCHER_POOL_RESTORE_${code.name}")
 
-/** Validates every manifest key before import and accepts a restore only after the complete smoke contract passes. */
+/** import 전에 모든 manifest key를 검증하고, complete smoke contract가 통과한 뒤에만 restore를 수락합니다. */
 internal class VoucherPoolRestoreCoordinator(
     private val availableKeys: VoucherPoolAvailableKeys,
 ) {
@@ -164,7 +164,7 @@ internal fun interface VoucherPoolKeyReferenceSource {
     fun referencedKeys(): VoucherPoolReferencedKeys
 }
 
-/** Reads all persisted key references, including retained or unrehearsed backup inventory. */
+/** retained 또는 unrehearsed backup inventory를 포함해 persisted key reference를 모두 읽습니다. */
 internal class PostgresVoucherPoolKeyReferenceSource(private val dataSource: DataSource) : VoucherPoolKeyReferenceSource {
     override fun referencedKeys(): VoucherPoolReferencedKeys = dataSource.connection.use { connection ->
         val backup = readBackupInventory(connection)
@@ -333,12 +333,12 @@ internal data class VoucherPoolRetentionBacklog(
     companion object { private const val serialVersionUID: Long = 1L }
 }
 
-/** PostgreSQL-time, dependency-ordered retention for voucher pool authority rows. */
+/** voucher pool authority row를 위한 PostgreSQL-time, dependency-ordered retention입니다. */
 internal class VoucherPoolRetention(
     private val dataSource: DataSource,
     private val policy: VoucherPoolRetentionPolicy = VoucherPoolRetentionPolicy(),
 ) {
-    /** Returns bounded-cardinality due-row count and oldest overdue age using PostgreSQL time. */
+    /** PostgreSQL time을 사용해 bounded-cardinality due-row count와 oldest overdue age를 반환합니다. */
     fun backlog(): VoucherPoolRetentionBacklog = dataSource.connection.use { connection ->
         VoucherPoolRetentionBacklog(
             linkedMapOf(
@@ -389,7 +389,7 @@ internal class VoucherPoolRetention(
         }
     }
 
-    /** Deletes tenant-lifetime fences only after every backup retention and rehearsal hold is released. */
+    /** 모든 backup retention과 rehearsal hold가 release된 뒤에만 tenant-lifetime fence를 삭제합니다. */
     fun deleteTenant(tenantId: String): Boolean {
         require(tenantId.isNotBlank()) { "tenantId must not be blank" }
         return transaction { connection ->

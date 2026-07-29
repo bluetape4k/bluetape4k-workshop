@@ -54,7 +54,7 @@ internal class NestedPermitException(
     val requestedLane: PermitLane,
 ) : IllegalStateException("nested database permit acquisition is forbidden: $activeLane -> $requestedLane")
 
-/** Keeps virtual-thread concurrency within the bounded PostgreSQL connection budget. */
+/** virtual-thread concurrency를 bounded PostgreSQL connection budget 안에 유지합니다. */
 @Suppress("TooManyFunctions")
 internal class DatabasePermitGate(
     hikariMaximumPoolSize: Int,

@@ -283,7 +283,7 @@ internal interface CampaignBatchCommandService {
     fun resumeBatch(command: BatchRevisionCommand): MutationResult<BatchSnapshot>
 }
 
-/** Bounded application orchestration; all parsing and encryption precedes JDBC admission. */
+/** bounded application orchestration입니다. 모든 parsing과 encryption은 JDBC admission보다 먼저 수행됩니다. */
 @Suppress("LargeClass") // Task-scoped command contracts and their shared idempotency boundary remain co-located.
 internal class JdbcCampaignBatchCommandService(
     private val executor: VoucherPoolJdbcExecutor,

@@ -6,7 +6,7 @@ import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
 import kotlin.time.Duration
 
-/** Lifecycle states for a voucher campaign. */
+/** voucher campaign의 lifecycle state입니다. */
 enum class CampaignState {
     DRAFT,
     ACTIVE,
@@ -15,7 +15,7 @@ enum class CampaignState {
     REVOKED,
 }
 
-/** Lifecycle states for an imported or generated voucher batch. */
+/** import되거나 생성된 voucher batch의 lifecycle state입니다. */
 enum class BatchState {
     STAGING,
     ACTIVE,
@@ -28,7 +28,7 @@ enum class BatchState {
     FAILED_TERMINAL,
 }
 
-/** Lifecycle states for a single voucher pool entry. */
+/** 단일 voucher pool entry의 lifecycle state입니다. */
 enum class EntryState {
     AVAILABLE,
     RESERVED,
@@ -39,7 +39,7 @@ enum class EntryState {
     EXPIRED,
 }
 
-/** Lifecycle states for a voucher reservation. */
+/** voucher reservation의 lifecycle state입니다. */
 enum class ReservationState {
     ACTIVE,
     ALLOCATED,
@@ -48,7 +48,7 @@ enum class ReservationState {
     REVOKED,
 }
 
-/** Stable public error codes shared by HTTP and worker paths. */
+/** HTTP path와 worker path가 공유하는 안정적인 public error code입니다. */
 enum class VoucherPoolErrorCode {
     COMMAND_IN_PROGRESS,
     IDEMPOTENCY_FINGERPRINT_CONFLICT,
@@ -79,16 +79,15 @@ enum class VoucherPoolErrorCode {
 }
 
 /**
- * A validated voucher code that preserves the caller-provided Unicode value.
+ * caller가 제공한 Unicode value를 보존하는 검증된 voucher code입니다.
  *
- * Codes are limited to 256 Unicode code points and cannot contain ISO control
- * characters or malformed surrogate pairs. The raw value is redacted from
- * [toString] so accidental diagnostics do not expose it.
+ * code는 256 Unicode code point로 제한되며 ISO control character나 malformed surrogate pair를 포함할 수 없습니다.
+ * accidental diagnostics에서 노출되지 않도록 raw value는 [toString]에서 redact됩니다.
  */
 class CanonicalVoucherCode private constructor(
     private val rawValue: String,
 ) {
-    /** Runs trusted module code against the raw value without exposing a bean property. */
+    /** bean property를 노출하지 않고 raw value에 대해 trusted module code를 실행합니다. */
     internal fun <T> withRawValue(block: (String) -> T): T = block(rawValue)
 
     override fun equals(other: Any?): Boolean =
@@ -101,7 +100,7 @@ class CanonicalVoucherCode private constructor(
     companion object {
         private const val MAX_CODE_POINTS = 256
 
-        /** Creates a voucher code after enforcing its semantic input boundary. */
+        /** semantic input boundary를 강제한 뒤 voucher code를 생성합니다. */
         fun of(raw: String): CanonicalVoucherCode {
             val validated = raw.requireNotBlank("voucherCode")
             validated.codePointCount(0, validated.length)
@@ -118,10 +117,10 @@ class CanonicalVoucherCode private constructor(
 }
 
 /**
- * Immutable campaign policy copied into reservation and allocation snapshots.
+ * reservation과 allocation snapshot에 복사되는 immutable campaign policy입니다.
  *
- * A campaign must allow at least one voucher per user, both TTLs must be
- * positive, and reveal-loss replacement is bounded to one lifetime recovery.
+ * campaign은 user당 최소 하나의 voucher를 허용해야 하고, 두 TTL은 모두 양수여야 하며,
+ * reveal-loss replacement는 lifetime recovery 한 번으로 제한됩니다.
  */
 @ConsistentCopyVisibility
 data class VoucherPoolPolicy private constructor(
@@ -143,7 +142,7 @@ data class VoucherPoolPolicy private constructor(
         private const val serialVersionUID: Long = 1L
         private const val MAX_REPLACEMENT_ALLOWANCE = 1
 
-        /** Creates a policy after validating all lifetime and TTL boundaries. */
+        /** 모든 lifetime과 TTL boundary를 검증한 뒤 policy를 생성합니다. */
         fun of(
             perUserLimit: Int,
             reservationTtl: Duration,

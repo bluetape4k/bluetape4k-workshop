@@ -7,7 +7,7 @@ import java.io.Serializable
 import java.nio.charset.StandardCharsets.UTF_8
 import java.util.UUID
 
-/** Bounded HTTP and local-demo authentication settings for the voucher-pool workshop. */
+/** voucher-pool workshop을 위한 bounded HTTP 및 local-demo authentication 설정입니다. */
 internal data class VoucherPoolHttpProperties(
     val maxTenantLength: Int = 64,
     val maxPrincipalLength: Int = 64,

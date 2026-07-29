@@ -83,7 +83,7 @@ internal class VoucherDigest private constructor(
 internal class VoucherKeyMaterialUnavailableException :
     IllegalStateException("required voucher key material is unavailable")
 
-/** Computes purpose-separated, versioned HMAC-SHA256 digests over canonical length-prefixed fields. */
+/** canonical length-prefixed field 위에서 purpose-separated, versioned HMAC-SHA256 digest를 계산합니다. */
 @Suppress("TooManyFunctions") // One cohesive facade keeps every digest purpose behind the same key boundary.
 internal class VoucherDigestService(
     private val stableDedupKey: DigestKey,
@@ -92,12 +92,12 @@ internal class VoucherDigestService(
 ) {
     private val rotatingKeys = rotatingKeys.toMap()
 
-    /** Fixed tenant-lifetime command digest authority version; key material remains encapsulated. */
+    /** 고정 tenant-lifetime command digest authority version입니다. key material은 encapsulated 상태로 유지됩니다. */
     val commandTombstoneKeyVersion: Int get() = commandTombstoneKey.version
     val currentUserIdentityKeyVersion: Int
         get() = checkNotNull(rotatingKeys[DigestPurpose.USER_IDENTITY]).current.version
 
-    /** Fails closed when persisted data references a key version this process cannot read. */
+    /** persisted data가 이 process가 읽을 수 없는 key version을 참조하면 fail-closed합니다. */
     fun requireAvailable(purpose: DigestPurpose, version: Int) {
         require(version > 0) { "digest key version must be positive" }
         when (purpose) {
