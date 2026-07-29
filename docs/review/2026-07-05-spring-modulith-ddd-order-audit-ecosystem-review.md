@@ -1,55 +1,55 @@
-# spring-modulith-ddd-order-audit Ecosystem Review
+# spring-modulith-ddd-order-audit 생태계 리뷰
 
-Date: 2026-07-05
-Module: `:spring-modulith-ddd-order-audit`
-Scope: `spring-modulith/ddd-order-audit`
-Branch: `refactor/spring-modulith-ddd-order-audit-ecosystem-patterns`
+날짜: 2026-07-05
+모듈: `:spring-modulith-ddd-order-audit`
+범위: `spring-modulith/ddd-order-audit`
+브랜치: `refactor/spring-modulith-ddd-order-audit-ecosystem-patterns`
 
-## Workflow Gate
+## Workflow 게이트
 
-- Work type: Type B Fast Track, module-scoped code-pattern review.
+- 작업 유형: Type B Fast Track, module-scoped code-pattern review.
 - Skills: `bluetape4k-workflow`, `bluetape4k-code-patterns`.
-- Helper-first evidence: `repo-status`, `repo-test-summary`, `worktree-new`, `worktree-list`.
-- GNO orientation found existing issue #322 spec/plan material for this module.
-- CodeGraph: graph stats available but stale (`Last updated: 2026-06-03T10:01:01`); `file_summary` returned 0 for `OrderDomain.kt`, so current-source `rg` and file reads were used as freshness fallback.
+- helper-first 근거: `repo-status`, `repo-test-summary`, `worktree-new`, `worktree-list`.
+- GNO orientation에서 이 모듈의 기존 issue #322 spec/plan material을 확인했다.
+- CodeGraph: graph stats는 있었지만 stale 상태였다(`Last updated: 2026-06-03T10:01:01`). `OrderDomain.kt`에 대한 `file_summary`는 0을 반환해 최신성 보강으로 현재 source `rg`와 파일 읽기를 사용했다.
 
-## Changes Reviewed
+## 검토한 변경
 
-- Normalized Kotlin spacing for Serializable declarations, `DomainEvent`, anonymous `TransactionSynchronization`, and `KLogging` companion object.
-- Preserved all domain validation and behavior.
+- Serializable declaration, `DomainEvent`, anonymous `TransactionSynchronization`, `KLogging` companion object의 Kotlin spacing을 정규화했다.
+- 모든 domain validation과 behavior를 보존했다.
 
-## Ecosystem Reuse
+## 생태계 재사용
 
-- Existing domain validation already uses `requireNotBlank`, `requireNotEmpty`, `requirePositiveNumber`, and `requireZeroOrPositiveNumber`.
-- Existing synthetic IDs use `Base58.randomString(8)`.
-- Existing tests use `PostgreSQLServer.Launcher.postgres` and bluetape4k assertions.
-- No raw `GenericContainer`, raw JUnit assertion, or new helper abstraction introduced.
+- 기존 domain validation은 이미 `requireNotBlank`, `requireNotEmpty`, `requirePositiveNumber`, `requireZeroOrPositiveNumber`를 사용한다.
+- 기존 synthetic ID는 `Base58.randomString(8)`을 사용한다.
+- 기존 test는 `PostgreSQLServer.Launcher.postgres`와 bluetape4k assertion을 사용한다.
+- raw `GenericContainer`, raw JUnit assertion, 새 helper abstraction은 도입하지 않았다.
 
-## 7-Tier Review
+## 7-Tier 리뷰
 
-| Tier | Verdict | Evidence |
+| Tier | 판정 | 근거 |
 |---|---|---|
-| Performance | PASS | Style-only changes; no runtime path changed. |
-| Stability | PASS | PostgreSQL Testcontainers fixture and transaction/audit flow unchanged. |
-| Security | PASS | No new input, persistence, or serialization trust boundary. |
-| Operator/Ops | PASS | Existing PostgreSQL launcher preserved. |
-| Developer/API | PASS | Kotlin style aligned with ecosystem pattern. |
-| User/caller | PASS | Public example behavior and README-facing semantics unchanged. |
-| Evidence integrity | PASS | Native reviewer P3 spacing finding was repaired before PR. |
+| Performance | PASS | style-only 변경이며 runtime path는 변경하지 않았다. |
+| Stability | PASS | PostgreSQL Testcontainers fixture와 transaction/audit flow는 변경 없다. |
+| Security | PASS | 새 input, persistence, serialization trust boundary는 없다. |
+| Operator/Ops | PASS | 기존 PostgreSQL launcher를 보존했다. |
+| Developer/API | PASS | Kotlin style을 ecosystem pattern에 맞췄다. |
+| User/caller | PASS | 공개 example 동작과 README-facing semantics는 변경 없다. |
+| Evidence integrity | PASS | native reviewer P3 spacing finding을 PR 전에 고쳤다. |
 
-## Reviewer Findings
+## Reviewer 발견 사항
 
 - P0/P1: 0.
-- P3 repaired: `OrderPlaced` and `OrderApproved` now use `) : DomainEvent`.
+- P3 repaired: `OrderPlaced`와 `OrderApproved`가 이제 `) : DomainEvent`를 사용한다.
 
-## Validation
+## 검증
 
-- `rg` pattern scan for `Thread.sleep`, `!!`, `uninitialized(`, compact `companion object:`, raw JUnit assertions, raw `GenericContainer`, and deprecated Exposed imports: PASS.
+- `Thread.sleep`, `!!`, `uninitialized(`, compact `companion object:`, raw JUnit assertion, raw `GenericContainer`, deprecated Exposed import에 대한 `rg` pattern scan: PASS.
 - `git diff --check`: PASS.
-- `repo-test-summary -- ./gradlew :spring-modulith-ddd-order-audit:cleanTest :spring-modulith-ddd-order-audit:test --console=plain --max-workers=1 --no-build-cache`: PASS, 15 tests executed, `BUILD SUCCESSFUL in 2m 10s`.
-- Follow-up compile/test after spacing repair: `repo-test-summary -- ./gradlew :spring-modulith-ddd-order-audit:test --console=plain --max-workers=1`: PASS, `BUILD SUCCESSFUL in 699ms`.
-- IntelliJ diagnostics were unavailable in this session; targeted Gradle compile/test and static scans were used as fallback.
+- `repo-test-summary -- ./gradlew :spring-modulith-ddd-order-audit:cleanTest :spring-modulith-ddd-order-audit:test --console=plain --max-workers=1 --no-build-cache`: PASS, 15 tests, `BUILD SUCCESSFUL in 2m 10s`.
+- spacing repair 이후 follow-up compile/test: `repo-test-summary -- ./gradlew :spring-modulith-ddd-order-audit:test --console=plain --max-workers=1`: PASS, `BUILD SUCCESSFUL in 699ms`.
+- IntelliJ diagnostics는 이 session에서 사용할 수 없어 타깃 Gradle compile/test와 static scan을 fallback으로 사용했다.
 
-## Residual Risk
+## 잔여 위험
 
-- Fresh test logged a shutdown-time Hikari cleanup warning after successful execution. Because the test task passed and the warning occurs during JVM shutdown, it is recorded as non-blocking local cleanup noise.
+- fresh test는 성공 후 JVM shutdown 중 Hikari cleanup warning을 기록했다. test task가 통과했고 warning이 JVM shutdown 중 발생하므로 non-blocking local cleanup noise로 기록한다.

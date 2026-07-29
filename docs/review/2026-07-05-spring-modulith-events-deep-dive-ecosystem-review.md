@@ -1,56 +1,56 @@
-# spring-modulith-events-deep-dive Ecosystem Review
+# spring-modulith-events-deep-dive 생태계 리뷰
 
-Date: 2026-07-05
-Module: `:spring-modulith-events-deep-dive`
-Scope: `spring-modulith/events-deep-dive`
-Branch: `refactor/spring-modulith-events-deep-dive-ecosystem-patterns`
+날짜: 2026-07-05
+모듈: `:spring-modulith-events-deep-dive`
+범위: `spring-modulith/events-deep-dive`
+브랜치: `refactor/spring-modulith-events-deep-dive-ecosystem-patterns`
 
-## Workflow Gate
+## Workflow 게이트
 
-- Work type: Type B Fast Track, module-scoped example refactor.
+- 작업 유형: Type B Fast Track, module-scoped example refactor.
 - Skills: `bluetape4k-workflow`, `bluetape4k-code-patterns`.
-- Helper-first evidence: `repo-status`, `repo-test-summary`, `worktree-new`, `worktree-list`.
-- GNO orientation: same workshop ecosystem query as this wave; no conflicting prior rule found for this module.
-- CodeGraph: graph stats available but stale (`Last updated: 2026-06-03T10:01:01`); `file_summary` returned 0 for a representative test file, so current-source `rg` and file reads were used as freshness fallback.
+- helper-first 근거: `repo-status`, `repo-test-summary`, `worktree-new`, `worktree-list`.
+- GNO orientation: 이 wave와 같은 workshop ecosystem query에서 이 모듈과 충돌하는 선행 규칙은 찾지 못했다.
+- CodeGraph: graph stats는 있었지만 stale 상태였다(`Last updated: 2026-06-03T10:01:01`). representative test file의 `file_summary`가 0을 반환해 현재 source `rg`와 파일 읽기로 최신성을 보강했다.
 
-## Changes Reviewed
+## 검토한 변경
 
-- Added explicit `serialVersionUID` to the quickstart `Order` Serializable data class.
-- Replaced field-level `@MockkBean` plus `uninitialized()` with class-level `@MockkBean(types = ...)` and constructor injection.
-- Removed a stale cross-package `after.Application` import from the `before.Application` example.
-- Normalized Kotlin spacing for touched `companion object`, inheritance, and Serializable declarations.
+- quickstart `Order` Serializable data class에 명시적 `serialVersionUID`를 추가했다.
+- field-level `@MockkBean`과 `uninitialized()`를 class-level `@MockkBean(types = ...)`와 constructor injection으로 바꿨다.
+- `before.Application` 예제에서 stale cross-package `after.Application` import를 제거했다.
+- 변경된 `companion object`, inheritance, Serializable declaration의 Kotlin spacing을 정규화했다.
 
-## Ecosystem Reuse
+## 생태계 재사용
 
-- Preserved Spring Modulith example structure and `@IntegrationTest` constructor autowiring.
-- Preserved existing bluetape4k `Uuid.V7` ID generation.
-- Preserved `bluetape4k-assertions` tests and existing MockK/SpringMockK usage.
+- Spring Modulith 예제 구조와 `@IntegrationTest` constructor autowiring을 보존했다.
+- 기존 bluetape4k `Uuid.V7` ID generation을 보존했다.
+- `bluetape4k-assertions` test와 기존 MockK/SpringMockK 사용을 보존했다.
 
-## 7-Tier Review
+## 7-Tier 리뷰
 
-| Tier | Verdict | Evidence |
+| Tier | 판정 | 근거 |
 |---|---|---|
-| Performance | PASS | Style/test wiring changes only; no hot path changed. |
-| Stability | PASS | Mock repository now follows constructor-injection pattern already used in sibling tests. |
-| Security | PASS | No new input, auth, persistence, or serialization trust boundary. |
-| Operator/Ops | PASS | No infrastructure or workflow behavior changed. |
-| Developer/API | PASS | Serializable and Kotlin style rules aligned. |
-| User/caller | PASS | Example behavior unchanged. |
-| Evidence integrity | PASS | Native reviewer P3 stale-import finding was repaired and retested. |
+| Performance | PASS | style/test wiring 변경뿐이며 hot path는 변경하지 않았다. |
+| Stability | PASS | mock repository는 sibling test에서 이미 쓰는 constructor-injection pattern을 따른다. |
+| Security | PASS | 새 input, auth, persistence, serialization trust boundary는 없다. |
+| Operator/Ops | PASS | infrastructure나 workflow 동작은 변경하지 않았다. |
+| Developer/API | PASS | Serializable과 Kotlin style rule을 맞췄다. |
+| User/caller | PASS | example 동작은 변경 없다. |
+| Evidence integrity | PASS | native reviewer P3 stale-import finding을 고친 뒤 다시 테스트했다. |
 
-## Reviewer Findings
+## Reviewer 발견 사항
 
 - P0/P1: 0.
-- P3 repaired: removed stale `after.Application` import from `c.architecture.before.Application`.
+- P3 repaired: `c.architecture.before.Application`에서 stale `after.Application` import를 제거했다.
 
-## Validation
+## 검증
 
-- `rg` pattern scan for `Thread.sleep`, `!!`, `uninitialized(`, compact `companion object:`, raw JUnit assertions, raw `GenericContainer`, and deprecated Exposed imports: PASS.
+- `Thread.sleep`, `!!`, `uninitialized(`, compact `companion object:`, raw JUnit assertion, raw `GenericContainer`, deprecated Exposed import에 대한 `rg` pattern scan: PASS.
 - `git diff --check`: PASS.
-- Initial targeted validation: `repo-test-summary -- ./gradlew :spring-modulith-events-deep-dive:test --console=plain --max-workers=1`: PASS, 10 tests executed, `BUILD SUCCESSFUL in 10s`.
-- Follow-up after P3 repair: same command PASS, 10 tests executed, `BUILD SUCCESSFUL in 5s`.
-- IntelliJ diagnostics were unavailable in this session; targeted Gradle compile/test and static scans were used as fallback.
+- 초기 타깃 검증: `repo-test-summary -- ./gradlew :spring-modulith-events-deep-dive:test --console=plain --max-workers=1`: PASS, 10 tests, `BUILD SUCCESSFUL in 10s`.
+- P3 repair 이후 follow-up: 같은 명령 PASS, 10 tests, `BUILD SUCCESSFUL in 5s`.
+- IntelliJ diagnostics는 이 session에서 사용할 수 없어 타깃 Gradle compile/test와 static scan을 fallback으로 사용했다.
 
-## Residual Risk
+## 잔여 위험
 
-- None known for this module slice.
+- 이 module slice에서 알려진 잔여 위험은 없다.

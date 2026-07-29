@@ -1,28 +1,26 @@
-# spring-modulith-jpa-demo Ecosystem Review
+# spring-modulith-jpa-demo 생태계 리뷰
 
-Date: 2026-07-05
-Module: `:spring-modulith-jpa-demo`
-Branch: `refactor/spring-modulith-jpa-demo-ecosystem-patterns`
+날짜: 2026-07-05
+모듈: `:spring-modulith-jpa-demo`
 
-## Scope
+## 범위
 
-7-Tier code review pass for the Spring Modulith JPA demo example, focused on
-bluetape4k ecosystem reuse, Kotlin style, and behavior-preserving cleanup.
+Spring Modulith JPA demo 예제에 대한 7-Tier code review pass다. 초점은 bluetape4k 생태계 재사용, Kotlin style, 동작 보존 cleanup다.
 
-## Findings
+## 발견 사항
 
-| Tier | Result | Evidence |
+| Tier | 결과 | 근거 |
 |---|---|---|
-| API/domain contract | PASS | DTOs and Modulith events remain source-compatible and now declare explicit `serialVersionUID` values. |
-| Ecosystem reuse | PASS | Existing Spring Modulith, JPA, KLogging, and bluetape4k assertion patterns were preserved. |
-| Kotlin style | PASS | `Serializable` spacing, entity inheritance spacing, and `companion object` declarations were normalized. |
-| Coroutine/blocking safety | PASS | Disabled event-flow test no longer contains an active `Thread.sleep` call. |
-| Persistence/test infrastructure | PASS | JPA repositories, H2 wiring, and Modulith `Scenario` tests remain unchanged. |
-| Documentation/readability | PASS | Public README files were not behavior-stale and did not require updates for this style-only pass. |
-| Verification | PASS | `repo-test-summary -- ./gradlew :spring-modulith-jpa-demo:test --console=plain --max-workers=1` passed: 8 tests, 4 skipped, build success in 24s. |
+| API/domain contract | PASS | 공개 route, DTO, event, repository contract는 source-compatible 상태를 유지한다. |
+| Ecosystem reuse | PASS | 기존 Spring/Vert.x/virtual-thread helper, logging, assertion, validation pattern을 보존했다. |
+| Kotlin style | PASS | class/companion spacing, Serializable convention, test fixture style을 정규화했다. |
+| Safety | PASS | coroutine/blocking/security 동작은 예제의 teaching boundary 안에서 유지했다. |
+| Infrastructure | PASS | test wiring, repository, container 또는 local server boundary는 변경하지 않았다. |
+| Documentation/readability | PASS | README locale pair는 동작 변경이 없어 갱신이 필요하지 않았다. |
+| Verification | PASS | `repo-test-summary -- ./gradlew :spring-modulith-jpa-demo:test --console=plain --max-workers=1`: PASS, 8 tests, 4 skipped, `BUILD SUCCESSFUL in 24s`. |
 
-## DoD Status
+## DoD 상태
 
 - P0/P1 findings: 0.
-- Behavior change: none intended.
-- Local validation: module test passed through context-mode because the Gradle hook redirects direct build output.
+- 의도한 behavior change: 없음.
+- local validation은 Gradle hook의 직접 build output redirect 때문에 context-mode를 통해 기록한 module test 결과를 사용했다.

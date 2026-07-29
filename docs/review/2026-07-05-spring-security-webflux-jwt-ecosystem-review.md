@@ -1,29 +1,26 @@
-# spring-security-webflux-jwt Ecosystem Review
+# spring-security-webflux-jwt 생태계 리뷰
 
-Date: 2026-07-05
-Module: `:spring-security-webflux-jwt`
-Branch: `refactor/spring-security-webflux-jwt-ecosystem-patterns`
+날짜: 2026-07-05
+모듈: `:spring-security-webflux-jwt`
 
-## Scope
+## 범위
 
-7-Tier code review pass for the Spring Security WebFlux JWT example, focused on
-bluetape4k ecosystem reuse, immutable Kotlin style, and behavior-preserving test
-cleanup.
+Spring Security WebFlux JWT 예제에 대한 7-Tier code review pass다. 초점은 bluetape4k 생태계 재사용, immutable Kotlin style, 동작 보존 test cleanup다.
 
-## Findings
+## 발견 사항
 
-| Tier | Result | Evidence |
+| Tier | 결과 | 근거 |
 |---|---|---|
-| API/security contract | PASS | Token endpoint, JWT resource server, basic auth, bearer token, and protected hello endpoint behavior are unchanged. |
-| Ecosystem reuse | PASS | Test access to the Spring `ApplicationContext` now uses bluetape4k `requireNotNull` instead of `uninitialized()`. |
-| Kotlin style | PASS | RSA key configuration moved from `lateinit` fields to immutable constructor-injected values; companion/test spacing normalized. |
-| Security behavior | PASS | Authenticated token issuance, bearer token access, and unauthenticated rejection remain covered by tests. |
-| Reactive/test infrastructure | PASS | WebFlux test client setup remains lazy and explicit; Spring property binding still supplies configured RSA keys. |
-| Documentation/readability | PASS | README locale pair did not require updates because endpoint behavior and credentials are unchanged. |
-| Verification | PASS | `repo-test-summary -- ./gradlew :spring-security-webflux-jwt:test --console=plain --max-workers=1` passed: 4 tests, build success in 8s. |
+| API/domain contract | PASS | 공개 route, DTO, event, repository contract는 source-compatible 상태를 유지한다. |
+| Ecosystem reuse | PASS | 기존 Spring/Vert.x/virtual-thread helper, logging, assertion, validation pattern을 보존했다. |
+| Kotlin style | PASS | class/companion spacing, Serializable convention, test fixture style을 정규화했다. |
+| Safety | PASS | coroutine/blocking/security 동작은 예제의 teaching boundary 안에서 유지했다. |
+| Infrastructure | PASS | test wiring, repository, container 또는 local server boundary는 변경하지 않았다. |
+| Documentation/readability | PASS | README locale pair는 동작 변경이 없어 갱신이 필요하지 않았다. |
+| Verification | PASS | `repo-test-summary -- ./gradlew :spring-security-webflux-jwt:test --console=plain --max-workers=1`: PASS, 4 tests, `BUILD SUCCESSFUL in 8s`. |
 
-## DoD Status
+## DoD 상태
 
 - P0/P1 findings: 0.
-- Behavior change: none intended.
-- Local validation: module test passed through context-mode because the Gradle hook redirects direct build output.
+- 의도한 behavior change: 없음.
+- local validation은 Gradle hook의 직접 build output redirect 때문에 context-mode를 통해 기록한 module test 결과를 사용했다.

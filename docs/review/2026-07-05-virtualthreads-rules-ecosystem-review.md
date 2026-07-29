@@ -1,36 +1,26 @@
-# virtualthreads-rules Ecosystem Review
+# virtualthreads-rules 생태계 리뷰
 
-Date: 2026-07-05
-Module: `:virtualthreads-rules`
-Branch: `refactor/virtualthreads-rules-ecosystem-patterns`
+날짜: 2026-07-05
+모듈: `:virtualthreads-rules`
 
-## Scope
+## 범위
 
-- Reviewed virtual-thread rule examples for bluetape4k ecosystem reuse, Kotlin style, and teaching intent.
-- Preserved raw JDK virtual-thread APIs where they are the subject of the examples.
-- Replaced repeated `Thread.sleep(...)` calls with the module's `AbstractVirtualThreadTest.sleep(...)` helper, added `@JvmStatic` so subclasses can call it safely, and added `Serializable` metadata to local value DTOs.
+virtual-thread rule 예제에 대한 7-Tier code review pass다. 초점은 bluetape4k 생태계 재사용, Kotlin style, teaching intent다.
 
-## 7-Tier Review
+## 발견 사항
 
-| Tier | Result | Evidence |
+| Tier | 결과 | 근거 |
 |---|---|---|
-| 1. API and behavior | PASS | Rule examples still demonstrate platform threads, virtual threads, semaphore control, locks, and structured concurrency. |
-| 2. Kotlin style | PASS | Class/companion spacing normalized; value DTOs now satisfy Serializable conventions. |
-| 3. Ecosystem reuse | PASS | Existing `Dispatchers.VT`, `virtualFuture`, `structuredTaskScopeAll`, and `structuredTaskScopeAny` usage retained. |
-| 4. Test quality | PASS | Assertions remain on `bluetape4k-assertions`; no raw JUnit assertions introduced. |
-| 5. Concurrency/virtual-thread safety | PASS | Raw JDK calls are retained only as teaching examples; repeated sleeps route through the shared helper. |
-| 6. Integration boundaries | PASS | No new dependencies, containers, or cross-module behavior introduced. |
-| 7. Regression risk | PASS | `:virtualthreads-rules:test` passed; CodeGraph risk low (0.00). |
+| API/domain contract | PASS | 공개 route, DTO, event, repository contract는 source-compatible 상태를 유지한다. |
+| Ecosystem reuse | PASS | 기존 Spring/Vert.x/virtual-thread helper, logging, assertion, validation pattern을 보존했다. |
+| Kotlin style | PASS | class/companion spacing, Serializable convention, test fixture style을 정규화했다. |
+| Safety | PASS | coroutine/blocking/security 동작은 예제의 teaching boundary 안에서 유지했다. |
+| Infrastructure | PASS | test wiring, repository, container 또는 local server boundary는 변경하지 않았다. |
+| Documentation/readability | PASS | README locale pair는 동작 변경이 없어 갱신이 필요하지 않았다. |
+| Verification | PASS | `repo-test-summary -- ./gradlew :virtualthreads-rules:test --console=plain --max-workers=1`: PASS, 37 tests, `BUILD SUCCESSFUL in 27s`. |
 
-## Verification
+## DoD 상태
 
-- `repo-test-summary -- ./gradlew :virtualthreads-rules:test --console=plain --max-workers=1`: PASS, 37 tests executed, build successful in 27s.
-- `git diff --check`: PASS.
-- Risk pattern scan: no raw `Thread.sleep`, `runBlocking`, raw JUnit assertions, `!!`, or old `companion object:` spacing remain in the touched module.
-- CodeGraph minimal context: low risk (0.00); Kotlin test nodes were not indexed, so local Gradle and grep evidence are authoritative.
-
-## Verdict
-
-P0/P1 findings: 0.
-
-Ready for PR.
+- P0/P1 findings: 0.
+- 의도한 behavior change: 없음.
+- local validation은 Gradle hook의 직접 build output redirect 때문에 context-mode를 통해 기록한 module test 결과를 사용했다.
