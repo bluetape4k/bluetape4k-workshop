@@ -30,29 +30,30 @@ import io.bluetape4k.workshop.graph.recommendation.schema.PurchasedLabel
 import io.bluetape4k.workshop.graph.recommendation.schema.UserLabel
 
 /**
- * Blocking graph service for e-commerce product and social follow recommendations.
+ * e-commerce 상품 추천과 social follow 추천을 제공하는 블로킹 그래프 서비스입니다.
  *
- * Uses a named graph on the given [GraphOperations] backend.
+ * 전달된 [GraphOperations] backend 위에서 named graph를 사용합니다.
  *
- * ## Behavior / Contract
- * - [initialize] must be called once before any other method to ensure the named graph exists.
- * - Vertex mutators ([addUser], [addProduct]) are idempotent: find-by-domain-key or create.
- * - [purchase] and [follow] are NOT idempotent — repeated calls create additional edges.
- *   Deduplication is handled at the algorithm level (co-buyer ID set).
- * - [purchase] validates User → Product endpoints; [follow] validates User → User endpoints.
- * - [recommendProducts] returns `emptyList()` when [userVertexId] is not found or has no purchases.
- * - [recommendFollows] returns `emptyList()` when [userVertexId] is not found or has no follows.
- * - [follow] throws [IllegalArgumentException] when follower equals followee.
+ * ## 동작 / 계약
+ * - named graph가 존재하도록 다른 메서드보다 먼저 [initialize]를 한 번 호출해야 합니다.
+ * - 정점 변경 메서드([addUser], [addProduct])는 멱등입니다. 도메인 키로 찾고 없으면 생성합니다.
+ * - [purchase]와 [follow]는 멱등이 아닙니다. 반복 호출하면 간선이 추가로 생성됩니다.
+ *   중복 제거는 알고리즘 수준의 co-buyer ID 집합으로 처리합니다.
+ * - [purchase]는 User -> Product endpoint를 검증하고, [follow]는 User -> User endpoint를 검증합니다.
+ * - [recommendProducts]는 [userVertexId]를 찾을 수 없거나 구매가 없으면 `emptyList()`를 반환합니다.
+ * - [recommendFollows]는 [userVertexId]를 찾을 수 없거나 follow가 없으면 `emptyList()`를 반환합니다.
+ * - [follow]는 follower와 followee가 같으면 [IllegalArgumentException]을 던집니다.
  *
- * ## Known Limitations (workshop demo scope)
- * - **N+1 traversal**: [recommendProducts] issues one neighbor query per seed product and one per
- *   co-buyer; [recommendFollows] issues one outgoing neighbor query per direct follow. The `limit`
- *   parameter bounds output count, not I/O calls. For large graphs, replace with native
- *   Cypher/Gremlin queries.
- * - **TOCTOU in [initialize]**: The `graphExists → createGraph` check is not atomic and assumes
- *   a single-instance deployment. Concurrent callers may attempt duplicate creation — acceptable
- *   for this demo; production code should use advisory locking or server-side upsert semantics.
- * ## Usage
+ * ## 알려진 제한(워크숍 demo 범위)
+ * - **N+1 traversal**: [recommendProducts]는 seed 상품마다 neighbor 조회 1회와 co-buyer마다
+ *   조회 1회를 실행합니다. [recommendFollows]는 direct follow마다 outgoing neighbor 조회 1회를 실행합니다.
+ *   `limit` 인자는 출력 개수만 제한하며 I/O 호출 수를 제한하지 않습니다. 큰 그래프에서는 native
+ *   Cypher/Gremlin query로 교체합니다.
+ * - **[initialize]의 TOCTOU**: `graphExists -> createGraph` 검사는 원자적이지 않고 단일 instance
+ *   배포를 가정합니다. 동시 호출자는 중복 생성을 시도할 수 있습니다. 이 demo에서는 허용하지만,
+ *   production code는 advisory locking 또는 server-side upsert 의미론을 사용해야 합니다.
+ *
+ * ## 사용 예
  * ```kotlin
  * val service = RecommendationService(ops, "recommendation")
  * service.initialize()
@@ -73,7 +74,7 @@ class RecommendationService(
     companion object : KLogging()
 
     /**
-     * Ensures the named graph exists. Safe to call multiple times — no-op when already created.
+     * named graph가 존재하도록 보장합니다. 여러 번 호출해도 안전하며, 이미 생성되어 있으면 no-op입니다.
      */
     fun initialize() {
         if (!ops.graphExists(graphName)) {
@@ -83,14 +84,14 @@ class RecommendationService(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Vertex mutators (find-or-create by domain key)
+    // 정점 변경 메서드(도메인 키 기준 find-or-create)
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Finds an existing User vertex by [userId] or creates a new one.
+     * [userId]로 기존 User 정점을 찾거나 새로 만듭니다.
      *
-     * @param userId stable domain key (opaque string, e.g. username or UUID)
-     * @param name display name
+     * @param userId 안정적인 도메인 키입니다. username이나 UUID처럼 내부 구조를 드러내지 않는 문자열입니다.
+     * @param name 표시 이름입니다.
      */
     fun addUser(userId: String, name: String): GraphVertex {
         userId.requireNotBlank("userId")
@@ -107,11 +108,11 @@ class RecommendationService(
     }
 
     /**
-     * Finds an existing Product vertex by [productId] or creates a new one.
+     * [productId]로 기존 Product 정점을 찾거나 새로 만듭니다.
      *
-     * @param productId stable domain key (opaque string, e.g. SKU or UUID)
-     * @param name display name
-     * @param category product category (optional)
+     * @param productId 안정적인 도메인 키입니다. SKU나 UUID처럼 내부 구조를 드러내지 않는 문자열입니다.
+     * @param name 표시 이름입니다.
+     * @param category 상품 category입니다. 선택 값입니다.
      */
     fun addProduct(productId: String, name: String, category: String = ""): GraphVertex {
         productId.requireNotBlank("productId")
@@ -129,19 +130,19 @@ class RecommendationService(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Edge mutators
+    // 간선 변경 메서드
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Creates a PURCHASED edge from a User vertex to a Product vertex.
+     * User 정점에서 Product 정점으로 향하는 `PURCHASED` 간선을 만듭니다.
      *
-     * Not idempotent — repeated calls create additional edges.
+     * 멱등이 아닙니다. 반복 호출하면 간선이 추가로 생성됩니다.
      *
-     * @param userVertexId graph ID of the User vertex
-     * @param productVertexId graph ID of the Product vertex
-     * @param rating purchase rating 0–5; 0 means unrated (stored only when > 0)
-     * @param purchasedAt ISO-8601 timestamp (optional)
-     * @throws IllegalArgumentException when endpoints are missing or not User → Product.
+     * @param userVertexId User 정점의 graph ID입니다.
+     * @param productVertexId Product 정점의 graph ID입니다.
+     * @param rating 구매 평점입니다. 범위는 0-5이며, 0은 미평가를 뜻하고 0보다 클 때만 저장합니다.
+     * @param purchasedAt ISO-8601 타임스탬프입니다. 선택 값입니다.
+     * @throws IllegalArgumentException endpoint가 없거나 User -> Product 관계가 아니면 발생합니다.
      */
     fun purchase(
         userVertexId: GraphElementId,
@@ -160,13 +161,13 @@ class RecommendationService(
     }
 
     /**
-     * Creates a unidirectional FOLLOWS edge from [followerVertexId] to [followeeVertexId].
+     * [followerVertexId]에서 [followeeVertexId]로 향하는 단방향 `FOLLOWS` 간선을 만듭니다.
      *
-     * Not idempotent — repeated calls create additional edges.
+     * 멱등이 아닙니다. 반복 호출하면 간선이 추가로 생성됩니다.
      *
-     * @param followerVertexId graph ID of the User who follows
-     * @param followeeVertexId graph ID of the User being followed
-     * @throws IllegalArgumentException when endpoints are equal, missing, or not User → User.
+     * @param followerVertexId follow하는 User의 graph ID입니다.
+     * @param followeeVertexId follow 대상 User의 graph ID입니다.
+     * @throws IllegalArgumentException endpoint가 같거나, 누락되었거나, User -> User 관계가 아니면 발생합니다.
      */
     fun follow(followerVertexId: GraphElementId, followeeVertexId: GraphElementId): GraphEdge {
         requireDistinctEndpoints(followerVertexId, followeeVertexId, "followerVertexId", "followeeVertexId")
@@ -176,40 +177,39 @@ class RecommendationService(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Recommendation queries
+    // 추천 조회
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Returns products bought by co-buyers of the seed user's products,
-     * ranked by distinct co-buyer count (score).
+     * seed 사용자의 상품을 산 co-buyer들이 구매한 상품을 반환하며,
+     * 서로 다른 co-buyer 수(score) 기준으로 순위를 매깁니다.
      *
-     * Already-purchased products are excluded from results.
+     * 이미 구매한 상품은 결과에서 제외합니다.
      *
-     * **N+1 warning**: issues one neighbor query per product and one per co-buyer.
-     * For large graphs, prefer native Cypher/Gremlin queries.
+     * **N+1 경고**: 상품마다 neighbor 조회 1회와 co-buyer마다 조회 1회를 실행합니다.
+     * 큰 그래프에서는 native Cypher/Gremlin query를 우선합니다.
      *
-     * ## Algorithm
-     * 1. Collect the seed user's purchased products (OUTGOING PURCHASED edges).
-     * 2. For each product, collect co-buyers (INCOMING PURCHASED from others).
-     * 3. For each co-buyer, collect their other products (excluding seed's products).
-     * 4. Accumulate co-buyer ID sets per candidate product; score = distinct co-buyer count.
-     * 5. Sort by score descending, then by `productId` ascending for tie-breaking.
+     * ## 알고리즘
+     * 1. seed 사용자가 구매한 상품을 수집합니다(OUTGOING `PURCHASED` 간선).
+     * 2. 각 상품마다 co-buyer를 수집합니다(다른 User의 INCOMING `PURCHASED`).
+     * 3. 각 co-buyer마다 seed 사용자의 상품을 제외한 다른 구매 상품을 수집합니다.
+     * 4. 후보 상품별 co-buyer ID 집합을 누적합니다. score = 서로 다른 co-buyer 수입니다.
+     * 5. score 내림차순, `productId` 오름차순으로 정렬해 tie-breaking합니다.
      *
-     * @param userVertexId GraphVertex.id returned by [addUser]
-     * @param limit 1..[MAX_RECOMMENDATION_LIMIT]
-     * @return ranked list of [ProductRecommendation]; `emptyList()` when user not found or has no purchases
+     * @param userVertexId [addUser]가 반환한 GraphVertex.id입니다.
+     * @param limit 1..[MAX_RECOMMENDATION_LIMIT] 범위의 반환 상한입니다.
+     * @return 순위화된 [ProductRecommendation] 목록입니다. User를 찾을 수 없거나 구매가 없으면 `emptyList()`입니다.
      */
     fun recommendProducts(userVertexId: GraphElementId, limit: Int = DEFAULT_RECOMMENDATION_LIMIT): List<ProductRecommendation> {
         return explainProductRecommendations(userVertexId, limit).map { it.recommendation }
     }
 
     /**
-     * Returns product recommendations with the concrete co-buyer paths and exclusion rules
-     * that explain each score.
+     * 각 score를 설명하는 구체적인 co-buyer path와 제외 규칙을 포함한 상품 추천을 반환합니다.
      *
-     * [ProductRecommendation.score] still equals the number of distinct co-buyers. The
-     * [ExplainedProductRecommendation.evidencePaths] list keeps the human-readable path
-     * details: seed product → co-buyer → candidate product.
+     * [ProductRecommendation.score]는 여전히 서로 다른 co-buyer 수입니다.
+     * [ExplainedProductRecommendation.evidencePaths] 목록은 사람이 읽을 수 있는
+     * seed product -> co-buyer -> candidate product path 상세를 보존합니다.
      */
     fun explainProductRecommendations(
         userVertexId: GraphElementId,
@@ -225,7 +225,7 @@ class RecommendationService(
         val myProductIds = myProducts.map { it.id }.toSet()
         val excludedCandidates = myProducts.map { CandidateExclusion(it.id, ALREADY_PURCHASED) }
 
-        // candidateMap: candidateProductId → (candidateVertex, evidence paths)
+        // candidateMap: candidateProductId -> (candidateVertex, evidence path)
         val candidateMap = mutableMapOf<GraphElementId, Pair<GraphVertex, MutableList<ProductEvidencePath>>>()
 
         for (product in myProducts) {
@@ -265,31 +265,31 @@ class RecommendationService(
     }
 
     /**
-     * Recommends users to follow based on 2-hop FOLLOWS traversal (FOAF).
+     * 2-hop `FOLLOWS` 순회(FOAF)를 기반으로 follow할 User를 추천합니다.
      *
-     * Already-followed users and the seed user itself are excluded from results.
+     * 이미 follow한 User와 seed 사용자 자신은 결과에서 제외합니다.
      *
-     * **N+1 warning**: issues one OUTGOING neighbor query per direct follow.
+     * **N+1 경고**: direct follow마다 OUTGOING neighbor 조회 1회를 실행합니다.
      *
-     * ## Algorithm
-     * 1. Collect seed's direct follows (OUTGOING FOLLOWS depth-1).
-     * 2. For each direct follow, collect their outgoing follows as candidate paths.
-     * 3. Exclude the seed user and already-followed users; record the exclusion reason.
-     * 4. Sort by mutual-follow count descending, then by `userId` ascending for tie-breaking.
+     * ## 알고리즘
+     * 1. seed의 direct follow를 수집합니다(OUTGOING `FOLLOWS`, depth-1).
+     * 2. 각 direct follow마다 그들의 outgoing follow를 후보 path로 수집합니다.
+     * 3. seed 사용자와 이미 follow한 User를 제외하고 제외 이유를 기록합니다.
+     * 4. mutual-follow count 내림차순, `userId` 오름차순으로 정렬해 tie-breaking합니다.
      *
-     * @param userVertexId GraphVertex.id returned by [addUser]
-     * @param limit 1..[MAX_RECOMMENDATION_LIMIT]
-     * @return ranked list of [FollowRecommendation]; `emptyList()` when user not found or has no follows
+     * @param userVertexId [addUser]가 반환한 GraphVertex.id입니다.
+     * @param limit 1..[MAX_RECOMMENDATION_LIMIT] 범위의 반환 상한입니다.
+     * @return 순위화된 [FollowRecommendation] 목록입니다. User를 찾을 수 없거나 follow가 없으면 `emptyList()`입니다.
      */
     fun recommendFollows(userVertexId: GraphElementId, limit: Int = DEFAULT_RECOMMENDATION_LIMIT): List<FollowRecommendation> {
         return explainFollowRecommendations(userVertexId, limit).map { it.recommendation }
     }
 
     /**
-     * Returns follow recommendations with FOAF evidence and excluded candidate rules.
+     * FOAF 증거와 제외된 후보 규칙을 포함한 follow 추천을 반환합니다.
      *
-     * The evidence path is `seed user -> intermediary -> candidate`. Already-followed
-     * users and the seed user itself are recorded in [ExplainedFollowRecommendation.excludedCandidates].
+     * 증거 path는 `seed user -> intermediary -> candidate`입니다. 이미 follow한 User와
+     * seed 사용자 자신은 [ExplainedFollowRecommendation.excludedCandidates]에 기록합니다.
      */
     fun explainFollowRecommendations(
         userVertexId: GraphElementId,
