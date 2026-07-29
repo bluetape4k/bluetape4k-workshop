@@ -13,6 +13,6 @@ object FactoryMaker {
         when (type) {
             KingdomType.ELF -> ElfKingdomFactory()
             KingdomType.ORC -> OrcKingdomFactory()
-            // else            -> throw IllegalArgumentException("KingdomType not supported.")
+            // else            -> throw IllegalArgumentException("지원하지 않는 KingdomType 입니다.")
         }
 }

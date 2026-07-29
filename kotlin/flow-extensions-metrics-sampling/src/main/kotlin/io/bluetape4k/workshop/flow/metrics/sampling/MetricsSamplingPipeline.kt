@@ -12,15 +12,13 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 
 /**
- * Teachable Flow pipeline for noisy metrics and sensor streams.
+ * noisy metric 과 sensor stream 을 다루는 학습용 Flow pipeline 입니다.
  *
  * ## Contract
- * - Leading samples favor fast feedback for alert previews.
- * - Trailing samples favor stable dashboards after each throttle window.
- * - Adjacent deltas and trends are derived with Flow extensions instead of
- *   manual mutable state.
- * - Lifecycle stop signals are delegated to `takeUntil`; materialized Result
- *   streams use `mapResultCatching` so cooperative cancellation is preserved.
+ * - leading sample 은 alert preview 의 빠른 feedback 을 우선합니다.
+ * - trailing sample 은 각 throttle window 이후 안정적인 dashboard 값을 우선합니다.
+ * - adjacent delta 와 trend 는 manual mutable state 대신 Flow extension 으로 파생합니다.
+ * - lifecycle stop signal 은 `takeUntil` 에 위임하고, materialized Result stream 은 cooperative cancellation 이 유지되도록 `mapResultCatching` 을 사용합니다.
  *
  * ```kotlin
  * val pipeline = MetricsSamplingPipeline()
@@ -30,7 +28,7 @@ import kotlinx.coroutines.flow.map
 class MetricsSamplingPipeline {
 
     /**
-     * Emits the first sample observed in each throttle window.
+     * 각 throttle window 에서 관측된 첫 sample 을 방출합니다.
      */
     fun leadingPreview(samples: Flow<MetricSample>, window: Duration): Flow<MetricSample> =
         samples
@@ -38,7 +36,7 @@ class MetricsSamplingPipeline {
             .log("metrics-leading-preview")
 
     /**
-     * Emits the last sample observed in each throttle window.
+     * 각 throttle window 에서 관측된 마지막 sample 을 방출합니다.
      */
     fun dashboardSamples(samples: Flow<MetricSample>, window: Duration): Flow<MetricSample> =
         samples
@@ -46,13 +44,13 @@ class MetricsSamplingPipeline {
             .log("metrics-dashboard")
 
     /**
-     * Converts adjacent samples from one metric stream into deltas.
+     * 하나의 metric stream 에서 인접한 sample 을 delta 로 변환합니다.
      */
     fun deltas(samples: Flow<MetricSample>): Flow<MetricDelta> =
         samples.pairwise(MetricDelta::from)
 
     /**
-     * Emits only adjacent trends that cross the configured absolute threshold.
+     * 설정된 absolute threshold 를 넘는 adjacent trend 만 방출합니다.
      */
     fun significantChanges(
         samples: Flow<MetricSample>,
@@ -67,8 +65,7 @@ class MetricsSamplingPipeline {
     }
 
     /**
-     * Converts materialized delta results into trend results without wrapping
-     * coroutine cancellation as a domain failure.
+     * coroutine cancellation 을 domain failure 로 감싸지 않고 materialized delta result 를 trend result 로 변환합니다.
      */
     fun significantChangeResults(
         deltas: Flow<Result<MetricDelta>>,
@@ -83,7 +80,7 @@ class MetricsSamplingPipeline {
     }
 
     /**
-     * Emits samples until a lifecycle stop signal arrives.
+     * lifecycle stop signal 이 도착할 때까지 sample 을 방출합니다.
      */
     fun lifecycleBoundSamples(
         samples: Flow<MetricSample>,

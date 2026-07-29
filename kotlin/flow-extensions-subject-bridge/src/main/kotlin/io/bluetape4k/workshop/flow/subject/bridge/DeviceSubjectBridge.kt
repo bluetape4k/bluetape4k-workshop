@@ -13,9 +13,9 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Bridges callback-style device notifications into Flow streams with explicit Subject semantics.
+ * callback-style device notification 을 명시적인 Subject semantic 을 가진 Flow stream 으로 연결합니다.
  *
- * This example keeps Subject mutation inside the bridge and exposes read-only [Flow] views to callers.
+ * 이 예제는 Subject mutation 을 bridge 내부에 가두고 caller 에게 read-only [Flow] view 만 노출합니다.
  */
 class DeviceSubjectBridge(
     initialState: DeviceState,
@@ -33,22 +33,22 @@ class DeviceSubjectBridge(
     private val multicastSubject = MulticastSubject<DeviceEvent>(multicastSubscribers)
     private val workSubject = UnicastWorkSubject<WorkItem>()
 
-    /** Event-only hot stream: late subscribers do not receive past events. */
+    /** Event-only hot stream 입니다. 늦게 구독한 subscriber 는 과거 event 를 받지 않습니다. */
     val events: Flow<DeviceEvent> get() = eventSubject
 
-    /** Latest-state hot stream: late subscribers receive the newest state first. */
+    /** Latest-state hot stream 입니다. 늦게 구독한 subscriber 는 최신 state 를 먼저 받습니다. */
     val latestState: Flow<DeviceState> get() = stateSubject
 
-    /** Replayable bounded event history for late subscribers. */
+    /** 늦게 구독한 subscriber 를 위한 replay 가능한 bounded event history 입니다. */
     val history: Flow<DeviceEvent> get() = historySubject
 
-    /** Coordinated multicast stream that waits for the configured subscriber count. */
+    /** 설정된 subscriber count 를 기다리는 coordinated multicast stream 입니다. */
     val multicastEvents: Flow<DeviceEvent> get() = multicastSubject
 
-    /** Single-consumer work queue. */
+    /** single-consumer work queue 입니다. */
     val workItems: Flow<WorkItem> get() = workSubject
 
-    /** Current latest state snapshot. */
+    /** 현재 latest state snapshot 입니다. */
     val currentState: DeviceState get() = stateSubject.value
 
     suspend fun awaitEventSubscribers(minCollectorCount: Int = 1, timeout: Duration = 5.seconds) {

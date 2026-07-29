@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.flow.subject.bridge
 import java.io.Serializable
 
 /**
- * Device event kind received from a callback-style SDK listener.
+ * callback-style SDK listener 에서 수신하는 device event kind 입니다.
  */
 enum class DeviceEventType {
     CONNECTED,
@@ -13,7 +13,7 @@ enum class DeviceEventType {
 }
 
 /**
- * Current device state exposed as a latest-state stream.
+ * latest-state stream 으로 노출되는 current device state 입니다.
  */
 enum class DeviceStatus {
     ONLINE,
@@ -22,7 +22,7 @@ enum class DeviceStatus {
 }
 
 /**
- * Event-only signal from an external callback API.
+ * external callback API 에서 들어오는 event-only signal 입니다.
  */
 data class DeviceEvent(
     val eventId: String,
@@ -36,7 +36,7 @@ data class DeviceEvent(
 }
 
 /**
- * Latest state snapshot for a device.
+ * device 의 latest state snapshot 입니다.
  */
 data class DeviceState(
     val deviceId: String,
@@ -49,7 +49,7 @@ data class DeviceState(
 }
 
 /**
- * Single-consumer work item produced from callback events.
+ * callback event 에서 생성되는 single-consumer work item 입니다.
  */
 data class WorkItem(
     val workId: String,

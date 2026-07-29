@@ -8,13 +8,12 @@ import java.time.Instant
 import kotlin.math.abs
 
 /**
- * One high-frequency metric or sensor value.
+ * 하나의 high-frequency metric 또는 sensor value 입니다.
  *
  * ## Contract
- * - `name` and `unit` are trimmed, bounded, and control-character free so
- *   sample values are safe to show in workshop logs.
- * - `value` must be finite.
- * - A private constructor avoids public `copy` bypasses for validated fields.
+ * - `name` 과 `unit` 은 trim 되고 길이가 제한되며 control character 를 포함하지 않아 workshop log 에 안전하게 표시할 수 있습니다.
+ * - `value` 는 finite 값이어야 합니다.
+ * - private constructor 로 검증된 field 를 public `copy` 가 우회하지 못하게 합니다.
  *
  * ```kotlin
  * val sample = MetricSample.of("cpu.usage", 71.5, Instant.now(), "percent")
@@ -51,12 +50,12 @@ class MetricSample private constructor(
 }
 
 /**
- * Adjacent delta between two samples from the same metric stream.
+ * 같은 metric stream 에서 인접한 두 sample 사이의 delta 입니다.
  *
  * ## Contract
- * - The samples must share one metric name and unit.
- * - `delta` is `current.value - previous.value`.
- * - `percentChange` is `null` when the previous value is zero.
+ * - sample 들은 하나의 metric name 과 unit 을 공유해야 합니다.
+ * - `delta` 는 `current.value - previous.value` 입니다.
+ * - previous value 가 0이면 `percentChange` 는 `null` 입니다.
  */
 data class MetricDelta(
     val name: String,
@@ -93,7 +92,7 @@ data class MetricDelta(
 }
 
 /**
- * Direction of a metric transition.
+ * metric transition 의 방향입니다.
  */
 enum class MetricDirection {
     UP,
@@ -102,7 +101,7 @@ enum class MetricDirection {
 }
 
 /**
- * Significant or non-significant trend derived from an adjacent delta.
+ * adjacent delta 에서 파생한 significant 또는 non-significant trend 입니다.
  */
 data class MetricTrend(
     val delta: MetricDelta,
