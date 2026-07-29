@@ -1,42 +1,42 @@
-# Flow Event Aggregation Implementation Plan
+# Flow 이벤트 집계 구현 계획
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build issue #303 as a new in-memory Flow event aggregation workshop example.
+**목표:** 새로운 인메모리 Flow 이벤트 집계 워크숍 예시로 이슈 #303를 구축합니다.
 
-**Architecture:** Add `kotlin/flow-extensions-event-aggregation` with a focused order-event domain and `OrderEventAggregationPipeline` functions that demonstrate bounded batching, rolling windows, grouping, state accumulation, unchanged-status suppression, transition detection, and debug audit logging. Keep the example process-local and deterministic so learners can understand the Flow semantics before adding durable event infrastructure.
+**아키텍처:** 제한된 일괄 처리, 롤링 창, 그룹화, 상태 누적, 변경되지 않은 상태 억제, 전환 감지 및 디버그 감사 로깅을 보여주는 집중된 주문 이벤트 도메인과 `OrderEventAggregationPipeline` 기능이 있는 `kotlin/flow-extensions-event-aggregation`을 추가합니다. 내구성 있는 이벤트 인프라를 추가하기 전에 학습자가 Flow 의미를 이해할 수 있도록 예시 프로세스를 로컬 및 결정론적으로 유지하세요.
 
-**Tech Stack:** Kotlin/JVM, Java 21, `bluetape4k-coroutines`, `bluetape4k-junit5`, `bluetape4k-assertions`, `kotlinx-coroutines-test`, CairoSVG-rendered README diagrams.
+**기술 스택:** Kotlin/JVM, Java 21, `bluetape4k-coroutines`, `bluetape4k-junit5`, `bluetape4k-assertions`, `kotlinx-coroutines-test`, CairoSVG-렌더링된 README 다이어그램.
 
 ---
 
-## File Structure
+## 파일 구조
 
-- Create `kotlin/flow-extensions-event-aggregation/build.gradle.kts`: dependencies matching sibling Flow modules.
-- Create `kotlin/flow-extensions-event-aggregation/src/main/kotlin/io/bluetape4k/workshop/flow/event/aggregation/OrderEventDomain.kt`: serializable events, read model, summaries, status runs, transitions, and audit entries.
-- Create `kotlin/flow-extensions-event-aggregation/src/main/kotlin/io/bluetape4k/workshop/flow/event/aggregation/OrderEventAggregationPipeline.kt`: Flow extension pipelines.
-- Create `kotlin/flow-extensions-event-aggregation/src/test/kotlin/io/bluetape4k/workshop/flow/event/aggregation/OrderEventAggregationPipelineTest.kt`: acceptance tests.
-- Create test resources `junit-platform.properties` and `logback-test.xml`.
-- Create `kotlin/flow-extensions-event-aggregation/README.md` and `README.ko.md`.
-- Modify root `README.md` and `README.ko.md` Async & Reactive tables.
-- Create README diagram assets under `docs/images/readme-diagrams/kotlin-flow-extensions-event-aggregation-readme-*.svg/png`.
-- Modify `scripts/validate-readme-architecture-diagrams.mjs` and `scripts/validate-sequence-diagrams.mjs` only if validator allowlists require the new diagram slugs.
-- Modify `.github/workflows/Examples.yml` and `scripts/smoke-validate.sh` so this in-memory Flow module joins smoke example coverage.
-- Create `docs/review/2026-06-29-issue-303-flow-event-aggregation-review.md`.
-- Create `docs/lessons/2026-06-29-issue-303-flow-event-aggregation.md`.
+- `kotlin/flow-extensions-event-aggregation/build.gradle.kts` 생성: 형제 Flow 모듈과 일치하는 종속성.
+- `kotlin/flow-extensions-event-aggregation/src/main/kotlin/io/bluetape4k/workshop/flow/event/aggregation/OrderEventDomain.kt` 만들기: 직렬화 가능한 이벤트, 읽기 모델, 요약, 상태 실행, 전환 및 감사 항목.
+- `kotlin/flow-extensions-event-aggregation/src/main/kotlin/io/bluetape4k/workshop/flow/event/aggregation/OrderEventAggregationPipeline.kt`: Flow 확장 파이프라인을 생성합니다.
+- `kotlin/flow-extensions-event-aggregation/src/test/kotlin/io/bluetape4k/workshop/flow/event/aggregation/OrderEventAggregationPipelineTest.kt` 생성: 승인 테스트.
+- 테스트 리소스 `junit-platform.properties` 및 `logback-test.xml`를 생성합니다.
+- `kotlin/flow-extensions-event-aggregation/README.md` 및 `README.ko.md`를 생성합니다.
+- 루트 `README.md` 및 `README.ko.md` 비동기 및 반응형 테이블을 수정합니다.
+- `docs/images/readme-diagrams/kotlin-flow-extensions-event-aggregation-readme-*.svg/png` 아래에 README 다이어그램 자산을 만듭니다.
+- 유효성 검사기 허용 목록에 새 다이어그램 슬러그가 필요한 경우에만 `scripts/validate-readme-architecture-diagrams.mjs` 및 `scripts/validate-sequence-diagrams.mjs`을 수정하세요.
+- `.github/workflows/Examples.yml` 및 `scripts/smoke-validate.sh`을 수정하여 이 인메모리 Flow 모듈이 연기 예제 적용 범위에 합류하도록 합니다.
+- `docs/review/2026-06-29-issue-303-flow-event-aggregation-review.md`를 생성합니다.
+- `docs/lessons/2026-06-29-issue-303-flow-event-aggregation.md`를 생성합니다.
 
-## Task 1: Module Skeleton And Domain
+## 작업 1: 모듈 뼈대 및 도메인
 
-**Complexity:** medium  
-**Applies:** `$bluetape4k-code-patterns`
+**복잡성:** 중간
+**적용:** `$bluetape4k-code-patterns`
 
-**Files:**
-- Create: `kotlin/flow-extensions-event-aggregation/build.gradle.kts`
-- Create: `kotlin/flow-extensions-event-aggregation/src/main/kotlin/io/bluetape4k/workshop/flow/event/aggregation/OrderEventDomain.kt`
-- Create: `kotlin/flow-extensions-event-aggregation/src/test/resources/junit-platform.properties`
-- Create: `kotlin/flow-extensions-event-aggregation/src/test/resources/logback-test.xml`
+**파일:**
+- 생성: `kotlin/flow-extensions-event-aggregation/build.gradle.kts`
+- 생성: `kotlin/flow-extensions-event-aggregation/src/main/kotlin/io/bluetape4k/workshop/flow/event/aggregation/OrderEventDomain.kt`
+- 생성: `kotlin/flow-extensions-event-aggregation/src/test/resources/junit-platform.properties`
+- 생성: `kotlin/flow-extensions-event-aggregation/src/test/resources/logback-test.xml`
 
-- [ ] Add Gradle dependencies copied from sibling Flow modules:
+- [ ] 형제 Flow 모듈에서 복사된 Gradle 종속성을 추가합니다.
 
 ```kotlin
 plugins {
@@ -58,12 +58,12 @@ dependencies {
 }
 ```
 
-- [ ] Add serializable domain model:
+- [ ] 직렬화 가능한 도메인 모델을 추가합니다.
   - `sealed interface OrderEvent : Serializable { val orderId: String; val occurredAt: Instant; val eventType: String }`
-  - Event classes: `OrderCreated`, `LineAdded`, `PaymentAuthorized`, `ShipmentStarted`, `OrderCancelled`.
+  - 이벤트 클래스: `OrderCreated`, `LineAdded`, `PaymentAuthorized`, `ShipmentStarted`, `OrderCancelled`.
   - `enum class OrderStatus { NEW, CREATED, PAID, SHIPPED, CANCELLED }`.
-  - Data classes: `OrderState`, `OrderReadModel`, `OrderActivitySummary`, `OrderStatusRun`, `OrderTransition`, `OrderAuditEntry`.
-- [ ] Use constructor `init` blocks with bluetape4k validation helpers:
+  - 데이터 클래스: `OrderState`, `OrderReadModel`, `OrderActivitySummary`, `OrderStatusRun`, `OrderTransition`, `OrderAuditEntry`.
+- [ ] bluetape4k 유효성 검사 도우미와 함께 생성자 `init` 블록을 사용하세요.
   - `orderId.requireNotBlank("orderId")`
   - `customerId.requireNotBlank("customerId")`
   - `sku.requireNotBlank("sku")`
@@ -72,31 +72,31 @@ dependencies {
   - `carrier.requireNotBlank("carrier")`
   - `trackingNumber.requireNotBlank("trackingNumber")`
   - `reason.requireNotBlank("reason")`
-- [ ] Add safe `toString()` overrides for event classes that hide customer id, tracking number, and cancellation reason.
-- [ ] Implement event classes as regular validated classes with private constructors plus companion factories. Do not expose public data-class `copy(...)` for event inputs. If a private data class is used internally, apply the repo's `@ConsistentCopyVisibility` pattern and add a review checklist item proving no public `copy(...)` path can create untrimmed, control-character, or overlong values.
-- [ ] Reject control characters and overlong values for every string; use a printable ASCII token pattern for log-visible identifiers such as `orderId`, `sku`, and `carrier`.
-- [ ] Restrict `OrderAuditEntry` to sanitized fields only: `sequence`, `eventType`, `orderId`, `status`, counts, amount, version, and timestamp. Do not store raw `customerId`, `trackingNumber`, or cancellation `reason`.
-- [ ] Add `private const val serialVersionUID: Long = 1L` in each concrete serializable class companion.
-- [ ] Add English KDoc for public domain types and note that `Serializable` is a repo convention, not a persistence/untrusted-deserialization feature.
-- [ ] Confirm no README, KDoc, or example introduces Java object deserialization or persistence semantics.
-- [ ] Add standard test resources by copying sibling Flow module patterns.
-- [ ] Run module registration check after the module exists:
+- [ ] 고객 ID, 추적 번호 및 취소 이유를 숨기는 이벤트 클래스에 대해 안전한 `toString()` 재정의를 추가합니다.
+- [ ] 전용 생성자와 동반 팩토리를 사용하여 이벤트 클래스를 일반 검증 클래스로 구현합니다. 이벤트 입력에 대해 공개 데이터 클래스 `copy(...)`를 노출하지 마십시오. 비공개 데이터 클래스가 내부적으로 사용되는 경우 저장소의 `@ConsistentCopyVisibility` 패턴을 적용하고 공개 `copy(...)` 경로가 잘리지 않은 제어 문자 또는 너무 긴 값을 생성할 수 없음을 증명하는 검토 체크리스트 항목을 추가합니다.
+- [ ] 모든 문자열에 대해 제어 문자와 너무 긴 값을 거부합니다. `orderId`, `sku` 및 `carrier`와 같은 로그 표시 식별자에 대해 인쇄 가능한 ASCII 토큰 패턴을 사용합니다.
+- [ ] `OrderAuditEntry`을 삭제된 필드(`sequence`, `eventType`, `orderId`, `status`, 개수, 금액, 버전 및 타임스탬프)로만 제한합니다. 원시 `customerId`, `trackingNumber` 또는 취소 `reason`를 저장하지 마십시오.
+- [ ] 각각의 구체적인 직렬화 가능 클래스 컴패니언에 `private const val serialVersionUID: Long = 1L`를 추가합니다.
+- [ ] 공개 도메인 유형에 대해 영어 KDoc을 추가하고 `Serializable`은 persistence/untrusted-deserialization 기능이 아니라 저장소 규칙이라는 점에 유의하세요.
+- [ ] README이 없음을 확인합니다. KDoc이나 예제에서는 Java 개체 역직렬화 또는 지속성 의미를 소개합니다.
+- [ ] 형제 Flow 모듈 패턴을 복사하여 표준 테스트 리소스를 추가합니다.
+- [ ] 모듈이 존재하면 모듈 등록 확인을 실행합니다.
 
 ```bash
 ./gradlew projects --console=plain
 ```
 
-Expected evidence: `:kotlin-flow-extensions-event-aggregation` appears.
+예상 증거: `:kotlin-flow-extensions-event-aggregation`이 나타납니다.
 
-## Task 2: RED Tests For Flow Semantics
+## 작업 2: RED Flow 의미론 테스트
 
-**Complexity:** high  
-**Applies:** `$bluetape4k-code-patterns`, `$test-driven-development`
+**복잡성:** 높음
+**적용:** `$bluetape4k-code-patterns`, `$test-driven-development`
 
-**Files:**
-- Create: `kotlin/flow-extensions-event-aggregation/src/test/kotlin/io/bluetape4k/workshop/flow/event/aggregation/OrderEventAggregationPipelineTest.kt`
+**파일:**
+- 생성: `kotlin/flow-extensions-event-aggregation/src/test/kotlin/io/bluetape4k/workshop/flow/event/aggregation/OrderEventAggregationPipelineTest.kt`
 
-- [ ] Add tests before implementation. Test names:
+- [ ] 구현 전에 테스트를 추가합니다. 테스트 이름:
   - ``chunked activity emits bounded event summaries``
   - ``rolling activity emits overlapping summary windows``
   - ``grouped events partition completed stream by order id``
@@ -119,117 +119,117 @@ Expected evidence: `:kotlin-flow-extensions-event-aggregation` appears.
   - ``collector cancellation stops upstream collection``
   - ``upstream failure propagates through each aggregation path``
   - ``cancellation exception is not wrapped by aggregation paths``
-- [ ] Use `io.bluetape4k.junit5.coroutines.runSuspendTest`.
-- [ ] Use `io.bluetape4k.assertions.assertFailsWith`, `shouldBeEqualTo`, `shouldContain`, `shouldHaveSize`, `shouldBeEmpty`, and dot-call boolean matchers.
-- [ ] Do not use JUnit, AssertJ, Kluent, or `kotlin.test` assertions.
-- [ ] Use finite `flowOf(...)` inputs for normal behavior, grouping, windowing, and projection tests. Do not use sleeps, timers, or wall-clock scheduler assertions.
-- [ ] For the cancellation test only, use a controlled `flow { emit(...); awaitCancellation() }` or gated `MutableSharedFlow` source with `cancelAndJoin`, and assert an `onCompletion` or `finally` flag so upstream cancellation is deterministic without sleeps.
-- [ ] Verify `groupedByOrder` result order by `associateBy { it.key }` or sorted keys; assert strict original order only inside each group's `values`.
-- [ ] Verify high-cardinality `groupedByOrder` with more distinct order ids than `flatMapMerge` default concurrency inside `withTimeout`, and keep it documented as a finite demo. If this exposes a timeout risk, bound concurrency explicitly and update README/KDoc to match.
-- [ ] Verify function-specific failure propagation:
-  - `chunkedActivity`, `rollingActivity`, `readModels`, `statusRuns`, `transitions`, and `audit` propagate the original upstream exception.
-  - `groupedByOrder` wraps non-cancellation upstream failures in `FlowOperationException` with the original exception as `cause`.
-  - Every path propagates `CancellationException` without wrapping.
-- [ ] Decide and document that public `readModels(events)` emits the initial empty `OrderReadModel` from `scanWith`; tests and README must name that first emission.
-- [ ] Test empty stream behavior, first-event transition behavior, unknown order id projection behavior, duplicate payment behavior, out-of-order shipment behavior, and terminal `CANCELLED` version advance.
-- [ ] Sensitive field validation tests must cover blank, trimming, overlong, and control-character behavior for `customerId`, `trackingNumber`, and cancellation `reason`, not only `orderId`, `sku`, or `carrier`.
-- [ ] Verify RED before production implementation:
+- [ ] `io.bluetape4k.junit5.coroutines.runSuspendTest`를 사용하세요.
+- [ ] `io.bluetape4k.assertions.assertFailsWith`, `shouldBeEqualTo`, `shouldContain`, `shouldHaveSize`, `shouldBeEmpty` 및 도트 호출 부울 매처를 사용하세요.
+- [ ] JUnit, AssertJ, Kluent 또는 `kotlin.test` 어설션을 사용하지 마세요.
+- [ ] 일반 동작, 그룹화, 윈도우화 및 프로젝션 테스트에는 유한 `flowOf(...)` 입력을 사용합니다. 절전 모드, 타이머 또는 벽시계 스케줄러 어설션을 사용하지 마세요.
+- [ ] 취소 테스트의 경우에만 `cancelAndJoin`와 함께 제어된 `flow { emit(...); awaitCancellation() }` 또는 게이트된 `MutableSharedFlow` 소스를 사용하고 `onCompletion` 또는 `finally` 플래그를 지정하여 업스트림 취소가 절전 모드 없이 결정적이 되도록 합니다.
+- [ ] `associateBy { it.key }` 또는 정렬된 키로 `groupedByOrder` 결과 순서를 확인합니다. 각 그룹의 `values` 내에서만 엄격한 원래 순서를 검증하십시오.
+- [ ] `withTimeout` 내부의 `flatMapMerge` 기본 동시성보다 더 고유한 주문 ID를 사용하여 높은 카디널리티 `groupedByOrder`을 확인하고 이를 유한 데모로 문서화하세요. 시간 초과 위험이 노출되면 동시성을 명시적으로 바인딩하고 일치하도록 README/KDoc을 업데이트하세요.
+- [ ] 기능별 오류 전파를 확인합니다.
+  - `chunkedActivity`, `rollingActivity`, `readModels`, `statusRuns`, `transitions` 및 `audit`는 원래 업스트림 예외를 전파합니다.
+  - `groupedByOrder`은 원래 예외를 `cause`로 사용하여 `FlowOperationException`의 취소되지 않는 업스트림 실패를 래핑합니다.
+  - 모든 경로는 래핑 없이 `CancellationException` 전파됩니다.
+- [ ] 공개 `readModels(events)`이 `scanWith`에서 초기 빈 `OrderReadModel`을 내보내도록 결정하고 문서화합니다. 테스트 및 README는 첫 번째 방출의 이름을 지정해야 합니다.
+- [ ] 빈 스트림 동작, 첫 번째 이벤트 전환 동작, 알 수 없는 주문 ID 예상 동작, 중복 결제 동작, 주문이 잘못된 배송 동작 및 터미널 `CANCELLED` 버전 향상을 테스트합니다.
+- [ ] 민감한 필드 유효성 검사 테스트는 `orderId`, `sku` 또는 `carrier`뿐만 아니라 `customerId`, `trackingNumber` 및 취소 `reason`에 대한 공백, 자르기, 너무 긴 제어 문자 동작을 다루어야 합니다.
+- [ ] 프로덕션 구현 전에 RED를 확인합니다.
 
 ```bash
 ./gradlew :kotlin-flow-extensions-event-aggregation:test --tests "io.bluetape4k.workshop.flow.event.aggregation.OrderEventAggregationPipelineTest" --console=plain
 ```
 
-Expected evidence: tests fail because `OrderEventAggregationPipeline` behavior is not implemented yet. If Task 1 already created domain types, the RED evidence may be unresolved pipeline symbols or failing behavior assertions, not necessarily missing domain classes.
+예상되는 증거: `OrderEventAggregationPipeline` 동작이 아직 구현되지 않았기 때문에 테스트가 실패합니다. 작업 1이 이미 도메인 유형을 생성한 경우 RED 증거는 해결되지 않은 파이프라인 기호 또는 실패한 동작 어설션일 수 있으며 반드시 도메인 클래스가 누락된 것은 아닙니다.
 
-## Task 3: Pipeline Implementation
+## 작업 3: 파이프라인 구현
 
-**Complexity:** high  
-**Applies:** `$bluetape4k-code-patterns`
+**복잡성:** 높음
+**적용:** `$bluetape4k-code-patterns`
 
-**Files:**
-- Create: `kotlin/flow-extensions-event-aggregation/src/main/kotlin/io/bluetape4k/workshop/flow/event/aggregation/OrderEventAggregationPipeline.kt`
-- Modify: `kotlin/flow-extensions-event-aggregation/src/main/kotlin/io/bluetape4k/workshop/flow/event/aggregation/OrderEventDomain.kt`
+**파일:**
+- 생성: `kotlin/flow-extensions-event-aggregation/src/main/kotlin/io/bluetape4k/workshop/flow/event/aggregation/OrderEventAggregationPipeline.kt`
+- 수정: `kotlin/flow-extensions-event-aggregation/src/main/kotlin/io/bluetape4k/workshop/flow/event/aggregation/OrderEventDomain.kt`
 
-- [ ] Implement `OrderState.apply(event: OrderEvent): OrderState`:
-  - `OrderCreated` moves `NEW -> CREATED`.
-  - `LineAdded` increments line count and item quantity but keeps current lifecycle status unless status is `NEW`, then uses `CREATED`.
-  - `PaymentAuthorized` sets `authorizedAmountCents` and moves non-cancelled orders to `PAID`.
-  - `ShipmentStarted` moves non-cancelled orders to `SHIPPED`.
-  - `OrderCancelled` moves to terminal `CANCELLED`.
-  - Once `CANCELLED`, later non-cancel events keep status `CANCELLED` while still increasing version/last event for audit visibility.
-- [ ] Accept out-of-order projection events rather than rejecting them:
-  - `ShipmentStarted` before payment moves to `SHIPPED`.
-  - Duplicate `PaymentAuthorized` stays `PAID` and updates amount/version if not cancelled.
-  - `OrderCancelled` after `SHIPPED` moves to terminal `CANCELLED`.
-  - Later non-cancel events after `CANCELLED` keep `CANCELLED`.
-- [ ] Implement `OrderReadModel.apply(event)` by replacing only the changed order entry in an immutable map copy.
-- [ ] Implement `OrderEventAggregationPipeline`:
-  - `chunkedActivity(events, chunkSize)` validates `chunkSize > 0`, calls `events.chunked(chunkSize, partialWindow = true)`, then maps each batch to `OrderActivitySummary`.
-  - `rollingActivity(events, size, step)` validates the same constraints as `windowed`, calls `events.windowed(size, step, partialWindow = true)`, then maps each window to `OrderActivitySummary`.
-  - `groupedByOrder(events)` returns `Flow<GroupItem<String, OrderEvent>>` and calls `events.groupBy { it.orderId }.flatMapMerge(concurrency = GROUPING_CONCURRENCY) { it.toGroupItems() }`, where `GROUPING_CONCURRENCY` is documented as a finite-demo guard.
-  - `readModels(events)` calls `events.scanWith({ OrderReadModel.empty() }) { model, event -> model.apply(event) }` and intentionally emits the initial empty model.
-  - `statusRuns(events, orderId)` returns `Flow<OrderStatusRun>` by filtering one order, applying `scanWith`, dropping the initial `NEW` state, calling `bufferUntilChanged { it.status }`, and mapping each run list to one DTO with final state.
-  - `transitions(events, orderId)` calls `statusRuns(...).map { it.finalState }.zipWithNext { previous, current -> OrderTransition(...) }` and filters out unchanged statuses.
-  - `audit(events)` maps to sanitized `OrderAuditEntry` first, then calls `.log("order-event-aggregation")`.
-- [ ] Add English KDoc for each public pipeline function, including the `groupBy` vs `bufferUntilChanged` distinction and finite-stream caveat for `groupedByOrder`.
-- [ ] Document allocation behavior in KDoc and README:
-  - `windowed`/`chunked` emit lists and overlapping windows duplicate retained elements.
-  - `rollingActivity(size = 3, step = 1, partialWindow = true)` may emit amplified tail windows; tests lock the count.
-  - `statusRuns` uses `bufferUntilChanged`, retains one run until status changes or upstream completes, then copies that run list; cost is `O(runLength)` retention.
-  - immutable `OrderReadModel` snapshots allocate per event intentionally for learning clarity; the copy cost is `O(events * activeOrders)` in the finite teaching model.
-  - high-throughput production projections should consider bounded mutable internal state, checkpointed projections, and durable stores instead of copying the full active-order map per event.
-  - `audit` is diagnostic-only and should be gated/removed in high-throughput production paths.
-  - `audit(events)` sanitizes emitted audit values, not arbitrary upstream exception messages; examples/tests use non-sensitive failure messages.
-- [ ] Run targeted tests until green:
+- [ ] `OrderState.apply(event: OrderEvent): OrderState` 구현:
+  - `OrderCreated`이(가) `NEW -> CREATED` 이동합니다.
+  - `LineAdded`은 라인 수와 항목 수량을 증가시키지만 상태가 `NEW`가 아닌 이상 현재 수명 주기 상태를 유지하고 `CREATED`를 사용합니다.
+  - `PaymentAuthorized`은 `authorizedAmountCents`을 설정하고 취소되지 않은 주문을 `PAID`로 이동합니다.
+  - `ShipmentStarted`은 취소되지 않은 주문을 `SHIPPED`로 이동합니다.
+  - `OrderCancelled`은 `CANCELLED` 터미널로 이동합니다.
+  - 일단 `CANCELLED`이면 나중에 취소되지 않는 이벤트는 `CANCELLED` 상태를 유지하면서 감사 가시성을 위해 version/last 이벤트를 계속 증가시킵니다.
+- [ ] 순서가 잘못된 투영 이벤트를 거부하는 대신 수락합니다.
+  - `ShipmentStarted` 결제 전 `SHIPPED`로 이동합니다.
+  - 중복된 `PaymentAuthorized`은(는) `PAID`로 유지되고 취소되지 않으면 업데이트(amount/version)됩니다.
+  - `SHIPPED` 이후 `OrderCancelled`은 `CANCELLED` 터미널로 이동합니다.
+  - `CANCELLED` 이후 취소되지 않는 이벤트는 `CANCELLED`을 유지합니다.
+- [ ] 불변 지도 복사본에서 변경된 순서 항목만 교체하여 `OrderReadModel.apply(event)`을 구현합니다.
+- [ ] `OrderEventAggregationPipeline` 구현:
+  - `chunkedActivity(events, chunkSize)`은 `chunkSize > 0`의 유효성을 검사하고 `events.chunked(chunkSize, partialWindow = true)`를 호출한 다음 각 배치를 `OrderActivitySummary`에 매핑합니다.
+  - `rollingActivity(events, size, step)`은 `windowed`과 동일한 제약 조건을 검증하고 `events.windowed(size, step, partialWindow = true)`를 호출한 다음 각 창을 `OrderActivitySummary`에 매핑합니다.
+  - `groupedByOrder(events)`은 `Flow<GroupItem<String, OrderEvent>>`을 반환하고 `events.groupBy { it.orderId }.flatMapMerge(concurrency = GROUPING_CONCURRENCY) { it.toGroupItems() }`를 호출합니다. 여기서 `GROUPING_CONCURRENCY`은 유한 데모 가드로 문서화되어 있습니다.
+  - `readModels(events)`은 `events.scanWith({ OrderReadModel.empty() }) { model, event -> model.apply(event) }`을 호출하고 의도적으로 초기 빈 모델을 내보냅니다.
+  - `statusRuns(events, orderId)`은 하나의 주문을 필터링하고, `scanWith`를 적용하고, 초기 `NEW` 상태를 삭제하고, `bufferUntilChanged { it.status }`를 호출하고, 각 실행 목록을 최종 상태가 있는 하나의 DTO에 매핑하여 `Flow<OrderStatusRun>`를 반환합니다.
+  - `transitions(events, orderId)`은 `statusRuns(...).map { it.finalState }.zipWithNext { previous, current -> OrderTransition(...) }`을 호출하고 변경되지 않은 상태를 필터링합니다.
+  - `audit(events)`은 먼저 정리된 `OrderAuditEntry`에 매핑된 다음 `.log("order-event-aggregation")`를 호출합니다.
+- [ ] `groupBy` 대 `bufferUntilChanged` 구별 및 `groupedByOrder`에 대한 유한 스트림 주의 사항을 포함하여 각 공용 파이프라인 기능에 대해 영어 KDoc를 추가합니다.
+- [ ] KDoc 및 README의 문서 할당 동작:
+  - `windowed`/`chunked`은 목록을 내보내고 겹치는 창은 유지된 요소를 복제합니다.
+  - `rollingActivity(size = 3, step = 1, partialWindow = true)`은(는) 증폭된 꼬리 창을 방출할 수 있습니다. 테스트에서는 카운트를 잠급니다.
+  - `statusRuns`은 `bufferUntilChanged`을 사용하고 상태가 변경되거나 업스트림이 완료될 때까지 하나의 실행을 유지한 다음 해당 실행 목록을 복사합니다. 비용은 `O(runLength)` 유지입니다.
+  - 불변 `OrderReadModel` 스냅샷은 학습 명확성을 위해 의도적으로 이벤트별로 할당합니다. 유한 교육 모델에서 복사 비용은 `O(events * activeOrders)`입니다.
+  - 높은 처리량 생산 예측은 이벤트별로 전체 활성 주문 맵을 복사하는 대신 제한된 변경 가능한 내부 상태, 체크포인트 예측 및 내구성 있는 저장소를 고려해야 합니다.
+  - `audit`은 진단 전용이며 처리량이 많은 생산 경로에서는 gated/removed이어야 합니다.
+  - `audit(events)`은 임의의 업스트림 예외 메시지가 아닌 내보낸 감사 값을 삭제합니다. examples/tests 민감하지 않은 실패 메시지를 사용합니다.
+- [ ] 녹색이 될 때까지 대상 테스트를 실행합니다.
 
 ```bash
 ./gradlew :kotlin-flow-extensions-event-aggregation:test --rerun-tasks --console=plain
 ```
 
-Expected evidence: module tests pass.
+예상 증거: 모듈 테스트가 통과되었습니다.
 
-## Task 4: Documentation And Diagrams
+## 작업 4: 문서 및 다이어그램
 
-**Complexity:** high  
-**Applies:** `$bluetape4k-blog`, `$bluetape4k-diagram`
+**복잡성:** 높음
+**적용:** `$bluetape4k-blog`, `$bluetape4k-diagram`
 
-**Files:**
-- Create: `kotlin/flow-extensions-event-aggregation/README.md`
-- Create: `kotlin/flow-extensions-event-aggregation/README.ko.md`
-- Modify: `README.md`
-- Modify: `README.ko.md`
-- Create: `docs/images/readme-diagrams/kotlin-flow-extensions-event-aggregation-readme-scenario-01.svg/png`
-- Create: `docs/images/readme-diagrams/kotlin-flow-extensions-event-aggregation-readme-architecture-01.svg/png`
-- Create: `docs/images/readme-diagrams/kotlin-flow-extensions-event-aggregation-readme-domain-01.svg/png`
-- Create: `docs/images/readme-diagrams/kotlin-flow-extensions-event-aggregation-readme-sequence-01.svg/png`
-- Create: `docs/images/readme-diagrams/kotlin-flow-extensions-event-aggregation-readme-contact-sheet-01.png`
+**파일:**
+- 생성: `kotlin/flow-extensions-event-aggregation/README.md`
+- 생성: `kotlin/flow-extensions-event-aggregation/README.ko.md`
+- 수정: `README.md`
+- 수정: `README.ko.md`
+- 생성: `docs/images/readme-diagrams/kotlin-flow-extensions-event-aggregation-readme-scenario-01.svg/png`
+- 생성: `docs/images/readme-diagrams/kotlin-flow-extensions-event-aggregation-readme-architecture-01.svg/png`
+- 생성: `docs/images/readme-diagrams/kotlin-flow-extensions-event-aggregation-readme-domain-01.svg/png`
+- 생성: `docs/images/readme-diagrams/kotlin-flow-extensions-event-aggregation-readme-sequence-01.svg/png`
+- 생성: `docs/images/readme-diagrams/kotlin-flow-extensions-event-aggregation-readme-contact-sheet-01.png`
 
-- [ ] README.md sections:
-  - Language switch: `[한국어](README.ko.md) | English`
-  - Overview
-  - Before: mutable map and scheduled flush
-  - After: Flow extension pipeline
-  - Architecture and scenario diagrams
-  - Core domain
-  - Pipeline walkthrough
-  - Used Bluetape4k features table
-  - Scope and durable event store/outbox caveat
-  - Resource ownership and recovery semantics
-  - Durable store/outbox responsibility table
-  - Debug audit/logging boundary
-  - Rollout, rollback, and operator verification notes
-  - Run commands
-- [ ] README.ko.md mirrors the same source facts in natural Korean:
-  - Language switch: `[English](README.md) | 한국어`
-  - Avoid literal translation; keep technical terms clear.
-- [ ] Root README tables add a Basic Async & Reactive row:
+- [ ] README.md 섹션:
+  - 언어 스위치: `[한국어](README.ko.md) | English`
+  - 개요
+  - 이전: 변경 가능한 맵 및 예약된 플러시
+  - 이후: Flow 확장 파이프라인
+  - 아키텍처 및 시나리오 다이어그램
+  - 핵심 도메인
+  - 파이프라인 연습
+  - 중고 Bluetape4k 기능 표
+  - 범위 및 지속성 이벤트 store/outbox 주의사항
+  - 리소스 소유권 및 복구 의미론
+  - 내구성 있는 store/outbox 책임 테이블
+  - 디버그 audit/logging 경계
+  - 롤아웃, 롤백 및 운영자 확인 노트
+  - 명령 실행
+- [ ] README.ko.md는 동일한 원본 사실을 자연 한국어로 반영합니다.
+  - 언어 스위치: `[English](README.md) | 한국어`
+  - 문자 그대로의 번역을 피하세요. 기술 용어를 명확하게 유지하세요.
+- [ ] 루트 README 테이블에 기본 비동기 및 반응 행이 추가됩니다.
   - `flow-extensions-event-aggregation`
-  - libs: `coroutines`, `junit5`
-  - infra: `In-memory`
-  - learning outcome: event aggregation with chunk/window/group/scan/suppression/transition Flow extensions.
-- [ ] Generate diagrams with English labels, `Architects Daughter` and `Comic Mono`, no Graphviz, no invented infra icons, and top-to-bottom architecture flow with visible layers.
-- [ ] Render every SVG to PNG with `~/.local/bin/cairosvg`.
-- [ ] Run diagram validation:
+  - 라이브러리: `coroutines`, `junit5`
+  - 인프라: `In-memory`
+  - 학습 결과: chunk/window/group/scan/suppression/transition Flow 확장을 사용한 이벤트 집계.
+- [ ] 영어 레이블, `Architects Daughter` 및 `Comic Mono`, Graphviz 없음, 고안된 인프라 아이콘 없음, 표시 레이어가 있는 위에서 아래로 아키텍처 흐름을 사용하여 다이어그램을 생성합니다.
+- [ ] `~/.local/bin/cairosvg`을 사용하여 모든 SVG부터 PNG까지 렌더링합니다.
+- [ ] 다이어그램 유효성 검사를 실행합니다.
 
 ```bash
 xmllint --noout docs/images/readme-diagrams/kotlin-flow-extensions-event-aggregation-readme-*.svg
@@ -239,29 +239,29 @@ python3 /Users/debop/.codex/skills/bluetape4k-diagram/references/diagram-geometr
 python3 /Users/debop/.codex/skills/bluetape4k-diagram/references/diagram-endpoint-audit.py docs/images/readme-diagrams/kotlin-flow-extensions-event-aggregation-readme-*.svg
 ```
 
-- [ ] Record CairoSVG render success for every SVG.
-- [ ] Create and inspect the contact sheet plus every full-size PNG with visual inspection; store the evidence in `docs/review/2026-06-29-issue-303-flow-event-aggregation-review.md`.
+- [ ] 모든 SVG에 대해 CairoSVG 렌더링 성공을 기록합니다.
+- [ ] 육안 검사를 통해 접착 시트와 모든 전체 크기 PNG를 만들고 검사합니다. 증거를 `docs/review/2026-06-29-issue-303-flow-event-aggregation-review.md`에 저장하세요.
 
-Expected evidence: validators pass, every SVG renders, and visual inspection passes.
+예상 증거: 유효성 검사기 통과, 모든 SVG 렌더링 및 육안 검사 통과.
 
-## Task 5: Smoke Registration And Verification
+## 작업 5: 연기 등록 및 확인
 
-**Complexity:** medium  
-**Applies:** `$bluetape4k-code-patterns`
+**복잡성:** 중간
+**적용:** `$bluetape4k-code-patterns`
 
-**Files:**
-- Modify: `.github/workflows/Examples.yml`
-- Modify: `scripts/smoke-validate.sh`
+**파일:**
+- 수정: `.github/workflows/Examples.yml`
+- 수정: `scripts/smoke-validate.sh`
 
-- [ ] Add `kotlin/flow-extensions-event-aggregation/**` to push and pull request path filters in `.github/workflows/Examples.yml`.
-- [ ] Add `:kotlin-flow-extensions-event-aggregation:test` to the `smoke-examples` Gradle command.
-- [ ] Add the exact new test result paths to the smoke artifact upload:
+- [ ] `.github/workflows/Examples.yml`의 푸시 및 풀 요청 경로 필터에 `kotlin/flow-extensions-event-aggregation/**`을 추가합니다.
+- [ ] `smoke-examples` Gradle 명령에 `:kotlin-flow-extensions-event-aggregation:test`을 추가합니다.
+- [ ] 연기 아티팩트 업로드에 정확한 새 테스트 결과 경로를 추가합니다.
   - `kotlin/flow-extensions-event-aggregation/build/test-results/test/*.xml`
   - `kotlin/flow-extensions-event-aggregation/build/reports/tests/test/`
-- [ ] Add `:kotlin-flow-extensions-event-aggregation:test` to `scripts/smoke-validate.sh` in `all-smoke` and `async`.
-- [ ] Note that adding the task to `all-smoke` intentionally covers `.github/workflows/nightly.yml` smoke runs; no Nightly workflow edit is needed unless direct workflow grouping changes.
-- [ ] Update `stale-check` expected project count by +1 after confirming `./gradlew projects` count.
-- [ ] Run:
+- [ ] `all-smoke` 및 `async`의 `scripts/smoke-validate.sh`에 `:kotlin-flow-extensions-event-aggregation:test`을 추가합니다.
+- [ ] `all-smoke`에 작업을 추가하면 의도적으로 `.github/workflows/nightly.yml` 연기 실행이 포함됩니다. 직접적인 워크플로 그룹화가 변경되지 않는 한 야간 워크플로 편집은 필요하지 않습니다.
+- [ ] `./gradlew projects` 개수를 확인한 후 `stale-check` 예상 프로젝트 개수를 +1 업데이트합니다.
+- [ ] 달리다:
 
 ```bash
 actionlint .github/workflows/Examples.yml
@@ -273,39 +273,39 @@ node scripts/validate-readme-language.mjs
 git diff --check
 ```
 
-Expected evidence: actionlint passes, project count is current, async smoke passes, and diff check is clean.
+예상 증거: actionlint 통과, 프로젝트 수가 현재 상태, 비동기 연기 통과, diff 확인이 깨끗함.
 
-## Task 6: Reviews, Lessons, PR, And CI
+## 작업 6: 리뷰, 강의, PR 및 CI
 
-**Complexity:** high  
-**Applies:** `$bluetape4k-workflow`, `$bluetape4k-full-feature`
+**복잡성:** 높음
+**적용:** `$bluetape4k-workflow`, `$bluetape4k-full-feature`
 
-**Files:**
-- Create: `docs/review/2026-06-29-issue-303-flow-event-aggregation-review.md`
-- Create: `docs/lessons/2026-06-29-issue-303-flow-event-aggregation.md`
+**파일:**
+- 생성: `docs/review/2026-06-29-issue-303-flow-event-aggregation-review.md`
+- 생성: `docs/lessons/2026-06-29-issue-303-flow-event-aggregation.md`
 
-- [ ] Run Step 5 verifier check against issue #303 and this spec/plan.
-- [ ] Run Step 6-R review with six independent perspectives plus main integration; converge P0 = 0 and P1 = 0.
-- [ ] Create a concise lesson:
-  - Context: event aggregation Flow example.
-  - Decision: separate `groupBy` global grouping from `bufferUntilChanged` adjacent suppression.
-  - Outcome: tests and README make the distinction explicit.
-  - Future guidance: do not use `bufferUntilChanged` as an all-order grouping primitive.
-- [ ] Commit implementation using Lore commit protocol.
-- [ ] Create PR against `develop`:
-  - Title: `feat: add Flow event aggregation workshop`
-  - Assignee: `debop`
-  - Milestone: `1.2.0`
-  - Labels mirrored from issue #303: `documentation`, `enhancement`, `difficulty:intermediate`, `area:async-reactive`, `coroutines`
-  - Body links `Closes #303`
-  - Final Markdown `##` section is exactly `## DoD Status`.
-- [ ] Verify live metadata:
+- [ ] 이슈 #303 및 spec/plan에 대해 5단계 검증 도구 확인을 실행합니다.
+- [ ] 6개의 독립적인 관점과 기본 통합을 통해 6-R단계 검토를 실행합니다. P0 = 0과 P1 = 0으로 수렴합니다.
+- [ ] 간결한 강의 만들기:
+  - 컨텍스트: 이벤트 집계 Flow 예.
+  - 결정: `bufferUntilChanged` 인접 억제에서 `groupBy` 전역 그룹화를 분리합니다.
+  - 결과: 테스트와 README는 구별을 명확하게 합니다.
+  - 향후 지침: `bufferUntilChanged`을 모든 순서 그룹화 기본 요소로 사용하지 마세요.
+- [ ] Lore 커밋 프로토콜을 사용하여 구현을 커밋합니다.
+- [ ] `develop`에 대해 PR를 생성합니다.
+  - 제목: `feat: add Flow event aggregation workshop`
+  - 담당자: `debop`
+  - 마일스톤: `1.2.0`
+  - 이슈 #303에서 미러링된 라벨: `documentation`, `enhancement`, `difficulty:intermediate`, `area:async-reactive`, `coroutines`
+  - 본문 링크 `Closes #303`
+  - 최종 Markdown `##` 섹션은 정확히 `## DoD Status`입니다.
+- [ ] 라이브 메타데이터를 확인합니다.
 
 ```bash
 gh issue view 303 --json assignees,labels,milestone,state
 gh pr view <number> --json assignees,labels,milestone,body
 ```
 
-- [ ] Run PR checks, verify PR body/metadata, and re-read reviews/review threads after checks are green.
-- [ ] Report merge-ready status and stop unless the user has explicitly requested merge for this PR.
-- [ ] If the user explicitly requests merge, re-read reviews/review threads immediately before merge, merge with rebase, sync local `develop`, remove the feature worktree only after merge ancestry is proven, and verify issue #303 closed.
+- [ ] PR 검사를 실행하고, PR body/metadata을 확인하고, 검사가 녹색이면 reviews/review 스레드를 다시 읽으세요.
+- [ ] 사용자가 이 PR에 대해 병합을 명시적으로 요청하지 않는 한 병합 준비 상태를 보고하고 중지합니다.
+- [ ] 사용자가 명시적으로 병합을 요청하는 경우 병합 직전에 reviews/review 스레드를 다시 읽고, 리베이스로 병합하고, 로컬 `develop`을 동기화하고, 병합 조상이 입증된 후에만 기능 작업 트리를 제거하고, 이슈 #303가 닫혔는지 확인합니다.

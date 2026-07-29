@@ -1,20 +1,20 @@
-# Code Review — Issue 306 Flow Subject Bridge
+# 이슈 306 Flow Subject 브리지 코드 리뷰
 
 ## 범위
 
-새 module `:flow-extensions-subject-bridge`, root README 등록, bilingual module README,
-README diagram asset.
+새 모듈 `:flow-extensions-subject-bridge`, 루트 README 등록, 양방향 모듈 README,
+README 다이어그램 아티팩트.
 
-## 통합 7-tier verdict
+## 7-Tier 종합 판정
 
-| Tier | Verdict | Evidence |
+| 계층 | 판정 | 근거 |
 |---|---|---|
-| Performance | PASS | bounded replay buffer, blocking call 없음, multicast readiness 문서화. |
-| Stability | PASS | hot-stream subscriber readiness는 `awaitCollector(s)` test로 보호하고, unicast single-consumer behavior도 테스트했다. |
-| Security | PASS | in-memory example만 있으며 external input, auth, secret, network, SQL, serialization boundary가 없다. |
-| Operator/Ops | PASS | README는 terminal behavior와 bridge boundary를 문서화하며 runtime infrastructure는 없다. |
-| Developer/API | PASS | Subject는 private이고 read side는 `Flow`, write side는 callback-style method다. test는 bluetape4k assertion을 사용한다. |
-| User/Caller | PASS | README는 before/after, selection guide, feature table, diagram을 포함한다. |
+| 성능 | PASS | 크기가 제한된 리플레이 버퍼를 사용하고 블로킹 호출이 없으며, 멀티캐스트 준비 상태를 문서화했다. |
+| 안정성 | PASS | 핫 스트림 구독자의 준비 상태는 `awaitCollector(s)` 테스트로 보호하고, 유니캐스트의 단일 소비자 동작도 테스트했다. |
+| 보안 | PASS | 인메모리 예제만 있으며 외부 입력, 인증, 비밀 정보, 네트워크, SQL, 직렬화 경계가 없다. |
+| 운영 | PASS | README는 종료 동작과 브리지 경계를 문서화하며 런타임 인프라는 없다. |
+| 개발자/API | PASS | `Subject`는 `private`이고 읽기 측은 `Flow`, 쓰기 측은 콜백 방식 메서드다. 테스트는 bluetape4k 검증문을 사용한다. |
+| 사용자/호출자 | PASS | README는 변경 전/후, 선택 가이드, 기능 표, 다이어그램을 포함한다. |
 
 ## P0/P1
 
@@ -23,4 +23,4 @@ README diagram asset.
 
 ## 후속 작업
 
-PR readiness를 위해 필요한 후속 작업은 없다.
+PR 준비를 위해 필요한 후속 작업은 없다.
