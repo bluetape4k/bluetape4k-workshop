@@ -1,0 +1,1710 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:,">
+  <title>Concert Ticket Flash Sale Visual Companion</title>
+  <script>
+    (() => {
+      const storageKey = "starlight-theme";
+      const storedTheme = localStorage.getItem(storageKey);
+      const systemTheme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.dataset.theme =
+        storedTheme === "light" || storedTheme === "dark" ? storedTheme : systemTheme;
+    })();
+  </script>
+  <style>
+    :root, :root[data-theme="light"] {
+      --ink: #18201f;
+      --muted: #596563;
+      --paper: #f6f7f3;
+      --surface: #ffffff;
+      --surface-2: #eef1eb;
+      --line: #cdd4cc;
+      --line-strong: #9ca8a0;
+      --teal: #087c70;
+      --teal-soft: #d9efea;
+      --coral: #d94d3f;
+      --coral-soft: #f8dfdb;
+      --yellow: #d99a16;
+      --yellow-soft: #f8eccd;
+      --yellow-text: #805600;
+      --blue: #3168a8;
+      --blue-soft: #e0ebf7;
+      --violet: #6f55a6;
+      --violet-soft: #ebe5f5;
+      --teal-text: #045d54;
+      --coral-text: #6f2721;
+      --shadow: 0 14px 36px rgba(32, 45, 41, .09);
+    }
+
+    :root[data-theme="dark"] {
+      --ink: #edf5f2;
+      --muted: #a8bbb5;
+      --paper: #08110f;
+      --surface: #111d1a;
+      --surface-2: #182724;
+      --line: #31433e;
+      --line-strong: #50655f;
+      --teal: #70d9c8;
+      --teal-soft: #123d36;
+      --coral: #ff8f82;
+      --coral-soft: #452824;
+      --yellow: #f0c264;
+      --yellow-soft: #40351d;
+      --yellow-text: #f3cf7d;
+      --blue: #84b6ee;
+      --blue-soft: #1d3348;
+      --violet: #c1a7ef;
+      --violet-soft: #332845;
+      --teal-text: #8ce6d8;
+      --coral-text: #ffaaa0;
+      --shadow: 0 14px 36px rgba(0, 0, 0, .28);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    a { color: inherit; text-underline-offset: 3px; }
+    .source-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      margin-top: 14px;
+      color: #b9efe4;
+      font-size: 12px;
+      font-weight: 750;
+    }
+    code, pre {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    code { font-size: .92em; }
+    h1, h2, h3, p { margin: 0; }
+    h1, h2, h3 { line-height: 1.2; letter-spacing: 0; }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid rgba(205, 212, 204, .9);
+      background: rgba(246, 247, 243, .94);
+      backdrop-filter: blur(12px);
+    }
+    :root[data-theme="dark"] .topbar {
+      border-bottom-color: color-mix(in srgb, var(--line) 90%, transparent);
+      background: color-mix(in srgb, var(--paper) 92%, transparent);
+    }
+    .topbar .shell {
+      display: flex;
+      min-height: 52px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .brand {
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    .topbar-actions,
+    .topnav {
+      display: flex;
+      align-items: center;
+    }
+    .topbar-actions { gap: 14px; }
+    .topnav {
+      gap: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .topnav a { text-decoration: none; }
+    .topnav a:hover { color: var(--teal); }
+    .theme-toggle {
+      display: inline-grid;
+      width: 36px;
+      height: 36px;
+      flex: 0 0 auto;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      color: var(--ink);
+      background: var(--surface);
+      cursor: pointer;
+    }
+    .theme-toggle:hover { border-color: var(--line-strong); }
+    .theme-toggle:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--teal) 38%, transparent);
+      outline-offset: 2px;
+    }
+    .theme-toggle svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+    }
+    :root[data-theme="dark"] .theme-icon-sun,
+    :root[data-theme="light"] .theme-icon-moon { display: none; }
+    section[id] { scroll-margin-top: 70px; }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, .88fr) minmax(520px, 1.12fr);
+      gap: 46px;
+      min-height: 690px;
+      align-items: center;
+      padding: 64px 0 54px;
+    }
+    .eyebrow {
+      color: var(--teal);
+      font-size: 13px;
+      font-weight: 850;
+    }
+    h1 {
+      max-width: 640px;
+      margin-top: 18px;
+      font-size: 68px;
+      word-break: keep-all;
+    }
+    .lead {
+      max-width: 650px;
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+    .hero-facts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      margin-top: 34px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--line);
+    }
+    .hero-fact {
+      min-width: 0;
+      padding: 14px;
+      background: var(--surface);
+    }
+    .hero-fact span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .hero-fact strong {
+      display: block;
+      margin-top: 4px;
+      font-size: 14px;
+    }
+
+    .live-board {
+      min-width: 0;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: #202725;
+      color: #f5f7f4;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .board-head {
+      display: flex;
+      min-height: 54px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 18px;
+      border-bottom: 1px solid #3c4744;
+      font-size: 12px;
+    }
+    .live {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: #b9d9d1;
+      font-weight: 800;
+    }
+    .live::before {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #67d7b9;
+      content: "";
+      box-shadow: 0 0 0 4px rgba(103, 215, 185, .12);
+    }
+    .board-body { padding: 18px; }
+    .sale-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: end;
+      padding-bottom: 17px;
+      border-bottom: 1px solid #3c4744;
+    }
+    .sale-row small { color: #aab7b3; }
+    .sale-row strong {
+      display: block;
+      margin-top: 3px;
+      font-size: 19px;
+    }
+    .stock {
+      color: #7fe2c6;
+      font-size: 26px;
+      font-weight: 850;
+    }
+    .queue-strip {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 7px;
+      margin: 18px 0;
+    }
+    .queue-person {
+      display: grid;
+      min-width: 0;
+      height: 56px;
+      place-items: center;
+      border: 1px solid #46534f;
+      border-radius: 6px;
+      background: #29312f;
+      color: #b9c4c1;
+      font-size: 11px;
+    }
+    .queue-person.active {
+      border-color: #67d7b9;
+      background: #16453d;
+      color: #e8fff8;
+    }
+    .purchase-path {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .path-step {
+      position: relative;
+      min-height: 96px;
+      padding: 12px 10px;
+      border: 1px solid #46534f;
+      border-radius: 6px;
+      background: #29312f;
+    }
+    .path-step::after {
+      position: absolute;
+      top: 44px;
+      right: -8px;
+      z-index: 2;
+      color: #788681;
+      content: "›";
+      font-size: 17px;
+    }
+    .path-step:last-child::after { content: ""; }
+    .path-step b {
+      display: block;
+      color: #f7d889;
+      font-size: 11px;
+    }
+    .path-step span {
+      display: block;
+      margin-top: 6px;
+      color: #cbd3d0;
+      font-size: 11px;
+    }
+    .board-foot {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 16px;
+      color: #aab7b3;
+      font-size: 11px;
+    }
+
+    .band { border-top: 1px solid var(--line); }
+    .section { padding: 82px 0; }
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, .82fr) minmax(360px, 1.18fr);
+      gap: 44px;
+      align-items: end;
+      margin-bottom: 30px;
+    }
+    .kicker {
+      color: var(--coral);
+      font-size: 12px;
+      font-weight: 850;
+    }
+    h2 {
+      margin-top: 8px;
+      font-size: 42px;
+      word-break: keep-all;
+    }
+    .section-head p {
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--line);
+      gap: 1px;
+    }
+    .scenario {
+      min-height: 220px;
+      padding: 22px;
+      background: var(--surface);
+    }
+    .scenario .index {
+      color: var(--teal);
+      font-size: 12px;
+      font-weight: 850;
+    }
+    .scenario h3 {
+      margin-top: 18px;
+      font-size: 18px;
+    }
+    .scenario p {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .scenario .impact {
+      display: block;
+      margin-top: 18px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+      color: var(--coral);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .reasoning {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(340px, .95fr);
+      gap: 18px;
+      margin-top: 18px;
+    }
+    .reason-copy, .invariant {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 24px;
+      background: var(--surface-2);
+    }
+    .reason-copy h3, .invariant h3 { font-size: 16px; }
+    .reason-copy p, .invariant p {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .equation {
+      display: block;
+      margin-top: 18px;
+      padding: 14px;
+      border-left: 4px solid var(--teal);
+      background: var(--surface);
+      color: var(--teal);
+      font-size: 15px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .responsibility-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .responsibility {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .responsibility-head {
+      display: flex;
+      min-height: 72px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 0 22px;
+      border-bottom: 1px solid var(--line);
+    }
+    .responsibility-head h3 { font-size: 20px; }
+    .responsibility-head span {
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .redis .responsibility-head span {
+      background: var(--yellow-soft);
+      color: var(--yellow-text);
+    }
+    .postgres .responsibility-head span {
+      background: var(--teal-soft);
+      color: var(--teal-text);
+    }
+    .responsibility ul {
+      display: grid;
+      gap: 0;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .responsibility li {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
+      padding: 15px 22px;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+    }
+    .responsibility li:last-child { border-bottom: 0; }
+    .responsibility li::before {
+      display: grid;
+      width: 23px;
+      height: 23px;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--surface-2);
+      content: "✓";
+      color: var(--teal);
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .redis li::before {
+      content: "↯";
+      color: var(--yellow-text);
+    }
+    .responsibility-note {
+      margin-top: 16px;
+      padding: 16px 18px;
+      border-left: 4px solid var(--coral);
+      background: var(--coral-soft);
+      color: var(--coral-text);
+      font-size: 14px;
+    }
+
+    .module-map {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-template-rows: auto auto auto;
+      gap: 12px;
+    }
+    .module {
+      min-width: 0;
+      min-height: 142px;
+      border: 1px solid var(--line);
+      border-top: 5px solid var(--teal);
+      border-radius: 8px;
+      padding: 18px;
+      background: var(--surface);
+    }
+    .module h3 { font-size: 16px; }
+    .module p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .module code {
+      display: block;
+      margin-top: 13px;
+      color: var(--teal);
+      overflow-wrap: anywhere;
+    }
+    .salecontrol { grid-column: span 4; border-top-color: var(--coral); }
+    .admission { grid-column: span 4; border-top-color: var(--yellow); }
+    .purchase { grid-column: span 4; border-top-color: var(--teal); }
+    .payment { grid-column: 2 / span 4; border-top-color: var(--blue); }
+    .ticketing { grid-column: 6 / span 4; border-top-color: var(--violet); }
+    .operations { grid-column: 10 / span 3; border-top-color: #666f6c; }
+    .dependency-rule {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 64px;
+      border: 1px dashed var(--line-strong);
+      border-radius: 8px;
+      padding: 12px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .simulator {
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .sim-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-bottom: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+    .sim-tab {
+      min-height: 56px;
+      border: 0;
+      border-right: 1px solid var(--line);
+      border-bottom: 3px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .sim-tab:last-child { border-right: 0; }
+    .sim-tab:hover { background: var(--surface-2); }
+    .sim-tab[aria-selected="true"] {
+      border-bottom-color: var(--teal);
+      background: var(--surface);
+      color: var(--teal);
+    }
+    .sim-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1.18fr) minmax(310px, .82fr);
+      min-height: 520px;
+    }
+    .flow-panel {
+      min-width: 0;
+      padding: 28px;
+      border-right: 1px solid var(--line);
+    }
+    .flow-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: start;
+    }
+    .flow-title h3 { font-size: 22px; }
+    .status-badge {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: var(--blue-soft);
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 850;
+    }
+    .flow-summary {
+      max-width: 660px;
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .flow-track {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 34px;
+    }
+    .flow-track::before {
+      position: absolute;
+      top: 27px;
+      left: 7%;
+      right: 7%;
+      z-index: 0;
+      height: 2px;
+      background: var(--line);
+      content: "";
+    }
+    .flow-node {
+      position: relative;
+      z-index: 1;
+      min-width: 0;
+      text-align: center;
+    }
+    .node-mark {
+      display: grid;
+      width: 56px;
+      height: 56px;
+      margin: 0 auto;
+      place-items: center;
+      border: 2px solid var(--line-strong);
+      border-radius: 50%;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 850;
+    }
+    .flow-node.active .node-mark {
+      border-color: var(--teal);
+      background: var(--teal-soft);
+      color: var(--teal);
+    }
+    .flow-node.warning .node-mark {
+      border-color: var(--yellow);
+      background: var(--yellow-soft);
+      color: var(--yellow-text);
+    }
+    .flow-node.danger .node-mark {
+      border-color: var(--coral);
+      background: var(--coral-soft);
+      color: var(--coral);
+    }
+    .flow-node strong {
+      display: block;
+      margin-top: 10px;
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+    .flow-node span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 10px;
+    }
+    .decision {
+      margin-top: 34px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .decision-row {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      min-height: 48px;
+      border-bottom: 1px solid var(--line);
+    }
+    .decision-row:last-child { border-bottom: 0; }
+    .decision-row b, .decision-row span {
+      display: flex;
+      align-items: center;
+      padding: 10px 14px;
+      font-size: 12px;
+    }
+    .decision-row b {
+      border-right: 1px solid var(--line);
+      background: var(--surface-2);
+    }
+    .decision-row span { color: var(--muted); }
+    .evidence-panel {
+      min-width: 0;
+      padding: 28px;
+      background: #202725;
+      color: #f4f7f4;
+    }
+    .evidence-panel h3 { font-size: 16px; }
+    .state-table {
+      display: grid;
+      gap: 9px;
+      margin-top: 18px;
+    }
+    .state-line {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      padding: 11px 0;
+      border-bottom: 1px solid #3c4744;
+      font-size: 12px;
+    }
+    .state-line span { color: #aab7b3; }
+    .state-line b {
+      max-width: 160px;
+      color: #8ae0c7;
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+    .event-log {
+      margin-top: 24px;
+      padding: 14px;
+      border: 1px solid #46534f;
+      border-radius: 6px;
+      background: #171d1b;
+      color: #cdd8d4;
+      font-size: 11px;
+      white-space: pre-wrap;
+    }
+
+    .implementation {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(330px, .92fr);
+      gap: 18px;
+    }
+    .diagram-frame {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .diagram-frame img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      background: var(--surface);
+    }
+    .diagram-caption {
+      padding: 14px 16px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .source-list {
+      display: grid;
+      gap: 10px;
+    }
+    .source-item {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      background: var(--surface);
+    }
+    .source-item code {
+      display: block;
+      color: var(--teal);
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+    .source-item p {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .run-layout {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 20px;
+    }
+    .run-steps {
+      display: grid;
+      align-content: start;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .run-step {
+      display: grid;
+      grid-template-columns: 36px 1fr;
+      gap: 10px;
+      min-height: 66px;
+      align-items: center;
+      padding: 10px 14px;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      background: var(--surface);
+      cursor: pointer;
+      text-align: left;
+    }
+    .run-step:last-child { border-bottom: 0; }
+    .run-step:hover { background: var(--surface-2); }
+    .run-step[aria-selected="true"] {
+      background: var(--teal-soft);
+      color: var(--teal-text);
+    }
+    .run-step b {
+      display: grid;
+      width: 28px;
+      height: 28px;
+      place-items: center;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+      font-size: 11px;
+    }
+    .run-step span { font-size: 13px; font-weight: 800; }
+    .run-content {
+      min-width: 0;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      background: #202725;
+      color: #f4f7f4;
+      overflow: hidden;
+    }
+    .run-content-head {
+      display: flex;
+      min-height: 52px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 18px;
+      border-bottom: 1px solid #3c4744;
+    }
+    .run-content-head h3 { font-size: 15px; }
+    .run-content-head span { color: #9eaaa6; font-size: 11px; }
+    .run-content pre {
+      min-height: 250px;
+      margin: 0;
+      padding: 20px;
+      overflow: auto;
+      color: #cce5de;
+      font-size: 12px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+    .run-observe {
+      padding: 16px 20px;
+      border-top: 1px solid #3c4744;
+      background: #29312f;
+      color: #cbd3d0;
+      font-size: 12px;
+    }
+    .run-observe b { color: #f7d889; }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .problem {
+      display: grid;
+      grid-template-columns: 46px 1fr;
+      gap: 16px;
+      min-height: 166px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 20px;
+      background: var(--surface);
+    }
+    .problem-index {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--coral-soft);
+      color: var(--coral);
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .problem h3 { font-size: 16px; }
+    .problem p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .problem strong {
+      display: block;
+      margin-top: 12px;
+      color: var(--teal);
+      font-size: 12px;
+    }
+
+    .closing {
+      margin-bottom: 72px;
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      padding: 28px;
+      background: #202725;
+      color: #f4f7f4;
+    }
+    .closing h2 {
+      margin: 0;
+      max-width: 920px;
+      font-size: 32px;
+    }
+    .closing p {
+      max-width: 860px;
+      margin-top: 13px;
+      color: #b9c4c1;
+      font-size: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .hero {
+        grid-template-columns: 1fr;
+        gap: 30px;
+        min-height: auto;
+      }
+      h1 { font-size: 58px; }
+      .section-head { grid-template-columns: 1fr; gap: 14px; }
+      .scenario-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .responsibility-grid, .reasoning, .implementation { grid-template-columns: 1fr; }
+      .module-map { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .module { grid-column: auto; }
+      .dependency-rule { grid-column: 1 / -1; }
+      .sim-body { grid-template-columns: 1fr; }
+      .flow-panel { border-right: 0; border-bottom: 1px solid var(--line); }
+      .run-layout { grid-template-columns: 1fr; }
+      .run-steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .run-step { grid-template-columns: 28px 1fr; border-bottom: 0; border-right: 1px solid var(--line); }
+      .run-step:last-child { border-right: 0; }
+    }
+
+    @media (max-width: 680px) {
+      .shell { width: min(100% - 22px, 1180px); }
+      .topbar .shell { min-height: 46px; }
+      .topnav { display: none; }
+      .hero {
+        gap: 18px;
+        padding: 28px 0 22px;
+      }
+      h1 { font-size: 42px; }
+      .lead {
+        margin-top: 16px;
+        font-size: 15px;
+      }
+      .hero-facts {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        margin-top: 20px;
+      }
+      .hero-fact { padding: 8px; }
+      .hero-fact span { font-size: 9px; }
+      .hero-fact strong { font-size: 11px; }
+      .live-board { box-shadow: none; }
+      .board-head { min-height: 42px; }
+      .board-body { padding: 12px 14px; }
+      .sale-row { padding-bottom: 10px; }
+      .sale-row strong { font-size: 15px; }
+      .stock { font-size: 22px; }
+      .queue-strip { margin: 12px 0 0; }
+      .queue-person { height: 42px; }
+      .purchase-path, .board-foot { display: none; }
+      .section { padding: 62px 0; }
+      h2 { font-size: 31px; }
+      .scenario-grid, .problem-grid { grid-template-columns: 1fr; }
+      .scenario { min-height: auto; }
+      .module-map { grid-template-columns: 1fr; }
+      .dependency-rule { grid-column: auto; }
+      .sim-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .sim-tab:nth-child(2) { border-right: 0; }
+      .sim-tab:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      .sim-tab[aria-selected="true"] { box-shadow: inset 0 -3px var(--teal); }
+      .flow-panel, .evidence-panel { padding: 20px 15px; }
+      .flow-title { display: block; }
+      .status-badge { display: inline-block; margin-top: 10px; }
+      .flow-track {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      .flow-track::before { display: none; }
+      .flow-node {
+        display: grid;
+        grid-template-columns: 46px 1fr;
+        gap: 12px;
+        align-items: center;
+        text-align: left;
+      }
+      .node-mark { width: 44px; height: 44px; margin: 0; }
+      .flow-node strong { margin-top: 0; }
+      .flow-node span { grid-column: 2; margin-top: -16px; }
+      .decision-row { grid-template-columns: 116px 1fr; }
+      .decision-row b, .decision-row span { padding: 9px 10px; }
+      .run-steps { grid-template-columns: 1fr 1fr; }
+      .run-step { border-bottom: 1px solid var(--line); }
+      .run-step:nth-child(2) { border-right: 0; }
+      .run-step:nth-child(n+3) { border-bottom: 0; }
+      .run-content pre { min-height: 300px; font-size: 11px; }
+      .problem { grid-template-columns: 38px 1fr; padding: 17px; }
+      .problem-index { width: 36px; height: 36px; }
+      .closing h2 { font-size: 25px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell">
+      <a class="brand" href="#top">bluetape4k-workshop · Visual Companion</a>
+      <div class="topbar-actions">
+        <nav class="topnav" aria-label="Document navigation">
+          <a href="#concept">Example Concept</a>
+          <a href="#design">Design</a>
+          <a href="#simulation">Processing Flow</a>
+          <a href="#run">Run</a>
+          <a href="#problems">Problems Solved</a>
+        </nav>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme" title="Switch to dark theme">
+          <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path>
+          </svg>
+          <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="shell hero">
+      <div>
+        <p class="eyebrow">Spring Boot 4 · Kotlin · Java 25</p>
+        <h1>Concert Ticket Flash Sale</h1>
+        <p class="lead">
+          This example handles a burst of requests for limited inventory when a sale opens. It
+          coordinates the waiting room, inventory holds, payment confirmation, cancellation and
+          refund, and ticket issuance through one consistent state model.
+        </p>
+        <div class="hero-facts" aria-label="Example components">
+          <div class="hero-fact"><span>Application Structure</span><strong>Spring Modulith</strong></div>
+          <div class="hero-fact"><span>Final-State Storage</span><strong>PostgreSQL</strong></div>
+          <div class="hero-fact"><span>Admission Acceleration</span><strong>Redis</strong></div>
+        </div>
+      </div>
+
+      <div class="live-board" aria-label="Ticket purchase processing overview">
+        <div class="board-head">
+          <strong>Sale Status</strong>
+          <span class="live">SALE OPEN</span>
+        </div>
+        <div class="board-body">
+          <div class="sale-row">
+            <div><small>STANDING A · AVAILABLE INVENTORY</small><strong>2026 SUMMER LIVE</strong></div>
+            <div class="stock">128</div>
+          </div>
+          <div class="queue-strip" aria-label="Waiting room">
+            <div class="queue-person">#1042</div>
+            <div class="queue-person">#1043</div>
+            <div class="queue-person active">ENTER</div>
+            <div class="queue-person">#1045</div>
+            <div class="queue-person">#1046</div>
+          </div>
+          <div class="purchase-path">
+            <div class="path-step"><b>01</b><span>Waiting-Room Admission</span></div>
+            <div class="path-step"><b>02</b><span>Inventory Hold</span></div>
+            <div class="path-step"><b>03</b><span>Payment Confirmation</span></div>
+            <div class="path-step"><b>04</b><span>Ticket Issuance</span></div>
+          </div>
+          <div class="board-foot">
+            <span>Redis: USER/IP Leases</span>
+            <span>PostgreSQL: Inventory, Payment, and Ticket State</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="concept" class="band">
+      <div class="shell section">
+        <div class="section-head">
+          <div>
+            <p class="kicker">01 · EXAMPLE CONCEPT</p>
+            <h2>Combine production failure modes in one purchase flow</h2>
+          </div>
+          <p>
+            A basic inventory-decrement example shows only the happy path. This example combines
+            repeated requests from the same user and IP, lost payment responses, cancellation
+            followed by delayed approval, and an auxiliary-store outage.
+          </p>
+        </div>
+
+        <div class="scenario-grid">
+          <article class="scenario">
+            <span class="index">PROBLEM 01</span>
+            <h3>High Contention When the Sale Opens</h3>
+            <p>Multiple requests read the remaining inventory for the same tier and attempt holds concurrently.</p>
+            <span class="impact">Prevent: Overselling</span>
+          </article>
+          <article class="scenario">
+            <span class="index">PROBLEM 02</span>
+            <h3>Repeated Clicks and Lost Responses</h3>
+            <p>Resending the same purchase request must not create another payment operation or order.</p>
+            <span class="impact">Prevent: Duplicate Charges</span>
+          </article>
+          <article class="scenario">
+            <span class="index">PROBLEM 03</span>
+            <h3>Unknown Payment Outcome</h3>
+            <p>A payment-provider timeout is not a rejection. The final result must be queried with the same operation ID.</p>
+            <span class="impact">Prevent: Premature Inventory Release</span>
+          </article>
+          <article class="scenario">
+            <span class="index">PROBLEM 04</span>
+            <h3>Cancellation and Delayed Approval</h3>
+            <p>If approval arrives after cancellation, the system must block ticket issuance and track the purchase through refund completion.</p>
+            <span class="impact">Prevent: Unrefunded Orders</span>
+          </article>
+        </div>
+
+        <div class="reasoning">
+          <div class="reason-copy">
+            <h3>Why This Scenario</h3>
+            <p>
+              Ticket sales concentrate requests on shared inventory, user, IP, and payment-operation
+              resources within a short window. At the same time, the external payment provider may
+              not return a definitive result immediately. Connecting concurrency control and failure
+              recovery in one state transition makes the design decisions explicit.
+            </p>
+          </div>
+          <div class="invariant">
+            <h3>Inventory Invariant Across the Entire Flow</h3>
+            <code class="equation">0 ≤ held + sold ≤ total</code>
+            <p>No approval, rejection, cancellation, refund, or ticket-revocation path may violate this relation.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="design" class="band">
+      <div class="shell section">
+        <div class="section-head">
+          <div>
+            <p class="kicker">02 · DESIGN DIRECTION</p>
+            <h2>Separate fast admission control from final-state changes</h2>
+          </div>
+          <p>
+            Redis absorbs request bursts but does not finalize inventory reservations. A PostgreSQL
+            transaction revalidates the sale window, duplicate USER/IP purchases, policy version,
+            and inventory quantity before committing the state change.
+          </p>
+        </div>
+
+        <div class="responsibility-grid">
+          <article class="responsibility redis">
+            <div class="responsibility-head">
+              <h3>Redis</h3>
+              <span>Temporary Coordination</span>
+            </div>
+            <ul>
+              <li>Manage waiting-room admission and short TTLs.</li>
+              <li>Claim USER/IP keys atomically with one Lua script.</li>
+              <li>Rate-limit requests and reject concurrent purchase attempts early.</li>
+              <li>Block new purchase admission during an outage.</li>
+            </ul>
+          </article>
+          <article class="responsibility postgres">
+            <div class="responsibility-head">
+              <h3>PostgreSQL</h3>
+              <span>Final-State Record</span>
+            </div>
+            <ul>
+              <li>Validate the sale window and immutable policy version.</li>
+              <li>Lock the inventory row and update held and sold quantities.</li>
+              <li>Restrict active purchases per USER/IP with unique constraints and locks.</li>
+              <li>Preserve payment-operation, order, refund, and ticket-processing results.</li>
+            </ul>
+          </article>
+        </div>
+        <p class="responsibility-note">
+          Even if Redis data is lost, payment, refund, and ticket recovery that already started
+          continues from the PostgreSQL record. A PostgreSQL outage prevents final-state changes,
+          so the readiness check fails.
+        </p>
+      </div>
+    </section>
+
+    <section class="band">
+      <div class="shell section">
+        <div class="section-head">
+          <div>
+            <p class="kicker">03 · IMPLEMENTATION DIRECTION</p>
+            <h2>Deploy once while keeping business-module responsibilities separate</h2>
+          </div>
+          <p>
+            A Spring Modulith modular monolith retains the benefits of a single transaction.
+            Each business module exposes only its <code>api</code> package and does not directly
+            access another module's tables or internal services.
+          </p>
+        </div>
+
+        <div class="module-map" aria-label="Business module structure">
+          <article class="module salecontrol">
+            <h3>salecontrol</h3>
+            <p>Manages the sale lifecycle, sale window, and policy version.</p>
+            <code>SalePurchaseAuthority</code>
+          </article>
+          <article class="module admission">
+            <h3>admission</h3>
+            <p>Manages the waiting room, admission grants, and USER/IP leases.</p>
+            <code>TransactionalAdmissionCommands</code>
+          </article>
+          <article class="module purchase">
+            <h3>purchase</h3>
+            <p>Enforces idempotency and changes inventory, hold, and order state.</p>
+            <code>PurchaseCommands</code>
+          </article>
+          <article class="module payment">
+            <h3>payment</h3>
+            <p>Claims payment operations and reconciles unknown outcomes.</p>
+            <code>PaymentWorker</code>
+          </article>
+          <article class="module ticketing">
+            <h3>ticketing</h3>
+            <p>Manages ticket issuance and revocation operations and deduplication records.</p>
+            <code>TicketEffectWorker</code>
+          </article>
+          <article class="module operations">
+            <h3>operations</h3>
+            <p>Provides bounded recovery operations and operational status queries.</p>
+            <code>OperationsService</code>
+          </article>
+          <div class="dependency-rule">
+            Allowed dependency direction: admission → salecontrol · purchase → salecontrol/admission · payment/ticketing → purchase · operations → each public API
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="simulation" class="band">
+      <div class="shell section">
+        <div class="section-head">
+          <div>
+            <p class="kicker">04 · PROCESSING FLOW</p>
+            <h2>Compare state transitions across failure scenarios</h2>
+          </div>
+          <p>
+            Each scenario summarizes the results verified by the real state-transition functions
+            and integration tests. Selecting a tab changes inventory, purchase state, payment
+            operation, and ticket-processing result together.
+          </p>
+        </div>
+
+        <div class="simulator">
+          <div class="sim-tabs" role="tablist" aria-label="Purchase processing scenarios">
+            <button class="sim-tab" type="button" role="tab" aria-selected="true" data-scenario="normal">Normal Purchase</button>
+            <button class="sim-tab" type="button" role="tab" aria-selected="false" data-scenario="timeout">Payment Timeout</button>
+            <button class="sim-tab" type="button" role="tab" aria-selected="false" data-scenario="late">Approval After Cancellation</button>
+            <button class="sim-tab" type="button" role="tab" aria-selected="false" data-scenario="redis">Redis Outage</button>
+          </div>
+          <div class="sim-body">
+            <div class="flow-panel">
+              <div class="flow-title">
+                <div>
+                  <h3 id="scenario-title">Normal Purchase and Ticket Issuance</h3>
+                  <p id="scenario-summary" class="flow-summary">
+                    Consume the admission grant, place an inventory hold, then apply payment approval and ticket issuance in sequence.
+                  </p>
+                </div>
+                <span id="scenario-badge" class="status-badge">Converged</span>
+              </div>
+              <div id="flow-track" class="flow-track"></div>
+              <div class="decision">
+                <div class="decision-row"><b>Inventory Change</b><span id="inventory-decision"></span></div>
+                <div class="decision-row"><b>External Call</b><span id="external-decision"></span></div>
+                <div class="decision-row"><b>Recovery Basis</b><span id="recovery-decision"></span></div>
+              </div>
+            </div>
+            <aside class="evidence-panel">
+              <h3>Final Observed State</h3>
+              <div class="state-table">
+                <div class="state-line"><span>Purchase State</span><b id="purchase-state"></b></div>
+                <div class="state-line"><span>held / sold Quantity</span><b id="inventory-state"></b></div>
+                <div class="state-line"><span>Payment Operation</span><b id="payment-state"></b></div>
+                <div class="state-line"><span>Ticket Processing</span><b id="ticket-state"></b></div>
+                <div class="state-line"><span>New Admission</span><b id="admission-state"></b></div>
+              </div>
+              <pre id="event-log" class="event-log"></pre>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band">
+      <div class="shell section">
+        <div class="section-head">
+          <div>
+            <p class="kicker">05 · IMPLEMENTATION</p>
+            <h2>Connect each design concern to classes and tests</h2>
+          </div>
+          <p>
+            The diagram below is the architecture view used in the module README. The list on the
+            right identifies the current source files that implement the core behavior. PostgreSQL
+            and Redis integration tests verify state transitions and failure recovery.
+          </p>
+        </div>
+
+        <div class="implementation">
+          <figure class="diagram-frame">
+            <img
+              src="../../images/readme-diagrams/commerce-concert-ticket-flash-sale-architecture-01.png"
+              alt="Spring Modulith business modules, PostgreSQL, and Redis architecture for the concert ticket flash sale">
+            <figcaption class="diagram-caption">
+              Implementation structure that separates business modules within one Spring Boot application and distinguishes PostgreSQL and Redis responsibilities
+            </figcaption>
+          </figure>
+          <div class="source-list">
+            <article class="source-item">
+              <code>purchase/internal/PurchaseService.kt</code>
+              <p>Validates idempotency, USER/IP protection, purchase limits, and inventory in a fixed lock order, then creates the purchase attempt in one transaction.</p>
+            </article>
+            <article class="source-item">
+              <code>payment/internal/PaymentWorker.kt</code>
+              <p>Records a token and revision within a short claim window, calls the external payment provider, and applies only a valid result.</p>
+            </article>
+            <article class="source-item">
+              <code>purchase/internal/RefundService.kt</code>
+              <p>Restores sold inventory only after confirming both the refund result and that the ticket was never issued or has been revoked.</p>
+            </article>
+            <article class="source-item">
+              <code>redis/MultiKeyLeaseAdapter.kt</code>
+              <p>Acquires, renews, and releases USER/IP leases with one Lua script to prevent partial claims.</p>
+            </article>
+            <article class="source-item">
+              <code>Ticket*IntegrationTest.kt</code>
+              <p>Verifies invariants under high contention, Redis outages, delayed approvals, duplicate delivery, and process restarts.</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="run" class="band">
+      <div class="shell section">
+        <div class="section-head">
+          <div>
+            <p class="kicker">06 · RUN THE EXAMPLE</p>
+            <h2>Prepare related services and verify recovery</h2>
+          </div>
+          <p>
+            Manual execution requires JDK 25, PostgreSQL 18, and Redis 8. The demo profile runs
+            only on the loopback interface, and the exposed page provides a recovery view of an
+            existing purchase attempt rather than a creation API.
+          </p>
+        </div>
+
+        <div class="run-layout">
+          <div class="run-steps" role="tablist" aria-label="Execution steps">
+            <button class="run-step" type="button" role="tab" aria-selected="true" data-run="deps"><b>1</b><span>Related Services</span></button>
+            <button class="run-step" type="button" role="tab" aria-selected="false" data-run="app"><b>2</b><span>Application</span></button>
+            <button class="run-step" type="button" role="tab" aria-selected="false" data-run="observe"><b>3</b><span>Recovery Query</span></button>
+            <button class="run-step" type="button" role="tab" aria-selected="false" data-run="verify"><b>4</b><span>Verification</span></button>
+          </div>
+          <div class="run-content">
+            <div class="run-content-head">
+              <h3 id="run-title">Start PostgreSQL and Redis</h3>
+              <span id="run-requirement">Docker-Compatible Container Runtime</span>
+            </div>
+            <pre id="run-command"></pre>
+            <div class="run-observe"><b>Verify:</b> <span id="run-observe"></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="problems" class="band">
+      <div class="shell section">
+        <div class="section-head">
+          <div>
+            <p class="kicker">07 · TECHNICAL PROBLEMS SOLVED</p>
+            <h2>Define post-failure convergence conditions, not only a fast happy path</h2>
+          </div>
+          <p>
+            The example does not assume that every request runs exactly once. It combines stable
+            identifiers, transactions, claim tokens, and deduplication records so repeated requests
+            and external effects converge on the same final state.
+          </p>
+        </div>
+
+        <div class="problem-grid">
+          <article class="problem">
+            <span class="problem-index">01</span>
+            <div>
+              <h3>Serialize Inventory Under High Contention</h3>
+              <p>Lock the inventory row for each tier and apply every quantity change in the same transaction.</p>
+              <strong>Result: Maintain held + sold ≤ total</strong>
+            </div>
+          </article>
+          <article class="problem">
+            <span class="problem-index">02</span>
+            <div>
+              <h3>Request Idempotency and Duplicate User Purchases</h3>
+              <p>Store the request fingerprint and key, and restrict active purchases per USER/IP with PostgreSQL unique constraints.</p>
+              <strong>Result: Return the same purchase result after a lost response</strong>
+            </div>
+          </article>
+          <article class="problem">
+            <span class="problem-index">03</span>
+            <div>
+              <h3>Payment Timeout Recovery</h3>
+              <p>Do not finalize a timeout as failure. Query the final outcome with the same operation ID and claim revision.</p>
+              <strong>Result: Reject results from stale workers</strong>
+            </div>
+          </article>
+          <article class="problem">
+            <span class="problem-index">04</span>
+            <div>
+              <h3>Cancellation, Refund, and Ticket-Revocation Races</h3>
+              <p>Restore sold inventory only when both the refund and ticket states are safe.</p>
+              <strong>Result: Prevent a usable ticket and restored inventory from coexisting</strong>
+            </div>
+          </article>
+          <article class="problem">
+            <span class="problem-index">05</span>
+            <div>
+              <h3>Bound the Impact of a Redis Outage</h3>
+              <p>Block only new purchase admission while continuing existing payments, refunds, and queries from PostgreSQL records.</p>
+              <strong>Result: An auxiliary-store outage does not block recovery</strong>
+            </div>
+          </article>
+          <article class="problem">
+            <span class="problem-index">06</span>
+            <div>
+              <h3>Deduplicate External Effects</h3>
+              <p>Use stable operation IDs and per-consumer processing records for payment, refund, and ticket operations.</p>
+              <strong>Result: Apply each effect once after restart and redelivery</strong>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <div class="shell closing">
+      <h2>A purchase is complete only when inventory, payment, refund, and ticket results reach a mutually consistent state.</h2>
+      <p>
+        This example encodes those convergence conditions and recovery procedures in executable
+        Spring Boot code and integration tests.
+      </p>
+      <p class="source-links"
+         data-status="approved"
+         data-source="2026-07-21-concert-ticket-flash-sale-design.md"
+         data-baseline="80c1f95eee175cc3bff4d27280f6dd2bb7d0f5f2">
+        <a href="2026-07-21-concert-ticket-flash-sale-design.md">Design document</a>
+        <a href="2026-07-29-event-sourced-promotion-voucher-visual-companion.en.html">Previous visual companion</a>
+        <a href="2026-07-30-concert-ticket-flash-sale-visual-companion.html">한국어</a>
+      </p>
+    </div>
+  </main>
+
+  <script>
+    const themeStorageKey = "starlight-theme";
+    const themeMedia = matchMedia("(prefers-color-scheme: dark)");
+    const themeToggle = document.getElementById("theme-toggle");
+
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      const nextTheme = theme === "dark" ? "light" : "dark";
+      themeToggle.setAttribute("aria-label", `Switch to ${nextTheme} theme`);
+      themeToggle.title = themeToggle.getAttribute("aria-label");
+    }
+
+    themeToggle.addEventListener("click", () => {
+      const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+      localStorage.setItem(themeStorageKey, nextTheme);
+      applyTheme(nextTheme);
+    });
+
+    themeMedia.addEventListener("change", (event) => {
+      const storedTheme = localStorage.getItem(themeStorageKey);
+      if (storedTheme !== "light" && storedTheme !== "dark") {
+        applyTheme(event.matches ? "dark" : "light");
+      }
+    });
+
+    addEventListener("storage", (event) => {
+      if (event.key === themeStorageKey && (event.newValue === "light" || event.newValue === "dark")) {
+        applyTheme(event.newValue);
+      }
+    });
+
+    applyTheme(document.documentElement.dataset.theme);
+
+    const scenarios = {
+      normal: {
+        title: "Normal Purchase and Ticket Issuance",
+        summary: "Consume the admission grant, place an inventory hold, then apply payment approval and ticket issuance in sequence.",
+        badge: "Converged",
+        nodes: [
+          ["Admission", "Grant consumed", "active"],
+          ["Inventory Hold", "held +1", "active"],
+          ["Payment", "APPROVED", "active"],
+          ["Order", "sold +1", "active"],
+          ["Ticket", "ISSUED", "active"]
+        ],
+        inventoryDecision: "On payment approval: held -1, sold +1",
+        externalDecision: "Execute payment and issuance with stable operation IDs",
+        recoveryDecision: "Do not repeat an external effect when its processing record exists",
+        purchase: "APPROVED",
+        inventory: "0 / 1",
+        payment: "approved",
+        ticket: "ISSUED",
+        admission: "Allowed",
+        log: [
+          "TX  admission grant consumed",
+          "TX  inventory held +1",
+          "PG  payment outcome APPROVED",
+          "PG  inventory held -1 / sold +1",
+          "FX  ticket receipt recorded"
+        ]
+      },
+      timeout: {
+        title: "Payment Timeout and Outcome Lookup",
+        summary: "Do not treat a missing response as a rejection. Keep the inventory hold and query the provider's final result with the same operation ID.",
+        badge: "Reconciliation Required",
+        nodes: [
+          ["Admission", "Grant consumed", "active"],
+          ["Inventory Hold", "held +1", "active"],
+          ["Payment", "No response", "warning"],
+          ["Lookup", "Same operation ID", "warning"],
+          ["Outcome", "Pending confirmation", ""]
+        ],
+        inventoryDecision: "Keep the held quantity until the outcome is known",
+        externalDecision: "Query using the existing payment-authorization operation ID",
+        recoveryDecision: "Apply only a result that matches the latest claim token and revision",
+        purchase: "RECONCILIATION_REQUIRED",
+        inventory: "1 / 0",
+        payment: "unknown",
+        ticket: "PENDING",
+        admission: "Recover Existing Purchase",
+        log: [
+          "PG  payment claim revision +1",
+          "FX  provider response TIMEOUT",
+          "PG  outcome UNKNOWN applied",
+          "PG  next_reconcile_at scheduled",
+          "... same operation ID lookup pending"
+        ]
+      },
+      late: {
+        title: "Payment Approval Confirmed After Cancellation",
+        summary: "Cancellation was requested while the payment outcome was unknown, but approval was later confirmed. Block ticket issuance and wait for the refund to complete.",
+        badge: "Refund in Progress",
+        nodes: [
+          ["Timeout", "UNKNOWN", "warning"],
+          ["Cancellation", "requested", "warning"],
+          ["Delayed Approval", "APPROVED", "danger"],
+          ["Refund", "PENDING", "warning"],
+          ["Inventory", "Pending restore", ""]
+        ],
+        inventoryDecision: "Keep the sold quantity until the refund completes",
+        externalDecision: "Set the ticket disposition to NEVER_ISSUED",
+        recoveryDecision: "Apply sold -1 after refund success and confirmation that no ticket was issued",
+        purchase: "REFUND_PENDING",
+        inventory: "0 / 1",
+        payment: "approved",
+        ticket: "NEVER_ISSUED",
+        admission: "Recover Existing Purchase",
+        log: [
+          "PG  cancellation requested",
+          "PG  late APPROVED outcome observed",
+          "PG  ticket disposition NEVER_ISSUED",
+          "FX  refund operation scheduled",
+          "... restock blocked until refund receipt"
+        ]
+      },
+      redis: {
+        title: "Redis Outage with Recovery Preserved",
+        summary: "Block new purchase admission because USER/IP leases cannot be checked atomically. Continue payments and refunds already in progress from PostgreSQL records.",
+        badge: "Degraded",
+        nodes: [
+          ["Request", "New purchase", "active"],
+          ["Redis", "Unavailable", "danger"],
+          ["Admission", "Blocked", "danger"],
+          ["Recovery", "PostgreSQL operation", "active"],
+          ["State", "Query available", "active"]
+        ],
+        inventoryDecision: "Do not create a new inventory hold",
+        externalDecision: "Continue payment and refund operations already in progress",
+        recoveryDecision: "Resume from PostgreSQL operation and processing records",
+        purchase: "Not Created",
+        inventory: "Unchanged",
+        payment: "Continue Existing Operation",
+        ticket: "Continue Existing Operation",
+        admission: "Block New Admission",
+        log: [
+          "REDIS lease command unavailable",
+          "API   admission_temporarily_unavailable",
+          "PG    no purchase attempt created",
+          "WORK  reconciliation remains active",
+          "HTTP  owner snapshot remains available"
+        ]
+      }
+    };
+
+    const runSteps = {
+      deps: {
+        title: "Start PostgreSQL and Redis",
+        requirement: "Docker-Compatible Container Runtime",
+        command: `docker run --name ticket-postgres --rm -d \\
+  -e POSTGRES_USER=ticket -e POSTGRES_PASSWORD=ticket \\
+  -e POSTGRES_DB=ticket -p 5432:5432 postgres:18
+
+docker run --name ticket-redis --rm -d \\
+  -p 6379:6379 redis:8`,
+        observe: "Verify that PostgreSQL on port 5432 and Redis on port 6379 respond on the loopback interface."
+      },
+      app: {
+        title: "Run the Application with the demo Profile",
+        requirement: "JDK 25 · Loopback Only",
+        command: `export SPRING_DATASOURCE_URL=jdbc:postgresql://127.0.0.1:5432/ticket
+export SPRING_DATASOURCE_USERNAME=ticket
+export SPRING_DATASOURCE_PASSWORD=ticket
+export WORKSHOP_TICKET_DEMO_OPERATOR_TOKEN=replace-with-a-long-local-secret
+
+./gradlew :commerce-concert-ticket-flash-sale:bootRun \\
+  --args='--spring.profiles.active=demo --server.address=127.0.0.1'`,
+        observe: "Open http://127.0.0.1:8080/ to view the owner-scoped recovery page for an existing purchase attempt."
+      },
+      observe: {
+        title: "Query a Purchase-Attempt Snapshot",
+        requirement: "Attempt ID Created by an Integration Test",
+        command: `BUYER=11111111-1111-1111-1111-111111111111
+ATTEMPT=replace-with-seeded-attempt-id
+
+curl -i \\
+  -H "X-Demo-Buyer: \${BUYER}" \\
+  "http://127.0.0.1:8080/api/v1/purchase-attempts/\${ATTEMPT}"`,
+        observe: "Verify `Cache-Control: no-store` and the purchase state in the response. IDs owned by another buyer and nonexistent IDs both return 404."
+      },
+      verify: {
+        title: "Run Integration and High-Contention Tests",
+        requirement: "Docker · Sequential Execution",
+        command: `./gradlew :commerce-concert-ticket-flash-sale:test --max-workers=1
+
+./gradlew :commerce-concert-ticket-flash-sale:ticketStressTest \\
+  -PticketStressRun=local-ticket-check --max-workers=1`,
+        observe: "Check the test results for the inventory invariant, duplicate external effects, Redis outage, payment reconciliation, and cancellation-refund races."
+      }
+    };
+
+    const scenarioButtons = [...document.querySelectorAll("[data-scenario]")];
+    const flowTrack = document.querySelector("#flow-track");
+
+    function renderScenario(key) {
+      const scenario = scenarios[key];
+      document.querySelector("#scenario-title").textContent = scenario.title;
+      document.querySelector("#scenario-summary").textContent = scenario.summary;
+      document.querySelector("#scenario-badge").textContent = scenario.badge;
+      document.querySelector("#inventory-decision").textContent = scenario.inventoryDecision;
+      document.querySelector("#external-decision").textContent = scenario.externalDecision;
+      document.querySelector("#recovery-decision").textContent = scenario.recoveryDecision;
+      document.querySelector("#purchase-state").textContent = scenario.purchase;
+      document.querySelector("#inventory-state").textContent = scenario.inventory;
+      document.querySelector("#payment-state").textContent = scenario.payment;
+      document.querySelector("#ticket-state").textContent = scenario.ticket;
+      document.querySelector("#admission-state").textContent = scenario.admission;
+      document.querySelector("#event-log").textContent = scenario.log.join("\n");
+      flowTrack.replaceChildren(...scenario.nodes.map(([title, detail, state], index) => {
+        const node = document.createElement("div");
+        node.className = `flow-node ${state}`;
+        node.innerHTML = `<span class="node-mark">${String(index + 1).padStart(2, "0")}</span><strong>${title}</strong><span>${detail}</span>`;
+        return node;
+      }));
+      scenarioButtons.forEach(button => {
+        button.setAttribute("aria-selected", String(button.dataset.scenario === key));
+      });
+    }
+
+    scenarioButtons.forEach(button => {
+      button.addEventListener("click", () => renderScenario(button.dataset.scenario));
+    });
+
+    const runButtons = [...document.querySelectorAll("[data-run]")];
+    function renderRunStep(key) {
+      const step = runSteps[key];
+      document.querySelector("#run-title").textContent = step.title;
+      document.querySelector("#run-requirement").textContent = step.requirement;
+      document.querySelector("#run-command").textContent = step.command;
+      document.querySelector("#run-observe").textContent = step.observe;
+      runButtons.forEach(button => {
+        button.setAttribute("aria-selected", String(button.dataset.run === key));
+      });
+    }
+
+    runButtons.forEach(button => {
+      button.addEventListener("click", () => renderRunStep(button.dataset.run));
+    });
+
+    renderScenario("normal");
+    renderRunStep("deps");
+  </script>
+</body>
+</html>

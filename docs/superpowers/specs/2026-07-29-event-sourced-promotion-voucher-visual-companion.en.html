@@ -1,0 +1,1397 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:,">
+  <title>Event-Sourced Promotion Voucher Campaign Visual Companion</title>
+  <script>
+    (() => {
+      const storageKey = "starlight-theme";
+      const storedTheme = localStorage.getItem(storageKey);
+      const systemTheme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      document.documentElement.dataset.theme =
+        storedTheme === "light" || storedTheme === "dark" ? storedTheme : systemTheme;
+    })();
+  </script>
+  <style>
+    :root, :root[data-theme="dark"] {
+      --bg: #07111f;
+      --panel: rgba(13, 24, 43, .86);
+      --panel-strong: rgba(20, 35, 60, .94);
+      --line: rgba(174, 195, 224, .24);
+      --line-strong: rgba(174, 195, 224, .42);
+      --text: #edf5ff;
+      --muted: #9db0c7;
+      --cyan: #55d6e6;
+      --blue: #6da5ff;
+      --violet: #ad8cff;
+      --green: #70dfac;
+      --amber: #ffc96b;
+      --red: #ff8292;
+      --shadow: 0 22px 60px rgba(0, 0, 0, .28);
+      --radius: 18px;
+    }
+
+    :root[data-theme="light"] {
+      --bg: #f4f7fb;
+      --panel: rgba(255, 255, 255, .92);
+      --panel-strong: rgba(247, 250, 255, .98);
+      --line: rgba(49, 75, 108, .20);
+      --line-strong: rgba(49, 75, 108, .36);
+      --text: #162337;
+      --muted: #53677f;
+      --cyan: #087f91;
+      --blue: #3169ba;
+      --violet: #7251b5;
+      --green: #16865e;
+      --amber: #a96800;
+      --red: #c63f54;
+      --shadow: 0 22px 60px rgba(36, 60, 91, .14);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 9% -10%, rgba(85, 214, 230, .18), transparent 34rem),
+        radial-gradient(circle at 91% 3%, rgba(173, 140, 255, .17), transparent 32rem),
+        linear-gradient(180deg, #07111f 0%, #0a1323 48%, #09101c 100%);
+      font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    :root[data-theme="light"] body {
+      background:
+        radial-gradient(circle at 9% -10%, rgba(8, 127, 145, .12), transparent 34rem),
+        radial-gradient(circle at 91% 3%, rgba(114, 81, 181, .12), transparent 32rem),
+        linear-gradient(180deg, #f7f9fc 0%, #f1f5fa 48%, #edf2f7 100%);
+    }
+
+    a { color: inherit; text-underline-offset: 3px; }
+    .source-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 16px;
+      margin-top: 14px;
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 750;
+    }
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      color: #d9ebff;
+    }
+
+    .shell {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 80px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      border-bottom: 1px solid var(--line);
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(14px);
+    }
+    .topbar-inner {
+      display: flex;
+      width: min(1180px, calc(100% - 32px));
+      min-height: 54px;
+      margin: 0 auto;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .brand {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .topbar-actions,
+    .topnav {
+      display: flex;
+      align-items: center;
+    }
+    .topbar-actions { gap: 14px; }
+    .topnav {
+      gap: 18px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .topnav a { text-decoration: none; }
+    .topnav a:hover { color: var(--cyan); }
+    .theme-toggle {
+      display: inline-grid;
+      width: 36px;
+      height: 36px;
+      flex: 0 0 auto;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      color: var(--text);
+      background: var(--panel);
+      cursor: pointer;
+    }
+    .theme-toggle:hover { border-color: var(--line-strong); }
+    .theme-toggle:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--cyan) 38%, transparent);
+      outline-offset: 2px;
+    }
+    .theme-toggle svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+    }
+    :root[data-theme="dark"] .theme-icon-sun,
+    :root[data-theme="light"] .theme-icon-moon { display: none; }
+    section[id] { scroll-margin-top: 72px; }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(320px, .92fr);
+      gap: 22px;
+      min-height: 620px;
+      align-items: stretch;
+      padding: 44px 0 24px;
+    }
+
+    .hero-copy {
+      align-self: center;
+      padding: 24px 0;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--cyan);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 { margin: 0; line-height: 1.12; }
+    h1 {
+      margin-top: 18px;
+      max-width: 720px;
+      font-size: clamp(44px, 7vw, 86px);
+      letter-spacing: 0;
+      word-break: keep-all;
+    }
+    h2 { font-size: clamp(28px, 4.2vw, 46px); letter-spacing: 0; }
+    h3 { font-size: 17px; letter-spacing: 0; }
+    p { margin: 0; }
+
+    .lead {
+      max-width: 700px;
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, .04);
+      color: #cfe2f8;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .hero-map {
+      position: relative;
+      min-height: 580px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background:
+        linear-gradient(145deg, rgba(85, 214, 230, .10), transparent 42%),
+        linear-gradient(315deg, rgba(173, 140, 255, .14), transparent 48%),
+        rgba(12, 23, 42, .72);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .hero-map::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(174, 195, 224, .08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(174, 195, 224, .08) 1px, transparent 1px);
+      background-size: 36px 36px;
+      mask-image: linear-gradient(180deg, rgba(0,0,0,.9), rgba(0,0,0,.15));
+    }
+
+    .map-node {
+      position: absolute;
+      width: 190px;
+      min-height: 96px;
+      padding: 16px;
+      border: 1px solid var(--line-strong);
+      border-radius: 18px;
+      background: rgba(9, 20, 36, .78);
+      box-shadow: 0 12px 36px rgba(0,0,0,.23);
+      backdrop-filter: blur(14px);
+    }
+    .map-node strong { display: block; font-size: 15px; }
+    .map-node span { display: block; margin-top: 7px; color: var(--muted); font-size: 12px; }
+    .map-node.command { left: 34px; top: 48px; border-color: rgba(85, 214, 230, .55); }
+    .map-node.store { right: 38px; top: 142px; border-color: rgba(109, 165, 255, .58); }
+    .map-node.projection { left: 74px; bottom: 118px; border-color: rgba(112, 223, 172, .55); }
+    .map-node.operator { right: 48px; bottom: 62px; border-color: rgba(255, 201, 107, .58); }
+
+    .map-path {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .section {
+      padding: 72px 0 0;
+    }
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 24px;
+    }
+    .section-head p {
+      max-width: 560px;
+      color: var(--muted);
+    }
+
+    .concept-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .concept-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      background: rgba(255, 255, 255, .045);
+    }
+    .concept-card .number {
+      display: inline-flex;
+      width: 30px;
+      height: 30px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+      border: 1px solid rgba(85, 214, 230, .42);
+      border-radius: 9px;
+      color: var(--cyan);
+      background: rgba(85, 214, 230, .09);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .concept-card p {
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .run-modes {
+      display: grid;
+      grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .run-mode {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      background: rgba(255,255,255,.04);
+    }
+    .run-mode.primary { border-color: rgba(85, 214, 230, .42); }
+    .run-mode p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .command-block {
+      max-width: 100%;
+      margin-top: 13px;
+      padding: 13px 14px;
+      overflow-x: auto;
+      border: 1px solid rgba(109, 165, 255, .25);
+      border-radius: 12px;
+      color: #dcecff;
+      background: #08111f;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .run-flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .run-step {
+      position: relative;
+      min-height: 228px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(11, 23, 42, .72);
+    }
+    .run-step::after {
+      content: "→";
+      position: absolute;
+      top: 50%;
+      right: -14px;
+      z-index: 2;
+      transform: translateY(-50%);
+      color: var(--cyan);
+      font-size: 21px;
+      font-weight: 800;
+    }
+    .run-step:last-child::after { display: none; }
+    .run-step .step-no {
+      display: block;
+      margin-bottom: 11px;
+      color: var(--cyan);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .run-step p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .run-step code {
+      display: block;
+      margin-top: 12px;
+      padding-top: 11px;
+      border-top: 1px solid var(--line);
+      color: #dcecff;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 11px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+    .observe-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .observe-strip div {
+      padding: 13px 14px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(255,255,255,.035);
+    }
+    .observe-strip strong {
+      display: block;
+      color: var(--green);
+      font-size: 12px;
+    }
+    .observe-strip span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .scenario-line {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 12px;
+      align-items: center;
+      margin-top: 16px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(8, 17, 31, .58);
+    }
+    .scenario-line .node {
+      min-height: 96px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.04);
+    }
+    .scenario-line .node strong { display: block; }
+    .scenario-line .node span {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .scenario-line .arrow {
+      color: var(--cyan);
+      font-size: 24px;
+      font-weight: 800;
+    }
+
+    .direction-grid {
+      display: grid;
+      grid-template-columns: .82fr 1.18fr;
+      gap: 16px;
+    }
+    .direction-side {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 20px;
+      background: rgba(255,255,255,.04);
+    }
+    .direction-side.risk {
+      border-color: rgba(255, 122, 138, .34);
+      background: rgba(255, 122, 138, .055);
+    }
+    .direction-side.authority {
+      border-color: rgba(112, 223, 172, .38);
+      background: rgba(112, 223, 172, .055);
+    }
+    .decision-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .decision {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 12px;
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+    }
+    .decision strong { color: var(--cyan); font-size: 13px; }
+    .decision span { color: var(--muted); font-size: 13px; }
+
+    .implementation-stack {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      align-items: stretch;
+    }
+    .implementation-layer {
+      position: relative;
+      min-height: 188px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(11, 23, 42, .72);
+    }
+    .implementation-layer::after {
+      content: "→";
+      position: absolute;
+      top: 50%;
+      right: -14px;
+      z-index: 2;
+      transform: translateY(-50%);
+      color: var(--blue);
+      font-size: 21px;
+      font-weight: 800;
+    }
+    .implementation-layer:last-child::after { display: none; }
+    .implementation-layer .label {
+      display: inline-block;
+      margin-bottom: 12px;
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .implementation-layer p {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .implementation-note {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-left: 3px solid var(--amber);
+      color: var(--muted);
+      background: rgba(255, 201, 107, .07);
+      font-size: 13px;
+    }
+
+    .file-kicker {
+      display: block;
+      margin-bottom: 9px;
+      color: var(--cyan);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 11px;
+      overflow-wrap: anywhere;
+    }
+
+    .problem-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .problem {
+      min-height: 190px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      background: rgba(255,255,255,.04);
+    }
+    .problem .symptom {
+      display: block;
+      margin-bottom: 12px;
+      color: var(--red);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .problem .answer {
+      display: block;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      color: var(--green);
+      font-size: 13px;
+    }
+
+    .lanes {
+      display: grid;
+      grid-template-columns: 220px minmax(0, 1fr);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      overflow: hidden;
+      background: rgba(255,255,255,.04);
+      box-shadow: var(--shadow);
+    }
+
+    .lane-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 14px;
+      border-right: 1px solid var(--line);
+      background: rgba(8, 17, 31, .58);
+    }
+    .lane-nav button {
+      width: 100%;
+      border: 1px solid transparent;
+      border-radius: 14px;
+      padding: 12px 13px;
+      color: var(--muted);
+      background: transparent;
+      text-align: left;
+      font: inherit;
+      cursor: pointer;
+    }
+    .lane-nav button[aria-pressed="true"] {
+      color: var(--text);
+      background: rgba(85, 214, 230, .13);
+      border-color: rgba(85, 214, 230, .38);
+    }
+
+    .lane-stage {
+      min-height: 520px;
+      padding: 22px;
+    }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+    .step {
+      position: relative;
+      min-height: 150px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      background: rgba(11, 23, 42, .72);
+    }
+    .step::after {
+      content: "→";
+      position: absolute;
+      right: -16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--cyan);
+      font-size: 24px;
+      font-weight: 800;
+    }
+    .step:last-child::after { display: none; }
+    .step .tag {
+      display: inline-block;
+      margin-bottom: 12px;
+      color: var(--cyan);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .step p {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .scenario {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      background: var(--panel);
+    }
+    .panel h3 { margin-bottom: 12px; }
+    .timeline {
+      display: grid;
+      gap: 10px;
+    }
+    .event {
+      display: grid;
+      grid-template-columns: 44px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255,255,255,.035);
+      font-size: 13px;
+    }
+    .event .pos {
+      color: var(--cyan);
+      font-weight: 800;
+    }
+    .event .type { color: #dcecff; }
+    .event .state { color: var(--muted); font-size: 12px; }
+
+    .lag-meter {
+      position: relative;
+      height: 20px;
+      margin: 18px 0 12px;
+      border-radius: 999px;
+      background: rgba(174, 195, 224, .16);
+      overflow: hidden;
+    }
+    .lag-meter span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--green), var(--amber));
+      transition: width .2s ease;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .controls button {
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      padding: 9px 13px;
+      color: var(--text);
+      background: rgba(255,255,255,.06);
+      font: inherit;
+      cursor: pointer;
+    }
+    .controls button:hover { border-color: rgba(85,214,230,.62); }
+
+    .matrix {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .matrix .panel {
+      min-height: 190px;
+      border-top: 3px solid var(--line-strong);
+    }
+    .matrix .panel:nth-child(1) { border-top-color: var(--cyan); }
+    .matrix .panel:nth-child(2) { border-top-color: var(--blue); }
+    .matrix .panel:nth-child(3) { border-top-color: var(--green); }
+    .matrix .panel:nth-child(4) { border-top-color: var(--amber); }
+    .matrix ul {
+      margin: 12px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .matrix li + li { margin-top: 7px; }
+
+    .source-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .source-list {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .source-list li + li { margin-top: 7px; }
+
+    footer {
+      padding-top: 70px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    :root[data-theme="light"] code,
+    :root[data-theme="light"] .run-step code,
+    :root[data-theme="light"] .event .type {
+      color: #244f87;
+    }
+    :root[data-theme="light"] .pill {
+      color: #3e5b7a;
+      background: rgba(255, 255, 255, .72);
+    }
+    :root[data-theme="light"] .map-node {
+      color: #edf5ff;
+      border-color: rgba(201, 217, 236, .48);
+      background: rgba(13, 28, 48, .90);
+    }
+    :root[data-theme="light"] .map-node span { color: #bdcde0; }
+    :root[data-theme="light"] .run-step,
+    :root[data-theme="light"] .scenario-line,
+    :root[data-theme="light"] .scenario-line .node,
+    :root[data-theme="light"] .implementation-layer,
+    :root[data-theme="light"] .lane-nav,
+    :root[data-theme="light"] .step {
+      background: var(--panel-strong);
+    }
+    :root[data-theme="light"] .concept-card,
+    :root[data-theme="light"] .run-mode,
+    :root[data-theme="light"] .observe-strip div,
+    :root[data-theme="light"] .direction-side,
+    :root[data-theme="light"] .problem,
+    :root[data-theme="light"] .lanes {
+      background: rgba(255, 255, 255, .72);
+    }
+
+    @media (max-width: 980px) {
+      .hero { grid-template-columns: 1fr; min-height: auto; }
+      .hero-map { min-height: 520px; }
+      .concept-grid, .matrix, .source-grid, .problem-grid { grid-template-columns: 1fr 1fr; }
+      .implementation-stack { grid-template-columns: 1fr 1fr; }
+      .implementation-layer::after { display: none; }
+      .run-flow { grid-template-columns: 1fr 1fr; }
+      .run-step::after { display: none; }
+      .flow { grid-template-columns: 1fr 1fr; }
+      .step:nth-child(2)::after { display: none; }
+    }
+
+    @media (max-width: 720px) {
+      .topbar-inner { width: min(100% - 22px, 1180px); min-height: 48px; }
+      .topnav { display: none; }
+      .shell { width: min(100% - 22px, 1180px); }
+      h1 { font-size: 42px; letter-spacing: 0; }
+      .hero-map { min-height: 620px; }
+      .map-node { width: calc(100% - 48px); left: 24px !important; right: auto !important; }
+      .map-node.command { top: 24px; }
+      .map-node.store { top: 160px; }
+      .map-node.projection { bottom: 176px; }
+      .map-node.operator { bottom: 36px; }
+      .section-head { display: block; }
+      .section-head p { margin-top: 12px; }
+      .concept-grid, .matrix, .source-grid, .scenario, .problem-grid, .direction-grid, .implementation-stack, .run-modes, .run-flow, .observe-strip { grid-template-columns: minmax(0, 1fr); }
+      .scenario-line { grid-template-columns: 1fr; }
+      .scenario-line .arrow { transform: rotate(90deg); justify-self: center; }
+      .decision { grid-template-columns: 1fr; gap: 5px; }
+      .lanes { grid-template-columns: 1fr; }
+      .lane-nav {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .flow { grid-template-columns: 1fr; }
+      .step::after {
+        content: "↓";
+        right: 18px;
+        top: auto;
+        bottom: -22px;
+        transform: none;
+      }
+      .step:last-child::after { display: none; }
+      .event { grid-template-columns: 38px 1fr; }
+      .event .state { grid-column: 2; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="#top">bluetape4k-workshop · Visual Companion</a>
+      <div class="topbar-actions">
+        <nav class="topnav" aria-label="Document navigation">
+          <a href="#concept">Example Concept</a>
+          <a href="#design-direction">Design</a>
+          <a href="#simulation">Run</a>
+          <a href="#implementation">Implementation</a>
+          <a href="#problems">Problems Solved</a>
+        </nav>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to dark theme" title="Switch to dark theme">
+          <svg class="theme-icon-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path>
+          </svg>
+          <svg class="theme-icon-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+  <main class="shell" id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">Design and Implementation Visual · Issue #538</div>
+        <h1>Event-Sourced Promotion Voucher Campaign</h1>
+        <p class="lead">
+          `commerce/event-sourced-promotion-voucher-campaign` records every change to campaigns
+          and vouchers in sequence in a PostgreSQL event store. A basic CRUD implementation
+          cannot reliably handle concurrent requests, retries, read-model lag, or operational
+          recovery. This example shows how to solve those problems by separating command
+          processing from read-model updates.
+        </p>
+        <div class="meta">
+          <span class="pill">Spring Boot 4 MVC</span>
+          <span class="pill">Java 25 Virtual Threads</span>
+          <span class="pill">PostgreSQL Event Store</span>
+          <span class="pill">Expected Version + Idempotency</span>
+          <span class="pill">Fenced Projection Rebuilds</span>
+        </div>
+      </div>
+      <div class="hero-map" aria-label="Data flow for the event-sourced promotion voucher campaign">
+        <svg class="map-path" viewBox="0 0 520 580" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M120 118 C250 72 315 112 405 183" fill="none" stroke="rgba(85,214,230,.64)" stroke-width="3"/>
+          <path d="M410 236 C364 312 284 354 164 410" fill="none" stroke="rgba(112,223,172,.60)" stroke-width="3"/>
+          <path d="M196 462 C296 520 388 494 432 430" fill="none" stroke="rgba(255,201,107,.62)" stroke-width="3"/>
+          <path d="M436 374 C456 298 453 244 423 210" fill="none" stroke="rgba(173,140,255,.52)" stroke-width="2" stroke-dasharray="7 8"/>
+        </svg>
+        <div class="map-node command">
+          <strong>Command Processing</strong>
+          <span>Idempotency check, aggregate rehydration, expected-version check, response storage</span>
+        </div>
+        <div class="map-node store">
+          <strong>System of Record for State Changes</strong>
+          <span>Stream-head lock, append fence for global sequence allocation, immutable events</span>
+        </div>
+        <div class="map-node projection">
+          <strong>Read-Model Updates</strong>
+          <span>Lease, fencing token, deduplication, checkpoint, read model</span>
+        </div>
+        <div class="map-node operator">
+          <strong>Failure Recovery</strong>
+          <span>Failed-event replay, generation-based rebuild, validation, active-generation swap</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="concept">
+      <div class="section-head">
+        <h2>Example Concept</h2>
+        <p>The example issues, redeems, and releases vouchers within one promotion campaign while addressing four production concerns.</p>
+      </div>
+      <div class="concept-grid">
+        <article class="concept-card">
+          <span class="number">01</span>
+          <h3>Concurrency Conflicts</h3>
+          <p>Overlapping claim, redeem, and release requests for the same campaign and voucher must resolve to one processing order.</p>
+        </article>
+        <article class="concept-card">
+          <span class="number">02</span>
+          <h3>Retry After a Lost Response</h3>
+          <p>When a client retries after losing a response, the system must return the previous result without storing duplicate events.</p>
+        </article>
+        <article class="concept-card">
+          <span class="number">03</span>
+          <h3>Projection Lag</h3>
+          <p>A completed write does not guarantee an up-to-date read model. The API must report its current processing position and lag.</p>
+        </article>
+        <article class="concept-card">
+          <span class="number">04</span>
+          <h3>Online Recovery</h3>
+          <p>Poison events, projector restarts, full rebuilds, and personal-data erasure must be handled without taking the service offline.</p>
+        </article>
+      </div>
+      <div class="scenario-line" aria-label="Voucher campaign business flow">
+        <div class="node"><strong>Create and Activate Campaign</strong><span>Record budget, duration, and issuance policy in the event stream.</span></div>
+        <span class="arrow">→</span>
+        <div class="node"><strong>Claim, Redeem, and Release Voucher</strong><span>Validate business rules and the expected version before changing state.</span></div>
+        <span class="arrow">→</span>
+        <div class="node"><strong>Query, Audit, and Recover</strong><span>Read and operational features use the same event history.</span></div>
+      </div>
+      <div class="implementation-note">
+        A discount voucher is a familiar business concept, but a production system must also
+        account for optimistic concurrency control, idempotency, eventual consistency,
+        projection rebuilds, and personal-data erasure. This example shows how these technical
+        concerns connect within one business flow.
+      </div>
+    </section>
+
+    <section class="section" id="design-direction">
+      <div class="section-head">
+        <h2>Design Direction</h2>
+        <p>Instead of coordinating simultaneous writes across multiple tables, the system records every state change as an event first. Current state and read models are derived from that event stream.</p>
+      </div>
+      <div class="direction-grid">
+        <article class="direction-side risk">
+          <h3>Limits of Basic CRUD</h3>
+          <div class="decision-list">
+            <div class="decision"><strong>Concurrent Updates</strong><span>A later write can overwrite a state change that was processed first.</span></div>
+            <div class="decision"><strong>Dual Writes</strong><span>Either the business state or the query table can be stored without the other.</span></div>
+            <div class="decision"><strong>Non-Idempotent Retries</strong><span>A lost response can cause the same command to run twice.</span></div>
+            <div class="decision"><strong>Direct History Edits</strong><span>Erasing only personal data while preserving the audit trail is difficult.</span></div>
+          </div>
+        </article>
+        <article class="direction-side authority">
+          <h3>Design Principles</h3>
+          <div class="decision-list">
+            <div class="decision"><strong>Events First</strong><span>Use the PostgreSQL event stream as the system of record for state changes.</span></div>
+            <div class="decision"><strong>Atomic Storage</strong><span>Store events and idempotency results in the same transaction.</span></div>
+            <div class="decision"><strong>Asynchronous Projection</strong><span>Rebuild read models from events and expose the current projection position.</span></div>
+            <div class="decision"><strong>Generation-Based Rebuild</strong><span>Build a new projection generation separately, validate it, and then make it active.</span></div>
+            <div class="decision"><strong>Sensitive-Data Separation</strong><span>Do not retain raw user details or voucher codes in immutable events.</span></div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="implementation-direction">
+      <div class="section-head">
+        <h2>Implementation Direction</h2>
+        <p>Separate business rules from storage mechanisms while making transaction boundaries and event-processing positions explicit in code.</p>
+      </div>
+      <div class="implementation-stack">
+        <article class="implementation-layer">
+          <span class="label">Domain</span>
+          <h3>Aggregate and Reducer</h3>
+          <p>Replay events to restore current state, then validate the command and determine which new events to record.</p>
+        </article>
+        <article class="implementation-layer">
+          <span class="label">Application Layer</span>
+          <h3>Command Service</h3>
+          <p>Perform the idempotency check, state rehydration, business decision, event storage, and final-response storage in one use case.</p>
+        </article>
+        <article class="implementation-layer">
+          <span class="label">Storage Layer</span>
+          <h3>PostgreSQL Event Store</h3>
+          <p>Record the stream lock, `append fence`, event payload, and global processing position in one transaction.</p>
+        </article>
+        <article class="implementation-layer">
+          <span class="label">Read Model</span>
+          <h3>Lease and Checkpoint</h3>
+          <p>Read stored events in batches, then deduplicate events, update the read model, and advance the checkpoint in one transaction.</p>
+        </article>
+        <article class="implementation-layer">
+          <span class="label">Operations</span>
+          <h3>Recovery and Observability</h3>
+          <p>Provide failed-event replay, consistency checks, and generation-based rebuilds while measuring connection-pool usage and processing lag.</p>
+        </article>
+      </div>
+      <div class="implementation-note">
+        Snapshots optimize event replay; they are not the final source of data. If snapshot
+        metadata is invalid or its HMAC key version is unavailable, discard the snapshot and
+        replay the full event stream.
+      </div>
+    </section>
+
+    <section class="section" id="simulation">
+      <div class="section-head">
+        <h2>Run and Verify the Example</h2>
+        <p>Start with the Testcontainers integration tests to verify the core behavior. To exercise the full flow, connect the application to PostgreSQL and send HTTP mutation and query requests in sequence.</p>
+      </div>
+      <div class="run-modes">
+        <article class="run-mode">
+          <h3>Run the Integration Tests</h3>
+          <p>Verify command processing, idempotency, read-model updates, and failure recovery without configuring a separate local PostgreSQL instance.</p>
+          <div class="command-block">./gradlew \
+:commerce-event-sourced-promotion-voucher-campaign:integrationTest \
+--console=plain</div>
+        </article>
+        <article class="run-mode primary">
+          <h3>Run the Application</h3>
+          <p>Set the PostgreSQL data source and HMAC secret in environment variables. The default key included with the example is for local execution only and must not be used in production.</p>
+          <div class="command-block">export SPRING_DATASOURCE_URL='jdbc:postgresql://localhost:5432/&lt;database&gt;'
+export SPRING_DATASOURCE_USERNAME='&lt;username&gt;'
+export SPRING_DATASOURCE_PASSWORD='&lt;password&gt;'
+export VOUCHER_HMAC_ACTIVE_VERSION=2
+export VOUCHER_HMAC_ACTIVE_KEY_BASE64='&lt;base64-secret&gt;'
+./gradlew :commerce-event-sourced-promotion-voucher-campaign:bootRun</div>
+        </article>
+      </div>
+      <div class="implementation-note">
+        Every API request requires the `X-Workshop-Tenant` and `X-Workshop-Principal` headers.
+        State-changing requests also require `Idempotency-Key`. The `/operator/**` APIs must be
+        called from localhost and additionally require `X-Workshop-Operator-Secret`,
+        `X-Workshop-Guard`, and `X-Workshop-Operator-Role: OPERATOR`.
+      </div>
+      <div class="run-flow" aria-label="Example execution procedure">
+        <article class="run-step">
+          <span class="step-no">01 · CREATE</span>
+          <h3>Create a Campaign</h3>
+          <p>Create a campaign through the operator API with the common authentication headers, an idempotency key, and `If-None-Match: *`.</p>
+          <code>POST /operator/api/v1/campaigns<br>{ campaignId, startsAt, endsAt, capacity, perUserLimit, redemptionTtlSeconds }</code>
+        </article>
+        <article class="run-step">
+          <span class="step-no">02 · ACTIVATE</span>
+          <h3>Activate the Campaign</h3>
+          <p>Send the `revision` from the create response as `expectedRevision` to detect whether another request changed the state first.</p>
+          <code>POST /operator/api/v1/campaigns/{campaignId}/activate<br>{ "expectedRevision": 0 }</code>
+        </article>
+        <article class="run-step">
+          <span class="step-no">03 · CLAIM</span>
+          <h3>Claim a Voucher</h3>
+          <p>Convert the user reference to an HMAC-based pseudonym, then validate the overall issuance capacity and per-user limit in the aggregate.</p>
+          <code>POST /api/v1/campaigns/{campaignId}/claims<br>{ "userRef": "member-42" }</code>
+        </article>
+        <article class="run-step">
+          <span class="step-no">04 · QUERY</span>
+          <h3>Check the Read Model</h3>
+          <p>Send the stream position from the mutation response as the minimum required projection position. This ensures the read model includes the preceding change.</p>
+          <code>GET /api/v1/campaigns/{campaignId}<br>X-Min-Stream-Position: {position}</code>
+        </article>
+        <article class="run-step">
+          <span class="step-no">05 · RECOVER</span>
+          <h3>Check Recovery Status</h3>
+          <p>If projection processing is delayed, retry only the GET request. If the entire read model diverges from the event history, rebuild it through the operator API and run the consistency check.</p>
+          <code>POST /operator/api/v1/projections/{projection}/rebuilds<br>GET .../rebuilds/{generation}</code>
+        </article>
+      </div>
+      <div class="observe-strip">
+        <div><strong>Command Result</strong><span>Use `Idempotency-Replayed` and `X-Stream-Position` to determine whether the request was processed or a previous result was replayed.</span></div>
+        <div><strong>Query Result</strong><span>`200` means the read model is current. For `202`, inspect `Retry-After` and `X-Projection-Lag`, then retry only the GET request.</span></div>
+        <div><strong>Operational State</strong><span>Inspect `/actuator/health`, Prometheus metrics for lag, failed events, and connection-pool usage, along with rebuild status and audit records.</span></div>
+      </div>
+    </section>
+
+    <section class="section" id="lanes">
+      <div class="section-head">
+        <h2>Processing Flow in the Code</h2>
+        <p>Command processing, read-model updates, rebuilds, and security and operations are implemented as separate concerns. Every state change passes through the PostgreSQL event history.</p>
+      </div>
+      <div class="lanes">
+        <nav class="lane-nav" aria-label="Select a processing flow">
+          <button type="button" data-lane="command" aria-pressed="true">Command</button>
+          <button type="button" data-lane="projection" aria-pressed="false">Read Model</button>
+          <button type="button" data-lane="rebuild" aria-pressed="false">Rebuild</button>
+          <button type="button" data-lane="security" aria-pressed="false">Security and Operations</button>
+        </nav>
+        <div class="lane-stage" id="lane-stage"></div>
+      </div>
+    </section>
+
+    <section class="section" id="scenario">
+      <div class="section-head">
+        <h2>Timing Gap Between Commands and the Read Model</h2>
+        <p>When a mutation succeeds, the event and idempotency result are stored first. The read model becomes current only after its projection checkpoint advances through that event.</p>
+      </div>
+      <div class="scenario">
+        <div class="panel">
+          <h3>Event Stream</h3>
+          <div class="timeline" id="event-stream"></div>
+          <div class="controls">
+            <button type="button" id="append-event">Process Command</button>
+            <button type="button" id="project-event">Update Read Model</button>
+            <button type="button" id="reset-scenario">Reset</button>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>Read-Model Freshness</h3>
+          <p id="freshness-copy">When read-model processing is delayed, the API returns `202 PROJECTION_PENDING`.</p>
+          <div class="lag-meter" aria-label="Read-model processing lag">
+            <span id="lag-fill" style="width: 0%"></span>
+          </div>
+          <div class="event">
+            <span class="pos">S</span>
+            <span class="type">X-Stream-Position</span>
+            <span class="state" id="stream-position">0</span>
+          </div>
+          <div class="event" style="margin-top: 10px;">
+            <span class="pos">P</span>
+            <span class="type">X-Projection-Position</span>
+            <span class="state" id="projection-position">0</span>
+          </div>
+          <div class="event" style="margin-top: 10px;">
+            <span class="pos">L</span>
+            <span class="type">X-Projection-Lag</span>
+            <span class="state" id="projection-lag">0</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="implementation">
+      <div class="section-head">
+        <h2>Implemented Structure</h2>
+        <p>The following Kotlin classes implement the transaction scopes and state-change rules described above.</p>
+      </div>
+      <div class="matrix">
+        <article class="panel">
+          <span class="file-kicker">EventStoreRepository.kt</span>
+          <h3>Event Storage</h3>
+          <ul>
+            <li>Lock `StreamHeads` first and verify that the expected stream version matches the current version.</li>
+            <li>Use `AppendFences` to assign gap-free global sequence numbers to committed events.</li>
+            <li>Append events and update the stream head in the same transaction.</li>
+          </ul>
+        </article>
+        <article class="panel">
+          <span class="file-kicker">EventSourcedCommandService.kt</span>
+          <h3>Command Idempotency</h3>
+          <ul>
+            <li>Claim the idempotency key and store the final response within the command-service transaction.</li>
+            <li>When the request fingerprint matches, return the previously stored final response unchanged.</li>
+            <li>If a key required to restore the response is unavailable, fail closed and return `503`.</li>
+          </ul>
+        </article>
+        <article class="panel">
+          <span class="file-kicker">ProjectionWorker.kt</span>
+          <h3>Read-Model Worker</h3>
+          <ul>
+            <li>Renew a projection lease only after validating its owner and fencing token.</li>
+            <li>Deduplicate events, update the read model, and advance the checkpoint in one transaction.</li>
+            <li>Quarantine poison events for recovery instead of skipping them.</li>
+          </ul>
+        </article>
+        <article class="panel">
+          <span class="file-kicker">EventSourcedProjectionRuntime.kt</span>
+          <h3>Read-Model Rebuild</h3>
+          <ul>
+            <li>Make a newly built read model active only after validating it.</li>
+            <li>Use revisions and fencing tokens to support cancellation and resumption and to reject writes from stale workers.</li>
+            <li>Run the currently served read model independently from the generation being rebuilt.</li>
+          </ul>
+        </article>
+      </div>
+      <div class="source-grid" style="margin-top: 14px;">
+        <article class="panel">
+          <span class="file-kicker">CampaignProjectionQueryService.kt</span>
+          <h3>Read-Model Projection Status</h3>
+          <p>Read the event-stream position and read-model position together. If the requested position has not been projected, wait for the configured interval, then return `202 PROJECTION_PENDING` with lag information in the response headers.</p>
+        </article>
+        <article class="panel">
+          <span class="file-kicker">SubjectIdentityRepository.kt · BoundedRehydrator.kt</span>
+          <h3>Personal-Data Erasure and State Rehydration</h3>
+          <p>Store raw user data in an erasable mapping to HMAC-based pseudonyms. Use a snapshot as the starting point for event replay only after it passes validation.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="problems">
+      <div class="section-head">
+        <h2>Technical Problems the Example Solves</h2>
+        <p>The API responses and operational data make failure states explicit. Callers can interpret response codes and processing positions, while operators can recover through controlled retries and rebuilds.</p>
+      </div>
+      <div class="problem-grid">
+        <article class="problem">
+          <span class="symptom">Lost Concurrent Update</span>
+          <h3>Concurrent requests overwrite each other's changes</h3>
+          <span class="answer">The expected stream version and stream-head lock allow only one request to append events; the others receive a conflict response.</span>
+        </article>
+        <article class="problem">
+          <span class="symptom">Duplicate Processing</span>
+          <h3>A retry after a lost response applies the change twice</h3>
+          <span class="answer">Store the idempotency scope, request fingerprint, and final response so the same request receives its previous result.</span>
+        </article>
+        <article class="problem">
+          <span class="symptom">Stale Query Result</span>
+          <h3>A query immediately after a mutation returns the previous state</h3>
+          <span class="answer">Expose event and read-model positions with the current lag, and return `202 PROJECTION_PENDING` when the requested change has not yet been projected.</span>
+        </article>
+        <article class="problem">
+          <span class="symptom">Projector Failure</span>
+          <h3>Duplicate delivery and processing failures corrupt the checkpoint</h3>
+          <span class="answer">Recover with leases and fencing tokens, event deduplication, transactional checkpoints, poison-event quarantine, and bounded retries.</span>
+        </article>
+        <article class="problem">
+          <span class="symptom">Unsafe Rebuild</span>
+          <h3>An unvalidated read model becomes visible to clients</h3>
+          <span class="answer">Update the `BUILDING` generation separately, validate its digest, and switch the active generation with CAS (Compare-and-Set).</span>
+        </article>
+        <article class="problem">
+          <span class="symptom">Personal Data in Events</span>
+          <h3>Personal data remains in immutable event history</h3>
+          <span class="answer">Keep only HMAC-based pseudonyms in events. Deleting the mapping to the raw data removes the association without rewriting event history.</span>
+        </article>
+      </div>
+    </section>
+
+    <footer>
+      A successful mutation means that the event was stored; it does not mean that the read
+      model is current. Distinguishing those states is essential for correct client retries
+      and operational recovery procedures.
+      <p class="source-links"
+         data-status="approved"
+         data-source="2026-07-22-issue-538-event-sourced-promotion-voucher-campaign-design.md"
+         data-baseline="80c1f95eee175cc3bff4d27280f6dd2bb7d0f5f2">
+        <a href="2026-07-22-issue-538-event-sourced-promotion-voucher-campaign-design.md">Design document</a>
+        <a href="2026-07-30-concert-ticket-flash-sale-visual-companion.en.html">Next visual companion</a>
+        <a href="2026-07-29-event-sourced-promotion-voucher-visual-companion.html">한국어</a>
+      </p>
+    </footer>
+  </main>
+
+  <script>
+    const themeStorageKey = "starlight-theme";
+    const themeMedia = matchMedia("(prefers-color-scheme: dark)");
+    const themeToggle = document.getElementById("theme-toggle");
+
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      const nextTheme = theme === "dark" ? "light" : "dark";
+      themeToggle.setAttribute("aria-label", `Switch to ${nextTheme} theme`);
+      themeToggle.title = themeToggle.getAttribute("aria-label");
+    }
+
+    themeToggle.addEventListener("click", () => {
+      const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+      localStorage.setItem(themeStorageKey, nextTheme);
+      applyTheme(nextTheme);
+    });
+
+    themeMedia.addEventListener("change", (event) => {
+      const storedTheme = localStorage.getItem(themeStorageKey);
+      if (storedTheme !== "light" && storedTheme !== "dark") {
+        applyTheme(event.matches ? "dark" : "light");
+      }
+    });
+
+    addEventListener("storage", (event) => {
+      if (event.key === themeStorageKey && (event.newValue === "light" || event.newValue === "dark")) {
+        applyTheme(event.newValue);
+      }
+    });
+
+    applyTheme(document.documentElement.dataset.theme);
+
+    const lanes = {
+      command: {
+        title: "Command Processing Flow",
+        steps: [
+          ["Validate HTTP Request", "Validate the tenant, principal, `Idempotency-Key`, and expected revision in the request body at the API boundary."],
+          ["Check Idempotency Result", "Return the stored final response when the idempotency scope and request fingerprint match; otherwise report a conflict."],
+          ["Rehydrate Current State", "Replay events after the snapshot, or the full stream, to restore the aggregate and produce the list of new events."],
+          ["Store Events and Response", "Check the expected stream version, reserve global sequence numbers, append events, and store the final response in one transaction."]
+        ]
+      },
+      projection: {
+        title: "Read-Model Update Flow",
+        steps: [
+          ["Acquire Lease", "Acquire the projection generation's lease and fencing token through PostgreSQL CAS (Compare-and-Set)."],
+          ["Read New Events", "Use keyset pagination to read only committed events after the last checkpoint."],
+          ["Update Read Model", "Deduplicate events, update the read model, and advance the checkpoint in one transaction."],
+          ["Check Freshness", "The query API exposes event position, read-model position, and lag, and returns `202` when required."]
+        ]
+      },
+      rebuild: {
+        title: "Read-Model Rebuild Flow",
+        steps: [
+          ["Create New Generation", "Replay from the first event into a `BUILDING` generation that is isolated from the active read model."],
+          ["Validate Rebuild", "Compare target event position, row count, aggregate versions, and the digest of normalized query results with the active generation."],
+          ["Swap Active Generation", "Make only a validated generation `ACTIVE` and preserve the previous generation as `RETIRED`."],
+          ["Cancel and Resume", "Use the cancellation revision and fencing token to prevent stale workers from overwriting valid results."]
+        ]
+      },
+      security: {
+        title: "Security and Operations Flow",
+        steps: [
+          ["Exclude Sensitive Data", "Do not store raw voucher codes, user details, IP addresses, or device signals in event payloads or final-response records."],
+          ["Use Pseudonymous Identifiers", "Link raw user data to an HMAC-based pseudonym mapping and delete that mapping when personal-data erasure is requested."],
+          ["Partition Connection-Pool Capacity", "Reserve separate pool capacity for regular requests, projections, rebuilds, maintenance, and health checks to prevent HikariCP exhaustion."],
+          ["Expose Operational Metrics", "Measure processing lag, poison events, rebuild state, `append fence` wait time, and connection-pool utilization separately."]
+        ]
+      }
+    };
+
+    function renderLane(name) {
+      const lane = lanes[name];
+      const stage = document.getElementById("lane-stage");
+      stage.innerHTML = `
+        <h3>${lane.title}</h3>
+        <div class="flow" style="margin-top: 18px;">
+          ${lane.steps.map((step, index) => `
+            <article class="step">
+              <span class="tag">${String(index + 1).padStart(2, "0")}</span>
+              <h3>${step[0]}</h3>
+              <p>${step[1]}</p>
+            </article>
+          `).join("")}
+        </div>
+      `;
+      document.querySelectorAll(".lane-nav button").forEach((button) => {
+        button.setAttribute("aria-pressed", String(button.dataset.lane === name));
+      });
+    }
+
+    document.querySelectorAll(".lane-nav button").forEach((button) => {
+      button.addEventListener("click", () => renderLane(button.dataset.lane));
+    });
+    renderLane("command");
+
+    const eventTypes = [
+      "CampaignCreated",
+      "CampaignActivated",
+      "VoucherAllocated",
+      "VoucherRedeemed",
+      "ProjectionCheckpointed"
+    ];
+    let streamPosition = 0;
+    let projectionPosition = 0;
+
+    function updateScenario() {
+      const stream = document.getElementById("event-stream");
+      const events = Array.from({ length: streamPosition }, (_, i) => i + 1);
+      stream.innerHTML = events.length
+        ? events.map((position) => `
+            <div class="event">
+              <span class="pos">#${position}</span>
+              <span class="type">${eventTypes[(position - 1) % eventTypes.length]}</span>
+              <span class="state">${position <= projectionPosition ? "Projected" : "Event stored only"}</span>
+            </div>
+          `).join("")
+        : `<div class="event"><span class="pos">0</span><span class="type">No stored events</span><span class="state">Waiting</span></div>`;
+      const lag = Math.max(0, streamPosition - projectionPosition);
+      document.getElementById("stream-position").textContent = String(streamPosition);
+      document.getElementById("projection-position").textContent = String(projectionPosition);
+      document.getElementById("projection-lag").textContent = String(lag);
+      document.getElementById("lag-fill").style.width = `${Math.min(100, lag * 24)}%`;
+      document.getElementById("freshness-copy").textContent = lag === 0
+        ? "The read model includes the latest event. The query API returns the current state with `200`."
+        : "The event is stored but has not reached the read model. The query API returns the current processing position, `Retry-After`, and `202 PROJECTION_PENDING`.";
+    }
+
+    document.getElementById("append-event").addEventListener("click", () => {
+      streamPosition = Math.min(streamPosition + 1, 8);
+      updateScenario();
+    });
+    document.getElementById("project-event").addEventListener("click", () => {
+      projectionPosition = Math.min(projectionPosition + 1, streamPosition);
+      updateScenario();
+    });
+    document.getElementById("reset-scenario").addEventListener("click", () => {
+      streamPosition = 0;
+      projectionPosition = 0;
+      updateScenario();
+    });
+    updateScenario();
+  </script>
+</body>
+</html>
