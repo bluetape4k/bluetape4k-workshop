@@ -747,12 +747,67 @@
       background: var(--surface);
       overflow: hidden;
     }
-    .diagram-frame img {
-      display: block;
-      width: 100%;
-      height: auto;
-      object-fit: contain;
+    .architecture-map {
+      display: grid;
+      gap: 14px;
+      min-height: 430px;
+      padding: 24px;
+      align-content: center;
+      background: var(--surface-2);
+    }
+    .architecture-app,
+    .architecture-store {
+      border: 1px solid var(--line-strong);
+      border-radius: 8px;
+      padding: 16px;
       background: var(--surface);
+    }
+    .architecture-app {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .architecture-app span,
+    .architecture-store span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .architecture-app strong,
+    .architecture-store strong {
+      color: var(--text);
+      font-size: 14px;
+    }
+    .architecture-modules {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .architecture-modules span {
+      padding: 12px 8px;
+      border: 1px solid var(--teal);
+      border-radius: 6px;
+      color: var(--teal-text);
+      background: var(--teal-soft);
+      font-size: 11px;
+      font-weight: 800;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+    .architecture-arrow {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-align: center;
+    }
+    .architecture-stores {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 10px;
+    }
+    .architecture-store {
+      display: grid;
+      gap: 5px;
     }
     .diagram-caption {
       padding: 14px 16px;
@@ -1000,6 +1055,10 @@
       .flow-node span { grid-column: 2; margin-top: -16px; }
       .decision-row { grid-template-columns: 116px 1fr; }
       .decision-row b, .decision-row span { padding: 9px 10px; }
+      .architecture-map { min-height: 0; padding: 14px; }
+      .architecture-app { display: grid; }
+      .architecture-modules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .architecture-stores { grid-template-columns: 1fr; }
       .run-steps { grid-template-columns: 1fr 1fr; }
       .run-step { border-bottom: 1px solid var(--line); }
       .run-step:nth-child(2) { border-right: 0; }
@@ -1315,9 +1374,31 @@
 
         <div class="implementation">
           <figure class="diagram-frame">
-            <img
-              src="../../images/readme-diagrams/commerce-concert-ticket-flash-sale-architecture-01.png"
-              alt="Spring Modulith business modules, PostgreSQL, and Redis architecture for the concert ticket flash sale">
+            <div class="architecture-map" role="img" aria-label="Spring Modulith business modules, PostgreSQL, and Redis architecture for the concert ticket flash sale">
+              <div class="architecture-app">
+                <span>Single deployment unit</span>
+                <strong>Spring Boot 4 · Spring Modulith</strong>
+              </div>
+              <div class="architecture-modules" aria-label="Business modules">
+                <span>salecontrol</span>
+                <span>admission</span>
+                <span>purchase</span>
+                <span>payment</span>
+                <span>ticketing</span>
+                <span>operations</span>
+              </div>
+              <div class="architecture-arrow">State changes through public APIs ↓</div>
+              <div class="architecture-stores">
+                <div class="architecture-store">
+                  <strong>PostgreSQL</strong>
+                  <span>Final inventory, purchase, payment, refund, and ticket state</span>
+                </div>
+                <div class="architecture-store">
+                  <strong>Redis</strong>
+                  <span>Queue, admission grants, and temporary USER/IP claims</span>
+                </div>
+              </div>
+            </div>
             <figcaption class="diagram-caption">
               Implementation structure that separates business modules within one Spring Boot application and distinguishes PostgreSQL and Redis responsibilities
             </figcaption>

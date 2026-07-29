@@ -10,7 +10,7 @@ const errors = [];
 const forbidden = [
   /<script\b[^>]*\bsrc\s*=/i,
   /<link\b[^>]*\brel\s*=\s*["']?stylesheet\b/i,
-  /<(?:img|iframe|audio|video|source)\b[^>]*\bsrc\s*=\s*["']?\s*(?:https?:)?\/\//i,
+  /<(?:img|iframe|audio|video|source)\b[^>]*\bsrc\s*=\s*["'](?!data:|#)[^"']+["']/i,
   /<form\b/i,
   /\bfetch\s*\(/,
   /\bXMLHttpRequest\b/,
