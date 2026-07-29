@@ -33,7 +33,7 @@ dependencies {
 
     api(libs.jakarta.servlet.api)
 
-    // Spring Boot
+    // Spring Boot 의존성
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
@@ -51,22 +51,22 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
-    // Coroutines
+    // 코루틴
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactor)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    // Reactor
+    // Reactor 의존성
     implementation(libs.reactor.netty)
     implementation(libs.reactor.kotlin.extensions)
     testImplementation(libs.reactor.test)
 
-    // Observability
+    // Observability 의존성
     implementation(libs.micrometer.core)
     implementation(libs.micrometer.observation.lib)
     testImplementation(libs.micrometer.observation.test)
 
-    // SpringDoc - OpenAPI 3.0
+    // SpringDoc - OpenAPI 3.0 의존성
     implementation(libs.springdoc.openapi.starter.webflux.ui)
 }

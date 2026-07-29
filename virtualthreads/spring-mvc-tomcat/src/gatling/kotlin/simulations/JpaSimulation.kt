@@ -29,6 +29,7 @@ class JpaSimulation : Simulation() {
     init {
         setUp(
             scn.injectClosed(rampConcurrentUsers(10).to(50).during(10.seconds.toJavaDuration()))
+            // open workload 가 필요할 때 constantUsersPerSec 설정을 다시 활성화합니다.
             // scn.injectOpen(constantUsersPerSec(20.0).during(5.seconds.toJavaDuration()))
         ).protocols(httpProtocol)
     }

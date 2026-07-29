@@ -15,7 +15,7 @@ dependencies {
 
     implementation(libs.bluetape4k.core)
 
-    // Jackson CBOR
+    // Jackson CBOR 의존성
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.jackson3.dataformat.cbor)
 
@@ -28,10 +28,10 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
-    // Spring Webflux
+    // Spring WebFlux 의존성
     testImplementation(libs.spring.boot.starter.webflux.lib)
 
-    // Coroutines & Reactor
+    // 코루틴 및 Reactor 의존성
     testImplementation(libs.bluetape4k.coroutines)
     testImplementation(libs.kotlinx.coroutines.reactor)
     testImplementation(libs.kotlinx.coroutines.test.lib)
