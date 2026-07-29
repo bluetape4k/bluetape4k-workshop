@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.runApplication
 
 /**
- * Spring Boot entrypoint for the text moderation API workshop module.
+ * text moderation API workshop module 의 Spring Boot entrypoint 입니다.
  */
 @SpringBootApplication
 @ConfigurationPropertiesScan(basePackageClasses = [TextModerationProperties::class])

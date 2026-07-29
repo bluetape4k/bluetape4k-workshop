@@ -5,7 +5,7 @@ import java.io.Serializable
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
- * Configuration properties for the text moderation API workshop module.
+ * text moderation API workshop module 의 configuration property 입니다.
  */
 @ConfigurationProperties(prefix = "workshop.text-moderation")
 data class TextModerationProperties(
