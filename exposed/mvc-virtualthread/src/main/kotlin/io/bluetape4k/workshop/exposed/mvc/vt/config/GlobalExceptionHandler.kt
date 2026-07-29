@@ -63,8 +63,8 @@ class GlobalExceptionHandler {
     }
 
     /**
-     * virtualFuture{}.get() wraps exceptions in ExecutionException / CompletionException.
-     * Unwrap and re-dispatch to the appropriate handler.
+     * virtualFuture{}.get()은 예외를 ExecutionException / CompletionException으로 감싼다.
+     * 내부 cause를 풀어 적절한 handler로 다시 dispatch한다.
      */
     @ExceptionHandler(ExecutionException::class, CompletionException::class)
     fun handleWrapped(e: Exception): ResponseEntity<ErrorResponse> {

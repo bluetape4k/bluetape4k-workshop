@@ -51,7 +51,7 @@ class OrderService(
     @Transactional
     fun placeOrder(req: PlaceOrderRequest): OrderDTO {
         val order = orderRepo.insert(req)
-        // deadlock prevention: sort by productId ascending
+        // deadlock 방지: productId 오름차순으로 정렬한다.
         val sortedLines = req.lines.sortedBy { it.productId }
         for (line in sortedLines) {
             val product = productRepo.findByIdForUpdate(line.productId)

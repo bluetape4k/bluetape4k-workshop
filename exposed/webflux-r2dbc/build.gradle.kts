@@ -27,36 +27,36 @@ dependencies {
     testImplementation(libs.bluetape4k.assertions)
     testImplementation(libs.exposed.r2dbc.tests)
 
-    // Logging
+    // 로깅 의존성
     implementation(libs.bluetape4k.logging)
     implementation(libs.bluetape4k.coroutines)
 
-    // Exposed R2DBC
+    // Exposed R2DBC 의존성
     implementation(libs.exposed.core)
     implementation(libs.exposed.r2dbc)
     implementation(libs.jetbrains.exposed.r2dbc)
 
-    // R2DBC
+    // R2DBC 드라이버/풀 의존성
     implementation(libs.r2dbc.pool)
     runtimeOnly(libs.r2dbc.postgresql)
 
-    // JDBC (for DatabaseInitializer schema creation)
+    // JDBC 의존성: DatabaseInitializer의 schema 생성에 사용한다.
     implementation(libs.exposed.jdbc)
     implementation(libs.jetbrains.exposed.jdbc)
     implementation(libs.hikaricp)
     runtimeOnly(libs.postgresql.driver)
 
-    // Coroutines
+    // 코루틴 및 Reactor 의존성
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactor)
     implementation(libs.reactor.netty)
     implementation(libs.reactor.kotlin.extensions)
 
-    // Jackson
+    // Jackson 직렬화 의존성
     implementation(libs.jackson3.module.kotlin)
     implementation(libs.jackson3.module.blackbird)
 
-    // Spring Boot
+    // Spring Boot 구성
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
@@ -76,6 +76,6 @@ dependencies {
     testImplementation(libs.bluetape4k.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
 
-    // SpringDoc
+    // SpringDoc 문서화 의존성
     implementation(libs.springdoc.openapi.starter.webflux.ui)
 }

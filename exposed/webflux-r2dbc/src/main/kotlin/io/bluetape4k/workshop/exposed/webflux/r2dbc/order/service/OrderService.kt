@@ -55,7 +55,7 @@ class OrderService(
 
     suspend fun placeOrder(req: PlaceOrderRequest): OrderDTO = suspendTransaction(db = db) {
         val order = orderRepo.insert(req)
-        // Sort by productId to prevent deadlock
+        // deadlock을 방지하기 위해 productId 기준으로 정렬한다.
         val sortedLines = req.lines.sortedBy { it.productId }
         for (line in sortedLines) {
             val product = productRepo.findByIdForUpdate(line.productId)

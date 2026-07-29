@@ -10,7 +10,7 @@ import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.springframework.stereotype.Repository
 
 /**
- * Author CRUD repository backed by bluetape4k [LongAuditableJdbcRepository].
+ * bluetape4k [LongAuditableJdbcRepository]를 기반으로 하는 Author CRUD repository이다.
  *
  * ## bluetape4k vs raw Exposed (before/after)
  *
@@ -28,7 +28,7 @@ import org.springframework.stereotype.Repository
  * class AuthorRepository : LongAuditableJdbcRepository<AuthorDTO, AuthorTable> { ... }
  * ```
  * `findAll()`, `findById()`, `findPage()`, `count()`, `existsById()`, `deleteById()`,
- * `batchInsert()`, `auditedUpdateById()` are all inherited — no boilerplate needed.
+ * `batchInsert()`, `auditedUpdateById()`까지 모두 상속되므로 boilerplate가 필요하지 않다.
  */
 @Repository
 class AuthorRepository : LongAuditableJdbcRepository<AuthorDTO, AuthorTable> {
@@ -40,11 +40,11 @@ class AuthorRepository : LongAuditableJdbcRepository<AuthorDTO, AuthorTable> {
     override fun ResultRow.toEntity() = toAuthorDTO()
 
     /**
-     * Inserts a new author and returns the persisted [AuthorDTO].
+     * 새 author를 insert하고 영속화된 [AuthorDTO]를 반환한다.
      *
-     * [insertAndGetId] retrieves the generated Long PK in one round-trip.
-     * Audit columns (`createdBy`, `createdAt`) are set automatically by
-     * [AuthorTable]'s clientDefault and DB default expression.
+     * [insertAndGetId]는 생성된 Long PK를 한 번의 왕복으로 가져온다.
+     * audit column(`createdBy`, `createdAt`)은 [AuthorTable]의 clientDefault와
+     * DB default expression에 의해 자동 설정된다.
      */
     fun save(req: CreateAuthorRequest): AuthorDTO {
         val id = AuthorTable.insertAndGetId {

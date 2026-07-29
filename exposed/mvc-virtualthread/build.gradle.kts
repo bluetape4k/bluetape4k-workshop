@@ -29,27 +29,27 @@ dependencies {
         exclude(group = "org.jetbrains.exposed", module = "exposed-spring-boot4-starter")
     }
 
-    // bluetape4k core (provides virtualFuture, ShutdownQueue, KLogging)
+    // bluetape4k core: virtualFuture, ShutdownQueue, KLogging을 제공한다.
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.logging)
 
-    // Virtual Thread runtime (jdk21 for JVM 21 test environment)
+    // Virtual Thread runtime: JVM 21 테스트 환경에서는 jdk21 구현을 사용한다.
     implementation(libs.bluetape4k.virtualthread.api)
     runtimeOnly(libs.bluetape4k.virtualthread.jdk21)
 
-    // Exposed JDBC (manual TX, no Spring TX starter)
+    // Exposed JDBC: Spring TX starter 없이 수동 TX를 사용한다.
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
 
-    // DB
+    // 데이터베이스 의존성
     implementation(libs.hikaricp)
     runtimeOnly(libs.postgresql.driver)
 
-    // Jackson
+    // Jackson 직렬화 의존성
     implementation(libs.jackson3.module.kotlin)
     implementation(libs.jackson3.module.blackbird)
 
-    // Spring Boot
+    // Spring Boot 구성
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
@@ -69,6 +69,6 @@ dependencies {
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.kotlinx.coroutines.reactor)
 
-    // SpringDoc
+    // SpringDoc 문서화 의존성
     implementation(libs.springdoc.openapi.starter.webmvc.ui)
 }
