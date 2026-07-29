@@ -1,48 +1,48 @@
-# Plan: graph/social-network Workshop Module
+# 계획: graph/social-network 워크숍 모듈
 
-**Date**: 2026-05-25
-**Branch**: `feat/graph-social-network`
-**Spec**: `docs/superpowers/specs/2026-05-25-graph-social-network-design.md`
-**Module**: `graph/social-network` — Gradle module name: `graph-social-network`
-**Canonical Pattern**: `graph/abuser-detection/`
-**Stack**: Kotlin 2.3.20, Java 25, bluetape4k 1.5.0-Beta2, bluetape4k-graph (via BOM)
-
----
-
-## Key Spec Decisions Encoded in Tasks
-
-1. **Auto-registration**: `settings.gradle.kts` line 27 already has `includeModules("graph", false, true)`. The `includeModules` function auto-discovers all subdirectories under `graph/`. Creating `graph/social-network/build.gradle.kts` is sufficient — no settings.gradle.kts changes needed. The resulting module name is `:graph-social-network`.
-
-2. **KNOWS bidirectional**: `connect(A,B)` creates TWO directed edges (A→B, B→A) with IDENTICAL properties. Callers must NOT call `connect(B,A)` after `connect(A,B)`.
-
-3. **find-or-create idempotency**: `addPerson`/`addCompany` find by domain key (`personId`/`companyId`) only. Second call with same key returns existing vertex without updating properties.
-
-4. **Seed centralization**: `@BeforeEach` in AbstractSocialNetworkTest calls `seedSocialNetwork(service)` after dropGraph + initialize. This reduces boilerplate across 29 test cases that all need the same topology.
-
-5. **FOAF tie-breaking**: personId domain key ascending (NOT backend GraphElementId) for deterministic cross-backend ordering.
-
-6. **neighbors() seed exclusion**: All algorithms (FOAF, N-degree, findColleagues) must explicitly subtract `{seed}` from results. `neighbors()` does not guarantee seed exclusion at depth >= 2.
-
-7. **Suspend service returns List, not Flow**: FOAF sorting requires full collection. All query methods in `SocialNetworkSuspendService` collect `Flow<GraphVertex>.toList()` internally and return `List`.
-
-8. **Unique graphName per concrete test class**: Prevents state collision when multiple test classes share a Neo4j/Memgraph container.
-
-9. **ID-based set operations**: `GraphVertex` equality is NOT guaranteed to be ID-based. Always compare via `.id` using `Set<GraphElementId>`.
-
-10. **Validation policy**: `requireNotBlank()` only on domain keys (`personId`, `companyId`, `role`). Optional metadata allows empty string. Numeric: `strength in 1..10`, `degree in 1..MAX_TRAVERSAL_DEPTH`, `limit > 0`.
+**날짜**: 2026-05-25
+**지점**: `feat/graph-social-network`
+**사양**: `docs/superpowers/specs/2026-05-25-graph-social-network-design.md`
+**모듈**: `graph/social-network` — Gradle 모듈 이름: `graph-social-network`
+**표준 패턴**: `graph/abuser-detection/`
+**스택**: Kotlin 2.3.20, Java 25, bluetape4k 1.5.0-Beta2, bluetape4k-graph(BOM을 통해)
 
 ---
 
-## Phase 1 — Module Scaffolding
+## 작업에 인코딩된 주요 사양 결정
 
-### T1: Module Registration and Build Configuration
+1. **자동 등록**: `settings.gradle.kts` 27행에는 이미 `includeModules("graph", false, true)`이 있습니다. `includeModules` 기능은 `graph/` 아래의 모든 하위 디렉터리를 자동으로 검색합니다. `graph/social-network/build.gradle.kts`를 생성하는 것으로 충분합니다. settings.gradle.kts를 변경할 필요가 없습니다. 결과 모듈 이름은 `:graph-social-network`입니다.
 
-- **Complexity**: low
-- **File**: `graph/social-network/build.gradle.kts`
-- **Dependencies**: None
-- **Notes**:
-  - No `settings.gradle.kts` changes needed — `includeModules("graph", false, true)` auto-discovers subdirectories.
-  - Copy `graph/abuser-detection/build.gradle.kts` structure exactly.
+2. **KNOWS 양방향**: `connect(A,B)`은 IDENTICAL 속성을 ​​사용하여 TWO방향 모서리(A→B, B→A)를 생성합니다. 발신자는 `connect(A,B)` 후에 NOT `connect(B,A)`을 호출해야 합니다.
+
+3. **멱등성 찾기 또는 생성**: `addPerson`/`addCompany` 도메인 키(`personId`/`companyId`)로만 찾습니다. 동일한 키를 사용한 두 번째 호출은 속성을 업데이트하지 않고 기존 꼭짓점을 반환합니다.
+
+4. **시드 중앙화**: AbstractSocialNetworkTest의 `@BeforeEach`는 dropGraph + 초기화 후에 `seedSocialNetwork(service)`을 호출합니다. 이렇게 하면 모두 동일한 토폴로지가 필요한 29개 테스트 사례의 상용구가 줄어듭니다.
+
+5. **FOAF 타이 브레이킹**: 결정론적 크로스 백엔드 순서 지정을 위한 personId 도메인 키 오름차순(NOT 백엔드 GraphElementId).
+
+6. **neighbors() 시드 제외**: 모든 알고리즘(FOAF, N 차수, findColleagues)은 결과에서 명시적으로 `{seed}`을 빼야 합니다. `neighbors()`은(는) 깊이 >= 2에서 시드 제외를 보장하지 않습니다.
+
+7. **일시 중지 서비스는 Flow이 아닌 목록을 반환합니다. **: FOAF 정렬에는 전체 수집이 필요합니다. `SocialNetworkSuspendService`의 모든 쿼리 메소드는 내부적으로 `Flow<GraphVertex>.toList()`을 수집하고 `List`를 반환합니다.
+
+8. **구체적인 테스트 클래스당 고유한 graphName**: 여러 테스트 클래스가 Neo4j/Memgraph 컨테이너를 공유할 때 상태 충돌을 방지합니다.
+
+9. **ID 기반 집합 연산**: `GraphVertex` 동등성은 NOT ID 기반으로 보장됩니다. 항상 `Set<GraphElementId>`를 사용하여 `.id`을 통해 비교하세요.
+
+10. **검증 정책**: `requireNotBlank()` 도메인 키(`personId`, `companyId`, `role`)에만 적용됩니다. 선택적 메타데이터는 빈 문자열을 허용합니다. 숫자: `strength in 1..10`, `degree in 1..MAX_TRAVERSAL_DEPTH`, `limit > 0`.
+
+---
+
+## 1단계 - 모듈 비계
+
+### T1: 모듈 등록 및 빌드 구성
+
+- **복잡성**: 낮음
+- **파일**: `graph/social-network/build.gradle.kts`
+- **종속성**: 없음
+- **참고**:
+  - `settings.gradle.kts` 변경이 필요하지 않습니다. `includeModules("graph", false, true)`은 하위 디렉터리를 자동 검색합니다.
+  - `graph/abuser-detection/build.gradle.kts` 구조를 정확하게 복사하세요.
 
 ```kotlin
 plugins {
@@ -69,27 +69,27 @@ tasks.register<Test>("integrationTest") {
 }
 ```
 
-  - Dependencies (order matters — BOM must be first):
+  - 종속성(순서가 중요함 - BOM이 먼저 와야 함):
     - `implementation(platform(libs.bluetape4k.graph.bom))`
     - `implementation(libs.bluetape4k.graph.core)` + `implementation(libs.bluetape4k.graph.tinkerpop)`
     - `compileOnly(libs.bluetape4k.graph.neo4j)` + `compileOnly(libs.bluetape4k.graph.memgraph)`
     - `implementation(libs.bluetape4k.logging)` + `implementation(libs.bluetape4k.coroutines)`
     - `implementation(libs.kotlinx.coroutines.core.lib)` + `testImplementation(libs.kotlinx.coroutines.test.lib)`
     - `testImplementation(project(":shared"))` + `testImplementation(libs.bluetape4k.junit5)` + `testImplementation(libs.bluetape4k.testcontainers)` + `testImplementation(libs.testcontainers.neo4j)` + `testImplementation(libs.bluetape4k.assertions)` + `testImplementation(libs.mockk)`
-  - **Gotcha**: `.get()` on configurations is REQUIRED in Kotlin DSL.
-  - **Verify**: `./gradlew :graph-social-network:dependencies` runs without error.
+  - **알았어**: 구성의 `.get()`은 Kotlin DSL의 REQUIRED입니다.
+  - **확인**: `./gradlew :graph-social-network:dependencies`이(가) 오류 없이 실행됩니다.
 
 ---
 
-### T2: Test Resources
+### T2: 테스트 리소스
 
-- **Complexity**: low
-- **Files**:
+- **복잡성**: 낮음
+- **파일**:
   - `graph/social-network/src/test/resources/junit-platform.properties`
   - `graph/social-network/src/test/resources/logback-test.xml`
-- **Dependencies**: T1
+- **종속성**: T1
 
-- `junit-platform.properties` (exact from abuser-detection):
+- `junit-platform.properties` (남용자 탐지와 정확히 일치함):
 ```properties
 junit.jupiter.extensions.autodetection.enabled=true
 junit.jupiter.testinstance.lifecycle.default=per_class
@@ -98,25 +98,25 @@ junit.jupiter.execution.parallel.enabled=false
 junit.jupiter.execution.parallel.mode.default=same_thread
 junit.jupiter.execution.parallel.mode.classes.default=concurrent
 ```
-  - **NEVER add** `junit.jupiter.tags.exclude=integration` here — tag exclusion is done only in `build.gradle.kts tasks.test { excludeTags }`.
+  - **NEVER 추가** `junit.jupiter.tags.exclude=integration` 여기에 — 태그 제외는 `build.gradle.kts tasks.test { excludeTags }`에서만 수행됩니다.
 
-- `logback-test.xml` — copy from abuser-detection, change logger:
+- `logback-test.xml` — 남용자 감지에서 복사, 로거 변경:
 ```xml
 <logger name="io.bluetape4k.workshop.graph.social" level="DEBUG"/>
 ```
 
 ---
 
-## Phase 2 — Schema and Domain Model
+## 2단계 — 스키마 및 도메인 모델
 
-### T3: Schema Definition
+### T3: 스키마 정의
 
-- **Complexity**: low
-- **File**: `graph/social-network/src/main/kotlin/io/bluetape4k/workshop/graph/social/schema/SocialNetworkSchema.kt`
-- **Dependencies**: T1
-- **Notes**:
-  - Follow abuser-detection `AbuserDetectionSchema.kt` pattern exactly.
-  - Graph properties are `Map<String, String>` — even `strength: Int` and `isCurrent: Boolean` are stored as strings. Conversion at service layer.
+- **복잡성**: 낮음
+- **파일**: `graph/social-network/src/main/kotlin/io/bluetape4k/workshop/graph/social/schema/SocialNetworkSchema.kt`
+- **종속성**: T1
+- **참고**:
+  - 학대자 탐지 `AbuserDetectionSchema.kt` 패턴을 정확하게 따르세요.
+  - 그래프 속성은 `Map<String, String>`입니다. `strength: Int` 및 `isCurrent: Boolean`도 문자열로 저장됩니다. 서비스 계층에서 변환.
 
 ```kotlin
 package io.bluetape4k.workshop.graph.social.schema
@@ -159,11 +159,11 @@ object FollowsLabel : EdgeLabel("FOLLOWS", PersonLabel, PersonLabel)
 
 ---
 
-### T4: Domain Model — ConnectionRecommendation
+### T4: 도메인 모델 — ConnectionRecommendation
 
-- **Complexity**: low
-- **File**: `graph/social-network/src/main/kotlin/io/bluetape4k/workshop/graph/social/model/ConnectionRecommendation.kt`
-- **Dependencies**: T3
+- **복잡성**: 낮음
+- **파일**: `graph/social-network/src/main/kotlin/io/bluetape4k/workshop/graph/social/model/ConnectionRecommendation.kt`
+- **종속성**: T3
 
 ```kotlin
 package io.bluetape4k.workshop.graph.social.model
@@ -191,15 +191,15 @@ data class ConnectionRecommendation(
 
 ---
 
-## Phase 3 — Service Implementation
+## 3단계 - 서비스 구현
 
-### T5: SocialNetworkService (Blocking)
+### T5: SocialNetworkService (차단)
 
-- **Complexity**: high
-- **File**: `graph/social-network/src/main/kotlin/io/bluetape4k/workshop/graph/social/service/SocialNetworkService.kt`
-- **Dependencies**: T3, T4
+- **복잡성**: 높음
+- **파일**: `graph/social-network/src/main/kotlin/io/bluetape4k/workshop/graph/social/service/SocialNetworkService.kt`
+- **종속성**: T3, T4
 
-**Key patterns**:
+**주요 패턴**:
 
 ```kotlin
 class SocialNetworkService(
@@ -383,26 +383,26 @@ class SocialNetworkService(
 }
 ```
 
-**Critical gotchas**:
-- `connect()`: SAME `props` map for both edges (property symmetry).
-- FOAF: `distinctBy { it.id }` on candidates — depth=2 traversal returns duplicates via different paths.
-- Tie-breaking: `personId` from `properties` map, NOT `GraphElementId`.
-- `findColleagues`: `distinctBy { it.id }` — same person at multiple companies returns duplicates without dedup.
+**중요한 문제**:
+- `connect()`: SAME `props` 양쪽 가장자리에 대한 맵(속성 대칭)
+- FOAF: `distinctBy { it.id }` 후보에 대해 — 깊이=2 순회는 다른 경로를 통해 중복을 반환합니다.
+- 동점 결정: `personId` `properties` 지도, NOT `GraphElementId`.
+- `findColleagues`: `distinctBy { it.id }` — 여러 회사의 동일한 사람이 중복 제거 없이 중복 항목을 반환합니다.
 
 ---
 
-### T6: SocialNetworkSuspendService (Suspend)
+### T6: SocialNetworkSuspendService (일시 중지)
 
-- **Complexity**: medium
-- **File**: `graph/social-network/src/main/kotlin/io/bluetape4k/workshop/graph/social/service/SocialNetworkSuspendService.kt`
-- **Dependencies**: T5
+- **복잡성**: 중간
+- **파일**: `graph/social-network/src/main/kotlin/io/bluetape4k/workshop/graph/social/service/SocialNetworkSuspendService.kt`
+- **종속성**: T5
 
-**Key differences from T5**:
+**T5과의 주요 차이점**:
 - `companion object : KLoggingChannel()` (NOT `KLogging()`).
-- All methods have `suspend` keyword.
-- `ops.neighbors()` returns `Flow<GraphVertex>` → must call `.toList()`.
-- `ops.findVerticesByLabel()` returns `Flow<GraphVertex>` → use `import kotlinx.coroutines.flow.firstOrNull`.
-- Never use `runCatching {}` around suspend calls — CancellationException must propagate.
+- 모든 메소드에는 `suspend` 키워드가 있습니다.
+- `ops.neighbors()`은 `Flow<GraphVertex>`을 반환 → `.toList()`를 호출해야 합니다.
+- `ops.findVerticesByLabel()`은 `Flow<GraphVertex>`을 반환하고 → `import kotlinx.coroutines.flow.firstOrNull`를 사용합니다.
+- 일시 중지 호출에는 절대로 `runCatching {}`을 사용하지 마세요. CancellationException은 반드시 전파되어야 합니다.
 
 ```kotlin
 class SocialNetworkSuspendService(
@@ -430,13 +430,13 @@ class SocialNetworkSuspendService(
 
 ---
 
-## Phase 4 — Test Infrastructure
+## 4단계 - 테스트 인프라
 
-### T7a: SocialNetworkSeed (blocking overload)
+### T7a: SocialNetworkSeed (과부하 차단)
 
-- **Complexity**: medium
-- **File**: `graph/social-network/src/test/kotlin/io/bluetape4k/workshop/graph/social/seed/SocialNetworkSeed.kt`
-- **Dependencies**: T5 only (T8 can start as soon as T5 + T7a are done, without waiting for T6)
+- **복잡성**: 중간
+- **파일**: `graph/social-network/src/test/kotlin/io/bluetape4k/workshop/graph/social/seed/SocialNetworkSeed.kt`
+- **종속성**: T5만(T8은 T5 + T7a가 완료되자마자 T6을 기다리지 않고 시작할 수 있음)
 
 ```kotlin
 import java.io.Serializable
@@ -500,33 +500,33 @@ fun seedSocialNetwork(service: SocialNetworkService): SocialNetworkSeed {
 - **Note**: Use `runSuspendIO` in tests (not `runTest`) — IO-bound Testcontainers operations. `runSuspendIO` is `withContext(Dispatchers.IO)` equivalent from bluetape4k-junit5.
 
 ```kotlin
-// Suspend overload — identical topology, each call is suspend
-suspend fun seedSocialNetwork(service: SocialNetworkSuspendService): SocialNetworkSeed {
-    val alice = service.addPerson("alice", "Alice", "Engineer", "Seoul")
-    val bob   = service.addPerson("bob", "Bob", "Manager", "Seoul")
-    val carol = service.addPerson("carol", "Carol", "Designer", "Busan")
-    val dave  = service.addPerson("dave", "Dave", "Engineer", "Incheon")
-    val eve   = service.addPerson("eve", "Eve", "Analyst", "Seoul")
-    val frank = service.addPerson("frank", "Frank", "Engineer", "Daejeon")
-    val grace = service.addPerson("grace", "Grace", "PM", "Seoul")
+// 일시중단 오버로드 — 동일한 토폴로지, 각 호출은 일시중단됩니다.
+일시 중지 재미 seedSocialNetwork(서비스: SocialNetworkSuspendService): SocialNetworkSeed {
+    val alice = 서비스.addPerson("앨리스", "앨리스", "엔지니어", "서울")
+    val bob = service.addPerson("bob", "Bob", "Manager", "Seoul")
+    val carol = service.addPerson("carol", "Carol", "디자이너", "부산")
+    val dave = 서비스.addPerson("dave", "Dave", "엔지니어", "인천")
+    val eve = service.addPerson("eve", "Eve", "Analyst", "Seoul")
+    val Frank = 서비스.addPerson("frank", "Frank", "Engineer", "대전")
+    val Grace = service.addPerson("은혜", "은혜", "PM", "서울")
 
-    val bluetape4k = service.addCompany("bluetape4k", "Bluetape4k", "Technology", "Seoul")
-    val acme       = service.addCompany("acme", "Acme", "Manufacturing", "Incheon")
+    val bluetape4k = service.addCompany("bluetape4k", "Bluetape4k", "기술", "서울")
+    val acme = 서비스.addCompany("acme", "Acme", "제조", "인천")
 
-    service.connect(alice.id, bob.id,   since = "2020-01-01", strength = 8)
-    service.connect(bob.id, carol.id,   since = "2021-03-15", strength = 6)
-    service.connect(alice.id, frank.id, since = "2019-06-01", strength = 7)
-    service.connect(bob.id, dave.id,    since = "2022-02-01", strength = 5)
-    service.connect(dave.id, grace.id,  since = "2023-01-01", strength = 4)
+    service.connect(alice.id, bob.id, 이후 = "2020-01-01", 강도 = 8)
+    service.connect(bob.id, carol.id, 이후 = "2021-03-15", 강도 = 6)
+    service.connect(alice.id, Frank.id, 이후 = "2019-06-01", 강도 = 7)
+    service.connect(bob.id, dave.id, 이후 = "2022-02-01", 강도 = 5)
+    service.connect(dave.id, Grace.id, 이후 = "2023-01-01", 강도 = 4)
 
     service.follow(carol.id, eve.id)
 
     service.addWorkExperience(alice.id, bluetape4k.id, "Senior Engineer", "2020-01-01", isCurrent = true)
-    service.addWorkExperience(bob.id,   bluetape4k.id, "Manager",        "2019-06-01", isCurrent = true)
-    service.addWorkExperience(carol.id, bluetape4k.id, "Designer",       "2021-01-01", isCurrent = false)
-    service.addWorkExperience(dave.id,  acme.id,       "Engineer",       "2022-01-01", isCurrent = true)
+    service.addWorkExperience(bob.id, bluetape4k.id, "Manager", "2019-06-01", isCurrent = true)
+    service.addWorkExperience(carol.id, bluetape4k.id, "Designer", "2021-01-01", isCurrent = false)
+    service.addWorkExperience(dave.id, acme.id, "Engineer", "2022-01-01", isCurrent = true)
 
-    return SocialNetworkSeed(alice, bob, carol, dave, eve, frank, grace, bluetape4k, acme)
+    반환 SocialNetworkSeed(alice, bob, carol, dave, eve, Frank, Grace, bluetape4k, acme)
 }
 ```
 
@@ -547,18 +547,18 @@ suspend fun seedSocialNetwork(service: SocialNetworkSuspendService): SocialNetwo
 
 ```kotlin
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-abstract class AbstractSocialNetworkTest {
-    protected abstract val graphName: String
-    protected abstract val ops: GraphOperations
-    protected abstract val service: SocialNetworkService
+추상 클래스 AbstractSocialNetworkTest {
+    보호된 추상 값 graphName: 문자열
+    보호된 추상 값 작업: GraphOperations
+    보호된 추상 Val 서비스: SocialNetworkService
 
-    protected lateinit var seed: SocialNetworkSeed
+    보호된 lateinit var 시드: SocialNetworkSeed
 
     @BeforeEach
-    fun setUp() {
-        ops.dropGraph(graphName)  // canonical pattern: call directly, no runCatching
-        service.initialize()
-        seed = seedSocialNetwork(service)
+    재미있다 setUp() {
+        ops.dropGraph(graphName) // 표준 패턴: 직접 호출, 아니요 runCatching
+        서비스.초기화()
+        시드 = seedSocialNetwork(서비스)
     }
 ```
 
@@ -604,10 +604,10 @@ abstract class AbstractSocialNetworkTest {
 - Use `shouldContainAll` / `shouldNotContain` for set-like checks.
 - FOAF #21: use `shouldContainExactly(listOf("carol", "dave"))` by personId — service guarantees deterministic order (personId ascending tiebreak). Test #13/#14 must also add `shouldNotContain(seed.alice)` to verify seed exclusion.
   ```kotlin
-  // #21 exact order assertion:
-  val personIds = result.map { it.person.properties[PersonLabel.personId.name] }
-  personIds shouldContainExactly listOf("carol", "dave")
-  // #13/#14 exclusion regression guard:
+  // #21 정확한 순서 검증:
+  val personIds = 결과.map { it.person.properties[PersonLabel.personId.name] }
+  personIds shouldContainExactly listOf("캐롤", "데이브")
+  // #13/#14 제외 회귀 가드:
   result.map { it.id } shouldNotContain seed.alice.id
   ```
 - Names: `results.map { it.properties[PersonLabel.name.name] }`.
@@ -625,17 +625,17 @@ abstract class AbstractSocialNetworkTest {
 
 ```kotlin
 @BeforeEach
-fun setUp() = runSuspendIO {
-    ops.dropGraph(graphName)  // canonical pattern: call directly; suspend inside runSuspendIO is fine
-    service.initialize()
-    seed = seedSocialNetwork(service)  // suspend overload
+재미 setUp() = runSuspendIO {
+    ops.dropGraph(graphName) // 표준 패턴: 직접 호출; runSuspendIO 내부에서 일시 중지해도 괜찮습니다.
+    서비스.초기화()
+    Seed = seedSocialNetwork(service) // 과부하 일시 중지
 }
 
-@Test
-fun `getDirectConnections returns 1st degree connections`() = runSuspendIO {
-    val connections = service.getDirectConnections(seed.alice.id)
-    val names = connections.map { it.properties[PersonLabel.name.name] }
-    names shouldContainAll listOf("Bob", "Frank")
+@시험
+재미 `getDirectConnections returns 1st degree connections`() = runSuspendIO {
+    Val 연결 = 서비스.getDirectConnections(seed.alice.id)
+    값 이름 = Connections.map { it.properties[PersonLabel.name.name] }
+    이름 shouldContainAll listOf("밥", "프랭크")
 }
 ```
 
@@ -653,29 +653,29 @@ fun `getDirectConnections returns 1st degree connections`() = runSuspendIO {
 
 ```kotlin
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class SocialNetworkTinkerGraphTest : AbstractSocialNetworkTest() {
-    companion object : KLogging()
+클래스 SocialNetworkTinkerGraphTest : AbstractSocialNetworkTest() {
+    동반 객체 : KLogging()
 
-    override val graphName = "test_social_tinkergraph"
-    override val ops: GraphOperations = TinkerGraphOperations()
-    override val service = SocialNetworkService(ops, graphName)
+    대체 val graphName = "test_social_tinkergraph"
+    Val ops 재정의: GraphOperations = TinkerGraphOperations()
+    val 서비스 재정의 = SocialNetworkService(ops, graphName)
 
     @AfterAll
-    fun tearDown() {
+    재미있다 tearDown() {
         ops.close()
     }
 }
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class SocialNetworkSuspendTinkerGraphTest : AbstractSocialNetworkSuspendTest() {
-    companion object : KLoggingChannel()
+클래스 SocialNetworkSuspendTinkerGraphTest : AbstractSocialNetworkSuspendTest() {
+    동반 객체 : KLoggingChannel()
 
-    override val graphName = "test_social_tinkergraph_suspend"
-    override val ops: GraphSuspendOperations = TinkerGraphSuspendOperations()
-    override val service = SocialNetworkSuspendService(ops, graphName)
+    대체 값 graphName = "test_social_tinkergraph_suspens"
+    Val ops 재정의: GraphSuspendOperations = TinkerGraphSuspendOperations()
+    val 서비스 재정의 = SocialNetworkSuspendService(ops, graphName)
 
     @AfterAll
-    fun tearDown() {
+    재미있다 tearDown() {
         ops.close()
     }
 }
@@ -692,31 +692,31 @@ class SocialNetworkSuspendTinkerGraphTest : AbstractSocialNetworkSuspendTest() {
 - **Dependencies**: T8, T9
 
 ```kotlin
-@Tag("integration")
+@Tag("통합")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class Neo4jSocialNetworkTest : AbstractSocialNetworkTest() {
-    companion object : KLogging() {
-        private val neo4j = Neo4jServer.Launcher.neo4j
+클래스 Neo4jSocialNetworkTest : AbstractSocialNetworkTest() {
+    컴패니언 객체 : KLogging() {
+        개인 발 neo4j = Neo4jServer.Launcher.neo4j
     }
 
-    override val graphName = "test_social_neo4j"
+    대체 값 graphName = "test_social_neo4j"
 
-    private val driver: Driver by lazy {
+    개인용 Val 드라이버: 게으른 {의 드라이버
         GraphDatabase.driver(neo4j.url)
     }
 
-    override val ops: GraphOperations by lazy {
-        Neo4jGraphOperations(driver)
+    val ops 재정의: GraphOperations bylazy {
+        Neo4jGraphOperations(운전자)
     }
 
-    override val service by lazy {
-        SocialNetworkService(ops, graphName)
+    게으른 {으로 val 서비스를 재정의
+        SocialNetworkService(앗, graphName)
     }
 
     @AfterAll
-    fun tearDown() {
-        runCatching { driver.close() }
-            .onFailure { log.warn(it) { "Driver close failed" } }
+    재미있다 tearDown() {
+        runCatching { 드라이버.닫기() }
+            .onFailure { log.warn(it) { "드라이버 종료 실패" } }
     }
 }
 ```

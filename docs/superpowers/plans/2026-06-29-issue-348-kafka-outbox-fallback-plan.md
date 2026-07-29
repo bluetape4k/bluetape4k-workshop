@@ -1,69 +1,69 @@
-# Kafka-first Outbox Fallback Implementation Plan
+# Kafka-첫 번째 Outbox 대체 구현 계획
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build Issue #348 as a new `messaging/kafka-outbox-fallback` workshop module that stores only `orders` in the hot transaction, publishes directly to Kafka after commit, stores failed publication rows as durable fallback, and relays fallback rows later.
+**목표:** 핫 트랜잭션에 `orders`만 저장하고, 커밋 후 Kafka에 직접 게시하고, 실패한 게시 행을 내구성 있는 대체 행으로 저장하고, 나중에 대체 행을 전달하는 새로운 `messaging/kafka-outbox-fallback` 워크샵 모듈로 Issue #348를 빌드합니다.
 
-**Architecture:** Add a standalone Spring Boot 4 + Exposed + Kafka module modeled after `messaging/transactional-outbox`, but keep the public order-placement boundary in `PlaceOrderUseCase`. `PlaceOrderUseCase` orchestrates an internal transactional order write, bounded direct Kafka publish, fallback upsert on failure, relay/reconciler recovery, safe inspection endpoints, README diagrams, and CI/smoke registration.
+**아키텍처:** `messaging/transactional-outbox`을 모델로 한 독립형 Spring Boot 4 + Exposed + Kafka 모듈을 추가하되 `PlaceOrderUseCase`에 공개 주문 배치 경계를 유지합니다. `PlaceOrderUseCase`는 내부 트랜잭션 순서 쓰기, 제한된 직접 Kafka 게시, 실패 시 대체 upsert, relay/reconciler 복구, 안전한 검사 엔드포인트, README 다이어그램 및 CI/smoke 등록을 조율합니다.
 
-**Tech Stack:** Kotlin, Spring Boot 4 Web MVC, Spring Kafka `KafkaTemplate`, JetBrains Exposed JDBC/Spring transactions, PostgreSQL Testcontainers, Kafka Testcontainers, MockK/springmockk, bluetape4k assertions/logging/Jackson/testcontainers, Micrometer.
+**기술 스택:** Kotlin, Spring Boot 4 Web MVC, Spring Kafka `KafkaTemplate`, JetBrains Exposed JDBC/Spring 트랜잭션, PostgreSQL Testcontainers, Kafka Testcontainers, MockK/springmockk, bluetape4k assertions/logging/Jackson/testcontainers, Micrometer.
 
 ---
 
-## Source Truth
+## 소스 진실
 
-- Spec: `docs/superpowers/specs/2026-06-29-issue-348-kafka-outbox-fallback-design.md`
-- Issue: https://github.com/bluetape4k/bluetape4k-workshop/issues/348
-- Reference module: `messaging/transactional-outbox`
+- 사양: `docs/superpowers/specs/2026-06-29-issue-348-kafka-outbox-fallback-design.md`
+- 이슈: https://github.com/bluetape4k/bluetape4k-workshop/issues/348
+- 참조 모듈: `messaging/transactional-outbox`
 
-## File Structure
+## 파일 구조
 
-Create module files:
+모듈 파일을 생성합니다:
 
-- `messaging/kafka-outbox-fallback/build.gradle.kts`: Spring Boot, Exposed, Kafka, Testcontainers, Micrometer dependencies.
-- `messaging/kafka-outbox-fallback/src/main/kotlin/io/bluetape4k/workshop/messaging/fallback/KafkaOutboxFallbackApplication.kt`: app entrypoint.
-- `.../api/OrderRequest.kt`: request DTO with bean validation.
-- `.../api/OrderResponse.kt`: order response with `publicationStatus`.
-- `.../api/OrderPublicationStatus.kt`: caller-facing publication outcome enum.
-- `.../api/PublicationResponse.kt`: safe publication-state DTO; no raw payload.
-- `.../api/AdminActionResponse.kt`: response DTO for demo-admin relay/reconcile actions.
-- `.../api/OrderController.kt`: REST endpoints.
-- `.../api/RestExceptionHandler.kt`: sanitized `400` responses for validation failures.
-- `.../config/ExposedConfig.kt`: create tables on startup.
-- `.../config/KafkaConfig.kt`: `KafkaTemplate<String, String>` producer config following the local Spring Kafka pattern.
-- `.../config/FallbackOutboxProperties.kt`: topic, retry, timeout, batch, scheduler toggles.
-- `.../config/ClockConfig.kt`: injectable `Clock` for deterministic reconciler tests.
-- `.../domain/OrderStatus.kt`: enum.
-- `.../domain/OrderTable.kt`: `orders` table.
-- `.../domain/OrderRecord.kt`: internal order projection.
-- `.../domain/TransactionalOrderWriter.kt`: internal `@Transactional` writer/reader.
-- `.../domain/PlaceOrderUseCase.kt`: public orchestration boundary.
-- `.../publication/OrderPlacedEvent.kt`: typed event DTO and deterministic event id.
+- `messaging/kafka-outbox-fallback/build.gradle.kts`: Spring Boot, Exposed, Kafka, Testcontainers, Micrometer 종속성.
+- `messaging/kafka-outbox-fallback/src/main/kotlin/io/bluetape4k/workshop/messaging/fallback/KafkaOutboxFallbackApplication.kt`: 앱 진입점.
+- `.../api/OrderRequest.kt`: Bean 유효성 검사를 통해 DTO를 요청합니다.
+- `.../api/OrderResponse.kt`: `publicationStatus`로 주문 응답.
+- `.../api/OrderPublicationStatus.kt`: 발신자 측 출판 결과 열거형.
+- `.../api/PublicationResponse.kt`: 안전한 게시 상태 DTO; 원시 페이로드가 없습니다.
+- `.../api/AdminActionResponse.kt`: 데모 관리자 relay/reconcile 작업에 대한 응답 DTO입니다.
+- `.../api/OrderController.kt`: REST 엔드포인트.
+- `.../api/RestExceptionHandler.kt`: 검증 실패에 대한 `400` 응답을 정리했습니다.
+- `.../config/ExposedConfig.kt`: 시작 시 테이블을 만듭니다.
+- `.../config/KafkaConfig.kt`: `KafkaTemplate<String, String>` 로컬 Spring Kafka 패턴을 따르는 생산자 구성입니다.
+- `.../config/FallbackOutboxProperties.kt`: 주제, 재시도, 시간 초과, 배치, 스케줄러 토글.
+- `.../config/ClockConfig.kt`: 결정론적 조정자 테스트에 주입 가능한 `Clock`입니다.
+- `.../domain/OrderStatus.kt`: 열거형.
+- `.../domain/OrderTable.kt`: `orders` 테이블.
+- `.../domain/OrderRecord.kt`: 내부 주문 투영.
+- `.../domain/TransactionalOrderWriter.kt`: 내부 `@Transactional` writer/reader.
+- `.../domain/PlaceOrderUseCase.kt`: 공개 오케스트레이션 경계.
+- `.../publication/OrderPlacedEvent.kt`: 입력된 이벤트 DTO 및 결정적 이벤트 ID입니다.
 - `.../publication/EventPublicationStatus.kt`: `NOT_PUBLISHED`, `PUBLISHED`, `FAILED`, `DEAD_LETTER`.
-- `.../publication/EventPublicationTable.kt`: fallback publication table.
-- `.../publication/EventPublicationRecord.kt`: internal row projection.
-- `.../publication/EventPublicationRepository.kt`: insert/upsert, claim, status update, safe query helpers.
-- `.../publication/OrderEventPublisher.kt`: bounded direct Kafka publish and fallback upsert.
-- `.../publication/EventPublicationRelay.kt`: scheduled claim/send/update relay.
-- `.../publication/PublicationReconciler.kt`: deterministic fallback reconstruction.
-- `.../publication/PublicationQueryService.kt`: safe publication-state query for REST.
-- `.../observability/OutboxMetrics.kt`: Micrometer counters/timer/gauge registration helpers.
-- `messaging/kafka-outbox-fallback/src/main/resources/application.yml`: demo config.
+- `.../publication/EventPublicationTable.kt`: 대체 게시 테이블입니다.
+- `.../publication/EventPublicationRecord.kt`: 내부 행 투영.
+- `.../publication/EventPublicationRepository.kt`: insert/upsert, 청구, 상태 업데이트, 안전한 쿼리 도우미.
+- `.../publication/OrderEventPublisher.kt`: 제한된 직접 Kafka 게시 및 대체 upsert.
+- `.../publication/EventPublicationRelay.kt`: 예정된 claim/send/update 릴레이.
+- `.../publication/PublicationReconciler.kt`: 결정론적 대체 재구성.
+- `.../publication/PublicationQueryService.kt`: REST에 대한 안전한 게시 상태 쿼리입니다.
+- `.../observability/OutboxMetrics.kt`: Micrometer counters/timer/gauge 등록 도우미.
+- `messaging/kafka-outbox-fallback/src/main/resources/application.yml`: 데모 구성.
 - `messaging/kafka-outbox-fallback/src/test/resources/junit-platform.properties`
 - `messaging/kafka-outbox-fallback/src/test/resources/logback-test.xml`
 - `messaging/kafka-outbox-fallback/src/test/kotlin/io/bluetape4k/workshop/messaging/fallback/AbstractKafkaOutboxFallbackTest.kt`
-- `.../KafkaOutboxFallbackFlowTest.kt`: integration and component tests.
+- `.../KafkaOutboxFallbackFlowTest.kt`: 통합 및 구성요소 테스트.
 
-Modify shared project files:
+공유 프로젝트 파일 수정:
 
-- `README.md` and `README.ko.md`: add Messaging row and targeted test command.
-- `.github/workflows/Examples.yml`: add path filter, container test task, artifact path, summary dependency.
-- `scripts/smoke-validate.sh`: add messaging test task.
+- `README.md` 및 `README.ko.md`: 메시징 행 및 대상 테스트 명령을 추가합니다.
+- `.github/workflows/Examples.yml`: 경로 필터, 컨테이너 테스트 작업, 아티팩트 경로, 요약 종속성을 추가합니다.
+- `scripts/smoke-validate.sh`: 메시징 테스트 작업을 추가합니다.
 - `scripts/validate-readme-architecture-diagrams.mjs`
 - `scripts/validate-sequence-diagrams.mjs`
-- Verify the state diagram through SVG/PNG existence, README references, and the diagram layout evidence gate; no separate state validator exists in this repo today.
+- SVG/PNG 존재, README 참조, 다이어그램 레이아웃 증거 게이트를 통해 상태 다이어그램을 확인합니다. 현재 이 저장소에는 별도의 상태 유효성 검사기가 없습니다.
 
-Create diagrams:
+다이어그램 만들기:
 
 - `docs/images/readme-diagrams/kafka-outbox-fallback-readme-architecture-01.svg`
 - `docs/images/readme-diagrams/kafka-outbox-fallback-readme-architecture-01.png`
@@ -72,17 +72,17 @@ Create diagrams:
 - `docs/images/readme-diagrams/kafka-outbox-fallback-readme-state-01.svg`
 - `docs/images/readme-diagrams/kafka-outbox-fallback-readme-state-01.png`
 
-## Task 1: Module Skeleton and Configuration
+## 작업 1: 모듈 뼈대 및 구성
 
-**Files:**
-- Create: `messaging/kafka-outbox-fallback/build.gradle.kts`
-- Create: `messaging/kafka-outbox-fallback/src/main/kotlin/io/bluetape4k/workshop/messaging/fallback/KafkaOutboxFallbackApplication.kt`
-- Create: `messaging/kafka-outbox-fallback/src/main/resources/application.yml`
-- Create: test resources listed above.
+**파일:**
+- 생성: `messaging/kafka-outbox-fallback/build.gradle.kts`
+- 생성: `messaging/kafka-outbox-fallback/src/main/kotlin/io/bluetape4k/workshop/messaging/fallback/KafkaOutboxFallbackApplication.kt`
+- 생성: `messaging/kafka-outbox-fallback/src/main/resources/application.yml`
+- 만들기: 위에 나열된 테스트 리소스입니다.
 
-- [ ] **Step 1: Create `build.gradle.kts` by adapting `messaging/transactional-outbox/build.gradle.kts`**
+- [ ] **1단계: `messaging/transactional-outbox/build.gradle.kts`을 수정하여 `build.gradle.kts` 생성**
 
-Use the same dependency families as transactional-outbox. Set:
+트랜잭션 발신함과 동일한 종속성 계열을 사용합니다. 세트:
 
 ```kotlin
 exposed {
@@ -99,9 +99,9 @@ springBoot {
 }
 ```
 
-Do not add Redis or `bluetape4k-kafka4`.
+Redis 또는 `bluetape4k-kafka4`을 추가하지 마세요.
 
-- [ ] **Step 2: Create application entrypoint**
+- [ ] **2단계: 애플리케이션 진입점 생성**
 
 ```kotlin
 package io.bluetape4k.workshop.messaging.fallback
@@ -119,9 +119,9 @@ fun main(args: Array<String>) {
 }
 ```
 
-- [ ] **Step 3: Create `application.yml`**
+- [ ] **3단계: `application.yml` 만들기**
 
-Include datasource, Kafka bootstrap placeholder, Jackson, safe error defaults, actuator health/readiness/liveness, and:
+데이터 소스, Kafka 부트스트랩 자리 표시자, Jackson, 안전 오류 기본값, 액추에이터 health/readiness/liveness 및 다음을 포함합니다.
 
 ```yaml
 server:
@@ -159,38 +159,38 @@ workshop:
     demo-admin-endpoints-enabled: false
 ```
 
-- [ ] **Step 4: Implement validated properties contract**
+- [ ] **4단계: 검증된 속성 계약 구현**
 
-`FallbackOutboxProperties` must use `@ConfigurationProperties("workshop.kafka-outbox-fallback")` and `@Validated`.
-Bounds:
+`FallbackOutboxProperties`은 `@ConfigurationProperties("workshop.kafka-outbox-fallback")` 및 `@Validated`를 사용해야 합니다.
+범위:
 
-- `topic` must equal `order-events`.
-- `directPublishAttempts` must be exactly `3` for the workshop.
-- `relayMaxRetries`, `relayBatchSize`, and durations must be positive.
-- `maxPayloadBytes` must be between `1024` and `65536`.
-- `demoAdminEndpointsEnabled` defaults to `false`.
+- `topic`은(는) `order-events`과(와) 같아야 합니다.
+- 워크숍의 경우 `directPublishAttempts`은(는) 정확히 `3`이어야 합니다.
+- `relayMaxRetries`, `relayBatchSize` 및 기간은 양수여야 합니다.
+- `maxPayloadBytes`은(는) `1024`과 `65536` 사이에 있어야 합니다.
+- `demoAdminEndpointsEnabled`의 기본값은 `false`입니다.
 
-Add a config validation test that invalid topic, zero timeout, zero batch size, and oversized payload limit fail startup or binding validation.
+유효하지 않은 주제, 제로 타임아웃, 제로 배치 크기, 초과된 페이로드 제한이 시작 또는 바인딩 검증에 실패하는 구성 검증 테스트를 추가합니다.
 
-- [ ] **Step 5: Verify module discovery**
+- [ ] **5단계: 모듈 검색 확인**
 
-Run:
+달리다:
 
 ```bash
 ./gradlew projects | rg "messaging-kafka-outbox-fallback"
 ```
 
-Expected: `Project ':messaging-kafka-outbox-fallback'` appears.
+예상: `Project ':messaging-kafka-outbox-fallback'`이 나타납니다.
 
-## Task 2: Domain Tables, DTOs, Validation, and Test Isolation
+## 작업 2: 도메인 테이블, DTO, 검증 및 테스트 격리
 
-**Files:**
-- Create domain/API files listed above.
-- Test: `KafkaOutboxFallbackFlowTest.kt`
+**파일:**
+- 위에 나열된 domain/API 파일을 만듭니다.
+- 테스트: `KafkaOutboxFallbackFlowTest.kt`
 
-- [ ] **Step 1: Write failing tests for transactional writer and REST validation**
+- [ ] **1단계: 트랜잭션 기록기 및 REST 유효성 검사에 대한 실패한 테스트 작성**
 
-Create tests named:
+다음 이름의 테스트를 만듭니다.
 
 ```kotlin
 @Test
@@ -200,11 +200,11 @@ fun `transactional writer stores only order row`()
 fun `POST api-orders rejects invalid input with safe 400 and zero persistence`()
 ```
 
-Assert writer success creates one `orders` row and zero `event_publications` rows. Assert REST validation rejects blank, length overflow, control characters, quantity `0`, and quantity `1001` with `400 Bad Request`, sanitized error body, and zero persisted rows.
+Assert 작성기 성공으로 `orders` 행 1개와 `event_publications` 행 0개가 생성됩니다. REST 유효성 검사는 공백, 길이 오버플로, 제어 문자, 수량 `0` 및 수량 `1001`(`400 Bad Request` 포함), 삭제된 오류 본문 및 0개의 지속 행을 거부합니다.
 
-- [ ] **Step 2: Implement request/response DTOs**
+- [ ] **2단계: request/response DTO 구현**
 
-Use:
+사용:
 
 ```kotlin
 data class OrderRequest(
@@ -214,7 +214,7 @@ data class OrderRequest(
 ) : Serializable
 ```
 
-Define public `OrderPublicationStatus` separately from fallback row status:
+대체 행 상태와 별도로 공개 `OrderPublicationStatus`를 정의합니다.
 
 ```kotlin
 enum class OrderPublicationStatus {
@@ -225,11 +225,11 @@ enum class OrderPublicationStatus {
 }
 ```
 
-Define `OrderResponse` with `id`, `customerId`, `product`, `quantity`, `status`, `publicationStatus`, `createdAt`, `updatedAt`. For read endpoints, `publicationStatus` is `UNKNOWN` unless a caller-facing outcome is known from the create flow.
+`OrderResponse`을 `id`, `customerId`, `product`, `quantity`, `status`, `publicationStatus`, `createdAt`, `updatedAt`로 정의합니다. 읽기 엔드포인트의 경우 생성 흐름에서 발신자 측 결과가 알려지지 않는 한 `publicationStatus`는 `UNKNOWN`입니다.
 
-- [ ] **Step 3: Implement tables and transactional writer**
+- [ ] **3단계: 테이블 및 트랜잭션 기록기 구현**
 
-`OrderTable` mirrors transactional-outbox `orders`. `TransactionalOrderWriter.saveOrder(...)` validates:
+`OrderTable`은 트랜잭션 발신함 `orders`을 미러링합니다. `TransactionalOrderWriter.saveOrder(...)`는 다음을 검증합니다:
 
 ```kotlin
 customerId.requireNotBlank("customerId")
@@ -242,9 +242,9 @@ require(customerId.none(Char::isISOControl)) { "customerId must not contain cont
 require(product.none(Char::isISOControl)) { "product must not contain control characters" }
 ```
 
-- [ ] **Step 4: Add sanitized exception mapping and test lifecycle isolation**
+- [ ] **4단계: 정리된 예외 매핑 추가 및 수명 주기 격리 테스트**
 
-Create `RestExceptionHandler` that maps `MethodArgumentNotValidException` and `IllegalArgumentException` to `400 Bad Request` without echoing raw customer/product values. In `AbstractKafkaOutboxFallbackTest`, set dynamic properties:
+원시 customer/product 값을 에코하지 않고 `MethodArgumentNotValidException` 및 `IllegalArgumentException`를 `400 Bad Request`에 매핑하는 `RestExceptionHandler`을 만듭니다. `AbstractKafkaOutboxFallbackTest`에서 동적 속성을 설정합니다.
 
 ```text
 workshop.kafka-outbox-fallback.relay-enabled=false
@@ -252,36 +252,36 @@ workshop.kafka-outbox-fallback.reconciler-enabled=false
 workshop.kafka-outbox-fallback.demo-admin-endpoints-enabled=false
 ```
 
-Clean `event_publications` and `orders` between tests with `TransactionTemplate`. Keep Testcontainers launcher singletons and `@DynamicPropertySource`.
-Scheduled entrypoints must honor these flags directly. Manual service methods
-such as `relayOnce()` and `reconcileOnce()` remain callable in tests, but
-`scheduledRelay()` and `scheduledReconcile()` must return without side effects
-when their flags are false.
+`TransactionTemplate`를 사용하여 테스트 사이에 `event_publications` 및 `orders`을 정리합니다. Testcontainers 런처 싱글톤과 `@DynamicPropertySource`을 유지하세요.
+예약된 진입점은 이러한 플래그를 직접 적용해야 합니다. 수동 서비스 방법
+`relayOnce()` 및 `reconcileOnce()` 등은 테스트에서 계속 호출 가능하지만
+`scheduledRelay()` 및 `scheduledReconcile()`은 부작용 없이 반환되어야 합니다.
+그들의 깃발이 거짓일 때.
 
-- [ ] **Step 5: Run targeted tests**
+- [ ] **5단계: 타겟 테스트 실행**
 
-Run:
+달리다:
 
 ```bash
 ./gradlew :messaging-kafka-outbox-fallback:test --tests '*transactional writer stores only order row*' --tests '*safe 400*' --max-workers=1
 ```
 
-Expected: PASS.
+예상: PASS.
 
-## Task 3: Direct Kafka Publish and Fallback Persistence
+## 작업 3: 직접 Kafka 게시 및 대체 지속성
 
-**Files:**
-- Create `FallbackOutboxProperties.kt`
-- Create `OrderPlacedEvent.kt`
-- Create `EventPublicationTable.kt`, `EventPublicationStatus.kt`, `EventPublicationRepository.kt`
-- Create `OrderEventPublisher.kt`
-- Create `OutboxMetrics.kt`
-- Create `PlaceOrderUseCase.kt`
-- Test: `KafkaOutboxFallbackFlowTest.kt`
+**파일:**
+- `FallbackOutboxProperties.kt` 생성
+- `OrderPlacedEvent.kt` 생성
+- `EventPublicationTable.kt`, `EventPublicationStatus.kt`, `EventPublicationRepository.kt` 생성
+- `OrderEventPublisher.kt` 생성
+- `OutboxMetrics.kt` 생성
+- `PlaceOrderUseCase.kt` 생성
+- 테스트: `KafkaOutboxFallbackFlowTest.kt`
 
-- [ ] **Step 1: Write failing tests for direct retry/fallback**
+- [ ] **1단계: 직접 retry/fallback에 대한 실패한 테스트 작성**
 
-Add tests:
+테스트를 추가합니다:
 
 ```kotlin
 @Test
@@ -297,78 +297,78 @@ fun `direct publish timeout stores NOT_PUBLISHED fallback row`()
 fun `fallback insert failure returns FALLBACK_STORE_FAILED and records safe metric and log`()
 ```
 
-Use `@MockkBean(relaxed = true) KafkaTemplate<String, String>`. For timeout, return an incomplete `CompletableFuture<SendResult<String, String>>()`, set a small per-attempt timeout plus total direct publish timeout, assert elapsed time remains below the total budget, and verify timed-out futures are cancelled. Document that a timed-out send has unknown Kafka outcome and may duplicate when fallback relay later publishes the deterministic `eventId`.
+`@MockkBean(relaxed = true) KafkaTemplate<String, String>`를 사용하세요. 시간 초과의 경우 불완전한 `CompletableFuture<SendResult<String, String>>()`을 반환하고, 작은 시도당 시간 초과와 총 직접 게시 시간 초과를 설정하고, 경과 시간이 총 예산 미만으로 유지되고 시간 초과된 미래가 취소되는지 확인합니다. 시간 초과된 전송에 알 수 없는 Kafka 결과가 있고 대체 릴레이가 나중에 결정적 `eventId`을 게시할 때 중복될 수 있다는 문서입니다.
 
-- [ ] **Step 2: Implement deterministic event DTO**
+- [ ] **2단계: 결정적 이벤트 구현 DTO**
 
-`OrderPlacedEvent` must be a `data class : Serializable` with `serialVersionUID`. Use:
+`OrderPlacedEvent`은(는) `serialVersionUID`가 있는 `data class : Serializable`이어야 합니다. 사용:
 
 ```kotlin
 val eventId: String get() = "order-placed:$orderId:v1"
 ```
 
-Serialize only this closed DTO. Do not enable Jackson default typing or class-name polymorphism. Assert payload JSON does not contain `@class`, package names, stack traces, or raw exception text, and assert serialized bytes are `<= maxPayloadBytes`.
+이 닫힌 DTO만 직렬화하세요. Jackson 기본 유형 지정 또는 클래스 이름 다형성을 활성화하지 마십시오. 어설션 페이로드 JSON에는 `@class`이 포함되어 있지 않으며 패키지 이름, 스택 추적 또는 원시 예외 텍스트가 있으며 직렬화된 바이트는 `<= maxPayloadBytes`입니다.
 
-- [ ] **Step 3: Implement fallback repository**
+- [ ] **3단계: 대체 저장소 구현**
 
-Repository operations:
+저장소 작업:
 
 - `upsertNotPublished(event, directAttemptCount, errorCode, errorSummary)`
 - `countByAggregateId(orderId)`
 - `findSafeResponses(orderId?)`
 
-Use unique `event_id`. Implement select-then-insert/update inside a transaction for PostgreSQL/H2 portability and keep it idempotent for this workshop.
+고유한 `event_id`를 사용하세요. PostgreSQL/H2 이식성을 위해 트랜잭션 내부에 select-then-insert/update을 구현하고 이 워크숍을 위해 멱등성을 유지하세요.
 
-- [ ] **Step 4: Implement direct publisher**
+- [ ] **4단계: 직접 게시자 구현**
 
-Use:
+사용:
 
 ```kotlin
 kafkaTemplate.send(topic, event.eventId, payload).get(timeout.toMillis(), TimeUnit.MILLISECONDS)
 ```
 
-Retry exactly `directPublishAttempts`. Sanitize errors into code/summary. Never persist raw stack traces.
-Enforce `directPublishTotalTimeout`: stop retrying when the total budget is exhausted even if attempts remain, cancel timed-out futures with `future.cancel(true)`, and store fallback as `NOT_PUBLISHED`.
+정확히 `directPublishAttempts` 다시 시도하세요. code/summary에서 오류를 삭제합니다. 원시 스택 추적을 유지하지 마십시오.
+`directPublishTotalTimeout` 시행: 시도가 남아 있더라도 총 예산이 소진되면 재시도를 중지하고, `future.cancel(true)`을 사용하여 시간 초과된 미래를 취소하고 대체를 `NOT_PUBLISHED`로 저장합니다.
 
-- [ ] **Step 5: Implement `PlaceOrderUseCase`**
+- [ ] **5단계: `PlaceOrderUseCase` 구현**
 
-Non-transactional orchestrator flow:
+비트랜잭션 조정자 흐름:
 
 1. `val order = transactionalOrderWriter.saveOrder(...)`
-2. Build typed `OrderPlacedEvent`
-3. Call `orderEventPublisher.publishDirectOrFallback(event)`
-4. Return `OrderResponse(... publicationStatus = result.status)`
+2. 빌드 유형 `OrderPlacedEvent`
+3. `orderEventPublisher.publishDirectOrFallback(event)`에 전화하세요.
+4. `OrderResponse(... publicationStatus = result.status)` 반환
 
-The result status mapping is:
+결과 상태 매핑은 다음과 같습니다.
 
-| Direct/fallback result | `OrderResponse.publicationStatus` |
+| Direct/fallback 결과 | `OrderResponse.publicationStatus` |
 |---|---|
-| Kafka send confirmed | `PUBLISHED_DIRECT` |
-| Kafka failed/timed out and fallback row upserted | `FALLBACK_STORED` |
-| Kafka failed/timed out and fallback upsert failed | `FALLBACK_STORE_FAILED` |
+| Kafka 전송 확인 | `PUBLISHED_DIRECT` |
+| Kafka failed/timed 출력 및 대체 행이 업데이트됨 | `FALLBACK_STORED` |
+| Kafka failed/timed out 및 fallback upsert 실패 | `FALLBACK_STORE_FAILED` |
 
-- [ ] **Step 6: Run targeted tests**
+- [ ] **6단계: 타겟 테스트 실행**
 
-Run:
+달리다:
 
 ```bash
 ./gradlew :messaging-kafka-outbox-fallback:test --tests '*placeOrder stores only order row*' --tests '*direct publish*' --tests '*fallback insert failure*' --max-workers=1
 ```
 
-Expected: PASS.
+예상: PASS.
 
-## Task 4: Relay, Reconciler, Safe Query API, and Observability
+## 작업 4: 릴레이, 조정자, 안전한 쿼리 API 및 관찰 가능성
 
-**Files:**
-- Create `EventPublicationRelay.kt`
-- Create `PublicationReconciler.kt`
-- Create `PublicationQueryService.kt`
+**파일:**
+- `EventPublicationRelay.kt` 생성
+- `PublicationReconciler.kt` 생성
+- `PublicationQueryService.kt` 생성
 - Create/modify `OrderController.kt`, `PublicationResponse.kt`
-- Test: `KafkaOutboxFallbackFlowTest.kt`
+- 테스트: `KafkaOutboxFallbackFlowTest.kt`
 
-- [ ] **Step 1: Write failing tests**
+- [ ] **1단계: 실패한 테스트 작성**
 
-Add tests:
+테스트를 추가합니다:
 
 ```kotlin
 @Test
@@ -405,18 +405,18 @@ fun `health readiness liveness and safe error defaults expose no sensitive detai
 fun `metrics and structured logs record direct failure fallback relay and reconciler outcomes`()
 ```
 
-- [ ] **Step 2: Implement atomic claim**
+- [ ] **2단계: 원자적 클레임 구현**
 
-Use an optimistic claim-token contract for PostgreSQL/H2 compatibility:
+PostgreSQL/H2 호환성을 위해 낙관적인 클레임-토큰 계약을 사용하세요.
 
-1. Generate a per-run `claimToken`.
-2. In one transaction, select candidate IDs ordered by `next_attempt_at` up to `relayBatchSize`.
-3. For each candidate, update with predicates on `id`, eligible status, retry count, and stale/null `claimed_until`.
-4. Count successful updates.
-5. Reload and return only rows whose `claimed_by == claimToken`.
-6. If an update count is `0`, do not send that row.
+1. 실행별 `claimToken`을 생성합니다.
+2. 한 번의 트랜잭션에서 `next_attempt_at`부터 `relayBatchSize`까지 정렬된 후보 ID를 선택합니다.
+3. 각 후보에 대해 `id`, 적격 상태, 재시도 횟수 및 stale/null `claimed_until`에 대한 조건자로 업데이트합니다.
+4. 성공적인 업데이트를 계산합니다.
+5. `claimed_by == claimToken`인 행만 다시 로드하고 반환합니다.
+6. 업데이트 횟수가 `0`인 경우 해당 행을 보내지 마세요.
 
-Eligibility:
+적임:
 
 ```text
 status in (NOT_PUBLISHED, FAILED)
@@ -425,29 +425,29 @@ next_attempt_at <= now
 claimed_until is null or claimed_until < now
 ```
 
-Tests must run two concurrent relay calls against the same row and verify exactly one Kafka send. Add a stale-claim test that sets `claimed_until` in the past and proves the row becomes eligible again.
+테스트에서는 동일한 행에 대해 두 개의 동시 릴레이 호출을 실행하고 정확히 한 번의 Kafka 전송을 확인해야 합니다. 과거에 `claimed_until`을 설정하고 행이 다시 적합함을 증명하는 오래된 클레임 테스트를 추가합니다.
 
-- [ ] **Step 3: Implement relay**
+- [ ] **3단계: 릴레이 구현**
 
-For each claimed row, send to Kafka with bounded timeout. On success mark `PUBLISHED`. On failure increment `relay_retry_count`, set `FAILED` or `DEAD_LETTER`, clear claim, set sanitized error fields, and set `next_attempt_at`.
-Split scheduled and manual entrypoints:
+청구된 각 행에 대해 제한된 시간 제한을 사용하여 Kafka로 보냅니다. 성공 표시 `PUBLISHED`. 실패 증가 시 `relay_retry_count`, `FAILED` 또는 `DEAD_LETTER`을 설정하고, 클레임을 지우고, 삭제된 오류 필드를 설정하고, `next_attempt_at`를 설정합니다.
+예약된 진입점과 수동 진입점을 분할합니다.
 
-- `scheduledRelay()` is annotated with `@Scheduled`, checks `relayEnabled`, and delegates to `relayOnce()` only when enabled.
-- `relayOnce()` contains the claim/send/update logic and is callable by tests and demo-admin endpoints.
-- The disabled-scheduler test inserts an eligible row, invokes `scheduledRelay()`, and verifies no Kafka send and unchanged row status.
+- `scheduledRelay()`은(는) `@Scheduled`로 주석을 달고, `relayEnabled`를 확인하고, 활성화된 경우에만 `relayOnce()`에 위임합니다.
+- `relayOnce()`에는 claim/send/update 로직이 포함되어 있으며 테스트 및 데모 관리 엔드포인트에서 호출할 수 있습니다.
+- 비활성화된 스케줄러 테스트는 적합한 행을 삽입하고 `scheduledRelay()`을 호출하며 Kafka 전송이 없고 행 상태가 변경되지 않았는지 확인합니다.
 
-- [ ] **Step 4: Implement reconciler**
+- [ ] **4단계: 조정자 구현**
 
-Inject `Clock` and use `reconcilerGrace`. Find orders older than the grace duration with no matching `event_id`, upsert `NOT_PUBLISHED`, increment `workshop.outbox.reconciler.repairs`, and emit `order.event.reconciler.repaired`. Tests freeze time for "too new" and "older than grace" cases.
-Split scheduled and manual entrypoints:
+`Clock`을 주입하고 `reconcilerGrace`을 사용하세요. 일치하는 `event_id`가 없는 유예 기간보다 오래된 주문을 찾고, `NOT_PUBLISHED`을 upsert하고, `workshop.outbox.reconciler.repairs`를 늘리고, `order.event.reconciler.repaired`을 내보냅니다. "너무 새로운" 사례와 "은혜보다 오래된" 사례에 대한 정지 시간을 테스트합니다.
+예약된 진입점과 수동 진입점을 분할합니다.
 
-- `scheduledReconcile()` is annotated with `@Scheduled`, checks `reconcilerEnabled`, and delegates to `reconcileOnce()` only when enabled.
-- `reconcileOnce()` contains deterministic reconstruction and is callable by tests and demo-admin endpoints.
-- The disabled-scheduler test creates an eligible old order, invokes `scheduledReconcile()`, and verifies no fallback row is created.
+- `scheduledReconcile()`은(는) `@Scheduled`로 주석을 달고, `reconcilerEnabled`를 확인하고, 활성화된 경우에만 `reconcileOnce()`에 위임합니다.
+- `reconcileOnce()`에는 결정론적 재구성이 포함되어 있으며 테스트 및 데모 관리 엔드포인트에서 호출할 수 있습니다.
+- 비활성화된 스케줄러 테스트는 적격한 이전 주문을 생성하고 `scheduledReconcile()`를 호출하며 대체 행이 생성되지 않았는지 확인합니다.
 
-- [ ] **Step 5: Implement safe REST endpoints**
+- [ ] **5단계: 안전한 REST 엔드포인트 구현**
 
-Paths:
+경로:
 
 - `POST /api/orders`
 - `GET /api/orders/{id}`
@@ -456,67 +456,67 @@ Paths:
 - `POST /api/publications/relay`
 - `POST /api/publications/reconcile`
 
-`PublicationResponse` excludes `payload` and raw error. It includes sanitized `lastErrorCode` and `lastErrorSummary`.
-`POST /api/publications/relay` and `POST /api/publications/reconcile` are demo-admin endpoints. They return `404` or `403` and perform no action unless `demoAdminEndpointsEnabled=true`; tests keep them disabled by default and enable them only in endpoint-specific tests. `AdminActionResponse` includes `requested`, `processed`, `published`, `failed`, and `repaired` counts. README must state these endpoints are local/demo-only and need real auth, rate limiting, and audit logging before production use.
+`PublicationResponse`은 `payload` 및 원시 오류를 제외합니다. 여기에는 삭제된 `lastErrorCode` 및 `lastErrorSummary`이 포함됩니다.
+`POST /api/publications/relay` 및 `POST /api/publications/reconcile`은 데모 관리 엔드포인트입니다. `404` 또는 `403`을 반환하고 `demoAdminEndpointsEnabled=true`가 아니면 아무 작업도 수행하지 않습니다. 테스트에서는 기본적으로 비활성화되어 있으며 엔드포인트별 테스트에서만 활성화됩니다. `AdminActionResponse`에는 `requested`, `processed`, `published`, `failed` 및 `repaired` 개수가 포함됩니다. README는 이러한 엔드포인트가 local/demo-only임을 명시해야 하며 프로덕션 사용 전에 실제 인증, 속도 제한 및 감사 로깅이 필요합니다.
 
-- [ ] **Step 6: Run targeted tests**
+- [ ] **6단계: 타겟 테스트 실행**
 
-Run:
+달리다:
 
 ```bash
 ./gradlew :messaging-kafka-outbox-fallback:test --tests '*relay*' --tests '*claim*' --tests '*reconciler*' --tests '*publication endpoint*' --tests '*health*' --tests '*metrics*' --tests '*structured logs*' --max-workers=1
 ```
 
-Expected: PASS.
+예상: PASS.
 
-## Task 5: README Pair and Diagrams
+## 작업 5: README 쌍 및 다이어그램
 
-**Files:**
-- Create: `messaging/kafka-outbox-fallback/README.md`
-- Create: `messaging/kafka-outbox-fallback/README.ko.md`
-- Create diagram SVG/PNG assets under `docs/images/readme-diagrams/`
-- Modify diagram validator scripts.
+**파일:**
+- 생성: `messaging/kafka-outbox-fallback/README.md`
+- 생성: `messaging/kafka-outbox-fallback/README.ko.md`
+- `docs/images/readme-diagrams/` 아래에 다이어그램 SVG/PNG 자산을 생성합니다.
+- 다이어그램 유효성 검사기 스크립트를 수정합니다.
 
-- [ ] **Step 1: Draft README.md in English**
+- [ ] **1단계: 영어로 README.md 초안**
 
-Required sections:
+필수 섹션:
 
-- Language switch.
-- Architecture image.
-- Sequence image.
-- State lifecycle image.
-- Classic transactional outbox vs Kafka-first fallback comparison table.
-- REST examples.
-- Failure semantics.
-- Not guaranteed.
-- Operator runbook.
+- 언어 스위치.
+- 건축 이미지.
+- 시퀀스 이미지.
+- 상태 수명 주기 이미지.
+- 클래식 트랜잭션 발신함과 Kafka-첫 번째 대체 비교표.
+- REST 예.
+- 실패 의미론.
+- 보장되지 않습니다.
+- 운영자 실행서.
 - Tests/running.
-- Public API status mapping table for `OrderPublicationStatus`.
-- Demo-admin endpoint response examples and disabled-by-default behavior.
-- KDoc coverage note for public DTOs/controllers/services.
+- `OrderPublicationStatus`에 대한 공개 API 상태 매핑 테이블입니다.
+- 데모 관리자 엔드포인트 응답 예시 및 기본적으로 비활성화되는 동작.
+- 공개 DTOs/controllers/services에 대한 KDoc 적용 참고 사항입니다.
 
-- [ ] **Step 2: Draft README.ko.md in natural Korean**
+- [ ] **2단계: README.ko.md를 자연스러운 한국어로 초안**
 
-Keep source-equivalent content and language switch `[English](README.md) | 한국어`.
+소스와 동등한 콘텐츠 및 언어 전환 `[English](README.md) | 한국어`을 유지합니다.
 
-- [ ] **Step 3: Generate diagrams with bluetape4k-diagram rules**
+- [ ] **3단계: bluetape4k-diagram 규칙을 사용하여 다이어그램 생성**
 
-Use shared Kafka/database icons. Hard visual gates:
+공유 Kafka/database 아이콘을 사용하세요. 하드 비주얼 게이트:
 
-- card-label overlaps = 0
-- label-card overlaps = 0
-- endpoint audit = PASS
-- diagonal card-to-card connectors = 0 unless unavoidable and documented
-- row centers and spacing reported
-- PNG rendered and visually inspected
+- 카드 라벨 겹침 = 0
+- 라벨-카드 겹침 = 0
+- 엔드포인트 감사 = PASS
+- 대각선 카드-카드 커넥터 = 0 불가피하고 문서화되지 않는 한
+- 보고된 행 중심 및 간격
+- PNG 렌더링 및 육안 검사
 
-- [ ] **Step 4: Update validators**
+- [ ] **4단계: 유효성 검사기 업데이트**
 
-Add new architecture and sequence basenames to existing allowlists. Add state validation only if a local state validator exists; otherwise validate SVG/PNG existence and references.
+기존 허용 목록에 새로운 아키텍처 및 시퀀스 기본 이름을 추가합니다. 로컬 상태 유효성 검사기가 있는 경우에만 상태 유효성 검사를 추가합니다. 그렇지 않으면 SVG/PNG 존재와 참조를 검증하십시오.
 
-- [ ] **Step 5: Run docs/diagram checks**
+- [ ] **5단계: docs/diagram 검사 실행**
 
-Run:
+달리다:
 
 ```bash
 node scripts/validate-readme-architecture-diagrams.mjs
@@ -525,52 +525,52 @@ rg -n "direct-publish-enabled|relay-enabled|reconciler-enabled|NOT_PUBLISHED|DEA
 git diff --check
 ```
 
-Expected: PASS.
+예상: PASS.
 
-## Task 6: Root README, CI, Smoke, and Verification
+## 작업 6: 루트 README, CI, Smoke 및 확인
 
-**Files:**
-- Modify: `README.md`
-- Modify: `README.ko.md`
-- Modify: `.github/workflows/Examples.yml`
-- Modify: `scripts/smoke-validate.sh`
+**파일:**
+- 수정: `README.md`
+- 수정: `README.ko.md`
+- 수정: `.github/workflows/Examples.yml`
+- 수정: `scripts/smoke-validate.sh`
 
-- [ ] **Step 1: Add root README rows**
+- [ ] **1단계: 루트 README 행 추가**
 
-Add `messaging/kafka-outbox-fallback` under Messaging in both root README files. Mention targeted command:
+두 루트 README 파일의 메시징 아래에 `messaging/kafka-outbox-fallback`를 추가합니다. 대상 명령 언급:
 
 ```bash
 ./gradlew :messaging-kafka-outbox-fallback:test --max-workers=1
 ```
 
-- [ ] **Step 2: Update Examples workflow**
+- [ ] **2단계: 예시 워크플로 업데이트**
 
-Add path filter:
+경로 필터 추가:
 
 ```yaml
       - 'messaging/kafka-outbox-fallback/**'
 ```
 
-Add sequential container lane task:
+순차적 컨테이너 레인 작업을 추가합니다.
 
 ```bash
 ./gradlew :messaging-kafka:test :messaging-kafka-outbox-fallback:test --continue --max-workers=1
 ```
 
-Add artifact path:
+아티팩트 경로 추가:
 
 ```yaml
 messaging/kafka-outbox-fallback/build/test-results/test/
 messaging/kafka-outbox-fallback/build/reports/tests/test/
 ```
 
-- [ ] **Step 3: Update smoke script**
+- [ ] **3단계: 연기 스크립트 업데이트**
 
-Add `:messaging-kafka-outbox-fallback:test` to the messaging group.
+메시징 그룹에 `:messaging-kafka-outbox-fallback:test`을 추가합니다.
 
-- [ ] **Step 4: Run full targeted verification**
+- [ ] **4단계: 전체 대상 확인 실행**
 
-Run:
+달리다:
 
 ```bash
 ./gradlew projects
@@ -585,34 +585,34 @@ rg -n "OrderPublicationStatus|PUBLISHED_DIRECT|FALLBACK_STORED|FALLBACK_STORE_FA
 git diff --check
 ```
 
-Expected: all pass. If `actionlint` is not installed, report the missing tool and validate workflow syntax through `gh workflow view Examples` or YAML parse as next-best evidence.
+예상: 모두 통과. `actionlint`이 설치되지 않은 경우 누락된 도구를 보고하고 차선 증거로 `gh workflow view Examples` 또는 YAML 구문 분석을 통해 워크플로 구문을 검증합니다.
 
-## Task 7: Lessons, Commit, PR, and Live Metadata
+## 작업 7: 강의, 커밋, PR 및 라이브 메타데이터
 
-**Files:**
-- Create: `docs/lessons/2026-06-29-issue-348-kafka-outbox-fallback.md`
+**파일:**
+- 생성: `docs/lessons/2026-06-29-issue-348-kafka-outbox-fallback.md`
 
-- [ ] **Step 1: Write concise lesson**
+- [ ] **1단계: 간결한 강의 작성**
 
-Cover context, decision, outcome, verification evidence, and future-agent warnings:
+상황, 결정, 결과, 확인 증거 및 향후 에이전트 경고를 다룹니다.
 
-- This pattern lowers hot-transaction DB work but weakens atomicity.
-- Reconciler is loss-avoidance with duplicate risk.
-- Safe publication endpoints must not expose raw payload/error.
-- Diagram layout evidence must be real rendered PNG evidence.
-- Article follow-up packet: final code paths, verified diagram paths, metric
-  names, unsupported capabilities, classic-vs-fallback comparison anchors, and
-  duplicate/idempotency warning.
+- 이 패턴은 핫 트랜잭션 DB 작업을 낮추지만 원자성을 약화시킵니다.
+- 조정자는 중복된 위험으로 인한 손실 회피입니다.
+- 안전한 게시 엔드포인트은 원시 payload/error을 노출해서는 안 됩니다.
+- 다이어그램 레이아웃 증거는 실제로 렌더링된 PNG 증거여야 합니다.
+- 기사 후속 패킷: 최종 코드 경로, 검증된 다이어그램 경로, 메트릭
+  이름, 지원되지 않는 기능, 클래식 대 대체 비교 앵커 및
+  duplicate/idempotency 경고.
 
-- [ ] **Step 2: Commit with Lore protocol**
+- [ ] **2단계: Lore 프로토콜로 커밋**
 
-Commit message intent line:
+커밋 메시지 의도 라인:
 
 ```text
 feat: teach Kafka-first outbox fallback trade-offs
 ```
 
-Include trailers:
+예고편 포함:
 
 ```text
 Constraint: Issue #348 requires order-only hot transaction and Kafka-first publication with durable fallback.
@@ -624,23 +624,23 @@ Tested: <commands that passed>
 Not-tested: <only if any required check could not run>
 ```
 
-- [ ] **Step 3: Push branch and open PR**
+- [ ] **3단계: 분기를 푸시하고 PR 열기**
 
-Before PR creation, refresh issue metadata:
+PR 생성 전에 이슈 메타데이터를 새로 고칩니다.
 
 ```bash
 gh issue view 348 --json assignees,milestone,labels,state,url
 ```
 
-Use the returned assignee, milestone, and labels for `gh pr create` / `gh pr edit` where supported. PR body final section must be `## DoD Status`.
+지원되는 경우 `gh pr create` / `gh pr edit`에 대해 반환된 담당자, 마일스톤 및 레이블을 사용하세요. PR 본문의 마지막 섹션은 `## DoD Status`이어야 합니다.
 
-- [ ] **Step 4: Verify live PR metadata**
+- [ ] **4단계: 라이브 PR 메타데이터 확인**
 
-Run:
+달리다:
 
 ```bash
 gh issue view 348 --json assignees,milestone,labels,state
 gh pr view <number> --json assignees,milestone,labels,body,url
 ```
 
-Expected: issue and PR assignee/milestone/labels are correct; PR body includes `## DoD Status`.
+예상됨: issue 및 PR assignee/milestone/labels이 정확합니다. PR 본문에는 `## DoD Status`이(가) 포함됩니다.
