@@ -67,6 +67,7 @@ jobs:
       - name: Build (compile only)
         run: ./gradlew build -x test -x stressTest -x migrationCompatibilityTest --parallel --continue
         env:
+          JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
   ci-status:
