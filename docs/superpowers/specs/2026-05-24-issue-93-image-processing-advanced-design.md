@@ -1,134 +1,134 @@
-# Issue #93 — Image Processing Advanced Workshop Design
+# Issue #93 — 이미지 처리 고급 워크샵 디자인
 
-**Date**: 2026-05-24  
-**Repository**: `bluetape4k-workshop`  
-**Target module**: `image-processing/advanced-workflow` (`:image-processing-advanced-workflow`)  
-**Workflow lane**: Type A Full Design via `bluetape4k-workflow`
+**날짜**: 2026-05-24
+**저장소**: `bluetape4k-workshop`
+**대상 모듈**: `image-processing/advanced-workflow` (`:image-processing-advanced-workflow`)
+**워크플로우 레인**: `bluetape4k-workflow`을 통한 유형 A 전체 설계
 
-## Problem
+## 문제
 
-Issue #93 asks for an advanced image-processing workshop that demonstrates a realistic upload-to-derivatives workflow:
+Issue #93에서는 파생 상품에 대한 현실적인 업로드 작업 흐름을 보여주는 고급 이미지 처리 워크숍을 요청합니다.
 
-- multipart image upload through Spring Boot
-- content type, byte-size, pixel-limit, and dimension validation
-- original image storage
-- configured derivative generation (`thumb-128.webp`, `card-320.webp`, `detail-1024.webp`)
-- S3 object key and unsigned public URL responses
-- metrics, health, concurrency limits, and native libvips handling
-- README architecture and sequence diagrams
+- Spring Boot를 통한 멀티파트 이미지 업로드
+- 콘텐츠 유형, 바이트 크기, 픽셀 제한 및 차원 유효성 검사
+- 원본 이미지 저장
+- 구성된 파생 생성(`thumb-128.webp`, `card-320.webp`, `detail-1024.webp`)
+- S3 객체 키 및 서명되지 않은 공개 URL 응답
+- 메트릭, 상태, 동시성 제한 및 기본 libvips 처리
+- README 아키텍처 및 시퀀스 다이어그램
 
-The example must be Bluetape4k-first, not a generic Spring or AWS sample.
+예제는 일반 Spring 또는 AWS 샘플이 아닌 Bluetape4k-first여야 합니다.
 
-## Current Evidence
+## 현재 증거
 
-- `bluetape4k-image` provides `bluetape4k-images-vips-java25` with `FfmVipsRuntime`, `ffmVipsImageOf`, `suspendFfmVipsImageOf`, `VipsImage.thumbnail()`, `VipsImage.resize()`, and `VipsImage.toBytes()`.
-- `bluetape4k-images-vips-java25` requires Java 25 and `--enable-native-access=ALL-UNNAMED`; this workshop keeps VIPS integration tests opt-in with `-Dvips.enabled=true` because native initialization can terminate the JVM on misconfigured hosts.
-- `bluetape4k-images-spring-boot` provides Spring Boot 4 auto-configuration for `ImageStorage`.
-  - `ImagesStorageAutoConfiguration` creates `S3ImageStorage` when `bluetape4k.images.storage.backend=s3` and `S3Operations` is present.
-  - It falls back to `LocalImageStorage` when no `ImageStorage` bean exists.
-  - `MetricImageStorage` wraps storage beans when Micrometer is present.
-- `ImageObjectKey` validates keys and prevents `..` segments.
-- `UploadImageValidator` limits workshop uploads to JPEG, PNG, and WebP, checks matching magic bytes, and still uses `UploadOptions` for Bluetape4k upload metadata validation.
-- `S3PreSignedUrlSigner` and `CloudFrontUrlSigner` exist for private/signed URL alternatives, but issue #93 requires the main path to return unsigned public URLs.
-- The workshop root currently defaults to Java 21, while Java 25-only modules can override module toolchains and test JVM launchers.
+- `bluetape4k-image`은 `bluetape4k-images-vips-java25`에 `FfmVipsRuntime`, `ffmVipsImageOf`, `suspendFfmVipsImageOf`, `VipsImage.thumbnail()`, `VipsImage.resize()`, `VipsImage.toBytes()`을 제공합니다.
+- `bluetape4k-images-vips-java25`에는 Java 25 및 `--enable-native-access=ALL-UNNAMED`이 필요합니다. 이 워크샵에서는 기본 초기화가 잘못 구성된 호스트에서 JVM를 종료할 수 있기 때문에 `-Dvips.enabled=true`와 함께 VIPS 통합 테스트를 선택하도록 유지합니다.
+- `bluetape4k-images-spring-boot`은 `ImageStorage`에 대해 Spring Boot 4가지 자동 구성을 제공합니다.
+  - `ImagesStorageAutoConfiguration`은 `bluetape4k.images.storage.backend=s3`와 `S3Operations`이 존재할 때 `S3ImageStorage`을 생성합니다.
+  - `ImageStorage` Bean이 없으면 `LocalImageStorage`으로 대체됩니다.
+  - `MetricImageStorage`은 Micrometer이 존재할 때 스토리지 빈을 래핑합니다.
+- `ImageObjectKey`은 키의 유효성을 검사하고 `..` 세그먼트를 방지합니다.
+- `UploadImageValidator`은 워크샵 업로드를 JPEG, PNG 및 WebP로 제한하고, 일치하는 매직 바이트를 확인하며, Bluetape4k 업로드 메타데이터 검증을 위해 `UploadOptions`을 계속 사용합니다.
+- `S3PreSignedUrlSigner` 및 `CloudFrontUrlSigner`은 private/signed URL 대안으로 존재하지만 issue #93에는 서명되지 않은 공개 URL을 반환하는 기본 경로가 필요합니다.
+- 워크샵 루트는 현재 Java 21로 기본 설정되어 있으며, Java 25 전용 모듈은 모듈 툴체인을 재정의하고 JVM 런처를 테스트할 수 있습니다.
 
-## Configuration Defaults
+## 구성 기본값
 
-| Property | Default | Rationale |
+| 부동산 | 기본값 | 근거 |
 |---|---:|---|
-| `spring.servlet.multipart.max-file-size` | `25MB` | Servlet boundary rejects oversized uploads before heap growth |
-| `spring.servlet.multipart.max-request-size` | `25MB` | Must match the file limit for this single-file endpoint |
-| `bluetape4k.images.storage.max-size-bytes` | `26214400` | Matches servlet upload limit |
-| `workshop.images.advanced.max-input-bytes` | `26214400` | Service-level guard after multipart parsing |
-| `workshop.images.advanced.max-pixels` | `100000000` | Decompression-bomb defense passed to `FfmVipsRuntime` |
-| `workshop.images.advanced.request-concurrency` | `2` | Bounds concurrent native decode/encode workflows |
-| `workshop.images.advanced.variant-concurrency` | `2` | Bounds per-request derivative fan-out |
-| `workshop.images.advanced.processing-timeout` | `30s` | Avoids unbounded native processing requests |
-| `workshop.images.advanced.public-base-url` | `http://localhost:8080/public-images` | Local dev default only |
-| `workshop.images.advanced.allow-insecure-public-base-url` | `false` | HTTPS required except loopback local dev |
-| `workshop.images.advanced.allow-local-storage-remote-public-base-url` | `false` | Prevents fake CDN URLs for local fallback unless deliberate |
+| `spring.servlet.multipart.max-file-size` | `25MB` | 서블릿 경계는 힙이 증가하기 전에 너무 큰 업로드를 거부합니다 |
+| `spring.servlet.multipart.max-request-size` | `25MB` | 이 단일 파일 엔드포인트에 대한 파일 제한과 일치해야 합니다. |
+| `bluetape4k.images.storage.max-size-bytes` | `26214400` | 서블릿 업로드 제한과 일치 |
+| `workshop.images.advanced.max-input-bytes` | `26214400` | 멀티파트 구문 분석 후 서비스 수준 보호 |
+| `workshop.images.advanced.max-pixels` | `100000000` | 감압폭탄 방어가 `FfmVipsRuntime`에 전달됨 |
+| `workshop.images.advanced.request-concurrency` | `2` | 동시 네이티브 decode/encode 워크플로 경계 |
+| `workshop.images.advanced.variant-concurrency` | `2` | 요청별 경계 파생 팬아웃 |
+| `workshop.images.advanced.processing-timeout` | `30s` | 무제한 기본 처리 요청 방지 |
+| `workshop.images.advanced.public-base-url` | `http://localhost:8080/public-images` | 로컬 개발 기본값만 |
+| `workshop.images.advanced.allow-insecure-public-base-url` | `false` | HTTPS 루프백 로컬 개발을 제외하고 필수 |
+| `workshop.images.advanced.allow-local-storage-remote-public-base-url` | `false` | 의도하지 않는 한 로컬 폴백을 위한 가짜 CDN URL을 방지합니다 |
 
-## Scope
+## 범위
 
 ### In
 
-- New Spring Boot 4 module `:image-processing-advanced-workflow`.
-- Java 25 module-level toolchain because `bluetape4k-images-vips-java25` is the requested backend.
-- Image upload controller:
+- 새로운 Spring Boot 4 모듈 `:image-processing-advanced-workflow`.
+- Java 25개 모듈 수준 툴체인 `bluetape4k-images-vips-java25`이 요청된 백엔드이기 때문입니다.
+- 이미지 업로드 컨트롤러:
   - `POST /api/images/derivatives`
-  - multipart part name: `file`
-  - JSON response with metadata, object keys, and unsigned URLs.
-- Service workflow:
-  1. validate upload bytes and MIME type
-  2. initialize and use Java 25 FFM VIPS runtime
-  3. inspect original dimensions
-  4. store original through `ImageStorage`
-  5. generate configured WebP variants through `VipsImage.thumbnail()`
-  6. store all variants through `ImageStorage`
-  7. compose public unsigned URLs from configurable `publicBaseUrl`
-  8. record upload/process success and failure metrics
-- README.md and README.ko.md with:
-  - setup prerequisites for JDK 25 and libvips
-  - run/test commands
-  - request examples and sample response JSON
-  - naming convention
-  - raw framework vs Bluetape4k-supported before/after explanation
-  - `Used Bluetape4k features` table
-  - Mermaid architecture diagram
-  - Mermaid sequence diagram
-  - unsigned URL security note
-- Tests for:
-  - resize/thumbnail dimensions on the Bluetape4k VIPS path, skipped explicitly if libvips is unavailable
-  - invalid content type
-  - too-large input
-  - key naming and unsigned URL composition
-  - all configured variants are stored
-  - libvips-disabled skip behavior
+  - 다중 부분 부분 이름: `file`
+  - JSON은 메타데이터, 객체 키, 서명되지 않은 URL로 응답합니다.
+- 서비스 작업 흐름:
+  1. 업로드 바이트 및 MIME 유형을 확인합니다.
+  2. Java 25 FFM VIPS 런타임 초기화 및 사용
+  3. 원래 치수 검사
+  4. `ImageStorage`를 통해 원본 저장
+  5. `VipsImage.thumbnail()`를 통해 구성된 WebP 변형 생성
+  6. `ImageStorage`을 통해 모든 변형을 저장합니다.
+  7. 구성 가능한 `publicBaseUrl`에서 서명되지 않은 공개 URL을 작성합니다.
+  8. upload/process 성공 및 실패 지표 기록
+- README.md 및 README.ko.md:
+  - JDK 25 및 libvips에 대한 전제 조건 설정
+  - run/test 명령
+  - 요청 예시 및 샘플 응답 JSON
+  - 명명 규칙
+  - 원시 프레임워크와 Bluetape4k 지원 before/after 설명 비교
+  - `Used Bluetape4k features` 테이블
+  - 인어 아키텍처 다이어그램
+  - 인어 시퀀스 다이어그램
+  - 서명되지 않은 URL 보안 메모
+- 테스트 대상:
+  - Bluetape4k VIPS 경로의 resize/thumbnail 차원, libvips를 사용할 수 없는 경우 명시적으로 건너뛰기
+  - 잘못된 콘텐츠 유형
+  - 너무 큰 입력
+  - 키 이름 지정 및 서명되지 않은 URL 구성
+  - 구성된 모든 변형이 저장됩니다.
+  - libvips 비활성화 건너뛰기 동작
 
-## HTTP and Coroutine Model
+## HTTP 및 코루틴 모델
 
-The module uses Spring MVC because the workshop endpoint is a servlet multipart upload. The controller and service methods remain `suspend` where Spring MVC can bridge them asynchronously, and native or blocking work stays behind explicit coroutine boundaries:
+워크숍 엔드포인트이 서블릿 멀티파트 업로드이기 때문에 모듈은 Spring MVC을 사용합니다. 컨트롤러와 서비스 메소드는 `suspend`로 유지되며 Spring MVC은 이들을 비동기식으로 연결할 수 있고 네이티브 또는 차단 작업은 명시적인 코루틴 경계 뒤에 유지됩니다.
 
-- Multipart parsing is bounded by Spring servlet multipart limits before the controller receives the file.
-- Service orchestration is suspend-first.
-- `suspendFfmVipsImageOf` and explicit `withContext(Dispatchers.IO)` boundaries keep native decode/encode work off request threads.
-- A request-level `Semaphore` limits concurrent image workflows; a variant-level `Semaphore` limits per-request fan-out.
-- `withTimeout(processingTimeout)` bounds each workflow.
+- 멀티파트 구문 분석은 컨트롤러가 파일을 수신하기 전에 Spring 서블릿 멀티파트 제한에 의해 제한됩니다.
+- 서비스 오케스트레이션은 일시 중단 우선입니다.
+- `suspendFfmVipsImageOf` 및 명시적인 `withContext(Dispatchers.IO)` 경계는 기본 decode/encode 작업을 요청 스레드에서 유지합니다.
+- 요청 수준 `Semaphore`은 동시 이미지 작업 흐름을 제한합니다. 변형 수준 `Semaphore`은 요청별 팬아웃을 제한합니다.
+- `withTimeout(processingTimeout)`은 각 작업흐름의 경계를 정합니다.
 
-### Out
+### 밖으로
 
-- PostgreSQL + Exposed metadata/history persistence. That is tracked by #94.
-- Auth/authz and tenant policy enforcement.
-- Signed URL main-path behavior. README will document `S3PreSignedUrlSigner` and `CloudFrontUrlSigner` as private-image alternatives.
-- A new upstream Bluetape4k library API for public URL composition. The workshop will keep this as small application glue because unsigned public URLs depend on bucket/CDN policy.
+- PostgreSQL + Exposed metadata/history 지속성. 이는  #94에 의해 추적됩니다.
+- Auth/authz 및 테넌트 정책 시행.
+- 서명된 URL 기본 경로 동작. README는 `S3PreSignedUrlSigner` 및 `CloudFrontUrlSigner`을 개인 이미지 대안으로 문서화합니다.
+- 공개 URL 구성을 위한 새로운 업스트림 Bluetape4k 라이브러리 API. 서명되지 않은 공개 URL은 bucket/CDN 정책에 따르기 때문에 워크숍에서는 이를 작은 애플리케이션 접착제로 유지할 것입니다.
 
-## Architecture
+## 건축학
 
-The module uses Bluetape4k libraries for the heavy parts:
+이 모듈은 무거운 부품에 Bluetape4k 라이브러리를 사용합니다.
 
-- `bluetape4k-images-vips-java25` for decode, dimension inspection, thumbnail generation, WebP encoding, and native runtime limits.
-- `bluetape4k-images-vips-api` for backend-neutral `VipsImage`, formats, and encode options.
-- `bluetape4k-images-spring-boot` for storage abstraction, S3/local storage, health, and storage metrics.
-- `bluetape4k-micrometer`/Micrometer for workflow-level metrics.
-- Spring Boot MVC only for the HTTP boundary.
+- 디코드, 차원 검사, 썸네일 생성, WebP 인코딩 및 기본 런타임 제한에 대한 `bluetape4k-images-vips-java25`입니다.
+- 백엔드 중립 `VipsImage`, 형식 및 인코딩 옵션의 경우 `bluetape4k-images-vips-api`.
+- `bluetape4k-images-spring-boot` 스토리지 추상화, S3/local 스토리지, 상태 및 스토리지 지표.
+- 워크플로 수준 측정항목의 경우 `bluetape4k-micrometer`/Micrometer입니다.
+- Spring Boot MVC HTTP 경계에만 적용됩니다.
 
-### Components
+### 구성요소
 
-| Component | Responsibility |
+| 구성요소 | 책임 |
 |---|---|
-| `ImageDerivativesController` | Multipart API boundary and HTTP status mapping |
-| `ImageDerivativeWorkflowService` | Orchestrates validation, processing, storage, metrics, and response assembly |
-| `UploadImageValidator` | Checks MIME type, magic bytes, empty input, byte limits, and delegates pixel validation to VIPS decode |
-| `FfmVipsDerivativeProcessor` | Initializes `FfmVipsRuntime`, inspects dimensions, generates WebP variants with concurrency limit |
-| `ImageStorage` | Bluetape4k storage abstraction; S3 in configured deployments, local fallback in dev/test |
-| `PublicImageUrlResolver` | Workshop glue for unsigned public URL composition from `ImageObjectKey.fullKey` |
-| `ImageProcessingAdvancedProperties` | Workflow variants, limits, and public URL settings |
+| `ImageDerivativesController` | 멀티파트 API 경계 및 HTTP 상태 매핑 |
+| `ImageDerivativeWorkflowService` | 검증, 처리, 저장, 측정항목 및 응답 어셈블리 조율 |
+| `UploadImageValidator` | MIME 유형, 매직 바이트, 빈 입력, 바이트 제한을 확인하고 픽셀 유효성 검사를 VIPS 디코딩에 위임 |
+| `FfmVipsDerivativeProcessor` | `FfmVipsRuntime` 초기화, 차원 검사, 동시성 제한이 있는 WebP 변형 생성 |
+| `ImageStorage` | Bluetape4k 스토리지 추상화; 구성된 배포의 S3, dev/test의 로컬 폴백 |
+| `PublicImageUrlResolver` | `ImageObjectKey.fullKey`의 서명되지 않은 공개 URL 구성을 위한 워크샵 접착제 |
+| `ImageProcessingAdvancedProperties` | 워크플로 변형, 제한 및 공개 URL 설정 |
 
-### Lifecycle Policy
+### 수명주기 정책
 
-`FfmVipsRuntime` is initialized lazily on first processor use. This keeps the workshop app bootable on machines where libvips is not installed, while the first processing request receives a clear native-runtime error. The service never calls `FfmVipsRuntime.shutdown()` from Spring destroy hooks because the library documents shutdown as terminal for the process. Tests use forked JVMs and an explicit runtime guard to avoid cross-context parameter conflicts.
+`FfmVipsRuntime`은 첫 번째 프로세서 사용 시 느리게 초기화됩니다. 이렇게 하면 libvips가 설치되지 않은 시스템에서 워크숍 앱을 부팅할 수 있게 유지하는 동시에 첫 번째 처리 요청에서 명확한 기본 런타임 오류가 수신됩니다. 라이브러리 문서가 프로세스의 터미널로 종료되기 때문에 서비스는 Spring 소멸 후크에서 `FfmVipsRuntime.shutdown()`을 호출하지 않습니다. 테스트에서는 교차 컨텍스트 매개변수 충돌을 방지하기 위해 포크된 JVM과 명시적인 런타임 가드를 사용합니다.
 
-## Key Model
+## 주요 모델
 
 ```text
 images/{imageId}/original/{safeFilename}
@@ -137,18 +137,18 @@ images/{imageId}/variants/card-320.webp
 images/{imageId}/variants/detail-1024.webp
 ```
 
-`ImageObjectKey.of(prefix, name)` validates every storage key. The workshop sanitizer keeps filenames deterministic enough for examples while removing path separators and unsupported characters.
+`ImageObjectKey.of(prefix, name)`은 모든 저장소 키의 유효성을 검사합니다. Workshop sanitizer는 경로 구분 기호와 지원되지 않는 문자를 제거하면서 예를 들어 파일 이름을 충분히 결정적으로 유지합니다.
 
-Filename sanitizing rules:
+파일 이름 삭제 규칙:
 
-- keep only `[A-Za-z0-9._-]`
-- replace all other characters with `_`
-- strip path separators before validation
-- preserve the last extension when present
-- cap the final file name at 120 characters
-- fall back to `upload.jpg` when no safe base name remains
+- `[A-Za-z0-9._-]`만 유지
+- 다른 모든 문자를 `_`으로 바꿉니다.
+- 검증 전 경로 구분 기호 제거
+- 마지막 확장자가 있으면 보존합니다.
+- 최종 파일 이름을 120자로 제한하세요.
+- 안전한 기본 이름이 남아 있지 않으면 `upload.jpg`으로 대체합니다.
 
-## Response Model
+## 응답 모델
 
 ```json
 {
@@ -178,153 +178,153 @@ Filename sanitizing rules:
 }
 ```
 
-## Approach Comparison
+## 접근 방식 비교
 
-### Approach A — Raw Spring + AWS SDK + ad hoc image library
+### 접근 방식 A — 원시 Spring + AWS SDK + 임시 이미지 라이브러리
 
-- Pros: no dependency on Java 25-specific Bluetape4k image module.
-- Cons: repeats content-type validation, path/key validation, storage exception mapping, S3 upload handling, metrics, and native runtime handling. It does not satisfy the Bluetape4k-first requirement.
-- Decision: rejected.
+- 장점: Java 25 특정 Bluetape4k 이미지 모듈에 종속되지 않습니다.
+- 단점: 콘텐츠 유형 유효성 검사, path/key 유효성 검사, 저장소 예외 매핑, S3 업로드 처리, 메트릭 및 기본 런타임 처리를 반복합니다. Bluetape4k-first 요구 사항을 충족하지 않습니다.
+- 결정: 거부됨.
 
-### Approach B — Spring Boot upload + Bluetape4k VIPS + Bluetape4k ImageStorage
+### 접근 방식 B - Spring Boot 업로드 + Bluetape4k VIPS + Bluetape4k ImageStorage
 
-- Pros: demonstrates realistic app workflow while using Bluetape4k for decode/resize/encode, storage, health, metrics, and validation boundaries.
-- Cons: Java 25 and libvips prerequisites must be explicit; CI may need toolchain download and libvips-aware skip behavior.
-- Decision: selected.
+- 장점: decode/resize/encode, 스토리지, 상태, 메트릭 및 검증 경계에 Bluetape4k를 사용하는 동안 현실적인 앱 워크플로를 보여줍니다.
+- 단점: Java 25 및 libvips 전제 조건이 명시적이어야 합니다. CI에는 툴체인 다운로드 및 libvips 인식 건너뛰기 동작이 필요할 수 있습니다.
+- 결정: 선택됨.
 
-### Approach C — Pure local file example without S3 abstraction
+### 접근법 C — S3 추상화가 없는 순수 로컬 파일 예
 
-- Pros: simplest to run.
-- Cons: misses the issue's S3 unsigned URL requirement and does not demonstrate the Spring Boot image storage abstraction.
-- Decision: rejected. Local storage remains only as the dev/test fallback from `images-spring-boot`.
+- 장점: 실행이 가장 간단합니다.
+- 단점: 문제의 S3 서명되지 않은 URL 요구 사항을 놓치고 Spring Boot 이미지 저장소 추상화를 보여주지 않습니다.
+- 결정: 거부됨. 로컬 저장소는 `images-spring-boot`의 dev/test 대체 버전으로만 유지됩니다.
 
-## Failure Modes and Handling
+## 실패 모드 및 처리
 
-| Failure | Handling |
+| 실패 | 취급 |
 |---|---|
-| Unsupported content type | reject before storage using the workshop JPEG/PNG/WebP allowlist, magic-byte checks, and `UploadOptions` |
-| Empty or too-large upload | reject before decode/storage |
-| Pixel limit exceeded | `FfmVipsRuntime`/decode validation raises a validation error |
-| libvips unavailable | runtime init failure surfaces in app startup/use; VIPS-dependent tests skip explicitly |
-| S3 unavailable | `ImageStorageException` propagates as service-unavailable style API error; storage health reports status |
-| Public URL misconfiguration | startup property validation rejects blank base URL; README explains bucket/CDN public-read requirement |
-| Partial variant failure | service performs best-effort delete for already-uploaded original/variant keys, returns an error, and increments failure metrics |
-| Private image accidentally exposed | README warns unsigned URLs are only for public images and points to signed URL signers |
+| 지원되지 않는 콘텐츠 유형 | 워크샵 JPEG/PNG/WebP 허용 목록, 매직 바이트 확인 및 `UploadOptions`을 사용하여 저장하기 전에 거부 |
+| 비어 있거나 너무 큰 업로드 | decode/storage 이전에 거부 |
+| 픽셀 한도 초과 | `FfmVipsRuntime`/decode 유효성 검사로 인해 유효성 검사 오류가 발생함 |
+| libvips를 사용할 수 없음 | 앱 startup/use에서 런타임 초기화 실패가 발생합니다. VIPS종속 테스트는 명시적으로 건너뜁니다. |
+| S3 이용 불가 | `ImageStorageException`은 서비스를 사용할 수 없는 스타일 API 오류로 전파됩니다. 스토리지 상태 보고서 상태 |
+| 공개 URL 구성 오류 | 시작 속성 유효성 검사는 빈 기본 URL을 거부합니다. README는 bucket/CDN 공개 읽기 요구 사항을 설명합니다 |
+| 부분 변형 실패 | 서비스는 이미 업로드된 original/variant 키에 대해 최선의 삭제를 수행하고 오류를 반환하며 실패 지표를 증가시킵니다. |
+| 비공개 이미지가 실수로 노출됨 | README 서명되지 않은 URL은 공개 이미지 전용이며 서명된 URL 서명자를 가리킨다고 경고 |
 
-## Security Notes
+## 보안 참고사항
 
-- Main path returns unsigned URLs because issue #93 requires it.
-- Unsigned URLs are acceptable only when every stored image is public.
-- Bucket/CDN policy, object ownership, and cache policy must allow public reads.
-- Private or user-sensitive images should use `S3PreSignedUrlSigner` or `CloudFrontUrlSigner`; this remains documented as an alternate path.
-- SVG uploads remain unsupported because `UploadOptions` excludes SVG for XSS risk.
-- `publicBaseUrl` must be HTTPS by default, with an exception only for loopback local development (`localhost`, `127.0.0.1`, `[::1]`) or an explicit `allowInsecurePublicBaseUrl=true`.
-- `publicBaseUrl` must not contain userinfo, `..`, query strings, or fragments.
-- When the active storage backend is local, non-loopback public base URLs require `allowLocalStorageRemotePublicBaseUrl=true` so accidental fake CDN responses are visible during configuration.
-- Header content type is normalized to a bounded image allowlist, magic bytes must match that content type, and VIPS decode/maxPixels validation remains the final content gate.
+- issue #93에서 요구하므로 기본 경로는 서명되지 않은 URL을 반환합니다.
+- 서명되지 않은 URL은 저장된 모든 이미지가 공개된 경우에만 허용됩니다.
+- Bucket/CDN 정책, 객체 소유권 및 캐시 정책은 공개 읽기를 허용해야 합니다.
+- 개인용 이미지 또는 사용자에게 민감한 이미지는 `S3PreSignedUrlSigner` 또는 `CloudFrontUrlSigner`을 사용해야 합니다. 이는 대체 경로로 문서화되어 있습니다.
+- SVG 업로드는 `UploadOptions`이 XSS 위험에서 SVG을 제외하기 때문에 지원되지 않습니다.
+- 루프백 로컬 개발(`localhost`, `127.0.0.1`, `[::1]`) 또는 명시적인 `allowInsecurePublicBaseUrl=true`의 경우를 제외하고 `publicBaseUrl`은 기본적으로 HTTPS여야 합니다.
+- `publicBaseUrl`에는 사용자 정보, `..`, 쿼리 문자열 또는 조각이 포함되어서는 안 됩니다.
+- 활성 스토리지 백엔드가 로컬인 경우 루프백이 아닌 공개 기본 URL에는 `allowLocalStorageRemotePublicBaseUrl=true`이 필요하므로 구성 중에 우발적인 가짜 CDN 응답이 표시됩니다.
+- 헤더 콘텐츠 유형은 제한된 이미지 허용 목록으로 정규화되고 매직 바이트는 해당 콘텐츠 유형과 일치해야 하며 VIPS decode/maxPixels 유효성 검사는 최종 콘텐츠 게이트로 유지됩니다.
 
-## Observability Contract
+## 관찰 가능성 계약
 
-Workflow metrics use low-cardinality tags only. They never include `imageId`, filename, or raw object key.
+워크플로 측정항목은 낮은 카디널리티 태그만 사용합니다. 여기에는 `imageId`, 파일 이름 또는 원시 개체 키가 포함되지 않습니다.
 
-| Metric | Type | Tags |
+| 미터법 | 유형 | 태그 |
 |---|---|---|
-| `workshop.images.upload.accepted` | Counter | normalized allowlisted `contentType` |
-| `workshop.images.processing.duration` | Timer | `result=success|timeout|cancelled|validation|failure` |
-| `workshop.images.processing.failures` | Counter | `stage=timeout|cancelled|validation|vips|storage|unknown` |
-| `workshop.images.variant.generated` | Counter | `variant` |
+| `workshop.images.upload.accepted` | 카운터 | 정규화된 허용 목록 `contentType` |
+| `workshop.images.processing.duration` | 타이머 | `result=success|timeout|cancelled|validation|failure` |
+| `workshop.images.processing.failures` | 카운터 | `stage=timeout|cancelled|validation|vips|storage|unknown` |
+| `workshop.images.variant.generated` | 카운터 | `variant` |
 
-## Test Strategy
+## 테스트 전략
 
-- Unit tests use a recording `ImageStorage` implementation to verify key naming, URL composition, and variant storage without external S3.
-- Controller/service tests verify invalid MIME type, MIME/magic-byte mismatch, unsafe public URL settings, and too-large input errors.
-- VIPS integration tests run on Java 25 with `--enable-native-access=ALL-UNNAMED`; they skip by default and require explicit opt-in with `-Dvips.enabled=true`.
-- Test images are generated with `ImageIO` to avoid depending on unpublished test fixtures.
-- Tests assert multipart and service byte limits both use the 25 MiB default.
-- Tests assert best-effort cleanup is attempted after partial storage failure.
-- Tests assert metric names and tags are low-cardinality.
-- Targeted verification:
+- 단위 테스트는 기록 `ImageStorage` 구현을 사용하여 키 이름 지정, URL 구성 및 외부 S3 없이 변형 저장소를 확인합니다.
+- Controller/service 테스트에서는 잘못된 MIME 유형, MIME/magic-byte 불일치, 안전하지 않은 공개 URL 설정 및 너무 큰 입력 오류를 확인합니다.
+- VIPS 통합 테스트는 `--enable-native-access=ALL-UNNAMED`을 사용하여 Java 25에서 실행됩니다. 기본적으로 건너뛰고 `-Dvips.enabled=true`을 사용하여 명시적으로 선택해야 합니다.
+- 테스트 이미지는 게시되지 않은 테스트 픽스처에 의존하지 않도록 `ImageIO`을 사용하여 생성됩니다.
+- 테스트에서는 멀티파트 및 서비스 바이트 제한이 모두 25 MiB 기본값을 사용한다고 검증문합니다.
+- 테스트에서는 부분적인 저장 오류가 발생한 후 최선의 정리 작업이 시도되었다고 검증문합니다.
+- 테스트에서는 지표 이름과 태그가 낮은 카디널리티임을 확인합니다.
+- 타겟 검증:
   - `./gradlew projects`
   - `./gradlew :image-processing-advanced-workflow:test`
-  - `./gradlew :image-processing-advanced-workflow:test -Dvips.enabled=true` when Java 25 and libvips are available
+  - `./gradlew :image-processing-advanced-workflow:test -Dvips.enabled=true` Java 25 및 libvips를 사용할 수 있는 경우
   - `./gradlew :image-processing-advanced-workflow:build`
-  - `./gradlew build -x test --parallel --continue` if local toolchain allows
+  - `./gradlew build -x test --parallel --continue` 로컬 툴체인이 허용하는 경우
 
-## Acceptance Criteria Mapping
+## 수락 기준 매핑
 
-| Issue #93 criterion | Design coverage |
+| Issue #93 기준 | 디자인 범위 |
 |---|---|
-| Add upload-to-derivatives module/scenario | new `:image-processing-advanced-workflow` |
-| JDK 25 and libvips README prerequisites | README task |
-| before/after snippets | README task |
-| request examples and sample JSON | README task |
-| generated naming convention | README and tests |
-| sequence and component diagrams | README Mermaid diagrams |
-| resize/thumbnail dimension tests | VIPS integration tests |
-| invalid content type and too-large tests | controller/service tests |
-| libvips-disabled skip behavior | `AbstractFfmVipsWorkshopTest` |
-| unsigned S3 public URLs | `PublicImageUrlResolver` and response model |
-| S3/local dev profile | `ImageStorage` auto-config docs and `application.yml` |
-| security note for unsigned URLs | README task |
-| Bluetape4k-first feature table | README task |
-| multipart max-size boundary | `application.yml` and configuration binding tests |
-| bounded concurrency and timeout | workflow service properties and tests |
+| 파생상품에 업로드 추가 module/scenario | 새로운 `:image-processing-advanced-workflow` |
+| JDK 25 및 libvips README 전제조건 | README 작업 |
+| before/after 조각 | README 작업 |
+| 예시 및 샘플 요청 JSON | README 작업 |
+| 생성된 명명 규칙 | README 및 테스트 |
+| 시퀀스 및 구성 요소 다이어그램 | README 인어 다이어그램 |
+| resize/thumbnail 치수 테스트 | VIPS 통합 테스트 |
+| 잘못된 콘텐츠 유형 및 너무 큰 테스트 | controller/service 테스트 |
+| libvips 비활성화 건너뛰기 동작 | `AbstractFfmVipsWorkshopTest` |
+| 서명되지 않은 S3 공개 URL | `PublicImageUrlResolver` 및 응답 모델 |
+| S3/local 개발자 프로필 | `ImageStorage` 자동 구성 문서 및 `application.yml` |
+| 서명되지 않은 URL에 대한 보안 참고 사항 | README 작업 |
+| Bluetape4k-첫 번째 기능 테이블 | README 작업 |
+| 다중 부분 최대 크기 경계 | `application.yml` 및 구성 바인딩 테스트 |
+| 제한된 동시성 및 시간 초과 | 워크플로 서비스 속성 및 테스트 |
 
-## Definition of Done
+## 완료의 정의
 
-- Spec and plan are committed before implementation.
-- Claude advisor gates for spec/plan and code review show P0=0 and P1=0.
-- New module is registered in `settings.gradle.kts`.
-- New dependency aliases are added without duplicating centrally governed versions beyond catalog aliases.
-- Module README.md and README.ko.md render GitHub Mermaid diagrams.
-- Root README.md and README.ko.md list the new advanced module.
-- Tests cover acceptance criteria with explicit VIPS skip behavior.
-- Multipart limits, service byte limits, `publicBaseUrl` validation, cleanup policy, and metric names are covered by tests.
-- Targeted Gradle verification passes or any environment-gated gap is recorded.
-- `docs/lessons/2026-05-24-issue-93-image-processing-advanced.md` is added.
-- PR is opened against `develop`, assigned to `debop`, with relevant labels.
+- 사양과 계획은 구현 전에 커밋됩니다.
+- Claude spec/plan 및 코드 검토에 대한 Advisor Gate는 P0=0 및 P1=0으로 표시됩니다.
+- 새 모듈이 `settings.gradle.kts`에 등록되었습니다.
+- 카탈로그 별칭 외에 중앙에서 관리되는 버전을 복제하지 않고 새 종속성 별칭이 추가됩니다.
+- 모듈 README.md 및 README.ko.md는 GitHub 인어 다이어그램을 렌더링합니다.
+- 루트 README.md 및 README.ko.md는 새로운 고급 모듈을 나열합니다.
+- 테스트는 명시적인 VIPS 건너뛰기 동작으로 승인 기준을 다룹니다.
+- 다중 부분 제한, 서비스 바이트 제한, `publicBaseUrl` 유효성 검사, 정리 정책 및 메트릭 이름이 테스트에 포함됩니다.
+- 대상 Gradle 검증 통과 또는 환경 관련 격차가 기록됩니다.
+- `docs/lessons/2026-05-24-issue-93-image-processing-advanced.md`이 추가되었습니다.
+- PR는 `debop`에 할당된 `develop`에 대해 관련 레이블과 함께 열립니다.
 
-## Step 1 / 1-R Checklist Completion Report
+## 1단계 / 1-R 체크리스트 완료 보고서
 
-| Item | Status | Notes |
+| 아이템 | 상태 | 메모 |
 |---|---|---|
-| Target repository confirmed | Done | `bluetape4k-workshop`, branch `feat/issue-93-image-processing-advanced` |
-| Memory/GNO searched | Done | Found `images-vips` design/plan and issue #77 classification references |
-| Current repo and ecosystem reuse searched | Done | CodeGraph and source inspection for VIPS and image storage |
-| External/current API evidence checked | Done | Local source for `FfmVipsRuntime`, `ffmVipsImageOf`, `ImageStorage`, `S3ImageStorage`, `LocalImageStorage` |
-| Technical constraints identified | Done | Java 25 module, libvips native dependency, unsigned public URL security |
-| User intent clear | Done | User explicitly selected #93 and README diagram requirements |
+| 대상 저장소 확인됨 | 완료 | `bluetape4k-workshop`, 분기 `feat/issue-93-image-processing-advanced` |
+| Memory/GNO 검색됨 | 완료 | `images-vips` design/plan 발견 및  #77 분류 참조 발행 |
+| 현재 저장소 및 생태계 재사용 검색 | 완료 | CodeGraph 및 VIPS에 대한 소스 검사 및 이미지 저장 |
+| External/current API 증거 확인 | 완료 | `FfmVipsRuntime`, `ffmVipsImageOf`, `ImageStorage`, `S3ImageStorage`, `LocalImageStorage`의 로컬 소스 |
+| 확인된 기술적 제약 | 완료 | Java 25 모듈, libvips 기본 종속성, 서명되지 않은 공개 URL 보안 |
+| 사용자 의도 명확 | 완료 | 사용자가 명시적으로 선택한 #93 및 README 다이어그램 요구사항 |
 
-## Step 2 Checklist Completion Report
+## 2단계 체크리스트 완료 보고서
 
-| Item | Status | Notes |
+| 아이템 | 상태 | 메모 |
 |---|---|---|
-| Architecture pre-design ran | Done | Approach comparison and component boundaries above |
-| Step 1-R research incorporated | Done | Evidence and selected approach reference current sources |
-| Spec path inside feature worktree | Done | This file is under the new feature worktree |
-| Risks/failure modes included | Done | Failure-mode table included |
-| Approach comparison included | Done | Three approaches compared |
-| User approval | Done | User already selected #93 and mandated workflow/README diagrams; no material ambiguity remains |
-| Draft task list returned | Done | Acceptance mapping and DoD define planning input |
+| 아키텍처 사전 설계 실행 | 완료 | 위의 비교 및 ​​구성 요소 경계에 접근 |
+| 1-R 단계 연구 통합 | 완료 | 증거 및 선택된 접근법은 현재 소스를 참조합니다 |
+| 기능 작업 트리 내부의 사양 경로 | 완료 | 이 파일은 새로운 기능 작업 트리 |
+| Risks/failure 모드 포함 | 완료 | 오류 모드 테이블 포함 |
+| 접근 방식 비교 포함 | 완료 | 세 가지 접근 방식 비교 |
+| 사용자 승인 | 완료 | 사용자가 이미  #93 선택하고 workflow/README 다이어그램을 지정했습니다. 물질적 모호성은 남아 있지 않습니다 |
+| 초안 작업 목록이 반환됨 | 완료 | 승인 매핑 및 DoD 계획 입력 정의 |
 
-## Step 2-R Review Notes
+## 2-R단계 검토 노트
 
-### Claude Code Opus Advisor
+### Claude 코드 오퍼스 어드바이저
 
-Initial artifact: `.omx/artifacts/claude-issue-93-spec-20260524162959.md`  
-Rerun artifact after P0/P1 fixes: `.omx/artifacts/claude-issue-93-spec-rerun-20260524163313.md`
+초기 아티팩트: `.omx/artifacts/claude-issue-93-spec-20260524162959.md`
+P0/P1 수정 후 아티팩트 다시 실행: `.omx/artifacts/claude-issue-93-spec-rerun-20260524163313.md`
 
-| Priority | Finding | Decision | Follow-up |
+| 우선순위 | 찾기 | 결정 | 후속 조치 |
 |---|---|---|---|
-| P0 | HTTP layer and coroutine/blocking model unclear | Accepted | Added MVC+suspend/coroutine boundary policy |
-| P0 | Multipart size limits missing | Accepted | Added servlet/storage/service 25 MiB defaults and tests |
-| P0 | Concurrency and timeout unspecified | Accepted | Added request/variant semaphores and 30s timeout |
-| P1 | Content-type trust boundary unclear | Accepted | Added header validation plus VIPS decode as final gate |
-| P1 | Orphan cleanup missing | Accepted | Added best-effort delete policy |
-| P1 | VIPS initialization timing unclear | Accepted | Added lazy init lifecycle policy |
-| P1 | Pixel limit unspecified | Accepted | Added 100M max pixel default |
-| P1 | Public URL validation underspecified | Accepted | Added scheme, path, and local/remote mismatch validation |
-| P1 | Filename sanitizer vague | Accepted | Added deterministic sanitizer rules |
-| P1 | Metric names unspecified | Accepted | Added observability contract |
+| P0 | HTTP 레이어 및 coroutine/blocking 모델이 불명확함 | 수락됨 | MVC+suspend/coroutine 경계 정책 추가 |
+| P0 | 다중 부분 크기 제한 누락 | 수락됨 | servlet/storage/service 25 MiB 기본값 및 테스트 추가 |
+| P0 | 동시성 및 제한시간이 지정되지 않음 | 수락됨 | request/variant 세마포어 및 30초 시간 제한 추가 |
+| P1 | 콘텐츠 유형 신뢰 경계가 불명확함 | 수락됨 | 헤더 검증과 VIPS 디코드를 최종 게이트로 추가 |
+| P1 | 고아 정리 누락 | 수락됨 | 최선의 삭제 정책을 추가했습니다 |
+| P1 | VIPS 초기화 시기가 불분명함 | 수락됨 | 지연 초기화 수명 주기 정책이 추가되었습니다 |
+| P1 | 픽셀 제한이 지정되지 않음 | 수락됨 | 최대 100M 픽셀 기본값 추가 |
+| P1 | 공개 URL 검증이 부족하게 지정됨 | 수락됨 | 구성표, 경로 및 local/remote 불일치 확인이 추가됨 |
+| P1 | 파일 이름 소독제가 모호함 | 수락됨 | 결정적 살균제 규칙이 추가되었습니다 |
+| P1 | 측정항목 이름이 지정되지 않음 | 수락됨 | 관찰 가능성 계약 추가됨 |
 
-Latest integrated finding table: `P0=0`, `P1=0`.
+최신 통합 결과 테이블: `P0=0`, `P1=0`.

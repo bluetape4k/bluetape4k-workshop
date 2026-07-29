@@ -10,7 +10,7 @@
 
 - `bluetape4k-leader-k8s`에 대한 버전 없는 별칭을 추가합니다.
   `bluetape4k-leader-micrometer` 및 `fabric8-kubernetes-client`.
-- 액추에이터가 포함된 Spring Boot 4개 모듈 빌드, Micrometer 코어, Prometheus 추가
+- 액추에이터가 포함된 Spring Boot 4 모듈 빌드, Micrometer 코어, Prometheus 추가
   레지스트리, Fabric8 클라이언트, bluetape4k 로깅, 코루틴 및 결정적
   종속성을 테스트합니다.
 - `bluetape4k-leader` BOM 또는 명시적인 bluetape4k 버전을 추가하지 마세요.
