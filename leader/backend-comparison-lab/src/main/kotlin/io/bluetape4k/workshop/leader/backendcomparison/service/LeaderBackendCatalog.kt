@@ -8,7 +8,7 @@ import io.bluetape4k.workshop.leader.backendcomparison.domain.BackendStatus
 import org.springframework.stereotype.Service
 
 /**
- * Provides source-backed comparison profiles for supported leader backends.
+ * 지원하는 leader backend의 source-backed comparison profile을 제공합니다.
  */
 @Service
 class LeaderBackendCatalog {
@@ -85,12 +85,12 @@ class LeaderBackendCatalog {
         }
 
     /**
-     * Returns the profiles in the learner-facing comparison order.
+     * 학습자가 비교하기 좋은 순서로 profile을 반환합니다.
      */
     fun all(): List<BackendProfile> = profiles
 
     /**
-     * Finds a backend profile by its stable workshop identifier.
+     * 안정적인 워크숍 식별자로 backend profile을 찾습니다.
      */
     fun findById(id: String): BackendProfile {
         id.requireNotBlank("id")
