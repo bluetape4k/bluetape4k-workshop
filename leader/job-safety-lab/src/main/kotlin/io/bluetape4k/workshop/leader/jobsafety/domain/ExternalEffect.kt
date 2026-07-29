@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.leader.jobsafety.domain
 
-/** Durable outbox lifecycle for an effect that cannot consume fencing tokens. */
+/** fencing token을 소비할 수 없는 effect를 위한 durable outbox lifecycle입니다. */
 enum class EffectDeliveryState {
     PENDING,
     CLAIMED,
@@ -9,5 +9,5 @@ enum class EffectDeliveryState {
     DECLINED,
 }
 
-/** Provider result vocabulary shared by delivery, reconciliation, and receipts. */
+/** delivery, reconciliation, receipt가 공유하는 provider 결과 vocabulary입니다. */
 enum class ExternalEffectResult { CONFIRMED, DECLINED, UNKNOWN }

@@ -6,7 +6,7 @@ import io.bluetape4k.support.requirePositiveNumber
 import org.springframework.boot.context.properties.ConfigurationProperties
 import java.time.Duration
 
-/** Fail-closed operational limits for the job safety lab. */
+/** job safety lab의 fail-closed 운영 한계값입니다. */
 @ConfigurationProperties("workshop.job-safety")
 data class JobSafetyProperties(
     val region: String = "region-a",

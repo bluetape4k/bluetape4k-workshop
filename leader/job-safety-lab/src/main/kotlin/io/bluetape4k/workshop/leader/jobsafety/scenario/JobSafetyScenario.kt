@@ -8,7 +8,7 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.JobRejectionReason
 import java.io.Serial
 import java.io.Serializable
 
-/** Closed catalog of failure-boundary demonstrations exposed by the workshop API. */
+/** 워크숍 API가 노출하는 failure-boundary demonstration의 닫힌 catalog입니다. */
 enum class JobSafetyScenario {
     CROSS_JOB_COLLISION,
     LEASE_OVERRUN,
@@ -18,10 +18,10 @@ enum class JobSafetyScenario {
     NON_FENCEABLE_EFFECT,
 }
 
-/** Selects production containment or an explicitly isolated broken baseline. */
+/** production containment 또는 명시적으로 격리한 broken baseline을 선택합니다. */
 enum class ScenarioMode { SAFE, UNSAFE }
 
-/** One bounded, low-cardinality transition in a scenario explanation. */
+/** scenario 설명 안의 제한된 low-cardinality transition 하나입니다. */
 data class ScenarioTimelineEvent(
     val sequence: Int,
     val code: String,
@@ -34,7 +34,7 @@ data class ScenarioTimelineEvent(
     }
 }
 
-/** Observable outcome of one logical worker in a scenario. */
+/** scenario 안에서 logical worker 하나가 만든 관찰 가능한 outcome입니다. */
 data class ScenarioExecution(
     val jobName: JobName,
     val conflictKey: ConflictKey,
@@ -48,7 +48,7 @@ data class ScenarioExecution(
     }
 }
 
-/** Final protected-resource state shown next to the execution timeline. */
+/** 실행 timeline 옆에 표시할 최종 protected-resource 상태입니다. */
 data class ScenarioResource(
     val conflictKey: ConflictKey,
     val summaryValue: Long,
@@ -60,7 +60,7 @@ data class ScenarioResource(
     }
 }
 
-/** Immutable scenario result safe to serialize through the Spring MVC API. */
+/** Spring MVC API를 통해 안전하게 serialize할 수 있는 불변 scenario 결과입니다. */
 data class JobSafetyScenarioSnapshot(
     val scenario: JobSafetyScenario,
     val mode: ScenarioMode,

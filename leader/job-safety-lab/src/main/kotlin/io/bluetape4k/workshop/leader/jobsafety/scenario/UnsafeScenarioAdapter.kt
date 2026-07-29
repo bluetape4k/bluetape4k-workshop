@@ -5,7 +5,7 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.FencingToken
 import io.bluetape4k.workshop.leader.jobsafety.domain.JobExecutionState
 import io.bluetape4k.workshop.leader.jobsafety.domain.JobName
 
-/** Deliberately broken baselines kept separate from production-safe execution services. */
+/** production-safe 실행 서비스와 분리해 둔, 의도적으로 깨진 baseline입니다. */
 internal class UnsafeScenarioAdapter {
     fun crossJobCollision(conflictKey: ConflictKey): ScenarioDraft =
         ScenarioDraft(
