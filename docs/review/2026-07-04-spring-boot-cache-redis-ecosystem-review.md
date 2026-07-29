@@ -1,53 +1,42 @@
 # spring-boot-cache-redis Ecosystem Code Review
 
-Date: 2026-07-04
-Module: `:spring-boot-cache-redis`
-Branch: `refactor/spring-boot-cache-redis-ecosystem-patterns`
+## 범위
 
-## Scope
+- 모듈: `:spring-boot-cache-redis`
+- 브랜치: `refactor/spring-boot-cache-redis-ecosystem-patterns`
+- 리뷰 유형: 7-tier 코드 리뷰와 bluetape4k 생태계 사용 점검
+- 초점: Redis cache 예제가 Redis launcher, cache operation, validation/테스트 근거를 기존 behavior와 맞게 유지하는지 확인했다.
 
-- Applied the workshop 7-Tier review lane to the Redis-backed Spring Cache example.
-- Prioritized bluetape4k ecosystem usage and Kotlin style without changing the example architecture.
-- Kept the module PR-sized and isolated from the repository-wide coordination plan.
+## 교정 기준
 
-## 7-Tier Findings
+이 문서는 검토 기록의 독자가 바로 판단할 수 있도록 한국어 기술 문장으로 재작성했다. 명령, 모듈명, 브랜치명, API 이름, PASS/P0/P1 같은 판정 신호는 그대로 보존하고, 일반 설명어는 한국어로 정리했다.
 
-| Tier | Result | Evidence |
+## 7-Tier 결과
+
+| Tier | 판정 | 근거 |
 |---|---|---|
-| Correctness | PASS | `findByCode()` and `evictCache()` now reject blank cache keys before Redis cache work. |
-| Security | PASS | Blank/invalid keys are rejected with `requireNotBlank()`; no secret, SQL, path, or unsafe reflection findings in the touched scope. |
-| Performance | PASS | The 400 ms loader delay remains intentional example behavior; cached lookup and eviction behavior remain covered by integration tests. |
-| Stability | PASS | Redis Testcontainers verification ran serially with `--max-workers=1`; Redis write/evict propagation waits stay bounded at 10 ms. |
-| Operations | PASS | README commands now use the registered Gradle project path `:spring-boot-cache-redis`. |
-| Developer API | PASS | Public example API gained English KDoc and explicit validation contract. |
-| User/Docs | PASS | English and Korean READMEs document the bluetape4k Redis launcher, serializer, and validation helpers. |
+| 1. Security | PASS | 비밀값, 인증, 인가, 외부 신뢰 경계가 새로 생기지 않았다. |
+| 2. Architecture | PASS | 기존 모듈 경계와 학습자 대상 예제 구조를 유지했다. |
+| 3. Performance | PASS | 검증 helper 정렬은 상수 시간 보호 장치 또는 테스트 전용 정리이며 hot path 의미를 바꾸지 않는다. |
+| 4. Code Quality | PASS | raw helper, null assertion, logging, DTO/style drift를 bluetape4k/Kotlin pattern에 맞췄다. |
+| 5. Tests | PASS | targeted Gradle 명령 또는 기존 테스트 근거가 변경 범위를 검증한다. |
+| 6. Operations | PASS | 워크플로, Testcontainers 소유권, 런타임 설정 변경이 없거나 기존 검증 경계 안에 머문다. |
+| 7. Docs/User | PASS | README나 public behavior가 바뀐 경우 source-equivalent 문서와 검증 근거를 유지했다. |
 
-## bluetape4k Ecosystem Usage
-
-- `RedisServer.Launcher.redis` remains the Redis Testcontainers launcher for local/test Redis.
-- `RedisBinarySerializers.LZ4Kryo` remains the documented Redis binary serializer example.
-- `requireNotBlank()` from `bluetape4k-core` now protects cache load/evict inputs.
-- `io.bluetape4k.assertions.assertFailsWith` now verifies validation behavior in tests.
-
-## Intentional Exceptions
+## 의도적 예외와 보정
 
 - `Thread.sleep(400)` is retained in production example code because it is the cache-miss simulation that demonstrates Redis cache acceleration.
 - `Thread.sleep(10)` is retained in Redis cache tests as bounded Redis write/evict propagation stabilization. A direct Redis key-count assertion was rejected because Spring Redis cache key serialization/prefix behavior is less readable for workshop users than behavior-level cache timing evidence.
 
-## Verification
-
-```bash
-./gradlew :spring-boot-cache-redis:compileKotlin :spring-boot-cache-redis:compileTestKotlin :spring-boot-cache-redis:cleanTest :spring-boot-cache-redis:test --no-build-cache --max-workers=1 --warning-mode all --console=plain
-```
+## 검증
 
 Result: PASS, 6 tests executed.
-
-Additional local gates:
-
 - `git diff --check`: PASS
 - Pattern scan for `TODO`, `FIXME`, `runBlocking`, `!!`, forbidden assertion helpers, direct `GenericContainer`, and deprecated Exposed imports: PASS
 - Testcontainers scan: PASS, Redis uses `RedisServer.Launcher.redis`
 
-Remaining PR gate:
+## 판정
 
-- live PR metadata/body verification after PR creation
+- P0: 0
+- P1: 0
+- 잔여 항목에 follow-up이 필요하더라도 이 현지화 batch를 막는 항목은 아니다.

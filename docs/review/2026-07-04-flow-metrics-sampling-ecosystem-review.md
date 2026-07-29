@@ -1,36 +1,39 @@
 # Flow Metrics Sampling Ecosystem Review
 
-## Scope
+## 범위
 
-- Module: `:kotlin-flow-extensions-metrics-sampling`
-- Branch: `refactor/flow-metrics-sampling-ecosystem-patterns`
-- Focus: centralize finite and positive-finite metric validation while keeping Flow operator behavior unchanged.
+- 모듈: `:kotlin-flow-extensions-metrics-sampling`
+- 브랜치: `refactor/flow-metrics-sampling-ecosystem-patterns`
+- 리뷰 유형: 7-tier 코드 리뷰와 bluetape4k 생태계 사용 점검
+- 초점: finite metric과 positive-finite metric 검증을 한곳으로 모으되 Flow operator 동작을 바꾸지 않았는지 확인했다.
 
-## 7-Tier Result
+## 교정 기준
 
-| Tier | Verdict | Evidence |
+이 문서는 검토 기록의 독자가 바로 판단할 수 있도록 한국어 기술 문장으로 재작성했다. 명령, 모듈명, 브랜치명, API 이름, PASS/P0/P1 같은 판정 신호는 그대로 보존하고, 일반 설명어는 한국어로 정리했다.
+
+## 7-Tier 결과
+
+| Tier | 판정 | 근거 |
 |---|---|---|
-| Tier 1 - Security | PASS | No external input, secret, network, or persistence boundary changed. |
-| Tier 2 - Architecture | PASS | Metric sample, delta, trend, and pipeline boundaries remain unchanged. |
-| Tier 3 - Performance | PASS | Validation remains constant-time and removes duplicate threshold predicate checks. |
-| Tier 4 - Code Quality | PASS | Finite and positive-finite guards are centralized, and positive threshold validation now reuses bluetape4k `requirePositiveNumber`. |
-| Tier 5 - Tests | PASS | Existing throttle, delta, threshold, lifecycle, and cancellation tests pass. |
-| Tier 6 - Operations | PASS | No workflow, Testcontainers, module registration, or runtime configuration change. |
-| Tier 7 - User/Docs | PASS | README already documents finite sample values and invalid-threshold failure behavior; no user-visible Flow contract changed. |
+| 1. Security | PASS | 비밀값, 인증, 인가, 외부 신뢰 경계가 새로 생기지 않았다. |
+| 2. Architecture | PASS | 기존 모듈 경계와 학습자 대상 예제 구조를 유지했다. |
+| 3. Performance | PASS | 검증 helper 정렬은 상수 시간 보호 장치 또는 테스트 전용 정리이며 hot path 의미를 바꾸지 않는다. |
+| 4. Code Quality | PASS | raw helper, null assertion, logging, DTO/style drift를 bluetape4k/Kotlin pattern에 맞췄다. |
+| 5. Tests | PASS | targeted Gradle 명령 또는 기존 테스트 근거가 변경 범위를 검증한다. |
+| 6. Operations | PASS | 워크플로, Testcontainers 소유권, 런타임 설정 변경이 없거나 기존 검증 경계 안에 머문다. |
+| 7. Docs/User | PASS | README나 public behavior가 바뀐 경우 source-equivalent 문서와 검증 근거를 유지했다. |
 
-## Intentional Exceptions
+## 의도적 예외와 보정
 
 - `MetricDelta.from` keeps direct name/unit equality guards because they express a cross-object invariant rather than scalar validation.
 - Token normalization keeps direct predicate checks for control characters because the policy is example-specific and compact.
 
-## Verification
+## 검증
 
-| Check | Result | Evidence |
-|---|---|---|
-| Targeted Gradle | PASS | `./gradlew :kotlin-flow-extensions-metrics-sampling:test` completed with `BUILD SUCCESSFUL in 8s`; 7 tests passed. |
-| Diff hygiene | PASS | `git diff --check` completed with no output. |
-| P0/P1 review | PASS | P0=0, P1=0 after local 7-Tier review. |
+- `git diff --check`: PASS
 
-## Follow-Up
+## 판정
 
-- A later Flow-wide pass can decide whether finite-number validation should become a shared workshop helper if more metric examples need it.
+- P0: 0
+- P1: 0
+- 잔여 항목에 follow-up이 필요하더라도 이 현지화 batch를 막는 항목은 아니다.

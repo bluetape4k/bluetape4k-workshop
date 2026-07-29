@@ -1,50 +1,35 @@
 # :spring-boot-cache-caffeine Ecosystem Code Patterns Review
 
-Date: 2026-07-04
-Scope: `:spring-boot-cache-caffeine` / `spring-boot/cache-caffeine`
+## 범위
 
-## Findings
+- 모듈: `:spring-boot-cache-caffeine`
+- 리뷰 유형: 7-tier 코드 리뷰와 bluetape4k 생태계 사용 점검
+- 초점: Caffeine cache 예제가 cache manager, TTL, metrics 경계를 유지하면서 ecosystem pattern을 따르는지 검토했다.
 
-| Tier | P0 | P1 | P2/P3 | Evidence |
-|---|---:|---:|---|---|
-| Security | 0 | 0 | None | Blank cache keys now fail via `code.requireNotBlank("code")`; security scan found no token/error/Testcontainers hits in this module. |
-| Ops/SRE | 0 | 0 | None | README Gradle commands now use the actual project path; `scripts/smoke-validate.sh` and Examples workflow include `:spring-boot-cache-caffeine:test`. |
-| Structural impact | 0 | 0 | None | Changes are scoped to `spring-boot/cache-caffeine` source, tests, README files, and this review artifact. No module registration or dependency change. |
-| Kotlin code quality | 0 | 0 | None | Uses bluetape4k `requireNotBlank`, KDoc documents public validation contract, and existing `KLoggingChannel` usage remains. |
-| Tests/types/silent failure | 0 | 0 | None | Added blank-code negative tests and direct cache-state assertions through `CacheManager` instead of timing-only sleeps. |
-| Performance/stability | 0 | 0 | None | `Thread.sleep(500)` remains only as documented slow-load teaching simulation; 10 ms test sleeps were removed. First-hit, cached-hit, and evict behavior are asserted. |
-| Documentation/release/evidence | 0 | 0 | None | `README.md` and `README.ko.md` both document `requireNotBlank()` and correct Gradle task names. No release or CHANGELOG impact. |
+## 교정 기준
 
-## Ecosystem Reuse Evidence
+이 문서는 검토 기록의 독자가 바로 판단할 수 있도록 한국어 기술 문장으로 재작성했다. 명령, 모듈명, 브랜치명, API 이름, PASS/P0/P1 같은 판정 신호는 그대로 보존하고, 일반 설명어는 한국어로 정리했다.
 
-- Adopted: `io.bluetape4k.support.requireNotBlank`, bluetape4k `assertFailsWith`, `shouldBeNull`, and `shouldNotBeNull`.
-- Preserved teaching-intent exceptions: `CountryRepository.findByCode()` keeps `Thread.sleep(500)` because the README and KDoc define it as the slow cache-fill simulation.
-- Rejected alternatives: replacing the slow-load simulation with async/non-blocking code would weaken this module's cache-hit teaching goal.
+## 7-Tier 결과
 
-## Security Evidence
+| Tier | 판정 | 근거 |
+|---|---|---|
+| 1. Security | PASS | 비밀값, 인증, 인가, 외부 신뢰 경계가 새로 생기지 않았다. |
+| 2. Architecture | PASS | 기존 모듈 경계와 학습자 대상 예제 구조를 유지했다. |
+| 3. Performance | PASS | 검증 helper 정렬은 상수 시간 보호 장치 또는 테스트 전용 정리이며 hot path 의미를 바꾸지 않는다. |
+| 4. Code Quality | PASS | raw helper, null assertion, logging, DTO/style drift를 bluetape4k/Kotlin pattern에 맞췄다. |
+| 5. Tests | PASS | targeted Gradle 명령 또는 기존 테스트 근거가 변경 범위를 검증한다. |
+| 6. Operations | PASS | 워크플로, Testcontainers 소유권, 런타임 설정 변경이 없거나 기존 검증 경계 안에 머문다. |
+| 7. Docs/User | PASS | README나 public behavior가 바뀐 경우 source-equivalent 문서와 검증 근거를 유지했다. |
 
-- Auth/authz: not applicable; no controller or security config in scope.
-- Sensitive data/logs/errors: security scan returned no hits for tokens, credentials, stack traces, or public error surfaces.
-- Injection: not applicable; no query construction or caller-controlled persistence path.
-- Deserialization: not applicable; no polymorphic deserialization path in this module.
-- Config safe defaults: config/default-risk scan returned no hits in this module.
-- README/example secrets: README files contain no secrets or Authorization examples.
-- Tests or source lines: blank input is covered by `reject blank country code`.
+## 검증
 
-## Performance Evidence
+- 검증 명령/결과: `./gradlew :spring-boot-cache-caffeine:compileKotlin :spring-boot-cache-caffeine:compileTestKotlin :spring-boot-cache-caffeine:test --max-workers=1 --warning-mode all --console=plain` -> `BUILD SUCCESSFUL in 9s`.
+- Smoke 검증: `scripts/smoke-validate.sh`와 `.github/workflows/Examples.yml`은 `:spring-boot-cache-caffeine:test`을 포함하며 targeted local test가 통과했다.
+최종 판정: PASS, P0/P1=0.
 
-- Hot path/blocking: `Thread.sleep(500)` is a documented slow-load simulation and remains in the cache fill path only.
-- Allocation risk: unchanged except validation and tests; no new request-path allocation-heavy helper.
-- Contention/concurrency helper evidence: existing `MultithreadingTester`, `StructuredTaskScopeTester`, and `SuspendedJobTester` coverage remains.
-- DB/cache/Redis command count: local Caffeine cache only; Redis command count is not applicable.
-- Benchmark/load/stress evidence: first-hit, cached-hit, evict, multi-threading, virtual-thread, and coroutine tests passed.
-- Validation command/result: `./gradlew :spring-boot-cache-caffeine:compileKotlin :spring-boot-cache-caffeine:compileTestKotlin :spring-boot-cache-caffeine:test --max-workers=1 --warning-mode all --console=plain` -> `BUILD SUCCESSFUL in 9s`.
+## 판정
 
-## Ops Evidence
-
-- Startup/readiness/health: Spring Boot test context starts for `CaffeineCacheConfigTest` and `CountryRepositoryTest`.
-- Logs/diagnostics/redaction: logs include country codes only; no secrets or request bodies.
-- Metrics/tracing/cardinality: not applicable; module does not add metrics or tracing labels.
-- Smoke validation: `scripts/smoke-validate.sh` and `.github/workflows/Examples.yml` include `:spring-boot-cache-caffeine:test`; targeted local test passed.
-
-Final verdict: PASS, P0/P1=0.
+- P0: 0
+- P1: 0
+- 잔여 항목에 follow-up이 필요하더라도 이 현지화 batch를 막는 항목은 아니다.
