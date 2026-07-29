@@ -1,55 +1,46 @@
-# spring-boot-idgenerator Ecosystem Review
+# spring-boot-idgenerator 생태계 리뷰
 
-Date: 2026-07-05
-Module: `:spring-boot-idgenerator`
-Branch: `refactor/spring-boot-idgenerator-ecosystem-patterns`
+날짜: 2026-07-05
+모듈: `:spring-boot-idgenerator`
+브랜치: `refactor/spring-boot-idgenerator-ecosystem-patterns`
 
-## Scope
+## 범위
 
-Review and cleanup focused on Kotlin style, bluetape4k ecosystem alignment, and
-test blocking hygiene for the id generator workshop example.
+이 리뷰와 정리는 id generator workshop 예제의 Kotlin 스타일, bluetape4k 생태계 정렬, 테스트 블로킹 제거에 초점을 맞췄다.
 
-## Changes Reviewed
+## 검토한 변경
 
-- Converted public response model KDoc to English contributor-facing text.
-- Added explicit `serialVersionUID` constants to `Serializable` response data
-  classes.
-- Replaced `uninitialized()` field injection in the Spring test base with
-  constructor injection.
-- Replaced WebFlux test `.block()` extraction with `expectBody` plus
-  bluetape4k assertion-based required body extraction.
+- 공개 response model KDoc을 기여자용 영어 문장으로 정리했다.
+- `Serializable` response data class에 명시적 `serialVersionUID` 상수를 추가했다.
+- Spring test base의 `uninitialized()` field injection을 constructor injection으로 바꿨다.
+- WebFlux 테스트의 `.block()` 응답 추출을 `expectBody`와 bluetape4k assertion 기반 필수 body 추출로 바꿨다.
 
-## Evidence
+## 근거
 
-- `repo-status`: 3 tracked changed paths on the feature worktree.
-- CodeGraph `detect_changes_tool`: analyzed 3 changed files; no function/class
-  nodes or affected flows were available for this workshop module, so review
-  used source diff plus targeted Gradle evidence as fallback.
+- `repo-status`: feature worktree에서 tracked 변경 경로 3개를 확인했다.
+- CodeGraph `detect_changes_tool`: 변경 파일 3개를 분석했다. 이 workshop 모듈에서는 function/class node나 affected flow를 제공하지 못해 source diff와 타깃 Gradle 근거로 대체 검토했다.
 - `git diff --check`: PASS.
-- `rg` smell scan for null assertions, raw blocking test extraction, raw JUnit
-  assertions, and style drift: PASS for touched scope.
-- `repo-test-summary -- ./gradlew :spring-boot-idgenerator:test --console=plain --max-workers=1`:
-  PASS, `SUCCESS: Executed 10 tests in 4.6s`, `BUILD SUCCESSFUL in 27s`.
+- `rg` 냄새 검사: null assertion, raw blocking 테스트 추출, raw JUnit assertion, 스타일 drift가 변경 범위에서 발견되지 않았다.
+- `repo-test-summary -- ./gradlew :spring-boot-idgenerator:test --console=plain --max-workers=1`: PASS, `SUCCESS: Executed 10 tests in 4.6s`, `BUILD SUCCESSFUL in 27s`.
 
-## 7-Tier Review
+## 7-Tier 리뷰
 
-| Tier | Verdict | Evidence |
+| Tier | 판정 | 근거 |
 |---|---|---|
-| Tier 1 - Security | PASS | DTO/test-only changes; no auth, SQL, secrets, or trust-boundary change. |
-| Tier 2 - Architecture | PASS | No public endpoint or ID-generation algorithm contract changed. |
-| Tier 3 - API/Docs | PASS | Public response KDoc is now English; no README behavior change needed. |
-| Tier 4 - Correctness | PASS | Targeted module tests pass with constructor-injected Spring context. |
-| Tier 5 - Tests | PASS | Removed blocking `.block()` extraction and kept bluetape4k assertions. |
-| Tier 6 - Performance/Stability | PASS | Test-only reactive body extraction avoids manual reactive blocking. |
-| Tier 7 - Evidence/Release | PASS | Review artifact and targeted validation evidence recorded. |
+| Tier 1 - Security | PASS | DTO/test 전용 변경이다. auth, SQL, secret, trust boundary 변경은 없다. |
+| Tier 2 - Architecture | PASS | 공개 endpoint나 ID 생성 알고리즘 계약은 변경하지 않았다. |
+| Tier 3 - API/Docs | PASS | 공개 response KDoc은 영어 정책을 따르도록 정리했고, README 동작 변경은 필요하지 않았다. |
+| Tier 4 - Correctness | PASS | constructor injection으로 바뀐 Spring context에서도 타깃 모듈 테스트가 통과했다. |
+| Tier 5 - 테스트 | PASS | 블로킹 `.block()` 추출을 제거하고 bluetape4k assertion을 유지했다. |
+| Tier 6 - Performance/Stability | PASS | test 전용 reactive body 추출 변경으로 수동 reactive blocking을 피했다. |
+| Tier 7 - Evidence/Release | PASS | review artifact와 타깃 검증 근거를 기록했다. |
 
-## P0/P1 Gate
+## P0/P1 게이트
 
 - P0: 0
 - P1: 0
-- P2/P3: none
+- P2/P3: 없음
 
-## Notes
+## 메모
 
-No new dependencies were introduced. Existing bluetape4k assertions and Spring
-WebTestClient test APIs were reused instead of ad hoc extraction helpers.
+새 dependency는 추가하지 않았다. 기존 bluetape4k assertion과 Spring WebTestClient test API를 재사용했고, ad hoc 추출 헬퍼는 만들지 않았다.

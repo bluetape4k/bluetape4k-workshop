@@ -1,59 +1,48 @@
-# spring-boot-protobuf-mvc Ecosystem Review
+# spring-boot-protobuf-mvc 생태계 리뷰
 
-Date: 2026-07-05
-Module: `:spring-boot-protobuf-mvc`
-Branch: `refactor/spring-boot-protobuf-mvc-ecosystem-patterns`
+날짜: 2026-07-05
+모듈: `:spring-boot-protobuf-mvc`
+브랜치: `refactor/spring-boot-protobuf-mvc-ecosystem-patterns`
 
-## Scope
+## 범위
 
-Review and cleanup focused on Kotlin style, bluetape4k validation helper reuse,
-immutability, and Spring test injection hygiene for the protobuf MVC workshop
-example.
+이 리뷰와 정리는 protobuf MVC workshop 예제의 Kotlin 스타일, bluetape4k 검증 헬퍼 재사용, 불변성, Spring test injection 정리에 초점을 맞췄다.
 
-## Changes Reviewed
+## 검토한 변경
 
-- Added `bluetape4k-core` to use ecosystem validation helpers.
-- Replaced raw positive-id handling in `CourseRepository` with
-  `requirePositiveNumber`.
-- Changed repository/config sample collections from mutable maps/lists to
-  immutable `Map` and `listOf`/`mapOf` initialization.
-- Replaced Spring test `uninitialized()` field injection with constructor
-  injection where the test fixture owns the dependency.
-- Normalized `KLogging` / `KLoggingChannel` companion object spacing.
+- 생태계 검증 헬퍼를 쓰기 위해 `bluetape4k-core`를 추가했다.
+- `CourseRepository`의 raw positive ID 처리를 `requirePositiveNumber`로 바꿨다.
+- repository/config sample collection을 mutable map/list에서 immutable `Map`과 `listOf`/`mapOf` 초기화로 바꿨다.
+- test fixture가 dependency를 소유하는 위치의 Spring test `uninitialized()` field injection을 constructor injection으로 바꿨다.
+- `KLogging` / `KLoggingChannel` companion object 공백을 정규화했다.
 
-## Evidence
+## 근거
 
-- `repo-status`: 8 tracked changed paths on the feature worktree.
-- `repo-diff`: 8 files changed, 18 insertions, 16 deletions before review
-  artifact creation.
-- CodeGraph `detect_changes_tool`: analyzed 8 changed files; no function/class
-  nodes or affected flows were available for this workshop module, so review
-  used source diff plus targeted Gradle evidence as fallback.
-- Hard-smell scan: no `Thread.sleep`, `!!`, `companion object:`, raw JUnit
-  assertions, or kotlin.test assertions in the module.
+- `repo-status`: feature worktree에서 tracked 변경 경로 8개를 확인했다.
+- `repo-diff`: review artifact 생성 전 8개 파일, 18 insertions, 16 deletions를 확인했다.
+- CodeGraph `detect_changes_tool`: 변경 파일 8개를 분석했다. 이 workshop 모듈에서는 function/class node나 affected flow를 제공하지 못해 source diff와 타깃 Gradle 근거로 대체 검토했다.
+- hard-smell scan: 모듈에서 `Thread.sleep`, `!!`, `companion object:`, raw JUnit assertion, kotlin.test assertion이 발견되지 않았다.
 - `git diff --check`: PASS.
-- `repo-test-summary -- ./gradlew :spring-boot-protobuf-mvc:test --console=plain --max-workers=1`:
-  PASS, `SUCCESS: Executed 9 tests in 3.1s`, `BUILD SUCCESSFUL in 18s`.
+- `repo-test-summary -- ./gradlew :spring-boot-protobuf-mvc:test --console=plain --max-workers=1`: PASS, `SUCCESS: Executed 9 tests in 3.1s`, `BUILD SUCCESSFUL in 18s`.
 
-## 7-Tier Review
+## 7-Tier 리뷰
 
-| Tier | Verdict | Evidence |
+| Tier | 판정 | 근거 |
 |---|---|---|
-| Tier 1 - Security | PASS | Positive caller input validation now uses `requirePositiveNumber`; no new trust boundary, auth, SQL, or secret handling. |
-| Tier 2 - Architecture | PASS | Repository API shape remains the same while its backing collection contract is immutable. |
-| Tier 3 - API/Docs | PASS | Example behavior and README-facing protobuf workflow are unchanged; no public API documentation change required. |
-| Tier 4 - Correctness | PASS | Invalid course ids now fail before lookup with an ecosystem validation helper; targeted tests pass. |
-| Tier 5 - Tests | PASS | Constructor injection removes `uninitialized()` test fixture state while preserving existing coverage. |
-| Tier 6 - Performance/Stability | PASS | Immutable fixture collections reduce accidental mutation risk; no hot-path or blocking behavior change. |
-| Tier 7 - Evidence/Release | PASS | Review artifact, hard-smell scan, diff check, and targeted module test evidence recorded. |
+| Tier 1 - Security | PASS | positive caller input validation은 이제 `requirePositiveNumber`를 사용한다. 새 trust boundary, auth, SQL, secret handling은 없다. |
+| Tier 2 - Architecture | PASS | repository API 형태는 같고 backing collection 계약만 immutable로 정리했다. |
+| Tier 3 - API/Docs | PASS | example 동작과 README-facing protobuf workflow는 변경 없다. 공개 API 문서 변경은 필요하지 않았다. |
+| Tier 4 - Correctness | PASS | invalid course ID는 lookup 전에 생태계 검증 헬퍼로 실패한다. 타깃 테스트가 통과했다. |
+| Tier 5 - 테스트 | PASS | constructor injection으로 `uninitialized()` test fixture state를 제거하면서 기존 coverage를 유지했다. |
+| Tier 6 - Performance/Stability | PASS | immutable fixture collection은 우발적 mutation 위험을 낮춘다. hot path나 blocking 동작 변경은 없다. |
+| Tier 7 - Evidence/Release | PASS | review artifact, hard-smell scan, diff check, 타깃 모듈 테스트 근거를 기록했다. |
 
-## P0/P1 Gate
+## P0/P1 게이트
 
 - P0: 0
 - P1: 0
-- P2/P3: none
+- P2/P3: 없음
 
-## Notes
+## 메모
 
-The new dependency is the ecosystem core module already used across sibling
-workshop examples for validation helpers. No third-party helper was introduced.
+새 dependency는 sibling workshop 예제에서 이미 검증 헬퍼용으로 쓰는 생태계 core 모듈이다. third-party helper는 추가하지 않았다.

@@ -1,35 +1,35 @@
-# Spring Boot Cache Resilience Ecosystem Review
+# Spring Boot Cache Resilience 생태계 리뷰
 
-Date: 2026-07-05
-Module: `:spring-boot-cache-resilience`
-Branch: `refactor/spring-boot-cache-resilience-ecosystem-patterns`
+날짜: 2026-07-05
+모듈: `:spring-boot-cache-resilience`
+브랜치: `refactor/spring-boot-cache-resilience-ecosystem-patterns`
 
-## Scope
+## 범위
 
-- Preserve the Redis primary cache, Caffeine fallback, Toxiproxy failure injection, and CircuitBreaker state-machine tests.
-- Keep `bluetape4k-resilience4j` `SuspendDecorators` as the resilience API under test.
-- Make suspend failure recording cancellation-safe.
+- Redis primary cache, Caffeine fallback, Toxiproxy 장애 주입, CircuitBreaker 상태 머신 테스트를 보존한다.
+- `bluetape4k-resilience4j` `SuspendDecorators`를 테스트 대상 회복성 API로 유지한다.
+- suspend 실패 기록이 취소를 안전하게 다루도록 만든다.
 
-## 7-Tier Review
+## 7-Tier 리뷰
 
-| Tier | Lens | Verdict | Evidence |
+| Tier | 관점 | 판정 | 근거 |
 |---|---|---|---|
-| 1 | Correctness | PASS | CircuitBreaker open/recovery scenarios still use the same Redis read probes. |
-| 2 | API / UX | PASS | `ResilientProductService` public methods and application configuration remain unchanged. |
-| 3 | Architecture | PASS | Redis, Caffeine, CircuitBreaker, and Toxiproxy test boundaries remain separate. |
-| 4 | Concurrency | PASS | Suspend Redis probe failures now rethrow `CancellationException` before wrapping other failures in `Result`. |
-| 5 | Resilience | PASS | Failure injection and fallback assertions continue to exercise `SuspendDecorators` and Caffeine fallback. |
-| 6 | Tests | PASS | `./gradlew :spring-boot-cache-resilience:test --console=plain --max-workers=1` passed. |
-| 7 | Maintainability | PASS | Repeated Redis probe error recording is centralized in `recordRedisRead`. |
+| 1 | 정확성 | PASS | CircuitBreaker open/recovery 시나리오는 같은 Redis read probe를 계속 사용한다. |
+| 2 | API / UX | PASS | `ResilientProductService` 공개 메서드와 애플리케이션 설정은 변경 없다. |
+| 3 | 아키텍처 | PASS | Redis, Caffeine, CircuitBreaker, Toxiproxy 테스트 경계는 계속 분리되어 있다. |
+| 4 | 동시성 | PASS | suspend Redis probe 실패는 다른 실패를 `Result`로 감싸기 전에 `CancellationException`을 다시 던진다. |
+| 5 | 회복성 | PASS | 장애 주입과 fallback assertion은 `SuspendDecorators`와 Caffeine fallback을 계속 검증한다. |
+| 6 | 테스트 | PASS | `./gradlew :spring-boot-cache-resilience:test --console=plain --max-workers=1`가 통과했다. |
+| 7 | 유지보수성 | PASS | 반복되는 Redis probe 오류 기록을 `recordRedisRead`에 모았다. |
 
-## P0/P1 Gate
+## P0/P1 게이트
 
 - P0: 0
 - P1: 0
-- Deferred: Non-suspend `runCatching` cleanup/reset calls are retained for idempotent container and toxic cleanup.
+- Deferred: non-suspend `runCatching` cleanup/reset 호출은 멱등적인 컨테이너와 toxic 정리에 쓰이므로 유지했다.
 
-## DoD Status
+## DoD 상태
 
 - `git diff --check`: PASS
-- Targeted test: `:spring-boot-cache-resilience:test`: PASS
-- Ecosystem helpers: existing `ToxiproxyServer`, `RedisServer`, `SuspendDecorators`, and bluetape4k coroutine test helper retained.
+- 타깃 테스트: `:spring-boot-cache-resilience:test`: PASS
+- 생태계 헬퍼: 기존 `ToxiproxyServer`, `RedisServer`, `SuspendDecorators`, bluetape4k 코루틴 테스트 헬퍼를 유지했다.
