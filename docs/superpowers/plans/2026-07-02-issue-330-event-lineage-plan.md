@@ -1,45 +1,45 @@
-# Event Lineage Implementation Plan
+# 이벤트 리니지 구현 계획
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build `graph/event-lineage`, a deterministic TinkerGraph workshop example for business event lineage and audit trail reconstruction.
+**목표:** 비즈니스 이벤트 계보 및 감사 추적 재구성을 위한 결정론적 TinkerGraph 워크숍 예시인 `graph/event-lineage`을 구축합니다.
 
-**Architecture:** Add a focused graph module that models events, aggregates, actors, and decisions with explicit causal and approval edges. The service uses `GraphOperations`, bounded traversal, bluetape4k validation helpers, serializable result models, bilingual README files, and README diagrams.
+**아키텍처:** 명시적인 인과관계 및 승인 가장자리를 사용하여 이벤트, 집계, 행위자 및 결정을 모델링하는 집중 그래프 모듈을 추가합니다. 이 서비스는 `GraphOperations`, 제한된 순회, bluetape4k 유효성 검사 도우미, 직렬화 가능한 결과 모델, 이중 언어 README 파일 및 README 다이어그램을 사용합니다.
 
-**Tech Stack:** Kotlin/JVM, bluetape4k graph core, bluetape4k graph TinkerPop, TinkerGraph, JUnit 5, bluetape4k-assertions, CairoSVG, repo-local diagram QA, GitHub Actions Examples workflow.
+**기술 스택:** Kotlin/JVM, bluetape4k 그래프 코어, bluetape4k 그래프 TinkerPop, TinkerGraph, JUnit 5, bluetape4k-assertions, CairoSVG, repo-local 다이어그램 QA, GitHub 작업 예제 워크플로.
 
 ---
 
-## File Map
+## 파일 맵
 
-- Create `graph/event-lineage/build.gradle.kts`: new no-container graph module.
-- Create `graph/event-lineage/src/main/kotlin/io/bluetape4k/workshop/graph/eventlineage/schema/EventLineageSchema.kt`: vertex and edge label definitions.
-- Create `graph/event-lineage/src/main/kotlin/io/bluetape4k/workshop/graph/eventlineage/model/AuditTrail.kt`: serializable result models.
-- Create `graph/event-lineage/src/main/kotlin/io/bluetape4k/workshop/graph/eventlineage/service/EventLineageService.kt`: graph lifecycle, vertex/edge creation, lineage queries.
-- Create `graph/event-lineage/src/test/kotlin/io/bluetape4k/workshop/graph/eventlineage/seed/EventLineageSeed.kt`: deterministic test scenario.
-- Create `graph/event-lineage/src/test/kotlin/io/bluetape4k/workshop/graph/eventlineage/AbstractEventLineageTest.kt`: shared behavior tests.
-- Create `graph/event-lineage/src/test/kotlin/io/bluetape4k/workshop/graph/eventlineage/EventLineageTinkerGraphTest.kt`: TinkerGraph test binding.
-- Create `graph/event-lineage/src/test/resources/junit-platform.properties` and `logback-test.xml`: test resource defaults.
-- Create `graph/event-lineage/README.md` and `README.ko.md`: learner-facing bilingual docs.
-- Create `docs/images/readme-diagrams/graph-event-lineage-readme-architecture-01.svg/png` and `graph-event-lineage-readme-sequence-01.svg/png`: README diagrams.
-- Modify `README.md`, `README.ko.md`, `AGENTS.md`, `scripts/smoke-validate.sh`, and `.github/workflows/Examples.yml`: module registration and CI coverage.
-- Create `docs/review/2026-07-02-issue-330-event-lineage-code-review.md` and `docs/lessons/2026-07-02-issue-330-event-lineage.md`: review and lesson evidence.
+- `graph/event-lineage/build.gradle.kts` 만들기: 컨테이너가 없는 새로운 그래프 모듈입니다.
+- `graph/event-lineage/src/main/kotlin/io/bluetape4k/workshop/graph/eventlineage/schema/EventLineageSchema.kt` 만들기: 정점 및 모서리 레이블 정의.
+- `graph/event-lineage/src/main/kotlin/io/bluetape4k/workshop/graph/eventlineage/model/AuditTrail.kt` 생성: 직렬화 가능한 결과 모델.
+- `graph/event-lineage/src/main/kotlin/io/bluetape4k/workshop/graph/eventlineage/service/EventLineageService.kt` 생성: 그래프 수명 주기, vertex/edge 생성, 계보 쿼리.
+- `graph/event-lineage/src/test/kotlin/io/bluetape4k/workshop/graph/eventlineage/seed/EventLineageSeed.kt` 생성: 결정론적 테스트 시나리오.
+- `graph/event-lineage/src/test/kotlin/io/bluetape4k/workshop/graph/eventlineage/AbstractEventLineageTest.kt` 생성: 공유 행동 테스트.
+- `graph/event-lineage/src/test/kotlin/io/bluetape4k/workshop/graph/eventlineage/EventLineageTinkerGraphTest.kt`: TinkerGraph 테스트 바인딩을 만듭니다.
+- `graph/event-lineage/src/test/resources/junit-platform.properties` 및 `logback-test.xml` 생성: 리소스 기본값을 테스트합니다.
+- `graph/event-lineage/README.md` 및 `README.ko.md`: 학습자용 이중 언어 문서를 만듭니다.
+- `docs/images/readme-diagrams/graph-event-lineage-readme-architecture-01.svg/png` 및 `graph-event-lineage-readme-sequence-01.svg/png`: README 다이어그램을 만듭니다.
+- `README.md`, `README.ko.md`, `AGENTS.md`, `scripts/smoke-validate.sh`, `.github/workflows/Examples.yml` 수정: 모듈 등록 및 CI 적용 범위.
+- `docs/review/2026-07-02-issue-330-event-lineage-code-review.md` 및 `docs/lessons/2026-07-02-issue-330-event-lineage.md` 만들기: 검토 및 수업 증거.
 
-## Task 1: Add Failing Behavior Tests
+## 작업 1: 실패한 동작 테스트 추가
 
-**Complexity:** medium  
-**Skills:** `bluetape4k-code-patterns`, `test-driven-development`, `ecc-kotlin-testing`
+**복잡성:** 중간
+**스킬:** `bluetape4k-code-patterns`, `test-driven-development`, `ecc-kotlin-testing`
 
-**Files:**
+**파일:**
 
-- Create: `graph/event-lineage/build.gradle.kts`
-- Create: `graph/event-lineage/src/test/kotlin/io/bluetape4k/workshop/graph/eventlineage/AbstractEventLineageTest.kt`
-- Create: `graph/event-lineage/src/test/kotlin/io/bluetape4k/workshop/graph/eventlineage/EventLineageTinkerGraphTest.kt`
-- Create: `graph/event-lineage/src/test/kotlin/io/bluetape4k/workshop/graph/eventlineage/seed/EventLineageSeed.kt`
-- Create: `graph/event-lineage/src/test/resources/junit-platform.properties`
-- Create: `graph/event-lineage/src/test/resources/logback-test.xml`
+- 생성: `graph/event-lineage/build.gradle.kts`
+- 생성: `graph/event-lineage/src/test/kotlin/io/bluetape4k/workshop/graph/eventlineage/AbstractEventLineageTest.kt`
+- 생성: `graph/event-lineage/src/test/kotlin/io/bluetape4k/workshop/graph/eventlineage/EventLineageTinkerGraphTest.kt`
+- 생성: `graph/event-lineage/src/test/kotlin/io/bluetape4k/workshop/graph/eventlineage/seed/EventLineageSeed.kt`
+- 생성: `graph/event-lineage/src/test/resources/junit-platform.properties`
+- 생성: `graph/event-lineage/src/test/resources/logback-test.xml`
 
-- [ ] **Step 1: Add module build file with test dependencies**
+- [ ] **1단계: 테스트 종속성이 있는 모듈 빌드 파일 추가**
 
 ```kotlin
 plugins {
@@ -61,161 +61,161 @@ dependencies {
 }
 ```
 
-- [ ] **Step 2: Write tests against the intended public service API**
+- [ ] **2단계: 의도한 공공 서비스에 대한 테스트 작성 API**
 
-Test names must include graph construction, causal path, audit trail,
-superseded chain, missing link, unknown ID, and blank validation cases. Use
-`io.bluetape4k.assertions` only.
+테스트 이름에는 그래프 구성, 원인 경로, 감사 추적,
+대체된 체인, 누락된 링크, 알 수 없는 ID 및 빈 유효성 검사 사례. 사용
+`io.bluetape4k.assertions`만 가능합니다.
 
-- [ ] **Step 3: Run the focused test and verify RED**
+- [ ] **3단계: 집중 테스트 실행 및 RED 확인**
 
-Run:
+달리다:
 
 ```bash
 ./gradlew :graph-event-lineage:test --tests '*EventLineageTinkerGraphTest' --console=plain
 ```
 
-Expected: compilation fails because `EventLineageService`, schema, and model
-types do not exist yet. This is the required TDD red proof.
+예상: `EventLineageService`, 스키마 및 모델로 인해 컴파일이 실패합니다.
+유형이 아직 존재하지 않습니다. 이것은 필수 TDD 빨간색 증명입니다.
 
-## Task 2: Implement Event Lineage Domain Model And Service
+## 작업 2: 이벤트 계보 도메인 모델 및 서비스 구현
 
-**Complexity:** high  
-**Skills:** `bluetape4k-code-patterns`, `ecc-kotlin-patterns`
+**복잡성:** 높음
+**스킬:** `bluetape4k-code-patterns`, `ecc-kotlin-patterns`
 
-**Files:**
+**파일:**
 
-- Create: `graph/event-lineage/src/main/kotlin/io/bluetape4k/workshop/graph/eventlineage/schema/EventLineageSchema.kt`
-- Create: `graph/event-lineage/src/main/kotlin/io/bluetape4k/workshop/graph/eventlineage/model/AuditTrail.kt`
-- Create: `graph/event-lineage/src/main/kotlin/io/bluetape4k/workshop/graph/eventlineage/service/EventLineageService.kt`
+- 생성: `graph/event-lineage/src/main/kotlin/io/bluetape4k/workshop/graph/eventlineage/schema/EventLineageSchema.kt`
+- 생성: `graph/event-lineage/src/main/kotlin/io/bluetape4k/workshop/graph/eventlineage/model/AuditTrail.kt`
+- 생성: `graph/event-lineage/src/main/kotlin/io/bluetape4k/workshop/graph/eventlineage/service/EventLineageService.kt`
 
-- [ ] **Step 1: Define schema labels**
+- [ ] **1단계: 스키마 라벨 정의**
 
-Create `EventLabel`, `AggregateLabel`, `ActorLabel`, `DecisionLabel`,
-`EmitsLabel`, `CausedByLabel`, `ApprovedByLabel`, `DecidedByLabel`, and
-`SupersedesLabel`. Store timestamps and versions as strings for backend-neutral
-graph properties, matching existing workshop graph examples.
+`EventLabel`, `AggregateLabel`, `ActorLabel`, `DecisionLabel`를 생성합니다.
+`EmitsLabel`, `CausedByLabel`, `ApprovedByLabel`, `DecidedByLabel` 및
+`SupersedesLabel`. 백엔드 중립을 위해 타임스탬프와 버전을 문자열로 저장
+기존 워크샵 그래프 예제와 일치하는 그래프 속성.
 
-- [ ] **Step 2: Define serializable result models**
+- [ ] **2단계: 직렬화 가능한 결과 모델 정의**
 
-Create `LineageNode`, `LineagePath`, `ApprovalEvidence`, and
-`AggregateAuditTrail`. Every data class implements `Serializable` and defines
+`LineageNode`, `LineagePath`, `ApprovalEvidence` 및
+`AggregateAuditTrail`. 모든 데이터 클래스는 `Serializable`을 구현하고 정의합니다.
 `serialVersionUID`.
 
-- [ ] **Step 3: Implement service mutators and queries**
+- [ ] **3단계: 서비스 변경자 및 쿼리 구현**
 
-Use `GraphOperations` and existing patterns from `RecommendationService`:
-`initialize`, idempotent `addEvent`/`addAggregate`/`addActor`/`addDecision`,
-edge mutators, `eventsForAggregate`, `causalPath`, `auditTrailForAggregate`,
-`supersededChain`, and `missingCausalLinks`.
+`GraphOperations` 및 `RecommendationService`의 기존 패턴을 사용합니다.
+`initialize`, 멱등성 `addEvent`/`addAggregate`/`addActor`/`addDecision`,
+가장자리 변형자, `eventsForAggregate`, `causalPath`, `auditTrailForAggregate`,
+`supersededChain` 및 `missingCausalLinks`.
 
-- [ ] **Step 4: Run the focused test and verify GREEN**
+- [ ] **4단계: 집중 테스트 실행 및 GREEN 확인**
 
-Run:
+달리다:
 
 ```bash
 ./gradlew :graph-event-lineage:test --tests '*EventLineageTinkerGraphTest' --console=plain
 ```
 
-Expected: tests compile and pass.
+예상: 테스트가 컴파일되고 통과됩니다.
 
-## Task 3: Add Learner Documentation And Diagrams
+## 작업 3: 학습자 문서 및 다이어그램 추가
 
-**Complexity:** high  
-**Skills:** `bluetape4k-blog`, `bluetape4k-diagram`
+**복잡성:** 높음
+**스킬:** `bluetape4k-blog`, `bluetape4k-diagram`
 
-**Files:**
+**파일:**
 
-- Create: `graph/event-lineage/README.md`
-- Create: `graph/event-lineage/README.ko.md`
-- Create: `docs/images/readme-diagrams/graph-event-lineage-readme-architecture-01.svg`
-- Create: `docs/images/readme-diagrams/graph-event-lineage-readme-architecture-01.png`
-- Create: `docs/images/readme-diagrams/graph-event-lineage-readme-sequence-01.svg`
-- Create: `docs/images/readme-diagrams/graph-event-lineage-readme-sequence-01.png`
+- 생성: `graph/event-lineage/README.md`
+- 생성: `graph/event-lineage/README.ko.md`
+- 생성: `docs/images/readme-diagrams/graph-event-lineage-readme-architecture-01.svg`
+- 생성: `docs/images/readme-diagrams/graph-event-lineage-readme-architecture-01.png`
+- 생성: `docs/images/readme-diagrams/graph-event-lineage-readme-sequence-01.svg`
+- 생성: `docs/images/readme-diagrams/graph-event-lineage-readme-sequence-01.png`
 
-- [ ] **Step 1: Write README pair**
+- [ ] **1단계: README 쌍 쓰기**
 
-README files include language switch, overview, when graph lineage is useful,
-when ordinary audit tables or JaVers are better, domain model table, core query
-table, Kotlin usage snippet, verification commands, and See Also links.
+README 파일에는 언어 전환, 개요, 그래프 계보가 유용한 경우,
+일반 감사 테이블 또는 JaVers이 더 나은 경우 도메인 모델 테이블, 핵심 쿼리
+테이블, Kotlin 사용법 조각, 확인 명령 및 참고 항목 링크.
 
-- [ ] **Step 2: Draw architecture diagram**
+- [ ] **2단계: 아키텍처 다이어그램 그리기**
 
-Use a current best-practices architecture reference, layered static ownership
-view, clear layer labels, consistent card text alignment, rounded orthogonal
-connectors, and legend if line styles differ.
+현재 모범 사례 아키텍처 참조, 계층화된 정적 소유권 사용
+보기, 레이어 레이블 지우기, 일관된 카드 텍스트 정렬, 둥근 직교
+선 스타일이 다른 경우 연결선 및 범례.
 
-- [ ] **Step 3: Draw sequence diagram**
+- [ ] **3단계: 시퀀스 다이어그램 그리기**
 
-Use current best-practices sequence references, numbered labels, muted palette,
-transparent `alt` frame bodies, branch-specific colors, and marker arrowheads
-matching call-line colors.
+현재의 모범 사례 시퀀스 참조, 번호가 매겨진 라벨, 음소거된 팔레트,
+투명한 `alt` 프레임 본체, 가지별 색상 및 마커 화살촉
+일치하는 통화 회선 색상.
 
-- [ ] **Step 4: Render and inspect PNG assets**
+- [ ] **4단계: PNG 자산 렌더링 및 검사**
 
-Run:
+달리다:
 
 ```bash
 ~/.local/bin/cairosvg docs/images/readme-diagrams/graph-event-lineage-readme-architecture-01.svg -o docs/images/readme-diagrams/graph-event-lineage-readme-architecture-01.png -s 2
 ~/.local/bin/cairosvg docs/images/readme-diagrams/graph-event-lineage-readme-sequence-01.svg -o docs/images/readme-diagrams/graph-event-lineage-readme-sequence-01.png -s 2
 ```
 
-Expected: SVG parse succeeds, PNGs render, and full-size visual inspection finds
-no connector, label, marker, card alignment, or sequence-style defects.
+예상: SVG 구문 분석 성공, PNG 렌더링 및 전체 크기 육안 검사 결과
+커넥터, 라벨, 마커, 카드 정렬 또는 시퀀스 스타일 결함이 없습니다.
 
-## Task 4: Register Module In Repository Surfaces
+## 작업 4: 리포지토리 표면에 모듈 등록
 
-**Complexity:** medium  
-**Skills:** `bluetape4k-code-patterns`
+**복잡성:** 중간
+**스킬:** `bluetape4k-code-patterns`
 
-**Files:**
+**파일:**
 
-- Modify: `README.md`
-- Modify: `README.ko.md`
-- Modify: `AGENTS.md`
-- Modify: `scripts/smoke-validate.sh`
-- Modify: `.github/workflows/Examples.yml`
+- 수정: `README.md`
+- 수정: `README.ko.md`
+- 수정: `AGENTS.md`
+- 수정: `scripts/smoke-validate.sh`
+- 수정: `.github/workflows/Examples.yml`
 
-- [ ] **Step 1: Add root README graph catalog rows**
+- [ ] **1단계: 루트 README 그래프 카탈로그 행 추가**
 
-Add `graph-event-lineage` as an Advanced graph module with in-memory infra and
-event-lineage/audit-trail learning outcome.
+인메모리 인프라를 갖춘 고급 그래프 모듈로 `graph-event-lineage`을 추가하고
+event-lineage/audit-trail 학습결과입니다.
 
-- [ ] **Step 2: Add smoke validation coverage**
+- [ ] **2단계: 연기 검증 범위 추가**
 
-Add `:graph-event-lineage:test` to `all-smoke`; update stale-check expected
-project count from `99` to `100`.
+`:graph-event-lineage:test`을 `all-smoke`에 추가합니다. 업데이트 부실 확인이 예상됩니다.
+`99`부터 `100`까지의 프로젝트 수입니다.
 
-- [ ] **Step 3: Add Examples workflow path and smoke job coverage**
+- [ ] **3단계: 예제 워크플로 경로 및 Smoke 작업 적용 범위 추가**
 
-Add `graph/event-lineage/**` to push/PR paths, include
-`:graph-event-lineage:test` in `smoke-examples`, and upload its test-result
-artifact paths.
+`graph/event-lineage/**`을 push/PR 경로에 추가하고 포함합니다.
+`:graph-event-lineage:test`을 `smoke-examples`에 넣고 테스트 결과를 업로드하세요.
+아티팩트 경로.
 
-- [ ] **Step 4: Validate workflow YAML**
+- [ ] **4단계: 작업흐름 검증 YAML**
 
-Run:
+달리다:
 
 ```bash
 actionlint .github/workflows/Examples.yml
 rg -n "\\\\'" .github/workflows
 ```
 
-Expected: actionlint passes and escaped GitHub-expression quotes are absent.
+예상됨: actionlint가 전달되고 이스케이프된 GitHub 표현식 따옴표가 없습니다.
 
-## Task 5: Verification, Review, Lessons, And PR
+## 작업 5: 확인, 검토, 학습 및 PR
 
-**Complexity:** high  
-**Skills:** `verification-before-completion`, `bluetape4k-diagram`, `bluetape4k-code-patterns`
+**복잡성:** 높음
+**스킬:** `verification-before-completion`, `bluetape4k-diagram`, `bluetape4k-code-patterns`
 
-**Files:**
+**파일:**
 
-- Create: `docs/review/2026-07-02-issue-330-event-lineage-code-review.md`
-- Create: `docs/lessons/2026-07-02-issue-330-event-lineage.md`
+- 생성: `docs/review/2026-07-02-issue-330-event-lineage-code-review.md`
+- 생성: `docs/lessons/2026-07-02-issue-330-event-lineage.md`
 
-- [ ] **Step 1: Run local verification**
+- [ ] **1단계: 로컬 확인 실행**
 
-Run:
+달리다:
 
 ```bash
 ./gradlew :graph-event-lineage:test --no-build-cache --rerun-tasks --console=plain
@@ -227,24 +227,24 @@ Run:
 git diff --check
 ```
 
-- [ ] **Step 2: Run Step 6-R review**
+- [ ] **2단계: 6-R단계 검토 실행**
 
-Review performance, stability, security, operator/Ops, developer/API, and
-user/caller lenses. Record `P0=0`, `P1=0`, and any P2/P3 decisions in
+성능, 안정성, 보안, operator/Ops, developer/API 및
+user/caller 렌즈. `P0=0`, `P1=0` 및 P2/P3 결정을 기록합니다.
 `docs/review/2026-07-02-issue-330-event-lineage-code-review.md`.
 
-- [ ] **Step 3: Commit lessons before PR**
+- [ ] **3단계: PR 이전에 강의 커밋**
 
-Create `docs/lessons/2026-07-02-issue-330-event-lineage.md` with context,
-decision, outcome, verification, diagram QA evidence, and future guard.
+컨텍스트를 사용하여 `docs/lessons/2026-07-02-issue-330-event-lineage.md`을 생성하고,
+결정, 결과, 검증, 다이어그램 QA 증거, 미래 가드.
 
-- [ ] **Step 4: Commit, push, create PR, and verify PR metadata**
+- [ ] **4단계: PR 커밋, 푸시, 생성 및 PR 메타데이터 확인**
 
-Commit with Lore trailers, push the feature branch, create an English PR that
-closes #330, set milestone `1.3.1`, assignee `debop`, mirror issue labels, and
-verify live PR body final section is `## DoD Status`.
+Lore 예고편으로 커밋하고 기능 분기를 푸시하고 영어 PR를 만듭니다.
+종료 #330, 마일스톤 설정 `1.3.1`, 담당자 `debop`, 미러 이슈 라벨 및
+실시간 PR 본문 마지막 섹션이 `## DoD Status`인지 확인합니다.
 
-- [ ] **Step 5: Run post-PR review and CI gate**
+- [ ] **5단계: post-PR 검토 및 CI 게이트 실행**
 
-Run PR diff review, wait for CI, update PR DoD, and report Step 9 evidence to
-the user. Merge only after the user requests merge.
+PR diff 검토를 실행하고 CI을 기다린 후 PR DoD을 업데이트하고 9단계 증거를 다음으로 보고합니다.
+사용자. 사용자가 병합을 요청한 후에만 병합합니다.

@@ -1,56 +1,56 @@
-# DDD Order Audit Workshop Implementation Plan
+# DDD 주문 감사 워크숍 실시 계획
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build `:spring-modulith-ddd-order-audit`, a learner-facing PostgreSQL-backed DDD aggregate lifecycle example with Spring Modulith publication rows and JaVers history/diff queries.
+**목표:** Spring Modulith 발행 행 및 JaVers history/diff 쿼리를 사용하여 학습자 대상 PostgreSQL 지원 DDD 집계 수명 주기 예제인 `:spring-modulith-ddd-order-audit`을 빌드합니다.
 
-**Architecture:** The order command transaction persists the aggregate and registers the Spring Modulith publication row atomically in PostgreSQL. `@ApplicationModuleListener` handles fulfillment after commit, while in-memory JaVers audit is written only after successful transaction commit so rollback tests cannot leave misleading audit history.
+**아키텍처:** order 명령 트랜잭션은 집계를 유지하고 PostgreSQL에 Spring Modulith 게시 행을 원자적으로 등록합니다. `@ApplicationModuleListener`은 커밋 후 이행을 처리하는 반면, 인메모리 JaVers 감사는 성공적인 트랜잭션 커밋 후에만 기록되므로 롤백 테스트에서 잘못된 감사 기록이 남지 않습니다.
 
-**Tech Stack:** Kotlin 2.3, Java 21, Spring Boot 4, Spring Data JPA, Spring Modulith 2.1, JaVers, `bluetape4k-testcontainers` `PostgreSQLServer.Launcher.postgres`, JUnit 5, MockK, bluetape4k assertions, generated SVG/PNG README diagrams.
+**기술 스택:** Kotlin 2.3, Java 21, Spring Boot 4, Spring Data JPA, Spring Modulith 2.1, JaVers, `bluetape4k-testcontainers` `PostgreSQLServer.Launcher.postgres`, JUnit 5, MockK, bluetape4k 어설션, 생성됨 SVG/PNG README 다이어그램.
 
 ---
 
-## File Structure
+## 파일 구조
 
-- Create `spring-modulith/ddd-order-audit/build.gradle.kts`: Gradle module dependencies and Spring Boot main class.
-- Create `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/DddOrderAuditApplication.kt`: application entrypoint.
-- Create `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/orders/OrderDomain.kt`: value objects, commands, aggregate, domain events.
-- Create `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/orders/OrderEntity.kt`: JPA entity mapping with optimistic lock.
-- Create `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/orders/OrderJpaRepository.kt`: Spring Data repository.
-- Create `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/orders/OrderAuditService.kt`: after-commit JaVers commit/query boundary.
-- Create `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/orders/OrderCommandService.kt`: transactional place/approve use cases and Spring event publication.
-- Create `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/fulfillment/FulfillmentReservation.kt`: fulfillment reservation JPA entity.
-- Create `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/fulfillment/FulfillmentReservationRepository.kt`: Spring Data repository.
-- Create `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/fulfillment/FulfillmentReservationHandler.kt`: `@ApplicationModuleListener` and deterministic failure switch.
-- Create `spring-modulith/ddd-order-audit/src/main/resources/application.yml`: JPA schema, Modulith event publication, logging defaults.
-- Create `spring-modulith/ddd-order-audit/src/test/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/AbstractDddOrderAuditTest.kt`: PostgreSQL Testcontainers setup and cleanup helpers.
-- Create tests under `spring-modulith/ddd-order-audit/src/test/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/`.
-- Create `spring-modulith/ddd-order-audit/src/test/resources/junit-platform.properties` and `logback-test.xml`.
-- Create `spring-modulith/ddd-order-audit/README.md` and `README.ko.md`.
-- Create `docs/images/readme-diagrams/spring-modulith-ddd-order-audit-readme-architecture-01.{svg,png}`.
-- Create `docs/images/readme-diagrams/spring-modulith-ddd-order-audit-readme-sequence-01.{svg,png}`.
-- Modify `gradle/libs.versions.toml`: add `bluetape4k-javers-ddd = { module = "io.github.bluetape4k.javers:javers-ddd" }` only if Gradle dependency resolution confirms the artifact exists through the root BOM.
-- Modify root `README.md`, `README.ko.md`, `AGENTS.md`, `.github/workflows/Examples.yml`, and `scripts/smoke-validate.sh`.
+- `spring-modulith/ddd-order-audit/build.gradle.kts`: Gradle 모듈 종속성과 Spring Boot 메인 클래스를 생성합니다.
+- `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/DddOrderAuditApplication.kt` 생성: 애플리케이션 진입점.
+- `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/orders/OrderDomain.kt` 만들기: 값 개체, 명령, 집계, 도메인 이벤트.
+- 낙관적 잠금을 사용하여 `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/orders/OrderEntity.kt`: JPA 엔터티 매핑을 만듭니다.
+- `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/orders/OrderJpaRepository.kt` 생성: Spring Data 저장소.
+- `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/orders/OrderAuditService.kt` 생성: 커밋 후 JaVers commit/query 경계.
+- `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/orders/OrderCommandService.kt` 생성: 트랜잭션 place/approve 사용 사례 및 Spring 이벤트 게시.
+- `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/fulfillment/FulfillmentReservation.kt` 생성: 이행 예약 JPA 엔터티.
+- `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/fulfillment/FulfillmentReservationRepository.kt` 생성: Spring Data 저장소.
+- `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/fulfillment/FulfillmentReservationHandler.kt`: `@ApplicationModuleListener` 및 결정적 오류 스위치를 만듭니다.
+- `spring-modulith/ddd-order-audit/src/main/resources/application.yml`: JPA 스키마, Modulith 이벤트 게시, 로깅 기본값을 생성합니다.
+- `spring-modulith/ddd-order-audit/src/test/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/AbstractDddOrderAuditTest.kt`: PostgreSQL Testcontainers 설정 및 정리 도우미를 만듭니다.
+- `spring-modulith/ddd-order-audit/src/test/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/` 아래에 테스트를 만듭니다.
+- `spring-modulith/ddd-order-audit/src/test/resources/junit-platform.properties` 및 `logback-test.xml`를 생성합니다.
+- `spring-modulith/ddd-order-audit/README.md` 및 `README.ko.md`를 생성합니다.
+- `docs/images/readme-diagrams/spring-modulith-ddd-order-audit-readme-architecture-01.{svg,png}`를 생성합니다.
+- `docs/images/readme-diagrams/spring-modulith-ddd-order-audit-readme-sequence-01.{svg,png}`를 생성합니다.
+- `gradle/libs.versions.toml` 수정: Gradle 종속성 해결을 통해 아티팩트가 루트 BOM를 통해 존재함을 확인한 경우에만 `bluetape4k-javers-ddd = { module = "io.github.bluetape4k.javers:javers-ddd" }`를 추가합니다.
+- 루트 `README.md`, `README.ko.md`, `AGENTS.md`, `.github/workflows/Examples.yml` 및 `scripts/smoke-validate.sh`를 수정합니다.
 
-## Task 1: Module Skeleton And Dependency Resolution
+## 작업 1: 모듈 뼈대 및 종속성 해결
 
-**Files:**
-- Create: `spring-modulith/ddd-order-audit/build.gradle.kts`
-- Create: `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/DddOrderAuditApplication.kt`
-- Create: `spring-modulith/ddd-order-audit/src/main/resources/application.yml`
-- Modify: `gradle/libs.versions.toml`
+**파일:**
+- 생성: `spring-modulith/ddd-order-audit/build.gradle.kts`
+- 생성: `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/DddOrderAuditApplication.kt`
+- 생성: `spring-modulith/ddd-order-audit/src/main/resources/application.yml`
+- 수정: `gradle/libs.versions.toml`
 
-- [ ] **Step 1: Resolve `javers-ddd` artifact before adding the alias**
+- [ ] **1단계: 별칭을 추가하기 전에 `javers-ddd` 아티팩트 해결**
 
-Run:
+달리다:
 
 ```bash
 ./gradlew dependencyInsight --configuration runtimeClasspath --dependency io.github.bluetape4k.javers:javers-ddd --console=plain
 ```
 
-Expected: Gradle resolves `io.github.bluetape4k.javers:javers-ddd` from the root `bluetape4k-dependencies` BOM. If it does not resolve, use `bluetape4k-javers-core` plus local after-commit audit code and record that fallback in the implementation notes before committing.
+예상: Gradle는 루트 `bluetape4k-dependencies` BOM에서 `io.github.bluetape4k.javers:javers-ddd`을 확인합니다. 해결되지 않으면 `bluetape4k-javers-core`와 로컬 커밋 후 감사 코드를 사용하고 커밋하기 전에 구현 참고 사항에 해당 폴백을 기록하세요.
 
-- [ ] **Step 2: Add the module build file**
+- [ ] **2단계: 모듈 빌드 파일 추가**
 
 `spring-modulith/ddd-order-audit/build.gradle.kts`:
 
@@ -110,7 +110,7 @@ dependencies {
 }
 ```
 
-- [ ] **Step 3: Add application entrypoint and configuration**
+- [ ] **3단계: 애플리케이션 진입점 및 구성 추가**
 
 `DddOrderAuditApplication.kt`:
 
@@ -148,32 +148,32 @@ logging:
     org.springframework.modulith.events: INFO
 ```
 
-- [ ] **Step 4: Verify project discovery**
+- [ ] **4단계: 프로젝트 검색 확인**
 
-Run:
+달리다:
 
 ```bash
 ./gradlew projects --console=plain
 ```
 
-Expected: output includes `Project ':spring-modulith-ddd-order-audit'`.
+예상: 출력에는 `Project ':spring-modulith-ddd-order-audit'`이 포함됩니다.
 
-- [ ] **Step 5: Commit**
+- [ ] **5단계: 커밋**
 
 ```bash
 git add gradle/libs.versions.toml spring-modulith/ddd-order-audit
 git commit -m "feat: add DDD order audit module skeleton"
 ```
 
-## Task 2: Domain Model And Aggregate Tests
+## 작업 2: 도메인 모델 및 집계 테스트
 
-**Files:**
-- Create: `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/orders/OrderDomain.kt`
-- Create: `spring-modulith/ddd-order-audit/src/test/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/orders/OrderDomainTest.kt`
+**파일:**
+- 생성: `spring-modulith/ddd-order-audit/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/orders/OrderDomain.kt`
+- 생성: `spring-modulith/ddd-order-audit/src/test/kotlin/io/bluetape4k/workshop/spring/modulith/ddd/audit/orders/OrderDomainTest.kt`
 
-- [ ] **Step 1: Write failing aggregate tests**
+- [ ] **1단계: 실패한 집계 테스트 작성**
 
-`OrderDomainTest.kt` must cover:
+`OrderDomainTest.kt`은 다음을 포함해야 합니다.
 
 ```kotlin
 @Test
@@ -203,9 +203,9 @@ fun `rejects repeated approve`() {
 }
 ```
 
-- [ ] **Step 2: Implement immutable domain model**
+- [ ] **2단계: 변경할 수 없는 도메인 모델 구현**
 
-`OrderDomain.kt` must define serializable value/data classes, command methods returning new instances, and events with safe payloads:
+`OrderDomain.kt`은(는) 직렬화 가능한 value/data 클래스, 새 인스턴스를 반환하는 명령 메서드, 안전한 페이로드가 있는 이벤트를 정의해야 합니다.
 
 ```kotlin
 data class OrderId(val value: String) : Serializable {
@@ -249,35 +249,35 @@ data class OrderApproved(
 }
 ```
 
-The event must carry `aggregateId`, not the full aggregate.
+이벤트는 전체 집계가 아닌 `aggregateId`을 전달해야 합니다.
 
-- [ ] **Step 3: Run domain tests**
+- [ ] **3단계: 도메인 테스트 실행**
 
 ```bash
 ./gradlew :spring-modulith-ddd-order-audit:test --tests '*OrderDomainTest' --console=plain
 ```
 
-Expected: aggregate invariant tests pass.
+예상: 집계 불변 테스트가 통과되었습니다.
 
-- [ ] **Step 4: Commit**
+- [ ] **4단계: 커밋**
 
 ```bash
 git add spring-modulith/ddd-order-audit/src/main/kotlin spring-modulith/ddd-order-audit/src/test/kotlin
 git commit -m "feat: model audited order aggregate"
 ```
 
-## Task 3: PostgreSQL Persistence And Transactional Publication
+## 작업 3: PostgreSQL 지속성 및 트랜잭션 게시
 
-**Files:**
-- Create: `orders/OrderEntity.kt`
-- Create: `orders/OrderJpaRepository.kt`
-- Create: `orders/OrderCommandService.kt`
-- Create: `AbstractDddOrderAuditTest.kt`
-- Create: `OrderCommandServiceTest.kt`
+**파일:**
+- 생성: `orders/OrderEntity.kt`
+- 생성: `orders/OrderJpaRepository.kt`
+- 생성: `orders/OrderCommandService.kt`
+- 생성: `AbstractDddOrderAuditTest.kt`
+- 생성: `OrderCommandServiceTest.kt`
 
-- [ ] **Step 1: Write failing PostgreSQL-backed service tests**
+- [ ] **1단계: 실패한 PostgreSQL 지원 서비스 테스트 쓰기**
 
-The test base must use the confirmed helper:
+테스트 베이스는 확인된 도우미를 사용해야 합니다.
 
 ```kotlin
 companion object : KLogging() {
@@ -293,16 +293,16 @@ companion object : KLogging() {
 }
 ```
 
-Tests must assert:
+테스트는 다음을 검증문해야 합니다.
 
-- placing an order creates an order row.
-- approving an order registers an `OrderApproved` publication row in the same transaction.
-- transaction rollback leaves no order row and no publication row.
-- repeated approval is rejected or produces no duplicate effective approval.
+- 주문을 하면 주문 행이 생성됩니다.
+- 주문을 승인하면 동일한 트랜잭션에 `OrderApproved` 게시 행이 등록됩니다.
+- 트랜잭션 롤백에는 주문 행과 게시 행이 남지 않습니다.
+- 반복 승인이 거부되거나 중복된 유효 승인이 생성되지 않습니다.
 
-- [ ] **Step 2: Implement JPA entity and repository**
+- [ ] **2단계: JPA 엔터티 및 저장소 구현**
 
-`OrderEntity` must include:
+`OrderEntity`에는 다음이 포함되어야 합니다.
 
 ```kotlin
 @Entity
@@ -334,38 +334,38 @@ class OrderEntity(
 }
 ```
 
-Use bound Spring Data/JPA APIs only; do not concatenate SQL/JPQL strings.
+바인딩된 Spring Data/JPA API만 사용하세요. SQL/JPQL 문자열을 연결하지 마세요.
 
-- [ ] **Step 3: Implement command service**
+- [ ] **3단계: 명령 서비스 구현**
 
-`OrderCommandService` must be `@Transactional`, persist the order, then call `ApplicationEventPublisher.publishEvent(OrderApproved(aggregateId = order.id.value))` before the transaction completes. This lets Spring Modulith write the publication row with the order row while listener side effects stay after-commit.
+`OrderCommandService`은(는) `@Transactional`이어야 하며 주문을 유지한 다음 트랜잭션이 완료되기 전에 `ApplicationEventPublisher.publishEvent(OrderApproved(aggregateId = order.id.value))`를 호출하세요. 이를 통해 Spring Modulith는 리스너 부작용이 커밋 후에도 유지되는 동안 주문 행으로 발행 행을 작성할 수 있습니다.
 
-- [ ] **Step 4: Run persistence tests**
+- [ ] **4단계: 지속성 테스트 실행**
 
 ```bash
 ./gradlew :spring-modulith-ddd-order-audit:test --tests '*OrderCommandServiceTest' --console=plain --max-workers=1
 ```
 
-Expected: PostgreSQL Testcontainer starts through `PostgreSQLServer.Launcher.postgres`; all service tests pass.
+예상: PostgreSQL 테스트 컨테이너는 `PostgreSQLServer.Launcher.postgres`을 통해 시작됩니다. 모든 서비스 테스트를 통과했습니다.
 
-- [ ] **Step 5: Commit**
+- [ ] **5단계: 커밋**
 
 ```bash
 git add spring-modulith/ddd-order-audit
 git commit -m "feat: persist orders with transactional Modulith publications"
 ```
 
-## Task 4: Fulfillment Listener, Failure, And Replay
+## 작업 4: 이행 리스너, 실패 및 재생
 
-**Files:**
-- Create: `fulfillment/FulfillmentReservation.kt`
-- Create: `fulfillment/FulfillmentReservationRepository.kt`
-- Create: `fulfillment/FulfillmentReservationHandler.kt`
-- Create: `FulfillmentPublicationTest.kt`
+**파일:**
+- 생성: `fulfillment/FulfillmentReservation.kt`
+- 생성: `fulfillment/FulfillmentReservationRepository.kt`
+- 생성: `fulfillment/FulfillmentReservationHandler.kt`
+- 생성: `FulfillmentPublicationTest.kt`
 
-- [ ] **Step 1: Write listener tests**
+- [ ] **1단계: 리스너 테스트 작성**
 
-Tests must use Spring Modulith 2.1 APIs:
+테스트에서는 Spring Modulith 2.1 API를 사용해야 합니다.
 
 ```kotlin
 @Autowired lateinit var incompletePublications: IncompleteEventPublications
@@ -373,14 +373,14 @@ Tests must use Spring Modulith 2.1 APIs:
 @Autowired lateinit var eventPublicationRepository: EventPublicationRepository
 ```
 
-Assertions:
+검증문:
 
-- successful approval eventually creates exactly one reservation.
-- configured handler failure leaves `EventPublication.Status.FAILED` or incomplete publication evidence.
-- `failedPublications.resubmit(ResubmissionOptions.defaults().withMaxInFlight(1).withBatchSize(1))` or `incompletePublications.resubmitIncompletePublications { it.event is OrderApproved }` creates the reservation after the failure switch is disabled.
-- duplicate replay does not create duplicate reservations because `orderId` is unique.
+- 성공적인 승인은 결국 정확히 하나의 예약을 생성합니다.
+- 구성된 핸들러 실패로 인해 `EventPublication.Status.FAILED` 또는 불완전한 게시 증거가 남습니다.
+- `failedPublications.resubmit(ResubmissionOptions.defaults().withMaxInFlight(1).withBatchSize(1))` 또는 `incompletePublications.resubmitIncompletePublications { it.event is OrderApproved }`은 실패 스위치가 비활성화된 후 예약을 생성합니다.
+- 중복 재생은 `orderId`이 고유하므로 중복 예약을 생성하지 않습니다.
 
-- [ ] **Step 2: Implement handler**
+- [ ] **2단계: 핸들러 구현**
 
 `FulfillmentReservationHandler`:
 
@@ -400,41 +400,41 @@ class FulfillmentReservationHandler(
 }
 ```
 
-The exception message must include only `orderId`; it must not dump the event body or aggregate snapshot.
+예외 메시지에는 `orderId`만 포함되어야 합니다. 이벤트 본문이나 집계 스냅샷을 덤프하면 안 됩니다.
 
-- [ ] **Step 3: Run listener tests**
+- [ ] **3단계: 리스너 테스트 실행**
 
 ```bash
 ./gradlew :spring-modulith-ddd-order-audit:test --tests '*FulfillmentPublicationTest' --console=plain --max-workers=1
 ```
 
-Expected: listener success, failure evidence, and replay pass without duplicate reservations.
+예상: 청취자 성공, 실패 증거 및 중복 예약 없이 재생 패스.
 
-- [ ] **Step 4: Commit**
+- [ ] **4단계: 커밋**
 
 ```bash
 git add spring-modulith/ddd-order-audit
 git commit -m "feat: handle Modulith fulfillment publications"
 ```
 
-## Task 5: JaVers After-Commit Audit And Query Tests
+## 작업 5: JaVers 커밋 후 감사 및 쿼리 테스트
 
-**Files:**
-- Create: `orders/OrderAuditService.kt`
-- Create: `OrderAuditServiceTest.kt`
+**파일:**
+- 생성: `orders/OrderAuditService.kt`
+- 생성: `OrderAuditServiceTest.kt`
 
-- [ ] **Step 1: Write audit tests**
+- [ ] **1단계: 감사 테스트 작성**
 
-Tests must assert:
+테스트는 다음을 검증문해야 합니다.
 
-- placing an order records one JaVers snapshot after commit.
-- approving records a second snapshot and a useful diff.
-- rollback leaves no JaVers snapshot/diff for the failed command.
-- audit DTOs expose synthetic ids/status/amounts only.
+- 주문을 하면 커밋 후 하나의 JaVers 스냅샷이 기록됩니다.
+- 승인하면 두 번째 스냅샷과 유용한 차이점이 기록됩니다.
+- 롤백은 실패한 명령에 대해 JaVers snapshot/diff을 남기지 않습니다.
+- 감사 DTO는 합성 ids/status/amounts만 노출합니다.
 
-- [ ] **Step 2: Implement after-commit audit boundary**
+- [ ] **2단계: 커밋 후 감사 경계 구현**
 
-Use `TransactionSynchronizationManager.registerSynchronization`:
+`TransactionSynchronizationManager.registerSynchronization` 사용:
 
 ```kotlin
 fun commitAfterTransaction(author: String, order: Order, properties: Map<String, String>) {
@@ -450,105 +450,105 @@ fun commitAfterTransaction(author: String, order: Order, properties: Map<String,
 }
 ```
 
-This prevents in-memory JaVers from recording rolled-back commands.
+이렇게 하면 인메모리 JaVers이 롤백된 명령을 기록하는 것을 방지할 수 있습니다.
 
-- [ ] **Step 3: Run audit tests**
+- [ ] **3단계: 감사 테스트 실행**
 
 ```bash
 ./gradlew :spring-modulith-ddd-order-audit:test --tests '*OrderAuditServiceTest' --console=plain --max-workers=1
 ```
 
-Expected: snapshot, diff, and rollback-no-audit tests pass.
+예상: 스냅샷, 차이점 및 감사 없는 롤백 테스트를 통과했습니다.
 
-- [ ] **Step 4: Commit**
+- [ ] **4단계: 커밋**
 
 ```bash
 git add spring-modulith/ddd-order-audit
 git commit -m "feat: record rollback-safe JaVers order audit"
 ```
 
-## Task 6: Documentation And Diagrams
+## 작업 6: 문서 및 다이어그램
 
-**Files:**
-- Create: `spring-modulith/ddd-order-audit/README.md`
-- Create: `spring-modulith/ddd-order-audit/README.ko.md`
-- Create: diagram source/generator files used by the repo pattern.
-- Create: `docs/images/readme-diagrams/spring-modulith-ddd-order-audit-readme-architecture-01.{svg,png}`
-- Create: `docs/images/readme-diagrams/spring-modulith-ddd-order-audit-readme-sequence-01.{svg,png}`
+**파일:**
+- 생성: `spring-modulith/ddd-order-audit/README.md`
+- 생성: `spring-modulith/ddd-order-audit/README.ko.md`
+- 생성: repo 패턴에서 사용되는 다이어그램 source/generator 파일.
+- 생성: `docs/images/readme-diagrams/spring-modulith-ddd-order-audit-readme-architecture-01.{svg,png}`
+- 생성: `docs/images/readme-diagrams/spring-modulith-ddd-order-audit-readme-sequence-01.{svg,png}`
 
-- [ ] **Step 1: Load diagram and blog skills before editing docs**
+- [ ] **1단계: 문서를 편집하기 전에 다이어그램 및 블로그 기술 로드**
 
-Read `bluetape4k-diagram` and `bluetape4k-blog` skill files completely. Apply the full sequence/architecture checklist, including best-practices color palette, transparent alt blocks, centered card text, matching arrowhead/line colors, rounded orthogonal connectors, official icons, SVG+PNG parity, and full-size PNG eye inspection.
+`bluetape4k-diagram` 및 `bluetape4k-blog` 스킬 파일을 완전히 읽으세요. 모범 사례 색상 팔레트, 투명한 대체 블록, 중앙에 있는 카드 텍스트, 일치하는 arrowhead/line 색상, 둥근 직교 커넥터, 공식 아이콘, SVG+PNG 패리티 및 전체 크기 PNG 시각 검사를 포함한 전체 sequence/architecture 체크리스트를 적용합니다.
 
-- [ ] **Step 2: Write README content**
+- [ ] **2단계: README 콘텐츠 작성**
 
-README must include:
+README에는 다음이 포함되어야 합니다.
 
-- language switch.
-- architecture and sequence PNG embeds with SVG siblings.
-- PostgreSQL/Testcontainers prerequisite and command.
-- table comparing domain events, Spring Modulith publication, transactional outbox, and JaVers audit.
-- warning that audit/event payloads are durable records and must not contain secrets.
-- exact validation command:
+- 언어 스위치.
+- 아키텍처 및 시퀀스 PNG는 SVG 형제와 함께 포함됩니다.
+- PostgreSQL/Testcontainers 전제조건 및 명령.
+- 도메인 이벤트, Spring Modulith 게시, 트랜잭션 발신함 및 JaVers 감사를 비교하는 표입니다.
+- audit/event 페이로드는 내구성 있는 레코드이므로 비밀을 포함해서는 안 된다는 경고입니다.
+- 정확한 검증 명령:
 
 ```bash
 ./gradlew :spring-modulith-ddd-order-audit:test --console=plain --max-workers=1
 ```
 
-- [ ] **Step 3: Generate diagrams and run visual QA**
+- [ ] **3단계: 다이어그램 생성 및 시각적 QA 실행**
 
-Run the diagram generator command selected by `bluetape4k-diagram`, then:
+`bluetape4k-diagram`에서 선택한 다이어그램 생성기 명령을 실행한 후 다음을 수행합니다.
 
 ```bash
 ./scripts/smoke-validate.sh diagram-qa
 ```
 
-Expected:
+예상되는:
 
-- SVG XML validation passes.
-- PNG files render and match SVG arrow directions.
-- full-size PNG eye inspection confirms no label overlap, transparent alt blocks, centered cards, correct layer grouping, official PostgreSQL icon, and rounded orthogonal connectors.
+- SVG XML 유효성 검사가 통과되었습니다.
+- PNG 파일은 SVG 화살표 방향을 렌더링하고 일치시킵니다.
+- 전체 크기 PNG 육안 검사를 통해 라벨 중복 없음, 투명한 대체 블록, 중앙 카드, 올바른 레이어 그룹화, 공식 PostgreSQL 아이콘 및 둥근 직교 커넥터를 확인합니다.
 
-- [ ] **Step 4: Commit**
+- [ ] **4단계: 커밋**
 
 ```bash
 git add spring-modulith/ddd-order-audit/README.md spring-modulith/ddd-order-audit/README.ko.md docs/images/readme-diagrams
 git commit -m "docs: explain DDD order audit workshop flow"
 ```
 
-## Task 7: Repository Registration And CI
+## 작업 7: 리포지토리 등록 및 CI
 
-**Files:**
-- Modify: `README.md`
-- Modify: `README.ko.md`
-- Modify: `AGENTS.md`
-- Modify: `.github/workflows/Examples.yml`
-- Modify: `scripts/smoke-validate.sh`
+**파일:**
+- 수정: `README.md`
+- 수정: `README.ko.md`
+- 수정: `AGENTS.md`
+- 수정: `.github/workflows/Examples.yml`
+- 수정: `scripts/smoke-validate.sh`
 
-- [ ] **Step 1: Update root module tables**
+- [ ] **1단계: 루트 모듈 테이블 업데이트**
 
-Add this English row under Architecture Extensions:
+Architecture Extensions 아래에 다음 영어 행을 추가합니다.
 
 ```markdown
 | Advanced | [`spring-modulith-ddd-order-audit`](spring-modulith/ddd-order-audit/) | `javers`, `testcontainers` | PostgreSQL (TC) | DDD aggregate lifecycle with Modulith publication rows and JaVers audit history |
 ```
 
-Add the Korean equivalent:
+이에 상응하는 한국어를 추가합니다.
 
 ```markdown
 | Advanced | [`spring-modulith-ddd-order-audit`](spring-modulith/ddd-order-audit/) | `javers`, `testcontainers` | PostgreSQL (TC) | Modulith publication row와 JaVers audit history로 배우는 DDD aggregate lifecycle |
 ```
 
-- [ ] **Step 2: Update CI/smoke registration**
+- [ ] **2단계: CI/smoke 등록 업데이트**
 
-Update `.github/workflows/Examples.yml` path filters and `container-examples` command/artifacts with `spring-modulith/ddd-order-audit`.
+`.github/workflows/Examples.yml` 경로 필터와 `container-examples` command/artifacts을 `spring-modulith/ddd-order-audit`로 업데이트하세요.
 
-Update `scripts/smoke-validate.sh`:
+`scripts/smoke-validate.sh` 업데이트:
 
-- add `:spring-modulith-ddd-order-audit:test` to `data-access-full`.
-- change `expected=91` to `expected=92`.
+- `:spring-modulith-ddd-order-audit:test`을 `data-access-full`에 추가합니다.
+- `expected=91`을 `expected=92`로 변경하세요.
 
-- [ ] **Step 3: Validate registration**
+- [ ] **3단계: 등록 확인**
 
 ```bash
 ./gradlew projects --console=plain
@@ -556,30 +556,30 @@ Update `scripts/smoke-validate.sh`:
 actionlint .github/workflows/Examples.yml
 ```
 
-Expected: project count is 92, no stale README refs, workflow syntax passes.
+예상: 프로젝트 수는 92개, 오래된 README 참조 없음, 워크플로 구문이 통과됩니다.
 
-- [ ] **Step 4: Commit**
+- [ ] **4단계: 커밋**
 
 ```bash
 git add README.md README.ko.md AGENTS.md .github/workflows/Examples.yml scripts/smoke-validate.sh
 git commit -m "build: register DDD order audit workshop"
 ```
 
-## Task 8: Final Verification, Review, PR, And Merge Gate
+## 작업 8: 최종 확인, 검토, PR 및 병합 게이트
 
-**Files:**
-- All changed files.
+**파일:**
+- 변경된 모든 파일.
 
-- [ ] **Step 1: Run Kotlin verification**
+- [ ] **1단계: Kotlin 확인 실행**
 
 ```bash
 ./gradlew :spring-modulith-ddd-order-audit:compileKotlin :spring-modulith-ddd-order-audit:compileTestKotlin --warning-mode all --console=plain
 ./gradlew :spring-modulith-ddd-order-audit:test --warning-mode all --console=plain --max-workers=1
 ```
 
-Expected: no compile errors, no unresolved deprecation warnings, all tests pass.
+예상: 컴파일 오류 없음, 해결되지 않은 지원 중단 경고 없음, 모든 테스트 통과.
 
-- [ ] **Step 2: Run repo verification**
+- [ ] **2단계: 저장소 확인 실행**
 
 ```bash
 ./gradlew projects --console=plain
@@ -590,33 +590,33 @@ actionlint .github/workflows/Examples.yml
 git diff --check
 ```
 
-Expected: all commands pass. If `data-access-full` is too slow for the local run, run at least the new module test and record the gap before PR.
+예상: 모든 명령이 통과됩니다. `data-access-full`이(가) 로컬 실행에 너무 느린 경우 최소한 새 모듈 테스트를 실행하고 PR 앞의 간격을 기록하십시오.
 
-- [ ] **Step 3: Review PR body metadata before opening**
+- [ ] **3단계: 열기 전에 PR 본문 메타데이터를 검토하세요**
 
-Use issue #322 metadata:
+이슈 #322 메타데이터 사용:
 
-- assignee: `debop`
-- milestone: `1.3.1`
-- labels: `documentation`, `enhancement`, `difficulty:advanced`, `area:data-access`, `area:serialization-messaging`, `area:architecture-extension`
+- 담당자: `debop`
+- 이정표: `1.3.1`
+- 라벨: `documentation`, `enhancement`, `difficulty:advanced`, `area:data-access`, `area:serialization-messaging`, `area:architecture-extension`
 
-PR body final section must be exactly:
+PR 본문의 마지막 섹션은 정확히 다음과 같아야 합니다.
 
 ```markdown
 ## DoD Status
 ```
 
-- [ ] **Step 4: Open PR and verify live metadata**
+- [ ] **4단계: PR을 열고 라이브 메타데이터 확인**
 
 ```bash
 gh pr create --base develop --head feat/issue-322-ddd-order-audit --assignee debop --title "feat: add DDD order audit workshop" --body-file /tmp/issue-322-pr.md
 gh pr view --json number,title,assignees,milestone,labels,body
 ```
 
-Expected: live PR metadata mirrors issue #322 and PR body ends with `## DoD Status`.
+예상: 라이브 PR 메타데이터 미러 이슈 #322 및 PR 본문이 `## DoD Status`으로 끝납니다.
 
-## Self-Review
+## 자체 검토
 
-- Spec coverage: module, PostgreSQL Testcontainers, transaction-coupled publication row, after-commit listener, rollback-safe JaVers, replay, docs, diagrams, CI, and PR metadata are covered.
-- Placeholder scan: this plan uses exact paths, commands, and API names. The only conditional branch is the explicit dependency-resolution fallback for `javers-ddd`, which has a required command and recorded decision point.
-- Type consistency: package prefix is `io.bluetape4k.workshop.spring.modulith.ddd.audit`; domain types use `OrderId`, `CustomerId`, `Money`, `Order`, `OrderPlaced`, and `OrderApproved` consistently.
+- 사양 적용 범위: 모듈, PostgreSQL Testcontainers, 트랜잭션 결합 게시 행, 커밋 후 리스너, 롤백 안전 JaVers, 재생, 문서, 다이어그램, CI 및 PR 메타데이터가 포함됩니다.
+- 자리 표시자 검사: 이 계획은 정확한 경로, 명령 및 API 이름을 사용합니다. 유일한 조건 분기는 필수 명령과 기록된 결정 지점이 있는 `javers-ddd`에 대한 명시적인 종속성 해결 폴백입니다.
+- 유형 일관성: 패키지 접두사는 `io.bluetape4k.workshop.spring.modulith.ddd.audit`입니다. 도메인 유형은 `OrderId`, `CustomerId`, `Money`, `Order`, `OrderPlaced` 및 `OrderApproved`을 일관되게 사용합니다.
