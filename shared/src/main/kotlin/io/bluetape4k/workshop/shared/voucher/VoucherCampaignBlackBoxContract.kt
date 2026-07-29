@@ -10,10 +10,10 @@ import java.time.Instant
 import java.util.UUID
 
 /**
- * Canonical request shared by the normalized-state and event-sourced voucher examples.
+ * normalized-state 예제와 event-sourced voucher 예제가 공유하는 표준 요청이다.
  *
- * Each module owns only an HTTP adapter. The scenarios and normalized result vocabulary
- * live here so compatibility cannot be claimed by copying one module's test fixture.
+ * 각 모듈은 HTTP adapter만 소유한다. 시나리오와 normalized result vocabulary는
+ * 이곳에 두어 한 모듈의 test fixture를 복사하는 방식으로 compatibility를 주장하지 못하게 한다.
  */
 class VoucherCampaignBlackBoxRequest private constructor(
     val tenant: String,
@@ -28,10 +28,10 @@ class VoucherCampaignBlackBoxRequest private constructor(
 ) {
     companion object {
         /**
-         * Creates a validated black-box campaign request.
+         * 검증된 black-box campaign request를 만든다.
          *
-         * Caller-supplied identity, interval, and limit values retain the common
-         * bluetape4k [IllegalArgumentException] validation contract.
+         * caller가 제공한 identity, interval, limit 값은 공통 bluetape4k
+         * [IllegalArgumentException] validation contract를 그대로 따른다.
          */
         operator fun invoke(
             tenant: String,
@@ -59,7 +59,7 @@ class VoucherCampaignBlackBoxRequest private constructor(
 }
 
 /**
- * Backend-neutral campaign result asserted by every compatibility adapter.
+ * 모든 compatibility adapter가 검증하는 backend-neutral campaign result다.
  */
 class NormalizedVoucherCampaignResult private constructor(
     val status: Int,
@@ -99,7 +99,7 @@ class NormalizedVoucherCampaignResult private constructor(
 }
 
 /**
- * One shared request/response scenario executed through each module's HTTP adapter.
+ * 각 모듈의 HTTP adapter를 통해 실행하는 공유 request/response scenario다.
  */
 class VoucherCampaignBlackBoxScenario private constructor(
     val name: String,
@@ -127,7 +127,7 @@ class VoucherCampaignBlackBoxScenario private constructor(
 }
 
 /**
- * Canonical campaign activation request shared by both HTTP adapters.
+ * 두 HTTP adapter가 공유하는 표준 campaign activation request다.
  */
 class VoucherCampaignActivationRequest private constructor(
     val tenant: String,
@@ -155,7 +155,7 @@ class VoucherCampaignActivationRequest private constructor(
 }
 
 /**
- * Shared create-then-activate flow; replay must not append a second activation event.
+ * 공유 create-then-activate flow다. replay는 두 번째 activation event를 append하면 안 된다.
  */
 class VoucherCampaignActivationScenario private constructor(
     val name: String,
@@ -189,7 +189,7 @@ class VoucherCampaignActivationScenario private constructor(
 }
 
 /**
- * Canonical voucher allocation request shared by both HTTP adapters.
+ * 두 HTTP adapter가 공유하는 표준 voucher allocation request다.
  */
 class VoucherAllocationBlackBoxRequest private constructor(
     val tenant: String,
@@ -223,7 +223,7 @@ class VoucherAllocationBlackBoxRequest private constructor(
 }
 
 /**
- * Backend-neutral voucher allocation result.
+ * backend-neutral voucher allocation result다.
  */
 class NormalizedVoucherAllocationResult private constructor(
     val status: Int,
@@ -257,10 +257,10 @@ class NormalizedVoucherAllocationResult private constructor(
 }
 
 /**
- * Shared allocate-then-replay flow executed by each voucher implementation.
+ * 각 voucher implementation이 실행하는 공유 allocate-then-replay flow다.
  *
- * The first request must allocate one voucher, while the replay must return the
- * same normalized outcome without consuming capacity or issuing another code.
+ * 첫 요청은 voucher 하나를 allocate해야 하며, replay는 capacity를 소비하거나
+ * 다른 code를 발급하지 않고 같은 normalized outcome을 반환해야 한다.
  */
 class VoucherAllocationBlackBoxScenario private constructor(
     val name: String,
@@ -291,7 +291,7 @@ class VoucherAllocationBlackBoxScenario private constructor(
 }
 
 /**
- * Customer-visible voucher transition exercised after a shared allocation.
+ * 공유 allocation 이후 검증하는 customer-visible voucher transition이다.
  */
 enum class VoucherLifecycleAction {
     REDEEM,
@@ -299,7 +299,7 @@ enum class VoucherLifecycleAction {
 }
 
 /**
- * Backend-neutral result for redeem and release compatibility checks.
+ * redeem/release compatibility check에 쓰는 backend-neutral result다.
  */
 class NormalizedVoucherLifecycleResult private constructor(
     val status: Int,
@@ -330,8 +330,8 @@ class NormalizedVoucherLifecycleResult private constructor(
 }
 
 /**
- * Shared allocation-to-transition scenario. Adapters supply the generated claim
- * identity and one-time code returned by their own allocation endpoint.
+ * 공유 allocation-to-transition scenario다. adapter는 자신의 allocation endpoint가
+ * 반환한 generated claim identity와 one-time code를 제공한다.
  */
 class VoucherLifecycleBlackBoxScenario private constructor(
     val name: String,
@@ -366,8 +366,8 @@ class VoucherLifecycleBlackBoxScenario private constructor(
 }
 
 /**
- * Shared allocation rejection scenario with optional campaign setup and
- * successful warm-up allocations before the rejected request.
+ * optional campaign setup과 거부 요청 전 successful warm-up allocation을 포함하는
+ * 공유 allocation rejection scenario다.
  */
 class VoucherAllocationFailureBlackBoxScenario private constructor(
     val name: String,
@@ -398,8 +398,8 @@ class VoucherAllocationFailureBlackBoxScenario private constructor(
 }
 
 /**
- * Input mutation used to prove both implementations reject the same customer
- * lifecycle failures without exposing persistence details.
+ * persistence detail을 노출하지 않고 두 구현이 같은 customer lifecycle failure를
+ * 거부한다는 점을 증명하는 input mutation이다.
  */
 enum class VoucherLifecycleFailureKind {
     WRONG_CODE,
@@ -408,7 +408,7 @@ enum class VoucherLifecycleFailureKind {
 }
 
 /**
- * Shared redeem rejection scenario executed after a fresh allocation.
+ * fresh allocation 이후 실행하는 공유 redeem rejection scenario다.
  */
 class VoucherLifecycleFailureBlackBoxScenario private constructor(
     val name: String,

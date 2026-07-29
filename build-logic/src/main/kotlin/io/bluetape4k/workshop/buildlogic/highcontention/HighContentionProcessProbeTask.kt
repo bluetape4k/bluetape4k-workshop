@@ -442,7 +442,7 @@ abstract class HighContentionProcessProbeTask : DefaultTask() {
             try {
                 channel.force(true)
             } catch (_: UnsupportedOperationException) {
-                // Directory fsync is not supported by every file provider.
+                // 모든 file provider가 directory fsync를 지원하지는 않는다.
             }
         }
     }

@@ -7,7 +7,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.body
 
 /**
- * Starts a GET request and optionally applies an `Accept` header.
+ * GET request를 시작하고 필요하면 `Accept` header를 적용한다.
  */
 fun WebClient.httpGet(
     uri: String,
@@ -19,7 +19,7 @@ fun WebClient.httpGet(
         .retrieve()
 
 /**
- * Starts a HEAD request and optionally applies an `Accept` header.
+ * HEAD request를 시작하고 필요하면 `Accept` header를 적용한다.
  */
 fun WebClient.httpHead(
     uri: String,
@@ -31,7 +31,7 @@ fun WebClient.httpHead(
         .retrieve()
 
 /**
- * Starts a POST request with an optional object body.
+ * optional object body가 있는 POST request를 시작한다.
  */
 fun WebClient.httpPost(
     uri: String,
@@ -49,7 +49,7 @@ fun WebClient.httpPost(
         .retrieve()
 
 /**
- * Starts a POST request with a reactive-streams body.
+ * reactive-streams body가 있는 POST request를 시작한다.
  */
 inline fun <reified T: Any> WebClient.httpPost(
     uri: String,
@@ -67,7 +67,7 @@ inline fun <reified T: Any> WebClient.httpPost(
         .retrieve()
 
 /**
- * Starts a POST request with a Kotlin [Flow] body.
+ * Kotlin [Flow] body가 있는 POST request를 시작한다.
  */
 inline fun <reified T: Any> WebClient.httpPost(
     uri: String,
@@ -85,7 +85,7 @@ inline fun <reified T: Any> WebClient.httpPost(
         .retrieve()
 
 /**
- * Starts a PUT request with an optional object body.
+ * optional object body가 있는 PUT request를 시작한다.
  */
 fun WebClient.httpPut(
     uri: String,
@@ -103,7 +103,7 @@ fun WebClient.httpPut(
         .retrieve()
 
 /**
- * Starts a PUT request with a reactive-streams body.
+ * reactive-streams body가 있는 PUT request를 시작한다.
  */
 inline fun <reified T: Any> WebClient.httpPut(
     uri: String,
@@ -121,7 +121,7 @@ inline fun <reified T: Any> WebClient.httpPut(
         .retrieve()
 
 /**
- * Starts a PUT request with a Kotlin [Flow] body.
+ * Kotlin [Flow] body가 있는 PUT request를 시작한다.
  */
 inline fun <reified T: Any> WebClient.httpPut(
     uri: String,
@@ -139,7 +139,7 @@ inline fun <reified T: Any> WebClient.httpPut(
         .retrieve()
 
 /**
- * Starts a PATCH request with an optional object body.
+ * optional object body가 있는 PATCH request를 시작한다.
  */
 fun WebClient.httpPatch(
     uri: String,
@@ -157,7 +157,7 @@ fun WebClient.httpPatch(
         .retrieve()
 
 /**
- * Starts a DELETE request and optionally applies an `Accept` header.
+ * DELETE request를 시작하고 필요하면 `Accept` header를 적용한다.
  */
 fun WebClient.httpDelete(
     uri: String,

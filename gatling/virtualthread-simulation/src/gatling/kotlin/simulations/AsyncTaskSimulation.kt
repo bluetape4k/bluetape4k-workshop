@@ -29,7 +29,7 @@ class AsyncTaskSimulation: Simulation() {
     init {
         setUp(
             scn.injectClosed(rampConcurrentUsers(10).to(20).during(10.seconds.toJavaDuration()))
-            // scn.injectOpen(rampUsers(100).during(5.seconds.toJavaDuration()))
+            // 필요하면 짧은 ramp-up 부하를 열어 비동기 작업 처리량을 확인한다.
         ).protocols(httpProtocol)
     }
 }
