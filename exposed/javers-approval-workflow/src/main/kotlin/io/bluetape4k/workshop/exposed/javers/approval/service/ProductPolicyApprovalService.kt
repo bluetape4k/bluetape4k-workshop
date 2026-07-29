@@ -30,13 +30,13 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 
 /**
- * Approval workflow service that computes JaVers diffs before committing state.
+ * 상태를 commit하기 전에 JaVers diff를 계산하는 approval workflow 서비스이다.
  *
- * ## Behavior / Contract
- * - [publishInitial] creates the first approved current row and JaVers snapshot.
- * - [submitProposal] stores a pending proposal and returns a pre-commit diff.
- * - [approveProposal] commits the proposed aggregate and updates the current row.
- * - [rejectProposal] records the decision without creating a JaVers snapshot.
+ * ## 동작 / 계약
+ * - [publishInitial]은 최초 승인된 current row와 JaVers snapshot을 만든다.
+ * - [submitProposal]은 pending 제안을 저장하고 commit 전 diff를 반환한다.
+ * - [approveProposal]은 제안된 aggregate를 commit하고 current row를 갱신한다.
+ * - [rejectProposal]은 JaVers snapshot을 만들지 않고 결정만 기록한다.
  */
 class ProductPolicyApprovalService(
     private val javers: Javers,
@@ -47,7 +47,7 @@ class ProductPolicyApprovalService(
     }
 
     /**
-     * Publishes the first approved policy state.
+     * 최초 승인된 policy 상태를 publish한다.
      */
     fun publishInitial(author: String, policy: ProductPolicy) {
         author.requireNotBlank("author")
@@ -58,7 +58,7 @@ class ProductPolicyApprovalService(
     }
 
     /**
-     * Stores a pending proposal and returns its pre-commit diff summary.
+     * pending 제안을 저장하고 commit 전 diff 요약을 반환한다.
      */
     fun submitProposal(requester: String, proposed: ProductPolicy): PolicyProposal {
         requester.requireNotBlank("requester")
@@ -95,7 +95,7 @@ class ProductPolicyApprovalService(
     }
 
     /**
-     * Approves a pending proposal and commits the proposed aggregate to JaVers.
+     * pending 제안을 승인하고 제안된 aggregate를 JaVers에 commit한다.
      */
     fun approveProposal(reviewer: String, proposalId: Long, reason: String): PolicyProposal {
         reviewer.requireNotBlank("reviewer")
@@ -110,7 +110,7 @@ class ProductPolicyApprovalService(
     }
 
     /**
-     * Rejects a pending proposal without changing the current row or JaVers history.
+     * current row나 JaVers history를 바꾸지 않고 pending 제안을 거절한다.
      */
     fun rejectProposal(reviewer: String, proposalId: Long, reason: String): PolicyProposal {
         reviewer.requireNotBlank("reviewer")
@@ -123,7 +123,7 @@ class ProductPolicyApprovalService(
     }
 
     /**
-     * Finds the current approved policy row.
+     * 현재 승인된 policy row를 찾는다.
      */
     fun findCurrentPolicy(policyId: Long): ProductPolicy? =
         transaction {
@@ -135,7 +135,7 @@ class ProductPolicyApprovalService(
         }
 
     /**
-     * Finds a stored proposal and decision.
+     * 저장된 제안과 결정 정보를 찾는다.
      */
     fun findProposal(proposalId: Long): PolicyProposal? =
         transaction {
@@ -147,7 +147,7 @@ class ProductPolicyApprovalService(
         }
 
     /**
-     * Returns approved JaVers snapshots only, oldest-first.
+     * 승인된 JaVers snapshot만 오래된 순서로 반환한다.
      */
     fun getHistory(policyId: Long): List<CdoSnapshot> {
         val validPolicyId = policyId.requirePositiveNumber("policyId")

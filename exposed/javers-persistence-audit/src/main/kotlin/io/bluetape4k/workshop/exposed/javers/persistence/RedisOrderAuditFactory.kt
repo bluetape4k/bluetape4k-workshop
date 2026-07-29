@@ -6,12 +6,12 @@ import org.javers.core.JaversBuilder
 import org.redisson.api.RedissonClient
 
 /**
- * Creates Redis-backed order audit services for the workshop module.
+ * 워크숍 모듈에서 사용할 Redis-backed order audit service를 만든다.
  *
- * ## Behavior / Contract
- * - [repositoryName] scopes Redis keys so tests and examples can run independently.
- * - The returned service uses [RedissonCdoSnapshotRepository] for durable JaVers snapshots.
- * - The current order row remains in Exposed; Redis owns audit history only.
+ * ## 동작 / 계약
+ * - [repositoryName]은 테스트와 예제가 서로 독립적으로 실행되도록 Redis key 범위를 나눈다.
+ * - 반환된 service는 durable JaVers snapshot을 위해 [RedissonCdoSnapshotRepository]를 사용한다.
+ * - 현재 order row는 Exposed에 남고, Redis는 audit history만 소유한다.
  *
  * ```kotlin
  * val service = RedisOrderAuditFactory.create("orders", redisson)
@@ -20,7 +20,7 @@ import org.redisson.api.RedissonClient
 object RedisOrderAuditFactory {
 
     /**
-     * Builds an [OrderAuditService] backed by a Redisson JaVers repository.
+     * Redisson JaVers repository를 사용하는 [OrderAuditService]를 만든다.
      */
     fun create(repositoryName: String, redisson: RedissonClient): OrderAuditService {
         repositoryName.requireNotBlank("repositoryName")
