@@ -13,15 +13,12 @@ import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Thread-safe in-memory implementation of [BookRepository].
+ * [BookRepository] 의 thread-safe in-memory 구현입니다.
  *
  * ## Behavior / Contract
- * - Backed by a [ConcurrentHashMap] for O(1) reads/writes.
- * - SSE stream backed by a [MutableSharedFlow] with `extraBufferCapacity = 64`
- *   and `onBufferOverflow = BufferOverflow.SUSPEND`.
- * - [save] and [update] attempt `sharedFlow.emit(book)` with a 5-second timeout so
- *   a stalled SSE subscriber cannot block the HTTP handler indefinitely.
- *   The book is always persisted regardless of whether the emit succeeds.
+ * - O(1) read/write 를 위해 [ConcurrentHashMap] 을 기반으로 합니다.
+ * - SSE stream 은 `extraBufferCapacity = 64` 와 `onBufferOverflow = BufferOverflow.SUSPEND` 를 가진 [MutableSharedFlow] 를 기반으로 합니다.
+ * - stalled SSE subscriber 가 HTTP handler 를 무기한 block 하지 못하도록 [save] 와 [update] 는 5초 timeout 으로 `sharedFlow.emit(book)` 을 시도합니다. emit 성공 여부와 관계없이 book 은 항상 persist 됩니다.
  */
 class InMemoryBookRepository : BookRepository {
 

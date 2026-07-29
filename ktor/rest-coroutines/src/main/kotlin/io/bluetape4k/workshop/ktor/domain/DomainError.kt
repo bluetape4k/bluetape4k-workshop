@@ -1,16 +1,16 @@
 package io.bluetape4k.workshop.ktor.domain
 
 /**
- * Domain-specific exception hierarchy for the book catalog.
+ * book catalog 를 위한 domain-specific exception hierarchy 입니다.
  *
  * ## Behavior / Contract
- * - [NotFound] maps to HTTP 404 via StatusPages in `ApplicationModule`.
- * - [Conflict] maps to HTTP 409 via StatusPages in `ApplicationModule`.
+ * - [NotFound] 는 `ApplicationModule` 의 StatusPages 를 통해 HTTP 404 로 매핑됩니다.
+ * - [Conflict] 는 `ApplicationModule` 의 StatusPages 를 통해 HTTP 409 로 매핑됩니다.
  */
 sealed class DomainError(message: String) : RuntimeException(message) {
-    /** Thrown when a book with the given id does not exist. Maps to HTTP 404. */
+    /** 주어진 id 의 book 이 없을 때 throw 됩니다. HTTP 404 로 매핑됩니다. */
     class NotFound(id: String) : DomainError("Book not found: id=$id")
 
-    /** Thrown when a book with the same id already exists. Maps to HTTP 409. */
+    /** 같은 id 의 book 이 이미 있을 때 throw 됩니다. HTTP 409 로 매핑됩니다. */
     class Conflict(message: String) : DomainError(message)
 }

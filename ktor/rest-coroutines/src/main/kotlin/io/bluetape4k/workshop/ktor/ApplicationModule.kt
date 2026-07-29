@@ -23,10 +23,9 @@ import kotlinx.serialization.json.Json
 private object ApplicationModuleLog : KLogging()
 
 /**
- * Shared [Json] instance used by ContentNegotiation and SSE encoding in BookRoutes.
+ * ContentNegotiation 과 BookRoutes 의 SSE encoding 에서 함께 사용하는 shared [Json] instance 입니다.
  *
- * `internal` visibility so `BookRoutes.kt` can import it as
- * `import io.bluetape4k.workshop.ktor.AppJson`.
+ * `BookRoutes.kt` 가 `import io.bluetape4k.workshop.ktor.AppJson` 형태로 import 할 수 있도록 `internal` visibility 를 사용합니다.
  */
 internal val AppJson = Json {
     prettyPrint = false
@@ -36,12 +35,12 @@ internal val AppJson = Json {
 }
 
 /**
- * Configures the Ktor [Application] with all plugins, status pages, and routes.
+ * 모든 plugin, status page, route 를 포함해 Ktor [Application] 을 구성합니다.
  *
  * ## Behavior / Contract
- * - Plugin install order: [CallLogging] → [ContentNegotiation] → [SSE] → [StatusPages].
- * - StatusPages handlers are registered from specific to general; [Throwable] catch-all is last.
- * - [repository] and [jackson3] are injectable for testing.
+ * - plugin install order 는 [CallLogging] → [ContentNegotiation] → [SSE] → [StatusPages] 입니다.
+ * - StatusPages handler 는 specific 에서 general 순서로 등록하며, [Throwable] catch-all 은 마지막입니다.
+ * - [repository] 와 [jackson3] 는 test 를 위해 injectable 하게 둡니다.
  *
  * ```kotlin
  * embeddedServer(Netty, port = 8080) { module() }.start(wait = true)
@@ -62,7 +61,7 @@ fun Application.module(
     install(SSE)
 
     install(StatusPages) {
-        // Specific domain errors first
+        // 구체적인 domain error 를 먼저 처리합니다.
         exception<DomainError.NotFound> { call, cause ->
             call.respond(
                 HttpStatusCode.NotFound,
@@ -87,7 +86,7 @@ fun Application.module(
                 mapOf("error" to (cause.message ?: "Bad request"), "type" to "BadRequest"),
             )
         }
-        // Catch-all must be last and must include "type":"Internal"
+        // catch-all 은 반드시 마지막이어야 하며 "type":"Internal" 을 포함해야 합니다.
         exception<Throwable> { call, _ ->
             call.respond(
                 HttpStatusCode.InternalServerError,
