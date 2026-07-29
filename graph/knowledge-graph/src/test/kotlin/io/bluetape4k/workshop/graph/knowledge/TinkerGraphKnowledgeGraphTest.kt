@@ -7,9 +7,9 @@ import io.bluetape4k.graph.tinkerpop.TinkerGraphSuspendOperations
 import io.bluetape4k.logging.KLogging
 
 /**
- * [AbstractKnowledgeGraphTest] backed by TinkerGraph (in-memory).
+ * TinkerGraph(인메모리)가 뒷받침하는 [AbstractKnowledgeGraphTest]입니다.
  *
- * No Docker required — runs in the default `:test` task.
+ * Docker가 필요하지 않으며 기본 `:test` task에서 실행됩니다.
  */
 class TinkerGraphKnowledgeGraphTest : AbstractKnowledgeGraphTest() {
     companion object : KLogging()
@@ -19,9 +19,9 @@ class TinkerGraphKnowledgeGraphTest : AbstractKnowledgeGraphTest() {
 }
 
 /**
- * [AbstractKnowledgeGraphSuspendTest] backed by TinkerGraph (in-memory).
+ * TinkerGraph(인메모리)가 뒷받침하는 [AbstractKnowledgeGraphSuspendTest]입니다.
  *
- * No Docker required — runs in the default `:test` task.
+ * Docker가 필요하지 않으며 기본 `:test` task에서 실행됩니다.
  */
 class TinkerGraphKnowledgeGraphSuspendTest : AbstractKnowledgeGraphSuspendTest() {
     companion object : KLogging()

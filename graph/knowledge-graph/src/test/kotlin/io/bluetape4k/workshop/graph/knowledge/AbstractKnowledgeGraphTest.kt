@@ -14,12 +14,12 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 /**
- * Abstract test suite for [KnowledgeGraphService].
+ * [KnowledgeGraphService]용 추상 테스트 suite입니다.
  *
- * Concrete subclasses supply [ops] backed by a specific graph backend.
- * Each test runs against a clean graph — [cleanGraph] drops and re-initializes before every test.
+ * 구체 하위 클래스는 특정 그래프 backend가 뒷받침하는 [ops]를 제공합니다.
+ * 각 테스트는 깨끗한 그래프에서 실행됩니다. [cleanGraph]가 매 테스트 전에 그래프를 drop하고 다시 초기화합니다.
  *
- * ## Seed topology
+ * ## Seed 토폴로지
  * ```
  * doc-kotlin-guide ──MENTIONS──► entity-kotlin   (confidence=95)
  * doc-kotlin-guide ──MENTIONS──► entity-jvm       (confidence=80)
@@ -56,7 +56,7 @@ abstract class AbstractKnowledgeGraphTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // MENTIONS traversal
+    // MENTIONS 순회
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -78,7 +78,7 @@ abstract class AbstractKnowledgeGraphTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // RELATED_TO traversal
+    // RELATED_TO 순회
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -103,7 +103,7 @@ abstract class AbstractKnowledgeGraphTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // IS_A classification
+    // IS_A 분류
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -125,7 +125,7 @@ abstract class AbstractKnowledgeGraphTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // Path inference
+    // Path 추론
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -152,12 +152,12 @@ abstract class AbstractKnowledgeGraphTest {
             maxPaths = 1,
         )
 
-        // at most 1 path returned
+        // 최대 path 1개만 반환합니다.
         paths.size shouldBeEqualTo 1
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // Ad-hoc entity/concept/document creation
+    // 임시 Entity/Concept/Document 생성
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
@@ -196,7 +196,7 @@ abstract class AbstractKnowledgeGraphTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────
-    // Input validation
+    // 입력 검증
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
