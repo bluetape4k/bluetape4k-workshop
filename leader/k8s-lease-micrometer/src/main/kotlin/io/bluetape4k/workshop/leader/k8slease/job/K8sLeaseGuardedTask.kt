@@ -18,7 +18,7 @@ import kotlin.time.TimeSource
 import kotlin.time.toKotlinDuration
 
 /**
- * Scheduled coroutine task guarded by Kubernetes Lease leadership.
+ * Kubernetes Lease leadership으로 보호되는 scheduled coroutine task입니다.
  */
 @Service
 class K8sLeaseGuardedTask(
@@ -32,11 +32,11 @@ class K8sLeaseGuardedTask(
     private companion object : KLogging()
 
     /**
-     * Spring scheduler entry point.
+     * Spring scheduler 진입점입니다.
      *
-     * `runBlocking` is intentionally limited to this blocking scheduler boundary. The
-     * guarded work stays suspend-first in [runOnce], including [CancellationException]
-     * rethrow semantics inside the leader boundary.
+     * `runBlocking`은 이 blocking scheduler boundary로 의도적으로 제한합니다. 보호 대상 작업은
+     * [runOnce] 안에서 suspend-first로 유지되며, leader boundary 안의 [CancellationException]
+     * 재던짐 의미론도 포함합니다.
      */
     @Scheduled(fixedDelayString = "\${workshop.leader.k8s.job-fixed-delay:10s}")
     fun runScheduled() {
@@ -46,7 +46,7 @@ class K8sLeaseGuardedTask(
     }
 
     /**
-     * Executes one guarded task tick and returns a learner-readable report.
+     * 보호된 task tick 하나를 실행하고 학습자가 읽을 수 있는 report를 반환합니다.
      */
     suspend fun runOnce(): LeaderTaskReport {
         val tags = LeaseMetricTags(properties.leaseName, properties.namespace)
@@ -95,7 +95,7 @@ class K8sLeaseGuardedTask(
 }
 
 /**
- * Result of one scheduled guard tick.
+ * scheduled guard tick 하나의 결과입니다.
  */
 data class LeaderTaskReport(
     val executed: Boolean,

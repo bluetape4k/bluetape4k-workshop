@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.annotation.EnableScheduling
 
 /**
- * Spring wiring for the Kubernetes Lease Micrometer workshop.
+ * Kubernetes Lease Micrometer 워크숍의 Spring wiring입니다.
  */
 @Configuration(proxyBeanMethods = false)
 @EnableScheduling
@@ -25,7 +25,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 class K8sLeaseMicrometerConfig {
 
     /**
-     * Creates the real Kubernetes client only when explicitly enabled.
+     * 명시적으로 활성화한 경우에만 실제 Kubernetes client를 만듭니다.
      */
     @Bean(destroyMethod = "close")
     @ConditionalOnProperty(prefix = "workshop.leader.k8s", name = ["enabled"], havingValue = "true")
@@ -33,7 +33,7 @@ class K8sLeaseMicrometerConfig {
         KubernetesClientBuilder().build()
 
     /**
-     * Creates the real Kubernetes Lease coordinator and wraps it with upstream Micrometer decorator metrics.
+     * 실제 Kubernetes Lease coordinator를 만들고 upstream Micrometer decorator metric으로 감쌉니다.
      */
     @Bean
     @ConditionalOnProperty(prefix = "workshop.leader.k8s", name = ["enabled"], havingValue = "true")
@@ -48,7 +48,7 @@ class K8sLeaseMicrometerConfig {
     }
 
     /**
-     * Default coordinator used by local tests and smoke runs.
+     * local test와 smoke run에서 사용하는 기본 coordinator입니다.
      */
     @Bean
     @ConditionalOnMissingBean(LeaderCoordinator::class)
