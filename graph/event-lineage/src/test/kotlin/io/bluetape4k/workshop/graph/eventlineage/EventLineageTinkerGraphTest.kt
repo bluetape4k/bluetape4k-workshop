@@ -8,10 +8,10 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.TestInstance
 
 /**
- * [EventLineageService] tests backed by TinkerGraph.
+ * TinkerGraph가 뒷받침하는 [EventLineageService] 테스트입니다.
  *
- * This module intentionally keeps the first workshop slice in-memory so
- * learners can run lineage and audit-trail examples without Docker.
+ * 이 모듈은 첫 워크숍 slice를 의도적으로 인메모리로 유지하므로
+ * 학습자는 Docker 없이 lineage와 감사 추적 예제를 실행할 수 있습니다.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class EventLineageTinkerGraphTest : AbstractEventLineageTest() {

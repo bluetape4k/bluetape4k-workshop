@@ -5,9 +5,9 @@ import io.bluetape4k.workshop.graph.eventlineage.service.EventLineageService
 import java.io.Serializable
 
 /**
- * Vertices created by [seedEventLineage].
+ * [seedEventLineage]가 생성한 정점입니다.
  *
- * Topology:
+ * 토폴로지:
  * ```
  * order-1001 ──EMITS──► order-created
  * order-1001 ──EMITS──► risk-scored ──CAUSED_BY──► order-created
@@ -37,7 +37,7 @@ data class EventLineageSeed(
 }
 
 /**
- * Populates a deterministic order approval lineage scenario.
+ * 결정적인 주문 승인 lineage 시나리오를 채웁니다.
  */
 fun seedEventLineage(service: EventLineageService): EventLineageSeed {
     val orderAggregate = service.addAggregate(
