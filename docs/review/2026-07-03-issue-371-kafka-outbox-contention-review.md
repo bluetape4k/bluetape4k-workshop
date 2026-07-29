@@ -1,31 +1,31 @@
 # Issue 371 Kafka Outbox Contention Test Review
 
-Date: 2026-07-03
+날짜: 2026-07-03
 
-Scope:
+범위:
 - `messaging/kafka-outbox-fallback/src/test/kotlin/io/bluetape4k/workshop/messaging/fallback/KafkaOutboxFallbackFlowTest.kt`
 
 ## 7-Tier Findings
 
-P0/P1 findings: none remaining.
+남은 P0/P1 발견사항: 없음.
 
-Resolved before PR:
-- The previous test named `concurrent relay calls cannot claim the same row twice` called `claimNextBatch` sequentially, so it did not exercise the conditional claim update under contention.
-- The test now uses bluetape4k-junit5 `MultithreadingTester` with two workers and one round.
-- A `CyclicBarrier` aligns both worker tasks before `claimNextBatch(..., 1)` so the test covers simultaneous claim attempts without sleeps or ad hoc stress loops.
-- The assertions prove exactly one worker receives the claim, exactly one worker observes an empty claim result, and the stored `claimedBy` matches the winning worker.
+PR 전에 해결됨:
+- 이전 `concurrent relay calls cannot claim the same row twice` 테스트는 `claimNextBatch`를 순차 호출했기 때문에 contention 상황의 conditional claim update를 실행하지 않았다.
+- 테스트는 이제 bluetape4k-junit5 `MultithreadingTester`를 두 worker와 한 round로 사용한다.
+- `CyclicBarrier`는 `claimNextBatch(..., 1)` 전에 두 worker task를 정렬하므로, sleep이나 ad hoc stress loop 없이 simultaneous claim attempt를 다룬다.
+- assertion은 정확히 한 worker만 claim을 받고, 정확히 한 worker가 empty claim result를 관찰하며, 저장된 `claimedBy`가 winning worker와 일치함을 증명한다.
 
 ## Helper Choice
 
-`MultithreadingTester` is the primary concurrency helper. Its implementation uses a fixed thread pool and waits for all futures, but it does not provide a start barrier. The test adds a small `CyclicBarrier(2)` only to align the two `MultithreadingTester` workers at the critical claim call.
+`MultithreadingTester`가 primary concurrency helper다. 구현은 fixed thread pool을 사용하고 모든 future를 기다리지만 start barrier는 제공하지 않는다. 테스트는 critical claim call에서 두 `MultithreadingTester` worker를 맞추기 위해 작은 `CyclicBarrier(2)`만 추가한다.
 
-## Verification Evidence
+## 검증 근거
 
 - `mcp__code_review_graph.detect_changes_tool(base=origin/develop)`: risk score `0.00`, test gaps `0`.
 - `./gradlew :messaging-kafka-outbox-fallback:test --tests 'io.bluetape4k.workshop.messaging.fallback.KafkaOutboxFallbackFlowTest.concurrent relay calls cannot claim the same row twice' --no-build-cache --warning-mode all --console=plain --max-workers=1`: `BUILD SUCCESSFUL`, `1 test`.
 - `./gradlew :messaging-kafka-outbox-fallback:test --tests 'io.bluetape4k.workshop.messaging.fallback.KafkaOutboxFallbackFlowTest' --no-build-cache --warning-mode all --console=plain --max-workers=1`: `BUILD SUCCESSFUL`, `18 tests`.
 - `git diff --check`: `PASS`.
 
-## Residual Risk
+## 잔여 위험
 
-The test verifies the H2-backed workshop claim path. Database-engine-specific lock behavior beyond the guarded update contract remains outside this issue.
+테스트는 H2-backed workshop claim path를 검증한다. guarded update contract를 넘어서는 database-engine-specific lock behavior는 이 issue 범위 밖이다.
