@@ -1,21 +1,28 @@
 # Issue 287 Graph IO Pipeline Lessons
 
-## Context
+## 배경
 
-Issue #287 added a graph-io import/export workshop module that teaches CSV import, Jackson 3 NDJSON export/import, and GraphML export/import on TinkerGraph without containers.
+Issue #287은 container 없이 TinkerGraph에서 CSV import, Jackson 3 NDJSON export/import,
+GraphML export/import를 가르치는 graph-io import/export workshop module을 추가했다.
 
-## Decisions
+## 결정
 
-- Keep the module consumer-scoped: use versionless aliases governed by `bluetape4k-dependencies`; do not import a graph-specific BOM.
-- Import CSV into a scratch `TinkerGraphOperations` first. Copy into the target graph only after `GraphIoStatus.COMPLETED`, so failed imports do not leave partial learner-visible state.
-- Keep graph-io examples small and deterministic: 3 vertices, 2 edges, no Testcontainers, and all generated round-trip files under `@TempDir`.
-- Use explicit legacy diagram allowlists. New or changed diagram SVGs must satisfy the current validator structure instead of relying on git cleanliness.
+- module을 consumer-scoped로 유지한다. `bluetape4k-dependencies`가 관리하는 versionless
+  alias를 사용하고 graph-specific BOM은 import하지 않는다.
+- CSV는 먼저 scratch `TinkerGraphOperations`로 import한다. `GraphIoStatus.COMPLETED`
+  이후에만 target graph로 copy해, 실패한 import가 learner-visible partial state를 남기지
+  않게 한다.
+- graph-io example은 작고 deterministic하게 유지한다. 3 vertices, 2 edges,
+  Testcontainers 없음, 모든 generated round-trip file은 `@TempDir` 아래에 둔다.
+- 명시적 legacy diagram allowlist를 사용한다. 새 diagram 또는 변경된 diagram SVG는 git
+  cleanliness에 의존하지 말고 현재 validator structure를 만족해야 한다.
 
-## Outcome
+## 결과
 
-The new `graph/io-pipeline` module has README/README.ko, PNG/SVG diagrams, CSV fixtures, fail-closed GraphML tests, smoke wiring, and Examples workflow coverage.
+새 `graph/io-pipeline` module은 README/README.ko, PNG/SVG diagram, CSV fixture,
+fail-closed GraphML test, smoke wiring, Examples workflow coverage를 갖는다.
 
-## Verification
+## 검증
 
 - `./gradlew :graph-io-pipeline:test --rerun-tasks --console=plain --no-daemon`
 - `./scripts/smoke-validate.sh all-smoke`
@@ -25,8 +32,11 @@ The new `graph/io-pipeline` module has README/README.ko, PNG/SVG diagrams, CSV f
 - `actionlint .github/workflows/Examples.yml`
 - `git diff --check`
 
-## Future Guidance
+## 향후 지침
 
-- If a graph-io example teaches reports, every README snippet should check `GraphIoStatus.COMPLETED` and empty `failures` before using exported files.
-- If graph-io imports write to a live target graph, test failure paths for target graph mutation, not only returned report counts.
-- When preserving old diagram assets, list exact legacy slugs and keep all new assets on the strict validator path.
+- graph-io example이 report를 가르친다면, 모든 README snippet은 exported file을 사용하기
+  전에 `GraphIoStatus.COMPLETED`와 비어 있는 `failures`를 확인해야 한다.
+- graph-io import가 live target graph에 write한다면, returned report count뿐 아니라 target
+  graph mutation에 대한 failure path도 테스트한다.
+- old diagram asset을 보존할 때는 정확한 legacy slug를 나열하고, 모든 new asset은 strict
+  validator path에 둔다.

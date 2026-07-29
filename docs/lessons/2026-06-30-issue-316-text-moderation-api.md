@@ -1,28 +1,27 @@
 # Issue 316 Text Moderation API Lesson
 
-## Context
+## 배경
 
-Milestone 1.3.1 needed a deterministic text web-safety moderation workshop
-example. The example had to stay local, use the root `bluetape4k-dependencies`
-BOM, reuse existing `bluetape4k-text` aliases, and explain the learner-facing
-flow with README diagrams.
+Milestone 1.3.1에는 deterministic text web-safety moderation workshop example이
+필요했다. example은 local로 유지되어야 했고, root `bluetape4k-dependencies` BOM을
+사용해야 했으며, 기존 `bluetape4k-text` alias를 재사용하고 learner-facing flow를 README
+diagram으로 설명해야 했다.
 
-## Decision
+## 결정
 
-Use Spring MVC with a small `TextModerationController`, a reusable
-`TextModerationService`, and singleton beans for Lingua language detection plus
-the Aho-Corasick blockword matcher. Keep blockwords configurable but small so
-learners can trace every response field back to configuration and code.
+작은 `TextModerationController`, 재사용 가능한 `TextModerationService`, Lingua language
+detection 및 Aho-Corasick blockword matcher용 singleton bean과 함께 Spring MVC를 사용한다.
+blockword는 configurable하게 두되 작게 유지해 learner가 모든 response field를 configuration과
+code까지 추적할 수 있게 한다.
 
-## Outcome
+## 결과
 
-The module verifies success masking, Korean language detection, invalid input
-mapping, oversized payload mapping, and bean reuse without external services.
-README diagrams use top-to-bottom architecture layers and a best-practices
-sequence layout with participant headers, lifelines, activation bars, pill
-labels, and a separate error branch note.
+module은 external service 없이 success masking, Korean language detection, invalid input
+mapping, oversized payload mapping, bean reuse를 검증한다. README diagram은 top-to-bottom
+architecture layer와 participant header, lifeline, activation bar, pill label, 별도 error
+branch note가 있는 best-practices sequence layout을 사용한다.
 
-## Verification
+## 검증
 
 - `./gradlew :spring-boot-text-moderation-api:test --warning-mode all --console=plain`: 10 tests passed.
 - `./gradlew :spring-boot-text-moderation-api:compileTestKotlin --warning-mode all --console=plain`: build passed; only pre-existing root Gradle deprecation warnings appeared.
@@ -31,9 +30,9 @@ labels, and a separate error branch note.
 - PNG eyes-check passed for both architecture and sequence diagrams.
 - `./scripts/smoke-validate.sh stale-check`: active modules 88/88, no stale refs, no broken README image links.
 
-## Future Notes
+## 향후 참고
 
-For the next workshop example, add the module to the Examples workflow and
-`scripts/smoke-validate.sh` at the same time as the README catalog entry. Run
-diagram geometry audit in addition to the repo validators; sharp orthogonal
-turns can pass repo parsing but still fail the diagram skill checklist.
+다음 workshop example에서는 README catalog entry와 동시에 module을 Examples workflow와
+`scripts/smoke-validate.sh`에 추가한다. repo validator뿐 아니라 diagram geometry audit도
+실행한다. sharp orthogonal turn은 repo parsing을 통과하더라도 diagram skill checklist에는
+실패할 수 있다.
