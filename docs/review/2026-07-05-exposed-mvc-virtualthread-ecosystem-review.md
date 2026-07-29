@@ -1,52 +1,50 @@
-# Exposed MVC Virtual Thread Ecosystem Review
+# Exposed MVC Virtual Thread 생태계 리뷰
 
-Date: 2026-07-05
-Module: `:exposed-mvc-virtualthread`
+날짜: 2026-07-05
+모듈: `:exposed-mvc-virtualthread`
 
-## Scope
+## 범위
 
-7-Tier review and remediation for Kotlin style, bluetape4k ecosystem alignment,
-Spring MVC validation, Exposed transaction behavior, virtual-thread test style,
-and example-module parity with `:exposed-mvc-jdbc`.
+Kotlin style, bluetape4k 생태계 정렬, Spring MVC validation, Exposed transaction behavior, virtual-thread test style,
+`:exposed-mvc-jdbc`와의 example-module parity에 대한 7-Tier review와 remediation 결과다.
 
-## Findings Closed
+## 해결한 발견 사항
 
-| Finding | Resolution |
+| 발견 사항 | 해결 |
 | --- | --- |
-| Blank email accepted by `@Email` alone | `CreateAuthorRequest.email` now requires `@NotBlank @Email`; controller regression returns 400. |
-| Whitespace product names accepted | `CreateProductRequest.name` now uses `@NotBlank`; controller regression returns 400. |
-| Book creation relied on database FK failure for missing author | `AuthorService.createBook()` checks `authorRepo.findById()` before insert and returns the existing 404 path. |
-| Raw executor/latch concurrency test | Replaced with bluetape4k `MultithreadingTester`. |
-| Touched tests used `!!` | Captured `shouldNotBeNull()` values instead. |
-| Kotlin compile warning in delete path | `deleteById()` now exits the transaction as `Unit` without an unused expression. |
+| `@Email`만으로 blank email을 허용함 | `CreateAuthorRequest.email`은 이제 `@NotBlank @Email`을 요구하며 controller regression은 400을 반환한다. |
+| whitespace product name을 허용함 | `CreateProductRequest.name`은 이제 `@NotBlank`를 사용하며 controller regression은 400을 반환한다. |
+| book creation이 missing author에 대해 database FK failure에 의존함 | `AuthorService.createBook()`은 insert 전에 `authorRepo.findById()`를 확인하고 기존 404 path를 반환한다. |
+| raw executor/latch concurrency test | bluetape4k `MultithreadingTester`로 대체했다. |
+| 수정된 test가 `!!`를 사용함 | 대신 `shouldNotBeNull()` 값을 capture했다. |
+| delete path의 Kotlin compile warning | `deleteById()`는 unused expression 없이 transaction을 `Unit`으로 끝낸다. |
 
-## Ecosystem Usage
+## 생태계 사용
 
-| Area | Evidence |
+| 영역 | 근거 |
 | --- | --- |
-| bluetape4k assertions | Touched tests use `shouldNotBeNull()` and value matchers. |
-| bluetape4k concurrency helper | Stock contention test uses `MultithreadingTester`. |
-| Exposed transaction path | Service-level author precheck avoids surfacing a low-level FK failure as an example API contract. |
+| bluetape4k assertions | 수정된 test는 `shouldNotBeNull()`와 value matcher를 사용한다. |
+| bluetape4k concurrency helper | stock contention test는 `MultithreadingTester`를 사용한다. |
+| Exposed transaction path | service-level author precheck는 low-level FK failure가 example API contract로 노출되는 일을 피한다. |
 
-## 7-Tier Verdict
+## 7-Tier 판정
 
-| Tier | Verdict | Evidence |
+| Tier | 판정 | 근거 |
 | --- | --- | --- |
-| Spec / scope | PASS | Diff is limited to `:exposed-mvc-virtualthread` validation, service precheck, and tests. |
-| API validation | PASS | Blank email/product name regressions return 400. |
-| Data correctness | PASS | Missing author is checked before book insert. |
-| Concurrency | PASS | `MultithreadingTester` replaces ad hoc executor/latch. |
-| Tests | PASS | Targeted regressions added; forbidden-pattern scan is clean. |
-| Security / error handling | PASS | Missing author follows explicit not-found handling instead of DB integrity leakage. |
-| Build / static validation | PASS | Targeted Gradle compile/test and `data-access-full` smoke pass. |
+| Spec / scope | PASS | diff는 `:exposed-mvc-virtualthread` validation, service precheck, test로 제한된다. |
+| API validation | PASS | blank email/product name regression은 400을 반환한다. |
+| Data correctness | PASS | missing author는 book insert 전에 확인한다. |
+| Concurrency | PASS | `MultithreadingTester`가 ad hoc executor/latch를 대체한다. |
+| Tests | PASS | targeted regression을 추가했고 forbidden-pattern scan은 clean이다. |
+| Security / error handling | PASS | missing author는 DB integrity leakage 대신 explicit not-found handling을 따른다. |
+| Build / static validation | PASS | targeted Gradle compile/test와 `data-access-full` smoke가 통과한다. |
 
-## Verification
+## 검증
 
 - `git diff --check`: PASS.
-- Static scan for `.shouldBeEqualTo(`, boolean equality assertions, `assertThrows`,
-  `kotlin.test`, `SqlExpressionBuilder`, `runCatching`, `!!`,
-  `CountDownLatch`, and `Thread.sleep`: PASS, no output.
-- `repo-test-summary -- ./gradlew :exposed-mvc-virtualthread:compileKotlin :exposed-mvc-virtualthread:compileTestKotlin :exposed-mvc-virtualthread:cleanTest :exposed-mvc-virtualthread:test --no-build-cache --warning-mode all --console=plain --max-workers=1`: PASS, 14 tests.
+- `.shouldBeEqualTo(`, boolean equality assertion, `assertThrows`, `kotlin.test`, `SqlExpressionBuilder`, `runCatching`, `!!`,
+  `CountDownLatch`, `Thread.sleep`에 대한 static scan: PASS, output 없음.
+- `repo-test-summary -- ./gradlew :exposed-mvc-virtualthread:compileKotlin :exposed-mvc-virtualthread:compileTestKotlin :exposed-mvc-virtualthread:cleanTest :exposed-mvc-virtualthread:test --no-build-cache --warning-mode all --console=plain --max-workers=1`: PASS, 14개 test.
 - `MAX_WORKERS=1 repo-test-summary -- ./scripts/smoke-validate.sh data-access-full`: PASS, Gradle `BUILD SUCCESSFUL`.
-- `repo-test-summary -- ./scripts/smoke-validate.sh stale-check`: PASS, 101 active modules, no stale README refs, no broken README image links.
-- Native code-reviewer re-review: APPROVE, P0/P1/P2/P3 = 0.
+- `repo-test-summary -- ./scripts/smoke-validate.sh stale-check`: PASS, active module 101개, stale README ref 없음, 깨진 README image link 없음.
+- Native code-reviewer 재리뷰: APPROVE, P0/P1/P2/P3 = 0.
