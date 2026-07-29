@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.multipart.MultipartFile
 
 /**
- * Multipart HTTP adapter for OCR image recognition requests.
+ * OCR 이미지 인식 요청용 multipart HTTP 어댑터입니다.
  */
 @RestController
 @RequestMapping("/api/images/ocr")
@@ -24,7 +24,7 @@ class ImageOcrController(
 ) {
 
     /**
-     * Accepts one JPEG, PNG, or WebP multipart file and optional Tesseract language codes.
+     * JPEG, PNG, WebP multipart 파일 하나와 선택적 Tesseract 언어 코드를 받습니다.
      */
     @PostMapping(
         consumes = [MediaType.MULTIPART_FORM_DATA_VALUE],

@@ -123,7 +123,7 @@ class ImageDerivativeWorkflowServiceTest {
 
         val response = service.processUpload(file)
 
-        // No new uploads — served from cache.
+        // 새 업로드는 없으며 캐시에서 제공합니다.
         storage.uploads.size shouldBeEqualTo 0
         response.imageId shouldBeEqualTo existingImageId
         response.warnings shouldContain "Returned from cache — asset already processed"

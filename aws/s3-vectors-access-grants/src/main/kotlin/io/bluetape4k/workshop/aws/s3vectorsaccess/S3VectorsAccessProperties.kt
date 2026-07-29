@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import java.io.Serializable
 
 /**
- * Configuration properties for the local S3 Vectors and Access Grants workshop sample.
+ * 로컬 S3 Vectors와 Access Grants 워크숍 예제의 설정 속성입니다.
  */
 @ConfigurationProperties(prefix = "workshop.aws.s3-vector-access")
 data class S3VectorsAccessProperties(
@@ -33,7 +33,7 @@ data class S3VectorsAccessProperties(
 }
 
 /**
- * Access Grants boundary settings used to build redacted data-access requests.
+ * 마스킹된 데이터 접근 요청을 만드는 데 사용하는 Access Grants 경계 설정입니다.
  */
 data class S3AccessGrantsBoundaryProperties(
     val accountId: String = "123456789012",

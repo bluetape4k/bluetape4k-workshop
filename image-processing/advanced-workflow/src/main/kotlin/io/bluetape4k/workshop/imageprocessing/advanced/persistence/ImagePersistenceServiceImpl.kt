@@ -34,24 +34,24 @@ import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 
 /**
- * Programmatic-transaction implementation of [ImagePersistenceService].
+ * [ImagePersistenceService]의 프로그래밍 방식 트랜잭션 구현입니다.
  *
- * ## Transaction strategy
- * Each write method runs inside its own `REQUIRES_NEW` transaction via [txTemplate].
- * No `@Transactional` annotation is placed on any method — all transaction
- * boundaries are managed explicitly.
+ * ## 트랜잭션 전략
+ * 각 쓰기 메서드는 [txTemplate]을 통해 자체 `REQUIRES_NEW` 트랜잭션 안에서 실행됩니다.
+ * 어떤 메서드에도 `@Transactional` 애너테이션을 두지 않으며 모든 트랜잭션
+ * 경계는 명시적으로 관리합니다.
  *
- * ## Audit user
- * Every write method wraps its entire body in [UserContext.withThreadLocalUser] with [AUDIT_USER],
- * so audit columns (`created_by`, `updated_by`) are populated correctly.
- * [UserContext.withThreadLocalUser] is used instead of [UserContext.withUser] because
- * this service is called from coroutine dispatchers (Dispatchers.IO), where ScopedValue
- * (used internally by withUser) is not compatible.
+ * ## 감사 사용자
+ * 모든 쓰기 메서드는 [AUDIT_USER]와 함께 [UserContext.withThreadLocalUser]로 본문 전체를 감쌉니다.
+ * 그래서 감사 컬럼(`created_by`, `updated_by`)이 올바르게 채워집니다.
+ * [UserContext.withUser] 대신 [UserContext.withThreadLocalUser]를 사용합니다. 이유는
+ * 이 서비스가 ScopedValue와 호환되지 않는 코루틴 dispatcher(Dispatchers.IO)에서
+ * 호출되기 때문입니다(withUser 내부에서 ScopedValue 사용).
  *
- * ## Concurrency
- * [recordJobStart] catches [DataIntegrityViolationException] (DIVE) outside the
- * [txTemplate] block — after the failed transaction has been rolled back — then
- * re-reads the conflicting row and branches accordingly.
+ * ## 동시성
+ * [recordJobStart]는 [DataIntegrityViolationException](DIVE)을 [txTemplate]
+ * 블록 밖, 즉 실패한 트랜잭션이 rollback된 뒤에 잡고
+ * 충돌한 행을 다시 읽어 그 상태에 따라 분기합니다.
  */
 @Service
 class ImagePersistenceServiceImpl(
@@ -72,7 +72,7 @@ class ImagePersistenceServiceImpl(
 
     private val readTxTemplate = TransactionTemplate(transactionManager).apply {
         isReadOnly = true
-        // PROPAGATION_REQUIRED (default) — join existing or create new read transaction
+        // PROPAGATION_REQUIRED(기본값) — 기존 트랜잭션에 참여하거나 새 읽기 트랜잭션을 만듭니다.
     }
 
     // -------------------------------------------------------------------------
@@ -114,7 +114,7 @@ class ImagePersistenceServiceImpl(
                             }
 
                             null -> {
-                                // New asset — insert and create first job
+                                // 새 asset — insert하고 첫 job을 만듭니다.
                                 val externalId = Uuid.V7.nextIdAsString()
                                 val assetId = ImageAssetTable.insertAndGetId {
                                     it[ImageAssetTable.externalId] = externalId
@@ -137,8 +137,8 @@ class ImagePersistenceServiceImpl(
                     }
                 ) { "T1 transaction returned null — unexpected rollback" }
             } catch (e: DataIntegrityViolationException) {
-                // Concurrent insert race — the failed transaction has already been rolled back.
-                // Re-read the conflicting row and branch on its current status.
+                // 동시 insert 경합 — 실패한 트랜잭션은 이미 rollback되었습니다.
+                // 충돌한 행을 다시 읽고 현재 상태에 따라 분기합니다.
                 log.warn { "DataIntegrityViolationException on recordJobStart checksum=${metadata.checksum}: ${e.message}" }
                 val reRead = assetRepo.findByChecksum(metadata.checksum)
                     ?: throw ImageAssetNotFoundException(metadata.checksum)
@@ -182,7 +182,7 @@ class ImagePersistenceServiceImpl(
     override fun recordJobSuccess(identity: JobIdentity, objects: List<ImageObjectInput>) {
         UserContext.withThreadLocalUser(AUDIT_USER) {
             txTemplate.executeWithoutResult {
-                // Compute duration from job's startedAt before marking it finished.
+                // job을 완료로 표시하기 전에 startedAt 기준으로 소요 시간을 계산합니다.
                 val job = jobRepo.findByIdOrNull(identity.jobId)
                 val durationMs = if (job != null) {
                     ChronoUnit.MILLIS.between(job.startedAt, LocalDateTime.now(ZoneOffset.UTC))
@@ -229,7 +229,7 @@ class ImagePersistenceServiceImpl(
     }
 
     // -------------------------------------------------------------------------
-    // Queries
+    // 조회
     // -------------------------------------------------------------------------
 
     override fun findAssetByExternalId(externalId: String): ImageAssetDetailResponse? =

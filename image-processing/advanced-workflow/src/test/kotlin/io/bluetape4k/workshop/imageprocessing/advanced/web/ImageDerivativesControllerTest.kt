@@ -23,10 +23,10 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.request
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 /**
- * Slice test for [ImageDerivativesController] GET endpoints.
+ * [ImageDerivativesController] GET 엔드포인트 slice 테스트입니다.
  *
- * Uses `@WebMvcTest` to load only the web layer with mocked services.
- * Coroutine-backed suspend handlers require the async-dispatch pattern:
+ * `@WebMvcTest`로 모의 서비스가 포함된 웹 계층만 로드합니다.
+ * 코루틴 기반 suspend 핸들러에는 async-dispatch 패턴이 필요합니다.
  * `perform(get(...)).andExpect(request().asyncStarted()).andReturn()` → `perform(asyncDispatch(...))`.
  */
 @WebMvcTest(controllers = [ImageDerivativesController::class])
@@ -36,7 +36,7 @@ class ImageDerivativesControllerTest {
     @Autowired
     private lateinit var mockMvc: MockMvc
 
-    /** Required in context even when not exercised in GET-only tests. */
+    /** GET 전용 테스트에서 직접 사용하지 않아도 context에 필요합니다. */
     @MockkBean
     private lateinit var workflowService: ImageDerivativeWorkflowService
 
@@ -114,7 +114,7 @@ class ImageDerivativesControllerTest {
     }
 
     // -------------------------------------------------------------------------
-    // Helpers
+    // 헬퍼
     // -------------------------------------------------------------------------
 
     private fun buildDetailResponse(imageId: String): ImageAssetDetailResponse =

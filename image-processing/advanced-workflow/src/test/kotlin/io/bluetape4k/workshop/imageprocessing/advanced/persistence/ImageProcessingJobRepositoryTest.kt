@@ -14,14 +14,14 @@ import org.springframework.beans.factory.annotation.Autowired
 import io.bluetape4k.codec.Base58
 
 /**
- * Integration tests for the processing-job history path exposed through [ImagePersistenceService].
+ * [ImagePersistenceService]가 노출하는 처리 job 이력 경로의 통합 테스트입니다.
  *
- * Exercises job creation, success/failure marking, and the [ImagePersistenceService.findAssetHistory]
- * query that drives `GET /images/{imageId}/history`.
+ * job 생성, 성공/실패 표시, [ImagePersistenceService.findAssetHistory]
+ * 쿼리를 검증합니다. 이 쿼리는 `GET /images/{imageId}/history`를 구동합니다.
  *
- * ## Isolation strategy
- * Each test uses a unique checksum — `PROPAGATION_REQUIRES_NEW` commits inside the service
- * defeat `@Rollback`, so per-test unique keys are the only safe isolation mechanism.
+ * ## 격리 전략
+ * 각 테스트는 고유 checksum을 사용합니다. 서비스 내부의 `PROPAGATION_REQUIRES_NEW` commit이
+ * `@Rollback`을 무력화하므로 테스트별 고유 키가 유일하게 안전한 격리 방식입니다.
  */
 class ImageProcessingJobRepositoryTest : AbstractImagePersistenceTest() {
 
@@ -31,7 +31,7 @@ class ImageProcessingJobRepositoryTest : AbstractImagePersistenceTest() {
     @Test
     fun `findAssetHistory - returns null for unknown externalId`() {
         val history = service.findAssetHistory(Base58.randomString(12))
-        // Soft assert: result is null — history is absent for unknown asset
+        // Soft assert: 알 수 없는 asset에는 이력이 없으므로 result는 null입니다.
         (history == null).shouldBeTrue()
     }
 

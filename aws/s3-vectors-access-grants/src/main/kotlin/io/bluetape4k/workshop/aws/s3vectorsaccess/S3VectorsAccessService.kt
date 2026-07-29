@@ -15,7 +15,7 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlin.math.sqrt
 
 /**
- * Coordinates local vector ranking with the S3 Vectors and S3 Access Grants boundary adapters.
+ * 로컬 벡터 순위 계산을 S3 Vectors 및 S3 Access Grants 경계 어댑터와 조율합니다.
  */
 @Service
 class S3VectorsAccessService(

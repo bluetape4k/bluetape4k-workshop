@@ -23,7 +23,7 @@ import java.time.Instant
 
 @Service
 /**
- * Coordinates validation, storage, pending preview generation, and moderation scheduling.
+ * 검증, 저장, 대기 preview 생성, 검수 예약을 조율합니다.
  */
 class ProfileImageService(
     private val storage: ImageStorage,

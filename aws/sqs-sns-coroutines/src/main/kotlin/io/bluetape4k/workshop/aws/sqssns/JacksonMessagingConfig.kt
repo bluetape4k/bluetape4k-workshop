@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Primary
 import tools.jackson.databind.json.JsonMapper
 
 /**
- * Registers the bluetape4k Jackson 3 mapper used by the messaging service.
+ * 메시징 서비스가 사용하는 bluetape4k Jackson 3 mapper를 등록합니다.
  */
 @Configuration(proxyBeanMethods = false)
 class JacksonMessagingConfig {

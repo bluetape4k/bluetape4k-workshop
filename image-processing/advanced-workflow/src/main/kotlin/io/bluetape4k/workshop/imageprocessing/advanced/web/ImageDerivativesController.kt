@@ -27,9 +27,9 @@ class ImageDerivativesController(
 ) {
 
     /**
-     * `POST /api/images/derivatives` — Upload an image and produce derivatives.
+     * `POST /api/images/derivatives` — 이미지를 업로드하고 파생 이미지를 생성합니다.
      *
-     * Returns 201 Created with [ImageProcessingResponse] on success.
+     * 성공 시 [ImageProcessingResponse]와 함께 201 Created를 반환합니다.
      */
     @PostMapping(
         "/derivatives",
@@ -41,9 +41,9 @@ class ImageDerivativesController(
         service.processUpload(file)
 
     /**
-     * `GET /api/images/{imageId}` — Retrieve asset detail (original + variants).
+     * `GET /api/images/{imageId}` — asset 상세(원본 + 변형)를 조회합니다.
      *
-     * Returns 200 OK with [ImageAssetDetailResponse], or 404 if no asset found.
+     * asset을 찾으면 [ImageAssetDetailResponse]와 함께 200 OK를, 없으면 404를 반환합니다.
      */
     @GetMapping("/{imageId}", produces = [MediaType.APPLICATION_JSON_VALUE])
     suspend fun getAssetDetail(@PathVariable imageId: String): ImageAssetDetailResponse {
@@ -53,9 +53,9 @@ class ImageDerivativesController(
     }
 
     /**
-     * `GET /api/images/{imageId}/history` — Retrieve full job + event history for an asset.
+     * `GET /api/images/{imageId}/history` — asset의 전체 job + 이벤트 이력을 조회합니다.
      *
-     * Returns 200 OK with [ImageAssetHistoryResponse], or 404 if no asset found.
+     * asset을 찾으면 [ImageAssetHistoryResponse]와 함께 200 OK를, 없으면 404를 반환합니다.
      */
     @GetMapping("/{imageId}/history", produces = [MediaType.APPLICATION_JSON_VALUE])
     suspend fun getAssetHistory(@PathVariable imageId: String): ImageAssetHistoryResponse {

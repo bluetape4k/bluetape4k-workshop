@@ -24,7 +24,7 @@ import kotlinx.coroutines.withTimeout
 import org.springframework.stereotype.Service
 
 /**
- * Default OCR service implementation for the workshop API.
+ * 워크숍 API용 기본 OCR 서비스 구현입니다.
  */
 @Service
 class ImageOcrServiceImpl(

@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.runApplication
 
 /**
- * Spring Boot entrypoint for the S3 Vectors and Access Grants workshop sample.
+ * S3 Vectors와 Access Grants 워크숍 예제의 Spring Boot 진입점입니다.
  */
 @SpringBootApplication
 @ConfigurationPropertiesScan

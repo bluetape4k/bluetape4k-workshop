@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException
 
 @RestControllerAdvice
 /**
- * Maps profile-image upload failures to ProblemDetail responses.
+ * 프로필 이미지 업로드 실패를 ProblemDetail 응답으로 매핑합니다.
  */
 class ProfileImageExceptionHandler {
 

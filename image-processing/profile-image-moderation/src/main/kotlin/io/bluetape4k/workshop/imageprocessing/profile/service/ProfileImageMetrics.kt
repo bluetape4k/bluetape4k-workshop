@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit
 
 @Component
 /**
- * Emits low-cardinality Micrometer meters for the moderation example.
+ * 검수 예제용 낮은 카디널리티 Micrometer meter를 발행합니다.
  */
 class ProfileImageMetrics(
     private val meterRegistry: MeterRegistry,

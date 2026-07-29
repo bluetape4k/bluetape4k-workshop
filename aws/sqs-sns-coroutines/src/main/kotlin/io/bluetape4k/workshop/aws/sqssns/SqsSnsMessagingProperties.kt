@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import java.io.Serializable
 
 /**
- * Configuration for the SQS/SNS workshop example.
+ * SQS/SNS 워크숍 예제 설정입니다.
  */
 @ConfigurationProperties(prefix = "bluetape4k.aws.sqs-sns")
 data class SqsSnsMessagingProperties(

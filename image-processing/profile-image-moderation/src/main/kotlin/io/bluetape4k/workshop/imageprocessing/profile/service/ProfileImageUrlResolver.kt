@@ -10,7 +10,7 @@ import java.net.URI
 
 @Component
 /**
- * Converts public object keys into safe external profile-image URLs.
+ * 공개 객체 키를 안전한 외부 프로필 이미지 URL로 변환합니다.
  */
 class ProfileImageUrlResolver(
     private val properties: ProfileImageModerationProperties,

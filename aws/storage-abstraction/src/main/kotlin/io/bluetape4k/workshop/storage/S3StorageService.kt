@@ -16,20 +16,20 @@ import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException
 
 /**
- * AWS S3-backed [StorageService] implementation for the `s3` Spring profile.
+ * `s3` Spring profile용 AWS S3 기반 [StorageService] 구현입니다.
  *
- * ## Behavior / Contract
- * - All objects are stored in [bucketName] on S3 (or LocalStack in tests).
- * - Object keys are validated as relative forward-slash keys before S3 access.
- * - `upload` puts bytes to S3 and returns an endpoint-neutral `s3://{bucket}/{key}` URI.
- * - `download` retrieves bytes from S3; throws [NoSuchKeyException] if the key does not exist.
- * - `getUrl` returns the same endpoint-neutral S3 object URI as `upload`.
- * - `delete` removes the object; silently ignores missing keys.
- * - All blocking `S3Client` calls are wrapped in `withContext(Dispatchers.IO)`.
- * - Active when Spring profile `s3` is set.
+ * ## 동작 / 계약
+ * - 모든 객체는 S3의 [bucketName]에 저장합니다(테스트에서는 LocalStack).
+ * - S3 접근 전에 객체 키가 상대 슬래시 키인지 검증합니다.
+ * - `upload`는 바이트를 S3에 넣고 엔드포인트와 무관한 `s3://{bucket}/{key}` URI를 반환합니다.
+ * - `download`는 S3에서 바이트를 가져오며, 키가 없으면 [NoSuchKeyException]을 던집니다.
+ * - `getUrl`은 `upload`와 같은 엔드포인트 중립 S3 객체 URI를 반환합니다.
+ * - `delete`는 객체를 삭제하며, 없는 키는 조용히 무시합니다.
+ * - 모든 블로킹 `S3Client` 호출은 `withContext(Dispatchers.IO)`로 감쌉니다.
+ * - Spring profile `s3`가 설정되면 활성화됩니다.
  *
  * ```kotlin
- * // With profile "s3":
+ * // profile "s3" 사용 시:
  * val url = storageService.upload("docs/readme.txt", bytes, "text/plain")
  * val data = storageService.download("docs/readme.txt")
  * storageService.delete("docs/readme.txt")

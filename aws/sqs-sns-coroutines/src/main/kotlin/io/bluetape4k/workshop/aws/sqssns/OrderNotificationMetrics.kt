@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 import kotlin.coroutines.cancellation.CancellationException
 
 /**
- * Micrometer metrics for the learner-visible SQS/SNS workflow outcomes.
+ * 학습자에게 보이는 SQS/SNS 처리 흐름 결과용 Micrometer 메트릭입니다.
  */
 @Component
 class OrderNotificationMetrics(

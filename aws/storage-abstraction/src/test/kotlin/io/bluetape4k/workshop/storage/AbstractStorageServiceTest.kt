@@ -12,9 +12,9 @@ import org.junit.jupiter.api.Test
 import java.nio.file.Path
 
 /**
- * Base test class for all [StorageService] implementations.
+ * 모든 [StorageService] 구현의 기본 테스트 클래스입니다.
  *
- * Subclasses activate the appropriate Spring profile via `@ActiveProfiles`.
+ * 하위 클래스는 `@ActiveProfiles`로 적절한 Spring profile을 활성화합니다.
  */
 abstract class AbstractStorageServiceTest(
     protected val storageService: StorageService,

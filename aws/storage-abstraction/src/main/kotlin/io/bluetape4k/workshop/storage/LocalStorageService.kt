@@ -12,20 +12,20 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 /**
- * Local filesystem-based [StorageService] implementation.
+ * 로컬 파일시스템 기반 [StorageService] 구현입니다.
  *
- * ## Behavior / Contract
- * - All objects are stored under [basePath] on the local filesystem.
- * - Object keys are validated as relative forward-slash paths before filesystem access.
- * - `upload` writes bytes to `{basePath}/{key}` and returns a `file://` URL.
- * - `download` reads bytes from `{basePath}/{key}`.
- * - `getUrl` returns the `file://` URL for the stored path.
- * - `delete` removes the file; silently ignores missing files.
- * - All blocking I/O is dispatched on [Dispatchers.IO].
- * - Active when Spring profile `local` is set.
+ * ## 동작 / 계약
+ * - 모든 객체를 로컬 파일시스템의 [basePath] 아래에 저장합니다.
+ * - 파일시스템 접근 전에 객체 키가 상대 슬래시 경로인지 검증합니다.
+ * - `upload`는 바이트를 `{basePath}/{key}`에 쓰고 `file://` URL을 반환합니다.
+ * - `download`는 `{basePath}/{key}`에서 바이트를 읽습니다.
+ * - `getUrl`은 저장된 경로의 `file://` URL을 반환합니다.
+ * - `delete`는 파일을 삭제하며, 없는 파일은 조용히 무시합니다.
+ * - 모든 블로킹 I/O는 [Dispatchers.IO]에서 실행합니다.
+ * - Spring profile `local`이 설정되면 활성화됩니다.
  *
  * ```kotlin
- * // With profile "local":
+ * // profile "local" 사용 시:
  * val url = storageService.upload("test.txt", "Hello".toByteArray(), "text/plain")
  * // url = "file:///tmp/storage/test.txt"
  * ```

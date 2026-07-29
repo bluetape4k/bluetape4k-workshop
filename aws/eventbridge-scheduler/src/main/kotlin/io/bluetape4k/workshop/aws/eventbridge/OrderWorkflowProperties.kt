@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import java.io.Serializable
 
 /**
- * Configuration used to map order workflows to EventBridge and Scheduler fields.
+ * 주문 처리 흐름을 EventBridge와 Scheduler 필드에 매핑하는 설정입니다.
  */
 @ConfigurationProperties(prefix = "bluetape4k.aws.eventbridge-scheduler")
 data class OrderWorkflowProperties(

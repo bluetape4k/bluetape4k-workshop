@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.aws.sqssns
 import java.io.Serializable
 
 /**
- * Domain event kinds used by the SQS/SNS workshop.
+ * SQS/SNS 워크숍에서 사용하는 도메인 이벤트 종류입니다.
  */
 enum class OrderNotificationType {
     ORDER_PLACED,
@@ -12,7 +12,7 @@ enum class OrderNotificationType {
 }
 
 /**
- * Publish command accepted from the learner-facing service API.
+ * 학습자 대상 서비스 API가 받는 발행 명령입니다.
  */
 data class OrderNotificationRequest(
     val orderId: String,
@@ -28,7 +28,7 @@ data class OrderNotificationRequest(
 }
 
 /**
- * JSON payload published to SNS and consumed from SQS.
+ * SNS로 발행하고 SQS에서 소비하는 JSON 페이로드입니다.
  */
 data class OrderNotificationEvent(
     val orderId: String,
@@ -45,7 +45,7 @@ data class OrderNotificationEvent(
 }
 
 /**
- * Publish boundary state for SNS.
+ * SNS 발행 경계 상태입니다.
  */
 enum class PublishState {
     PUBLISHED,
@@ -53,7 +53,7 @@ enum class PublishState {
 }
 
 /**
- * SQS consume result classification.
+ * SQS 소비 결과 분류입니다.
  */
 enum class ConsumeState {
     ACKED,
@@ -63,7 +63,7 @@ enum class ConsumeState {
 }
 
 /**
- * Report returned after an SNS publish attempt.
+ * SNS 발행 시도 뒤 반환하는 보고서입니다.
  */
 data class OrderNotificationPublishReport(
     val state: PublishState,
@@ -107,7 +107,7 @@ data class OrderNotificationPublishReport(
 }
 
 /**
- * Report returned after processing one SQS message.
+ * SQS 메시지 하나를 처리한 뒤 반환하는 보고서입니다.
  */
 data class OrderNotificationConsumeReport(
     val state: ConsumeState,

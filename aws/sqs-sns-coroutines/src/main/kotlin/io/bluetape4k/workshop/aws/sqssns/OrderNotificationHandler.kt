@@ -3,18 +3,18 @@ package io.bluetape4k.workshop.aws.sqssns
 import org.springframework.stereotype.Component
 
 /**
- * Application handler invoked after SQS delivers an order notification.
+ * SQS가 주문 알림을 전달한 뒤 호출되는 애플리케이션 핸들러입니다.
  */
 fun interface OrderNotificationHandler {
 
     /**
-     * Handles one decoded notification event.
+     * 디코딩된 알림 이벤트 하나를 처리합니다.
      */
     suspend fun handle(event: OrderNotificationEvent)
 }
 
 /**
- * Default local handler for `bootRun`; tests and real applications can replace it.
+ * 기본 `bootRun`용 로컬 핸들러이며, 테스트와 실제 애플리케이션에서 대체할 수 있습니다.
  */
 @Component
 class NoopOrderNotificationHandler: OrderNotificationHandler {

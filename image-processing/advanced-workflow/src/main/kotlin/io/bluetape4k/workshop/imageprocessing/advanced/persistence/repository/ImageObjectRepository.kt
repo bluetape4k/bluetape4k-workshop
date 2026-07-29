@@ -12,13 +12,13 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
 
 /**
- * Repository for [ImageObjectTable] rows.
+ * [ImageObjectTable] 행 저장소입니다.
  *
- * ## Behavior / Contract
- * - All write methods must be called within a [io.bluetape4k.exposed.core.auditable.UserContext.withUser] block.
- * - All methods must be called inside an Exposed `transaction {}` or equivalent.
- * - [batchUpsertObjects] resolves conflicts using the NULLS NOT DISTINCT unique index
- *   on `(image_asset_id, kind, variant_name)` created by [io.bluetape4k.workshop.imageprocessing.advanced.persistence.config.ImagePersistenceDatabaseInitializer].
+ * ## 동작 / 계약
+ * - 모든 쓰기 메서드는 [io.bluetape4k.exposed.core.auditable.UserContext.withUser] 블록 안에서 호출해야 합니다..
+ * - 모든 메서드는 Exposed `transaction {}` 또는 동등한 경계 안에서 호출해야 합니다.
+ * - [batchUpsertObjects]는 NULLS NOT DISTINCT unique 인덱스로 충돌을 해소합니다.
+ *   [io.bluetape4k.workshop.imageprocessing.advanced.persistence.config.ImagePersistenceDatabaseInitializer]가 만든 `(image_asset_id, kind, variant_name)` unique 인덱스입니다.
  */
 @Repository
 class ImageObjectRepository : LongAuditableJdbcRepository<ImageObjectDTO, ImageObjectTable> {
@@ -30,14 +30,14 @@ class ImageObjectRepository : LongAuditableJdbcRepository<ImageObjectDTO, ImageO
     override fun ResultRow.toEntity(): ImageObjectDTO = toImageObjectDTO()
 
     /**
-     * Batch-upserts image objects associated with [assetId].
+     * [assetId]에 연결된 이미지 객체를 batch upsert합니다.
      *
-     * Conflict resolution is driven by the unique index on
-     * `(image_asset_id, kind, variant_name)` with NULLS NOT DISTINCT semantics.
-     * When a duplicate row is found, all non-key columns are updated.
+     * 충돌 해소는 다음 위치의 unique 인덱스가 담당합니다.
+     * `(image_asset_id, kind, variant_name)`에 NULLS NOT DISTINCT 의미를 적용합니다.
+     * 중복 행을 찾으면 키가 아닌 모든 컬럼을 갱신합니다.
      *
-     * @param assetId the parent asset's primary key
-     * @param objects the list of image objects to persist
+     * @param assetId 부모 asset의 기본 키입니다.
+     * @param objects 영속화할 이미지 객체 목록입니다.
      */
     fun batchUpsertObjects(assetId: Long, objects: List<ImageObjectInput>) {
         if (objects.isEmpty()) return
@@ -60,7 +60,7 @@ class ImageObjectRepository : LongAuditableJdbcRepository<ImageObjectDTO, ImageO
     }
 
     /**
-     * Returns all image objects for the asset identified by [assetId].
+     * [assetId]로 식별한 asset의 모든 이미지 객체를 반환합니다.
      */
     fun findByAssetId(assetId: Long): List<ImageObjectDTO> =
         table.selectAll()

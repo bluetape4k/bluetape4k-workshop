@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component
 
 @Component
 /**
- * Runs moderation work asynchronously with bounded concurrency and timeouts.
+ * 제한된 동시성과 타임아웃으로 검수 작업을 비동기로 실행합니다.
  */
 class ProfileImageModerationRunner(
     private val provider: ImageModerationProvider,

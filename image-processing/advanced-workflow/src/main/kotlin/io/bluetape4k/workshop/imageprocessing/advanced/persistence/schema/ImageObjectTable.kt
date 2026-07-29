@@ -5,44 +5,44 @@ import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageObjectKind
 import org.jetbrains.exposed.v1.core.ReferenceOption
 
 /**
- * Exposed table for image objects (original and variant files stored in S3).
+ * S3에 저장된 이미지 객체(원본과 변형 파일)용 Exposed 테이블입니다.
  *
- * Each row is linked to an [ImageAssetTable] row via [imageAssetId] with ON DELETE CASCADE.
+ * 각 행은 ON DELETE CASCADE가 적용된 [imageAssetId]로 [ImageAssetTable] 행에 연결됩니다.
  *
- * A partial unique constraint on `(image_asset_id, kind, variant_name) NULLS NOT DISTINCT`
- * is created via raw SQL in [ImagePersistenceDatabaseInitializer] — do NOT add an Exposed
- * `uniqueIndex()` here, because Exposed cannot express NULLS NOT DISTINCT.
+ * `(image_asset_id, kind, variant_name) NULLS NOT DISTINCT` 부분 unique 제약은
+ * [ImagePersistenceDatabaseInitializer]에서 raw SQL로 생성합니다. 여기에 Exposed
+ * `uniqueIndex()`를 추가하면 안 됩니다. Exposed가 NULLS NOT DISTINCT를 표현할 수 없기 때문입니다.
  *
- * ## Inherited auditing columns (from [AuditableLongIdTable])
+ * ## 상속된 감사 컬럼([AuditableLongIdTable]에서 제공)
  * - `created_by`, `created_at`, `updated_by`, `updated_at`
  */
 object ImageObjectTable : AuditableLongIdTable("image_objects") {
 
-    /** FK to the parent [ImageAssetTable]; cascades deletes. */
+    /** 부모 [ImageAssetTable]에 대한 FK이며 삭제를 cascade합니다. */
     val imageAssetId = reference("image_asset_id", ImageAssetTable, onDelete = ReferenceOption.CASCADE)
         .index()
 
-    /** Whether this object is the [ImageObjectKind.ORIGINAL] or a [ImageObjectKind.VARIANT]. */
+    /** 이 객체가 [ImageObjectKind.ORIGINAL]인지 [ImageObjectKind.VARIANT]인지 나타냅니다. */
     val kind = enumerationByName("kind", 20, ImageObjectKind::class)
 
-    /** Variant name (e.g. `"thumbnail"`, `"webp-2x"`); null for originals. */
+    /** 변형 이름입니다(예: `"thumbnail"`, `"webp-2x"`). 원본이면 null입니다. */
     val variantName = varchar("variant_name", 100).nullable()
 
-    /** S3 object key under which the file is stored. */
+    /** 파일이 저장된 S3 객체 키입니다. */
     val s3Key = varchar("s3_key", 512)
 
-    /** Publicly accessible URL for the object. */
+    /** 객체에 공개적으로 접근할 수 있는 URL입니다. */
     val publicUrl = text("public_url")
 
-    /** Width in pixels; nullable. */
+    /** 픽셀 너비입니다. null일 수 있습니다. */
     val width = integer("width").nullable()
 
-    /** Height in pixels; nullable. */
+    /** 픽셀 높이입니다. null일 수 있습니다. */
     val height = integer("height").nullable()
 
-    /** Byte size of this object; nullable. */
+    /** 이 객체의 바이트 크기입니다. null일 수 있습니다. */
     val byteSize = long("byte_size").nullable()
 
-    /** Image format string (e.g. `"jpeg"`, `"webp"`, `"png"`); nullable. */
+    /** 이미지 형식 문자열입니다(예: `"jpeg"`, `"webp"`, `"png"`). null일 수 있습니다. */
     val format = varchar("format", 20).nullable()
 }

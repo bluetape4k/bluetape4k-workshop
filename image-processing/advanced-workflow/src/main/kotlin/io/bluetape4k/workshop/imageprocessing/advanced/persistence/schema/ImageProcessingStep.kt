@@ -1,14 +1,14 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.persistence.schema
 
 /**
- * Processing pipeline step recorded in [ImageProcessingEventTable].
+ * [ImageProcessingEventTable]에 기록하는 처리 파이프라인 단계입니다.
  *
- * ## Steps (in execution order)
- * - [VALIDATION]      — input file validation (MIME type, size, dimensions)
- * - [VIPS_PROCESSING] — libvips image resizing and format conversion
- * - [S3_UPLOAD]       — upload of original and variant objects to S3
- * - [JOB_COMPLETED]   — final marker written when the job succeeds
- * - [JOB_FAILED]      — final marker written when the job fails
+ * ## 단계(실행 순서)
+ * - [VALIDATION]      — 입력 파일 검증(MIME 유형, 크기, 이미지 치수)
+ * - [VIPS_PROCESSING] — libvips 이미지 크기 변경과 형식 변환
+ * - [S3_UPLOAD]       — 원본 및 변형 객체를 S3에 업로드
+ * - [JOB_COMPLETED]   — job 성공 시 쓰는 최종 마커
+ * - [JOB_FAILED]      — job 실패 시 쓰는 최종 마커
  */
 enum class ImageProcessingStep {
     VALIDATION,
