@@ -53,6 +53,10 @@ allprojects {
 }
 
 subprojects {
+    val isOptimizationModule = projectDir.toPath()
+        .startsWith(rootProject.projectDir.resolve("optimization").toPath())
+    val targetJavaVersion = if (isOptimizationModule) 25 else 21
+
     apply {
         plugin<JavaLibraryPlugin>()
 
@@ -72,12 +76,12 @@ subprojects {
 
     java {
         toolchain {
-            languageVersion.set(JavaLanguageVersion.of(21))
+            languageVersion.set(JavaLanguageVersion.of(targetJavaVersion))
         }
     }
 
     kotlin {
-        jvmToolchain(21)
+        jvmToolchain(targetJavaVersion)
         compilerOptions {
             languageVersion.set(KotlinVersion.KOTLIN_2_3)
             apiVersion.set(KotlinVersion.KOTLIN_2_3)

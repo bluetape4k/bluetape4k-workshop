@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: planning-contracts
+  datasource:
+    url: ${PLANNING_DATABASE_URL:jdbc:postgresql://localhost:5432/planning}
+    username: ${PLANNING_DATABASE_USERNAME:planning}
+    password: ${PLANNING_DATABASE_PASSWORD:planning}
+    hikari:
+      maximum-pool-size: 8
+  threads:
+    virtual:
+      enabled: true
+server:
+  max-http-request-header-size: 16KB
+  tomcat:
+    max-http-form-post-size: 256KB
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+planning:
+  provider:
+    base-url: ${PLANNING_PROVIDER_BASE_URL:http://localhost:8081}
+    callback-secret: ${PLANNING_CALLBACK_SECRET:}

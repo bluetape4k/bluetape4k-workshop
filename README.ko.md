@@ -298,6 +298,7 @@ bluetape4k-workshop/
 ├── leader/                 # 분산 리더 선출
 ├── messaging/              # Kafka
 ├── observability/          # Micrometer Observation + Tracing
+├── optimization/           # Java 25 planning/optimization 계약
 ├── operations/             # 내구성 작업 콘솔 core + Spring MVC/Ktor 어댑터
 ├── ratelimit/              # Bucket4j 속도 제한
 ├── redis/                  # Redisson + Redis 패턴

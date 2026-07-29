@@ -299,6 +299,7 @@ bluetape4k-workshop/
 ├── leader/                 # Distributed leader election
 ├── messaging/              # Kafka
 ├── observability/          # Micrometer Observation + Tracing
+├── optimization/           # Java 25 planning/optimization contracts
 ├── operations/             # Durable job console core + Spring MVC/Ktor adapters
 ├── ratelimit/              # Bucket4j rate limiting
 ├── redis/                  # Redisson + Redis patterns

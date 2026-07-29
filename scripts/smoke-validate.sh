@@ -10,7 +10,7 @@
 #   ./scripts/smoke-validate.sh high-contention-contract
 #   HIGH_CONTENTION_RUN_ID=<unique-id> ./scripts/smoke-validate.sh high-contention-ci
 #
-# Groups: data-access  spring-boot  serialization  messaging  commerce  operations  async  observability  aws  redis
+# Groups: data-access  spring-boot  serialization  messaging  commerce  optimization  operations  async  observability  aws  redis
 # Each group runs with --continue so a single failure does not abort the rest.
 
 set -euo pipefail
@@ -181,6 +181,13 @@ case "${1:-help}" in
       --continue --max-workers=1"
     ;;
 
+  optimization)
+    # Java 25; planning contract tests use deterministic fakes and PostgreSQL fixtures.
+    run "$GRADLEW \
+      :optimization-planning-contracts:test \
+      --continue --max-workers=1"
+    ;;
+
   leader-full)
     # Java 25; the default path is container-free and integration is serialized.
     run "$GRADLEW \
@@ -320,6 +327,7 @@ case "${1:-help}" in
     echo "  serialization    Jackson / JSON / Okio"
     echo "  messaging        Kafka (Testcontainers)"
     echo "  commerce         Commerce lifecycles (PostgreSQL Testcontainers)"
+    echo "  optimization     Planning contracts (Java 25, deterministic + PostgreSQL fixtures)"
     echo "  operations       Job console core + Spring MVC/Ktor (PostgreSQL/Redis Testcontainers)"
     echo "  leader-full      Job safety lab default + PostgreSQL/Redis integration tests"
     echo "  async            Coroutines / Vert.x"

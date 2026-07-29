@@ -165,6 +165,7 @@ gatling-plugin = { id = "io.gatling.gradle", version.ref = "gatling-plugin" }
 exposed = { id = "org.jetbrains.exposed.plugin", version.ref = "exposed" }
 
 [libraries]
+wiremock = { module = "org.wiremock:wiremock", version = "3.13.2" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version = "26.1.0" }  # https://mvnrepository.com/artifact/org.jetbrains/annotations
 
 # bluetape4k-graph — graph DB integrations; version governed by bluetape4k-dependencies BOM

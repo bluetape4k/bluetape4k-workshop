@@ -428,6 +428,7 @@ jobs:
       # - spring-boot-cache-redis: Redis-backed cache path
       # - messaging-kafka: Kafka-backed messaging path
       # - messaging-kafka-outbox-fallback: PostgreSQL + Kafka fallback relay path
+      # - optimization-planning-contracts: PostgreSQL planning inbox/outbox on Java 25
       # - commerce-order-lifecycle-fulfillment: PostgreSQL durable lifecycle and replay path
       # - commerce-reservation-control-plane: PostgreSQL-authoritative reservation and advisory Redis path
       # - commerce-event-sourced-promotion-voucher-campaign: PostgreSQL append, projection, rebuild, and recovery path
@@ -456,6 +457,7 @@ jobs:
           :spring-boot-cache-redis:test
           :messaging-kafka:test
           :messaging-kafka-outbox-fallback:test
+          :optimization-planning-contracts:test
           :commerce-order-lifecycle-fulfillment:test
           :commerce-reservation-control-plane:test
           :commerce-event-sourced-promotion-voucher-campaign:integrationTest
@@ -533,6 +535,8 @@ jobs:
             messaging/kafka/build/reports/tests/test/
             messaging/kafka-outbox-fallback/build/test-results/test/*.xml
             messaging/kafka-outbox-fallback/build/reports/tests/test/
+            optimization/planning-contracts/build/test-results/test/*.xml
+            optimization/planning-contracts/build/reports/tests/test/
             commerce/order-lifecycle-fulfillment/build/test-results/test/*.xml
             commerce/order-lifecycle-fulfillment/build/reports/tests/test/
             commerce/reservation-control-plane/build/test-results/test/*.xml
