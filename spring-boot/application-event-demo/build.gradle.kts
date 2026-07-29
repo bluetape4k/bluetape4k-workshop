@@ -17,11 +17,11 @@ configurations {
 dependencies {
     implementation(platform(libs.spring.boot4.dependencies))
 
-    // Bluetape4k
+    // Bluetape4k 의존성
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.io)
 
-    // Spring Boot
+    // Spring Boot 의존성
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
@@ -38,13 +38,13 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
-    // Coroutines
+    // 코루틴
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactor)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    // Reactor
+    // Reactor 의존성
     implementation(libs.reactor.netty)
     implementation(libs.reactor.kotlin.extensions)
     testImplementation(libs.reactor.test)

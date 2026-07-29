@@ -32,9 +32,9 @@ class AspectFlowEventEmitterTest(
 
         output.capture() shouldContain "Handle aspect event"
 
-        // val params = someOperation(params)
-        // val myAspectParams = MyAspectParams.create(params.id)
-        // publish AspectEvent(src, myAspectParams)
+        // val params = someOperation(params) 로 실행 결과를 얻습니다.
+        // val myAspectParams = MyAspectParams.create(params.id) 로 event parameter 를 만듭니다.
+        // publish AspectEvent(src, myAspectParams) 로 event 를 publish 합니다.
         output.expect {
             it shouldContain "src=io.bluetape4k.workshop.application.event.aspect.MyEventService"
             it shouldContain "message=${MyAspectParams(id)}"

@@ -5,10 +5,10 @@ import org.springframework.context.ApplicationEvent
 import java.io.Serializable
 
 /**
- * Application event published by the direct controller flow.
+ * direct controller flow 가 publish 하는 application event 입니다.
  *
- * The payload must be non-blank because listeners log and process the message as
- * user-visible event content.
+ * listener 가 메시지를 user-visible event content 로 log 하고 처리하므로
+ * payload 는 비어 있지 않아야 합니다.
  */
 data class CustomEvent(
     private val src: Any,
