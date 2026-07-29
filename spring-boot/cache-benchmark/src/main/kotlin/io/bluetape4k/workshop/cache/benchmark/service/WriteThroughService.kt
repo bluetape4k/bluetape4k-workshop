@@ -13,12 +13,12 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
- * Profile 6 — Write-Through Cache.
+ * Profile 6 — Write-Through Cache 입니다.
  *
- * Strategy: Redisson-managed write-through.
+ * Strategy 는 Redisson-managed write-through 입니다.
  *
- * - Reads: cache-first, then [ProductMapLoader] on miss.
- * - Writes: callers write the map; [ProductMapWriter] persists synchronously.
+ * - read: cache-first 로 읽고, miss 시 [ProductMapLoader] 를 사용합니다.
+ * - write: caller 가 map 에 쓰면 [ProductMapWriter] 가 동기적으로 persist 합니다.
  */
 @Service
 class WriteThroughService(

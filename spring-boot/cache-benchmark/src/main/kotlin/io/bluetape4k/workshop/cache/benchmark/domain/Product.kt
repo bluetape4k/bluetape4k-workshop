@@ -12,9 +12,9 @@ import java.io.Serializable
 import java.math.BigDecimal
 
 /**
- * Product entity used as the benchmark subject for all 7 cache profiles.
+ * 7개 cache profile 모두에서 benchmark 대상이 되는 Product entity 입니다.
  *
- * Implements [Serializable] so it can be stored in distributed caches (Redis, Redisson).
+ * distributed cache(Redis, Redisson)에 저장할 수 있도록 [Serializable] 을 구현합니다.
  */
 @Entity
 @Table(

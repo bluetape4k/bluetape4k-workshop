@@ -15,12 +15,12 @@ import kotlinx.benchmark.Warmup
 import java.util.concurrent.TimeUnit
 
 /**
- * Profile 7 — Write-Behind Cache.
+ * Profile 7 — Write-Behind Cache 입니다.
  *
- * Measures Redisson WRITE_BEHIND in two separate operations:
- * - [enqueueExistingUpdate] measures cache update and queue acceptance latency.
- * - [enqueueAndWaitForDrain] measures completed persistence by waiting until
- *   the repository reflects the queued update.
+ * Redisson WRITE_BEHIND 를 두 작업으로 나누어 측정합니다.
+ * - [enqueueExistingUpdate] 는 cache update 와 queue acceptance latency 를 측정합니다.
+ * - [enqueueAndWaitForDrain] 은 repository 가 queued update 를 반영할 때까지 기다려
+ *   완료된 persistence 를 측정합니다.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)

@@ -12,14 +12,14 @@ import org.springframework.stereotype.Service
 import java.time.Duration
 
 /**
- * Profile 4 — Redisson Near Cache (RLocalCachedMap).
+ * Profile 4 — Redisson Near Cache(RLocalCachedMap) 입니다.
  *
- * Uses Redisson's [RLocalCachedMap] which provides a 2-tier cache:
- * - Tier 1: Caffeine-backed local (in-JVM) map — ultra-low latency
- * - Tier 2: Redis backing store — shared across instances
+ * 2-tier cache 를 제공하는 Redisson [RLocalCachedMap] 을 사용합니다.
+ * - Tier 1: Caffeine 기반 local(in-JVM) map — ultra-low latency
+ * - Tier 2: Redis backing store — instance 사이에 공유
  *
- * This is the bluetape4k-recommended pattern for distributed near caching.
- * See: [io.bluetape4k.cache.nearcache.NearCacheOperations]
+ * distributed near caching 에 대해 bluetape4k 가 권장하는 pattern 입니다.
+ * 참고: [io.bluetape4k.cache.nearcache.NearCacheOperations]
  */
 @Service
 class NearCacheService(
@@ -42,10 +42,10 @@ class NearCacheService(
     }
 
     override fun findById(id: Long): Product? {
-        // 1. Check local (in-JVM) tier
+        // 1. local(in-JVM) tier 를 확인합니다.
         return nearCache.getOrDefault(id, null)
             ?: run {
-                // 2. Cache miss: load from DB and populate near cache
+                // 2. Cache miss: DB 에서 읽고 near cache 를 채웁니다.
                 productRepository.findById(id).orElse(null)?.also { product ->
                     nearCache[id] = product
                 }

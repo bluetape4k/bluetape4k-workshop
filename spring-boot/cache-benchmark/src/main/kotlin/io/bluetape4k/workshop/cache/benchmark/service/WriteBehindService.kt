@@ -15,15 +15,13 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
- * Profile 7 — Write-Behind Cache.
+ * Profile 7 — Write-Behind Cache 입니다.
  *
- * Strategy: Redisson-managed write-behind.
+ * Strategy 는 Redisson-managed write-behind 입니다.
  *
- * - Reads: cache-first, then [ProductMapLoader] on miss.
- * - Writes: callers write the map; Redisson queues and batches
- *   [ProductMapWriter] persistence.
- * - The returned value means the cache accepted the update, not that the DB has
- *   already drained the queued write.
+ * - read: cache-first 로 읽고, miss 시 [ProductMapLoader] 를 사용합니다.
+ * - write: caller 가 map 에 쓰면 Redisson 이 [ProductMapWriter] persistence 를 queue 에 넣고 batch 처리합니다.
+ * - 반환값은 cache 가 update 를 수락했다는 뜻이며, DB 가 queued write 를 이미 drain 했다는 뜻은 아닙니다.
  */
 @Service
 class WriteBehindService(

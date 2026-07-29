@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration
 import java.math.BigDecimal
 
 /**
- * Initializes the in-memory H2 DB with sample products for benchmark runs.
+ * benchmark 실행을 위해 in-memory H2 DB 를 예제 product 로 초기화합니다.
  */
 @Configuration
 class DataInitConfig {

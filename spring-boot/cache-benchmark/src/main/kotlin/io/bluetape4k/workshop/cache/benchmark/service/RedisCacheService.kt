@@ -9,10 +9,10 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 
 /**
- * Profile 3 — Redis Distributed Cache.
+ * Profile 3 — Redis Distributed Cache 입니다.
  *
- * Uses Spring's `@Cacheable` with a Redis-backed [CacheManager] (Spring Data Redis).
- * Cache entries are shared across all JVM instances, TTL = 60 s.
+ * Redis 기반 [CacheManager](Spring Data Redis)와 Spring `@Cacheable` 을 사용합니다.
+ * cache entry 는 모든 JVM instance 사이에 공유되며 TTL 은 60초입니다.
  */
 @Service
 class RedisCacheService(private val productRepository: ProductRepository) : ProductCacheService {
