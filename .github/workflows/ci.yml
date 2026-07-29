@@ -65,7 +65,7 @@ jobs:
           gradle-version: wrapper
           cache-read-only: ${{ github.event_name == 'pull_request' }}
       - name: Build (compile only)
-        run: ./gradlew build -x test -x stressTest -x migrationCompatibilityTest --parallel --continue
+        run: ./gradlew build -x test -x integrationTest -x stressTest -x migrationCompatibilityTest --parallel --continue
         env:
           JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
