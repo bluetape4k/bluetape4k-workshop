@@ -27,8 +27,8 @@ abstract class AbstractBucket4jAdvancedTest {
     @LocalServerPort
     protected var port: Int = 0
 
-    // Use bindToServer so requests have a real TCP remote address (127.0.0.1).
-    // This is required for IP-based rate limiting to work correctly in tests.
+    // 요청에 실제 TCP remote address(127.0.0.1)가 생기도록 bindToServer를 사용합니다.
+    // IP 기반 rate limiting이 테스트에서 올바르게 동작하려면 이 주소가 필요합니다.
     protected val client: WebTestClient by lazy {
         WebTestClient.bindToServer()
             .baseUrl("http://localhost:$port")

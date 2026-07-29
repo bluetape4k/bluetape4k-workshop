@@ -4,16 +4,16 @@ import io.bluetape4k.logging.KLogging
 import kotlinx.atomicfu.atomic
 
 /**
- * CAS-based fencing token guard for a single resource.
+ * 단일 리소스의 fencing token을 CAS로 검증하는 가드입니다.
  *
- * ## Behavior / Contract
- * - Tracks the highest fencing token ever seen via a CAS loop.
- * - `apply(token, work)` returns `null` when `token < lastSeenToken` (stale holder).
- * - Equal tokens (`token == lastSeenToken`) are **allowed** — modelling re-entry within
- *   the same lease period (assumes [work] is idempotent).
- * - This guard is **in-memory only**: state resets on JVM restart (workshop limitation).
+ * ## 동작 계약
+ * - CAS 루프로 지금까지 관측한 가장 큰 fencing token을 추적합니다.
+ * - `apply(token, work)`는 `token < lastSeenToken`인 오래된 보유자에게 `null`을 반환합니다.
+ * - 동일 토큰(`token == lastSeenToken`)은 **허용**합니다. 같은 lease 기간 안의 재진입을 모델링하며,
+ *   이때 [work]가 멱등적이라고 가정합니다.
+ * - 이 가드는 **메모리 전용**입니다. JVM을 재시작하면 상태가 초기화됩니다(워크숍 한계).
  *
- * ## Usage
+ * ## 사용 예
  * ```kotlin
  * val resource = FencedResource(inventoryId)
  * val result = resource.apply(token) {
@@ -29,18 +29,18 @@ class FencedResource(val resourceId: Long) {
     private val lastSeenToken = atomic(0L)
 
     /**
-     * Applies [work] only if [token] is not stale (not strictly less than the last seen token).
+     * [token]이 오래되지 않았을 때만 [work]를 실행합니다.
      *
-     * @return the result of [work], or `null` if [token] is stale.
+     * @return [work]의 결과. [token]이 지금까지 관측한 token보다 작으면 `null`입니다.
      */
     fun <T : Any> apply(token: Long, work: () -> T): T? {
         while (true) {
             val current = lastSeenToken.value
-            if (token < current) return null  // stale: strict less-than check
+            if (token < current) return null  // 오래된 토큰: 엄격한 작음 비교
             if (lastSeenToken.compareAndSet(current, maxOf(current, token))) {
                 return work()
             }
-            // CAS lost to a concurrent update; retry
+            // 동시 갱신에 CAS가 실패했으므로 재시도합니다.
         }
     }
 }

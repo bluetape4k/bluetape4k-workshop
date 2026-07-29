@@ -9,10 +9,10 @@ import org.springframework.context.annotation.Profile
 import org.springframework.core.annotation.Order
 
 /**
- * Starts a Testcontainers Redis singleton for `dev` and `test` profiles.
+ * `dev`와 `test` profile에서 Testcontainers Redis singleton을 시작합니다.
  *
- * Exposes the container URL via system properties so that [LettuceConfig] can wire it
- * through `spring.data.redis.url` in `application.yml`.
+ * [LettuceConfig]가 `application.yml`의 `spring.data.redis.url`을 통해 연결할 수 있도록
+ * container URL을 system property로 노출합니다.
  */
 @Configuration(proxyBeanMethods = false)
 @Profile("dev", "test")

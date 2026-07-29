@@ -7,10 +7,10 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * Provides simple WebMVC endpoints protected by Bucket4j servlet filters.
+ * Bucket4j servlet filter로 보호되는 단순 WebMVC endpoint를 제공합니다.
  *
- * `/hello` and `/world` intentionally return the same body so the example can
- * focus on per-URL quota differences configured in `application-servlet.yml`.
+ * 이 예제가 `application-servlet.yml`의 URL별 quota 차이에 집중하도록
+ * `/hello`와 `/world`는 의도적으로 같은 body를 반환합니다.
  */
 @RestController
 class IndexController {

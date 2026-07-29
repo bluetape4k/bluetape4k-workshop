@@ -34,7 +34,7 @@ class FileChannelSink(
     }
 
     override fun flush() {
-        // Cannot alter meta data through this sink 
+        // 이 sink 로는 metadata 를 변경할 수 없습니다.
         channel.force(false)
     }
 

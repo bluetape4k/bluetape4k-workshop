@@ -40,7 +40,7 @@ class ByteChannelSink(
     }
 
     override fun flush() {
-        // Nothing to do
+        // 수행할 작업이 없습니다.
     }
 
     override fun timeout(): Timeout = timeout

@@ -3,11 +3,11 @@ configurations {
 }
 
 dependencies {
-    // OKIO
+    // OKIO 의존성입니다.
     implementation(libs.okio.lib)
     implementation(libs.okio.fakefilesystem)
 
-    // bluetape4k
+    // bluetape4k 공통 의존성입니다.
     implementation(libs.bluetape4k.io)
     implementation(libs.bluetape4k.okio)
     implementation(libs.bluetape4k.coroutines)
@@ -15,15 +15,15 @@ dependencies {
 
     implementation(libs.commons.io)
 
-    // Coroutines
+    // coroutine 의존성입니다.
     implementation(libs.kotlinx.coroutines.core.lib)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    // Serialization Libraries
+    // serialization library 의존성입니다.
     implementation(libs.kryo5)
     implementation(libs.fory.kotlin)
 
-    // Compression libraries
+    // compression library 의존성입니다.
     implementation(libs.commons.compress)
     implementation(libs.lz4.java)
     implementation(libs.snappy.java)

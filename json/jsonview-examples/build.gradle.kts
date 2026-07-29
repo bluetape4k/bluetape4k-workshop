@@ -17,7 +17,7 @@ dependencies {
 
     testImplementation(project(":shared"))
 
-    // Jackson
+    // Jackson 의존성입니다.
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.jackson.annotations)
     implementation(libs.jackson3.core)
@@ -28,11 +28,11 @@ dependencies {
     compileOnly(libs.jsonpath)
     testImplementation(libs.jsonassert)
 
-    // bluetape4k
+    // bluetape4k 공통 의존성입니다.
     implementation(libs.bluetape4k.core)
     testImplementation(libs.bluetape4k.junit5)
 
-    // Spring Boot
+    // Spring Boot 의존성입니다.
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
@@ -48,13 +48,13 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
-    // Coroutines
+    // coroutine 의존성입니다.
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactor)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    // Reactor
+    // Reactor 의존성입니다.
     implementation(libs.reactor.netty)
     implementation(libs.reactor.kotlin.extensions)
     testImplementation(libs.reactor.test)

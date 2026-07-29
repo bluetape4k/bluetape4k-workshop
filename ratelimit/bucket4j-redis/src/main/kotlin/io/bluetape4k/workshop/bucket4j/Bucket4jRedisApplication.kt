@@ -7,10 +7,10 @@ import org.springframework.boot.runApplication
 import org.springframework.cache.annotation.EnableCaching
 
 /**
- * Spring Boot entry point for the Redis-backed Bucket4j WebFlux example.
+ * Redis 기반 Bucket4j WebFlux 예제의 Spring Boot entry point입니다.
  *
- * The companion starts the shared bluetape4k Redis Testcontainer so the sample
- * can bootstrap with the same Redis URL source used by its integration tests.
+ * companion은 공유 bluetape4k Redis Testcontainer를 시작해,
+ * sample이 통합 테스트와 같은 Redis URL source로 bootstrap되도록 합니다.
  */
 @SpringBootApplication(proxyBeanMethods = false)
 @EnableCaching

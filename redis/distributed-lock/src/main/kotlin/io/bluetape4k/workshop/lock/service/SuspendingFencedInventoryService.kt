@@ -18,18 +18,18 @@ import org.redisson.api.RedissonClient
 import java.util.concurrent.TimeUnit.MILLISECONDS
 
 /**
- * Coroutine-safe inventory service using [org.redisson.api.RFencedLock] with explicit lock identity.
+ * 명시적인 lock identity와 [org.redisson.api.RFencedLock]을 사용하는 coroutine-safe 재고 서비스입니다.
  *
- * ## Behavior / Contract
- * - Uses [RedissonClient.getLockId] to obtain a stable, coroutine-safe lock identity
- *   (Snowflake ID). This identity must be passed to both `tryLockAsync` and `unlockAsync`.
- * - Two-step acquire: `tryLockAsync(lockId)` then `tokenAsync.await()`.
- *   There is no `tryLockAndGetTokenAsync(lockId)` overload in Redisson 4.x.
- * - The `finally` block runs `unlockAsync(lockId)` inside `withContext(NonCancellable)`.
- *   Without this guard, coroutine cancellation causes the await to throw [kotlinx.coroutines.CancellationException]
- *   before the unlock completes, leaking the lock until lease expiry.
- * - [beforeWork] is a **test seam** — defaults to a no-op. Inject `suspend { delay(ms) }`
- *   in tests to create a reliable cancellation window inside the lock-held section.
+ * ## 동작 계약
+ * - [RedissonClient.getLockId]로 coroutine-safe한 안정적 lock identity(Snowflake ID)를 얻습니다.
+ *   이 identity는 `tryLockAsync`와 `unlockAsync` 모두에 전달해야 합니다.
+ * - lock 획득은 `tryLockAsync(lockId)` 뒤에 `tokenAsync.await()`를 호출하는 2단계입니다.
+ *   Redisson 4.x에는 `tryLockAndGetTokenAsync(lockId)` overload가 없습니다.
+ * - `finally` 블록은 `withContext(NonCancellable)` 안에서 `unlockAsync(lockId)`를 실행합니다.
+ *   이 보호가 없으면 coroutine 취소 때문에 unlock 완료 전에 await가 [kotlinx.coroutines.CancellationException]을 던지고,
+ *   lease 만료 전까지 lock이 누수될 수 있습니다.
+ * - [beforeWork]는 **테스트용 삽입 지점**이며 기본값은 no-op입니다. 테스트에서 `suspend { delay(ms) }`를 주입해
+ *   lock 보유 구간 안에 안정적인 취소 창을 만듭니다.
  */
 class SuspendingFencedInventoryService(
     private val redisson: RedissonClient,
@@ -59,7 +59,7 @@ class SuspendingFencedInventoryService(
 
         val token: Long = fLock.tokenAsync.await()
         try {
-            beforeWork()  // test seam: default no-op; inject delay for cancellation tests
+            beforeWork()  // 테스트용 삽입 지점: 기본 no-op이며 취소 테스트에서는 delay를 주입합니다.
             val current = store.currentStock(id)
             if (current < qty) return InsufficientStock(qty, current)
             return fencedResources.forResource(id).apply(token) {
@@ -67,8 +67,8 @@ class SuspendingFencedInventoryService(
                 Success(remaining, token)
             } ?: Rejected(token)
         } finally {
-            // CRITICAL: NonCancellable prevents CancellationException from aborting the unlock.
-            // Without this, a cancelled coroutine leaks the lock until lease expiry.
+            // 중요: NonCancellable은 CancellationException이 unlock을 중단하지 못하게 합니다.
+            // 이 보호가 없으면 취소된 coroutine이 lease 만료 전까지 lock을 누수합니다.
             withContext(NonCancellable) {
                 try {
                     fLock.unlockAsync(lockId).await()

@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Verifies [SuspendingFencedInventoryService] correctness and cancellation safety.
+ * [SuspendingFencedInventoryService]의 정확성과 취소 안전성을 검증합니다.
  */
 class SuspendFencedLockTest : AbstractDistributedLockTest() {
 
@@ -34,8 +34,8 @@ class SuspendFencedLockTest : AbstractDistributedLockTest() {
     fun `SuspendingFencedInventoryService - 동시 코루틴 차감 시 oversell 이 발생하지 않는다`() = runSuspendIO {
         val successCount = AtomicInteger(0)
 
-        // workers(20).rounds(20): totalUnits = rounds * blockCount = 20 * 1 = 20 attempts
-        // With stock=100, qty=10 → exactly 10 succeed, 10 get InsufficientStock
+        // workers(20).rounds(20): totalUnits = rounds * blockCount = 20 * 1 = 20회 시도입니다.
+        // stock=100, qty=10이면 정확히 10회 성공하고 10회는 InsufficientStock이 됩니다.
         SuspendedJobTester()
             .workers(20)
             .rounds(20)
@@ -55,8 +55,8 @@ class SuspendFencedLockTest : AbstractDistributedLockTest() {
         val lockName = "inventory:sfenced:999"
         val fLock = redisson.getFencedLock(lockName)
 
-        // beforeWork seam: delay(500) fires inside the lock-held section,
-        // ensuring delay(50) cancel lands DURING the lock-held window — not after deduct() returns.
+        // beforeWork 삽입 지점: delay(500)이 lock 보유 구간 안에서 실행되므로,
+        // delay(50) 뒤 취소가 deduct() 반환 후가 아니라 lock 보유 중에 도착합니다.
         val slowService = SuspendingFencedInventoryService(
             redisson = redisson,
             store = store,
@@ -65,18 +65,18 @@ class SuspendFencedLockTest : AbstractDistributedLockTest() {
         )
 
         val job = launch { slowService.deduct(999L, 10) }
-        delay(50)        // fires during the 500ms beforeWork window — lock is held
+        delay(50)        // 500ms beforeWork 창 중에 실행되므로 lock이 보유되어 있습니다.
         job.cancel()
         job.join()
 
-        // NonCancellable ensures unlock completes even after cancel
+        // NonCancellable은 취소 이후에도 unlock이 완료되도록 보장합니다.
         fLock.isLocked.shouldBeFalse()
     }
 
     @Test
     fun `SuspendingFencedInventoryService - 구 토큰으로 차감 시도 시 Rejected 반환`() = runSuspendIO {
-        // Pre-seed the shared FencedResource with a very high token.
-        // Any new Redisson lock token (starting from 1) will be strictly less than 9999 → Rejected.
+        // 공유 FencedResource에 매우 큰 token을 먼저 심어 둡니다.
+        // 새 Redisson lock token은 1부터 시작하므로 9999보다 작아 Rejected가 됩니다.
         fencedResources.forResource(inventoryId).apply(9999L) { Unit }
 
         val result = suspendingService.deduct(inventoryId, 10, waitMs = 2000L, leaseMs = 5000L)
@@ -86,7 +86,7 @@ class SuspendFencedLockTest : AbstractDistributedLockTest() {
 
     @Test
     fun `SuspendingFencedInventoryService - 락 획득 실패 시 LockNotAcquired 반환`() = runSuspendIO {
-        // RFencedLock is reentrant — must hold from a DIFFERENT thread to block coroutine acquisition.
+        // RFencedLock은 reentrant이므로 coroutine의 획득을 막으려면 다른 thread에서 보유해야 합니다.
         val lockName = "inventory:sfenced:$inventoryId"
         val holderLock = redisson.getFencedLock(lockName)
         val acquireLatch = java.util.concurrent.CountDownLatch(1)
@@ -101,7 +101,7 @@ class SuspendFencedLockTest : AbstractDistributedLockTest() {
             }
         }
         holder.start()
-        acquireLatch.await()  // wait until holder thread has the lock
+        acquireLatch.await()  // holder thread가 lock을 보유할 때까지 기다립니다.
 
         try {
             val result = suspendingService.deduct(inventoryId, 10, waitMs = 0L, leaseMs = 1000L)

@@ -14,13 +14,13 @@ import org.redisson.api.RedissonClient
 import java.util.concurrent.TimeUnit.MILLISECONDS
 
 /**
- * Inventory service that uses [org.redisson.api.RFencedLock] for fencing-token-based protection.
+ * [org.redisson.api.RFencedLock]으로 fencing-token 기반 보호를 적용하는 재고 서비스입니다.
  *
- * ## Behavior / Contract
- * - Uses the blocking `tryLockAndGetToken(waitMs, leaseMs, unit)` — safe to call from blocking threads.
- * - Delegates guarded writes to [FencedResources]: if the token is stale, returns [Rejected].
- * - The `finally` block wraps `unlock()` in `runCatching` to absorb `IllegalMonitorStateException`
- *   when the lease has already expired.
+ * ## 동작 계약
+ * - blocking API인 `tryLockAndGetToken(waitMs, leaseMs, unit)`을 사용하므로 blocking thread에서 호출해도 됩니다.
+ * - 보호된 쓰기는 [FencedResources]에 위임합니다. token이 오래되었으면 [Rejected]를 반환합니다.
+ * - lease가 이미 만료된 경우의 `IllegalMonitorStateException`을 흡수하기 위해
+ *   `finally` 블록에서 `unlock()`을 `runCatching`으로 감쌉니다.
  */
 class FencedInventoryService(
     private val redisson: RedissonClient,

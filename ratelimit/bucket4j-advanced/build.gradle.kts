@@ -22,18 +22,18 @@ configurations {
 dependencies {
     implementation(libs.bluetape4k.jackson3)
 
-    // Bucket4j
+    // Bucket4j 의존성입니다.
     implementation(libs.bluetape4k.bucket4j)
     implementation(libs.bucket4j.core)
     implementation(libs.bucket4j.lettuce)
     implementation(libs.commons.pool2)
 
-    // Redis
+    // Redis 의존성입니다.
     implementation(libs.bluetape4k.redis)
     implementation(libs.lettuce.core)
     implementation(libs.bluetape4k.testcontainers)
 
-    // Spring Boot
+    // Spring Boot 의존성입니다.
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
@@ -49,17 +49,17 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
-    // Coroutines
+    // coroutine 의존성입니다.
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactor)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    // Reactor
+    // Reactor 의존성입니다.
     implementation(libs.reactor.netty)
     implementation(libs.reactor.kotlin.extensions)
     testImplementation(libs.reactor.test)
 
-    // Test
+    // test 의존성입니다.
     testImplementation(libs.bluetape4k.junit5)
 }
