@@ -11,10 +11,10 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
- * Redisson client configuration.
+ * Redisson client 설정입니다.
  *
- * Reads `spring.data.redis.host` and `spring.data.redis.port` from application properties,
- * which are overridden at test time via [DynamicPropertySource].
+ * application property 에서 `spring.data.redis.host` 와 `spring.data.redis.port` 를 읽습니다.
+ * 이 값은 test 시점에 [DynamicPropertySource] 로 override 됩니다.
  */
 @Configuration(proxyBeanMethods = false)
 class RedissonConfig {
