@@ -16,22 +16,22 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * T6: Redis failure educational smoke test.
+ * T6: Redis failure 교육용 smoke test입니다.
  *
- * Demonstrates library behavior when Redis becomes unavailable mid-operation.
- * Uses an isolated Testcontainers Redis container that is stopped before the test.
+ * Redis가 operation 중 사용할 수 없게 될 때 library 동작을 보여줍니다.
+ * 테스트 전에 중지하는 isolated Testcontainers Redis container를 사용합니다.
  *
- * IMPORTANT: Does NOT use `RedisServer.Launcher.redis` (the shared singleton).
- * Stopping the singleton would break all other tests.
+ * 중요: 공유 singleton인 `RedisServer.Launcher.redis`를 사용하지 않습니다.
+ * singleton을 중지하면 다른 모든 테스트가 깨집니다.
  *
- * Excluded from the default `test` task via `junit.jupiter.execution.exclude.tags=smoke`.
+ * `junit.jupiter.execution.exclude.tags=smoke`로 기본 `test` task에서 제외됩니다.
  */
 @Tag("smoke")
 class RedisFailureTest {
 
     @Test
     fun `runIfLeader throws exception when Redis is unavailable`() = runSuspendIO(timeout = 10.seconds) {
-        // Use a dedicated container — NOT the shared singleton
+        // 공유 singleton이 아니라 dedicated container를 사용합니다.
         val redisContainer = RedisServer(image = RedisServer.IMAGE, tag = "7-alpine").apply { start() }
         val client = RedisClient.create(redisContainer.url)
 
@@ -42,10 +42,10 @@ class RedisFailureTest {
             val lockName = "test:t6:${Base58.randomString(8)}"
 
             try {
-                // Stop Redis before attempting lock acquisition
+                // lock 획득을 시도하기 전에 Redis를 중지합니다.
                 redisContainer.stop()
 
-                // runSuspendIO timeout guards against infinite hang; assertFailsWith verifies Redis failure propagation.
+                // runSuspendIO timeout은 무한 hang을 막고, assertFailsWith는 Redis failure 전파를 검증합니다.
                 assertFailsWith<Exception> {
                     elector.runIfLeader(lockName) { "should-not-execute" }
                 }

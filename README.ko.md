@@ -50,7 +50,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 
 ## 도메인 카탈로그
 
-모듈은 여덟 개의 학습 도메인으로 구성됩니다.
+모듈은 일곱 개의 학습 도메인으로 구성됩니다.
 각 도메인에는 **Basic** (독립적, 최소 인프라)과 **Advanced** (다계층, Testcontainers) 모듈이 있습니다.
 
 ![Workshop Module Composition](./docs/images/readme-charts/root-readme-module-chart-01.png)
@@ -214,6 +214,15 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Basic | [`spring-modulith-module-boundaries`](spring-modulith/module-boundaries/) | Spring Modulith | In-memory | Named interface와 event contract로 module boundary 검증 |
 | Advanced | [`spring-modulith-events-deep-dive`](spring-modulith/events-deep-dive/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | 영속성을 갖춘 Modulith 애플리케이션 이벤트 |
 | Advanced | [`spring-modulith-jpa-demo`](spring-modulith/jpa-demo/) | `logging`, `testcontainers` | PostgreSQL (TC) | JPA를 활용한 Modulith 모듈 캡슐화 |
+| Advanced | [`commerce-order-lifecycle-fulfillment`](commerce/order-lifecycle-fulfillment/) | `exposed-jdbc`, `exposed-jdbc-tests`, `virtualthread-jdk25`, `micrometer` | PostgreSQL (TC) | Durable event replay를 포함한 독립적인 주문, 결제, 재고, 분할 배송, 취소, 환불 생명주기 |
+| Advanced | [`commerce-reservation-control-plane`](commerce/reservation-control-plane/) | `exposed-jdbc`, `exposed-jdbc-tests`, `lettuce`, `leader`, `virtualthread-jdk25`, `logging` | PostgreSQL + Redis (TC) | PostgreSQL이 권위를 갖는 hold, 멱등 재시도, waitlist offer, leader-guarded expiry |
+| Advanced | [`commerce-event-sourced-promotion-voucher-campaign`](commerce/event-sourced-promotion-voucher-campaign/) | `exposed-jdbc`, `exposed-jdbc-tests`, `virtualthread-jdk25`, `micrometer`, `logging` | PostgreSQL (TC) | Append-only event 권위, snapshot, lease 기반 projection, generation fencing rebuild, position-aware HTTP/SSE 복구 |
+| Advanced | [`commerce-promotion-voucher-campaign`](commerce/promotion-voucher-campaign/) | `exposed-jdbc`, `exposed-jdbc-tests`, `lettuce`, `bucket4j`, `leader`, `virtualthread-jdk25`, `logging` | PostgreSQL + Redis (TC) | PostgreSQL이 권위를 갖는 캠페인 수량, 멱등 바우처 할당/사용, review, SSE, reconciliation |
+| Advanced | [`commerce-pre-generated-voucher-pool`](commerce/pre-generated-voucher-pool/) | `exposed-jdbc`, `exposed-jdbc-tests`, `lettuce`, `bucket4j`, `leader`, `virtualthread-jdk25`, `micrometer`, `logging` | PostgreSQL + Redis (TC) | PostgreSQL이 권위를 갖는 사전 생성 바우처 예약, 일회 reveal과 교체, revoke/reconciliation, Redis admission 보조 경계 |
+| Advanced | [`commerce-concert-ticket-flash-sale`](commerce/concert-ticket-flash-sale/) | `exposed-jdbc`, `lettuce`, `bucket4j`, `virtualthread-jdk25`, `micrometer` | PostgreSQL + Redis (TC) | 대기실 admission, USER/IP guard, 불명확한 결제 복구, late approval, 환불, ticket disposition, 안전한 restock |
+| Advanced | [`commerce-usage-metering-billing-ledger`](commerce/usage-metering-billing-ledger/) | `exposed-jdbc`, `exposed-jdbc-tests`, `virtualthread-jdk25`, `micrometer` | PostgreSQL (TC) | 멱등 usage ingest, 시간 버전 가격, 재시작 가능한 close checkpoint, 불변 ledger/invoice provenance, late adjustment와 reconciliation |
+| Advanced | [`commerce-usage-metering-billing-event-sourcing`](commerce/usage-metering-billing-event-sourcing/) | `exposed-jdbc`, `exposed-jdbc-tests`, `virtualthread-jdk25`, `micrometer` | PostgreSQL (TC) | Hash chain event store, deterministic replay/upcast, snapshot fallback, fenced projection generation rebuild, append-only correction과 reconciliation |
+| Advanced | [`commerce-usage-billing-microservices`](commerce/usage-billing-microservices-composition-tests/) | `exposed-jdbc`, `exposed-jdbc-tests`, `kafka4`, `virtualthread-jdk25`, `micrometer` | PostgreSQL + Kafka (TC) | local Exposed outbox/inbox와 replay-safe delivery, 명시적 ownership boundary를 갖는 독립 Spring Boot 서비스 5개 |
 | Advanced | [`gateway-api-gateway`](gateway/api-gateway/) | `logging` | Services running | Spring Cloud Gateway 라우팅, 필터, 프레디케이트 |
 | Basic | [`ratelimit-bucket4j-caffeine-web`](ratelimit/bucket4j-caffeine-web/) | `logging` | In-memory | Caffeine을 활용한 Bucket4j 속도 제한 |
 | Advanced | [`ratelimit-bucket4j-redis`](ratelimit/bucket4j-redis/) | `redis`, `testcontainers` | Redis (TC) | Bucket4j + Redis를 통한 분산 속도 제한 |
@@ -231,10 +240,14 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Advanced | [`image-processing-advanced-workflow`](image-processing/advanced-workflow/) | `images-vips-java25`, `images-spring-boot`, `micrometer` | S3 또는 local storage | 업로드 → 원본 저장 → WebP 파생 이미지 → unsigned public URL |
 | Advanced | [`image-processing-profile-image-moderation`](image-processing/profile-image-moderation/) | `images-spring-boot`, `coroutines`, `micrometer` | Local storage / S3-compatible | 프로필 업로드 → private 원본 → blurred pending URL → moderation 승인/기본 이미지 fallback |
 | Advanced | [`image-processing-ocr-api`](image-processing/ocr-api/) | `images-ocr`, `images`, `spring-boot4-core` | In-memory | 검증된 fallback과 선택 Tesseract를 사용하는 multipart OCR API |
+| Advanced | [`operations-job-console-core`](operations/job-console-core/) | `exposed-jdbc`, `lettuce`, `micrometer`, `testcontainers` | PostgreSQL + Redis (TC) | 내구성 있는 FIFO 작업, lease, checkpoint, 취소, 재시도 예산, 제한된 ETA, outbox |
+| Advanced | [`operations-job-console-spring`](operations/job-console-spring/) | `spring-boot4-core`, `virtualthread-jdk25` | PostgreSQL (TC) | 공유 Java 25 작업 콘솔 계약을 위한 Spring MVC REST/SSE 어댑터 |
+| Advanced | [`operations-job-console-ktor`](operations/job-console-ktor/) | `ktor`, `coroutines` | PostgreSQL (TC) | 공유 Java 25 작업 콘솔 계약을 위한 Ktor Netty REST/SSE 어댑터 |
 | Advanced | [`leader-leader-election`](leader/) | `coroutines`, `redis`, `testcontainers` | Redis (TC) | 분산 리더 선출: 블로킹, 코루틴, 가상 스레드 |
 | Advanced | [`leader-backend-comparison-lab`](leader/backend-comparison-lab/) | `leader-core`, `spring-boot4-core` | In-memory | Redis, ZooKeeper, Kubernetes Lease 백엔드 선택과 failover lab |
 | Advanced | [`leader-k8s-lease-micrometer`](leader/k8s-lease-micrometer/) | `leader-k8s`, `micrometer`, `spring-boot4-core` | Kubernetes Lease (opt-in) | Micrometer metric과 함께 배우는 Kubernetes Lease 리더 선출 |
 | Advanced | [`leader-tenant-scheduler`](leader/tenant-scheduler/) | `leader-core`, `spring-boot4-core` | In-memory | tenant-scoped leader scheduling: 공정 tick, stale handoff, bounded tenant metric |
+| Advanced | [`leader-job-safety-lab`](leader/job-safety-lab/) | `leader-redis-lettuce`, `lettuce`, `exposed-jdbc`, `spring-boot4-core`, `virtualthread-jdk25` | PostgreSQL + Redis (TC) | resource fencing, PostgreSQL authority, transactional outbox, reconciliation을 다루는 Java 25 Spring Boot 실전 lab |
 
 ```bash
 ./gradlew :spring-security-mvc:test
@@ -247,26 +260,12 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 ./gradlew :aws-storage-abstraction:test
 ./gradlew :aws-s3-vectors-access-grants:test
 ./gradlew :image-processing-profile-image-moderation:test
+./scripts/smoke-validate.sh operations
 ./gradlew :leader-backend-comparison-lab:test
 ./gradlew :leader-tenant-scheduler:test
+./gradlew :leader-job-safety-lab:test
+./gradlew :leader-job-safety-lab:integrationTest --max-workers=1
 ```
-
----
-
-### 8. Optimization 계약
-
-> Provider-neutral planning, PostgreSQL 수렴, Java 25 virtual thread
-
-| 수준 | 모듈 | bluetape4k 라이브러리 | 인프라 | 학습 목표 |
-|------|------|----------------------|-------|-----------|
-| Advanced | [`optimization-planning-contracts`](optimization/planning-contracts/) | `exposed-jdbc`, `exposed-jdbc-tests`, `virtualthread-api`, `virtualthread-jdk25`, `http`, `testcontainers` | PostgreSQL + WireMock (TC) | request/outbox 원자성, callback idempotency, stale result audit, 최종 aggregate version 재검증 |
-
-```bash
-./gradlew :optimization-planning-contracts:test --max-workers=1
-```
-
-`optimization/` 아래의 모든 모듈은 Java 25를 사용합니다. 나머지 workshop
-모듈은 Java 21 toolchain을 유지합니다.
 
 ---
 
@@ -274,9 +273,9 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 
 | 항목 | 버전 |
 |------|------|
-| Kotlin | 2.4.0 |
-| JVM | 21; `optimization/*`는 Java 25 |
-| Spring Boot | 4.1.0 |
+| Kotlin | 2.3.21 |
+| JVM | 21 |
+| Spring Boot | 4.0.6 |
 | bluetape4k | 1.7.0 |
 | Gradle | 8.x (Kotlin DSL, 멀티모듈) |
 
@@ -287,6 +286,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 ```
 bluetape4k-workshop/
 ├── aws/                    # AWS SDK + Spring Cloud AWS
+├── commerce/               # End-to-end commerce 생명주기
 ├── exposed/                # JetBrains Exposed ORM
 ├── gateway/                # API Gateway + 마이크로서비스
 ├── gatling/                # 부하/성능 테스트
@@ -299,6 +299,7 @@ bluetape4k-workshop/
 ├── messaging/              # Kafka
 ├── observability/          # Micrometer Observation + Tracing
 ├── optimization/           # Java 25 planning/optimization 계약
+├── operations/             # 내구성 작업 콘솔 core + Spring MVC/Ktor 어댑터
 ├── ratelimit/              # Bucket4j 속도 제한
 ├── redis/                  # Redisson + Redis 패턴
 ├── spring-boot/            # Spring Boot 기능

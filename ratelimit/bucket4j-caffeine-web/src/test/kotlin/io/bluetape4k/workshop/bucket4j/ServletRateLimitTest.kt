@@ -30,8 +30,8 @@ class ServletRateLimitTest {
 
     @Test
     fun `hello with 5 times rate limit`() {
-        // `/hello` Rate limit is 5 requests per second
-        // `/world` Rate limit is 10 requests per second
+        // `/hello` rate limit은 초당 5 request입니다.
+        // `/world` rate limit은 초당 10 request입니다.
         repeat(5) {
             successfulWebRequest(HELLO_PATH, 5 - 1 - it)
         }

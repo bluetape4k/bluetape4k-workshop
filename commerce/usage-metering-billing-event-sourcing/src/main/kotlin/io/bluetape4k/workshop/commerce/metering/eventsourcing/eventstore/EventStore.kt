@@ -1,0 +1,39 @@
+package io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore
+
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.NewEvent
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.PersistedEvent
+import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.StreamKey
+
+class OptimisticConcurrencyException(
+    val stream: StreamKey,
+    val expectedVersion: Long,
+    val actualVersion: Long,
+) : IllegalStateException(
+        "stream_version_conflict:${stream.canonical()}:expected=$expectedVersion:actual=$actualVersion",
+    )
+
+data class StreamAppend(
+    val stream: StreamKey,
+    val expectedVersion: Long,
+    val events: List<NewEvent>,
+)
+
+data class OccurredEventCursor(val occurredAt: java.time.Instant, val eventId: java.util.UUID)
+
+data class EventTypeQuery(
+    val tenantId: String,
+    val eventType: String,
+    val startsAt: java.time.Instant,
+    val endsAt: java.time.Instant,
+    val after: OccurredEventCursor? = null,
+    val limit: Int,
+)
+
+interface EventStore {
+    fun append(stream: StreamKey, expectedVersion: Long, events: List<NewEvent>): List<PersistedEvent>
+    fun appendAll(appends: List<StreamAppend>): List<PersistedEvent>
+    fun load(stream: StreamKey, afterVersion: Long = 0): List<PersistedEvent>
+    fun latestGlobalPosition(): Long
+    fun loadAfterGlobalPosition(afterPosition: Long, limit: Int): List<PersistedEvent>
+    fun loadByType(query: EventTypeQuery): List<PersistedEvent>
+}

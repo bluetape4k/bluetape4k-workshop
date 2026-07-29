@@ -1,34 +1,33 @@
 # Issue 245 Examples Weekly Gate
 
-## Context
+## 배경
 
-`bluetape4k-workshop` had CI and Nightly workflows, but no dedicated weekly
-Examples workflow for representative consumer-facing backend scenarios. Issue
-#245 requested a separate gate linked to the `bluetape4k-exposed` downstream
-examples epic.
+`bluetape4k-workshop`에는 CI와 Nightly workflow가 있었지만, representative
+consumer-facing backend scenario를 위한 dedicated weekly Examples workflow는 없었다.
+Issue #245는 `bluetape4k-exposed` downstream examples epic과 연결된 별도 gate를
+요청했다.
 
-## Decision
+## 결정
 
-- Add a weekly `Examples` workflow with manual dispatch and path-filtered PR/push
-  triggers.
-- Keep the selected module list explicit in the workflow instead of reusing
-  broad smoke groups.
-- Split the gate into H2/default smoke examples and one sequential
-  Testcontainers lane to avoid Docker contention.
+- manual dispatch와 path-filtered PR/push trigger를 가진 weekly `Examples` workflow를
+  추가한다.
+- broad smoke group을 재사용하지 않고 workflow 안에 선택된 module list를 명시적으로
+  유지한다.
+- Docker contention을 피하기 위해 gate를 H2/default smoke example과 하나의 sequential
+  Testcontainers lane으로 나눈다.
 
-## Outcome
+## 결과
 
-The selected matrix covers data access, Exposed/R2DBC, Spring Boot cache,
-Redis cache, Kafka messaging, Jackson serialization, and Resilience4j coroutine
-examples without duplicating the full CI or Nightly suite.
+선택된 matrix는 full CI 또는 Nightly suite를 중복하지 않으면서 data access,
+Exposed/R2DBC, Spring Boot cache, Redis cache, Kafka messaging, Jackson serialization,
+Resilience4j coroutine example을 포괄한다.
 
-## Verification
+## 검증
 
 - `actionlint .github/workflows/Examples.yml`
 - `git diff --check`
 
-## Future Guidance
+## 향후 지침
 
-Add new consumer examples to this workflow only when they are representative and
-stable enough for weekly validation. Keep heavy infrastructure examples in the
-sequential container lane or Nightly.
+새 consumer example은 weekly validation에 충분히 대표적이고 안정적일 때만 이 workflow에
+추가한다. heavy infrastructure example은 sequential container lane 또는 Nightly에 둔다.

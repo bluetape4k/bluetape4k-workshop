@@ -5,11 +5,10 @@ import io.bluetape4k.workshop.leader.zookeeper.config.LeaderZookeeperProperties
 import org.junit.jupiter.api.Test
 
 /**
- * T9: [LeaderZookeeperProperties] `init {}` validation tests.
+ * T9: [LeaderZookeeperProperties] `init {}` 검증 테스트이다.
  *
- * Pure unit tests — no Spring context, no ZooKeeper container. Verifies that the
- * constructor rejects invalid configurations early so misconfiguration cannot reach
- * production.
+ * Spring context와 ZooKeeper 컨테이너를 사용하지 않는 순수 단위 테스트이다.
+ * 잘못된 설정이 운영에 도달하지 못하도록 생성자가 유효하지 않은 구성을 조기에 거부하는지 검증한다.
  */
 class LeaderZookeeperPropertiesValidationTest {
 

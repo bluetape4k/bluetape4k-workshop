@@ -1,0 +1,146 @@
+spring:
+  application:
+    name: promotion-voucher-campaign
+  profiles:
+    default: local
+  datasource:
+    url: ${VOUCHER_DATABASE_URL:jdbc:postgresql://localhost:5432/voucher_campaign}
+    username: ${VOUCHER_DATABASE_USERNAME:vouchers}
+    password: ${VOUCHER_DATABASE_PASSWORD:vouchers}
+    hikari:
+      pool-name: voucher-campaign-pool
+      maximum-pool-size: 16
+      minimum-idle: 4
+      connection-timeout: 60000
+      validation-timeout: 5000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      keepalive-time: 120000
+  transaction:
+    default-timeout: 60s
+  mvc:
+    async:
+      request-timeout: 60s
+  threads:
+    virtual:
+      enabled: true
+  modulith:
+    events:
+      republish-outstanding-events-on-restart: true
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+
+bluetape4k:
+  spring:
+    modulith:
+      exposed:
+        completion-mode: update
+        initialize-schema: true
+        observability:
+          enabled: true
+          include-unloadable: true
+          tags:
+            application: promotion-voucher-campaign
+
+server:
+  address: ${VOUCHER_SERVER_ADDRESS:127.0.0.1}
+  port: ${VOUCHER_SERVER_PORT:8080}
+  shutdown: graceful
+  max-http-request-header-size: 16KB
+  tomcat:
+    threads:
+      max: 8000
+    max-connections: 8000
+    accept-count: 1000
+    connection-timeout: 60s
+    keep-alive-timeout: 60s
+    max-keep-alive-requests: 1000
+    max-http-form-post-size: 64KB
+
+management:
+  server:
+    address: 127.0.0.1
+    port: ${VOUCHER_MANAGEMENT_PORT:8081}
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  endpoint:
+    health:
+      show-details: never
+      show-components: always
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,voucherDatabase
+        liveness:
+          include: livenessState
+      status:
+        order: down,out-of-service,unknown,degraded,up
+        http-mapping:
+          degraded: 200
+
+workshop:
+  voucher:
+    db:
+      foreground-permits: 12
+      background-permits: 4
+      permit-timeout: 250ms
+      lock-timeout: 5s
+    keys:
+      current-version: 1
+      active-read-versions: 1
+      generation:
+        1: ${VOUCHER_GENERATION_KEY_1:local-generation-secret-000000000000001}
+      verification:
+        1: ${VOUCHER_VERIFICATION_KEY_1:local-verification-secret-0000000000001}
+      identity: ${VOUCHER_IDENTITY_KEY:local-identity-secret-0000000000000001}
+      risk: ${VOUCHER_RISK_KEY:local-risk-secret-00000000000000000001}
+      redis-slot: ${VOUCHER_REDIS_SLOT_KEY:local-redis-slot-secret-00000000000001}
+    redis:
+      enabled: ${VOUCHER_REDIS_ENABLED:false}
+      uri: ${VOUCHER_REDIS_URI:redis://127.0.0.1:6379}
+      command-timeout: 500ms
+      failure-threshold: 3
+      recovery-success-threshold: 3
+      probe-interval: 1s
+      max-in-flight-probes: 1
+      quota-capacity: 10
+      quota-period: 1m
+      bloom-expected-insertions: 100000
+      bloom-false-probability: 0.01
+    worker:
+      batch-size: 50
+      run-deadline: 10s
+      transaction-timeout: 5s
+      max-attempts: 5
+      instance-id: ${VOUCHER_INSTANCE_ID:${random.uuid}}
+      scheduling-enabled: true
+      interval: 5s
+      initial-delay: 5s
+    sse:
+      max-campaigns: 32
+      queue-size: 32
+      poll-interval: 500ms
+      max-idle-interval: 2s
+      heartbeat-interval: 15s
+      write-timeout: 5s
+      max-rows: 200
+      max-payload-bytes: 262144
+    retention:
+      audit: 90d
+      terminal-extra: 7d
+      applied-event: 30d
+      purge-batch-size: 200
+    http:
+      max-header-length: 64
+      max-scalar-bytes: 256
+      max-page-size: 100
+      max-cursor-bytes: 512
+      operator-secret: ${VOUCHER_OPERATOR_SECRET:local-operator-secret-0000000000000001}
+      operator-guard: ${VOUCHER_OPERATOR_GUARD:voucher-workshop-operator}
+      allowed-hosts: 127.0.0.1,localhost,::1

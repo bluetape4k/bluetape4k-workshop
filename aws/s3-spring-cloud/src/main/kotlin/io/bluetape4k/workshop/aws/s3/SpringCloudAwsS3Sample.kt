@@ -22,7 +22,7 @@ fun main(vararg args: String) {
 }
 
 /**
- * Local-first Spring Cloud AWS S3 sample backed by a Floci S3-compatible endpoint.
+ * Floci S3 호환 엔드포인트를 사용하는 로컬 우선 Spring Cloud AWS S3 예제입니다.
  */
 @SpringBootApplication(proxyBeanMethods = false)
 class SpringCloudAwsS3Sample {
@@ -57,14 +57,14 @@ class SpringCloudAwsS3Sample {
             s3Template.store("spring-cloud-aws-sample-bucket1", "test-file.txt", "test file content")
             s3Template.store("spring-cloud-aws-sample-bucket1", "my-file.txt", "my file content")
 
-            // use auto-configured cross-region client
+            // 자동 설정된 교차 리전 클라이언트를 사용합니다.
             s3Client
                 .listObjects { it.bucket("spring-cloud-aws-sample-bucket1") }.contents()
                 .forEach {
                     log.info { "Object in bucket: ${it.key()}" }
                 }
 
-            // Load resource using ResourceLoader
+            // ResourceLoader로 리소스를 로드합니다.
             val resource = resourceLoader.getResource(TEST_FILE_URL) as WritableResource
             log.info { "File content: ${resource.readContent()}" }
         }

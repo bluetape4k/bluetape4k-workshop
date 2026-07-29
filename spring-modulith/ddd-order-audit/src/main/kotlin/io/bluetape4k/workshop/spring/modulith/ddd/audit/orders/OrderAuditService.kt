@@ -15,13 +15,13 @@ import java.io.Serializable
 import java.math.BigDecimal
 
 /**
- * JaVers configuration for the workshop in-memory audit repository.
+ * workshop 의 in-memory audit repository 를 위한 JaVers 설정입니다.
  */
 @Configuration(proxyBeanMethods = false)
 class OrderAuditConfiguration {
 
     /**
-     * Creates the in-memory JaVers instance used by this workshop module.
+     * 이 workshop module 에서 사용하는 in-memory JaVers instance 를 생성합니다.
      */
     @Bean
     fun orderJavers(): Javers =
@@ -29,7 +29,7 @@ class OrderAuditConfiguration {
 }
 
 /**
- * Learner-facing audit DTO with safe, synthetic order fields only.
+ * 안전한 synthetic order field 만 담는 학습자용 audit DTO 입니다.
  */
 data class OrderAuditEntry(
     val orderId: String,
@@ -43,12 +43,12 @@ data class OrderAuditEntry(
 }
 
 /**
- * JaVers audit boundary for order aggregate snapshots and diffs.
+ * order aggregate snapshot 과 diff 를 담당하는 JaVers audit 경계입니다.
  *
- * ## Behavior / Contract
- * - [commitAfterTransaction] writes to JaVers only after the surrounding transaction commits.
- * - [getHistory] returns snapshots for one aggregate id, oldest-first.
- * - [getAuditTrail] exposes safe synthetic fields for README examples.
+ * ## 동작 / 계약
+ * - [commitAfterTransaction] 은 주변 transaction 이 commit 된 뒤에만 JaVers 에 기록합니다.
+ * - [getHistory] 는 단일 aggregate id 의 snapshot 을 오래된 순서로 반환합니다.
+ * - [getAuditTrail] 은 README 예제에 사용할 안전한 synthetic field 만 노출합니다.
  */
 @Service
 class OrderAuditService(
@@ -56,7 +56,7 @@ class OrderAuditService(
 ) {
 
     /**
-     * Commits [order] to JaVers after the current transaction commits.
+     * 현재 transaction 이 commit 된 뒤 [order] 를 JaVers 에 commit 합니다.
      */
     fun commitAfterTransaction(
         author: String,
@@ -80,7 +80,7 @@ class OrderAuditService(
     }
 
     /**
-     * Returns all JaVers snapshots for [orderId], oldest-first.
+     * [orderId] 의 모든 JaVers snapshot 을 오래된 순서로 반환합니다.
      */
     fun getHistory(orderId: OrderId): List<CdoSnapshot> {
         val query = QueryBuilder.byInstanceId(orderId, Order::class.java)
@@ -90,13 +90,13 @@ class OrderAuditService(
     }
 
     /**
-     * Computes a JaVers diff between two aggregate instances.
+     * 두 aggregate instance 사이의 JaVers diff 를 계산합니다.
      */
     fun diff(oldOrder: Order, newOrder: Order): Diff =
         javers.compare(oldOrder.withoutEvents(), newOrder.withoutEvents())
 
     /**
-     * Returns safe, synthetic audit entries for documentation examples.
+     * 문서 예제에 사용할 안전한 synthetic audit entry 를 반환합니다.
      */
     fun getAuditTrail(orderId: OrderId): List<OrderAuditEntry> =
         getHistory(orderId).map { snapshot ->

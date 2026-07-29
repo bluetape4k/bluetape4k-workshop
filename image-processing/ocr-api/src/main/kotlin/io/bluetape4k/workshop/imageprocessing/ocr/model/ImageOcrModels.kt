@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.imageprocessing.ocr.model
 import java.io.Serializable
 
 /**
- * OCR processing status returned by the workshop API.
+ * 워크숍 API가 반환하는 OCR 처리 상태입니다.
  */
 enum class OcrStatus {
     COMPLETED,
@@ -12,7 +12,7 @@ enum class OcrStatus {
 }
 
 /**
- * Service-level OCR request.
+ * 서비스 계층 OCR 요청입니다.
  */
 data class ImageOcrRequest(
     val bytes: ByteArray,
@@ -25,7 +25,7 @@ data class ImageOcrRequest(
 }
 
 /**
- * Structured OCR API response.
+ * 구조화된 OCR API 응답입니다.
  */
 data class ImageOcrResponse(
     val requestId: String,
@@ -43,7 +43,7 @@ data class ImageOcrResponse(
 }
 
 /**
- * Line-based OCR text block.
+ * 라인 기반 OCR 텍스트 블록입니다.
  */
 data class OcrTextBlock(
     val index: Int,

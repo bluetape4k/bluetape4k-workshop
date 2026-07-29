@@ -17,6 +17,7 @@ abstract class AbstractDomainTest : AbstractVirtualThreadMvcTest() {
     @PersistenceContext
     protected lateinit var em: EntityManager
 
+    // EntityManager 직접 접근이 필요할 때 아래 helper 를 다시 활성화합니다.
     // protected val em: EntityManager get() = tem.entityManager
     protected val emf: EntityManagerFactory get() = em.entityManagerFactory
 

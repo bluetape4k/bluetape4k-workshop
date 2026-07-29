@@ -1,4 +1,6 @@
 pluginManagement {
+    includeBuild("build-logic")
+
     repositories {
         gradlePluginPortal()
         mavenCentral()
@@ -17,6 +19,7 @@ rootProject.name = "$PROJECT_NAME-workshop"
 include("shared")
 
 includeModules("aws", false, true)
+includeModules("commerce", false, true)
 // includeModules("ddd", false, true)
 // includeModules("docker", false, true)
 includeModules("examples", false, false)
@@ -35,6 +38,7 @@ includeModules("leader", false, true)   // leader-leader-election: distributed l
 includeModules("messaging", false, true)
 includeModules("observability", false, false)
 includeModules("optimization", false, true)
+includeModules("operations", false, true)
 includeModules("ratelimit", false, false)
 // includeModules("reactive", false, true)  // archived: reactive/mutiny removed in #78 (Quarkus-adjacent, low BT value)
 includeModules("redis", false, true)

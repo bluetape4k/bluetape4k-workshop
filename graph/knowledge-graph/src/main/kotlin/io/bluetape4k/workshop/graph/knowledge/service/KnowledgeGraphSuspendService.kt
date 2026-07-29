@@ -23,21 +23,21 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.take
 
 /**
- * Coroutine/Flow variant of [KnowledgeGraphService].
+ * [KnowledgeGraphService]의 Coroutine/Flow 변형입니다.
  *
- * All mutating operations are `suspend` functions. Query operations that return multiple
- * results return `Flow<T>` for backpressure-aware consumption.
+ * 모든 변경 작업은 `suspend` 함수입니다. 여러 결과를 반환하는 조회 작업은
+ * backpressure를 의식해 소비할 수 있도록 `Flow<T>`를 반환합니다.
  *
- * ## Behavior / Contract
- * - [initialize] must be called once before any other method.
- * - Mutators ([addEntity], [addConcept], [addDocument]) are not idempotent — each call creates a new vertex.
- * - [mention] creates a directed MENTIONS edge from Document to Entity.
- * - [relateEntities] creates a directed RELATED_TO edge between Entities.
- * - [classify] creates a directed IS_A edge from Entity to Concept.
- * - Edge mutators reject missing vertices and source/target label mismatches with [IllegalArgumentException].
- * - Flow-returning methods do not suspend; consumption suspends.
+ * ## 동작 / 계약
+ * - 다른 메서드보다 먼저 [initialize]를 한 번 호출해야 합니다.
+ * - 변경 메서드([addEntity], [addConcept], [addDocument])는 멱등이 아닙니다. 호출할 때마다 새 정점을 만듭니다.
+ * - [mention]은 Document에서 Entity로 향하는 `MENTIONS` 방향성 간선을 만듭니다.
+ * - [relateEntities]는 Entity 사이의 `RELATED_TO` 방향성 간선을 만듭니다.
+ * - [classify]는 Entity에서 Concept으로 향하는 `IS_A` 방향성 간선을 만듭니다.
+ * - 간선 변경 메서드는 정점 누락과 source/target label 불일치를 [IllegalArgumentException]으로 거부합니다.
+ * - Flow 반환 메서드 자체는 suspend하지 않으며, 실제 소비 시점에 suspend됩니다.
  *
- * ## Usage
+ * ## 사용 예
  * ```kotlin
  * val service = KnowledgeGraphSuspendService(ops, "knowledge_graph")
  * service.initialize()
@@ -57,11 +57,11 @@ class KnowledgeGraphSuspendService(
     }
 
     companion object : KLoggingChannel() {
-        /** Maximum traversal depth for neighbor and path queries. */
+        /** neighbor 조회와 path 조회에 허용하는 최대 순회 깊이입니다. */
         const val MAX_TRAVERSAL_DEPTH: Int = 10
     }
 
-    /** Creates the backing graph when it does not already exist. */
+    /** backing graph가 아직 없으면 생성합니다. */
     suspend fun initialize() {
         if (!ops.graphExists(graphName)) {
             ops.createGraph(graphName)
@@ -69,7 +69,7 @@ class KnowledgeGraphSuspendService(
         }
     }
 
-    /** Adds an entity vertex. */
+    /** Entity 정점을 추가합니다. */
     suspend fun addEntity(entityId: String, name: String, entityType: String): GraphVertex {
         entityId.requireNotBlank("entityId")
         name.requireNotBlank("name")
@@ -84,7 +84,7 @@ class KnowledgeGraphSuspendService(
         )
     }
 
-    /** Adds a concept vertex. */
+    /** Concept 정점을 추가합니다. */
     suspend fun addConcept(conceptId: String, name: String, domain: String = ""): GraphVertex {
         conceptId.requireNotBlank("conceptId")
         name.requireNotBlank("name")
@@ -98,7 +98,7 @@ class KnowledgeGraphSuspendService(
         )
     }
 
-    /** Adds a document vertex. */
+    /** Document 정점을 추가합니다. */
     suspend fun addDocument(documentId: String, title: String, source: String = ""): GraphVertex {
         documentId.requireNotBlank("documentId")
         title.requireNotBlank("title")
@@ -113,9 +113,9 @@ class KnowledgeGraphSuspendService(
     }
 
     /**
-     * Creates a MENTIONS edge from [documentId] to [entityId].
+     * [documentId]에서 [entityId]로 향하는 `MENTIONS` 간선을 만듭니다.
      *
-     * @throws IllegalArgumentException when endpoints are missing or not Document → Entity.
+     * @throws IllegalArgumentException endpoint가 없거나 Document -> Entity 관계가 아니면 발생합니다.
      */
     suspend fun mention(documentId: GraphElementId, entityId: GraphElementId, confidence: Int = 100) {
         confidence.requireInRange(0, 100, "confidence")
@@ -130,9 +130,9 @@ class KnowledgeGraphSuspendService(
     }
 
     /**
-     * Creates a directed RELATED_TO edge from [fromEntityId] to [toEntityId].
+     * [fromEntityId]에서 [toEntityId]로 향하는 `RELATED_TO` 방향성 간선을 만듭니다.
      *
-     * @throws IllegalArgumentException when endpoints are missing or not Entity → Entity.
+     * @throws IllegalArgumentException endpoint가 없거나 Entity -> Entity 관계가 아니면 발생합니다.
      */
     suspend fun relateEntities(
         fromEntityId: GraphElementId,
@@ -151,9 +151,9 @@ class KnowledgeGraphSuspendService(
     }
 
     /**
-     * Creates an IS_A edge from [entityId] to [conceptId].
+     * [entityId]에서 [conceptId]로 향하는 `IS_A` 간선을 만듭니다.
      *
-     * @throws IllegalArgumentException when endpoints are missing or not Entity → Concept.
+     * @throws IllegalArgumentException endpoint가 없거나 Entity -> Concept 관계가 아니면 발생합니다.
      */
     suspend fun classify(entityId: GraphElementId, conceptId: GraphElementId) {
         requireEndpoint(entityId, EntityLabel.label, "entityId")
@@ -161,7 +161,7 @@ class KnowledgeGraphSuspendService(
         ops.createEdge(entityId, conceptId, IsALabel.label, emptyMap())
     }
 
-    /** Returns entities mentioned by [documentId] as a Flow. */
+    /** [documentId]가 언급한 Entity를 Flow로 반환합니다. */
     fun findMentionedEntities(documentId: GraphElementId): Flow<GraphVertex> =
         ops.neighbors(
             documentId,
@@ -169,9 +169,9 @@ class KnowledgeGraphSuspendService(
         )
 
     /**
-     * Returns entities reachable from [entityId] via RELATED_TO edges within [depth] hops.
+     * [entityId]에서 [depth] hop 안에 `RELATED_TO` 간선으로 도달할 수 있는 Entity를 반환합니다.
      *
-     * @param depth traversal depth; must be in 1..[MAX_TRAVERSAL_DEPTH]
+     * @param depth 순회 깊이입니다. 1..[MAX_TRAVERSAL_DEPTH] 범위여야 합니다.
      */
     fun findRelatedEntities(entityId: GraphElementId, depth: Int = 1): Flow<GraphVertex> {
         depth.requireInRange(1, MAX_TRAVERSAL_DEPTH, "depth")
@@ -181,7 +181,7 @@ class KnowledgeGraphSuspendService(
         )
     }
 
-    /** Returns concepts that [entityId] is classified under (IS_A edges). */
+    /** [entityId]가 속하는 Concept을 반환합니다. `IS_A` 간선을 따릅니다. */
     fun findConceptsForEntity(entityId: GraphElementId): Flow<GraphVertex> =
         ops.neighbors(
             entityId,
@@ -189,10 +189,10 @@ class KnowledgeGraphSuspendService(
         )
 
     /**
-     * Infers relationship paths between two entities along RELATED_TO edges.
+     * 두 Entity 사이의 관계 path를 `RELATED_TO` 간선을 따라 추론합니다.
      *
-     * @param maxDepth maximum traversal hops (default 3)
-     * @param maxPaths upper bound on returned paths (default 10)
+     * @param maxDepth 최대 순회 hop 수입니다. 기본값은 3입니다.
+     * @param maxPaths 반환할 path 수의 상한입니다. 기본값은 10입니다.
      */
     fun inferRelationshipPaths(
         fromEntityId: GraphElementId,

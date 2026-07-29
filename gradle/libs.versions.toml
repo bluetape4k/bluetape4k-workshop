@@ -130,6 +130,7 @@ gatling = "3.15.1"  # https://mvnrepository.com/artifact/io.gatling/gatling-app
 
 # Plugin versions
 detekt = "1.23.8"  # https://mvnrepository.com/artifact/io.gitlab.arturbosch.detekt/detekt-gradle-plugin
+kover = "0.9.8"  # https://plugins.gradle.org/plugin/org.jetbrains.kotlinx.kover
 dependency-management = "1.1.7"  # https://mvnrepository.com/artifact/io.spring.gradle/dependency-management-plugin
 dokka = "2.2.0"  # https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
 test-logger = "4.0.0"  # https://mvnrepository.com/artifact/com.adarshr/gradle-test-logger-plugin
@@ -151,6 +152,7 @@ kotlinx-atomicfu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "kotli
 kotlinx-benchmark = { id = "org.jetbrains.kotlinx.benchmark", version.ref = "kotlinx-benchmark" }
 
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 dependency-management = { id = "io.spring.dependency-management", version.ref = "dependency-management" }
 spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot4" }
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
@@ -213,6 +215,8 @@ exposed-jackson3 = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-j
 exposed-jdbc-tests = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc-tests" }
 exposed-r2dbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-r2dbc" }
 exposed-r2dbc-tests = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-r2dbc-tests" }
+exposed-spring-boot-jdbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-spring-boot-jdbc" }
+exposed-spring-modulith = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-spring-modulith" }
 bluetape4k-hibernate = { module = "io.github.bluetape4k:bluetape4k-hibernate" }
 bluetape4k-jdbc = { module = "io.github.bluetape4k:bluetape4k-jdbc" }
 bluetape4k-mongodb = { module = "io.github.bluetape4k:bluetape4k-mongodb" }
@@ -409,6 +413,7 @@ spring-integration-webflux = { module = "org.springframework.integration:spring-
 spring-modulith-actuator = { module = "org.springframework.modulith:spring-modulith-actuator" }
 spring-modulith-observability = { module = "org.springframework.modulith:spring-modulith-observability" }
 spring-modulith-events-core = { module = "org.springframework.modulith:spring-modulith-events-core" }
+spring-modulith-events-jackson = { module = "org.springframework.modulith:spring-modulith-events-jackson" }
 spring-modulith-starter-core = { module = "org.springframework.modulith:spring-modulith-starter-core" }
 spring-modulith-starter-jpa = { module = "org.springframework.modulith:spring-modulith-starter-jpa" }
 spring-modulith-starter-test = { module = "org.springframework.modulith:spring-modulith-starter-test" }
@@ -736,6 +741,7 @@ testcontainers-mongodb = { module = "org.testcontainers:testcontainers-mongodb" 
 testcontainers-mysql = { module = "org.testcontainers:testcontainers-mysql" }
 testcontainers-neo4j = { module = "org.testcontainers:testcontainers-neo4j", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql" }
+testcontainers-toxiproxy = { module = "org.testcontainers:testcontainers-toxiproxy" }
 
 jna-lib = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 jna-platform = { module = "net.java.dev.jna:jna-platform", version.ref = "jna" }

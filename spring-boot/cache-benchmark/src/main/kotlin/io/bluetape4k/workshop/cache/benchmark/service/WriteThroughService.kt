@@ -1,55 +1,63 @@
 package io.bluetape4k.workshop.cache.benchmark.service
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.WRITE_RETRY_ATTEMPTS
+import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.WRITE_RETRY_INTERVAL
+import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.qualifiedCacheName
+import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.requireExistingProduct
 import io.bluetape4k.workshop.cache.benchmark.domain.Product
-import io.bluetape4k.workshop.cache.benchmark.domain.ProductRepository
-import org.springframework.data.redis.core.RedisTemplate
+import org.redisson.api.RMap
+import org.redisson.api.RedissonClient
+import org.redisson.api.map.WriteMode
+import org.redisson.api.options.MapOptions
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.Duration
 
 /**
- * Profile 6 — Write-Through Cache.
+ * Profile 6 — Write-Through Cache 입니다.
  *
- * Strategy: true write-through.
- * Every write is applied synchronously to both Redis cache and DB.
+ * Strategy 는 Redisson-managed write-through 입니다.
  *
- * - Reads: cache-first, then repository on miss.
- * - Writes: synchronized dual-write (cache + DB) for immediate consistency.
+ * - read: cache-first 로 읽고, miss 시 [ProductMapLoader] 를 사용합니다.
+ * - write: caller 가 map 에 쓰면 [ProductMapWriter] 가 동기적으로 persist 합니다.
  */
 @Service
 class WriteThroughService(
-    private val productRepository: ProductRepository,
-    private val redisTemplate: RedisTemplate<String, Product>,
+    redissonClient: RedissonClient,
+    productMapLoader: ProductMapLoader,
+    productMapWriter: ProductMapWriter,
+    @Value("\${cache.benchmark.namespace:cache-benchmark}") namespace: String,
 ) : ProductCacheService {
-    companion object : KLoggingChannel() {
-        const val KEY_PREFIX = "products:write-through:"
-        val TTL: Duration = Duration.ofSeconds(60)
+    companion object {
+        const val CACHE_NAME = "products:write-through"
     }
 
-    private fun cacheKey(id: Long) = "$KEY_PREFIX$id"
+    private val mapName = qualifiedCacheName(namespace, CACHE_NAME)
 
-    override fun findById(id: Long): Product? {
-        val key = cacheKey(id)
-        val cached = redisTemplate.opsForValue().get(key)
-        if (cached != null) return cached
+    private val products: RMap<Long, Product> =
+        redissonClient.getMap(
+            MapOptions.name<Long, Product>(mapName)
+                .loader(productMapLoader)
+                .writer(productMapWriter)
+                .writeMode(WriteMode.WRITE_THROUGH)
+                .writeRetryAttempts(WRITE_RETRY_ATTEMPTS)
+                .writeRetryInterval(WRITE_RETRY_INTERVAL)
+        )
 
-        return productRepository.findById(id).orElse(null)?.also { product ->
-            redisTemplate.opsForValue().set(key, product, TTL)
-        }
-    }
+    private val cacheOnlyProducts: RMap<Long, Product> = redissonClient.getMap(mapName)
+
+    override fun findById(id: Long): Product? = products[id]
 
     override fun save(product: Product): Product {
-        val saved = productRepository.save(product)
-        redisTemplate.opsForValue().set(cacheKey(saved.id), saved, TTL)
-        return saved
+        val existingProduct = requireExistingProduct(product)
+        products[existingProduct.id] = existingProduct
+        return existingProduct
     }
 
     override fun evict(id: Long) {
-        redisTemplate.delete(cacheKey(id))
+        cacheOnlyProducts.fastRemove(id)
     }
 
     override fun clearAll() {
-        val keys = redisTemplate.keys("$KEY_PREFIX*")
-        if (!keys.isNullOrEmpty()) redisTemplate.delete(keys)
+        cacheOnlyProducts.clear()
     }
 }

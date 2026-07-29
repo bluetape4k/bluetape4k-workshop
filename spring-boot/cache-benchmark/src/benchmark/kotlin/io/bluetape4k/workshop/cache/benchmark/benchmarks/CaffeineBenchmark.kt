@@ -14,10 +14,10 @@ import kotlinx.benchmark.Warmup
 import java.util.concurrent.TimeUnit
 
 /**
- * Profile 2 — Caffeine local cache.
+ * Profile 2 — Caffeine local cache 입니다.
  *
- * Uses Spring's [@Cacheable] with a Caffeine-backed [CacheManager].
- * Expected: significantly higher throughput than Profile 1 after warm-up.
+ * Caffeine 기반 [CacheManager] 와 Spring [@Cacheable] 을 사용합니다.
+ * 예상: warm-up 이후 Profile 1 보다 훨씬 높은 throughput 을 냅니다.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
@@ -34,7 +34,7 @@ class CaffeineBenchmark : AbstractCacheBenchmark() {
     override fun setup() {
         super.setup()
         service = context.getBean(CaffeineService::class.java)
-        // Warm up the cache
+        // cache 를 warm-up 합니다.
         repeat(10) { service.findById(productId) }
     }
 

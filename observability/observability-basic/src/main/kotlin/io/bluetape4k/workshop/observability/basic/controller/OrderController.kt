@@ -9,11 +9,11 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * REST controller exposing order endpoints.
+ * order endpoint 를 노출하는 REST controller 입니다.
  *
  * ## Behavior / Contract
- * - `GET /orders/{id}` returns 200 with the order body, or 404 when not found.
- * - The HTTP server span (`http.server.requests`) is created automatically by Spring Boot.
+ * - `GET /orders/{id}` 는 order body 와 함께 200 을 반환하거나 찾지 못하면 404 를 반환합니다.
+ * - HTTP server span(`http.server.requests`)은 Spring Boot 가 자동 생성합니다.
  */
 @RestController
 @RequestMapping("/orders")
@@ -21,9 +21,9 @@ class OrderController(
     private val orderService: OrderService,
 ) {
     /**
-     * Retrieves an order by its ID.
+     * ID 로 order 를 조회합니다.
      *
-     * Returns 200 OK with the order, or 404 Not Found when the order does not exist.
+     * order 가 존재하면 200 OK 와 함께 반환하고, 존재하지 않으면 404 Not Found 를 반환합니다.
      */
     @GetMapping("/{id}")
     suspend fun getOrder(@PathVariable id: Long): ResponseEntity<Order> {

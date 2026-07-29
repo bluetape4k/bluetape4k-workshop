@@ -105,10 +105,10 @@ internal class RecordingImageStorage(
 }
 
 /**
- * No-op [ImagePersistenceService] for unit tests that don't need real persistence.
+ * 실제 영속화가 필요 없는 단위 테스트용 no-op [ImagePersistenceService]입니다.
  *
- * [recordJobStart] returns [JobStartResult.NewAsset] by default; override via [startResultFn].
- * [findAssetByExternalId] returns `null` by default; override via [detailResponseFn].
+ * [recordJobStart]는 기본적으로 [JobStartResult.NewAsset]을 반환하며 [startResultFn]으로 재정의할 수 있습니다.
+ * [findAssetByExternalId]는 기본적으로 `null`을 반환하며 [detailResponseFn]으로 재정의할 수 있습니다.
  */
 internal class StubImagePersistenceService(
     private val startResultFn: (() -> JobStartResult)? = null,

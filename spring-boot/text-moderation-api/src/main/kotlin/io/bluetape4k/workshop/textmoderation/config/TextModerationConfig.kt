@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
- * Builds reusable text-analysis components for the moderation API.
+ * moderation API 에서 재사용하는 text-analysis component 를 구성합니다.
  */
 @Configuration(proxyBeanMethods = false)
 class TextModerationConfig {

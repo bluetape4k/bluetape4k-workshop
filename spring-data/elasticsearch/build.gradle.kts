@@ -44,7 +44,7 @@ dependencies {
     implementation(libs.bluetape4k.jackson3)
     testImplementation(libs.bluetape4k.junit5)
 
-    // Coroutines
+    // 코루틴
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactor)

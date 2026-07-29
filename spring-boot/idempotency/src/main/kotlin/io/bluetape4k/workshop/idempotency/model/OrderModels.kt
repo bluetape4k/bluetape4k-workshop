@@ -6,12 +6,12 @@ import java.io.Serializable
 import java.time.Instant
 
 /**
- * Request payload for creating an order.
+ * 주문 생성을 위한 request payload 입니다.
  *
- * ## Behavior / Contract
- * - [productId] must be non-blank.
- * - [quantity] must be positive.
- * - [userId] must be non-blank.
+ * ## 동작 / 계약
+ * - [productId] 는 비어 있지 않아야 합니다.
+ * - [quantity] 는 양수여야 합니다.
+ * - [userId] 는 비어 있지 않아야 합니다.
  */
 data class OrderRequest(
     val productId: String,
@@ -30,11 +30,11 @@ data class OrderRequest(
 }
 
 /**
- * Response returned for a successfully processed (or replayed) order.
+ * 성공적으로 처리되었거나 replay 된 주문에 대해 반환하는 response 입니다.
  *
- * ## Behavior / Contract
- * - First creation returns HTTP 201.
- * - Replayed requests with the same Idempotency-Key return HTTP 200 with the same body.
+ * ## 동작 / 계약
+ * - 최초 생성은 HTTP 201 을 반환합니다.
+ * - 같은 Idempotency-Key 로 replay 된 요청은 같은 body 와 함께 HTTP 200 을 반환합니다.
  */
 data class OrderResponse(
     val orderId: String,
@@ -47,11 +47,11 @@ data class OrderResponse(
 }
 
 /**
- * Envelope stored in the idempotency cache, combining HTTP status with response body.
+ * HTTP status 와 response body 를 함께 담아 idempotency cache 에 저장하는 envelope 입니다.
  *
- * ## Behavior / Contract
- * - [httpStatus] is the status code returned on first creation (e.g., 201).
- * - [response] is the original [OrderResponse] payload.
+ * ## 동작 / 계약
+ * - [httpStatus] 는 최초 생성 시 반환한 status code 입니다(예: 201).
+ * - [response] 는 원래 [OrderResponse] payload 입니다.
  */
 data class CachedResponse(
     val httpStatus: Int,

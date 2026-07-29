@@ -14,12 +14,11 @@ import kotlinx.benchmark.Warmup
 import java.util.concurrent.TimeUnit
 
 /**
- * Profile 5 — Read-Through Cache.
+ * Profile 5 — Read-Through Cache 입니다.
  *
- * Profile 5 — Read-Through Cache.
- *
- * Read path: Redis cache-first with explicit DB fallback; cache is populated on miss.
- * Write path remains application-managed (cache-aside) in this service.
+ * Read path 는 MapLoader 가 DB miss loading 을 소유하는 Redisson map 입니다.
+ * [findByIdHit] 은 warm cache read 를 측정합니다. [findByIdMiss] 는 target key 를 먼저 evict 해서
+ * MapLoader path 를 별도로 측정합니다.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)
@@ -40,5 +39,11 @@ class ReadThroughBenchmark : AbstractCacheBenchmark() {
     }
 
     @Benchmark
-    fun findById() = service.findById(productId)
+    fun findByIdHit() = service.findById(productId)
+
+    @Benchmark
+    fun findByIdMiss() =
+        service.evict(productId).let {
+            service.findById(productId)
+        }
 }

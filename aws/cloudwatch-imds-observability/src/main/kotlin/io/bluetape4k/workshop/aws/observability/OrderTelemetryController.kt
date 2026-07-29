@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
 /**
- * REST endpoints for the AWS observability workshop.
+ * AWS 관측성 워크숍용 REST 엔드포인트입니다.
  */
 @RestController
 @RequestMapping("/api/aws-observability")
@@ -20,14 +20,14 @@ class OrderTelemetryController(
 ) {
 
     /**
-     * Records an order event through the local observability pipeline.
+     * 로컬 관측성 파이프라인으로 주문 이벤트를 기록합니다.
      */
     @PostMapping("/orders")
     suspend fun recordOrder(@RequestBody request: OrderTelemetryRequest): OrderTelemetryReport =
         service.recordOrder(request)
 
     /**
-     * Performs an explicit metadata lookup.
+     * 명시적으로 메타데이터를 조회합니다.
      */
     @GetMapping("/metadata")
     suspend fun metadata(): MetadataSnapshot =
@@ -35,7 +35,7 @@ class OrderTelemetryController(
 }
 
 /**
- * Converts validation failures into JSON error responses.
+ * 검증 실패를 JSON 오류 응답으로 변환합니다.
  */
 @RestControllerAdvice
 class OrderTelemetryExceptionHandler {

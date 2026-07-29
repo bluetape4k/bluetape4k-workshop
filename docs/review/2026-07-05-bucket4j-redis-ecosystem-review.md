@@ -1,35 +1,35 @@
-# Bucket4j Redis Ecosystem Review
+# Bucket4j Redis 생태계 리뷰
 
-Date: 2026-07-05
-Module: `:bucket4j-redis`
-Branch: `refactor/bucket4j-redis-ecosystem-patterns`
+날짜: 2026-07-05
+모듈: `:bucket4j-redis`
+브랜치: `refactor/bucket4j-redis-ecosystem-patterns`
 
-## Scope
+## 범위
 
-- Review the Redis-backed Bucket4j WebFlux example against the bluetape4k 7-Tier checklist.
-- Preserve coroutine/reactive endpoint behavior and Redis-backed quota configuration.
-- Prefer explicit bluetape4k helpers for local validation boundaries.
+- Redis-backed Bucket4j WebFlux example을 bluetape4k 7-Tier checklist 기준으로 검토했다.
+- coroutine/reactive endpoint behavior와 Redis-backed quota configuration을 보존했다.
+- local validation boundary에는 명시적인 bluetape4k helper를 우선 적용했다.
 
-## 7-Tier Review
+## 7-Tier 리뷰
 
-| Tier | Lens | Verdict | Evidence |
+| Tier | 관점 | 판정 | 근거 |
 |---|---|---|---|
-| 1 | Correctness | PASS | Coroutine and reactive paths still return the same bodies and rate-limit responses. |
-| 2 | API / UX | PASS | `/coroutines/*` and `/reactive/*` paths remain unchanged. |
-| 3 | Architecture | PASS | The module remains a WebFlux + Redis/Lettuce Bucket4j starter example. |
-| 4 | Concurrency | PASS | Coroutine and reactive controllers retain separate endpoint implementations. |
-| 5 | Resilience | PASS | Redis URL setup now uses bluetape4k `requireNotBlank` instead of implicit platform-null handling. |
-| 6 | Tests | PASS | `./gradlew :bucket4j-redis:test --console=plain --max-workers=1` executed 4 tests successfully. |
-| 7 | Maintainability | PASS | Added public KDoc, direct `bluetape4k.core` dependency, and named repeated test literals. |
+| 1 | Correctness | PASS | coroutine 및 reactive path는 여전히 같은 body와 rate-limit response를 반환한다. |
+| 2 | API / UX | PASS | `/coroutines/*`와 `/reactive/*` path는 변경 없다. |
+| 3 | Architecture | PASS | module은 WebFlux + Redis/Lettuce Bucket4j starter example로 유지된다. |
+| 4 | Concurrency | PASS | coroutine controller와 reactive controller는 별도의 endpoint implementation을 유지한다. |
+| 5 | Resilience | PASS | Redis URL setup은 이제 implicit platform-null handling 대신 bluetape4k `requireNotBlank`를 사용한다. |
+| 6 | Tests | PASS | `./gradlew :bucket4j-redis:test --console=plain --max-workers=1`가 4개 test를 성공적으로 실행했다. |
+| 7 | Maintainability | PASS | public KDoc, direct `bluetape4k.core` dependency를 추가하고 반복 test literal에 이름을 붙였다. |
 
-## P0/P1 Gate
+## P0/P1 게이트
 
 - P0: 0
 - P1: 0
-- Deferred: Shutdown-time Lettuce reconnect warnings are test-container lifecycle noise after successful assertions.
+- Deferred: shutdown-time Lettuce reconnect warning은 성공한 assertion 이후의 test-container lifecycle noise다.
 
-## DoD Status
+## DoD 상태
 
 - `git diff --check`: PASS
-- Targeted test: `:bucket4j-redis:test`: PASS, 4 tests
-- CodeGraph: queried changed controller/config/test files; contract proof is the Redis-backed WebFlux integration test.
+- targeted test: `:bucket4j-redis:test`: PASS, 4개 test
+- CodeGraph: 변경된 controller/config/test file을 조회했다. contract proof는 Redis-backed WebFlux integration test다.

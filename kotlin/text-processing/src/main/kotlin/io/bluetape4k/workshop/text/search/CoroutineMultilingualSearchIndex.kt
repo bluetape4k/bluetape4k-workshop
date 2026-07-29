@@ -9,13 +9,13 @@ import kotlinx.coroutines.withContext
 import java.util.Collections
 
 /**
- * Coroutine-safe in-memory multilingual search index.
+ * coroutine-safe in-memory multilingual search index 입니다.
  *
  * ## Behavior / Contract
- * - Keeps the existing synchronous [MultilingualSearchIndex] API unchanged.
- * - Builds immutable index snapshots, so concurrent searches cannot mutate index state.
- * - Uses [CoroutineLanguageDetectionService] to serialize access to the shared Lingua detector.
- * - Runs CPU-bound detection, tokenization, candidate lookup, and highlighting on [dispatcher].
+ * - 기존 synchronous [MultilingualSearchIndex] API 는 변경하지 않습니다.
+ * - immutable index snapshot 을 만들기 때문에 concurrent search 가 index state 를 mutate 할 수 없습니다.
+ * - [CoroutineLanguageDetectionService] 로 shared Lingua detector 접근을 직렬화합니다.
+ * - CPU-bound detection, tokenization, candidate lookup, highlighting 은 [dispatcher] 에서 실행합니다.
  *
  * ```kotlin
  * val index = CoroutineMultilingualSearchIndex.indexOf(
@@ -46,7 +46,7 @@ class CoroutineMultilingualSearchIndex private constructor(
         immutableInvertedIndex(buildSearchInvertedIndex(this.indexedDocuments))
 
     /**
-     * Searches the index from a coroutine and returns ranked hits with highlighted source text.
+     * coroutine 에서 index 를 검색하고 highlighted source text 를 포함한 ranked hit 를 반환합니다.
      */
     suspend fun search(query: String, limit: Int = DEFAULT_LIMIT): List<SearchHighlightHit> =
         withContext(dispatcher) {
@@ -94,10 +94,9 @@ class CoroutineMultilingualSearchIndex private constructor(
         private const val DEFAULT_LIMIT = 10
 
         /**
-         * Builds a coroutine-safe [CoroutineMultilingualSearchIndex].
+         * coroutine-safe [CoroutineMultilingualSearchIndex] 를 생성합니다.
          *
-         * Pass one shared [detectionService] when several indexes should reuse the same detector
-         * while still serializing detector access.
+         * 여러 index 가 같은 detector 를 재사용하면서 detector 접근은 직렬화해야 할 때 하나의 shared [detectionService] 를 전달합니다.
          */
         suspend fun indexOf(
             documents: Collection<SearchDocument>,

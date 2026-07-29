@@ -24,26 +24,25 @@ import io.ktor.server.sse.sse
 import io.ktor.sse.ServerSentEvent
 import kotlinx.coroutines.CancellationException
 
-// Extension functions cannot have companion objects — use a file-private holder.
+// extension function 은 companion object 를 가질 수 없으므로 file-private holder 를 사용합니다.
 private object BookRoutesLog : KLoggingChannel()
 
 /**
- * Registers all book catalog routes on the [Application].
+ * [Application] 에 모든 book catalog route 를 등록합니다.
  *
  * ## Routes
- * - `GET  /books`             — list all books
- * - `GET  /books/{id}`        — get book by id
- * - `POST /books`             — create book (201 Created)
- * - `PUT  /books/{id}`        — update book
- * - `DELETE /books/{id}`      — delete book (204 No Content)
- * - `GET  /books/export`      — NDJSON export (application/x-ndjson)
+ * - `GET  /books`             — 모든 book 조회
+ * - `GET  /books/{id}`        — id 로 book 조회
+ * - `POST /books`             — book 생성(201 Created)
+ * - `PUT  /books/{id}`        — book 갱신
+ * - `DELETE /books/{id}`      — book 삭제(204 No Content)
+ * - `GET  /books/export`      — NDJSON export(application/x-ndjson)
  * - `GET  /books/stream`      — SSE live stream
  *
  * ## Behavior / Contract
- * - `sse("/books/stream")` is registered at the **top-level routing scope**, NOT inside
- *   `route("/books")`, to avoid the double-prefix `/books/books/stream`.
- * - SSE collect block rethrows [CancellationException] before any broad catch.
- * - NDJSON export uses [Jackson3Support.writeNdjson] via [respondBytesWriter] — no `withContext` needed.
+ * - double-prefix `/books/books/stream` 을 피하려고 `sse("/books/stream")` 은 `route("/books")` 내부가 아니라 **top-level routing scope** 에 등록합니다.
+ * - SSE collect block 은 broad catch 전에 [CancellationException] 을 다시 throw 합니다.
+ * - NDJSON export 는 [respondBytesWriter] 를 통해 [Jackson3Support.writeNdjson] 를 사용하며 `withContext` 는 필요 없습니다.
  */
 fun Application.bookRoutes(service: BookService, jackson3: Jackson3Support) {
     routing {
@@ -83,8 +82,8 @@ fun Application.bookRoutes(service: BookService, jackson3: Jackson3Support) {
             }
         }
 
-        // CRITICAL: sse("/books/stream") at top-level routing scope — NOT inside route("/books") { }
-        // A bare sse { } would mount at application root instead of the intended path.
+        // 중요: sse("/books/stream") 은 top-level routing scope 에 둡니다. route("/books") { } 내부가 아닙니다.
+        // bare sse { } 는 의도한 path 가 아니라 application root 에 mount 됩니다.
         sse("/books/stream") {
             BookRoutesLog.log.debug { "SSE client connected to /books/stream" }
             try {

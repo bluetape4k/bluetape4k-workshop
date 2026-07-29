@@ -54,7 +54,7 @@ class OrderControllerTest : AbstractIdempotencyTest() {
     fun `동일한 Idempotency-Key로 재전송하면 200 OK와 동일 응답을 반환한다`() = runSuspendIO {
         val key = newIdempotencyKey()
 
-        // First request → 201 Created
+        // 첫 요청은 201 Created 를 반환합니다.
         val first = client.post()
             .uri(ORDERS_PATH)
             .header(IDEMPOTENCY_KEY_HEADER, key)
@@ -67,7 +67,7 @@ class OrderControllerTest : AbstractIdempotencyTest() {
             .responseBody
             .shouldNotBeNull()
 
-        // Second request with same key → 200 OK, same orderId
+        // 같은 key 의 두 번째 요청은 같은 orderId 와 함께 200 OK 를 반환합니다.
         val second = client.post()
             .uri(ORDERS_PATH)
             .header(IDEMPOTENCY_KEY_HEADER, key)
@@ -113,7 +113,7 @@ class OrderControllerTest : AbstractIdempotencyTest() {
             .responseBody
             .shouldNotBeNull()
 
-        // Different keys → different order IDs
+        // 서로 다른 key 는 서로 다른 order ID 를 만듭니다.
         responseA.orderId shouldNotBeEqualTo responseB.orderId
     }
 
@@ -155,7 +155,7 @@ class OrderControllerTest : AbstractIdempotencyTest() {
                 .shouldNotBeNull()
         }
 
-        // All responses must carry the same orderId
+        // 모든 response 는 같은 orderId 를 가져야 합니다.
         val distinctOrderIds = responses.map { it.orderId }.toSet()
         distinctOrderIds shouldHaveSize 1
     }

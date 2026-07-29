@@ -7,7 +7,7 @@ import path from "node:path";
 
 const root = process.cwd();
 const diagramDir = path.join(root, "docs/images/readme-diagrams");
-const skillAuditDir = process.env.DIAGRAM_QA_REFERENCE_AUDIT_DIR || "/Users/debop/.codex/skills/bluetape4k-diagram/references";
+const skillAuditDir = process.env.DIAGRAM_QA_REFERENCE_AUDIT_DIR || path.join(os.homedir(), ".codex/skills/bluetape-diagram/scripts");
 const localCairosvg = path.join(os.homedir(), ".local/bin/cairosvg");
 const cairosvg = process.env.CAIROSVG_BIN || (fs.existsSync(localCairosvg) ? localCairosvg : "cairosvg");
 const failures = [];
@@ -180,7 +180,10 @@ function changedSvgTargets() {
   const files = diff.stdout
     .split("\n")
     .filter((name) => name.startsWith("docs/images/readme-diagrams/") && name.endsWith(".svg"))
-    .map((name) => path.join(root, name));
+    .map((name) => path.join(root, name))
+    // A removed SVG has no raster pair to inspect. README validation owns the
+    // broken-reference check; diagram QA must only validate renderable assets.
+    .filter((file) => fs.existsSync(file));
 
   return [...new Set(files)].sort();
 }
@@ -227,6 +230,8 @@ function auditMarkers(file, svg) {
   let match;
   while ((match = pathRe.exec(svg))) {
     const attrs = parseAttrs(match[1]);
+    const inlineStyle = attrs.style || "";
+    if (inlineStyle.includes("marker-end:none")) continue;
     const classes = (attrs.class || "").split(/\s+/).filter(Boolean);
     let stroke = attrs.stroke;
     let marker = (attrs["marker-end"] || "").match(/url\(#([^)]+)\)/)?.[1];
@@ -263,8 +268,13 @@ function auditMarkers(file, svg) {
       fail(scope, "marker audit", `${marker} uses context-stroke`);
     }
   }
-  if (checked === 0 && /marker-end\s*:|marker-end=/.test(svg)) {
-    fail(scope, "marker audit", "marker-end exists but no marker paths were checked");
+  if (checked === 0) {
+    const directHeads = [...svg.matchAll(/<polygon\b[^>]*\bdata-connector-head="[^"]+"[^>]*\/?>/g)].length;
+    if (directHeads > 0) {
+      addRow(scope, "marker audit", `markers_checked=0 direct_heads=${directHeads} marker_failures=0`);
+    } else if (/marker-end\s*:|marker-end=/.test(svg)) {
+      fail(scope, "marker audit", "marker-end exists but no marker paths were checked");
+    }
   } else if (markerFailures === 0) {
     addRow(scope, "marker audit", `markers_checked=${checked} marker_failures=0`);
   }
@@ -292,12 +302,11 @@ function auditDirectHeads(file, svg) {
   if (heads.size === 0) return;
 
   let failures = 0;
-  for (const [id, pathAttrs] of paths) {
-    if (id.startsWith("seq-")) continue;
-    const head = heads.get(id);
-    if (!head) {
+  for (const [id, head] of heads) {
+    const pathAttrs = paths.get(id);
+    if (!pathAttrs) {
       failures += 1;
-      fail(scope, "direct-head audit", `${id} missing data-connector-head polygon`);
+      fail(scope, "direct-head audit", `${id} has no matching data-connector path`);
       continue;
     }
     const points = parsePathEndPoints(pathAttrs.d || "");
@@ -315,6 +324,7 @@ function auditDirectHeads(file, svg) {
     const headVector = { x: tip.x - base.x, y: tip.y - base.y };
     const stroke = resolveStroke(pathAttrs, styles);
     const dot = finalVector.x * headVector.x + finalVector.y * headVector.y;
+    const markerOverride = pathAttrs.style || "";
     if (distance(tip, end) > 0.2) {
       failures += 1;
       fail(scope, "direct-head audit", `${id} head tip=${tip.x},${tip.y} endpoint=${end.x},${end.y}`);
@@ -322,6 +332,10 @@ function auditDirectHeads(file, svg) {
     if (dot <= 0) {
       failures += 1;
       fail(scope, "direct-head audit", `${id} head direction opposes final connector segment`);
+    }
+    if (!markerOverride.includes("marker-end:none")) {
+      failures += 1;
+      fail(scope, "direct-head audit", `${id} does not disable its CSS marker-end`);
     }
     if (!stroke || head.fill !== stroke || head.stroke !== stroke) {
       failures += 1;
@@ -334,6 +348,76 @@ function auditDirectHeads(file, svg) {
   }
 
   if (failures === 0) addRow(scope, "direct-head audit", `heads=${heads.size} failures=0`);
+}
+
+function auditTerminalArrowClearance(file, svg) {
+  const scope = rel(file);
+  const paths = new Map();
+  const heads = new Map();
+
+  for (const match of svg.matchAll(/<path\b([^>]*\bdata-connector="([^"]+)"[^>]*)\/?>/g)) {
+    paths.set(match[2], parseAttrs(match[1]));
+  }
+  for (const match of svg.matchAll(/<polygon\b([^>]*\bdata-connector-head="([^"]+)"[^>]*)\/?>/g)) {
+    heads.set(match[2], parseAttrs(match[1]));
+  }
+  if (heads.size === 0) return;
+
+  let failures = 0;
+  let bent = 0;
+  const terminalSegments = [];
+  for (const [id, head] of heads) {
+    const pathAttrs = paths.get(id);
+    if (!pathAttrs) continue;
+    const steps = parsePathSteps(pathAttrs.d || "");
+    const finalStep = steps.at(-1);
+    const headPoints = polygonPoints(head.points || "");
+    const [tip, base1, base2] = headPoints;
+    if (!finalStep || !tip || !base1 || !base2) continue;
+
+    const hasBend = steps.some((step) => step.command === "Q");
+    if (!hasBend) continue;
+    bent += 1;
+
+    const base = { x: (base1.x + base2.x) / 2, y: (base1.y + base2.y) / 2 };
+    const arrowDepth = distance(tip, base);
+    const minimum = arrowDepth * 2;
+    const terminalLength = distance(finalStep.from, finalStep);
+    const direction = head["data-arrow-direction"];
+    const dx = finalStep.x - finalStep.from.x;
+    const dy = finalStep.y - finalStep.from.y;
+    const directionMatches =
+      (direction === "right" && finalStep.command === "H" && dx > 0) ||
+      (direction === "left" && finalStep.command === "H" && dx < 0) ||
+      (direction === "down" && finalStep.command === "V" && dy > 0) ||
+      (direction === "up" && finalStep.command === "V" && dy < 0);
+
+    terminalSegments.push(`${id}:${terminalLength.toFixed(1)}/${minimum.toFixed(1)}`);
+    if (!directionMatches) {
+      failures += 1;
+      fail(
+        scope,
+        "terminal arrow clearance audit",
+        `${id} final_command=${finalStep.command} does not provide a straight shaft aligned ${direction}`,
+      );
+    }
+    if (terminalLength + 0.2 < minimum) {
+      failures += 1;
+      fail(
+        scope,
+        "terminal arrow clearance audit",
+        `${id} terminal_segment_px=${terminalLength.toFixed(1)} minimum=${minimum.toFixed(1)} arrow_depth=${arrowDepth.toFixed(1)}`,
+      );
+    }
+  }
+
+  if (bent > 0 && failures === 0) {
+    addRow(
+      scope,
+      "terminal arrow clearance audit",
+      `bent_heads=${bent} terminal_segments=[${terminalSegments.join(",")}] failures=0`,
+    );
+  }
 }
 
 function auditRoundedBendDirection(file, svg) {
@@ -374,9 +458,12 @@ function auditRoundedBendDirection(file, svg) {
 
 function auditConnectorGeometry(file, svg) {
   const scope = rel(file);
+  if (referenceAuditsAvailable()) return;
   const pathMatches = [...svg.matchAll(/<path\b([^>]*\bdata-connector="([^"]+)"[^>]*)\/?>/g)];
   if (pathMatches.length === 0) {
-    if (/class="edge"|data-edge=/.test(svg)) fail(scope, "fallback connector audit", "edge groups exist but data-connector paths=0");
+    if (!referenceAuditsAvailable() && /class="edge"|data-edge=/.test(svg)) {
+      fail(scope, "fallback connector audit", "edge groups exist but data-connector paths=0");
+    }
     return;
   }
 
@@ -400,7 +487,7 @@ function auditConnectorGeometry(file, svg) {
       if (dir === "diagonal") diagonalSegments += 1;
     }
     const turns = directions.filter((dir, i) => i > 0 && dir !== "zero" && directions[i - 1] !== "zero" && dir !== directions[i - 1]).length;
-    const hasQ = /\bQ\b/.test(d);
+    const hasQ = points.some((point) => point.command === "Q");
     if (turns > 0) {
       bentConnectors += 1;
       if (hasQ) roundedBentConnectors += 1;
@@ -431,9 +518,11 @@ function auditConnectorGeometry(file, svg) {
 
 function auditSequenceShape(file, svg) {
   const scope = rel(file);
-  if (!path.basename(file).includes("sequence")) return;
+  if (!svg.includes('data-diagram-kind="sequence"')) return;
   const labels = [...svg.matchAll(/<rect\b[^>]*\bclass="[^"]*labelPill[^"]*"[^>]*>/g)].length;
   const numbers = [...svg.matchAll(/<text\b[^>]*\bclass="[^"]*\bnum\b[^"]*"[^>]*>(\d+)<\/text>/g)].map((match) => Number(match[1]));
+  const lifelines = [...svg.matchAll(/<(?:line|path)\b[^>]*\bclass="[^"]*\blifeline\b[^"]*"[^>]*>/g)].length;
+  const activations = [...svg.matchAll(/<rect\b[^>]*\bclass="[^"]*\bactivation\b[^"]*"[^>]*>/g)].length;
   const altBodies = [...svg.matchAll(/<rect\b([^>]*\bclass="[^"]*\balt\b[^"]*"[^>]*)\/?>/g)];
   let altFillFailures = 0;
   for (const alt of altBodies) {
@@ -441,11 +530,28 @@ function auditSequenceShape(file, svg) {
     if (attrs.fill && attrs.fill !== "none") altFillFailures += 1;
   }
   const monotonic = numbers.every((value, index) => value === index + 1);
-  if (labels === 0 || numbers.length === 0 || !monotonic || altFillFailures > 0) {
-    fail(scope, "fallback sequence audit", `labels=${labels} numbers=${numbers.join(",")} monotonic=${monotonic} alt_fill_failures=${altFillFailures}`);
+  if (labels !== numbers.length || numbers.length === 0 || !monotonic || lifelines < 2 || activations === 0 || altBodies.length === 0 || altFillFailures > 0) {
+    fail(
+      scope,
+      "fallback sequence audit",
+      `labels=${labels} numbers=${numbers.join(",")} monotonic=${monotonic} lifelines=${lifelines} activations=${activations} frames=${altBodies.length} alt_fill_failures=${altFillFailures}`,
+    );
   } else {
-    addRow(scope, "fallback sequence audit", `labels=${labels} numbers=${numbers.length} monotonic=true alt_fill_failures=0`);
+    addRow(
+      scope,
+      "fallback sequence audit",
+      `labels=${labels} numbers=${numbers.length} monotonic=true lifelines=${lifelines} activations=${activations} frames=${altBodies.length} alt_fill_failures=0`,
+    );
   }
+}
+
+function referenceAuditsAvailable() {
+  return [
+    "diagram-geometry-audit.py",
+    "diagram-endpoint-audit.py",
+    "diagram-connector-audit.py",
+    "diagram-mixed-corner-audit.py",
+  ].every(script => fs.existsSync(path.join(skillAuditDir, script)));
 }
 
 function runSkillAudits(file, svg) {
@@ -471,9 +577,9 @@ function runSkillAudits(file, svg) {
       fail(scope, `${gate} reference audit`, evidence || `exit=${result.status}`);
       continue;
     }
-    const weakConnector = gate === "connector" && /connectors=0/.test(evidence);
+    const weakConnector = gate === "connector" && /(?:^|\s)connectors=0(?:\s|$)/.test(evidence);
     const weakMixed = gate === "mixed-corner" && /paths=0/.test(evidence) && /\bQ\b/.test(svg);
-    const weakCards = gate === "connector" && path.basename(file).includes("architecture") && /cards=0/.test(evidence);
+    const weakCards = gate === "connector" && path.basename(file).includes("architecture") && /(?:^|\s)cards=0(?:\s|$)/.test(evidence);
     const resultLabel = weakConnector || weakMixed || weakCards ? "WEAK" : "PASS";
     addRow(scope, `${gate} reference audit`, evidence.split("\n").at(-1) || "exit=0", resultLabel);
   }
@@ -484,6 +590,8 @@ if (targets.length === 0) {
   console.log("diagram QA wrapper: PASS targets=0");
   process.exit(0);
 }
+const sequenceTargets = targets.filter((file) => fs.readFileSync(file, "utf8").includes('data-diagram-kind="sequence"'));
+const namedSequenceTargets = targets.filter((file) => path.basename(file).includes("sequence"));
 
 for (const file of targets) {
   const scope = rel(file);
@@ -507,6 +615,7 @@ for (const file of targets) {
   }
   auditMarkers(file, svg);
   auditDirectHeads(file, svg);
+  auditTerminalArrowClearance(file, svg);
   auditRoundedBendDirection(file, svg);
   runSkillAudits(file, svg);
   auditConnectorGeometry(file, svg);
@@ -516,15 +625,19 @@ for (const file of targets) {
 if (targets.some((file) => path.basename(file).includes("architecture"))) {
   runRequired("diagram-set", "architecture validator", "node", ["scripts/validate-readme-architecture-diagrams.mjs"]);
 }
-if (targets.some((file) => path.basename(file).includes("sequence"))) {
+if (namedSequenceTargets.length > 0) {
   runRequired("diagram-set", "sequence validator", "node", ["scripts/validate-sequence-diagrams.mjs"]);
+}
+if (sequenceTargets.length > 0) {
   const sequenceStyle = path.join(skillAuditDir, "diagram-sequence-style-audit.py");
   if (fs.existsSync(sequenceStyle)) {
-    const sequenceTargets = targets.filter((file) => path.basename(file).includes("sequence")).map(rel);
-    const result = run("python3", [sequenceStyle, ...sequenceTargets]);
+    const result = run("python3", [sequenceStyle, ...sequenceTargets.map(rel)]);
     const evidence = [result.stdout, result.stderr].filter(Boolean).join("\n").trim() || `exit=${result.status}`;
     if (result.status !== 0) fail("diagram-set", "sequence style reference audit", evidence);
-    else addRow("diagram-set", "sequence style reference audit", evidence.split("\n").at(-1) || "exit=0");
+    else {
+      const resultLabel = /sequence_files=0/.test(evidence) ? "WEAK" : "PASS";
+      addRow("diagram-set", "sequence style reference audit", evidence.split("\n").at(-1) || "exit=0", resultLabel);
+    }
   }
 }
 

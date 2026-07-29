@@ -6,13 +6,13 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
 /**
- * Maps OCR request validation failures to RFC 7807 problem details.
+ * OCR 요청 검증 실패를 RFC 7807 문제 상세로 매핑합니다.
  */
 @RestControllerAdvice
 class ImageOcrExceptionHandler {
 
     /**
-     * Converts invalid multipart or image validation input into a `400 Bad Request`.
+     * 잘못된 multipart 또는 이미지 검증 입력을 `400 Bad Request`로 변환합니다.
      */
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleValidation(exception: IllegalArgumentException): ProblemDetail =

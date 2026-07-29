@@ -37,6 +37,7 @@ class ElasticsearchServerTest {
             val client = Rest5Clients.getRest5Client(config)
 
             println((client.httpClient as CloseableHttpAsyncClient).status)
+            // 클라이언트 상태 검증은 Rest5 클라이언트 상태 확인 방식이 안정화되면 다시 활성화합니다.
             // client.isRunning.shouldBeTrue()
         }
     }

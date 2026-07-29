@@ -2,97 +2,119 @@
 
 [한국어](README.ko.md) | English
 
-This module benchmarks seven cache strategies behind one `ProductCacheService` contract. It is meant for choosing a cache shape, not for proving that one cache is universally faster.
+This module benchmarks cache strategy contracts behind one `ProductCacheService`
+shape. Issue #585 corrected the read/write-through and write-behind ownership
+contracts so Redisson's loader/writer paths, rather than application-managed
+repository/cache writes, are measured. The results below were regenerated from
+the corrected implementation.
 
 - `kotlinx-benchmark` provides JMH-style warmups and iterations.
 - H2 keeps the persistence layer local and repeatable.
 - Redis is started through bluetape4k Testcontainers for Redis-backed profiles.
-- Caffeine, Spring Cache Redis, Redisson near cache, and explicit read/write strategy profiles are measured with the same operations.
+- Each benchmark Spring context gets a unique H2 URL and Redis cache namespace.
 
 ## Architecture
 
 ![cache-benchmark architecture](../../docs/images/readme-diagrams/spring-boot-cache-benchmark-readme-architecture-01.png)
 
-Each benchmark profile boots the Spring context with a fresh H2 database URL and Redis connection properties from `RedisServer.Launcher.redis`. The services all implement `ProductCacheService`, so the benchmark compares cache policy instead of business logic differences.
+Each benchmark profile starts its own Spring context with:
 
-## Scenario
+- a fresh H2 database URL;
+- Redis connection properties from `RedisServer.Launcher.redis`;
+- a unique `cache.benchmark.namespace` so stale Redis state does not leak across
+  profiles or runs.
 
-![7 Cache Strategy Comparison](../../docs/images/readme-diagrams/cache-benchmark-scenario-01.png)
+## Strategy contracts
 
-The profiles cover direct database access, local caching, shared Redis caching, two-tier near caching, explicit read-through reads, explicit cache-aside write management, synchronous write-through writes, and asynchronous write-behind updates.
+| # | Profile | Actual strategy | DB ownership |
+|---|---|---|---|
+| 1 | **No Cache** | Direct repository access | Service |
+| 2 | **Caffeine** | Spring `@Cacheable` local cache | Service method invoked on miss/write |
+| 3 | **Redis Cache** | Spring Cache Redis remote cache | Service method invoked on miss/write |
+| 4 | **Near Cache** | Redisson `RLocalCachedMap` used as a two-tier cache | Service loads/writes repository explicitly |
+| 5 | **Read-Through** | Redisson `RMap` with `MapLoader` | `ProductMapLoader` loads DB misses |
+| 6 | **Write-Through** | Redisson `RMap` with `MapLoader` + `MapWriter` in `WRITE_THROUGH` mode | `ProductMapWriter` persists before `save` returns |
+| 7 | **Write-Behind** | Redisson `RMap` with `MapLoader` + `MapWriter` in `WRITE_BEHIND` mode | Redisson queues and batches `ProductMapWriter` persistence |
 
-### Strategy semantics
+The canonical Redisson profiles use existing products with stable IDs. Generated
+ID inserts are intentionally not part of write-through/write-behind benchmark
+operations because the map key is the write contract.
 
-- **Read-Through**: cache miss on `findById` is handled by repository lookup and then cached.
-- **Cache-aside writes**: application code writes to DB first, then explicitly updates cache for the target profile.
-- **Write-Through**: every write performs synchronized DB + cache updates.
-- **Write-Behind**: writes update cache immediately and flush DB asynchronously.
+## Benchmark results
 
-## 7 Cache Profiles
+Measured on 2026-07-27 with Apple M4 Pro, Java 21.0.12, Gradle 9.6.0,
+Kotlin Gradle plugin 2.4.0, Spring Boot 4.1.0, Docker 29.2.1, and `redis:8`.
+JMH used
+2 × 1-second warmup iterations and 5 × 1-second measurement iterations.
+All values are operations per second; higher is better only when the operation
+and completion contract are the same.
 
-| # | Profile | Strategy | Consistency | Write Latency | Read Latency |
-|---|---------|----------|-------------|---------------|--------------|
-| 1 | **No Cache** | Direct DB | Strong | Low | High |
-| 2 | **Caffeine** | `@Cacheable` local | Per-instance | Low | Lowest (ns) |
-| 3 | **Redis Cache** | `@Cacheable` remote | Shared | Low | Low (µs) |
-| 4 | **Near Cache** | Redisson `RLocalCachedMap` | Eventual | Medium | Mixed |
-| 5 | **Read-Through** | Cache-on-miss reads (`read-through`) | Eventual | Low | Low |
-| 6 | **Write-Through** | Synchronous dual-write | Strong | High | Low |
-| 7 | **Write-Behind** | Cache-first writes + async DB flush | Eventual | Lowest | Low |
+For benchmarks parameterized with `productId=1,100,500`, the table reports the
+arithmetic mean of the three JMH scores. The complete 23 measurements, errors,
+and parameters are preserved in the
+[raw JMH JSON](benchmark-results/2026-07-27-all-profiles.json), with the
+[derived summary](benchmark-results/2026-07-27-summary.json) and
+[run notes](benchmark-results/2026-07-27.md).
 
-## Benchmark Results
+### Read operations
 
-> **Note**: These are representative values measured on Apple M4 Pro (JDK 25, H2 in-memory, Redis via Testcontainers loopback).
-> Run `./gradlew :spring-boot-cache-benchmark:allProfilesBenchmark` for your own measurements.
+| Operation | Throughput (ops/s) | Aggregation |
+|---|---:|---|
+| Near Cache warmed hit | 3,287,505.143 | Mean of IDs 1, 100, 500 |
+| Caffeine warmed hit | 3,058,547.710 | Mean of IDs 1, 100, 500 |
+| No Cache repository read | 320,764.485 | Mean of IDs 1, 100, 500 |
+| Write-Behind warmed hit | 4,194.350 | Single benchmark score |
+| Write-Through warmed hit | 4,099.116 | Single benchmark score |
+| Read-Through warmed hit | 4,090.132 | Mean of IDs 1, 100, 500 |
+| Redis Cache warmed hit | 4,030.965 | Mean of IDs 1, 100, 500 |
+| Read-Through forced miss | 718.246 | Mean of IDs 1, 100, 500 |
 
-### Read Throughput — `findById` (warmed cache, ops/s)
+![cache read throughput](../../docs/images/readme-charts/cache-benchmark-read-throughput-chart-01.png)
 
-![Read Throughput chart](../../docs/images/readme-charts/cache-benchmark-read-throughput-chart-01.png)
+### Write operations
 
-| Profile | Read ops/s | vs Baseline |
-|---------|-----------|-------------|
-| No Cache (baseline) | ~8,200 | 1× |
-| Caffeine | ~490,000 | **60×** |
-| Redis Cache | ~43,000 | 5× |
-| Near Cache | ~465,000 | **57×** |
-| Read-Through | ~42,000 | 5× |
-| Write-Through | ~41,000 | 5× |
-| Write-Behind | ~42,000 | 5× |
+| Operation | Completion boundary | Throughput (ops/s) |
+|---|---|---:|
+| Write-Behind existing-ID update | Cache accepted; DB write remains queued | 3,551.936 |
+| Write-Through existing-ID update | Database persistence completed before return | 3,034.323 |
+| Write-Behind update and wait for drain | Database value observed after queued write | 0.988 |
 
-### Write Throughput — `save` (ops/s)
+![cache write throughput](../../docs/images/readme-charts/cache-benchmark-write-throughput-chart-01.png)
 
-![Write Throughput chart](../../docs/images/readme-charts/cache-benchmark-write-throughput-chart-01.png)
+The write-behind rows intentionally expose two different completion boundaries.
+The enqueue score must not be presented as completed database throughput, and
+the drain score includes the configured one-second write-behind delay. These
+local single-host measurements explain this example's behavior; they are not
+production capacity claims.
 
-| Profile | Write ops/s | Notes |
-|---------|------------|-------|
-| No Cache | ~8,200 | DB only |
-| Caffeine | ~8,100 | DB write + local cache |
-| Redis Cache | ~7,300 | DB write + Redis SET |
-| Near Cache | ~7,200 | DB write + RLocalCachedMap PUT |
-| Write-Through | ~5,600 | Sync DB + Redis (two network hops) |
-| **Write-Behind** | **~24,000** | Cache only (async DB flush) — **3× faster** |
+## Write-behind operational contract
 
-### Key Takeaways
+The write-behind profile uses Redisson's delayed/batched writer queue. It is not
+a crash-durable outbox.
 
-- **Caffeine** and **NearCache** win on read throughput (~60×) — best for read-heavy workloads with hot keys
-- **NearCache** adds cross-instance invalidation vs pure Caffeine — preferred in multi-instance deployments
-- **Write-Behind** wins on write throughput (~3× vs No Cache) — best for bursty write workloads tolerating eventual consistency
-- **Write-Through** has the highest write latency — use only when strong consistency is required
-- **Redis/Read-Through** sit in the middle: moderate read latency but shared cache state across all instances
+| Setting | Value |
+|---|---:|
+| Retry count | `3` |
+| Retry interval | `1s` |
+| Batch size | `50` |
+| Delay | `1s` |
 
-## Used Bluetape4k Features
+Operational caveats:
 
-| Feature | Module | Usage |
-|---------|--------|-------|
-| `NearCacheOperations` | `bluetape4k-cache-core` | Interface design reference for NearCache profile |
-| `RedisServer.Launcher` | `bluetape4k-testcontainers` | Singleton Redis Testcontainer for benchmarks & tests |
-| `KLoggingChannel` | `bluetape4k-logging` | Coroutine-safe logger in all service classes |
-| `bluetape4k-redisson` | `bluetape4k-redisson` | Redisson client wrapper used by NearCacheService |
-| `bluetape4k-junit5` | `bluetape4k-junit5` | Test assertions (`shouldBeEqualTo`, `shouldBeTrue`) |
+- `save` returning from `WriteBehindService` means the cache accepted the update;
+  it does not mean the database already reflects it.
+- Tests and completed-persistence benchmarks must wait until the repository
+  reflects the queued write.
+- Production-style use would need queue depth, failed-write, retry, and drain
+  observability.
+- Process termination before Redisson drains queued writes can lose updates.
+- Use a transactional outbox or Redis Stream design when crash-durable write
+  recovery is required; this example does not imply that architecture.
 
 ## Running Benchmarks
 
-Benchmarks are **not** part of the default build (`./gradlew test`). Run them explicitly:
+Benchmarks are not part of the default build (`./gradlew test`). Run them
+explicitly:
 
 ```bash
 # Profile 1 — baseline no-cache
@@ -126,12 +148,14 @@ Benchmarks are **not** part of the default build (`./gradlew test`). Run them ex
 ./gradlew :spring-boot-cache-benchmark:test
 ```
 
-Tests verify functional equivalence across all 7 profiles: given the same input, all services return the same result. **Redis container is started automatically** via Testcontainers.
+Tests verify the corrected ownership contracts and functional behavior.
+Redis-backed tests start Redis automatically through Testcontainers.
 
 ## Configuration
 
 | Property | Default | Description |
-|----------|---------|-------------|
+|---|---|---|
+| `cache.benchmark.namespace` | `cache-benchmark` | Redis namespace prefix for benchmark/test isolation |
 | `spring.data.redis.host` | `localhost` | Redis host |
 | `spring.data.redis.port` | `6379` | Redis port |
 | `spring.datasource.url` | H2 in-memory | Database URL |

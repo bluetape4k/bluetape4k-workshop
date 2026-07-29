@@ -22,20 +22,20 @@ import java.util.concurrent.TimeUnit
 import kotlin.time.toKotlinDuration
 
 /**
- * Spring configuration for ZooKeeper-based leader election beans.
+ * ZooKeeper 기반 리더 선출 빈을 구성하는 Spring 설정이다.
  *
- * ## Behavior / Contract
- * Creates a single shared [CuratorFramework] bean and four [io.bluetape4k.leader.LeaderElector] beans.
- * The [CuratorFramework] bean registers a [org.apache.curator.framework.state.ConnectionStateListener]
- * **before** `start()` to capture early connection transitions.
+ * ## 동작 / 계약
+ * 공유 [CuratorFramework] 빈 하나와 [io.bluetape4k.leader.LeaderElector] 빈 네 개를 만든다.
+ * [CuratorFramework] 빈은 초기 연결 상태 전이를 놓치지 않도록 `start()` 호출 **전에**
+ * [org.apache.curator.framework.state.ConnectionStateListener]를 등록한다.
  *
- * ## Resource Lifecycle
- * If `blockUntilConnected` times out, `client.close()` is called explicitly to prevent
- * background thread leaks (Spring `destroyMethod` only fires on successfully registered beans).
+ * ## 리소스 생명주기
+ * `blockUntilConnected`가 타임아웃되면 백그라운드 스레드 누수를 막기 위해
+ * `client.close()`를 명시적으로 호출한다. Spring `destroyMethod`는 빈 등록이 성공한 경우에만 실행된다.
  *
- * ## ACL Note
- * Default `OPEN_ACL_UNSAFE` — production deployments should configure
- * `CuratorFrameworkFactory.builder().aclProvider(DigestACLProvider(...))`.
+ * ## ACL 참고
+ * 기본값은 `OPEN_ACL_UNSAFE`이다. 운영 배포에서는
+ * `CuratorFrameworkFactory.builder().aclProvider(DigestACLProvider(...))`를 구성해야 한다.
  */
 @Configuration
 @EnableConfigurationProperties(LeaderZookeeperProperties::class)
@@ -44,10 +44,10 @@ class LeaderZookeeperConfig {
     companion object : KLogging()
 
     /**
-     * Creates and starts a [CuratorFramework] connected to the configured ZooKeeper ensemble.
+     * 설정된 ZooKeeper ensemble에 연결되는 [CuratorFramework]를 만들고 시작한다.
      *
-     * Registers a [org.apache.curator.framework.state.ConnectionStateListener] before `start()`
-     * so that SUSPENDED/LOST/RECONNECTED events are never missed.
+     * SUSPENDED/LOST/RECONNECTED 이벤트를 놓치지 않도록 `start()` 전에
+     * [org.apache.curator.framework.state.ConnectionStateListener]를 등록한다.
      */
     @Bean(destroyMethod = "close")
     fun curatorFramework(props: LeaderZookeeperProperties): CuratorFramework {
@@ -59,7 +59,7 @@ class LeaderZookeeperConfig {
             ExponentialBackoffRetry(1000, 3)
         )
 
-        // Register BEFORE start() to avoid missing early transitions
+        // 초기 상태 전이를 놓치지 않도록 start() 전에 등록한다.
         client.connectionStateListenable.addListener { _, newState ->
             when (newState) {
                 ConnectionState.SUSPENDED ->
@@ -76,14 +76,14 @@ class LeaderZookeeperConfig {
         client.start()
 
         if (!client.blockUntilConnected(cfg.blockUntilConnectedSeconds.toInt(), TimeUnit.SECONDS)) {
-            client.close() // explicit close to prevent background thread leak
+            client.close() // 백그라운드 스레드 누수를 막기 위해 명시적으로 닫는다.
             error(
                 "ZooKeeper connection timeout after ${cfg.blockUntilConnectedSeconds}s " +
                     "(connectString=${cfg.connectString}). Check that ZooKeeper is running and accessible."
             )
         }
 
-        // NOTE: OPEN_ACL_UNSAFE default — production: use CuratorFrameworkFactory.builder().aclProvider(...)
+        // 참고: 기본값은 OPEN_ACL_UNSAFE이다. 운영에서는 CuratorFrameworkFactory.builder().aclProvider(...)를 사용한다.
         return client
     }
 

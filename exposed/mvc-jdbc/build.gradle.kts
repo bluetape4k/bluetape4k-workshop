@@ -29,26 +29,26 @@ dependencies {
         exclude(group = "org.jetbrains.exposed", module = "exposed-spring-boot4-starter")
     }
 
-    // Logging
+    // 로깅 의존성
     implementation(libs.bluetape4k.logging)
 
-    // bluetape4k Exposed — core helpers (AuditableLongIdTable, etc.) + JDBC repository
+    // bluetape4k Exposed: core helper(AuditableLongIdTable 등)와 JDBC repository
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
-    // exposed-java-time required by AuditableIdTable (timestamp columns)
+    // AuditableIdTable의 timestamp column에 exposed-java-time이 필요하다.
     implementation(libs.jetbrains.exposed.java.time)
     implementation(libs.jetbrains.exposed.spring.boot4.starter)
     implementation(libs.jetbrains.exposed.spring7.transaction)
 
-    // DB
+    // 데이터베이스 의존성
     implementation(libs.hikaricp)
     runtimeOnly(libs.postgresql.driver)
 
-    // Jackson
+    // Jackson 직렬화 의존성
     implementation(libs.jackson3.module.kotlin)
     implementation(libs.jackson3.module.blackbird)
 
-    // Spring Boot
+    // Spring Boot 구성
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
@@ -69,6 +69,6 @@ dependencies {
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.kotlinx.coroutines.reactor)
 
-    // SpringDoc
+    // SpringDoc 문서화 의존성
     implementation(libs.springdoc.openapi.starter.webmvc.ui)
 }

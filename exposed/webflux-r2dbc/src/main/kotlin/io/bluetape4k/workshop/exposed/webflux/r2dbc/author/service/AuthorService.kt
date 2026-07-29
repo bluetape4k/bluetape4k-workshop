@@ -41,7 +41,7 @@ class AuthorService(
     }
 
     suspend fun delete(id: Long) = suspendTransaction(db = db) {
-        // collect all books first before issuing DELETE statements (avoid open cursor + mutation on same connection)
+        // 같은 connection에서 열린 cursor와 mutation이 겹치지 않도록 DELETE 전에 모든 book을 먼저 수집한다.
         val books = bookRepo.findByAuthorId(id).toList()
         books.forEach { bookRepo.delete(it.id) }
         val rows = authorRepo.delete(id)

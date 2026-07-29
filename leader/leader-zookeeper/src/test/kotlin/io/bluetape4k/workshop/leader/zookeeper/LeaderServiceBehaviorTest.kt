@@ -9,11 +9,10 @@ import io.bluetape4k.workshop.leader.zookeeper.service.GroupLeaderService
 import org.junit.jupiter.api.Test
 
 /**
- * Behavioral tests for [BlockingLeaderService] and [GroupLeaderService].
+ * [BlockingLeaderService]와 [GroupLeaderService]의 동작 테스트이다.
  *
- * Constructs service instances directly (no Spring context) using the shared [curator]
- * from [AbstractLeaderZookeeperTest]. Verifies that each service correctly delegates
- * to the underlying elector and updates its [BlockingLeaderService.executionCount].
+ * Spring context 없이 [AbstractLeaderZookeeperTest]의 공유 [curator]로 서비스 인스턴스를 직접 구성한다.
+ * 각 서비스가 하위 elector에 올바르게 위임하고 [BlockingLeaderService.executionCount]를 갱신하는지 검증한다.
  */
 class LeaderServiceBehaviorTest : AbstractLeaderZookeeperTest() {
 
@@ -60,7 +59,7 @@ class LeaderServiceBehaviorTest : AbstractLeaderZookeeperTest() {
         val service = GroupLeaderService(elector, defaultProps)
         val lockName = randomLockName("svc-state")
 
-        // Acquire a slot so state is non-trivially populated
+        // 상태가 비어 있지 않도록 slot을 하나 획득한다.
         service.runLeaderWork(lockName)
 
         val state = service.inspectState(lockName)

@@ -6,17 +6,16 @@ import org.springframework.stereotype.Component
 import java.time.Duration
 
 /**
- * Example leader-guarded job: cache warmup.
+ * leader-guarded job 예제: cache warmup입니다.
  *
- * Simulates a cache warmup operation that should run on exactly one instance
- * in a multi-instance deployment. Uses `bluetape4k-leader` distributed lock
- * to guarantee single execution.
+ * multi-instance 배포에서 정확히 하나의 instance에서만 실행되어야 하는 cache warmup 작업을 simulation합니다.
+ * `bluetape4k-leader` distributed lock을 사용해 단일 실행을 보장합니다.
  *
- * ## Behavior / Contract
- * - [lockName] is validated non-blank in `init {}`.
- * - [execute] logs a warmup message and simulates a short delay.
- * - This bean is registered as a Spring `@Component` so it is auto-discovered
- *   and injected into [LeaderScheduledJobService] via `List<LeaderGuardedJob>`.
+ * ## 동작 / 계약
+ * - [lockName]은 `init {}`에서 non-blank로 검증합니다.
+ * - [execute]는 warmup message를 log로 남기고 짧은 delay를 simulation합니다.
+ * - 이 bean은 Spring `@Component`로 등록되므로 auto-discovery되고
+ *   `List<LeaderGuardedJob>`를 통해 [LeaderScheduledJobService]에 주입됩니다.
  */
 @Component
 class CacheWarmupJob : LeaderGuardedJob {
@@ -29,7 +28,7 @@ class CacheWarmupJob : LeaderGuardedJob {
 
     override fun execute() {
         log.info { "[CacheWarmupJob] Starting cache warmup on elected leader instance" }
-        // Simulate warming up entries (e.g., pre-loading product catalog, config data)
+        // entry warmup을 simulation합니다(예: product catalog, config data pre-loading).
         simulateBlockingWork(WARMUP_DURATION)
         log.info { "[CacheWarmupJob] Cache warmup complete" }
     }

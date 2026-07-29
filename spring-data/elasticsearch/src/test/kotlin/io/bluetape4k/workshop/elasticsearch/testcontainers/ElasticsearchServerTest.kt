@@ -37,7 +37,7 @@ class ElasticsearchServerTest {
                 es.isRunning.shouldBeTrue()
 
                 val config = ElasticsearchServer.Launcher.Spring.getClientConfiguration(es)
-                // val client = ElasticsearchClients.createImperative(config) //  .getRestClient(config)
+                // val client = ElasticsearchClients.createImperative(config) //  .getRestClient(config) 로 클라이언트를 만들 수 있습니다.
                 // client.isRunning.shouldBeTrue()
 
                 val client = Rest5Clients.getRest5Client(config)

@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicLong
 
 /**
- * Deterministic order-number generator for tests and workshop demos.
+ * 테스트와 workshop demo 를 위한 결정적 order-number generator 입니다.
  */
 @Component
 class OrderNumberGenerator {

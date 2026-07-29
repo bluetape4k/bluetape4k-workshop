@@ -21,22 +21,21 @@ import io.bluetape4k.workshop.graph.knowledge.schema.MentionsLabel
 import io.bluetape4k.workshop.graph.knowledge.schema.RelatedToLabel
 
 /**
- * Blocking graph service for knowledge graph operations.
+ * knowledge graph 작업을 수행하는 블로킹 그래프 서비스입니다.
  *
- * Models entities (people, places, technologies), concepts (domain vocabulary),
- * and documents (source materials), then demonstrates entity lookup through document
- * mentions, semantic relationship traversal, and bounded path inference.
+ * Entity(사람, 장소, 기술), Concept(도메인 어휘), Document(원천 자료)를 모델링하고,
+ * 문서 mention을 통한 Entity 조회, 의미 관계 순회, 제한된 path 추론을 보여줍니다.
  *
- * ## Behavior / Contract
- * - [initialize] must be called once before any other method to ensure the named graph exists.
- * - [addEntity], [addConcept], [addDocument] are not idempotent — each call creates a new vertex.
- * - [mention] creates a directed MENTIONS edge from a Document to an Entity.
- * - [relateEntities] creates a directed RELATED_TO edge from one Entity to another.
- * - [classify] creates a directed IS_A edge from an Entity to a Concept.
- * - Edge mutators reject missing vertices and source/target label mismatches with [IllegalArgumentException].
- * - [inferRelationshipPaths] searches only along RELATED_TO edges.
+ * ## 동작 / 계약
+ * - named graph가 존재하도록 다른 메서드보다 먼저 [initialize]를 한 번 호출해야 합니다.
+ * - [addEntity], [addConcept], [addDocument]는 멱등이 아닙니다. 호출할 때마다 새 정점을 만듭니다.
+ * - [mention]은 Document에서 Entity로 향하는 `MENTIONS` 방향성 간선을 만듭니다.
+ * - [relateEntities]는 한 Entity에서 다른 Entity로 향하는 `RELATED_TO` 방향성 간선을 만듭니다.
+ * - [classify]는 Entity에서 Concept으로 향하는 `IS_A` 방향성 간선을 만듭니다.
+ * - 간선 변경 메서드는 정점 누락과 source/target label 불일치를 [IllegalArgumentException]으로 거부합니다.
+ * - [inferRelationshipPaths]는 `RELATED_TO` 간선만 따라 검색합니다.
  *
- * ## Usage
+ * ## 사용 예
  * ```kotlin
  * val service = KnowledgeGraphService(ops, "knowledge_graph")
  * service.initialize()
@@ -55,12 +54,12 @@ class KnowledgeGraphService(
     }
 
     companion object : KLogging() {
-        /** Maximum traversal depth for neighbor and path queries. */
+        /** neighbor 조회와 path 조회에 허용하는 최대 순회 깊이입니다. */
         const val MAX_TRAVERSAL_DEPTH: Int = 10
     }
 
     /**
-     * Creates the backing graph when it does not already exist.
+     * backing graph가 아직 없으면 생성합니다.
      */
     fun initialize() {
         if (!ops.graphExists(graphName)) {
@@ -70,11 +69,11 @@ class KnowledgeGraphService(
     }
 
     /**
-     * Adds an entity vertex to the graph.
+     * 그래프에 Entity 정점을 추가합니다.
      *
-     * @param entityId stable domain key (opaque string, e.g. slug or UUID)
-     * @param name human-readable display name
-     * @param entityType free-form category (e.g. "Language", "Framework", "Person")
+     * @param entityId 안정적인 도메인 키입니다. slug나 UUID처럼 내부 구조를 드러내지 않는 문자열입니다.
+     * @param name 사람이 읽을 수 있는 표시 이름입니다.
+     * @param entityType `"Language"`, `"Framework"`, `"Person"` 같은 자유 형식 분류입니다.
      */
     fun addEntity(entityId: String, name: String, entityType: String): GraphVertex {
         entityId.requireNotBlank("entityId")
@@ -91,11 +90,11 @@ class KnowledgeGraphService(
     }
 
     /**
-     * Adds a concept vertex representing a normalized domain vocabulary term.
+     * 정규화된 도메인 어휘 항목을 나타내는 Concept 정점을 추가합니다.
      *
-     * @param conceptId stable domain key
-     * @param name display name of the concept
-     * @param domain subject area (e.g. "software", "science")
+     * @param conceptId 안정적인 도메인 키입니다.
+     * @param name Concept의 표시 이름입니다.
+     * @param domain `"software"`, `"science"` 같은 주제 영역입니다.
      */
     fun addConcept(conceptId: String, name: String, domain: String = ""): GraphVertex {
         conceptId.requireNotBlank("conceptId")
@@ -111,11 +110,11 @@ class KnowledgeGraphService(
     }
 
     /**
-     * Adds a document vertex representing a source document that mentions entities.
+     * Entity를 언급하는 원천 문서를 나타내는 Document 정점을 추가합니다.
      *
-     * @param documentId stable domain key
-     * @param title document title
-     * @param source origin system or URL (optional)
+     * @param documentId 안정적인 도메인 키입니다.
+     * @param title 문서 제목입니다.
+     * @param source 원천 시스템 또는 URL입니다. 선택 값입니다.
      */
     fun addDocument(documentId: String, title: String, source: String = ""): GraphVertex {
         documentId.requireNotBlank("documentId")
@@ -131,10 +130,10 @@ class KnowledgeGraphService(
     }
 
     /**
-     * Creates a MENTIONS edge from [documentId] to [entityId].
+     * [documentId]에서 [entityId]로 향하는 `MENTIONS` 간선을 만듭니다.
      *
-     * @param confidence extraction confidence score 0–100
-     * @throws IllegalArgumentException when endpoints are missing or not Document → Entity.
+     * @param confidence 추출 신뢰도 점수입니다. 범위는 0-100입니다.
+     * @throws IllegalArgumentException endpoint가 없거나 Document -> Entity 관계가 아니면 발생합니다.
      */
     fun mention(documentId: GraphElementId, entityId: GraphElementId, confidence: Int = 100) {
         confidence.requireInRange(0, 100, "confidence")
@@ -149,10 +148,10 @@ class KnowledgeGraphService(
     }
 
     /**
-     * Creates a directed RELATED_TO edge from [fromEntityId] to [toEntityId].
+     * [fromEntityId]에서 [toEntityId]로 향하는 `RELATED_TO` 방향성 간선을 만듭니다.
      *
-     * @param relationType describes the kind of relationship (e.g. "has-feature", "integrates-with")
-     * @throws IllegalArgumentException when endpoints are missing or not Entity → Entity.
+     * @param relationType `"has-feature"`, `"integrates-with"` 같은 관계 종류를 설명합니다.
+     * @throws IllegalArgumentException endpoint가 없거나 Entity -> Entity 관계가 아니면 발생합니다.
      */
     fun relateEntities(
         fromEntityId: GraphElementId,
@@ -171,9 +170,9 @@ class KnowledgeGraphService(
     }
 
     /**
-     * Creates an IS_A edge from [entityId] to [conceptId] (entity → concept classification).
+     * [entityId]에서 [conceptId]로 향하는 `IS_A` 간선을 만듭니다. Entity -> Concept 분류입니다.
      *
-     * @throws IllegalArgumentException when endpoints are missing or not Entity → Concept.
+     * @throws IllegalArgumentException endpoint가 없거나 Entity -> Concept 관계가 아니면 발생합니다.
      */
     fun classify(entityId: GraphElementId, conceptId: GraphElementId) {
         requireEndpoint(entityId, EntityLabel.label, "entityId")
@@ -182,7 +181,7 @@ class KnowledgeGraphService(
     }
 
     /**
-     * Returns entities that a given document mentions (follows MENTIONS edges outward).
+     * 지정한 Document가 언급한 Entity를 반환합니다. 바깥 방향 `MENTIONS` 간선을 따릅니다.
      */
     fun findMentionedEntities(documentId: GraphElementId): List<GraphVertex> =
         ops.neighbors(
@@ -191,9 +190,9 @@ class KnowledgeGraphService(
         )
 
     /**
-     * Returns entities reachable from [entityId] via RELATED_TO edges within [depth] hops.
+     * [entityId]에서 [depth] hop 안에 `RELATED_TO` 간선으로 도달할 수 있는 Entity를 반환합니다.
      *
-     * @param depth traversal depth; must be in 1..[MAX_TRAVERSAL_DEPTH]
+     * @param depth 순회 깊이입니다. 1..[MAX_TRAVERSAL_DEPTH] 범위여야 합니다.
      */
     fun findRelatedEntities(entityId: GraphElementId, depth: Int = 1): List<GraphVertex> {
         depth.requireInRange(1, MAX_TRAVERSAL_DEPTH, "depth")
@@ -204,7 +203,7 @@ class KnowledgeGraphService(
     }
 
     /**
-     * Returns concepts that [entityId] is classified under (follows IS_A edges outward).
+     * [entityId]가 속하는 Concept을 반환합니다. 바깥 방향 `IS_A` 간선을 따릅니다.
      */
     fun findConceptsForEntity(entityId: GraphElementId): List<GraphVertex> =
         ops.neighbors(
@@ -213,10 +212,10 @@ class KnowledgeGraphService(
         )
 
     /**
-     * Infers and returns relationship paths between two entities along RELATED_TO edges.
+     * 두 Entity 사이의 관계 path를 `RELATED_TO` 간선을 따라 추론해 반환합니다.
      *
-     * @param maxDepth maximum traversal hops (default 3)
-     * @param maxPaths upper bound on returned paths (default 10)
+     * @param maxDepth 최대 순회 hop 수입니다. 기본값은 3입니다.
+     * @param maxPaths 반환할 path 수의 상한입니다. 기본값은 10입니다.
      */
     fun inferRelationshipPaths(
         fromEntityId: GraphElementId,

@@ -1,12 +1,12 @@
-# Issue #88: Async/Reactive Advanced README Enhancement
+# Issue #88: Async/Reactive Advanced README 개선
 
-## Overview
+## 개요
 
-Enhanced 6 module READMEs in bluetape4k-workshop with `Used bluetape4k Features` tables,
-`Before/After` code snippets, Mermaid sequence diagrams, and cancellation/structured-concurrency
-sections. No code changes — documentation only.
+bluetape4k-workshop의 6개 모듈 README를 `Used bluetape4k Features` 표,
+`Before/After` code snippet, Mermaid sequence diagram, cancellation/structured-concurrency
+섹션으로 강화했다. code 변경은 없고 문서 변경만 수행했다.
 
-## Updated Modules
+## 갱신한 모듈
 
 | Module | Action | Key bluetape4k APIs |
 |---|---|---|
@@ -17,40 +17,44 @@ sections. No code changes — documentation only.
 | `spring-data/mongodb-coroutines` | Full rewrite with table, Before/After, Mermaid, cancellation | `MongoDBServer.Launcher`, `Flow.log()`, `runSuspendIO`, `KLoggingChannel` |
 | `spring-data/mongodb-transactions` | Full rewrite with table, Before/After, Mermaid, cancellation | `MongoDBServer.Launcher`, `uninitialized()`, `@Transactional suspend fun` |
 
-## Methodology: Grounded on Real Imports
+## 방법론: 실제 import에 근거
 
-Features tables and Before/After snippets were authored from real `import io.bluetape4k.*`
-analysis of each module's source files. The task brief mentioned `bluetape4k-mongodb` API but
-no such dependency exists in the build files; documented only what the code actually imports.
+feature table과 Before/After snippet은 각 모듈 source file의 실제
+`import io.bluetape4k.*` 분석 결과를 바탕으로 작성했다. task brief는
+`bluetape4k-mongodb` API를 언급했지만 build file에는 그런 dependency가 없었다.
+따라서 code가 실제로 import하는 항목만 문서화했다.
 
-## Key Findings
+## 주요 발견 사항
 
 ### `spring-data/r2dbc-examples`
 
-- `bluetape4k-r2dbc` provides `connectionFactoryInitializer { }` DSL for building
-  `ConnectionFactoryInitializer` beans with a lambda — reduces boilerplate.
-- `bluetape4k-spring-boot4-r2dbc` provides `buildExampleMatcher(vararg props)` for
-  type-safe QBE (Query-by-Example) matcher construction.
-- R2DBC `CoroutineCrudRepository` Flow cancellation propagates back to the R2DBC publisher,
-  returning connections to the pool on scope cancellation.
+- `bluetape4k-r2dbc`는 lambda로 `ConnectionFactoryInitializer` bean을 만드는
+  `connectionFactoryInitializer { }` DSL을 제공해 boilerplate를 줄인다.
+- `bluetape4k-spring-boot4-r2dbc`는 type-safe QBE(Query-by-Example) matcher
+  구성을 위한 `buildExampleMatcher(vararg props)`를 제공한다.
+- R2DBC `CoroutineCrudRepository`의 Flow cancellation은 R2DBC publisher로 다시
+  전파되어 scope cancellation 시 connection을 pool에 반환한다.
 
 ### `spring-data/mongodb-coroutines`
 
-- `MongoDBServer.Launcher.mongoDB` singleton is used in `MongoClientConfig` and
-  `ReactiveMongoConfig` — all tests share one Testcontainers instance.
-- `io.bluetape4k.coroutines.flow.extensions.log` (`Flow.log("label")`) is used in
-  `FlowAndCoroutineTest` for debug-level per-element logging.
-- `io.bluetape4k.junit5.coroutines.runSuspendIO` is the test runner in flow/coroutine tests.
-- `@Tailable` cursor exposed as `Flux<Person>` can be bridged to `Flow` with backpressure.
+- `MongoDBServer.Launcher.mongoDB` singleton은 `MongoClientConfig`와
+  `ReactiveMongoConfig`에서 사용되며, 모든 테스트가 하나의 Testcontainers instance를
+  공유한다.
+- `io.bluetape4k.coroutines.flow.extensions.log`(`Flow.log("label")`)는
+  `FlowAndCoroutineTest`에서 element별 debug-level logging에 사용된다.
+- `io.bluetape4k.junit5.coroutines.runSuspendIO`는 flow/coroutine 테스트의 test runner다.
+- `Flux<Person>`으로 노출된 `@Tailable` cursor는 backpressure를 유지한 채 `Flow`로
+  bridge할 수 있다.
 
 ### `spring-data/mongodb-transactions`
 
-- `@Transactional suspend fun` with `ReactiveMongoTransactionManager` works because
-  `kotlinx-coroutines-reactor` bridges Reactor Context (session) into coroutine context via
-  `ReactorContext` element.
-- `io.bluetape4k.support.uninitialized()` replaces `lateinit var` for `@Autowired` test fields.
-- Coroutine cancellation during `@Transactional suspend fun` triggers rollback — Spring AOP
-  detects `CancellationException` and aborts the transaction.
+- `ReactiveMongoTransactionManager`와 함께 쓰는 `@Transactional suspend fun`은
+  `kotlinx-coroutines-reactor`가 Reactor Context(session)를 `ReactorContext` element를
+  통해 coroutine context로 bridge하므로 동작한다.
+- `io.bluetape4k.support.uninitialized()`는 `@Autowired` test field의 `lateinit var`를
+  대체한다.
+- `@Transactional suspend fun` 실행 중 coroutine cancellation이 발생하면 rollback이
+  trigger된다. Spring AOP가 `CancellationException`을 감지하고 transaction을 abort한다.
 
 ### Vertx modules (보강)
 
@@ -59,10 +63,12 @@ no such dependency exists in the build files; documented only what the code actu
   DB queries and HTTP requests, returning resources to their pools.
 - `vertx.dispatcher()` in `coroutineContext` keeps Vert.x API calls on the event loop thread.
 
-## Documentation Principles Applied
+## 적용한 문서화 원칙
 
-1. **Real code grounding**: import analysis — no fabricated APIs.
-2. **Honest Before/After**: Before shows standard library approach; After shows bluetape4k benefit.
-3. **Korean section headers**: preserved existing Korean style per workspace CLAUDE.md policy.
-4. **Additive for vertx**: existing vertx tables/Before-After preserved; Mermaid and cancellation
-   sections added without disturbing the content already written in issue #86.
+1. **실제 code 근거**: import 분석에 기반하고, 존재하지 않는 API를 만들지 않는다.
+2. **정직한 Before/After**: Before는 standard library 접근을 보여주고, After는
+   bluetape4k 이점을 보여준다.
+3. **한국어 section header**: workspace CLAUDE.md policy에 따라 기존 한국어 style을
+   보존했다.
+4. **vertx는 additive 방식**: 기존 vertx table/Before-After를 보존하고, issue #86에서
+   이미 작성된 내용을 흐트러뜨리지 않으면서 Mermaid와 cancellation 섹션을 추가했다.

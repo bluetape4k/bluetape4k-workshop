@@ -46,7 +46,7 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
 
     @Test
     fun `list authors returns non-empty`() {
-        // create one first
+        // 먼저 하나를 생성한다.
         val req = CreateAuthorRequest(
             firstName = faker.name().firstName(),
             lastName = faker.name().lastName(),

@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.messaging.fallback.api
 import java.io.Serializable
 
 /**
- * Small response returned by opt-in demo admin actions.
+ * opt-in demo admin action 이 반환하는 작은 response 입니다.
  */
 data class AdminActionResponse(
     val action: String,

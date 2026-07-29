@@ -12,7 +12,7 @@ class ReactiveController {
     companion object : KLoggingChannel()
 
     /**
-     * Applies rate limiting to `/api/v1/reactive/...`.
+     * `/api/v1/reactive/...`에 rate limiting을 적용합니다.
      */
     @GetMapping("/api/v1/reactive/hello")
     fun helloV1(): Mono<String> {
@@ -20,7 +20,7 @@ class ReactiveController {
     }
 
     /**
-     * Leaves `/api/v2/reactive/...` outside Bucket4j rate limiting.
+     * `/api/v2/reactive/...`는 Bucket4j rate limiting 대상에서 제외합니다.
      */
     @GetMapping("/api/v2/reactive/hello")
     fun helloV2(): Mono<String> {

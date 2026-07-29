@@ -5,16 +5,15 @@ import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantId
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantJobName
 
 /**
- * Derives backend lock names from tenant-local workshop inputs.
+ * tenant-local 워크숍 입력에서 backend lock 이름을 도출한다.
  *
- * The planner delegates namespace formatting and final lock-name validation to
- * `TenantLockNamespace` so the workshop uses the same rule as real leader
- * electors.
+ * 이 planner는 namespace 형식화와 최종 lock-name 검증을 `TenantLockNamespace`에 위임한다.
+ * 따라서 워크숍도 실제 leader elector와 같은 규칙을 사용한다.
  */
 class TenantLockNamePlanner {
 
     /**
-     * Returns the backend lock name for a tenant-local scheduled job.
+     * tenant-local scheduled job에 대응하는 backend lock 이름을 반환한다.
      */
     fun lockName(
         tenantId: TenantId,

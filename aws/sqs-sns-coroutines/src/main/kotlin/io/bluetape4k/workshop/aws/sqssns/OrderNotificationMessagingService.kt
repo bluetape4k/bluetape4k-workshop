@@ -15,7 +15,7 @@ import kotlin.coroutines.cancellation.CancellationException
 import tools.jackson.databind.ObjectMapper
 
 /**
- * Coordinates SNS publishing and SQS coroutine consumption for order notifications.
+ * 주문 알림을 위한 SNS 발행과 SQS 코루틴 소비를 조율합니다.
  */
 @Service
 class OrderNotificationMessagingService(
@@ -29,7 +29,7 @@ class OrderNotificationMessagingService(
 ) {
 
     /**
-     * Publishes an order notification event to the configured SNS topic.
+     * 설정된 SNS 토픽으로 주문 알림 이벤트를 발행합니다.
      */
     suspend fun publish(request: OrderNotificationRequest): OrderNotificationPublishReport {
         validate(request)
@@ -58,7 +58,7 @@ class OrderNotificationMessagingService(
     }
 
     /**
-     * Polls SQS once and processes each delivered notification.
+     * SQS를 한 번 폴링하고 전달된 각 알림을 처리합니다.
      */
     suspend fun consumeOnce(): List<OrderNotificationConsumeReport> {
         validateProperties()

@@ -9,7 +9,7 @@ import java.time.Duration
 
 @ConfigurationProperties(prefix = "workshop.profile-image-moderation")
 /**
- * Configuration properties for the profile-image moderation workshop example.
+ * 프로필 이미지 검수 워크숍 예제의 설정 속성입니다.
  */
 data class ProfileImageModerationProperties(
     val publicBaseUrl: String = "http://localhost:8080/public-images",

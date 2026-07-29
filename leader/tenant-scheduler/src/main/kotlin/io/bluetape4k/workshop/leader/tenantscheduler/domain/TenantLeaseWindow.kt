@@ -4,9 +4,9 @@ import io.bluetape4k.support.requireInRange
 import java.io.Serializable
 
 /**
- * Named lease timestamps for one tenant lease.
+ * tenant lease 하나에 대한 이름 붙은 lease timestamp 묶음이다.
  *
- * Grouping the three logical ticks avoids positional mistakes in public APIs.
+ * 세 개의 logical tick을 함께 묶어 공개 API에서 위치 기반 실수를 피한다.
  */
 data class TenantLeaseWindow(
     val acquiredAt: TenantLogicalTick,

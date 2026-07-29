@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 /**
- * Accepts greeting messages and publishes them to Kafka workshop topics.
+ * greeting message 를 받아 Kafka workshop topic 으로 publish 합니다.
  */
 @RestController
 @RequestMapping("/greeting")

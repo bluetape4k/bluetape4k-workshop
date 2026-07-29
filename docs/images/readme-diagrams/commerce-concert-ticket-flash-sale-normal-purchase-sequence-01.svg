@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980">
+  <defs>
+    <style>.bg{fill:#f8fafc}.frame{fill:#fff;stroke:#cbd5e1;stroke-width:1.5}.title{font:34px 'Architects Daughter','Comic Sans MS',cursive;fill:#18212f}.subtitle{font:16px 'Comic Mono','Courier New',monospace;fill:#64748b}.header{fill:#eff6ff;stroke:#93c5fd;stroke-width:1.5}.participant{font:21px 'Architects Daughter','Comic Sans MS',cursive;fill:#172033}.role{font:13px 'Comic Mono','Courier New',monospace;fill:#64748b}.lifeline{stroke:#94a3b8;stroke-width:1.5;stroke-dasharray:7 7}.activation{fill:#dbeafe;stroke:#60a5fa}.call{fill:none;stroke:#2563eb;stroke-width:2.5;stroke-linecap:round}.return{fill:none;stroke:#059669;stroke-width:2.5;stroke-dasharray:7 5}.label{fill:#fff;stroke:#cbd5e1}.labelText{font:14px 'Comic Mono','Courier New',monospace;fill:#334155}.num{font:bold 14px 'Comic Mono','Courier New',monospace;fill:#fff}.badge{fill:#2563eb}</style>
+    <marker id="seqArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke="#2563eb" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="seqReturn" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#059669" stroke="#059669" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+  </defs>
+  <rect class="bg" width="1600" height="980"/><rect class="frame" x="45" y="35" width="1510" height="900" rx="24"/>
+  <text class="title" x="80" y="88">Normal Purchase — Durable First, External Effects Second</text>
+  <text class="subtitle" x="82" y="116">The admission grant is consumed once; PostgreSQL commits before payment and ticket effects run.</text>
+  <rect class="header" x="120" y="155" width="260" height="82" rx="16"/><text class="participant" x="185" y="190">Customer API</text><text class="role" x="170" y="216">owner-scoped command</text>
+  <rect class="header" x="470" y="155" width="260" height="82" rx="16"/><text class="participant" x="535" y="190">Purchase</text><text class="role" x="508" y="216">Exposed transaction</text>
+  <rect class="header" x="820" y="155" width="260" height="82" rx="16"/><text class="participant" x="890" y="190">Payment</text><text class="role" x="867" y="216">lookup-first worker</text>
+  <rect class="header" x="1170" y="155" width="260" height="82" rx="16"/><text class="participant" x="1240" y="190">Ticketing</text><text class="role" x="1215" y="216">effect + receipt</text>
+  <line class="lifeline" x1="250" y1="237" x2="250" y2="885"/><line class="lifeline" x1="600" y1="237" x2="600" y2="885"/><line class="lifeline" x1="950" y1="237" x2="950" y2="885"/><line class="lifeline" x1="1300" y1="237" x2="1300" y2="885"/>
+  <rect class="activation" x="592" y="290" width="16" height="245" rx="6"/><rect class="activation" x="942" y="510" width="16" height="170" rx="6"/><rect class="activation" x="1292" y="670" width="16" height="100" rx="6"/>
+
+  <rect class="label labelPill" x="325" y="272" width="210" height="38" rx="19"/><circle class="badge" cx="348" cy="291" r="14"/><text class="num" x="344" y="296">1</text><text class="labelText" x="370" y="296">purchase(idempotency key)</text>
+  <path class="call" d="M250 325 H600" marker-end="url(#seqArrow)"/>
+  <rect class="label labelPill" x="655" y="362" width="250" height="38" rx="19"/><circle class="badge" cx="678" cy="381" r="14"/><text class="num" x="674" y="386">2</text><text class="labelText" x="700" y="386">validate admission grant</text>
+  <path class="call" d="M600 415 H950" marker-end="url(#seqArrow)"/>
+  <rect class="label labelPill" x="330" y="452" width="250" height="38" rx="19"/><circle class="badge" cx="353" cy="471" r="14"/><text class="num" x="349" y="476">3</text><text class="labelText" x="375" y="476">commit hold + guards</text>
+  <path class="return" d="M600 505 H250" marker-end="url(#seqReturn)"/>
+  <rect class="label labelPill" x="690" y="542" width="220" height="38" rx="19"/><circle class="badge" cx="713" cy="561" r="14"/><text class="num" x="709" y="566">4</text><text class="labelText" x="735" y="566">authorize(operation ID)</text>
+  <path class="call" d="M600 595 H950" marker-end="url(#seqArrow)"/>
+  <rect class="label labelPill" x="1035" y="632" width="220" height="38" rx="19"/><circle class="badge" cx="1058" cy="651" r="14"/><text class="num" x="1054" y="656">5</text><text class="labelText" x="1080" y="656">issue(ticket ID)</text>
+  <path class="call" d="M950 685 H1300" marker-end="url(#seqArrow)"/>
+  <rect class="label labelPill" x="720" y="722" width="230" height="38" rx="19"/><circle class="badge" cx="743" cy="741" r="14"/><text class="num" x="739" y="746">6</text><text class="labelText" x="765" y="746">snapshot: APPROVED</text>
+  <path class="return" d="M1300 775 H250" marker-end="url(#seqReturn)"/>
+  <text class="subtitle" x="120" y="910">Every retry reuses the same operation/effect ID; receipts make duplicate provider effects observable.</text>
+</svg>

@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.spring.modulith.boundaries.ordering
 import java.io.Serializable
 
 /**
- * Command object for placing an order from the ordering module.
+ * ordering module 에서 주문을 생성하기 위한 command object 입니다.
  */
 data class OrderRequest(
     val sku: String,

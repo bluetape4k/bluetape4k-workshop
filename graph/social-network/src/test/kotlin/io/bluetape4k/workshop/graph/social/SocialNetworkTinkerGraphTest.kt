@@ -8,10 +8,10 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.TestInstance
 
 /**
- * [SocialNetworkService] tests backed by TinkerGraph (in-memory, no Docker required).
+ * TinkerGraph(인메모리, Docker 불필요)가 뒷받침하는 [SocialNetworkService] 테스트입니다.
  *
- * All 34 tests from [AbstractSocialNetworkTest] run against an in-process TinkerGraph instance.
- * The graph is cleared and re-initialized before each test via the base [cleanGraph] setup.
+ * [AbstractSocialNetworkTest]의 모든 34개 테스트는 in-process TinkerGraph instance에서 실행됩니다.
+ * 그래프는 base [cleanGraph] setup을 통해 매 테스트 전에 비우고 다시 초기화합니다.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SocialNetworkTinkerGraphTest : AbstractSocialNetworkTest() {

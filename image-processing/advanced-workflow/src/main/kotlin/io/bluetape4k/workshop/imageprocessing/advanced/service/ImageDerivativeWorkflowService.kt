@@ -35,18 +35,18 @@ import java.security.MessageDigest
 import java.time.Duration
 
 /**
- * Orchestrates the image upload → process → store → persist saga.
+ * 이미지 업로드 → 처리 → 저장 → 영속화 사가를 조율합니다.
  *
- * ## Saga phases
- * 1. **T1** `recordJobStart` — deduplication check + new job creation.
- * 2. Image processing and S3 upload (with event emission at each step).
- * 3. **T2** `recordJobSuccess` / **T3** `recordJobFailure` — final saga state.
+ * ## 사가 단계
+ * 1. **T1** `recordJobStart` — 중복 제거 검사 + 새 job 생성.
+ * 2. 이미지 처리와 S3 업로드(각 단계에서 이벤트 발행).
+ * 3. **T2** `recordJobSuccess` / **T3** `recordJobFailure` — 최종 사가 상태.
  *
- * ## Cancellation contract
- * - Happy-path event emission propagates `CancellationException`.
- * - T2/T3 saga writes and their events run in `NonCancellable + IO` so they
- *   complete even if the caller coroutine is cancelled.
- * - Event emission failures are non-fatal: logged at WARN and swallowed.
+ * ## 취소 계약
+ * - 정상 경로 이벤트 발행은 `CancellationException`을 전파합니다.
+ * - T2/T3 사가 쓰기와 해당 이벤트는 `NonCancellable + IO`에서 실행하므로
+ *   호출자 코루틴이 취소되어도 완료됩니다.
+ * - 이벤트 발행 실패는 치명적이지 않습니다. WARN으로 기록하고 삼킵니다.
  */
 @Service
 class ImageDerivativeWorkflowService(
@@ -101,13 +101,13 @@ class ImageDerivativeWorkflowService(
     private suspend fun processUploadInternal(file: MultipartFile): ImageProcessingResponse {
         val started = System.nanoTime()
 
-        // --- Validation ---
+        // --- 검증 ---
         validator.validateDeclaredSize(file.size)
         val bytes = file.bytes
         val uploadOptions = validator.validate(file.contentType, bytes)
         meterRegistry.counter(METRIC_UPLOAD_ACCEPTED, "contentType", uploadOptions.contentType).increment()
 
-        // --- T1: recordJobStart (deduplication + job creation) ---
+        // --- T1: recordJobStart(중복 제거 + job 생성) ---
         val checksum = computeChecksum(bytes)
         val metadata = AssetMetadataInput(
             checksum = checksum,
@@ -120,7 +120,7 @@ class ImageDerivativeWorkflowService(
             persistenceService.recordJobStart(metadata)
         }
 
-        // AlreadyReady: skip processing, serve cached response from DB.
+        // AlreadyReady: 처리를 건너뛰고 DB의 캐시 응답을 제공합니다.
         if (jobStartResult is JobStartResult.AlreadyReady) {
             val cached = withContext(Dispatchers.IO) {
                 persistenceService.findAssetByExternalId(jobStartResult.externalId)
@@ -143,7 +143,7 @@ class ImageDerivativeWorkflowService(
         val uploadedKeys = mutableListOf<ImageObjectKey>()
         val imageObjects = mutableListOf<ImageObjectInput>()
         try {
-            // --- Processing ---
+            // --- 처리 ---
             val processed = processor.process(bytes, imageId)
             safeAppendEvent(
                 jobId = identity.jobId,
@@ -153,7 +153,7 @@ class ImageDerivativeWorkflowService(
                 payload = mapOf("variantCount" to processed.variants.size),
             )
 
-            // --- Upload original ---
+            // --- 원본 업로드 ---
             val originalKey = keyFactory.originalKey(imageId, file.originalFilename)
             val originalUpload = storage.upload(originalKey, bytes, uploadOptions)
             uploadedKeys += originalKey
@@ -168,7 +168,7 @@ class ImageDerivativeWorkflowService(
                 format = originalUpload.contentType,
             )
 
-            // --- Upload variants ---
+            // --- 변형 업로드 ---
             val variants = processed.variants.map { variant ->
                 val variantUpload = storage.upload(
                     key = variant.key,
@@ -290,7 +290,7 @@ class ImageDerivativeWorkflowService(
         }
     }
 
-    /** Best-effort event emission on the happy path. Swallows non-cancellation exceptions. */
+    /** 정상 경로의 최선 노력 이벤트 발행입니다. 취소가 아닌 예외는 삼킵니다. */
     private suspend fun safeAppendEvent(
         jobId: Long,
         step: ImageProcessingStep,
@@ -310,9 +310,9 @@ class ImageDerivativeWorkflowService(
     }
 
     /**
-     * Best-effort event emission inside a [NonCancellable] block (T2/T3 cleanup paths).
+     * [NonCancellable] 블록 안의 최선 노력 이벤트 발행입니다(T2/T3 정리 경로).
      *
-     * Must be called from within `withContext(NonCancellable + ...)`.
+     * 반드시 `withContext(NonCancellable + ...)` 내부에서 호출해야 합니다.
      */
     private fun safeAppendEventNonCancellable(
         jobId: Long,

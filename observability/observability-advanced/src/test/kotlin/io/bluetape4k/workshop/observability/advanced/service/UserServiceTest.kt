@@ -34,7 +34,7 @@ class UserServiceTest : AbstractAdvancedTest() {
 
     private val testUser = User(id = 1001L, name = "alice", email = "alice@example.com")
 
-    // C17: @BeforeEach suspend setup must use runSuspendIO {} (blocking wrapper, not suspend fun)
+    // C17: @BeforeEach suspend setup 은 suspend fun 이 아니라 blocking wrapper 인 runSuspendIO {} 를 사용해야 합니다.
     @BeforeEach
     fun setup() = runSuspendIO {
         testRegistry.clear()
@@ -87,7 +87,7 @@ class UserServiceTest : AbstractAdvancedTest() {
             .hasObservationWithNameEqualTo("user.cache.get")
             .that().hasBeenStarted().hasBeenStopped()
         assertParentObservation("user.cache.get", "user.service.get")
-        // DB span must NOT be present on cache hit
+        // cache hit 에서는 DB span 이 없어야 합니다.
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasNumberOfObservationsWithNameEqualTo("user.db.find", 0)
     }
@@ -118,14 +118,14 @@ class UserServiceTest : AbstractAdvancedTest() {
 
     @Test
     fun `getById - explicit cache delete forces DB lookup`() = runSuspendIO {
-        // Arrange: user in DB, no cache entry
+        // 준비: user 는 DB 에 있고 cache entry 는 없습니다.
         repo.save(testUser)
         cache.delete(testUser.id)
         testRegistry.clear()
 
         val result = userService.getById(testUser.id)
 
-        // DB fallback succeeds and result is non-null
+        // DB fallback 이 성공하고 result 는 non-null 입니다.
         result shouldBeEqualTo testUser
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.service.get")
@@ -133,7 +133,7 @@ class UserServiceTest : AbstractAdvancedTest() {
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.db.find")
             .that().hasBeenStarted().hasBeenStopped()
-        // After DB fetch, result is also written to cache
+        // DB fetch 이후 result 는 cache 에도 기록됩니다.
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.cache.put")
             .that().hasBeenStarted().hasBeenStopped()

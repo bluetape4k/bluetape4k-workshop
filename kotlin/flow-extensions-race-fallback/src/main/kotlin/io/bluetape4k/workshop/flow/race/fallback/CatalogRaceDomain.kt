@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.flow.race.fallback
 import java.io.Serializable
 
 /**
- * Reference-data source participating in race, fallback, and merge scenarios.
+ * race, fallback, merge scenario 에 참여하는 reference-data source 입니다.
  */
 enum class CatalogSource {
     CACHE,
@@ -13,7 +13,7 @@ enum class CatalogSource {
 }
 
 /**
- * Freshness or completeness marker attached to a catalog source result.
+ * catalog source result 에 붙는 freshness 또는 completeness marker 입니다.
  */
 enum class SourceQuality {
     FRESH,
@@ -22,7 +22,7 @@ enum class SourceQuality {
 }
 
 /**
- * Small reference-data item used by the Flow composition examples.
+ * Flow composition 예제에서 사용하는 작은 reference-data item 입니다.
  */
 data class CatalogItem(
     val sku: String,
@@ -36,7 +36,7 @@ data class CatalogItem(
 }
 
 /**
- * Value emitted by each source Flow.
+ * 각 source Flow 가 방출하는 값입니다.
  */
 data class SourceResult(
     val source: CatalogSource,

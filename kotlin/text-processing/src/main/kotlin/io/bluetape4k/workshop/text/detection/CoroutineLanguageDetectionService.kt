@@ -8,13 +8,12 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
- * Coroutine-friendly guard around [LanguageDetectionService].
+ * [LanguageDetectionService] 를 coroutine 친화적으로 보호하는 guard 입니다.
  *
  * ## Behavior / Contract
- * - Uses the caller-provided [dispatcher] for Lingua detection work.
- * - Serializes access to the wrapped detector with a [Mutex], so one shared wrapper can be reused
- *   by concurrent coroutine callers without exposing the detector directly.
- * - Keeps cancellation structured by using suspend functions instead of blocking callers.
+ * - Lingua detection 작업에는 caller 가 제공한 [dispatcher] 를 사용합니다.
+ * - [Mutex] 로 감싼 detector 접근을 직렬화하므로 detector 를 직접 노출하지 않고도 하나의 wrapper 를 여러 coroutine caller 가 재사용할 수 있습니다.
+ * - caller 를 blocking 하지 않고 suspend function 을 사용해 structured cancellation 을 유지합니다.
  *
  * ```kotlin
  * val detection = CoroutineLanguageDetectionService()
@@ -29,7 +28,7 @@ class CoroutineLanguageDetectionService(
     private val mutex = Mutex()
 
     /**
-     * Detects the most likely language for [text] using the guarded detector.
+     * 보호된 detector 로 [text] 에 가장 가능성이 높은 언어를 감지합니다.
      */
     suspend fun detectLanguage(text: String): Language? =
         withContext(dispatcher) {
@@ -39,7 +38,7 @@ class CoroutineLanguageDetectionService(
         }
 
     /**
-     * Computes confidence values for [text] using the guarded detector.
+     * 보호된 detector 로 [text] 의 언어별 confidence value 를 계산합니다.
      */
     suspend fun computeConfidenceValues(text: String): Map<Language, Double> =
         withContext(dispatcher) {

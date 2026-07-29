@@ -14,14 +14,14 @@ import kotlinx.benchmark.Warmup
 import java.util.concurrent.TimeUnit
 
 /**
- * Profile 4 — Redisson Near Cache.
+ * Profile 4 — Redisson Near Cache 입니다.
  *
- * Uses [NearCacheService] backed by Redisson's [org.redisson.api.RLocalCachedMap]:
- * - Tier 1: in-JVM Caffeine-backed local map (sub-microsecond reads when hot)
- * - Tier 2: Redis backing store (cross-instance consistency via invalidation)
+ * Redisson 의 [org.redisson.api.RLocalCachedMap] 기반 [NearCacheService] 를 사용합니다.
+ * - Tier 1: in-JVM Caffeine 기반 local map (hot 상태에서는 sub-microsecond read)
+ * - Tier 2: Redis backing store (invalidation 을 통한 cross-instance consistency)
  *
- * Expected: close to Caffeine throughput for hot data; better than Redis-only for
- * repeated reads of the same key.
+ * 예상: hot data 에서는 Caffeine 에 가까운 throughput 을 내며, 같은 key 를 반복 read 할 때
+ * Redis-only 보다 낫습니다.
  */
 @State(Scope.Benchmark)
 @BenchmarkMode(Mode.Throughput)

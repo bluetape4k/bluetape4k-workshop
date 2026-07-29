@@ -31,20 +31,20 @@ class ListOperationsTest(
     }
 
     /**
-     * A simple queue using Redis blocking list commands `BRPOP` and `LPUSH` to produce the queue message.
+     * Redis blocking list 명령인 `BRPOP` 과 `LPUSH` 로 큐 메시지를 생산하는 단순 큐입니다.
      */
     @Test
     fun `poll and populate queue`() = runSuspendIO {
         val queue = "simple-queue"
         val listOps = operations.opsForList()
 
-        // BRPOP
+        // BRPOP 로 메시지를 소비합니다.
         val brpop = listOps.rightPop(queue, Duration.ofSeconds(5))
             .log("workshop.redis.examples.reactive", Level.INFO)
         log.debug { "BRPOP ... wating for message" }
         delay(5)
 
-        // LPUSH
+        // LPUSH 로 메시지를 생산합니다.
         listOps.leftPush(queue, MESSAGE).awaitSingle() shouldBeEqualTo 1
         delay(5)
 

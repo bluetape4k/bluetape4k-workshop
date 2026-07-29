@@ -1,25 +1,26 @@
 # Code Review — Issue 306 Flow Subject Bridge
 
-## Scope
+## 범위
 
-New module `:flow-extensions-subject-bridge`, root README registration, bilingual module README, and README diagram assets.
+새 module `:flow-extensions-subject-bridge`, root README 등록, bilingual module README,
+README diagram asset.
 
-## Integrated 7-tier verdict
+## 통합 7-tier verdict
 
 | Tier | Verdict | Evidence |
 |---|---|---|
-| Performance | PASS | Bounded replay buffer, no blocking calls, multicast readiness documented. |
-| Stability | PASS | Hot-stream subscriber readiness covered with `awaitCollector(s)` tests; unicast single-consumer behavior tested. |
-| Security | PASS | In-memory example only; no external input, auth, secrets, network, SQL, or serialization boundary. |
-| Operator/Ops | PASS | README documents terminal behavior and bridge boundaries; no runtime infrastructure. |
-| Developer/API | PASS | Subjects are private, read side is `Flow`, write side is callback-style methods; tests use bluetape4k assertions. |
-| User/Caller | PASS | README includes before/after, selection guide, feature table, and diagrams. |
+| Performance | PASS | bounded replay buffer, blocking call 없음, multicast readiness 문서화. |
+| Stability | PASS | hot-stream subscriber readiness는 `awaitCollector(s)` test로 보호하고, unicast single-consumer behavior도 테스트했다. |
+| Security | PASS | in-memory example만 있으며 external input, auth, secret, network, SQL, serialization boundary가 없다. |
+| Operator/Ops | PASS | README는 terminal behavior와 bridge boundary를 문서화하며 runtime infrastructure는 없다. |
+| Developer/API | PASS | Subject는 private이고 read side는 `Flow`, write side는 callback-style method다. test는 bluetape4k assertion을 사용한다. |
+| User/Caller | PASS | README는 before/after, selection guide, feature table, diagram을 포함한다. |
 
 ## P0/P1
 
 - P0: 0
 - P1: 0
 
-## Follow-ups
+## 후속 작업
 
-None required for PR readiness.
+PR readiness를 위해 필요한 후속 작업은 없다.

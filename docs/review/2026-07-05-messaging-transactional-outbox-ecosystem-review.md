@@ -1,29 +1,29 @@
-# messaging-transactional-outbox Ecosystem Review
+# messaging-transactional-outbox 생태계 리뷰
 
-Date: 2026-07-05
-Module: `:messaging-transactional-outbox`
-Branch: `refactor/messaging-transactional-outbox-ecosystem-patterns`
+날짜: 2026-07-05
+모듈: `:messaging-transactional-outbox`
+브랜치: `refactor/messaging-transactional-outbox-ecosystem-patterns`
 
-## Scope
+## 범위
 
-- Declare direct `bluetape4k-core` dependency for support helper usage.
-- Validate order ids with bluetape4k `requirePositiveNumber` before DB writes and reads.
-- Keep transactional outbox persistence, publication retry, and controller behavior unchanged.
+- support helper 사용을 위해 direct `bluetape4k-core` dependency를 선언했다.
+- DB write/read 전에 order id를 bluetape4k `requirePositiveNumber`로 검증했다.
+- transactional outbox persistence, publication retry, controller behavior는 변경하지 않았다.
 
-## 7-Tier Review
+## 7-Tier 리뷰
 
-| Tier | Lens | Verdict | Evidence |
+| Tier | 관점 | 판정 | 근거 |
 |---|---|---|---|
-| 1 | Security/input | PASS | `updateStatus` and `getOrder` reject non-positive ids through named bluetape4k validation helpers. |
-| 2 | Architecture | PASS | No module topology or transaction boundary change; only a direct BOM-governed ecosystem dependency was added. |
-| 3 | Data/DB | PASS | Exposed update, outbox insert, payload shape, and response mapping remain unchanged after id validation. |
-| 4 | Code quality | PASS | Validated id is reused consistently in update, logging, payload, aggregate id, and response lookup. |
-| 5 | Tests | PASS | `./gradlew :messaging-transactional-outbox:test --console=plain --max-workers=1` passed. |
-| 6 | Operations | PASS | No Kafka, database, scheduler, workflow, or runtime configuration changed. |
-| 7 | Evidence/docs | PASS | `git diff --check` passed; Gradle test output executed 7 tests successfully. |
+| 1 | Security/input | PASS | `updateStatus`와 `getOrder`는 이름 있는 bluetape4k validation helper로 non-positive id를 거부한다. |
+| 2 | Architecture | PASS | module topology나 transaction boundary 변경은 없고 direct BOM-governed ecosystem dependency만 추가했다. |
+| 3 | Data/DB | PASS | id validation 후에도 Exposed update, outbox insert, payload shape, response mapping은 변경 없다. |
+| 4 | Code quality | PASS | 검증된 id는 update, logging, payload, aggregate id, response lookup에서 일관되게 재사용된다. |
+| 5 | Tests | PASS | `./gradlew :messaging-transactional-outbox:test --console=plain --max-workers=1`가 통과했다. |
+| 6 | Operations | PASS | Kafka, database, scheduler, workflow, runtime configuration 변경은 없다. |
+| 7 | 근거/docs | PASS | `git diff --check` passed; Gradle test output executed 7 tests successfully. |
 
-## P0/P1 Gate
+## P0/P1 게이트
 
 - P0: 0
 - P1: 0
-- Deferred: existing deprecation warnings in untouched Exposed setup and Faker test data remain outside this PR slice.
+- Deferred: 수정하지 않은 Exposed setup과 Faker test data의 기존 deprecation warning은 이 PR slice 범위 밖이다.

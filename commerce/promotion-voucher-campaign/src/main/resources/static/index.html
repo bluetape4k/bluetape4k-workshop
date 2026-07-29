@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Promotion Voucher Campaign Console</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/app.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#workspace">Skip to campaign workspace</a>
+<header class="hero">
+    <p class="eyebrow">bluetape4k workshop · PostgreSQL authority</p>
+    <h1>Promotion voucher campaign</h1>
+    <p>Observe retry-safe commands, advisory Redis admission, reviews, and reconciliation without exposing voucher secrets.</p>
+</header>
+
+<main id="workspace" tabindex="-1">
+    <section class="panel connection" aria-labelledby="connection-title">
+        <div>
+            <p class="section-index">01 / Scope</p>
+            <h2 id="connection-title">Connect to a campaign</h2>
+        </div>
+        <form id="connection-form" class="form-grid">
+            <label>Tenant
+                <input id="tenant" name="tenant" required maxlength="64" autocomplete="off" aria-label="Tenant identifier">
+            </label>
+            <label>Customer principal
+                <input id="principal" name="principal" required maxlength="64" autocomplete="off" aria-label="Customer principal">
+            </label>
+            <label>Campaign ID
+                <input id="campaign-id" name="campaignId" required inputmode="text" autocomplete="off" aria-label="Campaign UUID">
+            </label>
+            <button type="submit">Load snapshot and stream</button>
+        </form>
+        <p id="connection-help" class="help">Tenant and principal are sent only as request headers.</p>
+    </section>
+
+    <section class="status-grid" aria-label="Campaign status summary">
+        <article class="metric">
+            <span>Campaign state</span>
+            <strong id="campaign-state">Not loaded</strong>
+        </article>
+        <article class="metric">
+            <span>Remaining capacity</span>
+            <strong id="remaining-capacity">—</strong>
+        </article>
+        <article class="metric">
+            <span>Policy / revision</span>
+            <strong id="policy-revision">—</strong>
+        </article>
+        <article class="metric">
+            <span>Event transport</span>
+            <strong id="stream-state">Disconnected</strong>
+        </article>
+        <article class="metric">
+            <span>Redis admission</span>
+            <strong id="redis-state">Advisory · optional</strong>
+        </article>
+        <article class="metric">
+            <span>Reconciliation backlog</span>
+            <strong id="reconciliation-state">No signal</strong>
+        </article>
+    </section>
+
+    <section class="two-column">
+        <article class="panel" aria-labelledby="customer-title">
+            <p class="section-index">02 / Customer</p>
+            <h2 id="customer-title">Claim workflow</h2>
+            <p>Allocation is authoritative in PostgreSQL. Redis quota and Bloom risk remain advisory.</p>
+            <button id="allocate" type="button" disabled aria-describedby="allocate-reason">Allocate voucher</button>
+            <p id="allocate-reason" class="help">Load an active campaign first.</p>
+            <div class="claim-card" aria-label="Latest claim">
+                <span>Latest claim</span>
+                <strong id="claim-state">No claim</strong>
+                <code id="claim-id">—</code>
+            </div>
+        </article>
+
+        <article class="panel" aria-labelledby="operator-title">
+            <p class="section-index">03 / Operator</p>
+            <h2 id="operator-title">Guarded operations</h2>
+            <label>Operator secret
+                <input id="operator-secret" type="password" autocomplete="off" aria-label="Operator secret">
+            </label>
+            <p class="help">The value stays in session memory and is cleared on refresh or navigation.</p>
+            <div class="button-row" role="group" aria-label="Campaign operator actions">
+                <button class="operator-action" data-action="activate" type="button" disabled>Activate</button>
+                <button class="operator-action" data-action="pause" type="button" disabled>Pause</button>
+                <button class="operator-action danger" data-action="end" type="button" disabled>End campaign</button>
+            </div>
+            <p id="operator-disabled-reason" class="help">Load a campaign and enter the operator secret.</p>
+            <label>Scenario cookbook
+                <select id="scenario" aria-label="Scenario cookbook">
+                    <option value="happy-allocation">Happy allocation and redemption</option>
+                    <option value="same-key-response-loss">Same-key response loss</option>
+                    <option value="capacity-race">Capacity race</option>
+                    <option value="allocation-review">Allocation review</option>
+                    <option value="redemption-review">Redemption review</option>
+                    <option value="pause-allocation-race">Pause/allocation race</option>
+                    <option value="redeem-revoke-race">Redeem/revoke race</option>
+                    <option value="policy-change">Policy change race</option>
+                    <option value="redis-outage">Redis outage fallback</option>
+                    <option value="bloom-false-positive">Bloom false positive</option>
+                    <option value="delayed-duplicate-out-of-order">Delayed duplicate/out-of-order event</option>
+                </select>
+            </label>
+            <div class="button-row" role="group" aria-label="Scenario actions">
+                <button id="run-scenario" type="button" disabled>Run scenario</button>
+                <button id="reset-scenario" type="button" disabled>Reset tenant</button>
+            </div>
+            <p id="scenario-result" class="help" aria-live="polite">Choose a scenario after loading the campaign.</p>
+            <section aria-labelledby="review-queue-title">
+                <div class="button-row">
+                    <h3 id="review-queue-title">Open reviews</h3>
+                    <button id="refresh-operator-evidence" type="button" disabled>Refresh evidence</button>
+                </div>
+                <ol id="review-list" class="timeline" aria-label="Open voucher reviews"></ol>
+            </section>
+            <section aria-labelledby="reconciliation-backlog-title">
+                <h3 id="reconciliation-backlog-title">Reconciliation backlog</h3>
+                <ol id="reconciliation-list" class="timeline" aria-label="Reconciliation backlog items"></ol>
+            </section>
+        </article>
+    </section>
+
+    <section class="panel timeline-panel" aria-labelledby="timeline-title">
+        <div>
+            <p class="section-index">04 / Evidence</p>
+            <h2 id="timeline-title">Claim, review, and audit timeline</h2>
+            <p>Snapshot and audit state come from PostgreSQL; advisory signals never overwrite authority.</p>
+        </div>
+        <ol id="timeline" class="timeline" aria-label="Campaign audit events"></ol>
+    </section>
+</main>
+
+<div id="live-status" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+<dialog id="confirmation" aria-labelledby="confirmation-title" aria-describedby="confirmation-description">
+    <form method="dialog">
+        <h2 id="confirmation-title">Confirm operator action</h2>
+        <p id="confirmation-description">This command changes authoritative campaign state.</p>
+        <div class="button-row">
+            <button id="confirmation-cancel" value="cancel">Cancel</button>
+            <button id="confirmation-accept" class="danger" value="confirm">Confirm</button>
+        </div>
+    </form>
+</dialog>
+</body>
+</html>

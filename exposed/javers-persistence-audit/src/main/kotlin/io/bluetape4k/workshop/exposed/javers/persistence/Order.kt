@@ -8,12 +8,12 @@ import java.io.Serializable
 import java.math.BigDecimal
 
 /**
- * Immutable order aggregate audited by JaVers.
+ * JaVers가 감사하는 불변 order aggregate이다.
  *
- * ## Behavior / Contract
- * - [id] is the JaVers entity key and the Exposed table primary key.
- * - [status] records the lifecycle state used by audit-history examples.
- * - [totalAmount] is stored as a decimal value to avoid floating-point rounding.
+ * ## 동작 / 계약
+ * - [id]는 JaVers entity key이자 Exposed table primary key이다.
+ * - [status]는 audit-history 예제에서 사용하는 lifecycle 상태를 기록한다.
+ * - [totalAmount]는 floating-point 반올림을 피하기 위해 decimal 값으로 저장한다.
  *
  * ```kotlin
  * val order = Order("order-1", "customer-1", OrderStatus.PLACED, BigDecimal("19.99"))
@@ -39,7 +39,7 @@ data class Order(
 }
 
 /**
- * Order lifecycle states used by the persistence audit workshop.
+ * persistence audit 워크숍에서 사용하는 order lifecycle 상태이다.
  */
 enum class OrderStatus {
     PLACED,

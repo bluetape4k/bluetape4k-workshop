@@ -5,7 +5,7 @@ import java.io.Serializable
 import java.time.Instant
 
 /**
- * Lifecycle state for the effective profile-image URL returned by the example API.
+ * 예제 API가 반환하는 유효 프로필 이미지 URL의 생명주기 상태입니다.
  */
 enum class ProfileImageStatus {
     NO_IMAGE,
@@ -16,7 +16,7 @@ enum class ProfileImageStatus {
 }
 
 /**
- * Minimal moderation verdict used by the local fake provider and service workflow.
+ * 로컬 모의 제공자와 서비스 처리 흐름이 사용하는 최소 검수 판정입니다.
  */
 enum class ModerationDecision {
     APPROVED,
@@ -24,7 +24,7 @@ enum class ModerationDecision {
 }
 
 /**
- * API-facing profile-image projection with the currently effective URL.
+ * 현재 유효 URL을 포함한 API 대상 프로필 이미지 표현입니다.
  */
 data class ProfileImageView(
     val userId: String,
@@ -43,7 +43,7 @@ data class ProfileImageView(
 }
 
 /**
- * Object-storage keys produced for one profile-image upload.
+ * 프로필 이미지 업로드 하나에서 생성되는 객체 스토리지 키입니다.
  */
 data class ProfileImageKeys(
     val original: ImageObjectKey,
@@ -56,7 +56,7 @@ data class ProfileImageKeys(
 }
 
 /**
- * JPEG derivatives produced from the uploaded image before moderation starts.
+ * 검수 시작 전에 업로드 이미지에서 생성되는 JPEG 파생 이미지입니다.
  */
 data class ProcessedProfileImage(
     val width: Int,
@@ -71,7 +71,7 @@ data class ProcessedProfileImage(
 }
 
 /**
- * Mutable profile-image state persisted by the in-memory example repository.
+ * 인메모리 예제 저장소가 영속화하는 변경 가능한 프로필 이미지 상태입니다.
  */
 data class ProfileImageState(
     val userId: String,
@@ -112,7 +112,7 @@ data class ProfileImageState(
 }
 
 /**
- * Work item handed to the asynchronous moderation runner.
+ * 비동기 검수 실행기에 전달되는 작업 항목입니다.
  */
 data class ModerationRequest(
     val userId: String,
@@ -126,7 +126,7 @@ data class ModerationRequest(
 }
 
 /**
- * Result returned by an image moderation provider.
+ * 이미지 검수 제공자가 반환하는 결과입니다.
  */
 data class ModerationResult(
     val decision: ModerationDecision,

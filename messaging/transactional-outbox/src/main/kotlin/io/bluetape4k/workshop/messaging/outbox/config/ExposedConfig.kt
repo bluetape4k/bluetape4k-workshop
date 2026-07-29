@@ -11,10 +11,9 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 /**
- * Creates the [OrderTable] and [OutboxEventTable] database schemas on startup.
+ * startup 시 [OrderTable] 과 [OutboxEventTable] database schema 를 생성합니다.
  *
- * Uses `SchemaUtils.createMissingTablesAndColumns` so it is safe to run against an
- * existing database — columns and tables that already exist are left untouched.
+ * `SchemaUtils.createMissingTablesAndColumns` 를 사용하므로 existing database 에 대해 실행해도 안전합니다. 이미 존재하는 column 과 table 은 그대로 둡니다.
  */
 @Component
 class ExposedConfig : ApplicationRunner {

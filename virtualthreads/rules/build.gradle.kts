@@ -7,11 +7,11 @@ configurations {
 dependencies {
 
     implementation(libs.bluetape4k.core)
-    // VirtualThread of JDK 21
+    // JDK 21 VirtualThread 의존성
     implementation(libs.bluetape4k.virtualthread.api)
     runtimeOnly(libs.bluetape4k.virtualthread.jdk21)
 
-    // Coroutines
+    // 코루틴
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactor)

@@ -12,14 +12,14 @@ import org.redisson.api.RedissonClient
 import java.util.concurrent.TimeUnit.MILLISECONDS
 
 /**
- * Inventory service that uses [org.redisson.api.RLock] for mutual exclusion.
+ * [org.redisson.api.RLock]으로 상호 배제를 적용하는 재고 서비스입니다.
  *
- * ## Behavior / Contract
- * - Uses 3-argument `tryLock(waitMs, leaseMs, unit)` to disable the watchdog.
- *   Without an explicit lease, Redisson's watchdog extends the lock indefinitely,
- *   risking a never-expiring lock if the holder crashes.
- * - Returns [LockNotAcquired] when the lock cannot be acquired within [waitMs].
- * - The `finally` block releases the lock only if it is still held by the current thread.
+ * ## 동작 계약
+ * - watchdog을 비활성화하려고 3개 인자 `tryLock(waitMs, leaseMs, unit)`을 사용합니다.
+ *   명시적인 lease가 없으면 Redisson watchdog이 lock을 계속 연장하므로,
+ *   보유자가 중단될 때 만료되지 않는 lock이 남을 수 있습니다.
+ * - [waitMs] 안에 lock을 얻지 못하면 [LockNotAcquired]를 반환합니다.
+ * - `finally` 블록은 현재 thread가 아직 lock을 보유할 때만 해제합니다.
  */
 class LockedInventoryService(
     private val redisson: RedissonClient,

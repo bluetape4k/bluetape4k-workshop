@@ -7,13 +7,13 @@ configurations {
 }
 
 dependencies {
-    // bluetape4k-text — AhoCorasick pattern search
+    // bluetape4k-text — AhoCorasick pattern search 예제입니다.
     implementation(libs.bluetape4k.text.search)
-    // bluetape4k-text — Lingua language detection
+    // bluetape4k-text — Lingua language detection 예제입니다.
     implementation(libs.bluetape4k.text.lingua)
-    // bluetape4k-text — Korean tokenizer / blockword processing
+    // bluetape4k-text — Korean tokenizer 와 blockword processing 예제입니다.
     implementation(libs.bluetape4k.text.korean)
-    // bluetape4k-text — Japanese tokenizer / blockword processing
+    // bluetape4k-text — Japanese tokenizer 와 blockword processing 예제입니다.
     implementation(libs.bluetape4k.text.japanese)
 
     implementation(libs.kotlinx.coroutines.core.lib)

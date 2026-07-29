@@ -1,35 +1,35 @@
-# Redis Redisson Examples Ecosystem Review
+# Redis Redisson Examples 생태계 리뷰
 
-Date: 2026-07-05
-Module: `:redis-redisson-examples`
-Branch: `refactor/redis-redisson-examples-ecosystem-patterns`
+날짜: 2026-07-05
+모듈: `:redis-redisson-examples`
+브랜치: `refactor/redis-redisson-examples-ecosystem-patterns`
 
-## Scope
+## 범위
 
-- Keep the Redisson object, collection, lock, and read/write-through examples behaviorally unchanged.
-- Preserve and foreground existing bluetape4k Redisson helper usage.
-- Remove narrow example-quality drift in touched stream and local-cache paths.
+- Redisson object, collection, lock, read/write-through example 동작은 변경하지 않았다.
+- Preserve and foreground 기존 bluetape4k Redisson helper usage.
+- 수정된 stream 및 local-cache path의 좁은 example-quality drift를 제거했다.
 
-## 7-Tier Review
+## 7-Tier 리뷰
 
-| Tier | Lens | Verdict | Evidence |
+| Tier | 관점 | 판정 | 근거 |
 |---|---|---|---|
-| 1 | Correctness | PASS | Stream consumer assertions still validate the same message payload and ack count. |
-| 2 | API / UX | PASS | Example class names, test names, and Redisson object APIs remain unchanged. |
-| 3 | Architecture | PASS | Shared Redisson setup continues to use `RedissonCodecs.LZ4ForyComposite` and Redis testcontainer launcher. |
-| 4 | Concurrency | PASS | Coroutine stream consumer shape is unchanged; no new blocking path was added. |
-| 5 | Resilience | PASS | Stream message lookup now uses `shouldNotBeNull` before payload comparison. |
+| 1 | Correctness | PASS | stream consumer assertion은 같은 message payload와 ack count를 계속 검증한다. |
+| 2 | API / UX | PASS | example class name, test name, Redisson object API는 변경 없다. |
+| 3 | Architecture | PASS | shared Redisson setup은 계속 `RedissonCodecs.LZ4ForyComposite`와 Redis testcontainer launcher를 사용한다. |
+| 4 | Concurrency | PASS | coroutine stream consumer shape는 변경 없고 새 blocking path를 추가하지 않았다. |
+| 5 | Resilience | PASS | stream message lookup은 이제 payload comparison 전에 `shouldNotBeNull`을 사용한다. |
 | 6 | Tests | PASS | `./gradlew :redis-redisson-examples:test --console=plain --max-workers=1` passed. |
-| 7 | Maintainability | PASS | Touched examples use idiomatic object spacing, ordered imports, and English explanatory comments. |
+| 7 | Maintainability | PASS | 수정된 example은 idiomatic object spacing, ordered import, English explanatory comment를 사용한다. |
 
-## P0/P1 Gate
+## P0/P1 게이트
 
 - P0: 0
 - P1: 0
-- Deferred: Broader timing sleeps in lock/rate-limiter examples are demo workload timing and outside this PR slice.
+- Deferred: lock/rate-limiter example의 broader timing sleep은 demo workload timing이며 이 PR slice 범위 밖이다.
 
-## DoD Status
+## DoD 상태
 
 - `git diff --check`: PASS
-- Targeted test: `:redis-redisson-examples:test`: PASS
-- Ecosystem helpers: existing `RedissonCodecs`, `localCachedMap`, `streamAddArgsOf`, and coroutine `await` usage retained.
+- targeted test: `:redis-redisson-examples:test`: PASS
+- 생태계 helper: 기존 `RedissonCodecs`, `localCachedMap`, `streamAddArgsOf`, and coroutine `await` usage 보존됨.

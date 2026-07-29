@@ -1,28 +1,26 @@
 # Issue 348 - Kafka-first outbox fallback
 
-## Context
+## 배경
 
-Issue #348 added a workshop module that lowers hot transaction write cost by
-storing only `orders` in the transaction, publishing the event to Kafka after
-commit, and writing `event_publications` only when direct publication fails or
-reconciliation repairs a missing row.
+Issue #348은 transaction에는 `orders`만 저장하고, commit 이후 event를 Kafka에 publish하며,
+direct publication이 실패하거나 reconciliation이 missing row를 복구할 때만
+`event_publications`를 쓰는 방식으로 hot transaction write cost를 낮추는 workshop module을
+추가했다.
 
-## Decision
+## 결정
 
-The module intentionally does not implement the classic transactional outbox as
-the primary path. Direct Kafka success leaves no publication row. Failure,
-timeout, disabled publish, and reconstructed gaps create `NOT_PUBLISHED` rows
-that the relay can claim and re-drive.
+module은 의도적으로 classic transactional outbox를 primary path로 구현하지 않는다. direct
+Kafka success는 publication row를 남기지 않는다. failure, timeout, disabled publish,
+reconstructed gap은 relay가 claim하고 다시 drive할 수 있는 `NOT_PUBLISHED` row를 만든다.
 
-## What Failed During The Work
+## 작업 중 실패한 것
 
-- Rounded connector paths in the architecture diagram passed visual inspection
-  but failed geometry audits when Q-bend control points collapsed into
-  zero-length pre/post legs.
-- The architecture validator only parsed `M`/`L` path points, so valid Q-bend
-  rounded connectors were reported as diagonal false positives.
+- architecture diagram의 rounded connector path는 visual inspection을 통과했지만,
+  Q-bend control point가 zero-length pre/post leg로 collapse되면서 geometry audit에 실패했다.
+- architecture validator는 `M`/`L` path point만 parse했기 때문에, 유효한 Q-bend rounded
+  connector가 diagonal false positive로 보고되었다.
 
-## Evidence That Resolved It
+## 해결 증거
 
 - `diagram-geometry-audit.py`: `geometry_failures=0` for the touched
   architecture and state diagrams.
@@ -33,9 +31,9 @@ that the relay can claim and re-drive.
 - Full-size PNG inspection confirmed no card/label/connector overlap in the
   architecture, sequence, and state diagrams.
 
-## Future Guard
+## 향후 guard
 
-For connector-heavy README diagrams, do not accept "looks good" until the Q bend
-geometry, mixed-corner, endpoint, XML, CairoSVG render, and full-size PNG checks
-all pass. If a repo-local validator cannot parse rounded connectors, fix the
-validator narrowly instead of weakening the diagram geometry.
+connector-heavy README diagram에서는 Q bend geometry, mixed-corner, endpoint, XML,
+CairoSVG render, full-size PNG check가 모두 통과하기 전까지 "looks good"만으로 수용하지
+않는다. repo-local validator가 rounded connector를 parse하지 못하면 diagram geometry를
+약화하지 말고 validator를 좁게 수정한다.

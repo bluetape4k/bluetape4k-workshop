@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.leader.tenantscheduler.domain
 
 /**
- * Bounded outcome dimension used by scheduler reports.
+ * scheduler report가 사용하는 제한된 outcome dimension이다.
  */
 enum class TenantRunOutcome(
     val label: String,

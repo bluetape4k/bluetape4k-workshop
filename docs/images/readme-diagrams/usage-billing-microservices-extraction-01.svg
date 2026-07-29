@@ -1,0 +1,153 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2600" height="1500" viewBox="0 0 2600 1500" role="img" aria-labelledby="title desc" data-diagram-kind="sequence">
+  <title id="title">Staged Extraction With Route-Only Rollback</title>
+  <desc id="desc">Move one authority boundary at a time, prove immutable parity, and roll traffic back without copying databases backward.</desc>
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#243447" flood-opacity=".10"/>
+    </filter>
+    <style>
+      .canvas{fill:#F7F9FB}
+      .outer{fill:#FFFDFC;stroke:#C9D5DF;stroke-width:3}
+      .title{font:700 48px 'Architects Daughter',sans-serif;fill:#243447}
+      .subtitle{font:22px 'Comic Mono',monospace;fill:#526579}
+      .regionTitle{font:700 30px 'Architects Daughter',sans-serif;fill:#243447}
+      .cardTitle{font:700 28px 'Architects Daughter',sans-serif;fill:#243447}
+      .participant{font:700 25px 'Architects Daughter',sans-serif;fill:#243447}
+      .body{font:19px 'Comic Mono',monospace;fill:#526579}
+      .small{font:17px 'Comic Mono',monospace;fill:#526579}
+      .micro{font:15px 'Comic Mono',monospace;fill:#526579}
+      .footer{font:19px 'Comic Mono',monospace;fill:#526579}
+      .card{fill:#FFFDFC;stroke-width:3}
+      .lifeline{stroke:#8FA1B2;stroke-width:2;stroke-dasharray:10 10}
+      .activation{fill:#EAF2FB;stroke:#4F86C6;stroke-width:2}
+      .edgePath{fill:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+      .labelPill{fill:#FFFDFC;stroke-width:2}
+      .num{font:700 16px 'Comic Mono',monospace}
+      .message{font:17px 'Comic Mono',monospace;fill:#243447}
+      .frame{fill:none;stroke-width:2.5}
+      .frameLabel{font:700 19px 'Architects Daughter',sans-serif}
+      .legend{font:17px 'Comic Mono',monospace;fill:#526579}
+    </style>
+  </defs>
+  <rect class="canvas" width="2600" height="1500"/>
+  <rect class="outer" x="28" y="24" width="2544" height="1452" rx="28"/>
+  <text x="1300" y="88" text-anchor="middle" class="title">Staged Extraction With Route-Only Rollback</text>
+  <text x="1300" y="124" text-anchor="middle" class="subtitle">Move one authority boundary at a time, prove immutable parity, and roll traffic back without copying databases backward.</text>
+  <g class="node" data-node="Traffic router" data-card="Traffic router">
+    <rect class="card" x="55" y="180" width="410" height="105" rx="18" fill="#FFFDFC" stroke="#4F86C6" filter="url(#shadow)"/>
+
+    <text x="260" y="222" text-anchor="middle" class="participant">Traffic router</text>
+    <text x="260" y="255" text-anchor="middle" class="small">cutover and rollback</text>
+    <line x1="260" y1="285" x2="260" y2="1430" class="lifeline"/>
+  </g>
+<g class="node" data-node="Legacy ledger" data-card="Legacy ledger">
+    <rect class="card" x="575" y="180" width="410" height="105" rx="18" fill="#FFFDFC" stroke="#8FA1B2" filter="url(#shadow)"/>
+
+    <text x="780" y="222" text-anchor="middle" class="participant">Legacy ledger</text>
+    <text x="780" y="255" text-anchor="middle" class="small">initial authority</text>
+    <line x1="780" y1="285" x2="780" y2="1430" class="lifeline"/>
+  </g>
+<g class="node" data-node="Meter + Usage" data-card="Meter + Usage">
+    <rect class="card" x="1095" y="180" width="410" height="105" rx="18" fill="#FFFDFC" stroke="#6E8F4F" filter="url(#shadow)"/>
+
+    <text x="1300" y="222" text-anchor="middle" class="participant">Meter + Usage</text>
+    <text x="1300" y="255" text-anchor="middle" class="small">first extracted boundary</text>
+    <line x1="1300" y1="285" x2="1300" y2="1430" class="lifeline"/>
+  </g>
+<g class="node" data-node="Billing + Invoice" data-card="Billing + Invoice">
+    <rect class="card" x="1615" y="180" width="410" height="105" rx="18" fill="#FFFDFC" stroke="#8065A8" filter="url(#shadow)"/>
+
+    <text x="1820" y="222" text-anchor="middle" class="participant">Billing + Invoice</text>
+    <text x="1820" y="255" text-anchor="middle" class="small">financial materialization</text>
+    <line x1="1820" y1="285" x2="1820" y2="1430" class="lifeline"/>
+  </g>
+<g class="node" data-node="Query + parity" data-card="Query + parity">
+    <rect class="card" x="2135" y="180" width="410" height="105" rx="18" fill="#FFFDFC" stroke="#2D948C" filter="url(#shadow)"/>
+
+    <text x="2340" y="222" text-anchor="middle" class="participant">Query + parity</text>
+    <text x="2340" y="255" text-anchor="middle" class="small">read-side evidence</text>
+    <line x1="2340" y1="285" x2="2340" y2="1430" class="lifeline"/>
+  </g>
+  <rect x="55" y="350" width="2520" height="390" rx="18" class="frame alt" fill="none" stroke="#6E8F4F"/>
+        <rect x="55" y="350" width="468" height="38" rx="18" fill="#FFFDFC" stroke="#6E8F4F" stroke-width="2"/>
+        <text x="75" y="377" class="frameLabel" fill="#6E8F4F">phase 1 — extract source facts first</text>
+
+<rect x="55" y="760" width="2520" height="430" rx="18" class="frame alt" fill="none" stroke="#8065A8"/>
+        <rect x="55" y="760" width="637" height="38" rx="18" fill="#FFFDFC" stroke="#8065A8" stroke-width="2"/>
+        <text x="75" y="787" class="frameLabel" fill="#8065A8">phase 2/3 — add financial and read-side consumers</text>
+
+<rect x="55" y="1210" width="2520" height="170" rx="18" class="frame alt" fill="none" stroke="#B75B5B"/>
+        <rect x="55" y="1210" width="403" height="38" rx="18" fill="#FFFDFC" stroke="#B75B5B" stroke-width="2"/>
+        <text x="75" y="1237" class="frameLabel" fill="#B75B5B">alt — parity or operations fail</text>
+
+  <rect class="activation" x="250" y="400" width="20" height="900" rx="8" fill="#EAF2FB" stroke="#4F86C6"/>
+<rect class="activation" x="770" y="400" width="20" height="400" rx="8" fill="#EEF2F5" stroke="#8FA1B2"/>
+<rect class="activation" x="1290" y="500" width="20" height="520" rx="8" fill="#EEF5E9" stroke="#6E8F4F"/>
+<rect class="activation" x="1810" y="790" width="20" height="390" rx="8" fill="#F1EDF7" stroke="#8065A8"/>
+<rect class="activation" x="2330" y="620" width="20" height="600" rx="8" fill="#E8F5F3" stroke="#2D948C"/>
+  <rect x="270" y="408" width="500" height="42" rx="21" class="labelPill" stroke="#8FA1B2"/>
+    <circle cx="294" cy="429" r="15" fill="#FFFDFC" stroke="#8FA1B2" stroke-width="3"/>
+    <text x="294" y="435" text-anchor="middle" class="num" fill="#8FA1B2">1</text>
+    <text x="320" y="436" class="message">keep legacy as the initial source of truth</text>
+      <g class="edge" data-edge="message-1" data-label="keep legacy as the initial source of truth">
+    <path data-connector="message-1" class="edgePath" style="marker-end:none" d="M260 470 H780" stroke="#8FA1B2"/>
+    <polygon data-connector-head="message-1" data-arrow-direction="right" points="780,470 764,462 764,478" fill="#8FA1B2" stroke="#8FA1B2" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+<rect x="859.25" y="518" width="361.5" height="42" rx="21" class="labelPill" stroke="#6E8F4F"/>
+    <circle cx="883.25" cy="539" r="15" fill="#FFFDFC" stroke="#6E8F4F" stroke-width="3"/>
+    <text x="883.25" y="545" text-anchor="middle" class="num" fill="#6E8F4F">2</text>
+    <text x="909.25" y="546" class="message">mirror price + usage inputs</text>
+      <g class="edge" data-edge="message-2" data-label="mirror price + usage inputs">
+    <path data-connector="message-2" class="edgePath" style="marker-end:none" d="M780 580 H1300" stroke="#6E8F4F"/>
+    <polygon data-connector-head="message-2" data-arrow-direction="right" points="1300,580 1284,572 1284,588" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+<rect x="1570" y="628" width="500" height="42" rx="21" class="labelPill" stroke="#2D948C"/>
+    <circle cx="1594" cy="649" r="15" fill="#FFFDFC" stroke="#2D948C" stroke-width="3"/>
+    <text x="1594" y="655" text-anchor="middle" class="num" fill="#2D948C">3</text>
+    <text x="1620" y="656" class="message">compare price evidence + accepted usage IDs</text>
+      <g class="edge" data-edge="message-3" data-label="compare price evidence + accepted usage IDs">
+    <path data-connector="message-3" class="edgePath" style="marker-end:none" d="M1300 690 H2340" stroke="#2D948C"/>
+    <polygon data-connector-head="message-3" data-arrow-direction="right" points="2340,690 2324,682 2324,698" fill="#2D948C" stroke="#2D948C" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+<rect x="557.25" y="808" width="445.5" height="42" rx="21" class="labelPill" stroke="#4F86C6"/>
+    <circle cx="581.25" cy="829" r="15" fill="#FFFDFC" stroke="#4F86C6" stroke-width="3"/>
+    <text x="581.25" y="835" text-anchor="middle" class="num" fill="#4F86C6">4</text>
+    <text x="607.25" y="836" class="message">cut over Meter + Usage after parity</text>
+      <g class="edge" data-edge="message-4" data-label="cut over Meter + Usage after parity">
+    <path data-connector="message-4" class="edgePath" style="marker-end:none" d="M260 870 H1300" stroke="#4F86C6"/>
+    <polygon data-connector-head="message-4" data-arrow-direction="right" points="1300,870 1284,862 1284,878" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+<rect x="1342.5" y="908" width="435" height="42" rx="21" class="labelPill" stroke="#8065A8"/>
+    <circle cx="1366.5" cy="929" r="15" fill="#FFFDFC" stroke="#8065A8" stroke-width="3"/>
+    <text x="1366.5" y="935" text-anchor="middle" class="num" fill="#8065A8">5</text>
+    <text x="1392.5" y="936" class="message">publish immutable source-event IDs</text>
+      <g class="edge" data-edge="message-5" data-label="publish immutable source-event IDs">
+    <path data-connector="message-5" class="edgePath" style="marker-end:none" d="M1300 970 H1820" stroke="#8065A8"/>
+    <polygon data-connector-head="message-5" data-arrow-direction="right" points="1820,970 1804,962 1804,978" fill="#8065A8" stroke="#8065A8" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+<rect x="1830" y="1008" width="500" height="42" rx="21" class="labelPill" stroke="#2D948C"/>
+    <circle cx="1854" cy="1029" r="15" fill="#FFFDFC" stroke="#2D948C" stroke-width="3"/>
+    <text x="1854" y="1035" text-anchor="middle" class="num" fill="#2D948C">6</text>
+    <text x="1880" y="1036" class="message">compare rated totals + invoice references</text>
+      <g class="edge" data-edge="message-6" data-label="compare rated totals + invoice references">
+    <path data-connector="message-6" class="edgePath" style="marker-end:none" d="M1820 1070 H2340" stroke="#2D948C"/>
+    <polygon data-connector-head="message-6" data-arrow-direction="right" points="2340,1070 2324,1062 2324,1078" fill="#2D948C" stroke="#2D948C" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+<rect x="791" y="1108" width="498" height="42" rx="21" class="labelPill" stroke="#4F86C6"/>
+    <circle cx="815" cy="1129" r="15" fill="#FFFDFC" stroke="#4F86C6" stroke-width="3"/>
+    <text x="815" y="1135" text-anchor="middle" class="num" fill="#4F86C6">7</text>
+    <text x="841" y="1136" class="message">route downstream only after outbox drain</text>
+      <g class="edge" data-edge="message-7" data-label="route downstream only after outbox drain">
+    <path data-connector="message-7" class="edgePath" style="marker-end:none" d="M260 1170 H1820" stroke="#4F86C6"/>
+    <polygon data-connector-head="message-7" data-arrow-direction="right" points="1820,1170 1804,1162 1804,1178" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+<rect x="270" y="1258" width="500" height="42" rx="21" class="labelPill" stroke="#B75B5B"/>
+    <circle cx="294" cy="1279" r="15" fill="#FFFDFC" stroke="#B75B5B" stroke-width="3"/>
+    <text x="294" y="1285" text-anchor="middle" class="num" fill="#B75B5B">8</text>
+    <text x="320" y="1286" class="message">rollback routing; retain all durable history</text>
+      <g class="edge" data-edge="message-8" data-label="rollback routing; retain all durable history">
+    <path data-connector="message-8" class="edgePath" style="marker-end:none" d="M260 1320 H780" stroke="#B75B5B"/>
+    <polygon data-connector-head="message-8" data-arrow-direction="right" points="780,1320 764,1312 764,1328" fill="#B75B5B" stroke="#B75B5B" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <text x="1300" y="1442" text-anchor="middle" class="footer">Never copy a service database backward or rewrite published financial history during rollback.</text>
+</svg>

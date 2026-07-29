@@ -101,7 +101,7 @@ class InMemoryBookRepositoryTest : AbstractKtorTest() {
         val repo = repo()
         val received = Channel<Book>(Channel.BUFFERED)
 
-        // runTest provides TestScope, so launch {} is available
+        // runTest 가 TestScope 를 제공하므로 launch {} 를 사용할 수 있습니다.
         val job = launch { repo.stream().collect { received.send(it) } }
         delay(50) // let subscriber register on hot SharedFlow
 

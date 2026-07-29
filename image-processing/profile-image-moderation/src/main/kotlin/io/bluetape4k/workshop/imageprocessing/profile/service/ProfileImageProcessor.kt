@@ -14,7 +14,7 @@ import kotlin.math.roundToInt
 
 @Component
 /**
- * Produces the pending blurred image and the approved public derivative.
+ * 대기 중인 블러 이미지와 승인된 공개 파생 이미지를 생성합니다.
  */
 class ProfileImageProcessor(
     private val properties: ProfileImageModerationProperties,

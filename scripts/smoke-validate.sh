@@ -7,8 +7,10 @@
 #   ./scripts/smoke-validate.sh compile       # compile-only (no tests)
 #   ./scripts/smoke-validate.sh stale-check   # Gradle project count + README link check
 #   ./scripts/smoke-validate.sh diagram-qa    # changed README diagram QA evidence
+#   ./scripts/smoke-validate.sh high-contention-contract
+#   HIGH_CONTENTION_RUN_ID=<unique-id> ./scripts/smoke-validate.sh high-contention-ci
 #
-# Groups: data-access  spring-boot  serialization  messaging  async  observability  optimization  aws  redis
+# Groups: data-access  spring-boot  serialization  messaging  commerce  optimization  operations  async  observability  aws  redis
 # Each group runs with --continue so a single failure does not abort the rest.
 
 set -euo pipefail
@@ -43,6 +45,7 @@ case "${1:-help}" in
       :kotlin-flow-extensions-search-pipeline:test \
       :leader-backend-comparison-lab:test \
       :leader-k8s-lease-micrometer:test \
+      :leader-job-safety-lab:test \
       :leader-tenant-scheduler:test \
       :okio-examples:test \
       :graph-event-lineage:test \
@@ -52,6 +55,7 @@ case "${1:-help}" in
       :graph-social-network:test \
       :kotlin-design-patterns:test \
       :micrometer-observation:test \
+      :operations-job-console-core:test \
       :spring-boot-application-event-demo:test \
       :spring-boot-cache-caffeine:test \
       :spring-boot-cbor-mvc:test \
@@ -142,6 +146,56 @@ case "${1:-help}" in
       --continue --max-workers=1"
     ;;
 
+  commerce)
+    # The event-sourced module's test task is container-free; the remaining tasks use Testcontainers.
+    run "$GRADLEW \
+      :commerce-event-sourced-promotion-voucher-campaign:test \
+      :commerce-order-lifecycle-fulfillment:test \
+      :commerce-reservation-control-plane:test \
+      :commerce-promotion-voucher-campaign:test \
+      :commerce-pre-generated-voucher-pool:test \
+      :commerce-concert-ticket-flash-sale:test \
+      :commerce-usage-metering-billing-ledger:integrationTest \
+      :commerce-usage-metering-billing-event-sourcing:integrationTest \
+      :commerce-usage-metering-billing-event-sourcing:stressTest \
+      :commerce-usage-billing-meter-service:test \
+      :commerce-usage-billing-usage-service:test \
+      :commerce-usage-billing-billing-service:test \
+      :commerce-usage-billing-invoice-service:test \
+      :commerce-usage-billing-query-service:test \
+      :commerce-usage-billing-microservices-composition-tests:test \
+      :commerce-usage-billing-microservices-composition-tests:integrationTest \
+      :commerce-usage-billing-microservices-composition-tests:koverXmlReport \
+      --continue --max-workers=1"
+    ;;
+
+  operations)
+    # Java 25; PostgreSQL/Redis integration tests run sequentially.
+    run "$GRADLEW \
+      :operations-job-console-core:test \
+      :operations-job-console-core:integrationTest \
+      :operations-job-console-spring:test \
+      :operations-job-console-spring:integrationTest \
+      :operations-job-console-ktor:test \
+      :operations-job-console-ktor:integrationTest \
+      --continue --max-workers=1"
+    ;;
+
+  optimization)
+    # Java 25; planning contract tests use deterministic fakes and PostgreSQL fixtures.
+    run "$GRADLEW \
+      :optimization-planning-contracts:test \
+      --continue --max-workers=1"
+    ;;
+
+  leader-full)
+    # Java 25; the default path is container-free and integration is serialized.
+    run "$GRADLEW \
+      :leader-job-safety-lab:test \
+      :leader-job-safety-lab:integrationTest \
+      --continue --max-workers=1"
+    ;;
+
   async)
     run "$GRADLEW \
       :kotlin-coroutines:test \
@@ -169,13 +223,6 @@ case "${1:-help}" in
       --continue --max-workers=1"
     ;;
 
-  optimization)
-    # Java 25 and Testcontainers required
-    run "$GRADLEW \
-      :optimization-planning-contracts:test \
-      --continue --max-workers=1"
-    ;;
-
   aws)
     run "$GRADLEW \
       :aws-cloudwatch-imds-observability:test \
@@ -195,6 +242,34 @@ case "${1:-help}" in
       :bucker4j-bluetape4k-webflux:test \
       :bucket4j-redis:test \
       --continue --max-workers=1"
+    ;;
+
+  high-contention-contract)
+    run "node --test scripts/high-contention/validate-contract.test.mjs scripts/high-contention/validate-run.test.mjs scripts/high-contention/select-upload.test.mjs"
+    run "node scripts/validate-high-contention-readme.mjs"
+    run "$GRADLEW -p build-logic test"
+    run "$GRADLEW \
+      :operations-job-console-core:test \
+      :commerce-concert-ticket-flash-sale:test \
+      --max-workers=1"
+    ;;
+
+  high-contention-ci)
+    if [ -z "${HIGH_CONTENTION_RUN_ID:-}" ]; then
+      echo "HIGH_CONTENTION_RUN_ID is required and must be unique."
+      exit 2
+    fi
+    if [[ ! "$HIGH_CONTENTION_RUN_ID" =~ ^[a-z0-9][a-z0-9._-]{0,63}$ ]] ||
+      [[ "$HIGH_CONTENTION_RUN_ID" == "." || "$HIGH_CONTENTION_RUN_ID" == ".." ]]; then
+      echo "HIGH_CONTENTION_RUN_ID must be a bounded identifier."
+      exit 2
+    fi
+    high_contention_run_id="$HIGH_CONTENTION_RUN_ID"
+    unset HIGH_CONTENTION_RUN_ID
+    echo "▶ $GRADLEW highContentionCi -PhighContentionRunId=$high_contention_run_id --max-workers=1"
+    "$GRADLEW" highContentionCi \
+      "-PhighContentionRunId=$high_contention_run_id" \
+      --max-workers=1
     ;;
 
   stale-check)
@@ -237,6 +312,7 @@ case "${1:-help}" in
 
   diagram-qa)
     run "node scripts/validate-readme-diagram-qa.mjs"
+    run "node scripts/validate-usage-billing-microservices-readme.mjs"
     ;;
 
   help|*)
@@ -250,11 +326,16 @@ case "${1:-help}" in
     echo "  spring-boot      Spring Boot Operations (smoke)"
     echo "  serialization    Jackson / JSON / Okio"
     echo "  messaging        Kafka (Testcontainers)"
+    echo "  commerce         Commerce lifecycles (PostgreSQL Testcontainers)"
+    echo "  optimization     Planning contracts (Java 25, deterministic + PostgreSQL fixtures)"
+    echo "  operations       Job console core + Spring MVC/Ktor (PostgreSQL/Redis Testcontainers)"
+    echo "  leader-full      Job safety lab default + PostgreSQL/Redis integration tests"
     echo "  async            Coroutines / Vert.x"
     echo "  observability    Micrometer / Virtual Threads"
-    echo "  optimization     Java 25 planning contracts (Testcontainers)"
     echo "  aws              AWS local-first examples"
     echo "  redis            Redis / Redisson / Rate Limit"
+    echo "  high-contention-contract  Contract and producer tests (not part of all-smoke)"
+    echo "  high-contention-ci        Full CI matrix; requires a unique HIGH_CONTENTION_RUN_ID"
     echo "  stale-check      Gradle project count + README link check"
     echo "  diagram-qa       Changed README diagram QA evidence"
     ;;

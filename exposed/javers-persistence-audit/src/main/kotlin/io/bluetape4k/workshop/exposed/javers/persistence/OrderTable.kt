@@ -4,12 +4,12 @@ import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
 
 /**
- * Exposed table that stores the current order row.
+ * 현재 order row를 저장하는 Exposed table이다.
  *
- * ## Behavior / Contract
- * - JaVers stores historical snapshots separately in Redis.
- * - This table stores only the current materialized state.
- * - [totalAmount] uses DECIMAL(19,4) for deterministic monetary examples.
+ * ## 동작 / 계약
+ * - JaVers는 historical snapshot을 Redis에 별도로 저장한다.
+ * - 이 table은 현재 materialized 상태만 저장한다.
+ * - 결정적인 금액 예제를 위해 [totalAmount]는 DECIMAL(19,4)를 사용한다.
  *
  * ```kotlin
  * transaction {
@@ -27,7 +27,7 @@ object OrderTable: Table("orders") {
 }
 
 /**
- * Maps an Exposed [ResultRow] to the workshop [Order] aggregate.
+ * Exposed [ResultRow]를 워크숍 [Order] aggregate로 매핑한다.
  */
 fun ResultRow.toOrder(): Order =
     Order(

@@ -4,7 +4,7 @@ import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 
 /**
- * Request payload for greeting messages published to Kafka.
+ * Kafka 로 publish 할 greeting message 의 request payload 입니다.
  */
 data class GreetingRequest(
     val name: String,

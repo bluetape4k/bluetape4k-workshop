@@ -9,10 +9,10 @@ import org.junit.jupiter.api.RepeatedTest
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Demonstrates that [io.bluetape4k.workshop.lock.service.UnsafeInventoryService]
- * produces a race condition (over-sell) under concurrent load.
+ * [io.bluetape4k.workshop.lock.service.UnsafeInventoryService]가 동시 부하에서
+ * race condition(oversell)을 만든다는 점을 보여줍니다.
  *
- * The test is `@RepeatedTest(3)` to improve reproducibility of the non-deterministic race.
+ * 비결정적인 경쟁 재현성을 높이려고 `@RepeatedTest(3)`로 실행합니다.
  */
 class BaselineRaceTest : AbstractDistributedLockTest() {
 
@@ -37,9 +37,8 @@ class BaselineRaceTest : AbstractDistributedLockTest() {
             .run()
 
         val currentStock = store.currentStock(inventoryId)
-        // Race condition: either more than 10 successes OR stock went negative
-        // Race must be observed: either more than 10 successes OR stock went negative.
-        // shouldBeTrue() from bluetape4k-assertions always throws (never gated on -ea).
+        // race condition은 성공 건수가 10회를 넘거나 재고가 음수가 되는 형태로 관측됩니다.
+        // bluetape4k-assertions의 shouldBeTrue()는 -ea 설정과 무관하게 항상 예외를 던집니다.
         val raceObserved = successCount.get() > 10 || currentStock < 0
         raceObserved.shouldBeTrue()
     }

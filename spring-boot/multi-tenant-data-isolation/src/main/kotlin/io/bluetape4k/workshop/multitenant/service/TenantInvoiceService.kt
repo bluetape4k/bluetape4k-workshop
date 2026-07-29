@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 /**
- * Application service that composes tenant-scoped data, cache, lock, rate-limit, and metric paths.
+ * tenant-scoped data, cache, lock, rate-limit, metric path 를 조합하는 application service 입니다.
  */
 @Service
 class TenantInvoiceService(
@@ -25,7 +25,7 @@ class TenantInvoiceService(
     companion object : KLogging()
 
     /**
-     * Creates a tenant-scoped invoice.
+     * tenant-scoped invoice 를 생성합니다.
      */
     @Transactional
     fun createInvoice(invoice: InvoiceRecord): InvoiceRecord =
@@ -34,7 +34,7 @@ class TenantInvoiceService(
         }
 
     /**
-     * Reads an invoice through the tenant-safe repository and cache.
+     * tenant-safe repository 와 cache 를 통해 invoice 를 읽습니다.
      */
     @Transactional(readOnly = true)
     fun findInvoice(tenantId: TenantId, invoiceId: Long): InvoiceRecord? =
@@ -45,7 +45,7 @@ class TenantInvoiceService(
         }
 
     /**
-     * Updates an invoice only when the tenant predicate matches.
+     * tenant predicate 가 일치할 때만 invoice 를 갱신합니다.
      */
     @Transactional
     fun markPaid(tenantId: TenantId, invoiceId: Long): Boolean =
@@ -56,7 +56,7 @@ class TenantInvoiceService(
         }
 
     /**
-     * Baseline read path that intentionally omits tenant scope.
+     * tenant scope 를 의도적으로 생략하는 baseline read path 입니다.
      */
     @Transactional(readOnly = true)
     fun unsafeFindInvoiceForBaseline(requestingTenantId: TenantId, invoiceId: Long): InvoiceRecord? =
@@ -67,19 +67,19 @@ class TenantInvoiceService(
         }
 
     /**
-     * Executes a tenant-keyed invoice lock scenario.
+     * tenant-keyed invoice lock scenario 를 실행합니다.
      */
     fun <T> withInvoiceLock(tenantId: TenantId, invoiceId: Long, block: (String) -> T): T =
         lockRegistry.withInvoiceLock(tenantId, invoiceId, block)
 
     /**
-     * Consumes one request from a tenant-keyed rate-limit bucket.
+     * tenant-keyed rate-limit bucket 에서 요청 하나를 소비합니다.
      */
     fun tryRateLimit(tenantId: TenantId, principal: String, limit: Int = 2): RateLimitDecision =
         rateLimiter.tryConsume(tenantId, principal, limit)
 
     /**
-     * Clears volatile state for tests and repeatable workshop runs.
+     * 테스트와 반복 가능한 workshop 실행을 위해 volatile state 를 지웁니다.
      */
     fun resetVolatileState() {
         invoiceCache.clear()
@@ -88,7 +88,7 @@ class TenantInvoiceService(
     }
 
     /**
-     * Clears persistent and volatile workshop state.
+     * persistent workshop state 와 volatile workshop state 를 모두 지웁니다.
      */
     @Transactional
     fun resetWorkshopState() {

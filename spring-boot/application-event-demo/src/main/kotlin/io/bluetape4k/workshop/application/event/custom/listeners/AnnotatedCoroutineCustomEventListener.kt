@@ -15,11 +15,11 @@ class AnnotatedCoroutineCustomEventListener {
     companion object : KLoggingChannel()
 
     /**
-     * Handles [CustomEvent] in a coroutine-friendly Reactor bridge.
+     * coroutine 친화적인 Reactor bridge 에서 [CustomEvent] 를 처리합니다.
      *
-     * A suspend function cannot be used directly as an `@EventListener` method
-     * because the compiler adds a continuation parameter. Wrapping the suspend
-     * work in `mono { ... }` keeps the listener compatible with Spring events.
+     * compiler 가 continuation parameter 를 추가하므로 suspend function 을 `@EventListener` method 로
+     * 직접 사용할 수 없습니다. suspend 작업을 `mono { ... }` 로 감싸면 listener 가 Spring event 와
+     * 호환됩니다.
      */
     @EventListener(classes = [CustomEvent::class])
     fun handleEvent(event: CustomEvent) = mono(Dispatchers.IO) {

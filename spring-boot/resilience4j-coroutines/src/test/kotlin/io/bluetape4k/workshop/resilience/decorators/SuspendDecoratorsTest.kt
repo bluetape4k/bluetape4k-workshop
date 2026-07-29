@@ -19,19 +19,19 @@ import java.io.IOException
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * [SuspendDecorators] — programmatic Resilience4j API demonstration.
+ * [SuspendDecorators] — programmatic Resilience4j API demonstration 입니다.
  *
- * This test shows the **bluetape4k-resilience4j** programmatic approach as an alternative
- * to AOP annotations (`@CircuitBreaker`, `@Retry`, etc.).
+ * 이 test 는 AOP annotation(`@CircuitBreaker`, `@Retry` 등)의 대안으로
+ * **bluetape4k-resilience4j** programmatic approach 를 보여줍니다.
  *
- * ## Before (raw annotation approach):
+ * ## Before(raw annotation approach)
  * ```kotlin
  * @CircuitBreaker(name = "backendA", fallbackMethod = "fallback")
  * @Retry(name = "backendA")
  * suspend fun callRemoteService(): String { ... }
  * ```
  *
- * ## After (bluetape4k programmatic approach):
+ * ## After(bluetape4k programmatic approach)
  * ```kotlin
  * val result = SuspendDecorators.ofSupplier { callRemoteService() }
  *     .withCircuitBreaker(circuitBreaker)
@@ -39,10 +39,10 @@ import java.util.concurrent.atomic.AtomicInteger
  *     .invoke()
  * ```
  *
- * ## Behavior / Contract
- * - `SuspendDecorators` chains are composable and testable without Spring AOP.
- * - Decorator order matters: outer decorators execute first.
- * - Recommended order: CircuitBreaker → Retry → TimeLimiter → Bulkhead.
+ * ## 동작 / 계약
+ * - `SuspendDecorators` chain 은 Spring AOP 없이 조합하고 test 할 수 있습니다.
+ * - decorator 순서는 중요합니다. 바깥 decorator 가 먼저 실행됩니다.
+ * - 권장 순서: CircuitBreaker -> Retry -> TimeLimiter -> Bulkhead.
  */
 class SuspendDecoratorsTest : AbstractResilienceTest() {
 
@@ -105,7 +105,7 @@ class SuspendDecoratorsTest : AbstractResilienceTest() {
                 .build()
         )
 
-        // Trigger 4 failures to open the circuit breaker
+        // circuit breaker 를 open 하도록 4번 실패를 발생시킵니다.
         repeat(4) {
             runCatching {
                 SuspendDecorators.ofSupplier<String> {
@@ -119,7 +119,7 @@ class SuspendDecoratorsTest : AbstractResilienceTest() {
         circuitBreaker.state shouldBeEqualTo CircuitBreaker.State.OPEN
         log.debug { "Circuit breaker opened after 4 failures" }
 
-        // Next call must be rejected with CallNotPermittedException
+        // 다음 call 은 CallNotPermittedException 으로 거부되어야 합니다.
         val rejectedResult = runCatching {
             SuspendDecorators.ofSupplier {
                 "should not reach here"
@@ -145,7 +145,7 @@ class SuspendDecoratorsTest : AbstractResilienceTest() {
                 .build()
         )
 
-        // Open the circuit breaker
+        // circuit breaker 를 open 합니다.
         repeat(4) {
             runCatching {
                 SuspendDecorators.ofSupplier<String> {
@@ -158,7 +158,7 @@ class SuspendDecoratorsTest : AbstractResilienceTest() {
 
         circuitBreaker.state shouldBeEqualTo CircuitBreaker.State.OPEN
 
-        // Call with fallback — no exception thrown
+        // fallback 과 함께 호출하므로 exception 이 throw 되지 않습니다.
         val result = SuspendDecorators.ofSupplier<String> {
             "should not reach here"
         }
@@ -174,11 +174,11 @@ class SuspendDecoratorsTest : AbstractResilienceTest() {
 
     @Test
     fun `spring-registered circuit breaker used programmatically via SuspendDecorators`() = runSuspendIO {
-        // Use backendA circuit breaker from the Spring-managed registry
+        // Spring-managed registry 의 backendA circuit breaker 를 사용합니다.
         val circuitBreaker = circuitBreakerRegistry.circuitBreaker(BACKEND_A)
         val retry = retryRegistry.retry(BACKEND_A)
 
-        // Ensure circuit is closed before test
+        // test 전 circuit 이 closed 상태인지 확인합니다.
         circuitBreaker.transitionToClosedState()
 
         val callCount = AtomicInteger(0)

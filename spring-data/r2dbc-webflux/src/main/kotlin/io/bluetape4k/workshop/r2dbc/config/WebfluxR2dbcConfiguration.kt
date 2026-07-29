@@ -35,11 +35,11 @@ class WebfluxR2dbcConfiguration {
     }
 
     /**
-     * Initializes the database schema and seed data on startup.
+     * 애플리케이션 시작 시 데이터베이스 스키마와 seed 데이터를 초기화합니다.
      *
-     * Uses [ConnectionFactoryInitializer] to explicitly run `data/schema.sql` followed by
-     * `data/data.sql` via R2DBC. This replaces `spring.sql.init` which is unreliable
-     * for R2DBC embedded databases under Spring Boot 4.
+     * [ConnectionFactoryInitializer] 를 사용해 R2DBC 로 `data/schema.sql` 다음에 `data/data.sql` 을
+     * 명시적으로 실행합니다. Spring Boot 4 의 R2DBC embedded database 에서 신뢰하기 어려운
+     * `spring.sql.init` 을 이 방식으로 대체합니다.
      */
     @Bean
     fun databaseInitializer(connectionFactory: ConnectionFactory): ConnectionFactoryInitializer {

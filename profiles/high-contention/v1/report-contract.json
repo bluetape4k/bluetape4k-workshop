@@ -1,0 +1,81 @@
+{
+  "contractSchemaVersion": 1,
+  "reportSchemaVersion": 1,
+  "results": [
+    "PASS",
+    "FAIL",
+    "ERROR",
+    "UNAVAILABLE"
+  ],
+  "errorCodes": [
+    "NONE",
+    "INVALID_PROFILE",
+    "INVALID_REALIZATION",
+    "KEY_SCOPE_VIOLATION",
+    "EXECUTION_ERROR",
+    "INJECTION_TIMEOUT",
+    "FAILURE_DETECTION_TIMEOUT",
+    "WORKLOAD_TIMEOUT",
+    "RECOVERY_TIMEOUT",
+    "CLEANUP_TIMEOUT",
+    "REPORT_SERIALIZATION",
+    "JOURNAL_ERROR",
+    "PARENT_CLEANUP_ERROR",
+    "PREFLIGHT_UNAVAILABLE"
+  ],
+  "submissionDispositions": [
+    "SUCCEEDED",
+    "FAILED_CLOSED",
+    "EXECUTION_FAILED",
+    "LOCALLY_REJECTED",
+    "CANCELLED",
+    "TIMED_OUT",
+    "DUPLICATE_SUPPRESSED",
+    "IGNORED_FENCED"
+  ],
+  "failurePoints": [
+    "NONE",
+    "BEFORE_AUTHORITY",
+    "AFTER_AUTHORITY",
+    "UNKNOWN"
+  ],
+  "scheduleObservations": [
+    "ON_TIME",
+    "MISSED_DEADLINE"
+  ],
+  "cleanupResults": [
+    "PASS",
+    "FAIL"
+  ],
+  "requiredTopLevelFields": [
+    "reportSchemaVersion",
+    "suiteSchemaVersion",
+    "profileSchemaVersion",
+    "runId",
+    "profileId",
+    "mode",
+    "implementation",
+    "startedAt",
+    "endedAt",
+    "environment",
+    "phaseDurationsNanos",
+    "workload",
+    "failureInjection",
+    "invariantResults",
+    "observations",
+    "deadlines",
+    "observationScope",
+    "crossImplementationComparable",
+    "productionCapacityClaim",
+    "result",
+    "cleanup",
+    "knownLimitations"
+  ],
+  "forbiddenEvidencePatterns": [
+    "postgresql://",
+    "redis://",
+    "toxiproxyControlEndpoint",
+    "password",
+    "authorization"
+  ]
+}

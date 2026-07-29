@@ -1,17 +1,25 @@
 # Issue 304 Flow Metrics Sampling Lesson
 
-## Context
+## 배경
 
-The metrics sampling example teaches Flow operator boundaries for noisy CPU, queue-depth, latency, and sensor streams without adding metrics storage or transport infrastructure.
+metrics sampling example은 metrics storage 또는 transport infrastructure를 추가하지 않고
+noisy CPU, queue-depth, latency, sensor stream에 대한 Flow operator boundary를 가르친다.
 
-## Decision
+## 결정
 
-Use existing `bluetape4k-coroutines` Flow extensions directly: `throttleLeading` for alert previews, `throttleTrailing` for dashboards, `pairwise` for adjacent deltas, `takeUntil` for lifecycle stop, `Flow<T>.log()` for observation, and `mapResultCatching` for cancellation-safe Result mapping.
+기존 `bluetape4k-coroutines` Flow extension을 직접 사용한다. alert preview에는
+`throttleLeading`, dashboard에는 `throttleTrailing`, adjacent delta에는 `pairwise`,
+lifecycle stop에는 `takeUntil`, observation에는 `Flow<T>.log()`, cancellation-safe Result
+mapping에는 `mapResultCatching`을 사용한다.
 
-## Outcome
+## 결과
 
-The module now separates fast preview sampling, stable dashboard sampling, transition analysis, lifecycle stop handling, and cancellation behavior into small testable functions with bilingual learner documentation.
+module은 이제 fast preview sampling, stable dashboard sampling, transition analysis,
+lifecycle stop handling, cancellation behavior를 bilingual learner documentation이 포함된
+작고 testable한 function으로 분리한다.
 
-## Future guidance
+## 향후 지침
 
-Do not turn channel-bound implementation details of a throttle operator into workshop acceptance tests. Test the user-facing sampling values for throttle examples, and test explicit cancellation contracts on the extension that owns them, such as `mapResultCatching`.
+throttle operator의 channel-bound implementation detail을 workshop acceptance test로 만들지
+않는다. throttle example에서는 user-facing sampling value를 테스트하고, explicit
+cancellation contract는 `mapResultCatching`처럼 그 contract를 소유한 extension에서 테스트한다.

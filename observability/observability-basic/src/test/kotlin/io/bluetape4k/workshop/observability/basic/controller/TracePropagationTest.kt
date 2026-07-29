@@ -8,14 +8,12 @@ import org.springframework.boot.micrometer.tracing.test.autoconfigure.AutoConfig
 import java.util.concurrent.TimeUnit
 
 /**
- * Verifies W3C traceparent header propagation from inbound HTTP request to downstream WebClient call.
+ * inbound HTTP request 에서 downstream WebClient call 로 W3C traceparent header 가 전파되는지 검증합니다.
  *
  * ## Why a separate test class
- * - [OrderControllerTest] imports [io.bluetape4k.workshop.observability.basic.TestObservationConfig],
- *   which replaces the real `ObservationRegistry` with a `TestObservationRegistry` (no Tracer attached).
- * - Without a real Tracer, the WebClient cannot inject a `traceparent` header in outbound requests.
- * - This class uses `@AutoConfigureTracing` to ensure the full Micrometer + OpenTelemetry tracing
- *   bridge is active, which enables traceparent to be injected in outbound WebClient requests.
+ * - [OrderControllerTest] 는 [io.bluetape4k.workshop.observability.basic.TestObservationConfig] 를 import 하며, 이 config 는 real `ObservationRegistry` 를 Tracer 가 붙지 않은 `TestObservationRegistry` 로 교체합니다.
+ * - real Tracer 가 없으면 WebClient 는 outbound request 에 `traceparent` header 를 inject 할 수 없습니다.
+ * - 이 class 는 `@AutoConfigureTracing` 으로 전체 Micrometer + OpenTelemetry tracing bridge 가 활성화되도록 보장하며, 이를 통해 outbound WebClient request 에 traceparent 를 inject 할 수 있습니다.
  */
 @AutoConfigureTracing
 class TracePropagationTest : AbstractBasicTest() {

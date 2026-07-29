@@ -13,17 +13,17 @@ import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantSchedulerEvent
 import io.bluetape4k.workshop.leader.tenantscheduler.domain.TenantSchedulerReport
 
 /**
- * Pure logical-tick reducer for tenant-scoped leader scheduling scenarios.
+ * tenant 범위 leader scheduling scenario를 위한 순수 logical-tick reducer이다.
  *
- * This lab does not acquire a distributed lock. It models the observable
- * scheduling contract learners need before moving to real leader backends.
+ * 이 lab은 분산 lock을 획득하지 않는다.
+ * 실제 leader backend로 넘어가기 전에 학습자가 알아야 할 관측 가능한 scheduling 계약을 모델링한다.
  */
 class TenantSchedulerLab(
     private val lockNamePlanner: TenantLockNamePlanner = TenantLockNamePlanner(),
 ) {
 
     /**
-     * Runs the supplied finite scenario and returns a new immutable report.
+     * 전달된 유한 scenario를 실행하고 새로운 불변 report를 반환한다.
      */
     fun run(
         policy: TenantSchedulePolicy,

@@ -43,8 +43,8 @@ object TestUtil: KLogging() {
     fun bufferWithRandomSegmentLayout(data: ByteArray): Buffer {
         val result = Buffer()
 
-        // Writing to result directly will yield packed segments. Instead, write to
-        // other buffers, then write those buffers to result.
+        // result 에 직접 쓰면 packed segment 가 생깁니다. 대신 다른 buffer 에 쓴 뒤
+        // 그 buffer 들을 result 로 씁니다.
         var pos = 0
         var byteCount: Int
         while (pos < data.size) {

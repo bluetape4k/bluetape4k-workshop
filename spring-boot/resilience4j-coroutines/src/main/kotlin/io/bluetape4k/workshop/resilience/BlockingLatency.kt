@@ -4,7 +4,7 @@ import java.util.concurrent.locks.LockSupport
 import kotlin.time.Duration
 
 /**
- * Simulates blocking backend latency for Resilience4j timeout examples.
+ * Resilience4j timeout 예제를 위해 blocking backend latency 를 simulate 합니다.
  */
 internal fun simulateBlockingLatency(duration: Duration) {
     LockSupport.parkNanos(duration.inWholeNanoseconds)

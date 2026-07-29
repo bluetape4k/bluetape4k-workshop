@@ -4,7 +4,7 @@ import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 
 /**
- * Describes one learner-visible capability of a leader-election backend.
+ * 학습자가 확인할 수 있는 leader-election backend 기능 하나를 설명합니다.
  */
 data class BackendCapability(
     val label: String,

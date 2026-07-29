@@ -16,15 +16,14 @@ import java.time.Instant
 import java.util.concurrent.TimeUnit
 
 /**
- * Service that provides idempotent order creation backed by Redisson [RMapCache].
+ * Redisson [RMapCache] 기반 idempotent order creation 을 제공하는 service 입니다.
  *
- * ## Behavior / Contract
- * - First call with a given key creates an order, stores the response in Redis with a 5-minute TTL,
- *   and returns HTTP 201.
- * - Subsequent calls with the same key within the TTL return the cached response with HTTP 200.
- * - Concurrent first-time calls with the same key: the first writer wins via [RMapCache.putIfAbsent];
- *   later writers receive the cached response produced by the winner.
- * - Blank idempotency keys are rejected before this service is called (controller responsibility).
+ * ## 동작 / 계약
+ * - 특정 key 의 첫 호출은 주문을 만들고 response 를 Redis 에 5분 TTL 로 저장한 뒤 HTTP 201 을 반환합니다.
+ * - TTL 안에서 같은 key 로 들어온 후속 호출은 cached response 를 HTTP 200 으로 반환합니다.
+ * - 같은 key 의 동시 최초 호출에서는 [RMapCache.putIfAbsent] 로 첫 writer 가 이깁니다.
+ *   나중 writer 는 winner 가 만든 cached response 를 받습니다.
+ * - 빈 idempotency key 는 이 service 호출 전 controller 책임으로 거부됩니다.
  */
 @Service
 class IdempotencyService(private val redisson: RedissonClient) {
@@ -35,24 +34,24 @@ class IdempotencyService(private val redisson: RedissonClient) {
     }
 
     /**
-     * Attempts to process an order idempotently.
+     * 주문을 idempotent 하게 처리하려고 시도합니다.
      *
-     * @param idempotencyKey unique client-supplied key for this request
-     * @param request the order payload
-     * @return [IdempotencyResult] indicating whether this is a new response or a cached replay
+     * @param idempotencyKey 이 요청에 대해 client 가 제공하는 unique key 입니다.
+     * @param request 주문 payload 입니다.
+     * @return 새 response 인지 cached replay 인지를 나타내는 [IdempotencyResult] 입니다.
      */
     suspend fun processOrder(idempotencyKey: String, request: OrderRequest): IdempotencyResult =
         withContext(Dispatchers.IO) {
             val cache = redisson.getMapCache<String, CachedResponse>(CACHE_NAME)
 
-            // Check for existing cached response first (fast path)
+            // 기존 cached response 를 먼저 확인합니다(fast path).
             val existing = cache.get(idempotencyKey)
             if (existing != null) {
                 log.debug { "Cache HIT for idempotency key=$idempotencyKey" }
                 return@withContext IdempotencyResult.Replay(existing)
             }
 
-            // Create a new order response
+            // 새 order response 를 생성합니다.
             val newResponse = OrderResponse(
                 orderId = Uuid.V7.nextIdAsString(),
                 status = "CREATED",
@@ -60,15 +59,15 @@ class IdempotencyService(private val redisson: RedissonClient) {
             )
             val newCached = CachedResponse(httpStatus = 201, response = newResponse)
 
-            // putIfAbsent: atomic SET NX semantics via Redisson
+            // putIfAbsent: Redisson 을 통한 atomic SET NX semantics 입니다.
             val previous = cache.putIfAbsent(idempotencyKey, newCached, TTL_MINUTES, TimeUnit.MINUTES)
 
             if (previous == null) {
-                // We were the first writer
+                // 현재 요청이 첫 writer 입니다.
                 log.info { "Order created for idempotency key=$idempotencyKey, orderId=${newResponse.orderId}" }
                 IdempotencyResult.Created(newCached)
             } else {
-                // A concurrent request already stored a value; serve that cached result
+                // 동시 요청이 이미 값을 저장했으므로 cached result 를 제공합니다.
                 log.debug { "Concurrent write detected for idempotency key=$idempotencyKey — returning cached response" }
                 IdempotencyResult.Replay(previous)
             }
@@ -76,17 +75,17 @@ class IdempotencyService(private val redisson: RedissonClient) {
 }
 
 /**
- * Sealed result type for idempotent order processing.
+ * idempotent order processing 을 위한 sealed result type 입니다.
  */
 sealed class IdempotencyResult : Serializable {
-    /** The order was created for the first time. HTTP 201. */
+    /** 주문이 처음 생성되었습니다. HTTP 201 입니다. */
     data class Created(val cached: CachedResponse) : IdempotencyResult() {
         companion object {
             private const val serialVersionUID: Long = 1L
         }
     }
 
-    /** The same idempotency key was seen before. HTTP 200 with original payload. */
+    /** 같은 idempotency key 를 이전에 본 적이 있습니다. 원래 payload 와 함께 HTTP 200 입니다. */
     data class Replay(val cached: CachedResponse) : IdempotencyResult() {
         companion object {
             private const val serialVersionUID: Long = 1L

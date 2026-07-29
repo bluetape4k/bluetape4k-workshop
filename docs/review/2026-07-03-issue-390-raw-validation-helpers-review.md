@@ -1,48 +1,48 @@
 # Issue 390 Raw Validation Helper Review
 
-## Scope
+## 범위
 
-- Issue: #390 `Refactor raw validation to bluetape4k helpers`
-- Work type: Type B fast-track refactor with broad validation cleanup.
-- Diff scope: 19 files across AWS, Exposed, image-processing, Kotlin Flow, Ktor, leader, messaging, and Spring Modulith examples.
-- CodeReviewGraph: unavailable in this worktree (`Files: 0`, `Last updated: never`), so review used direct diff, source scan, compile, and tests.
+- 이슈: #390 `Refactor raw validation to bluetape4k helpers`
+- 작업 유형: broad validation cleanup을 포함한 Type B fast-track refactor.
+- Diff 범위: AWS, Exposed, image-processing, Kotlin Flow, Ktor, leader, messaging, Spring Modulith example의 19 files.
+- CodeReviewGraph: 이 worktree에서는 사용할 수 없었다(`Files: 0`, `Last updated: never`). 따라서 review는 direct diff, source scan, compile, test를 사용했다.
 
 ## Scan Evidence
 
-- Baseline before this issue work: `src/main` raw `require(...)` occurrences `151` in `36` files.
-- After refactor: `src/main` raw `require(...)` occurrences `111` in `32` files.
-- Changed production files reduced raw validation from `92` to `52` occurrences.
-- Remaining raw `require(...)` instances are intentionally kept where the predicate is not a simple caller-input helper case:
-  - regex, content-type, and security predicates,
-  - decoded image/parser boundary checks,
-  - domain invariants such as state/event identity and stock availability,
-  - exact decimal comparisons such as `BigDecimal` amount checks,
-  - Okio `require(byteCount)` API calls,
-  - error messages that must not echo sensitive caller input.
+- 이 issue 작업 전 baseline: `src/main` raw `require(...)` occurrences `151` in `36` files.
+- refactor 후: `src/main` raw `require(...)` occurrences `111` in `32` files.
+- 변경된 production file은 raw validation을 `92`에서 `52` occurrences로 줄였다.
+- 남은 raw `require(...)` instance는 predicate가 단순 caller-input helper case가 아니어서 의도적으로 유지했다.
+  - regex, content-type, security predicate,
+  - decoded image/parser boundary check,
+  - state/event identity와 stock availability 같은 domain invariant,
+  - `BigDecimal` amount check 같은 exact decimal comparison,
+  - Okio `require(byteCount)` API call,
+  - sensitive caller input을 echo하면 안 되는 error message.
 
 ## 7-Tier Review
 
-| Tier | Verdict | Evidence |
+| Tier | 판정 | 근거 |
 |---|---|---|
-| Security | PASS | Redaction blank text helper conversion was rejected because helper messages echo raw blank input; final diff keeps the non-echoing `blank-text` path outside helper conversion. |
-| Stability | PASS | `compileKotlin` for 14 affected modules passed after fixing ByteArray helper misuse and adding direct `bluetape4k-core` dependencies for modules with production `io.bluetape4k.support` imports. |
-| Performance | PASS | Validation helpers are inline/simple checks; no hot-loop allocations or blocking/runtime behavior changed. |
-| Operator/Ops | PASS | No workflow/container/runtime configuration changed; Testcontainers-backed affected tests ran in a single Gradle invocation with `--max-workers=1`. |
-| Developer/API | PASS | Production helper imports now have explicit `implementation(libs.bluetape4k.core)` boundaries; test assertion was loosened only from old exact wording to helper semantic wording. |
-| User/Caller | PASS | OCR controller preserves the exact oversize HTTP detail expected by tests; helper conversion is limited where user-facing message contracts matter. |
-| Evidence | PASS | `git diff --check`, affected-module compile/tests, and post-work full local build passed. |
+| Security | PASS | redaction blank text helper conversion은 helper message가 raw blank input을 echo하므로 기각했다. final diff는 non-echoing `blank-text` path를 helper conversion 밖에 유지한다. |
+| Stability | PASS | ByteArray helper misuse를 고치고 production `io.bluetape4k.support` import가 있는 module에 direct `bluetape4k-core` dependency를 추가한 뒤 affected module 14개의 `compileKotlin`이 통과했다. |
+| Performance | PASS | Validation helper는 inline/simple check이며 hot-loop allocation이나 blocking/runtime behavior를 바꾸지 않는다. |
+| Operator/Ops | PASS | workflow/container/runtime configuration은 변경되지 않았다. Testcontainers-backed affected tests는 `--max-workers=1` 단일 Gradle invocation으로 실행했다. |
+| Developer/API | PASS | Production helper import에는 이제 명시적 `implementation(libs.bluetape4k.core)` boundary가 있다. test assertion은 old exact wording에서 helper semantic wording으로만 완화했다. |
+| User/Caller | PASS | OCR controller는 test가 기대하는 exact oversize HTTP detail을 보존한다. helper conversion은 user-facing message contract가 중요한 곳에서 제한된다. |
+| Evidence | PASS | `git diff --check`, affected-module compile/test, post-work full local build가 통과했다. |
 
-## Validation Evidence
+## 검증 근거
 
-- Pre-work local build on clean `develop`: `./gradlew build --max-workers=1 --console=plain` -> `BUILD SUCCESSFUL in 9m 21s`.
+- clean `develop`에서 작업 전 local build: `./gradlew build --max-workers=1 --console=plain` -> `BUILD SUCCESSFUL in 9m 21s`.
 - Affected compile: `./gradlew :aws-s3-vectors-access-grants:compileKotlin ... :spring-modulith-module-boundaries:compileKotlin --max-workers=1 --warning-mode all --console=plain` -> `BUILD SUCCESSFUL in 5s`.
 - Affected tests: `./gradlew :aws-s3-vectors-access-grants:test ... :spring-modulith-module-boundaries:test --max-workers=1 --warning-mode all --console=plain` -> `BUILD SUCCESSFUL in 9s`.
-- Post-work full local build after review fixes: `./gradlew build --max-workers=1 --warning-mode all --console=plain` -> `BUILD SUCCESSFUL in 1m 56s`.
+- review fix 이후 post-work full local build: `./gradlew build --max-workers=1 --warning-mode all --console=plain` -> `BUILD SUCCESSFUL in 1m 56s`.
 - Diff hygiene: `git diff --check` -> PASS.
 
-## Findings
+## 발견사항
 
 - P0/P1: 0.
-- P1 repair evidence: `Order.totalAmount` uses exact `BigDecimal.ZERO` comparison, not numeric helper conversion; direct `bluetape4k-core` dependencies were added where production support helpers are imported instead of relying on transitive dependencies.
-- P2: Existing repository-wide Gradle deprecation warnings remain outside this issue scope.
-- P3: Future cleanup can target remaining simple raw predicates in modules that need additional dependency-boundary decisions, but security/parser/domain predicates should stay explicit.
+- P1 repair evidence: `Order.totalAmount`는 numeric helper conversion이 아니라 exact `BigDecimal.ZERO` comparison을 사용한다. production support helper를 import하는 곳에는 transitive dependency에 의존하지 않고 direct `bluetape4k-core` dependency를 추가했다.
+- P2: 기존 repository-wide Gradle deprecation warning은 이 issue 범위 밖에 남아 있다.
+- P3: future cleanup은 추가 dependency-boundary 결정이 필요한 module의 남은 simple raw predicate를 다룰 수 있다. 다만 security/parser/domain predicate는 explicit하게 유지해야 한다.

@@ -6,7 +6,7 @@ import java.io.Serializable
 import java.time.LocalDateTime
 
 /**
- * Typed integration event for an order placement.
+ * order placement 를 위한 typed integration event 입니다.
  */
 data class OrderPlacedEvent(
     val orderId: Long,

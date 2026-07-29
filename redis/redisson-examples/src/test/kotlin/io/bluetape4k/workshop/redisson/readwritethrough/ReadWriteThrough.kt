@@ -56,11 +56,11 @@ object ReadWriteThrough : KLogging() {
             }
 
             override fun loadAllKeys(): MutableIterable<Int> {
-                // Read-through loading requires all keys.
+                    // read-through loading에는 모든 key가 필요합니다.
                 log.debug { "Load all actor ids." }
 
                 return dataSource.runQuery(SELECT_ACTOR_IDS) { rs ->
-                    // Keep extraction lazy when the JDBC helper supports it because Redisson may not consume all keys.
+                    // Redisson이 모든 key를 소비하지 않을 수 있으므로 JDBC helper가 지원하면 extraction을 lazy하게 유지합니다.
                     rs.extract {
                         int[Actor::id.name]
                     }
@@ -70,13 +70,13 @@ object ReadWriteThrough : KLogging() {
     }
 
     /**
-     * Actor map writer
+     * [Actor]를 DB에 기록하는 Redisson map writer입니다.
      *
      * @see [org.redisson.api.map.RetryableMapWriter]
      * @see [org.redisson.api.map.RetryableMapWriterAsync]
      *
-     * @param dataSource
-     * @return
+     * @param dataSource Actor row를 쓰는 JDBC data source입니다.
+     * @return retry 설정이 적용된 [MapWriter]입니다.
      */
     fun actorMapWriter(dataSource: DataSource): MapWriter<Int, Actor> {
 
@@ -102,7 +102,7 @@ object ReadWriteThrough : KLogging() {
             }
         }
 
-        // NOTE: Redisson RetryableMapWriter is enough here; Resilience4j Retry is another viable wrapper.
+        // 참고: 여기서는 Redisson RetryableMapWriter로 충분하며, Resilience4j Retry도 가능한 wrapper입니다.
         val options = MapOptions.defaults<Int, Actor>()
             .writerRetryAttempts(3)
             .writerRetryInterval(100.milliseconds.toJavaDuration())

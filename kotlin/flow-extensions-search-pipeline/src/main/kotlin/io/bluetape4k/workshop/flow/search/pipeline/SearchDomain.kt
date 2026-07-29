@@ -7,7 +7,7 @@ import java.util.Collections
 import java.util.Locale
 
 /**
- * Search matching mode used by the in-memory autocomplete catalog.
+ * in-memory autocomplete catalog 에서 사용하는 search matching mode 입니다.
  */
 enum class SearchMode {
     PREFIX,
@@ -16,11 +16,9 @@ enum class SearchMode {
 }
 
 /**
- * Normalized, non-blank search text.
+ * normalization 된 non-blank search text 입니다.
  *
- * The public factory trims caller input, validates the canonical value, and
- * stores only the normalized text. This class is intentionally not a data class
- * so generated `copy` cannot bypass validation.
+ * public factory 는 caller input 을 trim 하고 canonical value 를 검증한 뒤 normalized text 만 저장합니다. 생성된 `copy` 가 validation 을 우회하지 못하도록 이 class 는 의도적으로 data class 가 아닙니다.
  */
 class SearchQuery private constructor(
     val text: String,
@@ -46,10 +44,9 @@ class SearchQuery private constructor(
 }
 
 /**
- * Search settings captured at the time a request starts.
+ * request 시작 시점에 캡처한 search setting 입니다.
  *
- * `featureFlags` is defensively copied into an unmodifiable set so later caller
- * mutation cannot change matching or logging behavior.
+ * `featureFlags` 는 unmodifiable set 으로 defensive copy 되어 이후 caller mutation 이 matching 이나 logging 동작을 바꿀 수 없습니다.
  */
 class SearchSettings private constructor(
     val tenantId: String,
@@ -107,7 +104,7 @@ class SearchSettings private constructor(
 }
 
 /**
- * Search request combining normalized query text with the latest settings.
+ * normalized query text 와 latest setting 을 결합한 search request 입니다.
  */
 data class SearchRequest(
     val query: SearchQuery,
@@ -119,7 +116,7 @@ data class SearchRequest(
 }
 
 /**
- * Ranked hit returned by the fake search adapter.
+ * fake search adapter 가 반환하는 ranked hit 입니다.
  */
 data class SearchHit(
     val id: String,
@@ -135,7 +132,7 @@ data class SearchHit(
 }
 
 /**
- * Search response emitted by [SearchPipeline].
+ * [SearchPipeline] 이 방출하는 search response 입니다.
  */
 data class SearchResult(
     val request: SearchRequest,

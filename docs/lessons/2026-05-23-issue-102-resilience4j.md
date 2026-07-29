@@ -6,53 +6,57 @@ Branch: `feat/issue-102-resilience4j`
 
 ---
 
-## 1. @TimeLimiter is NOT silently ignored for suspend functions
+## 1. @TimeLimiter는 suspend 함수에서 조용히 무시되지 않는다
 
-### Root cause
+### 근본 원인
 
-The assumption "Resilience4j silently ignores `@TimeLimiter` for Kotlin suspend functions" is **wrong**.
+"Resilience4j가 Kotlin suspend 함수의 `@TimeLimiter`를 조용히 무시한다"는
+가정은 **틀렸다**.
 
-In Resilience4j 2.4.x, applying `@TimeLimiter` to a `suspend` function causes an actual
-`TimeoutException` to be thrown after the configured duration (default 2 seconds). This breaks
-two downstream effects:
+Resilience4j 2.4.x에서 `suspend` 함수에 `@TimeLimiter`를 적용하면 설정된
+시간(기본 2초) 이후 실제 `TimeoutException`이 발생한다. 이 동작은 두 가지
+후속 효과를 깨뜨린다.
 
-1. The endpoint returns HTTP 500 (not 200)
-2. CircuitBreaker fallback is not invoked because `TimeoutException` propagates before the CB proxy
-   can intercept it for suspend functions
+1. endpoint가 HTTP 200이 아니라 HTTP 500을 반환한다.
+2. suspend 함수에서는 CB proxy가 가로채기 전에 `TimeoutException`이
+   전파되므로 CircuitBreaker fallback이 호출되지 않는다.
 
-### Evidence
+### 증거
 
-- `CoroutineCircuitBreakerTest.SuspendMethod.Timeout` — a previously passing test — also broke
-  when `@TimeLimiter` was added to `BackendACoService.suspendTimeout()`
-- Removing `@TimeLimiter` restored both tests to passing
+- 이전에 통과하던 `CoroutineCircuitBreakerTest.SuspendMethod.Timeout`도
+  `BackendACoService.suspendTimeout()`에 `@TimeLimiter`를 추가하자 실패했다.
+- `@TimeLimiter`를 제거하자 두 테스트가 다시 통과했다.
 
-### Decision
+### 결정
 
-Do NOT apply `@TimeLimiter` to any `suspend` function. Update KDoc to say:
+어떤 `suspend` 함수에도 `@TimeLimiter`를 적용하지 않는다. KDoc에는 다음
+내용을 명시한다.
 > "@TimeLimiter must NOT be applied to Kotlin suspend functions. It causes an actual
 > TimeoutException after the configured duration."
 
-For coroutine timeout enforcement, use `kotlinx.coroutines.withTimeout`:
+coroutine timeout 강제에는 `kotlinx.coroutines.withTimeout`을 사용한다.
 ```kotlin
 withTimeout(2_000L) { slowSuspendOperation() }
 ```
 
 ---
 
-## 2. BulkheadTest permit leak causes cascade failures
+## 2. BulkheadTest permit leak가 연쇄 실패를 만든다
 
-### Root cause
+### 근본 원인
 
-`BulkheadRegistry.tryAcquirePermission()` increments the "acquired" counter globally.
-If test assertions fail before the corresponding `releasePermission()` call, permits leak.
+`BulkheadRegistry.tryAcquirePermission()`은 전역 "acquired" counter를
+증가시킨다. 대응되는 `releasePermission()` 호출 전에 테스트 assertion이
+실패하면 permit이 누수된다.
 
-A leaked permit in `BulkheadTest.backendA` caused subsequent HTTP-based tests (`CircuitBreakerTest.BackendB`)
-to receive `BulkheadFullException` instead of the expected service exception — preventing the
-circuit breaker from opening and causing the test to fail.
+`BulkheadTest.backendA`에서 누수된 permit 때문에 이후 HTTP 기반 테스트
+(`CircuitBreakerTest.BackendB`)가 기대한 service exception 대신
+`BulkheadFullException`을 받았다. 그 결과 circuit breaker가 열리지 못하고
+테스트가 실패했다.
 
-### Fix
+### 수정
 
-Always use try-finally + an `acquired` counter:
+항상 try-finally와 `acquired` counter를 함께 사용한다.
 
 ```kotlin
 var acquired = 0
@@ -67,87 +71,90 @@ try {
 }
 ```
 
-Also, do NOT use `maxConcurrentCalls` as the repeat count. Use
-`bulkhead.metrics.availableConcurrentCalls` as a snapshot, since prior tests may have
-consumed some slots.
+또한 `maxConcurrentCalls`를 repeat count로 사용하지 않는다. 이전 테스트가
+일부 slot을 소비했을 수 있으므로 `bulkhead.metrics.availableConcurrentCalls`를
+snapshot으로 사용한다.
 
 ---
 
-## 3. Reactive/Future/Coroutine metrics do not update Resilience4j registry synchronously
+## 3. Reactive/Future/Coroutine metric은 Resilience4j registry를 동기 갱신하지 않는다
 
-### Root cause
+### 근본 원인
 
-For blocking (`suspend` via thread dispatch, `CompletableFuture`, or reactive `Mono`/`Flux`),
-Resilience4j updates the in-memory registry asynchronously. Delta assertions
-(`currentCount + 1`) are non-deterministic for these paths.
+blocking(`suspend` via thread dispatch, `CompletableFuture`, reactive `Mono`/`Flux`)
+경로에서는 Resilience4j가 in-memory registry를 비동기로 갱신한다. 따라서
+이 경로에서 delta assertion(`currentCount + 1`)은 비결정적이다.
 
-### Fix
+### 수정
 
-Introduce `metricsAssertionEnabled()` hook in the base test class. Override to `false` in:
+base test class에 `metricsAssertionEnabled()` hook을 추가한다. 다음 클래스에서는
+`false`로 override한다.
 - `ReactiveRetryTest`
 - `FutureRetryTest`
 - `CoroutineRetryTest`
 
-Only `RetryTest` (blocking, synchronous path) keeps `metricsAssertionEnabled() = true`.
+blocking, synchronous path인 `RetryTest`만 `metricsAssertionEnabled() = true`를 유지한다.
 
 ---
 
-## 4. CircuitBreaker fallback method for suspend functions must NOT be suspend
+## 4. suspend 함수의 CircuitBreaker fallback method는 suspend이면 안 된다
 
-### Root cause
+### 근본 원인
 
-The Resilience4j AOP proxy dispatches to the fallback method using reflection. For Kotlin
-`suspend` functions, the proxy's fallback dispatch does NOT correctly call the continuation
-parameter, so a `suspend` fallback silently fails or throws.
+Resilience4j AOP proxy는 reflection으로 fallback method에 dispatch한다. Kotlin
+`suspend` 함수에서는 proxy의 fallback dispatch가 continuation parameter를
+올바르게 호출하지 못하므로, `suspend` fallback이 조용히 실패하거나 예외를
+던진다.
 
-### Decision
+### 결정
 
-Fallback methods for `@CircuitBreaker(fallbackMethod = "...")` on suspend functions must be
-**regular (non-suspend) functions**:
+suspend 함수의 `@CircuitBreaker(fallbackMethod = "...")`에 연결되는 fallback
+method는 반드시 **일반(non-suspend) 함수**여야 한다.
 
 ```kotlin
 @CircuitBreaker(name = BACKEND_A, fallbackMethod = "suspendFallback")
 override suspend fun suspendFailureWithFallback(): String = suspendFailure()
 
-// Must NOT be suspend
+// suspend이면 안 됨
 private fun suspendFallback(ex: Throwable): String = "Recovered: ${ex.message}"
 ```
 
 ---
 
-## 5. @Retry annotation on Flow-returning functions is not applied
+## 5. Flow 반환 함수에는 @Retry annotation이 적용되지 않는다
 
-### Root cause
+### 근본 원인
 
-Resilience4j AOP intercepts the function call at invocation time. For `Flow`-returning
-functions, the actual execution is lazy (collector-driven), so the retry interceptor fires
-at invocation (before any emission) and does not wrap individual emissions.
+Resilience4j AOP는 함수 호출 시점에 intercept한다. `Flow` 반환 함수의 실제
+실행은 lazy, 즉 collector-driven이므로 retry interceptor는 emission 이전의
+호출 시점에 실행되고 개별 emission을 감싸지 못한다.
 
-### Decision
+### 결정
 
-Use `Flow.retry(retry)` extension for retry on Flow:
+Flow retry에는 `Flow.retry(retry)` extension을 사용한다.
 
 ```kotlin
 override fun flowFailure(): Flow<String> {
     return flowOf("Hello", "World")
         .onStart { throw IOException("BAM!") }
-        // .retry(retryRegistry.retry("backendA")) -- use this for retry on Flow
+        // .retry(retryRegistry.retry("backendA")) -- Flow retry에는 이것을 사용
 }
 ```
 
 ---
 
-## 6. Prometheus metric name format changed in Spring Boot 4
+## 6. Spring Boot 4에서 Prometheus metric name format이 변경되었다
 
-The standard Resilience4j Prometheus metric name (`resilience4j_circuitbreaker_calls_total`)
-does not match the actual metric emitted under Spring Boot 4 + Micrometer.
+표준 Resilience4j Prometheus metric name
+(`resilience4j_circuitbreaker_calls_total`)은 Spring Boot 4 + Micrometer에서
+실제로 방출되는 metric과 일치하지 않는다.
 
-Prometheus endpoint assertions were removed from the test suite as a workaround.
-Tracked as: https://github.com/bluetape4k/bluetape4k-workshop/issues/153
+우회책으로 test suite에서 Prometheus endpoint assertion을 제거했다.
+추적 이슈: https://github.com/bluetape4k/bluetape4k-workshop/issues/153
 
 ---
 
-## Review Misses
+## Review 누락
 
 | Finding | Impact | How caught |
 |---|---|---|
@@ -156,10 +163,12 @@ Tracked as: https://github.com/bluetape4k/bluetape4k-workshop/issues/153
 
 ---
 
-## Future Guidance
+## 향후 지침
 
-1. **Always run tests after applying code reviewer suggestions** — suggestions may be
-   correct for blocking code but wrong for coroutines.
-2. **BulkheadTest isolation**: always use try-finally + `acquired` counter.
-3. **Reactor/coroutine metrics**: use `metricsAssertionEnabled()` pattern for conditional assertions.
-4. **@TimeLimiter + suspend**: document prominently in KDoc and README — this is a footgun.
+1. **code reviewer 제안을 적용한 뒤에는 항상 테스트를 실행한다**. 제안은
+   blocking code에는 맞아도 coroutine에는 틀릴 수 있다.
+2. **BulkheadTest isolation**: 항상 try-finally와 `acquired` counter를 사용한다.
+3. **Reactor/coroutine metrics**: 조건부 assertion에는 `metricsAssertionEnabled()`
+   pattern을 사용한다.
+4. **@TimeLimiter + suspend**: KDoc과 README에 두드러지게 문서화한다. 이는
+   매우 위험한 footgun이다.

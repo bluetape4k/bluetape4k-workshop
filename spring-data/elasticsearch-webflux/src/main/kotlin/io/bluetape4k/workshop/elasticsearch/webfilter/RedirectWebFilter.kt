@@ -21,7 +21,7 @@ class RedirectWebFilter: WebFilter {
     override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
         if (exchange.request.uri.path == "/") {
             log.debug { "Redirect to $SWAGGER_PATH" }
-            // Redirect to swagger page
+            // Swagger 페이지로 리다이렉트합니다.
             val swaggerRequest = exchange.request.mutate().path(SWAGGER_PATH).build()
             return chain.filter(exchange.mutate().request(swaggerRequest).build())
         }

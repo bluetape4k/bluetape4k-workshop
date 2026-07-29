@@ -6,7 +6,7 @@ import io.bluetape4k.workshop.graph.recommendation.service.RecommendationSuspend
 import java.io.Serializable
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Domain-key constants
+// 도메인 키 상수
 // ─────────────────────────────────────────────────────────────────────────────
 
 const val USER_ALICE = "alice"
@@ -24,11 +24,11 @@ const val PROD_KEYBOARD = "keyboard"
 const val PROD_MOUSE = "mouse"
 
 /**
- * Snapshot of all vertices created by [seedRecommendation].
+ * [seedRecommendation]이 생성한 모든 정점의 스냅샷입니다.
  *
- * ## Graph topology
+ * ## 그래프 토폴로지
  *
- * ### PURCHASED edges (13)
+ * ### PURCHASED 간선(13개)
  * ```
  * alice   → laptop(5), phone(4), tablet(3)
  * bob     → laptop(4), headphones(5)
@@ -38,7 +38,7 @@ const val PROD_MOUSE = "mouse"
  * frank   → phone(3),  mouse(4)
  * ```
  *
- * ### FOLLOWS edges (12)
+ * ### FOLLOWS 간선(12개)
  * ```
  * alice → bob, carol
  * bob   → dave, carol
@@ -48,26 +48,26 @@ const val PROD_MOUSE = "mouse"
  * frank → alice, bob
  * ```
  *
- * ## Expected algorithm results for alice
+ * ## alice에 대한 알고리즘 기대 결과
  *
  * ### recommendProducts(alice)
  * - headphones: score=3 (co-buyers: bob via laptop, carol via phone, dave via tablet)
  * - keyboard:   score=1 (co-buyer:  eve via laptop)
  * - mouse:      score=1 (co-buyer:  frank via phone)
- * - Sort: descending score, then productId asc → [headphones(3), keyboard(1), mouse(1)]
+ * - 정렬: score 내림차순, productId 오름차순 -> [headphones(3), keyboard(1), mouse(1)]
  *
  * ### recommendFollows(alice)
- * - alice follows: {bob, carol} (myFollowIds)
- * - depth-2 from alice: bob→dave, bob→carol(excluded-depth1), carol→eve, carol→bob(excluded-depth1)
- * - Candidates: dave, eve
- * - dave:  INCOMING follows ∩ myFollowIds = {bob} → mutualFollowCount=1
- * - eve:   INCOMING follows ∩ myFollowIds = {carol} → mutualFollowCount=1
- * - Sort: descending count, then userId asc → [dave(1), eve(1)]
+ * - alice follows: {bob, carol}(myFollowIds)
+ * - alice에서 depth-2: bob -> dave, bob -> carol(excluded-depth1), carol -> eve, carol -> bob(excluded-depth1)
+ * - 후보: dave, eve
+ * - dave:  INCOMING follows와 myFollowIds의 교집합 = {bob} -> mutualFollowCount=1
+ * - eve:   INCOMING follows와 myFollowIds의 교집합 = {carol} -> mutualFollowCount=1
+ * - 정렬: count 내림차순, userId 오름차순 -> [dave(1), eve(1)]
  *
- * Note: The task spec text listed 18 PURCHASED edges in an alternative topology, but that
- * topology produces mouse(4)/headphones(3)/keyboard(3), inconsistent with the spec's stated
- * expected output headphones(3)/keyboard(1)/mouse(1). This 13-edge topology is the canonical
- * one that matches the stated expected output.
+ * 참고: task spec 문구에는 대안 토폴로지로 `PURCHASED` 간선 18개가 적혀 있었지만,
+ * 그 토폴로지는 mouse(4)/headphones(3)/keyboard(3)를 만들어 spec의 명시 기대값인
+ * headphones(3)/keyboard(1)/mouse(1)와 맞지 않습니다. 이 13개 간선 토폴로지가
+ * 명시 기대값과 일치하는 canonical 토폴로지입니다.
  */
 data class RecommendationSeed(
     val alice: GraphVertex,
@@ -89,17 +89,17 @@ data class RecommendationSeed(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Blocking helpers
+// 블로킹 helper
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Populates the recommendation graph with a deterministic 12-vertex, 25-edge topology
- * using the blocking [RecommendationService].
+ * 블로킹 [RecommendationService]를 사용해 결정적인 12개 정점, 25개 간선 토폴로지로
+ * 추천 그래프를 채웁니다.
  *
- * See [RecommendationSeed] for full topology and expected algorithm results.
+ * 전체 토폴로지와 알고리즘 기대 결과는 [RecommendationSeed]를 참고합니다.
  */
 fun seedRecommendation(service: RecommendationService): RecommendationSeed {
-    // Users
+    // User 정점
     val alice = service.addUser(USER_ALICE, "Alice")
     val bob = service.addUser(USER_BOB, "Bob")
     val carol = service.addUser(USER_CAROL, "Carol")
@@ -107,7 +107,7 @@ fun seedRecommendation(service: RecommendationService): RecommendationSeed {
     val eve = service.addUser(USER_EVE, "Eve")
     val frank = service.addUser(USER_FRANK, "Frank")
 
-    // Products
+    // Product 정점
     val laptop = service.addProduct(PROD_LAPTOP, "Laptop", category = "Electronics")
     val phone = service.addProduct(PROD_PHONE, "Phone", category = "Electronics")
     val tablet = service.addProduct(PROD_TABLET, "Tablet", category = "Electronics")
@@ -115,7 +115,7 @@ fun seedRecommendation(service: RecommendationService): RecommendationSeed {
     val keyboard = service.addProduct(PROD_KEYBOARD, "Keyboard", category = "Accessories")
     val mouse = service.addProduct(PROD_MOUSE, "Mouse", category = "Accessories")
 
-    // PURCHASED edges (13)
+    // PURCHASED 간선(13개)
     service.purchase(alice.id, laptop.id, rating = 5)
     service.purchase(alice.id, phone.id, rating = 4)
     service.purchase(alice.id, tablet.id, rating = 3)
@@ -135,7 +135,7 @@ fun seedRecommendation(service: RecommendationService): RecommendationSeed {
     service.purchase(frank.id, phone.id, rating = 3)
     service.purchase(frank.id, mouse.id, rating = 4)
 
-    // FOLLOWS edges (12)
+    // FOLLOWS 간선(12개)
     service.follow(alice.id, bob.id)
     service.follow(alice.id, carol.id)
     service.follow(bob.id, dave.id)
@@ -153,14 +153,14 @@ fun seedRecommendation(service: RecommendationService): RecommendationSeed {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Coroutine helpers
+// Coroutine helper
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Suspend variant of [seedRecommendation].
+ * [seedRecommendation]의 suspend 변형입니다.
  */
 suspend fun seedRecommendation(service: RecommendationSuspendService): RecommendationSeed {
-    // Users
+    // User 정점
     val alice = service.addUser(USER_ALICE, "Alice")
     val bob = service.addUser(USER_BOB, "Bob")
     val carol = service.addUser(USER_CAROL, "Carol")
@@ -168,7 +168,7 @@ suspend fun seedRecommendation(service: RecommendationSuspendService): Recommend
     val eve = service.addUser(USER_EVE, "Eve")
     val frank = service.addUser(USER_FRANK, "Frank")
 
-    // Products
+    // Product 정점
     val laptop = service.addProduct(PROD_LAPTOP, "Laptop", category = "Electronics")
     val phone = service.addProduct(PROD_PHONE, "Phone", category = "Electronics")
     val tablet = service.addProduct(PROD_TABLET, "Tablet", category = "Electronics")
@@ -176,7 +176,7 @@ suspend fun seedRecommendation(service: RecommendationSuspendService): Recommend
     val keyboard = service.addProduct(PROD_KEYBOARD, "Keyboard", category = "Accessories")
     val mouse = service.addProduct(PROD_MOUSE, "Mouse", category = "Accessories")
 
-    // PURCHASED edges (13)
+    // PURCHASED 간선(13개)
     service.purchase(alice.id, laptop.id, rating = 5)
     service.purchase(alice.id, phone.id, rating = 4)
     service.purchase(alice.id, tablet.id, rating = 3)
@@ -196,7 +196,7 @@ suspend fun seedRecommendation(service: RecommendationSuspendService): Recommend
     service.purchase(frank.id, phone.id, rating = 3)
     service.purchase(frank.id, mouse.id, rating = 4)
 
-    // FOLLOWS edges (12)
+    // FOLLOWS 간선(12개)
     service.follow(alice.id, bob.id)
     service.follow(alice.id, carol.id)
     service.follow(bob.id, dave.id)

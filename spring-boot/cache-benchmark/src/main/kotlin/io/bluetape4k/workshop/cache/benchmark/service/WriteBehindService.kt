@@ -1,72 +1,68 @@
 package io.bluetape4k.workshop.cache.benchmark.service
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.WRITE_BEHIND_BATCH_SIZE
+import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.WRITE_BEHIND_DELAY_MILLIS
+import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.WRITE_RETRY_ATTEMPTS
+import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.WRITE_RETRY_INTERVAL
+import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.qualifiedCacheName
+import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.requireExistingProduct
 import io.bluetape4k.workshop.cache.benchmark.domain.Product
-import io.bluetape4k.workshop.cache.benchmark.domain.ProductRepository
-import org.springframework.data.redis.core.RedisTemplate
+import org.redisson.api.RMap
+import org.redisson.api.RedissonClient
+import org.redisson.api.map.WriteMode
+import org.redisson.api.options.MapOptions
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.Duration
 
 /**
- * Profile 7 — Write-Behind Cache.
+ * Profile 7 — Write-Behind Cache 입니다.
  *
- * Strategy: cache-first reads and write-behind writes.
- * - Reads: cache-first, fall through to DB on miss.
- * - Writes (new entity): DB save first to get the generated ID, then cache the new row.
- * - Writes (update): update Redis immediately, flush DB asynchronously.
+ * Strategy 는 Redisson-managed write-behind 입니다.
  *
- * ## Why a separate flusher?
- * Spring's `@Async` requires the call to pass through a Spring proxy.
- * Internal `this`-calls bypass the proxy and execute synchronously.
- * [WriteBehindFlusher] is a separate `@Component` so the async invocation
- * goes through the proxy correctly.
- *
- * Trade-off: lower write latency for updates at the cost of eventual consistency.
+ * - read: cache-first 로 읽고, miss 시 [ProductMapLoader] 를 사용합니다.
+ * - write: caller 가 map 에 쓰면 Redisson 이 [ProductMapWriter] persistence 를 queue 에 넣고 batch 처리합니다.
+ * - 반환값은 cache 가 update 를 수락했다는 뜻이며, DB 가 queued write 를 이미 drain 했다는 뜻은 아닙니다.
  */
 @Service
 class WriteBehindService(
-    private val productRepository: ProductRepository,
-    private val redisTemplate: RedisTemplate<String, Product>,
-    private val flusher: WriteBehindFlusher,
-): ProductCacheService {
-    companion object : KLoggingChannel() {
-        const val KEY_PREFIX = "products:write-behind:"
-        val TTL: Duration = Duration.ofSeconds(60)
+    redissonClient: RedissonClient,
+    productMapLoader: ProductMapLoader,
+    productMapWriter: ProductMapWriter,
+    @Value("\${cache.benchmark.namespace:cache-benchmark}") namespace: String,
+) : ProductCacheService {
+    companion object {
+        const val CACHE_NAME = "products:write-behind"
     }
 
-    private fun cacheKey(id: Long) = "$KEY_PREFIX$id"
+    private val mapName = qualifiedCacheName(namespace, CACHE_NAME)
 
-    override fun findById(id: Long): Product? {
-        val key = cacheKey(id)
-        val cached = redisTemplate.opsForValue().get(key)
-        if (cached != null) return cached
+    private val products: RMap<Long, Product> =
+        redissonClient.getMap(
+            MapOptions.name<Long, Product>(mapName)
+                .loader(productMapLoader)
+                .writer(productMapWriter)
+                .writeMode(WriteMode.WRITE_BEHIND)
+                .writeBehindBatchSize(WRITE_BEHIND_BATCH_SIZE)
+                .writeBehindDelay(WRITE_BEHIND_DELAY_MILLIS)
+                .writeRetryAttempts(WRITE_RETRY_ATTEMPTS)
+                .writeRetryInterval(WRITE_RETRY_INTERVAL)
+        )
 
-        return productRepository.findById(id).orElse(null)?.also { product ->
-            redisTemplate.opsForValue().set(key, product, TTL)
-        }
-    }
+    private val cacheOnlyProducts: RMap<Long, Product> = redissonClient.getMap(mapName)
+
+    override fun findById(id: Long): Product? = products[id]
 
     override fun save(product: Product): Product {
-        return if (product.id == 0L) {
-            // New entity: must persist to DB first to obtain the generated ID
-            val saved = productRepository.save(product)
-            redisTemplate.opsForValue().set(cacheKey(saved.id), saved, TTL)
-            saved
-        } else {
-            // Existing entity (update): write-behind — update cache immediately,
-            // flush to DB asynchronously via proxy-based @Async flusher
-            redisTemplate.opsForValue().set(cacheKey(product.id), product, TTL)
-            flusher.persist(product)
-            product
-        }
+        val existingProduct = requireExistingProduct(product)
+        products[existingProduct.id] = existingProduct
+        return existingProduct
     }
 
     override fun evict(id: Long) {
-        redisTemplate.delete(cacheKey(id))
+        cacheOnlyProducts.fastRemove(id)
     }
 
     override fun clearAll() {
-        val keys = redisTemplate.keys("$KEY_PREFIX*")
-        if (!keys.isNullOrEmpty()) redisTemplate.delete(keys)
+        cacheOnlyProducts.clear()
     }
 }

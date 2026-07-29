@@ -15,7 +15,7 @@ dependencies {
     implementation(platform(libs.micrometer.bom))
     implementation(platform(libs.micrometer.tracing.bom))
 
-    // bluetape4k
+    // bluetape4k 공통 의존성입니다.
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.logging)
     implementation(libs.bluetape4k.coroutines)
@@ -27,17 +27,17 @@ dependencies {
     testImplementation(libs.okhttp3.mockwebserver)
     testImplementation(project(":shared"))
 
-    // Micrometer Observation
+    // Micrometer Observation 의존성입니다.
     implementation(libs.micrometer.observation.lib)
     testImplementation(libs.micrometer.observation.test)
 
-    // Micrometer Tracing
+    // Micrometer Tracing 의존성입니다.
     implementation(libs.micrometer.tracing.lib)
     testImplementation(libs.micrometer.tracing.test)
     implementation(libs.micrometer.tracing.bridge.otel)
     implementation(libs.micrometer.context.propagation)
 
-    // Spring Boot
+    // Spring Boot 의존성입니다.
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
@@ -54,7 +54,7 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
-    // Coroutines + Reactor
+    // coroutine 과 Reactor 의존성입니다.
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactor)
     testImplementation(libs.kotlinx.coroutines.test.lib)

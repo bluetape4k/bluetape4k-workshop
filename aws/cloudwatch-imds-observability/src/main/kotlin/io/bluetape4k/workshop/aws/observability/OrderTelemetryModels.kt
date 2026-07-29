@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.aws.observability
 import java.io.Serializable
 
 /**
- * Request body for publishing a local order telemetry event.
+ * 로컬 주문 텔레메트리 이벤트 발행 요청 본문입니다.
  */
 data class OrderTelemetryRequest(
     val eventId: String = "local-order",
@@ -17,7 +17,7 @@ data class OrderTelemetryRequest(
 }
 
 /**
- * Report showing which observability boundaries accepted the event.
+ * 이벤트를 수락한 관측성 경계를 보여 주는 보고서입니다.
  */
 data class OrderTelemetryReport(
     val outcome: TelemetryOutcome,
@@ -32,7 +32,7 @@ data class OrderTelemetryReport(
 }
 
 /**
- * Business outcome used as the metric tag value.
+ * 메트릭 태그 값으로 사용하는 비즈니스 결과입니다.
  */
 enum class TelemetryOutcome(val tagValue: String) {
     SUCCESS("success"),
@@ -40,7 +40,7 @@ enum class TelemetryOutcome(val tagValue: String) {
 }
 
 /**
- * Local publish state for a single AWS boundary.
+ * 단일 AWS 경계의 로컬 발행 상태입니다.
  */
 enum class PublishState {
     PUBLISHED,
@@ -49,7 +49,7 @@ enum class PublishState {
 }
 
 /**
- * Publish result for CloudWatch metrics, logs, or meter snapshots.
+ * CloudWatch 메트릭, 로그 또는 meter 스냅샷 발행 결과입니다.
  */
 data class PublishStatus(
     val state: PublishState,
@@ -59,19 +59,19 @@ data class PublishStatus(
         private const val serialVersionUID: Long = 8352173228614796523L
 
         /**
-         * Builds a published status.
+         * 발행 완료 상태를 만듭니다.
          */
         fun published(message: String = ""): PublishStatus =
             PublishStatus(PublishState.PUBLISHED, message)
 
         /**
-         * Builds a failed status from the underlying boundary exception.
+         * 하위 경계 예외로 실패 상태를 만듭니다.
          */
         fun failed(error: Throwable): PublishStatus =
             PublishStatus(PublishState.FAILED, error.message ?: error::class.simpleName.orEmpty())
 
         /**
-         * Builds a skipped status for disabled or dependent boundaries.
+         * 비활성화되었거나 의존 경계 때문에 건너뛴 상태를 만듭니다.
          */
         fun skipped(message: String = ""): PublishStatus =
             PublishStatus(PublishState.SKIPPED, message)
@@ -79,7 +79,7 @@ data class PublishStatus(
 }
 
 /**
- * Safe subset of EC2 metadata exposed by the workshop.
+ * 워크숍이 노출하는 EC2 메타데이터의 안전한 하위 집합입니다.
  */
 data class MetadataSnapshot(
     val state: PublishState,
@@ -92,13 +92,13 @@ data class MetadataSnapshot(
         private const val serialVersionUID: Long = -3970765835872248833L
 
         /**
-         * Builds a skipped metadata snapshot when metadata lookup is disabled.
+         * 메타데이터 조회가 비활성화되었을 때 건너뛴 메타데이터 스냅샷을 만듭니다.
          */
         fun skipped(): MetadataSnapshot =
             MetadataSnapshot(PublishState.SKIPPED, message = "metadata lookup disabled")
 
         /**
-         * Builds a failed metadata snapshot from the IMDS boundary exception.
+         * IMDS 경계 예외로 실패한 메타데이터 스냅샷을 만듭니다.
          */
         fun failed(error: Throwable): MetadataSnapshot =
             MetadataSnapshot(PublishState.FAILED, message = error.message ?: error::class.simpleName.orEmpty())
@@ -106,7 +106,7 @@ data class MetadataSnapshot(
 }
 
 /**
- * Error payload returned by the REST controller advice.
+ * REST 컨트롤러 advice가 반환하는 오류 페이로드입니다.
  */
 data class TelemetryErrorResponse(
     val error: String,

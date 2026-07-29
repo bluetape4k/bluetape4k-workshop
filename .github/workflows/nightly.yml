@@ -47,7 +47,7 @@ jobs:
         with:
           gradle-version: wrapper
       - name: Build (compile only)
-        run: ./gradlew build -x test --parallel --continue
+        run: ./gradlew build -x test -x stressTest -x migrationCompatibilityTest --parallel --continue
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
@@ -115,11 +115,43 @@ jobs:
         run: >-
           ./gradlew
           test
+          :commerce-pre-generated-voucher-pool:koverXmlReport
+          :commerce-event-sourced-promotion-voucher-campaign:integrationTest
+          :commerce-event-sourced-promotion-voucher-campaign:koverXmlReport
+          :commerce-usage-metering-billing-ledger:integrationTest
+          :commerce-usage-metering-billing-ledger:koverXmlReport
+          :commerce-usage-metering-billing-event-sourcing:integrationTest
+          :commerce-usage-metering-billing-event-sourcing:stressTest
+          :commerce-usage-metering-billing-event-sourcing:koverXmlReport
+          :commerce-usage-billing-meter-service:integrationTest
+          :commerce-usage-billing-usage-service:integrationTest
+          :commerce-usage-billing-billing-service:integrationTest
+          :commerce-usage-billing-invoice-service:integrationTest
+          :commerce-usage-billing-query-service:integrationTest
+          :commerce-usage-billing-microservices-composition-tests:integrationTest
+          :commerce-usage-billing-microservices-composition-tests:koverXmlReport
           :graph-recommendation:integrationTest
           :graph-knowledge-graph:integrationTest
           :graph-social-network:integrationTest
+          :operations-job-console-core:integrationTest
+          :operations-job-console-spring:integrationTest
+          :operations-job-console-ktor:integrationTest
           --continue
           --max-workers=1
+      - name: Verify commerce integration and coverage reports
+        run: |
+          test -n "$(find commerce/event-sourced-promotion-voucher-campaign/build/test-results/integrationTest -name '*.xml' -print -quit)"
+          test -s commerce/event-sourced-promotion-voucher-campaign/build/reports/kover/report.xml
+          test -n "$(find commerce/pre-generated-voucher-pool/build/test-results/test -name '*.xml' -print -quit)"
+          test -s commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
+          test -n "$(find commerce/usage-metering-billing-ledger/build/test-results/integrationTest -name '*.xml' -print -quit)"
+          test -s commerce/usage-metering-billing-ledger/build/reports/kover/report.xml
+          test -n "$(find commerce/usage-metering-billing-event-sourcing/build/test-results/integrationTest -name '*.xml' -print -quit)"
+          test -n "$(find commerce/usage-metering-billing-event-sourcing/build/test-results/stressTest -name '*.xml' -print -quit)"
+          test -s commerce/usage-metering-billing-event-sourcing/build/reports/kover/report.xml
+          test -n "$(find commerce/usage-billing-microservices-composition-tests/build/test-results/integrationTest -name '*.xml' -print -quit)"
+          test -s commerce/usage-billing-microservices-composition-tests/build/test-results/integrationTest/TEST-io.bluetape4k.workshop.commerce.usagebilling.composition.BrokerPathRecoveryIntegrationTest.xml
+          test -s commerce/usage-billing-microservices-composition-tests/build/reports/kover/report.xml
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v7
@@ -130,6 +162,72 @@ jobs:
             graph/recommendation/build/test-results/integrationTest/*.xml
             graph/knowledge-graph/build/test-results/integrationTest/*.xml
             graph/social-network/build/test-results/integrationTest/*.xml
+            operations/job-console-core/build/test-results/integrationTest/*.xml
+            operations/job-console-spring/build/test-results/integrationTest/*.xml
+            operations/job-console-ktor/build/test-results/integrationTest/*.xml
+            commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
+            commerce/event-sourced-promotion-voucher-campaign/build/test-results/integrationTest/*.xml
+            commerce/event-sourced-promotion-voucher-campaign/build/reports/kover/report.xml
+            commerce/usage-metering-billing-ledger/build/test-results/integrationTest/*.xml
+            commerce/usage-metering-billing-ledger/build/reports/kover/report.xml
+            commerce/usage-metering-billing-event-sourcing/build/test-results/integrationTest/*.xml
+            commerce/usage-metering-billing-event-sourcing/build/test-results/stressTest/*.xml
+            commerce/usage-metering-billing-event-sourcing/build/reports/kover/report.xml
+            commerce/usage-billing-meter-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-usage-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-billing-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-invoice-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-query-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-microservices-composition-tests/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-microservices-composition-tests/build/reports/kover/report.xml
+          retention-days: 14
+
+  high-contention-local-reference:
+    name: High-contention local reference
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: wrapper
+          cache-read-only: true
+      - name: Run the local reference matrix
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx2g -Dorg.gradle.daemon=false"
+          TESTCONTAINERS_RYUK_DISABLED: "true"
+          DOCKER_HOST: "unix:///var/run/docker.sock"
+        run: >-
+          ./gradlew
+          highContentionLocalReference
+          -PhighContentionRunId=nightly-${{ github.run_id }}-${{ github.run_attempt }}
+          -Pkotlin.compiler.execution.strategy=in-process
+          --max-workers=1
+          --stacktrace
+      - name: Validate and stage bounded evidence
+        if: always()
+        run: |
+          mkdir -p build/high-contention-upload-stage
+          node scripts/high-contention/select-upload.mjs \
+            build/reports/high-contention/nightly-${{ github.run_id }}-${{ github.run_attempt }} \
+            build/reports/high-contention-upload/nightly-${{ github.run_id }}-${{ github.run_attempt }} \
+            build/high-contention-upload-stage/nightly-${{ github.run_id }}-${{ github.run_attempt }} \
+            local-reference \
+            nightly-${{ github.run_id }}-${{ github.run_attempt }} \
+            ${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Upload bounded high-contention evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: high-contention-local-reference-nightly-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/high-contention-upload-stage/nightly-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: error
           retention-days: 14
 
   nightly-status:
@@ -139,6 +237,7 @@ jobs:
       - build
       - smoke-test
       - test
+      - high-contention-local-reference
     if: always()
     steps:
       - name: Check all jobs

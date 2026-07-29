@@ -12,7 +12,7 @@ class ElasticsearchClientConfig : ElasticsearchConfiguration() {
     companion object : KLogging()
 
     override fun clientConfiguration(): ClientConfiguration {
-        // log.info { "Create Elasticsearch client configuration. username=elastic, url=${elasticsearch.url}" }
+        // log.info { "Elasticsearch 클라이언트 설정을 생성합니다. username=elastic, url=${elasticsearch.url}" }
 
         return ClientConfiguration.builder()
             .connectedTo(elasticsearch.url)

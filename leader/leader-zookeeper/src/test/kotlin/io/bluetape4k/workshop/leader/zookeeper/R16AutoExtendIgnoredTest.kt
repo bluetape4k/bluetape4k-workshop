@@ -16,17 +16,16 @@ import org.slf4j.LoggerFactory
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * T7 — Verifies R16 (ZooKeeper has no TTL) by asserting that setting
- * [LeaderElectionOptions.autoExtend] = `true` emits a WARN log and is then silently ignored
- * while the action still executes successfully.
+ * T7 - [LeaderElectionOptions.autoExtend] = `true` 설정이 WARN 로그를 남긴 뒤 조용히 무시되고,
+ * 작업은 계속 성공적으로 실행됨을 단언해 R16(ZooKeeper에는 TTL이 없음)을 검증한다.
  *
- * ## Behavior / Contract
- * - Attaches a Logback [ListAppender] to the library logger `io.bluetape4k.leader.zookeeper`
- *   to capture WARN events emitted by [ZooKeeperLeaderElector].
- * - The WARN message is localized in Korean but contains the ASCII token `"autoExtend"` verbatim,
- *   so the assertion checks for that substring in `formattedMessage`. Do NOT change this substring.
- * - In `@AfterEach`, the appender MUST be detached from the logger BEFORE `stop()`; otherwise
- *   the stopped appender leaks into subsequent tests sharing the same logger.
+ * ## 동작 / 계약
+ * - [ZooKeeperLeaderElector]가 내보내는 WARN 이벤트를 잡기 위해
+ *   `io.bluetape4k.leader.zookeeper` 라이브러리 logger에 Logback [ListAppender]를 붙인다.
+ * - WARN 메시지는 한국어이지만 ASCII 토큰 `"autoExtend"`를 그대로 포함한다.
+ *   따라서 단언은 `formattedMessage`에서 해당 부분 문자열을 확인한다. 이 부분 문자열을 바꾸면 안 된다.
+ * - `@AfterEach`에서는 `stop()` 전에 appender를 logger에서 반드시 분리해야 한다.
+ *   그렇지 않으면 중지된 appender가 같은 logger를 공유하는 후속 테스트로 누수된다.
  */
 class R16AutoExtendIgnoredTest: AbstractLeaderZookeeperTest() {
 
@@ -45,8 +44,8 @@ class R16AutoExtendIgnoredTest: AbstractLeaderZookeeperTest() {
 
     @AfterEach
     fun teardownLogCapture() {
-        // MUST detachAppender BEFORE stop() — stop() alone does NOT remove the appender from
-        // the logger, leaking the stopped appender into subsequent tests.
+        // stop()만으로는 appender가 logger에서 제거되지 않으므로 stop() 전에 detachAppender를 반드시 호출한다.
+        // 그렇지 않으면 중지된 appender가 후속 테스트로 누수된다.
         val logger = LoggerFactory.getLogger(LIBRARY_LOGGER_NAME) as Logger
         logger.detachAppender(appender)
         appender.stop()
@@ -63,8 +62,8 @@ class R16AutoExtendIgnoredTest: AbstractLeaderZookeeperTest() {
         val result = elector.runIfLeader(randomLockName("t7")) { "r16-done" }
 
         result shouldBeEqualTo "r16-done"
-        // WARN message is in Korean but contains ASCII token "autoExtend" verbatim — source-confirmed
-        // from ZooKeeperLeaderElector.kt:111-113. Do NOT change this substring.
+        // WARN 메시지는 한국어지만 ASCII 토큰 "autoExtend"를 그대로 포함한다.
+        // ZooKeeperLeaderElector.kt:111-113에서 확인한 계약이므로 이 부분 문자열을 바꾸면 안 된다.
         val warnEvents = appender.list.filter {
             it.level == Level.WARN && "autoExtend" in it.formattedMessage
         }

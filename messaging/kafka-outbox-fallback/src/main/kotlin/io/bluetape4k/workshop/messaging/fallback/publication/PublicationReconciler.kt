@@ -10,7 +10,7 @@ import java.time.Clock
 import java.time.LocalDateTime
 
 /**
- * Reconstructs missing publication rows from persisted orders.
+ * persisted order 에서 missing publication row 를 reconstruct 합니다.
  */
 @Component
 class PublicationReconciler(
@@ -50,7 +50,7 @@ class PublicationReconciler(
 }
 
 /**
- * Summary returned by one reconciliation pass.
+ * reconciliation pass 한 번이 반환하는 summary 입니다.
  */
 data class ReconcileResult(
     val scanned: Int,

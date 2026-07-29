@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.spring.modulith.boundaries.notification
 import java.io.Serializable
 
 /**
- * Notification module state created from an order event.
+ * order event 로부터 생성되는 notification module state 입니다.
  */
 data class NotificationMessage(
     val orderId: String,

@@ -5,7 +5,7 @@ import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 
 /**
- * Notification module listener that consumes the ordering module's event contract.
+ * ordering module 의 event contract 를 소비하는 notification module listener 입니다.
  */
 @Component
 class NotificationEventHandler(

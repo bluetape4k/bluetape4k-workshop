@@ -1,0 +1,57 @@
+{
+  "profileSchemaVersion": 1,
+  "profileId": "redis-path-outage",
+  "mode": "local-reference",
+  "seed": "issue-522-local-redis-path-outage-v1",
+  "arrivalCurve": "step",
+  "operationCount": 400,
+  "concurrency": 96,
+  "dispatcherBacklogCapacity": 400,
+  "maxScheduleDelayMs": 1000,
+  "warmupOperationCount": 32,
+  "workloadDurationMs": 8000,
+  "epochs": [
+    {"durationMs": 4000, "operationCount": 200},
+    {"durationMs": 4000, "operationCount": 200}
+  ],
+  "retryShape": null,
+  "contentionShape": {
+    "authorityCount": 8,
+    "hotAuthorityCount": 2,
+    "identityCount": 400,
+    "sameIdentityRatioPermille": 250
+  },
+  "expectedSubmissionOutcomes": {
+    "minimumDispatched": 400,
+    "minimumCompleted": 400,
+    "maximumLocalRejected": 0,
+    "maximumMissedDeadline": 0
+  },
+  "failure": {
+    "kind": "redis-path-outage",
+    "triggerAcceptedCount": 200,
+    "steps": ["OLD_CONNECTION_RESET", "OLD_CONNECTION_RECOVERY", "NEW_CONNECTION_DOWN", "NEW_CONNECTION_RECOVERY"]
+  },
+  "operationTimeoutMs": 5000,
+  "injectionDeadlineMs": 10000,
+  "failureDetectionDeadlineMs": 10000,
+  "workloadJoinDeadlineMs": 30000,
+  "recoveryDeadlineMs": 30000,
+  "cleanupActionBudgetsMs": {
+    "application": 5000,
+    "clients": 5000,
+    "toxiproxy": 4000,
+    "redis": 4000,
+    "postgresql": 7000,
+    "network": 2000
+  },
+  "reportFinalizeReserveMs": 4000,
+  "cleanupReserveMs": 35000,
+  "profileDeadlineMs": 180000,
+  "expectedInvariants": {
+    "job": ["DURABLE_CANCEL_CONVERGES", "POSTGRESQL_REMAINS_AUTHORITY"],
+    "ticket": ["NEW_PURCHASE_FAILS_CLOSED", "COMMITTED_PAYMENT_CONVERGES"]
+  },
+  "observationFields": ["workloadDurationNanos", "latencyP95Nanos"],
+  "knownLimitations": ["Toxiproxy models a socket-path failure, not a Redis process crash."]
+}

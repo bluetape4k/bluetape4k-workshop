@@ -5,7 +5,7 @@ import io.micrometer.core.instrument.MeterRegistry
 import org.springframework.stereotype.Component
 
 /**
- * Records tenant-tagged counters for the workshop service.
+ * workshop service 의 tenant-tagged counter 를 기록합니다.
  */
 @Component
 class TenantMetrics(
@@ -13,21 +13,21 @@ class TenantMetrics(
 ) {
 
     /**
-     * Records an invoice read for [tenantId].
+     * [tenantId] 의 invoice read 를 기록합니다.
      */
     fun recordInvoiceRead(tenantId: TenantId) {
         meterRegistry.counter(INVOICE_READS, "tenant", tenantId.value).increment()
     }
 
     /**
-     * Records an invoice write for [tenantId].
+     * [tenantId] 의 invoice write 를 기록합니다.
      */
     fun recordInvoiceWrite(tenantId: TenantId) {
         meterRegistry.counter(INVOICE_WRITES, "tenant", tenantId.value).increment()
     }
 
     /**
-     * Returns the current read count for [tenantId].
+     * [tenantId] 의 현재 read count 를 반환합니다.
      */
     fun invoiceReads(tenantId: TenantId): Double =
         meterRegistry.counter(INVOICE_READS, "tenant", tenantId.value).count()

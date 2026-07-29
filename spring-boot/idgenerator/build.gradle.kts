@@ -12,13 +12,13 @@ configurations {
 }
 
 dependencies {
-    // bluetape4k
+    // bluetape4k 의존성
     implementation(libs.bluetape4k.idgenerators)
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.bluetape4k.coroutines)
     testImplementation(libs.bluetape4k.junit5)
 
-    // Spring Boot
+    // Spring Boot 의존성
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
@@ -33,15 +33,15 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
-    // Coroutines
+    // 코루틴
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactor)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    // Reactor
+    // Reactor 의존성
     implementation(libs.reactor.kotlin.extensions)
     testImplementation(libs.reactor.test)
 
-    // SpringDoc - OpenAPI
+    // SpringDoc - OpenAPI 의존성
     implementation(libs.springdoc.openapi.starter.webflux.ui)
 }

@@ -4,7 +4,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 /**
- * Spring Boot entrypoint for the multi-tenant data isolation workshop.
+ * multi-tenant data isolation workshop 의 Spring Boot entrypoint 입니다.
  */
 @SpringBootApplication
 class MultiTenantDataIsolationApplication

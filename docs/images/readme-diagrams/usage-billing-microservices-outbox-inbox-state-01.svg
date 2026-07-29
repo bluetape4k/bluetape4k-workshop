@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1350" viewBox="0 0 2400 1350" role="img" aria-labelledby="title desc" data-diagram-kind="state">
+  <title id="title">Durable Outbox and Inbox Decisions</title>
+  <desc id="desc">The producer retries one claimed outbox row until published or quarantined; the consumer commits an offset only after an applied, duplicate, or quarantined local decision.</desc>
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="5" stdDeviation="8" flood-color="#243447" flood-opacity=".10"/>
+    </filter>
+    <style>
+      .canvas{fill:#F7F9FB}
+      .outer{fill:#FFFDFC;stroke:#C9D5DF;stroke-width:3}
+      .title{font:700 48px 'Architects Daughter',sans-serif;fill:#243447}
+      .subtitle{font:22px 'Comic Mono',monospace;fill:#526579}
+      .regionTitle{font:700 30px 'Architects Daughter',sans-serif;fill:#243447}
+      .cardTitle{font:700 28px 'Architects Daughter',sans-serif;fill:#243447}
+      .participant{font:700 25px 'Architects Daughter',sans-serif;fill:#243447}
+      .body{font:19px 'Comic Mono',monospace;fill:#526579}
+      .small{font:17px 'Comic Mono',monospace;fill:#526579}
+      .micro{font:15px 'Comic Mono',monospace;fill:#526579}
+      .footer{font:19px 'Comic Mono',monospace;fill:#526579}
+      .card{fill:#FFFDFC;stroke-width:3}
+      .lifeline{stroke:#8FA1B2;stroke-width:2;stroke-dasharray:10 10}
+      .activation{fill:#EAF2FB;stroke:#4F86C6;stroke-width:2}
+      .edgePath{fill:none;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+      .labelPill{fill:#FFFDFC;stroke-width:2}
+      .num{font:700 16px 'Comic Mono',monospace}
+      .message{font:17px 'Comic Mono',monospace;fill:#243447}
+      .frame{fill:none;stroke-width:2.5}
+      .frameLabel{font:700 19px 'Architects Daughter',sans-serif}
+      .legend{font:17px 'Comic Mono',monospace;fill:#526579}
+    </style>
+  </defs>
+  <rect class="canvas" width="2400" height="1350"/>
+  <rect class="outer" x="28" y="24" width="2344" height="1302" rx="28"/>
+  <text x="1200" y="88" text-anchor="middle" class="title">Durable Outbox and Inbox Decisions</text>
+  <text x="1200" y="124" text-anchor="middle" class="subtitle">Retries move the same durable record; duplicate delivery is a normal terminal receiver outcome.</text>
+  <rect x="80" y="170" width="1080" height="1060" rx="30" fill="#EAF2FB" stroke="#4F86C6" stroke-width="3"/>
+  <text x="120" y="225" class="regionTitle">Producer outbox</text>
+  <text x="120" y="258" class="small">Owner + lease fencing protects completion after publication.</text>
+  <g class="node" data-node="outbox-pending" data-card="outbox-pending">
+    <rect class="card" x="150" y="330" width="270" height="120" rx="20" fill="#FFFDFC" stroke="#4F86C6" filter="url(#shadow)"/>
+
+    <text x="285" y="378" text-anchor="middle" class="cardTitle">PENDING</text>
+    <text x="285" y="408" text-anchor="middle" class="small">committed with local fact</text>
+  </g>
+  <g class="node" data-node="outbox-in-flight" data-card="outbox-in-flight">
+    <rect class="card" x="510" y="330" width="270" height="120" rx="20" fill="#FFFDFC" stroke="#B57E2A" filter="url(#shadow)"/>
+
+    <text x="645" y="378" text-anchor="middle" class="cardTitle">IN_FLIGHT</text>
+    <text x="645" y="408" text-anchor="middle" class="small">claimed by owner + lease</text>
+  </g>
+  <g class="node" data-node="outbox-published" data-card="outbox-published">
+    <rect class="card" x="870" y="330" width="270" height="120" rx="20" fill="#FFFDFC" stroke="#6E8F4F" filter="url(#shadow)"/>
+
+    <text x="1005" y="378" text-anchor="middle" class="cardTitle">PUBLISHED</text>
+    <text x="1005" y="408" text-anchor="middle" class="small">terminal success</text>
+  </g>
+  <g class="node" data-node="outbox-retry" data-card="outbox-retry">
+    <rect class="card" x="510" y="670" width="270" height="120" rx="20" fill="#FFFDFC" stroke="#B57E2A" filter="url(#shadow)"/>
+
+    <text x="645" y="718" text-anchor="middle" class="cardTitle">RETRY_WAIT</text>
+    <text x="645" y="748" text-anchor="middle" class="small">same row, later attempt</text>
+  </g>
+  <g class="node" data-node="outbox-quarantine" data-card="outbox-quarantine">
+    <rect class="card" x="870" y="670" width="270" height="120" rx="20" fill="#FFFDFC" stroke="#B75B5B" filter="url(#shadow)"/>
+
+    <text x="1005" y="718" text-anchor="middle" class="cardTitle">QUARANTINED</text>
+    <text x="1005" y="748" text-anchor="middle" class="small">retry policy exhausted</text>
+  </g>
+  <g class="edge" data-edge="outbox-claim" data-label="eligible row is claimed">
+    <path data-connector="outbox-claim" class="edgePath" style="marker-end:none" d="M420 390 H510" stroke="#4F86C6"/>
+    <polygon data-connector-head="outbox-claim" data-arrow-direction="right" points="510,390 496,383 496,397" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <g class="edge" data-edge="outbox-complete" data-label="matching owner and lease completes publication">
+    <path data-connector="outbox-complete" class="edgePath" style="marker-end:none" d="M780 390 H870" stroke="#6E8F4F"/>
+    <polygon data-connector-head="outbox-complete" data-arrow-direction="right" points="870,390 856,383 856,397" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <g class="edge" data-edge="outbox-retry-wait" data-label="retryable transport failure">
+    <path data-connector="outbox-retry-wait" class="edgePath" style="marker-end:none" d="M620 450 V670" stroke="#B57E2A"/>
+    <polygon data-connector-head="outbox-retry-wait" data-arrow-direction="down" points="620,670 613,656 627,656" fill="#B57E2A" stroke="#B57E2A" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <g class="edge" data-edge="outbox-reclaim" data-label="retry time reached or lease expired">
+    <path data-connector="outbox-reclaim" class="edgePath" style="marker-end:none" d="M510 730 H420 Q400 730 400 710 V530 Q400 510 420 510 H580 Q600 510 600 490 V450" stroke="#4F86C6"/>
+    <polygon data-connector-head="outbox-reclaim" data-arrow-direction="up" points="600,450 593,464 607,464" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <g class="edge" data-edge="outbox-quarantine" data-label="permanent or exhausted failure">
+    <path data-connector="outbox-quarantine" class="edgePath" style="marker-end:none" d="M780 420 H800 Q815 420 815 435 V715 Q815 730 830 730 H870" stroke="#B75B5B"/>
+    <polygon data-connector-head="outbox-quarantine" data-arrow-direction="right" points="870,730 856,723 856,737" fill="#B75B5B" stroke="#B75B5B" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <rect x="150" y="910" width="930" height="210" rx="24" fill="#FFFDFC" stroke="#C9D5DF" stroke-width="2"/>
+  <text x="190" y="956" class="cardTitle">Crash window stays safe</text>
+  <text x="190" y="997" text-anchor="start" class="body">Kafka may accept the record before PUBLISHED is stored.</text>
+<text x="190" y="1031" text-anchor="start" class="body">The lease expires and the same outbox row is published again.</text>
+<text x="190" y="1065" text-anchor="start" class="body">The receiver's inbox absorbs the replay.</text>
+  <rect x="1240" y="170" width="1080" height="1060" rx="30" fill="#F1EDF7" stroke="#8065A8" stroke-width="3"/>
+  <text x="1280" y="225" class="regionTitle">Consumer inbox / quarantine</text>
+  <text x="1280" y="258" class="small">Offset commit follows a durable local decision, never a log line.</text>
+  <g class="node" data-node="inbox-received" data-card="inbox-received">
+    <rect class="card" x="1645" y="320" width="270" height="120" rx="20" fill="#FFFDFC" stroke="#8065A8" filter="url(#shadow)"/>
+
+    <text x="1780" y="368" text-anchor="middle" class="cardTitle">RECEIVED</text>
+    <text x="1780" y="398" text-anchor="middle" class="small">validate local envelope</text>
+  </g>
+  <g class="node" data-node="inbox-applied" data-card="inbox-applied">
+    <rect class="card" x="1290" y="650" width="270" height="120" rx="20" fill="#FFFDFC" stroke="#6E8F4F" filter="url(#shadow)"/>
+
+    <text x="1425" y="698" text-anchor="middle" class="cardTitle">APPLIED</text>
+    <text x="1425" y="728" text-anchor="middle" class="small">new eventId</text>
+<text x="1425" y="755" text-anchor="middle" class="small">local effect committed</text>
+  </g>
+  <g class="node" data-node="inbox-duplicate" data-card="inbox-duplicate">
+    <rect class="card" x="1645" y="650" width="270" height="120" rx="20" fill="#FFFDFC" stroke="#2D948C" filter="url(#shadow)"/>
+
+    <text x="1780" y="698" text-anchor="middle" class="cardTitle">DUPLICATE</text>
+    <text x="1780" y="728" text-anchor="middle" class="small">same ID + same digest</text>
+<text x="1780" y="755" text-anchor="middle" class="small">no second effect</text>
+  </g>
+  <g class="node" data-node="inbox-quarantined" data-card="inbox-quarantined">
+    <rect class="card" x="2000" y="650" width="270" height="120" rx="20" fill="#FFFDFC" stroke="#B75B5B" filter="url(#shadow)"/>
+
+    <text x="2135" y="698" text-anchor="middle" class="cardTitle">QUARANTINED</text>
+    <text x="2135" y="728" text-anchor="middle" class="small">bad schema or digest</text>
+<text x="2135" y="755" text-anchor="middle" class="small">reason is durable</text>
+  </g>
+  <g class="edge" data-edge="inbox-apply" data-label="first valid event">
+    <path data-connector="inbox-apply" class="edgePath" style="marker-end:none" d="M1700 440 V510 Q1700 530 1680 530 H1445 Q1425 530 1425 550 V650" stroke="#6E8F4F"/>
+    <polygon data-connector-head="inbox-apply" data-arrow-direction="down" points="1425,650 1418,636 1432,636" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <g class="edge" data-edge="inbox-duplicate" data-label="same ID and digest">
+    <path data-connector="inbox-duplicate" class="edgePath" style="marker-end:none" d="M1780 440 V650" stroke="#2D948C"/>
+    <polygon data-connector-head="inbox-duplicate" data-arrow-direction="down" points="1780,650 1773,636 1787,636" fill="#2D948C" stroke="#2D948C" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <g class="edge" data-edge="inbox-quarantine" data-label="unsupported schema or digest conflict">
+    <path data-connector="inbox-quarantine" class="edgePath" style="marker-end:none" d="M1860 440 V510 Q1860 530 1880 530 H2115 Q2135 530 2135 550 V650" stroke="#B75B5B"/>
+    <polygon data-connector-head="inbox-quarantine" data-arrow-direction="down" points="2135,650 2128,636 2142,636" fill="#B75B5B" stroke="#B75B5B" stroke-dasharray="none" style="stroke-dasharray:none"/>
+  </g>
+  <rect x="1320" y="910" width="930" height="210" rx="24" fill="#FFFDFC" stroke="#C9D5DF" stroke-width="2"/>
+  <text x="1360" y="956" class="cardTitle">Retryable failure is not a terminal inbox state</text>
+  <text x="1360" y="997" text-anchor="start" class="body">A transient database error is propagated to Kafka.</text>
+<text x="1360" y="1031" text-anchor="start" class="body">No offset is committed; the same envelope is redelivered.</text>
+<text x="1360" y="1065" text-anchor="start" class="body">APPLIED, DUPLICATE, and QUARANTINED may commit the offset.</text>
+  <text x="1200" y="1285" text-anchor="middle" class="footer">Exactly-once is not claimed: local idempotency makes at-least-once delivery operationally safe.</text>
+</svg>

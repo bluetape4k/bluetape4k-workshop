@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
 /**
- * Maps moderation API failures to stable workshop HTTP responses.
+ * moderation API failure 를 안정적인 workshop HTTP response 로 mapping 합니다.
  */
 @RestControllerAdvice
 class TextModerationExceptionHandler {

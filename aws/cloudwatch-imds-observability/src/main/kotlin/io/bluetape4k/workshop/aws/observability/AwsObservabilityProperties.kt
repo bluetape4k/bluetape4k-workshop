@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import java.io.Serializable
 
 /**
- * Configuration for the CloudWatch and IMDS observability workshop.
+ * CloudWatch와 IMDS 관측성 워크숍 설정입니다.
  */
 @ConfigurationProperties(prefix = "bluetape4k.workshop.aws.observability")
 data class AwsObservabilityProperties(
@@ -33,7 +33,7 @@ data class AwsObservabilityProperties(
 }
 
 /**
- * Toggles safe local metadata lookup for the example.
+ * 예제의 안전한 로컬 메타데이터 조회를 켜고 끕니다.
  */
 data class MetadataProperties(
     val enabled: Boolean = false,

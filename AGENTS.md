@@ -31,6 +31,7 @@ names.
 | Directory | Purpose |
 |---|---|
 | `aws/` | S3 and Spring Cloud examples |
+| `commerce/` | PostgreSQL-authoritative order, reservation, voucher, and flash-sale lifecycle examples |
 | `exposed/` | Exposed DAO/SQL DSL, relations, custom columns, Spring transactions |
 | `gateway/` | API gateway plus customers/orders microservices |
 | `gatling/` | Gatling performance tests |
@@ -44,6 +45,7 @@ names.
 | `messaging/` | Kafka examples |
 | `observability/` | Micrometer observation/tracing with coroutines |
 | `optimization/` | Java 25 planning and optimization contract examples |
+| `operations/` | PostgreSQL-authoritative job console core with Spring MVC and Ktor adapters |
 | `ratelimit/` | Bucket4j rate limiting |
 | `reactive/` | Mutiny reactive streams |
 | `redis/` | Redisson and cluster examples |
@@ -60,8 +62,8 @@ names.
 - Dependency versions live in `gradle/libs.versions.toml`.
 - Package prefix: `io.bluetape4k.workshop.{module}.*`.
 - Tests are serialized by `TestMutexService` to avoid DB conflicts.
-- JVM uses the Java 21 toolchain except `optimization/*`, which uses Java 25.
-  Both toolchains use ZGC, 2-4 GB heap, and preview features.
+- JVM uses the Java 21 toolchain by default; explicitly marked new examples,
+  including `optimization/*`, may use Java 25 virtual threads.
 - Spring Boot modules use `springBoot { mainClass.set(...) }` and extend test
   dependencies from `compileOnly`/`runtimeOnly` where the repo already does so.
 - Common bluetape4k modules include logging, JUnit5, coroutines, Exposed, and

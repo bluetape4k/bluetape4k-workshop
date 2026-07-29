@@ -51,7 +51,7 @@ path where **Basic** modules are enough for exploration, then switch to
 
 ## Domain Catalog
 
-Modules are organized into eight learning domains.
+Modules are organized into seven learning domains.
 Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (multi-layer, Testcontainers) modules.
 
 ![Workshop Module Composition](./docs/images/readme-charts/root-readme-module-chart-01.png)
@@ -215,6 +215,15 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Basic | [`spring-modulith-module-boundaries`](spring-modulith/module-boundaries/) | Spring Modulith | In-memory | Module-boundary verification with named interfaces and event contracts |
 | Advanced | [`spring-modulith-events-deep-dive`](spring-modulith/events-deep-dive/) | `coroutines`, `testcontainers` | PostgreSQL (TC) | Modulith application events with persistence |
 | Advanced | [`spring-modulith-jpa-demo`](spring-modulith/jpa-demo/) | `logging`, `testcontainers` | PostgreSQL (TC) | Modulith module encapsulation with JPA |
+| Advanced | [`commerce-order-lifecycle-fulfillment`](commerce/order-lifecycle-fulfillment/) | `exposed-jdbc`, `exposed-jdbc-tests`, `virtualthread-jdk25`, `micrometer` | PostgreSQL (TC) | Independent order, payment, inventory, split fulfillment, cancellation, and refund lifecycles with durable event replay |
+| Advanced | [`commerce-reservation-control-plane`](commerce/reservation-control-plane/) | `exposed-jdbc`, `exposed-jdbc-tests`, `lettuce`, `leader`, `virtualthread-jdk25`, `logging` | PostgreSQL + Redis (TC) | PostgreSQL-authoritative holds, idempotent retries, waitlist offers, and leader-guarded expiry |
+| Advanced | [`commerce-event-sourced-promotion-voucher-campaign`](commerce/event-sourced-promotion-voucher-campaign/) | `exposed-jdbc`, `exposed-jdbc-tests`, `virtualthread-jdk25`, `micrometer`, `logging` | PostgreSQL (TC) | Append-only event authority, snapshots, leased projections, generation-fenced rebuilds, and position-aware HTTP/SSE recovery |
+| Advanced | [`commerce-promotion-voucher-campaign`](commerce/promotion-voucher-campaign/) | `exposed-jdbc`, `exposed-jdbc-tests`, `lettuce`, `bucket4j`, `leader`, `virtualthread-jdk25`, `logging` | PostgreSQL + Redis (TC) | PostgreSQL-authoritative campaign capacity, idempotent voucher allocation/redemption, review, SSE, and reconciliation |
+| Advanced | [`commerce-pre-generated-voucher-pool`](commerce/pre-generated-voucher-pool/) | `exposed-jdbc`, `exposed-jdbc-tests`, `lettuce`, `bucket4j`, `leader`, `virtualthread-jdk25`, `micrometer`, `logging` | PostgreSQL + Redis (TC) | PostgreSQL-authoritative pre-generated voucher reservation, one-time reveal and replacement, revoke/reconciliation, and advisory Redis admission |
+| Advanced | [`commerce-concert-ticket-flash-sale`](commerce/concert-ticket-flash-sale/) | `exposed-jdbc`, `lettuce`, `bucket4j`, `virtualthread-jdk25`, `micrometer` | PostgreSQL + Redis (TC) | Waiting-room admission, USER/IP guards, unknown payment recovery, late approval, refund, ticket disposition, and safe restock |
+| Advanced | [`commerce-usage-metering-billing-ledger`](commerce/usage-metering-billing-ledger/) | `exposed-jdbc`, `exposed-jdbc-tests`, `virtualthread-jdk25`, `micrometer` | PostgreSQL (TC) | Idempotent usage ingestion, time-versioned pricing, restartable close checkpoints, immutable ledger/invoice provenance, late adjustments, and reconciliation |
+| Advanced | [`commerce-usage-metering-billing-event-sourcing`](commerce/usage-metering-billing-event-sourcing/) | `exposed-jdbc`, `exposed-jdbc-tests`, `virtualthread-jdk25`, `micrometer` | PostgreSQL (TC) | Hash-chained event store, deterministic replay/upcasting, snapshot fallback, fenced projection-generation rebuilds, append-only corrections, and reconciliation |
+| Advanced | [`commerce-usage-billing-microservices`](commerce/usage-billing-microservices-composition-tests/) | `exposed-jdbc`, `exposed-jdbc-tests`, `kafka4`, `virtualthread-jdk25`, `micrometer` | PostgreSQL + Kafka (TC) | Five independent Spring Boot services with local Exposed outbox/inbox, replay-safe delivery, and explicit ownership boundaries |
 | Advanced | [`gateway-api-gateway`](gateway/api-gateway/) | `logging` | Services running | Spring Cloud Gateway routing, filters, predicates |
 | Basic | [`ratelimit-bucket4j-caffeine-web`](ratelimit/bucket4j-caffeine-web/) | `logging` | In-memory | Bucket4j rate limiting with Caffeine |
 | Advanced | [`ratelimit-bucket4j-redis`](ratelimit/bucket4j-redis/) | `redis`, `testcontainers` | Redis (TC) | Distributed rate limiting via Bucket4j + Redis |
@@ -232,10 +241,14 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Advanced | [`image-processing-advanced-workflow`](image-processing/advanced-workflow/) | `images-vips-java25`, `images-spring-boot`, `micrometer` | S3 or local storage | Upload → original storage → WebP variants → unsigned public URLs |
 | Advanced | [`image-processing-profile-image-moderation`](image-processing/profile-image-moderation/) | `images-spring-boot`, `coroutines`, `micrometer` | Local storage / S3-compatible | Profile upload → private original → blurred pending URL → moderation approval/default fallback |
 | Advanced | [`image-processing-ocr-api`](image-processing/ocr-api/) | `images-ocr`, `images`, `spring-boot4-core` | In-memory | Multipart OCR API with validated fallback and optional Tesseract |
+| Advanced | [`operations-job-console-core`](operations/job-console-core/) | `exposed-jdbc`, `lettuce`, `micrometer`, `testcontainers` | PostgreSQL + Redis (TC) | Durable FIFO jobs, leases, checkpoints, cancellation, retry budget, bounded ETA, and outbox |
+| Advanced | [`operations-job-console-spring`](operations/job-console-spring/) | `spring-boot4-core`, `virtualthread-jdk25` | PostgreSQL (TC) | Spring MVC REST/SSE adapter for the shared Java 25 job console contract |
+| Advanced | [`operations-job-console-ktor`](operations/job-console-ktor/) | `ktor`, `coroutines` | PostgreSQL (TC) | Ktor Netty REST/SSE adapter for the shared Java 25 job console contract |
 | Advanced | [`leader-leader-election`](leader/) | `coroutines`, `redis`, `testcontainers` | Redis (TC) | Distributed leader election: blocking, coroutine, virtual thread |
 | Advanced | [`leader-backend-comparison-lab`](leader/backend-comparison-lab/) | `leader-core`, `spring-boot4-core` | In-memory | Redis vs ZooKeeper vs Kubernetes Lease backend choice and failover lab |
 | Advanced | [`leader-k8s-lease-micrometer`](leader/k8s-lease-micrometer/) | `leader-k8s`, `micrometer`, `spring-boot4-core` | Kubernetes Lease (opt-in) | Kubernetes Lease leader election with Micrometer metrics |
 | Advanced | [`leader-tenant-scheduler`](leader/tenant-scheduler/) | `leader-core`, `spring-boot4-core` | In-memory | Tenant-scoped leader scheduling with fair ticks, stale handoff, and bounded tenant metrics |
+| Advanced | [`leader-job-safety-lab`](leader/job-safety-lab/) | `leader-redis-lettuce`, `lettuce`, `exposed-jdbc`, `spring-boot4-core`, `virtualthread-jdk25` | PostgreSQL + Redis (TC) | Java 25 Spring Boot lab for resource fencing, PostgreSQL authority, transactional outbox, and reconciliation |
 
 ```bash
 ./gradlew :spring-security-mvc:test
@@ -248,26 +261,12 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 ./gradlew :aws-storage-abstraction:test
 ./gradlew :aws-s3-vectors-access-grants:test
 ./gradlew :image-processing-profile-image-moderation:test
+./scripts/smoke-validate.sh operations
 ./gradlew :leader-backend-comparison-lab:test
 ./gradlew :leader-tenant-scheduler:test
+./gradlew :leader-job-safety-lab:test
+./gradlew :leader-job-safety-lab:integrationTest --max-workers=1
 ```
-
----
-
-### 8. Optimization Contracts
-
-> Provider-neutral planning, PostgreSQL convergence, Java 25 virtual threads
-
-| Level | Module | bluetape4k libs | Infra | Learning outcome |
-|-------|--------|-----------------|-------|-----------------|
-| Advanced | [`optimization-planning-contracts`](optimization/planning-contracts/) | `exposed-jdbc`, `exposed-jdbc-tests`, `virtualthread-api`, `virtualthread-jdk25`, `http`, `testcontainers` | PostgreSQL + WireMock (TC) | Request/outbox atomicity, callback idempotency, stale-result audit, and final aggregate-version revalidation |
-
-```bash
-./gradlew :optimization-planning-contracts:test --max-workers=1
-```
-
-All modules below `optimization/` use Java 25. Other workshop modules retain
-the Java 21 toolchain.
 
 ---
 
@@ -275,9 +274,9 @@ the Java 21 toolchain.
 
 | Item | Version |
 |------|---------|
-| Kotlin | 2.4.0 |
-| JVM | 21; Java 25 for `optimization/*` |
-| Spring Boot | 4.1.0 |
+| Kotlin | 2.3.21 |
+| JVM | 21 |
+| Spring Boot | 4.0.6 |
 | bluetape4k | 1.7.0 |
 | Gradle | 8.x (Kotlin DSL, multi-module) |
 
@@ -288,6 +287,7 @@ the Java 21 toolchain.
 ```
 bluetape4k-workshop/
 ├── aws/                    # AWS SDK + Spring Cloud AWS
+├── commerce/               # End-to-end commerce lifecycles
 ├── exposed/                # JetBrains Exposed ORM
 ├── gateway/                # API Gateway + microservices
 ├── gatling/                # Load/performance tests
@@ -300,6 +300,7 @@ bluetape4k-workshop/
 ├── messaging/              # Kafka
 ├── observability/          # Micrometer Observation + Tracing
 ├── optimization/           # Java 25 planning/optimization contracts
+├── operations/             # Durable job console core + Spring MVC/Ktor adapters
 ├── ratelimit/              # Bucket4j rate limiting
 ├── redis/                  # Redisson + Redis patterns
 ├── spring-boot/            # Spring Boot features

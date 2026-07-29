@@ -15,7 +15,7 @@ class Resilience4jControllerTest(context: ApplicationContext) : AbstractProblemT
     companion object : KLogging()
 
     /**
-     * When circuit breaker is opened returns call not permitted exception
+     * circuit breaker 가 open 되면 call not permitted exception 을 반환합니다.
      *
      * ```json
      * {
@@ -43,8 +43,8 @@ class Resilience4jControllerTest(context: ApplicationContext) : AbstractProblemT
     }
 
     /**
-     * When occur [io.github.resilience4j.retry.MaxRetriesExceededException] by Resilience4j Retry
-     * -> [Resilience4jTrait]에서 [io.github.resilience4j.retry.MaxRetriesExceededException] 에외에 대해 Problem 으로 정의했다
+     * Resilience4j Retry 로 [io.github.resilience4j.retry.MaxRetriesExceededException] 이 발생하는 경우입니다.
+     * [Resilience4jTrait] 에서 해당 예외를 Problem 으로 정의합니다.
      *
      * ```json
      * {

@@ -10,7 +10,7 @@ import io.bluetape4k.workshop.textmoderation.model.ModerationResponse
 import org.springframework.stereotype.Service
 
 /**
- * Coordinates request validation, language detection, and blockword masking.
+ * request validation, language detection, blockword masking 을 조율합니다.
  */
 @Service
 class TextModerationService(
@@ -25,10 +25,10 @@ class TextModerationService(
     }
 
     /**
-     * Analyzes [text] and returns a normalized moderation response.
+     * [text] 를 분석하고 normalized moderation response 를 반환합니다.
      *
-     * @throws IllegalArgumentException when [text] is blank
-     * @throws PayloadTooLargeException when [text] exceeds the configured size limit
+     * @throws IllegalArgumentException [text] 가 비어 있을 때 발생합니다.
+     * @throws PayloadTooLargeException [text] 가 설정된 size limit 을 넘을 때 발생합니다.
      */
     fun analyze(text: String): ModerationResponse {
         validate(text)

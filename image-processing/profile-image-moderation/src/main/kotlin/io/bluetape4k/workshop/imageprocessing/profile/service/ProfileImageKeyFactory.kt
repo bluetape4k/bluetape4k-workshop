@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component
 
 @Component
 /**
- * Creates safe object-storage keys for private originals and public derivatives.
+ * 비공개 원본과 공개 파생 이미지용 안전한 객체 스토리지 키를 만듭니다.
  */
 class ProfileImageKeyFactory {
 

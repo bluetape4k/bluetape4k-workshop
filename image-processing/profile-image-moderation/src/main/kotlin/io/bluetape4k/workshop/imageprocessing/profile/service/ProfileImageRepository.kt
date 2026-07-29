@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 @Repository
 /**
- * In-memory profile-image state store for the workshop example.
+ * 워크숍 예제용 인메모리 프로필 이미지 상태 저장소입니다.
  */
 class ProfileImageRepository {
 

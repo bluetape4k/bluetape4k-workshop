@@ -4,7 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 
 /**
- * Spring Data JPA repository for [Product] entities.
+ * [Product] entity 를 다루는 Spring Data JPA repository 입니다.
  */
 @Repository
 interface ProductRepository: JpaRepository<Product, Long> {

@@ -21,13 +21,13 @@ class SharedFlowAsEventBus {
     companion object: KLoggingChannel()
 
     /**
-     * An event bus implementation that uses a shared flow to broadcast events to multiple listeners.
+     * 여러 리스너에 이벤트를 브로드캐스트하기 위해 shared flow 를 사용하는 event bus 구현입니다.
      */
     class EventBus<T> {
-        // The shared flow that will be used to broadcast events to multiple listeners.
+        // 여러 리스너에 이벤트를 브로드캐스트할 shared flow 입니다.
         private val _events = MutableSharedFlow<T>(replay = 0, extraBufferCapacity = 64)
 
-        // The public flow that will be used to listen to events.
+        // 외부 구독자가 이벤트를 수신할 때 사용하는 공개 flow 입니다.
         val events: Flow<T> = _events.asSharedFlow()
 
         suspend fun sendEvent(event: T) {
@@ -50,7 +50,7 @@ class SharedFlowAsEventBus {
         companion object: KLogging()
 
         init {
-            // Subscribe to the events flow using the onEach operator
+            // onEach 연산자로 events flow 를 구독합니다.
             eventBus.events
                 .onEach { event ->
                     when (event) {
@@ -67,8 +67,8 @@ class SharedFlowAsEventBus {
                         )
                     }
                 }
-                // Launch the event listener in the given coroutine scope
-                // It can cancel the subscription when scope is not present any more
+                // 전달된 coroutine scope 안에서 이벤트 리스너를 실행합니다.
+                // scope 가 더 이상 유효하지 않으면 구독을 취소할 수 있습니다.
                 // `scope.coroutineContext.cancelChildren()` 을 호출하면 중단됩니다.
                 .launchIn(scope)
         }
@@ -94,7 +94,7 @@ class SharedFlowAsEventBus {
         val eventBus =
             EventBus<Event>()
 
-        // Create event listeners
+        // 이벤트 리스너를 생성합니다.
         val listener1 = EventListener(
             "#1",
             eventBus,
@@ -107,7 +107,7 @@ class SharedFlowAsEventBus {
         )
 
         val job = launch(Dispatchers.Default) {
-            // Send events
+            // 이벤트를 발행합니다.
             delay(100)
             eventBus.sendEvent(Event.EventA)
             delay(100)

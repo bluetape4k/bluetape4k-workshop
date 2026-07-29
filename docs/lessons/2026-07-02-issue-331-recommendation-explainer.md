@@ -1,36 +1,34 @@
 # Issue 331 Recommendation Explainer
 
-## Context
+## 배경
 
-Issue #331 asked for an explainable graph recommendation workshop example.
-The existing `graph/recommendation` module already had the seed graph, blocking
-and suspend recommendation services, TinkerGraph smoke tests, and optional
-Neo4j/Memgraph integration tests.
+Issue #331은 explainable graph recommendation workshop example을 요청했다. 기존
+`graph/recommendation` module은 이미 seed graph, blocking/suspend recommendation service,
+TinkerGraph smoke test, optional Neo4j/Memgraph integration test를 갖고 있었다.
 
-## Decision
+## 결정
 
-Extend the existing module instead of adding a new one. The new `explain*`
-APIs reuse the current ranking contracts and add payloads for:
+새 module을 추가하지 않고 기존 module을 확장한다. 새로운 `explain*` API는 현재 ranking
+contract를 재사용하고 다음 payload를 추가한다.
 
 - evidence paths that created the score
 - candidate exclusions such as already purchased, already followed, and self
 - blocking/suspend API parity
 
-This keeps TinkerGraph as the default no-Docker path while allowing the same
-abstract tests to run against Neo4j and Memgraph.
+이렇게 하면 TinkerGraph를 default no-Docker path로 유지하면서도 같은 abstract test를 Neo4j와
+Memgraph에 대해 실행할 수 있다.
 
-## Outcome
+## 결과
 
 `RecommendationService` and `RecommendationSuspendService` now expose:
 
 - `explainProductRecommendations`
 - `explainFollowRecommendations`
 
-The README locale set documents the evidence payload with small tables so
-learners can understand why a recommendation was made without reading the whole
-graph.
+README locale set은 작은 table로 evidence payload를 문서화해 learner가 전체 graph를 읽지
+않고도 추천 이유를 이해할 수 있게 한다.
 
-## Verification
+## 검증
 
 - `./gradlew :graph-recommendation:compileTestKotlin`
 - `./gradlew :graph-recommendation:cleanTest :graph-recommendation:test --no-build-cache`
@@ -38,8 +36,8 @@ graph.
 - `./gradlew :graph-recommendation:integrationTest --no-build-cache`
   - 148 tests, 0 failures, 0 skipped
 
-## Future Guard
+## 향후 guard
 
-When recommendation examples add explanation payloads, test the plain ranking
-API and the explainable API together. Otherwise the learner-facing explanation
-can drift from the ranking code.
+recommendation example에 explanation payload를 추가하면 plain ranking API와 explainable
+API를 함께 테스트한다. 그렇지 않으면 learner-facing explanation이 ranking code에서 drift될
+수 있다.

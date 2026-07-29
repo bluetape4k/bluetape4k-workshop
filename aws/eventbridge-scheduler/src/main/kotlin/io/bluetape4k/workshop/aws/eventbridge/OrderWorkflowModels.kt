@@ -4,7 +4,7 @@ import java.io.Serializable
 import java.time.Instant
 
 /**
- * Workflow types that the workshop publishes as EventBridge detail fields.
+ * 워크숍이 EventBridge detail 필드로 발행하는 처리 흐름 유형입니다.
  */
 enum class OrderWorkflow {
     PAYMENT_REMINDER,
@@ -12,7 +12,7 @@ enum class OrderWorkflow {
 }
 
 /**
- * Boundary state returned from the local EventBridge and Scheduler adapters.
+ * 로컬 EventBridge와 Scheduler 어댑터가 반환하는 경계 상태입니다.
  */
 enum class BoundaryState {
     PUBLISHED,
@@ -21,10 +21,10 @@ enum class BoundaryState {
 }
 
 /**
- * Command for starting an order workflow through the EventBridge Scheduler example.
+ * EventBridge Scheduler 예제로 주문 처리 흐름을 시작하는 명령입니다.
  *
- * The idempotency key is reused as the schedule name, and the correlation id is
- * copied to both the EventBridge trace header and the Scheduler request.
+ * 멱등성 키는 스케줄 이름으로 재사용하고, correlation id는
+ * EventBridge 추적 헤더와 Scheduler 요청에 모두 복사합니다.
  */
 data class OrderWorkflowRequest(
     val orderId: String,
@@ -42,7 +42,7 @@ data class OrderWorkflowRequest(
 }
 
 /**
- * Status object for a boundary call.
+ * 경계 호출의 상태 객체입니다.
  */
 data class BoundaryStatus(
     val state: BoundaryState,
@@ -53,19 +53,19 @@ data class BoundaryStatus(
         private const val serialVersionUID: Long = -5558132079675700722L
 
         /**
-         * Builds a successful boundary status.
+         * 성공한 경계 상태를 만듭니다.
          */
         fun published(message: String = "published"): BoundaryStatus =
             BoundaryStatus(BoundaryState.PUBLISHED, message)
 
         /**
-         * Builds a failed boundary status from an exception message.
+         * 예외 메시지로 실패한 경계 상태를 만듭니다.
          */
         fun failed(error: Throwable): BoundaryStatus =
             BoundaryStatus(BoundaryState.FAILED, error.message ?: error::class.java.simpleName)
 
         /**
-         * Builds a skipped boundary status when a previous boundary failed.
+         * 이전 경계가 실패했을 때 건너뛴 경계 상태를 만듭니다.
          */
         fun skipped(message: String): BoundaryStatus =
             BoundaryStatus(BoundaryState.SKIPPED, message)
@@ -73,7 +73,7 @@ data class BoundaryStatus(
 }
 
 /**
- * Local representation of the request that would be sent to EventBridge Scheduler.
+ * EventBridge Scheduler로 보낼 요청의 로컬 표현입니다.
  */
 data class SchedulerWorkflowRequest(
     val name: String,
@@ -93,7 +93,7 @@ data class SchedulerWorkflowRequest(
 }
 
 /**
- * Result returned to learners after the example attempts both boundaries.
+ * 예제가 두 경계를 모두 시도한 뒤 학습자에게 반환하는 결과입니다.
  */
 data class OrderWorkflowReport(
     val eventBridge: BoundaryStatus,

@@ -8,9 +8,9 @@ import io.ktor.server.netty.Netty
 private object MainLog : KLogging()
 
 /**
- * Entry point for the `ktor-rest-coroutines` workshop application.
+ * `ktor-rest-coroutines` workshop application 의 entry point 입니다.
  *
- * Starts a Netty-backed Ktor server on port 8080.
+ * port 8080 에서 Netty 기반 Ktor server 를 시작합니다.
  *
  * ```
  * ./gradlew :ktor-rest-coroutines:run

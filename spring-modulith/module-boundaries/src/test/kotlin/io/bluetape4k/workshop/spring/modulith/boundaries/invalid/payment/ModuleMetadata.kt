@@ -6,6 +6,6 @@ import org.springframework.modulith.PackageInfo
 @ApplicationModule(allowedDependencies = ["ordering :: events"])
 @PackageInfo
 /**
- * Test-only metadata for the invalid payment module fixture.
+ * invalid payment module fixture 를 위한 test-only metadata 입니다.
  */
 class ModuleMetadata

@@ -1,60 +1,50 @@
 package io.bluetape4k.workshop.cache.benchmark.service
 
-import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.workshop.cache.benchmark.service.ProductMapPersistenceContract.qualifiedCacheName
 import io.bluetape4k.workshop.cache.benchmark.domain.Product
-import io.bluetape4k.workshop.cache.benchmark.domain.ProductRepository
-import org.springframework.data.redis.core.RedisTemplate
+import org.redisson.api.RMap
+import org.redisson.api.RedissonClient
+import org.redisson.api.options.MapOptions
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.Duration
 
 /**
- * Profile 5 — Read-Through Cache.
+ * Profile 5 — Read-Through Cache 입니다.
  *
- * Read strategy: Redis-backed cache with explicit miss handling.
+ * Read strategy 는 database miss 를 [ProductMapLoader] 가 소유하는 Redisson map 입니다.
  *
- * - On cache hit: return cached value (no DB access).
- * - On cache miss: load from DB and populate cache.
- *
- * Write strategy: cache-aside / application-managed.
- * Writes are persisted in the repository first, then reflected in Redis so this
- * profile is intentionally not a write-through strategy.
+ * - cache hit: cached value 를 반환합니다(DB 접근 없음).
+ * - cache miss: Redisson 이 map loader 를 호출하고 map 을 채웁니다.
+ * - 이 profile 은 read-through ownership 만 보여주므로 write 는 의도적으로 지원하지 않습니다.
+ *   write 에는 write-through 또는 write-behind 를 사용합니다.
  */
 @Service
 class ReadThroughService(
-    private val productRepository: ProductRepository,
-    private val redisTemplate: RedisTemplate<String, Product>,
+    redissonClient: RedissonClient,
+    productMapLoader: ProductMapLoader,
+    @Value("\${cache.benchmark.namespace:cache-benchmark}") namespace: String,
 ) : ProductCacheService {
-    companion object : KLoggingChannel() {
-        const val KEY_PREFIX = "products:read-through:"
-        val TTL: Duration = Duration.ofSeconds(60)
+    companion object {
+        const val CACHE_NAME = "products:read-through"
     }
 
-    private fun cacheKey(id: Long) = "$KEY_PREFIX$id"
+    private val products: RMap<Long, Product> =
+        redissonClient.getMap(
+            MapOptions.name<Long, Product>(qualifiedCacheName(namespace, CACHE_NAME))
+                .loader(productMapLoader)
+        )
 
-    override fun findById(id: Long): Product? {
-        val key = cacheKey(id)
-        // 1. Read from cache
-        val cached = redisTemplate.opsForValue().get(key)
-        if (cached != null) return cached
-
-        // 2. Cache miss: read through to DB
-        return productRepository.findById(id).orElse(null)?.also { product ->
-            redisTemplate.opsForValue().set(key, product, TTL)
-        }
-    }
+    override fun findById(id: Long): Product? = products[id]
 
     override fun save(product: Product): Product {
-        val saved = productRepository.save(product)
-        redisTemplate.opsForValue().set(cacheKey(saved.id), saved, TTL)
-        return saved
+        throw UnsupportedOperationException("Read-through profile supports reads only; writes need a writer-backed profile.")
     }
 
     override fun evict(id: Long) {
-        redisTemplate.delete(cacheKey(id))
+        products.fastRemove(id)
     }
 
     override fun clearAll() {
-        val keys = redisTemplate.keys("$KEY_PREFIX*")
-        if (!keys.isNullOrEmpty()) redisTemplate.delete(keys)
+        products.clear()
     }
 }

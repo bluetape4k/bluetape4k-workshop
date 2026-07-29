@@ -1,57 +1,50 @@
 # Issue #329 Code Review
 
-**Date**: 2026-07-02
-**Scope**: `leader/tenant-scheduler` plus README, diagram, smoke, and Examples workflow registration.
-**Review stance**: 7-tier review after implementation, diagram repair, and validation.
+**날짜**: 2026-07-02
+**범위**: `leader/tenant-scheduler`와 README, diagram, smoke, Examples workflow 등록.
+**리뷰 관점**: implementation, diagram repair, validation 이후의 7-tier review.
 
-## Findings
+## 발견사항
 
-P0 findings: 0
-P1 findings: 0
-P2 findings: 0
-P3 findings: 0
+P0 발견사항: 0
+P1 발견사항: 0
+P2 발견사항: 0
+P3 발견사항: 0
 
-Resolved review findings:
+해결된 review 발견사항:
 
-- P1 untracked implementation/assets: addressed by staging and committing the
-  new module, diagrams, docs, workflow, and smoke changes before PR creation.
-- P2 privacy validation command scanned required negative test fixtures: fixed
-  the spec command so it scans README/main/resources/runtime artifacts while
-  excluding `src/test/kotlin` negative fixtures.
-- P2 stale handoff isolation lacked a combined scenario: added
-  `stale handoff does not disturb unrelated tenant lease`.
+- P1 untracked implementation/assets: PR 생성 전에 새 module, diagram, docs, workflow, smoke change를 staging/commit하여 해결했다.
+- P2 privacy validation command가 필요한 negative test fixture까지 scan했다. README/main/resources/runtime artifact를 scan하되 `src/test/kotlin` negative fixture를 제외하도록 spec command를 수정했다.
+- P2 stale handoff isolation에 combined scenario가 부족했다. `stale handoff does not disturb unrelated tenant lease`를 추가했다.
 
 ## 7-Tier Review
 
-| Tier | Result | Evidence |
+| Tier | 결과 | 근거 |
 |------|--------|----------|
-| Performance | PASS | The lab is a pure logical-tick reducer and does not start Redis, ZooKeeper, Kubernetes, Docker, network clients, or background schedulers. The stress test keeps reports bounded with `eventHistoryLimit`. |
-| Stability | PASS | `TenantSchedulePolicy` rejects empty/duplicate tenants and invalid numeric bounds. `TenantScheduleTick` rejects duplicate candidates, due tenants, action failures, and seed leases. `TenantSchedulerLab` also rejects seed leases whose lock names do not match the policy job. |
-| Security/privacy | PASS | Tenant, job, and node aliases are canonicalized and reject whitespace, control characters, email-like values, and account-id-shaped identifiers without echoing raw unsafe input. Metric tags degrade to `tenant=bounded` when cardinality is unsafe. |
-| Operator | PASS | README states that the module is infrastructure-free and production systems must replace the reducer with `TenantScopedLeaderElectors` and a selected backend. Smoke validation and Examples workflow include the module. |
-| Developer/API | PASS | Public value types use named wrappers and `Serializable`, avoid same-type raw parameter APIs in the scheduler contract, and use bluetape4k validation helpers for common numeric/string validation. Tests use JUnit 5 plus bluetape4k assertions. |
-| User/learner | PASS | README and README.ko include language switches, architecture and sequence diagrams, an executable snippet, scenario table, test map, run commands, and production boundaries. |
-| Current-session integration | PASS | Spec, plan, module registration, root README rows, smoke script, Examples workflow, diagrams, and review evidence are consistent with issue #329 and milestone 1.3.1 scope. |
+| Performance | PASS | lab은 순수 logical-tick reducer이며 Redis, ZooKeeper, Kubernetes, Docker, network client, background scheduler를 시작하지 않는다. stress test는 `eventHistoryLimit`로 report를 bounded하게 유지한다. |
+| Stability | PASS | `TenantSchedulePolicy`는 empty/duplicate tenant와 invalid numeric bound를 거부한다. `TenantScheduleTick`은 duplicate candidate, due tenant, action failure, seed lease를 거부한다. `TenantSchedulerLab`도 lock name이 policy job과 맞지 않는 seed lease를 거부한다. |
+| Security/privacy | PASS | Tenant, job, node alias는 canonicalize되며 whitespace, control character, email-like value, account-id-shaped identifier를 raw unsafe input echo 없이 거부한다. Metric tag는 cardinality가 안전하지 않을 때 `tenant=bounded`로 degrade된다. |
+| Operator | PASS | README는 module이 infrastructure-free이며 production system은 reducer를 `TenantScopedLeaderElectors`와 선택된 backend로 대체해야 한다고 명시한다. Smoke validation과 Examples workflow는 module을 포함한다. |
+| Developer/API | PASS | Public value type은 named wrapper와 `Serializable`을 사용하고, scheduler contract에서 same-type raw parameter API를 피하며, 공통 numeric/string validation에 bluetape4k validation helper를 사용한다. 테스트는 JUnit 5와 bluetape4k assertion을 사용한다. |
+| User/learner | PASS | README와 README.ko는 language switch, architecture/sequence diagram, executable snippet, scenario table, test map, run command, production boundary를 포함한다. |
+| Current-session integration | PASS | Spec, plan, module registration, root README row, smoke script, Examples workflow, diagram, review evidence가 issue #329 및 milestone 1.3.1 scope와 일치한다. |
 
-## Verification Evidence
+## 검증 근거
 
-- RED identifier/planner/scheduler checks failed before production classes were added.
-- GREEN unit slices passed for identifier validation, lock-name planning, metric-tag policy, scheduler scenarios, and README snippet execution.
-- Module test: `./gradlew --no-daemon :leader-tenant-scheduler:test --no-build-cache --rerun-tasks --console=plain` passed with 19 tests.
-- Compile: `./gradlew --no-daemon :leader-tenant-scheduler:compileKotlin :leader-tenant-scheduler:compileTestKotlin --warning-mode all --console=plain` passed. The visible warnings are existing root Gradle Kotlin DSL deprecations, not touched module source warnings.
-- Projects: `./gradlew --no-daemon projects --console=plain` passed and listed `:leader-tenant-scheduler`.
-- Smoke: `./scripts/smoke-validate.sh all-smoke` passed with `BUILD SUCCESSFUL` and 288 actionable tasks.
-- Stale check: `./scripts/smoke-validate.sh stale-check` reported 99/99 modules, no stale refs, and no broken README image links.
-- Diagram QA: `node scripts/validate-readme-diagram-qa.mjs docs/images/readme-diagrams/leader-tenant-scheduler-readme-architecture-01.svg docs/images/readme-diagrams/leader-tenant-scheduler-readme-sequence-01.svg` passed with `targets=2`, `weak_reference_rows=0`, architecture `q_bends=12`, sequence `markers_checked=8`, `labels=8`, `numbers=8`, `alt_fill_failures=0`, and `sequence style reference audit: PASS`.
-- Sequence label repair: a rendered-PNG eye review initially failed label/line spacing. The SVG now has 32px gap from every label pill bottom to its own call line for labels 1-8, and a follow-up independent vision review returned PASS.
-- Eye inspection: both rendered PNGs were opened full-size after the final coordinate change. Architecture has no broken icons, text overlap, connector intrusion, or missing legend. Sequence has separated labels, matching arrowhead colors, transparent alt body, and readable activation/lifeline structure.
-- Workflow: `actionlint .github/workflows/Examples.yml .github/workflows/nightly.yml .github/workflows/ci.yml` passed.
-- Whitespace: `git diff --check` passed.
-- Code-pattern scan: no production `runBlocking`, `runCatching`, `GlobalScope`, broad coroutine cancellation traps, `synchronized`, or direct Testcontainers usage exists in the new module.
+- RED identifier/planner/scheduler check는 production class 추가 전 실패했다.
+- GREEN unit slice는 identifier validation, lock-name planning, metric-tag policy, scheduler scenario, README snippet execution에 대해 통과했다.
+- Module test: `./gradlew --no-daemon :leader-tenant-scheduler:test --no-build-cache --rerun-tasks --console=plain`은 19 tests로 통과했다.
+- Compile: `./gradlew --no-daemon :leader-tenant-scheduler:compileKotlin :leader-tenant-scheduler:compileTestKotlin --warning-mode all --console=plain` 통과. 표시된 warning은 기존 root Gradle Kotlin DSL deprecation이며 touched module source warning이 아니다.
+- Projects: `./gradlew --no-daemon projects --console=plain`이 통과했고 `:leader-tenant-scheduler`를 나열했다.
+- Smoke: `./scripts/smoke-validate.sh all-smoke`는 `BUILD SUCCESSFUL` 및 288 actionable tasks로 통과했다.
+- Stale check: `./scripts/smoke-validate.sh stale-check`는 99/99 modules, stale ref 없음, broken README image link 없음을 보고했다.
+- Diagram QA: `node scripts/validate-readme-diagram-qa.mjs docs/images/readme-diagrams/leader-tenant-scheduler-readme-architecture-01.svg docs/images/readme-diagrams/leader-tenant-scheduler-readme-sequence-01.svg`는 `targets=2`, `weak_reference_rows=0`, architecture `q_bends=12`, sequence `markers_checked=8`, `labels=8`, `numbers=8`, `alt_fill_failures=0`, `sequence style reference audit: PASS`로 통과했다.
+- Sequence label repair: rendered-PNG eye review는 처음에 label/line spacing 실패를 보고했다. SVG는 이제 labels 1-8 각각의 label pill bottom과 해당 call line 사이에 32px gap을 갖고, follow-up independent vision review가 PASS를 반환했다.
+- Eye inspection: 최종 coordinate 변경 후 두 rendered PNG를 full-size로 열었다. Architecture에는 broken icon, text overlap, connector intrusion, missing legend가 없다. Sequence는 label separation, matching arrowhead color, transparent alt body, readable activation/lifeline structure를 갖는다.
+- Workflow: `actionlint .github/workflows/Examples.yml .github/workflows/nightly.yml .github/workflows/ci.yml` 통과.
+- Whitespace: `git diff --check` 통과.
+- Code-pattern scan: 새 module의 production code에는 `runBlocking`, `runCatching`, `GlobalScope`, broad coroutine cancellation trap, `synchronized`, direct Testcontainers usage가 없다.
 
-## Residual Risk
+## 잔여 위험
 
-The module models tenant-scoped scheduling semantics but does not prove a real
-distributed lock backend under contention. That is intentional for a default
-smoke-safe workshop lab; backend-heavy practice remains in Redis, ZooKeeper, and
-Kubernetes Lease modules.
+module은 tenant-scoped scheduling semantic을 모델링하지만 contention 상황의 real distributed lock backend를 증명하지 않는다. 이는 기본 smoke-safe workshop lab을 위한 의도적 범위 제한이며, backend-heavy practice는 Redis, ZooKeeper, Kubernetes Lease module에 남아 있다.

@@ -1,0 +1,54 @@
+{
+  "profileSchemaVersion": 1,
+  "profileId": "burst",
+  "mode": "local-reference",
+  "seed": "issue-522-local-burst-v1",
+  "arrivalCurve": "burst",
+  "operationCount": 512,
+  "concurrency": 128,
+  "dispatcherBacklogCapacity": 512,
+  "maxScheduleDelayMs": 1000,
+  "warmupOperationCount": 32,
+  "workloadDurationMs": 5000,
+  "epochs": [],
+  "retryShape": null,
+  "contentionShape": {
+    "authorityCount": 8,
+    "hotAuthorityCount": 2,
+    "identityCount": 256,
+    "sameIdentityRatioPermille": 500
+  },
+  "expectedSubmissionOutcomes": {
+    "minimumDispatched": 512,
+    "minimumCompleted": 512,
+    "maximumLocalRejected": 0,
+    "maximumMissedDeadline": 0
+  },
+  "failure": {
+    "kind": "none",
+    "triggerAcceptedCount": 0,
+    "steps": []
+  },
+  "operationTimeoutMs": 5000,
+  "injectionDeadlineMs": 10000,
+  "failureDetectionDeadlineMs": 10000,
+  "workloadJoinDeadlineMs": 30000,
+  "recoveryDeadlineMs": 30000,
+  "cleanupActionBudgetsMs": {
+    "application": 5000,
+    "clients": 5000,
+    "toxiproxy": 4000,
+    "redis": 4000,
+    "postgresql": 7000,
+    "network": 2000
+  },
+  "reportFinalizeReserveMs": 4000,
+  "cleanupReserveMs": 35000,
+  "profileDeadlineMs": 180000,
+  "expectedInvariants": {
+    "job": ["TENANT_FIFO", "ONE_ACTIVE_JOB", "QUEUE_VERSION_CONVERGES"],
+    "ticket": ["ADMISSION_ORDER", "INVENTORY_BOUND", "IDENTITY_GUARD"]
+  },
+  "observationFields": ["throughputOpsPerSecond", "latencyP50Nanos", "latencyP95Nanos", "latencyP99Nanos"],
+  "knownLimitations": ["Local observations are environment-specific and are not production capacity claims."]
+}

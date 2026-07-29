@@ -1,0 +1,58 @@
+{
+  "profileSchemaVersion": 1,
+  "profileId": "duplicate-storm",
+  "mode": "local-reference",
+  "seed": "issue-522-local-duplicate-storm-v1",
+  "arrivalCurve": "retry-storm",
+  "operationCount": 600,
+  "concurrency": 128,
+  "dispatcherBacklogCapacity": 600,
+  "maxScheduleDelayMs": 1000,
+  "warmupOperationCount": 32,
+  "workloadDurationMs": 5000,
+  "epochs": [],
+  "retryShape": {
+    "identityCount": 100,
+    "attemptsPerIdentity": 6,
+    "epochDurationMs": 5000
+  },
+  "contentionShape": {
+    "authorityCount": 8,
+    "hotAuthorityCount": 2,
+    "identityCount": 100,
+    "sameIdentityRatioPermille": 1000
+  },
+  "expectedSubmissionOutcomes": {
+    "minimumDispatched": 600,
+    "minimumCompleted": 600,
+    "maximumLocalRejected": 0,
+    "maximumMissedDeadline": 0
+  },
+  "failure": {
+    "kind": "duplicate-submission",
+    "triggerAcceptedCount": 100,
+    "steps": ["REPLAY_STABLE_IDENTITY"]
+  },
+  "operationTimeoutMs": 5000,
+  "injectionDeadlineMs": 10000,
+  "failureDetectionDeadlineMs": 10000,
+  "workloadJoinDeadlineMs": 30000,
+  "recoveryDeadlineMs": 30000,
+  "cleanupActionBudgetsMs": {
+    "application": 5000,
+    "clients": 5000,
+    "toxiproxy": 4000,
+    "redis": 4000,
+    "postgresql": 7000,
+    "network": 2000
+  },
+  "reportFinalizeReserveMs": 4000,
+  "cleanupReserveMs": 35000,
+  "profileDeadlineMs": 180000,
+  "expectedInvariants": {
+    "job": ["ONE_JOB_PER_IDEMPOTENCY_KEY", "ONE_TERMINAL_HISTORY"],
+    "ticket": ["ONE_ATTEMPT_PER_REQUEST", "ONE_ORDER_AND_TICKET"]
+  },
+  "observationFields": ["throughputOpsPerSecond", "latencyP50Nanos", "latencyP95Nanos", "latencyP99Nanos"],
+  "knownLimitations": ["Local observations are environment-specific and are not production capacity claims."]
+}

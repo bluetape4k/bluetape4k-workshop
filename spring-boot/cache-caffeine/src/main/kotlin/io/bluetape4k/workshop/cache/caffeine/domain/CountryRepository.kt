@@ -9,10 +9,10 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Component
 
 /**
- * Simulates a slow country lookup backed by Spring Cache and Caffeine.
+ * Spring Cache 와 Caffeine 으로 backing 되는 느린 country lookup 을 simulate 합니다.
  *
- * Blank country codes are rejected with bluetape4k validation helpers before
- * cache loading or eviction work proceeds.
+ * 빈 country code 는 cache loading 또는 eviction 작업을 진행하기 전에
+ * bluetape4k validation helper 로 거부합니다.
  */
 @Component
 @CacheConfig(cacheNames = ["cache:contries"])
@@ -48,12 +48,12 @@ class CountryRepository {
     val countrySize: Int get() = SAMPLE_COUNTRY_CODES.size
 
     /**
-     * Finds a country by ISO-like [code].
+     * ISO 형식에 가까운 [code] 로 country 를 찾습니다.
      *
-     * The first valid lookup intentionally waits for 500 ms to demonstrate
-     * cache fill behavior; subsequent lookups are served by Spring Cache.
+     * 첫 valid lookup 은 cache fill 동작을 보여주기 위해 의도적으로 500 ms 대기합니다.
+     * 후속 lookup 은 Spring Cache 로 제공합니다.
      *
-     * @throws IllegalArgumentException when [code] is blank.
+     * @throws IllegalArgumentException [code] 가 비어 있을 때 발생합니다.
      */
     @Cacheable(key = "'country:' + #code")
     fun findByCode(code: String): Country {
@@ -64,9 +64,9 @@ class CountryRepository {
     }
 
     /**
-     * Evicts the cached country entry for [code].
+     * [code] 에 대한 cached country entry 를 evict 합니다.
      *
-     * @throws IllegalArgumentException when [code] is blank.
+     * @throws IllegalArgumentException [code] 가 비어 있을 때 발생합니다.
      */
     @CacheEvict(key = "'country:' + #code")
     fun evictCache(code: String) {

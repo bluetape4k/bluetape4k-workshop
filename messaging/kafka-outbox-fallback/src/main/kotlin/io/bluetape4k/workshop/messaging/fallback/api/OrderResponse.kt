@@ -6,7 +6,7 @@ import java.io.Serializable
 import java.time.LocalDateTime
 
 /**
- * REST response for an order and its caller-facing publication outcome.
+ * order 와 caller-facing publication outcome 을 담는 REST response 입니다.
  */
 data class OrderResponse(
     val id: Long,

@@ -4,17 +4,17 @@ import io.bluetape4k.graph.schema.EdgeLabel
 import io.bluetape4k.graph.schema.VertexLabel
 
 // ────────────────────────────────────────────────────────────────────────────
-// Vertex Labels
+// 정점 label
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
- * Vertex label for a person node in the social network.
+ * social network의 Person node를 나타내는 정점 label입니다.
  *
- * ## Properties
- * - `personId` — stable domain key (opaque string, e.g. username or UUID)
- * - `name` — display name
- * - `title` — professional title (optional)
- * - `location` — city or region (optional)
+ * ## 속성
+ * - `personId` - 안정적인 도메인 키입니다. username이나 UUID처럼 내부 구조를 드러내지 않는 문자열입니다.
+ * - `name` - 표시 이름입니다.
+ * - `title` - 직무 title입니다. 선택 값입니다.
+ * - `location` - 도시 또는 지역입니다. 선택 값입니다.
  */
 object PersonLabel : VertexLabel("Person") {
     val personId = string("personId")
@@ -24,13 +24,13 @@ object PersonLabel : VertexLabel("Person") {
 }
 
 /**
- * Vertex label for a company node in the social network.
+ * social network의 Company node를 나타내는 정점 label입니다.
  *
- * ## Properties
- * - `companyId` — stable domain key (opaque string)
- * - `name` — company display name
- * - `industry` — industry sector (optional)
- * - `location` — headquarters city or region (optional)
+ * ## 속성
+ * - `companyId` - 안정적인 도메인 키입니다. 내부 구조를 드러내지 않는 문자열입니다.
+ * - `name` - 회사 표시 이름입니다.
+ * - `industry` - 산업 분야입니다. 선택 값입니다.
+ * - `location` - 본사 도시 또는 지역입니다. 선택 값입니다.
  */
 object CompanyLabel : VertexLabel("Company") {
     val companyId = string("companyId")
@@ -40,19 +40,19 @@ object CompanyLabel : VertexLabel("Company") {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Edge Labels
+// 간선 label
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
- * Bidirectional acquaintance edge between two Person vertices.
+ * 두 Person 정점 사이의 양방향 acquaintance 간선입니다.
  *
- * **Important**: Stored as TWO directed edges (A→B and B→A) with identical properties.
- * Call [io.bluetape4k.workshop.graph.social.service.SocialNetworkService.connect] once per pair —
- * never call it again with arguments reversed.
+ * **중요**: 동일한 속성을 가진 두 개의 방향성 간선(A -> B, B -> A)으로 저장합니다.
+ * [io.bluetape4k.workshop.graph.social.service.SocialNetworkService.connect]는 pair마다 한 번만 호출하고,
+ * 인자를 뒤집어 다시 호출하지 않습니다.
  *
- * ## Properties
- * - `since` — ISO-8601 date when the connection was established (optional)
- * - `strength` — connection strength 1–10, stored as String (e.g. "8")
+ * ## 속성
+ * - `since` - connection이 성립된 ISO-8601 날짜입니다. 선택 값입니다.
+ * - `strength` - connection 강도입니다. 범위는 1-10이고 `"8"` 같은 문자열로 저장합니다.
  */
 object KnowsLabel : EdgeLabel("KNOWS", PersonLabel, PersonLabel) {
     val since = string("since")
@@ -60,12 +60,12 @@ object KnowsLabel : EdgeLabel("KNOWS", PersonLabel, PersonLabel) {
 }
 
 /**
- * Employment edge from a Person to a Company.
+ * Person에서 Company로 향하는 재직 간선입니다.
  *
- * ## Properties
- * - `role` — job title or role name (required, must not be blank)
- * - `startDate` — ISO-8601 employment start date (optional)
- * - `isCurrent` — "true" or "false" indicating active employment (stored as String)
+ * ## 속성
+ * - `role` - 직무 title 또는 role 이름입니다. 필수이며 blank이면 안 됩니다.
+ * - `startDate` - ISO-8601 재직 시작일입니다. 선택 값입니다.
+ * - `isCurrent` - 현재 재직 여부를 나타내는 `"true"` 또는 `"false"` 문자열입니다.
  */
 object WorksAtLabel : EdgeLabel("WORKS_AT", PersonLabel, CompanyLabel) {
     val role = string("role")
@@ -74,9 +74,9 @@ object WorksAtLabel : EdgeLabel("WORKS_AT", PersonLabel, CompanyLabel) {
 }
 
 /**
- * Unidirectional follower edge from one Person to another.
+ * 한 Person에서 다른 Person으로 향하는 단방향 follower 간선입니다.
  *
- * Unlike [KnowsLabel], FOLLOWS is one-directional — only one edge is created.
- * A FOLLOWS relationship does not imply mutual acquaintance.
+ * [KnowsLabel]과 달리 `FOLLOWS`는 단방향이며 간선 하나만 만듭니다.
+ * `FOLLOWS` 관계는 상호 acquaintance를 뜻하지 않습니다.
  */
 object FollowsLabel : EdgeLabel("FOLLOWS", PersonLabel, PersonLabel)

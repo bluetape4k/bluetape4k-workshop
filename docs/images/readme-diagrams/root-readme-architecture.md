@@ -1,7 +1,7 @@
 # Root Architecture Diagram — Source
 
-This file contains the Mermaid source for the workshop root architecture diagram.
-Export to `root-readme-overview-01.svg` using the Mermaid CLI or online editor.
+이 파일은 워크숍 루트 architecture diagram의 Mermaid source를 담고 있습니다.
+Mermaid CLI 또는 online editor로 `root-readme-overview-01.svg`를 export합니다.
 
 ```mermaid
 graph TB

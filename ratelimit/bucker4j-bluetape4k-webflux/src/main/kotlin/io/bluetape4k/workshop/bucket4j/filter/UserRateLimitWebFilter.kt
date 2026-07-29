@@ -84,6 +84,6 @@ class UserRateLimitWebFilter(
     ) {
         log.warn { "Sending error response with status=$status" }
         exchange.response.statusCode = status
-        // exchange.response.headers.contentType = MediaType.APPLICATION_JSON
+        // JSON body를 보낼 때만 contentType을 명시합니다.
     }
 }

@@ -6,10 +6,10 @@ import io.bluetape4k.workshop.cache.benchmark.domain.ProductRepository
 import org.springframework.stereotype.Service
 
 /**
- * Profile 1 — No Cache (Baseline).
+ * Profile 1 — No Cache(Baseline) 입니다.
  *
- * Every [findById] call hits the database directly.
- * This is the baseline for measuring the overhead that caching eliminates.
+ * 모든 [findById] 호출이 database 에 직접 접근합니다.
+ * caching 이 제거하는 overhead 를 측정하기 위한 baseline 입니다.
  */
 @Service
 class NoCacheService(private val productRepository: ProductRepository) : ProductCacheService {
@@ -20,10 +20,10 @@ class NoCacheService(private val productRepository: ProductRepository) : Product
     override fun save(product: Product): Product = productRepository.save(product)
 
     override fun evict(id: Long) {
-        // No cache to evict — no-op
+        // evict 할 cache 가 없으므로 no-op 입니다.
     }
 
     override fun clearAll() {
-        // No cache to clear — no-op
+        // clear 할 cache 가 없으므로 no-op 입니다.
     }
 }

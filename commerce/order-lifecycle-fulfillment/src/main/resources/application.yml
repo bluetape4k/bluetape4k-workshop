@@ -1,0 +1,70 @@
+spring:
+  application:
+    name: order-lifecycle-fulfillment
+  datasource:
+    url: ${ORDER_DATABASE_URL:jdbc:postgresql://localhost:5432/order_lifecycle}
+    username: ${ORDER_DATABASE_USERNAME:orders}
+    password: ${ORDER_DATABASE_PASSWORD:orders}
+    hikari:
+      pool-name: order-lifecycle-pool
+      maximum-pool-size: ${ORDER_DB_POOL_MAX:8}
+      minimum-idle: ${ORDER_DB_POOL_MIN_IDLE:2}
+      connection-timeout: ${ORDER_DB_CONNECTION_TIMEOUT_MS:60000}
+      validation-timeout: ${ORDER_DB_VALIDATION_TIMEOUT_MS:5000}
+      idle-timeout: ${ORDER_DB_IDLE_TIMEOUT_MS:600000}
+      max-lifetime: ${ORDER_DB_MAX_LIFETIME_MS:1800000}
+      keepalive-time: ${ORDER_DB_KEEPALIVE_MS:120000}
+  transaction:
+    default-timeout: ${ORDER_TRANSACTION_TIMEOUT:60s}
+  threads:
+    virtual:
+      enabled: true
+  modulith:
+    events:
+      republish-outstanding-events-on-restart: true
+
+bluetape4k:
+  spring:
+    modulith:
+      exposed:
+        completion-mode: update
+        initialize-schema: true
+        observability:
+          enabled: true
+          include-unloadable: true
+          tags:
+            application: order-lifecycle-fulfillment
+
+order-lifecycle:
+  idempotency:
+    cleanup-batch-size: ${ORDER_IDEMPOTENCY_CLEANUP_BATCH_SIZE:250}
+    cleanup-interval: ${ORDER_IDEMPOTENCY_CLEANUP_INTERVAL:1h}
+    cleanup-initial-delay: ${ORDER_IDEMPOTENCY_CLEANUP_INITIAL_DELAY:1m}
+  sse:
+    max-connections: ${ORDER_SSE_MAX_CONNECTIONS:1000}
+    # Keep database polling below the Hikari pool boundary; virtual threads do not add DB capacity.
+    max-concurrent-polls: ${ORDER_SSE_MAX_CONCURRENT_POLLS:4}
+    timeout: ${ORDER_SSE_TIMEOUT:60s}
+    poll-interval: ${ORDER_SSE_POLL_INTERVAL:1s}
+    heartbeat-interval: ${ORDER_SSE_HEARTBEAT_INTERVAL:15s}
+
+server:
+  # This workshop has no authentication provider; stay loopback-only unless a deployment adds one.
+  address: ${ORDER_SERVER_ADDRESS:127.0.0.1}
+  max-http-request-header-size: 16KB
+  tomcat:
+    # Boot ignores threads.max while virtual threads are enabled; keep it as the platform-thread fallback.
+    threads:
+      max: ${ORDER_TOMCAT_MAX_THREADS:8000}
+    max-connections: ${ORDER_TOMCAT_MAX_CONNECTIONS:8000}
+    accept-count: ${ORDER_TOMCAT_ACCEPT_COUNT:1000}
+    connection-timeout: ${ORDER_TOMCAT_CONNECTION_TIMEOUT:60s}
+    keep-alive-timeout: ${ORDER_TOMCAT_KEEP_ALIVE_TIMEOUT:60s}
+    max-keep-alive-requests: ${ORDER_TOMCAT_MAX_KEEP_ALIVE_REQUESTS:1000}
+    max-http-form-post-size: 256KB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus

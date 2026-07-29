@@ -1,0 +1,37 @@
+:root {
+    color-scheme: light dark;
+    font-family: system-ui, sans-serif;
+}
+
+body {
+    margin: 0 auto;
+    max-width: 70rem;
+    padding: 2rem;
+}
+
+button,
+input {
+    font: inherit;
+    margin: 0.25rem;
+    padding: 0.5rem;
+}
+
+:focus-visible {
+    outline: 0.2rem solid currentColor;
+    outline-offset: 0.2rem;
+}
+
+.status-label::before {
+    content: "Status: ";
+    font-weight: 700;
+}
+
+.sr-only {
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}

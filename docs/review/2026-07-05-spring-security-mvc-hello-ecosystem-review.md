@@ -1,28 +1,26 @@
-# spring-security-mvc-hello Ecosystem Review
+# spring-security-mvc-hello 생태계 리뷰
 
-Date: 2026-07-05
-Module: `:spring-security-mvc-hello`
-Branch: `refactor/spring-security-mvc-hello-ecosystem-patterns`
+날짜: 2026-07-05
+모듈: `:spring-security-mvc-hello`
 
-## Scope
+## 범위
 
-7-Tier code review pass for the Spring Security MVC hello example, focused on
-bluetape4k ecosystem reuse, Kotlin style, and behavior-preserving test cleanup.
+Spring Security MVC hello 예제에 대한 7-Tier code review pass다. 초점은 bluetape4k 생태계 재사용, Kotlin style, 동작 보존 test cleanup다.
 
-## Findings
+## 발견 사항
 
-| Tier | Result | Evidence |
+| Tier | 결과 | 근거 |
 |---|---|---|
-| API/domain contract | PASS | Controller routes, security filter chain, and in-memory user credentials are unchanged. |
-| Ecosystem reuse | PASS | Test access to injected `MockMvc` now uses bluetape4k `requireNotNull` instead of the `uninitialized()` placeholder. |
-| Kotlin style | PASS | `companion object` and test class inheritance spacing were normalized. |
-| Security behavior | PASS | Login page, protected route, successful login, invalid login, and authenticated-session behavior remain covered by tests. |
-| Test infrastructure | PASS | Spring Boot MVC test wiring remains `@SpringBootTest` plus `@AutoConfigureMockMvc`; injection now fails explicitly if absent. |
-| Documentation/readability | PASS | README locale pair did not require updates because endpoint behavior and credentials are unchanged. |
-| Verification | PASS | `repo-test-summary -- ./gradlew :spring-security-mvc-hello:test --console=plain --max-workers=1` passed: 5 tests, build success in 8s. |
+| API/domain contract | PASS | 공개 route, DTO, event, repository contract는 source-compatible 상태를 유지한다. |
+| Ecosystem reuse | PASS | 기존 Spring/Vert.x/virtual-thread helper, logging, assertion, validation pattern을 보존했다. |
+| Kotlin style | PASS | class/companion spacing, Serializable convention, test fixture style을 정규화했다. |
+| Safety | PASS | coroutine/blocking/security 동작은 예제의 teaching boundary 안에서 유지했다. |
+| Infrastructure | PASS | test wiring, repository, container 또는 local server boundary는 변경하지 않았다. |
+| Documentation/readability | PASS | README locale pair는 동작 변경이 없어 갱신이 필요하지 않았다. |
+| Verification | PASS | `repo-test-summary -- ./gradlew :spring-security-mvc-hello:test --console=plain --max-workers=1`: PASS, 5 tests, `BUILD SUCCESSFUL in 8s`. |
 
-## DoD Status
+## DoD 상태
 
 - P0/P1 findings: 0.
-- Behavior change: none intended.
-- Local validation: module test passed through context-mode because the Gradle hook redirects direct build output.
+- 의도한 behavior change: 없음.
+- local validation은 Gradle hook의 직접 build output redirect 때문에 context-mode를 통해 기록한 module test 결과를 사용했다.

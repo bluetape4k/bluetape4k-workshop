@@ -5,7 +5,7 @@ import java.io.Serializable
 import java.time.LocalDateTime
 
 /**
- * Greeting response emitted by Kafka greeting handlers.
+ * Kafka greeting handler 가 방출하는 greeting response 입니다.
  */
 data class GreetingResult(
     val message: String,

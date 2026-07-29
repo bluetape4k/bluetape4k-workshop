@@ -57,7 +57,7 @@ class DatabaseInitializer : ApplicationRunner {
     }
 
     private fun seedAuthors() {
-        // AuthorTable extends AuditableLongIdTable — use insertAndGetId to get EntityID<Long>
+        // AuthorTable은 AuditableLongIdTable을 상속하므로 insertAndGetId로 EntityID<Long>을 얻는다.
         val authorId1 = AuthorTable.insertAndGetId {
             it[firstName] = "Joshua"
             it[lastName] = "Bloch"
@@ -76,8 +76,8 @@ class DatabaseInitializer : ApplicationRunner {
             it[email] = "venkat@example.com"
         }
 
-        // BookTable.authorId is reference("author_id", AuthorTable): Column<EntityID<Long>>
-        // Pass EntityID<Long> directly — no manual EntityID wrapping needed here
+        // BookTable.authorId는 reference("author_id", AuthorTable): Column<EntityID<Long>> 이다.
+        // 여기서는 EntityID<Long>을 직접 넘기며 수동 EntityID wrapping은 필요하지 않다.
         listOf(
             Triple("Effective Java", "2018-01-01", authorId1),
             Triple("Programming in Scala", "2021-01-01", authorId2),

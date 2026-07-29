@@ -14,12 +14,12 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.stereotype.Repository
 
 /**
- * Repository for [ImageProcessingEventTable] rows.
+ * [ImageProcessingEventTable] 행 저장소입니다.
  *
- * ## Behavior / Contract
- * - All methods must be called inside an Exposed `transaction {}` or equivalent.
- * - [ImageProcessingEventTable.createdAt] is set automatically via the DB default (`CURRENT_TIMESTAMP`).
- * - Exceptions from [appendEvent] propagate to the caller — no suppression inside this method.
+ * ## 동작 / 계약
+ * - 모든 메서드는 Exposed `transaction {}` 또는 동등한 경계 안에서 호출해야 합니다.
+ * - [ImageProcessingEventTable.createdAt]은 DB 기본값(`CURRENT_TIMESTAMP`)으로 자동 설정됩니다.
+ * - [appendEvent]의 예외는 호출자에게 전파되며 이 메서드 안에서는 억제하지 않습니다.
  */
 @Repository
 class ImageProcessingEventRepository : LongJdbcRepository<ImageProcessingEventDTO> {
@@ -31,16 +31,16 @@ class ImageProcessingEventRepository : LongJdbcRepository<ImageProcessingEventDT
     override fun ResultRow.toEntity(): ImageProcessingEventDTO = toImageProcessingEventDTO()
 
     /**
-     * Appends a single processing event row for the given [jobId].
+     * 지정한 [jobId]에 처리 이벤트 행 하나를 추가합니다.
      *
-     * [ImageProcessingEventTable.createdAt] is populated by the DB default.
-     * Exceptions propagate to the caller — no suppression is applied.
+     * [ImageProcessingEventTable.createdAt]은 DB 기본값으로 채웁니다.
+     * 예외는 호출자에게 전파되며 억제하지 않습니다.
      *
-     * @param jobId the parent job's primary key
-     * @param step the pipeline step this event describes
-     * @param status the outcome of the step
-     * @param message optional human-readable description
-     * @param payload optional structured diagnostic data; null when empty
+     * @param jobId 부모 job의 기본 키입니다.
+     * @param step 이 이벤트가 설명하는 파이프라인 단계입니다.
+     * @param status 해당 단계의 결과입니다.
+     * @param message 선택적인 사람이 읽을 수 있는 설명입니다.
+     * @param payload 선택적인 구조화 진단 데이터입니다. 비어 있으면 null입니다.
      */
     fun appendEvent(
         jobId: Long,
@@ -59,7 +59,7 @@ class ImageProcessingEventRepository : LongJdbcRepository<ImageProcessingEventDT
     }
 
     /**
-     * Returns all events for the job identified by [jobId], ordered by [ImageProcessingEventTable.createdAt] ASC.
+     * [jobId]로 식별한 job의 모든 이벤트를 [ImageProcessingEventTable.createdAt] ASC 순서로 반환합니다.
      */
     fun findByJobId(jobId: Long): List<ImageProcessingEventDTO> =
         ImageProcessingEventTable.selectAll()

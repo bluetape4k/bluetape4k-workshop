@@ -22,22 +22,22 @@ dependencies {
     implementation(libs.bluetape4k.testcontainers)
 
     // spring-data-redis에서는 기본적으로 lettuce를 사용합니다.
-    // Redisson
+    // Redisson 의존성
     // implementation(libs.redisson.lib)
     // https://github.com/redisson/redisson/blob/master/redisson-spring-data/README.md
     // spring-data-redis 2.7.x 를 사용하므로, redisson도 같은 버전을 참조해야 한다
     // implementation(libs.redisson.spring.data.27)
 
-    // Codecs
+    // 코덱
     implementation(libs.kryo)
     implementation(libs.fory.kotlin)
 
-    // Compressor
+    // 압축기
     implementation(libs.lz4.java)
     implementation(libs.snappy.java)
     implementation(libs.zstd.jni)
 
-    // Coroutines
+    // 코루틴
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactive)
@@ -58,7 +58,7 @@ dependencies {
     implementation(libs.jackson3.databind)
     implementation(libs.jackson3.module.kotlin)
 
-    // Netty
+    // Netty 의존성
     implementation(platform(libs.netty.bom))
     implementation(libs.netty.all)
     implementation(libs.netty.transport.native.epoll)

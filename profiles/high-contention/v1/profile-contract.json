@@ -1,0 +1,66 @@
+{
+  "contractSchemaVersion": 1,
+  "profileSchemaVersion": 1,
+  "allowedFields": [
+    "profileSchemaVersion",
+    "profileId",
+    "mode",
+    "seed",
+    "arrivalCurve",
+    "operationCount",
+    "concurrency",
+    "dispatcherBacklogCapacity",
+    "maxScheduleDelayMs",
+    "warmupOperationCount",
+    "workloadDurationMs",
+    "epochs",
+    "retryShape",
+    "contentionShape",
+    "expectedSubmissionOutcomes",
+    "failure",
+    "operationTimeoutMs",
+    "injectionDeadlineMs",
+    "failureDetectionDeadlineMs",
+    "workloadJoinDeadlineMs",
+    "recoveryDeadlineMs",
+    "cleanupActionBudgetsMs",
+    "reportFinalizeReserveMs",
+    "cleanupReserveMs",
+    "profileDeadlineMs",
+    "expectedInvariants",
+    "observationFields",
+    "knownLimitations"
+  ],
+  "modes": [
+    "ci-correctness",
+    "local-reference"
+  ],
+  "arrivalCurves": [
+    "burst",
+    "step",
+    "retry-storm"
+  ],
+  "failureKinds": [
+    "none",
+    "duplicate-submission",
+    "redis-path-outage",
+    "redis-key-loss",
+    "slow-provider",
+    "worker-restart",
+    "duplicate-delivery"
+  ],
+  "limits": {
+    "ci-correctness": {
+      "maxOperationCount": 128,
+      "maxConcurrency": 32,
+      "maxWarmupOperationCount": 16,
+      "maxProfileDeadlineMs": 120000
+    },
+    "local-reference": {
+      "maxOperationCount": 5000,
+      "maxConcurrency": 512,
+      "maxWarmupOperationCount": 128,
+      "maxProfileDeadlineMs": 600000
+    }
+  }
+}

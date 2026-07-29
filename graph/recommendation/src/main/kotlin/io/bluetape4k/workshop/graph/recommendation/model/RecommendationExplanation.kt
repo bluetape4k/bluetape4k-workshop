@@ -5,27 +5,27 @@ import io.bluetape4k.graph.model.GraphVertex
 import java.io.Serializable
 
 /**
- * Reason why a candidate was excluded from the final recommendation list.
+ * 후보가 최종 추천 목록에서 제외된 이유입니다.
  */
 enum class RecommendationExclusionReason {
-    /** Product candidate was already purchased by the seed user. */
+    /** Product 후보를 seed 사용자가 이미 구매했습니다. */
     ALREADY_PURCHASED,
 
-    /** Follow candidate is already followed by the seed user. */
+    /** follow 후보를 seed 사용자가 이미 follow하고 있습니다. */
     ALREADY_FOLLOWED,
 
-    /** Follow candidate is the seed user. */
+    /** follow 후보가 seed 사용자 자신입니다. */
     SELF,
 }
 
 /**
- * A candidate exclusion emitted with recommendation explanations.
+ * 추천 설명과 함께 내보내는 후보 제외 항목입니다.
  *
- * ## Behavior / Contract
- * - [candidateId] identifies the excluded product or user vertex.
- * - [reason] explains which rule removed the candidate from the final ranking.
- * - [via] identifies the intermediary vertex when the exclusion was discovered through
- *   a path, for example `alice -> bob -> alice` for [RecommendationExclusionReason.SELF].
+ * ## 동작 / 계약
+ * - [candidateId]는 제외된 Product 또는 User 정점을 식별합니다.
+ * - [reason]은 어떤 규칙이 후보를 최종 순위에서 제거했는지 설명합니다.
+ * - [via]는 path를 통해 제외를 발견했을 때의 중간 정점을 식별합니다.
+ *   예를 들어 [RecommendationExclusionReason.SELF]에서는 `alice -> bob -> alice`의 `bob`입니다.
  */
 data class CandidateExclusion(
     val candidateId: GraphElementId,
@@ -38,10 +38,11 @@ data class CandidateExclusion(
 }
 
 /**
- * Evidence path for a product recommendation.
+ * 상품 추천의 증거 path입니다.
  *
- * The path reads as: seed user bought [sharedProduct], [coBuyer] also bought that product,
- * and [coBuyer] bought [candidateProduct], making [candidateProduct] a recommendation candidate.
+ * path의 의미는 다음과 같습니다. seed 사용자가 [sharedProduct]를 구매했고, [coBuyer]도
+ * 그 상품을 구매했으며, [coBuyer]가 [candidateProduct]도 구매했으므로
+ * [candidateProduct]가 추천 후보가 됩니다.
  */
 data class ProductEvidencePath(
     val sharedProduct: GraphVertex,
@@ -54,9 +55,9 @@ data class ProductEvidencePath(
 }
 
 /**
- * Product recommendation plus the evidence and exclusion rules used to produce it.
+ * 상품 추천과, 그 추천을 만들 때 사용한 증거 및 제외 규칙입니다.
  *
- * ## Usage
+ * ## 사용 예
  * ```kotlin
  * val explanations = service.explainProductRecommendations(alice.id)
  * explanations.first().evidencePaths.forEach { path ->
@@ -75,9 +76,10 @@ data class ExplainedProductRecommendation(
 }
 
 /**
- * Evidence path for a follow recommendation.
+ * follow 추천의 증거 path입니다.
  *
- * The path reads as: seed user follows [intermediary], and [intermediary] follows [candidate].
+ * path의 의미는 다음과 같습니다. seed 사용자가 [intermediary]를 follow하고,
+ * [intermediary]가 [candidate]를 follow합니다.
  */
 data class FollowEvidencePath(
     val intermediary: GraphVertex,
@@ -89,7 +91,7 @@ data class FollowEvidencePath(
 }
 
 /**
- * Follow recommendation plus the FOAF paths and exclusion rules used to produce it.
+ * follow 추천과, 그 추천을 만들 때 사용한 FOAF path 및 제외 규칙입니다.
  */
 data class ExplainedFollowRecommendation(
     val recommendation: FollowRecommendation,

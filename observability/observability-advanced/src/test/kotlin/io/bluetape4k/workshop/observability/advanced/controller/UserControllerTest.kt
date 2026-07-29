@@ -28,7 +28,7 @@ class UserControllerTest : AbstractAdvancedTest() {
     @Autowired
     private lateinit var cache: UserCacheRepository
 
-    // C17: @BeforeEach suspend setup must use runSuspendIO {}
+    // C17: @BeforeEach suspend setup 은 runSuspendIO {} 를 사용해야 합니다.
     @BeforeEach
     fun setup() = runSuspendIO {
         testRegistry.clear()
@@ -62,7 +62,7 @@ class UserControllerTest : AbstractAdvancedTest() {
     @Test
     fun `GET users id - cache miss instruments user db find span`() = runSuspendIO {
         val newUser = User(id = 2002L, name = "carol", email = "carol@example.com")
-        // Create user first (POST also warms cache); clear cache to force miss on GET
+        // 먼저 user 를 생성합니다. POST 는 cache 도 warm 하므로 GET 에서 miss 를 강제하기 위해 cache 를 비웁니다.
         webTestClient.post()
             .uri("/users")
             .bodyValue(newUser)
@@ -89,14 +89,14 @@ class UserControllerTest : AbstractAdvancedTest() {
     @Test
     fun `GET users id - cache hit skips user db find span`() = runSuspendIO {
         val newUser = User(id = 2003L, name = "dave", email = "dave@example.com")
-        // Create user
+        // user 를 생성합니다.
         webTestClient.post()
             .uri("/users")
             .bodyValue(newUser)
             .exchange()
             .expectStatus().isCreated
 
-        // First GET populates cache
+        // 첫 번째 GET 은 cache 를 채웁니다.
         webTestClient.get()
             .uri("/users/${newUser.id}")
             .exchange()
@@ -104,7 +104,7 @@ class UserControllerTest : AbstractAdvancedTest() {
 
         testRegistry.clear()
 
-        // Second GET — should be cache hit, no DB span
+        // 두 번째 GET 은 cache hit 이어야 하며 DB span 이 없어야 합니다.
         webTestClient.get()
             .uri("/users/${newUser.id}")
             .exchange()

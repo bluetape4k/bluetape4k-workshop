@@ -6,6 +6,6 @@ import org.springframework.modulith.PackageInfo
 @NamedInterface("events")
 @PackageInfo
 /**
- * Spring Modulith metadata for the ordering event named interface.
+ * ordering event named interface 를 위한 Spring Modulith metadata 입니다.
  */
 class ModuleMetadata

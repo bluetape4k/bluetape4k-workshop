@@ -7,12 +7,11 @@ import io.bluetape4k.workshop.leader.backendcomparison.domain.LeaderScenarioRepo
 import org.springframework.stereotype.Service
 
 /**
- * Builds deterministic scenario reports for comparing leader backend behavior.
+ * leader backend 동작을 비교하기 위한 deterministic scenario report를 만듭니다.
  *
- * This service intentionally does not start real backend clients. The real
- * Redis, ZooKeeper, and Kubernetes practice paths stay in their existing
- * workshop modules; this lab models the visible `runIfLeader` contract and the
- * backend-specific handoff trigger.
+ * 이 서비스는 의도적으로 실제 backend client를 시작하지 않습니다. 실제 Redis, ZooKeeper,
+ * Kubernetes 연습 경로는 기존 워크숍 모듈에 두고, 이 lab은 눈에 보이는 `runIfLeader`
+ * 계약과 backend별 handoff trigger만 모델링합니다.
  */
 @Service
 class LeaderFailoverLab(
@@ -20,7 +19,7 @@ class LeaderFailoverLab(
 ) {
 
     /**
-     * Runs a deterministic comparison scenario for the requested backend.
+     * 요청한 backend에 대한 deterministic comparison scenario를 실행합니다.
      */
     fun run(scenario: LeaderScenario): LeaderScenarioReport {
         val profile = catalog.findById(scenario.backendId)

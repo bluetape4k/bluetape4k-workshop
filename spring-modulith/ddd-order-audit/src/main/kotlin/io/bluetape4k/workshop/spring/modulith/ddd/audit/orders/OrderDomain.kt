@@ -12,11 +12,11 @@ import java.math.BigDecimal
 import java.time.Instant
 
 /**
- * Stable order aggregate identifier.
+ * 안정적인 order aggregate 식별자입니다.
  *
- * ## Behavior / Contract
- * - [value] must be non-blank.
- * - The identifier is used by PostgreSQL rows, Spring Modulith events, and JaVers snapshots.
+ * ## 동작 / 계약
+ * - [value] 는 비어 있지 않아야 합니다.
+ * - 이 식별자는 PostgreSQL row, Spring Modulith event, JaVers snapshot 에 사용됩니다.
  */
 data class OrderId(val value: String) : Serializable {
     init {
@@ -27,18 +27,18 @@ data class OrderId(val value: String) : Serializable {
         private const val serialVersionUID: Long = 1L
 
         /**
-         * Creates a new random order identifier for examples and tests.
+         * 예제와 테스트용 무작위 order 식별자를 새로 생성합니다.
          */
         fun newId(): OrderId = OrderId("order-${Base58.randomString(8)}")
     }
 }
 
 /**
- * Stable customer identifier.
+ * 안정적인 customer 식별자입니다.
  *
- * ## Behavior / Contract
- * - [value] must be non-blank.
- * - The workshop treats it as a synthetic identifier and never as PII.
+ * ## 동작 / 계약
+ * - [value] 는 비어 있지 않아야 합니다.
+ * - 이 workshop 은 이 값을 synthetic identifier 로만 다루며 PII 로 취급하지 않습니다.
  */
 data class CustomerId(val value: String) : Serializable {
     init {
@@ -51,11 +51,11 @@ data class CustomerId(val value: String) : Serializable {
 }
 
 /**
- * Monetary amount used by order lines.
+ * order line 에서 사용하는 금액입니다.
  *
- * ## Behavior / Contract
- * - [amount] must be zero or positive.
- * - [currency] must be non-blank.
+ * ## 동작 / 계약
+ * - [amount] 는 0 이상이어야 합니다.
+ * - [currency] 는 비어 있지 않아야 합니다.
  */
 data class Money(
     val amount: BigDecimal,
@@ -72,12 +72,12 @@ data class Money(
 }
 
 /**
- * Immutable order line.
+ * 불변 order line 입니다.
  *
- * ## Behavior / Contract
- * - [sku] must be non-blank.
- * - [quantity] must be positive.
- * - [unitPrice] must be positive for command-created order lines.
+ * ## 동작 / 계약
+ * - [sku] 는 비어 있지 않아야 합니다.
+ * - [quantity] 는 양수여야 합니다.
+ * - command 로 생성되는 order line 의 [unitPrice] 는 양수여야 합니다.
  */
 data class OrderLine(
     val sku: String,
@@ -96,7 +96,7 @@ data class OrderLine(
 }
 
 /**
- * Order lifecycle states used by the workshop aggregate.
+ * workshop aggregate 에서 사용하는 order lifecycle 상태입니다.
  */
 enum class OrderStatus {
     PLACED,
@@ -105,11 +105,11 @@ enum class OrderStatus {
 }
 
 /**
- * Command that places a new order.
+ * 새 주문을 생성하는 command 입니다.
  *
- * ## Behavior / Contract
- * - [customerId] identifies the synthetic customer.
- * - [lines] must contain at least one valid [OrderLine].
+ * ## 동작 / 계약
+ * - [customerId] 는 synthetic customer 를 식별합니다.
+ * - [lines] 는 유효한 [OrderLine] 을 하나 이상 포함해야 합니다.
  */
 data class PlaceOrderCommand(
     val customerId: CustomerId,
@@ -125,11 +125,11 @@ data class PlaceOrderCommand(
 }
 
 /**
- * Command that approves an existing order.
+ * 기존 주문을 승인하는 command 입니다.
  *
- * ## Behavior / Contract
- * - [orderId] must match the aggregate being approved.
- * - [approvedBy] is a safe synthetic actor id for audit metadata.
+ * ## 동작 / 계약
+ * - [orderId] 는 승인 대상 aggregate 와 일치해야 합니다.
+ * - [approvedBy] 는 audit metadata 에 사용하는 안전한 synthetic actor id 입니다.
  */
 data class ApproveOrderCommand(
     val orderId: OrderId,
@@ -145,7 +145,7 @@ data class ApproveOrderCommand(
 }
 
 /**
- * Minimal event contract shared by Spring Modulith and JaVers audit metadata.
+ * Spring Modulith 와 JaVers audit metadata 가 공유하는 최소 event 계약입니다.
  */
 interface DomainEvent : Serializable {
     val aggregateId: String
@@ -153,7 +153,7 @@ interface DomainEvent : Serializable {
 }
 
 /**
- * Event emitted when an order is placed.
+ * 주문이 생성될 때 발생하는 event 입니다.
  */
 data class OrderPlaced(
     override val aggregateId: String,
@@ -165,7 +165,7 @@ data class OrderPlaced(
 }
 
 /**
- * Event emitted when an order is approved.
+ * 주문이 승인될 때 발생하는 event 입니다.
  */
 data class OrderApproved(
     override val aggregateId: String,
@@ -182,12 +182,12 @@ data class OrderApproved(
 }
 
 /**
- * Immutable order aggregate audited by JaVers and persisted through JPA.
+ * JaVers 로 audit 되고 JPA 로 저장되는 불변 order aggregate 입니다.
  *
- * ## Behavior / Contract
- * - Command methods return new aggregate instances and never mutate the current one.
- * - [events] contains only the new events emitted by the command that produced this instance.
- * - Events carry identifiers and safe metadata, not full aggregate payloads.
+ * ## 동작 / 계약
+ * - command method 는 새 aggregate instance 를 반환하며 현재 instance 를 변경하지 않습니다.
+ * - [events] 는 이 instance 를 만든 command 가 새로 발생시킨 event 만 포함합니다.
+ * - event 는 전체 aggregate payload 가 아니라 식별자와 안전한 metadata 만 담습니다.
  */
 @TypeName("DddOrder")
 data class Order(
@@ -205,7 +205,7 @@ data class Order(
     }
 
     /**
-     * Approves this order and emits [OrderApproved].
+     * 이 주문을 승인하고 [OrderApproved] 를 발생시킵니다.
      */
     fun approve(command: ApproveOrderCommand): Order {
         require(command.orderId == id) { "approve command order id must match aggregate id." }
@@ -223,7 +223,7 @@ data class Order(
     }
 
     /**
-     * Clears pending domain events after the surrounding infrastructure has handled them.
+     * 주변 infrastructure 가 처리한 뒤 pending domain event 를 지웁니다.
      */
     fun withoutEvents(): Order = copy(events = emptyList())
 
@@ -231,7 +231,7 @@ data class Order(
         private const val serialVersionUID: Long = 1L
 
         /**
-         * Creates a new placed order and emits [OrderPlaced].
+         * 새 주문을 생성하고 [OrderPlaced] 를 발생시킵니다.
          */
         fun place(command: PlaceOrderCommand): Order {
             val id = OrderId.newId()
@@ -245,7 +245,7 @@ data class Order(
         }
 
         /**
-         * Restores a persisted aggregate without emitting domain events.
+         * domain event 를 발생시키지 않고 저장된 aggregate 를 복원합니다.
          */
         fun restore(
             id: OrderId,

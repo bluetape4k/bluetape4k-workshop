@@ -7,17 +7,14 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 
 /**
- * Language detection service backed by the Lingua library.
+ * Lingua library 를 기반으로 하는 language detection service 입니다.
  *
- * Wraps a shared [LanguageDetector] instance that is built once and reused across calls,
- * because model construction is expensive.
+ * model construction 비용이 크므로 한 번 만든 shared [LanguageDetector] instance 를 감싸 여러 호출에서 재사용합니다.
  *
  * ## Behavior / Contract
- * - [detectLanguage] returns `null` when the input is blank or the detector is uncertain
- *   (i.e., the best guess is [Language.UNKNOWN]).
- * - [computeConfidenceValues] returns a map sorted by confidence descending; empty on blank input.
- * - Reuse one [LanguageDetectionService] instance across all calls in an application to avoid
- *   re-loading language models on every detection.
+ * - input 이 blank 이거나 detector 가 확신하지 못하면 [detectLanguage] 는 `null` 을 반환합니다. 즉 최선의 추정값이 [Language.UNKNOWN] 인 경우입니다.
+ * - [computeConfidenceValues] 는 confidence descending 순서의 map 을 반환하며, blank input 에서는 empty map 을 반환합니다.
+ * - detection 마다 language model 을 다시 load 하지 않도록 application 안에서는 하나의 [LanguageDetectionService] instance 를 재사용합니다.
  *
  * ```kotlin
  * val service = LanguageDetectionService()
@@ -35,13 +32,12 @@ class LanguageDetectionService {
     }
 
     /**
-     * Detects the most likely language for the given [text].
+     * 주어진 [text] 에 가장 가능성이 높은 언어를 감지합니다.
      *
-     * Returns `null` when [text] is blank or when the detector cannot determine the language
-     * (i.e., the result is [Language.UNKNOWN]).
+     * [text] 가 blank 이거나 detector 가 언어를 결정할 수 없으면, 즉 결과가 [Language.UNKNOWN] 이면 `null` 을 반환합니다.
      *
-     * @param text input text to classify
-     * @return detected [Language], or `null` if undetermined
+     * @param text 분류할 입력 text 입니다.
+     * @return 감지된 [Language] 입니다. 결정할 수 없으면 `null` 입니다.
      */
     fun detectLanguage(text: String): Language? {
         if (text.isBlank()) return null
@@ -51,13 +47,12 @@ class LanguageDetectionService {
     }
 
     /**
-     * Returns a map of [Language] to confidence values for all languages that the detector
-     * considers plausible for [text], sorted by confidence descending.
+     * detector 가 [text] 에 대해 가능성이 있다고 판단한 모든 언어의 [Language] to confidence value map 을 confidence descending 순서로 반환합니다.
      *
-     * The map is empty when [text] is blank.
+     * [text] 가 blank 이면 empty map 을 반환합니다.
      *
-     * @param text input text to classify
-     * @return language-to-confidence map sorted by confidence descending
+     * @param text 분류할 입력 text 입니다.
+     * @return confidence descending 순서로 정렬된 language-to-confidence map 입니다.
      */
     fun computeConfidenceValues(text: String): Map<Language, Double> {
         if (text.isBlank()) return emptyMap()

@@ -29,6 +29,7 @@ class SuspendedFileChannelSink(
         position += byteWritten
         log.debug { "Wrote $byteWritten bytes to channel at position $position" }
 
+//        아래 cursor 기반 구현은 대안 실험 코드입니다. source 위치 이동과 partial write 처리를 확인할 때만 사용합니다.
 //        source.readUnsafe().use { cursor ->
 //            var remaining = byteCount
 //            while (remaining > 0) {
@@ -47,7 +48,7 @@ class SuspendedFileChannelSink(
     }
 
     override suspend fun flush() {
-        // Cannot alter meta data through this sink
+        // 이 sink에서는 metadata를 변경하지 않습니다.
         channel.force(false)
     }
 

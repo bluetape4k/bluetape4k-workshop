@@ -57,7 +57,7 @@ class TaskControllerTest(context: ApplicationContext) : AbstractProblemTest(cont
     }
 
     /**
-     * Get invalid task id
+     * 잘못된 task id 를 조회합니다.
      *
      * Response:
      * ```json
@@ -94,7 +94,7 @@ class TaskControllerTest(context: ApplicationContext) : AbstractProblemTest(cont
     }
 
     /**
-     * Get task non-existing id
+     * 존재하지 않는 task id 를 조회합니다.
      *
      * ```json
      * {
@@ -152,7 +152,7 @@ class TaskControllerTest(context: ApplicationContext) : AbstractProblemTest(cont
     }
 
     /**
-     * When call api which throw [AccessDeniedException]
+     * [AccessDeniedException] 을 throw 하는 API 를 호출하는 경우입니다.
      *
      * ```json
      * {

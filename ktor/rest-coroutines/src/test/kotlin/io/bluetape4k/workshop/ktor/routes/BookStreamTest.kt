@@ -28,12 +28,12 @@ import org.junit.jupiter.api.Test
 class BookStreamTest : AbstractKtorTest() {
 
     /**
-     * Verifies SSE stream emits an event after a book is POSTed.
+     * book 이 POST 된 뒤 SSE stream 이 event 를 방출하는지 검증합니다.
      *
      * ## Implementation notes
-     * - `testApplication` receiver is `ApplicationTestBuilder`, NOT a `CoroutineScope`.
-     * - `backgroundScope` is not accessible here; use `CoroutineScope(coroutineContext + SupervisorJob())`.
-     * - Subscribe first, then delay to let the subscription register on the hot SharedFlow.
+     * - `testApplication` receiver 는 `CoroutineScope` 가 아니라 `ApplicationTestBuilder` 입니다.
+     * - 여기서는 `backgroundScope` 에 접근할 수 없으므로 `CoroutineScope(coroutineContext + SupervisorJob())` 를 사용합니다.
+     * - 먼저 subscribe 한 뒤 hot SharedFlow 에 subscription 이 등록될 수 있도록 delay 합니다.
      */
     @Test
     fun `SSE stream emits event after POST`() = testApplication {
@@ -43,8 +43,8 @@ class BookStreamTest : AbstractKtorTest() {
         val sseClient = createClient { install(SSE) }
         val events = Channel<String>(Channel.BUFFERED)
 
-        // testApplication block receiver = ApplicationTestBuilder (not CoroutineScope/TestScope).
-        // Neither bare launch{} nor backgroundScope.launch{} is accessible here.
+        // testApplication block receiver 는 ApplicationTestBuilder 입니다. CoroutineScope/TestScope 가 아닙니다.
+        // 여기서는 bare launch{} 나 backgroundScope.launch{} 에 접근할 수 없습니다.
         val subscriptionScope = CoroutineScope(Dispatchers.Default + SupervisorJob())
         val subscription = subscriptionScope.launch {
             sseClient.sse("/books/stream") {
@@ -76,7 +76,7 @@ class BookStreamTest : AbstractKtorTest() {
         val repository = InMemoryBookRepository()
         application { module(repository = repository) }
 
-        // POST a book BEFORE subscribing — hot SharedFlow means late subscriber misses it
+        // subscribe 전에 book 을 POST 합니다. hot SharedFlow 이므로 늦게 구독한 subscriber 는 이 event 를 놓칩니다.
         val postResponse = client.post("/books") {
             contentType(ContentType.Application.Json)
             setBody("""{"id":"early-1","title":"Early Book","author":"Author","year":2023}""")
@@ -99,7 +99,7 @@ class BookStreamTest : AbstractKtorTest() {
 
         delay(100) // allow subscription to connect
 
-        // Late subscriber should receive nothing for the already-emitted event
+        // 늦게 구독한 subscriber 는 이미 방출된 event 를 받지 않아야 합니다.
         val received = withTimeoutOrNull(500) { events.receive() }
         received shouldBeEqualTo null
 

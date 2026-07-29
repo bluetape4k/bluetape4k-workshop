@@ -12,7 +12,7 @@ class MyEventService {
     companion object : KLogging()
 
     /**
-     * Executes a sample operation and emits [AspectEvent] through [AspectEventEmitter].
+     * 예제 작업을 실행하고 [AspectEventEmitter] 를 통해 [AspectEvent] 를 발생시킵니다.
      */
     @AspectEventEmitter(
         eventType = AspectEvent::class,

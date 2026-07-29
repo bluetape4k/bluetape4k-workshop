@@ -5,11 +5,11 @@ import io.bluetape4k.workshop.ktor.domain.Book
 import org.junit.jupiter.api.TestInstance
 
 /**
- * Base class for Ktor integration tests.
+ * Ktor integration test 의 base class 입니다.
  *
  * ## Behavior / Contract
- * - `@TestInstance(PER_CLASS)` is mandatory for abstract test classes per workspace convention.
- * - Provides shared [Book] fixture builders to keep test data consistent.
+ * - workspace convention 에 따라 abstract test class 에는 `@TestInstance(PER_CLASS)` 가 필수입니다.
+ * - test data 를 일관되게 유지하기 위해 shared [Book] fixture builder 를 제공합니다.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractKtorTest {

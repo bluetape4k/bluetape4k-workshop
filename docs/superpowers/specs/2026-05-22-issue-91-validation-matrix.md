@@ -5,20 +5,27 @@
 **Parent Epic**: #76
 **Status**: Active
 
+> Current graph amendment (2026-07-24, #538 after #555): this checkout registers 119 projects in Gradle after adding
+> the five `:commerce-usage-billing-*-service` modules,
+> `:commerce-usage-billing-microservices-composition-tests`, and
+> `:commerce-event-sourced-promotion-voucher-campaign`. The 23/33 classification below remains the original
+> #91 baseline rather than a mechanically incremented inventory. Current executable lanes are
+> maintained in `scripts/smoke-validate.sh` and `.github/workflows/Examples.yml`.
+
 ---
 
 ## 1. Validation Tiers
 
 | Tier | Trigger | Scope | Docker required |
 |------|---------|-------|-----------------|
-| **T1 Compile** | Every push / PR | `./gradlew build -x test` all 56 modules | No |
+| **T1 Compile** | Every push / PR | `./gradlew build -x test` across the current 119-project graph | No |
 | **T2 Smoke** | Every weekday (nightly) | In-memory modules only (no Testcontainers) | No |
-| **T3 Full** | Every Sunday (nightly) | All 56 modules including Testcontainers | Yes |
+| **T3 Full** | Examples container lane and full local groups | Current container-backed modules, including Commerce | Yes |
 | **T4 Local group** | Developer convenience | Per-domain `scripts/smoke-validate.sh <group>` | Depends |
 
 ---
 
-## 2. Module Classification
+## 2. Original #91 Module Classification
 
 ### T2 Smoke — No Testcontainers (23 modules)
 
@@ -149,14 +156,25 @@ Run via `scripts/smoke-validate.sh <group>` or directly:
   :bucker4j-bluetape4k-webflux:test :bucket4j-redis:test --continue --max-workers=1
 ```
 
+### Commerce (Testcontainers)
+
+```bash
+./gradlew :commerce-order-lifecycle-fulfillment:test \
+  :commerce-reservation-control-plane:test \
+  :commerce-promotion-voucher-campaign:test \
+  :commerce-concert-ticket-flash-sale:test \
+  :commerce-usage-billing-microservices-composition-tests:integrationTest \
+  --continue --max-workers=1
+```
+
 ---
 
 ## 4. Stale-Include Guard
 
 ```bash
-# Verify no stale Gradle project registrations
-./gradlew projects -q | grep "Project ':" | wc -l
-# Expected: 56 (as of 2026-05-22 after #78)
+# Verify the current Gradle project graph and README references
+EXPECTED_GRADLE_PROJECTS=119 ./scripts/smoke-validate.sh stale-check
+# Expected: 108 (as of 2026-07-21 after #521; 107 before the module was added)
 
 # Verify removed modules are not referenced in any README
 for m in async-logging kotlin/workshop reactive/mutiny gatling/gradle-plugin-demo mapping/mapstruct; do
@@ -188,6 +206,6 @@ fd README.md . --exclude .worktrees | xargs -I{} bash -c '
 - [x] Per-domain smoke commands documented
 - [x] `scripts/smoke-validate.sh` added
 - [x] Nightly CI updated with daily T2 smoke-test job
-- [x] Stale-include check: 56 modules, no stale refs
+- [x] Stale-include check: current 108-project graph, no stale refs
 - [x] README link check command documented
 - [ ] #120 (`r2dbc-webflux` disabled tests) tracked separately

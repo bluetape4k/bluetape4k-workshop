@@ -44,7 +44,7 @@ class OrderControllerTest : AbstractMvcJdbcTest() {
 
     @Test
     fun `PATCH cancel order returns cancelled order`() {
-        // First place an order
+        // 먼저 order를 생성한다.
         val placeReq = PlaceOrderRequest(
             customerId = 1L,
             lines = listOf(OrderLineRequest(productId = 2L, quantity = 1))
@@ -58,7 +58,7 @@ class OrderControllerTest : AbstractMvcJdbcTest() {
             .expectBody(OrderDTO::class.java)
             .returnResult().responseBody.shouldNotBeNull()
 
-        // Then cancel it
+        // 이후 해당 order를 취소한다.
         webTestClient.patch()
             .uri("/api/v1/orders/${order.id}/cancel")
             .exchange()

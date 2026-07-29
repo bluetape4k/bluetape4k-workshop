@@ -1,62 +1,56 @@
-# aws-storage-abstraction Ecosystem Review
+# aws-storage-abstraction 생태계 리뷰
 
-Date: 2026-07-05
-Branch: `refactor/aws-storage-abstraction-ecosystem-patterns`
-Module: `:aws-storage-abstraction`
+날짜: 2026-07-05
+브랜치: `refactor/aws-storage-abstraction-ecosystem-patterns`
+모듈: `:aws-storage-abstraction`
 
-## Scope
+## 범위
 
-This review covers the storage abstraction workshop sample after aligning trust
-boundaries, S3 helper usage, docs, smoke validation, and Examples workflow
-coverage with bluetape4k code patterns.
+이 리뷰는 trust boundary, S3 helper 사용, docs, smoke validation, Examples workflow coverage를 bluetape4k code pattern에 맞춘 뒤
+storage abstraction workshop sample을 검토한 결과다.
 
-Touched behavior:
+영향을 받은 동작:
 
-- Object keys are validated as relative forward-slash keys and reject blank,
-  absolute, backslash, `.`, and `..` segments.
-- Local storage validates resolved path containment under the configured root.
-- S3 and presigned S3 services use bluetape4k S3 bucket helpers instead of a
-  broad `headBucket` fallback.
-- S3 upload and `getUrl` return endpoint-neutral `s3://bucket/key` object URIs;
-  presigned service still returns presigned URLs.
-- Examples workflow, AWS smoke lane, root README files, and module README files
-  now include `aws-storage-abstraction`.
+- object key는 relative forward-slash key로 검증하며 blank, absolute, backslash, `.`, `..` segment를 거부한다.
+- local storage는 설정된 root 아래에서 resolved path containment를 검증한다.
+- S3 및 presigned S3 service는 broad `headBucket` fallback 대신 bluetape4k S3 bucket helper를 사용한다.
+- S3 upload와 `getUrl`은 endpoint-neutral `s3://bucket/key` object URI를 반환하고, presigned service는 기존처럼 presigned URL을 반환한다.
+- Examples workflow, AWS smoke lane, root README file, module README file은 이제 `aws-storage-abstraction`을 포함한다.
 
-## 7-Tier Review
+## 7-Tier 리뷰
 
-| Tier | Verdict | Evidence |
+| Tier | 판정 | 근거 |
 |---|---:|---|
-| Correctness | PASS | Key validation, local path containment, S3 object URI semantics, and bucket creation paths are covered by 27 module tests. |
-| Kotlin style | PASS | Caller input validation uses bluetape4k `require*` helpers; tests use constructor injection and bluetape4k assertions. |
-| bluetape4k ecosystem reuse | PASS | `existsBucket`, `createBucket`, `requireNotBlank`, `requirePositiveNumber`, and `Base58.randomString` are used instead of ad hoc equivalents. |
-| Test coverage | PASS | Targeted module test executed 27 tests after `cleanTest --no-build-cache`; AWS smoke lane also passed. |
-| Documentation | PASS | Root and module README locale set documents the module, key guard, URL semantics, and test counts. |
-| Security / operations | PASS | Path traversal and endpoint-leaking S3 URL behavior are constrained; Examples workflow now runs the container-backed module in the sequential lane. |
-| Maintainability | PASS | Shared key and URI rules are centralized in `StorageKeySupport.kt`; CI/smoke registration is explicit. |
+| Correctness | PASS | key validation, local path containment, S3 object URI semantics, bucket creation path는 27개 module test가 커버한다. |
+| Kotlin style | PASS | caller input validation은 bluetape4k `require*` helper를 사용하고, test는 constructor injection과 bluetape4k assertion을 사용한다. |
+| bluetape4k 생태계 재사용 | PASS | ad hoc equivalent 대신 `existsBucket`, `createBucket`, `requireNotBlank`, `requirePositiveNumber`, `Base58.randomString`을 사용한다. |
+| Test coverage | PASS | targeted module test는 `cleanTest --no-build-cache` 후 27개 test를 실행했고 AWS smoke lane도 통과했다. |
+| Documentation | PASS | root 및 module README locale set은 module, key guard, URL semantics, test count를 문서화한다. |
+| Security / operations | PASS | path traversal과 endpoint-leaking S3 URL 동작을 제한했다. Examples workflow는 이제 container-backed module을 sequential lane에서 실행한다. |
+| Maintainability | PASS | shared key 및 URI rule은 `StorageKeySupport.kt`에 중앙화했고 CI/smoke registration은 명시적이다. |
 
-## Findings
+## 발견 사항
 
 P0: 0
 P1: 0
 P2: 0
 P3: 0
 
-Independent diff review found no P0/P1/P2/P3 findings.
+독립 diff review에서 P0/P1/P2/P3 finding이 없었다.
 
-## Validation
+## 검증
 
-| Step | Status | Evidence |
+| 단계 | 상태 | 근거 |
 |---|---:|---|
-| Targeted compile/test | PASS | `repo-test-summary -- ./gradlew :aws-storage-abstraction:compileKotlin :aws-storage-abstraction:compileTestKotlin :aws-storage-abstraction:cleanTest :aws-storage-abstraction:test --no-build-cache --warning-mode all --console=plain --max-workers=1` completed with `BUILD SUCCESSFUL` and 27 tests. |
-| AWS smoke lane | PASS | `MAX_WORKERS=1 repo-test-summary -- ./scripts/smoke-validate.sh aws` completed with `BUILD SUCCESSFUL`. |
-| Stale reference check | PASS | `repo-test-summary -- ./scripts/smoke-validate.sh stale-check` reported 101 active modules, no stale refs, and no broken image links. |
-| Workflow lint | PASS | `actionlint .github/workflows/Examples.yml` returned clean. |
-| Escaped quote scan | PASS | `rg -n -F "\\'" .github/workflows` returned no hits. |
-| Whitespace check | PASS | `git diff --check` returned clean. |
-| 7-Tier review | PASS | Native code-reviewer subagent reported P0/P1/P2/P3 = 0. |
-| IDE diagnostics | NOT RUN | No IntelliJ diagnostics tool was exposed in this session. |
+| Targeted compile/test | PASS | `repo-test-summary -- ./gradlew :aws-storage-abstraction:compileKotlin :aws-storage-abstraction:compileTestKotlin :aws-storage-abstraction:cleanTest :aws-storage-abstraction:test --no-build-cache --warning-mode all --console=plain --max-workers=1`가 `BUILD SUCCESSFUL`과 27개 test로 완료됐다. |
+| AWS smoke lane | PASS | `MAX_WORKERS=1 repo-test-summary -- ./scripts/smoke-validate.sh aws`가 `BUILD SUCCESSFUL`로 완료됐다. |
+| Stale reference check | PASS | `repo-test-summary -- ./scripts/smoke-validate.sh stale-check`가 active module 101개, stale ref 없음, 깨진 image link 없음으로 보고했다. |
+| Workflow lint | PASS | `actionlint .github/workflows/Examples.yml`가 clean을 반환했다. |
+| Escaped quote scan | PASS | `rg -n -F "\\'" .github/workflows`가 hit 없음으로 반환했다. |
+| Whitespace check | PASS | `git diff --check`가 clean을 반환했다. |
+| 7-Tier review | PASS | Native code-reviewer subagent가 P0/P1/P2/P3 = 0을 보고했다. |
+| IDE diagnostics | NOT RUN | 이 세션에는 IntelliJ diagnostics tool이 노출되지 않았다. |
 
-## Residual Risk
+## 잔여 위험
 
-Full repository test suite was not run. The changed module and AWS smoke lane
-were verified serially.
+full repository test suite는 실행하지 않았다. 변경 module과 AWS smoke lane은 직렬로 검증했다.

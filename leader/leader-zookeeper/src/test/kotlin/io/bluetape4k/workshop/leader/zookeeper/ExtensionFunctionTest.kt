@@ -15,18 +15,18 @@ import java.util.concurrent.CompletableFuture
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * T6: [org.apache.curator.framework.CuratorFramework] extension functions exposed by the
- * `io.bluetape4k.leader.zookeeper` package.
+ * T6: `io.bluetape4k.leader.zookeeper` 패키지가 제공하는
+ * [org.apache.curator.framework.CuratorFramework] 확장 함수 테스트이다.
  *
- * ## Behavior verified
- * - `runIfLeader` extension acquires leadership and returns the action result.
- * - `runAsyncIfLeader` extension returns a [CompletableFuture] whose value matches the action result.
- * - `suspendRunIfLeader` extension returns the suspending action result.
- * - `runIfLeaderGroup` extension acquires a group slot and returns the action result.
- *   The parameter is named `options=` (NOT `groupOptions=`), confirmed from the library source.
+ * ## 검증하는 동작
+ * - `runIfLeader` 확장 함수는 리더십을 획득하고 작업 결과를 반환한다.
+ * - `runAsyncIfLeader` 확장 함수는 작업 결과와 같은 값을 담은 [CompletableFuture]를 반환한다.
+ * - `suspendRunIfLeader` 확장 함수는 suspend 작업 결과를 반환한다.
+ * - `runIfLeaderGroup` 확장 함수는 그룹 slot을 획득하고 작업 결과를 반환한다.
+ *   파라미터 이름은 라이브러리 소스에서 확인한 대로 `groupOptions=`가 아니라 `options=`이다.
  *
- * Each extension call uses a unique `basePath` to avoid cross-test path collisions
- * with other tests in this suite.
+ * 각 확장 함수 호출은 이 테스트 묶음의 다른 테스트와 ZooKeeper 경로가 충돌하지 않도록
+ * 고유한 `basePath`를 사용한다.
  */
 class ExtensionFunctionTest : AbstractLeaderZookeeperTest() {
 

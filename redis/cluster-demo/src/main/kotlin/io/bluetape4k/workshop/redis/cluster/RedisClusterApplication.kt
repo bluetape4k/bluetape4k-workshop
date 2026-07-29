@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Bean
 class RedisClusterApplication {
 
     companion object : KLoggingChannel() {
-        // NOTE: RedisCluster uses ports 7000-7005. macOS AirPlay Receiver can conflict with these ports.
+        // 참고: RedisCluster 는 7000-7005 port 를 사용합니다. macOS AirPlay Receiver 와 충돌할 수 있습니다.
         @JvmStatic
         val redisCluster = RedisClusterServer.Launcher.redisCluster
     }

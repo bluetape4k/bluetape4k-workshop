@@ -9,12 +9,12 @@ import org.junit.jupiter.api.Test
 import io.bluetape4k.codec.Base58
 
 /**
- * Tests for [LockExtenderJob] and the [LockExtender] API.
+ * [LockExtenderJob]과 [LockExtender] API의 테스트입니다.
  *
- * ## Key behaviours verified
- * - [LockExtender.extendActiveLock] returns `true` when called inside `runIfLeader`.
- * - [LockExtender.extendActiveLock] returns `false` when called outside any leader scope.
- * - [LockExtenderJob.execute] completes without error when the elector is in scope.
+ * ## 검증하는 주요 동작
+ * - [LockExtender.extendActiveLock]는 `runIfLeader` 안에서 호출하면 `true`를 반환합니다.
+ * - [LockExtender.extendActiveLock]는 leader scope 밖에서 호출하면 `false`를 반환합니다.
+ * - [LockExtenderJob.execute]는 elector가 scope 안에 있을 때 error 없이 완료됩니다.
  */
 class LockExtenderTest : AbstractLeaderElectionTest() {
 
@@ -33,7 +33,7 @@ class LockExtenderTest : AbstractLeaderElectionTest() {
 
     @Test
     fun `extendActiveLock returns false outside any leader scope`() {
-        // LockExtender has no active handle when called outside runIfLeader.
+        // runIfLeader 밖에서 호출하면 LockExtender에는 active handle이 없습니다.
         val extended = LockExtender.extendActiveLock(LockExtenderJob.EXTENSION_DURATION)
         extended shouldBeEqualTo false
     }

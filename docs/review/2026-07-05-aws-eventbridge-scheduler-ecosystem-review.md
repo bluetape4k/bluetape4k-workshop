@@ -1,40 +1,40 @@
-# aws-eventbridge-scheduler Ecosystem Review
+# aws-eventbridge-scheduler 생태계 리뷰
 
-Date: 2026-07-05
-Module: `:aws-eventbridge-scheduler`
-Branch: `refactor/aws-eventbridge-scheduler-ecosystem-patterns`
+날짜: 2026-07-05
+모듈: `:aws-eventbridge-scheduler`
+브랜치: `refactor/aws-eventbridge-scheduler-ecosystem-patterns`
 
-## Scope
+## 범위
 
-- Reviewed the EventBridge Scheduler example for Kotlin style, local AWS boundaries, Scheduler request shape, Spring wiring coverage, and bluetape4k ecosystem reuse.
-- Normalized class spacing and Serializable model formatting.
-- Added a Spring Boot wiring smoke test for local EventBridge publisher and Scheduler beans.
-- Updated local one-time Scheduler requests to use AWS-ready `at(yyyy-MM-ddTHH:mm:ss)` syntax plus explicit `UTC` timezone metadata.
-- This PR should use `Refs #326` at most, not `Closes #326`, because the original feature issue is already closed.
+- EventBridge Scheduler 예제를 Kotlin style, 로컬 AWS 경계, Scheduler request shape, Spring wiring coverage, bluetape4k 생태계 재사용 기준으로 검토했다.
+- class spacing과 Serializable model formatting을 정규화했다.
+- 로컬 EventBridge publisher와 Scheduler bean을 검증하는 Spring Boot wiring smoke test를 추가했다.
+- 로컬 one-time Scheduler request가 AWS-ready `at(yyyy-MM-ddTHH:mm:ss)` 문법과 명시적 `UTC` timezone metadata를 사용하도록 갱신했다.
+- 원래 feature issue가 이미 닫혀 있으므로 이 PR은 `Closes #326`가 아니라 최대 `Refs #326`만 사용해야 한다.
 
-## 7-Tier Review
+## 7-Tier 리뷰
 
-| Tier | Result | Evidence |
+| Tier | 결과 | 근거 |
 |---|---|---|
-| 1. API and behavior | PASS | EventBridge publish, Scheduler skip/failure, cancellation, and validation tests remain covered. |
-| 2. Kotlin style | PASS | Class spacing and Serializable model layout follow repo style. |
-| 3. Ecosystem reuse | PASS | Existing bluetape4k validation, assertions, `runSuspendIO`, and local boundary adapters are retained. |
-| 4. Spring wiring | PASS | New `EventBridgeSchedulerApplicationTest` verifies local publisher, scheduler, service, and properties wiring. |
-| 5. AWS boundary safety | PASS | Local adapters remain credential-free; Scheduler expression syntax was checked against AWS official docs. |
-| 6. Documentation/release readiness | PASS | README behavior and diagrams were unchanged; stale-check found no stale README refs or broken images. |
-| 7. Regression risk | PASS | Targeted compile/test and AWS smoke passed; P0/P1 review findings are 0. |
+| 1. API와 동작 | PASS | EventBridge publish, Scheduler skip/failure, cancellation, validation test는 계속 커버된다. |
+| 2. Kotlin style | PASS | class spacing과 Serializable model layout은 repo style을 따른다. |
+| 3. 생태계 재사용 | PASS | 기존 bluetape4k validation, assertion, `runSuspendIO`, 로컬 boundary adapter를 유지했다. |
+| 4. Spring wiring | PASS | 새 `EventBridgeSchedulerApplicationTest`가 로컬 publisher, scheduler, service, properties wiring을 검증한다. |
+| 5. AWS 경계 안전성 | PASS | 로컬 adapter는 credential-free 상태를 유지하며, Scheduler expression 문법은 AWS 공식 문서와 대조했다. |
+| 6. 문서/release 준비도 | PASS | README 동작과 diagram은 변경 없으며, stale-check에서 stale README ref나 깨진 image link가 없었다. |
+| 7. 회귀 위험 | PASS | targeted compile/test와 AWS smoke가 통과했고 P0/P1 리뷰 finding은 0이다. |
 
-## Verification
+## 검증
 
-- `repo-test-summary -- ./gradlew :aws-eventbridge-scheduler:compileKotlin :aws-eventbridge-scheduler:compileTestKotlin :aws-eventbridge-scheduler:cleanTest :aws-eventbridge-scheduler:test --no-build-cache --warning-mode all --console=plain --max-workers=1`: PASS, 6 tests executed, build successful in 5s.
+- `repo-test-summary -- ./gradlew :aws-eventbridge-scheduler:compileKotlin :aws-eventbridge-scheduler:compileTestKotlin :aws-eventbridge-scheduler:cleanTest :aws-eventbridge-scheduler:test --no-build-cache --warning-mode all --console=plain --max-workers=1`: PASS, 6개 test 실행, build successful in 5s.
 - `repo-test-summary -- ./scripts/smoke-validate.sh aws`: PASS, build successful in 14s.
-- `repo-test-summary -- ./scripts/smoke-validate.sh stale-check`: PASS, 101 active modules, no stale README refs, no broken image links.
+- `repo-test-summary -- ./scripts/smoke-validate.sh stale-check`: PASS, active module 101개, stale README ref 없음, 깨진 image link 없음.
 - `git diff --check`: PASS.
-- AWS official docs: EventBridge Scheduler one-time syntax is `at(yyyy-mm-ddThh:mm:ss)` and timezone is configured separately.
-- Risk pattern scan: no `!!`, `lateinit`, raw JUnit assertions, `assertThrows`, or old `companion object:`/`class X:` spacing remain in `aws/eventbridge-scheduler/src`.
+- AWS 공식 문서: EventBridge Scheduler one-time 문법은 `at(yyyy-mm-ddThh:mm:ss)` 이고 timezone은 별도로 설정한다.
+- 위험 pattern scan: `aws/eventbridge-scheduler/src`에는 `!!`, `lateinit`, raw JUnit assertion, `assertThrows`, 이전 `companion object:`/`class X:` spacing이 남아 있지 않다.
 
-## Verdict
+## 판정
 
-P0/P1 findings: 0.
+P0/P1 finding: 0.
 
-Ready for PR.
+PR 준비 완료.

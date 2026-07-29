@@ -1,25 +1,25 @@
-# R2DBC WebFlux H2 Test Re-enablement (Issue #120)
+# R2DBC WebFlux H2 Test 재활성화(Issue #120)
 
 **Date**: 2026-05-24  
 **Branch**: fix/issue-120-r2dbc-webflux-tests  
 **Module**: `spring-data/r2dbc-webflux`
 
-## Root Cause
+## 근본 원인
 
-Three test classes (`UserServiceTest`, `UserHandlerIT`, `UserControllerTest`) were
-disabled with `@Disabled` due to H2 2.x SQL compatibility failures. The original
-`spring.sql.init` approach was unreliable with R2DBC embedded databases under Spring Boot 4.
+세 test class(`UserServiceTest`, `UserHandlerIT`, `UserControllerTest`)는 H2 2.x SQL
+compatibility failure 때문에 `@Disabled` 처리되어 있었다. 기존 `spring.sql.init`
+접근은 Spring Boot 4의 R2DBC embedded database에서 신뢰할 수 없었다.
 
-Three separate problems were compounding:
+세 가지 문제가 함께 겹쳐 있었다.
 
-### Problem 1: `spring.sql.init` not executing schema/data SQL
+### 문제 1: `spring.sql.init`이 schema/data SQL을 실행하지 않음
 
-`spring.sql.init.schema-locations` / `data-locations` do not reliably fire for
-R2DBC embedded databases in Spring Boot 4. The schema was never created, causing
-all tests to fail with "Table not found" errors.
+`spring.sql.init.schema-locations` / `data-locations`는 Spring Boot 4의 R2DBC
+embedded database에서 안정적으로 실행되지 않는다. schema가 생성되지 않아 모든
+테스트가 "Table not found" 오류로 실패했다.
 
-**Fix**: Replace with an explicit `ConnectionFactoryInitializer` bean that uses
-`CompositeDatabasePopulator` to run schema.sql then data.sql sequentially.
+**수정**: `CompositeDatabasePopulator`로 schema.sql과 data.sql을 순서대로 실행하는
+명시적 `ConnectionFactoryInitializer` bean으로 교체한다.
 
 ```kotlin
 @Bean
@@ -36,12 +36,12 @@ fun databaseInitializer(connectionFactory: ConnectionFactory): ConnectionFactory
 }
 ```
 
-### Problem 2: MySQL backtick quoting in data.sql
+### 문제 2: data.sql의 MySQL backtick quoting
 
-H2 2.x does not support MySQL backtick identifier quoting without `MODE=MySQL`.
-The original `data.sql` used `` INSERT INTO users(`name`, `login`, ...) ``.
+H2 2.x는 `MODE=MySQL` 없이 MySQL backtick identifier quoting을 지원하지 않는다.
+기존 `data.sql`은 `` INSERT INTO users(`name`, `login`, ...) ``를 사용했다.
 
-**Fix**: Remove backticks — use plain unquoted column names.
+**수정**: backtick을 제거하고 plain unquoted column name을 사용한다.
 
 ```sql
 -- Before (fails on H2 2.x without MODE=MySQL):
@@ -51,15 +51,15 @@ INSERT INTO users(`name`, `login`, `email`, `avatar`) VALUES ...
 INSERT INTO users(name, login, email, avatar) VALUES ...
 ```
 
-### Problem 3: Spring Data R2DBC H2 dialect identifier case mismatch
+### 문제 3: Spring Data R2DBC H2 dialect identifier 대소문자 불일치
 
-Spring Data R2DBC H2 dialect quotes column names as uppercase (`"ID"`, `"NAME"`, `"EMAIL"`),
-while `@Table("users")` generates lowercase `"users"`. H2 2.x stores unquoted identifiers
-as uppercase (`USERS`), so `"users"` ≠ `USERS`.
+Spring Data R2DBC H2 dialect는 column name을 uppercase(`"ID"`, `"NAME"`, `"EMAIL"`)로
+quote하는 반면 `@Table("users")`는 lowercase `"users"`를 생성한다. H2 2.x는
+unquoted identifier를 uppercase(`USERS`)로 저장하므로 `"users"` ≠ `USERS`가 된다.
 
-**Fix**: Add `CASE_INSENSITIVE_IDENTIFIERS=TRUE` to the R2DBC URL. This makes H2 compare
-all identifiers case-insensitively, resolving the mismatch between Spring Data's quoted
-uppercase columns and schema's unquoted lowercase definitions.
+**수정**: R2DBC URL에 `CASE_INSENSITIVE_IDENTIFIERS=TRUE`를 추가한다. 이렇게 하면
+H2가 모든 identifier를 case-insensitive하게 비교하므로 Spring Data의 quoted uppercase
+column과 schema의 unquoted lowercase definition 간 불일치가 해결된다.
 
 ```yaml
 spring:
@@ -67,29 +67,32 @@ spring:
     url: r2dbc:h2:mem:///pocdb?options=DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
 ```
 
-### Problem 4 (bonus): Missing `.bodyValue()` in update test
+### 문제 4(추가): update test의 `.bodyValue()` 누락
 
-`UserControllerTest.update non-existing user` sent a PUT request without a request body,
-causing Spring to return 400 (missing `@RequestBody`) instead of the expected 404.
+`UserControllerTest.update non-existing user`는 request body 없이 PUT request를
+보냈다. 그래서 Spring은 기대한 404가 아니라 `@RequestBody` 누락으로 400을 반환했다.
 
-**Fix**: Add `.bodyValue(userToUpdate)` to the request chain.
+**수정**: request chain에 `.bodyValue(userToUpdate)`를 추가한다.
 
-## Outcome
+## 결과
 
-44/44 tests passing after fix. All `@Disabled` annotations removed.
+수정 후 44/44 테스트가 통과했다. 모든 `@Disabled` annotation을 제거했다.
 
-## Decision Record
+## 결정 기록
 
-- `CASE_INSENSITIVE_IDENTIFIERS=TRUE` was chosen over `DATABASE_TO_UPPER=FALSE` because
-  the latter prevents Spring Data from using uppercase column aliases in `@Query` results.
-- `ConnectionFactoryInitializer` was chosen over `spring.sql.init` because it is explicitly
-  ordered in the Spring context lifecycle and guaranteed to run before test setup.
+- `DATABASE_TO_UPPER=FALSE` 대신 `CASE_INSENSITIVE_IDENTIFIERS=TRUE`를 선택했다.
+  전자는 Spring Data가 `@Query` 결과에서 uppercase column alias를 사용하는 것을
+  막기 때문이다.
+- `spring.sql.init` 대신 `ConnectionFactoryInitializer`를 선택했다. Spring context
+  lifecycle에서 명시적으로 순서가 잡히며 test setup 전에 실행됨이 보장되기 때문이다.
 
-## Future Guidance
+## 향후 지침
 
-When setting up a new Spring Data R2DBC + H2 in-memory test module:
+새 Spring Data R2DBC + H2 in-memory test module을 설정할 때는 다음을 따른다.
 
-1. Use `ConnectionFactoryInitializer` bean for schema/data initialization (not `spring.sql.init`)
-2. Add `CASE_INSENSITIVE_IDENTIFIERS=TRUE` to H2 R2DBC URL
-3. Avoid MySQL backtick quoting in SQL files unless `MODE=MySQL` is set
-4. Verify `@Query` using lowercase column names still resolves with CASE_INSENSITIVE mode
+1. schema/data initialization에는 `spring.sql.init`이 아니라
+   `ConnectionFactoryInitializer` bean을 사용한다.
+2. H2 R2DBC URL에 `CASE_INSENSITIVE_IDENTIFIERS=TRUE`를 추가한다.
+3. `MODE=MySQL`이 설정되지 않았다면 SQL file에서 MySQL backtick quoting을 피한다.
+4. lowercase column name을 사용하는 `@Query`가 CASE_INSENSITIVE mode에서 여전히
+   resolve되는지 검증한다.

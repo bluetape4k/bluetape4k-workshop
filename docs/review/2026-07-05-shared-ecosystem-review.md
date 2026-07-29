@@ -1,37 +1,37 @@
-# shared Ecosystem Review
+# shared 생태계 리뷰
 
-Date: 2026-07-05
-Module: `:shared`
-Branch: `refactor/shared-ecosystem-patterns`
+날짜: 2026-07-05
+모듈: `:shared`
+브랜치: `refactor/shared-ecosystem-patterns`
 
-## Scope
+## 범위
 
-- Reviewed shared Spring HTTP client test helpers for Kotlin style, public API documentation, and bluetape4k assertion usage.
-- Added concise English KDoc to public WebClient, WebTestClient, and RestClient extension helpers.
-- Normalized companion/class spacing, import order, and test names without changing HTTP helper behavior.
-- This is no-issue maintenance for the ecosystem review wave; no closed feature issue is used as a `Closes` target.
+- shared Spring HTTP client test helper를 Kotlin style, public API documentation, bluetape4k assertion usage 기준으로 검토했다.
+- public WebClient, WebTestClient, RestClient extension helper에 간결한 English KDoc을 추가했다.
+- HTTP helper behavior를 바꾸지 않고 companion/class spacing, import order, test name을 정규화했다.
+- 이는 ecosystem review wave의 no-issue maintenance이며, 닫힌 feature issue를 `Closes` target으로 사용하지 않는다.
 
-## 7-Tier Review
+## 7-Tier 리뷰
 
-| Tier | Result | Evidence |
+| Tier | 결과 | 근거 |
 |---|---|---|
-| 1. API and behavior | PASS | Existing helper signatures and request/response behavior are unchanged. |
-| 2. Kotlin style | PASS | Public helpers now have KDoc; spacing and imports follow Kotlin style. |
-| 3. Ecosystem reuse | PASS | Existing bluetape4k logging, assertions, `runSuspendIO`, and `BluetapeHttpServer` launcher are retained. |
-| 4. Spring/web boundaries | PASS | WebClient, WebTestClient, and RestClient adapters remain thin wrappers over Spring clients. |
-| 5. Coroutine/Testcontainers safety | PASS | Testcontainers-backed HTTP server usage remains singleton launcher based and was verified serially. |
-| 6. Documentation readiness | PASS | Public extension contracts are documented in KDoc; README behavior did not change. |
-| 7. Regression risk | PASS | Targeted compile/test passed; CodeGraph reported low risk with no impacted nodes for candidate shared files. |
+| 1. API and behavior | PASS | 기존 helper signature와 request/response behavior는 변경 없다. |
+| 2. Kotlin style | PASS | public helper는 이제 KDoc을 갖추며 spacing과 import는 Kotlin style을 따른다. |
+| 3. Ecosystem reuse | PASS | Existing bluetape4k logging, assertions, `runSuspendIO`, and `BluetapeHttpServer` launcher are 보존됨. |
+| 4. Spring/web boundaries | PASS | WebClient, WebTestClient, RestClient adapter는 Spring client 위의 thin wrapper로 유지된다. |
+| 5. Coroutine/Testcontainers safety | PASS | Testcontainers-backed HTTP server 사용은 singleton launcher 기반으로 유지되며 직렬로 검증했다. |
+| 6. Documentation readiness | PASS | public extension contract는 KDoc에 문서화했고 README behavior는 변경하지 않았다. |
+| 7. Regression risk | PASS | targeted compile/test가 통과했고 CodeGraph는 candidate shared file에 대해 low risk 및 impacted node 없음으로 보고했다. |
 
-## Verification
+## 검증
 
 - `repo-test-summary -- ./gradlew :shared:compileKotlin :shared:compileTestKotlin :shared:cleanTest :shared:test --no-build-cache --warning-mode all --console=plain --max-workers=1`: PASS, build successful in 26s.
 - `git diff --check`: PASS.
-- Risk pattern scan: no `!!`, `lateinit`, raw JUnit assertions, `assertThrows`, or old `companion object:`/`class X:` spacing remain in `shared/src`.
-- CodeGraph review context: low risk; no impacted nodes reported for shared web helper candidate files.
+- 위험 pattern scan: `shared/src`에는 `!!`, `lateinit`, raw JUnit assertion, `assertThrows`, 이전 `companion object:`/`class X:` spacing이 남아 있지 않다.
+- CodeGraph review context: low risk이며 shared web helper candidate file의 impacted node는 보고되지 않았다.
 
-## Verdict
+## 판정
 
-P0/P1 findings: 0.
+P0/P1 finding: 0.
 
-Ready for PR.
+PR 준비 완료.

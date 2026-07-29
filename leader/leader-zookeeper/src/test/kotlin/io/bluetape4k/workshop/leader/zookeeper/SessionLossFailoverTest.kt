@@ -20,19 +20,19 @@ import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
- * T8 — Demonstrates R16: ZooKeeper session expiry triggers ephemeral node removal and re-election.
+ * T8 - ZooKeeper 세션 만료가 ephemeral node 제거와 재선출을 유발한다는 R16을 보여준다.
  *
- * ## Isolation Strategy
+ * ## 격리 전략
  *
- * This test does NOT extend [AbstractLeaderZookeeperTest] — inheriting it would expose the shared
- * Launcher singleton curator through companion-object methods and accidentally coupling other tests
- * to client-side session closure performed here.
+ * 이 테스트는 [AbstractLeaderZookeeperTest]를 상속하지 않는다. 상속하면 companion-object 메서드를 통해
+ * 공유 Launcher singleton curator가 노출되어, 여기서 수행하는 client-side 세션 종료가 다른 테스트와
+ * 의도치 않게 결합될 수 있다.
  *
- * Uses client-side ZooKeeper session close (NOT container restart) to simulate session expiry:
- * `clientA.zookeeperClient.zooKeeper.close()` forces the ZK server to mark the session expired
- * and remove ephemeral nodes — equivalent to a network partition or process crash. Container
- * `stop()`/`start()` is avoided because `ZooKeeperServer(reuse=true)` remaps the host port,
- * leaving any existing Curator client in a stale state.
+ * 세션 만료는 컨테이너 재시작이 아니라 client-side ZooKeeper 세션 종료로 시뮬레이션한다.
+ * `clientA.zookeeperClient.zooKeeper.close()`는 ZK 서버가 해당 세션을 만료 처리하고
+ * ephemeral node를 제거하게 만든다. 이는 네트워크 분리나 프로세스 크래시와 동등한 상황이다.
+ * `ZooKeeperServer(reuse=true)`에서는 `stop()`/`start()`가 호스트 port를 다시 매핑해
+ * 기존 Curator client를 stale 상태로 남길 수 있으므로 컨테이너 재시작을 피한다.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SessionLossFailoverTest {
@@ -51,7 +51,7 @@ class SessionLossFailoverTest {
 
     @BeforeAll
     fun startIsolatedZk() {
-        // reuse=false so the container lifecycle is fully owned by this test class.
+        // 이 테스트 클래스가 컨테이너 생명주기를 완전히 소유하도록 reuse=false를 사용한다.
         isolatedZk = ZooKeeperServer(reuse = false).also { it.start() }
         clientA = ZooKeeperServer.Launcher.getCuratorFramework(isolatedZk).also {
             it.start()
@@ -76,7 +76,7 @@ class SessionLossFailoverTest {
         val workerAHoldingLatch = CountDownLatch(1)
         val workerADoneLatch = CountDownLatch(1)
 
-        // workerA acquires leadership in a background thread and holds it until interrupted.
+        // workerA는 백그라운드 스레드에서 리더십을 획득하고 interrupt될 때까지 유지한다.
         val workerAThread = Thread {
             val electorA = ZooKeeperLeaderElector(
                 client = clientA,
@@ -85,8 +85,8 @@ class SessionLossFailoverTest {
             )
             try {
                 electorA.runIfLeader(lockName) {
-                    workerAHoldingLatch.countDown()  // signal: "I now hold the lock"
-                    runCatching { Thread.sleep(60_000) }  // hold until session closed / interrupted
+                    workerAHoldingLatch.countDown()  // 신호: "지금 lock을 보유 중이다"
+                    runCatching { Thread.sleep(60_000) }  // 세션 종료 또는 interrupt까지 유지한다.
                     "A-done"
                 }
             } finally {
@@ -95,17 +95,16 @@ class SessionLossFailoverTest {
         }
         workerAThread.start()
 
-        // Wait until workerA holds the lock before triggering session loss.
+        // 세션 손실을 유발하기 전에 workerA가 lock을 보유할 때까지 기다린다.
         check(workerAHoldingLatch.await(10, TimeUnit.SECONDS)) {
             "workerA did not acquire leadership within 10s"
         }
 
-        // Simulate session expiry via client-side ZooKeeper close — forces ZK server to expire
-        // the session and remove ephemeral nodes; no container restart needed.
+        // client-side ZooKeeper close로 세션 만료를 시뮬레이션한다.
+        // ZK 서버가 세션을 만료시키고 ephemeral node를 제거하므로 컨테이너 재시작은 필요 없다.
         clientA.zookeeperClient.zooKeeper.close()
 
-        // workerB should be able to acquire leadership once workerA's session is expired
-        // and the ephemeral node is removed.
+        // workerA의 세션이 만료되고 ephemeral node가 제거되면 workerB가 리더십을 획득할 수 있어야 한다.
         val electorB = ZooKeeperLeaderElector(
             client = clientB,
             basePath = BASE_PATH,

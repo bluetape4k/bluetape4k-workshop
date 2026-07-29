@@ -4,13 +4,13 @@ import io.bluetape4k.logging.KLogging
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Registry of [FencedResource] instances keyed by resource id.
+ * 리소스 id별 [FencedResource] 인스턴스를 보관하는 레지스트리입니다.
  *
- * ## Behavior / Contract
- * - [forResource] is idempotent — the same [FencedResource] is always returned for a given id.
- * - [resetAll] removes all entries; used in `@BeforeEach` for test isolation.
- * - This registry is **in-memory only** (workshop limitation):
- *   the fencing token history is lost on JVM restart, and the map is unbounded.
+ * ## 동작 계약
+ * - [forResource]는 멱등적입니다. 같은 id에는 항상 같은 [FencedResource]를 반환합니다.
+ * - [resetAll]은 모든 항목을 제거하며, 테스트 격리를 위한 `@BeforeEach`에서 사용합니다.
+ * - 이 레지스트리는 **메모리 전용**입니다(워크숍 한계).
+ *   JVM을 재시작하면 fencing token 이력이 사라지고, map 크기도 제한하지 않습니다.
  */
 class FencedResources {
 
@@ -24,7 +24,7 @@ class FencedResources {
         map.remove(id)
     }
 
-    /** Clears all fencing token state. Used for `@BeforeEach` test isolation. */
+    /** 모든 fencing token 상태를 지웁니다. `@BeforeEach` 테스트 격리에 사용합니다. */
     fun resetAll() {
         map.clear()
     }

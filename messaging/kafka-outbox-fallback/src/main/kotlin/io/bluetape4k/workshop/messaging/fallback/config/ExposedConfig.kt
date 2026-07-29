@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 /**
- * Creates the workshop tables used by the Kafka-first outbox fallback example.
+ * Kafka-first outbox fallback 예제가 사용하는 workshop table 을 생성합니다.
  */
 @Component
 class ExposedConfig : ApplicationRunner {

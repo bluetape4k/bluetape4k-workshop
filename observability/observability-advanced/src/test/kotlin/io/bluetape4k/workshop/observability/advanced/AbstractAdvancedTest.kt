@@ -12,12 +12,12 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
 
 /**
- * Base class for all observability-advanced integration tests.
+ * 모든 observability-advanced integration test 의 base class 입니다.
  *
  * ## Behavior / Contract
- * - Uses `RedisServer.Launcher.redis` singleton Testcontainer (no `@Testcontainers` needed).
- * - `@DynamicPropertySource` overrides `workshop.observability.redis.url` with the container URL.
- * - `redis.url` returns `redis://host:port` format as required by Redisson.
+ * - `RedisServer.Launcher.redis` singleton Testcontainer 를 사용합니다. `@Testcontainers` 는 필요 없습니다.
+ * - `@DynamicPropertySource` 는 `workshop.observability.redis.url` 을 container URL 로 override 합니다.
+ * - `redis.url` 은 Redisson 이 요구하는 `redis://host:port` format 을 반환합니다.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")

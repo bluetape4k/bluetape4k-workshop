@@ -73,7 +73,7 @@ class TextNormalizerTest {
     @Test
     fun `extractKeywords normalizes before tokenizing`() {
         val keywords = TextNormalizer.extractKeywords("  HELLO   WORLD  hello ")
-        // "hello" and "world" after normalization; deduplication removes second "hello"
+        // normalization 이후 "hello" 와 "world" 가 남고 deduplication 이 두 번째 "hello" 를 제거합니다.
         keywords shouldHaveSize 2
         keywords shouldContain "hello"
         keywords shouldContain "world"

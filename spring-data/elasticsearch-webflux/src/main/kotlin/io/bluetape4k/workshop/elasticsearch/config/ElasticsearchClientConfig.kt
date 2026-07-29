@@ -16,7 +16,7 @@ class ElasticsearchClientConfig : ElasticsearchConfiguration() {
     companion object : KLogging()
 
     override fun clientConfiguration(): ClientConfiguration {
-        // log.info { "Create Elasticsearch client configuration. username=elastic, password=${esServer.password}" }
+        // log.info { "Elasticsearch 클라이언트 설정을 생성합니다. username=elastic, password=${esServer.password}" }
 
         return ClientConfiguration.builder()
             .connectedTo(esServer.url)

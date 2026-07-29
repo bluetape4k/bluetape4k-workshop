@@ -5,7 +5,7 @@ import org.jetbrains.exposed.v1.javatime.CurrentDateTime
 import org.jetbrains.exposed.v1.javatime.datetime
 
 /**
- * Exposed table for order domain rows.
+ * order domain row 를 위한 Exposed table 입니다.
  */
 object OrderTable : LongIdTable("orders") {
     val customerId = varchar("customer_id", 80)

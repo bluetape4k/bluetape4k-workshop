@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration
 import java.time.Clock
 
 /**
- * Time source used by publication retry and reconciliation components.
+ * publication retry 와 reconciliation component 가 사용하는 time source 입니다.
  */
 @Configuration
 class ClockConfig {

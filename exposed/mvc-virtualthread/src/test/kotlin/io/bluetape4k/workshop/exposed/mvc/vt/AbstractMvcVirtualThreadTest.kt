@@ -55,7 +55,7 @@ abstract class AbstractMvcVirtualThreadTest {
     @BeforeEach
     fun truncateAndReseed() {
         transaction(db) {
-            // children first
+            // child row를 먼저 삭제한다.
             OrderLineTable.deleteAll()
             OrderTable.deleteAll()
             BookTable.deleteAll()
@@ -110,8 +110,8 @@ abstract class AbstractMvcVirtualThreadTest {
     }
 
     /**
-     * Returns the ID of the first product by querying the products endpoint.
-     * Use this to avoid hardcoding IDs that may drift after truncate+reseed.
+     * products endpoint를 조회해 첫 번째 product ID를 반환한다.
+     * truncate+reseed 뒤에 달라질 수 있는 ID를 hardcoding하지 않기 위해 사용한다.
      */
     protected fun firstProductId(): Long {
         val products = webTestClient.get()

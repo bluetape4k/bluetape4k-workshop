@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: usage-billing-invoice-service
+  kafka:
+    consumer:
+      enable-auto-commit: false

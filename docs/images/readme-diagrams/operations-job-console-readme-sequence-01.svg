@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1320" viewBox="0 0 1600 1320" role="img" aria-labelledby="title desc">
+  <title id="title">Job submission, execution, cancellation, and refresh sequence</title>
+  <desc id="desc">PostgreSQL-authoritative job flow with loss-tolerant Redis and SSE notification branches.</desc>
+  <defs>
+    <marker id="seqArrowBlue" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86a8" stroke="#4f86a8" stroke-dasharray="none"/></marker>
+    <marker id="seqArrowGreen" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5d8c47" stroke="#5d8c47" stroke-dasharray="none"/></marker>
+    <marker id="seqArrowAmber" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b9822d" stroke="#b9822d" stroke-dasharray="none"/></marker>
+    <marker id="seqArrowTeal" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3b8b84" stroke="#3b8b84" stroke-dasharray="none"/></marker>
+    <marker id="seqArrowRed" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#bd5a62" stroke="#bd5a62" stroke-dasharray="none"/></marker>
+    <style>
+      .frame { fill:#fbfcf8; stroke:#40545d; stroke-width:3; }
+      .title { font:700 40px 'Architects Daughter',cursive; fill:#263238; }
+      .subtitle,.role,.labelText,.branchTitle,.note { font-family:'Comic Mono',monospace; }
+      .subtitle { font-size:18px; fill:#3f4f57; }
+      .header { fill:#fffefa; stroke:#536d79; stroke-width:2.5; }
+      .participant { font:700 22px 'Architects Daughter',cursive; fill:#1f2933; }
+      .role { font-size:14px; fill:#596b74; }
+      .lifeline { stroke:#8aa0aa; stroke-width:2; stroke-dasharray:8 8; }
+      .activation { fill:#eef8f0; stroke:#6f8f77; stroke-width:2; }
+      .activationWorker { fill:#fff8e8; stroke:#b9822d; stroke-width:2; }
+      .call,.authority,.advisory,.return,.error { fill:none; stroke-width:3.5; }
+      .call { stroke:#4f86a8; marker-end:url(#seqArrowBlue); }
+      .authority { stroke:#5d8c47; marker-end:url(#seqArrowGreen); }
+      .advisory { stroke:#b9822d; marker-end:url(#seqArrowAmber); }
+      .return { stroke:#3b8b84; marker-end:url(#seqArrowTeal); }
+      .error { stroke:#bd5a62; stroke-dasharray:9 7; marker-end:url(#seqArrowRed); }
+      .label { fill:#fff; stroke-width:1.6; }
+      .labelPill { fill:#fff; }
+      .labelBlue { stroke:#9cc6df; }.labelGreen { stroke:#a7c68f; }.labelAmber { stroke:#d6b069; }.labelTeal { stroke:#8ec9c3; }.labelRed { stroke:#d9a0a6; }
+      .badgeCircle { fill:#fffefa; stroke-width:1.6; }
+      .badgeBlue { stroke:#4f86a8; }.badgeGreen { stroke:#5d8c47; }.badgeAmber { stroke:#b9822d; }.badgeTeal { stroke:#3b8b84; }.badgeRed { stroke:#bd5a62; }
+      .badge { font:700 14px 'Comic Mono',monospace; fill:#263238; text-anchor:middle; }
+      .num { font:700 14px 'Comic Mono',monospace; }
+      .labelText { font-size:14px; font-weight:700; }
+      .textBlue { fill:#276b9d; }.textGreen { fill:#4f783c; }.textAmber { fill:#8e641f; }.textTeal { fill:#28756f; }.textRed { fill:#9e4851; }
+      .alt { fill:none; fill-opacity:0; stroke:#78909c; stroke-width:2.2; stroke-dasharray:10 8; }
+      .branchDivider { stroke:#94a3b8; stroke-width:2; stroke-dasharray:8 8; }
+      .branchTitle { font-size:15px; font-weight:700; fill:#334155; }
+      .note { font-size:14px; fill:#5b6f7a; }
+    </style>
+  </defs>
+  <rect class="frame" x="30" y="30" width="1540" height="1260" rx="20"/>
+  <text class="title" x="70" y="82">Submit, Execute, Notify, Refresh</text>
+  <text class="subtitle" x="70" y="114">PostgreSQL commits every durable fact before Redis or SSE can influence the caller.</text>
+
+  <g><rect class="header" x="55" y="150" width="190" height="82" rx="10"/><text class="participant" x="150" y="184" text-anchor="middle">Browser</text><text class="role" x="150" y="211" text-anchor="middle">REST + SSE caller</text></g>
+  <g><rect class="header" x="310" y="150" width="210" height="82" rx="10"/><text class="participant" x="415" y="184" text-anchor="middle">Adapter</text><text class="role" x="415" y="211" text-anchor="middle">Spring MVC or Ktor</text></g>
+  <g><rect class="header" x="585" y="150" width="210" height="82" rx="10"/><text class="participant" x="690" y="184" text-anchor="middle">Core</text><text class="role" x="690" y="211" text-anchor="middle">shared contract</text></g>
+  <g><rect class="header" x="860" y="150" width="210" height="82" rx="10"/><text class="participant" x="965" y="184" text-anchor="middle">PostgreSQL</text><text class="role" x="965" y="211" text-anchor="middle">authoritative</text></g>
+  <g><rect class="header" x="1135" y="150" width="190" height="82" rx="10"/><text class="participant" x="1230" y="184" text-anchor="middle">Worker</text><text class="role" x="1230" y="211" text-anchor="middle">lease + checkpoint</text></g>
+  <g><rect class="header" x="1390" y="150" width="150" height="82" rx="10"/><text class="participant" x="1465" y="184" text-anchor="middle">Redis</text><text class="role" x="1465" y="211" text-anchor="middle">advisory</text></g>
+
+  <path class="lifeline" d="M150 232 V1195"/><path class="lifeline" d="M415 232 V1195"/><path class="lifeline" d="M690 232 V1195"/><path class="lifeline" d="M965 232 V1195"/><path class="lifeline" d="M1230 232 V1195"/><path class="lifeline" d="M1465 232 V1195"/>
+  <rect class="activation" x="405" y="275" width="20" height="850" rx="5"/><rect class="activation" x="680" y="335" width="20" height="790" rx="5"/><rect class="activation" x="955" y="390" width="20" height="735" rx="5"/><rect class="activationWorker" x="1220" y="535" width="20" height="390" rx="5"/>
+
+  <path class="call" d="M150 290 H405"/><g><rect class="label labelBlue labelPill" x="190" y="247" width="210" height="34" rx="9"/><circle class="badgeCircle badgeBlue" cx="216" cy="264" r="13"/><text class="badge num" x="216" y="269">1</text><text class="labelText textBlue" x="244" y="269">POST job + key</text></g>
+  <path class="call" d="M425 350 H680"/><g><rect class="label labelBlue labelPill" x="455" y="307" width="220" height="34" rx="9"/><circle class="badgeCircle badgeBlue" cx="481" cy="324" r="13"/><text class="badge num" x="481" y="329">2</text><text class="labelText textBlue" x="509" y="329">validate + scope</text></g>
+  <path class="authority" d="M700 410 H955"/><g><rect class="label labelGreen labelPill" x="735" y="367" width="215" height="34" rx="9"/><circle class="badgeCircle badgeGreen" cx="761" cy="384" r="13"/><text class="badge num" x="761" y="389">3</text><text class="labelText textGreen" x="789" y="389">atomic submit tx</text></g>
+  <path class="return" d="M955 470 H150"/><g><rect class="label labelTeal labelPill" x="480" y="427" width="290" height="34" rx="9"/><circle class="badgeCircle badgeTeal" cx="506" cy="444" r="13"/><text class="badge num" x="506" y="449">4</text><text class="labelText textTeal" x="534" y="449">202 durable snapshot</text></g>
+  <path class="authority" d="M1220 555 H975"/><g><rect class="label labelGreen labelPill" x="985" y="512" width="225" height="34" rx="9"/><circle class="badgeCircle badgeGreen" cx="1011" cy="529" r="13"/><text class="badge num" x="1011" y="534">5</text><text class="labelText textGreen" x="1039" y="534">claim oldest FIFO</text></g>
+  <path class="authority" d="M1220 625 H975"/><g><rect class="label labelGreen labelPill" x="985" y="582" width="225" height="34" rx="9"/><circle class="badgeCircle badgeGreen" cx="1011" cy="599" r="13"/><text class="badge num" x="1011" y="604">6</text><text class="labelText textGreen" x="1039" y="604">checkpoint + outbox</text></g>
+  <path class="advisory" d="M975 700 H405"/><g><rect class="label labelAmber labelPill" x="600" y="657" width="270" height="34" rx="9"/><circle class="badgeCircle badgeAmber" cx="626" cy="674" r="13"/><text class="badge num" x="626" y="679">7</text><text class="labelText textAmber" x="654" y="679">SSE job.updated</text></g>
+  <path class="call" d="M150 770 H405"/><g><rect class="label labelBlue labelPill" x="180" y="727" width="220" height="34" rx="9"/><circle class="badgeCircle badgeBlue" cx="206" cy="744" r="13"/><text class="badge num" x="206" y="749">8</text><text class="labelText textBlue" x="234" y="749">GET fresh snapshot</text></g>
+  <path class="authority" d="M700 840 H955"/><g><rect class="label labelGreen labelPill" x="735" y="797" width="215" height="34" rx="9"/><circle class="badgeCircle badgeGreen" cx="761" cy="814" r="13"/><text class="badge num" x="761" y="819">9</text><text class="labelText textGreen" x="789" y="819">read current state</text></g>
+
+  <rect class="alt" x="550" y="900" width="950" height="235" rx="10"/>
+  <text class="branchTitle" x="575" y="932">alt running cancellation — durable request is committed first</text>
+  <path class="advisory" d="M700 980 H1450"/><g><rect class="label labelAmber labelPill" x="1000" y="937" width="300" height="34" rx="9"/><circle class="badgeCircle badgeAmber" cx="1026" cy="954" r="13"/><text class="badge num" x="1026" y="959">10</text><text class="labelText textAmber" x="1054" y="959">best-effort Redis wake-up</text></g>
+  <path class="branchDivider" d="M550 1020 H1500"/>
+  <text class="branchTitle" x="575" y="1050">else Redis unavailable — no rollback; worker observes cancel_requested at checkpoint</text>
+  <path class="error" d="M1220 1090 H975"/><g><rect class="label labelRed labelPill" x="985" y="1047" width="225" height="34" rx="9"/><circle class="badgeCircle badgeRed" cx="1011" cy="1064" r="13"/><text class="badge num" x="1011" y="1069">11</text><text class="labelText textRed" x="1039" y="1069">checkpoint to cancelled</text></g>
+
+  <rect x="70" y="1215" width="1460" height="42" rx="12" fill="#fff" stroke="#cad6dc" stroke-width="2"/>
+  <text class="note" x="800" y="1242" text-anchor="middle">SSE and Redis may be lost; the next REST read and PostgreSQL checkpoint still converge on the durable state.</text>
+</svg>

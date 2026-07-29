@@ -15,12 +15,12 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * Tests for [SuspendLeaderService] and [io.bluetape4k.leader.lettuce.LettuceSuspendLeaderElector].
+ * [SuspendLeaderService]와 [io.bluetape4k.leader.lettuce.LettuceSuspendLeaderElector]의 테스트입니다.
  *
- * ## Key behaviours verified
- * - Single coroutine acquires leadership and executes the suspend action.
- * - Second elector receives `null` when the lock is held by the first elector.
- * - [SuspendedJobTester] concurrency: exactly one worker wins per lock round.
+ * ## 검증하는 주요 동작
+ * - 단일 coroutine이 leadership을 획득하고 suspend action을 실행합니다.
+ * - 첫 번째 elector가 lock을 보유 중이면 두 번째 elector는 `null`을 받습니다.
+ * - [SuspendedJobTester] concurrency에서 lock round마다 정확히 worker 하나만 승리합니다.
  */
 class SuspendLeaderServiceTest : AbstractLeaderElectionTest() {
 
@@ -42,7 +42,7 @@ class SuspendLeaderServiceTest : AbstractLeaderElectionTest() {
         val elector1 = newSuspendElector(shortWait)
         val elector2 = newSuspendElector(shortWait)
 
-        // Elector2 tries while elector1 holds the lock — elector2 times out (waitTime=50ms).
+        // elector1이 lock을 보유하는 동안 elector2가 시도합니다. elector2는 timeout됩니다(waitTime=50ms).
         var result2: String? = "not-set"
         val result1 = elector1.runIfLeader(lockName) {
             result2 = elector2.runIfLeader(lockName) { "follower" }
@@ -58,8 +58,8 @@ class SuspendLeaderServiceTest : AbstractLeaderElectionTest() {
         val lockName = "test:suspend:concurrent:${Base58.randomString(8)}"
         val winCount = AtomicInteger(0)
 
-        // SuspendedJobTester — coroutine concurrency harness from bluetape4k-junit5.
-        // waitTime = 50ms so non-winners time out while the winner holds for 200ms.
+        // SuspendedJobTester는 bluetape4k-junit5의 coroutine concurrency harness입니다.
+        // winner가 200ms 동안 보유하는 동안 non-winner가 timeout되도록 waitTime = 50ms로 둡니다.
         val opts = LeaderElectionOptions(waitTime = 50.milliseconds, leaseTime = 5.seconds)
 
         SuspendedJobTester()

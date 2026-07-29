@@ -27,23 +27,23 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 
 /**
- * Coroutine-based graph service for LinkedIn-style social network operations.
+ * LinkedIn 스타일 social network 작업을 수행하는 coroutine 기반 그래프 서비스입니다.
  *
- * Mirrors the API of [SocialNetworkService] with suspend/Flow return types for non-blocking
- * use in coroutine contexts. Streaming queries return cold [Flow]s so callers control
- * back-pressure and cancellation.
+ * coroutine context에서 non-blocking으로 사용할 수 있도록 [SocialNetworkService] API를
+ * suspend/Flow 반환 형태로 대응시킵니다. Streaming query는 cold [Flow]를 반환하므로
+ * 호출자가 back-pressure와 cancellation을 제어합니다.
  *
- * ## Behavior / Contract
- * - [initialize] must be called once before any other method to ensure the named graph exists.
- * - Vertex mutators ([addPerson], [addCompany]) are idempotent: find-by-domain-key or create.
- * - [connect] stores BIDIRECTIONAL connection as TWO directed edges (A→B and B→A).
- *   Call it once per pair — **never call again with arguments reversed**.
- * - [follow] is unidirectional: one edge from follower to followee.
- * - Edge mutators reject missing vertices and source/target label mismatches with [IllegalArgumentException].
- * - [recommendConnections] has O(N) per-candidate neighbor lookups — use with care on large graphs.
- * - Never wrap suspend calls in `runCatching` — [kotlinx.coroutines.CancellationException] must propagate.
+ * ## 동작 / 계약
+ * - named graph가 존재하도록 다른 메서드보다 먼저 [initialize]를 한 번 호출해야 합니다.
+ * - 정점 변경 메서드([addPerson], [addCompany])는 멱등입니다. 도메인 키로 찾고 없으면 생성합니다.
+ * - [connect]는 양방향 connection을 두 개의 방향성 간선(A -> B, B -> A)으로 저장합니다.
+ *   pair마다 한 번만 호출합니다. **인자를 뒤집어 다시 호출하지 않습니다.**
+ * - [follow]는 단방향입니다. follower에서 followee로 향하는 간선 하나만 만듭니다.
+ * - 간선 변경 메서드는 정점 누락과 source/target label 불일치를 [IllegalArgumentException]으로 거부합니다.
+ * - [recommendConnections]는 후보마다 O(N) neighbor 조회를 수행하므로 큰 그래프에서는 주의해서 사용합니다.
+ * - suspend 호출을 `runCatching`으로 감싸지 않습니다. [kotlinx.coroutines.CancellationException]은 전파되어야 합니다.
  *
- * ## Usage
+ * ## 사용 예
  * ```kotlin
  * val service = SocialNetworkSuspendService(ops, "social_graph")
  * service.initialize()
@@ -64,8 +64,8 @@ class SocialNetworkSuspendService(
 
     companion object : KLoggingChannel() {
         /**
-         * Maximum allowed traversal depth for network queries.
-         * LinkedIn-equivalent "6 degrees of separation" upper bound.
+         * network query에 허용하는 최대 순회 깊이입니다.
+         * LinkedIn의 "6 degrees of separation"에 해당하는 상한입니다.
          */
         const val MAX_TRAVERSAL_DEPTH: Int = 6
     }
@@ -75,7 +75,7 @@ class SocialNetworkSuspendService(
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Ensures the named graph exists. Safe to call multiple times — no-op when already created.
+     * named graph가 존재하도록 보장합니다. 여러 번 호출해도 안전하며, 이미 생성되어 있으면 no-op입니다.
      */
     suspend fun initialize() {
         if (!ops.graphExists(graphName)) {
@@ -85,16 +85,16 @@ class SocialNetworkSuspendService(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Vertex mutators (find-or-create by domain key)
+    // 정점 변경 메서드(도메인 키 기준 find-or-create)
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Finds an existing Person vertex by [personId] or creates a new one.
+     * [personId]로 기존 Person 정점을 찾거나 새로 만듭니다.
      *
-     * @param personId stable domain key (opaque string, e.g. username or UUID)
-     * @param name display name
-     * @param title professional title (optional)
-     * @param location city or region (optional)
+     * @param personId 안정적인 도메인 키입니다. username이나 UUID처럼 내부 구조를 드러내지 않는 문자열입니다.
+     * @param name 표시 이름입니다.
+     * @param title 직무 title입니다. 선택 값입니다.
+     * @param location 도시 또는 지역입니다. 선택 값입니다.
      */
     suspend fun addPerson(
         personId: String,
@@ -118,12 +118,12 @@ class SocialNetworkSuspendService(
     }
 
     /**
-     * Finds an existing Company vertex by [companyId] or creates a new one.
+     * [companyId]로 기존 Company 정점을 찾거나 새로 만듭니다.
      *
-     * @param companyId stable domain key (opaque string)
-     * @param name company display name
-     * @param industry industry sector (optional)
-     * @param location headquarters city or region (optional)
+     * @param companyId 안정적인 도메인 키입니다. 내부 구조를 드러내지 않는 문자열입니다.
+     * @param name 회사 표시 이름입니다.
+     * @param industry 산업 분야입니다. 선택 값입니다.
+     * @param location 본사 도시 또는 지역입니다. 선택 값입니다.
      */
     suspend fun addCompany(
         companyId: String,
@@ -147,21 +147,21 @@ class SocialNetworkSuspendService(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Edge mutators
+    // 간선 변경 메서드
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Establishes a bidirectional KNOWS connection between two Person vertices.
+     * 두 Person 정점 사이에 양방향 `KNOWS` connection을 설정합니다.
      *
-     * Stores TWO directed edges (from→to and to→from) with identical properties.
-     * Call this method once per pair — **never call again with arguments reversed**.
+     * 동일한 속성을 가진 두 개의 방향성 간선(from -> to, to -> from)으로 저장합니다.
+     * 이 메서드는 pair마다 한 번만 호출합니다. **인자를 뒤집어 다시 호출하지 않습니다.**
      *
-     * @param fromVertexId graph ID of the first Person vertex
-     * @param toVertexId graph ID of the second Person vertex
-     * @param since ISO-8601 date when the connection was established (optional)
-     * @param strength connection strength 1–10 (default: 5)
-     * @return pair of (forward edge, backward edge)
-     * @throws IllegalArgumentException when endpoints are equal, missing, or not Person → Person.
+     * @param fromVertexId 첫 번째 Person 정점의 graph ID입니다.
+     * @param toVertexId 두 번째 Person 정점의 graph ID입니다.
+     * @param since connection이 성립된 ISO-8601 날짜입니다. 선택 값입니다.
+     * @param strength connection 강도입니다. 범위는 1-10이고 기본값은 5입니다.
+     * @return (정방향 간선, 역방향 간선) pair입니다.
+     * @throws IllegalArgumentException endpoint가 같거나, 누락되었거나, Person -> Person 관계가 아니면 발생합니다.
      */
     suspend fun connect(
         fromVertexId: GraphElementId,
@@ -184,13 +184,13 @@ class SocialNetworkSuspendService(
     }
 
     /**
-     * Creates a unidirectional FOLLOWS edge from [followerVertexId] to [followeeVertexId].
+     * [followerVertexId]에서 [followeeVertexId]로 향하는 단방향 `FOLLOWS` 간선을 만듭니다.
      *
-     * Unlike [connect], FOLLOWS does not imply mutual acquaintance.
+     * [connect]와 달리 `FOLLOWS`는 상호 acquaintance를 뜻하지 않습니다.
      *
-     * @param followerVertexId graph ID of the Person who follows
-     * @param followeeVertexId graph ID of the Person being followed
-     * @throws IllegalArgumentException when endpoints are equal, missing, or not Person → Person.
+     * @param followerVertexId follow하는 Person의 graph ID입니다.
+     * @param followeeVertexId follow 대상 Person의 graph ID입니다.
+     * @throws IllegalArgumentException endpoint가 같거나, 누락되었거나, Person -> Person 관계가 아니면 발생합니다.
      */
     suspend fun follow(followerVertexId: GraphElementId, followeeVertexId: GraphElementId): GraphEdge {
         requireDistinctEndpoints(followerVertexId, followeeVertexId, "followerVertexId", "followeeVertexId")
@@ -200,14 +200,14 @@ class SocialNetworkSuspendService(
     }
 
     /**
-     * Creates a WORKS_AT edge from a Person vertex to a Company vertex.
+     * Person 정점에서 Company 정점으로 향하는 `WORKS_AT` 간선을 만듭니다.
      *
-     * @param personVertexId graph ID of the Person vertex
-     * @param companyVertexId graph ID of the Company vertex
-     * @param role job title or role name (required, must not be blank)
-     * @param startDate ISO-8601 employment start date (optional)
-     * @param isCurrent whether employment is currently active (stored as "true"/"false")
-     * @throws IllegalArgumentException when endpoints are missing or not Person → Company.
+     * @param personVertexId Person 정점의 graph ID입니다.
+     * @param companyVertexId Company 정점의 graph ID입니다.
+     * @param role 직무 title 또는 role 이름입니다. 필수이며 blank이면 안 됩니다.
+     * @param startDate ISO-8601 재직 시작일입니다. 선택 값입니다.
+     * @param isCurrent 현재 재직 여부입니다. `"true"`/`"false"` 문자열로 저장합니다.
+     * @throws IllegalArgumentException endpoint가 없거나 Person -> Company 관계가 아니면 발생합니다.
      */
     suspend fun addWorkExperience(
         personVertexId: GraphElementId,
@@ -232,25 +232,25 @@ class SocialNetworkSuspendService(
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Network traversal queries
+    // Network 순회 query
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Returns a cold [Flow] of direct (1st-degree) KNOWS connections of the given person.
+     * 지정한 Person의 direct(1st-degree) `KNOWS` connection을 cold [Flow]로 반환합니다.
      *
-     * @param personVertexId graph ID of the seed Person vertex
+     * @param personVertexId seed Person 정점의 graph ID입니다.
      */
     fun getDirectConnections(personVertexId: GraphElementId): Flow<GraphVertex> {
         return ops.neighbors(personVertexId, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 1))
     }
 
     /**
-     * Returns a cold [Flow] of all Person vertices reachable within [maxDegree] KNOWS hops.
+     * seed에서 [maxDegree] `KNOWS` hop 안에 도달할 수 있는 모든 Person 정점을 cold [Flow]로 반환합니다.
      *
-     * The seed vertex itself is filtered out of the stream.
+     * seed 정점 자체는 stream에서 제외합니다.
      *
-     * @param personVertexId graph ID of the seed Person vertex
-     * @param maxDegree maximum hop count (1..[MAX_TRAVERSAL_DEPTH])
+     * @param personVertexId seed Person 정점의 graph ID입니다.
+     * @param maxDegree 최대 hop 수입니다. 1..[MAX_TRAVERSAL_DEPTH] 범위여야 합니다.
      */
     fun getConnectionsWithinDegree(
         personVertexId: GraphElementId,
@@ -262,16 +262,16 @@ class SocialNetworkSuspendService(
     }
 
     /**
-     * Returns Person vertices reachable at exactly the [degree]-th hop from the seed.
+     * seed에서 정확히 [degree]번째 hop에 도달할 수 있는 Person 정점을 반환합니다.
      *
-     * Vertices reachable at strictly shorter paths are excluded. The seed vertex is excluded.
+     * 더 짧은 path로 도달할 수 있는 정점은 제외합니다. seed 정점도 제외합니다.
      *
-     * ## Algorithm
-     * 1. Collect all vertices reachable within `degree` hops (excluding seed).
-     * 2. Subtract vertices reachable within `degree - 1` hops (excluding seed).
+     * ## 알고리즘
+     * 1. `degree` hop 안에 도달 가능한 모든 정점을 수집합니다(seed 제외).
+     * 2. `degree - 1` hop 안에 도달 가능한 정점을 뺍니다(seed 제외).
      *
-     * @param personVertexId graph ID of the seed Person vertex
-     * @param degree target hop distance (1..[MAX_TRAVERSAL_DEPTH])
+     * @param personVertexId seed Person 정점의 graph ID입니다.
+     * @param degree 목표 hop 거리입니다. 1..[MAX_TRAVERSAL_DEPTH] 범위여야 합니다.
      */
     suspend fun getNthDegreeConnections(personVertexId: GraphElementId, degree: Int): List<GraphVertex> {
         degree.requireInRange(1, MAX_TRAVERSAL_DEPTH, "degree")
@@ -291,19 +291,19 @@ class SocialNetworkSuspendService(
     }
 
     /**
-     * Recommends connections using the Friend-of-a-Friend (FOAF) algorithm.
+     * FOAF(Friend-of-a-Friend) 알고리즘으로 connection을 추천합니다.
      *
-     * **N+1 Warning**: this method issues one neighbor query per depth-2 candidate.
-     * For large graphs, prefer a backend-native single-query implementation.
+     * **N+1 경고**: 이 메서드는 depth-2 후보마다 neighbor 조회 1회를 실행합니다.
+     * 큰 그래프에서는 backend-native single-query 구현을 우선합니다.
      *
-     * ## Algorithm
-     * 1. Collect direct (depth-1) connections of the seed.
-     * 2. Collect depth-2 candidates; exclude seed and existing direct connections.
-     * 3. For each candidate, count shared direct connections (mutual connection count).
-     * 4. Return results sorted by mutual count descending, then by `personId` ascending.
+     * ## 알고리즘
+     * 1. seed의 direct(depth-1) connection을 수집합니다.
+     * 2. depth-2 후보를 수집하고, seed와 기존 direct connection을 제외합니다.
+     * 3. 후보마다 공유 direct connection 수(mutual connection count)를 셉니다.
+     * 4. mutual count 내림차순, `personId` 오름차순으로 정렬해 반환합니다.
      *
-     * @param personVertexId graph ID of the seed Person vertex
-     * @return ranked list of [ConnectionRecommendation]; empty if no FOAF candidates exist
+     * @param personVertexId seed Person 정점의 graph ID입니다.
+     * @return 순위화된 [ConnectionRecommendation] 목록입니다. FOAF 후보가 없으면 비어 있습니다.
      */
     suspend fun recommendConnections(personVertexId: GraphElementId): List<ConnectionRecommendation> {
         val directFriends = ops.neighbors(personVertexId, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 1))
@@ -333,11 +333,11 @@ class SocialNetworkSuspendService(
     }
 
     /**
-     * Returns a cold [Flow] of Person vertices that work at any company where [personVertexId] also works.
+     * [personVertexId]도 근무 중인 회사에서 현재 함께 일하는 Person 정점을 cold [Flow]로 반환합니다.
      *
-     * The seed person is always filtered from the stream.
+     * seed Person은 항상 stream에서 제외합니다.
      *
-     * @param personVertexId graph ID of the seed Person vertex
+     * @param personVertexId seed Person 정점의 graph ID입니다.
      */
     fun findColleagues(personVertexId: GraphElementId): Flow<GraphVertex> = flow {
         val companies = ops.neighbors(personVertexId, NeighborOptions(WorksAtLabel.label, Direction.OUTGOING, 1))
@@ -354,10 +354,10 @@ class SocialNetworkSuspendService(
     }
 
     /**
-     * Returns the shortest KNOWS path from [fromVertexId] to [toVertexId], or `null` if none exists.
+     * [fromVertexId]에서 [toVertexId]까지의 최단 `KNOWS` path를 반환합니다. 없으면 `null`입니다.
      *
-     * @param fromVertexId graph ID of the start Person vertex
-     * @param toVertexId graph ID of the target Person vertex
+     * @param fromVertexId 시작 Person 정점의 graph ID입니다.
+     * @param toVertexId 대상 Person 정점의 graph ID입니다.
      */
     suspend fun findConnectionPath(fromVertexId: GraphElementId, toVertexId: GraphElementId): GraphPath? {
         return ops.shortestPath(
@@ -368,11 +368,11 @@ class SocialNetworkSuspendService(
     }
 
     /**
-     * Returns a cold [Flow] of all KNOWS paths from [fromVertexId] to [toVertexId] up to [maxDepth] hops.
+     * [fromVertexId]에서 [toVertexId]까지 [maxDepth] hop 이하의 모든 `KNOWS` path를 cold [Flow]로 반환합니다.
      *
-     * @param fromVertexId graph ID of the start Person vertex
-     * @param toVertexId graph ID of the target Person vertex
-     * @param maxDepth maximum path length in hops (1..[MAX_TRAVERSAL_DEPTH])
+     * @param fromVertexId 시작 Person 정점의 graph ID입니다.
+     * @param toVertexId 대상 Person 정점의 graph ID입니다.
+     * @param maxDepth 최대 path 길이입니다. hop 기준이며 1..[MAX_TRAVERSAL_DEPTH] 범위여야 합니다.
      */
     fun findAllConnectionPaths(
         fromVertexId: GraphElementId,
@@ -388,11 +388,11 @@ class SocialNetworkSuspendService(
     }
 
     /**
-     * Returns the shared direct (1st-degree) KNOWS connections of two Person vertices.
+     * 두 Person 정점이 공유하는 direct(1st-degree) `KNOWS` connection을 반환합니다.
      *
-     * @param vertexId1 graph ID of the first Person vertex
-     * @param vertexId2 graph ID of the second Person vertex
-     * @return list of Person vertices directly connected to both
+     * @param vertexId1 첫 번째 Person 정점의 graph ID입니다.
+     * @param vertexId2 두 번째 Person 정점의 graph ID입니다.
+     * @return 두 정점 모두와 직접 연결된 Person 정점 목록입니다.
      */
     suspend fun findMutualConnections(vertexId1: GraphElementId, vertexId2: GraphElementId): List<GraphVertex> {
         val friends1 = ops.neighbors(vertexId1, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 1))

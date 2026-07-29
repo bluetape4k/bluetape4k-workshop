@@ -10,47 +10,47 @@ dependencies {
 
     testImplementation(project(":shared"))
 
-    // Redis
+    // Redis 의존성입니다.
     implementation(libs.bluetape4k.redis)
     implementation(libs.bluetape4k.redisson)
     testImplementation(libs.bluetape4k.testcontainers)
 
-    // Redisson
+    // Redisson 의존성입니다.
     implementation(libs.redisson.lib)
     implementation(libs.redisson.spring.boot.starter)
 
-    // Lettuce
+    // Lettuce 의존성입니다.
     implementation(libs.lettuce.core)
 
-    // Jackson
+    // Jackson 직렬화 의존성입니다.
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.jackson3.dataformat.protobuf)
     implementation(libs.jackson3.module.kotlin)
     implementation(libs.jackson3.module.blackbird)
 
-    // Grpc
+    // gRPC 의존성입니다.
     implementation(libs.bluetape4k.grpc)
 
-    // Codecs
+    // codec 의존성입니다.
     implementation(libs.fory.kotlin)
     implementation(libs.kryo)
 
-    // Compressor
+    // compressor 의존성입니다.
     implementation(libs.lz4.java)
     implementation(libs.snappy.java)
     implementation(libs.zstd.jni)
 
-    // Protobuf
+    // Protobuf 의존성입니다.
     implementation(libs.protobuf.java.lib)
     implementation(libs.protobuf.java.util)
     implementation(libs.protobuf.kotlin)
 
-    // Cache
+    // cache 의존성입니다.
     implementation(libs.bluetape4k.cache.core)
     implementation(libs.caffeine.lib)
     implementation(libs.caffeine.jcache)
 
-    // Coroutines
+    // coroutine 의존성입니다.
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactor)
@@ -59,7 +59,7 @@ dependencies {
     // IdGenerators
     implementation(libs.bluetape4k.idgenerators)
 
-    // Redisson Map Read/Write Through 예제를 위해
+    // Redis 의존성입니다.son Map Read/Write Through 예제를 위해
     testImplementation(libs.bluetape4k.jdbc)
     testRuntimeOnly(libs.h2.lib)
     testImplementation(libs.hikaricp)

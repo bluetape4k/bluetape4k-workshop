@@ -6,10 +6,10 @@ import org.junit.jupiter.api.Test
 import io.bluetape4k.codec.Base58
 
 /**
- * T1: Single-instance leader election test.
+ * T1: Single-instance leader election test입니다.
  *
- * When only one instance attempts to acquire a lock, it must be elected and execute the action.
- * Result must be non-null and equal to the expected return value.
+ * 하나의 instance만 lock 획득을 시도하면 반드시 선출되어 action을 실행해야 합니다.
+ * 결과는 non-null이어야 하며 기대 반환값과 같아야 합니다.
  */
 class LeaderElectionSingleRunnerTest : AbstractLeaderElectionTest() {
 

@@ -7,39 +7,39 @@ import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
 
 /**
- * Exposed table for image processing jobs.
+ * 이미지 처리 job용 Exposed 테이블입니다.
  *
- * Each row tracks one processing run for an [ImageAssetTable] row.
- * Multiple jobs may exist per asset (e.g. after recovery from a [ImageJobStatus.FAILED] state).
+ * 각 행은 [ImageAssetTable] 행 하나에 대한 처리 실행 하나를 추적합니다.
+ * asset 하나에 여러 job이 있을 수 있습니다(예: [ImageJobStatus.FAILED] 상태 복구 뒤).
  *
- * Uses plain [LongIdTable] — no auditing columns needed here; timing is tracked via
- * [startedAt] and [finishedAt].
+ * 일반 [LongIdTable]을 사용합니다. 여기에는 감사 컬럼이 필요 없고 시간은
+ * [startedAt]과 [finishedAt]으로 추적합니다.
  */
 object ImageProcessingJobTable : LongIdTable("image_processing_jobs") {
 
-    /** FK to the parent [ImageAssetTable]; cascades deletes. */
+    /** 부모 [ImageAssetTable]에 대한 FK이며 삭제를 cascade합니다. */
     val imageAssetId = reference("image_asset_id", ImageAssetTable, onDelete = ReferenceOption.CASCADE)
         .index()
 
-    /** Current execution status of this job. */
+    /** 이 job의 현재 실행 상태입니다. */
     val status = enumerationByName("status", 20, ImageJobStatus::class)
         .default(ImageJobStatus.RUNNING)
 
-    /** JSON array of variant names requested for this job (e.g. `["thumbnail", "webp-2x"]`). */
+    /** 이 job에서 요청한 변형 이름의 JSON 배열입니다(예: `["thumbnail", "webp-2x"]`). */
     val requestedVariants = jacksonb<List<String>>("requested_variants")
 
-    /** Wall-clock time when the job started; defaults to DB `CURRENT_TIMESTAMP`. */
+    /** job이 시작된 벽시계 시간입니다. 기본값은 DB `CURRENT_TIMESTAMP`입니다. */
     val startedAt = timestamp("started_at").defaultExpression(CurrentTimestamp)
 
-    /** Wall-clock time when the job finished; null while still running. */
+    /** job이 끝난 벽시계 시간입니다. 실행 중이면 null입니다. */
     val finishedAt = timestamp("finished_at").nullable()
 
-    /** Total processing duration in milliseconds; null while still running. */
+    /** 전체 처리 시간을 밀리초로 저장합니다. 실행 중이면 null입니다. */
     val durationMs = long("duration_ms").nullable()
 
-    /** Short machine-readable error code (≤ 100 chars); null on success. */
+    /** 짧은 기계 판독용 오류 코드입니다(≤ 100자). 성공 시 null입니다. */
     val errorCode = varchar("error_code", 100).nullable()
 
-    /** Human-readable error description; null on success. */
+    /** 사람이 읽을 수 있는 오류 설명입니다. 성공 시 null입니다. */
     val errorMessage = text("error_message").nullable()
 }

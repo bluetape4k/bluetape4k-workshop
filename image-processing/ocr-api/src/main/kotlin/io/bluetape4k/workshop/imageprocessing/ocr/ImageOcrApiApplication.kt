@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan
 import org.springframework.boot.runApplication
 
 /**
- * Spring Boot entrypoint for the image OCR API workshop module.
+ * 이미지 OCR API 워크숍 모듈의 Spring Boot 진입점입니다.
  */
 @SpringBootApplication
 @ConfigurationPropertiesScan(basePackageClasses = [ImageOcrProperties::class])

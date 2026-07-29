@@ -8,10 +8,10 @@ import io.bluetape4k.logging.debug
 import org.springframework.stereotype.Component
 
 /**
- * Logs Bucket4j starter metrics emitted by the Redis-backed WebFlux filters.
+ * Redis 기반 WebFlux filter가 내보내는 Bucket4j starter metric을 로그로 남깁니다.
  *
- * This example handler keeps metrics visible during workshop runs without
- * coupling the sample to an external metrics backend.
+ * 이 예제 handler는 sample을 외부 metrics backend에 결합하지 않으면서
+ * 워크숍 실행 중 metric을 확인할 수 있게 합니다.
  */
 @Component
 class DebugMetricHandler : MetricHandler {

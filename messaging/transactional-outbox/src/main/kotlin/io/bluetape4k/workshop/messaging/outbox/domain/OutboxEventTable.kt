@@ -6,23 +6,20 @@ import org.jetbrains.exposed.v1.javatime.CurrentDateTime
 import org.jetbrains.exposed.v1.javatime.datetime
 
 /**
- * Exposed table for outbox events used by the Transactional Outbox pattern.
+ * Transactional Outbox pattern 이 사용하는 outbox event 용 Exposed table 입니다.
  *
- * Each row is written atomically in the same transaction that mutates the domain
- * aggregate.  A background scheduler ([io.bluetape4k.workshop.messaging.outbox.outbox.OutboxPublisher])
- * polls [OutboxStatus.PENDING] (and [OutboxStatus.FAILED]) rows, publishes them to
- * Kafka, then marks them [OutboxStatus.PUBLISHED].
+ * 각 row 는 domain aggregate 를 mutate 하는 동일 transaction 안에서 atomically 기록됩니다. background scheduler([io.bluetape4k.workshop.messaging.outbox.outbox.OutboxPublisher]) 는 [OutboxStatus.PENDING] 및 [OutboxStatus.FAILED] row 를 polling 하고 Kafka 로 publish 한 뒤 [OutboxStatus.PUBLISHED] 로 표시합니다.
  *
  * ## Schema
- * - `id`             — auto-increment Long primary key
- * - `aggregate_type` — domain type, e.g. `"Order"`
- * - `aggregate_id`   — string representation of the aggregate PK
- * - `event_type`     — discriminator, e.g. `"OrderPlaced"`, `"OrderStatusChanged"`
- * - `payload`        — JSON-serialised event payload
- * - `status`         — current [OutboxStatus], defaults to [OutboxStatus.PENDING]
- * - `retry_count`    — number of failed publish attempts
- * - `created_at`     — wall-clock time of row creation
- * - `processed_at`   — wall-clock time of successful publish (nullable)
+ * - `id` — auto-increment Long primary key 입니다.
+ * - `aggregate_type` — domain type 입니다. 예: `"Order"`
+ * - `aggregate_id` — aggregate PK 의 string representation 입니다.
+ * - `event_type` — discriminator 입니다. 예: `"OrderPlaced"`, `"OrderStatusChanged"`
+ * - `payload` — JSON-serialized event payload 입니다.
+ * - `status` — 현재 [OutboxStatus] 입니다. 기본값은 [OutboxStatus.PENDING] 입니다.
+ * - `retry_count` — failed publish attempt 수입니다.
+ * - `created_at` — row creation wall-clock time 입니다.
+ * - `processed_at` — successful publish wall-clock time 이며 nullable 입니다.
  */
 object OutboxEventTable : LongIdTable("outbox_events") {
     val aggregateType = varchar("aggregate_type", 100)

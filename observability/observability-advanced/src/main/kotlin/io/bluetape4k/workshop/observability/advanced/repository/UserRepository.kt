@@ -15,14 +15,13 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.stereotype.Repository
 
 /**
- * Repository for [User] persistence using Exposed JDBC.
+ * Exposed JDBC 를 사용해 [User] 를 persist 하는 repository 입니다.
  *
  * ## Behavior / Contract
- * - All methods wrap Exposed calls in `withContext(Dispatchers.IO) { transaction { ... } }`.
- * - Spring `@Transactional` is intentionally avoided: it binds the connection to a thread-local,
- *   which breaks when `withContext(Dispatchers.IO)` switches the coroutine to a different thread.
- * - No Observation spans are created here; instrumentation is the service layer's responsibility.
- * - Uses top-level `eq` from `org.jetbrains.exposed.v1.core`.
+ * - 모든 method 는 Exposed 호출을 `withContext(Dispatchers.IO) { transaction { ... } }` 으로 감쌉니다.
+ * - Spring `@Transactional` 은 의도적으로 피합니다. connection 을 thread-local 에 bind 하므로 `withContext(Dispatchers.IO)` 가 coroutine 을 다른 thread 로 전환할 때 깨질 수 있습니다.
+ * - 여기서는 Observation span 을 만들지 않습니다. instrumentation 은 service layer 책임입니다.
+ * - `org.jetbrains.exposed.v1.core` 의 top-level `eq` 를 사용합니다.
  */
 @Repository
 class UserRepository {

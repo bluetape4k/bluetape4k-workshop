@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.exposed.javers.approval.model
 import org.jetbrains.exposed.v1.core.Table
 
 /**
- * Current approved product policy row.
+ * 현재 승인된 product policy row이다.
  */
 object ProductPolicyTable: Table("product_policies") {
     val id = long("id")

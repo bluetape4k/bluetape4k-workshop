@@ -6,6 +6,10 @@ on:
   push:
     branches: [ develop, main ]
     paths:
+      - 'commerce/**'
+      - 'operations/**'
+      - 'profiles/high-contention/**'
+      - 'scripts/high-contention/**'
       - 'exposed/webflux-r2dbc/**'
       - 'exposed/javers-approval-workflow/**'
       - 'exposed/javers-persistence-audit/**'
@@ -36,23 +40,29 @@ on:
       - 'kotlin/flow-extensions-search-pipeline/**'
       - 'leader/backend-comparison-lab/**'
       - 'leader/k8s-lease-micrometer/**'
+      - 'leader/job-safety-lab/**'
       - 'leader/tenant-scheduler/**'
       - 'messaging/kafka/**'
       - 'messaging/kafka-outbox-fallback/**'
-      - 'optimization/planning-contracts/**'
       - 'spring-modulith/module-boundaries/**'
       - 'shared/**'
       - 'buildSrc/**'
+      - 'build-logic/**'
       - 'gradle/**'
       - '*.gradle.kts'
       - 'settings.gradle.kts'
       - 'docs/images/readme-diagrams/**'
       - 'scripts/validate-readme-diagram-qa.mjs'
+      - 'scripts/validate-high-contention-readme.mjs'
       - 'scripts/smoke-validate.sh'
       - '.github/workflows/Examples.yml'
   pull_request:
     branches: [ develop, main ]
     paths:
+      - 'commerce/**'
+      - 'operations/**'
+      - 'profiles/high-contention/**'
+      - 'scripts/high-contention/**'
       - 'exposed/webflux-r2dbc/**'
       - 'exposed/javers-approval-workflow/**'
       - 'exposed/javers-persistence-audit/**'
@@ -83,18 +93,20 @@ on:
       - 'kotlin/flow-extensions-search-pipeline/**'
       - 'leader/backend-comparison-lab/**'
       - 'leader/k8s-lease-micrometer/**'
+      - 'leader/job-safety-lab/**'
       - 'leader/tenant-scheduler/**'
       - 'messaging/kafka/**'
       - 'messaging/kafka-outbox-fallback/**'
-      - 'optimization/planning-contracts/**'
       - 'spring-modulith/module-boundaries/**'
       - 'shared/**'
       - 'buildSrc/**'
+      - 'build-logic/**'
       - 'gradle/**'
       - '*.gradle.kts'
       - 'settings.gradle.kts'
       - 'docs/images/readme-diagrams/**'
       - 'scripts/validate-readme-diagram-qa.mjs'
+      - 'scripts/validate-high-contention-readme.mjs'
       - 'scripts/smoke-validate.sh'
       - '.github/workflows/Examples.yml'
   workflow_dispatch:
@@ -107,17 +119,104 @@ permissions:
   contents: read
 
 env:
-  JAVA_VERSIONS: |-
-    21
-    25
+  JAVA_VERSION: '21'
   JAVA_DISTRIBUTION: 'temurin'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
+  changes:
+    name: Detect Example Changes
+    runs-on: ubuntu-latest
+    outputs:
+      diagram: ${{ steps.paths.outputs.diagram }}
+      examples: ${{ steps.paths.outputs.examples }}
+      high_contention: ${{ steps.paths.outputs.high_contention }}
+      gradle: ${{ steps.paths.outputs.gradle }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Classify changed paths
+        id: paths
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          diagram=false
+          examples=false
+          high_contention=false
+          gradle=false
+
+          if [[ "$EVENT_NAME" == "schedule" || "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            diagram=true
+            examples=true
+            high_contention=true
+            gradle=true
+          else
+            if [[ "$EVENT_NAME" == "pull_request" ]]; then
+              range="$BASE_SHA...$HEAD_SHA"
+            elif [[ -n "$BEFORE_SHA" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then
+              range="$BEFORE_SHA...$HEAD_SHA"
+            else
+              range="$HEAD_SHA^...$HEAD_SHA"
+            fi
+
+            while IFS= read -r path; do
+              case "$path" in
+                .github/workflows/Examples.yml)
+                  diagram=true
+                  examples=true
+                  high_contention=true
+                  gradle=true
+                  ;;
+                *.md|docs/**)
+                  diagram=true
+                  ;;
+                scripts/validate-readme-diagram-qa.mjs)
+                  diagram=true
+                  ;;
+                scripts/validate-high-contention-readme.mjs)
+                  high_contention=true
+                  gradle=true
+                  ;;
+                scripts/smoke-validate.sh)
+                  diagram=true
+                  high_contention=true
+                  gradle=true
+                  ;;
+                profiles/high-contention/**|scripts/high-contention/**)
+                  high_contention=true
+                  gradle=true
+                  ;;
+                commerce/**|operations/**)
+                  examples=true
+                  high_contention=true
+                  gradle=true
+                  ;;
+                *)
+                  examples=true
+                  gradle=true
+                  ;;
+              esac
+            done < <(git diff --name-only "$range")
+          fi
+
+          {
+            echo "diagram=$diagram"
+            echo "examples=$examples"
+            echo "high_contention=$high_contention"
+            echo "gradle=$gradle"
+          } | tee -a "$GITHUB_OUTPUT"
+
   validate-wrapper:
     name: Validate Gradle Wrapper
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    needs: changes
+    if: needs.changes.outputs.gradle == 'true'
     steps:
       - uses: actions/checkout@v7
       - uses: gradle/actions/wrapper-validation@v6
@@ -126,13 +225,19 @@ jobs:
     name: Smoke Examples (H2/default)
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    needs: validate-wrapper
+    needs:
+      - changes
+      - validate-wrapper
+    if: >-
+      always() &&
+      needs.changes.outputs.examples == 'true' &&
+      needs.validate-wrapper.result == 'success'
     steps:
       - uses: actions/checkout@v7
 
       - uses: actions/setup-java@v5
         with:
-          java-version: ${{ env.JAVA_VERSIONS }}
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
 
       - uses: gradle/actions/setup-gradle@v6
@@ -147,6 +252,12 @@ jobs:
       # - spring-boot-resilience4j-coroutines: resilience path
       # - aws-eventbridge-scheduler: local EventBridge + Scheduler boundary path
       # - jackson/jsonview examples: serialization path
+      # - operations-job-console-core: framework-neutral state machine and queue projections
+      # - leader-job-safety-lab: deterministic safety scenarios without container-backed integration tags
+      # - commerce-event-sourced-promotion-voucher-campaign: container-free domain and web contract tests
+      # - commerce-usage-metering-billing-ledger: container-free domain and architecture contracts
+      # - commerce-usage-metering-billing-event-sourcing: container-free reducer, hash, upcast, and architecture contracts
+      # - commerce-usage-billing-*: five independently deployable service contracts and Kafka/PostgreSQL composition proof
       - name: Run H2/default examples
         run: >-
           ./gradlew
@@ -172,7 +283,18 @@ jobs:
           :kotlin-flow-extensions-search-pipeline:test
           :leader-backend-comparison-lab:test
           :leader-k8s-lease-micrometer:test
+          :leader-job-safety-lab:test
+          :commerce-event-sourced-promotion-voucher-campaign:test
+          :commerce-usage-metering-billing-ledger:test
+          :commerce-usage-metering-billing-event-sourcing:test
+          :commerce-usage-billing-meter-service:test
+          :commerce-usage-billing-usage-service:test
+          :commerce-usage-billing-billing-service:test
+          :commerce-usage-billing-invoice-service:test
+          :commerce-usage-billing-query-service:test
+          :commerce-usage-billing-microservices-composition-tests:test
           :leader-tenant-scheduler:test
+          :operations-job-console-core:test
           :spring-modulith-module-boundaries:test
           --continue
         env:
@@ -228,8 +350,16 @@ jobs:
             leader/backend-comparison-lab/build/reports/tests/test/
             leader/k8s-lease-micrometer/build/test-results/test/*.xml
             leader/k8s-lease-micrometer/build/reports/tests/test/
+            leader/job-safety-lab/build/test-results/test/*.xml
+            leader/job-safety-lab/build/reports/tests/test/
+            commerce/usage-metering-billing-ledger/build/test-results/test/*.xml
+            commerce/usage-metering-billing-ledger/build/reports/tests/test/
+            commerce/usage-metering-billing-event-sourcing/build/test-results/test/*.xml
+            commerce/usage-metering-billing-event-sourcing/build/reports/tests/test/
             leader/tenant-scheduler/build/test-results/test/*.xml
             leader/tenant-scheduler/build/reports/tests/test/
+            operations/job-console-core/build/test-results/test/*.xml
+            operations/job-console-core/build/reports/tests/test/
             spring-modulith/module-boundaries/build/test-results/test/*.xml
             spring-modulith/module-boundaries/build/reports/tests/test/
           retention-days: 7
@@ -238,7 +368,8 @@ jobs:
     name: Diagram QA
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: validate-wrapper
+    needs: changes
+    if: needs.changes.outputs.diagram == 'true'
     steps:
       - uses: actions/checkout@v7
         with:
@@ -262,13 +393,19 @@ jobs:
     name: Container Examples (sequential)
     runs-on: ubuntu-latest
     timeout-minutes: 35
-    needs: validate-wrapper
+    needs:
+      - changes
+      - validate-wrapper
+    if: >-
+      always() &&
+      needs.changes.outputs.examples == 'true' &&
+      needs.validate-wrapper.result == 'success'
     steps:
       - uses: actions/checkout@v7
 
       - uses: actions/setup-java@v5
         with:
-          java-version: ${{ env.JAVA_VERSIONS }}
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
 
       - uses: gradle/actions/setup-gradle@v6
@@ -292,6 +429,17 @@ jobs:
       # - messaging-kafka: Kafka-backed messaging path
       # - messaging-kafka-outbox-fallback: PostgreSQL + Kafka fallback relay path
       # - optimization-planning-contracts: PostgreSQL planning inbox/outbox on Java 25
+      # - commerce-order-lifecycle-fulfillment: PostgreSQL durable lifecycle and replay path
+      # - commerce-reservation-control-plane: PostgreSQL-authoritative reservation and advisory Redis path
+      # - commerce-event-sourced-promotion-voucher-campaign: PostgreSQL append, projection, rebuild, and recovery path
+      # - commerce-promotion-voucher-campaign: PostgreSQL-authoritative capacity with advisory Redis admission
+      # - commerce-concert-ticket-flash-sale: PostgreSQL-authoritative inventory with Redis waiting-room admission
+      # - operations-job-console-*: shared PostgreSQL/Redis contract plus live Spring MVC and Ktor adapters
+      # - commerce-pre-generated-voucher-pool: PostgreSQL-authoritative pre-generated voucher allocation and recovery
+      # - leader-job-safety-lab: real Redis fencing takeover plus PostgreSQL stale-writer rejection
+      # - commerce-usage-metering-billing-ledger: PostgreSQL-authoritative metering, close, invoice, and reconciliation
+      # - commerce-usage-metering-billing-event-sourcing: PostgreSQL event store, replay, fenced projections, and correction
+      # - commerce-usage-billing-microservices: five PostgreSQL-owned services connected through Kafka outbox/inbox delivery
       - name: Run container-backed examples
         run: >-
           ./gradlew
@@ -310,12 +458,48 @@ jobs:
           :messaging-kafka:test
           :messaging-kafka-outbox-fallback:test
           :optimization-planning-contracts:test
+          :commerce-order-lifecycle-fulfillment:test
+          :commerce-reservation-control-plane:test
+          :commerce-event-sourced-promotion-voucher-campaign:integrationTest
+          :commerce-event-sourced-promotion-voucher-campaign:koverXmlReport
+          :commerce-promotion-voucher-campaign:test
+          :commerce-concert-ticket-flash-sale:test
+          :operations-job-console-core:integrationTest
+          :operations-job-console-spring:integrationTest
+          :operations-job-console-ktor:integrationTest
+          :commerce-pre-generated-voucher-pool:test
+          :commerce-pre-generated-voucher-pool:koverXmlReport
+          :leader-job-safety-lab:integrationTest
+          :commerce-usage-metering-billing-ledger:integrationTest
+          :commerce-usage-metering-billing-ledger:koverXmlReport
+          :commerce-usage-metering-billing-event-sourcing:integrationTest
+          :commerce-usage-metering-billing-event-sourcing:koverXmlReport
+          :commerce-usage-billing-meter-service:integrationTest
+          :commerce-usage-billing-usage-service:integrationTest
+          :commerce-usage-billing-billing-service:integrationTest
+          :commerce-usage-billing-invoice-service:integrationTest
+          :commerce-usage-billing-query-service:integrationTest
+          :commerce-usage-billing-microservices-composition-tests:integrationTest
+          :commerce-usage-billing-microservices-composition-tests:koverXmlReport
           --continue
           --max-workers=1
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
           TESTCONTAINERS_RYUK_DISABLED: "true"
           DOCKER_HOST: "unix:///var/run/docker.sock"
+
+      - name: Verify commerce integration and coverage reports
+        run: |
+          test -n "$(find commerce/event-sourced-promotion-voucher-campaign/build/test-results/integrationTest -name '*.xml' -print -quit)"
+          test -s commerce/event-sourced-promotion-voucher-campaign/build/reports/kover/report.xml
+          test -n "$(find commerce/pre-generated-voucher-pool/build/test-results/test -name '*.xml' -print -quit)"
+          test -s commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
+          test -n "$(find commerce/usage-metering-billing-ledger/build/test-results/integrationTest -name '*.xml' -print -quit)"
+          test -s commerce/usage-metering-billing-ledger/build/reports/kover/report.xml
+          test -n "$(find commerce/usage-metering-billing-event-sourcing/build/test-results/integrationTest -name '*.xml' -print -quit)"
+          test -s commerce/usage-metering-billing-event-sourcing/build/reports/kover/report.xml
+          test -n "$(find commerce/usage-billing-microservices-composition-tests/build/test-results/integrationTest -name '*.xml' -print -quit)"
+          test -s commerce/usage-billing-microservices-composition-tests/build/reports/kover/report.xml
 
       - name: Upload container example test results
         if: always()
@@ -353,15 +537,114 @@ jobs:
             messaging/kafka-outbox-fallback/build/reports/tests/test/
             optimization/planning-contracts/build/test-results/test/*.xml
             optimization/planning-contracts/build/reports/tests/test/
+            commerce/order-lifecycle-fulfillment/build/test-results/test/*.xml
+            commerce/order-lifecycle-fulfillment/build/reports/tests/test/
+            commerce/reservation-control-plane/build/test-results/test/*.xml
+            commerce/reservation-control-plane/build/reports/tests/test/
+            commerce/event-sourced-promotion-voucher-campaign/build/test-results/integrationTest/*.xml
+            commerce/event-sourced-promotion-voucher-campaign/build/reports/tests/integrationTest/
+            commerce/event-sourced-promotion-voucher-campaign/build/reports/kover/report.xml
+            commerce/promotion-voucher-campaign/build/test-results/test/*.xml
+            commerce/promotion-voucher-campaign/build/reports/tests/test/
+            commerce/concert-ticket-flash-sale/build/test-results/test/*.xml
+            commerce/concert-ticket-flash-sale/build/reports/tests/test/
+            operations/job-console-core/build/test-results/integrationTest/*.xml
+            operations/job-console-core/build/reports/tests/integrationTest/
+            operations/job-console-spring/build/test-results/integrationTest/*.xml
+            operations/job-console-spring/build/reports/tests/integrationTest/
+            operations/job-console-ktor/build/test-results/integrationTest/*.xml
+            operations/job-console-ktor/build/reports/tests/integrationTest/
+            commerce/pre-generated-voucher-pool/build/test-results/test/*.xml
+            commerce/pre-generated-voucher-pool/build/reports/tests/test/
+            commerce/pre-generated-voucher-pool/build/reports/kover/report.xml
+            leader/job-safety-lab/build/test-results/integrationTest/*.xml
+            leader/job-safety-lab/build/reports/tests/integrationTest/
+            commerce/usage-metering-billing-ledger/build/test-results/integrationTest/*.xml
+            commerce/usage-metering-billing-ledger/build/reports/tests/integrationTest/
+            commerce/usage-metering-billing-ledger/build/reports/kover/report.xml
+            commerce/usage-metering-billing-event-sourcing/build/test-results/integrationTest/*.xml
+            commerce/usage-metering-billing-event-sourcing/build/reports/tests/integrationTest/
+            commerce/usage-metering-billing-event-sourcing/build/reports/kover/report.xml
+            commerce/usage-billing-meter-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-meter-service/build/reports/tests/integrationTest/
+            commerce/usage-billing-usage-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-usage-service/build/reports/tests/integrationTest/
+            commerce/usage-billing-billing-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-billing-service/build/reports/tests/integrationTest/
+            commerce/usage-billing-invoice-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-invoice-service/build/reports/tests/integrationTest/
+            commerce/usage-billing-query-service/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-query-service/build/reports/tests/integrationTest/
+            commerce/usage-billing-microservices-composition-tests/build/test-results/integrationTest/*.xml
+            commerce/usage-billing-microservices-composition-tests/build/reports/tests/integrationTest/
+            commerce/usage-billing-microservices-composition-tests/build/reports/kover/report.xml
+          retention-days: 7
+
+  high-contention-correctness:
+    name: High-contention CI correctness
+    runs-on: ubuntu-latest
+    needs:
+      - changes
+      - validate-wrapper
+    if: >-
+      always() &&
+      needs.changes.outputs.high_contention == 'true' &&
+      needs.validate-wrapper.result == 'success'
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: wrapper
+          cache-read-only: true
+      - name: Validate high-contention contract and runbooks
+        run: ./scripts/smoke-validate.sh high-contention-contract
+      - name: Run the CI correctness matrix
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx2g -Dorg.gradle.daemon=false"
+          TESTCONTAINERS_RYUK_DISABLED: "true"
+          DOCKER_HOST: "unix:///var/run/docker.sock"
+        run: >-
+          ./gradlew
+          highContentionCi
+          -PhighContentionRunId=examples-${{ github.run_id }}-${{ github.run_attempt }}
+          -Pkotlin.compiler.execution.strategy=in-process
+          --max-workers=1
+          --stacktrace
+      - name: Validate and stage bounded evidence
+        if: always()
+        run: |
+          mkdir -p build/high-contention-upload-stage
+          node scripts/high-contention/select-upload.mjs \
+            build/reports/high-contention/examples-${{ github.run_id }}-${{ github.run_attempt }} \
+            build/reports/high-contention-upload/examples-${{ github.run_id }}-${{ github.run_attempt }} \
+            build/high-contention-upload-stage/examples-${{ github.run_id }}-${{ github.run_attempt }} \
+            ci-correctness \
+            examples-${{ github.run_id }}-${{ github.run_attempt }} \
+            ${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Upload bounded high-contention evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: high-contention-ci-correctness-examples-${{ github.run_id }}-${{ github.run_attempt }}
+          path: build/high-contention-upload-stage/examples-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: error
           retention-days: 7
 
   examples-status:
     name: Examples Status
     runs-on: ubuntu-latest
     needs:
+      - changes
+      - validate-wrapper
       - diagram-qa
       - smoke-examples
       - container-examples
+      - high-contention-correctness
     if: always()
     steps:
       - name: Check Examples result

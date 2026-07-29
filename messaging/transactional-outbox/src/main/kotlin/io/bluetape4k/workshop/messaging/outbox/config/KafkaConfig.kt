@@ -8,11 +8,9 @@ import tools.jackson.databind.ObjectMapper
 import tools.jackson.module.kotlin.jacksonObjectMapper
 
 /**
- * Kafka and Jackson configuration for the Transactional Outbox pattern.
+ * Transactional Outbox pattern 을 위한 Kafka 및 Jackson configuration 입니다.
  *
- * `KafkaTemplate` is auto-configured by Spring Boot from `spring.kafka.*` properties.
- * An explicit `ObjectMapper` bean is registered using the Kotlin Jackson module so
- * domain services can serialize event payloads to JSON.
+ * `KafkaTemplate` 은 `spring.kafka.*` property 로 Spring Boot 가 auto-configure 합니다. domain service 가 event payload 를 JSON 으로 serialize 할 수 있도록 Kotlin Jackson module 을 사용하는 명시적 `ObjectMapper` bean 을 등록합니다.
  */
 @Configuration(proxyBeanMethods = false)
 @EnableKafka

@@ -27,10 +27,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 /**
- * Abstract test suite for [EventLineageService].
+ * [EventLineageService]용 추상 테스트 suite입니다.
  *
- * The seed graph explains an order approval state through aggregate, event,
- * actor, and decision vertices. Concrete subclasses provide the graph backend.
+ * seed 그래프는 aggregate, event, actor, decision 정점으로 주문 승인 상태를 설명합니다.
+ * 구체 하위 클래스는 그래프 백엔드를 제공합니다.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractEventLineageTest {

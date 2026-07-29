@@ -1,0 +1,172 @@
+import io.gitlab.arturbosch.detekt.Detekt
+import org.gradle.api.tasks.testing.Test
+import org.gradle.api.tasks.testing.TestDescriptor
+import org.gradle.api.tasks.testing.TestListener
+import org.gradle.api.tasks.testing.TestResult
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.concurrent.atomic.AtomicLong
+
+plugins {
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.detekt)
+    alias(libs.plugins.kover)
+}
+
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
+}
+
+kotlin {
+    jvmToolchain(25)
+    compilerOptions.jvmTarget.set(JvmTarget.JVM_25)
+}
+
+tasks.withType<Detekt>().configureEach {
+    jvmTarget = "22"
+}
+
+springBoot {
+    mainClass.set("io.bluetape4k.workshop.commerce.voucher.eventsourced.EventSourcedVoucherApplicationKt")
+}
+
+kover {
+    reports {
+        total {
+            xml {
+                onCheck = false
+            }
+        }
+    }
+}
+
+configurations {
+    testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
+}
+
+configurations.configureEach {
+    exclude(group = "io.github.bluetape4k", module = "bluetape4k-virtualthread-jdk21")
+}
+
+dependencies {
+    testImplementation(project(":shared"))
+
+    implementation(libs.bluetape4k.core)
+    implementation(libs.bluetape4k.logging)
+    implementation(libs.bluetape4k.jackson3)
+    implementation(libs.bluetape4k.idgenerators)
+    implementation(libs.bluetape4k.micrometer)
+    implementation(libs.bluetape4k.virtualthread.api)
+    runtimeOnly(libs.bluetape4k.virtualthread.jdk25)
+
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.dao)
+    implementation(libs.exposed.jdbc)
+    implementation(libs.exposed.jackson3)
+    implementation(libs.exposed.spring.boot.jdbc)
+    implementation(libs.jetbrains.exposed.java.time)
+    testImplementation(libs.exposed.jdbc.tests) {
+        exclude(group = "org.jetbrains.exposed", module = "exposed-spring-boot4-starter")
+    }
+
+    implementation(libs.hikaricp)
+    runtimeOnly(libs.postgresql.driver)
+
+    implementation(libs.spring.boot.autoconfigure.lib)
+    annotationProcessor(libs.spring.boot.autoconfigure.processor)
+    annotationProcessor(libs.spring.boot.configuration.processor)
+    implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.spring.boot.starter.jdbc.lib)
+    implementation(libs.spring.boot.starter.security)
+    implementation(libs.spring.boot.starter.validation)
+    implementation(libs.spring.boot.starter.webmvc.lib)
+
+    testImplementation(libs.spring.boot.starter.jdbc.test)
+    testImplementation(libs.spring.boot.starter.webflux.test)
+    testImplementation(libs.spring.boot.starter.test) {
+        exclude(group = "junit", module = "junit")
+        exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
+        exclude(module = "mockito-core")
+    }
+    testImplementation(libs.spring.security.test)
+    testImplementation(libs.bluetape4k.junit5)
+    testImplementation(libs.bluetape4k.assertions)
+    testImplementation(libs.bluetape4k.testcontainers)
+    testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.awaitility.kotlin)
+    testImplementation(libs.mockk)
+}
+
+fun Test.failOnZeroTests() {
+    val executed = AtomicLong()
+    addTestListener(
+        object : TestListener {
+            override fun beforeSuite(suite: TestDescriptor) = Unit
+            override fun afterSuite(suite: TestDescriptor, result: TestResult) = Unit
+            override fun beforeTest(testDescriptor: TestDescriptor) = Unit
+            override fun afterTest(testDescriptor: TestDescriptor, result: TestResult) {
+                executed.incrementAndGet()
+            }
+        },
+    )
+    doFirst { executed.set(0L) }
+    doLast { check(executed.get() > 0L) { "$name discovered zero tests" } }
+}
+
+fun Test.verifyNonEmptyXmlResults() {
+    reports.junitXml.required.set(true)
+    doLast {
+        val xmlFiles =
+            reports.junitXml.outputLocation.get().asFile
+                .walkTopDown()
+                .filter { it.isFile && it.extension == "xml" }
+                .toList()
+        check(xmlFiles.isNotEmpty() && xmlFiles.all { it.length() > 0L }) {
+            "$name did not produce non-empty XML test results"
+        }
+    }
+}
+
+fun Test.configureEventSourcedTestRuntime() {
+    setJvmArgs((jvmArgs ?: emptyList()).filterNot { it == "--enable-preview" })
+    usesService(gradle.sharedServices.registrations.named("test-mutex").get().service)
+}
+
+tasks.test {
+    configureEventSourcedTestRuntime()
+    useJUnitPlatform {
+        excludeTags("integration", "stress")
+    }
+    failOnZeroTests()
+    verifyNonEmptyXmlResults()
+}
+
+tasks.register<Test>("integrationTest") {
+    description = "Runs PostgreSQL integration tests for the event-sourced voucher campaign."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    configureEventSourcedTestRuntime()
+    useJUnitPlatform { includeTags("integration") }
+    failOnZeroTests()
+    verifyNonEmptyXmlResults()
+    shouldRunAfter(tasks.test)
+}
+
+tasks.register<Test>("stressTest") {
+    description = "Runs event-sourced voucher campaign stress tests."
+    group = "verification"
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
+    configureEventSourcedTestRuntime()
+    useJUnitPlatform { includeTags("stress") }
+    systemProperty(
+        "eventSourcedStress",
+        providers.gradleProperty("eventSourcedStress").getOrElse("false"),
+    )
+    failOnZeroTests()
+    verifyNonEmptyXmlResults()
+    shouldRunAfter(tasks.test)
+}

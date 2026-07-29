@@ -8,10 +8,10 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
- * Provides the Lettuce [RedisClient] used by the Bucket4j Redis proxy manager.
+ * Bucket4j Redis proxy manager가 사용하는 Lettuce [RedisClient]를 제공합니다.
  *
- * The URL comes from the bluetape4k Redis Testcontainer launcher through the
- * `testcontainers.redis.url` system property.
+ * URL은 bluetape4k Redis Testcontainer launcher가 설정한
+ * `testcontainers.redis.url` system property에서 가져옵니다.
  */
 @Configuration(proxyBeanMethods = false)
 class LettuceConfiguration {

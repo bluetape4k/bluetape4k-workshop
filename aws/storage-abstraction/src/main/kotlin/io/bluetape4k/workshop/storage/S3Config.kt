@@ -11,16 +11,16 @@ import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.presigner.S3Presigner
 
 /**
- * S3 bean configuration for profiles `s3` and `s3-presigned`.
+ * profile `s3`와 `s3-presigned`용 S3 bean 설정입니다.
  *
- * ## Behavior / Contract
- * - Uses [FlociServer] via [FlociServer.Launcher] singleton for local/test environments.
- *   Floci is the open-source replacement for LocalStack Community edition.
- * - [S3Client] is synchronous; callers wrap calls in `withContext(Dispatchers.IO)`.
- * - [S3Presigner] is provided only for the `s3-presigned` profile.
+ * ## 동작 / 계약
+ * - 로컬/테스트 환경에서는 [FlociServer.Launcher] 싱글턴을 통해 [FlociServer]를 사용합니다.
+ *   Floci는 LocalStack Community edition을 대체하는 오픈소스입니다.
+ * - [S3Client]는 동기식이므로 호출자는 호출을 `withContext(Dispatchers.IO)`로 감쌉니다.
+ * - [S3Presigner]는 `s3-presigned` profile에서만 제공합니다.
  *
  * ```kotlin
- * // Beans are auto-wired into S3StorageService / S3PresignedStorageService
+ * // bean은 S3StorageService / S3PresignedStorageService에 자동 주입됩니다.
  * ```
  */
 @Configuration(proxyBeanMethods = false)
@@ -28,7 +28,7 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner
 class S3Config {
 
     companion object : KLogging() {
-        /** Shared Floci AWS emulator instance across all test runs in the same JVM. */
+        /** 같은 JVM의 모든 테스트 실행에서 공유하는 Floci AWS 에뮬레이터 인스턴스입니다. */
         val floci: FlociServer = FlociServer.Launcher.floci
     }
 

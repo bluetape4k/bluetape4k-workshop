@@ -14,19 +14,19 @@ dependencies {
     implementation(libs.bluetape4k.spring.boot4.r2dbc)
     testImplementation(libs.bluetape4k.junit5)
 
-    // Coroutines
+    // 코루틴
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactive)
     implementation(libs.kotlinx.coroutines.reactor)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    // Reactor
+    // Reactor 의존성
     implementation(libs.reactor.core)
     implementation(libs.reactor.kotlin.extensions)
     testImplementation(libs.reactor.test)
 
-    // R2DBC
+    // R2DBC 의존성
     implementation(libs.spring.boot.starter.data.r2dbc.lib)
     testImplementation(libs.spring.boot.starter.data.r2dbc.test)
     implementation(libs.h2.v2)

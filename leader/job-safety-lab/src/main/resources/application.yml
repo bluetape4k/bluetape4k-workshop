@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: leader-job-safety-lab
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    hikari:
+      maximum-pool-size: 12
+  transaction:
+    default-timeout: 1s
+
+management:
+  datadog:
+    metrics:
+      export:
+        enabled: false
+
+workshop:
+  job-safety:
+    region: region-a
+    namespace-epoch: 1
+    timeline-limit: 128
+    fencing:
+      lease-ttl: 5s
+      renew-interval: 2s
+    redis:
+      uri: redis://localhost:6379
+      command-timeout: 500ms
+    outbox:
+      claim-timeout: 30s
+    lab:
+      unsafe-enabled: false

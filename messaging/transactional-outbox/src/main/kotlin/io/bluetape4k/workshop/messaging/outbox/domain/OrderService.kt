@@ -18,12 +18,9 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
 
 /**
- * Domain service for [Order] lifecycle operations.
+ * [Order] lifecycle operation 을 담당하는 domain service 입니다.
  *
- * Every mutating method writes both the domain row and an [OutboxEventTable] row inside
- * a single database transaction — the Transactional Outbox pattern.  The scheduler
- * ([io.bluetape4k.workshop.messaging.outbox.outbox.OutboxPublisher]) polls the outbox
- * table and publishes pending events to Kafka asynchronously.
+ * 모든 mutating method 는 단일 database transaction 안에서 domain row 와 [OutboxEventTable] row 를 함께 씁니다. 이것이 Transactional Outbox pattern 입니다. scheduler([io.bluetape4k.workshop.messaging.outbox.outbox.OutboxPublisher]) 는 outbox table 을 polling 하고 pending event 를 Kafka 로 비동기 publish 합니다.
  */
 @Service
 @Transactional
@@ -33,12 +30,12 @@ class OrderService(
     companion object : KLogging()
 
     /**
-     * Places a new order and records an `OrderPlaced` outbox event atomically.
+     * 새 order 를 place 하고 `OrderPlaced` outbox event 를 atomically 기록합니다.
      *
-     * @param customerId Non-blank customer identifier.
-     * @param product    Non-blank product name.
-     * @param quantity   Positive unit count.
-     * @return [OrderResponse] reflecting the persisted order.
+     * @param customerId non-blank customer identifier 입니다.
+     * @param product non-blank product name 입니다.
+     * @param quantity 양수 unit count 입니다.
+     * @return persisted order 를 반영하는 [OrderResponse] 입니다.
      */
     fun placeOrder(customerId: String, product: String, quantity: Int): OrderResponse {
         customerId.requireNotBlank("customerId")
@@ -75,12 +72,12 @@ class OrderService(
     }
 
     /**
-     * Updates an order's status and records an `OrderStatusChanged` outbox event atomically.
+     * order status 를 update 하고 `OrderStatusChanged` outbox event 를 atomically 기록합니다.
      *
-     * @param orderId The order to update.
-     * @param status  The new [OrderStatus].
-     * @return [OrderResponse] reflecting the updated order.
-     * @throws NoSuchElementException if no order exists with [orderId].
+     * @param orderId update 할 order 입니다.
+     * @param status 새 [OrderStatus] 입니다.
+     * @return updated order 를 반영하는 [OrderResponse] 입니다.
+     * @throws NoSuchElementException [orderId] 에 해당하는 order 가 없으면 발생합니다.
      */
     fun updateStatus(orderId: Long, status: OrderStatus): OrderResponse {
         val validOrderId = orderId.requirePositiveNumber("orderId")
@@ -111,15 +108,15 @@ class OrderService(
     }
 
     /**
-     * Retrieves a single order by id.
+     * id 로 단일 order 를 조회합니다.
      *
-     * @throws NoSuchElementException if no order exists with [orderId].
+     * @throws NoSuchElementException [orderId] 에 해당하는 order 가 없으면 발생합니다.
      */
     @Transactional(readOnly = true)
     fun getOrder(orderId: Long): OrderResponse =
         getOrderResponse(orderId.requirePositiveNumber("orderId"))
 
-    /** Returns all orders, ordered by id ascending. */
+    /** 모든 order 를 id ascending 순서로 반환합니다. */
     @Transactional(readOnly = true)
     fun getAllOrders(): List<OrderResponse> =
         OrderTable.selectAll().orderBy(OrderTable.id to SortOrder.ASC).map { row ->
@@ -134,7 +131,7 @@ class OrderService(
             )
         }
 
-    // ── Internal helpers ─────────────────────────────────────────────────────
+    // ── 내부 helper ───────────────────────────────────────────────────────────
 
     private fun getOrderResponse(orderId: Long): OrderResponse {
         val row = OrderTable.selectAll()

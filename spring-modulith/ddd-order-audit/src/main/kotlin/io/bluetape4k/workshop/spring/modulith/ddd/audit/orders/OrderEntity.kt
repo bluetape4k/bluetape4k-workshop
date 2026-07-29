@@ -16,12 +16,12 @@ import jakarta.persistence.Version
 import java.math.BigDecimal
 
 /**
- * JPA representation of the current order state.
+ * 현재 주문 상태를 나타내는 JPA 표현입니다.
  *
- * ## Behavior / Contract
- * - PostgreSQL stores current aggregate state; JaVers owns history snapshots.
- * - [version] enables optimistic locking for repeated or concurrent approval attempts.
- * - [lines] are stored as value objects in a child table.
+ * ## 동작 / 계약
+ * - PostgreSQL 은 현재 aggregate 상태를 저장하고, JaVers 는 history snapshot 을 소유합니다.
+ * - [version] 은 반복 또는 동시 승인 시도에 대한 optimistic locking 을 활성화합니다.
+ * - [lines] 는 child table 의 value object 로 저장됩니다.
  */
 @Entity
 @Table(name = "orders")
@@ -47,7 +47,7 @@ class OrderEntity(
     var lines: MutableList<OrderLineEntity> = mutableListOf()
 
     /**
-     * Applies [order] to this entity while preserving the JPA identity.
+     * JPA identity 를 유지하면서 [order] 를 이 entity 에 반영합니다.
      */
     fun apply(order: Order): OrderEntity = apply {
         customerId = order.customerId.value
@@ -57,7 +57,7 @@ class OrderEntity(
     }
 
     /**
-     * Converts this entity to a domain aggregate without pending events.
+     * 이 entity 를 pending event 가 없는 domain aggregate 로 변환합니다.
      */
     fun toDomain(): Order =
         Order.restore(
@@ -70,7 +70,7 @@ class OrderEntity(
 
     companion object {
         /**
-         * Creates an entity from a domain aggregate.
+         * domain aggregate 로부터 entity 를 생성합니다.
          */
         fun from(order: Order): OrderEntity =
             OrderEntity(
@@ -83,7 +83,7 @@ class OrderEntity(
 }
 
 /**
- * JPA embeddable order line value.
+ * JPA embeddable order line 값입니다.
  */
 @Embeddable
 class OrderLineEntity(

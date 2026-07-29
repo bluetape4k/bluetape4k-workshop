@@ -1,0 +1,242 @@
+package io.bluetape4k.workshop.commerce.voucher.config
+
+import io.bluetape4k.bucket4j.addBandwidth
+import io.bluetape4k.bucket4j.bucketConfiguration
+import io.bluetape4k.bucket4j.distributed.BucketProxyProvider
+import io.bluetape4k.bucket4j.distributed.redis.lettuceBasedProxyManagerOf
+import io.bluetape4k.bucket4j.ratelimit.RateLimiter
+import io.bluetape4k.bucket4j.ratelimit.RateLimitResult
+import io.bluetape4k.bucket4j.ratelimit.distributed.DistributedRateLimiter
+import io.bluetape4k.leader.lettuce.LettuceLeaderElector
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.info
+import io.bluetape4k.logging.warn
+import io.bluetape4k.redis.lettuce.LettuceClients
+import io.bluetape4k.redis.lettuce.filter.BloomFilterOptions
+import io.bluetape4k.redis.lettuce.filter.LettuceBloomFilter
+import io.bluetape4k.workshop.commerce.voucher.admission.AdmissionRecoveryPolicy
+import io.bluetape4k.workshop.commerce.voucher.admission.LettuceBloomRiskBackend
+import io.bluetape4k.workshop.commerce.voucher.admission.RiskSignalService
+import io.bluetape4k.workshop.commerce.voucher.admission.VoucherAdmissionGate
+import io.bluetape4k.workshop.commerce.voucher.admission.VoucherAdmissionKeyFactory
+import io.github.bucket4j.Bandwidth
+import io.lettuce.core.RedisClient
+import io.lettuce.core.RedisURI
+import io.lettuce.core.api.StatefulRedisConnection
+import org.springframework.beans.factory.ObjectProvider
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import java.time.Clock
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
+
+/** optional Redis resource를 소유하되, 부재가 PostgreSQL command를 막지 못하게 합니다. */
+internal class VoucherRedisResources private constructor(
+    val client: RedisClient,
+    private val bloomConnection: StatefulRedisConnection<String, String>?,
+    val bloomFilter: LettuceBloomFilter?,
+    private val degradation: VoucherDegradationState,
+) : AutoCloseable {
+    private val leaderLock = ReentrantLock()
+    private val closed = AtomicBoolean()
+
+    @Volatile
+    private var leaderConnection: StatefulRedisConnection<String, String>? = null
+
+    @Volatile
+    private var leaderElector: LettuceLeaderElector? = null
+
+    /** lazy하게 연결되는 Lettuce elector 하나를 재사용하고, startup backend가 없으면 이후 재시도합니다. */
+    fun leaderElector(): LettuceLeaderElector? =
+        leaderLock.withLock {
+            leaderElector ?: try {
+                val connection = client.connect()
+                leaderConnection = connection
+                LettuceLeaderElector(connection).also {
+                    leaderElector = it
+                    degradation.recover(VoucherDegradedComponent.LEADER)
+                    log.info { "voucher_redis_leader_connected" }
+                }
+            } catch (failure: Exception) {
+                degradation.degrade(VoucherDegradedComponent.LEADER)
+                log.warn {
+                    "voucher_redis_leader_unavailable fallback=MANUAL failure=${failure.javaClass.simpleName}"
+                }
+                null
+            }
+        }
+
+    override fun close() {
+        if (!closed.compareAndSet(false, true)) return
+        leaderConnection?.close()
+        if (bloomFilter != null) {
+            bloomFilter.close()
+        } else {
+            bloomConnection?.close()
+        }
+        LettuceClients.shutdown(client)
+        log.info { "voucher_redis_resources_closed" }
+    }
+
+    companion object : KLogging() {
+        fun open(
+            properties: VoucherRedisProperties,
+            degradation: VoucherDegradationState = VoucherDegradationState(),
+        ): VoucherRedisResources {
+            val uri = RedisURI.create(properties.uri).apply { timeout = properties.commandTimeout }
+            val client = LettuceClients.clientOf(uri)
+            var connection: StatefulRedisConnection<String, String>? = null
+            var filter: LettuceBloomFilter? = null
+            try {
+                connection = client.connect()
+                filter =
+                    LettuceBloomFilter(
+                        connection,
+                        filterName = BLOOM_FILTER_NAME,
+                        options =
+                            BloomFilterOptions(
+                                properties.bloomExpectedInsertions,
+                                properties.bloomFalseProbability,
+                            ),
+                    ).also { it.tryInit() }
+                degradation.recover(VoucherDegradedComponent.REDIS)
+                log.info { "voucher_redis_bloom_connected" }
+            } catch (failure: Exception) {
+                degradation.degrade(VoucherDegradedComponent.REDIS)
+                filter?.close() ?: connection?.close()
+                connection = null
+                filter = null
+                log.warn { "voucher_redis_bloom_unavailable fallback=POSTGRES failure=${failure.javaClass.simpleName}" }
+            }
+            return VoucherRedisResources(client, connection, filter, degradation)
+        }
+
+        private const val BLOOM_FILTER_NAME = "voucher:risk:v1"
+    }
+}
+
+internal fun voucherDistributedRateLimiter(
+    client: RedisClient,
+    properties: VoucherRedisProperties,
+): RateLimiter<String> {
+    val manager = lettuceBasedProxyManagerOf(client) {}
+    val configuration =
+        bucketConfiguration {
+            addBandwidth {
+                Bandwidth.builder()
+                    .capacity(properties.quotaCapacity)
+                    .refillGreedy(properties.quotaCapacity, properties.quotaPeriod)
+                    .build()
+            }
+        }
+    return DistributedRateLimiter(
+        BucketProxyProvider(manager, configuration, keyPrefix = "voucher:rate:"),
+    )
+}
+
+/** boot 시점 Redis outage가 in-place로 복구될 수 있도록 Bucket4j adapter를 lazy하게 재생성합니다. */
+internal class RecoverableVoucherRateLimiter(
+    private val client: RedisClient,
+    private val properties: VoucherRedisProperties,
+    private val degradation: VoucherDegradationState = VoucherDegradationState(),
+) : RateLimiter<String> {
+    private val delegateLock = ReentrantLock()
+
+    @Volatile
+    private var delegate: RateLimiter<String>? = null
+
+    override fun consume(
+        key: String,
+        numToken: Long,
+    ): RateLimitResult {
+        val limiter = delegate ?: createDelegate() ?: return RateLimitResult.error(IllegalStateException("redis unavailable"))
+        return limiter.consume(key, numToken)
+    }
+
+    private fun createDelegate(): RateLimiter<String>? =
+        delegateLock.withLock {
+            delegate ?: try {
+                voucherDistributedRateLimiter(client, properties).also {
+                    delegate = it
+                    degradation.recover(VoucherDegradedComponent.REDIS)
+                }
+            } catch (failure: Exception) {
+                degradation.degrade(VoucherDegradedComponent.REDIS)
+                log.warn {
+                    "voucher_redis_rate_limiter_unavailable fallback=POSTGRES failure=${failure.javaClass.simpleName}"
+                }
+                null
+            }
+        }
+
+    companion object : KLogging()
+}
+
+@Configuration(proxyBeanMethods = false)
+@EnableConfigurationProperties(VoucherProperties::class)
+internal class VoucherAdmissionConfiguration {
+    @Bean
+    fun voucherAdmissionKeyFactory(properties: VoucherProperties): VoucherAdmissionKeyFactory =
+        VoucherAdmissionKeyFactory(
+            version = properties.keys.currentVersion,
+            rateKey = properties.keys.redisSlot.toByteArray(),
+            riskKey = properties.keys.risk.toByteArray(),
+        )
+
+    @Bean
+    fun voucherAdmissionGate(
+        @Qualifier("voucherRateLimiter") rateLimiter: ObjectProvider<RateLimiter<String>>,
+        properties: VoucherProperties,
+        clock: Clock,
+    ): VoucherAdmissionGate =
+        VoucherAdmissionGate(
+            rateLimiter = rateLimiter.ifAvailable,
+            recoveryPolicy =
+                AdmissionRecoveryPolicy(
+                    failureThreshold = properties.redis.failureThreshold,
+                    recoverySuccessThreshold = properties.redis.recoverySuccessThreshold,
+                    probeInterval = properties.redis.probeInterval,
+                    maxInFlightProbes = properties.redis.maxInFlightProbes,
+                ),
+            clock = clock,
+        )
+
+    @Bean
+    fun riskSignalService(
+        keys: VoucherAdmissionKeyFactory,
+        resources: ObjectProvider<VoucherRedisResources>,
+        degradation: ObjectProvider<VoucherDegradationState>,
+    ): RiskSignalService =
+        RiskSignalService(
+            keys,
+            resources.ifAvailable?.bloomFilter?.let(::LettuceBloomRiskBackend),
+            degradation.getIfAvailable(::VoucherDegradationState),
+        )
+}
+
+@Configuration(proxyBeanMethods = false)
+@ConditionalOnProperty(prefix = "workshop.voucher.redis", name = ["enabled"], havingValue = "true")
+internal class VoucherRedisConfiguration {
+    @Bean(destroyMethod = "close")
+    fun voucherRedisResources(
+        properties: VoucherProperties,
+        degradation: ObjectProvider<VoucherDegradationState>,
+    ): VoucherRedisResources =
+        VoucherRedisResources.open(properties.redis, degradation.getIfAvailable(::VoucherDegradationState))
+
+    @Bean("voucherRateLimiter")
+    fun voucherRateLimiter(
+        resources: VoucherRedisResources,
+        properties: VoucherProperties,
+        degradation: ObjectProvider<VoucherDegradationState>,
+    ): RateLimiter<String> =
+        RecoverableVoucherRateLimiter(
+            resources.client,
+            properties.redis,
+            degradation.getIfAvailable(::VoucherDegradationState),
+        )
+}

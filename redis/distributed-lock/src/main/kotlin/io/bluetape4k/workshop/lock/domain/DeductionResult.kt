@@ -3,14 +3,13 @@ package io.bluetape4k.workshop.lock.domain
 import java.io.Serializable
 
 /**
- * Sealed result hierarchy for an inventory deduction operation.
+ * inventory deduction operation 을 위한 sealed result hierarchy 입니다.
  *
  * ## Variants
- * - [Success] — deduction succeeded; [remaining] is the stock after deduction.
- *   [token] is set only when a fencing token was used (fenced lock paths).
- * - [InsufficientStock] — not enough stock; [requested] > [available] at check time.
- * - [Rejected] — a fencing guard rejected the write because the [token] was stale.
- * - [LockNotAcquired] — the distributed lock could not be acquired within the wait timeout.
+ * - [Success] — deduction 이 성공했습니다. [remaining] 은 deduction 이후 stock 입니다. [token] 은 fencing token 을 사용한 path 에서만 설정됩니다.
+ * - [InsufficientStock] — stock 이 부족합니다. check 시점에 [requested] > [available] 입니다.
+ * - [Rejected] — [token] 이 stale 이라서 fencing guard 가 write 를 거부했습니다.
+ * - [LockNotAcquired] — wait timeout 안에 distributed lock 을 acquire 하지 못했습니다.
  */
 sealed interface DeductionResult {
 

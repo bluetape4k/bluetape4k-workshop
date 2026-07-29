@@ -1,19 +1,20 @@
-# H2 2.4.x Compatibility Verification (Issue #146)
+# H2 2.4.x Compatibility 검증(Issue #146)
 
 **Date**: 2026-05-24  
 **Branch**: fix/issue-146-h2-compat  
 **Scope**: `vertx/vertx-sqlclient`, `vertx/coroutines`, `redis/redisson-examples`, `spring-boot/chaos-monkey`
 
-## Root Cause (Original Issue)
+## 근본 원인(원 이슈)
 
-H2 2.x introduced stricter SQL compatibility compared to H2 1.x:
-- Unquoted identifiers are stored and compared in UPPERCASE by default
-- MySQL backtick quoting (`` `column_name` ``) is not supported without `MODE=MySQL`
-- `AUTO_INCREMENT` still works (MySQL compatibility option)
+H2 2.x는 H2 1.x보다 더 엄격한 SQL compatibility를 도입했다.
 
-## Finding: Modules Were Already Compatible
+- unquoted identifier는 기본적으로 UPPERCASE로 저장되고 비교된다.
+- MySQL backtick quoting(`` `column_name` ``)은 `MODE=MySQL` 없이는 지원되지 않는다.
+- `AUTO_INCREMENT`는 여전히 동작한다(MySQL compatibility option).
 
-Verification confirmed all affected modules already have correct H2 2.x settings:
+## 발견 사항: 모듈은 이미 compatible했다
+
+검증 결과 영향받는 모든 모듈은 이미 올바른 H2 2.x 설정을 갖고 있었다.
 
 | Module | H2 URL / Settings | Status |
 |--------|-------------------|--------|
@@ -22,19 +23,20 @@ Verification confirmed all affected modules already have correct H2 2.x settings
 | `redis/redisson-examples` (JdbcConfigTest) | Spring-managed H2 URL, standard SQL | ✅ Passes |
 | `spring-boot/chaos-monkey` | `jdbc:h2:mem:testdb` (JPA auto DDL) | ✅ Passes |
 
-## Pre-existing Fory Failure (Unrelated to Issue)
+## 기존 Fory Failure(이슈와 무관)
 
-`redis-redisson-examples` showed 38 failing tests with:
+`redis-redisson-examples`에서는 다음 오류로 38개 테스트가 실패했다.
 ```
 java.lang.NoSuchMethodError: 'org.apache.fory.ThreadSafeFory
   org.apache.fory.config.ForyBuilder.buildThreadSafeForyPool(int, int, long, java.util.concurrent.TimeUnit)'
 ```
 
-**Root cause**: The `fix/issue-146-h2-compat` worktree was created when develop used
-`bluetape4k = "1.8.0-SNAPSHOT"`. Since then, develop moved to `1.9.1` where `ForyBuilder`
-API changed. These failures are NOT related to H2 2.4.x.
+**근본 원인**: `fix/issue-146-h2-compat` worktree는 develop이
+`bluetape4k = "1.8.0-SNAPSHOT"`을 사용하던 시점에 생성되었다. 이후 develop은
+`ForyBuilder` API가 변경된 `1.9.1`로 이동했다. 이 failure들은 H2 2.4.x와
+관련이 없다.
 
-## Correct H2 2.x URL Patterns
+## 올바른 H2 2.x URL Pattern
 
 ```kotlin
 // vertx-sqlclient style: MySQL mode + case-insensitive
@@ -47,17 +49,17 @@ url: r2dbc:h2:mem:///pocdb?options=DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;CASE
 spring.datasource.url=jdbc:h2:mem:testdb
 ```
 
-## Key Decision
+## 핵심 결정
 
-`CASE_INSENSITIVE_IDENTIFIERS=TRUE` is preferred over `DATABASE_TO_UPPER=FALSE` for R2DBC
-because Spring Data R2DBC H2 dialect quotes column names in uppercase (`"ID"`, `"NAME"`),
-while `@Table("users")` produces lowercase `"users"`. Case-insensitive mode resolves both
-without requiring schema DDL changes.
+R2DBC에서는 `DATABASE_TO_UPPER=FALSE`보다 `CASE_INSENSITIVE_IDENTIFIERS=TRUE`를
+선호한다. Spring Data R2DBC H2 dialect는 column name을 uppercase(`"ID"`, `"NAME"`)로
+quote하는 반면 `@Table("users")`는 lowercase `"users"`를 만든다. case-insensitive
+mode는 schema DDL 변경 없이 두 경우를 모두 해결한다.
 
-## Future Guidance
+## 향후 지침
 
-- When creating a new module using H2 in-memory DB with Spring Data R2DBC:
-  append `CASE_INSENSITIVE_IDENTIFIERS=TRUE` to the R2DBC URL
-- When using Vert.x SQL client or JDBC with H2:
-  use `MODE=MySQL` or `DATABASE_TO_UPPER=FALSE` depending on SQL dialect
-- Do NOT use MySQL backtick quoting (`` `col` ``) without `MODE=MySQL`
+- Spring Data R2DBC로 H2 in-memory DB를 사용하는 새 모듈을 만들면 R2DBC URL에
+  `CASE_INSENSITIVE_IDENTIFIERS=TRUE`를 추가한다.
+- Vert.x SQL client 또는 JDBC에서 H2를 사용할 때는 SQL dialect에 따라
+  `MODE=MySQL` 또는 `DATABASE_TO_UPPER=FALSE`를 사용한다.
+- `MODE=MySQL` 없이 MySQL backtick quoting(`` `col` ``)을 사용하지 않는다.
