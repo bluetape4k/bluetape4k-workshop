@@ -20,26 +20,26 @@ interface PersonReactiveRepository: ReactiveCrudRepository<Person, String> {
     fun findByLastname(lastname: String): Flux<Person>
 
     /**
-     * Derived query selecting by [lastname]. [lastname] uses deferred resolution that does not require
-     * blocking to obtain the parameter value.
+     * [lastname] 으로 조회하는 파생 쿼리입니다.
+     * [lastname] 은 매개변수 값을 얻기 위해 blocking 하지 않아도 되는 지연 해석을 사용합니다.
      *
-     * @param lastname
-     * @return
+     * @param lastname 조회할 성을 담은 비동기 값입니다.
+     * @return 성이 일치하는 [Person] 스트림입니다.
      */
     fun findByLastname(lastname: Mono<String>): Flux<Person>
 
     /**
-     * Derived query selecting by [firstname] and [lastname]. [firstname] uses deferred resolution that
-     * does not require blocking to obtain the parameter value.
+     * [firstname] 과 [lastname] 으로 조회하는 파생 쿼리입니다.
+     * [firstname] 은 매개변수 값을 얻기 위해 blocking 하지 않아도 되는 지연 해석을 사용합니다.
      *
-     * @param firstname
-     * @param lastname
-     * @return
+     * @param firstname 조회할 이름을 담은 비동기 값입니다.
+     * @param lastname 조회할 성입니다.
+     * @return 이름과 성이 모두 일치하는 [Person] 입니다.
      */
     fun findByFirstnameAndLastname(firstname: Mono<String>, lastname: String): Mono<Person>
 
     /**
-     * Use a tailable cursor to emit a stream of entities as new entities are written to the capped collection.
+     * capped collection 에 새 엔티티가 기록될 때마다 tailable cursor 로 엔티티 스트림을 방출합니다.
      *
      * 참고: [MongoDB Tailable cursors](https://www.mongodb.com/docs/manual/core/tailable-cursors/)
      */

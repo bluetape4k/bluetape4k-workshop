@@ -18,22 +18,22 @@ dependencies {
     implementation(libs.bluetape4k.io)
     testImplementation(libs.bluetape4k.junit5)
 
-    // PostgreSql Server
+    // PostgreSQL 서버
     implementation(libs.bluetape4k.testcontainers)
     implementation(libs.testcontainers.postgresql)
 
-    // Coroutines
+    // 코루틴
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactor)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    // Reactor
+    // Reactor 의존성
     implementation(libs.reactor.core)
     implementation(libs.reactor.kotlin.extensions)
     testImplementation(libs.reactor.test)
 
-    // R2DBC
+    // R2DBC 의존성
     implementation(libs.bluetape4k.r2dbc)
     implementation(libs.bluetape4k.spring.boot4.r2dbc)
     implementation(libs.spring.boot.starter.data.r2dbc.lib)

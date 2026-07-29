@@ -47,7 +47,7 @@ class ReactiveElasticsearchOperationsTest(
         val saved = createRandomBooks(3)
         val target = saved.random()
 
-        // Query 사용 예
+        // Query 사용 예입니다. 현재는 CriteriaQuery 예제로 동일 조건을 검증하므로 NativeQuery 코드는 참고용으로 남깁니다.
 //        val query = QueryBuilders.bool { bqb ->
 //            bqb.must { qb ->
 //                qb.match { mqb ->

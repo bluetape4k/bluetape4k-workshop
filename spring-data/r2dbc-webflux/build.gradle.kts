@@ -16,32 +16,32 @@ dependencies {
     implementation(platform(libs.spring.boot4.dependencies))
     testImplementation(libs.bluetape4k.junit5)
 
-    // Coroutines
+    // 코루틴
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactive)
     implementation(libs.kotlinx.coroutines.reactor)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    // Reactor
+    // Reactor 의존성
     implementation(libs.reactor.core)
     implementation(libs.reactor.kotlin.extensions)
     testImplementation(libs.reactor.test)
 
-    // R2DBC
+    // R2DBC 의존성
     implementation(libs.bluetape4k.r2dbc)
     implementation(libs.spring.boot.starter.data.r2dbc.lib)
     testImplementation(libs.spring.boot.starter.data.r2dbc.test)
     implementation(libs.r2dbc.h2)
     implementation(libs.r2dbc.pool)
 
-    // Spring Boot
+    // Spring Boot 의존성
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
     runtimeOnly(libs.spring.boot.devtools)
 
-    // Webflux
+    // WebFlux 의존성
     implementation(libs.spring.boot.starter.webflux.lib)
     testImplementation(libs.spring.boot.starter.webflux.test)
 
