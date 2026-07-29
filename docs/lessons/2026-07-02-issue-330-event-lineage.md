@@ -11,11 +11,11 @@ audit reconstruction, approval evidence, superseding event, missing-cause detect
 `graph/event-lineage`를 빠른 TinkerGraph lane과 Neo4j Testcontainers integration lane을
 가진 GraphOperations workshop module로 만든다.
 
-- `EventLineageService` owns idempotent vertex creation, direct edge creation,
-  bounded causal traversal, superseded chains, and aggregate audit assembly.
-- `EventLineageSchema` keeps labels and property names explicit for learners.
-- `EventLineageSeed` creates a deterministic order approval scenario with one
-  intentional missing causal link.
+- `EventLineageService`는 idempotent vertex creation, direct edge creation, bounded
+  causal traversal, superseded chain, aggregate audit assembly를 소유한다.
+- `EventLineageSchema`는 learner를 위해 label과 property name을 명시적으로 유지한다.
+- `EventLineageSeed`는 의도적인 missing causal link 하나를 포함한 deterministic order
+  approval scenario를 만든다.
 - README와 README.ko는 architecture/sequence diagram 및 실행 가능한 test command로 model을
   가르친다.
 
@@ -33,8 +33,9 @@ module은 이제 business state를 event, decision, actor, correction vertex로 
 - `./gradlew --no-daemon projects --console=plain`
 - `./scripts/smoke-validate.sh all-smoke`
 - `./scripts/smoke-validate.sh stale-check`
-- explicit `node scripts/validate-readme-diagram-qa.mjs` for the architecture and sequence SVGs
-- full-size PNG eye inspection for both diagrams
+- architecture와 sequence SVG에 대한 explicit
+  `node scripts/validate-readme-diagram-qa.mjs`
+- 두 diagram 모두에 대한 full-size PNG eye inspection
 - `actionlint .github/workflows/Examples.yml`
 - `git diff --check`
 

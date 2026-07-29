@@ -1,22 +1,28 @@
 # Issue 382 Bucket4j Redis Launcher Alignment
 
-## Context
+## 배경
 
-The `bucker4j-bluetape4k-webflux` example started Redis with a direct `RedisServer(useDefaultPort = true)` construction in runtime bootstrap code. That bypassed the bluetape4k Testcontainers launcher singleton pattern and coupled local startup to a fixed Redis port.
+`bucker4j-bluetape4k-webflux` example은 runtime bootstrap code에서 직접
+`RedisServer(useDefaultPort = true)`를 구성해 Redis를 시작했다. 이는 bluetape4k
+Testcontainers launcher singleton pattern을 우회하고 local startup을 고정 Redis port에
+결합했다.
 
-## Decision
+## 결정
 
-- Use `RedisServer.Launcher.redis` for `dev` and `test` profiles, matching the rest of the workshop Redis-backed examples.
-- Remove manual `start()` and `ShutdownQueue` wiring from the module bootstrap.
-- Keep Spring property wiring through `testcontainers.redis.*` so the rest of the Lettuce configuration stays unchanged.
-- Update README and README.ko with the actual launcher behavior and the real Gradle project path.
-- Fix adjacent trace logging that printed `$this` instead of the extracted rate-limit key.
+- 나머지 workshop Redis-backed example과 맞추기 위해 `dev`와 `test` profile에서
+  `RedisServer.Launcher.redis`를 사용한다.
+- module bootstrap에서 manual `start()`와 `ShutdownQueue` wiring을 제거한다.
+- 나머지 Lettuce configuration이 바뀌지 않도록 Spring property wiring은
+  `testcontainers.redis.*`를 통해 유지한다.
+- 실제 launcher behavior와 real Gradle project path를 README와 README.ko에 반영한다.
+- 추출된 rate-limit key 대신 `$this`를 출력하던 인접 trace logging을 수정한다.
 
-## Outcome
+## 결과
 
-The module now uses the bluetape4k ecosystem launcher for Redis, avoids fixed default-port coupling, and keeps learner-facing smoke commands aligned with the registered Gradle project name.
+module은 이제 Redis에 bluetape4k ecosystem launcher를 사용하고, fixed default-port coupling을
+피하며, learner-facing smoke command를 등록된 Gradle project name과 맞춘다.
 
-## Verification
+## 검증
 
 - Baseline build before issue work: `/tmp/issue382-baseline-build.log` — `BUILD SUCCESSFUL in 1m 43s`.
 - `:bucker4j-bluetape4k-webflux:compileKotlin`
@@ -26,6 +32,9 @@ The module now uses the bluetape4k ecosystem launcher for Redis, avoids fixed de
 - Full build after work: `/tmp/issue382-full-build.log` — `BUILD SUCCESSFUL in 1m 35s`.
 - `git diff --check` (`/tmp/issue382-diff-check.log`)
 
-## Future Notes
+## 향후 참고
 
-When a README command fails because the directory name differs from the Gradle project name, verify with `./gradlew projects` and update the documentation in the same PR. For Testcontainers infrastructure already wrapped by bluetape4k, use `XxxServer.Launcher` unless the test explicitly needs an isolated failure container.
+directory name이 Gradle project name과 달라 README command가 실패하면 `./gradlew projects`로
+검증하고 같은 PR에서 문서를 갱신한다. bluetape4k가 이미 감싼 Testcontainers infrastructure는
+test가 명시적으로 isolated failure container를 필요로 하지 않는 한 `XxxServer.Launcher`를
+사용한다.
