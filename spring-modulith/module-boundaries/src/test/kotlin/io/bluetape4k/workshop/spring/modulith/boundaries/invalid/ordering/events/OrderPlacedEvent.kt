@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.spring.modulith.boundaries.invalid.ordering.event
 import java.io.Serializable
 
 /**
- * Test-only event contract exported by the invalid ordering fixture.
+ * invalid ordering fixture 가 export 하는 test-only event contract 입니다.
  */
 data class OrderPlacedEvent(
     val orderId: String,

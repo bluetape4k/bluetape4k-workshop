@@ -7,11 +7,11 @@ import jakarta.persistence.Table
 import java.time.Instant
 
 /**
- * Fulfillment reservation created after an order is approved.
+ * 주문 승인 후 생성되는 fulfillment 예약입니다.
  *
- * ## Behavior / Contract
- * - [orderId] is the primary key so publication replay cannot create duplicates.
- * - The row is a listener side effect and is created only after the order transaction commits.
+ * ## 동작 / 계약
+ * - [orderId] 가 기본 키이므로 publication replay 가 중복 예약을 만들 수 없습니다.
+ * - 이 row 는 listener side effect 이며, 주문 transaction 이 commit 된 뒤에만 생성됩니다.
  */
 @Entity
 @Table(name = "fulfillment_reservations")
@@ -25,7 +25,7 @@ class FulfillmentReservation(
 ) {
     companion object {
         /**
-         * Creates a reservation for [orderId].
+         * [orderId] 에 대한 예약을 생성합니다.
          */
         fun forOrder(orderId: String): FulfillmentReservation =
             FulfillmentReservation(orderId = orderId)

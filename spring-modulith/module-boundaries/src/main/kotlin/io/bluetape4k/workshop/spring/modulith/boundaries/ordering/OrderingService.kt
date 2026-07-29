@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service
 import java.time.Instant
 
 /**
- * Application service that owns order placement and publishes order events.
+ * order placement 를 소유하고 order event 를 publish 하는 application service 입니다.
  */
 @Service
 class OrderingService(
@@ -20,7 +20,7 @@ class OrderingService(
 ) {
 
     /**
-     * Places an order through the exported catalog API and publishes an order event.
+     * exported catalog API 를 통해 주문을 생성하고 order event 를 publish 합니다.
      */
     fun placeOrder(request: OrderRequest): OrderReceipt {
         request.sku.requireNotBlank("sku")

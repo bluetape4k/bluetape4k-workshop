@@ -7,12 +7,12 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 /**
- * Transactional command boundary for order lifecycle operations.
+ * 주문 lifecycle 작업을 담당하는 transactional command 경계입니다.
  *
- * ## Behavior / Contract
- * - Order state and Spring Modulith publication rows are registered in the same transaction.
- * - Listener side effects happen after commit through `@ApplicationModuleListener`.
- * - Returned aggregates have no pending events; infrastructure owns event publication.
+ * ## 동작 / 계약
+ * - 주문 상태와 Spring Modulith publication row 는 같은 transaction 안에서 등록됩니다.
+ * - listener side effect 는 commit 후 `@ApplicationModuleListener` 를 통해 발생합니다.
+ * - 반환되는 aggregate 에는 pending event 가 없으며, event publication 은 infrastructure 가 소유합니다.
  */
 @Service
 class OrderCommandService(
@@ -22,7 +22,7 @@ class OrderCommandService(
 ) {
 
     /**
-     * Places a new order and publishes [OrderPlaced] inside the command transaction.
+     * 새 주문을 생성하고 command transaction 안에서 [OrderPlaced] 를 publish 합니다.
      */
     @Transactional
     fun place(command: PlaceOrderCommand): Order {
@@ -39,7 +39,7 @@ class OrderCommandService(
     }
 
     /**
-     * Approves an existing order and publishes [OrderApproved] inside the command transaction.
+     * 기존 주문을 승인하고 command transaction 안에서 [OrderApproved] 를 publish 합니다.
      */
     @Transactional
     fun approve(command: ApproveOrderCommand): Order {

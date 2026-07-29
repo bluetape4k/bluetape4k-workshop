@@ -13,7 +13,7 @@ class OrderModuleTest {
 
     @Test
     fun `publishes order completed event`() {
-        // given
+        // 준비
         val order = Order()
 
         val orderRepository = mockk<OrderRepository>(relaxed = true)
@@ -22,10 +22,10 @@ class OrderModuleTest {
         val inventory = mockk<Inventory>(relaxed = true)
         val orderManagement = OrderManagement(orderRepository, inventory)
 
-        // when
+        // 실행
         orderManagement.completeOrder(order)
 
-        // then
+        // 검증
         verify(exactly = 1) { orderRepository.save(order) }
         verify(exactly = 1) { inventory.updateInventoryFor(order) }
     }

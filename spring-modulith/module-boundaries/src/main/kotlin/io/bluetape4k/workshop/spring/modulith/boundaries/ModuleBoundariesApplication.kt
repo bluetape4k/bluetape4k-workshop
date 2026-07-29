@@ -4,7 +4,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 /**
- * Spring Boot entrypoint for the Spring Modulith boundary verification example.
+ * Spring Modulith boundary verification 예제의 Spring Boot entrypoint 입니다.
  */
 @SpringBootApplication
 class ModuleBoundariesApplication

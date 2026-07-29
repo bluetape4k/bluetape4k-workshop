@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * In-memory notification-owned outbox used to prove event-driven handoff.
+ * event-driven handoff 를 증명하기 위해 notification 이 소유하는 in-memory outbox 입니다.
  */
 @Component
 class NotificationOutbox {

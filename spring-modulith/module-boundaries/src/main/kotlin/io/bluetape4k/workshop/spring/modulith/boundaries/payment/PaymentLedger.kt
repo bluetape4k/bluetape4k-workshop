@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * In-memory payment-owned ledger used to prove event-driven handoff.
+ * event-driven handoff 를 증명하기 위해 payment 가 소유하는 in-memory ledger 입니다.
  */
 @Component
 class PaymentLedger {
