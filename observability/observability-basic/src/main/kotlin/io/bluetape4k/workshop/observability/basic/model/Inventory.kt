@@ -4,10 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import java.io.Serializable
 
 /**
- * Inventory availability for a single item, returned by the downstream inventory service.
+ * downstream inventory service 가 반환하는 단일 item 의 inventory availability 입니다.
  *
  * ## Behavior / Contract
- * - Unknown JSON fields are ignored to tolerate downstream API additions.
+ * - downstream API 추가를 허용하기 위해 unknown JSON field 는 무시합니다.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Inventory(

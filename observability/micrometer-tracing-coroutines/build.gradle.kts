@@ -25,28 +25,28 @@ dependencies {
     implementation(libs.bluetape4k.testcontainers)
     testImplementation(libs.bluetape4k.junit5)
 
-    // Observability
+    // observability 의존성입니다.
     implementation(libs.micrometer.observation.lib)
     testImplementation(libs.micrometer.observation.test)
 
-    // Tracing
+    // tracing 의존성입니다.
     implementation(libs.micrometer.tracing.lib)
     testImplementation(libs.micrometer.tracing.test)
-    // testImplementation(libs.micrometer.tracing.integeration.test)
+    // testImplementation(libs.micrometer.tracing.integeration.test) 는 필요 시 tracing integration test 에 사용합니다.
 
-    // Tracing Reporting 방식은
-    // 1. Micrometer Tracing -> Otel Brigdge -> Otel Exporter -> Zipkin Server 로 하는 방식과
+    // tracing reporting 방식은
+    // 1. Micrometer Tracing -> Otel Bridge -> Otel Exporter -> Zipkin Server 로 연결하는 방식과
     implementation(libs.micrometer.tracing.bridge.otel)  // tracing 정보를 opentelemetry format으로 bridge
     implementation(libs.opentelemetry.exporter.zipkin)   // zipkin server로 export
 
-    // 2. Micrometer Tracing -> Brave Bridge -> Zipkin Reporter -> Zipkin Server 로 하는 방식이 있다.
+    // 2. Micrometer Tracing -> Brave Bridge -> Zipkin Reporter -> Zipkin Server 로 연결하는 방식이 있습니다.
     // 참고: https://www.appsdeveloperblog.com/micrometer-and-zipkin-in-spring-boot/
     // implementation(libs.micrometer.tracing.bridge.brave)
     // implementation("io.zipkin.reporter2:zipkin-reporter-brave:3.3.0")  // https://mvnrepository.com/artifact/io.zipkin.reporter2/zipkin-reporter-brave
 
     implementation(libs.micrometer.context.propagation)  // thread local <-> reactor 등 상이한 환경에서 context 전파를 위해 사용
 
-    // Spring Boot
+    // Spring Boot 의존성입니다.
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
@@ -64,13 +64,13 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
-    // Coroutines
+    // coroutine 의존성입니다.
     implementation(libs.bluetape4k.coroutines)
     implementation(libs.kotlinx.coroutines.core.lib)
     implementation(libs.kotlinx.coroutines.reactor)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    // Reactor
+    // Reactor 의존성입니다.
     implementation(libs.reactor.netty)
     implementation(libs.reactor.kotlin.extensions)
     testImplementation(libs.reactor.test)

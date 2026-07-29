@@ -11,15 +11,13 @@ import org.springframework.web.reactive.function.client.awaitBodyOrNull
 import org.springframework.web.reactive.function.client.createExceptionAndAwait
 
 /**
- * HTTP client for the downstream inventory service.
+ * downstream inventory service 를 호출하는 HTTP client 입니다.
  *
  * ## Behavior / Contract
- * - W3C traceparent header is propagated automatically via the injected `WebClient.Builder`
- *   (configured by Spring Boot's OpenTelemetry auto-configuration).
- * - 4xx responses (including 404) are treated as "not found" and return `null`.
- * - 5xx responses propagate as exceptions to the caller.
- * - No manual Observation span is created here; `http.client.requests` span is produced
- *   automatically by Micrometer's WebClient instrumentation.
+ * - W3C traceparent header 는 주입된 `WebClient.Builder` 를 통해 자동 전파됩니다. 이 builder 는 Spring Boot OpenTelemetry auto-configuration 으로 구성됩니다.
+ * - 404 를 포함한 4xx response 는 "not found" 로 취급하고 `null` 을 반환합니다.
+ * - 5xx response 는 caller 에게 exception 으로 전파됩니다.
+ * - 여기서는 manual Observation span 을 만들지 않습니다. `http.client.requests` span 은 Micrometer WebClient instrumentation 이 자동으로 생성합니다.
  */
 @Component
 class InventoryClient(
@@ -31,10 +29,9 @@ class InventoryClient(
     private val client: WebClient = builder.baseUrl(baseUrl).build()
 
     /**
-     * Fetches inventory availability for the given [itemId].
+     * 주어진 [itemId] 의 inventory availability 를 조회합니다.
      *
-     * Returns `null` when the item is not found (4xx) or the upstream returns an empty body.
-     * Throws on 5xx server errors.
+     * item 을 찾지 못했거나(4xx) upstream 이 empty body 를 반환하면 `null` 을 반환합니다. 5xx server error 에서는 throw 합니다.
      */
     suspend fun fetchInventory(itemId: Long): Inventory? {
         val validItemId = itemId.requirePositiveNumber("itemId")

@@ -17,15 +17,13 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
 
 /**
- * Base class for all observability-basic integration tests.
+ * 모든 observability-basic integration test 의 base class 입니다.
  *
  * ## Behavior / Contract
- * - Shares a single `MockWebServer` instance across all subclasses (serial execution via `junit-platform.properties`).
- * - `@AfterAll mockServer.shutdown()` is intentionally absent: multiple subclasses share this instance,
- *   so premature shutdown would break sibling tests. JVM shutdown handles cleanup.
- * - Each test is responsible for enqueuing its own stubs (no shared `@BeforeEach` enqueue).
- * - `@AfterEach resetMockServerDispatcher()` drains recorded requests and resets queued responses
- *   to prevent cross-context test pollution (e.g. stale entries breaking `TracePropagationTest`).
+ * - 모든 subclass 가 하나의 `MockWebServer` instance 를 공유합니다. `junit-platform.properties` 로 serial execution 합니다.
+ * - 여러 subclass 가 이 instance 를 공유하므로 `@AfterAll mockServer.shutdown()` 은 의도적으로 없습니다. premature shutdown 은 sibling test 를 깨뜨릴 수 있고 cleanup 은 JVM shutdown 이 처리합니다.
+ * - 각 test 는 자체 stub enqueue 를 책임집니다. shared `@BeforeEach` enqueue 는 없습니다.
+ * - cross-context test pollution 을 막기 위해 `@AfterEach resetMockServerDispatcher()` 가 recorded request 를 drain 하고 queued response 를 reset 합니다. 예를 들어 stale entry 가 `TracePropagationTest` 를 깨뜨리는 상황을 방지합니다.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -69,8 +67,8 @@ abstract class AbstractBasicTest {
 
     @AfterEach
     fun resetMockServerDispatcher() {
-        // Drain any unconsumed recorded requests so stale entries don't pollute
-        // cross-context tests (e.g. TracePropagationTest) that call takeRequest().
+        // 소비되지 않은 recorded request 를 drain 하여 stale entry 가 오염시키지 않게 합니다.
+        // takeRequest() 를 호출하는 cross-context test(예: TracePropagationTest)를 보호합니다.
         @Suppress("ControlFlowWithEmptyBody")
         while (mockServer.takeRequest(0, TimeUnit.MILLISECONDS) != null) { /* drain */ }
         mockServer.dispatcher.close()
@@ -78,7 +76,7 @@ abstract class AbstractBasicTest {
     }
 
     /**
-     * Enqueues a successful inventory response for the given [itemId] and [available] count.
+     * 주어진 [itemId] 와 [available] count 에 대한 successful inventory response 를 enqueue 합니다.
      */
     protected fun enqueueSuccessInventory(itemId: Long = 1L, available: Int = 50) {
         val json = """{"itemId":$itemId,"available":$available}"""

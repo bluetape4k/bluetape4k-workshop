@@ -4,11 +4,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 /**
- * Advanced observability demo: HTTP (WebFlux) → coroutine service → H2 DB (Exposed JDBC) + Redis cache.
+ * advanced observability demo 입니다. HTTP(WebFlux) → coroutine service → H2 DB(Exposed JDBC) + Redis cache 흐름을 보여줍니다.
  *
- * Demonstrates multi-layer span instrumentation via the local `observed()` helper
- * (a `finally { stop() }`-safe coroutine wrapper — see `ObservationSupport.kt`),
- * Redis cache-aside pattern with soft-fail, and coroutine dispatcher boundary propagation.
+ * local `observed()` helper(`finally { stop() }` 에 안전한 coroutine wrapper, `ObservationSupport.kt` 참고)를 통한 multi-layer span instrumentation, soft-fail 을 적용한 Redis cache-aside pattern, coroutine dispatcher boundary propagation 을 시연합니다.
  */
 @SpringBootApplication
 class AdvancedObservabilityApp

@@ -18,12 +18,12 @@ dependencies {
     implementation(platform(libs.micrometer.bom))
     implementation(platform(libs.micrometer.tracing.bom))
 
-    // Micrometer Observation
+    // Micrometer Observation 의존성입니다.
     implementation(libs.bluetape4k.micrometer)
     implementation(libs.micrometer.observation.lib)
     testImplementation(libs.micrometer.observation.test)
 
-    // Micrometer Tracing
+    // Micrometer Tracing 의존성입니다.
     implementation(libs.micrometer.tracing.lib)
     testImplementation(libs.micrometer.tracing.test)
     implementation(libs.micrometer.tracing.bridge.otel)  // tracing 정보를 opentelemetry format으로 bridge
@@ -32,7 +32,7 @@ dependencies {
 
     implementation(libs.micrometer.context.propagation)  // thread local <-> reactor 등 상이한 환경에서 context 전파를 위해 사용
 
-    // Spring Boot
+    // Spring Boot 관측성 의존성입니다.
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)

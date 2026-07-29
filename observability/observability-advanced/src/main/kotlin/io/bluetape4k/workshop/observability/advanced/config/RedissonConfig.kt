@@ -8,11 +8,11 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 /**
- * Configures the Redisson client for Redis connectivity.
+ * Redis 연결을 위한 Redisson client 를 구성합니다.
  *
  * ## Behavior / Contract
- * - The `url` property must use the `redis://host:port` format required by Redisson's `address` setter.
- * - Bean is destroyed via `shutdown()` on application stop.
+ * - `url` property 는 Redisson `address` setter 가 요구하는 `redis://host:port` format 을 사용해야 합니다.
+ * - application stop 시 bean 은 `shutdown()` 으로 destroy 됩니다.
  */
 @Configuration(proxyBeanMethods = false)
 class RedissonConfig {

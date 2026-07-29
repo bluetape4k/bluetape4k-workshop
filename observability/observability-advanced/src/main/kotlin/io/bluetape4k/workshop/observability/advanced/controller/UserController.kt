@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.RestController
 import java.net.URI
 
 /**
- * REST controller exposing user CRUD endpoints.
+ * user CRUD endpoint 를 노출하는 REST controller 입니다.
  *
  * ## Behavior / Contract
- * - `GET /users/{id}` returns 200 with user body or 404 when not found.
- * - `POST /users` returns 201 Created with the created user.
+ * - `GET /users/{id}` 는 user body 와 함께 200 을 반환하거나 찾지 못하면 404 를 반환합니다.
+ * - `POST /users` 는 생성된 user 와 함께 201 Created 를 반환합니다.
  */
 @RestController
 @RequestMapping("/users")
@@ -24,7 +24,7 @@ class UserController(
     private val userService: UserService,
 ) {
     /**
-     * Retrieves a user by ID. Returns 404 when not found.
+     * ID 로 user 를 조회합니다. 찾지 못하면 404 를 반환합니다.
      */
     @GetMapping("/{id}")
     suspend fun getUser(@PathVariable id: Long): ResponseEntity<User> {
@@ -34,7 +34,7 @@ class UserController(
     }
 
     /**
-     * Creates a new user. Returns 201 Created.
+     * 새 user 를 생성합니다. 201 Created 를 반환합니다.
      */
     @PostMapping
     suspend fun createUser(@RequestBody user: User): ResponseEntity<User> {

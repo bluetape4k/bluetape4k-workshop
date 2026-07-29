@@ -93,7 +93,7 @@ class OrderServiceTest : AbstractBasicTest() {
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            // expected
+            // 예상된 예외입니다.
         }
 
         TestObservationRegistryAssert.assertThat(testRegistry)

@@ -5,10 +5,10 @@ import io.bluetape4k.support.requirePositiveNumber
 import java.io.Serializable
 
 /**
- * Represents a user entity stored in the database.
+ * database 에 저장되는 user entity 를 표현합니다.
  *
  * ## Behavior / Contract
- * - Implements [Serializable] for Redis cache serialization.
+ * - Redis cache serialization 을 위해 [Serializable] 을 구현합니다.
  */
 data class User(
     val id: Long,
