@@ -8,7 +8,7 @@ import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Fixed-window tenant-keyed rate limiter for workshop isolation tests.
+ * workshop isolation test 를 위한 fixed-window tenant-keyed rate limiter 입니다.
  */
 @Component
 class TenantRateLimiter(
@@ -18,7 +18,7 @@ class TenantRateLimiter(
     private val buckets = ConcurrentHashMap<String, RateLimitBucket>()
 
     /**
-     * Consumes one request from the tenant/principal bucket.
+     * tenant/principal bucket 에서 요청 하나를 소비합니다.
      */
     fun tryConsume(
         tenantId: TenantId,
@@ -49,7 +49,7 @@ class TenantRateLimiter(
     }
 
     /**
-     * Clears all limiter buckets.
+     * 모든 limiter bucket 을 지웁니다.
      */
     fun clear() {
         buckets.clear()
@@ -62,7 +62,7 @@ class TenantRateLimiter(
 }
 
 /**
- * Result of a tenant-keyed rate-limit check.
+ * tenant-keyed rate-limit check 결과입니다.
  */
 data class RateLimitDecision(
     val key: String,

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 /**
- * Creates workshop tables when the application starts.
+ * application 시작 시 workshop table 을 생성합니다.
  */
 @Component
 class ExposedSchemaInitializer : ApplicationRunner {

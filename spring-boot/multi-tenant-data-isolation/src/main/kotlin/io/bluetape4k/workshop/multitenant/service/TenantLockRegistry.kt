@@ -7,7 +7,7 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 /**
- * Tenant-keyed lock registry for deterministic workshop tests.
+ * 결정적인 workshop test 를 위한 tenant-keyed lock registry 입니다.
  */
 @Component
 class TenantLockRegistry(
@@ -17,7 +17,7 @@ class TenantLockRegistry(
     private val locks = ConcurrentHashMap<String, ReentrantLock>()
 
     /**
-     * Executes [block] while holding a lock whose key includes tenant scope.
+     * tenant scope 를 포함하는 key 의 lock 을 잡은 상태로 [block] 을 실행합니다.
      */
     fun <T> withInvoiceLock(tenantId: TenantId, invoiceId: Long, block: (String) -> T): T {
         val key = keyFactory.invoiceLockKey(tenantId, invoiceId)
@@ -26,12 +26,12 @@ class TenantLockRegistry(
     }
 
     /**
-     * Returns the lock keys created during the workshop scenario.
+     * workshop scenario 중 생성된 lock key 를 반환합니다.
      */
     fun keys(): Set<String> = locks.keys.toSet()
 
     /**
-     * Clears all lock entries.
+     * 모든 lock entry 를 지웁니다.
      */
     fun clear() {
         locks.clear()

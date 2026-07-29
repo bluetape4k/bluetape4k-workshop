@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * In-memory cache that demonstrates the difference between tenant-safe and unsafe keys.
+ * tenant-safe key 와 unsafe key 의 차이를 보여주는 in-memory cache 입니다.
  */
 @Component
 class TenantInvoiceCache(
@@ -16,7 +16,7 @@ class TenantInvoiceCache(
     private val cache = ConcurrentHashMap<String, InvoiceRecord>()
 
     /**
-     * Reads with a tenant-prefixed key.
+     * tenant prefix 가 포함된 key 로 읽습니다.
      */
     fun getOrLoad(
         tenantId: TenantId,
@@ -29,7 +29,7 @@ class TenantInvoiceCache(
     }
 
     /**
-     * Reads with an unsafe key that omits tenant scope.
+     * tenant scope 를 생략한 unsafe key 로 읽습니다.
      */
     fun getOrLoadUnsafe(
         invoiceId: Long,
@@ -41,19 +41,19 @@ class TenantInvoiceCache(
     }
 
     /**
-     * Returns current cache keys for workshop assertions.
+     * workshop assertion 에 사용할 현재 cache key 를 반환합니다.
      */
     fun keys(): Set<String> = cache.keys.toSet()
 
     /**
-     * Evicts a tenant-scoped invoice cache entry.
+     * tenant-scoped invoice cache entry 를 evict 합니다.
      */
     fun evict(tenantId: TenantId, invoiceId: Long) {
         cache.remove(keyFactory.invoiceCacheKey(tenantId, invoiceId))
     }
 
     /**
-     * Clears all cache entries.
+     * 모든 cache entry 를 지웁니다.
      */
     fun clear() {
         cache.clear()
