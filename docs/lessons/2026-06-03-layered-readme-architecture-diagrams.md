@@ -1,36 +1,41 @@
 # Layered README architecture diagrams
 
-## Context
+## 배경
 
-README diagram standardization had drifted into generic horizontal flow diagrams and duplicate
-Architecture/Flow sections. The rendered PNGs were technically generated, but several assets did not
-explain the layered structure of the examples and some README pairs diverged between English and Korean.
+README diagram standardization이 generic horizontal flow diagram과 중복
+Architecture/Flow section으로 흐트러졌다. rendered PNG는 기술적으로 생성되어 있었지만,
+여러 asset이 예제의 layered structure를 설명하지 못했고 일부 README pair는 English와
+Korean 사이에 drift가 있었다.
 
-## Decision
+## 결정
 
-Use the graph examples as the visual baseline for README architecture diagrams: layered bands,
-component-level source-derived cards, visible orthogonal connectors, and the `Architects Daughter` /
-`Comic Mono` font roles. Keep Graphviz `.dot`, `.plain`, and sketch assets as evidence, but render
-the committed README SVG/PNG with a layered component layout instead of the raw Graphviz horizontal
-pipeline or one-card-per-layer summaries.
+graph 예제를 README architecture diagram의 visual baseline으로 사용한다. 기준은 layered
+band, component-level source-derived card, visible orthogonal connector,
+`Architects Daughter` / `Comic Mono` font role이다. Graphviz `.dot`, `.plain`, sketch
+asset은 evidence로 유지하지만, commit되는 README SVG/PNG는 raw Graphviz horizontal
+pipeline이나 one-card-per-layer summary 대신 layered component layout으로 렌더링한다.
 
-## Outcome
+## 결과
 
-- Regenerated 87 generic README architecture SVG/PNG assets with layered component-card structure.
-- Widened architecture canvases to 1320px so same-layer connectors have enough route space.
-- Added domain-specific layer and card labels for AWS, Exposed, messaging, graph, observability,
-  Redis, rate limit, Spring Data, Spring Boot, security, and virtual-thread examples.
-- Split generated architecture nodes into source-derived component cards instead of aggregating
-  controllers, services, repositories, and runtime items into broad summary cards.
-- Wrapped long CamelCase component names so class/test names stay inside card boundaries.
-- Removed visible architecture edge labels; semantic labels remain as SVG `data-label` metadata.
-- Restored the four existing `graph/` architecture assets and excluded them from the generic
-  generator/validator because those module-specific diagrams explain the graph examples better.
-- Removed generated Flow sections from README files.
-- Removed duplicate Architecture sections and duplicate image targets.
-- Kept README parity between `README.md` and `README.ko.md`.
+- 87개 generic README architecture SVG/PNG asset을 layered component-card 구조로
+  재생성했다.
+- same-layer connector가 충분한 route space를 갖도록 architecture canvas를 1320px로
+  넓혔다.
+- AWS, Exposed, messaging, graph, observability, Redis, rate limit, Spring Data,
+  Spring Boot, security, virtual-thread 예제에 domain-specific layer와 card label을
+  추가했다.
+- controller, service, repository, runtime item을 broad summary card로 집계하지 않고,
+  generated architecture node를 source-derived component card로 분리했다.
+- 긴 CamelCase component name을 wrap해 class/test name이 card boundary 안에 머물게 했다.
+- visible architecture edge label을 제거했다. semantic label은 SVG `data-label` metadata로
+  유지한다.
+- 기존 `graph/` architecture asset 4개를 복원하고 generic generator/validator에서
+  제외했다. 해당 module-specific diagram이 graph 예제를 더 잘 설명하기 때문이다.
+- README 파일에서 generated Flow section을 제거했다.
+- 중복 Architecture section과 중복 image target을 제거했다.
+- `README.md`와 `README.ko.md` 사이 parity를 유지했다.
 
-## Verification
+## 검증
 
 - `node scripts/validate-readme-language.mjs`
 - `node scripts/validate-readme-parity.mjs`
@@ -50,19 +55,20 @@ pipeline or one-card-per-layer summaries.
   `observability/micrometer-tracing-coroutines`
 - individual PNG rechecks after route fix: `exposed-mvc-jdbc`, `aws`, `messaging/kafka`
 
-## Future Rule
+## 향후 규칙
 
-Do not add generic README Flow sections unless there is a domain-specific flow asset. Architecture
-diagrams should default to layered structure and must be visually checked in rendered PNG form,
-especially when same-layer connector labels are present.
+domain-specific flow asset이 없는 한 generic README Flow section을 추가하지 않는다.
+Architecture diagram은 기본적으로 layered structure를 사용해야 하며, rendered PNG 형태로
+시각 확인해야 한다. 특히 same-layer connector label이 있을 때는 필수다.
 
-Repeated connector complaints must be promoted into generator validation immediately. Same-layer
-card pairs need enough canvas width, enough horizontal gap, side-to-side routing when their centers
-align, and no visible edge-label boxes over connector paths. Do not overwrite module-specific
-architecture assets that are already more explanatory than the generic generator output.
+반복되는 connector complaint는 즉시 generator validation으로 승격해야 한다.
+same-layer card pair에는 충분한 canvas width, 충분한 horizontal gap, center가 정렬될 때의
+side-to-side routing, connector path 위에 visible edge-label box가 없는 상태가 필요하다.
+generic generator output보다 이미 설명력이 좋은 module-specific architecture asset을
+덮어쓰지 않는다.
 
-Do not collapse README architecture diagrams into broad summary nodes such as "API & Adapters" or
-"Service & Domain" when source files are available. Generated architecture assets should show
-separate component cards for concrete controllers, handlers, services, repositories, DTOs/models,
-framework helpers, bluetape4k modules, and runtime backends. If adding those component cards creates
-connector clutter, reduce connector count before collapsing the components.
+source file이 있을 때 README architecture diagram을 "API & Adapters" 또는
+"Service & Domain" 같은 broad summary node로 collapse하지 않는다. generated architecture
+asset은 concrete controller, handler, service, repository, DTO/model, framework helper,
+bluetape4k module, runtime backend를 별도 component card로 보여주어야 한다. component
+card 추가로 connector clutter가 생기면 component를 collapse하기 전에 connector 수를 줄인다.

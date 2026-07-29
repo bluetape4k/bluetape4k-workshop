@@ -3,23 +3,21 @@
 Issue: #228
 Date: 2026-05-27
 
-## Context
+## 배경
 
-Issue #228 audited whether workshop example areas should adopt more
-domain-specific `bluetape4k-*` modules. The acceptance criteria required an
-adopt/defer/reject decision for each candidate and explicitly prohibited unused
-dependencies.
+Issue #228은 workshop example 영역이 더 domain-specific한 `bluetape4k-*` module을
+채택해야 하는지 감사했다. acceptance criteria는 각 candidate에 대해
+adopt/defer/reject 결정을 요구했고, unused dependency를 명시적으로 금지했다.
 
-## Decision or Finding
+## 결정 또는 발견 사항
 
-Keep the current dependency graph for this pass. The audited areas already use
-the matching bluetape4k modules where the examples exercise those domains, and
-the remaining candidates would be unused or would require a behavior-changing
-rewrite.
+이번 pass에서는 현재 dependency graph를 유지한다. 감사한 영역은 예제가 해당 domain을
+다루는 곳에서 이미 대응되는 bluetape4k module을 사용하고 있으며, 남은 candidate는
+unused가 되거나 behavior-changing rewrite를 요구한다.
 
-Do not add a bluetape4k module only to satisfy a pattern scan. Add it when the
-example source imports an API from that module or when a focused follow-up
-changes code to use that module's contract.
+pattern scan을 만족시키기 위해서만 bluetape4k module을 추가하지 않는다. example
+source가 해당 module의 API를 import하거나, focused follow-up이 code를 그 module의
+contract를 사용하도록 변경할 때 추가한다.
 
 ## Candidate Matrix
 
@@ -34,29 +32,28 @@ changes code to use that module's contract.
 | `spring-data/jpa-querydsl` | Adopted already | `spring-data/jpa-querydsl/build.gradle.kts` already uses `bluetape4k-hibernate` because the example domain is JPA/Hibernate based. |
 | `spring-data/mongodb-*` | Defer `bluetape4k-mongodb` | The MongoDB examples currently use Spring Data MongoDB, Kotlin MongoDB drivers, Testcontainers, and coroutine/reactor helpers directly. There is no existing import from `bluetape4k-mongodb` in the example source, and no local source evidence that a dependency-only addition would be used. A follow-up should first identify a concrete `bluetape4k-mongodb` API to demonstrate. |
 
-## Outcome
+## 결과
 
-No Gradle dependency was added. The issue result is a source-backed adoption
-matrix that prevents dependency churn while leaving clear follow-up gates for
-Kafka and MongoDB.
+Gradle dependency는 추가하지 않았다. 이 이슈의 결과는 dependency churn을 막으면서도
+Kafka와 MongoDB에 대한 명확한 follow-up gate를 남기는 source-backed adoption matrix다.
 
-## Verification
+## 검증
 
-- Inspected candidate build files and source imports for `messaging`,
-  `observability`, `redis`, `vertx`, and `spring-data`.
-- Inspected local `bluetape4k-kafka4` sources and confirmed the available
-  coroutine/Spring suspend-send helpers.
+- `messaging`, `observability`, `redis`, `vertx`, `spring-data`의 candidate build file과
+  source import를 검사했다.
+- local `bluetape4k-kafka4` source를 검사하고 사용 가능한 coroutine/Spring
+  suspend-send helper를 확인했다.
 
-## Future Guidance
+## 향후 지침
 
-When a future issue revisits a deferred area:
+향후 이슈에서 defer된 영역을 다시 다룰 때는 다음을 따른다.
 
-1. Start from source usage, not the version catalog.
-2. Add a bluetape4k dependency only with an accompanying source import or
-   behavior-preserving migration.
-3. Keep using the root `bluetape4k-dependencies` BOM; do not pin individual
-   bluetape4k module versions.
-4. For `messaging/transactional-outbox`, preserve the guarantee that an outbox
-   row is marked `PUBLISHED` only after Kafka send success is known.
-5. For MongoDB, first verify the current `bluetape4k-mongodb` API and choose a
-   focused example before changing Gradle dependencies.
+1. version catalog가 아니라 source usage에서 시작한다.
+2. source import가 동반되거나 behavior-preserving migration이 있을 때만 bluetape4k
+   dependency를 추가한다.
+3. root `bluetape4k-dependencies` BOM을 계속 사용하고, 개별 bluetape4k module version을
+   pin하지 않는다.
+4. `messaging/transactional-outbox`에서는 Kafka send success가 확인된 뒤에만 outbox row를
+   `PUBLISHED`로 표시한다는 보장을 보존한다.
+5. MongoDB는 Gradle dependency를 변경하기 전에 현재 `bluetape4k-mongodb` API를 먼저
+   검증하고 focused example을 선택한다.
