@@ -1,0 +1,879 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Compare transactional outbox with Kafka-first fallback, then run direct publish failures, relay retries, and reconciliation.">
+  <link rel="icon" href="data:,">
+  <title>Reduce Outbox Writes in Order Transactions While Recovering Event Publication After Kafka Failures</title>
+  <script>
+    (() => {
+      const storageKey = 'starlight-theme';
+      const saved = localStorage.getItem(storageKey);
+      document.documentElement.dataset.theme =
+        saved === 'light' || saved === 'dark'
+          ? saved
+          : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    })();
+  </script>
+  <style>
+    :root {
+      --page: #f4f7f8;
+      --surface: #ffffff;
+      --surface-2: #eaf0f2;
+      --text: #14202b;
+      --muted: #566778;
+      --line: #c9d4dc;
+      --code: #edf2f5;
+      --focus: #0969da;
+      --good: #147d45;
+      --warning: #b45d00;
+      --bad: #b52f3b;
+      --layer-api: #0f8b8d;
+      --layer-api-soft: #d9f3f1;
+      --layer-application: #2563eb;
+      --layer-application-soft: #e2ebff;
+      --layer-persistence: #27864b;
+      --layer-persistence-soft: #ddf3e5;
+      --layer-messaging: #d97706;
+      --layer-messaging-soft: #fff0d8;
+      --layer-recovery: #b33f8f;
+      --layer-recovery-soft: #fae3f3;
+      --shadow: 0 12px 34px rgb(31 50 64 / 10%);
+    }
+    :root[data-theme="light"] {
+      color-scheme: light;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --page: #10161b;
+      --surface: #182129;
+      --surface-2: #202c35;
+      --text: #edf4f7;
+      --muted: #aebdc7;
+      --line: #3a4a55;
+      --code: #11191f;
+      --focus: #71b7ff;
+      --good: #52c987;
+      --warning: #ffb457;
+      --bad: #ff7c88;
+      --layer-api: #3dc2bd;
+      --layer-api-soft: #173a3a;
+      --layer-application: #77a7ff;
+      --layer-application-soft: #1e3359;
+      --layer-persistence: #5bd08a;
+      --layer-persistence-soft: #1b3b2a;
+      --layer-messaging: #ffae42;
+      --layer-messaging-soft: #473016;
+      --layer-recovery: #eb79c3;
+      --layer-recovery-soft: #48223d;
+      --shadow: 0 16px 40px rgb(0 0 0 / 32%);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      line-height: 1.65;
+      letter-spacing: 0;
+    }
+    button, a { font: inherit; }
+    button { color: inherit; }
+    a { color: inherit; }
+    h1, h2, h3, h4, p, li, td, strong, span { overflow-wrap: anywhere; }
+    code, pre {
+      font-family: 'Comic Mono', ui-monospace, monospace;
+    }
+    code { overflow-wrap: anywhere; }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      min-height: 3.7rem;
+      border-bottom: 1px solid var(--line);
+      background: color-mix(in srgb, var(--page) 90%, transparent);
+      backdrop-filter: blur(16px);
+    }
+    .header-inner {
+      width: min(1180px, calc(100% - 2rem));
+      margin: auto;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+    .brand { font-weight: 800; text-decoration: none; white-space: nowrap; }
+    .site-nav { display: flex; gap: 1rem; margin-left: auto; }
+    .site-nav a, .locale-link {
+      color: var(--muted);
+      font-size: .9rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .site-nav a:hover, .locale-link:hover { color: var(--text); }
+    .header-actions { display: flex; gap: .45rem; align-items: center; }
+    .theme-toggle {
+      width: 2.4rem;
+      height: 2.4rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 1.1rem;
+    }
+    main { overflow: hidden; }
+    section {
+      width: min(1180px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 5.2rem 0;
+      scroll-margin-top: 4rem;
+    }
+    section + section { border-top: 1px solid var(--line); }
+    .hero {
+      min-height: min(78vh, 780px);
+      display: grid;
+      align-content: center;
+      padding-top: 5.5rem;
+      padding-bottom: 4rem;
+    }
+    .kicker {
+      margin: 0 0 1rem;
+      color: var(--layer-messaging);
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-size: .84rem;
+    }
+    h1 {
+      max-width: 1050px;
+      margin: 0;
+      font-size: clamp(2.25rem, 5vw, 4.8rem);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+    .hero-lead {
+      max-width: 840px;
+      margin: 1.6rem 0 2.2rem;
+      color: var(--muted);
+      font-size: clamp(1.02rem, 2vw, 1.28rem);
+    }
+    .hero-facts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      max-width: 760px;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .hero-fact { padding: 1.2rem 1.3rem 1.2rem 0; }
+    .hero-fact strong { display: block; font-size: 1.55rem; }
+    .hero-fact span { color: var(--muted); font-size: .9rem; }
+    .section-heading { max-width: 900px; margin-bottom: 2.3rem; }
+    .section-heading h2 {
+      margin: 0 0 .8rem;
+      font-size: clamp(1.8rem, 3.5vw, 3rem);
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+    .section-heading p { margin: 0; color: var(--muted); font-size: 1.05rem; }
+    .problem-grid, .decision-grid, .implementation-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+    .problem-grid > *, .decision-grid > *, .implementation-grid > * { min-width: 0; }
+    .problem-card, .decision, .implementation-grid article {
+      min-height: 10rem;
+      padding: 1.45rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+    .problem-card h3, .decision h3, .implementation-grid h3 { margin: .6rem 0 .4rem; }
+    .problem-card p, .decision p, .implementation-grid p { margin: 0; color: var(--muted); }
+    .layer-dot { display: block; width: 2.5rem; height: .35rem; border-radius: 2px; background: currentColor; }
+    .layer-api { color: var(--layer-api); }
+    .layer-application { color: var(--layer-application); }
+    .layer-persistence { color: var(--layer-persistence); }
+    .layer-messaging { color: var(--layer-messaging); }
+    .layer-recovery { color: var(--layer-recovery); }
+    .decision > span, .limit-row > span {
+      display: inline-block;
+      color: var(--muted);
+      font-size: .75rem;
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .decision.selected { border-color: var(--good); box-shadow: inset 4px 0 var(--good); }
+    .brainstorm-heading { margin: 3.4rem 0 1.2rem; font-size: 1.45rem; }
+    .comparison-tool {
+      display: grid;
+      grid-template-columns: minmax(15rem, .72fr) minmax(0, 1.28fr);
+      gap: 2rem;
+      align-items: stretch;
+    }
+    .segments {
+      display: grid;
+      gap: .6rem;
+      align-content: start;
+    }
+    .segment {
+      min-height: 3.4rem;
+      padding: .85rem 1rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      text-align: left;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .segment[aria-pressed="true"] {
+      border-color: var(--layer-messaging);
+      box-shadow: inset 4px 0 var(--layer-messaging);
+    }
+    .approach-summary { min-height: 6rem; margin: 1.2rem 0 0; color: var(--muted); }
+    .comparison-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: .8rem;
+    }
+    .metric {
+      min-height: 7rem;
+      padding: 1rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .metric span { color: var(--muted); font-size: .82rem; font-weight: 700; }
+    .metric strong { margin-top: .3rem; font-size: 1.3rem; overflow-wrap: anywhere; }
+    .architecture-board { display: grid; gap: .9rem; }
+    .architecture-layer {
+      display: grid;
+      grid-template-columns: 10.5rem minmax(0, 1fr);
+      gap: 1rem;
+      align-items: stretch;
+      padding: .9rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+    .architecture-layer > h3 {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      padding: .8rem;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+    .architecture-nodes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+      gap: .75rem;
+    }
+    .architecture-card, .class-card {
+      min-height: 7.5rem;
+      padding: 1rem;
+      border: 1px solid currentColor;
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .architecture-card.layer-api, .class-card.layer-api { background: var(--layer-api-soft); }
+    .architecture-card.layer-application, .class-card.layer-application { background: var(--layer-application-soft); }
+    .architecture-card.layer-persistence, .class-card.layer-persistence { background: var(--layer-persistence-soft); }
+    .architecture-card.layer-messaging, .class-card.layer-messaging { background: var(--layer-messaging-soft); }
+    .architecture-card.layer-recovery, .class-card.layer-recovery { background: var(--layer-recovery-soft); }
+    .architecture-card strong { display: block; color: var(--text); font-size: .94rem; overflow-wrap: anywhere; }
+    .architecture-card span { display: block; margin-top: .35rem; color: var(--muted); font-size: .8rem; }
+    .flow-list {
+      margin: 1.2rem 0 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: .65rem;
+      list-style: none;
+    }
+    .flow-list li {
+      padding: .85rem 1rem;
+      border-left: 3px solid var(--layer-messaging);
+      background: var(--surface);
+    }
+    .flow-list code { display: block; font-size: .78rem; }
+    .flow-list span { color: var(--muted); font-size: .85rem; }
+    .simulation-layout {
+      display: grid;
+      grid-template-columns: 17rem minmax(0, 1fr);
+      gap: 1.2rem;
+    }
+    .scenario-list { display: grid; gap: .5rem; align-content: start; }
+    .scenario-list button {
+      min-height: 3.5rem;
+      display: grid;
+      grid-template-columns: 2.2rem 1fr;
+      align-items: center;
+      gap: .55rem;
+      padding: .7rem .85rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      text-align: left;
+      cursor: pointer;
+      font-size: .88rem;
+      font-weight: 750;
+    }
+    .scenario-list button span { color: var(--muted); font-size: .72rem; }
+    .scenario-list button[aria-pressed="true"] {
+      border-color: var(--layer-recovery);
+      box-shadow: inset 4px 0 var(--layer-recovery);
+    }
+    .simulation-workspace { min-width: 0; }
+    .scenario-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+    .scenario-header h3 { margin: 0; font-size: 1.35rem; }
+    .scenario-header p { margin: .3rem 0 0; color: var(--muted); }
+    .sim-controls { display: flex; gap: .45rem; flex-shrink: 0; }
+    .icon-button {
+      width: 2.7rem;
+      height: 2.7rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      cursor: pointer;
+      font-weight: 900;
+    }
+    .icon-button:disabled { opacity: .4; cursor: not-allowed; }
+    .event-track {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(8.5rem, 1fr);
+      gap: .55rem;
+      overflow-x: auto;
+      padding: .25rem .1rem 1rem;
+      scrollbar-width: thin;
+    }
+    .event-step {
+      min-height: 5.6rem;
+      padding: .8rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: .76rem;
+      font-weight: 750;
+      opacity: .46;
+    }
+    .event-step.done { opacity: .78; }
+    .event-step.current {
+      opacity: 1;
+      color: var(--text);
+      border-color: currentColor;
+      box-shadow: 0 0 0 2px color-mix(in srgb, currentColor 22%, transparent);
+    }
+    .event-step i { display: block; width: 1.8rem; height: .28rem; margin-bottom: .65rem; background: currentColor; }
+    .event-step div { overflow-wrap: anywhere; }
+    .event-detail {
+      min-height: 8.4rem;
+      padding: 1.2rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+    .event-detail-head { display: flex; justify-content: space-between; gap: 1rem; }
+    .event-detail-head span { color: var(--muted); font-size: .8rem; font-weight: 750; }
+    .event-detail h4 { margin: .5rem 0; font-size: 1.05rem; }
+    .event-detail p { margin: 0; color: var(--muted); }
+    .sim-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: .55rem;
+      margin-top: .7rem;
+    }
+    .sim-metrics .metric { min-height: 5.7rem; padding: .75rem; }
+    .sim-metrics .metric strong { font-size: .94rem; }
+    .claim-race {
+      display: none;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: .7rem;
+      margin-top: .7rem;
+    }
+    .claim-race.visible { display: grid; }
+    .claim-worker { padding: .8rem; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+    .claim-worker strong, .claim-worker span { display: block; }
+    .claim-worker span { margin-top: .25rem; color: var(--muted); font-size: .82rem; }
+    .claim-note {
+      margin: .75rem 0 0;
+      padding: .85rem 1rem;
+      border-left: 3px solid var(--warning);
+      background: color-mix(in srgb, var(--warning) 10%, transparent);
+      color: var(--muted);
+      font-size: .86rem;
+    }
+    .legend { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: 1.2rem; }
+    .legend-item { display: inline-flex; gap: .35rem; align-items: center; color: var(--muted); font-size: .78rem; }
+    .legend-item i { width: .8rem; height: .8rem; border-radius: 2px; background: currentColor; }
+    .state-flow {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      overflow-x: auto;
+      padding: .5rem 0 1rem;
+    }
+    .state-node {
+      min-width: 8.4rem;
+      min-height: 3.2rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      cursor: pointer;
+      font-weight: 800;
+    }
+    .state-node[aria-pressed="true"] { border-color: var(--layer-recovery); box-shadow: inset 0 -4px var(--layer-recovery); }
+    .state-arrow { color: var(--muted); }
+    .state-detail {
+      display: grid;
+      grid-template-columns: 10rem 1fr 1fr;
+      gap: 1rem;
+      align-items: center;
+      padding: 1.2rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+    .state-detail strong { font-size: 1.15rem; }
+    .state-detail span { display: block; color: var(--muted); font-size: .78rem; }
+    .state-detail p { margin: .25rem 0 0; }
+    .class-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: .8rem;
+    }
+    .class-card { min-height: 11rem; color: var(--text); align-items: stretch; text-align: left; }
+    .class-card > div { width: 100%; }
+    .class-stereotype { color: var(--muted); font-size: .7rem; font-weight: 800; text-transform: uppercase; }
+    .class-card h3 { margin: .35rem 0 .7rem; overflow-wrap: anywhere; }
+    .class-card ul { margin: 0; padding: .7rem 0 0; border-top: 1px solid var(--line); list-style: none; }
+    .class-card li { padding: .16rem 0; color: var(--muted); font-family: ui-monospace, monospace; font-size: .72rem; overflow-wrap: anywhere; }
+    .implementation-grid article { min-height: 9rem; }
+    .run-tool {
+      display: grid;
+      grid-template-columns: 13rem minmax(0, 1fr);
+      gap: 1rem;
+    }
+    .run-tabs { display: grid; gap: .45rem; align-content: start; }
+    .run-tab {
+      min-height: 3rem;
+      padding: .6rem .8rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      text-align: left;
+      cursor: pointer;
+      font-weight: 750;
+    }
+    .run-tab[aria-pressed="true"] { border-color: var(--layer-application); box-shadow: inset 4px 0 var(--layer-application); }
+    .code-panel { min-width: 0; }
+    pre {
+      min-height: 18rem;
+      margin: 0;
+      padding: 1.2rem;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--code);
+      color: var(--text);
+      font-size: .8rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .run-note { margin: .7rem 0 0; color: var(--muted); font-size: .88rem; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; background: var(--surface); font-size: .86rem; }
+    th, td { padding: .85rem 1rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-size: .74rem; text-transform: uppercase; }
+    tr:last-child td { border-bottom: 0; }
+    td:first-child { width: 35%; }
+    .limits { display: grid; gap: .65rem; }
+    .limit-row {
+      display: grid;
+      grid-template-columns: 5.5rem minmax(0, 1fr);
+      gap: 1rem;
+      align-items: start;
+      padding: 1rem 1.1rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+    }
+    .limit-row.solved { border-left: 4px solid var(--good); }
+    .limit-row.caveat { border-left: 4px solid var(--warning); }
+    .limit-row h3 { margin: 0; font-size: 1rem; }
+    .limit-row p { margin: .2rem 0 0; color: var(--muted); }
+    footer {
+      width: min(1180px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 2.5rem 0 3.5rem;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .86rem;
+    }
+    .footer-links { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: .7rem; }
+    .footer-links a { color: var(--text); font-weight: 750; }
+    @media (max-width: 900px) {
+      .site-nav { display: none; }
+      .comparison-tool, .simulation-layout { grid-template-columns: 1fr; }
+      .scenario-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .architecture-layer { grid-template-columns: 1fr; }
+      .architecture-layer > h3 { padding: .15rem; }
+      .class-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .sim-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 620px) {
+      .header-inner { width: min(100% - 1rem, 1180px); gap: .6rem; }
+      .brand { max-width: 9rem; overflow: hidden; text-overflow: ellipsis; }
+      .locale-link { font-size: .78rem; }
+      section { width: min(100% - 1.2rem, 1180px); padding: 3.7rem 0; }
+      .hero { min-height: 72vh; padding-top: 4.5rem; }
+      h1 { font-size: 2.35rem; }
+      .hero-facts { grid-template-columns: 1fr; }
+      .hero-fact { padding: .7rem 0; border-bottom: 1px solid var(--line); }
+      .hero-fact:last-child { border-bottom: 0; }
+      .problem-grid, .decision-grid, .implementation-grid, .comparison-metrics,
+      .scenario-list, .class-grid, .claim-race, .flow-list { grid-template-columns: 1fr; }
+      .scenario-header { display: block; }
+      .sim-controls { margin-top: .9rem; }
+      .state-detail { grid-template-columns: 1fr; }
+      .run-tool { grid-template-columns: 1fr; }
+      .run-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      td:first-child { width: auto; }
+      .limit-row { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="#top">bluetape4k-workshop</a>
+      <nav class="site-nav" aria-label="Visual Companion"><a href="#comparison">Design comparison</a><a href="#architecture">Architecture</a><a href="#simulation">Failure recovery</a><a href="#implementation">Implementation</a><a href="#run">Run</a></nav>
+      <div class="header-actions">
+        <a class="locale-link" href="./2026-07-30-kafka-outbox-fallback-visual-companion.html" hreflang="ko">한국어</a>
+        <button type="button" class="theme-toggle" aria-label="Toggle theme" title="Toggle theme">◐</button>
+      </div>
+    </div>
+  </header>
+  <main id="top">
+    <section class="hero">
+      <p class="kicker">Kafka Outbox Fallback · Visual Companion</p>
+      <h1>Reduce Outbox Writes in Order Transactions While Recovering Event Publication After Kafka Failures</h1>
+      <p class="hero-lead">The normal path writes only orders and publishes directly to Kafka. A publish failure stores a replayable event_publications row; if that write also fails, reconciliation rebuilds publication data from the order.</p>
+      <div class="hero-facts"><div class="hero-fact"><strong>1</strong><span>normal-path DB write</span></div><div class="hero-fact"><strong>3</strong><span>direct Kafka attempts</span></div><div class="hero-fact"><strong>6</strong><span>failure and recovery scenarios</span></div></div>
+    </section>
+
+    <section id="problem">
+      <div class="section-heading"><h2>Removing the Outbox row from every order adds explicit recovery responsibilities</h2><p>Transactional outbox stores the order and publication data in one transaction. Kafka-first fallback reduces the normal-path database writes, but must recover timeouts and fallback-store failures separately.</p></div>
+      <div class="problem-grid"><article class="problem-card layer-persistence"><span class="layer-dot"></span><h3>Normal-path cost</h3><p>Writing and indexing an Outbox row for every order increases database work in the order transaction.</p></article><article class="problem-card layer-messaging"><span class="layer-dot"></span><h3>Uncertain timeout</h3><p>Kafka may have stored the event while only its response was delayed. The application cannot declare non-delivery.</p></article><article class="problem-card layer-recovery"><span class="layer-dot"></span><h3>Second write failure</h3><p>When both Kafka publication and the event_publications write fail, only the order remains.</p></article><article class="problem-card layer-application"><span class="layer-dot"></span><h3>Duplicate publication</h3><p>Relay or reconciliation can publish an eventId that Kafka already accepted.</p></article></div>
+      <h2 class="brainstorm-heading">Brainstorming: separate normal-path write cost from failure-recovery risk</h2>
+      <div class="decision-grid"><article class="decision "><span>Rejected</span><h3>Use Redis Streams as the fallback store</h3><p>A second durable system would obscure the core PostgreSQL and Kafka trade-off in the first example.</p></article><article class="decision "><span>Rejected</span><h3>Keep an Outbox row on the normal path</h3><p>This retains the strongest storage semantics but does not reduce normal-order database writes.</p></article><article class="decision selected"><span>Selected</span><h3>Store only failed publications in PostgreSQL</h3><p>This reuses the current Exposed and PostgreSQL patterns while separating normal and recovery costs.</p></article><article class="decision selected"><span>Selected</span><h3>Use a stable eventId and idempotent consumers</h3><p>This handles duplicate publication caused by timeouts and reconciliation.</p></article></div>
+    </section>
+
+    <section id="comparison">
+      <div class="section-heading"><h2>Transactional outbox and Kafka-first fallback use different normal paths</h2><p>Switching the approach changes database writes, Kafka waiting, and the recovery reference together. The write count is a structural fact, not a benchmark result.</p></div>
+      <div class="comparison-tool">
+        <div>
+          <div class="segments"><button type="button" class="segment" data-approach="transactional" aria-pressed="true">Transactional Outbox</button><button type="button" class="segment" data-approach="kafkaFirst" aria-pressed="false">Kafka-first Fallback</button></div>
+          <p class="approach-summary"></p>
+        </div>
+        <div class="comparison-metrics">
+          <div class="metric"><span>normal-order DB writes</span><strong data-metric="orderWrites"></strong></div>
+          <div class="metric"><span>wait for Kafka in API handling</span><strong data-metric="kafkaWait"></strong></div>
+          <div class="metric"><span>publication data</span><strong data-metric="publicationRows"></strong></div>
+          <div class="metric"><span>missing-row reconstruction</span><strong data-metric="reconciliation"></strong></div>
+          <div class="metric"><span>consumer deduplication</span><strong data-metric="deduplication"></strong></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <div class="section-heading"><h2>Separate components own order storage, direct publication, relay, and reconstruction</h2><p>The architecture view shows responsibilities and data access, not detailed timing. Use the recovery simulator below for ordered behavior.</p></div>
+      <div class="architecture-board"><div class="architecture-layer"><h3>API layer</h3><div class="architecture-nodes"><div class="architecture-card layer-api"><div><strong>OrderController</strong><span>order API</span></div></div></div></div><div class="architecture-layer"><h3>Application layer</h3><div class="architecture-nodes"><div class="architecture-card layer-application"><div><strong>PlaceOrderUseCase</strong><span>coordinate store then publish</span></div></div></div></div><div class="architecture-layer"><h3>Persistence layer</h3><div class="architecture-nodes"><div class="architecture-card layer-persistence"><div><strong>TransactionalOrderWriter</strong><span>orders transaction</span></div></div><div class="architecture-card layer-persistence"><div><strong>PostgreSQL.orders</strong><span>order data</span></div></div><div class="architecture-card layer-persistence"><div><strong>EventPublicationRepository</strong><span>replay rows and claims</span></div></div><div class="architecture-card layer-persistence"><div><strong>PostgreSQL.event_publications</strong><span>failed and repaired publications</span></div></div></div></div><div class="architecture-layer"><h3>Messaging layer</h3><div class="architecture-nodes"><div class="architecture-card layer-messaging"><div><strong>OrderEventPublisher</strong><span>direct Kafka publish and fallback</span></div></div><div class="architecture-card layer-messaging"><div><strong>Kafka.order-events</strong><span>OrderPlaced events</span></div></div></div></div><div class="architecture-layer"><h3>Recovery and operations</h3><div class="architecture-nodes"><div class="architecture-card layer-recovery"><div><strong>EventPublicationRelay</strong><span>claim and republish</span></div></div><div class="architecture-card layer-recovery"><div><strong>PublicationReconciler</strong><span>reconstruct missing publication data</span></div></div></div></div></div>
+      <ul class="flow-list"><li><code>OrderController → PlaceOrderUseCase</code><span>order request</span></li><li><code>PlaceOrderUseCase → TransactionalOrderWriter → orders</code><span>order transaction</span></li><li><code>PlaceOrderUseCase → OrderEventPublisher → Kafka</code><span>direct publish after commit</span></li><li><code>OrderEventPublisher → EventPublicationRepository</code><span>store after failure</span></li><li><code>EventPublicationRelay → event_publications → Kafka</code><span>claim and republish</span></li><li><code>PublicationReconciler → orders → event_publications</code><span>reconstruct missing rows</span></li></ul>
+    </section>
+
+    <section id="simulation" data-source="2026-07-30-kafka-outbox-fallback-visual-companion-design.md" data-baseline="39616246e2f03a3b332bbcc40bc04cd7e03c9dad">
+      <div class="section-heading"><h2>Select a failure condition and observe database, Kafka, and API state</h2><p>Advancing the scenario changes the active layer and cumulative state. A Kafka timeout uses unknown, not zero, for the received-event count.</p></div>
+      <div class="simulation-layout">
+        <div class="scenario-list"><button type="button" data-scenario="DIRECT_SUCCESS" aria-pressed="true"><span>01</span>Direct publish succeeds</button><button type="button" data-scenario="DIRECT_FAILURE" aria-pressed="false"><span>02</span>Direct Kafka publish fails</button><button type="button" data-scenario="DIRECT_TIMEOUT" aria-pressed="false"><span>03</span>Kafka publish times out</button><button type="button" data-scenario="RELAY_RECOVERY" aria-pressed="false"><span>04</span>Relay republishes successfully</button><button type="button" data-scenario="RELAY_DEAD_LETTER" aria-pressed="false"><span>05</span>Relay repeatedly fails</button><button type="button" data-scenario="FALLBACK_STORE_FAILURE" aria-pressed="false"><span>06</span>Fallback store fails and recovers</button></div>
+        <div class="simulation-workspace">
+          <div class="scenario-header">
+            <div><h3 class="scenario-title"></h3><p class="scenario-reason"></p></div>
+            <div class="sim-controls">
+              <button type="button" class="icon-button" data-action="previous" aria-label="Previous step" title="Previous step">←</button>
+              <button type="button" class="icon-button" data-action="play" aria-label="Play" title="Play">▶</button>
+              <button type="button" class="icon-button" data-action="reset" aria-label="Restart" title="Restart">↺</button>
+              <button type="button" class="icon-button" data-action="next" aria-label="Next step" title="Next step">→</button>
+            </div>
+          </div>
+          <div class="event-track"></div>
+          <div class="event-detail">
+            <div class="event-detail-head"><span data-current-step></span><span data-current-layer></span></div>
+            <h4 data-event-key></h4>
+            <p data-event-detail></p>
+          </div>
+          <div class="claim-race">
+            <div class="claim-worker"><strong>relay-a</strong><span>CLAIMED</span></div>
+            <div class="claim-worker"><strong>relay-b</strong><span>EMPTY</span></div>
+          </div>
+          <p class="claim-note" hidden>A claim prevents two workers from processing the same row at the same time. Duplicate publication is still possible if the process stops after Kafka confirms but before PostgreSQL records PUBLISHED.</p>
+          <div class="sim-metrics">
+            <div class="metric"><span>API result</span><strong data-sim-metric="apiStatus"></strong></div><div class="metric"><span>orders</span><strong data-sim-metric="orderRows"></strong></div><div class="metric"><span>event_publications</span><strong data-sim-metric="publicationRows"></strong></div><div class="metric"><span>Kafka events</span><strong data-sim-metric="kafkaEvents"></strong></div><div class="metric"><span>direct attempts</span><strong data-sim-metric="directAttempts"></strong></div><div class="metric"><span>relay retries</span><strong data-sim-metric="relayRetries"></strong></div><div class="metric"><span>publication state</span><strong data-sim-metric="publicationStatus"></strong></div><div class="metric"><span>claim owner</span><strong data-sim-metric="claimOwner"></strong></div>
+          </div>
+        </div>
+      </div>
+      <div class="legend"><span class="legend-item layer-api"><i></i>API layer</span><span class="legend-item layer-application"><i></i>Application layer</span><span class="legend-item layer-persistence"><i></i>Persistence layer</span><span class="legend-item layer-messaging"><i></i>Messaging layer</span><span class="legend-item layer-recovery"><i></i>Recovery and operations</span></div>
+    </section>
+
+    <section id="lifecycle">
+      <div class="section-heading"><h2>Keep publication states separate from the claim-processing state</h2><p>Select a state to inspect its entry condition and next action. CLAIMED is not an EventPublicationStatus enum value.</p></div>
+      <div class="state-flow"><button type="button" class="state-node state-no-row" data-state="NO_ROW" aria-pressed="true">NO ROW</button><span class="state-arrow" aria-hidden="true">→</span><button type="button" class="state-node state-not-published" data-state="NOT_PUBLISHED" aria-pressed="false">NOT PUBLISHED</button><span class="state-arrow" aria-hidden="true">→</span><button type="button" class="state-node state-claimed" data-state="CLAIMED" aria-pressed="false">CLAIMED</button><span class="state-arrow" aria-hidden="true">→</span><button type="button" class="state-node state-failed" data-state="FAILED" aria-pressed="false">FAILED</button><span class="state-arrow" aria-hidden="true">→</span><button type="button" class="state-node state-published" data-state="PUBLISHED" aria-pressed="false">PUBLISHED</button><span class="state-arrow" aria-hidden="true">→</span><button type="button" class="state-node state-dead-letter" data-state="DEAD_LETTER" aria-pressed="false">DEAD LETTER</button></div>
+      <div class="state-detail">
+        <strong data-state-name></strong>
+        <div><span>Meaning</span><p data-state-meaning></p></div>
+        <div><span>Entry or next action</span><p data-state-next></p></div>
+      </div>
+    </section>
+
+    <section id="classes">
+      <div class="section-heading"><h2>Concrete classes implement each simulator step</h2><p>The class view includes only public methods and use relationships that map to the scenarios.</p></div>
+      <div class="class-grid"><article class="class-card layer-api"><div><span class="class-stereotype">API layer</span><h3>OrderController</h3><ul><li>placeOrder(request): ResponseEntity&lt;OrderResponse&gt;</li></ul></div></article><article class="class-card layer-application"><div><span class="class-stereotype">Application layer</span><h3>PlaceOrderUseCase</h3><ul><li>placeOrder(request): OrderResponse</li></ul></div></article><article class="class-card layer-persistence"><div><span class="class-stereotype">Persistence layer</span><h3>TransactionalOrderWriter</h3><ul><li>saveOrder(...): OrderRecord</li><li>getOrder(orderId): OrderRecord</li></ul></div></article><article class="class-card layer-messaging"><div><span class="class-stereotype">Messaging layer</span><h3>OrderEventPublisher</h3><ul><li>publishDirectOrFallback(event): OrderPublicationStatus</li></ul></div></article><article class="class-card layer-persistence"><div><span class="class-stereotype">Persistence layer</span><h3>EventPublicationRepository</h3><ul><li>upsertNotPublished(...)</li><li>claimNextBatch(...)</li><li>markPublished(...)</li><li>markRelayFailure(...)</li><li>findOrdersWithoutPublicationsCreatedOnOrBefore(...)</li></ul></div></article><article class="class-card layer-recovery"><div><span class="class-stereotype">Recovery and operations</span><h3>EventPublicationRelay</h3><ul><li>scheduledRelay()</li><li>relayOnce(): RelayResult</li></ul></div></article><article class="class-card layer-recovery"><div><span class="class-stereotype">Recovery and operations</span><h3>PublicationReconciler</h3><ul><li>scheduledReconcile()</li><li>reconcileOnce(): ReconcileResult</li></ul></div></article><article class="class-card layer-application"><div><span class="class-stereotype">Application layer</span><h3>PublicationQueryService</h3><ul><li>findAll(): List&lt;PublicationResponse&gt;</li></ul></div></article><article class="class-card layer-recovery"><div><span class="class-stereotype">Recovery and operations</span><h3>OutboxMetrics</h3><ul><li>recordDirectPublish(result)</li><li>recordFallbackStored(result)</li><li>recordRelay(result)</li><li>recordReconciler(result)</li></ul></div></article></div>
+    </section>
+
+    <section id="implementation">
+      <div class="section-heading"><h2>Exposed separates the order transaction from replayable publication data</h2><p>Order writes, eventId upserts, claims, and SQL anti-joins run through different repository methods.</p></div>
+      <div class="implementation-grid"><article><h3>Order transaction</h3><p>TransactionalOrderWriter.saveOrder() changes only orders. Kafka and event_publications run after commit.</p></article><article><h3>Stable eventId</h3><p>OrderPlacedEvent.from(order) uses order-placed:{orderId}:v1. The unique event_id upsert collapses retries and reconstruction into one row.</p></article><article><h3>SQL claim</h3><p>claimNextBatch() applies state, nextAttemptAt, claim expiry, ordering, and batch limits in the database.</p></article><article><h3>Missing-row query</h3><p>findOrdersWithoutPublicationsCreatedOnOrBefore() uses a cutoff and anti-join to find orders without publication data.</p></article></div>
+    </section>
+
+    <section id="run">
+      <div class="section-heading"><h2>Start the related services, then inspect the normal and recovery paths</h2><p>The application uses PostgreSQL and Kafka. Demo admin endpoints are disabled by default.</p></div>
+      <div class="run-tool">
+        <div class="run-tabs"><button type="button" class="run-tab" data-run="0" aria-pressed="true">Related services</button><button type="button" class="run-tab" data-run="1" aria-pressed="false">Application</button><button type="button" class="run-tab" data-run="2" aria-pressed="false">API</button><button type="button" class="run-tab" data-run="3" aria-pressed="false">Relay / Reconcile</button><button type="button" class="run-tab" data-run="4" aria-pressed="false">Tests</button></div>
+        <div class="code-panel"><pre data-code-snippet="shell"><code data-run-code></code></pre><p class="run-note"></p></div>
+      </div>
+    </section>
+
+    <section id="tests">
+      <div class="section-heading"><h2>Tests cover the normal path, recovery, concurrent claims, and safe query output</h2></div>
+      <div class="table-wrap"><table><thead><tr><th>Meaning</th><th>KafkaOutboxFallbackFlowTest</th></tr></thead><tbody><tr><td>order transaction writes only orders</td><td><code>transactional writer stores only order row</code></td></tr><tr><td>direct success without a fallback row</td><td><code>placeOrder stores only order row and returns PUBLISHED_DIRECT when direct Kafka publish succeeds</code></td></tr><tr><td>NOT_PUBLISHED after three failures</td><td><code>direct publish retries three times then stores NOT_PUBLISHED fallback row</code></td></tr><tr><td>bounded response time and fallback storage</td><td><code>direct publish timeout stores NOT_PUBLISHED fallback row</code></td></tr><tr><td>visible FALLBACK_STORE_FAILED result</td><td><code>fallback insert failure returns FALLBACK_STORE_FAILED and records safe metric and log</code></td></tr><tr><td>PUBLISHED after relay</td><td><code>relay publishes fallback row and marks it PUBLISHED</code></td></tr><tr><td>DEAD_LETTER after the third failure</td><td><code>relay failure increments retry and moves to DEAD_LETTER</code></td></tr><tr><td>one claim winner under concurrency</td><td><code>concurrent relay calls cannot claim the same row twice</code></td></tr><tr><td>expired claims become eligible</td><td><code>stale relay claim becomes eligible after claim ttl</code></td></tr><tr><td>ordering and batch limits in SQL</td><td><code>claimNextBatch applies SQL eligibility ordering and limit</code></td></tr><tr><td>stable eventId reconstruction</td><td><code>reconciler reconstructs deterministic fallback row and documents duplicate risk</code></td></tr><tr><td>SQL cutoff and anti-join</td><td><code>reconciler uses SQL cutoff and anti join for missing publications</code></td></tr><tr><td>no raw payload or sensitive error text</td><td><code>publication endpoint never exposes raw payload or raw exception text</code></td></tr><tr><td>direct, fallback, relay, and reconciler metrics</td><td><code>metrics record direct failure fallback relay and reconciler outcomes</code></td></tr></tbody></table></div>
+    </section>
+
+    <section id="limits">
+      <div class="section-heading"><h2>The normal path writes less data, but duplicate and recovery risks remain</h2></div>
+      <div class="limits"><article class="limit-row solved"><span>Handled</span><div><h3>Normal-order Outbox write</h3><p>The normal path writes only orders and does not persist publication data.</p></div></article><article class="limit-row solved"><span>Handled</span><div><h3>Republish after Kafka failure</h3><p>A relay claims NOT_PUBLISHED rows and republishes them to Kafka.</p></div></article><article class="limit-row solved"><span>Handled</span><div><h3>Fallback-store failure</h3><p>Reconciliation rebuilds publication data from orders after the grace period.</p></div></article><article class="limit-row caveat"><span>Caveat</span><div><h3>Delivery after timeout</h3><p>The application cannot determine whether Kafka stored the event.</p></div></article><article class="limit-row caveat"><span>Caveat</span><div><h3>Exactly-once delivery</h3><p>Claims and stable eventIds do not provide exactly-once delivery.</p></div></article><article class="limit-row caveat"><span>Caveat</span><div><h3>Consumer deduplication</h3><p>Consumers must prevent duplicate business effects for the same eventId.</p></div></article></div>
+    </section>
+  </main>
+  <footer>
+    <div class="footer-links">
+      <a href="../../../messaging/kafka-outbox-fallback/README.md">English README</a>
+      <a href="./2026-07-30-kafka-outbox-fallback-visual-companion-design.md">Design document</a>
+      <a href="../plans/2026-07-30-kafka-outbox-fallback-visual-companion-plan.md">Implementation plan</a>
+      <a href="https://github.com/bluetape4k/bluetape4k-workshop">Repository</a>
+    </div>
+    <div>Kafka Outbox Fallback Visual Companion derived from current source and tests</div>
+  </footer>
+  <script>
+    const content = {"lang":"en","title":"Reduce Outbox Writes in Order Transactions While Recovering Event Publication After Kafka Failures","description":"Compare transactional outbox with Kafka-first fallback, then run direct publish failures, relay retries, and reconciliation.","alternate":"한국어","alternateHref":"./2026-07-30-kafka-outbox-fallback-visual-companion.html","themeLabel":"Toggle theme","repoLabel":"Repository","nav":[["Design comparison","comparison"],["Architecture","architecture"],["Failure recovery","simulation"],["Implementation","implementation"],["Run","run"]],"kicker":"Kafka Outbox Fallback · Visual Companion","heroLead":"The normal path writes only orders and publishes directly to Kafka. A publish failure stores a replayable event_publications row; if that write also fails, reconciliation rebuilds publication data from the order.","heroFacts":[["1","normal-path DB write"],["3","direct Kafka attempts"],["6","failure and recovery scenarios"]],"problemTitle":"Removing the Outbox row from every order adds explicit recovery responsibilities","problemLead":"Transactional outbox stores the order and publication data in one transaction. Kafka-first fallback reduces the normal-path database writes, but must recover timeouts and fallback-store failures separately.","problemCards":[["Normal-path cost","Writing and indexing an Outbox row for every order increases database work in the order transaction.","persistence"],["Uncertain timeout","Kafka may have stored the event while only its response was delayed. The application cannot declare non-delivery.","messaging"],["Second write failure","When both Kafka publication and the event_publications write fail, only the order remains.","recovery"],["Duplicate publication","Relay or reconciliation can publish an eventId that Kafka already accepted.","application"]],"brainstormTitle":"Brainstorming: separate normal-path write cost from failure-recovery risk","rejectedLabel":"Rejected","selectedLabel":"Selected","decisions":[["Use Redis Streams as the fallback store","A second durable system would obscure the core PostgreSQL and Kafka trade-off in the first example.",false],["Keep an Outbox row on the normal path","This retains the strongest storage semantics but does not reduce normal-order database writes.",false],["Store only failed publications in PostgreSQL","This reuses the current Exposed and PostgreSQL patterns while separating normal and recovery costs.",true],["Use a stable eventId and idempotent consumers","This handles duplicate publication caused by timeouts and reconciliation.",true]],"comparisonTitle":"Transactional outbox and Kafka-first fallback use different normal paths","comparisonLead":"Switching the approach changes database writes, Kafka waiting, and the recovery reference together. The write count is a structural fact, not a benchmark result.","approachNames":{"transactional":"Transactional Outbox","kafkaFirst":"Kafka-first Fallback"},"metrics":{"orderWrites":"normal-order DB writes","kafkaWait":"wait for Kafka in API handling","publicationRows":"publication data","reconciliation":"missing-row reconstruction","deduplication":"consumer deduplication","yes":"required","no":"none","all":"every event","failures":"failures and repairs only","recommended":"recommended","required":"required"},"approachSummaries":{"transactional":"Store orders and Outbox rows in one transaction, then let a relay publish asynchronously.","kafkaFirst":"Commit orders, publish directly to Kafka, and write event_publications only after failure."},"architectureTitle":"Separate components own order storage, direct publication, relay, and reconstruction","architectureLead":"The architecture view shows responsibilities and data access, not detailed timing. Use the recovery simulator below for ordered behavior.","layerNames":{"api":"API layer","application":"Application layer","persistence":"Persistence layer","messaging":"Messaging layer","recovery":"Recovery and operations"},"nodeRoles":{"OrderController":"order API","PlaceOrderUseCase":"coordinate store then publish","TransactionalOrderWriter":"orders transaction","PostgreSQL.orders":"order data","OrderEventPublisher":"direct Kafka publish and fallback","Kafka.order-events":"OrderPlaced events","EventPublicationRepository":"replay rows and claims","PostgreSQL.event_publications":"failed and repaired publications","EventPublicationRelay":"claim and republish","PublicationReconciler":"reconstruct missing publication data"},"architectureFlows":[["OrderController → PlaceOrderUseCase","order request"],["PlaceOrderUseCase → TransactionalOrderWriter → orders","order transaction"],["PlaceOrderUseCase → OrderEventPublisher → Kafka","direct publish after commit"],["OrderEventPublisher → EventPublicationRepository","store after failure"],["EventPublicationRelay → event_publications → Kafka","claim and republish"],["PublicationReconciler → orders → event_publications","reconstruct missing rows"]],"simulationTitle":"Select a failure condition and observe database, Kafka, and API state","simulationLead":"Advancing the scenario changes the active layer and cumulative state. A Kafka timeout uses unknown, not zero, for the received-event count.","scenarioNames":{"DIRECT_SUCCESS":"Direct publish succeeds","DIRECT_FAILURE":"Direct Kafka publish fails","DIRECT_TIMEOUT":"Kafka publish times out","RELAY_RECOVERY":"Relay republishes successfully","RELAY_DEAD_LETTER":"Relay repeatedly fails","FALLBACK_STORE_FAILURE":"Fallback store fails and recovers"},"scenarioReasons":{"DIRECT_SUCCESS":"The normal path creates no event_publications row.","DIRECT_FAILURE":"Three failed direct attempts store replayable publication data.","DIRECT_TIMEOUT":"The same eventId survives even though Kafka receipt is unknown.","RELAY_RECOVERY":"One worker claims the row and records Kafka confirmation as PUBLISHED.","RELAY_DEAD_LETTER":"The third relay failure stops automatic processing for operator review.","FALLBACK_STORE_FAILURE":"The reconciler finds an order without publication data through a SQL anti-join."},"eventDetails":{"ORDER_STORED":"TransactionalOrderWriter writes only the orders row.","TRANSACTION_COMMITTED":"The order transaction commits. Kafka publication runs outside this boundary.","KAFKA_ATTEMPT_1":"OrderEventPublisher sends the eventId as the Kafka record key.","KAFKA_CONFIRMED":"Kafka confirms publication before the timeout.","API_PUBLISHED_DIRECT":"The API returns PUBLISHED_DIRECT without creating a fallback row.","KAFKA_ATTEMPT_1_FAILED":"The first direct Kafka attempt fails.","KAFKA_ATTEMPT_2_FAILED":"The second attempt reuses the eventId and fails.","KAFKA_ATTEMPT_3_FAILED":"The third failure moves processing to durable fallback storage.","FALLBACK_NOT_PUBLISHED":"The repository upserts a NOT_PUBLISHED event_publications row.","API_FALLBACK_STORED":"The API returns FALLBACK_STORED.","KAFKA_TIMEOUT_1":"The first response times out. Kafka receipt is unknown.","KAFKA_TIMEOUT_2":"The same eventId is retried without a confirmed result.","KAFKA_TIMEOUT_3":"The third timeout moves processing to fallback storage.","FALLBACK_SAME_EVENT_ID":"The NOT_PUBLISHED row retains order-placed:{orderId}:v1.","FALLBACK_READY":"A NOT_PUBLISHED row from direct failure is eligible for relay.","RELAY_CLAIM_RACE":"relay-a claims the row while relay-b receives an empty result.","RELAY_KAFKA_SEND":"The claim owner sends the stored payload to Kafka.","RELAY_KAFKA_CONFIRMED":"Kafka confirms the relayed event.","MARK_PUBLISHED":"The repository verifies claim ownership, records PUBLISHED, and clears the claim.","RELAY_CLAIM_1":"relay-a claims the first relay attempt.","RELAY_FAILURE_1":"The first failure records relayRetryCount=1 and FAILED.","RELAY_CLAIM_2":"relay-b claims the row after nextAttemptAt.","RELAY_FAILURE_2":"The second failure records relayRetryCount=2.","RELAY_CLAIM_3":"relay-c starts the last permitted retry.","RELAY_DEAD_LETTERED":"The third failure moves the row to DEAD_LETTER and stops automatic processing.","DIRECT_ATTEMPTS_FAILED":"All three direct Kafka attempts fail.","FALLBACK_INSERT_FAILED":"The event_publications write also fails, so the API returns FALLBACK_STORE_FAILED.","GRACE_PERIOD_ELAPSED":"The order becomes eligible after reconcilerGrace.","RECONCILER_ANTI_JOIN":"A SQL cutoff and anti-join find orders without publication data.","RECONSTRUCT_EVENT":"The reconciler rebuilds OrderPlacedEvent and its stable eventId from orders.","UPSERT_RECONSTRUCTED":"A NOT_PUBLISHED row is upserted and becomes relay-eligible."},"controls":{"previous":"Previous step","next":"Next step","reset":"Restart","play":"Play","pause":"Pause","step":"Current step","layer":"Active layer"},"metricLabels":{"apiStatus":"API result","orderRows":"orders","publicationRows":"event_publications","kafkaEvents":"Kafka events","directAttempts":"direct attempts","relayRetries":"relay retries","publicationStatus":"publication state","claimOwner":"claim owner","unknown":"unknown","none":"none"},"claimNote":"A claim prevents two workers from processing the same row at the same time. Duplicate publication is still possible if the process stops after Kafka confirms but before PostgreSQL records PUBLISHED.","lifecycleTitle":"Keep publication states separate from the claim-processing state","lifecycleLead":"Select a state to inspect its entry condition and next action. CLAIMED is not an EventPublicationStatus enum value.","stateDescriptions":{"NO_ROW":["Direct Kafka publication succeeded, or missing publication data has not been repaired yet","Kafka failure, direct publish disabled, reconciliation"],"NOT_PUBLISHED":["Durable publication data waiting for relay","relay claim"],"CLAIMED":["Processing state while claimedBy and claimedUntil are valid","PUBLISHED, FAILED, DEAD_LETTER"],"FAILED":["Relay failed but has not reached the retry limit","retry after claim expiry or nextAttemptAt"],"PUBLISHED":["Kafka confirmation and publishedAt have been recorded","terminal"],"DEAD_LETTER":["Retry limit reached and operator review is required","operator decision"]},"stateLabels":["Meaning","Entry or next action"],"classesTitle":"Concrete classes implement each simulator step","classesLead":"The class view includes only public methods and use relationships that map to the scenarios.","implementationTitle":"Exposed separates the order transaction from replayable publication data","implementationLead":"Order writes, eventId upserts, claims, and SQL anti-joins run through different repository methods.","implementationItems":[["Order transaction","TransactionalOrderWriter.saveOrder() changes only orders. Kafka and event_publications run after commit."],["Stable eventId","OrderPlacedEvent.from(order) uses order-placed:{orderId}:v1. The unique event_id upsert collapses retries and reconstruction into one row."],["SQL claim","claimNextBatch() applies state, nextAttemptAt, claim expiry, ordering, and batch limits in the database."],["Missing-row query","findOrdersWithoutPublicationsCreatedOnOrBefore() uses a cutoff and anti-join to find orders without publication data."]],"runTitle":"Start the related services, then inspect the normal and recovery paths","runLead":"The application uses PostgreSQL and Kafka. Demo admin endpoints are disabled by default.","runTabs":["Related services","Application","API","Relay / Reconcile","Tests"],"runCommands":["docker run --rm --name kafka-outbox-postgres \\\n  -e POSTGRES_DB=workshop \\\n  -e POSTGRES_USER=postgres \\\n  -e POSTGRES_PASSWORD=postgres \\\n  -p 5432:5432 postgres:18-alpine\n\n# Start Kafka so the application can reach localhost:9092.","./gradlew :messaging-kafka-outbox-fallback:bootRun","curl -s -X POST http://localhost:8080/api/orders \\\n  -H 'Content-Type: application/json' \\\n  -d '{\"customerId\":\"customer-1001\",\"product\":\"coffee-beans\",\"quantity\":2}'\n\ncurl -s http://localhost:8080/api/orders\ncurl -s http://localhost:8080/api/publications","# application.yml\nworkshop:\n  kafka-outbox-fallback:\n    demo-admin-endpoints-enabled: true\n\ncurl -s -X POST http://localhost:8080/api/publications/relay\ncurl -s -X POST http://localhost:8080/api/publications/reconcile","./gradlew :messaging-kafka-outbox-fallback:test --max-workers=1\n\n./gradlew :messaging-kafka-outbox-fallback:test \\\n  --tests 'io.bluetape4k.workshop.messaging.fallback.KafkaOutboxFallbackFlowTest' \\\n  --max-workers=1"],"runNotes":["Start PostgreSQL and Kafka first. The Kafka runtime must expose localhost:9092 in the selected deployment environment.","Defaults use jdbc:postgresql://localhost:5432/workshop and localhost:9092.","The normal response uses publicationStatus=PUBLISHED_DIRECT and leaves event_publications empty.","Demo admin endpoints are for the workshop. Do not expose them in production without authentication, authorization, and rate limits.","Tests start PostgreSQL and Kafka through Testcontainers launchers and control KafkaTemplate results per path."],"testsTitle":"Tests cover the normal path, recovery, concurrent claims, and safe query output","testDescriptions":{"transactionOnly":"order transaction writes only orders","directSuccess":"direct success without a fallback row","directFailure":"NOT_PUBLISHED after three failures","timeout":"bounded response time and fallback storage","fallbackFailure":"visible FALLBACK_STORE_FAILED result","relaySuccess":"PUBLISHED after relay","deadLetter":"DEAD_LETTER after the third failure","claimRace":"one claim winner under concurrency","claimTtl":"expired claims become eligible","sqlEligibility":"ordering and batch limits in SQL","reconcile":"stable eventId reconstruction","antiJoin":"SQL cutoff and anti-join","safeQuery":"no raw payload or sensitive error text","metrics":"direct, fallback, relay, and reconciler metrics"},"limitsTitle":"The normal path writes less data, but duplicate and recovery risks remain","solvedLabel":"Handled","limitLabel":"Caveat","limits":[["Normal-order Outbox write","The normal path writes only orders and does not persist publication data.",true],["Republish after Kafka failure","A relay claims NOT_PUBLISHED rows and republishes them to Kafka.",true],["Fallback-store failure","Reconciliation rebuilds publication data from orders after the grace period.",true],["Delivery after timeout","The application cannot determine whether Kafka stored the event.",false],["Exactly-once delivery","Claims and stable eventIds do not provide exactly-once delivery.",false],["Consumer deduplication","Consumers must prevent duplicate business effects for the same eventId.",false]],"sourceLinks":["English README","Design document","Implementation plan"],"footer":"Kafka Outbox Fallback Visual Companion derived from current source and tests"};
+    const approaches = {"transactional":{"orderWrites":2,"kafkaWaitInRequest":false,"publicationRows":"ALL","reconciliation":false,"deduplication":"RECOMMENDED"},"kafkaFirst":{"orderWrites":1,"kafkaWaitInRequest":true,"publicationRows":"FAILURES_ONLY","reconciliation":true,"deduplication":"REQUIRED"}};
+    const scenarios = {"DIRECT_SUCCESS":{"events":[["ORDER_STORED","persistence",{"orderRows":1}],["TRANSACTION_COMMITTED","application",{}],["KAFKA_ATTEMPT_1","messaging",{"directAttempts":1}],["KAFKA_CONFIRMED","messaging",{"kafkaEvents":1}],["API_PUBLISHED_DIRECT","api",{"apiStatus":"PUBLISHED_DIRECT"}]],"final":{"apiStatus":"PUBLISHED_DIRECT","orderRows":1,"publicationRows":0,"kafkaEvents":1,"directAttempts":1,"relayRetries":0,"publicationStatus":"NO ROW","claimOwner":null}},"DIRECT_FAILURE":{"events":[["ORDER_STORED","persistence",{"orderRows":1}],["TRANSACTION_COMMITTED","application",{}],["KAFKA_ATTEMPT_1_FAILED","messaging",{"directAttempts":1}],["KAFKA_ATTEMPT_2_FAILED","messaging",{"directAttempts":2}],["KAFKA_ATTEMPT_3_FAILED","messaging",{"directAttempts":3}],["FALLBACK_NOT_PUBLISHED","persistence",{"publicationRows":1,"publicationStatus":"NOT_PUBLISHED"}],["API_FALLBACK_STORED","api",{"apiStatus":"FALLBACK_STORED"}]],"final":{"apiStatus":"FALLBACK_STORED","orderRows":1,"publicationRows":1,"kafkaEvents":0,"directAttempts":3,"relayRetries":0,"publicationStatus":"NOT_PUBLISHED","claimOwner":null}},"DIRECT_TIMEOUT":{"events":[["ORDER_STORED","persistence",{"orderRows":1}],["TRANSACTION_COMMITTED","application",{}],["KAFKA_TIMEOUT_1","messaging",{"directAttempts":1,"kafkaEvents":"?"}],["KAFKA_TIMEOUT_2","messaging",{"directAttempts":2}],["KAFKA_TIMEOUT_3","messaging",{"directAttempts":3}],["FALLBACK_SAME_EVENT_ID","persistence",{"publicationRows":1,"publicationStatus":"NOT_PUBLISHED"}],["API_FALLBACK_STORED","api",{"apiStatus":"FALLBACK_STORED"}]],"final":{"apiStatus":"FALLBACK_STORED","orderRows":1,"publicationRows":1,"kafkaEvents":"?","directAttempts":3,"relayRetries":0,"publicationStatus":"NOT_PUBLISHED","claimOwner":null}},"RELAY_RECOVERY":{"events":[["FALLBACK_READY","persistence",{"orderRows":1,"publicationRows":1,"directAttempts":3,"publicationStatus":"NOT_PUBLISHED","apiStatus":"FALLBACK_STORED"}],["RELAY_CLAIM_RACE","recovery",{"publicationStatus":"CLAIMED","claimOwner":"relay-a"}],["RELAY_KAFKA_SEND","messaging",{}],["RELAY_KAFKA_CONFIRMED","messaging",{"kafkaEvents":1}],["MARK_PUBLISHED","persistence",{"publicationStatus":"PUBLISHED","claimOwner":null}]],"final":{"apiStatus":"FALLBACK_STORED","orderRows":1,"publicationRows":1,"kafkaEvents":1,"directAttempts":3,"relayRetries":0,"publicationStatus":"PUBLISHED","claimOwner":null}},"RELAY_DEAD_LETTER":{"events":[["FALLBACK_READY","persistence",{"orderRows":1,"publicationRows":1,"directAttempts":3,"publicationStatus":"NOT_PUBLISHED","apiStatus":"FALLBACK_STORED"}],["RELAY_CLAIM_1","recovery",{"publicationStatus":"CLAIMED","claimOwner":"relay-a"}],["RELAY_FAILURE_1","messaging",{"publicationStatus":"FAILED","relayRetries":1,"claimOwner":null}],["RELAY_CLAIM_2","recovery",{"publicationStatus":"CLAIMED","claimOwner":"relay-b"}],["RELAY_FAILURE_2","messaging",{"publicationStatus":"FAILED","relayRetries":2,"claimOwner":null}],["RELAY_CLAIM_3","recovery",{"publicationStatus":"CLAIMED","claimOwner":"relay-c"}],["RELAY_DEAD_LETTERED","persistence",{"publicationStatus":"DEAD_LETTER","relayRetries":3,"claimOwner":null}]],"final":{"apiStatus":"FALLBACK_STORED","orderRows":1,"publicationRows":1,"kafkaEvents":0,"directAttempts":3,"relayRetries":3,"publicationStatus":"DEAD_LETTER","claimOwner":null}},"FALLBACK_STORE_FAILURE":{"events":[["ORDER_STORED","persistence",{"orderRows":1}],["TRANSACTION_COMMITTED","application",{}],["DIRECT_ATTEMPTS_FAILED","messaging",{"directAttempts":3}],["FALLBACK_INSERT_FAILED","persistence",{"apiStatus":"FALLBACK_STORE_FAILED"}],["GRACE_PERIOD_ELAPSED","recovery",{}],["RECONCILER_ANTI_JOIN","persistence",{}],["RECONSTRUCT_EVENT","recovery",{}],["UPSERT_RECONSTRUCTED","persistence",{"publicationRows":1,"publicationStatus":"NOT_PUBLISHED"}]],"final":{"apiStatus":"FALLBACK_STORE_FAILED","orderRows":1,"publicationRows":1,"kafkaEvents":0,"directAttempts":3,"relayRetries":0,"publicationStatus":"NOT_PUBLISHED","claimOwner":null}}};
+    const publicationStates = {"NO_ROW":["NOT_PUBLISHED"],"NOT_PUBLISHED":["CLAIMED"],"CLAIMED":["PUBLISHED","FAILED","DEAD_LETTER"],"FAILED":["CLAIMED"],"PUBLISHED":[],"DEAD_LETTER":[]};
+    const themeStorageKey = 'starlight-theme';
+    let activeApproach = 'transactional';
+    let activeScenario = 'DIRECT_SUCCESS';
+    let activeState = 'NO_ROW';
+    let stepIndex = 0;
+    let playTimer = null;
+
+    function approachValue(key, value) {
+      if (key === 'kafkaWait' || key === 'reconciliation') return value ? content.metrics.yes : content.metrics.no;
+      if (key === 'publicationRows') return value === 'ALL' ? content.metrics.all : content.metrics.failures;
+      if (key === 'deduplication') return value === 'REQUIRED' ? content.metrics.required : content.metrics.recommended;
+      return String(value);
+    }
+
+    function renderApproach() {
+      const approach = approaches[activeApproach];
+      document.querySelector('[data-metric="orderWrites"]').textContent = approach.orderWrites;
+      document.querySelector('[data-metric="kafkaWait"]').textContent = approachValue('kafkaWait', approach.kafkaWaitInRequest);
+      document.querySelector('[data-metric="publicationRows"]').textContent = approachValue('publicationRows', approach.publicationRows);
+      document.querySelector('[data-metric="reconciliation"]').textContent = approachValue('reconciliation', approach.reconciliation);
+      document.querySelector('[data-metric="deduplication"]').textContent = approachValue('deduplication', approach.deduplication);
+      document.querySelector('.approach-summary').textContent = content.approachSummaries[activeApproach];
+      document.querySelectorAll('[data-approach]').forEach((button) => {
+        button.setAttribute('aria-pressed', String(button.dataset.approach === activeApproach));
+      });
+    }
+
+    function snapshotAt(scenario, index) {
+      const snapshot = {
+        apiStatus: '—',
+        orderRows: 0,
+        publicationRows: 0,
+        kafkaEvents: 0,
+        directAttempts: 0,
+        relayRetries: 0,
+        publicationStatus: 'NO ROW',
+        claimOwner: null,
+      };
+      scenario.events.slice(0, index + 1).forEach(([, , changes]) => Object.assign(snapshot, changes));
+      return snapshot;
+    }
+
+    function displayMetric(key, value) {
+      if (value === '?') return content.metricLabels.unknown;
+      if (value === null || value === '—') return content.metricLabels.none;
+      return String(value);
+    }
+
+    function stopPlayback() {
+      if (playTimer) clearInterval(playTimer);
+      playTimer = null;
+      const play = document.querySelector('[data-action="play"]');
+      play.textContent = '▶';
+      play.setAttribute('aria-label', content.controls.play);
+      play.title = content.controls.play;
+    }
+
+    function renderSimulation() {
+      const scenario = scenarios[activeScenario];
+      const event = scenario.events[stepIndex];
+      const snapshot = snapshotAt(scenario, stepIndex);
+      document.querySelector('.scenario-title').textContent = content.scenarioNames[activeScenario];
+      document.querySelector('.scenario-reason').textContent = content.scenarioReasons[activeScenario];
+      document.querySelector('.event-track').innerHTML = scenario.events.map(([key, layer], index) =>
+        '<div class="event-step layer-' + layer + ' ' + (index < stepIndex ? 'done' : '') + ' ' + (index === stepIndex ? 'current' : '') + '">' +
+        '<i></i><span>' + (index + 1) + '</span><div>' + key.replaceAll('_', ' ') + '</div></div>'
+      ).join('');
+      document.querySelector('[data-current-step]').textContent = content.controls.step + ' ' + (stepIndex + 1) + ' / ' + scenario.events.length;
+      document.querySelector('[data-current-layer]').textContent = content.controls.layer + ': ' + content.layerNames[event[1]];
+      document.querySelector('[data-event-key]').textContent = event[0].replaceAll('_', ' ');
+      document.querySelector('[data-event-detail]').textContent = content.eventDetails[event[0]];
+      Object.entries(snapshot).forEach(([key, value]) => {
+        const target = document.querySelector('[data-sim-metric="' + key + '"]');
+        if (target) target.textContent = displayMetric(key, value);
+      });
+      const claimVisible = activeScenario === 'RELAY_RECOVERY' && event[0] === 'RELAY_CLAIM_RACE';
+      document.querySelector('.claim-race').classList.toggle('visible', claimVisible);
+      document.querySelector('.claim-note').hidden = !claimVisible;
+      document.querySelector('[data-action="previous"]').disabled = stepIndex === 0;
+      document.querySelector('[data-action="next"]').disabled = stepIndex === scenario.events.length - 1;
+      document.querySelectorAll('[data-scenario]').forEach((button) => {
+        button.setAttribute('aria-pressed', String(button.dataset.scenario === activeScenario));
+      });
+    }
+
+    function selectScenario(id) {
+      activeScenario = id;
+      stepIndex = 0;
+      stopPlayback();
+      renderSimulation();
+    }
+
+    function nextStep() {
+      const last = scenarios[activeScenario].events.length - 1;
+      stepIndex = Math.min(stepIndex + 1, last);
+      renderSimulation();
+      if (stepIndex === last) stopPlayback();
+    }
+
+    function previousStep() {
+      stepIndex = Math.max(stepIndex - 1, 0);
+      stopPlayback();
+      renderSimulation();
+    }
+
+    function resetScenario() {
+      stepIndex = 0;
+      stopPlayback();
+      renderSimulation();
+    }
+
+    function togglePlayback() {
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        nextStep();
+        return;
+      }
+      if (playTimer) {
+        stopPlayback();
+        return;
+      }
+      if (stepIndex === scenarios[activeScenario].events.length - 1) stepIndex = 0;
+      const play = document.querySelector('[data-action="play"]');
+      play.textContent = 'Ⅱ';
+      play.setAttribute('aria-label', content.controls.pause);
+      play.title = content.controls.pause;
+      playTimer = setInterval(nextStep, 900);
+      renderSimulation();
+    }
+
+    function renderState() {
+      const description = content.stateDescriptions[activeState];
+      document.querySelector('[data-state-name]').textContent = activeState.replace('_', ' ');
+      document.querySelector('[data-state-meaning]').textContent = description[0];
+      document.querySelector('[data-state-next]').textContent = description[1];
+      document.querySelectorAll('[data-state]').forEach((button) => {
+        button.setAttribute('aria-pressed', String(button.dataset.state === activeState));
+      });
+    }
+
+    function renderRun(index) {
+      document.querySelector('[data-run-code]').textContent = content.runCommands[index];
+      document.querySelector('.run-note').textContent = content.runNotes[index];
+      document.querySelectorAll('.run-tab').forEach((button) => {
+        button.setAttribute('aria-pressed', String(Number(button.dataset.run) === index));
+      });
+    }
+
+    document.querySelectorAll('[data-approach]').forEach((button) => button.addEventListener('click', () => {
+      activeApproach = button.dataset.approach;
+      renderApproach();
+    }));
+    document.querySelectorAll('[data-scenario]').forEach((button) => button.addEventListener('click', () => selectScenario(button.dataset.scenario)));
+    document.querySelector('[data-action="previous"]').addEventListener('click', previousStep);
+    document.querySelector('[data-action="next"]').addEventListener('click', nextStep);
+    document.querySelector('[data-action="reset"]').addEventListener('click', resetScenario);
+    document.querySelector('[data-action="play"]').addEventListener('click', togglePlayback);
+    document.querySelectorAll('[data-state]').forEach((button) => button.addEventListener('click', () => {
+      activeState = button.dataset.state;
+      renderState();
+    }));
+    document.querySelectorAll('.run-tab').forEach((button) => button.addEventListener('click', () => renderRun(Number(button.dataset.run))));
+    document.querySelector('.theme-toggle').addEventListener('click', () => {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      localStorage.setItem(themeStorageKey, next);
+    });
+
+    renderApproach();
+    renderSimulation();
+    renderState();
+    renderRun(0);
+  </script>
+</body>
+</html>
