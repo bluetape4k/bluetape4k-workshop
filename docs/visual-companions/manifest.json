@@ -70,6 +70,29 @@
           "html": "docs/superpowers/specs/2026-07-30-kafka-outbox-fallback-visual-companion.html"
         }
       }
+    },
+    {
+      "id": "leader-job-safety-lab",
+      "source": "docs/superpowers/specs/2026-07-22-issue-548-job-safety-lab-design.md",
+      "status": "approved",
+      "public": true,
+      "presentation": {
+        "mode": "simulation",
+        "defaultView": "simulation",
+        "views": [
+          "simulation"
+        ]
+      },
+      "locales": {
+        "en": {
+          "title": "Leader Job Safety Lab",
+          "html": "docs/superpowers/specs/2026-07-30-leader-job-safety-lab-visual-companion.en.html"
+        },
+        "ko": {
+          "title": "Leader Job Safety Lab",
+          "html": "docs/superpowers/specs/2026-07-30-leader-job-safety-lab-visual-companion.html"
+        }
+      }
     }
   ]
 }

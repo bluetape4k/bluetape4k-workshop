@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:,">
+  <title>Only the newest worker result reaches PostgreSQL after an expired worker resumes</title>
+  <meta name="description" content="Explore how leader election, fencing tokens, PostgreSQL conditional updates, and the outbox address different failures across six scenarios.">
+  <script>
+    (() => {
+      const storageKey = 'starlight-theme';
+      const stored = localStorage.getItem(storageKey);
+      const theme = stored === 'light' || stored === 'dark'
+        ? stored
+        : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
+  <style>
+    :root {
+      --paper:#f5f7f8;--surface:#fff;--surface-2:#eef2f3;--ink:#182226;--muted:#5e6e73;--line:#d5dde0;
+      --api:#1976d2;--coord:#8b5cf6;--db:#00897b;--external:#d97706;--good:#0b8f55;--bad:#c23b3b;
+      --hero:#10262b;--hero-ink:#f5ffff;--shadow:0 18px 50px rgba(18,38,43,.1);
+    }
+    :root[data-theme="light"]{color-scheme:light}
+    :root[data-theme="dark"] {
+      color-scheme:dark;--paper:#101719;--surface:#172124;--surface-2:#202c30;--ink:#eef7f8;--muted:#a8b8bc;
+      --line:#324247;--api:#62aef5;--coord:#b89cff;--db:#52cbbb;--external:#f0ae4d;--good:#58d397;--bad:#ff8585;
+      --hero:#071113;--hero-ink:#f5ffff;--shadow:0 18px 50px rgba(0,0,0,.28);
+    }
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:"goorm Sans",Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.55;letter-spacing:0}
+    button{font:inherit;color:inherit}a{color:inherit;text-underline-offset:3px}code,pre{font-family:"goorm Sans Code","SFMono-Regular",Consolas,monospace}
+    .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:20px;height:58px;padding:0 max(20px,calc((100vw - 1180px)/2));border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(16px)}
+    .brand{font-weight:850;text-decoration:none}.topnav,.actions{display:flex;align-items:center;gap:16px}.topnav{font-size:13px;color:var(--muted)}.topnav a{text-decoration:none}.actions a{font-size:13px;font-weight:750}
+    .theme-toggle,.icon-button{display:grid;place-items:center;width:38px;height:38px;border:1px solid var(--line);border-radius:50%;background:var(--surface);cursor:pointer}.theme-toggle:hover,.icon-button:hover{border-color:var(--db)}
+    .hero{background:var(--hero);color:var(--hero-ink);padding:78px 24px 66px}.hero-inner,.section-inner{width:min(1180px,100%);margin:0 auto}.kicker{color:#78ddd0;font-size:13px;font-weight:800;text-transform:uppercase}.hero h1{max-width:1050px;margin:18px 0 22px;font-size:clamp(36px,5vw,68px);line-height:1.08;letter-spacing:0}.hero-summary{max-width:850px;margin:0;color:#c8d8da;font-size:18px}.hero-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;max-width:760px;margin-top:42px;background:#355056;border:1px solid #355056}.hero-facts div{display:flex;flex-direction:column;padding:18px 22px;background:#122d32}.hero-facts strong{font-size:24px}.hero-facts span{color:#a9c2c5;font-size:12px}
+    section{padding:74px 24px;border-bottom:1px solid var(--line)}.section-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.55fr);gap:40px;align-items:end;margin-bottom:34px}.eyebrow{margin:0 0 8px;color:var(--db);font-size:12px;font-weight:850;text-transform:uppercase}.section-head h2{margin:0;font-size:clamp(28px,3.2vw,44px);line-height:1.16;letter-spacing:0}.section-head>p{margin:0;color:var(--muted)}
+    .problem-grid,.decision-grid,.class-grid,.limit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.problem-card,.decision,.class-card,.limit-card{min-width:0;padding:22px;border:1px solid var(--line);border-radius:8px;background:var(--surface);box-shadow:var(--shadow)}.problem-card span,.decision>span,.limit-card>span{font-size:11px;font-weight:850;text-transform:uppercase}.problem-card h3,.decision h3,.limit-card h3{margin:10px 0 8px;font-size:18px}.problem-card p,.decision p,.limit-card p,.class-card p{margin:0;color:var(--muted);font-size:14px}
+    .guarantee-wrap{margin-top:28px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}.guarantee-wrap h3{margin:0;padding:20px 22px;border-bottom:1px solid var(--line);font-size:18px}table{width:100%;border-collapse:collapse}th,td{padding:15px 18px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}th{white-space:nowrap}td{color:var(--muted)}tr:last-child th,tr:last-child td{border-bottom:0}
+    .decision.selected{border-top:4px solid var(--good)}.decision.rejected{border-top:4px solid var(--bad)}.decision.selected>span{color:var(--good)}.decision.rejected>span{color:var(--bad)}
+    .architecture-diagram-frame{margin-bottom:18px;border:1px solid var(--line);border-radius:8px;background:var(--surface);box-shadow:var(--shadow)}.architecture-diagram-scroll{overflow-x:auto;padding:14px}.architecture-diagram{display:block;width:100%;min-width:900px;height:auto}.diagram-lane rect{fill:var(--surface-2);stroke:var(--line);stroke-width:1}.diagram-lane>text{font-size:11px;font-weight:850;text-transform:uppercase}.diagram-lane-api>text{fill:var(--api)}.diagram-lane-coordination>text{fill:var(--coord)}.diagram-lane-database>text{fill:var(--db)}.diagram-lane-external>text{fill:var(--external)}.diagram-card rect{fill:var(--surface);stroke-width:2}.diagram-card-title{fill:var(--ink);font-size:13px;font-weight:850}.diagram-card-description{fill:var(--muted);font-size:10.5px}.diagram-card.diagram-api rect{stroke:var(--api)}.diagram-card.diagram-coordination rect{stroke:var(--coord)}.diagram-card.diagram-database rect{stroke:var(--db)}.diagram-card.diagram-external rect{stroke:var(--external)}.diagram-group>rect{fill:color-mix(in srgb,var(--surface) 78%,var(--coord));stroke:var(--coord);stroke-width:2}.diagram-group.diagram-database>rect{fill:color-mix(in srgb,var(--surface) 78%,var(--db));stroke:var(--db)}.diagram-group-title{fill:var(--ink);font-size:15px;font-weight:850}.diagram-group-description{fill:var(--muted);font-size:10.5px}.diagram-group .diagram-card-title{font-size:11px}.diagram-group .diagram-card-description{display:none}.diagram-connector path{fill:none;stroke-width:2}.diagram-connector text{font-size:10px;font-weight:750;paint-order:stroke;stroke:var(--surface);stroke-width:5px;stroke-linejoin:round}.diagram-connector.diagram-api{color:var(--api)}.diagram-connector.diagram-coordination{color:var(--coord)}.diagram-connector.diagram-database{color:var(--db)}.diagram-connector.diagram-external{color:var(--external)}.diagram-connector path{stroke:currentColor}.diagram-connector text{fill:currentColor}.arrow-api path{fill:var(--api)}.arrow-coordination path{fill:var(--coord)}.arrow-database path{fill:var(--db)}.arrow-external path{fill:var(--external)}.architecture{display:grid;gap:10px}.layer{display:grid;grid-template-columns:150px 260px 1fr;gap:22px;align-items:center;min-height:86px;padding:18px 22px;border-left:6px solid;border-radius:6px;background:var(--surface);box-shadow:var(--shadow)}.layer span{font-size:11px;font-weight:850;text-transform:uppercase}.layer strong{font-size:17px}.layer p{margin:0;color:var(--muted);font-size:14px}.layer-api{border-color:var(--api)}.layer-coordination{border-color:var(--coord)}.layer-database{border-color:var(--db)}.layer-external{border-color:var(--external)}
+    .simulator{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:620px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow)}.sim-sidebar{padding:20px;border-right:1px solid var(--line);background:var(--surface-2)}.scenario-button{width:100%;padding:12px 13px;border:0;border-left:3px solid transparent;background:transparent;text-align:left;cursor:pointer;font-size:13px}.scenario-button:hover{background:var(--surface)}.scenario-button[aria-pressed="true"]{border-left-color:var(--db);background:var(--surface);font-weight:800}
+    .mode-switch{display:grid;grid-template-columns:1fr 1fr;margin-bottom:18px;padding:3px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}.mode-switch button{padding:8px;border:0;border-radius:4px;background:transparent;cursor:pointer;font-size:12px;font-weight:850}.mode-switch button[aria-pressed="true"]{background:var(--good);color:#fff}.mode-switch button[data-mode="unsafe"][aria-pressed="true"]{background:var(--bad)}
+    .sim-main{min-width:0;padding:24px}.sim-title-row{display:flex;justify-content:space-between;gap:20px;align-items:start}.sim-title-row h3{margin:0 0 6px;font-size:23px}.sim-title-row p{max-width:680px;margin:0;color:var(--muted);font-size:14px}.sim-controls{display:flex;gap:8px;flex:0 0 auto}.sim-controls button{padding:8px 12px;border:1px solid var(--line);border-radius:5px;background:var(--surface);cursor:pointer;font-size:12px}.sim-controls button:disabled{opacity:.4;cursor:not-allowed}
+    .timeline{display:grid;gap:8px;margin-top:24px}.event{display:grid;grid-template-columns:44px 128px minmax(0,1fr);gap:14px;align-items:center;min-height:66px;padding:12px 15px;border:1px solid var(--line);border-left:5px solid var(--line);border-radius:6px;opacity:.45}.event.visible{opacity:1}.event.current{outline:2px solid var(--ink);outline-offset:2px}.event.layer-api{border-left-color:var(--api)}.event.layer-coordination{border-left-color:var(--coord)}.event.layer-database{border-left-color:var(--db)}.event.layer-external{border-left-color:var(--external)}.event-number{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-weight:850}.event-meta{display:flex;flex-direction:column}.event-meta strong{font-size:11px}.event-meta span{color:var(--muted);font-size:10px}.event-detail code{font-size:12px;font-weight:800}.event-detail p{margin:3px 0 0;color:var(--muted);font-size:13px}
+    .sim-result{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;margin-top:22px;border:1px solid var(--line);background:var(--line)}.metric{padding:14px;background:var(--surface)}.metric span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase}.metric strong{display:block;margin-top:5px;font-size:18px;overflow-wrap:anywhere}.metric.good strong{color:var(--good)}.metric.bad strong{color:var(--bad)}
+    .class-card{display:block;text-decoration:none}.class-card:hover{border-color:var(--db)}.class-card code{font-weight:850}.class-card p{margin:10px 0 14px}.class-card span{display:block;color:var(--db);font-family:"goorm Sans Code",monospace;font-size:10px;overflow-wrap:anywhere}.test-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:28px 0 0;padding:0;list-style:none}.test-list li{display:flex;flex-direction:column;gap:5px;padding:16px 18px;border-left:4px solid var(--coord);background:var(--surface)}.test-list code{font-size:12px;font-weight:850}.test-list span{color:var(--muted);font-size:13px}
+    .run-shell{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#0e1719;box-shadow:var(--shadow)}.run-tabs{display:flex;overflow:auto;border-bottom:1px solid #304146}.run-tab{flex:0 0 auto;padding:13px 18px;border:0;border-bottom:3px solid transparent;background:transparent;color:#a9b9bc;cursor:pointer;font-size:12px}.run-tab[aria-pressed="true"]{border-bottom-color:#66d9c8;color:#fff}.run-shell pre{min-height:260px;margin:0;padding:22px;overflow:auto;color:#dcebec;font-size:12px;line-height:1.65}.run-note{padding:14px 20px;border-top:1px solid #304146;color:#9fb2b5;font-size:12px}
+    .limit-card.solved{border-top:4px solid var(--good)}.limit-card.open{border-top:4px solid var(--external)}.limit-card.solved>span{color:var(--good)}.limit-card.open>span{color:var(--external)}
+    footer{padding:38px 24px 48px;background:var(--hero);color:#bed0d3}.footer-inner{display:flex;justify-content:space-between;gap:30px;width:min(1180px,100%);margin:0 auto}.source-links{display:flex;flex-wrap:wrap;gap:14px;font-size:12px}.source-links a{color:#7ce0d2}
+    button:focus-visible,a:focus-visible{outline:3px solid var(--external);outline-offset:3px}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+    @media(max-width:900px){.topnav{display:none}.section-head{grid-template-columns:1fr}.problem-grid,.decision-grid,.class-grid,.limit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.simulator{grid-template-columns:1fr}.sim-sidebar{border-right:0;border-bottom:1px solid var(--line)}.scenario-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.architecture .layer{grid-template-columns:120px 1fr}.layer p{grid-column:1/-1}.sim-title-row{flex-direction:column}.sim-controls{width:100%;flex-wrap:wrap}.test-list{grid-template-columns:1fr}}
+    @media(max-width:620px){.topbar{padding:0 14px}.brand{font-size:13px}.actions{gap:9px}.actions a{font-size:11px}.hero{padding:54px 18px 48px}.hero h1{font-size:36px}.hero-facts{grid-template-columns:1fr}.hero-facts div{padding:13px 16px}section{padding:56px 16px}.problem-grid,.decision-grid,.class-grid,.limit-grid{grid-template-columns:1fr}.guarantee-wrap table,.guarantee-wrap tbody,.guarantee-wrap tr,.guarantee-wrap th,.guarantee-wrap td{display:block;width:100%}.guarantee-wrap tr{padding:14px 16px;border-bottom:1px solid var(--line)}.guarantee-wrap tr:last-child{border-bottom:0}.guarantee-wrap th,.guarantee-wrap td{padding:3px 0;border:0;white-space:normal}.scenario-list{grid-template-columns:1fr}.sim-main{padding:18px}.event{grid-template-columns:34px minmax(0,1fr)}.event-meta{grid-column:2}.event-detail{grid-column:1/-1}.sim-result{grid-template-columns:repeat(2,minmax(0,1fr))}.architecture .layer{grid-template-columns:1fr;gap:5px}.layer p{grid-column:auto}.footer-inner{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top">Leader Job Safety Lab</a>
+    <nav class="topnav" aria-label="Sections">
+      <a href="#problem">Problem</a><a href="#decisions">Decisions</a><a href="#simulation">System flow</a><a href="#implementation">Implementation</a><a href="#run">Run</a>
+    </nav>
+    <div class="actions"><a href="./2026-07-30-leader-job-safety-lab-visual-companion.html">한국어</a><button type="button" class="theme-toggle" aria-label="Toggle theme" title="Toggle theme">◐</button></div>
+  </header>
+  <main id="top" data-source="2026-07-22-issue-548-job-safety-lab-design.md" data-baseline="39616246e2f03a3b332bbcc40bc04cd7e03c9dad">
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="kicker">Leader Job Safety Lab · Visual Companion</div>
+        <h1>Only the newest worker result reaches PostgreSQL after an expired worker resumes</h1>
+        <p class="hero-summary">Leader election only selects who may attempt the work. Redis must issue an ordering token and PostgreSQL must decide whether a delayed mutation is still current.</p>
+        <div class="hero-facts"><div><strong>6</strong><span>operational scenarios</span></div><div><strong>2</strong><span>SAFE / UNSAFE paths</span></div><div><strong>41 → 42</strong><span>fencing tokens during takeover</span></div></div>
+      </div>
+    </section>
+    <section id="problem">
+      <div class="section-inner">
+        <div class="section-head"><div><p class="eyebrow">01 · Problem framing</p><h2>Successful leader election does not guarantee a safe database mutation</h2></div><p>Lease expiry does not stop the old worker thread. After a GC pause, network partition, or long I/O, the old worker can resume and write after the takeover.</p></div>
+        <div class="problem-grid"><article class="problem-card"><span>Coordination</span><h3>Leader lease only</h3><p>It reduces concurrent workers but cannot reject a resumed stale worker.</p></article><article class="problem-card"><span>Resource identity</span><h3>Lock by job name</h3><p>Two differently named jobs can still mutate the same business resource.</p></article><article class="problem-card"><span>Outcome recovery</span><h3>Blind external retry</h3><p>A new request can duplicate an earlier request whose result is unknown.</p></article></div>
+        <div class="guarantee-wrap"><h3>Brainstorming: separate the guarantees before selecting mechanisms</h3><table><tbody><tr><th>Mutual exclusion</th><td>Redis leader and resource leases</td><td>Reduce concurrent execution at one moment.</td></tr><tr><th>Failover</th><td>Lease expiry and reacquisition</td><td>Allow a new worker to take over.</td></tr><tr><th>Stale-write rejection</th><td>Fencing token + PostgreSQL</td><td>Reject an older generation at commit.</td></tr><tr><th>Replay safety</th><td>OperationId + idempotency</td><td>Look up and retry the same external operation.</td></tr><tr><th>Durable completion</th><td>Exposed transaction + outbox</td><td>Commit business state and follow-up work together.</td></tr></tbody></table></div>
+      </div>
+    </section>
+    <section id="decisions">
+      <div class="section-inner">
+        <div class="section-head"><div><p class="eyebrow">02 · Solution design</p><h2>The design separates Redis ordering from PostgreSQL commit decisions</h2></div><p>No single component provides all guarantees. Coordination, durable mutation, and external outcome recovery remain separate.</p></div>
+        <div class="decision-grid"><article class="decision rejected"><span>Rejected</span><h3>Reuse the leader owner token</h3><p>The owner token is an opaque identifier with no ordering semantics.</p></article><article class="decision rejected"><span>Rejected</span><h3>Let Redis make the final commit decision</h3><p>Redis lease state can diverge from PostgreSQL business state.</p></article><article class="decision rejected"><span>Rejected</span><h3>Create a new request ID after timeout</h3><p>Both the unknown first request and the retry may be applied.</p></article><article class="decision selected"><span>Selected</span><h3>Monotonic fencing token</h3><p>Every takeover receives a higher generation.</p></article><article class="decision selected"><span>Selected</span><h3>PostgreSQL conditional update</h3><p>Mutate only when `incomingFence > lastAcceptedFence`.</p></article><article class="decision selected"><span>Selected</span><h3>Outbox and original OperationId lookup</h3><p>Query the same request instead of guessing the result.</p></article></div>
+      </div>
+    </section>
+    <section id="architecture">
+      <div class="section-inner">
+        <div class="section-head"><div><p class="eyebrow">03 · Architecture</p><h2>Redis coordinates execution order and PostgreSQL decides whether to commit</h2></div><p>No single component provides all guarantees. Coordination, durable mutation, and external outcome recovery remain separate.</p></div>
+
+    <div class="architecture-diagram-frame">
+      <div class="architecture-diagram-scroll">
+        <svg class="architecture-diagram" viewBox="0 0 1180 710" role="img" aria-labelledby="architecture-diagram-title architecture-diagram-description">
+          <title id="architecture-diagram-title">Leader Job Safety Lab components and data flow</title>
+          <desc id="architecture-diagram-description">No single component provides all guarantees. Coordination, durable mutation, and external outcome recovery remain separate.</desc>
+          <defs>
+            <marker id="arrow-api" class="arrow-api" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto-start-reverse" markerUnits="strokeWidth"><path d="M0,0 L9,4.5 L0,9 Z"/></marker>
+            <marker id="arrow-coordination" class="arrow-coordination" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto-start-reverse" markerUnits="strokeWidth"><path d="M0,0 L9,4.5 L0,9 Z"/></marker>
+            <marker id="arrow-database" class="arrow-database" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto-start-reverse" markerUnits="strokeWidth"><path d="M0,0 L9,4.5 L0,9 Z"/></marker>
+            <marker id="arrow-external" class="arrow-external" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto-start-reverse" markerUnits="strokeWidth"><path d="M0,0 L9,4.5 L0,9 Z"/></marker>
+          </defs>
+
+          <g class="diagram-lane diagram-lane-api"><rect x="16" y="28" width="1148" height="104" rx="8"/><text x="34" y="51">API</text></g>
+          <g class="diagram-lane diagram-lane-coordination"><rect x="16" y="148" width="1148" height="224" rx="8"/><text x="34" y="171">Coordination</text></g>
+          <g class="diagram-lane diagram-lane-database"><rect x="16" y="388" width="1148" height="164" rx="8"/><text x="34" y="411">Database</text></g>
+          <g class="diagram-lane diagram-lane-external"><rect x="16" y="568" width="1148" height="122" rx="8"/><text x="34" y="591">External effect</text></g>
+
+
+    <g class="diagram-card diagram-api">
+      <rect x="70" y="59" width="210" height="62" rx="7"/>
+      <text class="diagram-card-title" x="88" y="89">Caller</text>
+      <text class="diagram-card-description" x="88" y="112">Operator or scheduler</text>
+    </g>
+
+    <g class="diagram-card diagram-api">
+      <rect x="350" y="59" width="250" height="62" rx="7"/>
+      <text class="diagram-card-title" x="368" y="89">JobSafetyController</text>
+      <text class="diagram-card-description" x="368" y="112">Scenario API · authorization</text>
+    </g>
+
+    <g class="diagram-connector diagram-api">
+      <path d="M280 90 H350" marker-end="url(#arrow-api)"/>
+      <text x="315" y="81" text-anchor="middle">Request</text>
+    </g>
+
+
+    <g class="diagram-card diagram-coordination">
+      <rect x="450" y="190" width="250" height="70" rx="7"/>
+      <text class="diagram-card-title" x="468" y="220">JobRunCoordinator</text>
+      <text class="diagram-card-description" x="468" y="243">Execution order and leases</text>
+    </g>
+
+    <g class="diagram-card diagram-coordination">
+      <rect x="800" y="190" width="310" height="70" rx="7"/>
+      <text class="diagram-card-title" x="818" y="220">FencedJobExecutionService</text>
+      <text class="diagram-card-description" x="818" y="243">Recheck current state and token</text>
+    </g>
+
+    <g class="diagram-connector diagram-coordination">
+      <path d="M475 121 V190" marker-end="url(#arrow-coordination)"/>
+      <text x="489" y="158" text-anchor="start">Run</text>
+    </g>
+
+    <g class="diagram-connector diagram-coordination">
+      <path d="M700 225 H800" marker-end="url(#arrow-coordination)"/>
+      <text x="750" y="215" text-anchor="middle">Resource lease · token</text>
+    </g>
+
+          <g class="diagram-group diagram-coordination">
+            <rect x="70" y="190" width="260" height="150" rx="8"/>
+            <text class="diagram-group-title" x="88" y="216">Redis 8</text>
+            <text class="diagram-group-description" x="88" y="237">Coordination state store</text>
+
+    <g class="diagram-card diagram-coordination diagram-card-compact">
+      <rect x="88" y="252" width="224" height="36" rx="7"/>
+      <text class="diagram-card-title" x="106" y="270" dominant-baseline="middle">Leader lease</text>
+
+    </g>
+
+    <g class="diagram-card diagram-coordination diagram-card-compact">
+      <rect x="88" y="296" width="224" height="36" rx="7"/>
+      <text class="diagram-card-title" x="106" y="314" dominant-baseline="middle">Resource lease + fencing token</text>
+
+    </g>
+          </g>
+
+    <g class="diagram-connector diagram-coordination">
+      <path d="M450 215 H390 V270 H330" marker-end="url(#arrow-coordination)"/>
+      <text x="390" y="253" text-anchor="middle">Leader lease</text>
+    </g>
+
+    <g class="diagram-connector diagram-coordination">
+      <path d="M450 235 H410 V314 H330" marker-end="url(#arrow-coordination)"/>
+      <text x="390" y="299" text-anchor="middle">Resource lease · token</text>
+    </g>
+
+          <g class="diagram-group diagram-database">
+            <rect x="520" y="420" width="590" height="104" rx="8"/>
+            <text class="diagram-group-title" x="538" y="447">PostgreSQL 18 + Exposed</text>
+            <text class="diagram-group-description" x="538" y="468">Final mutation decision</text>
+
+    <g class="diagram-card diagram-database diagram-card-compact">
+      <rect x="538" y="480" width="240" height="34" rx="7"/>
+      <text class="diagram-card-title" x="556" y="497" dominant-baseline="middle">Single transaction</text>
+
+    </g>
+
+    <g class="diagram-card diagram-database diagram-card-compact">
+      <rect x="794" y="480" width="100" height="34" rx="7"/>
+      <text class="diagram-card-title" x="812" y="497" dominant-baseline="middle">Outbox</text>
+
+    </g>
+
+    <g class="diagram-card diagram-database diagram-card-compact">
+      <rect x="910" y="480" width="182" height="34" rx="7"/>
+      <text class="diagram-card-title" x="928" y="497" dominant-baseline="middle">Receipt and reconciliation</text>
+
+    </g>
+          </g>
+
+    <g class="diagram-connector diagram-database">
+      <path d="M955 260 V420" marker-end="url(#arrow-database)"/>
+      <text x="969" y="344" text-anchor="start">Conditional mutation</text>
+    </g>
+
+
+    <g class="diagram-card diagram-external">
+      <rect x="350" y="606" width="270" height="62" rx="7"/>
+      <text class="diagram-card-title" x="368" y="636">OutboxEffectWorker</text>
+      <text class="diagram-card-description" x="368" y="659">Process committed requests</text>
+    </g>
+
+    <g class="diagram-card diagram-external">
+      <rect x="840" y="606" width="270" height="62" rx="7"/>
+      <text class="diagram-card-title" x="858" y="636">External system</text>
+      <text class="diagram-card-description" x="858" y="659">Idempotent apply · outcome query</text>
+    </g>
+
+    <g class="diagram-connector diagram-database">
+      <path d="M979 524 V555 H485 V606" marker-end="url(#arrow-database)" marker-start="url(#arrow-database)"/>
+      <text x="725" y="546" text-anchor="middle">Claim outbox · record result</text>
+    </g>
+
+    <g class="diagram-connector diagram-external">
+      <path d="M620 637 H840" marker-end="url(#arrow-external)"/>
+      <text x="730" y="627" text-anchor="middle">Stable OperationId · outcome query</text>
+    </g>
+        </svg>
+      </div>
+    </div>
+        <div class="architecture"><div class="layer layer-api"><span>API</span><strong>API layer</strong><p>Scenario selection · SAFE/UNSAFE isolation · authorization</p></div><div class="layer layer-coordination"><span>Coordination</span><strong>Coordination layer</strong><p>Leader lease · resource lease · fencing-token allocation</p></div><div class="layer layer-database"><span>PostgreSQL</span><strong>Database layer</strong><p>Current-state recheck · conditional mutation · checkpoint/execution/outbox</p></div><div class="layer layer-external"><span>Outbox / Provider</span><strong>External-effect layer</strong><p>Provider call · receipt · reconciliation</p></div></div>
+      </div>
+    </section>
+    <section id="simulation">
+      <div class="section-inner">
+        <div class="section-head"><div><p class="eyebrow">04 · Interactive flow</p><h2>Select a scenario and inspect where the safeguard changes the outcome</h2></div><p>Switch the same scenario between SAFE and UNSAFE to find the exact step where the final state diverges.</p></div>
+        <div class="simulator">
+          <aside class="sim-sidebar">
+            <div class="mode-switch"><button type="button" data-mode="safe" aria-pressed="true">SAFE</button><button type="button" data-mode="unsafe" aria-pressed="false">UNSAFE</button></div>
+            <div class="scenario-list"><button class="scenario-button" type="button" data-scenario="CROSS_JOB_COLLISION" aria-pressed="false">Cross-job resource collision</button><button class="scenario-button" type="button" data-scenario="LEASE_OVERRUN" aria-pressed="true">Expired worker resumes</button><button class="scenario-button" type="button" data-scenario="DYNAMIC_TENANT" aria-pressed="false">Tenant changes during execution</button><button class="scenario-button" type="button" data-scenario="REGION_PARTITION" aria-pressed="false">Region partition</button><button class="scenario-button" type="button" data-scenario="MIXED_VERSION_ROLLOUT" aria-pressed="false">Mixed-version rollout</button><button class="scenario-button" type="button" data-scenario="NON_FENCEABLE_EFFECT" aria-pressed="false">Non-fenceable external effect</button></div>
+          </aside>
+          <div class="sim-main" aria-live="polite">
+            <div class="sim-title-row">
+              <div><h3 id="scenario-title"></h3><p id="scenario-reason"></p></div>
+              <div class="sim-controls"><button id="restart" type="button">Restart</button><button id="previous" type="button">Previous step</button><button id="next" type="button">Next step</button></div>
+            </div>
+            <div id="timeline" class="timeline"></div>
+            <div id="result" class="sim-result"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="implementation">
+      <div class="section-inner">
+        <div class="section-head"><div><p class="eyebrow">05 · Source mapping</p><h2>Concrete classes and tests prove each safeguard</h2></div><p>The visible steps are reconstructed from the actual services and deterministic scenario implementation.</p></div>
+        <div class="class-grid"><a class="class-card" href="../../../leader/job-safety-lab/src/main/kotlin/io/bluetape4k/workshop/leader/jobsafety/coordination/JobRunCoordinator.kt"><code>JobRunCoordinator</code><p>Acquires and releases leader and resource leases in order.</p><span>coordination/JobRunCoordinator.kt</span></a><a class="class-card" href="../../../leader/job-safety-lab/src/main/kotlin/io/bluetape4k/workshop/leader/jobsafety/coordination/redis/RedisJobFencingLeaseAdapter.kt"><code>RedisJobFencingLeaseAdapter</code><p>Uses Redis Lua to allocate monotonic fencing tokens.</p><span>coordination/redis/RedisJobFencingLeaseAdapter.kt</span></a><a class="class-card" href="../../../leader/job-safety-lab/src/main/kotlin/io/bluetape4k/workshop/leader/jobsafety/execution/FencedJobExecutionService.kt"><code>FencedJobExecutionService</code><p>Rechecks tenant, region, version, and namespace before mutation.</p><span>execution/FencedJobExecutionService.kt</span></a><a class="class-card" href="../../../leader/job-safety-lab/src/main/kotlin/io/bluetape4k/workshop/leader/jobsafety/persistence/JobSafetyRepositories.kt"><code>JobSafetyRepositories</code><p>Owns the conditional mutation, checkpoint, execution, and outbox writes.</p><span>persistence/JobSafetyRepositories.kt</span></a><a class="class-card" href="../../../leader/job-safety-lab/src/main/kotlin/io/bluetape4k/workshop/leader/jobsafety/effect/OutboxEffectWorker.kt"><code>OutboxEffectWorker</code><p>Calls the provider outside the transaction and persists uncertain outcomes for reconciliation.</p><span>effect/OutboxEffectWorker.kt</span></a><a class="class-card" href="../../../leader/job-safety-lab/src/main/kotlin/io/bluetape4k/workshop/leader/jobsafety/scenario/JobSafetyScenarioService.kt"><code>JobSafetyScenarioService</code><p>Produces deterministic SAFE and UNSAFE results for all six scenarios.</p><span>scenario/JobSafetyScenarioService.kt</span></a></div>
+        <h3>Tests that verify the implemented behavior</h3><ul class="test-list"><li><code>LeaseOverrunScenarioTest</code><span>Reject token 41 and preserve the token-42 result</span></li><li><code>FencedMutationPostgresIntegrationTest</code><span>Reject a stale conditional mutation in PostgreSQL</span></li><li><code>JobSafetyEndToEndIntegrationTest</code><span>Commit business state, checkpoint, execution, and outbox atomically</span></li><li><code>NonFenceableEffectScenarioTest</code><span>Avoid duplicate effects with a stable OperationId and reconciliation</span></li><li><code>UnsafeJobSafetyControllerConditionTest</code><span>Isolate the UNSAFE API behind both profile and property</span></li></ul>
+      </div>
+    </section>
+    <section id="run">
+      <div class="section-inner">
+        <div class="section-head"><div><p class="eyebrow">06 · Run the example</p><h2>Start the related services and verify the SAFE result first</h2></div><p>The example uses JDK 25, a PostgreSQL 18-compatible server, and a Redis 8-compatible server. Run the UNSAFE API only as an isolated comparison.</p></div>
+        <div class="run-shell"><div class="run-tabs"><button type="button" class="run-tab" data-run="0" aria-pressed="true">Related services</button><button type="button" class="run-tab" data-run="1" aria-pressed="false">Application</button><button type="button" class="run-tab" data-run="2" aria-pressed="false">SAFE request</button><button type="button" class="run-tab" data-run="3" aria-pressed="false">UNSAFE comparison</button><button type="button" class="run-tab" data-run="4" aria-pressed="false">Tests</button></div><pre><code id="run-command"></code></pre><div id="run-note" class="run-note"></div></div>
+      </div>
+    </section>
+    <section id="limits">
+      <div class="section-inner">
+        <div class="section-head"><div><p class="eyebrow">07 · Boundaries</p><h2>Problems addressed by the example and remaining limits</h2></div></div>
+        <div class="limit-grid"><article class="limit-card solved"><span>Addressed</span><h3>Delayed database mutation</h3><p>PostgreSQL rejects a conditional mutation carrying an old fencing token.</p></article><article class="limit-card solved"><span>Addressed</span><h3>Configuration changes during execution</h3><p>The transaction reloads tenant, region, version, and namespace state.</p></article><article class="limit-card solved"><span>Addressed</span><h3>Unknown external result</h3><p>The worker queries the original OperationId and records a receipt.</p></article><article class="limit-card open"><span>Limit</span><h3>Provider has no idempotency key or query API</h3><p>Exactly-once external effects cannot be guaranteed; manual review or compensation is required.</p></article><article class="limit-card open"><span>Limit</span><h3>Redis counter history is lost</h3><p>Preserve the counter in backups or advance the namespace epoch.</p></article><article class="limit-card open"><span>Limit</span><h3>Schema migration</h3><p>The example uses SchemaUtils at startup; production needs Flyway or Liquibase.</p></article></div>
+      </div>
+    </section>
+  </main>
+  <footer><div class="footer-inner"><span>Leader Job Safety Lab Visual Companion grounded in the actual implementation and tests</span><div class="source-links"><a href="../../../leader/job-safety-lab/README.md">README</a><a href="./2026-07-22-issue-548-job-safety-lab-design.md">Design</a><a href="../plans/2026-07-22-issue-548-job-safety-lab-plan.md">Implementation plan</a><a href="../../lessons/2026-07-22-issue-548-job-safety-lab.md">Lesson</a></div></div></footer>
+  <script>
+    const themeStorageKey = 'starlight-theme';
+    const content = {"lang":"en","title":"Only the newest worker result reaches PostgreSQL after an expired worker resumes","description":"Explore how leader election, fencing tokens, PostgreSQL conditional updates, and the outbox address different failures across six scenarios.","alternate":"한국어","alternateHref":"./2026-07-30-leader-job-safety-lab-visual-companion.html","themeLabel":"Toggle theme","nav":["Problem","Decisions","System flow","Implementation","Run"],"sectionLabels":["Problem framing","Solution design","Architecture","Interactive flow","Source mapping","Run the example","Boundaries"],"heroKicker":"Leader Job Safety Lab · Visual Companion","heroSummary":"Leader election only selects who may attempt the work. Redis must issue an ordering token and PostgreSQL must decide whether a delayed mutation is still current.","heroFacts":[["6","operational scenarios"],["2","SAFE / UNSAFE paths"],["41 → 42","fencing tokens during takeover"]],"problemTitle":"Successful leader election does not guarantee a safe database mutation","problemLead":"Lease expiry does not stop the old worker thread. After a GC pause, network partition, or long I/O, the old worker can resume and write after the takeover.","problemCards":[["Leader lease only","It reduces concurrent workers but cannot reject a resumed stale worker.","Coordination"],["Lock by job name","Two differently named jobs can still mutate the same business resource.","Resource identity"],["Blind external retry","A new request can duplicate an earlier request whose result is unknown.","Outcome recovery"]],"questionTitle":"Brainstorming: separate the guarantees before selecting mechanisms","guarantees":[["Mutual exclusion","Redis leader and resource leases","Reduce concurrent execution at one moment."],["Failover","Lease expiry and reacquisition","Allow a new worker to take over."],["Stale-write rejection","Fencing token + PostgreSQL","Reject an older generation at commit."],["Replay safety","OperationId + idempotency","Look up and retry the same external operation."],["Durable completion","Exposed transaction + outbox","Commit business state and follow-up work together."]],"solutionTitle":"The design separates Redis ordering from PostgreSQL commit decisions","rejectedLabel":"Rejected","selectedLabel":"Selected","decisions":[["Reuse the leader owner token","The owner token is an opaque identifier with no ordering semantics.",false],["Let Redis make the final commit decision","Redis lease state can diverge from PostgreSQL business state.",false],["Create a new request ID after timeout","Both the unknown first request and the retry may be applied.",false],["Monotonic fencing token","Every takeover receives a higher generation.",true],["PostgreSQL conditional update","Mutate only when `incomingFence > lastAcceptedFence`.",true],["Outbox and original OperationId lookup","Query the same request instead of guessing the result.",true]],"architectureTitle":"Redis coordinates execution order and PostgreSQL decides whether to commit","architectureLead":"No single component provides all guarantees. Coordination, durable mutation, and external outcome recovery remain separate.","layers":[["API layer","Scenario selection · SAFE/UNSAFE isolation · authorization","api"],["Coordination layer","Leader lease · resource lease · fencing-token allocation","coordination"],["Database layer","Current-state recheck · conditional mutation · checkpoint/execution/outbox","database"],["External-effect layer","Provider call · receipt · reconciliation","external"]],"architectureDiagram":{"title":"Leader Job Safety Lab components and data flow","caller":["Caller","Operator or scheduler"],"api":["JobSafetyController","Scenario API · authorization"],"coordinator":["JobRunCoordinator","Execution order and leases"],"execution":["FencedJobExecutionService","Recheck current state and token"],"redis":["Redis 8","Coordination state store"],"leaderLease":["Leader lease","Select an execution candidate"],"fencingLease":["Resource lease + fencing token","Monotonic execution generation"],"postgres":["PostgreSQL 18 + Exposed","Final mutation decision"],"transaction":["Single transaction","Business state · checkpoint · execution"],"outbox":["Outbox","Persist the external-effect request"],"worker":["OutboxEffectWorker","Process committed requests"],"provider":["External system","Idempotent apply · outcome query"],"receipt":["Receipt and reconciliation","Receipt · RECONCILIATION_REQUIRED"],"request":"Request","run":"Run","coordinate":"Leader lease","fence":"Resource lease · token","conditionalMutation":"Conditional mutation","claimAndRecord":"Claim outbox · record result","stableOperation":"Stable OperationId · outcome query","legend":["API","Coordination","Database","External effect"]},"simulationTitle":"Select a scenario and inspect where the safeguard changes the outcome","simulationLead":"Switch the same scenario between SAFE and UNSAFE to find the exact step where the final state diverges.","safe":"SAFE","unsafe":"UNSAFE","previous":"Previous step","next":"Next step","restart":"Restart","currentGuard":"Current handling","expected":"Expected","final":"Final","acceptedFence":"Last accepted fence","verdict":"Verdict","noFence":"None","layerNames":{"api":"API","coordination":"Coordination","database":"PostgreSQL","external":"Outbox / Provider"},"scenarioNames":{"CROSS_JOB_COLLISION":"Cross-job resource collision","LEASE_OVERRUN":"Expired worker resumes","DYNAMIC_TENANT":"Tenant changes during execution","REGION_PARTITION":"Region partition","MIXED_VERSION_ROLLOUT":"Mixed-version rollout","NON_FENCEABLE_EFFECT":"Non-fenceable external effect"},"scenarioReasons":{"CROSS_JOB_COLLISION":"Different job names can still target one business resource.","LEASE_OVERRUN":"Lease expiry does not prove that the old worker stopped.","DYNAMIC_TENANT":"A tenant or membership revision can change after scheduling.","REGION_PARTITION":"A partitioned region can elect a local leader and issue local tokens.","MIXED_VERSION_ROLLOUT":"An old writer can be incompatible with the current checkpoint schema.","NON_FENCEABLE_EFFECT":"Database fencing cannot undo an external request that was already sent."},"eventDetails":{"DERIVE_SHARED_KEY":"Both jobs derive the same business-resource key.","DAILY_FENCE_41":"daily-summary acquires generation 41 for the shared resource.","DAILY_COMMIT_10":"PostgreSQL accepts the generation-41 mutation.","BACKFILL_FENCE_42":"backfill-summary acquires generation 42 for the same resource.","BACKFILL_COMMIT_30":"PostgreSQL commits the accumulated value 30.","DAILY_READ_0":"daily-summary reads summary=0.","BACKFILL_READ_0":"backfill-summary reads the same summary=0.","DAILY_WRITE_10":"daily-summary writes 10 under its job-name lock.","BACKFILL_WRITE_20":"backfill-summary overwrites the result with 20.","LOST_UPDATE":"The expected value is 30 but the final value is 20.","A_ACQUIRE_41":"Worker A receives fencing token 41.","A_PAUSE":"Worker A pauses after reading state.","A_EXPIRE":"The lease expires without stopping worker A’s thread.","B_ACQUIRE_42":"Worker B takes over with fencing token 42.","B_COMMIT":"PostgreSQL commits worker B’s current result.","A_RESUME":"Worker A resumes and attempts a mutation with token 41.","TRIGGER_REVISION_7":"The scheduler triggers work from membership revision 7.","TENANT_REMOVED_REVISION_8":"The tenant is removed and revision advances to 8 before commit.","RELOAD_ASSIGNMENT":"The transaction reloads the current tenant assignment.","STALE_MEMBERSHIP_REJECTED":"Revision 7 is rejected as STALE_MEMBERSHIP.","TRIGGER_FROM_SNAPSHOT":"The worker runs from an old scheduler snapshot.","SKIP_DB_RECHECK":"The unsafe path skips the PostgreSQL current-state check.","STALE_WRITE_COMMITTED":"A mutation based on stale assumptions reaches business state.","REGION_PARTITION":"region-b elects a local leader while partitioned.","LOCAL_FENCE_100":"Redis in region-b issues local fencing token 100.","READ_WRITE_HOME":"PostgreSQL returns the current write region and epoch.","WRONG_REGION_REJECTED":"The region-b mutation is rejected as WRONG_REGION.","EXPAND_COMPATIBLE_DEPLOY":"Deploy readers that still understand old checkpoints.","CHECKPOINT_SCHEMA_2":"Advance the checkpoint schema to version 2.","MIN_WRITER_2":"Raise the minimum writer version to 2 last.","OLD_WRITER_REJECTED":"Writer v1 is rejected as INCOMPATIBLE_VERSION.","CHECKPOINT_SCHEMA_CHANGED":"The old writer runs after the checkpoint schema changes.","OUTBOX_COMMIT":"Business state and a stable OperationId commit together.","PROVIDER_APPLIED_TIMEOUT":"The provider applies the effect but the response is lost.","RECONCILIATION_REQUIRED":"Persist uncertainty instead of guessing the result.","QUERY_ORIGINAL_OPERATION":"Query the provider with the original OperationId.","RECEIPT_CONFIRMED":"Record the receipt and transition to COMPLETED.","PROVIDER_REQUEST_1":"The provider applies the first request.","RESPONSE_TIMEOUT":"The worker cannot observe the first result.","NEW_OPERATION_CREATED":"The unsafe retry creates a different OperationId.","DUPLICATE_EFFECT":"The provider applies both independent requests."},"implementationTitle":"Concrete classes and tests prove each safeguard","classIntro":"The visible steps are reconstructed from the actual services and deterministic scenario implementation.","classes":[["JobRunCoordinator","Acquires and releases leader and resource leases in order.","coordination/JobRunCoordinator.kt"],["RedisJobFencingLeaseAdapter","Uses Redis Lua to allocate monotonic fencing tokens.","coordination/redis/RedisJobFencingLeaseAdapter.kt"],["FencedJobExecutionService","Rechecks tenant, region, version, and namespace before mutation.","execution/FencedJobExecutionService.kt"],["JobSafetyRepositories","Owns the conditional mutation, checkpoint, execution, and outbox writes.","persistence/JobSafetyRepositories.kt"],["OutboxEffectWorker","Calls the provider outside the transaction and persists uncertain outcomes for reconciliation.","effect/OutboxEffectWorker.kt"],["JobSafetyScenarioService","Produces deterministic SAFE and UNSAFE results for all six scenarios.","scenario/JobSafetyScenarioService.kt"]],"testsTitle":"Tests that verify the implemented behavior","tests":[["LeaseOverrunScenarioTest","Reject token 41 and preserve the token-42 result"],["FencedMutationPostgresIntegrationTest","Reject a stale conditional mutation in PostgreSQL"],["JobSafetyEndToEndIntegrationTest","Commit business state, checkpoint, execution, and outbox atomically"],["NonFenceableEffectScenarioTest","Avoid duplicate effects with a stable OperationId and reconciliation"],["UnsafeJobSafetyControllerConditionTest","Isolate the UNSAFE API behind both profile and property"]],"runTitle":"Start the related services and verify the SAFE result first","runLead":"The example uses JDK 25, a PostgreSQL 18-compatible server, and a Redis 8-compatible server. Run the UNSAFE API only as an isolated comparison.","runTabs":["Related services","Application","SAFE request","UNSAFE comparison","Tests"],"runCommands":["docker run --rm --name job-safety-postgres \\\n  -e POSTGRES_DB=jobsafety -e POSTGRES_USER=jobsafety \\\n  -e POSTGRES_PASSWORD=jobsafety -p 5432:5432 postgres:18-alpine\n\ndocker run --rm --name job-safety-redis \\\n  -p 6379:6379 redis:8-alpine","SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/jobsafety \\\nSPRING_DATASOURCE_USERNAME=jobsafety \\\nSPRING_DATASOURCE_PASSWORD=jobsafety \\\nSPRING_SECURITY_USER_NAME=viewer \\\nSPRING_SECURITY_USER_PASSWORD=change-me \\\nSPRING_SECURITY_USER_ROLES=JOB_SAFETY_VIEWER,JOB_SAFETY_OPERATOR \\\n./gradlew :leader-job-safety-lab:bootRun","curl -u viewer:change-me \\\n  http://localhost:8080/api/job-safety/scenarios\n\ncurl -u viewer:change-me -X POST \\\n  http://localhost:8080/api/job-safety/scenarios/LEASE_OVERRUN/run","SPRING_PROFILES_ACTIVE=lab-unsafe \\\nWORKSHOP_JOB_SAFETY_LAB_UNSAFE_ENABLED=true \\\nSPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/jobsafety \\\nSPRING_DATASOURCE_USERNAME=jobsafety \\\nSPRING_DATASOURCE_PASSWORD=jobsafety \\\nSPRING_SECURITY_USER_NAME=operator \\\nSPRING_SECURITY_USER_PASSWORD=change-me \\\nSPRING_SECURITY_USER_ROLES=JOB_SAFETY_OPERATOR \\\n./gradlew :leader-job-safety-lab:bootRun\n\ncurl -u operator:change-me -X POST \\\n  http://localhost:8080/api/job-safety/unsafe/scenarios/LEASE_OVERRUN/run","./gradlew :leader-job-safety-lab:test\n\n./gradlew :leader-job-safety-lab:test \\\n  --tests '*LeaseOverrunScenarioTest'\n\n./gradlew :leader-job-safety-lab:integrationTest \\\n  --tests '*FencedMutationPostgresIntegrationTest'"],"runNotes":["Start PostgreSQL and Redis first.","The default application does not create the UNSAFE controller.","The SAFE result is expectedSummary=42, finalSummary=42, lastAcceptedFence=42.","Both the lab-unsafe profile and the property are required. The controller is always absent with the prod profile.","Integration tests start PostgreSQL and Redis with Testcontainers."],"limitsTitle":"Problems addressed by the example and remaining limits","solved":"Addressed","limit":"Limit","limits":[["Delayed database mutation","PostgreSQL rejects a conditional mutation carrying an old fencing token.",true],["Configuration changes during execution","The transaction reloads tenant, region, version, and namespace state.",true],["Unknown external result","The worker queries the original OperationId and records a receipt.",true],["Provider has no idempotency key or query API","Exactly-once external effects cannot be guaranteed; manual review or compensation is required.",false],["Redis counter history is lost","Preserve the counter in backups or advance the namespace epoch.",false],["Schema migration","The example uses SchemaUtils at startup; production needs Flyway or Liquibase.",false]],"sourceLinks":["README","Design","Implementation plan","Lesson"],"footer":"Leader Job Safety Lab Visual Companion grounded in the actual implementation and tests"};
+    const scenarios = {"CROSS_JOB_COLLISION":{"safe":{"expected":30,"final":30,"fence":42,"verdict":"MATCH","events":[["DERIVE_SHARED_KEY","REQUESTED","api"],["DAILY_FENCE_41","FENCE_ACQUIRED","coordination"],["DAILY_COMMIT_10","COMMITTED","database"],["BACKFILL_FENCE_42","FENCE_ACQUIRED","coordination"],["BACKFILL_COMMIT_30","COMMITTED","database"]]},"unsafe":{"expected":30,"final":20,"fence":null,"verdict":"LOST_UPDATE","events":[["DAILY_READ_0","RUNNING","database"],["BACKFILL_READ_0","RUNNING","database"],["DAILY_WRITE_10","COMMITTED","database"],["BACKFILL_WRITE_20","COMMITTED","database"],["LOST_UPDATE","FAILED","database"]]}},"LEASE_OVERRUN":{"safe":{"expected":42,"final":42,"fence":42,"verdict":"STALE_FENCE","events":[["A_ACQUIRE_41","FENCE_ACQUIRED","coordination"],["A_PAUSE","RUNNING","api"],["A_EXPIRE","RUNNING","coordination"],["B_ACQUIRE_42","FENCE_ACQUIRED","coordination"],["B_COMMIT","COMMITTED","database"],["A_RESUME","REJECTED","database"]]},"unsafe":{"expected":42,"final":41,"fence":41,"verdict":"STALE_OVERWRITE","events":[["A_ACQUIRE_41","FENCE_ACQUIRED","coordination"],["A_PAUSE","RUNNING","api"],["A_EXPIRE","RUNNING","coordination"],["B_ACQUIRE_42","FENCE_ACQUIRED","coordination"],["B_COMMIT","COMMITTED","database"],["A_RESUME","COMMITTED","database"]]}},"DYNAMIC_TENANT":{"safe":{"expected":0,"final":0,"fence":null,"verdict":"STALE_MEMBERSHIP","events":[["TRIGGER_REVISION_7","REQUESTED","api"],["TENANT_REMOVED_REVISION_8","RUNNING","api"],["RELOAD_ASSIGNMENT","RUNNING","database"],["STALE_MEMBERSHIP_REJECTED","REJECTED","database"]]},"unsafe":{"expected":0,"final":7,"fence":7,"verdict":"STALE_WRITE","events":[["TRIGGER_FROM_SNAPSHOT","REQUESTED","api"],["TENANT_REMOVED_REVISION_8","RUNNING","api"],["SKIP_DB_RECHECK","RUNNING","database"],["STALE_WRITE_COMMITTED","COMMITTED","database"]]}},"REGION_PARTITION":{"safe":{"expected":0,"final":0,"fence":null,"verdict":"WRONG_REGION","events":[["REGION_PARTITION","REQUESTED","api"],["LOCAL_FENCE_100","FENCE_ACQUIRED","coordination"],["READ_WRITE_HOME","RUNNING","database"],["WRONG_REGION_REJECTED","REJECTED","database"]]},"unsafe":{"expected":0,"final":100,"fence":100,"verdict":"STALE_WRITE","events":[["TRIGGER_FROM_SNAPSHOT","REQUESTED","api"],["REGION_PARTITION","RUNNING","coordination"],["SKIP_DB_RECHECK","RUNNING","database"],["STALE_WRITE_COMMITTED","COMMITTED","database"]]}},"MIXED_VERSION_ROLLOUT":{"safe":{"expected":0,"final":0,"fence":null,"verdict":"INCOMPATIBLE_VERSION","events":[["EXPAND_COMPATIBLE_DEPLOY","REQUESTED","api"],["CHECKPOINT_SCHEMA_2","RUNNING","database"],["MIN_WRITER_2","RUNNING","database"],["OLD_WRITER_REJECTED","REJECTED","database"]]},"unsafe":{"expected":0,"final":1,"fence":1,"verdict":"STALE_WRITE","events":[["TRIGGER_FROM_SNAPSHOT","REQUESTED","api"],["CHECKPOINT_SCHEMA_CHANGED","RUNNING","database"],["SKIP_DB_RECHECK","RUNNING","database"],["STALE_WRITE_COMMITTED","COMMITTED","database"]]}},"NON_FENCEABLE_EFFECT":{"safe":{"expected":1,"final":1,"fence":42,"verdict":"RECEIPT_CONFIRMED","events":[["OUTBOX_COMMIT","COMMITTED","database"],["PROVIDER_APPLIED_TIMEOUT","EFFECT_PENDING","external"],["RECONCILIATION_REQUIRED","RECONCILIATION_REQUIRED","external"],["QUERY_ORIGINAL_OPERATION","RECONCILIATION_REQUIRED","external"],["RECEIPT_CONFIRMED","COMPLETED","external"]]},"unsafe":{"expected":1,"final":2,"fence":42,"verdict":"DUPLICATE_EFFECT","events":[["PROVIDER_REQUEST_1","EFFECT_PENDING","external"],["RESPONSE_TIMEOUT","RECONCILIATION_REQUIRED","external"],["NEW_OPERATION_CREATED","EFFECT_PENDING","external"],["DUPLICATE_EFFECT","FAILED","external"]]}}};
+    let currentScenario = 'LEASE_OVERRUN';
+    let currentMode = 'safe';
+    let currentStep = scenarios[currentScenario][currentMode].events.length - 1;
+    const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
+    function renderSimulation() {
+      const model = scenarios[currentScenario][currentMode];
+      document.querySelectorAll('.scenario-button').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.scenario === currentScenario)));
+      document.querySelectorAll('[data-mode]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.mode === currentMode)));
+      document.querySelector('#scenario-title').textContent = content.scenarioNames[currentScenario];
+      document.querySelector('#scenario-reason').textContent = content.scenarioReasons[currentScenario];
+      document.querySelector('#timeline').innerHTML = model.events.map(([code,state,layer],index) => {
+        const visible = index <= currentStep;
+        return '<article class="event layer-' + layer + (visible ? ' visible' : '') + (index === currentStep ? ' current' : '') + '">' +
+          '<span class="event-number">' + (index + 1) + '</span>' +
+          '<span class="event-meta"><strong>' + escapeHtml(content.layerNames[layer]) + '</strong><span>' + escapeHtml(state) + '</span></span>' +
+          '<div class="event-detail"><code>' + escapeHtml(code) + '</code><p>' + escapeHtml(content.eventDetails[code]) + '</p></div></article>';
+      }).join('');
+      const finished = currentStep === model.events.length - 1;
+      document.querySelector('#result').innerHTML =
+        '<div class="metric"><span>' + content.expected + '</span><strong>' + model.expected + '</strong></div>' +
+        '<div class="metric ' + (finished && model.expected === model.final ? 'good' : finished ? 'bad' : '') + '"><span>' + content.final + '</span><strong>' + (finished ? model.final : '…') + '</strong></div>' +
+        '<div class="metric"><span>' + content.acceptedFence + '</span><strong>' + (finished ? (model.fence ?? content.noFence) : '…') + '</strong></div>' +
+        '<div class="metric ' + (finished ? (currentMode === 'safe' ? 'good' : 'bad') : '') + '"><span>' + content.verdict + '</span><strong>' + (finished ? model.verdict : '…') + '</strong></div>';
+      document.querySelector('#previous').disabled = currentStep <= 0;
+      document.querySelector('#next').disabled = currentStep >= model.events.length - 1;
+    }
+    document.querySelectorAll('.scenario-button').forEach((button) => button.addEventListener('click', () => {
+      currentScenario = button.dataset.scenario; currentStep = scenarios[currentScenario][currentMode].events.length - 1; renderSimulation();
+    }));
+    document.querySelectorAll('[data-mode]').forEach((button) => button.addEventListener('click', () => {
+      currentMode = button.dataset.mode; currentStep = scenarios[currentScenario][currentMode].events.length - 1; renderSimulation();
+    }));
+    document.querySelector('#previous').addEventListener('click', () => { currentStep = Math.max(0,currentStep-1); renderSimulation(); });
+    document.querySelector('#next').addEventListener('click', () => { currentStep = Math.min(scenarios[currentScenario][currentMode].events.length-1,currentStep+1); renderSimulation(); });
+    document.querySelector('#restart').addEventListener('click', () => { currentStep = 0; renderSimulation(); });
+    document.querySelector('.theme-toggle').addEventListener('click', () => {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next; localStorage.setItem(themeStorageKey, next);
+    });
+    function renderRun(index) {
+      document.querySelectorAll('.run-tab').forEach((button) => button.setAttribute('aria-pressed', String(Number(button.dataset.run) === index)));
+      document.querySelector('#run-command').textContent = content.runCommands[index];
+      document.querySelector('#run-note').textContent = content.runNotes[index];
+    }
+    document.querySelectorAll('.run-tab').forEach((button) => button.addEventListener('click', () => renderRun(Number(button.dataset.run))));
+    renderSimulation(); renderRun(0);
+    document.documentElement.dataset.workflowReady = 'true';
+  </script>
+</body>
+</html>

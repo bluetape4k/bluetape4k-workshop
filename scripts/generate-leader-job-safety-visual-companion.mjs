@@ -1,0 +1,814 @@
+#!/usr/bin/env node
+
+import { writeFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const baseline = '39616246e2f03a3b332bbcc40bc04cd7e03c9dad';
+const source = '2026-07-22-issue-548-job-safety-lab-design.md';
+const outputs = {
+  ko: 'docs/superpowers/specs/2026-07-30-leader-job-safety-lab-visual-companion.html',
+  en: 'docs/superpowers/specs/2026-07-30-leader-job-safety-lab-visual-companion.en.html',
+};
+
+const commonScenarios = {
+  CROSS_JOB_COLLISION: {
+    safe: {
+      expected: 30, final: 30, fence: 42, verdict: 'MATCH',
+      events: [
+        ['DERIVE_SHARED_KEY', 'REQUESTED', 'api'],
+        ['DAILY_FENCE_41', 'FENCE_ACQUIRED', 'coordination'],
+        ['DAILY_COMMIT_10', 'COMMITTED', 'database'],
+        ['BACKFILL_FENCE_42', 'FENCE_ACQUIRED', 'coordination'],
+        ['BACKFILL_COMMIT_30', 'COMMITTED', 'database'],
+      ],
+    },
+    unsafe: {
+      expected: 30, final: 20, fence: null, verdict: 'LOST_UPDATE',
+      events: [
+        ['DAILY_READ_0', 'RUNNING', 'database'],
+        ['BACKFILL_READ_0', 'RUNNING', 'database'],
+        ['DAILY_WRITE_10', 'COMMITTED', 'database'],
+        ['BACKFILL_WRITE_20', 'COMMITTED', 'database'],
+        ['LOST_UPDATE', 'FAILED', 'database'],
+      ],
+    },
+  },
+  LEASE_OVERRUN: {
+    safe: {
+      expected: 42, final: 42, fence: 42, verdict: 'STALE_FENCE',
+      events: [
+        ['A_ACQUIRE_41', 'FENCE_ACQUIRED', 'coordination'],
+        ['A_PAUSE', 'RUNNING', 'api'],
+        ['A_EXPIRE', 'RUNNING', 'coordination'],
+        ['B_ACQUIRE_42', 'FENCE_ACQUIRED', 'coordination'],
+        ['B_COMMIT', 'COMMITTED', 'database'],
+        ['A_RESUME', 'REJECTED', 'database'],
+      ],
+    },
+    unsafe: {
+      expected: 42, final: 41, fence: 41, verdict: 'STALE_OVERWRITE',
+      events: [
+        ['A_ACQUIRE_41', 'FENCE_ACQUIRED', 'coordination'],
+        ['A_PAUSE', 'RUNNING', 'api'],
+        ['A_EXPIRE', 'RUNNING', 'coordination'],
+        ['B_ACQUIRE_42', 'FENCE_ACQUIRED', 'coordination'],
+        ['B_COMMIT', 'COMMITTED', 'database'],
+        ['A_RESUME', 'COMMITTED', 'database'],
+      ],
+    },
+  },
+  DYNAMIC_TENANT: {
+    safe: {
+      expected: 0, final: 0, fence: null, verdict: 'STALE_MEMBERSHIP',
+      events: [
+        ['TRIGGER_REVISION_7', 'REQUESTED', 'api'],
+        ['TENANT_REMOVED_REVISION_8', 'RUNNING', 'api'],
+        ['RELOAD_ASSIGNMENT', 'RUNNING', 'database'],
+        ['STALE_MEMBERSHIP_REJECTED', 'REJECTED', 'database'],
+      ],
+    },
+    unsafe: {
+      expected: 0, final: 7, fence: 7, verdict: 'STALE_WRITE',
+      events: [
+        ['TRIGGER_FROM_SNAPSHOT', 'REQUESTED', 'api'],
+        ['TENANT_REMOVED_REVISION_8', 'RUNNING', 'api'],
+        ['SKIP_DB_RECHECK', 'RUNNING', 'database'],
+        ['STALE_WRITE_COMMITTED', 'COMMITTED', 'database'],
+      ],
+    },
+  },
+  REGION_PARTITION: {
+    safe: {
+      expected: 0, final: 0, fence: null, verdict: 'WRONG_REGION',
+      events: [
+        ['REGION_PARTITION', 'REQUESTED', 'api'],
+        ['LOCAL_FENCE_100', 'FENCE_ACQUIRED', 'coordination'],
+        ['READ_WRITE_HOME', 'RUNNING', 'database'],
+        ['WRONG_REGION_REJECTED', 'REJECTED', 'database'],
+      ],
+    },
+    unsafe: {
+      expected: 0, final: 100, fence: 100, verdict: 'STALE_WRITE',
+      events: [
+        ['TRIGGER_FROM_SNAPSHOT', 'REQUESTED', 'api'],
+        ['REGION_PARTITION', 'RUNNING', 'coordination'],
+        ['SKIP_DB_RECHECK', 'RUNNING', 'database'],
+        ['STALE_WRITE_COMMITTED', 'COMMITTED', 'database'],
+      ],
+    },
+  },
+  MIXED_VERSION_ROLLOUT: {
+    safe: {
+      expected: 0, final: 0, fence: null, verdict: 'INCOMPATIBLE_VERSION',
+      events: [
+        ['EXPAND_COMPATIBLE_DEPLOY', 'REQUESTED', 'api'],
+        ['CHECKPOINT_SCHEMA_2', 'RUNNING', 'database'],
+        ['MIN_WRITER_2', 'RUNNING', 'database'],
+        ['OLD_WRITER_REJECTED', 'REJECTED', 'database'],
+      ],
+    },
+    unsafe: {
+      expected: 0, final: 1, fence: 1, verdict: 'STALE_WRITE',
+      events: [
+        ['TRIGGER_FROM_SNAPSHOT', 'REQUESTED', 'api'],
+        ['CHECKPOINT_SCHEMA_CHANGED', 'RUNNING', 'database'],
+        ['SKIP_DB_RECHECK', 'RUNNING', 'database'],
+        ['STALE_WRITE_COMMITTED', 'COMMITTED', 'database'],
+      ],
+    },
+  },
+  NON_FENCEABLE_EFFECT: {
+    safe: {
+      expected: 1, final: 1, fence: 42, verdict: 'RECEIPT_CONFIRMED',
+      events: [
+        ['OUTBOX_COMMIT', 'COMMITTED', 'database'],
+        ['PROVIDER_APPLIED_TIMEOUT', 'EFFECT_PENDING', 'external'],
+        ['RECONCILIATION_REQUIRED', 'RECONCILIATION_REQUIRED', 'external'],
+        ['QUERY_ORIGINAL_OPERATION', 'RECONCILIATION_REQUIRED', 'external'],
+        ['RECEIPT_CONFIRMED', 'COMPLETED', 'external'],
+      ],
+    },
+    unsafe: {
+      expected: 1, final: 2, fence: 42, verdict: 'DUPLICATE_EFFECT',
+      events: [
+        ['PROVIDER_REQUEST_1', 'EFFECT_PENDING', 'external'],
+        ['RESPONSE_TIMEOUT', 'RECONCILIATION_REQUIRED', 'external'],
+        ['NEW_OPERATION_CREATED', 'EFFECT_PENDING', 'external'],
+        ['DUPLICATE_EFFECT', 'FAILED', 'external'],
+      ],
+    },
+  },
+};
+
+const locales = {
+  ko: {
+    lang: 'ko',
+    title: '리스가 만료된 이전 작업자가 다시 실행돼도 최신 작업 결과만 PostgreSQL에 반영된다',
+    description: 'Leader 선출, 펜싱 토큰, PostgreSQL 조건부 갱신과 Outbox가 서로 다른 실패를 어떻게 처리하는지 여섯 시나리오로 확인합니다.',
+    alternate: 'English',
+    alternateHref: './2026-07-30-leader-job-safety-lab-visual-companion.en.html',
+    themeLabel: '테마 전환',
+    nav: ['문제 파악', '해결 방안', '시스템 흐름', '실제 구현', '실행 방법'],
+    sectionLabels: ['문제 파악', '해결 방안', '시스템 구조', '대화형 시스템 흐름', '실제 구현', '예제 실행', '적용 범위'],
+    heroKicker: 'Leader Job Safety Lab · Visual Companion',
+    heroSummary: 'Leader 선출은 실행 후보를 정할 뿐입니다. 지연된 작업자의 데이터 변경을 차단하려면 Redis가 순서를 발급하고 PostgreSQL이 최종 반영 여부를 판정해야 합니다.',
+    heroFacts: [
+      ['6', '운영 시나리오'],
+      ['2', 'SAFE / UNSAFE 비교'],
+      ['41 → 42', '작업 인계 시 펜싱 토큰'],
+    ],
+    problemTitle: 'Leader 선출에 성공해도 데이터 변경은 안전하지 않을 수 있다',
+    problemLead: '리스 TTL이 끝나도 이전 작업자의 스레드가 즉시 중단되는 것은 아닙니다. GC 일시 중지, 네트워크 단절, 긴 I/O가 끝나면 이전 작업자가 다시 실행될 수 있습니다.',
+    problemCards: [
+      ['Leader 리스만 사용', '동시에 실행되는 작업자 수는 줄이지만, 이전 작업자의 재실행을 차단하지 못합니다.', '실행 조정'],
+      ['작업 이름으로만 잠금', '이름이 다른 작업이 같은 업무 자원을 변경하면 잠금 키가 충돌하지 않습니다.', '자원 식별'],
+      ['외부 호출을 바로 재시도', '첫 호출 결과가 불확실한 상태에서 새 요청을 만들면 외부 처리가 중복될 수 있습니다.', '결과 복구'],
+    ],
+    questionTitle: '구상 단계(Brainstorming): 문제를 어떤 보장으로 나눌 것인가',
+    guarantees: [
+      ['동시 실행 제한', 'Redis Leader 리스와 자원 리스', '한 시점의 실행 수를 줄입니다.'],
+      ['작업 인계', '리스 만료와 새 리스 획득', '새 작업자가 처리를 이어받습니다.'],
+      ['지연된 변경 차단', '펜싱 토큰 + PostgreSQL', '이전 토큰의 변경을 거부합니다.'],
+      ['재실행 안전성', 'OperationId + 멱등 처리', '같은 외부 처리를 다시 확인할 수 있습니다.'],
+      ['처리 결과 영속화', 'Exposed 트랜잭션 + Outbox', '업무 상태와 후속 작업을 함께 반영합니다.'],
+    ],
+    solutionTitle: '해결 방안은 Redis와 PostgreSQL의 판정 책임을 분리한다',
+    rejectedLabel: '검토 후 제외',
+    selectedLabel: '채택',
+    decisions: [
+      ['Leader Owner Token 재사용', 'Owner Token은 순서를 비교할 수 없는 식별자입니다.', false],
+      ['Redis에서 최종 반영 결정', '리스 상태와 PostgreSQL 업무 상태가 불일치할 수 있습니다.', false],
+      ['실패할 때 새 요청 ID 발급', '처리 여부를 모르는 첫 요청과 새 요청이 모두 반영될 수 있습니다.', false],
+      ['단조 증가하는 펜싱 토큰', '새 작업자가 항상 더 큰 순번을 받습니다.', true],
+      ['PostgreSQL 조건부 갱신', '`incomingFence > lastAcceptedFence`인 경우에만 변경합니다.', true],
+      ['Outbox와 원래 OperationId 조회', '불확실한 결과를 추측하지 않고 같은 요청을 조회합니다.', true],
+    ],
+    architectureTitle: 'Redis가 실행 순서를 조정하고 PostgreSQL이 데이터 반영 여부를 판정한다',
+    architectureLead: '한 구성 요소가 모든 안전성을 담당하지 않습니다. 실행 조정, 최종 데이터 반영, 외부 처리 복구를 분리합니다.',
+    layers: [
+      ['API 계층', '시나리오 선택 · SAFE/UNSAFE 격리 · 권한 검사', 'api'],
+      ['작업 조정 계층', 'Leader 리스 · 충돌 자원 리스 · 펜싱 토큰 발급', 'coordination'],
+      ['데이터베이스 계층', '현재 구성 재확인 · 조건부 갱신 · Checkpoint/Execution/Outbox', 'database'],
+      ['외부 처리 계층', '외부 시스템 호출 · 처리 확인 기록 · 결과 재확인', 'external'],
+    ],
+    architectureDiagram: {
+      title: 'Leader Job Safety Lab 구성 요소와 데이터 흐름',
+      caller: ['호출자', '운영자 또는 Scheduler'],
+      api: ['JobSafetyController', '시나리오 API · 권한 검사'],
+      coordinator: ['JobRunCoordinator', '실행 순서와 리스 관리'],
+      execution: ['FencedJobExecutionService', '현재 구성과 토큰 재확인'],
+      redis: ['Redis 8', '실행 순서를 조정하는 저장소'],
+      leaderLease: ['Leader 리스', '실행 후보 선택'],
+      fencingLease: ['자원 리스 + 펜싱 토큰', '단조 증가하는 작업 순번'],
+      postgres: ['PostgreSQL 18 + Exposed', '데이터 반영 여부를 최종 판정'],
+      transaction: ['하나의 트랜잭션', '업무 상태 · Checkpoint · 실행 이력'],
+      outbox: ['Outbox', '외부 처리 요청을 함께 저장'],
+      worker: ['OutboxEffectWorker', '커밋된 요청 처리'],
+      provider: ['외부 시스템', '멱등 처리 · 결과 조회'],
+      receipt: ['처리 확인 및 결과 재확인', 'Receipt · RECONCILIATION_REQUIRED'],
+      request: '실행 요청',
+      run: '실행 위임',
+      coordinate: 'Leader 리스',
+      fence: '자원 리스 · 토큰',
+      conditionalMutation: '조건부 데이터 변경',
+      claimAndRecord: 'Outbox 획득 · 결과 기록',
+      stableOperation: '안정적인 OperationId · 결과 조회',
+      legend: ['API', '작업 조정', '데이터베이스', '외부 처리'],
+    },
+    simulationTitle: '시나리오를 선택해 안전 장치가 작동하는 지점을 확인한다',
+    simulationLead: '같은 시나리오를 SAFE와 UNSAFE로 전환하면 최종 상태가 달라지는 지점을 확인할 수 있습니다.',
+    safe: 'SAFE',
+    unsafe: 'UNSAFE',
+    previous: '이전 단계',
+    next: '다음 단계',
+    restart: '처음부터',
+    currentGuard: '현재 적용 중인 처리',
+    expected: '예상 결과',
+    final: '최종 결과',
+    acceptedFence: '마지막 반영 토큰',
+    verdict: '판정',
+    noFence: '없음',
+    layerNames: { api: 'API', coordination: '작업 조정', database: 'PostgreSQL', external: 'Outbox / 외부 시스템' },
+    scenarioNames: {
+      CROSS_JOB_COLLISION: '서로 다른 작업의 자원 충돌',
+      LEASE_OVERRUN: '리스 만료 후 이전 작업자 재실행',
+      DYNAMIC_TENANT: '실행 중 Tenant 구성 변경',
+      REGION_PARTITION: 'Region 분할',
+      MIXED_VERSION_ROLLOUT: '서로 다른 버전 동시 배포',
+      NON_FENCEABLE_EFFECT: '되돌릴 수 없는 외부 처리',
+    },
+    scenarioReasons: {
+      CROSS_JOB_COLLISION: '작업 이름이 달라도 동일한 업무 자원을 변경할 수 있습니다.',
+      LEASE_OVERRUN: '리스 만료는 이전 작업자의 실제 중단을 보장하지 않습니다.',
+      DYNAMIC_TENANT: '실행 시작 후 Tenant가 제거되거나 할당 Revision이 변경될 수 있습니다.',
+      REGION_PARTITION: '분리된 Region의 로컬 Redis가 자체 Leader와 토큰을 만들 수 있습니다.',
+      MIXED_VERSION_ROLLOUT: '이전 Writer가 새 Checkpoint 스키마를 변경하면 호환성이 깨질 수 있습니다.',
+      NON_FENCEABLE_EFFECT: '데이터베이스 펜싱은 이미 전송된 외부 요청을 되돌릴 수 없습니다.',
+    },
+    eventDetails: {
+      DERIVE_SHARED_KEY: '두 작업이 동일한 업무 자원 키를 계산합니다.',
+      DAILY_FENCE_41: 'daily-summary가 공유 자원의 토큰 41을 받습니다.',
+      DAILY_COMMIT_10: 'PostgreSQL이 토큰 41의 변경을 반영합니다.',
+      BACKFILL_FENCE_42: 'backfill-summary가 같은 자원의 토큰 42를 받습니다.',
+      BACKFILL_COMMIT_30: 'PostgreSQL이 누적 결과 30을 반영합니다.',
+      DAILY_READ_0: 'daily-summary가 summary=0을 읽습니다.',
+      BACKFILL_READ_0: 'backfill-summary도 같은 summary=0을 읽습니다.',
+      DAILY_WRITE_10: 'daily-summary가 작업 이름 잠금 아래에서 10을 기록합니다.',
+      BACKFILL_WRITE_20: 'backfill-summary가 이전 결과를 20으로 덮어씁니다.',
+      LOST_UPDATE: '예상값은 30이지만 최종값은 20입니다.',
+      A_ACQUIRE_41: '작업자 A가 펜싱 토큰 41을 받습니다.',
+      A_PAUSE: '작업자 A가 상태를 읽은 뒤 처리가 지연됩니다.',
+      A_EXPIRE: '리스가 만료되지만 작업자 A의 스레드는 중단되지 않습니다.',
+      B_ACQUIRE_42: '작업자 B가 펜싱 토큰 42로 작업을 인계받습니다.',
+      B_COMMIT: 'PostgreSQL이 작업자 B의 최신 결과를 반영합니다.',
+      A_RESUME: '작업자 A가 토큰 41로 다시 반영을 시도합니다.',
+      TRIGGER_REVISION_7: 'Scheduler가 Membership Revision 7을 기준으로 실행을 요청합니다.',
+      TENANT_REMOVED_REVISION_8: '반영 전에 Tenant가 제거되고 Revision이 8로 변경됩니다.',
+      RELOAD_ASSIGNMENT: '트랜잭션에서 현재 Tenant 할당 정보를 다시 읽습니다.',
+      STALE_MEMBERSHIP_REJECTED: 'Revision 7의 요청을 STALE_MEMBERSHIP으로 거부합니다.',
+      TRIGGER_FROM_SNAPSHOT: '작업자가 이전 Scheduler Snapshot을 기준으로 실행합니다.',
+      SKIP_DB_RECHECK: '현재 구성을 PostgreSQL에서 다시 확인하지 않습니다.',
+      STALE_WRITE_COMMITTED: '이전 구성에 기반한 변경이 업무 상태에 반영됩니다.',
+      REGION_PARTITION: 'region-b가 분리된 상태에서 로컬 Leader를 선출합니다.',
+      LOCAL_FENCE_100: 'region-b의 Redis가 로컬 토큰 100을 발급합니다.',
+      READ_WRITE_HOME: 'PostgreSQL에서 현재 쓰기 Region과 Epoch를 확인합니다.',
+      WRONG_REGION_REJECTED: 'region-b의 변경을 WRONG_REGION으로 거부합니다.',
+      EXPAND_COMPATIBLE_DEPLOY: '이전 Checkpoint도 읽는 Reader를 먼저 배포합니다.',
+      CHECKPOINT_SCHEMA_2: 'Checkpoint 스키마 버전을 2로 전환합니다.',
+      MIN_WRITER_2: '최소 Writer 버전을 마지막에 2로 올립니다.',
+      OLD_WRITER_REJECTED: 'Writer v1의 변경을 INCOMPATIBLE_VERSION으로 거부합니다.',
+      CHECKPOINT_SCHEMA_CHANGED: 'Checkpoint 스키마가 변경된 뒤 이전 Writer가 실행됩니다.',
+      OUTBOX_COMMIT: '업무 상태와 안정적인 OperationId를 Outbox에 함께 반영합니다.',
+      PROVIDER_APPLIED_TIMEOUT: '외부 시스템은 처리했지만 응답이 유실됩니다.',
+      RECONCILIATION_REQUIRED: '결과를 추측하지 않고 확인이 필요한 상태로 기록합니다.',
+      QUERY_ORIGINAL_OPERATION: '원래 OperationId로 외부 시스템 처리 결과를 조회합니다.',
+      RECEIPT_CONFIRMED: '처리 확인 기록을 저장하고 실행을 COMPLETED로 전환합니다.',
+      PROVIDER_REQUEST_1: '외부 시스템이 첫 번째 요청을 반영합니다.',
+      RESPONSE_TIMEOUT: '작업자가 첫 번째 요청 결과를 확인하지 못합니다.',
+      NEW_OPERATION_CREATED: 'UNSAFE 재시도가 새로운 OperationId를 만듭니다.',
+      DUPLICATE_EFFECT: '외부 시스템이 서로 다른 두 요청을 모두 반영합니다.',
+    },
+    implementationTitle: '실제 클래스와 테스트가 각 안전 장치를 검증한다',
+    classIntro: '화면의 단계는 설명을 위해 새로 만든 흐름이 아니라 실제 서비스와 시나리오 코드의 동작을 재구성한 것입니다.',
+    classes: [
+      ['JobRunCoordinator', 'Leader 리스와 자원 리스를 순서대로 획득하고 해제합니다.', 'coordination/JobRunCoordinator.kt'],
+      ['RedisJobFencingLeaseAdapter', 'Redis Lua로 단조 증가하는 펜싱 토큰을 발급합니다.', 'coordination/redis/RedisJobFencingLeaseAdapter.kt'],
+      ['FencedJobExecutionService', '현재 Tenant, Region, 버전, Namespace를 확인한 뒤 데이터 변경을 요청합니다.', 'execution/FencedJobExecutionService.kt'],
+      ['JobSafetyRepositories', '조건부 갱신과 Checkpoint, 실행 이력, Outbox 저장을 담당합니다.', 'persistence/JobSafetyRepositories.kt'],
+      ['OutboxEffectWorker', '트랜잭션 밖에서 외부 시스템을 호출하고 불확실한 결과를 재확인 대상으로 전환합니다.', 'effect/OutboxEffectWorker.kt'],
+      ['JobSafetyScenarioService', '여섯 시나리오의 결정적인 SAFE/UNSAFE 결과를 제공합니다.', 'scenario/JobSafetyScenarioService.kt'],
+    ],
+    testsTitle: '구현 결과를 확인하는 테스트',
+    tests: [
+      ['LeaseOverrunScenarioTest', '토큰 41의 변경 거부와 토큰 42의 최종 상태 유지'],
+      ['FencedMutationPostgresIntegrationTest', 'PostgreSQL 조건부 갱신에서 지연된 변경 차단'],
+      ['JobSafetyEndToEndIntegrationTest', '업무 상태, Checkpoint, 실행 이력, Outbox의 트랜잭션 반영'],
+      ['NonFenceableEffectScenarioTest', '안정적인 OperationId와 결과 재확인으로 중복 처리 방지'],
+      ['UnsafeJobSafetyControllerConditionTest', 'UNSAFE API의 Profile과 설정값 격리'],
+    ],
+    runTitle: '관련 서비스를 실행하고 SAFE 결과부터 확인한다',
+    runLead: '예제는 JDK 25, PostgreSQL 18 호환 서버와 Redis 8 호환 서버를 사용합니다. UNSAFE API는 비교 학습용으로만 별도 실행합니다.',
+    runTabs: ['관련 서비스', '애플리케이션', 'SAFE 호출', 'UNSAFE 비교', '테스트'],
+    runCommands: [
+      `docker run --rm --name job-safety-postgres \\\n  -e POSTGRES_DB=jobsafety -e POSTGRES_USER=jobsafety \\\n  -e POSTGRES_PASSWORD=jobsafety -p 5432:5432 postgres:18-alpine\n\ndocker run --rm --name job-safety-redis \\\n  -p 6379:6379 redis:8-alpine`,
+      `SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/jobsafety \\\nSPRING_DATASOURCE_USERNAME=jobsafety \\\nSPRING_DATASOURCE_PASSWORD=jobsafety \\\nSPRING_SECURITY_USER_NAME=viewer \\\nSPRING_SECURITY_USER_PASSWORD=change-me \\\nSPRING_SECURITY_USER_ROLES=JOB_SAFETY_VIEWER,JOB_SAFETY_OPERATOR \\\n./gradlew :leader-job-safety-lab:bootRun`,
+      `curl -u viewer:change-me \\\n  http://localhost:8080/api/job-safety/scenarios\n\ncurl -u viewer:change-me -X POST \\\n  http://localhost:8080/api/job-safety/scenarios/LEASE_OVERRUN/run`,
+      `SPRING_PROFILES_ACTIVE=lab-unsafe \\\nWORKSHOP_JOB_SAFETY_LAB_UNSAFE_ENABLED=true \\\nSPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/jobsafety \\\nSPRING_DATASOURCE_USERNAME=jobsafety \\\nSPRING_DATASOURCE_PASSWORD=jobsafety \\\nSPRING_SECURITY_USER_NAME=operator \\\nSPRING_SECURITY_USER_PASSWORD=change-me \\\nSPRING_SECURITY_USER_ROLES=JOB_SAFETY_OPERATOR \\\n./gradlew :leader-job-safety-lab:bootRun\n\ncurl -u operator:change-me -X POST \\\n  http://localhost:8080/api/job-safety/unsafe/scenarios/LEASE_OVERRUN/run`,
+      `./gradlew :leader-job-safety-lab:test\n\n./gradlew :leader-job-safety-lab:test \\\n  --tests '*LeaseOverrunScenarioTest'\n\n./gradlew :leader-job-safety-lab:integrationTest \\\n  --tests '*FencedMutationPostgresIntegrationTest'`,
+    ],
+    runNotes: [
+      'PostgreSQL과 Redis를 먼저 실행합니다.',
+      '기본 실행에서는 UNSAFE Controller가 생성되지 않습니다.',
+      'SAFE 결과는 expectedSummary=42, finalSummary=42, lastAcceptedFence=42입니다.',
+      '`lab-unsafe` Profile과 설정값을 모두 지정해야 UNSAFE API가 활성화됩니다. `prod` Profile에서는 항상 비활성화됩니다.',
+      '통합 테스트는 Testcontainers로 PostgreSQL과 Redis를 실행합니다.',
+    ],
+    limitsTitle: '이 예제가 해결하는 문제와 남는 한계',
+    solved: '해결',
+    limit: '한계',
+    limits: [
+      ['지연된 데이터 변경', '이전 펜싱 토큰의 조건부 갱신을 PostgreSQL이 거부합니다.', true],
+      ['구성 변경 중 실행', '현재 Tenant, Region, 버전과 Namespace를 트랜잭션에서 다시 확인합니다.', true],
+      ['외부 결과 불확실', '원래 OperationId를 조회하고 처리 확인 기록을 저장합니다.', true],
+      ['외부 시스템이 멱등 키와 조회 API를 제공하지 않음', '정확히 한 번의 외부 처리를 보장할 수 없습니다. 수동 확인이나 보상 처리가 필요합니다.', false],
+      ['Redis 펜싱 순번 이력 유실', '백업으로 순번을 보존하거나 Namespace Epoch를 올려야 합니다.', false],
+      ['스키마 마이그레이션', '예제는 시작 시 SchemaUtils를 사용합니다. 운영 환경에서는 Flyway나 Liquibase가 필요합니다.', false],
+    ],
+    sourceLinks: ['한국어 README', '설계문서', '구현계획', '교훈'],
+    footer: '실제 구현과 테스트를 기준으로 구성한 Leader Job Safety Lab Visual Companion',
+  },
+  en: {
+    lang: 'en',
+    title: 'Only the newest worker result reaches PostgreSQL after an expired worker resumes',
+    description: 'Explore how leader election, fencing tokens, PostgreSQL conditional updates, and the outbox address different failures across six scenarios.',
+    alternate: '한국어',
+    alternateHref: './2026-07-30-leader-job-safety-lab-visual-companion.html',
+    themeLabel: 'Toggle theme',
+    nav: ['Problem', 'Decisions', 'System flow', 'Implementation', 'Run'],
+    sectionLabels: ['Problem framing', 'Solution design', 'Architecture', 'Interactive flow', 'Source mapping', 'Run the example', 'Boundaries'],
+    heroKicker: 'Leader Job Safety Lab · Visual Companion',
+    heroSummary: 'Leader election only selects who may attempt the work. Redis must issue an ordering token and PostgreSQL must decide whether a delayed mutation is still current.',
+    heroFacts: [['6', 'operational scenarios'], ['2', 'SAFE / UNSAFE paths'], ['41 → 42', 'fencing tokens during takeover']],
+    problemTitle: 'Successful leader election does not guarantee a safe database mutation',
+    problemLead: 'Lease expiry does not stop the old worker thread. After a GC pause, network partition, or long I/O, the old worker can resume and write after the takeover.',
+    problemCards: [
+      ['Leader lease only', 'It reduces concurrent workers but cannot reject a resumed stale worker.', 'Coordination'],
+      ['Lock by job name', 'Two differently named jobs can still mutate the same business resource.', 'Resource identity'],
+      ['Blind external retry', 'A new request can duplicate an earlier request whose result is unknown.', 'Outcome recovery'],
+    ],
+    questionTitle: 'Brainstorming: separate the guarantees before selecting mechanisms',
+    guarantees: [
+      ['Mutual exclusion', 'Redis leader and resource leases', 'Reduce concurrent execution at one moment.'],
+      ['Failover', 'Lease expiry and reacquisition', 'Allow a new worker to take over.'],
+      ['Stale-write rejection', 'Fencing token + PostgreSQL', 'Reject an older generation at commit.'],
+      ['Replay safety', 'OperationId + idempotency', 'Look up and retry the same external operation.'],
+      ['Durable completion', 'Exposed transaction + outbox', 'Commit business state and follow-up work together.'],
+    ],
+    solutionTitle: 'The design separates Redis ordering from PostgreSQL commit decisions',
+    rejectedLabel: 'Rejected',
+    selectedLabel: 'Selected',
+    decisions: [
+      ['Reuse the leader owner token', 'The owner token is an opaque identifier with no ordering semantics.', false],
+      ['Let Redis make the final commit decision', 'Redis lease state can diverge from PostgreSQL business state.', false],
+      ['Create a new request ID after timeout', 'Both the unknown first request and the retry may be applied.', false],
+      ['Monotonic fencing token', 'Every takeover receives a higher generation.', true],
+      ['PostgreSQL conditional update', 'Mutate only when `incomingFence > lastAcceptedFence`.', true],
+      ['Outbox and original OperationId lookup', 'Query the same request instead of guessing the result.', true],
+    ],
+    architectureTitle: 'Redis coordinates execution order and PostgreSQL decides whether to commit',
+    architectureLead: 'No single component provides all guarantees. Coordination, durable mutation, and external outcome recovery remain separate.',
+    layers: [
+      ['API layer', 'Scenario selection · SAFE/UNSAFE isolation · authorization', 'api'],
+      ['Coordination layer', 'Leader lease · resource lease · fencing-token allocation', 'coordination'],
+      ['Database layer', 'Current-state recheck · conditional mutation · checkpoint/execution/outbox', 'database'],
+      ['External-effect layer', 'Provider call · receipt · reconciliation', 'external'],
+    ],
+    architectureDiagram: {
+      title: 'Leader Job Safety Lab components and data flow',
+      caller: ['Caller', 'Operator or scheduler'],
+      api: ['JobSafetyController', 'Scenario API · authorization'],
+      coordinator: ['JobRunCoordinator', 'Execution order and leases'],
+      execution: ['FencedJobExecutionService', 'Recheck current state and token'],
+      redis: ['Redis 8', 'Coordination state store'],
+      leaderLease: ['Leader lease', 'Select an execution candidate'],
+      fencingLease: ['Resource lease + fencing token', 'Monotonic execution generation'],
+      postgres: ['PostgreSQL 18 + Exposed', 'Final mutation decision'],
+      transaction: ['Single transaction', 'Business state · checkpoint · execution'],
+      outbox: ['Outbox', 'Persist the external-effect request'],
+      worker: ['OutboxEffectWorker', 'Process committed requests'],
+      provider: ['External system', 'Idempotent apply · outcome query'],
+      receipt: ['Receipt and reconciliation', 'Receipt · RECONCILIATION_REQUIRED'],
+      request: 'Request',
+      run: 'Run',
+      coordinate: 'Leader lease',
+      fence: 'Resource lease · token',
+      conditionalMutation: 'Conditional mutation',
+      claimAndRecord: 'Claim outbox · record result',
+      stableOperation: 'Stable OperationId · outcome query',
+      legend: ['API', 'Coordination', 'Database', 'External effect'],
+    },
+    simulationTitle: 'Select a scenario and inspect where the safeguard changes the outcome',
+    simulationLead: 'Switch the same scenario between SAFE and UNSAFE to find the exact step where the final state diverges.',
+    safe: 'SAFE', unsafe: 'UNSAFE', previous: 'Previous step', next: 'Next step', restart: 'Restart',
+    currentGuard: 'Current handling', expected: 'Expected', final: 'Final', acceptedFence: 'Last accepted fence',
+    verdict: 'Verdict', noFence: 'None',
+    layerNames: { api: 'API', coordination: 'Coordination', database: 'PostgreSQL', external: 'Outbox / Provider' },
+    scenarioNames: {
+      CROSS_JOB_COLLISION: 'Cross-job resource collision',
+      LEASE_OVERRUN: 'Expired worker resumes',
+      DYNAMIC_TENANT: 'Tenant changes during execution',
+      REGION_PARTITION: 'Region partition',
+      MIXED_VERSION_ROLLOUT: 'Mixed-version rollout',
+      NON_FENCEABLE_EFFECT: 'Non-fenceable external effect',
+    },
+    scenarioReasons: {
+      CROSS_JOB_COLLISION: 'Different job names can still target one business resource.',
+      LEASE_OVERRUN: 'Lease expiry does not prove that the old worker stopped.',
+      DYNAMIC_TENANT: 'A tenant or membership revision can change after scheduling.',
+      REGION_PARTITION: 'A partitioned region can elect a local leader and issue local tokens.',
+      MIXED_VERSION_ROLLOUT: 'An old writer can be incompatible with the current checkpoint schema.',
+      NON_FENCEABLE_EFFECT: 'Database fencing cannot undo an external request that was already sent.',
+    },
+    eventDetails: {
+      DERIVE_SHARED_KEY: 'Both jobs derive the same business-resource key.',
+      DAILY_FENCE_41: 'daily-summary acquires generation 41 for the shared resource.',
+      DAILY_COMMIT_10: 'PostgreSQL accepts the generation-41 mutation.',
+      BACKFILL_FENCE_42: 'backfill-summary acquires generation 42 for the same resource.',
+      BACKFILL_COMMIT_30: 'PostgreSQL commits the accumulated value 30.',
+      DAILY_READ_0: 'daily-summary reads summary=0.',
+      BACKFILL_READ_0: 'backfill-summary reads the same summary=0.',
+      DAILY_WRITE_10: 'daily-summary writes 10 under its job-name lock.',
+      BACKFILL_WRITE_20: 'backfill-summary overwrites the result with 20.',
+      LOST_UPDATE: 'The expected value is 30 but the final value is 20.',
+      A_ACQUIRE_41: 'Worker A receives fencing token 41.',
+      A_PAUSE: 'Worker A pauses after reading state.',
+      A_EXPIRE: 'The lease expires without stopping worker A’s thread.',
+      B_ACQUIRE_42: 'Worker B takes over with fencing token 42.',
+      B_COMMIT: 'PostgreSQL commits worker B’s current result.',
+      A_RESUME: 'Worker A resumes and attempts a mutation with token 41.',
+      TRIGGER_REVISION_7: 'The scheduler triggers work from membership revision 7.',
+      TENANT_REMOVED_REVISION_8: 'The tenant is removed and revision advances to 8 before commit.',
+      RELOAD_ASSIGNMENT: 'The transaction reloads the current tenant assignment.',
+      STALE_MEMBERSHIP_REJECTED: 'Revision 7 is rejected as STALE_MEMBERSHIP.',
+      TRIGGER_FROM_SNAPSHOT: 'The worker runs from an old scheduler snapshot.',
+      SKIP_DB_RECHECK: 'The unsafe path skips the PostgreSQL current-state check.',
+      STALE_WRITE_COMMITTED: 'A mutation based on stale assumptions reaches business state.',
+      REGION_PARTITION: 'region-b elects a local leader while partitioned.',
+      LOCAL_FENCE_100: 'Redis in region-b issues local fencing token 100.',
+      READ_WRITE_HOME: 'PostgreSQL returns the current write region and epoch.',
+      WRONG_REGION_REJECTED: 'The region-b mutation is rejected as WRONG_REGION.',
+      EXPAND_COMPATIBLE_DEPLOY: 'Deploy readers that still understand old checkpoints.',
+      CHECKPOINT_SCHEMA_2: 'Advance the checkpoint schema to version 2.',
+      MIN_WRITER_2: 'Raise the minimum writer version to 2 last.',
+      OLD_WRITER_REJECTED: 'Writer v1 is rejected as INCOMPATIBLE_VERSION.',
+      CHECKPOINT_SCHEMA_CHANGED: 'The old writer runs after the checkpoint schema changes.',
+      OUTBOX_COMMIT: 'Business state and a stable OperationId commit together.',
+      PROVIDER_APPLIED_TIMEOUT: 'The provider applies the effect but the response is lost.',
+      RECONCILIATION_REQUIRED: 'Persist uncertainty instead of guessing the result.',
+      QUERY_ORIGINAL_OPERATION: 'Query the provider with the original OperationId.',
+      RECEIPT_CONFIRMED: 'Record the receipt and transition to COMPLETED.',
+      PROVIDER_REQUEST_1: 'The provider applies the first request.',
+      RESPONSE_TIMEOUT: 'The worker cannot observe the first result.',
+      NEW_OPERATION_CREATED: 'The unsafe retry creates a different OperationId.',
+      DUPLICATE_EFFECT: 'The provider applies both independent requests.',
+    },
+    implementationTitle: 'Concrete classes and tests prove each safeguard',
+    classIntro: 'The visible steps are reconstructed from the actual services and deterministic scenario implementation.',
+    classes: [
+      ['JobRunCoordinator', 'Acquires and releases leader and resource leases in order.', 'coordination/JobRunCoordinator.kt'],
+      ['RedisJobFencingLeaseAdapter', 'Uses Redis Lua to allocate monotonic fencing tokens.', 'coordination/redis/RedisJobFencingLeaseAdapter.kt'],
+      ['FencedJobExecutionService', 'Rechecks tenant, region, version, and namespace before mutation.', 'execution/FencedJobExecutionService.kt'],
+      ['JobSafetyRepositories', 'Owns the conditional mutation, checkpoint, execution, and outbox writes.', 'persistence/JobSafetyRepositories.kt'],
+      ['OutboxEffectWorker', 'Calls the provider outside the transaction and persists uncertain outcomes for reconciliation.', 'effect/OutboxEffectWorker.kt'],
+      ['JobSafetyScenarioService', 'Produces deterministic SAFE and UNSAFE results for all six scenarios.', 'scenario/JobSafetyScenarioService.kt'],
+    ],
+    testsTitle: 'Tests that verify the implemented behavior',
+    tests: [
+      ['LeaseOverrunScenarioTest', 'Reject token 41 and preserve the token-42 result'],
+      ['FencedMutationPostgresIntegrationTest', 'Reject a stale conditional mutation in PostgreSQL'],
+      ['JobSafetyEndToEndIntegrationTest', 'Commit business state, checkpoint, execution, and outbox atomically'],
+      ['NonFenceableEffectScenarioTest', 'Avoid duplicate effects with a stable OperationId and reconciliation'],
+      ['UnsafeJobSafetyControllerConditionTest', 'Isolate the UNSAFE API behind both profile and property'],
+    ],
+    runTitle: 'Start the related services and verify the SAFE result first',
+    runLead: 'The example uses JDK 25, a PostgreSQL 18-compatible server, and a Redis 8-compatible server. Run the UNSAFE API only as an isolated comparison.',
+    runTabs: ['Related services', 'Application', 'SAFE request', 'UNSAFE comparison', 'Tests'],
+    runCommands: [
+      `docker run --rm --name job-safety-postgres \\\n  -e POSTGRES_DB=jobsafety -e POSTGRES_USER=jobsafety \\\n  -e POSTGRES_PASSWORD=jobsafety -p 5432:5432 postgres:18-alpine\n\ndocker run --rm --name job-safety-redis \\\n  -p 6379:6379 redis:8-alpine`,
+      `SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/jobsafety \\\nSPRING_DATASOURCE_USERNAME=jobsafety \\\nSPRING_DATASOURCE_PASSWORD=jobsafety \\\nSPRING_SECURITY_USER_NAME=viewer \\\nSPRING_SECURITY_USER_PASSWORD=change-me \\\nSPRING_SECURITY_USER_ROLES=JOB_SAFETY_VIEWER,JOB_SAFETY_OPERATOR \\\n./gradlew :leader-job-safety-lab:bootRun`,
+      `curl -u viewer:change-me \\\n  http://localhost:8080/api/job-safety/scenarios\n\ncurl -u viewer:change-me -X POST \\\n  http://localhost:8080/api/job-safety/scenarios/LEASE_OVERRUN/run`,
+      `SPRING_PROFILES_ACTIVE=lab-unsafe \\\nWORKSHOP_JOB_SAFETY_LAB_UNSAFE_ENABLED=true \\\nSPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/jobsafety \\\nSPRING_DATASOURCE_USERNAME=jobsafety \\\nSPRING_DATASOURCE_PASSWORD=jobsafety \\\nSPRING_SECURITY_USER_NAME=operator \\\nSPRING_SECURITY_USER_PASSWORD=change-me \\\nSPRING_SECURITY_USER_ROLES=JOB_SAFETY_OPERATOR \\\n./gradlew :leader-job-safety-lab:bootRun\n\ncurl -u operator:change-me -X POST \\\n  http://localhost:8080/api/job-safety/unsafe/scenarios/LEASE_OVERRUN/run`,
+      `./gradlew :leader-job-safety-lab:test\n\n./gradlew :leader-job-safety-lab:test \\\n  --tests '*LeaseOverrunScenarioTest'\n\n./gradlew :leader-job-safety-lab:integrationTest \\\n  --tests '*FencedMutationPostgresIntegrationTest'`,
+    ],
+    runNotes: [
+      'Start PostgreSQL and Redis first.',
+      'The default application does not create the UNSAFE controller.',
+      'The SAFE result is expectedSummary=42, finalSummary=42, lastAcceptedFence=42.',
+      'Both the lab-unsafe profile and the property are required. The controller is always absent with the prod profile.',
+      'Integration tests start PostgreSQL and Redis with Testcontainers.',
+    ],
+    limitsTitle: 'Problems addressed by the example and remaining limits',
+    solved: 'Addressed', limit: 'Limit',
+    limits: [
+      ['Delayed database mutation', 'PostgreSQL rejects a conditional mutation carrying an old fencing token.', true],
+      ['Configuration changes during execution', 'The transaction reloads tenant, region, version, and namespace state.', true],
+      ['Unknown external result', 'The worker queries the original OperationId and records a receipt.', true],
+      ['Provider has no idempotency key or query API', 'Exactly-once external effects cannot be guaranteed; manual review or compensation is required.', false],
+      ['Redis counter history is lost', 'Preserve the counter in backups or advance the namespace epoch.', false],
+      ['Schema migration', 'The example uses SchemaUtils at startup; production needs Flyway or Liquibase.', false],
+    ],
+    sourceLinks: ['README', 'Design', 'Implementation plan', 'Lesson'],
+    footer: 'Leader Job Safety Lab Visual Companion grounded in the actual implementation and tests',
+  },
+};
+
+function renderArchitectureDiagram(c) {
+  const d = c.architectureDiagram;
+  const card = (x, y, width, height, kind, [title, description]) => {
+    const compact = height <= 40;
+    return `
+    <g class="diagram-card diagram-${kind}${compact ? ' diagram-card-compact' : ''}">
+      <rect x="${x}" y="${y}" width="${width}" height="${height}" rx="7"/>
+      <text class="diagram-card-title" x="${x + 18}" y="${compact ? y + height / 2 : y + 30}"${compact ? ' dominant-baseline="middle"' : ''}>${title}</text>
+      ${compact ? '' : `<text class="diagram-card-description" x="${x + 18}" y="${y + 53}">${description}</text>`}
+    </g>`;
+  };
+  const connector = (path, kind, label, x, y, anchor = 'middle', marker = true, bidirectional = false) => `
+    <g class="diagram-connector diagram-${kind}">
+      <path d="${path}"${marker ? ` marker-end="url(#arrow-${kind})"` : ''}${bidirectional ? ` marker-start="url(#arrow-${kind})"` : ''}/>
+      <text x="${x}" y="${y}" text-anchor="${anchor}">${label}</text>
+    </g>`;
+
+  return `
+    <div class="architecture-diagram-frame">
+      <div class="architecture-diagram-scroll">
+        <svg class="architecture-diagram" viewBox="0 0 1180 710" role="img" aria-labelledby="architecture-diagram-title architecture-diagram-description">
+          <title id="architecture-diagram-title">${d.title}</title>
+          <desc id="architecture-diagram-description">${c.architectureLead}</desc>
+          <defs>
+            <marker id="arrow-api" class="arrow-api" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto-start-reverse" markerUnits="strokeWidth"><path d="M0,0 L9,4.5 L0,9 Z"/></marker>
+            <marker id="arrow-coordination" class="arrow-coordination" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto-start-reverse" markerUnits="strokeWidth"><path d="M0,0 L9,4.5 L0,9 Z"/></marker>
+            <marker id="arrow-database" class="arrow-database" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto-start-reverse" markerUnits="strokeWidth"><path d="M0,0 L9,4.5 L0,9 Z"/></marker>
+            <marker id="arrow-external" class="arrow-external" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto-start-reverse" markerUnits="strokeWidth"><path d="M0,0 L9,4.5 L0,9 Z"/></marker>
+          </defs>
+
+          <g class="diagram-lane diagram-lane-api"><rect x="16" y="28" width="1148" height="104" rx="8"/><text x="34" y="51">${d.legend[0]}</text></g>
+          <g class="diagram-lane diagram-lane-coordination"><rect x="16" y="148" width="1148" height="224" rx="8"/><text x="34" y="171">${d.legend[1]}</text></g>
+          <g class="diagram-lane diagram-lane-database"><rect x="16" y="388" width="1148" height="164" rx="8"/><text x="34" y="411">${d.legend[2]}</text></g>
+          <g class="diagram-lane diagram-lane-external"><rect x="16" y="568" width="1148" height="122" rx="8"/><text x="34" y="591">${d.legend[3]}</text></g>
+
+          ${card(70, 59, 210, 62, 'api', d.caller)}
+          ${card(350, 59, 250, 62, 'api', d.api)}
+          ${connector('M280 90 H350', 'api', d.request, 315, 81)}
+
+          ${card(450, 190, 250, 70, 'coordination', d.coordinator)}
+          ${card(800, 190, 310, 70, 'coordination', d.execution)}
+          ${connector('M475 121 V190', 'coordination', d.run, 489, 158, 'start')}
+          ${connector('M700 225 H800', 'coordination', d.fence, 750, 215)}
+
+          <g class="diagram-group diagram-coordination">
+            <rect x="70" y="190" width="260" height="150" rx="8"/>
+            <text class="diagram-group-title" x="88" y="216">${d.redis[0]}</text>
+            <text class="diagram-group-description" x="88" y="237">${d.redis[1]}</text>
+            ${card(88, 252, 224, 36, 'coordination', [d.leaderLease[0], d.leaderLease[1]])}
+            ${card(88, 296, 224, 36, 'coordination', [d.fencingLease[0], d.fencingLease[1]])}
+          </g>
+          ${connector('M450 215 H390 V270 H330', 'coordination', d.coordinate, 390, 253, 'middle')}
+          ${connector('M450 235 H410 V314 H330', 'coordination', d.fence, 390, 299, 'middle')}
+
+          <g class="diagram-group diagram-database">
+            <rect x="520" y="420" width="590" height="104" rx="8"/>
+            <text class="diagram-group-title" x="538" y="447">${d.postgres[0]}</text>
+            <text class="diagram-group-description" x="538" y="468">${d.postgres[1]}</text>
+            ${card(538, 480, 240, 34, 'database', [d.transaction[0], d.transaction[1]])}
+            ${card(794, 480, 100, 34, 'database', [d.outbox[0], d.outbox[1]])}
+            ${card(910, 480, 182, 34, 'database', [d.receipt[0], d.receipt[1]])}
+          </g>
+          ${connector('M955 260 V420', 'database', d.conditionalMutation, 969, 344, 'start')}
+
+          ${card(350, 606, 270, 62, 'external', d.worker)}
+          ${card(840, 606, 270, 62, 'external', d.provider)}
+          ${connector('M979 524 V555 H485 V606', 'database', d.claimAndRecord, 725, 546, 'middle', true, true)}
+          ${connector('M620 637 H840', 'external', d.stableOperation, 730, 627)}
+        </svg>
+      </div>
+    </div>`;
+}
+
+function render(localeKey) {
+  const c = locales[localeKey];
+  const isKo = localeKey === 'ko';
+  const readme = isKo ? '../../../leader/job-safety-lab/README.ko.md' : '../../../leader/job-safety-lab/README.md';
+  const plan = '../plans/2026-07-22-issue-548-job-safety-lab-plan.md';
+  const lesson = '../../lessons/2026-07-22-issue-548-job-safety-lab.md';
+  const sourceBase = '../../../leader/job-safety-lab/src/main/kotlin/io/bluetape4k/workshop/leader/jobsafety/';
+  const scenarios = JSON.stringify(commonScenarios).replaceAll('<', '\\u003c');
+  const content = JSON.stringify(c).replaceAll('<', '\\u003c');
+  const heroFacts = c.heroFacts.map(([value, label]) => `<div><strong>${value}</strong><span>${label}</span></div>`).join('');
+  const problemCards = c.problemCards.map(([title, body, tag]) => `<article class="problem-card"><span>${tag}</span><h3>${title}</h3><p>${body}</p></article>`).join('');
+  const guarantees = c.guarantees.map(([name, owner, result]) => `<tr><th>${name}</th><td>${owner}</td><td>${result}</td></tr>`).join('');
+  const decisions = c.decisions.map(([name, reason, selected]) => `<article class="decision ${selected ? 'selected' : 'rejected'}"><span>${selected ? c.selectedLabel : c.rejectedLabel}</span><h3>${name}</h3><p>${reason}</p></article>`).join('');
+  const architectureDiagram = renderArchitectureDiagram(c);
+  const layers = c.layers.map(([name, body, kind]) => `<div class="layer layer-${kind}"><span>${c.layerNames[kind]}</span><strong>${name}</strong><p>${body}</p></div>`).join('');
+  const scenarioButtons = Object.keys(commonScenarios).map((key) => `<button class="scenario-button" type="button" data-scenario="${key}" aria-pressed="${key === 'LEASE_OVERRUN'}">${c.scenarioNames[key]}</button>`).join('');
+  const classCards = c.classes.map(([name, body, file]) => `<a class="class-card" href="${sourceBase}${file}"><code>${name}</code><p>${body}</p><span>${file}</span></a>`).join('');
+  const tests = c.tests.map(([name, body]) => `<li><code>${name}</code><span>${body}</span></li>`).join('');
+  const runTabs = c.runTabs.map((label, index) => `<button type="button" class="run-tab" data-run="${index}" aria-pressed="${index === 0}">${label}</button>`).join('');
+  const limits = c.limits.map(([name, body, solved]) => `<article class="limit-card ${solved ? 'solved' : 'open'}"><span>${solved ? c.solved : c.limit}</span><h3>${name}</h3><p>${body}</p></article>`).join('');
+  return `<!doctype html>
+<html lang="${c.lang}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:,">
+  <title>${c.title}</title>
+  <meta name="description" content="${c.description}">
+  <script>
+    (() => {
+      const storageKey = 'starlight-theme';
+      const stored = localStorage.getItem(storageKey);
+      const theme = stored === 'light' || stored === 'dark'
+        ? stored
+        : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
+  <style>
+    :root {
+      --paper:#f5f7f8;--surface:#fff;--surface-2:#eef2f3;--ink:#182226;--muted:#5e6e73;--line:#d5dde0;
+      --api:#1976d2;--coord:#8b5cf6;--db:#00897b;--external:#d97706;--good:#0b8f55;--bad:#c23b3b;
+      --hero:#10262b;--hero-ink:#f5ffff;--shadow:0 18px 50px rgba(18,38,43,.1);
+    }
+    :root[data-theme="light"]{color-scheme:light}
+    :root[data-theme="dark"] {
+      color-scheme:dark;--paper:#101719;--surface:#172124;--surface-2:#202c30;--ink:#eef7f8;--muted:#a8b8bc;
+      --line:#324247;--api:#62aef5;--coord:#b89cff;--db:#52cbbb;--external:#f0ae4d;--good:#58d397;--bad:#ff8585;
+      --hero:#071113;--hero-ink:#f5ffff;--shadow:0 18px 50px rgba(0,0,0,.28);
+    }
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:"goorm Sans",Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.55;letter-spacing:0}
+    button{font:inherit;color:inherit}a{color:inherit;text-underline-offset:3px}code,pre{font-family:"goorm Sans Code","SFMono-Regular",Consolas,monospace}
+    .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:20px;height:58px;padding:0 max(20px,calc((100vw - 1180px)/2));border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(16px)}
+    .brand{font-weight:850;text-decoration:none}.topnav,.actions{display:flex;align-items:center;gap:16px}.topnav{font-size:13px;color:var(--muted)}.topnav a{text-decoration:none}.actions a{font-size:13px;font-weight:750}
+    .theme-toggle,.icon-button{display:grid;place-items:center;width:38px;height:38px;border:1px solid var(--line);border-radius:50%;background:var(--surface);cursor:pointer}.theme-toggle:hover,.icon-button:hover{border-color:var(--db)}
+    .hero{background:var(--hero);color:var(--hero-ink);padding:78px 24px 66px}.hero-inner,.section-inner{width:min(1180px,100%);margin:0 auto}.kicker{color:#78ddd0;font-size:13px;font-weight:800;text-transform:uppercase}.hero h1{max-width:1050px;margin:18px 0 22px;font-size:clamp(36px,5vw,68px);line-height:1.08;letter-spacing:0}.hero-summary{max-width:850px;margin:0;color:#c8d8da;font-size:18px}.hero-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;max-width:760px;margin-top:42px;background:#355056;border:1px solid #355056}.hero-facts div{display:flex;flex-direction:column;padding:18px 22px;background:#122d32}.hero-facts strong{font-size:24px}.hero-facts span{color:#a9c2c5;font-size:12px}
+    section{padding:74px 24px;border-bottom:1px solid var(--line)}.section-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,.55fr);gap:40px;align-items:end;margin-bottom:34px}.eyebrow{margin:0 0 8px;color:var(--db);font-size:12px;font-weight:850;text-transform:uppercase}.section-head h2{margin:0;font-size:clamp(28px,3.2vw,44px);line-height:1.16;letter-spacing:0}.section-head>p{margin:0;color:var(--muted)}
+    .problem-grid,.decision-grid,.class-grid,.limit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.problem-card,.decision,.class-card,.limit-card{min-width:0;padding:22px;border:1px solid var(--line);border-radius:8px;background:var(--surface);box-shadow:var(--shadow)}.problem-card span,.decision>span,.limit-card>span{font-size:11px;font-weight:850;text-transform:uppercase}.problem-card h3,.decision h3,.limit-card h3{margin:10px 0 8px;font-size:18px}.problem-card p,.decision p,.limit-card p,.class-card p{margin:0;color:var(--muted);font-size:14px}
+    .guarantee-wrap{margin-top:28px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--surface)}.guarantee-wrap h3{margin:0;padding:20px 22px;border-bottom:1px solid var(--line);font-size:18px}table{width:100%;border-collapse:collapse}th,td{padding:15px 18px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}th{white-space:nowrap}td{color:var(--muted)}tr:last-child th,tr:last-child td{border-bottom:0}
+    .decision.selected{border-top:4px solid var(--good)}.decision.rejected{border-top:4px solid var(--bad)}.decision.selected>span{color:var(--good)}.decision.rejected>span{color:var(--bad)}
+    .architecture-diagram-frame{margin-bottom:18px;border:1px solid var(--line);border-radius:8px;background:var(--surface);box-shadow:var(--shadow)}.architecture-diagram-scroll{overflow-x:auto;padding:14px}.architecture-diagram{display:block;width:100%;min-width:900px;height:auto}.diagram-lane rect{fill:var(--surface-2);stroke:var(--line);stroke-width:1}.diagram-lane>text{font-size:11px;font-weight:850;text-transform:uppercase}.diagram-lane-api>text{fill:var(--api)}.diagram-lane-coordination>text{fill:var(--coord)}.diagram-lane-database>text{fill:var(--db)}.diagram-lane-external>text{fill:var(--external)}.diagram-card rect{fill:var(--surface);stroke-width:2}.diagram-card-title{fill:var(--ink);font-size:13px;font-weight:850}.diagram-card-description{fill:var(--muted);font-size:10.5px}.diagram-card.diagram-api rect{stroke:var(--api)}.diagram-card.diagram-coordination rect{stroke:var(--coord)}.diagram-card.diagram-database rect{stroke:var(--db)}.diagram-card.diagram-external rect{stroke:var(--external)}.diagram-group>rect{fill:color-mix(in srgb,var(--surface) 78%,var(--coord));stroke:var(--coord);stroke-width:2}.diagram-group.diagram-database>rect{fill:color-mix(in srgb,var(--surface) 78%,var(--db));stroke:var(--db)}.diagram-group-title{fill:var(--ink);font-size:15px;font-weight:850}.diagram-group-description{fill:var(--muted);font-size:10.5px}.diagram-group .diagram-card-title{font-size:11px}.diagram-group .diagram-card-description{display:none}.diagram-connector path{fill:none;stroke-width:2}.diagram-connector text{font-size:10px;font-weight:750;paint-order:stroke;stroke:var(--surface);stroke-width:5px;stroke-linejoin:round}.diagram-connector.diagram-api{color:var(--api)}.diagram-connector.diagram-coordination{color:var(--coord)}.diagram-connector.diagram-database{color:var(--db)}.diagram-connector.diagram-external{color:var(--external)}.diagram-connector path{stroke:currentColor}.diagram-connector text{fill:currentColor}.arrow-api path{fill:var(--api)}.arrow-coordination path{fill:var(--coord)}.arrow-database path{fill:var(--db)}.arrow-external path{fill:var(--external)}.architecture{display:grid;gap:10px}.layer{display:grid;grid-template-columns:150px 260px 1fr;gap:22px;align-items:center;min-height:86px;padding:18px 22px;border-left:6px solid;border-radius:6px;background:var(--surface);box-shadow:var(--shadow)}.layer span{font-size:11px;font-weight:850;text-transform:uppercase}.layer strong{font-size:17px}.layer p{margin:0;color:var(--muted);font-size:14px}.layer-api{border-color:var(--api)}.layer-coordination{border-color:var(--coord)}.layer-database{border-color:var(--db)}.layer-external{border-color:var(--external)}
+    .simulator{display:grid;grid-template-columns:280px minmax(0,1fr);min-height:620px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface);box-shadow:var(--shadow)}.sim-sidebar{padding:20px;border-right:1px solid var(--line);background:var(--surface-2)}.scenario-button{width:100%;padding:12px 13px;border:0;border-left:3px solid transparent;background:transparent;text-align:left;cursor:pointer;font-size:13px}.scenario-button:hover{background:var(--surface)}.scenario-button[aria-pressed="true"]{border-left-color:var(--db);background:var(--surface);font-weight:800}
+    .mode-switch{display:grid;grid-template-columns:1fr 1fr;margin-bottom:18px;padding:3px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}.mode-switch button{padding:8px;border:0;border-radius:4px;background:transparent;cursor:pointer;font-size:12px;font-weight:850}.mode-switch button[aria-pressed="true"]{background:var(--good);color:#fff}.mode-switch button[data-mode="unsafe"][aria-pressed="true"]{background:var(--bad)}
+    .sim-main{min-width:0;padding:24px}.sim-title-row{display:flex;justify-content:space-between;gap:20px;align-items:start}.sim-title-row h3{margin:0 0 6px;font-size:23px}.sim-title-row p{max-width:680px;margin:0;color:var(--muted);font-size:14px}.sim-controls{display:flex;gap:8px;flex:0 0 auto}.sim-controls button{padding:8px 12px;border:1px solid var(--line);border-radius:5px;background:var(--surface);cursor:pointer;font-size:12px}.sim-controls button:disabled{opacity:.4;cursor:not-allowed}
+    .timeline{display:grid;gap:8px;margin-top:24px}.event{display:grid;grid-template-columns:44px 128px minmax(0,1fr);gap:14px;align-items:center;min-height:66px;padding:12px 15px;border:1px solid var(--line);border-left:5px solid var(--line);border-radius:6px;opacity:.45}.event.visible{opacity:1}.event.current{outline:2px solid var(--ink);outline-offset:2px}.event.layer-api{border-left-color:var(--api)}.event.layer-coordination{border-left-color:var(--coord)}.event.layer-database{border-left-color:var(--db)}.event.layer-external{border-left-color:var(--external)}.event-number{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--surface-2);font-weight:850}.event-meta{display:flex;flex-direction:column}.event-meta strong{font-size:11px}.event-meta span{color:var(--muted);font-size:10px}.event-detail code{font-size:12px;font-weight:800}.event-detail p{margin:3px 0 0;color:var(--muted);font-size:13px}
+    .sim-result{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;margin-top:22px;border:1px solid var(--line);background:var(--line)}.metric{padding:14px;background:var(--surface)}.metric span{display:block;color:var(--muted);font-size:10px;text-transform:uppercase}.metric strong{display:block;margin-top:5px;font-size:18px;overflow-wrap:anywhere}.metric.good strong{color:var(--good)}.metric.bad strong{color:var(--bad)}
+    .class-card{display:block;text-decoration:none}.class-card:hover{border-color:var(--db)}.class-card code{font-weight:850}.class-card p{margin:10px 0 14px}.class-card span{display:block;color:var(--db);font-family:"goorm Sans Code",monospace;font-size:10px;overflow-wrap:anywhere}.test-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:28px 0 0;padding:0;list-style:none}.test-list li{display:flex;flex-direction:column;gap:5px;padding:16px 18px;border-left:4px solid var(--coord);background:var(--surface)}.test-list code{font-size:12px;font-weight:850}.test-list span{color:var(--muted);font-size:13px}
+    .run-shell{border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#0e1719;box-shadow:var(--shadow)}.run-tabs{display:flex;overflow:auto;border-bottom:1px solid #304146}.run-tab{flex:0 0 auto;padding:13px 18px;border:0;border-bottom:3px solid transparent;background:transparent;color:#a9b9bc;cursor:pointer;font-size:12px}.run-tab[aria-pressed="true"]{border-bottom-color:#66d9c8;color:#fff}.run-shell pre{min-height:260px;margin:0;padding:22px;overflow:auto;color:#dcebec;font-size:12px;line-height:1.65}.run-note{padding:14px 20px;border-top:1px solid #304146;color:#9fb2b5;font-size:12px}
+    .limit-card.solved{border-top:4px solid var(--good)}.limit-card.open{border-top:4px solid var(--external)}.limit-card.solved>span{color:var(--good)}.limit-card.open>span{color:var(--external)}
+    footer{padding:38px 24px 48px;background:var(--hero);color:#bed0d3}.footer-inner{display:flex;justify-content:space-between;gap:30px;width:min(1180px,100%);margin:0 auto}.source-links{display:flex;flex-wrap:wrap;gap:14px;font-size:12px}.source-links a{color:#7ce0d2}
+    button:focus-visible,a:focus-visible{outline:3px solid var(--external);outline-offset:3px}@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+    @media(max-width:900px){.topnav{display:none}.section-head{grid-template-columns:1fr}.problem-grid,.decision-grid,.class-grid,.limit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.simulator{grid-template-columns:1fr}.sim-sidebar{border-right:0;border-bottom:1px solid var(--line)}.scenario-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.architecture .layer{grid-template-columns:120px 1fr}.layer p{grid-column:1/-1}.sim-title-row{flex-direction:column}.sim-controls{width:100%;flex-wrap:wrap}.test-list{grid-template-columns:1fr}}
+    @media(max-width:620px){.topbar{padding:0 14px}.brand{font-size:13px}.actions{gap:9px}.actions a{font-size:11px}.hero{padding:54px 18px 48px}.hero h1{font-size:36px}.hero-facts{grid-template-columns:1fr}.hero-facts div{padding:13px 16px}section{padding:56px 16px}.problem-grid,.decision-grid,.class-grid,.limit-grid{grid-template-columns:1fr}.guarantee-wrap table,.guarantee-wrap tbody,.guarantee-wrap tr,.guarantee-wrap th,.guarantee-wrap td{display:block;width:100%}.guarantee-wrap tr{padding:14px 16px;border-bottom:1px solid var(--line)}.guarantee-wrap tr:last-child{border-bottom:0}.guarantee-wrap th,.guarantee-wrap td{padding:3px 0;border:0;white-space:normal}.scenario-list{grid-template-columns:1fr}.sim-main{padding:18px}.event{grid-template-columns:34px minmax(0,1fr)}.event-meta{grid-column:2}.event-detail{grid-column:1/-1}.sim-result{grid-template-columns:repeat(2,minmax(0,1fr))}.architecture .layer{grid-template-columns:1fr;gap:5px}.layer p{grid-column:auto}.footer-inner{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top">Leader Job Safety Lab</a>
+    <nav class="topnav" aria-label="Sections">
+      <a href="#problem">${c.nav[0]}</a><a href="#decisions">${c.nav[1]}</a><a href="#simulation">${c.nav[2]}</a><a href="#implementation">${c.nav[3]}</a><a href="#run">${c.nav[4]}</a>
+    </nav>
+    <div class="actions"><a href="${c.alternateHref}">${c.alternate}</a><button type="button" class="theme-toggle" aria-label="${c.themeLabel}" title="${c.themeLabel}">◐</button></div>
+  </header>
+  <main id="top" data-source="${source}" data-baseline="${baseline}">
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="kicker">${c.heroKicker}</div>
+        <h1>${c.title}</h1>
+        <p class="hero-summary">${c.heroSummary}</p>
+        <div class="hero-facts">${heroFacts}</div>
+      </div>
+    </section>
+    <section id="problem">
+      <div class="section-inner">
+        <div class="section-head"><div><p class="eyebrow">01 · ${c.sectionLabels[0]}</p><h2>${c.problemTitle}</h2></div><p>${c.problemLead}</p></div>
+        <div class="problem-grid">${problemCards}</div>
+        <div class="guarantee-wrap"><h3>${c.questionTitle}</h3><table><tbody>${guarantees}</tbody></table></div>
+      </div>
+    </section>
+    <section id="decisions">
+      <div class="section-inner">
+        <div class="section-head"><div><p class="eyebrow">02 · ${c.sectionLabels[1]}</p><h2>${c.solutionTitle}</h2></div><p>${c.architectureLead}</p></div>
+        <div class="decision-grid">${decisions}</div>
+      </div>
+    </section>
+    <section id="architecture">
+      <div class="section-inner">
+        <div class="section-head"><div><p class="eyebrow">03 · ${c.sectionLabels[2]}</p><h2>${c.architectureTitle}</h2></div><p>${c.architectureLead}</p></div>
+        ${architectureDiagram}
+        <div class="architecture">${layers}</div>
+      </div>
+    </section>
+    <section id="simulation">
+      <div class="section-inner">
+        <div class="section-head"><div><p class="eyebrow">04 · ${c.sectionLabels[3]}</p><h2>${c.simulationTitle}</h2></div><p>${c.simulationLead}</p></div>
+        <div class="simulator">
+          <aside class="sim-sidebar">
+            <div class="mode-switch"><button type="button" data-mode="safe" aria-pressed="true">${c.safe}</button><button type="button" data-mode="unsafe" aria-pressed="false">${c.unsafe}</button></div>
+            <div class="scenario-list">${scenarioButtons}</div>
+          </aside>
+          <div class="sim-main" aria-live="polite">
+            <div class="sim-title-row">
+              <div><h3 id="scenario-title"></h3><p id="scenario-reason"></p></div>
+              <div class="sim-controls"><button id="restart" type="button">${c.restart}</button><button id="previous" type="button">${c.previous}</button><button id="next" type="button">${c.next}</button></div>
+            </div>
+            <div id="timeline" class="timeline"></div>
+            <div id="result" class="sim-result"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="implementation">
+      <div class="section-inner">
+        <div class="section-head"><div><p class="eyebrow">05 · ${c.sectionLabels[4]}</p><h2>${c.implementationTitle}</h2></div><p>${c.classIntro}</p></div>
+        <div class="class-grid">${classCards}</div>
+        <h3>${c.testsTitle}</h3><ul class="test-list">${tests}</ul>
+      </div>
+    </section>
+    <section id="run">
+      <div class="section-inner">
+        <div class="section-head"><div><p class="eyebrow">06 · ${c.sectionLabels[5]}</p><h2>${c.runTitle}</h2></div><p>${c.runLead}</p></div>
+        <div class="run-shell"><div class="run-tabs">${runTabs}</div><pre><code id="run-command"></code></pre><div id="run-note" class="run-note"></div></div>
+      </div>
+    </section>
+    <section id="limits">
+      <div class="section-inner">
+        <div class="section-head"><div><p class="eyebrow">07 · ${c.sectionLabels[6]}</p><h2>${c.limitsTitle}</h2></div></div>
+        <div class="limit-grid">${limits}</div>
+      </div>
+    </section>
+  </main>
+  <footer><div class="footer-inner"><span>${c.footer}</span><div class="source-links"><a href="${readme}">${c.sourceLinks[0]}</a><a href="./${source}">${c.sourceLinks[1]}</a><a href="${plan}">${c.sourceLinks[2]}</a><a href="${lesson}">${c.sourceLinks[3]}</a></div></div></footer>
+  <script>
+    const themeStorageKey = 'starlight-theme';
+    const content = ${content};
+    const scenarios = ${scenarios};
+    let currentScenario = 'LEASE_OVERRUN';
+    let currentMode = 'safe';
+    let currentStep = scenarios[currentScenario][currentMode].events.length - 1;
+    const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
+    function renderSimulation() {
+      const model = scenarios[currentScenario][currentMode];
+      document.querySelectorAll('.scenario-button').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.scenario === currentScenario)));
+      document.querySelectorAll('[data-mode]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.mode === currentMode)));
+      document.querySelector('#scenario-title').textContent = content.scenarioNames[currentScenario];
+      document.querySelector('#scenario-reason').textContent = content.scenarioReasons[currentScenario];
+      document.querySelector('#timeline').innerHTML = model.events.map(([code,state,layer],index) => {
+        const visible = index <= currentStep;
+        return '<article class="event layer-' + layer + (visible ? ' visible' : '') + (index === currentStep ? ' current' : '') + '">' +
+          '<span class="event-number">' + (index + 1) + '</span>' +
+          '<span class="event-meta"><strong>' + escapeHtml(content.layerNames[layer]) + '</strong><span>' + escapeHtml(state) + '</span></span>' +
+          '<div class="event-detail"><code>' + escapeHtml(code) + '</code><p>' + escapeHtml(content.eventDetails[code]) + '</p></div></article>';
+      }).join('');
+      const finished = currentStep === model.events.length - 1;
+      document.querySelector('#result').innerHTML =
+        '<div class="metric"><span>' + content.expected + '</span><strong>' + model.expected + '</strong></div>' +
+        '<div class="metric ' + (finished && model.expected === model.final ? 'good' : finished ? 'bad' : '') + '"><span>' + content.final + '</span><strong>' + (finished ? model.final : '…') + '</strong></div>' +
+        '<div class="metric"><span>' + content.acceptedFence + '</span><strong>' + (finished ? (model.fence ?? content.noFence) : '…') + '</strong></div>' +
+        '<div class="metric ' + (finished ? (currentMode === 'safe' ? 'good' : 'bad') : '') + '"><span>' + content.verdict + '</span><strong>' + (finished ? model.verdict : '…') + '</strong></div>';
+      document.querySelector('#previous').disabled = currentStep <= 0;
+      document.querySelector('#next').disabled = currentStep >= model.events.length - 1;
+    }
+    document.querySelectorAll('.scenario-button').forEach((button) => button.addEventListener('click', () => {
+      currentScenario = button.dataset.scenario; currentStep = scenarios[currentScenario][currentMode].events.length - 1; renderSimulation();
+    }));
+    document.querySelectorAll('[data-mode]').forEach((button) => button.addEventListener('click', () => {
+      currentMode = button.dataset.mode; currentStep = scenarios[currentScenario][currentMode].events.length - 1; renderSimulation();
+    }));
+    document.querySelector('#previous').addEventListener('click', () => { currentStep = Math.max(0,currentStep-1); renderSimulation(); });
+    document.querySelector('#next').addEventListener('click', () => { currentStep = Math.min(scenarios[currentScenario][currentMode].events.length-1,currentStep+1); renderSimulation(); });
+    document.querySelector('#restart').addEventListener('click', () => { currentStep = 0; renderSimulation(); });
+    document.querySelector('.theme-toggle').addEventListener('click', () => {
+      const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next; localStorage.setItem(themeStorageKey, next);
+    });
+    function renderRun(index) {
+      document.querySelectorAll('.run-tab').forEach((button) => button.setAttribute('aria-pressed', String(Number(button.dataset.run) === index)));
+      document.querySelector('#run-command').textContent = content.runCommands[index];
+      document.querySelector('#run-note').textContent = content.runNotes[index];
+    }
+    document.querySelectorAll('.run-tab').forEach((button) => button.addEventListener('click', () => renderRun(Number(button.dataset.run))));
+    renderSimulation(); renderRun(0);
+    document.documentElement.dataset.workflowReady = 'true';
+  </script>
+</body>
+</html>`;
+}
+
+for (const locale of Object.keys(outputs)) {
+  const html = render(locale).replace(/[ \t]+$/gm, '');
+  await writeFile(path.join(root, outputs[locale]), html);
+}
+
+console.log(`Generated ${Object.values(outputs).join(', ')}`);
