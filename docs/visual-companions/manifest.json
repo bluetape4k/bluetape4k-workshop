@@ -47,6 +47,29 @@
           "html": "docs/superpowers/specs/2026-07-30-concert-ticket-flash-sale-visual-companion.html"
         }
       }
+    },
+    {
+      "id": "kafka-outbox-fallback",
+      "source": "docs/superpowers/specs/2026-07-30-kafka-outbox-fallback-visual-companion-design.md",
+      "status": "approved",
+      "public": true,
+      "presentation": {
+        "mode": "simulation",
+        "defaultView": "simulation",
+        "views": [
+          "simulation"
+        ]
+      },
+      "locales": {
+        "en": {
+          "title": "Kafka Outbox Fallback",
+          "html": "docs/superpowers/specs/2026-07-30-kafka-outbox-fallback-visual-companion.en.html"
+        },
+        "ko": {
+          "title": "Kafka Outbox Fallback",
+          "html": "docs/superpowers/specs/2026-07-30-kafka-outbox-fallback-visual-companion.html"
+        }
+      }
     }
   ]
 }
