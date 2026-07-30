@@ -1333,6 +1333,11 @@ function html(locale, content) {
     table { width: 100%; border-collapse: collapse; background: var(--surface); font-size: .86rem; }
     th, td { padding: .85rem 1rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
     th { color: var(--muted); font-size: .74rem; text-transform: uppercase; }
+    th.identifier-heading {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      text-transform: none;
+      letter-spacing: 0;
+    }
     tr:last-child td { border-bottom: 0; }
     td:first-child { width: 35%; }
     .limits { display: grid; gap: .65rem; }
@@ -1507,7 +1512,7 @@ function html(locale, content) {
 
     <section id="tests">
       <div class="section-heading"><h2>${escapeHtml(content.testsTitle)}</h2></div>
-      <div class="table-wrap"><table><thead><tr><th>${escapeHtml(content.stateLabels[0])}</th><th>KafkaOutboxFallbackFlowTest</th></tr></thead><tbody>${tests}</tbody></table></div>
+      <div class="table-wrap"><table><thead><tr><th>${escapeHtml(content.stateLabels[0])}</th><th class="identifier-heading">KafkaOutboxFallbackFlowTest</th></tr></thead><tbody>${tests}</tbody></table></div>
     </section>
 
     <section id="limits">

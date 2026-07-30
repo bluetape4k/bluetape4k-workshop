@@ -4,6 +4,8 @@
 
 **Goal:** 기존 Transactional Outbox와 Kafka-first Fallback을 비교한 뒤 Kafka 장애, relay, reconciliation을 직접 실행할 수 있는 한국어·영어 Visual Companion을 만든다.
 
+**Completion:** PR #694에서 구현·검증한 뒤 `a6180d427b2dbb3586efdebdf33a3ef9ad0fd2e4`로 병합했다.
+
 **Architecture:** 하나의 Node.js 생성 스크립트가 공통 시나리오 데이터, locale별 기술 문장, Theme 대응 HTML/CSS/JavaScript를 결합해 한국어와 영어 HTML을 생성한다. 생성된 문서는 외부 스크립트·스타일·네트워크 요청 없이 동작하며, 저장소 manifest와 기존 validator로 공개 범위와 보안 조건을 검증한다.
 
 **Tech Stack:** Node.js ESM, self-contained HTML/CSS/JavaScript, Playwright, Gradle, Spring Boot 4, Kafka, PostgreSQL, Exposed
@@ -145,7 +147,7 @@ const publicationStates = {
 - Create: `docs/superpowers/specs/2026-07-30-kafka-outbox-fallback-visual-companion.html`
 - Create: `docs/superpowers/specs/2026-07-30-kafka-outbox-fallback-visual-companion.en.html`
 
-- [ ] **Step 1: 현재 기준 커밋과 source 파일을 고정한다**
+- [x] **Step 1: 현재 기준 커밋과 source 파일을 고정한다**
 
 Run:
 
@@ -170,7 +172,7 @@ const outputs = {
 };
 ```
 
-- [ ] **Step 2: 출력 계약을 먼저 검사하는 assertion을 작성한다**
+- [x] **Step 2: 출력 계약을 먼저 검사하는 assertion을 작성한다**
 
 생성 스크립트에 다음 함수를 추가한다.
 
@@ -197,7 +199,7 @@ function assertScenarios(value) {
 }
 ```
 
-- [ ] **Step 3: assertion이 누락된 locale에서 실패하는지 확인한다**
+- [x] **Step 3: assertion이 누락된 locale에서 실패하는지 확인한다**
 
 임시로 `locales.en.description`을 생략하고 실행한다.
 
@@ -213,7 +215,7 @@ Expected:
 Error: Incomplete locale content: en
 ```
 
-- [ ] **Step 4: 두 locale의 최소 콘텐츠와 HTML shell을 구현한다**
+- [x] **Step 4: 두 locale의 최소 콘텐츠와 HTML shell을 구현한다**
 
 필수 HTML:
 
@@ -251,7 +253,7 @@ Error: Incomplete locale content: en
 
 `localStorage.getItem(storageKey)`는 첫 `<style>`보다 앞에 있어야 한다.
 
-- [ ] **Step 5: 두 HTML을 생성하고 기본 계약을 확인한다**
+- [x] **Step 5: 두 HTML을 생성하고 기본 계약을 확인한다**
 
 Run:
 
@@ -275,7 +277,7 @@ Expected:
 - Regenerate: `docs/superpowers/specs/2026-07-30-kafka-outbox-fallback-visual-companion.html`
 - Regenerate: `docs/superpowers/specs/2026-07-30-kafka-outbox-fallback-visual-companion.en.html`
 
-- [ ] **Step 1: 비교 데이터 계약을 작성한다**
+- [x] **Step 1: 비교 데이터 계약을 작성한다**
 
 ```javascript
 const approaches = {
@@ -298,7 +300,7 @@ const approaches = {
 
 `orderWrites`는 측정된 성능값이 아니라 구현상 DB 입력 건수라고 설명한다.
 
-- [ ] **Step 2: 비교 UI의 초기 상태 검증 코드를 작성한다**
+- [x] **Step 2: 비교 UI의 초기 상태 검증 코드를 작성한다**
 
 브라우저 스크립트에 다음 invariant를 사용한다.
 
@@ -314,7 +316,7 @@ function renderApproach() {
 }
 ```
 
-- [ ] **Step 3: 비교 UI와 문제 파악 섹션을 구현한다**
+- [x] **Step 3: 비교 UI와 문제 파악 섹션을 구현한다**
 
 필수 화면:
 
@@ -333,7 +335,7 @@ Kafka 발행에 실패하면 event_publications에 재발행 대상을 저장한
 타임아웃은 Kafka가 이벤트를 받지 않았다는 뜻이 아니다.
 ```
 
-- [ ] **Step 4: 접근 방식 전환을 검증한다**
+- [x] **Step 4: 접근 방식 전환을 검증한다**
 
 Playwright 검사:
 
@@ -345,7 +347,7 @@ await page.click('[data-approach="transactional"]');
 await expect(page.locator('[data-metric="orderWrites"]')).toHaveText('2');
 ```
 
-- [ ] **Step 5: 생성 결과를 갱신한다**
+- [x] **Step 5: 생성 결과를 갱신한다**
 
 Run:
 
@@ -362,7 +364,7 @@ Expected: exit code 0
 - Regenerate: `docs/superpowers/specs/2026-07-30-kafka-outbox-fallback-visual-companion.html`
 - Regenerate: `docs/superpowers/specs/2026-07-30-kafka-outbox-fallback-visual-companion.en.html`
 
-- [ ] **Step 1: Architecture Diagram 구성 요소를 데이터로 정의한다**
+- [x] **Step 1: Architecture Diagram 구성 요소를 데이터로 정의한다**
 
 ```javascript
 const architectureNodes = [
@@ -397,7 +399,7 @@ const architectureEdges = [
 ];
 ```
 
-- [ ] **Step 2: Architecture Card와 연결선을 구현한다**
+- [x] **Step 2: Architecture Card와 연결선을 구현한다**
 
 DOM-native grid와 CSS connector를 사용한다. 연결선은 카드 내부와 계층 제목을 통과하지 않아야 한다.
 작은 화면에서는 계층별 세로 흐름으로 전환한다.
@@ -416,7 +418,7 @@ DOM-native grid와 CSS connector를 사용한다. 연결선은 카드 내부와 
 }
 ```
 
-- [ ] **Step 3: Class Diagram의 실제 사용 관계를 정의한다**
+- [x] **Step 3: Class Diagram의 실제 사용 관계를 정의한다**
 
 필수 클래스:
 
@@ -436,7 +438,7 @@ const classes = [
 
 표시할 메서드는 설계 문서 12.2절과 일치해야 한다. 전체 생성자 인수와 private 메서드는 생략한다.
 
-- [ ] **Step 4: 한국어·영어와 Light·Dark Theme을 검증한다**
+- [x] **Step 4: 한국어·영어와 Light·Dark Theme을 검증한다**
 
 각 조합에서 다음 selector의 개수가 같아야 한다.
 
@@ -458,7 +460,7 @@ const errors = await page.locator('.architecture-card, .class-card').evaluateAll
 if (Math.max(...errors) > 2) throw new Error(`Vertical centering error: ${Math.max(...errors)}px`);
 ```
 
-- [ ] **Step 5: 생성 결과를 갱신한다**
+- [x] **Step 5: 생성 결과를 갱신한다**
 
 Run:
 
@@ -475,7 +477,7 @@ Expected: exit code 0
 - Regenerate: `docs/superpowers/specs/2026-07-30-kafka-outbox-fallback-visual-companion.html`
 - Regenerate: `docs/superpowers/specs/2026-07-30-kafka-outbox-fallback-visual-companion.en.html`
 
-- [ ] **Step 1: 여섯 시나리오의 최종 상태를 정의한다**
+- [x] **Step 1: 여섯 시나리오의 최종 상태를 정의한다**
 
 ```javascript
 const expectedFinals = {
@@ -490,7 +492,7 @@ const expectedFinals = {
 
 `?`는 불확실한 Kafka 수신 여부를 나타낸다. 숫자 `0`으로 바꾸지 않는다.
 
-- [ ] **Step 2: 최종 상태 assertion을 작성한다**
+- [x] **Step 2: 최종 상태 assertion을 작성한다**
 
 ```javascript
 function assertFinalState(id, scenario) {
@@ -509,7 +511,7 @@ function assertFinalState(id, scenario) {
 }
 ```
 
-- [ ] **Step 3: 이전·다음·초기화·재생을 구현한다**
+- [x] **Step 3: 이전·다음·초기화·재생을 구현한다**
 
 ```javascript
 let activeScenario = 'DIRECT_SUCCESS';
@@ -544,7 +546,7 @@ function resetScenario() {
 재생은 마지막 단계에서 정지하며 새 시나리오를 선택하면 timer를 해제한다. `prefers-reduced-motion`
 사용자는 자동 재생 대신 단계 이동만 제공한다.
 
-- [ ] **Step 4: 동시 claim 비교를 relay 시나리오에 추가한다**
+- [x] **Step 4: 동시 claim 비교를 relay 시나리오에 추가한다**
 
 `RELAY_RECOVERY`에서 claim 단계가 선택되면 두 작업자를 표시한다.
 
@@ -558,7 +560,7 @@ const claimWorkers = [
 화면에는 “한 작업자만 같은 row를 확보한다”와 “Kafka 발행 성공 후 DB 반영 전에 중단되면 중복
 발행은 여전히 가능하다”를 함께 표시한다.
 
-- [ ] **Step 5: 대화형 상태 모델을 구현한다**
+- [x] **Step 5: 대화형 상태 모델을 구현한다**
 
 상태 버튼을 선택하면 다음 정보를 표시한다.
 
@@ -573,7 +575,7 @@ const claimWorkers = [
 EventPublicationStatus 값이 아니다. claimedBy와 claimedUntil이 유효한 동안의 처리 상태다.
 ```
 
-- [ ] **Step 6: 모든 시나리오의 마지막 단계를 검증한다**
+- [x] **Step 6: 모든 시나리오의 마지막 단계를 검증한다**
 
 Playwright 반복:
 
@@ -588,7 +590,7 @@ for (const scenario of Object.keys(expectedFinals)) {
 }
 ```
 
-- [ ] **Step 7: 생성 결과를 갱신한다**
+- [x] **Step 7: 생성 결과를 갱신한다**
 
 Run:
 
@@ -605,7 +607,7 @@ Expected: exit code 0
 - Regenerate: `docs/superpowers/specs/2026-07-30-kafka-outbox-fallback-visual-companion.html`
 - Regenerate: `docs/superpowers/specs/2026-07-30-kafka-outbox-fallback-visual-companion.en.html`
 
-- [ ] **Step 1: 소스 경로와 클래스명을 다시 확인한다**
+- [x] **Step 1: 소스 경로와 클래스명을 다시 확인한다**
 
 Run:
 
@@ -625,7 +627,7 @@ Expected:
 - `OrderTable`
 - `EventPublicationTable`
 
-- [ ] **Step 2: 설정값을 소스와 application.yml에서 확인한다**
+- [x] **Step 2: 설정값을 소스와 application.yml에서 확인한다**
 
 Run:
 
@@ -637,7 +639,7 @@ rg -n 'direct-publish|relay-|reconciler-|max-payload|demo-admin' \
 
 Expected: 설계 문서 14절의 설정 키와 기본값 일치
 
-- [ ] **Step 3: 실제 실행 명령을 검증한다**
+- [x] **Step 3: 실제 실행 명령을 검증한다**
 
 관련 서비스:
 
@@ -666,7 +668,7 @@ curl -s -X POST http://localhost:8080/api/orders \
 curl -s http://localhost:8080/api/publications
 ```
 
-- [ ] **Step 4: demo admin endpoint 실행 조건을 표시한다**
+- [x] **Step 4: demo admin endpoint 실행 조건을 표시한다**
 
 ```yaml
 workshop:
@@ -681,7 +683,7 @@ curl -s -X POST http://localhost:8080/api/publications/reconcile
 
 운영 환경에는 인증, 권한, 요청 제한 없이 노출하지 않는다고 설명한다.
 
-- [ ] **Step 5: 실제 테스트명을 데이터로 추가한다**
+- [x] **Step 5: 실제 테스트명을 데이터로 추가한다**
 
 Run:
 
@@ -692,7 +694,7 @@ rg -n '^    fun `' \
 
 설계 문서 16절에 열거된 테스트를 한국어와 영어에서 같은 순서로 표시한다.
 
-- [ ] **Step 6: 집중 테스트 명령을 실제 Gradle 필터로 검증한다**
+- [x] **Step 6: 집중 테스트 명령을 실제 Gradle 필터로 검증한다**
 
 Run:
 
@@ -707,7 +709,7 @@ Expected: `BUILD SUCCESSFUL`, 18 tests
 README의 `--tests '*direct publish*'`처럼 JUnit display name과 동작 여부가 불확실한 wildcard는
 검증 없이 사용하지 않는다.
 
-- [ ] **Step 7: 생성 결과를 갱신한다**
+- [x] **Step 7: 생성 결과를 갱신한다**
 
 Run:
 
@@ -723,7 +725,7 @@ Expected: exit code 0
 - Modify: `docs/visual-companions/manifest.json`
 - Test: `scripts/validate-visual-companions.mjs`
 
-- [ ] **Step 1: validator가 신규 문서 없이 기존 상태에서 통과하는지 확인한다**
+- [x] **Step 1: validator가 신규 문서 없이 기존 상태에서 통과하는지 확인한다**
 
 Run:
 
@@ -739,7 +741,7 @@ Visual companion validation passed: 2 documents / 4 locale files
 
 현재 `develop` 문서 수가 달라졌다면 실제 숫자를 기록하고 원인을 확인한다.
 
-- [ ] **Step 2: manifest에 신규 문서를 추가한다**
+- [x] **Step 2: manifest에 신규 문서를 추가한다**
 
 ```json
 {
@@ -765,7 +767,7 @@ Visual companion validation passed: 2 documents / 4 locale files
 }
 ```
 
-- [ ] **Step 3: 정적 검증을 실행한다**
+- [x] **Step 3: 정적 검증을 실행한다**
 
 Run:
 
@@ -782,7 +784,7 @@ Visual companion validation passed: 3 documents / 6 locale files
 
 PR #693이 먼저 병합돼 현재 문서 수가 3이면 예상 결과는 `4 documents / 8 locale files`다.
 
-- [ ] **Step 4: 생성 재현성을 확인한다**
+- [x] **Step 4: 생성 재현성을 확인한다**
 
 Run:
 
@@ -795,7 +797,7 @@ git diff --exit-code -- \
 
 Expected: exit code 0
 
-- [ ] **Step 5: 금지된 외부 surface가 없는지 확인한다**
+- [x] **Step 5: 금지된 외부 surface가 없는지 확인한다**
 
 Run:
 
@@ -813,7 +815,7 @@ Expected: no matches
 - Verify: `docs/superpowers/specs/2026-07-30-kafka-outbox-fallback-visual-companion.en.html`
 - Temporary output: `output/playwright/kafka-outbox-fallback/`
 
-- [ ] **Step 1: 로컬 서버를 시작한다**
+- [x] **Step 1: 로컬 서버를 시작한다**
 
 Run:
 
@@ -829,7 +831,7 @@ Serving HTTP on 127.0.0.1 port 4318
 
 4318이 사용 중이면 빈 포트를 선택하고 이후 명령에 같은 포트를 사용한다.
 
-- [ ] **Step 2: locale·Theme·viewport 조합을 캡처한다**
+- [x] **Step 2: locale·Theme·viewport 조합을 캡처한다**
 
 조합:
 
@@ -842,7 +844,7 @@ Serving HTTP on 127.0.0.1 port 4318
 
 각 화면을 전체 페이지로 캡처한다.
 
-- [ ] **Step 3: 기능 검증을 실행한다**
+- [x] **Step 3: 기능 검증을 실행한다**
 
 각 locale에서 확인:
 
@@ -860,7 +862,7 @@ Expected:
 - failed page request 0
 - 모든 selector가 단일 대상과 연결
 
-- [ ] **Step 4: overflow와 텍스트 중앙 정렬을 측정한다**
+- [x] **Step 4: overflow와 텍스트 중앙 정렬을 측정한다**
 
 ```javascript
 const overflow = await page.evaluate(() => ({
@@ -877,7 +879,7 @@ Expected:
 - 의미 없는 element overflow 0
 - Architecture/Class Card 수직 중심 오차 2px 이하
 
-- [ ] **Step 5: 전체 화면을 직접 검사한다**
+- [x] **Step 5: 전체 화면을 직접 검사한다**
 
 확인:
 
@@ -889,7 +891,7 @@ Expected:
 - 모바일에서 비교 표와 시뮬레이션 조작이 잘리지 않음
 - 다음 섹션 일부가 첫 viewport 하단에 보임
 
-- [ ] **Step 6: 시각 결함을 수정하고 검증을 반복한다**
+- [x] **Step 6: 시각 결함을 수정하고 검증을 반복한다**
 
 수정할 때마다 다음을 다시 실행한다.
 
@@ -912,7 +914,7 @@ Stop condition:
 **Files:**
 - Verify all changed files
 
-- [ ] **Step 1: 전체 정적 검증을 실행한다**
+- [x] **Step 1: 전체 정적 검증을 실행한다**
 
 Run:
 
@@ -924,7 +926,7 @@ git diff --check
 
 Expected: all pass
 
-- [ ] **Step 2: 모듈 테스트를 실행한다**
+- [x] **Step 2: 모듈 테스트를 실행한다**
 
 Run:
 
@@ -934,7 +936,7 @@ Run:
 
 Expected: `BUILD SUCCESSFUL`, 18 tests
 
-- [ ] **Step 3: 변경 범위를 확인한다**
+- [x] **Step 3: 변경 범위를 확인한다**
 
 Run:
 
@@ -951,7 +953,7 @@ Expected:
 - 설계·계획·생성 스크립트·두 HTML·manifest만 변경
 - Kotlin 소스와 테스트 변경 없음
 
-- [ ] **Step 4: 로컬 검토 URL을 사용자에게 제공한다**
+- [x] **Step 4: 로컬 검토 URL을 사용자에게 제공한다**
 
 ```text
 http://127.0.0.1:4318/docs/superpowers/specs/2026-07-30-kafka-outbox-fallback-visual-companion.html
@@ -966,7 +968,7 @@ http://127.0.0.1:4318/docs/superpowers/specs/2026-07-30-kafka-outbox-fallback-vi
 - 알려진 제한
 - 사용자 검토 전이므로 구현 diff가 아직 커밋되지 않았다는 사실
 
-- [ ] **Step 5: 사용자 검토 결과를 반영한다**
+- [x] **Step 5: 사용자 검토 결과를 반영한다**
 
 수정 요청이 있으면 생성 스크립트를 수정하고 Task 7과 Task 8 검증을 반복한다.
 
@@ -975,7 +977,7 @@ http://127.0.0.1:4318/docs/superpowers/specs/2026-07-30-kafka-outbox-fallback-vi
 **Files:**
 - Commit all approved implementation files
 
-- [ ] **Step 1: 최신 `origin/develop`와 PR #693 상태를 확인한다**
+- [x] **Step 1: 최신 `origin/develop`와 PR #693 상태를 확인한다**
 
 Run:
 
@@ -988,7 +990,7 @@ git log --oneline --decorate -5 origin/develop
 PR #693이 병합됐다면 현재 브랜치를 최신 `origin/develop`에 rebase하고 manifest의 Leader Job
 Safety 항목과 Kafka Outbox Fallback 항목을 모두 보존한다.
 
-- [ ] **Step 2: rebase 후 전체 검증을 다시 실행한다**
+- [x] **Step 2: rebase 후 전체 검증을 다시 실행한다**
 
 Run:
 
@@ -1001,7 +1003,7 @@ git diff --check
 
 Expected: all pass
 
-- [ ] **Step 3: Lore protocol로 구현을 커밋한다**
+- [x] **Step 3: Lore protocol로 구현을 커밋한다**
 
 ```bash
 git add \
@@ -1021,7 +1023,7 @@ git commit -m "Show why Kafka-first publication needs durable recovery" \
   -m "Not-tested: Production Kafka and PostgreSQL deployment behavior."
 ```
 
-- [ ] **Step 4: Push와 PR은 사용자가 요청한 범위에서만 진행한다**
+- [x] **Step 4: Push와 PR은 사용자가 요청한 범위에서만 진행한다**
 
 PR을 만들 때:
 
