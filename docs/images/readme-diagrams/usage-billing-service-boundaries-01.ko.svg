@@ -94,16 +94,16 @@
   <text x="1165" y="470" text-anchor="middle" class="topic">invoice.events.v1</text>
 
   <!-- 발행 연결: service outbox -> Kafka topic -->
-  <path d="M110 340 L110 400" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arrow-publish)"/>
-  <path d="M380 340 L380 400" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arrow-publish)"/>
-  <path d="M650 340 L650 400" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arrow-publish)"/>
-  <path d="M920 340 L920 400" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arrow-publish)"/>
+  <path data-connector="meter-publish" d="M110 340 L110 400" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arrow-publish)"/>
+  <path data-connector="usage-publish" d="M380 340 L380 400" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arrow-publish)"/>
+  <path data-connector="billing-publish" d="M650 340 L650 400" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arrow-publish)"/>
+  <path data-connector="invoice-publish" d="M920 340 L920 400" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arrow-publish)"/>
 
   <!-- 전달 연결: Kafka -> receiver inbox -->
-  <path d="M470 400 L470 340" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-deliver)"/>
-  <path d="M740 400 L740 340" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-deliver)"/>
-  <path d="M1010 400 L1010 340" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-deliver)"/>
-  <path d="M1280 400 L1280 340" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-deliver)"/>
+  <path data-connector="usage-price-deliver" d="M470 400 L470 340" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-deliver)"/>
+  <path data-connector="billing-meter-usage-deliver" d="M740 400 L740 340" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-deliver)"/>
+  <path data-connector="invoice-billing-deliver" d="M1010 400 L1010 340" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-deliver)"/>
+  <path data-connector="query-topics-deliver" d="M1280 400 L1280 340" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-deliver)"/>
 
   <!-- 운영 보호선 -->
   <rect x="30" y="560" width="1340" height="200" rx="18" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
