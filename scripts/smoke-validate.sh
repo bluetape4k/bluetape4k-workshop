@@ -15,7 +15,7 @@
 
 set -euo pipefail
 
-# Keep every script-driven Gradle path free of Detekt, including future groups.
+# Keep root-project script paths free of Detekt; standalone build-logic is kept separate below.
 GRADLEW="./gradlew -x detekt"
 MAX_WORKERS="${MAX_WORKERS:-2}"
 
@@ -248,7 +248,8 @@ case "${1:-help}" in
   high-contention-contract)
     run "node --test scripts/high-contention/validate-contract.test.mjs scripts/high-contention/validate-run.test.mjs scripts/high-contention/select-upload.test.mjs"
     run "node scripts/validate-high-contention-readme.mjs"
-    run "$GRADLEW -p build-logic test"
+    # build-logic is a standalone Gradle build without a Detekt task.
+    run "./gradlew -p build-logic test"
     run "$GRADLEW \
       :operations-job-console-core:test \
       :commerce-concert-ticket-flash-sale:test \

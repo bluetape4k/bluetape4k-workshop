@@ -8,7 +8,8 @@ Nightly의 `Build (compile only)`가 여러 commerce 모듈의 `detekt`에서 �
 
 ## 유지할 가드
 
-- 모든 workflow의 직접 Gradle 호출과 `scripts/smoke-validate.sh`의 Gradle 경로에는 `-x detekt`를 유지한다.
+- 모든 workflow의 직접 Gradle 호출과 `scripts/smoke-validate.sh`의 root-project Gradle 경로에는 `-x detekt`를 유지한다.
+- `build-logic`처럼 Detekt task가 없는 standalone Gradle build에는 `-x detekt`를 전달하지 않는다.
 - `JAVA_VERSIONS`는 `21` 다음 `25` 순서로 두어 일반 Gradle 작업의 기본 런타임을 기존 설정으로 유지한다.
 - `optimization/*`의 Java 25 toolchain과 전용 high-contention Java 25 job은 유지한다.
 - Java 버전 목록이나 workflow Gradle 호출을 바꿀 때는 `actionlint`와 Detekt 제외 task graph를 함께 확인한다.
@@ -16,4 +17,4 @@ Nightly의 `Build (compile only)`가 여러 commerce 모듈의 `detekt`에서 �
 
 ## 검증
 
-`build`, `test`, `highContentionCi`, `highContentionLocalReference` dry-run에서 `detekt` task가 나타나지 않았고, 워크플로 호출 전수 assertion, `actionlint`, `bash -n`, `git diff --check`도 통과했다.
+`build`, `test`, `highContentionCi`, `highContentionLocalReference` dry-run에서 `detekt` task가 나타나지 않았고, `build-logic` standalone test도 별도 경로로 통과했다. 워크플로 호출 assertion, `actionlint`, `bash -n`, `git diff --check`도 통과했다.
