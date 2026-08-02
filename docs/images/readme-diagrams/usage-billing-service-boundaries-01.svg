@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 920" width="1400" height="920">
+  <defs>
+    <marker id="arrow-publish" markerWidth="14" markerHeight="10" refX="12" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 14 5, 0 10" fill="#059669"/>
+    </marker>
+    <marker id="arrow-deliver" markerWidth="14" markerHeight="10" refX="12" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 14 5, 0 10" fill="#2563eb"/>
+    </marker>
+    <filter id="soft-shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+    <style>
+      .title { font-family: 'Architects Daughter'; font-size: 34px; font-weight: 700; fill: #111827; }
+      .subtitle { font-family: 'Comic Mono'; font-size: 15px; fill: #6b7280; }
+      .service-title { font-family: 'Architects Daughter'; font-size: 24px; font-weight: 700; fill: #111827; }
+      .body { font-family: 'Comic Mono'; font-size: 14px; fill: #374151; }
+      .small { font-family: 'Comic Mono'; font-size: 12px; fill: #6b7280; }
+      .code { font-family: 'Comic Mono'; font-size: 13px; fill: #111827; }
+      .topic { font-family: 'Comic Mono'; font-size: 13px; font-weight: 700; fill: #1e3a8a; }
+      .band-title { font-family: 'Architects Daughter'; font-size: 22px; font-weight: 700; fill: #111827; }
+      .legend { font-family: 'Comic Mono'; font-size: 13px; fill: #4b5563; }
+      .footnote { font-family: 'Comic Mono'; font-size: 13px; fill: #6b7280; }
+    </style>
+  </defs>
+
+  <rect width="1400" height="920" fill="#ffffff"/>
+  <text x="700" y="52" text-anchor="middle" class="title">Usage Billing Service Boundaries</text>
+  <text x="700" y="82" text-anchor="middle" class="subtitle">Local authority + outbox/inbox + Kafka at-least-once delivery</text>
+
+  <!-- Service ownership cards -->
+  <g filter="url(#soft-shadow)">
+    <rect x="40" y="135" width="220" height="205" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.6"/>
+    <rect x="310" y="135" width="220" height="205" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.6"/>
+    <rect x="580" y="135" width="220" height="205" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.6"/>
+    <rect x="850" y="135" width="220" height="205" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.6"/>
+    <rect x="1120" y="135" width="220" height="205" rx="14" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.8"/>
+  </g>
+
+  <!-- Meter -->
+  <text x="150" y="171" text-anchor="middle" class="service-title">Meter</text>
+  <text x="62" y="198" class="body">price authority</text>
+  <rect x="62" y="214" width="176" height="38" rx="8" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="150" y="238" text-anchor="middle" class="code">PostgreSQL</text>
+  <text x="62" y="278" class="small">outbox</text>
+  <text x="62" y="298" class="code">meter.events.v1</text>
+  <text x="62" y="322" class="small">inbox: —</text>
+
+  <!-- Usage -->
+  <text x="420" y="171" text-anchor="middle" class="service-title">Usage</text>
+  <text x="332" y="198" class="body">accepted usage</text>
+  <rect x="332" y="214" width="176" height="38" rx="8" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="420" y="238" text-anchor="middle" class="code">PostgreSQL</text>
+  <text x="332" y="278" class="small">inbox from price evidence</text>
+  <text x="332" y="298" class="small">outbox</text>
+  <text x="332" y="318" class="code">usage.events.v1</text>
+
+  <!-- Billing -->
+  <text x="690" y="171" text-anchor="middle" class="service-title">Billing</text>
+  <text x="602" y="198" class="body">rated charge authority</text>
+  <rect x="602" y="214" width="176" height="38" rx="8" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="690" y="238" text-anchor="middle" class="code">PostgreSQL</text>
+  <text x="602" y="278" class="small">inbox from meter + usage</text>
+  <text x="602" y="298" class="small">outbox</text>
+  <text x="602" y="318" class="code">billing.events.v1</text>
+
+  <!-- Invoice -->
+  <text x="960" y="171" text-anchor="middle" class="service-title">Invoice</text>
+  <text x="872" y="198" class="body">append-only lines</text>
+  <rect x="872" y="214" width="176" height="38" rx="8" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="960" y="238" text-anchor="middle" class="code">PostgreSQL</text>
+  <text x="872" y="278" class="small">inbox from billing</text>
+  <text x="872" y="298" class="small">outbox</text>
+  <text x="872" y="318" class="code">invoice.events.v1</text>
+
+  <!-- Query -->
+  <text x="1230" y="171" text-anchor="middle" class="service-title">Query</text>
+  <text x="1142" y="198" class="body">read model + recovery</text>
+  <rect x="1142" y="214" width="176" height="38" rx="8" fill="#dbeafe" stroke="#93c5fd"/>
+  <text x="1230" y="238" text-anchor="middle" class="code">PostgreSQL</text>
+  <text x="1142" y="278" class="small">inbox from all public topics</text>
+  <text x="1142" y="298" class="small">checkpoint + quarantine</text>
+  <text x="1142" y="318" class="small">HTTP summary / operator redrive</text>
+
+  <!-- Kafka event boundary -->
+  <rect x="30" y="400" width="1340" height="110" rx="18" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.8"/>
+  <text x="700" y="428" text-anchor="middle" class="band-title">Kafka event boundary</text>
+  <rect x="55" y="448" width="300" height="34" rx="17" fill="#ede9fe" stroke="#c4b5fd"/>
+  <rect x="375" y="448" width="300" height="34" rx="17" fill="#ede9fe" stroke="#c4b5fd"/>
+  <rect x="695" y="448" width="300" height="34" rx="17" fill="#ede9fe" stroke="#c4b5fd"/>
+  <rect x="1015" y="448" width="300" height="34" rx="17" fill="#ede9fe" stroke="#c4b5fd"/>
+  <text x="205" y="470" text-anchor="middle" class="topic">meter.events.v1</text>
+  <text x="525" y="470" text-anchor="middle" class="topic">usage.events.v1</text>
+  <text x="845" y="470" text-anchor="middle" class="topic">billing.events.v1</text>
+  <text x="1165" y="470" text-anchor="middle" class="topic">invoice.events.v1</text>
+
+  <!-- Publication connectors: service outbox -> Kafka topic -->
+  <path d="M110 340 L110 400" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arrow-publish)"/>
+  <path d="M380 340 L380 400" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arrow-publish)"/>
+  <path d="M650 340 L650 400" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arrow-publish)"/>
+  <path d="M920 340 L920 400" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arrow-publish)"/>
+
+  <!-- Delivery connectors: Kafka -> receiver inbox -->
+  <path d="M470 400 L470 340" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-deliver)"/>
+  <path d="M740 400 L740 340" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-deliver)"/>
+  <path d="M1010 400 L1010 340" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-deliver)"/>
+  <path d="M1280 400 L1280 340" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-deliver)"/>
+
+  <!-- Recovery/operational guardrails -->
+  <rect x="30" y="560" width="1340" height="200" rx="18" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="700" y="596" text-anchor="middle" class="band-title">Operational guardrails</text>
+  <rect x="60" y="620" width="390" height="92" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+  <rect x="505" y="620" width="390" height="92" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+  <rect x="950" y="620" width="390" height="92" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+  <text x="80" y="650" class="service-title" font-size="20">Local transaction</text>
+  <text x="80" y="677" class="body">fact + outbox commit together</text>
+  <text x="80" y="700" class="small">no shared database or XA</text>
+  <text x="525" y="650" class="service-title" font-size="20">At-least-once</text>
+  <text x="525" y="677" class="body">lease, retry wait, duplicate inbox</text>
+  <text x="525" y="700" class="small">digest conflicts quarantine</text>
+  <text x="970" y="650" class="service-title" font-size="20">Query boundary</text>
+  <text x="970" y="677" class="body">projection + checkpoint + audit</text>
+  <text x="970" y="700" class="small">tenant read / operator recovery</text>
+
+  <!-- Legend -->
+  <line x1="60" y1="805" x2="100" y2="805" stroke="#059669" stroke-width="2.5" marker-end="url(#arrow-publish)"/>
+  <text x="112" y="810" class="legend">publish from local outbox</text>
+  <line x1="330" y1="805" x2="370" y2="805" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-deliver)"/>
+  <text x="382" y="810" class="legend">deliver to local inbox</text>
+  <text x="700" y="852" text-anchor="middle" class="footnote">Five independent PostgreSQL authorities; Kafka is transport, not financial authority.</text>
+</svg>

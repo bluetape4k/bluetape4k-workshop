@@ -1,0 +1,130 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 920" width="1400" height="920">
+  <defs>
+    <marker id="arrow-publish" markerWidth="14" markerHeight="10" refX="12" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 14 5, 0 10" fill="#059669"/>
+    </marker>
+    <marker id="arrow-deliver" markerWidth="14" markerHeight="10" refX="12" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <polygon points="0 0, 14 5, 0 10" fill="#2563eb"/>
+    </marker>
+    <filter id="soft-shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+    <style>
+      .title { font-family: 'goorm Sans'; font-size: 34px; font-weight: 700; fill: #111827; }
+      .subtitle { font-family: 'goorm Sans Code'; font-size: 15px; fill: #6b7280; }
+      .service-title { font-family: 'goorm Sans'; font-size: 24px; font-weight: 700; fill: #111827; }
+      .body { font-family: 'goorm Sans'; font-size: 14px; fill: #374151; }
+      .small { font-family: 'goorm Sans'; font-size: 12px; fill: #6b7280; }
+      .code { font-family: 'goorm Sans Code'; font-size: 13px; fill: #111827; }
+      .topic { font-family: 'goorm Sans Code'; font-size: 13px; font-weight: 700; fill: #1e3a8a; }
+      .band-title { font-family: 'goorm Sans'; font-size: 22px; font-weight: 700; fill: #111827; }
+      .legend { font-family: 'goorm Sans'; font-size: 13px; fill: #4b5563; }
+      .footnote { font-family: 'goorm Sans'; font-size: 13px; fill: #6b7280; }
+    </style>
+  </defs>
+
+  <rect width="1400" height="920" fill="#ffffff"/>
+  <text x="700" y="52" text-anchor="middle" class="title">Usage Billing 서비스 경계</text>
+  <text x="700" y="82" text-anchor="middle" class="subtitle">로컬 권위 + outbox/inbox + Kafka at-least-once 전달</text>
+
+  <!-- 서비스 소유권 카드 -->
+  <g filter="url(#soft-shadow)">
+    <rect x="40" y="135" width="220" height="205" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.6"/>
+    <rect x="310" y="135" width="220" height="205" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.6"/>
+    <rect x="580" y="135" width="220" height="205" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.6"/>
+    <rect x="850" y="135" width="220" height="205" rx="14" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.6"/>
+    <rect x="1120" y="135" width="220" height="205" rx="14" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.8"/>
+  </g>
+
+  <!-- Meter -->
+  <text x="150" y="171" text-anchor="middle" class="service-title">Meter</text>
+  <text x="62" y="198" class="body">가격 권위</text>
+  <rect x="62" y="214" width="176" height="38" rx="8" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="150" y="238" text-anchor="middle" class="code">PostgreSQL</text>
+  <text x="62" y="278" class="small">outbox</text>
+  <text x="62" y="298" class="code">meter.events.v1</text>
+  <text x="62" y="322" class="small">inbox: —</text>
+
+  <!-- Usage -->
+  <text x="420" y="171" text-anchor="middle" class="service-title">Usage</text>
+  <text x="332" y="198" class="body">접수된 사용량</text>
+  <rect x="332" y="214" width="176" height="38" rx="8" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="420" y="238" text-anchor="middle" class="code">PostgreSQL</text>
+  <text x="332" y="278" class="small">inbox: 가격 근거</text>
+  <text x="332" y="298" class="small">outbox</text>
+  <text x="332" y="318" class="code">usage.events.v1</text>
+
+  <!-- Billing -->
+  <text x="690" y="171" text-anchor="middle" class="service-title">Billing</text>
+  <text x="602" y="198" class="body">산정된 청구 금액</text>
+  <rect x="602" y="214" width="176" height="38" rx="8" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="690" y="238" text-anchor="middle" class="code">PostgreSQL</text>
+  <text x="602" y="278" class="small">inbox: meter + usage</text>
+  <text x="602" y="298" class="small">outbox</text>
+  <text x="602" y="318" class="code">billing.events.v1</text>
+
+  <!-- Invoice -->
+  <text x="960" y="171" text-anchor="middle" class="service-title">Invoice</text>
+  <text x="872" y="198" class="body">append-only 라인</text>
+  <rect x="872" y="214" width="176" height="38" rx="8" fill="#f8fafc" stroke="#e2e8f0"/>
+  <text x="960" y="238" text-anchor="middle" class="code">PostgreSQL</text>
+  <text x="872" y="278" class="small">inbox: billing</text>
+  <text x="872" y="298" class="small">outbox</text>
+  <text x="872" y="318" class="code">invoice.events.v1</text>
+
+  <!-- Query -->
+  <text x="1230" y="171" text-anchor="middle" class="service-title">Query</text>
+  <text x="1142" y="198" class="body">조회 모델 + 복구</text>
+  <rect x="1142" y="214" width="176" height="38" rx="8" fill="#dbeafe" stroke="#93c5fd"/>
+  <text x="1230" y="238" text-anchor="middle" class="code">PostgreSQL</text>
+  <text x="1142" y="278" class="small">inbox: 모든 public topic</text>
+  <text x="1142" y="298" class="small">checkpoint + quarantine</text>
+  <text x="1142" y="318" class="small">HTTP summary / operator redrive</text>
+
+  <!-- Kafka 이벤트 경계 -->
+  <rect x="30" y="400" width="1340" height="110" rx="18" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.8"/>
+  <text x="700" y="428" text-anchor="middle" class="band-title">Kafka 이벤트 경계</text>
+  <rect x="55" y="448" width="300" height="34" rx="17" fill="#ede9fe" stroke="#c4b5fd"/>
+  <rect x="375" y="448" width="300" height="34" rx="17" fill="#ede9fe" stroke="#c4b5fd"/>
+  <rect x="695" y="448" width="300" height="34" rx="17" fill="#ede9fe" stroke="#c4b5fd"/>
+  <rect x="1015" y="448" width="300" height="34" rx="17" fill="#ede9fe" stroke="#c4b5fd"/>
+  <text x="205" y="470" text-anchor="middle" class="topic">meter.events.v1</text>
+  <text x="525" y="470" text-anchor="middle" class="topic">usage.events.v1</text>
+  <text x="845" y="470" text-anchor="middle" class="topic">billing.events.v1</text>
+  <text x="1165" y="470" text-anchor="middle" class="topic">invoice.events.v1</text>
+
+  <!-- 발행 연결: service outbox -> Kafka topic -->
+  <path d="M110 340 L110 400" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arrow-publish)"/>
+  <path d="M380 340 L380 400" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arrow-publish)"/>
+  <path d="M650 340 L650 400" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arrow-publish)"/>
+  <path d="M920 340 L920 400" fill="none" stroke="#059669" stroke-width="2.5" marker-end="url(#arrow-publish)"/>
+
+  <!-- 전달 연결: Kafka -> receiver inbox -->
+  <path d="M470 400 L470 340" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-deliver)"/>
+  <path d="M740 400 L740 340" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-deliver)"/>
+  <path d="M1010 400 L1010 340" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-deliver)"/>
+  <path d="M1280 400 L1280 340" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-deliver)"/>
+
+  <!-- 운영 보호선 -->
+  <rect x="30" y="560" width="1340" height="200" rx="18" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text x="700" y="596" text-anchor="middle" class="band-title">운영 보호선</text>
+  <rect x="60" y="620" width="390" height="92" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+  <rect x="505" y="620" width="390" height="92" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+  <rect x="950" y="620" width="390" height="92" rx="12" fill="#ffffff" stroke="#e2e8f0"/>
+  <text x="80" y="650" class="service-title" font-size="20">로컬 트랜잭션</text>
+  <text x="80" y="677" class="body">fact + outbox를 함께 commit</text>
+  <text x="80" y="700" class="small">shared database 또는 XA 없음</text>
+  <text x="525" y="650" class="service-title" font-size="20">At-least-once 전달</text>
+  <text x="525" y="677" class="body">lease, retry wait, 중복 inbox</text>
+  <text x="525" y="700" class="small">digest 충돌은 quarantine</text>
+  <text x="970" y="650" class="service-title" font-size="20">Query 경계</text>
+  <text x="970" y="677" class="body">projection + checkpoint + audit</text>
+  <text x="970" y="700" class="small">tenant 조회 / operator 복구</text>
+
+  <!-- 범례 -->
+  <line x1="60" y1="805" x2="100" y2="805" stroke="#059669" stroke-width="2.5" marker-end="url(#arrow-publish)"/>
+  <text x="112" y="810" class="legend">로컬 outbox에서 발행</text>
+  <line x1="330" y1="805" x2="370" y2="805" stroke="#2563eb" stroke-width="2.5" stroke-dasharray="8 6" marker-end="url(#arrow-deliver)"/>
+  <text x="382" y="810" class="legend">로컬 inbox로 전달</text>
+  <text x="700" y="852" text-anchor="middle" class="footnote">독립 PostgreSQL 권위 5개; Kafka는 전송 수단이며 금융 권위가 아닙니다.</text>
+</svg>
