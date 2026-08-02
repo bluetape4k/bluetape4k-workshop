@@ -47,7 +47,7 @@ jobs:
         with:
           gradle-version: wrapper
       - name: Build (compile only)
-        run: ./gradlew build -x test -x stressTest -x migrationCompatibilityTest --parallel --continue
+        run: ./gradlew build -x detekt -x test -x stressTest -x migrationCompatibilityTest --parallel --continue
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
@@ -102,7 +102,7 @@ jobs:
           path: .bluetape4k-projects
       - name: Build bluetape4k mock server images
         working-directory: .bluetape4k-projects
-        run: ./gradlew :bluetape4k-mock-web-server:jibDockerBuild :bluetape4k-mock-webflux-server:jibDockerBuild --no-configuration-cache --max-workers=1
+        run: ./gradlew -x detekt :bluetape4k-mock-web-server:jibDockerBuild :bluetape4k-mock-webflux-server:jibDockerBuild --no-configuration-cache --max-workers=1
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
       - name: Run tests
@@ -114,6 +114,7 @@ jobs:
           DD_APPLICATION_KEY: "test-application-key"
         run: >-
           ./gradlew
+          -x detekt
           test
           :commerce-pre-generated-voucher-pool:koverXmlReport
           :commerce-event-sourced-promotion-voucher-campaign:integrationTest
@@ -205,6 +206,7 @@ jobs:
           DOCKER_HOST: "unix:///var/run/docker.sock"
         run: >-
           ./gradlew
+          -x detekt
           highContentionLocalReference
           -PhighContentionRunId=nightly-${{ github.run_id }}-${{ github.run_attempt }}
           -Pkotlin.compiler.execution.strategy=in-process

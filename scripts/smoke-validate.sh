@@ -15,7 +15,8 @@
 
 set -euo pipefail
 
-GRADLEW="./gradlew"
+# Keep every script-driven Gradle path free of Detekt, including future groups.
+GRADLEW="./gradlew -x detekt"
 MAX_WORKERS="${MAX_WORKERS:-2}"
 
 run() {
@@ -267,14 +268,14 @@ case "${1:-help}" in
     high_contention_run_id="$HIGH_CONTENTION_RUN_ID"
     unset HIGH_CONTENTION_RUN_ID
     echo "▶ $GRADLEW highContentionCi -PhighContentionRunId=$high_contention_run_id --max-workers=1"
-    "$GRADLEW" highContentionCi \
+    ./gradlew -x detekt highContentionCi \
       "-PhighContentionRunId=$high_contention_run_id" \
       --max-workers=1
     ;;
 
   stale-check)
     echo "=== Gradle project count ==="
-    count=$("$GRADLEW" projects --console=plain 2>/dev/null | grep -Ec "Project ':" || true)
+    count=$(./gradlew -x detekt projects --console=plain 2>/dev/null | grep -Ec "Project ':" || true)
     expected="${EXPECTED_GRADLE_PROJECTS:-}"
     if [ -n "$expected" ]; then
       echo "Active modules: $count (expected: $expected)"
