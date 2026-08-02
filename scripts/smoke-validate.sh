@@ -15,7 +15,8 @@
 
 set -euo pipefail
 
-GRADLEW="./gradlew"
+# Keep root-project script paths free of Detekt; standalone build-logic is kept separate below.
+GRADLEW="./gradlew -x detekt"
 MAX_WORKERS="${MAX_WORKERS:-2}"
 
 run() {
@@ -247,7 +248,8 @@ case "${1:-help}" in
   high-contention-contract)
     run "node --test scripts/high-contention/validate-contract.test.mjs scripts/high-contention/validate-run.test.mjs scripts/high-contention/select-upload.test.mjs"
     run "node scripts/validate-high-contention-readme.mjs"
-    run "$GRADLEW -p build-logic test"
+    # build-logic is a standalone Gradle build without a Detekt task.
+    run "./gradlew -p build-logic test"
     run "$GRADLEW \
       :operations-job-console-core:test \
       :commerce-concert-ticket-flash-sale:test \
@@ -267,14 +269,14 @@ case "${1:-help}" in
     high_contention_run_id="$HIGH_CONTENTION_RUN_ID"
     unset HIGH_CONTENTION_RUN_ID
     echo "▶ $GRADLEW highContentionCi -PhighContentionRunId=$high_contention_run_id --max-workers=1"
-    "$GRADLEW" highContentionCi \
+    ./gradlew -x detekt highContentionCi \
       "-PhighContentionRunId=$high_contention_run_id" \
       --max-workers=1
     ;;
 
   stale-check)
     echo "=== Gradle project count ==="
-    count=$("$GRADLEW" projects --console=plain 2>/dev/null | grep -Ec "Project ':" || true)
+    count=$(./gradlew -x detekt projects --console=plain 2>/dev/null | grep -Ec "Project ':" || true)
     expected="${EXPECTED_GRADLE_PROJECTS:-}"
     if [ -n "$expected" ]; then
       echo "Active modules: $count (expected: $expected)"
