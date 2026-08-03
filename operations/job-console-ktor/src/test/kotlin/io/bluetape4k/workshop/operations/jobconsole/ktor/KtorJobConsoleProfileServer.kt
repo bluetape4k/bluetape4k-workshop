@@ -399,7 +399,7 @@ internal class KtorJobConsoleLiveAdapter private constructor(
     }
 
     private fun completeThroughOwnedWorker(jobId: UUID) {
-        val deadline = System.nanoTime() + Duration.ofSeconds(10).toNanos()
+        val deadline = System.nanoTime() + Duration.ofMillis(profile.recoveryDeadlineMs).toNanos()
         do {
             val stored = application.runtime.repository.load(jobId)
             if (stored?.state?.terminal == true) return
@@ -425,7 +425,7 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         val staleExecutor = VirtualThreads.executorService()
         try {
             val staleAttempt = staleExecutor.submit<JobProblemCode> {
-                check(barrier.readyAndAwait(Duration.ofSeconds(10))) {
+                check(barrier.readyAndAwait(Duration.ofMillis(profile.failureDetectionDeadlineMs))) {
                     "stale Ktor attempt barrier timed out"
                 }
                 try {
@@ -435,7 +435,7 @@ internal class KtorJobConsoleLiveAdapter private constructor(
                     failure.code
                 }
             }
-            check(barrier.awaitReady(Duration.ofSeconds(10))) {
+            check(barrier.awaitReady(Duration.ofMillis(profile.failureDetectionDeadlineMs))) {
                 "stale Ktor attempt did not reach its transaction-free pause"
             }
             val pausedConnections = staleDataSource.hikariPoolMXBean.activeConnections
@@ -462,7 +462,7 @@ internal class KtorJobConsoleLiveAdapter private constructor(
             val beforeRelease = authorityBaseline(submitted.jobId)
 
             barrier.release()
-            val staleCode = staleAttempt.get(10, TimeUnit.SECONDS)
+            val staleCode = staleAttempt.get(profile.recoveryDeadlineMs, TimeUnit.MILLISECONDS)
             check(staleCode == JobProblemCode.LEASE_LOST)
             val afterRelease = authorityBaseline(submitted.jobId)
             staleAttemptEvidence = KtorStaleAttemptEvidence(
@@ -487,7 +487,7 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         tenantId: String,
     ): io.bluetape4k.workshop.operations.jobconsole.persistence.ClaimedJob {
         return HighContentionAwait.value(
-            timeout = Duration.ofSeconds(10),
+            timeout = Duration.ofMillis(profile.recoveryDeadlineMs),
             pollInterval = Duration.ofMillis(10),
             description = "replacement Ktor worker did not reclaim the expired lease",
         ) {
