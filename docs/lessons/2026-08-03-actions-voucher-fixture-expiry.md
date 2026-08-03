@@ -201,6 +201,14 @@ Flow operator 오류나 다른 테스트 실패는 없었다.
 blocking thread를 점유하는 대신 coroutine 구조와 직접 연결된 test-only 동기화 경계다.
 
 로컬에서 수정된 `RaceFallbackCatalogTest` 전체 9개를 `--rerun-tasks`로 10회 반복해
-`PASS`를 확인했다. 이 수정은 production code나 timeout 계약을 바꾸지 않으며, 다음
-Nightly full dispatch에서 hosted runner의 동일한 두 timing assertion이 재발하지 않는지
-확인해야 한다.
+`PASS`를 확인했다. 이 수정은 production code나 timeout 계약을 바꾸지 않는다.
+
+새 head `400c5a890eebf17cae6f2268bc394ec05cb50d09`의 Nightly full run
+`30838002379`가 성공했다. `High-contention local reference` matrix의
+`job-core`, `job-spring`, `job-ktor`, `ticket-spring` 네 job과 `Test (Testcontainers)`,
+`Nightly Status`가 모두 성공했으며, `test-results` artifact에서도 전체 XML에
+`<failure>`/`<error>`가 없었다. 특히 `RaceFallbackCatalogTest`는 `tests=9`,
+`failures=0`, `errors=0`, `skipped=0`으로 hosted runner에서 통과했다. 따라서
+고정 20ms 관찰에 의존하던 eager-start 검사는 실제 `onStart` 이벤트를 bounded 대기하는
+구현으로 안정화되었고, 구현별 high-contention matrix 분할도 원격 Nightly에서
+동시 실행 가능한 상태로 검증되었다.
