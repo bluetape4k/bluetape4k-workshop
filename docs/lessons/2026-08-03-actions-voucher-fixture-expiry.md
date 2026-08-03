@@ -166,3 +166,17 @@ cycle임을 test XML에서 확인했다. 동일 Java 25 전체 7개 profile(`loc
 correctness gate의 판정을 바꾸지 않는다. 로컬 Colima에서는 `DOCKER_HOST`를 CI의
 `/var/run/docker.sock`로 덮어쓰지 않고 Testcontainers가 설정한
 `~/.colima/default/docker.sock`을 사용한다.
+
+Nightly matrix run `30831407873`은 `ticket-spring`, `job-core`, `job-spring`을 통과시켰지만
+`job-ktor/slow-provider`만 `CHILD_TEST_FAILURE`로 종료했다. 원격 child 출력의 유효한
+테스트 실패는 1건이었고, 고정된 10초 예산을 profile budget으로 바꾼 뒤에도 첫
+slow-provider stale-lease 시나리오가 measured 400개 요청과 동시에 시작되는 구조가 남아
+있었다. 2-CPU runner에서 이 초기 lifecycle probe가 PostgreSQL/HTTP contention에 밀릴 수
+있으므로, 첫 probe 완료를 `CompletableFuture`로 bounded 대기시키고 후속 measured 요청은
+그 경계가 성공한 뒤에만 진입하도록 격리했다. 실패 시 gate도 같은 예외로 종료해 timeout을
+숨기지 않는다.
+
+수정 후 로컬 Java 25 `job-ktor/slow-provider`를
+`local-hc-ktor-gated-20260803b`로 재실행해 `BUILD SUCCESSFUL in 35s`를 확인했다. 원격
+matrix에서 이미 통과한 다른 구현과 함께 새 head의 Nightly full dispatch에서
+hosted-runner 재검증이 필요하다.
