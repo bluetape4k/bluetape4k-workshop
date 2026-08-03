@@ -48,7 +48,7 @@ jobs:
           gradle-version: wrapper
       - name: Build (compile only)
         # Compile-only Nightly does not consume native-image reachability metadata.
-        run: ./gradlew build -x detekt -x collectReachabilityMetadata -x test -x stressTest -x migrationCompatibilityTest --parallel --continue
+        run: ./gradlew assemble -x detekt -x collectReachabilityMetadata -x test -x stressTest -x migrationCompatibilityTest --parallel --continue
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 

@@ -80,3 +80,16 @@ CI의 image decode와 scheduler variance보다 짧은 timeout을 assertion budge
 사용하지 않는다.
 Container/Nightly가 공유하는 HTTP lifecycle 테스트는 실제 runner의 DB 및 이벤트 처리
 지연보다 짧은 response/Awaitility timeout을 사용하지 않는다.
+
+추가로 수동 Nightly full run `30810489739`에서는 `Build (compile only)`가 이름과 달리
+`build` lifecycle을 통해 `commerce-event-sourced-promotion-voucher-campaign:integrationTest`까지
+실행했고, `EventSourcedProjectionRuntimeIntegrationTest`의 poison gauge가 아직 등록되지
+않은 순간에 실패했다. compile-only 단계는 검증 테스트를 중복 실행하지 않도록 `assemble`을
+사용하고, bounded reason-class metric gauge는 초기화 시 미리 등록해 첫 관측 tick의
+순서와 무관하게 `HANDLER_REJECTED`/`UNKNOWN` 값을 관측할 수 있게 한다.
+
+Examples run `30810461549`에서도 동일한 주문 lifecycle web test가 30초 예산으로
+재차 `SUCCEEDED` 상태 assertion을 끝내지 못했다. polling Awaitility는 60초로 늘리되
+개별 HTTP 요청은 10초에서 끊어 다음 polling 시도에 진행권을 넘긴다. 이는 production
+timeout을 바꾸지 않고 Container/Nightly의 일시적인 DB·이벤트 처리 정체를 회복할 수 있게
+하는 test-only 경계다.

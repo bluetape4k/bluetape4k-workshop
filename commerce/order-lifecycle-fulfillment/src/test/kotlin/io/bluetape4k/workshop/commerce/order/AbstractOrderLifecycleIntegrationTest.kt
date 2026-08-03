@@ -26,7 +26,7 @@ internal abstract class AbstractOrderLifecycleIntegrationTest {
         WebTestClient
             .bindToServer()
             .baseUrl("http://localhost:$port")
-            .responseTimeout(Duration.ofSeconds(30))
+            .responseTimeout(Duration.ofSeconds(10))
             .build()
     }
 
