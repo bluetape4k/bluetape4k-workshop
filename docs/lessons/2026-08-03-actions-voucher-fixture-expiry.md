@@ -93,3 +93,27 @@ Examples run `30810461549`에서도 동일한 주문 lifecycle web test가 30초
 개별 HTTP 요청은 10초에서 끊어 다음 polling 시도에 진행권을 넘긴다. 이는 production
 timeout을 바꾸지 않고 Container/Nightly의 일시적인 DB·이벤트 처리 정체를 회복할 수 있게
 하는 test-only 경계다.
+
+수정된 PR head `085dfc7cdf9b145578974cbced3735c5f92ddfb9`의 수동 Nightly full run
+`30811875199`에서는 compile-only 단계가 `assemble`로 정상 종료했지만, 두 개의 별도
+결정적 실패가 드러났다. `kotlin-flow-extensions-parallel-enrichment`의 테스트가
+published `bluetape4k-junit5`에 없는 `io.bluetape4k.coroutines.tests.withParallels`를
+import하고 있었고, `observability-basic`은 공유 `MockWebServer` connection 재사용으로
+404 inventory 요청이 180초까지 대기했다. `redis-cluster-demo`는 cluster 전체에 대한
+무인자 `flushDb()`가 replica를 임의 선택해 `READONLY`를 반환했다. high-contention의
+`ticket-spring/redis-path-outage`는 동일 run에서 PostgreSQL/Exposed prepared statement
+실패로 별도 RED가 남았고, 같은 suite의 과거 Nightly에도 반복된 runner/DB contention
+신호이므로 재실행 결과와 raw log를 함께 확인해야 한다.
+
+Flow 테스트는 published package인 `io.bluetape4k.junit5.coroutines.withParallels`를
+사용하도록 고쳤다. Observability의 공유 mock 응답에는 `Connection: close`를 명시해
+테스트 context 간 pooled connection 재사용을 차단했고, Redis cluster fixture는
+`clusterGetNodes()`에서 MASTER만 골라 각 master에 `flushDb(node)`를 보내도록 바꿨다.
+이렇게 하면 테스트를 무작정 늘린 timeout이나 replica 쓰기로 통과시키지 않고 CI runner의
+공유 상태 경계를 명시적으로 격리할 수 있다.
+
+로컬 검증에서는 Flow 7개, Observability 6개 테스트와 Redis test compile이 통과했다.
+Flow는 로컬 `mavenLocal()`의 오래된 동일 버전 jar가 helper를 포함하지 않아 published
+Central jar를 직접 사용한 임시 Gradle 검증으로 확인했다. Redis runtime은 Docker socket이
+없어 실행하지 못했으므로, GitHub Nightly 재실행에서 cluster master 초기화 동작을
+확인해야 한다.
