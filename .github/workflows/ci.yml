@@ -65,7 +65,8 @@ jobs:
           gradle-version: wrapper
           cache-read-only: ${{ github.event_name == 'pull_request' }}
       - name: Build (compile only)
-        run: ./gradlew build -x detekt -x test -x integrationTest -x stressTest -x migrationCompatibilityTest --parallel --continue
+        # Compile-only CI does not consume native-image reachability metadata.
+        run: ./gradlew build -x detekt -x collectReachabilityMetadata -x test -x integrationTest -x stressTest -x migrationCompatibilityTest --parallel --continue
         env:
           JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"

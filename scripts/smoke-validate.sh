@@ -15,8 +15,9 @@
 
 set -euo pipefail
 
-# Keep root-project script paths free of Detekt; standalone build-logic is kept separate below.
-GRADLEW="./gradlew -x detekt"
+# Keep root-project script paths free of Detekt and optional native-image metadata;
+# standalone build-logic is kept separate below.
+GRADLEW="./gradlew -x detekt -x collectReachabilityMetadata"
 MAX_WORKERS="${MAX_WORKERS:-2}"
 
 run() {
