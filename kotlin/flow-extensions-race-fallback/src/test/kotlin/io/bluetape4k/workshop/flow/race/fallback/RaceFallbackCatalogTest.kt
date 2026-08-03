@@ -6,12 +6,13 @@ import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.coroutines.flow.extensions.FlowEvent
 import io.bluetape4k.junit5.coroutines.runSuspendTest
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Test
 
 class RaceFallbackCatalogTest {
@@ -72,23 +73,23 @@ class RaceFallbackCatalogTest {
 
     @Test
     fun `eager fallback starts later sources early but emits in source order`() = runSuspendTest {
-        val backupStarted = AtomicBoolean(false)
+        val backupStarted = CompletableDeferred<Unit>()
         val cache = catalog.source(result(CatalogSource.CACHE, latencyMs = 80, quality = SourceQuality.STALE))
         val backup = catalog.source(
             result = result(CatalogSource.BACKUP_API, latencyMs = 1),
-            onStart = { backupStarted.set(true) },
+            onStart = { backupStarted.complete(Unit) },
         )
 
         val collection = async { catalog.eagerFallback(cache, backup).toList() }
-        delay(20)
+        withTimeout(1_000) { backupStarted.await() }
 
-        backupStarted.get() shouldBeEqualTo true
+        backupStarted.isCompleted shouldBeEqualTo true
         collection.await().map { it.source } shouldBeEqualTo listOf(CatalogSource.CACHE, CatalogSource.BACKUP_API)
     }
 
     @Test
     fun `concatMapEager starts mapped sources eagerly and preserves outer order`() = runSuspendTest {
-        val remoteStarted = AtomicBoolean(false)
+        val remoteStarted = CompletableDeferred<Unit>()
         val sources = flowOf(CatalogSource.CACHE, CatalogSource.REMOTE_API)
 
         val collection = async {
@@ -97,15 +98,15 @@ class RaceFallbackCatalogTest {
                     CatalogSource.CACHE -> catalog.source(result(source, latencyMs = 80, quality = SourceQuality.STALE))
                     CatalogSource.REMOTE_API -> catalog.source(
                         result = result(source, latencyMs = 1),
-                        onStart = { remoteStarted.set(true) },
+                        onStart = { remoteStarted.complete(Unit) },
                     )
                     else -> catalog.source(result(source))
                 }
             }.toList()
         }
-        delay(20)
+        withTimeout(1_000) { remoteStarted.await() }
 
-        remoteStarted.get() shouldBeEqualTo true
+        remoteStarted.isCompleted shouldBeEqualTo true
         collection.await().map { it.source } shouldBeEqualTo listOf(CatalogSource.CACHE, CatalogSource.REMOTE_API)
     }
 
