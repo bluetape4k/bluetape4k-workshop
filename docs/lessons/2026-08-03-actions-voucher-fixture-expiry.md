@@ -128,3 +128,31 @@ bounded `untilAsserted`로 바꿔 transport timeout을 일시적인 관측 실�
 만 무시하므로 assertion 오류나 다른 예외의 진단은 보존된다. 이 실패는 새 production
 동작 변경이 아니라 Container runner의 첫 polling 요청 지연이라는 재현 가능한 테스트
 경계 문제였다.
+
+## high-contention 로컬 재현과 수정
+
+수정 전 `ticket-spring/redis-path-outage` local-reference 프로파일을 로컬
+Colima/Testcontainers에서 실행했을 때도 Nightly와 같은 실패를 재현했다. 400개 작업과
+동시성 96에서 `TicketHighContentionWorkloadEngine.awaitAll`이
+`Ticket workload execution failed`를 보고했고, 원인 예외는
+`org.postgresql.util.PSQLException: ERROR: deadlock detected`였다. PostgreSQL은
+`ticket_inventory` 행을 잠그는 중 두 transaction이 서로의 ShareLock을 기다린다고
+기록했으며, stack은 `TicketPurchaseRepository.start`와
+`TicketLiveProfileAdapter.execute`로 이어졌다. 이는 polling 상태가 늦게 보인 것이 아니라
+동기 purchase transaction이 rollback된 것이다.
+
+원인은 measured worker가 `application.command(...)`를 지연 생성한 데 있었다. command
+fixture는 admission grant와 idempotency row를 쓰고, 동시에 다른 worker의 purchase는
+sale row를 먼저 잠갔다. grant의 foreign-key 검증과 sale lock이 서로를 기다릴 수 있으므로,
+전체 workload를 Awaitility로 감싸는 것은 deadlock을 해결하지 않고 실제 transaction
+실패를 숨긴다. 모든 measured schedule의 command fixture를 worker 시작 전에 순차적으로
+준비하도록 바꾸고, Redis failure injection에서 실제로 시작된 command가 존재하는 지점만
+5초 bounded Awaitility로 기다리도록 했다.
+
+검증 결과 수정 후 로컬 `redis-path-outage`는 400/400 completed, local rejection 0,
+missed deadline 0, schedule digest 일치, `NEW_PURCHASE_FAILS_CLOSED`와
+`COMMITTED_PAYMENT_CONVERGES` PASS, terminal report PASS를 기록했다. 이어서
+`ticket-spring` local-reference 전체 7개 프로파일도 3분 15초 만에 `PASS=7,
+FAIL=0, ERROR=0, UNAVAILABLE=0`으로 종료했다. 로컬 Colima에서는 `DOCKER_HOST`를
+CI의 `/var/run/docker.sock`로 덮어쓰지 않고 Testcontainers가 설정한
+`~/.colima/default/docker.sock`을 사용해야 한다.
