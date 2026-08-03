@@ -42,6 +42,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import java.util.UUID
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -114,6 +115,7 @@ internal class KtorJobConsoleLiveAdapter private constructor(
     private val deliveredEventIds = ConcurrentHashMap.newKeySet<UUID>()
     private val restartStarted = AtomicBoolean()
     private val slowProviderStarted = AtomicBoolean()
+    private val slowProviderReady = CompletableFuture<Unit>()
     private val outageActive = AtomicBoolean()
     private val durableCancelsDuringOutage = AtomicInteger()
     private val durableCancelsAfterKeyLoss = AtomicInteger()
@@ -183,16 +185,7 @@ internal class KtorJobConsoleLiveAdapter private constructor(
                     lifecycleLock.read { submitAndComplete(token, identity) }
                 }
 
-            KtorJobConsoleProfileAction.SLOW_PROVIDER ->
-                lifecycleLock.read {
-                    if (slowProviderStarted.compareAndSet(false, true)) {
-                        runFencedAttemptScenario(restartApplication = false, identity = identity)
-                        winners[token.stableOrdinal] = true
-                        WorkloadTerminalDisposition.COMPLETED
-                    } else {
-                        submitAndComplete(token, identity)
-                    }
-                }
+            KtorJobConsoleProfileAction.SLOW_PROVIDER -> executeSlowProvider(token, identity)
 
             else -> lifecycleLock.read { executeLiveAction(token, identity) }
         }
@@ -396,6 +389,41 @@ internal class KtorJobConsoleLiveAdapter private constructor(
         winners[token.stableOrdinal] = winner
         if (winner) completeThroughOwnedWorker(submitted.jobId)
         return WorkloadTerminalDisposition.COMPLETED
+    }
+
+    private fun executeSlowProvider(
+        token: ScheduleToken,
+        identity: WorkloadIdentity,
+    ): WorkloadTerminalDisposition {
+        if (slowProviderStarted.compareAndSet(false, true)) {
+            try {
+                lifecycleLock.write {
+                    runFencedAttemptScenario(restartApplication = false, identity = identity)
+                    winners[token.stableOrdinal] = true
+                }
+                slowProviderReady.complete(Unit)
+            } catch (failure: Throwable) {
+                slowProviderReady.completeExceptionally(failure)
+                throw failure
+            }
+        } else {
+            awaitSlowProviderBoundary()
+            lifecycleLock.read {
+                submitAndComplete(token, identity)
+            }
+        }
+        return WorkloadTerminalDisposition.COMPLETED
+    }
+
+    private fun awaitSlowProviderBoundary() {
+        try {
+            slowProviderReady.get(profile.workloadJoinDeadlineMs, TimeUnit.MILLISECONDS)
+        } catch (failure: Throwable) {
+            throw IllegalStateException(
+                "slow-provider lifecycle boundary did not become ready before the workload deadline",
+                failure,
+            )
+        }
     }
 
     private fun completeThroughOwnedWorker(jobId: UUID) {
