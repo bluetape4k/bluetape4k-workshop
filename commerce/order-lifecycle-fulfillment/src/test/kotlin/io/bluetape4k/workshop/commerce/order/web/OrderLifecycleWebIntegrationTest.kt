@@ -78,7 +78,7 @@ internal class OrderLifecycleWebIntegrationTest(
             .jsonPath("$.code")
             .isEqualTo("IDEMPOTENCY_FINGERPRINT_CONFLICT")
 
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost Duration.ofSeconds(30) untilAsserted {
             webTestClient
                 .get()
                 .uri("/api/v1/orders/{orderId}", orderId)
@@ -111,7 +111,7 @@ internal class OrderLifecycleWebIntegrationTest(
         val delayedOrderId = delayedBody.get("orderId").asString()
         val paymentAttemptId = delayedBody.get("paymentAttemptId").asString()
 
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost Duration.ofSeconds(30) untilAsserted {
             webTestClient
                 .get()
                 .uri("/api/v1/orders/{orderId}", delayedOrderId)
@@ -134,7 +134,7 @@ internal class OrderLifecycleWebIntegrationTest(
             .jsonPath("$.disposition")
             .isEqualTo("APPLIED")
 
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost Duration.ofSeconds(30) untilAsserted {
             webTestClient
                 .get()
                 .uri("/api/v1/orders/{orderId}", delayedOrderId)
@@ -178,7 +178,7 @@ internal class OrderLifecycleWebIntegrationTest(
             .jsonPath("$.refundCaseId")
             .isNotEmpty
 
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost Duration.ofSeconds(30) untilAsserted {
             webTestClient
                 .get()
                 .uri("/api/v1/orders/{orderId}", delayedOrderId)
@@ -229,7 +229,7 @@ internal class OrderLifecycleWebIntegrationTest(
                 .returnResult()
         val orderId = objectMapper.readTree(created.responseBody.shouldNotBeNull()).get("orderId").asString()
 
-        await atMost Duration.ofSeconds(10) untilAsserted {
+        await atMost Duration.ofSeconds(30) untilAsserted {
             webTestClient
                 .get()
                 .uri("/api/v1/orders/{orderId}", orderId)

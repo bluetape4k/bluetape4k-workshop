@@ -58,6 +58,19 @@ native-image metadata cache를 소비하지 않도록 한다. 실제 native-imag
   중단되었으며, 이는 테스트 assertion 실패가 아니다. GitHub artifact가 남긴 원래
   RED 증거는 별도로 보존했다.
 
+2026-08-03 merge commit `22787298`의 Examples run `30807714538`에서는
+`commerce-order-lifecycle-fulfillment`의 `OrderLifecycleWebIntegrationTest`가
+Container runner에서 `browser commands reconcile delayed payment and keep cancellation
+separate from refund` 상태 검증을 10초 안에 끝내지 못했다. `test` task가 공유하는
+Nightly full 경로도 같은 HTTP/Testcontainers 테스트를 실행하므로, Examples만 재시도해
+넘기는 것은 충분한 수정이 아니다. production 결제 상태 전이는 올바르게 구현되어
+있고, 실패 지점은 CI 부하에서의 HTTP/DB 비동기 후속 상태 확인 예산이었다.
+
+따라서 `AbstractOrderLifecycleIntegrationTest`의 `WebTestClient` response timeout과
+웹 lifecycle 테스트의 Awaitility 예산을 30초로 맞췄다. 기능을 건너뛰거나 production
+timeout을 바꾸지 않고, Container/Nightly의 공유 테스트가 실제 `SUCCEEDED` 상태와
+후속 취소/환불 계약을 계속 검증하도록 유지한다.
+
 ## 다음 실행 지침
 
 공유 voucher compatibility scenario에 고정된 과거 날짜를 넣지 않는다. 시간 경계
@@ -65,3 +78,5 @@ native-image metadata cache를 소비하지 않도록 한다. 실제 native-imag
 black-box contract는 실행 시점에 유효한 window를 사용한다. Blocking/native 테스트는
 CI의 image decode와 scheduler variance보다 짧은 timeout을 assertion budget으로
 사용하지 않는다.
+Container/Nightly가 공유하는 HTTP lifecycle 테스트는 실제 runner의 DB 및 이벤트 처리
+지연보다 짧은 response/Awaitility timeout을 사용하지 않는다.
