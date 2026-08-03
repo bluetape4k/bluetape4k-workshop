@@ -158,8 +158,11 @@ inventory를 기다리므로 두 transaction이 교착할 수 있었다. `cancel
 inventory mutation의 순서를 `sale → guard/buyer → inventory`로 통일했다. 이 경우에도
 Awaitility로 workload 전체를 감싸지 않고, 교착을 유발한 transaction 순서를 바로잡았다.
 
-수정 후 Java 25 로컬 `redis-path-outage` 단일 profile은 compile과 runtime을 통과했고,
-이전 실패의 원인은 `ticket_sales` foreign-key lock cycle임을 test XML에서 확인했다. 이어서
-동일 Java 25 전체 7개 profile을 다시 실행해 `PASS=7, FAIL=0, ERROR=0, UNAVAILABLE=0`을
-확인해야 한다. 로컬 Colima에서는 `DOCKER_HOST`를 CI의 `/var/run/docker.sock`로 덮어쓰지
-않고 Testcontainers가 설정한 `~/.colima/default/docker.sock`을 사용한다.
+수정 후 Java 25 로컬 `redis-path-outage` 단일 profile(`local-hc-ticket-j25-fixed-redis3-20260803`)
+은 compile과 runtime을 통과했고, 이전 실패의 원인은 `ticket_sales` foreign-key lock
+cycle임을 test XML에서 확인했다. 동일 Java 25 전체 7개 profile(`local-hc-ticket-j25-fixed-all-20260803`)
+도 3분 7초 만에 `PASS=7, FAIL=0, ERROR=0, UNAVAILABLE=0`, `cleanupZeroLive=true`로
+종료했다. `burst`의 missed-deadline 수치는 관찰값으로 남지만 terminal report와 현재
+correctness gate의 판정을 바꾸지 않는다. 로컬 Colima에서는 `DOCKER_HOST`를 CI의
+`/var/run/docker.sock`로 덮어쓰지 않고 Testcontainers가 설정한
+`~/.colima/default/docker.sock`을 사용한다.
