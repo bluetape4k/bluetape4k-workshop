@@ -180,3 +180,27 @@ slow-provider stale-lease 시나리오가 measured 400개 요청과 동시에 �
 `local-hc-ktor-gated-20260803b`로 재실행해 `BUILD SUCCESSFUL in 35s`를 확인했다. 원격
 matrix에서 이미 통과한 다른 구현과 함께 새 head의 Nightly full dispatch에서
 hosted-runner 재검증이 필요하다.
+
+## Nightly Flow eager-start timing 경계
+
+새 head `3da01b9ae12f781054e0264c16a7ddb6d776c746`의 Nightly full run
+`30833108958`에서는 high-contention 4개 matrix가 모두 통과했지만
+`Test (Testcontainers)`가 `kotlin/flow-extensions-race-fallback`의
+`RaceFallbackCatalogTest` 두 항목에서 실패했다. `eager fallback starts later sources
+early but emits in source order`와 `concatMapEager starts mapped sources eagerly and
+preserves outer order`가 모두 20ms 뒤 `AtomicBoolean`을 확인할 때 아직 `false`였다.
+업로드된 `test-results` artifact의 XML에는 이 두 assertion failure만 있었고 production
+Flow operator 오류나 다른 테스트 실패는 없었다.
+
+이 검사는 `runSuspendTest`의 단일 `runBlocking` event loop에서 eager child coroutine의
+실행을 고정된 실제 시간 20ms로 추정하고 있었다. GitHub hosted runner의 JVM/스케줄러
+지연이 그 예산을 넘을 수 있으므로, 고정 sleep을 늘려 우연히 통과시키지 않는다.
+각 `onStart` callback이 `CompletableDeferred`를 완료하게 하고, 테스트는
+`withTimeout(1_000) { started.await() }`로 실제 eager 시작 이벤트를 bounded 대기한다.
+그 뒤에도 source-order 방출 결과를 기존 assertion으로 검증한다. 이는 Awaitility로
+blocking thread를 점유하는 대신 coroutine 구조와 직접 연결된 test-only 동기화 경계다.
+
+로컬에서 수정된 `RaceFallbackCatalogTest` 전체 9개를 `--rerun-tasks`로 10회 반복해
+`PASS`를 확인했다. 이 수정은 production code나 timeout 계약을 바꾸지 않으며, 다음
+Nightly full dispatch에서 hosted runner의 동일한 두 timing assertion이 재발하지 않는지
+확인해야 한다.
