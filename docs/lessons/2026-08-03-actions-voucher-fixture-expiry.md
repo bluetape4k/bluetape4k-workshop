@@ -21,6 +21,13 @@ run 30768173911은 `bucket4j-caffeine-web`과 `bucket4j-redis`의
 Dependabot의 cache-read-only 실행에서 오래된 reachability metadata 저장소를
 재사용했다.
 
+PR #709의 첫 `Examples` 실행(30804446013)에서는 별도로
+`ImageOcrServiceImplTest`의 `blocking OCR timeout releases the native lane`가
+실패했다. 테스트 fixture의 전체 OCR timeout이 100ms라서, CI에서 두 번째 호출의
+이미지 decode가 그 예산을 조금 넘으면 lane 자체는 해제됐어도 정상 응답 대신
+`FAILED`가 반환됐다. 이는 production timeout 회귀가 아니라 환경별 decode 지연에
+민감한 테스트 경계였다.
+
 ## 결정
 
 공유 contract scenario의 시작 시각을 로드 시점 1분 전으로 두고, 종료 시각을
@@ -29,7 +36,9 @@ campaign)를 유지하면서 달력 날짜가 바뀌어도 재발하지 않는�
 별도 dependency는 추가하지 않는다. CI·Nightly·Examples의 compile/test 및
 high-contention Gradle 경로에는 `-x collectReachabilityMetadata`를 적용해 선택적
 native-image metadata cache를 소비하지 않도록 한다. 실제 native-image 빌드 경로는
-이 workflow 범위에 포함하지 않는다.
+이 workflow 범위에 포함하지 않는다. OCR timeout regression fixture는 timeout을
+500ms로 늘려 첫 번째 blocking 호출의 timeout 의미는 유지하면서 CI decode variance를
+흡수한다.
 
 ## 검증
 
@@ -41,6 +50,10 @@ native-image metadata cache를 소비하지 않도록 한다. 실제 native-imag
 - `actionlint .github/workflows/ci.yml .github/workflows/nightly.yml .github/workflows/Examples.yml` 통과.
 - `scripts/smoke-validate.sh`의 공통 Gradle 경로와 세 workflow의 직접 Gradle 경로에
   metadata task 제외가 적용됐음을 확인했다.
+- `ImageOcrServiceImplTest`의 OCR timeout regression을 500ms fixture로 실행해 1개
+  테스트 통과.
+- PR #709의 첫 `Examples` 실행에서 위 테스트가 100ms 경계로 실패한 로그와 artifact를
+  확인하고, 로컬에서도 같은 실패를 재현한 뒤 fixture 조정 후 재실행 통과.
 - 로컬 event-sourced integrationTest는 Docker 미가용으로 Spring context 초기화에서
   중단되었으며, 이는 테스트 assertion 실패가 아니다. GitHub artifact가 남긴 원래
   RED 증거는 별도로 보존했다.
@@ -49,4 +62,6 @@ native-image metadata cache를 소비하지 않도록 한다. 실제 native-imag
 
 공유 voucher compatibility scenario에 고정된 과거 날짜를 넣지 않는다. 시간 경계
 동작 자체를 검증해야 하는 테스트는 해당 adapter의 test clock을 고정하고, 공용
-black-box contract는 실행 시점에 유효한 window를 사용한다.
+black-box contract는 실행 시점에 유효한 window를 사용한다. Blocking/native 테스트는
+CI의 image decode와 scheduler variance보다 짧은 timeout을 assertion budget으로
+사용하지 않는다.
