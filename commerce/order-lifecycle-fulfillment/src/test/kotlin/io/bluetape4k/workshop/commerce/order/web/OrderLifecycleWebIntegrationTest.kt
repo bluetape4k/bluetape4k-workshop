@@ -4,6 +4,7 @@ import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.commerce.order.AbstractOrderLifecycleIntegrationTest
 import org.awaitility.kotlin.await
+import org.awaitility.kotlin.ignoreExceptionsInstanceOf
 import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
@@ -77,7 +78,9 @@ internal class OrderLifecycleWebIntegrationTest(
             .jsonPath("$.code")
             .isEqualTo("IDEMPOTENCY_FINGERPRINT_CONFLICT")
 
-        await.ignoreExceptions().atMost(Duration.ofSeconds(60)).untilAsserted {
+        await.ignoreExceptionsInstanceOf(IllegalStateException::class)
+            .atMost(Duration.ofSeconds(60))
+            .untilAsserted {
             webTestClient
                 .get()
                 .uri("/api/v1/orders/{orderId}", orderId)
@@ -110,7 +113,9 @@ internal class OrderLifecycleWebIntegrationTest(
         val delayedOrderId = delayedBody.get("orderId").asString()
         val paymentAttemptId = delayedBody.get("paymentAttemptId").asString()
 
-        await.ignoreExceptions().atMost(Duration.ofSeconds(60)).untilAsserted {
+        await.ignoreExceptionsInstanceOf(IllegalStateException::class)
+            .atMost(Duration.ofSeconds(60))
+            .untilAsserted {
             webTestClient
                 .get()
                 .uri("/api/v1/orders/{orderId}", delayedOrderId)
@@ -133,7 +138,9 @@ internal class OrderLifecycleWebIntegrationTest(
             .jsonPath("$.disposition")
             .isEqualTo("APPLIED")
 
-        await.ignoreExceptions().atMost(Duration.ofSeconds(60)).untilAsserted {
+        await.ignoreExceptionsInstanceOf(IllegalStateException::class)
+            .atMost(Duration.ofSeconds(60))
+            .untilAsserted {
             webTestClient
                 .get()
                 .uri("/api/v1/orders/{orderId}", delayedOrderId)
@@ -177,7 +184,9 @@ internal class OrderLifecycleWebIntegrationTest(
             .jsonPath("$.refundCaseId")
             .isNotEmpty
 
-        await.ignoreExceptions().atMost(Duration.ofSeconds(60)).untilAsserted {
+        await.ignoreExceptionsInstanceOf(IllegalStateException::class)
+            .atMost(Duration.ofSeconds(60))
+            .untilAsserted {
             webTestClient
                 .get()
                 .uri("/api/v1/orders/{orderId}", delayedOrderId)
@@ -228,7 +237,9 @@ internal class OrderLifecycleWebIntegrationTest(
                 .returnResult()
         val orderId = objectMapper.readTree(created.responseBody.shouldNotBeNull()).get("orderId").asString()
 
-        await.ignoreExceptions().atMost(Duration.ofSeconds(60)).untilAsserted {
+        await.ignoreExceptionsInstanceOf(IllegalStateException::class)
+            .atMost(Duration.ofSeconds(60))
+            .untilAsserted {
             webTestClient
                 .get()
                 .uri("/api/v1/orders/{orderId}", orderId)

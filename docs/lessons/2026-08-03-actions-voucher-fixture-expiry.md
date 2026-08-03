@@ -122,7 +122,9 @@ Central jar를 직접 사용한 임시 Gradle 검증으로 확인했다. Redis r
 `WebTestClient`의 10초 response timeout에서 즉시 종료됐다. 기존 `untilAsserted`는
 Awaitility의 assertion failure는 재시도하지만 이 일시적인 `IllegalStateException`을
 무시하지 않아, 전체 60초 polling 예산을 사용하기 전에 테스트가 실패했다. 모든
-test-only 상태 polling을 `await.ignoreExceptions().atMost(...).untilAsserted`로 바꿔
-transport timeout을 일시적인 관측 실패로 취급하고, 최종 상태가 끝내 도달하지 않으면
-동일한 bounded timeout으로 실패하도록 했다. 이 실패는 새 production 동작 변경이 아니라
-Container runner의 첫 polling 요청 지연이라는 재현 가능한 테스트 경계 문제였다.
+test-only 상태 polling을 `await.ignoreExceptionsInstanceOf(IllegalStateException::class)`와
+bounded `untilAsserted`로 바꿔 transport timeout을 일시적인 관측 실패로 취급하고, 최종
+상태가 끝내 도달하지 않으면 동일한 bounded timeout으로 실패하도록 했다. `IllegalStateException`
+만 무시하므로 assertion 오류나 다른 예외의 진단은 보존된다. 이 실패는 새 production
+동작 변경이 아니라 Container runner의 첫 polling 요청 지연이라는 재현 가능한 테스트
+경계 문제였다.
