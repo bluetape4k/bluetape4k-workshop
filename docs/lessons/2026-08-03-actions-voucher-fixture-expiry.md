@@ -4,9 +4,11 @@
 
 2026-08-02 `Examples` run 30771298111과 이전 `Nightly` run 30764691938에서
 `commerce-event-sourced-promotion-voucher-campaign:integrationTest`가 실패했다.
-실패한 HTTP 응답은 `409 CAMPAIGN_ENDED`였고, `CI`의 현재 `develop` compile-only
-run은 성공했으므로 workflow YAML 자체보다 integration fixture의 시간 의존성이
-문제였다.
+실패한 HTTP 응답은 `409 CAMPAIGN_ENDED`였다. 같은 기간 최신 Dependabot `CI`
+run 30768173911은 `bucket4j-caffeine-web`과 `bucket4j-redis`의
+`collectReachabilityMetadata`가 `schemas` 디렉터리가 없는 캐시 저장소를 읽어
+실패했다. 따라서 voucher fixture와 Gradle native metadata cache 문제가 함께
+존재했다.
 
 ## 원인
 
@@ -14,15 +16,20 @@ run은 성공했으므로 workflow YAML 자체보다 integration fixture의 시�
 고정 campaign window를 사용했다. 계약을 추가한 뒤 실행일이 7월 31일을 지나면서
 두 voucher adapter가 정상 allocation을 보내도 만료 campaign으로 거부했다.
 `Nightly`의 같은 실행은 이 문제와 별개로 Java 25에서 Detekt parser가 실패한
-오래된 `develop` SHA도 포함했다. 현재 `develop`에는 이미 `-x detekt` 완화가
-적용되어 있으므로 이번 수정에서 그 workflow 변경은 반복하지 않는다.
+오래된 `develop` SHA도 포함했다. 또한 GraalVM native plugin의
+`collectReachabilityMetadata`는 compile/test 결과에 필요하지 않은 선택적 task인데,
+Dependabot의 cache-read-only 실행에서 오래된 reachability metadata 저장소를
+재사용했다.
 
 ## 결정
 
 공유 contract scenario의 시작 시각을 로드 시점 1분 전으로 두고, 종료 시각을
 그로부터 2일 뒤로 계산한다. 이렇게 하면 fixture의 의도(현재 시각에 활성인
 campaign)를 유지하면서 달력 날짜가 바뀌어도 재발하지 않는다. production clock나
-별도 dependency는 추가하지 않는다.
+별도 dependency는 추가하지 않는다. CI·Nightly·Examples의 compile/test 및
+high-contention Gradle 경로에는 `-x collectReachabilityMetadata`를 적용해 선택적
+native-image metadata cache를 소비하지 않도록 한다. 실제 native-image 빌드 경로는
+이 workflow 범위에 포함하지 않는다.
 
 ## 검증
 
@@ -30,7 +37,10 @@ campaign)를 유지하면서 달력 날짜가 바뀌어도 재발하지 않는�
 - `:shared:test --tests ...VoucherCampaignBlackBoxContractTest` 3개 테스트 통과.
 - `:commerce-promotion-voucher-campaign:compileTestKotlin` 통과.
 - `:commerce-event-sourced-promotion-voucher-campaign:compileTestKotlin` 통과.
-- `actionlint .github/workflows/CI.yml .github/workflows/Nightly.yml .github/workflows/Examples.yml` 통과.
+- `:bucket4j-caffeine-web:build -x collectReachabilityMetadata -x detekt -x test` 통과.
+- `actionlint .github/workflows/ci.yml .github/workflows/nightly.yml .github/workflows/Examples.yml` 통과.
+- `scripts/smoke-validate.sh`의 공통 Gradle 경로와 세 workflow의 직접 Gradle 경로에
+  metadata task 제외가 적용됐음을 확인했다.
 - 로컬 event-sourced integrationTest는 Docker 미가용으로 Spring context 초기화에서
   중단되었으며, 이는 테스트 assertion 실패가 아니다. GitHub artifact가 남긴 원래
   RED 증거는 별도로 보존했다.

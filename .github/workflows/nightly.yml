@@ -47,7 +47,8 @@ jobs:
         with:
           gradle-version: wrapper
       - name: Build (compile only)
-        run: ./gradlew build -x detekt -x test -x stressTest -x migrationCompatibilityTest --parallel --continue
+        # Compile-only Nightly does not consume native-image reachability metadata.
+        run: ./gradlew build -x detekt -x collectReachabilityMetadata -x test -x stressTest -x migrationCompatibilityTest --parallel --continue
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
@@ -115,6 +116,7 @@ jobs:
         run: >-
           ./gradlew
           -x detekt
+          -x collectReachabilityMetadata
           test
           :commerce-pre-generated-voucher-pool:koverXmlReport
           :commerce-event-sourced-promotion-voucher-campaign:integrationTest
@@ -207,6 +209,7 @@ jobs:
         run: >-
           ./gradlew
           -x detekt
+          -x collectReachabilityMetadata
           highContentionLocalReference
           -PhighContentionRunId=nightly-${{ github.run_id }}-${{ github.run_attempt }}
           -Pkotlin.compiler.execution.strategy=in-process
