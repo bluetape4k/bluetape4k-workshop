@@ -141,18 +141,25 @@ Colima/Testcontainers에서 실행했을 때도 Nightly와 같은 실패를 재�
 `TicketLiveProfileAdapter.execute`로 이어졌다. 이는 polling 상태가 늦게 보인 것이 아니라
 동기 purchase transaction이 rollback된 것이다.
 
-원인은 measured worker가 `application.command(...)`를 지연 생성한 데 있었다. command
-fixture는 admission grant와 idempotency row를 쓰고, 동시에 다른 worker의 purchase는
-sale row를 먼저 잠갔다. grant의 foreign-key 검증과 sale lock이 서로를 기다릴 수 있으므로,
-전체 workload를 Awaitility로 감싸는 것은 deadlock을 해결하지 않고 실제 transaction
-실패를 숨긴다. 모든 measured schedule의 command fixture를 worker 시작 전에 순차적으로
-준비하도록 바꾸고, Redis failure injection에서 실제로 시작된 command가 존재하는 지점만
-5초 bounded Awaitility로 기다리도록 했다.
+첫 번째 원인은 measured worker가 `application.command(...)`를 지연 생성한 데 있었다.
+command fixture는 admission grant와 idempotency row를 쓰고, 동시에 다른 worker의
+purchase는 sale row를 먼저 잠갔다. grant의 foreign-key 검증과 sale lock이 서로를 기다릴
+수 있으므로, 전체 workload를 Awaitility로 감싸는 것은 deadlock을 해결하지 않고 실제
+transaction 실패를 숨긴다. 모든 measured schedule의 command fixture를 worker 시작 전에
+순차적으로 준비하도록 바꾸고, Redis failure injection에서 실제로 시작된 command가
+존재하는 지점만 5초 bounded Awaitility로 기다리도록 했다.
 
-검증 결과 수정 후 로컬 `redis-path-outage`는 400/400 completed, local rejection 0,
-missed deadline 0, schedule digest 일치, `NEW_PURCHASE_FAILS_CLOSED`와
-`COMMITTED_PAYMENT_CONVERGES` PASS, terminal report PASS를 기록했다. 이어서
-`ticket-spring` local-reference 전체 7개 프로파일도 3분 15초 만에 `PASS=7,
-FAIL=0, ERROR=0, UNAVAILABLE=0`으로 종료했다. 로컬 Colima에서는 `DOCKER_HOST`를
-CI의 `/var/run/docker.sock`로 덮어쓰지 않고 Testcontainers가 설정한
-`~/.colima/default/docker.sock`을 사용해야 한다.
+Java 25 전체 matrix를 다시 실행하자 두 번째 lock inversion도 재현됐다. Redis 장애 주입이
+아직 purchase worker가 실행 중인 동안 `paymentWorker.applyPaymentOutcome`을 호출했고,
+payment 경로가 `ticket_inventory`를 먼저 잠근 뒤 `ticket_orders`의 sale foreign-key
+`FOR KEY SHARE`를 확인했다. 반대편 purchase 경로는 `ticket_sales FOR UPDATE`를 잡은 뒤
+inventory를 기다리므로 두 transaction이 교착할 수 있었다. `cancel`과
+`applyPaymentOutcome`도 purchase와 같은 sale-root lock을 먼저 획득하도록 고쳐 모든
+inventory mutation의 순서를 `sale → guard/buyer → inventory`로 통일했다. 이 경우에도
+Awaitility로 workload 전체를 감싸지 않고, 교착을 유발한 transaction 순서를 바로잡았다.
+
+수정 후 Java 25 로컬 `redis-path-outage` 단일 profile은 compile과 runtime을 통과했고,
+이전 실패의 원인은 `ticket_sales` foreign-key lock cycle임을 test XML에서 확인했다. 이어서
+동일 Java 25 전체 7개 profile을 다시 실행해 `PASS=7, FAIL=0, ERROR=0, UNAVAILABLE=0`을
+확인해야 한다. 로컬 Colima에서는 `DOCKER_HOST`를 CI의 `/var/run/docker.sock`로 덮어쓰지
+않고 Testcontainers가 설정한 `~/.colima/default/docker.sock`을 사용한다.
