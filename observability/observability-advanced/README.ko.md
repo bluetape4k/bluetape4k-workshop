@@ -15,7 +15,7 @@ HTTP 계층은 suspend endpoint를 노출합니다. `UserService`는 cache-aside
 상위 `user.service.*` span을 만듭니다. Redis 작업은 `UserCacheRepository`가 감싸고,
 DB 호출은 `UserRepository`에 남겨 `withContext(Dispatchers.IO) { transaction { ... } }`
 안에서 실행합니다. released `withObservationContextSuspending` helper는 코루틴 resume 뒤에도
-Micrometer scope가 이어지게 만들고, `finally`에서 항상 observation을 stop합니다.
+Micrometer scope가 이어지게 만들고, 성공·실패·취소 모든 경로에서 observation을 종료합니다.
 
 ## Span Flow
 

@@ -4,14 +4,15 @@
 
 `observability-basic`과 `observability-advanced`는 과거 provider helper의
 제약을 우회하기 위해 각 모듈에 `observed`/`ObservationSupport` lifecycle wrapper를
-복제하고 있었다. 이 wrapper는 observation을 시작·종료하고 오류를 기록했지만,
-`withContext(Dispatchers.Default)` 같은 dispatcher 경계를 넘을 때 현재 Micrometer
-Observation context를 coroutine에 전달하지 못했다.
+복제하고 있었다. basic wrapper는 `withContext(Dispatchers.Default)` 같은 dispatcher
+경계를 넘을 때 현재 Micrometer Observation context를 coroutine에 전달하지 못했고,
+advanced wrapper는 자체 `ThreadContextElement`로 context 전파를 별도 구현하고 있었다.
+두 모듈 모두 provider lifecycle 의미를 consumer 안에서 중복 소유하고 있었다.
 
 현재 workshop root의 `bluetape4k-dependencies:1.3.1`이 해석하는
 `bluetape4k-micrometer:1.11.0`에는 이 계약을 제공하는
 `withObservationContextSuspending`이 이미 배포되어 있다.
-이 helper의 lifecycle 결함과 `finally` 기반 stop 보강은 provider Issue
+이 helper의 lifecycle 결함과 cancellation·stop 계약 보강은 provider Issue
 [#744](https://github.com/bluetape4k/bluetape4k-projects/issues/744)에 기록되어 있으며,
 이 workshop이 해석한 `1.11.0`부터 수정된 provider 계약을 사용할 수 있다.
 

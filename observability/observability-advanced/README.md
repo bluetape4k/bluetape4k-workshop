@@ -16,7 +16,7 @@ The HTTP layer exposes suspend endpoints. `UserService` owns the cache-aside dec
 the high-level `user.service.*` spans. Redis operations are wrapped by `UserCacheRepository`, while
 database calls stay in `UserRepository` and run inside `withContext(Dispatchers.IO) { transaction { ... } }`.
 The released `withObservationContextSuspending` helper keeps the Micrometer scope attached to
-coroutine resumes and always stops the observation in `finally`.
+coroutine resumes and completes the observation on success, failure, or cancellation.
 
 ## Span Flow
 
