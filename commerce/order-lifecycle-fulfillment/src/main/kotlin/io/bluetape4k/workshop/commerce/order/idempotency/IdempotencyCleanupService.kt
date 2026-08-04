@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.order.idempotency
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
+import io.bluetape4k.support.requireInRange
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -18,7 +19,7 @@ internal class IdempotencyCleanupService(
     private val batchSize: Int,
 ) {
     init {
-        require(batchSize in 1..HttpIdempotencyRepository.MAX_CLEANUP_BATCH)
+        batchSize.requireInRange(1, HttpIdempotencyRepository.MAX_CLEANUP_BATCH, "batchSize")
     }
 
     @Scheduled(
