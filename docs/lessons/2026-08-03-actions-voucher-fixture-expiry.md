@@ -212,3 +212,40 @@ blocking thread를 점유하는 대신 coroutine 구조와 직접 연결된 test
 고정 20ms 관찰에 의존하던 eager-start 검사는 실제 `onStart` 이벤트를 bounded 대기하는
 구현으로 안정화되었고, 구현별 high-contention matrix 분할도 원격 Nightly에서
 동시 실행 가능한 상태로 검증되었다.
+
+## 컨테이너 부하에서 드러난 event snapshot과 STOMP 프레임 순서
+
+merge commit `16e6fbfe`의 수동 Nightly full run `30864030859`에서는 분리한
+high-contention matrix 네 job이 모두 성공했지만, `Test (Testcontainers)`에서 두 경쟁
+조건이 드러났다. event-sourced voucher의 마지막 capacity를 동시에 요청한 두 호출이
+모두 `201`을 반환했고, STOMP greeting 테스트는 연결 직후 보낸 메시지를 받지 못해
+Awaitility 제한 시간에 도달했다.
+
+event store는 event rows를 먼저 조회하고 head version을 나중에 읽었다. 두 쿼리 사이에
+다른 transaction이 append하면 이전 event 목록과 새 head가 한 `EventPage`에 섞인다.
+그 결과 aggregate는 오래된 capacity를 replay하지만 append의 expected version은 최신
+head를 사용해 두 번째 예약도 성공할 수 있었다. head를 먼저 읽고 event query의 상한을
+그 version으로 제한해 page 전체를 동일한 committed boundary에 묶었다. 이후 append가
+발생하면 expected-version conflict가 권위 있는 단일 winner를 보장한다.
+
+STOMP 테스트는 connection future를 기다리는 test thread와 `afterConnected` callback이
+서로 다른 thread에서 실행되어, callback의 `SUBSCRIBE`보다 test thread의 `SEND`가 먼저
+서버에 도착할 수 있었다. 이 예제의 simple broker는 subscription receipt를 반환하지
+않으므로 receipt 대기를 추가하지 않는다. 대신 `afterConnected` 안에서 subscribe 직후
+send를 실행해 한 session의 프레임 순서를 `SUBSCRIBE → SEND`로 고정한다.
+
+로컬에서 voucher 동시 capacity 테스트 100회, STOMP 두 경로 20회씩 총 40회가 통과했다.
+진단용 반복 애노테이션을 제거한 최종 상태에서도 STOMP 2개와 event-sourced voucher
+integration 77개가 모두 통과했다. event-page를 구성할 때 events와 head를 서로 다른
+관측 시점에서 조합하지 말고, WebSocket/STOMP 테스트는 연결 완료와 application-level
+구독 완료를 같은 사건으로 간주하지 않는다.
+
+후속 head `c554e803`의 Nightly full run `30868816130`에서는 위 두 테스트를 포함한
+Examples Container가 성공했지만, full Testcontainers의 `AtomicLongExamples`에서 Redis
+명령 하나가 Netty queue에 기록되지 못해 `RedisTimeoutException`이 발생했다. 테스트는
+1,000개 increment를 test coroutine의 자식이 아닌 공유 `CoroutineScope`의 standalone
+coroutine으로 실행해 예외를 전파하지 않았고, 마지막 assertion에서 원인을 잃은
+`999 != 1000`만 보고했다. `coroutineScope`로 작업을 구조화하고 `Semaphore(16)`으로 동시에
+outstanding 상태인 Redis 명령을 제한했다. 이제 실제 명령 실패는 즉시 테스트 실패로
+전파되며, atomic 동시성 검증은 유지하면서 hosted runner의 Netty queue 폭주를 피한다.
+로컬에서 수정된 경로를 100회 반복해 모두 통과했다.
