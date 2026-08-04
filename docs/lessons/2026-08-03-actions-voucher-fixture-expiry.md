@@ -239,3 +239,13 @@ send를 실행해 한 session의 프레임 순서를 `SUBSCRIBE → SEND`로 고
 integration 77개가 모두 통과했다. event-page를 구성할 때 events와 head를 서로 다른
 관측 시점에서 조합하지 말고, WebSocket/STOMP 테스트는 연결 완료와 application-level
 구독 완료를 같은 사건으로 간주하지 않는다.
+
+후속 head `c554e803`의 Nightly full run `30868816130`에서는 위 두 테스트를 포함한
+Examples Container가 성공했지만, full Testcontainers의 `AtomicLongExamples`에서 Redis
+명령 하나가 Netty queue에 기록되지 못해 `RedisTimeoutException`이 발생했다. 테스트는
+1,000개 increment를 test coroutine의 자식이 아닌 공유 `CoroutineScope`의 standalone
+coroutine으로 실행해 예외를 전파하지 않았고, 마지막 assertion에서 원인을 잃은
+`999 != 1000`만 보고했다. `coroutineScope`로 작업을 구조화하고 `Semaphore(16)`으로 동시에
+outstanding 상태인 Redis 명령을 제한했다. 이제 실제 명령 실패는 즉시 테스트 실패로
+전파되며, atomic 동시성 검증은 유지하면서 hosted runner의 Netty queue 폭주를 피한다.
+로컬에서 수정된 경로를 100회 반복해 모두 통과했다.
