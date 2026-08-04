@@ -16,6 +16,7 @@ directory unless they have been deliberately promoted.
 
 Recent delivery lessons:
 
+- [Issue #561 released Observation helper reuse](2026-08-04-issue-561-observation-helper-reuse.md)
 - [Issue #573 commerce shared boundary](2026-07-24-issue-573-commerce-shared-boundary.md)
 - [Issue #522 high-contention profiles](2026-07-24-issue-522-high-contention-profiles.md)
 - [Issue #538 event-sourced promotion voucher campaign](2026-07-24-issue-538-event-sourced-promotion-voucher-campaign.md)

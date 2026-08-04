@@ -14,8 +14,8 @@ Redis soft-fail, 성공/실패 양쪽에서의 span 종료가 핵심입니다.
 HTTP 계층은 suspend endpoint를 노출합니다. `UserService`는 cache-aside 결정을 소유하고
 상위 `user.service.*` span을 만듭니다. Redis 작업은 `UserCacheRepository`가 감싸고,
 DB 호출은 `UserRepository`에 남겨 `withContext(Dispatchers.IO) { transaction { ... } }`
-안에서 실행합니다. 로컬 `observed()` helper는 코루틴 resume 뒤에도 Micrometer scope가
-이어지게 만들고, `finally`에서 항상 observation을 stop합니다.
+안에서 실행합니다. released `withObservationContextSuspending` helper는 코루틴 resume 뒤에도
+Micrometer scope가 이어지게 만들고, `finally`에서 항상 observation을 stop합니다.
 
 ## Span Flow
 
@@ -50,7 +50,7 @@ http.server.requests
 
 | 개념 | 구현 |
 |---|---|
-| 다계층 span | `observed()`가 service, cache, 선택된 DB 작업을 감싼다. |
+| 다계층 span | `withObservationContextSuspending()`이 service, cache, 선택된 DB 작업을 감싼다. |
 | Dispatcher 경계 | Coroutine `ThreadContextElement`로 Observation scope를 연다. |
 | Redis soft-fail | Cancellation이 아닌 Redis 예외는 로그 후 cache miss/skip으로 변환한다. |
 | Cache-aside 패턴 | `get -> miss -> DB -> put`; hit이면 DB span을 건너뛴다. |
@@ -60,7 +60,7 @@ http.server.requests
 
 | 기능 | 모듈 / Artifact | 코드 위치 | 이점 |
 |---|---|---|---|
-| Micrometer Observation starter | `bluetape4k-micrometer` | `ObservationSupport.observed()`가 `ObservationRegistry.start(name)` 호출 | `Observation.Context`를 직접 조립하지 않고 bluetape4k Observation factory를 재사용한다. |
+| Micrometer Observation starter | `bluetape4k-micrometer` | `withObservationContextSuspending()`이 observation을 만들고 scope를 연다 | released bluetape4k coroutine Observation lifecycle과 context 전파를 재사용한다. |
 | 코루틴 친화 로깅 | `bluetape4k-logging` | `UserService`, `UserRepository`, `UserCacheRepository` | Lazy Kotlin logging과 trace/span MDC 출력을 일관되게 유지한다. |
 | Redis/Redisson DSL | `bluetape4k-redisson`, `bluetape4k-redis` | `RedissonConfig` | 간결한 Kotlin 설정으로 Redisson client를 만든다. |
 | Redis Testcontainer singleton | `bluetape4k-testcontainers` | `AbstractAdvancedTest` | 임의 container 대신 `RedisServer.Launcher.redis`를 재사용한다. |
@@ -90,13 +90,13 @@ try {
 }
 ```
 
-이 예제는 같은 Micrometer 의미를 suspend 친화 wrapper 뒤에 둡니다.
+이 예제는 같은 Micrometer 의미를 released suspend 친화 helper로 구현합니다.
 
 ```kotlin
 suspend fun getById(id: Long): User? =
-    observed("user.service.get", observationRegistry) {
+    withObservationContextSuspending("user.service.get", observationRegistry) {
         val cached = cache.get(id)
-        cached ?: observed("user.db.find", observationRegistry) {
+        cached ?: withObservationContextSuspending("user.db.find", observationRegistry) {
             repo.findById(id)
         }
     }
@@ -139,7 +139,7 @@ management:
 
 ## 의존성
 
-- `bluetape4k-micrometer` - 로컬 `observed()` 코루틴 wrapper.
+- `bluetape4k-micrometer` - released `withObservationContextSuspending` 코루틴 helper.
 - `bluetape4k-redisson` - `redissonClient {}` DSL.
 - `micrometer-context-propagation` - dispatcher 경계 span 연속성.
 - `jetbrains-exposed-spring-boot4-starter` - Exposed 자동 구성.
