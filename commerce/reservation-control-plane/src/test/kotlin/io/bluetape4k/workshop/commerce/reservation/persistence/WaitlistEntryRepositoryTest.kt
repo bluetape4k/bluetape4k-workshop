@@ -1,11 +1,11 @@
 package io.bluetape4k.workshop.commerce.reservation.persistence
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.exposed.tests.withTables
 import io.bluetape4k.workshop.commerce.reservation.domain.WaitlistState
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class WaitlistEntryRepositoryTest {
@@ -18,10 +18,10 @@ class WaitlistEntryRepositoryTest {
             val first = repository.join(resource.id, ownerDigest = "a".repeat(64))
             val second = repository.join(resource.id, ownerDigest = "b".repeat(64))
 
-            assertEquals(1L, first.sequence)
-            assertEquals(2L, second.sequence)
-            assertEquals(listOf(first.id, second.id), repository.snapshots(resource.id).map { it.id })
-            assertEquals(first.id, repository.oldestWaiting(resource.id)?.id)
+            first.sequence shouldBeEqualTo 1L
+            second.sequence shouldBeEqualTo 2L
+            repository.snapshots(resource.id).map { it.id } shouldBeEqualTo listOf(first.id, second.id)
+            repository.oldestWaiting(resource.id)?.id shouldBeEqualTo first.id
         }
     }
 
@@ -32,36 +32,30 @@ class WaitlistEntryRepositoryTest {
             val repository = WaitlistEntryRepository()
             val entry = repository.join(resource.id, ownerDigest = "a".repeat(64))
 
-            assertFalse(
-                repository.transition(
-                    id = entry.id,
-                    ownerDigest = "b".repeat(64),
-                    expectedRevision = 0,
-                    from = WaitlistState.WAITING,
-                    to = WaitlistState.CANCELLED
-                )
-            )
-            assertTrue(
-                repository.transition(
-                    id = entry.id,
-                    ownerDigest = entry.ownerDigest,
-                    expectedRevision = 0,
-                    from = WaitlistState.WAITING,
-                    to = WaitlistState.CANCELLED
-                )
-            )
-            assertFalse(
-                repository.transition(
-                    id = entry.id,
-                    ownerDigest = entry.ownerDigest,
-                    expectedRevision = 0,
-                    from = WaitlistState.WAITING,
-                    to = WaitlistState.CANCELLED
-                )
-            )
+            repository.transition(
+                id = entry.id,
+                ownerDigest = "b".repeat(64),
+                expectedRevision = 0,
+                from = WaitlistState.WAITING,
+                to = WaitlistState.CANCELLED
+            ).shouldBeFalse()
+            repository.transition(
+                id = entry.id,
+                ownerDigest = entry.ownerDigest,
+                expectedRevision = 0,
+                from = WaitlistState.WAITING,
+                to = WaitlistState.CANCELLED
+            ).shouldBeTrue()
+            repository.transition(
+                id = entry.id,
+                ownerDigest = entry.ownerDigest,
+                expectedRevision = 0,
+                from = WaitlistState.WAITING,
+                to = WaitlistState.CANCELLED
+            ).shouldBeFalse()
 
-            assertEquals(WaitlistState.CANCELLED, repository.findById(entry.id).state)
-            assertEquals(1L, repository.findById(entry.id).revision)
+            repository.findById(entry.id).state shouldBeEqualTo WaitlistState.CANCELLED
+            repository.findById(entry.id).revision shouldBeEqualTo 1L
         }
     }
 }

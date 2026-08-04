@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.commerce.reservation.domain
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import java.time.Instant
 
@@ -15,38 +15,38 @@ class ReservationPoliciesTest {
 
         val outcome = ReservationPolicies.confirm(hold, "owner-digest", 1, now)
 
-        assertTrue(outcome is TransitionOutcome.Applied)
-        assertEquals(HoldState.CONFIRMED, (outcome as TransitionOutcome.Applied).hold.state)
-        assertEquals(2, outcome.hold.revision)
+        (outcome is TransitionOutcome.Applied).shouldBeTrue()
+        (outcome as TransitionOutcome.Applied).hold.state shouldBeEqualTo HoldState.CONFIRMED
+        outcome.hold.revision shouldBeEqualTo 2
     }
 
     @Test
     fun `expired reservation is rejected with a stable reason`() {
         val outcome = ReservationPolicies.confirm(hold(expiresAt = now), "owner-digest", 1, now)
 
-        assertEquals(TransitionReason.HOLD_EXPIRED, (outcome as TransitionOutcome.Rejected).reason)
+        (outcome as TransitionOutcome.Rejected).reason shouldBeEqualTo TransitionReason.HOLD_EXPIRED
     }
 
     @Test
     fun `other owner cannot mutate a reservation`() {
         val outcome = ReservationPolicies.cancel(hold(), "other-owner", 1, now)
 
-        assertEquals(TransitionReason.OWNER_MISMATCH, (outcome as TransitionOutcome.Rejected).reason)
+        (outcome as TransitionOutcome.Rejected).reason shouldBeEqualTo TransitionReason.OWNER_MISMATCH
     }
 
     @Test
     fun `stale revision cannot mutate a reservation`() {
         val outcome = ReservationPolicies.confirm(hold(), "owner-digest", 0, now)
 
-        assertEquals(TransitionReason.STALE_REVISION, (outcome as TransitionOutcome.Rejected).reason)
+        (outcome as TransitionOutcome.Rejected).reason shouldBeEqualTo TransitionReason.STALE_REVISION
     }
 
     @Test
     fun `active offer occupies capacity without increment on acceptance`() {
         val resource = CapacityResourceSnapshot(1, capacity = 1, occupiedCount = 1, revision = 7)
 
-        assertFalse(resource.hasCapacity)
-        assertEquals(1, ReservationPolicies.occupiedAfterOfferAccepted(resource))
+        resource.hasCapacity.shouldBeFalse()
+        ReservationPolicies.occupiedAfterOfferAccepted(resource) shouldBeEqualTo 1
     }
 
     @Test
@@ -55,17 +55,17 @@ class ReservationPoliciesTest {
 
         val outcome = ReservationPolicies.extend(hold, "owner-digest", 1, now, now.plusSeconds(90))
 
-        assertTrue(outcome is TransitionOutcome.Applied)
+        (outcome is TransitionOutcome.Applied).shouldBeTrue()
         val extended = (outcome as TransitionOutcome.Applied).hold
-        assertEquals(2, extended.revision)
-        assertEquals(now.plusSeconds(90), extended.expiresAt)
+        extended.revision shouldBeEqualTo 2
+        extended.expiresAt shouldBeEqualTo now.plusSeconds(90)
     }
 
     @Test
     fun `extension must move expiry forward`() {
         val outcome = ReservationPolicies.extend(hold(), "owner-digest", 1, now, now.plusSeconds(10))
 
-        assertEquals(TransitionReason.INVALID_EXPIRY, (outcome as TransitionOutcome.Rejected).reason)
+        (outcome as TransitionOutcome.Rejected).reason shouldBeEqualTo TransitionReason.INVALID_EXPIRY
     }
 
     private fun hold(expiresAt: Instant = now.plusSeconds(30)) =
