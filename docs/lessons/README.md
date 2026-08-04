@@ -16,6 +16,7 @@ directory unless they have been deliberately promoted.
 
 Recent delivery lessons:
 
+- [Issue #567 reservation control-plane assertion 이관](2026-08-05-issue-567-reservation-assertions.md)
 - [Issue #569 Order Lifecycle validation helper 경계](2026-08-05-issue-569-order-validation-helpers.md)
 - [Issue #561 released Observation helper reuse](2026-08-04-issue-561-observation-helper-reuse.md)
 - [Issue #573 commerce shared boundary](2026-07-24-issue-573-commerce-shared-boundary.md)
