@@ -15,8 +15,8 @@ success and failure.
 The HTTP layer exposes suspend endpoints. `UserService` owns the cache-aside decision and creates
 the high-level `user.service.*` spans. Redis operations are wrapped by `UserCacheRepository`, while
 database calls stay in `UserRepository` and run inside `withContext(Dispatchers.IO) { transaction { ... } }`.
-The local `observed()` helper keeps the Micrometer scope attached to coroutine resumes and always
-stops the observation in `finally`.
+The released `withObservationContextSuspending` helper keeps the Micrometer scope attached to
+coroutine resumes and always stops the observation in `finally`.
 
 ## Span Flow
 
@@ -50,7 +50,7 @@ http.server.requests
 
 | Concept | Implementation |
 |---|---|
-| Multi-layer spans | `observed()` wraps service, cache, and selected DB operations. |
+| Multi-layer spans | `withObservationContextSuspending()` wraps service, cache, and selected DB operations. |
 | Dispatcher boundary | Observation scope is opened through a coroutine `ThreadContextElement`. |
 | Redis soft-fail | Non-cancellation Redis exceptions are logged and converted to cache miss/skip behavior. |
 | Cache-aside pattern | `get -> miss -> DB -> put`; hit skips the database span. |
@@ -60,7 +60,7 @@ http.server.requests
 
 | Feature | Module / Artifact | Code Reference | Benefit |
 |---|---|---|---|
-| Micrometer observation starter | `bluetape4k-micrometer` | `ObservationSupport.observed()` calls `ObservationRegistry.start(name)` | Reuses the bluetape4k Observation factory instead of hand-building contexts. |
+| Micrometer observation starter | `bluetape4k-micrometer` | `withObservationContextSuspending()` creates and scopes each observation | Reuses the released bluetape4k coroutine Observation lifecycle and context propagation. |
 | Coroutine-aware logging | `bluetape4k-logging` | `UserService`, `UserRepository`, `UserCacheRepository` | Keeps lazy Kotlin logging and trace/span MDC output consistent. |
 | Redis/Redisson DSL | `bluetape4k-redisson`, `bluetape4k-redis` | `RedissonConfig` | Builds a Redisson client from concise Kotlin configuration. |
 | Redis Testcontainer singleton | `bluetape4k-testcontainers` | `AbstractAdvancedTest` | Reuses `RedisServer.Launcher.redis` instead of ad-hoc containers. |
@@ -90,13 +90,13 @@ try {
 }
 ```
 
-The workshop keeps the same Micrometer semantics behind a suspend-friendly wrapper:
+The workshop keeps the same Micrometer semantics through the released suspend-friendly helper:
 
 ```kotlin
 suspend fun getById(id: Long): User? =
-    observed("user.service.get", observationRegistry) {
+    withObservationContextSuspending("user.service.get", observationRegistry) {
         val cached = cache.get(id)
-        cached ?: observed("user.db.find", observationRegistry) {
+        cached ?: withObservationContextSuspending("user.db.find", observationRegistry) {
             repo.findById(id)
         }
     }
@@ -139,7 +139,7 @@ management:
 
 ## Dependencies
 
-- `bluetape4k-micrometer` - local `observed()` coroutine wrapper.
+- `bluetape4k-micrometer` - released `withObservationContextSuspending` coroutine helper.
 - `bluetape4k-redisson` - `redissonClient {}` DSL.
 - `micrometer-context-propagation` - span continuity across dispatcher boundaries.
 - `jetbrains-exposed-spring-boot4-starter` - Exposed auto-configuration.
