@@ -1,7 +1,9 @@
 package io.bluetape4k.workshop.observability.basic.observation
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.junit5.coroutines.assertCancellationPropagates
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.micrometer.observation.coroutines.currentObservationInContext
 import io.bluetape4k.micrometer.observation.coroutines.withObservationContextSuspending
@@ -11,8 +13,6 @@ import io.micrometer.observation.ObservationRegistry
 import io.micrometer.observation.tck.TestObservationRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.awaitCancellation
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
@@ -51,13 +51,12 @@ class ObservationLifecycleTest {
         }
         val expected = IllegalStateException("inventory unavailable")
 
-        try {
+        val actual = assertFailsWith<IllegalStateException> {
             withObservationContextSuspending<String>("order.service.fetch", registry) {
                 throw expected
             }
-        } catch (actual: IllegalStateException) {
-            actual.message shouldBeEqualTo expected.message
         }
+        actual.message shouldBeEqualTo expected.message
 
         handler.stopCount.get() shouldBeEqualTo 1
         handler.errorCount.get() shouldBeEqualTo 1
@@ -70,12 +69,11 @@ class ObservationLifecycleTest {
             it.observationConfig().observationHandler(handler)
         }
 
-        val job = launch {
+        assertCancellationPropagates {
             withObservationContextSuspending<Unit>("order.service.fetch", registry) {
                 awaitCancellation()
             }
         }
-        job.cancelAndJoin()
 
         handler.stopCount.get() shouldBeEqualTo 1
         handler.errorCount.get() shouldBeEqualTo 0

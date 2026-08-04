@@ -51,7 +51,7 @@ http.server.requests
 | 개념 | 구현 |
 |---|---|
 | 다계층 span | `withObservationContextSuspending()`이 service, cache, 선택된 DB 작업을 감싼다. |
-| Dispatcher 경계 | Coroutine `ThreadContextElement`로 Observation scope를 연다. |
+| Dispatcher 경계 | Released helper가 coroutine dispatcher 이동 뒤에도 현재 Observation과 parent/child 관계를 유지한다. |
 | Redis soft-fail | Cancellation이 아닌 Redis 예외는 로그 후 cache miss/skip으로 변환한다. |
 | Cache-aside 패턴 | `get -> miss -> DB -> put`; hit이면 DB span을 건너뛴다. |
 | 테스트 어설션 | `TestObservationRegistryAssert`로 필요한 span과 생기지 않아야 할 span을 함께 검증한다. |

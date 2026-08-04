@@ -11,6 +11,9 @@ Observation context를 coroutine에 전달하지 못했다.
 현재 workshop root의 `bluetape4k-dependencies:1.3.1`이 해석하는
 `bluetape4k-micrometer:1.11.0`에는 이 계약을 제공하는
 `withObservationContextSuspending`이 이미 배포되어 있다.
+이 helper의 lifecycle 결함과 `finally` 기반 stop 보강은 provider Issue
+[#744](https://github.com/bluetape4k/bluetape4k-projects/issues/744)에 기록되어 있으며,
+이 workshop이 해석한 `1.11.0`부터 수정된 provider 계약을 사용할 수 있다.
 
 ## 결정 또는 발견
 
@@ -35,7 +38,7 @@ Observation context를 coroutine에 전달하지 못했다.
 - `:observability-basic`의 dispatcher-context RED 재현: local wrapper에서
   `currentObservationInContext()`가 null로 실패.
 - released helper 회귀 테스트 4개 통과: context propagation, success/error의 exactly-once
-  stop, cancellation rethrow/cleanup.
+  stop, 실제 `Job.cancel()`을 통한 cancellation rethrow/cleanup.
 - `:observability-basic:test`, `:observability-advanced:test` 및 정적 검사를 순차 실행한다.
 
 ## 향후 지침

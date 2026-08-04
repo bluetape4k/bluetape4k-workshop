@@ -51,7 +51,7 @@ http.server.requests
 | Concept | Implementation |
 |---|---|
 | Multi-layer spans | `withObservationContextSuspending()` wraps service, cache, and selected DB operations. |
-| Dispatcher boundary | Observation scope is opened through a coroutine `ThreadContextElement`. |
+| Dispatcher boundary | The released helper keeps the current Observation and parent/child relationship across coroutine dispatcher hops. |
 | Redis soft-fail | Non-cancellation Redis exceptions are logged and converted to cache miss/skip behavior. |
 | Cache-aside pattern | `get -> miss -> DB -> put`; hit skips the database span. |
 | Test assertions | `TestObservationRegistryAssert` verifies required spans and absence of skipped spans. |
