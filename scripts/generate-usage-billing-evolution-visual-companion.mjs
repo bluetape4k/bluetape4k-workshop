@@ -338,7 +338,9 @@ function html(localeId) {
       localStorage.setItem(themeStorageKey, next);
     });
     render();
-    document.fonts.ready.then(() => { window.__USAGE_BILLING_READY__ = true; });
+    window.__USAGE_BILLING_READY__ = true;
+    document.documentElement.dataset.ready = 'true';
+    document.fonts.ready.then(() => { document.documentElement.dataset.fonts = 'ready'; });
   </script>
 </body>
 </html>

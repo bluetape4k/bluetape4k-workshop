@@ -58,7 +58,7 @@
 - Modify: `docs/visual-companions/manifest.json`
 - Test: `scripts/validate-visual-companions.mjs`
 
-- [ ] **Step 1: Manifest에 아직 존재하지 않는 Locale HTML을 등록한다**
+- [x] **Step 1: Manifest에 아직 존재하지 않는 Locale HTML을 등록한다**
 
 `documents` 마지막에 다음 문서를 추가한다.
 
@@ -86,7 +86,7 @@
 }
 ```
 
-- [ ] **Step 2: 기존 Validator가 누락된 HTML을 거부하는지 확인한다**
+- [x] **Step 2: 기존 Validator가 누락된 HTML을 거부하는지 확인한다**
 
 Run:
 
@@ -101,7 +101,7 @@ usage-billing-evolution.en.html does not exist
 usage-billing-evolution.ko.html does not exist
 ```
 
-- [ ] **Step 3: 실패 상태를 커밋하지 않고 Task 2로 진행한다**
+- [x] **Step 3: 실패 상태를 커밋하지 않고 Task 2로 진행한다**
 
 Manifest 변경은 Task 2의 생성 파일과 한 커밋에 포함한다. RED 증거만 실행 기록에 남긴다.
 
@@ -116,7 +116,7 @@ Manifest 변경은 Task 2의 생성 파일과 한 커밋에 포함한다. RED �
 - Modify: `docs/visual-companions/manifest.json`
 - Test: `scripts/validate-visual-companions.mjs`
 
-- [ ] **Step 1: Model의 안정 ID와 공통 불변식을 정의한다**
+- [x] **Step 1: Model의 안정 ID와 공통 불변식을 정의한다**
 
 `usage-billing-evolution-model.mjs`는 다음 상수를 Export한다.
 
@@ -142,7 +142,7 @@ export const scenarioIds = {
 
 각 Scenario는 `events`, `initial`, `final`, `authority`, `allowedActions`를 갖는다. `events`의 모든 상태 변경은 실제 README·Service·Integration Test에서 확인한 결과만 사용한다.
 
-- [ ] **Step 2: Locale 문구가 같은 구조를 사용하도록 정의한다**
+- [x] **Step 2: Locale 문구가 같은 구조를 사용하도록 정의한다**
 
 ```javascript
 export const locales = {
@@ -173,7 +173,7 @@ export const locales = {
 
 실제 상대 경로는 생성된 두 HTML의 디렉터리 깊이를 기준으로 검증한다. Site Sync가 GitHub Source Link와 Locale Route를 다시 쓰므로 Mutable Branch URL을 HTML에 직접 넣지 않는다.
 
-- [ ] **Step 3: Generator가 독립 실행 가능한 HTML을 만들게 한다**
+- [x] **Step 3: Generator가 독립 실행 가능한 HTML을 만들게 한다**
 
 Generator는 `renderDocument(locale)`과 `writeDocument(locale)`을 제공하고 직접 실행 시 두 Locale을 생성한다.
 
@@ -203,7 +203,7 @@ for (const locale of ['en', 'ko']) {
 
 초기화 코드는 `location.hash`를 읽고 `viewIds`에 없는 값은 `ledger`로 바꾼다. Button 선택은 Hash를 갱신하고 `hashchange`는 Browser Back/Forward 상태를 복원한다.
 
-- [ ] **Step 4: Theme·Capture·접근성 계약을 구현한다**
+- [x] **Step 4: Theme·Capture·접근성 계약을 구현한다**
 
 Theme 우선순위는 Capture Query, 저장된 `starlight-theme`, 시스템 Theme 순이다.
 
@@ -222,7 +222,7 @@ document.documentElement.dataset.capture = params.get('capture') === '1' ? 'true
 
 `capture=1`이면 Header·Footer·설명 Section을 숨기고 `#workflow-capture`를 포함한 비교 화면만 1440×900 Viewport 안에 표시한다. `prefers-reduced-motion`과 Capture Mode에서는 Animation과 Transition을 제거한다. 모든 선택기는 Button, `aria-pressed`, Focus Ring을 사용한다.
 
-- [ ] **Step 5: Generator를 두 번 실행해 결정적 Source 생성을 확인한다**
+- [x] **Step 5: Generator를 두 번 실행해 결정적 Source 생성을 확인한다**
 
 Run:
 
@@ -236,7 +236,7 @@ diff -u /tmp/usage-billing-html-first.sha256 /tmp/usage-billing-html-second.sha2
 
 Expected: `diff` output 없음.
 
-- [ ] **Step 6: 공통 Visual Companion Validator를 통과한다**
+- [x] **Step 6: 공통 Visual Companion Validator를 통과한다**
 
 Run:
 
@@ -250,7 +250,7 @@ Expected:
 Visual companion validation passed: 5 documents / 10 locale files
 ```
 
-- [ ] **Step 7: HTML과 Manifest를 커밋한다**
+- [x] **Step 7: HTML과 Manifest를 커밋한다**
 
 ```bash
 git add \
@@ -272,7 +272,7 @@ Commit intent: `Make billing architecture choices comparable through one reprodu
 - Modify: `scripts/visual-companions/usage-billing-evolution-model.mjs`
 - Test: `scripts/validate-usage-billing-evolution-visual-companion.mjs`
 
-- [ ] **Step 1: 의도적으로 잘못된 Model Fixture가 실패하도록 Validator를 작성한다**
+- [x] **Step 1: 의도적으로 잘못된 Model Fixture가 실패하도록 Validator를 작성한다**
 
 Validator는 다음 함수를 Export한다.
 
@@ -295,7 +295,7 @@ export function validateUsageBillingModel({ viewIds, scenarioIds, scenarios, loc
 
 Script 내부의 최소 실패 Fixture에서 `ledger/NORMAL`을 제거하고 `missing scenario: ledger/NORMAL`이 발생하는지 먼저 확인한다.
 
-- [ ] **Step 2: HTML 구조·Fragment·Source Link 검사를 추가한다**
+- [x] **Step 2: HTML 구조·Fragment·Source Link 검사를 추가한다**
 
 두 HTML 각각에 대해 다음 값을 검사한다.
 
@@ -314,7 +314,7 @@ const required = [
 
 Locale별 HTML은 상대 Locale Link와 설계 문서 Link를 포함해야 한다. `fetch(`, 외부 Script·Stylesheet·Media URL, WebSocket, Form은 0개여야 한다.
 
-- [ ] **Step 3: 정상 Model과 생성 HTML을 검증한다**
+- [x] **Step 3: 정상 Model과 생성 HTML을 검증한다**
 
 Run:
 
@@ -328,7 +328,7 @@ Expected:
 Usage billing visualization validation passed: views=3 scenarios=16 locales=2
 ```
 
-- [ ] **Step 4: Validator와 필요한 Model 보정을 커밋한다**
+- [x] **Step 4: Validator와 필요한 Model 보정을 커밋한다**
 
 ```bash
 git add \
@@ -360,7 +360,7 @@ Commit intent: `Keep every billing scenario and locale bound to the same source 
 - Create: `docs/images/visual-companions/usage-billing-evolution-microservices.ko.dark.png`
 - Test: `scripts/capture-usage-billing-evolution-visual-companion.mjs`
 
-- [ ] **Step 1: Chrome 실행 환경을 고정한다**
+- [x] **Step 1: Chrome 실행 환경을 고정한다**
 
 Capture Script는 다음 값을 사용한다.
 
@@ -374,7 +374,7 @@ const views = ['ledger', 'event-sourcing', 'microservices'];
 
 Chrome Version을 실행 로그에 출력하고 임시 User Data Directory를 `mkdtemp()`로 만든다. Network를 사용하지 않는 `file://` URL에 Capture Theme과 View ID를 조합한 Query·Fragment를 붙인다.
 
-- [ ] **Step 2: 같은 입력을 두 디렉터리에 Capture한다**
+- [x] **Step 2: 같은 입력을 두 디렉터리에 Capture한다**
 
 각 조합에 다음 인수를 사용한다.
 
@@ -394,7 +394,7 @@ Chrome Version을 실행 로그에 출력하고 임시 User Data Directory를 `m
 
 첫 번째·두 번째 Capture는 서로 다른 임시 User Data Directory를 사용한다.
 
-- [ ] **Step 3: Dimensions와 SHA-256이 같은지 확인한다**
+- [x] **Step 3: Dimensions와 SHA-256이 같은지 확인한다**
 
 Script는 PNG Header에서 `1440×900`을 읽고 두 Capture의 SHA-256을 비교한다. 다르면 파일을 복사하지 않고 다음 형식으로 실패한다.
 
@@ -404,7 +404,7 @@ capture drift: locale=ko theme=dark view=ledger first=FIRST_SHA256 second=SECOND
 
 같으면 첫 번째 파일을 Canonical Output으로 복사한다.
 
-- [ ] **Step 4: 12개 Capture를 생성한다**
+- [x] **Step 4: 12개 Capture를 생성한다**
 
 Run:
 
@@ -418,7 +418,7 @@ Expected:
 Usage billing captures passed: chrome=151.0.7922.72 assets=12 dimensions=1440x900 deterministic=12/12
 ```
 
-- [ ] **Step 5: PNG를 한 장씩 Full-size로 검사한다**
+- [x] **Step 5: PNG를 한 장씩 Full-size로 검사한다**
 
 각 PNG에서 다음 항목을 기록한다.
 
@@ -431,7 +431,7 @@ Usage billing captures passed: chrome=151.0.7922.72 assets=12 dimensions=1440x90
 
 Contact Sheet는 Pattern Scan에만 사용하고 Full-size 검사 12건을 대체하지 않는다.
 
-- [ ] **Step 6: Capture Script와 PNG를 커밋한다**
+- [x] **Step 6: Capture Script와 PNG를 커밋한다**
 
 ```bash
 git add scripts/capture-usage-billing-evolution-visual-companion.mjs docs/images/visual-companions/usage-billing-evolution-*.png
@@ -449,7 +449,7 @@ Commit intent: `Give every billing-series locale a deterministic visual fallback
 - Regenerate: `docs/visual-companions/en/usage-billing-evolution.html`
 - Regenerate: `docs/visual-companions/ko/usage-billing-evolution.html`
 
-- [ ] **Step 1: 두 Locale HTML을 Local HTTP Server로 제공한다**
+- [x] **Step 1: 두 Locale HTML을 Local HTTP Server로 제공한다**
 
 Run:
 
@@ -464,11 +464,11 @@ http://127.0.0.1:8765/docs/visual-companions/en/usage-billing-evolution.html#led
 http://127.0.0.1:8765/docs/visual-companions/ko/usage-billing-evolution.html#ledger
 ```
 
-- [ ] **Step 2: 세 Fragment와 Browser History를 검증한다**
+- [x] **Step 2: 세 Fragment와 Browser History를 검증한다**
 
 각 Locale에서 `#ledger`, `#event-sourcing`, `#microservices` 직접 진입을 확인한다. 알 수 없는 `#unknown`은 `#ledger`로 바뀌어야 한다. 화면을 차례로 선택한 뒤 Back/Forward로 선택 상태가 복원되어야 한다.
 
-- [ ] **Step 3: Desktop·360px·Theme·Keyboard를 검증한다**
+- [x] **Step 3: Desktop·360px·Theme·Keyboard를 검증한다**
 
 검증 Matrix:
 
@@ -478,7 +478,7 @@ http://127.0.0.1:8765/docs/visual-companions/ko/usage-billing-evolution.html#led
 
 각 Check에서 Console Error 0, Page Error 0, 수평 Overflow 0, Focus 누락 0, 숨은 Scenario 0을 확인한다.
 
-- [ ] **Step 4: 최종 생성·검증을 다시 실행한다**
+- [x] **Step 4: 최종 생성·검증을 다시 실행한다**
 
 ```bash
 node scripts/generate-usage-billing-evolution-visual-companion.mjs
@@ -497,7 +497,7 @@ Expected: 모든 명령 Exit 0, Capture `12/12`, Diff Check 출력 없음.
 - Create: `docs/lessons/2026-08-05-usage-billing-visualization-boundaries.md`
 - Modify: `docs/lessons/README.md` if the repository index includes dated lessons
 
-- [ ] **Step 1: 재사용 가능한 교훈을 기록한다**
+- [x] **Step 1: 재사용 가능한 교훈을 기록한다**
 
 Lesson은 다음 세 결정을 근거와 함께 기록한다.
 
@@ -505,7 +505,7 @@ Lesson은 다음 세 결정을 근거와 함께 기록한다.
 2. 동일 Scenario ID를 세 구현 단계에 적용해야 Architecture 발전 과정을 비교할 수 있다.
 3. HTML 원본과 Blog PNG를 같은 Capture 입력에서 만들어야 Locale·Theme별 설명이 어긋나지 않는다.
 
-- [ ] **Step 2: 최종 Workshop Diff를 검토한다**
+- [x] **Step 2: 최종 Workshop Diff를 검토한다**
 
 ```bash
 git status --short
@@ -517,7 +517,7 @@ node scripts/validate-usage-billing-evolution-visual-companion.mjs
 
 Expected: 관련 Source·HTML·PNG·Manifest·Lesson만 변경되고 P0/P1 Finding 0.
 
-- [ ] **Step 3: Lesson을 커밋한다**
+- [x] **Step 3: Lesson을 커밋한다**
 
 ```bash
 git add docs/lessons/2026-08-05-usage-billing-visualization-boundaries.md docs/lessons/README.md
@@ -526,7 +526,7 @@ git commit
 
 Commit intent: `Preserve the publication boundary behind the billing visualization`
 
-- [ ] **Step 4: Workshop 전달 경계를 보고한다**
+- [x] **Step 4: Workshop 전달 경계를 보고한다**
 
 보고 내용:
 
