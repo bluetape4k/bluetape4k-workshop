@@ -33,6 +33,8 @@ test("high-contention runner passes one quoted property and removes its shell ch
             JSON.parse(await readFile(join(fixture, "gradlew-invocation.json"), "utf8")),
             {
                 args: [
+                    "-x",
+                    "detekt",
                     "highContentionCi",
                     "-PhighContentionRunId=issue-522-final",
                     "--max-workers=1",

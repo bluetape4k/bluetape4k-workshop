@@ -119,6 +119,26 @@ test("PR-gated high-contention validation checks the shared diagram artifacts", 
     assert.match(readmeValidator, /evidence-to-cleanup/u);
 });
 
+test("local high-contention contract disables Ryuk without replacing the Docker host", async () => {
+    const smoke = await readFile("scripts/smoke-validate.sh", "utf8");
+    const contractStart = smoke.indexOf("  high-contention-contract)");
+    const contractEnd = smoke.indexOf("  high-contention-ci)", contractStart);
+
+    assert.notEqual(contractStart, -1, "the local contract group must remain explicit");
+    assert.notEqual(contractEnd, -1, "the CI group must follow the local contract group");
+
+    const contract = smoke.slice(contractStart, contractEnd);
+    assert.equal(
+        (contract.match(/TESTCONTAINERS_RYUK_DISABLED=true \$GRADLEW/gu) ?? []).length,
+        2,
+        "container-backed modules must use isolated Gradle invocations",
+    );
+    assert.match(contract, /:operations-job-console-core:test/u);
+    assert.match(contract, /:commerce-concert-ticket-flash-sale:test/u);
+    assert.match(contract, /--no-daemon/u);
+    assert.doesNotMatch(contract, /(?:^|[\s])DOCKER_HOST=/mu);
+});
+
 async function kotlinFiles(root) {
     const files = [];
     for (const entry of await readdir(root, { withFileTypes: true })) {
