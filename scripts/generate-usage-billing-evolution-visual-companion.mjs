@@ -273,7 +273,7 @@ function html(localeId) {
     let activeScenario = model.scenarioIds[activeView][0];
 
     function humanize(value) {
-      return value.replaceAll('-', ' ').replaceAll('_', ' ');
+      return model.copy.terms?.[value] || value.replaceAll('-', ' ').replaceAll('_', ' ');
     }
 
     function renderScenarioButtons() {
