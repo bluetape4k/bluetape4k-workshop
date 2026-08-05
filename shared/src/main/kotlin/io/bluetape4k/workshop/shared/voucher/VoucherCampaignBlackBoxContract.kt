@@ -6,6 +6,7 @@ import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.support.requireZeroOrPositiveNumber
+import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 
@@ -439,8 +440,11 @@ object VoucherCampaignBlackBoxContract {
     private const val TENANT = "voucher-contract"
     private const val PRINCIPAL = "voucher-contract-operator"
     private const val CAPACITY = 20
-    private val STARTS_AT: Instant = Instant.parse("2026-07-22T00:00:00Z")
-    private val ENDS_AT: Instant = Instant.parse("2026-07-31T00:00:00Z")
+
+    /** 실행일이 바뀌어도 공유 compatibility scenario가 만료되지 않도록 runtime-relative window를 사용합니다. */
+    private val CONTRACT_START: Instant = Instant.now().minus(Duration.ofMinutes(1))
+    private val STARTS_AT: Instant = CONTRACT_START
+    private val ENDS_AT: Instant = CONTRACT_START.plus(Duration.ofDays(2))
 
     val createAndReplay: VoucherCampaignBlackBoxScenario =
         VoucherCampaignBlackBoxScenario(

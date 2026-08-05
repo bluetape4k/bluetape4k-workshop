@@ -58,6 +58,7 @@ internal class TicketHighContentionProfileTest {
             TicketProxiedTopology.start(runId, profileId, journal).use { topology ->
                 TicketLiveProfileAdapter(runId, profile, topology).use { adapter ->
                     val schedule = TicketDeterministicSchedule.generate(profile.scheduleVector())
+                    adapter.prepareCommands(schedule)
                     val injectAfter = when (profile.failure.kind) {
                         TicketFailureKind.REDIS_PATH_OUTAGE,
                         TicketFailureKind.REDIS_KEY_LOSS,
@@ -181,6 +182,7 @@ private class TicketLiveProfileAdapter(
     )
     private val commands = ConcurrentHashMap<Int, StartPurchase>()
     private val duplicateCommands = ConcurrentHashMap<Int, StartPurchase>()
+    private val startedCommands = ConcurrentHashMap<Int, StartPurchase>()
     private val winnerOrdinals = ConcurrentHashMap.newKeySet<Int>()
     private val winnerAttemptIds = ConcurrentHashMap.newKeySet<UUID>()
     private val injected = AtomicBoolean()
@@ -211,20 +213,45 @@ private class TicketLiveProfileAdapter(
             "${it.attempts}:${it.effects}:${it.receipts}"
         }
 
+    /**
+     * Prepare all command-side rows before measured workers start.
+     *
+     * Command creation writes admission and idempotency rows. Doing that lazily
+     * inside the measured workers lets those writes wait on the sale row while a
+     * purchase transaction is already holding it, which can form a PostgreSQL
+     * foreign-key deadlock. Preparation is setup work, not measured contention.
+     */
+    fun prepareCommands(schedule: List<TicketScheduleToken>) {
+        if (profile.failure.kind == TicketFailureKind.DUPLICATE_SUBMISSION) {
+            schedule
+                .asSequence()
+                .map(TicketScheduleToken::identityOrdinal)
+                .distinct()
+                .forEach { identityOrdinal ->
+                    duplicateCommands[identityOrdinal] = application.command(measuredSale, identityOrdinal)
+                }
+        } else {
+            schedule.forEach { token ->
+                commands[token.stableOrdinal] = application.command(measuredSale, token.stableOrdinal)
+            }
+        }
+    }
+
     override fun execute(
         token: TicketScheduleToken,
         identity: TicketWorkloadIdentity,
     ): TicketWorkloadDisposition {
         val command = if (profile.failure.kind == TicketFailureKind.DUPLICATE_SUBMISSION) {
-            duplicateCommands.computeIfAbsent(identity.ordinal) {
-                application.command(measuredSale, identity.ordinal)
-            }
+            duplicateCommands[identity.ordinal]
+                ?: error("prepared duplicate Ticket command is missing")
         } else {
-            application.command(measuredSale, token.stableOrdinal)
+            commands[token.stableOrdinal]
+                ?: error("prepared Ticket command is missing")
         }
         commands.putIfAbsent(token.stableOrdinal, command)
         return try {
             application.purchases.start(command)
+            startedCommands[token.stableOrdinal] = command
             if (
                 profile.failure.kind != TicketFailureKind.DUPLICATE_SUBMISSION ||
                 duplicateCommands[identity.ordinal] == command &&
@@ -340,7 +367,7 @@ private class TicketLiveProfileAdapter(
             }
             check(failedClosed) { "new Ticket purchase did not fail closed during Redis outage" }
 
-            val command = commands.values.first()
+            val command = firstStartedCommand()
             application.paymentProvider.complete(command.authorizationOperationId, PaymentOutcome.APPROVED)
             check(application.paymentWorker.run(command.authorizationOperationId) == ApplyResult.APPLIED)
             topology.recover()
@@ -368,7 +395,7 @@ private class TicketLiveProfileAdapter(
         check(deleted.deletedKeys == ownedKeys.sorted())
         check(commands.get(unrelatedKey) == "retained")
 
-        val first = this.commands.values.first()
+        val first = firstStartedCommand()
         val conflicting = application.command(
             measuredSale,
             identityOrdinal = firstIdentityOrdinal(first),
@@ -500,6 +527,15 @@ private class TicketLiveProfileAdapter(
 
     private fun firstIdentityOrdinal(command: StartPurchase): Int =
         commands.entries.single { it.value.attemptId == command.attemptId }.key
+
+    private fun firstStartedCommand(): StartPurchase =
+        TicketHighContentionAwait.value(
+            timeout = Duration.ofSeconds(5),
+            pollInterval = Duration.ofMillis(10),
+            description = "Ticket measured purchase did not start before failure injection",
+        ) {
+            startedCommands.values.firstOrNull()
+        }
 
     private fun measuredInventory(): Int =
         when (profile.failure.kind) {

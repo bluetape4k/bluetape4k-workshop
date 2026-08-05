@@ -1,13 +1,13 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.application
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.StreamKey
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageAccepted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreDatabaseFixture
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventTypeQuery
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -34,10 +34,10 @@ class CommandServicePostgresIntegrationTest {
         fixture.executor.transaction { meters.register("tenant-a", "api_calls", "request", "USD", now) }
         fixture.executor.transaction { meters.activatePrice("tenant-a", "api_calls", BigDecimal("0.10"), "USD", now) }
 
-        assertThrows(IllegalStateException::class.java) {
+        assertFailsWith<IllegalStateException> {
             fixture.executor.transaction { meters.register("tenant-a", "api_calls", "request", "USD", now) }
         }
-        assertThrows(IllegalStateException::class.java) {
+        assertFailsWith<IllegalStateException> {
             fixture.executor.transaction {
                 meters.activatePrice("tenant-a", "api_calls", BigDecimal("0.20"), "USD", now)
             }
@@ -58,15 +58,15 @@ class CommandServicePostgresIntegrationTest {
                 }
             }
             start.countDown()
-            assertEquals(1, results.count { it.get() })
+            results.count { it.get() }.shouldBeEqualTo(1)
         } finally {
             pool.shutdownNow()
         }
 
         val replay = fixture.executor.transaction { usages.accept("tenant-a", usage, now) }
-        assertFalse(replay.created)
-        assertEquals(1, fixture.executor.transaction { eventStore.load(replay.stream).size })
-        assertThrows(IllegalStateException::class.java) {
+        replay.created.shouldBeFalse()
+        fixture.executor.transaction { eventStore.load(replay.stream).size }.shouldBeEqualTo(1)
+        assertFailsWith<IllegalStateException> {
             fixture.executor.transaction {
                 usages.accept("tenant-a", usage.copy(quantity = BigDecimal.ONE), now)
             }
@@ -80,15 +80,11 @@ class CommandServicePostgresIntegrationTest {
         fixture.executor.transaction { billing.startClose("tenant-a", "2026-07", now.plusSeconds(3600)) }
         fixture.executor.transaction { billing.issueInvoice("tenant-a", "invoice-1", BigDecimal.TEN, "USD", now) }
 
-        assertFalse(
-            fixture.executor.transaction {
-                billing.issueInvoice("tenant-a", "invoice-1", BigDecimal.TEN, "USD", now)
-            },
-        )
-        assertEquals(
-            0,
-            fixture.executor.transaction { eventStore.load(StreamKey("tenant-b", "Invoice", "invoice-1")).size },
-        )
+        fixture.executor.transaction {
+            billing.issueInvoice("tenant-a", "invoice-1", BigDecimal.TEN, "USD", now)
+        }.shouldBeFalse()
+        fixture.executor.transaction { eventStore.load(StreamKey("tenant-b", "Invoice", "invoice-1")).size }
+            .shouldBeEqualTo(0)
     }
 
     @Test
@@ -103,24 +99,18 @@ class CommandServicePostgresIntegrationTest {
             billing.startClose("tenant-a", "2026-07", now.plusSeconds(3600))
         }
 
-        assertEquals(
-            BillingCloseBatchResult.APPLIED,
-            fixture.executor.transaction { closer.closeNextBatch("tenant-a", "2026-07", 1, now) },
-        )
-        assertEquals(
-            BillingCloseBatchResult.APPLIED,
-            fixture.executor.transaction { closer.closeNextBatch("tenant-a", "2026-07", 1, now) },
-        )
-        assertEquals(
-            BillingCloseBatchResult.FINALIZED,
-            fixture.executor.transaction { closer.closeNextBatch("tenant-a", "2026-07", 1, now) },
-        )
+        fixture.executor.transaction { closer.closeNextBatch("tenant-a", "2026-07", 1, now) }
+            .shouldBeEqualTo(BillingCloseBatchResult.APPLIED)
+        fixture.executor.transaction { closer.closeNextBatch("tenant-a", "2026-07", 1, now) }
+            .shouldBeEqualTo(BillingCloseBatchResult.APPLIED)
+        fixture.executor.transaction { closer.closeNextBatch("tenant-a", "2026-07", 1, now) }
+            .shouldBeEqualTo(BillingCloseBatchResult.FINALIZED)
         val rated = fixture.executor.transaction {
             eventStore.loadByType(
                 EventTypeQuery("tenant-a", "usage.rated", now.minusSeconds(1), now.plusSeconds(3600), limit = 10),
             )
         }
-        assertEquals(2, rated.size)
+        rated.size.shouldBeEqualTo(2)
     }
 
     @Test
@@ -153,6 +143,6 @@ class CommandServicePostgresIntegrationTest {
                 EventTypeQuery("tenant-a", "usage.rated", now.minusSeconds(1), now.plusSeconds(3600), limit = 10),
             )
         }
-        assertEquals(1, rated.size)
+        rated.size.shouldBeEqualTo(1)
     }
 }

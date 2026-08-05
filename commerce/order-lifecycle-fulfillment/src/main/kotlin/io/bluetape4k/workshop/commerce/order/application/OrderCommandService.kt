@@ -4,6 +4,9 @@ import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireInRange
+import io.bluetape4k.support.requireNotEmpty
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.commerce.order.domain.AggregateType
 import io.bluetape4k.workshop.commerce.order.domain.CancellationPolicy
 import io.bluetape4k.workshop.commerce.order.domain.CancellationStatus
@@ -73,9 +76,12 @@ internal class OrderCommandService(
     fun submit(command: SubmitOrder): SubmittedOrderIds {
         require(command.tenantId.matches(IDENTIFIER)) { "invalid tenantId" }
         require(command.customerReference.matches(IDENTIFIER)) { "invalid customerReference" }
-        require(command.lines.isNotEmpty() && command.lines.size <= 50) { "lines must contain 1..50 items" }
+        command.lines.requireNotEmpty("lines")
+        command.lines.size.requireInRange(1, 50, "lines.size")
         command.lines.forEach {
-            require(it.sku.matches(IDENTIFIER) && it.quantity in 1..1_000 && it.unitPrice.signum() >= 0)
+            require(it.sku.matches(IDENTIFIER))
+            it.quantity.requireInRange(1, 1_000, "quantity")
+            require(it.unitPrice.signum() >= 0)
         }
 
         val orderId = Uuid.V7.nextId()
@@ -180,7 +186,7 @@ internal class OrderCommandService(
         reasonCode: String,
     ): LineCancellationResult {
         require(reasonCode.matches(REASON)) { "invalid reasonCode" }
-        require(quantity > 0) { "quantity must be positive" }
+        quantity.requirePositiveNumber("quantity")
         val line = lines.findByLineId(lineId)
         check(line != null && line.orderId == orderId) { "order line not found" }
         val linkedLines = fulfillmentLines.findByLineId(lineId)

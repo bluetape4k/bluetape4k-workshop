@@ -1,5 +1,9 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.application
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentDirection
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentPosted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.DomainEvent
@@ -18,10 +22,6 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.Project
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionHandlers
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionLease
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionModelType
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -52,8 +52,8 @@ class CorrectionReconciliationIntegrationTest {
         val credit = credit("2.00")
 
         fixture.executor.transaction { adjustments.post("tenant-a", "correction-1", credit, now) }
-        assertFalse(fixture.executor.transaction { adjustments.post("tenant-a", "correction-1", credit, now) })
-        assertThrows(IllegalStateException::class.java) {
+        fixture.executor.transaction { adjustments.post("tenant-a", "correction-1", credit, now) }.shouldBeFalse()
+        assertFailsWith<IllegalStateException> {
             fixture.executor.transaction {
                 adjustments.post("tenant-a", "correction-1", credit.copy(amount = BigDecimal.ONE), now)
             }
@@ -77,7 +77,7 @@ class CorrectionReconciliationIntegrationTest {
             generations.createInitialActive("billing", 1, now)
         }
         projectGeneration(1)
-        assertNull(fixture.executor.transaction { reconciliation.inspect(query) })
+        fixture.executor.transaction { reconciliation.inspect(query) }.shouldBeNull()
 
         fixture.executor.transaction {
             readModels.append(
@@ -88,13 +88,13 @@ class CorrectionReconciliationIntegrationTest {
             )
         }
         val finding = fixture.executor.transaction { reconciliation.inspect(query) }
-        assertNotNull(finding)
+        finding.shouldNotBeNull()
 
         fixture.executor.transaction { generations.createBuilding("billing", 2, 2, now) }
         val lease = projectGeneration(2)
         fixture.executor.transaction { generations.switchActive(lease, 1, now) }
-        assertNull(fixture.executor.transaction { reconciliation.inspect(query) })
-        assertFalse(fixture.executor.transaction { reconciliation.isStillCurrent(query, checkNotNull(finding)) })
+        fixture.executor.transaction { reconciliation.inspect(query) }.shouldBeNull()
+        fixture.executor.transaction { reconciliation.isStillCurrent(query, checkNotNull(finding)) }.shouldBeFalse()
     }
 
     private fun projectGeneration(generation: Int): ProjectionLease {

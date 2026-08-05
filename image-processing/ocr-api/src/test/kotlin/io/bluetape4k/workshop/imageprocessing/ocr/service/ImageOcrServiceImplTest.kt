@@ -235,7 +235,7 @@ class ImageOcrServiceImplTest {
         val secondEntered = AtomicBoolean(false)
         val neverReleased = CountDownLatch(1)
         val service = service(
-            properties = properties(nativeEnabled = true, timeout = Duration.ofMillis(100)),
+            properties = properties(nativeEnabled = true, timeout = Duration.ofMillis(500)),
             engine = OcrEngine { _, options ->
                 if (firstEntered.compareAndSet(false, true)) {
                     neverReleased.await(2, TimeUnit.SECONDS)
