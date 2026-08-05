@@ -1,5 +1,9 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.projection
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentDirection
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.AdjustmentPosted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.DomainEvent
@@ -11,9 +15,6 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventS
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionCheckpointRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionFailureRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionGenerationRepository
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -55,11 +56,11 @@ class ProjectionRecoveryPostgresIntegrationTest {
         val active = fixture.executor.transaction { readModels.entries("billing", 1, "tenant-a") }
         val building = fixture.executor.transaction { readModels.entries("billing", 2, "tenant-a") }
 
-        assertEquals(8, active.size)
-        assertEquals(2, building.size)
+        active.size.shouldBeEqualTo(8)
+        building.size.shouldBeEqualTo(2)
         val total = fixture.executor.transaction { readModels.financialTotal("billing", 1, "tenant-a") }
-        assertEquals(0, BigDecimal("3.00").compareTo(total))
-        assertEquals(emptyList<Any>(), fixture.executor.transaction { readModels.entries("billing", 1, "tenant-b") })
+        BigDecimal("3.00").compareTo(total).shouldBeEqualTo(0)
+        fixture.executor.transaction { readModels.entries("billing", 1, "tenant-b") }.shouldBeEqualTo(emptyList<Any>())
     }
 
     @Test
@@ -78,17 +79,19 @@ class ProjectionRecoveryPostgresIntegrationTest {
         }
 
         val failure = fixture.executor.transaction { failures.latest("billing", 2) }
-        assertEquals(eventId, failure?.eventId)
-        assertEquals("sha256:error", failure?.errorDigest)
-        assertNull(failure?.rawPayload)
-        assertEquals(1, fixture.executor.transaction { generations.active("billing")?.generation })
-        assertEquals(
-            ProjectionGenerationState.FAILED,
-            fixture.executor.transaction { generations.get("billing", 2)?.state },
-        )
-        assertFalse(
-            ProjectionFailureRepository::class.java.methods.any { it.name.contains("skip", ignoreCase = true) },
-        )
+        val actualFailure = failure.shouldNotBeNull()
+        actualFailure.eventId.shouldBeEqualTo(eventId)
+        actualFailure.errorDigest.shouldBeEqualTo("sha256:error")
+        actualFailure.rawPayload.shouldBeNull()
+        fixture.executor.transaction { generations.active("billing")?.generation }
+            .shouldNotBeNull()
+            .shouldBeEqualTo(1)
+        fixture.executor.transaction { generations.get("billing", 2)?.state }
+            .shouldNotBeNull()
+            .shouldBeEqualTo(ProjectionGenerationState.FAILED)
+        ProjectionFailureRepository::class.java.methods
+            .any { it.name.contains("skip", ignoreCase = true) }
+            .shouldBeFalse()
     }
 
     private fun project(

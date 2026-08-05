@@ -25,6 +25,7 @@ import io.bluetape4k.workshop.commerce.ticket.persistence.TicketOrders
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketPaymentOperations
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketPurchaseAttemptEntity
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketPurchaseAttempts
+import io.bluetape4k.workshop.commerce.ticket.persistence.TicketSales
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketTickets
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.ApplyPaymentOutcome
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.ApplyResult
@@ -129,6 +130,7 @@ class TicketPurchaseRepository(
     fun cancel(command: CancelPurchase): PurchaseSnapshot = jdbc.transaction {
         val candidate = findAttempt(command.attemptId) ?: throw PurchaseNotFound()
         if (candidate.buyerSubjectId != command.buyerSubjectId) throw PurchaseNotFound()
+        lockSale(candidate.saleId)
         lockGuard(candidate.saleId, IdentityKind.USER, candidate.buyerSubjectId, candidate.attemptId)
         lockGuard(candidate.saleId, IdentityKind.IP, candidate.ipSubjectId, candidate.attemptId)
         lockExistingBuyer(candidate.saleId, candidate.buyerSubjectId)
@@ -152,6 +154,7 @@ class TicketPurchaseRepository(
 
     fun applyPaymentOutcome(command: ApplyPaymentOutcome): ApplyResult = jdbc.transaction {
         val candidate = findAttempt(command.attemptId) ?: return@transaction ApplyResult.STALE
+        lockSale(candidate.saleId)
         lockGuard(candidate.saleId, IdentityKind.USER, candidate.buyerSubjectId, candidate.attemptId)
         lockGuard(candidate.saleId, IdentityKind.IP, candidate.ipSubjectId, candidate.attemptId)
         lockExistingBuyer(candidate.saleId, candidate.buyerSubjectId)
@@ -240,6 +243,16 @@ class TicketPurchaseRepository(
         return row[TicketHttpIdempotencies.attemptId]?.also {
             if (it != command.attemptId) throw IdempotencyOwnershipLost()
         }
+    }
+
+    /** All transactions that mutate inventory must acquire the sale root first. */
+    private fun TicketJdbcTransaction.lockSale(saleId: UUID) {
+        acquire(TicketLockRank.SALE)
+        TicketSales.selectAll()
+            .where { TicketSales.id eq saleId }
+            .forUpdate()
+            .singleOrNull()
+            ?: throw PurchaseNotFound()
     }
 
     private fun TicketJdbcTransaction.lockGuard(

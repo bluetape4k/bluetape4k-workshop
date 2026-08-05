@@ -31,7 +31,7 @@ class BasicUsageTest(
     @BeforeEach
     fun beforeEach() {
         operations.execute { conn ->
-            conn.serverCommands().flushDb()
+            conn.flushMasterDatabases()
         }
     }
 

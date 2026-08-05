@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.order.application
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
+import io.bluetape4k.support.requireInRange
 import org.springframework.modulith.events.FailedEventPublications
 import org.springframework.modulith.events.ResubmissionOptions
 import org.springframework.stereotype.Service
@@ -20,7 +21,7 @@ internal class PublicationReconciliationService(
     private val failedPublications: FailedEventPublications,
 ) {
     fun replayFailed(batchSize: Int): ReconciliationResult {
-        require(batchSize in 1..MAX_BATCH_SIZE) { "batchSize must contain 1..$MAX_BATCH_SIZE" }
+        batchSize.requireInRange(1, MAX_BATCH_SIZE, "batchSize")
         failedPublications.resubmit(
             ResubmissionOptions
                 .defaults()

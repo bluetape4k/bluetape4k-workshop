@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.idempotency
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotEquals
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeEqualTo
 import org.junit.jupiter.api.Test
 
 class CommandFingerprintTest {
@@ -11,7 +11,7 @@ class CommandFingerprintTest {
         val reordered = CommandFingerprint.request("meter-register", mapOf("code" to "api_calls", "unit" to "request"))
         val changed = CommandFingerprint.request("meter-register", mapOf("code" to "api_calls", "unit" to "call"))
 
-        assertEquals(first, reordered)
-        assertNotEquals(first, changed)
+        reordered.shouldBeEqualTo(first)
+        changed.shouldNotBeEqualTo(first)
     }
 }
