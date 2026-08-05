@@ -93,6 +93,29 @@
           "html": "docs/superpowers/specs/2026-07-30-leader-job-safety-lab-visual-companion.html"
         }
       }
+    },
+    {
+      "id": "usage-billing-evolution",
+      "source": "docs/superpowers/specs/2026-08-05-usage-billing-series-visualization-design.md",
+      "status": "approved",
+      "public": true,
+      "presentation": {
+        "mode": "simulation",
+        "defaultView": "simulation",
+        "views": [
+          "simulation"
+        ]
+      },
+      "locales": {
+        "en": {
+          "title": "Usage Billing Evolution",
+          "html": "docs/visual-companions/en/usage-billing-evolution.html"
+        },
+        "ko": {
+          "title": "SaaS 사용량 과금의 발전 단계",
+          "html": "docs/visual-companions/ko/usage-billing-evolution.html"
+        }
+      }
     }
   ]
 }
