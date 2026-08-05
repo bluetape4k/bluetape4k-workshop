@@ -220,7 +220,7 @@ document.documentElement.dataset.theme = resolvedTheme;
 document.documentElement.dataset.capture = params.get('capture') === '1' ? 'true' : 'false';
 ```
 
-`capture=1`이면 Header·Footer·설명 Section을 숨기고 `#workflow-capture`만 1440×1800 Viewport 안에 표시한다. `prefers-reduced-motion`과 Capture Mode에서는 Animation과 Transition을 제거한다. 모든 선택기는 Button, `aria-pressed`, Focus Ring을 사용한다.
+`capture=1`이면 Header·Footer·설명 Section을 숨기고 `#workflow-capture`를 포함한 비교 화면만 1440×900 Viewport 안에 표시한다. `prefers-reduced-motion`과 Capture Mode에서는 Animation과 Transition을 제거한다. 모든 선택기는 Button, `aria-pressed`, Focus Ring을 사용한다.
 
 - [ ] **Step 5: Generator를 두 번 실행해 결정적 Source 생성을 확인한다**
 
@@ -366,7 +366,7 @@ Capture Script는 다음 값을 사용한다.
 
 ```javascript
 const chrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const windowSize = '1440,1800';
+const windowSize = '1440,900';
 const locales = ['en', 'ko'];
 const themes = ['light', 'dark'];
 const views = ['ledger', 'event-sourcing', 'microservices'];
@@ -382,7 +382,7 @@ Chrome Version을 실행 로그에 출력하고 임시 User Data Directory를 `m
 --headless=new
 --hide-scrollbars
 --force-device-scale-factor=1
---window-size=1440,1800
+--window-size=1440,900
 --disable-background-networking
 --disable-default-apps
 --disable-extensions
@@ -396,7 +396,7 @@ Chrome Version을 실행 로그에 출력하고 임시 User Data Directory를 `m
 
 - [ ] **Step 3: Dimensions와 SHA-256이 같은지 확인한다**
 
-Script는 PNG Header에서 `1440×1800`을 읽고 두 Capture의 SHA-256을 비교한다. 다르면 파일을 복사하지 않고 다음 형식으로 실패한다.
+Script는 PNG Header에서 `1440×900`을 읽고 두 Capture의 SHA-256을 비교한다. 다르면 파일을 복사하지 않고 다음 형식으로 실패한다.
 
 ```text
 capture drift: locale=ko theme=dark view=ledger first=FIRST_SHA256 second=SECOND_SHA256
@@ -415,7 +415,7 @@ node scripts/capture-usage-billing-evolution-visual-companion.mjs
 Expected:
 
 ```text
-Usage billing captures passed: chrome=151.0.7922.72 assets=12 dimensions=1440x1800 deterministic=12/12
+Usage billing captures passed: chrome=151.0.7922.72 assets=12 dimensions=1440x900 deterministic=12/12
 ```
 
 - [ ] **Step 5: PNG를 한 장씩 Full-size로 검사한다**

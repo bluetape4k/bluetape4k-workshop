@@ -20,6 +20,7 @@ const htmlPaths = {
 export function validateUsageBillingModel(model) {
   const errors = [];
   const seen = new Set();
+  const scenarioTerms = new Set();
   for (const viewId of model.viewIds) {
     if (!model.locales.en.viewNames[viewId] || !model.locales.ko.viewNames[viewId]) {
       errors.push(`missing localized view: ${viewId}`);
@@ -42,7 +43,15 @@ export function validateUsageBillingModel(model) {
           errors.push(`missing localized scenario: ${localeId}/${scenarioId}`);
         }
       }
+      scenarioTerms.add(item.initial);
+      scenarioTerms.add(item.final);
+      scenarioTerms.add(item.authority);
+      item.events.forEach((term) => scenarioTerms.add(term));
+      item.allowedActions.forEach((term) => scenarioTerms.add(term));
     }
+  }
+  for (const term of scenarioTerms) {
+    if (!model.locales.ko.terms?.[term]) errors.push(`missing Korean scenario term: ${term}`);
   }
   return errors;
 }
@@ -107,4 +116,3 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     process.stdout.write(`Usage billing visualization validation passed: views=${viewIds.length} scenarios=${count} locales=2\n`);
   }
 }
-
