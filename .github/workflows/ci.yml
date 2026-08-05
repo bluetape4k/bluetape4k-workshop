@@ -64,9 +64,15 @@ jobs:
         with:
           gradle-version: wrapper
           cache-read-only: ${{ github.event_name == 'pull_request' }}
+          gradle-home-cache-excludes: |
+            native-build-tools
+      - name: Repair GraalVM reachability metadata cache
+        run: ./scripts/repair-graalvm-metadata-cache.sh
+      - name: Validate GraalVM metadata cache repair
+        run: node --test scripts/graalvm-metadata-cache.test.mjs
       - name: Build (compile only)
-        # Compile-only CI does not consume native-image reachability metadata.
-        run: ./gradlew build -x detekt -x collectReachabilityMetadata -x test -x integrationTest -x stressTest -x migrationCompatibilityTest --parallel --continue
+        # Keep the compile-only lane honest: native metadata tasks are part of the build graph.
+        run: ./gradlew build -x detekt -x test -x integrationTest -x stressTest -x migrationCompatibilityTest --parallel --continue
         env:
           JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"

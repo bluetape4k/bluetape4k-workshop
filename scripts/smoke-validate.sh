@@ -251,9 +251,16 @@ case "${1:-help}" in
     run "node scripts/validate-high-contention-readme.mjs"
     # build-logic is a standalone Gradle build without a Detekt task.
     run "./gradlew -p build-logic test"
-    run "$GRADLEW \
+    # Colima exposes a host socket path that its remote Docker engine cannot bind-mount for Ryuk.
+    # Keep the configured Docker context and disable only Ryuk for these contract runs.
+    # Keep the container-backed modules in separate JVMs so Testcontainers state cannot leak between them.
+    run "TESTCONTAINERS_RYUK_DISABLED=true $GRADLEW \
       :operations-job-console-core:test \
+      --no-daemon \
+      --max-workers=1"
+    run "TESTCONTAINERS_RYUK_DISABLED=true $GRADLEW \
       :commerce-concert-ticket-flash-sale:test \
+      --no-daemon \
       --max-workers=1"
     ;;
 
