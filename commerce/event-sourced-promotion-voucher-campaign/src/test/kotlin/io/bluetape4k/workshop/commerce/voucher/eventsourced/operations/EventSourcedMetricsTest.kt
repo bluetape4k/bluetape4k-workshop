@@ -76,6 +76,11 @@ internal class EventSourcedMetricsTest {
         val registry = SimpleMeterRegistry()
         val metrics = EventSourcedMetrics(registry)
 
+        registry.get("voucher_projection_poison_events")
+            .tag("reasonClass", "HANDLER_REJECTED")
+            .gauge()
+            .value() shouldBeEqualTo 0.0
+
         metrics.failedPoisons(
             mapOf(
                 "HANDLER_REJECTED" to 1L,

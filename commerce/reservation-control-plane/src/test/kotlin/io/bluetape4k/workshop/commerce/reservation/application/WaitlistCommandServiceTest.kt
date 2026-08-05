@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.reservation.application
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.exposed.tests.withTables
 import io.bluetape4k.workshop.commerce.reservation.domain.OfferState
@@ -11,8 +13,6 @@ import io.bluetape4k.workshop.commerce.reservation.persistence.ReservationOfferT
 import io.bluetape4k.workshop.commerce.reservation.persistence.WaitlistEntryRepository
 import io.bluetape4k.workshop.commerce.reservation.persistence.WaitlistEntryTable
 import io.bluetape4k.workshop.commerce.reservation.persistence.reservationTables
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Duration
@@ -35,11 +35,11 @@ class WaitlistCommandServiceTest {
 
             val offer = service.promote(resource.id)
 
-            assertEquals(first.id, offer?.entryId)
-            assertEquals(OfferState.ACTIVE, offer?.state)
-            assertEquals(now.plusSeconds(20), offer?.expiresAt)
-            assertEquals(WaitlistState.OFFERED, waitlists.findById(first.id).state)
-            assertEquals(WaitlistState.WAITING, waitlists.findById(second.id).state)
+            offer?.entryId shouldBeEqualTo first.id
+            offer?.state shouldBeEqualTo OfferState.ACTIVE
+            offer?.expiresAt shouldBeEqualTo now.plusSeconds(20)
+            waitlists.findById(first.id).state shouldBeEqualTo WaitlistState.OFFERED
+            waitlists.findById(second.id).state shouldBeEqualTo WaitlistState.WAITING
         }
     }
 
@@ -53,10 +53,10 @@ class WaitlistCommandServiceTest {
             service.join(JoinWaitlistCommand(resource.id, "offer-owner"))
             val offer = service.promote(resource.id)!!
 
-            assertThrows(WaitlistCommandException::class.java) {
+            assertFailsWith<WaitlistCommandException> {
                 service.accept(AcceptOfferCommand(offer.id, expectedRevision = 0, ownerToken = "other-owner"))
             }
-            assertThrows(WaitlistCommandException::class.java) {
+            assertFailsWith<WaitlistCommandException> {
                 service.accept(AcceptOfferCommand(offer.id, expectedRevision = 9, ownerToken = "offer-owner"))
             }
 
@@ -65,10 +65,10 @@ class WaitlistCommandServiceTest {
                     AcceptOfferCommand(offer.id, expectedRevision = 0, ownerToken = "offer-owner")
                 )
 
-            assertEquals(OfferState.ACCEPTED, accepted.offer.state)
-            assertEquals(1L, accepted.offer.revision)
-            assertEquals(WaitlistState.ACCEPTED, accepted.entry.state)
-            assertEquals(2L, accepted.entry.revision)
+            accepted.offer.state shouldBeEqualTo OfferState.ACCEPTED
+            accepted.offer.revision shouldBeEqualTo 1L
+            accepted.entry.state shouldBeEqualTo WaitlistState.ACCEPTED
+            accepted.entry.revision shouldBeEqualTo 2L
         }
     }
 
@@ -85,14 +85,13 @@ class WaitlistCommandServiceTest {
             val acceptService =
                 WaitlistCommandService(waitlists, offers, credentialService, expiredClock, Duration.ofSeconds(20))
 
-            val error =
-                assertThrows(WaitlistCommandException::class.java) {
-                    acceptService.accept(AcceptOfferCommand(offer.id, expectedRevision = 0, ownerToken = "offer-owner"))
-                }
+            val error = assertFailsWith<WaitlistCommandException> {
+                acceptService.accept(AcceptOfferCommand(offer.id, expectedRevision = 0, ownerToken = "offer-owner"))
+            }
 
-            assertEquals("OFFER_EXPIRED", error.reason)
-            assertEquals(OfferState.ACTIVE, offers.findById(offer.id).state)
-            assertEquals(WaitlistState.OFFERED, waitlists.findById(entry.id).state)
+            error.reason shouldBeEqualTo "OFFER_EXPIRED"
+            offers.findById(offer.id).state shouldBeEqualTo OfferState.ACTIVE
+            waitlists.findById(entry.id).state shouldBeEqualTo WaitlistState.OFFERED
         }
     }
 

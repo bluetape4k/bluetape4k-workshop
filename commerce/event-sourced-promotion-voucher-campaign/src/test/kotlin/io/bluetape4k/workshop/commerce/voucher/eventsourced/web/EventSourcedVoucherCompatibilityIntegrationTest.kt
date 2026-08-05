@@ -228,14 +228,15 @@ internal class EventSourcedVoucherCompatibilityIntegrationTest
     }
 
     private fun createCapacityRaceCampaign(): VoucherCampaignBlackBoxRequest {
+        val now = Instant.now()
         val create =
             VoucherCampaignBlackBoxRequest(
                 tenant = "capacity-race",
                 principal = "capacity-operator",
                 idempotencyKey = "capacity-create-001",
                 campaignId = UUID.randomUUID(),
-                startsAt = Instant.parse("2026-07-22T00:00:00Z"),
-                endsAt = Instant.parse("2026-07-31T00:00:00Z"),
+                startsAt = now.minus(Duration.ofMinutes(1)),
+                endsAt = now.plus(Duration.ofDays(2)),
                 capacity = 1,
                 perUserLimit = 1,
                 redemptionTtlSeconds = 3_600,

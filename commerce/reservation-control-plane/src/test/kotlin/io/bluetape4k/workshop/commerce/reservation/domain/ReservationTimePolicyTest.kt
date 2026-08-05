@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.commerce.reservation.domain
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -18,7 +18,7 @@ class ReservationTimePolicyTest {
                 newYork
             )
 
-        assertEquals(LocalTimeRejection.DST_GAP, (result as LocalTimeResolution.Rejected).reason)
+        (result as LocalTimeResolution.Rejected).reason shouldBeEqualTo LocalTimeRejection.DST_GAP
     }
 
     @Test
@@ -29,13 +29,10 @@ class ReservationTimePolicyTest {
         val first = ReservationTimePolicy.resolve(local, newYork, ZoneOffset.ofHours(-4))
         val second = ReservationTimePolicy.resolve(local, newYork, ZoneOffset.ofHours(-5))
 
-        assertEquals(LocalTimeRejection.DST_OVERLAP, (ambiguous as LocalTimeResolution.Rejected).reason)
-        assertTrue(first is LocalTimeResolution.Resolved)
-        assertTrue(second is LocalTimeResolution.Resolved)
-        assertEquals(
-            3_600,
-            (second as LocalTimeResolution.Resolved).instant.epochSecond -
-                (first as LocalTimeResolution.Resolved).instant.epochSecond
-        )
+        (ambiguous as LocalTimeResolution.Rejected).reason shouldBeEqualTo LocalTimeRejection.DST_OVERLAP
+        (first is LocalTimeResolution.Resolved).shouldBeTrue()
+        (second is LocalTimeResolution.Resolved).shouldBeTrue()
+        ((second as LocalTimeResolution.Resolved).instant.epochSecond -
+            (first as LocalTimeResolution.Resolved).instant.epochSecond) shouldBeEqualTo 3_600L
     }
 }

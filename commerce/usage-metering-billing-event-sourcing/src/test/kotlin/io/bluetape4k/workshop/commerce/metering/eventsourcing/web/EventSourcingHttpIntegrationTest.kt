@@ -1,5 +1,10 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.web
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeBlank
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.metering.contract.ContractHttpClient
 import io.bluetape4k.workshop.commerce.metering.contract.ContractHttpResponse
@@ -42,9 +47,6 @@ import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 import javax.sql.DataSource
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 @Tag("integration")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -149,10 +151,10 @@ class EventSourcingHttpIntegrationTest {
         val metadata = objectMapper.readTree(persisted.metadata)
         val commandId = metadata.get("commandId").stringValue()
 
-        assertTrue(commandId.isNotBlank())
-        assertEquals(commandId, metadata.get("correlationId").stringValue())
-        assertEquals(commandId, metadata.get("causationId").stringValue())
-        assertEquals(TENANT_A, metadata.get("actorId").stringValue())
+        commandId.shouldNotBeBlank()
+        metadata.get("correlationId").stringValue().shouldBeEqualTo(commandId)
+        metadata.get("causationId").stringValue().shouldBeEqualTo(commandId)
+        metadata.get("actorId").stringValue().shouldBeEqualTo(TENANT_A)
     }
 
     @Test
@@ -247,17 +249,15 @@ class EventSourcingHttpIntegrationTest {
             .expectBody()
             .jsonPath("$.generation").isEqualTo(2)
             .jsonPath("$.state").isEqualTo("ACTIVE")
-        assertEquals(
-            rebuildMetricBefore + 1,
-            meterRegistry.counter("billing.projection.rebuild", "outcome", "started").count(),
-        )
+        meterRegistry.counter("billing.projection.rebuild", "outcome", "started").count()
+            .shouldBeEqualTo(rebuildMetricBefore + 1)
     }
 
     @Test
     fun `worker uses fenced lease and actuator health reports projection state`() {
         val appendCountBefore = meterRegistry.timer("billing.event.append", "outcome", "success").count()
         val replayCountBefore = meterRegistry.counter("billing.event.replay", "outcome", "success").count()
-        assertEquals(Status.DOWN, healthIndicator.health().status)
+        healthIndicator.health().status.shouldBeEqualTo(Status.DOWN)
         executor.transaction { ProjectionGenerationRepository().createInitialActive("billing", 1, Instant.now()) }
 
         client.post().uri("/api/v1/tenants/$TENANT_A/meters")
@@ -278,14 +278,17 @@ class EventSourcingHttpIntegrationTest {
 
         val result = projectionWorker.runOnce("billing", 1, UUID.randomUUID(), limit = 1)
 
-        assertTrue(result.acquired)
-        assertEquals(1, result.applied)
-        assertEquals(1, result.checkpoint)
-        assertEquals(1, result.lag)
-        assertEquals(Status.UP, healthIndicator.health().status)
-        assertEquals(1.0, meterRegistry.counter("billing.projection.batch", "outcome", "success").count())
-        assertEquals(appendCountBefore + 2, meterRegistry.timer("billing.event.append", "outcome", "success").count())
-        assertEquals(replayCountBefore + 2, meterRegistry.counter("billing.event.replay", "outcome", "success").count())
+        result.acquired.shouldBeTrue()
+        result.applied.shouldBeEqualTo(1)
+        result.checkpoint.shouldBeEqualTo(1)
+        result.lag.shouldBeEqualTo(1)
+        healthIndicator.health().status.shouldBeEqualTo(Status.UP)
+        meterRegistry.counter("billing.projection.batch", "outcome", "success").count()
+            .shouldBeEqualTo(1.0)
+        meterRegistry.timer("billing.event.append", "outcome", "success").count()
+            .shouldBeEqualTo(appendCountBefore + 2)
+        meterRegistry.counter("billing.event.replay", "outcome", "success").count()
+            .shouldBeEqualTo(replayCountBefore + 2)
 
         client.get().uri("/api/v1/tenants/$TENANT_A/billing/summary")
             .headers { it.setBasicAuth(TENANT_A, PASSWORD) }
@@ -298,16 +301,16 @@ class EventSourcingHttpIntegrationTest {
             .exchange()
             .returnResult(String::class.java)
         val actuatorBody = actuatorHealth.responseBody.blockFirst().orEmpty()
-        assertEquals(200, actuatorHealth.status.value(), actuatorBody)
-        assertFalse(actuatorBody.contains("projectionPosition"))
+        actuatorHealth.status.value().shouldBeEqualTo(200)
+        actuatorBody.shouldNotContain("projectionPosition")
 
         val operatorHealth = client.get().uri("/actuator/health")
             .headers { it.setBasicAuth("operator", PASSWORD) }
             .exchange()
             .returnResult(String::class.java)
         val operatorHealthBody = operatorHealth.responseBody.blockFirst().orEmpty()
-        assertEquals(200, operatorHealth.status.value(), operatorHealthBody)
-        assertTrue(operatorHealthBody.contains("projectionPosition"), operatorHealthBody)
+        operatorHealth.status.value().shouldBeEqualTo(200)
+        operatorHealthBody.shouldContain("projectionPosition")
     }
 
     @TestConfiguration(proxyBeanMethods = false)

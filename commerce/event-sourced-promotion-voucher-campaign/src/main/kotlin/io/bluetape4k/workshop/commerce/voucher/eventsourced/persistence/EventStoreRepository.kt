@@ -10,6 +10,7 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.lessEq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertIgnore
@@ -65,6 +66,7 @@ internal class EventStoreRepository(
 
     override fun loadInCurrentTransaction(read: EventStoreRead): EventPage {
         TransactionManager.current()
+        val committedHead = headVersion(read.stream)
         val events =
             EventLog
                 .selectAll()
@@ -72,11 +74,12 @@ internal class EventStoreRepository(
                     (EventLog.tenantId eq read.stream.tenantId.value) and
                         (EventLog.streamType eq read.stream.streamType) and
                         (EventLog.streamId eq read.stream.streamId) and
-                        (EventLog.streamVersion greater read.afterVersion)
+                        (EventLog.streamVersion greater read.afterVersion) and
+                        (EventLog.streamVersion lessEq committedHead)
                 }.orderBy(EventLog.streamVersion to SortOrder.ASC)
                 .limit(read.limit)
                 .map(::toEnvelope)
-        return EventPage(events, headVersion(read.stream))
+        return EventPage(events, committedHead)
     }
 
     override fun appendAll(appends: List<ExpectedAppend>): AppendResult {

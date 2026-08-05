@@ -3,9 +3,9 @@ package io.bluetape4k.workshop.observability.advanced.service
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
+import io.bluetape4k.micrometer.observation.coroutines.withObservationContextSuspending
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.observability.advanced.model.User
-import io.bluetape4k.workshop.observability.advanced.observation.observed
 import io.bluetape4k.workshop.observability.advanced.repository.UserCacheRepository
 import io.bluetape4k.workshop.observability.advanced.repository.UserRepository
 import io.micrometer.observation.ObservationRegistry
@@ -37,7 +37,7 @@ class UserService(
      * Redis error: warning 을 log 하고 DB 로 fallback 합니다.
      */
     suspend fun getById(id: Long): User? =
-        observed("user.service.get", observationRegistry) {
+        withObservationContextSuspending("user.service.get", observationRegistry) {
             val validId = id.requirePositiveNumber("id")
             // soft-fail 을 적용해 cache 를 읽습니다.
             val cached = try {
@@ -51,11 +51,11 @@ class UserService(
 
             if (cached != null) {
                 log.debug { "Cache hit for user id=$validId" }
-                return@observed cached
+                return@withObservationContextSuspending cached
             }
 
             // DB 에서 조회합니다.
-            val user = observed("user.db.find", observationRegistry) {
+            val user = withObservationContextSuspending("user.db.find", observationRegistry) {
                 repo.findById(validId)
             }
 
@@ -77,8 +77,8 @@ class UserService(
      * 새 [User] 를 생성하고 persist 한 뒤 saved entity 를 반환합니다.
      */
     suspend fun create(user: User): User {
-        observed("user.service.create", observationRegistry) {
-            observed("user.db.save", observationRegistry) {
+        withObservationContextSuspending("user.service.create", observationRegistry) {
+            withObservationContextSuspending<Unit>("user.db.save", observationRegistry) {
                 repo.save(user)
             }
         }

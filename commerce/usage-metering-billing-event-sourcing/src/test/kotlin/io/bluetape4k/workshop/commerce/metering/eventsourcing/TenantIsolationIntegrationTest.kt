@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.DomainEventJsonCodec
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.ReconciliationQuery
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.ReconciliationService
@@ -25,9 +28,6 @@ import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
-import kotlin.test.assertEquals
-import kotlin.test.assertIs
-import kotlin.test.assertNull
 
 @Tag("integration")
 class TenantIsolationIntegrationTest {
@@ -48,14 +48,14 @@ class TenantIsolationIntegrationTest {
         acquireSameCommandKeyPerTenant()
         projectBothTenants()
 
-        assertEquals(1, fixture.executor.transaction { eventStore.load(stream(TENANT_A)).size })
-        assertEquals(1, fixture.executor.transaction { eventStore.load(stream(TENANT_B)).size })
-        assertEquals(0, BigDecimal("1.00").compareTo(total(TENANT_A)))
-        assertEquals(0, BigDecimal("2.00").compareTo(total(TENANT_B)))
+        fixture.executor.transaction { eventStore.load(stream(TENANT_A)).size }.shouldBeEqualTo(1)
+        fixture.executor.transaction { eventStore.load(stream(TENANT_B)).size }.shouldBeEqualTo(1)
+        BigDecimal("1.00").compareTo(total(TENANT_A)).shouldBeEqualTo(0)
+        BigDecimal("2.00").compareTo(total(TENANT_B)).shouldBeEqualTo(0)
 
         val reconciliation = ReconciliationService(eventStore, codec, generations, readModels)
-        assertNull(fixture.executor.transaction { reconciliation.inspect(query(TENANT_A)) })
-        assertNull(fixture.executor.transaction { reconciliation.inspect(query(TENANT_B)) })
+        fixture.executor.transaction { reconciliation.inspect(query(TENANT_A)) }.shouldBeNull()
+        fixture.executor.transaction { reconciliation.inspect(query(TENANT_B)) }.shouldBeNull()
     }
 
     private fun appendRating(tenantId: String, amount: String) {
@@ -77,12 +77,10 @@ class TenantIsolationIntegrationTest {
         val key = CommandFingerprint.key(SHARED_EXTERNAL_ID)
         val fingerprint = CommandFingerprint.request("rate", mapOf("usageId" to SHARED_EXTERNAL_ID))
         fixture.executor.transaction {
-            assertIs<CommandAcquireResult.Owned>(
-                receipts.acquire(CommandScope(TENANT_A, "rate", key), fingerprint, NOW),
-            )
-            assertIs<CommandAcquireResult.Owned>(
-                receipts.acquire(CommandScope(TENANT_B, "rate", key), fingerprint, NOW),
-            )
+            receipts.acquire(CommandScope(TENANT_A, "rate", key), fingerprint, NOW)
+                .shouldBeInstanceOf<CommandAcquireResult.Owned>()
+            receipts.acquire(CommandScope(TENANT_B, "rate", key), fingerprint, NOW)
+                .shouldBeInstanceOf<CommandAcquireResult.Owned>()
         }
     }
 
