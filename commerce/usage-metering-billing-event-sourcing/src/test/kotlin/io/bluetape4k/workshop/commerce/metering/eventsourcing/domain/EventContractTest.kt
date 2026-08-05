@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.domain
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
 class EventContractTest {
@@ -13,14 +13,12 @@ class EventContractTest {
             StreamKey("tenant-a", "Meter", "9"),
         )
 
-        assertEquals(
-            listOf("tenant-a/Meter/9", "tenant-a/Usage/2", "tenant-b/Usage/2"),
-            keys.sorted().map(StreamKey::canonical),
-        )
+        keys.sorted().map(StreamKey::canonical)
+            .shouldBeEqualTo(listOf("tenant-a/Meter/9", "tenant-a/Usage/2", "tenant-b/Usage/2"))
     }
 
     @Test
     fun `stream key rejects a blank boundary`() {
-        assertThrows(IllegalArgumentException::class.java) { StreamKey("tenant-a", " ", "stream-1") }
+        assertFailsWith<IllegalArgumentException> { StreamKey("tenant-a", " ", "stream-1") }
     }
 }

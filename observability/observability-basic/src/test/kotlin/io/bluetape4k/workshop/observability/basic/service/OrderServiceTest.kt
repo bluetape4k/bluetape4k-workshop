@@ -65,6 +65,7 @@ class OrderServiceTest : AbstractBasicTest() {
         mockServer.enqueue(
             MockResponse.Builder()
                 .code(404)
+                .addHeader("Connection", "close")
                 .body("")
                 .build()
         )
@@ -84,6 +85,7 @@ class OrderServiceTest : AbstractBasicTest() {
         mockServer.enqueue(
             MockResponse.Builder()
                 .code(500)
+                .addHeader("Connection", "close")
                 .body("")
                 .build()
         )

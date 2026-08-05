@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing
 
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
+import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Path
@@ -9,11 +9,9 @@ import java.nio.file.Path
 class KotlinPatternArchitectureTest {
     @Test
     fun `Spring Boot application entry point is explicit`() {
-        assertNotNull(
-            Class.forName(
-                "io.bluetape4k.workshop.commerce.metering.eventsourcing.UsageBillingEventSourcingApplicationKt",
-            ),
-        )
+        Class.forName(
+            "io.bluetape4k.workshop.commerce.metering.eventsourcing.UsageBillingEventSourcingApplicationKt",
+        ).shouldNotBeNull()
     }
 
     @Test
@@ -36,7 +34,7 @@ class KotlinPatternArchitectureTest {
                 .toList()
         }
 
-        assertTrue(violations.isEmpty(), violations.joinToString("\n"))
+        violations.shouldBeEmpty()
     }
 
     private fun mainSourceRoot(): Path {

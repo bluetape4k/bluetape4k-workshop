@@ -47,6 +47,7 @@ abstract class AbstractBasicTest {
                 setFailFast(
                     MockResponse.Builder()
                         .code(503)
+                        .addHeader("Connection", "close")
                         .body("")
                         .build()
                 )
@@ -84,6 +85,7 @@ abstract class AbstractBasicTest {
             MockResponse.Builder()
                 .code(200)
                 .addHeader("Content-Type", "application/json")
+                .addHeader("Connection", "close")
                 .body(json)
                 .build()
         )

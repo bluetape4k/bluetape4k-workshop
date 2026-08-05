@@ -36,7 +36,7 @@ http.server.requests
 
 | Concept | Implementation |
 |---|---|
-| Manual span | `observed("order.service.fetch", registry) { }` wraps order assembly. |
+| Manual span | `withObservationContextSuspending("order.service.fetch", registry) { }` wraps order assembly and propagates the coroutine Observation context. |
 | W3C propagation | Spring Boot's `WebClient.Builder` injects `traceparent` automatically. |
 | Test registry | `TestObservationRegistry` verifies service span lifecycle without Zipkin. |
 | 4xx handling | `awaitExchangeOrNull { 4xx -> null }` returns no order. |
@@ -75,7 +75,7 @@ management:
 
 ## Dependencies
 
-- `bluetape4k-micrometer` - local `observed()` coroutine helper.
+- `bluetape4k-micrometer` - released `withObservationContextSuspending` coroutine helper.
 - `micrometer-tracing-bridge-otel` - OpenTelemetry bridge for W3C propagation.
 - `micrometer-context-propagation` - Reactor and coroutine context bridging.
 - `spring-boot-starter-opentelemetry` - WebClient instrumentation auto-configuration.
