@@ -1,9 +1,10 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.StreamKey
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -28,10 +29,12 @@ class SnapshotPostgresIntegrationTest {
         val reducerOne = fixture.executor.transaction { repository.latest(stream, 1) }
         val reducerTwo = fixture.executor.transaction { repository.latest(stream, 2) }
 
-        assertEquals(20L, reducerOne?.streamVersion)
-        assertEquals("hash-20", reducerOne?.lastEventHash)
-        assertEquals(30L, reducerTwo?.streamVersion)
-        assertNull(fixture.executor.transaction { repository.latest(stream.copy(tenantId = "tenant-b"), 1) })
+        val actualReducerOne = reducerOne.shouldNotBeNull()
+        val actualReducerTwo = reducerTwo.shouldNotBeNull()
+        actualReducerOne.streamVersion.shouldBeEqualTo(20L)
+        actualReducerOne.lastEventHash.shouldBeEqualTo("hash-20")
+        actualReducerTwo.streamVersion.shouldBeEqualTo(30L)
+        fixture.executor.transaction { repository.latest(stream.copy(tenantId = "tenant-b"), 1) }.shouldBeNull()
     }
 
     @Test
@@ -40,7 +43,7 @@ class SnapshotPostgresIntegrationTest {
         val stream = StreamKey("tenant-a", "Meter", "api_calls")
         val stored = fixture.executor.transaction { repository.append(snapshot(stream, 10, 1, "hash-10")) }
 
-        assertThrows(UnsupportedOperationException::class.java) {
+        assertFailsWith<UnsupportedOperationException> {
             fixture.executor.transaction { repository.save(AggregateSnapshotEntity[stored.snapshotId]) }
         }
     }

@@ -2,9 +2,9 @@ package io.bluetape4k.workshop.commerce.reservation.persistence
 
 import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.exposed.tests.withTables
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 
 class CapacityResourceRepositoryTest {
@@ -14,12 +14,12 @@ class CapacityResourceRepositoryTest {
             val repository = CapacityResourceRepository()
             val resource = repository.create("demo-room", capacity = 1, policyVersion = 1)
 
-            assertTrue(repository.tryOccupy(resource.id, expectedRevision = 0))
-            assertFalse(repository.tryOccupy(resource.id, expectedRevision = 0))
+            repository.tryOccupy(resource.id, expectedRevision = 0).shouldBeTrue()
+            repository.tryOccupy(resource.id, expectedRevision = 0).shouldBeFalse()
 
             val occupied = repository.findById(resource.id)
-            assertEquals(1, occupied.occupiedCount)
-            assertEquals(1, occupied.revision)
+            occupied.occupiedCount shouldBeEqualTo 1
+            occupied.revision shouldBeEqualTo 1
         }
     }
 }

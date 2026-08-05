@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.domain
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Instant
@@ -15,15 +15,15 @@ class AggregateReducerTest {
 
         val state = listOf(registered, first, second).fold(MeterState.Empty, MeterReducer::evolve)
 
-        assertEquals(BigDecimal("0.10"), state.priceAt(Instant.parse("2026-06-30T23:59:59Z")).unitPrice)
-        assertEquals(BigDecimal("0.20"), state.priceAt(Instant.parse("2026-07-01T00:00:00Z")).unitPrice)
+        state.priceAt(Instant.parse("2026-06-30T23:59:59Z")).unitPrice.shouldBeEqualTo(BigDecimal("0.10"))
+        state.priceAt(Instant.parse("2026-07-01T00:00:00Z")).unitPrice.shouldBeEqualTo(BigDecimal("0.20"))
     }
 
     @Test
     fun `meter cannot register twice`() {
         val registered = MeterReducer.evolve(MeterState.Empty, MeterRegistered("api_calls", "request", "USD"))
 
-        assertThrows(IllegalStateException::class.java) {
+        assertFailsWith<IllegalStateException> {
             MeterReducer.evolve(registered, MeterRegistered("api_calls", "request", "USD"))
         }
     }

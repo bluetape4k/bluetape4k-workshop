@@ -2,17 +2,18 @@
 
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.idempotency
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.CommandReceiptRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreDatabaseFixture
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.EventStoreRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.NewEvent
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.StreamKey
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageAccepted
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertInstanceOf
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -36,11 +37,11 @@ class CommandReceiptPostgresIntegrationTest {
         fixture.reset()
         val now = Instant.parse("2026-07-01T00:00:00Z")
         val owned = fixture.executor.transaction { service.acquire(scope, fingerprint, now) } as CommandAcquireResult.Owned
-        assertTrue(fixture.executor.transaction { service.succeed(owned, 201, "{\"code\":\"api_calls\"}", now) })
+        fixture.executor.transaction { service.succeed(owned, 201, "{\"code\":\"api_calls\"}", now) }.shouldBeTrue()
 
         val replay = fixture.executor.transaction { service.acquire(scope, fingerprint, now) }
 
-        assertEquals(CommandAcquireResult.Replay(201, "{\"code\":\"api_calls\"}"), replay)
+        replay.shouldBeEqualTo(CommandAcquireResult.Replay(201, "{\"code\":\"api_calls\"}"))
     }
 
     @Test
@@ -53,7 +54,7 @@ class CommandReceiptPostgresIntegrationTest {
             service.acquire(scope, CommandFingerprint.request("meter-register", mapOf("code" to "other")), now)
         }
 
-        assertEquals(CommandAcquireResult.Conflict, result)
+        result.shouldBeEqualTo(CommandAcquireResult.Conflict)
     }
 
     @Test
@@ -65,13 +66,11 @@ class CommandReceiptPostgresIntegrationTest {
             service.acquire(scope, fingerprint, acquiredAt.plusSeconds(31))
         }
 
-        assertInstanceOf(CommandAcquireResult.Owned::class.java, second)
-        assertFalse(fixture.executor.transaction { service.succeed(first, 201, "{}", acquiredAt.plusSeconds(31)) })
-        assertTrue(
-            fixture.executor.transaction {
-                service.succeed(second as CommandAcquireResult.Owned, 201, "{}", acquiredAt.plusSeconds(31))
-            },
-        )
+        val secondOwned = second.shouldBeInstanceOf<CommandAcquireResult.Owned>()
+        fixture.executor.transaction { service.succeed(first, 201, "{}", acquiredAt.plusSeconds(31)) }.shouldBeFalse()
+        fixture.executor.transaction {
+            service.succeed(secondOwned, 201, "{}", acquiredAt.plusSeconds(31))
+        }.shouldBeTrue()
     }
 
     @Test
@@ -81,7 +80,7 @@ class CommandReceiptPostgresIntegrationTest {
         val first = fixture.executor.transaction { service.acquire(scope, fingerprint, acquiredAt) } as CommandAcquireResult.Owned
         fixture.executor.transaction { service.acquire(scope, fingerprint, acquiredAt.plusSeconds(31)) }
 
-        assertThrows(CommandOwnerLostException::class.java) {
+        assertFailsWith<CommandOwnerLostException> {
             fixture.executor.transaction { service.requireOwnership(first, acquiredAt.plusSeconds(31)) }
         }
     }
@@ -93,7 +92,7 @@ class CommandReceiptPostgresIntegrationTest {
         val owned = fixture.executor.transaction { service.acquire(scope, fingerprint, now) } as CommandAcquireResult.Owned
         val stream = StreamKey("tenant-a", "Usage", "atomic")
 
-        assertThrows(IllegalStateException::class.java) {
+        assertFailsWith<IllegalStateException> {
             fixture.executor.transaction {
                 service.requireOwnership(owned, now)
                 eventStore.append(stream, 0, listOf(usageEvent(now)))
@@ -102,11 +101,8 @@ class CommandReceiptPostgresIntegrationTest {
             }
         }
 
-        assertTrue(fixture.executor.transaction { eventStore.load(stream).isEmpty() })
-        assertInstanceOf(
-            CommandAcquireResult.InProgress::class.java,
-            fixture.executor.transaction { service.acquire(scope, fingerprint, now.plusSeconds(1)) },
-        )
+        fixture.executor.transaction { eventStore.load(stream) }.shouldBeEmpty()
+        fixture.executor.transaction { service.acquire(scope, fingerprint, now.plusSeconds(1)) }.shouldBeInstanceOf<CommandAcquireResult.InProgress>()
     }
 
     private fun usageEvent(now: Instant): NewEvent = NewEvent(

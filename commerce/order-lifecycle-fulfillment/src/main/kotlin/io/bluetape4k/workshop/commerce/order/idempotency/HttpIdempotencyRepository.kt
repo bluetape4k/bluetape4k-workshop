@@ -6,6 +6,7 @@ import io.bluetape4k.exposed.jdbc.repository.LongAuditableJdbcRepository
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.workshop.commerce.order.persistence.HttpIdempotencyTable
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
@@ -225,7 +226,7 @@ internal class HttpIdempotencyRepository : LongAuditableJdbcRepository<Idempoten
         now: Instant,
         limit: Int,
     ): Int {
-        require(limit in 1..MAX_CLEANUP_BATCH) { "limit must contain 1..$MAX_CLEANUP_BATCH" }
+        limit.requireInRange(1, MAX_CLEANUP_BATCH, "limit")
         val candidateIds =
             table
                 .selectAll()

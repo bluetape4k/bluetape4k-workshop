@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.observability.advanced.repository
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.micrometer.observation.coroutines.withObservationContextSuspending
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.observability.advanced.model.User
-import io.bluetape4k.workshop.observability.advanced.observation.observed
 import io.micrometer.observation.ObservationRegistry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,8 +16,8 @@ import java.util.concurrent.TimeUnit
  * Redisson `RMapCache` 를 사용하는 [User] object 용 Redis cache repository 입니다.
  *
  * ## Behavior / Contract
- * - cache read/write 는 [observed] 를 통한 manual Observation span 으로 instrumentation 됩니다.
- * - [observed](Observation OUTER)를 사용하고 내부에서 `withContext(Dispatchers.IO)` 를 호출합니다.
+ * - cache read/write 는 released `withObservationContextSuspending` helper 를 통한 Observation span 으로 instrumentation 됩니다.
+ * - Observation context 를 유지하면서 내부에서 `withContext(Dispatchers.IO)` 를 호출합니다.
  * - cached entry 의 TTL 기본값은 60초입니다.
  */
 @Repository
@@ -37,7 +37,7 @@ class UserCacheRepository(
      * cache miss 이면 `null` 을 반환합니다.
      */
     suspend fun get(id: Long): User? =
-        observed("user.cache.get", observationRegistry) {
+        withObservationContextSuspending("user.cache.get", observationRegistry) {
             val validId = id.requirePositiveNumber("id")
             withContext(Dispatchers.IO) {
                 cache[validId]
@@ -48,7 +48,7 @@ class UserCacheRepository(
      * 주어진 [ttlSeconds] TTL 로 [User] 를 cache 에 저장합니다.
      */
     suspend fun put(user: User, ttlSeconds: Long = 60L) {
-        observed("user.cache.put", observationRegistry) {
+        withObservationContextSuspending<Unit>("user.cache.put", observationRegistry) {
             val ttl = ttlSeconds.requirePositiveNumber("ttlSeconds")
             withContext(Dispatchers.IO) {
                 // RMapCache.put() 은 previous value(V?) 를 반환하므로 버립니다.
