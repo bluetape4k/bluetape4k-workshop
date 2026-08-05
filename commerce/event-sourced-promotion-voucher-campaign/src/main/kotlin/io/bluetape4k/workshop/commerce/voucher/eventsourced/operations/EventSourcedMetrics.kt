@@ -69,6 +69,13 @@ internal class EventSourcedMetrics(
                 .tag("state", state.name)
                 .register(registry)
         }
+        KNOWN_REASON_CLASSES.forEach { reasonClass ->
+            val value = AtomicLong()
+            failedPoisonGauges[reasonClass] = value
+            Gauge.builder("voucher_projection_poison_events", value) { it.get().toDouble() }
+                .tag("reasonClass", reasonClass)
+                .register(registry)
+        }
     }
 
     fun bind(gate: EventSourcedDatabasePermitGate) {
@@ -114,13 +121,7 @@ internal class EventSourcedMetrics(
                 }
         failedPoisonGauges.values.forEach { it.set(0) }
         boundedCounts.forEach { (reasonClass, count) ->
-            failedPoisonGauges.computeIfAbsent(reasonClass) {
-                AtomicLong().also { value ->
-                    Gauge.builder("voucher_projection_poison_events", value) { it.get().toDouble() }
-                        .tag("reasonClass", reasonClass)
-                        .register(registry)
-                }
-            }.set(count)
+            failedPoisonGauges.getValue(reasonClass).set(count)
         }
     }
 

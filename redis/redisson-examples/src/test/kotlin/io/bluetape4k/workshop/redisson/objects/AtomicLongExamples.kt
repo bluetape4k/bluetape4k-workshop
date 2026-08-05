@@ -1,18 +1,20 @@
 package io.bluetape4k.workshop.redisson.objects
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
-import io.bluetape4k.assertions.shouldBeTrue
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.condition.EnabledOnJre
 import org.junit.jupiter.api.condition.JRE
@@ -22,19 +24,24 @@ class AtomicLongExamples: AbstractRedissonTest() {
     companion object: KLoggingChannel() {
         private const val REPEAT_SIZE = 5
         private const val TEST_COUNT = 1_000
+        private const val MAX_CONCURRENCY = 16
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun `AtomicLong 을 Coroutines 환경에서 사용하기`() = runSuspendIO {
         val counter = redisson.getAtomicLong(randomName())
 
-        // TEST_COUNT 만큼의 코루틴을 생성하여 incrementAndGetAsync()를 호출합니다.
-        val jobs = List(TEST_COUNT) {
-            scope.launch {
-                counter.incrementAndGetAsync().await()
+        // TEST_COUNT 만큼 increment하면서 동시에 outstanding 상태인 Redis command 수를 제한합니다.
+        val semaphore = Semaphore(MAX_CONCURRENCY)
+        coroutineScope {
+            repeat(TEST_COUNT) {
+                launch {
+                    semaphore.withPermit {
+                        counter.incrementAndGetAsync().await()
+                    }
+                }
             }
         }
-        jobs.joinAll()
 
         // counter 값이 TEST_COUNT 와 같아야 합니다. (비동기로 다중의 코루틴이 동시에 호출되었지만, Atomic하기 때문에 값이 정확해야 합니다.)
         counter.async.await() shouldBeEqualTo TEST_COUNT.toLong()
