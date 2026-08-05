@@ -1,5 +1,9 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.BillingCloseBatchResult
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.BillingCloseService
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.application.BillingLifecycleCommandService
@@ -36,10 +40,6 @@ import java.math.BigDecimal
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 @Tag("stress")
 class BillingEventSourcingStressTest {
@@ -60,9 +60,9 @@ class BillingEventSourcingStressTest {
         appendUsageEvents()
         closeBillingPeriod()
         val rated = loadAll("usage.rated")
-        assertEquals(USAGE_COUNT, rated.size)
-        assertEquals(USAGE_COUNT, rated.map { it.eventId }.distinct().size)
-        assertTrue(rated.all { it.previousHash == null && it.eventHash.length == SHA256_HEX_LENGTH })
+        rated.size.shouldBeEqualTo(USAGE_COUNT)
+        rated.map { it.eventId }.distinct().size.shouldBeEqualTo(USAGE_COUNT)
+        rated.all { it.previousHash == null && it.eventHash.length == SHA256_HEX_LENGTH }.shouldBeTrue()
 
         verifySnapshotReplay()
         val highWatermark = lastGlobalPosition()
@@ -70,16 +70,16 @@ class BillingEventSourcingStressTest {
 
         val entries = fixture.executor.transaction { readModels.entries(PROJECTION, 2, TENANT) }
         val charges = entries.filter { it.modelType == ProjectionModelType.LEDGER_DEBIT }
-        assertEquals(USAGE_COUNT, charges.size)
-        assertEquals(USAGE_COUNT, charges.map { it.provenance }.distinct().size)
-        assertEquals(0, EXPECTED_TOTAL.compareTo(charges.sumOf { checkNotNull(it.amount) }))
+        charges.size.shouldBeEqualTo(USAGE_COUNT)
+        charges.map { it.provenance }.distinct().size.shouldBeEqualTo(USAGE_COUNT)
+        EXPECTED_TOTAL.compareTo(charges.sumOf { checkNotNull(it.amount) }).shouldBeEqualTo(0)
 
         val reconciliation = ReconciliationService(eventStore, codec, generations, readModels)
         val finding = fixture.executor.transaction {
             reconciliation.inspect(ReconciliationQuery(TENANT, PROJECTION, START.minusSeconds(1), END.plusSeconds(1)))
         }
-        assertNull(finding)
-        assertEquals(2, fixture.executor.transaction { generations.active(PROJECTION)?.generation })
+        finding.shouldBeNull()
+        fixture.executor.transaction { generations.active(PROJECTION)?.generation }.shouldBeEqualTo(2)
 
         reportThroughput(startedAt)
     }
@@ -123,7 +123,7 @@ class BillingEventSourcingStressTest {
             }
             if (result == BillingCloseBatchResult.APPLIED) batches += 1
         } while (result == BillingCloseBatchResult.APPLIED || result == BillingCloseBatchResult.RETRY)
-        assertEquals(USAGE_COUNT / CLOSE_BATCH_SIZE, batches)
+        batches.shouldBeEqualTo(USAGE_COUNT / CLOSE_BATCH_SIZE)
     }
 
     private fun verifySnapshotReplay() {
@@ -138,7 +138,7 @@ class BillingEventSourcingStressTest {
             END,
         )
         val stored = fixture.executor.transaction { SnapshotRepository().append(snapshot) }
-        assertNotNull(stored)
+        stored.shouldNotBeNull()
         val state = MeterState.Active(METER, "request", CURRENCY, listOf(PricePoint(CURRENCY, UNIT_PRICE, START)))
         val replayed = AggregateReplayer.replay(
             meterEvents,
@@ -147,8 +147,8 @@ class BillingEventSourcingStressTest {
             AggregateSnapshotSeed(state, stored.streamVersion, stored.lastEventHash, stored.reducerVersion),
             ReplayPolicy(codec.registry, REDUCER_VERSION),
         )
-        assertEquals(state, replayed.state)
-        assertEquals(meterEvents.size.toLong(), replayed.streamVersion)
+        replayed.state.shouldBeEqualTo(state)
+        replayed.streamVersion.shouldBeEqualTo(meterEvents.size.toLong())
     }
 
     private fun rebuildAndSwitch(highWatermark: Long) {
@@ -158,7 +158,7 @@ class BillingEventSourcingStressTest {
         }
         val lease = projectGeneration(generation = 2, highWatermark = highWatermark, release = false)
         fixture.executor.transaction {
-            assertTrue(generations.switchActive(lease, expectedActiveGeneration = 1, END.plusSeconds(2)))
+            generations.switchActive(lease, expectedActiveGeneration = 1, END.plusSeconds(2)).shouldBeTrue()
             checkpoints.releaseLease(lease, END.plusSeconds(2))
         }
     }

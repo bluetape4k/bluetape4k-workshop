@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.reservation.sweeper
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.exposed.tests.withTables
 import io.bluetape4k.workshop.commerce.reservation.application.JoinWaitlistCommand
@@ -24,7 +25,6 @@ import io.bluetape4k.workshop.commerce.reservation.persistence.WaitlistEntryRepo
 import io.bluetape4k.workshop.commerce.reservation.persistence.WaitlistEntryTable
 import io.bluetape4k.workshop.commerce.reservation.persistence.reservationTables
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Duration
@@ -74,17 +74,15 @@ internal class ReservationResourceTransactionServiceTest {
             val first = service.finalizeExpiredResource(resource.id, now)
             val second = service.finalizeExpiredResource(resource.id, now)
 
-            assertEquals(SweepBatchSummary(1, 1, 1, 0), first)
-            assertEquals(SweepBatchSummary(1, 0, 0, 0), second)
-            assertEquals(HoldState.EXPIRED, holds.findById(hold.id).state)
-            assertEquals(WaitlistState.OFFERED, waitlists.findById(entry.id).state)
-            assertEquals(1, resources.findById(resource.id).occupiedCount)
+            first shouldBeEqualTo SweepBatchSummary(1, 1, 1, 0)
+            second shouldBeEqualTo SweepBatchSummary(1, 0, 0, 0)
+            holds.findById(hold.id).state shouldBeEqualTo HoldState.EXPIRED
+            waitlists.findById(entry.id).state shouldBeEqualTo WaitlistState.OFFERED
+            resources.findById(resource.id).occupiedCount shouldBeEqualTo 1
             val offer = offers.snapshots(resource.id).single()
-            assertEquals(
-                NotificationDeliveryStatus.PENDING,
-                notifications.findByDeliveryId("offer-created:${offer.id}:0:in-app")?.delivery?.status
-            )
-            assertEquals(4L, ReservationAuditTable.selectAll().count())
+            notifications.findByDeliveryId("offer-created:${offer.id}:0:in-app")?.delivery?.status shouldBeEqualTo
+                NotificationDeliveryStatus.PENDING
+            ReservationAuditTable.selectAll().count() shouldBeEqualTo 4L
         }
     }
 
@@ -117,15 +115,16 @@ internal class ReservationResourceTransactionServiceTest {
             val handoff = ReservationCapacityHandoffService(resources, waitlistService, notifications, audits)
             val service = ReservationResourceTransactionService(resources, holds, offers, waitlists, handoff, audits)
 
-            assertEquals(listOf(resource.id), service.expiredResourceIds(now, 32))
+            service.expiredResourceIds(now, 32) shouldBeEqualTo listOf(resource.id)
             val summary = service.finalizeExpiredResource(resource.id, now)
 
-            assertEquals(SweepBatchSummary(1, 0, 1, 0), summary)
-            assertEquals(OfferState.EXPIRED, offers.findById(firstOffer.id).state)
-            assertEquals(WaitlistState.EXPIRED, waitlists.findById(firstEntry.id).state)
-            assertEquals(WaitlistState.OFFERED, waitlists.findById(secondEntry.id).state)
-            assertEquals(1, resources.findById(resource.id).occupiedCount)
-            assertEquals(listOf(OfferState.EXPIRED, OfferState.ACTIVE), offers.snapshots(resource.id).map { it.state })
+            summary shouldBeEqualTo SweepBatchSummary(1, 0, 1, 0)
+            offers.findById(firstOffer.id).state shouldBeEqualTo OfferState.EXPIRED
+            waitlists.findById(firstEntry.id).state shouldBeEqualTo WaitlistState.EXPIRED
+            waitlists.findById(secondEntry.id).state shouldBeEqualTo WaitlistState.OFFERED
+            resources.findById(resource.id).occupiedCount shouldBeEqualTo 1
+            offers.snapshots(resource.id).map { it.state } shouldBeEqualTo
+                listOf(OfferState.EXPIRED, OfferState.ACTIVE)
         }
     }
 
@@ -159,11 +158,11 @@ internal class ReservationResourceTransactionServiceTest {
 
             val summary = service.finalizeExpiredResource(resource.id, now)
 
-            assertEquals(SweepBatchSummary(1, 0, 0, 0), summary)
-            assertEquals(OfferState.EXPIRED, offers.findById(offer.id).state)
-            assertEquals(WaitlistState.EXPIRED, waitlists.findById(entry.id).state)
-            assertEquals(0, resources.findById(resource.id).occupiedCount)
-            assertEquals(2, resources.findById(resource.id).revision)
+            summary shouldBeEqualTo SweepBatchSummary(1, 0, 0, 0)
+            offers.findById(offer.id).state shouldBeEqualTo OfferState.EXPIRED
+            waitlists.findById(entry.id).state shouldBeEqualTo WaitlistState.EXPIRED
+            resources.findById(resource.id).occupiedCount shouldBeEqualTo 0
+            resources.findById(resource.id).revision shouldBeEqualTo 2
         }
     }
 
@@ -207,8 +206,8 @@ internal class ReservationResourceTransactionServiceTest {
 
             val candidates = service.expiredResourceIds(now, 32)
 
-            assertEquals(32, candidates.size)
-            assertEquals(offerResource.id, candidates.first())
+            candidates.size shouldBeEqualTo 32
+            candidates.first() shouldBeEqualTo offerResource.id
         }
     }
 }

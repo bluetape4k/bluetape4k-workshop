@@ -1,0 +1,251 @@
+# 공유 voucher contract fixture는 실행일에 만료되면 안 된다
+
+## 맥락
+
+2026-08-02 `Examples` run 30771298111과 이전 `Nightly` run 30764691938에서
+`commerce-event-sourced-promotion-voucher-campaign:integrationTest`가 실패했다.
+실패한 HTTP 응답은 `409 CAMPAIGN_ENDED`였다. 같은 기간 최신 Dependabot `CI`
+run 30768173911은 `bucket4j-caffeine-web`과 `bucket4j-redis`의
+`collectReachabilityMetadata`가 `schemas` 디렉터리가 없는 캐시 저장소를 읽어
+실패했다. 따라서 voucher fixture와 Gradle native metadata cache 문제가 함께
+존재했다.
+
+## 원인
+
+공유 `VoucherCampaignBlackBoxContract`가 `2026-07-22`부터 `2026-07-31`까지의
+고정 campaign window를 사용했다. 계약을 추가한 뒤 실행일이 7월 31일을 지나면서
+두 voucher adapter가 정상 allocation을 보내도 만료 campaign으로 거부했다.
+`Nightly`의 같은 실행은 이 문제와 별개로 Java 25에서 Detekt parser가 실패한
+오래된 `develop` SHA도 포함했다. 또한 GraalVM native plugin의
+`collectReachabilityMetadata`는 compile/test 결과에 필요하지 않은 선택적 task인데,
+Dependabot의 cache-read-only 실행에서 오래된 reachability metadata 저장소를
+재사용했다.
+
+PR #709의 첫 `Examples` 실행(30804446013)에서는 별도로
+`ImageOcrServiceImplTest`의 `blocking OCR timeout releases the native lane`가
+실패했다. 테스트 fixture의 전체 OCR timeout이 100ms라서, CI에서 두 번째 호출의
+이미지 decode가 그 예산을 조금 넘으면 lane 자체는 해제됐어도 정상 응답 대신
+`FAILED`가 반환됐다. 이는 production timeout 회귀가 아니라 환경별 decode 지연에
+민감한 테스트 경계였다.
+
+## 결정
+
+공유 contract scenario의 시작 시각을 로드 시점 1분 전으로 두고, 종료 시각을
+그로부터 2일 뒤로 계산한다. 이렇게 하면 fixture의 의도(현재 시각에 활성인
+campaign)를 유지하면서 달력 날짜가 바뀌어도 재발하지 않는다. production clock나
+별도 dependency는 추가하지 않는다. CI·Nightly·Examples의 compile/test 및
+high-contention Gradle 경로에는 `-x collectReachabilityMetadata`를 적용해 선택적
+native-image metadata cache를 소비하지 않도록 한다. 실제 native-image 빌드 경로는
+이 workflow 범위에 포함하지 않는다. OCR timeout regression fixture는 timeout을
+500ms로 늘려 첫 번째 blocking 호출의 timeout 의미는 유지하면서 CI decode variance를
+흡수한다.
+
+## 검증
+
+- 실패 artifact에서 `CAMPAIGN_ENDED` 응답과 409 assertion을 확인했다.
+- `:shared:test --tests ...VoucherCampaignBlackBoxContractTest` 3개 테스트 통과.
+- `:commerce-promotion-voucher-campaign:compileTestKotlin` 통과.
+- `:commerce-event-sourced-promotion-voucher-campaign:compileTestKotlin` 통과.
+- `:bucket4j-caffeine-web:build -x collectReachabilityMetadata -x detekt -x test` 통과.
+- `actionlint .github/workflows/ci.yml .github/workflows/nightly.yml .github/workflows/Examples.yml` 통과.
+- `scripts/smoke-validate.sh`의 공통 Gradle 경로와 세 workflow의 직접 Gradle 경로에
+  metadata task 제외가 적용됐음을 확인했다.
+- `ImageOcrServiceImplTest`의 OCR timeout regression을 500ms fixture로 실행해 1개
+  테스트 통과.
+- PR #709의 첫 `Examples` 실행에서 위 테스트가 100ms 경계로 실패한 로그와 artifact를
+  확인하고, 로컬에서도 같은 실패를 재현한 뒤 fixture 조정 후 재실행 통과.
+- 로컬 event-sourced integrationTest는 Docker 미가용으로 Spring context 초기화에서
+  중단되었으며, 이는 테스트 assertion 실패가 아니다. GitHub artifact가 남긴 원래
+  RED 증거는 별도로 보존했다.
+
+2026-08-03 merge commit `22787298`의 Examples run `30807714538`에서는
+`commerce-order-lifecycle-fulfillment`의 `OrderLifecycleWebIntegrationTest`가
+Container runner에서 `browser commands reconcile delayed payment and keep cancellation
+separate from refund` 상태 검증을 10초 안에 끝내지 못했다. `test` task가 공유하는
+Nightly full 경로도 같은 HTTP/Testcontainers 테스트를 실행하므로, Examples만 재시도해
+넘기는 것은 충분한 수정이 아니다. production 결제 상태 전이는 올바르게 구현되어
+있고, 실패 지점은 CI 부하에서의 HTTP/DB 비동기 후속 상태 확인 예산이었다.
+
+따라서 `AbstractOrderLifecycleIntegrationTest`의 `WebTestClient` response timeout과
+웹 lifecycle 테스트의 Awaitility 예산을 30초로 맞췄다. 기능을 건너뛰거나 production
+timeout을 바꾸지 않고, Container/Nightly의 공유 테스트가 실제 `SUCCEEDED` 상태와
+후속 취소/환불 계약을 계속 검증하도록 유지한다.
+
+## 다음 실행 지침
+
+공유 voucher compatibility scenario에 고정된 과거 날짜를 넣지 않는다. 시간 경계
+동작 자체를 검증해야 하는 테스트는 해당 adapter의 test clock을 고정하고, 공용
+black-box contract는 실행 시점에 유효한 window를 사용한다. Blocking/native 테스트는
+CI의 image decode와 scheduler variance보다 짧은 timeout을 assertion budget으로
+사용하지 않는다.
+Container/Nightly가 공유하는 HTTP lifecycle 테스트는 실제 runner의 DB 및 이벤트 처리
+지연보다 짧은 response/Awaitility timeout을 사용하지 않는다.
+
+추가로 수동 Nightly full run `30810489739`에서는 `Build (compile only)`가 이름과 달리
+`build` lifecycle을 통해 `commerce-event-sourced-promotion-voucher-campaign:integrationTest`까지
+실행했고, `EventSourcedProjectionRuntimeIntegrationTest`의 poison gauge가 아직 등록되지
+않은 순간에 실패했다. compile-only 단계는 검증 테스트를 중복 실행하지 않도록 `assemble`을
+사용하고, bounded reason-class metric gauge는 초기화 시 미리 등록해 첫 관측 tick의
+순서와 무관하게 `HANDLER_REJECTED`/`UNKNOWN` 값을 관측할 수 있게 한다.
+
+Examples run `30810461549`에서도 동일한 주문 lifecycle web test가 30초 예산으로
+재차 `SUCCEEDED` 상태 assertion을 끝내지 못했다. polling Awaitility는 60초로 늘리되
+개별 HTTP 요청은 10초에서 끊어 다음 polling 시도에 진행권을 넘긴다. 이는 production
+timeout을 바꾸지 않고 Container/Nightly의 일시적인 DB·이벤트 처리 정체를 회복할 수 있게
+하는 test-only 경계다.
+
+수정된 PR head `085dfc7cdf9b145578974cbced3735c5f92ddfb9`의 수동 Nightly full run
+`30811875199`에서는 compile-only 단계가 `assemble`로 정상 종료했지만, 두 개의 별도
+결정적 실패가 드러났다. `kotlin-flow-extensions-parallel-enrichment`의 테스트가
+published `bluetape4k-junit5`에 없는 `io.bluetape4k.coroutines.tests.withParallels`를
+import하고 있었고, `observability-basic`은 공유 `MockWebServer` connection 재사용으로
+404 inventory 요청이 180초까지 대기했다. `redis-cluster-demo`는 cluster 전체에 대한
+무인자 `flushDb()`가 replica를 임의 선택해 `READONLY`를 반환했다. high-contention의
+`ticket-spring/redis-path-outage`는 동일 run에서 PostgreSQL/Exposed prepared statement
+실패로 별도 RED가 남았고, 같은 suite의 과거 Nightly에도 반복된 runner/DB contention
+신호이므로 재실행 결과와 raw log를 함께 확인해야 한다.
+
+Flow 테스트는 published package인 `io.bluetape4k.junit5.coroutines.withParallels`를
+사용하도록 고쳤다. Observability의 공유 mock 응답에는 `Connection: close`를 명시해
+테스트 context 간 pooled connection 재사용을 차단했고, Redis cluster fixture는
+`clusterGetNodes()`에서 MASTER만 골라 각 master에 `flushDb(node)`를 보내도록 바꿨다.
+이렇게 하면 테스트를 무작정 늘린 timeout이나 replica 쓰기로 통과시키지 않고 CI runner의
+공유 상태 경계를 명시적으로 격리할 수 있다.
+
+로컬 검증에서는 Flow 7개, Observability 6개 테스트와 Redis test compile이 통과했다.
+Flow는 로컬 `mavenLocal()`의 오래된 동일 버전 jar가 helper를 포함하지 않아 published
+Central jar를 직접 사용한 임시 Gradle 검증으로 확인했다. Redis runtime은 Docker socket이
+없어 실행하지 못했으므로, GitHub Nightly 재실행에서 cluster master 초기화 동작을
+확인해야 한다.
+
+새 head의 Examples run `30817734373`에서도 같은 lifecycle 테스트의 두 번째 상태 조회가
+`WebTestClient`의 10초 response timeout에서 즉시 종료됐다. 기존 `untilAsserted`는
+Awaitility의 assertion failure는 재시도하지만 이 일시적인 `IllegalStateException`을
+무시하지 않아, 전체 60초 polling 예산을 사용하기 전에 테스트가 실패했다. 모든
+test-only 상태 polling을 `await.ignoreExceptionsInstanceOf(IllegalStateException::class)`와
+bounded `untilAsserted`로 바꿔 transport timeout을 일시적인 관측 실패로 취급하고, 최종
+상태가 끝내 도달하지 않으면 동일한 bounded timeout으로 실패하도록 했다. `IllegalStateException`
+만 무시하므로 assertion 오류나 다른 예외의 진단은 보존된다. 이 실패는 새 production
+동작 변경이 아니라 Container runner의 첫 polling 요청 지연이라는 재현 가능한 테스트
+경계 문제였다.
+
+## high-contention 로컬 재현과 수정
+
+수정 전 `ticket-spring/redis-path-outage` local-reference 프로파일을 로컬
+Colima/Testcontainers에서 실행했을 때도 Nightly와 같은 실패를 재현했다. 400개 작업과
+동시성 96에서 `TicketHighContentionWorkloadEngine.awaitAll`이
+`Ticket workload execution failed`를 보고했고, 원인 예외는
+`org.postgresql.util.PSQLException: ERROR: deadlock detected`였다. PostgreSQL은
+`ticket_inventory` 행을 잠그는 중 두 transaction이 서로의 ShareLock을 기다린다고
+기록했으며, stack은 `TicketPurchaseRepository.start`와
+`TicketLiveProfileAdapter.execute`로 이어졌다. 이는 polling 상태가 늦게 보인 것이 아니라
+동기 purchase transaction이 rollback된 것이다.
+
+첫 번째 원인은 measured worker가 `application.command(...)`를 지연 생성한 데 있었다.
+command fixture는 admission grant와 idempotency row를 쓰고, 동시에 다른 worker의
+purchase는 sale row를 먼저 잠갔다. grant의 foreign-key 검증과 sale lock이 서로를 기다릴
+수 있으므로, 전체 workload를 Awaitility로 감싸는 것은 deadlock을 해결하지 않고 실제
+transaction 실패를 숨긴다. 모든 measured schedule의 command fixture를 worker 시작 전에
+순차적으로 준비하도록 바꾸고, Redis failure injection에서 실제로 시작된 command가
+존재하는 지점만 5초 bounded Awaitility로 기다리도록 했다.
+
+Java 25 전체 matrix를 다시 실행하자 두 번째 lock inversion도 재현됐다. Redis 장애 주입이
+아직 purchase worker가 실행 중인 동안 `paymentWorker.applyPaymentOutcome`을 호출했고,
+payment 경로가 `ticket_inventory`를 먼저 잠근 뒤 `ticket_orders`의 sale foreign-key
+`FOR KEY SHARE`를 확인했다. 반대편 purchase 경로는 `ticket_sales FOR UPDATE`를 잡은 뒤
+inventory를 기다리므로 두 transaction이 교착할 수 있었다. `cancel`과
+`applyPaymentOutcome`도 purchase와 같은 sale-root lock을 먼저 획득하도록 고쳐 모든
+inventory mutation의 순서를 `sale → guard/buyer → inventory`로 통일했다. 이 경우에도
+Awaitility로 workload 전체를 감싸지 않고, 교착을 유발한 transaction 순서를 바로잡았다.
+
+수정 후 Java 25 로컬 `redis-path-outage` 단일 profile(`local-hc-ticket-j25-fixed-redis3-20260803`)
+은 compile과 runtime을 통과했고, 이전 실패의 원인은 `ticket_sales` foreign-key lock
+cycle임을 test XML에서 확인했다. 동일 Java 25 전체 7개 profile(`local-hc-ticket-j25-fixed-all-20260803`)
+도 3분 7초 만에 `PASS=7, FAIL=0, ERROR=0, UNAVAILABLE=0`, `cleanupZeroLive=true`로
+종료했다. `burst`의 missed-deadline 수치는 관찰값으로 남지만 terminal report와 현재
+correctness gate의 판정을 바꾸지 않는다. 로컬 Colima에서는 `DOCKER_HOST`를 CI의
+`/var/run/docker.sock`로 덮어쓰지 않고 Testcontainers가 설정한
+`~/.colima/default/docker.sock`을 사용한다.
+
+Nightly matrix run `30831407873`은 `ticket-spring`, `job-core`, `job-spring`을 통과시켰지만
+`job-ktor/slow-provider`만 `CHILD_TEST_FAILURE`로 종료했다. 원격 child 출력의 유효한
+테스트 실패는 1건이었고, 고정된 10초 예산을 profile budget으로 바꾼 뒤에도 첫
+slow-provider stale-lease 시나리오가 measured 400개 요청과 동시에 시작되는 구조가 남아
+있었다. 2-CPU runner에서 이 초기 lifecycle probe가 PostgreSQL/HTTP contention에 밀릴 수
+있으므로, 첫 probe 완료를 `CompletableFuture`로 bounded 대기시키고 후속 measured 요청은
+그 경계가 성공한 뒤에만 진입하도록 격리했다. 실패 시 gate도 같은 예외로 종료해 timeout을
+숨기지 않는다.
+
+수정 후 로컬 Java 25 `job-ktor/slow-provider`를
+`local-hc-ktor-gated-20260803b`로 재실행해 `BUILD SUCCESSFUL in 35s`를 확인했다. 원격
+matrix에서 이미 통과한 다른 구현과 함께 새 head의 Nightly full dispatch에서
+hosted-runner 재검증이 필요하다.
+
+## Nightly Flow eager-start timing 경계
+
+새 head `3da01b9ae12f781054e0264c16a7ddb6d776c746`의 Nightly full run
+`30833108958`에서는 high-contention 4개 matrix가 모두 통과했지만
+`Test (Testcontainers)`가 `kotlin/flow-extensions-race-fallback`의
+`RaceFallbackCatalogTest` 두 항목에서 실패했다. `eager fallback starts later sources
+early but emits in source order`와 `concatMapEager starts mapped sources eagerly and
+preserves outer order`가 모두 20ms 뒤 `AtomicBoolean`을 확인할 때 아직 `false`였다.
+업로드된 `test-results` artifact의 XML에는 이 두 assertion failure만 있었고 production
+Flow operator 오류나 다른 테스트 실패는 없었다.
+
+이 검사는 `runSuspendTest`의 단일 `runBlocking` event loop에서 eager child coroutine의
+실행을 고정된 실제 시간 20ms로 추정하고 있었다. GitHub hosted runner의 JVM/스케줄러
+지연이 그 예산을 넘을 수 있으므로, 고정 sleep을 늘려 우연히 통과시키지 않는다.
+각 `onStart` callback이 `CompletableDeferred`를 완료하게 하고, 테스트는
+`withTimeout(1_000) { started.await() }`로 실제 eager 시작 이벤트를 bounded 대기한다.
+그 뒤에도 source-order 방출 결과를 기존 assertion으로 검증한다. 이는 Awaitility로
+blocking thread를 점유하는 대신 coroutine 구조와 직접 연결된 test-only 동기화 경계다.
+
+로컬에서 수정된 `RaceFallbackCatalogTest` 전체 9개를 `--rerun-tasks`로 10회 반복해
+`PASS`를 확인했다. 이 수정은 production code나 timeout 계약을 바꾸지 않는다.
+
+새 head `400c5a890eebf17cae6f2268bc394ec05cb50d09`의 Nightly full run
+`30838002379`가 성공했다. `High-contention local reference` matrix의
+`job-core`, `job-spring`, `job-ktor`, `ticket-spring` 네 job과 `Test (Testcontainers)`,
+`Nightly Status`가 모두 성공했으며, `test-results` artifact에서도 전체 XML에
+`<failure>`/`<error>`가 없었다. 특히 `RaceFallbackCatalogTest`는 `tests=9`,
+`failures=0`, `errors=0`, `skipped=0`으로 hosted runner에서 통과했다. 따라서
+고정 20ms 관찰에 의존하던 eager-start 검사는 실제 `onStart` 이벤트를 bounded 대기하는
+구현으로 안정화되었고, 구현별 high-contention matrix 분할도 원격 Nightly에서
+동시 실행 가능한 상태로 검증되었다.
+
+## 컨테이너 부하에서 드러난 event snapshot과 STOMP 프레임 순서
+
+merge commit `16e6fbfe`의 수동 Nightly full run `30864030859`에서는 분리한
+high-contention matrix 네 job이 모두 성공했지만, `Test (Testcontainers)`에서 두 경쟁
+조건이 드러났다. event-sourced voucher의 마지막 capacity를 동시에 요청한 두 호출이
+모두 `201`을 반환했고, STOMP greeting 테스트는 연결 직후 보낸 메시지를 받지 못해
+Awaitility 제한 시간에 도달했다.
+
+event store는 event rows를 먼저 조회하고 head version을 나중에 읽었다. 두 쿼리 사이에
+다른 transaction이 append하면 이전 event 목록과 새 head가 한 `EventPage`에 섞인다.
+그 결과 aggregate는 오래된 capacity를 replay하지만 append의 expected version은 최신
+head를 사용해 두 번째 예약도 성공할 수 있었다. head를 먼저 읽고 event query의 상한을
+그 version으로 제한해 page 전체를 동일한 committed boundary에 묶었다. 이후 append가
+발생하면 expected-version conflict가 권위 있는 단일 winner를 보장한다.
+
+STOMP 테스트는 connection future를 기다리는 test thread와 `afterConnected` callback이
+서로 다른 thread에서 실행되어, callback의 `SUBSCRIBE`보다 test thread의 `SEND`가 먼저
+서버에 도착할 수 있었다. 이 예제의 simple broker는 subscription receipt를 반환하지
+않으므로 receipt 대기를 추가하지 않는다. 대신 `afterConnected` 안에서 subscribe 직후
+send를 실행해 한 session의 프레임 순서를 `SUBSCRIBE → SEND`로 고정한다.
+
+로컬에서 voucher 동시 capacity 테스트 100회, STOMP 두 경로 20회씩 총 40회가 통과했다.
+진단용 반복 애노테이션을 제거한 최종 상태에서도 STOMP 2개와 event-sourced voucher
+integration 77개가 모두 통과했다. event-page를 구성할 때 events와 head를 서로 다른
+관측 시점에서 조합하지 말고, WebSocket/STOMP 테스트는 연결 완료와 application-level
+구독 완료를 같은 사건으로 간주하지 않는다.
+
+후속 head `c554e803`의 Nightly full run `30868816130`에서는 위 두 테스트를 포함한
+Examples Container가 성공했지만, full Testcontainers의 `AtomicLongExamples`에서 Redis
+명령 하나가 Netty queue에 기록되지 못해 `RedisTimeoutException`이 발생했다. 테스트는
+1,000개 increment를 test coroutine의 자식이 아닌 공유 `CoroutineScope`의 standalone
+coroutine으로 실행해 예외를 전파하지 않았고, 마지막 assertion에서 원인을 잃은
+`999 != 1000`만 보고했다. `coroutineScope`로 작업을 구조화하고 `Semaphore(16)`으로 동시에
+outstanding 상태인 Redis 명령을 제한했다. 이제 실제 명령 실패는 즉시 테스트 실패로
+전파되며, atomic 동시성 검증은 유지하면서 hosted runner의 Netty queue 폭주를 피한다.
+로컬에서 수정된 경로를 100회 반복해 모두 통과했다.

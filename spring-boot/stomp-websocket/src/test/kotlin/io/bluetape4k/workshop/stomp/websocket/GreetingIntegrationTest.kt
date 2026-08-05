@@ -58,16 +58,9 @@ class GreetingIntegrationTest(
     fun `get greeting`() {
         val received = AtomicReference<Greeting>(null)
         val failure = AtomicReference<Throwable>(null)
-        val handler: StompSessionHandler = getStopmSessionHandler(received, failure)
+        val handler: StompSessionHandler = getStompSessionHandler(received, failure)
 
-        val session = stompClient.connectAsync(wsUrl, headers, handler, port).get()
-
-        log.debug { "Send HelloMessage to /app/hello" }
-        try {
-            session.send("/app/hello", HelloMessage("Spring"))
-        } catch (e: Throwable) {
-            failure.set(e)
-        }
+        stompClient.connectAsync(wsUrl, headers, handler, port).get()
 
         await until { received.get() != null || failure.get() != null }
 
@@ -82,16 +75,9 @@ class GreetingIntegrationTest(
     fun `get greeting with coroutines`() = runSuspendIO {
         val received = AtomicReference<Greeting>(null)
         val failure = AtomicReference<Throwable>(null)
-        val handler: StompSessionHandler = getStopmSessionHandler(received, failure)
+        val handler: StompSessionHandler = getStompSessionHandler(received, failure)
 
-        val session = stompClient.connectAsync(wsUrl, headers, handler, port).await()
-
-        log.debug { "Send HelloMessage to /app/hello" }
-        try {
-            session.send("/app/hello", HelloMessage("Spring"))
-        } catch (e: Throwable) {
-            failure.set(e)
-        }
+        stompClient.connectAsync(wsUrl, headers, handler, port).await()
 
         await untilSuspending { received.get() != null || failure.get() != null }
 
@@ -102,7 +88,7 @@ class GreetingIntegrationTest(
         }
     }
 
-    private fun getStopmSessionHandler(
+    private fun getStompSessionHandler(
         received: AtomicReference<Greeting>,
         failure: AtomicReference<Throwable>,
     ): StompSessionHandler = object : TestSessionHandler(failure) {
@@ -125,8 +111,14 @@ class GreetingIntegrationTest(
                             session.disconnect()
                         }
                     }
-                }
+                },
             )
+            log.debug { "Send HelloMessage to /app/hello" }
+            try {
+                session.send("/app/hello", HelloMessage("Spring"))
+            } catch (e: Throwable) {
+                failure.set(e)
+            }
         }
     }
 }
