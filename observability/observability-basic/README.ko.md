@@ -36,7 +36,7 @@ http.server.requests
 
 | 개념 | 구현 |
 |---|---|
-| 수동 span | `observed("order.service.fetch", registry) { }`가 order 조립을 감싼다. |
+| 수동 span | `withObservationContextSuspending("order.service.fetch", registry) { }`가 order 조립을 감싸고 coroutine Observation context를 전파한다. |
 | W3C 전파 | Spring Boot `WebClient.Builder`가 `traceparent`를 자동 주입한다. |
 | Test registry | `TestObservationRegistry`로 Zipkin 없이 service span lifecycle을 검증한다. |
 | 4xx 처리 | `awaitExchangeOrNull { 4xx -> null }`로 order 없음 처리. |
@@ -75,7 +75,7 @@ management:
 
 ## 의존성
 
-- `bluetape4k-micrometer` - 로컬 `observed()` 코루틴 helper.
+- `bluetape4k-micrometer` - released `withObservationContextSuspending` 코루틴 helper.
 - `micrometer-tracing-bridge-otel` - W3C 전파를 위한 OpenTelemetry bridge.
 - `micrometer-context-propagation` - Reactor와 coroutine context bridging.
 - `spring-boot-starter-opentelemetry` - WebClient 계측 자동 구성.

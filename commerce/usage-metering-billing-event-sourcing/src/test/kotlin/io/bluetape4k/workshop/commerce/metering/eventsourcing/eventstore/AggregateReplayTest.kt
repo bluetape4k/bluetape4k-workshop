@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.EventHashMaterial
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.MeterReducer
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.MeterRegistered
@@ -7,8 +9,6 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.MeterState
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.PersistedEvent
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.PriceActivated
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.StreamKey
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Duration
@@ -33,8 +33,8 @@ class AggregateReplayTest {
         val full = AggregateReplayer.replay(events, MeterState.Empty, MeterReducer, null, policy)
         val restored = AggregateReplayer.replay(events, MeterState.Empty, MeterReducer, snapshot, policy)
 
-        assertEquals(full, restored)
-        assertEquals(2L, restored.streamVersion)
+        restored.shouldBeEqualTo(full)
+        restored.streamVersion.shouldBeEqualTo(2L)
     }
 
     @Test
@@ -48,10 +48,10 @@ class AggregateReplayTest {
             telemetry,
         )
 
-        assertEquals(2L, restored.streamVersion)
-        assertEquals("api_calls", (restored.state as MeterState.Active).meterCode)
-        assertEquals(listOf("invalid"), telemetry.snapshotFallbacks)
-        assertEquals(listOf("success" to 2), telemetry.replays)
+        restored.streamVersion.shouldBeEqualTo(2L)
+        (restored.state as MeterState.Active).meterCode.shouldBeEqualTo("api_calls")
+        telemetry.snapshotFallbacks.shouldBeEqualTo(listOf("invalid"))
+        telemetry.replays.shouldBeEqualTo(listOf("success" to 2))
     }
 
     @Test
@@ -59,7 +59,7 @@ class AggregateReplayTest {
         val events = events().toMutableList()
         events[1] = events[1].copy(payload = """{"unitPrice":999}""")
 
-        assertThrows(EventHashMismatchException::class.java) {
+        assertFailsWith<EventHashMismatchException> {
             AggregateReplayer.replay(events, MeterState.Empty, MeterReducer, null, policy)
         }
     }

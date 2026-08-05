@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence
 
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.spring.data.exposed.jdbc.repository.ExposedJdbcRepository
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class RepositoryArchitectureTest {
@@ -16,6 +16,6 @@ class RepositoryArchitectureTest {
             BillingReadModelRepository::class.java,
             ProjectionFailureRepository::class.java,
         )
-        assertTrue(repositories.all(ExposedJdbcRepository::class.java::isAssignableFrom))
+        repositories.all(ExposedJdbcRepository::class.java::isAssignableFrom).shouldBeTrue()
     }
 }

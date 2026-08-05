@@ -1,13 +1,14 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.NewEvent
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.StreamKey
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageAccepted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.OptimisticConcurrencyException
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.StreamAppend
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -33,10 +34,11 @@ class EventStorePostgresIntegrationTest {
         val first = fixture.executor.transaction { repository.append(stream, 0, listOf(event("source-1"))) }
         val second = fixture.executor.transaction { repository.append(stream, 1, listOf(event("source-2"))) }
 
-        assertEquals(1L, first.single().streamVersion)
-        assertEquals(first.single().eventHash, second.single().previousHash)
-        assertEquals(listOf(1L, 2L), fixture.executor.transaction { repository.load(stream).map { it.streamVersion } })
-        assertThrows(OptimisticConcurrencyException::class.java) {
+        first.single().streamVersion.shouldBeEqualTo(1L)
+        second.single().previousHash.shouldBeEqualTo(first.single().eventHash)
+        fixture.executor.transaction { repository.load(stream).map { it.streamVersion } }
+            .shouldBeEqualTo(listOf(1L, 2L))
+        assertFailsWith<OptimisticConcurrencyException> {
             fixture.executor.transaction { repository.append(stream, 0, listOf(event("stale"))) }
         }
     }
@@ -52,11 +54,9 @@ class EventStorePostgresIntegrationTest {
             databaseTimedRepository.append(stream, 0, listOf(event("database-time"))).single()
         }
 
-        assertTrue(persisted.recordedAt > Instant.parse("2020-01-01T00:00:00Z"))
-        assertEquals(
-            persisted.recordedAt,
-            fixture.executor.transaction { databaseTimedRepository.load(stream).single().recordedAt },
-        )
+        (persisted.recordedAt > Instant.parse("2020-01-01T00:00:00Z")).shouldBeTrue()
+        fixture.executor.transaction { databaseTimedRepository.load(stream).single().recordedAt }
+            .shouldBeEqualTo(persisted.recordedAt)
     }
 
     @Test
@@ -67,8 +67,8 @@ class EventStorePostgresIntegrationTest {
         fixture.executor.transaction { repository.append(tenantA, 0, listOf(event("a"))) }
         fixture.executor.transaction { repository.append(tenantB, 0, listOf(event("b"))) }
 
-        assertEquals("a", fixture.executor.transaction { repository.load(tenantA).single().payload }.sourceId())
-        assertEquals("b", fixture.executor.transaction { repository.load(tenantB).single().payload }.sourceId())
+        fixture.executor.transaction { repository.load(tenantA).single().payload }.sourceId().shouldBeEqualTo("a")
+        fixture.executor.transaction { repository.load(tenantB).single().payload }.sourceId().shouldBeEqualTo("b")
     }
 
     @Test
@@ -86,7 +86,7 @@ class EventStorePostgresIntegrationTest {
             )
         }
 
-        assertEquals(listOf(earlier, later), appended.map { it.stream })
+        appended.map { it.stream }.shouldBeEqualTo(listOf(earlier, later))
     }
 
     @Test
@@ -109,8 +109,8 @@ class EventStorePostgresIntegrationTest {
             }
             start.countDown()
 
-            assertEquals(1, outcomes.count { it.get() })
-            assertEquals(1, fixture.executor.transaction { repository.load(stream).size })
+            outcomes.count { it.get() }.shouldBeEqualTo(1)
+            fixture.executor.transaction { repository.load(stream).size }.shouldBeEqualTo(1)
         } finally {
             pool.shutdownNow()
         }
@@ -122,7 +122,7 @@ class EventStorePostgresIntegrationTest {
         val stream = StreamKey("tenant-a", "Usage", "immutable")
         val stored = fixture.executor.transaction { repository.append(stream, 0, listOf(event("immutable"))).single() }
 
-        assertThrows(UnsupportedOperationException::class.java) {
+        assertFailsWith<UnsupportedOperationException> {
             fixture.executor.transaction { repository.save(DomainEventEntity[stored.eventId]) }
         }
     }
@@ -134,7 +134,7 @@ class EventStorePostgresIntegrationTest {
         val rolledBackStream = StreamKey("tenant-a", "Usage", "rolled-back")
         val laterStream = StreamKey("tenant-a", "Usage", "later")
         val first = fixture.executor.transaction { repository.append(firstStream, 0, listOf(event("first"))).single() }
-        assertThrows(IllegalStateException::class.java) {
+        assertFailsWith<IllegalStateException> {
             fixture.executor.transaction {
                 repository.append(rolledBackStream, 0, listOf(event("rolled-back")))
                 error("rollback after consuming a sequence value")
@@ -144,8 +144,8 @@ class EventStorePostgresIntegrationTest {
 
         val page = fixture.executor.transaction { repository.loadAfterGlobalPosition(first.globalPosition, 10) }
 
-        assertEquals(listOf(later.eventId), page.map { it.eventId })
-        assertTrue(later.globalPosition > first.globalPosition + 1)
+        page.map { it.eventId }.shouldBeEqualTo(listOf(later.eventId))
+        later.globalPosition.shouldBeGreaterThan(first.globalPosition + 1)
     }
 
     private fun event(sourceId: String): NewEvent = NewEvent(
