@@ -50,10 +50,10 @@ is rethrown before broad exception handling so coroutine cancellation remains co
 
 ## Notes
 
-`bluetape4k-dependencies` 1.3.1 currently resolves an AWS Spring Boot artifact that does not expose
-EventBridge or Scheduler operations. This workshop therefore uses the AWS SDK v2 EventBridge model
-plus local boundary interfaces. A real AWS adapter can be added behind those interfaces when the
-wrapper API is available.
+`bluetape4k-dependencies` 1.4.0 resolves `bluetape4k-aws` 0.5.0. Its Spring Boot artifact exposes
+EventBridge operations when the AWS SDK module is present, while Scheduler remains a direct AWS SDK
+concern. This workshop keeps the AWS SDK v2 EventBridge/Scheduler models plus local boundary
+interfaces to make the scheduler contract explicit.
 
 Do not put raw secrets or sensitive personal data in EventBridge detail payloads. Keep the example
 payload limited to workflow identifiers, correlation IDs, and learner-safe reason text.

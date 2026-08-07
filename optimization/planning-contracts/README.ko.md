@@ -21,7 +21,7 @@ version을 다시 읽습니다.
 
 | 책임 | 사용 기능 |
 |---|---|
-| 버전 기준 | `bluetape4k-dependencies:1.3.1` |
+| 버전 기준 | `bluetape4k-dependencies:1.4.0` |
 | Repository | `bluetape4k-exposed-jdbc`의 `UUIDAuditableJdbcRepository`, `LongAuditableJdbcRepository`, `LongJdbcRepository` |
 | PostgreSQL 테스트 | `PostgreSQLServer.Launcher.postgres`, 공개된 `bluetape4k-exposed-jdbc-tests` 지원 기능 |
 | Virtual thread | `bluetape4k-virtualthread-api`와 runtime `bluetape4k-virtualthread-jdk25` |
@@ -29,8 +29,8 @@ version을 다시 읽습니다.
 | 동시성 테스트 | `MultithreadingTester` |
 
 JetBrains Exposed 좌표는 버전 없이 선언합니다. 현재
-`bluetape4k-dependencies:1.3.1` 해석 결과는 JetBrains Exposed `1.3.0`,
-Bluetape Exposed `1.11.0`입니다. 라이브러리 버전과 BOM 버전 `1.3.1`은
+`bluetape4k-dependencies:1.4.0` 해석 결과는 JetBrains Exposed `1.4.0`,
+Bluetape Exposed `1.12.1`입니다. 라이브러리 버전과 BOM 버전 `1.4.0`은
 서로 다른 값입니다.
 
 모든 configuration에서 JDK 21 virtual-thread provider를 제외합니다. 첫 계약은

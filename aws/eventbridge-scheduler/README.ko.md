@@ -52,10 +52,11 @@ AWS 자격 증명이 필요하지 않습니다.
 
 ## 참고
 
-`bluetape4k-dependencies` 1.3.1이 해석하는 AWS Spring Boot artifact에는 아직
-EventBridge 또는 Scheduler operation이 노출되어 있지 않습니다. 그래서 이 워크숍은 AWS SDK
-v2 EventBridge 모델과 로컬 boundary interface를 사용합니다. wrapper API가 제공되면 같은
-interface 뒤에 실제 AWS adapter를 추가하면 됩니다.
+`bluetape4k-dependencies` 1.4.0은 `bluetape4k-aws` 0.5.0을 해석합니다. AWS SDK 모듈이
+classpath에 있으면 Spring Boot artifact에서 EventBridge operation을 사용할 수 있지만,
+Scheduler는 여전히 AWS SDK를 직접 사용하는 영역입니다. 이 워크숍은 scheduler 계약을
+명확히 보여주기 위해 AWS SDK v2 EventBridge/Scheduler 모델과 로컬 boundary interface를
+유지합니다.
 
 EventBridge detail payload에는 원문 secret이나 민감한 개인정보를 넣지 마세요. 이 예제의
 payload는 workflow 식별자, correlation ID, 학습용 reason text 정도로 제한합니다.
