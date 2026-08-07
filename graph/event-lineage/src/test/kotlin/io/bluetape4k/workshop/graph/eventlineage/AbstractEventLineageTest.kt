@@ -43,6 +43,8 @@ abstract class AbstractEventLineageTest {
 
     @BeforeEach
     fun cleanGraph() {
+        // bluetape4k-graph 0.6.0 requires selecting the logical graph before dropping it.
+        ops.createGraph(graphName)
         ops.dropGraph(graphName)
         service.initialize()
         seed = seedEventLineage(service)
