@@ -257,6 +257,12 @@ subprojects {
             // spring-boot BOM 의 logback 버전을 catalog 정의(1.5.32)로 override
             dependency(rootLibs.logback.lib.get().toString())
             dependency(rootLibs.logback.core.get().toString())
+            // bluetape4k-images 0.4.0 publishes these transitive Scrimage modules
+            // without versions in its regular dependency section.  The 1.4.0 root
+            // BOM does not yet manage them, so keep the 4.6.7 compatibility line
+            // explicit in this consumer until the next central BOM repair.
+            dependency(rootLibs.scrimage.filters.get().toString())
+            dependency(rootLibs.scrimage.webp.get().toString())
 
             val protobufVersion = rootLibs.versions.protobuf.asProvider().get()
             dependency("com.google.protobuf:protobuf-java:$protobufVersion")
