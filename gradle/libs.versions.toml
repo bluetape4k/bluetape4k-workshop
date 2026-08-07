@@ -2,7 +2,7 @@
 # Gradle Version Catalog — migrated from buildSrc/src/main/kotlin/Libs.kt
 
 [versions]
-bluetape4k-dependencies-version = "1.3.1"  # https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-dependencies
+bluetape4k-dependencies-version = "1.4.0"  # https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-dependencies
 # bluetape4k-graph version is managed by bluetape4k-dependencies BOM (currently 0.4.1)
 
 kotlin = "2.4.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-bom
@@ -56,7 +56,7 @@ hibernate-reactive = "4.3.3.Final"  # https://mvnrepository.com/artifact/org.hib
 hibernate-validator = "9.1.0.Final"  # https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
 querydsl = "7.5"  # https://mvnrepository.com/artifact/io.github.openfeign.querydsl/querydsl-apt
 
-exposed = "1.3.0"  # https://mvnrepository.com/artifact/org.jetbrains.exposed/exposed-bom
+exposed = "1.4.0"  # https://mvnrepository.com/artifact/org.jetbrains.exposed/exposed-bom
 r2dbc = "1.0.0.RELEASE"  # https://mvnrepository.com/artifact/io.r2dbc/r2dbc-spi
 r2dbc-h2 = "1.1.0.RELEASE"  # https://mvnrepository.com/artifact/io.r2dbc/r2dbc-h2
 r2dbc-pool = "1.0.2.RELEASE"  # https://mvnrepository.com/artifact/io.r2dbc/r2dbc-pool
@@ -636,20 +636,20 @@ querydsl-jpa = { module = "io.github.openfeign.querydsl:querydsl-jpa", version.r
 mybatis-dynamic-sql = { module = "org.mybatis.dynamic-sql:mybatis-dynamic-sql", version = "2.0.0" }  # https://mvnrepository.com/artifact/org.mybatis.dynamic-sql/mybatis-dynamic-sql
 
 # Exposed
-jetbrains-exposed-bom = { module = "org.jetbrains.exposed:exposed-bom", version.ref = "exposed" }
-jetbrains-exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
-jetbrains-exposed-crypt = { module = "org.jetbrains.exposed:exposed-crypt", version.ref = "exposed" }
-jetbrains-exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
-jetbrains-exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
-jetbrains-exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
-jetbrains-exposed-json = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
-jetbrains-exposed-kotlin-datetime = { module = "org.jetbrains.exposed:exposed-kotlin-datetime", version.ref = "exposed" }
-jetbrains-exposed-migration-jdbc = { module = "org.jetbrains.exposed:exposed-migration-jdbc", version.ref = "exposed" }
-jetbrains-exposed-money = { module = "org.jetbrains.exposed:exposed-money", version.ref = "exposed" }
-jetbrains-exposed-r2dbc = { module = "org.jetbrains.exposed:exposed-r2dbc", version.ref = "exposed" }
-jetbrains-exposed-spring-boot-starter = { module = "org.jetbrains.exposed:exposed-spring-boot-starter", version.ref = "exposed" }
-jetbrains-exposed-spring-boot4-starter = { module = "org.jetbrains.exposed:exposed-spring-boot4-starter", version.ref = "exposed" }
-jetbrains-exposed-spring7-transaction = { module = "org.jetbrains.exposed:spring7-transaction", version.ref = "exposed" }
+jetbrains-exposed-bom = { module = "org.jetbrains.exposed:exposed-bom" }
+jetbrains-exposed-core = { module = "org.jetbrains.exposed:exposed-core" }
+jetbrains-exposed-crypt = { module = "org.jetbrains.exposed:exposed-crypt" }
+jetbrains-exposed-dao = { module = "org.jetbrains.exposed:exposed-dao" }
+jetbrains-exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time" }
+jetbrains-exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc" }
+jetbrains-exposed-json = { module = "org.jetbrains.exposed:exposed-json" }
+jetbrains-exposed-kotlin-datetime = { module = "org.jetbrains.exposed:exposed-kotlin-datetime" }
+jetbrains-exposed-migration-jdbc = { module = "org.jetbrains.exposed:exposed-migration-jdbc" }
+jetbrains-exposed-money = { module = "org.jetbrains.exposed:exposed-money" }
+jetbrains-exposed-r2dbc = { module = "org.jetbrains.exposed:exposed-r2dbc" }
+jetbrains-exposed-spring-boot-starter = { module = "org.jetbrains.exposed:exposed-spring-boot-starter" }
+jetbrains-exposed-spring-boot4-starter = { module = "org.jetbrains.exposed:exposed-spring-boot4-starter" }
+jetbrains-exposed-spring7-transaction = { module = "org.jetbrains.exposed:spring7-transaction" }
 
 # R2DBC
 r2dbc-h2 = { module = "io.r2dbc:r2dbc-h2", version.ref = "r2dbc-h2" }

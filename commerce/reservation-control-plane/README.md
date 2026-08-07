@@ -41,7 +41,7 @@ The expiry worker locks one resource, expires stale holds and offers with compar
 | Test database | `PostgreSQLServer` from `bluetape4k-testcontainers` |
 | Advisory coordination | Redis through Lettuce, `bluetape4k-leader` |
 | Observability | `bluetape4k-logging`, Actuator health, Prometheus registry |
-| Dependency authority | `bluetape4k-dependencies:1.3.1` only |
+| Dependency authority | `bluetape4k-dependencies:1.4.0` only |
 
 The module consumes `bluetape4k-exposed-jdbc`, `bluetape4k-exposed-jdbc-tests`, `bluetape4k-virtualthread-api`, and `bluetape4k-virtualthread-jdk25` through the root dependency platform. It does not import an individual Bluetape BOM or pin a Bluetape module version.
 
