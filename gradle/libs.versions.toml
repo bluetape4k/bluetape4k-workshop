@@ -125,7 +125,7 @@ random-beans = "3.9.0"  # https://mvnrepository.com/artifact/io.github.benas/ran
 springdoc-openapi = "3.0.3"  # https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-api
 problem = "0.29.1"  # https://mvnrepository.com/artifact/org.zalando/problem-spring-webflux
 
-scrimage = "4.6.5"  # https://mvnrepository.com/artifact/com.sksamuel.scrimage/scrimage-core
+scrimage = "4.6.7"  # https://mvnrepository.com/artifact/com.sksamuel.scrimage/scrimage-core
 gatling = "3.15.1"  # https://mvnrepository.com/artifact/io.gatling/gatling-app
 
 # Plugin versions
@@ -650,6 +650,11 @@ jetbrains-exposed-r2dbc = { module = "org.jetbrains.exposed:exposed-r2dbc" }
 jetbrains-exposed-spring-boot-starter = { module = "org.jetbrains.exposed:exposed-spring-boot-starter" }
 jetbrains-exposed-spring-boot4-starter = { module = "org.jetbrains.exposed:exposed-spring-boot4-starter" }
 jetbrains-exposed-spring7-transaction = { module = "org.jetbrains.exposed:spring7-transaction" }
+
+# Scrimage transitive modules exposed by bluetape4k-images 0.4.0.
+# Keep these explicit until the central dependencies BOM manages them directly.
+scrimage-filters = { module = "com.sksamuel.scrimage:scrimage-filters", version.ref = "scrimage" }
+scrimage-webp = { module = "com.sksamuel.scrimage:scrimage-webp", version.ref = "scrimage" }
 
 # R2DBC
 r2dbc-h2 = { module = "io.r2dbc:r2dbc-h2", version.ref = "r2dbc-h2" }
