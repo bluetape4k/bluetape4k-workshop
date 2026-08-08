@@ -40,7 +40,7 @@
 
   <g class="node" data-node="operational-observability" filter="url(#shadow)"><rect class="card red" x="360" y="1124" width="1080" height="62" rx="15"/><text class="cardTitle" x="900" y="1152" text-anchor="middle">Operational observability</text><text class="body" x="900" y="1175" text-anchor="middle">bluetape4k-logging decision logs + Micrometer metrics; no raw idempotency key or request payload</text></g>
 
-  <g class="edge" data-edge="browser-console-&gt;tomcat-mvc" data-label="browser HTTP and SSE"><path data-connector="browser-console-to-tomcat-mvc" class="connector http" d="M 315 287 L 315 310 Q 315 330 335 330 L 1070 330 Q 1090 330 1090 310 L 1090 297" marker-end="url(#arrow-blue)"/></g>
+  <g class="edge" data-edge="browser-console-&gt;tomcat-mvc" data-label="browser HTTP and SSE"><path data-connector="browser-console-to-tomcat-mvc" class="connector http" d="M 315 287 L 315 310 Q 315 330 335 330 L 1070 330 Q 1090 330 1090 313 L 1090 297" marker-end="url(#arrow-blue)"/></g>
   <g class="edge" data-edge="live-web-test-client-&gt;tomcat-mvc" data-label="live integration transport"><path data-connector="live-web-test-client-to-tomcat-mvc" class="connector http" d="M 895 250 L 965 250" marker-end="url(#arrow-blue)"/></g>
   <g class="edge" data-edge="tomcat-mvc-&gt;idempotent-submission" data-label="POST order"><path data-connector="tomcat-mvc-to-idempotent-submission" class="connector http" d="M 1120 297 L 1120 325 Q 1120 345 1100 345 L 305 345 Q 285 345 285 365 L 285 458" marker-end="url(#arrow-blue)"/></g>
   <g class="edge" data-edge="tomcat-mvc-&gt;query-and-sse" data-label="GET snapshot and events"><path data-connector="tomcat-mvc-to-query-and-sse" class="connector read" d="M 1180 297 L 1180 458" marker-end="url(#arrow-teal)"/></g>

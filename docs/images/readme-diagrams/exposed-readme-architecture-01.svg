@@ -63,17 +63,17 @@
   </g>
 
   <g id="edges">
-    <path class="edge" d="M 555.538 405 V 560" stroke="#c47a2c" marker-end="url(#arrow-amber)" stroke-linecap="round" stroke-linejoin="round"/>
-    <path class="edge" d="M 555.538 668 V 815" stroke="#c47a2c" marker-end="url(#arrow-amber)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="edge" d="M 555.538 405 V 560" stroke="#c47a2c" marker-end="url(#arrow-amber)" stroke-linecap="round" stroke-linejoin="round" data-connector="edge-01"/>
+    <path class="edge" d="M 555.538 668 V 815" stroke="#c47a2c" marker-end="url(#arrow-amber)" stroke-linecap="round" stroke-linejoin="round" data-connector="edge-02"/>
 
-    <path class="edge" d="M 986.363 405 V 560" stroke="#2f8b57" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-    <path class="edge" d="M 986.363 668 V 815" stroke="#2f8b57" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="edge" d="M 986.363 405 V 560" stroke="#2f8b57" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round" data-connector="edge-03"/>
+    <path class="edge" d="M 986.363 668 V 815" stroke="#2f8b57" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round" data-connector="edge-04"/>
 
-    <path class="edge" d="M 1417.188 405 V 560" stroke="#7c5bc4" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
-    <path class="edge" d="M 1417.188 668 V 815" stroke="#7c5bc4" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="edge" d="M 1417.188 405 V 560" stroke="#7c5bc4" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round" data-connector="edge-05"/>
+    <path class="edge" d="M 1417.188 668 V 815" stroke="#7c5bc4" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round" data-connector="edge-06"/>
 
-    <path class="edge" d="M 1848.013 405 V 560" stroke="#386fd8" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
-    <path class="edge" d="M 1848.013 668 V 815" stroke="#386fd8" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="edge" d="M 1848.013 405 V 560" stroke="#386fd8" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round" data-connector="edge-07"/>
+    <path class="edge" d="M 1848.013 668 V 815" stroke="#386fd8" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round" data-connector="edge-08"/>
   </g>
 
   <g id="module-cards">

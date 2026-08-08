@@ -70,9 +70,9 @@
     <text class="field" x="22" y="72">suspend search(request)</text>
   </g>
 
-  <path class="edge" d="M 330 188 L 374 188 Q 382 188 382 196 L 382 292 Q 382 300 390 300 L 435 300" marker-end="url(#arrow)"/>
-  <path class="edge" d="M 330 450 L 374 450 Q 382 450 382 442 L 382 356 Q 382 348 390 348 L 435 348" marker-end="url(#arrow)"/>
-  <path class="edge" d="M 685 300 L 727 300 Q 735 300 735 292 L 735 196 Q 735 188 743 188 L 790 188" marker-end="url(#arrow)"/>
-  <path class="edge" d="M 915 266 L 915 364" marker-end="url(#arrow)"/>
-  <path class="edge muted" d="M 560 402 L 560 520" marker-end="url(#arrow)"/>
+  <path class="edge" d="M 330 188 L 374 188 Q 382 188 382 196 L 382 292 Q 382 300 390 300 L 435 300" marker-end="url(#arrow)" data-connector="edge-01" stroke="#3b4b5f"/>
+  <path class="edge" d="M 330 450 L 374 450 Q 382 450 382 442 L 382 356 Q 382 348 390 348 L 435 348" marker-end="url(#arrow)" data-connector="edge-02" stroke="#3b4b5f"/>
+  <path class="edge" d="M 685 300 L 727 300 Q 735 300 735 292 L 735 196 Q 735 188 743 188 L 790 188" marker-end="url(#arrow)" data-connector="edge-03" stroke="#3b4b5f"/>
+  <path class="edge" d="M 915 266 L 915 364" marker-end="url(#arrow)" data-connector="edge-04" stroke="#3b4b5f"/>
+  <path class="edge muted" d="M 560 402 L 560 520" marker-end="url(#arrow)" data-connector="edge-05" stroke="#3b4b5f"/>
 </svg>
