@@ -8,12 +8,11 @@ import io.bluetape4k.graph.model.GraphVertex
 import io.bluetape4k.graph.model.NeighborOptions
 import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.graph.repository.GraphSuspendOperations
+import io.bluetape4k.graph.repository.requireEndpoint
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
-import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.graph.social.model.ConnectionRecommendation
 import io.bluetape4k.workshop.graph.social.schema.CompanyLabel
 import io.bluetape4k.workshop.graph.social.schema.FollowsLabel
@@ -171,8 +170,8 @@ class SocialNetworkSuspendService(
     ): Pair<GraphEdge, GraphEdge> {
         strength.requireInRange(1, 10, "strength")
         requireDistinctEndpoints(fromVertexId, toVertexId, "fromVertexId", "toVertexId")
-        requireEndpoint(fromVertexId, PersonLabel.label, "fromVertexId")
-        requireEndpoint(toVertexId, PersonLabel.label, "toVertexId")
+        ops.requireEndpoint(fromVertexId, PersonLabel.label, "fromVertexId")
+        ops.requireEndpoint(toVertexId, PersonLabel.label, "toVertexId")
         val props = buildMap {
             if (since.isNotBlank()) put(KnowsLabel.since.name, since)
             put(KnowsLabel.strength.name, strength.toString())
@@ -194,8 +193,8 @@ class SocialNetworkSuspendService(
      */
     suspend fun follow(followerVertexId: GraphElementId, followeeVertexId: GraphElementId): GraphEdge {
         requireDistinctEndpoints(followerVertexId, followeeVertexId, "followerVertexId", "followeeVertexId")
-        requireEndpoint(followerVertexId, PersonLabel.label, "followerVertexId")
-        requireEndpoint(followeeVertexId, PersonLabel.label, "followeeVertexId")
+        ops.requireEndpoint(followerVertexId, PersonLabel.label, "followerVertexId")
+        ops.requireEndpoint(followeeVertexId, PersonLabel.label, "followeeVertexId")
         return ops.createEdge(followerVertexId, followeeVertexId, FollowsLabel.label, emptyMap())
     }
 
@@ -217,8 +216,8 @@ class SocialNetworkSuspendService(
         isCurrent: Boolean = true,
     ): GraphEdge {
         role.requireNotBlank("role")
-        requireEndpoint(personVertexId, PersonLabel.label, "personVertexId")
-        requireEndpoint(companyVertexId, CompanyLabel.label, "companyVertexId")
+        ops.requireEndpoint(personVertexId, PersonLabel.label, "personVertexId")
+        ops.requireEndpoint(companyVertexId, CompanyLabel.label, "companyVertexId")
         return ops.createEdge(
             personVertexId,
             companyVertexId,
@@ -402,12 +401,6 @@ class SocialNetworkSuspendService(
         return ops.neighbors(vertexId2, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 1))
             .toList()
             .filter { it.id in friends1 }
-    }
-
-    private suspend fun requireEndpoint(id: GraphElementId, expectedLabel: String, parameterName: String): GraphVertex {
-        val vertex = ops.findVertexById(id).requireNotNull(parameterName)
-        vertex.label.requireEquals(expectedLabel, "$parameterName.label")
-        return vertex
     }
 
     private fun requireDistinctEndpoints(

@@ -7,20 +7,28 @@
 
 ## [Unreleased]
 
-### Added
+### 추가
+
+- bluetape4k-images 0.4.0의 provider-neutral Barcode API와 ZXing 구현을 소비하는
+  `image-processing/barcode-api` 워크숍 예제를 추가했습니다.
 
 - 루트 README 영웅 이미지와 프로젝트 목적, 기능 진입점 문서를 갱신했습니다.
 - CI와 nightly 워크플로를 추가했습니다 ([PR #16](https://github.com/bluetape4k/bluetape4k-workshop/pull/16)).
 - 로컬 OMX 프로젝트 메모리 무시 규칙을 추가했습니다 ([PR #21](https://github.com/bluetape4k/bluetape4k-workshop/pull/21)).
 
-### Changed
+### 변경
+
+- bluetape4k-dependencies 1.4.0의 Graph 0.6.0 chunk export와 typed endpoint validation을
+  `graph/io-pipeline`, `graph/social-network` 기존 예제에 반영했습니다.
+- `redis/cluster-demo`가 `LettuceLongCodec`뿐 아니라 `LettuceIntCodec`와 `awaitSuspending()`을
+  사용하는 typed async round trip도 보여주도록 갱신했습니다.
 
 - 현재 할당된 GitHub 이슈 기준으로 WIP 스냅샷을 갱신했습니다.
 - 워크숍 예제에 Spring Boot 4.0.0을 적용했습니다 ([PR #7](https://github.com/bluetape4k/bluetape4k-workshop/pull/7)).
 - `buildSrc` 의존성 선언을 `gradle/libs.versions.toml`로 이전하고 Gradle을 9.5.0으로 업그레이드했습니다 ([PR #15](https://github.com/bluetape4k/bluetape4k-workshop/pull/15)).
 - 테스트 코드를 bluetape4k-assertions에서 `bluetape4k-assertions`로 이전했습니다 ([PR #20](https://github.com/bluetape4k/bluetape4k-workshop/pull/20)).
 
-### Fixed
+### 버그 수정
 
 - Spring Boot 4.0.6, AspectJ, Logback override, protobuf `protoc` 호환성 문제를 수정했습니다 ([PR #17](https://github.com/bluetape4k/bluetape4k-workshop/pull/17)).
 - GraalVM Native 1.1.0과 `spring-context` 버전 참조 문제를 수정했습니다 ([PR #18](https://github.com/bluetape4k/bluetape4k-workshop/pull/18)).

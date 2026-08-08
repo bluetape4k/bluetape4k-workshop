@@ -229,7 +229,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Advanced | [`ratelimit-bucket4j-redis`](ratelimit/bucket4j-redis/) | `redis`, `testcontainers` | Redis (TC) | Distributed rate limiting via Bucket4j + Redis |
 | Advanced | [`ratelimit-bucker4j-bluetape4k-webflux`](ratelimit/bucker4j-bluetape4k-webflux/) | `redis`, `coroutines`, `testcontainers` | Redis (TC) | bluetape4k WebFlux rate limit integration |
 | Advanced | [`redis-distributed-lock`](redis/distributed-lock/) | `redis`, `redisson`, `coroutines` | Redis (TC) | Distributed lock with Redisson + coroutine suspend |
-| Advanced | [`redis-cluster-demo`](redis/cluster-demo/) | `redis`, `redisson` | Redis Cluster (TC) | Redis Cluster topology and failover |
+| Advanced | [`redis-cluster-demo`](redis/cluster-demo/) | `redis`, `lettuce`, `redisson` | Redis Cluster (TC) | Redis Cluster topology, failover, and typed Lettuce codecs |
 | Basic | [`redis-redisson-examples`](redis/redisson-examples/) | `redis`, `redisson` | Redis (TC) | Redisson data structures and pub/sub |
 | Advanced | [`aws-s3-spring-cloud`](aws/s3-spring-cloud/) | `aws`, `testcontainers` | LocalStack (TC) | AWS S3 with Spring Cloud AWS + LocalStack |
 | Advanced | [`aws-ktor-dynamodb`](aws/ktor-dynamodb/) | `aws`, `ktor`, `coroutines`, `testcontainers` | Floci/LocalStack (TC) | Ktor REST + DynamoDB conditional writes with fail-closed local mode |
@@ -241,6 +241,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Advanced | [`image-processing-advanced-workflow`](image-processing/advanced-workflow/) | `images-vips-java25`, `images-spring-boot`, `micrometer` | S3 or local storage | Upload → original storage → WebP variants → unsigned public URLs |
 | Advanced | [`image-processing-profile-image-moderation`](image-processing/profile-image-moderation/) | `images-spring-boot`, `coroutines`, `micrometer` | Local storage / S3-compatible | Profile upload → private original → blurred pending URL → moderation approval/default fallback |
 | Advanced | [`image-processing-ocr-api`](image-processing/ocr-api/) | `images-ocr`, `images`, `spring-boot4-core` | In-memory | Multipart OCR API with validated fallback and optional Tesseract |
+| Advanced | [`image-processing-barcode-api`](image-processing/barcode-api/) | `images-barcode-api`, `images-barcode-zxing`, `images` | In-memory | Provider-neutral barcode extraction with ZXing, bounded multipart input, and deterministic fixtures |
 | Advanced | [`operations-job-console-core`](operations/job-console-core/) | `exposed-jdbc`, `lettuce`, `micrometer`, `testcontainers` | PostgreSQL + Redis (TC) | Durable FIFO jobs, leases, checkpoints, cancellation, retry budget, bounded ETA, and outbox |
 | Advanced | [`operations-job-console-spring`](operations/job-console-spring/) | `spring-boot4-core`, `virtualthread-jdk25` | PostgreSQL (TC) | Spring MVC REST/SSE adapter for the shared Java 25 job console contract |
 | Advanced | [`operations-job-console-ktor`](operations/job-console-ktor/) | `ktor`, `coroutines` | PostgreSQL (TC) | Ktor Netty REST/SSE adapter for the shared Java 25 job console contract |
@@ -261,6 +262,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 ./gradlew :aws-storage-abstraction:test
 ./gradlew :aws-s3-vectors-access-grants:test
 ./gradlew :image-processing-profile-image-moderation:test
+./gradlew :image-processing-barcode-api:test
 ./scripts/smoke-validate.sh operations
 ./gradlew :leader-backend-comparison-lab:test
 ./gradlew :leader-tenant-scheduler:test
@@ -292,7 +294,7 @@ bluetape4k-workshop/
 ├── gateway/                # API Gateway + microservices
 ├── gatling/                # Load/performance tests
 ├── graph/                  # TinkerGraph, traversal, graph-io examples
-├── image-processing/       # Image upload, moderation, VIPS derivatives, OCR API
+├── image-processing/       # Image upload, moderation, VIPS derivatives, OCR, barcode API
 ├── io/                     # Okio I/O examples
 ├── json/                   # Jackson 3 serialization
 ├── kotlin/                 # Coroutines, design patterns
