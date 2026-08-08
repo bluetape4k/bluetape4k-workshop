@@ -20,91 +20,91 @@
       .line-orange { fill: none; stroke: #f07d22; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
       .line-red { fill: none; stroke: #f04438; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
-    <marker id="arrow-blue" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <marker id="arrow-blue" viewBox="0 0 16.3333 16.3333" refX="12" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" />
     </marker>
-    <marker id="arrow-green" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <marker id="arrow-green" viewBox="0 0 16.3333 16.3333" refX="12" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" />
     </marker>
-    <marker id="arrow-orange" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <marker id="arrow-orange" viewBox="0 0 16.3333 16.3333" refX="12" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" />
     </marker>
-    <marker id="arrow-red" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <marker id="arrow-red" viewBox="0 0 16.3333 16.3333" refX="12" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" />
     </marker>
   </defs>
 
-  <rect class="canvas" x="0" y="0" width="1800" height="980"/>
-  <rect x="24" y="24" width="1752" height="932" rx="22" fill="#ffffff" stroke="#d7e0eb" stroke-width="2"/>  <text class="title" x="900" y="72" text-anchor="middle">Spring Data Elasticsearch sample</text>
+  <rect class="canvas" x="0" y="0" width="1800" height="980" />
+  <rect x="24" y="24" width="1752" height="932" rx="22" fill="#ffffff" stroke="#d7e0eb" stroke-width="2" />  <text class="title" x="900" y="72" text-anchor="middle">Spring Data Elasticsearch sample</text>
   <text class="subtitle" x="900" y="102" text-anchor="middle">Conference documents are loaded once, then repository and operations APIs query the same index.</text>
 
-  <rect class="layer-app" x="80" y="140" width="1640" height="210" rx="18" stroke-width="2"/>
+  <rect class="layer-app" x="80" y="140" width="1640" height="210" rx="18" stroke-width="2" />
   <text class="layer-title" x="112" y="184">Sample application</text>
 
-  <rect class="card-blue" x="160" y="220" width="320" height="82" rx="10" stroke-width="2"/>
+  <rect class="card-blue" x="160" y="220" width="320" height="82" rx="10" stroke-width="2" />
   <text class="card-title" x="320" y="255" text-anchor="middle">ElasticsearchApplication</text>
   <text class="card-small" x="320" y="282" text-anchor="middle">Spring Boot entrypoint</text>
 
-  <rect class="card-blue" x="740" y="220" width="320" height="82" rx="10" stroke-width="2"/>
+  <rect class="card-blue" x="740" y="220" width="320" height="82" rx="10" stroke-width="2" />
   <text class="card-title" x="900" y="255" text-anchor="middle">insertSampleData()</text>
   <text class="card-small" x="900" y="282" text-anchor="middle">saves five conferences</text>
 
-  <rect class="card-blue" x="1320" y="220" width="320" height="82" rx="10" stroke-width="2"/>
+  <rect class="card-blue" x="1320" y="220" width="320" height="82" rx="10" stroke-width="2" />
   <text class="card-title" x="1480" y="255" text-anchor="middle">Conference document</text>
   <text class="card-small" x="1480" y="282" text-anchor="middle">name, date, location, keywords</text>
 
-  <rect class="layer-data" x="80" y="390" width="1640" height="250" rx="18" stroke-width="2"/>
+  <rect class="layer-data" x="80" y="390" width="1640" height="250" rx="18" stroke-width="2" />
   <text class="layer-title" x="112" y="434">Spring Data access paths</text>
 
-  <rect class="card-green" x="145" y="478" width="330" height="90" rx="10" stroke-width="2"/>
+  <rect class="card-green" x="145" y="478" width="330" height="90" rx="10" stroke-width="2" />
   <text class="card-title" x="310" y="513" text-anchor="middle">ConferenceRepository</text>
   <text class="card-small" x="310" y="541" text-anchor="middle">ElasticsearchRepository</text>
 
-  <rect class="card-green" x="535" y="478" width="330" height="90" rx="10" stroke-width="2"/>
+  <rect class="card-green" x="535" y="478" width="330" height="90" rx="10" stroke-width="2" />
   <text class="card-title" x="700" y="513" text-anchor="middle">ElasticsearchOperations</text>
   <text class="card-small" x="700" y="541" text-anchor="middle">CriteriaQuery search</text>
 
-  <rect class="card-green" x="925" y="478" width="350" height="90" rx="10" stroke-width="2"/>
+  <rect class="card-green" x="925" y="478" width="350" height="90" rx="10" stroke-width="2" />
   <text class="card-title" x="1100" y="513" text-anchor="middle">ReactiveRepository</text>
   <text class="card-small" x="1100" y="541" text-anchor="middle">Flux results for derived queries</text>
 
-  <rect class="card-green" x="1335" y="478" width="330" height="90" rx="10" stroke-width="2"/>
+  <rect class="card-green" x="1335" y="478" width="330" height="90" rx="10" stroke-width="2" />
   <text class="card-title" x="1500" y="513" text-anchor="middle">ReactiveOperations</text>
   <text class="card-small" x="1500" y="541" text-anchor="middle">reactive criteria search</text>
 
-  <rect class="layer-client" x="80" y="680" width="1640" height="210" rx="18" stroke-width="2"/>
+  <rect class="layer-client" x="80" y="680" width="1640" height="210" rx="18" stroke-width="2" />
   <text class="layer-title" x="112" y="724">Client and runtime dependency</text>
 
-  <rect class="card-orange" x="270" y="765" width="420" height="82" rx="10" stroke-width="2"/>
+  <rect class="card-orange" x="270" y="765" width="420" height="82" rx="10" stroke-width="2" />
   <text class="card-title" x="480" y="800" text-anchor="middle">ElasticsearchClientConfig</text>
   <text class="card-small" x="480" y="827" text-anchor="middle">container URL + basic auth</text>
 
-  <rect class="card-orange" x="760" y="765" width="320" height="82" rx="10" stroke-width="2"/>
+  <rect class="card-orange" x="760" y="765" width="320" height="82" rx="10" stroke-width="2" />
   <text class="card-title" x="920" y="800" text-anchor="middle">NettyConfig</text>
   <text class="card-small" x="920" y="827" text-anchor="middle">reactive server resources</text>
 
-  <rect class="card-red" x="1200" y="745" width="390" height="122" rx="10" stroke-width="2"/>
+  <rect class="card-red" x="1200" y="745" width="390" height="122" rx="10" stroke-width="2" />
   <g transform="translate(1238 766)">
-    <circle cx="34" cy="34" r="30" fill="#00bfb3"/>
-    <path d="M 17 36 A 18 18 0 0 1 52 30" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
-    <path d="M 20 47 A 18 18 0 0 0 53 45" fill="none" stroke="#f2c94c" stroke-width="8" stroke-linecap="round"/>
-    <circle cx="54" cy="31" r="8" fill="#343741"/>
+    <circle cx="34" cy="34" r="30" fill="#00bfb3" />
+    <path d="M 17 36 A 18 18 0 0 1 52 30" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" />
+    <path d="M 20 47 A 18 18 0 0 0 53 45" fill="none" stroke="#f2c94c" stroke-width="8" stroke-linecap="round" />
+    <circle cx="54" cy="31" r="8" fill="#343741" />
   </g>  <text class="card-title" x="1422" y="790" text-anchor="middle">Elasticsearch OSS</text>  <text class="card-small" x="1422" y="818" text-anchor="middle">Testcontainers server</text>
   <text class="tiny" x="1422" y="842" text-anchor="middle">conference-index</text>
 
-  <path class="line-blue" d="M 480 261 L 730 261" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-blue" d="M 1060 261 L 1310 261" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-blue" d="M 480 261 L 730 261" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round" />
+  <path class="line-blue" d="M 1060 261 L 1310 261" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round" />
 
-  <path class="line-green" d="M 900 302 L 900 446 Q 900 456 890 456 L 314 456 Q 310 456 310 460 L 310 466" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-green" d="M 900 302 L 900 446 Q 900 456 890 456 L 704 456 Q 700 456 700 460 L 700 466" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-green" d="M 1480 302 L 1480 446 Q 1480 456 1470 456 L 1104 456 Q 1100 456 1100 460 L 1100 466" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-green" d="M 1480 302 L 1480 447 Q 1480 456 1489 456 L 1496 456 Q 1500 456 1500 460 L 1500 466" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-green" d="M 900 302 L 900 446 Q 900 456 890 456 L 314 456 Q 305 461 310 451 V 466" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round" />
+  <path class="line-green" d="M 900 302 L 900 446 Q 900 456 890 456 L 704 456 Q 695 461 700 451 V 466" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round" />
+  <path class="line-green" d="M 1480 302 L 1480 446 Q 1480 456 1470 456 L 1104 456 Q 1095 461 1100 451 V 466" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round" />
+  <path class="line-green" d="M 1480 302 L 1480 447 Q 1480 456 1489 456 L 1496 456 Q 1500 441 1500 451 V 466" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round" />
 
-  <path class="line-orange" d="M 310 568 L 310 640 Q 310 656 320 656 L 470 656 Q 480 656 480 660 L 480 753" marker-end="url(#arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-orange" d="M 700 568 L 700 640 Q 700 656 690 656 L 490 656 Q 480 656 480 660 L 480 753" marker-end="url(#arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-orange" d="M 1100 568 L 1100 640 Q 1100 656 1090 656 L 930 656 Q 920 656 920 660 L 920 753" marker-end="url(#arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-orange" d="M 1500 568 L 1500 640 Q 1500 656 1490 656 L 930 656 Q 920 656 920 660 L 920 753" marker-end="url(#arrow-orange)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-orange" d="M 310 568 L 310 640 Q 310 656 320 656 L 470 656 Q 480 656 480 664 V 753" marker-end="url(#arrow-orange)" stroke-linecap="round" stroke-linejoin="round" />
+  <path class="line-orange" d="M 700 568 L 700 640 Q 700 656 690 656 L 490 656 Q 480 656 480 664 V 753" marker-end="url(#arrow-orange)" stroke-linecap="round" stroke-linejoin="round" />
+  <path class="line-orange" d="M 1100 568 L 1100 640 Q 1100 656 1090 656 L 930 656 Q 920 656 920 664 V 753" marker-end="url(#arrow-orange)" stroke-linecap="round" stroke-linejoin="round" />
+  <path class="line-orange" d="M 1500 568 L 1500 640 Q 1500 656 1490 656 L 930 656 Q 920 656 920 664 V 753" marker-end="url(#arrow-orange)" stroke-linecap="round" stroke-linejoin="round" />
 
-  <path class="line-red" d="M 690 806 L 710 806 Q 720 806 720 816 L 720 868 Q 720 906 730 906 L 1150 906 Q 1160 906 1160 868 L 1160 846 Q 1160 836 1170 836 L 1188 836" marker-end="url(#arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line-red" d="M 1080 806 L 1188 806" marker-end="url(#arrow-red)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line-red" d="M 690 806 L 710 806 Q 720 806 720 816 L 720 868 Q 720 906 730 906 L 1150 906 Q 1160 906 1160 868 L 1160 846 Q 1160 836 1170 836 L 1188 836" marker-end="url(#arrow-red)" stroke-linecap="round" stroke-linejoin="round" />
+  <path class="line-red" d="M 1080 806 L 1188 806" marker-end="url(#arrow-red)" stroke-linecap="round" stroke-linejoin="round" />
 </svg>

@@ -46,22 +46,22 @@
     <filter id="labelShadow" x="-12%" y="-35%" width="124%" height="170%">
       <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#263238" flood-opacity="0.10"/>
     </filter>
-    <marker id="arrowCall" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+    <marker id="arrowCall" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="sequence" data-tip-direction="positive-x">
       <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f8fda" stroke="#4f8fda" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
-    <marker id="arrowState" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+    <marker id="arrowState" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="sequence" data-tip-direction="positive-x">
       <path d="M 0 0 L 10 5 L 0 10 Z" fill="#8a63d2" stroke="#8a63d2" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
-    <marker id="arrowDetect" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+    <marker id="arrowDetect" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="sequence" data-tip-direction="positive-x">
       <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2fa36f" stroke="#2fa36f" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
-    <marker id="arrowScan" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+    <marker id="arrowScan" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="sequence" data-tip-direction="positive-x">
       <path d="M 0 0 L 10 5 L 0 10 Z" fill="#c28518" stroke="#c28518" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
-    <marker id="arrowSuccess" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+    <marker id="arrowSuccess" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="sequence" data-tip-direction="positive-x">
       <path d="M 0 0 L 10 5 L 0 10 Z" fill="#24928d" stroke="#24928d" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
-    <marker id="arrowError" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10">
+    <marker id="arrowError" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="sequence" data-tip-direction="positive-x">
       <path d="M 0 0 L 10 5 L 0 10 Z" fill="#d95c55" stroke="#d95c55" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
   </defs>

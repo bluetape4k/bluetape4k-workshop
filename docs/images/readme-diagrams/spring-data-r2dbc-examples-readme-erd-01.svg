@@ -7,7 +7,7 @@
       .col{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:19px;fill:#263244}.note{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:17px;fill:#475569}
       .line{fill:none;stroke:#64748b;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
     </style>
-    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#64748b" stroke-dasharray="none"/></marker>
+    <marker id="arrow" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x"><path d="M1,1 L11,6 L1,11 Z" fill="#64748b" stroke-dasharray="none"/></marker>
   </defs>
   <rect class="bg" width="1500" height="760"/>
   <text class="title" x="70" y="70">R2DBC Example Schemas</text>
