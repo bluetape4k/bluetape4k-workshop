@@ -26,6 +26,7 @@ dependencies {
     // Netty 테스트 의존성
     testImplementation(libs.bluetape4k.netty)
 
+    compileOnly(libs.bluetape4k.testcontainers)
     testImplementation(libs.bluetape4k.testcontainers)
     testImplementation(libs.testcontainers.lib)
 }

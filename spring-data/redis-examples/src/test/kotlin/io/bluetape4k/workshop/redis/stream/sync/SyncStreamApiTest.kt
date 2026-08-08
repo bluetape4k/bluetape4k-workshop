@@ -6,7 +6,7 @@ import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.redis.RedisTestSupport
+import io.bluetape4k.workshop.shared.testcontainers.RedisTestSupport
 import io.bluetape4k.workshop.redis.stream.RedisStreamConfiguration
 import io.bluetape4k.workshop.redis.stream.SensorData
 import org.awaitility.kotlin.await

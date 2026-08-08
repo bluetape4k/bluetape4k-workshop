@@ -18,6 +18,7 @@ dependencies {
     implementation(libs.bluetape4k.spring.boot4.core)
     implementation(libs.bluetape4k.spring.boot4.redis)
     implementation(libs.bluetape4k.idgenerators)
+    testImplementation(project(":shared"))
     testImplementation(libs.bluetape4k.junit5)
     implementation(libs.bluetape4k.testcontainers)
 
