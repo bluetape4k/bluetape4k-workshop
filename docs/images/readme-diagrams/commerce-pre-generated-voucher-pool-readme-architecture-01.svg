@@ -41,8 +41,8 @@
   <g class="node" data-node="repositories" filter="url(#shadow)"><rect class="card green" x="175" y="990" width="930" height="95" rx="15"/><text class="cardTitle" x="640" y="1024" text-anchor="middle">Bluetape Exposed / JDBC repositories</text><text class="body" x="640" y="1052" text-anchor="middle">campaign / batch / entry / reservation / allocation / idempotency / audit / inbox</text><text class="small" x="640" y="1074" text-anchor="middle">short transactions, global lock order, revision and owner CAS</text></g>
   <g class="node" data-node="workers" filter="url(#shadow)"><rect class="card amber" x="1260" y="970" width="400" height="125" rx="15"/><text class="cardTitle" x="1460" y="1005" text-anchor="middle">Leader + manual recovery workers</text><text class="body" x="1460" y="1033" text-anchor="middle">expiry / revocation / reconciliation / purge</text><text class="small" x="1460" y="1060" text-anchor="middle">claim owner + revision CAS / bounded chunks</text><text class="small" x="1460" y="1082" text-anchor="middle">lease renewal, checkpoint, stale-finalize reject</text></g>
   <path data-connector="commands-permit" class="connector db" d="M1100 640 V770 Q 1100 795 1075 795 H875 Q 850 795 850 820 V850" marker-end="url(#arrow-green)"/>
-  <path data-connector="query-permit" class="connector read" d="M1530 625 V750 Q 1530 775 1505 775 H1210 Q 1185 775 1185 800 V855 Q 1185 880 1165 880 H1160" marker-end="url(#arrow-teal)"/>
-  <path data-connector="workers-permit" class="connector durable" d="M1260 1015 H1220 Q 1195 1015 1195 990 V935 Q 1195 910 1170 910 H1160" marker-end="url(#arrow-amber)"/>
+  <path data-connector="query-permit" class="connector read" d="M1530 625 V750 Q 1530 775 1505 775 H1210 Q 1185 775 1185 800 V855 Q 1185 880 1176 880 H1160" marker-end="url(#arrow-teal)"/>
+  <path data-connector="workers-permit" class="connector durable" d="M1260 1015 H1220 Q 1195 1015 1195 990 V935 Q 1195 910 1176 910 H1160" marker-end="url(#arrow-amber)"/>
   <path data-connector="permit-repositories" class="connector db" d="M835 938 V990" marker-end="url(#arrow-green)"/>
 
   <rect class="layer" x="70" y="1160" width="1660" height="155" rx="24"/>

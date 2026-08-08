@@ -3,7 +3,7 @@
   <desc id="desc">A top-to-bottom layered architecture for a Flow based search pipeline.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 12.5 12.5" refX="8" refY="5" markerWidth="10" markerHeight="10" orient="auto" markerUnits="userSpaceOnUse" data-role="secondary" data-tip-direction="positive-x">
-      <path d="M 1 1 L 9 5 L 1 9 z" fill="#314a67" stroke-dasharray="none"/>
+      <path d="M 1 1 L 9 5 L 1 9 z" fill="#314a67" stroke-dasharray="none" stroke="#314a67" stroke-width="0"/>
     </marker>
     <style>
       .title { font-family: 'Architects Daughter', 'Comic Mono', sans-serif; font-size: 34px; fill: #1f2937; }
@@ -64,18 +64,18 @@
   </g>
 
   <g class="edge" data-edge="query-ui-&gt;flow-pipeline" data-label="debounced query">
-    <path d="M 210 184 L 210 240 L 500 240 L 500 290"/>
+    <path d="M 210 184 L 210 232 Q 210 240 218 240 L 492 240 Q 500 240 500 248 L 500 290" data-connector="query-ui-flow-pipeline" marker-end="url(#arrow)" stroke="#314a67"/>
   </g>
   <g class="edge" data-edge="settings-&gt;flow-pipeline" data-label="latest settings">
-    <path d="M 560 184 L 560 290"/>
+    <path d="M 560 184 L 560 290" data-connector="settings-flow-pipeline" marker-end="url(#arrow)" stroke="#314a67"/>
   </g>
   <g class="edge" data-edge="session-&gt;flow-pipeline" data-label="stop signal">
-    <path d="M 910 184 L 910 240 L 620 240 L 620 290"/>
+    <path d="M 910 184 L 910 232 Q 910 240 902 240 L 628 240 Q 620 240 620 248 L 620 290" data-connector="session-flow-pipeline" marker-end="url(#arrow)" stroke="#314a67"/>
   </g>
   <g class="edge" data-edge="flow-pipeline-&gt;adapter" data-label="search request">
-    <path d="M 560 374 L 560 470"/>
+    <path d="M 560 374 L 560 470" data-connector="flow-pipeline-adapter" marker-end="url(#arrow)" stroke="#314a67"/>
   </g>
   <g class="edge" data-edge="adapter-&gt;results" data-label="search result">
-    <path d="M 560 554 L 560 640"/>
+    <path d="M 560 554 L 560 640" data-connector="adapter-results" marker-end="url(#arrow)" stroke="#314a67"/>
   </g>
 </svg>

@@ -69,25 +69,25 @@
   </g>
 
   <g class="edge" data-edge="upload-&gt;controller" data-label="POST multipart">
-    <path class="line blue" d="M 550 243 L 550 310" marker-end="url(#arrowBlue)"/>
+    <path class="line blue" d="M 550 243 L 550 310" marker-end="url(#arrowBlue)" data-connector="upload-controller" stroke="#2563EB"/>
   </g>
   <g class="edge" data-edge="controller-&gt;validation" data-label="validate metadata">
-    <path class="line green" d="M 550 402 L 550 470" marker-end="url(#arrowGreen)"/>
+    <path class="line green" d="M 550 402 L 550 470" marker-end="url(#arrowGreen)" data-connector="controller-validation" stroke="#15803D"/>
   </g>
   <g class="edge" data-edge="validation-&gt;fallback" data-label="native disabled">
-    <path class="line blue" d="M 505 562 L 505 606 L 330 606 L 330 650" marker-end="url(#arrowBlue)"/>
+    <path class="line blue" d="M 505 562 L 505 598 Q 505 606 497 606 L 338 606 Q 330 606 330 614 L 330 650" marker-end="url(#arrowBlue)" data-connector="validation-fallback" stroke="#2563EB"/>
   </g>
   <g class="edge" data-edge="validation-&gt;native" data-label="native enabled">
-    <path class="line purple" d="M 595 562 L 595 606 L 770 606 L 770 650" marker-end="url(#arrowPurple)"/>
+    <path class="line purple" d="M 595 562 L 595 598 Q 595 606 603 606 L 762 606 Q 770 606 770 614 L 770 650" marker-end="url(#arrowPurple)" data-connector="validation-native" stroke="#7C3AED"/>
   </g>
   <g class="edge" data-edge="fallback-&gt;mapping" data-label="structured fallback">
-    <path class="line blue" d="M 330 742 L 330 786 L 505 786 L 505 830" marker-end="url(#arrowBlue)"/>
+    <path class="line blue" d="M 330 742 L 330 778 Q 330 786 338 786 L 497 786 Q 505 786 505 794 L 505 830" marker-end="url(#arrowBlue)" data-connector="fallback-mapping" stroke="#2563EB"/>
   </g>
   <g class="edge" data-edge="native-&gt;mapping" data-label="OCR text or failure">
-    <path class="line purple" d="M 770 742 L 770 786 L 595 786 L 595 830" marker-end="url(#arrowPurple)"/>
+    <path class="line purple" d="M 770 742 L 770 778 Q 770 786 762 786 L 603 786 Q 595 786 595 794 L 595 830" marker-end="url(#arrowPurple)" data-connector="native-mapping" stroke="#7C3AED"/>
   </g>
   <g class="edge" data-edge="mapping-&gt;tests" data-label="assert response">
-    <path class="line green" d="M 550 922 L 550 990" marker-end="url(#arrowGreen)"/>
+    <path class="line green" d="M 550 922 L 550 990" marker-end="url(#arrowGreen)" data-connector="mapping-tests" stroke="#15803D"/>
   </g>
 
   <rect x="120" y="1102" width="860" height="40" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>

@@ -68,25 +68,25 @@
   </g>
 
   <g class="edge" data-edge="csv-&gt;pipeline" data-label="paired CSV import">
-    <path class="line blue" d="M 550 243 L 550 310" marker-end="url(#arrowBlue)"/>
+    <path class="line blue" d="M 550 243 L 550 310" marker-end="url(#arrowBlue)" data-connector="csv-pipeline" stroke="#2563EB"/>
   </g>
   <g class="edge" data-edge="pipeline-&gt;tinkergraph" data-label="GraphOperations writes">
-    <path class="line green" d="M 550 402 L 550 470" marker-end="url(#arrowGreen)"/>
+    <path class="line green" d="M 550 402 L 550 470" marker-end="url(#arrowGreen)" data-connector="pipeline-tinkergraph" stroke="#15803D"/>
   </g>
   <g class="edge" data-edge="tinkergraph-&gt;ndjson" data-label="filtered export">
-    <path class="line purple" d="M 505 562 L 505 606 L 350 606 L 350 650" marker-end="url(#arrowPurple)"/>
+    <path class="line purple" d="M 505 562 L 505 598 Q 505 606 497 606 L 358 606 Q 350 606 350 614 L 350 650" marker-end="url(#arrowPurple)" data-connector="tinkergraph-ndjson" stroke="#7C3AED"/>
   </g>
   <g class="edge" data-edge="tinkergraph-&gt;graphml" data-label="filtered export">
-    <path class="line purple" d="M 595 562 L 595 606 L 750 606 L 750 650" marker-end="url(#arrowPurple)"/>
+    <path class="line purple" d="M 595 562 L 595 598 Q 595 606 603 606 L 742 606 Q 750 606 750 614 L 750 650" marker-end="url(#arrowPurple)" data-connector="tinkergraph-graphml" stroke="#7C3AED"/>
   </g>
   <g class="edge" data-edge="ndjson-&gt;reports" data-label="report contract">
-    <path class="line blue" d="M 350 742 L 350 786 L 505 786 L 505 830" marker-end="url(#arrowBlue)"/>
+    <path class="line blue" d="M 350 742 L 350 778 Q 350 786 358 786 L 497 786 Q 505 786 505 794 L 505 830" marker-end="url(#arrowBlue)" data-connector="ndjson-reports" stroke="#2563EB"/>
   </g>
   <g class="edge" data-edge="graphml-&gt;reports" data-label="report contract">
-    <path class="line purple" d="M 750 742 L 750 786 L 595 786 L 595 830" marker-end="url(#arrowPurple)"/>
+    <path class="line purple" d="M 750 742 L 750 778 Q 750 786 742 786 L 603 786 Q 595 786 595 794 L 595 830" marker-end="url(#arrowPurple)" data-connector="graphml-reports" stroke="#7C3AED"/>
   </g>
   <g class="edge" data-edge="reports-&gt;tests" data-label="assert status">
-    <path class="line green" d="M 550 922 L 550 990" marker-end="url(#arrowGreen)"/>
+    <path class="line green" d="M 550 922 L 550 990" marker-end="url(#arrowGreen)" data-connector="reports-tests" stroke="#15803D"/>
   </g>
 
   <rect x="120" y="1102" width="860" height="40" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>

@@ -41,7 +41,7 @@
 
   <g class="node" data-node="observability" filter="url(#shadow)"><rect class="card red" x="350" y="1134" width="1100" height="60" rx="15"/><text class="cardTitle" x="900" y="1161" text-anchor="middle">Operational observability</text><text class="body" x="900" y="1184" text-anchor="middle">bluetape4k-logging + Micrometer / stable outcomes / secret and high-cardinality redaction</text></g>
 
-  <g class="edge" data-edge="browser-&gt;tomcat" data-label="browser HTTP and SSE"><path data-connector="browser-to-tomcat" class="connector http" d="M305 287 L305 310 Q 305 332 327 332 L1090 332 Q 1112 332 1112 310 L1112 297" marker-end="url(#arrow-blue)"/></g>
+  <g class="edge" data-edge="browser-&gt;tomcat" data-label="browser HTTP and SSE"><path data-connector="browser-to-tomcat" class="connector http" d="M305 287 L305 310 Q 305 332 327 332 L1090 332 Q 1112 332 1112 313 L1112 297" marker-end="url(#arrow-blue)"/></g>
   <g class="edge" data-edge="webtestclient-&gt;tomcat" data-label="live integration"><path data-connector="webtestclient-to-tomcat" class="connector http" d="M890 251 L965 251" marker-end="url(#arrow-blue)"/></g>
   <g class="edge" data-edge="tomcat-&gt;idempotency" data-label="commands"><path data-connector="tomcat-to-idempotency" class="connector http" d="M1160 297 L1160 350 Q 1160 365 1145 365 L625 365 Q 610 365 610 380 L610 462" marker-end="url(#arrow-blue)"/></g>
   <g class="edge" data-edge="tomcat-&gt;query-sse" data-label="reads and events"><path data-connector="tomcat-to-query-sse" class="connector read" d="M1365 297 L1365 462" marker-end="url(#arrow-teal)"/></g>
