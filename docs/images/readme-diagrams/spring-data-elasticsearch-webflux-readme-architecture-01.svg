@@ -22,16 +22,16 @@
       .line-red { fill: none; stroke: #f04438; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
     <marker id="ew-arrow-blue" viewBox="0 0 16.3333 16.3333" refX="12" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#2f6df6" stroke-width="0"/>
     </marker>
     <marker id="ew-arrow-green" viewBox="0 0 16.3333 16.3333" refX="12" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#18a558" stroke-width="0"/>
     </marker>
     <marker id="ew-arrow-orange" viewBox="0 0 16.3333 16.3333" refX="12" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#f07d22" stroke-width="0"/>
     </marker>
     <marker id="ew-arrow-red" viewBox="0 0 16.3333 16.3333" refX="12" refY="7" markerWidth="14" markerHeight="14" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#f04438" stroke-width="0"/>
     </marker>
   </defs>
 

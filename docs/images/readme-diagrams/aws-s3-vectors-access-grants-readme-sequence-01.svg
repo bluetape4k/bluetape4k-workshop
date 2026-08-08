@@ -1,16 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1440" height="1220" viewBox="0 0 1440 1220" role="img" aria-label="S3 Vectors and Access Grants request sequence">
   <defs>
     <marker id="seqArrowBlue" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="sequence" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86c6" stroke="#4f86c6" stroke-dasharray="none" style="stroke-dasharray:none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86c6" stroke="#4f86c6" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
     <marker id="seqArrowGreen" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="sequence" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#3f9b72" stroke="#3f9b72" stroke-dasharray="none" style="stroke-dasharray:none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#3f9b72" stroke="#3f9b72" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
     <marker id="seqArrowAmber" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="sequence" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#b78022" stroke="#b78022" stroke-dasharray="none" style="stroke-dasharray:none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#b78022" stroke="#b78022" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
     <marker id="seqArrowTeal" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="sequence" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f9c95" stroke="#2f9c95" stroke-dasharray="none" style="stroke-dasharray:none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f9c95" stroke="#2f9c95" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
     <style>
       .canvas{fill:#f7f9fc}
@@ -95,49 +95,49 @@
   <rect class="activation" x="982" y="714" width="14" height="100" rx="5"/>
   <rect class="activation" x="1258" y="914" width="14" height="126" rx="5"/>
 
-  <path class="callBlue" d="M 167 314 L 433 314"/>
+  <path class="callBlue" d="M 167 314 L 433 314" marker-end="url(#seqArrowBlue)"/>
   <rect class="labelPill pillBlue" x="194" y="266" width="212" height="30" rx="14"/>
   <circle class="numBadge badgeBlue" cx="216" cy="281" r="12"/>
   <text class="num numBlue" x="216" y="286" text-anchor="middle">1</text>
   <text class="labelText textBlue" x="300" y="286" text-anchor="middle">POST document</text>
 
-  <path class="callGreen" d="M 433 394 L 709 394"/>
+  <path class="callGreen" d="M 433 394 L 709 394" marker-end="url(#seqArrowGreen)"/>
   <rect class="labelPill pillGreen" x="455" y="346" width="232" height="30" rx="14"/>
   <circle class="numBadge badgeGreen" cx="477" cy="361" r="12"/>
   <text class="num numGreen" x="477" y="366" text-anchor="middle">2</text>
   <text class="labelText textGreen" x="582" y="366" text-anchor="middle">validate vector DTO</text>
 
-  <path class="callGreen" d="M 709 474 L 987 474"/>
+  <path class="callGreen" d="M 709 474 L 987 474" marker-end="url(#seqArrowGreen)"/>
   <rect class="labelPill pillGreen" x="772" y="426" width="152" height="30" rx="14"/>
   <circle class="numBadge badgeGreen" cx="794" cy="441" r="12"/>
   <text class="num numGreen" x="794" y="446" text-anchor="middle">3</text>
   <text class="labelText textGreen" x="854" y="446" text-anchor="middle">PutVectors</text>
 
-  <path class="return" d="M 987 574 L 709 574"/>
+  <path class="return" d="M 987 574 L 709 574" marker-end="url(#seqArrowTeal)"/>
   <rect class="labelPill pillTeal" x="758" y="526" width="180" height="30" rx="14"/>
   <circle class="numBadge badgeTeal" cx="780" cy="541" r="12"/>
   <text class="num numTeal" x="780" y="546" text-anchor="middle">4</text>
   <text class="labelText textTeal" x="852" y="546" text-anchor="middle">published</text>
 
-  <path class="callBlue" d="M 167 634 L 433 634"/>
+  <path class="callBlue" d="M 167 634 L 433 634" marker-end="url(#seqArrowBlue)"/>
   <rect class="labelPill pillBlue" x="204" y="586" width="192" height="30" rx="14"/>
   <circle class="numBadge badgeBlue" cx="226" cy="601" r="12"/>
   <text class="num numBlue" x="226" y="606" text-anchor="middle">5</text>
   <text class="labelText textBlue" x="300" y="606" text-anchor="middle">POST search</text>
 
-  <path class="callGreen" d="M 433 714 L 709 714"/>
+  <path class="callGreen" d="M 433 714 L 709 714" marker-end="url(#seqArrowGreen)"/>
   <rect class="labelPill pillGreen" x="456" y="666" width="230" height="30" rx="14"/>
   <circle class="numBadge badgeGreen" cx="478" cy="681" r="12"/>
   <text class="num numGreen" x="478" y="686" text-anchor="middle">6</text>
   <text class="labelText textGreen" x="582" y="686" text-anchor="middle">normalize query DTO</text>
 
-  <path class="callGreen" d="M 709 794 L 987 794"/>
+  <path class="callGreen" d="M 709 794 L 987 794" marker-end="url(#seqArrowGreen)"/>
   <rect class="labelPill pillGreen" x="760" y="746" width="184" height="30" rx="14"/>
   <circle class="numBadge badgeGreen" cx="782" cy="761" r="12"/>
   <text class="num numGreen" x="782" y="766" text-anchor="middle">7</text>
   <text class="labelText textGreen" x="852" y="766" text-anchor="middle">QueryVectors</text>
 
-  <path class="return" d="M 709 854 L 433 854"/>
+  <path class="return" d="M 709 854 L 433 854" marker-end="url(#seqArrowTeal)"/>
   <rect class="labelPill pillTeal" x="488" y="806" width="220" height="30" rx="14"/>
   <circle class="numBadge badgeTeal" cx="510" cy="821" r="12"/>
   <text class="num numTeal" x="510" y="826" text-anchor="middle">8</text>
@@ -147,19 +147,19 @@
   <rect class="branchHeader" x="674" y="878" width="240" height="30" rx="14"/>
   <text class="branchText" x="794" y="898" text-anchor="middle">alt requireAccessGrant=true</text>
 
-  <path class="callAmber" d="M 709 934 L 1263 934"/>
+  <path class="callAmber" d="M 709 934 L 1263 934" marker-end="url(#seqArrowAmber)"/>
   <rect class="labelPill pillAmber" x="930" y="886" width="268" height="30" rx="14"/>
   <circle class="numBadge badgeAmber" cx="952" cy="901" r="12"/>
   <text class="num numAmber" x="952" y="906" text-anchor="middle">9</text>
   <text class="labelText textAmber" x="1066" y="906" text-anchor="middle">GetDataAccess READ</text>
 
-  <path class="return" d="M 1263 1016 L 709 1016"/>
+  <path class="return" d="M 1263 1016 L 709 1016" marker-end="url(#seqArrowTeal)"/>
   <rect class="labelPill pillTeal" x="868" y="968" width="240" height="30" rx="14"/>
   <circle class="numBadge badgeTeal" cx="890" cy="983" r="12"/>
   <text class="num numTeal" x="890" y="988" text-anchor="middle">10</text>
   <text class="labelText textTeal" x="1012" y="988" text-anchor="middle">redacted decision</text>
 
-  <path class="return" d="M 433 1084 L 167 1084"/>
+  <path class="return" d="M 433 1084 L 167 1084" marker-end="url(#seqArrowTeal)"/>
   <rect class="labelPill pillTeal" x="168" y="1036" width="310" height="30" rx="14"/>
   <circle class="numBadge badgeTeal" cx="190" cy="1051" r="12"/>
   <text class="num numTeal" x="190" y="1056" text-anchor="middle">11</text>

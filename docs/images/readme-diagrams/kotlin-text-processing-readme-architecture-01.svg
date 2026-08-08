@@ -2,7 +2,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980" role="img" aria-label="Kotlin text processing architecture diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowSlate" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#5F7382" stroke="#5F7382" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowSlate" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#5F7382" stroke="#5F7382" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="0"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.6}.layerInput{fill:#EEF8F3;stroke:#A9D8C6;stroke-width:2}.layerCore{fill:#F5F1FA;stroke:#CDB9EA;stroke-width:2}.layerText{fill:#FFF6E8;stroke:#E8C27D;stroke-width:2}.layerVerify{fill:#EBF4FC;stroke:#B6D4EC;stroke-width:2}.title{font-family:"Architects Daughter";font-size:42px;fill:#172033}.subtitle{font-family:"Comic Mono";font-size:17px;fill:#536473}.layerTitle{font-family:"Architects Daughter";font-size:27px;fill:#2D4050}.cardTitle{font-family:"Architects Daughter";font-size:26px;fill:#132033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#4F6070}.line{fill:none;stroke:#5F7382;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrowSlate)}
     </style>
@@ -68,12 +68,12 @@
     <text class="cardTitle" x="800" y="887" text-anchor="middle">JUnit search + redaction + coroutine tests</text>
   </g>
 
-  <path class="flow line" data-connector="document-to-index" d="M 350 284 L 350 323 Q 350 335 362 335 L 788 335 Q 800 335 800 347 L 800 385"/>
-  <path class="flow line" data-connector="query-to-index" d="M 1250 284 L 1250 323 Q 1250 335 1238 335 L 812 335 Q 800 335 800 347 L 800 385"/>
-  <path class="flow line" data-connector="index-to-language-detector" d="M 640 497 L 640 588 Q 640 600 628 600 L 307 600 Q 295 600 295 612 L 295 615"/>
-  <path class="flow line" data-connector="index-to-korean-processor" d="M 720 497 L 720 588 Q 720 600 708 600 L 632 600 Q 620 600 620 612 L 620 615"/>
-  <path class="flow line" data-connector="index-to-japanese-processor" d="M 880 497 L 880 580 Q 880 592 892 592 L 928 592 Q 940 592 940 604 L 940 615"/>
-  <path class="flow line" data-connector="index-to-normalizer" d="M 960 497 L 960 553 Q 960 565 972 565 L 1263 565 Q 1275 565 1275 577 L 1275 615"/>
-  <path class="flow line" data-connector="index-to-highlighter" d="M 800 497 L 800 715"/>
-  <path class="flow line" data-connector="highlighter-to-tests" d="M 800 779 L 800 854"/>
+  <path class="flow line" data-connector="document-to-index" d="M 350 284 L 350 323 Q 350 335 362 335 L 788 335 Q 800 335 800 347 L 800 385" marker-end="url(#arrowSlate)"/>
+  <path class="flow line" data-connector="query-to-index" d="M 1250 284 L 1250 323 Q 1250 335 1238 335 L 812 335 Q 800 335 800 347 L 800 385" marker-end="url(#arrowSlate)"/>
+  <path class="flow line" data-connector="index-to-language-detector" d="M 640 497 L 640 588 Q 640 600 628 600 L 307 600 Q 295 600 295 612 L 295 615" marker-end="url(#arrowSlate)"/>
+  <path class="flow line" data-connector="index-to-korean-processor" d="M 720 497 L 720 588 Q 720 600 708 600 L 632 600 Q 620 600 620 612 L 620 615" marker-end="url(#arrowSlate)"/>
+  <path class="flow line" data-connector="index-to-japanese-processor" d="M 880 497 L 880 580 Q 880 592 892 592 L 928 592 Q 940 592 940 604 L 940 615" marker-end="url(#arrowSlate)"/>
+  <path class="flow line" data-connector="index-to-normalizer" d="M 960 497 L 960 553 Q 960 565 972 565 L 1263 565 Q 1275 565 1275 577 L 1275 615" marker-end="url(#arrowSlate)"/>
+  <path class="flow line" data-connector="index-to-highlighter" d="M 800 497 L 800 715" marker-end="url(#arrowSlate)"/>
+  <path class="flow line" data-connector="highlighter-to-tests" d="M 800 779 L 800 854" marker-end="url(#arrowSlate)"/>
 </svg>

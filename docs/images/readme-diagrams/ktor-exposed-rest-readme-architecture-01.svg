@@ -6,13 +6,13 @@
       <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#64748B" flood-opacity="0.16"/>
     </filter>
     <marker id="arrow-blue" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x">
-      <path d="M1,1 L11,6 L1,11 Z" fill="#3F7D9C" stroke="#3F7D9C" stroke-dasharray="none"/>
+      <path d="M1,1 L11,6 L1,11 Z" fill="#3F7D9C" stroke="#3F7D9C" stroke-dasharray="none" stroke-width="0"/>
     </marker>
     <marker id="arrow-green" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x">
-      <path d="M1,1 L11,6 L1,11 Z" fill="#5F8A54" stroke="#5F8A54" stroke-dasharray="none"/>
+      <path d="M1,1 L11,6 L1,11 Z" fill="#5F8A54" stroke="#5F8A54" stroke-dasharray="none" stroke-width="0"/>
     </marker>
     <marker id="arrow-amber" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x">
-      <path d="M1,1 L11,6 L1,11 Z" fill="#9B7D54" stroke="#9B7D54" stroke-dasharray="none"/>
+      <path d="M1,1 L11,6 L1,11 Z" fill="#9B7D54" stroke="#9B7D54" stroke-dasharray="none" stroke-width="0"/>
     </marker>
     <style>
       .canvas{fill:#FBFCF8}
@@ -45,11 +45,11 @@
   <text class="title" x="800" y="78" text-anchor="middle">Ktor Exposed REST Architecture</text>
   <text class="subtitle" x="800" y="108" text-anchor="middle">PostgreSQL-backed Ktor routes use bluetape4k-exposed-ktor for transaction and error boundaries.</text>
   <g aria-label="connector legend">
-    <path class="line blue marker-blue" data-connector="legend-request-route" d="M511 128 L551 128"/>
+    <path class="line blue marker-blue" data-connector="legend-request-route" d="M511 128 L551 128" marker-end="url(#arrow-blue)"/>
     <text class="legend" x="560" y="132">request route</text>
-    <path class="line green marker-green" data-connector="legend-repository-call" d="M673 128 L713 128"/>
+    <path class="line green marker-green" data-connector="legend-repository-call" d="M673 128 L713 128" marker-end="url(#arrow-green)"/>
     <text class="legend" x="722" y="132">repository call</text>
-    <path class="line amber marker-amber" data-connector="legend-postgresql-jdbc" d="M885 128 L925 128"/>
+    <path class="line amber marker-amber" data-connector="legend-postgresql-jdbc" d="M885 128 L925 128" marker-end="url(#arrow-amber)"/>
     <text class="legend" x="934" y="132">PostgreSQL JDBC</text>
   </g>
 

@@ -2,7 +2,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1180" viewBox="0 0 1320 1180" role="img" aria-label="Kotlin text processing redaction pipeline diagram">
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="0"/></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.6}.lane{fill:#FFF6E8;stroke:#E8C27D;stroke-width:2}.title{font-family:"Architects Daughter";font-size:42px;fill:#172033}.subtitle{font-family:"Comic Mono";font-size:17px;fill:#536473}.laneTitle{font-family:"Architects Daughter";font-size:27px;fill:#2D4050}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#132033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#4F6070}.noteTitle{font-family:"Architects Daughter";font-size:24px;fill:#132033}.noteText{font-family:"Comic Mono";font-size:14px;fill:#4F6070}.line{fill:none;stroke:#4F86C6;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrowBlue)}
     </style>
@@ -46,11 +46,11 @@
     <text class="cardText" x="660" y="905" text-anchor="middle">redacted text, merged spans, language, confidence, no raw matches</text>
   </g>
 
-  <path class="line" data-connector="validate-to-detect" d="M 660 298 L 660 345"/>
-  <path class="line" data-connector="detect-to-find" d="M 660 423 L 660 470"/>
-  <path class="line" data-connector="find-to-merge" d="M 660 548 L 660 595"/>
-  <path class="line" data-connector="merge-to-mask" d="M 660 673 L 660 720"/>
-  <path class="line" data-connector="mask-to-result" d="M 660 798 L 660 845"/>
+  <path class="line" data-connector="validate-to-detect" d="M 660 298 L 660 345" marker-end="url(#arrowBlue)"/>
+  <path class="line" data-connector="detect-to-find" d="M 660 423 L 660 470" marker-end="url(#arrowBlue)"/>
+  <path class="line" data-connector="find-to-merge" d="M 660 548 L 660 595" marker-end="url(#arrowBlue)"/>
+  <path class="line" data-connector="merge-to-mask" d="M 660 673 L 660 720" marker-end="url(#arrowBlue)"/>
+  <path class="line" data-connector="mask-to-result" d="M 660 798 L 660 845" marker-end="url(#arrowBlue)"/>
 
   <g filter="url(#shadow)">
     <rect x="190" y="1038" width="940" height="72" rx="18" fill="#EEF8F3" stroke="#A9D8C6" stroke-width="2"/>

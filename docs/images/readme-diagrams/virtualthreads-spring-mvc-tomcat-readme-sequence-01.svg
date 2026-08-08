@@ -6,9 +6,9 @@
     <style>
       .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:19px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:12px;fill:#546A73}.msg{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.call,.work,.return,.skip{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call)}.work{stroke:#6E8F4F;marker-end:url(#arrow-work)}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret)}.skip{stroke:#B86868;marker-end:url(#arrow-skip)}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.skipLabel{stroke:#D9ABAB}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.skipBadge{fill:#FFF0F0;stroke:#B86868}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.skipText,.badgeText.skipText{fill:#9D4F4F}.alt{fill:#FFF7ED;fill-opacity:.38;stroke:#D08A39;stroke-width:2.2;stroke-dasharray:12 8}.divider{stroke:#D08A39;stroke-width:1.8;stroke-dasharray:9 7;opacity:.7}
     </style>
-    <marker id="arrow-call" viewBox="0 0 12.3077 12.3077" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrow-work" viewBox="0 0 12.3077 12.3077" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrow-ret" viewBox="0 0 12.3077 12.3077" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-call" viewBox="0 0 12.3077 12.3077" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#3F7D9C" stroke-width="0"/></marker>
+    <marker id="arrow-work" viewBox="0 0 12.3077 12.3077" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#6E8F4F" stroke-width="0"/></marker>
+    <marker id="arrow-ret" viewBox="0 0 12.3077 12.3077" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#9B7D54" stroke-width="0"/></marker>
     <marker id="arrow-skip" viewBox="0 0 12.3077 12.3077" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
   </defs>
   <rect x="24" y="24" width="1632" height="1030" rx="20" class="frame"/>
@@ -40,39 +40,39 @@
   <rect x="221.1" y="274" width="247.8" height="34" rx="17" class="label callLabel"/>
   <circle cx="245.1" cy="291" r="13" class="badge callBadge"/><text x="245.1" y="296" text-anchor="middle" class="badgeText callText">1</text>
   <text x="269.1" y="296" class="msg callText">GET /virtual-thread</text>
-  <path d="M 180.0 322 L 510.0 322" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 180.0 322 L 510.0 322" class="call" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-call)"/>
   <rect x="522.4" y="350" width="305.2" height="34" rx="17" class="label callLabel"/>
   <circle cx="546.4" cy="367" r="13" class="badge callBadge"/><text x="546.4" y="372" text-anchor="middle" class="badgeText callText">2</text>
   <text x="570.4" y="372" class="msg callText">dispatch on virtual thread</text>
-  <path d="M 510.0 398 L 840.0 398" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 510.0 398 L 840.0 398" class="call" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-call)"/>
   <rect x="890.0" y="426" width="230.0" height="34" rx="17" class="label workLabel"/>
   <circle cx="914.0" cy="443" r="13" class="badge workBadge"/><text x="914.0" y="448" text-anchor="middle" class="badgeText workText">3</text>
   <text x="938.0" y="448" class="msg workText">use VT executor</text>
-  <path d="M 840.0 474 L 1170.0 474" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 840.0 474 L 1170.0 474" class="work" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-work)"/>
   <rect x="361.5" y="502" width="297.0" height="34" rx="17" class="label callLabel"/>
   <circle cx="385.5" cy="519" r="13" class="badge callBadge"/><text x="385.5" y="524" text-anchor="middle" class="badgeText callText">4</text>
   <text x="409.5" y="524" class="msg callText">GET /virtual-thread/multi</text>
-  <path d="M 180.0 550 L 840.0 550" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 180.0 550 L 840.0 550" class="call" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-call)"/>
   <rect x="868.8" y="578" width="272.4" height="34" rx="17" class="label workLabel"/>
   <circle cx="892.8" cy="595" r="13" class="badge workBadge"/><text x="892.8" y="600" text-anchor="middle" class="badgeText workText">5</text>
   <text x="916.8" y="600" class="msg workText">structuredTaskScopeAll</text>
-  <path d="M 840.0 626 L 1170.0 626" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 840.0 626 L 1170.0 626" class="work" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-work)"/>
   <rect x="1202.9" y="654" width="264.2" height="34" rx="17" class="label workLabel"/>
   <circle cx="1226.9" cy="671" r="13" class="badge workBadge"/><text x="1226.9" y="676" text-anchor="middle" class="badgeText workText">6</text>
   <text x="1250.9" y="676" class="msg workText">run blocking subtasks</text>
-  <path d="M 1170.0 702 L 1500.0 702" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 1170.0 702 L 1500.0 702" class="work" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-work)"/>
   <rect x="382.0" y="730" width="256.0" height="34" rx="17" class="label callLabel"/>
   <circle cx="406.0" cy="747" r="13" class="badge callBadge"/><text x="406.0" y="752" text-anchor="middle" class="badgeText callText">7</text>
   <text x="430.0" y="752" class="msg callText">GET /member or /team</text>
-  <path d="M 180.0 778 L 840.0 778" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 180.0 778 L 840.0 778" class="call" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-call)"/>
   <rect x="1025.6" y="806" width="288.8" height="34" rx="17" class="label workLabel"/>
   <circle cx="1049.6" cy="823" r="13" class="badge workBadge"/><text x="1049.6" y="828" text-anchor="middle" class="badgeText workText">8</text>
   <text x="1073.6" y="828" class="msg workText">JPA / HTTP blocking call</text>
-  <path d="M 840.0 854 L 1500.0 854" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 840.0 854 L 1500.0 854" class="work" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-work)"/>
   <rect x="630.0" y="882" width="420.0" height="34" rx="17" class="label returnLabel"/>
   <circle cx="654.0" cy="899" r="13" class="badge returnBadge"/><text x="654.0" y="904" text-anchor="middle" class="badgeText returnText">9</text>
   <text x="678.0" y="904" class="msg returnText">response without platform-thread pinning</text>
-  <path d="M 1500.0 930 L 180.0 930" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 1500.0 930 L 180.0 930" class="return" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-ret)"/>
   <rect x="90" y="996" width="1500" height="38" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
   <text x="840.0" y="1021" text-anchor="middle" class="footer">Reader contract: ordered calls, branch boundaries, and infrastructure touchpoints stay visible without label overlap.</text>
 </svg>

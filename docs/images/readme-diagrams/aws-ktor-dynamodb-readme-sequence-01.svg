@@ -4,19 +4,19 @@
   <desc id="desc">Sequence diagram for creating, reading, updating, and error mapping an OrderSession through Ktor, service, repository, and DynamoDB.</desc>
   <defs>
     <marker id="seq-blue" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86c6" stroke="#4f86c6" stroke-dasharray="none" style="stroke-dasharray:none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86c6" stroke="#4f86c6" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
     <marker id="seq-green" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#668b4a" stroke="#668b4a" stroke-dasharray="none" style="stroke-dasharray:none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#668b4a" stroke="#668b4a" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
     <marker id="seq-teal" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f9a9b" stroke="#2f9a9b" stroke-dasharray="none" style="stroke-dasharray:none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f9a9b" stroke="#2f9a9b" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
     <marker id="seq-brown" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#a1743f" stroke="#a1743f" stroke-dasharray="none" style="stroke-dasharray:none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#a1743f" stroke="#a1743f" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
     <marker id="seq-red" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#b65d61" stroke="#b65d61" stroke-dasharray="none" style="stroke-dasharray:none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#b65d61" stroke="#b65d61" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
     <style>
       .canvas { fill: #fbfcf8; }
@@ -87,37 +87,37 @@
   <rect class="activation" x="985" y="390" width="16" height="225"/>
   <rect class="activation" x="1212" y="430" width="16" height="112"/>
 
-  <path class="msg blue" d="M 143 250 H 405"/>
+  <path class="msg blue" d="M 143 250 H 405" marker-end="url(#seq-blue)"/>
   <rect class="labelPill pill pill-blue" x="178" y="208" width="218" height="32"/>
   <circle class="badge pill-blue" cx="200" cy="224" r="13"/>
   <text class="label num blue-text" x="196" y="229">1</text>
   <text class="label blue-text" x="220" y="229">POST /dynamodb/order-sessions</text>
 
-  <path class="msg blue" d="M 421 322 H 695"/>
+  <path class="msg blue" d="M 421 322 H 695" marker-end="url(#seq-blue)"/>
   <rect class="labelPill pill pill-blue" x="462" y="280" width="210" height="32"/>
   <circle class="badge pill-blue" cx="484" cy="296" r="13"/>
   <text class="label num blue-text" x="480" y="301">2</text>
   <text class="label blue-text" x="504" y="301">validate request fields</text>
 
-  <path class="msg green" d="M 711 402 H 985"/>
+  <path class="msg green" d="M 711 402 H 985" marker-end="url(#seq-green)"/>
   <rect class="labelPill pill pill-green" x="746" y="360" width="224" height="32"/>
   <circle class="badge pill-green" cx="768" cy="376" r="13"/>
   <text class="label num green-text" x="764" y="381">3</text>
   <text class="label green-text" x="788" y="381">create version=1 session</text>
 
-  <path class="msg green" d="M 1001 452 H 1212"/>
+  <path class="msg green" d="M 1001 452 H 1212" marker-end="url(#seq-green)"/>
   <rect class="labelPill pill pill-green" x="1030" y="410" width="170" height="32"/>
   <circle class="badge pill-green" cx="1052" cy="426" r="13"/>
   <text class="label num green-text" x="1048" y="431">4</text>
   <text class="label green-text" x="1072" y="431">conditional PutItem</text>
 
-  <path class="msg teal return" d="M 1212 520 H 1001"/>
+  <path class="msg teal return" d="M 1212 520 H 1001" marker-end="url(#seq-teal)"/>
   <rect class="labelPill pill pill-teal" x="1014" y="476" width="180" height="32"/>
   <circle class="badge pill-teal" cx="1036" cy="492" r="13"/>
   <text class="label num teal-text" x="1032" y="497">5</text>
   <text class="label teal-text" x="1056" y="497">stored item accepted</text>
 
-  <path class="msg teal return" d="M 985 560 H 421"/>
+  <path class="msg teal return" d="M 985 560 H 421" marker-end="url(#seq-teal)"/>
   <rect class="labelPill pill pill-teal" x="562" y="518" width="210" height="32"/>
   <circle class="badge pill-teal" cx="584" cy="534" r="13"/>
   <text class="label num teal-text" x="580" y="539">6</text>
@@ -130,13 +130,13 @@
   <text class="alt-text" x="112" y="674">duplicate or stale version</text>
   <text class="alt-text" x="112" y="724">missing row</text>
 
-  <path class="msg red" d="M 1001 660 H 1212"/>
+  <path class="msg red" d="M 1001 660 H 1212" marker-end="url(#seq-red)"/>
   <rect class="labelPill pill pill-red" x="1030" y="618" width="170" height="32"/>
   <circle class="badge pill-red" cx="1052" cy="634" r="13"/>
   <text class="label num red-text" x="1048" y="639">7</text>
   <text class="label red-text" x="1072" y="639">condition failed</text>
 
-  <path class="msg brown return" d="M 985 724 H 421"/>
+  <path class="msg brown return" d="M 985 724 H 421" marker-end="url(#seq-brown)"/>
   <rect class="labelPill pill pill-brown" x="560" y="688" width="246" height="32"/>
   <circle class="badge pill-brown" cx="582" cy="704" r="13"/>
   <text class="label num brown-text" x="578" y="709">8</text>

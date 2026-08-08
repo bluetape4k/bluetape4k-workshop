@@ -3,7 +3,9 @@
   <desc id="desc">Sequence showing debounced query search, stale cancellation, and session close handling.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 22.8571 22.8571" refX="8" refY="5" markerWidth="16" markerHeight="16" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x">
-      <path d="M 1 1 L 9 5 L 1 9 z" fill="#314a67" stroke-dasharray="none"/>
+      <path d="M 1 1 L 9 5 L 1 9 z" fill="#2d9d78" stroke-dasharray="none" stroke="#2d9d78" stroke-width="0"/>
+    </marker><marker id="arrow--314a67" viewBox="0 0 22.8571 22.8571" refX="8" refY="5" markerWidth="16" markerHeight="16" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x">
+      <path d="M 1 1 L 9 5 L 1 9 z" fill="#314a67" stroke-dasharray="none" stroke="#314a67" stroke-width="0"/>
     </marker>
     <style>
       .title { font-family: 'Architects Daughter', 'Comic Mono', sans-serif; font-size: 34px; fill: #1f2937; }
@@ -38,27 +40,27 @@
   <path class="lifeline" d="M 769 122 L 769 706"/>
   <path class="lifeline" d="M 981 122 L 981 706"/>
 
-  <path class="call" d="M 133 156 L 557 156"/>
+  <path class="call" d="M 133 156 L 557 156" marker-end="url(#arrow--314a67)"/>
   <rect class="message-label" x="254" y="174" width="182" height="24"/>
   <text class="message" x="345" y="191" text-anchor="middle">query burst emits</text>
 
-  <path class="call" d="M 345 242 L 557 242"/>
+  <path class="call" d="M 345 242 L 557 242" marker-end="url(#arrow--314a67)"/>
   <rect class="message-label" x="374" y="260" width="154" height="24"/>
   <text class="message" x="451" y="277" text-anchor="middle">latest settings</text>
 
-  <path class="call" d="M 557 328 L 769 328"/>
+  <path class="call" d="M 557 328 L 769 328" marker-end="url(#arrow--314a67)"/>
   <rect class="message-label" x="584" y="346" width="158" height="24"/>
   <text class="message" x="663" y="363" text-anchor="middle">start search A</text>
 
-  <path class="call" d="M 133 414 L 557 414"/>
+  <path class="call" d="M 133 414 L 557 414" marker-end="url(#arrow--314a67)"/>
   <rect class="message-label" x="236" y="432" width="218" height="24"/>
   <text class="message" x="345" y="449" text-anchor="middle">newer query supersedes</text>
 
-  <path class="call" d="M 557 500 L 769 500"/>
+  <path class="call" d="M 557 500 L 769 500" marker-end="url(#arrow--314a67)"/>
   <rect class="message-label" x="566" y="518" width="194" height="24"/>
   <text class="message" x="663" y="535" text-anchor="middle">cancel A, start B</text>
 
-  <path class="return" d="M 769 586 L 981 586"/>
+  <path class="return" d="M 769 586 L 981 586" marker-end="url(#arrow)"/>
   <rect class="message-label" x="784" y="604" width="182" height="24"/>
   <text class="message" x="875" y="621" text-anchor="middle">redacted result</text>
 
