@@ -110,8 +110,8 @@ object RedisTestSupport {
 **Commands:**
 
 ~~~bash
-./gradlew :shared:compileKotlin :spring-data:redis-examples:compileTestKotlin --no-daemon
-./gradlew :spring-data:redis-examples:test --no-daemon
+./gradlew :shared:compileKotlin :spring-data-redis-examples:compileTestKotlin --no-daemon
+./gradlew :spring-data-redis-examples:test --no-daemon
 ~~~
 
 **Expected:** 두 compile task가 통과하고 Redis 영향 테스트가 기존과 동일한 컨테이너 프로퍼티로 통과한다. 컨테이너 오류가 나면 병렬 실행을 피하고 첫 실패 로그부터 진단한다.
@@ -157,7 +157,7 @@ git diff --check
 
 ~~~bash
 ./gradlew :shared:test --no-daemon
-./gradlew :spring-data:redis-examples:test --no-daemon
+./gradlew :spring-data-redis-examples:test --no-daemon
 ./gradlew detekt --no-daemon
 ./gradlew :shared:dependencies --configuration testRuntimeClasspath --no-daemon
 ./gradlew projects --no-daemon
