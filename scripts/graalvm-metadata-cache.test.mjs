@@ -45,6 +45,68 @@ test("does not create a cache when Gradle has not initialized one", async () => 
     }
 });
 
+test("removes malformed repository archives and preserves schema-bearing archives", async () => {
+    const gradleHome = await mkdtemp(join(tmpdir(), "graalvm-metadata-cache-archives-"));
+    const metadataRoot = join(
+        gradleHome,
+        "caches",
+        "modules-2",
+        "files-2.1",
+        "org.graalvm.buildtools",
+        "graalvm-reachability-metadata",
+        "1.1.7",
+    );
+    const incompleteArchive = join(
+        metadataRoot,
+        "incomplete-hash",
+        "graalvm-reachability-metadata-1.1.7-repository.zip",
+    );
+    const completeSource = join(gradleHome, "complete-source");
+    const completeArchive = join(
+        metadataRoot,
+        "complete-hash",
+        "graalvm-reachability-metadata-1.1.7-repository.zip",
+    );
+    try {
+        await mkdir(dirname(incompleteArchive), { recursive: true });
+        await writeFile(incompleteArchive, "not a zip archive\n");
+        await mkdir(join(completeSource, "schemas"), { recursive: true });
+        await writeFile(join(completeSource, "schemas", "schema.json"), "{}\n");
+        await mkdir(dirname(completeArchive), { recursive: true });
+        await createZip(completeSource, completeArchive);
+
+        const result = await run(gradleHome);
+
+        assert.equal(result.code, 0, result.stderr);
+        await assert.rejects(access(join(metadataRoot, "incomplete-hash")), { code: "ENOENT" });
+        await access(completeArchive);
+        assert.match(result.stdout, /removed 1 incomplete repository archive/u);
+    } finally {
+        await rm(gradleHome, { recursive: true, force: true });
+    }
+});
+
+function createZip(sourceDirectory, archive) {
+    return new Promise((resolve, reject) => {
+        const child = spawn("zip", ["-q", "-r", archive, "."], {
+            cwd: sourceDirectory,
+            stdio: ["ignore", "pipe", "pipe"],
+        });
+        let stderr = "";
+        child.stderr.on("data", (chunk) => {
+            stderr += chunk;
+        });
+        child.on("error", reject);
+        child.on("close", (code) => {
+            if (code === 0) {
+                resolve();
+            } else {
+                reject(new Error(`zip exited with ${code}: ${stderr}`));
+            }
+        });
+    });
+}
+
 function run(gradleHome) {
     return new Promise((resolve, reject) => {
         const child = spawn("bash", [SCRIPT], {
