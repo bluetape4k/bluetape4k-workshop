@@ -2,11 +2,11 @@
   <title id="title">Job submission, execution, cancellation, and refresh sequence</title>
   <desc id="desc">PostgreSQL-authoritative job flow with loss-tolerant Redis and SSE notification branches.</desc>
   <defs>
-    <marker id="seqArrowBlue" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86a8" stroke="#4f86a8" stroke-dasharray="none"/></marker>
-    <marker id="seqArrowGreen" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5d8c47" stroke="#5d8c47" stroke-dasharray="none"/></marker>
-    <marker id="seqArrowAmber" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b9822d" stroke="#b9822d" stroke-dasharray="none"/></marker>
-    <marker id="seqArrowTeal" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3b8b84" stroke="#3b8b84" stroke-dasharray="none"/></marker>
-    <marker id="seqArrowRed" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#bd5a62" stroke="#bd5a62" stroke-dasharray="none"/></marker>
+    <marker id="seqArrowBlue" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86a8" stroke="#4f86a8" stroke-dasharray="none"/></marker>
+    <marker id="seqArrowGreen" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5d8c47" stroke="#5d8c47" stroke-dasharray="none"/></marker>
+    <marker id="seqArrowAmber" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b9822d" stroke="#b9822d" stroke-dasharray="none"/></marker>
+    <marker id="seqArrowTeal" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3b8b84" stroke="#3b8b84" stroke-dasharray="none"/></marker>
+    <marker id="seqArrowRed" markerWidth="16" markerHeight="16" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#bd5a62" stroke="#bd5a62" stroke-dasharray="none"/></marker>
     <style>
       .frame { fill:#fbfcf8; stroke:#40545d; stroke-width:3; }
       .title { font:700 40px 'Architects Daughter',cursive; fill:#263238; }

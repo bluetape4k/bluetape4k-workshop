@@ -65,27 +65,27 @@
 
   <g class="edge" data-edge="readme-tests-&gt;tenant-policy" data-label="README snippet creates validated scheduling policy">
     <path data-connector="readme-to-policy" class="connector learn" d="M 690 292 L 690 326 Q 690 346 670 346 L 380 346 Q 360 346 360 366 L 360 462"/>
-    <polygon data-connector-head="readme-to-policy" class="arrowHead" points="360,462 352,446 368,446" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    <polygon data-connector-head="readme-to-policy" class="arrowHead" points="360,462 352,446 368,446" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none" data-arrowhead="true" data-role="primary" data-size="14x14" data-tip-direction="positive-x" data-solid-head="true"/>
   </g>
   <g class="edge" data-edge="readme-tests-&gt;lock-namespace" data-label="README snippet demonstrates tenant-scoped lock name">
     <path data-connector="readme-to-namespace" class="connector learn" d="M 810 292 L 810 326 Q 810 346 830 346 L 1120 346 Q 1140 346 1140 366 L 1140 462"/>
-    <polygon data-connector-head="readme-to-namespace" class="arrowHead" points="1140,462 1132,446 1148,446" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    <polygon data-connector-head="readme-to-namespace" class="arrowHead" points="1140,462 1132,446 1148,446" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none" data-arrowhead="true" data-role="primary" data-size="14x14" data-tip-direction="positive-x" data-solid-head="true"/>
   </g>
   <g class="edge" data-edge="tenant-policy-&gt;scheduler-lab" data-label="policy supplies tenants and stale windows">
     <path data-connector="policy-to-scheduler" class="connector domain" d="M 380 558 L 380 602 Q 380 622 400 622 L 730 622 Q 750 622 750 642 L 750 752"/>
-    <polygon data-connector-head="policy-to-scheduler" class="arrowHead" points="750,752 742,736 758,736" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    <polygon data-connector-head="policy-to-scheduler" class="arrowHead" points="750,752 742,736 758,736" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none" data-arrowhead="true" data-role="primary" data-size="14x14" data-tip-direction="positive-x" data-solid-head="true"/>
   </g>
   <g class="edge" data-edge="lock-namespace-&gt;scheduler-lab" data-label="lock planner supplies tenant lock names">
     <path data-connector="namespace-to-scheduler" class="connector domain" d="M 1120 558 L 1120 602 Q 1120 622 1100 622 L 770 622 Q 750 622 750 642 L 750 752"/>
-    <polygon data-connector-head="namespace-to-scheduler" class="arrowHead" points="750,752 742,736 758,736" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    <polygon data-connector-head="namespace-to-scheduler" class="arrowHead" points="750,752 742,736 758,736" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none" data-arrowhead="true" data-role="primary" data-size="14x14" data-tip-direction="positive-x" data-solid-head="true"/>
   </g>
   <g class="edge" data-edge="scheduler-lab-&gt;scheduler-report" data-label="scheduler emits bounded report rows">
     <path data-connector="scheduler-to-report" class="connector state" d="M 690 848 L 690 892 Q 690 912 670 912 L 380 912 Q 360 912 360 932 L 360 1040"/>
-    <polygon data-connector-head="scheduler-to-report" class="arrowHead" points="360,1040 352,1024 368,1024" fill="#2D948C" stroke="#2D948C" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    <polygon data-connector-head="scheduler-to-report" class="arrowHead" points="360,1040 352,1024 368,1024" fill="#2D948C" stroke="#2D948C" stroke-dasharray="none" style="stroke-dasharray:none" data-arrowhead="true" data-role="primary" data-size="14x14" data-tip-direction="positive-x" data-solid-head="true"/>
   </g>
   <g class="edge" data-edge="scheduler-lab-&gt;metric-tags" data-label="scheduler output maps tenant-safe metric tags">
     <path data-connector="scheduler-to-metrics" class="connector metric" d="M 810 848 L 810 892 Q 810 912 830 912 L 1120 912 Q 1140 912 1140 932 L 1140 1040"/>
-    <polygon data-connector-head="scheduler-to-metrics" class="arrowHead" points="1140,1040 1132,1024 1148,1024" fill="#9B7D54" stroke="#9B7D54" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    <polygon data-connector-head="scheduler-to-metrics" class="arrowHead" points="1140,1040 1132,1024 1148,1024" fill="#9B7D54" stroke="#9B7D54" stroke-dasharray="none" style="stroke-dasharray:none" data-arrowhead="true" data-role="primary" data-size="14x14" data-tip-direction="positive-x" data-solid-head="true"/>
   </g>
 
   <rect class="legendBox" x="164" y="1166" width="1172" height="72" rx="16"/>

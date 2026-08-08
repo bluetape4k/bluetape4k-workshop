@@ -2,26 +2,26 @@
   <title id="title">CloudWatch and IMDS Observability Workshop Sequence</title>
   <desc id="desc">Best-practices sequence diagram with numbered calls, transparent alt frame, branch-specific colors, participant roles, lifelines, and activation bars.</desc>
   <defs>
-    <marker id="seqArrowBlue" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86c6" stroke="#4f86c6"/>
+    <marker id="seqArrowBlue" markerWidth="16" markerHeight="16" viewBox="0 0 16 16" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto" data-role="sequence" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86c6" stroke="#4f86c6" stroke-dasharray="none"/>
     </marker>
-    <marker id="seqArrowPurple" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#8a6a3b" stroke="#8a6a3b"/>
+    <marker id="seqArrowPurple" markerWidth="16" markerHeight="16" viewBox="0 0 16 16" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto" data-role="sequence" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#8a6a3b" stroke="#8a6a3b" stroke-dasharray="none"/>
     </marker>
-    <marker id="seqArrowGreen" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#5d8c47" stroke="#5d8c47"/>
+    <marker id="seqArrowGreen" markerWidth="16" markerHeight="16" viewBox="0 0 16 16" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto" data-role="sequence" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#5d8c47" stroke="#5d8c47" stroke-dasharray="none"/>
     </marker>
-    <marker id="seqArrowAmber" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#b9822d" stroke="#b9822d"/>
+    <marker id="seqArrowAmber" markerWidth="16" markerHeight="16" viewBox="0 0 16 16" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto" data-role="sequence" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#b9822d" stroke="#b9822d" stroke-dasharray="none"/>
     </marker>
-    <marker id="seqArrowOrange" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#9a6a2e" stroke="#9a6a2e"/>
+    <marker id="seqArrowOrange" markerWidth="16" markerHeight="16" viewBox="0 0 16 16" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto" data-role="sequence" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#9a6a2e" stroke="#9a6a2e" stroke-dasharray="none"/>
     </marker>
-    <marker id="seqArrowRed" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
+    <marker id="seqArrowRed" markerWidth="16" markerHeight="16" viewBox="0 0 16 16" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto" data-role="sequence" data-tip-direction="positive-x">
       <path d="M 0 0 L 10 5 L 0 10 Z" fill="#bd5a62" stroke="#bd5a62" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
-    <marker id="seqArrowReturn" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2b8f88" stroke="#2b8f88"/>
+    <marker id="seqArrowReturn" markerWidth="16" markerHeight="16" viewBox="0 0 16 16" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto" data-role="sequence" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2b8f88" stroke="#2b8f88" stroke-dasharray="none"/>
     </marker>
     <style>
       .frame { fill: #fbfcf8; stroke: #40545d; stroke-width: 3; rx: 8; }

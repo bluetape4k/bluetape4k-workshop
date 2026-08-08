@@ -3,13 +3,13 @@
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
       <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#23384d" flood-opacity="0.16"/>
     </filter>
-    <marker id="arrow-blue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+    <marker id="arrow-blue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x">
       <path d="M1 1 L13 7 L1 13 Z" fill="#397ca6" stroke="#397ca6" stroke-dasharray="none"/>
     </marker>
-    <marker id="arrow-green" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+    <marker id="arrow-green" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x">
       <path d="M1 1 L13 7 L1 13 Z" fill="#4f8a55" stroke="#4f8a55" stroke-dasharray="none"/>
     </marker>
-    <marker id="arrow-amber" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+    <marker id="arrow-amber" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x">
       <path d="M1 1 L13 7 L1 13 Z" fill="#b67a1d" stroke="#b67a1d" stroke-dasharray="none"/>
     </marker>
     <style>

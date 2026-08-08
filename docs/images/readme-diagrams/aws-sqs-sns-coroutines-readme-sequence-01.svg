@@ -28,11 +28,11 @@
       .branchTitle{font-family:"Comic Mono";font-size:13px;fill:#805B2A}
       .branchPill{fill:#FFFDF8;stroke:#D08A39;stroke-width:1.6}
     </style>
-    <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
-    <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
-    <marker id="arrow-amber" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke="#9B7D54" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
-    <marker id="arrow-red" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke="#B86868" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
-    <marker id="arrow-teal" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2F9D9A" stroke="#2F9D9A" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#4F86C6" stroke="#4F86C6" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke="#9B7D54" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke="#B86868" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-teal" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2F9D9A" stroke="#2F9D9A" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
   </defs>
   <rect x="24" y="24" width="1632" height="892" rx="20" class="frame"/>
   <text x="840" y="76" text-anchor="middle" class="title">SQS SNS Coroutine Messaging Sequence</text>

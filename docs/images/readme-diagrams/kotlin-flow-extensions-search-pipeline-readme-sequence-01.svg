@@ -2,8 +2,8 @@
   <title id="title">Search Pipeline Sequence</title>
   <desc id="desc">Sequence showing debounced query search, stale cancellation, and session close handling.</desc>
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-      <path d="M 1 1 L 9 5 L 1 9 z" fill="#314a67"/>
+    <marker id="arrow" viewBox="0 0 22.8571 22.8571" refX="8" refY="5" markerWidth="16" markerHeight="16" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x">
+      <path d="M 1 1 L 9 5 L 1 9 z" fill="#314a67" stroke-dasharray="none"/>
     </marker>
     <style>
       .title { font-family: 'Architects Daughter', 'Comic Mono', sans-serif; font-size: 34px; fill: #1f2937; }

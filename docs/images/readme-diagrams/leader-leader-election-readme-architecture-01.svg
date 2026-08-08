@@ -1,86 +1,85 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1894.4" height="760" viewBox="0 0 1894.4 760" role="img" aria-label="Leader election workshop architecture diagram">
   <defs>
-    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
-    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrowRed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#DC2626" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16" /></filter>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" /></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" /></marker>
+    <marker id="arrowAmber" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" /></marker>
+    <marker id="arrowRed" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#DC2626" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" /></marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:23px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.redisText{font-family:"Architects Daughter";font-size:26px;fill:#102033}
     </style>
   </defs>
-  <rect class="canvas" width="1894.4" height="760"/>
-  <rect class="frame" x="30.72" y="24" width="1832.96" height="712" rx="24"/>  <text class="title" x="947.2" y="66" text-anchor="middle">Redis-backed leader election</text>  <text class="subtitle" x="947.2" y="94" text-anchor="middle">Every Spring Boot instance schedules the same jobs, but Redis-backed electors let only the elected instance run each job body.</text>
+  <rect class="canvas" width="1894.4" height="760" />
+  <rect class="frame" x="30.72" y="24" width="1832.96" height="712" rx="24" />  <text class="title" x="947.2" y="66" text-anchor="middle">Redis-backed leader election</text>  <text class="subtitle" x="947.2" y="94" text-anchor="middle">Every Spring Boot instance schedules the same jobs, but Redis-backed electors let only the elected instance run each job body.</text>
 
-  <rect class="layer" x="92.16" y="132" width="440.32" height="504" rx="18"/>
+  <rect class="layer" x="92.16" y="132" width="440.32" height="504" rx="18" />
   <text class="layerLabel" x="128" y="168">Spring Boot instance</text>
   <g filter="url(#shadow)">
-    <rect x="143.36" y="210" width="337.92" height="108" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="2.176"/>
+    <rect x="143.36" y="210" width="337.92" height="108" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="2.176" />
     <text class="cardTitle" x="312.32" y="242" text-anchor="middle">Leader Election</text>
     <text class="cardTitle" x="312.32" y="270" text-anchor="middle">Config</text>
     <text class="cardText" x="312.32" y="298" text-anchor="middle">RedisClient + connections</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="143.36" y="364" width="337.92" height="118" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="2.176"/>
+    <rect x="143.36" y="364" width="337.92" height="118" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="2.176" />
     <text class="cardTitle" x="312.32" y="396" text-anchor="middle">Leader Scheduled</text>
     <text class="cardTitle" x="312.32" y="424" text-anchor="middle">Job</text>
     <text class="cardText" x="312.32" y="452" text-anchor="middle">one try/catch per job</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="143.36" y="528" width="337.92" height="82" rx="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="2.176"/>
+    <rect x="143.36" y="528" width="337.92" height="82" rx="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="2.176" />
     <text class="cardTitle" x="312.32" y="554" text-anchor="middle">Suspend Leader</text>
     <text class="cardTitle" x="312.32" y="582" text-anchor="middle">Service</text>
   </g>
 
-  <rect class="layer" x="588.8" y="132" width="499.2" height="504" rx="18"/>
+  <rect class="layer" x="588.8" y="132" width="499.2" height="504" rx="18" />
   <text class="layerLabel" x="624.64" y="168">Leader workload</text>
   <g filter="url(#shadow)">
-    <rect x="646.4" y="226" width="384" height="116" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="2.176"/>
+    <rect x="646.4" y="226" width="384" height="116" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="2.176" />
     <text class="cardTitle" x="838.4" y="266" text-anchor="middle">LeaderGuardedJob</text>
     <text class="cardText" x="838.4" y="294" text-anchor="middle">unique lockName per bean</text>
     <text class="cardText" x="838.4" y="318" text-anchor="middle">execute only on leader</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="646.4" y="396" width="384" height="142" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="2.176"/>
+    <rect x="646.4" y="396" width="384" height="142" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="2.176" />
     <text class="cardTitle" x="838.4" y="438" text-anchor="middle">Example jobs</text>
     <text class="cardText" x="838.4" y="468" text-anchor="middle">CacheWarmupJob</text>
     <text class="cardText" x="838.4" y="492" text-anchor="middle">StaleWorkflowCleanupJob</text>
     <text class="cardText" x="838.4" y="516" text-anchor="middle">LockAssert + LockExtender</text>
   </g>
 
-  <rect class="layer" x="1144.32" y="132" width="322.56" height="504" rx="18"/>
+  <rect class="layer" x="1144.32" y="132" width="322.56" height="504" rx="18" />
   <text class="layerLabel" x="1180.16" y="168">bluetape4k leader</text>
   <g filter="url(#shadow)">
-    <rect x="1190.4" y="226" width="230.4" height="116" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="2.176"/>
+    <rect x="1190.4" y="226" width="230.4" height="116" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="2.176" />
     <text class="cardTitle" x="1305.6" y="258" text-anchor="middle">Listening</text>
     <text class="cardTitle" x="1305.6" y="286" text-anchor="middle">Elector</text>
     <text class="cardText" x="1305.6" y="314" text-anchor="middle">events + listeners</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="1190.4" y="398" width="230.4" height="116" rx="16" fill="#EEF2FF" stroke="#6366F1" stroke-width="2.176"/>
+    <rect x="1190.4" y="398" width="230.4" height="116" rx="16" fill="#EEF2FF" stroke="#6366F1" stroke-width="2.176" />
     <text class="cardTitle" x="1305.6" y="430" text-anchor="middle">Suspend</text>
     <text class="cardTitle" x="1305.6" y="458" text-anchor="middle">Elector</text>
     <text class="cardText" x="1305.6" y="486" text-anchor="middle">dedicated connection</text>
   </g>
   <g filter="url(#shadow)">
-    <rect x="1190.4" y="548" width="230.4" height="62" rx="16" fill="#FEF2F2" stroke="#DC2626" stroke-width="2.176"/>
+    <rect x="1190.4" y="548" width="230.4" height="62" rx="16" fill="#FEF2F2" stroke="#DC2626" stroke-width="2.176" />
     <text class="cardTitle" x="1305.6" y="587" text-anchor="middle">Event Listener</text>
   </g>
 
-  <rect class="layer" x="1523.2" y="132" width="279.04" height="504" rx="18"/>
+  <rect class="layer" x="1523.2" y="132" width="279.04" height="504" rx="18" />
   <text class="layerLabel" x="1559.04" y="168">Runtime store</text>
   <g filter="url(#shadow)">
-    <rect x="1569.28" y="298" width="186.88" height="162" rx="16" fill="#FFF1F2" stroke="#DC2626" stroke-width="2.304"/><image data-bluetape4k-icon="redis" data-source="docs/icons/redis/redis-icon.svg" x="1640" y="326" width="48" height="48" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBoZWlnaHQ9IjY0IiB2aWV3Qm94PSIwIDAgMzIgMzIiIHdpZHRoPSI2NCI+PGcgdHJhbnNmb3JtPSJtYXRyaXgoLjg0ODMyNyAwIDAgLjg0ODMyNyAtNy44ODM1NzMgLTkuNDQ5NjkxKSI+PHVzZSB4bGluazpocmVmPSIjQiIgZmlsbD0iI2E0MWUxMSIvPjxwYXRoIGQ9Ik00NS41MzYgMzQuOTVjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTRzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2LTIuMDQtMS42MTMtLjA3Ny0yLjM4MmwxNS4zMzItNS45MzZjMi4zMzItLjgzNiAzLjE0LS44NjcgNS4xMjYtLjE0UzQzLjU1IDMxLjg3IDQ1LjUxIDMyLjZzMi4wMzcgMS4zMS4wMjQgMi4zNnoiIGZpbGw9IiNkODJjMjAiLz48dXNlIHhsaW5rOmhyZWY9IiNCIiB5PSItNi4yMTgiIGZpbGw9IiNhNDFlMTEiLz48dXNlIHhsaW5rOmhyZWY9IiNDIiBmaWxsPSIjZDgyYzIwIi8+PHBhdGggZD0iTTQ1LjUzNiAyNi4wOThjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTVzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2Yy0xLS40NzgtMS41MjQtLjg4LTEuNTI0LTEuMjZWMjEuNTVzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6IiBmaWxsPSIjYTQxZTExIi8+PHVzZSB4bGluazpocmVmPSIjQyIgeT0iLTYuNDQ5IiBmaWxsPSIjZDgyYzIwIi8+PGcgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTI5LjA5NiAyMC43MTJsLTEuMTgyLTEuOTY1LTMuNzc0LS4zNCAyLjgxNi0xLjAxNi0uODQ1LTEuNTYgMi42MzYgMS4wMyAyLjQ4Ni0uODE0LS42NzIgMS42MTIgMi41MzQuOTUtMy4yNjguMzR6TTIyLjggMjQuNjI0bDguNzQtMS4zNDItMi42NCAzLjg3MnoiLz48ZWxsaXBzZSBjeD0iMjAuNDQ0IiByeD0iNC42NzIiIHJ5PSIxLjgxMSIgY3k9IjIxLjQwMiIvPjwvZz48cGF0aCBkPSJNNDIuMTMyIDIxLjEzOGwtNS4xNyAyLjA0Mi0uMDA0LTQuMDg3eiIgZmlsbD0iIzdhMGMwMCIvPjxwYXRoIGQ9Ik0zNi45NjMgMjMuMThsLS41Ni4yMi01LjE2Ni0yLjA0MiA1LjcyMy0yLjI2NHoiIGZpbGw9IiNhZDIxMTUiLz48L2c+PGRlZnMgPjxwYXRoIGlkPSJCIiBkPSJNNDUuNTM2IDM4Ljc2NGMtMi4wMTMgMS4wNS0xMi40NCA1LjMzNy0xNC42NiA2LjQ5NHMtMy40NTMgMS4xNDYtNS4yMDcuMzA4LTEyLjg1LTUuMzItMTQuODUtNi4yNzZjLTEtLjQ3OC0xLjUyNC0uODgtMS41MjQtMS4yNnYtMy44MTNzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6Ii8+PHBhdGggaWQ9IkMiIGQ9Ik00NS41MzYgMjguNzMzYy0yLjAxMyAxLjA1LTEyLjQ0IDUuMzM3LTE0LjY2IDYuNDk0cy0zLjQ1MyAxLjE0Ni01LjIwNy4zMDgtMTIuODUtNS4zMi0xNC44NS02LjI3Ni0yLjA0LTEuNjEzLS4wNzctMi4zODJsMTUuMzMyLTUuOTM1YzIuMzMyLS44MzcgMy4xNC0uODY3IDUuMTI2LS4xNHMxMi4zNSA0Ljg1MyAxNC4zMTIgNS41NyAyLjAzNyAxLjMxLjAyNCAyLjM2eiIvPjwvZGVmcz48L3N2Zz4=" preserveAspectRatio="xMidYMid meet"/>
+    <rect x="1569.28" y="298" width="186.88" height="162" rx="16" fill="#FFF1F2" stroke="#DC2626" stroke-width="2.304" /><image data-bluetape4k-icon="redis" data-source="docs/icons/redis/redis-icon.svg" x="1640" y="326" width="48" height="48" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBoZWlnaHQ9IjY0IiB2aWV3Qm94PSIwIDAgMzIgMzIiIHdpZHRoPSI2NCI+PGcgdHJhbnNmb3JtPSJtYXRyaXgoLjg0ODMyNyAwIDAgLjg0ODMyNyAtNy44ODM1NzMgLTkuNDQ5NjkxKSI+PHVzZSB4bGluazpocmVmPSIjQiIgZmlsbD0iI2E0MWUxMSIvPjxwYXRoIGQ9Ik00NS41MzYgMzQuOTVjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTRzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2LTIuMDQtMS42MTMtLjA3Ny0yLjM4MmwxNS4zMzItNS45MzZjMi4zMzItLjgzNiAzLjE0LS44NjcgNS4xMjYtLjE0UzQzLjU1IDMxLjg3IDQ1LjUxIDMyLjZzMi4wMzcgMS4zMS4wMjQgMi4zNnoiIGZpbGw9IiNkODJjMjAiLz48dXNlIHhsaW5rOmhyZWY9IiNCIiB5PSItNi4yMTgiIGZpbGw9IiNhNDFlMTEiLz48dXNlIHhsaW5rOmhyZWY9IiNDIiBmaWxsPSIjZDgyYzIwIi8+PHBhdGggZD0iTTQ1LjUzNiAyNi4wOThjLTIuMDEzIDEuMDUtMTIuNDQgNS4zMzctMTQuNjYgNi40OTVzLTMuNDUzIDEuMTQ2LTUuMjA3LjMwOC0xMi44NS01LjMyLTE0Ljg1LTYuMjc2Yy0xLS40NzgtMS41MjQtLjg4LTEuNTI0LTEuMjZWMjEuNTVzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6IiBmaWxsPSIjYTQxZTExIi8+PHVzZSB4bGluazpocmVmPSIjQyIgeT0iLTYuNDQ5IiBmaWxsPSIjZDgyYzIwIi8+PGcgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTI5LjA5NiAyMC43MTJsLTEuMTgyLTEuOTY1LTMuNzc0LS4zNCAyLjgxNi0xLjAxNi0uODQ1LTEuNTYgMi42MzYgMS4wMyAyLjQ4Ni0uODE0LS42NzIgMS42MTIgMi41MzQuOTUtMy4yNjguMzR6TTIyLjggMjQuNjI0bDguNzQtMS4zNDItMi42NCAzLjg3MnoiLz48ZWxsaXBzZSBjeD0iMjAuNDQ0IiByeD0iNC42NzIiIHJ5PSIxLjgxMSIgY3k9IjIxLjQwMiIvPjwvZz48cGF0aCBkPSJNNDIuMTMyIDIxLjEzOGwtNS4xNyAyLjA0Mi0uMDA0LTQuMDg3eiIgZmlsbD0iIzdhMGMwMCIvPjxwYXRoIGQ9Ik0zNi45NjMgMjMuMThsLS41Ni4yMi01LjE2Ni0yLjA0MiA1LjcyMy0yLjI2NHoiIGZpbGw9IiNhZDIxMTUiLz48L2c+PGRlZnMgPjxwYXRoIGlkPSJCIiBkPSJNNDUuNTM2IDM4Ljc2NGMtMi4wMTMgMS4wNS0xMi40NCA1LjMzNy0xNC42NiA2LjQ5NHMtMy40NTMgMS4xNDYtNS4yMDcuMzA4LTEyLjg1LTUuMzItMTQuODUtNi4yNzZjLTEtLjQ3OC0xLjUyNC0uODgtMS41MjQtMS4yNnYtMy44MTNzMTQuNDQ3LTMuMTQ1IDE2Ljc4LTMuOTgyIDMuMTQtLjg2NyA1LjEyNi0uMTQgMTMuODUzIDIuODY4IDE1LjgxNCAzLjU4N3YzLjc2YzAgLjM3Ny0uNDUyLjgtMS40NzcgMS4zMjR6Ii8+PHBhdGggaWQ9IkMiIGQ9Ik00NS41MzYgMjguNzMzYy0yLjAxMyAxLjA1LTEyLjQ0IDUuMzM3LTE0LjY2IDYuNDk0cy0zLjQ1MyAxLjE0Ni01LjIwNy4zMDgtMTIuODUtNS4zMi0xNC44NS02LjI3Ni0yLjA0LTEuNjEzLS4wNzctMi4zODJsMTUuMzMyLTUuOTM1YzIuMzMyLS44MzcgMy4xNC0uODY3IDUuMTI2LS4xNHMxMi4zNSA0Ljg1MyAxNC4zMTIgNS41NyAyLjAzNyAxLjMxLjAyNCAyLjM2eiIvPjwvZGVmcz48L3N2Zz4=" preserveAspectRatio="xMidYMid meet" />
     <text class="redisText" x="1662.72" y="428" text-anchor="middle">Redis</text>
     <text class="cardText" x="1662.72" y="452" text-anchor="middle">SET NX EX lock</text>
   </g>
 
-  <path class="line" d="M 481.28 423 L 646.4 284" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 838.4 342 L 838.4 396" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 481.28 423 L 537.6 423 Q 552.96 423 552.96 433 L 552.96 578 Q 552.96 588 563.2 588 L 1139.2 588 Q 1123.84 588 1123.84 578 L 1123.84 294 Q 1123.84 284 1164.8 284 L 1190.4 284" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 481.28 569 L 512 569 Q 552.96 569 552.96 579 L 552.96 608 Q 552.96 618 537.6 618 L 1139.2 618 Q 1123.84 618 1123.84 608 L 1123.84 466 Q 1123.84 456 1164.8 456 L 1190.4 456" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1420.8 284 L 1569.28 379" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1420.8 456 L 1569.28 379" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1420.8 284 L 1434.88 284 Q 1446.4 284 1446.4 293 L 1446.4 570 Q 1446.4 579 1434.88 579 L 1420.8 579" stroke="#DC2626" marker-end="url(#arrowRed)" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 481.28 423 L 646.4 284" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round" />
+  <path class="line" d="M 838.4 342 L 838.4 396" stroke="#C47A12" marker-end="url(#arrowAmber)" stroke-linecap="round" stroke-linejoin="round" />
+  <path class="line" d="M 481.28 423 L 537.6 423 Q 552.96 423 552.96 433 L 552.96 578 Q 552.96 588 563.2 588 L 1139.2 588 Q 1123.84 588 1123.84 578 L 1123.84 294 Q 1123.84 284 1164.8 284 L 1190.4 284" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round" />
+  <path class="line" d="M 481.28 569 L 512 569 Q 552.96 569 552.96 579 L 552.96 608 Q 552.96 618 537.6 618 L 1139.2 618 Q 1123.84 618 1123.84 608 L 1123.84 466 Q 1123.84 456 1164.8 456 L 1190.4 456" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round" />
+  <path class="line" d="M 1420.8 284 L 1569.28 379" stroke="#16A34A" marker-end="url(#arrowGreen)" stroke-linecap="round" stroke-linejoin="round" />
+  <path class="line" d="M 1420.8 456 L 1569.28 379" stroke="#2563EB" marker-end="url(#arrowBlue)" stroke-linecap="round" stroke-linejoin="round" />
+  <path class="line" d="M 1420.8 284 L 1434.88 284 Q 1446.4 284 1446.4 293 L 1446.4 570 Q 1446.4 579 1435.8 579 L 1420.8 579" stroke="#DC2626" marker-end="url(#arrowRed)" stroke-linecap="round" stroke-linejoin="round" />
 </svg>

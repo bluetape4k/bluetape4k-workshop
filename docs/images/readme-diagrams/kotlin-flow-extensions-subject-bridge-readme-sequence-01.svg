@@ -3,16 +3,16 @@
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
       <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#8aa0b8" flood-opacity="0.22"/>
     </filter>
-    <marker id="arrow-blue" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14">
+    <marker id="arrow-blue" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="12" refY="7" orient="auto" viewBox="0 0 16 16" data-role="sequence" data-tip-direction="positive-x">
       <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f7ed8" stroke="#2f7ed8" stroke-width="1" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
-    <marker id="arrow-green" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14">
+    <marker id="arrow-green" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="12" refY="7" orient="auto" viewBox="0 0 16 16" data-role="sequence" data-tip-direction="positive-x">
       <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f9e44" stroke="#2f9e44" stroke-width="1" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
-    <marker id="arrow-orange" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14">
+    <marker id="arrow-orange" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="12" refY="7" orient="auto" viewBox="0 0 16 16" data-role="sequence" data-tip-direction="positive-x">
       <path d="M 1 1 L 13 7 L 1 13 Z" fill="#d97706" stroke="#d97706" stroke-width="1" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
-    <marker id="arrow-purple" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14">
+    <marker id="arrow-purple" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="12" refY="7" orient="auto" viewBox="0 0 16 16" data-role="sequence" data-tip-direction="positive-x">
       <path d="M 1 1 L 13 7 L 1 13 Z" fill="#8b5cf6" stroke="#8b5cf6" stroke-width="1" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
     <style>
