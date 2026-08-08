@@ -39,6 +39,7 @@ case "${1:-help}" in
       :image-processing-advanced-workflow:test \
       :image-processing-profile-image-moderation:test \
       :image-processing-ocr-api:test \
+      :image-processing-barcode-api:test \
       :aws-cloudwatch-imds-observability:test \
       :aws-eventbridge-scheduler:test \
       :aws-s3-vectors-access-grants:test \
@@ -303,6 +304,19 @@ case "${1:-help}" in
       fi
     done
     [ "$stale" -eq 0 ] && echo "No stale refs found." || echo "WARNING: $stale stale ref(s) found."
+
+    echo ""
+    echo "=== Required workshop module registration ==="
+    missing_modules=0
+    for module in image-processing/barcode-api; do
+      for required_file in build.gradle.kts README.md README.ko.md; do
+        if [ ! -f "$module/$required_file" ]; then
+          echo "MISSING: $module/$required_file"
+          missing_modules=$((missing_modules + 1))
+        fi
+      done
+    done
+    [ "$missing_modules" -eq 0 ] && echo "Required workshop modules are registered." || echo "WARNING: $missing_modules required module file(s) missing."
 
     echo ""
     echo "=== README broken image links ==="

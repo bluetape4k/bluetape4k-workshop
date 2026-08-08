@@ -22,9 +22,11 @@ import io.bluetape4k.graph.model.GraphEdge
 import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.model.GraphVertex
 import io.bluetape4k.graph.repository.GraphOperations
+import io.bluetape4k.graph.repository.DEFAULT_GRAPH_EXPORT_CHUNK_SIZE
 import io.bluetape4k.graph.tinkerpop.TinkerGraphOperations
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotNull
+import io.bluetape4k.support.requirePositiveNumber
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
@@ -38,6 +40,10 @@ import kotlin.io.path.isRegularFile
  * 정점 ID와 누락된 간선 endpoint는 조기 실패합니다. GraphML도 지원하지 않는
  * 구조를 조용히 건너뛰지 않고 거부합니다.
  *
+ * [exportChunkSize]는 Graph 0.6.0 chunk-aware exporter가 repository에서 한 번에
+ * 읽을 최대 레코드 수입니다. 작은 값으로 설정하면 bounded export 동작을 로컬에서
+ * 확인할 수 있고, 기본값은 library의 [DEFAULT_GRAPH_EXPORT_CHUNK_SIZE]입니다.
+ *
  * 예:
  *
  * ```kotlin
@@ -48,7 +54,19 @@ import kotlin.io.path.isRegularFile
  */
 class GraphIoPipeline(
     private val operations: GraphOperations,
+    private val exportChunkSize: Int = DEFAULT_GRAPH_EXPORT_CHUNK_SIZE,
 ) {
+
+    init {
+        exportChunkSize.requirePositiveNumber("exportChunkSize")
+    }
+
+    private val exportOptions: GraphExportOptions
+        get() = GraphExportOptions(
+            vertexLabels = vertexLabels,
+            edgeLabels = edgeLabels,
+            exportChunkSize = exportChunkSize,
+        )
 
     /**
      * 결정적인 CSV 파일에서 정점과 간선을 가져옵니다.
@@ -208,11 +226,6 @@ class GraphIoPipeline(
             onDuplicateVertexId = DuplicateVertexPolicy.FAIL,
             onMissingEdgeEndpoint = MissingEndpointPolicy.FAIL,
             preserveExternalIdProperty = EXTERNAL_ID_PROPERTY,
-        )
-
-        private val exportOptions = GraphExportOptions(
-            vertexLabels = vertexLabels,
-            edgeLabels = edgeLabels,
         )
 
         private val graphMlImportOptions = GraphMlImportOptions(

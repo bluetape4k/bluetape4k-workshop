@@ -53,7 +53,7 @@ class GraphIoPipelineTest {
     @Test
     fun `exports and imports Jackson3 NDJSON round trip`(@TempDir tempDir: Path) {
         TinkerGraphOperations().use { sourceOps ->
-            val source = GraphIoPipeline(sourceOps)
+            val source = GraphIoPipeline(sourceOps, exportChunkSize = 2)
             source.importCsv(fixture("vertices.csv"), fixture("edges.csv"))
 
             val target = inside(tempDir, "graph.ndjson")
@@ -74,6 +74,15 @@ class GraphIoPipelineTest {
             }
         }
         assertTempOutputs(tempDir, setOf("graph.ndjson"))
+    }
+
+    @Test
+    fun `rejects a non-positive graph export chunk size`() {
+        TinkerGraphOperations().use { ops ->
+            assertFailsWith<IllegalArgumentException> {
+                GraphIoPipeline(ops, exportChunkSize = 0)
+            }
+        }
     }
 
     @Test

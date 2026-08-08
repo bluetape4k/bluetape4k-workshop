@@ -52,7 +52,7 @@ spring:
 |---|---|---|---|
 | `RedisClusterServer.Launcher.redisCluster` | `bluetape4k-testcontainers` | `RedisClusterApplication` companion | Testcontainers Redis Cluster singleton that automatically starts and stops 6 nodes (3 masters + 3 replicas) |
 | `Launcher.LettuceLib.clientResources(redisCluster)` | `bluetape4k-testcontainers` | `RedisClusterApplication.lettuceClientResource()` | One-step creation of Lettuce `ClientResources` matched to container ports |
-| `LettuceClients` / `LettuceLongCodec` / `awaitSuspending()` | `bluetape4k-lettuce` | `Bluetape4kLettuceUsageTest` | Verifies typed codecs and coroutine-friendly async waiting on low-level Redis paths |
+| `LettuceClients` / `LettuceIntCodec` / `LettuceLongCodec` / `awaitSuspending()` | `bluetape4k-lettuce` | `Bluetape4kLettuceUsageTest` | Verifies 32-bit/64-bit typed codecs and coroutine-friendly async waiting on low-level Redis paths |
 | `KLoggingChannel` | `bluetape4k-logging` | `RedisClusterApplication` companion, `NumberService` companion, `AbstractRedisClusterTest` companion | Structured logging with coroutine MDC context |
 | `Fakers.faker` / `Fakers.fixedString` | `bluetape4k-junit5` | `AbstractRedisClusterTest` | Generates reproducible random keys and values |
 | `bluetape4k-core` — `toByteArray()` / `toInt()` | `bluetape4k-core` | `NumberService` | Int-to-ByteArray conversion utilities used in binary cluster commands |
@@ -129,7 +129,7 @@ fun multiplyAndSave(number: Int) {
 ## Lettuce boundary
 
 Spring Data Redis `clusterConnection` is responsible for proving Redis Cluster behavior.
-`bluetape4k-lettuce` verifies typed codecs and the coroutine-friendly async bridge in separate low-level tests using `LettuceClients`, `LettuceLongCodec`, and `awaitSuspending()`.
+`bluetape4k-lettuce` verifies the coroutine-friendly async bridge with separate low-level round trips: `LettuceLongCodec` preserves 64-bit values and `LettuceIntCodec` preserves 32-bit values through the matching typed commands.
 
 ## Cluster Slot Distribution
 

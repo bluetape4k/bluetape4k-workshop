@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.redis.cluster.basic
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.redis.lettuce.LettuceClients
 import io.bluetape4k.redis.lettuce.awaitSuspending
+import io.bluetape4k.redis.lettuce.codec.LettuceIntCodec
 import io.bluetape4k.redis.lettuce.codec.LettuceLongCodec
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.workshop.redis.cluster.AbstractRedisClusterTest
@@ -22,6 +23,22 @@ class Bluetape4kLettuceUsageTest : AbstractRedisClusterTest() {
 
             commands.set(key, 42L).awaitSuspending() shouldBeEqualTo "OK"
             commands.get(key).awaitSuspending() shouldBeEqualTo 42L
+        } finally {
+            LettuceClients.shutdown(client)
+        }
+    }
+
+    @Test
+    fun `bluetape4k lettuce client supports typed int async round trip`() = runSuspendIO {
+        val redis = RedisServer.Launcher.redis
+        val client = LettuceClients.clientOf(redis.url)
+
+        try {
+            val commands = LettuceClients.asyncCommands(client, LettuceIntCodec)
+            val key = "lettuce-int:${randomKey()}"
+
+            commands.set(key, 42).awaitSuspending() shouldBeEqualTo "OK"
+            commands.get(key).awaitSuspending() shouldBeEqualTo 42
         } finally {
             LettuceClients.shutdown(client)
         }
