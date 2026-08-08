@@ -47,22 +47,22 @@
       <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#263238" flood-opacity="0.10"/>
     </filter>
     <marker id="arrowCall" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="sequence" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f8fda" stroke="#4f8fda" stroke-dasharray="none" style="stroke-dasharray:none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f8fda" stroke="#4f8fda" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
     <marker id="arrowState" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="sequence" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#8a63d2" stroke="#8a63d2" stroke-dasharray="none" style="stroke-dasharray:none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#8a63d2" stroke="#8a63d2" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
     <marker id="arrowDetect" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="sequence" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2fa36f" stroke="#2fa36f" stroke-dasharray="none" style="stroke-dasharray:none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2fa36f" stroke="#2fa36f" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
     <marker id="arrowScan" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="sequence" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#c28518" stroke="#c28518" stroke-dasharray="none" style="stroke-dasharray:none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#c28518" stroke="#c28518" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
     <marker id="arrowSuccess" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="sequence" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#24928d" stroke="#24928d" stroke-dasharray="none" style="stroke-dasharray:none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#24928d" stroke="#24928d" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
     <marker id="arrowError" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="sequence" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#d95c55" stroke="#d95c55" stroke-dasharray="none" style="stroke-dasharray:none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#d95c55" stroke="#d95c55" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
   </defs>
 
@@ -114,19 +114,19 @@
     <circle class="badge num" cx="238" cy="293" r="14" stroke="#4f8fda"/>
     <text class="badgeText num" x="238" y="293" fill="#2b6fb5">1</text>
     <text class="message" x="266" y="298">POST /api/moderation/analyze</text>
-    <path class="call" stroke="#4f8fda" d="M 161 324 L 413 324"/>
+    <path class="call" stroke="#4f8fda" d="M 161 324 L 413 324" marker-end="url(#arrowCall)"/>
 
     <rect class="label labelPill" x="458" y="344" width="306" height="38"/>
     <circle class="badge num" cx="480" cy="363" r="14" stroke="#4f8fda"/>
     <text class="badgeText num" x="480" y="363" fill="#2b6fb5">2</text>
     <text class="message" x="508" y="368">service.analyze(request.text)</text>
-    <path class="call" stroke="#4f8fda" d="M 422 394 L 667 394"/>
+    <path class="call" stroke="#4f8fda" d="M 422 394 L 667 394" marker-end="url(#arrowCall)"/>
 
     <rect class="label labelPill" x="542" y="426" width="314" height="38"/>
     <circle class="badge num" cx="564" cy="445" r="14" stroke="#8a63d2"/>
     <text class="badgeText num" x="564" y="445" fill="#7049bd">3</text>
     <text class="message" x="592" y="450">validate blank + payload size</text>
-    <path class="state" stroke="#8a63d2" d="M 676 482 L 758 482 L 758 526 L 676 526"/>
+    <path class="state" stroke="#8a63d2" d="M 676 482 L 758 482 L 758 526 L 676 526" marker-end="url(#arrowState)"/>
   </g>
 
   <g id="alt-valid-or-error">
@@ -141,49 +141,49 @@
     <circle class="badge num" cx="744" cy="583" r="14" stroke="#2fa36f"/>
     <text class="badgeText num" x="744" y="583" fill="#1f7e55">4</text>
     <text class="message" x="772" y="588">detectLanguageOf(text)</text>
-    <path class="detect" stroke="#2fa36f" d="M 676 612 L 923 612"/>
+    <path class="detect" stroke="#2fa36f" d="M 676 612 L 923 612" marker-end="url(#arrowDetect)"/>
 
     <rect class="label labelPill" x="704" y="644" width="348" height="38"/>
     <circle class="badge num" cx="726" cy="663" r="14" stroke="#2fa36f"/>
     <text class="badgeText num" x="726" y="663" fill="#1f7e55">5</text>
     <text class="message" x="754" y="668">language + confidence snapshot</text>
-    <path class="return detect" stroke="#2fa36f" d="M 914 692 L 667 692"/>
+    <path class="return detect" stroke="#2fa36f" d="M 914 692 L 667 692" marker-end="url(#arrowDetect)"/>
 
     <rect class="label labelPill" x="888" y="724" width="310" height="38"/>
     <circle class="badge num" cx="910" cy="743" r="14" stroke="#c28518"/>
     <text class="badgeText num" x="910" y="743" fill="#9a650d">6</text>
     <text class="message" x="938" y="748">parseText for blockwords</text>
-    <path class="scan" stroke="#c28518" d="M 676 772 L 1179 772"/>
+    <path class="scan" stroke="#c28518" d="M 676 772 L 1179 772" marker-end="url(#arrowScan)"/>
 
     <rect class="label labelPill" x="864" y="804" width="330" height="38"/>
     <circle class="badge num" cx="886" cy="823" r="14" stroke="#c28518"/>
     <text class="badgeText num" x="886" y="823" fill="#9a650d">7</text>
     <text class="message" x="914" y="828">matches + masked text</text>
-    <path class="return scan" stroke="#c28518" d="M 1170 852 L 667 852"/>
+    <path class="return scan" stroke="#c28518" d="M 1170 852 L 667 852" marker-end="url(#arrowScan)"/>
 
     <rect class="label labelPill" x="452" y="884" width="286" height="38"/>
     <circle class="badge num" cx="474" cy="903" r="14" stroke="#24928d"/>
     <text class="badgeText num" x="474" y="903" fill="#17736e">8</text>
     <text class="message" x="502" y="908">ModerationResponse DTO</text>
-    <path class="return success" stroke="#24928d" d="M 658 932 L 413 932"/>
+    <path class="return success" stroke="#24928d" d="M 658 932 L 413 932" marker-end="url(#arrowSuccess)"/>
 
     <rect class="label labelPill" x="186" y="950" width="270" height="38"/>
     <circle class="badge num" cx="208" cy="969" r="14" stroke="#24928d"/>
     <text class="badgeText num" x="208" y="969" fill="#17736e">9</text>
     <text class="message" x="236" y="974">200 OK masked JSON</text>
-    <path class="return success" stroke="#24928d" d="M 404 1000 L 161 1000"/>
+    <path class="return success" stroke="#24928d" d="M 404 1000 L 161 1000" marker-end="url(#arrowSuccess)"/>
 
     <rect class="label labelPill" x="966" y="1078" width="342" height="38"/>
     <circle class="badge num" cx="988" cy="1097" r="14" stroke="#d95c55"/>
     <text class="badgeText num" x="988" y="1097" fill="#ad352e">10</text>
     <text class="message" x="1016" y="1102">validation exception to advice</text>
-    <path class="error" stroke="#d95c55" d="M 676 1128 L 1441 1128"/>
+    <path class="error" stroke="#d95c55" d="M 676 1128 L 1441 1128" marker-end="url(#arrowError)"/>
 
     <rect class="label labelPill" x="646" y="1160" width="338" height="38"/>
     <circle class="badge num" cx="668" cy="1179" r="14" stroke="#d95c55"/>
     <text class="badgeText num" x="668" y="1179" fill="#ad352e">11</text>
     <text class="message" x="696" y="1184">400 Bad Request or 413 JSON</text>
-    <path class="return error" stroke="#d95c55" d="M 1432 1210 L 161 1210"/>
+    <path class="return error" stroke="#d95c55" d="M 1432 1210 L 161 1210" marker-end="url(#arrowError)"/>
   </g>
 
   <rect class="footer" x="226" y="1326" width="1148" height="46"/>

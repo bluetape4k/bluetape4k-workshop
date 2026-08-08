@@ -7,13 +7,13 @@
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/>
     </filter>
     <marker id="arrowBlue" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563EB" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#2563EB" stroke-width="0"/>
     </marker>
     <marker id="arrowGreen" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#15803D" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#15803D" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#15803D" stroke-width="0"/>
     </marker>
     <marker id="arrowPurple" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#7C3AED" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#7C3AED" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#7C3AED" stroke-width="0"/>
     </marker>
     <style>
       .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#CBD5E1;stroke-width:2}.title{font-family:"Architects Daughter";font-size:42px;fill:#102033}.subtitle,.cardText,.footer{font-family:"Comic Mono";fill:#415166}.subtitle{font-size:17px}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-size:14px}.node rect{rx:14;filter:url(#shadow)}.line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}.blue{stroke:#2563EB;marker-end:url(#arrowBlue)}.green{stroke:#15803D;marker-end:url(#arrowGreen)}.purple{stroke:#7C3AED;marker-end:url(#arrowPurple)}.footer{font-size:14px;fill:#526272}
@@ -69,25 +69,25 @@
   </g>
 
   <g class="edge" data-edge="upload-&gt;controller" data-label="POST multipart">
-    <path class="line blue" d="M 550 243 L 550 310"/>
+    <path class="line blue" d="M 550 243 L 550 310" marker-end="url(#arrowBlue)"/>
   </g>
   <g class="edge" data-edge="controller-&gt;validation" data-label="validate metadata">
-    <path class="line green" d="M 550 402 L 550 470"/>
+    <path class="line green" d="M 550 402 L 550 470" marker-end="url(#arrowGreen)"/>
   </g>
   <g class="edge" data-edge="validation-&gt;fallback" data-label="native disabled">
-    <path class="line blue" d="M 505 562 L 505 606 L 330 606 L 330 650"/>
+    <path class="line blue" d="M 505 562 L 505 606 L 330 606 L 330 650" marker-end="url(#arrowBlue)"/>
   </g>
   <g class="edge" data-edge="validation-&gt;native" data-label="native enabled">
-    <path class="line purple" d="M 595 562 L 595 606 L 770 606 L 770 650"/>
+    <path class="line purple" d="M 595 562 L 595 606 L 770 606 L 770 650" marker-end="url(#arrowPurple)"/>
   </g>
   <g class="edge" data-edge="fallback-&gt;mapping" data-label="structured fallback">
-    <path class="line blue" d="M 330 742 L 330 786 L 505 786 L 505 830"/>
+    <path class="line blue" d="M 330 742 L 330 786 L 505 786 L 505 830" marker-end="url(#arrowBlue)"/>
   </g>
   <g class="edge" data-edge="native-&gt;mapping" data-label="OCR text or failure">
-    <path class="line purple" d="M 770 742 L 770 786 L 595 786 L 595 830"/>
+    <path class="line purple" d="M 770 742 L 770 786 L 595 786 L 595 830" marker-end="url(#arrowPurple)"/>
   </g>
   <g class="edge" data-edge="mapping-&gt;tests" data-label="assert response">
-    <path class="line green" d="M 550 922 L 550 990"/>
+    <path class="line green" d="M 550 922 L 550 990" marker-end="url(#arrowGreen)"/>
   </g>
 
   <rect x="120" y="1102" width="860" height="40" rx="12" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>

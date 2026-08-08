@@ -6,10 +6,10 @@
     <style>
       .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:19px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:12px;fill:#546A73}.msg{font-size:13px}.note{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.return,.skip{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call);stroke-linecap:round;stroke-linejoin:round}.work{stroke:#6E8F4F;marker-end:url(#arrow-work);stroke-linecap:round;stroke-linejoin:round}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret);stroke-linecap:round;stroke-linejoin:round}.skip{stroke:#B86868;marker-end:url(#arrow-skip);stroke-linecap:round;stroke-linejoin:round}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.skipLabel{stroke:#D9ABAB}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.skipBadge{fill:#FFF0F0;stroke:#B86868}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.skipText,.badgeText.skipText{fill:#9D4F4F}.alt{fill:#FFF7ED;fill-opacity:.42;stroke:#D08A39;stroke-width:2.4;stroke-dasharray:12 8}.branch{fill:#FFFFFF;fill-opacity:.82;stroke:#E6C68C;stroke-width:1.5}
     </style>
-    <marker id="arrow-call" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrow-work" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrow-ret" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrow-skip" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-call" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#3F7D9C" stroke-width="0"/></marker>
+    <marker id="arrow-work" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#6E8F4F" stroke-width="0"/></marker>
+    <marker id="arrow-ret" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#9B7D54" stroke-width="0"/></marker>
+    <marker id="arrow-skip" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#B86868" stroke-width="0"/></marker>
   </defs>
   <rect x="24" y="24" width="1622" height="1086" rx="20" class="frame"/>
   <text x="835" y="76" text-anchor="middle" class="title">Leader Election Sequence</text>  <text x="835" y="106" text-anchor="middle" class="subtitle">A scheduled trigger asks the Lettuce elector to acquire Redis ownership before the protected job body runs.</text>
@@ -26,39 +26,39 @@
   <rect x="230.3" y="252" width="242.5" height="34" rx="17" class="label callLabel"/>
   <circle cx="254.3" cy="269" r="13" class="badge callBadge"/><text x="254.3" y="274" text-anchor="middle" class="badgeText callText">1</text>
   <text x="278.3" y="274" class="msg callText">scheduled trigger fires</text>
-  <path d="M 190 300 L 513 300" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 190 300 L 513 300" class="call" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-call)"/>
   <rect x="720.5" y="328" width="230.0" height="34" rx="17" class="label callLabel"/>
   <circle cx="744.5" cy="345" r="13" class="badge callBadge"/><text x="744.5" y="350" text-anchor="middle" class="badgeText callText">2</text>
   <text x="768.5" y="350" class="msg callText">runIfLeader(lockName)</text>
-  <path d="M 513 376 L 1158 376" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 513 376 L 1158 376" class="call" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-call)"/>
   <rect x="1197.8" y="404" width="242.5" height="34" rx="17" class="label workLabel"/>
   <circle cx="1221.8" cy="421" r="13" class="badge workBadge"/><text x="1221.8" y="426" text-anchor="middle" class="badgeText workText">3</text>
   <text x="1245.8" y="426" class="msg workText">SETNX leader:{lockName}</text>
-  <path d="M 1158 452 L 1480 452" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 1158 452 L 1480 452" class="work" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-work)"/>
   <rect x="1204" y="480" width="230.0" height="34" rx="17" class="label returnLabel"/>
   <circle cx="1228" cy="497" r="13" class="badge returnBadge"/><text x="1228" y="502" text-anchor="middle" class="badgeText returnText">4</text>
   <text x="1252" y="502" class="msg returnText">true -&gt; leader wins</text>
-  <path d="M 1480 528 L 1158 528" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 1480 528 L 1158 528" class="return" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-ret)"/>
   <rect x="720.5" y="556" width="230.0" height="34" rx="17" class="label returnLabel"/>
   <circle cx="744.5" cy="573" r="13" class="badge returnBadge"/><text x="744.5" y="578" text-anchor="middle" class="badgeText returnText">5</text>
   <text x="768.5" y="578" class="msg returnText">lock acquired</text>
-  <path d="M 1158 604 L 513 604" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 1158 604 L 513 604" class="return" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-ret)"/>
   <rect x="559" y="632" width="230.0" height="34" rx="17" class="label workLabel"/>
   <circle cx="583" cy="649" r="13" class="badge workBadge"/><text x="583" y="654" text-anchor="middle" class="badgeText workText">6</text>
   <text x="607" y="654" class="msg workText">job.execute()</text>
-  <path d="M 513 680 L 835 680" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 513 680 L 835 680" class="work" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-work)"/>
   <rect x="559" y="708" width="230.0" height="34" rx="17" class="label returnLabel"/>
   <circle cx="583" cy="725" r="13" class="badge returnBadge"/><text x="583" y="730" text-anchor="middle" class="badgeText returnText">7</text>
   <text x="607" y="730" class="msg returnText">work result</text>
-  <path d="M 835 756 L 513 756" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 835 756 L 513 756" class="return" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-ret)"/>
   <rect x="1175.3" y="784" width="287.5" height="34" rx="17" class="label skipLabel"/>
   <circle cx="1199.3" cy="801" r="13" class="badge skipBadge"/><text x="1199.3" y="806" text-anchor="middle" class="badgeText skipText">8</text>
   <text x="1223.3" y="806" class="msg skipText">DEL leader:{lockName} release</text>
-  <path d="M 1158 832 L 1480 832" class="skip" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 1158 832 L 1480 832" class="skip" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-skip)"/>
   <rect x="236.5" y="860" width="230.0" height="34" rx="17" class="label returnLabel"/>
   <circle cx="260.5" cy="877" r="13" class="badge returnBadge"/><text x="260.5" y="882" text-anchor="middle" class="badgeText returnText">9</text>
   <text x="284.5" y="882" class="msg returnText">winner result emitted</text>
-  <path d="M 513 908 L 190 908" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 513 908 L 190 908" class="return" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-ret)"/>
   <rect x="90" y="1046" width="1490" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
   <text x="835" y="1072" text-anchor="middle" class="footer">Reader contract: request order, branch ownership, and infrastructure boundary are shown without hiding call labels.</text>
 </svg>

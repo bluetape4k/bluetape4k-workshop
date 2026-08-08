@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820">
 
   <defs>
-    <marker id="arrow-blue" markerWidth="16" markerHeight="16" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f80dc" stroke-dasharray="none"/></marker>
-    <marker id="arrow-green" markerWidth="16" markerHeight="16" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f9e44" stroke-dasharray="none"/></marker>
-    <marker id="arrow-orange" markerWidth="16" markerHeight="16" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#d97706" stroke-dasharray="none"/></marker>
-    <marker id="arrow-purple" markerWidth="16" markerHeight="16" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#8b5cf6" stroke-dasharray="none"/></marker>
+    <marker id="arrow-blue" markerWidth="16" markerHeight="16" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f80dc" stroke-dasharray="none" stroke="#2f80dc" stroke-width="0"/></marker>
+    <marker id="arrow-green" markerWidth="16" markerHeight="16" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f9e44" stroke-dasharray="none" stroke="#2f9e44" stroke-width="0"/></marker>
+    <marker id="arrow-orange" markerWidth="16" markerHeight="16" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#d97706" stroke-dasharray="none" stroke="#d97706" stroke-width="0"/></marker>
+    <marker id="arrow-purple" markerWidth="16" markerHeight="16" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#8b5cf6" stroke-dasharray="none" stroke="#8b5cf6" stroke-width="0"/></marker>
     <marker id="arrow-red" markerWidth="16" markerHeight="16" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#dc2626" stroke-dasharray="none"/></marker>
   </defs>
   <style>
@@ -58,19 +58,19 @@
   <path class="life" d="M 730 230 L 730 690"/>
   <path class="life" d="M 990 230 L 990 690"/>
   <path class="life" d="M 1250 230 L 1250 690"/>
-  <path class="line-blue" d="M 165 295 L 440 295"/>
+  <path class="line-blue" d="M 165 295 L 440 295" marker-end="url(#arrow-blue)"/>
   <text class="small" x="300" y="280">1 choose race</text>
-  <path class="line-green" d="M 440 350 L 730 350"/>
+  <path class="line-green" d="M 440 350 L 730 350" marker-end="url(#arrow-green)"/>
   <text class="small" x="590" y="335">2 start cache</text>
-  <path class="line-green" d="M 440 400 L 990 400"/>
+  <path class="line-green" d="M 440 400 L 990 400" marker-end="url(#arrow-green)"/>
   <text class="small" x="710" y="385">3 start replica</text>
-  <path class="line-purple" d="M 440 450 L 1250 450"/>
+  <path class="line-purple" d="M 440 450 L 1250 450" marker-end="url(#arrow-purple)"/>
   <text class="small" x="850" y="435">4 start remote</text>
-  <path class="line-green" d="M 990 510 L 440 510"/>
+  <path class="line-green" d="M 990 510 L 440 510" marker-end="url(#arrow-green)"/>
   <text class="small" x="720" y="495">5 first value wins</text>
-  <path class="line-orange dash" d="M 440 565 L 730 565"/>
-  <path class="line-orange dash" d="M 440 610 L 1250 610"/>
+  <path class="line-orange dash" d="M 440 565 L 730 565" marker-end="url(#arrow-orange)"/>
+  <path class="line-orange dash" d="M 440 610 L 1250 610" marker-end="url(#arrow-orange)"/>
   <text class="small" x="870" y="595">6 cancel losing sources</text>
-  <path class="line-blue" d="M 440 660 L 165 660"/>
+  <path class="line-blue" d="M 440 660 L 165 660" marker-end="url(#arrow-blue)"/>
   <text class="small" x="300" y="645">7 return winner</text>
 </svg>

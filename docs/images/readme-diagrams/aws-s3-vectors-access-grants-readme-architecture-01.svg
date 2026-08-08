@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1120" height="1040" viewBox="0 0 1120 1040" role="img" aria-label="S3 Vectors and Access Grants workshop architecture">
   <defs>
     <marker id="archArrowBlue" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="primary" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f78b8" stroke="#4f78b8" stroke-dasharray="none" style="stroke-dasharray:none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f78b8" stroke="#4f78b8" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
     <marker id="archArrowGreen" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="primary" data-tip-direction="positive-x">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f8f70" stroke="#4f8f70" stroke-dasharray="none" style="stroke-dasharray:none"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f8f70" stroke="#4f8f70" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
     <style>
       .canvas{fill:#f7f9fc}
@@ -82,30 +82,30 @@
   </g>
 
   <g class="edge" data-edge="client-&gt;controller" data-label="HTTP command">
-    <path class="flow solid" data-connector="client-to-controller" d="M 560 207 L 560 295"/>
+    <path class="flow solid" data-connector="client-to-controller" d="M 560 207 L 560 295" marker-end="url(#archArrowBlue)"/>
   </g>
   <g class="edge" data-edge="controller-&gt;service" data-label="Validated request DTO">
-    <path class="flow solid" data-connector="controller-to-service" d="M 560 365 L 560 380"/>
+    <path class="flow solid" data-connector="controller-to-service" d="M 560 365 L 560 380" marker-end="url(#archArrowBlue)"/>
   </g>
   <g class="edge" data-edge="service-&gt;vectorsOps" data-label="Vector upsert and query">
-    <path class="flow solid" data-connector="service-to-vectors-ops" d="M 560 450 L 560 503 Q 560 515 548 515 L 502 515 Q 490 515 490 527 L 490 548 Q 490 560 478 560 L 460 560"/>
+    <path class="flow solid" data-connector="service-to-vectors-ops" d="M 560 450 L 560 503 Q 560 515 548 515 L 502 515 Q 490 515 490 527 L 490 548 Q 490 560 478 560 L 460 560" marker-end="url(#archArrowBlue)"/>
   </g>
   <g class="edge" data-edge="service-&gt;accessOps" data-label="Access decision after top match">
-    <path class="flow dashed" data-connector="service-to-access-ops" d="M 560 450 L 560 503 Q 560 515 572 515 L 618 515 Q 630 515 630 527 L 630 548 Q 630 560 642 560 L 660 560"/>
+    <path class="flow dashed" data-connector="service-to-access-ops" d="M 560 450 L 560 503 Q 560 515 572 515 L 618 515 Q 630 515 630 527 L 630 548 Q 630 560 642 560 L 660 560" marker-end="url(#archArrowGreen)"/>
   </g>
   <g class="edge" data-edge="vectorsOps-&gt;s3Vectors" data-label="AWS SDK S3 Vectors request">
-    <path class="flow solid" data-connector="vectors-ops-to-s3-vectors" d="M 295 595 L 295 700"/>
+    <path class="flow solid" data-connector="vectors-ops-to-s3-vectors" d="M 295 595 L 295 700" marker-end="url(#archArrowBlue)"/>
   </g>
   <g class="edge" data-edge="accessOps-&gt;accessGrants" data-label="AWS SDK S3 Control request">
-    <path class="flow dashed" data-connector="access-ops-to-access-grants" d="M 825 595 L 825 700"/>
+    <path class="flow dashed" data-connector="access-ops-to-access-grants" d="M 825 595 L 825 700" marker-end="url(#archArrowGreen)"/>
   </g>
   <g class="edge" data-edge="accessGrants-&gt;objectData" data-label="Temporary object access decision">
-    <path class="flow dashed" data-connector="access-grants-to-object-data" d="M 825 770 L 825 778 Q 825 790 813 790 L 572 790 Q 560 790 560 802 L 560 835"/>
+    <path class="flow dashed" data-connector="access-grants-to-object-data" d="M 825 770 L 825 778 Q 825 790 813 790 L 572 790 Q 560 790 560 802 L 560 835" marker-end="url(#archArrowGreen)"/>
   </g>
 
   <rect x="86" y="970" width="650" height="28" rx="8" fill="#ffffff" stroke="#cad5e2"/>
-  <path d="M 104 984 L 170 984" class="solid" fill="none" stroke-width="2.5"/>
+  <path d="M 104 984 L 170 984" class="solid" fill="none" stroke-width="2.5" marker-end="url(#archArrowBlue)"/>
   <text class="legend" x="184" y="988">solid: vector write/query path</text>
-  <path d="M 470 984 L 536 984" class="dashed" fill="none" stroke-width="2.5"/>
+  <path d="M 470 984 L 536 984" class="dashed" fill="none" stroke-width="2.5" marker-end="url(#archArrowGreen)"/>
   <text class="legend" x="550" y="988">dashed: access grant decision</text>
 </svg>

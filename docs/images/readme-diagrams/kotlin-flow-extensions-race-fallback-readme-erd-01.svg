@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820">
 
   <defs>
-    <marker id="arrow-blue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f80dc" stroke-dasharray="none"/></marker>
+    <marker id="arrow-blue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f80dc" stroke-dasharray="none" stroke="#2f80dc" stroke-width="0"/></marker>
     <marker id="arrow-green" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f9e44" stroke-dasharray="none"/></marker>
-    <marker id="arrow-orange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#d97706" stroke-dasharray="none"/></marker>
-    <marker id="arrow-purple" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#8b5cf6" stroke-dasharray="none"/></marker>
-    <marker id="arrow-red" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#dc2626" stroke-dasharray="none"/></marker>
+    <marker id="arrow-orange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#d97706" stroke-dasharray="none" stroke="#d97706" stroke-width="0"/></marker>
+    <marker id="arrow-purple" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#8b5cf6" stroke-dasharray="none" stroke="#8b5cf6" stroke-width="0"/></marker>
+    <marker id="arrow-red" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#dc2626" stroke-dasharray="none" stroke="#dc2626" stroke-width="0"/></marker>
   </defs>
   <style>
     .bg { fill: #f4f8fc; }
@@ -61,10 +61,10 @@
   <text class="card-title" x="1145.0" y="536">FlowEvent</text>
   <text class="card-text" x="1145.0" y="570">Value / Error</text>
   <text class="card-text" x="1145.0" y="592">Complete</text>
-  <path class="line-orange" d="M 360 285 L 520 285 Q 540 285 540 275 L 560 275"/>
-  <path class="line-blue" d="M 820 255 L 980 255 Q 1000 255 1000 285 L 1020 285"/>
-  <path class="line-purple" d="M 690 350 L 690 500"/>
-  <path class="line-red dash" d="M 820 560 L 980 560 Q 1000 560 1000 555 L 1020 555"/>
+  <path class="line-orange" d="M 360 285 L 520 285 Q 540 285 540 275 L 560 275" marker-end="url(#arrow-orange)"/>
+  <path class="line-blue" d="M 820 255 L 980 255 Q 1000 255 1000 285 L 1020 285" marker-end="url(#arrow-blue)"/>
+  <path class="line-purple" d="M 690 350 L 690 500" marker-end="url(#arrow-purple)"/>
+  <path class="line-red dash" d="M 820 560 L 980 560 Q 1000 560 1000 555 L 1020 555" marker-end="url(#arrow-red)"/>
   <text class="small" x="460" y="258">item</text>
   <text class="small" x="940" y="235">source</text>
   <text class="small" x="720" y="450">quality</text>

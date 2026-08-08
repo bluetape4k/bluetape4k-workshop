@@ -4,10 +4,10 @@
   <desc id="desc">Order placement commits the order before direct Kafka publish; disabled or failed direct publish creates a fallback row that the relay later sends.</desc>
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
-    <marker id="arrow-call" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke="#3F7D9C" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-call" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke="#3F7D9C" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/></marker>
     <marker id="arrow-work" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke="#6E8F4F" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
     <marker id="arrow-warn" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#C47A12" stroke="#C47A12" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
-    <marker id="arrow-alt-warn" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#A65F20" stroke="#A65F20" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-alt-warn" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#A65F20" stroke="#A65F20" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/></marker>
     <style>
       .frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.title{font-family:"Architects Daughter";font-size:38px;fill:#263238}.subtitle,.msg,.role,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:15px}.participant{font-family:"Architects Daughter";font-size:19px;fill:#1F3138}.role{font-size:12px}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.box{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.warn,.altWarn{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call)}.work{stroke:#6E8F4F;marker-end:url(#arrow-work)}.warn{stroke:#C47A12;marker-end:url(#arrow-warn)}.altWarn{stroke:#A65F20;marker-end:url(#arrow-alt-warn)}.message-label,.labelPill{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.msg{font-size:12px}.badge{stroke-width:1.6}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.warnBadge{fill:#FFF7E8;stroke:#C47A12}.badgeText{font-family:"Comic Mono";font-size:11px;font-weight:700}.callText{fill:#2F6F8E}.workText{fill:#55783F}.warnText{fill:#8A5A10}.region{fill:none;fill-opacity:0;stroke:#C47A12;stroke-width:2;stroke-dasharray:8 8}.branchLine{stroke:#D6A150;stroke-width:1.5;stroke-dasharray:6 8}.footer{font-size:13px;fill:#60727D}
     </style>
@@ -30,29 +30,29 @@
   <line x1="1590" y1="224" x2="1590" y2="926" class="lifeline"/>
 
   <rect x="205" y="294" width="230" height="30" rx="15" class="label labelPill messageLabel"/><circle cx="224" cy="309" r="11" class="badge num callBadge"/><text x="224" y="313" text-anchor="middle" class="badgeText num callText">1</text><text x="246" y="313" class="msg callText">POST /api/orders</text>
-  <path d="M 190 282 L 470 282" class="call"/><rect x="463" y="274" width="14" height="54" rx="4" class="activation"/>
+  <path d="M 190 282 L 470 282" class="call" marker-end="url(#arrow-call)"/><rect x="463" y="274" width="14" height="54" rx="4" class="activation"/>
   <rect x="492" y="364" width="234" height="30" rx="15" class="label labelPill messageLabel"/><circle cx="511" cy="379" r="11" class="badge num workBadge"/><text x="511" y="383" text-anchor="middle" class="badgeText num workText">2</text><text x="533" y="383" class="msg workText">save order in TX</text>
-  <path d="M 470 352 L 750 352" class="call work"/><rect x="743" y="344" width="14" height="54" rx="4" class="activation"/>
+  <path d="M 470 352 L 750 352" class="call work" marker-end="url(#arrow-call)"/><rect x="743" y="344" width="14" height="54" rx="4" class="activation"/>
   <rect x="772" y="434" width="228" height="30" rx="15" class="label labelPill messageLabel"/><circle cx="791" cy="449" r="11" class="badge num workBadge"/><text x="791" y="453" text-anchor="middle" class="badgeText num workText">3</text><text x="813" y="453" class="msg workText">insert orders row</text>
-  <path d="M 750 422 L 1030 422" class="call work"/><rect x="1023" y="414" width="14" height="54" rx="4" class="activation"/>
+  <path d="M 750 422 L 1030 422" class="call work" marker-end="url(#arrow-call)"/><rect x="1023" y="414" width="14" height="54" rx="4" class="activation"/>
 
   <rect x="452" y="492" width="1030" height="242" rx="16" class="region alt"/>
   <text x="474" y="518" class="msg warnText">alt directPublishEnabled=false</text>
   <rect x="610" y="544" width="378" height="30" rx="15" class="label labelPill messageLabel"/><circle cx="629" cy="559" r="11" class="badge num warnBadge"/><text x="629" y="563" text-anchor="middle" class="badgeText num warnText">4</text><text x="651" y="563" class="msg warnText">store DIRECT_DISABLED fallback row</text>
-  <path d="M 470 532 L 1030 532" class="altWarn"/>
+  <path d="M 470 532 L 1030 532" class="altWarn" marker-end="url(#arrow-alt-warn)"/>
   <line x1="452" y1="594" x2="1482" y2="594" class="branchLine"/>
   <text x="474" y="620" class="msg warnText">else direct Kafka publish fails or times out</text>
   <rect x="825" y="656" width="264" height="30" rx="15" class="label labelPill messageLabel"/><circle cx="844" cy="671" r="11" class="badge num callBadge"/><text x="844" y="675" text-anchor="middle" class="badgeText num callText">5</text><text x="866" y="675" class="msg callText">send eventId key</text>
-  <path d="M 470 644 L 1310 644" class="call"/><rect x="1303" y="636" width="14" height="54" rx="4" class="activation"/>
+  <path d="M 470 644 L 1310 644" class="call" marker-end="url(#arrow-call)"/><rect x="1303" y="636" width="14" height="54" rx="4" class="activation"/>
   <rect x="610" y="708" width="340" height="30" rx="15" class="label labelPill messageLabel"/><circle cx="629" cy="723" r="11" class="badge num warnBadge"/><text x="629" y="727" text-anchor="middle" class="badgeText num warnText">6</text><text x="651" y="727" class="msg warnText">upsert NOT_PUBLISHED row</text>
-  <path d="M 470 696 L 1030 696" class="altWarn"/>
+  <path d="M 470 696 L 1030 696" class="altWarn" marker-end="url(#arrow-alt-warn)"/>
 
   <rect x="780" y="798" width="328" height="30" rx="15" class="label labelPill messageLabel"/><circle cx="799" cy="813" r="11" class="badge num warnBadge"/><text x="799" y="817" text-anchor="middle" class="badgeText num warnText">7</text><text x="821" y="817" class="msg warnText">claim eligible fallback row</text>
-  <path d="M 1590 786 L 1030 786" class="call warn"/><rect x="1583" y="778" width="14" height="54" rx="4" class="activation"/>
+  <path d="M 1590 786 L 1030 786" class="call warn" marker-end="url(#arrow-call)"/><rect x="1583" y="778" width="14" height="54" rx="4" class="activation"/>
   <rect x="1328" y="858" width="220" height="30" rx="15" class="label labelPill messageLabel"/><circle cx="1347" cy="873" r="11" class="badge num callBadge"/><text x="1347" y="877" text-anchor="middle" class="badgeText num callText">8</text><text x="1369" y="877" class="msg callText">re-drive payload</text>
-  <path d="M 1590 846 L 1310 846" class="call"/>
+  <path d="M 1590 846 L 1310 846" class="call" marker-end="url(#arrow-call)"/>
   <rect x="1046" y="918" width="332" height="30" rx="15" class="label labelPill messageLabel"/><circle cx="1065" cy="933" r="11" class="badge num workBadge"/><text x="1065" y="937" text-anchor="middle" class="badgeText num workText">9</text><text x="1087" y="937" class="msg workText">mark PUBLISHED or DEAD_LETTER</text>
-  <path d="M 1590 906 L 1030 906" class="call work"/>
+  <path d="M 1590 906 L 1030 906" class="call work" marker-end="url(#arrow-call)"/>
 
   <rect x="80" y="966" width="1620" height="30" rx="11" fill="#FFFFFF" stroke="#CCD7DA"/>
   <text x="890" y="986" text-anchor="middle" class="footer">Disabled direct publish, timeout, and failure all create fallback rows; deterministic eventId keeps relay duplicates tolerable.</text>

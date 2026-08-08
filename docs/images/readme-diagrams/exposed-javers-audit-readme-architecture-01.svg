@@ -19,10 +19,10 @@
       .dbLine{fill:none;stroke:#9b6b2f;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#dbArrow)}
       .readLine{fill:none;stroke:#6b8191;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:9 7;marker-end:url(#readArrow)}
     </style>
-    <marker id="arrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#52748d" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="auditArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#7a64aa" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="dbArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9b6b2f" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="readArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 11.6667 11.6667" refX="9" refY="5" orient="auto" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6b8191" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#52748d" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#52748d" stroke-width="0"/></marker>
+    <marker id="auditArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#7a64aa" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#7a64aa" stroke-width="0"/></marker>
+    <marker id="dbArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9b6b2f" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#9b6b2f" stroke-width="0"/></marker>
+    <marker id="readArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 11.6667 11.6667" refX="9" refY="5" orient="auto" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6b8191" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#6b8191" stroke-width="0"/></marker>
     <g id="dbIcon">
       <rect x="0" y="0" width="70" height="70" rx="13" fill="#fffaf2" stroke="#28485a" stroke-width="4"/>
       <ellipse cx="35" cy="20" rx="19" ry="8" fill="#fff0d8" stroke="#8c6f33" stroke-width="4"/>
@@ -67,12 +67,12 @@
   <rect class="layer readLayer" x="70" y="920" width="1520" height="82" rx="14"/>
   <text class="small" x="830" y="970" text-anchor="middle">Reader contract: JaVers owns history and diff state; Exposed owns only the current relational row.</text>
 
-  <path class="line" d="M 500 267 L 720 267 Q 730 267 730 277 L 730 462" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="line" d="M 1130 267 L 940 267 Q 930 267 930 277 L 930 462" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="auditLine" d="M 700 558 L 700 680 Q 700 690 690 690 L 395 690 Q 385 690 385 700 L 385 738" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="dbLine" d="M 960 558 L 960 680 Q 960 690 970 690 L 1270 690 Q 1280 690 1280 700 L 1280 722" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="readLine" d="M 600 790 L 820 790 Q 830 790 830 780 L 830 558" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="readLine" d="M 1060 790 L 880 790 Q 870 790 870 780 L 870 558" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="line" d="M 500 267 L 720 267 Q 730 267 730 277 L 730 462" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+  <path class="line" d="M 1130 267 L 940 267 Q 930 267 930 277 L 930 462" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+  <path class="auditLine" d="M 700 558 L 700 680 Q 700 690 690 690 L 395 690 Q 385 690 385 700 L 385 738" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#auditArrow)"/>
+  <path class="dbLine" d="M 960 558 L 960 680 Q 960 690 970 690 L 1270 690 Q 1280 690 1280 700 L 1280 722" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#dbArrow)"/>
+  <path class="readLine" d="M 600 790 L 820 790 Q 830 790 830 780 L 830 558" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#readArrow)"/>
+  <path class="readLine" d="M 1060 790 L 880 790 Q 870 790 870 780 L 870 558" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#readArrow)"/>
 
   <text class="footer" x="830" y="1030" text-anchor="middle">No event bus or application server is hidden here; the example is a service-level audit boundary plus one Exposed table.</text>
 </svg>

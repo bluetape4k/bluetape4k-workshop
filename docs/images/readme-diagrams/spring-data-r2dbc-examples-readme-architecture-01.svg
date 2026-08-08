@@ -9,10 +9,10 @@
       .layer{stroke-width:1.5;rx:22;ry:22}.card{fill:#fff;stroke:#cbd5e1;stroke-width:1.5;rx:18;ry:18}
       .line{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
     </style>
-    <marker id="arrow-blue" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb" stroke-dasharray="none"/></marker>
-    <marker id="arrow-green" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x"><path d="M1,1 L11,6 L1,11 Z" fill="#059669" stroke-dasharray="none"/></marker>
-    <marker id="arrow-purple" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x"><path d="M1,1 L11,6 L1,11 Z" fill="#7c3aed" stroke-dasharray="none"/></marker>
-  <marker id="arrow-blue-64748b" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x"><path stroke-dasharray="none" d="M1,1 L11,6 L1,11 Z" fill="#64748b"/></marker>
+    <marker id="arrow-blue" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb" stroke-dasharray="none" stroke="#2563eb" stroke-width="0"/></marker>
+    <marker id="arrow-green" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x"><path d="M1,1 L11,6 L1,11 Z" fill="#059669" stroke-dasharray="none" stroke="#059669" stroke-width="0"/></marker>
+    <marker id="arrow-purple" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x"><path d="M1,1 L11,6 L1,11 Z" fill="#7c3aed" stroke-dasharray="none" stroke="#7c3aed" stroke-width="0"/></marker>
+  <marker id="arrow-blue-64748b" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x"><path stroke-dasharray="none" d="M1,1 L11,6 L1,11 Z" fill="#64748b" stroke="#64748b" stroke-width="0"/></marker>
 </defs>
   <rect class="bg" width="1720" height="980"/>
   <text class="title" x="70" y="70">Spring Data R2DBC Examples</text>

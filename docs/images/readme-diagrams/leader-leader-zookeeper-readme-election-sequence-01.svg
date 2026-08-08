@@ -5,8 +5,8 @@
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
     <style>.title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:19px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:12px;fill:#546A73}.msg{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.return{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call)}.work{stroke:#6E8F4F;marker-end:url(#arrow-work)}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret)}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}</style>
-    <marker id="arrow-call" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrow-work" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-call" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#3F7D9C" stroke-width="0"/></marker>
+    <marker id="arrow-work" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#6E8F4F" stroke-width="0"/></marker>
     <marker id="arrow-ret" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
   </defs>
   <rect x="24" y="24" width="2678" height="904" rx="20" class="frame"/>
@@ -47,42 +47,42 @@
   <rect x="432.0" y="252" width="222.0" height="34" rx="17" class="label callLabel"/>
   <circle cx="456.0" cy="269" r="13" class="badge callBadge"/><text x="456.0" y="274" text-anchor="middle" class="badgeText callText">1</text>
   <text x="480.0" y="274" class="msg callText">/single/{lockName}</text>
-  <path d="M 215.0 298 L 871.0 298" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 215.0 298 L 871.0 298" class="call" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-call)"/>
   <rect x="864.0" y="290" width="14" height="48" rx="4" class="activation"/>
   <rect x="1089.0" y="328" width="220.0" height="34" rx="17" class="label callLabel"/>
   <circle cx="1113.0" cy="345" r="13" class="badge callBadge"/><text x="1113.0" y="350" text-anchor="middle" class="badgeText callText">2</text>
   <text x="1137.0" y="350" class="msg callText">executes job body</text>
-  <path d="M 871.0 374 L 1527.0 374" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 871.0 374 L 1527.0 374" class="call" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-call)"/>
   <rect x="1520.0" y="366" width="14" height="48" rx="4" class="activation"/>
   <rect x="1745.0" y="404" width="220.0" height="34" rx="17" class="label workLabel"/>
   <circle cx="1769.0" cy="421" r="13" class="badge workBadge"/><text x="1769.0" y="426" text-anchor="middle" class="badgeText workText">3</text>
   <text x="1793.0" y="426" class="msg workText">result is null</text>
-  <path d="M 1527.0 450 L 2183.0 450" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 1527.0 450 L 2183.0 450" class="work" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-work)"/>
   <rect x="2176.0" y="442" width="14" height="48" rx="4" class="activation"/>
   <rect x="1253.0" y="480" width="220.0" height="34" rx="17" class="label callLabel"/>
   <circle cx="1277.0" cy="497" r="13" class="badge callBadge"/><text x="1277.0" y="502" text-anchor="middle" class="badgeText callText">4</text>
   <text x="1301.0" y="502" class="msg callText">maxLeaders slots</text>
-  <path d="M 871.0 526 L 1855.0 526" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 871.0 526 L 1855.0 526" class="call" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-call)"/>
   <rect x="1848.0" y="518" width="14" height="48" rx="4" class="activation"/>
   <rect x="597.0" y="556" width="220.0" height="34" rx="17" class="label callLabel"/>
   <circle cx="621.0" cy="573" r="13" class="badge callBadge"/><text x="621.0" y="578" text-anchor="middle" class="badgeText callText">5</text>
   <text x="645.0" y="578" class="msg callText">/group/{lockName}</text>
-  <path d="M 215.0 602 L 1199.0 602" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 215.0 602 L 1199.0 602" class="call" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-call)"/>
   <rect x="1192.0" y="594" width="14" height="48" rx="4" class="activation"/>
   <rect x="1417.0" y="632" width="220.0" height="34" rx="17" class="label workLabel"/>
   <circle cx="1441.0" cy="649" r="13" class="badge workBadge"/><text x="1441.0" y="654" text-anchor="middle" class="badgeText workText">6</text>
   <text x="1465.0" y="654" class="msg workText">maxLeaders slots</text>
-  <path d="M 1199.0 678 L 1855.0 678" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 1199.0 678 L 1855.0 678" class="work" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-work)"/>
   <rect x="1848.0" y="670" width="14" height="48" rx="4" class="activation"/>
   <rect x="2073.0" y="708" width="220.0" height="34" rx="17" class="label callLabel"/>
   <circle cx="2097.0" cy="725" r="13" class="badge callBadge"/><text x="2097.0" y="730" text-anchor="middle" class="badgeText callText">7</text>
   <text x="2121.0" y="730" class="msg callText">result is null</text>
-  <path d="M 1855.0 754 L 2511.0 754" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 1855.0 754 L 2511.0 754" class="call" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-call)"/>
   <rect x="2504.0" y="746" width="14" height="48" rx="4" class="activation"/>
   <rect x="1417.0" y="784" width="220.0" height="34" rx="17" class="label callLabel"/>
   <circle cx="1441.0" cy="801" r="13" class="badge callBadge"/><text x="1441.0" y="806" text-anchor="middle" class="badgeText callText">8</text>
   <text x="1465.0" y="806" class="msg callText">maxLeaders slots</text>
-  <path d="M 1199.0 830 L 1855.0 830" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 1199.0 830 L 1855.0 830" class="call" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-call)"/>
   <rect x="1848.0" y="822" width="14" height="48" rx="4" class="activation"/>
   <rect x="90" y="888" width="2546" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
   <text x="1363.0" y="914" text-anchor="middle" class="footer">Reader contract: participants, ordered messages, returns, and infrastructure boundaries stay visible.</text>

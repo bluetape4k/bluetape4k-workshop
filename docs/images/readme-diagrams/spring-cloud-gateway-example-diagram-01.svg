@@ -2,7 +2,7 @@
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.09"/></filter>
   <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 10 10" data-role="secondary" data-tip-direction="positive-x">
-    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297" stroke-dasharray="none"/>
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297" stroke-dasharray="none" stroke="#758297" stroke-width="0"/>
   </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
@@ -70,5 +70,5 @@
 <text class="small" x="584.38" y="454" text-anchor="middle">RequestRateLimiter  -  sliding window counters  -  UserKeyResolver key extraction</text>
 
 <!-- Arrow RateLimiter -> Redis: jog left to x=140 to avoid crossing IndexController (x=152..408) -->
-<path class="line" d="M 200.08 284 L 200.08 302 Q 200.08 312 187.88 312 L 183 312 Q 165.92 312 165.92 322 L 165.92 416" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M 200.08 284 L 200.08 302 Q 200.08 312 187.88 312 L 183 312 Q 165.92 312 165.92 322 L 165.92 416" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
 </svg>

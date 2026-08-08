@@ -7,7 +7,7 @@
       <stop offset="100%" stop-color="#f8f5ef"/>
     </linearGradient>
     <marker id="arrow" viewBox="0 0 12.5 12.5" refX="8" refY="5" markerWidth="10" markerHeight="10" orient="auto" markerUnits="userSpaceOnUse" data-role="secondary" data-tip-direction="positive-x">
-      <path d="M 1 1 L 9 5 L 1 9 z" fill="#355c7d" stroke-dasharray="none"/>
+      <path d="M 1 1 L 9 5 L 1 9 z" fill="#355c7d" stroke-dasharray="none" stroke="#355c7d" stroke-width="0"/>
     </marker>
     <style>
       .title { font-family: 'Architects Daughter', 'Comic Mono', sans-serif; font-size: 34px; fill: #1f2a37; }
@@ -32,28 +32,28 @@
     <text class="label" x="260" y="31" text-anchor="middle">1. User query burst</text>
     <text class="body" x="260" y="57" text-anchor="middle">"r", "re", "red", "redi", "redis"</text>
   </g>
-  <path class="arrow" d="M 560 210 L 560 250"/>
+  <path class="arrow" d="M 560 210 L 560 250" marker-end="url(#arrow)"/>
 
   <g transform="translate(300 250)">
     <rect class="card accent-b" x="0" y="0" width="520" height="82"/>
     <text class="label" x="260" y="31" text-anchor="middle">2. Debounce and normalize</text>
     <text class="body" x="260" y="57" text-anchor="middle">keep the latest non-blank query from the burst</text>
   </g>
-  <path class="arrow" d="M 560 332 L 560 372"/>
+  <path class="arrow" d="M 560 332 L 560 372" marker-end="url(#arrow)"/>
 
   <g transform="translate(300 372)">
     <rect class="card accent-c" x="0" y="0" width="520" height="82"/>
     <text class="label" x="260" y="31" text-anchor="middle">3. Attach latest settings</text>
     <text class="body" x="260" y="57" text-anchor="middle">tenant, locale, mode, flags, result limit</text>
   </g>
-  <path class="arrow" d="M 560 454 L 560 494"/>
+  <path class="arrow" d="M 560 454 L 560 494" marker-end="url(#arrow)"/>
 
   <g transform="translate(300 494)">
     <rect class="card accent-d" x="0" y="0" width="520" height="82"/>
     <text class="label" x="260" y="31" text-anchor="middle">4. Search with cancellation</text>
     <text class="body" x="260" y="57" text-anchor="middle">new query or session close cancels stale adapter work</text>
   </g>
-  <path class="arrow" d="M 560 576 L 560 616"/>
+  <path class="arrow" d="M 560 576 L 560 616" marker-end="url(#arrow)"/>
 
   <g transform="translate(300 616)">
     <rect class="card" x="0" y="0" width="520" height="64"/>

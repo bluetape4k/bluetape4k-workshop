@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820">
 
   <defs>
-    <marker id="arrow-blue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f80dc" stroke-dasharray="none"/></marker>
-    <marker id="arrow-green" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f9e44" stroke-dasharray="none"/></marker>
+    <marker id="arrow-blue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f80dc" stroke-dasharray="none" stroke="#2f80dc" stroke-width="0"/></marker>
+    <marker id="arrow-green" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f9e44" stroke-dasharray="none" stroke="#2f9e44" stroke-width="0"/></marker>
     <marker id="arrow-orange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#d97706" stroke-dasharray="none"/></marker>
-    <marker id="arrow-purple" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#8b5cf6" stroke-dasharray="none"/></marker>
-    <marker id="arrow-red" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#dc2626" stroke-dasharray="none"/></marker>
+    <marker id="arrow-purple" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#8b5cf6" stroke-dasharray="none" stroke="#8b5cf6" stroke-width="0"/></marker>
+    <marker id="arrow-red" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#dc2626" stroke-dasharray="none" stroke="#dc2626" stroke-width="0"/></marker>
   </defs>
   <style>
     .bg { fill: #f4f8fc; }
@@ -65,11 +65,11 @@
   <text class="card-title" x="1220.0" y="481">materialize</text>
   <text class="card-text" x="1220.0" y="515">error-as-value</text>
   <text class="card-text" x="1220.0" y="537">dematerialize</text>
-  <path class="line-blue" d="M 320 265 L 430 265"/>
-  <path class="line-green" d="M 690 270 L 760 270 Q 780 270 780 212 L 805 212"/>
-  <path class="line-green" d="M 690 270 L 760 270 Q 780 270 780 352 L 805 352"/>
-  <path class="line-green" d="M 690 270 L 760 270 Q 780 270 780 492 L 805 492"/>
-  <path class="line-purple" d="M 1025 352 L 1080 352 Q 1100 352 1100 282 L 1110 282"/>
-  <path class="line-red" d="M 1025 492 L 1080 492 Q 1100 492 1100 492 L 1110 492"/>
+  <path class="line-blue" d="M 320 265 L 430 265" marker-end="url(#arrow-blue)"/>
+  <path class="line-green" d="M 690 270 L 760 270 Q 780 270 780 212 L 805 212" marker-end="url(#arrow-green)"/>
+  <path class="line-green" d="M 690 270 L 760 270 Q 780 270 780 352 L 805 352" marker-end="url(#arrow-green)"/>
+  <path class="line-green" d="M 690 270 L 760 270 Q 780 270 780 492 L 805 492" marker-end="url(#arrow-green)"/>
+  <path class="line-purple" d="M 1025 352 L 1080 352 Q 1100 352 1100 282 L 1110 282" marker-end="url(#arrow-purple)"/>
+  <path class="line-red" d="M 1025 492 L 1080 492 Q 1100 492 1100 492 L 1110 492" marker-end="url(#arrow-red)"/>
   <text class="subtitle" x="700" y="660">Pick race, concat, eager concat, merge, or materialize before writing fallback glue.</text>
 </svg>

@@ -28,10 +28,10 @@
       .divider{stroke:#D08A39;stroke-width:1.8;stroke-dasharray:9 7;opacity:.7}
       .altText{font-size:13px;fill:#8A5A18;font-weight:700}
     </style>
-    <marker id="arrow-call" viewBox="0 0 12.3077 12.3077" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke="#3F7D9C" stroke-dasharray="none"/></marker>
-    <marker id="arrow-work" viewBox="0 0 12.3077 12.3077" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5F8A54" stroke="#5F8A54" stroke-dasharray="none"/></marker>
-    <marker id="arrow-return" viewBox="0 0 12.3077 12.3077" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke="#9B7D54" stroke-dasharray="none"/></marker>
-    <marker id="arrow-fail" viewBox="0 0 12.3077 12.3077" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke="#B86868" stroke-dasharray="none"/></marker>
+    <marker id="arrow-call" viewBox="0 0 12.3077 12.3077" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke="#3F7D9C" stroke-dasharray="none" stroke-width="0"/></marker>
+    <marker id="arrow-work" viewBox="0 0 12.3077 12.3077" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5F8A54" stroke="#5F8A54" stroke-dasharray="none" stroke-width="0"/></marker>
+    <marker id="arrow-return" viewBox="0 0 12.3077 12.3077" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke="#9B7D54" stroke-dasharray="none" stroke-width="0"/></marker>
+    <marker id="arrow-fail" viewBox="0 0 12.3077 12.3077" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke="#B86868" stroke-dasharray="none" stroke-width="0"/></marker>
   </defs>
 
   <rect x="24" y="24" width="1632" height="912" rx="20" class="frame"/>
@@ -85,42 +85,42 @@
   <rect x="210" y="250" width="230" height="34" class="label labelPill callLabel"/>
   <circle cx="234" cy="267" r="13" class="badge callBadge"/><text x="234" y="272" text-anchor="middle" class="badgeText num callText">1</text>
   <text x="258" y="272" class="msg callText">POST /api/books</text>
-  <path d="M165 298 L485 298" class="call"/>
+  <path d="M165 298 L485 298" class="call" marker-end="url(#arrow-call)"/>
 
   <rect x="524" y="314" width="242" height="34" class="label labelPill callLabel"/>
   <circle cx="548" cy="331" r="13" class="badge callBadge"/><text x="548" y="336" text-anchor="middle" class="badgeText num callText">2</text>
   <text x="572" y="336" class="msg callText">validate BookRequest</text>
-  <path d="M485 362 L805 362" class="call"/>
+  <path d="M485 362 L805 362" class="call" marker-end="url(#arrow-call)"/>
 
   <rect x="842" y="378" width="248" height="34" class="label labelPill workLabel"/>
   <circle cx="866" cy="395" r="13" class="badge workBadge"/><text x="866" y="400" text-anchor="middle" class="badgeText num workText">3</text>
   <text x="890" y="400" class="msg workText">start JDBC transaction</text>
-  <path d="M805 426 L1125 426" class="work"/>
+  <path d="M805 426 L1125 426" class="work" marker-end="url(#arrow-work)"/>
 
   <rect x="1168" y="442" width="252" height="34" class="label labelPill workLabel"/>
   <circle cx="1192" cy="459" r="13" class="badge workBadge"/><text x="1192" y="464" text-anchor="middle" class="badgeText num workText">4</text>
   <text x="1216" y="464" class="msg workText">INSERT book row</text>
-  <path d="M1125 490 L1455 490" class="work"/>
+  <path d="M1125 490 L1455 490" class="work" marker-end="url(#arrow-work)"/>
 
   <rect x="510" y="506" width="250" height="34" class="label labelPill returnLabel"/>
   <circle cx="534" cy="523" r="13" class="badge returnBadge"/><text x="534" y="528" text-anchor="middle" class="badgeText num returnText">5</text>
   <text x="558" y="528" class="msg returnText">201 BookResponse</text>
-  <path d="M1455 554 L165 554" class="return"/>
+  <path d="M1455 554 L165 554" class="return" marker-end="url(#arrow-return)"/>
 
   <rect x="520" y="614" width="252" height="34" class="label labelPill failLabel"/>
   <circle cx="544" cy="631" r="13" class="badge failBadge"/><text x="544" y="636" text-anchor="middle" class="badgeText num failText">6</text>
   <text x="568" y="636" class="msg failText">POST /api/books/rollback</text>
-  <path d="M165 662 L485 662" class="fail"/>
+  <path d="M165 662 L485 662" class="fail" marker-end="url(#arrow-fail)"/>
 
   <rect x="850" y="732" width="300" height="34" class="label labelPill failLabel"/>
   <circle cx="874" cy="749" r="13" class="badge failBadge"/><text x="874" y="754" text-anchor="middle" class="badgeText num failText">7</text>
   <text x="898" y="754" class="msg failText">insert then throw inside tx</text>
-  <path d="M805 780 L1125 780" class="fail"/>
+  <path d="M805 780 L1125 780" class="fail" marker-end="url(#arrow-fail)"/>
 
   <rect x="520" y="796" width="348" height="34" class="label labelPill returnLabel"/>
   <circle cx="544" cy="813" r="13" class="badge returnBadge"/><text x="544" y="818" text-anchor="middle" class="badgeText num returnText">8</text>
   <text x="568" y="818" class="msg returnText">safe EXPOSED_* error, no secrets</text>
-  <path d="M1125 844 L165 844" class="return"/>
+  <path d="M1125 844 L165 844" class="return" marker-end="url(#arrow-return)"/>
 
   <rect x="90" y="880" width="1500" height="38" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
   <text x="840" y="905" text-anchor="middle" class="footer">Contract: validation happens before the transaction; rollback and SQL exceptions return sanitized JSON errors.</text>

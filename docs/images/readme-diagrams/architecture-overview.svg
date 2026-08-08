@@ -15,7 +15,7 @@
       <feDropShadow dx="2" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.12"/>
     </filter>
     <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 9 9" data-role="secondary" data-tip-direction="positive-x">
-      <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297" stroke-dasharray="none"/>
+      <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297" stroke-dasharray="none" stroke="#758297" stroke-width="0"/>
     </marker>
   </defs>
 
@@ -56,10 +56,10 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
 
   <!-- Instance 1 bottom (195,208) -> down y=238 -> right to (480,238) -> down to (480,248) -->
-  <path d="M 195 208 L 195 228 Q 195 232 205 232 L 476 232 Q 480 232 480 242 L 480 248" class="line" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 195 208 L 195 228 Q 195 232 205 232 L 476 232 Q 480 232 480 242 L 480 248" class="line" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
 
   <!-- Instance 2 bottom (480,208) -> straight down -->
-  <path d="M 480,208 L 480,248" class="line" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 480,208 L 480,248" class="line" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
 
   <!-- Instance 3 bottom (765,208) -> down y=238 -> left to (480,238) -->
   <!-- Already drawn segment 480,238->480,248 above; just add the branch -->
@@ -75,7 +75,7 @@
   <text x="480" y="318" class="mono" text-anchor="middle">Runs on all instances; only the leader executes the job body</text>
 
   <!-- Arrow: JobService -> LettuceLeaderElector -->
-  <path d="M 480,330 L 480,368" class="line" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 480,330 L 480,368" class="line" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
 
   <!-- ════════════════════════════════════════════════════ -->
   <!-- ROW 3: LettuceLeaderElector (teal, full-width)       -->
@@ -93,10 +93,10 @@
   <!-- ════════════════════════════════════════════════════════════ -->
 
   <!-- Elector bottom (480,448) -> down y=478 -> left to (262,478) -> down to (262,488) -->
-  <path d="M 480 448 L 480 468 Q 480 472 470 472 L 266 472 Q 262 472 262 482 L 262 488" class="line" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 480 448 L 480 468 Q 480 472 470 472 L 266 472 Q 262 472 262 482 L 262 488" class="line" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
 
   <!-- Elector bottom (480,448) -> down y=478 -> right to (699,478) -> down to (699,488) -->
-  <path d="M 480 448 L 480 468 Q 480 472 490 472 L 695 472 Q 699 472 699 482 L 699 488" class="line" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 480 448 L 480 468 Q 480 472 490 472 L 695 472 Q 699 472 699 482 L 699 488" class="line" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
 
   <!-- ═══════════════════════════════════════════════════ -->
   <!-- ROW 4: Job cards (green)  y=488..558              -->
@@ -134,7 +134,7 @@
   <!-- Redis arrow: from right edge of Elector (888,408) -> right to x=920 would exceed frame -->
   <!-- Use interior path: right edge of Elector is x=888, frame inner edge is 936 -->
   <!-- Route: M 888,408 L 920,408 L 920,598 L 888,598 stays inside frame -->
-  <path d="M 888 408 L 910 408 Q 920 408 920 418 L 920 588 Q 920 598 910 598 L 888 598" class="line" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 888 408 L 910 408 Q 920 408 920 418 L 920 588 Q 920 598 910 598 L 888 598" class="line" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
 
   <!-- ════════════════════════════════════════════════ -->
   <!-- BOTTOM BAND: Redis (amber, full-width)           -->

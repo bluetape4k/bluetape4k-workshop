@@ -3,7 +3,7 @@
   <desc id="desc">Domain model for query, settings, request, result, and adapter types.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 12.5 12.5" refX="8" refY="5" markerWidth="10" markerHeight="10" orient="auto" markerUnits="userSpaceOnUse" data-role="secondary" data-tip-direction="positive-x">
-      <path d="M 1 1 L 9 5 L 1 9 z" fill="#3b4b5f" stroke-dasharray="none"/>
+      <path d="M 1 1 L 9 5 L 1 9 z" fill="#3b4b5f" stroke-dasharray="none" stroke="#3b4b5f" stroke-width="0"/>
     </marker>
     <style>
       .title { font-family: 'Architects Daughter', 'Comic Mono', sans-serif; font-size: 34px; fill: #1f2937; }
@@ -70,9 +70,9 @@
     <text class="field" x="22" y="72">suspend search(request)</text>
   </g>
 
-  <path class="edge" d="M 330 188 L 374 188 Q 382 188 382 196 L 382 292 Q 382 300 390 300 L 435 300"/>
-  <path class="edge" d="M 330 450 L 374 450 Q 382 450 382 442 L 382 356 Q 382 348 390 348 L 435 348"/>
-  <path class="edge" d="M 685 300 L 727 300 Q 735 300 735 292 L 735 196 Q 735 188 743 188 L 790 188"/>
-  <path class="edge" d="M 915 266 L 915 364"/>
-  <path class="edge muted" d="M 560 402 L 560 520"/>
+  <path class="edge" d="M 330 188 L 374 188 Q 382 188 382 196 L 382 292 Q 382 300 390 300 L 435 300" marker-end="url(#arrow)"/>
+  <path class="edge" d="M 330 450 L 374 450 Q 382 450 382 442 L 382 356 Q 382 348 390 348 L 435 348" marker-end="url(#arrow)"/>
+  <path class="edge" d="M 685 300 L 727 300 Q 735 300 735 292 L 735 196 Q 735 188 743 188 L 790 188" marker-end="url(#arrow)"/>
+  <path class="edge" d="M 915 266 L 915 364" marker-end="url(#arrow)"/>
+  <path class="edge muted" d="M 560 402 L 560 520" marker-end="url(#arrow)"/>
 </svg>
