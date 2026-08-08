@@ -15,8 +15,8 @@
       .number{font-family:"Comic Mono";font-size:16px;font-weight:700;fill:#ffffff}
       .circle{fill:#52748d}.failCircle{fill:#bd4d45}
     </style>
-    <marker id="arrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#52748d" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="failArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#bd4d45" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#52748d" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#52748d" stroke-width="0"/></marker>
+    <marker id="failArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#bd4d45" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#bd4d45" stroke-width="0"/></marker>
   </defs>
 
   <rect class="frame" x="28" y="28" width="1344" height="924" rx="18"/>
@@ -28,25 +28,25 @@
   <text class="stepTitle" x="700" y="202" text-anchor="middle">Validate request</text>
   <text class="stepText" x="700" y="232" text-anchor="middle">author and order id must be present before any persistence happens</text>
 
-  <path class="arrow" d="M 700 266 L 700 318"/>
+  <path class="arrow" d="M 700 266 L 700 318" marker-end="url(#arrow)"/>
   <rect class="step audit" x="300" y="318" width="800" height="112" rx="12"/>
   <circle class="circle" cx="346" cy="374" r="18"/><text class="number" x="346" y="380" text-anchor="middle">2</text>
   <text class="stepTitle" x="700" y="360" text-anchor="middle">Commit JaVers snapshot</text>
   <text class="stepText" x="700" y="390" text-anchor="middle">RedissonCdoSnapshotRepository stores durable Redis snapshot history</text>
 
-  <path class="failArrow" d="M 700 430 L 700 482"/>
+  <path class="failArrow" d="M 700 430 L 700 482" marker-end="url(#failArrow)"/>
   <rect class="step failure" x="300" y="482" width="800" height="104" rx="12"/>
   <circle class="failCircle" cx="346" cy="534" r="18"/><text class="number" x="346" y="540" text-anchor="middle">3</text>
   <text class="stepTitle" x="700" y="522" text-anchor="middle">Audit sink gate</text>
   <text class="stepText" x="700" y="552" text-anchor="middle">failure stops here; success continues to the current-row write</text>
 
-  <path class="arrow" d="M 700 586 L 700 638"/>
+  <path class="arrow" d="M 700 586 L 700 638" marker-end="url(#arrow)"/>
   <rect class="step row" x="300" y="638" width="800" height="112" rx="12"/>
   <circle class="circle" cx="346" cy="694" r="18"/><text class="number" x="346" y="700" text-anchor="middle">4</text>
   <text class="stepTitle" x="700" y="680" text-anchor="middle">Materialize current row</text>
   <text class="stepText" x="700" y="710" text-anchor="middle">Exposed OrderTable keeps only the latest order state</text>
 
-  <path class="arrow" d="M 700 750 L 700 802"/>
+  <path class="arrow" d="M 700 750 L 700 802" marker-end="url(#arrow)"/>
   <rect class="step read" x="300" y="802" width="800" height="104" rx="12"/>
   <circle class="circle" cx="346" cy="854" r="18"/><text class="number" x="346" y="860" text-anchor="middle">5</text>
   <text class="stepTitle" x="700" y="842" text-anchor="middle">Read history from JaVers</text>

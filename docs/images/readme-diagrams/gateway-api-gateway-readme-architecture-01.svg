@@ -4,10 +4,10 @@
     <filter id="shadow" x="-8%" y="-10%" width="116%" height="130%">
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#5b7282" flood-opacity="0.16"/>
     </filter>
-    <marker id="blueArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#457b9d" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="greenArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5f8f5b" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="redArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b44d49" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="goldArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#a87332" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="blueArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10.7692 10.7692" refX="9" refY="5" orient="auto" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#457b9d" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#457b9d" stroke-width="0"/></marker>
+    <marker id="greenArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10.7692 10.7692" refX="9" refY="5" orient="auto" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5f8f5b" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#5f8f5b" stroke-width="0"/></marker>
+    <marker id="redArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10.7692 10.7692" refX="9" refY="5" orient="auto" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b44d49" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#b44d49" stroke-width="0"/></marker>
+    <marker id="goldArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 11.6667 11.6667" refX="9" refY="5" orient="auto" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#a87332" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#a87332" stroke-width="0"/></marker>
     <style>
       .canvas { fill: #f7fafc; }
       .frame { fill: #fffefd; stroke: #cdd8df; stroke-width: 2; }
@@ -97,29 +97,29 @@
   <text class="cardTitle" x="1402" y="788" text-anchor="middle">WebSocket Echo</text>
   <text class="smallText" x="1402" y="816" text-anchor="middle">/echo -> ws://localhost:9000</text>
 
-  <path class="lineBlue" d="M 378 368 H 550" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="lineBlue" d="M 378 368 H 550" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#blueArrow)"/>
   <rect class="labelBox" x="400" y="326" width="122" height="30" rx="15" stroke="#8eb4d6"/>
   <text class="label" x="461" y="346" text-anchor="middle" fill="#457b9d">port 8080</text>
 
-  <path class="lineGreen" d="M 1004 304 H 1180" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="lineGreen" d="M 1004 304 H 1180" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#greenArrow)"/>
   <rect class="labelBox" x="1028" y="261" width="124" height="30" rx="15" stroke="#91b884"/>
   <text class="label" x="1090" y="281" text-anchor="middle" fill="#5f8f5b">customers</text>
 
-  <path class="lineGreen" d="M 1004 370 L 1078 370 Q 1088 370 1088 380 L 1088 461 Q 1088 471 1098 471 L 1180 471" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="lineGreen" d="M 1004 370 L 1078 370 Q 1088 370 1088 380 L 1088 461 Q 1088 471 1098 471 L 1180 471" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#greenArrow)"/>
   <rect class="labelBox" x="1036" y="421" width="102" height="30" rx="15" stroke="#91b884"/>
   <text class="label" x="1087" y="441" text-anchor="middle" fill="#5f8f5b">orders</text>
 
-  <path class="lineGold" d="M 1004 514 L 1090 514 Q 1100 514 1100 524 L 1100 636 Q 1100 646 1110 646 L 1180 646" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="lineGold" d="M 1004 514 L 1090 514 Q 1100 514 1100 524 L 1100 636 Q 1100 646 1110 646 L 1180 646" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#goldArrow)"/>
   <rect class="labelBox" x="1034" y="588" width="108" height="30" rx="15" stroke="#d5a656"/>
   <text class="label" x="1088" y="608" text-anchor="middle" fill="#a87332">swagger</text>
 
-  <path class="lineGold" d="M 1004 337 L 1108 337 Q 1108 337 1108 347 L 1108 785 Q 1108 795 1128 795 L 1180 795" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="lineGold" d="M 1004 337 L 1108 337 Q 1108 337 1108 347 L 1108 785 Q 1108 795 1128 795 L 1180 795" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#goldArrow)"/>
   <rect class="labelBox" x="1062" y="736" width="92" height="30" rx="15" stroke="#d5a656"/>
   <text class="label" x="1108" y="756" text-anchor="middle" fill="#a87332">/echo</text>
 
-  <path class="lineRed" d="M 777 750 V 812" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="lineRed" d="M 777 750 V 812" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#redArrow)"/>
   <rect class="labelBox" x="800" y="770" width="146" height="30" rx="15" stroke="#bc544f"/>
   <text class="label" x="873" y="790" text-anchor="middle" fill="#b44d49">rate buckets</text>
 
-  <path class="lineBlue" d="M 378 579 L 496 579 Q 506 579 506 569 L 506 337 Q 506 327 516 327 L 550 327" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="lineBlue" d="M 378 579 L 496 579 Q 506 579 506 569 L 506 337 Q 506 327 516 327 L 550 327" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#blueArrow)"/>
 </svg>

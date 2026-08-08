@@ -5,19 +5,19 @@
       <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
     </filter>
     <marker id="arrow-api" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4F7DB5" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4F7DB5" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#4F7DB5" stroke-width="0"/>
     </marker>
     <marker id="arrow-service" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4A9667" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4A9667" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#4A9667" stroke-width="0"/>
     </marker>
-    <marker id="arrow-infra" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#B18435" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <marker id="arrow-infra" viewBox="0 0 9.3333 9.3333" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#B18435" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#B18435" stroke-width="0"/>
     </marker>
     <marker id="arrow-bt" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#3E927D" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#3E927D" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#3E927D" stroke-width="0"/>
     </marker>
-    <marker id="arrow-runtime" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#B85E63" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <marker id="arrow-runtime" viewBox="0 0 9.3333 9.3333" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#B85E63" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#B85E63" stroke-width="0"/>
     </marker>
     <style>
       .canvas { fill: #F8FBFD; }
@@ -53,10 +53,10 @@
       <text text-anchor="middle"><tspan class="layer-detail" x="193.28" y="764.0">FlociServer, S3,</tspan><tspan class="layer-detail" x="193.28" y="780.0">Testcontainers</tspan></text>
     </g>
     <g class="edge" data-edge="entry2-&gt;infra0" data-label="uses">
-      <path d="M 1402.88 233 L 1402.88 259 Q 1402.88 262 1390.08 262 L 555.52 262 Q 542.72 262 542.72 279 L 542.72 305" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
+      <path d="M 1402.88 233 L 1402.88 259 Q 1402.88 262 1390.08 262 L 555.52 262 Q 542.72 262 542.72 279 L 542.72 305" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-infra)" data-connector="entry2-infra0"/>
     </g>
     <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 542.72 638 L 542.72 657 Q 542.72 660 555.52 660 L 744.96 660 Q 757.76 660 757.76 677 L 757.76 696" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+      <path d="M 542.72 638 L 542.72 657 Q 542.72 660 555.52 660 L 744.96 660 Q 757.76 660 757.76 677 L 757.76 696" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-runtime)" data-connector="bt2-runtime0"/>
     </g>
     <g class="node" data-node="entry0" data-lines="Spring Cloud Aws S3 | Sample | s3">
       <rect x="350.72" y="134.0" width="384" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>

@@ -3,17 +3,17 @@
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
       <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#8aa0b8" flood-opacity="0.22"/>
     </filter>
-    <marker id="arrow-blue" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14">
+    <marker id="arrow-blue" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x">
       <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f7ed8" stroke="#2f7ed8" stroke-width="1" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
-    <marker id="arrow-green" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f9e44" stroke="#2f9e44" stroke-width="1" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    <marker id="arrow-green" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f9e44" stroke="#2f9e44" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
-    <marker id="arrow-orange" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#d97706" stroke="#d97706" stroke-width="1" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    <marker id="arrow-orange" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#d97706" stroke="#d97706" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
-    <marker id="arrow-purple" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#8b5cf6" stroke="#8b5cf6" stroke-width="1" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    <marker id="arrow-purple" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#8b5cf6" stroke="#8b5cf6" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
     <style>
       .canvas { fill:#f8fbff; }
@@ -81,28 +81,28 @@
   <text class="card-title" x="1140.0" y="640">WorkItem</text>
   <text class="card-text" x="1140.0" y="666">workId/deviceId</text>
   <text class="card-text" x="1140.0" y="684">command</text>
-  <path class="line-green" d="M 585 300 L 585 345 Q 585 365 565 365 L 205 365 Q 185 365 185 385 L 185 390"/>
+  <path class="line-green" d="M 585 300 L 585 345 Q 585 365 565 365 L 205 365 Q 185 365 185 385 L 185 390" marker-end="url(#arrow-green)"/>
   <rect x="358" y="333" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
   <text class="label" x="430" y="351">uses</text>
-  <path class="line-green" d="M 645 300 L 645 345 Q 645 365 625 365 L 455 365 Q 435 365 435 385 L 435 390"/>
+  <path class="line-green" d="M 645 300 L 645 345 Q 645 365 625 365 L 455 365 Q 435 365 435 385 L 435 390" marker-end="url(#arrow-green)"/>
   <rect x="523" y="333" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
   <text class="label" x="595" y="351">uses</text>
-  <path class="line-green" d="M 705 300 L 705 345 Q 705 365 725 365 L 705 365 Q 685 365 685 385 L 685 390"/>
+  <path class="line-green" d="M 705 300 L 705 345 Q 705 365 725 365 L 705 365 Q 685 365 685 385 L 685 390" marker-end="url(#arrow-green)"/>
   <rect x="678" y="333" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
   <text class="label" x="750" y="351">uses</text>
-  <path class="line-purple" d="M 765 300 L 765 345 Q 765 365 785 365 L 915 365 Q 935 365 935 385 L 935 390"/>
+  <path class="line-purple" d="M 765 300 L 765 345 Q 765 365 785 365 L 915 365 Q 935 365 935 385 L 935 390" marker-end="url(#arrow-purple)"/>
   <rect x="828" y="333" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
   <text class="label" x="900" y="351">uses</text>
-  <path class="line-purple" d="M 825 300 L 825 345 Q 825 365 845 365 L 1165 365 Q 1185 365 1185 385 L 1185 390"/>
+  <path class="line-purple" d="M 825 300 L 825 345 Q 825 365 845 365 L 1165 365 Q 1185 365 1185 385 L 1185 390" marker-end="url(#arrow-purple)"/>
   <rect x="908" y="307" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
   <text class="label" x="980" y="325">uses</text>
-  <path class="line-orange dash" d="M 185 486 L 185 575 Q 185 600 210 600 L 220 600 Q 230 600 230 610"/>
+  <path class="line-orange dash" d="M 185 486 L 185 575 Q 185 600 210 600 L 220 600 Q 230 600 230 610" marker-end="url(#arrow-orange)"/>
   <rect x="148" y="540" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
   <text class="label" x="220" y="558">emits</text>
-  <path class="line-orange dash" d="M 435 486 L 435 575 Q 435 600 460 600 L 680 600 Q 700 600 700 610"/>
+  <path class="line-orange dash" d="M 435 486 L 435 575 Q 435 600 460 600 L 680 600 Q 700 600 700 610" marker-end="url(#arrow-orange)"/>
   <rect x="448" y="540" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
   <text class="label" x="520" y="558">state</text>
-  <path class="line-orange dash" d="M 1185 486 L 1185 575 Q 1185 600 1165 600 L 1150 600 Q 1140 600 1140 610"/>
+  <path class="line-orange dash" d="M 1185 486 L 1185 575 Q 1185 600 1165 600 L 1150 600 Q 1140 600 1140 610" marker-end="url(#arrow-orange)"/>
   <rect x="1138" y="540" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
   <text class="label" x="1210" y="558">queue</text>
 </svg>

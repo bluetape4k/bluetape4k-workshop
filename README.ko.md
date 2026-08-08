@@ -228,7 +228,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Advanced | [`ratelimit-bucket4j-redis`](ratelimit/bucket4j-redis/) | `redis`, `testcontainers` | Redis (TC) | Bucket4j + Redis를 통한 분산 속도 제한 |
 | Advanced | [`ratelimit-bucker4j-bluetape4k-webflux`](ratelimit/bucker4j-bluetape4k-webflux/) | `redis`, `coroutines`, `testcontainers` | Redis (TC) | bluetape4k WebFlux 속도 제한 통합 |
 | Advanced | [`redis-distributed-lock`](redis/distributed-lock/) | `redis`, `redisson`, `coroutines` | Redis (TC) | Redisson + 코루틴 suspend를 활용한 분산 락 |
-| Advanced | [`redis-cluster-demo`](redis/cluster-demo/) | `redis`, `redisson` | Redis Cluster (TC) | Redis 클러스터 토폴로지 및 장애 조치 |
+| Advanced | [`redis-cluster-demo`](redis/cluster-demo/) | `redis`, `lettuce`, `redisson` | Redis Cluster (TC) | Redis 클러스터 토폴로지, 장애 조치 및 typed Lettuce codec |
 | Basic | [`redis-redisson-examples`](redis/redisson-examples/) | `redis`, `redisson` | Redis (TC) | Redisson 데이터 구조와 Pub/Sub |
 | Advanced | [`aws-s3-spring-cloud`](aws/s3-spring-cloud/) | `aws`, `testcontainers` | LocalStack (TC) | Spring Cloud AWS + LocalStack으로 AWS S3 사용 |
 | Advanced | [`aws-ktor-dynamodb`](aws/ktor-dynamodb/) | `aws`, `ktor`, `coroutines`, `testcontainers` | Floci/LocalStack (TC) | fail-closed local mode에서 배우는 Ktor REST + DynamoDB conditional write |
@@ -240,6 +240,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Advanced | [`image-processing-advanced-workflow`](image-processing/advanced-workflow/) | `images-vips-java25`, `images-spring-boot`, `micrometer` | S3 또는 local storage | 업로드 → 원본 저장 → WebP 파생 이미지 → unsigned public URL |
 | Advanced | [`image-processing-profile-image-moderation`](image-processing/profile-image-moderation/) | `images-spring-boot`, `coroutines`, `micrometer` | Local storage / S3-compatible | 프로필 업로드 → private 원본 → blurred pending URL → moderation 승인/기본 이미지 fallback |
 | Advanced | [`image-processing-ocr-api`](image-processing/ocr-api/) | `images-ocr`, `images`, `spring-boot4-core` | In-memory | 검증된 fallback과 선택 Tesseract를 사용하는 multipart OCR API |
+| Advanced | [`image-processing-barcode-api`](image-processing/barcode-api/) | `images-barcode-api`, `images-barcode-zxing`, `images` | In-memory | ZXing provider를 주입한 provider-neutral barcode 추출, bounded multipart 입력, 결정적 fixture |
 | Advanced | [`operations-job-console-core`](operations/job-console-core/) | `exposed-jdbc`, `lettuce`, `micrometer`, `testcontainers` | PostgreSQL + Redis (TC) | 내구성 있는 FIFO 작업, lease, checkpoint, 취소, 재시도 예산, 제한된 ETA, outbox |
 | Advanced | [`operations-job-console-spring`](operations/job-console-spring/) | `spring-boot4-core`, `virtualthread-jdk25` | PostgreSQL (TC) | 공유 Java 25 작업 콘솔 계약을 위한 Spring MVC REST/SSE 어댑터 |
 | Advanced | [`operations-job-console-ktor`](operations/job-console-ktor/) | `ktor`, `coroutines` | PostgreSQL (TC) | 공유 Java 25 작업 콘솔 계약을 위한 Ktor Netty REST/SSE 어댑터 |
@@ -260,6 +261,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 ./gradlew :aws-storage-abstraction:test
 ./gradlew :aws-s3-vectors-access-grants:test
 ./gradlew :image-processing-profile-image-moderation:test
+./gradlew :image-processing-barcode-api:test
 ./scripts/smoke-validate.sh operations
 ./gradlew :leader-backend-comparison-lab:test
 ./gradlew :leader-tenant-scheduler:test
@@ -291,7 +293,7 @@ bluetape4k-workshop/
 ├── gateway/                # API Gateway + 마이크로서비스
 ├── gatling/                # 부하/성능 테스트
 ├── graph/                  # TinkerGraph, traversal, graph-io 예제
-├── image-processing/       # 이미지 업로드, moderation, VIPS 파생 이미지, OCR API
+├── image-processing/       # 이미지 업로드, moderation, VIPS 파생 이미지, OCR, barcode API
 ├── io/                     # Okio I/O 예제
 ├── json/                   # Jackson 3 직렬화
 ├── kotlin/                 # 코루틴, 디자인 패턴

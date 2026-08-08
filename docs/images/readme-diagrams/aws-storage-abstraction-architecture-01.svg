@@ -5,14 +5,14 @@
     <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
       <feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#18304a" flood-opacity="0.13"/>
     </filter>
-    <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f6de0" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <marker id="arrow-blue" viewBox="0 0 9.3333 9.3333" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f6de0" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#2f6de0" stroke-width="0"/>
     </marker>
-    <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f8b57" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <marker id="arrow-green" viewBox="0 0 9.3333 9.3333" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f8b57" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#2f8b57" stroke-width="0"/>
     </marker>
-    <marker id="arrow-purple" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#7953b6" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <marker id="arrow-purple" viewBox="0 0 9.3333 9.3333" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#7953b6" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#7953b6" stroke-width="0"/>
     </marker>
     <style>
       svg{background:#f6f8fb}
@@ -50,13 +50,13 @@
   </g>
 
   <g id="connections">
-    <path class="edge" d="M 254.684 303 V 340" stroke="#2f6de0" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
-    <path class="edge" d="M 381.484 380 H 520.205" stroke="#2f8b57" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-    <path class="edge" d="M 381.484 487 H 520.205" stroke="#2f6de0" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
-    <path class="edge" d="M 381.484 594 H 520.205" stroke="#7953b6" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
-    <path class="edge" d="M 1062.085 380 H 1192.137" stroke="#2f8b57" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round"/>
-    <path class="edge" d="M 1062.085 487 H 1192.137" stroke="#2f6de0" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round"/>
-    <path class="edge" d="M 1062.085 594 H 1192.137" stroke="#7953b6" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round"/>
+    <path class="edge" d="M 254.684 303 V 340" stroke="#2f6de0" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round" data-connector="edge-01"/>
+    <path class="edge" d="M 381.484 380 H 520.205" stroke="#2f8b57" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round" data-connector="edge-02"/>
+    <path class="edge" d="M 381.484 487 H 520.205" stroke="#2f6de0" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round" data-connector="edge-03"/>
+    <path class="edge" d="M 381.484 594 H 520.205" stroke="#7953b6" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round" data-connector="edge-04"/>
+    <path class="edge" d="M 1062.085 380 H 1192.137" stroke="#2f8b57" marker-end="url(#arrow-green)" stroke-linecap="round" stroke-linejoin="round" data-connector="edge-05"/>
+    <path class="edge" d="M 1062.085 487 H 1192.137" stroke="#2f6de0" marker-end="url(#arrow-blue)" stroke-linecap="round" stroke-linejoin="round" data-connector="edge-06"/>
+    <path class="edge" d="M 1062.085 594 H 1192.137" stroke="#7953b6" marker-end="url(#arrow-purple)" stroke-linecap="round" stroke-linejoin="round" data-connector="edge-07"/>
   </g>
 
   <g id="application-cards">

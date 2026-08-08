@@ -20,8 +20,8 @@
       .relLabel{font-family:"Comic Mono";font-size:14px;fill:#536975}
       .labelBox{fill:#ffffff;stroke:#d7e0e4;stroke-width:1.3}
     </style>
-    <marker id="fkArrow" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#667f8c" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <marker id="fkArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 9.3333 9.3333" refX="9" refY="5" orient="auto" data-role="primary" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#667f8c" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#667f8c" stroke-width="0"/>
     </marker>
   </defs>
 
@@ -80,17 +80,17 @@
     <text class="col" x="1320" y="860">status</text><text class="type" x="1570" y="860" text-anchor="end">VARCHAR(20)</text>
   </g>
 
-  <path class="rel" d="M 525 407 H 725" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="rel" d="M 525 407 H 725" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#fkArrow)"/>
   <rect class="labelBox" x="575" y="336" width="100" height="28" rx="14"/>
   <text class="relLabel" x="625" y="355" text-anchor="middle">1 author</text>
   <rect class="labelBox" x="655" y="472" width="102" height="28" rx="14"/>
   <text class="relLabel" x="706" y="491" text-anchor="middle">many books</text>
 
-  <path class="rel" d="M 1225 754 H 1095" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="rel" d="M 1225 754 H 1095" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#fkArrow)"/>
   <rect class="labelBox" x="1122" y="690" width="82" height="28" rx="14"/>
   <text class="relLabel" x="1163" y="709" text-anchor="middle">order</text>
 
-  <path class="rel" d="M 525 792 H 665" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="rel" d="M 525 792 H 665" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#fkArrow)"/>
   <rect class="labelBox" x="535" y="828" width="118" height="28" rx="14"/>
   <text class="relLabel" x="594" y="847" text-anchor="middle">product row</text>
 

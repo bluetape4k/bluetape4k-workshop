@@ -21,77 +21,77 @@
 
 </style>
 
-    <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2F6F8E" stroke="#2F6F8E" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
-    <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#55783F" stroke="#55783F" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
-    <marker id="arrow-amber" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#A46628" stroke="#A46628" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
-    <marker id="arrow-red" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B85E63" stroke="#B85E63" stroke-dasharray="none" style="stroke-dasharray:none"/></marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2F6F8E" stroke="#2F6F8E" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/></marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#55783F" stroke="#55783F" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/></marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#A46628" stroke="#A46628" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/></marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B85E63" stroke="#B85E63" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/></marker>
 
 </defs>
-<rect x="0" y="0" width="1800" height="1060" rx="0" class="canvas" fill="#F8FBFD"/>
-<rect x="20" y="20" width="1760" height="1020" rx="22" class="frame" fill="#FFFFFF"/>
+<rect x="0" y="0" width="1800" height="1060" rx="0" class="canvas" fill="#F8FBFD" />
+<rect x="20" y="20" width="1760" height="1020" rx="22" class="frame" fill="#FFFFFF" />
 <text x="900" y="68" class="title" text-anchor="middle">Parallel Enrichment Class Diagram</text>
 <text x="900" y="98" class="subtitle" text-anchor="middle">Pipeline dependencies, service contracts, DTOs, and fast-fail exception types</text>
-<rect x="650" y="150" width="500" height="230" rx="14" class="card" fill="#EAF7F0"/>
+<rect x="650" y="150" width="500" height="230" rx="14" class="card" fill="#EAF7F0" />
 <text x="900.0" y="184" class="card-title" text-anchor="middle">OrderEnrichmentPipeline</text>
-<line x1="650" y1="200" x2="1150" y2="200" stroke="#8FA6B6" stroke-width="1.4"/>
+<line x1="650" y1="200" x2="1150" y2="200" stroke="#8FA6B6" stroke-width="1.4" />
 <text x="670" y="226" class="card-detail">- customerProfileService</text>
 <text x="670" y="248" class="card-detail">- inventoryService</text>
 <text x="670" y="270" class="card-detail">- promotionService</text>
 <text x="670" y="292" class="card-detail">+ enrichInParallel(source, parallelism, runOn)</text>
 <text x="670" y="314" class="card-detail">+ enrichSequentially(source)</text>
 <text x="670" y="336" class="card-detail">- enrichOrder(order)</text>
-<rect x="90" y="470" width="360" height="150" rx="14" class="card" fill="#FFF1F1"/>
+<rect x="90" y="470" width="360" height="150" rx="14" class="card" fill="#FFF1F1" />
 <text x="270.0" y="504" class="card-title" text-anchor="middle">CustomerProfileService</text>
-<line x1="90" y1="520" x2="450" y2="520" stroke="#8FA6B6" stroke-width="1.4"/>
+<line x1="90" y1="520" x2="450" y2="520" stroke="#8FA6B6" stroke-width="1.4" />
 <text x="110" y="546" class="card-detail">- profiles: Map&lt;String, LoyaltyGrade&gt;</text>
 <text x="110" y="568" class="card-detail">+ findByCustomerId(customerId)</text>
-<rect x="510" y="470" width="340" height="150" rx="14" class="card" fill="#FFF1F1"/>
+<rect x="510" y="470" width="340" height="150" rx="14" class="card" fill="#FFF1F1" />
 <text x="680.0" y="504" class="card-title" text-anchor="middle">InventoryService</text>
-<line x1="510" y1="520" x2="850" y2="520" stroke="#8FA6B6" stroke-width="1.4"/>
+<line x1="510" y1="520" x2="850" y2="520" stroke="#8FA6B6" stroke-width="1.4" />
 <text x="530" y="546" class="card-detail">- stockBySku: Map&lt;String, Int&gt;</text>
 <text x="530" y="568" class="card-detail">+ reserve(orderItems)</text>
-<rect x="910" y="470" width="340" height="150" rx="14" class="card" fill="#FFF1F1"/>
+<rect x="910" y="470" width="340" height="150" rx="14" class="card" fill="#FFF1F1" />
 <text x="1080.0" y="504" class="card-title" text-anchor="middle">PromotionService</text>
-<line x1="910" y1="520" x2="1250" y2="520" stroke="#8FA6B6" stroke-width="1.4"/>
+<line x1="910" y1="520" x2="1250" y2="520" stroke="#8FA6B6" stroke-width="1.4" />
 <text x="930" y="546" class="card-detail">- baseDiscount: Int</text>
 <text x="930" y="568" class="card-detail">+ estimateDiscount(profile)</text>
-<rect x="1330" y="430" width="360" height="190" rx="14" class="card" fill="#FFF8E7"/>
+<rect x="1330" y="430" width="360" height="190" rx="14" class="card" fill="#FFF8E7" />
 <text x="1510.0" y="464" class="card-title" text-anchor="middle">OrderCommand</text>
-<line x1="1330" y1="480" x2="1690" y2="480" stroke="#8FA6B6" stroke-width="1.4"/>
+<line x1="1330" y1="480" x2="1690" y2="480" stroke="#8FA6B6" stroke-width="1.4" />
 <text x="1350" y="506" class="card-detail">+ orderId: String</text>
 <text x="1350" y="528" class="card-detail">+ customerId: String</text>
 <text x="1350" y="550" class="card-detail">+ items: List&lt;OrderItem&gt;</text>
-<rect x="1330" y="700" width="360" height="190" rx="14" class="card" fill="#FFF9F1"/>
+<rect x="1330" y="700" width="360" height="190" rx="14" class="card" fill="#FFF9F1" />
 <text x="1510.0" y="734" class="card-title" text-anchor="middle">EnrichedOrder</text>
-<line x1="1330" y1="750" x2="1690" y2="750" stroke="#8FA6B6" stroke-width="1.4"/>
+<line x1="1330" y1="750" x2="1690" y2="750" stroke="#8FA6B6" stroke-width="1.4" />
 <text x="1350" y="776" class="card-detail">+ loyaltyGrade: LoyaltyGrade</text>
 <text x="1350" y="798" class="card-detail">+ discountPercent: Int</text>
 <text x="1350" y="820" class="card-detail">+ fulfillable: Boolean</text>
-<rect x="90" y="760" width="360" height="138" rx="14" class="card" fill="#FFF3F3"/>
+<rect x="90" y="760" width="360" height="138" rx="14" class="card" fill="#FFF3F3" />
 <text x="270.0" y="794" class="card-title" text-anchor="middle">UnknownCustomerException</text>
-<line x1="90" y1="810" x2="450" y2="810" stroke="#8FA6B6" stroke-width="1.4"/>
+<line x1="90" y1="810" x2="450" y2="810" stroke="#8FA6B6" stroke-width="1.4" />
 <text x="110" y="836" class="card-detail">extends IllegalArgumentException</text>
 <text x="110" y="858" class="card-detail">thrown by profile lookup</text>
-<rect x="510" y="760" width="360" height="138" rx="14" class="card" fill="#FFF3F3"/>
+<rect x="510" y="760" width="360" height="138" rx="14" class="card" fill="#FFF3F3" />
 <text x="690.0" y="794" class="card-title" text-anchor="middle">UnknownProductException</text>
-<line x1="510" y1="810" x2="870" y2="810" stroke="#8FA6B6" stroke-width="1.4"/>
+<line x1="510" y1="810" x2="870" y2="810" stroke="#8FA6B6" stroke-width="1.4" />
 <text x="530" y="836" class="card-detail">extends IllegalArgumentException</text>
 <text x="530" y="858" class="card-detail">thrown by inventory lookup</text>
-<path class="line" d="M 760 380 L 760 425 Q 760 445 740 445 L 270 445 Q 250 445 250 465 L 250 470" stroke="#55783F" marker-end="url(#arrow-green)"/>
-<path class="line" d="M 900 380 L 900 425 Q 900 445 880 445 L 700 445 Q 680 445 680 465 L 680 470" stroke="#55783F" marker-end="url(#arrow-green)"/>
-<path class="line" d="M 1040 380 L 1040 425 Q 1040 445 1060 445 L 1080 445 Q 1100 445 1100 465 L 1100 470" stroke="#55783F" marker-end="url(#arrow-green)"/>
-<path class="line" d="M 1150 265 L 1288 265 Q 1308 265 1308 285 L 1308 485 Q 1308 505 1328 505 L 1330 505" stroke="#2F6F8E" marker-end="url(#arrow-blue)"/>
-<path class="line" d="M 1150 315 L 1288 315 Q 1308 315 1308 335 L 1308 755 Q 1308 775 1328 775 L 1330 775" stroke="#A46628" marker-end="url(#arrow-amber)"/>
+<path class="line" d="M 760 380 L 760 425 Q 760 445 740 445 L 270 445 Q 250 445 250 455 V 470" stroke="#55783F" marker-end="url(#arrow-green)"/>
+<path class="line" d="M 900 380 L 900 425 Q 900 445 880 445 L 700 445 Q 680 445 680 455 V 470" stroke="#55783F" marker-end="url(#arrow-green)"/>
+<path class="line" d="M 1040 380 L 1040 425 Q 1040 445 1060 445 L 1080 445 Q 1100 445 1100 455 V 470" stroke="#55783F" marker-end="url(#arrow-green)"/>
+<path class="line" d="M 1150 265 L 1288 265 Q 1308 265 1308 285 L 1308 485 Q 1307 505 1315 505 L 1330 505" stroke="#2F6F8E" marker-end="url(#arrow-blue)"/>
+<path class="line" d="M 1150 315 L 1288 315 Q 1308 315 1308 335 L 1308 755 Q 1307 775 1315 775 L 1330 775" stroke="#A46628" marker-end="url(#arrow-amber)"/>
 <path class="line-thin dash" d="M 270 620 L 270 740 L 270 760" stroke="#B85E63" marker-end="url(#arrow-red)"/>
 <path class="line-thin dash" d="M 680 620 L 680 740 L 680 760" stroke="#B85E63" marker-end="url(#arrow-red)"/>
-<rect x="470" y="430" width="122" height="24" class="pill"/>
+<rect x="470" y="430" width="122" height="24" class="pill" />
 <text x="531.0" y="446" class="label" text-anchor="middle">uses</text>
-<rect x="1210" y="250" width="96" height="24" class="pill"/>
+<rect x="1210" y="250" width="96" height="24" class="pill" />
 <text x="1258.0" y="266" class="label" text-anchor="middle">input</text>
-<rect x="1210" y="760" width="106" height="24" class="pill"/>
+<rect x="1210" y="760" width="106" height="24" class="pill" />
 <text x="1263.0" y="776" class="label" text-anchor="middle">output</text>
-<rect x="286" y="708" width="112" height="24" class="pill"/>
+<rect x="286" y="708" width="112" height="24" class="pill" />
 <text x="342.0" y="724" class="label" text-anchor="middle">throws</text>
-<rect x="696" y="708" width="112" height="24" class="pill"/>
+<rect x="696" y="708" width="112" height="24" class="pill" />
 <text x="752.0" y="724" class="label" text-anchor="middle">throws</text>
 </svg>

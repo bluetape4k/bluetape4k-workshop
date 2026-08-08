@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="2025.2" height="960" viewBox="0 0 2025.2 960" role="img" aria-label="image-processing advanced workflow persistence ERD">
   <defs>
-    <marker id="fkArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 12.2 10" refX="9" refY="5" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#667F8C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <marker id="fkArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 14.2333 11.6667" refX="9" refY="5" orient="auto" data-role="primary" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#667F8C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#667F8C" stroke-width="0"/>
     </marker>
     <style>
       svg { background: #F8FAFC; }
@@ -85,9 +85,9 @@
     <text class="col" x="1664.08" y="867">message, payload</text><text class="type" x="1886.12" y="867" text-anchor="end">TEXT?, JSONB?</text>
   </g>
 
-  <path class="rel" d="M 678.32 294 H 880.84" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="rel" d="M 678.32 754 H 880.84" stroke-linecap="round" stroke-linejoin="round"/>
-  <path class="rel" d="M 1442.04 754 H 1561.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="rel" d="M 678.32 294 H 880.84" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#fkArrow)"/>
+  <path class="rel" d="M 678.32 754 H 880.84" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#fkArrow)"/>
+  <path class="rel" d="M 1442.04 754 H 1561.6" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#fkArrow)"/>
   <rect class="labelBox" x="727.12" y="248" width="112.24" height="28" rx="14"/>
   <text class="relLabel" x="783.24" y="267" text-anchor="middle">1 asset</text>
   <rect class="labelBox" x="753.96" y="326" width="148.84" height="28" rx="14"/>

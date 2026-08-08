@@ -52,7 +52,7 @@ spring:
 |---|---|---|---|
 | `RedisClusterServer.Launcher.redisCluster` | `bluetape4k-testcontainers` | `RedisClusterApplication` companion | 6개 노드(3 masters + 3 replicas)를 자동으로 시작하고 중지하는 Testcontainers Redis Cluster singleton입니다 |
 | `Launcher.LettuceLib.clientResources(redisCluster)` | `bluetape4k-testcontainers` | `RedisClusterApplication.lettuceClientResource()` | 컨테이너 포트에 맞는 Lettuce `ClientResources`를 한 번에 생성합니다 |
-| `LettuceClients` / `LettuceLongCodec` / `awaitSuspending()` | `bluetape4k-lettuce` | `Bluetape4kLettuceUsageTest` | typed codec과 low-level Redis 경로의 coroutine-friendly async wait를 검증합니다 |
+| `LettuceClients` / `LettuceIntCodec` / `LettuceLongCodec` / `awaitSuspending()` | `bluetape4k-lettuce` | `Bluetape4kLettuceUsageTest` | 32-bit/64-bit typed codec과 low-level Redis 경로의 coroutine-friendly async wait를 검증합니다 |
 | `KLoggingChannel` | `bluetape4k-logging` | `RedisClusterApplication` companion, `NumberService` companion, `AbstractRedisClusterTest` companion | coroutine MDC context를 포함한 구조화 로깅을 제공합니다 |
 | `Fakers.faker` / `Fakers.fixedString` | `bluetape4k-junit5` | `AbstractRedisClusterTest` | 재현 가능한 random key와 value를 생성합니다 |
 | `bluetape4k-core` — `toByteArray()` / `toInt()` | `bluetape4k-core` | `NumberService` | binary cluster command에서 사용하는 Int-to-ByteArray 변환 유틸리티입니다 |
@@ -129,7 +129,7 @@ fun multiplyAndSave(number: Int) {
 ## Lettuce 경계
 
 Spring Data Redis `clusterConnection`은 Redis Cluster 동작을 입증하는 책임을 가집니다.
-`bluetape4k-lettuce`는 `LettuceClients`, `LettuceLongCodec`, `awaitSuspending()`을 사용하는 별도의 low-level 테스트에서 typed codec과 coroutine-friendly async bridge를 검증합니다.
+`bluetape4k-lettuce`는 별도의 low-level round trip에서 coroutine-friendly async bridge를 검증합니다. `LettuceLongCodec`은 64-bit 값을, `LettuceIntCodec`은 32-bit 값을 각각 대응하는 typed command로 보존합니다.
 
 ## Cluster Slot 분산
 

@@ -3,7 +3,7 @@
 각 bluetape4k library를 기존 workshop 예제와 연결하고, Basic/Advanced 제안 시나리오와
 함께 coverage gap을 식별합니다.
 
-> 마지막 갱신: 2026-05-24
+> 마지막 갱신: 2026-08-08
 
 ---
 
@@ -44,6 +44,7 @@
 | `bluetape4k-spring-boot-redis` | `spring-boot-cache-redis` | ⚠️ Partial | custom codec, key별 TTL | Redis L2 fallback을 가진 Caffeine-first cache | TTL override를 포함한 distributed cache cluster | — |
 | `bluetape4k-redis` | `redis-redisson-examples`, `redis-distributed-lock` | ✅ Good | reactive Redisson 미노출 | — | Reactive Redisson RMapReactive example | — |
 | `bluetape4k-redisson` | `redis-distributed-lock`, `redis-cluster-demo` | ✅ Good | Redisson Spring Boot auto-config | — | — | — |
+| `bluetape4k-lettuce` | `redis/cluster-demo` | ✅ Good | low-level typed codec 소비가 기존 Long 중심 | — | `LettuceIntCodec`와 `LettuceLongCodec`의 coroutine async round trip | — |
 | `bluetape4k-idgenerators` | `redis-distributed-lock` (indirect) | ❌ Missing | standalone ID generator demo 없음 | `SnowflakeId` / `TimebasedUuid` generation benchmark | concurrent load에서 distributed unique ID | #62 |
 
 ---
@@ -97,6 +98,7 @@
 | AWS S3 | `aws-s3-spring-cloud` | ⚠️ Partial | multipart upload 미노출 | — | LocalStack 기반 S3 multipart upload | — |
 | `bluetape4k-aws` | `aws-s3-spring-cloud` | ⚠️ Partial | BT AWS Kotlin SDK wrapper 미노출 | — | AWS Kotlin SDK + coroutine suspend wrapper | — |
 | `bluetape4k-images` / `bluetape4k-images-spring-boot` | `image-processing/advanced-workflow`, `image-processing/ocr-api`, `image-processing/profile-image-moderation` | ✅ Good | — | — | private original, blurred pending image, default fallback을 포함한 profile upload moderation | — |
+| `bluetape4k-images-barcode-api` / `bluetape4k-images-barcode-zxing` | `image-processing/barcode-api` | ✅ Good | provider-neutral reader와 bounded upload API를 새로 노출 | — | provider capability matrix와 운영 provider 교체 계약 | — |
 
 ---
 

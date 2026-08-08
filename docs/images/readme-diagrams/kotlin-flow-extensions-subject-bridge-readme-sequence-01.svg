@@ -3,17 +3,17 @@
     <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
       <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#8aa0b8" flood-opacity="0.22"/>
     </filter>
-    <marker id="arrow-blue" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f7ed8" stroke="#2f7ed8" stroke-width="1" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    <marker id="arrow-blue" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="12" refY="7" orient="auto" viewBox="0 0 16 16" data-role="sequence" data-tip-direction="positive-x">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f7ed8" stroke="#2f7ed8" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
-    <marker id="arrow-green" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f9e44" stroke="#2f9e44" stroke-width="1" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    <marker id="arrow-green" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="12" refY="7" orient="auto" viewBox="0 0 16 16" data-role="sequence" data-tip-direction="positive-x">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f9e44" stroke="#2f9e44" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
-    <marker id="arrow-orange" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#d97706" stroke="#d97706" stroke-width="1" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    <marker id="arrow-orange" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="12" refY="7" orient="auto" viewBox="0 0 16 16" data-role="sequence" data-tip-direction="positive-x">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#d97706" stroke="#d97706" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
-    <marker id="arrow-purple" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" viewBox="0 0 14 14">
-      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#8b5cf6" stroke="#8b5cf6" stroke-width="1" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    <marker id="arrow-purple" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="12" refY="7" orient="auto" viewBox="0 0 16 16" data-role="sequence" data-tip-direction="positive-x">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#8b5cf6" stroke="#8b5cf6" stroke-width="0" stroke-dasharray="none" style="stroke-dasharray:none"/>
     </marker>
     <style>
       .canvas { fill:#f8fbff; }
@@ -66,31 +66,31 @@
   <path d="M 845 193 L 845 700" stroke="#b9c7d8" stroke-width="2" stroke-dasharray="7 7"/>
   <path d="M 1050 193 L 1050 700" stroke="#b9c7d8" stroke-width="2" stroke-dasharray="7 7"/>
   <path d="M 1265 193 L 1265 700" stroke="#b9c7d8" stroke-width="2" stroke-dasharray="7 7"/>
-  <path class="line-blue" d="M 155 250 L 395 250"/>
+  <path class="line-blue" d="M 155 250 L 395 250" marker-end="url(#arrow-blue)"/>
   <rect x="203" y="215" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
   <text class="label" x="275" y="233">1 onEvent</text>
-  <path class="line-green" d="M 395 300 L 640 300"/>
+  <path class="line-green" d="M 395 300 L 640 300" marker-end="url(#arrow-green)"/>
   <rect x="448" y="265" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
   <text class="label" x="520" y="283">2 publishEvent</text>
-  <path class="line-green" d="M 395 350 L 1050 350"/>
+  <path class="line-green" d="M 395 350 L 1050 350" marker-end="url(#arrow-green)"/>
   <rect x="648" y="315" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
   <text class="label" x="720" y="333">3 record history</text>
-  <path class="line-orange" d="M 155 420 L 395 420"/>
+  <path class="line-orange" d="M 155 420 L 395 420" marker-end="url(#arrow-orange)"/>
   <rect x="203" y="385" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
   <text class="label" x="275" y="403">4 onState</text>
-  <path class="line-green" d="M 395 470 L 845 470"/>
+  <path class="line-green" d="M 395 470 L 845 470" marker-end="url(#arrow-green)"/>
   <rect x="548" y="435" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
   <text class="label" x="620" y="453">5 update latest</text>
-  <path class="line-purple" d="M 155 540 L 395 540"/>
+  <path class="line-purple" d="M 155 540 L 395 540" marker-end="url(#arrow-purple)"/>
   <rect x="203" y="505" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
   <text class="label" x="275" y="523">6 enqueueWork</text>
-  <path class="line-purple" d="M 395 590 L 1265 590"/>
+  <path class="line-purple" d="M 395 590 L 1265 590" marker-end="url(#arrow-purple)"/>
   <rect x="748" y="555" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
   <text class="label" x="820" y="573">7 work item consumed once</text>
-  <path class="line-orange dash" d="M 155 655 L 395 655"/>
+  <path class="line-orange dash" d="M 155 655 L 395 655" marker-end="url(#arrow-orange)"/>
   <rect x="203" y="620" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
   <text class="label" x="275" y="638">8 onError / complete</text>
-  <path class="line-orange dash" d="M 395 690 L 1265 690"/>
+  <path class="line-orange dash" d="M 395 690 L 1265 690" marker-end="url(#arrow-orange)"/>
   <rect x="758" y="655" width="144" height="24" rx="12" fill="#ffffff" stroke="#d5e1ef"/>
   <text class="label" x="830" y="673">9 terminal signal reaches readers</text>
 </svg>

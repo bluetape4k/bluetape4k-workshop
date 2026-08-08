@@ -7,7 +7,7 @@
       .body{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:18px;fill:#364152}.small{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:15px;fill:#475569}
       .layer{stroke-width:1.5;rx:22;ry:22}.card{fill:#fff;stroke:#cbd5e1;stroke-width:1.5;rx:18;ry:18}.line{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
     </style>
-    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb" stroke-dasharray="none"/></marker>
+    <marker id="arrow" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb" stroke-dasharray="none" stroke="#2563eb" stroke-width="0"/></marker>
   </defs>
   <rect class="bg" width="1660" height="760"/>
   <text class="title" x="70" y="70">Spring Security Workshop Modules</text>

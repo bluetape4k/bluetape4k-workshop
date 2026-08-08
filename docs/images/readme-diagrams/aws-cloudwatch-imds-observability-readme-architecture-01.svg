@@ -2,11 +2,11 @@
   <title id="title">CloudWatch and IMDS Observability Workshop Architecture</title>
   <desc id="desc">Top-to-bottom architecture showing local-first Spring Boot telemetry, CloudWatch payload builders, local adapters, and optional real AWS targets.</desc>
   <defs>
-    <marker id="arrow" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke="#2563eb" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    <marker id="arrow" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto" data-role="secondary" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke="#2563eb" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
-    <marker id="arrowOptional" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#c2410c" stroke="#c2410c" stroke-dasharray="none" style="stroke-dasharray:none"/>
+    <marker id="arrowOptional" markerWidth="10" markerHeight="10" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" orient="auto" data-role="secondary" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#c2410c" stroke="#c2410c" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
     </marker>
     <style>
       .bg { fill: #f8fafc; }
@@ -46,9 +46,9 @@
   <rect class="bg" x="0" y="0" width="1440" height="1720"/>
   <text class="title" x="80" y="76">CloudWatch + IMDS Observability Workshop</text>
   <text class="subtitle" x="80" y="112">Default path is local and credential-free. Real AWS and IMDS access are explicit opt-in boundaries.</text>
-  <path class="legendDefault" d="M 760 124 L 820 124"/>
+  <path class="legendDefault" d="M 760 124 L 820 124" marker-end="url(#arrow)"/>
   <text class="smallText" x="835" y="129">solid blue: default local flow</text>
-  <path class="legendOptional" d="M 1050 124 L 1110 124"/>
+  <path class="legendOptional" d="M 1050 124 L 1110 124" marker-end="url(#arrowOptional)"/>
   <text class="smallText" x="1125" y="129">dashed orange: real AWS opt-in</text>
 
   <rect id="layer-learner" class="layer" x="70" y="145" width="1300" height="205" rx="8"/>
@@ -119,16 +119,16 @@
   <text class="titleText" x="300" y="1564">Safety Boundary</text>
   <text class="bodyText" x="300" y="1594">No real AWS calls in default tests. No automatic credentials are read from IMDS.</text>
 
-  <path class="connector" d="M 420 308 L 420 475"/>
-  <path class="connector" d="M 990 308 L 990 475"/>
-  <path class="connector" d="M 720 567 L 720 745"/>
-  <path class="connector" d="M 300 837 L 300 1020"/>
-  <path class="connector" d="M 720 837 L 720 1020"/>
-  <path class="connector" d="M 1140 837 L 1140 1020"/>
-  <path class="optionalConnector" d="M 300 1118 L 300 1320"/>
-  <path class="optionalConnector" d="M 720 1118 L 720 1320"/>
-  <path class="optionalConnector" d="M 1140 1118 L 1140 1320"/>
-  <path class="optionalConnector" d="M 1140 1424 L 1140 1525"/>
+  <path class="connector" d="M 420 308 L 420 475" marker-end="url(#arrow)"/>
+  <path class="connector" d="M 990 308 L 990 475" marker-end="url(#arrow)"/>
+  <path class="connector" d="M 720 567 L 720 745" marker-end="url(#arrow)"/>
+  <path class="connector" d="M 300 837 L 300 1020" marker-end="url(#arrow)"/>
+  <path class="connector" d="M 720 837 L 720 1020" marker-end="url(#arrow)"/>
+  <path class="connector" d="M 1140 837 L 1140 1020" marker-end="url(#arrow)"/>
+  <path class="optionalConnector" d="M 300 1118 L 300 1320" marker-end="url(#arrowOptional)"/>
+  <path class="optionalConnector" d="M 720 1118 L 720 1320" marker-end="url(#arrowOptional)"/>
+  <path class="optionalConnector" d="M 1140 1118 L 1140 1320" marker-end="url(#arrowOptional)"/>
+  <path class="optionalConnector" d="M 1140 1424 L 1140 1525" marker-end="url(#arrowOptional)"/>
   <text class="smallText" x="340" y="1180">default local beans</text>
   <text class="smallText" x="790" y="1280">activate `real-aws` manually</text>
 </svg>

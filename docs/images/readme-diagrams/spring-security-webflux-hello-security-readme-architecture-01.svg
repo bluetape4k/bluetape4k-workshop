@@ -10,11 +10,11 @@
       .layer { stroke-width: 1.5; rx: 22; ry: 22; }
       .line { fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
     </style>
-    <marker id="arrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <marker id="arrow" viewBox="0 0 11.6667 11.6667" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#2563eb" stroke-width="0"/>
     </marker>
-    <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#059669" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <marker id="arrow-green" viewBox="0 0 11.6667 11.6667" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="primary" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#059669" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#059669" stroke-width="0"/>
     </marker>
   </defs>
   <rect class="bg" width="1600" height="820"/>

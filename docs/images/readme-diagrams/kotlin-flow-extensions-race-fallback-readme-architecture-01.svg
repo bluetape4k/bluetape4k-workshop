@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1660" height="860" viewBox="0 0 1660 860">
 
   <defs>
-    <marker id="arrow-blue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f80dc"/></marker>
-    <marker id="arrow-green" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f9e44"/></marker>
-    <marker id="arrow-orange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#d97706"/></marker>
-    <marker id="arrow-purple" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#8b5cf6"/></marker>
-    <marker id="arrow-red" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 z" fill="#dc2626"/></marker>
+    <marker id="arrow-blue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f80dc" stroke-dasharray="none" stroke="#2f80dc" stroke-width="0"/></marker>
+    <marker id="arrow-green" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#2f9e44" stroke-dasharray="none" stroke="#2f9e44" stroke-width="0"/></marker>
+    <marker id="arrow-orange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#d97706" stroke-dasharray="none" stroke="#d97706" stroke-width="0"/></marker>
+    <marker id="arrow-purple" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#8b5cf6" stroke-dasharray="none" stroke="#8b5cf6" stroke-width="0"/></marker>
+    <marker id="arrow-red" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 14 14" data-role="primary" data-tip-direction="positive-x"><path d="M 0 0 L 14 7 L 0 14 z" fill="#dc2626" stroke-dasharray="none"/></marker>
   </defs>
   <style>
     .bg { fill: #f4f8fc; }
@@ -78,13 +78,13 @@
   <rect class="card-blue" x="1220" y="545" width="270" height="95" rx="16"/>
   <text class="card-title" x="1355.0" y="581">Enrichment job</text>
   <text class="card-text" x="1355.0" y="615">needs all parts</text>
-  <path class="line-blue" d="M 305 305 L 360 305 Q 380 305 380 350 L 410 350"/>
-  <path class="line-orange" d="M 305 465 L 360 465 Q 380 465 380 405 L 410 405"/>
-  <path class="line-green" d="M 710 375 L 760 375 Q 780 375 780 272 L 835 272"/>
-  <path class="line-green" d="M 710 375 L 760 375 Q 780 375 780 397 L 835 397"/>
-  <path class="line-purple" d="M 710 375 L 760 375 Q 780 375 780 522 L 835 522"/>
-  <path class="line-orange" d="M 710 375 L 760 375 Q 780 375 780 647 L 835 647"/>
-  <path class="line-blue" d="M 1055 272 L 1130 272 Q 1150 272 1150 282 L 1220 282"/>
-  <path class="line-blue" d="M 1055 397 L 1130 397 Q 1150 397 1150 437 L 1220 437"/>
-  <path class="line-blue" d="M 1055 647 L 1130 647 Q 1150 647 1150 592 L 1220 592"/>
+  <path class="line-blue" d="M 305 305 L 360 305 Q 380 305 380 350 L 410 350" marker-end="url(#arrow-blue)"/>
+  <path class="line-orange" d="M 305 465 L 360 465 Q 380 465 380 405 L 410 405" marker-end="url(#arrow-orange)"/>
+  <path class="line-green" d="M 710 375 L 760 375 Q 780 375 780 272 L 835 272" marker-end="url(#arrow-green)"/>
+  <path class="line-green" d="M 710 375 L 760 375 Q 780 375 780 397 L 835 397" marker-end="url(#arrow-green)"/>
+  <path class="line-purple" d="M 710 375 L 760 375 Q 780 375 780 522 L 835 522" marker-end="url(#arrow-purple)"/>
+  <path class="line-orange" d="M 710 375 L 760 375 Q 780 375 780 647 L 835 647" marker-end="url(#arrow-orange)"/>
+  <path class="line-blue" d="M 1055 272 L 1130 272 Q 1150 272 1150 282 L 1220 282" marker-end="url(#arrow-blue)"/>
+  <path class="line-blue" d="M 1055 397 L 1130 397 Q 1150 397 1150 437 L 1220 437" marker-end="url(#arrow-blue)"/>
+  <path class="line-blue" d="M 1055 647 L 1130 647 Q 1150 647 1150 592 L 1220 592" marker-end="url(#arrow-blue)"/>
 </svg>

@@ -5,14 +5,14 @@
     <filter id="soft-shadow" x="-8%" y="-8%" width="116%" height="124%">
       <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#64748B" flood-opacity="0.16"/>
     </filter>
-    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M1,1 L11,6 L1,11 Z" fill="#3F7D9C" stroke="#3F7D9C" stroke-dasharray="none"/>
+    <marker id="arrow-blue" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#3F7D9C" stroke="#3F7D9C" stroke-dasharray="none" stroke-width="0"/>
     </marker>
-    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M1,1 L11,6 L1,11 Z" fill="#5F8A54" stroke="#5F8A54" stroke-dasharray="none"/>
+    <marker id="arrow-green" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#5F8A54" stroke="#5F8A54" stroke-dasharray="none" stroke-width="0"/>
     </marker>
-    <marker id="arrow-amber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
-      <path d="M1,1 L11,6 L1,11 Z" fill="#9B7D54" stroke="#9B7D54" stroke-dasharray="none"/>
+    <marker id="arrow-amber" markerWidth="14" markerHeight="14" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 12 12" data-role="primary" data-tip-direction="positive-x">
+      <path d="M1,1 L11,6 L1,11 Z" fill="#9B7D54" stroke="#9B7D54" stroke-dasharray="none" stroke-width="0"/>
     </marker>
     <style>
       .canvas{fill:#FBFCF8}
@@ -45,11 +45,11 @@
   <text class="title" x="800" y="78" text-anchor="middle">Ktor Exposed REST Architecture</text>
   <text class="subtitle" x="800" y="108" text-anchor="middle">PostgreSQL-backed Ktor routes use bluetape4k-exposed-ktor for transaction and error boundaries.</text>
   <g aria-label="connector legend">
-    <path class="line blue marker-blue" data-connector="legend-request-route" d="M511 128 L551 128"/>
+    <path class="line blue marker-blue" data-connector="legend-request-route" d="M511 128 L551 128" marker-end="url(#arrow-blue)"/>
     <text class="legend" x="560" y="132">request route</text>
-    <path class="line green marker-green" data-connector="legend-repository-call" d="M673 128 L713 128"/>
+    <path class="line green marker-green" data-connector="legend-repository-call" d="M673 128 L713 128" marker-end="url(#arrow-green)"/>
     <text class="legend" x="722" y="132">repository call</text>
-    <path class="line amber marker-amber" data-connector="legend-postgresql-jdbc" d="M885 128 L925 128"/>
+    <path class="line amber marker-amber" data-connector="legend-postgresql-jdbc" d="M885 128 L925 128" marker-end="url(#arrow-amber)"/>
     <text class="legend" x="934" y="132">PostgreSQL JDBC</text>
   </g>
 
@@ -109,13 +109,13 @@
   </g>
 
   <path class="line blue" data-connector="client-to-routes" d="M800 267 L800 450"/>
-  <polygon class="arrowhead" data-arrowhead="client-to-routes" points="800,450 792,436 808,436" fill="#3F7D9C" stroke="#3F7D9C" style="stroke-dasharray:none"/>
+  <polygon class="arrowhead" data-arrowhead="true" points="800,450 792,436 808,436" fill="#3F7D9C" stroke="#3F7D9C" style="stroke-dasharray:none" data-role="primary" data-size="14x14" data-tip-direction="positive-x" data-solid-head="true" stroke-dasharray="none"/>
   <path class="line blue" data-connector="routes-to-transaction" d="M800 532 L800 705"/>
-  <polygon class="arrowhead" data-arrowhead="routes-to-transaction" points="800,705 792,691 808,691" fill="#3F7D9C" stroke="#3F7D9C" style="stroke-dasharray:none"/>
+  <polygon class="arrowhead" data-arrowhead="true" points="800,705 792,691 808,691" fill="#3F7D9C" stroke="#3F7D9C" style="stroke-dasharray:none" data-role="primary" data-size="14x14" data-tip-direction="positive-x" data-solid-head="true" stroke-dasharray="none"/>
   <path class="line green" data-connector="transaction-to-repository" d="M997.5 741 L1070 741"/>
-  <polygon class="arrowhead" data-arrowhead="transaction-to-repository" points="1070,741 1056,733 1056,749" fill="#5F8A54" stroke="#5F8A54" style="stroke-dasharray:none"/>
+  <polygon class="arrowhead" data-arrowhead="true" points="1070,741 1056,733 1056,749" fill="#5F8A54" stroke="#5F8A54" style="stroke-dasharray:none" data-role="primary" data-size="14x14" data-tip-direction="positive-x" data-solid-head="true" stroke-dasharray="none"/>
   <path class="line amber" data-connector="repository-to-postgresql" d="M1267.5 777 L1267.5 884"/>
-  <polygon class="arrowhead" data-arrowhead="repository-to-postgresql" points="1267.5,884 1259.5,870 1275.5,870" fill="#9B7D54" stroke="#9B7D54" style="stroke-dasharray:none"/>
+  <polygon class="arrowhead" data-arrowhead="true" points="1267.5,884 1259.5,870 1275.5,870" fill="#9B7D54" stroke="#9B7D54" style="stroke-dasharray:none" data-role="primary" data-size="14x14" data-tip-direction="positive-x" data-solid-head="true" stroke-dasharray="none"/>
 
   <rect class="callout" x="120" y="992" width="1360" height="30"/>
   <text class="footer" x="800" y="1013" text-anchor="middle">Contract: route validation is outside the transaction; JDBC work is inside exposedJdbcTransaction; PostgreSQL is supplied by bluetape4k-testcontainers.</text>

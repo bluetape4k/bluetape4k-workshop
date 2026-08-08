@@ -6,10 +6,10 @@
     <style>
       .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:19px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:12px;fill:#546A73}.msg{font-size:13px}.note{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.return,.skip{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call);stroke-linecap:round;stroke-linejoin:round}.work{stroke:#6E8F4F;marker-end:url(#arrow-work);stroke-linecap:round;stroke-linejoin:round}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret);stroke-linecap:round;stroke-linejoin:round}.skip{stroke:#B86868;marker-end:url(#arrow-skip);stroke-linecap:round;stroke-linejoin:round}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.skipLabel{stroke:#D9ABAB}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.skipBadge{fill:#FFF0F0;stroke:#B86868}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.skipText,.badgeText.skipText{fill:#9D4F4F}.alt{fill:#FFF7ED;fill-opacity:.42;stroke:#D08A39;stroke-width:2.4;stroke-dasharray:12 8}.branch{fill:#FFFFFF;fill-opacity:.82;stroke:#E6C68C;stroke-width:1.5}
     </style>
-    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrow-skip" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-call" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#3F7D9C" stroke-width="0"/></marker>
+    <marker id="arrow-work" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#6E8F4F" stroke-width="0"/></marker>
+    <marker id="arrow-ret" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#9B7D54" stroke-width="0"/></marker>
+    <marker id="arrow-skip" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
   </defs>
   <rect x="24" y="24" width="1872" height="1010" rx="20" class="frame"/>
   <text x="960" y="76" text-anchor="middle" class="title">StorageService Request Sequence</text>  <text x="960" y="106" text-anchor="middle" class="subtitle">The StorageService contract keeps local file, direct S3, and presigned S3 profiles behind one coroutine API.</text>
@@ -28,35 +28,35 @@
   <rect x="229" y="252" width="230.0" height="34" rx="17" class="label callLabel"/>
   <circle cx="253" cy="269" r="13" class="badge callBadge"/><text x="253" y="274" text-anchor="middle" class="badgeText callText">1</text>
   <text x="277" y="274" class="msg callText">upload(key, content)</text>
-  <path d="M 190 300 L 498 300" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 190 300 L 498 300" class="call" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-call)"/>
   <rect x="493.3" y="328" width="317.5" height="34" rx="17" class="label callLabel"/>
   <circle cx="517.3" cy="345" r="13" class="badge callBadge"/><text x="517.3" y="350" text-anchor="middle" class="badgeText callText">2</text>
   <text x="541.3" y="350" class="msg callText">delegate to selected profile bean</text>
-  <path d="M 498 376 L 806 376" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 498 376 L 806 376" class="call" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-call)"/>
   <rect x="790" y="404" width="340.0" height="34" rx="17" class="label workLabel"/>
   <circle cx="814" cy="421" r="13" class="badge workBadge"/><text x="814" y="426" text-anchor="middle" class="badgeText workText">3</text>
   <text x="838" y="426" class="msg workText">wrap blocking Files or S3Client call</text>
-  <path d="M 806 452 L 1114 452" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 806 452 L 1114 452" class="work" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-work)"/>
   <rect x="1143" y="480" width="250.0" height="34" rx="17" class="label workLabel"/>
   <circle cx="1167" cy="497" r="13" class="badge workBadge"/><text x="1167" y="502" text-anchor="middle" class="badgeText workText">4</text>
   <text x="1191" y="502" class="msg workText">putObject or Files.write</text>
-  <path d="M 1114 528 L 1422 528" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 1114 528 L 1422 528" class="work" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-work)"/>
   <rect x="654.8" y="556" width="302.5" height="34" rx="17" class="label returnLabel"/>
   <circle cx="678.8" cy="573" r="13" class="badge returnBadge"/><text x="678.8" y="578" text-anchor="middle" class="badgeText returnText">5</text>
   <text x="702.8" y="578" class="msg returnText">download returns bytes/resource</text>
-  <path d="M 1422 604 L 190 604" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 1422 604 L 190 604" class="return" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-ret)"/>
   <rect x="229" y="632" width="230.0" height="34" rx="17" class="label callLabel"/>
   <circle cx="253" cy="649" r="13" class="badge callBadge"/><text x="253" y="654" text-anchor="middle" class="badgeText callText">6</text>
   <text x="277" y="654" class="msg callText">getUrl(key)</text>
-  <path d="M 190 680 L 498 680" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 190 680 L 498 680" class="call" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-call)"/>
   <rect x="951.5" y="708" width="325.0" height="34" rx="17" class="label workLabel"/>
   <circle cx="975.5" cy="725" r="13" class="badge workBadge"/><text x="975.5" y="730" text-anchor="middle" class="badgeText workText">7</text>
   <text x="999.5" y="730" class="msg workText">create 15-minute presigned GET URL</text>
-  <path d="M 498 756 L 1730 756" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 498 756 L 1730 756" class="work" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-work)"/>
   <rect x="827.5" y="784" width="265.0" height="34" rx="17" class="label returnLabel"/>
   <circle cx="851.5" cy="801" r="13" class="badge returnBadge"/><text x="851.5" y="806" text-anchor="middle" class="badgeText returnText">8</text>
   <text x="875.5" y="806" class="msg returnText">URL with X-Amz-Expires=900</text>
-  <path d="M 1730 832 L 190 832" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 1730 832 L 190 832" class="return" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-ret)"/>
   <rect x="90" y="970" width="1740" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
   <text x="960" y="996" text-anchor="middle" class="footer">Reader contract: request order, branch ownership, and infrastructure boundary are shown without hiding call labels.</text>
 </svg>

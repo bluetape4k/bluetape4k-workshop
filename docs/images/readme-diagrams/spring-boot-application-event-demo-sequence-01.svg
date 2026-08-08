@@ -6,10 +6,10 @@
     <style>
       .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:19px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:12px;fill:#546A73}.msg{font-size:13px}.note{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#E6F2EC;stroke:#5B7E67;stroke-width:1.5}.call,.work,.return,.skip{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call);stroke-linecap:round;stroke-linejoin:round}.work{stroke:#6E8F4F;marker-end:url(#arrow-work);stroke-linecap:round;stroke-linejoin:round}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret);stroke-linecap:round;stroke-linejoin:round}.skip{stroke:#B86868;marker-end:url(#arrow-skip);stroke-linecap:round;stroke-linejoin:round}.label{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.callLabel{stroke:#9CC2D1}.workLabel{stroke:#B6C9A4}.returnLabel{stroke:#C8B38F}.skipLabel{stroke:#D9ABAB}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.skipBadge{fill:#FFF0F0;stroke:#B86868}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.skipText,.badgeText.skipText{fill:#9D4F4F}.alt{fill:#FFF7ED;fill-opacity:.42;stroke:#D08A39;stroke-width:2.4;stroke-dasharray:12 8}.branch{fill:#FFFFFF;fill-opacity:.82;stroke:#E6C68C;stroke-width:1.5}
     </style>
-    <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
-    <marker id="arrow-skip" viewBox="0 0 10 10" markerWidth="14" markerHeight="14" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
+    <marker id="arrow-call" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#3F7D9C" stroke-width="0"/></marker>
+    <marker id="arrow-work" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#6E8F4F" stroke-width="0"/></marker>
+    <marker id="arrow-ret" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round" stroke="#9B7D54" stroke-width="0"/></marker>
+    <marker id="arrow-skip" viewBox="0 0 11.4286 11.4286" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B86868" stroke-dasharray="none" stroke-linecap="round" stroke-linejoin="round"/></marker>
   </defs>
   <rect x="27.339" y="24" width="1847.67" height="782" rx="20" class="frame"/>
   <text x="951.174" y="76" text-anchor="middle" class="title">Direct CustomEvent Publishing</text>
@@ -27,23 +27,23 @@
   <rect x="269.404" y="252" width="262" height="34" rx="17" class="label callLabel"/>
   <circle cx="296.743" cy="269" r="13" class="badge callBadge"/><text x="296.743" y="274" text-anchor="middle" class="badgeText callText">1</text>
   <text x="324.083" y="274" class="msg callText">request message</text>
-  <path d="M 216.435 300 L 584.374 300" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 216.435 300 L 584.374 300" class="call" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-call)"/>
   <rect x="636.774" y="328" width="262" height="34" rx="17" class="label callLabel"/>
   <circle cx="664.113" cy="345" r="13" class="badge callBadge"/><text x="664.113" y="350" text-anchor="middle" class="badgeText callText">2</text>
   <text x="691.452" y="350" class="msg callText">publish(message)</text>
-  <path d="M 584.374 376 L 951.174 376" class="call" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 584.374 376 L 951.174 376" class="call" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-call)"/>
   <rect x="988.537" y="404" width="293.326" height="34" rx="17" class="label workLabel"/>
   <circle cx="1015.877" cy="421" r="13" class="badge workBadge"/><text x="1015.877" y="426" text-anchor="middle" class="badgeText workText">3</text>
   <text x="1043.216" y="426" class="msg workText">publishEvent(CustomEvent)</text>
-  <path d="M 951.174 452 L 1319.113 452" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 951.174 452 L 1319.113 452" class="work" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-work)"/>
   <rect x="1371.513" y="480" width="262" height="34" rx="17" class="label workLabel"/>
   <circle cx="1398.852" cy="497" r="13" class="badge workBadge"/><text x="1398.852" y="502" text-anchor="middle" class="badgeText workText">4</text>
   <text x="1426.191" y="502" class="msg workText">dispatch to listeners</text>
-  <path d="M 1319.113 528 L 1685.913 528" class="work" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 1319.113 528 L 1685.913 528" class="work" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-work)"/>
   <rect x="269.404" y="556" width="262" height="34" rx="17" class="label returnLabel"/>
   <circle cx="296.743" cy="573" r="13" class="badge returnBadge"/><text x="296.743" y="578" text-anchor="middle" class="badgeText returnText">5</text>
   <text x="324.083" y="578" class="msg returnText">return &quot;Finished&quot;</text>
-  <path d="M 584.374 604 L 216.435 604" class="return" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 584.374 604 L 216.435 604" class="return" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow-ret)"/>
   <rect x="102.522" y="742" width="1697.304" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2.278"/>
   <text x="951.174" y="768" text-anchor="middle" class="footer">Reader contract: request order, branch ownership, and infrastructure boundary are shown without hiding call labels.</text>
 </svg>

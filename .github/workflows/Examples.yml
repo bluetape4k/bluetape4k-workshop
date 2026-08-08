@@ -27,6 +27,7 @@ on:
       - 'graph/social-network/**'
       - 'image-processing/ocr-api/**'
       - 'image-processing/profile-image-moderation/**'
+      - 'image-processing/barcode-api/**'
       - 'ktor/exposed-rest/**'
       - 'aws/ktor-dynamodb/**'
       - 'aws/cloudwatch-imds-observability/**'
@@ -80,6 +81,7 @@ on:
       - 'graph/social-network/**'
       - 'image-processing/ocr-api/**'
       - 'image-processing/profile-image-moderation/**'
+      - 'image-processing/barcode-api/**'
       - 'ktor/exposed-rest/**'
       - 'aws/ktor-dynamodb/**'
       - 'aws/cloudwatch-imds-observability/**'
@@ -277,6 +279,7 @@ jobs:
           :graph-social-network:test
           :image-processing-ocr-api:test
           :image-processing-profile-image-moderation:test
+          :image-processing-barcode-api:test
           :aws-cloudwatch-imds-observability:test
           :aws-eventbridge-scheduler:test
           :aws-s3-vectors-access-grants:test
@@ -336,6 +339,8 @@ jobs:
             image-processing/ocr-api/build/reports/tests/test/
             image-processing/profile-image-moderation/build/test-results/test/*.xml
             image-processing/profile-image-moderation/build/reports/tests/test/
+            image-processing/barcode-api/build/test-results/test/*.xml
+            image-processing/barcode-api/build/reports/tests/test/
             aws/cloudwatch-imds-observability/build/test-results/test/*.xml
             aws/cloudwatch-imds-observability/build/reports/tests/test/
             aws/eventbridge-scheduler/build/test-results/test/*.xml

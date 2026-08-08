@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1171.2" height="440" viewBox="0 0 1171.2 440" role="img" aria-label="Spring Data Redis Data Structures and Operations">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L8,4.5 L1,8 Z" fill="#758297" stroke-dasharray="none"/></marker>
+  <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="4.5" orient="auto" markerUnits="userSpaceOnUse" viewBox="0 0 9 9" data-role="secondary" data-tip-direction="positive-x"><path d="M1,1 L8,4.5 L1,8 Z" fill="#758297" stroke-dasharray="none" stroke="#758297" stroke-width="0"/></marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
     .title{font-family:"Architects Daughter";font-size:38px;font-weight:400;fill:#102033}
@@ -61,14 +61,14 @@
 <text class="small" x="951.6" y="394" text-anchor="middle">expiry  -  del  -  set events</text>
 
 <!-- Arrows: Data types -> Redis -->
-<path class="line" d="M 132.98 166 L 488 220" stroke-linecap="round" stroke-linejoin="round"/>
-<path class="line" d="M 315.98 166 L 536.8 220" stroke-linecap="round" stroke-linejoin="round"/>
-<path class="line" d="M 498.98 166 L 573.4 220" stroke-linecap="round" stroke-linejoin="round"/>
-<path class="line" d="M 681.98 166 L 622.2 220" stroke-linecap="round" stroke-linejoin="round"/>
-<path class="line" d="M 864.98 166 L 683.2 220" stroke-linecap="round" stroke-linejoin="round"/>
-<path class="line" d="M 1047.98 166 L 756.4 220" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M 132.98 166 L 488 220" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path class="line" d="M 315.98 166 L 536.8 220" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path class="line" d="M 498.98 166 L 573.4 220" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path class="line" d="M 681.98 166 L 622.2 220" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path class="line" d="M 864.98 166 L 683.2 220" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path class="line" d="M 1047.98 166 L 756.4 220" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
 <!-- Redis -> Bottom -->
-<path class="line" d="M 475.8 280 L 305 350" stroke-linecap="round" stroke-linejoin="round"/>
-<path class="line" d="M 585.6 280 L 610 350" stroke-linecap="round" stroke-linejoin="round"/>
-<path class="line" d="M 719.8 280 L 915 350" stroke-linecap="round" stroke-linejoin="round"/>
+<path class="line" d="M 475.8 280 L 305 350" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path class="line" d="M 585.6 280 L 610 350" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path class="line" d="M 719.8 280 L 915 350" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
 </svg>
