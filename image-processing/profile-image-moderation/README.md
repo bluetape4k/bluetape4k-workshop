@@ -1,6 +1,6 @@
 # Profile Image Moderation
 
-English | [한국어](README.ko.md)
+[한국어](README.ko.md) | English
 
 This example demonstrates a production-shaped profile image flow:
 

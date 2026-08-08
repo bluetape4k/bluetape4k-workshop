@@ -38,18 +38,18 @@
 
 대부분의 팀은 먼저 [`usage-metering-billing-ledger`](../usage-metering-billing-ledger/)를 선택해야 한다. 이 예제는 독립 배포/소유권/스케일링 경계가 실제로 필요하고, topic·lag·schema compatibility·outbox/inbox·quarantine/redrive를 함께 운영할 준비가 된 경우에만 적합하다.
 
-## 단계적 추출과 rollback
+## 운영 결정 규칙
 
-1. ledger를 authority로 유지한 채 Meter와 Usage를 먼저 분리하고 accepted usage/price evidence를 dual-run 비교한다.
-2. Billing의 replicated price evidence와 charge total parity를 확인하고, outbox backlog를 비운 뒤 downstream routing을 전환한다.
-3. Invoice와 Query는 마지막에 추가한다. mutable row가 아니라 immutable source event ID와 total을 비교한다.
-4. rollback은 traffic routing만 되돌린다. 서비스 DB 복사, published financial history rewrite, 금액/가격 수정은 하지 않는다.
-
-![단계적 extraction과 rollback](../../docs/images/readme-diagrams/usage-billing-microservices-extraction-01.png)
-
-[Extraction SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-extraction-01.svg)
-
-운영자는 먼저 outbox backlog/state, oldest retry, inbox/quarantine reason, aggregate key를 확인한다. Query의 redrive는 audit을 남기는 요청이며, immutable original envelope의 조회·재발행은 외부 retained source가 수행한다. 이는 재무 상태 수정 API가 아니다.
+- 가격 선택은 Billing이 로컬에 복제한 근거로 수행하며, Meter는 가격 이력의
+  권위 있는 발행자로 남습니다.
+- `UsageAccepted` payload는 Billing이 Usage나 Meter table을 동기 조회하지 않고
+  자체 근거로 rate할 수 있는 가격 provenance를 포함합니다.
+- Invoice는 기존 line을 수정하지 않습니다. correction은 원본 event를 가리키는
+  새 `AdjustmentPosted` 기반 line입니다.
+- Query에는 financial command endpoint가 없습니다. read projection,
+  checkpoint, quarantine과 operator redrive audit만 소유합니다.
+- offset commit은 durable inbox/quarantine 결정 뒤에만 수행하며 best-effort
+  log line 뒤에는 수행하지 않습니다.
 
 ## 검증 실행
 
@@ -109,3 +109,35 @@ reference에 둔다.
 ![Append-only correction 경로](../../docs/images/readme-diagrams/usage-billing-microservices-correction-01.png)
 
 [Correction SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-correction-01.svg)
+
+## 단계적 추출과 rollback
+
+1. ledger/modular monolith를 source of truth로 유지하고 Meter와 Usage를 먼저
+   분리하면서 accepted usage 수와 price evidence를 dual-check합니다.
+2. Billing의 replicated price evidence와 rated-charge parity를 추가하고,
+   downstream routing 전에 outbox를 비웁니다.
+3. Invoice materialization과 Query read model은 마지막에 추가하고 mutable row가
+   아니라 immutable source-event ID와 total을 비교합니다.
+4. rollback은 traffic routing만 되돌립니다. service DB를 역복사하거나 공개된
+   financial history를 고치지 않고 durable event, outbox, inbox, quarantine
+   audit을 reconciliation에 남깁니다.
+
+![단계적 extraction과 rollback](../../docs/images/readme-diagrams/usage-billing-microservices-extraction-01.png)
+
+[Extraction SVG source](../../docs/images/readme-diagrams/usage-billing-microservices-extraction-01.svg)
+
+운영자는 먼저 outbox backlog/state, oldest retry, inbox/quarantine reason과
+영향받은 aggregate key를 확인합니다. Query redrive는 audit 가능한 요청이며,
+immutable original envelope를 조회·재발행하는 일은 외부 retained source가
+수행합니다. 금액이나 가격을 수정하는 표면이 아닙니다.
+
+## 모듈 맵
+
+| 모듈 | 목적 |
+| --- | --- |
+| `usage-billing-meter-service` | 가격 권위와 outbox |
+| `usage-billing-usage-service` | usage receipt, price evidence inbox, accepted usage outbox |
+| `usage-billing-billing-service` | pricing evidence inbox, rating, charge outbox |
+| `usage-billing-invoice-service` | charge inbox와 불변 invoice line |
+| `usage-billing-query-service` | projection inbox, checkpoint, quarantine, 운영 진단 |
+| `usage-billing-microservices-composition-tests` | contract/composition 테스트 전용 경계 |

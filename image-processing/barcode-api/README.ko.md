@@ -1,5 +1,7 @@
 # 이미지 Barcode API
 
+[English](README.md) | 한국어
+
 이 Spring Boot 예제는 `bluetape4k-dependencies` 1.4.0 BOM을 통해 배포된
 `bluetape4k-images` 0.4.0의 barcode API를 소비합니다. 애플리케이션 서비스는
 provider-neutral `BarcodeReader` 계약만 사용하고, ZXing 구현은 configuration 경계에서
