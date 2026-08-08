@@ -71,8 +71,8 @@ jobs:
       - name: Validate GraalVM metadata cache repair
         run: node --test scripts/graalvm-metadata-cache.test.mjs
       - name: Build (compile only)
-        # Keep native metadata extraction deterministic: the plugin shares one extracted repository path across projects.
-        run: ./gradlew build -x detekt -x test -x integrationTest -x stressTest -x migrationCompatibilityTest --continue
+        # Keep native metadata extraction deterministic: gradle.properties enables parallel project execution.
+        run: ./gradlew build -x detekt -x test -x integrationTest -x stressTest -x migrationCompatibilityTest --no-parallel --continue
         env:
           JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
