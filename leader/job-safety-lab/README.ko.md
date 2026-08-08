@@ -1,6 +1,6 @@
 # Leader Job Safety Lab
 
-[English](README.md) | **한국어**
+[English](README.md) | 한국어
 
 리더 선출에 성공했다고 해서 작업 결과까지 안전한 것은 아닙니다. 리더의 lease가 끝난 뒤 멈춰 있던 worker가 다시 실행되거나, 두 job 이름이 같은 업무 자원을 건드리거나, tenant/region/version 권한이 실행 중 바뀔 수 있습니다. 이 예제는 그런 상황에서 무엇을 Redis가 막고 무엇을 PostgreSQL이 최종 판단해야 하는지 보여주는 Spring Boot 예제입니다.
 

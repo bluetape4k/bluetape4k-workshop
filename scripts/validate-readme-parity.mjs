@@ -31,6 +31,10 @@ function imageTargets(markdown) {
   return [...markdown.matchAll(/!\[[^\]]*]\(([^)]+)\)/g)].map((match) => match[1].trim());
 }
 
+function canonicalImageTarget(target) {
+  return target.replace(/\.ko(?=\.(?:png|svg)$)/, "");
+}
+
 const forbiddenKoPatterns = [
   /원문 상세 항목/,
   /영어 README에는 다음 상세 항목/,
@@ -70,8 +74,8 @@ for (const readme of walk(root)) {
     fileFailures.push(`code fences ${englishFenceCount}/${koreanFenceCount}`);
   }
 
-  const englishImages = imageTargets(english);
-  const koreanImages = imageTargets(korean);
+  const englishImages = imageTargets(english).map(canonicalImageTarget);
+  const koreanImages = imageTargets(korean).map(canonicalImageTarget);
   if (JSON.stringify(englishImages) !== JSON.stringify(koreanImages)) {
     fileFailures.push(`image targets ${englishImages.length}/${koreanImages.length}`);
   }

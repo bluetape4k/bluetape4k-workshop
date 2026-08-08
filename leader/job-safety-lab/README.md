@@ -1,6 +1,6 @@
 # Leader Job Safety Lab
 
-**English** | [한국어](README.ko.md)
+[한국어](README.ko.md) | English
 
 Winning leader election does not make a job result safe. A paused worker can resume after its lease expires, two differently named jobs can mutate the same business resource, and tenant, region, or rollout authority can change while work is running. This Spring Boot example shows which failures Redis can reduce and which decisions PostgreSQL must make at commit time.
 

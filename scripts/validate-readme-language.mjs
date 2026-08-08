@@ -5,6 +5,9 @@ import path from "node:path";
 
 const root = process.cwd();
 const skippedDirs = new Set([".git", ".gradle", ".omx", ".omc", ".worktrees", "build", "buildSrc", "node_modules"]);
+const allowedKoreanTokens = new Map([
+  ["image-processing/profile-image-moderation/README.md", ["욱일기"]],
+]);
 
 function walk(dir, out = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -22,11 +25,18 @@ function walk(dir, out = []) {
 const offenders = [];
 for (const file of walk(root)) {
   const rel = path.relative(root, file).replaceAll(path.sep, "/");
+  // Only bilingual README pairs are subject to the English README gate.
+  // Standalone indexes such as docs/lessons/README.md may intentionally link
+  // to Korean project artifacts and are not locale pairs.
+  if (!fs.existsSync(path.join(path.dirname(file), "README.ko.md"))) continue;
+  const allowedTokens = allowedKoreanTokens.get(rel) ?? [];
   const lines = fs.readFileSync(file, "utf8").split(/\r?\n/);
   const hits = [];
   lines.forEach((line, index) => {
     if (!/[가-힣]/.test(line)) return;
     if (/^\[한국어\]\(README\.ko\.md\) \| English\s*$/.test(line.trim())) return;
+    const sanitized = allowedTokens.reduce((value, token) => value.replaceAll(token, ""), line);
+    if (!/[가-힣]/.test(sanitized)) return;
     hits.push({ line: index + 1, text: line });
   });
   if (hits.length > 0) offenders.push({ file: rel, count: hits.length, hits: hits.slice(0, 5) });
