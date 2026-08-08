@@ -18,6 +18,7 @@ This module provides small HTTP client and integration-test helpers used by work
 - **WebClientExtensions**: Reactive `WebClient` extension functions
 - **WebTestClientExtensions**: Test extension functions for `WebTestClient`
 - **AbstractSpringTest**: Base class for Spring integration tests
+- **RedisTestSupport**: Shared Redis Testcontainers and Spring dynamic-property helper
 
 ## Module Structure
 
@@ -53,6 +54,31 @@ webTestClient.httpGet("/tasks/1", HttpStatus.OK)
 
 webTestClient.httpPost("/tasks", task, HttpStatus.CREATED)
 ```
+
+### RedisTestSupport (Redis Testcontainers)
+
+`RedisTestSupport` reuses `RedisServer.Launcher.redis` and registers the
+following Spring `DynamicPropertyRegistry` keys:
+
+- `testcontainers.redis.host`
+- `testcontainers.redis.port`
+- `testcontainers.redis.url`
+
+Use it from a Redis example test and connect the consumer module to `shared`
+with `testImplementation(project(":shared"))`. The consumer must continue to
+declare its own Spring Test and Testcontainers runtime dependencies.
+
+~~~kotlin
+import io.bluetape4k.workshop.shared.testcontainers.RedisTestSupport
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
+
+@JvmStatic
+@DynamicPropertySource
+fun redisProperties(registry: DynamicPropertyRegistry) {
+    RedisTestSupport.registerRedisProperties(registry)
+}
+~~~
 
 ## Usage
 

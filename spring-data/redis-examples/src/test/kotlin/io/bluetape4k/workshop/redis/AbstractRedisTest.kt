@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.redis
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.workshop.shared.testcontainers.RedisTestSupport
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource

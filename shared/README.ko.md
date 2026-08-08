@@ -18,6 +18,7 @@
 - **WebClientExtensions**: Reactive `WebClient` 확장 함수
 - **WebTestClientExtensions**: `WebTestClient`용 테스트 확장 함수
 - **AbstractSpringTest**: Spring 통합 테스트 base class
+- **RedisTestSupport**: Redis Testcontainers와 Spring 동적 프로퍼티 등록 helper
 
 ## 모듈 구조
 
@@ -53,6 +54,31 @@ webTestClient.httpGet("/tasks/1", HttpStatus.OK)
 
 webTestClient.httpPost("/tasks", task, HttpStatus.CREATED)
 ```
+
+### RedisTestSupport (Redis Testcontainers)
+
+`RedisTestSupport`는 `RedisServer.Launcher.redis`를 재사용하고 다음
+Spring `DynamicPropertyRegistry` 키를 등록합니다.
+
+- `testcontainers.redis.host`
+- `testcontainers.redis.port`
+- `testcontainers.redis.url`
+
+Redis 예제 테스트에서 사용하려면 소비 모듈에
+`testImplementation(project(":shared"))`를 선언하세요. 소비 모듈은
+Spring Test와 Testcontainers 실행 의존성도 계속 자체 선언해야 합니다.
+
+~~~kotlin
+import io.bluetape4k.workshop.shared.testcontainers.RedisTestSupport
+import org.springframework.test.context.DynamicPropertyRegistry
+import org.springframework.test.context.DynamicPropertySource
+
+@JvmStatic
+@DynamicPropertySource
+fun redisProperties(registry: DynamicPropertyRegistry) {
+    RedisTestSupport.registerRedisProperties(registry)
+}
+~~~
 
 ## 사용법
 

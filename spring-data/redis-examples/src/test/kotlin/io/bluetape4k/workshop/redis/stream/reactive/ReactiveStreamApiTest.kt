@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.redis.stream.reactive
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.redis.RedisTestSupport
+import io.bluetape4k.workshop.shared.testcontainers.RedisTestSupport
 import io.bluetape4k.workshop.redis.stream.RedisStreamConfiguration
 import io.bluetape4k.workshop.redis.stream.SensorData
 import kotlinx.coroutines.delay
