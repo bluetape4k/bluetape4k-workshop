@@ -49,7 +49,7 @@ reflectasm = "1.11.9"  # https://mvnrepository.com/artifact/com.esotericsoftware
 mongo-driver = "5.9.1"  # https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-sync
 lettuce = "7.6.0.RELEASE"  # https://mvnrepository.com/artifact/io.lettuce/lettuce-core
 redisson = "4.6.1"  # https://mvnrepository.com/artifact/org.redisson/redisson
-lz4 = "1.11.1"  # https://mvnrepository.com/artifact/at.yawk.lz4/lz4-java
+lz4 = "1.11.2"  # https://mvnrepository.com/artifact/at.yawk.lz4/lz4-java
 
 hibernate = "7.4.5.Final"  # https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
 hibernate-reactive = "4.3.3.Final"  # https://mvnrepository.com/artifact/org.hibernate.reactive/hibernate-reactive-core
