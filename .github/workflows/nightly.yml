@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: gradle/actions/wrapper-validation@v6.2.0
+      - uses: gradle/actions/wrapper-validation@v6.3.0
 
   build:
     name: Build (compile only)
@@ -43,7 +43,7 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSIONS }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
-      - uses: gradle/actions/setup-gradle@v6.2.0
+      - uses: gradle/actions/setup-gradle@v6.3.0
         with:
           gradle-version: wrapper
           gradle-home-cache-excludes: |
@@ -69,7 +69,7 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSIONS }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
-      - uses: gradle/actions/setup-gradle@v6.2.0
+      - uses: gradle/actions/setup-gradle@v6.3.0
         with:
           gradle-version: wrapper
           cache-read-only: true
@@ -97,7 +97,7 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSIONS }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
-      - uses: gradle/actions/setup-gradle@v6.2.0
+      - uses: gradle/actions/setup-gradle@v6.3.0
         with:
           gradle-version: wrapper
           cache-read-only: true
@@ -212,7 +212,7 @@ jobs:
         with:
           java-version: '25'
           distribution: ${{ env.JAVA_DISTRIBUTION }}
-      - uses: gradle/actions/setup-gradle@v6.2.0
+      - uses: gradle/actions/setup-gradle@v6.3.0
         with:
           gradle-version: wrapper
           cache-read-only: true
