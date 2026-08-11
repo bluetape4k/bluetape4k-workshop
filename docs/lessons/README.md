@@ -16,6 +16,7 @@ directory unless they have been deliberately promoted.
 
 Recent delivery lessons:
 
+- [Nightly GraalVM reachability metadata 병렬 추출 경쟁](2026-08-11-nightly-graalvm-metadata-serialization.md)
 - [사용량 과금 Visualization의 원본과 게시 경계](2026-08-05-usage-billing-visualization-boundaries.md)
 - [Issue #699 CI metadata cache와 voucher fixture 안정화](2026-08-05-issue-699-ci-metadata-cache.md)
 - [Issue #567 reservation control-plane assertion 이관](2026-08-05-issue-567-reservation-assertions.md)

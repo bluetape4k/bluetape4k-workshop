@@ -54,7 +54,7 @@ jobs:
         run: node --test scripts/graalvm-metadata-cache.test.mjs
       - name: Build (compile only)
         # Keep the compile-only lane honest: native metadata tasks are part of the build graph.
-        run: ./gradlew assemble -x detekt -x test -x stressTest -x migrationCompatibilityTest --parallel --continue
+        run: ./gradlew assemble -x detekt -x test -x stressTest -x migrationCompatibilityTest --no-parallel --max-workers=1 --continue
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
