@@ -43,9 +43,9 @@ allprojects {
     }
 
     // bluetape4k snapshot 버전 사용 시만 사용하세요.
-    configurations.all {
-        resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.SECONDS)
-    }
+    // configurations.all {
+    //     resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.SECONDS)
+    // }
 }
 
 subprojects {
