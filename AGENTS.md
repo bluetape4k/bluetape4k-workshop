@@ -8,7 +8,7 @@ repo-specific layout, commands, domain rules, and local exceptions.
 Backend examples using bluetape4k libraries.
 
 - Kotlin 2.4.0
-- Java 21
+- Java 25
 - Spring Boot 4.0.6
 - bluetape4k 1.7.0
 
@@ -62,8 +62,8 @@ names.
 - Dependency versions live in `gradle/libs.versions.toml`.
 - Package prefix: `io.bluetape4k.workshop.{module}.*`.
 - Tests are serialized by `TestMutexService` to avoid DB conflicts.
-- JVM uses the Java 21 toolchain by default; explicitly marked new examples,
-  including `optimization/*`, may use Java 25 virtual threads.
+- JVM uses the Java 25 toolchain by default; examples may use Java 25 virtual
+  threads.
 - Spring Boot modules use `springBoot { mainClass.set(...) }` and extend test
   dependencies from `compileOnly`/`runtimeOnly` where the repo already does so.
 - Common bluetape4k modules include logging, JUnit5, coroutines, Exposed, and

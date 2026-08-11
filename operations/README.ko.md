@@ -15,8 +15,7 @@
 | [`job-console-spring`](job-console-spring/) | Spring MVC REST/SSE 어댑터와 데모 UI | Java 25 |
 | [`job-console-ktor`](job-console-ktor/) | Ktor Netty REST/SSE 어댑터와 데모 UI | Java 25 |
 
-Java 25는 이 신규 모듈 세 개에만 격리합니다. 저장소 기본값은 계속 Java
-21입니다.
+이 모듈들은 저장소 전체의 기본 Java 25 toolchain을 사용합니다.
 
 ## 아키텍처
 

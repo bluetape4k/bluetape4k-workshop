@@ -10,7 +10,7 @@ The design is a Spring Modulith modular monolith. It uses JetBrains Exposed thro
 
 ## Prerequisites and Java 25
 
-- JDK 25. This new example intentionally differs from the repository-wide Java 21 default.
+- JDK 25, matching the repository-wide default toolchain.
 - Docker-compatible container runtime for the PostgreSQL and Redis integration tests.
 - PostgreSQL 18 and Redis 8 for a manual boot run; the tests provision compatible containers through `bluetape4k-testcontainers`.
 - No individual Bluetape library BOM. The workshop consumes only `bluetape4k-dependencies`.

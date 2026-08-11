@@ -117,7 +117,7 @@ suspend fun getById(id: Long): User? =
 Prerequisites:
 
 - Docker must be available for the Redis Testcontainer used by integration tests.
-- JDK 21+ must be available through Gradle.
+- JDK 25 must be available through Gradle.
 
 ## Configuration
 

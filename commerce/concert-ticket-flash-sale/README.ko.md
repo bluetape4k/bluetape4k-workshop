@@ -10,7 +10,7 @@
 
 ## Prerequisites and Java 25
 
-- JDK 25. 신규 예제이므로 저장소의 Java 21 기본값과 의도적으로 다르다.
+- JDK 25. 저장소 전체의 기본 toolchain과 동일하다.
 - PostgreSQL/Redis 통합 테스트를 위한 Docker 호환 container runtime.
 - 수동 실행에는 PostgreSQL 18과 Redis 8. 테스트는 `bluetape4k-testcontainers`로 호환 container를 준비한다.
 - 개별 Bluetape BOM은 사용하지 않고 `bluetape4k-dependencies`만 사용한다.

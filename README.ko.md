@@ -34,7 +34,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 ./gradlew detekt
 ```
 
-**요구 사항**: JDK 21+, Docker (Testcontainers)
+**요구 사항**: JDK 25, Docker (Testcontainers)
 
 이 저장소는 실행 가능한 cookbook로 구성됩니다.
 

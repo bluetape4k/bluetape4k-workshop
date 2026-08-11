@@ -97,6 +97,6 @@ Run the profile-driven storage sample directly when you want to compare backends
 
 | item | requirement |
 | --- | --- |
-| JDK | Java 21 or newer. |
+| JDK | Java 25. |
 | Docker | Required for emulator-backed tests and S3 samples. |
 | AWS account | Not required for the local workshop path. Real EventBridge/Scheduler, CloudWatch/IMDS, and S3 Vectors/Access Grants behavior is manual opt-in only. |

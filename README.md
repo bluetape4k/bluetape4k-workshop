@@ -34,7 +34,7 @@ virtual-thread, Vert.x, and cloud-native workloads.
 ./gradlew detekt
 ```
 
-**Requirements**: JDK 21+, Docker (Testcontainers)
+**Requirements**: JDK 25, Docker (Testcontainers)
 
 Use this repository as a runnable cookbook:
 

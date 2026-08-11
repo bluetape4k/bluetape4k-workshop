@@ -117,7 +117,7 @@ suspend fun getById(id: Long): User? =
 사전 조건:
 
 - 통합 테스트의 Redis Testcontainer를 위해 Docker가 필요합니다.
-- Gradle이 사용할 수 있는 JDK 21+가 필요합니다.
+- Gradle이 사용할 수 있는 JDK 25가 필요합니다.
 
 ## 설정
 

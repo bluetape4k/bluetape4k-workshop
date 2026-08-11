@@ -11,12 +11,6 @@ configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(21))
-    }
-}
-
 // smoke test 는 lease expiry 때문에 timing-sensitive 하므로 기본 CI 실행에서 제외합니다.
 // 포함해서 실행하려면 ./gradlew :redis-distributed-lock:test -Djunit.jupiter.execution.exclude.tags= 를 사용합니다.
 tasks.named<Test>("test") {
