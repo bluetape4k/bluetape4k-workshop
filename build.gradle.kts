@@ -38,24 +38,18 @@ val rootLibs = libs
 
 allprojects {
     repositories {
-        mavenLocal()   // required for bluetape4k-graph until published to Maven Central
         mavenCentral()
-        maven {
-            name = "central-snapshots"
-            url = uri("https://central.sonatype.com/repository/maven-snapshots/")
-        }
+        google()
     }
 
     // bluetape4k snapshot 버전 사용 시만 사용하세요.
-    configurations.all {
-        resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.SECONDS)
-    }
+    // configurations.all {
+    //     resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.SECONDS)
+    // }
 }
 
 subprojects {
-    val isOptimizationModule = projectDir.toPath()
-        .startsWith(rootProject.projectDir.resolve("optimization").toPath())
-    val targetJavaVersion = if (isOptimizationModule) 25 else 21
+    val targetJavaVersion = 25
 
     apply {
         plugin<JavaLibraryPlugin>()
@@ -83,8 +77,8 @@ subprojects {
     kotlin {
         jvmToolchain(targetJavaVersion)
         compilerOptions {
-            languageVersion.set(KotlinVersion.KOTLIN_2_3)
-            apiVersion.set(KotlinVersion.KOTLIN_2_3)
+            languageVersion.set(KotlinVersion.KOTLIN_2_4)
+            apiVersion.set(KotlinVersion.KOTLIN_2_4)
             freeCompilerArgs = listOf(
                 "-Xjsr305=strict",
                 "-jvm-default=enable",

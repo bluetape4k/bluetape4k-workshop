@@ -15,8 +15,7 @@ state or invalidates the next REST snapshot.
 | [`job-console-spring`](job-console-spring/) | Spring MVC REST/SSE adapter and demo UI | Java 25 |
 | [`job-console-ktor`](job-console-ktor/) | Ktor Netty REST/SSE adapter and demo UI | Java 25 |
 
-Java 25 is isolated to these three new modules. The repository default remains
-Java 21.
+These modules use the repository-wide Java 25 default.
 
 ## Architecture
 

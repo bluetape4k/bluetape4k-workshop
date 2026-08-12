@@ -98,6 +98,6 @@ backend별 동작을 비교하려면 profile 기반 storage 샘플을 직접 실
 
 | item | requirement |
 | --- | --- |
-| JDK | Java 21 이상. |
+| JDK | Java 25. |
 | Docker | 에뮬레이터 기반 테스트와 S3 샘플 실행에 필요합니다. |
 | AWS account | 로컬 워크숍 경로에는 필요하지 않습니다. 실제 EventBridge/Scheduler, CloudWatch/IMDS, S3 Vectors/Access Grants 동작은 수동 opt-in입니다. |
