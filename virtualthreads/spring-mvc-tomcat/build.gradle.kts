@@ -28,7 +28,7 @@ kapt {
     }
     javacOptions {
         option("--add-modules", "java.base")
-        option("--enable-preview")             // for Java 21 Virtual Threads
+        option("--enable-preview")             // for Java 25 Virtual Threads
     }
 }
 
@@ -47,9 +47,9 @@ dependencies {
     // api(libs.jakarta.annotation.api)
 
     implementation(libs.bluetape4k.core)
-    // VirtualThread of JDK 21
+    // VirtualThread of JDK 25
     implementation(libs.bluetape4k.virtualthread.api)
-    runtimeOnly(libs.bluetape4k.virtualthread.jdk21)
+    runtimeOnly(libs.bluetape4k.virtualthread.jdk25)
 
     implementation(libs.bluetape4k.testcontainers)
 

@@ -27,6 +27,7 @@ import org.junit.jupiter.api.TestInstance
 import java.sql.SQLException
 import java.time.Duration
 import java.time.Instant
+import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -260,7 +261,7 @@ internal class EventSourcedAppendStressTest {
             "streamHeadP95=${metrics.streamHeadPercentile(0.95).toMillis()}ms " +
             "appendFenceP95=${metrics.appendFencePercentile(0.95).toMillis()}ms"
 
-    private fun Double.format(): String = "%.2f".format(this)
+    private fun Double.format(): String = "%.2f".format(Locale.ROOT, this)
 
     private companion object {
         private const val TENANT = "tenant-stress"

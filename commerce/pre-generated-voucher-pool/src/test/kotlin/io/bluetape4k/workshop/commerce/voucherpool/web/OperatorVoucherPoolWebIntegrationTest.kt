@@ -41,6 +41,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import tools.jackson.databind.ObjectMapper
 import java.sql.Timestamp
 import java.time.Instant
+import java.util.Locale
 import java.util.UUID
 import javax.sql.DataSource
 import kotlin.time.Duration.Companion.minutes
@@ -647,7 +648,7 @@ internal class OperatorVoucherPoolWebIntegrationTest : AbstractVoucherPoolIntegr
     }
 
     private fun digestHex(seed: Int): String =
-        ByteArray(32) { index -> (seed + index).toByte() }.joinToString("") { "%02x".format(it) }
+        ByteArray(32) { index -> (seed + index).toByte() }.joinToString("") { "%02x".format(Locale.ROOT, it) }
 
     private fun activePool(name: String): OperatorFixture {
         val now = Instant.now()

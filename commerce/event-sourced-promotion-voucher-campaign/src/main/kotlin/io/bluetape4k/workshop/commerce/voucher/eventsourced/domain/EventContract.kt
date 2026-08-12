@@ -10,6 +10,7 @@ import io.bluetape4k.support.requireZeroOrPositiveNumber
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.time.Instant
+import java.util.Locale
 import java.util.UUID
 
 internal const val MAX_EVENT_PAYLOAD_BYTES = 64 * 1024
@@ -158,7 +159,7 @@ internal data class EventEnvelope(
                 .joinToString("|")
                 .toByteArray(StandardCharsets.UTF_8)
                 .let { MessageDigest.getInstance("SHA-256").digest(it) }
-                .joinToString("") { byte -> "%02x".format(byte) }
+                .joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }
     }
 }
 

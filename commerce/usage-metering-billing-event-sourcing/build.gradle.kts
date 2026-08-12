@@ -1,4 +1,3 @@
-import io.gitlab.arturbosch.detekt.Detekt
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.TestDescriptor
 import org.gradle.api.tasks.testing.TestListener
@@ -20,10 +19,6 @@ java {
 kotlin {
     jvmToolchain(25)
     compilerOptions.jvmTarget.set(JvmTarget.JVM_25)
-}
-
-tasks.withType<Detekt>().configureEach {
-    jvmTarget = "22"
 }
 
 springBoot {

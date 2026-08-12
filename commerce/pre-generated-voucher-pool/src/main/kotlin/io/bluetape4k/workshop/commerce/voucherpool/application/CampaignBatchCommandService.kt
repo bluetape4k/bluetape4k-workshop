@@ -50,6 +50,7 @@ import java.util.ArrayDeque
 import java.util.Base64
 import java.util.Collections
 import java.util.IdentityHashMap
+import java.util.Locale
 import java.util.UUID
 
 internal enum class BatchSourceKind { IMPORTED, GENERATED }
@@ -1143,7 +1144,7 @@ private fun Instant.toPostgresInstant(): Instant {
 private fun DigestValue.secureEquals(other: DigestValue): Boolean =
     MessageDigest.isEqual(copyBytes(), other.copyBytes())
 
-private fun ByteArray.toHex(): String = joinToString("") { "%02x".format(it) }
+private fun ByteArray.toHex(): String = joinToString("") { "%02x".format(Locale.ROOT, it) }
 
 private fun validateChunkPayload(codes: List<String>, allowEmpty: Boolean = false) {
     if (!allowEmpty) require(codes.isNotEmpty()) { "chunk must not be empty" }

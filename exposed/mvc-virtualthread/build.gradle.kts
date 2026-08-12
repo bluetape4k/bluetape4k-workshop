@@ -35,7 +35,7 @@ dependencies {
 
     // Virtual Thread runtime: JVM 21 테스트 환경에서는 jdk21 구현을 사용한다.
     implementation(libs.bluetape4k.virtualthread.api)
-    runtimeOnly(libs.bluetape4k.virtualthread.jdk21)
+    runtimeOnly(libs.bluetape4k.virtualthread.jdk25)
 
     // Exposed JDBC: Spring TX starter 없이 수동 TX를 사용한다.
     implementation(libs.exposed.core)

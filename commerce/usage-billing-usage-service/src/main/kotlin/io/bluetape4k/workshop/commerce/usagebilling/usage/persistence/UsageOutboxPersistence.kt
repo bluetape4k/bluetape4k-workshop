@@ -156,10 +156,12 @@ class UsageRecordEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var occurredAt by UsageRecords.occurredAt
 }
 
+@Suppress("AbstractClassCanBeConcreteClass")
 abstract class UsageExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(ExposedEntityInformationImpl(domainClass))
 
+@Suppress("AbstractClassCanBeConcreteClass")
 abstract class AppendOnlyUsageExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : UsageExposedJdbcRepository<E, ID>(domainClass) {

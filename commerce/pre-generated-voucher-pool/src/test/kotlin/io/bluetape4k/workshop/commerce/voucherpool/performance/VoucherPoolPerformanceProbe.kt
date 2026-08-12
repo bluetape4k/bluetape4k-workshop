@@ -81,6 +81,7 @@ import java.sql.Connection
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
+import java.util.Locale
 import java.util.concurrent.Callable
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -1043,7 +1044,7 @@ internal class StressEvidenceWriter(private val outputRoot: Path) {
             }
 
     private fun sha256(path: Path): String =
-        MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path)).joinToString("") { "%02x".format(it) }
+        MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path)).joinToString("") { "%02x".format(Locale.ROOT, it) }
 
     private fun String.json(): String = replace("\\", "\\\\").replace("\"", "\\\"")
 

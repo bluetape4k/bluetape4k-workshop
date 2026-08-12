@@ -21,7 +21,10 @@ import java.time.Duration
 @Import(VoucherPoolTestKeyMaterialConfiguration::class)
 @Execution(ExecutionMode.SAME_THREAD)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@Suppress("UnnecessaryAbstractClass") // Shared JUnit fixture must not be discovered as a concrete test class.
+@Suppress(
+    "UnnecessaryAbstractClass",
+    "AbstractClassCanBeConcreteClass",
+) // Shared JUnit fixture must not be discovered as a concrete test class.
 internal abstract class AbstractVoucherPoolIntegrationTest {
     @LocalServerPort
     protected var port: Int = 0

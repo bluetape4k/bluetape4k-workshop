@@ -5,12 +5,14 @@ import io.bluetape4k.spring.data.exposed.jdbc.repository.support.ExposedEntityIn
 import io.bluetape4k.spring.data.exposed.jdbc.repository.support.SimpleExposedJdbcRepository
 import org.jetbrains.exposed.v1.dao.Entity
 
+@Suppress("AbstractClassCanBeConcreteClass")
 abstract class EventSourcingExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(
         ExposedEntityInformationImpl(domainClass),
     )
 
+@Suppress("AbstractClassCanBeConcreteClass")
 abstract class AppendOnlyEventSourcingExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : EventSourcingExposedJdbcRepository<E, ID>(domainClass) {

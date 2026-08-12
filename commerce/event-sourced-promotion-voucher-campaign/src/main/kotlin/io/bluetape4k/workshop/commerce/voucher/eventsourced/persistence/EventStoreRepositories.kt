@@ -292,12 +292,14 @@ internal class EventLogEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     companion object : UUIDEntityClass<EventLogEntity>(EventLog)
 }
 
+@Suppress("AbstractClassCanBeConcreteClass")
 internal abstract class EventSourcedExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(
         ExposedEntityInformationImpl(domainClass),
     )
 
+@Suppress("AbstractClassCanBeConcreteClass")
 internal abstract class AppendOnlyEventSourcedRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : EventSourcedExposedJdbcRepository<E, ID>(domainClass) {

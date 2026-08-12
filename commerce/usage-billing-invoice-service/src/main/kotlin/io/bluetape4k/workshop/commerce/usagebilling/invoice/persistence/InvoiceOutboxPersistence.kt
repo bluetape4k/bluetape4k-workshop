@@ -123,10 +123,12 @@ class InvoiceInboxEventEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var createdAt by InvoiceInboxEvents.createdAt
 }
 
+@Suppress("AbstractClassCanBeConcreteClass")
 abstract class InvoiceExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(ExposedEntityInformationImpl(domainClass))
 
+@Suppress("AbstractClassCanBeConcreteClass")
 abstract class AppendOnlyInvoiceExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : InvoiceExposedJdbcRepository<E, ID>(domainClass) {

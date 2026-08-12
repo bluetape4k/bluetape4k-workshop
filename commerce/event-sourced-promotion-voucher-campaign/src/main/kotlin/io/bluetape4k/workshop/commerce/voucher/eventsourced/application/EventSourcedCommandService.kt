@@ -27,7 +27,7 @@ internal interface CommandTransactionRunner {
 }
 
 internal class ExposedCommandTransactionRunner(
-    private val database: Database,
+    database: Database,
     permits: EventSourcedDatabasePermitGate,
 ) : CommandTransactionRunner {
     private val transactions =

@@ -162,6 +162,7 @@ internal class AesGcmVoucherEnvelopeCrypto(
         }
     }
 
+    @Suppress("ThrowsCount")
     override fun decryptAndVerify(
         entryIdentity: EntryIdentity,
         encrypted: EncryptedVoucherCode,
