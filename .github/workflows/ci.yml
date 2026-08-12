@@ -37,7 +37,6 @@ permissions:
 
 env:
   JAVA_VERSIONS: |-
-    21
     25
   JAVA_DISTRIBUTION: 'temurin'
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
@@ -74,7 +73,7 @@ jobs:
         # Keep native metadata extraction deterministic: shared services use one cache path across projects.
         run: ./gradlew build -x detekt -x test -x integrationTest -x stressTest -x migrationCompatibilityTest --no-parallel --max-workers=1 --continue
         env:
-          JAVA_HOME: ${{ env.JAVA_HOME_21_X64 }}
+          JAVA_HOME: ${{ env.JAVA_HOME_25_X64 }}
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
   ci-status:
