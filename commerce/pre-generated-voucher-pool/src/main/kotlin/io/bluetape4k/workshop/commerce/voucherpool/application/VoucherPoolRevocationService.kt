@@ -33,6 +33,7 @@ import java.sql.Timestamp
 import java.time.Duration
 import java.time.Instant
 import java.util.Base64
+import java.util.Locale
 import java.util.UUID
 
 internal enum class RevokeAggregateType { CAMPAIGN, BATCH }
@@ -715,7 +716,7 @@ private fun impactDigest(
     return MessageDigest.getInstance("SHA-256").digest(material.toByteArray(UTF_8))
 }
 
-private fun ByteArray.toHex(): String = joinToString("") { byte -> "%02x".format(byte) }
+private fun ByteArray.toHex(): String = joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }
 
 private fun fail(reason: RevocationCommandFailure): Nothing = throw RevocationCommandException(reason)
 

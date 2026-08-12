@@ -11,6 +11,7 @@ import java.util.concurrent.TimeoutException
 class KafkaUsageEventTransport(
     private val kafkaTemplate: KafkaTemplate<String, String>,
 ) : UsageEventTransport {
+    @Suppress("ThrowsCount")
     override fun publish(partitionKey: String, payload: String) {
         try {
             kafkaTemplate.send(TOPIC, partitionKey, payload).get(PUBLISH_TIMEOUT_SECONDS, TimeUnit.SECONDS)

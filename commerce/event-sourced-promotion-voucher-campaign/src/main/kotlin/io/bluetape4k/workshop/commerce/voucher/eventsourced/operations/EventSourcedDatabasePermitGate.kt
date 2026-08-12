@@ -88,7 +88,7 @@ internal data class EventSourcedDatabasePermitSnapshot(
  * foreground traffic이 포화되어도 독립 readiness lane은 계속 사용할 수 있습니다.
  */
 internal class EventSourcedDatabasePermitGate(
-    private val budget: EventSourcedDatabasePermitBudget = EventSourcedDatabasePermitBudget(),
+    budget: EventSourcedDatabasePermitBudget = EventSourcedDatabasePermitBudget(),
     acquireTimeout: Duration = DEFAULT_ACQUIRE_TIMEOUT,
     private val metrics: EventSourcedDatabasePermitMetrics = EventSourcedDatabasePermitMetrics.NONE,
 ) {

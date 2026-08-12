@@ -188,10 +188,12 @@ class BillingChargeEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var createdAt by BillingCharges.createdAt
 }
 
+@Suppress("AbstractClassCanBeConcreteClass")
 abstract class BillingExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(ExposedEntityInformationImpl(domainClass))
 
+@Suppress("AbstractClassCanBeConcreteClass")
 abstract class AppendOnlyBillingExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : BillingExposedJdbcRepository<E, ID>(domainClass) {

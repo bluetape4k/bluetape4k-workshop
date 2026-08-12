@@ -38,6 +38,7 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 import java.time.Duration
+import java.util.Locale
 import java.time.Instant
 import java.util.UUID
 
@@ -235,7 +236,7 @@ class BillingEventSourcingStressTest {
         val throughput = USAGE_COUNT.toDouble() / elapsed.toMillis().coerceAtLeast(1) * MILLIS_PER_SECOND
         println(
             "stress.usage.count=$USAGE_COUNT stress.elapsed.ms=${elapsed.toMillis()} " +
-                "stress.throughput.events_per_second=${"%.2f".format(throughput)} " +
+                "stress.throughput.events_per_second=${"%.2f".format(Locale.ROOT, throughput)} " +
                 "stress.peak.batch=$PROJECTION_BATCH_SIZE",
         )
     }

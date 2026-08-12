@@ -59,6 +59,7 @@ import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
 import java.sql.Connection
 import java.sql.DriverManager
 import java.time.Instant
+import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -462,7 +463,7 @@ internal class VoucherBatchIngestIntegrationTest {
         rejection.evidenceCode shouldBeEqualTo failed.lastFailureCode
         rejection.evidenceCode shouldNotContain "bad"
         val plainOracle = java.security.MessageDigest.getInstance("SHA-256")
-            .digest("bad\ncode".toByteArray()).take(8).toByteArray().joinToString("") { "%02x".format(it) }
+            .digest("bad\ncode".toByteArray()).take(8).toByteArray().joinToString("") { "%02x".format(Locale.ROOT, it) }
         failed.lastFailureCode.orEmpty() shouldNotContain plainOracle
         failed.lastFailureCode.orEmpty().length.let { it <= 64 }.shouldBeTrue()
         val replay = service.importChunk(command) as MutationResult.Replay
@@ -527,7 +528,7 @@ internal class VoucherBatchIngestIntegrationTest {
         failed.lastFailureCode shouldBeEqualTo rejection.evidenceCode
         failed.lastFailureCode.orEmpty() shouldNotContain rawSecret
         val plainOracle = java.security.MessageDigest.getInstance("SHA-256")
-            .digest(rawSecret.toByteArray()).take(8).toByteArray().joinToString("") { "%02x".format(it) }
+            .digest(rawSecret.toByteArray()).take(8).toByteArray().joinToString("") { "%02x".format(Locale.ROOT, it) }
         failed.lastFailureCode.orEmpty() shouldNotContain plainOracle
         (failed.lastFailureCode.orEmpty().length <= 64).shouldBeTrue()
 

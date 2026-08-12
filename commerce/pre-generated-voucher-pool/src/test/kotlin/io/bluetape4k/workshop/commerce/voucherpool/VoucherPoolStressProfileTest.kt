@@ -19,6 +19,7 @@ import org.junit.jupiter.params.provider.CsvSource
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.MessageDigest
+import java.util.Locale
 
 @Tag("stress")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -71,7 +72,9 @@ internal class VoucherPoolStressProfileTest {
     }
 
     private fun sha256(path: Path): String =
-        MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(path)).joinToString("") { "%02x".format(it) }
+        MessageDigest.getInstance("SHA-256")
+            .digest(Files.readAllBytes(path))
+            .joinToString("") { "%02x".format(Locale.ROOT, it) }
 
     companion object {
         private val EXPECTED_PROFILES = linkedSetOf(

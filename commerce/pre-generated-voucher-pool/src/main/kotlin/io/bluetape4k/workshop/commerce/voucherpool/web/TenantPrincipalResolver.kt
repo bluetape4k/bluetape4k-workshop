@@ -38,6 +38,7 @@ internal class TenantPrincipalResolver(
     override fun supportsParameter(parameter: MethodParameter): Boolean =
         parameter.parameterType == TenantPrincipal::class.java
 
+    @Suppress("ThrowsCount")
     override fun resolveArgument(
         parameter: MethodParameter,
         mavContainer: ModelAndViewContainer?,

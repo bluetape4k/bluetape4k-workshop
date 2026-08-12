@@ -5,6 +5,7 @@ import tools.jackson.databind.JsonNode
 import tools.jackson.databind.ObjectMapper
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
+import java.util.Locale
 
 object CanonicalEventHash {
     private val mapper = ObjectMapper()
@@ -24,7 +25,7 @@ object CanonicalEventHash {
         }
         return MessageDigest.getInstance("SHA-256")
             .digest(canonical.toByteArray(UTF_8))
-            .joinToString("") { byte -> "%02x".format(byte) }
+            .joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }
     }
 
     private fun canonicalJson(json: String): String = canonical(mapper.readTree(json))

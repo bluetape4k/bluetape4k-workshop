@@ -7,9 +7,9 @@ configurations {
 dependencies {
 
     implementation(libs.bluetape4k.core)
-    // JDK 21 VirtualThread 의존성
+    // JDK 25 VirtualThread 의존성
     implementation(libs.bluetape4k.virtualthread.api)
-    runtimeOnly(libs.bluetape4k.virtualthread.jdk21)
+    runtimeOnly(libs.bluetape4k.virtualthread.jdk25)
 
     // 코루틴
     implementation(libs.bluetape4k.coroutines)

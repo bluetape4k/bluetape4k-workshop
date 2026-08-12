@@ -147,10 +147,12 @@ class QueryRedriveAuditEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var requestedAt by QueryRedriveAudits.requestedAt
 }
 
+@Suppress("AbstractClassCanBeConcreteClass")
 abstract class QueryExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(ExposedEntityInformationImpl(domainClass))
 
+@Suppress("AbstractClassCanBeConcreteClass")
 abstract class AppendOnlyQueryExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : QueryExposedJdbcRepository<E, ID>(domainClass) {
@@ -205,7 +207,7 @@ class ExposedQueryProjectionJournal : QueryProjectionJournal {
         }
 
     override fun hasEvent(eventId: UUID): Boolean =
-        QueryReadModelEntity.find { QueryReadModels.sourceEventId eq eventId }.firstOrNull() != null
+        QueryReadModelEntity.find { QueryReadModels.sourceEventId eq eventId }.any()
 
     override fun apply(event: QueryInboxEvent) {
         QueryInboxEventEntity.new {
@@ -242,7 +244,7 @@ class ExposedQueryRecoveryJournal : QueryRecoveryJournal {
     }
 
     override fun quarantine(event: QueryQuarantineEvent) {
-        if (QueryQuarantineEventEntity.find { QueryQuarantineEvents.eventId eq event.eventId }.firstOrNull() != null) {
+        if (QueryQuarantineEventEntity.find { QueryQuarantineEvents.eventId eq event.eventId }.any()) {
             return
         }
         QueryQuarantineEventEntity.new {

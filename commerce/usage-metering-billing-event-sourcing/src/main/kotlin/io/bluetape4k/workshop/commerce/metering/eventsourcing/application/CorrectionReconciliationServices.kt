@@ -18,12 +18,13 @@ import java.math.BigDecimal
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.time.Instant
+import java.util.Locale
 
 @Service
 class AdjustmentCommandService(
     private val eventStore: EventStore,
     private val codec: DomainEventJsonCodec,
-    private val metrics: ReplayTelemetry? = null,
+    metrics: ReplayTelemetry? = null,
 ) {
     private val replayRuntime = ReplayRuntime(eventStore, codec, metrics)
 
@@ -123,7 +124,7 @@ class ReconciliationService(
 
     private fun sha256(material: String): String = MessageDigest.getInstance("SHA-256")
         .digest(material.toByteArray(UTF_8))
-        .joinToString("") { byte -> "%02x".format(byte) }
+        .joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }
 
     private companion object {
         const val EVENT_PAGE_SIZE = 1_000

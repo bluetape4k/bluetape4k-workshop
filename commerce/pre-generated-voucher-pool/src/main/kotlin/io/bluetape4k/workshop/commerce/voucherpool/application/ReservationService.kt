@@ -78,7 +78,7 @@ internal interface ReservationService {
 }
 
 internal class JdbcReservationService(
-    private val executor: VoucherPoolJdbcExecutor,
+    executor: VoucherPoolJdbcExecutor,
     private val repository: VoucherPoolRepository,
     idempotency: VoucherPoolIdempotencyRepository,
     private val digests: VoucherDigestService,

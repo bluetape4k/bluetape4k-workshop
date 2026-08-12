@@ -112,7 +112,7 @@ internal interface ProjectionTransactionRunner {
 }
 
 internal class ExposedProjectionTransactionRunner(
-    private val database: Database,
+    database: Database,
     permits: EventSourcedDatabasePermitGate,
 ) : ProjectionTransactionRunner {
     private val transactions =

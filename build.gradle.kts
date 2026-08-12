@@ -1,6 +1,6 @@
-import io.gitlab.arturbosch.detekt.Detekt
-import io.gitlab.arturbosch.detekt.getSupportedKotlinVersion
-import io.gitlab.arturbosch.detekt.report.ReportMergeTask
+import dev.detekt.gradle.Detekt
+import dev.detekt.gradle.plugin.getSupportedKotlinVersion
+import dev.detekt.gradle.report.ReportMergeTask
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
@@ -181,10 +181,11 @@ subprojects {
         val detektTasks = withType<Detekt>()
         detektTasks.configureEach {
             enabled = this@subprojects.name !== "exposed-tests"
+            reports.checkstyle.required.set(true)
             finalizedBy(reportMerge)
         }
         reportMerge.configure {
-            input.from(detektTasks.map { it.xmlReportFile })
+            input.from(detektTasks.map { it.reports.checkstyle.outputLocation })
         }
 
         // https://kotlin.github.io/dokka/1.6.0/user_guide/gradle/usage/

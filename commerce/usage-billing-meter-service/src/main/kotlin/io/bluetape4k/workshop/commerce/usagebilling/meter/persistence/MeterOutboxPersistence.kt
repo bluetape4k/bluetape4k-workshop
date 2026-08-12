@@ -125,10 +125,12 @@ class MeterCommandReceiptEntity(id: EntityID<UUID>) : UUIDEntity(id) {
     var createdAt by MeterCommandReceipts.createdAt
 }
 
+@Suppress("AbstractClassCanBeConcreteClass")
 abstract class MeterExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : ExposedJdbcRepository<E, ID> by SimpleExposedJdbcRepository(ExposedEntityInformationImpl(domainClass))
 
+@Suppress("AbstractClassCanBeConcreteClass")
 abstract class AppendOnlyMeterExposedJdbcRepository<E : Entity<ID>, ID : Any>(
     domainClass: Class<E>,
 ) : MeterExposedJdbcRepository<E, ID>(domainClass) {

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.security.MessageDigest
+import java.util.Locale
 import java.time.Clock
 import java.time.Duration
 import java.util.UUID
@@ -123,7 +124,7 @@ class ProjectionBatchProcessor(
         val material = "${failure::class.qualifiedName}:${failure.message.orEmpty()}"
         return MessageDigest.getInstance("SHA-256")
             .digest(material.toByteArray(UTF_8))
-            .joinToString("") { byte -> "%02x".format(byte) }
+            .joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }
     }
 
     private companion object {

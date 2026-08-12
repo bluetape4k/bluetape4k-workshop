@@ -27,12 +27,13 @@ import java.math.BigDecimal
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.time.Instant
+import java.util.Locale
 
 @Service
 class MeterCommandService(
     private val eventStore: EventStore,
     private val codec: DomainEventJsonCodec,
-    private val metrics: ReplayTelemetry? = null,
+    metrics: ReplayTelemetry? = null,
 ) {
     private val replayRuntime = ReplayRuntime(eventStore, codec, metrics)
 
@@ -80,7 +81,7 @@ data class UsageAcceptance(val created: Boolean, val stream: StreamKey, val stre
 class UsageCommandService(
     private val eventStore: EventStore,
     private val codec: DomainEventJsonCodec,
-    private val metrics: ReplayTelemetry? = null,
+    metrics: ReplayTelemetry? = null,
 ) {
     private val replayRuntime = ReplayRuntime(eventStore, codec, metrics)
 
@@ -110,14 +111,14 @@ class UsageCommandService(
     private fun deterministicUsageId(sourceSystem: String, sourceEventId: String): String =
         MessageDigest.getInstance("SHA-256")
             .digest("$sourceSystem\u0000$sourceEventId".toByteArray(UTF_8))
-            .joinToString("") { byte -> "%02x".format(byte) }
+            .joinToString("") { byte -> "%02x".format(Locale.ROOT, byte) }
 }
 
 @Service
 class BillingLifecycleCommandService(
     private val eventStore: EventStore,
     private val codec: DomainEventJsonCodec,
-    private val metrics: ReplayTelemetry? = null,
+    metrics: ReplayTelemetry? = null,
 ) {
     private val replayRuntime = ReplayRuntime(eventStore, codec, metrics)
 

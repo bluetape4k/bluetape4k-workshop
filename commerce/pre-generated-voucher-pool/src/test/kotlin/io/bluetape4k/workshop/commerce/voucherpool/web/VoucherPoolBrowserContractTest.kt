@@ -186,7 +186,7 @@ internal class VoucherPoolBrowserContractTest {
 
 private class BoundedProcessOutput(
     input: InputStream,
-    private val limit: Int,
+    limit: Int,
 ) {
     private val bytes = ByteArrayOutputStream(limit)
     private val drain = thread(start = true, isDaemon = true, name = "voucher-pool-node-output") {
