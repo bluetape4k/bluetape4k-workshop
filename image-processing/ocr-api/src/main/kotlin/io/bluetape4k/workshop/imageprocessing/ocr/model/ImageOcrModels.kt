@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.imageprocessing.ocr.model
 
+import io.bluetape4k.images.ocr.OcrStructuredDetail
 import java.io.Serializable
 
 /**
@@ -18,6 +19,7 @@ data class ImageOcrRequest(
     val bytes: ByteArray,
     val contentType: String?,
     val languages: List<String>,
+    val structuredDetail: OcrStructuredDetail = OcrStructuredDetail.PLAIN_TEXT,
 ): Serializable {
     companion object {
         private const val serialVersionUID: Long = -1524473156985272973L
@@ -36,6 +38,10 @@ data class ImageOcrResponse(
     val text: String,
     val blocks: List<OcrTextBlock>,
     val warnings: List<String>,
+    val effectiveStructuredDetail: OcrStructuredDetail = OcrStructuredDetail.PLAIN_TEXT,
+    val pages: List<OcrPage> = emptyList(),
+    val lines: List<OcrTextLine> = emptyList(),
+    val words: List<OcrWord> = emptyList(),
 ): Serializable {
     companion object {
         private const val serialVersionUID: Long = -1667282267859767983L
@@ -49,8 +55,66 @@ data class OcrTextBlock(
     val index: Int,
     val text: String,
     val confidence: Double?,
+    val pageIndex: Int? = null,
+    val boundingBox: OcrBoundingBox? = null,
 ): Serializable {
     companion object {
         private const val serialVersionUID: Long = 2813846273462115403L
+    }
+}
+
+/**
+ * OCR 결과의 이미지 내 사각형 영역입니다.
+ */
+data class OcrBoundingBox(
+    val x: Int,
+    val y: Int,
+    val width: Int,
+    val height: Int,
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = -8542432708570251756L
+    }
+}
+
+/**
+ * 페이지 단위의 구조화된 OCR 결과입니다.
+ */
+data class OcrPage(
+    val pageIndex: Int,
+    val text: String,
+    val confidence: Double?,
+    val boundingBox: OcrBoundingBox? = null,
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 8658553843880049498L
+    }
+}
+
+/**
+ * 라인 단위의 구조화된 OCR 결과입니다.
+ */
+data class OcrTextLine(
+    val pageIndex: Int,
+    val text: String,
+    val confidence: Double?,
+    val boundingBox: OcrBoundingBox? = null,
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 2574707970975838308L
+    }
+}
+
+/**
+ * 단어 단위의 구조화된 OCR 결과입니다.
+ */
+data class OcrWord(
+    val pageIndex: Int,
+    val text: String,
+    val confidence: Double?,
+    val boundingBox: OcrBoundingBox? = null,
+): Serializable {
+    companion object {
+        private const val serialVersionUID: Long = -5814983464065807540L
     }
 }
