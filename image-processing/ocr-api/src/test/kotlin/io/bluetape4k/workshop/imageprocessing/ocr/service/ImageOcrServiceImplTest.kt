@@ -6,9 +6,19 @@ import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.images.ocr.OcrConfigurationException
+import io.bluetape4k.images.ocr.OcrBoundingBox
 import io.bluetape4k.images.ocr.OcrEngine
 import io.bluetape4k.images.ocr.OcrException
+import io.bluetape4k.images.ocr.OcrOptions
+import io.bluetape4k.images.ocr.OcrPage
 import io.bluetape4k.images.ocr.OcrResult
+import io.bluetape4k.images.ocr.OcrStructuredDetail
+import io.bluetape4k.images.ocr.OcrStructuredResult
+import io.bluetape4k.images.ocr.OcrTextBlock as SourceOcrTextBlock
+import io.bluetape4k.images.ocr.OcrTextLine
+import io.bluetape4k.images.ocr.OcrWord
+import io.bluetape4k.images.ocr.StructuredOcrEngine
+import com.sksamuel.scrimage.ImmutableImage
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.workshop.imageprocessing.ocr.config.ImageOcrProperties
 import io.bluetape4k.workshop.imageprocessing.ocr.model.ImageOcrRequest
@@ -26,6 +36,26 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+
+private class FakeStructuredOcrEngine(
+    private val structuredResult: OcrStructuredResult,
+) : StructuredOcrEngine {
+    var recognizeCalls: Int = 0
+    var structuredCalls: Int = 0
+    lateinit var lastOptions: OcrOptions
+
+    override fun recognize(image: ImmutableImage, options: OcrOptions): OcrResult {
+        recognizeCalls++
+        lastOptions = options
+        return OcrResult(structuredResult.text, options)
+    }
+
+    override fun recognizeStructured(image: ImmutableImage, options: OcrOptions): OcrStructuredResult {
+        structuredCalls++
+        lastOptions = options
+        return structuredResult.copy(options = options)
+    }
+}
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ImageOcrServiceImplTest {
@@ -104,6 +134,56 @@ class ImageOcrServiceImplTest {
         response.text shouldBeEqualTo "Bluetape OCR\n\nSecond line"
         response.blocks.map { it.text } shouldBeEqualTo listOf("Bluetape OCR", "Second line")
         response.warnings.any { it.contains("confidence", ignoreCase = true) }.shouldBeTrue()
+    }
+
+    @Test
+    fun `LINE detail uses structured engine and preserves nullable metadata`() = runSuspendIO {
+        val engine = FakeStructuredOcrEngine(structuredResult())
+        val response = service(properties(nativeEnabled = true), engine = engine)
+            .recognize(request(structuredDetail = OcrStructuredDetail.LINE))
+
+        response.status shouldBeEqualTo OcrStatus.COMPLETED
+        response.effectiveStructuredDetail shouldBeEqualTo OcrStructuredDetail.LINE
+        response.pages.single().pageIndex shouldBeEqualTo 0
+        response.blocks.single().boundingBox?.width shouldBeEqualTo 30
+        response.lines.single().confidence shouldBeEqualTo null
+        response.words.size shouldBeEqualTo 0
+        response.confidence shouldBeEqualTo null
+        engine.lastOptions.structuredDetail shouldBeEqualTo OcrStructuredDetail.LINE
+        engine.recognizeCalls shouldBeEqualTo 0
+        engine.structuredCalls shouldBeEqualTo 1
+    }
+
+    @Test
+    fun `WORD detail maps pages blocks lines and words`() = runSuspendIO {
+        val engine = FakeStructuredOcrEngine(structuredResult())
+        val response = service(properties(nativeEnabled = true), engine = engine)
+            .recognize(request(structuredDetail = OcrStructuredDetail.WORD))
+
+        response.effectiveStructuredDetail shouldBeEqualTo OcrStructuredDetail.WORD
+        response.pages.size shouldBeEqualTo 1
+        response.blocks.size shouldBeEqualTo 1
+        response.lines.size shouldBeEqualTo 1
+        response.words.single().confidence shouldBeEqualTo 88.0
+        response.words.single().boundingBox?.height shouldBeEqualTo 12
+        engine.lastOptions.structuredDetail shouldBeEqualTo OcrStructuredDetail.WORD
+    }
+
+    @Test
+    fun `plain engine returns legacy line fallback for structured request`() = runSuspendIO {
+        val response = service(
+            properties = properties(nativeEnabled = true),
+            engine = OcrEngine { _, options -> OcrResult("first\nsecond", options) },
+        ).recognize(request(structuredDetail = OcrStructuredDetail.WORD))
+
+        response.status shouldBeEqualTo OcrStatus.COMPLETED
+        response.effectiveStructuredDetail shouldBeEqualTo OcrStructuredDetail.PLAIN_TEXT
+        response.text shouldBeEqualTo "first\nsecond"
+        response.blocks.map { it.text } shouldBeEqualTo listOf("first", "second")
+        response.pages.size shouldBeEqualTo 0
+        response.lines.size shouldBeEqualTo 0
+        response.words.size shouldBeEqualTo 0
+        response.warnings.joinToString(" ") shouldContain "structured"
     }
 
     @Test
@@ -296,11 +376,44 @@ class ImageOcrServiceImplTest {
         bytes: ByteArray = tinyPng(),
         contentType: String = "image/png",
         languages: List<String> = listOf("eng"),
+        structuredDetail: OcrStructuredDetail = OcrStructuredDetail.PLAIN_TEXT,
     ): ImageOcrRequest =
         ImageOcrRequest(
             bytes = bytes,
             contentType = contentType,
             languages = languages,
+            structuredDetail = structuredDetail,
+        )
+
+    private fun structuredResult(): OcrStructuredResult =
+        OcrStructuredResult(
+            text = "Bluetape OCR",
+            options = OcrOptions(),
+            pages = listOf(OcrPage(pageIndex = 0, text = "Bluetape OCR")),
+            blocks = listOf(
+                SourceOcrTextBlock(
+                    pageIndex = 0,
+                    text = "Bluetape OCR",
+                    boundingBox = OcrBoundingBox(1, 2, 30, 12),
+                    confidence = 91.5,
+                ),
+            ),
+            lines = listOf(
+                OcrTextLine(
+                    pageIndex = 0,
+                    text = "Bluetape OCR",
+                    boundingBox = null,
+                    confidence = null,
+                ),
+            ),
+            words = listOf(
+                OcrWord(
+                    pageIndex = 0,
+                    text = "Bluetape",
+                    boundingBox = OcrBoundingBox(1, 2, 16, 12),
+                    confidence = 88.0,
+                ),
+            ),
         )
 
     private fun tinyPng(): ByteArray {
