@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.imageprocessing.ocr.web
 
 import com.ninjasquad.springmockk.MockkBean
+import io.bluetape4k.images.ocr.OcrStructuredDetail
 import io.bluetape4k.workshop.imageprocessing.ocr.config.ImageOcrProperties
 import io.bluetape4k.workshop.imageprocessing.ocr.model.ImageOcrResponse
 import io.bluetape4k.workshop.imageprocessing.ocr.model.OcrStatus
@@ -60,6 +61,48 @@ class ImageOcrControllerTest {
             .andExpect(jsonPath("$.requestId").value("ocr-test-request"))
             .andExpect(jsonPath("$.status").value("COMPLETED"))
             .andExpect(jsonPath("$.blocks[0].text").value("Bluetape OCR"))
+            .andExpect(jsonPath("$.effectiveStructuredDetail").value("PLAIN_TEXT"))
+            .andExpect(jsonPath("$.pages").isArray)
+            .andExpect(jsonPath("$.pages").isEmpty)
+    }
+
+    @Test
+    fun `structuredDetail parameter reaches service`() {
+        coEvery { service.recognize(any()) } returns response()
+
+        val asyncResult = mockMvc.perform(
+            multipart("/api/images/ocr")
+                .file(imageFile())
+                .param("structuredDetail", "WORD"),
+        )
+            .andExpect(request().asyncStarted())
+            .andReturn()
+
+        mockMvc.perform(asyncDispatch(asyncResult))
+            .andExpect(status().isOk)
+
+        coVerify {
+            service.recognize(match { it.structuredDetail == OcrStructuredDetail.WORD })
+        }
+    }
+
+    @Test
+    fun `missing structuredDetail preserves plain text default`() {
+        coEvery { service.recognize(any()) } returns response()
+
+        val asyncResult = mockMvc.perform(
+            multipart("/api/images/ocr")
+                .file(imageFile()),
+        )
+            .andExpect(request().asyncStarted())
+            .andReturn()
+
+        mockMvc.perform(asyncDispatch(asyncResult))
+            .andExpect(status().isOk)
+
+        coVerify {
+            service.recognize(match { it.structuredDetail == OcrStructuredDetail.PLAIN_TEXT })
+        }
     }
 
     @Test

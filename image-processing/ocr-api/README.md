@@ -39,16 +39,23 @@ Content-Type: multipart/form-data
 
 file      required image/jpeg, image/png, or image/webp
 language  optional repeated or comma-separated Tesseract language codes
+structuredDetail optional PLAIN_TEXT, LINE, or WORD (default PLAIN_TEXT)
 ```
 
 ```bash
 curl -F "file=@docs/images/readme-diagrams/image-ocr-api-readme-architecture-01.png;type=image/png" \
   -F "language=eng" \
+  -F "structuredDetail=WORD" \
   http://localhost:8080/api/images/ocr
 ```
 
 Invalid uploads return `400 Bad Request`. Valid uploads that cannot run native
 OCR return structured `200 OK` data with `status=UNAVAILABLE`.
+
+`structuredDetail=LINE` or `WORD` is used only when the configured engine
+implements `StructuredOcrEngine`. Older/plain engines are detected at runtime;
+the service falls back to text and reports `effectiveStructuredDetail=PLAIN_TEXT`
+with empty `pages`, `lines`, and `words` lists.
 
 ## Fallback Response
 
@@ -61,6 +68,10 @@ OCR return structured `200 OK` data with `status=UNAVAILABLE`.
   "confidence": null,
   "text": "",
   "blocks": [],
+  "effectiveStructuredDetail": "PLAIN_TEXT",
+  "pages": [],
+  "lines": [],
+  "words": [],
   "warnings": [
     "Native OCR is disabled. Enable workshop.ocr.native-enabled=true or -Docr.enabled=true."
   ]
@@ -78,17 +89,32 @@ OCR return structured `200 OK` data with `status=UNAVAILABLE`.
   "confidence": null,
   "text": "Bluetape OCR\nSecond line",
   "blocks": [
-    { "index": 0, "text": "Bluetape OCR", "confidence": null },
-    { "index": 1, "text": "Second line", "confidence": null }
+    { "index": 0, "text": "Bluetape OCR", "confidence": null, "pageIndex": 0, "boundingBox": null },
+    { "index": 1, "text": "Second line", "confidence": null, "pageIndex": 0, "boundingBox": null }
+  ],
+  "effectiveStructuredDetail": "WORD",
+  "pages": [
+    { "pageIndex": 0, "text": "Bluetape OCR\nSecond line", "confidence": null, "boundingBox": null }
+  ],
+  "lines": [
+    { "pageIndex": 0, "text": "Bluetape OCR", "confidence": null, "boundingBox": null },
+    { "pageIndex": 0, "text": "Second line", "confidence": null, "boundingBox": null }
+  ],
+  "words": [
+    { "pageIndex": 0, "text": "Bluetape", "confidence": 88.0, "boundingBox": { "x": 1, "y": 2, "width": 16, "height": 12 } }
   ],
   "warnings": [
-    "Confidence is not available from the current OCR engine."
+    "Top-level confidence is not aggregated; inspect structured elements."
   ]
 }
 ```
 
-`confidence` is nullable because the current `OcrResult` contract exposes text
-and effective options, not per-line or per-word confidence.
+`effectiveStructuredDetail` records the detail actually returned. `pages`,
+`lines`, and `words` preserve the hierarchy returned by `StructuredOcrEngine`;
+element `confidence` and `boundingBox` values remain nullable. The top-level
+`confidence` is always `null` for this example and is never synthesized by
+aggregating child values. Legacy `blocks` remain available for plain-text
+consumers and now carry optional `pageIndex` and `boundingBox` metadata.
 
 ## Configuration
 
@@ -176,8 +202,10 @@ retention policies.
 ./gradlew :image-processing-ocr-api:test -Docr.enabled=true
 ```
 
-The tests inject a fake `OcrEngine` for completed responses and verify fallback,
-validation, sanitized failure mapping, language normalization, and cancellation
+The tests inject fake `OcrEngine` and `StructuredOcrEngine` implementations for
+completed responses, so the deterministic suite does not require native
+Tesseract. They verify structured mapping, capability fallback, validation,
+sanitized failure mapping, language normalization, timeout, and cancellation
 propagation.
 
 ## Dependency Note
