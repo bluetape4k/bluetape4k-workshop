@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1080" viewBox="0 0 1600 1080" role="img" aria-labelledby="title desc">
-  <title id="title">Image OCR API Request Sequence</title>
-  <desc id="desc">The controller validates upload input, the service selects the native-disabled fallback or a bounded OCR capability path, then maps plain or structured response data.</desc>
+  <title id="title">Image OCR API 요청 시퀀스</title>
+  <desc id="desc">컨트롤러가 업로드를 검증하고 서비스가 native 비활성 fallback 또는 제한된 OCR capability 경로를 선택한 뒤 plain 또는 구조화 응답을 매핑합니다.</desc>
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
     <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke="#3F7D9C" stroke-width="0" stroke-dasharray="none"/></marker>
@@ -10,16 +10,16 @@
     <marker id="arrow-amber" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B45309" stroke="#B45309" stroke-width="0" stroke-dasharray="none"/></marker>
     <marker id="arrow-purple" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#7C3AED" stroke="#7C3AED" stroke-width="0" stroke-dasharray="none"/></marker>
     <style>
-      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.footer{font-family:"Comic Mono";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"Architects Daughter";font-size:19px;fill:#1F3138}.role{font-family:"Comic Mono";font-size:12px;fill:#546A73}.msg{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#DCEAF0;stroke:#5F8190;stroke-width:1.5}.call,.work,.return{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call)}.work{stroke:#6E8F4F;marker-end:url(#arrow-work)}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret)}.pill{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.branch{fill:none;stroke:#94A3B8;stroke-width:2;stroke-dasharray:10 8}.branchDivider{stroke:#CBD5E1;stroke-width:2;stroke-dasharray:5 6}.branchTitle,.branchText{font-family:"Comic Mono";font-size:13px;fill:#475569}.branchFallback{stroke:#B45309;marker-end:url(#arrow-amber)}.branchNative{stroke:#7C3AED;marker-end:url(#arrow-purple)}.branchStructured{stroke:#15803D;marker-end:url(#arrow-work)}
+      .title{font-family:"goorm Sans";font-size:40px;fill:#263238}.subtitle,.msg,.footer{font-family:"goorm Sans Code";fill:#36464F}.subtitle{font-size:17px}.participant{font-family:"goorm Sans";font-size:19px;fill:#1F3138}.role{font-family:"goorm Sans Code";font-size:12px;fill:#546A73}.msg{font-size:13px}.footer{font-size:14px;fill:#60727D}.frame{fill:#FBFCF8;stroke:#41545D;stroke-width:3}.header{fill:#FFFFFF;stroke:#546E7A;stroke-width:2}.lifeline{stroke:#9AAAB1;stroke-width:2;stroke-dasharray:7 8;stroke-linecap:round}.activation{fill:#DCEAF0;stroke:#5F8190;stroke-width:1.5}.call,.work,.return{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.call{stroke:#3F7D9C;marker-end:url(#arrow-call)}.work{stroke:#6E8F4F;marker-end:url(#arrow-work)}.return{stroke:#9B7D54;stroke-width:2.6;stroke-dasharray:8 6;marker-end:url(#arrow-ret)}.pill{fill:#FFFFFF;stroke:#D7E0E4;stroke-width:1.5}.badge{stroke-width:1.8}.callBadge{fill:#EAF4F8;stroke:#3F7D9C}.workBadge{fill:#EEF7F0;stroke:#6E8F4F}.returnBadge{fill:#FFF7E8;stroke:#9B7D54}.badgeText{font-family:"goorm Sans Code";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2F6F8E}.workText,.badgeText.workText{fill:#55783F}.returnText,.badgeText.returnText{fill:#7F6038}.branch{fill:none;stroke:#94A3B8;stroke-width:2;stroke-dasharray:10 8}.branchDivider{stroke:#CBD5E1;stroke-width:2;stroke-dasharray:5 6}.branchTitle,.branchText{font-family:"goorm Sans Code";font-size:13px;fill:#475569}.branchFallback{stroke:#B45309;marker-end:url(#arrow-amber)}.branchNative{stroke:#7C3AED;marker-end:url(#arrow-purple)}.branchStructured{stroke:#15803D;marker-end:url(#arrow-work)}
     </style>
   </defs>
 
   <rect width="1600" height="1080" fill="#FBFCF8"/>
   <rect x="24" y="24" width="1552" height="1032" rx="20" class="frame"/>
-  <text x="800" y="76" text-anchor="middle" class="title">Image OCR API Request Sequence</text>
-  <text x="800" y="108" text-anchor="middle" class="subtitle">Upload validation is shared; only the native path uses OCR engine capability.</text>
+  <text x="800" y="76" text-anchor="middle" class="title">Image OCR API 요청 시퀀스</text>
+  <text x="800" y="108" text-anchor="middle" class="subtitle">업로드 검증은 공통이며 native 경로만 OCR engine capability를 사용합니다.</text>
 
-  <g filter="url(#shadow)"><rect x="55" y="156" width="190" height="76" rx="10" class="header"/><text x="150" y="186" text-anchor="middle" class="participant">Client</text><text x="150" y="211" text-anchor="middle" class="role">multipart caller</text></g>
+  <g filter="url(#shadow)"><rect x="55" y="156" width="190" height="76" rx="10" class="header"/><text x="150" y="186" text-anchor="middle" class="participant">Client</text><text x="150" y="211" text-anchor="middle" class="role">multipart 호출자</text></g>
   <line x1="150" y1="232" x2="150" y2="970" class="lifeline"/>
   <g filter="url(#shadow)"><rect x="315" y="156" width="190" height="76" rx="10" class="header"/><text x="410" y="186" text-anchor="middle" class="participant">Controller</text><text x="410" y="211" text-anchor="middle" class="role">ImageOcrController</text></g>
   <line x1="410" y1="232" x2="410" y2="970" class="lifeline"/>
@@ -27,9 +27,9 @@
   <line x1="670" y1="232" x2="670" y2="970" class="lifeline"/>
   <g filter="url(#shadow)"><rect x="835" y="156" width="190" height="76" rx="10" class="header"/><text x="930" y="186" text-anchor="middle" class="participant">OcrEngine</text><text x="930" y="211" text-anchor="middle" class="role">Tesseract opt-in</text></g>
   <line x1="930" y1="232" x2="930" y2="970" class="lifeline"/>
-  <g filter="url(#shadow)"><rect x="1095" y="156" width="190" height="76" rx="10" class="header"/><text x="1190" y="186" text-anchor="middle" class="participant">StructuredEngine</text><text x="1190" y="211" text-anchor="middle" class="role">optional capability</text></g>
+  <g filter="url(#shadow)"><rect x="1095" y="156" width="190" height="76" rx="10" class="header"/><text x="1190" y="186" text-anchor="middle" class="participant">StructuredEngine</text><text x="1190" y="211" text-anchor="middle" class="role">선택 capability</text></g>
   <line x1="1190" y1="232" x2="1190" y2="970" class="lifeline"/>
-  <g filter="url(#shadow)"><rect x="1355" y="156" width="190" height="76" rx="10" class="header"/><text x="1450" y="186" text-anchor="middle" class="participant">Response</text><text x="1450" y="211" text-anchor="middle" class="role">JSON or 400</text></g>
+  <g filter="url(#shadow)"><rect x="1355" y="156" width="190" height="76" rx="10" class="header"/><text x="1450" y="186" text-anchor="middle" class="participant">Response</text><text x="1450" y="211" text-anchor="middle" class="role">JSON 또는 400</text></g>
   <line x1="1450" y1="232" x2="1450" y2="970" class="lifeline"/>
 
   <rect x="142" y="270" width="16" height="82" rx="6" class="activation"/>
@@ -49,41 +49,41 @@
   <g class="message" data-message="2">
     <rect x="442" y="330" width="210" height="30" rx="15" class="pill"/>
     <circle cx="462" cy="345" r="11" class="badge workBadge"/><text x="462" y="349" text-anchor="middle" class="badgeText workText">2</text>
-    <text x="484" y="350" class="msg workText">validate bytes + pixels</text>
+    <text x="484" y="350" class="msg workText">bytes + pixels 검증</text>
     <path d="M 410 380 L 670 380" class="work" marker-end="url(#arrow-work)"/>
   </g>
 
   <g class="message" data-message="3">
     <rect x="950" y="392" width="240" height="30" rx="15" class="pill"/>
     <circle cx="970" cy="407" r="11" class="badge returnBadge"/><text x="970" y="411" text-anchor="middle" class="badgeText returnText">3</text>
-    <text x="992" y="412" class="msg returnText">invalid upload -> 400</text>
+    <text x="992" y="412" class="msg returnText">잘못된 업로드 -> 400</text>
     <path d="M 670 440 L 1450 440" class="return" marker-end="url(#arrow-ret)"/>
   </g>
 
   <rect x="610" y="480" width="900" height="320" rx="16" class="branch"/>
-  <text x="635" y="510" class="branchTitle">capability decision</text>
+  <text x="635" y="510" class="branchTitle">capability 선택</text>
   <line x1="630" y1="680" x2="1490" y2="680" class="branchDivider"/>
-  <text x="635" y="528" class="branchText">native disabled</text>
-  <text x="635" y="730" class="branchText">native enabled</text>
+  <text x="635" y="528" class="branchText">native 비활성</text>
+  <text x="635" y="730" class="branchText">native 활성</text>
 
   <g class="message" data-message="4">
     <rect x="850" y="482" width="310" height="30" rx="15" class="pill"/>
     <circle cx="870" cy="497" r="11" class="badge returnBadge"/><text x="870" y="501" text-anchor="middle" class="badgeText returnText">4</text>
-    <text x="892" y="502" class="msg returnText">disabled -> UNAVAILABLE</text>
+    <text x="892" y="502" class="msg returnText">비활성 -> UNAVAILABLE</text>
     <path d="M 670 540 L 1450 540" class="call branchFallback" stroke="#B45309" marker-end="url(#arrow-amber)"/>
   </g>
 
   <g class="message" data-message="5">
     <rect x="720" y="562" width="270" height="30" rx="15" class="pill"/>
     <circle cx="740" cy="577" r="11" class="badge callBadge"/><text x="740" y="581" text-anchor="middle" class="badgeText callText">5</text>
-    <text x="762" y="582" class="msg callText">bounded recognize call</text>
+    <text x="762" y="582" class="msg callText">제한된 recognize 호출</text>
     <path d="M 670 620 L 930 620" class="work branchNative" stroke="#7C3AED" marker-end="url(#arrow-purple)"/>
   </g>
 
   <g class="message" data-message="6">
     <rect x="965" y="642" width="300" height="30" rx="15" class="pill"/>
     <circle cx="985" cy="657" r="11" class="badge workBadge"/><text x="985" y="661" text-anchor="middle" class="badgeText workText">6</text>
-    <text x="1007" y="662" class="msg workText">is StructuredOcrEngine?</text>
+    <text x="1007" y="662" class="msg workText">StructuredOcrEngine인가?</text>
     <path d="M 930 700 L 1190 700" class="work branchStructured" stroke="#15803D" marker-end="url(#arrow-work)"/>
   </g>
 
@@ -97,17 +97,17 @@
   <g class="message" data-message="8">
     <rect x="840" y="792" width="360" height="30" rx="15" class="pill"/>
     <circle cx="860" cy="807" r="11" class="badge workBadge"/><text x="860" y="811" text-anchor="middle" class="badgeText workText">8</text>
-    <text x="882" y="812" class="msg workText">map detail, blocks, nullable metadata</text>
+    <text x="882" y="812" class="msg workText">detail, blocks, nullable metadata 매핑</text>
     <path d="M 670 840 L 1450 840" class="work" marker-end="url(#arrow-work)"/>
   </g>
 
   <g class="message" data-message="9">
     <rect x="1050" y="862" width="330" height="30" rx="15" class="pill"/>
     <circle cx="1070" cy="877" r="11" class="badge returnBadge"/><text x="1070" y="881" text-anchor="middle" class="badgeText returnText">9</text>
-    <text x="1092" y="882" class="msg returnText">JSON response to client</text>
+    <text x="1092" y="882" class="msg returnText">Client로 JSON 응답</text>
     <path d="M 1450 910 L 150 910" class="return" marker-end="url(#arrow-ret)"/>
   </g>
 
   <rect x="100" y="990" width="1400" height="40" rx="12" fill="#FFFFFF" stroke="#CCD7DA" stroke-width="2"/>
-  <text x="800" y="1016" text-anchor="middle" class="footer">Reader contract: plain fallback preserves PLAIN_TEXT; structured engines expose effectiveStructuredDetail and nullable metadata.</text>
+  <text x="800" y="1016" text-anchor="middle" class="footer">독자 계약: plain fallback은 PLAIN_TEXT를 유지하고 구조화 engine은 effectiveStructuredDetail과 nullable metadata를 노출합니다.</text>
 </svg>

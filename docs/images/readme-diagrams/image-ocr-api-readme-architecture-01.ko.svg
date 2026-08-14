@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1780" viewBox="0 0 1320 1780" role="img" aria-labelledby="title desc">
-  <title id="title">Image OCR API Architecture</title>
-  <desc id="desc">Multipart OCR requests are validated, then choose a native-disabled fallback or a bounded engine capability path that returns plain or structured OCR data.</desc>
+  <title id="title">Image OCR API 아키텍처</title>
+  <desc id="desc">multipart OCR 요청을 검증한 뒤 native 비활성 fallback 또는 engine capability 경로를 선택하고 plain 또는 구조화 OCR 데이터를 반환합니다.</desc>
   <defs>
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%">
       <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/>
@@ -19,71 +19,71 @@
       <path d="M 0 0 L 10 5 L 0 10 Z" fill="#B45309" stroke="#B45309" stroke-width="0" stroke-dasharray="none"/>
     </marker>
     <style>
-      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#CBD5E1;stroke-width:2}.title{font-family:"Architects Daughter";font-size:42px;fill:#102033}.subtitle,.cardText,.footer{font-family:"Comic Mono";fill:#415166}.subtitle{font-size:17px}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-size:14px}.node rect{rx:14;filter:url(#shadow)}.line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}.blue{stroke:#2563EB;marker-end:url(#arrowBlue)}.green{stroke:#15803D;marker-end:url(#arrowGreen)}.purple{stroke:#7C3AED;marker-end:url(#arrowPurple)}.amber{stroke:#B45309;marker-end:url(#arrowAmber)}.footer{font-size:14px;fill:#526272}
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#CBD5E1;stroke-width:2}.title{font-family:"goorm Sans";font-size:42px;fill:#102033}.subtitle,.cardText,.footer{font-family:"goorm Sans Code";fill:#415166}.subtitle{font-size:17px}.cardTitle{font-family:"goorm Sans";font-size:27px;fill:#102033}.cardText{font-size:14px}.node rect{rx:14;filter:url(#shadow)}.line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}.blue{stroke:#2563EB;marker-end:url(#arrowBlue)}.green{stroke:#15803D;marker-end:url(#arrowGreen)}.purple{stroke:#7C3AED;marker-end:url(#arrowPurple)}.amber{stroke:#B45309;marker-end:url(#arrowAmber)}.footer{font-size:14px;fill:#526272}
     </style>
   </defs>
 
   <rect class="canvas" width="1320" height="1780"/>
   <rect class="frame" x="28" y="24" width="1264" height="1732" rx="24"/>
-  <text class="title" x="660" y="78" text-anchor="middle">Image OCR API Architecture</text>
-  <text class="subtitle" x="660" y="112" text-anchor="middle">Validate the upload, choose the engine capability, and expose plain or structured OCR response data.</text>
+  <text class="title" x="660" y="78" text-anchor="middle">Image OCR API 아키텍처</text>
+  <text class="subtitle" x="660" y="112" text-anchor="middle">업로드를 검증하고 engine capability에 따라 plain 또는 구조화 OCR 응답을 반환합니다.</text>
 
   <g class="node" data-node="upload">
     <rect x="470" y="140" width="380" height="110" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
-    <text class="cardTitle" x="660" y="184" text-anchor="middle">Multipart upload</text>
+    <text class="cardTitle" x="660" y="184" text-anchor="middle">Multipart 업로드</text>
     <text class="cardText" x="660" y="210" text-anchor="middle">JPEG, PNG, WebP + structuredDetail</text>
   </g>
 
   <g class="node" data-node="controller">
     <rect x="430" y="320" width="460" height="120" fill="#F0FDF4" stroke="#15803D" stroke-width="2"/>
     <text class="cardTitle" x="660" y="366" text-anchor="middle">ImageOcrController</text>
-    <text class="cardText" x="660" y="394" text-anchor="middle">multipart, language, and detail boundary</text>
+    <text class="cardText" x="660" y="394" text-anchor="middle">multipart, language, detail 경계</text>
   </g>
 
   <g class="node" data-node="validation">
     <rect x="420" y="510" width="480" height="120" fill="#FFF7ED" stroke="#EA580C" stroke-width="2"/>
-    <text class="cardTitle" x="660" y="556" text-anchor="middle">Image validation</text>
-    <text class="cardText" x="660" y="584" text-anchor="middle">content type, byte limit, decoded pixel budget</text>
+    <text class="cardTitle" x="660" y="556" text-anchor="middle">이미지 검증</text>
+    <text class="cardText" x="660" y="584" text-anchor="middle">content type, byte 제한, decoded pixel 예산</text>
   </g>
 
   <g class="node" data-node="disabled-fallback">
     <rect x="100" y="730" width="380" height="130" fill="#ECFEFF" stroke="#0891B2" stroke-width="2"/>
-    <text class="cardTitle" x="290" y="776" text-anchor="middle">Native disabled fallback</text>
-    <text class="cardText" x="290" y="804" text-anchor="middle">UNAVAILABLE, no OCR call</text>
-    <text class="cardText" x="290" y="828" text-anchor="middle">empty pages / lines / words</text>
+    <text class="cardTitle" x="290" y="776" text-anchor="middle">Native 비활성 fallback</text>
+    <text class="cardText" x="290" y="804" text-anchor="middle">UNAVAILABLE, OCR 호출 없음</text>
+    <text class="cardText" x="290" y="828" text-anchor="middle">pages / lines / words 비어 있음</text>
   </g>
 
   <g class="node" data-node="native-runtime">
     <rect x="840" y="730" width="380" height="130" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2"/>
-    <text class="cardTitle" x="1030" y="776" text-anchor="middle">Bounded native OCR</text>
+    <text class="cardTitle" x="1030" y="776" text-anchor="middle">제한된 native OCR</text>
     <text class="cardText" x="1030" y="804" text-anchor="middle">semaphore, timeout, OcrEngineProvider</text>
-    <text class="cardText" x="1030" y="828" text-anchor="middle">Tesseract opt-in path</text>
+    <text class="cardText" x="1030" y="828" text-anchor="middle">Tesseract opt-in 경로</text>
   </g>
 
   <g class="node" data-node="capability">
     <rect x="840" y="960" width="380" height="130" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2"/>
-    <text class="cardTitle" x="1030" y="1006" text-anchor="middle">Capability detection</text>
-    <text class="cardText" x="1030" y="1034" text-anchor="middle">is engine a StructuredOcrEngine?</text>
-    <text class="cardText" x="1030" y="1058" text-anchor="middle">requested LINE / WORD detail</text>
+    <text class="cardTitle" x="1030" y="1006" text-anchor="middle">Capability 감지</text>
+    <text class="cardText" x="1030" y="1034" text-anchor="middle">engine이 StructuredOcrEngine인가?</text>
+    <text class="cardText" x="1030" y="1058" text-anchor="middle">요청된 LINE / WORD 상세도</text>
   </g>
 
   <g class="node" data-node="plain-fallback">
     <rect x="100" y="1190" width="380" height="130" fill="#FFF7ED" stroke="#B45309" stroke-width="2"/>
     <text class="cardTitle" x="290" y="1236" text-anchor="middle">Plain engine fallback</text>
     <text class="cardText" x="290" y="1264" text-anchor="middle">effectiveStructuredDetail=PLAIN_TEXT</text>
-    <text class="cardText" x="290" y="1288" text-anchor="middle">pages / lines / words remain empty</text>
+    <text class="cardText" x="290" y="1288" text-anchor="middle">pages / lines / words는 비어 있음</text>
   </g>
 
   <g class="node" data-node="structured-engine">
     <rect x="840" y="1190" width="380" height="130" fill="#F0FDF4" stroke="#15803D" stroke-width="2"/>
     <text class="cardTitle" x="1030" y="1236" text-anchor="middle">StructuredOcrEngine</text>
-    <text class="cardText" x="1030" y="1264" text-anchor="middle">OcrStructuredResult hierarchy</text>
+    <text class="cardText" x="1030" y="1264" text-anchor="middle">OcrStructuredResult 계층</text>
     <text class="cardText" x="1030" y="1288" text-anchor="middle">pages / lines / words + metadata</text>
   </g>
 
   <g class="node" data-node="response">
     <rect x="420" y="1430" width="480" height="150" fill="#FDF2F8" stroke="#DB2777" stroke-width="2"/>
-    <text class="cardTitle" x="660" y="1474" text-anchor="middle">Structured response mapping</text>
+    <text class="cardTitle" x="660" y="1474" text-anchor="middle">구조화 응답 매핑</text>
     <text class="cardText" x="660" y="1502" text-anchor="middle">effectiveStructuredDetail + blocks</text>
     <text class="cardText" x="660" y="1526" text-anchor="middle">pages / lines / words</text>
     <text class="cardText" x="660" y="1550" text-anchor="middle">nullable confidence / boundingBox / warnings</text>
@@ -91,43 +91,43 @@
 
   <g class="node" data-node="tests">
     <rect x="420" y="1600" width="480" height="100" fill="#F7FEE7" stroke="#65A30D" stroke-width="2"/>
-    <text class="cardTitle" x="660" y="1642" text-anchor="middle">Contract tests</text>
-    <text class="cardText" x="660" y="1670" text-anchor="middle">fallback, structured fake engine, controller boundary</text>
+    <text class="cardTitle" x="660" y="1642" text-anchor="middle">계약 테스트</text>
+    <text class="cardText" x="660" y="1670" text-anchor="middle">fallback, structured fake engine, controller 경계</text>
   </g>
 
   <g class="edge" data-edge="upload-&gt;controller" data-label="POST multipart">
     <path class="line blue" d="M 660 250 L 660 320" marker-end="url(#arrowBlue)" data-connector="upload-controller" data-source="upload" data-target="controller" stroke="#2563EB"/>
   </g>
-  <g class="edge" data-edge="controller-&gt;validation" data-label="validate input">
+  <g class="edge" data-edge="controller-&gt;validation" data-label="입력 검증">
     <path class="line green" d="M 660 440 L 660 510" marker-end="url(#arrowGreen)" data-connector="controller-validation" data-source="controller" data-target="validation" stroke="#15803D"/>
   </g>
-  <g class="edge" data-edge="validation-&gt;disabled-fallback" data-label="native disabled">
+  <g class="edge" data-edge="validation-&gt;disabled-fallback" data-label="native 비활성">
     <path class="line blue" d="M 530 630 L 530 680 Q 530 688 522 688 L 298 688 Q 290 688 290 696 L 290 730" marker-end="url(#arrowBlue)" data-connector="validation-disabled" data-source="validation" data-target="disabled-fallback" stroke="#2563EB"/>
   </g>
-  <g class="edge" data-edge="validation-&gt;native-runtime" data-label="native enabled">
+  <g class="edge" data-edge="validation-&gt;native-runtime" data-label="native 활성">
     <path class="line purple" d="M 790 630 L 790 680 Q 790 688 798 688 L 1022 688 Q 1030 688 1030 696 L 1030 730" marker-end="url(#arrowPurple)" data-connector="validation-native" data-source="validation" data-target="native-runtime" stroke="#7C3AED"/>
   </g>
-  <g class="edge" data-edge="native-runtime-&gt;capability" data-label="resolve engine">
+  <g class="edge" data-edge="native-runtime-&gt;capability" data-label="engine 해석">
     <path class="line purple" d="M 1030 860 L 1030 960" marker-end="url(#arrowPurple)" data-connector="native-capability" data-source="native-runtime" data-target="capability" stroke="#7C3AED"/>
   </g>
   <g class="edge" data-edge="capability-&gt;plain-fallback" data-label="plain engine">
     <path class="line amber" d="M 930 1090 L 930 1138 Q 930 1146 922 1146 L 298 1146 Q 290 1146 290 1154 L 290 1190" marker-end="url(#arrowAmber)" data-connector="capability-plain" data-source="capability" data-target="plain-fallback" stroke="#B45309"/>
   </g>
-  <g class="edge" data-edge="capability-&gt;structured-engine" data-label="structured capability">
+  <g class="edge" data-edge="capability-&gt;structured-engine" data-label="구조화 capability">
     <path class="line green" d="M 1030 1090 L 1030 1190" marker-end="url(#arrowGreen)" data-connector="capability-structured" data-source="capability" data-target="structured-engine" stroke="#15803D"/>
   </g>
-  <g class="edge" data-edge="disabled-fallback-&gt;response" data-label="fallback response">
+  <g class="edge" data-edge="disabled-fallback-&gt;response" data-label="fallback 응답">
     <path class="line blue" d="M 290 860 L 290 900 Q 290 908 282 908 L 68 908 Q 60 908 60 916 L 60 1394 Q 60 1402 68 1402 L 512 1402 Q 520 1402 520 1410 L 520 1430" marker-end="url(#arrowBlue)" data-connector="disabled-response" data-source="disabled-fallback" data-target="response" stroke="#2563EB"/>
   </g>
-  <g class="edge" data-edge="plain-fallback-&gt;response" data-label="plain response">
+  <g class="edge" data-edge="plain-fallback-&gt;response" data-label="plain 응답">
     <path class="line amber" d="M 290 1320 L 290 1378 Q 290 1386 298 1386 L 652 1386 Q 660 1386 660 1394 L 660 1430" marker-end="url(#arrowAmber)" data-connector="plain-response" data-source="plain-fallback" data-target="response" stroke="#B45309"/>
   </g>
-  <g class="edge" data-edge="structured-engine-&gt;response" data-label="structured response">
+  <g class="edge" data-edge="structured-engine-&gt;response" data-label="구조화 응답">
     <path class="line green" d="M 1030 1320 L 1030 1378 Q 1030 1386 1022 1386 L 858 1386 Q 850 1386 850 1394 L 850 1430" marker-end="url(#arrowGreen)" data-connector="structured-response" data-source="structured-engine" data-target="response" stroke="#15803D"/>
   </g>
-  <g class="edge" data-edge="response-&gt;tests" data-label="assert contract">
+  <g class="edge" data-edge="response-&gt;tests" data-label="계약 검증">
     <path class="line green" d="M 660 1580 L 660 1600" marker-end="url(#arrowGreen)" data-connector="response-tests" data-source="response" data-target="tests" stroke="#15803D"/>
   </g>
 
-  <text class="footer" x="660" y="1730" text-anchor="middle">Reader contract: structured detail is capability-aware; plain engines preserve a truthful PLAIN_TEXT response.</text>
+  <text class="footer" x="660" y="1730" text-anchor="middle">독자 계약: 상세도는 capability를 반영하고 plain engine은 정직한 PLAIN_TEXT 응답을 유지합니다.</text>
 </svg>

@@ -221,6 +221,7 @@ function validateEndpointAngle(file, edgeName, side, first, second, endPoint = f
 function validateFile(file) {
   const svg = read(file);
   const base = file.replace(/\.svg$/, "");
+  const korean = path.basename(file).endsWith(".ko.svg");
   if (legacyArchitectureSlugs.has(path.basename(file))) {
     legacySkipped += 1;
     documentedExceptionSlugs.push(path.basename(file));
@@ -231,7 +232,8 @@ function validateFile(file) {
     fail(file, `missing rendered PNG ${path.basename(base)}.png`);
   }
 
-  if (!svg.includes("Architects Daughter") || !svg.includes("Comic Mono")) {
+  const requiredFonts = korean ? ["goorm Sans", "goorm Sans Code"] : ["Architects Daughter", "Comic Mono"];
+  if (requiredFonts.some((font) => !svg.includes(font))) {
     fail(file, "missing required font roles");
   }
   if (/\b(Inter|Arial|Helvetica)\b/.test(svg)) {
@@ -306,7 +308,7 @@ function validateFile(file) {
 }
 
 const files = fs.readdirSync(diagramDir)
-  .filter((name) => name.endsWith("-readme-architecture-01.svg"))
+  .filter((name) => /-readme-architecture-01(?:\.ko)?\.svg$/.test(name))
   .map((name) => path.join(diagramDir, name))
   .sort();
 
