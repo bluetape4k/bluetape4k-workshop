@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.imageprocessing.ocr.web
 
+import io.bluetape4k.images.ocr.OcrStructuredDetail
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.imageprocessing.ocr.config.ImageOcrProperties
 import io.bluetape4k.workshop.imageprocessing.ocr.model.ImageOcrRequest
@@ -24,7 +25,7 @@ class ImageOcrController(
 ) {
 
     /**
-     * JPEG, PNG, WebP multipart 파일 하나와 선택적 Tesseract 언어 코드를 받습니다.
+     * JPEG, PNG, WebP multipart 파일 하나와 선택적 Tesseract 언어 코드 및 구조화 상세 수준을 받습니다.
      */
     @PostMapping(
         consumes = [MediaType.MULTIPART_FORM_DATA_VALUE],
@@ -33,6 +34,7 @@ class ImageOcrController(
     suspend fun recognize(
         @RequestPart("file") file: MultipartFile,
         @RequestParam("language", required = false) languages: List<String>?,
+        @RequestParam("structuredDetail", required = false) structuredDetail: OcrStructuredDetail?,
     ): ImageOcrResponse {
         file.size.requirePositiveNumber("file.size")
         require(file.size <= properties.maxUploadBytes) {
@@ -47,6 +49,7 @@ class ImageOcrController(
                 bytes = file.bytes,
                 contentType = file.contentType,
                 languages = languages.orEmpty(),
+                structuredDetail = structuredDetail ?: OcrStructuredDetail.PLAIN_TEXT,
             ),
         )
     }
