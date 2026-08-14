@@ -20,6 +20,9 @@ production upload service.
 The flow is top-to-bottom: `ImageOcrController` accepts multipart input,
 `ImageOcrServiceImpl` validates metadata and decoded pixels, then either
 short-circuits to a fallback response or calls a bounded native `OcrEngine`.
+The capability branch is explicit: a plain engine preserves `PLAIN_TEXT`, while
+`StructuredOcrEngine` maps `pages`, `lines`, and `words` without inventing
+non-null `confidence` or `boundingBox` values.
 
 ## Request Flow
 
@@ -29,7 +32,9 @@ The default smoke path validates a real decodable image, skips Tesseract, and
 returns `UNAVAILABLE`. Native OCR is opt-in through `workshop.ocr.native-enabled`
 or `-Docr.enabled=true`.
 Configuration and decoded-pixel limits use bluetape4k `require*` helpers, while
-public upload error messages remain explicit at the HTTP boundary.
+public upload error messages remain explicit at the HTTP boundary. The numbered
+sequence shows the invalid-upload `400` path, the native-disabled response, the
+runtime capability check, and the final response mapping in one contract.
 
 ## Endpoint
 

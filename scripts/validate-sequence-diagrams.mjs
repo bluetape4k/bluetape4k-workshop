@@ -135,16 +135,18 @@ const documentedExceptionSlugs = [];
 for (const file of files) {
   const svg = fs.readFileSync(file, "utf8");
   const rel = path.relative(root, file).replaceAll(path.sep, "/");
+  const korean = path.basename(file).endsWith(".ko.svg");
   if (legacySequenceSlugs.has(path.basename(file))) {
     legacySkipped += 1;
     documentedExceptionSlugs.push(path.basename(file));
     continue;
   }
 
-  if (!svg.includes("Architects Daughter") || !svg.includes("Comic Mono") || /(Inter|Arial|Helvetica)/.test(svg)) {
+  const requiredFonts = korean ? ["goorm Sans", "goorm Sans Code"] : ["Architects Daughter", "Comic Mono"];
+  if (requiredFonts.some((font) => !svg.includes(font)) || /(Inter|Arial|Helvetica)/.test(svg)) {
     failures.push({ file: rel, failure: "font signature" });
   }
-  if (/[가-힣]/.test(svg)) {
+  if (!korean && /[가-힣]/.test(svg)) {
     failures.push({ file: rel, failure: "non-English diagram label" });
   }
 

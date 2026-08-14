@@ -15,21 +15,26 @@ multipart API로 노출하는 예제입니다. JPEG, PNG, WebP 업로드를 검�
 
 ## 아키텍처
 
-![image-processing-ocr-api architecture](../../docs/images/readme-diagrams/image-ocr-api-readme-architecture-01.png)
+![image-processing-ocr-api 아키텍처](../../docs/images/readme-diagrams/image-ocr-api-readme-architecture-01.ko.png)
 
 흐름은 위에서 아래로 이어집니다. `ImageOcrController`가 multipart 입력을 받고,
 `ImageOcrServiceImpl`이 metadata와 decoded pixel을 검증한 뒤 fallback 응답으로
-short-circuit하거나 제한된 native `OcrEngine`을 호출합니다.
+short-circuit하거나 제한된 native `OcrEngine`을 호출합니다. Capability 분기에서
+plain engine은 `PLAIN_TEXT`를 유지하고 `StructuredOcrEngine`은 `pages`, `lines`,
+`words`를 매핑합니다. `confidence`와 `boundingBox`는 실제 engine metadata가 없으면
+억지로 채우지 않고 nullable 상태를 보존합니다.
 
 ## 요청 흐름
 
-![image-processing-ocr-api sequence](../../docs/images/readme-diagrams/image-ocr-api-readme-sequence-01.png)
+![image-processing-ocr-api 요청 시퀀스](../../docs/images/readme-diagrams/image-ocr-api-readme-sequence-01.ko.png)
 
 기본 smoke 경로는 실제로 decode 가능한 이미지를 검증하고 Tesseract 호출은 건너뛴
 뒤 `UNAVAILABLE`을 반환합니다. Native OCR은 `workshop.ocr.native-enabled` 또는
 `-Docr.enabled=true`로 명시적으로 켭니다.
 설정과 decoded-pixel limit은 bluetape4k `require*` helper로 검증하고, HTTP 경계의
-public upload error message는 명시적인 메시지를 유지합니다.
+public upload error message는 명시적인 메시지를 유지합니다. 번호가 붙은 시퀀스는
+잘못된 업로드의 `400`, native 비활성 응답, runtime capability 확인, 구조화 응답 매핑을
+한 흐름으로 보여줍니다.
 
 ## 엔드포인트
 
