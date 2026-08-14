@@ -4,6 +4,7 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.graph.knowledge.seed.KnowledgeGraphSeed
@@ -247,6 +248,13 @@ abstract class AbstractKnowledgeGraphTest {
     fun `mention rejects non-document source endpoint`() {
         assertFailsWith<IllegalArgumentException> {
             service.mention(seed.entityKotlin.id, seed.entityJvm.id, confidence = 90)
+        }
+    }
+
+    @Test
+    fun `mention rejects missing document endpoint`() {
+        assertFailsWith<IllegalArgumentException> {
+            service.mention(GraphElementId("missing-document-id"), seed.entityKotlin.id, confidence = 90)
         }
     }
 

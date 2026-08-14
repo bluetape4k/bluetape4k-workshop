@@ -7,6 +7,10 @@
 [bluetape4k-graph](https://github.com/bluetape4k/bluetape4k-graph) 기반의 소셜 커머스 도메인 상품 추천 및 팔로우 추천 예제.
 TinkerGraph, Neo4j, Memgraph 백엔드를 지원합니다.
 
+블로킹 서비스와 코루틴 서비스는 출시된 `io.bluetape4k.graph.repository.requireEndpoint`
+extension을 함께 사용해 endpoint를 검증합니다. 정점이 없거나 label이 일치하지 않으면
+`IllegalArgumentException`으로 즉시 실패합니다.
+
 ---
 
 ## 아키텍처

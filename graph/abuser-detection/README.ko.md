@@ -64,8 +64,9 @@ bluetape4k 워크샵 모듈로, 그래프 기반 어뷰저(abuser) 탐지를 시
 | `detectReferralLoops(maxDepth, maxCycles)` | `REFERRED_BY` 서브그래프 내 User 정점 사이의 방향성 사이클을 탐지합니다. 블로킹 서비스는 `List<GraphCycle>`, 코루틴 서비스는 cold `Flow<GraphCycle>`을 반환합니다. |
 | `rankSuspiciousUsers(limit)` | User 정점에 대해 PageRank를 계산하고 점수 내림차순으로 결과를 반환합니다. 각 `SuspiciousUserScore`에는 1-based 순위가 포함됩니다. PageRank 점수가 높을수록 공유 식별자 연결이 많다는 의미이며, 이는 어뷰징 위험의 지표가 됩니다. |
 
-서비스 생성자는 blank graph name을 거부합니다. edge mutator는 graph edge를 만들기
-전에 endpoint 존재 여부와 기대 label을 확인하므로 잘못된 `User -> identifier` 또는
+서비스 생성자는 blank graph name을 거부합니다. 두 서비스는 출시된
+`io.bluetape4k.graph.repository.requireEndpoint` extension으로 graph edge를 만들기 전에
+endpoint 존재 여부와 기대 label을 확인하므로 잘못된 `User -> identifier` 또는
 `User -> User` 관계는 `IllegalArgumentException`으로 즉시 실패합니다.
 
 ### 결과 타입

@@ -8,6 +8,10 @@
 동일한 그래프 모델을 블로킹 서비스와 코루틴 서비스로 제공하고, 같은 서비스 로직을 TinkerGraph, Neo4j,
 Memgraph 백엔드에서 실행합니다.
 
+두 서비스는 출시된 `io.bluetape4k.graph.repository.requireEndpoint` extension으로 그래프
+endpoint를 검증합니다. 정점이 없거나 label이 일치하지 않으면 `IllegalArgumentException`으로
+즉시 실패하며, 검증 메시지에는 호출자 parameter name을 그대로 보존합니다.
+
 > **관련 이슈:** [bluetape4k-workshop #11](https://github.com/bluetape4k/bluetape4k-workshop/issues/11)
 
 ![graph-knowledge-graph 아키텍처 다이어그램](../../docs/images/readme-diagrams/graph-knowledge-graph-readme-architecture-01.png)
