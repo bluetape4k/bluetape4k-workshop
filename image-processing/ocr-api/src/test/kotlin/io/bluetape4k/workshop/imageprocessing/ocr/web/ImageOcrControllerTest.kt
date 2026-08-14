@@ -1,11 +1,11 @@
 package io.bluetape4k.workshop.imageprocessing.ocr.web
 
 import com.ninjasquad.springmockk.MockkBean
+import io.bluetape4k.images.ocr.OcrStructuredDetail
 import io.bluetape4k.workshop.imageprocessing.ocr.config.ImageOcrProperties
 import io.bluetape4k.workshop.imageprocessing.ocr.model.ImageOcrResponse
 import io.bluetape4k.workshop.imageprocessing.ocr.model.OcrStatus
 import io.bluetape4k.workshop.imageprocessing.ocr.model.OcrTextBlock
-import io.bluetape4k.images.ocr.OcrStructuredDetail
 import io.bluetape4k.workshop.imageprocessing.ocr.service.ImageOcrService
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -61,6 +61,9 @@ class ImageOcrControllerTest {
             .andExpect(jsonPath("$.requestId").value("ocr-test-request"))
             .andExpect(jsonPath("$.status").value("COMPLETED"))
             .andExpect(jsonPath("$.blocks[0].text").value("Bluetape OCR"))
+            .andExpect(jsonPath("$.effectiveStructuredDetail").value("PLAIN_TEXT"))
+            .andExpect(jsonPath("$.pages").isArray)
+            .andExpect(jsonPath("$.pages").isEmpty)
     }
 
     @Test

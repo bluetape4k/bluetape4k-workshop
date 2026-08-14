@@ -100,6 +100,10 @@ class ImageOcrServiceImplTest {
         response.languages shouldBeEqualTo listOf("eng", "kor")
         response.text shouldBeEqualTo ""
         response.blocks.size shouldBeEqualTo 0
+        response.effectiveStructuredDetail shouldBeEqualTo OcrStructuredDetail.PLAIN_TEXT
+        response.pages.size shouldBeEqualTo 0
+        response.lines.size shouldBeEqualTo 0
+        response.words.size shouldBeEqualTo 0
         response.warnings.any { it.contains("disabled", ignoreCase = true) }.shouldBeTrue()
         invoked.get().shouldBeFalse()
     }
@@ -201,6 +205,10 @@ class ImageOcrServiceImplTest {
         val response = service.recognize(request())
 
         response.status shouldBeEqualTo OcrStatus.UNAVAILABLE
+        response.effectiveStructuredDetail shouldBeEqualTo OcrStructuredDetail.PLAIN_TEXT
+        response.pages.size shouldBeEqualTo 0
+        response.lines.size shouldBeEqualTo 0
+        response.words.size shouldBeEqualTo 0
         response.warnings.joinToString(" ") shouldContain "Native OCR is unavailable"
         response.warnings.joinToString(" ").contains("/secret").shouldBeFalse()
     }
@@ -217,6 +225,10 @@ class ImageOcrServiceImplTest {
         val response = service.recognize(request())
 
         response.status shouldBeEqualTo OcrStatus.FAILED
+        response.effectiveStructuredDetail shouldBeEqualTo OcrStructuredDetail.PLAIN_TEXT
+        response.pages.size shouldBeEqualTo 0
+        response.lines.size shouldBeEqualTo 0
+        response.words.size shouldBeEqualTo 0
         response.warnings.joinToString(" ") shouldContain "OCR failed"
         response.warnings.joinToString(" ").contains("/tmp").shouldBeFalse()
     }
@@ -333,8 +345,39 @@ class ImageOcrServiceImplTest {
         val completed = service.recognize(request())
 
         timedOut.status shouldBeEqualTo OcrStatus.FAILED
+        timedOut.effectiveStructuredDetail shouldBeEqualTo OcrStructuredDetail.PLAIN_TEXT
+        timedOut.pages.size shouldBeEqualTo 0
+        timedOut.lines.size shouldBeEqualTo 0
+        timedOut.words.size shouldBeEqualTo 0
         completed.status shouldBeEqualTo OcrStatus.COMPLETED
         secondEntered.get().shouldBeTrue()
+    }
+
+    @Test
+    fun `structured OCR timeout returns failed response and preserves plain metadata`() = runSuspendIO {
+        val entered = CountDownLatch(1)
+        val service = service(
+            properties = properties(nativeEnabled = true, timeout = Duration.ofMillis(500)),
+            engine = object : StructuredOcrEngine {
+                override fun recognize(image: ImmutableImage, options: OcrOptions): OcrResult =
+                    OcrResult("plain fallback", options)
+
+                override fun recognizeStructured(image: ImmutableImage, options: OcrOptions): OcrStructuredResult {
+                    entered.countDown()
+                    CountDownLatch(1).await(2, TimeUnit.SECONDS)
+                    return structuredResult().copy(options = options)
+                }
+            },
+        )
+
+        val response = service.recognize(request(structuredDetail = OcrStructuredDetail.WORD))
+
+        entered.await(1, TimeUnit.SECONDS).shouldBeTrue()
+        response.status shouldBeEqualTo OcrStatus.FAILED
+        response.effectiveStructuredDetail shouldBeEqualTo OcrStructuredDetail.PLAIN_TEXT
+        response.pages.size shouldBeEqualTo 0
+        response.lines.size shouldBeEqualTo 0
+        response.words.size shouldBeEqualTo 0
     }
 
     @Test
@@ -346,6 +389,24 @@ class ImageOcrServiceImplTest {
 
         assertFailsWith<CancellationException> {
             service.recognize(request())
+        }
+    }
+
+    @Test
+    fun `structured OCR cancellation is rethrown`() = runSuspendIO {
+        val service = service(
+            properties = properties(nativeEnabled = true),
+            engine = object : StructuredOcrEngine {
+                override fun recognize(image: ImmutableImage, options: OcrOptions): OcrResult =
+                    OcrResult("plain", options)
+
+                override fun recognizeStructured(image: ImmutableImage, options: OcrOptions): OcrStructuredResult =
+                    throw CancellationException("structured cancelled")
+            },
+        )
+
+        assertFailsWith<CancellationException> {
+            service.recognize(request(structuredDetail = OcrStructuredDetail.LINE))
         }
     }
 
