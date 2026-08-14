@@ -7,12 +7,11 @@ import io.bluetape4k.graph.model.GraphVertex
 import io.bluetape4k.graph.model.NeighborOptions
 import io.bluetape4k.graph.model.PathOptions
 import io.bluetape4k.graph.repository.GraphOperations
+import io.bluetape4k.graph.repository.requireEndpoint
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
-import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
-import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.graph.knowledge.schema.ConceptLabel
 import io.bluetape4k.workshop.graph.knowledge.schema.DocumentLabel
 import io.bluetape4k.workshop.graph.knowledge.schema.EntityLabel
@@ -137,8 +136,8 @@ class KnowledgeGraphService(
      */
     fun mention(documentId: GraphElementId, entityId: GraphElementId, confidence: Int = 100) {
         confidence.requireInRange(0, 100, "confidence")
-        requireEndpoint(documentId, DocumentLabel.label, "documentId")
-        requireEndpoint(entityId, EntityLabel.label, "entityId")
+        ops.requireEndpoint(documentId, DocumentLabel.label, "documentId")
+        ops.requireEndpoint(entityId, EntityLabel.label, "entityId")
         ops.createEdge(
             documentId,
             entityId,
@@ -159,8 +158,8 @@ class KnowledgeGraphService(
         relationType: String = "related",
     ) {
         relationType.requireNotBlank("relationType")
-        requireEndpoint(fromEntityId, EntityLabel.label, "fromEntityId")
-        requireEndpoint(toEntityId, EntityLabel.label, "toEntityId")
+        ops.requireEndpoint(fromEntityId, EntityLabel.label, "fromEntityId")
+        ops.requireEndpoint(toEntityId, EntityLabel.label, "toEntityId")
         ops.createEdge(
             fromEntityId,
             toEntityId,
@@ -175,8 +174,8 @@ class KnowledgeGraphService(
      * @throws IllegalArgumentException endpoint가 없거나 Entity -> Concept 관계가 아니면 발생합니다.
      */
     fun classify(entityId: GraphElementId, conceptId: GraphElementId) {
-        requireEndpoint(entityId, EntityLabel.label, "entityId")
-        requireEndpoint(conceptId, ConceptLabel.label, "conceptId")
+        ops.requireEndpoint(entityId, EntityLabel.label, "entityId")
+        ops.requireEndpoint(conceptId, ConceptLabel.label, "conceptId")
         ops.createEdge(entityId, conceptId, IsALabel.label, emptyMap())
     }
 
@@ -232,9 +231,4 @@ class KnowledgeGraphService(
         ).take(maxPaths)
     }
 
-    private fun requireEndpoint(id: GraphElementId, expectedLabel: String, parameterName: String): GraphVertex {
-        val vertex = ops.findVertexById(id).requireNotNull(parameterName)
-        vertex.label.requireEquals(expectedLabel, "$parameterName.label")
-        return vertex
-    }
 }

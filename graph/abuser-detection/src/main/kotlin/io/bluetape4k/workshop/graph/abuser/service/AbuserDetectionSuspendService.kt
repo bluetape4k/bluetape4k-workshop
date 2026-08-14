@@ -9,12 +9,11 @@ import io.bluetape4k.graph.model.GraphVertex
 import io.bluetape4k.graph.model.NeighborOptions
 import io.bluetape4k.graph.model.PageRankOptions
 import io.bluetape4k.graph.repository.GraphSuspendOperations
+import io.bluetape4k.graph.repository.requireEndpoint
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
-import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireNotBlank
-import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.graph.abuser.model.AbuseCluster
 import io.bluetape4k.workshop.graph.abuser.model.AbusePath
@@ -206,8 +205,8 @@ class AbuserDetectionSuspendService(
         occurredAt: String,
     ): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
-        requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
-        requireEndpoint(deviceVertexId, DeviceLabel.label, "deviceVertexId")
+        ops.requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
+        ops.requireEndpoint(deviceVertexId, DeviceLabel.label, "deviceVertexId")
         return ops.createEdge(
             userVertexId,
             deviceVertexId,
@@ -229,8 +228,8 @@ class AbuserDetectionSuspendService(
         occurredAt: String,
     ): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
-        requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
-        requireEndpoint(ipVertexId, IpAddressLabel.label, "ipVertexId")
+        ops.requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
+        ops.requireEndpoint(ipVertexId, IpAddressLabel.label, "ipVertexId")
         return ops.createEdge(
             userVertexId,
             ipVertexId,
@@ -252,8 +251,8 @@ class AbuserDetectionSuspendService(
         occurredAt: String,
     ): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
-        requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
-        requireEndpoint(phoneVertexId, PhoneNumberLabel.label, "phoneVertexId")
+        ops.requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
+        ops.requireEndpoint(phoneVertexId, PhoneNumberLabel.label, "phoneVertexId")
         return ops.createEdge(
             userVertexId,
             phoneVertexId,
@@ -275,8 +274,8 @@ class AbuserDetectionSuspendService(
         occurredAt: String,
     ): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
-        requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
-        requireEndpoint(paymentVertexId, PaymentMethodLabel.label, "paymentVertexId")
+        ops.requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
+        ops.requireEndpoint(paymentVertexId, PaymentMethodLabel.label, "paymentVertexId")
         return ops.createEdge(
             userVertexId,
             paymentVertexId,
@@ -298,8 +297,8 @@ class AbuserDetectionSuspendService(
         occurredAt: String,
     ): GraphEdge {
         occurredAt.requireNotBlank("occurredAt")
-        requireEndpoint(referrerVertexId, UserLabel.label, "referrerVertexId")
-        requireEndpoint(referredVertexId, UserLabel.label, "referredVertexId")
+        ops.requireEndpoint(referrerVertexId, UserLabel.label, "referrerVertexId")
+        ops.requireEndpoint(referredVertexId, UserLabel.label, "referredVertexId")
         return ops.createEdge(
             referrerVertexId,
             referredVertexId,
@@ -430,9 +429,4 @@ class AbuserDetectionSuspendService(
             }
     }
 
-    private suspend fun requireEndpoint(id: GraphElementId, expectedLabel: String, parameterName: String): GraphVertex {
-        val vertex = ops.findVertexById(id).requireNotNull(parameterName)
-        vertex.label.requireEquals(expectedLabel, "$parameterName.label")
-        return vertex
-    }
 }

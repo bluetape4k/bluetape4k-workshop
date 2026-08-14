@@ -8,6 +8,10 @@ Graph-based product and follow recommendations for a social commerce domain, bui
 [bluetape4k-graph](https://github.com/bluetape4k/bluetape4k-graph) with TinkerGraph,
 Neo4j, and Memgraph backends.
 
+The blocking and coroutine services share the released
+`io.bluetape4k.graph.repository.requireEndpoint` extension for endpoint validation.
+Missing vertices and label mismatches fail fast with `IllegalArgumentException`.
+
 ---
 
 ## Architecture

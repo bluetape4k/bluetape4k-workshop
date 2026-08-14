@@ -9,6 +9,11 @@ the [bluetape4k-graph](https://github.com/bluetape4k/bluetape4k-graph) library. 
 same graph model through blocking and coroutine services, then runs the same service logic against
 TinkerGraph, Neo4j, and Memgraph backends.
 
+Both services validate graph endpoints with the released
+`io.bluetape4k.graph.repository.requireEndpoint` extension. Missing vertices and
+label mismatches fail fast with `IllegalArgumentException` while preserving the
+caller parameter name in the validation message.
+
 > **Related issue:** [bluetape4k-workshop #11](https://github.com/bluetape4k/bluetape4k-workshop/issues/11)
 
 ![graph-knowledge-graph architecture diagram](../../docs/images/readme-diagrams/graph-knowledge-graph-readme-architecture-01.png)

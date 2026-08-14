@@ -6,12 +6,11 @@ import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.model.GraphVertex
 import io.bluetape4k.graph.model.NeighborOptions
 import io.bluetape4k.graph.repository.GraphOperations
+import io.bluetape4k.graph.repository.requireEndpoint
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.support.requireEquals
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
-import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.graph.recommendation.DEFAULT_RECOMMENDATION_LIMIT
 import io.bluetape4k.workshop.graph.recommendation.MAX_RECOMMENDATION_LIMIT
 import io.bluetape4k.workshop.graph.recommendation.model.CandidateExclusion
@@ -151,8 +150,8 @@ class RecommendationService(
         purchasedAt: String = "",
     ): GraphEdge {
         rating.requireInRange(0, 5, "rating")
-        requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
-        requireEndpoint(productVertexId, ProductLabel.label, "productVertexId")
+        ops.requireEndpoint(userVertexId, UserLabel.label, "userVertexId")
+        ops.requireEndpoint(productVertexId, ProductLabel.label, "productVertexId")
         val props = buildMap {
             if (rating > 0) put(PurchasedLabel.rating.name, rating.toString())
             if (purchasedAt.isNotBlank()) put(PurchasedLabel.purchasedAt.name, purchasedAt)
@@ -171,8 +170,8 @@ class RecommendationService(
      */
     fun follow(followerVertexId: GraphElementId, followeeVertexId: GraphElementId): GraphEdge {
         requireDistinctEndpoints(followerVertexId, followeeVertexId, "followerVertexId", "followeeVertexId")
-        requireEndpoint(followerVertexId, UserLabel.label, "followerVertexId")
-        requireEndpoint(followeeVertexId, UserLabel.label, "followeeVertexId")
+        ops.requireEndpoint(followerVertexId, UserLabel.label, "followerVertexId")
+        ops.requireEndpoint(followeeVertexId, UserLabel.label, "followeeVertexId")
         return ops.createEdge(followerVertexId, followeeVertexId, FollowsLabel.label, emptyMap())
     }
 
@@ -345,12 +344,6 @@ class RecommendationService(
                     .thenBy { it.recommendation.person.properties[UserLabel.userId.name]?.toString() ?: "" }
             )
             .take(limit)
-    }
-
-    private fun requireEndpoint(id: GraphElementId, expectedLabel: String, parameterName: String): GraphVertex {
-        val vertex = ops.findVertexById(id).requireNotNull(parameterName)
-        vertex.label.requireEquals(expectedLabel, "$parameterName.label")
-        return vertex
     }
 
     private fun requireDistinctEndpoints(

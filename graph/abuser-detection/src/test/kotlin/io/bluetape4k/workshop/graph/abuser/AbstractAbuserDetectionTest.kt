@@ -204,6 +204,15 @@ abstract class AbstractAbuserDetectionTest {
         }
     }
 
+    @Test
+    fun `linkDevice rejects missing device endpoint`() {
+        val seed = seedSharedIdentifiers(service)
+
+        assertFailsWith<IllegalArgumentException> {
+            service.linkDevice(seed.user1.id, GraphElementId("missing-device-id"), "2026-01-01T00:00:00Z")
+        }
+    }
+
     // ─────────────────────────────────────────────────────────────────────
     // detectReferralLoops 테스트
     // ─────────────────────────────────────────────────────────────────────

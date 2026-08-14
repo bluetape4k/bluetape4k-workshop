@@ -8,6 +8,7 @@ import io.bluetape4k.assertions.shouldContainAll
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.graph.model.GraphElementId
 import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.workshop.graph.recommendation.model.FollowRecommendation
 import io.bluetape4k.workshop.graph.recommendation.model.ProductRecommendation
@@ -216,6 +217,15 @@ abstract class AbstractRecommendationTest {
 
         assertFailsWith<IllegalArgumentException> {
             service.purchase(alice.id, bob.id, rating = 5)
+        }
+    }
+
+    @Test
+    fun `purchase rejects missing product endpoint`() {
+        val alice = service.addUser(USER_ALICE, "Alice")
+
+        assertFailsWith<IllegalArgumentException> {
+            service.purchase(alice.id, GraphElementId("missing-product-id"), rating = 5)
         }
     }
 
