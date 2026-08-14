@@ -1,18 +1,30 @@
 package io.bluetape4k.workshop.imageprocessing.ocr.service
 
 import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.images.ocr.OcrBoundingBox as SourceOcrBoundingBox
 import io.bluetape4k.images.ocr.OcrConfigurationException
 import io.bluetape4k.images.ocr.OcrException
 import io.bluetape4k.images.ocr.OcrOptions
+import io.bluetape4k.images.ocr.OcrPage as SourceOcrPage
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.images.ocr.OcrStructuredDetail
+import io.bluetape4k.images.ocr.OcrStructuredResult
+import io.bluetape4k.images.ocr.OcrTextBlock as SourceOcrTextBlock
+import io.bluetape4k.images.ocr.OcrTextLine as SourceOcrTextLine
+import io.bluetape4k.images.ocr.OcrWord as SourceOcrWord
+import io.bluetape4k.images.ocr.StructuredOcrEngine
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.imageprocessing.ocr.config.ImageOcrProperties
 import io.bluetape4k.workshop.imageprocessing.ocr.model.ImageOcrRequest
 import io.bluetape4k.workshop.imageprocessing.ocr.model.ImageOcrResponse
+import io.bluetape4k.workshop.imageprocessing.ocr.model.OcrBoundingBox
+import io.bluetape4k.workshop.imageprocessing.ocr.model.OcrPage
 import io.bluetape4k.workshop.imageprocessing.ocr.model.OcrStatus
 import io.bluetape4k.workshop.imageprocessing.ocr.model.OcrTextBlock
+import io.bluetape4k.workshop.imageprocessing.ocr.model.OcrTextLine
+import io.bluetape4k.workshop.imageprocessing.ocr.model.OcrWord
 import com.sksamuel.scrimage.ImmutableImage
 import java.util.concurrent.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -68,15 +80,26 @@ class ImageOcrServiceImpl(
                     runInterruptible(Dispatchers.IO) {
                         val image = decodeAndValidateImage(request.bytes, contentType)
                         val engine = ocrEngineProvider.get() ?: throw OcrConfigurationException("Native OCR engine is not configured")
-                        val result = engine.recognize(
-                            image,
-                            OcrOptions(
-                                languages = languages,
-                                tessdataPath = properties.tessdataPath,
-                            ),
+                        val options = OcrOptions(
+                            languages = languages,
+                            tessdataPath = properties.tessdataPath,
+                            structuredDetail = request.structuredDetail,
                         )
+                        val response = when {
+                            request.structuredDetail == OcrStructuredDetail.PLAIN_TEXT ->
+                                completed(requestId, languages, engine.recognize(image, options).text.trim())
+                            engine is StructuredOcrEngine ->
+                                completed(requestId, languages, engine.recognizeStructured(image, options))
+                            else ->
+                                plainFallback(
+                                    requestId = requestId,
+                                    languages = languages,
+                                    requestedDetail = request.structuredDetail,
+                                    text = engine.recognize(image, options).text.trim(),
+                                )
+                        }
                         recordOutcome(
-                            response = completed(requestId, languages, result.text.trim()),
+                            response = response,
                             nativeEnabled = true,
                             failureCategory = "none",
                             startedAtNanos = startedAtNanos,
@@ -143,6 +166,39 @@ class ImageOcrServiceImpl(
             warnings = listOf("Confidence is not available from the current OCR engine."),
         )
 
+    private fun completed(requestId: String, languages: List<String>, result: OcrStructuredResult): ImageOcrResponse =
+        ImageOcrResponse(
+            requestId = requestId,
+            status = OcrStatus.COMPLETED,
+            engine = NATIVE_ENGINE,
+            languages = languages,
+            confidence = null,
+            text = result.text.trim(),
+            blocks = result.blocks.mapIndexed { index, block -> block.toModel(index) },
+            warnings = listOf("Top-level confidence is not aggregated; inspect structured elements."),
+            effectiveStructuredDetail = result.options.structuredDetail,
+            pages = result.pages.map { it.toModel() },
+            lines = result.lines.map { it.toModel() },
+            words = result.words.map { it.toModel() },
+        )
+
+    private fun plainFallback(
+        requestId: String,
+        languages: List<String>,
+        requestedDetail: OcrStructuredDetail,
+        text: String,
+    ): ImageOcrResponse =
+        completed(
+            requestId = requestId,
+            languages = languages,
+            text = text,
+        ).copy(
+            warnings = listOf(
+                "Requested structured OCR detail $requestedDetail is unavailable from the configured engine; returned plain text.",
+                "Confidence is not available from the current OCR engine.",
+            ),
+        )
+
     private fun unavailable(requestId: String, languages: List<String>, warning: String): ImageOcrResponse =
         ImageOcrResponse(
             requestId = requestId,
@@ -165,6 +221,47 @@ class ImageOcrServiceImpl(
             text = "",
             blocks = emptyList(),
             warnings = listOf(warning),
+        )
+
+    private fun SourceOcrPage.toModel(): OcrPage =
+        OcrPage(
+            pageIndex = pageIndex,
+            text = text,
+            confidence = confidence,
+            boundingBox = boundingBox?.toModel(),
+        )
+
+    private fun SourceOcrTextBlock.toModel(index: Int): OcrTextBlock =
+        OcrTextBlock(
+            index = index,
+            text = text,
+            confidence = confidence,
+            pageIndex = pageIndex,
+            boundingBox = boundingBox?.toModel(),
+        )
+
+    private fun SourceOcrTextLine.toModel(): OcrTextLine =
+        OcrTextLine(
+            pageIndex = pageIndex,
+            text = text,
+            confidence = confidence,
+            boundingBox = boundingBox?.toModel(),
+        )
+
+    private fun SourceOcrWord.toModel(): OcrWord =
+        OcrWord(
+            pageIndex = pageIndex,
+            text = text,
+            confidence = confidence,
+            boundingBox = boundingBox?.toModel(),
+        )
+
+    private fun SourceOcrBoundingBox.toModel(): OcrBoundingBox =
+        OcrBoundingBox(
+            x = x,
+            y = y,
+            width = width,
+            height = height,
         )
 
     private fun validateBytes(bytes: ByteArray) {

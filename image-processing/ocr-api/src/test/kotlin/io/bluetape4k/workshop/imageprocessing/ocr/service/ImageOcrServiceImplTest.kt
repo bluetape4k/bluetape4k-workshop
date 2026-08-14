@@ -53,7 +53,10 @@ private class FakeStructuredOcrEngine(
     override fun recognizeStructured(image: ImmutableImage, options: OcrOptions): OcrStructuredResult {
         structuredCalls++
         lastOptions = options
-        return structuredResult.copy(options = options)
+        return structuredResult.copy(
+            options = options,
+            words = if (options.structuredDetail == OcrStructuredDetail.WORD) structuredResult.words else emptyList(),
+        )
     }
 }
 
