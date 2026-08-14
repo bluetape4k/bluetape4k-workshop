@@ -6,6 +6,7 @@
     <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
     <marker id="arrow-call" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3F7D9C" stroke="#3F7D9C" stroke-width="0" stroke-dasharray="none"/></marker>
     <marker id="arrow-work" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6E8F4F" stroke="#6E8F4F" stroke-width="0" stroke-dasharray="none"/></marker>
+    <marker id="arrow-structured" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#15803D" stroke="#15803D" stroke-width="0" stroke-dasharray="none"/></marker>
     <marker id="arrow-ret" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9B7D54" stroke="#9B7D54" stroke-width="0" stroke-dasharray="none"/></marker>
     <marker id="arrow-amber" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#B45309" stroke="#B45309" stroke-width="0" stroke-dasharray="none"/></marker>
     <marker id="arrow-purple" viewBox="0 0 10 10" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#7C3AED" stroke="#7C3AED" stroke-width="0" stroke-dasharray="none"/></marker>
@@ -84,7 +85,7 @@
     <rect x="965" y="642" width="300" height="30" rx="15" class="pill"/>
     <circle cx="985" cy="657" r="11" class="badge workBadge"/><text x="985" y="661" text-anchor="middle" class="badgeText workText">6</text>
     <text x="1007" y="662" class="msg workText">StructuredOcrEngine인가?</text>
-    <path d="M 930 700 L 1190 700" class="work branchStructured" stroke="#15803D" marker-end="url(#arrow-work)"/>
+    <path d="M 930 700 L 1190 700" class="work branchStructured" stroke="#15803D" marker-end="url(#arrow-structured)"/>
   </g>
 
   <g class="message" data-message="7">
