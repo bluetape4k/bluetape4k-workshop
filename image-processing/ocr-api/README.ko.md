@@ -39,16 +39,23 @@ Content-Type: multipart/form-data
 
 file      필수 image/jpeg, image/png, image/webp
 language  선택 반복 파라미터 또는 comma-separated Tesseract language code
+structuredDetail 선택 PLAIN_TEXT, LINE, WORD (기본값 PLAIN_TEXT)
 ```
 
 ```bash
 curl -F "file=@docs/images/readme-diagrams/image-ocr-api-readme-architecture-01.png;type=image/png" \
   -F "language=eng" \
+  -F "structuredDetail=WORD" \
   http://localhost:8080/api/images/ocr
 ```
 
 잘못된 업로드는 `400 Bad Request`입니다. 유효한 업로드지만 native OCR을 실행할 수
 없는 경우에는 `status=UNAVAILABLE`인 구조화된 `200 OK` 응답을 반환합니다.
+
+`structuredDetail=LINE` 또는 `WORD`는 설정된 engine이 `StructuredOcrEngine`을
+구현한 경우에만 사용합니다. 기존 plain engine은 runtime에 capability를 확인한 뒤
+text로 fallback하고, `effectiveStructuredDetail=PLAIN_TEXT`와 빈
+`pages`, `lines`, `words` 목록을 반환합니다.
 
 ## Fallback 응답
 
@@ -61,6 +68,10 @@ curl -F "file=@docs/images/readme-diagrams/image-ocr-api-readme-architecture-01.
   "confidence": null,
   "text": "",
   "blocks": [],
+  "effectiveStructuredDetail": "PLAIN_TEXT",
+  "pages": [],
+  "lines": [],
+  "words": [],
   "warnings": [
     "Native OCR is disabled. Enable workshop.ocr.native-enabled=true or -Docr.enabled=true."
   ]
@@ -78,17 +89,31 @@ curl -F "file=@docs/images/readme-diagrams/image-ocr-api-readme-architecture-01.
   "confidence": null,
   "text": "Bluetape OCR\nSecond line",
   "blocks": [
-    { "index": 0, "text": "Bluetape OCR", "confidence": null },
-    { "index": 1, "text": "Second line", "confidence": null }
+    { "index": 0, "text": "Bluetape OCR", "confidence": null, "pageIndex": 0, "boundingBox": null },
+    { "index": 1, "text": "Second line", "confidence": null, "pageIndex": 0, "boundingBox": null }
+  ],
+  "effectiveStructuredDetail": "WORD",
+  "pages": [
+    { "pageIndex": 0, "text": "Bluetape OCR\nSecond line", "confidence": null, "boundingBox": null }
+  ],
+  "lines": [
+    { "pageIndex": 0, "text": "Bluetape OCR", "confidence": null, "boundingBox": null },
+    { "pageIndex": 0, "text": "Second line", "confidence": null, "boundingBox": null }
+  ],
+  "words": [
+    { "pageIndex": 0, "text": "Bluetape", "confidence": 88.0, "boundingBox": { "x": 1, "y": 2, "width": 16, "height": 12 } }
   ],
   "warnings": [
-    "Confidence is not available from the current OCR engine."
+    "Top-level confidence is not aggregated; inspect structured elements."
   ]
 }
 ```
 
-`confidence`가 nullable인 이유는 현재 `OcrResult` 계약이 text와 effective options만
-제공하고, line/word 단위 confidence를 제공하지 않기 때문입니다.
+`effectiveStructuredDetail`은 실제 반환한 상세 수준을 나타냅니다. `pages`, `lines`,
+`words`는 `StructuredOcrEngine`이 반환한 계층을 보존하며, 각 element의 `confidence`와
+`boundingBox`는 nullable일 수 있습니다. 이 예제의 top-level `confidence`는 항상 `null`이고
+하위 값의 평균 등으로 합성하지 않습니다. 기존 plain-text consumer를 위해 `blocks`도
+유지하며, 선택적으로 `pageIndex`와 `boundingBox` metadata를 포함합니다.
 
 ## 설정
 
@@ -175,8 +200,10 @@ queueing, audit workflow, PII 관리, 운영용 upload hardening이 없습니다
 ./gradlew :image-processing-ocr-api:test -Docr.enabled=true
 ```
 
-테스트는 완료 응답을 위해 fake `OcrEngine`을 주입하고 fallback, validation,
-sanitized failure mapping, language normalization, cancellation propagation을 검증합니다.
+테스트는 완료 응답을 위해 fake `OcrEngine`과 `StructuredOcrEngine`을 주입하므로 native
+Tesseract가 없어도 결정적으로 실행됩니다. 구조화 매핑, capability fallback, validation,
+sanitized failure mapping, language normalization, timeout, cancellation propagation을
+검증합니다.
 
 ## 의존성 메모
 
