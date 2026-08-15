@@ -24,9 +24,12 @@ Architecture는 위에서 아래로 읽습니다. Raw event가 bounded Flow oper
 
 ![Sequence](../../docs/images/readme-diagrams/kotlin-flow-extensions-event-aggregation-readme-sequence-01.png)
 
+![Count-or-time 계약](../../docs/images/readme-diagrams/kotlin-flow-extensions-event-aggregation-readme-count-or-time-01.ko.png)
+
 Sequence diagram은 중요한 contract를 보여줍니다.
 
 - `chunked`는 batch-level activity summary를 위해 bounded batch를 emit합니다.
+- `bufferTimeout`은 count 경계, 관찰된 idle timeout, 정상 완료 중 먼저 관찰된 경계에서 non-empty batch를 닫습니다.
 - `windowed`는 rolling context가 필요할 때 overlapping window를 emit합니다.
 - `groupBy`는 완료된 replay를 `orderId`별로 나눕니다.
 - `scanWith`는 immutable read-model snapshot을 만듭니다.
@@ -53,11 +56,18 @@ for (event in events) {
 val pipeline = OrderEventAggregationPipeline()
 
 val summaries = pipeline.chunkedActivity(events, chunkSize = 100)
+val countOrTimeSummaries = pipeline.countOrTimeActivity(
+    events,
+    maxSize = 100,
+    timeout = 250.milliseconds,
+)
 val readModels = pipeline.readModels(events)
 val transitions = pipeline.transitions(events, orderId = "order-1")
 ```
 
 각 public function은 하나의 aggregation boundary만 가르칩니다. 그래서 학습자는 테스트를 실행하고 operator별 emitted value를 차례로 확인할 수 있습니다.
+
+`countOrTimeActivity`는 `maxSize`가 먼저 차면 full batch를 emit하고, upstream이 정상 완료되거나 관찰된 idle timeout이 먼저 발생하면 non-empty partial batch를 emit합니다. 이 workshop은 bluetape4k-coroutines `1.12.1`의 동작을 고정합니다. 현재 구현은 각 원소를 받은 뒤 timeout을 다시 등록하므로, timeout은 마지막 원소 이후의 idle period로 관찰됩니다. 첫 원소부터 측정하는 wall-clock window가 필요하면 dependency source와 version을 다시 확인해야 합니다.
 
 ## Domain model
 
@@ -69,6 +79,7 @@ Order event는 private constructor를 가진 regular serializable class입니다
 
 - 잘못된 id, amount, quantity, control character는 collect 전에 실패합니다.
 - `CancellationException`은 다시 던져 coroutine cancellation을 cooperative하게 유지합니다.
+- `countOrTimeActivity`는 정상 완료일 때만 마지막 partial batch를 flush하고, upstream failure에서는 진행 중인 partial batch를 버린 뒤 원래 exception을 유지합니다.
 - `groupBy`는 upstream failure를 `FlowOperationException`으로 감쌉니다. 테스트는 원래 cause가 사라지지 않는지 확인합니다.
 - Debug rendering은 customer id, tracking number, cancellation reason을 redaction합니다.
 
@@ -77,6 +88,7 @@ Order event는 private constructor를 가진 regular serializable class입니다
 | 기능 | 코드 위치 | 학습 포인트 |
 |---|---|---|
 | `chunked` | `chunkedActivity` | Batch size로 memory 사용량 제한 |
+| `bufferTimeout` | `countOrTimeActivity` | Count, 관찰된 idle timeout, 완료 경계에서 batch를 닫음 |
 | `windowed` | `rollingActivity` | Overlapping rolling summary emit |
 | `groupBy` + `toGroupItems` | `groupedByOrder` | 완료된 replay를 aggregate id별로 분리 |
 | `scanWith` | `readModels` | Immutable projection snapshot emit |
@@ -95,6 +107,7 @@ Order event는 private constructor를 가진 regular serializable class입니다
 ## 참고
 
 - [chunked](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/chunked.kt)
+- [bufferTimeout](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/bufferTimeout.kt)
 - [windowed](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/windowed.kt)
 - [groupBy](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/groupBy.kt)
 - [scanWith](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/scanWith.kt)

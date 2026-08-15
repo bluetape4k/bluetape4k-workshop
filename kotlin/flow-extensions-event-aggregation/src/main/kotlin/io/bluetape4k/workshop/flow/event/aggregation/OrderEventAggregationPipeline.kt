@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.flow.event.aggregation
 
 import io.bluetape4k.coroutines.flow.extensions.GroupItem
 import io.bluetape4k.coroutines.flow.extensions.bufferUntilChanged
+import io.bluetape4k.coroutines.flow.extensions.bufferTimeout
 import io.bluetape4k.coroutines.flow.extensions.chunked
 import io.bluetape4k.coroutines.flow.extensions.groupBy
 import io.bluetape4k.coroutines.flow.extensions.log
@@ -10,7 +11,11 @@ import io.bluetape4k.coroutines.flow.extensions.toGroupItems
 import io.bluetape4k.coroutines.flow.extensions.windowed
 import io.bluetape4k.coroutines.flow.extensions.zipWithNext
 import io.bluetape4k.support.requireGe
+import io.bluetape4k.support.requireGt
+import io.bluetape4k.support.requireLt
 import io.bluetape4k.support.requirePositiveNumber
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
@@ -39,6 +44,28 @@ class OrderEventAggregationPipeline {
         chunkSize.requirePositiveNumber("chunkSize")
         return events
             .chunked(chunkSize, partialWindow = true)
+            .map(OrderActivitySummary::from)
+    }
+
+    /**
+     * count 또는 timeout 중 먼저 관찰된 경계로 activity summary 를 방출합니다.
+     *
+     * upstream `bufferTimeout`의 완료 시점에는 남은 partial batch 를 방출하고,
+     * upstream 실패나 downstream 취소 시에는 진행 중인 batch 를 일반적인 Flow
+     * 실패·취소 의미로 처리합니다. 현재 workshop 이 고정하는 동작은
+     * bluetape4k-coroutines `1.12.1` 구현의 실제 동작을 기준으로 합니다. 해당
+     * 구현은 각 원소를 받은 뒤 timeout clause 를 다시 등록하므로, 원소가 계속
+     * 들어오는 동안에는 마지막 원소 이후의 idle timeout 으로 관찰됩니다.
+     */
+    fun countOrTimeActivity(
+        events: Flow<OrderEvent>,
+        maxSize: Int,
+        timeout: Duration,
+    ): Flow<OrderActivitySummary> {
+        maxSize.requirePositiveNumber("maxSize")
+        timeout.requirePositiveFinite("timeout")
+        return events
+            .bufferTimeout(maxSize = maxSize, timeout = timeout)
             .map(OrderActivitySummary::from)
     }
 
@@ -124,4 +151,10 @@ class OrderEventAggregationPipeline {
     private fun normalizeOrderId(orderId: String): String =
         OrderCreated(orderId, "normalization-probe", java.time.Instant.EPOCH).orderId
 
+}
+
+private fun Duration.requirePositiveFinite(parameterName: String): Duration = apply {
+    val nanoseconds = toDouble(DurationUnit.NANOSECONDS)
+    nanoseconds.requireGt(0.0, parameterName)
+    nanoseconds.requireLt(Double.POSITIVE_INFINITY, parameterName)
 }

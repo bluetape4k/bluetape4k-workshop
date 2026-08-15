@@ -1,0 +1,36 @@
+{
+  "kind": "sequence",
+  "source": {
+    "question": "How does the search pipeline choose latest, cancellation, idle fallback, and timely result paths?",
+    "revision": "acbe8e88bd23c95465e35c001ed34ea4f33b00e3",
+    "paths": [
+      "kotlin/flow-extensions-search-pipeline/src/main/kotlin/io/bluetape4k/workshop/flow/search/pipeline/SearchPipeline.kt",
+      "kotlin/flow-extensions-search-pipeline/src/test/kotlin/io/bluetape4k/workshop/flow/search/pipeline/SearchPipelineTest.kt",
+      "kotlin/flow-extensions-search-pipeline/README.md",
+      "kotlin/flow-extensions-search-pipeline/README.ko.md"
+    ]
+  },
+  "nodes": [
+    {"id": "input-signals", "label": "Input signals", "source": "SearchPipeline.kt"},
+    {"id": "pipeline", "label": "SearchPipeline", "source": "SearchPipeline.kt"},
+    {"id": "adapter", "label": "SearchAdapter", "source": "SearchPipeline.kt"},
+    {"id": "fallback", "label": "Fallback Flow", "source": "SearchPipeline.kt"},
+    {"id": "collector", "label": "Collector", "source": "README.md"},
+    {"id": "latest-request", "label": "Latest request", "source": "SearchPipelineTest.kt"},
+    {"id": "idle-timeout", "label": "Idle timeout fallback", "source": "SearchPipelineTest.kt"},
+    {"id": "timely-result", "label": "Timely adapter result", "source": "SearchPipelineTest.kt"}
+  ],
+  "edges": [
+    {"id": "input-latest", "from": "input-signals", "to": "latest-request", "kind": "query", "source": "SearchPipeline.kt"},
+    {"id": "latest-pipeline", "from": "latest-request", "to": "pipeline", "kind": "flow", "source": "SearchPipeline.kt"},
+    {"id": "pipeline-adapter", "from": "pipeline", "to": "adapter", "kind": "search", "source": "SearchPipeline.kt"},
+    {"id": "latest-cancels", "from": "pipeline", "to": "adapter", "kind": "cancellation", "source": "SearchPipelineTest.kt"},
+    {"id": "pipeline-idle", "from": "pipeline", "to": "idle-timeout", "kind": "timeout", "source": "SearchPipelineTest.kt"},
+    {"id": "idle-fallback", "from": "idle-timeout", "to": "fallback", "kind": "fallback", "source": "SearchPipeline.kt"},
+    {"id": "fallback-collector", "from": "fallback", "to": "collector", "kind": "output", "source": "SearchPipeline.kt"},
+    {"id": "adapter-timely", "from": "adapter", "to": "timely-result", "kind": "completion", "source": "SearchPipelineTest.kt"},
+    {"id": "timely-collector", "from": "timely-result", "to": "collector", "kind": "output", "source": "SearchPipeline.kt"}
+  ],
+  "behavior": {"branches": 3, "loops": 0},
+  "repairs": []
+}

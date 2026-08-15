@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.flow.search.pipeline
 import io.bluetape4k.coroutines.flow.extensions.bufferingDebounce
 import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.coroutines.flow.extensions.takeUntil
+import io.bluetape4k.coroutines.flow.extensions.timeoutOrFallback
 import io.bluetape4k.coroutines.flow.extensions.withLatestFrom
 import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requireLt
@@ -46,8 +47,57 @@ class SearchPipeline(
         settings: Flow<SearchSettings>,
         sessionClosed: Flow<Unit>,
         debounce: Duration,
+    ): Flow<SearchResult> = searchInternal(
+        queries = queries,
+        settings = settings,
+        sessionClosed = sessionClosed,
+        debounce = debounce,
+        adapterTimeout = null,
+        fallback = null,
+    )
+
+    /**
+     * idle timeout 이 발생한 search 를 요청별 fallback 결과로 대체합니다.
+     *
+     * 일반 search 는 기존과 같이 `flatMapLatest` 로 최신 요청만 유지합니다.
+     * adapter 가 지정된 시간 안에 결과를 방출하지 않으면
+     * `timeoutOrFallback` 이 adapter 를 먼저 취소하고 fallback 을 한 번
+     * 수집합니다. adapter 의 일반 예외와 caller의 `CancellationException`은
+     * fallback 으로 바꾸지 않고 원래 의미를 유지합니다.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun searchWithIdleFallback(
+        queries: Flow<String>,
+        settings: Flow<SearchSettings>,
+        sessionClosed: Flow<Unit>,
+        debounce: Duration,
+        adapterTimeout: Duration,
+        fallback: (SearchRequest) -> SearchResult,
+    ): Flow<SearchResult> = searchInternal(
+        queries = queries,
+        settings = settings,
+        sessionClosed = sessionClosed,
+        debounce = debounce,
+        adapterTimeout = adapterTimeout,
+        fallback = fallback,
+    )
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun searchInternal(
+        queries: Flow<String>,
+        settings: Flow<SearchSettings>,
+        sessionClosed: Flow<Unit>,
+        debounce: Duration,
+        adapterTimeout: Duration?,
+        fallback: ((SearchRequest) -> SearchResult)?,
     ): Flow<SearchResult> {
         debounce.requirePositiveFinite("debounce")
+        if (adapterTimeout != null) {
+            adapterTimeout.requirePositiveFinite("adapterTimeout")
+            requireNotNull(fallback) { "fallback is required when adapterTimeout is configured" }
+        } else {
+            require(fallback == null) { "fallback requires adapterTimeout" }
+        }
 
         return channelFlow {
             val sharedSessionClosed = MutableSharedFlow<Unit>(replay = 1, extraBufferCapacity = 1)
@@ -64,7 +114,9 @@ class SearchPipeline(
                     .bufferingDebounce(debounce)
                     .mapNotNull { burst -> burst.lastOrNull()?.let { SearchQuery(it) } }
                     .withLatestFrom(settings) { query, latestSettings -> SearchRequest(query, latestSettings) }
-                    .flatMapLatest { request -> searchUntilSessionClosed(request, sharedSessionClosed) }
+                    .flatMapLatest { request ->
+                        searchUntilSessionClosed(request, sharedSessionClosed, adapterTimeout, fallback)
+                    }
                     .takeUntil(sharedSessionClosed)
                     .collect { send(it) }
             } finally {
@@ -76,10 +128,21 @@ class SearchPipeline(
     private fun searchUntilSessionClosed(
         request: SearchRequest,
         sharedSessionClosed: Flow<Unit>,
+        adapterTimeout: Duration?,
+        fallback: ((SearchRequest) -> SearchResult)?,
     ): Flow<SearchResult> = flow {
         coroutineScope {
             val search = async(start = CoroutineStart.UNDISPATCHED) {
-                adapter.search(request)
+                if (adapterTimeout == null) {
+                    adapter.search(request)
+                } else {
+                    flow {
+                        emit(adapter.search(request))
+                    }.timeoutOrFallback(
+                        timeout = adapterTimeout,
+                        fallback = flow { emit(requireNotNull(fallback).invoke(request)) },
+                    ).first()
+                }
             }
             val stop = async(start = CoroutineStart.UNDISPATCHED) {
                 sharedSessionClosed.first()
