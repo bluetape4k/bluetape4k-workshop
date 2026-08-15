@@ -32,12 +32,15 @@ class JobSubmissionIdempotencyMultiInstanceTest {
             val executor = Executors.newFixedThreadPool(repositories.size)
             try {
                 val reserveStart = CountDownLatch(1)
+                val reserveReady = CountDownLatch(repositories.size)
                 val reservations = repositories.map { repository ->
                     executor.submit<Reservation> {
+                        reserveReady.countDown()
                         check(reserveStart.await(5, TimeUnit.SECONDS))
                         repository.reserve(command, NOW)
                     }
                 }
+                check(reserveReady.await(5, TimeUnit.SECONDS))
                 reserveStart.countDown()
                 val results = reservations.map { it.get(10, TimeUnit.SECONDS) }
                 results.count { it is Reservation.Owner } shouldBeEqualTo 1
@@ -45,12 +48,15 @@ class JobSubmissionIdempotencyMultiInstanceTest {
                 val owner = results.filterIsInstance<Reservation.Owner>().single()
 
                 val waiterStart = CountDownLatch(1)
+                val waiterReady = CountDownLatch(repositories.size)
                 val registrations = repositories.map { repository ->
                     executor.submit<WaiterRegistration> {
+                        waiterReady.countDown()
                         check(waiterStart.await(5, TimeUnit.SECONDS))
                         repository.registerWaiter(InFlightOwnership(owner.ownership), NOW)
                     }
                 }
+                check(waiterReady.await(5, TimeUnit.SECONDS))
                 waiterStart.countDown()
                 val waiterResults = registrations.map { it.get(10, TimeUnit.SECONDS) }
                 waiterResults.count { it is WaiterRegistration.Registered } shouldBeEqualTo 1
