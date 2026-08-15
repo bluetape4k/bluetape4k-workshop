@@ -39,6 +39,25 @@ val fallback = catalog.orderedFallback(listOf(cacheFlow, replicaFlow, backupFlow
 val enriched = catalog.mergeContributions(cacheFlow, replicaFlow, remoteFlow).toList()
 ```
 
+### Bounded eager fallback
+
+```kotlin
+val bounded = catalog.boundedEagerFallbackBySource(
+    sources = flowOf(CatalogSource.CACHE, CatalogSource.REMOTE_API),
+    maxConcurrency = 2,
+    bufferCapacity = 1,
+) { source -> sourceFlow(source) }.toList()
+```
+
+eager inner 수집에 명시적인 자원 계약이 필요하면 bounded overload를 사용하세요.
+
+- 동시에 collect하는 inner Flow는 최대 `maxConcurrency`개입니다.
+- 각 inner Flow는 `bufferCapacity` 출력 queue를 가지며, `0`은 rendezvous queue입니다.
+- outer/source 순서는 보존되지만 뒤 source의 값은 자신의 inner queue 한도까지만 누적됩니다.
+- transform 및 inner 실패는 예외 의미를 유지하고, downstream cancellation은 모든 active child로 전파됩니다.
+
+이것은 inner별 backpressure 한도이며, 서로 독립된 composition 사이의 전역 순서나 exactly-once를 보장하지는 않습니다.
+
 ## Architecture
 
 ![Architecture](../../docs/images/readme-diagrams/kotlin-flow-extensions-race-fallback-readme-architecture-01.png)
@@ -52,7 +71,8 @@ val enriched = catalog.mergeContributions(cacheFlow, replicaFlow, remoteFlow).to
 | 가장 낮은 latency의 정상 응답 | `race` / `amb` | 먼저 값을 emit한 source가 이기고 loser는 취소됩니다 |
 | 순서가 중요한 fallback | `concat` | 우선순위 순서대로 source를 하나씩 실행합니다 |
 | eager fallback + 순서 보존 | `concatArrayEager` | source는 즉시 시작하지만 출력은 source 순서를 지킵니다 |
-| 동적 eager fallback | `concatMapEager` | mapping된 source는 eager하게 시작하고 outer 순서가 출력을 결정합니다 |
+| 동적 eager fallback | `concatMapEager` | mapping된 source는 eager하게 시작하고 outer 순서가 출력을 결정하며 queue는 unbounded입니다 |
+| bounded 동적 eager fallback | `concatMapEager(maxConcurrency, bufferCapacity)` | active inner와 inner별 queue를 제한하면서 outer 순서를 보존합니다 |
 | 모든 source의 partial enrichment | `merge` | 모든 source가 도착 순서대로 기여합니다 |
 | 오류를 값으로 설명 | `materialize` / `dematerialize` | terminal signal을 값으로 바꾸고 다시 복원합니다 |
 
@@ -70,6 +90,12 @@ val enriched = catalog.mergeContributions(cacheFlow, replicaFlow, remoteFlow).to
 
 ![Sequence](../../docs/images/readme-diagrams/kotlin-flow-extensions-race-fallback-readme-sequence-01.png)
 
+## Bounded sequence model
+
+![Bounded concatMapEager sequence](../../docs/images/readme-diagrams/kotlin-flow-extensions-race-fallback-readme-bounded-sequence-01.ko.png)
+
+bounded sequence는 두 가지 독립적인 한도를 보여줍니다. 동시에 두 inner만 시작하고, 느린 `CACHE` inner가 ordered drain을 release할 때까지 `REMOTE_API` inner는 queue에 값 하나를 둔 뒤 suspend합니다.
+
 ## 오류 의미론
 
 source 실패가 현재 composition을 멈춰야 한다면 terminal error를 그대로 사용하세요. 원본 예외를 잃지 않으면서 실패를 데이터로 설명하거나 라우팅해야 한다면 `materialize()`를 사용합니다.
@@ -82,6 +108,7 @@ source 실패가 현재 composition을 멈춰야 한다면 terminal error를 그
 | `concat` | 엄격한 fallback 순서 |
 | `concatArrayEager` | source를 eager하게 시작하되 출력 순서 보존 |
 | `concatMapEager` | 동적 eager fallback mapping |
+| `concatMapEager(maxConcurrency, bufferCapacity)` | active inner와 inner별 queue를 제한하면서 순서 있는 출력 제공 |
 | `merge` | 모든 source의 partial contribution 수집 |
 | `materialize` / `dematerialize` | error-as-value와 terminal-error 변환 |
 
@@ -97,6 +124,6 @@ source 실패가 현재 composition을 멈춰야 한다면 terminal error를 그
 - [race](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/race.kt)
 - [concat](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/concat.kt)
 - [concatArrayEager](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/concatArrayEager.kt)
-- [concatMapEager](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/concatMapEager.kt)
+- [`concatMapEager`와 bounded overload](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/concatMapEager.kt)
 - [merge](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/mergeFlows.kt)
 - [materialize](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/materialize.kt)

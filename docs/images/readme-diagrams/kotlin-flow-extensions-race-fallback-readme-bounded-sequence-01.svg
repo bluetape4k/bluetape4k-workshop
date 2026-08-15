@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="1050" viewBox="0 0 1560 1050" role="img" aria-labelledby="title desc">
+  <title id="title">Bounded concatMapEager contract</title>
+  <desc id="desc">Sequence showing eager inner starts, maxConcurrency two, a per-inner queue of one, ordered draining, and structured cancellation.</desc>
+  <defs>
+    <marker id="arrow-call" viewBox="0 0 10 10" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86c6" stroke="#4f86c6" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/></marker>
+    <marker id="arrow-work" viewBox="0 0 10 10" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6e8f4f" stroke="#6e8f4f" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/></marker>
+    <marker id="arrow-audit" viewBox="0 0 10 10" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b5832f" stroke="#b5832f" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/></marker>
+    <marker id="arrow-return" viewBox="0 0 10 10" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" data-role="sequence" data-tip-direction="positive-x"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2b8f88" stroke="#2b8f88" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/></marker>
+    <style>
+      .frame { fill: #fbfcf8; stroke: #40545d; stroke-width: 3; rx: 20; }
+      .title { font-family: "Architects Daughter", sans-serif; font-size: 40px; fill: #263238; }
+      .subtitle, .role, .msg, .note, .badgeText { font-family: "Comic Mono", monospace; fill: #36464f; }
+      .subtitle { font-size: 16px; }
+      .participant { font-family: "Architects Daughter", sans-serif; font-size: 21px; fill: #1f3138; }
+      .role { font-size: 13px; fill: #546a73; }
+      .header { fill: #ffffff; stroke: #546e7a; stroke-width: 2; rx: 10; }
+      .lifeline { stroke: #9aaab1; stroke-width: 2; stroke-dasharray: 7 8; stroke-linecap: round; }
+      .activation { fill: #eef8f0; stroke: #6f8f77; stroke-width: 1.8; rx: 6; }
+      .activationAudit { fill: #fff7e8; stroke: #9b7d54; stroke-width: 1.8; rx: 6; }
+      .activationReturn { fill: #eef8fb; stroke: #5e9d98; stroke-width: 1.8; rx: 6; }
+      .call, .work, .audit, .return { fill: none; stroke-width: 3.1; stroke-linecap: round; stroke-linejoin: round; }
+      .call { stroke: #4f86c6; marker-end: url(#arrow-call); }
+      .work { stroke: #6e8f4f; marker-end: url(#arrow-work); }
+      .audit { stroke: #b5832f; marker-end: url(#arrow-audit); }
+      .return { stroke: #2b8f88; stroke-dasharray: 8 6; marker-end: url(#arrow-return); }
+      .label { fill: #ffffff; stroke-width: 1.6; rx: 17; }
+      .labelCall { stroke: #9cc6df; }
+      .labelWork { stroke: #b6c9a4; }
+      .labelAudit { stroke: #d0b477; }
+      .labelReturn { stroke: #9bc9c4; }
+      .badgeCircle { fill: #fffefa; stroke-width: 1.6; }
+      .badgeCall { stroke: #4f86c6; }
+      .badgeWork { stroke: #6e8f4f; }
+      .badgeAudit { stroke: #b5832f; }
+      .badgeReturn { stroke: #2b8f88; }
+      .badgeText { font-size: 12px; font-weight: 700; text-anchor: middle; }
+      .callText { fill: #276b9d; }
+      .workText { fill: #55783f; }
+      .auditText { fill: #805d22; }
+      .returnText { fill: #217a74; }
+      .msg { font-size: 14px; font-weight: 600; }
+      .note { font-size: 13px; fill: #5b6f7a; }
+      .contract { fill: none; stroke: #9aaab1; stroke-width: 2; stroke-dasharray: 9 7; rx: 14; }
+      .contractLabel { fill: #ffffff; stroke: #b6c3c7; stroke-width: 1.6; rx: 17; }
+      .contractText { font-family: "Comic Mono", monospace; font-size: 14px; font-weight: 700; fill: #4d626c; text-anchor: middle; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1560" height="1050" fill="#f3f7f3"/>
+  <rect class="frame" x="24" y="24" width="1512" height="1002"/>
+  <text class="title" x="780" y="78" text-anchor="middle">Bounded concatMapEager Contract</text>
+  <text class="subtitle" x="780" y="108" text-anchor="middle">maxConcurrency=2 starts two inners eagerly; bufferCapacity=1 bounds each inner queue while output stays source ordered.</text>
+
+  <rect class="header" x="60" y="150" width="200" height="76"/>
+  <text class="participant" x="160" y="181" text-anchor="middle">Caller</text>
+  <text class="role" x="160" y="205" text-anchor="middle">collect / cancel</text>
+  <rect class="header" x="330" y="150" width="330" height="76"/>
+  <text class="participant" x="495" y="181" text-anchor="middle">boundedEagerFallbackBySource</text>
+  <text class="role" x="495" y="205" text-anchor="middle">concurrency gate + ordered drain</text>
+  <rect class="header" x="730" y="150" width="220" height="76"/>
+  <text class="participant" x="840" y="181" text-anchor="middle">CACHE inner</text>
+  <text class="role" x="840" y="205" text-anchor="middle">slow first source</text>
+  <rect class="header" x="1010" y="150" width="250" height="76"/>
+  <text class="participant" x="1135" y="181" text-anchor="middle">REMOTE_API inner</text>
+  <text class="role" x="1135" y="205" text-anchor="middle">queue capacity = 1</text>
+  <rect class="header" x="1320" y="150" width="180" height="76"/>
+  <text class="participant" x="1410" y="181" text-anchor="middle">Collector</text>
+  <text class="role" x="1410" y="205" text-anchor="middle">ordered output</text>
+
+  <line class="lifeline" x1="160" y1="226" x2="160" y2="944"/>
+  <line class="lifeline" x1="495" y1="226" x2="495" y2="944"/>
+  <line class="lifeline" x1="840" y1="226" x2="840" y2="944"/>
+  <line class="lifeline" x1="1135" y1="226" x2="1135" y2="944"/>
+  <line class="lifeline" x1="1410" y1="226" x2="1410" y2="944"/>
+
+  <rect class="activation" x="486" y="300" width="18" height="594"/>
+  <rect class="activation" x="831" y="388" width="18" height="264"/>
+  <rect class="activationAudit" x="1126" y="432" width="18" height="332"/>
+  <rect class="activationReturn" x="1401" y="786" width="18" height="72"/>
+
+  <rect class="label labelCall" x="178" y="260" width="310" height="34"/>
+  <circle class="badgeCircle badgeCall" cx="202" cy="277" r="13"/>
+  <text class="badgeText callText" x="202" y="282">1</text>
+  <text class="msg callText" x="226" y="282">collect(maxConcurrency=2)</text>
+  <path class="call" d="M 160 314 L 495 314" data-connector="caller-bounded-collect" data-source="caller" data-target="bounded"/>
+
+  <rect class="label labelWork" x="525" y="348" width="238" height="34"/>
+  <circle class="badgeCircle badgeWork" cx="549" cy="365" r="13"/>
+  <text class="badgeText workText" x="549" y="370">2</text>
+  <text class="msg workText" x="573" y="370">start inner #1</text>
+  <path class="work" d="M 495 402 L 840 402" data-connector="bounded-cache-start" data-source="bounded" data-target="cache"/>
+
+  <rect class="label labelWork" x="525" y="414" width="278" height="34"/>
+  <circle class="badgeCircle badgeWork" cx="549" cy="431" r="13"/>
+  <text class="badgeText workText" x="549" y="436">3</text>
+  <text class="msg workText" x="573" y="436">start inner #2 (gate=2)</text>
+  <path class="work" d="M 495 468 L 1135 468" data-connector="bounded-remote-start" data-source="bounded" data-target="remote"/>
+
+  <rect class="label labelReturn" x="930" y="492" width="276" height="34"/>
+  <circle class="badgeCircle badgeReturn" cx="954" cy="509" r="13"/>
+  <text class="badgeText returnText" x="954" y="514">4</text>
+  <text class="msg returnText" x="978" y="514">emit sku-200 into queue(1)</text>
+  <path class="return" d="M 1135 548 L 495 548" data-connector="remote-bounded-buffer" data-source="remote" data-target="bounded"/>
+
+  <rect class="label labelAudit" x="920" y="570" width="300" height="34"/>
+  <circle class="badgeCircle badgeAudit" cx="944" cy="587" r="13"/>
+  <text class="badgeText auditText" x="944" y="592">5</text>
+  <text class="msg auditText" x="968" y="592">sku-201 suspends at boundary</text>
+  <path class="audit" d="M 1135 626 L 495 626" data-connector="remote-bounded-backpressure" data-source="remote" data-target="bounded"/>
+
+  <rect class="contract" x="92" y="670" width="1376" height="136"/>
+  <rect class="contractLabel" x="118" y="656" width="276" height="34"/>
+  <text class="contractText" x="256" y="678">bounded queue contract</text>
+  <text class="note" x="780" y="716" text-anchor="middle">CACHE is still first, so REMOTE_API values wait behind its queue.</text>
+  <text class="note" x="780" y="742" text-anchor="middle">At most 2 inners run; each inner can retain at most 1 pending value.</text>
+  <text class="note" x="780" y="768" text-anchor="middle">A failure keeps its exception; cancellation reaches every active child.</text>
+
+  <rect class="label labelCall" x="178" y="828" width="278" height="34"/>
+  <circle class="badgeCircle badgeCall" cx="202" cy="845" r="13"/>
+  <text class="badgeText callText" x="202" y="850">6</text>
+  <text class="msg callText" x="226" y="850">release CACHE inner</text>
+  <path class="call" d="M 160 882 L 495 882" data-connector="caller-bounded-release" data-source="caller" data-target="bounded"/>
+
+  <rect class="label labelReturn" x="570" y="828" width="300" height="34"/>
+  <circle class="badgeCircle badgeReturn" cx="594" cy="845" r="13"/>
+  <text class="badgeText returnText" x="594" y="850">7</text>
+  <text class="msg returnText" x="618" y="850">drain CACHE then REMOTE_API</text>
+  <path class="return" d="M 495 916 L 1410 916" data-connector="bounded-collector-ordered-output" data-source="bounded" data-target="collector"/>
+
+  <rect class="label labelReturn" x="1050" y="828" width="300" height="34"/>
+  <circle class="badgeCircle badgeReturn" cx="1074" cy="845" r="13"/>
+  <text class="badgeText returnText" x="1074" y="850">8</text>
+  <text class="msg returnText" x="1098" y="850">take(1) cancels all children</text>
+  <path class="return" d="M 1410 960 L 495 960" data-connector="collector-bounded-cancel" data-source="collector" data-target="bounded"/>
+
+  <rect x="92" y="974" width="1376" height="32" rx="12" fill="#ffffff" stroke="#ccd7da" stroke-width="2"/>
+  <text class="note" x="780" y="996" text-anchor="middle">Source order is preserved; bounded eager does not promise global ordering across independent compositions.</text>
+</svg>
