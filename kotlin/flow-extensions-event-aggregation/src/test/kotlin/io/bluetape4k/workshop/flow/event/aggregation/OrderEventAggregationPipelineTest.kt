@@ -12,11 +12,15 @@ import io.bluetape4k.junit5.coroutines.runSuspendTest
 import java.time.Instant
 import java.util.concurrent.CancellationException
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
@@ -39,6 +43,48 @@ class OrderEventAggregationPipelineTest {
             setOf("order-2"),
         )
         summaries.last().latestStatuses["order-2"] shouldBeEqualTo OrderStatus.SHIPPED
+    }
+
+    @Test
+    fun `count or time activity emits count boundaries and completion partial batch`() = runSuspendTest {
+        val summaries = pipeline.countOrTimeActivity(
+            events = sampleEvents().asFlow(),
+            maxSize = 2,
+            timeout = 1.seconds,
+        ).toList()
+
+        summaries.map { it.eventCount } shouldBeEqualTo listOf(2, 2, 1)
+    }
+
+    @Test
+    fun `count or time activity emits a partial batch after an idle timeout`() = runSuspendTest {
+        val events = flow {
+            emit(sampleEvents()[0])
+            kotlinx.coroutines.delay(10)
+            emit(sampleEvents()[1])
+            kotlinx.coroutines.delay(60)
+            emit(sampleEvents()[2])
+        }
+
+        val summaries = pipeline.countOrTimeActivity(events, maxSize = 3, timeout = 50.milliseconds).toList()
+
+        summaries.map { it.eventCount } shouldBeEqualTo listOf(2, 1)
+    }
+
+    @Test
+    fun `count or time activity locks the upstream idle timeout observation`() = runSuspendTest {
+        val events = flow {
+            emit(sampleEvents()[0])
+            kotlinx.coroutines.delay(40)
+            emit(sampleEvents()[1])
+            kotlinx.coroutines.delay(20)
+            emit(sampleEvents()[2])
+        }
+
+        val summaries = pipeline.countOrTimeActivity(events, maxSize = 3, timeout = 50.milliseconds).toList()
+
+        // bluetape4k-coroutines 1.12.1 re-registers the timeout after each receive.
+        summaries.map { it.eventCount } shouldBeEqualTo listOf(3)
     }
 
     @Test
@@ -214,6 +260,9 @@ class OrderEventAggregationPipelineTest {
     @Test
     fun `invalid pipeline parameters fail before collection`() = runSuspendTest {
         assertFailsWith<IllegalArgumentException> { pipeline.chunkedActivity(flowOf(), 0).toList() }
+        assertFailsWith<IllegalArgumentException> { pipeline.countOrTimeActivity(flowOf(), 0, 1.seconds) }
+        assertFailsWith<IllegalArgumentException> { pipeline.countOrTimeActivity(flowOf(), 1, Duration.ZERO) }
+        assertFailsWith<IllegalArgumentException> { pipeline.countOrTimeActivity(flowOf(), 1, Duration.INFINITE) }
         assertFailsWith<IllegalArgumentException> { pipeline.rollingActivity(flowOf(), size = 0, step = 1).toList() }
         assertFailsWith<IllegalArgumentException> { pipeline.rollingActivity(flowOf(), size = 2, step = 0).toList() }
         assertFailsWith<IllegalArgumentException> { pipeline.rollingActivity(flowOf(), size = 2, step = 3).toList() }
@@ -277,6 +326,18 @@ class OrderEventAggregationPipelineTest {
     @Test
     fun `upstream failure propagates through each aggregation path`() = runSuspendTest {
         val boom = IllegalStateException("upstream failed")
+        val emitted = mutableListOf<OrderActivitySummary>()
+
+        val countOrTimeFailure = assertFailsWith<IllegalStateException> {
+            pipeline.countOrTimeActivity(
+                failingEvents(boom),
+                maxSize = 3,
+                timeout = 1.seconds,
+            ).collect { emitted += it }
+        }
+
+        countOrTimeFailure.message shouldBeEqualTo boom.message
+        emitted.shouldHaveSize(0)
 
         assertFailsWith<IllegalStateException> { pipeline.chunkedActivity(failingEvents(boom), 2).toList() }
         assertFailsWith<IllegalStateException> { pipeline.rollingActivity(failingEvents(boom), 2, 1).toList() }
@@ -295,6 +356,10 @@ class OrderEventAggregationPipelineTest {
     @Test
     fun `cancellation exception is not wrapped by aggregation paths`() = runSuspendTest {
         val cancellation = CancellationException("collector stopped")
+
+        assertFailsWith<CancellationException> {
+            pipeline.countOrTimeActivity(cancelledEvents(cancellation), 2, 1.seconds).toList()
+        }
 
         assertFailsWith<CancellationException> { pipeline.chunkedActivity(cancelledEvents(cancellation), 2).toList() }
         assertFailsWith<CancellationException> { pipeline.groupedByOrder(cancelledEvents(cancellation)).toList() }

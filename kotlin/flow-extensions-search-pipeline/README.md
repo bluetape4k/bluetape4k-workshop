@@ -43,6 +43,20 @@ val results = SearchPipeline(adapter).search(
 )
 ```
 
+When the backend can remain idle longer than the user-facing budget, opt into a request-aware fallback:
+
+```kotlin
+val resilientResults = SearchPipeline(adapter).searchWithIdleFallback(
+    queries = queryText,
+    settings = settingsState,
+    sessionClosed = sessionClosed,
+    debounce = 150.milliseconds,
+    adapterTimeout = 500.milliseconds,
+) { request ->
+    SearchResult(request, emptyList(), source = "idle-fallback")
+}
+```
+
 `SearchPipeline` keeps the lifecycle rules in one stream:
 
 - `bufferingDebounce` groups rapid input and keeps the latest query in the burst.
@@ -67,7 +81,11 @@ The architecture is layered from input to pipeline to adapter/output. The sessio
 
 ![Sequence](../../docs/images/readme-diagrams/kotlin-flow-extensions-search-pipeline-readme-sequence-01.png)
 
+![Idle timeout fallback](../../docs/images/readme-diagrams/kotlin-flow-extensions-search-pipeline-readme-idle-fallback-01.png)
+
 The adapter call races the shared session stop signal. If the session closes first, the suspended adapter job is cancelled instead of merely suppressing a late result.
+
+`searchWithIdleFallback` keeps the same `flatMapLatest` supersession contract and wraps only the adapter call with `timeoutOrFallback`. A timely adapter result is returned unchanged; an idle timeout cancels the adapter and collects the fallback once. Adapter failures and `CancellationException` are still propagated.
 
 ## Why `flatMapLatest`, not `flatMapDrop`
 
@@ -86,6 +104,7 @@ This example still references those operators because the contrast is important:
 - Feature flags are normalized into an unmodifiable lowercase kebab-case set.
 - Result limits are bounded so a fake adapter cannot materialize unbounded output.
 - `CancellationException` is rethrown by the adapter so coroutine cancellation remains cooperative.
+- `searchWithIdleFallback` uses the fallback only for an idle timeout; it never turns an adapter failure or caller cancellation into a successful-looking response.
 - Redacted `toString()` output keeps `Flow<T>.log()` safe for learner-visible logs.
 
 ## Used Bluetape4k features
@@ -95,6 +114,7 @@ This example still references those operators because the contrast is important:
 | `bufferingDebounce` | Query burst handling | `SearchPipeline.search` | Keeps the latest query after fast typing |
 | `withLatestFrom` | Settings snapshot | `SearchPipeline.search` | Combines debounced input with current settings |
 | `takeUntil` | Session stop | `SearchPipeline.search` | Stops result emission on close |
+| `timeoutOrFallback` | Idle adapter budget | `SearchPipeline.searchWithIdleFallback` | Emits one request-aware fallback only after idle timeout |
 | `Flow<T>.log()` | Diagnostics | `SearchPipeline.search` | Logs lifecycle events without leaking redacted domain text |
 | Validation helpers | Domain model | `SearchQuery`, `SearchSettings` | Rejects blank, oversized, or malformed input early |
 
@@ -111,5 +131,6 @@ This example still references those operators because the contrast is important:
 - [bufferingDebounce](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/bufferingDebounce.kt)
 - [withLatestFrom](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/withLatestFrom.kt)
 - [takeUntil](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/takeUntil.kt)
+- [timeoutOrFallback](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/timeout.kt)
 - [Flow logging](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/logger.kt)
 - [flatMapDrop](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/flatMapDrop.kt)

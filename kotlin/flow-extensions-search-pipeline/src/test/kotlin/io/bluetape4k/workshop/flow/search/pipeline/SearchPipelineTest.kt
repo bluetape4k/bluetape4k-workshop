@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -76,6 +77,102 @@ class SearchPipelineTest {
         results shouldHaveSize 1
         adapter.requests shouldHaveSize 1
         adapter.requests.single().query.text shouldBeEqualTo "red-999"
+    }
+
+    @Test
+    fun `idle timeout returns a request-aware fallback`() = runSuspendTest {
+        val cancelled = AtomicBoolean(false)
+        val adapter = RecordingSearchAdapter(
+            delayByQuery = mapOf("red" to 100),
+            onCancel = { cancelled.set(true) },
+        )
+        val pipeline = SearchPipeline(adapter)
+
+        val results = pipeline.searchWithIdleFallback(
+            queries = flowOf("red"),
+            settings = flowOf(settings()),
+            sessionClosed = flowOf(),
+            debounce = 10.milliseconds,
+            adapterTimeout = 50.milliseconds,
+        ) { request ->
+            SearchResult(request, emptyList(), "idle-fallback")
+        }.toList()
+
+        results.single().source shouldBeEqualTo "idle-fallback"
+        results.single().request.query.text shouldBeEqualTo "red"
+        cancelled.get().shouldBeTrue()
+    }
+
+    @Test
+    fun `idle fallback leaves an adapter result unchanged when it is timely`() = runSuspendTest {
+        val adapter = RecordingSearchAdapter(delayByQuery = mapOf("red" to 20))
+        val pipeline = SearchPipeline(adapter)
+
+        val results = pipeline.searchWithIdleFallback(
+            queries = flowOf("red"),
+            settings = flowOf(settings()),
+            sessionClosed = flowOf(),
+            debounce = 10.milliseconds,
+            adapterTimeout = 50.milliseconds,
+        ) { request ->
+            SearchResult(request, emptyList(), "idle-fallback")
+        }.toList()
+
+        results.single().source shouldBeEqualTo "test-catalog"
+    }
+
+    @Test
+    fun `adapter failure is propagated instead of invoking idle fallback`() = runSuspendTest {
+        val fallbackCalls = AtomicInteger(0)
+        val boom = IllegalStateException("search failed for red")
+        val adapter = RecordingSearchAdapter(failForQueries = setOf("red"), failure = boom)
+        val pipeline = SearchPipeline(adapter)
+
+        val failure = assertFailsWith<IllegalStateException> {
+            pipeline.searchWithIdleFallback(
+                queries = flowOf("red"),
+                settings = flowOf(settings()),
+                sessionClosed = flowOf(),
+                debounce = 10.milliseconds,
+                adapterTimeout = 50.milliseconds,
+            ) { request ->
+                fallbackCalls.incrementAndGet()
+                SearchResult(request, emptyList(), "idle-fallback")
+            }.toList()
+        }
+
+        failure.message shouldBeEqualTo boom.message
+        fallbackCalls.get() shouldBeEqualTo 0
+    }
+
+    @Test
+    fun `collector cancellation cancels idle adapter without fallback`() = runSuspendTest {
+        val cancelled = AtomicBoolean(false)
+        val fallbackCalls = AtomicInteger(0)
+        val adapter = RecordingSearchAdapter(
+            delayByQuery = mapOf("red" to Long.MAX_VALUE),
+            onCancel = { cancelled.set(true) },
+        )
+        val pipeline = SearchPipeline(adapter)
+
+        val collection = async {
+            pipeline.searchWithIdleFallback(
+                queries = flowOf("red"),
+                settings = flowOf(settings()),
+                sessionClosed = flowOf(),
+                debounce = 10.milliseconds,
+                adapterTimeout = 1.seconds,
+            ) { request ->
+                fallbackCalls.incrementAndGet()
+                SearchResult(request, emptyList(), "idle-fallback")
+            }.toList()
+        }
+
+        delay(20)
+        collection.cancelAndJoin()
+
+        cancelled.get().shouldBeTrue()
+        fallbackCalls.get() shouldBeEqualTo 0
     }
 
     @Test
@@ -330,6 +427,30 @@ class SearchPipelineTest {
     }
 
     @Test
+    fun `idle timeout must be positive and finite`() = runSuspendTest {
+        val pipeline = SearchPipeline(RecordingSearchAdapter())
+
+        assertFailsWith<IllegalArgumentException> {
+            pipeline.searchWithIdleFallback(
+                flowOf("red"),
+                flowOf(settings()),
+                flowOf(),
+                10.milliseconds,
+                Duration.ZERO,
+            ) { request -> SearchResult(request, emptyList(), "idle-fallback") }
+        }
+        assertFailsWith<IllegalArgumentException> {
+            pipeline.searchWithIdleFallback(
+                flowOf("red"),
+                flowOf(settings()),
+                flowOf(),
+                10.milliseconds,
+                Duration.INFINITE,
+            ) { request -> SearchResult(request, emptyList(), "idle-fallback") }
+        }
+    }
+
+    @Test
     fun `regex looking query is treated as literal text`() = runSuspendTest {
         val adapter = RecordingSearchAdapter()
         val pipeline = SearchPipeline(adapter)
@@ -380,6 +501,7 @@ class SearchPipelineTest {
     private class RecordingSearchAdapter(
         private val delayByQuery: Map<String, Long> = emptyMap(),
         private val failForQueries: Set<String> = emptySet(),
+        private val failure: IllegalStateException? = null,
         private val failAfterCancelGate: CompletableDeferred<Unit>? = null,
         private val onCancel: (SearchRequest) -> Unit = {},
     ): SearchAdapter {
@@ -393,7 +515,7 @@ class SearchPipelineTest {
             try {
                 delayByQuery[request.query.text]?.let { delay(it) }
                 if (request.query.text in failForQueries) {
-                    throw IllegalStateException("search failed for ${request.query.text}")
+                    throw failure ?: IllegalStateException("search failed for ${request.query.text}")
                 }
 
                 val hits = catalog.asSequence()

@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1080" viewBox="0 0 1500 1080" role="img" aria-labelledby="title desc">
+  <title id="title">Count-or-Time Activity Contract</title>
+  <desc id="desc">Sequence showing count boundaries, partial batches after idle timeout, completion, upstream failure, and cancellation for bufferTimeout.</desc>
+  <defs>
+    <marker id="arrowCall" viewBox="0 0 10 10" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" data-role="sequence" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#4f86c6" stroke="#4f86c6" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
+    </marker>
+    <marker id="arrowWork" viewBox="0 0 10 10" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" data-role="sequence" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#6e8f4f" stroke="#6e8f4f" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
+    </marker>
+    <marker id="arrowAudit" viewBox="0 0 10 10" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" data-role="sequence" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#b5832f" stroke="#b5832f" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
+    </marker>
+    <marker id="arrowError" viewBox="0 0 10 10" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" data-role="sequence" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#c85c68" stroke="#c85c68" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
+    </marker>
+    <marker id="arrowReturn" viewBox="0 0 10 10" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="16" refX="9" refY="5" orient="auto" data-role="sequence" data-tip-direction="positive-x">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2b8f88" stroke="#2b8f88" stroke-dasharray="none" style="stroke-dasharray:none" stroke-width="0"/>
+    </marker>
+    <style>
+      .frame { fill: #fbfcf8; stroke: #40545d; stroke-width: 3; rx: 20; }
+      .title { font-family: "Architects Daughter", sans-serif; font-size: 40px; fill: #263238; }
+      .subtitle, .role, .msg, .note, .badgeText, .branchText { font-family: "Comic Mono", monospace; fill: #36464f; }
+      .subtitle { font-size: 16px; }
+      .participant { font-family: "Architects Daughter", sans-serif; font-size: 21px; fill: #1f3138; }
+      .role { font-size: 13px; fill: #546a73; }
+      .header { fill: #ffffff; stroke: #546e7a; stroke-width: 2; rx: 10; }
+      .lifeline { stroke: #9aaab1; stroke-width: 2; stroke-dasharray: 7 8; stroke-linecap: round; }
+      .activation { fill: #eef8f0; stroke: #6f8f77; stroke-width: 1.8; rx: 6; }
+      .activationAudit { fill: #fff7e8; stroke: #9b7d54; stroke-width: 1.8; rx: 6; }
+      .activationError { fill: #fff0f1; stroke: #c85c68; stroke-width: 1.8; rx: 6; }
+      .call, .work, .audit, .error, .return { fill: none; stroke-width: 3.1; stroke-linecap: round; stroke-linejoin: round; }
+      .call { stroke: #4f86c6; marker-end: url(#arrowCall); }
+      .work { stroke: #6e8f4f; marker-end: url(#arrowWork); }
+      .audit { stroke: #b5832f; marker-end: url(#arrowAudit); }
+      .error { stroke: #c85c68; marker-end: url(#arrowError); }
+      .return { stroke: #2b8f88; stroke-dasharray: 8 6; marker-end: url(#arrowReturn); }
+      .label, .branchLabel { fill: #ffffff; stroke-width: 1.6; rx: 17; }
+      .labelCall { stroke: #9cc6df; }
+      .labelWork { stroke: #b6c9a4; }
+      .labelAudit { stroke: #d0b477; }
+      .labelError { stroke: #e1a4aa; }
+      .labelReturn { stroke: #9bc9c4; }
+      .badgeCircle { fill: #fffefa; stroke-width: 1.6; }
+      .badgeCall { stroke: #4f86c6; }
+      .badgeWork { stroke: #6e8f4f; }
+      .badgeAudit { stroke: #b5832f; }
+      .badgeError { stroke: #c85c68; }
+      .badgeReturn { stroke: #2b8f88; }
+      .badgeText { font-size: 12px; font-weight: 700; text-anchor: middle; }
+      .callText { fill: #276b9d; }
+      .workText { fill: #55783f; }
+      .auditText { fill: #805d22; }
+      .errorText { fill: #a3424e; }
+      .returnText { fill: #217a74; }
+      .msg { font-size: 14px; font-weight: 600; }
+      .note { font-size: 13px; fill: #5b6f7a; }
+      .branch { fill: none; stroke: #9aaab1; stroke-width: 2; stroke-dasharray: 9 7; rx: 14; }
+      .branchLabel { stroke: #b6c3c7; }
+      .branchText { font-size: 14px; font-weight: 700; }
+      .divider { stroke: #c3cdd0; stroke-width: 1.5; stroke-dasharray: 6 6; }
+    </style>
+  </defs>
+
+  <rect class="frame" x="24" y="24" width="1452" height="1032"/>
+  <text class="title" x="750" y="78" text-anchor="middle">Count-or-Time Activity Contract</text>
+  <text class="subtitle" x="750" y="108" text-anchor="middle">bufferTimeout closes a non-empty batch at a count boundary, an observed idle timeout, or normal completion.</text>
+
+  <rect class="header" x="70" y="150" width="220" height="76"/>
+  <text class="participant" x="180" y="181" text-anchor="middle">Event Flow</text>
+  <text class="role" x="180" y="205" text-anchor="middle">domain events</text>
+  <rect class="header" x="390" y="150" width="250" height="76"/>
+  <text class="participant" x="515" y="181" text-anchor="middle">bufferTimeout</text>
+  <text class="role" x="515" y="205" text-anchor="middle">count/time boundary</text>
+  <rect class="header" x="740" y="150" width="240" height="76"/>
+  <text class="participant" x="860" y="181" text-anchor="middle">Activity Summary</text>
+  <text class="role" x="860" y="205" text-anchor="middle">projection</text>
+  <rect class="header" x="1080" y="150" width="300" height="76"/>
+  <text class="participant" x="1230" y="181" text-anchor="middle">Collector / Cancellation</text>
+  <text class="role" x="1230" y="205" text-anchor="middle">output and lifecycle</text>
+
+  <line class="lifeline" x1="180" y1="226" x2="180" y2="962"/>
+  <line class="lifeline" x1="515" y1="226" x2="515" y2="962"/>
+  <line class="lifeline" x1="860" y1="226" x2="860" y2="962"/>
+  <line class="lifeline" x1="1230" y1="226" x2="1230" y2="962"/>
+
+  <rect class="activation" x="506" y="300" width="18" height="590"/>
+  <rect class="activation" x="851" y="482" width="18" height="100"/>
+  <rect class="activationAudit" x="851" y="650" width="18" height="100"/>
+  <rect class="activationError" x="506" y="830" width="18" height="74"/>
+  <rect class="activation" x="1221" y="482" width="18" height="268"/>
+
+  <rect class="label labelCall" x="210" y="260" width="270" height="34"/>
+  <circle class="badgeCircle badgeCall" cx="234" cy="277" r="13"/>
+  <text class="badgeText callText" x="234" y="282">1</text>
+  <text class="msg callText" x="258" y="282">receive event 1</text>
+  <path class="call" d="M 180 314 L 515 314"/>
+
+  <rect class="label labelCall" x="210" y="350" width="270" height="34"/>
+  <circle class="badgeCircle badgeCall" cx="234" cy="367" r="13"/>
+  <text class="badgeText callText" x="234" y="372">2</text>
+  <text class="msg callText" x="258" y="372">receive event 2</text>
+  <path class="call" d="M 180 404 L 515 404"/>
+
+  <rect class="branch" x="88" y="440" width="1324" height="340"/>
+  <rect class="branchLabel" x="112" y="426" width="244" height="34"/>
+  <text class="branchText" x="234" y="448" text-anchor="middle">boundary outcome</text>
+  <line class="divider" x1="104" y1="620" x2="1396" y2="620"/>
+
+  <rect class="label labelWork" x="545" y="440" width="326" height="34"/>
+  <circle class="badgeCircle badgeWork" cx="569" cy="457" r="13"/>
+  <text class="badgeText workText" x="569" y="462">3</text>
+  <text class="msg workText" x="593" y="462">count boundary emits full batch</text>
+  <path class="work" d="M 515 494 L 860 494"/>
+  <path class="return" d="M 860 530 L 1230 530"/>
+
+  <rect class="label labelCall" x="210" y="540" width="270" height="34"/>
+  <circle class="badgeCircle badgeCall" cx="234" cy="557" r="13"/>
+  <text class="badgeText callText" x="234" y="562">4</text>
+  <text class="msg callText" x="258" y="562">receive event 3</text>
+  <path class="call" d="M 180 594 L 515 594"/>
+
+  <rect class="label labelAudit" x="545" y="640" width="356" height="34"/>
+  <circle class="badgeCircle badgeAudit" cx="569" cy="657" r="13"/>
+  <text class="badgeText auditText" x="569" y="662">5</text>
+  <text class="msg auditText" x="593" y="662">idle timeout emits partial batch</text>
+  <path class="audit" d="M 515 694 L 860 694"/>
+  <path class="return" d="M 860 730 L 1230 730"/>
+
+  <rect class="label labelReturn" x="915" y="748" width="340" height="34"/>
+  <circle class="badgeCircle badgeReturn" cx="939" cy="765" r="13"/>
+  <text class="badgeText returnText" x="939" y="770">6</text>
+  <text class="msg returnText" x="963" y="770">normal completion emits tail</text>
+
+  <rect class="branch" x="88" y="808" width="1324" height="112"/>
+  <rect class="branchLabel" x="112" y="794" width="250" height="34"/>
+  <text class="branchText" x="237" y="816" text-anchor="middle">terminal signal</text>
+  <rect class="label labelError" x="545" y="834" width="386" height="34"/>
+  <circle class="badgeCircle badgeError" cx="569" cy="851" r="13"/>
+  <text class="badgeText errorText" x="569" y="856">7</text>
+  <text class="msg errorText" x="593" y="856">failure discards pending batch</text>
+  <path class="error" d="M 180 888 L 515 888"/>
+  <path class="return" d="M 1230 924 L 515 924"/>
+
+  <rect x="96" y="972" width="1308" height="48" rx="12" fill="#ffffff" stroke="#ccd7da" stroke-width="2"/>
+  <text class="note" x="750" y="1002" text-anchor="middle">Cancellation remains CancellationException; only a normal completion flushes the final partial batch.</text>
+</svg>

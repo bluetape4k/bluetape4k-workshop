@@ -1,0 +1,33 @@
+{
+  "kind": "sequence",
+  "source": {
+    "question": "How does an order event batch close at count, idle timeout, completion, failure, or cancellation?",
+    "revision": "acbe8e88bd23c95465e35c001ed34ea4f33b00e3",
+    "paths": [
+      "kotlin/flow-extensions-event-aggregation/src/main/kotlin/io/bluetape4k/workshop/flow/event/aggregation/OrderEventAggregationPipeline.kt",
+      "kotlin/flow-extensions-event-aggregation/src/test/kotlin/io/bluetape4k/workshop/flow/event/aggregation/OrderEventAggregationPipelineTest.kt",
+      "kotlin/flow-extensions-event-aggregation/README.md",
+      "kotlin/flow-extensions-event-aggregation/README.ko.md"
+    ]
+  },
+  "nodes": [
+    {"id": "event-flow", "label": "Event Flow", "source": "OrderEventAggregationPipeline.kt"},
+    {"id": "buffer-timeout", "label": "bufferTimeout", "source": "OrderEventAggregationPipeline.kt"},
+    {"id": "full-batch", "label": "Count boundary full batch", "source": "OrderEventAggregationPipelineTest.kt"},
+    {"id": "partial-batch", "label": "Idle timeout partial batch", "source": "OrderEventAggregationPipelineTest.kt"},
+    {"id": "tail-batch", "label": "Normal completion tail", "source": "OrderEventAggregationPipelineTest.kt"},
+    {"id": "terminal-signal", "label": "Failure or cancellation", "source": "OrderEventAggregationPipelineTest.kt"},
+    {"id": "collector", "label": "Collector", "source": "README.md"}
+  ],
+  "edges": [
+    {"id": "event-buffer-1", "from": "event-flow", "to": "buffer-timeout", "kind": "flow", "source": "OrderEventAggregationPipeline.kt"},
+    {"id": "event-buffer-2", "from": "event-flow", "to": "buffer-timeout", "kind": "flow", "source": "OrderEventAggregationPipeline.kt"},
+    {"id": "buffer-full", "from": "buffer-timeout", "to": "full-batch", "kind": "boundary", "source": "OrderEventAggregationPipelineTest.kt"},
+    {"id": "buffer-partial", "from": "buffer-timeout", "to": "partial-batch", "kind": "timeout", "source": "OrderEventAggregationPipelineTest.kt"},
+    {"id": "buffer-tail", "from": "buffer-timeout", "to": "tail-batch", "kind": "completion", "source": "OrderEventAggregationPipelineTest.kt"},
+    {"id": "buffer-terminal", "from": "event-flow", "to": "terminal-signal", "kind": "failure", "source": "OrderEventAggregationPipelineTest.kt"},
+    {"id": "terminal-collector", "from": "terminal-signal", "to": "collector", "kind": "cancellation", "source": "OrderEventAggregationPipeline.kt"}
+  ],
+  "behavior": {"branches": 3, "loops": 0},
+  "repairs": []
+}

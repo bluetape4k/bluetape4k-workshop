@@ -43,6 +43,20 @@ val results = SearchPipeline(adapter).search(
 )
 ```
 
+Backend가 user-facing budget보다 오래 idle할 수 있으면 request-aware fallback을 선택할 수 있습니다.
+
+```kotlin
+val resilientResults = SearchPipeline(adapter).searchWithIdleFallback(
+    queries = queryText,
+    settings = settingsState,
+    sessionClosed = sessionClosed,
+    debounce = 150.milliseconds,
+    adapterTimeout = 500.milliseconds,
+) { request ->
+    SearchResult(request, emptyList(), source = "idle-fallback")
+}
+```
+
 `SearchPipeline`은 lifecycle 규칙을 하나의 stream에 모읍니다.
 
 - `bufferingDebounce`는 빠른 입력을 burst로 묶고 마지막 검색어를 남깁니다.
@@ -67,7 +81,11 @@ Architecture는 input, pipeline, adapter/output 순서로 layer를 나눴습니�
 
 ![Sequence](../../docs/images/readme-diagrams/kotlin-flow-extensions-search-pipeline-readme-sequence-01.png)
 
+![Idle timeout fallback](../../docs/images/readme-diagrams/kotlin-flow-extensions-search-pipeline-readme-idle-fallback-01.ko.png)
+
 Adapter 호출은 공유된 세션 종료 신호와 race합니다. 세션이 먼저 닫히면 늦게 도착한 결과만 버리는 것이 아니라, suspend 중인 adapter job 자체를 취소합니다.
+
+`searchWithIdleFallback`은 기존 `flatMapLatest` supersession contract를 유지하고 adapter 호출에만 `timeoutOrFallback`을 적용합니다. Adapter가 제때 결과를 내면 그대로 반환하고, idle timeout이면 adapter를 취소한 뒤 fallback을 한 번만 collect합니다. Adapter failure와 `CancellationException`은 그대로 전파합니다.
 
 ## 왜 `flatMapLatest`이고 `flatMapDrop`이 아닌가
 
@@ -86,6 +104,7 @@ Adapter 호출은 공유된 세션 종료 신호와 race합니다. 세션이 먼
 - Feature flag는 lowercase kebab-case set으로 정규화하고 변경 불가능하게 보관합니다.
 - Result limit을 제한해 fake adapter가 무제한 결과를 materialize하지 않게 합니다.
 - Adapter는 `CancellationException`을 다시 던져 coroutine cancellation을 cooperative하게 유지합니다.
+- `searchWithIdleFallback`은 idle timeout에서만 fallback을 사용하며, adapter failure나 caller cancellation을 성공처럼 보이는 응답으로 바꾸지 않습니다.
 - Redacted `toString()` 덕분에 학습자가 보는 `Flow<T>.log()` 출력에도 민감한 값이 남지 않습니다.
 
 ## 사용한 Bluetape4k 기능
@@ -95,6 +114,7 @@ Adapter 호출은 공유된 세션 종료 신호와 race합니다. 세션이 먼
 | `bufferingDebounce` | Query burst 처리 | `SearchPipeline.search` | 빠른 타이핑 뒤 최신 검색어만 남김 |
 | `withLatestFrom` | Settings snapshot | `SearchPipeline.search` | Debounced input과 현재 settings를 결합 |
 | `takeUntil` | Session stop | `SearchPipeline.search` | 세션 종료 시 result emission 중단 |
+| `timeoutOrFallback` | Idle adapter budget | `SearchPipeline.searchWithIdleFallback` | Idle timeout 이후 request-aware fallback을 한 번 emit |
 | `Flow<T>.log()` | Diagnostics | `SearchPipeline.search` | Redacted domain text로 lifecycle event 기록 |
 | Validation helpers | Domain model | `SearchQuery`, `SearchSettings` | Blank, oversized, malformed input을 초기에 거부 |
 
@@ -111,5 +131,6 @@ Adapter 호출은 공유된 세션 종료 신호와 race합니다. 세션이 먼
 - [bufferingDebounce](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/bufferingDebounce.kt)
 - [withLatestFrom](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/withLatestFrom.kt)
 - [takeUntil](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/takeUntil.kt)
+- [timeoutOrFallback](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/timeout.kt)
 - [Flow logging](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/logger.kt)
 - [flatMapDrop](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/flatMapDrop.kt)
