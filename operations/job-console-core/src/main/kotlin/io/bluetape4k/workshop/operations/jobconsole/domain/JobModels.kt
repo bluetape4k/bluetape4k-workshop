@@ -37,7 +37,11 @@ enum class JobProblemCode(
     @get:JsonValue val wireValue: String,
 ) {
     VALIDATION_FAILED("validation_failed"),
+    INVALID_IDEMPOTENCY_REQUEST("invalid_idempotency_request"),
     IDEMPOTENCY_KEY_REUSED("idempotency_key_reused"),
+    IDEMPOTENCY_IN_FLIGHT("idempotency_in_flight"),
+    IDEMPOTENCY_WAITERS_EXCEEDED("idempotency_waiters_exceeded"),
+    IDEMPOTENCY_SNAPSHOT_REJECTED("idempotency_snapshot_rejected"),
     JOB_NOT_FOUND("job_not_found"),
     SCOPE_DENIED("scope_denied"),
     INVALID_TRANSITION("invalid_transition"),
