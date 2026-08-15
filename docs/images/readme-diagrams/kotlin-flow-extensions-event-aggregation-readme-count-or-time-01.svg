@@ -94,13 +94,13 @@
   <circle class="badgeCircle badgeCall" cx="234" cy="277" r="13"/>
   <text class="badgeText callText" x="234" y="282">1</text>
   <text class="msg callText" x="258" y="282">receive event 1</text>
-  <path class="call" d="M 180 314 L 515 314"/>
+  <path class="call" d="M 180 314 L 515 314" data-connector="events-buffer-1" data-source="events" data-target="bufferTimeout"/>
 
   <rect class="label labelCall" x="210" y="350" width="270" height="34"/>
   <circle class="badgeCircle badgeCall" cx="234" cy="367" r="13"/>
   <text class="badgeText callText" x="234" y="372">2</text>
   <text class="msg callText" x="258" y="372">receive event 2</text>
-  <path class="call" d="M 180 404 L 515 404"/>
+  <path class="call" d="M 180 404 L 515 404" data-connector="events-buffer-2" data-source="events" data-target="bufferTimeout"/>
 
   <rect class="branch" x="88" y="440" width="1324" height="340"/>
   <rect class="branchLabel" x="112" y="426" width="244" height="34"/>
@@ -111,21 +111,21 @@
   <circle class="badgeCircle badgeWork" cx="569" cy="457" r="13"/>
   <text class="badgeText workText" x="569" y="462">3</text>
   <text class="msg workText" x="593" y="462">count boundary emits full batch</text>
-  <path class="work" d="M 515 494 L 860 494"/>
-  <path class="return" d="M 860 530 L 1230 530"/>
+  <path class="work" d="M 515 494 L 860 494" data-connector="buffer-summary-full" data-source="bufferTimeout" data-target="summary"/>
+  <path class="return" d="M 860 530 L 1230 530" data-connector="summary-collector-full" data-source="summary" data-target="collector"/>
 
   <rect class="label labelCall" x="210" y="540" width="270" height="34"/>
   <circle class="badgeCircle badgeCall" cx="234" cy="557" r="13"/>
   <text class="badgeText callText" x="234" y="562">4</text>
   <text class="msg callText" x="258" y="562">receive event 3</text>
-  <path class="call" d="M 180 594 L 515 594"/>
+  <path class="call" d="M 180 594 L 515 594" data-connector="events-buffer-3" data-source="events" data-target="bufferTimeout"/>
 
   <rect class="label labelAudit" x="545" y="640" width="356" height="34"/>
   <circle class="badgeCircle badgeAudit" cx="569" cy="657" r="13"/>
   <text class="badgeText auditText" x="569" y="662">5</text>
   <text class="msg auditText" x="593" y="662">idle timeout emits partial batch</text>
-  <path class="audit" d="M 515 694 L 860 694"/>
-  <path class="return" d="M 860 730 L 1230 730"/>
+  <path class="audit" d="M 515 694 L 860 694" data-connector="buffer-summary-partial" data-source="bufferTimeout" data-target="summary"/>
+  <path class="return" d="M 860 730 L 1230 730" data-connector="summary-collector-partial" data-source="summary" data-target="collector"/>
 
   <rect class="label labelReturn" x="915" y="748" width="340" height="34"/>
   <circle class="badgeCircle badgeReturn" cx="939" cy="765" r="13"/>
@@ -139,8 +139,8 @@
   <circle class="badgeCircle badgeError" cx="569" cy="851" r="13"/>
   <text class="badgeText errorText" x="569" y="856">7</text>
   <text class="msg errorText" x="593" y="856">failure discards pending batch</text>
-  <path class="error" d="M 180 888 L 515 888"/>
-  <path class="return" d="M 1230 924 L 515 924"/>
+  <path class="error" d="M 180 888 L 515 888" data-connector="events-buffer-error" data-source="events" data-target="bufferTimeout"/>
+  <path class="return" d="M 1230 924 L 515 924" data-connector="collector-buffer-cancel" data-source="collector" data-target="bufferTimeout"/>
 
   <rect x="96" y="972" width="1308" height="48" rx="12" fill="#ffffff" stroke="#ccd7da" stroke-width="2"/>
   <text class="note" x="750" y="1002" text-anchor="middle">Cancellation remains CancellationException; only a normal completion flushes the final partial batch.</text>
