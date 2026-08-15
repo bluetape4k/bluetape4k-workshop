@@ -27,7 +27,10 @@ class JobConsoleSpringConfiguration {
     fun jobRepository(dataSource: DataSource): JobRepository {
         JobMigrationRunner(
             dataSource,
-            listOf(JobMigration.classpath("001", "db/job-console/V001__job_console.sql")),
+            listOf(
+                JobMigration.classpath("001", "db/job-console/V001__job_console.sql"),
+                JobMigration.classpath("002", "db/job-console/V002__bounded_wait_http_idempotency.sql"),
+            ),
             advisoryLockKey = 520_001L,
         ).migrate()
         return JobRepository(dataSource)
