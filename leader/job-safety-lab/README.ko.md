@@ -207,6 +207,45 @@ broker message order, image tag, pod start time은 fencing token이 아닙니다
 - timeline code와 rejection reason은 low-cardinality입니다. operation ID와 tenant ID를 metric label로 넣지 마십시오.
 - Actuator health는 공개할 수 있지만 상세 Redis/PostgreSQL 오류와 credential은 응답에 노출하지 않습니다.
 
+## Observation과 tag 정책
+
+Redis leader와 fencing 실행 경계는 Leader 0.5.0의
+`MicrometerObservationLeaderAopMetricsRecorder`와
+`MicrometerObservationLeaderElectionListener`에 연결되어 있습니다. coordinator는
+leader acquire, fence로 보호되는 실행, release event를 기록하지만 fencing과
+failover 판단은 변경하지 않습니다.
+
+기록하는 lifecycle observation은 다음과 같습니다.
+
+- `leader.aop.acquire`: `outcome=acquired|skipped`
+- `leader.aop.execution`: `outcome=success|error|cancelled`
+- `leader.election.event`: `event=elected|revoked|skipped`
+
+기본 `LeaderObservationOptions`는 `lock.name`과 `leader.id`를 12자리 lowercase
+SHA-256 prefix로 hash하고 exception detail은 비활성화합니다.
+`JobRunCoordinator`는 job name으로 lock name을 만들지만 sanitizer 입력으로만
+사용합니다. raw job, tenant, operation, fencing-owner 식별자는 observation tag로
+내보내지 않습니다. hash는 raw 값을 숨기지만 서로 다른 값의 개수까지 줄이지
+않으므로 series 개수를 엄격하게 제한해야 하면 `REDACT` 또는 명시적인
+allowlist를 사용합니다.
+
+```kotlin
+@Bean
+fun leaderObservationOptions() = LeaderObservationOptions(
+    includeLockName = true,
+    includeLeaderId = true,
+    tagOptions = LeaderMetricTagOptions(
+        lockName = LeaderMetricTagRule(mode = LeaderMetricTagMode.HASH, hashLength = 12),
+        leaderId = LeaderMetricTagRule(mode = LeaderMetricTagMode.REDACT),
+    ),
+)
+```
+
+`bluetape4k-leader-spring-boot`를 포함한 애플리케이션은 이 lab의 수동
+observation bean을 제거하거나 override한 뒤 observation auto-configuration을
+사용할 수 있습니다. 이 lab은 Redis leader와 PostgreSQL fencing 경계를 명확히
+보여주기 위해 recorder와 listener를 수동으로 연결합니다.
+
 ## 테스트
 
 ```bash
@@ -219,6 +258,7 @@ broker message order, image tag, pod start time은 fencing token이 아닙니다
 
 | Proof | Test |
 | --- | --- |
+| Leader 0.5.0 lifecycle observation과 sanitized identifier | `JobRunCoordinatorTest` |
 | Java 25 virtual thread와 안전 기본값 | `JobSafetyRuntimeContractTest`, `JobSafetyPropertiesTest` |
 | opaque leader token 분리 | `RedisLeaderElectionAdapterTest` |
 | Lua token 단조 증가, renew/release owner binding, script flush | `RedisJobFencingLeaseIntegrationTest` |

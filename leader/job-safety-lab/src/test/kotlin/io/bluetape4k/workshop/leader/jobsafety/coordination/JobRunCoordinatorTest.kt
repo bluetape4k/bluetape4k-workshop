@@ -1,6 +1,14 @@
 package io.bluetape4k.workshop.leader.jobsafety.coordination
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.leader.LeaderElectionListener
+import io.bluetape4k.leader.metrics.LeaderAopMetricsRecorder
+import io.bluetape4k.leader.micrometer.LeaderObservationOptions
+import io.bluetape4k.leader.micrometer.MicrometerObservationLeaderAopMetricsRecorder
+import io.bluetape4k.leader.micrometer.MicrometerObservationLeaderElectionListener
+import io.bluetape4k.leader.micrometer.OBSERVATION_LEADER_AOP_EXECUTION
+import io.bluetape4k.leader.micrometer.OBSERVATION_TAG_OUTCOME
 import io.bluetape4k.workshop.leader.jobsafety.domain.ConflictKey
 import io.bluetape4k.workshop.leader.jobsafety.domain.ExecutionContractVersion
 import io.bluetape4k.workshop.leader.jobsafety.domain.FencingOwnerId
@@ -16,10 +24,15 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.RegionId
 import io.bluetape4k.workshop.leader.jobsafety.domain.TenantId
 import io.bluetape4k.workshop.leader.jobsafety.support.RecordingFencingLease
 import io.bluetape4k.workshop.leader.jobsafety.support.RecordingLeaderElection
+import io.micrometer.observation.Observation
+import io.micrometer.observation.ObservationHandler
+import io.micrometer.observation.ObservationRegistry
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.time.Duration
 import java.time.YearMonth
+import java.util.concurrent.CancellationException
+import java.util.concurrent.CopyOnWriteArrayList
 
 internal class JobRunCoordinatorTest {
     @Test
@@ -125,17 +138,60 @@ internal class JobRunCoordinatorTest {
         }
     }
 
+    @Test
+    fun `success error and cancellation produce lifecycle observations without raw identifiers`() {
+        val handler = CollectingObservationHandler()
+        val registry = ObservationRegistry.create().also { it.observationConfig().observationHandler(handler) }
+        val recorder = MicrometerObservationLeaderAopMetricsRecorder(
+            registry = registry,
+            options = LeaderObservationOptions(includeLockName = true, includeLeaderId = true),
+        )
+        val listener = MicrometerObservationLeaderElectionListener(registry)
+
+        val success = coordinator(mutableListOf(), recorder = recorder, listener = listener)
+        success.run(request()) { JobMutation.Committed }
+        handler.executionOutcomes() shouldBeEqualTo listOf("success")
+
+        val failure = coordinator(mutableListOf(), recorder = recorder, listener = listener)
+        failure.run(request()) { error("domain failed") }
+        handler.executionOutcomes() shouldBeEqualTo listOf("success", "error")
+
+        val cancelled = coordinator(mutableListOf(), recorder = recorder, listener = listener)
+        assertFailsWith<CancellationException> {
+            cancelled.run(request()) { throw CancellationException("cancelled") }
+        }
+        handler.executionOutcomes() shouldBeEqualTo listOf("success", "error", "cancelled")
+
+        val backendFailure = coordinator(
+            mutableListOf(),
+            fenceOutcome = RecordingFencingLease.Outcome.BACKEND_FAILURE,
+            recorder = recorder,
+            listener = listener,
+        )
+        backendFailure.run(request()) { error("must not execute") }
+            .state shouldBeEqualTo JobExecutionState.FAILED
+        handler.executionOutcomes() shouldBeEqualTo listOf("success", "error", "cancelled", "error")
+
+        val execution = handler.stopped.last { it.name == OBSERVATION_LEADER_AOP_EXECUTION }
+        execution.high["lock.name"] shouldBeEqualTo "redacted-lock"
+        execution.high["leader.id"] shouldBeEqualTo "redacted-leader"
+    }
+
     private fun coordinator(
         events: MutableList<String>,
         leaderAcquired: Boolean = true,
         leaderReleaseFailure: Boolean = false,
         fenceOutcome: RecordingFencingLease.Outcome = RecordingFencingLease.Outcome.ACQUIRED,
         fenceReleaseFailure: Boolean = false,
+        recorder: LeaderAopMetricsRecorder = LeaderAopMetricsRecorder.NoOp,
+        listener: LeaderElectionListener = NoOpLeaderElectionListener,
     ): JobRunCoordinator =
         JobRunCoordinator(
             leaderElection = RecordingLeaderElection(events, leaderAcquired, leaderReleaseFailure),
             fencingLease = RecordingFencingLease(events, fenceOutcome, fenceReleaseFailure),
             fencingTtl = Duration.ofSeconds(5),
+            observationRecorder = recorder,
+            observationListener = listener,
         )
 
     private fun request(): JobRunRequest =
@@ -152,4 +208,30 @@ internal class JobRunCoordinatorTest {
             operationId = OperationId("operation-1"),
             nextValue = 100L,
         )
+
+    private object NoOpLeaderElectionListener : LeaderElectionListener
+
+    private class CollectingObservationHandler : ObservationHandler<Observation.Context> {
+        val stopped = CopyOnWriteArrayList<Snapshot>()
+
+        override fun supportsContext(context: Observation.Context): Boolean = true
+
+        override fun onStop(context: Observation.Context) {
+            stopped += Snapshot(
+                name = context.name.orEmpty(),
+                low = context.lowCardinalityKeyValues.associate { it.key to it.value },
+                high = context.highCardinalityKeyValues.associate { it.key to it.value },
+            )
+        }
+
+        fun executionOutcomes(): List<String> = stopped
+            .filter { it.name == OBSERVATION_LEADER_AOP_EXECUTION }
+            .map { it.low.getValue(OBSERVATION_TAG_OUTCOME) }
+    }
+
+    private data class Snapshot(
+        val name: String,
+        val low: Map<String, String>,
+        val high: Map<String, String>,
+    )
 }

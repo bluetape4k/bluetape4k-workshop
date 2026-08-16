@@ -92,6 +92,49 @@ decorator meters such as:
 - `shedlock.leader.duration`
 - `shedlock.leader.active`
 
+## Observation and tag policy
+
+This module wires `LeaderObservationOptions`,
+`MicrometerObservationLeaderAopMetricsRecorder`, and
+`MicrometerObservationLeaderElectionListener` explicitly because the
+Kubernetes-specific coordinator is created in this module. The real elector
+decorator receives the same `tagOptions`, so library meters and workshop meters
+share one sanitization policy.
+
+The lifecycle observations are:
+
+- `leader.aop.acquire` with `outcome=acquired|skipped`;
+- `leader.aop.execution` with `outcome=success|error|cancelled`;
+- `leader.election.event` with `event=elected|revoked|skipped`.
+
+The default policy hashes `lock.name` and `leader.id` to a 12-character
+lowercase SHA-256 prefix and allowlists the stable workshop outcomes. Namespace
+and other unknown values are redacted. Hashing prevents raw identifiers from
+being exported but does not reduce the number of distinct values; use `REDACT`
+or a small `allowList` when a strict series budget matters. A consuming
+application can replace the default bean with an explicit policy:
+
+```kotlin
+@Bean
+fun leaderObservationOptions() = LeaderObservationOptions(
+    includeLockName = true,
+    includeLeaderId = true,
+    tagOptions = LeaderMetricTagOptions(
+        lockName = LeaderMetricTagRule(mode = LeaderMetricTagMode.HASH, hashLength = 12),
+        leaderId = LeaderMetricTagRule(mode = LeaderMetricTagMode.REDACT),
+        defaultRule = LeaderMetricTagRule(
+            mode = LeaderMetricTagMode.RAW,
+            allowList = setOf("success", "failure"),
+        ),
+    ),
+)
+```
+
+Applications that include `bluetape4k-leader-spring-boot` can use its
+observation auto-configuration after removing or overriding this module's
+manual observation beans. This workshop keeps the wiring manual so the
+backend-specific coordinator and its tag boundary remain visible.
+
 ## Run Locally
 
 ```bash
@@ -172,6 +215,7 @@ the current lease expires.
 | `K8sLeaseMicrometerPropertiesTest` | Property defaults, validation, and conversion to `KubernetesLeaseOptions`. |
 | `K8sLeaseMetricsTest` | Stable meter names, tags, counters, timer, and active gauge reset. |
 | `K8sLeaseGuardedTaskTest` | Elected, skipped, and task-failure paths without Kubernetes. |
+| `K8sLeaseGuardedTaskObservationTest` | Acquire, success, error, cancellation, and sanitized observation tags. |
 | `K8sLeaseMicrometerContextTest` | Default Spring context uses the disabled coordinator and creates no `KubernetesClient`. |
 
 ## Production Boundaries

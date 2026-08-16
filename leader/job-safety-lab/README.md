@@ -201,6 +201,45 @@ Commands must preserve `OperationId`, `ConflictKey`, membership revision, region
 - Timeline codes and rejection reasons are low-cardinality. Never put operation or tenant IDs in metric labels.
 - Actuator health may be exposed, but detailed Redis/PostgreSQL errors and credentials must remain private.
 
+## Observation and tag policy
+
+The Redis leader and fenced execution path is wired to Leader 0.5.0's
+`MicrometerObservationLeaderAopMetricsRecorder` and
+`MicrometerObservationLeaderElectionListener`. The coordinator records the
+leader acquire boundary, fence-protected execution, and release event without
+changing the fencing or failover decisions.
+
+The lifecycle observations are:
+
+- `leader.aop.acquire` with `outcome=acquired|skipped`;
+- `leader.aop.execution` with `outcome=success|error|cancelled`;
+- `leader.election.event` with `event=elected|revoked|skipped`.
+
+The default `LeaderObservationOptions` hashes `lock.name` and `leader.id` to a
+12-character lowercase SHA-256 prefix and keeps exception details disabled.
+`JobRunCoordinator` derives the lock name from the job name only as an input to
+the sanitizer; raw job, tenant, operation, and fencing-owner identifiers are
+never exported as observation tags. Hashing hides the raw value but preserves
+the number of distinct values, so a strict series budget should use `REDACT` or
+an explicit allowlist:
+
+```kotlin
+@Bean
+fun leaderObservationOptions() = LeaderObservationOptions(
+    includeLockName = true,
+    includeLeaderId = true,
+    tagOptions = LeaderMetricTagOptions(
+        lockName = LeaderMetricTagRule(mode = LeaderMetricTagMode.HASH, hashLength = 12),
+        leaderId = LeaderMetricTagRule(mode = LeaderMetricTagMode.REDACT),
+    ),
+)
+```
+
+Applications that include `bluetape4k-leader-spring-boot` can use its
+observation auto-configuration after removing or overriding this lab's manual
+observation beans. This lab keeps the recorder and listener manual so the Redis
+leader and PostgreSQL fencing boundary remains explicit.
+
 ## Tests
 
 ```bash
@@ -213,6 +252,7 @@ Commands must preserve `OperationId`, `ConflictKey`, membership revision, region
 
 | Proof | Tests |
 | --- | --- |
+| Leader 0.5.0 lifecycle observations and sanitized identifiers | `JobRunCoordinatorTest` |
 | Java 25 virtual threads and safe defaults | `JobSafetyRuntimeContractTest`, `JobSafetyPropertiesTest` |
 | Opaque leader token separation | `RedisLeaderElectionAdapterTest` |
 | Monotonic Lua tokens, owner-bound renew/release, script flush | `RedisJobFencingLeaseIntegrationTest` |

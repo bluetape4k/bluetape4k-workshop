@@ -1,5 +1,10 @@
 package io.bluetape4k.workshop.leader.k8slease.job
 
+import io.bluetape4k.leader.LeaderElectionListener
+import io.bluetape4k.leader.identity.LeaderIdSource
+import io.bluetape4k.leader.metrics.LeaderAopMetricsContext
+import io.bluetape4k.leader.metrics.LeaderAopMetricsRecorder
+import io.bluetape4k.leader.metrics.SkipReason
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
@@ -25,6 +30,8 @@ class K8sLeaseGuardedTask(
     private val coordinator: LeaderCoordinator,
     private val properties: K8sLeaseMicrometerProperties,
     private val metrics: K8sLeaseMetrics,
+    private val observationRecorder: LeaderAopMetricsRecorder = LeaderAopMetricsRecorder.NoOp,
+    private val observationListener: LeaderElectionListener = NoOpLeaderElectionListener,
 ) {
     val executionCount: AtomicInteger = AtomicInteger()
     internal var failWork: Boolean = false
@@ -52,9 +59,24 @@ class K8sLeaseGuardedTask(
         val tags = LeaseMetricTags(properties.leaseName, properties.namespace)
         metrics.recordGuardAttempt(tags)
         val started = TimeSource.Monotonic.markNow()
+        val leaderOptions = properties.toKubernetesLeaseOptions().leaderOptions
+        observe { observationRecorder.onLockAttempt(properties.leaseName, leaderOptions) }
+        val acquireStarted = TimeSource.Monotonic.markNow()
 
         return try {
             val report = coordinator.runIfLeader(properties.leaseName) {
+                val context = LeaderAopMetricsContext.Identified(properties.identity, LeaderIdSource.PROPERTY)
+                observe { observationListener.onElected(properties.leaseName) }
+                observe {
+                    observationRecorder.onLockAcquired(
+                        properties.leaseName,
+                        leaderOptions,
+                        acquireStarted.elapsedNow(),
+                        context,
+                    )
+                }
+                observe { observationRecorder.onTaskStarted(properties.leaseName, context) }
+                val executionStarted = TimeSource.Monotonic.markNow()
                 metrics.markActive(tags)
                 metrics.recordRenewAttempt(tags)
                 try {
@@ -62,21 +84,40 @@ class K8sLeaseGuardedTask(
                     check(!failWork) { "Simulated workshop task failure" }
                     val count = executionCount.incrementAndGet()
                     metrics.recordTask(tags, "success", started.elapsedNow())
+                    observe {
+                        observationRecorder.onTaskFinished(properties.leaseName, executionStarted.elapsedNow(), context)
+                    }
                     log.info { "Kubernetes Lease guarded task executed. lease=${properties.leaseName}, count=$count" }
                     LeaderTaskReport(executed = true, reason = "elected", executionCount = count)
                 } catch (e: CancellationException) {
+                    observe {
+                        observationRecorder.onTaskFailed(properties.leaseName, executionStarted.elapsedNow(), e, context)
+                    }
                     throw e
                 } catch (e: Exception) {
                     metrics.recordRenewFailure(tags, "task-failed")
                     metrics.recordTask(tags, "failure", started.elapsedNow())
+                    observe {
+                        observationRecorder.onTaskFailed(properties.leaseName, executionStarted.elapsedNow(), e, context)
+                    }
                     log.warn(e) { "Kubernetes Lease guarded task failed. lease=${properties.leaseName}" }
                     LeaderTaskReport(executed = false, reason = "task-failed", executionCount = executionCount.get())
                 } finally {
                     metrics.markInactive(tags)
+                    observe { observationListener.onRevoked(properties.leaseName) }
                 }
             }
 
             if (report == null) {
+                observe {
+                    observationRecorder.onLockNotAcquired(
+                        properties.leaseName,
+                        leaderOptions,
+                        SkipReason.CONTENTION,
+                        LeaderAopMetricsContext.Unknown,
+                    )
+                }
+                observe { observationListener.onSkipped(properties.leaseName) }
                 metrics.recordSkipped(tags, "not-elected")
                 LeaderTaskReport(executed = false, reason = "not-elected", executionCount = executionCount.get())
             } else {
@@ -85,6 +126,16 @@ class K8sLeaseGuardedTask(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
+            observe {
+                observationRecorder.onLockNotAcquired(
+                    properties.leaseName,
+                    leaderOptions,
+                    SkipReason.BACKEND_ERROR,
+                    LeaderAopMetricsContext.Unknown,
+                )
+            }
+            observe { observationRecorder.onTaskFailed(properties.leaseName, started.elapsedNow(), e) }
+            observe { observationListener.onSkipped(properties.leaseName) }
             metrics.recordSkipped(tags, "backend-error")
             metrics.recordRenewFailure(tags, "backend-error")
             metrics.recordTask(tags, "failure", started.elapsedNow())
@@ -92,7 +143,15 @@ class K8sLeaseGuardedTask(
             LeaderTaskReport(executed = false, reason = "backend-error", executionCount = executionCount.get())
         }
     }
+
+    private inline fun observe(block: () -> Unit) {
+        runCatching(block).onFailure { error ->
+            log.warn(error) { "Leader observation callback failed. lease=${properties.leaseName}" }
+        }
+    }
 }
+
+private object NoOpLeaderElectionListener : LeaderElectionListener
 
 /**
  * scheduled guard tick 하나의 결과입니다.

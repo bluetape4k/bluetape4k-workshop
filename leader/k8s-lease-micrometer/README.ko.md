@@ -89,6 +89,48 @@ workshop heartbeat입니다. 실제 owner-conditional Lease renewal은
 - `shedlock.leader.duration`
 - `shedlock.leader.active`
 
+## Observation과 tag 정책
+
+이 모듈은 Kubernetes 전용 coordinator를 직접 만들기 때문에
+`LeaderObservationOptions`, `MicrometerObservationLeaderAopMetricsRecorder`,
+`MicrometerObservationLeaderElectionListener`를 명시적으로 wiring합니다. 실제
+elector decorator에도 같은 `tagOptions`를 전달하므로 library meter와 workshop
+meter가 하나의 sanitizer 정책을 공유합니다.
+
+기록하는 lifecycle observation은 다음과 같습니다.
+
+- `leader.aop.acquire`: `outcome=acquired|skipped`
+- `leader.aop.execution`: `outcome=success|error|cancelled`
+- `leader.election.event`: `event=elected|revoked|skipped`
+
+기본 정책은 `lock.name`과 `leader.id`를 12자리 lowercase SHA-256 prefix로
+hash하고, workshop에서 사용하는 안정적인 outcome만 allowlist로 통과시킵니다.
+namespace와 그 밖의 알 수 없는 값은 redacted 값으로 바꿉니다. hash는 raw
+식별자를 노출하지 않지만 서로 다른 값의 개수까지 줄이지는 않습니다. series
+개수를 엄격하게 제한해야 하면 `REDACT` 또는 작은 `allowList`를 사용합니다.
+애플리케이션은 다음처럼 기본 bean을 명시적인 정책으로 바꿀 수 있습니다.
+
+```kotlin
+@Bean
+fun leaderObservationOptions() = LeaderObservationOptions(
+    includeLockName = true,
+    includeLeaderId = true,
+    tagOptions = LeaderMetricTagOptions(
+        lockName = LeaderMetricTagRule(mode = LeaderMetricTagMode.HASH, hashLength = 12),
+        leaderId = LeaderMetricTagRule(mode = LeaderMetricTagMode.REDACT),
+        defaultRule = LeaderMetricTagRule(
+            mode = LeaderMetricTagMode.RAW,
+            allowList = setOf("success", "failure"),
+        ),
+    ),
+)
+```
+
+`bluetape4k-leader-spring-boot`를 포함한 애플리케이션은 이 모듈의 수동
+observation bean을 제거하거나 override한 뒤 observation auto-configuration을
+사용할 수 있습니다. 이 workshop은 backend-specific coordinator와 tag 경계를
+드러내기 위해 수동 wiring을 유지합니다.
+
 ## Run Locally
 
 ```bash
@@ -168,6 +210,7 @@ roleRef:
 | `K8sLeaseMicrometerPropertiesTest` | property 기본값, 검증, `KubernetesLeaseOptions` 변환 |
 | `K8sLeaseMetricsTest` | 안정적인 meter 이름, tag, counter, timer, active gauge reset |
 | `K8sLeaseGuardedTaskTest` | Kubernetes 없이 elected, skipped, task-failure 경로 검증 |
+| `K8sLeaseGuardedTaskObservationTest` | acquire, success, error, cancellation과 sanitizer 적용 observation tag 검증 |
 | `K8sLeaseMicrometerContextTest` | 기본 Spring context가 disabled coordinator를 사용하고 `KubernetesClient`를 만들지 않음 |
 
 ## Production Boundaries
