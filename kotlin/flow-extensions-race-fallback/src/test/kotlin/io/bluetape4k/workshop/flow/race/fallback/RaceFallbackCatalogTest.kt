@@ -2,12 +2,16 @@ package io.bluetape4k.workshop.flow.race.fallback
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import io.bluetape4k.coroutines.flow.extensions.FlowEvent
 import io.bluetape4k.junit5.coroutines.runSuspendTest
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.take
@@ -108,6 +112,134 @@ class RaceFallbackCatalogTest {
 
         remoteStarted.isCompleted shouldBeEqualTo true
         collection.await().map { it.source } shouldBeEqualTo listOf(CatalogSource.CACHE, CatalogSource.REMOTE_API)
+    }
+
+    @Test
+    fun `bounded eager mapping preserves outer order and caps active inner flows`() = runSuspendTest {
+        val active = AtomicInteger(0)
+        val peak = AtomicInteger(0)
+        val secondInnerStarted = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+
+        val collection = async {
+            catalog.boundedEagerFallbackBySource(
+                sources = flowOf(
+                    CatalogSource.CACHE,
+                    CatalogSource.REPLICA,
+                    CatalogSource.REMOTE_API,
+                    CatalogSource.BACKUP_API,
+                ),
+                maxConcurrency = 2,
+                bufferCapacity = 1,
+            ) { source ->
+                flow {
+                    val current = active.incrementAndGet()
+                    peak.updateAndGet { maxOf(it, current) }
+                    if (current == 2) {
+                        secondInnerStarted.complete(Unit)
+                    }
+                    try {
+                        emit(result(source))
+                        release.await()
+                    } finally {
+                        active.decrementAndGet()
+                    }
+                }
+            }.toList()
+        }
+
+        withTimeout(1_000) { secondInnerStarted.await() }
+        peak.get() shouldBeLessOrEqualTo 2
+        release.complete(Unit)
+
+        collection.await().map { it.source } shouldBeEqualTo listOf(
+            CatalogSource.CACHE,
+            CatalogSource.REPLICA,
+            CatalogSource.REMOTE_API,
+            CatalogSource.BACKUP_API,
+        )
+        active.get() shouldBeEqualTo 0
+    }
+
+    @Test
+    fun `bounded eager mapping suspends an inner producer at its buffer boundary`() = runSuspendTest {
+        val firstInnerRelease = CompletableDeferred<Unit>()
+        val secondFirstEmission = CompletableDeferred<Unit>()
+        val secondSecondEmission = CompletableDeferred<Unit>()
+
+        val collection = async {
+            catalog.boundedEagerFallbackBySource(
+                sources = flowOf(CatalogSource.CACHE, CatalogSource.REMOTE_API),
+                maxConcurrency = 2,
+                bufferCapacity = 1,
+            ) { source ->
+                if (source == CatalogSource.CACHE) {
+                    flow {
+                        firstInnerRelease.await()
+                        emit(result(source))
+                    }
+                } else {
+                    flow {
+                        emit(result(source, sku = "sku-200"))
+                        secondFirstEmission.complete(Unit)
+                        emit(result(source, sku = "sku-201"))
+                        secondSecondEmission.complete(Unit)
+                    }
+                }
+            }.toList()
+        }
+
+        withTimeout(1_000) { secondFirstEmission.await() }
+        secondSecondEmission.isCompleted shouldBeEqualTo false
+
+        firstInnerRelease.complete(Unit)
+        collection.await().map { it.item.sku } shouldBeEqualTo listOf("sku-100", "sku-200", "sku-201")
+        secondSecondEmission.isCompleted shouldBeEqualTo true
+    }
+
+    @Test
+    fun `bounded eager cancellation stops all inner flows`() = runSuspendTest {
+        val cancelled = AtomicInteger(0)
+
+        catalog.boundedEagerFallbackBySource(
+            sources = flowOf(CatalogSource.CACHE, CatalogSource.REPLICA, CatalogSource.REMOTE_API),
+            maxConcurrency = 2,
+            bufferCapacity = 1,
+        ) { source ->
+            flow {
+                try {
+                    emit(result(source))
+                    awaitCancellation()
+                } finally {
+                    cancelled.incrementAndGet()
+                }
+            }
+        }.take(1).toList()
+
+        cancelled.get() shouldBeGreaterThan 0
+    }
+
+    @Test
+    fun `bounded eager arguments and inner failures keep their contracts`() = runSuspendTest {
+        assertFailsWith<IllegalArgumentException> {
+            catalog.boundedEagerFallbackBySource(flowOf(CatalogSource.CACHE), maxConcurrency = 0) { flowOf(result(it)) }
+                .toList()
+        }
+        assertFailsWith<IllegalArgumentException> {
+            catalog.boundedEagerFallbackBySource(
+                flowOf(CatalogSource.CACHE),
+                maxConcurrency = 1,
+                bufferCapacity = -1,
+            ) { flowOf(result(it)) }.toList()
+        }
+
+        val boom = IllegalStateException("bounded inner failed")
+        val failure = assertFailsWith<IllegalStateException> {
+            catalog.boundedEagerFallbackBySource(flowOf(CatalogSource.REMOTE_API), maxConcurrency = 2) {
+                flow { throw boom }
+            }.toList()
+        }
+        failure.message shouldBeEqualTo boom.message
     }
 
     @Test

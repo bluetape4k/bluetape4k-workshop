@@ -1,0 +1,33 @@
+{
+  "kind": "sequence",
+  "source": {
+    "question": "How does bounded concatMapEager start inner flows eagerly without exceeding concurrency or per-inner queue limits?",
+    "revision": "Issue #740 / feat/issue-740-bounded-concat-map-eager",
+    "paths": [
+      "kotlin/flow-extensions-race-fallback/src/main/kotlin/io/bluetape4k/workshop/flow/race/fallback/RaceFallbackCatalog.kt",
+      "kotlin/flow-extensions-race-fallback/src/test/kotlin/io/bluetape4k/workshop/flow/race/fallback/RaceFallbackCatalogTest.kt"
+    ]
+  },
+  "nodes": [
+    {"id": "caller", "label": "Caller", "source": "RaceFallbackCatalogTest.kt"},
+    {"id": "bounded", "label": "boundedEagerFallbackBySource", "source": "RaceFallbackCatalog.kt"},
+    {"id": "cache", "label": "CACHE inner", "source": "RaceFallbackCatalogTest.kt"},
+    {"id": "remote", "label": "REMOTE_API inner / queue(1)", "source": "RaceFallbackCatalogTest.kt"},
+    {"id": "collector", "label": "Collector", "source": "RaceFallbackCatalogTest.kt"}
+  ],
+  "edges": [
+    {"id": "caller-bounded", "from": "caller", "to": "bounded", "kind": "call", "source": "RaceFallbackCatalogTest.kt"},
+    {"id": "bounded-cache", "from": "bounded", "to": "cache", "kind": "start", "source": "concatMapEager.kt"},
+    {"id": "bounded-remote", "from": "bounded", "to": "remote", "kind": "start", "source": "concatMapEager.kt"},
+    {"id": "remote-bounded-buffer", "from": "remote", "to": "bounded", "kind": "buffer", "source": "ConcatMapEagerBoundedTest.kt"},
+    {"id": "remote-bounded-suspend", "from": "remote", "to": "bounded", "kind": "backpressure", "source": "RaceFallbackCatalogTest.kt"},
+    {"id": "caller-bounded-release", "from": "caller", "to": "bounded", "kind": "release", "source": "RaceFallbackCatalogTest.kt"},
+    {"id": "cache-bounded-drain", "from": "cache", "to": "bounded", "kind": "ordered-drain", "source": "RaceFallbackCatalogTest.kt"},
+    {"id": "bounded-collector", "from": "bounded", "to": "collector", "kind": "ordered-output", "source": "RaceFallbackCatalogTest.kt"},
+    {"id": "collector-bounded-cancel", "from": "collector", "to": "bounded", "kind": "cancel", "source": "RaceFallbackCatalogTest.kt"}
+  ],
+  "behavior": {"branches": 1, "loops": 0},
+  "repairs": [
+    {"target": "remote", "reason": "keep queue capacity and producer suspension visible without adding another participant", "touches": 1}
+  ]
+}

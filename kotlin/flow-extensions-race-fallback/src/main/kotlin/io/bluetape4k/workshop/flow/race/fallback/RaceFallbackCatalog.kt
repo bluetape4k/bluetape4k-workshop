@@ -9,6 +9,7 @@ import io.bluetape4k.coroutines.flow.extensions.materialize
 import io.bluetape4k.coroutines.flow.extensions.merge
 import io.bluetape4k.coroutines.flow.extensions.race
 import io.bluetape4k.support.requireNotEmpty
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.support.requireZeroOrPositiveNumber
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -82,6 +83,28 @@ class RaceFallbackCatalog {
         sources: Flow<CatalogSource>,
         sourceFactory: suspend (CatalogSource) -> Flow<SourceResult>,
     ): Flow<SourceResult> = sources.concatMapEager(sourceFactory)
+
+    /**
+     * source order 를 보존하면서 동시 inner 수와 inner 별 출력 queue 용량을 제한합니다.
+     *
+     * [maxConcurrency] 는 동시에 수집할 inner Flow 의 최대 개수이고,
+     * [bufferCapacity] 는 inner 별 출력 queue 의 최대 용량입니다. `0` 은 rendezvous
+     * queue 이며, 앞선 source 가 느려도 뒤 source 는 설정한 queue 까지만 누적됩니다.
+     */
+    fun boundedEagerFallbackBySource(
+        sources: Flow<CatalogSource>,
+        maxConcurrency: Int,
+        bufferCapacity: Int = maxConcurrency,
+        sourceFactory: suspend (CatalogSource) -> Flow<SourceResult>,
+    ): Flow<SourceResult> {
+        maxConcurrency.requirePositiveNumber("maxConcurrency")
+        bufferCapacity.requireZeroOrPositiveNumber("bufferCapacity")
+        return sources.concatMapEager(
+            maxConcurrency = maxConcurrency,
+            bufferCapacity = bufferCapacity,
+            transform = sourceFactory,
+        )
+    }
 
     /**
      * 모든 source contribution 을 도착 순서대로 merge 합니다.

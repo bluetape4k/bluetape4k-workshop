@@ -39,6 +39,25 @@ val fallback = catalog.orderedFallback(listOf(cacheFlow, replicaFlow, backupFlow
 val enriched = catalog.mergeContributions(cacheFlow, replicaFlow, remoteFlow).toList()
 ```
 
+### Bounded eager fallback
+
+```kotlin
+val bounded = catalog.boundedEagerFallbackBySource(
+    sources = flowOf(CatalogSource.CACHE, CatalogSource.REMOTE_API),
+    maxConcurrency = 2,
+    bufferCapacity = 1,
+) { source -> sourceFlow(source) }.toList()
+```
+
+Use the bounded overload when eager inner collection needs an explicit resource contract:
+
+- at most `maxConcurrency` inner flows are collected at once;
+- each inner flow has a `bufferCapacity` output queue (`0` is a rendezvous queue);
+- the outer/source order is preserved, while later values can accumulate only up to their inner queue bound;
+- transform and inner failures keep their exception semantics, and downstream cancellation reaches every active child.
+
+This is a per-inner backpressure bound, not a global ordering or exactly-once guarantee across independent compositions.
+
 ## Architecture
 
 ![Architecture](../../docs/images/readme-diagrams/kotlin-flow-extensions-race-fallback-readme-architecture-01.png)
@@ -52,7 +71,8 @@ val enriched = catalog.mergeContributions(cacheFlow, replicaFlow, remoteFlow).to
 | Lowest latency healthy answer | `race` / `amb` | First source to emit wins; losers are cancelled |
 | Ordered fallback | `concat` | Sources run one after another in priority order |
 | Eager fallback with ordered output | `concatArrayEager` | Sources start immediately; output remains source ordered |
-| Dynamic eager fallback | `concatMapEager` | Mapped sources start eagerly; outer order controls output |
+| Dynamic eager fallback | `concatMapEager` | Mapped sources start eagerly; outer order controls output; queue is unbounded |
+| Bounded dynamic eager fallback | `concatMapEager(maxConcurrency, bufferCapacity)` | Limits active inners and each inner queue while preserving outer order |
 | Partial enrichment from every source | `merge` | All sources contribute by arrival order |
 | Error-as-value explanation | `materialize` / `dematerialize` | Terminal signals become values and can be restored |
 
@@ -70,6 +90,12 @@ The model is intentionally small: `CatalogItem`, `CatalogSource`, `SourceResult`
 
 ![Sequence](../../docs/images/readme-diagrams/kotlin-flow-extensions-race-fallback-readme-sequence-01.png)
 
+## Bounded sequence model
+
+![Bounded concatMapEager sequence](../../docs/images/readme-diagrams/kotlin-flow-extensions-race-fallback-readme-bounded-sequence-01.png)
+
+The bounded sequence makes the two independent limits visible: only two inner flows start, and the `REMOTE_API` inner suspends after one queued value until the slower `CACHE` inner releases the ordered drain.
+
 ## Error semantics
 
 Use terminal errors when a source failure should stop the current composition. Use `materialize()` when the example needs to explain or route failure as data without losing the original exception.
@@ -82,6 +108,7 @@ Use terminal errors when a source failure should stop the current composition. U
 | `concat` | strict fallback order |
 | `concatArrayEager` | eager source start with ordered output |
 | `concatMapEager` | dynamic eager fallback mapping |
+| `concatMapEager(maxConcurrency, bufferCapacity)` | bounded active inners and per-inner queues with ordered output |
 | `merge` | partial contributions from all sources |
 | `materialize` / `dematerialize` | error-as-value and terminal-error conversion |
 
@@ -97,6 +124,6 @@ Use terminal errors when a source failure should stop the current composition. U
 - [race](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/race.kt)
 - [concat](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/concat.kt)
 - [concatArrayEager](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/concatArrayEager.kt)
-- [concatMapEager](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/concatMapEager.kt)
+- [`concatMapEager` and its bounded overload](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/concatMapEager.kt)
 - [merge](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/mergeFlows.kt)
 - [materialize](../../../../bluetape4k-projects/bluetape4k/coroutines/src/main/kotlin/io/bluetape4k/coroutines/flow/extensions/materialize.kt)
