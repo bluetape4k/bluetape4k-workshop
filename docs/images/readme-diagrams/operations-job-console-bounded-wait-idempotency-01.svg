@@ -43,27 +43,27 @@
   <text x="62" y="278" font-family="Comic Mono, monospace" font-size="17" fill="#9a6e3d">admission</text>
   <g font-family="Comic Mono, monospace" font-size="16">
     <rect class="pill" x="238" y="302" width="212" height="32" rx="16" fill="#fff" stroke="#9cc5d3" stroke-width="2"/><circle cx="258" cy="318" r="12" fill="#3f7f9f"/><text class="num" x="258" y="323" text-anchor="middle" fill="#fff">1</text><text class="labelText" x="278" y="323" fill="#3f7f9f">POST /v1/jobs</text>
-    <path class="call" d="M184 350 H504" fill="none" stroke="#3f7f9f" stroke-width="4" marker-end="url(#bw-blue)"/>
+    <path data-connector="admission-post" class="call" d="M184 350 H504" fill="none" stroke="#3f7f9f" stroke-width="4" marker-end="url(#bw-blue)"/>
     <rect class="pill" x="516" y="374" width="242" height="32" rx="16" fill="#fff" stroke="#9cc5d3" stroke-width="2"/><circle cx="536" cy="390" r="12" fill="#3f7f9f"/><text class="num" x="536" y="395" text-anchor="middle" fill="#fff">2</text><text class="labelText" x="556" y="395" fill="#3f7f9f">validate scope / key / body</text>
-    <path class="call" d="M504 422 H824" fill="none" stroke="#3f7f9f" stroke-width="4" marker-end="url(#bw-blue)"/>
+    <path data-connector="admission-validate" class="call" d="M504 422 H824" fill="none" stroke="#3f7f9f" stroke-width="4" marker-end="url(#bw-blue)"/>
     <rect class="pill" x="848" y="446" width="212" height="32" rx="16" fill="#fff" stroke="#b8cc9b" stroke-width="2"/><circle cx="868" cy="462" r="12" fill="#6e8f4f"/><text class="num" x="868" y="467" text-anchor="middle" fill="#fff">3</text><text class="labelText" x="888" y="467" fill="#6e8f4f">reserve tuple + generation</text>
-    <path class="call" d="M824 494 H1144" fill="none" stroke="#6e8f4f" stroke-width="4" marker-end="url(#bw-green)"/>
+    <path data-connector="admission-reserve" class="call" d="M824 494 H1144" fill="none" stroke="#6e8f4f" stroke-width="4" marker-end="url(#bw-green)"/>
   </g>
 
   <rect class="alt" x="44" y="572" width="1490" height="310" rx="18" fill="none" stroke="#aab7ba" stroke-width="3"/>
   <text x="62" y="600" font-family="Comic Mono, monospace" font-size="17" fill="#687b83">alt: owner / replay / conflict / bounded wait</text>
-  <path class="work" d="M824 635 H1144" fill="none" stroke="#6e8f4f" stroke-width="4" marker-end="url(#bw-green)"/>
+  <path data-connector="owner-prepare" class="work" d="M824 635 H1144" fill="none" stroke="#6e8f4f" stroke-width="4" marker-end="url(#bw-green)"/>
   <rect class="pill" x="858" y="604" width="210" height="32" rx="16" fill="#fff" stroke="#b8cc9b" stroke-width="2"/><circle cx="878" cy="620" r="12" fill="#6e8f4f"/><text class="num" x="878" y="625" text-anchor="middle" fill="#fff" font-family="Comic Mono, monospace" font-size="16">4</text><text class="labelText" x="898" y="625" fill="#6e8f4f" font-family="Comic Mono, monospace" font-size="16">owner prepares</text>
-  <path class="work" d="M1144 680 H1439" fill="none" stroke="#6e8f4f" stroke-width="4" marker-end="url(#bw-green)"/>
+  <path data-connector="owner-finalize" class="work" d="M1144 680 H1439" fill="none" stroke="#6e8f4f" stroke-width="4" marker-end="url(#bw-green)"/>
   <rect class="pill" x="1154" y="649" width="238" height="32" rx="16" fill="#fff" stroke="#b8cc9b" stroke-width="2"/><circle cx="1174" cy="665" r="12" fill="#6e8f4f"/><text class="num" x="1174" y="670" text-anchor="middle" fill="#fff" font-family="Comic Mono, monospace" font-size="16">5</text><text class="labelText" x="1194" y="670" fill="#6e8f4f" font-family="Comic Mono, monospace" font-size="16">finalize job + snapshot</text>
-  <path class="return" d="M1144 760 H824" fill="none" stroke="#b4874d" stroke-width="4" stroke-dasharray="10 8" marker-end="url(#bw-amber)"/>
+  <path data-connector="terminal-replay" class="return" d="M1144 760 H824" fill="none" stroke="#b4874d" stroke-width="4" stroke-dasharray="10 8" marker-end="url(#bw-amber)"/>
   <rect class="pill" x="894" y="729" width="230" height="32" rx="16" fill="#fff" stroke="#d4bc92" stroke-width="2"/><circle cx="914" cy="745" r="12" fill="#b4874d"/><text class="num" x="914" y="750" text-anchor="middle" fill="#fff" font-family="Comic Mono, monospace" font-size="16">6</text><text class="labelText" x="934" y="750" fill="#9a6e3d" font-family="Comic Mono, monospace" font-size="16">terminal snapshot / replay</text>
-  <path class="error" d="M824 824 H504" fill="none" stroke="#b56868" stroke-width="4" stroke-dasharray="10 8" marker-end="url(#bw-red)"/>
+  <path data-connector="status-response" class="error" d="M824 824 H504" fill="none" stroke="#b56868" stroke-width="4" stroke-dasharray="10 8" marker-end="url(#bw-red)"/>
   <rect class="pill" x="584" y="793" width="210" height="32" rx="16" fill="#fff" stroke="#d4bc92" stroke-width="2"/><circle cx="604" cy="809" r="12" fill="#b4874d"/><text class="num" x="604" y="814" text-anchor="middle" fill="#fff" font-family="Comic Mono, monospace" font-size="16">7</text><text class="labelText" x="624" y="814" fill="#9a6e3d" font-family="Comic Mono, monospace" font-size="16">202 / 409 / 429 / 503</text>
-  <path class="return" d="M504 850 H184" fill="none" stroke="#b4874d" stroke-width="4" stroke-dasharray="10 8" marker-end="url(#bw-amber)"/>
+  <path data-connector="caller-response" class="return" d="M504 850 H184" fill="none" stroke="#b4874d" stroke-width="4" stroke-dasharray="10 8" marker-end="url(#bw-amber)"/>
 
   <rect x="44" y="910" width="1490" height="80" rx="16" fill="#fff8ed" stroke="#d4bc92" stroke-width="2"/>
   <text x="68" y="942" font-family="Comic Mono, monospace" font-size="16" fill="#9a6e3d">recovery loop: owner disconnect / lease expiry → ABANDONED or takeover → one new generation owner</text>
-  <path class="error" d="M504 958 H804 Q824 958 824 978 V1010 Q824 1030 804 1030 H504" fill="none" stroke="#b56868" stroke-width="4" marker-end="url(#bw-red)"/>
+  <path data-connector="recovery-loop" class="error" d="M504 958 H804 Q824 958 824 978 V1010 Q824 1030 804 1030 H504" fill="none" stroke="#b56868" stroke-width="4" marker-end="url(#bw-red)"/>
   <text x="800" y="1080" text-anchor="middle" font-family="Comic Mono, monospace" font-size="16" fill="#687b83">Durable guarantee ends at committed PostgreSQL job/outbox/history and the stored HTTP snapshot.</text>
 </svg>
