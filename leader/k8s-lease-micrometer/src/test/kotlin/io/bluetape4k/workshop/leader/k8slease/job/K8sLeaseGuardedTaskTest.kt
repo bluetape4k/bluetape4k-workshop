@@ -28,13 +28,10 @@ class K8sLeaseGuardedTaskTest {
         report.executed.shouldBeTrue()
         report.reason shouldBeEqualTo "elected"
         task.executionCount.get() shouldBeEqualTo 1
-        registry.counter("workshop.k8s.lease.guard.attempts", "lock.name", "workshop-nightly-export", "namespace", "workshop").count() shouldBeEqualTo 1.0
+        registry.counter("workshop.k8s.lease.guard.attempts", "lock.name", "redacted-lock", "namespace", "redacted").count() shouldBeEqualTo 1.0
         registry.counter(
             "workshop.k8s.lease.task.executions",
-            "lock.name",
-            "workshop-nightly-export",
-            "namespace",
-            "workshop",
+            "lock.name", "redacted-lock", "namespace", "redacted",
             "result",
             "success",
         ).count() shouldBeEqualTo 1.0
@@ -56,10 +53,7 @@ class K8sLeaseGuardedTaskTest {
         task.executionCount.get() shouldBeEqualTo 0
         registry.counter(
             "workshop.k8s.lease.guard.skipped",
-            "lock.name",
-            "workshop-nightly-export",
-            "namespace",
-            "workshop",
+            "lock.name", "redacted-lock", "namespace", "redacted",
             "reason",
             "not-elected",
         ).count() shouldBeEqualTo 1.0
@@ -80,16 +74,13 @@ class K8sLeaseGuardedTaskTest {
         report.reason shouldBeEqualTo "task-failed"
         registry.counter(
             "workshop.k8s.lease.task.executions",
-            "lock.name",
-            "workshop-nightly-export",
-            "namespace",
-            "workshop",
+            "lock.name", "redacted-lock", "namespace", "redacted",
             "result",
             "failure",
         ).count() shouldBeEqualTo 1.0
         registry.find("workshop.k8s.lease.leader.active")
-            .tag("lock.name", "workshop-nightly-export")
-            .tag("namespace", "workshop")
+            .tag("lock.name", "redacted-lock")
+            .tag("namespace", "redacted")
             .gauge()
             ?.value() shouldBeEqualTo 0.0
     }

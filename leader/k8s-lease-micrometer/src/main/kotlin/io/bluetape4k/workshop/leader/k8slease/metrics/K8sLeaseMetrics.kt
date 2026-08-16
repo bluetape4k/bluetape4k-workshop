@@ -1,5 +1,9 @@
 package io.bluetape4k.workshop.leader.k8slease.metrics
 
+import io.bluetape4k.leader.micrometer.LeaderMetricTagMode
+import io.bluetape4k.leader.micrometer.LeaderMetricTagOptions
+import io.bluetape4k.leader.micrometer.LeaderMetricTagRule
+import io.bluetape4k.leader.micrometer.LeaderMetricTagSanitizer
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.micrometer.core.instrument.Counter
@@ -38,6 +42,7 @@ data class LeaseMetricTags(
  */
 class K8sLeaseMetrics(
     private val registry: MeterRegistry,
+    private val tagSanitizer: LeaderMetricTagSanitizer = DefaultWorkshopTagSanitizer,
 ) {
 
     private val activeGauges = ConcurrentHashMap<LeaseMetricTags, AtomicInteger>()
@@ -68,33 +73,51 @@ class K8sLeaseMetrics(
 
     fun recordTask(tags: LeaseMetricTags, result: String, duration: Duration) {
         counter("workshop.k8s.lease.task.executions", tags, "result", result).increment()
+        val safeTags = sanitize(tags)
         Timer.builder("workshop.k8s.lease.task.duration")
-            .tag("lock.name", tags.lockName)
-            .tag("namespace", tags.namespace)
+            .tag("lock.name", safeTags.lockName)
+            .tag("namespace", safeTags.namespace)
             .register(registry)
             .record(duration.toJavaDuration())
     }
 
     private fun counter(name: String, tags: LeaseMetricTags, vararg extraTags: String): Counter {
+        val safeTags = sanitize(tags)
         val builder = Counter.builder(name)
-            .tag("lock.name", tags.lockName)
-            .tag("namespace", tags.namespace)
+            .tag("lock.name", safeTags.lockName)
+            .tag("namespace", safeTags.namespace)
         extraTags.requireKeyValuePairs().asList().chunked(2).forEach { (key, value) ->
-            builder.tag(key, value)
+            builder.tag(key, tagSanitizer.sanitize(key, value))
         }
         return builder.register(registry)
     }
 
     private fun activeGauge(tags: LeaseMetricTags): AtomicInteger =
-        activeGauges.computeIfAbsent(tags) {
+        activeGauges.computeIfAbsent(sanitize(tags)) {
             val value = AtomicInteger(0)
             Gauge.builder("workshop.k8s.lease.leader.active", value) { active -> active.get().toDouble() }
-                .tag("lock.name", tags.lockName)
-                .tag("namespace", tags.namespace)
+                .tag("lock.name", it.lockName)
+                .tag("namespace", it.namespace)
                 .register(registry)
             value
         }
+
+    private fun sanitize(tags: LeaseMetricTags): LeaseMetricTags =
+        LeaseMetricTags(
+            lockName = tagSanitizer.sanitize("lock.name", tags.lockName),
+            namespace = tagSanitizer.sanitize("namespace", tags.namespace),
+        )
 }
+
+private val DefaultWorkshopTagSanitizer: LeaderMetricTagSanitizer = LeaderMetricTagSanitizer.from(
+    LeaderMetricTagOptions(
+        defaultRule = LeaderMetricTagRule(
+            mode = LeaderMetricTagMode.RAW,
+            allowList = setOf("success", "failure", "not-elected", "backend-error", "task-failed"),
+            redactedValue = "redacted",
+        ),
+    ),
+)
 
 private fun Array<out String>.requireKeyValuePairs(): Array<out String> = apply {
     (size % 2).requireInRange(0, 0, "extraTags.size % 2")

@@ -3,6 +3,12 @@ package io.bluetape4k.workshop.leader.jobsafety.config
 import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.leader.LeaderElector
 import io.bluetape4k.leader.lettuce.LettuceLeaderElector
+import io.bluetape4k.leader.micrometer.LeaderMetricTagMode
+import io.bluetape4k.leader.micrometer.LeaderMetricTagOptions
+import io.bluetape4k.leader.micrometer.LeaderMetricTagRule
+import io.bluetape4k.leader.micrometer.LeaderObservationOptions
+import io.bluetape4k.leader.micrometer.MicrometerObservationLeaderAopMetricsRecorder
+import io.bluetape4k.leader.micrometer.MicrometerObservationLeaderElectionListener
 import io.bluetape4k.workshop.leader.jobsafety.coordination.FencingLeasePort
 import io.bluetape4k.workshop.leader.jobsafety.coordination.JobRunCoordinator
 import io.bluetape4k.workshop.leader.jobsafety.coordination.LeaderElectionPort
@@ -21,12 +27,14 @@ import io.bluetape4k.workshop.leader.jobsafety.scenario.JobSafetyScenarioService
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.codec.StringCodec
+import io.micrometer.observation.ObservationRegistry
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.ApplicationRunner
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import javax.sql.DataSource
@@ -35,6 +43,31 @@ import kotlin.time.toKotlinDuration
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(JobSafetyProperties::class)
 class JobSafetyConfiguration {
+    @Bean
+    @ConditionalOnMissingBean(ObservationRegistry::class)
+    fun jobSafetyLeaderObservationRegistry(): ObservationRegistry = ObservationRegistry.NOOP
+
+    /** Redis owner ID와 job lock을 12자리 hash로 제한하는 수동 observation wiring입니다. */
+    @Bean
+    @ConditionalOnMissingBean(LeaderObservationOptions::class)
+    fun jobSafetyLeaderObservationOptions(): LeaderObservationOptions = defaultLeaderObservationOptions()
+
+    @Bean
+    @ConditionalOnMissingBean(MicrometerObservationLeaderAopMetricsRecorder::class)
+    fun jobSafetyLeaderObservationRecorder(
+        registry: ObservationRegistry,
+        options: LeaderObservationOptions,
+    ): MicrometerObservationLeaderAopMetricsRecorder =
+        MicrometerObservationLeaderAopMetricsRecorder(registry, options)
+
+    @Bean
+    @ConditionalOnMissingBean(MicrometerObservationLeaderElectionListener::class)
+    fun jobSafetyLeaderObservationListener(
+        registry: ObservationRegistry,
+        options: LeaderObservationOptions,
+    ): MicrometerObservationLeaderElectionListener =
+        MicrometerObservationLeaderElectionListener(registry, options)
+
     @Bean(destroyMethod = "shutdown")
     fun jobSafetyRedisClient(properties: JobSafetyProperties): RedisClient =
         RedisClient.create(properties.redis.uri)
@@ -85,7 +118,16 @@ class JobSafetyConfiguration {
         leaderElection: LeaderElectionPort,
         fencingLease: FencingLeasePort,
         properties: JobSafetyProperties,
-    ): JobRunCoordinator = JobRunCoordinator(leaderElection, fencingLease, properties.fencing.leaseTtl)
+        observationRecorder: MicrometerObservationLeaderAopMetricsRecorder,
+        observationListener: MicrometerObservationLeaderElectionListener,
+    ): JobRunCoordinator =
+        JobRunCoordinator(
+            leaderElection = leaderElection,
+            fencingLease = fencingLease,
+            fencingTtl = properties.fencing.leaseTtl,
+            observationRecorder = observationRecorder,
+            observationListener = observationListener,
+        )
 
     @Bean
     fun jobSafetyJdbcExecutor(dataSource: DataSource): JobSafetyJdbcExecutor = JobSafetyJdbcExecutor(dataSource)
@@ -127,3 +169,14 @@ class JobSafetyConfiguration {
             }
         }
 }
+
+private fun defaultLeaderObservationOptions(): LeaderObservationOptions =
+    LeaderObservationOptions(
+        includeLockName = true,
+        includeLeaderId = true,
+        tagOptions = LeaderMetricTagOptions(
+            lockName = LeaderMetricTagRule(mode = LeaderMetricTagMode.HASH, hashLength = 12),
+            leaderId = LeaderMetricTagRule(mode = LeaderMetricTagMode.HASH, hashLength = 12),
+            defaultRule = LeaderMetricTagRule(mode = LeaderMetricTagMode.HASH, hashLength = 12),
+        ),
+    )
