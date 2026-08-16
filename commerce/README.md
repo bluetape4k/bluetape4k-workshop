@@ -20,6 +20,7 @@ the diagram is a source-backed ownership view, not a throughput chart.
 |--------|-------|----------------|
 | [`order-lifecycle-fulfillment`](order-lifecycle-fulfillment/) | Independent order, payment, inventory, fulfillment, and refund lifecycles | PostgreSQL (Testcontainers) |
 | [`reservation-control-plane`](reservation-control-plane/) | PostgreSQL-authoritative reservations, idempotent retries, waitlist offers, and expiry | PostgreSQL + Redis (Testcontainers) |
+| [`shared`](shared/) | Voucher campaign compatibility contract and cross-example fixtures | None |
 | [`event-sourced-promotion-voucher-campaign`](event-sourced-promotion-voucher-campaign/) | Append-only campaign/claim streams, snapshots, leased projections, fenced rebuilds, and position-aware HTTP/SSE | PostgreSQL (Testcontainers) |
 | [`promotion-voucher-campaign`](promotion-voucher-campaign/) | Campaign capacity, voucher allocation/redemption, review, SSE, and reconciliation | PostgreSQL + Redis (Testcontainers) |
 | [`pre-generated-voucher-pool`](pre-generated-voucher-pool/) | PostgreSQL-authoritative pre-generated voucher reservation, one-time reveal/replacement, revoke, and reconciliation | PostgreSQL + Redis (Testcontainers) |
@@ -42,6 +43,7 @@ request concurrency, not PostgreSQL capacity.
 ```bash
 ./gradlew :commerce-order-lifecycle-fulfillment:test --max-workers=1
 ./gradlew :commerce-reservation-control-plane:test --max-workers=1
+./gradlew :commerce-shared:test --max-workers=1
 ./gradlew :commerce-event-sourced-promotion-voucher-campaign:integrationTest --max-workers=1
 ./gradlew :commerce-promotion-voucher-campaign:test --max-workers=1
 ./gradlew :commerce-pre-generated-voucher-pool:test --max-workers=1

@@ -152,6 +152,7 @@ case "${1:-help}" in
   commerce)
     # The event-sourced module's test task is container-free; the remaining tasks use Testcontainers.
     run "$GRADLEW \
+      :commerce-shared:test \
       :commerce-event-sourced-promotion-voucher-campaign:test \
       :commerce-order-lifecycle-fulfillment:test \
       :commerce-reservation-control-plane:test \
@@ -308,7 +309,7 @@ case "${1:-help}" in
     echo ""
     echo "=== Required workshop module registration ==="
     missing_modules=0
-    for module in image-processing/barcode-api; do
+    for module in image-processing/barcode-api commerce/shared; do
       for required_file in build.gradle.kts README.md README.ko.md; do
         if [ ! -f "$module/$required_file" ]; then
           echo "MISSING: $module/$required_file"

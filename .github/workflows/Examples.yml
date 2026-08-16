@@ -289,6 +289,7 @@ jobs:
           :leader-backend-comparison-lab:test
           :leader-k8s-lease-micrometer:test
           :leader-job-safety-lab:test
+          :commerce-shared:test
           :commerce-event-sourced-promotion-voucher-campaign:test
           :commerce-usage-metering-billing-ledger:test
           :commerce-usage-metering-billing-event-sourcing:test
@@ -341,6 +342,8 @@ jobs:
             image-processing/profile-image-moderation/build/reports/tests/test/
             image-processing/barcode-api/build/test-results/test/*.xml
             image-processing/barcode-api/build/reports/tests/test/
+            commerce/shared/build/test-results/test/*.xml
+            commerce/shared/build/reports/tests/test/
             aws/cloudwatch-imds-observability/build/test-results/test/*.xml
             aws/cloudwatch-imds-observability/build/reports/tests/test/
             aws/eventbridge-scheduler/build/test-results/test/*.xml

@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.shared.voucher
+package io.bluetape4k.workshop.commerce.shared.voucher
 
 import io.bluetape4k.support.requireGt
 import io.bluetape4k.support.requireEquals
