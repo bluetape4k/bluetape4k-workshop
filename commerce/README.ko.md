@@ -20,6 +20,7 @@ PostgreSQL 권위를 소유하고 Kafka topic으로 서비스 경계를 넘습�
 |------|------|--------|
 | [`order-lifecycle-fulfillment`](order-lifecycle-fulfillment/) | 독립적인 주문, 결제, 재고, 배송, 환불 생명주기 | PostgreSQL (Testcontainers) |
 | [`reservation-control-plane`](reservation-control-plane/) | PostgreSQL이 권위를 갖는 예약, 멱등 재시도, waitlist offer, expiry | PostgreSQL + Redis (Testcontainers) |
+| [`shared`](shared/) | 바우처 캠페인 호환성 계약과 예제 간 공용 fixture | 없음 |
 | [`event-sourced-promotion-voucher-campaign`](event-sourced-promotion-voucher-campaign/) | Append-only campaign/claim stream, snapshot, lease 기반 projection, fencing rebuild, position-aware HTTP/SSE | PostgreSQL (Testcontainers) |
 | [`promotion-voucher-campaign`](promotion-voucher-campaign/) | 캠페인 수량, 바우처 할당/사용, review, SSE, reconciliation | PostgreSQL + Redis (Testcontainers) |
 | [`pre-generated-voucher-pool`](pre-generated-voucher-pool/) | PostgreSQL이 권위를 갖는 사전 생성 바우처 예약, 일회 reveal/교체, revoke와 reconciliation | PostgreSQL + Redis (Testcontainers) |
@@ -42,6 +43,7 @@ HikariCP로 제한합니다.
 ```bash
 ./gradlew :commerce-order-lifecycle-fulfillment:test --max-workers=1
 ./gradlew :commerce-reservation-control-plane:test --max-workers=1
+./gradlew :commerce-shared:test --max-workers=1
 ./gradlew :commerce-event-sourced-promotion-voucher-campaign:integrationTest --max-workers=1
 ./gradlew :commerce-promotion-voucher-campaign:test --max-workers=1
 ./gradlew :commerce-pre-generated-voucher-pool:test --max-workers=1
