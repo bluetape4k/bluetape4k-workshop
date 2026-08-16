@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.shared.voucher
+package io.bluetape4k.workshop.commerce.shared.voucher
 
 import io.bluetape4k.assertions.assertFailsWith
 import org.junit.jupiter.api.Test
