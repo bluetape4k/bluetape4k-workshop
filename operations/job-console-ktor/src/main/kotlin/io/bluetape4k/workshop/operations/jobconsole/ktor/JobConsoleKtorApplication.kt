@@ -37,6 +37,7 @@ import io.ktor.server.sse.SSE
 import io.ktor.server.sse.sse
 import io.ktor.sse.ServerSentEvent
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -46,6 +47,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.runBlocking
 import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.time.Duration
 import java.util.UUID
@@ -57,12 +59,14 @@ fun Application.jobConsoleModule(
     dataSource: DataSource,
     demoEnabled: Boolean = false,
     redisUri: String? = null,
+    boundedWaitEnabled: Boolean = boundedWaitEnabledFromEnvironment(),
 ) {
     jobConsoleModule(
         dataSource = dataSource,
         demoEnabled = demoEnabled,
         redisUri = redisUri,
         workerEnabled = demoEnabled,
+        boundedWaitEnabled = boundedWaitEnabled,
     )
 }
 
@@ -71,6 +75,7 @@ internal fun Application.jobConsoleModule(
     demoEnabled: Boolean,
     redisUri: String?,
     workerEnabled: Boolean,
+    boundedWaitEnabled: Boolean = boundedWaitEnabledFromEnvironment(),
     outboxStartGate: suspend () -> Unit = {},
     workerStartGate: suspend () -> Unit = {},
     runtimeObserver: (JobConsoleKtorRuntime) -> Unit = {},
@@ -85,7 +90,13 @@ internal fun Application.jobConsoleModule(
     ).migrate()
     val repository = JobRepository(dataSource)
     val redisSignal = redisUri?.takeIf(String::isNotBlank)?.let { runCatching { LettuceCancelSignal(it) }.getOrNull() }
-    val service = JobConsoleService(repository, redisSignal ?: NoOpCancelSignal)
+    val service = JobConsoleService(
+        repository = repository,
+        cancelSignal = redisSignal ?: NoOpCancelSignal,
+        boundedWaitEnabled = boundedWaitEnabled,
+        expectedPolicyFingerprint = System.getenv("JOB_CONSOLE_BOUNDED_WAIT_POLICY_FINGERPRINT")
+            ?.takeIf(String::isNotBlank),
+    )
     val fanout = BoundedJobEventFanout(Duration.ofSeconds(2))
     val outboxRepository = JobOutboxRepository(dataSource)
     val poller = JobOutboxPoller(outboxRepository, fanout)
@@ -169,6 +180,7 @@ internal fun Application.jobConsoleModule(
         }
     runtimeObserver(
         JobConsoleKtorRuntime(
+            service = service,
             repository = repository,
             outboxRepository = outboxRepository,
             workerEngine = workerEngine,
@@ -178,14 +190,19 @@ internal fun Application.jobConsoleModule(
         ),
     )
     monitor.subscribe(ApplicationStopped) {
-        workerJob?.cancel()
-        outboxJob.cancel()
+        service.closeAdmission()
+        runBlocking(Dispatchers.IO) {
+            service.awaitSubmissionQuiescence(Duration.ofSeconds(5))
+            workerJob?.cancelAndJoin()
+            outboxJob.cancelAndJoin()
+        }
         redisSignal?.close()
         (dataSource as? AutoCloseable)?.close()
     }
 }
 
 internal class JobConsoleKtorRuntime(
+    val service: JobConsoleService,
     val repository: JobRepository,
     val outboxRepository: JobOutboxRepository,
     val workerEngine: JobWorkerEngine,
@@ -196,6 +213,9 @@ internal class JobConsoleKtorRuntime(
     val backgroundJobsStopped: Boolean
         get() = !outboxJob.isActive && workerJob?.isActive != true
 }
+
+private fun boundedWaitEnabledFromEnvironment(): Boolean =
+    System.getenv("JOB_CONSOLE_BOUNDED_WAIT_ENABLED")?.toBooleanStrictOrNull() ?: false
 
 private fun Application.installJobConsoleRoutes(service: JobConsoleService, fanout: BoundedJobEventFanout) {
     routing {

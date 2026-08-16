@@ -644,6 +644,7 @@ internal class SpringJobConsoleLiveAdapter private constructor(
                     "spring.datasource.hikari.maximum-pool-size" to profile.concurrency.coerceAtLeast(4).toString(),
                     "job-console.redis-uri" to topology.redisUri,
                     "job-console.worker-delay-ms" to "1",
+                    "job-console.bounded-wait.enabled" to "true",
                     "management.datadog.metrics.export.enabled" to "false",
                 ),
             )

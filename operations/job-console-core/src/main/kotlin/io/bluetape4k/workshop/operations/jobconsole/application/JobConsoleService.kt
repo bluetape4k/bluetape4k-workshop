@@ -4,6 +4,7 @@ import io.bluetape4k.workshop.operations.jobconsole.api.JobSnapshot
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import io.bluetape4k.workshop.operations.jobconsole.api.JobSubmissionOutcome
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobState
+import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionCanonicalizer
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionCommand
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionIdempotencyCoordinator
@@ -14,6 +15,7 @@ import io.bluetape4k.workshop.operations.jobconsole.idempotency.ReplayableJobSub
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JdbcJobSubmissionIdempotencyRepository
 import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepository
+import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepositoryException
 import io.bluetape4k.workshop.operations.jobconsole.signal.CancelSignal
 import io.bluetape4k.workshop.operations.jobconsole.signal.NoOpCancelSignal
 import io.bluetape4k.workshop.operations.jobconsole.queue.EtaEstimator
@@ -26,6 +28,9 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Clock
 import java.time.Duration
 import java.util.UUID
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 
 data class CancelServiceOutcome(
     val jobId: UUID,
@@ -38,6 +43,8 @@ class JobConsoleService(
     private val cancelSignal: CancelSignal = NoOpCancelSignal,
     private val clock: Clock = Clock.systemUTC(),
     private val etaEstimator: EtaEstimator = EtaEstimator(),
+    private val boundedWaitEnabled: Boolean = true,
+    private val expectedPolicyFingerprint: String? = null,
 ) {
     private val submissionPolicy = JobSubmissionIdempotencyPolicy()
     private val submissionCanonicalizer = JobSubmissionCanonicalizer()
@@ -46,8 +53,55 @@ class JobConsoleService(
     private val submissionCoordinator =
         JobSubmissionIdempotencyCoordinator(submissionRepository, submissionPolicy)
     private val jsonMapper by lazy(LazyThreadSafetyMode.PUBLICATION) { jacksonObjectMapper() }
+    private val acceptingSubmissions = AtomicBoolean(true)
+    private val activeSubmissions = AtomicInteger(0)
 
     fun submit(
+        scope: DemoCallerScope,
+        idempotencyKey: String,
+        request: SubmitJobRequest,
+    ): JobSubmissionOutcome {
+        activeSubmissions.incrementAndGet()
+        if (!acceptingSubmissions.get()) {
+            activeSubmissions.decrementAndGet()
+            throw JobRepositoryException(JobProblemCode.DEPENDENCY_UNAVAILABLE)
+        }
+        try {
+            return if (boundedWaitEnabled) {
+                submitBounded(scope, idempotencyKey, request)
+            } else {
+                submitLegacy(scope, idempotencyKey, request)
+            }
+        } finally {
+            activeSubmissions.decrementAndGet()
+        }
+    }
+
+    /** Stops new submissions before an adapter begins its bounded shutdown drain. */
+    fun closeAdmission() {
+        acceptingSubmissions.set(false)
+    }
+
+    fun isAcceptingSubmissions(): Boolean = acceptingSubmissions.get()
+
+    fun awaitSubmissionQuiescence(timeout: Duration): Boolean {
+        require(!timeout.isNegative) { "timeout must not be negative" }
+        if (activeSubmissions.get() == 0) return true
+        val deadline = System.nanoTime() + timeout.toNanos()
+        while (activeSubmissions.get() > 0) {
+            val remaining = deadline - System.nanoTime()
+            if (remaining <= 0L) return false
+            Thread.onSpinWait()
+            if (remaining > TimeUnit.MILLISECONDS.toNanos(1)) {
+                Thread.sleep(minOf(TimeUnit.NANOSECONDS.toMillis(remaining).coerceAtLeast(1L), 10L))
+            }
+        }
+        return true
+    }
+
+    fun activeSubmissionCount(): Int = activeSubmissions.get()
+
+    private fun submitBounded(
         scope: DemoCallerScope,
         idempotencyKey: String,
         request: SubmitJobRequest,
@@ -91,6 +145,21 @@ class JobConsoleService(
                 },
             ),
         )
+    }
+
+    private fun submitLegacy(
+        scope: DemoCallerScope,
+        idempotencyKey: String,
+        request: SubmitJobRequest,
+    ): JobSubmissionOutcome {
+        val result = repository.submit(scope, idempotencyKey, request, clock.instant())
+        val snapshot = snapshot(scope, result.jobId)
+        val headers = mapOf("Idempotency-Replayed" to listOf(result.replayed.toString()))
+        return if (result.replayed) {
+            JobSubmissionOutcome.Replayed(snapshot, headers)
+        } else {
+            JobSubmissionOutcome.OwnerCompleted(snapshot, headers)
+        }
     }
 
     private fun toPublicOutcome(
@@ -160,10 +229,19 @@ class JobConsoleService(
     fun readiness(): JobConsoleReadiness {
         val postgresReady = repository.databaseReady()
         val redisAvailable = cancelSignal.isAvailable()
+        val policyMatches = expectedPolicyFingerprint == null || expectedPolicyFingerprint == submissionPolicy.fingerprint
+        val reason = when {
+            !postgresReady -> "postgres"
+            !policyMatches -> "policy"
+            else -> null
+        }
         return JobConsoleReadiness(
-            ready = postgresReady,
+            ready = postgresReady && policyMatches,
             postgres = if (postgresReady) DependencyState.UP else DependencyState.DOWN,
             redis = if (redisAvailable) DependencyState.UP else DependencyState.DEGRADED,
+            policyFingerprint = submissionPolicy.fingerprint,
+            boundedWaitEnabled = boundedWaitEnabled,
+            reason = reason,
         )
     }
 

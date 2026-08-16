@@ -72,6 +72,15 @@ internal class JobConsoleDatabaseFixture : AutoCloseable {
             }
         }
 
+    fun queryLinesWithoutPlannerOverride(sql: String): List<String> =
+        dataSource.connection.use { connection ->
+            connection.createStatement().use { statement ->
+                statement.executeQuery(sql).use { result ->
+                    buildList { while (result.next()) add(result.getString(1)) }
+                }
+            }
+        }
+
     override fun close() {
         dataSource.close()
         adminConnection().use { connection ->

@@ -40,8 +40,18 @@ class JobConsoleSpringConfiguration {
     fun jobEventFanout(): BoundedJobEventFanout = BoundedJobEventFanout(Duration.ofSeconds(2))
 
     @Bean
-    fun jobConsoleService(repository: JobRepository, signalProvider: ObjectProvider<CancelSignal>): JobConsoleService =
-        JobConsoleService(repository, signalProvider.ifAvailable ?: io.bluetape4k.workshop.operations.jobconsole.signal.NoOpCancelSignal)
+    fun jobConsoleService(
+        repository: JobRepository,
+        signalProvider: ObjectProvider<CancelSignal>,
+        @Value("\${job-console.bounded-wait.enabled:false}") boundedWaitEnabled: Boolean,
+        @Value("\${job-console.bounded-wait.policy-fingerprint:}") expectedPolicyFingerprint: String,
+    ): JobConsoleService =
+        JobConsoleService(
+            repository = repository,
+            cancelSignal = signalProvider.ifAvailable ?: io.bluetape4k.workshop.operations.jobconsole.signal.NoOpCancelSignal,
+            boundedWaitEnabled = boundedWaitEnabled,
+            expectedPolicyFingerprint = expectedPolicyFingerprint.takeIf(String::isNotBlank),
+        )
 
     @Bean
     fun jobCancelSignal(@Value("\${job-console.redis-uri:}") redisUri: String): CancelSignal =
@@ -58,4 +68,8 @@ class JobConsoleSpringConfiguration {
     @Bean
     fun jobOutboxPoller(dataSource: DataSource, fanout: BoundedJobEventFanout): JobOutboxPoller =
         JobOutboxPoller(JobOutboxRepository(dataSource), fanout)
+
+    @Bean
+    fun jobConsoleSpringLifecycle(service: JobConsoleService): JobConsoleSpringLifecycle =
+        JobConsoleSpringLifecycle(service)
 }

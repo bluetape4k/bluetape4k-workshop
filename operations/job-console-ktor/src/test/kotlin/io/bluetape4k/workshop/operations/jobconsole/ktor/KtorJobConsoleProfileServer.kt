@@ -621,6 +621,7 @@ internal class KtorJobConsoleLiveAdapter private constructor(
                 demoEnabled = true,
                 redisUri = topology.redisUri,
                 workerEnabled = true,
+                boundedWaitEnabled = true,
                 outboxStartGate = outboxGate::await,
                 workerStartGate = workerGate::await,
                 runtimeObserver = { runtime = it },

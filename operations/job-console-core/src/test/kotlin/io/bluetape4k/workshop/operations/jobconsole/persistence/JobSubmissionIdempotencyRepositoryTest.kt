@@ -210,6 +210,36 @@ class JobSubmissionIdempotencyRepositoryTest {
     }
 
     @Test
+    fun `cleanup deletes expired abandoned requests in bounded batches`() {
+        JobConsoleDatabaseFixture().use { fixture ->
+            fixture.migrate()
+            val repository = JdbcJobSubmissionIdempotencyRepository(fixture.dataSource, JobRepository(fixture.dataSource))
+            fixture.execute(
+                """
+                INSERT INTO job_requests(
+                    tenant_id, submitter_hash, key_hash, request_fingerprint, job_id,
+                    state, generation, abandoned_until, updated_at
+                )
+                SELECT 'tenant-cleanup-batch', lpad(to_hex(item), 64, '0'), lpad(to_hex(item + 1000), 64, '0'),
+                       repeat('f', 64), md5(format('cleanup-%s', item))::uuid,
+                       'ABANDONED', 1, CURRENT_TIMESTAMP - interval '1 second', CURRENT_TIMESTAMP
+                FROM generate_series(1, 105) item
+                """.trimIndent(),
+            )
+
+            val first = repository.cleanupExpired(NOW, batchSize = 100)
+            first.waitersDeleted shouldBeEqualTo 0
+            first.requestsDeleted shouldBeEqualTo 100
+            fixture.countWhere("job_requests", "tenant_id = 'tenant-cleanup-batch'") shouldBeEqualTo 5L
+
+            val second = repository.cleanupExpired(NOW, batchSize = 100)
+            second.waitersDeleted shouldBeEqualTo 0
+            second.requestsDeleted shouldBeEqualTo 5
+            fixture.countWhere("job_requests", "tenant_id = 'tenant-cleanup-batch'") shouldBeEqualTo 0L
+        }
+    }
+
+    @Test
     fun `legacy terminal row lazily snapshots and retention creates a new generation`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()

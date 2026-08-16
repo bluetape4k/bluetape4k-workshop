@@ -10,6 +10,8 @@ import io.bluetape4k.workshop.operations.jobconsole.domain.JobState
 import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobConsoleDatabaseFixture
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepository
+import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepositoryException
+import io.bluetape4k.assertions.assertFailsWith
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import tools.jackson.module.kotlin.jacksonObjectMapper
@@ -94,6 +96,39 @@ class JobConsoleSubmissionOutcomeTest {
             fixture.count("jobs") shouldBeEqualTo 1L
             fixture.count("job_outbox") shouldBeEqualTo 2L
             fixture.count("job_history") shouldBeEqualTo 1L
+        }
+    }
+
+    @Test
+    @Tag("integration")
+    fun `readiness exposes policy mismatch and closed admission rejects new submissions`() {
+        JobConsoleDatabaseFixture().use { fixture ->
+            fixture.migrate()
+            val service =
+                JobConsoleService(
+                    repository = JobRepository(fixture.dataSource),
+                    boundedWaitEnabled = false,
+                    expectedPolicyFingerprint = "mismatched-policy",
+                )
+            val readiness = service.readiness()
+            readiness.ready shouldBeEqualTo false
+            readiness.postgres shouldBeEqualTo io.bluetape4k.workshop.operations.jobconsole.observability.DependencyState.UP
+            readiness.boundedWaitEnabled shouldBeEqualTo false
+            readiness.reason shouldBeEqualTo "policy"
+            readiness.policyFingerprint.isNotBlank() shouldBeEqualTo true
+
+            service.closeAdmission()
+            service.isAcceptingSubmissions() shouldBeEqualTo false
+            val failure =
+                assertFailsWith<JobRepositoryException> {
+                    service.submit(
+                        DemoCallerScope("tenant-a", "submitter-a"),
+                        "closed-admission-key",
+                        SubmitJobRequest(JobType.DOCUMENT_EXPORT, 1),
+                    )
+                }
+            failure.code shouldBeEqualTo JobProblemCode.DEPENDENCY_UNAVAILABLE
+            service.activeSubmissionCount() shouldBeEqualTo 0
         }
     }
 }

@@ -14,6 +14,32 @@ route를 사용하려면 `JOB_CONSOLE_DEMO=true`가 필요합니다.
 헤더이지 운영 인증이 아닙니다. 모든 SSE 알림 뒤에도 REST 스냅샷이 권위를
 유지합니다.
 
+## 제한된 대기 HTTP 멱등성
+
+![제한된 대기 멱등성 시퀀스](../../docs/images/readme-diagrams/operations-job-console-bounded-wait-idempotency-01.ko.png)
+
+이 어댑터의 `POST /v1/jobs`는 공용 PostgreSQL request row에 위임합니다.
+rollout은 기본적으로 비활성화(`JOB_CONSOLE_BOUNDED_WAIT_ENABLED=false`)되어
+있으며 모든 인스턴스가 같은 policy fingerprint를 사용할 때만 켭니다. 정책은
+waiter deadline 2초, key별 waiter 2개, terminal retention 1시간,
+request/replay body 64KiB, idempotency key 255바이트입니다.
+
+| 결과 | 상태 | 호출자 동작 |
+| --- | ---: | --- |
+| 최초 owner 또는 replay | `202` | response 저장, replay는 저장 snapshot 사용 |
+| 다른 request로 key 재사용 | `409` | key 또는 payload 수정 |
+| in-flight timeout | `409` + `Retry-After: 1` | 같은 key 재시도 |
+| waiter overflow | `429` + `Retry-After: 2` | backoff 후 재시도 |
+| abandoned owner / dependency failure | `503` | backoff 재시도 |
+| 잘못된 입력 / body 초과 | `400` / `413` | request 수정 |
+
+이 계약은 at-least-once 및 idempotent이며 exactly-once가 아닙니다. Legacy
+replay는 V001 호환 terminal 경로를 사용합니다. Shutdown 시 admission을 닫고
+active submission을 최대 5초 drain한 뒤 남은 owner를 abandon하여 lease recovery가
+처리합니다. Readiness는 PostgreSQL, Redis, bounded-wait 상태와 policy
+fingerprint를 노출하며 Redis는 보조 경로입니다. test-only conformance route는
+이 어댑터에 공개하지 않습니다.
+
 ## 실행
 
 ```bash
