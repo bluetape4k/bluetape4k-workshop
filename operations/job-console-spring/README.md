@@ -13,6 +13,32 @@ Routes exist only under the `demo` profile. `X-Demo-Tenant`,
 production authentication. REST snapshots remain authoritative after every SSE
 notification.
 
+## Bounded-wait HTTP idempotency
+
+![Bounded-wait idempotency sequence](../../docs/images/readme-diagrams/operations-job-console-bounded-wait-idempotency-01.png)
+
+The adapter delegates `POST /v1/jobs` to the shared PostgreSQL-owned request
+row. Rollout is disabled by default (`job-console.bounded-wait.enabled=false`);
+enable it only with one policy fingerprint across every instance. The policy is
+2s waiter deadline, two waiters per key, 1h terminal retention, 64KiB
+request/replay bodies, and a 255-byte idempotency key.
+
+| Outcome | Status | Caller action |
+| --- | ---: | --- |
+| first owner or replay | `202` | store the response; replay uses the saved snapshot |
+| key reused with another request | `409` | correct the key or payload |
+| in-flight timeout | `409` + `Retry-After: 1` | retry the same key |
+| waiter overflow | `429` + `Retry-After: 2` | back off and retry |
+| abandoned owner / dependency failure | `503` | retry with backoff |
+| invalid input / body too large | `400` / `413` | fix the request |
+
+The contract is at-least-once and idempotent, not exactly-once. Legacy replay
+uses the V001-compatible terminal path. On shutdown, admission closes, active
+submissions drain for at most five seconds, and remaining owners are abandoned
+for lease recovery. Readiness exposes PostgreSQL, Redis, bounded-wait state,
+and policy fingerprint; Redis remains advisory. No test-only conformance route
+is published by this adapter.
+
 ## Run
 
 ```bash

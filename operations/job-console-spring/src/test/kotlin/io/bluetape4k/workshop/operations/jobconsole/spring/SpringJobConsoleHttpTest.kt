@@ -45,6 +45,7 @@ class SpringJobConsoleHttpTest {
             registry.add("spring.datasource.username") { fixture.databaseUsername }
             registry.add("spring.datasource.password") { fixture.databasePassword }
             registry.add("spring.datasource.hikari.schema") { fixture.schema }
+            registry.add("job-console.bounded-wait.enabled") { "true" }
         }
     }
 }

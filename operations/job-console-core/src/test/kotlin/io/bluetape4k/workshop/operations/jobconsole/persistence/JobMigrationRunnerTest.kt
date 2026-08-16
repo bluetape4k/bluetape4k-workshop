@@ -14,7 +14,7 @@ class JobMigrationRunnerTest {
             fixture.migrate() shouldBeEqualTo JobMigrationResult.APPLIED
             fixture.migrate() shouldBeEqualTo JobMigrationResult.ALREADY_APPLIED
 
-            fixture.count("job_schema_history") shouldBeEqualTo 1L
+            fixture.count("job_schema_history") shouldBeEqualTo 2L
             fixture.count("jobs") shouldBeEqualTo 0L
             fixture.count("job_requests") shouldBeEqualTo 0L
             fixture.count("job_outbox") shouldBeEqualTo 0L
@@ -24,17 +24,26 @@ class JobMigrationRunnerTest {
     @Test
     fun `checksum drift fails closed`() {
         JobConsoleDatabaseFixture().use { fixture ->
-            val original = JobMigration("probe", "CREATE TABLE migration_probe(id BIGINT PRIMARY KEY)".toByteArray())
-            val drifted = JobMigration("probe", "CREATE TABLE migration_probe(id UUID PRIMARY KEY)".toByteArray())
+            val original = JobMigration.classpath("002", "db/job-console/V002__bounded_wait_http_idempotency.sql")
+            val drifted = JobMigration("002", "CREATE TABLE migration_probe(id UUID PRIMARY KEY)".toByteArray())
 
-            JobMigrationRunner(fixture.dataSource, listOf(original), 520002L).migrate()
+            JobMigrationRunner(
+                fixture.dataSource,
+                listOf(JobMigration.classpath("001", "db/job-console/V001__job_console.sql"), original),
+                520002L,
+            ).migrate()
+            fixture.count("job_schema_history") shouldBeEqualTo 2L
             val failure =
                 assertFailsWith<JobMigrationException> {
-                    JobMigrationRunner(fixture.dataSource, listOf(drifted), 520002L).migrate()
+                    JobMigrationRunner(
+                        fixture.dataSource,
+                        listOf(JobMigration.classpath("001", "db/job-console/V001__job_console.sql"), drifted),
+                        520002L,
+                    ).migrate()
                 }
 
             failure.code shouldBeEqualTo JobMigrationFailureCode.CHECKSUM_DRIFT
-            fixture.count("job_schema_history") shouldBeEqualTo 1L
+            fixture.count("job_schema_history") shouldBeEqualTo 2L
         }
     }
 }

@@ -406,7 +406,11 @@ class JobConsoleHighContentionAdapter private constructor(
             )
             JobMigrationRunner(
                 dataSource = dataSource,
-                migrations = listOf(JobMigration.classpath("001", "db/job-console/V001__job_console.sql")),
+                migrations =
+                    listOf(
+                        JobMigration.classpath("001", "db/job-console/V001__job_console.sql"),
+                        JobMigration.classpath("002", "db/job-console/V002__bounded_wait_http_idempotency.sql"),
+                    ),
                 advisoryLockKey = 522_006L,
             ).migrate()
             return JobConsoleHighContentionAdapter(fixture, dataSource, profile)

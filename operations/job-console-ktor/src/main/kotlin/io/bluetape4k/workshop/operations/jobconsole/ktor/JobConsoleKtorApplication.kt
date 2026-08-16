@@ -3,12 +3,11 @@ package io.bluetape4k.workshop.operations.jobconsole.ktor
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.idgenerators.uuid.Uuid
-import io.bluetape4k.workshop.operations.jobconsole.api.JobProblem
-import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import io.bluetape4k.workshop.operations.jobconsole.application.BoundedJobEventFanout
 import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleService
 import io.bluetape4k.workshop.operations.jobconsole.application.JobOutboxPoller
 import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleUi
+import io.bluetape4k.workshop.operations.jobconsole.application.JobSubmissionHttpMapper
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
 import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobMigration
@@ -29,7 +28,6 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.statuspages.StatusPages
-import io.ktor.server.request.receiveText
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -39,14 +37,17 @@ import io.ktor.server.sse.SSE
 import io.ktor.server.sse.sse
 import io.ktor.sse.ServerSentEvent
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.runBlocking
 import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.time.Duration
 import java.util.UUID
@@ -58,12 +59,14 @@ fun Application.jobConsoleModule(
     dataSource: DataSource,
     demoEnabled: Boolean = false,
     redisUri: String? = null,
+    boundedWaitEnabled: Boolean = boundedWaitEnabledFromEnvironment(),
 ) {
     jobConsoleModule(
         dataSource = dataSource,
         demoEnabled = demoEnabled,
         redisUri = redisUri,
         workerEnabled = demoEnabled,
+        boundedWaitEnabled = boundedWaitEnabled,
     )
 }
 
@@ -72,18 +75,28 @@ internal fun Application.jobConsoleModule(
     demoEnabled: Boolean,
     redisUri: String?,
     workerEnabled: Boolean,
+    boundedWaitEnabled: Boolean = boundedWaitEnabledFromEnvironment(),
     outboxStartGate: suspend () -> Unit = {},
     workerStartGate: suspend () -> Unit = {},
     runtimeObserver: (JobConsoleKtorRuntime) -> Unit = {},
 ) {
     JobMigrationRunner(
         dataSource,
-        listOf(JobMigration.classpath("001", "db/job-console/V001__job_console.sql")),
+        listOf(
+            JobMigration.classpath("001", "db/job-console/V001__job_console.sql"),
+            JobMigration.classpath("002", "db/job-console/V002__bounded_wait_http_idempotency.sql"),
+        ),
         advisoryLockKey = 520_001L,
     ).migrate()
     val repository = JobRepository(dataSource)
     val redisSignal = redisUri?.takeIf(String::isNotBlank)?.let { runCatching { LettuceCancelSignal(it) }.getOrNull() }
-    val service = JobConsoleService(repository, redisSignal ?: NoOpCancelSignal)
+    val service = JobConsoleService(
+        repository = repository,
+        cancelSignal = redisSignal ?: NoOpCancelSignal,
+        boundedWaitEnabled = boundedWaitEnabled,
+        expectedPolicyFingerprint = System.getenv("JOB_CONSOLE_BOUNDED_WAIT_POLICY_FINGERPRINT")
+            ?.takeIf(String::isNotBlank),
+    )
     val fanout = BoundedJobEventFanout(Duration.ofSeconds(2))
     val outboxRepository = JobOutboxRepository(dataSource)
     val poller = JobOutboxPoller(outboxRepository, fanout)
@@ -92,28 +105,43 @@ internal fun Application.jobConsoleModule(
     install(CallLogging)
     install(SSE)
     install(StatusPages) {
+        exception<KtorJobSubmissionScopeDeniedException> { call, _ ->
+            call.respondSubmissionProblem(
+                JobSubmissionHttpMapper.problem(JobProblemCode.SCOPE_DENIED, 403, "Forbidden"),
+            )
+        }
+        exception<KtorJobSubmissionRequestTooLargeException> { call, _ ->
+            call.respondSubmissionProblem(
+                JobSubmissionHttpMapper.problem(JobProblemCode.IDEMPOTENCY_REQUEST_TOO_LARGE, 413, "Payload Too Large"),
+            )
+        }
+        exception<KtorJobSubmissionInvalidRequestException> { call, _ ->
+            call.respondSubmissionProblem(
+                JobSubmissionHttpMapper.problem(JobProblemCode.INVALID_IDEMPOTENCY_REQUEST, 400, "Bad Request"),
+            )
+        }
         exception<JobRepositoryException> { call, failure ->
             val status =
                 when (failure.code) {
                     JobProblemCode.JOB_NOT_FOUND -> HttpStatusCode.NotFound
                     JobProblemCode.SCOPE_DENIED -> HttpStatusCode.Forbidden
                     JobProblemCode.IDEMPOTENCY_KEY_REUSED -> HttpStatusCode.Conflict
+                    JobProblemCode.IDEMPOTENCY_IN_FLIGHT -> HttpStatusCode.Conflict
+                    JobProblemCode.IDEMPOTENCY_WAITERS_EXCEEDED -> HttpStatusCode.TooManyRequests
+                    JobProblemCode.IDEMPOTENCY_SNAPSHOT_REJECTED -> HttpStatusCode.InternalServerError
+                    JobProblemCode.DEPENDENCY_UNAVAILABLE,
+                    JobProblemCode.LEASE_LOST,
+                    -> HttpStatusCode.ServiceUnavailable
                     else -> HttpStatusCode.Conflict
                 }
-            call.respondJson(status, JobProblem(status.value, failure.code, status.description, Uuid.V7.nextId().toString()))
+            call.respondSubmissionProblem(JobSubmissionHttpMapper.problem(failure.code, status.value, status.description))
         }
         exception<IllegalArgumentException> { call, _ ->
-            call.respondJson(
-                HttpStatusCode.BadRequest,
-                JobProblem(400, JobProblemCode.VALIDATION_FAILED, "Bad Request", Uuid.V7.nextId().toString()),
-            )
+            call.respondSubmissionProblem(JobSubmissionHttpMapper.problem(JobProblemCode.VALIDATION_FAILED, 400, "Bad Request"))
         }
         exception<CancellationException> { _, failure -> throw failure }
         exception<Throwable> { call, _ ->
-            call.respondJson(
-                HttpStatusCode.InternalServerError,
-                JobProblem(500, JobProblemCode.DEPENDENCY_UNAVAILABLE, "Internal Server Error", Uuid.V7.nextId().toString()),
-            )
+            call.respondSubmissionProblem(JobSubmissionHttpMapper.problem(JobProblemCode.DEPENDENCY_UNAVAILABLE, 503, "Service Unavailable"))
         }
     }
 
@@ -152,6 +180,7 @@ internal fun Application.jobConsoleModule(
         }
     runtimeObserver(
         JobConsoleKtorRuntime(
+            service = service,
             repository = repository,
             outboxRepository = outboxRepository,
             workerEngine = workerEngine,
@@ -161,14 +190,19 @@ internal fun Application.jobConsoleModule(
         ),
     )
     monitor.subscribe(ApplicationStopped) {
-        workerJob?.cancel()
-        outboxJob.cancel()
+        service.closeAdmission()
+        runBlocking(Dispatchers.IO) {
+            service.awaitSubmissionQuiescence(Duration.ofSeconds(5))
+            workerJob?.cancelAndJoin()
+            outboxJob.cancelAndJoin()
+        }
         redisSignal?.close()
         (dataSource as? AutoCloseable)?.close()
     }
 }
 
 internal class JobConsoleKtorRuntime(
+    val service: JobConsoleService,
     val repository: JobRepository,
     val outboxRepository: JobOutboxRepository,
     val workerEngine: JobWorkerEngine,
@@ -179,6 +213,9 @@ internal class JobConsoleKtorRuntime(
     val backgroundJobsStopped: Boolean
         get() = !outboxJob.isActive && workerJob?.isActive != true
 }
+
+private fun boundedWaitEnabledFromEnvironment(): Boolean =
+    System.getenv("JOB_CONSOLE_BOUNDED_WAIT_ENABLED")?.toBooleanStrictOrNull() ?: false
 
 private fun Application.installJobConsoleRoutes(service: JobConsoleService, fanout: BoundedJobEventFanout) {
     routing {
@@ -194,10 +231,11 @@ private fun Application.installJobConsoleRoutes(service: JobConsoleService, fano
         }
         route("/v1/jobs") {
             post {
-                val scope = call.demoScope()
-                val key = requireNotNull(call.request.headers["Idempotency-Key"]) { "Idempotency-Key is required" }
-                val request = mapper.readValue(call.receiveText(), SubmitJobRequest::class.java)
-                call.respondJson(HttpStatusCode.Accepted, withContext(Dispatchers.IO) { service.submit(scope, key, request) })
+                val scope = JobConsoleKtorSubmissionHttp.scope(call)
+                val key = JobConsoleKtorSubmissionHttp.idempotencyKey(call)
+                val request = JobConsoleKtorSubmissionHttp.readSubmitRequest(call)
+                val outcome = runInterruptible(Dispatchers.IO) { service.submit(scope, key, request) }
+                call.respondSubmission(JobSubmissionHttpMapper.map(outcome))
             }
             get("/{jobId}") {
                 val jobId = UUID.fromString(requireNotNull(call.parameters["jobId"]))

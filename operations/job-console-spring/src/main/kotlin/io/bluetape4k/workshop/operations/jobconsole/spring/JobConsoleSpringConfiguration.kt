@@ -27,7 +27,10 @@ class JobConsoleSpringConfiguration {
     fun jobRepository(dataSource: DataSource): JobRepository {
         JobMigrationRunner(
             dataSource,
-            listOf(JobMigration.classpath("001", "db/job-console/V001__job_console.sql")),
+            listOf(
+                JobMigration.classpath("001", "db/job-console/V001__job_console.sql"),
+                JobMigration.classpath("002", "db/job-console/V002__bounded_wait_http_idempotency.sql"),
+            ),
             advisoryLockKey = 520_001L,
         ).migrate()
         return JobRepository(dataSource)
@@ -37,8 +40,18 @@ class JobConsoleSpringConfiguration {
     fun jobEventFanout(): BoundedJobEventFanout = BoundedJobEventFanout(Duration.ofSeconds(2))
 
     @Bean
-    fun jobConsoleService(repository: JobRepository, signalProvider: ObjectProvider<CancelSignal>): JobConsoleService =
-        JobConsoleService(repository, signalProvider.ifAvailable ?: io.bluetape4k.workshop.operations.jobconsole.signal.NoOpCancelSignal)
+    fun jobConsoleService(
+        repository: JobRepository,
+        signalProvider: ObjectProvider<CancelSignal>,
+        @Value("\${job-console.bounded-wait.enabled:false}") boundedWaitEnabled: Boolean,
+        @Value("\${job-console.bounded-wait.policy-fingerprint:}") expectedPolicyFingerprint: String,
+    ): JobConsoleService =
+        JobConsoleService(
+            repository = repository,
+            cancelSignal = signalProvider.ifAvailable ?: io.bluetape4k.workshop.operations.jobconsole.signal.NoOpCancelSignal,
+            boundedWaitEnabled = boundedWaitEnabled,
+            expectedPolicyFingerprint = expectedPolicyFingerprint.takeIf(String::isNotBlank),
+        )
 
     @Bean
     fun jobCancelSignal(@Value("\${job-console.redis-uri:}") redisUri: String): CancelSignal =
@@ -55,4 +68,8 @@ class JobConsoleSpringConfiguration {
     @Bean
     fun jobOutboxPoller(dataSource: DataSource, fanout: BoundedJobEventFanout): JobOutboxPoller =
         JobOutboxPoller(JobOutboxRepository(dataSource), fanout)
+
+    @Bean
+    fun jobConsoleSpringLifecycle(service: JobConsoleService): JobConsoleSpringLifecycle =
+        JobConsoleSpringLifecycle(service)
 }

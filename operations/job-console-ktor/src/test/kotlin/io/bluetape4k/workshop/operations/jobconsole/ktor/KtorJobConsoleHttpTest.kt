@@ -34,15 +34,17 @@ class KtorJobConsoleHttpTest {
                     schema = fixture.schema
                 },
             )
-        val server = embeddedServer(Netty, port = port) { jobConsoleModule(dataSource, demoEnabled = true) }
+        val server = embeddedServer(Netty, port = port) {
+            jobConsoleModule(dataSource, demoEnabled = true, boundedWaitEnabled = true)
+        }
         server.start(wait = false)
         stopServer = { server.stop(500, 2_000) }
     }
 
     @AfterAll
     fun stopServer() {
-        fixture.dropSchema()
         stopServer?.invoke()
+        fixture.dropSchema()
     }
 
     @Test

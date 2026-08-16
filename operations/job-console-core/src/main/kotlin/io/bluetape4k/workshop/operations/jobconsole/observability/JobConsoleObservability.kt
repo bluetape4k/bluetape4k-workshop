@@ -10,6 +10,9 @@ data class JobConsoleReadiness(
     val ready: Boolean,
     val postgres: DependencyState,
     val redis: DependencyState,
+    val policyFingerprint: String,
+    val boundedWaitEnabled: Boolean,
+    val reason: String? = null,
 )
 
 object JobConsoleObservability {

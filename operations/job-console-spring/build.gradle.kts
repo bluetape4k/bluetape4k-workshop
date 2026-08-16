@@ -33,6 +33,7 @@ configurations.configureEach {
 dependencies {
     implementation(project(":operations-job-console-core"))
     implementation(libs.bluetape4k.idgenerators)
+    implementation(libs.jackson3.module.kotlin)
     implementation(libs.bluetape4k.virtualthread.api)
     runtimeOnly(libs.bluetape4k.virtualthread.jdk25)
     implementation(libs.spring.boot.starter.actuator)

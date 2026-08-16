@@ -38,6 +38,11 @@ data class SubmitJobResult(
     val replayed: Boolean,
 )
 
+internal data class InsertedSubmittedJob(
+    val jobId: UUID,
+    val enqueueSequence: Long,
+)
+
 data class ClaimedJob(
     val lease: JobLease,
     val tenantId: String,
@@ -79,7 +84,7 @@ class JobRepositoryException(
 ) : RuntimeException(code.name)
 
 class JobRepository(
-    private val dataSource: DataSource,
+    internal val dataSource: DataSource,
 ) {
     fun runnableTenantIds(limit: Int): List<String> {
         require(limit in 1..100) { "limit must be between 1 and 100" }
@@ -136,20 +141,31 @@ class JobRepository(
                     return@use SubmitJobResult(existing.jobId, enqueueSequence(connection, existing.jobId), replayed = true)
                 }
 
-                advisoryLock(connection, "queue:${scope.tenantId}")
-                val sequence = nextEnqueueSequence(connection, scope.tenantId)
                 val jobId = Uuid.V7.nextId()
-                insertJob(connection, scope, request, jobId, sequence, now)
+                val created = insertSubmittedJob(connection, scope, request, jobId, now)
                 insertRequest(connection, scope, keyHash, fingerprint, jobId, now)
-                insertOutbox(connection, jobId, now)
-                insertHistory(connection, jobId, now)
                 connection.commit()
-                SubmitJobResult(jobId, sequence, replayed = false)
+                SubmitJobResult(jobId, created.enqueueSequence, replayed = false)
             } catch (failure: Throwable) {
                 runCatching { connection.rollback() }
                 throw failure
             }
         }
+    }
+
+    internal fun insertSubmittedJob(
+        connection: Connection,
+        scope: DemoCallerScope,
+        request: SubmitJobRequest,
+        jobId: UUID,
+        now: Instant,
+    ): InsertedSubmittedJob {
+        advisoryLock(connection, "queue:${scope.tenantId}")
+        val sequence = nextEnqueueSequence(connection, scope.tenantId)
+        insertJob(connection, scope, request, jobId, sequence, now)
+        insertOutbox(connection, jobId, now)
+        insertHistory(connection, jobId, now)
+        return InsertedSubmittedJob(jobId, sequence)
     }
 
     fun claimNext(tenantId: String, leaseDuration: Duration): ClaimedJob? =
@@ -854,7 +870,7 @@ class JobRepository(
         }
     }
 
-    private fun load(jobId: UUID, connection: Connection): StoredJob? =
+    internal fun load(jobId: UUID, connection: Connection): StoredJob? =
         connection.prepareStatement(
             """
             SELECT j.job_id, j.tenant_id, j.submitter_hash, j.job_type, j.state, j.progress,

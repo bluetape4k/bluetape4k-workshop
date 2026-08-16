@@ -1,0 +1,33 @@
+{
+  "kind": "sequence",
+  "source": {
+    "question": "How does one bounded-wait submission become a durable PostgreSQL owner, replay, conflict, or recovery result?",
+    "revision": "feat/issue-737-bounded-wait-http-idempotency",
+    "paths": [
+      "docs/superpowers/specs/2026-08-16-issue-737-bounded-wait-http-idempotency-design.md",
+      "operations/job-console-core/src/main/kotlin/io/bluetape4k/workshop/operations/jobconsole/idempotency/JobSubmissionIdempotencyCoordinator.kt",
+      "operations/job-console-core/src/main/kotlin/io/bluetape4k/workshop/operations/jobconsole/persistence/JobSubmissionIdempotencyRepository.kt"
+    ]
+  },
+  "nodes": [
+    {"id":"caller","label":"HTTP caller","source":"design.md:194-231"},
+    {"id":"adapter","label":"Spring MVC / Ktor adapter","source":"JobConsoleSpringController.kt; JobConsoleKtorApplication.kt"},
+    {"id":"coordinator","label":"JobSubmissionIdempotencyCoordinator","source":"JobSubmissionIdempotencyCoordinator.kt"},
+    {"id":"postgres","label":"PostgreSQL authority","source":"design.md:57-69"},
+    {"id":"worker","label":"worker / outbox","source":"design.md:225-227"}
+  ],
+  "edges": [
+    {"id":"caller-adapter","from":"caller","to":"adapter","kind":"request","source":"design.md:194-231"},
+    {"id":"adapter-coordinator","from":"adapter","to":"coordinator","kind":"validated-submit","source":"JobConsoleService.kt"},
+    {"id":"coordinator-postgres","from":"coordinator","to":"postgres","kind":"reserve","source":"JobSubmissionIdempotencyRepository.kt"},
+    {"id":"postgres-coordinator","from":"postgres","to":"coordinator","kind":"owner-waiter-replay","source":"JobSubmissionIdempotencyRepository.kt"},
+    {"id":"coordinator-worker","from":"coordinator","to":"worker","kind":"finalize","source":"JobRepository.kt"},
+    {"id":"worker-postgres","from":"worker","to":"postgres","kind":"durable-commit","source":"design.md:225-227"},
+    {"id":"coordinator-adapter","from":"coordinator","to":"adapter","kind":"wire-outcome","source":"JobSubmissionHttpMapper.kt"},
+    {"id":"adapter-caller","from":"adapter","to":"caller","kind":"response","source":"design.md:344-345"}
+  ],
+  "behavior": {"branches": 3, "loops": 1},
+  "repairs": [
+    {"target":"branches","reason":"Use one alt frame for owner/replay/conflict and one recovery loop so all source-backed outcomes remain visible without adding participants.","touches":2}
+  ]
+}

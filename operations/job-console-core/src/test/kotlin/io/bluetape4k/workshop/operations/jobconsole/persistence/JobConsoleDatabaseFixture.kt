@@ -29,9 +29,13 @@ internal class JobConsoleDatabaseFixture : AutoCloseable {
     fun migrate(): JobMigrationResult =
         JobMigrationRunner(
             dataSource = dataSource,
-            migrations = listOf(JobMigration.classpath("001", "db/job-console/V001__job_console.sql")),
+            migrations =
+                listOf(
+                    JobMigration.classpath("001", "db/job-console/V001__job_console.sql"),
+                    JobMigration.classpath("002", "db/job-console/V002__bounded_wait_http_idempotency.sql"),
+                ),
             advisoryLockKey = 520001L,
-        ).migrate().single()
+        ).migrate().last()
 
     fun count(table: String): Long =
         dataSource.connection.use { connection ->
@@ -62,6 +66,15 @@ internal class JobConsoleDatabaseFixture : AutoCloseable {
         dataSource.connection.use { connection ->
             connection.createStatement().use { statement ->
                 statement.execute("SET enable_seqscan = off")
+                statement.executeQuery(sql).use { result ->
+                    buildList { while (result.next()) add(result.getString(1)) }
+                }
+            }
+        }
+
+    fun queryLinesWithoutPlannerOverride(sql: String): List<String> =
+        dataSource.connection.use { connection ->
+            connection.createStatement().use { statement ->
                 statement.executeQuery(sql).use { result ->
                     buildList { while (result.next()) add(result.getString(1)) }
                 }

@@ -52,9 +52,11 @@ dependencies {
     testImplementation(libs.mockk)
 
     testFixturesImplementation(libs.bluetape4k.assertions)
+    testFixturesImplementation(libs.bluetape4k.junit5)
     testFixturesImplementation(libs.bluetape4k.jackson3)
     testFixturesImplementation(libs.bluetape4k.lettuce)
     testFixturesImplementation(libs.bluetape4k.testcontainers)
+    testFixturesImplementation(libs.kotlinx.coroutines.core.lib)
     testFixturesImplementation(libs.hikaricp)
     testFixturesImplementation(libs.awaitility.kotlin)
     testFixturesImplementation(libs.testcontainers.postgresql)
