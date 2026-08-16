@@ -1,11 +1,11 @@
 package io.bluetape4k.workshop.commerce.voucher.eventsourced.web
 
 import io.bluetape4k.support.requireNotBlank
-import io.bluetape4k.workshop.shared.voucher.NormalizedVoucherCampaignResult
-import io.bluetape4k.workshop.shared.voucher.NormalizedVoucherAllocationResult
-import io.bluetape4k.workshop.shared.voucher.VoucherAllocationBlackBoxRequest
-import io.bluetape4k.workshop.shared.voucher.VoucherCampaignActivationRequest
-import io.bluetape4k.workshop.shared.voucher.VoucherCampaignBlackBoxRequest
+import io.bluetape4k.workshop.commerce.shared.voucher.NormalizedVoucherCampaignResult
+import io.bluetape4k.workshop.commerce.shared.voucher.NormalizedVoucherAllocationResult
+import io.bluetape4k.workshop.commerce.shared.voucher.VoucherAllocationBlackBoxRequest
+import io.bluetape4k.workshop.commerce.shared.voucher.VoucherCampaignActivationRequest
+import io.bluetape4k.workshop.commerce.shared.voucher.VoucherCampaignBlackBoxRequest
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.util.UUID

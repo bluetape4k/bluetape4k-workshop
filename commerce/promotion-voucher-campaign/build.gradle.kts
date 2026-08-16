@@ -36,7 +36,7 @@ configurations.configureEach {
 }
 
 dependencies {
-    testImplementation(project(":shared"))
+    testImplementation(project(":commerce-shared"))
 
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.logging)
