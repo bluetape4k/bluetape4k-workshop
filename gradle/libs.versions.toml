@@ -47,7 +47,7 @@ fastjson2 = "2.0.62"  # https://mvnrepository.com/artifact/com.alibaba.fastjson2
 mapstruct = "1.6.3"  # https://mvnrepository.com/artifact/org.mapstruct/mapstruct
 reflectasm = "1.11.9"  # https://mvnrepository.com/artifact/com.esotericsoftware/reflectasm
 
-mongo-driver = "5.9.1"  # https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-sync
+mongo-driver = "5.9.2"  # https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-sync
 lettuce = "7.6.0.RELEASE"  # https://mvnrepository.com/artifact/io.lettuce/lettuce-core
 redisson = "4.6.1"  # https://mvnrepository.com/artifact/org.redisson/redisson
 lz4 = "1.11.2"  # https://mvnrepository.com/artifact/at.yawk.lz4/lz4-java
