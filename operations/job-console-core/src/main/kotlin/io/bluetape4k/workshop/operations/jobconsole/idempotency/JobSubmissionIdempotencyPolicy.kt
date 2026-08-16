@@ -54,6 +54,7 @@ internal data class JobSubmissionIdempotencyPolicy(
         require(ownerPrepareConcurrency > 0) { "ownerPrepareConcurrency must be positive" }
         require(connectionAcquireTimeout.hasPositiveDuration()) { "connectionAcquireTimeout must be positive" }
         require(statementTimeout.hasPositiveDuration()) { "statementTimeout must be positive" }
+        require(statementTimeout.toMillis() > 0L) { "statementTimeout must be at least one millisecond" }
         require(pollInitialInterval.hasPositiveDuration()) { "pollInitialInterval must be positive" }
         require(pollMaxInterval.hasPositiveDuration()) { "pollMaxInterval must be positive" }
         require(pollInitialInterval <= pollMaxInterval) {

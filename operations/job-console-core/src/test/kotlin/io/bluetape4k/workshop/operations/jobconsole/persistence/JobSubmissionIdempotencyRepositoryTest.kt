@@ -9,6 +9,7 @@ import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionCan
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionCommand
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionIdempotencyPolicy
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOwnership
+import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionSnapshotPolicy
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.PreparedJobSubmission
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.PollResult
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.Reservation
@@ -82,6 +83,39 @@ class JobSubmissionIdempotencyRepositoryTest {
     }
 
     @Test
+    fun `test-only synthetic snapshot policy reaches jdbc finalize and replay`() {
+        JobConsoleDatabaseFixture().use { fixture ->
+            fixture.migrate()
+            val policy = JobSubmissionIdempotencyPolicy()
+            val repository =
+                JdbcJobSubmissionIdempotencyRepository(
+                    fixture.dataSource,
+                    JobRepository(fixture.dataSource),
+                    policy,
+                    JobSubmissionSnapshotPolicy.syntheticForTests(policy),
+                )
+            val command = command(policy)
+            val owner = repository.reserve(command, NOW)
+            check(owner is Reservation.Owner)
+
+            val snapshot =
+                repository.finalizeOwner(
+                    owner.ownership,
+                    PreparedJobSubmission(
+                        request = command.request,
+                        responseStatus = 422,
+                        responseBody = "synthetic problem".toByteArray(),
+                        responseContentType = "application/problem+json",
+                    ),
+                    NOW,
+                )
+
+            snapshot.responseStatus shouldBeEqualTo 422
+            check(repository.reserve(command, NOW.plusSeconds(1)) is Reservation.Replay)
+        }
+    }
+
+    @Test
     fun `waiter registration is bounded and abandoned state is observable`() {
         JobConsoleDatabaseFixture().use { fixture ->
             fixture.migrate()
@@ -104,8 +138,22 @@ class JobSubmissionIdempotencyRepositoryTest {
             repository.registerWaiter(io.bluetape4k.workshop.operations.jobconsole.idempotency.InFlightOwnership(ownership), NOW) shouldBeEqualTo WaiterRegistration.Overflow
 
             repository.removeWaiter(command.scope, command.keyHash, first.generation, first.waiterToken) shouldBeEqualTo true
-            val replacement = repository.registerWaiter(io.bluetape4k.workshop.operations.jobconsole.idempotency.InFlightOwnership(ownership), NOW)
+            val registrationNow = Instant.now()
+            val registrationDeadline = registrationNow.plusSeconds(2)
+            val replacement =
+                repository.registerWaiter(
+                    io.bluetape4k.workshop.operations.jobconsole.idempotency.InFlightOwnership(ownership),
+                    registrationNow,
+                    Duration.ofSeconds(2),
+                    registrationDeadline,
+                )
             check(replacement is WaiterRegistration.Registered)
+            fixture.queryLines(
+                "SELECT expires_at >= CURRENT_TIMESTAMP FROM job_request_waiters",
+            ).single() shouldBeEqualTo "t"
+            fixture.queryLines(
+                "SELECT expires_at <= CURRENT_TIMESTAMP + INTERVAL '2 seconds' FROM job_request_waiters",
+            ).single() shouldBeEqualTo "t"
             repository.abandon(ownership, AbandonReason.PREPARE_FAILED, NOW) shouldBeEqualTo true
             repository.poll(command.scope, command.keyHash, ownership.generation, NOW) shouldBeEqualTo PollResult.Abandoned(ownership.generation)
             fixture.execute("UPDATE job_request_waiters SET expires_at = CURRENT_TIMESTAMP - INTERVAL '1 second'")

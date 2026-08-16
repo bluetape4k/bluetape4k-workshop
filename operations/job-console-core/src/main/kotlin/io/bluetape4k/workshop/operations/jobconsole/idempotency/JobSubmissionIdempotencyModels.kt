@@ -54,7 +54,11 @@ internal sealed interface JobSubmissionOutcome {
 
 internal sealed interface Reservation {
     data class Owner(val ownership: JobSubmissionOwnership) : Reservation
-    data class Wait(val ownership: JobSubmissionOwnership) : Reservation
+    /** Existing in-flight owner plus the transaction's database-authoritative timestamp. */
+    data class Wait(
+        val ownership: JobSubmissionOwnership,
+        val databaseNow: Instant,
+    ) : Reservation
     data class Replay(val snapshot: ReplayableJobSubmission) : Reservation
     data object Conflict : Reservation
     data object Overflow : Reservation
@@ -66,6 +70,7 @@ internal data class InFlightOwnership(val ownership: JobSubmissionOwnership)
 internal sealed interface WaiterRegistration {
     data class Registered(val waiterToken: UUID, val generation: Long) : WaiterRegistration
     data object Overflow : WaiterRegistration
+    data object DeadlineExceeded : WaiterRegistration
 }
 
 internal sealed interface PollResult {
