@@ -8,6 +8,7 @@ internal class JobSubmissionSnapshotPolicy private constructor(
     private val policy: JobSubmissionIdempotencyPolicy,
     private val acceptedStatuses: Set<Int>,
     private val acceptedContentTypes: Set<String>,
+    private val replayHeaderAllowlist: Set<String> = emptySet(),
 ) {
     internal constructor(policy: JobSubmissionIdempotencyPolicy) :
         this(policy, setOf(202), setOf(APPLICATION_JSON))
@@ -65,7 +66,7 @@ internal class JobSubmissionSnapshotPolicy private constructor(
             require(!SENSITIVE_HEADER_PATTERN.containsMatchIn(canonicalName)) {
                 "response header is not replayable"
             }
-            require(canonicalName in REPLAY_HEADER_ALLOWLIST) { "response header is not replayable" }
+            require(canonicalName in replayHeaderAllowlist) { "response header is not replayable" }
             canonicalHeaders[canonicalName] = copiedValues
         }
         require(aggregateBytes <= policy.maxAggregateHeaderBytes) {
@@ -81,7 +82,7 @@ internal class JobSubmissionSnapshotPolicy private constructor(
     internal companion object {
         /** Test-fixture-only policy for adapter simulations that need problem responses. */
         fun syntheticForTests(policy: JobSubmissionIdempotencyPolicy): JobSubmissionSnapshotPolicy =
-            JobSubmissionSnapshotPolicy(policy, SYNTHETIC_STATUSES, CONTENT_TYPES)
+            JobSubmissionSnapshotPolicy(policy, SYNTHETIC_STATUSES, CONTENT_TYPES, SYNTHETIC_REPLAY_HEADER_ALLOWLIST)
 
         const val APPLICATION_JSON = "application/json"
         val CONTENT_TYPES = setOf(APPLICATION_JSON, "application/problem+json")
@@ -90,6 +91,7 @@ internal class JobSubmissionSnapshotPolicy private constructor(
         const val MAX_HEADER_NAME_LENGTH = 128
         val SENSITIVE_HEADER_PATTERN = Regex(".*(auth|credential|cookie|password|secret|token|api[-_]?key).*")
         val REPLAY_HEADER_ALLOWLIST: Set<String> = emptySet()
+        val SYNTHETIC_REPLAY_HEADER_ALLOWLIST: Set<String> = setOf("etag")
         val FORBIDDEN_REPLAY_HEADERS =
             setOf(
                 "authorization",
