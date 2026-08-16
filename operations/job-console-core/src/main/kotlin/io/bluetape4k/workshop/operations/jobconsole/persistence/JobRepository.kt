@@ -84,7 +84,7 @@ class JobRepositoryException(
 ) : RuntimeException(code.name)
 
 class JobRepository(
-    private val dataSource: DataSource,
+    internal val dataSource: DataSource,
 ) {
     fun runnableTenantIds(limit: Int): List<String> {
         require(limit in 1..100) { "limit must be between 1 and 100" }

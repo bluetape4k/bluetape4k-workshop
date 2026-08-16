@@ -83,6 +83,52 @@ data class JobSnapshot(
     }
 }
 
+/** Public result of an idempotent job submission, before an HTTP adapter adds wire details. */
+sealed interface JobSubmissionOutcome : Serializable {
+    data class OwnerCompleted(
+        val snapshot: JobSnapshot,
+        val responseHeaders: Map<String, List<String>> = emptyMap(),
+    ) : JobSubmissionOutcome
+
+    data class Replayed(
+        val snapshot: JobSnapshot,
+        val responseHeaders: Map<String, List<String>> = emptyMap(),
+    ) : JobSubmissionOutcome
+
+    data object Conflict : JobSubmissionOutcome
+
+    data object InFlightTimeout : JobSubmissionOutcome
+
+    data object WaiterOverflow : JobSubmissionOutcome
+
+    data object Abandoned : JobSubmissionOutcome
+}
+
+/** Framework-neutral HTTP response assembled from a submission outcome. */
+data class JobSubmissionHttpResponse(
+    val status: Int,
+    val body: ByteArray,
+    val contentType: String,
+    val headers: Map<String, List<String>> = emptyMap(),
+    val replayed: Boolean,
+) : Serializable {
+    init {
+        require(status in 100..599) { "status must be between 100 and 599" }
+        require(contentType.isNotBlank()) { "contentType must not be blank" }
+    }
+
+    override fun equals(other: Any?): Boolean =
+        other is JobSubmissionHttpResponse &&
+            status == other.status &&
+            body.contentEquals(other.body) &&
+            contentType == other.contentType &&
+            headers == other.headers &&
+            replayed == other.replayed
+
+    override fun hashCode(): Int =
+        (((status * 31 + body.contentHashCode()) * 31 + contentType.hashCode()) * 31 + headers.hashCode()) * 31 + replayed.hashCode()
+}
+
 /** Stable, redacted problem payload. */
 data class JobProblem(
     val status: Int,

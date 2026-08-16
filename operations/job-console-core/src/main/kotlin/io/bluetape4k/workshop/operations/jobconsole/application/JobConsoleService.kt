@@ -2,7 +2,16 @@ package io.bluetape4k.workshop.operations.jobconsole.application
 
 import io.bluetape4k.workshop.operations.jobconsole.api.JobSnapshot
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
+import io.bluetape4k.workshop.operations.jobconsole.api.JobSubmissionOutcome
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobState
+import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionCanonicalizer
+import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionCommand
+import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionIdempotencyCoordinator
+import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionIdempotencyPolicy
+import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOwnerAction
+import io.bluetape4k.workshop.operations.jobconsole.idempotency.PreparedJobSubmission
+import io.bluetape4k.workshop.operations.jobconsole.idempotency.ReplayableJobSubmission
+import io.bluetape4k.workshop.operations.jobconsole.persistence.JdbcJobSubmissionIdempotencyRepository
 import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepository
 import io.bluetape4k.workshop.operations.jobconsole.signal.CancelSignal
@@ -12,6 +21,8 @@ import io.bluetape4k.workshop.operations.jobconsole.queue.QueueProjectionService
 import io.bluetape4k.workshop.operations.jobconsole.queue.QueuePage
 import io.bluetape4k.workshop.operations.jobconsole.observability.DependencyState
 import io.bluetape4k.workshop.operations.jobconsole.observability.JobConsoleReadiness
+import tools.jackson.module.kotlin.jacksonObjectMapper
+import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Clock
 import java.time.Duration
 import java.util.UUID
@@ -28,14 +39,76 @@ class JobConsoleService(
     private val clock: Clock = Clock.systemUTC(),
     private val etaEstimator: EtaEstimator = EtaEstimator(),
 ) {
+    private val submissionPolicy = JobSubmissionIdempotencyPolicy()
+    private val submissionCanonicalizer = JobSubmissionCanonicalizer()
+    private val submissionRepository =
+        JdbcJobSubmissionIdempotencyRepository(repository.dataSource, repository, submissionPolicy)
+    private val submissionCoordinator =
+        JobSubmissionIdempotencyCoordinator(submissionRepository, submissionPolicy)
+    private val jsonMapper by lazy(LazyThreadSafetyMode.PUBLICATION) { jacksonObjectMapper() }
+
     fun submit(
         scope: DemoCallerScope,
         idempotencyKey: String,
         request: SubmitJobRequest,
-    ): JobSnapshot {
-        val submitted = repository.submit(scope, idempotencyKey, request, clock.instant())
-        return snapshot(scope, submitted.jobId)
+    ): JobSubmissionOutcome {
+        val command =
+            JobSubmissionCommand(
+                scope = scope,
+                keyHash = submissionCanonicalizer.keyHash(scope, idempotencyKey),
+                requestFingerprint = submissionCanonicalizer.fingerprint(request),
+                request = request,
+                policyFingerprint = submissionPolicy.fingerprint,
+            )
+        return toPublicOutcome(
+            submissionCoordinator.execute(
+                command,
+                object : JobSubmissionOwnerAction {
+                    override fun prepare(ownership: io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOwnership): PreparedJobSubmission {
+                        val initial =
+                            JobSnapshot(
+                                jobId = ownership.jobId,
+                                jobType = request.jobType,
+                                state = JobState.QUEUED,
+                                progress = 0,
+                                checkpoint = null,
+                                queue = null,
+                                version = 1,
+                                updatedAt = clock.instant(),
+                            )
+                        return PreparedJobSubmission(
+                            request = request,
+                            responseBody = jsonMapper.writeValueAsString(initial).toByteArray(UTF_8),
+                        )
+                    }
+
+                    override fun commit(
+                        connection: java.sql.Connection,
+                        ownership: io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOwnership,
+                        prepared: PreparedJobSubmission,
+                    ): ReplayableJobSubmission =
+                        submissionRepository.finalizeOwner(connection, ownership, prepared, clock.instant())
+                },
+            ),
+        )
     }
+
+    private fun toPublicOutcome(
+        outcome: io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome,
+    ): JobSubmissionOutcome =
+        when (outcome) {
+            is io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome.OwnerCompleted ->
+                JobSubmissionOutcome.OwnerCompleted(outcome.snapshot.toJobSnapshot(), outcome.snapshot.responseHeaders)
+            is io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome.Replayed ->
+                JobSubmissionOutcome.Replayed(outcome.snapshot.toJobSnapshot(), outcome.snapshot.responseHeaders)
+            io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome.Conflict -> JobSubmissionOutcome.Conflict
+            io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome.InFlightTimeout -> JobSubmissionOutcome.InFlightTimeout
+            io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome.WaiterOverflow -> JobSubmissionOutcome.WaiterOverflow
+            io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionOutcome.Abandoned -> JobSubmissionOutcome.Abandoned
+        }
+
+    private fun ReplayableJobSubmission.toJobSnapshot(): JobSnapshot =
+        jsonMapper.readValue(responseBody.decodeToString(), JobSnapshot::class.java)
 
     fun snapshot(scope: DemoCallerScope, jobId: UUID): JobSnapshot {
         val stored = repository.load(scope, jobId)

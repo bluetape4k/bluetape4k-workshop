@@ -38,6 +38,7 @@ enum class JobProblemCode(
 ) {
     VALIDATION_FAILED("validation_failed"),
     INVALID_IDEMPOTENCY_REQUEST("invalid_idempotency_request"),
+    IDEMPOTENCY_REQUEST_TOO_LARGE("idempotency_request_too_large"),
     IDEMPOTENCY_KEY_REUSED("idempotency_key_reused"),
     IDEMPOTENCY_IN_FLIGHT("idempotency_in_flight"),
     IDEMPOTENCY_WAITERS_EXCEEDED("idempotency_waiters_exceeded"),
