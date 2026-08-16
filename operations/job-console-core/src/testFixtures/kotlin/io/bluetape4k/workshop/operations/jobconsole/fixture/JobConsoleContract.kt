@@ -55,9 +55,13 @@ class JobConsoleV1LiveContract(
 
         val submit = request("POST", "/v1/jobs", SUBMIT_BODY, idempotencyKey)
         check(submit.statusCode() == 202)
+        check(submit.headers().firstValue("Idempotency-Replayed").orElse(null) == "false")
+        check(submit.headers().firstValue("Content-Type").orElse("").startsWith("application/json"))
         val jobId = requireNotNull(JOB_ID.find(submit.body())?.groupValues?.get(1))
         val replay = request("POST", "/v1/jobs", SUBMIT_BODY, idempotencyKey)
         check(replay.statusCode() == 202)
+        check(replay.headers().firstValue("Idempotency-Replayed").orElse(null) == "true")
+        check(replay.headers().firstValue("Content-Type").orElse("").startsWith("application/json"))
         check(JOB_ID.find(replay.body())?.groupValues?.get(1) == jobId)
         verifyHeartbeat(jobId)
         awaitState(jobId, "succeeded")
@@ -74,6 +78,7 @@ class JobConsoleV1LiveContract(
         val problem = request("POST", "/v1/jobs", INVALID_SUBMIT_BODY, "invalid-key")
 
         check(problem.statusCode() == 400)
+        check(problem.headers().firstValue("Content-Type").orElse("").startsWith("application/problem+json"))
         val requestId = requireNotNull(REQUEST_ID.find(problem.body())?.groupValues?.get(1))
         check(UUID.fromString(requestId).version() == 7) { "requestId must use UUID v7: $requestId" }
     }

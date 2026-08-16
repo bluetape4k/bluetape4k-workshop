@@ -3,12 +3,11 @@ package io.bluetape4k.workshop.operations.jobconsole.ktor
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.idgenerators.uuid.Uuid
-import io.bluetape4k.workshop.operations.jobconsole.api.JobProblem
-import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import io.bluetape4k.workshop.operations.jobconsole.application.BoundedJobEventFanout
 import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleService
 import io.bluetape4k.workshop.operations.jobconsole.application.JobOutboxPoller
 import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleUi
+import io.bluetape4k.workshop.operations.jobconsole.application.JobSubmissionHttpMapper
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
 import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobMigration
@@ -29,7 +28,6 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.plugins.statuspages.StatusPages
-import io.ktor.server.request.receiveText
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -45,6 +43,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import tools.jackson.module.kotlin.jacksonObjectMapper
@@ -95,28 +94,43 @@ internal fun Application.jobConsoleModule(
     install(CallLogging)
     install(SSE)
     install(StatusPages) {
+        exception<KtorJobSubmissionScopeDeniedException> { call, _ ->
+            call.respondSubmissionProblem(
+                JobSubmissionHttpMapper.problem(JobProblemCode.SCOPE_DENIED, 403, "Forbidden"),
+            )
+        }
+        exception<KtorJobSubmissionRequestTooLargeException> { call, _ ->
+            call.respondSubmissionProblem(
+                JobSubmissionHttpMapper.problem(JobProblemCode.IDEMPOTENCY_REQUEST_TOO_LARGE, 413, "Payload Too Large"),
+            )
+        }
+        exception<KtorJobSubmissionInvalidRequestException> { call, _ ->
+            call.respondSubmissionProblem(
+                JobSubmissionHttpMapper.problem(JobProblemCode.INVALID_IDEMPOTENCY_REQUEST, 400, "Bad Request"),
+            )
+        }
         exception<JobRepositoryException> { call, failure ->
             val status =
                 when (failure.code) {
                     JobProblemCode.JOB_NOT_FOUND -> HttpStatusCode.NotFound
                     JobProblemCode.SCOPE_DENIED -> HttpStatusCode.Forbidden
                     JobProblemCode.IDEMPOTENCY_KEY_REUSED -> HttpStatusCode.Conflict
+                    JobProblemCode.IDEMPOTENCY_IN_FLIGHT -> HttpStatusCode.Conflict
+                    JobProblemCode.IDEMPOTENCY_WAITERS_EXCEEDED -> HttpStatusCode.TooManyRequests
+                    JobProblemCode.IDEMPOTENCY_SNAPSHOT_REJECTED -> HttpStatusCode.InternalServerError
+                    JobProblemCode.DEPENDENCY_UNAVAILABLE,
+                    JobProblemCode.LEASE_LOST,
+                    -> HttpStatusCode.ServiceUnavailable
                     else -> HttpStatusCode.Conflict
                 }
-            call.respondJson(status, JobProblem(status.value, failure.code, status.description, Uuid.V7.nextId().toString()))
+            call.respondSubmissionProblem(JobSubmissionHttpMapper.problem(failure.code, status.value, status.description))
         }
         exception<IllegalArgumentException> { call, _ ->
-            call.respondJson(
-                HttpStatusCode.BadRequest,
-                JobProblem(400, JobProblemCode.VALIDATION_FAILED, "Bad Request", Uuid.V7.nextId().toString()),
-            )
+            call.respondSubmissionProblem(JobSubmissionHttpMapper.problem(JobProblemCode.VALIDATION_FAILED, 400, "Bad Request"))
         }
         exception<CancellationException> { _, failure -> throw failure }
         exception<Throwable> { call, _ ->
-            call.respondJson(
-                HttpStatusCode.InternalServerError,
-                JobProblem(500, JobProblemCode.DEPENDENCY_UNAVAILABLE, "Internal Server Error", Uuid.V7.nextId().toString()),
-            )
+            call.respondSubmissionProblem(JobSubmissionHttpMapper.problem(JobProblemCode.DEPENDENCY_UNAVAILABLE, 503, "Service Unavailable"))
         }
     }
 
@@ -197,10 +211,11 @@ private fun Application.installJobConsoleRoutes(service: JobConsoleService, fano
         }
         route("/v1/jobs") {
             post {
-                val scope = call.demoScope()
-                val key = requireNotNull(call.request.headers["Idempotency-Key"]) { "Idempotency-Key is required" }
-                val request = mapper.readValue(call.receiveText(), SubmitJobRequest::class.java)
-                call.respondJson(HttpStatusCode.Accepted, withContext(Dispatchers.IO) { service.submit(scope, key, request) })
+                val scope = JobConsoleKtorSubmissionHttp.scope(call)
+                val key = JobConsoleKtorSubmissionHttp.idempotencyKey(call)
+                val request = JobConsoleKtorSubmissionHttp.readSubmitRequest(call)
+                val outcome = runInterruptible(Dispatchers.IO) { service.submit(scope, key, request) }
+                call.respondSubmission(JobSubmissionHttpMapper.map(outcome))
             }
             get("/{jobId}") {
                 val jobId = UUID.fromString(requireNotNull(call.parameters["jobId"]))
