@@ -54,7 +54,6 @@ import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
-import java.util.concurrent.locks.ReentrantLock
 import kotlin.coroutines.coroutineContext
 
 /**
@@ -83,13 +82,7 @@ class BoundedWaitHttpIdempotencyFixture(
             maxAggregateHeaderBytes = config.maxReplayHeaderBytes,
         )
     private val virtualClock = FixtureClock()
-    private val wakeup = ReentrantLock()
-    private val wakeupCondition = wakeup.newCondition()
-    private val mutationEpoch = AtomicLong()
-    private val waitStrategy =
-        object : InterruptibleWaitStrategy {
-            override fun await(interval: Duration) = awaitVirtual(interval)
-        }
+    private val waitStrategy = FixtureVirtualWaitStrategy(virtualClock::monotonicNanos)
     private val repository = FixtureRepository(policy, virtualClock)
     private val prepareExecutor = Executors.newVirtualThreadPerTaskExecutor()
     private val coordinator =
@@ -121,10 +114,7 @@ class BoundedWaitHttpIdempotencyFixture(
             .build()
 
     init {
-        repository.onMutation = {
-            mutationEpoch.incrementAndGet()
-            signalWakeup()
-        }
+        repository.onMutation = waitStrategy::signal
     }
 
     override suspend fun exchange(request: HttpIdempotencyRequest): HttpIdempotencyResponse {
@@ -171,7 +161,7 @@ class BoundedWaitHttpIdempotencyFixture(
         if (ownerControl.holdDelivery) {
             withTimeout(config.scenarioTimeout.toMillis()) { ownerControl.finalized.await() }
         }
-        signalWakeup()
+        waitStrategy.signal()
     }
 
     override suspend fun holdOwnerResponseDelivery(request: HttpIdempotencyRequest) {
@@ -184,7 +174,7 @@ class BoundedWaitHttpIdempotencyFixture(
 
     override suspend fun abandonOwner(request: HttpIdempotencyRequest, outcome: HttpIdempotencyResponse) {
         (activeOwnerControls[keyOf(request)] ?: control(request)).completion.complete(OwnerSignal.Abandon(sanitizeTransient(outcome)))
-        signalWakeup()
+        waitStrategy.signal()
     }
 
     override suspend fun advanceTimeBy(duration: Duration) {
@@ -199,8 +189,7 @@ class BoundedWaitHttpIdempotencyFixture(
                 duration
             }
         virtualClock.advance(adjustedDuration)
-        mutationEpoch.incrementAndGet()
-        signalWakeup()
+        waitStrategy.signal()
     }
 
     override suspend fun resetScenario() {
@@ -221,7 +210,7 @@ class BoundedWaitHttpIdempotencyFixture(
             repository.clear()
             sideEffects.clear()
             virtualClock.reset()
-            signalWakeup()
+            waitStrategy.signal()
         }
     }
 
@@ -242,7 +231,7 @@ class BoundedWaitHttpIdempotencyFixture(
     override fun close() {
         if (closed.compareAndSet(0, 1)) {
             prepareExecutor.shutdownNow()
-            signalWakeup()
+            waitStrategy.signal()
         }
     }
 
@@ -275,10 +264,15 @@ class BoundedWaitHttpIdempotencyFixture(
         val outcome =
             try {
                 runInterruptible(Dispatchers.IO) {
-                    coordinator.execute(
-                        command,
-                        ownerAction(request, key, commandRequest, ownerJob),
-                    )
+                    waitStrategy.beginWaiter()
+                    try {
+                        coordinator.execute(
+                            command,
+                            ownerAction(request, key, commandRequest, ownerJob),
+                        )
+                    } finally {
+                        waitStrategy.endWaiter()
+                    }
                 }
             } catch (failure: JobRepositoryException) {
                 if (failure.code == JobProblemCode.IDEMPOTENCY_SNAPSHOT_REJECTED) {
@@ -502,28 +496,6 @@ class BoundedWaitHttpIdempotencyFixture(
         java.security.MessageDigest.getInstance("SHA-256")
             .digest("$operation\u0000$resource\u0000$body".toByteArray(UTF_8))
             .joinToString("") { "%02x".format(it.toInt() and 0xff) }
-
-    private fun awaitVirtual(interval: Duration) {
-        val deadline = virtualClock.monotonicNanos() + interval.toNanos()
-        val observedMutation = mutationEpoch.get()
-        wakeup.lock()
-        try {
-            while (virtualClock.monotonicNanos() < deadline && mutationEpoch.get() == observedMutation) {
-                wakeupCondition.await(25L, TimeUnit.MILLISECONDS)
-            }
-        } finally {
-            wakeup.unlock()
-        }
-    }
-
-    private fun signalWakeup() {
-        wakeup.lock()
-        try {
-            wakeupCondition.signalAll()
-        } finally {
-            wakeup.unlock()
-        }
-    }
 
     private data class CommandKey(val tenant: String, val submitter: String, val keyHash: String)
 
@@ -762,5 +734,53 @@ class BoundedWaitHttpIdempotencyFixture(
                 type == Char::class.javaPrimitiveType -> '\u0000'
                 else -> null
             }
+    }
+}
+
+/**
+ * 인메모리 conformance fixture가 사용하는 가상 시간 대기 전략입니다.
+ *
+ * waiter가 coordinator에 진입하기 전에 mutation epoch을 기록합니다. poll 반환 후 waiter가
+ * condition variable에 도달하기 전에 owner가 완료될 수 있으므로, await 진입 시점에만 epoch을
+ * 읽으면 이미 발생한 wake-up을 잃고 가상 시간이 멈춘 상태에서 영원히 대기할 수 있습니다.
+ */
+class FixtureVirtualWaitStrategy(
+    private val monotonicNanos: () -> Long,
+) : InterruptibleWaitStrategy {
+    private val wakeup = java.util.concurrent.locks.ReentrantLock()
+    private val wakeupCondition = wakeup.newCondition()
+    private val mutationEpoch = AtomicLong()
+    private val observedEpoch = ThreadLocal<Long?>()
+
+    fun beginWaiter() {
+        observedEpoch.set(mutationEpoch.get())
+    }
+
+    fun endWaiter() {
+        observedEpoch.remove()
+    }
+
+    fun signal() {
+        wakeup.lock()
+        try {
+            mutationEpoch.incrementAndGet()
+            wakeupCondition.signalAll()
+        } finally {
+            wakeup.unlock()
+        }
+    }
+
+    override fun await(interval: Duration) {
+        val deadline = Math.addExact(monotonicNanos(), interval.toNanos())
+        val baseline = observedEpoch.get() ?: mutationEpoch.get()
+        wakeup.lock()
+        try {
+            while (monotonicNanos() < deadline && mutationEpoch.get() == baseline) {
+                wakeupCondition.await(25L, TimeUnit.MILLISECONDS)
+            }
+            observedEpoch.set(mutationEpoch.get())
+        } finally {
+            wakeup.unlock()
+        }
     }
 }
