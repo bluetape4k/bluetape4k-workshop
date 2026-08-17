@@ -1,0 +1,6 @@
+[
+  {
+    "kind": "startup-ack",
+    "summary": "검토 lane이 작업 범위와 중단 조건을 인지했으며 bounded review를 수행한다."
+  }
+]

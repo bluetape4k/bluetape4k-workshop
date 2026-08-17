@@ -1,0 +1,6 @@
+[
+  {
+    "kind": "lane-assignment",
+    "summary": "독립 명세 검토 lane으로 배정했으며 현재 worktree와 명세를 읽기 전용으로 검토한다."
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "lane_id": "spec-performance",
+  "agent_id": "agent-spec-performance",
+  "assignment": "Issue #743 설계 명세의 성능 관점 독립 검토: polling/backpressure/retry/메모리와 실행 비용",
+  "write_scope": [],
+  "fallback": "main session",
+  "observed_at": "2026-08-16T15:32:59Z",
+  "startup_ack_deadline": "2026-08-16T15:33:29Z",
+  "command_deadline": "2026-08-16T15:42:59Z"
+}

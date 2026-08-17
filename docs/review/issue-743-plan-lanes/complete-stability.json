@@ -1,0 +1,6 @@
+[
+  {
+    "kind": "review",
+    "summary": "계획 안정성/API 재검토 PASS: passive caller-owned registry, app-owned job만 취소, 네 position branch, virtual-time readiness/retry, timeout client-close ordering이 승인 spec과 일치하며 P0/P1/P2/P3는 0이다."
+  }
+]

@@ -42,6 +42,7 @@ case "${1:-help}" in
       :image-processing-barcode-api:test \
       :aws-cloudwatch-imds-observability:test \
       :aws-eventbridge-scheduler:test \
+      :aws-kinesis-coroutines:test \
       :aws-s3-vectors-access-grants:test \
       :kotlin-flow-extensions-event-aggregation:test \
       :kotlin-flow-extensions-metrics-sampling:test \
@@ -218,6 +219,7 @@ case "${1:-help}" in
       :micrometer-observation:test \
       :aws-cloudwatch-imds-observability:test \
       :aws-eventbridge-scheduler:test \
+      :aws-kinesis-coroutines:test \
       :aws-sqs-sns-coroutines:test \
       :aws-s3-vectors-access-grants:test \
       :micrometer-tracing-coroutines:test \
@@ -232,6 +234,7 @@ case "${1:-help}" in
       :aws-cloudwatch-imds-observability:test \
       :aws-eventbridge-scheduler:test \
       :aws-ktor-dynamodb:test \
+      :aws-kinesis-coroutines:test \
       :aws-s3-spring-cloud:test \
       :aws-sqs-sns-coroutines:test \
       :aws-storage-abstraction:test \
@@ -309,7 +312,7 @@ case "${1:-help}" in
     echo ""
     echo "=== Required workshop module registration ==="
     missing_modules=0
-    for module in image-processing/barcode-api commerce/shared; do
+    for module in image-processing/barcode-api commerce/shared aws/kinesis-coroutines; do
       for required_file in build.gradle.kts README.md README.ko.md; do
         if [ ! -f "$module/$required_file" ]; then
           echo "MISSING: $module/$required_file"

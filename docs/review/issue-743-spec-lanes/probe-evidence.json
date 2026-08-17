@@ -1,0 +1,6 @@
+[
+  {
+    "kind": "probe",
+    "summary": "5분 검토 deadline을 넘어 bounded verdict를 요청하는 probe를 기록한다."
+  }
+]

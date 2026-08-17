@@ -1,0 +1,10 @@
+{
+  "lane_id": "main-integration",
+  "agent_id": "agent-main",
+  "assignment": "Issue #743 명세 통합 및 후속 구현 계획/검증을 담당하는 주 세션 lane",
+  "write_scope": [],
+  "fallback": "main session",
+  "observed_at": "2026-08-16T15:32:59Z",
+  "startup_ack_deadline": "2026-08-16T15:33:29Z",
+  "command_deadline": "2026-08-16T15:42:59Z"
+}

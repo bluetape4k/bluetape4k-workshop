@@ -1,0 +1,10 @@
+{
+  "lane_id": "plan-stability",
+  "agent_id": "agent-plan-stability",
+  "assignment": "Issue #743 구현 계획의 안정성/API 관점 독립 검토: lifecycle/cancellation/retry/error/test determinism",
+  "write_scope": [],
+  "fallback": "main session",
+  "observed_at": "2026-08-17T00:00:00Z",
+  "startup_ack_deadline": "2026-08-17T00:00:30Z",
+  "command_deadline": "2026-08-17T00:05:00Z"
+}

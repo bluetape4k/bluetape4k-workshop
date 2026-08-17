@@ -1,0 +1,6 @@
+[
+  {
+    "kind": "review",
+    "summary": "계획 보안 재검토 PASS: endpoint allow/deny 및 SSRF 방어, 호출자 원본 예외와 관측성 redaction 분리, synthetic sentinel 회귀, Actuator health/info/metrics allowlist, credential-free/real-aws safety가 반영되었고 P0/P1/P2/P3는 0이다."
+  }
+]

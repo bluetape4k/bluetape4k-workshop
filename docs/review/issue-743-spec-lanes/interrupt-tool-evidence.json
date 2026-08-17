@@ -1,0 +1,6 @@
+[
+  {
+    "kind": "tool",
+    "summary": "collaboration.interrupt_agent returned previous_status=running; agent was interrupted after bounded review deadline."
+  }
+]

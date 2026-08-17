@@ -1,0 +1,6 @@
+[
+  {
+    "kind": "lane-assignment",
+    "summary": "승인된 Issue #743 구현 계획을 implementation-main lane에서 TDD 순서로 실행하며 지정된 모듈·registry·workflow·문서 범위만 변경한다."
+  }
+]

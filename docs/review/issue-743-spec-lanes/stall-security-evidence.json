@@ -1,0 +1,7 @@
+[
+  {
+    "kind": "liveness-decision",
+    "summary": "Security review lane exceeded its bounded review window without fresh evidence.",
+    "checksum": "979e2167c41a0d9ccf9eb074cc744ff33494b894254dac54f43fa2b05f1048f1"
+  }
+]

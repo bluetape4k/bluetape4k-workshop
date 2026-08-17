@@ -1,0 +1,6 @@
+[
+  {
+    "kind": "startup-ack",
+    "summary": "주 세션이 implementation-main lane의 write scope와 TDD/검증 순서를 확인했다."
+  }
+]
