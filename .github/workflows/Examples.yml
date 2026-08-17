@@ -33,6 +33,7 @@ on:
       - 'aws/cloudwatch-imds-observability/**'
       - 'aws/eventbridge-scheduler/**'
       - 'aws/sqs-sns-coroutines/**'
+      - 'aws/kinesis-coroutines/**'
       - 'aws/storage-abstraction/**'
       - 'aws/s3-spring-cloud/**'
       - 'aws/s3-vectors-access-grants/**'
@@ -87,6 +88,7 @@ on:
       - 'aws/cloudwatch-imds-observability/**'
       - 'aws/eventbridge-scheduler/**'
       - 'aws/sqs-sns-coroutines/**'
+      - 'aws/kinesis-coroutines/**'
       - 'aws/storage-abstraction/**'
       - 'aws/s3-spring-cloud/**'
       - 'aws/s3-vectors-access-grants/**'
@@ -282,6 +284,7 @@ jobs:
           :image-processing-barcode-api:test
           :aws-cloudwatch-imds-observability:test
           :aws-eventbridge-scheduler:test
+          :aws-kinesis-coroutines:test
           :aws-s3-vectors-access-grants:test
           :kotlin-flow-extensions-event-aggregation:test
           :kotlin-flow-extensions-metrics-sampling:test
@@ -348,6 +351,8 @@ jobs:
             aws/cloudwatch-imds-observability/build/reports/tests/test/
             aws/eventbridge-scheduler/build/test-results/test/*.xml
             aws/eventbridge-scheduler/build/reports/tests/test/
+            aws/kinesis-coroutines/build/test-results/test/*.xml
+            aws/kinesis-coroutines/build/reports/tests/test/
             aws/s3-vectors-access-grants/build/test-results/test/*.xml
             aws/s3-vectors-access-grants/build/reports/tests/test/
             kotlin/flow-extensions-event-aggregation/build/test-results/test/*.xml

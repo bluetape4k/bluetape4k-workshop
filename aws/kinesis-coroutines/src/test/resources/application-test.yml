@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: kinesis-coroutines-test
+  main:
+    web-application-type: none
+  profiles:
+    default: local
+
+bluetape4k:
+  aws:
+    enabled: false
+    kinesis:
+      enabled: false
+
+kinesis:
+  workshop:
+    profile: local
+    run-demo: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

@@ -1,0 +1,19 @@
+[
+  {
+    "id": "kinesis-coroutines",
+    "required": true,
+    "description": "Issue #743 Kinesis coroutine reference module, documentation, registry, workflow, and validation",
+    "owner_lane": "main-integration",
+    "required_checks": [
+      "spec-review",
+      "plan-review",
+      "targeted-tests",
+      "module-tests",
+      "workflow-validation",
+      "documentation-parity"
+    ],
+    "dependencies": [],
+    "evidence_refs": [],
+    "coverage_state": "missing"
+  }
+]

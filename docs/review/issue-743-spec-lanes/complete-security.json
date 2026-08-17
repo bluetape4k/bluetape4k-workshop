@@ -1,0 +1,6 @@
+[
+  {
+    "kind": "review",
+    "summary": "Security/user lens final re-review PASS: credential, endpoint, redaction, learner and AWS safety boundaries are covered."
+  }
+]

@@ -1,0 +1,6 @@
+[
+  {
+    "kind": "review",
+    "summary": "Stability/API lens final re-review PASS: iterator branches, episode reset, ACTIVE readiness and client-close ordering are covered."
+  }
+]

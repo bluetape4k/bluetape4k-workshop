@@ -1,0 +1,22 @@
+spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 10s
+
+bluetape4k:
+  aws:
+    enabled: true
+    kinesis:
+      enabled: true
+
+kinesis:
+  workshop:
+    profile: real-aws
+    run-demo: false
+    readiness-timeout: 30s
+    readiness-poll-interval: 250ms
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

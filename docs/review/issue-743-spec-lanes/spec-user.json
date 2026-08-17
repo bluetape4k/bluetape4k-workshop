@@ -1,0 +1,10 @@
+{
+  "lane_id": "spec-user",
+  "agent_id": "agent-spec-user",
+  "assignment": "Issue #743 설계 명세의 사용자/학습자 관점 독립 검토: examples/README/claims/acceptance/usefulness",
+  "write_scope": [],
+  "fallback": "main session",
+  "observed_at": "2026-08-16T15:32:59Z",
+  "startup_ack_deadline": "2026-08-16T15:33:29Z",
+  "command_deadline": "2026-08-16T15:42:59Z"
+}

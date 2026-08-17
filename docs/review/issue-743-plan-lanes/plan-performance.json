@@ -1,0 +1,10 @@
+{
+  "lane_id": "plan-performance",
+  "agent_id": "agent-plan-performance",
+  "assignment": "Issue #743 구현 계획의 성능 관점 독립 검토: polling/backpressure/retry/메모리/실행 비용",
+  "write_scope": [],
+  "fallback": "main session",
+  "observed_at": "2026-08-17T00:00:00Z",
+  "startup_ack_deadline": "2026-08-17T00:00:30Z",
+  "command_deadline": "2026-08-17T00:05:00Z"
+}

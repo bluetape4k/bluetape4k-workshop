@@ -1,0 +1,6 @@
+{
+  "component_id": "kinesis-coroutines",
+  "check_id": "plan-review",
+  "passed": true,
+  "reason": "Six independent plan review lanes and SPW-01..05 writer gate PASS; integrated P0/P1/P2/P3 are zero."
+}

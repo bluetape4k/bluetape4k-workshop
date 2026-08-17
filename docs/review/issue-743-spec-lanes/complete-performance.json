@@ -1,0 +1,6 @@
+[
+  {
+    "kind": "review",
+    "summary": "Performance lens final re-review PASS: bounded polling/backoff, memory, backpressure, retry episode and cancellation contracts are covered."
+  }
+]

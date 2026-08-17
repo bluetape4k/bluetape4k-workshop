@@ -1,0 +1,6 @@
+[
+  {
+    "kind": "review",
+    "summary": "계획 운영 재검토 PASS: SmartLifecycle phase/order와 10초 withTimeout, non-terminating collector close 테스트, module README, all-smoke/observability/aws/stale-check/workflow artifact parity가 반영되었고 P0/P1/P2/P3는 0이다."
+  }
+]

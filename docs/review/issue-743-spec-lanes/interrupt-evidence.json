@@ -1,0 +1,6 @@
+[
+  {
+    "kind": "interrupt-result",
+    "summary": "검토 agent가 deadline 내 결과를 반환하지 않아 중단되었고, 마지막 checkpoint는 명세 파일 read-only 검토 시작이다."
+  }
+]

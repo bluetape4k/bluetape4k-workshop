@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: kinesis-coroutines
+  profiles:
+    default: local
+  main:
+    web-application-type: none
+  lifecycle:
+    timeout-per-shutdown-phase: 10s
+
+bluetape4k:
+  aws:
+    enabled: false
+    kinesis:
+      enabled: false
+
+kinesis:
+  workshop:
+    profile: local
+    run-demo: true
+    batch-limit: 100
+    poll-interval: 200ms
+    empty-backoff: 1s
+    max-aggregate-payload-bytes: 1048576
+    readiness-timeout: 30s
+    readiness-poll-interval: 250ms
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    env:
+      enabled: false
+    configprops:
+      enabled: false
+    beans:
+      enabled: false

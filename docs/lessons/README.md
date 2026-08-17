@@ -16,6 +16,7 @@ directory unless they have been deliberately promoted.
 
 Recent delivery lessons:
 
+- [Issue #743 Kinesis 코루틴 워크숍 경계](2026-08-17-issue-743-kinesis-coroutines.md)
 - [Issue #573 Commerce shared 경계 구현](2026-08-16-issue-573-commerce-shared-boundary.md)
 - [Issue #740 bounded concatMapEager backpressure 계약](2026-08-15-issue-740-bounded-concat-map-eager.md)
 - [Nightly GraalVM reachability metadata 병렬 추출 경쟁](2026-08-11-nightly-graalvm-metadata-serialization.md)

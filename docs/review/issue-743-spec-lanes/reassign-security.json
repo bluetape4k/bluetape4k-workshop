@@ -1,0 +1,10 @@
+{
+  "lane_id": "spec-security",
+  "replacement_lane_id": "spec-security-retry",
+  "replacement_agent_id": "agent-spec-security-replacement",
+  "decided_at": "2026-08-16T15:50:20Z",
+  "replacement_assignment": "checkpoint: read the Issue #743 design spec and return the bounded SECURITY verdict; do not extend scope",
+  "replacement_write_scope": [],
+  "replacement_startup_ack_deadline": "2026-08-16T15:50:50Z",
+  "replacement_command_deadline": "2026-08-16T15:52:20Z"
+}

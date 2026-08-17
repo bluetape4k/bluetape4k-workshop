@@ -1,0 +1,10 @@
+{
+  "lane_id": "plan-developer",
+  "agent_id": "agent-plan-developer",
+  "assignment": "Issue #743 구현 계획의 개발자/API 관점 독립 검토: upstream 0.5.0 contract/Gradle/module/tests/traceability",
+  "write_scope": [],
+  "fallback": "main session",
+  "observed_at": "2026-08-17T00:00:00Z",
+  "startup_ack_deadline": "2026-08-17T00:00:30Z",
+  "command_deadline": "2026-08-17T00:05:00Z"
+}

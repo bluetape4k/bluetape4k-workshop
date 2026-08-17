@@ -15,7 +15,9 @@ Ktor route, DynamoDB table bootstrap, conditional write, optimistic update를 �
 보고 싶다면 `sqs-sns-coroutines/`를 사용합니다. S3 Vectors upsert/query와 S3 Access
 Grants read decision을 분리해서 보고 싶다면 `s3-vectors-access-grants/`를 사용합니다.
 실제 AWS 자격 증명 없이 CloudWatch metrics, CloudWatch Logs, Micrometer publishing,
-명시적 IMDS 경계를 배우고 싶다면 `cloudwatch-imds-observability/`를 사용합니다.
+명시적 IMDS 경계를 배우고 싶다면 `cloudwatch-imds-observability/`를 사용합니다. partition key,
+shard/sequence report, coroutine cancellation, bounded retry/backoff를 credential-free local
+fake로 배우고 실제 AWS는 명시적으로 opt-in하고 싶다면 `kinesis-coroutines/`를 사용합니다.
 
 ## 아키텍처
 
@@ -25,7 +27,8 @@ Grants read decision을 분리해서 보고 싶다면 `s3-vectors-access-grants/
 Floci 기반 AWS 호환 인프라로 통합 테스트를 수행합니다. EventBridge Scheduler,
 S3 Vectors/Access Grants, CloudWatch/IMDS는 실제 AWS 서비스나 IMDS를 호출하지 않고
 request construction, failure isolation, 명시적 opt-in 경계를 배우도록 local adapter
-경계를 유지합니다.
+경계를 유지합니다. Kinesis는 기본적으로 deterministic in-memory `local` adapter를 사용하고,
+`real-aws` profile에서만 upstream AWS SDK v2 async client를 생성합니다.
 
 ## 모듈 가이드
 
@@ -36,6 +39,7 @@ request construction, failure isolation, 명시적 opt-in 경계를 배우도록
 | `ktor-dynamodb/` | `:aws-ktor-dynamodb` | Ktor REST route, `DynamoDbKtorPlugin` table bootstrap, conditional write, optimistic version update, local emulator readiness check를 확인합니다. |
 | `eventbridge-scheduler/` | `:aws-eventbridge-scheduler` | Order workflow event envelope, EventBridge publish status, 지연 Scheduler request mapping, idempotency key, correlation id를 확인합니다. |
 | `sqs-sns-coroutines/` | `:aws-sqs-sns-coroutines` | SNS publish request, SQS polling, coroutine cancellation propagation, retry visibility change, dead-letter report, Micrometer outcome metric을 확인합니다. |
+| `kinesis-coroutines/` | `:aws-kinesis-coroutines` | Kinesis stream readiness, partition-key publish, shard/sequence consume, coroutine cancellation, bounded retry/backoff, local fake와 명시적 `real-aws` opt-in을 확인합니다. |
 | `cloudwatch-imds-observability/` | `:aws-cloudwatch-imds-observability` | CloudWatch metric/log publish intent, Micrometer meter publishing, failure isolation, 명시적 IMDS metadata opt-in을 실제 자격 증명 없이 확인합니다. |
 | `s3-vectors-access-grants/` | `:aws-s3-vectors-access-grants` | S3 Vectors 문서 upsert/query 경계, deterministic local vector ranking, redacted S3 Access Grants read-decision report를 확인합니다. |
 
@@ -49,6 +53,7 @@ request construction, failure isolation, 명시적 opt-in 경계를 배우도록
 | DynamoDB client | `ktor-dynamodb/`에서 `DynamoDbKtorPlugin`을 통해 AWS Kotlin SDK `DynamoDbClient`를 설치합니다. |
 | EventBridge and Scheduler | `eventbridge-scheduler/`에서 AWS SDK v2 `PutEventsRequestEntry` 모델과 로컬 publisher/scheduler 경계를 사용합니다. |
 | SQS and SNS messaging | `sqs-sns-coroutines/`에서 bluetape4k `SqsOperations`와 `SnsOperations`를 local adapter 및 Floci 통합 테스트와 함께 사용합니다. |
+| Kinesis messaging | `KinesisOperations`를 deterministic local fake와 함께 사용하며, `real-aws`에서만 AWS SDK v2 `KinesisAsyncClient`와 upstream coroutine template을 명시적으로 활성화합니다. |
 | Spring integration | `s3-spring-cloud/`는 Spring Cloud AWS `S3Template`과 `ResourceLoader`를, `storage-abstraction/`은 Spring profile을 사용합니다. |
 | Vector and access boundaries | `s3-vectors-access-grants/`는 기본적으로 bluetape4k `S3VectorsOperations`와 `S3AccessGrantsOperations` local adapter를 사용합니다. |
 | Observability | `cloudwatch-imds-observability/`는 기본적으로 로컬 CloudWatch intent를 publish하고, 명시적으로 요청한 경우에만 IMDS metadata를 읽습니다. |
@@ -61,6 +66,7 @@ request construction, failure isolation, 명시적 opt-in 경계를 배우도록
 | `storage-abstraction/` | Floci 기반 S3 통합 테스트 | `s3`, `s3-presigned` profile이 `S3Config.floci`를 사용하며 upload, download, delete, pre-signed URL 동작을 검증합니다. |
 | `ktor-dynamodb/` | Floci 기반 DynamoDB 통합 테스트 | Ktor route 테스트가 `FlociServer.Launcher.floci`, AWS Kotlin `DynamoDbClient`, `DynamoDbKtorPlugin` table bootstrap을 함께 사용합니다. |
 | `sqs-sns-coroutines/` | Floci 기반 SNS/SQS 통합 테스트와 local adapter | Unit test는 local fake 경계를 작게 유지하고, 통합 테스트는 Floci에서 `SnsCoroutinesTemplate` publish와 `SqsCoroutinesTemplate` consume을 검증합니다. |
+| `kinesis-coroutines/` | deterministic local adapter | 기본 테스트는 AWS credential resolution이나 network endpoint를 사용하지 않습니다. exactly-once/global ordering을 주장하지 않고 cancellation, retry/backoff, partition key, shard sequence report를 학습합니다. |
 | `eventbridge-scheduler/` | local adapter only | 이 lesson은 실제 AWS target provisioning 없이 EventBridge entry, Scheduler request mapping, idempotency, failure/cancellation 경계를 배우는 데 집중합니다. |
 | `cloudwatch-imds-observability/` | local adapter only | metadata 접근을 명시적이고 안전하게 유지하기 위해 기본 테스트에서는 CloudWatch와 IMDS network call을 피합니다. |
 | `s3-vectors-access-grants/` | local adapter only | S3 Vectors와 S3 Access Grants는 bluetape4k operation interface 뒤에 두고, deterministic local ranking과 redacted access report를 테스트 대상 동작으로 둡니다. |
@@ -73,6 +79,7 @@ request construction, failure isolation, 명시적 opt-in 경계를 배우도록
 ./gradlew :aws-ktor-dynamodb:test --max-workers=1
 ./gradlew :aws-eventbridge-scheduler:test
 ./gradlew :aws-sqs-sns-coroutines:test
+./gradlew :aws-kinesis-coroutines:test
 ./gradlew :aws-cloudwatch-imds-observability:test
 ./gradlew :aws-s3-vectors-access-grants:test
 ```
@@ -91,8 +98,34 @@ backend별 동작을 비교하려면 profile 기반 storage 샘플을 직접 실
 ./gradlew :aws-cloudwatch-imds-observability:bootRun
 ./gradlew :aws-eventbridge-scheduler:bootRun
 ./gradlew :aws-sqs-sns-coroutines:bootRun
+./gradlew :aws-kinesis-coroutines:bootRun
 ./gradlew :aws-s3-vectors-access-grants:bootRun
 ```
+
+Kinesis sample은 credential-free `local` profile을 기본으로 사용하고 deterministic record 3개를
+publish/consume한 뒤 정상 종료합니다. 실제 AWS는 비용이 발생할 수 있는 명시적 opt-in입니다.
+
+local 실행이 성공하면 비밀값을 제거한
+`Kinesis demo completed: publishedCount=3, consumedCount=3, sequenceCount=3` 요약을 출력하고
+exit code `0`으로 종료합니다.
+
+```bash
+AWS_REGION=ap-northeast-2 \
+  ./gradlew :aws-kinesis-coroutines:bootRun \
+  --args='--spring.profiles.active=real-aws --kinesis.workshop.run-demo=true'
+```
+
+실행 전 표준 AWS credential provider를 구성하고 고유한 stream, partition key, shard를 사용합니다.
+lesson에 필요한 최소 IAM action은 `CreateStream`, `DescribeStream`, `PutRecord`, `GetShardIterator`,
+`GetRecords`입니다. sample은 stream을 자동 삭제하지 않습니다. lesson 후 다음 명령으로 직접
+삭제하여 비용이 남지 않게 정리합니다.
+
+```bash
+aws kinesis delete-stream --stream-name "$KINESIS_WORKSHOP_STREAM_NAME"
+```
+
+credential, endpoint, payload, partition key는 log/report에 기록하지 않습니다. ordering은
+partition key/shard 범위에 한정되며 exactly-once/global ordering을 주장하지 않습니다.
 
 ## 전제 조건
 
@@ -100,4 +133,4 @@ backend별 동작을 비교하려면 profile 기반 storage 샘플을 직접 실
 | --- | --- |
 | JDK | Java 25. |
 | Docker | 에뮬레이터 기반 테스트와 S3 샘플 실행에 필요합니다. |
-| AWS account | 로컬 워크숍 경로에는 필요하지 않습니다. 실제 EventBridge/Scheduler, CloudWatch/IMDS, S3 Vectors/Access Grants 동작은 수동 opt-in입니다. |
+| AWS account | 로컬 워크숍 경로에는 필요하지 않습니다. 실제 Kinesis, EventBridge/Scheduler, CloudWatch/IMDS, S3 Vectors/Access Grants 동작은 수동 opt-in입니다. |

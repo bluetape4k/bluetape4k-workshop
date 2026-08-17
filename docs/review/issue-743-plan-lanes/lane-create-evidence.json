@@ -1,0 +1,6 @@
+[
+  {
+    "kind": "lane-assignment",
+    "summary": "승인된 Issue #743 구현 계획을 읽기 전용으로 독립 검토하고, 지정 관점의 P0~P3 finding과 PASS/PENDING verdict를 반환한다."
+  }
+]

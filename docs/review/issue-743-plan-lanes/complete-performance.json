@@ -1,0 +1,6 @@
+[
+  {
+    "kind": "review",
+    "summary": "계획 성능 재검토 PASS: 느린 collector의 bounded record/byte in-flight와 registry quiescence, virtual-time deterministic retry/backoff, smoke 중복 비용이 반영되었고 P0/P1/P2/P3는 0이다."
+  }
+]
