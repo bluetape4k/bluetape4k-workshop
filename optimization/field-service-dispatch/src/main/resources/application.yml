@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: field-service-dispatch
+  profiles:
+    default: demo
+  datasource:
+    url: ${FIELD_SERVICE_DATABASE_URL:jdbc:postgresql://localhost:5432/field_service}
+    username: ${FIELD_SERVICE_DATABASE_USERNAME:field_service}
+    password: ${FIELD_SERVICE_DATABASE_PASSWORD:field_service}
+    hikari:
+      maximum-pool-size: 8
+  threads:
+    virtual:
+      enabled: true
+server:
+  address: 127.0.0.1
+  max-http-request-header-size: 16KB
+  tomcat:
+    max-http-form-post-size: 256KB
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus

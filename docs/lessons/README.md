@@ -16,6 +16,7 @@ directory unless they have been deliberately promoted.
 
 Recent delivery lessons:
 
+- [Issue #525 Field Service Dispatch 독립 예제의 경계](2026-08-20-issue-525-field-service.md)
 - [Issue #743 Kinesis 코루틴 워크숍 경계](2026-08-17-issue-743-kinesis-coroutines.md)
 - [Issue #573 Commerce shared 경계 구현](2026-08-16-issue-573-commerce-shared-boundary.md)
 - [Issue #740 bounded concatMapEager backpressure 계약](2026-08-15-issue-740-bounded-concat-map-eager.md)
