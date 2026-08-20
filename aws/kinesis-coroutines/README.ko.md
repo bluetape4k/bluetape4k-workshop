@@ -1,5 +1,7 @@
 # Kinesis 코루틴 워크숍
 
+[English](README.md) | 한국어
+
 이 모듈은 credential 없이 실행되는 local 기본값으로 `bluetape4k` AWS Spring
 Boot 0.5.0 Kinesis 코루틴 계약을 보여줍니다. local adapter는 하나의 스트림과
 하나의 샤드로 제한한 결정적 인메모리 fake이며 AWS client 생성, credential 해석,
