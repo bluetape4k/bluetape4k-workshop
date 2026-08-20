@@ -10,6 +10,7 @@ runtime.
 | Module | Purpose | Infrastructure |
 |---|---|---|
 | [`planning-contracts`](planning-contracts/) | Provider-neutral planning submission, PostgreSQL inbox/outbox convergence, callback idempotency, and final aggregate-version revalidation | PostgreSQL + WireMock (Testcontainers) |
+| [`field-service-dispatch`](field-service-dispatch/) | Synthetic Field Service dispatch with deterministic planning, proposal approval, worker-route CAS confirmation, and a redacted browser console | PostgreSQL (Testcontainers) |
 
 Run the group validation with:
 

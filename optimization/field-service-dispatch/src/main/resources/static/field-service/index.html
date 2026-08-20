@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none';">
+  <title>Field Service Dispatcher</title>
+</head>
+<body>
+  <main>
+    <h1>Field Service Dispatcher</h1>
+    <p id="status" aria-live="polite">준비됨</p>
+    <button id="refresh" type="button">새로고침</button>
+    <section aria-labelledby="visits-title">
+      <h2 id="visits-title">방문</h2>
+      <ul id="visits"></ul>
+    </section>
+    <section aria-labelledby="workers-title">
+      <h2 id="workers-title">작업자</h2>
+      <ul id="workers"></ul>
+    </section>
+    <section aria-labelledby="plans-title">
+      <h2 id="plans-title">계획</h2>
+      <ul id="plans"></ul>
+    </section>
+  </main>
+  <script src="/field-service/app.js" defer></script>
+</body>
+</html>

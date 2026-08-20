@@ -187,9 +187,10 @@ case "${1:-help}" in
     ;;
 
   optimization)
-    # Java 25; planning contract tests use deterministic fakes and PostgreSQL fixtures.
+    # Java 25; optimization examples use deterministic fakes and PostgreSQL fixtures.
     run "$GRADLEW \
       :optimization-planning-contracts:test \
+      :optimization-field-service-dispatch:test \
       --continue --max-workers=1"
     ;;
 
@@ -312,7 +313,7 @@ case "${1:-help}" in
     echo ""
     echo "=== Required workshop module registration ==="
     missing_modules=0
-    for module in image-processing/barcode-api commerce/shared aws/kinesis-coroutines; do
+    for module in image-processing/barcode-api commerce/shared aws/kinesis-coroutines optimization/field-service-dispatch; do
       for required_file in build.gradle.kts README.md README.ko.md; do
         if [ ! -f "$module/$required_file" ]; then
           echo "MISSING: $module/$required_file"
@@ -355,7 +356,7 @@ case "${1:-help}" in
     echo "  serialization    Jackson / JSON / Okio"
     echo "  messaging        Kafka (Testcontainers)"
     echo "  commerce         Commerce lifecycles (PostgreSQL Testcontainers)"
-    echo "  optimization     Planning contracts (Java 25, deterministic + PostgreSQL fixtures)"
+    echo "  optimization     Planning contracts + Field Service dispatch (Java 25, deterministic + PostgreSQL fixtures)"
     echo "  operations       Job console core + Spring MVC/Ktor (PostgreSQL/Redis Testcontainers)"
     echo "  leader-full      Job safety lab default + PostgreSQL/Redis integration tests"
     echo "  async            Coroutines / Vert.x"

@@ -1,5 +1,7 @@
 # Kinesis Coroutines Workshop
 
+[한국어](README.ko.md) | English
+
 This module demonstrates the `bluetape4k` AWS Spring Boot 0.5.0 Kinesis
 coroutine contract with a credential-free local default. The local adapter is
 an in-memory, one-stream/one-shard fake; it does not create an AWS client,
