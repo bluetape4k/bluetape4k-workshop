@@ -76,7 +76,7 @@ logback-slack-appender = "1.6.1"  # https://mvnrepository.com/artifact/com.githu
 sentry-logback = "8.53.0"  # https://mvnrepository.com/artifact/io.sentry/sentry-logback
 
 micrometer = "1.17.0"  # https://mvnrepository.com/artifact/io.micrometer/micrometer-bom
-micrometer-tracing = "1.7.0"  # https://mvnrepository.com/artifact/io.micrometer/micrometer-tracing-bom
+micrometer-tracing = "1.7.1"  # https://mvnrepository.com/artifact/io.micrometer/micrometer-tracing-bom
 micrometer-context-propagation = "1.2.1"  # https://mvnrepository.com/artifact/io.micrometer/context-propagation
 
 opentelemetry = "1.65.0"  # https://mvnrepository.com/artifact/io.opentelemetry/opentelemetry-bom
