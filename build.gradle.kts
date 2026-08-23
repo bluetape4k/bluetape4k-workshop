@@ -31,7 +31,7 @@ plugins {
     alias(libs.plugins.exposed) apply false
 
     // for JMolecules
-    id("net.bytebuddy.byte-buddy-gradle-plugin") version "1.18.11" apply false
+    id("net.bytebuddy.byte-buddy-gradle-plugin") version "1.18.12" apply false
 }
 
 val rootLibs = libs
