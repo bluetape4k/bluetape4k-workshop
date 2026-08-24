@@ -192,6 +192,7 @@ case "${1:-help}" in
       :optimization-planning-contracts:test \
       :optimization-field-service-dispatch:test \
       :optimization-last-mile-routing:test \
+      :optimization-warehouse-allocation:test \
       --continue --max-workers=1"
     ;;
 
@@ -314,7 +315,7 @@ case "${1:-help}" in
     echo ""
     echo "=== Required workshop module registration ==="
     missing_modules=0
-    for module in image-processing/barcode-api commerce/shared aws/kinesis-coroutines optimization/field-service-dispatch optimization/last-mile-routing; do
+    for module in image-processing/barcode-api commerce/shared aws/kinesis-coroutines optimization/field-service-dispatch optimization/last-mile-routing optimization/warehouse-allocation; do
       for required_file in build.gradle.kts README.md README.ko.md; do
         if [ ! -f "$module/$required_file" ]; then
           echo "MISSING: $module/$required_file"

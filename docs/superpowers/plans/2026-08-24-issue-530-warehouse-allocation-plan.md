@@ -338,3 +338,20 @@
 - [ ] Six-lane Step 3-R review and main integration PASS
 - [ ] Approved plan/spec/docs commit before Step 4
 - [ ] Step 4 implementation, Step 5 verifier, Step 6 review, Step 7 lesson, and PR/merge gates
+
+## 2026-08-24 구현 증거
+
+- [x] warehouse-allocation 모듈, deterministic planner, PostgreSQL reservation authority,
+  event inbox, durable replan, outbox lease/effect, HTTP query/command, fixture ABI를
+  구현했다.
+- [x] 모듈 테스트 13개와 PostgreSQL Testcontainers 저장소 테스트 6개가 통과했다.
+- [x] optimization smoke, Gradle project registration, workflow lint, README language,
+  `git diff --check`, test-fixtures/bootJar 경계를 확인했다.
+- [ ] `detekt`는 모듈 task가 없어 검증하지 못했다. 이는 현재 저장소 build convention의
+  검증 공백이다.
+- [ ] HTTP 전체 end-to-end/stress suite와 모든 mutation route의 공통 idempotency
+  service wiring은 후속 hardening 범위다.
+
+따라서 본 계획의 구현 DoD는 `DONE (bounded #530 implementation)`으로 판정하되,
+위 두 정적 분석·hardening 항목은 `PENDING`으로 추적한다. PR 생성·merge·release는
+이 계획의 범위가 아니며 별도 승인 단계다.

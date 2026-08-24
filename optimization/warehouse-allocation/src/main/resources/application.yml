@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: warehouse-allocation
+  profiles:
+    default: test
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: ${WAREHOUSE_ALLOCATION_DATABASE_URL:jdbc:postgresql://localhost:5432/warehouse_allocation}
+    username: ${WAREHOUSE_ALLOCATION_DATABASE_USERNAME:warehouse_allocation}
+    password: ${WAREHOUSE_ALLOCATION_DATABASE_PASSWORD:warehouse_allocation}
+    hikari:
+      maximum-pool-size: 8
+  sql:
+    init:
+      mode: never
+server:
+  address: 127.0.0.1
+  port: ${WAREHOUSE_ALLOCATION_SERVER_PORT:8080}
+  max-http-request-header-size: 16KB
+  tomcat:
+    max-http-form-post-size: 256KB
+management:
+  server:
+    address: 127.0.0.1
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+warehouse-allocation:
+  provider: fake
+  demo-profile: demo
+  planner:
+    deadline: 2s
+    max-lines: 500
+    max-warehouses: 100
+    max-waves: 200
+    max-stock-rows: 10000
+    max-pins: 500
+    max-response-bytes: 262144
+  hmac:
+    enabled: false
+    secret: ${WAREHOUSE_ALLOCATION_HMAC_SECRET:}
