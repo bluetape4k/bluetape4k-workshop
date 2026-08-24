@@ -5,7 +5,7 @@
 `optimization/shift-coverage`에 synthetic multi-site worker/shift coverage와
 사람이 확인하는 shift swap의 결정적인 demo 경계를 추가했다. 기본 `demo`
 profile은 recorded fake adapter와 loopback API만 사용하고, `postgres` profile은
-PostgreSQL을 authority로 사용한다. planner proposal은 immutable snapshot digest와
+PostgreSQL을 authority로 사용한다. planner proposal은 immutable 기준 데이터 digest와
 stable reason code를 보존하며, assignment projection은 approval 또는 CAS 기반 swap
 acceptance에서만 변경된다.
 
@@ -75,6 +75,8 @@ metric family와 bounded result allowlist를 넘지 않는다.
   확인했다. loopback demo process는 검증 후 종료했다.
 - `./gradlew :optimization-shift-coverage:build --no-build-cache --max-workers=1 --console=plain`
   — BUILD SUCCESSFUL.
+- `./gradlew detekt --max-workers=1 --console=plain` — BUILD SUCCESSFUL. Root aggregate에
+  등록된 detekt module의 정적 분석 gate를 통과했다.
 - `colima status`, `docker context show`, `docker info` — Colima/Docker healthy;
   Testcontainers PostgreSQL 테스트를 실제 실행했다.
 - `bash scripts/smoke-validate.sh optimization` — planning-contracts,
@@ -91,11 +93,24 @@ metric family와 bounded result allowlist를 넘지 않는다.
 
 - 이 module에는 별도 Gradle `detekt` task가 등록되지 않아
   `./gradlew :optimization-shift-coverage:detekt`는 `task 'detekt' not found`로
-  실행되지 않는다. 이는 Java 25 workflow에서 detekt를 제외하는 workspace 정책과
-  일치하지만, 정식 repository detekt gate가 생기기 전까지 PENDING으로 남긴다.
+  실행되지 않는다. 이는 Java 25 workflow에서 detekt를 제외하고 optimization sibling
+  module에도 plugin을 적용하지 않는 workspace 정책과 일치한다. 따라서 module-local
+  결과는 `N/A (repository policy)`로 기록하며 module source lint를 했다고 주장하지
+  않는다. root aggregate `./gradlew detekt` PASS가 현재 저장소 정적 분석 gate다. 향후
+  optimization module detekt 정책이 생기면 이 gap을 다시 검토한다.
 - metrics 장시간 외부 부하와 external Timefold callback integration은 이 demo 범위에
   포함하지 않았다. route/status/CORS/browser golden matrix, restart generation sweep,
   bounded cardinality는 이번 보강에서 검증했다.
 - #527/#528/#529, PR 생성·push·merge는 이 변경의 scope가 아니며 #526 DoD 이후
   순서대로 진행한다. 구현을 되돌릴 때는 이 feature branch의 Lore commit만
   revert하고 `develop`과 sibling worktree는 건드리지 않는다.
+
+## 문서 작성 게이트
+
+| 항목 | 결과 | 근거 |
+|---|---|---|
+| SPW-01 | PASS | lesson의 대상 구현, live evidence, root/module detekt 사실과 잔여 범위를 고정했다. |
+| SPW-02 | PASS | 결과·재사용·경계·검증 영수증·rollback/후속 guard를 포함했다. |
+| SPW-03 | PASS | Korean naturalness checklist(KO-01..KO-07)를 적용해 기술 용어와 정확한 오류를 보존했다. |
+| SPW-04 | PASS | 계획·리뷰·root detekt 정책과 fresh command 결과를 대조했다. |
+| SPW-05 | PASS | 최종 Markdown read-back으로 claim 범위와 residual risk를 확인했다. |

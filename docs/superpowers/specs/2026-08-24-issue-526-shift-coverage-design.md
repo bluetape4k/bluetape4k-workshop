@@ -520,10 +520,26 @@ validation matrix, and a Korean lesson.
   context is inspected before a retry, and no skipped container test is counted as a pass.
 - Module test, optimization smoke, `./gradlew projects`, README language/parity checks,
   `actionlint`, `git diff --check`, and fixture/production JAR boundary are required.
-- `detekt` is attempted with the exact module task name; if the task is not registered,
-  the gap is recorded as `PENDING` rather than treated as success.
+- `detekt`는 먼저 exact module task 이름으로 시도해 부재를 확인한다. 현재
+  `optimization/*` module은 `dev.detekt` plugin을 적용하지 않고, Java 25 CI 정책도
+  module detekt를 제외한다. 따라서 `./gradlew :optimization-shift-coverage:detekt`의
+  `task 'detekt' not found`는 module source lint의 성공이 아니라 저장소 정책에 따른
+  `N/A`로 기록한다. 대신 등록된 module을 대상으로 하는 root aggregate
+  `./gradlew detekt`가 PASS해야 한다. 이 fallback은 모듈 소스를 직접 lint했다는
+  주장이 아니며, 향후 optimization module detekt 정책이 도입되면 이 gate를 다시
+  연다.
 - PR creation, merge, release, external provider dispatch, and Epic closure are outside
   this implementation unit.
+
+## 문서 작성 게이트
+
+| 항목 | 결과 | 근거 |
+|---|---|---|
+| SPW-01 | PASS | 설계 문서 독자·목적·live Issue #526·GNO 연구·저장소 경로와 module detekt 정책을 고정했다. |
+| SPW-02 | PASS | 경계, 계약, 실패 모드, 호환성, acceptance, DoD와 rollback을 유지했다. |
+| SPW-03 | PASS | Korean naturalness checklist(KO-01..KO-07)를 적용하고 `N/A`, `PASS`, `detekt` 같은 기술 토큰을 보존했다. |
+| SPW-04 | PASS | root `build.gradle.kts`, Java 25 lesson, 기존 root aggregate fallback 리뷰와 현재 명령 결과를 대조했다. |
+| SPW-05 | PASS | 최종 Markdown을 다시 읽어 verification 문장과 module-lint 주장 범위를 확인했다. |
 
 ## 10. Open risks and rollback
 

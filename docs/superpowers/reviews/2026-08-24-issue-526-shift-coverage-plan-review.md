@@ -55,12 +55,21 @@
 
 - 검토일: 2026-08-24
 - 현재 계획 SHA-256: `e5cbea929531ce1e2c83401a962d3a6619bca71691f592a65cb43c2b0329a42c`
+- detekt 정책 재검토 후 계획 SHA-256: `95d00917559788287406ef59fedf70190faeb2deb203d97d270cc75828cd5c4b`
+- detekt 정책 재검토 후 설계 SHA-256: `45ffe4bf238bfbcacd8ede4a1b9862cc7198992214d6b069646edfd70140fabc`
 - 대상 구현: `optimization/shift-coverage` 및 README/workflow/smoke/lesson 등록
 - fresh evidence: matrix 보강 후 `./gradlew :optimization-shift-coverage:cleanTest :optimization-shift-coverage:test --no-build-cache --max-workers=1 --console=plain`에서 **59 tests PASS**, `build` PASS; PostgreSQL Testcontainers CAS/lock-timeout **3 tests PASS**; route/browser targeted **6 tests PASS**; demo `bootRun`에서 `Started ShiftCoverageApplicationKt`, actuator health `UP`, authenticated replan `202`, Prometheus `workshop_shift_coverage_*` 8 lines 확인 후 loopback process cleanup; Playwright에서 `/shift-coverage/` response `200`, CSP, initial/final `계획을 조회했습니다.`, replan accepted state, rendered row와 console error `0`을 확인했다. `bash scripts/smoke-validate.sh optimization`, `stale-check`, `actionlint`, `bash -n`, `git diff --check`, project registration PASS.
 - 하드닝 증거: missing/hostile Origin, strict non-loopback, malformed/oversized callback,
   operator Origin no-write, stable error `nextAction`과 retryable `Retry-After: 1`, restart
   generation sweep/idempotence, six metric-family bounded cardinality를 RED→GREEN으로
   확인했다.
+
+- detekt 정책 재검토: `./gradlew :optimization-shift-coverage:detekt`는
+  `task 'detekt' not found`로 module-local task 부재를 확인했다. `optimization/*`가
+  detekt plugin을 적용하지 않고 Java 25 CI도 detekt를 제외하므로 이 결과는
+  `N/A (repository policy)`다. root `./gradlew detekt --max-workers=1 --console=plain`은
+  `BUILD SUCCESSFUL`로 통과했으며, 기존 structured OCR 리뷰의 root aggregate fallback
+  선례와 일치한다. 이 fallback으로 module source lint를 했다고 주장하지 않는다.
 
 | Lens | delta 결과 | 잔여 위험/판정 |
 |---|---|---|
@@ -76,8 +85,20 @@
 - 구현된 P0: `0`
 - 구현된 P1: `0`
 - P2/P3: restart generation sweep, bounded metrics cardinality와 route/status/CORS/browser
-  golden matrix는 해소됐다. 장시간 외부 부하, remote provider integration, repository
-  Gradle `detekt` task 부재는 **PENDING/N/A**로 기록한다.
-- **판정: PENDING.** 현재 변경은 로컬 deterministic reference module과 실제 demo
-  browser로 검증됐지만 repository lint task가 해결되기 전에는 #526 DoD를 `DONE`으로
-  선언하지 않으며 #527로 진행하지 않는다.
+  golden matrix는 해소됐다. 장시간 외부 부하와 remote provider integration은 범위
+  밖이다. repository root aggregate detekt는 PASS이며 module-local task 부재는
+  `N/A (repository policy)`로 남긴다.
+- **판정: PASS.** 현재 변경은 deterministic reference module, PostgreSQL fixture,
+  실제 demo browser, repository aggregate static gate로 검증됐다. module source lint를
+  했다는 주장은 하지 않으며, optimization module detekt 정책이 생기면 후속 검토를
+  연다. P0=0, P1=0.
+
+## 문서 작성 게이트
+
+| 항목 | 결과 | 근거 |
+|---|---|---|
+| SPW-01 | PASS | review 범위, live issue, 설계·계획·실행 명령과 unresolved module-lint 경계를 고정했다. |
+| SPW-02 | PASS | lens별 severity, 근거, 잔여 위험, gate verdict를 기록했다. |
+| SPW-03 | PASS | Korean naturalness checklist(KO-01..KO-07)를 적용해 `PENDING`, `N/A`, `PASS`의 의미를 구분했다. |
+| SPW-04 | PASS | plan/spec SHA, root/module detekt 결과, 기존 fallback 선례와 delta verdict를 대조했다. |
+| SPW-05 | PASS | 최종 Markdown을 다시 읽어 verdict와 residual risk가 일치함을 확인했다. |

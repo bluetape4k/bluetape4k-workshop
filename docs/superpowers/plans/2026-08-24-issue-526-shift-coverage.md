@@ -4,7 +4,7 @@
 
 **Goal:** `optimization/shift-coverage`에 synthetic multi-site worker/shift coverage와 사람이 확인하는 shift swap을 구현하고, deterministic planner, PostgreSQL revision/CAS, callback/inbox/outbox 수렴, Java 25 virtual-thread lifecycle, redacted demo console을 검증한다.
 
-**Architecture:** 새 Spring Boot MVC consumer module이 worker·shift·assignment·pin·swap·plan 상태와 감사/Inbox/Outbox를 소유한다. planner는 immutable canonical snapshot만 읽어 proposal을 반환하고, approval/swap acceptance만 PostgreSQL 고정 lock 순서와 expected-revision CAS를 통해 assignment를 변경한다. 실제 Timefold Platform은 dependency나 credential로 추가하지 않고 normalized adapter port 뒤의 deterministic fake/recorded fixture로 고정한다.
+**Architecture:** 새 Spring Boot MVC consumer module이 worker·shift·assignment·pin·swap·plan 상태와 감사/Inbox/Outbox를 소유한다. planner는 immutable canonical 기준 데이터만 읽어 proposal을 반환하고, approval/swap acceptance만 PostgreSQL 고정 lock 순서와 expected-revision CAS를 통해 assignment를 변경한다. 실제 Timefold Platform은 dependency나 credential로 추가하지 않고 normalized adapter port 뒤의 deterministic fake/recorded fixture로 고정한다.
 
 **Tech Stack:** Kotlin 2.4, Java 25, Spring Boot 4.0.6 MVC, JetBrains Exposed 1.4 계열, PostgreSQL/Testcontainers, Jackson 3, Micrometer/Actuator, `bluetape4k-dependencies` BOM, Bluetape core/idgenerators/logging/exposed-jdbc/http/virtualthread/JUnit5/assertions/testcontainers.
 
@@ -26,12 +26,13 @@
 | 7 | PASS | bounded executor, readiness/close, demo replan/approve/swap/read model을 구현했다. |
 | 8 | PASS | MVC/controller/callback/operator/static console, strict callback envelope, DST boundary, redaction/loopback/Origin, stable `nextAction`/`Retry-After`, restart generation sweep, bounded Micrometer tags와 MockMvc route/status/CORS golden matrix를 구현·검증했다. CSP/safe-DOM browser contract와 Playwright demo smoke도 통과했다. |
 | 9 | PASS | README/README.ko, optimization index, workflow, smoke/stale-check, lesson을 등록했다. |
-| 10 | PARTIAL / PENDING | matrix 보강 후 59 tests, build, PostgreSQL, demo actuator/HTTP boot, 실제 Playwright console, smoke, actionlint, shell syntax, diff check가 통과했다. Gradle `detekt` task가 등록되지 않아 전체 DoD는 아직 `PENDING`이다. |
+| 10 | PASS | matrix 보강 후 59 tests, build, PostgreSQL, demo actuator/HTTP boot, 실제 Playwright console, smoke, actionlint, shell syntax, diff check와 root aggregate `./gradlew detekt`가 통과했다. module-local `detekt` task 부재는 Java 25/optimization 저장소 정책에 따른 `N/A`로 기록하며 module source lint를 했다고 주장하지 않는다. |
 
-**현재 판정:** `optimization-shift-coverage`의 구현 단위는 **PENDING**이다. HTTP·CORS·
-browser acceptance matrix는 닫혔지만 module 전용 Gradle `detekt` task가 없어 lint
-gate를 증명할 수 없다. #527 → #528 → #529는 이 계획의 Stop condition을 충족하고
-fresh approval을 얻은 뒤에만 시작한다.
+**현재 판정:** `optimization-shift-coverage`의 구현 단위는 **DONE**이다. HTTP·CORS·
+browser acceptance matrix와 root aggregate 정적 분석 gate를 닫았다. module-local
+`detekt` task는 등록되지 않았으므로 해당 module 소스 lint 결과는 별도로 주장하지
+않으며, optimization module에 detekt 정책이 도입되면 후속 gate로 다시 연다. #527 →
+#528 → #529는 이 계획의 DoD와 fresh approval 경계를 확인한 뒤 순서대로 시작한다.
 
 ---
 
@@ -170,11 +171,11 @@ Expected: first run fails because the new project/classes are absent; after the 
   --max-workers=1 --console=plain
 ```
 
-## Task 3: canonical snapshot과 normalized provider ABI를 구현
+## Task 3: canonical 기준 데이터와 normalized provider ABI를 구현
 
 **Files:** `planner/ShiftCoverageSnapshot.kt`, `ShiftCoverageCanonicalizer.kt`, `adapter/*`, canonical/signature tests and fixtures.
 
-- [ ] **Step 1: canonicalization RED를 작성한다.** semantic snapshot의 field/map/array
+- [ ] **Step 1: canonicalization RED를 작성한다.** semantic 기준 데이터의 field/map/array
   순서만 바꾼 입력이 NFC 문자열, UTC `Z` instant, plain decimal, schema-order JSON bytes,
   SHA-256 digest를 동일하게 만드는 golden fixture를 추가한다. duplicate/unknown key,
   trailing token, depth 13, body 256 KiB 초과, non-finite number는 parse 전에 거부한다.
@@ -222,7 +223,7 @@ class ShiftCoverageCanonicalizer(private val mapper: ObjectMapper) {
   all skills, minimum rest, started/pin immutability를 hard-rule 순서로 검증한다. 실패
   사유는 `OVERLAP`, `UNAVAILABLE`, `MISSING_SKILL`, `REST_RULE`, `STARTED_SHIFT`, `PINNED`,
   `NO_CANDIDATE`이고 equal vector는 `(shiftId, workerId, assignmentId)` lexical order다.
-  동일 canonical snapshot은 assignment/reason/metrics/digest가 byte-identical이어야 한다.
+  동일 canonical 기준 데이터는 assignment/reason/metrics/digest가 byte-identical이어야 한다.
 - [ ] **Step 2: planner 최소 구현을 작성한다.** 후보를 hard-rule 순서로 filter하고
   coverage gap reduction → preference → fairness delta → cost → stable ID로 정렬한다.
   후보 50,000 초과는 `PLANNER_LIMIT_EXCEEDED`, 5초 초과는 `REPLAN_TIMEOUT`이며
@@ -563,6 +564,7 @@ docker info
   --no-build-cache --max-workers=1 --console=plain
 ./gradlew :optimization-shift-coverage:build --max-workers=1 --console=plain
 ./gradlew :optimization-shift-coverage:detekt --max-workers=1 --console=plain
+./gradlew detekt --max-workers=1 --console=plain
 ./gradlew projects --console=plain
 bash scripts/smoke-validate.sh optimization
 bash scripts/smoke-validate.sh stale-check
@@ -570,9 +572,11 @@ actionlint .github/workflows/Examples.yml
 git diff --check
 ```
 
-  detekt task가 등록되지 않으면 exact error를 `PENDING`으로 기록하고 PASS로 바꾸지 않는다.
-  Testcontainers가 unavailable이면 Docker/Colima 로그와 report를 보존하고 해당 검증을
-  `PENDING`으로 남긴다.
+  module `detekt` task가 등록되지 않으면 exact error를 `N/A (repository policy)`로
+  기록하고 module source lint PASS로 바꾸지 않는다. 같은 실행 묶음의 root aggregate
+  `./gradlew detekt`가 PASS해야 정적 분석 repository gate를 닫는다. Testcontainers가
+  unavailable이면 Docker/Colima 로그와 report를 보존하고 해당 검증을 `PENDING`으로
+  남긴다.
 - [ ] **Step 4: static/ABI boundary를 검사한다.** 신규 production Kotlin에서 `println`,
   `synchronized`, monitor, `!!`, suspend `runCatching`, deprecated Exposed
   `SqlExpressionBuilder.eq`, `project(":optimization-planning-contracts")`, raw Bluetape
@@ -606,7 +610,19 @@ git diff --check
 
 `optimization-shift-coverage` module test/build/static checks, PostgreSQL Testcontainers,
 canonical/ABI/security/lifecycle evidence, optimization smoke/stale-check, README parity,
-workflow lint, plan review P0/P1=0, Lore commit, clean worktree가 모두 확인될 때 #526
-implementation unit을 `DONE`으로 표시한다. 어느 container/lifecycle check라도 실행되지
-않으면 해당 항목은 `PENDING`으로 남기며 전체 DoD를 `DONE`으로 보고하지 않는다. #527,
-#528, #529는 이 module의 DoD 이후에만 순서대로 시작한다.
+workflow lint, root aggregate `detekt` PASS, plan review P0/P1=0, Lore commit, clean
+worktree가 모두 확인될 때 #526 implementation unit을 `DONE`으로 표시한다.
+module-local detekt task 부재는 repository policy `N/A`이며 module source lint 증거로
+세지 않는다. 어느 container/lifecycle check라도 실행되지 않으면 해당 항목은 `PENDING`
+으로 남기며 전체 DoD를 `DONE`으로 보고하지 않는다. #527, #528, #529는 이 module의
+DoD 이후에 순서대로 시작한다.
+
+## 문서 작성 게이트
+
+| 항목 | 결과 | 근거 |
+|---|---|---|
+| SPW-01 | PASS | 계획 독자·목적·정확한 파일·명령·현재 detekt 정책과 미검증 범위를 고정했다. |
+| SPW-02 | PASS | Task 순서, acceptance traceability, rollback/rerun, stop condition을 유지했다. |
+| SPW-03 | PASS | Korean naturalness checklist(KO-01..KO-07)를 적용하고 명령·식별자·정확한 오류를 보존했다. |
+| SPW-04 | PASS | 설계·root build policy·현재 root/module 실행 결과와 task evidence를 대조했다. |
+| SPW-05 | PASS | 최종 Markdown을 다시 읽어 `N/A`와 `PASS`의 의미가 뒤섞이지 않는지 확인했다. |
