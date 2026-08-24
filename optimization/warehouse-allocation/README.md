@@ -19,6 +19,19 @@ Production WMS, robotics, carrier APIs, automatic stock commits, Kafka brokers,
 and Timefold credentials are outside this example. Recorded outbox events are
 fixture evidence, not proof of production fulfillment.
 
+## Bluetape stack
+
+| Responsibility | Capability |
+|---|---|
+| Version authority | Root `bluetape4k-dependencies` BOM |
+| Persistence | `LongJdbcRepository` from `bluetape4k-exposed-jdbc` with Exposed `LongIdTable` |
+| Assertions | `bluetape4k-assertions` matchers such as `shouldBeEqualTo`, `shouldBeInstanceOf`, and `shouldNotBeNull` |
+| PostgreSQL tests | `PostgreSQLServer.Launcher.postgres` with `bluetape4k-testcontainers` and `bluetape4k-exposed-jdbc-tests` |
+
+The repository architecture test keeps the application-owned persistence adapter
+on the Bluetape Exposed repository contract while the PostgreSQL tests exercise
+the reservation authority and compare-and-set boundaries.
+
 ## Run locally
 
 The default application binds HTTP and management endpoints to loopback and

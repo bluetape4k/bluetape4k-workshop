@@ -43,7 +43,8 @@ internal class WarehouseAllocationHttpService(
     fun callback(provider: String, request: PlanningCallbackDto): PlanningCallbackResponse {
         val state = planning[request.planningRequestId] ?: return PlanningCallbackResponse("REJECTED")
         if (!state.provider.equals(provider, ignoreCase = true)) return PlanningCallbackResponse("PROVIDER_MISMATCH")
-        if (state.providerRevision != null && request.providerRevision < state.providerRevision!!) return PlanningCallbackResponse("STALE_REVISION")
+        val storedRevision = state.providerRevision
+        if (storedRevision != null && request.providerRevision < storedRevision) return PlanningCallbackResponse("STALE_REVISION")
         if (state.providerRevision == request.providerRevision && state.status == request.status) return PlanningCallbackResponse("DUPLICATE")
         state.providerRevision = request.providerRevision
         state.status = request.status

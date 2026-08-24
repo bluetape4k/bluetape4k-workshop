@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.optimization.warehouseallocation.domain
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 class WarehouseAllocationModelsTest {
     @Test
@@ -14,12 +14,12 @@ class WarehouseAllocationModelsTest {
 
     @Test
     fun `available stock is on hand minus reserved`() {
-        assertEquals(7, SkuStockSnapshot(WarehouseId("w"), Sku("s"), 10, 3).availableQuantity)
+        SkuStockSnapshot(WarehouseId("w"), Sku("s"), 10, 3).availableQuantity shouldBeEqualTo 7
     }
 
     @Test
     fun `closed status enums have exact wire values`() {
-        assertEquals(listOf("DRAFT", "STALE", "APPROVED", "REJECTED", "CANCELLED"), PlanStatus.entries.map { it.name })
-        assertEquals(listOf("PENDING", "ACCEPTED", "REJECTED", "RELEASED", "CANCELLED"), ReservationState.entries.map { it.name })
+        PlanStatus.entries.map { it.name } shouldBeEqualTo listOf("DRAFT", "STALE", "APPROVED", "REJECTED", "CANCELLED")
+        ReservationState.entries.map { it.name } shouldBeEqualTo listOf("PENDING", "ACCEPTED", "REJECTED", "RELEASED", "CANCELLED")
     }
 }

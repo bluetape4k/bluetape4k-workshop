@@ -8,6 +8,7 @@ import io.bluetape4k.workshop.optimization.warehouseallocation.domain.Reservatio
 import java.time.Instant
 
 internal data class WarehouseAllocationPlanRecord(
+    val id: Long,
     val planId: String,
     val datasetId: String,
     val datasetVersion: Long,

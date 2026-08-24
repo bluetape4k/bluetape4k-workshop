@@ -23,6 +23,8 @@ import io.bluetape4k.workshop.optimization.warehouseallocation.domain.PickWave
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.PickWaveStatus
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.PinStatus
 import io.bluetape4k.workshop.optimization.warehouseallocation.persistence.WarehouseAllocationEventInboxTable.aggregateId
+import io.bluetape4k.exposed.jdbc.repository.LongJdbcRepository
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -43,7 +45,28 @@ import java.util.UUID
 internal class WarehouseAllocationRepository(
     private val codec: WarehouseAllocationCodec = WarehouseAllocationCodec(),
     private val clock: Clock = Clock.systemUTC(),
-) {
+) : LongJdbcRepository<WarehouseAllocationPlanRecord> {
+    override val table = WarehouseAllocationPlansTable
+
+    override fun extractId(entity: WarehouseAllocationPlanRecord): Long = entity.id
+
+    override fun ResultRow.toEntity(): WarehouseAllocationPlanRecord = WarehouseAllocationPlanRecord(
+        id = this[WarehouseAllocationPlansTable.id].value,
+        planId = this[WarehouseAllocationPlansTable.planId],
+        datasetId = this[WarehouseAllocationPlansTable.datasetId],
+        datasetVersion = this[WarehouseAllocationPlansTable.datasetVersion],
+        planRevision = this[WarehouseAllocationPlansTable.planRevision],
+        expectedOrderRevision = this[WarehouseAllocationPlansTable.expectedOrderRevision],
+        warehouseRevision = this[WarehouseAllocationPlansTable.warehouseRevision],
+        status = this[WarehouseAllocationPlansTable.status],
+        digest = this[WarehouseAllocationPlansTable.digest],
+        payload = this[WarehouseAllocationPlansTable.payload],
+        fencingToken = this[WarehouseAllocationPlansTable.fencingToken],
+        requestGeneration = this[WarehouseAllocationPlansTable.requestGeneration],
+        createdAt = this[WarehouseAllocationPlansTable.createdAt],
+        updatedAt = this[WarehouseAllocationPlansTable.updatedAt],
+    )
+
     fun saveWarehouse(value: Warehouse): Warehouse {
         val now = clock.instant()
         WarehouseAllocationWarehousesTable.insert { statement ->
@@ -720,7 +743,7 @@ internal class WarehouseAllocationRepository(
             statement[createdAt] = now
             statement[updatedAt] = now
         }
-        return outbox(operationKey)!!
+        return checkNotNull(outbox(operationKey)) { "outbox row missing after insert: $operationKey" }
     }
 
     fun outbox(operationKey: String): WarehouseAllocationOutboxRecord? = WarehouseAllocationOutboxTable.selectAll()

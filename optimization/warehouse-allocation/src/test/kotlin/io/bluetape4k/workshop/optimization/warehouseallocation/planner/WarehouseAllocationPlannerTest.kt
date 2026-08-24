@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.warehouseallocation.planner
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.DatasetId
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.Order
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.OrderId
@@ -17,7 +18,6 @@ import io.bluetape4k.workshop.optimization.warehouseallocation.domain.WarehouseI
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.WaveId
 import org.junit.jupiter.api.Test
 import java.time.Instant
-import kotlin.test.assertEquals
 
 class WarehouseAllocationPlannerTest {
     private val input = WarehouseAllocationPlannerInput(
@@ -33,8 +33,8 @@ class WarehouseAllocationPlannerTest {
         val planner = WarehouseAllocationPlanner()
         val left = planner.plan(input)
         val right = planner.plan(input)
-        assertEquals(left, right)
-        assertEquals(listOf(2), left.proposal.allocations.map { it.quantity })
+        left shouldBeEqualTo right
+        left.proposal.allocations.map { it.quantity } shouldBeEqualTo listOf(2)
     }
 
     @Test
@@ -44,7 +44,7 @@ class WarehouseAllocationPlannerTest {
             waves = listOf(input.waves.single().copy(maxLines = 1, allocationIds = listOf(OrderLineId("line-1")))),
         )
         val proposal = WarehouseAllocationPlanner().plan(constrained).proposal
-        assertEquals(emptyList(), proposal.allocations)
-        assertEquals(WarehouseAllocationReasonCode.PICKER_CAPACITY, proposal.unassignedReasons[OrderLineId("line-2")])
+        proposal.allocations shouldBeEqualTo emptyList()
+        proposal.unassignedReasons[OrderLineId("line-2")] shouldBeEqualTo WarehouseAllocationReasonCode.PICKER_CAPACITY
     }
 }

@@ -19,6 +19,19 @@ Production WMS, robotics, carrier API, 자동 stock commit, Kafka broker와
 Timefold credential은 이 예제의 범위가 아닙니다. 기록된 outbox event는 fixture
 증거이며 production fulfillment를 의미하지 않습니다.
 
+## Bluetape stack
+
+| 책임 | 사용 기능 |
+|---|---|
+| 버전 기준 | Root `bluetape4k-dependencies` BOM |
+| 영속성 | Exposed `LongIdTable`과 `bluetape4k-exposed-jdbc`의 `LongJdbcRepository` |
+| Assertion | `shouldBeEqualTo`, `shouldBeInstanceOf`, `shouldNotBeNull` 등을 제공하는 `bluetape4k-assertions` |
+| PostgreSQL 테스트 | `bluetape4k-testcontainers`의 `PostgreSQLServer.Launcher.postgres`와 `bluetape4k-exposed-jdbc-tests` |
+
+Repository architecture test는 애플리케이션 영속성 adapter가 Bluetape Exposed
+repository 계약을 계속 따르는지 확인하며, PostgreSQL 테스트는 reservation 권위와
+compare-and-set 경계를 검증합니다.
+
 ## 로컬 실행
 
 기본 애플리케이션은 HTTP와 management endpoint를 loopback에 바인딩하고 `test`

@@ -10,6 +10,7 @@ import io.bluetape4k.workshop.optimization.warehouseallocation.domain.PlanStatus
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.ReservationState
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.WarehouseAllocationLimits
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.javatime.timestamp
 import io.bluetape4k.workshop.optimization.warehouseallocation.domain.PickWaveStatus
 
@@ -87,8 +88,7 @@ internal object WarehouseAllocationPinsTable : Table("warehouse_alloc_pins") {
     override val primaryKey = PrimaryKey(id)
 }
 
-internal object WarehouseAllocationPlansTable : Table("warehouse_alloc_plans") {
-    val id = long("id").autoIncrement()
+internal object WarehouseAllocationPlansTable : LongIdTable("warehouse_alloc_plans") {
     val planId = varchar("plan_id", WarehouseAllocationLimits.MAX_IDENTIFIER)
     val datasetId = varchar("dataset_id", WarehouseAllocationLimits.MAX_DATASET_ID)
     val datasetVersion = long("dataset_version")
@@ -103,7 +103,6 @@ internal object WarehouseAllocationPlansTable : Table("warehouse_alloc_plans") {
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
     init { uniqueIndex(planId, planRevision); index(false, datasetId, datasetVersion); index(false, status, planRevision) }
-    override val primaryKey = PrimaryKey(id)
 }
 
 internal object WarehouseAllocationAllocationsTable : Table("warehouse_alloc_allocations") {

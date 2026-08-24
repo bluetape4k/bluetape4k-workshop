@@ -51,11 +51,16 @@ internal class WarehouseAllocationEventService(
     private fun apply(event: WarehouseAllocationEvent): Boolean = when (event.eventType) {
         WarehouseAllocationEventType.INVENTORY_ADJUSTED -> {
             val payload = event.payload as WarehouseAllocationEventPayload.InventoryAdjusted
-            repository.applyInventoryAdjustment(event.target.warehouseId!!.value, event.target.sku!!.value, payload.onHandQuantity, event.sourceEventRevision)
+            repository.applyInventoryAdjustment(
+                validated(event.target.warehouseId, "warehouseId").value,
+                validated(event.target.sku, "sku").value,
+                payload.onHandQuantity,
+                event.sourceEventRevision,
+            )
         }
         WarehouseAllocationEventType.RESERVATION_REJECTED -> {
-            val lineId = event.target.orderLineId!!.value
-            if (!repository.rejectReservation(event.target.reservationId!!.value, lineId)) return false
+            val lineId = validated(event.target.orderLineId, "orderLineId").value
+            if (!repository.rejectReservation(validated(event.target.reservationId, "reservationId").value, lineId)) return false
             val line = repository.findOrderLine(lineId) ?: return false
             val reservations = repository.reservations(lineId)
             val nextStatus = when {
@@ -72,7 +77,7 @@ internal class WarehouseAllocationEventService(
         }
         WarehouseAllocationEventType.ORDER_CANCELLED -> {
             val payload = event.payload as WarehouseAllocationEventPayload.OrderCancelled
-            val line = repository.findOrderLine(event.target.orderLineId!!.value) ?: return false
+            val line = repository.findOrderLine(validated(event.target.orderLineId, "orderLineId").value) ?: return false
             if (!repository.cancelOrderLine(line.orderLineId.value, payload.lineRevision)) return false
             val orderId = line.orderId?.value ?: return false
             val order = repository.findOrder(orderId) ?: return false
@@ -81,18 +86,21 @@ internal class WarehouseAllocationEventService(
             if (order.status == status) true else repository.updateOrderIfRevision(orderId, order.revision, order.copy(status = status, revision = order.revision + 1, lines = lines))
         }
         WarehouseAllocationEventType.CARRIER_CUTOFF_CHANGED -> repository.updateOrderLineCutoff(
-            event.target.orderLineId!!.value,
+            validated(event.target.orderLineId, "orderLineId").value,
             (event.payload as WarehouseAllocationEventPayload.CarrierCutoffChanged).cutoffAt,
         )
         WarehouseAllocationEventType.PICKER_CAPACITY_CHANGED -> repository.updateWarehouseCapacity(
-            event.target.warehouseId!!.value,
+            validated(event.target.warehouseId, "warehouseId").value,
             (event.payload as WarehouseAllocationEventPayload.PickerCapacityChanged).capacity,
         )
         WarehouseAllocationEventType.WAREHOUSE_INCIDENT -> repository.updateWarehouseIncident(
-            event.target.warehouseId!!.value,
+            validated(event.target.warehouseId, "warehouseId").value,
             (event.payload as WarehouseAllocationEventPayload.WarehouseIncident).active,
         )
     }
+
+    private fun <T> validated(value: T?, field: String): T =
+        checkNotNull(value) { "validated event must include $field" }
 
     private fun validateTarget(event: WarehouseAllocationEvent) {
         if (event.aggregateId != event.target.key()) {

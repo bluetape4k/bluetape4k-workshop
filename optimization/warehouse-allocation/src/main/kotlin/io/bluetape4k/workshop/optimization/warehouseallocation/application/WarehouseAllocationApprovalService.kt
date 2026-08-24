@@ -51,10 +51,11 @@ internal class WarehouseAllocationApprovalService(
 
             val activePin = repository.activePin(lineId.value)
             val plannedPin = plan.manualPins.firstOrNull { it.orderLineId == lineId }
-            if ((activePin == null) != (plannedPin == null) ||
-                (activePin != null && (plannedPin!!.pinRevision != activePin.pinRevision ||
+            if ((activePin == null) != (plannedPin == null)) throw conflict("allocation pin changed")
+            if (activePin != null && plannedPin != null &&
+                (plannedPin.pinRevision != activePin.pinRevision ||
                     plannedPin.warehouseId != activePin.warehouseId || plannedPin.quantity != activePin.quantity ||
-                    plannedPin.status != activePin.status))
+                    plannedPin.status != activePin.status)
             ) throw conflict("allocation pin changed")
 
             validateAllocations(line, allocations, activePin, plan)
