@@ -54,26 +54,30 @@
 ## 구현 후 delta review
 
 - 검토일: 2026-08-24
-- 현재 계획 SHA-256: `28445bab4f9fe9eb2a7dccb84cd965afee82b8331a2b67f866d301139409ca95`
+- 현재 계획 SHA-256: `58d8dad84d8c55cbf3080846b8850c99d30567e4cd9dd320a83ad4e8ddb148fd`
 - 대상 구현: `optimization/shift-coverage` 및 README/workflow/smoke/lesson 등록
-- fresh evidence: `./gradlew :optimization-shift-coverage:cleanTest :optimization-shift-coverage:test --no-build-cache --max-workers=1 --console=plain`에서 46 tests PASS; `build` PASS; PostgreSQL Testcontainers 3개 PASS; demo `bootRun`에서 `Started ShiftCoverageApplicationKt`, actuator health `UP`, authenticated replan `202`, Prometheus `workshop_shift_coverage_*` 8 lines 확인 후 process cleanup; `bash scripts/smoke-validate.sh optimization`, `stale-check`, `actionlint`, `bash -n`, `git diff --check`, project registration PASS.
+- fresh evidence: 하드닝 RED→GREEN 후 `./gradlew :optimization-shift-coverage:cleanTest :optimization-shift-coverage:test --no-build-cache --max-workers=1 --console=plain`에서 **53 tests PASS**, `build` PASS; PostgreSQL Testcontainers CAS/lock-timeout **3 tests PASS**; demo `bootRun`에서 `Started ShiftCoverageApplicationKt`, actuator health `UP`, authenticated replan `202`, Prometheus `workshop_shift_coverage_*` 8 lines 확인 후 loopback process cleanup; `bash scripts/smoke-validate.sh optimization`, `stale-check`, `actionlint`, `bash -n`, `git diff --check`, project registration PASS.
+- 하드닝 증거: missing/hostile Origin, strict non-loopback, malformed/oversized callback,
+  operator Origin no-write, stable error `nextAction`과 retryable `Retry-After: 1`, restart
+  generation sweep/idempotence, six metric-family bounded cardinality를 RED→GREEN으로
+  확인했다.
 
 | Lens | delta 결과 | 잔여 위험/판정 |
 |---|---|---|
-| Performance / Exposed | PASS | UUID aggregate/CAS/lock tuple와 PostgreSQL timeout evidence, bounded planner/generation state가 구현됐다. restart generation sweep와 long-run metrics cardinality 측정은 미구현이다. |
+| Performance / Exposed | PASS | UUID aggregate/CAS/lock tuple와 PostgreSQL timeout evidence, bounded planner/generation state, restart generation sweep와 six-family cardinality bound가 구현·검증됐다. 장시간 외부 부하 측정은 범위 밖이다. |
 | Stability | PASS | inbox retry terminal, outbox `DELIVERY_UNKNOWN` reconciliation, bounded executor와 close/readiness를 테스트했다. full restart/lease sweep은 범위 밖으로 남겼다. |
-| Security | PASS | HMAC length-prefix context, strict canonical callback envelope, required target/digest headers, constant-time compare, loopback/Origin/role/no-write/redaction 경계를 반영했다. full MockMvc/CORS/error matrix는 미구현이다. |
-| Operator/Ops | PASS | operator-only requeue/redrive, stable error code, DB timeout profile, demo credential-free boot, actuator health/prometheus와 lifecycle evidence가 있다. restart/long-run diagnostics contract는 미구현이다. |
-| Developer/API | PASS | BOM-only module, DTO/controller/error handler, strict callback canonical JSON unknown-key handling, README/workflow/smoke registration이 컴파일·lint된다. full MockMvc matrix는 미구현이다. |
-| User/caller + integration | PASS | manager/worker redaction, idempotency replay/conflict, hostile Origin rejection, plan status/read model과 static console가 구현됐다. full browser/HTTP matrix와 remote provider integration은 미구현이다. |
+| Security | PASS | HMAC length-prefix context, strict canonical callback envelope, required target/digest headers, constant-time compare, strict loopback/Origin/role/no-write/redaction와 stable error contract를 반영했다. `postgres` profile은 환경 credential 없이는 시작하지 않는다. 전체 route/CORS golden matrix는 미구현이다. |
+| Operator/Ops | PASS | operator-only requeue/redrive, stable error code/nextAction, retry header, DB timeout profile, demo credential-free boot, actuator health/prometheus와 lifecycle evidence가 있다. 외부 장시간 diagnostics는 범위 밖이다. |
+| Developer/API | PASS | BOM-only module, DTO/controller/error handler, strict callback canonical JSON unknown-key handling, README/workflow/smoke registration이 컴파일·lint된다. 전체 route/browser matrix는 미구현이다. |
+| User/caller + integration | PASS | manager/worker redaction, idempotency replay/conflict, hostile Origin rejection, plan status/read model과 static console가 구현됐다. 전체 browser/HTTP matrix와 remote provider integration은 미구현이다. |
 
 ### Delta gate
 
 - 구현된 P0: `0`
 - 구현된 P1: `0`
-- P2/P3: full CORS/error matrix, restart generation sweep, long-run
-  metrics cardinality, repository Gradle `detekt` task가 아직 없어 **PENDING**으로
-  기록한다.
+- P2/P3: restart generation sweep와 bounded metrics cardinality는 해소됐다. 전체
+  route/status/CORS/browser golden matrix, remote provider integration, repository Gradle
+  `detekt` task 부재는 **PENDING/N/A**로 기록한다.
 - **판정: PENDING.** 현재 변경은 로컬 deterministic reference module로 검증됐지만,
-  위 acceptance gaps를 채우기 전에는 #526 DoD를 `DONE`으로 선언하지 않으며 #527로
-  진행하지 않는다.
+  전체 HTTP/browser acceptance gap과 repository lint task가 해결되기 전에는 #526 DoD를
+  `DONE`으로 선언하지 않으며 #527로 진행하지 않는다.

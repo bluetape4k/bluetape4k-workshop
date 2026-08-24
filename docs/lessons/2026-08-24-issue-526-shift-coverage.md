@@ -9,6 +9,13 @@ PostgreSQL을 authority로 사용한다. planner proposal은 immutable snapshot 
 stable reason code를 보존하며, assignment projection은 approval 또는 CAS 기반 swap
 acceptance에서만 변경된다.
 
+하드닝 단계에서는 controller가 nullable remote address를 허용하지 않도록 strict
+loopback guard를 적용하고, 정확한 HTTP `Origin` allowlist와 operator recovery 경계를
+같은 규칙으로 맞췄다. error response는 code별 bounded `nextAction`을 포함하고,
+retryable replan rejection만 `Retry-After: 1`을 반환한다. generation restart sweep은
+RUNNING만 FAILED로 복구하고 terminal state는 보존하며, callback/result metrics는 여섯
+metric family와 bounded result allowlist를 넘지 않는다.
+
 ## Bluetape 재사용
 
 - root `bluetape4k-dependencies` BOM만 사용하고 개별 Bluetape 버전은 고정하지 않았다.
@@ -39,18 +46,22 @@ acceptance에서만 변경된다.
   failed terminal state를 보존한다.
 - callback은 signature/target/issued-at preflight를 inbox claim보다 먼저 수행하고,
   strict duplicate/unknown-key closed envelope를 canonicalize한다. error response에는
-  stable code와 request ID만 남긴다. controller origin은 `localhost`/`127.0.0.1`의
+  stable code/request ID와 bounded `nextAction`만 남긴다. controller origin은
+  `localhost`/`127.0.0.1`의
   정확한 HTTP origin만 허용한다.
 - Micrometer observation은 `result`의 bounded allowlist만 tag로 사용하며 callback
   body, worker, credential, tenant를 metric label로 만들지 않는다.
+- `postgres` profile은 `SHIFT_COVERAGE_DATABASE_*` 환경값이 없으면 시작하지 않으며,
+  저장소 기본 JDBC URL·credential을 제거해 demo와 authoritative DB 경계를 분리한다.
 
 ## 검증 영수증
 
 - `./gradlew :optimization-shift-coverage:cleanTest :optimization-shift-coverage:test --no-build-cache --max-workers=1 --console=plain`
-  — 46개 테스트 통과. planner, canonical digest, approval/CAS, swap race,
+  — 53개 테스트 통과. planner, canonical digest, approval/CAS, swap race,
   idempotency restart, inbox retry, generation/event stale, DST boundary, outbox
   fencing/queue, Java 25 lifecycle, callback canonical preflight, MockMvc error
-  matrix, role/redaction, bounded metrics, PostgreSQL authority를 포함한다.
+  matrix, stable error contract, restart generation sweep, role/redaction, bounded
+  metrics cardinality, PostgreSQL authority를 포함한다.
 - `./gradlew :optimization-shift-coverage:build --no-build-cache --max-workers=1 --console=plain`
   — BUILD SUCCESSFUL.
 - `colima status`, `docker context show`, `docker info` — Colima/Docker healthy;
@@ -61,9 +72,9 @@ acceptance에서만 변경된다.
   README broken image 없음.
 - `actionlint .github/workflows/Examples.yml`, `bash -n scripts/smoke-validate.sh`,
   `git diff --check` — 통과.
-- `bootRun` demo smoke — `Started ShiftCoverageApplicationKt` 확인 후 timeout 종료;
+- `bootRun` demo smoke — `Started ShiftCoverageApplicationKt` 확인 후 명시적 cleanup;
   `/actuator/health`가 `UP`, authenticated replan 202, `/actuator/prometheus`에서
-  `workshop_shift_coverage_*` 8개 line을 확인했으며 lingering process 없음.
+  `workshop_shift_coverage_*` 8개 line을 확인했으며 loopback port 잔류 process 없음.
 
 ## 남은 범위와 rollback
 
@@ -71,9 +82,10 @@ acceptance에서만 변경된다.
   `./gradlew :optimization-shift-coverage:detekt`는 `task 'detekt' not found`로
   실행되지 않는다. 이는 Java 25 workflow에서 detekt를 제외하는 workspace 정책과
   일치하지만, 정식 repository detekt gate가 생기기 전까지 PENDING으로 남긴다.
-- full HTTP MockMvc error matrix, restart 후 generation sweep, metrics cardinality
-  load/long-run, external Timefold callback integration은 이 demo 범위에 포함하지
-  않았다.
+- 전체 route/status/CORS/browser golden matrix, metrics 장시간 외부 부하, external
+  Timefold callback integration은 이 demo 범위에 포함하지 않았다. 핵심 MockMvc
+  security/error matrix, restart generation sweep, bounded cardinality는 이번 하드닝에서
+  검증했다.
 - #527/#528/#529, PR 생성·push·merge는 이 변경의 scope가 아니며 #526 DoD 이후
   순서대로 진행한다. 구현을 되돌릴 때는 이 feature branch의 Lore commit만
   revert하고 `develop`과 sibling worktree는 건드리지 않는다.

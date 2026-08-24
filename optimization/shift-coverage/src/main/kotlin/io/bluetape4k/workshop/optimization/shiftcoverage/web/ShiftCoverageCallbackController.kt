@@ -61,7 +61,7 @@ class ShiftCoverageCallbackController(
         } catch (failure: InvalidShiftCoverageInput) {
             throw ShiftCoverageHttpException(HttpStatus.BAD_REQUEST, "REQUEST_INVALID", false)
         }
-        if (request.remoteAddr != null && request.remoteAddr !in LOOPBACK) throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "LOOPBACK_REQUIRED", false)
+        if (request.remoteAddr !in LOOPBACK) throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "LOOPBACK_REQUIRED", false)
         val parsedProvider = provider.toProviderOrNull() ?: throw ShiftCoverageHttpException(HttpStatus.BAD_REQUEST, "REQUEST_INVALID", false)
         val id = eventId?.takeIf { it.isNotBlank() } ?: throw ShiftCoverageHttpException(HttpStatus.UNAUTHORIZED, "CALLBACK_SIGNATURE_INVALID", true)
         val signedRequestId = requestId?.takeIf { it.isNotBlank() }

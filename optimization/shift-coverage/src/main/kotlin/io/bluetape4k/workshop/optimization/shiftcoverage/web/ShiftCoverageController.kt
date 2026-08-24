@@ -103,7 +103,7 @@ class ShiftCoverageController(private val service: ShiftCoverageDemoService) {
 
     private fun guard(request: HttpServletRequest, requiredRole: String?): DemoPrincipal {
         val remote = request.remoteAddr
-        if (remote != null && remote !in LOOPBACK) throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "LOOPBACK_REQUIRED", false)
+        if (remote !in LOOPBACK) throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "LOOPBACK_REQUIRED", false)
         val origin = request.getHeader("Origin")
         if (origin != null && !isAllowedOrigin(origin)) {
             throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "ORIGIN_FORBIDDEN", false)

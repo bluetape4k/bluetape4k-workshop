@@ -52,4 +52,34 @@ class ShiftCoverageGenerationStoreTest {
         restarted.find(generation.generationId)?.state shouldBeEqualTo ShiftCoverageGenerationState.FAILED
         restarted.find(generation.generationId)?.retryable.shouldBeTrue()
     }
+
+    @Test
+    fun `restart sweep only fails in-flight generations and is idempotent`() {
+        val records = ConcurrentHashMap<GenerationId, ShiftCoverageGenerationRecord>()
+        val latest = ConcurrentHashMap<PlanId, GenerationId>()
+        val first = ShiftCoverageGenerationStore(records, latest)
+        val requestedPlan = PlanId("plan-requested")
+        val requested = first.request(requestedPlan, 5L, digest, GenerationId("generation-requested"), Instant.EPOCH)
+        val running = first.request(PlanId("plan-running"), 6L, digest, GenerationId("generation-running"), Instant.EPOCH)
+        first.start(running.generationId)
+        val succeeded = first.request(PlanId("plan-succeeded"), 7L, digest, GenerationId("generation-succeeded"), Instant.EPOCH)
+        first.start(succeeded.generationId)
+        first.succeed(succeeded.generationId, Instant.parse("2026-08-24T09:05:00Z"))
+        val cancelled = first.request(PlanId("plan-cancelled"), 8L, digest, GenerationId("generation-cancelled"), Instant.EPOCH)
+        first.cancel(cancelled.generationId, Instant.parse("2026-08-24T09:06:00Z"))
+
+        val restarted = ShiftCoverageGenerationStore(records, latest)
+        val recoveredAt = Instant.parse("2026-08-24T09:07:00Z")
+        val recovered = restarted.recoverAfterRestart(recoveredAt)
+        val secondPass = restarted.recoverAfterRestart(recoveredAt.plusSeconds(1))
+
+        recovered.map { it.generationId.value } shouldBeEqualTo recovered.map { it.generationId.value }.sorted()
+        restarted.find(requested.generationId)?.state shouldBeEqualTo ShiftCoverageGenerationState.REQUESTED
+        restarted.find(running.generationId)?.state shouldBeEqualTo ShiftCoverageGenerationState.FAILED
+        restarted.find(running.generationId)?.completedAt shouldBeEqualTo recoveredAt
+        restarted.find(succeeded.generationId)?.state shouldBeEqualTo ShiftCoverageGenerationState.SUCCEEDED
+        restarted.find(cancelled.generationId)?.state shouldBeEqualTo ShiftCoverageGenerationState.CANCELLED
+        secondPass.map { it.state } shouldBeEqualTo recovered.map { it.state }
+        restarted.find(running.generationId)?.completedAt shouldBeEqualTo recoveredAt
+    }
 }

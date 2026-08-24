@@ -1,7 +1,7 @@
 spring:
   datasource:
-    url: ${SHIFT_COVERAGE_DATABASE_URL:jdbc:postgresql://localhost:5432/shift_coverage}
-    username: ${SHIFT_COVERAGE_DATABASE_USERNAME:shift_coverage}
-    password: ${SHIFT_COVERAGE_DATABASE_PASSWORD:shift_coverage}
+    url: ${SHIFT_COVERAGE_DATABASE_URL}
+    username: ${SHIFT_COVERAGE_DATABASE_USERNAME}
+    password: ${SHIFT_COVERAGE_DATABASE_PASSWORD}
     hikari:
       maximum-pool-size: 8

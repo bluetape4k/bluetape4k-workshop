@@ -24,9 +24,9 @@
 | 5 | PASS | Exposed authority tables, UUID aggregate repository, CAS/lock tuple, PostgreSQL lock/statement timeout Testcontainers를 검증했다. |
 | 6 | PASS | approval/swap CAS, principal-scoped idempotency, inbox monotonic/retry terminal, generation/event stale, outbox unknown/reconcile/redrive 경계를 구현했다. |
 | 7 | PASS | bounded executor, readiness/close, demo replan/approve/swap/read model을 구현했다. |
-| 8 | PARTIAL | MVC/controller/callback/operator/static console, strict callback envelope, DST boundary, redaction/loopback/Origin, bounded Micrometer tags와 핵심 MockMvc error cases를 구현했다. full CORS/error matrix, restart generation sweep, long-run metrics cardinality 검증은 남아 있다. |
+| 8 | PARTIAL | MVC/controller/callback/operator/static console, strict callback envelope, DST boundary, redaction/loopback/Origin, stable `nextAction`/`Retry-After`, restart generation sweep, bounded Micrometer tags와 핵심 MockMvc error cases를 구현했다. 전체 route/status/CORS golden matrix와 live browser matrix는 남아 있다. |
 | 9 | PASS | README/README.ko, optimization index, workflow, smoke/stale-check, lesson을 등록했다. |
-| 10 | PARTIAL / PENDING | 46 tests, build, PostgreSQL, demo actuator/HTTP boot, smoke, actionlint, shell syntax, diff check가 통과했다. Gradle `detekt` task가 등록되지 않았고, 위 Task 8의 full CORS/restart/long-run gaps가 남아 있어 전체 DoD는 아직 `PENDING`이다. |
+| 10 | PARTIAL / PENDING | 하드닝 후 53 tests, build, PostgreSQL, demo actuator/HTTP boot, smoke, actionlint, shell syntax, diff check가 통과했다. Gradle `detekt` task가 등록되지 않았고, 위 Task 8의 전체 route/CORS/browser matrix gap이 남아 있어 전체 DoD는 아직 `PENDING`이다. |
 
 **현재 판정:** `optimization-shift-coverage`의 구현 단위는 **PENDING**이다. #527 →
 #528 → #529는 이 계획의 Stop condition을 충족하고 fresh approval을 얻은 뒤에만
@@ -442,7 +442,9 @@ Expected: outbox repository/state machine이 없어 test compilation failure가 
   `POST /api/shift-coverage/callbacks/{provider}`; operator redrive
   `POST /api/shift-coverage/outbox/{effectKey}/redrive`와 inbox requeue
   `POST /api/shift-coverage/inbox/{provider}/{eventId}/requeue`의
-  method/path/header/body/status/error matrix를 live `WebTestClient`로 고정한다.
+  method/path/header/body/status/error matrix를 MVC `MockMvc`로 고정한다. 이 모듈은
+  Spring MVC consumer이므로 `WebTestClient`가 아니라 실제 dispatcher/advice 경계를
+  실행하는 `MockMvc`를 사용한다.
   `Idempotency-Key`, `X-Request-Id`,
   `X-Demo-Operator`, `X-Demo-Role`, callback의 `X-Shift-Coverage-Signature`와
   `X-Shift-Coverage-Key-Version` header 이름을 고정하고, `409` (`REVISION_CONFLICT`,
@@ -468,12 +470,14 @@ Expected: outbox repository/state machine이 없어 test compilation failure가 
 
 Expected: 새 controller/project가 없어 test compilation failure가 발생한다. 최소 DTO와
 route 구현 후 같은 명령이 GREEN이어야 하며 live HTTP/Testcontainers가 불가능하면 해당
-부분만 `PENDING`으로 남긴다.
+부분만 `PENDING`으로 남긴다. 현재는 핵심 error/security matrix를 `MockMvc`로 검증하고,
+전체 route/status/CORS/browser golden matrix는 별도 후속 범위로 남긴다.
 - [ ] **Step 2: closed DTO와 filter를 구현한다.** unknown fields/duplicate keys/trailing
   tokens/non-finite/open enum/oversized body/depth를 거부한다. loopback+`demo` profile,
   bounded `X-Demo-Operator`, `X-Demo-Role` (`manager|worker`), `X-Request-Id`, idempotency
   header를 확인하고 response에는 stable code/requestId/retryability/Retry-After/nextAction만
-  둔다. `X-Demo-Operator`는 고정된 `manager-demo→manager/site-demo`와
+  둔다. `ShiftCoverageExceptionHandler`는 code별 bounded `nextAction`과 retryable
+  replan의 `Retry-After: 1`을 매핑한다. `X-Demo-Operator`는 고정된 `manager-demo→manager/site-demo`와
   `worker-a-demo|worker-b-demo→worker/site-demo` subject로만 매핑하고 principal/role/
   worker/site scope를 idempotency namespace와 canonical fingerprint에 포함한다.
   authorization과 callback signature/target preflight는 inbox/plan/assignment write보다

@@ -33,6 +33,11 @@ approval and swap acceptance can change the assignment projection.
 curl -s http://127.0.0.1:8080/shift-coverage/
 ```
 
+The `postgres` profile fails closed unless `SHIFT_COVERAGE_DATABASE_URL`,
+`SHIFT_COVERAGE_DATABASE_USERNAME`, and `SHIFT_COVERAGE_DATABASE_PASSWORD` are
+provided by the environment; no repository default JDBC URL or credential is
+used.
+
 Demo headers use `manager-demo`, `worker-a-demo`, or `worker-b-demo` with the
 matching `X-Demo-Role`. Mutation requests require `Idempotency-Key` and the
 loopback guard. The browser console is deliberately redacted and only shows

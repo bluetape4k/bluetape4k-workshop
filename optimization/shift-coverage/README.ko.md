@@ -32,6 +32,11 @@ projection을 변경하는 경로는 manager approval과 swap acceptance뿐입�
 curl -s http://127.0.0.1:8080/shift-coverage/
 ```
 
+`postgres` profile은 `SHIFT_COVERAGE_DATABASE_URL`,
+`SHIFT_COVERAGE_DATABASE_USERNAME`, `SHIFT_COVERAGE_DATABASE_PASSWORD`를
+환경에서 제공하지 않으면 fail-closed 한다. 저장소에는 기본 JDBC URL이나
+credential을 두지 않는다.
+
 Demo header에는 `manager-demo`, `worker-a-demo`, `worker-b-demo`와 일치하는
 `X-Demo-Role`을 사용합니다. mutation에는 `Idempotency-Key`와 loopback guard가
 필요합니다. browser console은 의도적으로 redacted read model만 호출하고

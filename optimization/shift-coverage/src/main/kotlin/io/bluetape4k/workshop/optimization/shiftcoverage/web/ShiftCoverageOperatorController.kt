@@ -6,6 +6,7 @@ import io.bluetape4k.workshop.optimization.shiftcoverage.adapter.ShiftCoveragePr
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.EffectKey
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.EventId
 import jakarta.servlet.http.HttpServletRequest
+import java.net.URI
 import org.springframework.context.annotation.Profile
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PathVariable
@@ -52,13 +53,28 @@ class ShiftCoverageOperatorController(
     }
 
     private fun requireManager(request: HttpServletRequest, operator: String, role: String) {
-        if (request.remoteAddr != null && request.remoteAddr !in LOOPBACK) {
+        if (request.remoteAddr !in LOOPBACK) {
             throw ShiftCoverageHttpException(org.springframework.http.HttpStatus.FORBIDDEN, "LOOPBACK_REQUIRED", false)
+        }
+        val origin = request.getHeader("Origin")
+        if (origin != null && !isAllowedOrigin(origin)) {
+            throw ShiftCoverageHttpException(org.springframework.http.HttpStatus.FORBIDDEN, "ORIGIN_FORBIDDEN", false)
         }
         if (operator != "manager-demo" || role != "manager") {
             throw ShiftCoverageHttpException(org.springframework.http.HttpStatus.FORBIDDEN, "DEMO_ROLE_FORBIDDEN", false)
         }
     }
 
-    companion object { private val LOOPBACK = setOf("127.0.0.1", "::1", "0:0:0:0:0:0:0:1") }
+    private fun isAllowedOrigin(value: String): Boolean = try {
+        val origin = URI(value)
+        origin.scheme == "http" && origin.userInfo == null && origin.path.isEmpty() &&
+            origin.host in ALLOWED_ORIGIN_HOSTS && origin.query == null && origin.fragment == null
+    } catch (_: IllegalArgumentException) {
+        false
+    }
+
+    companion object {
+        private val LOOPBACK = setOf("127.0.0.1", "::1", "0:0:0:0:0:0:0:1")
+        private val ALLOWED_ORIGIN_HOSTS = setOf("127.0.0.1", "localhost")
+    }
 }
