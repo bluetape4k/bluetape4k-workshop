@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: last-mile-routing
+  profiles:
+    default: demo
+  datasource:
+    url: ${LAST_MILE_DATABASE_URL:}
+    username: ${LAST_MILE_DATABASE_USERNAME:}
+    password: ${LAST_MILE_DATABASE_PASSWORD:}
+    hikari:
+      maximum-pool-size: 8
+  threads:
+    virtual:
+      enabled: true
+server:
+  address: 127.0.0.1
+  max-http-request-header-size: 16KB
+  tomcat:
+    max-http-form-post-size: 256KB
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus

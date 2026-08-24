@@ -11,6 +11,7 @@ provider HTTP 호출과 JDBC 작업은 Bluetape JDK 25 virtual-thread runtime에
 |---|---|---|
 | [`planning-contracts`](planning-contracts/) | provider-neutral planning 제출, PostgreSQL inbox/outbox 수렴, callback idempotency, 최종 aggregate version 재검증 | PostgreSQL + WireMock (Testcontainers) |
 | [`field-service-dispatch`](field-service-dispatch/) | synthetic Field Service dispatch, deterministic planning, proposal approval, worker-route CAS confirmation, redacted browser console | PostgreSQL (Testcontainers) |
+| [`last-mile-routing`](last-mile-routing/) | 고정 travel matrix 기반 synthetic pickup/delivery 라우팅, Bluetape Exposed CAS repository, 정규화 provider callback/outbox lifecycle, CSP 안전 redacted browser projection | PostgreSQL (Testcontainers) |
 
 그룹 검증:
 
