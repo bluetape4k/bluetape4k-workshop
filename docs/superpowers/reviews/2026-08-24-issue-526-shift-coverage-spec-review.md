@@ -2,7 +2,7 @@
 
 - 검토일: 2026-08-24
 - 대상 문서: `docs/superpowers/specs/2026-08-24-issue-526-shift-coverage-design.md`
-- 대상 문서 SHA-256: `5857e564c43c4a3bc870f15ab29a19db1512c3e9dae6043061b34d522888092d`
+- 대상 문서 SHA-256: `460a0c38051077679a8f29dceb01a41195cfb315d35c0e74f41d688b95b842e3`
 - 근거 이슈: https://github.com/bluetape4k/bluetape4k-workshop/issues/526
 - 검토 범위: Type A 설계 문서의 요구사항 추적성, 결정성, 실패 수렴, 보안, 운영,
   API, 호출자 경험
@@ -21,6 +21,16 @@
 계약이다. 따라서 live provider dispatch와 production credential은 이 문서의 범위에
 포함하지 않았다.
 
+## capability correction
+
+설계 작성 후 resolved public artifact를 다시 확인한 결과 `bluetape4k-testcontainers:1.11.0`
+및 `bluetape4k-junit5:1.11.0`에는 `TestMutexService`가 없다. 다만 workspace root
+`build.gradle.kts`가 Gradle `test-mutex` BuildService를 등록하고 표준 `test` task에
+`usesService(testMutex)`로 연결한다. 따라서 설계의 Testcontainers 직렬화 근거는
+`PostgreSQLServer.Launcher.postgres`, 모듈별 `junit-platform.properties` same-thread
+실행, root BuildService, Gradle `--max-workers=1`의 조합이며 module 전용 helper는
+추가하지 않는다. 이 교정은 provider 경계·business state·acceptance를 변경하지 않는다.
+
 ## SPW writer gate
 
 | Gate | 결과 | 증거 |
@@ -29,7 +39,7 @@
 | SPW-02 completeness | PASS | 문제·범위·비목표·대안·아키텍처·domain/API·failure convergence·호환성·acceptance·DoD를 모두 읽어 확인했다. |
 | SPW-03 Korean naturalness | PASS | `audit-korean-terms.mjs`가 대상 문서에서 0 findings를 반환했다. |
 | SPW-04 traceability | PASS | 아래 acceptance traceability 표에서 Issue #526 조건과 구현 경계를 연결했다. |
-| SPW-05 final readback | PASS | 문서 전체 readback, `git diff --check`, TODO/TBD/FIXME 검색, SHA-256 재계산을 완료했다. |
+| SPW-05 final readback | PASS | 문서 전체 readback, `git diff --check`, 미완성 표식 검색, SHA-256 재계산을 완료했다. |
 
 ## 독립 관점 검토
 

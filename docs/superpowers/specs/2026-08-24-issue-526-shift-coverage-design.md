@@ -215,10 +215,10 @@ planner는 CPU 작업을 고정 worker 4개와 `ArrayBlockingQueue(8)`로 admiss
 fixture와 timeout/cancellation fixture에서 검증한다.
 
 정규화 adapter port는 `submit(PlanningRequest)`와 `accept(PlanningCallback)` 두 경로만
-노출한다. `PlanningRequest`에는 `provider`, `datasetId`, `generation`, `aggregateId`,
+노출한다. `PlanningRequest`에는 `provider`, `datasetId`, `generationId`, `aggregateId`,
 `siteId`, `aggregateRevision`, `canonicalizationVersion`, `snapshotDigest`, callback
 binding만 포함하고 raw PostgreSQL row나 credential은 포함하지 않는다. `PlanningCallback`은
-`provider`, `eventId`, `requestId`, `datasetId`, `generation`, `aggregateId`, `siteId`,
+`provider`, `eventId`, `requestId`, `datasetId`, `generationId`, `aggregateId`, `siteId`,
 `targetAssignmentId`, `providerRevision`, `status`, proposal digest, score summary,
 bounded reason codes만 가진다. Fake adapter와
 recorded fixture는 이 ABI를 그대로 사용하고, live Timefold/HTTP 구현은 같은 port 뒤에
@@ -232,20 +232,29 @@ Every mutating transaction first claims its event/idempotency row when present, 
 locks worker rows by `(siteId, workerId)`, shift rows by `(siteId, shiftId)`, assignment
 rows by `(shiftId, workerId)`, plan rows, and swap rows in that fixed ascending order.
 The same lock order applies to approval, swap acceptance, and event handling; queries do
-not take these locks. Unique/index contracts include assignment `(siteId, shiftId,
-workerId)`, shift `(siteId, startAt, shiftId)`, event inbox `(provider, eventId)`,
-idempotency `(method, route, demoScope, key)`, and outbox `(status, nextAttemptAt, id)`.
+not take these locks. Within every lock class, claim keys and lock tuples are normalized
+to UTF-8 lexical ascending order before acquisition: event/idempotency claim, worker
+`(siteId, workerId)`, shift `(siteId, startAt, shiftId)`, assignment `(shiftId, workerId)`,
+plan `(planId)`, then swap `(swapId)`. A caller-provided reverse order is never honored,
+so concurrent transactions use one order and the deadlock fixture can prove it. Unique/index
+contracts include assignment `(siteId, shiftId, workerId)`, shift `(siteId, startAt, shiftId)`,
+event inbox `(provider, eventId)`, idempotency `(method, route, demoScope, principal, key)`,
+and outbox `(status, nextAttemptAt, id)`.
 
 The PostgreSQL session sets `lock_timeout=2s` and `statement_timeout=5s`. A failed CAS,
 lock timeout, or exhausted deadlock retry performs no business write; after rollback, a
 separate short transaction records a bounded conflict audit. Approval and swap acceptance
 use `SELECT ... FOR UPDATE` plus expected revision CAS and require `affectedRows == 1`.
 An idempotency claim stores the canonical command fingerprint (source assignment,
-target worker, plan revision, dataset, generation, and body digest) with
-`(method, route, demoScope, key)`. A matching retry returns the stored response; a
+target worker, plan revision, dataset, generationId, and body digest) with
+`(method, route, demoScope, principal, key)`. A matching retry returns the stored response; a
 different fingerprint returns `409 IDEMPOTENCY_KEY_REUSED` and performs no domain write.
+The idempotency row stores `fingerprintSha256 CHAR(64)` with a lowercase-hex length/check
+constraint; its canonical input is source assignment, target worker, plan revision, dataset,
+generationId, and body digest. Schema and restart fixtures verify the unique namespace and
+preserve replay/mismatch behavior after process restart.
 
-Event inbox rows contain `(provider, eventId, digest, requestId, datasetId, generation,
+Event inbox rows contain `(provider, eventId, digest, requestId, datasetId, generationId,
 aggregateId, siteId, targetAssignmentId, aggregateRevision, status, attempt, nextAttemptAt)`.
 `status` is one of `RECEIVED`, `APPLIED`, `STALE`, `REJECTED`, or
 `RETRY_EXHAUSTED`. The unique provider/event key is
@@ -257,7 +266,7 @@ atomically appends the audit/outbox effects and moves the inbox to `APPLIED` or 
 A transient database/provider failure leaves `RECEIVED` with at most five attempts and
 `2/4/8/16/30` second backoff; an invalid binding moves it to `REJECTED`. Availability, sick-call,
 demand, swap, and shift-start events increment the affected aggregate revision and
-enqueue a unique `(datasetId, generation)` replan in the same transaction.
+enqueue a unique `(datasetId, generationId)` replan in the same transaction.
 
 Callback revision comparison is monotonic: `providerRevision > storedRevision` may apply
 only when the aggregate revision and signed target binding still match, `==` is a duplicate
@@ -265,7 +274,17 @@ only when the digest matches, and `<` is `STALE` audit-only. Aggregate/source re
 updates use `affectedRows == 1`; a failed comparison never changes accepted state. After
 five retryable inbox failures the row becomes terminal `RETRY_EXHAUSTED` and an operator
 must explicitly requeue the same digest with a new request ID; automatic replay is not
-allowed.
+allowed. The loopback demo exposes `POST /api/shift-coverage/outbox/{effectKey}/redrive`
+for the same recovery boundary. It accepts only `X-Demo-Role=manager`, a bounded printable
+reason, and a new `X-Request-Id`; it writes an operator audit before redriving only a
+`RETRYABLE` row produced by definitive `NOT_FOUND` reconciliation. `DELIVERY_UNKNOWN`,
+`APPLIED|COMPLETED`, `DEAD_LETTER`,
+unresolved provider lookup, foreign effect key, and worker callers are rejected with no write.
+For inbox failures, `POST /api/shift-coverage/inbox/{provider}/{eventId}/requeue` is the
+manager-only operator command. It requires the stored digest, a bounded reason, and a new
+`X-Request-Id`; it records an operator audit and returns the row to `RECEIVED` only from
+`RETRY_EXHAUSTED`. A digest mismatch, non-terminal row, stale provider binding, or worker
+caller returns no-write.
 
 Replan writes a durable generation row before planning. Duplicate generation requests
 return the existing terminal state. A generation is `REQUESTED`, `RUNNING`, `SUCCEEDED`,
@@ -282,7 +301,7 @@ Outbox delivery uses the following state machine:
 | `STARTED` + provider ACK | `APPLIED` + `COMPLETED` (`affectedRows == 1` for both) | ACK must contain the same effect key and request ID |
 | `STARTED` + exception before send | `RETRYABLE` or `DEAD_LETTER` | only the fenced owner may classify a pre-send failure |
 | `STARTED` + timeout/uncertain send | `DELIVERY_UNKNOWN` | never silently duplicates; reconcile by the same effect key |
-| `DELIVERY_UNKNOWN` | `APPLIED`/`COMPLETED` or `RETRYABLE` | definitive provider lookup or operator redrive with the same key |
+| `DELIVERY_UNKNOWN` | `APPLIED`/`COMPLETED` or `RETRYABLE` | definitive provider lookup; operator redrive is allowed only after `NOT_FOUND` |
 | `RETRYABLE` | `CLAIMED` or `DEAD_LETTER` | `2/4/8/16/30` second backoff, max five attempts |
 
 The message and paired effect transition are atomic in PostgreSQL. Every effect references
@@ -293,8 +312,9 @@ owner cannot send or complete. Completion requires provider ACK evidence with th
 effect key, request ID, and `affectedRows == 1` for both effect and message updates. A
 timeout or crash after `STARTED` enters `DELIVERY_UNKNOWN`; reconciliation makes a
 state-changing decision only when provider lookup returns `APPLIED` or `NOT_FOUND`
-(`NOT_FOUND` returns to `RETRYABLE`), while an unresolved result remains operator-visible
-and can be redriven with the same key.
+(`NOT_FOUND` returns to `RETRYABLE`). An unresolved result remains operator-visible but
+cannot be redriven until a definitive lookup; after `NOT_FOUND`, manager-only redrive uses
+the same key and a new request ID.
 
 Startup sweeps run before polling and every 10 seconds thereafter, in ascending message
 ID order, with a two-second DB statement deadline. They reclaim only expired
@@ -319,14 +339,19 @@ after cancellation, timeout, restart, or forced shutdown.
 
 - Query routes are available on loopback with opaque cursor pagination and redacted DTOs.
 - Mutation routes are enabled only on the `demo` profile and require bounded
-  `X-Demo-Operator`/`X-Demo-Role`/`X-Request-Id` headers. These headers are workshop guards, not
+  `X-Demo-Operator`/`X-Demo-Role`/`X-Request-Id` headers. The fixed subjects are
+  `manager-demo→manager/site-demo` and `worker-a-demo|worker-b-demo→worker/site-demo`;
+  principal/role/worker/site scope is part of idempotency binding. These headers are workshop guards, not
   production authentication or authorization. The demo server binds to `127.0.0.1`;
   non-loopback mutation requests and every mutation outside `demo` fail closed.
 - Callback parsing rejects duplicate/unknown keys, oversized bodies, invalid canonical
-  JSON, wrong provider/request/dataset binding, stale generation, and invalid signature.
+  JSON, wrong provider/request/dataset binding, stale generation, and invalid signature
+  before inserting an inbox row or changing any business table.
 - Provider callback signatures use HMAC-SHA-256 over canonical UTF-8 bytes plus the
-  signed context `(method, path, schemaVersion, provider, requestId, datasetId,
-  generation, aggregateId, siteId, eventId, issuedAt)` with a constant-time comparison.
+  signed context `(v1, method, path, schemaVersion, provider, requestId, datasetId,
+  generationId, aggregateId, siteId, eventId, issuedAt)` encoded as length-prefixed UTF-8
+  fields with a constant-time comparison. The exact signature headers are
+  `X-Shift-Coverage-Signature` and `X-Shift-Coverage-Key-Version`.
   `issuedAt` must be within five minutes of the database clock; outside-window or reused
   events return `CALLBACK_REPLAY` with no write. Secrets are read only from
   environment/configuration, excluded from logs and DTOs, and a provider profile fails
@@ -349,19 +374,36 @@ after cancellation, timeout, restart, or forced shutdown.
 
   | HTTP | code | retryable | nextAction |
   |---:|---|---|---|
+  | `400` | `REQUEST_INVALID` | no | `FIX_REQUEST` |
+  | `401` | `CALLBACK_SIGNATURE_INVALID` | no | `FIX_SIGNATURE` |
+  | `403` | `DEMO_ROLE_FORBIDDEN` | no | `USE_ALLOWED_ROLE` |
+  | `403` | `LOOPBACK_REQUIRED` | no | `USE_LOOPBACK` |
+  | `403` | `ORIGIN_FORBIDDEN` | no | `USE_SAME_ORIGIN` |
   | `409` | `REVISION_CONFLICT` | no | `REFRESH_PLAN` |
+  | `409` | `IDEMPOTENCY_KEY_REUSED` | no | `USE_NEW_KEY` |
+  | `409` | `CALLBACK_REPLAY` | no | `DROP_EVENT` |
+  | `409` | `EVENT_KEY_REUSED` | no | `DROP_EVENT` |
+  | `409` | `STALE` | no | `REFRESH_PLAN` |
   | `413` | `RESPONSE_TOO_LARGE` | no | `SHRINK_INPUT` |
+  | `422` | `RETRY_EXHAUSTED` | no | `OPERATOR_REQUEUE` |
   | `429` | `REPLAN_REJECTED` | yes | `RETRY_AFTER` |
   | `202` | `REPLAN_ACCEPTED` | yes | `POLL_OPERATION` |
+  | `404` | `DEMO_PROFILE_REQUIRED` | no | `ENABLE_DEMO` |
 
   Raw callback body, credentials, tokens, PII, JDBC URL, and internal exception text are
   excluded. The golden error matrix fixes status, code, redaction, and retry headers.
+Malformed/unknown DTO, invalid or missing signature, wrong target, forbidden role,
+non-loopback/non-demo request, and foreign `Origin`/CORS are negative fixtures that assert
+the mapped status/code/`nextAction` and no response, audit, inbox, plan, or assignment write.
 
 Caller-facing routes are intentionally narrow: `GET /api/shift-coverage/plans` and
 `GET /api/shift-coverage/swaps` are read-only cursor queries; `POST /api/shift-coverage/
 replans`, `POST /api/shift-coverage/plans/{revision}/approve`,
 `POST /api/shift-coverage/swaps`, and `POST /api/shift-coverage/swaps/{id}/accept` are
-demo mutations; `POST /api/shift-coverage/callbacks/{provider}` is signature-protected.
+demo mutations; `POST /api/shift-coverage/callbacks/{provider}` is signature-protected;
+`POST /api/shift-coverage/outbox/{effectKey}/redrive` and
+`POST /api/shift-coverage/inbox/{provider}/{eventId}/requeue` are manager-only operator
+recovery commands.
 Approval and acceptance require the plan/assignment revision and idempotency key, so a
 stale caller receives `409 REVISION_CONFLICT` instead of a partial write. The browser
 console uses only these redacted routes and displays coverage gap, cost, fairness, reason
@@ -369,7 +411,9 @@ codes, plan revision, and change impact; it never displays provider raw payloads
 
 The demo command matrix permits a `worker` role to request a swap, while only the
 `manager` role may approve a plan or accept a swap; replan requests use the manager
-route. These role checks are deterministic caller-shape fixtures, not production authz.
+route. Outbox redrive and inbox requeue also require the manager role, stored digest, and a
+new request ID/reason. These
+role checks are deterministic caller-shape fixtures, not production authz.
 
 The manager read model allowlist is `siteId`, `shiftId`, synthetic `workerId`, shift
 interval, assignment state, plan revision, gap/cost/fairness, bounded reason codes, and
@@ -466,8 +510,14 @@ validation matrix, and a Korean lesson.
   lock-wait/dead-letter counts, and response bytes without using an external benchmark
   dependency. Failed container or lifecycle runs preserve redacted diagnostics under
   `build/reports/shift-coverage/`; a skipped database check is recorded as `PENDING`.
-- Testcontainers use `TestMutexService` and `--max-workers=1`; Docker/Colima context is
-  inspected before a retry, and no skipped container test is counted as a pass.
+- Testcontainers use `PostgreSQLServer.Launcher.postgres`, the module
+  `junit-platform.properties` (`parallel.enabled=false`, same-thread execution), and
+  `--max-workers=1`. The resolved `bluetape4k-testcontainers:1.11.0` and
+  `bluetape4k-junit5:1.11.0` artifacts expose no helper, but the workspace root
+  `build.gradle.kts` registers the Gradle `test-mutex` BuildService and attaches it with
+  `usesService(testMutex)` to every standard `test` task. No module-specific mutex is added;
+  a future custom integration task must register the same shared service. Docker/Colima
+  context is inspected before a retry, and no skipped container test is counted as a pass.
 - Module test, optimization smoke, `./gradlew projects`, README language/parity checks,
   `actionlint`, `git diff --check`, and fixture/production JAR boundary are required.
 - `detekt` is attempted with the exact module task name; if the task is not registered,
