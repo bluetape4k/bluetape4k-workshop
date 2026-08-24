@@ -35,7 +35,7 @@ feign = "13.13"  # https://mvnrepository.com/artifact/io.github.openfeign/feign-
 httpclient5 = "5.6.4"  # https://mvnrepository.com/artifact/org.apache.httpcomponents.client5/httpclient5
 httpcore5 = "5.4.3"  # https://mvnrepository.com/artifact/org.apache.httpcomponents.core5/httpcore5
 retrofit2 = "3.0.0"  # https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit
-okhttp3 = "5.4.0"  # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp-bom
+okhttp3 = "5.5.0"  # https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp-bom
 okio = "3.18.1"  # https://mvnrepository.com/artifact/com.squareup.okio/okio
 asynchttpclient = "3.0.9"  # https://mvnrepository.com/artifact/org.asynchttpclient/async-http-client
 
