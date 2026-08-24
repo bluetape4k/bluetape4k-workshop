@@ -2,7 +2,7 @@
 
 - 검토일: 2026-08-24
 - 대상 계획: `docs/superpowers/plans/2026-08-24-issue-526-shift-coverage.md`
-- 계획 SHA-256: `7f933db7c25b3fddb5d856372f31fe753ea32d6a0fa2f8410b1d9482aa06a196`
+- preflight 계획 SHA-256: `7f933db7c25b3fddb5d856372f31fe753ea32d6a0fa2f8410b1d9482aa06a196`
 - 기준 설계: `docs/superpowers/specs/2026-08-24-issue-526-shift-coverage-design.md`
 - 설계 SHA-256: `460a0c38051077679a8f29dceb01a41195cfb315d35c0e74f41d688b95b842e3`
 - 근거 이슈: https://github.com/bluetape4k/bluetape4k-workshop/issues/526
@@ -50,3 +50,30 @@
 - P2: `0`
 - P3: `0`
 - Task 1 구현 착수 조건: 충족
+
+## 구현 후 delta review
+
+- 검토일: 2026-08-24
+- 현재 계획 SHA-256: `28445bab4f9fe9eb2a7dccb84cd965afee82b8331a2b67f866d301139409ca95`
+- 대상 구현: `optimization/shift-coverage` 및 README/workflow/smoke/lesson 등록
+- fresh evidence: `./gradlew :optimization-shift-coverage:cleanTest :optimization-shift-coverage:test --no-build-cache --max-workers=1 --console=plain`에서 46 tests PASS; `build` PASS; PostgreSQL Testcontainers 3개 PASS; demo `bootRun`에서 `Started ShiftCoverageApplicationKt`, actuator health `UP`, authenticated replan `202`, Prometheus `workshop_shift_coverage_*` 8 lines 확인 후 process cleanup; `bash scripts/smoke-validate.sh optimization`, `stale-check`, `actionlint`, `bash -n`, `git diff --check`, project registration PASS.
+
+| Lens | delta 결과 | 잔여 위험/판정 |
+|---|---|---|
+| Performance / Exposed | PASS | UUID aggregate/CAS/lock tuple와 PostgreSQL timeout evidence, bounded planner/generation state가 구현됐다. restart generation sweep와 long-run metrics cardinality 측정은 미구현이다. |
+| Stability | PASS | inbox retry terminal, outbox `DELIVERY_UNKNOWN` reconciliation, bounded executor와 close/readiness를 테스트했다. full restart/lease sweep은 범위 밖으로 남겼다. |
+| Security | PASS | HMAC length-prefix context, strict canonical callback envelope, required target/digest headers, constant-time compare, loopback/Origin/role/no-write/redaction 경계를 반영했다. full MockMvc/CORS/error matrix는 미구현이다. |
+| Operator/Ops | PASS | operator-only requeue/redrive, stable error code, DB timeout profile, demo credential-free boot, actuator health/prometheus와 lifecycle evidence가 있다. restart/long-run diagnostics contract는 미구현이다. |
+| Developer/API | PASS | BOM-only module, DTO/controller/error handler, strict callback canonical JSON unknown-key handling, README/workflow/smoke registration이 컴파일·lint된다. full MockMvc matrix는 미구현이다. |
+| User/caller + integration | PASS | manager/worker redaction, idempotency replay/conflict, hostile Origin rejection, plan status/read model과 static console가 구현됐다. full browser/HTTP matrix와 remote provider integration은 미구현이다. |
+
+### Delta gate
+
+- 구현된 P0: `0`
+- 구현된 P1: `0`
+- P2/P3: full CORS/error matrix, restart generation sweep, long-run
+  metrics cardinality, repository Gradle `detekt` task가 아직 없어 **PENDING**으로
+  기록한다.
+- **판정: PENDING.** 현재 변경은 로컬 deterministic reference module로 검증됐지만,
+  위 acceptance gaps를 채우기 전에는 #526 DoD를 `DONE`으로 선언하지 않으며 #527로
+  진행하지 않는다.

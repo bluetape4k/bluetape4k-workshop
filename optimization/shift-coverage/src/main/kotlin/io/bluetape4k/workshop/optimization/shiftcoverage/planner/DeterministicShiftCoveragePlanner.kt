@@ -63,7 +63,6 @@ class DeterministicShiftCoveragePlanner(
 
         val workers = snapshot.workers.sortedBy { it.workerId.value }
         val shifts = snapshot.shifts.sortedWith(compareBy({ it.startAt }, { it.shiftId.value }))
-        val shiftsById = shifts.associateBy { it.shiftId }
         val currentAssignments = snapshot.assignments.associateBy { it.shiftId }
         val assignments = mutableListOf<PlannedShift>()
         val assignedIntervals = mutableMapOf<WorkerId, MutableList<Shift>>()
@@ -159,6 +158,7 @@ class DeterministicShiftCoveragePlanner(
             planId = snapshot.planId,
             generationId = snapshot.generationId,
             revision = snapshot.aggregateRevision,
+            siteId = snapshot.siteId,
             assignments = orderedAssignments,
             unassigned = orderedUnassigned,
             score = CoverageScore(coverageMinor = orderedAssignments.size.toLong() * 1_000L, fairnessMinor = fairness),

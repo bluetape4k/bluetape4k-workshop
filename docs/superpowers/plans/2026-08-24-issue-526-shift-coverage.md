@@ -8,6 +8,30 @@
 
 **Tech Stack:** Kotlin 2.4, Java 25, Spring Boot 4.0.6 MVC, JetBrains Exposed 1.4 계열, PostgreSQL/Testcontainers, Jackson 3, Micrometer/Actuator, `bluetape4k-dependencies` BOM, Bluetape core/idgenerators/logging/exposed-jdbc/http/virtualthread/JUnit5/assertions/testcontainers.
 
+## 구현 상태 (2026-08-24 현재)
+
+아래 상태는 이 계획을 실행한 뒤의 fresh evidence를 반영한 것이다. 원래의 Task별
+체크박스는 실행 순서와 RED → GREEN 추적을 보존하고, 이 표가 현재 DoD 판정을
+보완한다.
+
+| Task | 상태 | 근거 및 남은 범위 |
+|---:|---|---|
+| 0 | PASS | preflight review가 P0/P1/P2/P3 모두 0으로 통과했다. |
+| 1 | PASS | Java 25/virtual-thread module skeleton, demo/postgres profile, shutdown 경계를 구현하고 테스트했다. |
+| 2 | PASS | worker/shift/assignment/swap domain ID·model·hard-rule reason과 deterministic planner를 구현했다. |
+| 3 | PASS | canonical v1, NFC/UTC/Jackson3 escaping, digest/HMAC target context와 callback preflight를 구현했다. |
+| 4 | PASS | normalized planning port와 credential-free deterministic fake/fixture를 구현했다. |
+| 5 | PASS | Exposed authority tables, UUID aggregate repository, CAS/lock tuple, PostgreSQL lock/statement timeout Testcontainers를 검증했다. |
+| 6 | PASS | approval/swap CAS, principal-scoped idempotency, inbox monotonic/retry terminal, generation/event stale, outbox unknown/reconcile/redrive 경계를 구현했다. |
+| 7 | PASS | bounded executor, readiness/close, demo replan/approve/swap/read model을 구현했다. |
+| 8 | PARTIAL | MVC/controller/callback/operator/static console, strict callback envelope, DST boundary, redaction/loopback/Origin, bounded Micrometer tags와 핵심 MockMvc error cases를 구현했다. full CORS/error matrix, restart generation sweep, long-run metrics cardinality 검증은 남아 있다. |
+| 9 | PASS | README/README.ko, optimization index, workflow, smoke/stale-check, lesson을 등록했다. |
+| 10 | PARTIAL / PENDING | 46 tests, build, PostgreSQL, demo actuator/HTTP boot, smoke, actionlint, shell syntax, diff check가 통과했다. Gradle `detekt` task가 등록되지 않았고, 위 Task 8의 full CORS/restart/long-run gaps가 남아 있어 전체 DoD는 아직 `PENDING`이다. |
+
+**현재 판정:** `optimization-shift-coverage`의 구현 단위는 **PENDING**이다. #527 →
+#528 → #529는 이 계획의 Stop condition을 충족하고 fresh approval을 얻은 뒤에만
+시작한다.
+
 ---
 
 ## 0. 구현 전 필수 계약과 재사용 원장

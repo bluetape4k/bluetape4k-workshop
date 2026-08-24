@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shift Coverage Demo</title>
+</head>
+<body>
+  <main>
+    <h1>Shift Coverage</h1>
+    <p>synthetic coverage와 사람이 확인하는 shift swap만 표시합니다.</p>
+    <button id="refresh" type="button">계획 새로고침</button>
+    <button id="replan" type="button">manager replan</button>
+    <section aria-live="polite" id="status">대기 중</section>
+    <table>
+      <thead><tr><th>Plan revision</th><th>Coverage</th><th>Gap</th><th>Fairness</th><th>Reasons</th></tr></thead>
+      <tbody id="plans"></tbody>
+    </table>
+  </main>
+  <script src="/shift-coverage/shift-coverage.js"></script>
+</body>
+</html>

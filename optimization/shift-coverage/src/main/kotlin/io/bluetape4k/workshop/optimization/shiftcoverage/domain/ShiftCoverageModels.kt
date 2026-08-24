@@ -136,6 +136,16 @@ data class CoverageScore(val coverageMinor: Long = 0L, val costMinor: Long = 0L,
 /** planner의 stable failure reason입니다. */
 enum class ShiftCoverageReason { OVERLAP, UNAVAILABLE, MISSING_SKILL, REST_RULE, STARTED_SHIFT, PINNED, NO_CANDIDATE }
 
+/** Issue #526이 수렴시켜야 하는 외부 event의 closed set입니다. */
+enum class ShiftCoverageEventType(val wireName: String) {
+    AVAILABILITY_CHANGED("availability.changed"),
+    SHIFT_DEMAND_CHANGED("shift.demand_changed"),
+    WORKER_SICK_CALLED("worker.sick_called"),
+    SWAP_REQUESTED("swap.requested"),
+    SWAP_ACCEPTED("swap.accepted"),
+    SHIFT_STARTED("shift.started"),
+}
+
 /** route에 materialize된 assignment입니다. */
 data class PlannedShift(val shiftId: ShiftId, val workerId: WorkerId, val assignmentId: AssignmentId, val pinned: Boolean) : Serializable
 
@@ -147,6 +157,7 @@ data class ShiftCoveragePlanProposal(
     val planId: PlanId,
     val generationId: GenerationId,
     val revision: Long,
+    val siteId: SiteId? = null,
     val assignments: List<PlannedShift>,
     val unassigned: List<UnassignedShift>,
     val score: CoverageScore,

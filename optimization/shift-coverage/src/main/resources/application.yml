@@ -29,6 +29,10 @@ shift-coverage:
   zone-offset: Z
 
 management:
+  datadog:
+    metrics:
+      export:
+        enabled: false
   endpoints:
     web:
       exposure:
