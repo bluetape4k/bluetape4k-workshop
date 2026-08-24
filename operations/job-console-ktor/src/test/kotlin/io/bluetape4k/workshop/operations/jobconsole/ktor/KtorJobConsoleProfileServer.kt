@@ -840,17 +840,19 @@ private class RunningKtorJobConsole(
     val stop: () -> Unit,
 )
 
-private class KtorJobConsoleHttpSnapshot(
+internal class KtorJobConsoleHttpSnapshot(
     val jobId: UUID,
     val state: String,
 )
 
-private class KtorJobConsoleHttpClient(
+internal class KtorJobConsoleHttpClient(
     private val baseUri: URI,
     private val client: HttpClient = HttpClient.newBuilder()
         .proxy(ProxySelector.of(null))
         .connectTimeout(Duration.ofSeconds(5))
         .build(),
+    private val sendRequest: ((HttpRequest) -> HttpResponse<String>)? = null,
+    private val delay: (Duration) -> Unit = { duration -> Thread.sleep(duration.toMillis()) },
 ) {
 
     fun submit(scenario: JobConsoleScenario): KtorJobConsoleHttpSnapshot =
@@ -861,6 +863,7 @@ private class KtorJobConsoleHttpClient(
             body = """{"jobType":"document_export","workUnits":1,"failureMode":"none"}""",
             idempotencyKey = scenario.idempotencyKey,
             expectedStatus = 202,
+            retryOnTransientSubmissionFailure = true,
         ).toSnapshot()
 
     fun snapshot(
@@ -910,19 +913,49 @@ private class KtorJobConsoleHttpClient(
         body: String? = null,
         idempotencyKey: String? = null,
         expectedStatus: Int,
+        retryOnTransientSubmissionFailure: Boolean = false,
     ): HttpResponse<String> {
-        val builder = requestBuilder(path, scenario)
-        idempotencyKey?.let { builder.header("Idempotency-Key", it) }
-        if (body == null) {
-            builder.method(method, HttpRequest.BodyPublishers.noBody())
-        } else {
-            builder.header("Content-Type", "application/json")
-                .method(method, HttpRequest.BodyPublishers.ofString(body))
-        }
-        return client.send(builder.build(), HttpResponse.BodyHandlers.ofString()).also { response ->
-            check(response.statusCode() == expectedStatus) {
-                "Ktor HTTP $method $path returned ${response.statusCode()}: ${response.body()}"
+        var attempt = 0
+        while (true) {
+            val builder = requestBuilder(path, scenario)
+            idempotencyKey?.let { builder.header("Idempotency-Key", it) }
+            if (body == null) {
+                builder.method(method, HttpRequest.BodyPublishers.noBody())
+            } else {
+                builder.header("Content-Type", "application/json")
+                    .method(method, HttpRequest.BodyPublishers.ofString(body))
             }
+            val request = builder.build()
+            val response = sendRequest?.invoke(request)
+                ?: client.send(request, HttpResponse.BodyHandlers.ofString())
+            if (retryOnTransientSubmissionFailure &&
+                response.statusCode() in RETRYABLE_SUBMISSION_STATUSES &&
+                attempt < MAX_SUBMISSION_RETRIES
+            ) {
+                attempt++
+                delay(response.retryAfter())
+                continue
+            }
+            return response.also {
+                check(it.statusCode() == expectedStatus) {
+                    "Ktor HTTP $method $path returned ${it.statusCode()}: ${it.body()}"
+                }
+            }
+        }
+    }
+
+    private fun HttpResponse<String>.retryAfter(): Duration {
+        val headerDelay = headers()
+            .firstValue("Retry-After")
+            .orElse(null)
+            ?.toLongOrNull()
+            ?.takeIf { it > 0L }
+            ?.coerceAtMost(MAX_RETRY_AFTER_SECONDS)
+            ?.let(Duration::ofSeconds)
+        return headerDelay ?: if (statusCode() == SERVICE_UNAVAILABLE) {
+            DEFAULT_SERVICE_UNAVAILABLE_RETRY_AFTER
+        } else {
+            DEFAULT_TOO_MANY_REQUESTS_RETRY_AFTER
         }
     }
 
@@ -944,6 +977,13 @@ private class KtorJobConsoleHttpClient(
     }
 
     private companion object {
+        const val TOO_MANY_REQUESTS = 429
+        const val SERVICE_UNAVAILABLE = 503
+        const val MAX_SUBMISSION_RETRIES = 8
+        const val MAX_RETRY_AFTER_SECONDS = 30L
+        val RETRYABLE_SUBMISSION_STATUSES = setOf(TOO_MANY_REQUESTS, SERVICE_UNAVAILABLE)
+        val DEFAULT_TOO_MANY_REQUESTS_RETRY_AFTER = Duration.ofSeconds(2)
+        val DEFAULT_SERVICE_UNAVAILABLE_RETRY_AFTER = Duration.ofMillis(100)
         val JOB_ID = Regex("\\\"jobId\\\":\\\"([^\\\"]+)")
         val STATE = Regex("\\\"state\\\":\\\"([^\\\"]+)")
     }
