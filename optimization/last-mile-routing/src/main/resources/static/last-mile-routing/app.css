@@ -1,0 +1,8 @@
+:root { color-scheme: light; font-family: system-ui, sans-serif; }
+body { margin: 0; background: #f6f7fb; color: #19202a; }
+main { max-width: 70rem; margin: 0 auto; padding: 2rem; }
+section { margin-top: 1.5rem; padding: 1rem; background: white; border: 1px solid #d9deea; border-radius: .5rem; }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: .5rem 1rem; }
+svg { width: 100%; min-height: 24rem; background: #edf1f8; border-radius: .25rem; }
+.route { fill: none; stroke: #1769aa; stroke-width: 4; }
+.stop { fill: #d04a35; }

@@ -191,6 +191,7 @@ case "${1:-help}" in
     run "$GRADLEW \
       :optimization-planning-contracts:test \
       :optimization-field-service-dispatch:test \
+      :optimization-last-mile-routing:test \
       --continue --max-workers=1"
     ;;
 
@@ -313,7 +314,7 @@ case "${1:-help}" in
     echo ""
     echo "=== Required workshop module registration ==="
     missing_modules=0
-    for module in image-processing/barcode-api commerce/shared aws/kinesis-coroutines optimization/field-service-dispatch; do
+    for module in image-processing/barcode-api commerce/shared aws/kinesis-coroutines optimization/field-service-dispatch optimization/last-mile-routing; do
       for required_file in build.gradle.kts README.md README.ko.md; do
         if [ ! -f "$module/$required_file" ]; then
           echo "MISSING: $module/$required_file"
@@ -356,7 +357,7 @@ case "${1:-help}" in
     echo "  serialization    Jackson / JSON / Okio"
     echo "  messaging        Kafka (Testcontainers)"
     echo "  commerce         Commerce lifecycles (PostgreSQL Testcontainers)"
-    echo "  optimization     Planning contracts + Field Service dispatch (Java 25, deterministic + PostgreSQL fixtures)"
+    echo "  optimization     Planning contracts + Field Service + Last-mile routing (Java 25, deterministic + PostgreSQL fixtures)"
     echo "  operations       Job console core + Spring MVC/Ktor (PostgreSQL/Redis Testcontainers)"
     echo "  leader-full      Job safety lab default + PostgreSQL/Redis integration tests"
     echo "  async            Coroutines / Vert.x"

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Last-mile routing console</title>
+  <link rel="stylesheet" href="/last-mile-routing/app.css">
+</head>
+<body>
+<main>
+  <h1>라스트마일 라우팅</h1>
+  <p id="status" role="status">계획을 불러오는 중입니다.</p>
+  <section aria-labelledby="summary-title">
+    <h2 id="summary-title">계획 요약</h2>
+    <dl id="summary"></dl>
+  </section>
+  <section aria-labelledby="map-title">
+    <h2 id="map-title">합성 경로</h2>
+    <svg id="map" viewBox="0 0 1024 1024" role="img" aria-label="합성 라우팅 polyline"></svg>
+  </section>
+  <section aria-labelledby="unassigned-title">
+    <h2 id="unassigned-title">미배정 작업</h2>
+    <ul id="unassigned"></ul>
+  </section>
+</main>
+<script src="/last-mile-routing/app.js" defer></script>
+</body>
+</html>

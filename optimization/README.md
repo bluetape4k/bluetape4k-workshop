@@ -11,6 +11,7 @@ runtime.
 |---|---|---|
 | [`planning-contracts`](planning-contracts/) | Provider-neutral planning submission, PostgreSQL inbox/outbox convergence, callback idempotency, and final aggregate-version revalidation | PostgreSQL + WireMock (Testcontainers) |
 | [`field-service-dispatch`](field-service-dispatch/) | Synthetic Field Service dispatch with deterministic planning, proposal approval, worker-route CAS confirmation, and a redacted browser console | PostgreSQL (Testcontainers) |
+| [`last-mile-routing`](last-mile-routing/) | Synthetic pickup/delivery routing with fixed travel matrix, Bluetape Exposed CAS repositories, normalized provider callback/outbox lifecycle, and a CSP-safe redacted browser projection | PostgreSQL (Testcontainers) |
 
 Run the group validation with:
 

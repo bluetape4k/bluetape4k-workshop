@@ -292,10 +292,21 @@ Task 0 gate
 | redaction/CSP/ETag/health | 7, 9 | MVC/browser/observability smoke |
 | BOM/module/README/workflow/stale 등록 | 1, 8, 9 | projects/parity/smoke/detekt |
 
-## 계획 review 전 상태
+## 계획 review 및 실행 상태
 
-이 계획은 Issue #527 범위에 맞춘 실행 단위와 검증 명령을 고정한다. 계획 review가
-완료되고 사용자 승인이 확인되기 전에는 Task 1의 구현 파일을 생성하지 않는다.
+계획 review는 P0/P1=0으로 완료되었고, 승인된 순서에 따라 Task 1–9 구현과 검증을
+실행했다. 실제 persistence 구현은 계획의 단일 `LastMileRepositories.kt` 대신
+`LastMileAggregateRepositories.kt`, `LastMilePlanRepositories.kt`,
+`LastMileEventRepositories.kt`, `LastMileRecords.kt`로 책임을 분리했다. 계획의
+미실행 checkbox는 실제 provider wire contract, process-restart 입력 재수화,
+production auth/CSRF/migration, full browser journey와 대규모 benchmark처럼
+이번 synthetic reference 범위 밖의 후속 항목을 뜻한다.
+
+Task 10 구현 review와 lesson은 다음 문서에 기록했다.
+
+- `docs/review/2026-08-24-issue-527-last-mile-routing-implementation-review.md`
+- `docs/lessons/2026-08-24-issue-527-last-mile-routing.md`
+
 PR 생성, push, merge, Epic #523 종료는 이 계획에 포함되지 않는다.
 
 ## 문서 작성 게이트
