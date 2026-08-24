@@ -49,6 +49,10 @@ metric family와 bounded result allowlist를 넘지 않는다.
   stable code/request ID와 bounded `nextAction`만 남긴다. controller origin은
   `localhost`/`127.0.0.1`의
   정확한 HTTP origin만 허용한다.
+- directory URL `/shift-coverage/`는 static `index.html`로 명시적으로 redirect하며,
+  static console은 CSP와 `textContent`/`replaceChildren` 기반 safe DOM으로 렌더링한다.
+  202 accepted, 409 revision conflict, 413 oversize, 429 retry-after 상태를 bounded
+  사용자 상태로 표시하고 redacted API만 호출한다.
 - Micrometer observation은 `result`의 bounded allowlist만 tag로 사용하며 callback
   body, worker, credential, tenant를 metric label로 만들지 않는다.
 - `postgres` profile은 `SHIFT_COVERAGE_DATABASE_*` 환경값이 없으면 시작하지 않으며,
@@ -57,11 +61,18 @@ metric family와 bounded result allowlist를 넘지 않는다.
 ## 검증 영수증
 
 - `./gradlew :optimization-shift-coverage:cleanTest :optimization-shift-coverage:test --no-build-cache --max-workers=1 --console=plain`
-  — 53개 테스트 통과. planner, canonical digest, approval/CAS, swap race,
+  — 59개 테스트 통과. planner, canonical digest, approval/CAS, swap race,
   idempotency restart, inbox retry, generation/event stale, DST boundary, outbox
   fencing/queue, Java 25 lifecycle, callback canonical preflight, MockMvc error
   matrix, stable error contract, restart generation sweep, role/redaction, bounded
-  metrics cardinality, PostgreSQL authority를 포함한다.
+  metrics cardinality, PostgreSQL authority, route/CORS golden matrix와 browser static
+  contract를 포함한다.
+- `ShiftCoverageMockMvcRouteMatrixTest` + `ShiftCoverageBrowserContractTest` — 6개 targeted
+  테스트 통과. manager/worker query·command·approval·swap, callback/operator no-write,
+  hostile Origin, console redirect와 CSP/safe-DOM/202·409·413·429 문자열을 고정한다.
+- Playwright demo smoke — `/shift-coverage/` response `200`, CSP와 empty-state row,
+  replan accepted 상태와 1초 후 refresh, rendered row, browser console error `0`을
+  확인했다. loopback demo process는 검증 후 종료했다.
 - `./gradlew :optimization-shift-coverage:build --no-build-cache --max-workers=1 --console=plain`
   — BUILD SUCCESSFUL.
 - `colima status`, `docker context show`, `docker info` — Colima/Docker healthy;
@@ -82,10 +93,9 @@ metric family와 bounded result allowlist를 넘지 않는다.
   `./gradlew :optimization-shift-coverage:detekt`는 `task 'detekt' not found`로
   실행되지 않는다. 이는 Java 25 workflow에서 detekt를 제외하는 workspace 정책과
   일치하지만, 정식 repository detekt gate가 생기기 전까지 PENDING으로 남긴다.
-- 전체 route/status/CORS/browser golden matrix, metrics 장시간 외부 부하, external
-  Timefold callback integration은 이 demo 범위에 포함하지 않았다. 핵심 MockMvc
-  security/error matrix, restart generation sweep, bounded cardinality는 이번 하드닝에서
-  검증했다.
+- metrics 장시간 외부 부하와 external Timefold callback integration은 이 demo 범위에
+  포함하지 않았다. route/status/CORS/browser golden matrix, restart generation sweep,
+  bounded cardinality는 이번 보강에서 검증했다.
 - #527/#528/#529, PR 생성·push·merge는 이 변경의 scope가 아니며 #526 DoD 이후
   순서대로 진행한다. 구현을 되돌릴 때는 이 feature branch의 Lore commit만
   revert하고 `develop`과 sibling worktree는 건드리지 않는다.

@@ -24,13 +24,14 @@
 | 5 | PASS | Exposed authority tables, UUID aggregate repository, CAS/lock tuple, PostgreSQL lock/statement timeout Testcontainers를 검증했다. |
 | 6 | PASS | approval/swap CAS, principal-scoped idempotency, inbox monotonic/retry terminal, generation/event stale, outbox unknown/reconcile/redrive 경계를 구현했다. |
 | 7 | PASS | bounded executor, readiness/close, demo replan/approve/swap/read model을 구현했다. |
-| 8 | PARTIAL | MVC/controller/callback/operator/static console, strict callback envelope, DST boundary, redaction/loopback/Origin, stable `nextAction`/`Retry-After`, restart generation sweep, bounded Micrometer tags와 핵심 MockMvc error cases를 구현했다. 전체 route/status/CORS golden matrix와 live browser matrix는 남아 있다. |
+| 8 | PASS | MVC/controller/callback/operator/static console, strict callback envelope, DST boundary, redaction/loopback/Origin, stable `nextAction`/`Retry-After`, restart generation sweep, bounded Micrometer tags와 MockMvc route/status/CORS golden matrix를 구현·검증했다. CSP/safe-DOM browser contract와 Playwright demo smoke도 통과했다. |
 | 9 | PASS | README/README.ko, optimization index, workflow, smoke/stale-check, lesson을 등록했다. |
-| 10 | PARTIAL / PENDING | 하드닝 후 53 tests, build, PostgreSQL, demo actuator/HTTP boot, smoke, actionlint, shell syntax, diff check가 통과했다. Gradle `detekt` task가 등록되지 않았고, 위 Task 8의 전체 route/CORS/browser matrix gap이 남아 있어 전체 DoD는 아직 `PENDING`이다. |
+| 10 | PARTIAL / PENDING | matrix 보강 후 59 tests, build, PostgreSQL, demo actuator/HTTP boot, 실제 Playwright console, smoke, actionlint, shell syntax, diff check가 통과했다. Gradle `detekt` task가 등록되지 않아 전체 DoD는 아직 `PENDING`이다. |
 
-**현재 판정:** `optimization-shift-coverage`의 구현 단위는 **PENDING**이다. #527 →
-#528 → #529는 이 계획의 Stop condition을 충족하고 fresh approval을 얻은 뒤에만
-시작한다.
+**현재 판정:** `optimization-shift-coverage`의 구현 단위는 **PENDING**이다. HTTP·CORS·
+browser acceptance matrix는 닫혔지만 module 전용 Gradle `detekt` task가 없어 lint
+gate를 증명할 수 없다. #527 → #528 → #529는 이 계획의 Stop condition을 충족하고
+fresh approval을 얻은 뒤에만 시작한다.
 
 ---
 
@@ -470,8 +471,10 @@ Expected: outbox repository/state machine이 없어 test compilation failure가 
 
 Expected: 새 controller/project가 없어 test compilation failure가 발생한다. 최소 DTO와
 route 구현 후 같은 명령이 GREEN이어야 하며 live HTTP/Testcontainers가 불가능하면 해당
-부분만 `PENDING`으로 남긴다. 현재는 핵심 error/security matrix를 `MockMvc`로 검증하고,
-전체 route/status/CORS/browser golden matrix는 별도 후속 범위로 남긴다.
+부분만 `PENDING`으로 남긴다. 현재는 `ShiftCoverageMockMvcRouteMatrixTest` 5건과
+`ShiftCoverageBrowserContractTest` 1건으로 route/status/CORS·static browser contract를
+검증하고, demo profile에서 Playwright로 `/shift-coverage/` redirect·replan·refresh와
+console error 0을 확인했다.
 - [ ] **Step 2: closed DTO와 filter를 구현한다.** unknown fields/duplicate keys/trailing
   tokens/non-finite/open enum/oversized body/depth를 거부한다. loopback+`demo` profile,
   bounded `X-Demo-Operator`, `X-Demo-Role` (`manager|worker`), `X-Request-Id`, idempotency
@@ -501,7 +504,8 @@ route 구현 후 같은 명령이 GREEN이어야 하며 live HTTP/Testcontainers
 - [ ] **Step 5: browser console을 구현한다.** static HTML/JS는 plan revision, gap, cost,
   fairness, reason, change impact, swap state를 표시하고 redacted routes만 호출한다.
   manager/worker command visibility, stale 409 refresh, 413 shrink, 429 retry-after,
-  202 poll을 keyboard-accessible state로 제공한다.
+  202 poll을 keyboard-accessible state로 제공한다. CSP meta, `textContent` 기반 safe DOM,
+  `/shift-coverage/` static entrypoint redirect와 실제 demo Playwright smoke를 유지한다.
 
 ```bash
 ./gradlew :optimization-shift-coverage:test \
