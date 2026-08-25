@@ -21,6 +21,7 @@ data class FieldServiceCommand(
     val digest: EventDigest,
     val payloadSummary: String,
     val expectedVersion: Long = 0L,
+    val eventVersion: Long = expectedVersion,
 ) : Serializable {
     companion object {
         private const val serialVersionUID = 1L
@@ -37,6 +38,7 @@ enum class EventAppendResult {
     APPENDED,
     DUPLICATE,
     EVENT_KEY_REUSED,
+    VERSION_CONFLICT,
 }
 
 /** 최소 persisted outbox row이며 raw provider response는 의도적으로 저장하지 않습니다. */

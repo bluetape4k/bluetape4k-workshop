@@ -60,8 +60,11 @@ internal class FieldServiceConfiguration {
     fun fieldServiceReplanService(
         repository: FieldServiceRepository,
         planner: DeterministicFieldServicePlanner,
+        fieldServiceVirtualThreadExecutor: ExecutorService,
     ): FieldServiceReplanService = FieldServiceReplanService(
         planner = planner,
+        blockingExecutor = fieldServiceVirtualThreadExecutor,
+        closeBlockingExecutor = false,
         snapshot = {
             transaction {
                 val visits = repository.findVisits()

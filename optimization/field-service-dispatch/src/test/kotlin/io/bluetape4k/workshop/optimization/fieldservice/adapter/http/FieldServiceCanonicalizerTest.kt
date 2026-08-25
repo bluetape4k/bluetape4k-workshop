@@ -4,6 +4,11 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.workshop.optimization.fieldservice.domain.EventDigestMatch
 import io.bluetape4k.workshop.optimization.fieldservice.domain.InvalidFieldServiceInput
+import io.bluetape4k.workshop.optimization.fieldservice.domain.AggregateId
+import io.bluetape4k.workshop.optimization.fieldservice.domain.CoordinateId
+import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanId
+import io.bluetape4k.workshop.optimization.fieldservice.domain.VisitId
+import io.bluetape4k.workshop.optimization.fieldservice.domain.WorkerId
 import org.junit.jupiter.api.Test
 
 class FieldServiceCanonicalizerTest {
@@ -35,5 +40,14 @@ class FieldServiceCanonicalizerTest {
     fun `canonical bytes are utf8 and stable`() {
         val bytes = canonicalizer.canonicalBytes("{\"name\":\"현장\"}".toByteArray())
         bytes.toString(Charsets.UTF_8) shouldBeEqualTo "{\"name\":\"현장\"}"
+    }
+
+    @Test
+    fun `value class identifiers preserve validated normalization`() {
+        WorkerId(" worker-1 ").value shouldBeEqualTo "worker-1"
+        VisitId(" visit-1 ").value shouldBeEqualTo "visit-1"
+        PlanId(" plan-1 ").value shouldBeEqualTo "plan-1"
+        AggregateId(" aggregate-1 ").value shouldBeEqualTo "aggregate-1"
+        CoordinateId(" coordinate-1 ").value shouldBeEqualTo "coordinate-1"
     }
 }

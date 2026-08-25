@@ -421,19 +421,20 @@ class FieldServiceRepository(
                 )
             }
 
-    fun appendEvent(command: FieldServiceCommand): EventAppendResult {
-        val inserted = FieldServiceEventsTable.insertIgnore { statement ->
-            statement[aggregateType] = command.aggregateType
-            statement[aggregateId] = command.aggregateId.value
-            statement[eventKey] = command.eventKey.value
-            statement[eventType] = command.eventType
-            statement[digest] = command.digest.value
-            statement[payloadSummary] = command.payloadSummary.take(240)
-            statement[aggregateVersion] = command.expectedVersion
-            statement[createdAt] = clock.instant()
-        }.insertedCount > 0
-        if (inserted) return EventAppendResult.APPENDED
+    /** aggregate별 다음 event sequence를 읽습니다. 호출자는 이 값을 CAS expectedVersion으로 사용합니다. */
+    fun nextAggregateVersion(aggregateType: String, aggregateId: String): Long =
+        (FieldServiceEventsTable.selectAll()
+            .where {
+                (FieldServiceEventsTable.aggregateType eq aggregateType) and
+                    (FieldServiceEventsTable.aggregateId eq aggregateId)
+            }
+            .orderBy(FieldServiceEventsTable.sequenceVersion to SortOrder.DESC)
+            .limit(1)
+            .firstOrNull()
+            ?.get(FieldServiceEventsTable.sequenceVersion)
+            ?: -1L) + 1L
 
+    fun appendEvent(command: FieldServiceCommand): EventAppendResult {
         val existing = FieldServiceEventsTable.selectAll()
             .where {
                 (FieldServiceEventsTable.aggregateType eq command.aggregateType) and
@@ -441,8 +442,40 @@ class FieldServiceRepository(
                     (FieldServiceEventsTable.eventKey eq command.eventKey.value)
             }
             .singleOrNull()
-            ?: return EventAppendResult.EVENT_KEY_REUSED
-        val storedDigest = EventDigest(existing[FieldServiceEventsTable.digest])
+        if (existing != null) {
+            val storedDigest = EventDigest(existing[FieldServiceEventsTable.digest])
+            return when (FieldServiceEvents.compare(storedDigest, command.digest)) {
+                EventDigestMatch.DUPLICATE -> EventAppendResult.DUPLICATE
+                EventDigestMatch.EVENT_KEY_REUSED -> EventAppendResult.EVENT_KEY_REUSED
+            }
+        }
+
+        if (command.expectedVersion != nextAggregateVersion(command.aggregateType, command.aggregateId.value)) {
+            return EventAppendResult.VERSION_CONFLICT
+        }
+
+        val inserted = FieldServiceEventsTable.insertIgnore { statement ->
+            statement[aggregateType] = command.aggregateType
+            statement[aggregateId] = command.aggregateId.value
+            statement[eventKey] = command.eventKey.value
+            statement[eventType] = command.eventType
+            statement[digest] = command.digest.value
+            statement[payloadSummary] = command.payloadSummary.take(240)
+            statement[aggregateVersion] = command.eventVersion
+            statement[sequenceVersion] = command.expectedVersion
+            statement[createdAt] = clock.instant()
+        }.insertedCount > 0
+        if (inserted) return EventAppendResult.APPENDED
+
+        val raced = FieldServiceEventsTable.selectAll()
+            .where {
+                (FieldServiceEventsTable.aggregateType eq command.aggregateType) and
+                    (FieldServiceEventsTable.aggregateId eq command.aggregateId.value) and
+                    (FieldServiceEventsTable.eventKey eq command.eventKey.value)
+            }
+            .singleOrNull()
+            ?: return EventAppendResult.VERSION_CONFLICT
+        val storedDigest = EventDigest(raced[FieldServiceEventsTable.digest])
         return when (FieldServiceEvents.compare(storedDigest, command.digest)) {
             EventDigestMatch.DUPLICATE -> EventAppendResult.DUPLICATE
             EventDigestMatch.EVENT_KEY_REUSED -> EventAppendResult.EVENT_KEY_REUSED
