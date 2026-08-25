@@ -53,7 +53,7 @@ class FieldServiceReplanService(
         if (!plannerPermits.tryAcquire()) return@withLock ReplanAdmission.Rejected("REPLAN_REJECTED")
         lateinit var task: ReplanTask
         val result = ReplanFuture {
-            task.cancelStages()
+            task.cancelStages(it)
             cleanup(aggregateId, task)
         }
         val snapshotTask = object : FutureTask<PlannerInput>(Callable { snapshot(aggregateId) }) {
@@ -185,9 +185,9 @@ class FieldServiceReplanService(
 
         private val permitReleased = AtomicBoolean(false)
 
-        fun cancelStages() {
-            plannerTask?.cancel(true)
-            snapshotTask.cancel(true)
+        fun cancelStages(mayInterruptIfRunning: Boolean = true) {
+            plannerTask?.cancel(mayInterruptIfRunning)
+            snapshotTask.cancel(mayInterruptIfRunning)
         }
 
         fun releasePermit() {
@@ -198,11 +198,11 @@ class FieldServiceReplanService(
     }
 
     private class ReplanFuture(
-        private val onCancel: () -> Unit,
+        private val onCancel: (Boolean) -> Unit,
     ) : CompletableFuture<PlanProposal>() {
         override fun cancel(mayInterruptIfRunning: Boolean): Boolean {
             val cancelled = super.cancel(mayInterruptIfRunning)
-            if (cancelled) onCancel()
+            if (cancelled) onCancel(mayInterruptIfRunning)
             return cancelled
         }
     }

@@ -211,6 +211,50 @@ class FieldServiceReplanServiceTest {
     }
 
     @Test
+    fun `non interrupting future cancellation does not interrupt a running snapshot`() {
+        val snapshotStarted = CountDownLatch(1)
+        val releaseSnapshot = CountDownLatch(1)
+        val snapshotFinished = CountDownLatch(1)
+        val interrupted = AtomicBoolean(false)
+        val blockingExecutor = TestingExecutors.newFixedThreadPool(1)
+        val service = FieldServiceReplanService(
+            planner = DeterministicFieldServicePlanner(),
+            snapshot = {
+                snapshotStarted.countDown()
+                try {
+                    releaseSnapshot.await(5, TimeUnit.SECONDS)
+                } catch (failure: InterruptedException) {
+                    interrupted.set(true)
+                    throw failure
+                } finally {
+                    snapshotFinished.countDown()
+                }
+                emptyInput(it)
+            },
+            executor = boundedCpuExecutor(),
+            timeout = Duration.ofSeconds(2),
+            blockingExecutor = blockingExecutor,
+        )
+
+        try {
+            val first = service.requestReplan(AggregateId("aggregate-cancel-no-interrupt"))
+                as ReplanAdmission.Accepted
+            snapshotStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+
+            first.future.cancel(false).shouldBeTrue()
+            snapshotFinished.await(100, TimeUnit.MILLISECONDS).shouldBeEqualTo(false)
+            interrupted.get().shouldBeEqualTo(false)
+
+            releaseSnapshot.countDown()
+            snapshotFinished.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            interrupted.get().shouldBeEqualTo(false)
+        } finally {
+            releaseSnapshot.countDown()
+            service.close()
+        }
+    }
+
+    @Test
     fun `closing the service cancels a blocked snapshot and rejects new admissions`() {
         val snapshotStarted = CountDownLatch(1)
         val snapshotFinished = CountDownLatch(1)
