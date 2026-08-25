@@ -10,6 +10,7 @@ import io.bluetape4k.workshop.optimization.fieldservice.planner.PlannerInput
 import java.time.Duration
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.Callable
+import java.util.concurrent.CancellationException
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutionException
@@ -22,7 +23,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -57,12 +58,13 @@ class FieldServiceReplanService(
             task.cancelStages(it)
             cleanup(aggregateId, task)
         }
+        val snapshotLease = StageLease()
         val snapshotTask = object : FutureTask<PlannerInput>(Callable {
-            task.stageStarted()
+            if (!snapshotLease.tryStart()) throw CancellationException("snapshot stage cancelled before start")
             try {
                 snapshot(aggregateId)
             } finally {
-                task.stageFinished()
+                snapshotLease.finish()
             }
         }) {
             override fun done() {
@@ -72,12 +74,19 @@ class FieldServiceReplanService(
                 }
                 try {
                     val input = get()
+                    val planningLease = task.registerStage()
+                    if (planningLease == null) {
+                        cleanup(aggregateId, task)
+                        return
+                    }
                     val planningTask = object : FutureTask<PlanProposal>(Callable {
-                        task.stageStarted()
+                        if (!planningLease.tryStart()) {
+                            throw CancellationException("planning stage cancelled before start")
+                        }
                         try {
                             planner.plan(input)
                         } finally {
-                            task.stageFinished()
+                            planningLease.finish()
                         }
                     }) {
                         override fun done() {
@@ -95,7 +104,9 @@ class FieldServiceReplanService(
                         }
                     }
                     task.plannerTask = planningTask
+                    task.plannerLease = planningLease
                     if (result.isDone) {
+                        task.cancelStages()
                         planningTask.cancel(true)
                         cleanup(aggregateId, task)
                     } else {
@@ -112,7 +123,7 @@ class FieldServiceReplanService(
                 }
             }
         }
-        task = ReplanTask(result, snapshotTask, plannerPermits)
+        task = ReplanTask(result, snapshotTask, snapshotLease, plannerPermits)
         flights[aggregateId] = result
         tasks[aggregateId] = task
         return@withLock try {
@@ -193,40 +204,84 @@ class FieldServiceReplanService(
     private class ReplanTask(
         val result: CompletableFuture<PlanProposal>,
         val snapshotTask: FutureTask<PlannerInput>,
+        private val snapshotLease: StageLease,
         private val plannerPermits: Semaphore,
     ) {
         @Volatile
         var plannerTask: FutureTask<PlanProposal>? = null
 
-        /** Future 취소와 실제 Callable 종료를 분리해 실행 중인 stage가 permit을 선점하도록 유지합니다. */
-        private val runningStages = AtomicInteger(0)
-        private val cleanupRequested = AtomicBoolean(false)
+        @Volatile
+        var plannerLease: StageLease? = null
+
+        private val leaseLock = Any()
+        private var openStages = 1
+        private var cleanupRequested = false
         private val permitReleased = AtomicBoolean(false)
 
-        fun stageStarted() {
-            runningStages.incrementAndGet()
+        init {
+            snapshotLease.bind(::stageDone)
         }
 
-        fun stageFinished() {
-            if (runningStages.decrementAndGet() == 0 && cleanupRequested.get()) {
-                releasePermit()
+        fun registerStage(): StageLease? = synchronized(leaseLock) {
+            if (cleanupRequested) return@synchronized null
+            openStages += 1
+            StageLease().also { it.bind(::stageDone) }
+        }
+
+        private fun stageDone() {
+            val shouldRelease = synchronized(leaseLock) {
+                openStages -= 1
+                openStages == 0 && cleanupRequested
             }
+            if (shouldRelease) releasePermit()
         }
 
         fun cancelStages(mayInterruptIfRunning: Boolean = true) {
+            plannerLease?.cancel()
+            snapshotLease.cancel()
             plannerTask?.cancel(mayInterruptIfRunning)
             snapshotTask.cancel(mayInterruptIfRunning)
         }
 
         fun requestCleanup() {
-            cleanupRequested.set(true)
-            if (runningStages.get() == 0) releasePermit()
+            val shouldRelease = synchronized(leaseLock) {
+                cleanupRequested = true
+                openStages == 0
+            }
+            if (shouldRelease) releasePermit()
         }
 
         private fun releasePermit() {
             if (permitReleased.compareAndSet(false, true)) {
                 plannerPermits.release()
             }
+        }
+    }
+
+    private class StageLease {
+        private enum class State { QUEUED, RUNNING, DONE }
+
+        private val state = AtomicReference(State.QUEUED)
+
+        @Volatile
+        private var onDone: (() -> Unit)? = null
+
+        fun bind(onDone: () -> Unit) {
+            this.onDone = onDone
+        }
+
+        fun tryStart(): Boolean = state.compareAndSet(State.QUEUED, State.RUNNING)
+
+        fun cancel() {
+            if (state.compareAndSet(State.QUEUED, State.DONE)) notifyDone()
+        }
+
+        fun finish() {
+            if (state.getAndSet(State.DONE) != State.DONE) notifyDone()
+        }
+
+        private fun notifyDone() {
+            checkNotNull(onDone).invoke()
         }
     }
 

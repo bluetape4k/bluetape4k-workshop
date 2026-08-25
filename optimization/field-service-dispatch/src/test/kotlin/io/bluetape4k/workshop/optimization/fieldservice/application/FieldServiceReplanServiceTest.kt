@@ -298,6 +298,57 @@ class FieldServiceReplanServiceTest {
     }
 
     @Test
+    fun `cancelled queued planner releases its lease for the next admissions`() {
+        val plannerStarted = CountDownLatch(1)
+        val releasePlanner = CountDownLatch(1)
+        val plannerQueued = CountDownLatch(1)
+        val cpuExecutor = object : ThreadPoolExecutor(
+            1,
+            1,
+            0L,
+            TimeUnit.MILLISECONDS,
+            ArrayBlockingQueue(1),
+        ) {
+            override fun execute(command: Runnable) {
+                super.execute(command)
+                if (queue.isNotEmpty()) plannerQueued.countDown()
+            }
+        }
+        cpuExecutor.execute {
+            plannerStarted.countDown()
+            releasePlanner.await(5, TimeUnit.SECONDS)
+        }
+        plannerStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+
+        val snapshotFinished = CountDownLatch(1)
+        val blockingExecutor = TestingExecutors.newFixedThreadPool(1)
+        val service = FieldServiceReplanService(
+            planner = DeterministicFieldServicePlanner(),
+            snapshot = {
+                snapshotFinished.countDown()
+                emptyInput(it)
+            },
+            executor = cpuExecutor,
+            timeout = Duration.ofSeconds(2),
+            blockingExecutor = blockingExecutor,
+        )
+
+        try {
+            val first = service.requestReplan(AggregateId("aggregate-planner-lease"))
+                as ReplanAdmission.Accepted
+            snapshotFinished.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            plannerQueued.await(5, TimeUnit.SECONDS).shouldBeTrue()
+
+            first.future.cancel(false).shouldBeTrue()
+            service.requestReplan(AggregateId("aggregate-planner-next")) as ReplanAdmission.Accepted
+            service.requestReplan(AggregateId("aggregate-planner-third")) as ReplanAdmission.Accepted
+        } finally {
+            releasePlanner.countDown()
+            service.close()
+        }
+    }
+
+    @Test
     fun `closing the service cancels a blocked snapshot and rejects new admissions`() {
         val snapshotStarted = CountDownLatch(1)
         val snapshotFinished = CountDownLatch(1)
