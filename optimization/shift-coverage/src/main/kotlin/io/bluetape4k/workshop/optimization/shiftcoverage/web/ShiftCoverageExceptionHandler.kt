@@ -3,8 +3,11 @@ package io.bluetape4k.workshop.optimization.shiftcoverage.web
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageInboxRequeueRejected
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageOutboxRedriveRejected
-import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoverageConflict
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.InvalidShiftCoverageInput
+import io.bluetape4k.workshop.optimization.shiftcoverage.domain.PlannerFailureCode
+import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoverageConflict
+import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoverageConflictCode
+import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoveragePlannerFailure
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -24,7 +27,18 @@ class ShiftCoverageExceptionHandler {
 
     @ExceptionHandler(ShiftCoverageConflict::class)
     fun handleConflict(exception: ShiftCoverageConflict, request: HttpServletRequest): ResponseEntity<ShiftCoverageErrorResponse> =
-        error(HttpStatus.CONFLICT, exception.code.name, request, false)
+        if (exception.code == ShiftCoverageConflictCode.REPLAN_REJECTED) {
+            error(HttpStatus.TOO_MANY_REQUESTS, exception.code.name, request, true)
+        } else {
+            error(HttpStatus.CONFLICT, exception.code.name, request, false)
+        }
+
+    @ExceptionHandler(ShiftCoveragePlannerFailure::class)
+    fun handlePlannerFailure(exception: ShiftCoveragePlannerFailure, request: HttpServletRequest): ResponseEntity<ShiftCoverageErrorResponse> =
+        when (exception.code) {
+            PlannerFailureCode.PLANNER_LIMIT_EXCEEDED -> error(HttpStatus.valueOf(413), "RESPONSE_TOO_LARGE", request, false)
+            PlannerFailureCode.REPLAN_TIMEOUT -> error(HttpStatus.TOO_MANY_REQUESTS, "REPLAN_REJECTED", request, true)
+        }
 
     @ExceptionHandler(ShiftCoverageOutboxRedriveRejected::class)
     fun handleOutboxRedrive(exception: ShiftCoverageOutboxRedriveRejected, request: HttpServletRequest): ResponseEntity<ShiftCoverageErrorResponse> =

@@ -5,13 +5,14 @@ import io.bluetape4k.workshop.optimization.shiftcoverage.domain.CoverageScore
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.PlannedShift
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.PlannerFailureCode
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.Shift
-import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftAssignment
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoverageLimits
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoveragePlanProposal
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoveragePlannerFailure
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoverageSnapshot
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoverageReason
+import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftId
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftWorker
+import io.bluetape4k.workshop.optimization.shiftcoverage.domain.SiteId
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.TimeInterval
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.UnassignedShift
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.WorkerId
@@ -63,90 +64,129 @@ class DeterministicShiftCoveragePlanner(
 
         val workers = snapshot.workers.sortedBy { it.workerId.value }
         val shifts = snapshot.shifts.sortedWith(compareBy({ it.startAt }, { it.shiftId.value }))
-        val currentAssignments = snapshot.assignments.associateBy { it.shiftId }
+        val currentAssignments = snapshot.assignments.groupBy { it.shiftId }
         val assignments = mutableListOf<PlannedShift>()
         val assignedIntervals = mutableMapOf<WorkerId, MutableList<Shift>>()
         val unassigned = mutableListOf<UnassignedShift>()
         var evaluations = 0
+        val fixedShiftIds = mutableSetOf<ShiftId>()
 
         // 시작되었거나 명시적으로 고정된 assignment는 planner가 이동시키지 않습니다.
         shifts.filter { shift ->
-            val assignment = currentAssignments[shift.shiftId]
-            assignment?.started == true || assignment?.pinned == true || shift.isStarted || shift.pinnedWorkerId != null
+            val stored = currentAssignments[shift.shiftId].orEmpty()
+            stored.any { it.started || it.pinned } || shift.isStarted || shift.pinnedWorkerId != null
         }.forEach { shift ->
-            val assignment = currentAssignments[shift.shiftId]
-            val workerId = assignment?.workerId ?: shift.pinnedWorkerId
-            if (workerId != null) {
-                val assignmentId = assignment?.assignmentId ?: deterministicAssignmentId(shift.shiftId, workerId)
-                assignments += PlannedShift(shift.shiftId, workerId, assignmentId, pinned = true)
-                assignedIntervals.getOrPut(workerId) { mutableListOf() }.add(shift)
+            fixedShiftIds += shift.shiftId
+            val stored = currentAssignments[shift.shiftId].orEmpty().sortedBy { it.assignmentId.value }
+            var fixedCount = 0
+            if (stored.isNotEmpty()) {
+                stored.forEach { fixed ->
+                    val planned = PlannedShift(shift.shiftId, fixed.workerId, fixed.assignmentId, pinned = true)
+                    assignments += planned
+                    assignedIntervals.getOrPut(planned.workerId) { mutableListOf() }.add(shift)
+                    fixedCount++
+                }
             } else {
+                shift.pinnedWorkerId?.let { workerId ->
+                    assignments += PlannedShift(shift.shiftId, workerId, deterministicSlotAssignmentId(shift.shiftId, 0), pinned = true)
+                    assignedIntervals.getOrPut(workerId) { mutableListOf() }.add(shift)
+                    fixedCount++
+                }
+            }
+            if (fixedCount < shift.demand) {
                 unassigned += UnassignedShift(shift.shiftId, if (shift.isStarted) ShiftCoverageReason.STARTED_SHIFT else ShiftCoverageReason.PINNED)
             }
         }
 
-        shifts.filterNot { shift -> assignments.any { it.shiftId == shift.shiftId } || unassigned.any { it.shiftId == shift.shiftId } }
+        val orderedOpenShifts = shifts.filterNot { it.shiftId in fixedShiftIds }
+            .map { shift ->
+                val existingCount = currentAssignments[shift.shiftId].orEmpty().size
+                ShiftOrder(
+                    shift = shift,
+                    coverageGap = (shift.demand - existingCount).coerceAtLeast(0),
+                    eligibleCandidates = workers.count { worker -> isBaseCandidate(worker, shift, snapshot.siteId) },
+                )
+            }
+            .sortedWith(
+                compareByDescending<ShiftOrder> { it.coverageGap }
+                    .thenBy { it.eligibleCandidates }
+                    .thenBy { it.shift.startAt }
+                    .thenBy { it.shift.shiftId.value },
+            )
+
+        orderedOpenShifts
             .forEach { shift ->
                 budget.check()
-                val candidates = mutableListOf<Candidate>()
-                var sawUnavailable = false
-                var sawMissingSkill = false
-                var sawOverlap = false
-                var sawRest = false
-                workers.forEach { worker ->
-                    budget.check()
-                    evaluations++
-                    if (worker.siteId != snapshot.siteId) return@forEach
-                    if (worker.sickCalled) {
-                        sawUnavailable = true
-                        return@forEach
+                val existingAssignmentIds = currentAssignments[shift.shift.shiftId].orEmpty()
+                    .sortedBy { it.assignmentId.value }
+                    .map { it.assignmentId }
+                var assignedSlots = 0
+                var failureReason: ShiftCoverageReason? = null
+                for (slotIndex in 0 until shift.shift.demand) {
+                    val candidates = mutableListOf<Candidate>()
+                    var sawUnavailable = false
+                    var sawMissingSkill = false
+                    var sawOverlap = false
+                    var sawRest = false
+                    workers.forEach { worker ->
+                        budget.check()
+                        evaluations++
+                        if (worker.siteId != snapshot.siteId) return@forEach
+                        if (worker.sickCalled) {
+                            sawUnavailable = true
+                            return@forEach
+                        }
+                        if (!worker.skills.containsAll(shift.shift.requiredSkills)) {
+                            sawMissingSkill = true
+                            return@forEach
+                        }
+                        if (!covers(worker.availability, shift.shift.startAt, shift.shift.endAt)) {
+                            sawUnavailable = true
+                            return@forEach
+                        }
+                        val prior = assignedIntervals[worker.workerId].orEmpty()
+                        if (prior.any { overlaps(it, shift.shift) }) {
+                            sawOverlap = true
+                            return@forEach
+                        }
+                        if (prior.any { violatesRest(it, shift.shift) }) {
+                            sawRest = true
+                            return@forEach
+                        }
+                        val preference = shift.shift.preference?.let { wanted ->
+                            worker.preferences.firstOrNull { it.skill == wanted.skill }?.weightMinor ?: 0L
+                        } ?: 0L
+                        val fairnessDelta = -(2L * prior.size.toLong() + 1L)
+                        candidates += Candidate(worker, preference, fairnessDelta, costMinor = 0L)
                     }
-                    if (!worker.skills.containsAll(shift.requiredSkills)) {
-                        sawMissingSkill = true
-                        return@forEach
+                    val selected = candidates.sortedWith(
+                        compareByDescending<Candidate> { it.preference }
+                            .thenByDescending { it.fairnessDelta }
+                            .thenBy { it.costMinor }
+                            .thenBy { it.worker.workerId.value },
+                    ).firstOrNull()
+                    if (selected == null) {
+                        failureReason = when {
+                            sawOverlap -> ShiftCoverageReason.OVERLAP
+                            sawRest -> ShiftCoverageReason.REST_RULE
+                            sawMissingSkill && !sawUnavailable -> ShiftCoverageReason.MISSING_SKILL
+                            sawUnavailable -> ShiftCoverageReason.UNAVAILABLE
+                            else -> ShiftCoverageReason.NO_CANDIDATE
+                        }
+                        break
                     }
-                    if (!covers(worker.availability, shift.startAt, shift.endAt)) {
-                        sawUnavailable = true
-                        return@forEach
-                    }
-                    val prior = assignedIntervals[worker.workerId].orEmpty()
-                    if (prior.any { overlaps(it, shift) }) {
-                        sawOverlap = true
-                        return@forEach
-                    }
-                    if (prior.any { violatesRest(it, shift) }) {
-                        sawRest = true
-                        return@forEach
-                    }
-                    val preference = shift.preference?.let { wanted ->
-                        worker.preferences.firstOrNull { it.skill == wanted.skill }?.weightMinor ?: 0L
-                    } ?: 0L
-                    candidates += Candidate(worker, preference, prior.size)
-                }
-                val selected = candidates.sortedWith(
-                    compareByDescending<Candidate> { it.preference }
-                        .thenBy { it.assignedCount }
-                        .thenBy { it.worker.workerId.value },
-                ).firstOrNull()
-                if (selected == null) {
-                    val reason = when {
-                        sawOverlap -> ShiftCoverageReason.OVERLAP
-                        sawRest -> ShiftCoverageReason.REST_RULE
-                        sawMissingSkill && !sawUnavailable -> ShiftCoverageReason.MISSING_SKILL
-                        sawUnavailable -> ShiftCoverageReason.UNAVAILABLE
-                        else -> ShiftCoverageReason.NO_CANDIDATE
-                    }
-                    unassigned += UnassignedShift(shift.shiftId, reason)
-                } else {
-                    val assignment = PlannedShift(
-                        shiftId = shift.shiftId,
+                    assignments += PlannedShift(
+                        shiftId = shift.shift.shiftId,
                         workerId = selected.worker.workerId,
-                        assignmentId = currentAssignments[shift.shiftId]?.assignmentId
-                            ?: deterministicAssignmentId(shift.shiftId, selected.worker.workerId),
+                        assignmentId = existingAssignmentIds.getOrNull(slotIndex)
+                            ?: deterministicSlotAssignmentId(shift.shift.shiftId, slotIndex),
                         pinned = false,
                     )
-                    assignments += assignment
-                    assignedIntervals.getOrPut(selected.worker.workerId) { mutableListOf() }.add(shift)
+                    assignedIntervals.getOrPut(selected.worker.workerId) { mutableListOf() }.add(shift.shift)
+                    assignedSlots++
+                }
+                if (assignedSlots < shift.shift.demand) {
+                    unassigned += UnassignedShift(shift.shift.shiftId, failureReason ?: ShiftCoverageReason.NO_CANDIDATE)
                 }
             }
 
@@ -167,8 +207,14 @@ class DeterministicShiftCoveragePlanner(
         )
     }
 
-    private fun deterministicAssignmentId(shiftId: io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftId, workerId: WorkerId): AssignmentId =
-        AssignmentId("proposal-${shiftId.value}-${workerId.value}")
+    private fun deterministicSlotAssignmentId(shiftId: ShiftId, slotIndex: Int): AssignmentId =
+        AssignmentId("proposal-${shiftId.value}-slot-${slotIndex + 1}")
+
+    private fun isBaseCandidate(worker: ShiftWorker, shift: Shift, siteId: SiteId): Boolean =
+        worker.siteId == siteId &&
+            !worker.sickCalled &&
+            worker.skills.containsAll(shift.requiredSkills) &&
+            covers(worker.availability, shift.startAt, shift.endAt)
 
     private fun covers(windows: List<TimeInterval>, start: Instant, end: Instant): Boolean =
         windows.any { !start.isBefore(it.startAt) && !end.isAfter(it.endAt) }
@@ -184,5 +230,12 @@ class DeterministicShiftCoveragePlanner(
         return gap < minimumRest
     }
 
-    private data class Candidate(val worker: ShiftWorker, val preference: Long, val assignedCount: Int)
+    private data class ShiftOrder(val shift: Shift, val coverageGap: Int, val eligibleCandidates: Int)
+
+    private data class Candidate(
+        val worker: ShiftWorker,
+        val preference: Long,
+        val fairnessDelta: Long,
+        val costMinor: Long,
+    )
 }

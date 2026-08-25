@@ -20,6 +20,8 @@ data class ShiftCoverageProperties(
     val ioTimeout: Duration = Duration.ofSeconds(5),
     val shutdownDrain: Duration = Duration.ofSeconds(30),
     val zoneOffset: String = ZoneOffset.UTC.id,
+    /** demo fixture 전용 비밀값이며 provider profile은 secret source에서 재정의해야 합니다. */
+    val callbackSecret: String = "shift-coverage-fixture-secret",
 ) {
     init {
         maxBodyBytes.requirePositiveNumber("shift-coverage.maxBodyBytes")
@@ -38,5 +40,6 @@ data class ShiftCoverageProperties(
         require(!shutdownDrain.isZero && !shutdownDrain.isNegative) {
             "shift-coverage.shutdownDrain must be positive"
         }
+        require(callbackSecret.isNotBlank()) { "shift-coverage.callbackSecret must not be blank" }
     }
 }

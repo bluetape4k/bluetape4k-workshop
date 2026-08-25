@@ -27,6 +27,7 @@ shift-coverage:
   io-timeout: 5s
   shutdown-drain: 30s
   zone-offset: Z
+  callback-secret: ${SHIFT_COVERAGE_CALLBACK_SECRET:shift-coverage-fixture-secret}
 
 management:
   datadog:

@@ -66,6 +66,37 @@ class ShiftCoverageCallbackPreflightTest {
         inbox.find(ShiftCoverageProvider.FAKE, eventId)?.status shouldBeEqualTo ShiftCoverageInboxStatus.RECEIVED
     }
 
+    @Test
+    fun `valid signature for a foreign aggregate is stale before inbox claim`() {
+        val inbox = ShiftCoverageInboxService()
+        val controller = ShiftCoverageCallbackController(inbox, Clock.fixed(issuedAt, ZoneOffset.UTC))
+        val requestId = "request-foreign"
+        val eventId = EventId("event-foreign")
+        val context = ShiftCoverageSignatureContext(
+            method = "POST", path = "/api/shift-coverage/callbacks/FAKE", schemaVersion = "v1",
+            provider = ProviderName("FAKE"), requestId = requestId, datasetId = "dataset-demo",
+            generationId = GenerationId("generation-demo"), aggregateId = PlanId("foreign-plan"),
+            siteId = SiteId("site-demo"), eventId = eventId, issuedAt = issuedAt,
+        )
+        val signature = ShiftCoverageSignatureVerifier("shift-coverage-fixture-secret").sign(body, context, "fixture-v1")
+        val request = request(eventId.value).apply {
+            addHeader("X-Shift-Coverage-Issued-At", issuedAt.toString())
+            addHeader("X-Shift-Coverage-Dataset-Id", "dataset-demo")
+            addHeader("X-Shift-Coverage-Generation-Id", "generation-demo")
+            addHeader("X-Shift-Coverage-Plan-Id", "foreign-plan")
+            addHeader("X-Shift-Coverage-Site-Id", "site-demo")
+            addHeader("X-Shift-Coverage-Digest", body.sha256())
+        }
+
+        val failure = assertFailsWith<ShiftCoverageHttpException> {
+            controller.callback(request, "FAKE", body, signature, "fixture-v1", eventId.value, requestId)
+        }
+
+        failure.status shouldBeEqualTo HttpStatus.CONFLICT
+        failure.code shouldBeEqualTo "STALE"
+        inbox.find(ShiftCoverageProvider.FAKE, eventId) shouldBeEqualTo null
+    }
+
     private fun request(eventId: String) = MockHttpServletRequest().apply {
         remoteAddr = "127.0.0.1"
         requestURI = "/api/shift-coverage/callbacks/FAKE"

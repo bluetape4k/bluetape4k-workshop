@@ -22,13 +22,20 @@ enum class IdempotencyClaimKind { NEW, REPLAY, REUSED, IN_PROGRESS }
 
 data class IdempotencyClaim(val kind: IdempotencyClaimKind, val response: String? = null)
 
+/** process 재시작을 넘어 동일한 route/scope/key 계약을 유지하는 저장소 port입니다. */
+interface ShiftCoverageIdempotencyPort {
+    fun begin(namespace: IdempotencyNamespace, fingerprintSha256: String): IdempotencyClaim
+    fun complete(namespace: IdempotencyNamespace, response: String): IdempotencyRecord
+    fun abort(namespace: IdempotencyNamespace)
+}
+
 /** DB unique key와 동일한 semantics를 재현하는 restartable in-memory seam입니다. */
 class ShiftCoverageIdempotencyStore(
     private val records: MutableMap<IdempotencyNamespace, IdempotencyRecord> = mutableMapOf(),
-) {
+) : ShiftCoverageIdempotencyPort {
     private val lock = ReentrantLock()
 
-    fun begin(namespace: IdempotencyNamespace, fingerprintSha256: String): IdempotencyClaim = lock.withLock {
+    override fun begin(namespace: IdempotencyNamespace, fingerprintSha256: String): IdempotencyClaim = lock.withLock {
         validateFingerprint(fingerprintSha256)
         val current = records[namespace]
         if (current == null) {
@@ -43,10 +50,17 @@ class ShiftCoverageIdempotencyStore(
         }
     }
 
-    fun complete(namespace: IdempotencyNamespace, response: String): IdempotencyRecord = lock.withLock {
+    override fun complete(namespace: IdempotencyNamespace, response: String): IdempotencyRecord = lock.withLock {
         val current = records[namespace] ?: error("idempotency claim does not exist")
         records[namespace] = current.copy(response = response)
         records.getValue(namespace)
+    }
+
+    /** 결과가 쓰였다는 증거가 없는 실패는 retryable claim으로 되돌립니다. */
+    override fun abort(namespace: IdempotencyNamespace) {
+        lock.withLock {
+            records.remove(namespace)
+        }
     }
 
     fun isWriteSuppressed(namespace: IdempotencyNamespace, fingerprintSha256: String): Boolean =

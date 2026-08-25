@@ -11,6 +11,14 @@ data class ShiftCoveragePlanDto(
     val reasons: List<String>,
 )
 
+/** worker read model은 자기 assignment 식별자만 노출하고 coverage aggregate 지표를 숨깁니다. */
+data class ShiftCoverageWorkerPlanDto(
+    val planId: String,
+    val revision: Long,
+    val siteId: String,
+    val assignments: Int,
+)
+
 data class ShiftCoverageReplanResponse(val accepted: Boolean, val revision: Long, val requestId: String)
 
 data class ShiftCoverageSwapRequestDto(val sourceWorkerId: String, val targetWorkerId: String)

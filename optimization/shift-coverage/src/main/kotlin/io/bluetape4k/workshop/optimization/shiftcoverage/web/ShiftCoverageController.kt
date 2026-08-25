@@ -7,7 +7,6 @@ import io.bluetape4k.workshop.optimization.shiftcoverage.domain.InvalidShiftCove
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.WorkerId
 import jakarta.servlet.http.HttpServletRequest
 import java.net.URI
-import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -18,25 +17,33 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
-/** loopback/demo profile에 한정한 closed command/query surface입니다. */
-@Profile("demo")
+/** loopback과 closed demo operator guard를 적용한 command/query surface입니다. */
 @RestController
 @RequestMapping("/api/shift-coverage")
 class ShiftCoverageController(private val service: ShiftCoverageDemoService) {
     @GetMapping("/plans")
-    fun plans(request: HttpServletRequest): List<ShiftCoveragePlanDto> {
+    fun plans(request: HttpServletRequest): List<Any> {
         val principal = guard(request, requiredRole = null)
         return service.listPlans(principal.workerId).map { proposal ->
-            ShiftCoveragePlanDto(
-                planId = proposal.planId.value,
-                revision = proposal.revision,
-                siteId = proposal.siteId?.value ?: "site-demo",
-                assignments = proposal.assignments.size,
-                gaps = proposal.unassigned.size,
-                coverageMinor = proposal.score.coverageMinor,
-                fairnessMinor = proposal.score.fairnessMinor,
-                reasons = proposal.unassigned.map { it.reason.name },
-            )
+            if (principal.workerId == null) {
+                ShiftCoveragePlanDto(
+                    planId = proposal.planId.value,
+                    revision = proposal.revision,
+                    siteId = proposal.siteId?.value ?: "site-demo",
+                    assignments = proposal.assignments.size,
+                    gaps = proposal.unassigned.size,
+                    coverageMinor = proposal.score.coverageMinor,
+                    fairnessMinor = proposal.score.fairnessMinor,
+                    reasons = proposal.unassigned.map { it.reason.name },
+                )
+            } else {
+                ShiftCoverageWorkerPlanDto(
+                    planId = proposal.planId.value,
+                    revision = proposal.revision,
+                    siteId = proposal.siteId?.value ?: "site-demo",
+                    assignments = proposal.assignments.size,
+                )
+            }
         }
     }
 

@@ -11,6 +11,10 @@ import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoveragePla
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoverageSnapshot
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoverageConflict
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoverageConflictCode
+import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoverageLimits
+import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftCoveragePlannerFailure
+import io.bluetape4k.workshop.optimization.shiftcoverage.domain.PlannerFailureCode
+import io.bluetape4k.workshop.optimization.shiftcoverage.domain.InvalidShiftCoverageInput
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftId
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftSwapRequest
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftWorker
@@ -19,40 +23,53 @@ import io.bluetape4k.workshop.optimization.shiftcoverage.domain.Skill
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.TimeInterval
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.WorkerId
 import io.bluetape4k.workshop.optimization.shiftcoverage.persistence.ShiftCoverageRepository
+import io.bluetape4k.workshop.optimization.shiftcoverage.persistence.ShiftCoverageAssignmentStore
 import io.bluetape4k.workshop.optimization.shiftcoverage.planner.DeterministicShiftCoveragePlanner
 import io.bluetape4k.workshop.optimization.shiftcoverage.planner.ShiftCoverageCanonicalizer
 import io.bluetape4k.workshop.optimization.shiftcoverage.observability.ShiftCoverageObservations
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
-import org.springframework.context.annotation.Profile
+import java.util.concurrent.Callable
+import java.util.concurrent.CancellationException
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import org.springframework.stereotype.Service
 
 data class ShiftCoverageSwapView(val requestId: String, val shiftId: String, val sourceWorkerId: String, val targetWorkerId: String, val status: String)
 
 data class ShiftCoverageReplanResult(val proposal: ShiftCoveragePlanProposal, val requestId: String, val replay: Boolean)
 
-/** demo profile의 synthetic fixture와 application services를 묶는 bounded facade입니다. */
-@Profile("demo")
+/** demo와 postgres profile의 synthetic fixture/application services를 묶는 bounded facade입니다. */
 @Service
 class ShiftCoverageDemoService(
     private val clock: Clock = Clock.systemUTC(),
     private val observations: ShiftCoverageObservations? = null,
+    assignmentStore: ShiftCoverageAssignmentStore? = null,
+    idempotencyStore: ShiftCoverageIdempotencyPort? = null,
+    private val plannerLifecycle: ShiftCoverageExecutorLifecycle? = null,
+    private val plannerTimeout: Duration = Duration.ofMillis(ShiftCoverageLimits.MAX_PLANNER_MILLIS),
 ) {
     private val planner = DeterministicShiftCoveragePlanner()
     private val canonicalizer = ShiftCoverageCanonicalizer()
     private val plans = ShiftCoveragePlanStore()
     private val generations = ShiftCoverageGenerationStore()
-    private val assignments = ShiftCoverageRepository()
+    private val assignments: ShiftCoverageAssignmentStore = assignmentStore ?: ShiftCoverageRepository()
     private val approval = ShiftCoverageApprovalService(plans, assignments)
-    private val swaps = ShiftCoverageSwapService(assignments)
-    private val swapRequests = ConcurrentHashMap<String, ShiftSwapRequest>()
-    private val idempotency = ShiftCoverageIdempotencyStore()
     private val revisions = AtomicLong(0L)
     private val siteId = SiteId("site-demo")
+    private val swaps = ShiftCoverageSwapService(
+        repository = assignments,
+        currentPlanRevision = { revisions.get() },
+        targetAllowed = { target -> target.targetWorkerId in DEMO_WORKERS && target.current.siteId == siteId },
+    )
+    private val swapRequests = ConcurrentHashMap<String, ShiftSwapRequest>()
+    private val idempotency: ShiftCoverageIdempotencyPort = idempotencyStore ?: ShiftCoverageIdempotencyStore()
 
     fun listPlans(workerId: WorkerId?): List<ShiftCoveragePlanProposal> = buildList {
         val latest = plans.find(PlanId("plan-demo"), revisions.get())
@@ -79,15 +96,46 @@ class ShiftCoverageDemoService(
         )
         generations.start(generation.generationId)
         return try {
-            val proposal = observations?.observePlan { planner.plan(snapshot) } ?: planner.plan(snapshot)
+            val proposal = plan(snapshot)
             plans.save(StoredShiftCoveragePlan(proposal))
             generations.succeed(generation.generationId, clock.instant())
             observations?.recordReplan("accepted")
             proposal
-        } catch (failure: Throwable) {
+        } catch (cancelled: CancellationException) {
+            generations.cancel(generation.generationId, clock.instant())
+            observations?.recordReplan("cancelled")
+            throw cancelled
+        } catch (failure: Exception) {
             generations.fail(generation.generationId, failure.message ?: failure::class.simpleName.orEmpty(), clock.instant())
             observations?.recordReplan("rejected")
             throw failure
+        }
+    }
+
+    /** bounded CPU admission을 통과한 planner만 proposal을 생성하도록 합니다. */
+    private fun plan(snapshot: ShiftCoverageSnapshot): ShiftCoveragePlanProposal {
+        val lifecycle = plannerLifecycle
+        if (lifecycle == null) {
+            return observations?.observePlan { planner.plan(snapshot) } ?: planner.plan(snapshot)
+        }
+        val task = lifecycle.submitCallable(
+            Callable { observations?.observePlan { planner.plan(snapshot) } ?: planner.plan(snapshot) },
+        ) ?: throw ShiftCoverageConflict(ShiftCoverageConflictCode.REPLAN_REJECTED, "planner admission is full")
+        return try {
+            task.get(plannerTimeout.toMillis(), TimeUnit.MILLISECONDS)
+        } catch (timeout: TimeoutException) {
+            task.cancel(true)
+            throw ShiftCoveragePlannerFailure(PlannerFailureCode.REPLAN_TIMEOUT, "planner deadline exceeded")
+        } catch (interrupted: InterruptedException) {
+            task.cancel(true)
+            Thread.currentThread().interrupt()
+            throw ShiftCoveragePlannerFailure(PlannerFailureCode.REPLAN_TIMEOUT, "planner interrupted")
+        } catch (failure: ExecutionException) {
+            val cause = failure.cause
+            when (cause) {
+                is RuntimeException -> throw cause
+                else -> throw IllegalStateException("planner execution failed", cause)
+            }
         }
     }
 
@@ -99,9 +147,14 @@ class ShiftCoverageDemoService(
         val claim = idempotency.begin(namespace, fingerprint("replan", principal))
         return when (claim.kind) {
             IdempotencyClaimKind.NEW -> {
-                val proposal = replan()
-                idempotency.complete(namespace, "${proposal.revision}|$requestId")
-                ShiftCoverageReplanResult(proposal, requestId, replay = false)
+                try {
+                    val proposal = replan()
+                    idempotency.complete(namespace, "${proposal.revision}|$requestId")
+                    ShiftCoverageReplanResult(proposal, requestId, replay = false)
+                } catch (failure: Exception) {
+                    idempotency.abort(namespace)
+                    throw failure
+                }
             }
             IdempotencyClaimKind.REPLAY -> replayReplan(claim.response)
             IdempotencyClaimKind.REUSED -> throw ShiftCoverageConflict(ShiftCoverageConflictCode.IDEMPOTENCY_KEY_REUSED)
@@ -118,6 +171,9 @@ class ShiftCoverageDemoService(
         ) { approval.approve(PlanId("plan-demo"), revision).also { observations?.recordApproval(if (it) "accepted" else "conflict") } }
 
     fun requestSwap(sourceWorkerId: WorkerId, targetWorkerId: WorkerId, idempotencyKey: IdempotencyKey): ShiftSwapRequest {
+        if (sourceWorkerId == targetWorkerId || sourceWorkerId !in DEMO_WORKERS || targetWorkerId !in DEMO_WORKERS) {
+            throw InvalidShiftCoverageInput("swap workers are outside the demo scope")
+        }
         val assignment = assignments.listAssignments().firstOrNull { it.workerId == sourceWorkerId }
             ?: ShiftAssignment(AssignmentId.new(), siteId, ShiftId("shift-demo"), sourceWorkerId)
         assignments.saveAssignment(assignment)
@@ -186,7 +242,12 @@ class ShiftCoverageDemoService(
     private fun idempotentBoolean(namespace: IdempotencyNamespace, fingerprint: String, operation: () -> Boolean): Boolean {
         val claim = idempotency.begin(namespace, fingerprint)
         return when (claim.kind) {
-            IdempotencyClaimKind.NEW -> operation().also { idempotency.complete(namespace, it.toString()) }
+            IdempotencyClaimKind.NEW -> try {
+                operation().also { idempotency.complete(namespace, it.toString()) }
+            } catch (failure: Exception) {
+                idempotency.abort(namespace)
+                throw failure
+            }
             IdempotencyClaimKind.REPLAY -> claim.response?.toBooleanStrictOrNull()
                 ?: throw ShiftCoverageConflict(ShiftCoverageConflictCode.REPLAN_REJECTED)
             IdempotencyClaimKind.REUSED -> throw ShiftCoverageConflict(ShiftCoverageConflictCode.IDEMPOTENCY_KEY_REUSED)
@@ -197,7 +258,12 @@ class ShiftCoverageDemoService(
     private fun idempotentSwap(namespace: IdempotencyNamespace, fingerprint: String, operation: () -> ShiftSwapRequest): ShiftSwapRequest {
         val claim = idempotency.begin(namespace, fingerprint)
         return when (claim.kind) {
-            IdempotencyClaimKind.NEW -> operation().also { idempotency.complete(namespace, it.requestId.value) }
+            IdempotencyClaimKind.NEW -> try {
+                operation().also { idempotency.complete(namespace, it.requestId.value) }
+            } catch (failure: Exception) {
+                idempotency.abort(namespace)
+                throw failure
+            }
             IdempotencyClaimKind.REPLAY -> swapRequests[claim.response]
                 ?: throw ShiftCoverageConflict(ShiftCoverageConflictCode.REPLAN_REJECTED)
             IdempotencyClaimKind.REUSED -> throw ShiftCoverageConflict(ShiftCoverageConflictCode.IDEMPOTENCY_KEY_REUSED)
@@ -208,5 +274,9 @@ class ShiftCoverageDemoService(
     private fun fingerprint(vararg parts: String): String = MessageDigest.getInstance("SHA-256")
         .digest(parts.joinToString("\u0000").toByteArray(UTF_8))
         .joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
+
+    companion object {
+        private val DEMO_WORKERS = setOf(WorkerId("worker-a"), WorkerId("worker-b"))
+    }
 
 }

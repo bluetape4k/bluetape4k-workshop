@@ -3,14 +3,14 @@ package io.bluetape4k.workshop.optimization.shiftcoverage.application
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftAssignment
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.PlanId
 import io.bluetape4k.workshop.optimization.shiftcoverage.persistence.AssignmentChange
-import io.bluetape4k.workshop.optimization.shiftcoverage.persistence.ShiftCoverageRepository
+import io.bluetape4k.workshop.optimization.shiftcoverage.persistence.ShiftCoverageAssignmentStore
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 /** immutable planner proposal을 manager approval 시에만 authoritative assignment로 materialize합니다. */
 class ShiftCoverageApprovalService(
     private val plans: ShiftCoveragePlanStore,
-    private val assignments: ShiftCoverageRepository,
+    private val assignments: ShiftCoverageAssignmentStore,
 ) {
     private val mutationLock = ReentrantLock()
 

@@ -1,7 +1,9 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.application
 
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.workshop.optimization.shiftcoverage.config.ShiftCoverageProperties
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.EffectKey
+import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.ConcurrentHashMap
@@ -26,11 +28,14 @@ data class ShiftCoverageOutboxRecord(
 
 class ShiftCoverageOutboxRedriveRejected(message: String) : IllegalStateException(message)
 
-/** DB outbox transition과 lease fence를 deterministic in-memory로 검증하는 seam입니다. */
+/** DB outbox transition과 lease fence를 결정론적 in-memory로 검증하는 경계입니다. */
 @Profile("demo")
 @Service
-class ShiftCoverageOutboxStore {
+class ShiftCoverageOutboxStore(
+    properties: ShiftCoverageProperties = ShiftCoverageProperties(),
+) {
     private val records = ConcurrentHashMap<EffectKey, ShiftCoverageOutboxRecord>()
+    private val leaseDuration = properties.outboxLease
 
     fun enqueue(requestId: String, effectKey: EffectKey, now: Instant = Instant.now()): ShiftCoverageOutboxRecord =
         records.computeIfAbsent(effectKey) { ShiftCoverageOutboxRecord(effectKey, requestId, nextAttemptAt = now) }
@@ -38,6 +43,7 @@ class ShiftCoverageOutboxStore {
     fun find(effectKey: EffectKey): ShiftCoverageOutboxRecord? = records[effectKey]
 
     fun claim(owner: String, now: Instant): ShiftCoverageOutboxRecord? {
+        recoverExpired(now)
         val candidate = records.values.asSequence()
             .filter { it.status == ShiftCoverageOutboxStatus.PENDING || it.status == ShiftCoverageOutboxStatus.RETRYABLE }
             .filter { !it.nextAttemptAt.isAfter(now) }
@@ -53,21 +59,25 @@ class ShiftCoverageOutboxStore {
                     status = ShiftCoverageOutboxStatus.CLAIMED,
                     leaseOwner = owner,
                     leaseToken = Base58.randomString(22),
-                    leaseExpiresAt = now.plusSeconds(30),
+                    leaseExpiresAt = now.plus(leaseDuration),
                 )
             } else current
         }
         return if (claimed.get()) result else null
     }
 
-    fun markStarted(record: ShiftCoverageOutboxRecord, owner: String): Boolean = transition(record.effectKey) { current ->
-        if (current.status == ShiftCoverageOutboxStatus.CLAIMED && current.leaseOwner == owner && current.leaseToken == record.leaseToken) {
+    fun markStarted(record: ShiftCoverageOutboxRecord, owner: String, now: Instant = Instant.now()): Boolean = transition(record.effectKey) { current ->
+        if (current.status == ShiftCoverageOutboxStatus.CLAIMED && current.leaseOwner == owner && current.leaseToken == record.leaseToken &&
+            current.leaseExpiresAt?.isAfter(now) == true
+        ) {
             current.copy(status = ShiftCoverageOutboxStatus.STARTED)
         } else null
     } != null
 
-    fun markDeliveryUnknown(effectKey: EffectKey, owner: String, leaseToken: String): Boolean = transition(effectKey) { current ->
-        if (current.status == ShiftCoverageOutboxStatus.STARTED && current.leaseOwner == owner && current.leaseToken == leaseToken) {
+    fun markDeliveryUnknown(effectKey: EffectKey, owner: String, leaseToken: String, now: Instant = Instant.now()): Boolean = transition(effectKey) { current ->
+        if (current.status == ShiftCoverageOutboxStatus.STARTED && current.leaseOwner == owner && current.leaseToken == leaseToken &&
+            current.leaseExpiresAt?.isAfter(now) == true
+        ) {
             current.copy(status = ShiftCoverageOutboxStatus.DELIVERY_UNKNOWN, lastError = "delivery outcome unknown")
         } else null
     } != null
@@ -95,6 +105,32 @@ class ShiftCoverageOutboxStore {
         return updated
     }
 
+    /** 만료된 claim은 재사용하지 않고 상태를 회수해 fence를 보존합니다. */
+    fun recoverExpired(now: Instant): Int {
+        var recovered = 0
+        records.replaceAll { _, current ->
+            if (current.leaseExpiresAt?.isAfter(now) != false) return@replaceAll current
+            when (current.status) {
+                ShiftCoverageOutboxStatus.CLAIMED -> {
+                    recovered++
+                    current.copy(
+                        status = ShiftCoverageOutboxStatus.PENDING,
+                        leaseOwner = null,
+                        leaseToken = null,
+                        leaseExpiresAt = null,
+                        nextAttemptAt = now,
+                    )
+                }
+                ShiftCoverageOutboxStatus.STARTED -> {
+                    recovered++
+                    current.copy(status = ShiftCoverageOutboxStatus.DELIVERY_UNKNOWN, lastError = "lease expired")
+                }
+                else -> current
+            }
+        }
+        return recovered
+    }
+
     private fun transition(effectKey: EffectKey, update: (ShiftCoverageOutboxRecord) -> ShiftCoverageOutboxRecord?): ShiftCoverageOutboxRecord? {
         val rejected = AtomicBoolean(false)
         val updated = records.computeIfPresent(effectKey) { _, current ->
@@ -119,10 +155,22 @@ class ShiftCoverageDeliveryQueue(capacity: Int = 8) {
 class ShiftCoverageOutboxWorker(
     private val store: ShiftCoverageOutboxStore,
     private val queue: ShiftCoverageDeliveryQueue,
+    private val batchSize: Int = 10,
 ) {
+    init {
+        require(batchSize > 0) { "outbox batch size must be positive" }
+    }
+
     fun admit(effectKey: EffectKey, requestId: String): Boolean {
         if (!queue.offer(effectKey)) return false
         store.enqueue(requestId, effectKey)
         return true
+    }
+
+    /** bounded batch만 claim해 queue saturation과 lease fence를 함께 관찰합니다. */
+    fun poll(owner: String, now: Instant): List<ShiftCoverageOutboxRecord> = buildList {
+        repeat(batchSize) {
+            store.claim(owner, now)?.let(::add) ?: return@repeat
+        }
     }
 }

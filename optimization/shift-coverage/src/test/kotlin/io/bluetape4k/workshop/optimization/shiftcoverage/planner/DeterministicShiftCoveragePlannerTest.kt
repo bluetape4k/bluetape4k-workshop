@@ -16,6 +16,7 @@ import io.bluetape4k.workshop.optimization.shiftcoverage.domain.ShiftWorker
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.SiteId
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.Skill
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.TimeInterval
+import io.bluetape4k.workshop.optimization.shiftcoverage.domain.WorkerPreference
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.WorkerId
 import java.time.Duration
 import java.time.Instant
@@ -38,6 +39,56 @@ class DeterministicShiftCoveragePlannerTest {
         val second = planner.plan(snapshot)
 
         first shouldBeEqualTo second
+    }
+
+    @Test
+    fun `demand materializes unique deterministic slot assignments`() {
+        val result = planner.plan(
+            snapshot(
+                workers = listOf(worker("worker-b"), worker("worker-a")),
+                shifts = listOf(shift("shift-demand", demand = 2)),
+            ),
+        )
+
+        result.assignments.map { it.shiftId.value to it.workerId.value to it.assignmentId.value } shouldBeEqualTo listOf(
+            "shift-demand" to "worker-a" to "proposal-shift-demand-slot-1",
+            "shift-demand" to "worker-b" to "proposal-shift-demand-slot-2",
+        )
+        result.score.coverageMinor shouldBeEqualTo 2_000L
+        result.score.fairnessMinor shouldBeEqualTo -2L
+    }
+
+    @Test
+    fun `scarce coverage is planned before a flexible shift even when preference differs`() {
+        val plumbing = Skill("plumbing")
+        val result = planner.plan(
+            snapshot(
+                workers = listOf(
+                    worker("worker-a", skills = setOf(skill)),
+                    worker(
+                        "worker-b",
+                        skills = setOf(skill, plumbing),
+                        preferences = listOf(WorkerPreference(skill, 100L)),
+                    ),
+                ),
+                shifts = listOf(
+                    shift(
+                        "shift-a-flexible",
+                        preference = WorkerPreference(skill, 1L),
+                    ),
+                    shift(
+                        "shift-b-scarce",
+                        requiredSkills = setOf(skill, plumbing),
+                    ),
+                ),
+            ),
+        )
+
+        result.assignments.map { it.shiftId.value to it.workerId.value } shouldBeEqualTo listOf(
+            "shift-a-flexible" to "worker-a",
+            "shift-b-scarce" to "worker-b",
+        )
+        result.unassigned shouldBeEqualTo emptyList()
     }
 
     @Test
@@ -98,9 +149,14 @@ class DeterministicShiftCoveragePlannerTest {
         planId = PlanId("plan-a"), generationId = GenerationId("generation-a"), aggregateRevision = 1,
     )
 
-    private fun worker(id: String, skills: Set<Skill> = setOf(skill), sickCalled: Boolean = false) = ShiftWorker(
+    private fun worker(
+        id: String,
+        skills: Set<Skill> = setOf(skill),
+        sickCalled: Boolean = false,
+        preferences: List<WorkerPreference> = emptyList(),
+    ) = ShiftWorker(
         workerId = WorkerId(id), siteId = SiteId("site-a"), displayName = id, skills = skills,
-        availability = listOf(TimeInterval(day, end)), sickCalled = sickCalled,
+        availability = listOf(TimeInterval(day, end)), sickCalled = sickCalled, preferences = preferences,
     )
 
     private fun shift(
@@ -109,9 +165,10 @@ class DeterministicShiftCoveragePlannerTest {
         startAt: Instant = day,
         endAt: Instant = day.plus(Duration.ofHours(1)),
         demand: Int = 1,
+        preference: WorkerPreference? = null,
         startedAt: Instant? = null,
         pinnedWorkerId: WorkerId? = null,
-    ) = Shift(ShiftId(id), SiteId("site-a"), startAt, endAt, requiredSkills, demand = demand, startedAt = startedAt, pinnedWorkerId = pinnedWorkerId)
+    ) = Shift(ShiftId(id), SiteId("site-a"), startAt, endAt, requiredSkills, demand = demand, preference = preference, startedAt = startedAt, pinnedWorkerId = pinnedWorkerId)
 }
 
 private class FakePlannerClock(var now: Long = 0L) : PlannerClock {

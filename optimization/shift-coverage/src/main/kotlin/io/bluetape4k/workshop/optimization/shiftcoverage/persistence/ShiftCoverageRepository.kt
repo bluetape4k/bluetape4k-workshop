@@ -10,24 +10,35 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-/** 테스트와 demo profile이 공유하는 authoritative assignment CAS seam입니다. */
-class ShiftCoverageRepository {
+/** approval/swap mutation이 사용하는 assignment 권위 저장소 계약입니다. */
+interface ShiftCoverageAssignmentStore {
+    fun saveAssignment(assignment: ShiftAssignment): ShiftAssignment
+    fun findAssignment(assignmentId: AssignmentId): ShiftAssignment?
+    fun listAssignments(): List<ShiftAssignment>
+    fun compareAndSetAssignment(assignmentId: AssignmentId, expectedRevision: Long, replacement: ShiftAssignment): Boolean
+    fun findByShift(shiftId: ShiftId): ShiftAssignment?
+    fun findByWorker(workerId: WorkerId): List<ShiftAssignment>
+    fun compareAndSetBatch(changes: List<AssignmentChange>): Boolean
+}
+
+/** 테스트와 demo profile이 공유하는 bounded in-memory assignment CAS 구현입니다. */
+class ShiftCoverageRepository : ShiftCoverageAssignmentStore {
     private val assignments = ConcurrentHashMap<AssignmentId, ShiftAssignment>()
     private val batchLock = ReentrantLock()
 
-    fun saveAssignment(assignment: ShiftAssignment): ShiftAssignment {
+    override fun saveAssignment(assignment: ShiftAssignment): ShiftAssignment {
         assignments[assignment.assignmentId] = assignment
         return assignment
     }
 
-    fun findAssignment(assignmentId: AssignmentId): ShiftAssignment? = assignments[assignmentId]
+    override fun findAssignment(assignmentId: AssignmentId): ShiftAssignment? = assignments[assignmentId]
 
-    fun listAssignments(): List<ShiftAssignment> = assignments.values.sortedWith(
+    override fun listAssignments(): List<ShiftAssignment> = assignments.values.sortedWith(
         compareBy({ it.siteId.value }, { it.shiftId.value }, { it.workerId.value }, { it.assignmentId.value }),
     )
 
     /** expected revision이 정확히 일치할 때만 replacement를 materialize합니다. */
-    fun compareAndSetAssignment(assignmentId: AssignmentId, expectedRevision: Long, replacement: ShiftAssignment): Boolean {
+    override fun compareAndSetAssignment(assignmentId: AssignmentId, expectedRevision: Long, replacement: ShiftAssignment): Boolean {
         val changed = AtomicBoolean(false)
         assignments.compute(assignmentId) { _, current ->
             if (current?.revision == expectedRevision) {
@@ -40,12 +51,12 @@ class ShiftCoverageRepository {
         return changed.get()
     }
 
-    fun findByShift(shiftId: ShiftId): ShiftAssignment? = assignments.values.firstOrNull { it.shiftId == shiftId }
+    override fun findByShift(shiftId: ShiftId): ShiftAssignment? = assignments.values.firstOrNull { it.shiftId == shiftId }
 
-    fun findByWorker(workerId: WorkerId): List<ShiftAssignment> = assignments.values.filter { it.workerId == workerId }
+    override fun findByWorker(workerId: WorkerId): List<ShiftAssignment> = assignments.values.filter { it.workerId == workerId }
 
     /** 여러 assignment의 expected revision을 모두 확인한 뒤 한 번에 materialize합니다. */
-    fun compareAndSetBatch(changes: List<AssignmentChange>): Boolean = batchLock.withLock {
+    override fun compareAndSetBatch(changes: List<AssignmentChange>): Boolean = batchLock.withLock {
         if (changes.map { it.replacement.assignmentId }.toSet().size != changes.size) return@withLock false
         val valid = changes.all { change ->
             val current = assignments[change.replacement.assignmentId]

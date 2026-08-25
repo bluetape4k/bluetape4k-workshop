@@ -6,6 +6,7 @@ import io.bluetape4k.workshop.optimization.shiftcoverage.adapter.ShiftCoverageSi
 import io.bluetape4k.workshop.optimization.shiftcoverage.adapter.ShiftCoverageSignatureVerifier
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageInboxEvent
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageInboxService
+import io.bluetape4k.workshop.optimization.shiftcoverage.config.ShiftCoverageProperties
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.EventId
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.GenerationId
 import io.bluetape4k.workshop.optimization.shiftcoverage.domain.InvalidShiftCoverageInput
@@ -38,8 +39,9 @@ class ShiftCoverageCallbackController(
     private val inbox: ShiftCoverageInboxService,
     private val clock: Clock = Clock.systemUTC(),
     private val observations: ShiftCoverageObservations? = null,
+    properties: ShiftCoverageProperties = ShiftCoverageProperties(),
 ) {
-    private val verifier = ShiftCoverageSignatureVerifier(FIXTURE_SECRET)
+    private val verifier = ShiftCoverageSignatureVerifier(properties.callbackSecret)
     private val canonicalizer = ShiftCoverageCallbackCanonicalizer()
 
     @PostMapping("/{provider}")
@@ -62,10 +64,14 @@ class ShiftCoverageCallbackController(
             throw ShiftCoverageHttpException(HttpStatus.BAD_REQUEST, "REQUEST_INVALID", false)
         }
         if (request.remoteAddr !in LOOPBACK) throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "LOOPBACK_REQUIRED", false)
+        val origin = request.getHeader("Origin")
+        if (origin != null && !isAllowedOrigin(origin)) {
+            throw ShiftCoverageHttpException(HttpStatus.FORBIDDEN, "ORIGIN_FORBIDDEN", false)
+        }
         val parsedProvider = provider.toProviderOrNull() ?: throw ShiftCoverageHttpException(HttpStatus.BAD_REQUEST, "REQUEST_INVALID", false)
-        val id = eventId?.takeIf { it.isNotBlank() } ?: throw ShiftCoverageHttpException(HttpStatus.UNAUTHORIZED, "CALLBACK_SIGNATURE_INVALID", true)
+        val id = eventId?.takeIf { it.isNotBlank() } ?: throw ShiftCoverageHttpException(HttpStatus.UNAUTHORIZED, "CALLBACK_SIGNATURE_INVALID", false)
         val signedRequestId = requestId?.takeIf { it.isNotBlank() }
-            ?: throw ShiftCoverageHttpException(HttpStatus.UNAUTHORIZED, "CALLBACK_SIGNATURE_INVALID", true)
+            ?: throw ShiftCoverageHttpException(HttpStatus.UNAUTHORIZED, "CALLBACK_SIGNATURE_INVALID", false)
         val issuedAt = request.getHeader("X-Shift-Coverage-Issued-At")?.let { value ->
             try {
                 Instant.parse(value)
@@ -73,7 +79,7 @@ class ShiftCoverageCallbackController(
                 null
             }
         }
-            ?: throw ShiftCoverageHttpException(HttpStatus.UNAUTHORIZED, "CALLBACK_SIGNATURE_INVALID", true)
+            ?: throw ShiftCoverageHttpException(HttpStatus.UNAUTHORIZED, "CALLBACK_SIGNATURE_INVALID", false)
         val datasetId = request.requiredSignedHeader("X-Shift-Coverage-Dataset-Id")
         val generationId = request.requiredSignedHeader("X-Shift-Coverage-Generation-Id")
         val aggregateId = request.requiredSignedHeader("X-Shift-Coverage-Plan-Id")
@@ -81,7 +87,7 @@ class ShiftCoverageCallbackController(
         val digest = request.requiredSignedHeader("X-Shift-Coverage-Digest")
         val actualDigest = MessageDigest.getInstance("SHA-256").digest(canonicalBody).toHex()
         if (!MessageDigest.isEqual(digest.toByteArray(UTF_8), actualDigest.toByteArray(UTF_8))) {
-            throw ShiftCoverageHttpException(HttpStatus.UNAUTHORIZED, "CALLBACK_SIGNATURE_INVALID", true)
+            throw ShiftCoverageHttpException(HttpStatus.UNAUTHORIZED, "CALLBACK_SIGNATURE_INVALID", false)
         }
         val context = ShiftCoverageSignatureContext(
             method = "POST", path = request.requestURI, schemaVersion = "v1", provider = ProviderName(parsedProvider.name),
@@ -90,21 +96,32 @@ class ShiftCoverageCallbackController(
             siteId = SiteId(siteId), eventId = EventId(id), issuedAt = issuedAt,
         )
         val valid = verifier.verify(canonicalBody, context, signature, keyVersion, Instant.now(clock))
-        if (!valid) throw ShiftCoverageHttpException(HttpStatus.UNAUTHORIZED, "CALLBACK_SIGNATURE_INVALID", true)
+        if (!valid) throw ShiftCoverageHttpException(HttpStatus.UNAUTHORIZED, "CALLBACK_SIGNATURE_INVALID", false)
+        if (aggregateId != "plan-demo" || siteId != "site-demo") {
+            throw ShiftCoverageHttpException(HttpStatus.CONFLICT, "STALE", false)
+        }
         val event = inbox.claim(ShiftCoverageInboxEvent(parsedProvider, EventId(id), digest, 0L))
         observations?.recordCallback(event.status.name)
         return ResponseEntity.accepted().body(mapOf("status" to event.status.name, "requestId" to signedRequestId))
     }
 
     private fun HttpServletRequest.requiredSignedHeader(name: String): String = getHeader(name)?.takeIf { it.isNotBlank() }
-        ?: throw ShiftCoverageHttpException(HttpStatus.UNAUTHORIZED, "CALLBACK_SIGNATURE_INVALID", true)
+        ?: throw ShiftCoverageHttpException(HttpStatus.UNAUTHORIZED, "CALLBACK_SIGNATURE_INVALID", false)
 
     private fun ByteArray.toHex(): String = joinToString(separator = "") { byte -> "%02x".format(byte.toInt() and 0xff) }
 
     private fun String.toProviderOrNull(): ShiftCoverageProvider? = ShiftCoverageProvider.entries.firstOrNull { it.name == this }
 
+    private fun isAllowedOrigin(value: String): Boolean = try {
+        val origin = java.net.URI(value)
+        origin.scheme == "http" && origin.userInfo == null && origin.path.isEmpty() &&
+            origin.host in ALLOWED_ORIGIN_HOSTS && origin.query == null && origin.fragment == null
+    } catch (_: IllegalArgumentException) {
+        false
+    }
+
     companion object {
-        private const val FIXTURE_SECRET = "shift-coverage-fixture-secret"
         private val LOOPBACK = setOf("127.0.0.1", "::1", "0:0:0:0:0:0:0:1")
+        private val ALLOWED_ORIGIN_HOSTS = setOf("127.0.0.1", "localhost")
     }
 }

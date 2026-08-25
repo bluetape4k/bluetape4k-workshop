@@ -16,9 +16,10 @@ projection을 변경하는 경로는 manager approval과 swap acceptance뿐입�
 - local wall-clock은 DST gap/ambiguous를 명시적인 reason code로 거절하며,
   explicit offset이 있을 때만 Instant로 정규화합니다. source event는 assignment를
   쓰지 않고 해당 plan/generation을 stale로 수렴시킵니다.
-- `postgres` profile에서 PostgreSQL이 authority입니다. inbox/event claim,
-  idempotency fingerprint, revision CAS, fenced outbox delivery, audit row는
-  PostgreSQL/Testcontainers를 기준으로 하며 demo는 DB 없이 시작할 수 있습니다.
+- `postgres` profile은 assignment approval/swap CAS와 command idempotency claim을
+  PostgreSQL/Testcontainers 경로로 보냅니다. planner plan, generation, inbox
+  callback, demo outbox는 durable repository가 추가되기 전까지 bounded in-memory
+  경계로 유지하며, 기본 demo는 DB 없이 시작할 수 있습니다.
 - Java 25 virtual thread는 blocking I/O에만 사용하고 CPU planning은 bounded
   four-worker/eight-queue admission 경로를 사용합니다.
 - Actuator health와 Prometheus metrics는 bounded `result` label만 노출하며

@@ -5,9 +5,9 @@
 `optimization/shift-coverage`에 synthetic multi-site worker/shift coverage와
 사람이 확인하는 shift swap의 결정적인 demo 경계를 추가했다. 기본 `demo`
 profile은 recorded fake adapter와 loopback API만 사용하고, `postgres` profile은
-PostgreSQL을 authority로 사용한다. planner proposal은 immutable 기준 데이터 digest와
-stable reason code를 보존하며, assignment projection은 approval 또는 CAS 기반 swap
-acceptance에서만 변경된다.
+assignment approval/swap CAS와 command idempotency claim을 PostgreSQL로 보낸다.
+planner proposal은 immutable 기준 데이터 digest와 stable reason code를 보존하며,
+assignment projection은 approval 또는 CAS 기반 swap acceptance에서만 변경된다.
 
 하드닝 단계에서는 controller가 nullable remote address를 허용하지 않도록 strict
 loopback guard를 적용하고, 정확한 HTTP `Origin` allowlist와 operator recovery 경계를
@@ -57,18 +57,22 @@ metric family와 bounded result allowlist를 넘지 않는다.
   body, worker, credential, tenant를 metric label로 만들지 않는다.
 - `postgres` profile은 `SHIFT_COVERAGE_DATABASE_*` 환경값이 없으면 시작하지 않으며,
   저장소 기본 JDBC URL·credential을 제거해 demo와 authoritative DB 경계를 분리한다.
+- `postgres` profile의 현재 durable 경계는 assignment와 command idempotency이며,
+  plan/generation/inbox/outbox는 bounded in-memory seam으로 남겨 restart durability를
+  주장하지 않는다.
 
 ## 검증 영수증
 
-- `./gradlew :optimization-shift-coverage:cleanTest :optimization-shift-coverage:test --no-build-cache --max-workers=1 --console=plain`
-  — 59개 테스트 통과. planner, canonical digest, approval/CAS, swap race,
+- `./gradlew :optimization-shift-coverage:cleanTest :optimization-shift-coverage:test --no-build-cache --no-daemon --max-workers=1 --console=plain`
+  — 67개 테스트 통과. planner, canonical digest, approval/CAS, swap race,
   idempotency restart, inbox retry, generation/event stale, DST boundary, outbox
   fencing/queue, Java 25 lifecycle, callback canonical preflight, MockMvc error
   matrix, stable error contract, restart generation sweep, role/redaction, bounded
-  metrics cardinality, PostgreSQL authority, route/CORS golden matrix와 browser static
+  metrics cardinality, PostgreSQL assignment/idempotency wiring, route/CORS golden matrix와 browser static
   contract를 포함한다.
-- `ShiftCoverageMockMvcRouteMatrixTest` + `ShiftCoverageBrowserContractTest` — 6개 targeted
-  테스트 통과. manager/worker query·command·approval·swap, callback/operator no-write,
+- `ShiftCoverageMockMvcRouteMatrixTest` + `ShiftCoverageCallbackPreflightTest` +
+  `ShiftCoverageSpringWiringTest` — 9개 targeted 테스트 통과. manager/worker
+  query·command·approval·swap, worker redaction, callback/operator no-write,
   hostile Origin, console redirect와 CSP/safe-DOM/202·409·413·429 문자열을 고정한다.
 - Playwright demo smoke — `/shift-coverage/` response `200`, CSP와 empty-state row,
   replan accepted 상태와 1초 후 refresh, rendered row, browser console error `0`을
@@ -81,7 +85,7 @@ metric family와 bounded result allowlist를 넘지 않는다.
   Testcontainers PostgreSQL 테스트를 실제 실행했다.
 - `bash scripts/smoke-validate.sh optimization` — planning-contracts,
   field-service-dispatch, shift-coverage test group 통과.
-- `bash scripts/smoke-validate.sh stale-check` — 125 active modules, stale ref와
+- `bash scripts/smoke-validate.sh stale-check` — 127 active modules, stale ref와
   README broken image 없음.
 - `actionlint .github/workflows/Examples.yml`, `bash -n scripts/smoke-validate.sh`,
   `git diff --check` — 통과.

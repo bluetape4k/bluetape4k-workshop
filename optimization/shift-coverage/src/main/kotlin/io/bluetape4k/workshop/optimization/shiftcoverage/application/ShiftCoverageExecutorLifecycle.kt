@@ -2,8 +2,11 @@ package io.bluetape4k.workshop.optimization.shiftcoverage.application
 
 import java.time.Duration
 import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.Callable
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.FutureTask
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
@@ -41,6 +44,18 @@ class ShiftCoverageExecutorLifecycle(
             true
         } catch (_: RejectedExecutionException) {
             false
+        }
+    }
+
+    /** 결과를 기다리는 planner 호출도 동일한 bounded queue와 rejection 경계를 사용합니다. */
+    fun <T> submitCallable(task: Callable<T>): Future<T>? {
+        if (!accepting.get()) return null
+        val future = FutureTask(task)
+        return try {
+            executor.execute(future)
+            future
+        } catch (_: RejectedExecutionException) {
+            null
         }
     }
 

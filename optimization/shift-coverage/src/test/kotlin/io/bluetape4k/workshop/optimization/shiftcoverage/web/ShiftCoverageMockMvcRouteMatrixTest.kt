@@ -65,6 +65,8 @@ class ShiftCoverageMockMvcRouteMatrixTest {
         mvc.perform(get("/api/shift-coverage/plans").worker("worker-a-demo"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$[0].assignments").value(1))
+            .andExpect(jsonPath("$[0].gaps").doesNotExist())
+            .andExpect(jsonPath("$[0].fairnessMinor").doesNotExist())
 
         mvc.perform(
             post("/api/shift-coverage/plans/1/approve")
@@ -143,6 +145,7 @@ class ShiftCoverageMockMvcRouteMatrixTest {
         )
             .andExpect(status().isUnauthorized)
             .andExpect(jsonPath("$.code").value("CALLBACK_SIGNATURE_INVALID"))
+            .andExpect(jsonPath("$.retryable").value(false))
             .andExpect(jsonPath("$.nextAction").value("FIX_SIGNATURE"))
             .andExpect(jsonPath("$.requestId").value(requestId))
         inbox.find(ShiftCoverageProvider.FAKE, EventId(eventId)) shouldBeEqualTo null

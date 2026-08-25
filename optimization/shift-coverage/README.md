@@ -16,10 +16,11 @@ approval and swap acceptance can change the assignment projection.
 - Local wall-clock boundaries reject DST gaps/ambiguities unless an explicit
   offset is supplied; source events stale the affected plan/generation without
   writing assignments.
-- PostgreSQL is the authority in the `postgres` profile. Inbox/event claims,
-  idempotency fingerprints, revision CAS, fenced outbox delivery, and audit
-  rows are designed for PostgreSQL/Testcontainers; the demo can start without
-  a database.
+- The `postgres` profile routes assignment approval/swap CAS and command
+  idempotency claims through PostgreSQL/Testcontainers. Planner plans,
+  generations, inbox callbacks, and the demo outbox remain bounded in-memory
+  seams until their durable repositories are added; the default demo can start
+  without a database.
 - Java 25 virtual threads are reserved for blocking I/O. CPU planning uses a
   bounded four-worker/eight-queue admission path.
 - Actuator health and Prometheus metrics expose only bounded `result` labels;
