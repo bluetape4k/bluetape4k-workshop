@@ -57,7 +57,7 @@
 
 > **알려진 건너뛰기**: `:spring-data-r2dbc-webflux` —  #120 스키마 수정이 보류 중인 테스트가 비활성화되었습니다.
 
-### T3 전체 — Testcontainers (33개 모듈)
+### T3 전체 — Testcontainers (34개 모듈)
 
 | 모듈 | 필요한 인프라 |
 |--------|-----------------------|
@@ -94,6 +94,7 @@
 | `:customers` | (현재 없음) |
 | `:orders` | (현재 없음) |
 | `:spring-data-r2dbc-webflux-exposed` | (H2 인메모리 — 연기 OK) |
+| `:optimization-warehouse-allocation` | PostgreSQL |
 
 ---
 
@@ -164,6 +165,15 @@
   :commerce-promotion-voucher-campaign:test \
   :commerce-concert-ticket-flash-sale:test \
   :commerce-usage-billing-microservices-composition-tests:integrationTest \
+  --continue --max-workers=1
+```
+
+### Optimization (Testcontainers)
+
+```bash
+./gradlew :optimization-planning-contracts:test \
+  :optimization-field-service-dispatch:test \
+  :optimization-warehouse-allocation:test \
   --continue --max-workers=1
 ```
 
