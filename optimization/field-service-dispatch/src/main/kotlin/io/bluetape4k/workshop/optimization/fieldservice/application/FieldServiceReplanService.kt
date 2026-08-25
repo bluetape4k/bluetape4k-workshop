@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.fieldservice.application
 
+import io.bluetape4k.concurrent.virtualthread.VirtualThreads
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.optimization.fieldservice.domain.AggregateId
@@ -8,6 +9,7 @@ import io.bluetape4k.workshop.optimization.fieldservice.planner.DeterministicFie
 import io.bluetape4k.workshop.optimization.fieldservice.planner.PlannerInput
 import java.time.Duration
 import java.util.concurrent.ArrayBlockingQueue
+import java.util.concurrent.Callable
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
@@ -25,6 +27,8 @@ class FieldServiceReplanService(
     private val snapshot: (AggregateId) -> PlannerInput,
     private val executor: ThreadPoolExecutor = boundedPlannerExecutor(),
     private val timeout: Duration = Duration.ofSeconds(5),
+    private val blockingExecutor: ExecutorService = VirtualThreads.executorService(),
+    private val closeBlockingExecutor: Boolean = true,
 ) : AutoCloseable {
     private val flights = ConcurrentHashMap<AggregateId, CompletableFuture<PlanProposal>>()
     private val tasks = ConcurrentHashMap<AggregateId, FutureTask<Unit>>()
@@ -42,12 +46,17 @@ class FieldServiceReplanService(
                 return ReplanAdmission.Coalesced(flights.getValue(aggregateId))
             }
             lateinit var task: FutureTask<Unit>
+            var snapshotTask: Future<PlannerInput>? = null
             task = FutureTask {
                 try {
-                    result.complete(planner.plan(snapshot(aggregateId)))
+                    snapshotTask = blockingExecutor.submit(Callable { snapshot(aggregateId) })
+                    val input = snapshotTask?.get(timeout.toMillis(), TimeUnit.MILLISECONDS)
+                        ?: throw IllegalStateException("snapshot task was not submitted")
+                    result.complete(planner.plan(input))
                 } catch (failure: Throwable) {
                     result.completeExceptionally(failure)
                 } finally {
+                    snapshotTask?.cancel(true)
                     tasks.remove(aggregateId, task)
                     flights.remove(aggregateId, result)
                 }
@@ -91,6 +100,12 @@ class FieldServiceReplanService(
         }
         tasks.values.forEach { it.cancel(true) }
         flights.clear()
+        if (closeBlockingExecutor) {
+            blockingExecutor.shutdown()
+            if (!blockingExecutor.awaitTermination(30, TimeUnit.SECONDS)) {
+                blockingExecutor.shutdownNow()
+            }
+        }
     }
 
     companion object : KLogging() {

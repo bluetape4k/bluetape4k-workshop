@@ -1,15 +1,18 @@
 package io.bluetape4k.workshop.optimization.fieldservice.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.optimization.fieldservice.domain.AggregateId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.DatasetId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanId
 import io.bluetape4k.workshop.optimization.fieldservice.persistence.FieldServiceRepository
 import io.bluetape4k.workshop.optimization.fieldservice.persistence.FieldServiceTables
+import io.bluetape4k.workshop.optimization.fieldservice.persistence.FieldServiceOutboxTable
 import io.bluetape4k.workshop.optimization.fieldservice.persistence.OutboxRecord
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -60,5 +63,23 @@ class FieldServiceOutboxWorkerTest {
 
         result.deadLetter shouldBeEqualTo 1
         transaction { repository.claimOutbox().size shouldBeEqualTo 0 }
+    }
+
+    @Test
+    fun `handler failure stores a stable redacted reason`() {
+        transaction {
+            repository.enqueueOutbox(OutboxRecord(payload = "safe-job", nextAttemptAt = Instant.EPOCH))
+        }
+        val worker = FieldServiceOutboxWorker(repository, handler = {
+            throw IllegalArgumentException("secret=do-not-persist")
+        })
+
+        worker.processOutboxBatch().retryable shouldBeEqualTo 1
+
+        val lastError = transaction {
+            FieldServiceOutboxTable.selectAll().single()[FieldServiceOutboxTable.lastError]
+        }
+        lastError shouldBeEqualTo "RETRYABLE:IllegalArgumentException"
+        lastError.orEmpty().contains("do-not-persist").shouldBeFalse()
     }
 }
