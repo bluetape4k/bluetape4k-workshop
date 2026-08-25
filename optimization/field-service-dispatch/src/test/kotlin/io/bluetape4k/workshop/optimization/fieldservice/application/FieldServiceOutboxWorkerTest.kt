@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.optimization.fieldservice.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.optimization.fieldservice.domain.AggregateId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.DatasetId
@@ -80,6 +80,6 @@ class FieldServiceOutboxWorkerTest {
             FieldServiceOutboxTable.selectAll().single()[FieldServiceOutboxTable.lastError]
         }
         lastError shouldBeEqualTo "RETRYABLE:IllegalArgumentException"
-        lastError.orEmpty().contains("do-not-persist").shouldBeFalse()
+        lastError.orEmpty() shouldNotContain "do-not-persist"
     }
 }
