@@ -29,6 +29,21 @@ targeted test receipt를 제출해야 한다.
 통합 review에서 P0/P1 finding은 0건이다. P2/P3는 문서 계약에 흡수했으며, 실제
 구현 lane에서 다시 발생하면 해당 Tier와 descendant를 `INVALID`로 전환한다.
 
+## Stacked child hosted-check 계약
+
+Issue #813의 live evidence에서 non-default base branch child PR에 hosted
+check가 생성되지 않는 trigger gap을 확인했다. P0는 다음 계약으로 이를
+보완한다.
+
+- `Examples.yml`과 `ecosystem-reuse-gate.yml`의 `pull_request.branches` 제한을
+  제거해 `feat/ecosystem-reuse-gate`와 후속 child base에도 check가 연결된다.
+- `push.branches: [develop, main]`와 기존 `paths` 제한은 유지해 push 실행 범위와
+  workload scope를 넓히지 않는다.
+- 두 workflow 모두 `contents: read`, pinned action, `persist-credentials: false`
+  경계를 유지하며 fork PR에 write 권한이나 secret handoff를 추가하지 않는다.
+- A1/F1 child는 exact head OID와 check run을 live read-back한 뒤에만 `PASS`로
+  전환한다. 미보고 또는 skipped check는 PASS가 아니다.
+
 ## Writer 및 문서 검증
 
 | 검사 | 결과 | 증거 |
@@ -49,6 +64,7 @@ python3 .github/scripts/check-ecosystem-reuse.py \
   --manifest docs/ecosystem-reuse-train.json --bootstrap \
   --workflow .github/workflows/ecosystem-reuse-gate.yml  # PASS
 python3 -m json.tool docs/ecosystem-reuse-train.json  # PASS
+actionlint .github/workflows/Examples.yml .github/workflows/ecosystem-reuse-gate.yml  # PASS
 git diff --check  # PASS
 ./gradlew --no-daemon --no-build-cache --max-workers=1 --no-parallel detekt  # PASS (110 tasks)
 ```
