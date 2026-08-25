@@ -1,0 +1,7 @@
+spring:
+  datasource:
+    url: ${SHIFT_COVERAGE_DATABASE_URL}
+    username: ${SHIFT_COVERAGE_DATABASE_USERNAME}
+    password: ${SHIFT_COVERAGE_DATABASE_PASSWORD}
+    hikari:
+      maximum-pool-size: 8

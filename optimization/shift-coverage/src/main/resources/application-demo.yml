@@ -1,0 +1,5 @@
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration
+      - org.jetbrains.exposed.v1.spring.boot4.autoconfigure.ExposedAutoConfiguration
