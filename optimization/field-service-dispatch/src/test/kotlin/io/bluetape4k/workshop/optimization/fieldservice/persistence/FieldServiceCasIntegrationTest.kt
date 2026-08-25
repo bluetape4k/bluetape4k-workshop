@@ -3,6 +3,13 @@ package io.bluetape4k.workshop.optimization.fieldservice.persistence
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.junit5.concurrency.TestingExecutors
+import io.bluetape4k.workshop.optimization.fieldservice.application.FieldServiceReplanService
+import io.bluetape4k.workshop.optimization.fieldservice.domain.AggregateId
+import io.bluetape4k.workshop.optimization.fieldservice.domain.EventDigest
+import io.bluetape4k.workshop.optimization.fieldservice.domain.EventKey
+import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceEventType
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.optimization.fieldservice.application.ApprovalResult
 import io.bluetape4k.workshop.optimization.fieldservice.application.DispatchResult
@@ -23,8 +30,12 @@ import io.bluetape4k.workshop.optimization.fieldservice.domain.VisitId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.Worker
 import io.bluetape4k.workshop.optimization.fieldservice.domain.WorkerId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.WorkerRoute
+import io.bluetape4k.workshop.optimization.fieldservice.planner.DeterministicFieldServicePlanner
+import io.bluetape4k.workshop.optimization.fieldservice.planner.PlannerInput
+import io.bluetape4k.workshop.optimization.fieldservice.planner.TravelTimeMatrix
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -32,6 +43,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.CyclicBarrier
+import java.util.concurrent.Callable
+import java.util.concurrent.TimeUnit
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FieldServiceCasIntegrationTest {
@@ -64,8 +78,8 @@ class FieldServiceCasIntegrationTest {
 
         approval.approve(fixture.plan.planId, fixture.plan.planRevision, fixture.plan.versionVector) shouldBeEqualTo ApprovalResult.VERSION_CONFLICT
         transaction {
-            repository.loadPlan(fixture.plan.planId, fixture.plan.planRevision)!!.state shouldBeEqualTo PlanState.DRAFT
-            repository.findWorker(fixture.worker1.workerId)!!.version shouldBeEqualTo 0L
+            repository.loadPlan(fixture.plan.planId, fixture.plan.planRevision).shouldNotBeNull().state shouldBeEqualTo PlanState.DRAFT
+            repository.findWorker(fixture.worker1.workerId).shouldNotBeNull().version shouldBeEqualTo 0L
             repository.countAssignments() shouldBeEqualTo 0L
         }
     }
@@ -76,9 +90,9 @@ class FieldServiceCasIntegrationTest {
 
         approval.approve(fixture.plan.planId, fixture.plan.planRevision, fixture.plan.versionVector) shouldBeEqualTo ApprovalResult.APPROVED
         transaction {
-            repository.loadPlan(fixture.plan.planId, fixture.plan.planRevision)!!.state shouldBeEqualTo PlanState.APPROVED
-            repository.findWorker(fixture.worker1.workerId)!!.version shouldBeEqualTo 0L
-            repository.findWorker(fixture.worker1.workerId)!!.workerScheduleRevision shouldBeEqualTo 0L
+            repository.loadPlan(fixture.plan.planId, fixture.plan.planRevision).shouldNotBeNull().state shouldBeEqualTo PlanState.APPROVED
+            repository.findWorker(fixture.worker1.workerId).shouldNotBeNull().version shouldBeEqualTo 0L
+            repository.findWorker(fixture.worker1.workerId).shouldNotBeNull().workerScheduleRevision shouldBeEqualTo 0L
         }
     }
 
@@ -91,6 +105,33 @@ class FieldServiceCasIntegrationTest {
         dispatch.confirmWorkerRoute(fixture.worker1.workerId, fixture.plan.planId, fixture.plan.planRevision) shouldBeEqualTo DispatchResult.SCHEDULE_CONFLICT
         dispatch.confirmWorkerRoute(fixture.worker2.workerId, fixture.plan.planId, fixture.plan.planRevision) shouldBeEqualTo DispatchResult.COMMITTED
         transaction { repository.countAssignments() shouldBeEqualTo 2L }
+    }
+
+    @Test
+    fun `concurrent route confirmations commit exactly one worker route`() {
+        val fixture = saveFixture()
+        approval.approve(fixture.plan.planId, fixture.plan.planRevision, fixture.plan.versionVector)
+        val barrier = CyclicBarrier(2)
+        val executor = TestingExecutors.newFixedThreadPool(2)
+
+        val results = try {
+            executor.invokeAll(
+                listOf(1, 2).map {
+                    Callable {
+                        barrier.await(5, TimeUnit.SECONDS)
+                        dispatch.confirmWorkerRoute(fixture.worker1.workerId, fixture.plan.planId, fixture.plan.planRevision)
+                    }
+                },
+                10,
+                TimeUnit.SECONDS,
+            ).map { it.get(10, TimeUnit.SECONDS) }
+        } finally {
+            executor.shutdown()
+            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) executor.shutdownNow()
+        }
+
+        results.map { it.name }.sorted() shouldBeEqualTo listOf("COMMITTED", "SCHEDULE_CONFLICT")
+        transaction { repository.countAssignments() shouldBeEqualTo 1L }
     }
 
     @Test
@@ -108,6 +149,70 @@ class FieldServiceCasIntegrationTest {
         dispatch.confirmWorkerRoute(fixture.worker1.workerId, fixture.plan.planId, fixture.plan.planRevision) shouldBeEqualTo
             DispatchResult.VERSION_CONFLICT
         transaction { repository.countAssignments() shouldBeEqualTo 0L }
+    }
+
+    @Test
+    fun `event append CAS permits exactly one command at the same expected version`() {
+        val barrier = CyclicBarrier(2)
+        val executor = TestingExecutors.newFixedThreadPool(2)
+        val commands = listOf("event-a", "event-b").map { key ->
+            FieldServiceCommand(
+                aggregateType = "visit",
+                aggregateId = AggregateId("visit-cas"),
+                eventKey = EventKey(key),
+                eventType = FieldServiceEventType.VISIT_URGENT,
+                digest = EventDigest("a".repeat(64)),
+                payloadSummary = "visit-cas",
+                expectedVersion = 0L,
+            )
+        }
+
+        val results = try {
+            executor.invokeAll(
+                commands.map { command ->
+                    Callable {
+                        barrier.await(5, TimeUnit.SECONDS)
+                        transaction { repository.appendEvent(command) }
+                    }
+                },
+                10,
+                TimeUnit.SECONDS,
+            ).map { it.get(10, TimeUnit.SECONDS) }
+        } finally {
+            executor.shutdown()
+            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) executor.shutdownNow()
+        }
+
+        results.map { it.name }.sorted() shouldBeEqualTo listOf("APPENDED", "VERSION_CONFLICT")
+        transaction {
+            repository.countEvents() shouldBeEqualTo 1L
+            FieldServiceEventsTable.selectAll().single()[FieldServiceEventsTable.aggregateVersion] shouldBeEqualTo 0L
+        }
+    }
+
+    @Test
+    fun `blocking snapshot runs on the virtual thread boundary`() {
+        var snapshotWasVirtual = false
+        val service = FieldServiceReplanService(
+            planner = DeterministicFieldServicePlanner(),
+            snapshot = {
+                snapshotWasVirtual = Thread.currentThread().isVirtual
+                PlannerInput(
+                    workers = emptyList(),
+                    visits = emptyList(),
+                    matrix = TravelTimeMatrix(0L, emptySet(), emptyMap()),
+                    datasetId = DatasetId("dataset-empty"),
+                    planId = PlanId("plan-empty"),
+                )
+            },
+        )
+
+        try {
+            service.await(service.requestReplan(AggregateId("aggregate-empty")))
+        } finally {
+            service.close()
+        }
+        snapshotWasVirtual.shouldBeTrue()
     }
 
     private fun saveFixture(): Fixture = transaction {

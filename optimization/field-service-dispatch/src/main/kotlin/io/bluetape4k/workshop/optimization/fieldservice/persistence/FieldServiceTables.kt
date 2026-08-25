@@ -100,9 +100,11 @@ object FieldServiceEventsTable : Table("field_service_events") {
     val digest = varchar("digest", 64)
     val payloadSummary = varchar("payload_summary", 240)
     val aggregateVersion = long("aggregate_version")
+    val sequenceVersion = long("sequence_version")
     val createdAt = timestamp("created_at")
     init {
         uniqueIndex(aggregateType, aggregateId, eventKey)
+        uniqueIndex(aggregateType, aggregateId, sequenceVersion)
         index(false, aggregateType, aggregateId, digest)
     }
     override val primaryKey = PrimaryKey(id)

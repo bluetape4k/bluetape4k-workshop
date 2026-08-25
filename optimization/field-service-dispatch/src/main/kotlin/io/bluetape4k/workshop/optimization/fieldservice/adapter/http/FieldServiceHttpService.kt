@@ -55,7 +55,7 @@ class FieldServiceHttpService(
                 FieldServiceEventType.VISIT_CREATED,
                 idempotencyKey,
                 createPayload(request),
-                0L,
+                repository.nextAggregateVersion("field_service", visit.visitId.value),
             )
             commandService.accept(command) {
                 if (repository.findVisit(visit.visitId) != null) {
@@ -75,7 +75,14 @@ class FieldServiceHttpService(
     ): CommandResult = transaction {
         val current = repository.findVisit(visitId) ?: throw NoSuchElementException("visit not found")
         val next = transform(current)
-        val command = command(visitId.value, eventType, idempotencyKey, payload, current.version)
+        val command = command(
+            aggregateId = visitId.value,
+            eventType = eventType,
+            idempotencyKey = idempotencyKey,
+            payload = payload,
+            expectedVersion = repository.nextAggregateVersion("field_service", visitId.value),
+            eventVersion = next.version,
+        )
         commandService.accept(command) {
             if (!repository.updateVisitIfVersion(visitId, current.version, next)) {
                 throw FieldServiceConflict(FieldServiceConflictCode.VERSION_CONFLICT)
@@ -91,7 +98,14 @@ class FieldServiceHttpService(
     ): CommandResult = transaction {
         val current = repository.findWorker(workerId) ?: throw NoSuchElementException("worker not found")
         val next = transform(current)
-        val command = command(workerId.value, FieldServiceEventType.WORKER_UNAVAILABLE, idempotencyKey, payload, current.version)
+        val command = command(
+            aggregateId = workerId.value,
+            eventType = FieldServiceEventType.WORKER_UNAVAILABLE,
+            idempotencyKey = idempotencyKey,
+            payload = payload,
+            expectedVersion = repository.nextAggregateVersion("field_service", workerId.value),
+            eventVersion = next.version,
+        )
         commandService.accept(command) {
             if (!repository.updateWorkerIfVersion(workerId, current.version, next)) {
                 throw FieldServiceConflict(FieldServiceConflictCode.VERSION_CONFLICT)
@@ -106,7 +120,13 @@ class FieldServiceHttpService(
         val aggregate = "${request.fromCoordinateId}->${request.toCoordinateId}"
         return transaction {
             commandService.accept(
-                command(aggregate, FieldServiceEventType.TRAVEL_TIME_UPDATED, idempotencyKey, request.toString(), 0L),
+                command(
+                    aggregate,
+                    FieldServiceEventType.TRAVEL_TIME_UPDATED,
+                    idempotencyKey,
+                    request.toString(),
+                    repository.nextAggregateVersion("field_service", aggregate),
+                ),
             ) {
                 repository.saveTravelTime(
                     CoordinateId(request.fromCoordinateId),
@@ -130,7 +150,8 @@ class FieldServiceHttpService(
             eventType = FieldServiceEventType.PLAN_REPLANNED,
             idempotencyKey = idempotencyKey,
             payload = "${request.planId}|${request.datasetId}",
-            expectedVersion = revision,
+            expectedVersion = repository.nextAggregateVersion("field_service", planId.value),
+            eventVersion = revision,
         )
         var created: PlanProposal? = null
         return@transaction when (commandService.accept(command) {
@@ -157,6 +178,7 @@ class FieldServiceHttpService(
                     ?: throw FieldServiceConflict(FieldServiceConflictCode.STALE_REVISION)
             }
             CommandResult.EVENT_KEY_REUSED -> throw FieldServiceConflict(FieldServiceConflictCode.EVENT_KEY_REUSED)
+            CommandResult.VERSION_CONFLICT -> throw FieldServiceConflict(FieldServiceConflictCode.VERSION_CONFLICT)
         }
     }
 
@@ -167,7 +189,8 @@ class FieldServiceHttpService(
             eventType = FieldServiceEventType.PLAN_APPROVED,
             idempotencyKey = idempotencyKey,
             payload = "${planId.value}|$revision",
-            expectedVersion = revision,
+            expectedVersion = repository.nextAggregateVersion("field_service", planId.value),
+            eventVersion = revision,
         )
         return@transaction when (commandService.accept(command) {
             if (approvalService.approve(planId, revision, plan.versionVector) != ApprovalResult.APPROVED) {
@@ -181,6 +204,7 @@ class FieldServiceHttpService(
                 ApprovalResult.VERSION_CONFLICT
             }
             CommandResult.EVENT_KEY_REUSED -> throw FieldServiceConflict(FieldServiceConflictCode.EVENT_KEY_REUSED)
+            CommandResult.VERSION_CONFLICT -> ApprovalResult.VERSION_CONFLICT
         }
     }
 
@@ -190,7 +214,8 @@ class FieldServiceHttpService(
             eventType = FieldServiceEventType.ROUTE_CONFIRMED,
             idempotencyKey = idempotencyKey,
             payload = "${planId.value}|$revision|${workerId.value}",
-            expectedVersion = revision,
+            expectedVersion = repository.nextAggregateVersion("field_service", "${planId.value}:${workerId.value}"),
+            eventVersion = revision,
         )
         return@transaction when (commandService.accept(command) {
             when (val result = dispatchService.confirmWorkerRoute(workerId, planId, revision)) {
@@ -206,6 +231,7 @@ class FieldServiceHttpService(
                 DispatchResult.VERSION_CONFLICT
             }
             CommandResult.EVENT_KEY_REUSED -> throw FieldServiceConflict(FieldServiceConflictCode.EVENT_KEY_REUSED)
+            CommandResult.VERSION_CONFLICT -> DispatchResult.VERSION_CONFLICT
         }
     }
 
@@ -215,6 +241,7 @@ class FieldServiceHttpService(
         idempotencyKey: String,
         payload: String,
         expectedVersion: Long,
+        eventVersion: Long = expectedVersion,
     ): FieldServiceCommand {
         val key = IdempotencyKey(idempotencyKey)
         val digest = canonicalizer.digest("{\"payload\":${quote(payload)}}".toByteArray(UTF_8))
@@ -226,6 +253,7 @@ class FieldServiceHttpService(
             digest = digest,
             payloadSummary = payload.take(240),
             expectedVersion = expectedVersion,
+            eventVersion = eventVersion,
         )
     }
 

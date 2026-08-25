@@ -31,6 +31,7 @@ class FieldServiceCommandService(
             }
             EventAppendResult.DUPLICATE -> CommandResult.DUPLICATE
             EventAppendResult.EVENT_KEY_REUSED -> CommandResult.EVENT_KEY_REUSED
+            EventAppendResult.VERSION_CONFLICT -> CommandResult.VERSION_CONFLICT
         }
     }
 
@@ -41,4 +42,5 @@ enum class CommandResult {
     APPLIED,
     DUPLICATE,
     EVENT_KEY_REUSED,
+    VERSION_CONFLICT,
 }
