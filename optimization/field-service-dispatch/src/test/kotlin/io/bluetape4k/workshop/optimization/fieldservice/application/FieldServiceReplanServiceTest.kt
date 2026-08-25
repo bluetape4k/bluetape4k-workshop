@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -342,6 +343,39 @@ class FieldServiceReplanServiceTest {
             first.future.cancel(false).shouldBeTrue()
             service.requestReplan(AggregateId("aggregate-planner-next")) as ReplanAdmission.Accepted
             service.requestReplan(AggregateId("aggregate-planner-third")) as ReplanAdmission.Accepted
+        } finally {
+            releasePlanner.countDown()
+            service.close()
+        }
+    }
+
+    @Test
+    fun `rejected planner execution releases its queued stage lease`() {
+        val releasePlanner = CountDownLatch(1)
+        val plannerStarted = CountDownLatch(1)
+        val cpuExecutor = boundedCpuExecutor()
+        cpuExecutor.execute {
+            plannerStarted.countDown()
+            releasePlanner.await(5, TimeUnit.SECONDS)
+        }
+        cpuExecutor.execute { releasePlanner.await(5, TimeUnit.SECONDS) }
+        plannerStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+
+        val blockingExecutor = TestingExecutors.newFixedThreadPool(1)
+        val service = FieldServiceReplanService(
+            planner = DeterministicFieldServicePlanner(),
+            snapshot = ::emptyInput,
+            executor = cpuExecutor,
+            timeout = Duration.ofSeconds(2),
+            blockingExecutor = blockingExecutor,
+        )
+
+        try {
+            repeat(3) { index ->
+                val admission = service.requestReplan(AggregateId("aggregate-rejected-$index"))
+                    as ReplanAdmission.Accepted
+                assertFailsWith<ExecutionException> { admission.future.get(5, TimeUnit.SECONDS) }
+            }
         } finally {
             releasePlanner.countDown()
             service.close()
