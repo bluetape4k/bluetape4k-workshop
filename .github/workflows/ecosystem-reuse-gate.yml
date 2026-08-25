@@ -9,6 +9,7 @@ on:
       - 'docs/coverage-matrix.md'
       - 'docs/ecosystem-reuse-inventory.md'
       - 'docs/ecosystem-reuse-train.json'
+      - 'docs/lessons/**'
       - 'docs/review/**'
       - 'docs/governance/github-action-pins.json'
       - '.github/scripts/check-ecosystem-reuse.py'
@@ -24,6 +25,7 @@ on:
       - 'docs/coverage-matrix.md'
       - 'docs/ecosystem-reuse-inventory.md'
       - 'docs/ecosystem-reuse-train.json'
+      - 'docs/lessons/**'
       - 'docs/review/**'
       - 'docs/governance/github-action-pins.json'
       - '.github/scripts/check-ecosystem-reuse.py'
@@ -97,12 +99,18 @@ jobs:
           TRUSTED: ${{ steps.trusted-base.outputs.trusted }}
           BASE_SHA: ${{ steps.trusted-base.outputs.base_sha }}
           HEAD_SHA: ${{ steps.trusted-base.outputs.head_sha }}
+          PR_SCOPE: ${{ github.event_name == 'pull_request' }}
+          BASE_REF_NAME: ${{ github.event.pull_request.base.ref || '' }}
+          HEAD_REF_NAME: ${{ github.event.pull_request.head.ref || '' }}
         shell: bash
         run: |
           set -euo pipefail
           diff_args=()
           if [[ "${BASE_SHA:-}" =~ ^[0-9a-f]{40}$ && "${HEAD_SHA:-}" =~ ^[0-9a-f]{40}$ ]]; then
             diff_args+=(--base-ref "$BASE_SHA" --head-ref "$HEAD_SHA")
+          fi
+          if [[ "$PR_SCOPE" == "true" ]]; then
+            diff_args+=(--pr-scope --base-ref-name "$BASE_REF_NAME" --head-ref-name "$HEAD_REF_NAME")
           fi
           if [[ "$TRUSTED" == "true" ]]; then
             python3 .github/scripts/check-ecosystem-reuse.py \

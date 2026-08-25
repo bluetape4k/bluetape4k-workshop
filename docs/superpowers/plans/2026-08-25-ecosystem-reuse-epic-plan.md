@@ -257,11 +257,11 @@ coordinator와 serial closeout lane만 이를 갱신할 수 있다.
   Every path anchor must exist except an explicit `N/A` `actual_import` for a
   `provider-gap`, `shared-candidate`, or `documented-raw-fallback` row. Such a
   row must use a `candidate:` `capability_api` marker and retain local
-  `source_anchor` and `test_anchor`. Otherwise `actual_import` is the current
-  file containing the exact Bluetape import or dependency declaration, and the
-  checker requires both a dependency/alias token and the declared
-  `capability_api` token (or an exact `libs.*` alias). This prevents a generic
-  `bluetape4k` substring from masquerading as adoption evidence.
+  `source_anchor` and `test_anchor`. Otherwise `actual_import` must be a
+  source/test file containing the exact Bluetape import and the declared
+  `capability_api` token. A Gradle build/catalog declaration and a `libs.*`
+  alias are dependency-resolution evidence only; neither is adoption evidence.
+  This prevents a generic `bluetape4k` substring from masquerading as reuse.
   `bluetape_source_anchor` and `bluetape_test_anchor` point to current
   repository comparison files for released capabilities; a non-released
   fallback classification may use `N/A` for those upstream anchors while its
@@ -317,6 +317,9 @@ trusted-base 비교와 negative test 대상으로 취급한다.
       configuration; duplicate or extra command keys; missing R2 anchor symbols;
       stale R1 evidence after an R2 reparent; an invalid state transition; or a
       terminal receipt ID/checksum mutation.
+  16. a released row whose `actual_import` points at a Gradle/catalog file or
+      whose `capability_api` is a `libs.*` alias; and a pull-request diff that
+      escapes its single manifest node or uses the wrong base/head ref or OID.
 
   Run:
 

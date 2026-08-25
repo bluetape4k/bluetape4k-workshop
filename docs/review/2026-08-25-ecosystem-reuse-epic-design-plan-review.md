@@ -9,9 +9,11 @@ worktree branch `feat/ecosystem-reuse-gate`다. 검토 범위는 P0 foundation�
 stack topology이며 Kotlin child 구현, Testcontainers 실행, PR CI와 merge는
 범위 밖이다.
 
-최종 판정은 **설계·계획 및 P0 계약 PASS / child 구현 PENDING**이다. 설계 승인과
-live Epic mutation, merge-ready, merged는 서로 다른 상태다. P0 산출물이 exact-head
-검증을 통과한 뒤에만 #792 본문·labels·comments를 동기화하고, 자식 PR은 각자
+초기 판정은 **설계·계획 및 P0 계약 PASS / child 구현 PENDING**이었다. 후속
+Type-C 수리에서 checker false positive와 PR scope gap을 발견했고, 현재는 해당
+수리를 로컬 regression으로 검증한 상태다. 설계 승인과 live Epic mutation,
+merge-ready, merged는 서로 다른 상태다. P0 산출물이 exact-head 검증을 통과한
+뒤에만 #792 본문·labels·comments를 동기화하고, 자식 PR은 각자
 `$bluetape-kotlin-patterns`, 7-Tier review, resolved dependency receipt와
 targeted test receipt를 제출해야 한다.
 
@@ -23,11 +25,27 @@ targeted test receipt를 제출해야 한다.
 | Stability | PASS | bootstrap은 정확한 9-track에만 허용, trusted manifest 비교, receipt/state 전이표, terminal receipt 불변 및 `PENDING` reset, R1→R2 symbol-level `parent_evidence`와 P0 reparent, active path overlap 거부 | 실제 ancestor OID/merge-base는 P0 commit 후 동결 |
 | Security | PASS | 40-character action SHA와 pins file exact match, `contents: read`, token/secrets 금지, path traversal·symlink·control character 거부, sanitized artifact | GitHub hosted run에서 최종 receipt read-back 필요 |
 | Operator/Ops | PASS | workflow_dispatch parent fallback, 문서/manifest/build 파일 path trigger, cancellation/retention/timeout, mutation retry 금지와 field-specific recovery | live GitHub mutation과 CI 실행은 아직 대기 |
-| Developer/API | PASS | inventory의 resolved alias와 exact dependency/API token, source/test anchor, track별 project/coordinate/configuration 1:1 `dependencyInsight`, BOM-only gate, R1/R2 경계와 child review artifact allowlist | 실제 resolved coordinate와 import 변경은 child 작업에서 증명 |
+| Developer/API | PASS (수리 후 재검증) | inventory의 source/test-only `actual_import`, `candidate:` marker, `libs.*` alias 거부, track별 project/coordinate/configuration 1:1 `dependencyInsight`, BOM-only gate, R1/R2 경계와 child review artifact allowlist | 실제 resolved coordinate와 import 변경은 child 작업에서 증명 |
 | User/Caller | PASS | 한국어 설계·계획, `bluetape4k-assertions` before/after 표, raw fallback 분류·사유, A2의 aws·commerce·operations·planning·voucher·browser 범위, Epic/child 추적성 | 자식 PR의 reader-facing 예제 변경은 PENDING |
 
-통합 review에서 P0/P1 finding은 0건이다. P2/P3는 문서 계약에 흡수했으며, 실제
-구현 lane에서 다시 발생하면 해당 Tier와 descendant를 `INVALID`로 전환한다.
+초기 통합 review snapshot에는 P0/P1 finding이 0건으로 기록됐지만, 후속 live
+재검토에서 dependency declaration false positive와 PR scope gap을 P1로 식별했다.
+현재 checker·manifest·workflow·inventory·lesson 수리는 로컬 회귀 검증을
+통과했으며, exact-head hosted check와 PR read-back 전까지는 P0 `READY`로
+승격하지 않는다. P2/P3는 문서 계약에 흡수했으며, 실제 구현 lane에서 다시
+발생하면 해당 Tier와 descendant를 `INVALID`로 전환한다.
+
+## 후속 P1 수리 증거
+
+- `actual_import`가 `build.gradle.kts`/catalog를 가리키거나 `capability_api`가
+  `libs.*`인 released 행을 거부하도록 checker를 강화했다.
+- dependency-only inventory 행은 `actual_import=N/A`와 `candidate:` marker로
+  재분류했고, 실제 `Uuid`, `Jackson`, `VirtualThreads`, `shouldBeEqualTo`
+  consumer는 source/test anchor로 교정했다.
+- PR diff를 전체 경로로 수집하고, 하나의 manifest `allowed_paths` 및 exact
+  base/head ref·OID에 묶는 `--pr-scope` 검사를 추가했다.
+- `python3 .github/scripts/test_check_ecosystem_reuse.py -v`는 38개 테스트를
+  통과했고, checker bootstrap·JSON·diff check도 통과했다.
 
 ## Stacked child hosted-check 계약
 
@@ -58,7 +76,7 @@ check가 생성되지 않는 trigger gap을 확인했다. P0는 다음 계약으
 ## P0 검증 명령
 
 ```text
-python3 .github/scripts/test_check_ecosystem_reuse.py -v  # 32 tests PASS
+python3 .github/scripts/test_check_ecosystem_reuse.py -v  # 38 tests PASS
 python3 .github/scripts/check-ecosystem-reuse.py \
   --inventory docs/ecosystem-reuse-inventory.md \
   --manifest docs/ecosystem-reuse-train.json --bootstrap \
