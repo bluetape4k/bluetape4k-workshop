@@ -114,6 +114,7 @@ class FieldServiceReplanService(
                             executor.execute(planningTask)
                         } catch (rejected: RejectedExecutionException) {
                             result.completeExceptionally(rejected)
+                            task.cancelStages()
                             cleanup(aggregateId, task)
                         }
                     }
@@ -136,6 +137,7 @@ class FieldServiceReplanService(
             }
             ReplanAdmission.Accepted(result)
         } catch (rejected: RejectedExecutionException) {
+            task.cancelStages()
             cleanup(aggregateId, task)
             log.warn { "Field Service replan queue rejected aggregate=${aggregateId.value}" }
             ReplanAdmission.Rejected("REPLAN_REJECTED")
