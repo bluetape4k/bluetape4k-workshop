@@ -255,6 +255,49 @@ class FieldServiceReplanServiceTest {
     }
 
     @Test
+    fun `cancelled running snapshot retains admission permit until snapshot exits`() {
+        val snapshotStarted = CountDownLatch(1)
+        val releaseSnapshot = CountDownLatch(1)
+        val snapshotFinished = CountDownLatch(1)
+        val blockingExecutor = TestingExecutors.newFixedThreadPool(1)
+        val service = FieldServiceReplanService(
+            planner = DeterministicFieldServicePlanner(),
+            snapshot = { aggregateId ->
+                if (aggregateId.value == "aggregate-lease") {
+                    snapshotStarted.countDown()
+                    try {
+                        releaseSnapshot.await(5, TimeUnit.SECONDS)
+                    } finally {
+                        snapshotFinished.countDown()
+                    }
+                }
+                emptyInput(aggregateId)
+            },
+            executor = boundedCpuExecutor(),
+            timeout = Duration.ofSeconds(2),
+            blockingExecutor = blockingExecutor,
+        )
+
+        try {
+            val first = service.requestReplan(AggregateId("aggregate-lease")) as ReplanAdmission.Accepted
+            snapshotStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
+
+            first.future.cancel(false).shouldBeTrue()
+            snapshotFinished.await(100, TimeUnit.MILLISECONDS).shouldBeEqualTo(false)
+
+            service.requestReplan(AggregateId("aggregate-lease-next")) as ReplanAdmission.Accepted
+            service.requestReplan(AggregateId("aggregate-lease-overflow")) shouldBeEqualTo
+                ReplanAdmission.Rejected("REPLAN_REJECTED")
+
+            releaseSnapshot.countDown()
+            snapshotFinished.await(5, TimeUnit.SECONDS).shouldBeTrue()
+        } finally {
+            releaseSnapshot.countDown()
+            service.close()
+        }
+    }
+
+    @Test
     fun `closing the service cancels a blocked snapshot and rejects new admissions`() {
         val snapshotStarted = CountDownLatch(1)
         val snapshotFinished = CountDownLatch(1)

@@ -22,6 +22,7 @@ import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -56,7 +57,14 @@ class FieldServiceReplanService(
             task.cancelStages(it)
             cleanup(aggregateId, task)
         }
-        val snapshotTask = object : FutureTask<PlannerInput>(Callable { snapshot(aggregateId) }) {
+        val snapshotTask = object : FutureTask<PlannerInput>(Callable {
+            task.stageStarted()
+            try {
+                snapshot(aggregateId)
+            } finally {
+                task.stageFinished()
+            }
+        }) {
             override fun done() {
                 if (result.isDone) {
                     cleanup(aggregateId, task)
@@ -64,7 +72,14 @@ class FieldServiceReplanService(
                 }
                 try {
                     val input = get()
-                    val planningTask = object : FutureTask<PlanProposal>(Callable { planner.plan(input) }) {
+                    val planningTask = object : FutureTask<PlanProposal>(Callable {
+                        task.stageStarted()
+                        try {
+                            planner.plan(input)
+                        } finally {
+                            task.stageFinished()
+                        }
+                    }) {
                         override fun done() {
                             if (result.isDone) {
                                 cleanup(aggregateId, task)
@@ -169,7 +184,7 @@ class FieldServiceReplanService(
     private fun cleanup(aggregateId: AggregateId, task: ReplanTask) {
         tasks.remove(aggregateId, task)
         flights.remove(aggregateId, task.result)
-        task.releasePermit()
+        task.requestCleanup()
     }
 
     private fun unwrap(failure: Throwable): Throwable =
@@ -183,14 +198,32 @@ class FieldServiceReplanService(
         @Volatile
         var plannerTask: FutureTask<PlanProposal>? = null
 
+        /** Future 취소와 실제 Callable 종료를 분리해 실행 중인 stage가 permit을 선점하도록 유지합니다. */
+        private val runningStages = AtomicInteger(0)
+        private val cleanupRequested = AtomicBoolean(false)
         private val permitReleased = AtomicBoolean(false)
+
+        fun stageStarted() {
+            runningStages.incrementAndGet()
+        }
+
+        fun stageFinished() {
+            if (runningStages.decrementAndGet() == 0 && cleanupRequested.get()) {
+                releasePermit()
+            }
+        }
 
         fun cancelStages(mayInterruptIfRunning: Boolean = true) {
             plannerTask?.cancel(mayInterruptIfRunning)
             snapshotTask.cancel(mayInterruptIfRunning)
         }
 
-        fun releasePermit() {
+        fun requestCleanup() {
+            cleanupRequested.set(true)
+            if (runningStages.get() == 0) releasePermit()
+        }
+
+        private fun releasePermit() {
             if (permitReleased.compareAndSet(false, true)) {
                 plannerPermits.release()
             }
