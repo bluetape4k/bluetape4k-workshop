@@ -239,8 +239,15 @@ internal class KtorJobConsoleLiveAdapter private constructor(
 
                 else -> ""
             }
+            val retrySummary = application.http.retrySummary()
+            val retryStatusEvidence = retrySummary.statusCounts.entries
+                .joinToString(separator = ";") { (status, count) -> "$status:$count" }
             "hikari=true,maxPool=${application.dataSource.maximumPoolSize}," +
-                "redisProxy=${application.redisUri == topology.redisUri}$actionEvidence"
+                "redisProxy=${application.redisUri == topology.redisUri}," +
+                "retryRequests=${retrySummary.requestCount}," +
+                "retryCount=${retrySummary.retryCount}," +
+                "retryStatusCounts=$retryStatusEvidence," +
+                "retryDelayMillis=${retrySummary.cumulativeDelay.toMillis()}$actionEvidence"
         }
 
     override fun assertProfileInvariants(delta: JobConsoleAuthorityBaseline) {
@@ -843,7 +850,50 @@ private class RunningKtorJobConsole(
 internal class KtorJobConsoleHttpSnapshot(
     val jobId: UUID,
     val state: String,
+    val retryAttempts: Int = 0,
+    val retryStatuses: List<Int> = emptyList(),
+    val retryDelay: Duration = Duration.ZERO,
 )
+
+internal data class KtorJobConsoleRetrySummary(
+    val requestCount: Int,
+    val retryCount: Int,
+    val statusCounts: Map<Int, Int>,
+    val cumulativeDelay: Duration,
+)
+
+private data class KtorJobConsoleHttpResult(
+    val response: HttpResponse<String>,
+    val retryAttempts: Int,
+    val retryStatuses: List<Int>,
+    val retryDelay: Duration,
+)
+
+private class KtorJobConsoleRetryAccumulator {
+    private var requestCount: Int = 0
+    private var retryCount: Int = 0
+    private val statusCounts: MutableMap<Int, Int> = mutableMapOf()
+    private var cumulativeDelay: Duration = Duration.ZERO
+
+    @Synchronized
+    fun record(result: KtorJobConsoleHttpResult) {
+        requestCount++
+        retryCount += result.retryAttempts
+        result.retryStatuses
+            .filter { it in KtorJobConsoleHttpClient.RETRYABLE_SUBMISSION_STATUSES }
+            .forEach { status -> statusCounts[status] = statusCounts.getOrDefault(status, 0) + 1 }
+        cumulativeDelay = cumulativeDelay.plus(result.retryDelay)
+    }
+
+    @Synchronized
+    fun snapshot(): KtorJobConsoleRetrySummary =
+        KtorJobConsoleRetrySummary(
+            requestCount = requestCount,
+            retryCount = retryCount,
+            statusCounts = statusCounts.toSortedMap(),
+            cumulativeDelay = cumulativeDelay,
+        )
+}
 
 internal class KtorJobConsoleHttpClient(
     private val baseUri: URI,
@@ -854,6 +904,9 @@ internal class KtorJobConsoleHttpClient(
     private val sendRequest: ((HttpRequest) -> HttpResponse<String>)? = null,
     private val delay: (Duration) -> Unit = { duration -> Thread.sleep(duration.toMillis()) },
 ) {
+    private val retryAccumulator = KtorJobConsoleRetryAccumulator()
+
+    internal fun retrySummary(): KtorJobConsoleRetrySummary = retryAccumulator.snapshot()
 
     fun submit(scenario: JobConsoleScenario): KtorJobConsoleHttpSnapshot =
         request(
@@ -914,8 +967,10 @@ internal class KtorJobConsoleHttpClient(
         idempotencyKey: String? = null,
         expectedStatus: Int,
         retryOnTransientSubmissionFailure: Boolean = false,
-    ): HttpResponse<String> {
+    ): KtorJobConsoleHttpResult {
         var attempt = 0
+        var cumulativeDelay = Duration.ZERO
+        val statuses = ArrayList<Int>(MAX_SUBMISSION_RETRIES + 1)
         while (true) {
             val builder = requestBuilder(path, scenario)
             idempotencyKey?.let { builder.header("Idempotency-Key", it) }
@@ -928,17 +983,29 @@ internal class KtorJobConsoleHttpClient(
             val request = builder.build()
             val response = sendRequest?.invoke(request)
                 ?: client.send(request, HttpResponse.BodyHandlers.ofString())
+            statuses += response.statusCode()
             if (retryOnTransientSubmissionFailure &&
                 response.statusCode() in RETRYABLE_SUBMISSION_STATUSES &&
                 attempt < MAX_SUBMISSION_RETRIES
             ) {
                 attempt++
-                delay(response.retryAfter())
+                val retryDelay = response.retryAfter()
+                cumulativeDelay = cumulativeDelay.plus(retryDelay)
+                delay(retryDelay)
                 continue
             }
-            return response.also {
-                check(it.statusCode() == expectedStatus) {
-                    "Ktor HTTP $method $path returned ${it.statusCode()}: ${it.body()}"
+            val result = KtorJobConsoleHttpResult(
+                response = response,
+                retryAttempts = attempt,
+                retryStatuses = statuses.toList(),
+                retryDelay = cumulativeDelay,
+            )
+            if (retryOnTransientSubmissionFailure) {
+                retryAccumulator.record(result)
+            }
+            return result.also {
+                check(it.response.statusCode() == expectedStatus) {
+                    "Ktor HTTP $method $path returned ${it.response.statusCode()}: ${it.response.body()}"
                 }
             }
         }
@@ -968,15 +1035,21 @@ internal class KtorJobConsoleHttpClient(
             .header("X-Demo-Tenant", scenario.scope.tenantId)
             .header("X-Demo-Submitter", scenario.scope.submitterHash)
 
-    private fun HttpResponse<String>.toSnapshot(): KtorJobConsoleHttpSnapshot {
-        val jobId = JOB_ID.find(body())?.groupValues?.get(1)
+    private fun KtorJobConsoleHttpResult.toSnapshot(): KtorJobConsoleHttpSnapshot {
+        val jobId = JOB_ID.find(response.body())?.groupValues?.get(1)
             ?: error("Ktor response omitted jobId")
-        val state = STATE.find(body())?.groupValues?.get(1)
+        val state = STATE.find(response.body())?.groupValues?.get(1)
             ?: error("Ktor response omitted state")
-        return KtorJobConsoleHttpSnapshot(UUID.fromString(jobId), state)
+        return KtorJobConsoleHttpSnapshot(
+            jobId = UUID.fromString(jobId),
+            state = state,
+            retryAttempts = retryAttempts,
+            retryStatuses = retryStatuses,
+            retryDelay = retryDelay,
+        )
     }
 
-    private companion object {
+    internal companion object {
         const val TOO_MANY_REQUESTS = 429
         const val SERVICE_UNAVAILABLE = 503
         const val MAX_SUBMISSION_RETRIES = 8
