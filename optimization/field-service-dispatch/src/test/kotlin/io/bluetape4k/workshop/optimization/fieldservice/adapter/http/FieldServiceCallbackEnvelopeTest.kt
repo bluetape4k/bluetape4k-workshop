@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.optimization.fieldservice.adapter.http
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.junit5.concurrency.TestingExecutors
 import io.bluetape4k.workshop.optimization.fieldservice.adapter.fake.FieldServicePlanningFixture
 import io.bluetape4k.workshop.optimization.fieldservice.adapter.fake.FieldServicePlanningFixtureMetadata
 import io.bluetape4k.workshop.optimization.fieldservice.domain.ConstraintReasonCode
@@ -12,9 +14,10 @@ import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.ProviderRequestId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.VersionVector
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.Executors
+import java.util.concurrent.Callable
+import java.util.concurrent.CyclicBarrier
+import java.util.concurrent.TimeUnit
 
 class FieldServiceCallbackEnvelopeTest {
     private val canonicalizer = FieldServiceCanonicalizer()
@@ -31,20 +34,20 @@ class FieldServiceCallbackEnvelopeTest {
 
     @Test
     fun `strict parser rejects unknown fields and provider text leakage`() {
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             FieldServiceCallbackEnvelope.parse(successBody(extraField = ",\"unknown\":true"))
         }
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             FieldServiceCallbackEnvelope.parse(
                 """{"provider":"FAKE","eventId":"event-1","planningRequestId":"request-1","providerRequestId":"provider-request","providerRevision":1,"requestGeneration":1,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":0,"softScore":0,"assignedCount":0,"unassignedCount":0,"secret":"token=abc"},"constraintExplanations":[]}""".toByteArray(),
             )
         }
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             FieldServiceCallbackEnvelope.parse(
                 """{"provider":"FAKE","eventId":"event-1","planningRequestId":"request-1","providerRequestId":"provider-request","providerRevision":1,"requestGeneration":1,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":0,"softScore":0,"assignedCount":0,"unassignedCount":0},"constraintExplanations":[{"visitId":"visit-1","reason":"raw provider address"}]}""".toByteArray(),
             )
         }
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             FieldServiceCallbackEnvelope.parse(
                 """{"provider":"FAKE","eventId":"event-1","planningRequestId":"request-1","providerRequestId":"provider-request","providerRevision":1,"requestGeneration":1,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":0,"softScore":0,"assignedCount":0,"unassignedCount":NaN},"constraintExplanations":[]}""".toByteArray(),
             )
@@ -151,19 +154,30 @@ class FieldServiceCallbackEnvelopeTest {
         val adapter = adapter(state)
         val body = successBody()
         val envelope = FieldServiceCallbackEnvelope.parse(body)
-        val executor = Executors.newFixedThreadPool(2)
+        val startGate = CyclicBarrier(2)
+        val executor = TestingExecutors.newFixedThreadPool(2)
         try {
-            val results = (1..2).map {
-                executor.submit<FieldServiceCallbackDecision> {
+            val tasks = (1..2).map {
+                Callable {
+                    startGate.await(CALLBACK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                     adapter.acceptCallback(envelope, body, sign(body)).decision
                 }
-            }.map { it.get() }
+            }
+            val results = executor.invokeAll(tasks, CALLBACK_TIMEOUT_SECONDS, TimeUnit.SECONDS).map { future ->
+                future.isDone.shouldBeTrue()
+                future.isCancelled.shouldBeFalse()
+                future.get(CALLBACK_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            }
 
             results.count { it == FieldServiceCallbackDecision.ACCEPTED } shouldBeEqualTo 1
             results.count { it == FieldServiceCallbackDecision.DUPLICATE } shouldBeEqualTo 1
             state.acceptedCount() shouldBeEqualTo 1
         } finally {
-            executor.shutdownNow()
+            executor.shutdown()
+            if (!executor.awaitTermination(TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                executor.shutdownNow()
+                executor.awaitTermination(TERMINATION_TIMEOUT_SECONDS, TimeUnit.SECONDS).shouldBeTrue()
+            }
         }
     }
 
@@ -241,4 +255,9 @@ class FieldServiceCallbackEnvelopeTest {
         scoreHardScore: Long = 10,
         extraField: String = "",
     ) = """{"provider":"$provider","eventId":"$eventId","planningRequestId":"request-1","providerRequestId":"$providerRequestId","providerRevision":$providerRevision,"requestGeneration":$requestGeneration,"planId":"plan-1","datasetId":"dataset-1","status":"SUCCEEDED","scoreSummary":{"hardScore":$scoreHardScore,"softScore":-2,"assignedCount":1,"unassignedCount":0},"constraintExplanations":[{"visitId":"visit-1","reason":"TIME_WINDOW"}]$extraField}""".toByteArray()
+
+    companion object {
+        private const val CALLBACK_TIMEOUT_SECONDS = 2L
+        private const val TERMINATION_TIMEOUT_SECONDS = 5L
+    }
 }

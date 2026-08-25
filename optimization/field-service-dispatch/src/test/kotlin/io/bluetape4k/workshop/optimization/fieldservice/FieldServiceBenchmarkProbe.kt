@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.fieldservice
 
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.optimization.fieldservice.domain.AvailabilityWindow
 import io.bluetape4k.workshop.optimization.fieldservice.domain.CoordinateId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.DatasetId
@@ -57,7 +58,7 @@ object FieldServiceBenchmarkProbe {
             }
             """.trimIndent(),
         )
-        check(invariantsPass) { "field-service benchmark invariant failed" }
+        invariantsPass.shouldBeTrue()
         return output
     }
 
