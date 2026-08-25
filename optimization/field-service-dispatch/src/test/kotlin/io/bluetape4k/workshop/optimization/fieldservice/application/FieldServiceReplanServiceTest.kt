@@ -17,6 +17,7 @@ import java.time.Duration
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
+import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -378,6 +379,42 @@ class FieldServiceReplanServiceTest {
             }
         } finally {
             releasePlanner.countDown()
+            service.close()
+        }
+    }
+
+    @Test
+    fun `rejected blocking snapshot releases its admission lease`() {
+        val rejectFirst = AtomicBoolean(true)
+        val blockingExecutor = object : ThreadPoolExecutor(
+            1,
+            1,
+            0L,
+            TimeUnit.MILLISECONDS,
+            ArrayBlockingQueue(1),
+        ) {
+            override fun execute(command: Runnable) {
+                if (rejectFirst.compareAndSet(true, false)) {
+                    throw RejectedExecutionException("synthetic blocking rejection")
+                }
+                super.execute(command)
+            }
+        }
+        val service = FieldServiceReplanService(
+            planner = DeterministicFieldServicePlanner(),
+            snapshot = ::emptyInput,
+            executor = boundedCpuExecutor(),
+            timeout = Duration.ofSeconds(2),
+            blockingExecutor = blockingExecutor,
+        )
+
+        try {
+            service.requestReplan(AggregateId("aggregate-blocking-rejected")) shouldBeEqualTo
+                ReplanAdmission.Rejected("REPLAN_REJECTED")
+            val accepted = service.requestReplan(AggregateId("aggregate-blocking-next"))
+                as ReplanAdmission.Accepted
+            service.await(accepted).shouldNotBeNull()
+        } finally {
             service.close()
         }
     }
