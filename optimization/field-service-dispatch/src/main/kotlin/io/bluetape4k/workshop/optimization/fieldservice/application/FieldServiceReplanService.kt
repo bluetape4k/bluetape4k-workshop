@@ -113,9 +113,10 @@ class FieldServiceReplanService(
                         try {
                             executor.execute(planningTask)
                         } catch (rejected: RejectedExecutionException) {
-                            result.completeExceptionally(rejected)
-                            task.cancelStages()
+                            // The planner task was never accepted, so cancel its lease before exposing the failure.
+                            task.plannerLease?.cancel()
                             cleanup(aggregateId, task)
+                            result.completeExceptionally(rejected)
                         }
                     }
                 } catch (failure: Throwable) {
