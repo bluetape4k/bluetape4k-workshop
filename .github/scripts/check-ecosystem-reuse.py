@@ -56,6 +56,7 @@ STATE_TRANSITIONS = {
 ACTIVE_STATES = {"READY", "MERGE_READY"}
 CONTROL_RE = re.compile(r"[\x00-\x1f\x7f]")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+DEPENDENCY_DECLARATION_NAMES = {"build.gradle", "build.gradle.kts", "libs.versions.toml"}
 DEPENDENCY_INSIGHT_RE = re.compile(
     r"^(?:\./gradlew|gradlew)\s+"
     r"(?P<task>(?::[A-Za-z0-9_-]+:)?dependencyInsight)\s+"
@@ -170,7 +171,7 @@ def _candidate_import_tokens(alias: str, resolved_module: str, capability_api: s
 
 
 def _capability_api_tokens(capability_api: str) -> List[str]:
-    if capability_api.startswith("candidate:") or capability_api.startswith("libs."):
+    if capability_api.startswith("candidate:"):
         return []
     ignored = {"value", "collection", "matcher", "candidate", "policy", "boundary", "primitive", "declaration", "runtime", "domain", "and", "or", "or", "test"}
     tokens: List[str] = []
@@ -180,6 +181,11 @@ def _capability_api_tokens(capability_api: str) -> List[str]:
         tokens.append(value)
         tokens.extend(part for part in re.split(r"[.\-/ ]+", value) if len(part) >= 4 and part.lower() not in ignored)
     return sorted(set(tokens), key=len, reverse=True)
+
+
+def _is_dependency_declaration_path(raw: str) -> bool:
+    value = clean_cell(raw)
+    return Path(value).name in DEPENDENCY_DECLARATION_NAMES
 
 
 def _gradle_project_for_row(row: Dict[str, str]) -> str:
@@ -308,6 +314,14 @@ def validate_inventory(root: Path, inventory_path: Path, manifest: Optional[Dict
             errors.append("%s: unknown dependency alias %s" % (prefix, escaped(alias)))
         elif catalog[alias] != resolved_module:
             errors.append("%s: resolved_module does not match dependency alias" % prefix)
+        actual_import = row.get("actual_import", "")
+        capability_api = row.get("capability_api", "")
+        if actual_import != "N/A" and _is_dependency_declaration_path(actual_import):
+            errors.append(
+                "%s: actual_import must point to a source/test file, not a dependency declaration" % prefix
+            )
+        if not capability_api.startswith("candidate:") and capability_api.startswith("libs."):
+            errors.append("%s: capability_api must name an imported API, not a catalog alias" % prefix)
         for column in path_columns:
             try:
                 allow_na = (
@@ -326,7 +340,6 @@ def validate_inventory(root: Path, inventory_path: Path, manifest: Optional[Dict
                         if "bluetape4k" not in source_text:
                             errors.append("%s: actual_import lacks Bluetape import or dependency anchor" % prefix)
                         else:
-                            capability_api = row.get("capability_api", "")
                             import_tokens = _candidate_import_tokens(alias, resolved_module, capability_api)
                             if not any(token in source_text for token in import_tokens):
                                 errors.append("%s: actual_import lacks the declared dependency/API token" % prefix)
@@ -616,11 +629,11 @@ def validate_changed_files(root: Path, paths: Sequence[str]) -> List[str]:
     errors: List[str] = []
     for raw in paths:
         try:
-            file_path = safe_relative_path(root, raw)
+            file_path = safe_relative_path(root, raw, must_exist=False)
         except ValueError as exc:
             errors.append("changed file rejected: %s" % escaped(exc))
             continue
-        if not file_path or file_path.suffix not in {".kts", ".toml"}:
+        if not file_path or not file_path.exists() or file_path.suffix not in {".kts", ".toml"}:
             continue
         text = file_path.read_text(encoding="utf-8")
         if re.search(r"platform\s*\(\s*libs\.bluetape4k\.(?!dependencies\b)[^)]*\)", text):
@@ -633,7 +646,7 @@ def validate_changed_files(root: Path, paths: Sequence[str]) -> List[str]:
 def changed_files_between_refs(root: Path, base_ref: str, head_ref: str) -> Tuple[List[str], List[str]]:
     try:
         result = subprocess.run(
-            ["git", "diff", "--name-only", base_ref, head_ref, "--", "**/build.gradle.kts", "gradle/libs.versions.toml"],
+            ["git", "diff", "--name-only", base_ref, head_ref],
             cwd=root,
             check=True,
             capture_output=True,
@@ -642,6 +655,80 @@ def changed_files_between_refs(root: Path, base_ref: str, head_ref: str) -> Tupl
     except (OSError, subprocess.CalledProcessError) as exc:
         return [], ["changed-file diff could not be resolved: %s" % escaped(exc)]
     return [line for line in result.stdout.splitlines() if line.strip()], []
+
+
+def _normalise_ref(value: str) -> str:
+    normalised = clean_cell(value)
+    for prefix in ("refs/heads/", "origin/"):
+        if normalised.startswith(prefix):
+            normalised = normalised[len(prefix):]
+    return normalised
+
+
+def _path_matches_allowed(path: str, allowed_path: str) -> bool:
+    path = clean_cell(path)
+    allowed = clean_cell(allowed_path)
+    if allowed.endswith("/**"):
+        prefix = allowed[:-3].rstrip("/")
+        return path == prefix or path.startswith(prefix + "/")
+    return path == allowed
+
+
+def validate_train_scope(
+    manifest: Dict[str, object],
+    changed_paths: Sequence[str],
+    *,
+    base_ref_name: str,
+    head_ref_name: str,
+    base_oid: str,
+    head_oid: str,
+) -> List[str]:
+    """Bind a pull-request diff to one manifest node and its exact refs/OIDs."""
+    errors: List[str] = []
+    if not changed_paths:
+        return ["PR scope requires at least one changed path"]
+    for label, oid in (("base_oid", base_oid), ("head_oid", head_oid)):
+        if not SHA_RE.fullmatch(str(oid or "")):
+            errors.append("%s must be a 40-hex SHA" % label)
+    if not clean_cell(base_ref_name):
+        errors.append("base_ref_name is required for PR scope")
+    if not clean_cell(head_ref_name):
+        errors.append("head_ref_name is required for PR scope")
+    nodes = manifest_nodes(manifest)
+    matching_tracks = []
+    for track, node in nodes.items():
+        allowed_paths = node.get("allowed_paths", [])
+        if isinstance(allowed_paths, list) and all(
+            any(_path_matches_allowed(path, str(allowed)) for allowed in allowed_paths)
+            for path in changed_paths
+        ):
+            matching_tracks.append(track)
+    if len(matching_tracks) != 1:
+        errors.append(
+            "PR changed paths must map to exactly one manifest track (found %d)" % len(matching_tracks)
+        )
+        return errors
+    track = matching_tracks[0]
+    node = nodes[track]
+    expected_base = _normalise_ref(str(node.get("expected_base_ref", "")))
+    expected_head = _normalise_ref(str(node.get("expected_head_ref", "")))
+    actual_base = _normalise_ref(base_ref_name)
+    actual_head = _normalise_ref(head_ref_name)
+    if actual_base != expected_base:
+        errors.append(
+            "%s: expected_base_ref %s but PR base ref is %s" %
+            (track, escaped(expected_base), escaped(actual_base))
+        )
+    if actual_head != expected_head:
+        errors.append(
+            "%s: expected_head_ref %s but PR head ref is %s" %
+            (track, escaped(expected_head), escaped(actual_head))
+        )
+    for label, supplied in (("base_oid", base_oid), ("head_oid", head_oid)):
+        recorded = node.get(label)
+        if recorded not in (None, "") and recorded != supplied:
+            errors.append("%s: %s does not match the manifest recorded OID" % (track, label))
+    return errors
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -655,6 +742,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--changed-file", action="append", default=[])
     parser.add_argument("--base-ref")
     parser.add_argument("--head-ref")
+    parser.add_argument("--pr-scope", action="store_true")
+    parser.add_argument("--base-ref-name")
+    parser.add_argument("--head-ref-name")
     args = parser.parse_args(argv)
     root = repo_root()
     errors: List[str] = []
@@ -678,6 +768,21 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         diff_paths, diff_errors = changed_files_between_refs(root, args.base_ref, args.head_ref)
         errors.extend(diff_errors)
         changed_files.extend(diff_paths)
+    scope_args = (args.base_ref_name, args.head_ref_name, args.base_ref, args.head_ref)
+    if args.pr_scope:
+        if not args.manifest or manifest_data is None:
+            errors.append("--pr-scope requires a readable --manifest")
+        elif not all(scope_args):
+            errors.append("--pr-scope requires base/head ref names and OIDs")
+        else:
+            errors.extend(validate_train_scope(
+                manifest_data,
+                changed_files,
+                base_ref_name=args.base_ref_name,
+                head_ref_name=args.head_ref_name,
+                base_oid=args.base_ref,
+                head_oid=args.head_ref,
+            ))
     errors.extend(validate_changed_files(root, changed_files))
     if errors:
         for error in sorted(set(errors)):

@@ -172,7 +172,7 @@ alias·API·assertion·fallback 이유가 없는 변경은 child PR의 acceptanc
 
 | 항목 | 필수 내용 |
 |---|---|
-| Capability | `bluetape4k` alias, 실제 import/API와 선택 이유. inventory의 `actual_import`는 dependency/API token과 `capability_api` token을 모두 증명해야 하며, 현재 도입 전이면 `actual_import=N/A` + `capability_api=candidate: ...`를 사용한다. |
+| Capability | `bluetape4k` alias, 실제 import/API와 선택 이유. inventory의 `actual_import`는 source/test 파일에서 dependency token과 `capability_api` token을 모두 증명해야 하며, dependency declaration만 있거나 현재 도입 전이면 `actual_import=N/A` + `capability_api=candidate: ...`를 사용한다. `libs.*` catalog alias는 API 사용 증거로 인정하지 않는다. |
 | Source anchor | 변경 파일과 심볼 또는 line anchor |
 | Test anchor | 성공·실패·경계·수명주기/동시성 테스트 |
 | Bluetape anchor | released capability는 현재 repository의 실제 adoption import/test anchor와 resolved coordinate를 기록하고, fallback 분류는 upstream anchor를 `N/A`로 둘 수 있다. 모든 행은 local source/test anchor를 유지한다. |

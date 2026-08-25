@@ -61,10 +61,12 @@
         "docs/coverage-matrix.md",
         "docs/ecosystem-reuse-inventory.md",
         "docs/ecosystem-reuse-train.json",
+        "docs/lessons/2026-08-25-ecosystem-reuse-gate-contracts.md",
         "docs/governance/github-action-pins.json",
         ".github/scripts/check-ecosystem-reuse.py",
         ".github/scripts/test_check_ecosystem_reuse.py",
         ".github/workflows/ecosystem-reuse-gate.yml",
+        ".github/workflows/Examples.yml",
         "docs/review/2026-08-25-ecosystem-reuse-epic-design-plan-review.md"
       ],
       "gradle_tasks": [

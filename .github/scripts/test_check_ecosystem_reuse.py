@@ -76,9 +76,9 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         tracks = ["P0", "A1", "A2", "F1", "F2", "R1", "R2", "T1", "I1"]
         nodes = []
         for track in tracks:
-            paths = ["src/%s" % track]
+            paths = ["src/%s/**" % track]
             if overlap and track == "A1":
-                paths = ["src/P0"]
+                paths = ["src/P0/**"]
             review_path = "docs/review/%s-7tier.md" % track
             paths.append(review_path)
             nodes.append({
@@ -141,6 +141,30 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
             self.inventory([self.row(capability_api="missingBluetapeMatcher")]),
         )
         self.assertTrue(any("exact capability_api token" in error for error in errors))
+
+    def test_released_actual_import_must_not_be_a_dependency_declaration(self):
+        build_path = self.root / "src/build.gradle.kts"
+        build_path.write_text(
+            "dependencies { implementation(libs.bluetape4k.assertions) }\n",
+            encoding="utf-8",
+        )
+        errors = CHECKER.validate_inventory(
+            self.root,
+            self.inventory([
+                self.row(
+                    actual_import="src/build.gradle.kts",
+                    capability_api="libs.bluetape4k.assertions",
+                )
+            ]),
+        )
+        self.assertTrue(any("source/test file" in error for error in errors))
+
+    def test_released_capability_api_must_not_be_a_catalog_alias(self):
+        errors = CHECKER.validate_inventory(
+            self.root,
+            self.inventory([self.row(capability_api="libs.bluetape4k.assertions")]),
+        )
+        self.assertTrue(any("catalog alias" in error for error in errors))
 
     def test_missing_current_import_is_explicit_candidate_only(self):
         errors = CHECKER.validate_inventory(
@@ -436,6 +460,57 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         build.write_text("dependencies { implementation(platform(libs.bluetape4k.graph.bom)) }\n", encoding="utf-8")
         errors = CHECKER.validate_changed_files(self.root, ["sample.gradle.kts"])
         self.assertTrue(any("individual Bluetape BOM" in error for error in errors))
+
+    def test_train_scope_accepts_exact_node_and_refs(self):
+        manifest = self.manifest()
+        errors = CHECKER.validate_train_scope(
+            manifest,
+            ["src/A1/Changed.kt", "docs/review/A1-7tier.md"],
+            base_ref_name="develop",
+            head_ref_name="branch/A1",
+            base_oid="b" * 40,
+            head_oid="a" * 40,
+        )
+        self.assertEqual([], errors)
+
+    def test_train_scope_rejects_paths_outside_one_node(self):
+        errors = CHECKER.validate_train_scope(
+            self.manifest(),
+            ["src/A1/Changed.kt", "src/P0/Changed.kt"],
+            base_ref_name="develop",
+            head_ref_name="branch/A1",
+            base_oid="b" * 40,
+            head_oid="a" * 40,
+        )
+        self.assertTrue(any("exactly one manifest track" in error for error in errors))
+
+    def test_train_scope_rejects_wrong_refs_and_oids(self):
+        manifest = self.manifest()
+        manifest["nodes"][1]["base_oid"] = "b" * 40
+        manifest["nodes"][1]["head_oid"] = "a" * 40
+        errors = CHECKER.validate_train_scope(
+            manifest,
+            ["src/A1/Changed.kt"],
+            base_ref_name="feature/base",
+            head_ref_name="branch/P0",
+            base_oid="c" * 40,
+            head_oid="d" * 40,
+        )
+        self.assertTrue(any("expected_base_ref" in error for error in errors))
+        self.assertTrue(any("expected_head_ref" in error for error in errors))
+        self.assertTrue(any("base_oid" in error for error in errors))
+        self.assertTrue(any("head_oid" in error for error in errors))
+
+    def test_train_scope_requires_sha_oids(self):
+        errors = CHECKER.validate_train_scope(
+            self.manifest(),
+            ["src/A1/Changed.kt"],
+            base_ref_name="develop",
+            head_ref_name="branch/A1",
+            base_oid="not-a-sha",
+            head_oid="a" * 40,
+        )
+        self.assertTrue(any("base_oid must be a 40-hex SHA" in error for error in errors))
 
 
 if __name__ == "__main__":
