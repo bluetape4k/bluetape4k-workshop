@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.usagebilling.composition
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.workshop.commerce.usagebilling.composition.fixture.UsageBillingMicroserviceFixture
+import io.bluetape4k.workshop.shared.messaging.KafkaRecoveryConformanceFixture
 import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -46,6 +47,11 @@ class UsageBillingMicroserviceCompositionIntegrationTest {
             await().during(Duration.ofSeconds(2)).atMost(TIMEOUT).untilAsserted {
                 fixture.chargeCount() shouldBeEqualTo 1L
             }
+            KafkaRecoveryConformanceFixture(TIMEOUT).assertDedupBoundary(
+                logicalEventIds = setOf(DUPLICATE_SOURCE_EVENT_ID),
+                deliveredEventIds = listOf(DUPLICATE_SOURCE_EVENT_ID, DUPLICATE_SOURCE_EVENT_ID),
+                appliedEventIds = setOf(DUPLICATE_SOURCE_EVENT_ID),
+            )
         }
     }
 

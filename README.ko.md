@@ -116,7 +116,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 
 ### 3. 직렬화 & 메시징
 
-> Jackson 3, JsonView, Kafka, Kafka Reply, Outbox fallback
+> Jackson 3, JsonView, Kafka, Kafka Reply, Outbox fallback, multi-broker failover
 
 | 수준 | 모듈 | bluetape4k 라이브러리 | 인프라 | 학습 목표 |
 |------|------|----------------------|-------|-----------|
@@ -125,11 +125,13 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Basic | [`messaging-kafka`](messaging/kafka/) | `jackson3`, `coroutines`, `testcontainers` | Kafka (TC) | 코루틴을 활용한 Kafka 프로듀서/컨슈머 |
 | Advanced | [`messaging-kafka-reply`](messaging/kafka-reply/) | `jackson3`, `coroutines`, `testcontainers` | Kafka (TC) | `ReplyingKafkaTemplate`을 활용한 Kafka 요청-응답 패턴 |
 | Advanced | [`messaging-kafka-outbox-fallback`](messaging/kafka-outbox-fallback/) | `jackson3`, `exposed-jdbc`, `testcontainers`, `micrometer` | PostgreSQL + Kafka (TC) | Kafka 직접 발행과 durable outbox fallback, relay/reconciler 복구 패턴 |
+| Advanced | [`messaging-kafka-multi-broker-failover`](messaging/kafka-multi-broker-failover/) | `jackson3`, `kafka4`, `testcontainers` | Kafka (3-node KRaft TC) | Leader/coordinator failover, replica/ISR 복구, redacted evidence |
 
 ```bash
 ./gradlew :jackson-examples:test
 ./gradlew :messaging-kafka:test
 ./gradlew :messaging-kafka-outbox-fallback:test --max-workers=1
+./gradlew :messaging-kafka-multi-broker-failover:test --tests '*KafkaMultiBrokerFailoverIntegrationTest.dataLeaderFailover' --max-workers=1
 ```
 
 ---
@@ -299,6 +301,7 @@ bluetape4k-workshop/
 ├── kotlin/                 # 코루틴, 디자인 패턴
 ├── leader/                 # 분산 리더 선출
 ├── messaging/              # Kafka
+│   └── kafka-multi-broker-failover/ # 3-broker KRaft failover reference
 ├── observability/          # Micrometer Observation + Tracing
 ├── optimization/           # Java 25 planning/optimization 계약
 ├── operations/             # 내구성 작업 콘솔 core + Spring MVC/Ktor 어댑터

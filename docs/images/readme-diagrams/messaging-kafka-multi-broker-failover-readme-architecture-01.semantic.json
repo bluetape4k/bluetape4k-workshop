@@ -1,0 +1,40 @@
+{
+  "kind": "architecture",
+  "source": {
+    "question": "How does the Kafka failover reference keep the three-broker KRaft topology, host listener boundary, and redacted evidence independently verifiable?",
+    "revision": "feat/kafka-multi-broker-failover",
+    "paths": [
+      "messaging/kafka-multi-broker-failover/src/test/kotlin/io/bluetape4k/workshop/messaging/kafka/multibroker/failover/fixture/KafkaFailoverTopology.kt",
+      "messaging/kafka-multi-broker-failover/src/test/kotlin/io/bluetape4k/workshop/messaging/kafka/multibroker/failover/fixture/KafkaFailoverClusterFixture.kt",
+      "messaging/kafka-multi-broker-failover/src/test/kotlin/io/bluetape4k/workshop/messaging/kafka/multibroker/failover/fixture/KafkaFailoverEvidence.kt",
+      "messaging/kafka-multi-broker-failover/README.md"
+    ]
+  },
+  "nodes": [
+    {"id":"harness","label":"Integration harness","source":"KafkaMultiBrokerFailoverIntegrationTest.kt"},
+    {"id":"clients","label":"Explicit Kafka clients","source":"KafkaFailoverClientFactory.kt"},
+    {"id":"contracts","label":"Evidence contracts","source":"KafkaFailoverEvidence.kt"},
+    {"id":"broker-1","label":"Broker 1 / kafka-1","source":"KafkaFailoverTopology.kt"},
+    {"id":"broker-2","label":"Broker 2 / kafka-2","source":"KafkaFailoverTopology.kt"},
+    {"id":"broker-3","label":"Broker 3 / kafka-3","source":"KafkaFailoverTopology.kt"},
+    {"id":"topic","label":"Reference topic RF=3","source":"KafkaFailoverTopology.kt"},
+    {"id":"evidence","label":"Sanitized JSONL","source":"KafkaFailoverEvidenceWriter.kt"},
+    {"id":"conformance","label":"Black-box conformance","source":"KafkaRecoveryConformanceFixture.kt"}
+  ],
+  "edges": [
+    {"id":"harness-clients","from":"harness","to":"clients","kind":"start","source":"KafkaMultiBrokerFailoverIntegrationTest.kt"},
+    {"id":"clients-brokers","from":"clients","to":"broker-1","kind":"loopback","source":"KafkaFailoverClusterFixture.kt"},
+    {"id":"clients-broker-2","from":"clients","to":"broker-2","kind":"loopback","source":"KafkaFailoverClusterFixture.kt"},
+    {"id":"clients-broker-3","from":"clients","to":"broker-3","kind":"loopback","source":"KafkaFailoverClusterFixture.kt"},
+    {"id":"broker-1-topic","from":"broker-1","to":"topic","kind":"replica","source":"KafkaFailoverTopology.kt"},
+    {"id":"broker-2-topic","from":"broker-2","to":"topic","kind":"replica","source":"KafkaFailoverTopology.kt"},
+    {"id":"broker-3-topic","from":"broker-3","to":"topic","kind":"replica","source":"KafkaFailoverTopology.kt"},
+    {"id":"topic-evidence","from":"topic","to":"evidence","kind":"observation","source":"KafkaFailoverEvidenceWriter.kt"},
+    {"id":"evidence-conformance","from":"evidence","to":"conformance","kind":"contract","source":"KafkaRecoveryConformanceFixture.kt"}
+  ],
+  "behavior": {"branches": 2, "loops": 1},
+  "repairs": [
+    {"target":"listener boundary","reason":"Keep broker/controller listeners inside the network while showing only mapped loopback client traffic.","touches":2},
+    {"target":"evidence boundary","reason":"Show the evidence writer and black-box consumer as separate nodes so redaction and conformance are not conflated.","touches":2}
+  ]
+}

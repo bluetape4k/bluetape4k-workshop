@@ -43,7 +43,7 @@ abstract class AbstractRedissonTest {
                 executor = VirtualThreadExecutor
                 threads = 256
                 nettyThreads = 128
-                codec = RedissonCodecs.LZ4ForyComposite
+                codec = RedissonCodecs.LZ4FastForyComposite
                 setTcpNoDelay(true)
                 setTcpUserTimeout(5000)
             }

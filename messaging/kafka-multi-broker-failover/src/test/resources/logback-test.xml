@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <logger name="io.bluetape4k.workshop.messaging.kafka.multibroker.failover" level="WARN"/>
+    <!-- Kafka 재연결 경고의 임시 host endpoint가 업로드 JUnit 출력에 남지 않도록 숨깁니다. -->
+    <logger name="org.apache.kafka.clients.NetworkClient" level="ERROR"/>
+    <logger name="org.apache.kafka" level="WARN"/>
+    <logger name="org.springframework.kafka" level="WARN"/>
+    <logger name="org.testcontainers" level="WARN"/>
+
+    <root level="WARN">
+        <appender-ref ref="console"/>
+    </root>
+</configuration>

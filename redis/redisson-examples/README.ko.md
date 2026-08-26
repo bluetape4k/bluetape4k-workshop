@@ -12,7 +12,7 @@
 
 ![Redisson Examples runtime](../../docs/images/readme-diagrams/redis-redisson-examples-readme-runtime-01.png)
 
-`AbstractRedissonTest`는 `RedisServer.Launcher.redis`로 Redis를 시작하고, `RedissonCodecs.LZ4ForyComposite`와 `VirtualThreadExecutor`를 사용하는 tuned `RedissonClient`를 만듭니다. 또한 raw Lettuce command로 Redis keyspace notification을 켜고, 각 예제에 재현 가능한 random name을 제공합니다.
+`AbstractRedissonTest`는 `RedisServer.Launcher.redis`로 Redis를 시작하고, `RedissonCodecs.LZ4FastForyComposite`와 `VirtualThreadExecutor`를 사용하는 `RedissonClient`를 만듭니다. 또한 raw Lettuce command로 Redis keyspace notification을 켜고, 각 예제에 재현 가능한 random name을 제공합니다.
 
 ## 예제 범주
 
@@ -73,7 +73,7 @@
 
 | 기능 | 아티팩트 | 코드 위치 | 이점 |
 |---|---|---|---|
-| `RedissonCodecs.LZ4ForyComposite` | `bluetape4k-redisson` | `AbstractRedissonTest` | JSON보다 공간과 속도 특성이 좋은 LZ4 압축 + Fory serialization을 사용합니다 |
+| `RedissonCodecs.LZ4FastForyComposite` | `bluetape4k-redisson` | `AbstractRedissonTest` | 휘발성/cache 예제에서 LZ4 압축 + FastFory serialization을 사용합니다 |
 | `localCachedMap()` | `bluetape4k-redisson` | `LocalCachedMapExamples` | `LocalCachedMapOptions` DSL과 map 생성 호출을 결합해 Near Cache 설정 중복을 줄입니다 |
 | `streamAddArgsOf()` | `bluetape4k-redisson` | `StreamExamples` | Kotlin 친화적인 helper로 Redis Stream append arguments를 만듭니다 |
 | `VirtualThreadExecutor` | `bluetape4k-coroutines` | `AbstractRedissonTest` | Virtual Threads로 Redisson I/O를 처리합니다 |
@@ -85,9 +85,13 @@
 | `SuspendedJobTester` | `bluetape4k-junit5` | `FencedLockExamples` | coroutine race condition을 검증합니다 |
 | `getLockId()` | `bluetape4k-redis` | `FencedLockExamples` | coroutine-safe `RFencedLock` ID를 가져옵니다 |
 
+`FastFory`를 사용하는 클래스는 `SCHEMA_CONSISTENT`를 유지해야 하며 기본
+Fory codec과 wire 호환되지 않습니다. 따라서 이 codec은 폐기 가능한 cache
+데이터에만 사용하고 durable 또는 버전 간 공유 데이터에는 사용하지 않습니다.
+
 ## bluetape4k Before / After
 
-### `RedissonCodecs.LZ4ForyComposite`와 기본 Codec 비교
+### `RedissonCodecs.LZ4FastForyComposite`와 기본 Codec 비교
 
 ```kotlin
 // Before — default JSON serialization (text-based, larger payloads)
@@ -96,7 +100,7 @@ val config = Config().apply {
     codec = JsonJacksonCodec()  // text-based serialization
 }
 
-// After — bluetape4k LZ4ForyComposite (binary compressed serialization)
+// After — bluetape4k LZ4FastForyComposite (binary compressed serialization)
 val config = Config().apply {
     useSingleServer()
         .setAddress(redis.url)
@@ -105,7 +109,7 @@ val config = Config().apply {
     executor = VirtualThreadExecutor          // Virtual Thread I/O
     threads = 256
     nettyThreads = 128
-    codec = RedissonCodecs.LZ4ForyComposite   // LZ4 + Fory binary compression
+    codec = RedissonCodecs.LZ4FastForyComposite   // LZ4 + FastFory binary compression
 }
 ```
 

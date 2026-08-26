@@ -40,7 +40,7 @@ class RedisApplication(
         return RedisTemplate<ByteArray, ByteArray>().apply {
             connectionFactory = factory
             keySerializer = StringRedisSerializer.UTF_8
-            valueSerializer = RedisBinarySerializers.LZ4Fory
+            valueSerializer = RedisBinarySerializers.LZ4FastFory
         }
     }
 
@@ -49,8 +49,8 @@ class RedisApplication(
         val context = redisSerializationContext(RedisSerializer.byteArray()) {
             key(RedisSerializer.byteArray())
             hashKey(RedisSerializer.byteArray())
-            value(RedisBinarySerializers.LZ4Fory)
-            hashValue(RedisBinarySerializers.LZ4Fory)
+            value(RedisBinarySerializers.LZ4FastFory)
+            hashValue(RedisBinarySerializers.LZ4FastFory)
             string(RedisSerializer.string())
         }
         return ReactiveRedisTemplate(factory, context)

@@ -30,7 +30,7 @@ class RedissonClientConfigTest: AbstractRedissonTest() {
 
         config.threads shouldBeEqualTo 256
         config.nettyThreads shouldBeEqualTo 128
-        config.codec shouldBeEqualTo RedissonCodecs.LZ4ForyComposite
+        config.codec shouldBeEqualTo RedissonCodecs.LZ4FastForyComposite
         config.isTcpNoDelay.shouldBeTrue()
         config.tcpUserTimeout shouldBeEqualTo 5000
     }

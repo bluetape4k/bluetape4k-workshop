@@ -48,5 +48,47 @@
 - Independent six-lens P0/P1: 0/0
 - Kotlin pattern traceability: PASS
 - Plan static checks: PASS
-- Implementation/runtime/CI: PENDING (계획 승인 전 미실행)
+- Implementation/runtime/CI: PASS (구현 검토 section의 fresh local evidence 참조)
 - PR/merge/issue close: PENDING (별도 권한/승인 필요)
+
+## 구현 검토 (2026-08-27)
+
+- 검토 대상: 승인된 계획의 현재 feature worktree 구현과 #555 black-box fixture, #577 FastFory 범위 변경
+- 검토 방식: source/read-only six-lens 재검토, fresh module/integration/artifact/README/static evidence 대조
+- 판정: P0=0, P1=0. 동작·증거·문서·CI 경계를 깨는 미해결 차단 항목은 없다.
+
+### 구현 및 런타임 근거
+
+1. `:messaging-kafka-multi-broker-failover:test --max-workers=1 --no-build-cache`가 `SUCCESS: Executed 50 tests`와 `BUILD SUCCESSFUL`을 반환했다.
+2. `KAFKA_FAILOVER_RUN_ID=verification-20260827-558-577-r4`로 lock을 획득한 fresh Testcontainers 실행에서 `data-leader-failover`(29.5초)와 `group-coordinator-failover`(19.9초)가 모두 PASS했다.
+3. r4 `evidence.jsonl`은 두 scenario, 20 rows, 각 row 18 fields이며 terminal은 data leader `applied=8/raw=8/conflict=0/ISR=3`, coordinator `applied=6/raw=10/conflict=0/ISR=3`이다. 두 stream 모두 `status=PASS`이고 run ID가 고정된다.
+4. r4 `performance.jsonl`은 두 terminal row의 12-field schema를 가지며 elapsed/admin round-trip/ack/poll/retry/cleanup/max-buffer counters를 allowlist로 기록한다. broker summary 3개는 승인 digest와 loopback-safe identity만 포함한다.
+5. `validate-kafka-failover-artifacts.sh`는 r4에서 `artifact scan passed: rows=20 scenarios=2 files=14`를 반환했다. 전체 conformance, `--path broker-leader`, `--path broker-coordinator` 검사가 모두 PASS했고, nested staging 입력은 exit 2로 fail-closed 된다.
+6. #555 `BrokerPathRecoveryIntegrationTest`는 fresh rerun에서 `SUCCESS: Executed 1 tests`와 `BUILD SUCCESSFUL`을 반환했으며 shared black-box fixture로 transport/dedup 경계를 검증한다.
+7. `compileTestKotlin` 대상(#555/#558/#577), root `detekt`, README semantic/parity/language, stale-check, diagram-qa, bash/node/shellcheck/actionlint, production forbidden-pattern scan이 모두 PASS했다.
+
+### 렌즈별 결론
+
+| 렌즈 | 결론 | 근거 |
+|---|---|---|
+| Performance | P0/P1=0 | 420초 누적 deadline, phase bounded wait, performance 12-field counter, 50-test/2-scenario fresh runtime |
+| Stability | P0/P1=0 | cancellation/quiescence, replacement rollback, suppressed cleanup, leader/coordinator recovery와 ISR 3 |
+| Security | P0/P1=0 | digest 고정, 단일 RepoDigest, loopback PLAINTEXT만 host 노출, strict codec/canary sanitizer |
+| Operator/Ops | P0/P1=0 | run-scoped JSONL, terminal row, sanitizer-before-upload, `if-no-files-found: error`, lock/stale fail-closed |
+| Developer/API | P0/P1=0 | `src/main` Testcontainers 부재, immutable explicit clients, 자동 module registration, shared fixture black-box 경계 |
+| User/Caller | P0/P1=0 | 양 locale README semantic parity, unsupported 범위/runbook, validation matrix와 smoke/stale registration |
+
+### 잔여 리스크와 concrete N/A
+
+- 원격 PR CI, exact-head hosted review, PR 생성/merge, issue close는 별도 권한이므로 실행하지 않았다.
+- 새 module에는 repository convention상 독립 `detekt`/`kover` task가 생성되지 않아 root detekt와 compile/test evidence로 대체했다. benchmark/Exposed/HTTP/production coroutine API가 없으므로 해당 Kotlin checklist 항목은 concrete N/A다.
+- repo-wide diagram pair audit의 기존 unrelated baseline mismatch는 이번 module asset과 무관하며 새 module의 semantic/visual/connector/endpoint/mixed-corner 검사는 모두 failures=0이다.
+
+## 구현 DoD Status
+
+- 계획 및 구현 항목 1–11: 완료 (fresh local evidence 확보)
+- Kotlin pattern/checklist: PASS, concrete N/A 기록
+- Runtime/integration/evidence/sanitizer/conformance: PASS
+- README/CI/nightly/smoke/stale/diagram: PASS
+- P0/P1: `0/0`
+- PR/remote exact-head/merge/issue close: `PENDING` (명시적 후속 승인 필요)

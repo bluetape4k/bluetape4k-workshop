@@ -12,7 +12,7 @@ This module is a test-backed catalog of [Redisson](https://redisson.org/) featur
 
 ![Redisson Examples runtime](../../docs/images/readme-diagrams/redis-redisson-examples-readme-runtime-01.png)
 
-`AbstractRedissonTest` starts Redis with `RedisServer.Launcher.redis`, creates a tuned `RedissonClient` with `RedissonCodecs.LZ4ForyComposite` and `VirtualThreadExecutor`, enables Redis keyspace notifications through raw Lettuce commands, and gives each example reproducible random names.
+`AbstractRedissonTest` starts Redis with `RedisServer.Launcher.redis`, creates a tuned `RedissonClient` with `RedissonCodecs.LZ4FastForyComposite` and `VirtualThreadExecutor`, enables Redis keyspace notifications through raw Lettuce commands, and gives each example reproducible random names.
 
 ## Example Categories
 
@@ -73,7 +73,7 @@ This module is a test-backed catalog of [Redisson](https://redisson.org/) featur
 
 | Feature | Artifact | Code Location | Benefit |
 |---|---|---|---|
-| `RedissonCodecs.LZ4ForyComposite` | `bluetape4k-redisson` | `AbstractRedissonTest` | LZ4 compression + Fory serialization with better space and speed characteristics than JSON |
+| `RedissonCodecs.LZ4FastForyComposite` | `bluetape4k-redisson` | `AbstractRedissonTest` | LZ4 compression + FastFory serialization for volatile/cache examples |
 | `localCachedMap()` | `bluetape4k-redisson` | `LocalCachedMapExamples` | Combines the `LocalCachedMapOptions` DSL and map creation call to reduce duplicate Near Cache configuration |
 | `streamAddArgsOf()` | `bluetape4k-redisson` | `StreamExamples` | Creates Redis Stream append arguments with a Kotlin-friendly helper |
 | `VirtualThreadExecutor` | `bluetape4k-coroutines` | `AbstractRedissonTest` | Handles Redisson I/O with Virtual Threads |
@@ -85,9 +85,13 @@ This module is a test-backed catalog of [Redisson](https://redisson.org/) featur
 | `SuspendedJobTester` | `bluetape4k-junit5` | `FencedLockExamples` | Verifies coroutine race conditions |
 | `getLockId()` | `bluetape4k-redis` | `FencedLockExamples` | Gets coroutine-safe `RFencedLock` IDs |
 
+`FastFory` requires `SCHEMA_CONSISTENT` classes and is not wire-compatible with
+the default Fory codec. Use it only for disposable cache contents; do not use
+this codec for durable or cross-version data.
+
 ## bluetape4k Before / After
 
-### `RedissonCodecs.LZ4ForyComposite` vs Default Codec
+### `RedissonCodecs.LZ4FastForyComposite` vs Default Codec
 
 ```kotlin
 // Before — default JSON serialization (text-based, larger payloads)
@@ -96,7 +100,7 @@ val config = Config().apply {
     codec = JsonJacksonCodec()  // text-based serialization
 }
 
-// After — bluetape4k LZ4ForyComposite (binary compressed serialization)
+// After — bluetape4k LZ4FastForyComposite (binary compressed serialization)
 val config = Config().apply {
     useSingleServer()
         .setAddress(redis.url)
@@ -105,7 +109,7 @@ val config = Config().apply {
     executor = VirtualThreadExecutor          // Virtual Thread I/O
     threads = 256
     nettyThreads = 128
-    codec = RedissonCodecs.LZ4ForyComposite   // LZ4 + Fory binary compression
+    codec = RedissonCodecs.LZ4FastForyComposite   // LZ4 + FastFory binary compression
 }
 ```
 

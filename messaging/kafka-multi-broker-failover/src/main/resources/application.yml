@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: messaging-kafka-multi-broker-failover
+  main:
+    web-application-type: none
+    banner-mode: off

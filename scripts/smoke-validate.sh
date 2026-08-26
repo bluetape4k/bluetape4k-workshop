@@ -312,12 +312,17 @@ case "${1:-help}" in
         stale=$((stale + 1))
       fi
     done
-    [ "$stale" -eq 0 ] && echo "No stale refs found." || echo "WARNING: $stale stale ref(s) found."
+    if [ "$stale" -eq 0 ]; then
+      echo "No stale refs found."
+    else
+      echo "ERROR: $stale stale ref(s) found."
+      exit 1
+    fi
 
     echo ""
     echo "=== Required workshop module registration ==="
     missing_modules=0
-    for module in image-processing/barcode-api commerce/shared aws/kinesis-coroutines optimization/field-service-dispatch optimization/last-mile-routing optimization/warehouse-allocation optimization/shift-coverage optimization/clinic-appointment-solver; do
+    for module in image-processing/barcode-api commerce/shared aws/kinesis-coroutines optimization/field-service-dispatch optimization/last-mile-routing optimization/warehouse-allocation optimization/shift-coverage optimization/clinic-appointment-solver messaging/kafka-multi-broker-failover; do
       for required_file in build.gradle.kts README.md README.ko.md; do
         if [ ! -f "$module/$required_file" ]; then
           echo "MISSING: $module/$required_file"
@@ -325,7 +330,12 @@ case "${1:-help}" in
         fi
       done
     done
-    [ "$missing_modules" -eq 0 ] && echo "Required workshop modules are registered." || echo "WARNING: $missing_modules required module file(s) missing."
+    if [ "$missing_modules" -eq 0 ]; then
+      echo "Required workshop modules are registered."
+    else
+      echo "ERROR: $missing_modules required module file(s) missing."
+      exit 1
+    fi
 
     echo ""
     echo "=== README broken image links ==="
@@ -340,7 +350,12 @@ case "${1:-help}" in
         fi
       done < <(rg '!\[.*\]\(([^ ")\t]+)' "$readme" -o -r '$1' 2>/dev/null || true)
     done < <(fd README.md . --exclude .worktrees --exclude build)
-    [ "$broken" -eq 0 ] && echo "No broken image links found." || echo "WARNING: $broken broken link(s) found."
+    if [ "$broken" -eq 0 ]; then
+      echo "No broken image links found."
+    else
+      echo "ERROR: $broken broken link(s) found."
+      exit 1
+    fi
     ;;
 
   diagram-qa)

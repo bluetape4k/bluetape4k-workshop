@@ -5,10 +5,10 @@
 **부모 에픽**: #76
 **상태**: 활성
 
-> 현재 그래프 수정 사항(2026-07-24, #538 이후 #555): 이 체크아웃은 추가 후 Gradle에 119개의 프로젝트를 등록합니다.
+> 현재 그래프 수정 사항(2026-08-27, #558): 이 체크아웃은 추가 후 Gradle에 129개의 프로젝트를 등록합니다.
 > 5개의 `:commerce-usage-billing-*-service` 모듈,
 > `:commerce-usage-billing-microservices-composition-tests` 그리고
-> `:commerce-event-sourced-promotion-voucher-campaign`. 아래의 23/33 분류는 원래대로 유지됩니다.
+> `:commerce-event-sourced-promotion-voucher-campaign`. 아래의 23/35 분류는 현재 등록 기준입니다.
 > #91 기계적으로 증가하는 재고가 아닌 기준선입니다. 현재 실행 가능한 레인은 다음과 같습니다.
 > `scripts/smoke-validate.sh` 및 `.github/workflows/Examples.yml`에 유지됩니다.
 
@@ -18,7 +18,7 @@
 
 | 계층 | 트리거 | 범위 | 도커 필요 |
 |------|---------|-------|-----------------|
-| **T1 컴파일** | 모든 푸시 / PR | `./gradlew build -x test` 현재 119개 프로젝트 그래프 전체 | 아니요 |
+| **T1 컴파일** | 모든 푸시 / PR | `./gradlew build -x test` 현재 129개 프로젝트 그래프 전체 | 아니요 |
 | **T2 연기** | 평일(야간) | 인메모리 모듈만(Testcontainers 없음) | 아니요 |
 | **T3 전체** | 컨테이너 레인 및 전체 로컬 그룹의 예 | Commerce | 예 |
 | **T4 로컬 그룹** | 개발자 편의성 | 도메인별 `scripts/smoke-validate.sh <group>` | 의존한다 |
@@ -57,7 +57,7 @@
 
 > **알려진 건너뛰기**: `:spring-data-r2dbc-webflux` —  #120 스키마 수정이 보류 중인 테스트가 비활성화되었습니다.
 
-### T3 전체 — Testcontainers (34개 모듈)
+### T3 전체 — Testcontainers (35개 모듈)
 
 | 모듈 | 필요한 인프라 |
 |--------|-----------------------|
@@ -78,6 +78,7 @@
 | `:spring-modulith-jpa-demo` | PostgreSQL |
 | `:messaging-kafka` | Kafka |
 | `:messaging-kafka-reply` | Kafka |
+| `:messaging-kafka-multi-broker-failover` | Kafka 3-broker KRaft (Colima/Docker) |
 | `:redis-cluster-demo` | Redis 클러스터 |
 | `:redis-redisson-examples` | Redis |
 | `:bucker4j-bluetape4k-webflux` | Redis |
@@ -136,6 +137,7 @@
 ### 직렬화 및 메시징(Testcontainers)
 ```bash
 ./gradlew :messaging-kafka:test :messaging-kafka-reply:test --continue --max-workers=1
+./gradlew :messaging-kafka-multi-broker-failover:test --continue --max-workers=1
 ```
 
 ### 비동기식 및 반응성
@@ -183,8 +185,8 @@
 
 ```bash
 # Verify the current Gradle project graph and README references
-EXPECTED_GRADLE_PROJECTS=119 ./scripts/smoke-validate.sh stale-check
-# Expected: 108 (as of 2026-07-21 after #521; 107 before the module was added)
+EXPECTED_GRADLE_PROJECTS=129 ./scripts/smoke-validate.sh stale-check
+# Expected: 129 for the current Gradle project graph (including #558)
 
 # Verify removed modules are not referenced in any README
 for m in async-logging kotlin/workshop reactive/mutiny gatling/gradle-plugin-demo mapping/mapstruct; do
@@ -212,10 +214,10 @@ fd README.md . --exclude .worktrees | xargs -I{} bash -c '
 ## 6. 합격기준 현황
 
 - [x] 정의된 검증 매트릭스(T1/T2/T3/T4 계층)
-- [x] 모듈 분류: 23 연기 안전, 33 Testcontainers
+- [x] 모듈 분류: 23 연기 안전, 35 Testcontainers
 - [x] 도메인별 연기 명령이 문서화되었습니다.
 - [x] `scripts/smoke-validate.sh` 추가됨
 - [x] 매일 T2 연기 테스트 작업으로 야간 CI 업데이트됨
-- [x] 오래된 포함 확인: 현재 108개 프로젝트 그래프, 오래된 참조 없음
+- [x] 오래된 포함 확인: 현재 129개 프로젝트 그래프, 오래된 참조 없음
 - [x] README 링크 확인 명령이 문서화됨
 - [ ] #120(`r2dbc-webflux` 비활성화된 테스트)는 별도로 추적됨
