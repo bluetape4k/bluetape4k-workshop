@@ -49,7 +49,7 @@
       "scope_kind": "coordinator",
       "parent_track": "P0",
       "expected_head_ref": "fix/ecosystem-reuse-child-scope",
-      "expected_base_ref": "feat/ecosystem-reuse-gate",
+      "expected_base_ref": "develop",
       "oid_policy": "rebase-aware",
       "head_oid": null,
       "base_oid": null,
@@ -80,14 +80,14 @@
       "review_artifact": "docs/review/2026-08-25-F1-7tier.md"
     }
   ],
-  "coordinator_scope_receipt": {
-    "receipt_id": "20260826T081952Z-c08d5362",
-    "checksum": "d29cccdf41f7873f078da6fe42b03661d918eafc32da3e7fd1ad1071e5c4f239"
+      "coordinator_scope_receipt": {
+    "receipt_id": "20260827T013500Z-develop-base-transition",
+    "checksum": "4f18a5511d6169dfa70d36dcca87d55a18e8a5021d54b05eb8019630b1adb37e"
   },
   "nodes": [
     {
       "track": "P0",
-      "expected_head_ref": "feat/ecosystem-reuse-gate",
+      "expected_head_ref": "develop",
       "expected_base_ref": "origin/develop",
       "parent_track": null,
       "oid_policy": "reviewed-ancestor",
@@ -95,8 +95,8 @@
       "base_oid": null,
       "parent_oid": null,
       "merge_base_oid": null,
-      "reviewed_implementation_oid": null,
-      "state": "PLANNED",
+      "reviewed_implementation_oid": "85aa60c1b525c7b0df693d897207221288fad25e",
+      "state": "READY",
       "issue_numbers": [792],
       "allowed_paths": [
         "docs/superpowers/specs/2026-08-25-ecosystem-reuse-epic-design.md",
@@ -129,22 +129,22 @@
       "docker_required": false,
       "dependency_insight_commands": [],
       "review_artifact": "docs/review/2026-08-25-ecosystem-reuse-epic-design-plan-review.md",
-      "receipt_id": null,
-      "receipt_status": "PENDING",
-      "checksum": null
+      "receipt_id": "20260827T013500Z-p0-squash-closeout",
+      "receipt_status": "PASS",
+      "checksum": "c1b5f9b01c331f7fdc09319463116a5c997c7efe7c58900c890600d7a0c8bf0e"
     },
     {
       "track": "A1",
       "expected_head_ref": "test/ecosystem-reuse-assertions-field-service",
-      "expected_base_ref": "feat/ecosystem-reuse-gate",
+      "expected_base_ref": "origin/develop",
       "parent_track": "P0",
       "oid_policy": "reviewed-ancestor",
       "head_oid": null,
       "base_oid": null,
-      "parent_oid": null,
+      "parent_oid": "85aa60c1b525c7b0df693d897207221288fad25e",
       "merge_base_oid": null,
-      "reviewed_implementation_oid": null,
-      "state": "PLANNED",
+      "reviewed_implementation_oid": "b3711b30a0c51f78750b3cdf2718692d40af08de",
+      "state": "READY",
       "issue_numbers": [783],
       "allowed_paths": [
         "optimization/field-service-dispatch/src/test/kotlin/**",
@@ -169,9 +169,9 @@
         "./gradlew :optimization-field-service-dispatch:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-assertions --configuration testRuntimeClasspath"
       ],
       "review_artifact": "docs/review/2026-08-25-A1-7tier.md",
-      "receipt_id": null,
-      "receipt_status": "PENDING",
-      "checksum": null
+      "receipt_id": "20260827T013500Z-a1-develop-rebase",
+      "receipt_status": "PASS",
+      "checksum": "5453fa0a854d388e3bd613961a0820f3aed1560fd5e6960d5c3f4af58f685bb0"
     },
     {
       "track": "A2",

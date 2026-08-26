@@ -26,6 +26,17 @@ follow-up scope 정책은 다음과 같다.
 사용한다. child를 coordinator로 위장하거나 checker의 ref/path 경계를 완화하지
 않는다.
 
+## P0 squash merge 후 기준 전환
+
+P0 PR #811은 exact head `9608cf10be846ead37000295d6b1da3a1d03d726`에서
+`develop` merge commit `85aa60c1b525c7b0df693d897207221288fad25e`로
+통합되었다. 보호된 저장소의 자동 head-branch 삭제로 A1 #812의 base가
+`develop`으로 자동 전환되었으므로, 삭제된 branch를 가장하지 않고 coordinator
+receipt로 A1의 새 기준을 `origin/develop`에 재고정한다. A1 재기반화 head는
+`bd6d452305f437b20e1c28279a1cbf8e4663303c`, reviewed implementation ancestor는
+`b3711b30a0c51f78750b3cdf2718692d40af08de`이며, F1은 A1이 MERGED로 전환될
+때까지 `PLANNED`로 보존한다. 이 전환에는 Kotlin source 변경이 없다.
+
 ## 7-Tier 점검
 
 | Tier | 점검 결과 | 근거 |
