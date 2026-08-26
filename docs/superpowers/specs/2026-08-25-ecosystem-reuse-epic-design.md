@@ -149,12 +149,16 @@ child PR의 exact-head test receipt와 merge 여부를 받은 뒤 별도 closeou
 train manifest는 `docs/ecosystem-reuse-train.json`에 보관하며 track, expected
 head/base ref, parent OID, merge-base, 상태, issue mapping, allowed paths,
 structured Gradle/test selectors, timeout, Docker 요구 여부, review artifact,
-OID policy, receipt ID, receipt status, checksum을 포함한다. fixed node의
-`oid_policy=bootstrap`은 자체 head를 아직 기록할 수 없는 최초 P0 manifest에서만
-사용하며 `state=PLANNED`, 모든 OID와 receipt가 `null/PENDING`이어야 한다.
-coordinator가 실제 base/head/merge-base를 동결하면 `oid_policy=exact`로 전환하고,
-그 뒤 exact scope는 기록된 `base_oid`와 `head_oid`가 PR 입력과 일치하지 않으면
-실패한다. 따라서 `null` OID를 `exact`로 가장하는 완화는 허용하지 않는다.
+OID policy, receipt ID, receipt status, checksum을 포함한다. fixed node는
+`oid_policy=reviewed-ancestor`를 사용하며 `reviewed_implementation_oid` 필드를
+가진다. 최초 manifest에서는 `state=PLANNED`, legacy OID와 reviewed OID가
+`null`, receipt가 `PENDING`이어야 한다.
+
+fixed node의 자체 head를 같은 commit 안에 기록할 수 없으므로 coordinator는
+review artifact에 `reviewed_implementation_oid: <40-hex SHA>` marker를 남긴다.
+marker는 PR base 이후의 구현 ancestor여야 하고 PR head의 선조여야 하며, marker
+이후 head까지의 evidence tail은 해당 review artifact 하나만 변경해야 한다.
+marker가 PR head와 같거나 비선조이거나 코드 변경을 포함하면 checker가 실패한다.
 follow-up scope는 `exact` 또는 `rebase-aware`만 사용한다. workflow coordinator와
 serial closeout lane만 manifest를 갱신한다. Issue 본문은 설명과 메타데이터로만
 취급하고 child 편집 범위나 shell command를 결정하지 않는다.
@@ -228,7 +232,7 @@ behavior처럼 raw API 자체가 학습 대상이면 해당 테스트에 이유�
 실행하고, Tier 6 review에서 raw assertion 잔여와 allowlist 근거를 함께 확인한다.
 
 각 child의 `docs/review/DATE-TRACK-7tier.md`는 공통 구조를 따른다: `track`,
-`head_oid`, `base_oid`, manifest checksum, 적용한 `$bluetape-kotlin-patterns`
+`reviewed_implementation_oid` marker, `head_oid`, `base_oid`, manifest checksum, 적용한 `$bluetape-kotlin-patterns`
 checklist ID, capability/source/test anchor, assertion migration 또는 fallback
 근거, Tier 1~7별 evidence와 finding count, targeted test receipt, skipped/disabled
 정책, owner와 stop condition. ancestor OID가 바뀌면 영향받은 Tier와 checklist를

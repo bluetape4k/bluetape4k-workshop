@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -76,7 +77,7 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
     def manifest(self, *, state="PLANNED", receipt_status="PENDING", overlap=False):
         tracks = ["P0", "A1", "A2", "F1", "F2", "R1", "R2", "T1", "I1"]
         nodes = []
-        oid_policy = "bootstrap" if state == "PLANNED" else "exact"
+        oid_policy = "bootstrap" if state == "PLANNED" else "reviewed-ancestor"
         for track in tracks:
             paths = ["src/%s/**" % track]
             if overlap and track == "A1":
@@ -89,10 +90,11 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
                 "expected_base_ref": "origin/develop",
                 "parent_track": None,
                 "oid_policy": oid_policy,
-                "head_oid": None if state == "PLANNED" else "a" * 40,
-                "base_oid": None if state == "PLANNED" else "b" * 40,
+                "head_oid": None,
+                "base_oid": None,
                 "parent_oid": None,
-                "merge_base_oid": None if state == "PLANNED" else "c" * 40,
+                "merge_base_oid": None,
+                "reviewed_implementation_oid": None if state == "PLANNED" else "a" * 40,
                 "state": state,
                 "issue_numbers": [1],
                 "allowed_paths": paths,
@@ -168,6 +170,51 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
             "receipt_id": "run-1",
             "checksum": "c" * 64,
         }
+        return manifest
+
+    def _git(self, *args):
+        return subprocess.run(
+            ["git", *args],
+            cwd=self.root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+
+    def _reviewed_ancestor_history(self, *, marker_text=None, code_after_marker=False):
+        self._git("init")
+        self._git("config", "user.email", "test@example.com")
+        self._git("config", "user.name", "Ecosystem Reuse Test")
+        review = self.root / "docs/review/A1-7tier.md"
+        review.parent.mkdir(parents=True)
+        review.write_text("# A1 review\n", encoding="utf-8")
+        self._git("add", ".")
+        self._git("commit", "-m", "base")
+        base_oid = self._git("rev-parse", "HEAD")
+
+        changed = self.root / "src/A1/Changed.kt"
+        changed.parent.mkdir(parents=True, exist_ok=True)
+        changed.write_text("class Changed\n", encoding="utf-8")
+        self._git("add", str(changed.relative_to(self.root)))
+        self._git("commit", "-m", "implementation")
+        implementation_oid = self._git("rev-parse", "HEAD")
+
+        marker = marker_text or implementation_oid
+        review.write_text(
+            "# A1 review\n\n<!-- reviewed_implementation_oid: %s -->\n" % marker,
+            encoding="utf-8",
+        )
+        if code_after_marker:
+            changed.write_text("class Changed\nclass TailChange\n", encoding="utf-8")
+            self._git("add", str(changed.relative_to(self.root)))
+        self._git("add", str(review.relative_to(self.root)))
+        self._git("commit", "-m", "review evidence tail")
+        head_oid = self._git("rev-parse", "HEAD")
+        return base_oid, implementation_oid, head_oid
+
+    def _reviewed_manifest(self):
+        manifest = self.manifest()
+        manifest["nodes"][1]["oid_policy"] = "reviewed-ancestor"
         return manifest
 
     def test_valid_row_with_existing_source_and_test_paths(self):
@@ -325,13 +372,27 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         errors = CHECKER.validate_manifest(self.root, path)
         self.assertTrue(any("oid_policy" in error for error in errors))
 
-    def test_manifest_rejects_exact_fixed_node_without_oids(self):
+    def test_manifest_rejects_exact_fixed_node_policy(self):
         manifest = self.manifest()
         manifest["nodes"][0]["oid_policy"] = "exact"
         path = self.root / "manifest.json"
         path.write_text(json.dumps(manifest), encoding="utf-8")
         errors = CHECKER.validate_manifest(self.root, path)
-        self.assertTrue(any("exact node requires base_oid" in error for error in errors))
+        self.assertTrue(any("invalid fixed-node oid_policy exact" in error for error in errors))
+
+    def test_manifest_requires_reviewed_implementation_oid_field(self):
+        manifest = self.manifest()
+        del manifest["nodes"][0]["reviewed_implementation_oid"]
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, path)
+        self.assertTrue(any("reviewed_implementation_oid" in error for error in errors))
+
+    def test_manifest_accepts_planned_reviewed_ancestor_without_oid(self):
+        manifest = self._reviewed_manifest()
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        self.assertEqual([], CHECKER.validate_manifest(self.root, path))
 
     def test_manifest_rejects_bootstrap_fixed_node_outside_planned_state(self):
         manifest = self.manifest(state="READY", receipt_status="PASS")
@@ -607,6 +668,73 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
             head_oid="a" * 40,
         )
         self.assertEqual([], errors)
+
+    def test_train_scope_accepts_reviewed_ancestor_with_real_git_history(self):
+        base_oid, implementation_oid, head_oid = self._reviewed_ancestor_history()
+        manifest = self._reviewed_manifest()
+        errors = CHECKER.validate_train_scope(
+            manifest,
+            ["src/A1/Changed.kt", "docs/review/A1-7tier.md"],
+            base_ref_name="origin/develop",
+            head_ref_name="branch/A1",
+            base_oid=base_oid,
+            head_oid=head_oid,
+            repository_root=self.root,
+        )
+        self.assertEqual([], errors)
+        self.assertNotEqual(implementation_oid, head_oid)
+
+    def test_train_scope_rejects_reviewed_ancestor_self_reference(self):
+        base_oid, implementation_oid, _ = self._reviewed_ancestor_history()
+        errors = CHECKER.validate_train_scope(
+            self._reviewed_manifest(),
+            ["src/A1/Changed.kt", "docs/review/A1-7tier.md"],
+            base_ref_name="origin/develop",
+            head_ref_name="branch/A1",
+            base_oid=base_oid,
+            head_oid=implementation_oid,
+            repository_root=self.root,
+        )
+        self.assertTrue(any("must be a prior commit, not the PR head" in error for error in errors))
+
+    def test_train_scope_rejects_reviewed_ancestor_outside_history(self):
+        base_oid, _, head_oid = self._reviewed_ancestor_history(marker_text="a" * 40)
+        errors = CHECKER.validate_train_scope(
+            self._reviewed_manifest(),
+            ["src/A1/Changed.kt", "docs/review/A1-7tier.md"],
+            base_ref_name="origin/develop",
+            head_ref_name="branch/A1",
+            base_oid=base_oid,
+            head_oid=head_oid,
+            repository_root=self.root,
+        )
+        self.assertTrue(any("must be an ancestor of the PR head" in error for error in errors))
+
+    def test_train_scope_rejects_code_changes_after_reviewed_ancestor(self):
+        base_oid, _, head_oid = self._reviewed_ancestor_history(code_after_marker=True)
+        errors = CHECKER.validate_train_scope(
+            self._reviewed_manifest(),
+            ["src/A1/Changed.kt", "docs/review/A1-7tier.md"],
+            base_ref_name="origin/develop",
+            head_ref_name="branch/A1",
+            base_oid=base_oid,
+            head_oid=head_oid,
+            repository_root=self.root,
+        )
+        self.assertTrue(any("evidence tail may change only the review artifact" in error for error in errors))
+
+    def test_train_scope_rejects_missing_reviewed_ancestor_marker(self):
+        base_oid, _, head_oid = self._reviewed_ancestor_history(marker_text="not-a-sha")
+        errors = CHECKER.validate_train_scope(
+            self._reviewed_manifest(),
+            ["src/A1/Changed.kt", "docs/review/A1-7tier.md"],
+            base_ref_name="origin/develop",
+            head_ref_name="branch/A1",
+            base_oid=base_oid,
+            head_oid=head_oid,
+            repository_root=self.root,
+        )
+        self.assertTrue(any("reviewed_implementation_oid marker" in error for error in errors))
 
     def test_train_scope_rejects_bootstrap_node_without_bootstrap_context(self):
         errors = CHECKER.validate_train_scope(

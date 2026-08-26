@@ -160,10 +160,12 @@ coordinator와 serial closeout lane만 이를 갱신할 수 있다.
   `receipt_id`, `receipt_status`, and `checksum`. The canonical schema above and
   its checker are authoritative for the complete transition tables, receipt
   fields, and R2 `parent_evidence`; this task list is not a reduced schema.
-  Initialize the bootstrap manifest with `oid_policy=bootstrap`, all OIDs as
-  `null`, `state=PLANNED`, and a pending receipt. The checker must reject a
-  fixed node that labels missing OIDs as `exact`; after coordinator freeze, it
-  must require recorded exact OIDs before a node can advance. Do not place this
+  Initialize the manifest with `oid_policy=reviewed-ancestor`,
+  `reviewed_implementation_oid` and legacy OIDs as `null`, `state=PLANNED`, and
+  a pending receipt. The review artifact marker must identify a reviewed
+  implementation ancestor, and the bounded evidence tail may change only that
+  artifact. The checker must reject a marker equal to the PR head, a non-ancestor,
+  malformed marker, or code changes after the marker. Do not place this
   machine state under `.bluetape`; the workflow script remains the sole writer
   of `.bluetape` receipts.
 
@@ -282,11 +284,12 @@ coordinator와 serial closeout lane만 이를 갱신할 수 있다.
 `receipt_transitions`, `state_transitions`다. 각 node는 `expected_*_ref`,
 `parent_track`, `oid_policy`, issue 목록, disjoint `allowed_paths`,
 `gradle_tasks`, `test_selectors`, `gradle_flags`, `timeout_seconds`,
-`docker_required`, `dependency_insight_commands`, `review_artifact`, OID와
-`receipt_id/status`, checksum을 가진다. 최초 P0 bootstrap에서 fixed node는
-`oid_policy=bootstrap`, `state=PLANNED`, OID `null`, receipt `PENDING`만 허용한다.
-coordinator가 ancestor를 동결한 뒤에는 `oid_policy=exact`와 기록된
-`base_oid`/`head_oid`가 필수이며, exact scope가 null OID를 묵인하지 않는다.
+`docker_required`, `dependency_insight_commands`, `review_artifact`,
+`reviewed_implementation_oid`, OID와 `receipt_id/status`, checksum을 가진다.
+최초 P0 manifest에서 fixed node는 `oid_policy=reviewed-ancestor`,
+`state=PLANNED`, reviewed/legacy OID `null`, receipt `PENDING`만 허용한다.
+review artifact marker와 base→ancestor→head 이력 및 문서-only evidence tail을
+검증하며, self-reference와 임의 SHA를 묵인하지 않는다.
 `P0`는 자체 review artifact를 가지며, child는 `DATE-TRACK-7tier.md`를 자신의
 allowlist에 포함한다. `R2`만 추가로
 `parent_evidence`(`parent_track`, `r1_api_anchor`, `r1_allowed_path`,

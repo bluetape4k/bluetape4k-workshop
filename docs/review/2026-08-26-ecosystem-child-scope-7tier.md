@@ -7,7 +7,14 @@ OID 고정 정책을 manifest와 Python checker에 명시하는 governance 변�
 9개 fixed track은 유지하며, coordinator-owned #823과 child PR #821을
 `follow_up_scopes`로 분리한다.
 
-현재 정책은 다음과 같다.
+fixed node는 자체 commit의 SHA를 같은 commit 안에 기록할 수 없으므로
+`oid_policy=reviewed-ancestor`를 사용한다. review artifact의
+`reviewed_implementation_oid` marker는 PR base 이후의 검토된 구현 ancestor를
+가리키며, 현재 PR head까지의 증거 tail은 해당 review artifact 하나만 변경해야
+한다. 이 계약은 임의 SHA와 self-reference를 모두 거부하면서 최신 PR head가
+검토된 구현의 후속 증거임을 확인한다.
+
+follow-up scope 정책은 다음과 같다.
 
 - `exact`: `base_oid`와 `head_oid`를 각각 40-hex SHA로 고정하고 실제 PR과
   일치하는지 검사한다.
@@ -24,12 +31,12 @@ OID 고정 정책을 manifest와 Python checker에 명시하는 governance 변�
 | Tier | 점검 결과 | 근거 |
 | --- | --- | --- |
 | 1. 요구사항·범위 | PASS | fixed 9-track을 늘리지 않고 #822 coordinator lane과 #821 child lane만 별도 scope로 고정했다. |
-| 2. 계약·자료구조 | PASS | `scope_id`, `scope_kind`, `oid_policy`, 부모 track, exact ref, issue, allowlist, review artifact를 필수 필드로 검증한다. `exact`는 두 OID를 요구하고 `rebase-aware`는 두 OID의 `null`을 요구한다. |
-| 3. 경계·보안 | PASS | path traversal/control character, 잘못된 SHA, 정책 외 값, 중복 ID, scope overlap, 부모 track과 base ref 불일치를 fail-closed로 거부한다. |
-| 4. 정확성·상태 | PASS | path 후보가 겹쳐도 exact base/head ref가 하나인 scope만 선택한다. `exact`만 manifest OID equality를 검사하고, `rebase-aware`는 현재 rebase OID가 달라도 ref/path 계약을 유지한다. |
+| 2. 계약·자료구조 | PASS | fixed node의 `reviewed-ancestor`, review marker, ancestor 관계, 단일 문서 evidence tail과 follow-up의 `exact`/`rebase-aware` 필드를 명시한다. |
+| 3. 경계·보안 | PASS | path traversal/control character, 잘못된 SHA, 정책 외 값, 중복 ID, scope overlap, 부모 track과 base ref 불일치, marker 중복·누락을 fail-closed로 거부한다. |
+| 4. 정확성·상태 | PASS | path 후보가 겹쳐도 exact ref로 하나를 선택한다. fixed node는 base→reviewed ancestor→head 이력과 문서-only tail을 검사하고, follow-up은 정책별 OID 계약을 검사한다. |
 | 5. 동시성·자원 | N/A | 실행 중 Kotlin/DB/비동기 자원은 변경하지 않는다. 기존 Testcontainers 직렬화와 child workflow 정책을 유지한다. |
-| 6. 테스트·운영 | IN PROGRESS | exact child 회귀, rebase-aware child/coordinator 수락, stale OID 거부, 잘못된 정책 거부, rebase 후 scope 선택 테스트를 추가한다. P0 hosted gate와 downstream exact-head 재검증은 이 문서 갱신 후 수행한다. |
-| 7. 문서·유지보수 | PASS | 정책 선택 이유와 merge 전 fresh review/approval 분리를 이 문서와 #822에 기록한다. |
+| 6. 테스트·운영 | IN PROGRESS | 실제 Git 저장소의 구현 commit·evidence tail, self-reference, 비선조 marker, 코드 변경 tail 및 malformed marker 회귀를 추가했다. P0/A1/F1/P2 hosted gate는 새 exact head에서 재실행한다. |
+| 7. 문서·유지보수 | PASS | self-reference를 피하는 정책 선택, bounded tail, fresh review/approval 분리를 이 문서와 #822에 기록한다. |
 
 ## Bluetape4k 및 Kotlin 지침
 
@@ -45,15 +52,19 @@ OID 고정 정책을 manifest와 Python checker에 명시하는 governance 변�
 
 - `receipt_id`: `20260826T081952Z-c08d5362`
 - `checksum`: `d29cccdf41f7873f078da6fe42b03661d918eafc32da3e7fd1ad1071e5c4f239`
-- checksum 입력은 `oid-policy-v1`과 두 scope의 정책·null OID·run ID를 포함한
-  canonical policy string이며, manifest 자체를 다시 hash하지 않아 순환 의존을
-  만들지 않는다.
+- 이 receipt는 기존 follow-up scope coordinator 계약의 기록이다. fixed node의
+  reviewed ancestor marker는 각 PR review artifact의 bounded evidence tail에서
+  별도로 검증한다.
 
-## 남은 검증
+## 검증 명령과 남은 검증
 
-1. checker unit test와 JSON/diff validation을 실행한다.
-2. P0 exact head에서 `detekt`와 hosted Ecosystem/CI/Examples gate를 확인한다.
-3. 새 P0 head를 기준으로 A1/F1/P2를 순서대로 rebase하고, 각 PR의 exact head,
-   hosted checks, review/merge 대기 상태를 다시 읽는다.
+```text
+python3 .github/scripts/test_check_ecosystem_reuse.py -q  # 59 tests PASS
+python3 -m json.tool docs/ecosystem-reuse-train.json  # PASS
+git diff --check  # PASS
+```
 
-최종 merge는 별도 fresh approval 없이는 수행하지 않는다.
+다음 검증은 contract commit 이후 marker-only evidence-tail commit을 만들고,
+새 P0 head를 기준으로 A1/F1/P2를 순서대로 rebase한 뒤 각 hosted Ecosystem,
+Examples, CI와 exact-head read-back을 확인하는 것이다. 최종 merge는 별도 fresh
+approval 없이는 수행하지 않는다.

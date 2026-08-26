@@ -37,14 +37,17 @@ targeted test receipt를 제출해야 한다.
 
 ## 2026-08-26 독립 최종 검토 후속 수리
 
-독립 architect 검토에서 fixed node가 `oid_policy=exact`처럼 보이지만
-`PLANNED/null` OID로 비교를 건너뛰는 P1을 식별했다. self-referential한 P0
-manifest에 임의 SHA를 기록하는 대신, 최초 manifest의 모든 fixed node를
-`oid_policy=bootstrap`으로 명시하고 `state=PLANNED`, OID `null`, receipt
-`PENDING`을 강제했다. checker는 bootstrap context 밖의 PR scope를 거부하며,
-coordinator가 ancestor를 동결한 뒤 `oid_policy=exact`와 기록된 OID 없이는
-scope를 통과시키지 않는다. 이 로컬 수리는 checker 회귀 테스트와 bootstrap
-manifest 검증으로 확인했고 hosted exact-head 재실행은 아직 PENDING이다.
+독립 architect 검토에서 fixed node의 `head_oid`를 같은 manifest commit에
+기록하는 exact 모델이 self-reference가 될 수 있다는 P1을 식별했다. 이를
+우회하기 위해 최초 manifest의 fixed node를 `oid_policy=reviewed-ancestor`로
+명시하고 `state=PLANNED`, reviewed/legacy OID `null`, receipt `PENDING`을
+강제한다. 각 review artifact의 단일 `reviewed_implementation_oid` marker는
+PR base 이후의 구현 ancestor를 가리키고, marker 이후 PR head까지는 해당
+artifact만 변경하는 bounded evidence tail이어야 한다. checker는 marker 누락,
+malformed SHA, self-reference, 비선조, 코드 변경 tail을 fail-closed로 거부한다.
+follow-up scope만 `exact` 또는 `rebase-aware`를 사용한다. 이 로컬 수리는 실제
+Git commit history를 만드는 회귀 테스트와 manifest 검증으로 고정했으며, 새
+evidence-tail head의 hosted exact-head 재실행은 아직 PENDING이다.
 
 ## 후속 P1 수리 증거
 
@@ -55,8 +58,9 @@ manifest 검증으로 확인했고 hosted exact-head 재실행은 아직 PENDING
   consumer는 source/test anchor로 교정했다.
 - PR diff를 전체 경로로 수집하고, 하나의 manifest `allowed_paths` 및 exact
   base/head ref·OID에 묶는 `--pr-scope` 검사를 추가했다.
-- `python3 .github/scripts/test_check_ecosystem_reuse.py -v`는 38개 테스트를
-  통과했고, checker bootstrap·JSON·diff check도 통과했다.
+- `python3 .github/scripts/test_check_ecosystem_reuse.py -q`는 59개 테스트를
+  통과했고, checker/manifest 계약·실제 Git history·JSON·diff check가 최신
+  reviewed-ancestor 설계와 일치한다.
 
 ## Stacked child hosted-check 계약
 

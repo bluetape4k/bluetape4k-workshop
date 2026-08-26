@@ -59,7 +59,9 @@ SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 CHECKSUM_RE = re.compile(r"^[0-9a-f]{64}$")
 FOLLOW_UP_SCOPE_KINDS = {"child", "coordinator"}
 OID_POLICIES = {"exact", "rebase-aware"}
-FIXED_NODE_OID_POLICIES = {"bootstrap", "exact"}
+FIXED_NODE_OID_POLICIES = {"bootstrap", "reviewed-ancestor"}
+REVIEWED_MARKER_LABEL_RE = re.compile(r"(?im)\breviewed_implementation_oid\s*:")
+REVIEWED_MARKER_RE = re.compile(r"(?im)\breviewed_implementation_oid\s*:\s*([0-9a-f]{40})\b")
 FOLLOW_UP_SCOPE_FIELDS = {
     "scope_id", "scope_kind", "parent_track", "expected_head_ref", "expected_base_ref",
     "oid_policy", "head_oid", "base_oid", "issue_numbers", "allowed_paths", "review_artifact",
@@ -536,7 +538,7 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
         "track", "expected_head_ref", "expected_base_ref", "parent_track", "oid_policy", "head_oid", "base_oid",
         "parent_oid", "merge_base_oid", "state", "issue_numbers", "allowed_paths", "gradle_tasks",
         "test_selectors", "gradle_flags", "timeout_seconds", "docker_required", "review_artifact",
-        "receipt_id", "receipt_status", "checksum", "dependency_insight_commands",
+        "receipt_id", "receipt_status", "checksum", "dependency_insight_commands", "reviewed_implementation_oid",
     }
     for track in fixed_tracks:
         node = node_map.get(track)
@@ -562,15 +564,20 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
                 errors.append("%s: bootstrap oid_policy requires null OIDs" % track)
             if receipt_status != "PENDING" or node.get("receipt_id") not in (None, "") or node.get("checksum") not in (None, ""):
                 errors.append("%s: bootstrap oid_policy requires a pending receipt" % track)
-        elif oid_policy == "exact":
-            for field in ("head_oid", "base_oid"):
-                if not SHA_RE.fullmatch(str(node.get(field) or "")):
-                    errors.append("%s: exact node requires %s" % (track, field))
-            if state != "PLANNED" and not SHA_RE.fullmatch(str(node.get("merge_base_oid") or "")):
-                errors.append("%s: exact active node requires merge_base_oid" % track)
+        elif oid_policy == "reviewed-ancestor":
+            if any(node.get(field) not in (None, "") for field in ("head_oid", "base_oid", "merge_base_oid")):
+                errors.append("%s: reviewed-ancestor oid_policy requires null legacy OIDs" % track)
+            reviewed_oid = node.get("reviewed_implementation_oid")
+            if reviewed_oid not in (None, "") and not SHA_RE.fullmatch(str(reviewed_oid)):
+                errors.append("%s: reviewed_implementation_oid must be null or a 40-hex SHA" % track)
+            if state != "PLANNED" and not SHA_RE.fullmatch(str(reviewed_oid or "")):
+                errors.append("%s: active reviewed-ancestor node requires reviewed_implementation_oid" % track)
         if state in {"READY", "MERGE_READY", "MERGED"} and receipt_status != "PASS":
             errors.append("%s: ready state requires receipt_status PASS" % track)
-        if state != "PLANNED" and any(node.get(field) in (None, "") for field in ("head_oid", "base_oid", "merge_base_oid", "receipt_id", "checksum")):
+        required_non_planned_fields = ("receipt_id", "checksum")
+        if oid_policy != "reviewed-ancestor":
+            required_non_planned_fields += ("head_oid", "base_oid", "merge_base_oid")
+        if state != "PLANNED" and any(node.get(field) in (None, "") for field in required_non_planned_fields):
             errors.append("%s: non-PLANNED node has incomplete receipt/OID fields" % track)
         parent_track = node.get("parent_track")
         if parent_track is not None:
@@ -712,7 +719,7 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
                     "expected_head_ref", "expected_base_ref", "parent_track", "oid_policy", "issue_numbers",
                     "allowed_paths", "gradle_tasks", "test_selectors", "gradle_flags",
                     "timeout_seconds", "docker_required", "dependency_insight_commands",
-                    "review_artifact", "parent_evidence",
+                    "review_artifact", "parent_evidence", "reviewed_implementation_oid",
                 ))
                 changed = graph_changed
                 if changed:
@@ -825,6 +832,42 @@ def changed_files_between_refs(root: Path, base_ref: str, head_ref: str) -> Tupl
     return [line for line in result.stdout.splitlines() if line.strip()], []
 
 
+def _git_is_ancestor(root: Path, ancestor: str, descendant: str) -> bool:
+    try:
+        result = subprocess.run(
+            ["git", "merge-base", "--is-ancestor", ancestor, descendant],
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return False
+    return result.returncode == 0
+
+
+def _read_reviewed_implementation_oid(
+    root: Path,
+    review_artifact: str,
+    scope_label: str,
+) -> Tuple[Optional[str], List[str]]:
+    try:
+        artifact_path = safe_relative_path(root, review_artifact)
+    except (TypeError, AttributeError, ValueError) as exc:
+        return None, ["%s: review artifact is invalid: %s" % (scope_label, escaped(exc))]
+    try:
+        text = artifact_path.read_text(encoding="utf-8")
+    except OSError as exc:
+        return None, ["%s: review artifact is unreadable: %s" % (scope_label, escaped(exc))]
+    labels = REVIEWED_MARKER_LABEL_RE.findall(text)
+    matches = REVIEWED_MARKER_RE.findall(text)
+    if len(labels) != 1 or len(matches) != 1:
+        return None, [
+            "%s: review artifact must contain exactly one reviewed_implementation_oid marker" % scope_label
+        ]
+    return matches[0], []
+
+
 def _normalise_ref(value: str) -> str:
     normalised = clean_cell(value)
     for prefix in ("refs/heads/", "origin/"):
@@ -851,8 +894,9 @@ def validate_train_scope(
     base_oid: str,
     head_oid: str,
     bootstrap: bool = False,
+    repository_root: Optional[Path] = None,
 ) -> List[str]:
-    """Bind a pull-request diff to one manifest node and its exact refs/OIDs."""
+    """Bind a pull-request diff to one manifest node and its ref/OID policy."""
     errors: List[str] = []
     if not changed_paths:
         return ["PR scope requires at least one changed path"]
@@ -932,6 +976,36 @@ def validate_train_scope(
                 errors.append("%s: exact scope requires recorded %s" % (scope_label, label))
             elif recorded != supplied:
                 errors.append("%s: %s does not match the manifest recorded OID" % (scope_label, label))
+    elif oid_policy == "reviewed-ancestor":
+        if repository_root is None:
+            errors.append("%s: reviewed-ancestor requires repository_root" % scope_label)
+        else:
+            marker_oid, marker_errors = _read_reviewed_implementation_oid(
+                repository_root,
+                str(node.get("review_artifact", "")),
+                scope_label,
+            )
+            errors.extend(marker_errors)
+            if marker_oid is not None:
+                if marker_oid == head_oid:
+                    errors.append("%s: reviewed_implementation_oid must be a prior commit, not the PR head" % scope_label)
+                elif marker_oid == base_oid:
+                    errors.append("%s: reviewed_implementation_oid must be after the PR base" % scope_label)
+                else:
+                    base_is_ancestor = _git_is_ancestor(repository_root, base_oid, marker_oid)
+                    marker_is_ancestor = _git_is_ancestor(repository_root, marker_oid, head_oid)
+                    if not base_is_ancestor:
+                        errors.append("%s: reviewed_implementation_oid must descend from the PR base" % scope_label)
+                    if not marker_is_ancestor:
+                        errors.append("%s: reviewed_implementation_oid must be an ancestor of the PR head" % scope_label)
+                    if base_is_ancestor and marker_is_ancestor:
+                        tail_paths, tail_errors = changed_files_between_refs(repository_root, marker_oid, head_oid)
+                        errors.extend("%s: %s" % (scope_label, error) for error in tail_errors)
+                        review_artifact = clean_cell(str(node.get("review_artifact", "")))
+                        if not tail_paths:
+                            errors.append("%s: reviewed-ancestor evidence tail must contain a review artifact change" % scope_label)
+                        elif any(path != review_artifact for path in tail_paths) or review_artifact not in tail_paths:
+                            errors.append("%s: reviewed-ancestor evidence tail may change only the review artifact" % scope_label)
     return errors
 
 
@@ -987,6 +1061,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 base_oid=args.base_ref,
                 head_oid=args.head_ref,
                 bootstrap=args.bootstrap,
+                repository_root=root,
             ))
     errors.extend(validate_changed_files(root, changed_files))
     if errors:
