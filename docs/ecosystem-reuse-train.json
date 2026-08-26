@@ -250,6 +250,7 @@
         "optimization/field-service-dispatch/src/test/kotlin/io/bluetape4k/workshop/optimization/fieldservice/application/FieldServiceOutboxWorkerTest.kt",
         "optimization/field-service-dispatch/src/test/kotlin/io/bluetape4k/workshop/optimization/fieldservice/persistence/FieldServiceCasIntegrationTest.kt",
         "optimization/field-service-dispatch/src/test/kotlin/io/bluetape4k/workshop/optimization/fieldservice/adapter/http/FieldServiceCanonicalizerTest.kt",
+        "optimization/field-service-dispatch/src/test/kotlin/io/bluetape4k/workshop/optimization/fieldservice/application/FieldServiceReplanServiceTest.kt",
         "docs/review/2026-08-25-F1-7tier.md"
       ],
       "gradle_tasks": [
