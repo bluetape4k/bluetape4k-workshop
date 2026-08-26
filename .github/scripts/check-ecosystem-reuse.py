@@ -301,6 +301,20 @@ def _import_declarations(source_text: str) -> List[str]:
     return [match.group(1) for match in IMPORT_DECLARATION_RE.finditer(source_text)]
 
 
+def _mask_import_declarations(source_text: str) -> str:
+    """Mask complete import lines so imports cannot count as API usage."""
+    output = list(source_text)
+    for match in IMPORT_DECLARATION_RE.finditer(source_text):
+        line_start = source_text.rfind("\n", 0, match.start()) + 1
+        line_end = source_text.find("\n", match.end())
+        if line_end == -1:
+            line_end = len(source_text)
+        for index in range(line_start, line_end):
+            if output[index] != "\n":
+                output[index] = " "
+    return "".join(output)
+
+
 def _gradle_project_for_row(row: Dict[str, str]) -> str:
     """Resolve the Gradle project from the inventory module path."""
     parts = Path(row.get("module", "")).parts
@@ -473,7 +487,8 @@ def validate_inventory(root: Path, inventory_path: Path, manifest: Optional[Dict
                             ):
                                 errors.append("%s: actual_import lacks the declared dependency/API token" % prefix)
                             api_tokens = _capability_api_tokens(capability_api)
-                            if api_tokens and not any(token in sanitized_source for token in api_tokens):
+                            usage_source = _mask_import_declarations(sanitized_source)
+                            if api_tokens and not any(token in usage_source for token in api_tokens):
                                 errors.append("%s: actual_import lacks the exact capability_api token" % prefix)
                 elif column == "actual_import" and resolved is None and not row.get("capability_api", "").startswith("candidate:"):
                     errors.append("%s: N/A actual_import requires a candidate: capability_api marker" % prefix)

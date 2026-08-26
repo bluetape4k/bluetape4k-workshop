@@ -31,7 +31,11 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
             encoding="utf-8",
         )
         (self.root / "src").mkdir()
-        (self.root / "src/source.kt").write_text("import io.bluetape4k.assertions.shouldBeEqualTo\n", encoding="utf-8")
+        (self.root / "src/source.kt").write_text(
+            "import io.bluetape4k.assertions.shouldBeEqualTo\n"
+            "fun verify(actual: Int) = actual.shouldBeEqualTo(1)\n",
+            encoding="utf-8",
+        )
         (self.root / "src/test.kt").write_text("fun test() = Unit\n", encoding="utf-8")
 
         (self.root / "src/R1").mkdir()
@@ -243,6 +247,14 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         )
         errors = CHECKER.validate_inventory(self.root, self.inventory([self.row()]))
         self.assertTrue(any("Bluetape import declaration" in error for error in errors))
+
+    def test_actual_import_rejects_import_only_capability(self):
+        (self.root / "src/source.kt").write_text(
+            "import io.github.bluetape4k.assertions.shouldBeEqualTo\n",
+            encoding="utf-8",
+        )
+        errors = CHECKER.validate_inventory(self.root, self.inventory([self.row()]))
+        self.assertTrue(any("exact capability_api token" in error for error in errors))
 
     def test_actual_import_rejects_non_source_document(self):
         (self.root / "README.md").write_text(
