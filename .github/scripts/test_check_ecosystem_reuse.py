@@ -131,6 +131,29 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
             "nodes": nodes,
         }
 
+    def follow_up_scope(self, *, scope_id="F1-child", scope_kind="child", base_oid="b" * 40, head_oid="a" * 40):
+        return {
+            "scope_id": scope_id,
+            "scope_kind": scope_kind,
+            "parent_track": "F1",
+            "expected_head_ref": "branch/F1-child",
+            "expected_base_ref": "branch/F1",
+            "head_oid": head_oid,
+            "base_oid": base_oid,
+            "issue_numbers": [2],
+            "allowed_paths": ["src/F1/**", "docs/review/F1-child-7tier.md"],
+            "review_artifact": "docs/review/F1-child-7tier.md",
+        }
+
+    def manifest_with_follow_up_scope(self):
+        manifest = self.manifest()
+        manifest["follow_up_scopes"] = [self.follow_up_scope()]
+        manifest["coordinator_scope_receipt"] = {
+            "receipt_id": "run-1",
+            "checksum": "c" * 64,
+        }
+        return manifest
+
     def test_valid_row_with_existing_source_and_test_paths(self):
         errors = CHECKER.validate_inventory(self.root, self.inventory([self.row()]))
         self.assertEqual([], errors)
@@ -307,6 +330,42 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         r2["parent_evidence"]["r1_allowed_path"] = "src/unknown"
         path.write_text(json.dumps(manifest), encoding="utf-8")
         self.assertTrue(any("r1_allowed_path" in error for error in CHECKER.validate_manifest(self.root, path)))
+
+    def test_manifest_accepts_coordinator_owned_follow_up_scope(self):
+        manifest = self.manifest_with_follow_up_scope()
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        self.assertEqual([], CHECKER.validate_manifest(self.root, path))
+
+    def test_manifest_rejects_follow_up_scope_overlap(self):
+        manifest = self.manifest_with_follow_up_scope()
+        manifest["follow_up_scopes"].append(
+            self.follow_up_scope(scope_id="F1-child-overlap", base_oid="d" * 40, head_oid="e" * 40)
+        )
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, path)
+        self.assertTrue(any("follow_up_scopes overlap" in error for error in errors))
+
+    def test_trusted_manifest_allows_follow_up_scope_with_fresh_coordinator_receipt(self):
+        trusted = self.manifest()
+        current = self.manifest_with_follow_up_scope()
+        trusted_path = self.root / "trusted.json"
+        current_path = self.root / "manifest.json"
+        trusted_path.write_text(json.dumps(trusted), encoding="utf-8")
+        current_path.write_text(json.dumps(current), encoding="utf-8")
+        self.assertEqual([], CHECKER.validate_manifest(self.root, current_path, trusted_path=trusted_path))
+
+    def test_trusted_manifest_rejects_follow_up_scope_without_fresh_coordinator_receipt(self):
+        trusted = self.manifest()
+        current = self.manifest_with_follow_up_scope()
+        trusted["coordinator_scope_receipt"] = current["coordinator_scope_receipt"]
+        trusted_path = self.root / "trusted.json"
+        current_path = self.root / "manifest.json"
+        trusted_path.write_text(json.dumps(trusted), encoding="utf-8")
+        current_path.write_text(json.dumps(current), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, current_path, trusted_path=trusted_path)
+        self.assertTrue(any("follow_up_scopes changed without a fresh coordinator receipt" in error for error in errors))
 
     def _single_track_manifest(self):
         manifest = self.manifest()
@@ -499,6 +558,31 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         self.assertTrue(any("expected_base_ref" in error for error in errors))
         self.assertTrue(any("expected_head_ref" in error for error in errors))
         self.assertTrue(any("base_oid" in error for error in errors))
+        self.assertTrue(any("head_oid" in error for error in errors))
+
+    def test_train_scope_selects_follow_up_scope_by_exact_refs_and_oids(self):
+        manifest = self.manifest_with_follow_up_scope()
+        errors = CHECKER.validate_train_scope(
+            manifest,
+            ["src/F1/Changed.kt", "docs/review/F1-child-7tier.md"],
+            base_ref_name="branch/F1",
+            head_ref_name="branch/F1-child",
+            base_oid="b" * 40,
+            head_oid="a" * 40,
+        )
+        self.assertEqual([], errors)
+
+    def test_train_scope_rejects_follow_up_scope_with_wrong_recorded_oid(self):
+        manifest = self.manifest_with_follow_up_scope()
+        manifest["follow_up_scopes"][0]["head_oid"] = "f" * 40
+        errors = CHECKER.validate_train_scope(
+            manifest,
+            ["src/F1/Changed.kt", "docs/review/F1-child-7tier.md"],
+            base_ref_name="branch/F1",
+            head_ref_name="branch/F1-child",
+            base_oid="b" * 40,
+            head_oid="a" * 40,
+        )
         self.assertTrue(any("head_oid" in error for error in errors))
 
     def test_train_scope_requires_sha_oids(self):
