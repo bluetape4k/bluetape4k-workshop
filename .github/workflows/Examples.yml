@@ -447,7 +447,7 @@ jobs:
       # - messaging-kafka-outbox-fallback: PostgreSQL + Kafka fallback relay path
       # - optimization-planning-contracts: PostgreSQL planning inbox/outbox on Java 25
       # - optimization-field-service-dispatch: PostgreSQL Field Service dispatch and replay path on Java 25
-      # - optimization-last-mile-routing: PostgreSQL last-mile routing proposal/CAS path on Java 25
+      # - optimization-last-mile-routing: PostgreSQL fixed-matrix routing, callback/outbox, and browser projection on Java 25
       # - optimization-warehouse-allocation: PostgreSQL-authoritative stock reservation and deterministic pick-wave path on Java 25
       # - optimization-shift-coverage: PostgreSQL shift coverage, swap, inbox/outbox and lifecycle path on Java 25
       # - optimization-clinic-appointment-solver: embedded Timefold Solver clinic/resource proposal path on Java 25
