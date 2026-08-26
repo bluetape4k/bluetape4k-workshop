@@ -56,6 +56,12 @@ STATE_TRANSITIONS = {
 ACTIVE_STATES = {"READY", "MERGE_READY"}
 CONTROL_RE = re.compile(r"[\x00-\x1f\x7f]")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+CHECKSUM_RE = re.compile(r"^[0-9a-f]{64}$")
+FOLLOW_UP_SCOPE_KINDS = {"child", "coordinator"}
+FOLLOW_UP_SCOPE_FIELDS = {
+    "scope_id", "scope_kind", "parent_track", "expected_head_ref", "expected_base_ref",
+    "head_oid", "base_oid", "issue_numbers", "allowed_paths", "review_artifact",
+}
 DEPENDENCY_DECLARATION_NAMES = {"build.gradle", "build.gradle.kts", "libs.versions.toml"}
 DEPENDENCY_INSIGHT_RE = re.compile(
     r"^(?:\./gradlew|gradlew)\s+"
@@ -377,6 +383,124 @@ def manifest_nodes(manifest: Dict[str, object]) -> Dict[str, Dict[str, object]]:
     return {str(node.get("track")): node for node in manifest.get("nodes", []) if isinstance(node, dict)}
 
 
+def manifest_follow_up_scopes(manifest: Dict[str, object]) -> List[Dict[str, object]]:
+    scopes = manifest.get("follow_up_scopes", [])
+    if not isinstance(scopes, list):
+        return []
+    return [scope for scope in scopes if isinstance(scope, dict)]
+
+
+def _scope_path_prefix(raw: object) -> str:
+    return clean_cell(str(raw)).removesuffix("/**")
+
+
+def _validate_follow_up_scopes(
+    root: Path,
+    manifest: Dict[str, object],
+    fixed_tracks: Sequence[str],
+) -> List[str]:
+    errors: List[str] = []
+    raw_scopes = manifest.get("follow_up_scopes", [])
+    if not isinstance(raw_scopes, list):
+        return ["follow_up_scopes must be a list"]
+    scopes = [scope for scope in raw_scopes if isinstance(scope, dict)]
+    if len(scopes) != len(raw_scopes):
+        errors.append("follow_up_scopes entries must be objects")
+    scope_ids = set()
+    for index, scope in enumerate(scopes):
+        prefix = "follow_up_scopes[%d]" % index
+        missing = sorted(FOLLOW_UP_SCOPE_FIELDS - set(scope))
+        unknown = sorted(set(scope) - FOLLOW_UP_SCOPE_FIELDS)
+        if missing:
+            errors.append("%s: missing fields %s" % (prefix, ", ".join(missing)))
+        if unknown:
+            errors.append("%s: unknown fields %s" % (prefix, ", ".join(unknown)))
+        scope_id = scope.get("scope_id")
+        if not isinstance(scope_id, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", scope_id):
+            errors.append("%s: scope_id must be a safe identifier" % prefix)
+        elif scope_id in scope_ids:
+            errors.append("%s: duplicate scope_id %s" % (prefix, escaped(scope_id)))
+        else:
+            scope_ids.add(scope_id)
+        scope_kind = scope.get("scope_kind")
+        if scope_kind not in FOLLOW_UP_SCOPE_KINDS:
+            errors.append("%s: invalid scope_kind %s" % (prefix, escaped(scope_kind)))
+        parent_track = scope.get("parent_track")
+        if parent_track not in fixed_tracks:
+            errors.append("%s: parent_track must name a fixed track" % prefix)
+        for field in ("expected_head_ref", "expected_base_ref"):
+            value = scope.get(field)
+            if not isinstance(value, str) or not value.strip() or CONTROL_RE.search(value):
+                errors.append("%s: %s must be a non-empty ref" % (prefix, field))
+        for field in ("head_oid", "base_oid"):
+            value = scope.get(field)
+            if value in (None, ""):
+                if scope_kind == "child":
+                    errors.append("%s: child scope requires %s" % (prefix, field))
+            elif not SHA_RE.fullmatch(str(value)):
+                errors.append("%s: %s must be null or a 40-hex SHA" % (prefix, field))
+        issue_numbers = scope.get("issue_numbers")
+        if not isinstance(issue_numbers, list) or not issue_numbers:
+            errors.append("%s: issue_numbers must be non-empty" % prefix)
+        elif any(isinstance(issue, bool) or not isinstance(issue, int) or issue <= 0 for issue in issue_numbers):
+            errors.append("%s: issue_numbers must contain positive integers" % prefix)
+        elif len(set(issue_numbers)) != len(issue_numbers):
+            errors.append("%s: issue_numbers must not contain duplicates" % prefix)
+        allowed_paths = scope.get("allowed_paths")
+        if not isinstance(allowed_paths, list) or not allowed_paths:
+            errors.append("%s: allowed_paths must be non-empty" % prefix)
+            allowed_paths = []
+        else:
+            for value in allowed_paths:
+                try:
+                    safe_relative_path(root, value, must_exist=False)
+                except (TypeError, AttributeError, ValueError) as exc:
+                    errors.append("%s: invalid allowed path %s" % (prefix, escaped(exc)))
+        review_artifact = scope.get("review_artifact")
+        if review_artifact is None:
+            errors.append("%s: invalid review_artifact blank path" % prefix)
+        else:
+            try:
+                safe_relative_path(root, review_artifact, must_exist=False)
+            except (TypeError, AttributeError, ValueError) as exc:
+                errors.append("%s: invalid review_artifact %s" % (prefix, escaped(exc)))
+        if review_artifact not in allowed_paths:
+            errors.append("%s: review_artifact must be in allowed_paths" % prefix)
+        if parent_track in fixed_tracks:
+            parent = manifest_nodes(manifest).get(str(parent_track), {})
+            if _normalise_ref(str(scope.get("expected_base_ref", ""))) != _normalise_ref(str(parent.get("expected_head_ref", ""))):
+                errors.append("%s: expected_base_ref must equal parent track expected_head_ref" % prefix)
+    for index, left in enumerate(scopes):
+        left_paths = left.get("allowed_paths", []) if isinstance(left.get("allowed_paths"), list) else []
+        for right in scopes[index + 1 :]:
+            right_paths = right.get("allowed_paths", []) if isinstance(right.get("allowed_paths"), list) else []
+            if any(
+                _scope_path_prefix(left_path) == _scope_path_prefix(right_path)
+                or _scope_path_prefix(left_path).startswith(_scope_path_prefix(right_path) + "/")
+                or _scope_path_prefix(right_path).startswith(_scope_path_prefix(left_path) + "/")
+                for left_path in left_paths
+                for right_path in right_paths
+            ):
+                errors.append(
+                    "follow_up_scopes overlap: %s and %s" %
+                    (escaped(left.get("scope_id")), escaped(right.get("scope_id")))
+                )
+    receipt = manifest.get("coordinator_scope_receipt")
+    if scopes:
+        if not isinstance(receipt, dict):
+            errors.append("follow_up_scopes require coordinator_scope_receipt")
+        else:
+            receipt_id = receipt.get("receipt_id")
+            checksum = receipt.get("checksum")
+            if not isinstance(receipt_id, str) or not receipt_id.strip() or CONTROL_RE.search(receipt_id):
+                errors.append("coordinator_scope_receipt receipt_id must be non-empty")
+            if not isinstance(checksum, str) or not CHECKSUM_RE.fullmatch(checksum):
+                errors.append("coordinator_scope_receipt checksum must be a 64-hex SHA")
+    elif receipt not in (None, {}):
+        errors.append("coordinator_scope_receipt requires follow_up_scopes")
+    return errors
+
+
 def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, trusted_path: Optional[Path] = None) -> List[str]:
     errors: List[str] = []
     try:
@@ -473,6 +597,7 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
         for selector in node.get("test_selectors", []):
             if not isinstance(selector, str) or not selector.strip() or CONTROL_RE.search(selector):
                 errors.append("%s: invalid test selector" % track)
+    errors.extend(_validate_follow_up_scopes(root, manifest, fixed_tracks))
     active = {track: node for track, node in node_map.items() if node.get("state") in ACTIVE_STATES}
     active_paths = [(track, clean_cell(path).removesuffix("/**")) for track, node in active.items() for path in node.get("allowed_paths", [])]
     for index, (left_track, left_path) in enumerate(active_paths):
@@ -535,6 +660,25 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
             for top_level in ("repository", "base_ref", "fixed_tracks", "state_values", "receipt_status_values", "receipt_transitions", "state_transitions"):
                 if manifest.get(top_level) != trusted.get(top_level):
                     errors.append("manifest top-level contract changed without a trusted coordinator update: %s" % top_level)
+            current_scopes = manifest.get("follow_up_scopes", [])
+            trusted_scopes = trusted.get("follow_up_scopes", [])
+            current_scope_receipt = manifest.get("coordinator_scope_receipt")
+            trusted_scope_receipt = trusted.get("coordinator_scope_receipt")
+            if current_scopes != trusted_scopes:
+                current_receipt_id = current_scope_receipt.get("receipt_id") if isinstance(current_scope_receipt, dict) else None
+                current_receipt_checksum = current_scope_receipt.get("checksum") if isinstance(current_scope_receipt, dict) else None
+                trusted_receipt_id = trusted_scope_receipt.get("receipt_id") if isinstance(trusted_scope_receipt, dict) else None
+                trusted_receipt_checksum = trusted_scope_receipt.get("checksum") if isinstance(trusted_scope_receipt, dict) else None
+                if (
+                    not isinstance(current_scope_receipt, dict)
+                    or not current_receipt_id
+                    or not current_receipt_checksum
+                    or current_receipt_id == trusted_receipt_id
+                    or current_receipt_checksum == trusted_receipt_checksum
+                ):
+                    errors.append("follow_up_scopes changed without a fresh coordinator receipt")
+            elif current_scope_receipt != trusted_scope_receipt:
+                errors.append("coordinator_scope_receipt changed without follow_up_scopes update")
             current_nodes = manifest_nodes(manifest)
             trusted_nodes = manifest_nodes(trusted)
             for track in fixed_tracks:
@@ -695,39 +839,61 @@ def validate_train_scope(
     if not clean_cell(head_ref_name):
         errors.append("head_ref_name is required for PR scope")
     nodes = manifest_nodes(manifest)
-    matching_tracks = []
-    for track, node in nodes.items():
+    scope_entries = list(nodes.items()) + [
+        (str(scope.get("scope_id")), scope)
+        for scope in manifest_follow_up_scopes(manifest)
+    ]
+    matching_scopes = []
+    for label, node in scope_entries:
         allowed_paths = node.get("allowed_paths", [])
         if isinstance(allowed_paths, list) and all(
             any(_path_matches_allowed(path, str(allowed)) for allowed in allowed_paths)
             for path in changed_paths
         ):
-            matching_tracks.append(track)
-    if len(matching_tracks) != 1:
+            matching_scopes.append((label, node))
+    if not matching_scopes:
         errors.append(
-            "PR changed paths must map to exactly one manifest track (found %d)" % len(matching_tracks)
+            "PR changed paths must map to exactly one manifest track (found 0)"
         )
         return errors
-    track = matching_tracks[0]
-    node = nodes[track]
-    expected_base = _normalise_ref(str(node.get("expected_base_ref", "")))
-    expected_head = _normalise_ref(str(node.get("expected_head_ref", "")))
     actual_base = _normalise_ref(base_ref_name)
     actual_head = _normalise_ref(head_ref_name)
+    if len(matching_scopes) > 1:
+        ref_matches = [
+            (label, node)
+            for label, node in matching_scopes
+            if actual_base == _normalise_ref(str(node.get("expected_base_ref", "")))
+            and actual_head == _normalise_ref(str(node.get("expected_head_ref", "")))
+        ]
+        if len(ref_matches) == 1:
+            matching_scopes = ref_matches
+        else:
+            errors.append(
+                "PR changed paths must map to exactly one manifest track (found %d)" % len(matching_scopes)
+            )
+            return errors
+    if len(matching_scopes) != 1:
+        errors.append(
+            "PR changed paths must map to exactly one manifest track (found %d)" % len(matching_scopes)
+        )
+        return errors
+    scope_label, node = matching_scopes[0]
+    expected_base = _normalise_ref(str(node.get("expected_base_ref", "")))
+    expected_head = _normalise_ref(str(node.get("expected_head_ref", "")))
     if actual_base != expected_base:
         errors.append(
             "%s: expected_base_ref %s but PR base ref is %s" %
-            (track, escaped(expected_base), escaped(actual_base))
+            (scope_label, escaped(expected_base), escaped(actual_base))
         )
     if actual_head != expected_head:
         errors.append(
             "%s: expected_head_ref %s but PR head ref is %s" %
-            (track, escaped(expected_head), escaped(actual_head))
+            (scope_label, escaped(expected_head), escaped(actual_head))
         )
     for label, supplied in (("base_oid", base_oid), ("head_oid", head_oid)):
         recorded = node.get(label)
         if recorded not in (None, "") and recorded != supplied:
-            errors.append("%s: %s does not match the manifest recorded OID" % (track, label))
+            errors.append("%s: %s does not match the manifest recorded OID" % (scope_label, label))
     return errors
 
 

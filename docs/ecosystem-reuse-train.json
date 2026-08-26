@@ -43,6 +43,45 @@
     "MERGE_READY": ["MERGE_READY", "MERGED", "INVALID"],
     "MERGED": ["MERGED"]
   },
+  "follow_up_scopes": [
+    {
+      "scope_id": "coordinator-child-scope",
+      "scope_kind": "coordinator",
+      "parent_track": "P0",
+      "expected_head_ref": "fix/ecosystem-reuse-child-scope",
+      "expected_base_ref": "feat/ecosystem-reuse-gate",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [822],
+      "allowed_paths": [
+        "docs/ecosystem-reuse-train.json",
+        ".github/scripts/check-ecosystem-reuse.py",
+        ".github/scripts/test_check_ecosystem_reuse.py",
+        "docs/review/2026-08-26-ecosystem-child-scope-7tier.md"
+      ],
+      "review_artifact": "docs/review/2026-08-26-ecosystem-child-scope-7tier.md"
+    },
+    {
+      "scope_id": "F1-P2-02",
+      "scope_kind": "child",
+      "parent_track": "F1",
+      "expected_head_ref": "fix/ecosystem-reuse-shutdown-deadline",
+      "expected_base_ref": "fix/ecosystem-reuse-field-service-contracts",
+      "head_oid": "ccbcd903d824fd549728b2e5f182fd8ab4374d24",
+      "base_oid": "046b61bee697a5ff252144db42d1c41106558be4",
+      "issue_numbers": [782],
+      "allowed_paths": [
+        "optimization/field-service-dispatch/src/main/kotlin/**",
+        "optimization/field-service-dispatch/src/test/kotlin/io/bluetape4k/workshop/optimization/fieldservice/application/FieldServiceReplanServiceTest.kt",
+        "docs/review/2026-08-25-F1-7tier.md"
+      ],
+      "review_artifact": "docs/review/2026-08-25-F1-7tier.md"
+    }
+  ],
+  "coordinator_scope_receipt": {
+    "receipt_id": "20260826T055755Z-4602c2c1",
+    "checksum": "ebfedc6c989134ceedc03461d1b8a5f148e8deb27bce689638daf8c1813d6569"
+  },
   "nodes": [
     {
       "track": "P0",
