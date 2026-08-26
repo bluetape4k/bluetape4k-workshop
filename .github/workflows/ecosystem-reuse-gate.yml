@@ -33,6 +33,8 @@ on:
       - '.github/workflows/ecosystem-reuse-gate.yml'
       - '**/build.gradle.kts'
       - 'gradle/libs.versions.toml'
+      - 'optimization/field-service-dispatch/src/main/kotlin/**'
+      - 'optimization/field-service-dispatch/src/test/kotlin/**'
   workflow_dispatch:
 
 concurrency:

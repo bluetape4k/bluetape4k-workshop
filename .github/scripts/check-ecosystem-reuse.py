@@ -59,7 +59,7 @@ SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 CHECKSUM_RE = re.compile(r"^[0-9a-f]{64}$")
 FOLLOW_UP_SCOPE_KINDS = {"child", "coordinator"}
 OID_POLICIES = {"exact", "rebase-aware"}
-FIXED_NODE_OID_POLICIES = {"bootstrap", "reviewed-ancestor"}
+FIXED_NODE_OID_POLICIES = {"reviewed-ancestor"}
 REVIEWED_MARKER_LABEL_RE = re.compile(r"(?im)\breviewed_implementation_oid\s*:")
 REVIEWED_MARKER_RE = re.compile(r"(?im)\breviewed_implementation_oid\s*:\s*([0-9a-f]{40})\b")
 FOLLOW_UP_SCOPE_FIELDS = {
@@ -557,13 +557,6 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
             errors.append("%s: invalid receipt_status %s" % (track, escaped(receipt_status)))
         if oid_policy not in FIXED_NODE_OID_POLICIES:
             errors.append("%s: invalid fixed-node oid_policy %s" % (track, escaped(oid_policy)))
-        elif oid_policy == "bootstrap":
-            if state != "PLANNED":
-                errors.append("%s: bootstrap oid_policy requires PLANNED state" % track)
-            if any(node.get(field) not in (None, "") for field in ("head_oid", "base_oid", "merge_base_oid")):
-                errors.append("%s: bootstrap oid_policy requires null OIDs" % track)
-            if receipt_status != "PENDING" or node.get("receipt_id") not in (None, "") or node.get("checksum") not in (None, ""):
-                errors.append("%s: bootstrap oid_policy requires a pending receipt" % track)
         elif oid_policy == "reviewed-ancestor":
             if any(node.get(field) not in (None, "") for field in ("head_oid", "base_oid", "merge_base_oid")):
                 errors.append("%s: reviewed-ancestor oid_policy requires null legacy OIDs" % track)
@@ -583,12 +576,26 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
         if parent_track is not None:
             parent_node = node_map.get(str(parent_track), {})
             if state in ACTIVE_STATES | {"MERGED"}:
+                if parent_node.get("state") not in ACTIVE_STATES | {"MERGED"}:
+                    errors.append("%s: active child requires an active parent" % track)
                 if not SHA_RE.fullmatch(str(node.get("parent_oid", ""))):
                     errors.append("%s: active child node requires a 40-hex parent_oid" % track)
-                if not SHA_RE.fullmatch(str(parent_node.get("head_oid", ""))):
-                    errors.append("%s: active child requires a recorded parent head_oid" % track)
-                elif node.get("parent_oid") != parent_node.get("head_oid"):
-                    errors.append("%s: parent_oid must equal the parent node head_oid" % track)
+                parent_oid_field = (
+                    "reviewed_implementation_oid"
+                    if parent_node.get("oid_policy") == "reviewed-ancestor"
+                    else "head_oid"
+                )
+                parent_oid = parent_node.get(parent_oid_field)
+                if not SHA_RE.fullmatch(str(parent_oid or "")):
+                    errors.append(
+                        "%s: active child requires a recorded parent %s" %
+                        (track, parent_oid_field)
+                    )
+                elif node.get("parent_oid") != parent_oid:
+                    errors.append(
+                        "%s: parent_oid must equal the parent node %s" %
+                        (track, parent_oid_field)
+                    )
         if not isinstance(node.get("issue_numbers"), list) or not node.get("issue_numbers"):
             errors.append("%s: issue_numbers must be non-empty" % track)
         if not isinstance(node.get("allowed_paths"), list) or not node.get("allowed_paths"):
@@ -682,6 +689,14 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
             errors.append("--bootstrap cannot be combined with a trusted manifest")
         if manifest.get("base_ref") != "origin/develop":
             errors.append("P0 bootstrap requires base_ref origin/develop")
+        for track in fixed_tracks:
+            node = node_map.get(track, {})
+            if node.get("oid_policy") != "reviewed-ancestor":
+                errors.append("%s: bootstrap context permits only reviewed-ancestor fixed nodes" % track)
+            if node.get("state") != "PLANNED":
+                errors.append("%s: bootstrap context requires every fixed node to remain PLANNED" % track)
+            if node.get("reviewed_implementation_oid") not in (None, ""):
+                errors.append("%s: bootstrap context requires null reviewed_implementation_oid" % track)
     elif trusted_path is not None:
         try:
             trusted = json.loads(trusted_path.read_text(encoding="utf-8"))
@@ -797,6 +812,12 @@ def validate_workflow(path: Path, pins_path: Optional[Path] = None) -> List[str]
         errors.append("workflow timeout-minutes must be 10")
     if "cancel-in-progress: true" not in text:
         errors.append("workflow must cancel duplicate runs")
+    for required_path in (
+        "optimization/field-service-dispatch/src/main/kotlin/**",
+        "optimization/field-service-dispatch/src/test/kotlin/**",
+    ):
+        if required_path not in text:
+            errors.append("workflow pull_request paths must include %s" % required_path)
     return errors
 
 
@@ -987,6 +1008,12 @@ def validate_train_scope(
             )
             errors.extend(marker_errors)
             if marker_oid is not None:
+                manifest_oid = node.get("reviewed_implementation_oid")
+                if node.get("state") in ACTIVE_STATES | {"MERGED"}:
+                    if not SHA_RE.fullmatch(str(manifest_oid or "")):
+                        errors.append("%s: active reviewed-ancestor scope requires manifest reviewed_implementation_oid" % scope_label)
+                    elif marker_oid != manifest_oid:
+                        errors.append("%s: marker must match manifest reviewed_implementation_oid" % scope_label)
                 if marker_oid == head_oid:
                     errors.append("%s: reviewed_implementation_oid must be a prior commit, not the PR head" % scope_label)
                 elif marker_oid == base_oid:

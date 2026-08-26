@@ -77,7 +77,7 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
     def manifest(self, *, state="PLANNED", receipt_status="PENDING", overlap=False):
         tracks = ["P0", "A1", "A2", "F1", "F2", "R1", "R2", "T1", "I1"]
         nodes = []
-        oid_policy = "bootstrap" if state == "PLANNED" else "reviewed-ancestor"
+        oid_policy = "reviewed-ancestor"
         for track in tracks:
             paths = ["src/%s/**" % track]
             if overlap and track == "A1":
@@ -394,13 +394,90 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         path.write_text(json.dumps(manifest), encoding="utf-8")
         self.assertEqual([], CHECKER.validate_manifest(self.root, path))
 
+    def test_manifest_accepts_active_reviewed_parent_child_transition(self):
+        manifest = self.manifest()
+        parent = manifest["nodes"][0]
+        child = manifest["nodes"][1]
+        parent.update({
+            "state": "READY",
+            "receipt_status": "PASS",
+            "receipt_id": "receipt-p0",
+            "checksum": "a" * 64,
+            "reviewed_implementation_oid": "b" * 40,
+        })
+        child.update({
+            "parent_track": "P0",
+            "expected_base_ref": parent["expected_head_ref"],
+            "state": "READY",
+            "receipt_status": "PASS",
+            "receipt_id": "receipt-a1",
+            "checksum": "c" * 64,
+            "parent_oid": parent["reviewed_implementation_oid"],
+            "reviewed_implementation_oid": "d" * 40,
+        })
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        self.assertEqual([], CHECKER.validate_manifest(self.root, path))
+
+    def test_manifest_rejects_active_child_parent_reviewed_oid_mismatch(self):
+        manifest = self.manifest()
+        parent = manifest["nodes"][0]
+        child = manifest["nodes"][1]
+        parent.update({
+            "state": "READY",
+            "receipt_status": "PASS",
+            "receipt_id": "receipt-p0",
+            "checksum": "a" * 64,
+            "reviewed_implementation_oid": "b" * 40,
+        })
+        child.update({
+            "parent_track": "P0",
+            "expected_base_ref": parent["expected_head_ref"],
+            "state": "READY",
+            "receipt_status": "PASS",
+            "receipt_id": "receipt-a1",
+            "checksum": "c" * 64,
+            "parent_oid": "e" * 40,
+            "reviewed_implementation_oid": "d" * 40,
+        })
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, path)
+        self.assertTrue(any("parent_oid must equal the parent node reviewed_implementation_oid" in error for error in errors))
+
+    def test_manifest_rejects_active_child_with_planned_parent(self):
+        manifest = self.manifest()
+        child = manifest["nodes"][1]
+        child.update({
+            "parent_track": "P0",
+            "expected_base_ref": manifest["nodes"][0]["expected_head_ref"],
+            "state": "READY",
+            "receipt_status": "PASS",
+            "receipt_id": "receipt-a1",
+            "checksum": "c" * 64,
+            "parent_oid": "b" * 40,
+            "reviewed_implementation_oid": "d" * 40,
+        })
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, path)
+        self.assertTrue(any("active child requires an active parent" in error for error in errors))
+
     def test_manifest_rejects_bootstrap_fixed_node_outside_planned_state(self):
         manifest = self.manifest(state="READY", receipt_status="PASS")
         manifest["nodes"][0]["oid_policy"] = "bootstrap"
         path = self.root / "manifest.json"
         path.write_text(json.dumps(manifest), encoding="utf-8")
         errors = CHECKER.validate_manifest(self.root, path)
-        self.assertTrue(any("bootstrap oid_policy requires PLANNED state" in error for error in errors))
+        self.assertTrue(any("invalid fixed-node oid_policy bootstrap" in error for error in errors))
+
+    def test_bootstrap_context_rejects_fixed_node_policy_downgrade(self):
+        manifest = self.manifest()
+        manifest["nodes"][1]["oid_policy"] = "bootstrap"
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, path, bootstrap=True)
+        self.assertTrue(any("invalid fixed-node oid_policy bootstrap" in error for error in errors))
 
     def test_manifest_rejects_invalid_receipt_transition_contract(self):
         manifest = self.manifest()
@@ -684,6 +761,50 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         self.assertEqual([], errors)
         self.assertNotEqual(implementation_oid, head_oid)
 
+    def test_train_scope_accepts_active_reviewed_ancestor_bound_to_manifest_oid(self):
+        base_oid, implementation_oid, head_oid = self._reviewed_ancestor_history()
+        manifest = self._reviewed_manifest()
+        node = manifest["nodes"][1]
+        node.update({
+            "state": "READY",
+            "receipt_status": "PASS",
+            "receipt_id": "receipt-a1",
+            "checksum": "d" * 64,
+            "reviewed_implementation_oid": implementation_oid,
+        })
+        errors = CHECKER.validate_train_scope(
+            manifest,
+            ["src/A1/Changed.kt", "docs/review/A1-7tier.md"],
+            base_ref_name="origin/develop",
+            head_ref_name="branch/A1",
+            base_oid=base_oid,
+            head_oid=head_oid,
+            repository_root=self.root,
+        )
+        self.assertEqual([], errors)
+
+    def test_train_scope_rejects_manifest_marker_oid_mismatch(self):
+        base_oid, _, head_oid = self._reviewed_ancestor_history()
+        manifest = self._reviewed_manifest()
+        node = manifest["nodes"][1]
+        node.update({
+            "state": "READY",
+            "receipt_status": "PASS",
+            "receipt_id": "receipt-a1",
+            "checksum": "d" * 64,
+            "reviewed_implementation_oid": "a" * 40,
+        })
+        errors = CHECKER.validate_train_scope(
+            manifest,
+            ["src/A1/Changed.kt", "docs/review/A1-7tier.md"],
+            base_ref_name="origin/develop",
+            head_ref_name="branch/A1",
+            base_oid=base_oid,
+            head_oid=head_oid,
+            repository_root=self.root,
+        )
+        self.assertTrue(any("must match manifest reviewed_implementation_oid" in error for error in errors))
+
     def test_train_scope_rejects_reviewed_ancestor_self_reference(self):
         base_oid, implementation_oid, _ = self._reviewed_ancestor_history()
         errors = CHECKER.validate_train_scope(
@@ -737,15 +858,23 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         self.assertTrue(any("reviewed_implementation_oid marker" in error for error in errors))
 
     def test_train_scope_rejects_bootstrap_node_without_bootstrap_context(self):
+        manifest = self.manifest()
+        manifest["nodes"][1]["oid_policy"] = "bootstrap"
         errors = CHECKER.validate_train_scope(
-            self.manifest(),
+            manifest,
             ["src/A1/Changed.kt"],
             base_ref_name="develop",
             head_ref_name="branch/A1",
             base_oid="b" * 40,
             head_oid="a" * 40,
         )
-        self.assertTrue(any("bootstrap oid_policy requires bootstrap context" in error for error in errors))
+        self.assertTrue(any("invalid oid_policy bootstrap" in error for error in errors))
+
+    def test_workflow_includes_follow_up_kotlin_paths(self):
+        workflow = SCRIPT.parent.parent / "workflows/ecosystem-reuse-gate.yml"
+        text = workflow.read_text(encoding="utf-8")
+        self.assertIn("optimization/field-service-dispatch/src/main/kotlin/**", text)
+        self.assertIn("optimization/field-service-dispatch/src/test/kotlin/**", text)
 
     def test_train_scope_rejects_paths_outside_one_node(self):
         errors = CHECKER.validate_train_scope(
