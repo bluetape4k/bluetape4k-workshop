@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.optimization.fieldservice.application
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
@@ -14,15 +16,18 @@ import io.bluetape4k.workshop.optimization.fieldservice.planner.PlannerInput
 import io.bluetape4k.workshop.optimization.fieldservice.planner.TravelTimeMatrix
 import org.junit.jupiter.api.Test
 import java.time.Duration
+import java.util.concurrent.AbstractExecutorService
 import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutionException
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 class FieldServiceReplanServiceTest {
 
@@ -480,6 +485,32 @@ class FieldServiceReplanServiceTest {
         }
     }
 
+    @Test
+    fun `closing the service shares one absolute termination deadline across executors`() {
+        val cpuExecutor = RecordingThreadPoolExecutor(awaitDelayMillis = 20)
+        val blockingExecutor = RecordingExecutorService(TestingExecutors.newFixedThreadPool(1))
+        val service = FieldServiceReplanService(
+            planner = DeterministicFieldServicePlanner(),
+            snapshot = ::emptyInput,
+            executor = cpuExecutor,
+            timeout = Duration.ofSeconds(2),
+            blockingExecutor = blockingExecutor,
+        )
+
+        try {
+            service.close()
+
+            cpuExecutor.awaitNanos.get() shouldBeGreaterThan 0L
+            blockingExecutor.awaitNanos.get() shouldBeGreaterThan 0L
+            blockingExecutor.awaitNanos.get() shouldBeLessThan cpuExecutor.awaitNanos.get()
+            cpuExecutor.shutdownNowCalled.get().shouldBeTrue()
+            blockingExecutor.shutdownNowCalled.get().shouldBeTrue()
+        } finally {
+            cpuExecutor.shutdownNow()
+            blockingExecutor.shutdownNow()
+        }
+    }
+
     private fun boundedCpuExecutor(): ThreadPoolExecutor = ThreadPoolExecutor(
         1,
         1,
@@ -487,6 +518,55 @@ class FieldServiceReplanServiceTest {
         TimeUnit.MILLISECONDS,
         ArrayBlockingQueue(1),
     )
+
+    private class RecordingThreadPoolExecutor(
+        private val awaitDelayMillis: Long,
+    ) : ThreadPoolExecutor(
+        1,
+        1,
+        0L,
+        TimeUnit.MILLISECONDS,
+        ArrayBlockingQueue(1),
+    ) {
+        val awaitNanos = AtomicLong()
+        val shutdownNowCalled = AtomicBoolean(false)
+
+        override fun awaitTermination(timeout: Long, unit: TimeUnit): Boolean {
+            awaitNanos.set(unit.toNanos(timeout))
+            Thread.sleep(awaitDelayMillis)
+            return false
+        }
+
+        override fun shutdownNow(): MutableList<Runnable> {
+            shutdownNowCalled.set(true)
+            return super.shutdownNow()
+        }
+    }
+
+    private class RecordingExecutorService(
+        private val delegate: ExecutorService,
+    ) : AbstractExecutorService() {
+        val awaitNanos = AtomicLong()
+        val shutdownNowCalled = AtomicBoolean(false)
+
+        override fun execute(command: Runnable) = delegate.execute(command)
+
+        override fun shutdown() = delegate.shutdown()
+
+        override fun shutdownNow(): MutableList<Runnable> {
+            shutdownNowCalled.set(true)
+            return delegate.shutdownNow()
+        }
+
+        override fun isShutdown(): Boolean = delegate.isShutdown
+
+        override fun isTerminated(): Boolean = delegate.isTerminated
+
+        override fun awaitTermination(timeout: Long, unit: TimeUnit): Boolean {
+            awaitNanos.set(unit.toNanos(timeout))
+            return false
+        }
+    }
 
     private fun emptyInput(aggregateId: AggregateId): PlannerInput = PlannerInput(
         workers = emptyList(),
