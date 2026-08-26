@@ -10,6 +10,7 @@ SPEC = importlib.util.spec_from_file_location("check_ecosystem_reuse", SCRIPT)
 CHECKER = importlib.util.module_from_spec(SPEC)
 assert SPEC and SPEC.loader
 SPEC.loader.exec_module(CHECKER)
+UNSET = object()
 
 
 HEADERS = (
@@ -131,13 +132,26 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
             "nodes": nodes,
         }
 
-    def follow_up_scope(self, *, scope_id="F1-child", scope_kind="child", base_oid="b" * 40, head_oid="a" * 40):
+    def follow_up_scope(
+        self,
+        *,
+        scope_id="F1-child",
+        scope_kind="child",
+        oid_policy="exact",
+        base_oid=UNSET,
+        head_oid=UNSET,
+    ):
+        if base_oid is UNSET:
+            base_oid = None if oid_policy == "rebase-aware" else "b" * 40
+        if head_oid is UNSET:
+            head_oid = None if oid_policy == "rebase-aware" else "a" * 40
         return {
             "scope_id": scope_id,
             "scope_kind": scope_kind,
             "parent_track": "F1",
             "expected_head_ref": "branch/F1-child",
             "expected_base_ref": "branch/F1",
+            "oid_policy": oid_policy,
             "head_oid": head_oid,
             "base_oid": base_oid,
             "issue_numbers": [2],
@@ -333,9 +347,40 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
 
     def test_manifest_accepts_coordinator_owned_follow_up_scope(self):
         manifest = self.manifest_with_follow_up_scope()
+        manifest["follow_up_scopes"][0] = self.follow_up_scope(
+            scope_id="coordinator-child",
+            scope_kind="coordinator",
+            oid_policy="rebase-aware",
+        )
         path = self.root / "manifest.json"
         path.write_text(json.dumps(manifest), encoding="utf-8")
         self.assertEqual([], CHECKER.validate_manifest(self.root, path))
+
+    def test_manifest_accepts_rebase_aware_child_scope_without_oids(self):
+        manifest = self.manifest_with_follow_up_scope()
+        manifest["follow_up_scopes"][0] = self.follow_up_scope(oid_policy="rebase-aware")
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        self.assertEqual([], CHECKER.validate_manifest(self.root, path))
+
+    def test_manifest_rejects_rebase_aware_child_scope_with_stale_oid(self):
+        manifest = self.manifest_with_follow_up_scope()
+        manifest["follow_up_scopes"][0] = self.follow_up_scope(
+            oid_policy="rebase-aware",
+            head_oid="a" * 40,
+        )
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, path)
+        self.assertTrue(any("rebase-aware scope requires head_oid to be null" in error for error in errors))
+
+    def test_manifest_rejects_unknown_follow_up_oid_policy(self):
+        manifest = self.manifest_with_follow_up_scope()
+        manifest["follow_up_scopes"][0]["oid_policy"] = "floating"
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, path)
+        self.assertTrue(any("invalid oid_policy" in error for error in errors))
 
     def test_manifest_rejects_follow_up_scope_overlap(self):
         manifest = self.manifest_with_follow_up_scope()
@@ -584,6 +629,19 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
             head_oid="a" * 40,
         )
         self.assertTrue(any("head_oid" in error for error in errors))
+
+    def test_train_scope_accepts_rebase_aware_follow_up_after_rebase(self):
+        manifest = self.manifest_with_follow_up_scope()
+        manifest["follow_up_scopes"][0] = self.follow_up_scope(oid_policy="rebase-aware")
+        errors = CHECKER.validate_train_scope(
+            manifest,
+            ["src/F1/Changed.kt", "docs/review/F1-child-7tier.md"],
+            base_ref_name="branch/F1",
+            head_ref_name="branch/F1-child",
+            base_oid="c" * 40,
+            head_oid="d" * 40,
+        )
+        self.assertEqual([], errors)
 
     def test_train_scope_requires_sha_oids(self):
         errors = CHECKER.validate_train_scope(

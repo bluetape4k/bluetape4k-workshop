@@ -50,6 +50,7 @@
       "parent_track": "P0",
       "expected_head_ref": "fix/ecosystem-reuse-child-scope",
       "expected_base_ref": "feat/ecosystem-reuse-gate",
+      "oid_policy": "rebase-aware",
       "head_oid": null,
       "base_oid": null,
       "issue_numbers": [822],
@@ -67,8 +68,9 @@
       "parent_track": "F1",
       "expected_head_ref": "fix/ecosystem-reuse-shutdown-deadline",
       "expected_base_ref": "fix/ecosystem-reuse-field-service-contracts",
-      "head_oid": "ccbcd903d824fd549728b2e5f182fd8ab4374d24",
-      "base_oid": "046b61bee697a5ff252144db42d1c41106558be4",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
       "issue_numbers": [782],
       "allowed_paths": [
         "optimization/field-service-dispatch/src/main/kotlin/**",
@@ -79,8 +81,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260826T055755Z-4602c2c1",
-    "checksum": "ebfedc6c989134ceedc03461d1b8a5f148e8deb27bce689638daf8c1813d6569"
+    "receipt_id": "20260826T081952Z-c08d5362",
+    "checksum": "d29cccdf41f7873f078da6fe42b03661d918eafc32da3e7fd1ad1071e5c4f239"
   },
   "nodes": [
     {

@@ -58,9 +58,10 @@ CONTROL_RE = re.compile(r"[\x00-\x1f\x7f]")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 CHECKSUM_RE = re.compile(r"^[0-9a-f]{64}$")
 FOLLOW_UP_SCOPE_KINDS = {"child", "coordinator"}
+OID_POLICIES = {"exact", "rebase-aware"}
 FOLLOW_UP_SCOPE_FIELDS = {
     "scope_id", "scope_kind", "parent_track", "expected_head_ref", "expected_base_ref",
-    "head_oid", "base_oid", "issue_numbers", "allowed_paths", "review_artifact",
+    "oid_policy", "head_oid", "base_oid", "issue_numbers", "allowed_paths", "review_artifact",
 }
 DEPENDENCY_DECLARATION_NAMES = {"build.gradle", "build.gradle.kts", "libs.versions.toml"}
 DEPENDENCY_INSIGHT_RE = re.compile(
@@ -425,6 +426,9 @@ def _validate_follow_up_scopes(
         scope_kind = scope.get("scope_kind")
         if scope_kind not in FOLLOW_UP_SCOPE_KINDS:
             errors.append("%s: invalid scope_kind %s" % (prefix, escaped(scope_kind)))
+        oid_policy = scope.get("oid_policy")
+        if oid_policy not in OID_POLICIES:
+            errors.append("%s: invalid oid_policy %s" % (prefix, escaped(oid_policy)))
         parent_track = scope.get("parent_track")
         if parent_track not in fixed_tracks:
             errors.append("%s: parent_track must name a fixed track" % prefix)
@@ -434,11 +438,14 @@ def _validate_follow_up_scopes(
                 errors.append("%s: %s must be a non-empty ref" % (prefix, field))
         for field in ("head_oid", "base_oid"):
             value = scope.get(field)
-            if value in (None, ""):
-                if scope_kind == "child":
-                    errors.append("%s: child scope requires %s" % (prefix, field))
-            elif not SHA_RE.fullmatch(str(value)):
-                errors.append("%s: %s must be null or a 40-hex SHA" % (prefix, field))
+            if oid_policy == "rebase-aware":
+                if value is not None:
+                    errors.append("%s: rebase-aware scope requires %s to be null" % (prefix, field))
+            elif oid_policy == "exact":
+                if value in (None, ""):
+                    errors.append("%s: exact scope requires %s" % (prefix, field))
+                elif not SHA_RE.fullmatch(str(value)):
+                    errors.append("%s: %s must be null or a 40-hex SHA" % (prefix, field))
         issue_numbers = scope.get("issue_numbers")
         if not isinstance(issue_numbers, list) or not issue_numbers:
             errors.append("%s: issue_numbers must be non-empty" % prefix)
@@ -890,10 +897,14 @@ def validate_train_scope(
             "%s: expected_head_ref %s but PR head ref is %s" %
             (scope_label, escaped(expected_head), escaped(actual_head))
         )
-    for label, supplied in (("base_oid", base_oid), ("head_oid", head_oid)):
-        recorded = node.get(label)
-        if recorded not in (None, "") and recorded != supplied:
-            errors.append("%s: %s does not match the manifest recorded OID" % (scope_label, label))
+    oid_policy = node.get("oid_policy", "exact")
+    if oid_policy not in OID_POLICIES:
+        errors.append("%s: invalid oid_policy %s" % (scope_label, escaped(oid_policy)))
+    elif oid_policy == "exact":
+        for label, supplied in (("base_oid", base_oid), ("head_oid", head_oid)):
+            recorded = node.get(label)
+            if recorded not in (None, "") and recorded != supplied:
+                errors.append("%s: %s does not match the manifest recorded OID" % (scope_label, label))
     return errors
 
 
