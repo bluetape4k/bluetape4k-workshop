@@ -100,8 +100,6 @@ bucket4j = "8.19.0"  # https://mvnrepository.com/artifact/com.bucket4j/bucket4j_
 ktor = "3.5.0"  # https://mvnrepository.com/artifact/io.ktor/ktor-server-core
 vertx = "5.1.3"  # https://mvnrepository.com/artifact/io.vertx/vertx-core
 
-timefold-solver = "2.2.0"   # https://mvnrepository.com/artifact/ai.timefold.solver/timefold-solver-bom
-
 eclipse-collections = "13.0.0"  # https://mvnrepository.com/artifact/org.eclipse.collections/eclipse-collections
 jctools = "4.0.6"  # https://mvnrepository.com/artifact/org.jctools/jctools-core
 ow2-asm = "9.10.1"  # https://mvnrepository.com/artifact/org.ow2.asm/asm
@@ -268,6 +266,9 @@ kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 kotlin-test-lib = { module = "org.jetbrains.kotlin:kotlin-test" }
 kotlin-test-junit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5" }
+
+# Timefold Solver — version governed by the bluetape4k-dependencies BOM
+timefold-solver-core = { module = "ai.timefold.solver:timefold-solver-core" }
 
 # Kotlinx Coroutines
 kotlinx-coroutines-bom = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-bom", version.ref = "kotlinx-coroutines" }

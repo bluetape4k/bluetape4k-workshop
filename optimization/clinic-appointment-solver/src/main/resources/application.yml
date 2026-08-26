@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: clinic-appointment-solver
+  profiles:
+    default: demo
+
+server:
+  address: 127.0.0.1
+  port: ${CLINIC_APPOINTMENT_SOLVER_PORT:8080}
+
+management:
+  server:
+    address: 127.0.0.1

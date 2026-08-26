@@ -14,6 +14,7 @@ provider HTTP 호출과 JDBC 작업은 Bluetape JDK 25 virtual-thread runtime에
 | [`last-mile-routing`](last-mile-routing/) | 고정 travel matrix 기반 synthetic pickup/delivery 라우팅, Bluetape Exposed CAS repository, 정규화 provider callback/outbox lifecycle, CSP 안전 redacted browser projection | PostgreSQL (Testcontainers) |
 | [`warehouse-allocation`](warehouse-allocation/) | synthetic warehouse allocation 및 pick-wave 제안, PostgreSQL 권위 재고 예약, 결정론적 제약·replay, redacted browser console | PostgreSQL (Testcontainers) |
 | [`shift-coverage`](shift-coverage/) | synthetic multi-site worker/shift coverage, hard-rule deterministic planning, 사람이 확인하는 shift swap, inbox/outbox fencing, redacted demo console | PostgreSQL + Testcontainers (기본 demo fake) |
+| [`clinic-appointment-solver`](clinic-appointment-solver/) | embedded Timefold Solver를 사용한 synthetic clinic appointment/resource 최적화, confirmed booking pin, 결정론적 proposal, 읽기 전용 score projection | In-memory fixture (외부 credential 불필요) |
 
 그룹 검증:
 
