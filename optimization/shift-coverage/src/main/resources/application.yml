@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: shift-coverage
+  profiles:
+    default: demo
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  address: 127.0.0.1
+  max-http-request-header-size: 16KB
+  tomcat:
+    max-http-form-post-size: 256KB
+
+shift-coverage:
+  profile: demo
+  bind-address: 127.0.0.1
+  max-body-bytes: 262144
+  page-size: 100
+  mutation-admission: 8
+  planner-workers: 4
+  planner-queue: 8
+  outbox-workers: 4
+  outbox-batch-size: 10
+  outbox-lease: 30s
+  io-timeout: 5s
+  shutdown-drain: 30s
+  zone-offset: Z
+  callback-secret: ${SHIFT_COVERAGE_CALLBACK_SECRET:shift-coverage-fixture-secret}
+
+management:
+  datadog:
+    metrics:
+      export:
+        enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus

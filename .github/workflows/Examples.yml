@@ -447,7 +447,10 @@ jobs:
       # - messaging-kafka-outbox-fallback: PostgreSQL + Kafka fallback relay path
       # - optimization-planning-contracts: PostgreSQL planning inbox/outbox on Java 25
       # - optimization-field-service-dispatch: PostgreSQL Field Service dispatch and replay path on Java 25
-      # - optimization-last-mile-routing: PostgreSQL last-mile routing proposal/CAS path on Java 25
+      # - optimization-last-mile-routing: PostgreSQL fixed-matrix routing, callback/outbox, and browser projection on Java 25
+      # - optimization-warehouse-allocation: PostgreSQL-authoritative stock reservation and deterministic pick-wave path on Java 25
+      # - optimization-shift-coverage: PostgreSQL shift coverage, swap, inbox/outbox and lifecycle path on Java 25
+      # - optimization-clinic-appointment-solver: embedded Timefold Solver clinic/resource proposal path on Java 25
       # - commerce-order-lifecycle-fulfillment: PostgreSQL durable lifecycle and replay path
       # - commerce-reservation-control-plane: PostgreSQL-authoritative reservation and advisory Redis path
       # - commerce-event-sourced-promotion-voucher-campaign: PostgreSQL append, projection, rebuild, and recovery path
@@ -481,6 +484,9 @@ jobs:
           :optimization-planning-contracts:test
           :optimization-field-service-dispatch:test
           :optimization-last-mile-routing:test
+          :optimization-warehouse-allocation:test
+          :optimization-shift-coverage:test
+          :optimization-clinic-appointment-solver:test
           :commerce-order-lifecycle-fulfillment:test
           :commerce-reservation-control-plane:test
           :commerce-event-sourced-promotion-voucher-campaign:integrationTest
@@ -564,6 +570,14 @@ jobs:
             optimization/field-service-dispatch/build/reports/tests/test/
             optimization/last-mile-routing/build/test-results/test/*.xml
             optimization/last-mile-routing/build/reports/tests/test/
+            optimization/warehouse-allocation/build/test-results/test/*.xml
+            optimization/warehouse-allocation/build/reports/tests/test/
+            optimization/warehouse-allocation/build/reports/warehouse-allocation-diagnostics/**
+            optimization/warehouse-allocation/build/reports/performance/*.jfr
+            optimization/shift-coverage/build/test-results/test/*.xml
+            optimization/shift-coverage/build/reports/tests/test/
+            optimization/clinic-appointment-solver/build/test-results/test/*.xml
+            optimization/clinic-appointment-solver/build/reports/tests/test/
             commerce/order-lifecycle-fulfillment/build/test-results/test/*.xml
             commerce/order-lifecycle-fulfillment/build/reports/tests/test/
             commerce/reservation-control-plane/build/test-results/test/*.xml

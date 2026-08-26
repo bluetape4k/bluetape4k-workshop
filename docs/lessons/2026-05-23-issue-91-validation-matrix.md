@@ -49,6 +49,9 @@ actionlint .github/workflows/nightly.yml              # → OK
   다시 실행한다.
 - 새 Testcontainers 모듈을 추가하면 validation matrix spec의 T3 Full group에
   넣는다.
+- `optimization-warehouse-allocation`은 PostgreSQL 권위 재고 예약을 검증하는
+  Testcontainers 모듈이므로 T3와 `scripts/smoke-validate.sh optimization`에
+  함께 등록한다.
 - 새 no-Testcontainers 모듈을 추가하면 spec의 T2 Smoke list와
   `scripts/smoke-validate.sh all-smoke` + `nightly.yml smoke-test`에 함께 넣는다.
 - broken-link regex는 optional Markdown image title string을 file path 일부로

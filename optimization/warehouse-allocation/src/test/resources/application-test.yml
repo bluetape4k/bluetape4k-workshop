@@ -1,0 +1,14 @@
+spring:
+  profiles:
+    default: test
+  sql:
+    init:
+      mode: never
+  datasource:
+    url: ${WAREHOUSE_ALLOCATION_TEST_DATABASE_URL:jdbc:postgresql://localhost:5432/warehouse_allocation}
+    username: ${WAREHOUSE_ALLOCATION_TEST_DATABASE_USERNAME:warehouse_allocation}
+    password: ${WAREHOUSE_ALLOCATION_TEST_DATABASE_PASSWORD:warehouse_allocation}
+warehouse-allocation:
+  provider: fake
+  hmac:
+    enabled: false

@@ -1,0 +1,104 @@
+# #526 Shift Coverage 구현 계획 preflight 검토
+
+- 검토일: 2026-08-24
+- 대상 계획: `docs/superpowers/plans/2026-08-24-issue-526-shift-coverage.md`
+- preflight 계획 SHA-256: `7f933db7c25b3fddb5d856372f31fe753ea32d6a0fa2f8410b1d9482aa06a196`
+- 기준 설계: `docs/superpowers/specs/2026-08-24-issue-526-shift-coverage-design.md`
+- 설계 SHA-256: `460a0c38051077679a8f29dceb01a41195cfb315d35c0e74f41d688b95b842e3`
+- 근거 이슈: https://github.com/bluetape4k/bluetape4k-workshop/issues/526
+- 검토 범위: 구현 전 계획의 요구사항 추적성, Bluetape 재사용, TDD 순서, PostgreSQL
+  권위, Java 25 lifecycle, HTTP 보안, 운영 복구, 문서·CI 등록
+
+## 검토 원장
+
+| 근거 | 사용 목적 | 확인 결과 |
+|---|---|---|
+| 승인 설계와 live Issue #526 | acceptance 1–12, 비목표, route·state·failure 계약 | 계획 Task 1–10과 traceability 표가 모든 요구를 연결한다. |
+| GNO 전역 query 및 보존된 Timefold 연구 | provider/custom Solver 경계, PostgreSQL 권위, fake boundary | live provider credential 없이 normalized ABI와 deterministic fake를 유지한다. |
+| `$bluetape-kotlin-patterns` 및 references | Kotlin/Exposed/Spring/JUnit/virtual-thread 규칙 | `require*`, `Uuid.V7`, `Base58`, UUID Exposed repository, Bluetape assertions/testers, KLogging, cancellation/IO 경계를 매트릭스와 Task에 반영했다. |
+| root `build.gradle.kts`와 기존 `optimization` 모듈 | BOM, Java 25, test serialization, build/task 등록 | `bluetape4k-dependencies` BOM, root `test-mutex` BuildService, existing repository/fixture/API 패턴을 재사용한다. |
+| resolved `bluetape4k-testcontainers:1.11.0`/`bluetape4k-junit5:1.11.0` | 공개 artifact capability 확인 | artifact에 module helper는 없지만 root Gradle BuildService가 표준 `test` task를 직렬화한다. 미확인 module helper는 추가하지 않는다. |
+
+## 독립 관점 검토
+
+| Priority | Lens | 결과·근거 | 필요한 수정 |
+|---|---|---|---|
+| P0/P1 | Performance / Exposed | PASS. UUID PK와 `AuditableUUIDTable`/`UUIDAuditableJdbcRepository`가 기존 `PlanningRequestRepository`와 일치한다. `PlannerClock`/`StepBudget`, 50,000 후보·5초 경계, fixed 4/queue 8, canonical lock tuple, named deadlock/timeout test, outbox queue saturation을 RED/GREEN 명령까지 추적했다. | 없음 |
+| P0/P1 | Stability | PASS. `DELIVERY_UNKNOWN`은 definitive lookup 전 redrive하지 않고 `NOT_FOUND` 후에만 manager redrive한다. `RETRY_EXHAUSTED` inbox는 별도 manager-only requeue, stored digest/new request ID/audit/no-write를 가진다. root `test-mutex`와 PENDING 규칙도 명시됐다. | 없음 |
+| P0/P1 | Security | PASS. HMAC length-prefixed `schemaVersion`/`generationId` context, exact signature headers, preflight no-write, principal-scoped fingerprint schema/restart, 400/401/403/404 negative matrix, loopback/CORS/log redaction canary가 plan/design에 정합하다. | 없음 |
+| P0/P1 | Operator/Ops | PASS. DB clock/lock·statement timeout, bounded audit, lease/effect fencing, readiness/liveness, operator reason/request ID, diagnostics/PENDING, smoke·workflow·ABI 검증과 rollback boundary가 명시됐다. | 없음 |
+| P0/P1 | Developer/API | PASS. module은 BOM-only consumer이고 `planning-contracts` implementation dependency가 없다. full route/header/error matrix, closed DTO, stable DTO/error ABI, exact RED command, test task 및 custom integration serialization 규칙이 있다. | 없음 |
+| P0/P1 | User/caller | PASS. manager/worker subject mapping과 allowlist, same-key cross-principal no-write, stale 409, 413/429/202 nextAction, browser keyboard state, redacted read model이 고정됐다. | 없음 |
+| P0/P1 | Main integration | PASS. Task 0 preflight review가 Task 1 전에 위치하고 Task 10은 구현 후 delta review로 분리됐다. Task 1–10과 acceptance 1–12, stop condition, workflow lane이 서로 모순되지 않는다. | 없음 |
+
+## TDD 및 실행 게이트
+
+- Task 5–8의 named behavior가 각 Task의 RED command에 포함된다. 예상된 missing
+  project/class/compilation failure를 먼저 관찰하고 최소 구현 후 동일 command를 GREEN으로
+  재실행한다.
+- Docker/Colima 또는 live HTTP가 unavailable이면 로그/report를 보존하고 해당 evidence를
+  `PENDING`으로 남긴다. skipped container를 PASS로 변환하지 않는다.
+- 구현을 시작하기 전 계획 검토의 최종 판정은 **PASS**이며, P0=0, P1=0, P2=0, P3=0이다.
+- 구현/Testcontainers 실행 증거는 이 artifact의 범위 밖이며 Task 10에서 fresh evidence로
+  수집한다.
+
+## Gate result
+
+- **PASS — Task 0 preflight review complete**
+- P0: `0`
+- P1: `0`
+- P2: `0`
+- P3: `0`
+- Task 1 구현 착수 조건: 충족
+
+## 구현 후 delta review
+
+- 검토일: 2026-08-24
+- 현재 계획 SHA-256: `e5cbea929531ce1e2c83401a962d3a6619bca71691f592a65cb43c2b0329a42c`
+- detekt 정책 재검토 후 계획 SHA-256: `95d00917559788287406ef59fedf70190faeb2deb203d97d270cc75828cd5c4b`
+- detekt 정책 재검토 후 설계 SHA-256: `45ffe4bf238bfbcacd8ede4a1b9862cc7198992214d6b069646edfd70140fabc`
+- 대상 구현: `optimization/shift-coverage` 및 README/workflow/smoke/lesson 등록
+- fresh evidence: matrix 보강 후 `./gradlew :optimization-shift-coverage:cleanTest :optimization-shift-coverage:test --no-build-cache --max-workers=1 --console=plain`에서 **59 tests PASS**, `build` PASS; PostgreSQL Testcontainers CAS/lock-timeout **3 tests PASS**; route/browser targeted **6 tests PASS**; demo `bootRun`에서 `Started ShiftCoverageApplicationKt`, actuator health `UP`, authenticated replan `202`, Prometheus `workshop_shift_coverage_*` 8 lines 확인 후 loopback process cleanup; Playwright에서 `/shift-coverage/` response `200`, CSP, initial/final `계획을 조회했습니다.`, replan accepted state, rendered row와 console error `0`을 확인했다. `bash scripts/smoke-validate.sh optimization`, `stale-check`, `actionlint`, `bash -n`, `git diff --check`, project registration PASS.
+- 하드닝 증거: missing/hostile Origin, strict non-loopback, malformed/oversized callback,
+  operator Origin no-write, stable error `nextAction`과 retryable `Retry-After: 1`, restart
+  generation sweep/idempotence, six metric-family bounded cardinality를 RED→GREEN으로
+  확인했다.
+
+- detekt 정책 재검토: `./gradlew :optimization-shift-coverage:detekt`는
+  `task 'detekt' not found`로 module-local task 부재를 확인했다. `optimization/*`가
+  detekt plugin을 적용하지 않고 Java 25 CI도 detekt를 제외하므로 이 결과는
+  `N/A (repository policy)`다. root `./gradlew detekt --max-workers=1 --console=plain`은
+  `BUILD SUCCESSFUL`로 통과했으며, 기존 structured OCR 리뷰의 root aggregate fallback
+  선례와 일치한다. 이 fallback으로 module source lint를 했다고 주장하지 않는다.
+
+| Lens | delta 결과 | 잔여 위험/판정 |
+|---|---|---|
+| Performance / Exposed | PASS | UUID aggregate/CAS/lock tuple와 PostgreSQL timeout evidence, bounded planner/generation state, restart generation sweep와 six-family cardinality bound가 구현·검증됐다. 장시간 외부 부하 측정은 범위 밖이다. |
+| Stability | PASS | inbox retry terminal, outbox `DELIVERY_UNKNOWN` reconciliation, bounded executor와 close/readiness를 테스트했다. full restart/lease sweep은 범위 밖으로 남겼다. |
+| Security | PASS | HMAC length-prefix context, strict canonical callback envelope, required target/digest headers, constant-time compare, strict loopback/Origin/role/no-write/redaction와 stable error contract를 반영했다. `postgres` profile은 환경 credential 없이는 시작하지 않는다. 5개 MockMvc route/CORS matrix와 callback/operator no-write를 통과했다. |
+| Operator/Ops | PASS | operator-only requeue/redrive, stable error code/nextAction, retry header, DB timeout profile, demo credential-free boot, actuator health/prometheus와 lifecycle evidence가 있다. 외부 장시간 diagnostics는 범위 밖이다. |
+| Developer/API | PASS | BOM-only module, DTO/controller/error handler, strict callback canonical JSON unknown-key handling, README/workflow/smoke registration이 컴파일·lint된다. directory console redirect, static CSP/safe-DOM contract와 6개 route/browser targeted test가 추가됐다. |
+| User/caller + integration | PASS | manager/worker redaction, idempotency replay/conflict, hostile Origin rejection, plan status/read model과 static console가 구현됐다. 실제 Playwright demo에서 redirect, replan 202, refresh, rendered state와 console error 0을 확인했다. remote provider integration은 범위 밖이다. |
+
+### Delta gate
+
+- 구현된 P0: `0`
+- 구현된 P1: `0`
+- P2/P3: restart generation sweep, bounded metrics cardinality와 route/status/CORS/browser
+  golden matrix는 해소됐다. 장시간 외부 부하와 remote provider integration은 범위
+  밖이다. repository root aggregate detekt는 PASS이며 module-local task 부재는
+  `N/A (repository policy)`로 남긴다.
+- **판정: PASS.** 현재 변경은 deterministic reference module, PostgreSQL fixture,
+  실제 demo browser, repository aggregate static gate로 검증됐다. module source lint를
+  했다는 주장은 하지 않으며, optimization module detekt 정책이 생기면 후속 검토를
+  연다. P0=0, P1=0.
+
+## 문서 작성 게이트
+
+| 항목 | 결과 | 근거 |
+|---|---|---|
+| SPW-01 | PASS | review 범위, live issue, 설계·계획·실행 명령과 unresolved module-lint 경계를 고정했다. |
+| SPW-02 | PASS | lens별 severity, 근거, 잔여 위험, gate verdict를 기록했다. |
+| SPW-03 | PASS | Korean naturalness checklist(KO-01..KO-07)를 적용해 `PENDING`, `N/A`, `PASS`의 의미를 구분했다. |
+| SPW-04 | PASS | plan/spec SHA, root/module detekt 결과, 기존 fallback 선례와 delta verdict를 대조했다. |
+| SPW-05 | PASS | 최종 Markdown을 다시 읽어 verdict와 residual risk가 일치함을 확인했다. |
