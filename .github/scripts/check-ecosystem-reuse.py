@@ -59,6 +59,7 @@ SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 CHECKSUM_RE = re.compile(r"^[0-9a-f]{64}$")
 FOLLOW_UP_SCOPE_KINDS = {"child", "coordinator"}
 OID_POLICIES = {"exact", "rebase-aware"}
+FIXED_NODE_OID_POLICIES = {"bootstrap", "exact"}
 FOLLOW_UP_SCOPE_FIELDS = {
     "scope_id", "scope_kind", "parent_track", "expected_head_ref", "expected_base_ref",
     "oid_policy", "head_oid", "base_oid", "issue_numbers", "allowed_paths", "review_artifact",
@@ -532,7 +533,7 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
     if sorted(node_map) != sorted(fixed_tracks):
         errors.append("manifest node tracks do not match fixed allowlist")
     required = {
-        "track", "expected_head_ref", "expected_base_ref", "parent_track", "head_oid", "base_oid",
+        "track", "expected_head_ref", "expected_base_ref", "parent_track", "oid_policy", "head_oid", "base_oid",
         "parent_oid", "merge_base_oid", "state", "issue_numbers", "allowed_paths", "gradle_tasks",
         "test_selectors", "gradle_flags", "timeout_seconds", "docker_required", "review_artifact",
         "receipt_id", "receipt_status", "checksum", "dependency_insight_commands",
@@ -547,10 +548,26 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
             continue
         state = node.get("state")
         receipt_status = node.get("receipt_status")
+        oid_policy = node.get("oid_policy")
         if state not in STATE_VALUES:
             errors.append("%s: invalid state %s" % (track, escaped(state)))
         if receipt_status not in RECEIPT_VALUES:
             errors.append("%s: invalid receipt_status %s" % (track, escaped(receipt_status)))
+        if oid_policy not in FIXED_NODE_OID_POLICIES:
+            errors.append("%s: invalid fixed-node oid_policy %s" % (track, escaped(oid_policy)))
+        elif oid_policy == "bootstrap":
+            if state != "PLANNED":
+                errors.append("%s: bootstrap oid_policy requires PLANNED state" % track)
+            if any(node.get(field) not in (None, "") for field in ("head_oid", "base_oid", "merge_base_oid")):
+                errors.append("%s: bootstrap oid_policy requires null OIDs" % track)
+            if receipt_status != "PENDING" or node.get("receipt_id") not in (None, "") or node.get("checksum") not in (None, ""):
+                errors.append("%s: bootstrap oid_policy requires a pending receipt" % track)
+        elif oid_policy == "exact":
+            for field in ("head_oid", "base_oid"):
+                if not SHA_RE.fullmatch(str(node.get(field) or "")):
+                    errors.append("%s: exact node requires %s" % (track, field))
+            if state != "PLANNED" and not SHA_RE.fullmatch(str(node.get("merge_base_oid") or "")):
+                errors.append("%s: exact active node requires merge_base_oid" % track)
         if state in {"READY", "MERGE_READY", "MERGED"} and receipt_status != "PASS":
             errors.append("%s: ready state requires receipt_status PASS" % track)
         if state != "PLANNED" and any(node.get(field) in (None, "") for field in ("head_oid", "base_oid", "merge_base_oid", "receipt_id", "checksum")):
@@ -692,7 +709,7 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
                 current = current_nodes.get(track, {})
                 baseline = trusted_nodes.get(track, {})
                 graph_changed = any(current.get(field) != baseline.get(field) for field in (
-                    "expected_head_ref", "expected_base_ref", "parent_track", "issue_numbers",
+                    "expected_head_ref", "expected_base_ref", "parent_track", "oid_policy", "issue_numbers",
                     "allowed_paths", "gradle_tasks", "test_selectors", "gradle_flags",
                     "timeout_seconds", "docker_required", "dependency_insight_commands",
                     "review_artifact", "parent_evidence",
@@ -833,6 +850,7 @@ def validate_train_scope(
     head_ref_name: str,
     base_oid: str,
     head_oid: str,
+    bootstrap: bool = False,
 ) -> List[str]:
     """Bind a pull-request diff to one manifest node and its exact refs/OIDs."""
     errors: List[str] = []
@@ -897,13 +915,22 @@ def validate_train_scope(
             "%s: expected_head_ref %s but PR head ref is %s" %
             (scope_label, escaped(expected_head), escaped(actual_head))
         )
-    oid_policy = node.get("oid_policy", "exact")
-    if oid_policy not in OID_POLICIES:
+    oid_policy = node.get("oid_policy")
+    if oid_policy not in FIXED_NODE_OID_POLICIES and oid_policy not in OID_POLICIES:
         errors.append("%s: invalid oid_policy %s" % (scope_label, escaped(oid_policy)))
+    elif oid_policy == "bootstrap":
+        if not bootstrap:
+            errors.append("%s: bootstrap oid_policy requires bootstrap context" % scope_label)
+        if node.get("state") != "PLANNED":
+            errors.append("%s: bootstrap oid_policy requires PLANNED state" % scope_label)
+        if any(node.get(field) not in (None, "") for field in ("base_oid", "head_oid")):
+            errors.append("%s: bootstrap oid_policy requires null OIDs" % scope_label)
     elif oid_policy == "exact":
         for label, supplied in (("base_oid", base_oid), ("head_oid", head_oid)):
             recorded = node.get(label)
-            if recorded not in (None, "") and recorded != supplied:
+            if not SHA_RE.fullmatch(str(recorded or "")):
+                errors.append("%s: exact scope requires recorded %s" % (scope_label, label))
+            elif recorded != supplied:
                 errors.append("%s: %s does not match the manifest recorded OID" % (scope_label, label))
     return errors
 
@@ -959,6 +986,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                 head_ref_name=args.head_ref_name,
                 base_oid=args.base_ref,
                 head_oid=args.head_ref,
+                bootstrap=args.bootstrap,
             ))
     errors.extend(validate_changed_files(root, changed_files))
     if errors:

@@ -149,9 +149,15 @@ child PR의 exact-head test receipt와 merge 여부를 받은 뒤 별도 closeou
 train manifest는 `docs/ecosystem-reuse-train.json`에 보관하며 track, expected
 head/base ref, parent OID, merge-base, 상태, issue mapping, allowed paths,
 structured Gradle/test selectors, timeout, Docker 요구 여부, review artifact,
-receipt ID, receipt status, checksum을 포함한다. workflow coordinator와 serial
-closeout lane만 manifest를 갱신한다. Issue 본문은 설명과 메타데이터로만 취급하고
-child 편집 범위나 shell command를 결정하지 않는다.
+OID policy, receipt ID, receipt status, checksum을 포함한다. fixed node의
+`oid_policy=bootstrap`은 자체 head를 아직 기록할 수 없는 최초 P0 manifest에서만
+사용하며 `state=PLANNED`, 모든 OID와 receipt가 `null/PENDING`이어야 한다.
+coordinator가 실제 base/head/merge-base를 동결하면 `oid_policy=exact`로 전환하고,
+그 뒤 exact scope는 기록된 `base_oid`와 `head_oid`가 PR 입력과 일치하지 않으면
+실패한다. 따라서 `null` OID를 `exact`로 가장하는 완화는 허용하지 않는다.
+follow-up scope는 `exact` 또는 `rebase-aware`만 사용한다. workflow coordinator와
+serial closeout lane만 manifest를 갱신한다. Issue 본문은 설명과 메타데이터로만
+취급하고 child 편집 범위나 shell command를 결정하지 않는다.
 
 독자가 실제 재사용 대상을 바로 찾을 수 있도록 대표 anchor는
 [`docs/ecosystem-reuse-inventory.md`](../../ecosystem-reuse-inventory.md)에

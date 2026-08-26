@@ -35,6 +35,17 @@ targeted test receipt를 제출해야 한다.
 승격하지 않는다. P2/P3는 문서 계약에 흡수했으며, 실제 구현 lane에서 다시
 발생하면 해당 Tier와 descendant를 `INVALID`로 전환한다.
 
+## 2026-08-26 독립 최종 검토 후속 수리
+
+독립 architect 검토에서 fixed node가 `oid_policy=exact`처럼 보이지만
+`PLANNED/null` OID로 비교를 건너뛰는 P1을 식별했다. self-referential한 P0
+manifest에 임의 SHA를 기록하는 대신, 최초 manifest의 모든 fixed node를
+`oid_policy=bootstrap`으로 명시하고 `state=PLANNED`, OID `null`, receipt
+`PENDING`을 강제했다. checker는 bootstrap context 밖의 PR scope를 거부하며,
+coordinator가 ancestor를 동결한 뒤 `oid_policy=exact`와 기록된 OID 없이는
+scope를 통과시키지 않는다. 이 로컬 수리는 checker 회귀 테스트와 bootstrap
+manifest 검증으로 확인했고 hosted exact-head 재실행은 아직 PENDING이다.
+
 ## 후속 P1 수리 증거
 
 - `actual_import`가 `build.gradle.kts`/catalog를 가리키거나 `capability_api`가

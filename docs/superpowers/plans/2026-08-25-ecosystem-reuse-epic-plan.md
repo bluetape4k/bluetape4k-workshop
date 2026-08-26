@@ -152,7 +152,7 @@ coordinator와 serial closeout lane만 이를 갱신할 수 있다.
 
   Create `docs/ecosystem-reuse-train.json` with one node for `P0`, `A1`, `A2`,
   `F1`, `F2`, `R1`, `R2`, `T1`, and `I1`. Each node must contain `track`,
-  `expected_head_ref`, `expected_base_ref`, `parent_track`, `head_oid`,
+  `expected_head_ref`, `expected_base_ref`, `parent_track`, `oid_policy`, `head_oid`,
   `base_oid`, `parent_oid`, `merge_base_oid`, `state` (`PLANNED`, `READY`,
   `INVALID`, `MERGE_READY`, or `MERGED`), `issue_numbers`, `allowed_paths`,
   `gradle_tasks`, `test_selectors`, `gradle_flags`, `timeout_seconds`,
@@ -160,11 +160,12 @@ coordinator와 serial closeout lane만 이를 갱신할 수 있다.
   `receipt_id`, `receipt_status`, and `checksum`. The canonical schema above and
   its checker are authoritative for the complete transition tables, receipt
   fields, and R2 `parent_evidence`; this task list is not a reduced schema.
-  Initialize all OIDs as the
-  current known values or `null` with `state=PLANNED`; the checker must reject
-  missing fields after a node leaves `PLANNED`. Do not place this machine state
-  under `.bluetape`; the workflow script remains the sole writer of `.bluetape`
-  receipts.
+  Initialize the bootstrap manifest with `oid_policy=bootstrap`, all OIDs as
+  `null`, `state=PLANNED`, and a pending receipt. The checker must reject a
+  fixed node that labels missing OIDs as `exact`; after coordinator freeze, it
+  must require recorded exact OIDs before a node can advance. Do not place this
+  machine state under `.bluetape`; the workflow script remains the sole writer
+  of `.bluetape` receipts.
 
 ## Task 2: Prepare the Epic and train mutation contract
 
@@ -279,11 +280,15 @@ coordinator와 serial closeout lane만 이를 갱신할 수 있다.
 `docs/ecosystem-reuse-train.json`의 top-level 계약은 `schema_version=1`,
 고정 9-track 목록, `state_values`, `receipt_status_values`,
 `receipt_transitions`, `state_transitions`다. 각 node는 `expected_*_ref`,
-`parent_track`, issue 목록, disjoint `allowed_paths`, `gradle_tasks`,
-`test_selectors`, `gradle_flags`, `timeout_seconds`, `docker_required`,
-`dependency_insight_commands`, `review_artifact`, OID와 `receipt_id/status`,
-checksum을 가진다. `P0`는 자체 review artifact를 가지며, child는
-`DATE-TRACK-7tier.md`를 자신의 allowlist에 포함한다. `R2`만 추가로
+`parent_track`, `oid_policy`, issue 목록, disjoint `allowed_paths`,
+`gradle_tasks`, `test_selectors`, `gradle_flags`, `timeout_seconds`,
+`docker_required`, `dependency_insight_commands`, `review_artifact`, OID와
+`receipt_id/status`, checksum을 가진다. 최초 P0 bootstrap에서 fixed node는
+`oid_policy=bootstrap`, `state=PLANNED`, OID `null`, receipt `PENDING`만 허용한다.
+coordinator가 ancestor를 동결한 뒤에는 `oid_policy=exact`와 기록된
+`base_oid`/`head_oid`가 필수이며, exact scope가 null OID를 묵인하지 않는다.
+`P0`는 자체 review artifact를 가지며, child는 `DATE-TRACK-7tier.md`를 자신의
+allowlist에 포함한다. `R2`만 추가로
 `parent_evidence`(`parent_track`, `r1_api_anchor`, `r1_allowed_path`,
 `r2_consumer_anchor`, `r2_test_anchor`, `required=true`)를 가진다. checker는 이 top-level/node 필드를 exact
 trusted-base 비교와 negative test 대상으로 취급한다.

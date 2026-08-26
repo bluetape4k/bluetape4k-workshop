@@ -76,6 +76,7 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
     def manifest(self, *, state="PLANNED", receipt_status="PENDING", overlap=False):
         tracks = ["P0", "A1", "A2", "F1", "F2", "R1", "R2", "T1", "I1"]
         nodes = []
+        oid_policy = "bootstrap" if state == "PLANNED" else "exact"
         for track in tracks:
             paths = ["src/%s/**" % track]
             if overlap and track == "A1":
@@ -87,6 +88,7 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
                 "expected_head_ref": "branch/%s" % track,
                 "expected_base_ref": "origin/develop",
                 "parent_track": None,
+                "oid_policy": oid_policy,
                 "head_oid": None if state == "PLANNED" else "a" * 40,
                 "base_oid": None if state == "PLANNED" else "b" * 40,
                 "parent_oid": None,
@@ -314,6 +316,30 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         path.write_text(json.dumps(manifest), encoding="utf-8")
         errors = CHECKER.validate_manifest(self.root, path)
         self.assertTrue(any("missing manifest fields" in error for error in errors))
+
+    def test_manifest_requires_explicit_fixed_oid_policy(self):
+        manifest = self.manifest()
+        del manifest["nodes"][0]["oid_policy"]
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, path)
+        self.assertTrue(any("oid_policy" in error for error in errors))
+
+    def test_manifest_rejects_exact_fixed_node_without_oids(self):
+        manifest = self.manifest()
+        manifest["nodes"][0]["oid_policy"] = "exact"
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, path)
+        self.assertTrue(any("exact node requires base_oid" in error for error in errors))
+
+    def test_manifest_rejects_bootstrap_fixed_node_outside_planned_state(self):
+        manifest = self.manifest(state="READY", receipt_status="PASS")
+        manifest["nodes"][0]["oid_policy"] = "bootstrap"
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, path)
+        self.assertTrue(any("bootstrap oid_policy requires PLANNED state" in error for error in errors))
 
     def test_manifest_rejects_invalid_receipt_transition_contract(self):
         manifest = self.manifest()
@@ -567,6 +593,11 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
 
     def test_train_scope_accepts_exact_node_and_refs(self):
         manifest = self.manifest()
+        manifest["nodes"][1].update({
+            "oid_policy": "exact",
+            "base_oid": "b" * 40,
+            "head_oid": "a" * 40,
+        })
         errors = CHECKER.validate_train_scope(
             manifest,
             ["src/A1/Changed.kt", "docs/review/A1-7tier.md"],
@@ -576,6 +607,17 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
             head_oid="a" * 40,
         )
         self.assertEqual([], errors)
+
+    def test_train_scope_rejects_bootstrap_node_without_bootstrap_context(self):
+        errors = CHECKER.validate_train_scope(
+            self.manifest(),
+            ["src/A1/Changed.kt"],
+            base_ref_name="develop",
+            head_ref_name="branch/A1",
+            base_oid="b" * 40,
+            head_oid="a" * 40,
+        )
+        self.assertTrue(any("bootstrap oid_policy requires bootstrap context" in error for error in errors))
 
     def test_train_scope_rejects_paths_outside_one_node(self):
         errors = CHECKER.validate_train_scope(
@@ -590,6 +632,7 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
 
     def test_train_scope_rejects_wrong_refs_and_oids(self):
         manifest = self.manifest()
+        manifest["nodes"][1]["oid_policy"] = "exact"
         manifest["nodes"][1]["base_oid"] = "b" * 40
         manifest["nodes"][1]["head_oid"] = "a" * 40
         errors = CHECKER.validate_train_scope(
