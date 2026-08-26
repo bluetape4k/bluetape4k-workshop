@@ -33,19 +33,19 @@
   <g class="node" data-node="broker-3" filter="url(#shadow)"><rect class="card greenCard" x="1255" y="525" width="390" height="145" rx="16"/><text class="card-title" x="1450" y="562" text-anchor="middle">Broker 3</text><text class="body" x="1450" y="590" text-anchor="middle">node.id=3 / kafka-3</text><text class="small" x="1450" y="616" text-anchor="middle">KRaft voter + PLAINTEXT</text><text class="small" x="1450" y="640" text-anchor="middle">partition replica / ISR member</text></g>
   <g class="node" data-node="topic" filter="url(#shadow)"><rect class="card amberCard" x="705" y="735" width="390" height="58" rx="14"/><text class="body" x="900" y="760" text-anchor="middle">kafka-failover-reference</text><text class="small" x="900" y="781" text-anchor="middle">3 partitions / RF=3 / min ISR=2</text></g>
 
-  <g class="edge" data-edge="harness-clients" data-label="starts clients under deadlines"><path data-connector="harness-clients" class="connector blueEdge" d="M555 270 L685 270"/></g>
-  <g class="edge" data-edge="clients-brokers" data-label="host loopback client traffic"><path data-connector="clients-brokers" class="connector blueEdge" d="M760 315 L760 400 Q760 415 745 415 L335 415 Q320 415 320 430 L320 525"/></g>
-  <g class="edge" data-edge="clients-broker-2" data-label="host loopback client traffic"><path data-connector="clients-broker-2" class="connector blueEdge" d="M900 315 L900 525"/></g>
-  <g class="edge" data-edge="clients-broker-3" data-label="host loopback client traffic"><path data-connector="clients-broker-3" class="connector blueEdge" d="M1040 315 L1040 400 Q1040 415 1055 415 L1465 415 Q1480 415 1480 430 L1480 525"/></g>
-  <g class="edge" data-edge="broker-1-topic" data-label="replica and ISR state"><path data-connector="broker-1-topic" class="connector greenEdge" d="M350 670 L350 685 Q350 695 365 695 L700 695 Q720 695 720 715 L720 735"/></g>
-  <g class="edge" data-edge="broker-2-topic" data-label="replica and ISR state"><path data-connector="broker-2-topic" class="connector greenEdge" d="M900 670 L900 735"/></g>
-  <g class="edge" data-edge="broker-3-topic" data-label="replica and ISR state"><path data-connector="broker-3-topic" class="connector greenEdge" d="M1450 670 L1450 685 Q1450 695 1435 695 L1100 695 Q1080 695 1080 715 L1080 735"/></g>
+  <g class="edge" data-edge="harness-&gt;clients" data-label="starts clients under deadlines"><path data-connector="harness-clients" class="connector blueEdge" d="M555 270 L685 270"/></g>
+  <g class="edge" data-edge="clients-&gt;broker-1" data-label="host loopback client traffic"><path data-connector="clients-brokers" class="connector blueEdge" d="M760 315 L760 400 Q760 415 745 415 L335 415 Q320 415 320 430 L320 525"/></g>
+  <g class="edge" data-edge="clients-&gt;broker-2" data-label="host loopback client traffic"><path data-connector="clients-broker-2" class="connector blueEdge" d="M900 315 L900 525"/></g>
+  <g class="edge" data-edge="clients-&gt;broker-3" data-label="host loopback client traffic"><path data-connector="clients-broker-3" class="connector blueEdge" d="M1040 315 L1040 400 Q1040 415 1055 415 L1465 415 Q1480 415 1480 430 L1480 525"/></g>
+  <g class="edge" data-edge="broker-1-&gt;topic" data-label="replica and ISR state"><path data-connector="broker-1-topic" class="connector greenEdge" d="M350 670 L350 685 Q350 695 365 695 L700 695 Q720 695 720 715 L720 735"/></g>
+  <g class="edge" data-edge="broker-2-&gt;topic" data-label="replica and ISR state"><path data-connector="broker-2-topic" class="connector greenEdge" d="M900 670 L900 735"/></g>
+  <g class="edge" data-edge="broker-3-&gt;topic" data-label="replica and ISR state"><path data-connector="broker-3-topic" class="connector greenEdge" d="M1450 670 L1450 685 Q1450 695 1435 695 L1100 695 Q1080 695 1080 715 L1080 735"/></g>
 
   <rect class="layer amberLayer" x="75" y="855" width="1650" height="145" rx="22"/>
   <text class="layer-title" x="110" y="900">Observable outcome</text>
   <g class="node" data-node="evidence" filter="url(#shadow)"><rect class="card amberCard" x="155" y="920" width="650" height="52" rx="14"/><text class="body" x="480" y="952" text-anchor="middle">run-scoped evidence.jsonl + performance.jsonl</text></g>
   <g class="node" data-node="conformance" filter="url(#shadow)"><rect class="card purpleCard" x="945" y="920" width="700" height="52" rx="14"/><text class="body" x="1295" y="952" text-anchor="middle">sanitizer + #559 black-box fixture + terminal PASS/FAIL</text></g>
-  <g class="edge" data-edge="topic-evidence" data-label="bounded state observation"><path data-connector="topic-evidence" class="connector amberEdge" d="M900 793 L900 810 Q900 825 885 825 L480 825 Q465 825 465 840 L465 920"/></g>
-  <g class="edge" data-edge="evidence-conformance" data-label="18-field contract validation"><path data-connector="evidence-conformance" class="connector purpleEdge" d="M805 946 L945 946"/></g>
+  <g class="edge" data-edge="topic-&gt;evidence" data-label="bounded state observation"><path data-connector="topic-evidence" class="connector amberEdge" d="M900 793 L900 810 Q900 825 885 825 L480 825 Q465 825 465 840 L465 920"/></g>
+  <g class="edge" data-edge="evidence-&gt;conformance" data-label="18-field contract validation"><path data-connector="evidence-conformance" class="connector purpleEdge" d="M805 946 L945 946"/></g>
   <text class="footer" x="900" y="1032" text-anchor="middle">No payload, event ID, bootstrap endpoint, credential, owner token, or raw provider log crosses the evidence boundary.</text>
 </svg>

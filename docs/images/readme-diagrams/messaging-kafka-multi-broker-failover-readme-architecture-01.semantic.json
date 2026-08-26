@@ -35,6 +35,7 @@
   "behavior": {"branches": 2, "loops": 1},
   "repairs": [
     {"target":"listener boundary","reason":"Keep broker/controller listeners inside the network while showing only mapped loopback client traffic.","touches":2},
-    {"target":"evidence boundary","reason":"Show the evidence writer and black-box consumer as separate nodes so redaction and conformance are not conflated.","touches":2}
+    {"target":"evidence boundary","reason":"Show the evidence writer and black-box consumer as separate nodes so redaction and conformance are not conflated.","touches":2},
+    {"target":"architecture edge encoding","reason":"Encode data-edge endpoints with the validator's escaped arrow contract so every connector resolves to a declared node ID.","touches":9}
   ]
 }
