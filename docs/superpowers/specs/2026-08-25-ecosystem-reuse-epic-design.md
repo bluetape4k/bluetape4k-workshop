@@ -122,20 +122,26 @@ namespace 정책을 검증한다. manifest의 `parent_evidence`에는 `r1_api_an
 `r1_allowed_path`, `r2_consumer_anchor`, `r2_test_anchor`를 파일·심볼 단위로
 기록한다. 따라서 R2의 source/test anchor가 R1의 mapper 또는 fixture factory
 API를 호출하지 않으면 R2를 `P0` 기준의 독립 track으로 재분류하고
-`parent_track=P0`, `expected_base_ref=<frozen P0 expected_head_ref>`,
-`base_oid=P0_HEAD_OID`, `parent_oid=P0_HEAD_OID`,
-`merge_base_oid=git merge-base P0_HEAD_OID P0_HEAD_OID`를 원자적으로 갱신하며
-`parent_evidence`를 제거한다. 이때 `state=PLANNED`, `receipt_status=PENDING`,
-`receipt_id=null`, `checksum=null`을 유지하고 coordinator receipt에 reparent
-사유를 남긴다. 이전 R1 parent를 남긴 채 READY로 올리는 것은 금지한다.
+`parent_track=P0`, `expected_base_ref=<frozen P0 expected_head_ref>`를
+원자적으로 갱신하며 `parent_evidence`를 제거한다. P0가
+`oid_policy=reviewed-ancestor`이면 `parent_oid`는 P0의
+`reviewed_implementation_oid`와 같아야 하며, exact 정책을 사용하는 P0인
+경우에만 `head_oid`를 사용한다. reviewed-ancestor의 `base_oid`, `head_oid`,
+`merge_base_oid` legacy 필드는 계속 `null`로 유지한다. 이때
+`state=PLANNED`, `receipt_status=PENDING`, `receipt_id=null`, `checksum=null`을
+유지하고 coordinator receipt에 reparent 사유를 남긴다. 이전 R1 parent를 남긴
+채 READY로 올리는 것은 금지한다.
 
 ### Train 상태와 무효화
 
-`P0`가 commit된 뒤에는 base OID, `P0_HEAD_OID`, merge-base, 각 child의
-parent OID를 train manifest에 고정한다. P0 review 수정, rebase, merge, revert로
-ancestor OID가 바뀌면 해당 ancestor와 모든 descendant를 `INVALID`로 표시하고,
-위상 순서로 base/head·targeted test·7-Tier review를 다시 확인한다. `P0` exact-head
-CI와 review가 끝나기 전에는 child branch를 다음 단계로 진전시키지 않는다.
+`P0`가 commit된 뒤에는 exact PR base/head/merge-base read-back과 각 child의
+parent OID를 receipt와 review artifact에 고정한다. `reviewed-ancestor` manifest는
+legacy OID 필드를 `null`로 유지하고, 구현 기준점은
+`reviewed_implementation_oid` marker로 고정한다. P0 review 수정, rebase, merge,
+revert로 ancestor OID가 바뀌면 해당 ancestor와 모든 descendant를 `INVALID`로
+표시하고, 위상 순서로 base/head·targeted test·7-Tier review를 다시 확인한다.
+`P0` exact-head CI와 review가 끝나기 전에는 child branch를 다음 단계로 진전시키지
+않는다.
 
 terminal receipt 파일은 immutable하다. 재실행은 새 receipt ID/checksum을 만들고
 기존 terminal 파일은 보존한 채 node를 `PLANNED/PENDING`으로 되돌린다. 같은
@@ -232,12 +238,15 @@ behavior처럼 raw API 자체가 학습 대상이면 해당 테스트에 이유�
 실행하고, Tier 6 review에서 raw assertion 잔여와 allowlist 근거를 함께 확인한다.
 
 각 child의 `docs/review/DATE-TRACK-7tier.md`는 공통 구조를 따른다: `track`,
-`reviewed_implementation_oid` marker, `head_oid`, `base_oid`, manifest checksum, 적용한 `$bluetape-kotlin-patterns`
+`reviewed_implementation_oid` marker, PR의 exact `head_oid`/`base_oid`/
+`merge_base_oid` read-back, manifest checksum, 적용한 `$bluetape-kotlin-patterns`
 checklist ID, capability/source/test anchor, assertion migration 또는 fallback
 근거, Tier 1~7별 evidence와 finding count, targeted test receipt, skipped/disabled
-정책, owner와 stop condition. ancestor OID가 바뀌면 영향받은 Tier와 checklist를
-다시 실행하고 이전 결과를 PASS로 재사용하지 않는다. 이 구조가 없는 child는
-`READY`로 전환할 수 없다.
+정책, owner와 stop condition. 여기서 exact PR OID는 사람이 읽는 검증 증거이고,
+`reviewed-ancestor` manifest의 authoritative implementation anchor는 marker와
+`reviewed_implementation_oid`이며 legacy OID 필드는 `null`이다. ancestor OID가
+바뀌면 영향받은 Tier와 checklist를 다시 실행하고 이전 결과를 PASS로 재사용하지
+않는다. 이 구조가 없는 child는 `READY`로 전환할 수 없다.
 
 ### Train 용어와 시작 안내
 

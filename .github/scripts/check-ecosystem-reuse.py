@@ -680,8 +680,14 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
         p0 = node_map.get("P0", {})
         if r2.get("expected_base_ref") != p0.get("expected_head_ref"):
             errors.append("R2: P0 reparent must use the frozen P0 expected_head_ref")
-        if p0.get("head_oid") and r2.get("parent_oid") != p0.get("head_oid"):
-            errors.append("R2: P0 reparent parent_oid must equal P0 head_oid")
+        parent_oid_field = (
+            "reviewed_implementation_oid"
+            if p0.get("oid_policy") == "reviewed-ancestor"
+            else "head_oid"
+        )
+        parent_oid = p0.get(parent_oid_field)
+        if parent_oid and r2.get("parent_oid") != parent_oid:
+            errors.append("R2: P0 reparent parent_oid must equal P0 %s" % parent_oid_field)
     elif parent_evidence not in (None, {}):
         errors.append("R2: parent_evidence is only valid while parent_track is R1")
     if bootstrap:

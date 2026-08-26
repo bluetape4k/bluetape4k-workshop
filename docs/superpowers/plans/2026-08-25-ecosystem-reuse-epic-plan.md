@@ -499,13 +499,16 @@ repository-root containment를 대조한다. 모든 code task는 failing test로
 최소 Kotlin 변경, module test, 7-Tier review 순서로 진행한다.
 
 각 child는 `docs/review/DATE-TRACK-7tier.md`를 생성한다. 문서에는 track와
-severity를 구분한 표기, exact `head_oid`/`base_oid`, manifest checksum,
-적용한 `$bluetape-kotlin-patterns` checklist ID, capability/API/source/test
-anchor, `resolved_dependency_receipt`, assertion 또는 fallback 근거, Tier 1~7 evidence와 finding count,
-selector별 receipt, skipped/disabled 정책, owner와 stop condition을 포함한다.
-이 artifact가 없거나 ancestor OID와 receipt checksum이 맞지 않으면 child는
-`READY`가 될 수 없다. P0/P1 finding이 다시 생기면 해당 Tier와 descendant를
-topological order로 재검토한다.
+severity를 구분한 표기, PR의 exact `head_oid`/`base_oid`/`merge_base_oid`
+read-back, manifest checksum, 적용한 `$bluetape-kotlin-patterns` checklist ID,
+capability/API/source/test anchor, `resolved_dependency_receipt`, assertion 또는
+fallback 근거, Tier 1~7별 evidence와 finding count, selector별 receipt,
+skipped/disabled 정책, owner와 stop condition을 포함한다. reviewed-ancestor
+manifest에서는 marker와 `reviewed_implementation_oid`가 authoritative
+implementation anchor이고 legacy OID 필드는 `null`이므로, artifact의 exact PR
+OID는 read-back 증거로만 기록한다. 이 artifact가 없거나 ancestor OID와 receipt
+checksum이 맞지 않으면 child는 `READY`가 될 수 없다. P0/P1 finding이 다시
+생기면 해당 Tier와 descendant를 topological order로 재검토한다.
 
 ### Track A — assertions 및 Field Service 계약
 
@@ -560,9 +563,11 @@ topological order로 재검토한다.
   `r1_api_anchor`, `r1_allowed_path`, `r2_consumer_anchor`, `r2_test_anchor`의
   실행을 증명한다. anchor가 없거나 R1 mapper 경계를 호출하지 않으면 coordinator는
   R2를 `P0`로 원자적으로 reparent한다. 이때 `parent_track=P0`,
-  `expected_base_ref=<frozen P0 expected_head_ref>`, `base_oid=P0_HEAD_OID`,
-  `parent_oid=P0_HEAD_OID`, `merge_base_oid=git merge-base P0_HEAD_OID P0_HEAD_OID`
-  를 함께 갱신하고 `parent_evidence`를 제거한다. `state=PLANNED`,
+  `expected_base_ref=<frozen P0 expected_head_ref>`를 함께 갱신하고
+  `parent_evidence`를 제거한다. P0가 `oid_policy=reviewed-ancestor`이면
+  `parent_oid=P0.reviewed_implementation_oid`로 기록하고, exact 정책인 P0일
+  때만 `parent_oid=P0.head_oid`를 사용한다. reviewed-ancestor의 legacy
+  `base_oid`/`head_oid`/`merge_base_oid`는 계속 `null`이다. `state=PLANNED`,
   `receipt_status=PENDING`, `receipt_id=null`, `checksum=null`을 유지하며 사유를
   coordinator receipt에 기록한 뒤 anchor 검증을 다시 실행한다. 사유를 receipt에
   남기지 않은 stale R1 parent는 invalid train state다.
