@@ -169,6 +169,7 @@ class FieldServiceReplanService(
     }
 
     override fun close() {
+        val shutdownDeadlineNanos = shutdownDeadlineNanos()
         admissionLock.withLock {
             accepting.set(false)
             tasks.entries.forEach { (aggregateId, task) ->
@@ -179,16 +180,27 @@ class FieldServiceReplanService(
             flights.clear()
         }
         executor.shutdown()
-        if (!executor.awaitTermination(30, TimeUnit.SECONDS)) {
+        if (!awaitTermination(executor, shutdownDeadlineNanos)) {
             tasks.values.forEach { it.cancelStages() }
             executor.shutdownNow()
         }
         if (closeBlockingExecutor) {
             blockingExecutor.shutdown()
-            if (!blockingExecutor.awaitTermination(30, TimeUnit.SECONDS)) {
+            if (!awaitTermination(blockingExecutor, shutdownDeadlineNanos)) {
                 blockingExecutor.shutdownNow()
             }
         }
+    }
+
+    private fun shutdownDeadlineNanos(): Long {
+        val now = System.nanoTime()
+        val timeoutNanos = TimeUnit.SECONDS.toNanos(CLOSE_TIMEOUT_SECONDS)
+        return if (now > Long.MAX_VALUE - timeoutNanos) Long.MAX_VALUE else now + timeoutNanos
+    }
+
+    private fun awaitTermination(executor: ExecutorService, deadlineNanos: Long): Boolean {
+        val remainingNanos = (deadlineNanos - System.nanoTime()).coerceAtLeast(0L)
+        return remainingNanos > 0L && executor.awaitTermination(remainingNanos, TimeUnit.NANOSECONDS)
     }
 
     private fun cancelFuture(future: Future<PlanProposal>) {
@@ -301,6 +313,7 @@ class FieldServiceReplanService(
     companion object : KLogging() {
         const val CPU_WORKERS: Int = 4
         const val QUEUE_CAPACITY: Int = 8
+        private const val CLOSE_TIMEOUT_SECONDS = 30L
 
         fun boundedPlannerExecutor(): ThreadPoolExecutor = ThreadPoolExecutor(
             CPU_WORKERS,
