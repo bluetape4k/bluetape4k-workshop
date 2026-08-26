@@ -1,0 +1,551 @@
+{
+  "schema_version": 1,
+  "repository": "bluetape4k/bluetape4k-workshop",
+  "base_ref": "origin/develop",
+  "fixed_tracks": [
+    "P0",
+    "A1",
+    "A2",
+    "F1",
+    "F2",
+    "R1",
+    "R2",
+    "T1",
+    "I1"
+  ],
+  "state_values": [
+    "PLANNED",
+    "READY",
+    "INVALID",
+    "MERGE_READY",
+    "MERGED"
+  ],
+  "receipt_status_values": [
+    "PENDING",
+    "PASS",
+    "FAIL",
+    "CANCELLED",
+    "TIMEOUT",
+    "CLEANUP_FAILED"
+  ],
+  "receipt_transitions": {
+    "PENDING": ["PENDING", "PASS", "FAIL", "CANCELLED", "TIMEOUT", "CLEANUP_FAILED"],
+    "PASS": ["PENDING", "PASS"],
+    "FAIL": ["PENDING", "FAIL"],
+    "CANCELLED": ["PENDING", "CANCELLED"],
+    "TIMEOUT": ["PENDING", "TIMEOUT"],
+    "CLEANUP_FAILED": ["PENDING", "CLEANUP_FAILED"]
+  },
+  "state_transitions": {
+    "PLANNED": ["PLANNED", "READY", "INVALID"],
+    "READY": ["READY", "INVALID", "MERGE_READY"],
+    "INVALID": ["INVALID", "PLANNED"],
+    "MERGE_READY": ["MERGE_READY", "MERGED", "INVALID"],
+    "MERGED": ["MERGED"]
+  },
+  "follow_up_scopes": [
+    {
+      "scope_id": "coordinator-child-scope",
+      "scope_kind": "coordinator",
+      "parent_track": "P0",
+      "expected_head_ref": "fix/ecosystem-reuse-child-scope",
+      "expected_base_ref": "feat/ecosystem-reuse-gate",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [822],
+      "allowed_paths": [
+        "docs/ecosystem-reuse-train.json",
+        ".github/scripts/check-ecosystem-reuse.py",
+        ".github/scripts/test_check_ecosystem_reuse.py",
+        "docs/review/2026-08-26-ecosystem-child-scope-7tier.md"
+      ],
+      "review_artifact": "docs/review/2026-08-26-ecosystem-child-scope-7tier.md"
+    },
+    {
+      "scope_id": "F1-P2-02",
+      "scope_kind": "child",
+      "parent_track": "F1",
+      "expected_head_ref": "fix/ecosystem-reuse-shutdown-deadline",
+      "expected_base_ref": "fix/ecosystem-reuse-field-service-contracts",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [782],
+      "allowed_paths": [
+        "optimization/field-service-dispatch/src/main/kotlin/**",
+        "optimization/field-service-dispatch/src/test/kotlin/io/bluetape4k/workshop/optimization/fieldservice/application/FieldServiceReplanServiceTest.kt",
+        "docs/review/2026-08-25-F1-7tier.md"
+      ],
+      "review_artifact": "docs/review/2026-08-25-F1-7tier.md"
+    }
+  ],
+  "coordinator_scope_receipt": {
+    "receipt_id": "20260826T081952Z-c08d5362",
+    "checksum": "d29cccdf41f7873f078da6fe42b03661d918eafc32da3e7fd1ad1071e5c4f239"
+  },
+  "nodes": [
+    {
+      "track": "P0",
+      "expected_head_ref": "feat/ecosystem-reuse-gate",
+      "expected_base_ref": "origin/develop",
+      "parent_track": null,
+      "oid_policy": "reviewed-ancestor",
+      "head_oid": null,
+      "base_oid": null,
+      "parent_oid": null,
+      "merge_base_oid": null,
+      "reviewed_implementation_oid": null,
+      "state": "PLANNED",
+      "issue_numbers": [792],
+      "allowed_paths": [
+        "docs/superpowers/specs/2026-08-25-ecosystem-reuse-epic-design.md",
+        "docs/superpowers/plans/2026-08-25-ecosystem-reuse-epic-plan.md",
+        "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-inventory.md",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/2026-08-25-ecosystem-reuse-gate-contracts.md",
+        "docs/governance/github-action-pins.json",
+        ".github/scripts/check-ecosystem-reuse.py",
+        ".github/scripts/test_check_ecosystem_reuse.py",
+        ".github/workflows/ecosystem-reuse-gate.yml",
+        ".github/workflows/Examples.yml",
+        "docs/review/2026-08-25-ecosystem-reuse-epic-design-plan-review.md",
+        "docs/review/2026-08-26-ecosystem-child-scope-7tier.md"
+      ],
+      "gradle_tasks": [
+        "detekt"
+      ],
+      "test_selectors": [
+        "python3 .github/scripts/test_check_ecosystem_reuse.py -v"
+      ],
+      "gradle_flags": [
+        "--no-daemon",
+        "--no-build-cache",
+        "--max-workers=1",
+        "--no-parallel"
+      ],
+      "timeout_seconds": 600,
+      "docker_required": false,
+      "dependency_insight_commands": [],
+      "review_artifact": "docs/review/2026-08-25-ecosystem-reuse-epic-design-plan-review.md",
+      "receipt_id": null,
+      "receipt_status": "PENDING",
+      "checksum": null
+    },
+    {
+      "track": "A1",
+      "expected_head_ref": "test/ecosystem-reuse-assertions-field-service",
+      "expected_base_ref": "feat/ecosystem-reuse-gate",
+      "parent_track": "P0",
+      "oid_policy": "reviewed-ancestor",
+      "head_oid": null,
+      "base_oid": null,
+      "parent_oid": null,
+      "merge_base_oid": null,
+      "reviewed_implementation_oid": null,
+      "state": "PLANNED",
+      "issue_numbers": [783],
+      "allowed_paths": [
+        "optimization/field-service-dispatch/src/test/kotlin/**",
+        "optimization/field-service-dispatch/build.gradle.kts",
+        "docs/review/2026-08-25-A1-7tier.md"
+      ],
+      "gradle_tasks": [
+        ":optimization-field-service-dispatch:test"
+      ],
+      "test_selectors": [
+        ":optimization-field-service-dispatch:test"
+      ],
+      "gradle_flags": [
+        "--no-daemon",
+        "--no-build-cache",
+        "--max-workers=1",
+        "--no-parallel"
+      ],
+      "timeout_seconds": 900,
+      "docker_required": false,
+      "dependency_insight_commands": [
+        "./gradlew :optimization-field-service-dispatch:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-assertions --configuration testRuntimeClasspath"
+      ],
+      "review_artifact": "docs/review/2026-08-25-A1-7tier.md",
+      "receipt_id": null,
+      "receipt_status": "PENDING",
+      "checksum": null
+    },
+    {
+      "track": "A2",
+      "expected_head_ref": "test/ecosystem-reuse-assertions-platform",
+      "expected_base_ref": "feat/ecosystem-reuse-gate",
+      "parent_track": "P0",
+      "oid_policy": "reviewed-ancestor",
+      "head_oid": null,
+      "base_oid": null,
+      "parent_oid": null,
+      "merge_base_oid": null,
+      "reviewed_implementation_oid": null,
+      "state": "PLANNED",
+      "issue_numbers": [785, 786, 787, 788, 789, 790, 791],
+      "allowed_paths": [
+        "aws/kinesis-coroutines/src/test/kotlin/io/bluetape4k/workshop/aws/kinesis/KinesisStreamServiceTest.kt",
+        "commerce/promotion-voucher-campaign/src/test/kotlin/io/bluetape4k/workshop/commerce/voucher/VoucherEndToEndIntegrationTest.kt",
+        "commerce/event-sourced-promotion-voucher-campaign/src/test/kotlin/io/bluetape4k/workshop/commerce/voucher/eventsourced/EventSourcedRuntimeContractTest.kt",
+        "commerce/pre-generated-voucher-pool/src/test/kotlin/io/bluetape4k/workshop/commerce/voucherpool/fixture/VoucherPoolFixturesTest.kt",
+        "commerce/concert-ticket-flash-sale/src/test/kotlin/io/bluetape4k/workshop/commerce/ticket/web/TicketBrowserContractTest.kt",
+        "operations/job-console-core/src/test/kotlin/io/bluetape4k/workshop/operations/jobconsole/api/JobApiModelsTest.kt",
+        "operations/job-console-spring/src/test/kotlin/io/bluetape4k/workshop/operations/jobconsole/spring/JobConsoleSpringSubmissionHttpTest.kt",
+        "operations/job-console-ktor/src/test/kotlin/io/bluetape4k/workshop/operations/jobconsole/ktor/JobConsoleKtorSubmissionHttpTest.kt",
+        "optimization/planning-contracts/src/test/kotlin/io/bluetape4k/workshop/optimization/planning/OptimizationRuntimeContractTest.kt",
+        "docs/review/2026-08-25-A2-7tier.md"
+      ],
+      "gradle_tasks": [
+        ":aws-kinesis-coroutines:test",
+        ":commerce-promotion-voucher-campaign:test",
+        ":commerce-event-sourced-promotion-voucher-campaign:test",
+        ":commerce-pre-generated-voucher-pool:test",
+        ":commerce-concert-ticket-flash-sale:test",
+        ":operations-job-console-core:test",
+        ":operations-job-console-spring:test",
+        ":operations-job-console-ktor:test",
+        ":optimization-planning-contracts:test"
+      ],
+      "test_selectors": [
+        ":aws-kinesis-coroutines:test",
+        ":commerce-promotion-voucher-campaign:test",
+        ":commerce-event-sourced-promotion-voucher-campaign:test",
+        ":commerce-pre-generated-voucher-pool:test",
+        ":commerce-concert-ticket-flash-sale:test",
+        ":operations-job-console-core:test",
+        ":operations-job-console-spring:test",
+        ":operations-job-console-ktor:test",
+        ":optimization-planning-contracts:test"
+      ],
+      "gradle_flags": [
+        "--no-daemon",
+        "--no-build-cache",
+        "--max-workers=1",
+        "--no-parallel"
+      ],
+      "timeout_seconds": 900,
+      "docker_required": false,
+      "dependency_insight_commands": [
+        "./gradlew :aws-kinesis-coroutines:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-logging --configuration testRuntimeClasspath",
+        "./gradlew :commerce-usage-metering-billing-event-sourcing:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-assertions --configuration testRuntimeClasspath",
+        "./gradlew :operations-job-console-core:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-assertions --configuration testRuntimeClasspath",
+        "./gradlew :optimization-planning-contracts:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-assertions --configuration testRuntimeClasspath",
+        "./gradlew :commerce-promotion-voucher-campaign:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-assertions --configuration testRuntimeClasspath",
+        "./gradlew :commerce-pre-generated-voucher-pool:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-assertions --configuration testRuntimeClasspath",
+        "./gradlew :commerce-concert-ticket-flash-sale:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-assertions --configuration testRuntimeClasspath"
+      ],
+      "review_artifact": "docs/review/2026-08-25-A2-7tier.md",
+      "receipt_id": null,
+      "receipt_status": "PENDING",
+      "checksum": null
+    },
+    {
+      "track": "F1",
+      "expected_head_ref": "fix/ecosystem-reuse-field-service-contracts",
+      "expected_base_ref": "test/ecosystem-reuse-assertions-field-service",
+      "parent_track": "A1",
+      "oid_policy": "reviewed-ancestor",
+      "head_oid": null,
+      "base_oid": null,
+      "parent_oid": null,
+      "merge_base_oid": null,
+      "reviewed_implementation_oid": null,
+      "state": "PLANNED",
+      "issue_numbers": [777, 781, 782, 784],
+      "allowed_paths": [
+        "optimization/field-service-dispatch/src/main/kotlin/**",
+        "optimization/field-service-dispatch/src/test/kotlin/io/bluetape4k/workshop/optimization/fieldservice/application/FieldServiceOutboxWorkerTest.kt",
+        "optimization/field-service-dispatch/src/test/kotlin/io/bluetape4k/workshop/optimization/fieldservice/persistence/FieldServiceCasIntegrationTest.kt",
+        "optimization/field-service-dispatch/src/test/kotlin/io/bluetape4k/workshop/optimization/fieldservice/adapter/http/FieldServiceCanonicalizerTest.kt",
+        "optimization/field-service-dispatch/src/test/kotlin/io/bluetape4k/workshop/optimization/fieldservice/application/FieldServiceReplanServiceTest.kt",
+        "docs/review/2026-08-25-F1-7tier.md"
+      ],
+      "gradle_tasks": [
+        ":optimization-field-service-dispatch:test"
+      ],
+      "test_selectors": [
+        ":optimization-field-service-dispatch:test"
+      ],
+      "gradle_flags": [
+        "--no-daemon",
+        "--no-build-cache",
+        "--max-workers=1",
+        "--no-parallel"
+      ],
+      "timeout_seconds": 900,
+      "docker_required": false,
+      "dependency_insight_commands": [
+        "./gradlew :optimization-field-service-dispatch:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-idgenerators --configuration testRuntimeClasspath",
+        "./gradlew :optimization-field-service-dispatch:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-assertions --configuration testRuntimeClasspath",
+        "./gradlew :optimization-field-service-dispatch:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-junit5 --configuration testRuntimeClasspath"
+      ],
+      "review_artifact": "docs/review/2026-08-25-F1-7tier.md",
+      "receipt_id": null,
+      "receipt_status": "PENDING",
+      "checksum": null
+    },
+    {
+      "track": "F2",
+      "expected_head_ref": "refactor/ecosystem-reuse-field-service-capabilities",
+      "expected_base_ref": "fix/ecosystem-reuse-field-service-contracts",
+      "parent_track": "F1",
+      "oid_policy": "reviewed-ancestor",
+      "head_oid": null,
+      "base_oid": null,
+      "parent_oid": null,
+      "merge_base_oid": null,
+      "reviewed_implementation_oid": null,
+      "state": "PLANNED",
+      "issue_numbers": [804, 805, 806, 807],
+      "allowed_paths": [
+        "optimization/field-service-dispatch/src/main/kotlin/**",
+        "optimization/field-service-dispatch/build.gradle.kts",
+        "docs/review/2026-08-25-F2-7tier.md"
+      ],
+      "gradle_tasks": [
+        ":optimization-field-service-dispatch:compileTestKotlin",
+        ":optimization-field-service-dispatch:test"
+      ],
+      "test_selectors": [
+        ":optimization-field-service-dispatch:compileTestKotlin",
+        ":optimization-field-service-dispatch:test"
+      ],
+      "gradle_flags": [
+        "--no-daemon",
+        "--no-build-cache",
+        "--max-workers=1",
+        "--no-parallel"
+      ],
+      "timeout_seconds": 900,
+      "docker_required": false,
+      "dependency_insight_commands": [
+        "./gradlew :optimization-field-service-dispatch:dependencyInsight --dependency io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc --configuration testRuntimeClasspath",
+        "./gradlew :optimization-field-service-dispatch:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-jackson3 --configuration testRuntimeClasspath",
+        "./gradlew :optimization-field-service-dispatch:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-idgenerators --configuration testRuntimeClasspath",
+        "./gradlew :optimization-field-service-dispatch:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-http --configuration testRuntimeClasspath"
+      ],
+      "review_artifact": "docs/review/2026-08-25-F2-7tier.md",
+      "receipt_id": null,
+      "receipt_status": "PENDING",
+      "checksum": null
+    },
+    {
+      "track": "R1",
+      "expected_head_ref": "refactor/ecosystem-reuse-http-json",
+      "expected_base_ref": "feat/ecosystem-reuse-gate",
+      "parent_track": "P0",
+      "oid_policy": "reviewed-ancestor",
+      "head_oid": null,
+      "base_oid": null,
+      "parent_oid": null,
+      "merge_base_oid": null,
+      "reviewed_implementation_oid": null,
+      "state": "PLANNED",
+      "issue_numbers": [793, 796, 798],
+      "allowed_paths": [
+        "commerce/usage-metering-billing-event-sourcing/src/main/kotlin/**",
+        "commerce/usage-metering-billing-event-sourcing/src/test/kotlin/**",
+        "operations/job-console-core/src/main/kotlin/io/bluetape4k/workshop/operations/jobconsole/api/**",
+        "shared/src/main/kotlin/io/bluetape4k/workshop/shared/web/**",
+        "docs/review/2026-08-25-R1-7tier.md"
+      ],
+      "gradle_tasks": [
+        ":commerce-usage-metering-billing-event-sourcing:test",
+        ":operations-job-console-core:test",
+        ":shared:test"
+      ],
+      "test_selectors": [
+        ":commerce-usage-metering-billing-event-sourcing:test",
+        ":operations-job-console-core:test",
+        ":shared:test"
+      ],
+      "gradle_flags": [
+        "--no-daemon",
+        "--no-build-cache",
+        "--max-workers=1",
+        "--no-parallel"
+      ],
+      "timeout_seconds": 900,
+      "docker_required": false,
+      "dependency_insight_commands": [
+        "./gradlew :commerce-usage-metering-billing-event-sourcing:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-jackson3 --configuration testRuntimeClasspath",
+        "./gradlew :operations-job-console-core:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-jackson3 --configuration testRuntimeClasspath",
+        "./gradlew :shared:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-spring-boot-core --configuration testRuntimeClasspath"
+      ],
+      "review_artifact": "docs/review/2026-08-25-R1-7tier.md",
+      "receipt_id": null,
+      "receipt_status": "PENDING",
+      "checksum": null
+    },
+    {
+      "track": "R2",
+      "expected_head_ref": "refactor/ecosystem-reuse-identifiers-fixtures",
+      "expected_base_ref": "refactor/ecosystem-reuse-http-json",
+      "parent_track": "R1",
+      "oid_policy": "reviewed-ancestor",
+      "head_oid": null,
+      "base_oid": null,
+      "parent_oid": null,
+      "merge_base_oid": null,
+      "reviewed_implementation_oid": null,
+      "state": "PLANNED",
+      "issue_numbers": [794, 795],
+      "allowed_paths": [
+        "commerce/pre-generated-voucher-pool/src/main/kotlin/io/bluetape4k/workshop/commerce/voucherpool/config/VoucherPoolConfiguration.kt",
+        "commerce/pre-generated-voucher-pool/src/test/kotlin/io/bluetape4k/workshop/commerce/voucherpool/config/VoucherPoolConfigurationTest.kt",
+        "commerce/concert-ticket-flash-sale/src/main/kotlin/io/bluetape4k/workshop/commerce/ticket/config/TicketLifecycle.kt",
+        "commerce/concert-ticket-flash-sale/src/test/kotlin/io/bluetape4k/workshop/commerce/ticket/admission/AdmissionConcurrencyIntegrationTest.kt",
+        "docs/review/2026-08-25-R2-7tier.md"
+      ],
+      "gradle_tasks": [
+        ":commerce-pre-generated-voucher-pool:test",
+        ":commerce-concert-ticket-flash-sale:test"
+      ],
+      "test_selectors": [
+        ":commerce-pre-generated-voucher-pool:test",
+        ":commerce-concert-ticket-flash-sale:test"
+      ],
+      "gradle_flags": [
+        "--no-daemon",
+        "--no-build-cache",
+        "--max-workers=1",
+        "--no-parallel"
+      ],
+      "timeout_seconds": 900,
+      "docker_required": false,
+      "dependency_insight_commands": [
+        "./gradlew :commerce-pre-generated-voucher-pool:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-idgenerators --configuration testRuntimeClasspath",
+        "./gradlew :commerce-concert-ticket-flash-sale:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-idgenerators --configuration testRuntimeClasspath"
+      ],
+      "parent_evidence": {
+        "parent_track": "R1",
+        "parent_allowed_path": "operations/job-console-core/src/main/kotlin/io/bluetape4k/workshop/operations/jobconsole/api",
+        "consumer_allowed_path": "commerce/pre-generated-voucher-pool/src/main/kotlin/io/bluetape4k/workshop/commerce/voucherpool/config/VoucherPoolConfiguration.kt",
+        "api_anchor": "fixture factory mapper boundary",
+        "r1_api_anchor": "operations/job-console-core/src/main/kotlin/io/bluetape4k/workshop/operations/jobconsole/api/JobApiModels.kt#JobSubmissionHttpResponse",
+        "r1_allowed_path": "operations/job-console-core/src/main/kotlin/io/bluetape4k/workshop/operations/jobconsole/api",
+        "r2_consumer_anchor": "commerce/pre-generated-voucher-pool/src/main/kotlin/io/bluetape4k/workshop/commerce/voucherpool/config/VoucherPoolConfiguration.kt#VoucherPoolConfiguration",
+        "r2_test_anchor": "commerce/pre-generated-voucher-pool/src/test/kotlin/io/bluetape4k/workshop/commerce/voucherpool/config/VoucherPoolConfigurationTest.kt#VoucherPoolConfigurationTest",
+        "required": true
+      },
+      "review_artifact": "docs/review/2026-08-25-R2-7tier.md",
+      "receipt_id": null,
+      "receipt_status": "PENDING",
+      "checksum": null
+    },
+    {
+      "track": "T1",
+      "expected_head_ref": "test/ecosystem-reuse-testcontainers-r2dbc",
+      "expected_base_ref": "feat/ecosystem-reuse-gate",
+      "parent_track": "P0",
+      "oid_policy": "reviewed-ancestor",
+      "head_oid": null,
+      "base_oid": null,
+      "parent_oid": null,
+      "merge_base_oid": null,
+      "reviewed_implementation_oid": null,
+      "state": "PLANNED",
+      "issue_numbers": [779, 802, 803],
+      "allowed_paths": [
+        "commerce/usage-billing-microservices-composition-tests/**",
+        "spring-data/r2dbc-coroutines/**",
+        "gateway/api-gateway/**",
+        "observability/observability-basic/**",
+        "kotlin/coroutines/**",
+        "spring-data/jpa-querydsl/**",
+        "spring-modulith/jpa-demo/**",
+        "docs/review/2026-08-25-T1-7tier.md"
+      ],
+      "gradle_tasks": [
+        ":commerce-usage-billing-microservices-composition-tests:integrationTest",
+        ":spring-data-r2dbc-coroutines:test",
+        ":gateway-api-gateway:test",
+        ":observability-observability-basic:test",
+        ":kotlin-coroutines:test",
+        ":spring-data-jpa-querydsl:test",
+        ":spring-modulith-jpa-demo:test"
+      ],
+      "test_selectors": [
+        ":commerce-usage-billing-microservices-composition-tests:integrationTest",
+        ":spring-data-r2dbc-coroutines:test",
+        ":gateway-api-gateway:test",
+        ":observability-observability-basic:test",
+        ":kotlin-coroutines:test",
+        ":spring-data-jpa-querydsl:test",
+        ":spring-modulith-jpa-demo:test"
+      ],
+      "gradle_flags": [
+        "--no-daemon",
+        "--no-build-cache",
+        "--max-workers=1",
+        "--no-parallel"
+      ],
+      "timeout_seconds": 1800,
+      "docker_required": true,
+      "dependency_insight_commands": [
+        "./gradlew :shared:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-testcontainers --configuration testRuntimeClasspath",
+        "./gradlew :spring-data-r2dbc-coroutines:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-testcontainers --configuration testRuntimeClasspath",
+        "./gradlew :spring-data-r2dbc-coroutines:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-spring-boot-r2dbc --configuration testRuntimeClasspath"
+      ],
+      "review_artifact": "docs/review/2026-08-25-T1-7tier.md",
+      "receipt_id": null,
+      "receipt_status": "PENDING",
+      "checksum": null
+    },
+    {
+      "track": "I1",
+      "expected_head_ref": "refactor/ecosystem-reuse-fencing-runtime",
+      "expected_base_ref": "feat/ecosystem-reuse-gate",
+      "parent_track": "P0",
+      "oid_policy": "reviewed-ancestor",
+      "head_oid": null,
+      "base_oid": null,
+      "parent_oid": null,
+      "merge_base_oid": null,
+      "reviewed_implementation_oid": null,
+      "state": "PLANNED",
+      "issue_numbers": [799, 800, 801, 808],
+      "allowed_paths": [
+        "leader/job-safety-lab/**",
+        "operations/job-console-core/src/main/kotlin/io/bluetape4k/workshop/operations/jobconsole/worker/**",
+        "commerce/usage-metering-billing-ledger/**",
+        "docs/review/2026-08-25-I1-7tier.md"
+      ],
+      "gradle_tasks": [
+        ":leader-job-safety-lab:integrationTest",
+        ":commerce-usage-metering-billing-ledger:integrationTest",
+        ":operations-job-console-core:integrationTest",
+        ":spring-modulith-jpa-demo:test",
+        ":commerce-concert-ticket-flash-sale:test"
+      ],
+      "test_selectors": [
+        ":leader-job-safety-lab:integrationTest",
+        ":commerce-usage-metering-billing-ledger:integrationTest",
+        ":operations-job-console-core:integrationTest",
+        ":spring-modulith-jpa-demo:test",
+        ":commerce-concert-ticket-flash-sale:test"
+      ],
+      "gradle_flags": [
+        "--no-daemon",
+        "--no-build-cache",
+        "--max-workers=1",
+        "--no-parallel"
+      ],
+      "timeout_seconds": 1800,
+      "docker_required": true,
+      "dependency_insight_commands": [
+        "./gradlew :leader-job-safety-lab:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-lettuce --configuration testRuntimeClasspath",
+        "./gradlew :commerce-usage-metering-billing-ledger:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-money --configuration testRuntimeClasspath",
+        "./gradlew :operations-job-console-core:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-virtualthread-jdk25 --configuration testRuntimeClasspath",
+        "./gradlew :optimization-field-service-dispatch:dependencyInsight --dependency io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc --configuration testRuntimeClasspath"
+      ],
+      "review_artifact": "docs/review/2026-08-25-I1-7tier.md",
+      "receipt_id": null,
+      "receipt_status": "PENDING",
+      "checksum": null
+    }
+  ]
+}

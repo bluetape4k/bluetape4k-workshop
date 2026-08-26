@@ -1,0 +1,141 @@
+name: Ecosystem Reuse Gate
+
+on:
+  push:
+    branches: [develop, main]
+    paths:
+      - 'docs/superpowers/specs/2026-08-25-ecosystem-reuse-epic-design.md'
+      - 'docs/superpowers/plans/2026-08-25-ecosystem-reuse-epic-plan.md'
+      - 'docs/coverage-matrix.md'
+      - 'docs/ecosystem-reuse-inventory.md'
+      - 'docs/ecosystem-reuse-train.json'
+      - 'docs/lessons/**'
+      - 'docs/review/**'
+      - 'docs/governance/github-action-pins.json'
+      - '.github/scripts/check-ecosystem-reuse.py'
+      - '.github/scripts/test_check_ecosystem_reuse.py'
+      - '.github/workflows/ecosystem-reuse-gate.yml'
+      - '**/build.gradle.kts'
+      - 'gradle/libs.versions.toml'
+  # Stacked child PRs may target a non-default base; paths still bound the workload.
+  pull_request:
+    paths:
+      - 'docs/superpowers/specs/2026-08-25-ecosystem-reuse-epic-design.md'
+      - 'docs/superpowers/plans/2026-08-25-ecosystem-reuse-epic-plan.md'
+      - 'docs/coverage-matrix.md'
+      - 'docs/ecosystem-reuse-inventory.md'
+      - 'docs/ecosystem-reuse-train.json'
+      - 'docs/lessons/**'
+      - 'docs/review/**'
+      - 'docs/governance/github-action-pins.json'
+      - '.github/scripts/check-ecosystem-reuse.py'
+      - '.github/scripts/test_check_ecosystem_reuse.py'
+      - '.github/workflows/ecosystem-reuse-gate.yml'
+      - '**/build.gradle.kts'
+      - 'gradle/libs.versions.toml'
+      - 'optimization/field-service-dispatch/src/main/kotlin/**'
+      - 'optimization/field-service-dispatch/src/test/kotlin/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ecosystem-reuse-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    name: Validate ecosystem reuse contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout read-only ref
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Resolve trusted base manifest
+        id: trusted-base
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            git fetch --no-tags --depth=1 origin develop
+            BASE_SHA="$(git rev-parse origin/develop)"
+            git merge-base --is-ancestor "$BASE_SHA" "$HEAD_SHA" || {
+              echo "workflow_dispatch HEAD is not based on origin/develop" >&2
+              exit 1
+            }
+          elif [[ ! "${BASE_SHA:-}" =~ ^[0-9a-f]{40}$ ]]; then
+            BASE_SHA="$(git rev-parse origin/develop 2>/dev/null || true)"
+          fi
+          if [[ ! "${BASE_SHA:-}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "trusted base SHA could not be resolved" >&2
+            exit 1
+          fi
+          trusted=false
+          if [[ -n "${BASE_SHA:-}" ]] && git cat-file -e "${BASE_SHA}:docs/ecosystem-reuse-train.json" 2>/dev/null; then
+            git show "${BASE_SHA}:docs/ecosystem-reuse-train.json" > "$RUNNER_TEMP/trusted-ecosystem-reuse-train.json"
+            trusted=true
+          fi
+          {
+            echo "trusted=$trusted"
+            echo "base_sha=$BASE_SHA"
+            echo "head_sha=$HEAD_SHA"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run checker unit tests
+        run: python3 .github/scripts/test_check_ecosystem_reuse.py -v
+
+      - name: Run checker and record sanitized receipt
+        env:
+          TRUSTED: ${{ steps.trusted-base.outputs.trusted }}
+          BASE_SHA: ${{ steps.trusted-base.outputs.base_sha }}
+          HEAD_SHA: ${{ steps.trusted-base.outputs.head_sha }}
+          PR_SCOPE: ${{ github.event_name == 'pull_request' }}
+          BASE_REF_NAME: ${{ github.event.pull_request.base.ref || '' }}
+          HEAD_REF_NAME: ${{ github.event.pull_request.head.ref || '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          diff_args=()
+          if [[ "${BASE_SHA:-}" =~ ^[0-9a-f]{40}$ && "${HEAD_SHA:-}" =~ ^[0-9a-f]{40}$ ]]; then
+            diff_args+=(--base-ref "$BASE_SHA" --head-ref "$HEAD_SHA")
+          fi
+          if [[ "$PR_SCOPE" == "true" ]]; then
+            diff_args+=(--pr-scope --base-ref-name "$BASE_REF_NAME" --head-ref-name "$HEAD_REF_NAME")
+          fi
+          if [[ "$TRUSTED" == "true" ]]; then
+            python3 .github/scripts/check-ecosystem-reuse.py \
+              --inventory docs/ecosystem-reuse-inventory.md \
+              --manifest docs/ecosystem-reuse-train.json \
+              --trusted-manifest "$RUNNER_TEMP/trusted-ecosystem-reuse-train.json" \
+              --workflow .github/workflows/ecosystem-reuse-gate.yml \
+              "${diff_args[@]}" \
+              | tee .ecosystem-reuse-report.txt
+          else
+            python3 .github/scripts/check-ecosystem-reuse.py \
+              --inventory docs/ecosystem-reuse-inventory.md \
+              --manifest docs/ecosystem-reuse-train.json --bootstrap \
+              --workflow .github/workflows/ecosystem-reuse-gate.yml \
+              "${diff_args[@]}" \
+              | tee .ecosystem-reuse-report.txt
+          fi
+
+      - name: Upload sanitized failure receipt
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ecosystem-reuse-report
+          path: .ecosystem-reuse-report.txt
+          if-no-files-found: ignore
+          retention-days: 7

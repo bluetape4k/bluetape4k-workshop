@@ -3,7 +3,29 @@
 각 bluetape4k library를 기존 workshop 예제와 연결하고, Basic/Advanced 제안 시나리오와
 함께 coverage gap을 식별합니다.
 
-> 마지막 갱신: 2026-08-08
+> 마지막 갱신: 2026-08-25
+
+## 2026-08-25 ecosystem 재사용 2차 gate
+
+`bluetape4k-assertions`는 모든 테스트에 전이되어 있지만, legacy raw assertion과
+module-local fallback이 남아 있어 전체 `Good`으로 판정하지 않는다. 실제 caller,
+capability API, BOM alias, source/test anchor, fallback 사유는
+[`docs/ecosystem-reuse-inventory.md`](ecosystem-reuse-inventory.md)에서 issue별로
+추적한다. `A1`은 Field Service, `A2`는 commerce·leader·operations·planning의
+assertion migration을 맡고, framework/protocol 학습 대상 raw check는
+`behavior-under-test`로 분리한다.
+
+| 확인 항목 | 기준 | 현재 상태 | 다음 gate |
+|---|---|---|---|
+| assertions matcher | touched assertion block은 `bluetape4k-assertions` 우선 | ⚠️ Partial | #783, #785~#791; A1/A2 exact selectors |
+| capability 재사용 | released API와 실제 import/source/test anchor를 inventory에 기록 | ⚠️ Partial | #777, #793~#808; P0 checker |
+| raw fallback | 다섯 분류와 비어 있지 않은 `fallback_reason` | ⚠️ Partial | `behavior-under-test`/`documented-raw-fallback` negative test |
+| BOM/version | `bluetape4k-dependencies`만 버전 authority | ✅ Guarded | child build-file diff gate |
+
+이 표의 `Good`은 구현 완료를 뜻하지 않으며, child exact-head receipt와 serial
+closeout가 `status=verified`로 전환한 뒤에만 회복할 수 있다. `build-logic`의
+consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 inventory에
+별도 사유를 남긴다.
 
 ---
 
@@ -29,7 +51,7 @@
 | `bluetape4k-logging` | All modules | ✅ Good | — | — | — | — |
 | `bluetape4k-coroutines` | `kotlin/coroutines`, `observability-*`, `redis-distributed-lock` | ✅ Good | structured concurrency pattern이 불완전함 | — | — | — |
 | `bluetape4k-junit5` | All test modules | ✅ Good | `SuspendedJobTester` / `MultithreadingTester` 미노출 | concurrency test harness demo | — | — |
-| `bluetape4k-assertions` | All test modules | ✅ Good | — | — | — | — |
+| `bluetape4k-assertions` | All test modules | ⚠️ Partial | legacy raw assertion과 module별 matcher 적용 편차 | assertion migration + raw fallback inventory | exact-head matcher migration with failure-message parity | #792 |
 | `bluetape4k-testcontainers` | `exposed-*`, `spring-data-*`, `redis-*`, `messaging-*` | ✅ Good | — | — | — | — |
 
 ---
