@@ -106,7 +106,8 @@
         ".github/scripts/test_check_ecosystem_reuse.py",
         ".github/workflows/ecosystem-reuse-gate.yml",
         ".github/workflows/Examples.yml",
-        "docs/review/2026-08-25-ecosystem-reuse-epic-design-plan-review.md"
+        "docs/review/2026-08-25-ecosystem-reuse-epic-design-plan-review.md",
+        "docs/review/2026-08-26-ecosystem-child-scope-7tier.md"
       ],
       "gradle_tasks": [
         "detekt"
