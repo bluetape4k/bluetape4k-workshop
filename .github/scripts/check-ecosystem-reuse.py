@@ -686,7 +686,9 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
             else "head_oid"
         )
         parent_oid = p0.get(parent_oid_field)
-        if parent_oid and r2.get("parent_oid") != parent_oid:
+        if not SHA_RE.fullmatch(str(parent_oid or "")):
+            errors.append("R2: P0 reparent requires recorded P0 %s" % parent_oid_field)
+        elif r2.get("parent_oid") != parent_oid:
             errors.append("R2: P0 reparent parent_oid must equal P0 %s" % parent_oid_field)
     elif parent_evidence not in (None, {}):
         errors.append("R2: parent_evidence is only valid while parent_track is R1")

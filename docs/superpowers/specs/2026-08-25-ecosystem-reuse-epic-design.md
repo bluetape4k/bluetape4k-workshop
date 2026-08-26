@@ -238,11 +238,12 @@ behavior처럼 raw API 자체가 학습 대상이면 해당 테스트에 이유�
 실행하고, Tier 6 review에서 raw assertion 잔여와 allowlist 근거를 함께 확인한다.
 
 각 child의 `docs/review/DATE-TRACK-7tier.md`는 공통 구조를 따른다: `track`,
-`reviewed_implementation_oid` marker, PR의 exact `head_oid`/`base_oid`/
-`merge_base_oid` read-back, manifest checksum, 적용한 `$bluetape-kotlin-patterns`
-checklist ID, capability/source/test anchor, assertion migration 또는 fallback
-근거, Tier 1~7별 evidence와 finding count, targeted test receipt, skipped/disabled
-정책, owner와 stop condition. 여기서 exact PR OID는 사람이 읽는 검증 증거이고,
+`reviewed_implementation_oid` marker, manifest checksum, 적용한
+`$bluetape-kotlin-patterns` checklist ID, capability/source/test anchor, assertion
+migration 또는 fallback 근거, Tier 1~7별 evidence와 finding count, targeted test
+receipt, skipped/disabled 정책, owner와 stop condition. PR의 exact
+`head_oid`/`base_oid`/`merge_base_oid`는 PR body 또는 별도 외부 receipt에서
+read-back하며, committed artifact의 필수 authoritative field로 요구하지 않는다.
 `reviewed-ancestor` manifest의 authoritative implementation anchor는 marker와
 `reviewed_implementation_oid`이며 legacy OID 필드는 `null`이다. ancestor OID가
 바뀌면 영향받은 Tier와 checklist를 다시 실행하고 이전 결과를 PASS로 재사용하지

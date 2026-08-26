@@ -658,6 +658,18 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         errors = CHECKER.validate_manifest(self.root, path)
         self.assertTrue(any("P0 reparent parent_oid must equal P0 reviewed_implementation_oid" in error for error in errors))
 
+    def test_manifest_reparent_rejects_missing_reviewed_ancestor_parent_oid(self):
+        manifest = self.manifest()
+        p0 = manifest["nodes"][0]
+        r2 = manifest["nodes"][6]
+        r2["parent_track"] = "P0"
+        r2["expected_base_ref"] = p0["expected_head_ref"]
+        r2["parent_oid"] = "b" * 40
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, path)
+        self.assertTrue(any("P0 reparent requires recorded P0 reviewed_implementation_oid" in error for error in errors))
+
     def test_manifest_rejects_invalid_state_transition(self):
         trusted = self.manifest()
         current = self.manifest()

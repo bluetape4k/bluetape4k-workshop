@@ -499,16 +499,17 @@ repository-root containment를 대조한다. 모든 code task는 failing test로
 최소 Kotlin 변경, module test, 7-Tier review 순서로 진행한다.
 
 각 child는 `docs/review/DATE-TRACK-7tier.md`를 생성한다. 문서에는 track와
-severity를 구분한 표기, PR의 exact `head_oid`/`base_oid`/`merge_base_oid`
-read-back, manifest checksum, 적용한 `$bluetape-kotlin-patterns` checklist ID,
-capability/API/source/test anchor, `resolved_dependency_receipt`, assertion 또는
-fallback 근거, Tier 1~7별 evidence와 finding count, selector별 receipt,
-skipped/disabled 정책, owner와 stop condition을 포함한다. reviewed-ancestor
-manifest에서는 marker와 `reviewed_implementation_oid`가 authoritative
-implementation anchor이고 legacy OID 필드는 `null`이므로, artifact의 exact PR
-OID는 read-back 증거로만 기록한다. 이 artifact가 없거나 ancestor OID와 receipt
-checksum이 맞지 않으면 child는 `READY`가 될 수 없다. P0/P1 finding이 다시
-생기면 해당 Tier와 descendant를 topological order로 재검토한다.
+severity를 구분한 표기, manifest checksum, 적용한 `$bluetape-kotlin-patterns`
+checklist ID, capability/API/source/test anchor, `resolved_dependency_receipt`,
+assertion 또는 fallback 근거, Tier 1~7별 evidence와 finding count, selector별
+receipt, skipped/disabled 정책, owner와 stop condition을 포함한다. PR의 exact
+`head_oid`/`base_oid`/`merge_base_oid`는 PR body 또는 별도 외부 receipt에서
+read-back하며 committed artifact의 필수 field로 요구하지 않는다.
+reviewed-ancestor manifest에서는 marker와 `reviewed_implementation_oid`가
+authoritative implementation anchor이고 legacy OID 필드는 `null`이다. 이
+artifact가 없거나 ancestor OID와 receipt checksum이 맞지 않으면 child는
+`READY`가 될 수 없다. P0/P1 finding이 다시 생기면 해당 Tier와 descendant를
+topological order로 재검토한다.
 
 ### Track A — assertions 및 Field Service 계약
 
