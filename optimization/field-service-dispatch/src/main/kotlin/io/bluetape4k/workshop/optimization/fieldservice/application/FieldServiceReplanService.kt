@@ -179,17 +179,33 @@ class FieldServiceReplanService(
             }
             flights.clear()
         }
+
+        var interrupted = false
         executor.shutdown()
-        if (!awaitTermination(executor, shutdownDeadlineNanos)) {
+        try {
+            if (!awaitTermination(executor, shutdownDeadlineNanos)) {
+                tasks.values.forEach { it.cancelStages() }
+                executor.shutdownNow()
+            }
+        } catch (failure: InterruptedException) {
+            interrupted = true
             tasks.values.forEach { it.cancelStages() }
             executor.shutdownNow()
+            log.warn(failure) { "Field Service planner executor shutdown was interrupted" }
         }
         if (closeBlockingExecutor) {
             blockingExecutor.shutdown()
-            if (!awaitTermination(blockingExecutor, shutdownDeadlineNanos)) {
+            try {
+                if (!awaitTermination(blockingExecutor, shutdownDeadlineNanos)) {
+                    blockingExecutor.shutdownNow()
+                }
+            } catch (failure: InterruptedException) {
+                interrupted = true
                 blockingExecutor.shutdownNow()
+                log.warn(failure) { "Field Service blocking executor shutdown was interrupted" }
             }
         }
+        if (interrupted) Thread.currentThread().interrupt()
     }
 
     private fun shutdownDeadlineNanos(): Long {

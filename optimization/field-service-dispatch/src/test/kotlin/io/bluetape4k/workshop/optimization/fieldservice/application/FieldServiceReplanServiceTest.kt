@@ -511,6 +511,34 @@ class FieldServiceReplanServiceTest {
         }
     }
 
+    @Test
+    fun `closing the service cleans both executors when termination wait is interrupted`() {
+        val cpuExecutor = RecordingThreadPoolExecutor(awaitDelayMillis = 0, interruptOnAwait = true)
+        val blockingExecutor = RecordingExecutorService(
+            delegate = TestingExecutors.newFixedThreadPool(1),
+            interruptOnAwait = true,
+        )
+        val service = FieldServiceReplanService(
+            planner = DeterministicFieldServicePlanner(),
+            snapshot = ::emptyInput,
+            executor = cpuExecutor,
+            timeout = Duration.ofSeconds(2),
+            blockingExecutor = blockingExecutor,
+        )
+
+        try {
+            service.close()
+
+            cpuExecutor.shutdownNowCalled.get().shouldBeTrue()
+            blockingExecutor.shutdownNowCalled.get().shouldBeTrue()
+            Thread.interrupted().shouldBeTrue()
+        } finally {
+            Thread.interrupted()
+            cpuExecutor.shutdownNow()
+            blockingExecutor.shutdownNow()
+        }
+    }
+
     private fun boundedCpuExecutor(): ThreadPoolExecutor = ThreadPoolExecutor(
         1,
         1,
@@ -521,6 +549,7 @@ class FieldServiceReplanServiceTest {
 
     private class RecordingThreadPoolExecutor(
         private val awaitDelayMillis: Long,
+        private val interruptOnAwait: Boolean = false,
     ) : ThreadPoolExecutor(
         1,
         1,
@@ -533,6 +562,7 @@ class FieldServiceReplanServiceTest {
 
         override fun awaitTermination(timeout: Long, unit: TimeUnit): Boolean {
             awaitNanos.set(unit.toNanos(timeout))
+            if (interruptOnAwait) throw InterruptedException("synthetic await interruption")
             Thread.sleep(awaitDelayMillis)
             return false
         }
@@ -545,6 +575,7 @@ class FieldServiceReplanServiceTest {
 
     private class RecordingExecutorService(
         private val delegate: ExecutorService,
+        private val interruptOnAwait: Boolean = false,
     ) : AbstractExecutorService() {
         val awaitNanos = AtomicLong()
         val shutdownNowCalled = AtomicBoolean(false)
@@ -564,6 +595,7 @@ class FieldServiceReplanServiceTest {
 
         override fun awaitTermination(timeout: Long, unit: TimeUnit): Boolean {
             awaitNanos.set(unit.toNanos(timeout))
+            if (interruptOnAwait) throw InterruptedException("synthetic await interruption")
             return false
         }
     }
