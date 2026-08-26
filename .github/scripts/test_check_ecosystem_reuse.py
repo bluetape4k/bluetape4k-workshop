@@ -228,6 +228,33 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         )
         self.assertTrue(any("exact capability_api token" in error for error in errors))
 
+    def test_actual_import_rejects_comment_only_import(self):
+        (self.root / "src/source.kt").write_text(
+            "// import io.github.bluetape4k.assertions.shouldBeEqualTo\n",
+            encoding="utf-8",
+        )
+        errors = CHECKER.validate_inventory(self.root, self.inventory([self.row()]))
+        self.assertTrue(any("Bluetape import declaration" in error for error in errors))
+
+    def test_actual_import_rejects_string_only_import(self):
+        (self.root / "src/source.kt").write_text(
+            'val evidence = "import io.github.bluetape4k.assertions.shouldBeEqualTo"\n',
+            encoding="utf-8",
+        )
+        errors = CHECKER.validate_inventory(self.root, self.inventory([self.row()]))
+        self.assertTrue(any("Bluetape import declaration" in error for error in errors))
+
+    def test_actual_import_rejects_non_source_document(self):
+        (self.root / "README.md").write_text(
+            "import io.github.bluetape4k.assertions.shouldBeEqualTo\n",
+            encoding="utf-8",
+        )
+        errors = CHECKER.validate_inventory(
+            self.root,
+            self.inventory([self.row(actual_import="README.md")]),
+        )
+        self.assertTrue(any("source/test file" in error for error in errors))
+
     def test_released_actual_import_must_not_be_a_dependency_declaration(self):
         build_path = self.root / "src/build.gradle.kts"
         build_path.write_text(

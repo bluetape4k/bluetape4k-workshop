@@ -67,6 +67,11 @@ FOLLOW_UP_SCOPE_FIELDS = {
     "oid_policy", "head_oid", "base_oid", "issue_numbers", "allowed_paths", "review_artifact",
 }
 DEPENDENCY_DECLARATION_NAMES = {"build.gradle", "build.gradle.kts", "libs.versions.toml"}
+SOURCE_IMPORT_EXTENSIONS = {".java", ".kt", ".kts"}
+BLUETAPE_IMPORT_PREFIXES = ("io.bluetape4k.", "io.github.bluetape4k.")
+IMPORT_DECLARATION_RE = re.compile(
+    r"(?m)^[ \t]*import(?:[ \t]+static)?[ \t]+([A-Za-z_][A-Za-z0-9_.]*)\b"
+)
 DEPENDENCY_INSIGHT_RE = re.compile(
     r"^(?:\./gradlew|gradlew)\s+"
     r"(?P<task>(?::[A-Za-z0-9_-]+:)?dependencyInsight)\s+"
@@ -196,6 +201,104 @@ def _capability_api_tokens(capability_api: str) -> List[str]:
 def _is_dependency_declaration_path(raw: str) -> bool:
     value = clean_cell(raw)
     return Path(value).name in DEPENDENCY_DECLARATION_NAMES
+
+
+def _is_source_import_path(raw: str) -> bool:
+    """Return whether an ``actual_import`` points at a Kotlin/Java source file."""
+    value = clean_cell(raw)
+    path = Path(value)
+    return "src" in path.parts and path.suffix.lower() in SOURCE_IMPORT_EXTENSIONS
+
+
+def _strip_comments_and_strings(source_text: str) -> str:
+    """Mask comments and literals while preserving newlines for import parsing."""
+    output: List[str] = []
+    index = 0
+    state = "normal"
+    block_depth = 0
+
+    def mask(character: str) -> None:
+        output.append("\n" if character == "\n" else " ")
+
+    while index < len(source_text):
+        character = source_text[index]
+        next_two = source_text[index:index + 2]
+        next_three = source_text[index:index + 3]
+
+        if state == "normal":
+            if next_two == "//":
+                mask(" ")
+                mask(" ")
+                index += 2
+                state = "line-comment"
+            elif next_two == "/*":
+                mask(" ")
+                mask(" ")
+                index += 2
+                block_depth = 1
+                state = "block-comment"
+            elif next_three == '\"\"\"':
+                mask(" ")
+                mask(" ")
+                mask(" ")
+                index += 3
+                state = "triple-string"
+            elif character in {'\"', "'"}:
+                mask(character)
+                index += 1
+                state = "string" if character == '\"' else "character"
+            else:
+                output.append(character)
+                index += 1
+        elif state == "line-comment":
+            mask(character)
+            index += 1
+            if character == "\n":
+                state = "normal"
+        elif state == "block-comment":
+            if next_two == "/*":
+                mask(" ")
+                mask(" ")
+                index += 2
+                block_depth += 1
+            elif next_two == "*/":
+                mask(" ")
+                mask(" ")
+                index += 2
+                block_depth -= 1
+                if block_depth == 0:
+                    state = "normal"
+            else:
+                mask(character)
+                index += 1
+        elif state in {"string", "character"}:
+            if character == "\\":
+                mask(character)
+                index += 1
+                if index < len(source_text):
+                    mask(source_text[index])
+                    index += 1
+            else:
+                mask(character)
+                index += 1
+                if (state == "string" and character == '\"') or (state == "character" and character == "'"):
+                    state = "normal"
+        else:  # triple-string
+            if next_three == '\"\"\"':
+                mask(" ")
+                mask(" ")
+                mask(" ")
+                index += 3
+                state = "normal"
+            else:
+                mask(character)
+                index += 1
+    return "".join(output)
+
+
+def _import_declarations(source_text: str) -> List[str]:
+    """Extract fully qualified Kotlin/Java import names from sanitized source."""
+    return [match.group(1) for match in IMPORT_DECLARATION_RE.finditer(source_text)]
 
 
 def _gradle_project_for_row(row: Dict[str, str]) -> str:
@@ -342,19 +445,35 @@ def validate_inventory(root: Path, inventory_path: Path, manifest: Optional[Dict
                 )
                 resolved = safe_relative_path(root, row.get(column, ""), allow_na=allow_na)
                 if column == "actual_import" and resolved is not None:
+                    if not _is_source_import_path(row.get(column, "")):
+                        if not _is_dependency_declaration_path(row.get(column, "")):
+                            errors.append(
+                                "%s: actual_import must point to a source/test file under src "
+                                "with a Kotlin/Java source extension" % prefix
+                            )
+                        continue
                     try:
                         source_text = resolved.read_text(encoding="utf-8")
                     except OSError as exc:
                         errors.append("%s: actual_import unreadable %s" % (prefix, escaped(exc)))
                     else:
-                        if "bluetape4k" not in source_text:
-                            errors.append("%s: actual_import lacks Bluetape import or dependency anchor" % prefix)
+                        sanitized_source = _strip_comments_and_strings(source_text)
+                        bluetape_imports = [
+                            declaration for declaration in _import_declarations(sanitized_source)
+                            if declaration.startswith(BLUETAPE_IMPORT_PREFIXES)
+                        ]
+                        if not bluetape_imports:
+                            errors.append("%s: actual_import lacks a Bluetape import declaration" % prefix)
                         else:
                             import_tokens = _candidate_import_tokens(alias, resolved_module, capability_api)
-                            if not any(token in source_text for token in import_tokens):
+                            if not any(
+                                token in declaration
+                                for token in import_tokens
+                                for declaration in bluetape_imports
+                            ):
                                 errors.append("%s: actual_import lacks the declared dependency/API token" % prefix)
                             api_tokens = _capability_api_tokens(capability_api)
-                            if api_tokens and not any(token in source_text for token in api_tokens):
+                            if api_tokens and not any(token in sanitized_source for token in api_tokens):
                                 errors.append("%s: actual_import lacks the exact capability_api token" % prefix)
                 elif column == "actual_import" and resolved is None and not row.get("capability_api", "").startswith("candidate:"):
                     errors.append("%s: N/A actual_import requires a candidate: capability_api marker" % prefix)
