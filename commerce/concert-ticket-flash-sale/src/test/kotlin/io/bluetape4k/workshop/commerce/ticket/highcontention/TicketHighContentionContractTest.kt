@@ -4,6 +4,7 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.concurrent.virtualthread.VirtualThreads
 import io.bluetape4k.testcontainers.storage.RedisServer
 import org.awaitility.kotlin.atMost
@@ -18,7 +19,6 @@ import java.nio.file.StandardCopyOption.ATOMIC_MOVE
 import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 import java.nio.file.StandardOpenOption.APPEND
 import java.time.Duration
-import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -75,7 +75,7 @@ internal class TicketHighContentionContractTest {
             TicketTopologyCutpoint.Phase.BEFORE_CREATE to "before",
             TicketTopologyCutpoint.Phase.AFTER_CREATE to "after",
         ).forEach { (phase, suffix) ->
-            val runId = "ticket-cutpoint-$suffix-${UUID.randomUUID()}"
+            val runId = "ticket-cutpoint-$suffix-${Base58.randomString(16).lowercase()}"
             val artifacts = TicketHighContentionArtifactStore.create(tempDir.toRealPath(), runId)
             val journalPath = artifacts.journalPath
             artifacts.createJournal().use { journal ->

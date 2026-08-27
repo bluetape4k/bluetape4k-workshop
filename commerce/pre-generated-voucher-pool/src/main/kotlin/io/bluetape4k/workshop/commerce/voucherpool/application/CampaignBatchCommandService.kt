@@ -8,6 +8,7 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.application
 
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.voucherpool.domain.BatchPolicy
 import io.bluetape4k.workshop.commerce.voucherpool.domain.BatchState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CampaignPolicy
@@ -654,7 +655,7 @@ internal class JdbcCampaignBatchCommandService(
             try {
                 val code = CanonicalVoucherCode.of(rawCode)
                 val stable = digests.stableDedup(tenantId, code)
-                val entryId = UUID.randomUUID()
+                val entryId = Uuid.V7.nextId()
                 val encrypted = crypto.encrypt(EntryIdentity(tenantId, campaignId, batchId, entryId, ordinal), code)
                 entries += PreparedVoucherEntryRecord(
                     tenantId,

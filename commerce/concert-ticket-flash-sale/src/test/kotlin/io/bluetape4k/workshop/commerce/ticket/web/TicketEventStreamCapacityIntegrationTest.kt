@@ -2,14 +2,14 @@ package io.bluetape4k.workshop.commerce.ticket.web
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.idgenerators.uuid.Uuid
 import org.junit.jupiter.api.Test
-import java.util.UUID
 
 internal class TicketEventStreamCapacityIntegrationTest {
     @Test
     fun `slow consumer is disconnected and releases its connection permit`() {
         val stream = TicketEventStream(queueSize = 1, maxConnections = 1)
-        val scope = StreamScope.PublicSale(UUID.randomUUID())
+        val scope = StreamScope.PublicSale(Uuid.V7.nextId())
         stream.subscribe(scope) { mapOf("status" to "open") }
         stream.publish(scope, "inventory", mapOf("remaining" to "10"))
 
@@ -26,9 +26,9 @@ internal class TicketEventStreamCapacityIntegrationTest {
         val stream = TicketEventStream(2, 1)
         assertFailsWith<IllegalArgumentException> {
             stream.publish(
-                StreamScope.PublicSale(UUID.randomUUID()),
+                StreamScope.PublicSale(Uuid.V7.nextId()),
                 "purchase",
-                mapOf("buyerSubjectId" to UUID.randomUUID().toString()),
+                mapOf("buyerSubjectId" to Uuid.V7.nextId().toString()),
             )
         }
     }
