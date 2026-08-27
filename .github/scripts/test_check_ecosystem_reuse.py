@@ -216,6 +216,46 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         head_oid = self._git("rev-parse", "HEAD")
         return base_oid, implementation_oid, head_oid
 
+    def _rebased_reviewed_ancestor_history(self):
+        self._git("init")
+        self._git("config", "user.email", "test@example.com")
+        self._git("config", "user.name", "Ecosystem Reuse Test")
+        review = self.root / "docs/review/A1-7tier.md"
+        review.parent.mkdir(parents=True)
+        review.write_text("# A1 review\n", encoding="utf-8")
+        self._git("add", ".")
+        self._git("commit", "-m", "base")
+        original_base_oid = self._git("rev-parse", "HEAD")
+
+        original_changed = self.root / "src/A1/Changed.kt"
+        original_changed.parent.mkdir(parents=True, exist_ok=True)
+        original_changed.write_text("class Changed\n", encoding="utf-8")
+        self._git("add", str(original_changed.relative_to(self.root)))
+        self._git("commit", "-m", "original implementation")
+        stale_marker_oid = self._git("rev-parse", "HEAD")
+
+        self._git("checkout", "-b", "rebased-child", original_base_oid)
+        (self.root / "coordinator.txt").write_text("coordinator transition\n", encoding="utf-8")
+        self._git("add", "coordinator.txt")
+        self._git("commit", "-m", "coordinator transition")
+        current_base_oid = self._git("rev-parse", "HEAD")
+
+        rebased_changed = self.root / "src/A1/Changed.kt"
+        rebased_changed.parent.mkdir(parents=True, exist_ok=True)
+        rebased_changed.write_text("class Changed\n", encoding="utf-8")
+        self._git("add", str(rebased_changed.relative_to(self.root)))
+        self._git("commit", "-m", "rebased implementation")
+        current_marker_oid = self._git("rev-parse", "HEAD")
+
+        review.write_text(
+            "# A1 review\n\n<!-- reviewed_implementation_oid: %s -->\n" % current_marker_oid,
+            encoding="utf-8",
+        )
+        self._git("add", str(review.relative_to(self.root)))
+        self._git("commit", "-m", "review evidence tail")
+        head_oid = self._git("rev-parse", "HEAD")
+        return current_base_oid, stale_marker_oid, current_marker_oid, head_oid
+
     def _reviewed_manifest(self):
         manifest = self.manifest()
         manifest["nodes"][1]["oid_policy"] = "reviewed-ancestor"
@@ -380,6 +420,71 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         current_path.write_text(json.dumps(current), encoding="utf-8")
         errors = CHECKER.validate_manifest(self.root, current_path, trusted_path=trusted_path)
         self.assertTrue(any("execution scope changed" in error for error in errors))
+
+    def test_manifest_rejects_unknown_reviewed_marker_binding(self):
+        manifest = self.manifest()
+        manifest["nodes"][1]["reviewed_marker_binding"] = "floating"
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, path)
+        self.assertTrue(any("invalid reviewed_marker_binding" in error for error in errors))
+
+    def test_manifest_marker_binding_change_requires_coordinator_transition(self):
+        trusted = self.manifest(state="READY", receipt_status="PASS")
+        current = self.manifest(state="READY", receipt_status="PASS")
+        current["nodes"][1]["reviewed_marker_binding"] = "lineage"
+        trusted_path = self.root / "trusted.json"
+        current_path = self.root / "current.json"
+        trusted_path.write_text(json.dumps(trusted), encoding="utf-8")
+        current_path.write_text(json.dumps(current), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, current_path, trusted_path=trusted_path)
+        self.assertTrue(any("without a fresh coordinator transition" in error for error in errors))
+
+    def test_trusted_manifest_accepts_lineage_binding_with_fresh_coordinator_receipt(self):
+        trusted = self.manifest(state="READY", receipt_status="PASS")
+        current = self.manifest(state="READY", receipt_status="PASS")
+        current["nodes"][1]["reviewed_marker_binding"] = "lineage"
+        current["reviewed_marker_transitions"] = {
+            "A1": {
+                "from": "manifest",
+                "to": "lineage",
+                "receipt_id": "receipt-lineage",
+                "checksum": "e" * 64,
+            }
+        }
+        trusted_path = self.root / "trusted.json"
+        current_path = self.root / "current.json"
+        trusted_path.write_text(json.dumps(trusted), encoding="utf-8")
+        current_path.write_text(json.dumps(current), encoding="utf-8")
+        self.assertEqual([], CHECKER.validate_manifest(self.root, current_path, trusted_path=trusted_path))
+
+    def test_trusted_manifest_rejects_reused_marker_transition_receipt(self):
+        trusted = self.manifest(state="READY", receipt_status="PASS")
+        trusted["nodes"][1]["reviewed_marker_binding"] = "manifest"
+        trusted["reviewed_marker_transitions"] = {
+            "A1": {
+                "from": "lineage",
+                "to": "manifest",
+                "receipt_id": "receipt-reused",
+                "checksum": "f" * 64,
+            }
+        }
+        current = self.manifest(state="READY", receipt_status="PASS")
+        current["nodes"][1]["reviewed_marker_binding"] = "lineage"
+        current["reviewed_marker_transitions"] = {
+            "A1": {
+                "from": "manifest",
+                "to": "lineage",
+                "receipt_id": "receipt-reused",
+                "checksum": "f" * 64,
+            }
+        }
+        trusted_path = self.root / "trusted.json"
+        current_path = self.root / "current.json"
+        trusted_path.write_text(json.dumps(trusted), encoding="utf-8")
+        current_path.write_text(json.dumps(current), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, current_path, trusted_path=trusted_path)
+        self.assertTrue(any("requires a fresh coordinator receipt" in error for error in errors))
 
     def test_manifest_active_path_overlap_is_rejected(self):
         manifest = self.manifest(state="READY", receipt_status="PASS", overlap=True)
@@ -850,6 +955,30 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
             repository_root=self.root,
         )
         self.assertEqual([], errors)
+
+    def test_train_scope_accepts_lineage_marker_after_coordinator_rebase(self):
+        base_oid, stale_marker_oid, current_marker_oid, head_oid = self._rebased_reviewed_ancestor_history()
+        manifest = self._reviewed_manifest()
+        node = manifest["nodes"][1]
+        node.update({
+            "state": "READY",
+            "receipt_status": "PASS",
+            "receipt_id": "receipt-a1-lineage",
+            "checksum": "d" * 64,
+            "reviewed_implementation_oid": stale_marker_oid,
+            "reviewed_marker_binding": "lineage",
+        })
+        errors = CHECKER.validate_train_scope(
+            manifest,
+            ["src/A1/Changed.kt", "docs/review/A1-7tier.md"],
+            base_ref_name="origin/develop",
+            head_ref_name="branch/A1",
+            base_oid=base_oid,
+            head_oid=head_oid,
+            repository_root=self.root,
+        )
+        self.assertEqual([], errors)
+        self.assertNotEqual(stale_marker_oid, current_marker_oid)
 
     def test_train_scope_rejects_manifest_marker_oid_mismatch(self):
         base_oid, _, head_oid = self._reviewed_ancestor_history()

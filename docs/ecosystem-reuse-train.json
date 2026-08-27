@@ -43,22 +43,31 @@
     "MERGE_READY": ["MERGE_READY", "MERGED", "INVALID"],
     "MERGED": ["MERGED"]
   },
+  "reviewed_marker_transitions": {
+    "A1": {
+      "from": "manifest",
+      "to": "lineage",
+      "receipt_id": "20260827T033641Z-a1-marker-lineage",
+      "checksum": "a68977d01c16d85f22db97bfd49f9e7c2468e2e120e1396db2f690e9133626de"
+    }
+  },
   "follow_up_scopes": [
     {
       "scope_id": "coordinator-child-scope",
       "scope_kind": "coordinator",
       "parent_track": "P0",
-      "expected_head_ref": "fix/ecosystem-reuse-child-scope",
+      "expected_head_ref": "fix/ecosystem-reuse-marker-transition",
       "expected_base_ref": "develop",
       "oid_policy": "rebase-aware",
       "head_oid": null,
       "base_oid": null,
-      "issue_numbers": [822],
+      "issue_numbers": [822, 826],
       "allowed_paths": [
         "docs/ecosystem-reuse-train.json",
         ".github/scripts/check-ecosystem-reuse.py",
         ".github/scripts/test_check_ecosystem_reuse.py",
-        "docs/review/2026-08-26-ecosystem-child-scope-7tier.md"
+        "docs/review/2026-08-26-ecosystem-child-scope-7tier.md",
+        "docs/lessons/2026-08-27-fixed-child-marker-lineage-transition.md"
       ],
       "review_artifact": "docs/review/2026-08-26-ecosystem-child-scope-7tier.md"
     },
@@ -81,8 +90,8 @@
     }
   ],
       "coordinator_scope_receipt": {
-    "receipt_id": "20260827T013500Z-develop-base-transition",
-    "checksum": "4f18a5511d6169dfa70d36dcca87d55a18e8a5021d54b05eb8019630b1adb37e"
+      "receipt_id": "20260827T033641Z-marker-transition-scope",
+      "checksum": "347b99710d7441308ee9d6928dffe0f84c75e96638184c63d18f747089219ce7"
   },
   "nodes": [
     {
@@ -144,6 +153,7 @@
       "parent_oid": "85aa60c1b525c7b0df693d897207221288fad25e",
       "merge_base_oid": null,
       "reviewed_implementation_oid": "b3711b30a0c51f78750b3cdf2718692d40af08de",
+      "reviewed_marker_binding": "lineage",
       "state": "READY",
       "issue_numbers": [783],
       "allowed_paths": [
