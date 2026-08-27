@@ -38,9 +38,9 @@ import java.util.UUID
 /**
  * disposable Field Service workshop schema를 위한 Exposed repository입니다.
  *
- * plan projection의 일반 CRUD/read는 Bluetape [LongJdbcRepository]를 사용하고,
- * CAS, row lock, event append, outbox lease/fencing은 동시성 계약을 보존해야 하므로
- * 명시적인 Exposed SQL로 유지합니다.
+ * plan projection의 bounded 조회는 Bluetape [LongJdbcRepository]를 사용하고,
+ * multi-table plan 저장과 CAS, row lock, event append, outbox lease/fencing은
+ * 동시성·원자성 계약을 보존해야 하므로 명시적인 Exposed SQL로 유지합니다.
  */
 class FieldServiceRepository(
     private val clock: Clock = Clock.systemUTC(),
