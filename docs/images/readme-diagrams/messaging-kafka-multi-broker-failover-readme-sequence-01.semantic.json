@@ -1,0 +1,40 @@
+{
+  "kind": "sequence",
+  "source": {
+    "question": "What bounded sequence proves both Kafka broker failover paths while preserving unique application effects and redacted terminal evidence?",
+    "revision": "feat/kafka-multi-broker-failover",
+    "paths": [
+      "messaging/kafka-multi-broker-failover/src/test/kotlin/io/bluetape4k/workshop/messaging/kafka/multibroker/failover/KafkaMultiBrokerFailoverIntegrationTest.kt",
+      "messaging/kafka-multi-broker-failover/src/test/kotlin/io/bluetape4k/workshop/messaging/kafka/multibroker/failover/fixture/KafkaFailoverEvidence.kt",
+      "shared/src/testFixtures/kotlin/io/bluetape4k/workshop/shared/messaging/KafkaRecoveryConformanceFixture.kt",
+      "messaging/kafka-multi-broker-failover/README.md"
+    ]
+  },
+  "nodes": [
+    {"id":"harness","label":"Test harness","source":"KafkaMultiBrokerFailoverIntegrationTest.kt"},
+    {"id":"admin","label":"AdminClient","source":"KafkaFailoverAdmin.kt"},
+    {"id":"producer","label":"Producer","source":"KafkaFailoverClientFactory.kt"},
+    {"id":"consumer","label":"Consumer","source":"KafkaFailoverCollector.kt"},
+    {"id":"brokers","label":"Kafka quorum","source":"KafkaFailoverClusterFixture.kt"},
+    {"id":"evidence","label":"Evidence","source":"KafkaFailoverEvidenceWriter.kt"}
+  ],
+  "edges": [
+    {"id":"start-topic","from":"admin","to":"brokers","kind":"start","source":"KafkaMultiBrokerFailoverIntegrationTest.kt"},
+    {"id":"assert-topology","from":"admin","to":"brokers","kind":"assert","source":"KafkaFailoverAdmin.kt"},
+    {"id":"prefix-produce","from":"producer","to":"brokers","kind":"publish","source":"KafkaMultiBrokerFailoverIntegrationTest.kt"},
+    {"id":"assignment-callback","from":"brokers","to":"consumer","kind":"assignment","source":"KafkaFailoverCollector.kt"},
+    {"id":"stop-leader","from":"harness","to":"brokers","kind":"fault","source":"KafkaMultiBrokerFailoverIntegrationTest.kt"},
+    {"id":"new-leader","from":"brokers","to":"admin","kind":"recovery","source":"KafkaFailoverAdmin.kt"},
+    {"id":"stop-coordinator","from":"harness","to":"brokers","kind":"fault","source":"KafkaMultiBrokerFailoverIntegrationTest.kt"},
+    {"id":"new-coordinator","from":"brokers","to":"consumer","kind":"recovery","source":"KafkaFailoverCollector.kt"},
+    {"id":"suffix-produce","from":"producer","to":"brokers","kind":"publish","source":"KafkaMultiBrokerFailoverIntegrationTest.kt"},
+    {"id":"replacement-isr","from":"harness","to":"brokers","kind":"replacement","source":"KafkaFailoverClusterFixture.kt"},
+    {"id":"records-callback","from":"brokers","to":"consumer","kind":"delivery","source":"KafkaFailoverCollector.kt"},
+    {"id":"terminal-evidence","from":"brokers","to":"evidence","kind":"terminal","source":"KafkaFailoverEvidenceWriter.kt"}
+  ],
+  "behavior": {"branches": 2, "loops": 1},
+  "repairs": [
+    {"target":"fault branch","reason":"Use one alt frame for leader and coordinator faults so shared suffix, replacement, and evidence steps remain visible without duplicating participants.","touches":3},
+    {"target":"delivery boundary","reason":"Keep at-least-once delivery and unique applied effects in one terminal note rather than adding a second consumer participant.","touches":2}
+  ]
+}

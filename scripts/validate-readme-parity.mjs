@@ -35,6 +35,27 @@ function canonicalImageTarget(target) {
   return target.replace(/\.ko(?=\.(?:png|svg)$)/, "");
 }
 
+function requestedReadmes() {
+  const argument = process.argv[2];
+  if (!argument) return walk(root);
+
+  const requested = path.resolve(root, argument);
+  const rootPrefix = `${root}${path.sep}`;
+  if (requested !== root && !requested.startsWith(rootPrefix)) {
+    console.error(`README path must stay inside repository: ${argument}`);
+    process.exit(2);
+  }
+
+  const readme = fs.existsSync(requested) && fs.statSync(requested).isDirectory()
+    ? path.join(requested, "README.md")
+    : requested;
+  if (path.basename(readme) !== "README.md" || !fs.existsSync(readme)) {
+    console.error(`README.md not found: ${argument}`);
+    process.exit(2);
+  }
+  return [readme];
+}
+
 const forbiddenKoPatterns = [
   /원문 상세 항목/,
   /영어 README에는 다음 상세 항목/,
@@ -45,7 +66,7 @@ const forbiddenKoPatterns = [
 
 const failures = [];
 
-for (const readme of walk(root)) {
+for (const readme of requestedReadmes()) {
   const koReadme = path.join(path.dirname(readme), "README.ko.md");
   if (!fs.existsSync(koReadme)) continue;
 

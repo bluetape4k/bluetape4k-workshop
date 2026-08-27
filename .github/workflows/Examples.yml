@@ -47,6 +47,7 @@ on:
       - 'leader/tenant-scheduler/**'
       - 'messaging/kafka/**'
       - 'messaging/kafka-outbox-fallback/**'
+      - 'messaging/kafka-multi-broker-failover/**'
       - 'spring-modulith/module-boundaries/**'
       - 'shared/**'
       - 'buildSrc/**'
@@ -103,6 +104,7 @@ on:
       - 'leader/tenant-scheduler/**'
       - 'messaging/kafka/**'
       - 'messaging/kafka-outbox-fallback/**'
+      - 'messaging/kafka-multi-broker-failover/**'
       - 'spring-modulith/module-boundaries/**'
       - 'shared/**'
       - 'buildSrc/**'
@@ -409,7 +411,7 @@ jobs:
   container-examples:
     name: Container Examples (sequential)
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 45
     needs:
       - changes
       - validate-wrapper
@@ -445,6 +447,7 @@ jobs:
       # - spring-boot-cache-redis: Redis-backed cache path
       # - messaging-kafka: Kafka-backed messaging path
       # - messaging-kafka-outbox-fallback: PostgreSQL + Kafka fallback relay path
+      # - messaging-kafka-multi-broker-failover: three-broker KRaft leader/coordinator recovery path
       # - optimization-planning-contracts: PostgreSQL planning inbox/outbox on Java 25
       # - optimization-field-service-dispatch: PostgreSQL Field Service dispatch and replay path on Java 25
       # - optimization-last-mile-routing: PostgreSQL fixed-matrix routing, callback/outbox, and browser projection on Java 25
@@ -517,6 +520,43 @@ jobs:
           TESTCONTAINERS_RYUK_DISABLED: "true"
           DOCKER_HOST: "unix:///var/run/docker.sock"
 
+      - name: Run Kafka multi-broker failover reference
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
+          TESTCONTAINERS_RYUK_DISABLED: "true"
+          DOCKER_HOST: "unix:///var/run/docker.sock"
+          KAFKA_FAILOVER_RUN_ID: examples-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          report_root="messaging/kafka-multi-broker-failover/build/reports/kafka-failover"
+          mkdir -p "$report_root/$KAFKA_FAILOVER_RUN_ID"
+          ./scripts/with-kafka-failover-lock.sh -- ./gradlew \
+            :messaging-kafka-multi-broker-failover:test \
+            --tests '*KafkaMultiBrokerFailoverIntegrationTest' \
+            --max-workers=1 --console=plain \
+            > >(tee "$report_root/$KAFKA_FAILOVER_RUN_ID/gradle.stdout.log") \
+            2> >(tee "$report_root/$KAFKA_FAILOVER_RUN_ID/gradle.stderr.log" >&2)
+
+      - name: Verify Kafka failover reports
+        if: always()
+        env:
+          KAFKA_FAILOVER_RUN_ID: examples-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          test -n "$(find messaging/kafka-multi-broker-failover/build/test-results/test -name '*.xml' -print -quit)"
+          test -n "$(find messaging/kafka-multi-broker-failover/build/reports/tests/test -name '*.html' -print -quit)"
+          test -s "messaging/kafka-multi-broker-failover/build/reports/kafka-failover/$KAFKA_FAILOVER_RUN_ID/evidence.jsonl"
+
+      - name: Sanitize Kafka failover artifacts
+        id: kafka_failover_sanitize
+        if: always()
+        env:
+          KAFKA_FAILOVER_RUN_ID: examples-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          ./scripts/validate-kafka-failover-artifacts.sh \
+            --module messaging/kafka-multi-broker-failover \
+            --run-id "$KAFKA_FAILOVER_RUN_ID" \
+            --staging messaging/kafka-multi-broker-failover/build/reports/kafka-failover/sanitized
+
       - name: Verify commerce integration and coverage reports
         run: |
           test -n "$(find commerce/event-sourced-promotion-voucher-campaign/build/test-results/integrationTest -name '*.xml' -print -quit)"
@@ -531,10 +571,11 @@ jobs:
           test -s commerce/usage-billing-microservices-composition-tests/build/reports/kover/report.xml
 
       - name: Upload container example test results
-        if: always()
+        if: ${{ always() && steps.kafka_failover_sanitize.outcome == 'success' }}
         uses: actions/upload-artifact@v7
         with:
           name: container-example-test-results
+          if-no-files-found: error
           path: |
             exposed/webflux-r2dbc/build/test-results/test/*.xml
             exposed/webflux-r2dbc/build/reports/tests/test/
@@ -564,6 +605,9 @@ jobs:
             messaging/kafka/build/reports/tests/test/
             messaging/kafka-outbox-fallback/build/test-results/test/*.xml
             messaging/kafka-outbox-fallback/build/reports/tests/test/
+            messaging/kafka-multi-broker-failover/build/test-results/test/*.xml
+            messaging/kafka-multi-broker-failover/build/reports/tests/test/
+            messaging/kafka-multi-broker-failover/build/reports/kafka-failover/sanitized/**
             optimization/planning-contracts/build/test-results/test/*.xml
             optimization/planning-contracts/build/reports/tests/test/
             optimization/field-service-dispatch/build/test-results/test/*.xml

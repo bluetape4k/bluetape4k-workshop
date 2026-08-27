@@ -1,3 +1,7 @@
+plugins {
+    `java-test-fixtures`
+}
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
