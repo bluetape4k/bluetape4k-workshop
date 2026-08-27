@@ -56,7 +56,7 @@
       "scope_id": "coordinator-child-scope",
       "scope_kind": "coordinator",
       "parent_track": "P0",
-      "expected_head_ref": "fix/ecosystem-reuse-marker-transition",
+      "expected_head_ref": "fix/ecosystem-reuse-train-replan",
       "expected_base_ref": "develop",
       "oid_policy": "rebase-aware",
       "head_oid": null,
@@ -90,8 +90,8 @@
     }
   ],
       "coordinator_scope_receipt": {
-      "receipt_id": "20260827T033641Z-marker-transition-scope",
-      "checksum": "347b99710d7441308ee9d6928dffe0f84c75e96638184c63d18f747089219ce7"
+      "receipt_id": "20260827T063057Z-f1-base-replan-scope",
+      "checksum": "6d174f43113cfb20a76e9c98a2cc7b693a0c3701a4eec5a8d85c2d3c97784ae1"
   },
   "nodes": [
     {
@@ -255,7 +255,7 @@
     {
       "track": "F1",
       "expected_head_ref": "fix/ecosystem-reuse-field-service-contracts",
-      "expected_base_ref": "test/ecosystem-reuse-assertions-field-service",
+      "expected_base_ref": "develop",
       "parent_track": "A1",
       "oid_policy": "reviewed-ancestor",
       "head_oid": null,
@@ -293,9 +293,9 @@
         "./gradlew :optimization-field-service-dispatch:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-junit5 --configuration testRuntimeClasspath"
       ],
       "review_artifact": "docs/review/2026-08-25-F1-7tier.md",
-      "receipt_id": null,
-      "receipt_status": "PENDING",
-      "checksum": null
+      "receipt_id": "20260827T063057Z-f1-base-replan",
+      "receipt_status": "PASS",
+      "checksum": "bd2a4f5d8915fb3f74c6e47ffb42ac34b69eb5d0fc54f781a52df08d8d6269d8"
     },
     {
       "track": "F2",

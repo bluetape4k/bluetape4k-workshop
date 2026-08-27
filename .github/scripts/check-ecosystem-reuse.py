@@ -987,16 +987,37 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
                     errors.append(
                         "%s: reviewed_marker_transitions changed without a binding update" % track
                     )
-                graph_changed = any(current.get(field) != baseline.get(field) for field in (
+                graph_fields = (
                     "expected_head_ref", "expected_base_ref", "parent_track", "oid_policy", "issue_numbers",
                     "allowed_paths", "gradle_tasks", "test_selectors", "gradle_flags",
                     "timeout_seconds", "docker_required", "dependency_insight_commands",
                     "review_artifact", "parent_evidence", "reviewed_implementation_oid",
-                ))
-                changed = graph_changed
+                )
+                changed_graph_fields = [
+                    field for field in graph_fields if current.get(field) != baseline.get(field)
+                ]
+                changed = bool(changed_graph_fields)
                 if changed:
                     if baseline.get("state") == "MERGED":
                         errors.append("%s: MERGED execution scope is immutable" % track)
+                    elif current.get("state") == "PLANNED":
+                        planned_replan_fields = {"expected_head_ref", "expected_base_ref", "parent_track"}
+                        if current.get("receipt_status") != "PASS":
+                            errors.append(
+                                "%s: PLANNED execution scope replan requires receipt_status PASS" % track
+                            )
+                        if set(changed_graph_fields) - planned_replan_fields:
+                            errors.append(
+                                "%s: PLANNED scope replan may change only ref/parent fields" % track
+                            )
+                        if (
+                            not current.get("receipt_id")
+                            or current.get("receipt_id") == baseline.get("receipt_id")
+                            or current.get("checksum") == baseline.get("checksum")
+                        ):
+                            errors.append(
+                                "%s: execution scope changed without a fresh coordinator receipt" % track
+                            )
                     elif (
                         current.get("state") not in {"READY", "MERGE_READY", "MERGED"}
                         or not current.get("receipt_id")
