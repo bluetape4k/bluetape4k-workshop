@@ -1263,6 +1263,38 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         )
         self.assertEqual([], errors)
 
+    def test_train_scope_accepts_repository_base_follow_up_after_parent_merge(self):
+        manifest = self.manifest_with_follow_up_scope()
+        scope = self.follow_up_scope(oid_policy="rebase-aware")
+        scope["expected_base_ref"] = "develop"
+        scope["base_ref_policy"] = "repository-base-after-parent-merge"
+        manifest["follow_up_scopes"][0] = scope
+        errors = CHECKER.validate_train_scope(
+            manifest,
+            ["src/F1/Changed.kt", "docs/review/F1-child-7tier.md"],
+            base_ref_name="develop",
+            head_ref_name="branch/F1-child",
+            base_oid="c" * 40,
+            head_oid="d" * 40,
+        )
+        self.assertEqual([], errors)
+
+    def test_train_scope_rejects_repository_base_follow_up_with_parent_ref(self):
+        manifest = self.manifest_with_follow_up_scope()
+        scope = self.follow_up_scope(oid_policy="rebase-aware")
+        scope["expected_base_ref"] = "develop"
+        scope["base_ref_policy"] = "repository-base-after-parent-merge"
+        manifest["follow_up_scopes"][0] = scope
+        errors = CHECKER.validate_train_scope(
+            manifest,
+            ["src/F1/Changed.kt", "docs/review/F1-child-7tier.md"],
+            base_ref_name="branch/F1",
+            head_ref_name="branch/F1-child",
+            base_oid="c" * 40,
+            head_oid="d" * 40,
+        )
+        self.assertTrue(any("expected_base_ref" in error for error in errors))
+
     def test_train_scope_requires_sha_oids(self):
         errors = CHECKER.validate_train_scope(
             self.manifest(),

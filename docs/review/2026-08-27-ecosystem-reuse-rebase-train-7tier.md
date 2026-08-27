@@ -20,6 +20,23 @@ null OID를 모두 검증한다.
 - target child: `F1-P2-02`, base `develop`, head `fix/ecosystem-reuse-shutdown-deadline`
 - blocker resolved by contract update; P2 hosted gate must still run at its new exact head
 
+### 현재 coordinator PR #831 exact-head read-back
+
+현재 coordinator branch는 최신 `develop@8550c08b40e671fd48dea8d1ad0d59f8868210a0`에
+rebase되어 `fix/ecosystem-reuse-follow-up-base-replan@6e27bda95227bc0c3a2dd9973643a4fbfa6ca831`로
+게시되어 있다. PR #831의 변경 범위는 manifest/checker와 관련 한국어
+review/lesson/plan/spec 7개 파일이며, P2 Kotlin production/test source는 포함하지
+않는다.
+
+- PR: [#831](https://github.com/bluetape4k/bluetape4k-workshop/pull/831)
+- CI: previous exact-head runs `33060636802` (CI compile/wrapper/status) and
+  `33060636804` (Ecosystem Reuse Gate) were PASS before the regression-test
+  follow-up; hosted checks must be re-read after the new head is published
+- local proof: checker 88 tests, current/trusted manifest, PR-scope simulation,
+  JSON, `py_compile`, and `git diff --check` PASS
+- live review/thread read-back: review 0, comments 0, unresolved threads 0 at
+  read time; independent 7-Tier review subsequently requested
+
 ## 이전 coordinator PR #828 검토 범위
 
 이번 coordinator 변경은 이미 `develop`에 통합된 P0/A1 이후의 train을 현재
@@ -100,8 +117,11 @@ rebase merge되었다.
 
 ## 현재 coordinator replan 판정
 
-현재 변경은 P2 #821이 `develop@2c388e1dba3de5a9636b1528c68d1da758601e76`을
-base로 사용하도록 `F1-P2-02`를 재계획하는 coordinator-only lane이다. 새
-`base_ref_policy` positive/negative tests를 포함한 checker 86개가 통과했고,
-current/trusted manifest, JSON, diff 검증도 통과했다. coordinator PR의 exact
-head hosted CI와 live metadata를 확인하기 전에는 child merge gate를 열지 않는다.
+현재 변경은 PR #831 `6e27bda95227bc0c3a2dd9973643a4fbfa6ca831`이 최신
+`develop@8550c08b40e671fd48dea8d1ad0d59f8868210a0`을 base로 사용하는
+coordinator-only lane이다. `F1-P2-02`는 부모 merge 후 repository base에 재결속되도록
+`base_ref_policy=repository-base-after-parent-merge`를 사용하며, 새 positive/negative
+train-scope 회귀 테스트를 포함한 checker 88개가 통과했다. current/trusted manifest,
+JSON, `py_compile`, diff 검증과 hosted exact-head checks도 통과했다. 독립 7-Tier
+검토 결과와 PR body의 exact-head metadata를 갱신한 뒤에만 coordinator merge-ready
+gate를 열고, 그 다음에 P2 #821을 새 coordinator merge 결과에 rebase한다.
