@@ -68,6 +68,7 @@
         ".github/scripts/check-ecosystem-reuse.py",
         ".github/scripts/test_check_ecosystem_reuse.py",
         "docs/review/2026-08-26-ecosystem-child-scope-7tier.md",
+        "docs/review/2026-08-25-A1-7tier.md",
         "docs/review/2026-08-25-A2-7tier.md",
         "docs/review/2026-08-25-F1-7tier.md",
         "docs/lessons/2026-08-27-fixed-child-marker-lineage-transition.md",
@@ -80,18 +81,10 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260827T102153Z-serial-train-closeout",
-    "checksum": "638e642428ae0a449bda9562ab38721e7269f6ffd68766963a5e7c27a6736559"
+    "receipt_id": "20260827T110000Z-serial-train-closeout-2",
+    "checksum": "858378f8cde827f2409ecc4c68821206020386fd9f5e5faa8777abdd6a2d2984"
   },
   "planned_scope_replan_receipts": {
-    "A2": {
-      "receipt_id": "20260827T071228Z-a2-base-replan",
-      "checksum": "dd4e13e547ff35e402176b00449782a6d0986f5ae9b18f01915e657fbde7e808"
-    },
-    "F1": {
-      "receipt_id": "20260827T092246Z-f1-parent-ref-replan",
-      "checksum": "b80ff49af37d433bdbd12ae6fccee3e85060ce1ad006406f0eb8f824330690c8"
-    },
     "I1": {
       "receipt_id": "20260827T071228Z-i1-base-replan",
       "checksum": "5e4bf7c8e629c24917e26b2f083d8c429d57b02e8015819e5e65c7712c9fc67c"
@@ -166,7 +159,7 @@
       "merge_base_oid": null,
       "reviewed_implementation_oid": "b3711b30a0c51f78750b3cdf2718692d40af08de",
       "reviewed_marker_binding": "lineage",
-      "state": "MERGE_READY",
+      "state": "MERGED",
       "issue_numbers": [783],
       "allowed_paths": [
         "optimization/field-service-dispatch/src/test/kotlin/**",
@@ -203,10 +196,10 @@
       "oid_policy": "reviewed-ancestor",
       "head_oid": null,
       "base_oid": null,
-      "parent_oid": null,
+      "parent_oid": "85aa60c1b525c7b0df693d897207221288fad25e",
       "merge_base_oid": null,
-      "reviewed_implementation_oid": null,
-      "state": "PLANNED",
+      "reviewed_implementation_oid": "0912ee52467ed9eb83c918090d5eda40f8f1e8d0",
+      "state": "READY",
       "issue_numbers": [785, 786, 787, 788, 789, 790, 791],
       "allowed_paths": [
         "aws/kinesis-coroutines/src/test/kotlin/io/bluetape4k/workshop/aws/kinesis/KinesisStreamServiceTest.kt",
@@ -260,9 +253,9 @@
         "./gradlew :commerce-concert-ticket-flash-sale:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-assertions --configuration testRuntimeClasspath"
       ],
       "review_artifact": "docs/review/2026-08-25-A2-7tier.md",
-      "receipt_id": null,
-      "receipt_status": "PENDING",
-      "checksum": null
+      "receipt_id": "20260827T102153Z-a2-merge-closeout",
+      "receipt_status": "PASS",
+      "checksum": "16f71c3f1305d3b0e961c15115faf0c6237cd074e01a99a9d46284a13c9620e7"
     },
     {
       "track": "F1",
@@ -272,10 +265,10 @@
       "oid_policy": "reviewed-ancestor",
       "head_oid": null,
       "base_oid": null,
-      "parent_oid": null,
+      "parent_oid": "b3711b30a0c51f78750b3cdf2718692d40af08de",
       "merge_base_oid": null,
-      "reviewed_implementation_oid": null,
-      "state": "PLANNED",
+      "reviewed_implementation_oid": "27085b3ff6ab87a24e4fb08dbc4c14c0704378cf",
+      "state": "READY",
       "issue_numbers": [777, 781, 782, 784],
       "allowed_paths": [
         "optimization/field-service-dispatch/src/main/kotlin/**",
@@ -305,9 +298,9 @@
         "./gradlew :optimization-field-service-dispatch:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-junit5 --configuration testRuntimeClasspath"
       ],
       "review_artifact": "docs/review/2026-08-25-F1-7tier.md",
-      "receipt_id": null,
-      "receipt_status": "PENDING",
-      "checksum": null
+      "receipt_id": "20260827T102153Z-f1-p2-merge-closeout",
+      "receipt_status": "PASS",
+      "checksum": "0b1bdbbba153f73b2dbdfc617a5caa67307f0dcb68ca3dd65074aac9725842a4"
     },
     {
       "track": "F2",
