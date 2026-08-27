@@ -16,8 +16,11 @@ node scope를 새 receipt로 전환하기로 했다.
 
 1. topology는 helper의 최대 8개 제한을 넘지 않도록 독립 PR train을 aggregate
    component로 묶되, 실제 issue/track 범위는 plan과 manifest에 그대로 보존한다.
-2. stale coordinator ref는 fresh `coordinator_scope_receipt`와 명시적 allowlist로
-   갱신한다. 기존 receipt ID/checksum을 재사용하지 않는다.
+2. stale follow-up coordinator ref는 fresh `coordinator_scope_receipt`와 명시적
+   allowlist로 갱신한다. fixed node의 planned base ref 재계획은
+   `planned_scope_replan_receipts`에 track별 fresh receipt를 기록하고, 실행
+   receipt는 `PENDING/null`로 분리한다. 기존 receipt ID/checksum을 재사용하지
+   않는다.
 3. child branch가 rebase되면 implementation marker, targeted test, CI, review를
    exact new head에서 다시 검증한다. 이전 green 결과는 증거로 재사용하지 않는다.
 4. 병합 method는 사용자 지시에 따라 `rebase merge`로 고정한다. `squash`와

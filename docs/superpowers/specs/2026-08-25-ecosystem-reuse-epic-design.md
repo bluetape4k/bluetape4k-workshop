@@ -158,6 +158,11 @@ revert로 ancestor OID가 바뀌면 해당 ancestor와 모든 descendant를 `INV
 terminal receipt 파일은 immutable하다. 재실행은 새 receipt ID/checksum을 만들고
 기존 terminal 파일은 보존한 채 node를 `PLANNED/PENDING`으로 되돌린다. 같은
 terminal status에서 receipt ID 또는 checksum만 바꾸는 갱신은 허용하지 않는다.
+실행 전에 stale base/ref를 재계산하는 경우에는 fixed node의 실행 receipt를
+terminal 상태로 만들지 않고, `planned_scope_replan_receipts`에 track별
+coordinator 승인 receipt를 별도로 기록한다. 해당 node는 실행 전까지
+`state=PLANNED`, `receipt_status=PENDING`, `receipt_id=null`, `checksum=null`을
+유지한다.
 
 inventory의 `pending → verified` 전환은 병렬 child가 직접 수행하지 않는다.
 child PR의 exact-head test receipt와 merge 여부를 받은 뒤 별도 closeout lane이
