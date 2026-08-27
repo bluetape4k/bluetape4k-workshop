@@ -50,11 +50,12 @@ git diff --check
 이후 F2 test allowlist 보정을 위해 coordinator receipt
 `20260827T141532Z-f2-allowlist-repair`를 새로 발행했으며, combined repair
 payload의 SHA-256 `d6e7c7ce9bd5a0a550cc0ef62e33ec1e49ed2fb96fd936aa26829bcbdb3bf1fa`를
-manifest와 함께 기록했다. current exact head
+manifest와 함께 기록했다. 직전 documentation head
 `847806df686fe31ea191cd4c2e5c4cd60316e145`에서 [Ecosystem Reuse Gate run
 33082664038](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33082664038)와
 [CI run 33082664013](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33082664013)
-가 모두 성공했으며, local `completion-check`는 required
+가 모두 성공했으며, 이 lesson은 해당 historical evidence를 보존한다. local
+`completion-check`는 required
 component/lane/check/replacement/main proof 누락 없이 `complete=true`를
 반환했다.
 
