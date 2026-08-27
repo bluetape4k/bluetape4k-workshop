@@ -51,6 +51,7 @@ internal class FieldServiceEcosystemReuseContractTest {
     fun `field service persistence uses Bluetape Exposed and UUID capabilities`() {
         val repositories = Files.readString(sourcePath("persistence/FieldServiceRepositories.kt"))
         repositories.shouldContain("LongJdbcRepository<FieldServicePlanRecord>")
+        repositories.shouldContain("findBy(")
         repositories.shouldContain("Uuid.V4.nextUUID()")
 
         val tables = Files.readString(sourcePath("persistence/FieldServiceTables.kt"))
