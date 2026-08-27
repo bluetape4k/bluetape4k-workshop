@@ -39,23 +39,41 @@ python3 -m py_compile .github/scripts/check-ecosystem-reuse.py .github/scripts/t
 git diff --check
 ```
 
-최신 base에 대한 새 Type E workflow receipt
-`20260827T133807Z-2e478eff`를 발행했으며, sequence 16 head
-`efde1f6ec96c2531e8a7dc3844805f69742eeab6e69d30e894a4abacfcfc38cd`를
-manifest와 함께 기록했다. `completion-check`는 required
-component/lane/check/replacement/main proof 누락 없이 `complete=true`를
-반환했다.
+최신 base에 대한 초기 Type E workflow receipt
+`20260827T133807Z-2e478eff`는 sequence 16 head
+`efde1f6ec96c2531e8a7dc3844805f69742eeab6e69d30e894a4abacfcfc38cd`로
+완료됐지만, PR exact-head hosted ref 검증은 별도 실패했다. 승인된 repair에서
+새 Type E run `20260827T135913Z-b18aca2f`를 실행했고, sequence 16 checksum
+`4dc63584517e5359a71f24d4042f829c9afecda3da9470bdfa94ad57181a428f`와
+`completion-check complete=true`를 발행해 이전 실패와 독립된 증거로
+연결했다.
 
 ## 재발 방지
 
 - 부모 merge 직후 child를 만들 때는 parent branch ref와 repository base를
   먼저 구분하고, 정책과 OID policy를 함께 기록한다.
+- 새 coordinator PR을 만들기 전에는 trusted manifest의
+  `follow_up_scopes[].expected_head_ref`가 실제 PR head branch와 일치하는지
+  `--pr-scope` 명령으로 확인한다. 이미 병합된 coordinator branch가 남아
+  있으면 historical ref를 복원하지 말고 현재 governance branch로
+  `expected_head_ref`를 재결속한다.
 - manifest scope 또는 allowlist를 바꾸면 기존 receipt를 재사용하지 말고
   fresh coordinator receipt를 발행한다.
 - historical PR branch는 참고 자료로만 읽고, 최신 develop의 현재 manifest와
   trusted 비교를 기준으로 새 변경을 만든다.
 - checker의 positive/negative 테스트와 7-Tier review/lesson을 같은 변경에
   포함하되, 실제 hosted CI는 exact PR head에서 다시 실행한다.
+
+## Exact-head hosted 실패 교훈
+
+PR #835의 첫 hosted Ecosystem Reuse Gate
+([run 33078409120](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33078409120))는
+`expected_head_ref chore/ecosystem-reuse-f2-base-replan`과 실제
+`chore/ecosystem-reuse-follow-up-base-policy`가 달라 실패했다. Gradle
+wrapper와 compile-only CI는 성공했으므로 production/build 문제가 아니라
+trusted manifest와 PR ref의 경계 검증 문제였다. 로컬 `--pr-scope` 재현을
+먼저 수행한 뒤 coordinator scope ref를 현재 branch에 재결속하고, fresh
+receipt와 hosted gate를 새로 발행하는 것이 올바른 복구 순서다.
 
 ## Stop condition
 
