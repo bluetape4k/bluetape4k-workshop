@@ -57,8 +57,16 @@ node를 READY로 올리거나 OID를 미리 채우지 말고, coordinator가 fre
 중 필요한 ref/parent만 재계획한다. path, task, dependency, marker와 issue
 범위는 이 전환에서 바꾸지 않는다.
 
-checker는 baseline/current가 모두 `PLANNED`이고 current receipt가 `PASS`이며
-receipt ID/checksum이 새 값일 때만 이 좁은 replan을 허용한다. 이후 child
-rebase가 완료되면 실제 marker ancestor와 review-only tail을 fresh child
+checker는 baseline/current가 모두 `PLANNED`이고 실행 receipt는
+`PENDING/null`인 경우에만 이 좁은 replan을 허용한다. 별도의
+`planned_scope_replan_receipts`에 fresh coordinator receipt를 남겨 실행
+receipt와 topology 승인을 분리하며, `expected_base_ref`는 repository base
+또는 현재 parent head만 사용할 수 있고 기존 parent를 지울 수 없다. 이후
+child rebase가 완료되면 실제 marker ancestor와 review-only tail을 fresh child
 evidence로 다시 고정한다. 이 순서를 지키면 branch alias를 복구하는 원격
 mutation 없이 protected `develop`과 rebase merge를 유지할 수 있다.
+
+이미 병합된 parent는 child를 활성화하기 전에 manifest에서 `MERGE_READY`를
+거쳐 `MERGED`로 reconcile해야 한다. parent가 `READY`인 채로 child를
+`READY`로 올리면 shared test path overlap이 차단되어야 하며, 이를 우회하려고
+active path allowlist를 줄여서는 안 된다.

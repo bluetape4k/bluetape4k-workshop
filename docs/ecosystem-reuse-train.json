@@ -97,6 +97,12 @@
       "receipt_id": "20260827T071403Z-coordinator-rebase-train-scope",
       "checksum": "2ac170983b2d0cfe3e8d4a48edd92534a4d00462855b7752238d77bdc0379117"
   },
+  "planned_scope_replan_receipts": {
+    "F1": {
+      "receipt_id": "20260827T063057Z-f1-base-replan",
+      "checksum": "bd2a4f5d8915fb3f74c6e47ffb42ac34b69eb5d0fc54f781a52df08d8d6269d8"
+    }
+  },
   "nodes": [
     {
       "track": "P0",
@@ -297,9 +303,9 @@
         "./gradlew :optimization-field-service-dispatch:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-junit5 --configuration testRuntimeClasspath"
       ],
       "review_artifact": "docs/review/2026-08-25-F1-7tier.md",
-      "receipt_id": "20260827T063057Z-f1-base-replan",
-      "receipt_status": "PASS",
-      "checksum": "bd2a4f5d8915fb3f74c6e47ffb42ac34b69eb5d0fc54f781a52df08d8d6269d8"
+      "receipt_id": null,
+      "receipt_status": "PENDING",
+      "checksum": null
     },
     {
       "track": "F2",

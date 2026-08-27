@@ -588,6 +588,54 @@ def _validate_reviewed_marker_transitions(
     return errors
 
 
+def _validate_planned_scope_replan_receipts(
+    manifest: Dict[str, object],
+    node_map: Dict[str, Dict[str, object]],
+    fixed_tracks: Sequence[str],
+) -> List[str]:
+    """Validate coordinator receipts that authorize a pre-execution scope replan."""
+    errors: List[str] = []
+    raw_receipts = manifest.get("planned_scope_replan_receipts", {})
+    if raw_receipts in (None, {}):
+        raw_receipts = {}
+    if not isinstance(raw_receipts, dict):
+        return ["planned_scope_replan_receipts must be an object"]
+    unknown_tracks = sorted(set(raw_receipts) - set(fixed_tracks))
+    if unknown_tracks:
+        errors.append(
+            "planned_scope_replan_receipts contains unknown tracks %s" %
+            ", ".join(unknown_tracks)
+        )
+    fields = {"receipt_id", "checksum"}
+    for track, raw_receipt in raw_receipts.items():
+        prefix = "planned_scope_replan_receipts.%s" % track
+        if not isinstance(raw_receipt, dict):
+            errors.append("%s must be an object" % prefix)
+            continue
+        missing = sorted(fields - set(raw_receipt))
+        unknown = sorted(set(raw_receipt) - fields)
+        if missing:
+            errors.append("%s missing fields %s" % (prefix, ", ".join(missing)))
+        if unknown:
+            errors.append("%s has unknown fields %s" % (prefix, ", ".join(unknown)))
+        receipt_id = raw_receipt.get("receipt_id")
+        if not isinstance(receipt_id, str) or not receipt_id.strip() or CONTROL_RE.search(receipt_id):
+            errors.append("%s: receipt_id must be non-empty" % prefix)
+        checksum = raw_receipt.get("checksum")
+        if not isinstance(checksum, str) or not CHECKSUM_RE.fullmatch(checksum):
+            errors.append("%s: checksum must be a 64-hex SHA" % prefix)
+        if track not in fixed_tracks:
+            continue
+        node = node_map.get(track, {})
+        if node.get("state") != "PLANNED":
+            errors.append("%s: receipt requires the fixed node to remain PLANNED" % prefix)
+        if node.get("receipt_status") != "PENDING" or node.get("receipt_id") is not None or node.get("checksum") is not None:
+            errors.append(
+                "%s: coordinator replan receipt must not replace the execution receipt" % prefix
+            )
+    return errors
+
+
 def manifest_follow_up_scopes(manifest: Dict[str, object]) -> List[Dict[str, object]]:
     scopes = manifest.get("follow_up_scopes", [])
     if not isinstance(scopes, list):
@@ -736,6 +784,7 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
     if sorted(node_map) != sorted(fixed_tracks):
         errors.append("manifest node tracks do not match fixed allowlist")
     errors.extend(_validate_reviewed_marker_transitions(manifest, node_map, fixed_tracks))
+    errors.extend(_validate_planned_scope_replan_receipts(manifest, node_map, fixed_tracks))
     required = {
         "track", "expected_head_ref", "expected_base_ref", "parent_track", "oid_policy", "head_oid", "base_oid",
         "parent_oid", "merge_base_oid", "state", "issue_numbers", "allowed_paths", "gradle_tasks",
@@ -753,6 +802,10 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
         state = node.get("state")
         receipt_status = node.get("receipt_status")
         oid_policy = node.get("oid_policy")
+        for field in ("expected_head_ref", "expected_base_ref"):
+            value = node.get(field)
+            if not isinstance(value, str) or not value.strip() or CONTROL_RE.search(value):
+                errors.append("%s: %s must be a non-empty ref" % (track, field))
         marker_binding = reviewed_marker_binding(node)
         if marker_binding not in REVIEWED_MARKER_BINDINGS:
             errors.append(
@@ -782,6 +835,10 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
             errors.append("%s: non-PLANNED node has incomplete receipt/OID fields" % track)
         parent_track = node.get("parent_track")
         if parent_track is not None:
+            if parent_track not in fixed_tracks:
+                errors.append("%s: parent_track must name a fixed track" % track)
+            elif parent_track == track:
+                errors.append("%s: parent_track cannot reference itself" % track)
             parent_node = node_map.get(str(parent_track), {})
             if state in ACTIVE_STATES | {"MERGED"}:
                 if parent_node.get("state") not in ACTIVE_STATES | {"MERGED"}:
@@ -945,6 +1002,12 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
                 errors.append("coordinator_scope_receipt changed without follow_up_scopes update")
             current_nodes = manifest_nodes(manifest)
             trusted_nodes = manifest_nodes(trusted)
+            current_replan_receipts = manifest.get("planned_scope_replan_receipts", {}) or {}
+            trusted_replan_receipts = trusted.get("planned_scope_replan_receipts", {}) or {}
+            if not isinstance(current_replan_receipts, dict):
+                current_replan_receipts = {}
+            if not isinstance(trusted_replan_receipts, dict):
+                trusted_replan_receipts = {}
             current_marker_transitions = manifest.get("reviewed_marker_transitions", {}) or {}
             trusted_marker_transitions = trusted.get("reviewed_marker_transitions", {}) or {}
             if not isinstance(current_marker_transitions, dict):
@@ -1002,22 +1065,80 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
                         errors.append("%s: MERGED execution scope is immutable" % track)
                     elif current.get("state") == "PLANNED":
                         planned_replan_fields = {"expected_head_ref", "expected_base_ref", "parent_track"}
-                        if current.get("receipt_status") != "PASS":
+                        if baseline.get("state") != "PLANNED":
                             errors.append(
-                                "%s: PLANNED execution scope replan requires receipt_status PASS" % track
+                                "%s: PLANNED scope replan requires the trusted node to also be PLANNED" % track
+                            )
+                        if current.get("receipt_status") != "PENDING":
+                            errors.append(
+                                "%s: PLANNED scope replan must keep the execution receipt PENDING" % track
+                            )
+                        if current.get("receipt_id") is not None or current.get("checksum") is not None:
+                            errors.append(
+                                "%s: PLANNED scope replan must not populate the execution receipt" % track
                             )
                         if set(changed_graph_fields) - planned_replan_fields:
                             errors.append(
                                 "%s: PLANNED scope replan may change only ref/parent fields" % track
                             )
+                        current_replan_receipt = current_replan_receipts.get(track)
+                        trusted_replan_receipt = trusted_replan_receipts.get(track)
+                        trusted_replan_receipt_id = (
+                            trusted_replan_receipt.get("receipt_id")
+                            if isinstance(trusted_replan_receipt, dict) else None
+                        )
+                        trusted_replan_receipt_checksum = (
+                            trusted_replan_receipt.get("checksum")
+                            if isinstance(trusted_replan_receipt, dict) else None
+                        )
                         if (
-                            not current.get("receipt_id")
-                            or current.get("receipt_id") == baseline.get("receipt_id")
-                            or current.get("checksum") == baseline.get("checksum")
+                            not isinstance(current_replan_receipt, dict)
+                            or current_replan_receipt == trusted_replan_receipt
+                            or current_replan_receipt.get("receipt_id") == trusted_replan_receipt_id
+                            or current_replan_receipt.get("checksum") == trusted_replan_receipt_checksum
                         ):
                             errors.append(
-                                "%s: execution scope changed without a fresh coordinator receipt" % track
+                                "%s: execution scope changed without a fresh planned-scope coordinator receipt" % track
                             )
+                        parent_track = current.get("parent_track")
+                        if parent_track is not None and parent_track not in fixed_tracks:
+                            errors.append("%s: planned scope replan parent_track must name a fixed track" % track)
+                        if parent_track == track:
+                            errors.append("%s: planned scope replan parent_track cannot reference itself" % track)
+                        if parent_track is None and baseline.get("parent_track") is not None:
+                            errors.append(
+                                "%s: planned scope replan cannot clear an existing parent_track" % track
+                            )
+                        if parent_track is None:
+                            permitted_base_refs = {_normalise_ref(str(manifest.get("base_ref", "")))}
+                        else:
+                            parent_node = current_nodes.get(str(parent_track), {})
+                            permitted_base_refs = {
+                                _normalise_ref(str(manifest.get("base_ref", ""))),
+                                _normalise_ref(str(parent_node.get("expected_head_ref", ""))),
+                            }
+                        if _normalise_ref(str(current.get("expected_base_ref", ""))) not in permitted_base_refs:
+                            errors.append(
+                                "%s: planned scope replan expected_base_ref must match the repository base or current parent head" % track
+                            )
+                        if current.get("expected_head_ref") != baseline.get("expected_head_ref"):
+                            known_refs = {
+                                _normalise_ref(str(manifest.get("base_ref", ""))),
+                                *{
+                                    _normalise_ref(str(node.get(field, "")))
+                                    for node in current_nodes.values()
+                                    for field in ("expected_head_ref", "expected_base_ref")
+                                },
+                                *{
+                                    _normalise_ref(str(scope.get(field, "")))
+                                    for scope in manifest_follow_up_scopes(manifest)
+                                    for field in ("expected_head_ref", "expected_base_ref")
+                                },
+                            }
+                            if _normalise_ref(str(current.get("expected_head_ref", ""))) not in known_refs:
+                                errors.append(
+                                    "%s: planned scope replan expected_head_ref must use a known train ref" % track
+                                )
                     elif (
                         current.get("state") not in {"READY", "MERGE_READY", "MERGED"}
                         or not current.get("receipt_id")
@@ -1025,6 +1146,12 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
                         or current.get("checksum") == baseline.get("checksum")
                     ):
                         errors.append("%s: execution scope changed without a fresh coordinator receipt" % track)
+                current_replan_receipt = current_replan_receipts.get(track)
+                trusted_replan_receipt = trusted_replan_receipts.get(track)
+                if current_replan_receipt != trusted_replan_receipt and not changed:
+                    errors.append(
+                        "%s: planned-scope coordinator receipt changed without an execution scope replan" % track
+                    )
                 previous_status = baseline.get("receipt_status")
                 current_status = current.get("receipt_status")
                 if previous_status in RECEIPT_TRANSITIONS and current_status != previous_status:
