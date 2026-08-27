@@ -37,7 +37,6 @@ class JobSafetyJdbcExecutor(
     init {
         foregroundPermits.requirePositiveNumber("foregroundPermits")
         permitTimeout.requireGt(Duration.ZERO, "permitTimeout")
-        TransactionManager.defaultDatabase = database
     }
 
     fun <T> transaction(block: JobSafetyJdbcTransaction.() -> T): T {

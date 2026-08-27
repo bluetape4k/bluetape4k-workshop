@@ -159,6 +159,7 @@ internal class TicketDatabaseFixture : AutoCloseable {
 
     override fun close() {
         try {
+            executor.close()
             dataSource.close()
         } finally {
             adminConnection().use { connection ->

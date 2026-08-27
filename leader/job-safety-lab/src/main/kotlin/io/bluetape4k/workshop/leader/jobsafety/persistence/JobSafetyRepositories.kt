@@ -129,11 +129,12 @@ class JobResourceRepository(
                 .where { JobResources.conflictKey eq conflictKey.value }
                 .singleOrNull()
                 ?.let { row ->
+                    val persistedFenceEpoch = row[JobResources.lastAcceptedFenceEpoch]
                     val persistedFence = row[JobResources.lastAcceptedFence]
                     JobResourceSnapshot(
                         conflictKey = ConflictKey.of(row[JobResources.conflictKey]),
                         namespaceEpoch = NamespaceEpoch(row[JobResources.namespaceEpoch]),
-                        lastAcceptedFence = persistedFence.takeIf { it > 0L }?.let(::FencingToken),
+                        lastAcceptedFence = persistedFence.takeIf { it > 0L }?.let { FencingToken(persistedFenceEpoch, it) },
                         summaryValue = row[JobResources.summaryValue],
                     )
                 }
@@ -149,9 +150,14 @@ class JobResourceRepository(
             JobResources.update({
                 (JobResources.conflictKey eq request.conflictKey.value) and
                     (JobResources.namespaceEpoch eq request.namespaceEpoch.value) and
-                    (JobResources.lastAcceptedFence less fencingToken.value)
+                    (
+                        (JobResources.lastAcceptedFenceEpoch less fencingToken.epoch) or
+                            ((JobResources.lastAcceptedFenceEpoch eq fencingToken.epoch) and
+                                (JobResources.lastAcceptedFence less fencingToken.sequence))
+                    )
             }) {
-                it[lastAcceptedFence] = fencingToken.value
+                it[lastAcceptedFenceEpoch] = fencingToken.epoch
+                it[lastAcceptedFence] = fencingToken.sequence
                 it[summaryValue] = request.nextValue
                 it[updatedAt] = now
             }
@@ -176,7 +182,8 @@ class JobExecutionRepository(
                 it[tenantId] = request.tenantId.value
                 it[conflictKey] = request.conflictKey.value
                 it[fencingOwnerId] = request.fencingOwnerId.value
-                it[JobExecutions.fencingToken] = fencingToken.value
+                it[JobExecutions.fencingTokenEpoch] = fencingToken.epoch
+                it[JobExecutions.fencingToken] = fencingToken.sequence
                 it[JobExecutions.state] = state.name
                 it[JobExecutions.rejection] = rejection?.name
                 it[contractVersion] = request.contractVersion.value
@@ -207,7 +214,8 @@ class JobCheckpointRepository(
         transaction.withExposed {
             val updated =
                 JobCheckpoints.update({ JobCheckpoints.conflictKey eq request.conflictKey.value }) {
-                    it[JobCheckpoints.fencingToken] = fencingToken.value
+                    it[JobCheckpoints.fencingTokenEpoch] = fencingToken.epoch
+                    it[JobCheckpoints.fencingToken] = fencingToken.sequence
                     it[JobCheckpoints.schemaVersion] = schemaVersion
                     it[summaryValue] = request.nextValue
                     it[updatedAt] = now
@@ -215,7 +223,8 @@ class JobCheckpointRepository(
             if (updated == 0) {
                 JobCheckpoints.insert {
                     it[conflictKey] = request.conflictKey.value
-                    it[JobCheckpoints.fencingToken] = fencingToken.value
+                    it[JobCheckpoints.fencingTokenEpoch] = fencingToken.epoch
+                    it[JobCheckpoints.fencingToken] = fencingToken.sequence
                     it[JobCheckpoints.schemaVersion] = schemaVersion
                     it[summaryValue] = request.nextValue
                     it[updatedAt] = now

@@ -5,12 +5,21 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.FencingOwnerId
 import io.bluetape4k.workshop.leader.jobsafety.domain.FencingToken
 import java.time.Duration
 
-fun interface FencingLeasePort {
+interface FencingLeasePort {
+    /** Initializes the externally approved epoch before the first acquisition. */
+    fun bootstrap(conflictKey: ConflictKey): FenceBootstrapResult = FenceBootstrapResult.Ready
+
     fun acquire(
         conflictKey: ConflictKey,
         ownerId: FencingOwnerId,
         ttl: Duration,
     ): FenceAcquireResult
+}
+
+sealed interface FenceBootstrapResult {
+    data object Ready : FenceBootstrapResult
+
+    data class BackendFailure(val cause: Throwable) : FenceBootstrapResult
 }
 
 interface FencingLease {

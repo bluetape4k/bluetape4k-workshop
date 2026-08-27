@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.spring.modulith.ddd.audit.orders
 
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.money.bigDecimalValue
+import io.bluetape4k.money.currencyUnitOf
+import io.bluetape4k.money.moneyOf
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
 import io.bluetape4k.support.requirePositiveNumber
@@ -64,6 +67,7 @@ data class Money(
     init {
         amount.requireZeroOrPositiveNumber("amount")
         currency.requireNotBlank("currency")
+        moneyOf(amount, currencyUnitOf(currency))
     }
 
     companion object {

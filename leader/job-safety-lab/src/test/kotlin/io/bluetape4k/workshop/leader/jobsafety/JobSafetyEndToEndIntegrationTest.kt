@@ -26,7 +26,6 @@ import io.bluetape4k.workshop.leader.jobsafety.persistence.JobRolloutMarkerEntit
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobRolloutMarkerRepository
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobSafetyRepositories
 import io.bluetape4k.workshop.leader.jobsafety.support.AbstractJobSafetyIntegrationTest
-import io.lettuce.core.api.StatefulRedisConnection
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.Duration
@@ -42,15 +41,13 @@ internal class JobSafetyEndToEndIntegrationTest : AbstractJobSafetyIntegrationTe
     @Autowired
     private lateinit var repositories: JobSafetyRepositories
 
-    @Autowired
-    private lateinit var redis: StatefulRedisConnection<String, String>
-
     @Test
     fun `takeover commits the newer fence and rejects a resumed stale worker`() {
         seedAuthorityAndResource()
         val adapter = fences as RedisJobFencingLeaseAdapter
+        adapter.bootstrap(CONFLICT_KEY)
         val stale = fences.acquire(CONFLICT_KEY, FencingOwnerId("worker-a"), TTL).lease()
-        redis.sync().del(adapter.keysFor(CONFLICT_KEY).lease)
+        adapter.release(stale)
         val current = fences.acquire(CONFLICT_KEY, FencingOwnerId("worker-b"), TTL).lease()
 
         val currentResult = executionService.execute(FencedJobRequest(request("operation-b", 42L), current.token))

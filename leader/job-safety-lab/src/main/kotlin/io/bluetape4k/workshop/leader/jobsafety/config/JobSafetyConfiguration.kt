@@ -36,9 +36,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import javax.sql.DataSource
 import kotlin.time.toKotlinDuration
+import io.bluetape4k.concurrent.virtualthread.VirtualThreads
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(JobSafetyProperties::class)
@@ -95,7 +95,7 @@ class JobSafetyConfiguration {
         )
 
     @Bean(destroyMethod = "close")
-    fun jobSafetyLeaderExecutor(): ExecutorService = Executors.newVirtualThreadPerTaskExecutor()
+    fun jobSafetyLeaderExecutor(): ExecutorService = VirtualThreads.executorService()
 
     @Bean
     fun leaderElectionPort(
@@ -109,7 +109,7 @@ class JobSafetyConfiguration {
         properties: JobSafetyProperties,
     ): FencingLeasePort =
         RedisJobFencingLeaseAdapter(
-            commands = connection.sync(),
+            connection = connection,
             namespaceEpoch = NamespaceEpoch(properties.namespaceEpoch),
         )
 

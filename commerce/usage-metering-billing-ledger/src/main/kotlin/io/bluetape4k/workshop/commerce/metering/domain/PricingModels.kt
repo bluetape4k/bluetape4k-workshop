@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.commerce.metering.domain
 
+import io.bluetape4k.money.bigDecimalValue
+import io.bluetape4k.money.currencyUnitOf
+import io.bluetape4k.money.moneyOf
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.support.requireZeroOrPositiveNumber
@@ -34,16 +37,20 @@ data class Money(
     init {
         amount.requireZeroOrPositiveNumber("money.amount")
         currency.defaultFractionDigits.requireZeroOrPositiveNumber("currency.defaultFractionDigits")
+        moneyOf(amount, currencyUnitOf(currency.currencyCode))
     }
 
     fun normalized(): Money =
-        copy(
-            amount = amount.setScale(currency.defaultFractionDigits, RoundingMode.HALF_UP),
-        )
+        moneyOf(
+            amount.setScale(currency.defaultFractionDigits, RoundingMode.HALF_UP),
+            currencyUnitOf(currency.currencyCode),
+        ).let { Money(it.bigDecimalValue, currency) }
 
     operator fun plus(other: Money): Money {
         require(currency == other.currency) { "currency mismatch: $currency != ${other.currency}" }
-        return Money(amount + other.amount, currency).normalized()
+        val total = moneyOf(amount, currencyUnitOf(currency.currencyCode))
+            .add(moneyOf(other.amount, currencyUnitOf(other.currency.currencyCode)))
+        return Money(total.bigDecimalValue, currency).normalized()
     }
 }
 

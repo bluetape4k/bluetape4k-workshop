@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.bluetape4k.logging)
     implementation(libs.bluetape4k.idgenerators)
     implementation(libs.bluetape4k.micrometer)
+    implementation(libs.bluetape4k.money)
     implementation(libs.bluetape4k.virtualthread.api)
     runtimeOnly(libs.bluetape4k.virtualthread.jdk25)
 

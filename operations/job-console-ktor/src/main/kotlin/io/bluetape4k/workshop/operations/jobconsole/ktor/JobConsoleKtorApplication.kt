@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.operations.jobconsole.ktor
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.bluetape4k.concurrent.virtualthread.VirtualThreads
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.operations.jobconsole.application.BoundedJobEventFanout
 import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleService
@@ -51,6 +52,7 @@ import kotlinx.coroutines.runBlocking
 import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.time.Duration
 import java.util.UUID
+import java.util.concurrent.ExecutorService
 import javax.sql.DataSource
 
 private val mapper = jacksonObjectMapper()
@@ -90,14 +92,16 @@ internal fun Application.jobConsoleModule(
     ).migrate()
     val repository = JobRepository(dataSource)
     val redisSignal = redisUri?.takeIf(String::isNotBlank)?.let { runCatching { LettuceCancelSignal(it) }.getOrNull() }
+    val executor = VirtualThreads.executorService()
     val service = JobConsoleService(
         repository = repository,
         cancelSignal = redisSignal ?: NoOpCancelSignal,
         boundedWaitEnabled = boundedWaitEnabled,
         expectedPolicyFingerprint = System.getenv("JOB_CONSOLE_BOUNDED_WAIT_POLICY_FINGERPRINT")
             ?.takeIf(String::isNotBlank),
+        executor = executor,
     )
-    val fanout = BoundedJobEventFanout(Duration.ofSeconds(2))
+    val fanout = BoundedJobEventFanout(Duration.ofSeconds(2), executor)
     val outboxRepository = JobOutboxRepository(dataSource)
     val poller = JobOutboxPoller(outboxRepository, fanout)
     val workerEngine = JobWorkerEngine(repository, DeterministicJobWorkload())
@@ -187,6 +191,7 @@ internal fun Application.jobConsoleModule(
             outboxJob = outboxJob,
             workerJob = workerJob,
             redisSignal = redisSignal,
+            executor = executor,
         ),
     )
     monitor.subscribe(ApplicationStopped) {
@@ -197,6 +202,7 @@ internal fun Application.jobConsoleModule(
             outboxJob.cancelAndJoin()
         }
         redisSignal?.close()
+        executor.close()
         (dataSource as? AutoCloseable)?.close()
     }
 }
@@ -209,6 +215,7 @@ internal class JobConsoleKtorRuntime(
     private val outboxJob: Job,
     private val workerJob: Job?,
     val redisSignal: LettuceCancelSignal?,
+    val executor: ExecutorService,
 ) {
     val backgroundJobsStopped: Boolean
         get() = !outboxJob.isActive && workerJob?.isActive != true

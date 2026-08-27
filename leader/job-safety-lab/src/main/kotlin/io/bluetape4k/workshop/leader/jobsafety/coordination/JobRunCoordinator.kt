@@ -39,14 +39,16 @@ class JobRunCoordinator(
         val taskStartedAt = TimeSource.Monotonic.markNow()
 
         return try {
-            val result = when (
-                val acquired =
-                    fencingLease.acquire(
-                        conflictKey = request.conflictKey,
-                        ownerId = request.fencingOwnerId,
-                        ttl = fencingTtl,
-                    )
-            ) {
+            val bootstrap = fencingLease.bootstrap(request.conflictKey)
+            val result = when (bootstrap) {
+                FenceBootstrapResult.Ready -> when (
+                    val acquired =
+                        fencingLease.acquire(
+                            conflictKey = request.conflictKey,
+                            ownerId = request.fencingOwnerId,
+                            ttl = fencingTtl,
+                        )
+                ) {
                 is FenceAcquireResult.Acquired -> {
                     observe { observationRecorder.onTaskStarted(lockName, context) }
                     taskStarted = true
@@ -68,6 +70,19 @@ class JobRunCoordinator(
                         )
                     }
                     log.warn(acquired.cause) { "job_fence_acquire_failed reason=FENCE_BACKEND_FAILURE" }
+                    failed(JobRejectionReason.FENCE_BACKEND_FAILURE)
+                }
+                }
+                is FenceBootstrapResult.BackendFailure -> {
+                    observe {
+                        observationRecorder.onTaskFailed(
+                            lockName,
+                            taskStartedAt.elapsedNow(),
+                            bootstrap.cause,
+                            context,
+                        )
+                    }
+                    log.warn(bootstrap.cause) { "job_fence_bootstrap_failed reason=FENCE_BACKEND_FAILURE" }
                     failed(JobRejectionReason.FENCE_BACKEND_FAILURE)
                 }
             }

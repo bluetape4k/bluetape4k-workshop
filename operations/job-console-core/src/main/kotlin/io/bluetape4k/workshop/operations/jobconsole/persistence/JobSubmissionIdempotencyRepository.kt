@@ -25,7 +25,8 @@ import java.time.Duration
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ExecutionException
-import java.util.concurrent.Executors
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import javax.sql.DataSource
@@ -87,9 +88,8 @@ internal interface JobSubmissionIdempotencyRepository {
  */
 internal class BoundedConnectionAcquirer(
     private val dataSource: DataSource,
+    private val executor: ExecutorService = ForkJoinPool.commonPool(),
 ) {
-    private val executor = BoundedConnectionExecutor.executor
-
     fun acquire(timeout: Duration): Connection? {
         if (timeout.isZero || timeout.isNegative) return null
         val handoff = Handoff()
@@ -141,18 +141,15 @@ internal class BoundedConnectionAcquirer(
     private class LateConnection : RuntimeException()
 }
 
-private object BoundedConnectionExecutor {
-    val executor = Executors.newVirtualThreadPerTaskExecutor()
-}
-
 /** JDBC implementation whose request row is the authority for every state transition. */
 internal class JdbcJobSubmissionIdempotencyRepository(
     private val dataSource: DataSource,
     private val jobRepository: JobRepository,
     private val policy: JobSubmissionIdempotencyPolicy = JobSubmissionIdempotencyPolicy(),
     private val snapshotPolicy: JobSubmissionSnapshotPolicy = JobSubmissionSnapshotPolicy(policy),
+    private val executor: ExecutorService = ForkJoinPool.commonPool(),
 ) : JobSubmissionIdempotencyRepository {
-    private val boundedConnectionAcquirer = BoundedConnectionAcquirer(dataSource)
+    private val boundedConnectionAcquirer = BoundedConnectionAcquirer(dataSource, executor)
 
     override fun reserve(command: JobSubmissionCommand, now: Instant): Reservation {
         var attempt = 0
@@ -183,7 +180,7 @@ internal class JdbcJobSubmissionIdempotencyRepository(
     private fun currentDatabaseTimestamp(connection: Connection): Instant =
         run {
             val timeoutMillis = policy.statementTimeout.toMillis().coerceAtLeast(1L).coerceAtMost(Int.MAX_VALUE.toLong())
-            connection.setNetworkTimeout(BoundedConnectionExecutor.executor, timeoutMillis.toInt())
+            connection.setNetworkTimeout(executor, timeoutMillis.toInt())
             applyStatementTimeout(connection, policy.statementTimeout)
             connection.createStatement().use { statement ->
                 statement.executeQuery("SELECT clock_timestamp()").use { result ->
@@ -798,7 +795,7 @@ internal class JdbcJobSubmissionIdempotencyRepository(
 
     private fun rollbackOrAbort(connection: Connection, deadlineNanos: Long?, hardExpired: Boolean) {
         if (hardExpired && deadlineNanos != null) {
-            runCatching { connection.abort(BoundedConnectionExecutor.executor) }
+            runCatching { connection.abort(executor) }
                 .onFailure { runCatching { connection.rollback() } }
         } else {
             runCatching { connection.rollback() }
@@ -899,7 +896,7 @@ internal class JdbcJobSubmissionIdempotencyRepository(
 
     private fun setNetworkTimeout(connection: Connection, timeout: Duration) {
         val timeoutMillis = timeout.toMillis().coerceAtLeast(1L).coerceAtMost(Int.MAX_VALUE.toLong())
-        connection.setNetworkTimeout(BoundedConnectionExecutor.executor, timeoutMillis.toInt())
+        connection.setNetworkTimeout(executor, timeoutMillis.toInt())
     }
 
     private fun checkRegistrationStatementBudget(deadlineNanos: Long, statementBudgetNanos: Long) {

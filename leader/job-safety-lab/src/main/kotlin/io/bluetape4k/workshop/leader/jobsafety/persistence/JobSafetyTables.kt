@@ -22,6 +22,7 @@ object JobRolloutMarkers : LongIdTable("job_safety_rollout_markers") {
 object JobResources : LongIdTable("job_safety_resources") {
     val conflictKey = varchar("conflict_key", 200).uniqueIndex()
     val namespaceEpoch = long("namespace_epoch")
+    val lastAcceptedFenceEpoch = long("last_accepted_fence_epoch").default(1L)
     val lastAcceptedFence = long("last_accepted_fence")
     val summaryValue = long("summary_value")
     val updatedAt = timestamp("updated_at")
@@ -33,6 +34,7 @@ object JobExecutions : LongIdTable("job_safety_executions") {
     val tenantId = varchar("tenant_id", 80)
     val conflictKey = varchar("conflict_key", 200)
     val fencingOwnerId = varchar("fencing_owner_id", 160)
+    val fencingTokenEpoch = long("fencing_token_epoch").default(1L)
     val fencingToken = long("fencing_token")
     val state = varchar("state", 40)
     val rejection = varchar("rejection", 48).nullable()
@@ -43,6 +45,7 @@ object JobExecutions : LongIdTable("job_safety_executions") {
 
 object JobCheckpoints : LongIdTable("job_safety_checkpoints") {
     val conflictKey = varchar("conflict_key", 200).uniqueIndex()
+    val fencingTokenEpoch = long("fencing_token_epoch").default(1L)
     val fencingToken = long("fencing_token")
     val schemaVersion = integer("schema_version")
     val summaryValue = long("summary_value")

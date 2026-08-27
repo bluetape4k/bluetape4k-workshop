@@ -29,6 +29,7 @@ dependencies {
     implementation(platform(libs.ktor.bom))
     implementation(project(":operations-job-console-core"))
     implementation(libs.bluetape4k.idgenerators)
+    implementation(libs.bluetape4k.virtualthread.api)
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.content.negotiation)
@@ -40,6 +41,7 @@ dependencies {
     implementation(libs.jackson3.module.kotlin)
     implementation(libs.hikaricp)
     runtimeOnly(libs.postgresql.driver)
+    runtimeOnly(libs.bluetape4k.virtualthread.jdk25)
 
     testImplementation(testFixtures(project(":operations-job-console-core")))
     testImplementation(libs.bluetape4k.junit5)
