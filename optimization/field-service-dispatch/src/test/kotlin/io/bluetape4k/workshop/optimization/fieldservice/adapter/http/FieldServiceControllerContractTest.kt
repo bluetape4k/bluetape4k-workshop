@@ -1,5 +1,10 @@
 package io.bluetape4k.workshop.optimization.fieldservice.adapter.http
 
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.workshop.optimization.fieldservice.application.FieldServiceApprovalService
 import io.bluetape4k.workshop.optimization.fieldservice.application.FieldServiceCommandService
 import io.bluetape4k.workshop.optimization.fieldservice.application.FieldServiceDispatchService
@@ -11,7 +16,6 @@ import io.bluetape4k.workshop.optimization.fieldservice.persistence.FieldService
 import io.bluetape4k.workshop.optimization.fieldservice.planner.DeterministicFieldServicePlanner
 import jakarta.servlet.http.HttpServletRequestWrapper
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.springframework.context.annotation.Profile
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.mock.web.MockHttpServletResponse
@@ -40,23 +44,23 @@ internal class FieldServiceControllerContractTest {
             windowEnd = Instant.parse("2026-08-20T10:00:00Z"),
             serviceDurationSeconds = 60,
         )
-        assertThrows<InvalidFieldServiceInput> {
+        assertFailsWith<InvalidFieldServiceInput> {
             controller.createVisit(request, operator = null, key = null)
         }
     }
 
     @Test
     fun `input and page bounds remain centralized`() {
-        check(FieldServiceLimits.MAX_BODY_BYTES == 256 * 1024)
-        check(FieldServiceLimits.MAX_PAGE_SIZE == 100)
-        check(FieldServiceEventType.entries.isNotEmpty())
+        FieldServiceLimits.MAX_BODY_BYTES shouldBeEqualTo 256 * 1024
+        FieldServiceLimits.MAX_PAGE_SIZE shouldBeEqualTo 100
+        FieldServiceEventType.entries.shouldNotBeEmpty()
     }
 
     @Test
     fun `dispatcher routes and beans are demo profile only`() {
-        check(FieldServiceController::class.java.getAnnotation(Profile::class.java).value.contains("demo"))
-        check(FieldServiceConsoleController::class.java.getAnnotation(Profile::class.java).value.contains("demo"))
-        check(FieldServiceConfiguration::class.java.getAnnotation(Profile::class.java).value.contains("demo"))
+        FieldServiceController::class.java.getAnnotation(Profile::class.java).value.toList() shouldContain "demo"
+        FieldServiceConsoleController::class.java.getAnnotation(Profile::class.java).value.toList() shouldContain "demo"
+        FieldServiceConfiguration::class.java.getAnnotation(Profile::class.java).value.toList() shouldContain "demo"
     }
 
     @Test
@@ -75,7 +79,7 @@ internal class FieldServiceControllerContractTest {
             wrapped.inputStream.readBytes()
         }
 
-        check(response.status == 413)
-        check(response.contentAsString.contains("BODY_TOO_LARGE"))
+        response.status shouldBeEqualTo 413
+        response.contentAsString shouldContain "BODY_TOO_LARGE"
     }
 }
