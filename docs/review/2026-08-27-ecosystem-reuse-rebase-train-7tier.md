@@ -78,3 +78,15 @@ PR 생성 전 문서/receipt를 수리하고, child branch의 green 결과를 �
 - stop condition: manifest checker P0/P1 finding, stale exact head, unresolved live review, missing CI, 또는 merge strategy mismatch.
 
 현재 review verdict: `P0=0, P1=0`; fresh checker/test, 실제 receipt event, PR #828 exact-head CI와 live review/thread read-back을 모두 확인했다. coordinator는 CG-15까지 PASS이며, CG-16 exact-head 승인 전에는 merge하지 않는다.
+
+## 2026-08-27 serial post-merge closeout
+
+- coordinator manifest repair PR #830은 `8550c08b40e671fd48dea8d1ad0d59f8868210a0`로,
+  A2 PR #829는 `323290adec9e8904f566ed736217369d78313896`로 rebase merge했다.
+- F1 PR #815 (`2c388e1dba3de5a9636b1528c68d1da758601e76`)와 descendant P2-02
+  PR #821 (`f95ea45c1c053f3901d91d29bca58f4e18fb3bdf`)도 이미 `develop`에
+  rebase merge되어 있다. squash와 auto-merge는 사용하지 않았다.
+- manifest closeout receipt `20260827T102153Z-serial-train-closeout`가 A2/F1
+  `READY/PASS`와 inventory verified rows `#777/#782/#787/#791`을 기록한다.
+- #781, #784, #785 및 F2/R1/R2/T1/I1은 범위 밖 또는 명시적 후속으로 남아
+  있으며, Epic #792는 열린 상태다.

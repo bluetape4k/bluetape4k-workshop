@@ -706,3 +706,19 @@ topological order로 재검토한다.
   mutation during the next startup recovery preflight before writing again.
 - On a failing Testcontainers or concurrency test: diagnose the first raw failure,
   fix the owning track, and rerun the same sequential command before broader CI.
+
+## 2026-08-27 serial post-merge closeout
+
+- F1 PR #815는 `2c388e1dba3de5a9636b1528c68d1da758601e76`로, descendant P2-02
+  PR #821은 `f95ea45c1c053f3901d91d29bca58f4e18fb3bdf`로 rebase merge했다.
+- A2 PR #829는 `323290adec9e8904f566ed736217369d78313896`로 rebase merge했고,
+  coordinator manifest repair PR #830은 `8550c08b40e671fd48dea8d1ad0d59f8868210a0`로
+  rebase merge했다.
+- serial closeout manifest는 A2/F1을 법적 상태 전이상 `READY/PASS`로 기록하고,
+  receipts `20260827T102153Z-a2-merge-closeout`와
+  `20260827T102153Z-f1-p2-merge-closeout`를 결속한다. inventory는 직접 변경된
+  #777, #782, #787, #791만 `verified`로 전환했으며 #781, #784, #785와 나머지
+  train track은 `pending`으로 유지한다.
+- Epic #792는 F2/R1/R2/T1/I1 및 명시적 후속 issue가 남아 있으므로 열린 상태를
+  유지한다. 이후 child는 최신 `develop`을 parent로 삼고 exact-head receipt와
+  사용자의 fresh approval 후에만 rebase merge한다.
