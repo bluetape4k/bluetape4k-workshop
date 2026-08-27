@@ -84,8 +84,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260827T114428Z-f2-coordinator-scope-replan",
-    "checksum": "c7aa46b1c52d20be09c814d0e7a1b5b4fdc598162e9ed4b184d2fe88ad1a0e95"
+    "receipt_id": "20260827T133807Z-2e478eff-g0-base-policy",
+    "checksum": "efde1f6ec96c2531e8a7dc3844805f69742eeab6e69d30e894a4abacfcfc38cd"
   },
   "planned_scope_replan_receipts": {
     "F2": {

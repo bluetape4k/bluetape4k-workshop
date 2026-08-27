@@ -5,7 +5,7 @@
 PR #831의 branch에는 후속 child base 정책에 필요한 checker/test 변경이
 있었지만, 최신 `develop`과의 diff에는 이미 병합된 closeout 상태를 되돌릴 수
 있는 historical 변경도 섞여 있었다. 따라서 전체 branch를 cherry-pick하거나
-rebase하지 않고, `origin/develop@283defb0a0ec5b3777968772b811d1164fae578e`에서
+rebase하지 않고, `origin/develop@69ba991778101c027282a80726de5eb1403da091`에서
 새 G0 lane을 시작했다.
 
 ## 결정
@@ -39,11 +39,12 @@ python3 -m py_compile .github/scripts/check-ecosystem-reuse.py .github/scripts/t
 git diff --check
 ```
 
-workflow receipt는 Type E run `20260827T114512Z-dec4c6ad`로 완료했으며,
-sequence 16 head는
-`fd03d0087c7d25e4803aa640b4f21f2a3e04d5cc115030c0495d00d20cf0089d`다.
-`completion-check`는 required component/lane/check/replacement/main proof
-누락 없이 `complete=true`를 반환했다.
+최신 base에 대한 새 Type E workflow receipt
+`20260827T133807Z-2e478eff`를 발행했으며, sequence 16 head
+`efde1f6ec96c2531e8a7dc3844805f69742eeab6e69d30e894a4abacfcfc38cd`를
+manifest와 함께 기록했다. `completion-check`는 required
+component/lane/check/replacement/main proof 누락 없이 `complete=true`를
+반환했다.
 
 ## 재발 방지
 
