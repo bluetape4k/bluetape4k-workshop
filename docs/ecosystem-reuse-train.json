@@ -140,12 +140,16 @@
       "checksum": "4b46bc3c43722f6156985bdfacf07aa61dc737183e829d2e698404235cf74ab6"
     },
     "I1": {
-      "receipt_id": "20260827T071228Z-i1-base-replan",
-      "checksum": "5e4bf7c8e629c24917e26b2f083d8c429d57b02e8015819e5e65c7712c9fc67c"
+      "receipt_id": "20260828T-i1-allowlist-replan",
+      "checksum": "bfeafc53f939be8f2f2d3e0af9a1f3c19921c3b99e1dc1fd653a325730fd2b41"
     },
     "R1": {
       "receipt_id": "20260828T-r1-acceptance-scope",
       "checksum": "1d706f3b1e651bec424a09a9e69b15a04f446d4df0566c1839a45570f9d39c37"
+    },
+    "R2": {
+      "receipt_id": "20260828T-r2-allowlist-replan",
+      "checksum": "621cf37e58d8c2739f63e55d9c639dca84aedc96f1f0fe933a33f1c2bc0b4f2b"
     },
     "T1": {
       "receipt_id": "20260828T-t1-acceptance-scope",
