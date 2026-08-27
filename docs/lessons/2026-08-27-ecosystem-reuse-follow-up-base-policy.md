@@ -51,10 +51,10 @@ git diff --check
 `20260827T141532Z-f2-allowlist-repair`를 새로 발행했으며, combined repair
 payload의 SHA-256 `d6e7c7ce9bd5a0a550cc0ef62e33ec1e49ed2fb96fd936aa26829bcbdb3bf1fa`를
 manifest와 함께 기록했다. current exact head
-`9bb587c56db46988295bcfc9b17a9fe0548a2a31`에서 [Ecosystem Reuse Gate run
-33081285604](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33081285604)와
-[CI run 33081285932](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33081285932)
-(attempt 2)가 모두 성공했으며, local `completion-check`는 required
+`847806df686fe31ea191cd4c2e5c4cd60316e145`에서 [Ecosystem Reuse Gate run
+33082664038](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33082664038)와
+[CI run 33082664013](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33082664013)
+가 모두 성공했으며, local `completion-check`는 required
 component/lane/check/replacement/main proof 누락 없이 `complete=true`를
 반환했다.
 
