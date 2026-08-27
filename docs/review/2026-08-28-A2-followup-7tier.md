@@ -6,7 +6,8 @@ A2 후속 lane은 Kinesis lifecycle logging을 Bluetape lazy logging contract로
 정렬하고, 허용된 테스트 앵커의 plain assertion을 Bluetape assertion helper로
 통일한다. framework DSL, fixture, manifest, inventory는 변경하지 않았다.
 
-현재 exact head `2652884d`는 최신 `develop` `b5a09c4b` 위에 rebased 되었고,
+현재 implementation head `b0e8883b`는 coordinator exact head `67b393c6`
+위에 rebased 되었고,
 변경 파일은 manifest allowlist 안의 22개 source/test와 이 review artifact다.
 판정은 **P0=0, P1=0, P2=0 / IMPLEMENTATION VERIFIED**다.
 
@@ -33,7 +34,8 @@ A2 후속 lane은 Kinesis lifecycle logging을 Bluetape lazy logging contract로
 ## Fresh verification receipt
 
 ```text
-BASE/HEAD: develop `b5a09c4b`, exact head `2652884d`.
+BASE/HEAD: post-merge `develop` base `67b393c6`, review commit head
+`1a116473`.
 STATIC RED→GREEN: legacy JUnit/raw assertion 168→0, Kinesis
 LoggerFactory/LOGGER 6→0; setup precondition `requireNotNull` 8건은 유지.
 COMPILE: affected module `compileTestKotlin` selectors 모두 PASS.
