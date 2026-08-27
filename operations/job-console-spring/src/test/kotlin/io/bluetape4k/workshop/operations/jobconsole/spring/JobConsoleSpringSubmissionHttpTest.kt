@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.operations.jobconsole.spring
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.workshop.operations.jobconsole.api.FailureMode
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.springframework.mock.web.MockHttpServletRequest
 
 class JobConsoleSpringSubmissionHttpTest {
@@ -12,7 +12,7 @@ class JobConsoleSpringSubmissionHttpTest {
     fun `scope and key are validated before bounded JSON parsing`() {
         val request = request("{}", key = "bad,key")
 
-        assertThrows<JobSubmissionInvalidRequestException> {
+        assertFailsWith<JobSubmissionInvalidRequestException> {
             JobConsoleSpringSubmissionHttp.idempotencyKey(request)
         }
     }
@@ -37,7 +37,7 @@ class JobConsoleSpringSubmissionHttpTest {
             """{"jobType":"document_export","workUnits":3,"unexpected":true}""",
             """{"jobType":"document_export","workUnits":3} {}""",
         ).forEach { body ->
-            assertThrows<JobSubmissionInvalidRequestException> { JobConsoleSpringSubmissionHttp.readSubmitRequest(request(body, "spring-key")) }
+            assertFailsWith<JobSubmissionInvalidRequestException> { JobConsoleSpringSubmissionHttp.readSubmitRequest(request(body, "spring-key")) }
         }
     }
 
@@ -46,7 +46,7 @@ class JobConsoleSpringSubmissionHttpTest {
         val body = "{" + "\"jobType\":\"document_export\",\"workUnits\":3,\"failureMode\":\"none\",\"padding\":\"" +
             "x".repeat(MAX_JOB_SUBMISSION_BODY_BYTES) + "\"}"
 
-        assertThrows<JobSubmissionRequestTooLargeException> {
+        assertFailsWith<JobSubmissionRequestTooLargeException> {
             JobConsoleSpringSubmissionHttp.readSubmitRequest(request(body, "spring-key"))
         }
     }
@@ -56,7 +56,7 @@ class JobConsoleSpringSubmissionHttpTest {
         val request = request("not-json", "spring-key")
         request.removeHeader("X-Demo-Tenant")
 
-        assertThrows<JobSubmissionScopeDeniedException> {
+        assertFailsWith<JobSubmissionScopeDeniedException> {
             JobConsoleSpringSubmissionHttp.scope(request)
         }
     }
