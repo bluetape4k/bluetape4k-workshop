@@ -56,7 +56,7 @@
       "scope_id": "coordinator-child-scope",
       "scope_kind": "coordinator",
       "parent_track": "P0",
-      "expected_head_ref": "chore/ecosystem-reuse-manifest-repair",
+      "expected_head_ref": "chore/ecosystem-reuse-train-closeout",
       "expected_base_ref": "develop",
       "oid_policy": "rebase-aware",
       "head_oid": null,
@@ -64,9 +64,12 @@
       "issue_numbers": [822, 826],
       "allowed_paths": [
         "docs/ecosystem-reuse-train.json",
+        "docs/ecosystem-reuse-inventory.md",
         ".github/scripts/check-ecosystem-reuse.py",
         ".github/scripts/test_check_ecosystem_reuse.py",
         "docs/review/2026-08-26-ecosystem-child-scope-7tier.md",
+        "docs/review/2026-08-25-A2-7tier.md",
+        "docs/review/2026-08-25-F1-7tier.md",
         "docs/lessons/2026-08-27-fixed-child-marker-lineage-transition.md",
         "docs/superpowers/specs/2026-08-25-ecosystem-reuse-epic-design.md",
         "docs/superpowers/plans/2026-08-25-ecosystem-reuse-epic-plan.md",
@@ -74,28 +77,11 @@
         "docs/lessons/2026-08-27-ecosystem-reuse-rebase-train-transition.md"
       ],
       "review_artifact": "docs/review/2026-08-27-ecosystem-reuse-rebase-train-7tier.md"
-    },
-    {
-      "scope_id": "F1-P2-02",
-      "scope_kind": "child",
-      "parent_track": "F1",
-      "expected_head_ref": "fix/ecosystem-reuse-shutdown-deadline",
-      "expected_base_ref": "develop",
-      "oid_policy": "rebase-aware",
-      "head_oid": null,
-      "base_oid": null,
-      "issue_numbers": [782],
-      "allowed_paths": [
-        "optimization/field-service-dispatch/src/main/kotlin/**",
-        "optimization/field-service-dispatch/src/test/kotlin/io/bluetape4k/workshop/optimization/fieldservice/application/FieldServiceReplanServiceTest.kt",
-        "docs/review/2026-08-25-F1-7tier.md"
-      ],
-      "review_artifact": "docs/review/2026-08-25-F1-7tier.md"
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260827T092246Z-f1-p2-base-replan",
-    "checksum": "b35737c5d18afc56454573267d9a1a9818e1684ab63949fb4ee45db400ea3dc9"
+    "receipt_id": "20260827T102153Z-serial-train-closeout",
+    "checksum": "638e642428ae0a449bda9562ab38721e7269f6ffd68766963a5e7c27a6736559"
   },
   "planned_scope_replan_receipts": {
     "A2": {
@@ -180,7 +166,7 @@
       "merge_base_oid": null,
       "reviewed_implementation_oid": "b3711b30a0c51f78750b3cdf2718692d40af08de",
       "reviewed_marker_binding": "lineage",
-      "state": "READY",
+      "state": "MERGE_READY",
       "issue_numbers": [783],
       "allowed_paths": [
         "optimization/field-service-dispatch/src/test/kotlin/**",
