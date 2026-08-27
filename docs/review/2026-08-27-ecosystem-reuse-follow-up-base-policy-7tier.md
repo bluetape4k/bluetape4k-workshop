@@ -155,3 +155,12 @@ current exact-head hosted CI는 PASS다. PR review/thread에는 미해결 항목
 한국어 `## DoD Status`를 고정한다. 마지막 issue가 완료된 뒤에만 한 번의 fresh
 approval을 exact live heads에 결속하고, 의존 순서대로 `rebase` merge를 실행한다.
 `squash`와 auto-merge는 금지한다.
+
+### I1 operations runtime scope 보강
+
+`#801` 수용 기준의 operations core executor 주입 경계를 실제로 검증하기
+위해 `BoundedJobEventFanout`, `JobConsoleService`, bounded connection
+acquirer와 Ktor adapter 경로를 I1 allowlist에 추가했다. Spring만 바꾸고 core가
+executor를 계속 생성하는 부분 완성은 허용하지 않는다. Ktor/Spring adapter가
+`VirtualThreads.executorService()`를 소유하고 종료 lifecycle을 책임지며,
+core는 전달받은 `ExecutorService`만 사용한다.
