@@ -22,11 +22,6 @@ dependencies {
     // 참고: https://github.com/cashapp/turbine/
     testImplementation(libs.turbine)
 
-    // TestContainers
-    testImplementation(libs.bluetape4k.testcontainers)
-    testImplementation(libs.testcontainers.lib)
-    testImplementation(libs.testcontainers.junit.jupiter)
-
     // Spring Boot
     implementation(libs.spring.context)
     implementation(libs.bluetape4k.spring.boot4.core)

@@ -3,9 +3,15 @@
 [한국어](README.ko.md) | English
 
 This module exposes a coroutine REST API over Spring Data R2DBC and an in-memory H2
-database. It demonstrates bluetape4k `*Suspending` extensions for `R2dbcEntityOperations`
+database by default. It demonstrates bluetape4k `*Suspending` extensions for `R2dbcEntityOperations`
 so repository code can stay suspend/`Flow` based instead of manually converting Reactor
 publishers.
+
+The application uses the H2 settings in `application.yml` by default, while tests activate the
+`postgres` profile and use the real PostgreSQL Testcontainer from
+`PostgreSQLServer.Launcher.postgres`. The `spring.r2dbc.*` properties are wired dynamically from
+the fixture's mapped port and credentials, and `spring.sql.init` runs `schema.sql` so schema
+bootstrap stays consistent across both environments.
 
 ## What this example shows
 
@@ -13,7 +19,7 @@ publishers.
 
 `PostController` publishes `/posts` endpoints, `DatabaseInitializer` seeds two posts and
 four comments on `ApplicationReadyEvent`, and `schema.sql` creates the `posts`, `comments`,
-and `members` tables for the H2 R2DBC connection.
+and `members` tables for H2 and PostgreSQL R2DBC connections.
 
 ## Domain ERD
 
@@ -39,6 +45,9 @@ does not declare a foreign key. `MemberRepository` demonstrates a plain
 ```bash
 ./gradlew :spring-data:r2dbc-coroutines:test
 ```
+
+Tests require Docker because they start a PostgreSQL container. Running the application directly
+uses the H2 fallback unless another profile is supplied.
 
 ## References
 

@@ -23,7 +23,6 @@ dependencies {
     implementation(libs.bluetape4k.jackson3)
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.bluetape4k.assertions)
-    testImplementation(libs.bluetape4k.testcontainers)
     testImplementation(libs.okhttp3.mockwebserver)
     testImplementation(project(":shared"))
 

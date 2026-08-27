@@ -72,9 +72,6 @@ dependencies {
     implementation(libs.hibernate.validator.lib)
     runtimeOnly(libs.jakarta.validation.api)
 
-    // Testcontainers
-    implementation(libs.bluetape4k.testcontainers)
-
     // Spring Boot
     testImplementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)

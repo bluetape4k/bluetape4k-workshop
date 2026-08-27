@@ -18,9 +18,9 @@ dependencies {
     implementation(libs.bluetape4k.io)
     testImplementation(libs.bluetape4k.junit5)
 
-    // PostgreSQL 서버
-    implementation(libs.bluetape4k.testcontainers)
-    implementation(libs.testcontainers.postgresql)
+    // PostgreSQL 테스트 fixture
+    testImplementation(libs.bluetape4k.testcontainers)
+    testImplementation(libs.testcontainers.postgresql)
 
     // 코루틴
     implementation(libs.bluetape4k.coroutines)
