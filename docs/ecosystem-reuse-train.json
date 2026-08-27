@@ -98,9 +98,25 @@
       "checksum": "2ac170983b2d0cfe3e8d4a48edd92534a4d00462855b7752238d77bdc0379117"
   },
   "planned_scope_replan_receipts": {
+    "A2": {
+      "receipt_id": "20260827T071228Z-a2-base-replan",
+      "checksum": "dd4e13e547ff35e402176b00449782a6d0986f5ae9b18f01915e657fbde7e808"
+    },
     "F1": {
       "receipt_id": "20260827T063057Z-f1-base-replan",
       "checksum": "bd2a4f5d8915fb3f74c6e47ffb42ac34b69eb5d0fc54f781a52df08d8d6269d8"
+    },
+    "I1": {
+      "receipt_id": "20260827T071228Z-i1-base-replan",
+      "checksum": "5e4bf7c8e629c24917e26b2f083d8c429d57b02e8015819e5e65c7712c9fc67c"
+    },
+    "R1": {
+      "receipt_id": "20260827T071228Z-r1-base-replan",
+      "checksum": "b5e7f3199acd9968ebf8443f71112a19e5cc8306d91bebd95c1cabf4de6dbd8d"
+    },
+    "T1": {
+      "receipt_id": "20260827T071228Z-t1-base-replan",
+      "checksum": "983fade378b4916f3773279aa42313b279a720ae1701ce0573bac0f9370a7430"
     }
   },
   "nodes": [
@@ -258,9 +274,9 @@
         "./gradlew :commerce-concert-ticket-flash-sale:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-assertions --configuration testRuntimeClasspath"
       ],
       "review_artifact": "docs/review/2026-08-25-A2-7tier.md",
-      "receipt_id": "20260827T071228Z-a2-base-replan",
-      "receipt_status": "PASS",
-      "checksum": "dd4e13e547ff35e402176b00449782a6d0986f5ae9b18f01915e657fbde7e808"
+      "receipt_id": null,
+      "receipt_status": "PENDING",
+      "checksum": null
     },
     {
       "track": "F1",
@@ -396,9 +412,9 @@
         "./gradlew :shared:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-spring-boot-core --configuration testRuntimeClasspath"
       ],
       "review_artifact": "docs/review/2026-08-25-R1-7tier.md",
-      "receipt_id": "20260827T071228Z-r1-base-replan",
-      "receipt_status": "PASS",
-      "checksum": "b5e7f3199acd9968ebf8443f71112a19e5cc8306d91bebd95c1cabf4de6dbd8d"
+      "receipt_id": null,
+      "receipt_status": "PENDING",
+      "checksum": null
     },
     {
       "track": "R2",
@@ -511,9 +527,9 @@
         "./gradlew :spring-data-r2dbc-coroutines:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-spring-boot-r2dbc --configuration testRuntimeClasspath"
       ],
       "review_artifact": "docs/review/2026-08-25-T1-7tier.md",
-      "receipt_id": "20260827T071228Z-t1-base-replan",
-      "receipt_status": "PASS",
-      "checksum": "983fade378b4916f3773279aa42313b279a720ae1701ce0573bac0f9370a7430"
+      "receipt_id": null,
+      "receipt_status": "PENDING",
+      "checksum": null
     },
     {
       "track": "I1",
@@ -563,9 +579,9 @@
         "./gradlew :optimization-field-service-dispatch:dependencyInsight --dependency io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc --configuration testRuntimeClasspath"
       ],
       "review_artifact": "docs/review/2026-08-25-I1-7tier.md",
-      "receipt_id": "20260827T071228Z-i1-base-replan",
-      "receipt_status": "PASS",
-      "checksum": "5e4bf7c8e629c24917e26b2f083d8c429d57b02e8015819e5e65c7712c9fc67c"
+      "receipt_id": null,
+      "receipt_status": "PENDING",
+      "checksum": null
     }
   ]
 }

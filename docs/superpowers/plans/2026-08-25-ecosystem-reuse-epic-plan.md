@@ -25,7 +25,7 @@ legacy assertion block에만 허용하며, touched assertion은 inventory 사유
 이 문서는 2026-08-25 승인 설계를 현재 `develop` 기준으로 이어가는 실행 계획이다.
 P0/A1은 이미 `develop`에 통합되었고, 삭제된 historical foundation ref를
 child base로 재사용하지 않는다. 현재 coordinator branch는
-`chore/ecosystem-reuse-coordinator-transition`이며, F1/P2-02와 A2는 최신
+`fix/ecosystem-reuse-train-replan`이며, F1/P2-02, A2, R1, T1, I1은 최신
 `develop`에서 exact base/head를 다시 고정한다. 사용자의 최신 병합 지시는
 `squash`가 아닌 `rebase merge`이므로 모든 PR delivery와 closeout은 이 전략만
 허용한다. rebase 후에는 implementation marker, manifest receipt, targeted
@@ -38,7 +38,7 @@ test, CI, review를 새 exact head에서 다시 검증하며 이전 green 결과
 
 - 저장소: `bluetape4k/bluetape4k-workshop`
 - 기준: 계획 시점의 `origin/develop`; PR 또는 stack 전환마다 최신 상태를 다시 확인한다.
-- Foundation history: 이미 `develop`에 통합된 historical `feat/ecosystem-reuse-gate`; 현재 작업은 `chore/ecosystem-reuse-coordinator-transition`에서 stale ref를 수리한다.
+- Foundation history: 이미 `develop`에 통합된 historical `feat/ecosystem-reuse-gate`; 현재 작업은 `fix/ecosystem-reuse-train-replan`에서 stale ref를 수리한다.
 - 공개 문서: 한국어로 작성하고 code, path, API name, command, URL, exact error는 보존한다.
 - 의존성 규칙: Bluetape 버전은 `platform(libs.bluetape4k.dependencies)`만 관리한다.
 - 병합 규칙: `squash`와 auto-merge는 금지하고, 각 PR은 exact head에 대한 fresh 승인 후 `rebase merge`로만 통합한다. 승인 전에는 merge-ready 증거에서 멈춘다.
