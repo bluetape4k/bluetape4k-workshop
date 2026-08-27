@@ -47,3 +47,18 @@ coordinator가 parent를 squash merge한 뒤 child PR을 rebase하면 같은 구
 3. marker binding만 바꾸거나 기존 execution receipt를 재사용하지 않는다.
 4. A1/F1/P2 stacked train은 각 PR의 실제 base/head ref, path scope, review
    tail, hosted exact-head 결과를 순서대로 다시 확인한다.
+
+## 부모 branch 자동 삭제 뒤 실행 전 재계획
+
+A1을 `develop`에 merge하면 GitHub의 자동 branch 삭제와 PR retarget으로 아직
+실행되지 않은 F1의 `expected_base_ref`가 stale해질 수 있다. 이 경우 fixed
+node를 READY로 올리거나 OID를 미리 채우지 말고, coordinator가 fresh receipt로
+`PLANNED` 상태를 유지한 채 `expected_head_ref`/`expected_base_ref`/`parent_track`
+중 필요한 ref/parent만 재계획한다. path, task, dependency, marker와 issue
+범위는 이 전환에서 바꾸지 않는다.
+
+checker는 baseline/current가 모두 `PLANNED`이고 current receipt가 `PASS`이며
+receipt ID/checksum이 새 값일 때만 이 좁은 replan을 허용한다. 이후 child
+rebase가 완료되면 실제 marker ancestor와 review-only tail을 fresh child
+evidence로 다시 고정한다. 이 순서를 지키면 branch alias를 복구하는 원격
+mutation 없이 protected `develop`과 rebase merge를 유지할 수 있다.

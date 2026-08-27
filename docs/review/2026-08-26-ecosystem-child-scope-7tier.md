@@ -62,12 +62,12 @@ artifact marker가 기존 manifest marker와 달라진다. 즉 source/test 동�
 ## 현재 manifest와 coordinator receipt
 
 현재 contract branch는 `develop`을 base로 하는
-`fix/ecosystem-reuse-marker-transition`이며, coordinator-owned scope는 이
+`fix/ecosystem-reuse-train-replan`이며, coordinator-owned scope는 이
 branch와 issue `#822`, `#826`을 함께 기록한다.
 
-- scope receipt: `20260827T033641Z-marker-transition-scope`
+- scope receipt: `20260827T063057Z-f1-base-replan-scope`
 - scope checksum:
-  `347b99710d7441308ee9d6928dffe0f84c75e96638184c63d18f747089219ce7`
+  `6d174f43113cfb20a76e9c98a2cc7b693a0c3701a4eec5a8d85c2d3c97784ae1`
 - A1 `reviewed_marker_binding`: `lineage`
 - A1 trusted marker: `b3711b30a0c51f78750b3cdf2718692d40af08de`
 - A1 transition receipt: `20260827T033641Z-a1-marker-lineage`
@@ -124,9 +124,55 @@ python3 .github/scripts/check-ecosystem-reuse.py --inventory docs/ecosystem-reus
 git diff --check  # PASS after final edits
 ```
 
+## 실행 전 PLANNED scope 재계획
+
+A1 #812가 `develop@5c188021acf298dd9a1e21da80063fdd1ee4c2f8`로 squash merge된
+뒤 GitHub가 부모 branch `test/ecosystem-reuse-assertions-field-service`를
+자동 삭제하고 F1 #815를 `develop`으로 retarget했다. 이때 F1 구현을 원격에
+게시하기 전에 coordinator가 base/ref만 다시 계산할 수 있어야 하며, 아직
+실행되지 않은 fixed node를 `READY`로 가장하거나 stale OID를 채우면 안 된다.
+
+이를 위해 trusted manifest 비교에 다음의 좁은 전환을 추가한다.
+
+1. baseline과 current node가 모두 `PLANNED`일 때만 실행 전 replan을 허용한다.
+2. 변경 가능한 graph field는 `expected_head_ref`, `expected_base_ref`,
+   `parent_track`뿐이다. path, task, selector, dependency, review marker와
+   issue 계약은 이 경로에서 변경할 수 없다.
+3. current node는 `receipt_status=PASS`와 baseline과 다른 fresh
+   `receipt_id`/`checksum`을 가져야 한다. trusted manifest의 receipt 재사용은
+   계속 거부한다.
+4. F1 node의 `expected_base_ref`는 `develop`으로, coordinator scope의 head는
+   `fix/ecosystem-reuse-train-replan`으로 갱신한다. F1 reviewed marker/OID는
+   child rebase와 local proof가 끝난 뒤에만 기록한다.
+
+이 전환은 stale manifest를 허용하는 예외가 아니라 실행 전 topology 재계획을
+명시하는 상태 전이이다. F1 PR은 이 coordinator head 이후 실제 `develop` base,
+경로 allowlist, marker ancestor, evidence tail을 다시 증명해야 한다.
+
+## 추가 7-Tier 판정
+
+| Tier | 판정 | 근거 |
+| --- | --- | --- |
+| 1. 요구사항·범위 | PASS | 부모 branch 삭제로 발생한 F1 base drift만 다루며 Kotlin production 동작은 변경하지 않는다. |
+| 2. 계약·자료구조 | PASS | PLANNED 유지, ref/parent field 제한, PASS receipt, fresh coordinator scope receipt를 checker와 manifest에 고정했다. |
+| 3. 경계·보안 | PASS | path/task/dependency/marker widening을 replan 경로에서 거부하고 기존 trusted-manifest 비교를 유지한다. |
+| 4. 정확성·상태 | PASS | PLANNED→PLANNED replan은 허용하지만 `MERGED` scope와 non-ref graph 변경은 계속 fail-closed다. |
+| 5. 동시성·자원 | N/A | governance checker/manifest/doc/test harness만 바꾸며 DB·container·coroutine lifecycle은 건드리지 않는다. |
+| 6. 테스트·운영 | PASS | fresh planned ref replan 수용과 non-ref graph 변경 거부 회귀를 checker test에 추가한다. |
+| 7. 문서·유지보수 | PASS | 삭제된 parent ref, 새 coordinator receipt, F1 후속 rebase 순서를 이 문서와 lesson에 기록한다. |
+
+## 검증 명령과 남은 위험
+
+```text
+python3 .github/scripts/test_check_ecosystem_reuse.py -v  # 79 tests PASS
+python3 -m json.tool docs/ecosystem-reuse-train.json  # PASS
+python3 .github/scripts/check-ecosystem-reuse.py --inventory docs/ecosystem-reuse-inventory.md --manifest docs/ecosystem-reuse-train.json --workflow .github/workflows/ecosystem-reuse-gate.yml  # PASS
+git diff --check  # PASS after final edits
+```
+
 계약 PR의 exact head에 대해 Ecosystem Reuse Gate와 required review/CI를
-확인한 뒤에야 A1 #812를 최종 develop head로 rebase하고 review marker를 새
-implementation commit으로 갱신한다. 그 다음 F1 #815와 P2 #821의 base/ref/path
-scope를 순서대로 다시 계산한다. 이 문서 시점에는 hosted exact-head PASS,
-fresh human approval, merge, canonical sync, worktree cleanup이 아직
-완료되지 않았다.
+확인한 뒤 F1 #815를 새 `develop` 기준으로 rebase하고 reviewed marker를 새
+implementation commit으로 갱신한다. 그 다음 P2 #821의 base/ref/path scope를
+순서대로 다시 계산한다. 이 문서 시점에는 coordinator PR의 hosted
+exact-head PASS, F1/P2의 fresh human approval, rebase merge, canonical sync,
+worktree cleanup이 아직 완료되지 않았다.

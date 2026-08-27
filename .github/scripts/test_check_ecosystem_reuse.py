@@ -421,6 +421,33 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         errors = CHECKER.validate_manifest(self.root, current_path, trusted_path=trusted_path)
         self.assertTrue(any("execution scope changed" in error for error in errors))
 
+    def test_trusted_manifest_accepts_fresh_planned_ref_replan(self):
+        trusted = self.manifest()
+        current = self.manifest()
+        current["nodes"][3]["expected_base_ref"] = "develop"
+        current["nodes"][3]["receipt_status"] = "PASS"
+        current["nodes"][3]["receipt_id"] = "replan-f1"
+        current["nodes"][3]["checksum"] = "e" * 64
+        trusted_path = self.root / "trusted.json"
+        current_path = self.root / "current.json"
+        trusted_path.write_text(json.dumps(trusted), encoding="utf-8")
+        current_path.write_text(json.dumps(current), encoding="utf-8")
+        self.assertEqual([], CHECKER.validate_manifest(self.root, current_path, trusted_path=trusted_path))
+
+    def test_planned_scope_replan_rejects_non_ref_graph_change(self):
+        trusted = self.manifest()
+        current = self.manifest()
+        current["nodes"][3]["test_selectors"] = [":widened:test"]
+        current["nodes"][3]["receipt_status"] = "PASS"
+        current["nodes"][3]["receipt_id"] = "replan-f1"
+        current["nodes"][3]["checksum"] = "e" * 64
+        trusted_path = self.root / "trusted.json"
+        current_path = self.root / "current.json"
+        trusted_path.write_text(json.dumps(trusted), encoding="utf-8")
+        current_path.write_text(json.dumps(current), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, current_path, trusted_path=trusted_path)
+        self.assertTrue(any("PLANNED scope replan may change only ref/parent fields" in error for error in errors))
+
     def test_manifest_rejects_unknown_reviewed_marker_binding(self):
         manifest = self.manifest()
         manifest["nodes"][1]["reviewed_marker_binding"] = "floating"
