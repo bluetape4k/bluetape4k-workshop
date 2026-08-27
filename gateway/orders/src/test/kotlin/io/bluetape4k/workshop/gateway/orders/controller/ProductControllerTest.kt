@@ -6,7 +6,7 @@ import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.workshop.gateway.orders.AbstractOrderTest
 import io.bluetape4k.workshop.gateway.orders.model.Product
-import io.bluetape4k.workshop.shared.web.httpGet
+import io.bluetape4k.spring.tests.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult

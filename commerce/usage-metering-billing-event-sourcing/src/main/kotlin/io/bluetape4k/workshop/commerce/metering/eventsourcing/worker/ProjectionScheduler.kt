@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.worker
 
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventStore
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionCheckpointRepository
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.ProjectionGenerationRepository
@@ -12,7 +13,6 @@ import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import java.time.Clock
 import java.time.Duration
-import java.util.UUID
 
 data class ProjectionCycle(
     val activeGeneration: Int,
@@ -31,10 +31,10 @@ class ProjectionGenerationRunner(
 
     fun runOnce(projectionName: String): ProjectionCycle? {
         val active = transactions.execute { generations.active(projectionName) } ?: return null
-        worker.runOnce(projectionName, active.generation, UUID.randomUUID())
+        worker.runOnce(projectionName, active.generation, Uuid.V7.nextId())
         val building = transactions.execute { generationQueries.building(projectionName) }
         val buildingResult = building?.let {
-            worker.runOnce(projectionName, it.generation, UUID.randomUUID())
+            worker.runOnce(projectionName, it.generation, Uuid.V7.nextId())
         }
         return ProjectionCycle(active.generation, building?.generation, buildingResult)
     }
@@ -60,7 +60,7 @@ class ProjectionGenerationSwitcher(
             val lease = checkpoints.acquireLease(
                 projectionName,
                 generation,
-                UUID.randomUUID(),
+                Uuid.V7.nextId(),
                 now,
                 SWITCH_LEASE,
             ) ?: return@execute false

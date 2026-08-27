@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence
 
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.BillingReadModelEntry
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.NewBillingReadModelEntry
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.NewProjectionFailure
@@ -23,7 +24,7 @@ class BillingReadModelRepository :
 
     fun append(entry: NewBillingReadModelEntry) {
         BillingReadModels.insert {
-            it[id] = UUID.randomUUID()
+            it[id] = Uuid.V7.nextId()
             it[projectionName] = entry.projectionName
             it[generation] = entry.generation
             it[tenantId] = entry.tenantId
@@ -82,7 +83,7 @@ class ProjectionFailureRepository :
 
     fun record(failure: NewProjectionFailure) {
         val inserted = ProjectionFailures.insertIgnore {
-            it[id] = UUID.randomUUID()
+            it[id] = Uuid.V7.nextId()
             it[projectionName] = failure.projectionName
             it[generation] = failure.generation
             it[eventId] = failure.eventId

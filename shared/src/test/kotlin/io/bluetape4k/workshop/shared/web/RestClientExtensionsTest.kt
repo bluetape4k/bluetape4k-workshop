@@ -2,9 +2,18 @@ package io.bluetape4k.workshop.shared.web
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import io.bluetape4k.spring.tests.httpDelete
+import io.bluetape4k.spring.tests.httpGet
+import io.bluetape4k.spring.tests.httpHead
+import io.bluetape4k.spring.tests.httpOptions
+import io.bluetape4k.spring.tests.httpPatch
+import io.bluetape4k.spring.tests.httpPost
+import io.bluetape4k.spring.tests.httpPut
 import kotlinx.coroutines.flow.flowOf
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Nested
@@ -161,6 +170,22 @@ class RestClientExtensionsTest : AbstractSpringTest() {
 
             log.debug { "response=$response" }
             response shouldContain "$baseUrl/delete"
+        }
+    }
+
+    @Nested
+    inner class Head {
+        @Test
+        fun `httpHead httpbin`() {
+            client.httpHead("/get").toBodilessEntity().statusCode.is2xxSuccessful.shouldBeEqualTo(true)
+        }
+    }
+
+    @Nested
+    inner class Options {
+        @Test
+        fun `httpOptions httpbin`() {
+            client.httpOptions("/anything").toBodilessEntity().body.shouldBeNull()
         }
     }
 }

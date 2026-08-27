@@ -1,16 +1,16 @@
 package io.bluetape4k.workshop.operations.jobconsole.api
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobState
 import org.junit.jupiter.api.Test
-import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.time.Instant
 import java.util.UUID
 
 class JobApiModelsTest {
 
-    private val mapper = jacksonObjectMapper()
+    private val mapper = Jackson.defaultJsonMapper
 
     @Test
     fun `snapshot JSON exposes stable queue and ETA fields without caller identity`() {

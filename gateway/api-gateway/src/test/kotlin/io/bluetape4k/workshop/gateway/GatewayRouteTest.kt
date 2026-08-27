@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.gateway
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.workshop.shared.web.httpGet
+import io.bluetape4k.spring.tests.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test

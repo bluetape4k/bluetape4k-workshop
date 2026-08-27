@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.concurrent.virtualthread.VirtualThreads
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.operations.jobconsole.application.BoundedJobEventFanout
+import io.bluetape4k.workshop.operations.jobconsole.api.JobConsoleJson
 import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleService
 import io.bluetape4k.workshop.operations.jobconsole.application.JobOutboxPoller
 import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleUi
@@ -49,13 +50,12 @@ import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.runBlocking
-import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.time.Duration
 import java.util.UUID
 import java.util.concurrent.ExecutorService
 import javax.sql.DataSource
 
-private val mapper = jacksonObjectMapper()
+private val mapper = JobConsoleJson.defaultMapper
 
 fun Application.jobConsoleModule(
     dataSource: DataSource,

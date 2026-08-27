@@ -8,10 +8,10 @@ import io.bluetape4k.workshop.elasticsearch.domain.dto.toBook
 import io.bluetape4k.workshop.elasticsearch.domain.dto.toModifyBookRequest
 import io.bluetape4k.workshop.elasticsearch.domain.model.Book
 import io.bluetape4k.workshop.elasticsearch.domain.service.BookService
-import io.bluetape4k.workshop.shared.web.httpDelete
-import io.bluetape4k.workshop.shared.web.httpGet
-import io.bluetape4k.workshop.shared.web.httpPost
-import io.bluetape4k.workshop.shared.web.httpPut
+import io.bluetape4k.spring.tests.httpDelete
+import io.bluetape4k.spring.tests.httpGet
+import io.bluetape4k.spring.tests.httpPost
+import io.bluetape4k.spring.tests.httpPut
 import kotlinx.coroutines.reactive.awaitSingle
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo

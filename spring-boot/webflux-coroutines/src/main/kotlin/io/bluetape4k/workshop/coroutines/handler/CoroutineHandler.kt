@@ -5,7 +5,6 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.coroutines.model.Banner
-import io.bluetape4k.workshop.shared.web.httpGet
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -107,7 +106,10 @@ class CoroutineHandler(
         log.debug { "Retrieve banner from /suspend" }
 
         return client
-            .httpGet("/suspend", MediaType.APPLICATION_JSON)
+            .get()
+            .uri("/suspend")
+            .accept(MediaType.APPLICATION_JSON)
+            .retrieve()
             .awaitBody<Banner>()
     }
 }

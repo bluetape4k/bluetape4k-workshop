@@ -17,4 +17,11 @@ class DomainEventJsonCodecTest {
 
         failure.message.shouldBeEqualTo("event_payload_too_large")
     }
+
+    @Test
+    fun `default event identity uses uuid v7`() {
+        val event = codec.encode(MeterRegistered("meter", "api-calls", "USD"), Instant.EPOCH)
+
+        event.eventId.version().shouldBeEqualTo(7)
+    }
 }

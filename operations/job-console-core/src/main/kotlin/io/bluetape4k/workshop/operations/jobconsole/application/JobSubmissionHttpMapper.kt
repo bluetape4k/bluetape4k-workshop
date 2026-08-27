@@ -1,15 +1,15 @@
 package io.bluetape4k.workshop.operations.jobconsole.application
 
 import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.workshop.operations.jobconsole.api.JobProblem
 import io.bluetape4k.workshop.operations.jobconsole.api.JobSubmissionHttpResponse
 import io.bluetape4k.workshop.operations.jobconsole.api.JobSubmissionOutcome
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
-import tools.jackson.module.kotlin.jacksonObjectMapper
 
 /** Maps the core submission result to the single wire contract consumed by both adapters. */
 object JobSubmissionHttpMapper {
-    private val mapper by lazy(LazyThreadSafetyMode.PUBLICATION) { jacksonObjectMapper() }
+    private val mapper = Jackson.defaultJsonMapper
 
     fun map(
         outcome: JobSubmissionOutcome,

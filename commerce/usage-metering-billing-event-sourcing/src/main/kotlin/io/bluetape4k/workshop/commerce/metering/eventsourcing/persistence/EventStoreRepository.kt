@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence
 
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.EventHashMaterial
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.NewEvent
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.PersistedEvent
@@ -57,7 +58,7 @@ class EventStoreRepository(
 
     private fun lockHead(stream: StreamKey, now: java.time.Instant): LockedHead {
         EventStreamHeads.insertIgnore {
-            it[id] = UUID.randomUUID()
+            it[id] = Uuid.V7.nextId()
             it[tenantId] = stream.tenantId
             it[streamType] = stream.streamType
             it[streamId] = stream.streamId

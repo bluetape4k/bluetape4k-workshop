@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.operations.jobconsole.persistence
 
+import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.operations.jobconsole.api.JobSnapshot
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.AbandonReason
@@ -15,7 +16,6 @@ import io.bluetape4k.workshop.operations.jobconsole.idempotency.ReplayableJobSub
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.Reservation
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.WaiterRegistration
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
-import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.sql.Connection
@@ -986,7 +986,7 @@ internal class JdbcJobSubmissionIdempotencyRepository(
         const val REGISTRATION_STATEMENT_COUNT = 5
         const val MIN_REGISTRATION_STATEMENT_BUDGET_NANOS = REGISTRATION_STATEMENT_COUNT * 1_000_000L
         val MIN_REGISTRATION_TTL: Duration = Duration.ofMillis(25)
-        val jsonMapper by lazy(LazyThreadSafetyMode.PUBLICATION) { jacksonObjectMapper() }
+        val jsonMapper = Jackson.defaultJsonMapper
 
         fun normalizedSubmitterHash(value: String): String =
             if (value.matches(Regex("[0-9a-f]{64}"))) {

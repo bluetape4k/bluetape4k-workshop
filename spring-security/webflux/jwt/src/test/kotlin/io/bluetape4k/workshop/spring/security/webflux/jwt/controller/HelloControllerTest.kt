@@ -5,7 +5,7 @@ import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.shared.web.httpPost
+import io.bluetape4k.spring.tests.httpPost
 import io.bluetape4k.workshop.spring.security.webflux.jwt.AbstractJwtApplicationTest
 import kotlinx.coroutines.reactive.awaitSingle
 import org.junit.jupiter.api.Test

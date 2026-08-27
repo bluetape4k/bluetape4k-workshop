@@ -33,6 +33,7 @@ configurations {
 dependencies {
 
     testImplementation(project(":shared"))
+    testImplementation(libs.bluetape4k.spring.boot4.core)
 
     // Spring Boot 의존성
     implementation(libs.spring.boot.autoconfigure.lib)

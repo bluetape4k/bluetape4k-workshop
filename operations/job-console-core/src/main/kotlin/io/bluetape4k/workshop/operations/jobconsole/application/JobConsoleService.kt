@@ -23,7 +23,7 @@ import io.bluetape4k.workshop.operations.jobconsole.queue.QueueProjectionService
 import io.bluetape4k.workshop.operations.jobconsole.queue.QueuePage
 import io.bluetape4k.workshop.operations.jobconsole.observability.DependencyState
 import io.bluetape4k.workshop.operations.jobconsole.observability.JobConsoleReadiness
-import tools.jackson.module.kotlin.jacksonObjectMapper
+import io.bluetape4k.jackson3.Jackson
 import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Clock
 import java.time.Duration
@@ -55,7 +55,7 @@ class JobConsoleService(
         JdbcJobSubmissionIdempotencyRepository(repository.dataSource, repository, submissionPolicy, executor = executor)
     private val submissionCoordinator =
         JobSubmissionIdempotencyCoordinator(submissionRepository, submissionPolicy)
-    private val jsonMapper by lazy(LazyThreadSafetyMode.PUBLICATION) { jacksonObjectMapper() }
+    private val jsonMapper = Jackson.defaultJsonMapper
     private val acceptingSubmissions = AtomicBoolean(true)
     private val activeSubmissions = AtomicInteger(0)
 

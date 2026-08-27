@@ -14,8 +14,9 @@ import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.PriceActiva
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageAccepted
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.UsageRated
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore.EventCodecRegistry
+import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.jackson3.Jackson
 import tools.jackson.databind.ObjectMapper
-import tools.jackson.module.kotlin.jacksonObjectMapper
 import org.springframework.stereotype.Component
 import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Instant
@@ -23,7 +24,7 @@ import java.util.UUID
 
 @Component
 class DomainEventJsonCodec(
-    private val mapper: ObjectMapper = jacksonObjectMapper(),
+    private val mapper: ObjectMapper = Jackson.defaultJsonMapper,
 ) {
     val registry: EventCodecRegistry = EventCodecRegistry().apply {
         register<MeterRegistered>()
@@ -41,7 +42,7 @@ class DomainEventJsonCodec(
     fun encode(
         event: DomainEvent,
         occurredAt: Instant,
-        eventId: UUID = UUID.randomUUID(),
+        eventId: UUID = Uuid.V7.nextId(),
         metadata: EventMetadata = EventMetadata.system(eventId),
     ): NewEvent {
         val payloadJson = mapper.writeValueAsString(event)

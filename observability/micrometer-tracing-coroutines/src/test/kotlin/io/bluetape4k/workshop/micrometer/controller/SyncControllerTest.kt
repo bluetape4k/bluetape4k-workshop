@@ -5,7 +5,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.micrometer.AbstractTracingTest
 import io.bluetape4k.workshop.micrometer.model.Todo
-import io.bluetape4k.workshop.shared.web.httpGet
+import io.bluetape4k.spring.tests.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeEmpty
