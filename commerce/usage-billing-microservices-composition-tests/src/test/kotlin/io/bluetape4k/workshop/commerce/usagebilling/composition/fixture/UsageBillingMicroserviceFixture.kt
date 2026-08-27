@@ -7,6 +7,8 @@ import eu.rekawek.toxiproxy.Proxy
 import eu.rekawek.toxiproxy.model.ToxicDirection
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.support.requireEquals
+import io.bluetape4k.testcontainers.database.PostgreSQLServer
+import io.bluetape4k.testcontainers.infra.ToxiproxyServer
 import io.bluetape4k.workshop.commerce.usagebilling.billing.BillingServiceApplication
 import io.bluetape4k.workshop.commerce.usagebilling.billing.application.BillingAdjustmentService
 import io.bluetape4k.workshop.commerce.usagebilling.billing.domain.BillingAdjustmentCommand
@@ -50,8 +52,6 @@ import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.support.TransactionTemplate
 import org.testcontainers.containers.Network
 import org.testcontainers.kafka.KafkaContainer
-import org.testcontainers.postgresql.PostgreSQLContainer
-import org.testcontainers.toxiproxy.ToxiproxyContainer
 import org.testcontainers.utility.DockerImageName
 import java.math.BigDecimal
 import java.nio.charset.StandardCharsets.UTF_8
@@ -70,8 +70,10 @@ class UsageBillingMicroserviceFixture(
     private val brokerPathProxy: Boolean = false,
 ) : AutoCloseable {
     private val brokerPathNetwork: Network by lazy { Network.newNetwork() }
-    private val toxiproxy: ToxiproxyContainer by lazy {
-        ToxiproxyContainer("ghcr.io/shopify/toxiproxy:2.5.0").withNetwork(brokerPathNetwork)
+    private val toxiproxy: ToxiproxyServer by lazy {
+        ToxiproxyServer(image = "ghcr.io/shopify/toxiproxy", tag = "2.5.0").apply {
+            withNetwork(brokerPathNetwork)
+        }
     }
     private val kafka = KafkaContainer(DockerImageName.parse("apache/kafka-native:3.8.0")).apply {
         if (brokerPathProxy) {
@@ -79,11 +81,11 @@ class UsageBillingMicroserviceFixture(
             withListener("$KAFKA_NETWORK_ALIAS:$KAFKA_PROXY_TARGET_PORT") { brokerPathBootstrapServers() }
         }
     }
-    private val meterDatabase = PostgreSQLContainer(DockerImageName.parse("postgres:16-alpine"))
-    private val usageDatabase = PostgreSQLContainer(DockerImageName.parse("postgres:16-alpine"))
-    private val billingDatabase = PostgreSQLContainer(DockerImageName.parse("postgres:16-alpine"))
-    private val invoiceDatabase = PostgreSQLContainer(DockerImageName.parse("postgres:16-alpine"))
-    private val queryDatabase = PostgreSQLContainer(DockerImageName.parse("postgres:16-alpine"))
+    private val meterDatabase = postgresServer()
+    private val usageDatabase = postgresServer()
+    private val billingDatabase = postgresServer()
+    private val invoiceDatabase = postgresServer()
+    private val queryDatabase = postgresServer()
     private lateinit var meterContext: ConfigurableApplicationContext
     private lateinit var usageContext: ConfigurableApplicationContext
     private lateinit var billingContext: ConfigurableApplicationContext
@@ -360,7 +362,7 @@ class UsageBillingMicroserviceFixture(
     private fun startContext(
         application: Class<*>,
         service: String,
-        database: PostgreSQLContainer,
+        database: PostgreSQLServer,
     ): ConfigurableApplicationContext {
         val sources = if (service == "meter") {
             arrayOf(application, MeterCompositionTestConfiguration::class.java)
@@ -399,6 +401,9 @@ class UsageBillingMicroserviceFixture(
     private fun brokerPathBootstrapServers(): String {
         return "${toxiproxy.host}:${toxiproxy.getMappedPort(TOXIPROXY_LISTEN_PORT)}"
     }
+
+    private fun postgresServer(): PostgreSQLServer =
+        PostgreSQLServer(image = "postgres", tag = "16-alpine")
 
     private fun <T : Any> meterTransaction(block: () -> T): T =
         transaction(meterContext, block)

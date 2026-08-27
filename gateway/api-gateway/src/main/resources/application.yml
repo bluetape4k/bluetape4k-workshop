@@ -65,9 +65,9 @@ spring:
 
     data:
         redis:
-            host: ${testcontainers.redis.host}
-            port: ${testcontainers.redis.port}
-            url: ${testcontainers.redis.url}
+            host: ${testcontainers.redis.host:localhost}
+            port: ${testcontainers.redis.port:6379}
+            url: ${testcontainers.redis.url:redis://localhost:6379}
             lettuce:
                 pool:
                     enabled: true

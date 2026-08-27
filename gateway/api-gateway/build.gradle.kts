@@ -46,8 +46,6 @@ dependencies {
     implementation(libs.bluetape4k.cache.core)
     implementation(libs.lettuce.core)
 
-    implementation(libs.bluetape4k.testcontainers)
-
     implementation(libs.jakarta.servlet.api)
 
     implementation(libs.bluetape4k.resilience4j)

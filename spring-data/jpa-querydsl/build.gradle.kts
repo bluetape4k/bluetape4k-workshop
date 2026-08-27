@@ -65,9 +65,6 @@ dependencies {
     }
     testImplementation(libs.bluetape4k.spring.boot4.core)
 
-    testImplementation(libs.bluetape4k.testcontainers)
-    testImplementation(libs.testcontainers.mysql)
-
     testImplementation(libs.hikaricp)
     testImplementation(libs.h2.v2)
     testImplementation(libs.mysql.connector.j)
