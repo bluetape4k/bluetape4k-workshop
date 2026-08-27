@@ -50,8 +50,11 @@ git diff --check
 이후 F2 test allowlist 보정을 위해 coordinator receipt
 `20260827T141532Z-f2-allowlist-repair`를 새로 발행했으며, combined repair
 payload의 SHA-256 `d6e7c7ce9bd5a0a550cc0ef62e33ec1e49ed2fb96fd936aa26829bcbdb3bf1fa`를
-manifest와 함께 기록했다. hosted exact-head gate는 이 commit 이후 새로
-실행해야 하며, local `completion-check`는 required
+manifest와 함께 기록했다. current exact head
+`9bb587c56db46988295bcfc9b17a9fe0548a2a31`에서 [Ecosystem Reuse Gate run
+33081285604](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33081285604)와
+[CI run 33081285932](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33081285932)
+(attempt 2)가 모두 성공했으며, local `completion-check`는 required
 component/lane/check/replacement/main proof 누락 없이 `complete=true`를
 반환했다.
 
@@ -83,7 +86,10 @@ PR #835의 첫 hosted Ecosystem Reuse Gate
 wrapper와 compile-only CI는 성공했으므로 production/build 문제가 아니라
 trusted manifest와 PR ref의 경계 검증 문제였다. 로컬 `--pr-scope` 재현을
 먼저 수행한 뒤 coordinator scope ref를 현재 branch에 재결속하고, fresh
-receipt와 hosted gate를 새로 발행하는 것이 올바른 복구 순서다.
+receipt와 hosted gate를 새로 발행하는 것이 올바른 복구 순서다. 복구 후에는
+이전 run을 current evidence로 재사용하지 않고, current exact head에서 CI와
+ecosystem gate를 각각 확인해야 한다. 이번 current head는 두 gate 모두
+성공했고, PR review/thread에도 미해결 항목이 없었다.
 
 ## Stop condition
 
