@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.planning.application
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.optimization.planning.PlanningContractsApplication
@@ -14,7 +15,6 @@ import io.bluetape4k.workshop.optimization.planning.persistence.PlanningRequestR
 import io.bluetape4k.workshop.optimization.planning.persistence.PlanningRequestTable
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -77,7 +77,7 @@ internal class PlanningRequestServiceTest @Autowired constructor(
             )
         }
 
-        assertThrows(Exception::class.java) {
+        assertFailsWith<Exception> {
             service.create(command(), REQUEST_ID)
         }
 
@@ -89,7 +89,7 @@ internal class PlanningRequestServiceTest @Autowired constructor(
 
     @Test
     fun `request rejects a provider that is not active`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             service.create(command().copy(provider = PlanningProvider.TIMEFOLD_PLATFORM), REQUEST_ID)
         }
 

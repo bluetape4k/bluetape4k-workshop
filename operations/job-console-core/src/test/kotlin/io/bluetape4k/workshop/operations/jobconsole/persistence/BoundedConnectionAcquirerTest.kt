@@ -1,10 +1,12 @@
 package io.bluetape4k.workshop.operations.jobconsole.persistence
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.PollResult
 import io.bluetape4k.workshop.operations.jobconsole.idempotency.JobSubmissionIdempotencyPolicy
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.lang.reflect.Proxy
 import java.sql.Connection
 import java.sql.SQLException
@@ -45,11 +47,11 @@ class BoundedConnectionAcquirerTest {
             } as DataSource
 
         val acquirer = BoundedConnectionAcquirer(dataSource)
-        check(acquirer.acquire(Duration.ofMillis(25)) == null)
-        check(entered.await(1, TimeUnit.SECONDS))
+        acquirer.acquire(Duration.ofMillis(25)) shouldBeEqualTo null
+        entered.await(1, TimeUnit.SECONDS).shouldBeTrue()
 
         release.countDown()
-        check(closed.await(1, TimeUnit.SECONDS))
+        closed.await(1, TimeUnit.SECONDS).shouldBeTrue()
     }
 
     @Test
@@ -67,10 +69,10 @@ class BoundedConnectionAcquirerTest {
 
         repository.poll(DemoCallerScope("tenant", "submitter"), "a".repeat(64), 1, Instant.EPOCH, Duration.ofMillis(50)) shouldBeEqualTo
             PollResult.StillInFlight
-        check(entered.await(1, TimeUnit.SECONDS))
+        entered.await(1, TimeUnit.SECONDS).shouldBeTrue()
 
         release.countDown()
-        check(closed.await(1, TimeUnit.SECONDS))
+        closed.await(1, TimeUnit.SECONDS).shouldBeTrue()
     }
 
     @Test
@@ -128,8 +130,8 @@ class BoundedConnectionAcquirerTest {
         repository.poll(DemoCallerScope("tenant", "submitter"), "a".repeat(64), 1, Instant.EPOCH, Duration.ofMillis(25)) shouldBeEqualTo
             PollResult.StillInFlight
         queryReached.get() shouldBeEqualTo false
-        check(aborted.await(1, TimeUnit.SECONDS))
-        check(!rolledBack.await(100, TimeUnit.MILLISECONDS))
+        aborted.await(1, TimeUnit.SECONDS).shouldBeTrue()
+        rolledBack.await(100, TimeUnit.MILLISECONDS).shouldBeFalse()
     }
 
     @Test
@@ -165,7 +167,7 @@ class BoundedConnectionAcquirerTest {
         val repository = JdbcJobSubmissionIdempotencyRepository(dataSource, JobRepository(dataSource), policy)
 
         val failure =
-            assertThrows<SQLException> {
+            assertFailsWith<SQLException> {
                 repository.poll(
                     DemoCallerScope("tenant", "submitter"),
                     "a".repeat(64),

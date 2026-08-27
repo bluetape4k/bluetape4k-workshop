@@ -1,5 +1,9 @@
 package io.bluetape4k.workshop.commerce.voucher.web
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.commerce.voucher.AbstractVoucherIntegrationTest
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -30,15 +34,15 @@ internal class VoucherEventStreamIntegrationTest : AbstractVoucherIntegrationTes
                 .build()
 
         val response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofInputStream())
-        check(response.statusCode() == 200)
+        response.statusCode() shouldBeEqualTo 200
         val firstEvent =
             response.body().bufferedReader().use { reader ->
                 generateSequence(reader::readLine).takeWhile(String::isNotEmpty).toList()
             }
 
-        check(firstEvent.any { it == "event: snapshot" })
-        check(firstEvent.any { it.startsWith("id: ") && it.substringAfter("id: ").contains(':') })
-        check(firstEvent.any { it.startsWith("data: ") && it.contains("\"campaignId\":\"$campaignId\"") })
+        firstEvent.any { it == "event: snapshot" }.shouldBeTrue()
+        firstEvent.any { it.startsWith("id: ") && it.substringAfter("id: ").contains(':') }.shouldBeTrue()
+        firstEvent.any { it.startsWith("data: ") && it.contains("\"campaignId\":\"$campaignId\"") }.shouldBeTrue()
     }
 
     @Test
@@ -48,14 +52,14 @@ internal class VoucherEventStreamIntegrationTest : AbstractVoucherIntegrationTes
         val activeBefore = streams.activePollers()
 
         val subscription = streams.open(tenant, campaignId, null)
-        check(streams.activePollers() == activeBefore + 1)
+        streams.activePollers() shouldBeEqualTo activeBefore + 1
 
         subscription.close()
         subscription.close()
 
-        check(subscription.cleanupInvocationCount() == 1L)
-        check(subscription.queueDepth() == 0)
-        check(streams.activePollers() == activeBefore)
+        subscription.cleanupInvocationCount() shouldBeEqualTo 1L
+        subscription.queueDepth() shouldBeEqualTo 0
+        streams.activePollers() shouldBeEqualTo activeBefore
     }
 
     @Test
@@ -64,13 +68,13 @@ internal class VoucherEventStreamIntegrationTest : AbstractVoucherIntegrationTes
         val campaignId = createActiveCampaign(tenant)
         val subscription = streams.open(tenant, campaignId, EventCursor(0, 0))
 
-        val snapshot = checkNotNull(subscription.next(Duration.ZERO))
-        val reset = checkNotNull(subscription.next(Duration.ZERO))
+        val snapshot = subscription.next(Duration.ZERO).shouldNotBeNull()
+        val reset = subscription.next(Duration.ZERO).shouldNotBeNull()
         subscription.close()
 
-        check(snapshot.event == "snapshot")
-        check(reset.event == "reset")
-        check(reset.cursor == snapshot.cursor)
+        snapshot.event shouldBeEqualTo "snapshot"
+        reset.event shouldBeEqualTo "reset"
+        reset.cursor shouldBeEqualTo snapshot.cursor
     }
 
     @Test
@@ -78,15 +82,14 @@ internal class VoucherEventStreamIntegrationTest : AbstractVoucherIntegrationTes
         val firstTenant = randomIdentifier()
         val firstCampaign = createActiveCampaign(firstTenant)
         val first = streams.open(firstTenant, firstCampaign, null)
-        val foreignCursor = checkNotNull(first.next(Duration.ZERO)).cursor
+        val foreignCursor = first.next(Duration.ZERO).shouldNotBeNull().cursor
         first.close()
 
         val secondTenant = randomIdentifier()
         val secondCampaign = createActiveCampaign(secondTenant)
         val failure = runCatching { streams.open(secondTenant, secondCampaign, foreignCursor) }.exceptionOrNull()
 
-        check(failure is VoucherApiException)
-        check(failure.stableCode == "INVALID_EVENT_CURSOR")
+        failure.shouldBeInstanceOf<VoucherApiException>().stableCode shouldBeEqualTo "INVALID_EVENT_CURSOR"
     }
 
     @Test
@@ -94,15 +97,15 @@ internal class VoucherEventStreamIntegrationTest : AbstractVoucherIntegrationTes
         val tenant = randomIdentifier()
         val campaignId = createActiveCampaign(tenant)
         val first = streams.open(tenant, campaignId, null)
-        val cursor = checkNotNull(first.next(Duration.ZERO)).cursor
+        val cursor = first.next(Duration.ZERO).shouldNotBeNull().cursor
         first.close()
 
         val resumed = streams.open(tenant, campaignId, cursor)
-        val snapshot = checkNotNull(resumed.next(Duration.ZERO))
+        val snapshot = resumed.next(Duration.ZERO).shouldNotBeNull()
 
-        check(snapshot.event == "snapshot")
-        check(snapshot.cursor.id >= cursor.id)
-        check(resumed.queueDepth() == 0)
+        snapshot.event shouldBeEqualTo "snapshot"
+        (snapshot.cursor.id >= cursor.id).shouldBeTrue()
+        resumed.queueDepth() shouldBeEqualTo 0
         resumed.close()
     }
 
@@ -118,11 +121,11 @@ internal class VoucherEventStreamIntegrationTest : AbstractVoucherIntegrationTes
         ).exchange().expectStatus().isOk
 
         val first = streams.open(tenant, campaignId, null)
-        val cursor = checkNotNull(first.next(Duration.ZERO)).cursor
+        val cursor = first.next(Duration.ZERO).shouldNotBeNull().cursor
         first.close()
 
         val resumed = streams.open(tenant, campaignId, cursor)
-        check(checkNotNull(resumed.next(Duration.ZERO)).event == "snapshot")
+        resumed.next(Duration.ZERO).shouldNotBeNull().event shouldBeEqualTo "snapshot"
         resumed.close()
     }
 

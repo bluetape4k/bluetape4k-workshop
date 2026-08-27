@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.web
 
+import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.workshop.commerce.voucher.AbstractVoucherIntegrationTest
 import org.junit.jupiter.api.Test
 
@@ -16,8 +17,8 @@ internal class VoucherScopeIsolationIntegrationTest : AbstractVoucherIntegration
         val claimB = allocate(tenantB, "principal-b", campaignB, rawKey)
         val claimC = allocate(tenantA, "principal-c", campaignA, rawKey)
 
-        check(claimA.claimId != claimB.claimId)
-        check(claimA.claimId != claimC.claimId)
+        claimA.claimId shouldNotBeEqualTo claimB.claimId
+        claimA.claimId shouldNotBeEqualTo claimC.claimId
 
         webTestClient.get().uri("/api/v1/claims/${claimA.claimId}")
             .header(TENANT_HEADER, tenantB)

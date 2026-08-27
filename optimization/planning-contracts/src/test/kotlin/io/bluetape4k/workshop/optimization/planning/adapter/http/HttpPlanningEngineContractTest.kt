@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.containing
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.stubbing.Scenario
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.testcontainers.http.WireMockServer
 import io.bluetape4k.workshop.optimization.planning.domain.AggregateId
@@ -12,7 +13,6 @@ import io.bluetape4k.workshop.optimization.planning.domain.AggregateVersion
 import io.bluetape4k.workshop.optimization.planning.domain.DatasetId
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningStatus
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningSubmission
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import tools.jackson.module.kotlin.jacksonObjectMapper
@@ -75,7 +75,7 @@ internal class HttpPlanningEngineContractTest {
                     ),
             )
 
-            assertThrows(PlanningProviderException::class.java) {
+            assertFailsWith<PlanningProviderException> {
                 engine.submit(submission())
             }
         }
@@ -94,7 +94,7 @@ internal class HttpPlanningEngineContractTest {
                     ),
             )
 
-            assertThrows(PlanningProviderException::class.java) {
+            assertFailsWith<PlanningProviderException> {
                 engine.submit(submission())
             }
         }

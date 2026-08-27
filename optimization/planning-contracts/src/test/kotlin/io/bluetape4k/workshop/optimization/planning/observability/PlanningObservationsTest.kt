@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.planning.observability
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.workshop.optimization.planning.application.PlanningCallbackDecision
 import io.bluetape4k.workshop.optimization.planning.domain.PlanningProvider
@@ -7,7 +8,6 @@ import io.bluetape4k.workshop.optimization.planning.persistence.PlanningOutboxSt
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.micrometer.observation.ObservationRegistry
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 class PlanningObservationsTest {
 
@@ -27,7 +27,7 @@ class PlanningObservationsTest {
 
     @Test
     fun `records provider failure and preserves the exception`() {
-        assertThrows<IllegalStateException> {
+        assertFailsWith<IllegalStateException> {
             observations.observeProviderSubmission(PlanningProvider.CUSTOM_SOLVER) {
                 error("provider unavailable")
             }

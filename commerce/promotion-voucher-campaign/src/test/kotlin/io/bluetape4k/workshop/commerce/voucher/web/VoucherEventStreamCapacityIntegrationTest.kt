@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.voucher.web
 
+import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.voucher.AbstractVoucherIntegrationTest
 import io.bluetape4k.workshop.commerce.voucher.domain.CampaignState
@@ -48,11 +49,11 @@ internal class VoucherEventStreamCapacityIntegrationTest : AbstractVoucherIntegr
 
             subscriptions.removeFirst().close()
             subscriptions += streams.open(tenant, rejectedCampaign, null)
-            check(streams.activePollers() == 32)
+            streams.activePollers() shouldBeEqualTo 32
         } finally {
             subscriptions.forEach(AutoCloseable::close)
         }
-        check(streams.activePollers() == 0)
+        streams.activePollers() shouldBeEqualTo 0
     }
 
     private fun seedActiveCampaigns(

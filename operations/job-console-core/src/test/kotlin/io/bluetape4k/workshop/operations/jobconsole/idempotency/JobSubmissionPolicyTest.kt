@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.operations.jobconsole.idempotency
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
-import org.junit.jupiter.api.Assertions.assertNotEquals
+import io.bluetape4k.assertions.shouldNotBeEqualTo
 import org.junit.jupiter.api.Test
 import java.time.Duration
 
@@ -26,7 +26,7 @@ class JobSubmissionPolicyTest {
         val baseline = JobSubmissionIdempotencyPolicy()
         val changed = baseline.copy(waiterTimeout = Duration.ofSeconds(3))
 
-        assertNotEquals(baseline.fingerprint, changed.fingerprint)
+        baseline.fingerprint shouldNotBeEqualTo changed.fingerprint
     }
 
     @Test
