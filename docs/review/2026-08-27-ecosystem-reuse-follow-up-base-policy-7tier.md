@@ -29,6 +29,23 @@ scope의 path/ref/OID/issue/review artifact 검사를 유지한다. repository-b
 정책은 `child`와 `rebase-aware` 조합을 동시에 요구하고, parent ref를
 repository base로 가장하는 경우를 거부한다.
 
+## Exact-head CI repair
+
+PR #835의 첫 exact-head Ecosystem Reuse Gate
+([run 33078409120](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33078409120),
+job `98538665837`)는 다음 ref 불일치로 실패했다.
+
+```text
+expected_head_ref chore/ecosystem-reuse-f2-base-replan but PR head ref is chore/ecosystem-reuse-follow-up-base-policy
+```
+
+원인은 최신 `develop`에 이미 병합된 PR #834의 coordinator scope ref가
+trusted manifest에 남아 있었기 때문이다. 로컬에서도 동일한 `--pr-scope`
+명령으로 실패를 재현했다. 따라서 historical branch를 복원하지 않고 현재
+G0 branch를 coordinator scope의 `expected_head_ref`에 재결속하며, 기존
+`parent-head`/`rebase-aware`/null OID 계약은 그대로 보존한다. 재결속 뒤에는
+새 coordinator receipt와 exact-head hosted CI를 다시 발행한다.
+
 ## 소스·테스트 근거
 
 | 대상 | anchor | 확인 내용 |
@@ -50,7 +67,7 @@ repository base로 가장하는 경우를 거부한다.
 | 3. 경계·보안 | PASS | repository-relative allowlist와 기존 control-character/path traversal 방어를 유지했다. token, credential, owner handle은 문서·manifest에 기록하지 않았다. |
 | 4. 정확성·상태 | PASS | `parent-head`는 parent track head만, repository 정책은 manifest repository base만 허용한다. rebase-aware scope의 `base_oid/head_oid=null` invariant도 유지한다. |
 | 5. 성능·안정성 | N/A | Python checker와 JSON/documentation만 변경하며 Kotlin runtime, DB, coroutine, Testcontainers 경로를 건드리지 않는다. |
-| 6. 테스트·운영 | PASS | test-first RED에서 정책 미지원으로 6개 실패를 확인한 뒤 90개 전체가 `OK`가 됐다. current manifest, JSON, py_compile, diff 검증과 workflow receipt를 연결한다. hosted PR CI는 PR exact head 생성 전이므로 아직 실행하지 않는다. |
+| 6. 테스트·운영 | IN PROGRESS | test-first RED 이후 90개 전체가 `OK`가 됐고, 재결속 전 exact-head hosted run의 ref 불일치를 재현했다. 재결속 후 local/trusted checker와 fresh Type E receipt는 PASS이며, hosted CI 재실행이 남아 있다. |
 | 7. 문서·유지보수 | PASS | 한국어 review/lesson에 source/test anchor, raw fallback, receipt, stop condition을 남겼고, 기존 역사적 review를 덮어쓰지 않았다. |
 
 ## Bluetape 패턴 적용 여부
@@ -64,8 +81,8 @@ repository base로 가장하는 경우를 거부한다.
 
 ## Raw fallback 및 receipt
 
-주요 검증 명령은 다음과 같다. hosted CI가 아직 없는 단계에서는 이 raw
-명령과 출력이 재현 가능한 fallback이다.
+주요 검증 명령은 다음과 같다. 첫 hosted 실패는 아래 raw 명령으로 로컬에서
+재현했으며, 재결속 후 같은 명령과 fresh hosted CI를 다시 실행한다.
 
 ```text
 python3 .github/scripts/test_check_ecosystem_reuse.py -v
@@ -76,10 +93,16 @@ git diff --check
 ```
 
 - workflow type: `E` (`bluetape-maintenance`)
-- run: `20260827T133807Z-2e478eff`
+- initial run: `20260827T133807Z-2e478eff` (pre-repair evidence)
+- hosted failure: [Ecosystem Reuse Gate run 33078409120](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33078409120)
+- repair run: `20260827T135913Z-b18aca2f`, sequence 16 checksum
+  `4dc63584517e5359a71f24d4042f829c9afecda3da9470bdfa94ad57181a428f`
+- repair `completion-check`: `complete=true`, missing component/lane/check/replacement/main proof 없음
 - base: `origin/develop@69ba991778101c027282a80726de5eb1403da091`
-- receipt evidence: completed sequence 16 head
+- initial receipt evidence: completed sequence 16 head
   `efde1f6ec96c2531e8a7dc3844805f69742eeab6e69d30e894a4abacfcfc38cd`
+- repair receipt evidence: completed sequence 16 head
+  `4dc63584517e5359a71f24d4042f829c9afecda3da9470bdfa94ad57181a428f`
 - `completion-check`: `complete=true`, missing component/lane/check/replacement/main proof 없음.
 
 ## Stop condition
@@ -96,5 +119,5 @@ git diff --check
 5. 7-Tier에서 P0 또는 P1이 하나라도 남거나, workflow receipt의
    `completion-check`에 누락된 required proof가 남는다.
 
-현재 verdict: `P0=0, P1=0`; 새 PR 생성·hosted CI·merge는 별도 gate로
-`PENDING`이다.
+현재 verdict: `P0=0, P1=0`; coordinator ref 재결속과 fresh local receipt는
+PASS이며, fresh exact-head hosted CI가 완료되기 전까지 `PENDING`이다.
