@@ -47,7 +47,7 @@ receipt를 남기고, fixed node의 implementation OID는 child evidence가 생�
 | 3. 경계·보안 | PASS | 경로는 repository-relative allowlist이며 token/credential/실제 owner handle을 문서·manifest에 기록하지 않았다. |
 | 4. 정확성·상태 | PASS | 기존 trusted manifest와 비교할 때 scope 변경은 새 coordinator receipt가 있어야 하며 fixed node는 planned 상태를 유지한다. |
 | 5. 성능·안정성 | N/A | 문서·JSON coordinator scope만 변경하고 runtime, DB, container, coroutine 경로를 변경하지 않는다. |
-| 6. 테스트·운영 | IN PROGRESS | checker 전체 테스트와 trusted/current manifest 검증은 현재 coordinator head에서 fresh 실행한다. PR #828 exact-head CI와 live review는 head 갱신 후 다시 수행한다. |
+| 6. 테스트·운영 | PASS (local; hosted pending) | `test_check_ecosystem_reuse.py -q` 79개 성공, current/trusted manifest checker PASS, JSON 및 diff 검증 PASS. `.bluetape` sequence 24의 `governance` check receipt (`7240909088de9e6ded67c33fcc50702f479f196fe10235b73992c6980b17c269`)가 PR #828 재사용과 planned base 재결속을 증명한다. PR #828 exact-head hosted CI와 live review는 새 head push 후 재확인한다. |
 | 7. 문서·유지보수 | PASS | 한국어 plan/spec/review/lesson에 stale ref 원인, rebase-only 정책, rollback/검증 순서를 기록했다. |
 
 ## 검증 계약
@@ -55,13 +55,21 @@ receipt를 남기고, fixed node의 implementation OID는 child evidence가 생�
 ```text
 python3 .github/scripts/test_check_ecosystem_reuse.py -v
 python3 .github/scripts/check-ecosystem-reuse.py --inventory docs/ecosystem-reuse-inventory.md --manifest docs/ecosystem-reuse-train.json --workflow .github/workflows/ecosystem-reuse-gate.yml --pins docs/governance/github-action-pins.json
+python3 .github/scripts/check-ecosystem-reuse.py --inventory docs/ecosystem-reuse-inventory.md --manifest docs/ecosystem-reuse-train.json --workflow .github/workflows/ecosystem-reuse-gate.yml --pins docs/governance/github-action-pins.json --trusted-manifest <origin/develop manifest snapshot>
 python3 -m json.tool docs/ecosystem-reuse-train.json
 git diff --check
 ```
 
-모든 결과는 coordinator branch의 현재 diff와 연결해 기록한다. checker 또는
-trusted-manifest 비교가 실패하면 PR 생성 전 문서/receipt를 수리하고, child
-branch의 green 결과를 재사용하지 않는다.
+현재 결과: 79 tests `OK`; current/trusted checker `PASS`; JSON `PASS`; diff
+`PASS`. 검증 대상 manifest SHA-256은
+`45cf05437ce7c9a9f76c8c141b261adc099f232ea8973fac071fe877f03be5e4`이며,
+receipt sequence 24는 `.bluetape/runs/20260827T063949Z-ac17c4ec/receipt.jsonl`의
+`2026-08-27T07:15:49Z` 이벤트다. 해당 receipt가 캡처한 coordinator scope commit은
+`6e46efa55a32574102935a9e2264963843234165`, merge-base는
+`develop@5c188021acf298dd9a1e21da80063fdd1ee4c2f8`다. 모든 결과는 coordinator
+branch의 현재 diff와 연결해 기록한다. checker 또는 trusted-manifest 비교가
+실패하면 PR 생성 전 문서/receipt를 수리하고, child branch의 green 결과를
+재사용하지 않는다.
 
 ## 적용한 규칙과 stop condition
 
