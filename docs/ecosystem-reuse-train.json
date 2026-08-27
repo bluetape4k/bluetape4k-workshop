@@ -95,7 +95,7 @@
   ],
   "coordinator_scope_receipt": {
       "receipt_id": "20260827T071403Z-coordinator-rebase-train-scope",
-      "checksum": "7240909088de9e6ded67c33fcc50702f479f196fe10235b73992c6980b17c269"
+      "checksum": "2ac170983b2d0cfe3e8d4a48edd92534a4d00462855b7752238d77bdc0379117"
   },
   "nodes": [
     {
