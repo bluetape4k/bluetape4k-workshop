@@ -6,7 +6,10 @@ import io.bluetape4k.workshop.optimization.fieldservice.domain.EventDigestMatch
 import io.bluetape4k.workshop.optimization.fieldservice.domain.InvalidFieldServiceInput
 import io.bluetape4k.workshop.optimization.fieldservice.domain.AggregateId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.CoordinateId
+import io.bluetape4k.workshop.optimization.fieldservice.domain.DatasetId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanId
+import io.bluetape4k.workshop.optimization.fieldservice.domain.ProviderRequestId
+import io.bluetape4k.workshop.optimization.fieldservice.domain.Skill
 import io.bluetape4k.workshop.optimization.fieldservice.domain.VisitId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.WorkerId
 import org.junit.jupiter.api.Test
@@ -49,5 +52,8 @@ class FieldServiceCanonicalizerTest {
         PlanId(" plan-1 ").value shouldBeEqualTo "plan-1"
         AggregateId(" aggregate-1 ").value shouldBeEqualTo "aggregate-1"
         CoordinateId(" coordinate-1 ").value shouldBeEqualTo "coordinate-1"
+        Skill(" electrical ").value shouldBeEqualTo "electrical"
+        DatasetId(" dataset-1 ").value shouldBeEqualTo "dataset-1"
+        ProviderRequestId(" provider-request-1 ").value shouldBeEqualTo "provider-request-1"
     }
 }
