@@ -39,6 +39,24 @@ review/lesson/plan/spec 7개 파일이며, P2 Kotlin production/test source는 �
 - live review/thread read-back: review 0, comments 0, unresolved threads 0 at
   read time; independent 7-Tier review subsequently requested
 
+## 최신 train closeout 이후의 historical 상태
+
+위 coordinator 검토는 `develop@f95ea45c1c053f3901d91d29bca58f4e18fb3bdf`를
+기준으로 수행한 historical evidence다. 이후 동일 train의 후속 PR #832와
+serial closeout PR #833이 순차적으로 통합되었다.
+
+- PR #832 merge: `c3c1319b47a6c73cc61ab3cf8d215c5dddbb99da`
+- PR #833 merge: `283defb0a0ec5b3777968772b811d1164fae578e`
+- 최신 `develop`: `283defb0a0ec5b3777968772b811d1164fae578e`
+- PR #831: head `367002eb1c22645bd2a32946b4274018eb4bb368`,
+  `OPEN/CONFLICTING`
+
+따라서 이 문서의 88-test receipt, hosted checks, 독립 review, merge-ready
+판정과 사용자 approval은 최신 closeout 이후 재사용할 수 없다. PR #831은
+superseded 상태로 보존하며, 별도 scope 결정 없이 rebase·merge·close하지
+않는다. 최신 lifecycle/receipt 판정은 #833의 live body와
+`develop@283defb0…`을 기준으로 한다.
+
 ## 이전 coordinator PR #828 검토 범위
 
 이번 coordinator 변경은 이미 `develop`에 통합된 P0/A1 이후의 train을 현재
@@ -120,11 +138,11 @@ rebase merge되었다.
 ## 현재 coordinator replan 판정
 
 현재 변경은 PR #831의 reviewed implementation ancestor와 review-tail이 구성하는
-coordinator-only lane이다. 이 lane은 P2 #821 병합으로 발생한 base drift를 감지한 뒤
-`develop@f95ea45c1c053f3901d91d29bca58f4e18fb3bdf`에 rebase되었고, 최종 exact head는
-live PR metadata에서 확인한다. `F1-P2-02`는 부모 merge 후 repository base에
-재결속되도록 `base_ref_policy=repository-base-after-parent-merge`를 사용하며, 새
+coordinator-only lane였다. 이 lane은 P2 #821 병합으로 발생한 base drift를 감지한 뒤
+`develop@f95ea45c1c053f3901d91d29bca58f4e18fb3bdf`에 rebase되었고, 당시 exact
+head에서 `base_ref_policy=repository-base-after-parent-merge`와 새
 positive/negative train-scope 회귀 테스트를 포함한 checker 88개가 통과했다.
-이전 base의 green 결과와 merge approval은 재사용하지 않고, current/trusted manifest,
-JSON, `py_compile`, diff 검증, 새 hosted exact-head checks, 독립 7-Tier 검토를
-현재 head에서 다시 수렴시킨 뒤 merge-ready gate를 연다.
+이후 #832/#833 closeout이 최신 `develop@283defb0a0ec5b3777968772b811d1164fae578e`
+에 통합되었으므로, 이전 base의 green 결과·merge approval·receipt는 모두
+historical evidence다. PR #831은 merge-ready가 아니며, 최신 lifecycle/receipt는
+#833에서 완료되었다.
