@@ -46,7 +46,11 @@ data class FieldServicePlanRecord(
     val providerRevision: Long?,
     val requestGeneration: Long,
     val createdAt: Instant,
-)
+) : Serializable {
+    companion object {
+        private const val serialVersionUID = 1L
+    }
+}
 
 enum class EventAppendResult {
     APPENDED,
