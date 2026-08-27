@@ -5,6 +5,7 @@ import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.redis.lettuce.LettuceClients
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.workshop.leader.jobsafety.coordination.FenceAcquireResult
+import io.bluetape4k.workshop.leader.jobsafety.coordination.FenceBootstrapResult
 import io.bluetape4k.workshop.leader.jobsafety.domain.ConflictKey
 import io.bluetape4k.workshop.leader.jobsafety.domain.FencingOwnerId
 import io.bluetape4k.workshop.leader.jobsafety.domain.NamespaceEpoch
@@ -16,22 +17,34 @@ import java.time.Duration
 @Tag("integration")
 internal class RedisJobFencingLeaseIntegrationTest {
     @Test
-    fun `takeover increments the fence and renewal preserves it`() =
+    fun `bootstrap is explicit and idempotent for the approved epoch`() =
         withRedis { connection ->
-            val adapter = RedisJobFencingLeaseAdapter(connection.sync(), NamespaceEpoch(1L))
+            val adapter = RedisJobFencingLeaseAdapter(connection, NamespaceEpoch(1L))
+
+            adapter.bootstrap(KEY) shouldBeEqualTo FenceBootstrapResult.Ready
+            adapter.bootstrap(KEY) shouldBeEqualTo FenceBootstrapResult.Ready
+        }
+
+    @Test
+    fun `takeover increments the tuple fence and renewal preserves it`() =
+        withRedis { connection ->
+            val adapter = RedisJobFencingLeaseAdapter(connection, NamespaceEpoch(1L))
+            adapter.bootstrap(KEY)
             val first = adapter.acquire(KEY, owner("a"), TTL).acquiredLease()
 
             adapter.renew(first, TTL) shouldBeEqualTo FenceRenewResult.Renewed(first.token)
-            connection.sync().del(adapter.keysFor(KEY).lease)
+            adapter.release(first) shouldBeEqualTo FenceReleaseResult.Released
             val second = adapter.acquire(KEY, owner("b"), TTL).acquiredLease()
 
             (second.token > first.token).shouldBeTrue()
+            second.token.epoch shouldBeEqualTo first.token.epoch
         }
 
     @Test
     fun `ambiguous retry reuses the active owner fence`() =
         withRedis { connection ->
-            val adapter = RedisJobFencingLeaseAdapter(connection.sync(), NamespaceEpoch(1L))
+            val adapter = RedisJobFencingLeaseAdapter(connection, NamespaceEpoch(1L))
+            adapter.bootstrap(KEY)
             val first = adapter.acquire(KEY, owner("a"), TTL).acquiredLease()
             val retry = adapter.acquire(KEY, owner("a"), TTL)
 
@@ -42,9 +55,10 @@ internal class RedisJobFencingLeaseIntegrationTest {
     @Test
     fun `stale owner cannot renew or release a newer generation`() =
         withRedis { connection ->
-            val adapter = RedisJobFencingLeaseAdapter(connection.sync(), NamespaceEpoch(1L))
+            val adapter = RedisJobFencingLeaseAdapter(connection, NamespaceEpoch(1L))
+            adapter.bootstrap(KEY)
             val first = adapter.acquire(KEY, owner("a"), TTL).acquiredLease()
-            connection.sync().del(adapter.keysFor(KEY).lease)
+            adapter.release(first) shouldBeEqualTo FenceReleaseResult.Released
             adapter.acquire(KEY, owner("b"), TTL).acquiredLease()
 
             adapter.renew(first, TTL) shouldBeEqualTo FenceRenewResult.OwnershipLost
@@ -52,54 +66,26 @@ internal class RedisJobFencingLeaseIntegrationTest {
         }
 
     @Test
-    fun `release removes only the lease and preserves counter history`() =
+    fun `a new approved epoch is explicit and rejects stale leases`() =
         withRedis { connection ->
-            val adapter = RedisJobFencingLeaseAdapter(connection.sync(), NamespaceEpoch(1L))
-            val first = adapter.acquire(KEY, owner("a"), TTL).acquiredLease()
+            val epochOne = RedisJobFencingLeaseAdapter(connection, NamespaceEpoch(1L))
+            val epochTwo = RedisJobFencingLeaseAdapter(connection, NamespaceEpoch(2L))
+            epochOne.bootstrap(KEY)
+            val first = epochOne.acquire(KEY, owner("a"), TTL).acquiredLease()
 
-            adapter.release(first) shouldBeEqualTo FenceReleaseResult.Released
-            val keys = adapter.keysFor(KEY)
-            connection.sync().exists(keys.lease) shouldBeEqualTo 0L
-            connection.sync().exists(keys.counter) shouldBeEqualTo 1L
-            val second = adapter.acquire(KEY, owner("b"), TTL).acquiredLease()
-            (second.token > first.token).shouldBeTrue()
-        }
-
-    @Test
-    fun `malformed lease missing counter and counter overflow fail closed`() =
-        withRedis { connection ->
-            val adapter = RedisJobFencingLeaseAdapter(connection.sync(), NamespaceEpoch(1L))
-            val keys = adapter.keysFor(KEY)
-
-            connection.sync().set(keys.epoch, "1")
-            connection.sync().set(keys.lease, "missing-separator")
-            (adapter.acquire(KEY, owner("a"), TTL) is FenceAcquireResult.BackendFailure).shouldBeTrue()
-
-            connection.sync().set(keys.lease, "owner|7")
-            connection.sync().del(keys.counter)
-            (adapter.acquire(KEY, owner("a"), TTL) is FenceAcquireResult.BackendFailure).shouldBeTrue()
-
-            connection.sync().del(keys.lease)
-            connection.sync().set(keys.counter, Long.MAX_VALUE.toString())
-            (adapter.acquire(KEY, owner("a"), TTL) is FenceAcquireResult.BackendFailure).shouldBeTrue()
-        }
-
-    @Test
-    fun `namespace mismatch fails closed and all script keys share a hash slot`() =
-        withRedis { connection ->
-            val epochOne = RedisJobFencingLeaseAdapter(connection.sync(), NamespaceEpoch(1L))
-            val epochTwo = RedisJobFencingLeaseAdapter(connection.sync(), NamespaceEpoch(2L))
-            val keys = epochOne.keysFor(KEY)
-
-            epochOne.acquire(KEY, owner("a"), TTL).acquiredLease()
             (epochTwo.acquire(KEY, owner("b"), TTL) is FenceAcquireResult.BackendFailure).shouldBeTrue()
-            listOf(keys.lease, keys.counter, keys.epoch).map(::hashTag).distinct().size shouldBeEqualTo 1
+            epochTwo.bootstrap(KEY) shouldBeEqualTo FenceBootstrapResult.Ready
+            val second = epochTwo.acquire(KEY, owner("b"), TTL).acquiredLease()
+            second.token.epoch shouldBeEqualTo 2L
+            (epochTwo.renew(first, TTL) is FenceRenewResult.BackendFailure).shouldBeTrue()
+            (epochTwo.release(first) is FenceReleaseResult.BackendFailure).shouldBeTrue()
         }
 
     @Test
-    fun `script flush falls back to source without changing the contract`() =
+    fun `script flush falls back to the shared source without changing the contract`() =
         withRedis { connection ->
-            val adapter = RedisJobFencingLeaseAdapter(connection.sync(), NamespaceEpoch(1L))
+            val adapter = RedisJobFencingLeaseAdapter(connection, NamespaceEpoch(1L))
+            adapter.bootstrap(KEY)
             val first = adapter.acquire(KEY, owner("a"), TTL).acquiredLease()
             connection.sync().scriptFlush()
 
@@ -116,8 +102,6 @@ internal class RedisJobFencingLeaseIntegrationTest {
         }
 
     private fun owner(value: String) = FencingOwnerId("owner-$value")
-
-    private fun hashTag(key: String): String = key.substringAfter('{').substringBefore('}')
 
     private fun withRedis(block: (StatefulRedisConnection<String, String>) -> Unit) {
         val redis = RedisServer.Launcher.redis

@@ -28,6 +28,8 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.time.Clock
 import java.time.Duration
 import java.util.UUID
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.ForkJoinPool
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -45,11 +47,12 @@ class JobConsoleService(
     private val etaEstimator: EtaEstimator = EtaEstimator(),
     private val boundedWaitEnabled: Boolean = true,
     private val expectedPolicyFingerprint: String? = null,
+    private val executor: ExecutorService = ForkJoinPool.commonPool(),
 ) {
     private val submissionPolicy = JobSubmissionIdempotencyPolicy()
     private val submissionCanonicalizer = JobSubmissionCanonicalizer()
     private val submissionRepository =
-        JdbcJobSubmissionIdempotencyRepository(repository.dataSource, repository, submissionPolicy)
+        JdbcJobSubmissionIdempotencyRepository(repository.dataSource, repository, submissionPolicy, executor = executor)
     private val submissionCoordinator =
         JobSubmissionIdempotencyCoordinator(submissionRepository, submissionPolicy)
     private val jsonMapper by lazy(LazyThreadSafetyMode.PUBLICATION) { jacksonObjectMapper() }

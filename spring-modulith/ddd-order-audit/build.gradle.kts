@@ -29,6 +29,7 @@ dependencies {
     implementation(libs.bluetape4k.hibernate)
     implementation(libs.bluetape4k.idgenerators)
     implementation(libs.bluetape4k.javers.core)
+    implementation(libs.bluetape4k.money)
 
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)

@@ -32,6 +32,7 @@ class JobResourceEntity(id: EntityID<Long>) : LongEntity(id) {
 
     var conflictKey by JobResources.conflictKey
     var namespaceEpoch by JobResources.namespaceEpoch
+    var lastAcceptedFenceEpoch by JobResources.lastAcceptedFenceEpoch
     var lastAcceptedFence by JobResources.lastAcceptedFence
     var summaryValue by JobResources.summaryValue
     var updatedAt by JobResources.updatedAt
@@ -46,6 +47,7 @@ class JobExecutionEntity(id: EntityID<Long>) : LongEntity(id) {
     var tenantId by JobExecutions.tenantId
     var conflictKey by JobExecutions.conflictKey
     var fencingOwnerId by JobExecutions.fencingOwnerId
+    var fencingTokenEpoch by JobExecutions.fencingTokenEpoch
     var fencingToken by JobExecutions.fencingToken
     var state by JobExecutions.state
     var rejection by JobExecutions.rejection
@@ -59,6 +61,7 @@ class JobCheckpointEntity(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<JobCheckpointEntity>(JobCheckpoints)
 
     var conflictKey by JobCheckpoints.conflictKey
+    var fencingTokenEpoch by JobCheckpoints.fencingTokenEpoch
     var fencingToken by JobCheckpoints.fencingToken
     var schemaVersion by JobCheckpoints.schemaVersion
     var summaryValue by JobCheckpoints.summaryValue

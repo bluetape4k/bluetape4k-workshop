@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.operations.jobconsole.spring
 
+import io.bluetape4k.concurrent.virtualthread.VirtualThreads
 import io.bluetape4k.workshop.operations.jobconsole.application.BoundedJobEventFanout
 import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleService
 import io.bluetape4k.workshop.operations.jobconsole.application.JobOutboxPoller
@@ -18,7 +19,6 @@ import org.springframework.beans.factory.ObjectProvider
 import org.springframework.beans.factory.annotation.Value
 import java.time.Duration
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 import javax.sql.DataSource
 
 @Configuration
@@ -37,12 +37,14 @@ class JobConsoleSpringConfiguration {
     }
 
     @Bean
-    fun jobEventFanout(): BoundedJobEventFanout = BoundedJobEventFanout(Duration.ofSeconds(2))
+    fun jobEventFanout(jobWorkerExecutor: ExecutorService): BoundedJobEventFanout =
+        BoundedJobEventFanout(Duration.ofSeconds(2), jobWorkerExecutor)
 
     @Bean
     fun jobConsoleService(
         repository: JobRepository,
         signalProvider: ObjectProvider<CancelSignal>,
+        jobWorkerExecutor: ExecutorService,
         @Value("\${job-console.bounded-wait.enabled:false}") boundedWaitEnabled: Boolean,
         @Value("\${job-console.bounded-wait.policy-fingerprint:}") expectedPolicyFingerprint: String,
     ): JobConsoleService =
@@ -51,6 +53,7 @@ class JobConsoleSpringConfiguration {
             cancelSignal = signalProvider.ifAvailable ?: io.bluetape4k.workshop.operations.jobconsole.signal.NoOpCancelSignal,
             boundedWaitEnabled = boundedWaitEnabled,
             expectedPolicyFingerprint = expectedPolicyFingerprint.takeIf(String::isNotBlank),
+            executor = jobWorkerExecutor,
         )
 
     @Bean
@@ -63,7 +66,7 @@ class JobConsoleSpringConfiguration {
         JobWorkerEngine(repository, DeterministicJobWorkload())
 
     @Bean(destroyMethod = "close")
-    fun jobWorkerExecutor(): ExecutorService = Executors.newVirtualThreadPerTaskExecutor()
+    fun jobWorkerExecutor(): ExecutorService = VirtualThreads.executorService()
 
     @Bean
     fun jobOutboxPoller(dataSource: DataSource, fanout: BoundedJobEventFanout): JobOutboxPoller =

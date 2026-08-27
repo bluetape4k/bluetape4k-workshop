@@ -6,10 +6,12 @@ import java.io.Serial
 import java.time.Duration
 import java.util.concurrent.Semaphore
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.sql.DataSource
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 /** 모든 ticket transaction에 적용되는 전역 row-lock 획득 순서입니다. */
@@ -63,8 +65,9 @@ class TicketJdbcExecutor(
     dataSource: DataSource,
     foregroundPermits: Int,
     internal val permitTimeout: Duration = Duration.ofMillis(250),
-) {
+) : AutoCloseable {
     private val permits = Semaphore(foregroundPermits, true)
+    private val closed = AtomicBoolean()
     private val database = Database.connect(
         datasource = dataSource,
         databaseConfig = DatabaseConfig {
@@ -78,6 +81,7 @@ class TicketJdbcExecutor(
     }
 
     fun <T> transaction(block: TicketJdbcTransaction.() -> T): T {
+        check(!closed.get()) { "ticket_jdbc_executor_closed" }
         if (!permits.tryAcquire(permitTimeout.toMillis(), TimeUnit.MILLISECONDS)) {
             throw TicketDatabasePermitUnavailable()
         }
@@ -87,6 +91,12 @@ class TicketJdbcExecutor(
             }
         } finally {
             permits.release()
+        }
+    }
+
+    override fun close() {
+        if (closed.compareAndSet(false, true)) {
+            TransactionManager.closeAndUnregister(database)
         }
     }
 }

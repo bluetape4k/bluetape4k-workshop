@@ -1,9 +1,15 @@
 package io.bluetape4k.workshop.leader.jobsafety.coordination.redis
 
-import io.bluetape4k.redis.lettuce.script.RedisScript
-import io.bluetape4k.redis.lettuce.script.RedisScriptRunner
-import io.bluetape4k.support.requireGt
+import io.bluetape4k.redis.lettuce.lease.FencingAcquireResult
+import io.bluetape4k.redis.lettuce.lease.FencingBootstrapResult
+import io.bluetape4k.redis.lettuce.lease.FencingOwnerId as LettuceFencingOwnerId
+import io.bluetape4k.redis.lettuce.lease.FencingReleaseResult
+import io.bluetape4k.redis.lettuce.lease.FencingRenewResult
+import io.bluetape4k.redis.lettuce.lease.FencingToken as LettuceFencingToken
+import io.bluetape4k.redis.lettuce.lease.LettuceFencingLease
+import io.bluetape4k.redis.lettuce.lease.LettuceFencingLeaseConfig
 import io.bluetape4k.workshop.leader.jobsafety.coordination.FenceAcquireResult
+import io.bluetape4k.workshop.leader.jobsafety.coordination.FenceBootstrapResult
 import io.bluetape4k.workshop.leader.jobsafety.coordination.FencingLease
 import io.bluetape4k.workshop.leader.jobsafety.coordination.FencingLeasePort
 import io.bluetape4k.workshop.leader.jobsafety.domain.ConflictKey
@@ -11,21 +17,10 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.FencingOwnerId
 import io.bluetape4k.workshop.leader.jobsafety.domain.FencingToken
 import io.bluetape4k.workshop.leader.jobsafety.domain.NamespaceEpoch
 import io.lettuce.core.RedisException
-import io.lettuce.core.ScriptOutputType
-import io.lettuce.core.api.sync.RedisCommands
-import java.security.MessageDigest
+import io.lettuce.core.api.StatefulRedisConnection
+import java.nio.charset.StandardCharsets
 import java.time.Duration
-import java.util.HexFormat
-
-data class JobFencingKeys(
-    val lease: String,
-    val counter: String,
-    val epoch: String,
-) {
-    fun asAcquireKeys(): Array<String> = arrayOf(lease, counter, epoch)
-
-    fun asOwnershipKeys(): Array<String> = arrayOf(lease, epoch)
-}
+import java.util.UUID
 
 sealed interface FenceRenewResult {
     data class Renewed(val token: FencingToken) : FenceRenewResult
@@ -47,6 +42,9 @@ internal class RedisJobFencingLease(
     override val conflictKey: ConflictKey,
     override val ownerId: FencingOwnerId,
     override val token: FencingToken,
+    internal val backendLease: LettuceFencingLease,
+    internal val backendOwnerId: LettuceFencingOwnerId,
+    internal val backendToken: LettuceFencingToken,
     private val adapter: RedisJobFencingLeaseAdapter,
 ) : FencingLease {
     override fun release() {
@@ -61,141 +59,154 @@ internal class RedisJobFencingLease(
     }
 }
 
+/**
+ * Workshop adapter for the shared Lettuce fencing-lease primitive.
+ *
+ * The epoch is supplied by the rollout authority. Bootstrap is explicit and never repairs a missing counter or
+ * silently chooses an epoch. Resource names are deterministic safe components derived from the domain key; Redis
+ * key derivation and owner/token validation remain inside [LettuceFencingLease].
+ */
 class RedisJobFencingLeaseAdapter(
-    private val commandsProvider: () -> RedisCommands<String, String>,
+    private val connection: StatefulRedisConnection<String, String>,
     private val namespaceEpoch: NamespaceEpoch,
+    private val namespace: String = DEFAULT_NAMESPACE,
 ) : FencingLeasePort {
-    constructor(
-        commands: RedisCommands<String, String>,
-        namespaceEpoch: NamespaceEpoch,
-    ) : this({ commands }, namespaceEpoch)
+    override fun bootstrap(conflictKey: ConflictKey): FenceBootstrapResult =
+        try {
+            when (leaseFor(conflictKey).bootstrap()) {
+                FencingBootstrapResult.Initialized,
+                FencingBootstrapResult.AlreadyInitialized,
+                -> FenceBootstrapResult.Ready
+
+                is FencingBootstrapResult.IntegrityFailure ->
+                    FenceBootstrapResult.BackendFailure(IllegalStateException("fencing state integrity failure"))
+
+                is FencingBootstrapResult.BackendFailure ->
+                    FenceBootstrapResult.BackendFailure(IllegalStateException("fencing backend unavailable"))
+            }
+        } catch (error: Exception) {
+            FenceBootstrapResult.BackendFailure(error)
+        }
 
     override fun acquire(
         conflictKey: ConflictKey,
         ownerId: FencingOwnerId,
         ttl: Duration,
     ): FenceAcquireResult {
-        ttl.requireGt(Duration.ZERO, "ttl")
+        val backendOwner = LettuceFencingOwnerId.from(ownerId.value)
         return try {
-            val response =
-                RedisScriptRunner.run<String>(
-                    commandsProvider(),
-                    JobFencingScripts.acquire,
-                    ScriptOutputType.VALUE,
-                    keysFor(conflictKey).asAcquireKeys(),
-                    ownerWire(ownerId),
-                    ttl.toMillis().toString(),
-                    namespaceEpoch.value.toString(),
-                )
-            parseAcquire(response, conflictKey, ownerId)
-        } catch (e: Exception) {
-            FenceAcquireResult.BackendFailure(e)
+            when (val result = leaseFor(conflictKey).acquire(backendOwner, ttl)) {
+                is FencingAcquireResult.Acquired ->
+                    FenceAcquireResult.Acquired(
+                        lease(conflictKey, ownerId, backendOwner, result.token),
+                    )
+
+                is FencingAcquireResult.AlreadyOwned ->
+                    FenceAcquireResult.AlreadyOwned(
+                        lease(conflictKey, ownerId, backendOwner, result.token),
+                    )
+
+                is FencingAcquireResult.Contended -> FenceAcquireResult.Contended
+                FencingAcquireResult.CounterUnavailable ->
+                    FenceAcquireResult.BackendFailure(IllegalStateException("fencing counter unavailable"))
+
+                FencingAcquireResult.SequenceExhausted ->
+                    FenceAcquireResult.BackendFailure(IllegalStateException("fencing sequence exhausted"))
+
+                is FencingAcquireResult.IntegrityFailure ->
+                    FenceAcquireResult.BackendFailure(IllegalStateException("fencing state integrity failure"))
+
+                is FencingAcquireResult.BackendFailure ->
+                    FenceAcquireResult.BackendFailure(IllegalStateException("fencing backend unavailable"))
+            }
+        } catch (error: Exception) {
+            FenceAcquireResult.BackendFailure(error)
         }
     }
 
     fun renew(lease: FencingLease, ttl: Duration): FenceRenewResult {
-        ttl.requireGt(Duration.ZERO, "ttl")
+        val redisLease = lease as? RedisJobFencingLease
+            ?: return FenceRenewResult.BackendFailure(IllegalArgumentException("lease was not created by this adapter"))
+        if (redisLease.token.epoch != namespaceEpoch.value) {
+            return FenceRenewResult.BackendFailure(
+                IllegalArgumentException("fencing lease epoch does not match the configured ordering domain"),
+            )
+        }
         return try {
-            when (
-                runInteger(
-                    script = JobFencingScripts.renew,
-                    lease = lease,
-                    ttl.toMillis().toString(),
-                    namespaceEpoch.value.toString(),
-                )
-            ) {
-                1L -> FenceRenewResult.Renewed(lease.token)
-                0L -> FenceRenewResult.OwnershipLost
-                else -> FenceRenewResult.BackendFailure(RedisException("job fencing namespace mismatch"))
+            when (redisLease.backendLease.renew(redisLease.backendOwnerId, redisLease.backendToken, ttl)) {
+                FencingRenewResult.Renewed -> FenceRenewResult.Renewed(redisLease.token)
+                FencingRenewResult.Lost,
+                FencingRenewResult.OwnershipMismatch,
+                -> FenceRenewResult.OwnershipLost
+
+                is FencingRenewResult.IntegrityFailure ->
+                    FenceRenewResult.BackendFailure(IllegalStateException("fencing state integrity failure"))
+
+                is FencingRenewResult.BackendFailure ->
+                    FenceRenewResult.BackendFailure(IllegalStateException("fencing backend unavailable"))
             }
-        } catch (e: Exception) {
-            FenceRenewResult.BackendFailure(e)
+        } catch (error: Exception) {
+            FenceRenewResult.BackendFailure(error)
         }
     }
 
-    fun release(lease: FencingLease): FenceReleaseResult =
-        try {
-            when (
-                runInteger(
-                    script = JobFencingScripts.release,
-                    lease = lease,
-                    namespaceEpoch.value.toString(),
-                )
-            ) {
-                1L -> FenceReleaseResult.Released
-                0L -> FenceReleaseResult.OwnershipLost
-                else -> FenceReleaseResult.BackendFailure(RedisException("job fencing namespace mismatch"))
-            }
-        } catch (e: Exception) {
-            FenceReleaseResult.BackendFailure(e)
+    fun release(lease: FencingLease): FenceReleaseResult {
+        val redisLease = lease as? RedisJobFencingLease
+            ?: return FenceReleaseResult.BackendFailure(IllegalArgumentException("lease was not created by this adapter"))
+        if (redisLease.token.epoch != namespaceEpoch.value) {
+            return FenceReleaseResult.BackendFailure(
+                IllegalArgumentException("fencing lease epoch does not match the configured ordering domain"),
+            )
         }
+        return try {
+            when (redisLease.backendLease.release(redisLease.backendOwnerId, redisLease.backendToken)) {
+                FencingReleaseResult.Released -> FenceReleaseResult.Released
+                FencingReleaseResult.Lost,
+                FencingReleaseResult.OwnershipMismatch,
+                -> FenceReleaseResult.OwnershipLost
 
-    internal fun keysFor(conflictKey: ConflictKey): JobFencingKeys {
-        val resourceTag = digest(conflictKey.value).take(24)
-        val prefix = "job-fence:{$resourceTag}"
-        return JobFencingKeys(
-            lease = "$prefix:lease",
-            counter = "$prefix:counter",
-            epoch = "$prefix:epoch",
+                is FencingReleaseResult.IntegrityFailure ->
+                    FenceReleaseResult.BackendFailure(IllegalStateException("fencing state integrity failure"))
+
+                is FencingReleaseResult.BackendFailure ->
+                    FenceReleaseResult.BackendFailure(IllegalStateException("fencing backend unavailable"))
+            }
+        } catch (error: Exception) {
+            FenceReleaseResult.BackendFailure(error)
+        }
+    }
+
+    internal fun resourceNameFor(conflictKey: ConflictKey): String =
+        "resource-${UUID.nameUUIDFromBytes(conflictKey.value.toByteArray(StandardCharsets.UTF_8))}"
+            .replace("-", "")
+
+    private fun leaseFor(conflictKey: ConflictKey): LettuceFencingLease =
+        LettuceFencingLease(
+            connection,
+            LettuceFencingLeaseConfig(
+                namespace = namespace,
+                resourceName = resourceNameFor(conflictKey),
+                epoch = namespaceEpoch.value,
+            ),
         )
-    }
 
-    private fun parseAcquire(
-        response: String,
+    private fun lease(
         conflictKey: ConflictKey,
         ownerId: FencingOwnerId,
-    ): FenceAcquireResult =
-        when (response) {
-            CONTENDED -> FenceAcquireResult.Contended
-            EPOCH_MISMATCH -> FenceAcquireResult.BackendFailure(RedisException("job fencing namespace mismatch"))
-            MALFORMED_LEASE -> FenceAcquireResult.BackendFailure(RedisException("malformed job fencing lease"))
-            HISTORY_UNSAFE -> FenceAcquireResult.BackendFailure(RedisException("job fencing counter history is unsafe"))
-            else -> {
-                val parts = response.split(RESPONSE_SEPARATOR, limit = 2)
-                if (parts.size != 2) {
-                    return FenceAcquireResult.BackendFailure(RedisException("malformed job fencing response"))
-                }
-                val token =
-                    parts[1].toLongOrNull()?.takeIf { it > 0L }?.let(::FencingToken)
-                        ?: return FenceAcquireResult.BackendFailure(RedisException("invalid job fencing token"))
-                val lease = RedisJobFencingLease(conflictKey, ownerId, token, this)
-                when (parts[0]) {
-                    ACQUIRED -> FenceAcquireResult.Acquired(lease)
-                    OWNED -> FenceAcquireResult.AlreadyOwned(lease)
-                    else -> FenceAcquireResult.BackendFailure(RedisException("unknown job fencing response"))
-                }
-            }
-        }
-
-    private fun runInteger(
-        script: RedisScript,
-        lease: FencingLease,
-        vararg trailingArgs: String,
-    ): Long =
-        RedisScriptRunner.run(
-            commandsProvider(),
-            script,
-            ScriptOutputType.INTEGER,
-            keysFor(lease.conflictKey).asOwnershipKeys(),
-            ownerWire(lease.ownerId),
-            lease.token.value.toString(),
-            *trailingArgs,
+        backendOwnerId: LettuceFencingOwnerId,
+        backendToken: LettuceFencingToken,
+    ): RedisJobFencingLease =
+        RedisJobFencingLease(
+            conflictKey = conflictKey,
+            ownerId = ownerId,
+            token = FencingToken(backendToken.epoch, backendToken.sequence),
+            backendLease = leaseFor(conflictKey),
+            backendOwnerId = backendOwnerId,
+            backendToken = backendToken,
+            adapter = this,
         )
 
-    private fun ownerWire(ownerId: FencingOwnerId): String = digest("job-fence-owner:${ownerId.value}")
-
-    private fun digest(value: String): String =
-        HexFormat.of().formatHex(
-            MessageDigest.getInstance("SHA-256").digest(value.toByteArray(Charsets.UTF_8)),
-        )
-
-    companion object {
-        private const val CONTENDED = "C"
-        private const val EPOCH_MISMATCH = "E"
-        private const val MALFORMED_LEASE = "X"
-        private const val HISTORY_UNSAFE = "H"
-        private const val ACQUIRED = "A"
-        private const val OWNED = "O"
-        private const val RESPONSE_SEPARATOR = '|'
+    private companion object {
+        private const val DEFAULT_NAMESPACE = "job-safety"
     }
 }

@@ -60,13 +60,28 @@ value class ConflictKey private constructor(val value: String) {
     }
 }
 
-@JvmInline
-value class FencingToken(val value: Long) : Comparable<FencingToken> {
+data class FencingToken(
+    val epoch: Long,
+    val sequence: Long,
+) : Comparable<FencingToken> {
+    constructor(sequence: Long) : this(DEFAULT_EPOCH, sequence)
+
     init {
-        value.requireGt(0L, "fencingToken")
+        epoch.requireGt(0L, "fencingEpoch")
+        sequence.requireGt(0L, "fencingSequence")
     }
 
-    override fun compareTo(other: FencingToken): Int = value.compareTo(other.value)
+    /** Backward-compatible sequence projection for existing workshop examples. */
+    val value: Long
+        get() = sequence
+
+    override fun compareTo(other: FencingToken): Int =
+        epoch.compareTo(other.epoch).takeIf { it != 0 } ?: sequence.compareTo(other.sequence)
+
+    companion object {
+        /** Legacy rows and examples belong to the initial externally approved epoch. */
+        const val DEFAULT_EPOCH: Long = 1L
+    }
 }
 
 @JvmInline
