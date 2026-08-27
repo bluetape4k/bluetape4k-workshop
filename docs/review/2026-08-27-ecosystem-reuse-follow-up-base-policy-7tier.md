@@ -134,3 +134,24 @@ git diff --check
 current exact-head hosted CI는 PASS다. PR review/thread에는 미해결 항목이
 없고, 1인 개발자 lane의 human-review subgate는 독립 최종 diff 검토로
 대체했으므로 merge-ready 판정을 위한 fresh approval만 남았다.
+
+## 2026-08-28 Epic #792 전체 train scope replan
+
+기존 fixed track의 허용 경로가 현재 live child issue의 acceptance 범위보다
+좁아, 구현 전에 coordinator scope를 보정했다. 이 변경은 동작 코드가 아니라
+실제 issue anchor, test selector, consumer migration 경계를 manifest에 반영하는
+문서-only tail이다.
+
+| scope | 보정 근거 | 정책 |
+|---|---|---|
+| R1 | #793/#796/#798의 event-sourcing, Operations Ktor/Spring adapter, shared HTTP 소비 지점 | 기존 strict JSON/security contract와 upstream HTTP API를 보존하고 필요한 source/test 경로만 추가 |
+| R2 | #794/#795의 persistent identity와 전체 fixture namespace | `Uuid.V7`/`Base58` 선택 및 security raw fallback 검증을 모듈 테스트 범위로 확장 |
+| T1 | #779/#802/#803의 composition, R2DBC, unused dependency 대상 | PostgreSQL/Toxiproxy lifecycle, H2 fallback, 다섯 dependency 대상의 실제 selector를 고정 |
+| I1 | #799/#800/#801/#808의 fencing, money, runtime, launcher 경계 | 겹치는 모듈을 단일 serialized lane에서 처리하고 provider-gap은 명시적으로 기록 |
+| F1/A2 follow-up | 이미 병합된 A1/A2의 live 잔여 issue | fixed merged receipt를 변경하지 않고 별도 follow-up scope와 review artifact로 추적 |
+
+이 train은 중간 승인·중간 병합을 수행하지 않는다. 모든 child PR은 open 상태에서
+정확한 head, CI, review/thread, assignee `debop`, milestone `1.4.0`, labels와
+한국어 `## DoD Status`를 고정한다. 마지막 issue가 완료된 뒤에만 한 번의 fresh
+approval을 exact live heads에 결속하고, 의존 순서대로 `rebase` merge를 실행한다.
+`squash`와 auto-merge는 금지한다.

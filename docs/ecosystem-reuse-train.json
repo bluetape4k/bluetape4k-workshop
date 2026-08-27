@@ -56,7 +56,7 @@
       "scope_id": "coordinator-child-scope",
       "scope_kind": "coordinator",
       "parent_track": "P0",
-      "expected_head_ref": "docs/ecosystem-reuse-f2-closeout",
+      "expected_head_ref": "chore/ecosystem-reuse-train-scope",
       "expected_base_ref": "develop",
       "base_ref_policy": "parent-head",
       "oid_policy": "rebase-aware",
@@ -81,11 +81,58 @@
         "docs/lessons/2026-08-27-ecosystem-reuse-follow-up-base-policy.md"
       ],
       "review_artifact": "docs/review/2026-08-27-ecosystem-reuse-follow-up-base-policy-7tier.md"
+    },
+    {
+      "scope_id": "f1-followup",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "fix/ecosystem-reuse-field-service-followups",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "repository-base-after-parent-merge",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [781, 784],
+      "allowed_paths": [
+        "optimization/field-service-dispatch/src/main/kotlin/**",
+        "optimization/field-service-dispatch/src/test/kotlin/io/bluetape4k/workshop/optimization/fieldservice/adapter/http/FieldServiceCanonicalizerTest.kt",
+        "optimization/field-service-dispatch/src/test/kotlin/io/bluetape4k/workshop/optimization/fieldservice/persistence/FieldServiceCasIntegrationTest.kt",
+        "docs/review/2026-08-28-F1-followup-7tier.md"
+      ],
+      "review_artifact": "docs/review/2026-08-28-F1-followup-7tier.md"
+    },
+    {
+      "scope_id": "a2-followup",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "test/ecosystem-reuse-assertions-followups",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "repository-base-after-parent-merge",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [785, 786, 787, 788, 789, 790, 791],
+      "allowed_paths": [
+        "aws/kinesis-coroutines/src/main/kotlin/**",
+        "aws/kinesis-coroutines/src/test/kotlin/**",
+        "commerce/order-lifecycle-fulfillment/src/test/kotlin/**",
+        "commerce/usage-metering-billing-ledger/src/test/kotlin/**",
+        "commerce/promotion-voucher-campaign/src/test/kotlin/**",
+        "commerce/pre-generated-voucher-pool/src/test/kotlin/**",
+        "commerce/concert-ticket-flash-sale/src/test/kotlin/**",
+        "leader/job-safety-lab/src/test/kotlin/**",
+        "operations/job-console-core/src/test/kotlin/**",
+        "operations/job-console-spring/src/test/kotlin/**",
+        "operations/job-console-ktor/src/test/kotlin/**",
+        "optimization/planning-contracts/src/test/kotlin/**",
+        "docs/review/2026-08-28-A2-followup-7tier.md"
+      ],
+      "review_artifact": "docs/review/2026-08-28-A2-followup-7tier.md"
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260827T185612Z-coordinator-f1-parent-reconcile",
-    "checksum": "9b12aa34ba8863c3bd3076a01c55e1937b32012c2bce76a7986c061e5ae4ad1d"
+    "receipt_id": "20260828T-scope-replan-epic792",
+    "checksum": "b87a9377b01595738a46528d45da6eefd6f3e21f8a6f94493451f9b323bc23c9"
   },
   "planned_scope_replan_receipts": {
     "F2": {
@@ -97,12 +144,12 @@
       "checksum": "5e4bf7c8e629c24917e26b2f083d8c429d57b02e8015819e5e65c7712c9fc67c"
     },
     "R1": {
-      "receipt_id": "20260827T071228Z-r1-base-replan",
-      "checksum": "b5e7f3199acd9968ebf8443f71112a19e5cc8306d91bebd95c1cabf4de6dbd8d"
+      "receipt_id": "20260828T-r1-acceptance-scope",
+      "checksum": "1d706f3b1e651bec424a09a9e69b15a04f446d4df0566c1839a45570f9d39c37"
     },
     "T1": {
-      "receipt_id": "20260827T071228Z-t1-base-replan",
-      "checksum": "983fade378b4916f3773279aa42313b279a720ae1701ce0573bac0f9370a7430"
+      "receipt_id": "20260828T-t1-acceptance-scope",
+      "checksum": "0ac20459714fd8b3179d78f1dfe0fdc766ad6b6dab8d5b90bac9e220ec70ab58"
     }
   },
   "nodes": [
@@ -372,17 +419,46 @@
         "commerce/usage-metering-billing-event-sourcing/src/main/kotlin/**",
         "commerce/usage-metering-billing-event-sourcing/src/test/kotlin/**",
         "operations/job-console-core/src/main/kotlin/io/bluetape4k/workshop/operations/jobconsole/api/**",
+        "operations/job-console-core/src/main/kotlin/io/bluetape4k/workshop/operations/jobconsole/application/**",
+        "operations/job-console-core/src/main/kotlin/io/bluetape4k/workshop/operations/jobconsole/persistence/**",
+        "operations/job-console-core/src/test/kotlin/**",
+        "operations/job-console-core/src/testFixtures/kotlin/**",
+        "operations/job-console-ktor/src/main/kotlin/io/bluetape4k/workshop/operations/jobconsole/ktor/JobConsoleKtorApplication.kt",
+        "operations/job-console-ktor/src/main/kotlin/io/bluetape4k/workshop/operations/jobconsole/ktor/JobConsoleKtorSubmissionHttp.kt",
+        "operations/job-console-ktor/src/test/kotlin/**",
+        "operations/job-console-spring/src/main/kotlin/io/bluetape4k/workshop/operations/jobconsole/spring/JobConsoleSpringSubmissionHttp.kt",
+        "operations/job-console-spring/src/test/kotlin/**",
         "shared/src/main/kotlin/io/bluetape4k/workshop/shared/web/**",
+        "shared/src/test/kotlin/io/bluetape4k/workshop/shared/web/**",
+        "shared/build.gradle.kts",
+        "gateway/api-gateway/src/test/kotlin/**",
+        "gatling/virtualthread-simulation/src/test/kotlin/**",
+        "json/jsonview-examples/src/test/kotlin/**",
+        "observability/micrometer-tracing-coroutines/src/test/kotlin/**",
+        "spring-boot/cbor-mvc/src/test/kotlin/**",
+        "spring-boot/protobuf-mvc/src/test/kotlin/**",
+        "spring-boot/resilience4j-coroutines/src/test/kotlin/**",
+        "spring-boot/webflux-coroutines/src/main/kotlin/**",
+        "spring-boot/webflux-coroutines/src/test/kotlin/**",
+        "spring-cloud/gateway-example/src/test/kotlin/**",
+        "spring-data/elasticsearch-webflux/src/test/kotlin/**",
+        "spring-data/r2dbc-webflux-exposed/src/test/kotlin/**",
+        "spring-security/webflux/hello-security/src/test/kotlin/**",
+        "spring-security/webflux/jwt/src/test/kotlin/**",
         "docs/review/2026-08-25-R1-7tier.md"
       ],
       "gradle_tasks": [
         ":commerce-usage-metering-billing-event-sourcing:test",
         ":operations-job-console-core:test",
+        ":operations-job-console-ktor:test",
+        ":operations-job-console-spring:test",
         ":shared:test"
       ],
       "test_selectors": [
         ":commerce-usage-metering-billing-event-sourcing:test",
         ":operations-job-console-core:test",
+        ":operations-job-console-ktor:test",
+        ":operations-job-console-spring:test",
         ":shared:test"
       ],
       "gradle_flags": [
@@ -417,10 +493,10 @@
       "state": "PLANNED",
       "issue_numbers": [794, 795],
       "allowed_paths": [
-        "commerce/pre-generated-voucher-pool/src/main/kotlin/io/bluetape4k/workshop/commerce/voucherpool/config/VoucherPoolConfiguration.kt",
-        "commerce/pre-generated-voucher-pool/src/test/kotlin/io/bluetape4k/workshop/commerce/voucherpool/config/VoucherPoolConfigurationTest.kt",
-        "commerce/concert-ticket-flash-sale/src/main/kotlin/io/bluetape4k/workshop/commerce/ticket/config/TicketLifecycle.kt",
-        "commerce/concert-ticket-flash-sale/src/test/kotlin/io/bluetape4k/workshop/commerce/ticket/admission/AdmissionConcurrencyIntegrationTest.kt",
+        "commerce/pre-generated-voucher-pool/src/main/kotlin/**",
+        "commerce/pre-generated-voucher-pool/src/test/kotlin/**",
+        "commerce/concert-ticket-flash-sale/src/main/kotlin/**",
+        "commerce/concert-ticket-flash-sale/src/test/kotlin/**",
         "docs/review/2026-08-25-R2-7tier.md"
       ],
       "gradle_tasks": [
@@ -480,6 +556,11 @@
         "kotlin/coroutines/**",
         "spring-data/jpa-querydsl/**",
         "spring-modulith/jpa-demo/**",
+        "gateway/api-gateway/build.gradle.kts",
+        "observability/observability-basic/build.gradle.kts",
+        "kotlin/coroutines/build.gradle.kts",
+        "spring-data/jpa-querydsl/build.gradle.kts",
+        "spring-modulith/jpa-demo/build.gradle.kts",
         "docs/review/2026-08-25-T1-7tier.md"
       ],
       "gradle_tasks": [
@@ -534,21 +615,27 @@
       "allowed_paths": [
         "leader/job-safety-lab/**",
         "operations/job-console-core/src/main/kotlin/io/bluetape4k/workshop/operations/jobconsole/worker/**",
+        "operations/job-console-spring/**",
         "commerce/usage-metering-billing-ledger/**",
+        "spring-modulith/ddd-order-audit/**",
+        "commerce/concert-ticket-flash-sale/src/main/kotlin/io/bluetape4k/workshop/commerce/ticket/persistence/TicketJdbcExecutor.kt",
+        "commerce/concert-ticket-flash-sale/src/test/kotlin/**",
         "docs/review/2026-08-25-I1-7tier.md"
       ],
       "gradle_tasks": [
         ":leader-job-safety-lab:integrationTest",
         ":commerce-usage-metering-billing-ledger:integrationTest",
         ":operations-job-console-core:integrationTest",
-        ":spring-modulith-jpa-demo:test",
+        ":operations-job-console-spring:test",
+        ":spring-modulith-ddd-order-audit:test",
         ":commerce-concert-ticket-flash-sale:test"
       ],
       "test_selectors": [
         ":leader-job-safety-lab:integrationTest",
         ":commerce-usage-metering-billing-ledger:integrationTest",
         ":operations-job-console-core:integrationTest",
-        ":spring-modulith-jpa-demo:test",
+        ":operations-job-console-spring:test",
+        ":spring-modulith-ddd-order-audit:test",
         ":commerce-concert-ticket-flash-sale:test"
       ],
       "gradle_flags": [
