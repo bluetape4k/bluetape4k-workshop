@@ -67,7 +67,7 @@ G0 branch를 coordinator scope의 `expected_head_ref`에 재결속하며, 기존
 | 3. 경계·보안 | PASS | repository-relative allowlist와 기존 control-character/path traversal 방어를 유지했다. token, credential, owner handle은 문서·manifest에 기록하지 않았다. |
 | 4. 정확성·상태 | PASS | `parent-head`는 parent track head만, repository 정책은 manifest repository base만 허용한다. rebase-aware scope의 `base_oid/head_oid=null` invariant도 유지한다. |
 | 5. 성능·안정성 | N/A | Python checker와 JSON/documentation만 변경하며 Kotlin runtime, DB, coroutine, Testcontainers 경로를 건드리지 않는다. |
-| 6. 테스트·운영 | IN PROGRESS | test-first RED 이후 90개 전체가 `OK`가 됐고, 재결속 전 exact-head hosted run의 ref 불일치를 재현했다. 재결속 후 local/trusted checker와 fresh Type E receipt는 PASS이며, hosted CI 재실행이 남아 있다. |
+| 6. 테스트·운영 | PASS | test-first RED 이후 90개 전체가 `OK`가 됐고, 재결속 전 exact-head hosted run의 ref 불일치를 재현했다. 재결속 후 local/trusted checker와 fresh Type E receipt, exact-head hosted CI가 모두 PASS다. CI run `33080335900`의 wrapper/build/CI Status와 Ecosystem Reuse Gate run `33080335986`이 모두 성공했다. |
 | 7. 문서·유지보수 | PASS | 한국어 review/lesson에 source/test anchor, raw fallback, receipt, stop condition을 남겼고, 기존 역사적 review를 덮어쓰지 않았다. |
 
 ## Bluetape 패턴 적용 여부
@@ -82,7 +82,7 @@ G0 branch를 coordinator scope의 `expected_head_ref`에 재결속하며, 기존
 ## Raw fallback 및 receipt
 
 주요 검증 명령은 다음과 같다. 첫 hosted 실패는 아래 raw 명령으로 로컬에서
-재현했으며, 재결속 후 같은 명령과 fresh hosted CI를 다시 실행한다.
+재현했으며, 재결속 후 같은 명령과 fresh hosted CI를 다시 실행해 성공했다.
 
 ```text
 python3 .github/scripts/test_check_ecosystem_reuse.py -v
@@ -95,6 +95,7 @@ git diff --check
 - workflow type: `E` (`bluetape-maintenance`)
 - initial run: `20260827T133807Z-2e478eff` (pre-repair evidence)
 - hosted failure: [Ecosystem Reuse Gate run 33078409120](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33078409120)
+- fresh exact-head CI: [CI run 33080335900](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33080335900), [Ecosystem Reuse Gate run 33080335986](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33080335986) — 모두 `b66e2c019cfc64a75981c555efed959129bf5ec5`에서 성공
 - repair run: `20260827T135913Z-b18aca2f`, sequence 16 checksum
   `4dc63584517e5359a71f24d4042f829c9afecda3da9470bdfa94ad57181a428f`
 - repair `completion-check`: `complete=true`, missing component/lane/check/replacement/main proof 없음
@@ -119,5 +120,7 @@ git diff --check
 5. 7-Tier에서 P0 또는 P1이 하나라도 남거나, workflow receipt의
    `completion-check`에 누락된 required proof가 남는다.
 
-현재 verdict: `P0=0, P1=0`; coordinator ref 재결속과 fresh local receipt는
-PASS이며, fresh exact-head hosted CI가 완료되기 전까지 `PENDING`이다.
+현재 verdict: `P0=0, P1=0`; coordinator ref 재결속, fresh local receipt와
+fresh exact-head hosted CI는 PASS다. PR review/thread에는 미해결 항목이 없고,
+1인 개발자 lane의 human-review subgate는 독립 최종 diff 검토로 대체했으므로
+merge-ready 판정을 위한 fresh approval만 남았다.
