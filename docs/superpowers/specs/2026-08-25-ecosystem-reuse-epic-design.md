@@ -169,6 +169,14 @@ child PR의 exact-head test receipt와 merge 여부를 받은 뒤 별도 closeou
 순차적으로 inventory, Epic checkbox, train 상태를 갱신한다. 따라서 문서 gate와
 코드 변경의 상태가 서로 앞서가지 않는다.
 
+F1과 P2-02가 `develop`에 병합된 뒤 실행되지 않은 F2의 base가 삭제된 F1
+branch를 가리키면, coordinator는 `parent_track=F1`을 보존한 채
+`expected_base_ref=develop`으로만 planned scope를 재계획한다. 이때
+`planned_scope_replan_receipts.F2`의 fresh receipt를 남기고 F2 실행 receipt와
+implementation marker는 `PLANNED/PENDING/null`로 유지한다. replan merge가
+완료된 최신 `develop`에서 F2 child의 source, review, CI, merge evidence를
+새로 발행한다.
+
 train manifest는 `docs/ecosystem-reuse-train.json`에 보관하며 track, expected
 head/base ref, parent OID, merge-base, 상태, issue mapping, allowed paths,
 structured Gradle/test selectors, timeout, Docker 요구 여부, review artifact,

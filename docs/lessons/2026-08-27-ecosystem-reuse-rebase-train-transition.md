@@ -32,3 +32,15 @@ node scope를 새 receipt로 전환하기로 했다.
 - P0/A1 merge 또는 branch 삭제 후 manifest expected ref를 live GitHub와 비교한다.
 - coordinator scope 변경마다 새 receipt ID/checksum, JSON/checker test, review/lesson을 함께 갱신한다.
 - 각 PR merge 직전 `mergeStateStatus`, exact head, CI/review/thread, method를 다시 읽는다.
+
+## F2 시작 전 base 재계획
+
+F1과 P2-02를 병합한 뒤 F2의 planned node가 삭제된 F1 branch를 계속
+`expected_base_ref`로 가리키는 것을 확인했다. 이미 superseded된 #831을
+rebase하거나 재사용하지 않고, coordinator scope에서 F2의 ref만 최신
+`develop`으로 바꾸고 새 `planned_scope_replan_receipts.F2`를 기록했다.
+
+이 재계획은 `parent_track=F1`, F2 head/path/task/dependency 범위를 보존하며,
+실행 receipt는 `PLANNED/PENDING/null`로 남긴다. 따라서 F2 child의 source 변경,
+review, CI, merge evidence는 이 coordinator rebase merge 후 최신 `develop`에서
+새로 발행해야 한다.

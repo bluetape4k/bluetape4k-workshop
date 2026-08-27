@@ -90,3 +90,25 @@ PR 생성 전 문서/receipt를 수리하고, child branch의 green 결과를 �
   `READY/PASS`와 inventory verified rows `#777/#782/#787/#791`을 기록한다.
 - #781, #784, #785 및 F2/R1/R2/T1/I1은 범위 밖 또는 명시적 후속으로 남아
   있으며, Epic #792는 열린 상태다.
+
+## 2026-08-27 F2 실행 전 base 재계획
+
+F1과 그 후속 P2-02가 `develop`에 rebase merge된 뒤에도 F2 node의
+`expected_base_ref`가 삭제된 `fix/ecosystem-reuse-field-service-contracts`를
+가리키고 있어, 최신 `develop`에서 F2를 시작하면 부모 head와 repository base
+정합성 검증을 통과할 수 없었다. F2의 `parent_track=F1`과 head ref, path,
+Gradle selector, dependency-insight 범위는 유지하고 `expected_base_ref`만
+`develop`으로 재계획했다.
+
+- 최신 기준: `origin/develop`=`283defb0a0ec5b3777968772b811d1164fae578e`
+- planned-scope receipt: `20260827T113018Z-f2-base-replan`
+- receipt checksum: `97b71c2120bacc8535d9a5ea56f81aa4a8708f07521ec60db1bbe07f10528593`
+- 실행 receipt: `state=PLANNED`, `receipt_status=PENDING`, `receipt_id=null`,
+  `checksum=null` 유지
+- 범위: coordinator-owned manifest 및 이 review/lesson만 변경; F2 Kotlin
+  source는 새 child worktree에서 이 replan merge 후에만 수정
+
+검증 기준은 기존 checker contract와 동일하다. planned replan은 ref/parent 필드만
+변경하고, 새 coordinator receipt를 사용하며, F2의 실행 receipt나
+`reviewed_implementation_oid`를 미리 채우지 않는다. 이 coordinator PR이
+rebase merge되기 전에는 F2 child PR을 생성하지 않는다.

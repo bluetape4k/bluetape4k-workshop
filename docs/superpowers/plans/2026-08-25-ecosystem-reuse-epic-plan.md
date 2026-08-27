@@ -722,3 +722,13 @@ topological order로 재검토한다.
 - Epic #792는 F2/R1/R2/T1/I1 및 명시적 후속 issue가 남아 있으므로 열린 상태를
   유지한다. 이후 child는 최신 `develop`을 parent로 삼고 exact-head receipt와
   사용자의 fresh approval 후에만 rebase merge한다.
+
+### F2 실행 전 base 재계획 기록
+
+F1 및 P2-02가 `develop`에 통합된 현재 topology에서 F2의 stale
+`expected_base_ref`를 `develop`으로 재계획한다. `parent_track=F1`, F2 head,
+allowlist, selector, timeout, dependency-insight 명령은 변경하지 않으며,
+`planned_scope_replan_receipts.F2`에 fresh coordinator receipt를 기록한다.
+F2 실행 receipt는 child exact head에서 검증이 끝날 때까지
+`PLANNED/PENDING/null`로 유지한다. coordinator replan merge 전에는 F2 source
+변경 및 PR 생성을 시작하지 않는다.
