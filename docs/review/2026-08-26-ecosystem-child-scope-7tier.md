@@ -138,9 +138,10 @@ A1 #812가 `develop@5c188021acf298dd9a1e21da80063fdd1ee4c2f8`로 squash merge된
 2. 변경 가능한 graph field는 `expected_head_ref`, `expected_base_ref`,
    `parent_track`뿐이다. path, task, selector, dependency, review marker와
    issue 계약은 이 경로에서 변경할 수 없다.
-3. current node는 `receipt_status=PASS`와 baseline과 다른 fresh
-   `receipt_id`/`checksum`을 가져야 한다. trusted manifest의 receipt 재사용은
-   계속 거부한다.
+3. current node의 실행 receipt는 `receipt_status=PENDING`,
+   `receipt_id=null`, `checksum=null`로 유지한다. coordinator가 발행한
+   `planned_scope_replan_receipts.F1`의 fresh `receipt_id`/`checksum`이
+   topology 변경을 승인하며, 실행 receipt와 섞거나 재사용할 수 없다.
 4. F1 node의 `expected_base_ref`는 `develop`으로, coordinator scope의 head는
    `fix/ecosystem-reuse-train-replan`으로 갱신한다. F1 reviewed marker/OID는
    child rebase와 local proof가 끝난 뒤에만 기록한다.
@@ -149,22 +150,28 @@ A1 #812가 `develop@5c188021acf298dd9a1e21da80063fdd1ee4c2f8`로 squash merge된
 명시하는 상태 전이이다. F1 PR은 이 coordinator head 이후 실제 `develop` base,
 경로 allowlist, marker ancestor, evidence tail을 다시 증명해야 한다.
 
+F1을 `READY`로 승격하기 전에는 이미 병합된 A1의 manifest 상태를
+`MERGE_READY`를 거쳐 `MERGED`로 reconcile해야 한다. A1이 `READY`인 채로
+F1을 활성화하면 두 node의 테스트 경로가 겹치므로 active-path 검사가 이를
+거부한다. 이 coordinator PR은 그 상태 전이를 미리 가장하지 않으며, F1 실행
+receipt와 A1 merge-state closeout은 각각 별도 gate로 남긴다.
+
 ## 추가 7-Tier 판정
 
 | Tier | 판정 | 근거 |
 | --- | --- | --- |
 | 1. 요구사항·범위 | PASS | 부모 branch 삭제로 발생한 F1 base drift만 다루며 Kotlin production 동작은 변경하지 않는다. |
-| 2. 계약·자료구조 | PASS | PLANNED 유지, ref/parent field 제한, PASS receipt, fresh coordinator scope receipt를 checker와 manifest에 고정했다. |
+| 2. 계약·자료구조 | PASS | PLANNED 유지, ref/parent field 제한, 별도 planned-scope coordinator receipt와 PENDING 실행 receipt를 checker와 manifest에 고정했다. |
 | 3. 경계·보안 | PASS | path/task/dependency/marker widening을 replan 경로에서 거부하고 기존 trusted-manifest 비교를 유지한다. |
-| 4. 정확성·상태 | PASS | PLANNED→PLANNED replan은 허용하지만 `MERGED` scope와 non-ref graph 변경은 계속 fail-closed다. |
+| 4. 정확성·상태 | PASS | baseline/current가 모두 PLANNED인 경우에만 replan을 허용하고, 실행 receipt terminal mutation·임의 parent/ref·`MERGED` scope를 fail-closed로 거부한다. |
 | 5. 동시성·자원 | N/A | governance checker/manifest/doc/test harness만 바꾸며 DB·container·coroutine lifecycle은 건드리지 않는다. |
-| 6. 테스트·운영 | PASS | fresh planned ref replan 수용과 non-ref graph 변경 거부 회귀를 checker test에 추가한다. |
+| 6. 테스트·운영 | PASS | fresh planned ref replan, 실행 receipt 혼용, INVALID 복구, 임의 parent/base, receipt-only 변경 거부 회귀를 checker test에 추가한다. |
 | 7. 문서·유지보수 | PASS | 삭제된 parent ref, 새 coordinator receipt, F1 후속 rebase 순서를 이 문서와 lesson에 기록한다. |
 
 ## 검증 명령과 남은 위험
 
 ```text
-python3 .github/scripts/test_check_ecosystem_reuse.py -v  # 79 tests PASS
+python3 .github/scripts/test_check_ecosystem_reuse.py -v  # checker regression PASS
 python3 -m json.tool docs/ecosystem-reuse-train.json  # PASS
 python3 .github/scripts/check-ecosystem-reuse.py --inventory docs/ecosystem-reuse-inventory.md --manifest docs/ecosystem-reuse-train.json --workflow .github/workflows/ecosystem-reuse-gate.yml  # PASS
 git diff --check  # PASS after final edits
