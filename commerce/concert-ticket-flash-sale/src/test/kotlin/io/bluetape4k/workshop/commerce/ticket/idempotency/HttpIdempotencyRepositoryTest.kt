@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.ticket.idempotency
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.ticket.persistence.IdentityKind
 import io.bluetape4k.workshop.commerce.ticket.persistence.TicketDatabaseFixture
 import org.junit.jupiter.api.Test
@@ -11,14 +12,14 @@ internal class HttpIdempotencyRepositoryTest {
     @Test
     fun `nonterminal replay returns its attempt before any Redis decision`() {
         TicketDatabaseFixture().use { fixture ->
-            val principal = UUID.randomUUID()
-            val attemptId = UUID.randomUUID()
+            val principal = Uuid.V7.nextId()
+            val attemptId = Uuid.V7.nextId()
             fixture.seedAuthority(
-                saleId = UUID.randomUUID(),
+                saleId = Uuid.V7.nextId(),
                 userSubjectId = principal,
-                ipSubjectId = UUID.randomUUID(),
+                ipSubjectId = Uuid.V7.nextId(),
                 firstAttemptId = attemptId,
-                secondAttemptId = UUID.randomUUID(),
+                secondAttemptId = Uuid.V7.nextId(),
             )
             val repository = HttpIdempotencyRepository(fixture.executor)
             val scope = scope(principal, rawKey = "same-key-1234567")
@@ -35,8 +36,8 @@ internal class HttpIdempotencyRepositoryTest {
     @Test
     fun `same key cannot replay across principals and changed payload conflicts`() {
         TicketDatabaseFixture().use { fixture ->
-            val firstPrincipal = UUID.randomUUID()
-            val secondPrincipal = UUID.randomUUID()
+            val firstPrincipal = Uuid.V7.nextId()
+            val secondPrincipal = Uuid.V7.nextId()
             fixture.execute(
                 """
                 INSERT INTO ticket_identity_subjects(subject_id, identity_kind) VALUES

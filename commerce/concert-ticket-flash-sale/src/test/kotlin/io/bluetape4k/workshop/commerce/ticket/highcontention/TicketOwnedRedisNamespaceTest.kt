@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.ticket.highcontention
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.redis.lettuce.LettuceClients
 import io.bluetape4k.support.requireNotNull
@@ -11,7 +12,6 @@ import tools.jackson.databind.JsonNode
 import java.nio.file.Files
 import java.nio.file.Path
 import java.security.MessageDigest
-import java.util.UUID
 
 class TicketOwnedRedisNamespaceTest {
 
@@ -142,7 +142,7 @@ class TicketOwnedRedisNamespaceTest {
         val client = LettuceClients.clientOf(redis.url)
         val connection = LettuceClients.connect(client)
         val commands = connection.sync()
-        val runId = UUID.randomUUID().toString()
+        val runId = Base58.randomString(16)
         val namespaceValue = "hc:v1:$runId:ticket-spring:redis-key-loss:"
         val ownedKeys = listOf("${namespaceValue}lease:user-1", "${namespaceValue}lease:user-2")
         val foreignKey = "hc:v1:foreign:sentinel:$runId"

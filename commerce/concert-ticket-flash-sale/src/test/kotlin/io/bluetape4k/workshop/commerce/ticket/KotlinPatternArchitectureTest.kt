@@ -29,6 +29,31 @@ internal class KotlinPatternArchitectureTest {
     }
 
     @Test
+    fun `fixture Kotlin uses Bluetape primitives for generated identifiers`() {
+        val violations =
+            Files.walk(locateTestSourceRoot()).use { paths ->
+                paths
+                    .filter { Files.isRegularFile(it) && it.toString().endsWith(".kt") }
+                    .flatMap { path ->
+                        val lines = Files.readAllLines(path)
+                        lines
+                            .withIndex()
+                            .filter { (index, line) ->
+                                line.contains(RAW_UUID_GENERATOR) &&
+                                    !(line.contains("grantNonce") &&
+                                        lines.getOrNull(index - 1)?.contains(SECURITY_FALLBACK_MARKER) == true)
+                            }
+                            .map { (index, _) -> "${path.fileName}:${index + 1}" }
+                            .stream()
+                    }
+                    .sorted()
+                    .toList()
+            }
+
+        violations.shouldBeEmpty()
+    }
+
+    @Test
     fun `production data classes declare stable Java serialization contracts`() {
         val violations =
             PathMatchingResourcePatternResolver()
@@ -57,6 +82,13 @@ internal class KotlinPatternArchitectureTest {
         return current.resolve("commerce/concert-ticket-flash-sale/src/main/kotlin")
     }
 
+    private fun locateTestSourceRoot(): Path {
+        val current = Path.of("").toAbsolutePath()
+        val moduleLocal = current.resolve("src/test/kotlin")
+        if (Files.isDirectory(moduleLocal)) return moduleLocal
+        return current.resolve("commerce/concert-ticket-flash-sale/src/test/kotlin")
+    }
+
     private fun loadClass(resource: org.springframework.core.io.Resource): Class<*>? {
         val classPath = resource.url.toString().substringAfter("/classes/kotlin/main/", missingDelimiterValue = "")
         if (classPath.isEmpty() || classPath.contains("module-info")) return null
@@ -65,6 +97,9 @@ internal class KotlinPatternArchitectureTest {
     }
 
     companion object {
+        private const val RAW_UUID_GENERATOR = "UUID" + ".randomUUID("
+        private const val SECURITY_FALLBACK_MARKER = "보안 nonce fallback"
+
         private val FORBIDDEN_PRODUCTION_PATTERNS =
             mapOf(
                 "raw UUID generator" to Regex("UUID\\.randomUUID\\("),

@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.ticket.purchase
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.ticket.purchase.internal.ActivePurchaseExists
 import io.bluetape4k.workshop.commerce.ticket.purchase.internal.InventoryUnavailable
 import org.junit.jupiter.api.Test
@@ -11,11 +12,11 @@ internal class PurchaseConcurrencyIntegrationTest {
     @Test
     fun `one buyer from two ips leaves one active attempt`() {
         PurchaseFixture(inventory = 2).use { fixture ->
-            val buyer = UUID.randomUUID()
+            val buyer = Uuid.V7.nextId()
             val commands =
                 listOf(
-                    fixture.command(buyer = buyer, ip = UUID.randomUUID()),
-                    fixture.command(buyer = buyer, ip = UUID.randomUUID()),
+                    fixture.command(buyer = buyer, ip = Uuid.V7.nextId()),
+                    fixture.command(buyer = buyer, ip = Uuid.V7.nextId()),
                 )
 
             val results = concurrent(commands.map { { fixture.service.start(it) } })
@@ -46,8 +47,8 @@ internal class PurchaseConcurrencyIntegrationTest {
         PurchaseFixture(inventory = 1).use { fixture ->
             val commands =
                 listOf(
-                    fixture.command(ip = UUID.randomUUID()),
-                    fixture.command(ip = UUID.randomUUID()),
+                    fixture.command(ip = Uuid.V7.nextId()),
+                    fixture.command(ip = Uuid.V7.nextId()),
                 )
 
             val results = concurrent(commands.map { { fixture.service.start(it) } })

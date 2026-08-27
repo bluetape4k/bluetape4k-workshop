@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.commerce.ticket.persistence
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.commerce.ticket.config.TicketMigration
 import io.bluetape4k.workshop.commerce.ticket.config.TicketMigrationRunner
@@ -98,7 +99,7 @@ internal class TicketDatabaseFixture : AutoCloseable {
                     policyVersion = 1L
                     state = PurchaseState.INVENTORY_HELD.code
                     holdDeadline = now.plusSeconds(30)
-                    authorizationOperationId = UUID.randomUUID()
+                    authorizationOperationId = Uuid.V7.nextId()
                     revision = 0L
                     createdAt = now
                     updatedAt = now

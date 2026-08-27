@@ -3,16 +3,16 @@ package io.bluetape4k.workshop.commerce.ticket.persistence
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.idgenerators.uuid.Uuid
 import org.junit.jupiter.api.Test
 import java.sql.SQLException
-import java.util.UUID
 
 internal class TicketRepositoryIntegrationTest {
     @Test
     fun `inventory check rejects held plus sold above total`() {
         TicketDatabaseFixture().use { fixture ->
             val repository = TicketInventoryRepository(fixture.executor)
-            val saleId = UUID.randomUUID()
+            val saleId = Uuid.V7.nextId()
             fixture.seedSale(saleId, totalQuantity = 1)
 
             assertFailsWith<SQLException> {
@@ -25,11 +25,11 @@ internal class TicketRepositoryIntegrationTest {
     @Test
     fun `user and ip active guards are unique per sale`() {
         TicketDatabaseFixture().use { fixture ->
-            val saleId = UUID.randomUUID()
-            val userSubjectId = UUID.randomUUID()
-            val ipSubjectId = UUID.randomUUID()
-            val firstAttemptId = UUID.randomUUID()
-            val secondAttemptId = UUID.randomUUID()
+            val saleId = Uuid.V7.nextId()
+            val userSubjectId = Uuid.V7.nextId()
+            val ipSubjectId = Uuid.V7.nextId()
+            val firstAttemptId = Uuid.V7.nextId()
+            val secondAttemptId = Uuid.V7.nextId()
             fixture.seedAuthority(saleId, userSubjectId, ipSubjectId, firstAttemptId, secondAttemptId)
             val repository = TicketIdentityGuardRepository(fixture.executor)
 
@@ -47,11 +47,11 @@ internal class TicketRepositoryIntegrationTest {
     @Test
     fun `waiting room claim uses canonical fifo index`() {
         TicketDatabaseFixture().use { fixture ->
-            val saleId = UUID.randomUUID()
+            val saleId = Uuid.V7.nextId()
             fixture.seedSale(saleId)
             val repository = TicketWaitingRoomRepository(fixture.executor)
             repeat(8) { index ->
-                val subjectId = UUID.randomUUID()
+                val subjectId = Uuid.V7.nextId()
                 fixture.seedIdentitySubject(subjectId)
                 repository.join(saleId, subjectId, sequence = 100L - index)
             }
@@ -81,13 +81,13 @@ internal class TicketRepositoryIntegrationTest {
     @Test
     fun `payment operation is unique and reconciliation uses its due index`() {
         TicketDatabaseFixture().use { fixture ->
-            val saleId = UUID.randomUUID()
-            val userSubjectId = UUID.randomUUID()
-            val ipSubjectId = UUID.randomUUID()
-            val attemptId = UUID.randomUUID()
-            fixture.seedAuthority(saleId, userSubjectId, ipSubjectId, attemptId, UUID.randomUUID())
+            val saleId = Uuid.V7.nextId()
+            val userSubjectId = Uuid.V7.nextId()
+            val ipSubjectId = Uuid.V7.nextId()
+            val attemptId = Uuid.V7.nextId()
+            fixture.seedAuthority(saleId, userSubjectId, ipSubjectId, attemptId, Uuid.V7.nextId())
             val repository = TicketPaymentOperationRepository(fixture.executor)
-            val operationId = UUID.randomUUID()
+            val operationId = Uuid.V7.nextId()
 
             repository.insertAuthorization("fake-pg", operationId, attemptId)
             assertFailsWith<SQLException> {

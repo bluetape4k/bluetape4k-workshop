@@ -38,6 +38,34 @@ internal class CampaignBatchCommandServiceTest {
     }
 
     @Test
+    fun `lifecycle command defaults use UUID version seven`() {
+        AllocateVoucherCommand(
+            tenantId = TENANT,
+            campaignId = CAMPAIGN,
+            reservationId = BATCH,
+            canonicalUser = "user-1",
+            expectedRevision = REVISION,
+            idempotencyKey = IDEMPOTENCY_KEY,
+        ).allocationId.version().shouldBeEqualTo(7)
+
+        ReplaceLostRevealCommand(
+            tenantId = TENANT,
+            campaignId = CAMPAIGN,
+            allocationId = BATCH,
+            canonicalUser = "user-1",
+            expectedRevision = REVISION,
+            idempotencyKey = IDEMPOTENCY_KEY,
+        ).reservationId.version().shouldBeEqualTo(7)
+
+        ReserveVoucherCommand(
+            tenantId = TENANT,
+            campaignId = CAMPAIGN,
+            canonicalUser = "user-1",
+            idempotencyKey = IDEMPOTENCY_KEY,
+        ).reservationId.version().shouldBeEqualTo(7)
+    }
+
+    @Test
     fun `import and generation commands reject invalid ordinals and empty work`() {
         assertFailsWith<IllegalArgumentException> { importChunk(firstOrdinal = -1) }
         assertFailsWith<IllegalArgumentException> { importChunk(codes = emptyList()) }

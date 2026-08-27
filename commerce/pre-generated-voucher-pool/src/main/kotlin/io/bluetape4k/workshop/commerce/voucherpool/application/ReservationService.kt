@@ -8,6 +8,7 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.application
 
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.voucherpool.domain.BatchState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CampaignState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.DescriptorAction
@@ -46,7 +47,7 @@ internal data class ReserveVoucherCommand(
     val campaignId: UUID,
     val canonicalUser: String,
     val idempotencyKey: String,
-    val reservationId: UUID = UUID.randomUUID(),
+    val reservationId: UUID = Uuid.V7.nextId(),
 )
 
 internal data class ReleaseReservationCommand(

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.ticket.highcontention
 
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotEmpty
@@ -19,7 +20,6 @@ import java.nio.file.StandardOpenOption.DSYNC
 import java.nio.file.StandardOpenOption.READ
 import java.nio.file.StandardOpenOption.WRITE
 import java.security.MessageDigest
-import java.util.UUID
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -59,7 +59,7 @@ internal class TicketHighContentionArtifactStore private constructor(
         verifyRedaction(bytes.toString(Charsets.UTF_8), forbiddenPatterns)
 
         val target = runRoot.resolve("$safeImplementation-$safeProfile-report.json")
-        val temporary = runRoot.resolve(".${target.fileName}.${UUID.randomUUID()}.tmp")
+        val temporary = runRoot.resolve(".${target.fileName}.${Base58.randomString(16)}.tmp")
         var published = false
         try {
             FileChannel.open(temporary, CREATE_NEW, WRITE, DSYNC).use { channel ->
