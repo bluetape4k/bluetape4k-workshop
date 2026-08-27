@@ -48,3 +48,11 @@ node scope를 새 receipt로 전환하기로 했다.
 - P0/A1 merge 또는 branch 삭제 후 manifest expected ref를 live GitHub와 비교한다.
 - coordinator scope 변경마다 새 receipt ID/checksum, JSON/checker test, review/lesson을 함께 갱신한다.
 - 각 PR merge 직전 `mergeStateStatus`, exact head, CI/review/thread, method를 다시 읽는다.
+
+## 승인 후 base drift 대응
+
+coordinator merge approval 이후 P2 #821이 `develop@f95ea45c1c053f3901d91d29bca58f4e18fb3bdf`로
+먼저 병합되면서 coordinator PR의 승인 당시 base `8550c08b40e671fd48dea8d1ad0d59f8868210a0`가
+더 이상 최신 기준이 아니게 되었다. 이 경우 기존 exact-head CI, review, receipt, merge approval을
+재사용하지 않고 coordinator branch를 새 `develop`에 rebase한 뒤 hosted 검증과 독립 review를
+다시 수행하며, 새 head에 대해 fresh merge approval을 다시 받는다.

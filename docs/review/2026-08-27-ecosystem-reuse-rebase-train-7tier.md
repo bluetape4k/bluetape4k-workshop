@@ -18,22 +18,22 @@ null OID를 모두 검증한다.
 - coordinator scope receipt: `20260827T093234Z-p2-base-replan`
 - receipt checksum: `fe95df7379a758f62102054624c5e8c4c3b6fb0f4a0b3b48d8d0d87ac758bce4`
 - target child: `F1-P2-02`, base `develop`, head `fix/ecosystem-reuse-shutdown-deadline`
-- blocker resolved by contract update; P2 hosted gate must still run at its new exact head
+- blocker resolved by contract update; P2 #821 was subsequently merged to `develop`, so the coordinator was re-based once more onto the new repository base before merge review
 
 ### 현재 coordinator PR #831 exact-head read-back
 
-coordinator branch는 최신 `develop@8550c08b40e671fd48dea8d1ad0d59f8868210a0`에
-rebase되어 게시되었다. train-scope 회귀 테스트와 stale evidence 보정을 포함한
-reviewed implementation ancestor는 `8b2cd5f47ce8c916160f2d8396a87b42c84fbdc5`이며,
-review-tail 뒤의 최종 exact head와 base는 PR body의 live metadata에서 읽는다.
+coordinator branch는 P2 #821의 병합으로 전진한 최신
+`develop@f95ea45c1c053f3901d91d29bca58f4e18fb3bdf`에 다시 rebase되어 게시되었다.
+train-scope 회귀 테스트와 stale evidence 보정을 포함한 reviewed implementation
+ancestor는 `8b2cd5f47ce8c916160f2d8396a87b42c84fbdc5`이며, review-tail 뒤의 최종
+exact head와 base는 PR body의 live metadata에서 읽는다.
 PR #831의 변경 범위는 manifest/checker와 관련 한국어
 review/lesson/plan/spec 7개 파일이며, P2 Kotlin production/test source는 포함하지
 않는다.
 
 - PR: [#831](https://github.com/bluetape4k/bluetape4k-workshop/pull/831)
-- CI: reviewed implementation ancestor의 `33061720628` (CI compile/wrapper/status)와
-  `33061720617` (Ecosystem Reuse Gate, 88 tests)는 PASS이며, review-tail 이후
-  최종 exact head의 hosted 결과는 PR body에서 재확인한다
+- CI: 이전 base의 hosted 결과는 base drift로 폐기하고, 현재 rebase head의 새
+  CI/Gate 결과를 exact-head read-back에서 재확인한다
 - local proof: checker 88 tests, current/trusted manifest, PR-scope simulation,
   JSON, `py_compile`, and `git diff --check` PASS
 - live review/thread read-back: review 0, comments 0, unresolved threads 0 at
@@ -120,11 +120,11 @@ rebase merge되었다.
 ## 현재 coordinator replan 판정
 
 현재 변경은 PR #831의 reviewed implementation ancestor와 review-tail이 구성하는
-coordinator-only lane이다. 이 lane의 latest base는
-`develop@8550c08b40e671fd48dea8d1ad0d59f8868210a0`이며, 최종 exact head는 live PR
-metadata에서 확인한다. `F1-P2-02`는 부모 merge 후 repository base에 재결속되도록
-`base_ref_policy=repository-base-after-parent-merge`를 사용하며, 새 positive/negative
-train-scope 회귀 테스트를 포함한 checker 88개가 통과했다. current/trusted manifest,
-JSON, `py_compile`, diff 검증과 hosted exact-head checks도 통과했다. 독립 7-Tier
-검토 결과와 PR body의 exact-head metadata를 갱신한 뒤에만 coordinator merge-ready
-gate를 열고, 그 다음에 P2 #821을 새 coordinator merge 결과에 rebase한다.
+coordinator-only lane이다. 이 lane은 P2 #821 병합으로 발생한 base drift를 감지한 뒤
+`develop@f95ea45c1c053f3901d91d29bca58f4e18fb3bdf`에 rebase되었고, 최종 exact head는
+live PR metadata에서 확인한다. `F1-P2-02`는 부모 merge 후 repository base에
+재결속되도록 `base_ref_policy=repository-base-after-parent-merge`를 사용하며, 새
+positive/negative train-scope 회귀 테스트를 포함한 checker 88개가 통과했다.
+이전 base의 green 결과와 merge approval은 재사용하지 않고, current/trusted manifest,
+JSON, `py_compile`, diff 검증, 새 hosted exact-head checks, 독립 7-Tier 검토를
+현재 head에서 다시 수렴시킨 뒤 merge-ready gate를 연다.
