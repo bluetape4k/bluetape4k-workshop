@@ -23,6 +23,7 @@ import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanProposal
 import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanState
 import io.bluetape4k.workshop.optimization.fieldservice.domain.PlannedVisit
+import io.bluetape4k.workshop.optimization.fieldservice.domain.ProviderRequestId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.Skill
 import io.bluetape4k.workshop.optimization.fieldservice.domain.VersionVector
 import io.bluetape4k.workshop.optimization.fieldservice.domain.Visit
@@ -187,6 +188,60 @@ class FieldServiceCasIntegrationTest {
         transaction {
             repository.countEvents() shouldBeEqualTo 1L
             FieldServiceEventsTable.selectAll().single()[FieldServiceEventsTable.aggregateVersion] shouldBeEqualTo 0L
+        }
+    }
+
+    @Test
+    fun `validated identifiers remain normalized through persisted record round trips`() {
+        val worker = worker(" worker-round-trip ").copy(
+            skills = setOf(Skill(" electrical ")),
+            homeCoordinateId = CoordinateId(" depot-round-trip "),
+        )
+        val visit = visit(" visit-round-trip ", " coordinate-round-trip ").copy(
+            requiredSkill = Skill(" electrical "),
+        )
+        val plan = PlanProposal(
+            planId = PlanId(" plan-round-trip "),
+            planRevision = 1,
+            parentRevision = null,
+            providerRequestId = ProviderRequestId(" provider-round-trip "),
+            requestGeneration = 1,
+            datasetId = DatasetId(" dataset-round-trip "),
+            versionVector = VersionVector(
+                visitVersions = mapOf(visit.visitId to 0L),
+                workerVersions = mapOf(worker.workerId to 0L),
+                workerScheduleRevisions = mapOf(worker.workerId to 0L),
+            ),
+            routes = listOf(
+                WorkerRoute(
+                    worker.workerId,
+                    listOf(PlannedVisit(visit.visitId, visit.coordinateId, 0, false)),
+                ),
+            ),
+            unassigned = emptyList(),
+            score = FieldServiceScoreSummary(0, 0, 1, 0),
+        )
+
+        transaction {
+            repository.saveWorker(worker)
+            repository.saveVisit(visit)
+            repository.savePlan(plan)
+        }
+
+        val workerPayload = FieldServiceRecordCodec.encodeWorker(worker)
+        val visitPayload = FieldServiceRecordCodec.encodeVisit(visit)
+        val planPayload = FieldServiceRecordCodec.encode(plan)
+        workerPayload.contains("\"workerId\":\"worker-round-trip\"").shouldBeTrue()
+        workerPayload.contains("\"workerId\":\" worker-round-trip \"").shouldBeFalse()
+        visitPayload.contains("\"visitId\":\"visit-round-trip\"").shouldBeTrue()
+        visitPayload.contains("\"visitId\":\" visit-round-trip \"").shouldBeFalse()
+        planPayload.contains("\"planId\":\"plan-round-trip\"").shouldBeTrue()
+        planPayload.contains("\"planId\":\" plan-round-trip \"").shouldBeFalse()
+
+        transaction {
+            repository.findWorker(WorkerId("worker-round-trip")) shouldBeEqualTo worker
+            repository.findVisit(VisitId("visit-round-trip")) shouldBeEqualTo visit
+            repository.loadPlan(PlanId("plan-round-trip"), 1) shouldBeEqualTo plan
         }
     }
 
