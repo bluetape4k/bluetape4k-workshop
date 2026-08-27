@@ -275,7 +275,7 @@
       "parent_oid": "b3711b30a0c51f78750b3cdf2718692d40af08de",
       "merge_base_oid": null,
       "reviewed_implementation_oid": "27085b3ff6ab87a24e4fb08dbc4c14c0704378cf",
-      "state": "READY",
+      "state": "MERGE_READY",
       "issue_numbers": [777, 781, 782, 784],
       "allowed_paths": [
         "optimization/field-service-dispatch/src/main/kotlin/**",
