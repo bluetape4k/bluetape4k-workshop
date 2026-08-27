@@ -2,7 +2,10 @@ package io.bluetape4k.workshop.optimization.fieldservice.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.exposed.jdbc.repository.JdbcRepository
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.optimization.fieldservice.domain.AggregateId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.EventDigest
@@ -21,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.time.Instant
+import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class FieldServiceRepositoryTest {
@@ -54,6 +58,11 @@ class FieldServiceRepositoryTest {
     fun `schema exposes nine bounded tables`() {
         FieldServiceTables.all.size shouldBeEqualTo 9
         FieldServiceTables.all.map { it.tableName }.toSet().size shouldBeEqualTo 9
+    }
+
+    @Test
+    fun `plan persistence exposes the bluetape generic CRUD contract`() {
+        repository.shouldBeInstanceOf<JdbcRepository<*, *>>()
     }
 
     @Test
@@ -100,6 +109,23 @@ class FieldServiceRepositoryTest {
         transaction {
             repeat(12) { index -> repository.enqueueOutbox(OutboxRecord(payload = "job-$index", nextAttemptAt = Instant.EPOCH)) }
             repository.claimOutbox(limit = 100).size shouldBeEqualTo 10
+        }
+    }
+
+    @Test
+    fun `outbox lease token uses a V4 generator and remains injectable`() {
+        transaction {
+            repository.enqueueOutbox(OutboxRecord(payload = "default", nextAttemptAt = Instant.EPOCH))
+            val claimed = repository.claimOutbox().single()
+            val token = claimed.leaseToken.shouldNotBeNull()
+            UUID.fromString(token).version() shouldBeEqualTo 4
+        }
+
+        val expected = UUID.fromString("00000000-0000-4000-8000-000000000001")
+        val deterministicRepository = FieldServiceRepository(leaseTokenGenerator = { expected })
+        transaction {
+            deterministicRepository.enqueueOutbox(OutboxRecord(payload = "injected", nextAttemptAt = Instant.EPOCH))
+            deterministicRepository.claimOutbox().single().leaseToken shouldBeEqualTo expected.toString()
         }
     }
 

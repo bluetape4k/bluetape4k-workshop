@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.fieldservice.adapter.http
 
+import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.workshop.optimization.fieldservice.domain.EventDigest
 import io.bluetape4k.workshop.optimization.fieldservice.domain.EventDigestMatch
 import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceEvents
@@ -16,7 +17,12 @@ import java.math.BigDecimal
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 
-/** Event digest 전에 JSON 입력을 닫힌 canonical 표현으로 정규화합니다. */
+/**
+ * Event digest 전에 JSON 입력을 닫힌 canonical 표현으로 정규화합니다.
+ *
+ * 일반 JSON 경로는 [Jackson.defaultJsonMapper]를 공유하지만, strict canonical input guard는
+ * duplicate key와 body/depth/name 길이 제한을 함께 적용해야 하므로 전용 JsonFactory를 유지합니다.
+ */
 class FieldServiceCanonicalizer {
     private val mapper: JsonMapper = JsonMapper.builder(
         JsonFactory.builder()
@@ -86,5 +92,5 @@ class FieldServiceCanonicalizer {
         return if (normalized.compareTo(BigDecimal.ZERO) == 0) "0" else normalized.toPlainString()
     }
 
-    private fun quote(value: String): String = mapper.writeValueAsString(value)
+    private fun quote(value: String): String = Jackson.defaultJsonMapper.writeValueAsString(value)
 }

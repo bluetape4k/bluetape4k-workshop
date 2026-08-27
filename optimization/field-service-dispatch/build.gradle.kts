@@ -20,15 +20,11 @@ dependencies {
 
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.logging)
-    implementation(libs.bluetape4k.http)
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.bluetape4k.idgenerators)
     implementation(libs.bluetape4k.micrometer)
     implementation(libs.bluetape4k.virtualthread.api)
     runtimeOnly(libs.bluetape4k.virtualthread.jdk25)
-    implementation(libs.httpclient5)
-    implementation(libs.httpcore5.lib)
-
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
     implementation(libs.exposed.jackson3)

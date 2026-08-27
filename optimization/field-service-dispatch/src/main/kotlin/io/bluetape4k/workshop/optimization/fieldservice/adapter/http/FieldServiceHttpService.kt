@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.fieldservice.adapter.http
 
+import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.workshop.optimization.fieldservice.application.ApprovalResult
 import io.bluetape4k.workshop.optimization.fieldservice.application.CommandResult
 import io.bluetape4k.workshop.optimization.fieldservice.application.DispatchResult
@@ -257,9 +258,7 @@ class FieldServiceHttpService(
         )
     }
 
-    private fun quote(value: String): String = tools.jackson.databind.json.JsonMapper.builder()
-        .build()
-        .writeValueAsString(value)
+    private fun quote(value: String): String = Jackson.defaultJsonMapper.writeValueAsString(value)
 
     private fun createPayload(request: CreateVisitRequest): String =
         listOf(

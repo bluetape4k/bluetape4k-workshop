@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.fieldservice.adapter.http
 
+import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.workshop.optimization.fieldservice.domain.ConstraintExplanation
 import io.bluetape4k.workshop.optimization.fieldservice.domain.ConstraintReasonCode
 import io.bluetape4k.workshop.optimization.fieldservice.domain.DatasetId
@@ -13,7 +14,6 @@ import io.bluetape4k.workshop.optimization.fieldservice.domain.ProviderRequestId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.VersionVector
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.json.JsonMapper
-import tools.jackson.module.kotlin.kotlinModule
 import java.util.concurrent.ConcurrentHashMap
 
 /** #524 wire DTO와 분리된 Field Service 전용 callback envelope입니다. */
@@ -43,7 +43,7 @@ data class FieldServiceCallbackEnvelope(
     }
 
     companion object {
-        private val mapper: JsonMapper = JsonMapper.builder().addModule(kotlinModule()).build()
+        private val mapper: JsonMapper = Jackson.defaultJsonMapper
 
         /** 중복 키, 길이, 숫자, 닫힌 score/reason 집합을 모두 검증해 envelope를 만듭니다. */
         fun parse(

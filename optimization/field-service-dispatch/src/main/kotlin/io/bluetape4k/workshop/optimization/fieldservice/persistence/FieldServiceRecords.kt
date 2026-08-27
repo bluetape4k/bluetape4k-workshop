@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.fieldservice.persistence
 
+import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.workshop.optimization.fieldservice.domain.AggregateId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.EventDigest
 import io.bluetape4k.workshop.optimization.fieldservice.domain.EventKey
@@ -9,8 +10,6 @@ import io.bluetape4k.workshop.optimization.fieldservice.domain.Visit
 import io.bluetape4k.workshop.optimization.fieldservice.domain.Worker
 import java.io.Serializable
 import java.time.Instant
-import tools.jackson.databind.json.JsonMapper
-import tools.jackson.module.kotlin.kotlinModule
 
 /** event repository가 사용하는 command metadata이며 payload는 이미 canonicalized 상태입니다. */
 data class FieldServiceCommand(
@@ -32,6 +31,21 @@ data class FieldServiceCommand(
 data class StoredFieldServiceEvent(
     val digest: EventDigest,
     val aggregateVersion: Long,
+)
+
+/** Bluetape4k [io.bluetape4k.exposed.jdbc.repository.LongJdbcRepository]가 매핑하는 plan row입니다. */
+data class FieldServicePlanRecord(
+    val id: Long,
+    val planId: String,
+    val planRevision: Long,
+    val parentRevision: Long?,
+    val datasetId: String,
+    val state: StoredPlanState,
+    val payload: String,
+    val providerRequestId: String?,
+    val providerRevision: Long?,
+    val requestGeneration: Long,
+    val createdAt: Instant,
 )
 
 enum class EventAppendResult {
@@ -62,9 +76,7 @@ data class OutboxRecord(
 
 /** redacted serialized plan projection을 위한 Jackson 3 codec입니다. */
 internal object FieldServiceRecordCodec {
-    private val mapper = JsonMapper.builder()
-        .addModule(kotlinModule())
-        .build()
+    private val mapper = Jackson.defaultJsonMapper
 
     fun encode(plan: PlanProposal): String = mapper.writeValueAsString(plan)
 

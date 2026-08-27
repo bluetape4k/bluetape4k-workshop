@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.fieldservice.adapter.http
 
+import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.workshop.optimization.fieldservice.application.CommandResult
 import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceLimits
 import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceEventType
@@ -21,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import jakarta.validation.Valid
 import tools.jackson.databind.json.JsonMapper
-import tools.jackson.module.kotlin.kotlinModule
 
 @RestController
 @RequestMapping("/api/field-service")
@@ -159,6 +159,6 @@ internal class FieldServiceController(
     }
 
     private companion object {
-        val JSON: JsonMapper = JsonMapper.builder().addModule(kotlinModule()).build()
+        val JSON: JsonMapper = Jackson.defaultJsonMapper
     }
 }
