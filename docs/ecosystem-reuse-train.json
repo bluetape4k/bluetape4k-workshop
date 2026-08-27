@@ -56,7 +56,7 @@
       "scope_id": "coordinator-child-scope",
       "scope_kind": "coordinator",
       "parent_track": "P0",
-      "expected_head_ref": "fix/ecosystem-reuse-train-replan",
+      "expected_head_ref": "chore/ecosystem-reuse-manifest-repair",
       "expected_base_ref": "develop",
       "oid_policy": "rebase-aware",
       "head_oid": null,
@@ -80,7 +80,7 @@
       "scope_kind": "child",
       "parent_track": "F1",
       "expected_head_ref": "fix/ecosystem-reuse-shutdown-deadline",
-      "expected_base_ref": "fix/ecosystem-reuse-field-service-contracts",
+      "expected_base_ref": "develop",
       "oid_policy": "rebase-aware",
       "head_oid": null,
       "base_oid": null,
@@ -94,8 +94,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-      "receipt_id": "20260827T071403Z-coordinator-rebase-train-scope",
-      "checksum": "2ac170983b2d0cfe3e8d4a48edd92534a4d00462855b7752238d77bdc0379117"
+    "receipt_id": "20260827T092246Z-f1-p2-base-replan",
+    "checksum": "b35737c5d18afc56454573267d9a1a9818e1684ab63949fb4ee45db400ea3dc9"
   },
   "planned_scope_replan_receipts": {
     "A2": {
@@ -103,8 +103,8 @@
       "checksum": "dd4e13e547ff35e402176b00449782a6d0986f5ae9b18f01915e657fbde7e808"
     },
     "F1": {
-      "receipt_id": "20260827T063057Z-f1-base-replan",
-      "checksum": "bd2a4f5d8915fb3f74c6e47ffb42ac34b69eb5d0fc54f781a52df08d8d6269d8"
+      "receipt_id": "20260827T092246Z-f1-parent-ref-replan",
+      "checksum": "b80ff49af37d433bdbd12ae6fccee3e85060ce1ad006406f0eb8f824330690c8"
     },
     "I1": {
       "receipt_id": "20260827T071228Z-i1-base-replan",
@@ -280,7 +280,7 @@
     },
     {
       "track": "F1",
-      "expected_head_ref": "fix/ecosystem-reuse-field-service-contracts",
+      "expected_head_ref": "develop",
       "expected_base_ref": "develop",
       "parent_track": "A1",
       "oid_policy": "reviewed-ancestor",
