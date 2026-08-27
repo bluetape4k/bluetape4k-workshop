@@ -732,3 +732,8 @@ allowlist, selector, timeout, dependency-insight 명령은 변경하지 않으�
 F2 실행 receipt는 child exact head에서 검증이 끝날 때까지
 `PLANNED/PENDING/null`로 유지한다. coordinator replan merge 전에는 F2 source
 변경 및 PR 생성을 시작하지 않는다.
+
+coordinator follow-up scope의 `expected_head_ref`도 실제 replan PR head와
+일치해야 한다. 기존 scope head가 이미 병합된 branch라면 branch를 복원하지
+말고 fresh `coordinator_scope_receipt`로 현재 replan branch를 재결속한 뒤
+hosted exact-head 검증을 다시 수행한다.

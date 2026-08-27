@@ -108,6 +108,17 @@ Gradle selector, dependency-insight 범위는 유지하고 `expected_base_ref`�
 - 범위: coordinator-owned manifest 및 이 review/lesson만 변경; F2 Kotlin
   source는 새 child worktree에서 이 replan merge 후에만 수정
 
+첫 hosted 검증에서 coordinator scope의 historical `expected_head_ref`가
+실제 PR head와 다르면 fail-closed해야 한다는 사실을 확인했다. 따라서 같은
+fresh coordinator receipt로 scope head도 현재
+`chore/ecosystem-reuse-f2-base-replan`에 재결속했다.
+
+- coordinator scope receipt: `20260827T114428Z-f2-coordinator-scope-replan`
+- coordinator scope checksum: `c7aa46b1c52d20be09c814d0e7a1b5b4fdc598162e9ed4b184d2fe88ad1a0e95`
+- 첫 hosted run `33068432743`의 raw failure: `coordinator-child-scope:
+  expected_head_ref chore/ecosystem-reuse-train-closeout but PR head ref is
+  chore/ecosystem-reuse-f2-base-replan`
+
 검증 기준은 기존 checker contract와 동일하다. planned replan은 ref/parent 필드만
 변경하고, 새 coordinator receipt를 사용하며, F2의 실행 receipt나
 `reviewed_implementation_oid`를 미리 채우지 않는다. 이 coordinator PR이

@@ -56,7 +56,7 @@
       "scope_id": "coordinator-child-scope",
       "scope_kind": "coordinator",
       "parent_track": "P0",
-      "expected_head_ref": "chore/ecosystem-reuse-train-closeout",
+      "expected_head_ref": "chore/ecosystem-reuse-f2-base-replan",
       "expected_base_ref": "develop",
       "oid_policy": "rebase-aware",
       "head_oid": null,
@@ -81,8 +81,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260827T110000Z-serial-train-closeout-2",
-    "checksum": "858378f8cde827f2409ecc4c68821206020386fd9f5e5faa8777abdd6a2d2984"
+    "receipt_id": "20260827T114428Z-f2-coordinator-scope-replan",
+    "checksum": "c7aa46b1c52d20be09c814d0e7a1b5b4fdc598162e9ed4b184d2fe88ad1a0e95"
   },
   "planned_scope_replan_receipts": {
     "F2": {
