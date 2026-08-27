@@ -3,7 +3,7 @@
 ## 판정과 범위
 
 이번 변경은 Epic #792의 후속 거버넌스 lane인 G0-BASE-POLICY다. 최신
-`develop@283defb0a0ec5b3777968772b811d1164fae578e`에서 시작했으며, 과거 PR
+`develop@69ba991778101c027282a80726de5eb1403da091`에서 시작했으며, 과거 PR
 #831의 전체 branch/history를 재적용하지 않고 후속 child의 base ref 의미만
 checker 계약으로 추출했다.
 
@@ -76,10 +76,10 @@ git diff --check
 ```
 
 - workflow type: `E` (`bluetape-maintenance`)
-- run: `20260827T114512Z-dec4c6ad`
-- base: `origin/develop@283defb0a0ec5b3777968772b811d1164fae578e`
+- run: `20260827T133807Z-2e478eff`
+- base: `origin/develop@69ba991778101c027282a80726de5eb1403da091`
 - receipt evidence: completed sequence 16 head
-  `fd03d0087c7d25e4803aa640b4f21f2a3e04d5cc115030c0495d00d20cf0089d`
+  `efde1f6ec96c2531e8a7dc3844805f69742eeab6e69d30e894a4abacfcfc38cd`
 - `completion-check`: `complete=true`, missing component/lane/check/replacement/main proof 없음.
 
 ## Stop condition
