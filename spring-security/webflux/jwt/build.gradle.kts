@@ -15,6 +15,7 @@ configurations {
 
 dependencies {
     testImplementation(project(":shared"))
+    testImplementation(libs.bluetape4k.spring.boot4.core)
 
     testImplementation(libs.bluetape4k.jackson3)
     testImplementation(libs.bluetape4k.junit5)

@@ -5,6 +5,13 @@ import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import io.bluetape4k.spring.tests.httpDelete
+import io.bluetape4k.spring.tests.httpGet
+import io.bluetape4k.spring.tests.httpHead
+import io.bluetape4k.spring.tests.httpOptions
+import io.bluetape4k.spring.tests.httpPatch
+import io.bluetape4k.spring.tests.httpPost
+import io.bluetape4k.spring.tests.httpPut
 import io.bluetape4k.support.toUtf8String
 import kotlinx.coroutines.flow.flowOf
 import org.junit.jupiter.api.MethodOrderer
@@ -161,6 +168,22 @@ class WebTestClientExtensionsTest : AbstractSpringTest() {
                 .expectStatus().is2xxSuccessful
                 .expectBody()
                 .jsonPath("$.url").isEqualTo("$baseUrl/delete")
+        }
+    }
+
+    @Nested
+    inner class Head {
+        @Test
+        fun `httpHead httpbin`() {
+            client.httpHead("/get").expectStatus().is2xxSuccessful
+        }
+    }
+
+    @Nested
+    inner class Options {
+        @Test
+        fun `httpOptions httpbin`() {
+            client.httpOptions("/anything").expectStatus().is2xxSuccessful
         }
     }
 }

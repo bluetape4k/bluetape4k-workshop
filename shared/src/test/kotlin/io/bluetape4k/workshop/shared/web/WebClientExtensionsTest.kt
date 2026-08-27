@@ -2,9 +2,18 @@ package io.bluetape4k.workshop.shared.web
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import io.bluetape4k.spring.tests.httpDelete
+import io.bluetape4k.spring.tests.httpGet
+import io.bluetape4k.spring.tests.httpHead
+import io.bluetape4k.spring.tests.httpOptions
+import io.bluetape4k.spring.tests.httpPatch
+import io.bluetape4k.spring.tests.httpPost
+import io.bluetape4k.spring.tests.httpPut
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import kotlinx.coroutines.flow.flowOf
 import org.junit.jupiter.api.Nested
@@ -13,6 +22,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.client.awaitBodyOrNull
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
 
 class WebClientExtensionsTest : AbstractSpringTest() {
 
@@ -152,6 +162,22 @@ class WebClientExtensionsTest : AbstractSpringTest() {
 
             log.debug { "response=$response" }
             response.shouldNotBeNull() shouldContain "$baseUrl/delete"
+        }
+    }
+
+    @Nested
+    inner class Head {
+        @Test
+        fun `httpHead httpbin`() = runSuspendIO {
+            client.httpHead("/get").awaitBodilessEntity().statusCode.is2xxSuccessful.shouldBeEqualTo(true)
+        }
+    }
+
+    @Nested
+    inner class Options {
+        @Test
+        fun `httpOptions httpbin`() = runSuspendIO {
+            client.httpOptions("/anything").awaitBodyOrNull<String>().shouldBeNull()
         }
     }
 }

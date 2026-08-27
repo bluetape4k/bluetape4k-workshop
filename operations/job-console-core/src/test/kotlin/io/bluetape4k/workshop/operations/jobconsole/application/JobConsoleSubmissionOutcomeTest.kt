@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.operations.jobconsole.application
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.workshop.operations.jobconsole.api.JobSnapshot
 import io.bluetape4k.workshop.operations.jobconsole.api.JobSubmissionOutcome
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
@@ -14,7 +15,6 @@ import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepositoryExc
 import io.bluetape4k.assertions.assertFailsWith
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.time.Instant
 import java.util.UUID
 
@@ -56,7 +56,7 @@ class JobConsoleSubmissionOutcomeTest {
                 JobSubmissionOutcome.WaiterOverflow to Triple(429, JobProblemCode.IDEMPOTENCY_WAITERS_EXCEEDED, 2L),
                 JobSubmissionOutcome.Abandoned to Triple(503, JobProblemCode.DEPENDENCY_UNAVAILABLE, null),
             )
-        val mapper = jacksonObjectMapper()
+        val mapper = Jackson.defaultJsonMapper
         cases.forEach { (outcome, expected) ->
             val response = JobSubmissionHttpMapper.map(outcome, requestId = "request-id")
             val tree = mapper.readTree(response.body)

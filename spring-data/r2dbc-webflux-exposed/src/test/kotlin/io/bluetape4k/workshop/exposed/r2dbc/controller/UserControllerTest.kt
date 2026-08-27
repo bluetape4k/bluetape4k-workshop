@@ -5,10 +5,10 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.r2dbc.AbstractWebfluxR2dbcExposedApplicationTest
 import io.bluetape4k.workshop.exposed.r2dbc.domain.model.UserRecord
 import io.bluetape4k.workshop.exposed.r2dbc.service.UserService
-import io.bluetape4k.workshop.shared.web.httpDelete
-import io.bluetape4k.workshop.shared.web.httpGet
-import io.bluetape4k.workshop.shared.web.httpPost
-import io.bluetape4k.workshop.shared.web.httpPut
+import io.bluetape4k.spring.tests.httpDelete
+import io.bluetape4k.spring.tests.httpGet
+import io.bluetape4k.spring.tests.httpPost
+import io.bluetape4k.spring.tests.httpPut
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle

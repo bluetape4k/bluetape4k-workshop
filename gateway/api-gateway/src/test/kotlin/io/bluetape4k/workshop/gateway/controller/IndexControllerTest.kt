@@ -5,7 +5,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.gateway.AbstractGatewayTest
-import io.bluetape4k.workshop.shared.web.httpGet
+import io.bluetape4k.spring.tests.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult

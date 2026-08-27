@@ -1,13 +1,9 @@
 package io.bluetape4k.workshop.operations.jobconsole.spring
 
+import io.bluetape4k.workshop.operations.jobconsole.api.JobConsoleJson
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import org.springframework.http.MediaType
-import tools.jackson.core.StreamReadConstraints
-import tools.jackson.core.StreamReadFeature
-import tools.jackson.core.json.JsonFactory
-import tools.jackson.databind.DeserializationFeature
 import tools.jackson.databind.json.JsonMapper
-import tools.jackson.module.kotlin.kotlinModule
 import jakarta.servlet.http.HttpServletRequest
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets.UTF_8
@@ -28,24 +24,7 @@ internal class JobSubmissionScopeDeniedException(
 ) : RuntimeException(message, cause)
 
 internal object JobConsoleSpringSubmissionHttp {
-    private val strictMapper: JsonMapper =
-        JsonMapper.builder(
-            JsonFactory.builder()
-                .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
-                .streamReadConstraints(
-                    StreamReadConstraints.builder()
-                        .maxDocumentLength(MAX_JOB_SUBMISSION_BODY_BYTES.toLong())
-                        .maxNestingDepth(32)
-                        .maxStringLength(MAX_JOB_SUBMISSION_BODY_BYTES)
-                        .maxNameLength(256)
-                        .maxTokenCount(256)
-                        .build(),
-                ).build(),
-        ).addModule(kotlinModule())
-            .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
-            .enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY)
-            .build()
+    private val strictMapper: JsonMapper = JobConsoleJson.strictRequestMapper(MAX_JOB_SUBMISSION_BODY_BYTES)
 
     fun scope(request: HttpServletRequest): io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope {
         val tenant = runCatching { request.singleHeader("X-Demo-Tenant") }

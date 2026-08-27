@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence
 
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.StreamKey
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
@@ -41,7 +42,7 @@ class SnapshotRepository :
     AppendOnlyEventSourcingExposedJdbcRepository<AggregateSnapshotEntity, UUID>(AggregateSnapshotEntity::class.java) {
 
     fun append(snapshot: NewAggregateSnapshot): StoredAggregateSnapshot {
-        val snapshotId = UUID.randomUUID()
+        val snapshotId = Uuid.V7.nextId()
         AggregateSnapshots.insert {
             it[id] = snapshotId
             it[tenantId] = snapshot.stream.tenantId

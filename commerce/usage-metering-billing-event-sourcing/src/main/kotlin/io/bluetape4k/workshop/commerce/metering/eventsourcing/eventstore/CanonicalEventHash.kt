@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.eventstore
 
+import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.domain.EventHashMaterial
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.ObjectMapper
@@ -8,7 +9,7 @@ import java.security.MessageDigest
 import java.util.Locale
 
 object CanonicalEventHash {
-    private val mapper = ObjectMapper()
+    private val mapper: ObjectMapper = Jackson.defaultJsonMapper
 
     fun sha256(material: EventHashMaterial): String {
         require(material.streamVersion > 0) { "stream_version_invalid" }

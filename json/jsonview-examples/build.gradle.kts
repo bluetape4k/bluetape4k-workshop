@@ -16,6 +16,7 @@ configurations {
 dependencies {
 
     testImplementation(project(":shared"))
+    testImplementation(libs.bluetape4k.spring.boot4.core)
 
     // Jackson 의존성입니다.
     implementation(libs.bluetape4k.jackson3)
