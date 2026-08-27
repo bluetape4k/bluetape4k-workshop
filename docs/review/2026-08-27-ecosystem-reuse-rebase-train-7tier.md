@@ -49,7 +49,7 @@ review·lesson을 명시적 allowlist에 포함한다. 변경은 fresh
 | 3. 경계·보안 | PASS | 경로는 repository-relative allowlist이며 token/credential/실제 owner handle을 문서·manifest에 기록하지 않았다. |
 | 4. 정확성·상태 | PASS | 기존 trusted manifest와 비교할 때 follow-up scope는 새 `coordinator_scope_receipt`, F1/A2/R1/T1/I1 planned ref 변경은 track별 `planned_scope_replan_receipts`가 필요하며 fixed node 실행 receipt는 PENDING/null로 유지한다. |
 | 5. 성능·안정성 | N/A | 문서·JSON coordinator scope만 변경하고 runtime, DB, container, coroutine 경로를 변경하지 않는다. |
-| 6. 테스트·운영 | PASS | `test_check_ecosystem_reuse.py -v` 83개 성공, current/trusted manifest checker PASS, JSON·py_compile·diff 검증 PASS. 각 planned base replan은 별도 track receipt와 PENDING/null 실행 receipt를 사용한다. PR #828 exact-head `b4ab28bbdb293bd167e7e65d284840cf1732de8a` hosted CI `33050454815` (Ecosystem Reuse Gate)와 `33050454682` (CI)가 모두 PASS이며, live review/thread는 비어 있음을 재확인했다. |
+| 6. 테스트·운영 | PASS | `test_check_ecosystem_reuse.py -v` 83개 성공, current/trusted manifest checker PASS, JSON·py_compile·diff 검증 PASS. 각 planned base replan은 별도 track receipt와 PENDING/null 실행 receipt를 사용한다. PR #828 exact-head `21f53a030e24a9dc305ea21b7333b140bd258cb8` hosted CI `33051206844` (Ecosystem Reuse Gate)와 `33051206902` (CI)가 모두 PASS이며, live review/thread는 비어 있음을 재확인했다. |
 | 7. 문서·유지보수 | PASS | 한국어 plan/spec/review/lesson에 stale ref 원인, rebase-only 정책, rollback/검증 순서를 기록했다. |
 
 ## 검증 계약
