@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.operations.jobconsole.persistence
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import tools.jackson.module.kotlin.jacksonObjectMapper
+import io.bluetape4k.jackson3.Jackson
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
@@ -73,7 +73,7 @@ class JobSubmissionIdempotencyQueryPlanTest {
                 )
             val reportPath = Path.of("build/reports/job-console-idempotency/query-plans.json")
             Files.createDirectories(reportPath.parent)
-            Files.writeString(reportPath, jacksonObjectMapper().writeValueAsString(report) + "\n")
+            Files.writeString(reportPath, Jackson.defaultJsonMapper.writeValueAsString(report) + "\n")
         }
     }
 

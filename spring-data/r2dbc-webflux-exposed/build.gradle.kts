@@ -27,6 +27,7 @@ dependencies {
     implementation(platform(libs.spring.boot4.dependencies))
 
     testImplementation(project(":shared"))
+    testImplementation(libs.bluetape4k.spring.boot4.core)
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.exposed.r2dbc.tests)
     testRuntimeOnly(libs.mysql.connector.j)

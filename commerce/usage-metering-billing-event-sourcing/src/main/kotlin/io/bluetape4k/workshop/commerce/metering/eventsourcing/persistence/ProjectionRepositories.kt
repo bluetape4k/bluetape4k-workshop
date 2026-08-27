@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence
 
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionGeneration
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionGenerationState
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.projection.ProjectionLease
@@ -23,7 +24,7 @@ class ProjectionGenerationRepository :
     fun createInitialActive(projectionName: String, generation: Int, now: Instant) {
         validateProjectionIdentity(projectionName, generation)
         check(ProjectionAliases.insertIgnore {
-            it[id] = UUID.randomUUID()
+            it[id] = Uuid.V7.nextId()
             it[ProjectionAliases.projectionName] = projectionName
             it[activeGeneration] = generation
             it[updatedAt] = now
@@ -117,7 +118,7 @@ class ProjectionGenerationRepository :
         now: Instant,
     ) {
         ProjectionGenerations.insert {
-            it[id] = UUID.randomUUID()
+            it[id] = Uuid.V7.nextId()
             it[ProjectionGenerations.projectionName] = projectionName
             it[ProjectionGenerations.generation] = generation
             it[ProjectionGenerations.state] = state.name
@@ -214,7 +215,7 @@ class ProjectionCheckpointRepository :
     fun insertAppliedEvent(lease: ProjectionLease, eventId: UUID, globalPosition: Long, now: Instant): Boolean {
         require(globalPosition > 0) { "projection_global_position_invalid" }
         return ProjectionAppliedEvents.insertIgnore {
-            it[id] = UUID.randomUUID()
+            it[id] = Uuid.V7.nextId()
             it[projectionName] = lease.projectionName
             it[generation] = lease.generation
             it[ProjectionAppliedEvents.eventId] = eventId

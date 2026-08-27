@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence
 
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.idempotency.CommandDigest
 import io.bluetape4k.workshop.commerce.metering.eventsourcing.idempotency.CommandScope
 import org.jetbrains.exposed.v1.core.and
@@ -47,7 +48,7 @@ class CommandReceiptRepository :
     EventSourcingExposedJdbcRepository<CommandReceiptEntity, UUID>(CommandReceiptEntity::class.java) {
 
     fun insertOwnerIfAbsent(request: CommandReceiptInsert): Boolean = CommandReceipts.insertIgnore {
-        it[id] = UUID.randomUUID()
+        it[id] = Uuid.V7.nextId()
         it[tenantId] = request.scope.tenantId
         it[operation] = request.scope.operation
         it[keyDigest] = request.scope.keyDigest.value

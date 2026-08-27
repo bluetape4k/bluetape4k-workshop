@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.resilience.circuitbreaker.coroutines
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.resilience.circuitbreaker.AbstractCircuitBreakerTest
-import io.bluetape4k.workshop.shared.web.httpGet
+import io.bluetape4k.spring.tests.httpGet
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested

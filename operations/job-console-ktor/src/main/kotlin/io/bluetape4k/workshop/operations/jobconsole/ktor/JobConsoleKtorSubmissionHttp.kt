@@ -9,18 +9,14 @@ import io.ktor.server.request.receiveChannel
 import io.ktor.server.response.respondBytes
 import io.ktor.utils.io.InternalAPI
 import io.ktor.utils.io.readRemaining
+import io.bluetape4k.workshop.operations.jobconsole.api.JobConsoleJson
 import io.bluetape4k.workshop.operations.jobconsole.api.JobSubmissionHttpResponse
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import io.bluetape4k.workshop.operations.jobconsole.application.JobSubmissionHttpMapper
 import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
 import io.ktor.http.HttpStatusCode
 import kotlinx.io.readByteArray
-import tools.jackson.core.StreamReadConstraints
-import tools.jackson.core.StreamReadFeature
-import tools.jackson.core.json.JsonFactory
-import tools.jackson.databind.DeserializationFeature
 import tools.jackson.databind.json.JsonMapper
-import tools.jackson.module.kotlin.kotlinModule
 import java.nio.charset.StandardCharsets.UTF_8
 
 internal const val MAX_JOB_SUBMISSION_BODY_BYTES: Int = 64 * 1024
@@ -38,24 +34,7 @@ internal class KtorJobSubmissionScopeDeniedException(
 ) : RuntimeException(message, cause)
 
 internal object JobConsoleKtorSubmissionHttp {
-    private val strictMapper: JsonMapper =
-        JsonMapper.builder(
-            JsonFactory.builder()
-                .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
-                .streamReadConstraints(
-                    StreamReadConstraints.builder()
-                        .maxDocumentLength(MAX_JOB_SUBMISSION_BODY_BYTES.toLong())
-                        .maxNestingDepth(32)
-                        .maxStringLength(MAX_JOB_SUBMISSION_BODY_BYTES)
-                        .maxNameLength(256)
-                        .maxTokenCount(256)
-                        .build(),
-                ).build(),
-        ).addModule(kotlinModule())
-            .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-            .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
-            .enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY)
-            .build()
+    private val strictMapper: JsonMapper = JobConsoleJson.strictRequestMapper(MAX_JOB_SUBMISSION_BODY_BYTES)
 
     fun scope(call: ApplicationCall): DemoCallerScope {
         val tenant = requiredSingleHeader(call, "X-Demo-Tenant", scopeHeader = true)

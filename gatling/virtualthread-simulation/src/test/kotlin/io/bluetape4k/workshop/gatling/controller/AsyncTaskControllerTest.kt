@@ -7,7 +7,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.gatling.AbstractGatlingTest
 import io.bluetape4k.workshop.gatling.validation.MAX_DELAY_SECONDS
-import io.bluetape4k.workshop.shared.web.httpGet
+import io.bluetape4k.spring.tests.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult

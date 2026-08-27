@@ -3,15 +3,15 @@ package io.bluetape4k.workshop.operations.jobconsole.spring
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.operations.jobconsole.api.JobProblem
+import io.bluetape4k.workshop.operations.jobconsole.api.JobConsoleJson
 import io.bluetape4k.workshop.operations.jobconsole.domain.JobProblemCode
 import io.bluetape4k.workshop.operations.jobconsole.persistence.JobRepositoryException
 import org.junit.jupiter.api.Test
-import tools.jackson.module.kotlin.jacksonObjectMapper
 import java.util.UUID
 
 class JobConsoleProblemHandlerTest {
     private val handler = JobConsoleProblemHandler()
-    private val mapper = jacksonObjectMapper()
+    private val mapper = JobConsoleJson.defaultMapper
 
     @Test
     fun `problem correlations use UUID version seven`() {

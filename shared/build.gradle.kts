@@ -8,6 +8,7 @@ configurations {
 
 dependencies {
     implementation(libs.bluetape4k.io)
+    testImplementation(libs.bluetape4k.spring.boot4.core)
 
     // Web MVC 의존성
     compileOnly(libs.spring.boot.starter.webmvc.lib)

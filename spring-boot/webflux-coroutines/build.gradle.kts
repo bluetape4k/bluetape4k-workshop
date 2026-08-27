@@ -19,6 +19,7 @@ dependencies {
     implementation(libs.bluetape4k.io)
     implementation(libs.bluetape4k.jackson3)
     testImplementation(libs.bluetape4k.junit5)
+    testImplementation(libs.bluetape4k.spring.boot4.core)
 
     // Spring Boot 의존성
     implementation(libs.spring.boot.autoconfigure.lib)

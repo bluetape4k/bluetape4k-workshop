@@ -31,6 +31,7 @@ class CommandReceiptService(
     }
 
     fun acquire(scope: CommandScope, fingerprint: CommandDigest, now: Instant): CommandAcquireResult {
+        // ownerToken은 takeover 방지용 opaque 보안 토큰이므로 UUID v7로 정렬하지 않는다.
         val ownerToken = UUID.randomUUID()
         repository.insertOwnerIfAbsent(
             CommandReceiptInsert(scope, fingerprint, ownerToken, now.plus(lease), now.plus(retention), now),
@@ -59,6 +60,7 @@ class CommandReceiptService(
         current: io.bluetape4k.workshop.commerce.metering.eventsourcing.persistence.CommandReceiptSnapshot,
         now: Instant,
     ): CommandAcquireResult {
+        // replacement도 기존 owner를 fencing하는 opaque 보안 토큰이며 documented raw fallback이다.
         val replacement = UUID.randomUUID()
         return if (repository.takeover(current, replacement, now.plus(lease), now.plus(retention), now)) {
             CommandAcquireResult.Owned(current.id, replacement)

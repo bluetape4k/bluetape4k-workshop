@@ -8,7 +8,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.cbor.course.Course
 import io.bluetape4k.workshop.cbor.course.PhoneType
-import io.bluetape4k.workshop.shared.web.httpGet
+import io.bluetape4k.spring.tests.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
