@@ -27,7 +27,7 @@ rebase하지 않고, `origin/develop@69ba991778101c027282a80726de5eb1403da091`�
 테스트 fixture에 `base_ref_policy`와 positive/negative 사례를 먼저 넣었을
 때, 구현 전 기존 checker는 `unknown fields base_ref_policy` 및 정책 거부로
 6개 테스트를 실패시켰다(RED). 그 뒤 enum, 필수 필드, scope-kind/OID,
-expected-base 분기만 최소 구현해 90개 전체 테스트를 `OK`로 만들었다(GREEN).
+expected-base 분기만 최소 구현해 92개 전체 테스트를 `OK`로 만들었다(GREEN).
 
 다음 명령을 재현 가능한 raw fallback으로 보존한다.
 
@@ -47,6 +47,13 @@ git diff --check
 `4dc63584517e5359a71f24d4042f829c9afecda3da9470bdfa94ad57181a428f`와
 `completion-check complete=true`를 발행해 이전 실패와 독립된 증거로
 연결했다.
+이후 F2 test allowlist 보정을 위해 coordinator receipt
+`20260827T141532Z-f2-allowlist-repair`를 새로 발행했으며, combined repair
+payload의 SHA-256 `d6e7c7ce9bd5a0a550cc0ef62e33ec1e49ed2fb96fd936aa26829bcbdb3bf1fa`를
+manifest와 함께 기록했다. hosted exact-head gate는 이 commit 이후 새로
+실행해야 하며, local `completion-check`는 required
+component/lane/check/replacement/main proof 누락 없이 `complete=true`를
+반환했다.
 
 ## 재발 방지
 
@@ -63,6 +70,9 @@ git diff --check
   trusted 비교를 기준으로 새 변경을 만든다.
 - checker의 positive/negative 테스트와 7-Tier review/lesson을 같은 변경에
   포함하되, 실제 hosted CI는 exact PR head에서 다시 실행한다.
+- planned child scope의 누락된 테스트 경로는 coordinator receipt를 새로
+  발행한 additive-only allowlist repair로만 보정한다. 기존 허용 경로를
+  제거하는 manifest diff는 checker가 거부해야 한다.
 
 ## Exact-head hosted 실패 교훈
 

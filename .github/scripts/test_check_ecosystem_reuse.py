@@ -447,7 +447,34 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         trusted_path.write_text(json.dumps(trusted), encoding="utf-8")
         current_path.write_text(json.dumps(current), encoding="utf-8")
         errors = CHECKER.validate_manifest(self.root, current_path, trusted_path=trusted_path)
-        self.assertTrue(any("PLANNED scope replan may change only ref/parent fields" in error for error in errors))
+        self.assertTrue(any("PLANNED scope replan may change only ref/parent fields or allowed_paths" in error for error in errors))
+
+    def test_trusted_manifest_accepts_fresh_planned_allowlist_repair(self):
+        trusted = self.manifest()
+        current = self.manifest()
+        current["nodes"][4]["allowed_paths"].insert(0, "src/F2-test/**")
+        current["planned_scope_replan_receipts"] = {
+            "F2": {"receipt_id": "replan-f2-allowlist", "checksum": "e" * 64}
+        }
+        trusted_path = self.root / "trusted.json"
+        current_path = self.root / "current.json"
+        trusted_path.write_text(json.dumps(trusted), encoding="utf-8")
+        current_path.write_text(json.dumps(current), encoding="utf-8")
+        self.assertEqual([], CHECKER.validate_manifest(self.root, current_path, trusted_path=trusted_path))
+
+    def test_planned_allowlist_repair_rejects_path_removal(self):
+        trusted = self.manifest()
+        current = self.manifest()
+        current["nodes"][4]["allowed_paths"] = current["nodes"][4]["allowed_paths"][1:]
+        current["planned_scope_replan_receipts"] = {
+            "F2": {"receipt_id": "replan-f2-allowlist", "checksum": "e" * 64}
+        }
+        trusted_path = self.root / "trusted.json"
+        current_path = self.root / "current.json"
+        trusted_path.write_text(json.dumps(trusted), encoding="utf-8")
+        current_path.write_text(json.dumps(current), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, current_path, trusted_path=trusted_path)
+        self.assertTrue(any("planned allowlist repair may only add paths" in error for error in errors))
 
     def test_planned_scope_replan_requires_pending_execution_receipt(self):
         trusted = self.manifest()

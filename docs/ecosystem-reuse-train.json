@@ -84,13 +84,13 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260827T135913Z-b18aca2f-g0-ci-repair",
-    "checksum": "4dc63584517e5359a71f24d4042f829c9afecda3da9470bdfa94ad57181a428f"
+    "receipt_id": "20260827T141532Z-f2-allowlist-repair",
+    "checksum": "d6e7c7ce9bd5a0a550cc0ef62e33ec1e49ed2fb96fd936aa26829bcbdb3bf1fa"
   },
   "planned_scope_replan_receipts": {
     "F2": {
-      "receipt_id": "20260827T113018Z-f2-base-replan",
-      "checksum": "97b71c2120bacc8535d9a5ea56f81aa4a8708f07521ec60db1bbe07f10528593"
+      "receipt_id": "20260827T140200Z-f2-allowlist-repair",
+      "checksum": "4b46bc3c43722f6156985bdfacf07aa61dc737183e829d2e698404235cf74ab6"
     },
     "I1": {
       "receipt_id": "20260827T071228Z-i1-base-replan",
@@ -324,6 +324,7 @@
       "issue_numbers": [804, 805, 806, 807],
       "allowed_paths": [
         "optimization/field-service-dispatch/src/main/kotlin/**",
+        "optimization/field-service-dispatch/src/test/kotlin/**",
         "optimization/field-service-dispatch/build.gradle.kts",
         "docs/review/2026-08-25-F2-7tier.md"
       ],
