@@ -22,17 +22,18 @@ null OID를 모두 검증한다.
 
 ### 현재 coordinator PR #831 exact-head read-back
 
-현재 coordinator branch는 최신 `develop@8550c08b40e671fd48dea8d1ad0d59f8868210a0`에
-rebase되어 `fix/ecosystem-reuse-follow-up-base-replan@8b2cd5f47ce8c916160f2d8396a87b42c84fbdc5`로
-게시되어 있다. 이 SHA는 train-scope 회귀 테스트와 stale evidence 보정을 포함한
-reviewed implementation ancestor이며, PR body의 live metadata가 review-tail 이후
-최종 exact head를 결정한다. PR #831의 변경 범위는 manifest/checker와 관련 한국어
+coordinator branch는 최신 `develop@8550c08b40e671fd48dea8d1ad0d59f8868210a0`에
+rebase되어 게시되었다. train-scope 회귀 테스트와 stale evidence 보정을 포함한
+reviewed implementation ancestor는 `8b2cd5f47ce8c916160f2d8396a87b42c84fbdc5`이며,
+review-tail 뒤의 최종 exact head와 base는 PR body의 live metadata에서 읽는다.
+PR #831의 변경 범위는 manifest/checker와 관련 한국어
 review/lesson/plan/spec 7개 파일이며, P2 Kotlin production/test source는 포함하지
 않는다.
 
 - PR: [#831](https://github.com/bluetape4k/bluetape4k-workshop/pull/831)
-- CI: `33061720628` (CI compile/wrapper/status) and `33061720617`
-  (Ecosystem Reuse Gate, 88 tests) PASS at the reviewed implementation ancestor
+- CI: reviewed implementation ancestor의 `33061720628` (CI compile/wrapper/status)와
+  `33061720617` (Ecosystem Reuse Gate, 88 tests)는 PASS이며, review-tail 이후
+  최종 exact head의 hosted 결과는 PR body에서 재확인한다
 - local proof: checker 88 tests, current/trusted manifest, PR-scope simulation,
   JSON, `py_compile`, and `git diff --check` PASS
 - live review/thread read-back: review 0, comments 0, unresolved threads 0 at
@@ -118,10 +119,10 @@ rebase merge되었다.
 
 ## 현재 coordinator replan 판정
 
-현재 변경은 PR #831의 reviewed implementation ancestor
-`8b2cd5f47ce8c916160f2d8396a87b42c84fbdc5`가 최신
-`develop@8550c08b40e671fd48dea8d1ad0d59f8868210a0`을 base로 사용하는
-coordinator-only lane이다. `F1-P2-02`는 부모 merge 후 repository base에 재결속되도록
+현재 변경은 PR #831의 reviewed implementation ancestor와 review-tail이 구성하는
+coordinator-only lane이다. 이 lane의 latest base는
+`develop@8550c08b40e671fd48dea8d1ad0d59f8868210a0`이며, 최종 exact head는 live PR
+metadata에서 확인한다. `F1-P2-02`는 부모 merge 후 repository base에 재결속되도록
 `base_ref_policy=repository-base-after-parent-merge`를 사용하며, 새 positive/negative
 train-scope 회귀 테스트를 포함한 checker 88개가 통과했다. current/trusted manifest,
 JSON, `py_compile`, diff 검증과 hosted exact-head checks도 통과했다. 독립 7-Tier
