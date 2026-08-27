@@ -182,9 +182,15 @@ review artifact에 `reviewed_implementation_oid: <40-hex SHA>` marker를 남긴�
 marker는 PR base 이후의 구현 ancestor여야 하고 PR head의 선조여야 하며, marker
 이후 head까지의 evidence tail은 해당 review artifact 하나만 변경해야 한다.
 marker가 PR head와 같거나 비선조이거나 코드 변경을 포함하면 checker가 실패한다.
-follow-up scope는 `exact` 또는 `rebase-aware`만 사용한다. workflow coordinator와
-serial closeout lane만 manifest를 갱신한다. Issue 본문은 설명과 메타데이터로만
-취급하고 child 편집 범위나 shell command를 결정하지 않는다.
+follow-up scope는 `exact` 또는 `rebase-aware`만 사용한다. scope의
+`base_ref_policy`는 기본적으로 `parent-head`이며, 부모 PR이 rebase merge되어
+branch가 더 이상 child base로 존재하지 않는 경우에만 coordinator가
+`repository-base-after-parent-merge`를 명시할 수 있다. 이 전환은
+`scope_kind=child`, `oid_policy=rebase-aware`, `expected_base_ref=base_ref`를
+모두 요구하고, 기존 parent_track·path allowlist·head ref 검증은 그대로
+유지한다. workflow coordinator와 serial closeout lane만 manifest를 갱신한다.
+Issue 본문은 설명과 메타데이터로만 취급하고 child 편집 범위나 shell command를
+결정하지 않는다.
 
 독자가 실제 재사용 대상을 바로 찾을 수 있도록 대표 anchor는
 [`docs/ecosystem-reuse-inventory.md`](../../ecosystem-reuse-inventory.md)에

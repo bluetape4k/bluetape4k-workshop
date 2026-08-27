@@ -1,6 +1,26 @@
 # Epic #792 rebase PR train coordinator 7-Tier 검토
 
-## 판정과 범위
+## 2026-08-27 P2 child base 재계획 갱신
+
+F1 #815 rebase merge 이후 P2 #821의 live base가 `develop`으로 이동했지만,
+`F1-P2-02` scope가 삭제된 F1 branch를 기대해 기존 checker가 F1과 P2를 모두
+매칭했다(`found 2`). 부모 branch를 복구하거나 checker를 느슨하게 하지 않고,
+fresh coordinator scope receipt로 P2의 `expected_base_ref=develop`을
+재계획했다.
+
+manifest의 follow-up scope는 이제 `base_ref_policy`를 명시한다. 기본
+`parent-head`는 parent track head와의 동일성을 요구하고,
+`repository-base-after-parent-merge`는 `scope_kind=child`와
+`oid_policy=rebase-aware`인 경우에만 repository `base_ref`를 허용한다.
+실제 PR scope는 여전히 exact head ref, changed-path allowlist, rebase-aware
+null OID를 모두 검증한다.
+
+- coordinator scope receipt: `20260827T093234Z-p2-base-replan`
+- receipt checksum: `fe95df7379a758f62102054624c5e8c4c3b6fb0f4a0b3b48d8d0d87ac758bce4`
+- target child: `F1-P2-02`, base `develop`, head `fix/ecosystem-reuse-shutdown-deadline`
+- blocker resolved by contract update; P2 hosted gate must still run at its new exact head
+
+## 이전 coordinator PR #828 검토 범위
 
 이번 coordinator 변경은 이미 `develop`에 통합된 P0/A1 이후의 train을 현재
 ref에 다시 결속하고, 사용자 지시인 `rebase merge`를 실행 계획의 병합 계약으로
@@ -8,8 +28,8 @@ ref에 다시 결속하고, 사용자 지시인 `rebase merge`를 실행 계획�
 
 - 변경 범위: `docs/ecosystem-reuse-train.json`, 승인 실행 plan/spec,
   이 review와 lesson
-- 기준 head: `develop`=`5c188021acf298dd9a1e21da80063fdd1ee4c2f8`
-- coordinator head: 기존 coordinator PR #828의 `fix/ecosystem-reuse-train-replan`
+- 당시 기준 head: `develop`=`5c188021acf298dd9a1e21da80063fdd1ee4c2f8`
+- 당시 coordinator head: PR #828의 `fix/ecosystem-reuse-train-replan`
 - 관련 이슈: #792, #822, #826
 - OID marker: coordinator 문서-only scope이므로 fixed-node implementation
   marker는 적용하지 않으며 child marker/receipt는 각 child exact head에서
@@ -62,13 +82,10 @@ python3 -m json.tool docs/ecosystem-reuse-train.json
 git diff --check
 ```
 
-현재 결과: 83 tests `OK`; current/trusted checker `PASS`; JSON·py_compile·diff
-`PASS`. 검증 기준 `develop`은
+이전 PR #828 기준 결과: 83 tests `OK`; current/trusted checker,
+JSON·py_compile·diff `PASS`. 당시 검증 기준 `develop`은
 `5c188021acf298dd9a1e21da80063fdd1ee4c2f8`이며, planned-scope 승인 receipt와
-실행 receipt는 서로 다른 필드로 보존한다. 모든 결과는 coordinator branch의
-현재 diff와 연결해 기록한다. checker 또는 trusted-manifest 비교가 실패하면
-PR 생성 전 문서/receipt를 수리하고, child branch의 green 결과를 재사용하지
-않는다.
+실행 receipt는 서로 다른 필드로 보존했다.
 
 ## 적용한 규칙과 stop condition
 
@@ -77,4 +94,14 @@ PR 생성 전 문서/receipt를 수리하고, child branch의 green 결과를 �
 - `rebase merge`: CG-16 fresh approval 전에는 merge하지 않는다. 승인 후에도 GitHub merge method가 `rebase`인지 확인하고, 다른 method/auto-merge는 중단한다.
 - stop condition: manifest checker P0/P1 finding, stale exact head, unresolved live review, missing CI, 또는 merge strategy mismatch.
 
-현재 review verdict: `P0=0, P1=0`; fresh checker/test, 실제 receipt event, PR #828 exact-head CI와 live review/thread read-back을 모두 확인했다. coordinator는 CG-15까지 PASS이며, CG-16 exact-head 승인 전에는 merge하지 않는다.
+이전 PR #828 review verdict: `P0=0, P1=0`; fresh checker/test, 실제 receipt event,
+PR #828 exact-head CI와 live review/thread read-back을 확인했다. PR #828은 이후
+rebase merge되었다.
+
+## 현재 coordinator replan 판정
+
+현재 변경은 P2 #821이 `develop@2c388e1dba3de5a9636b1528c68d1da758601e76`을
+base로 사용하도록 `F1-P2-02`를 재계획하는 coordinator-only lane이다. 새
+`base_ref_policy` positive/negative tests를 포함한 checker 86개가 통과했고,
+current/trusted manifest, JSON, diff 검증도 통과했다. coordinator PR의 exact
+head hosted CI와 live metadata를 확인하기 전에는 child merge gate를 열지 않는다.

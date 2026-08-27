@@ -1,5 +1,21 @@
 # Epic #792 rebase train 전환 교훈
 
+## 2026-08-27 P2 child base 재결속
+
+F1 #815를 `develop`에 rebase merge한 뒤 GitHub는 후속 P2 #821의 base를
+`develop`으로 자동 재결속하고, 부모 branch를 삭제했다. manifest의
+`F1-P2-02`가 이전 `fix/ecosystem-reuse-field-service-contracts`를 계속
+기대하자 PR scope checker는 F1 wildcard와 child path를 동시에 매칭해
+`found 2`로 fail-closed했다.
+
+이를 해결하기 위해 child scope에 `base_ref_policy`를 추가했다. 일반 child는
+`parent-head`를 사용하고, 부모가 merge된 뒤 rebase 가능한 child만
+`repository-base-after-parent-merge`를 fresh coordinator receipt와 함께
+사용한다. 후자의 경우에도 `scope_kind=child`, `oid_policy=rebase-aware`,
+`expected_base_ref=develop`, exact head ref와 path allowlist를 모두 검사한다.
+따라서 checker를 약화하거나 삭제된 parent branch를 되살려 검증을 우회하지
+않는다.
+
 ## 발견
 
 receipt bootstrap에서 topology component 상한이 8인데 11개 component를 한 번에

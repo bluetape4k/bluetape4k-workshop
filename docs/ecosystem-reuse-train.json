@@ -56,8 +56,9 @@
       "scope_id": "coordinator-child-scope",
       "scope_kind": "coordinator",
       "parent_track": "P0",
-      "expected_head_ref": "chore/ecosystem-reuse-manifest-repair",
+      "expected_head_ref": "fix/ecosystem-reuse-follow-up-base-replan",
       "expected_base_ref": "develop",
+      "base_ref_policy": "parent-head",
       "oid_policy": "rebase-aware",
       "head_oid": null,
       "base_oid": null,
@@ -81,6 +82,7 @@
       "parent_track": "F1",
       "expected_head_ref": "fix/ecosystem-reuse-shutdown-deadline",
       "expected_base_ref": "develop",
+      "base_ref_policy": "repository-base-after-parent-merge",
       "oid_policy": "rebase-aware",
       "head_oid": null,
       "base_oid": null,
@@ -94,8 +96,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260827T092246Z-f1-p2-base-replan",
-    "checksum": "b35737c5d18afc56454573267d9a1a9818e1684ab63949fb4ee45db400ea3dc9"
+      "receipt_id": "20260827T093234Z-p2-base-replan",
+      "checksum": "fe95df7379a758f62102054624c5e8c4c3b6fb0f4a0b3b48d8d0d87ac758bce4"
   },
   "planned_scope_replan_receipts": {
     "A2": {

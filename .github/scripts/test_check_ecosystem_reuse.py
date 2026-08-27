@@ -159,6 +159,7 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
             "parent_track": "F1",
             "expected_head_ref": "branch/F1-child",
             "expected_base_ref": "branch/F1",
+            "base_ref_policy": "parent-head",
             "oid_policy": oid_policy,
             "head_oid": head_oid,
             "base_oid": base_oid,
@@ -762,6 +763,36 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         path = self.root / "manifest.json"
         path.write_text(json.dumps(manifest), encoding="utf-8")
         self.assertEqual([], CHECKER.validate_manifest(self.root, path))
+
+    def test_manifest_accepts_rebase_aware_child_scope_after_parent_merge(self):
+        manifest = self.manifest_with_follow_up_scope()
+        manifest["follow_up_scopes"][0] = self.follow_up_scope(oid_policy="rebase-aware")
+        manifest["follow_up_scopes"][0]["expected_base_ref"] = "develop"
+        manifest["follow_up_scopes"][0]["base_ref_policy"] = "repository-base-after-parent-merge"
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        self.assertEqual([], CHECKER.validate_manifest(self.root, path))
+
+    def test_manifest_rejects_repository_base_policy_for_exact_scope(self):
+        manifest = self.manifest_with_follow_up_scope()
+        manifest["follow_up_scopes"][0]["expected_base_ref"] = "develop"
+        manifest["follow_up_scopes"][0]["base_ref_policy"] = "repository-base-after-parent-merge"
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, path)
+        self.assertTrue(any("requires rebase-aware oid_policy" in error for error in errors))
+
+    def test_manifest_rejects_repository_base_policy_for_coordinator_scope(self):
+        manifest = self.manifest_with_follow_up_scope()
+        manifest["follow_up_scopes"][0] = self.follow_up_scope(
+            scope_kind="coordinator", oid_policy="rebase-aware"
+        )
+        manifest["follow_up_scopes"][0]["expected_base_ref"] = "develop"
+        manifest["follow_up_scopes"][0]["base_ref_policy"] = "repository-base-after-parent-merge"
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        errors = CHECKER.validate_manifest(self.root, path)
+        self.assertTrue(any("requires child scope_kind" in error for error in errors))
 
     def test_manifest_rejects_rebase_aware_child_scope_with_stale_oid(self):
         manifest = self.manifest_with_follow_up_scope()

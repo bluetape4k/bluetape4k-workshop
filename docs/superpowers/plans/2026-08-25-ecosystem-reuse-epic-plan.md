@@ -311,6 +311,14 @@ allowlist에 포함한다. `R2`만 추가로
 `r2_consumer_anchor`, `r2_test_anchor`, `required=true`)를 가진다. checker는 이 top-level/node 필드를 exact
 trusted-base 비교와 negative test 대상으로 취급한다.
 
+follow-up scope는 `base_ref_policy=parent-head`일 때 parent track의
+`expected_head_ref`를 base로 요구한다. 부모가 rebase merge되어 branch가 삭제된
+뒤 child가 repository `base_ref`로 재기반화되면 coordinator는
+`base_ref_policy=repository-base-after-parent-merge`를 fresh receipt와 함께
+기록한다. 후자는 `scope_kind=child`, `oid_policy=rebase-aware`, 정확한
+`expected_base_ref=base_ref` 조합에서만 허용하며 path/ref/OID 검증을
+완화하지 않는다.
+
 - [ ] **Step 2: Write the checker test first**
 
   In `.github/scripts/test_check_ecosystem_reuse.py`, cover:
