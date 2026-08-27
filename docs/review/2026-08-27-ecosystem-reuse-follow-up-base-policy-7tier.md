@@ -11,7 +11,11 @@ checker 계약으로 추출했다.
 - 예정 branch: `chore/ecosystem-reuse-follow-up-base-policy`
 - 변경 파일: checker, checker tests, `docs/ecosystem-reuse-train.json`, 이
   review와 lesson
-- 명시적 제외: Kotlin 예제 production/test source, 새 dependency, individual
+- F2 경로 보정: `src/test/kotlin/**`가 구현 child의 production 경로와 함께
+  검증되도록 F2 allowlist에 추가했다. planned scope의 allowlist는 fresh
+  coordinator receipt가 있을 때만 경로를 추가할 수 있고 기존 경로 삭제는
+  거부한다.
+- 명시적 제외: Kotlin 예제 production/test 동작 자체, 새 dependency, individual
   Bluetape BOM/version pin, 이미 `develop`에 병합된 #821/#832/#833의 code와
   receipt
 - 병합 정책: fresh exact-head approval 뒤 GitHub `rebase`만 허용하며,
@@ -53,21 +57,22 @@ G0 branch를 coordinator scope의 `expected_head_ref`에 재결속하며, 기존
 | checker 정책 상수/필드 | `.github/scripts/check-ecosystem-reuse.py:60-70` | 두 base 정책과 필수 `base_ref_policy` 필드를 선언 |
 | checker scope invariant | `.github/scripts/check-ecosystem-reuse.py:679-692` | enum, scope kind, OID 조합을 fail-closed로 검사 |
 | checker base binding | `.github/scripts/check-ecosystem-reuse.py:737-747` | parent-head와 repository base의 expected ref를 분리 검사 |
+| planned allowlist repair | `.github/scripts/check-ecosystem-reuse.py:1100-1124` | fresh planned receipt와 additive-only F2 test path 보정 |
 | 테스트 fixture | `.github/scripts/test_check_ecosystem_reuse.py:156-168` | follow-up scope에 명시적 `parent-head`를 포함 |
 | manifest positive/negative | `.github/scripts/test_check_ecosystem_reuse.py:767-816` | parent merge, exact/coordinator 오사용, unknown policy와 parent ref 혼용을 검증 |
 | train-scope positive/negative | `.github/scripts/test_check_ecosystem_reuse.py:1287-1325` | repository base와 parent ref를 실제 PR scope binding에서 구분 |
-| current manifest | `docs/ecosystem-reuse-train.json:54-88` | coordinator scope는 `parent-head`로 보존하고 새 review/lesson과 fresh receipt를 연결 |
+| current manifest | `docs/ecosystem-reuse-train.json:54-88, 313-330` | coordinator scope는 현재 branch에 결속하고 F2 test allowlist와 fresh repair receipt를 연결 |
 
 ## 7-Tier 결과
 
 | Tier | 판정 | 근거 |
 | --- | --- | --- |
 | 1. 요구사항·범위 | PASS | #822/#792 continuation과 사용자 지시인 rebase merge를 반영했다. #831 전체 재사용과 병합된 child code는 제외했다. |
-| 2. 계약·자료구조 | PASS | `base_ref_policy` 필수성, 두 enum, scope-kind/OID 조합, expected base binding을 checker와 manifest에 명시했다. |
+| 2. 계약·자료구조 | PASS | `base_ref_policy` 필수성, 두 enum, scope-kind/OID 조합, expected base binding과 F2 additive allowlist repair를 checker와 manifest에 명시했다. |
 | 3. 경계·보안 | PASS | repository-relative allowlist와 기존 control-character/path traversal 방어를 유지했다. token, credential, owner handle은 문서·manifest에 기록하지 않았다. |
-| 4. 정확성·상태 | PASS | `parent-head`는 parent track head만, repository 정책은 manifest repository base만 허용한다. rebase-aware scope의 `base_oid/head_oid=null` invariant도 유지한다. |
+| 4. 정확성·상태 | PASS | `parent-head`는 parent track head만, repository 정책은 manifest repository base만 허용한다. rebase-aware scope의 `base_oid/head_oid=null` invariant와 planned allowlist의 추가-only invariant도 유지한다. |
 | 5. 성능·안정성 | N/A | Python checker와 JSON/documentation만 변경하며 Kotlin runtime, DB, coroutine, Testcontainers 경로를 건드리지 않는다. |
-| 6. 테스트·운영 | PASS | test-first RED 이후 90개 전체가 `OK`가 됐고, 재결속 전 exact-head hosted run의 ref 불일치를 재현했다. 재결속 후 local/trusted checker와 fresh Type E receipt, exact-head hosted CI가 모두 PASS다. CI run `33080335900`의 wrapper/build/CI Status와 Ecosystem Reuse Gate run `33080335986`이 모두 성공했다. |
+| 6. 테스트·운영 | IN PROGRESS | test-first RED 이후 92개 전체가 `OK`가 됐고, 재결속 전 exact-head hosted run의 ref 불일치를 재현했다. additive-only F2 allowlist repair와 path removal 거부 회귀를 포함한 local/trusted checker는 PASS이며, 이전 head `b66e2c019`의 hosted CI는 historical evidence로 보존하고 현재 head의 hosted CI 재실행이 남아 있다. |
 | 7. 문서·유지보수 | PASS | 한국어 review/lesson에 source/test anchor, raw fallback, receipt, stop condition을 남겼고, 기존 역사적 review를 덮어쓰지 않았다. |
 
 ## Bluetape 패턴 적용 여부
@@ -82,7 +87,8 @@ G0 branch를 coordinator scope의 `expected_head_ref`에 재결속하며, 기존
 ## Raw fallback 및 receipt
 
 주요 검증 명령은 다음과 같다. 첫 hosted 실패는 아래 raw 명령으로 로컬에서
-재현했으며, 재결속 후 같은 명령과 fresh hosted CI를 다시 실행해 성공했다.
+재현했으며, allowlist 보정 후 현재 head에서 같은 명령과 fresh hosted CI를
+다시 실행해야 한다.
 
 ```text
 python3 .github/scripts/test_check_ecosystem_reuse.py -v
@@ -95,7 +101,7 @@ git diff --check
 - workflow type: `E` (`bluetape-maintenance`)
 - initial run: `20260827T133807Z-2e478eff` (pre-repair evidence)
 - hosted failure: [Ecosystem Reuse Gate run 33078409120](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33078409120)
-- fresh exact-head CI: [CI run 33080335900](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33080335900), [Ecosystem Reuse Gate run 33080335986](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33080335986) — 모두 `b66e2c019cfc64a75981c555efed959129bf5ec5`에서 성공
+- historical exact-head CI: [CI run 33080335900](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33080335900), [Ecosystem Reuse Gate run 33080335986](https://github.com/bluetape4k/bluetape4k-workshop/actions/runs/33080335986) — `b66e2c019cfc64a75981c555efed959129bf5ec5`에서 성공했으며 현재 head의 증거로 재사용하지 않음
 - repair run: `20260827T135913Z-b18aca2f`, sequence 16 checksum
   `4dc63584517e5359a71f24d4042f829c9afecda3da9470bdfa94ad57181a428f`
 - repair `completion-check`: `complete=true`, missing component/lane/check/replacement/main proof 없음
@@ -105,13 +111,16 @@ git diff --check
 - repair receipt evidence: completed sequence 16 head
   `4dc63584517e5359a71f24d4042f829c9afecda3da9470bdfa94ad57181a428f`
 - `completion-check`: `complete=true`, missing component/lane/check/replacement/main proof 없음.
+- combined repair receipt: `20260827T141532Z-f2-allowlist-repair`
+- combined repair payload SHA-256:
+  `d6e7c7ce9bd5a0a550cc0ef62e33ec1e49ed2fb96fd936aa26829bcbdb3bf1fa`
 
 ## Stop condition
 
 다음 중 하나라도 발생하면 PR 생성 또는 후속 train으로 진행하지 않는다.
 
-1. checker가 unknown policy, scope-kind/OID 조합, expected base mismatch를
-   `FAIL`로 보고한다.
+1. checker가 unknown policy, scope-kind/OID 조합, expected base mismatch 또는
+   planned allowlist 경로 삭제를 `FAIL`로 보고한다.
 2. trusted manifest 비교에 fresh coordinator receipt가 없거나, 기존
    merged/verified 상태를 되돌리는 diff가 생긴다.
 3. exact PR head의 base/head, changed paths, CI, review/thread, milestone,
@@ -120,7 +129,6 @@ git diff --check
 5. 7-Tier에서 P0 또는 P1이 하나라도 남거나, workflow receipt의
    `completion-check`에 누락된 required proof가 남는다.
 
-현재 verdict: `P0=0, P1=0`; coordinator ref 재결속, fresh local receipt와
-fresh exact-head hosted CI는 PASS다. PR review/thread에는 미해결 항목이 없고,
-1인 개발자 lane의 human-review subgate는 독립 최종 diff 검토로 대체했으므로
-merge-ready 판정을 위한 fresh approval만 남았다.
+현재 verdict: `P0=0, P1=0`; coordinator ref 재결속과 fresh local receipt는
+PASS다. 이전 exact-head hosted CI는 historical evidence이며, 현재 head의
+fresh hosted CI와 review/thread read-back 뒤에 merge-ready를 재판정한다.

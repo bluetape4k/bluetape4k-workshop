@@ -1080,7 +1080,12 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
                     if baseline.get("state") == "MERGED":
                         errors.append("%s: MERGED execution scope is immutable" % track)
                     elif current.get("state") == "PLANNED":
-                        planned_replan_fields = {"expected_head_ref", "expected_base_ref", "parent_track"}
+                        planned_replan_fields = {
+                            "expected_head_ref",
+                            "expected_base_ref",
+                            "parent_track",
+                            "allowed_paths",
+                        }
                         if baseline.get("state") != "PLANNED":
                             errors.append(
                                 "%s: PLANNED scope replan requires the trusted node to also be PLANNED" % track
@@ -1095,8 +1100,21 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
                             )
                         if set(changed_graph_fields) - planned_replan_fields:
                             errors.append(
-                                "%s: PLANNED scope replan may change only ref/parent fields" % track
+                                "%s: PLANNED scope replan may change only ref/parent fields or allowed_paths" % track
                             )
+                        if "allowed_paths" in changed_graph_fields:
+                            baseline_paths = {
+                                clean_cell(str(path))
+                                for path in baseline.get("allowed_paths", [])
+                            }
+                            current_paths = {
+                                clean_cell(str(path))
+                                for path in current.get("allowed_paths", [])
+                            }
+                            if not baseline_paths.issubset(current_paths):
+                                errors.append(
+                                    "%s: planned allowlist repair may only add paths" % track
+                                )
                         current_replan_receipt = current_replan_receipts.get(track)
                         trusted_replan_receipt = trusted_replan_receipts.get(track)
                         trusted_replan_receipt_id = (
