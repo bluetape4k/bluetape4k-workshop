@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucherpool.config
 
 import com.zaxxer.hikari.HikariDataSource
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.concurrent.virtualthread.VirtualThreads
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
@@ -23,7 +24,6 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager
 import java.io.Serializable
 import java.time.Duration
-import java.util.UUID
 import java.util.concurrent.ExecutorService
 import javax.sql.DataSource
 import kotlin.time.toKotlinDuration
@@ -51,6 +51,7 @@ private const val DEFAULT_SSE_POLL_INTERVAL_MILLIS = 250L
 private const val DEFAULT_SSE_MAX_IDLE_INTERVAL_SECONDS = 2L
 private const val DEFAULT_SSE_HEARTBEAT_INTERVAL_SECONDS = 15L
 private const val DEFAULT_SSE_WRITE_TIMEOUT_SECONDS = 5L
+private const val DEFAULT_WORKER_INSTANCE_SUFFIX_LENGTH = 16
 
 @ConfigurationProperties(prefix = "workshop.voucher-pool")
 internal data class VoucherPoolProperties(
@@ -58,7 +59,7 @@ internal data class VoucherPoolProperties(
     val redis: VoucherPoolRedisProperties = VoucherPoolRedisProperties(),
     val sse: VoucherPoolSseProperties = VoucherPoolSseProperties(),
     val http: VoucherPoolHttpProperties,
-    val workerInstanceId: String = "voucher-pool-${UUID.randomUUID()}",
+    val workerInstanceId: String = "voucher-pool-${Base58.randomString(DEFAULT_WORKER_INSTANCE_SUFFIX_LENGTH)}",
 ) : Serializable {
     companion object { private const val serialVersionUID: Long = 1L }
 }

@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.voucherpool.config
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotContain
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.VoucherPoolJdbcMetrics
@@ -84,6 +85,16 @@ internal class VoucherPoolConfigurationTest {
         properties.http.toString() shouldNotContain "test-voucher-pool-operator-guard"
         properties.toString() shouldNotContain "test-operator-secret"
         properties.toString() shouldNotContain "test-voucher-pool-operator-guard"
+    }
+
+    @Test
+    fun `default worker instance uses a compact base58 namespace`() {
+        val workerInstanceId = testProperties().workerInstanceId
+        val suffix = workerInstanceId.removePrefix("voucher-pool-")
+
+        workerInstanceId.startsWith("voucher-pool-").shouldBeTrue()
+        suffix.length shouldBeEqualTo 16
+        suffix.all { it.isLetterOrDigit() }.shouldBeTrue()
     }
 
     @Test

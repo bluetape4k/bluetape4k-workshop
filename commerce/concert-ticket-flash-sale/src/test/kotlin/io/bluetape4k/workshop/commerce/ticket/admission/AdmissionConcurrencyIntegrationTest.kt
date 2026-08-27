@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.ticket.admission
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.ticket.admission.api.ConsumeGrant
 import io.bluetape4k.workshop.commerce.ticket.admission.internal.AdmissionExpired
 import io.bluetape4k.workshop.commerce.ticket.admission.internal.AdmissionService
@@ -19,12 +20,13 @@ internal class AdmissionConcurrencyIntegrationTest {
     fun `one admission grant can be consumed once`() {
         TicketDatabaseFixture().use { fixture ->
             val now = Instant.parse("2026-07-21T10:00:00Z")
-            val saleId = UUID.randomUUID()
-            val buyerId = UUID.randomUUID()
-            val ipId = UUID.randomUUID()
+            val saleId = Uuid.V7.nextId()
+            val buyerId = Uuid.V7.nextId()
+            val ipId = Uuid.V7.nextId()
+            // grantNonce는 승인 토큰의 보안 nonce fallback이므로 영속 식별자 생성 계약에서 제외한다.
             val grantNonce = UUID.randomUUID()
-            val firstAttempt = UUID.randomUUID()
-            val secondAttempt = UUID.randomUUID()
+            val firstAttempt = Uuid.V7.nextId()
+            val secondAttempt = Uuid.V7.nextId()
             fixture.execute(
                 """
                 INSERT INTO ticket_sales(sale_id, state, current_policy_version, opens_at, closes_at)
@@ -39,9 +41,9 @@ internal class AdmissionConcurrencyIntegrationTest {
                     state, hold_deadline, authorization_operation_id
                 ) VALUES
                     ('$firstAttempt', '$saleId', '$buyerId', '$ipId', 'GENERAL', 1, 1,
-                     'inventory_held', '${now.plusSeconds(30)}', '${UUID.randomUUID()}'),
+                     'inventory_held', '${now.plusSeconds(30)}', '${Uuid.V7.nextId()}'),
                     ('$secondAttempt', '$saleId', '$buyerId', '$ipId', 'GENERAL', 1, 1,
-                     'inventory_held', '${now.plusSeconds(30)}', '${UUID.randomUUID()}');
+                     'inventory_held', '${now.plusSeconds(30)}', '${Uuid.V7.nextId()}');
                 INSERT INTO ticket_admission_grants(sale_id, grant_nonce, buyer_subject_id, policy_version, expires_at)
                 VALUES ('$saleId', '$grantNonce', '$buyerId', 1, '${now.plusSeconds(30)}')
                 """.trimIndent(),
@@ -59,11 +61,12 @@ internal class AdmissionConcurrencyIntegrationTest {
     fun `concurrent grant consumers have one winner`() {
         TicketDatabaseFixture().use { fixture ->
             val now = Instant.parse("2026-07-21T10:00:00Z")
-            val saleId = UUID.randomUUID()
-            val buyerId = UUID.randomUUID()
-            val ipId = UUID.randomUUID()
+            val saleId = Uuid.V7.nextId()
+            val buyerId = Uuid.V7.nextId()
+            val ipId = Uuid.V7.nextId()
+            // grantNonce는 승인 토큰의 보안 nonce fallback이므로 영속 식별자 생성 계약에서 제외한다.
             val grantNonce = UUID.randomUUID()
-            val attempts = listOf(UUID.randomUUID(), UUID.randomUUID())
+            val attempts = listOf(Uuid.V7.nextId(), Uuid.V7.nextId())
             fixture.execute(
                 """
                 INSERT INTO ticket_sales(sale_id, state, current_policy_version, opens_at, closes_at)
@@ -78,9 +81,9 @@ internal class AdmissionConcurrencyIntegrationTest {
                     state, hold_deadline, authorization_operation_id
                 ) VALUES
                     ('${attempts[0]}', '$saleId', '$buyerId', '$ipId', 'GENERAL', 1, 1,
-                     'inventory_held', '${now.plusSeconds(30)}', '${UUID.randomUUID()}'),
+                     'inventory_held', '${now.plusSeconds(30)}', '${Uuid.V7.nextId()}'),
                     ('${attempts[1]}', '$saleId', '$buyerId', '$ipId', 'GENERAL', 1, 1,
-                     'inventory_held', '${now.plusSeconds(30)}', '${UUID.randomUUID()}');
+                     'inventory_held', '${now.plusSeconds(30)}', '${Uuid.V7.nextId()}');
                 INSERT INTO ticket_admission_grants(sale_id, grant_nonce, buyer_subject_id, policy_version, expires_at)
                 VALUES ('$saleId', '$grantNonce', '$buyerId', 1, '${now.plusSeconds(30)}')
                 """.trimIndent(),

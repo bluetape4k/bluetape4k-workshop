@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.commerce.ticket.web
 
 import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.PurchaseQueries
 import org.junit.jupiter.api.Test
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
-import java.util.UUID
 
 internal class TicketRedactionContractTest {
     @Test
@@ -16,7 +16,7 @@ internal class TicketRedactionContractTest {
             CustomerTicketController(NoopPurchaseCommands, PurchaseQueries { _, _ -> null }, PrincipalSubjectResolver()),
         ).setControllerAdvice(ApiExceptionHandler()).build()
 
-        val response = mvc.get("/api/v1/purchase-attempts/${UUID.randomUUID()}") {
+        val response = mvc.get("/api/v1/purchase-attempts/${Uuid.V7.nextId()}") {
             principal = UsernamePasswordAuthenticationToken.authenticated(canary, null, emptyList())
         }.andExpect {
             status { isBadRequest() }

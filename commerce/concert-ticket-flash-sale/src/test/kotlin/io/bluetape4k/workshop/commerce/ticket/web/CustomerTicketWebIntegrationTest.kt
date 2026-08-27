@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.commerce.ticket.web
 
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.ticket.domain.PurchaseState
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.ApplyTicketOutcome
 import io.bluetape4k.workshop.commerce.ticket.purchase.api.CancelPurchase
@@ -12,14 +13,13 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import java.time.Instant
-import java.util.UUID
 
 internal class CustomerTicketWebIntegrationTest {
     @Test
     fun `other buyer cannot discover an attempt`() {
-        val owner = UUID.randomUUID()
-        val other = UUID.randomUUID()
-        val attempt = UUID.randomUUID()
+        val owner = Uuid.V7.nextId()
+        val other = Uuid.V7.nextId()
+        val attempt = Uuid.V7.nextId()
         val snapshot = PurchaseSnapshot(attempt, PurchaseState.INVENTORY_HELD, 0, Instant.EPOCH)
         val queries = PurchaseQueries { id, buyer -> snapshot.takeIf { id == attempt && buyer == owner } }
         val mvc = MockMvcBuilders.standaloneSetup(
@@ -37,8 +37,8 @@ internal class CustomerTicketWebIntegrationTest {
 
     @Test
     fun `owner response is no store and contains only recovery projection`() {
-        val owner = UUID.randomUUID()
-        val attempt = UUID.randomUUID()
+        val owner = Uuid.V7.nextId()
+        val attempt = Uuid.V7.nextId()
         val snapshot = PurchaseSnapshot(attempt, PurchaseState.APPROVED, 3, Instant.EPOCH)
         val mvc = MockMvcBuilders.standaloneSetup(
             CustomerTicketController(NoopPurchaseCommands, PurchaseQueries { _, _ -> snapshot }, PrincipalSubjectResolver()),

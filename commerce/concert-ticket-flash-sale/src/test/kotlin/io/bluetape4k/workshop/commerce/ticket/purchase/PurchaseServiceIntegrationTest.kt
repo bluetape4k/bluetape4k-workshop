@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.ticket.purchase
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.ticket.admission.api.ConsumeGrant
 import io.bluetape4k.workshop.commerce.ticket.admission.internal.AdmissionService
 import io.bluetape4k.workshop.commerce.ticket.domain.PurchaseState
@@ -99,7 +100,7 @@ internal class PurchaseServiceIntegrationTest {
             fixture.service.start(command)
 
             fixture.service.owned(command.attemptId, command.buyerSubjectId)?.attemptId shouldBeEqualTo command.attemptId
-            fixture.service.owned(command.attemptId, UUID.randomUUID()) shouldBeEqualTo null
+            fixture.service.owned(command.attemptId, Uuid.V7.nextId()) shouldBeEqualTo null
         }
     }
 }
@@ -122,8 +123,8 @@ internal class PurchaseFixture(
 ) : AutoCloseable {
     private val database = TicketDatabaseFixture()
     val executor get() = database.executor
-    val saleId: UUID = UUID.randomUUID()
-    val sharedIp: UUID = UUID.randomUUID()
+    val saleId: UUID = Uuid.V7.nextId()
+    val sharedIp: UUID = Uuid.V7.nextId()
     val events = mutableListOf<AuthorizationRequested>()
     val service =
         PurchaseService(
@@ -148,11 +149,12 @@ internal class PurchaseFixture(
     }
 
     fun command(
-        buyer: UUID = UUID.randomUUID(),
+        buyer: UUID = Uuid.V7.nextId(),
         ip: UUID = sharedIp,
         quantity: Int = 1,
     ): StartPurchase {
-        val attemptId = UUID.randomUUID()
+        val attemptId = Uuid.V7.nextId()
+        // grantNonce는 승인 토큰의 보안 nonce fallback이므로 영속 식별자 생성 계약에서 제외한다.
         val grantNonce = UUID.randomUUID()
         execute(
             """
@@ -173,14 +175,14 @@ internal class PurchaseFixture(
                     canonicalRoute = "/api/v1/sales/{saleId}/purchase-attempts",
                     resourceId = saleId.toString(),
                     operation = "purchase",
-                    keyDigest = IdempotencyFingerprint.key(ByteArray(32) { 0x33 }, UUID.randomUUID().toString()),
+                    keyDigest = IdempotencyFingerprint.key(ByteArray(32) { 0x33 }, Uuid.V7.nextId().toString()),
                 ),
                 IdempotencyFingerprint.request("POST", "/purchase", "{\"grade\":\"GENERAL\",\"quantity\":$quantity}"),
                 NOW,
             ) as IdempotencyDecision.Owner
         return StartPurchase(
             attemptId = attemptId,
-            authorizationOperationId = UUID.randomUUID(),
+            authorizationOperationId = Uuid.V7.nextId(),
             idempotencyOwnerId = owner.id,
             buyerSubjectId = buyer,
             ipSubjectId = ip,

@@ -2,6 +2,7 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.application
 
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.voucherpool.domain.BatchPolicy
 import io.bluetape4k.workshop.commerce.voucherpool.domain.BatchState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CampaignPolicy
@@ -310,7 +311,8 @@ internal class JdbcVoucherPoolRevocationService(
         tenantId: String,
         impact: ImpactSnapshot,
     ): RevokePreviewSnapshot {
-        val grantId = UUID.randomUUID()
+        val grantId = Uuid.V7.nextId()
+        // nonce는 서명 토큰의 cryptographic nonce이므로 SecureRandom 생성 경로를 유지한다.
         val nonce = ByteArray(TOKEN_NONCE_BYTES).also(random::nextBytes)
         val expiresAt = impact.observedAt.plus(previewLifetime)
         val material = tokenMaterial(grantId, nonce, impact, expiresAt)

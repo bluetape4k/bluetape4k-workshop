@@ -7,6 +7,7 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.application
 
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.voucherpool.domain.CanonicalVoucherCode
 import io.bluetape4k.workshop.commerce.voucherpool.domain.EntryState
 import io.bluetape4k.workshop.commerce.voucherpool.domain.ReservationState
@@ -34,7 +35,7 @@ internal data class AllocateVoucherCommand(
     val canonicalUser: String,
     val expectedRevision: Long,
     val idempotencyKey: String,
-    val allocationId: UUID = UUID.randomUUID(),
+    val allocationId: UUID = Uuid.V7.nextId(),
 )
 
 internal data class RevealVoucherCommand(
@@ -53,7 +54,7 @@ internal data class ReplaceLostRevealCommand(
     val canonicalUser: String,
     val expectedRevision: Long,
     val idempotencyKey: String,
-    val reservationId: UUID = UUID.randomUUID(),
+    val reservationId: UUID = Uuid.V7.nextId(),
 )
 
 internal data class AllocationSnapshot(

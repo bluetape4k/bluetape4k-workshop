@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.commerce.ticket.config
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.ticket.operations.api.OperatorReconcile
 import io.bluetape4k.workshop.commerce.ticket.operations.internal.OperationsService
 import io.bluetape4k.workshop.commerce.ticket.operations.internal.ReconciliationJob
@@ -13,7 +14,6 @@ import org.springframework.boot.health.contributor.Status
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
 
 internal class TicketHealthLifecycleIntegrationTest {
     @Test
@@ -44,7 +44,7 @@ internal class TicketHealthLifecycleIntegrationTest {
             clock = Clock.systemUTC(),
         )
         assertFailsWith<IllegalStateException> {
-            service.reconcile(OperatorReconcile(UUID.randomUUID(), 1, Instant.now(), "manual recovery"))
+            service.reconcile(OperatorReconcile(Uuid.V7.nextId(), 1, Instant.now(), "manual recovery"))
         }
         service.availablePermits() shouldBeEqualTo 1
     }
@@ -61,7 +61,7 @@ internal class TicketHealthLifecycleIntegrationTest {
         lifecycle.acceptsForegroundWork() shouldBeEqualTo false
         registry.counter("ticket.purchase.outcomes", "outcome", "approved").count() shouldBeEqualTo 1.0
         assertFailsWith<TicketStreamCapacityExceeded> {
-            stream.subscribe(io.bluetape4k.workshop.commerce.ticket.web.StreamScope.PublicSale(UUID.randomUUID())) { emptyMap() }
+            stream.subscribe(io.bluetape4k.workshop.commerce.ticket.web.StreamScope.PublicSale(Uuid.V7.nextId())) { emptyMap() }
         }
     }
 }
