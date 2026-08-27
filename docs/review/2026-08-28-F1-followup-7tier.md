@@ -45,8 +45,9 @@ io.bluetape4k.workshop.optimization.fieldservice.persistence.FieldServiceCasInte
 GREEN/FULL: `:optimization-field-service-dispatch:test` — 76 tests passed,
 failures=0, errors=0, skipped=0; `BUILD SUCCESSFUL`.
 STATIC: `./gradlew detekt --no-daemon` — `BUILD SUCCESSFUL`; `git diff --check` — PASS.
-BASE/HEAD: current branch is rebased onto `develop` `b5a09c4b` with exact head
-`d1e97739`.
+BASE/HEAD: current branch is prepared on coordinator exact head
+`67b393c6` (the post-merge `develop` base) with implementation head
+`9b1c6c20` before the review-artifact commit.
 ```
 
 ## 남은 게이트와 DoD
