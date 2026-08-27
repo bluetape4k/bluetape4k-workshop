@@ -2,6 +2,11 @@
 
 package io.bluetape4k.workshop.commerce.voucherpool.web
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.workshop.commerce.voucherpool.AbstractVoucherPoolIntegrationTest
 import io.bluetape4k.workshop.commerce.voucherpool.application.BatchRevisionCommand
 import io.bluetape4k.workshop.commerce.voucherpool.application.BatchSourceKind
@@ -83,14 +88,14 @@ internal class VoucherPoolEventStreamIntegrationTest : AbstractVoucherPoolIntegr
             .jsonPath("$.code").doesNotExist()
 
         val direct = streams.openCustomer(TENANT, PRINCIPAL, null)
-        check(checkNotNull(direct.next(Duration.ZERO)).type == "snapshot")
+        direct.next(Duration.ZERO).shouldNotBeNull().type shouldBeEqualTo "snapshot"
         direct.close()
 
         val event = firstCustomerEvent()
-        check(event.any { it == "event: snapshot" })
-        check(event.any { it.startsWith("id: ") && ':' in it })
-        check(event.any { it.contains(owned.reservationId.toString()) })
-        check(event.none { it.contains("VOUCHER-SSE-") })
+        event.any { it == "event: snapshot" }.shouldBeTrue()
+        event.any { it.startsWith("id: ") && ':' in it }.shouldBeTrue()
+        event.any { it.contains(owned.reservationId.toString()) }.shouldBeTrue()
+        event.joinToString("\n") shouldNotContain "VOUCHER-SSE-"
     }
 
     @Test
@@ -125,15 +130,15 @@ internal class VoucherPoolEventStreamIntegrationTest : AbstractVoucherPoolIntegr
             .applied()
 
         val first = streams.openCustomer(TENANT, PRINCIPAL, null)
-        val cursor = checkNotNull(first.next(Duration.ZERO)).cursor
+        val cursor = first.next(Duration.ZERO).shouldNotBeNull().cursor
         first.close()
 
         val resumed = streams.openCustomer(TENANT, PRINCIPAL, cursor)
-        check(checkNotNull(resumed.next(Duration.ZERO)).type == "snapshot")
+        resumed.next(Duration.ZERO).shouldNotBeNull().type shouldBeEqualTo "snapshot"
         resumed.close()
 
         val failure = runCatching { streams.openCustomer(TENANT, OTHER_PRINCIPAL, cursor) }.exceptionOrNull()
-        check(failure is VoucherPoolApiException && failure.stableCode == "INVALID_EVENT_CURSOR")
+        failure.shouldBeInstanceOf<VoucherPoolApiException>().stableCode shouldBeEqualTo "INVALID_EVENT_CURSOR"
     }
 
     @Test
@@ -143,9 +148,10 @@ internal class VoucherPoolEventStreamIntegrationTest : AbstractVoucherPoolIntegr
             .applied()
 
         val subscription = streams.openCustomer(TENANT, PRINCIPAL, VoucherPoolEventCursor(0, 0))
-        check(checkNotNull(subscription.next(Duration.ZERO)).type == "snapshot")
-        val reset = checkNotNull(subscription.next(Duration.ZERO))
-        check(reset.type == "reset" && reset.terminal)
+        subscription.next(Duration.ZERO).shouldNotBeNull().type shouldBeEqualTo "snapshot"
+        val reset = subscription.next(Duration.ZERO).shouldNotBeNull()
+        reset.type shouldBeEqualTo "reset"
+        reset.terminal.shouldBeTrue()
         subscription.close()
     }
 
@@ -178,15 +184,16 @@ internal class VoucherPoolEventStreamIntegrationTest : AbstractVoucherPoolIntegr
                 }
             }
             try {
-                check(source.initialEntered.await(2, TimeUnit.SECONDS))
+                source.initialEntered.await(2, TimeUnit.SECONDS).shouldBeTrue()
                 stream.close()
                 source.releaseInitial.countDown()
                 opening.join(Duration.ofSeconds(2))
 
                 val shutdown = failure.get()
-                check(shutdown is VoucherPoolApiException && shutdown.stableCode == "SERVICE_SHUTTING_DOWN")
-                check(subscription.get() == null)
-                check(stream.activePollers() == 0)
+                val shutdownException = shutdown.shouldBeInstanceOf<VoucherPoolApiException>()
+                shutdownException.stableCode shouldBeEqualTo "SERVICE_SHUTTING_DOWN"
+                subscription.get() shouldBeEqualTo null
+                stream.activePollers() shouldBeEqualTo 0
             } finally {
                 source.releaseInitial.countDown()
                 subscription.get()?.close()
@@ -214,12 +221,13 @@ internal class VoucherPoolEventStreamIntegrationTest : AbstractVoucherPoolIntegr
             val metrics = VoucherPoolMetrics(SimpleMeterRegistry())
             VoucherPoolEventStream(source, Jackson.defaultJsonMapper, executor, properties, metrics).use { stream ->
                 val subscription = stream.openCustomer(TENANT, PRINCIPAL, null)
-                await atMost Duration.ofSeconds(2) untilAsserted { check(source.pollCount.get() > 0) }
+                await atMost Duration.ofSeconds(2) untilAsserted { (source.pollCount.get() > 0).shouldBeTrue() }
 
-                val next = checkNotNull(subscription.next(Duration.ofSeconds(1)))
-                check(next.type == "reset" && next.terminal)
+                val next = subscription.next(Duration.ofSeconds(1)).shouldNotBeNull()
+                next.type shouldBeEqualTo "reset"
+                next.terminal.shouldBeTrue()
                 subscription.close()
-                check(subscription.cleanupInvocationCount() == 1L)
+                subscription.cleanupInvocationCount() shouldBeEqualTo 1L
             }
         }
     }
@@ -242,12 +250,13 @@ internal class VoucherPoolEventStreamIntegrationTest : AbstractVoucherPoolIntegr
             val metrics = VoucherPoolMetrics(SimpleMeterRegistry())
             VoucherPoolEventStream(source, Jackson.defaultJsonMapper, executor, properties, metrics).use { stream ->
                 val first = stream.openCustomer(TENANT, PRINCIPAL, null)
-                await atMost Duration.ofSeconds(2) untilAsserted { check(source.pollCount.get() > 0) }
+                await atMost Duration.ofSeconds(2) untilAsserted { (source.pollCount.get() > 0).shouldBeTrue() }
 
                 val second = stream.openCustomer(TENANT, PRINCIPAL, null)
-                check(checkNotNull(second.next(Duration.ZERO)).type == "snapshot")
-                val caughtUp = checkNotNull(second.next(Duration.ofSeconds(1)))
-                check(caughtUp.type == "audit" && caughtUp.cursor.id == 1L)
+                second.next(Duration.ZERO).shouldNotBeNull().type shouldBeEqualTo "snapshot"
+                val caughtUp = second.next(Duration.ofSeconds(1)).shouldNotBeNull()
+                caughtUp.type shouldBeEqualTo "audit"
+                caughtUp.cursor.id shouldBeEqualTo 1L
 
                 first.close()
                 second.close()
@@ -270,9 +279,9 @@ internal class VoucherPoolEventStreamIntegrationTest : AbstractVoucherPoolIntegr
             val metrics = VoucherPoolMetrics(SimpleMeterRegistry())
             VoucherPoolEventStream(source, Jackson.defaultJsonMapper, executor, properties, metrics).use { stream ->
                 stream.openCustomer(TENANT, PRINCIPAL, null).use {
-                    await atMost Duration.ofSeconds(2) untilAsserted { check(source.afterIds.size >= 2) }
+                    await atMost Duration.ofSeconds(2) untilAsserted { (source.afterIds.size >= 2).shouldBeTrue() }
                     val observed = source.afterIds.toList()
-                    check(observed[1] > observed[0])
+                    (observed[1] > observed[0]).shouldBeTrue()
                 }
             }
         }
@@ -293,9 +302,9 @@ internal class VoucherPoolEventStreamIntegrationTest : AbstractVoucherPoolIntegr
             val metrics = VoucherPoolMetrics(SimpleMeterRegistry())
             VoucherPoolEventStream(source, Jackson.defaultJsonMapper, executor, properties, metrics).use { stream ->
                 stream.openOperator(TENANT, null, null, null).use { subscription ->
-                    check(checkNotNull(subscription.next(Duration.ZERO)).type == "snapshot")
-                    val changed = checkNotNull(subscription.next(Duration.ofSeconds(1)))
-                    check(changed.type == "snapshot")
+                    subscription.next(Duration.ZERO).shouldNotBeNull().type shouldBeEqualTo "snapshot"
+                    val changed = subscription.next(Duration.ofSeconds(1)).shouldNotBeNull()
+                    changed.type shouldBeEqualTo "snapshot"
                 }
             }
         }
@@ -310,7 +319,7 @@ internal class VoucherPoolEventStreamIntegrationTest : AbstractVoucherPoolIntegr
             .GET()
             .build()
         val response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofInputStream())
-        check(response.statusCode() == 200)
+        response.statusCode() shouldBeEqualTo 200
         return response.body().bufferedReader().use { reader ->
             generateSequence(reader::readLine).takeWhile(String::isNotEmpty).toList()
         }
@@ -494,7 +503,7 @@ internal class VoucherPoolEventStreamIntegrationTest : AbstractVoucherPoolIntegr
             cursor: VoucherPoolEventCursor?,
         ): VoucherPoolStreamInitial {
             initialEntered.countDown()
-            check(releaseInitial.await(2, TimeUnit.SECONDS))
+            releaseInitial.await(2, TimeUnit.SECONDS).shouldBeTrue()
             return VoucherPoolStreamInitial(snapshot, VoucherPoolEventCursor(0, 0), false)
         }
 

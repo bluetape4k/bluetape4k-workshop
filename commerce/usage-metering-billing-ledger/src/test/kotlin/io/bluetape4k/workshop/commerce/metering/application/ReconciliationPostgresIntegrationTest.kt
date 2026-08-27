@@ -2,6 +2,7 @@
 
 package io.bluetape4k.workshop.commerce.metering.application
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.commerce.metering.config.MeteringProperties
@@ -35,7 +36,6 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertThrows
 import java.math.BigDecimal
 import java.time.Clock
 import java.time.Instant
@@ -112,7 +112,7 @@ class ReconciliationPostgresIntegrationTest {
                 scenario.seed.currency,
             )
         }
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             transaction {
                 reconciliation.repairLateUsage(
                     scenario.seed.tenantId,

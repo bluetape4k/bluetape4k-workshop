@@ -5,7 +5,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
-import org.slf4j.LoggerFactory
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.info
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.stereotype.Component
@@ -31,12 +32,11 @@ class KinesisDemoRunner(
         val job = demoScope.launchDemo {
             val demoResult = runDemo()
             lastResult.set(demoResult)
-            LOGGER.info(
-                "Kinesis demo completed: publishedCount={}, consumedCount={}, sequenceCount={}",
-                demoResult.publishedCount,
-                demoResult.consumedCount,
-                demoResult.sequenceNumbers.size,
-            )
+            log.info {
+                "Kinesis demo completed: publishedCount=${demoResult.publishedCount}, " +
+                    "consumedCount=${demoResult.consumedCount}, " +
+                    "sequenceCount=${demoResult.sequenceNumbers.size}"
+            }
         }
         runBlocking { job.await() }
     }
@@ -80,8 +80,7 @@ class KinesisDemoRunner(
         )
     }
 
-    private companion object {
+    companion object : KLoggingChannel() {
         const val DEMO_RECORD_COUNT: Int = 3
-        val LOGGER = LoggerFactory.getLogger(KinesisDemoRunner::class.java)
     }
 }

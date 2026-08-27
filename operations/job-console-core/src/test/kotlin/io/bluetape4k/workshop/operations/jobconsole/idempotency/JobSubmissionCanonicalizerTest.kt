@@ -2,12 +2,12 @@ package io.bluetape4k.workshop.operations.jobconsole.idempotency
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.workshop.operations.jobconsole.api.FailureMode
 import io.bluetape4k.workshop.operations.jobconsole.api.JobType
 import io.bluetape4k.workshop.operations.jobconsole.api.SubmitJobRequest
 import io.bluetape4k.workshop.operations.jobconsole.persistence.DemoCallerScope
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.assertNotEquals
 
 class JobSubmissionCanonicalizerTest {
 
@@ -28,8 +28,8 @@ class JobSubmissionCanonicalizerTest {
         val differentUnits = original.copy(workUnits = 11)
         val differentFailureMode = original.copy(failureMode = FailureMode.RETRY_ONCE)
 
-        assertNotEquals(canonicalizer.fingerprint(original), canonicalizer.fingerprint(differentUnits))
-        assertNotEquals(canonicalizer.fingerprint(original), canonicalizer.fingerprint(differentFailureMode))
+        canonicalizer.fingerprint(original) shouldNotBeEqualTo canonicalizer.fingerprint(differentUnits)
+        canonicalizer.fingerprint(original) shouldNotBeEqualTo canonicalizer.fingerprint(differentFailureMode)
     }
 
     @Test
@@ -41,10 +41,7 @@ class JobSubmissionCanonicalizerTest {
         assertFailsWith<IllegalArgumentException> { canonicalizer.keyHash(scope, "é") }
         assertFailsWith<IllegalArgumentException> { canonicalizer.keyHash(scope, "first,second") }
 
-        assertNotEquals(
-            canonicalizer.keyHash(scope, "Key-A"),
-            canonicalizer.keyHash(scope, "key-a"),
-        )
+        canonicalizer.keyHash(scope, "Key-A") shouldNotBeEqualTo canonicalizer.keyHash(scope, "key-a")
     }
 
     @Test
@@ -53,7 +50,7 @@ class JobSubmissionCanonicalizerTest {
         val sameTenantDifferentSubmitter = DemoCallerScope("tenant-a", "submitter-b")
         val differentTenantSameSubmitter = DemoCallerScope("tenant-b", "submitter-a")
 
-        assertNotEquals(canonicalizer.keyHash(scope, key), canonicalizer.keyHash(sameTenantDifferentSubmitter, key))
-        assertNotEquals(canonicalizer.keyHash(scope, key), canonicalizer.keyHash(differentTenantSameSubmitter, key))
+        canonicalizer.keyHash(scope, key) shouldNotBeEqualTo canonicalizer.keyHash(sameTenantDifferentSubmitter, key)
+        canonicalizer.keyHash(scope, key) shouldNotBeEqualTo canonicalizer.keyHash(differentTenantSameSubmitter, key)
     }
 }

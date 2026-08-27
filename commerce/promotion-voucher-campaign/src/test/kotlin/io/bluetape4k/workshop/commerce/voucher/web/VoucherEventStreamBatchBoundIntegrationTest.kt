@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.web
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.voucher.AbstractVoucherIntegrationTest
 import io.bluetape4k.workshop.commerce.voucher.admission.DatabaseLane
@@ -41,7 +43,7 @@ internal class VoucherEventStreamBatchBoundIntegrationTest : AbstractVoucherInte
 
         val rowBoundSource = source(maxRows = 3, maxPayloadBytes = 256 * 1024)
         val rowBound = rowBoundSource.poll(tenant, campaignId, 0)
-        check(rowBound.events.size == 3)
+        rowBound.events.size shouldBeEqualTo 3
 
         val oneEncodedEventBytes =
             rowBound.events.first().let { (cursor, event) ->
@@ -50,12 +52,12 @@ internal class VoucherEventStreamBatchBoundIntegrationTest : AbstractVoucherInte
         val payloadLimit = oneEncodedEventBytes * 2 + oneEncodedEventBytes / 2
         val payloadBound = source(maxRows = 200, maxPayloadBytes = payloadLimit).poll(tenant, campaignId, 0)
 
-        check(payloadBound.events.size == 2)
-        check(payloadBound.events.sumOf { (cursor, event) ->
+        payloadBound.events.size shouldBeEqualTo 2
+        (payloadBound.events.sumOf { (cursor, event) ->
             mapper.writeValueAsBytes(event).size + cursor.toString().length + SSE_FRAME_BYTES
-        } <= payloadLimit)
-        check(permits.availablePermits(DatabaseLane.SSE_MAINTENANCE) == 3)
-        check(permits.availablePermits(DatabaseLane.WORKER) == 1)
+        } <= payloadLimit).shouldBeTrue()
+        permits.availablePermits(DatabaseLane.SSE_MAINTENANCE) shouldBeEqualTo 3
+        permits.availablePermits(DatabaseLane.WORKER) shouldBeEqualTo 1
     }
 
     private fun source(

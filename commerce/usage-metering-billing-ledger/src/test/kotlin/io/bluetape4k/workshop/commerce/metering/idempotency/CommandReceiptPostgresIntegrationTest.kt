@@ -2,6 +2,7 @@
 
 package io.bluetape4k.workshop.commerce.metering.idempotency
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
@@ -71,7 +72,7 @@ class CommandReceiptPostgresIntegrationTest {
         val live = transaction { service.acquire(scope("live"), CommandFingerprint.key("live")) }
             .shouldBeInstanceOf<CommandAcquireResult.Acquired>()
 
-        org.junit.jupiter.api.assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> {
             transaction {
                 service.succeed(
                     terminal.receipt.id,

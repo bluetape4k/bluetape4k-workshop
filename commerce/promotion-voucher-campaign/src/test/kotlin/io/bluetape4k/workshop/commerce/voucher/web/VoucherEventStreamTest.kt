@@ -1,6 +1,11 @@
 package io.bluetape4k.workshop.commerce.voucher.web
 
 import io.bluetape4k.concurrent.virtualthread.VirtualThreads
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotContain
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherProperties
@@ -26,14 +31,14 @@ internal class VoucherEventStreamTest {
             val first = stream.open("tenant", campaignId, null)
             val second = stream.open("tenant", campaignId, null)
 
-            check(stream.activePollers() == 1)
+            stream.activePollers() shouldBeEqualTo 1
             first.close()
-            check(stream.activePollers() == 1)
+            stream.activePollers() shouldBeEqualTo 1
             second.close()
             second.close()
 
-            check(second.cleanupInvocationCount() == 1L)
-            check(stream.activePollers() == 0)
+            second.cleanupInvocationCount() shouldBeEqualTo 1L
+            stream.activePollers() shouldBeEqualTo 0
         }
 
     @Test
@@ -51,19 +56,19 @@ internal class VoucherEventStreamTest {
         withStream(source, properties) { stream ->
             val subscription = stream.open("tenant", Uuid.V7.nextId(), null)
             await atMost Duration.ofSeconds(2) untilAsserted {
-                check(source.pollCount.get() > 0)
+                (source.pollCount.get() > 0).shouldBeTrue()
             }
 
             val output = ByteArrayOutputStream()
             stream.write(subscription, output)
 
             val encoded = output.toString(Charsets.UTF_8)
-            check("event: reset" in encoded)
-            check("id: 2:2" in encoded)
-            check("event: snapshot" !in encoded)
-            check(subscription.cleanupInvocationCount() == 1L)
-            check(subscription.queueDepth() == 0)
-            check(stream.activePollers() == 0)
+            encoded shouldContain "event: reset"
+            encoded shouldContain "id: 2:2"
+            encoded shouldNotContain "event: snapshot"
+            subscription.cleanupInvocationCount() shouldBeEqualTo 1L
+            subscription.queueDepth() shouldBeEqualTo 0
+            stream.activePollers() shouldBeEqualTo 0
         }
     }
 
@@ -77,15 +82,15 @@ internal class VoucherEventStreamTest {
             val retryCampaign = Uuid.V7.nextId()
 
             val rejected = runCatching { stream.open("tenant", retryCampaign, null) }.exceptionOrNull()
-            check(rejected is SseCapacityRejected)
-            check(stream.activePollers() == 32)
+            rejected.shouldBeInstanceOf<SseCapacityRejected>()
+            stream.activePollers() shouldBeEqualTo 32
 
             subscriptions.removeFirst().close()
             subscriptions += stream.open("tenant", retryCampaign, null)
-            check(stream.activePollers() == 32)
+            stream.activePollers() shouldBeEqualTo 32
 
             subscriptions.forEach(AutoCloseable::close)
-            check(stream.activePollers() == 0)
+            stream.activePollers() shouldBeEqualTo 0
         }
 
     @Test
@@ -98,10 +103,10 @@ internal class VoucherEventStreamTest {
             stream.write(subscription, BlockingOutputStream())
 
             val elapsed = Duration.ofNanos(System.nanoTime() - started)
-            check(elapsed < Duration.ofSeconds(5))
-            check(subscription.cleanupInvocationCount() == 1L)
-            check(subscription.queueDepth() == 0)
-            check(stream.activePollers() == 0)
+            (elapsed < Duration.ofSeconds(5)).shouldBeTrue()
+            subscription.cleanupInvocationCount() shouldBeEqualTo 1L
+            subscription.queueDepth() shouldBeEqualTo 0
+            stream.activePollers() shouldBeEqualTo 0
         }
     }
 
@@ -132,13 +137,13 @@ internal class VoucherEventStreamTest {
             val campaignId = Uuid.V7.nextId()
             val subscription = stream.open("tenant", campaignId, null)
             await atMost Duration.ofSeconds(2) untilAsserted {
-                check(source.pollCount.get() >= 2)
-                check(stream.pollDelay("tenant", campaignId) == Duration.ofMillis(40))
+                (source.pollCount.get() >= 2).shouldBeTrue()
+                stream.pollDelay("tenant", campaignId) shouldBeEqualTo Duration.ofMillis(40)
             }
             releaseActivity.countDown()
             await atMost Duration.ofSeconds(2) untilAsserted {
-                check(source.pollCount.get() >= 3)
-                check(stream.pollDelay("tenant", campaignId) == Duration.ofMillis(10))
+                (source.pollCount.get() >= 3).shouldBeTrue()
+                stream.pollDelay("tenant", campaignId) shouldBeEqualTo Duration.ofMillis(10)
             }
             subscription.close()
         }

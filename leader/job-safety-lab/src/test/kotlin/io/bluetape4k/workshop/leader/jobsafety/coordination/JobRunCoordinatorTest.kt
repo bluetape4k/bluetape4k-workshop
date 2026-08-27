@@ -28,7 +28,6 @@ import io.micrometer.observation.Observation
 import io.micrometer.observation.ObservationHandler
 import io.micrometer.observation.ObservationRegistry
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.time.Duration
 import java.time.YearMonth
 import java.util.concurrent.CancellationException
@@ -124,7 +123,7 @@ internal class JobRunCoordinatorTest {
         val coordinator = coordinator(events)
 
         try {
-            assertThrows<InterruptedException> {
+            assertFailsWith<InterruptedException> {
                 coordinator.run(request()) {
                     events += "execute"
                     throw InterruptedException("cancelled")

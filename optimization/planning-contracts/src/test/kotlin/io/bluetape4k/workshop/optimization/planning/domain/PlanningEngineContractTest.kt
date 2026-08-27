@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.optimization.planning.domain
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.workshop.optimization.planning.adapter.fake.DeterministicPlanningEngine
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.util.UUID
 
 class PlanningEngineContractTest {
@@ -28,8 +28,8 @@ class PlanningEngineContractTest {
 
     @Test
     fun `contract values reject negative revisions and oversized explanations`() {
-        assertThrows<IllegalArgumentException> { PlanningRevision(-1) }
-        assertThrows<IllegalArgumentException> {
+        assertFailsWith<IllegalArgumentException> { PlanningRevision(-1) }
+        assertFailsWith<IllegalArgumentException> {
             PlanningResult(
                 requestId = UUID.randomUUID(),
                 providerRequestId = ProviderRequestId("provider-42"),

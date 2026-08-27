@@ -3,7 +3,8 @@ package io.bluetape4k.workshop.aws.kinesis
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.runBlocking
-import org.slf4j.LoggerFactory
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.warn
 import org.springframework.context.SmartLifecycle
 import org.springframework.stereotype.Component
 
@@ -44,7 +45,7 @@ class KinesisShutdownConfiguration(
             drained = demoScope.awaitCallerCollectorsEmpty(shutdownTimeout)
             if (!drained) {
                 timeoutState.set(true)
-                LOGGER.warn("Kinesis shutdown timed out while waiting for caller collectors.")
+                log.warn { "Kinesis shutdown timed out while waiting for caller collectors." }
             }
         }
         running = false
@@ -57,8 +58,7 @@ class KinesisShutdownConfiguration(
 
     private var running: Boolean = false
 
-    private companion object {
+    companion object : KLoggingChannel() {
         val SHUTDOWN_TIMEOUT: Duration = Duration.ofSeconds(10)
-        val LOGGER = LoggerFactory.getLogger(KinesisShutdownConfiguration::class.java)
     }
 }

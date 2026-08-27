@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.optimization.planning.application
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.optimization.planning.PlanningContractsApplication
@@ -18,7 +19,6 @@ import io.bluetape4k.workshop.optimization.planning.persistence.PlanningRequestR
 import io.bluetape4k.workshop.optimization.planning.observability.PlanningObservations
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -94,7 +94,7 @@ internal class PlanningCallbackServiceTest @Autowired constructor(
 
     @Test
     fun `invalid signature changes no callback state`() {
-        assertThrows(InvalidCallbackSignatureException::class.java) {
+        assertFailsWith<InvalidCallbackSignatureException> {
             callbackService.handle(callback("event-42", 2), RAW_BODY, "invalid")
         }
 
@@ -106,7 +106,7 @@ internal class PlanningCallbackServiceTest @Autowired constructor(
 
     @Test
     fun `callback rejects an oversized constraint explanation`() {
-        assertThrows(IllegalArgumentException::class.java) {
+        assertFailsWith<IllegalArgumentException> {
             callback("event-42", 2).copy(constraintExplanations = listOf("x".repeat(241)))
         }
     }

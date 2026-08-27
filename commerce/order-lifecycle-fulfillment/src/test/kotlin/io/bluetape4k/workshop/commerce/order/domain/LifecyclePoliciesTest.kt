@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.commerce.order.domain
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.assertFailsWith
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 internal class LifecyclePoliciesTest {
     @Test
@@ -11,20 +11,20 @@ internal class LifecyclePoliciesTest {
             PaymentStatus.SUCCEEDED
         OrderPolicy.transition(OrderStatus.ACCEPTED, OrderStatus.FULFILLMENT_IN_PROGRESS) shouldBeEqualTo
             OrderStatus.FULFILLMENT_IN_PROGRESS
-        assertThrows<InvalidTransition> {
+        assertFailsWith<InvalidTransition> {
             FulfillmentPolicy.transition(FulfillmentStatus.REQUESTED, FulfillmentStatus.DELIVERED)
         }
     }
 
     @Test
     fun `terminal states reject stale transitions`() {
-        assertThrows<InvalidTransition> {
+        assertFailsWith<InvalidTransition> {
             PaymentPolicy.transition(PaymentStatus.SUCCEEDED, PaymentStatus.AUTHORIZING)
         }
-        assertThrows<InvalidTransition> {
+        assertFailsWith<InvalidTransition> {
             RefundPolicy.transition(RefundStatus.SUCCEEDED, RefundStatus.PENDING_PROVIDER)
         }
-        assertThrows<InvalidTransition> {
+        assertFailsWith<InvalidTransition> {
             CancellationPolicy.transition(CancellationStatus.APPROVED, CancellationStatus.REQUESTED)
         }
     }
