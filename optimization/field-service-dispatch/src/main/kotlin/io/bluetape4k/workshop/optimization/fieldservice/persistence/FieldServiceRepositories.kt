@@ -1,10 +1,12 @@
 package io.bluetape4k.workshop.optimization.fieldservice.persistence
 
+import io.bluetape4k.exposed.jdbc.repository.LongJdbcRepository
+import io.bluetape4k.idgenerators.uuid.Uuid
+import io.bluetape4k.workshop.optimization.fieldservice.domain.CoordinateId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.EventDigest
 import io.bluetape4k.workshop.optimization.fieldservice.domain.EventDigestMatch
 import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceEvents
 import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceLimits
-import io.bluetape4k.workshop.optimization.fieldservice.domain.CoordinateId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanId
 import io.bluetape4k.workshop.optimization.fieldservice.domain.PlanProposal
 import io.bluetape4k.workshop.optimization.fieldservice.domain.VersionVector
@@ -14,6 +16,7 @@ import io.bluetape4k.workshop.optimization.fieldservice.domain.Worker
 import io.bluetape4k.workshop.optimization.fieldservice.domain.WorkerId
 import io.bluetape4k.workshop.optimization.fieldservice.planner.CoordinatePair
 import io.bluetape4k.workshop.optimization.fieldservice.planner.TravelTimeMatrix
+import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -32,10 +35,35 @@ import java.time.Clock
 import java.time.Instant
 import java.util.UUID
 
-/** disposable Field Service workshop schema를 위한 Exposed repository입니다. */
+/**
+ * disposable Field Service workshop schema를 위한 Exposed repository입니다.
+ *
+ * plan projection의 일반 CRUD/read는 Bluetape [LongJdbcRepository]를 사용하고,
+ * CAS, row lock, event append, outbox lease/fencing은 동시성 계약을 보존해야 하므로
+ * 명시적인 Exposed SQL로 유지합니다.
+ */
 class FieldServiceRepository(
     private val clock: Clock = Clock.systemUTC(),
-) {
+    private val leaseTokenGenerator: () -> UUID = { Uuid.V4.nextUUID() },
+) : LongJdbcRepository<FieldServicePlanRecord> {
+    override val table = FieldServicePlansTable
+
+    override fun extractId(entity: FieldServicePlanRecord): Long = entity.id
+
+    override fun ResultRow.toEntity(): FieldServicePlanRecord = FieldServicePlanRecord(
+        id = this[FieldServicePlansTable.id].value,
+        planId = this[FieldServicePlansTable.planId],
+        planRevision = this[FieldServicePlansTable.planRevision],
+        parentRevision = this[FieldServicePlansTable.parentRevision],
+        datasetId = this[FieldServicePlansTable.datasetId],
+        state = this[FieldServicePlansTable.state],
+        payload = this[FieldServicePlansTable.payload],
+        providerRequestId = this[FieldServicePlansTable.providerRequestId],
+        providerRevision = this[FieldServicePlansTable.providerRevision],
+        requestGeneration = this[FieldServicePlansTable.requestGeneration],
+        createdAt = this[FieldServicePlansTable.createdAt],
+    )
+
     fun saveWorker(worker: Worker): Worker {
         val payload = FieldServiceRecordCodec.encodeWorker(worker)
         FieldServiceWorkersTable.insert { statement ->
@@ -191,14 +219,11 @@ class FieldServiceRepository(
         return plan
     }
 
+    /** business revision 정렬은 보존하고, plan 조회는 Bluetape generic repository에 위임합니다. */
     fun loadPlan(planId: PlanId, revision: Long): PlanProposal? =
-        FieldServicePlansTable.selectAll()
-            .where {
-                (FieldServicePlansTable.planId eq planId.value) and
-                    (FieldServicePlansTable.planRevision eq revision)
-            }
-            .singleOrNull()
-            ?.let { FieldServiceRecordCodec.decodePlan(it[FieldServicePlansTable.payload]) }
+        findByField(FieldServicePlansTable.planId, planId.value)
+            .singleOrNull { it.planRevision == revision }
+            ?.let { FieldServiceRecordCodec.decodePlan(it.payload) }
 
     fun listPlans(limit: Int = 100): List<PlanProposal> {
         val bounded = limit.coerceIn(1, 100)
@@ -210,11 +235,10 @@ class FieldServiceRepository(
 
     fun listPlans(planId: PlanId, limit: Int = FieldServiceLimits.MAX_PLAN_HISTORY): List<PlanProposal> {
         val bounded = limit.coerceIn(1, FieldServiceLimits.MAX_PLAN_HISTORY)
-        return FieldServicePlansTable.selectAll()
-            .where { FieldServicePlansTable.planId eq planId.value }
-            .orderBy(FieldServicePlansTable.planRevision to SortOrder.DESC)
-            .limit(bounded)
-            .map { FieldServiceRecordCodec.decodePlan(it[FieldServicePlansTable.payload]) }
+        return findByField(FieldServicePlansTable.planId, planId.value)
+            .sortedByDescending { it.planRevision }
+            .take(bounded)
+            .map { FieldServiceRecordCodec.decodePlan(it.payload) }
     }
 
     /** 두 set-based predicate로 모든 expected source row를 잠급니다. */
@@ -515,7 +539,8 @@ class FieldServiceRepository(
             .limit(bounded)
             .toList()
         return rows.mapNotNull { row ->
-            val token = UUID.randomUUID().toString()
+            // lease token은 DB 정렬이 필요 없는 opaque 보안 값이므로 UUID v4를 사용합니다.
+            val token = leaseTokenGenerator().toString()
             val changed = FieldServiceOutboxTable.update(
                 where = {
                     (FieldServiceOutboxTable.id eq row[FieldServiceOutboxTable.id]) and

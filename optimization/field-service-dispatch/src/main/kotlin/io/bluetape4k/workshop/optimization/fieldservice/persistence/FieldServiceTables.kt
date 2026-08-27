@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.optimization.fieldservice.persistence
 
 import io.bluetape4k.workshop.optimization.fieldservice.domain.FieldServiceLimits
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.javatime.timestamp
 
 /** worker eligibility와 schedule version의 source of truth입니다. */
@@ -40,8 +41,7 @@ object FieldServiceTravelTimesTable : Table("field_service_travel_times") {
 }
 
 /** 불변 plan proposal metadata와 redacted serialized proposal입니다. */
-object FieldServicePlansTable : Table("field_service_plans") {
-    val id = long("id").autoIncrement()
+object FieldServicePlansTable : LongIdTable("field_service_plans") {
     val planId = varchar("plan_id", FieldServiceLimits.MAX_STRING_LENGTH)
     val planRevision = long("plan_revision")
     val parentRevision = long("parent_revision").nullable()
@@ -56,7 +56,6 @@ object FieldServicePlansTable : Table("field_service_plans") {
         uniqueIndex(planId, planRevision)
         index(false, state, planRevision)
     }
-    override val primaryKey = PrimaryKey(id)
 }
 
 /** proposal에 속한 불변 worker route row입니다. */
