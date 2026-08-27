@@ -70,8 +70,6 @@
         ".github/scripts/test_check_ecosystem_reuse.py",
         "docs/review/2026-08-26-ecosystem-child-scope-7tier.md",
         "docs/review/2026-08-25-A1-7tier.md",
-        "docs/review/2026-08-25-A2-7tier.md",
-        "docs/review/2026-08-25-F1-7tier.md",
         "docs/lessons/2026-08-27-fixed-child-marker-lineage-transition.md",
         "docs/superpowers/specs/2026-08-25-ecosystem-reuse-epic-design.md",
         "docs/superpowers/plans/2026-08-25-ecosystem-reuse-epic-plan.md",
@@ -94,10 +92,11 @@
       "base_oid": null,
       "issue_numbers": [781, 784],
       "allowed_paths": [
-        "optimization/field-service-dispatch/src/main/kotlin/**",
-        "optimization/field-service-dispatch/src/test/kotlin/io/bluetape4k/workshop/optimization/fieldservice/adapter/http/FieldServiceCanonicalizerTest.kt",
-        "optimization/field-service-dispatch/src/test/kotlin/io/bluetape4k/workshop/optimization/fieldservice/persistence/FieldServiceCasIntegrationTest.kt",
-        "docs/review/2026-08-28-F1-followup-7tier.md"
+      "optimization/field-service-dispatch/src/main/kotlin/**",
+      "optimization/field-service-dispatch/src/test/kotlin/io/bluetape4k/workshop/optimization/fieldservice/adapter/http/FieldServiceCanonicalizerTest.kt",
+      "optimization/field-service-dispatch/src/test/kotlin/io/bluetape4k/workshop/optimization/fieldservice/persistence/FieldServiceCasIntegrationTest.kt",
+      "docs/review/2026-08-25-F1-7tier.md",
+      "docs/review/2026-08-28-F1-followup-7tier.md"
       ],
       "review_artifact": "docs/review/2026-08-28-F1-followup-7tier.md"
     },
@@ -122,10 +121,11 @@
         "commerce/concert-ticket-flash-sale/src/test/kotlin/**",
         "leader/job-safety-lab/src/test/kotlin/**",
         "operations/job-console-core/src/test/kotlin/**",
-        "operations/job-console-spring/src/test/kotlin/**",
-        "operations/job-console-ktor/src/test/kotlin/**",
-        "optimization/planning-contracts/src/test/kotlin/**",
-        "docs/review/2026-08-28-A2-followup-7tier.md"
+      "operations/job-console-spring/src/test/kotlin/**",
+      "operations/job-console-ktor/src/test/kotlin/**",
+      "optimization/planning-contracts/src/test/kotlin/**",
+      "docs/review/2026-08-25-A2-7tier.md",
+      "docs/review/2026-08-28-A2-followup-7tier.md"
       ],
       "review_artifact": "docs/review/2026-08-28-A2-followup-7tier.md"
     }
