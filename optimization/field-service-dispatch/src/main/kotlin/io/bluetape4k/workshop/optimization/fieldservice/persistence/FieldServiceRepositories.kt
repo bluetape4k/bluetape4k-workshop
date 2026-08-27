@@ -219,10 +219,14 @@ class FieldServiceRepository(
         return plan
     }
 
-    /** business revision 정렬은 보존하고, plan 조회는 Bluetape generic repository에 위임합니다. */
+    /** business revision 단일 조회는 Bluetape generic repository에 bounded하게 위임합니다. */
     fun loadPlan(planId: PlanId, revision: Long): PlanProposal? =
-        findByField(FieldServicePlansTable.planId, planId.value)
-            .singleOrNull { it.planRevision == revision }
+        findBy(
+            { FieldServicePlansTable.planId eq planId.value },
+            { FieldServicePlansTable.planRevision eq revision },
+            limit = 1,
+        )
+            .singleOrNull()
             ?.let { FieldServiceRecordCodec.decodePlan(it.payload) }
 
     fun listPlans(limit: Int = 100): List<PlanProposal> {
@@ -233,12 +237,14 @@ class FieldServiceRepository(
             .map { FieldServiceRecordCodec.decodePlan(it[FieldServicePlansTable.payload]) }
     }
 
+    /** revision 내림차순과 SQL LIMIT을 보존해야 하므로 이 history query는 raw Exposed SQL을 사용합니다. */
     fun listPlans(planId: PlanId, limit: Int = FieldServiceLimits.MAX_PLAN_HISTORY): List<PlanProposal> {
         val bounded = limit.coerceIn(1, FieldServiceLimits.MAX_PLAN_HISTORY)
-        return findByField(FieldServicePlansTable.planId, planId.value)
-            .sortedByDescending { it.planRevision }
-            .take(bounded)
-            .map { FieldServiceRecordCodec.decodePlan(it.payload) }
+        return FieldServicePlansTable.selectAll()
+            .where { FieldServicePlansTable.planId eq planId.value }
+            .orderBy(FieldServicePlansTable.planRevision to SortOrder.DESC)
+            .limit(bounded)
+            .map { FieldServiceRecordCodec.decodePlan(it[FieldServicePlansTable.payload]) }
     }
 
     /** 두 set-based predicate로 모든 expected source row를 잠급니다. */
