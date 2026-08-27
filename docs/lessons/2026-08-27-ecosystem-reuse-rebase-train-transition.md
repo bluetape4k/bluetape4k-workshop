@@ -44,3 +44,9 @@ rebase하거나 재사용하지 않고, coordinator scope에서 F2의 ref만 최
 실행 receipt는 `PLANNED/PENDING/null`로 남긴다. 따라서 F2 child의 source 변경,
 review, CI, merge evidence는 이 coordinator rebase merge 후 최신 `develop`에서
 새로 발행해야 한다.
+
+첫 PR 검증은 coordinator scope의 `expected_head_ref`가 이미 병합된
+`chore/ecosystem-reuse-train-closeout`으로 남아 있어 새 PR head를 거부했다.
+이 실패는 scope와 PR ref를 함께 exact하게 검증하는 계약이므로, historical
+branch를 되살리는 대신 fresh `coordinator_scope_receipt`로 현재 replan
+branch를 scope head에 결속했다.

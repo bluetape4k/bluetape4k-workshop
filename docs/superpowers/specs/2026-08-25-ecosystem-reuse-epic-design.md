@@ -177,6 +177,12 @@ implementation marker는 `PLANNED/PENDING/null`로 유지한다. replan merge가
 완료된 최신 `develop`에서 F2 child의 source, review, CI, merge evidence를
 새로 발행한다.
 
+coordinator follow-up scope 자체의 `expected_head_ref`는 실행 중인 coordinator
+PR의 실제 head와 exact하게 일치해야 한다. 이미 병합된 historical branch가
+scope head로 남아 있으면, branch를 부활시키지 않고 fresh
+`coordinator_scope_receipt`로 새 replan branch를 결속한 후 hosted scope
+검증을 다시 한다.
+
 train manifest는 `docs/ecosystem-reuse-train.json`에 보관하며 track, expected
 head/base ref, parent OID, merge-base, 상태, issue mapping, allowed paths,
 structured Gradle/test selectors, timeout, Docker 요구 여부, review artifact,
