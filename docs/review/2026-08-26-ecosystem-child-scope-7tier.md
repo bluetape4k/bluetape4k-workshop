@@ -1,81 +1,132 @@
-# Ecosystem child scope governance 7-Tier 검토
+# Fixed child reviewed marker 전환 7-Tier 검토
 
-## 범위와 현재 판정
+## 판정과 범위
 
-이번 Type E lane은 Kotlin 예제의 실행 동작을 변경하지 않고, stacked child PR의
-OID 고정 정책을 manifest와 Python checker에 명시하는 governance 변경이다. 기존
-9개 fixed track은 유지하며, coordinator-owned #823과 child PR #821을
-`follow_up_scopes`로 분리한다.
+이번 Type C 수정은 coordinator의 squash/rebase 뒤 fixed child PR의
+`reviewed_implementation_oid`가 더 이상 같은 manifest 값과 일치할 수 없는
+재현 가능한 gate 결함을 수리한다. Kotlin 예제의 실행 동작이나
+`bluetape4k` API 사용 코드는 변경하지 않고, 다음 네 가지 governance 경계만
+수정한다.
 
-fixed node는 자체 commit의 SHA를 같은 commit 안에 기록할 수 없으므로
-`oid_policy=reviewed-ancestor`를 사용한다. review artifact의
-`reviewed_implementation_oid` marker는 PR base 이후의 검토된 구현 ancestor를
-가리키며, 현재 PR head까지의 증거 tail은 해당 review artifact 하나만 변경해야
-한다. 이 계약은 임의 SHA와 self-reference를 모두 거부하면서 최신 PR head가
-검토된 구현의 후속 증거임을 확인한다.
+- `.github/scripts/check-ecosystem-reuse.py`의 marker 전환 계약과 검증
+- `.github/scripts/test_check_ecosystem_reuse.py`의 RED/GREEN 회귀
+- `docs/ecosystem-reuse-train.json`의 A1 전환 receipt와 coordinator scope
+- 이 문서와 `docs/lessons/2026-08-27-fixed-child-marker-lineage-transition.md`의
+  7-Tier·운영 기록
 
-follow-up scope 정책은 다음과 같다.
+고정 9-track, `reviewed-ancestor`의 선조성, 단일 scope path/ref 경계,
+문서-only evidence tail은 그대로 유지한다. marker 완화는 coordinator가
+명시한 전환 receipt가 있을 때만 허용한다.
 
-- `exact`: `base_oid`와 `head_oid`를 각각 40-hex SHA로 고정하고 실제 PR과
-  일치하는지 검사한다.
-- `rebase-aware`: 두 OID를 반드시 `null`로 두고, rebase 때 stale SHA가 되는
-  비교를 생략한다. 대신 exact branch ref, 부모 관계, 변경 경로 allowlist,
-  issue, review artifact, coordinator receipt는 계속 fail-closed로 검사한다.
+## 재현 증거와 근본 원인
 
-따라서 #821은 `scope_kind: child`를 유지하면서 `oid_policy: rebase-aware`를
-사용한다. child를 coordinator로 위장하거나 checker의 ref/path 경계를 완화하지
-않는다.
+- 최신 `develop` 기준 commit: `96a7eb829fb0cc625a3080553d9811a7b4df4dea`
+- 실패한 hosted run: `33001959078` (A1 #812 exact head 당시)
+- 실패한 scope: `A1`, `P0`
+- 실패 메시지: `execution scope changed without a fresh coordinator receipt`,
+  `state transition READY -> PLANNED is not allowed`,
+  `PR changed paths must map to exactly one manifest track (found 0)`
+- 이전 marker 관계에서 관찰된 추가 오류: `reviewed_implementation_oid must be
+  an ancestor of the PR head`, `reviewed_implementation_oid must descend from
+  the PR base`
 
-## P0 squash merge 후 기준 전환
+실패한 A1 branch는 coordinator 전환 전의 `PLANNED` manifest와 이전 base/ref를
+되돌려 놓았고, 이를 최신 trusted manifest와 비교하면서 실제 execution scope도
+변경했다. manifest를 최신 기준으로 맞추면 rebase로 새로 만들어진 review
+artifact marker가 기존 manifest marker와 달라진다. 즉 source/test 동작의
+실패가 아니라, squash/rebase로 implementation OID가 재생성될 때 marker의
+기준을 표현할 상태가 없었던 contract 결함이다. stale manifest를 허용하거나
+실패한 gate를 PASS로 승격하지 않는다.
 
-P0 PR #811은 exact head `9608cf10be846ead37000295d6b1da3a1d03d726`에서
-`develop` merge commit `85aa60c1b525c7b0df693d897207221288fad25e`로
-통합되었다. 보호된 저장소의 자동 head-branch 삭제로 A1 #812의 base가
-`develop`으로 자동 전환되었으므로, 삭제된 branch를 가장하지 않고 coordinator
-receipt로 A1의 새 기준을 `origin/develop`에 재고정한다. A1 재기반화 head는
-`bd6d452305f437b20e1c28279a1cbf8e4663303c`, reviewed implementation ancestor는
-`b3711b30a0c51f78750b3cdf2718692d40af08de`이며, F1은 A1이 MERGED로 전환될
-때까지 `PLANNED`로 보존한다. 이 전환에는 Kotlin source 변경이 없다.
+## 결정한 전환 계약
+
+1. fixed node의 `reviewed_marker_binding`은 선택 필드이며 생략하면 기존
+   동작과 같은 `manifest`로 해석한다. 허용 값은 `manifest`와 `lineage`뿐이다.
+2. `manifest` binding은 기존처럼 review artifact marker가 active node의
+   `reviewed_implementation_oid`와 정확히 같아야 한다.
+3. coordinator가 squash/rebase로 marker를 새 lineage에 붙이는 경우 node를
+   `lineage`로 전환하고, top-level `reviewed_marker_transitions[track]`에
+   `from`, `to`, `receipt_id`, `checksum`을 모두 기록한다. `to`는 node 값과
+   같고 `from`은 trusted manifest의 binding과 같아야 한다.
+4. trusted manifest 비교에서 binding 전환은 fresh coordinator receipt를
+   요구한다. 이전 transition의 `receipt_id`나 `checksum`을 재사용할 수 없다.
+   binding 전환 없이 transition만 바꾸는 것도 거부한다.
+5. `lineage`에서도 marker는 반드시 실제 PR base 이후, PR head 이전의
+   ancestor여야 하며 `base -> marker -> head`를 확인한다. marker 이후 tail은
+   review artifact 하나만 바꿀 수 있으므로 코드 변경·self-reference·비선조
+   marker를 우회할 수 없다.
+6. bootstrap context는 재현 가능한 초기 상태를 위해 모든 node를
+   `manifest` binding으로 제한한다. 기존 fixed node의 state/receipt/OID,
+   parent, issue, path, workflow 검증은 변경하지 않는다.
+
+## 현재 manifest와 coordinator receipt
+
+현재 contract branch는 `develop`을 base로 하는
+`fix/ecosystem-reuse-marker-transition`이며, coordinator-owned scope는 이
+branch와 issue `#822`, `#826`을 함께 기록한다.
+
+- scope receipt: `20260827T033641Z-marker-transition-scope`
+- scope checksum:
+  `347b99710d7441308ee9d6928dffe0f84c75e96638184c63d18f747089219ce7`
+- A1 `reviewed_marker_binding`: `lineage`
+- A1 trusted marker: `b3711b30a0c51f78750b3cdf2718692d40af08de`
+- A1 transition receipt: `20260827T033641Z-a1-marker-lineage`
+- A1 transition checksum:
+  `a68977d01c16d85f22db97bfd49f9e7c2468e2e120e1396db2f690e9133626de`
+
+두 checksum은 각각 scope/전환 설명의 canonical 문자열에서 SHA-256으로
+계산했다. 이것은 secret이 아니라 manifest transition의 변경·재사용을
+탐지하는 receipt 식별자다.
 
 ## 7-Tier 점검
 
-| Tier | 점검 결과 | 근거 |
+| Tier | 판정 | 근거 |
 | --- | --- | --- |
-| 1. 요구사항·범위 | PASS | fixed 9-track을 늘리지 않고 #822 coordinator lane과 #821 child lane만 별도 scope로 고정했다. |
-| 2. 계약·자료구조 | PASS | fixed node의 `reviewed-ancestor`, review marker, ancestor 관계, 단일 문서 evidence tail과 follow-up의 `exact`/`rebase-aware` 필드를 명시한다. |
-| 3. 경계·보안 | PASS | path traversal/control character, 잘못된 SHA, 정책 외 값, 중복 ID, scope overlap, 부모 track과 base ref 불일치, marker 중복·누락을 fail-closed로 거부한다. |
-| 4. 정확성·상태 | PASS | path 후보가 겹쳐도 exact ref로 하나를 선택한다. fixed node는 base→reviewed ancestor→head 이력과 문서-only tail을 검사하고, follow-up은 정책별 OID 계약을 검사한다. |
-| 5. 동시성·자원 | N/A | 실행 중 Kotlin/DB/비동기 자원은 변경하지 않는다. 기존 Testcontainers 직렬화와 child workflow 정책을 유지한다. |
-| 6. 테스트·운영 | IN PROGRESS | 실제 Git 저장소의 구현 commit·evidence tail, self-reference, 비선조 marker, 코드 변경 tail 및 malformed marker 회귀를 추가했다. P0/A1/F1/P2 hosted gate는 새 exact head에서 재실행한다. |
-| 7. 문서·유지보수 | PASS | self-reference를 피하는 정책 선택, bounded tail, fresh review/approval 분리를 이 문서와 #822에 기록한다. |
+| 1. 요구사항·범위 | PASS | #826의 fixed child marker 전환만 다루며 Kotlin source와 예제 동작은 scope 밖으로 유지했다. |
+| 2. 계약·자료구조 | PASS | legacy `manifest` default, 명시적 `lineage`, exact transition fields, trusted binding/from/to, fresh receipt를 manifest/checker에 고정했다. |
+| 3. 경계·보안 | PASS | 허용 binding, unknown track/field, control character, SHA 형식, receipt 재사용, path/ref/OID/ancestor 경계를 fail-closed로 거부한다. |
+| 4. 정확성·상태 | PASS | `base -> marker -> head`와 review-only tail을 두 binding 모두 검증하고, binding 변경을 execution receipt와 혼동하지 않도록 별도 transition contract로 분리했다. |
+| 5. 동시성·자원 | N/A | 실행 코드·DB·container·coroutine lifecycle을 변경하지 않는다. 기존 Testcontainers 직렬화와 workflow concurrency 정책을 유지한다. |
+| 6. 테스트·운영 | IN PROGRESS | 의도적 RED 4건을 새 계약과 함께 GREEN으로 전환했고, fresh/reused receipt와 rebase lineage 이력을 검증했다. hosted exact-head 검증은 PR 이후 남아 있다. |
+| 7. 문서·유지보수 | PASS | 이 문서와 lesson에 원인, 전환 규칙, receipt, 향후 child rebase 순서와 남은 검증을 기록했다. |
 
-## Bluetape4k 및 Kotlin 지침
+## Bluetape4k ecosystem 및 Kotlin 지침
 
-- 이번 변경 대상은 Python checker, JSON manifest, 검토 문서뿐이므로 Kotlin 구현
-  코드는 수정하지 않는다.
-- consumer 예제의 `bluetape4k-dependencies` BOM 단일 사용, 개별 Bluetape BOM 및
-  명시적 버전 pin 금지 규칙을 변경하지 않는다.
-- 실제 Bluetape API 재사용과 `bluetape4k-assertions` 활용 여부는 A1/F1 및
-  후속 모듈별 7-Tier review/test evidence에서 계속 확인한다. 이 governance
-  contract는 그 evidence의 경로와 stacked ref 경계를 누락 없이 보존한다.
+- 이번 변경은 Python checker·JSON manifest·문서·테스트 harness에 한정되어
+  `$bluetape-kotlin-patterns`가 요구하는 Kotlin source 변경은 없다.
+- workshop consumer의 `bluetape4k-dependencies` BOM 단일 사용, 개별 BOM 및
+  명시적 Bluetape 버전 pin 금지 규칙을 변경하지 않는다.
+- 실제 예제의 Bluetape API 재사용과 `bluetape4k-assertions` 활용은 A1/F1
+  module review의 별도 7-Tier evidence로 계속 확인한다. 이 contract는 그
+  review artifact와 stacked ref가 rebase 후에도 누락되지 않게 할 뿐, 사용
+  품질을 대신 판정하지 않는다.
 
-## Coordinator receipt
+## 문서 품질 점검 (SPW-01~05)
 
-- `receipt_id`: `20260826T081952Z-c08d5362`
-- `checksum`: `d29cccdf41f7873f078da6fe42b03661d918eafc32da3e7fd1ad1071e5c4f239`
-- 이 receipt는 기존 follow-up scope coordinator 계약의 기록이다. fixed node의
-  reviewed ancestor marker는 각 PR review artifact의 bounded evidence tail에서
-  별도로 검증한다.
+- **SPW-01 독자·근거:** workshop maintainer와 workflow reviewer를 독자로
+  정하고, run `33001959078`, `develop` `96a7...`, checker/test diff, manifest,
+  issue `#826`을 근거 ledger로 삼았다.
+- **SPW-02 구조:** 범위 → 재현/원인 → 전환 계약 → manifest receipt → 7-Tier
+  → ecosystem/Kotlin 경계 → 검증/남은 위험 순서로 배치했다.
+- **SPW-03 한국어 자연스러움:** 설명과 판정은 한국어로 작성하고, 명령·SHA·ref·
+  API/필드명·정확한 오류는 원문 토큰을 보존했다.
+- **SPW-04 사실 대조:** 로컬 checker의 current/trusted 비교와 회귀 테스트,
+  live issue/PR 상태를 다시 대조했다. hosted PASS라고 추정하지 않는다.
+- **SPW-05 최종 read-back:** 아래 명령으로 JSON, 전체 checker test, diff 공백을
+  다시 읽어 문서와 manifest의 receipt 값이 일치하는지 확인한다.
 
-## 검증 명령과 남은 검증
+## 검증 명령과 남은 위험
 
 ```text
-python3 .github/scripts/test_check_ecosystem_reuse.py -q  # 59 tests PASS
+python3 .github/scripts/test_check_ecosystem_reuse.py -v  # 77 tests PASS
 python3 -m json.tool docs/ecosystem-reuse-train.json  # PASS
-git diff --check  # PASS
+python3 .github/scripts/check-ecosystem-reuse.py --inventory docs/ecosystem-reuse-inventory.md --manifest docs/ecosystem-reuse-train.json --workflow .github/workflows/ecosystem-reuse-gate.yml  # PASS
+git diff --check  # PASS after final edits
 ```
 
-다음 검증은 contract commit 이후 marker-only evidence-tail commit을 만들고,
-새 P0 head를 기준으로 A1/F1/P2를 순서대로 rebase한 뒤 각 hosted Ecosystem,
-Examples, CI와 exact-head read-back을 확인하는 것이다. 최종 merge는 별도 fresh
-approval 없이는 수행하지 않는다.
+계약 PR의 exact head에 대해 Ecosystem Reuse Gate와 required review/CI를
+확인한 뒤에야 A1 #812를 최종 develop head로 rebase하고 review marker를 새
+implementation commit으로 갱신한다. 그 다음 F1 #815와 P2 #821의 base/ref/path
+scope를 순서대로 다시 계산한다. 이 문서 시점에는 hosted exact-head PASS,
+fresh human approval, merge, canonical sync, worktree cleanup이 아직
+완료되지 않았다.

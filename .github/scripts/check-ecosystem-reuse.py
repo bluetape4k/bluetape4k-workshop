@@ -60,6 +60,7 @@ CHECKSUM_RE = re.compile(r"^[0-9a-f]{64}$")
 FOLLOW_UP_SCOPE_KINDS = {"child", "coordinator"}
 OID_POLICIES = {"exact", "rebase-aware"}
 FIXED_NODE_OID_POLICIES = {"reviewed-ancestor"}
+REVIEWED_MARKER_BINDINGS = {"manifest", "lineage"}
 REVIEWED_MARKER_LABEL_RE = re.compile(r"(?im)\breviewed_implementation_oid\s*:")
 REVIEWED_MARKER_RE = re.compile(r"(?im)\breviewed_implementation_oid\s*:\s*([0-9a-f]{40})\b")
 FOLLOW_UP_SCOPE_FIELDS = {
@@ -521,6 +522,72 @@ def manifest_nodes(manifest: Dict[str, object]) -> Dict[str, Dict[str, object]]:
     return {str(node.get("track")): node for node in manifest.get("nodes", []) if isinstance(node, dict)}
 
 
+def reviewed_marker_binding(node: Dict[str, object]) -> str:
+    """Return the fixed-node marker binding, preserving the legacy default."""
+    return str(node.get("reviewed_marker_binding", "manifest"))
+
+
+def _validate_reviewed_marker_transitions(
+    manifest: Dict[str, object],
+    node_map: Dict[str, Dict[str, object]],
+    fixed_tracks: Sequence[str],
+) -> List[str]:
+    errors: List[str] = []
+    raw_transitions = manifest.get("reviewed_marker_transitions", {})
+    if raw_transitions in (None, {}):
+        raw_transitions = {}
+    if not isinstance(raw_transitions, dict):
+        return ["reviewed_marker_transitions must be an object"]
+    unknown_tracks = sorted(set(raw_transitions) - set(fixed_tracks))
+    if unknown_tracks:
+        errors.append(
+            "reviewed_marker_transitions contains unknown tracks %s" %
+            ", ".join(unknown_tracks)
+        )
+    fields = {"from", "to", "receipt_id", "checksum"}
+    transitions: Dict[str, Dict[str, object]] = {}
+    for track, raw_transition in raw_transitions.items():
+        prefix = "reviewed_marker_transitions.%s" % track
+        if not isinstance(raw_transition, dict):
+            errors.append("%s must be an object" % prefix)
+            continue
+        missing = sorted(fields - set(raw_transition))
+        unknown = sorted(set(raw_transition) - fields)
+        if missing:
+            errors.append("%s missing fields %s" % (prefix, ", ".join(missing)))
+        if unknown:
+            errors.append("%s has unknown fields %s" % (prefix, ", ".join(unknown)))
+        from_binding = raw_transition.get("from")
+        to_binding = raw_transition.get("to")
+        if from_binding not in REVIEWED_MARKER_BINDINGS:
+            errors.append("%s: invalid from binding %s" % (prefix, escaped(from_binding)))
+        if to_binding not in REVIEWED_MARKER_BINDINGS:
+            errors.append("%s: invalid to binding %s" % (prefix, escaped(to_binding)))
+        if from_binding == to_binding and from_binding in REVIEWED_MARKER_BINDINGS:
+            errors.append("%s: from and to bindings must differ" % prefix)
+        receipt_id = raw_transition.get("receipt_id")
+        if not isinstance(receipt_id, str) or not receipt_id.strip() or CONTROL_RE.search(receipt_id):
+            errors.append("%s: receipt_id must be non-empty" % prefix)
+        checksum = raw_transition.get("checksum")
+        if not isinstance(checksum, str) or not CHECKSUM_RE.fullmatch(checksum):
+            errors.append("%s: checksum must be a 64-hex SHA" % prefix)
+        if track not in fixed_tracks:
+            continue
+        node_binding = reviewed_marker_binding(node_map.get(track, {}))
+        if to_binding in REVIEWED_MARKER_BINDINGS and to_binding != node_binding:
+            errors.append(
+                "%s: to binding must equal the node reviewed_marker_binding" % prefix
+            )
+        transitions[track] = raw_transition
+    for track in fixed_tracks:
+        node = node_map.get(track, {})
+        if reviewed_marker_binding(node) == "lineage" and track not in transitions:
+            errors.append(
+                "%s: lineage reviewed_marker_binding requires a reviewed_marker_transitions receipt" % track
+            )
+    return errors
+
+
 def manifest_follow_up_scopes(manifest: Dict[str, object]) -> List[Dict[str, object]]:
     scopes = manifest.get("follow_up_scopes", [])
     if not isinstance(scopes, list):
@@ -668,6 +735,7 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
     node_map = manifest_nodes(manifest)
     if sorted(node_map) != sorted(fixed_tracks):
         errors.append("manifest node tracks do not match fixed allowlist")
+    errors.extend(_validate_reviewed_marker_transitions(manifest, node_map, fixed_tracks))
     required = {
         "track", "expected_head_ref", "expected_base_ref", "parent_track", "oid_policy", "head_oid", "base_oid",
         "parent_oid", "merge_base_oid", "state", "issue_numbers", "allowed_paths", "gradle_tasks",
@@ -685,6 +753,12 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
         state = node.get("state")
         receipt_status = node.get("receipt_status")
         oid_policy = node.get("oid_policy")
+        marker_binding = reviewed_marker_binding(node)
+        if marker_binding not in REVIEWED_MARKER_BINDINGS:
+            errors.append(
+                "%s: invalid reviewed_marker_binding %s" %
+                (track, escaped(marker_binding))
+            )
         if state not in STATE_VALUES:
             errors.append("%s: invalid state %s" % (track, escaped(state)))
         if receipt_status not in RECEIPT_VALUES:
@@ -835,6 +909,8 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
             node = node_map.get(track, {})
             if node.get("oid_policy") != "reviewed-ancestor":
                 errors.append("%s: bootstrap context permits only reviewed-ancestor fixed nodes" % track)
+            if reviewed_marker_binding(node) != "manifest":
+                errors.append("%s: bootstrap context requires manifest reviewed_marker_binding" % track)
             if node.get("state") != "PLANNED":
                 errors.append("%s: bootstrap context requires every fixed node to remain PLANNED" % track)
             if node.get("reviewed_implementation_oid") not in (None, ""):
@@ -869,9 +945,48 @@ def validate_manifest(root: Path, manifest_path: Path, bootstrap: bool = False, 
                 errors.append("coordinator_scope_receipt changed without follow_up_scopes update")
             current_nodes = manifest_nodes(manifest)
             trusted_nodes = manifest_nodes(trusted)
+            current_marker_transitions = manifest.get("reviewed_marker_transitions", {}) or {}
+            trusted_marker_transitions = trusted.get("reviewed_marker_transitions", {}) or {}
+            if not isinstance(current_marker_transitions, dict):
+                current_marker_transitions = {}
+            if not isinstance(trusted_marker_transitions, dict):
+                trusted_marker_transitions = {}
             for track in fixed_tracks:
                 current = current_nodes.get(track, {})
                 baseline = trusted_nodes.get(track, {})
+                current_binding = reviewed_marker_binding(current)
+                baseline_binding = reviewed_marker_binding(baseline)
+                current_transition = current_marker_transitions.get(track)
+                trusted_transition = trusted_marker_transitions.get(track)
+                if current_binding != baseline_binding:
+                    if not isinstance(current_transition, dict):
+                        errors.append(
+                            "%s: reviewed_marker_binding changed without a fresh coordinator transition" % track
+                        )
+                    else:
+                        if current_transition.get("from") != baseline_binding:
+                            errors.append(
+                                "%s: reviewed_marker transition must start at the trusted binding" % track
+                            )
+                        if current_transition.get("to") != current_binding:
+                            errors.append(
+                                "%s: reviewed_marker transition must end at the current binding" % track
+                            )
+                        trusted_receipt_reused = (
+                            isinstance(trusted_transition, dict)
+                            and (
+                                current_transition.get("receipt_id") == trusted_transition.get("receipt_id")
+                                or current_transition.get("checksum") == trusted_transition.get("checksum")
+                            )
+                        )
+                        if current_transition == trusted_transition or trusted_receipt_reused:
+                            errors.append(
+                                "%s: reviewed_marker binding transition requires a fresh coordinator receipt" % track
+                            )
+                elif current_transition != trusted_transition:
+                    errors.append(
+                        "%s: reviewed_marker_transitions changed without a binding update" % track
+                    )
                 graph_changed = any(current.get(field) != baseline.get(field) for field in (
                     "expected_head_ref", "expected_base_ref", "parent_track", "oid_policy", "issue_numbers",
                     "allowed_paths", "gradle_tasks", "test_selectors", "gradle_flags",
@@ -1143,6 +1258,12 @@ def validate_train_scope(
         if repository_root is None:
             errors.append("%s: reviewed-ancestor requires repository_root" % scope_label)
         else:
+            marker_binding = reviewed_marker_binding(node)
+            if marker_binding not in REVIEWED_MARKER_BINDINGS:
+                errors.append(
+                    "%s: invalid reviewed_marker_binding %s" %
+                    (scope_label, escaped(marker_binding))
+                )
             marker_oid, marker_errors = _read_reviewed_implementation_oid(
                 repository_root,
                 str(node.get("review_artifact", "")),
@@ -1154,7 +1275,7 @@ def validate_train_scope(
                 if node.get("state") in ACTIVE_STATES | {"MERGED"}:
                     if not SHA_RE.fullmatch(str(manifest_oid or "")):
                         errors.append("%s: active reviewed-ancestor scope requires manifest reviewed_implementation_oid" % scope_label)
-                    elif marker_oid != manifest_oid:
+                    elif marker_binding == "manifest" and marker_oid != manifest_oid:
                         errors.append("%s: marker must match manifest reviewed_implementation_oid" % scope_label)
                 if marker_oid == head_oid:
                     errors.append("%s: reviewed_implementation_oid must be a prior commit, not the PR head" % scope_label)
