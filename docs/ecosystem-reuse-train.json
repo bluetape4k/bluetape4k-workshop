@@ -56,7 +56,7 @@
       "scope_id": "coordinator-child-scope",
       "scope_kind": "coordinator",
       "parent_track": "P0",
-      "expected_head_ref": "chore/ecosystem-reuse-follow-up-base-policy",
+      "expected_head_ref": "docs/ecosystem-reuse-f2-closeout",
       "expected_base_ref": "develop",
       "base_ref_policy": "parent-head",
       "oid_policy": "rebase-aware",
@@ -84,8 +84,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260827T141532Z-f2-allowlist-repair",
-    "checksum": "d6e7c7ce9bd5a0a550cc0ef62e33ec1e49ed2fb96fd936aa26829bcbdb3bf1fa"
+    "receipt_id": "20260827T185612Z-coordinator-f1-parent-reconcile",
+    "checksum": "9b12aa34ba8863c3bd3076a01c55e1937b32012c2bce76a7986c061e5ae4ad1d"
   },
   "planned_scope_replan_receipts": {
     "F2": {
