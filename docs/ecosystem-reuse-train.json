@@ -67,9 +67,13 @@
         ".github/scripts/check-ecosystem-reuse.py",
         ".github/scripts/test_check_ecosystem_reuse.py",
         "docs/review/2026-08-26-ecosystem-child-scope-7tier.md",
-        "docs/lessons/2026-08-27-fixed-child-marker-lineage-transition.md"
+        "docs/lessons/2026-08-27-fixed-child-marker-lineage-transition.md",
+        "docs/superpowers/specs/2026-08-25-ecosystem-reuse-epic-design.md",
+        "docs/superpowers/plans/2026-08-25-ecosystem-reuse-epic-plan.md",
+        "docs/review/2026-08-27-ecosystem-reuse-rebase-train-7tier.md",
+        "docs/lessons/2026-08-27-ecosystem-reuse-rebase-train-transition.md"
       ],
-      "review_artifact": "docs/review/2026-08-26-ecosystem-child-scope-7tier.md"
+      "review_artifact": "docs/review/2026-08-27-ecosystem-reuse-rebase-train-7tier.md"
     },
     {
       "scope_id": "F1-P2-02",
@@ -89,9 +93,9 @@
       "review_artifact": "docs/review/2026-08-25-F1-7tier.md"
     }
   ],
-      "coordinator_scope_receipt": {
-      "receipt_id": "20260827T063057Z-f1-base-replan-scope",
-      "checksum": "6d174f43113cfb20a76e9c98a2cc7b693a0c3701a4eec5a8d85c2d3c97784ae1"
+  "coordinator_scope_receipt": {
+      "receipt_id": "20260827T071403Z-coordinator-rebase-train-scope",
+      "checksum": "81c6f1db4197960690a35fa66c987472758b08ae8a0ed78e02919ff8d0c4decd"
   },
   "nodes": [
     {
@@ -186,7 +190,7 @@
     {
       "track": "A2",
       "expected_head_ref": "test/ecosystem-reuse-assertions-platform",
-      "expected_base_ref": "feat/ecosystem-reuse-gate",
+      "expected_base_ref": "develop",
       "parent_track": "P0",
       "oid_policy": "reviewed-ancestor",
       "head_oid": null,
@@ -248,9 +252,9 @@
         "./gradlew :commerce-concert-ticket-flash-sale:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-assertions --configuration testRuntimeClasspath"
       ],
       "review_artifact": "docs/review/2026-08-25-A2-7tier.md",
-      "receipt_id": null,
-      "receipt_status": "PENDING",
-      "checksum": null
+      "receipt_id": "20260827T071228Z-a2-base-replan",
+      "receipt_status": "PASS",
+      "checksum": "dd4e13e547ff35e402176b00449782a6d0986f5ae9b18f01915e657fbde7e808"
     },
     {
       "track": "F1",
@@ -345,7 +349,7 @@
     {
       "track": "R1",
       "expected_head_ref": "refactor/ecosystem-reuse-http-json",
-      "expected_base_ref": "feat/ecosystem-reuse-gate",
+      "expected_base_ref": "develop",
       "parent_track": "P0",
       "oid_policy": "reviewed-ancestor",
       "head_oid": null,
@@ -386,9 +390,9 @@
         "./gradlew :shared:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-spring-boot-core --configuration testRuntimeClasspath"
       ],
       "review_artifact": "docs/review/2026-08-25-R1-7tier.md",
-      "receipt_id": null,
-      "receipt_status": "PENDING",
-      "checksum": null
+      "receipt_id": "20260827T071228Z-r1-base-replan",
+      "receipt_status": "PASS",
+      "checksum": "b5e7f3199acd9968ebf8443f71112a19e5cc8306d91bebd95c1cabf4de6dbd8d"
     },
     {
       "track": "R2",
@@ -449,7 +453,7 @@
     {
       "track": "T1",
       "expected_head_ref": "test/ecosystem-reuse-testcontainers-r2dbc",
-      "expected_base_ref": "feat/ecosystem-reuse-gate",
+      "expected_base_ref": "develop",
       "parent_track": "P0",
       "oid_policy": "reviewed-ancestor",
       "head_oid": null,
@@ -501,14 +505,14 @@
         "./gradlew :spring-data-r2dbc-coroutines:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-spring-boot-r2dbc --configuration testRuntimeClasspath"
       ],
       "review_artifact": "docs/review/2026-08-25-T1-7tier.md",
-      "receipt_id": null,
-      "receipt_status": "PENDING",
-      "checksum": null
+      "receipt_id": "20260827T071228Z-t1-base-replan",
+      "receipt_status": "PASS",
+      "checksum": "983fade378b4916f3773279aa42313b279a720ae1701ce0573bac0f9370a7430"
     },
     {
       "track": "I1",
       "expected_head_ref": "refactor/ecosystem-reuse-fencing-runtime",
-      "expected_base_ref": "feat/ecosystem-reuse-gate",
+      "expected_base_ref": "develop",
       "parent_track": "P0",
       "oid_policy": "reviewed-ancestor",
       "head_oid": null,
@@ -553,9 +557,9 @@
         "./gradlew :optimization-field-service-dispatch:dependencyInsight --dependency io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc --configuration testRuntimeClasspath"
       ],
       "review_artifact": "docs/review/2026-08-25-I1-7tier.md",
-      "receipt_id": null,
-      "receipt_status": "PENDING",
-      "checksum": null
+      "receipt_id": "20260827T071228Z-i1-base-replan",
+      "receipt_status": "PASS",
+      "checksum": "5e4bf7c8e629c24917e26b2f083d8c429d57b02e8015819e5e65c7712c9fc67c"
     }
   ]
 }

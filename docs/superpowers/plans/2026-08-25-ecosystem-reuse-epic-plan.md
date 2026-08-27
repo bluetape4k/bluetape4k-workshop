@@ -20,16 +20,28 @@ targeted proof를 제출한다.
 legacy assertion block에만 허용하며, touched assertion은 inventory 사유 없이
 `bluetape4k-assertions` 우선 규칙을 따른다.
 
+## 2026-08-27 실행 갱신
+
+이 문서는 2026-08-25 승인 설계를 현재 `develop` 기준으로 이어가는 실행 계획이다.
+P0/A1은 이미 `develop`에 통합되었고, 삭제된 historical foundation ref를
+child base로 재사용하지 않는다. 현재 coordinator branch는
+`chore/ecosystem-reuse-coordinator-transition`이며, F1/P2-02와 A2는 최신
+`develop`에서 exact base/head를 다시 고정한다. 사용자의 최신 병합 지시는
+`squash`가 아닌 `rebase merge`이므로 모든 PR delivery와 closeout은 이 전략만
+허용한다. rebase 후에는 implementation marker, manifest receipt, targeted
+test, CI, review를 새 exact head에서 다시 검증하며 이전 green 결과를
+재사용하지 않는다.
+
 ---
 
 ## 실행 계약
 
 - 저장소: `bluetape4k/bluetape4k-workshop`
 - 기준: 계획 시점의 `origin/develop`; PR 또는 stack 전환마다 최신 상태를 다시 확인한다.
-- Foundation branch: `.worktrees/feat/ecosystem-reuse-gate`의 `feat/ecosystem-reuse-gate`.
+- Foundation history: 이미 `develop`에 통합된 historical `feat/ecosystem-reuse-gate`; 현재 작업은 `chore/ecosystem-reuse-coordinator-transition`에서 stale ref를 수리한다.
 - 공개 문서: 한국어로 작성하고 code, path, API name, command, URL, exact error는 보존한다.
 - 의존성 규칙: Bluetape 버전은 `platform(libs.bluetape4k.dependencies)`만 관리한다.
-- 병합 규칙: 이 계획에서는 merge나 auto-merge를 수행하지 않고, 새 승인이 있을 때까지 merge-ready 증거에서 멈춘다.
+- 병합 규칙: `squash`와 auto-merge는 금지하고, 각 PR은 exact head에 대한 fresh 승인 후 `rebase merge`로만 통합한다. 승인 전에는 merge-ready 증거에서 멈춘다.
 - 무관한 dirty 변경: main checkout의 `.github/workflows/Examples.yml` 수정은 보존하며, train 범위에 속한다는 증거 없이는 이 worktree로 복사하지 않는다.
 
 GitHub read-only commands use a bounded wrapper with a 30-second deadline, one
@@ -105,7 +117,7 @@ overlap을 거부한다. child issue가 표의 경계를 넘으면 코딩 전에
 `docs/ecosystem-reuse-train.json`이 유일한 train manifest이며, workflow
 coordinator와 serial closeout lane만 이를 갱신할 수 있다.
 
-## Task 1: Confirm foundation state and create the Epic worktree
+## Task 1: Confirm foundation state and record the continuation worktrees
 
 **Files:**
 - Create: `docs/ecosystem-reuse-train.json` through the coordinator-owned bootstrap step
@@ -133,20 +145,23 @@ coordinator와 serial closeout lane만 이를 갱신할 수 있다.
   bounded deadline and may be retried once; mutation commands are never blindly
   retried.
 
-- [ ] **Step 2: Confirm the isolated worktree**
+- [x] **Step 2: Confirm the isolated worktree**
+
+  The historical `.worktrees/feat/ecosystem-reuse-gate` foundation was already
+  integrated into `develop` and its branch was deleted. Do not recreate or alias
+  that ref. Instead, preserve the live dirty-file audit and use the continuation
+  worktrees recorded in the 2026-08-27 execution receipt:
 
   ```bash
   git worktree list --porcelain
-  test "$(git -C .worktrees/feat/ecosystem-reuse-gate branch --show-current)" = "feat/ecosystem-reuse-gate"
-  test "$(git -C .worktrees/feat/ecosystem-reuse-gate rev-parse HEAD)" = "$(git rev-parse origin/develop)"
+  git status --porcelain=v1 -z
+  git -C .worktrees/fix/ecosystem-reuse-f1 rev-parse HEAD
+  git -C .worktrees/test/ecosystem-reuse-assertions-platform rev-parse HEAD
   ```
 
-  Expected evidence: the foundation branch is isolated and starts at the refreshed
-  base. Before any recreation, run `git status --porcelain=v1 -z`, save staged and
-  unstaged diffs plus the untracked path list, and prove the worktree is clean. If
-  any tracked or untracked artifact exists, do not delete or recreate the worktree;
-  preserve it in a commit or patch receipt and create a new base worktree only after
-  the evidence is recoverable.
+  Expected evidence: current `origin/develop` is the base for new independent
+  children, F1 is rebased onto that head, and no historical worktree is deleted
+  or recreated.
 
 - [ ] **Step 3: Initialize the machine-readable train manifest**
 
@@ -667,12 +682,12 @@ topological order로 재검토한다.
 
 - [ ] **Step 5: Conditional post-merge closeout**
 
-  This step is outside the current no-merge run and remains `N/A` until fresh
-  merge approval is provided. After an approved merge, the serial closeout lane
-  verifies the merge SHA is on `develop`, consumes the exact-head receipt, changes
-  inventory `pending` to `verified`, and updates the Epic checkbox. A missing merge
-  SHA or non-ancestor develop head leaves the node `MERGE_READY`/`PENDING` and does
-  not advance descendants.
+  After CG-16 fresh approval for the exact current head, the serial closeout lane
+  executes GitHub's `rebase` merge strategy only (never squash or auto-merge),
+  verifies the resulting merge state and commit on `develop`, consumes the
+  exact-head receipt, changes inventory `pending` to `verified`, and updates the
+  Epic checkbox. A missing merge SHA or non-ancestor develop head leaves the node
+  `MERGE_READY`/`PENDING` and does not advance descendants.
 
 ## Rollback and rerun points
 

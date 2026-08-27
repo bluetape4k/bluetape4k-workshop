@@ -9,6 +9,16 @@
 - 마일스톤: `1.4.0`
 - 상태: 사용자의 2026-08-25 진행 지시로 실행 승인된 설계
 
+## 2026-08-27 실행 갱신
+
+현재 실행은 이 설계를 이어받은 stacked PR train continuation이다. P0와 A1은
+각각 `develop`에 통합되었고, 삭제된 historical foundation/child ref를 현재
+작업 기준으로 재사용하지 않는다. 사용자의 최신 지시에 따라 child PR은
+`squash`가 아닌 `rebase merge`만 사용하며, 병합 직전 exact head에 대한 fresh
+승인과 CI·review read-back을 다시 통과한다. rebase로 implementation OID가
+바뀌면 `reviewed-ancestor` marker와 coordinator receipt를 새 lineage에 맞춰
+갱신하고, 이전 green evidence를 재사용하지 않는다.
+
 ## 문제와 목표
 
 이 저장소는 bluetape4k 라이브러리 사용법을 보여 주는 consumer 예제 모음이다.
@@ -62,7 +72,9 @@
 - #527 라스트마일 routing 구현(#797), Kafka recovery Epic(#560), Timefold Epic(#523)
 - Bluetape4k library 자체의 API 변경 또는 새 dependency 추가
 - 실제 provider credential, 외부 서비스 호출, production schema migration
-- PR merge, auto-merge, branch 삭제, release/publication
+- 이번 coordinator 문서 lane에서의 직접 merge·auto-merge·branch 삭제·release/publication
+  실행. 각 child PR의 delivery는 exact head 검증 뒤 별도 CG-16 승인을 받고
+  `rebase merge`로 수행한다.
 - raw framework API를 예제의 학습 대상으로 사용하는 경로의 기계적 제거
 
 ## 선택지와 결정
