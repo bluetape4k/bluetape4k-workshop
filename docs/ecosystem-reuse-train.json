@@ -85,6 +85,10 @@
     "checksum": "858378f8cde827f2409ecc4c68821206020386fd9f5e5faa8777abdd6a2d2984"
   },
   "planned_scope_replan_receipts": {
+    "F2": {
+      "receipt_id": "20260827T113018Z-f2-base-replan",
+      "checksum": "97b71c2120bacc8535d9a5ea56f81aa4a8708f07521ec60db1bbe07f10528593"
+    },
     "I1": {
       "receipt_id": "20260827T071228Z-i1-base-replan",
       "checksum": "5e4bf7c8e629c24917e26b2f083d8c429d57b02e8015819e5e65c7712c9fc67c"
@@ -305,7 +309,7 @@
     {
       "track": "F2",
       "expected_head_ref": "refactor/ecosystem-reuse-field-service-capabilities",
-      "expected_base_ref": "fix/ecosystem-reuse-field-service-contracts",
+      "expected_base_ref": "develop",
       "parent_track": "F1",
       "oid_policy": "reviewed-ancestor",
       "head_oid": null,
