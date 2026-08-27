@@ -59,13 +59,14 @@ SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 CHECKSUM_RE = re.compile(r"^[0-9a-f]{64}$")
 FOLLOW_UP_SCOPE_KINDS = {"child", "coordinator"}
 OID_POLICIES = {"exact", "rebase-aware"}
+FOLLOW_UP_BASE_REF_POLICIES = {"parent-head", "repository-base-after-parent-merge"}
 FIXED_NODE_OID_POLICIES = {"reviewed-ancestor"}
 REVIEWED_MARKER_BINDINGS = {"manifest", "lineage"}
 REVIEWED_MARKER_LABEL_RE = re.compile(r"(?im)\breviewed_implementation_oid\s*:")
 REVIEWED_MARKER_RE = re.compile(r"(?im)\breviewed_implementation_oid\s*:\s*([0-9a-f]{40})\b")
 FOLLOW_UP_SCOPE_FIELDS = {
     "scope_id", "scope_kind", "parent_track", "expected_head_ref", "expected_base_ref",
-    "oid_policy", "head_oid", "base_oid", "issue_numbers", "allowed_paths", "review_artifact",
+    "base_ref_policy", "oid_policy", "head_oid", "base_oid", "issue_numbers", "allowed_paths", "review_artifact",
 }
 DEPENDENCY_DECLARATION_NAMES = {"build.gradle", "build.gradle.kts", "libs.versions.toml"}
 SOURCE_IMPORT_EXTENSIONS = {".java", ".kt", ".kts"}
@@ -678,9 +679,17 @@ def _validate_follow_up_scopes(
         scope_kind = scope.get("scope_kind")
         if scope_kind not in FOLLOW_UP_SCOPE_KINDS:
             errors.append("%s: invalid scope_kind %s" % (prefix, escaped(scope_kind)))
+        base_ref_policy = scope.get("base_ref_policy")
+        if base_ref_policy not in FOLLOW_UP_BASE_REF_POLICIES:
+            errors.append("%s: invalid base_ref_policy %s" % (prefix, escaped(base_ref_policy)))
         oid_policy = scope.get("oid_policy")
         if oid_policy not in OID_POLICIES:
             errors.append("%s: invalid oid_policy %s" % (prefix, escaped(oid_policy)))
+        elif base_ref_policy == "repository-base-after-parent-merge":
+            if scope_kind != "child":
+                errors.append("%s: repository-base-after-parent-merge requires child scope_kind" % prefix)
+            if oid_policy != "rebase-aware":
+                errors.append("%s: repository-base-after-parent-merge requires rebase-aware oid_policy" % prefix)
         parent_track = scope.get("parent_track")
         if parent_track not in fixed_tracks:
             errors.append("%s: parent_track must name a fixed track" % prefix)
@@ -727,8 +736,15 @@ def _validate_follow_up_scopes(
             errors.append("%s: review_artifact must be in allowed_paths" % prefix)
         if parent_track in fixed_tracks:
             parent = manifest_nodes(manifest).get(str(parent_track), {})
-            if _normalise_ref(str(scope.get("expected_base_ref", ""))) != _normalise_ref(str(parent.get("expected_head_ref", ""))):
-                errors.append("%s: expected_base_ref must equal parent track expected_head_ref" % prefix)
+            expected_base_ref = _normalise_ref(str(scope.get("expected_base_ref", "")))
+            if base_ref_policy == "parent-head":
+                if expected_base_ref != _normalise_ref(str(parent.get("expected_head_ref", ""))):
+                    errors.append("%s: expected_base_ref must equal parent track expected_head_ref" % prefix)
+            elif base_ref_policy == "repository-base-after-parent-merge":
+                if expected_base_ref != _normalise_ref(str(manifest.get("base_ref", ""))):
+                    errors.append(
+                        "%s: repository-base-after-parent-merge expected_base_ref must equal repository base_ref" % prefix
+                    )
     for index, left in enumerate(scopes):
         left_paths = left.get("allowed_paths", []) if isinstance(left.get("allowed_paths"), list) else []
         for right in scopes[index + 1 :]:
