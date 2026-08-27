@@ -20,7 +20,8 @@
 
 ## 재현 증거와 근본 원인
 
-- 최신 `develop` 기준 commit: `96a7eb829fb0cc625a3080553d9811a7b4df4dea`
+- 재현 당시 최신 `develop` 기준 commit: `96a7eb829fb0cc625a3080553d9811a7b4df4dea`
+- 현재 coordinator 검증 기준 `develop` commit: `5c188021acf298dd9a1e21da80063fdd1ee4c2f8`
 - 실패한 hosted run: `33001959078` (A1 #812 exact head 당시)
 - 실패한 scope: `A1`, `P0`
 - 실패 메시지: `execution scope changed without a fresh coordinator receipt`,
@@ -104,8 +105,9 @@ branch와 issue `#822`, `#826`을 함께 기록한다.
 ## 문서 품질 점검 (SPW-01~05)
 
 - **SPW-01 독자·근거:** workshop maintainer와 workflow reviewer를 독자로
-  정하고, run `33001959078`, `develop` `96a7...`, checker/test diff, manifest,
-  issue `#826`을 근거 ledger로 삼았다.
+  정하고, 재현 run `33001959078`의 `develop` `96a7...`, 현재 coordinator
+  기준 `develop` `5c1880...`, checker/test diff, manifest, issue `#826`을
+  근거 ledger로 삼았다.
 - **SPW-02 구조:** 범위 → 재현/원인 → 전환 계약 → manifest receipt → 7-Tier
   → ecosystem/Kotlin 경계 → 검증/남은 위험 순서로 배치했다.
 - **SPW-03 한국어 자연스러움:** 설명과 판정은 한국어로 작성하고, 명령·SHA·ref·
@@ -118,7 +120,7 @@ branch와 issue `#822`, `#826`을 함께 기록한다.
 ## 검증 명령과 남은 위험
 
 ```text
-python3 .github/scripts/test_check_ecosystem_reuse.py -v  # 77 tests PASS
+python3 .github/scripts/test_check_ecosystem_reuse.py -v  # 83 tests PASS
 python3 -m json.tool docs/ecosystem-reuse-train.json  # PASS
 python3 .github/scripts/check-ecosystem-reuse.py --inventory docs/ecosystem-reuse-inventory.md --manifest docs/ecosystem-reuse-train.json --workflow .github/workflows/ecosystem-reuse-gate.yml  # PASS
 git diff --check  # PASS after final edits
