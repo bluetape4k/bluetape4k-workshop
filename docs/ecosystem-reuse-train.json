@@ -189,7 +189,7 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260828T-aws-bedrock-stacked-scope",
+    "receipt_id": "20260828T-aws-settings-stacked-scope",
     "checksum": "795c3bd86b0e386e2fa7112bf3a56ee2a293e11b4abae5ee2839f789aaba312b"
   },
   "planned_scope_replan_receipts": {
