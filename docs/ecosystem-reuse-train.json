@@ -257,7 +257,7 @@
       "scope_id": "epic-792-final-closeout",
       "scope_kind": "child",
       "parent_track": "P0",
-      "expected_head_ref": "chore/epic-792-final-closeout-f2-r1-merge-ready",
+      "expected_head_ref": "chore/epic-792-final-closeout-r1-r2-t1",
       "expected_base_ref": "develop",
       "base_ref_policy": "stacked-parent-head",
       "oid_policy": "rebase-aware",
@@ -273,21 +273,13 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260829T-epic-792-final-closeout-stage3-rebase-repair",
-    "checksum": "fea2da2bbb21b10d6c6b9f0b2e3a004e821e0f8df68968bdb37f81323bd1cb17"
+    "receipt_id": "20260829T-epic-792-final-closeout-stage4-rebase-repair",
+    "checksum": "bc839b4d8b4da9297a83c9e6c57041d7efd5894e63a5e44fcdd7f49e5a40e95d"
   },
   "planned_scope_replan_receipts": {
     "I1": {
       "receipt_id": "20260828T-i1-allowlist-replan",
       "checksum": "bfeafc53f939be8f2f2d3e0af9a1f3c19921c3b99e1dc1fd653a325730fd2b41"
-    },
-    "R2": {
-      "receipt_id": "20260828T-r2-allowlist-replan",
-      "checksum": "621cf37e58d8c2739f63e55d9c639dca84aedc96f1f0fe933a33f1c2bc0b4f2b"
-    },
-    "T1": {
-      "receipt_id": "20260828T-t1-acceptance-scope",
-      "checksum": "0ac20459714fd8b3179d78f1dfe0fdc766ad6b6dab8d5b90bac9e220ec70ab58"
     }
   },
   "nodes": [
@@ -551,7 +543,7 @@
       "parent_oid": "85aa60c1b525c7b0df693d897207221288fad25e",
       "merge_base_oid": null,
       "reviewed_implementation_oid": "38cb1843eef7a34cc0c522fc3f936488c43dbd24",
-      "state": "MERGE_READY",
+      "state": "MERGED",
       "issue_numbers": [793, 796, 798],
       "allowed_paths": [
         "commerce/usage-metering-billing-event-sourcing/src/main/kotlin/**",
@@ -643,10 +635,10 @@
       "oid_policy": "reviewed-ancestor",
       "head_oid": null,
       "base_oid": null,
-      "parent_oid": null,
+      "parent_oid": "38cb1843eef7a34cc0c522fc3f936488c43dbd24",
       "merge_base_oid": null,
-      "reviewed_implementation_oid": null,
-      "state": "PLANNED",
+      "reviewed_implementation_oid": "a2303af622cdf35fd427c87a24b701171b5c747d",
+      "state": "READY",
       "issue_numbers": [794, 795],
       "allowed_paths": [
         "commerce/pre-generated-voucher-pool/src/main/kotlin/io/bluetape4k/workshop/commerce/voucherpool/config/VoucherPoolConfiguration.kt",
@@ -692,9 +684,9 @@
         "required": true
       },
       "review_artifact": "docs/review/2026-08-25-R2-7tier.md",
-      "receipt_id": null,
-      "receipt_status": "PENDING",
-      "checksum": null
+      "receipt_id": "20260829T-epic-792-stage3-r2-ready",
+      "receipt_status": "PASS",
+      "checksum": "d2ef87f3367fb11fbed24bcb6fbcd5e0b41f3d26462fb5a1ffbc1e138f587792"
     },
     {
       "track": "T1",
@@ -704,10 +696,10 @@
       "oid_policy": "reviewed-ancestor",
       "head_oid": null,
       "base_oid": null,
-      "parent_oid": null,
+      "parent_oid": "85aa60c1b525c7b0df693d897207221288fad25e",
       "merge_base_oid": null,
-      "reviewed_implementation_oid": null,
-      "state": "PLANNED",
+      "reviewed_implementation_oid": "ab4adcb62fa7502f03bfbad898b2818b85107c23",
+      "state": "READY",
       "issue_numbers": [779, 802, 803],
       "allowed_paths": [
         "commerce/usage-billing-microservices-composition-tests/**",
@@ -756,9 +748,9 @@
         "./gradlew :spring-data-r2dbc-coroutines:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-spring-boot-r2dbc --configuration testRuntimeClasspath"
       ],
       "review_artifact": "docs/review/2026-08-25-T1-7tier.md",
-      "receipt_id": null,
-      "receipt_status": "PENDING",
-      "checksum": null
+      "receipt_id": "20260829T-epic-792-stage3-t1-ready",
+      "receipt_status": "PASS",
+      "checksum": "7fd07013395845d11e354f83b9be134c050c24406da2ffef382d1bf08f6dae74"
     },
     {
       "track": "I1",
