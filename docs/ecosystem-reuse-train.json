@@ -252,17 +252,31 @@
         "docs/review/2026-08-29-epic-792-train-promotion-7tier.md"
       ],
       "review_artifact": "docs/review/2026-08-29-epic-792-train-promotion-7tier.md"
+    },
+    {
+      "scope_id": "epic-792-final-closeout",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "chore/epic-792-final-closeout",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [792],
+      "allowed_paths": [
+        "docs/ecosystem-reuse-train.json",
+        "docs/ecosystem-reuse-inventory.md",
+        "docs/review/2026-08-29-epic-792-final-closeout-7tier.md"
+      ],
+      "review_artifact": "docs/review/2026-08-29-epic-792-final-closeout-7tier.md"
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260829T-epic-792-train-promotion-scope",
-    "checksum": "86849f4ea718f85b8a28ea9cc5245e109f0cb930520b7fce742694a3e8add6a9"
+    "receipt_id": "20260829T-epic-792-final-closeout-stage1",
+    "checksum": "4f790aede4491cb00ac0989c11bc93f321858a702936474d45d6a1855e0cf9cf"
   },
   "planned_scope_replan_receipts": {
-    "F2": {
-      "receipt_id": "20260827T140200Z-f2-allowlist-repair",
-      "checksum": "4b46bc3c43722f6156985bdfacf07aa61dc737183e829d2e698404235cf74ab6"
-    },
     "I1": {
       "receipt_id": "20260828T-i1-allowlist-replan",
       "checksum": "bfeafc53f939be8f2f2d3e0af9a1f3c19921c3b99e1dc1fd653a325730fd2b41"
@@ -492,10 +506,10 @@
       "oid_policy": "reviewed-ancestor",
       "head_oid": null,
       "base_oid": null,
-      "parent_oid": null,
+      "parent_oid": "27085b3ff6ab87a24e4fb08dbc4c14c0704378cf",
       "merge_base_oid": null,
-      "reviewed_implementation_oid": null,
-      "state": "PLANNED",
+      "reviewed_implementation_oid": "352f84fa66c83e2e2006353222f2f658eca02c44",
+      "state": "READY",
       "issue_numbers": [804, 805, 806, 807],
       "allowed_paths": [
         "optimization/field-service-dispatch/src/main/kotlin/**",
@@ -526,9 +540,9 @@
         "./gradlew :optimization-field-service-dispatch:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-http --configuration testRuntimeClasspath"
       ],
       "review_artifact": "docs/review/2026-08-25-F2-7tier.md",
-      "receipt_id": null,
-      "receipt_status": "PENDING",
-      "checksum": null
+      "receipt_id": "20260829T-epic-792-stage1-f2-ready",
+      "receipt_status": "PASS",
+      "checksum": "dcd030f67e97ea7708959b107cd6be4b73148c337070375b182a6724b88e9236"
     },
     {
       "track": "R1",
