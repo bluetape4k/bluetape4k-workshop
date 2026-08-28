@@ -44,9 +44,17 @@ matcher 회귀를 CI에서 즉시 차단하는 deterministic static guard를 제
 
 - [x] `docs/ecosystem-reuse-train.json`에 `assertion-governance-followup`
       scope와 fresh coordinator receipt 추가
-- [ ] #742 exact head를 base로 local scope checker PASS
-- [ ] terminal PR 생성, issue milestone/assignee/labels/body/DoD live read-back
-- [ ] hosted CI와 exact head를 확인하고 전체 train closeout만 PENDING으로 유지
+- [x] #742 exact head `a2a8f038...`를 base로 local scope checker PASS
+- [x] terminal PR #850 생성, issue milestone/assignee/labels/body/DoD live
+      read-back
+- [x] published terminal head의 hosted ecosystem/Examples CI PASS를 확인하고
+      전체 train closeout만 PENDING으로 유지
+
+실제 확인 증거:
+
+- local checker: #742 published base → terminal child published head PASS
+- PR #850: terminal child exact head/base와 metadata/body live read-back PASS
+- hosted ecosystem/Examples: published terminal head live checks PASS (상세 run ID는 PR #850 body에 기록)
 
 ## 검증 명령
 
