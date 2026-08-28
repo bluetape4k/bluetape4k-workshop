@@ -257,7 +257,7 @@
       "scope_id": "epic-792-final-closeout",
       "scope_kind": "child",
       "parent_track": "P0",
-      "expected_head_ref": "chore/epic-792-final-closeout-r2-t1-merge-ready",
+      "expected_head_ref": "chore/epic-792-final-closeout-i1-ready",
       "expected_base_ref": "develop",
       "base_ref_policy": "stacked-parent-head",
       "oid_policy": "rebase-aware",
@@ -273,14 +273,10 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260829T-epic-792-final-closeout-stage5-rebase-repair",
-    "checksum": "78bf5cdcaed4611b591b0d0737f7f25cd8444054e7788fe4be55ff3050257677"
+    "receipt_id": "20260829T-epic-792-final-closeout-stage6-rebase-repair",
+    "checksum": "21fb3894d2315b78ed1f5b3c248101ef243b67b44c343d11327d5ecaac9008ed"
   },
   "planned_scope_replan_receipts": {
-    "I1": {
-      "receipt_id": "20260828T-i1-allowlist-replan",
-      "checksum": "bfeafc53f939be8f2f2d3e0af9a1f3c19921c3b99e1dc1fd653a325730fd2b41"
-    }
   },
   "nodes": [
     {
@@ -638,7 +634,7 @@
       "parent_oid": "38cb1843eef7a34cc0c522fc3f936488c43dbd24",
       "merge_base_oid": null,
       "reviewed_implementation_oid": "a2303af622cdf35fd427c87a24b701171b5c747d",
-      "state": "MERGE_READY",
+      "state": "MERGED",
       "issue_numbers": [794, 795],
       "allowed_paths": [
         "commerce/pre-generated-voucher-pool/src/main/kotlin/io/bluetape4k/workshop/commerce/voucherpool/config/VoucherPoolConfiguration.kt",
@@ -699,7 +695,7 @@
       "parent_oid": "85aa60c1b525c7b0df693d897207221288fad25e",
       "merge_base_oid": null,
       "reviewed_implementation_oid": "ab4adcb62fa7502f03bfbad898b2818b85107c23",
-      "state": "MERGE_READY",
+      "state": "MERGED",
       "issue_numbers": [779, 802, 803],
       "allowed_paths": [
         "commerce/usage-billing-microservices-composition-tests/**",
@@ -760,10 +756,10 @@
       "oid_policy": "reviewed-ancestor",
       "head_oid": null,
       "base_oid": null,
-      "parent_oid": null,
+      "parent_oid": "85aa60c1b525c7b0df693d897207221288fad25e",
       "merge_base_oid": null,
-      "reviewed_implementation_oid": null,
-      "state": "PLANNED",
+      "reviewed_implementation_oid": "89c4db31470b6033266ec102491b1d4f7883e7ad",
+      "state": "READY",
       "issue_numbers": [799, 800, 801, 808],
     "allowed_paths": [
       "leader/job-safety-lab/**",
@@ -809,9 +805,9 @@
         "./gradlew :optimization-field-service-dispatch:dependencyInsight --dependency io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc --configuration testRuntimeClasspath"
       ],
       "review_artifact": "docs/review/2026-08-25-I1-7tier.md",
-      "receipt_id": null,
-      "receipt_status": "PENDING",
-      "checksum": null
+      "receipt_id": "20260829T-epic-792-stage6-i1-ready",
+      "receipt_status": "PASS",
+      "checksum": "7b737d7cc2ac7cf21c0e494a64876d752552ec1bbd5daea5d5ad774a6c5b045f"
     }
   ]
 }
