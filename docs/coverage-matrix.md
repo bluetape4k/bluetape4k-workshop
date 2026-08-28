@@ -3,13 +3,16 @@
 각 bluetape4k library를 기존 workshop 예제와 연결하고, Basic/Advanced 제안 시나리오와
 함께 coverage gap을 식별합니다.
 
-> 마지막 갱신: 2026-08-25
+> 마지막 갱신: 2026-08-28
 
 ## 2026-08-25 ecosystem 재사용 2차 gate
 
 `bluetape4k-assertions`는 모든 테스트에 전이되어 있지만, legacy raw assertion과
-module-local fallback이 남아 있어 전체 `Good`으로 판정하지 않는다. 실제 caller,
-capability API, BOM alias, source/test anchor, fallback 사유는
+module-local fallback이 남아 있어 전체 `Good`으로 판정하지 않는다. #776에서
+consumer 테스트의 generic Boolean/null matcher 19개를 의도 기반 matcher로
+전환했고, 정적 guard가 1,151개 Kotlin 테스트 파일을 검사한다. `build-logic`의
+16개 legacy import는 별도 allowlist로 집계한다. 실제 caller, capability API,
+BOM alias, source/test anchor, fallback 사유는
 [`docs/ecosystem-reuse-inventory.md`](ecosystem-reuse-inventory.md)에서 issue별로
 추적한다. `A1`은 Field Service, `A2`는 commerce·leader·operations·planning의
 assertion migration을 맡고, framework/protocol 학습 대상 raw check는
@@ -17,7 +20,7 @@ assertion migration을 맡고, framework/protocol 학습 대상 raw check는
 
 | 확인 항목 | 기준 | 현재 상태 | 다음 gate |
 |---|---|---|---|
-| assertions matcher | touched assertion block은 `bluetape4k-assertions` 우선 | ⚠️ Partial | #783, #785~#791; A1/A2 exact selectors |
+| assertions matcher | touched assertion block은 `bluetape4k-assertions` 우선 | ⚠️ Partial / 회귀 guard ✅ | #776, #783, #785~#791; A1/A2 exact selectors |
 | capability 재사용 | released API와 실제 import/source/test anchor를 inventory에 기록 | ⚠️ Partial | #777, #793~#808; P0 checker |
 | raw fallback | 다섯 분류와 비어 있지 않은 `fallback_reason` | ⚠️ Partial | `behavior-under-test`/`documented-raw-fallback` negative test |
 | BOM/version | `bluetape4k-dependencies`만 버전 authority | ✅ Guarded | child build-file diff gate |
@@ -51,7 +54,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | `bluetape4k-logging` | All modules | ✅ Good | — | — | — | — |
 | `bluetape4k-coroutines` | `kotlin/coroutines`, `observability-*`, `redis-distributed-lock` | ✅ Good | structured concurrency pattern이 불완전함 | — | — | — |
 | `bluetape4k-junit5` | All test modules | ✅ Good | `SuspendedJobTester` / `MultithreadingTester` 미노출 | concurrency test harness demo | — | — |
-| `bluetape4k-assertions` | All test modules | ⚠️ Partial | legacy raw assertion과 module별 matcher 적용 편차 | assertion migration + raw fallback inventory | exact-head matcher migration with failure-message parity | #792 |
+| `bluetape4k-assertions` | All test modules | ⚠️ Partial | module별 matcher 적용 편차; #776 guard는 consumer generic Boolean/null을 0건으로 유지 | assertion migration + raw fallback inventory | exact-head matcher migration with failure-message parity | #776, #792 |
 | `bluetape4k-testcontainers` | `exposed-*`, `spring-data-*`, `redis-*`, `messaging-*` | ✅ Good | — | — | — | — |
 
 ---
