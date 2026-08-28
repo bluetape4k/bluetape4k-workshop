@@ -16,6 +16,7 @@ directory unless they have been deliberately promoted.
 
 Recent delivery lessons:
 
+- [Issue #741 Bedrock Converse consumer 경계](2026-08-28-issue-741-bedrock-converse.md)
 - [Issue #528 Clinic Appointment Solver 독립 예제 경계](2026-08-25-issue-528-clinic-appointment-solver.md)
 - [Issue #525 Field Service Dispatch 독립 예제의 경계](2026-08-20-issue-525-field-service.md)
 - [Issue #743 Kinesis 코루틴 워크숍 경계](2026-08-17-issue-743-kinesis-coroutines.md)
