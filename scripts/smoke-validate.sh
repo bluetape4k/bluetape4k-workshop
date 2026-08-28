@@ -44,6 +44,7 @@ case "${1:-help}" in
       :aws-eventbridge-scheduler:test \
       :aws-kinesis-coroutines:test \
       :aws-s3-vectors-access-grants:test \
+      :aws-bedrock-converse:test \
       :kotlin-flow-extensions-event-aggregation:test \
       :kotlin-flow-extensions-metrics-sampling:test \
       :kotlin-flow-extensions-search-pipeline:test \
@@ -244,6 +245,7 @@ case "${1:-help}" in
       :aws-sqs-sns-coroutines:test \
       :aws-storage-abstraction:test \
       :aws-s3-vectors-access-grants:test \
+      :aws-bedrock-converse:test \
       --continue --max-workers=1"
     ;;
 
@@ -322,7 +324,7 @@ case "${1:-help}" in
     echo ""
     echo "=== Required workshop module registration ==="
     missing_modules=0
-    for module in image-processing/barcode-api commerce/shared aws/kinesis-coroutines optimization/field-service-dispatch optimization/last-mile-routing optimization/warehouse-allocation optimization/shift-coverage optimization/clinic-appointment-solver messaging/kafka-multi-broker-failover; do
+    for module in image-processing/barcode-api commerce/shared aws/kinesis-coroutines aws/bedrock-converse optimization/field-service-dispatch optimization/last-mile-routing optimization/warehouse-allocation optimization/shift-coverage optimization/clinic-appointment-solver messaging/kafka-multi-broker-failover; do
       for required_file in build.gradle.kts README.md README.ko.md; do
         if [ ! -f "$module/$required_file" ]; then
           echo "MISSING: $module/$required_file"

@@ -38,6 +38,7 @@ on:
       - 'aws/storage-abstraction/**'
       - 'aws/s3-spring-cloud/**'
       - 'aws/s3-vectors-access-grants/**'
+      - 'aws/bedrock-converse/**'
       - 'kotlin/flow-extensions-event-aggregation/**'
       - 'kotlin/flow-extensions-metrics-sampling/**'
       - 'kotlin/flow-extensions-search-pipeline/**'
@@ -95,6 +96,7 @@ on:
       - 'aws/storage-abstraction/**'
       - 'aws/s3-spring-cloud/**'
       - 'aws/s3-vectors-access-grants/**'
+      - 'aws/bedrock-converse/**'
       - 'kotlin/flow-extensions-event-aggregation/**'
       - 'kotlin/flow-extensions-metrics-sampling/**'
       - 'kotlin/flow-extensions-search-pipeline/**'
@@ -259,6 +261,7 @@ jobs:
       # - spring-boot-cache-caffeine: local cache path
       # - spring-boot-resilience4j-coroutines: resilience path
       # - aws-eventbridge-scheduler: local EventBridge + Scheduler boundary path
+      # - aws-bedrock-converse: credential-free Bedrock Converse/ConverseStream Flow contract
       # - jackson/jsonview examples: serialization path
       # - operations-job-console-core: framework-neutral state machine and queue projections
       # - leader-job-safety-lab: deterministic safety scenarios without container-backed integration tags
@@ -290,6 +293,7 @@ jobs:
           :aws-eventbridge-scheduler:test
           :aws-kinesis-coroutines:test
           :aws-s3-vectors-access-grants:test
+          :aws-bedrock-converse:test
           :kotlin-flow-extensions-event-aggregation:test
           :kotlin-flow-extensions-metrics-sampling:test
           :kotlin-flow-extensions-search-pipeline:test
@@ -359,6 +363,8 @@ jobs:
             aws/kinesis-coroutines/build/reports/tests/test/
             aws/s3-vectors-access-grants/build/test-results/test/*.xml
             aws/s3-vectors-access-grants/build/reports/tests/test/
+            aws/bedrock-converse/build/test-results/test/*.xml
+            aws/bedrock-converse/build/reports/tests/test/
             kotlin/flow-extensions-event-aggregation/build/test-results/test/*.xml
             kotlin/flow-extensions-event-aggregation/build/reports/tests/test/
             kotlin/flow-extensions-metrics-sampling/build/test-results/test/*.xml
