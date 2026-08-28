@@ -5,6 +5,7 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.assertions.shouldBeSameInstanceAs
+import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.concurrency.TestingExecutors
@@ -249,12 +250,12 @@ class FieldServiceReplanServiceTest {
             snapshotStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
 
             first.future.cancel(false).shouldBeTrue()
-            snapshotFinished.await(100, TimeUnit.MILLISECONDS).shouldBeEqualTo(false)
-            interrupted.get().shouldBeEqualTo(false)
+            snapshotFinished.await(100, TimeUnit.MILLISECONDS).shouldBeFalse()
+            interrupted.get().shouldBeFalse()
 
             releaseSnapshot.countDown()
             snapshotFinished.await(5, TimeUnit.SECONDS).shouldBeTrue()
-            interrupted.get().shouldBeEqualTo(false)
+            interrupted.get().shouldBeFalse()
         } finally {
             releaseSnapshot.countDown()
             service.close()
@@ -290,7 +291,7 @@ class FieldServiceReplanServiceTest {
             snapshotStarted.await(5, TimeUnit.SECONDS).shouldBeTrue()
 
             first.future.cancel(false).shouldBeTrue()
-            snapshotFinished.await(100, TimeUnit.MILLISECONDS).shouldBeEqualTo(false)
+            snapshotFinished.await(100, TimeUnit.MILLISECONDS).shouldBeFalse()
 
             service.requestReplan(AggregateId("aggregate-lease-next")) as ReplanAdmission.Accepted
             service.requestReplan(AggregateId("aggregate-lease-overflow")) shouldBeEqualTo
