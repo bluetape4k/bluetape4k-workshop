@@ -257,7 +257,7 @@
       "scope_id": "epic-792-final-closeout",
       "scope_kind": "child",
       "parent_track": "P0",
-      "expected_head_ref": "chore/epic-792-final-closeout-r1-r2-t1",
+      "expected_head_ref": "chore/epic-792-final-closeout-r2-t1-merge-ready",
       "expected_base_ref": "develop",
       "base_ref_policy": "stacked-parent-head",
       "oid_policy": "rebase-aware",
@@ -273,8 +273,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260829T-epic-792-final-closeout-stage4-rebase-repair",
-    "checksum": "bc839b4d8b4da9297a83c9e6c57041d7efd5894e63a5e44fcdd7f49e5a40e95d"
+    "receipt_id": "20260829T-epic-792-final-closeout-stage5-rebase-repair",
+    "checksum": "78bf5cdcaed4611b591b0d0737f7f25cd8444054e7788fe4be55ff3050257677"
   },
   "planned_scope_replan_receipts": {
     "I1": {
@@ -638,7 +638,7 @@
       "parent_oid": "38cb1843eef7a34cc0c522fc3f936488c43dbd24",
       "merge_base_oid": null,
       "reviewed_implementation_oid": "a2303af622cdf35fd427c87a24b701171b5c747d",
-      "state": "READY",
+      "state": "MERGE_READY",
       "issue_numbers": [794, 795],
       "allowed_paths": [
         "commerce/pre-generated-voucher-pool/src/main/kotlin/io/bluetape4k/workshop/commerce/voucherpool/config/VoucherPoolConfiguration.kt",
@@ -699,7 +699,7 @@
       "parent_oid": "85aa60c1b525c7b0df693d897207221288fad25e",
       "merge_base_oid": null,
       "reviewed_implementation_oid": "ab4adcb62fa7502f03bfbad898b2818b85107c23",
-      "state": "READY",
+      "state": "MERGE_READY",
       "issue_numbers": [779, 802, 803],
       "allowed_paths": [
         "commerce/usage-billing-microservices-composition-tests/**",
