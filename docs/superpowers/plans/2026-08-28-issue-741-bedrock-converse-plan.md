@@ -20,7 +20,7 @@
 - Create: \`aws/bedrock-converse/src/test/resources/logback-test.xml\`
 - Modify: \`gradle/libs.versions.toml: AWS Kotlin aliases\`
 
-- [ ] **Step 1: Write the failing module registration test**
+- [x] **Step 1: Write the failing module registration test**
 
 \`\`\`bash
 ./gradlew :aws-bedrock-converse:tasks --all --console=plain
@@ -28,7 +28,7 @@
 
 Expected: FAIL because the project and \`aws-kotlin-bedrock-runtime\` alias do not yet exist.
 
-- [ ] **Step 2: Add the module and versionless-by-consumer alias**
+- [x] **Step 2: Add the module and versionless-by-consumer alias**
 
 Add this catalog entry next to \`aws-kotlin-dynamodb\`:
 
@@ -40,7 +40,7 @@ Create \`build.gradle.kts\` with \`application\`, \`libs.aws.kotlin.bedrock.runt
 
 Create a \`main()\` that prints only a credential-free usage hint through \`KLogging\`; it must not construct a client or resolve credentials unless \`-Dbluetape4k.aws.bedrock.mode=real-aws\` is explicitly set.
 
-- [ ] **Step 3: Run the registration proof**
+- [x] **Step 3: Run the registration proof**
 
 Run:
 
@@ -51,7 +51,7 @@ Run:
 
 Expected: both commands succeed and list \`:aws-bedrock-converse\`.
 
-- [ ] **Step 4: Commit the module skeleton**
+- [x] **Step 4: Commit the module skeleton**
 
 \`\`\`bash
 git add aws/bedrock-converse gradle/libs.versions.toml
@@ -67,7 +67,7 @@ Constraint: AWS Kotlin SDK has no workshop BOM, so its existing \`aws-kotlin\` c
 - Create: \`aws/bedrock-converse/src/main/kotlin/io/bluetape4k/workshop/aws/bedrock/BedrockConverseService.kt\`
 - Create: \`aws/bedrock-converse/src/test/kotlin/io/bluetape4k/workshop/aws/bedrock/BedrockConverseServiceTest.kt\`
 
-- [ ] **Step 1: Write RED tests for request mapping and lazy streaming**
+- [x] **Step 1: Write RED tests for request mapping and lazy streaming**
 
 The test must use a MockK \`BedrockRuntimeClient\`, \`coEvery\` for \`converse\` and \`converseStream\`, \`ConverseResponse\`/\`ConverseStreamResponse\` builders, and \`bluetape4k-assertions\`. Cover:
 
@@ -87,7 +87,7 @@ fun \`native failure identity reaches caller\`() = runTest { /* assertFailsWith 
 
 Use two model ids (\`anthropic.claude-3-haiku\` and \`amazon.nova-lite\`) in separate parameterized or explicit tests to prove model-neutral mapping. Do not use \`!!\`, raw JUnit assertions, or generic Boolean/null equality matchers.
 
-- [ ] **Step 2: Run the targeted test and confirm the expected RED state**
+- [x] **Step 2: Run the targeted test and confirm the expected RED state**
 
 \`\`\`bash
 ./gradlew :aws-bedrock-converse:test --tests '*BedrockConverseServiceTest' --no-build-cache --console=plain
@@ -95,7 +95,7 @@ Use two model ids (\`anthropic.claude-3-haiku\` and \`amazon.nova-lite\`) in sep
 
 Expected: compilation/test failure because \`BedrockPrompt\` and \`BedrockConverseService\` are not defined.
 
-- [ ] **Step 3: Implement the smallest service**
+- [x] **Step 3: Implement the smallest service**
 
 Use this contract:
 
@@ -112,7 +112,7 @@ class BedrockConverseService(
 
 Validate \`modelId\` and \`prompt\` with \`requireNotBlank\`. Build messages with \`userMessageOf\`, call \`client.converse\` and \`client.converseStreamFlow(...).textDeltaFlow()\`, wrap each operation in \`clientFactory().useSafe\`, and rethrow cancellation/native failures unchanged. Keep logs free of prompt/response/credential values.
 
-- [ ] **Step 4: Run the targeted test and confirm GREEN**
+- [x] **Step 4: Run the targeted test and confirm GREEN**
 
 \`\`\`bash
 ./gradlew :aws-bedrock-converse:test --tests '*BedrockConverseServiceTest' --no-build-cache --console=plain
@@ -120,7 +120,7 @@ Validate \`modelId\` and \`prompt\` with \`requireNotBlank\`. Build messages wit
 
 Expected: all service tests PASS, including zero-before-collection, two invocations for two collections, ordered deltas, cancellation cleanup, and exception identity.
 
-- [ ] **Step 5: Commit the service contract**
+- [x] **Step 5: Commit the service contract**
 
 \`\`\`bash
 git add aws/bedrock-converse/src/main aws/bedrock-converse/src/test
@@ -135,15 +135,15 @@ git commit -m "Bedrock Converse 요청과 cold Flow 수명주기를 고정한다
 - Modify: \`aws/README.md\`
 - Modify: \`aws/README.ko.md\`
 
-- [ ] **Step 1: Add the runnable configuration contract**
+- [x] **Step 1: Add the runnable configuration contract**
 
 Document \`bluetape4k.aws.bedrock.mode=local\` as the default and \`real-aws\` as the only mode that calls AWS. Show \`bedrockRuntimeClientOf\` with region/endpoint/credentials injection and require HTTPS or literal loopback HTTP as defined upstream. Include non-streaming and streaming snippets, cancellation scope, and the explicit non-guarantees (no retry, replay, buffering, exactly-once, or provider-specific guarantee).
 
-- [ ] **Step 2: Keep English/Korean locale parity**
+- [x] **Step 2: Keep English/Korean locale parity**
 
 Both module READMEs must contain the same module purpose, dependency snippet, test command, local/real mode table, API snippets, lifecycle warning, and source links. Add the module to the AWS root README module guide, run table, and coverage table in each locale without adding a diagram.
 
-- [ ] **Step 3: Run documentation checks**
+- [x] **Step 3: Run documentation checks**
 
 \`\`\`bash
 git diff --check
@@ -159,7 +159,7 @@ Expected: no whitespace errors and \`findings=0\`.
 - Modify: \`scripts/smoke-validate.sh\` (AWS group and all-smoke task list)
 - Modify: \`docs/coverage-matrix.md\`
 
-- [ ] **Step 1: Add failing registration assertions**
+- [x] **Step 1: Add failing registration assertions**
 
 Run the existing stale/coverage checks and verify they do not yet include \`:aws-bedrock-converse:test\`:
 
@@ -170,11 +170,11 @@ rg -n "aws-bedrock-converse" .github/workflows/Examples.yml scripts/smoke-valida
 
 Expected: the new module is absent from the registration surfaces.
 
-- [ ] **Step 2: Add anchored registration entries**
+- [x] **Step 2: Add anchored registration entries**
 
 Add \`aws/bedrock-converse/**\` to the AWS path filters, \`:aws-bedrock-converse:test\` to the AWS smoke group, and the same credential-free test to the appropriate full/examples group. Preserve existing job \`needs\`, Kover/report artifact behavior, and do not add live AWS credentials.
 
-- [ ] **Step 3: Verify all registration surfaces**
+- [x] **Step 3: Verify all registration surfaces**
 
 \`\`\`bash
 ./scripts/smoke-validate.sh stale-check
@@ -184,7 +184,7 @@ rg -n "aws-bedrock-converse|Bedrock Converse" .github/workflows/Examples.yml scr
 
 Expected: stale-check PASS, module tests PASS, and every required surface contains the exact project/task name.
 
-- [ ] **Step 4: Commit registration and docs**
+- [x] **Step 4: Commit registration and docs**
 
 \`\`\`bash
 git add .github/workflows/Examples.yml scripts/smoke-validate.sh docs/coverage-matrix.md aws/README.md aws/README.ko.md aws/bedrock-converse/README.md aws/bedrock-converse/README.ko.md
@@ -197,7 +197,7 @@ git commit -m "Bedrock consumer를 AWS 검증 경로와 문서에 등록한다"
 - Create: \`docs/lessons/2026-08-28-issue-741-bedrock-converse.md\`
 - Review: all #741 changed files and exact diff from \`origin/chore/ecosystem-reuse-manifest-transition-1\`
 
-- [ ] **Step 1: Run proportional validation**
+- [x] **Step 1: Run proportional validation**
 
 \`\`\`bash
 ./gradlew :aws-bedrock-converse:test --no-build-cache --console=plain
@@ -209,11 +209,11 @@ git diff --check
 
 Expected: all commands PASS; no live AWS call is required or attempted.
 
-- [ ] **Step 2: Write and validate the Korean lesson**
+- [x] **Step 2: Write and validate the Korean lesson**
 
 Record the evidence, rejected emulator/SPI alternatives, credential boundary, lifecycle contract, any surprises, and the future guard (smoke/full registration plus fake cancellation test). Run the Korean terminology audit and read the final Markdown back in context.
 
-- [ ] **Step 3: Commit the lesson with Lore trailers**
+- [x] **Step 3: Commit the lesson with Lore trailers**
 
 \`\`\`bash
 git add docs/lessons/2026-08-28-issue-741-bedrock-converse.md
