@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.optimization.shiftcoverage.config
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.optimization.shiftcoverage.ShiftCoverageApplication
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageDemoService
@@ -35,7 +36,7 @@ class ShiftCoveragePostgresSpringWiringTest {
         idempotencyStore.shouldBeInstanceOf<ShiftCoveragePostgresIdempotencyRepository>()
 
         service.replan(IdempotencyKey("postgres-replan"), "manager-demo", "postgres-request")
-        service.approve(1L, IdempotencyKey("postgres-approve"), "manager-demo").shouldBeEqualTo(true)
+        service.approve(1L, IdempotencyKey("postgres-approve"), "manager-demo").shouldBeTrue()
         assignmentStore.listAssignments().size shouldBeEqualTo 1
     }
 

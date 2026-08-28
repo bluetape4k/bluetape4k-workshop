@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.commerce.ticket.purchase
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.commerce.ticket.domain.PaymentOutcome
 import io.bluetape4k.workshop.commerce.ticket.payment.internal.FakePaymentProvider
 import io.bluetape4k.workshop.commerce.ticket.payment.internal.PaymentWorker
@@ -39,8 +41,8 @@ internal class RefundRaceIntegrationTest {
             val refundProvider = FakeRefundProvider().apply { succeed(refundOperationId) }
             val refunds = RefundService(fixture.executor, refundProvider)
 
-            refunds.run(refundOperationId).shouldBeEqualTo(true)
-            refunds.run(refundOperationId).shouldBeEqualTo(false)
+            refunds.run(refundOperationId).shouldBeTrue()
+            refunds.run(refundOperationId).shouldBeFalse()
 
             refundProvider.refundCount(refundOperationId).shouldBeEqualTo(1)
             fixture.queryString("SELECT state FROM ticket_purchase_attempts WHERE attempt_id = '${command.attemptId}'")

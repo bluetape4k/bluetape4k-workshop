@@ -7,10 +7,11 @@
 #   ./scripts/smoke-validate.sh compile       # compile-only (no tests)
 #   ./scripts/smoke-validate.sh stale-check   # Gradle project count + README link check
 #   ./scripts/smoke-validate.sh diagram-qa    # changed README diagram QA evidence
+#   ./scripts/smoke-validate.sh assertion-governance
 #   ./scripts/smoke-validate.sh high-contention-contract
 #   HIGH_CONTENTION_RUN_ID=<unique-id> ./scripts/smoke-validate.sh high-contention-ci
 #
-# Groups: data-access  spring-boot  serialization  messaging  commerce  optimization  operations  async  observability  aws  redis
+# Groups: data-access  spring-boot  serialization  messaging  commerce  optimization  operations  async  observability  aws  redis  assertion-governance
 # Each group runs with --continue so a single failure does not abort the rest.
 
 set -euo pipefail
@@ -219,6 +220,11 @@ case "${1:-help}" in
       :vertx-vertx-sqlclient:test \
       :vertx-vertx-webclient:test \
       --continue"
+    ;;
+
+  assertion-governance)
+    run "python3 .github/scripts/test_check_assertion_governance.py -v"
+    run "python3 .github/scripts/check-assertion-governance.py"
     ;;
 
   observability)

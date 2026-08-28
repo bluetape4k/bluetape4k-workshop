@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.optimization.clinicappointment.solver
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.optimization.clinicappointment.fixture.ClinicAppointmentFixtures
 import org.junit.jupiter.api.Test
@@ -31,7 +32,7 @@ class ClinicAppointmentSolverTest {
         pinned.roomId shouldBeEqualTo "room-2"
         pinned.date shouldBeEqualTo input.dates.first()
         pinned.startTime?.toString().shouldBeEqualTo("10:00")
-        input.appointments.first { it.requestId == "appointment-1" }.providerId.shouldBeEqualTo(null)
+        input.appointments.first { it.requestId == "appointment-1" }.providerId.shouldBeNull()
         proposal.feasible.shouldBeTrue()
     }
 

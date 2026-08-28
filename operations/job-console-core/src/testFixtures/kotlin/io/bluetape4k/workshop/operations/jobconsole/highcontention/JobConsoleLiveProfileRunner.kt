@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.operations.jobconsole.highcontention
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotNull
 import java.nio.file.Files
@@ -113,7 +114,7 @@ class JobConsoleLiveProfileRunner(
             report = finalizedReport,
         )
 
-        Files.isRegularFile(reportPath).shouldBeEqualTo(true)
+        Files.isRegularFile(reportPath).shouldBeTrue()
     }
 
     private fun requiredProperty(name: String): String =
