@@ -257,7 +257,7 @@
       "scope_id": "epic-792-final-closeout",
       "scope_kind": "child",
       "parent_track": "P0",
-      "expected_head_ref": "chore/epic-792-final-closeout-ready",
+      "expected_head_ref": "chore/epic-792-final-closeout-f2-r1-merge-ready",
       "expected_base_ref": "develop",
       "base_ref_policy": "stacked-parent-head",
       "oid_policy": "rebase-aware",
@@ -273,8 +273,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260829T-epic-792-final-closeout-stage2-rebase-repair",
-    "checksum": "9cb0465c646a37f6460272896f8391db553746da8ec232d77b81b8e63fe8cf9e"
+    "receipt_id": "20260829T-epic-792-final-closeout-stage3-rebase-repair",
+    "checksum": "fea2da2bbb21b10d6c6b9f0b2e3a004e821e0f8df68968bdb37f81323bd1cb17"
   },
   "planned_scope_replan_receipts": {
     "I1": {
@@ -505,7 +505,7 @@
       "parent_oid": "27085b3ff6ab87a24e4fb08dbc4c14c0704378cf",
       "merge_base_oid": null,
       "reviewed_implementation_oid": "352f84fa66c83e2e2006353222f2f658eca02c44",
-      "state": "MERGE_READY",
+      "state": "MERGED",
       "issue_numbers": [804, 805, 806, 807],
       "allowed_paths": [
         "optimization/field-service-dispatch/src/main/kotlin/**",
@@ -551,7 +551,7 @@
       "parent_oid": "85aa60c1b525c7b0df693d897207221288fad25e",
       "merge_base_oid": null,
       "reviewed_implementation_oid": "38cb1843eef7a34cc0c522fc3f936488c43dbd24",
-      "state": "READY",
+      "state": "MERGE_READY",
       "issue_numbers": [793, 796, 798],
       "allowed_paths": [
         "commerce/usage-metering-billing-event-sourcing/src/main/kotlin/**",
