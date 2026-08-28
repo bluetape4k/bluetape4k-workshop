@@ -56,7 +56,7 @@
       "scope_id": "coordinator-child-scope",
       "scope_kind": "coordinator",
       "parent_track": "P0",
-      "expected_head_ref": "chore/ecosystem-reuse-inventory-closeout",
+      "expected_head_ref": "chore/ecosystem-reuse-manifest-transition-1",
       "expected_base_ref": "develop",
       "base_ref_policy": "parent-head",
       "oid_policy": "rebase-aware",
@@ -131,8 +131,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260828T-scope-replan-inventory-closeout",
-    "checksum": "6d5b964747a98c5a048b549de442ac3f31c5b20dc896c835460b4c7f9eecf875"
+    "receipt_id": "20260828T084028Z-scope-replan-transition-1",
+    "checksum": "6265d1eed2ede0c9e30ebb38fd9ffe60bd0478afae2488dd56c2aaa4ec537a40"
   },
   "planned_scope_replan_receipts": {
     "F2": {
@@ -257,7 +257,7 @@
       "parent_oid": "85aa60c1b525c7b0df693d897207221288fad25e",
       "merge_base_oid": null,
       "reviewed_implementation_oid": "0912ee52467ed9eb83c918090d5eda40f8f1e8d0",
-      "state": "READY",
+      "state": "MERGE_READY",
       "issue_numbers": [785, 786, 787, 788, 789, 790, 791],
       "allowed_paths": [
         "aws/kinesis-coroutines/src/test/kotlin/io/bluetape4k/workshop/aws/kinesis/KinesisStreamServiceTest.kt",
@@ -326,7 +326,7 @@
       "parent_oid": "b3711b30a0c51f78750b3cdf2718692d40af08de",
       "merge_base_oid": null,
       "reviewed_implementation_oid": "27085b3ff6ab87a24e4fb08dbc4c14c0704378cf",
-      "state": "MERGE_READY",
+      "state": "MERGED",
       "issue_numbers": [777, 781, 782, 784],
       "allowed_paths": [
         "optimization/field-service-dispatch/src/main/kotlin/**",
