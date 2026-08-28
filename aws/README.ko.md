@@ -20,6 +20,9 @@ shard/sequence report, coroutine cancellation, bounded retry/backoff를 credenti
 fake로 배우고 실제 AWS는 명시적으로 opt-in하고 싶다면 `kinesis-coroutines/`를 사용합니다.
 Bedrock Converse/ConverseStream consumer 경계, cold Flow collection, 작업 단위 client
 lifecycle, 명시적 real AWS opt-in을 보고 싶다면 `bedrock-converse/`를 사용합니다.
+Secrets Manager와 secure Parameter Store를 하나의 provider-neutral resolver로
+소비하고 startup/refresh fallback, full-replacement 설정 결과, redaction을 배우고 싶다면
+`settings-boundary/`를 사용합니다.
 
 ## 아키텍처
 
@@ -45,6 +48,7 @@ request construction, failure isolation, 명시적 opt-in 경계를 배우도록
 | `cloudwatch-imds-observability/` | `:aws-cloudwatch-imds-observability` | CloudWatch metric/log publish intent, Micrometer meter publishing, failure isolation, 명시적 IMDS metadata opt-in을 실제 자격 증명 없이 확인합니다. |
 | `s3-vectors-access-grants/` | `:aws-s3-vectors-access-grants` | S3 Vectors 문서 upsert/query 경계, deterministic local vector ranking, redacted S3 Access Grants read-decision report를 확인합니다. |
 | `bedrock-converse/` | `:aws-bedrock-converse` | Bedrock Converse/ConverseStream request mapping, cold text-delta Flow, cancellation-safe client lifecycle, 명시적 real AWS opt-in을 확인합니다. |
+| `settings-boundary/` | `:aws-settings-boundary` | Provider-neutral Secrets Manager/secure Parameter Store lookup, startup/refresh fallback, full-replacement 설정 결과, redaction을 확인합니다. |
 
 ## 런타임 모델
 
@@ -61,6 +65,7 @@ request construction, failure isolation, 명시적 opt-in 경계를 배우도록
 | Vector and access boundaries | `s3-vectors-access-grants/`는 기본적으로 bluetape4k `S3VectorsOperations`와 `S3AccessGrantsOperations` local adapter를 사용합니다. |
 | Observability | `cloudwatch-imds-observability/`는 기본적으로 로컬 CloudWatch intent를 publish하고, 명시적으로 요청한 경우에만 IMDS metadata를 읽습니다. |
 | Bedrock runtime | `bedrock-converse/`는 upstream AWS Kotlin Bedrock helper를 사용합니다. 각 작업이 client를 소유하며 명시적인 factory만 live AWS를 활성화합니다. |
+| Settings boundary | `settings-boundary/`는 upstream AWS Kotlin Secrets Manager와 secure SSM helper를 사용합니다. 각 lookup이 client를 소유하며 설정 결과는 이전 secret을 재사용하지 않습니다. |
 
 ## 로컬 AWS 커버리지
 
@@ -75,6 +80,7 @@ request construction, failure isolation, 명시적 opt-in 경계를 배우도록
 | `cloudwatch-imds-observability/` | local adapter only | metadata 접근을 명시적이고 안전하게 유지하기 위해 기본 테스트에서는 CloudWatch와 IMDS network call을 피합니다. |
 | `s3-vectors-access-grants/` | local adapter only | S3 Vectors와 S3 Access Grants는 bluetape4k operation interface 뒤에 두고, deterministic local ranking과 redacted access report를 테스트 대상 동작으로 둡니다. |
 | `bedrock-converse/` | credential-free fake | 기본 테스트는 AWS client를 만들거나 network call을 수행하지 않습니다. fake client로 request mapping, cold Flow collection, cancellation, close 순서를 검증합니다. |
+| `settings-boundary/` | credential-free fake | 기본 테스트는 Secrets Manager와 secure Parameter Store의 성공/누락/권한 오류 분류, refresh replacement, redaction, cancellation을 credential과 network 없이 검증합니다. |
 
 ## 실행
 
@@ -88,6 +94,7 @@ request construction, failure isolation, 명시적 opt-in 경계를 배우도록
 ./gradlew :aws-cloudwatch-imds-observability:test
 ./gradlew :aws-s3-vectors-access-grants:test
 ./gradlew :aws-bedrock-converse:test
+./gradlew :aws-settings-boundary:test
 ```
 
 backend별 동작을 비교하려면 profile 기반 storage 샘플을 직접 실행합니다.
@@ -107,6 +114,7 @@ backend별 동작을 비교하려면 profile 기반 storage 샘플을 직접 실
 ./gradlew :aws-kinesis-coroutines:bootRun
 ./gradlew :aws-s3-vectors-access-grants:bootRun
 ./gradlew :aws-bedrock-converse:run
+./gradlew :aws-settings-boundary:run
 ```
 
 Kinesis sample은 credential-free `local` profile을 기본으로 사용하고 deterministic record 3개를

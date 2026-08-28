@@ -20,6 +20,8 @@ keys, shard/sequence reports, coroutine cancellation, bounded retry/backoff, and
 `real-aws` opt-in. Use `bedrock-converse/` when you want a thin Bedrock Converse/ConverseStream
 consumer boundary with cold Flow collection, operation-owned client lifecycle, and explicit
 real-AWS opt-in.
+Use `settings-boundary/` when you want to consume Secrets Manager and secure Parameter Store
+through one provider-neutral resolver with startup/refresh fallback and redacted snapshots.
 
 ## Architecture
 
@@ -45,6 +47,7 @@ profile creates the upstream AWS SDK v2 async client.
 | `cloudwatch-imds-observability/` | `:aws-cloudwatch-imds-observability` | CloudWatch metric/log publish intent, Micrometer meter publishing, failure isolation, and explicit IMDS metadata opt-in without real credentials. |
 | `s3-vectors-access-grants/` | `:aws-s3-vectors-access-grants` | S3 Vectors document upsert/query boundaries, deterministic local vector ranking, and redacted S3 Access Grants read-decision reports. |
 | `bedrock-converse/` | `:aws-bedrock-converse` | Bedrock Converse/ConverseStream request mapping, cold text-delta Flow, cancellation-safe client lifecycle, and explicit real-AWS opt-in. |
+| `settings-boundary/` | `:aws-settings-boundary` | Provider-neutral Secrets Manager/secure Parameter Store lookup, startup/refresh fallback, full-replacement snapshots, and redaction. |
 
 ## Runtime Model
 
@@ -61,6 +64,7 @@ profile creates the upstream AWS SDK v2 async client.
 | Vector and access boundaries | `s3-vectors-access-grants/` uses bluetape4k `S3VectorsOperations` and `S3AccessGrantsOperations` local adapters by default. |
 | Observability | `cloudwatch-imds-observability/` publishes local CloudWatch intent by default and reads IMDS metadata only when explicitly requested. |
 | Bedrock runtime | `bedrock-converse/` consumes upstream AWS Kotlin Bedrock helpers; each operation owns its client, and only an explicit factory can enable live AWS. |
+| Settings boundary | `settings-boundary/` consumes upstream AWS Kotlin Secrets Manager and secure SSM helpers; each lookup owns its client and snapshots never reuse a prior secret. |
 
 ## Local AWS Coverage
 
@@ -75,6 +79,7 @@ profile creates the upstream AWS SDK v2 async client.
 | `cloudwatch-imds-observability/` | local adapter only | The example deliberately avoids CloudWatch and IMDS network calls in default tests so metadata access stays explicit and safe. |
 | `s3-vectors-access-grants/` | local adapter only | S3 Vectors and S3 Access Grants are kept behind bluetape4k operation interfaces; deterministic local ranking and redacted access reports are the workshop behavior under test. |
 | `bedrock-converse/` | credential-free fake | Default tests create no AWS client and make no network call; fake clients verify request mapping, cold Flow collection, cancellation, and close ordering. |
+| `settings-boundary/` | credential-free fake | Default tests verify Secrets Manager and secure Parameter Store success/missing/denied classification, refresh replacement, redaction, and cancellation without credentials or network. |
 
 ## Run
 
@@ -88,6 +93,7 @@ profile creates the upstream AWS SDK v2 async client.
 ./gradlew :aws-cloudwatch-imds-observability:test
 ./gradlew :aws-s3-vectors-access-grants:test
 ./gradlew :aws-bedrock-converse:test
+./gradlew :aws-settings-boundary:test
 ```
 
 Run the profile-driven storage sample directly when you want to compare backends:
@@ -107,6 +113,7 @@ Run the profile-driven storage sample directly when you want to compare backends
 ./gradlew :aws-kinesis-coroutines:bootRun
 ./gradlew :aws-s3-vectors-access-grants:bootRun
 ./gradlew :aws-bedrock-converse:run
+./gradlew :aws-settings-boundary:run
 ```
 
 The Kinesis sample defaults to the credential-free `local` profile and exits after publishing
