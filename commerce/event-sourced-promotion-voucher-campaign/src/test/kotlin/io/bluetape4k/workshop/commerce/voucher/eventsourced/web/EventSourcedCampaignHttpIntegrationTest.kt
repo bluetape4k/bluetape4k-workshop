@@ -413,7 +413,7 @@ internal class EventSourcedCampaignHttpIntegrationTest
         transaction(database) {
             val rebuilds = ProjectionRebuildRepository()
             val candidate = rebuilds.start(PROJECTION, targetPosition = 2, now = NOW)
-            rebuilds.fail(candidate.key, candidate.fencingToken, retryable = true, now = NOW).shouldBeEqualTo(true)
+            rebuilds.fail(candidate.key, candidate.fencingToken, retryable = true, now = NOW).shouldBeTrue()
         }
 
         postRebuildAction(

@@ -4,6 +4,7 @@ import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -169,7 +170,7 @@ class WebClientExtensionsTest : AbstractSpringTest() {
     inner class Head {
         @Test
         fun `httpHead httpbin`() = runSuspendIO {
-            client.httpHead("/get").awaitBodilessEntity().statusCode.is2xxSuccessful.shouldBeEqualTo(true)
+            client.httpHead("/get").awaitBodilessEntity().statusCode.is2xxSuccessful.shouldBeTrue()
         }
     }
 

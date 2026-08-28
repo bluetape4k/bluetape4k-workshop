@@ -14,9 +14,13 @@ on:
       - 'docs/governance/github-action-pins.json'
       - '.github/scripts/check-ecosystem-reuse.py'
       - '.github/scripts/test_check_ecosystem_reuse.py'
+      - '.github/scripts/check-assertion-governance.py'
+      - '.github/scripts/test_check_assertion_governance.py'
       - '.github/workflows/ecosystem-reuse-gate.yml'
       - '**/build.gradle.kts'
       - 'gradle/libs.versions.toml'
+      - '**/src/test/**/*.kt'
+      - '**/src/testFixtures/**/*.kt'
   # Stacked child PRs may target a non-default base; paths still bound the workload.
   pull_request:
     paths:
@@ -30,9 +34,13 @@ on:
       - 'docs/governance/github-action-pins.json'
       - '.github/scripts/check-ecosystem-reuse.py'
       - '.github/scripts/test_check_ecosystem_reuse.py'
+      - '.github/scripts/check-assertion-governance.py'
+      - '.github/scripts/test_check_assertion_governance.py'
       - '.github/workflows/ecosystem-reuse-gate.yml'
       - '**/build.gradle.kts'
       - 'gradle/libs.versions.toml'
+      - '**/src/test/**/*.kt'
+      - '**/src/testFixtures/**/*.kt'
       - 'optimization/field-service-dispatch/src/main/kotlin/**'
       - 'optimization/field-service-dispatch/src/test/kotlin/**'
   workflow_dispatch:
@@ -95,6 +103,12 @@ jobs:
 
       - name: Run checker unit tests
         run: python3 .github/scripts/test_check_ecosystem_reuse.py -v
+
+      - name: Run assertion governance guard tests
+        run: python3 .github/scripts/test_check_assertion_governance.py -v
+
+      - name: Run assertion governance guard
+        run: python3 .github/scripts/check-assertion-governance.py
 
       - name: Run checker and record sanitized receipt
         env:

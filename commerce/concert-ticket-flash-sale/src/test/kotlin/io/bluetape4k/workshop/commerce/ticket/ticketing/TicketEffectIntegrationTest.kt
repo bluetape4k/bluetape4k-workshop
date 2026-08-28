@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.commerce.ticket.ticketing
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.commerce.ticket.domain.PaymentOutcome
 import io.bluetape4k.workshop.commerce.ticket.payment.internal.FakePaymentProvider
 import io.bluetape4k.workshop.commerce.ticket.payment.internal.PaymentWorker
@@ -23,13 +25,13 @@ internal class TicketEffectIntegrationTest {
             val provider = FakeTicketProvider().apply { succeedButLoseResponse(operationId) }
             val worker = TicketEffectWorker(fixture.executor, fixture.service, provider)
 
-            worker.run(operationId).shouldBeEqualTo(true)
+            worker.run(operationId).shouldBeTrue()
             fixture.execute(
                 "UPDATE ticket_effect_operations SET claim_until = CURRENT_TIMESTAMP - INTERVAL '1 second' " +
                     "WHERE operation_id = '$operationId'",
             )
-            worker.run(operationId).shouldBeEqualTo(true)
-            worker.run(operationId).shouldBeEqualTo(false)
+            worker.run(operationId).shouldBeTrue()
+            worker.run(operationId).shouldBeFalse()
 
             provider.issueCount(operationId).shouldBeEqualTo(1)
             fixture.queryString("SELECT state FROM ticket_tickets").shouldBeEqualTo("issued")
