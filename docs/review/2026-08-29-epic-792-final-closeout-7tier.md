@@ -118,10 +118,11 @@ PR 링크: [#811](https://github.com/bluetape4k/bluetape4k-workshop/pull/811),
 
 ## 현재 단계와 남은 gate
 
-이 artifact를 포함한 첫 closeout PR은 A2를 `MERGED`, F2를 `READY`로 만들고,
-이후 PR에서 active path overlap이 없는 순서로 나머지 state transition을
-수행한다. 최종 PR에서만 P0/F2/R1/R2/T1/I1의 `MERGED` receipt와 inventory
-전체 `status=verified`를 함께 기록한다. 마지막 PR의 fresh exact-head read-back,
+이 artifact를 포함한 첫 closeout PR은 F2를 `READY`로 만들고 A2의 기존
+`MERGE_READY` receipt를 보존한다. 다음 PR에서 A2를 `MERGED`로 전이한 뒤,
+active path overlap이 없는 순서로 나머지 state transition을 수행한다. 최종
+PR에서만 P0/F2/R1/R2/T1/I1의 `MERGED` receipt와 inventory 전체
+`status=verified`를 함께 기록한다. 마지막 PR의 fresh exact-head read-back,
 required hosted checks, 사용자의 merge 승인, protected `develop` rebase merge,
 Epic #792 본문 갱신·종료 전까지 최종 상태는 `PENDING`이다.
 
@@ -131,6 +132,7 @@ Epic #792 본문 갱신·종료 전까지 최종 상태는 `PENDING`이다.
 - [x] native `subIssues=0` 및 child `parent_issue_url` 공백을 명시
 - [x] closeout follow-up scope와 직렬 전이 순서 정의
 - [x] Kotlin closeout checklist와 writer/naturalness gate 기록
+- [x] F2 `PLANNED → READY`와 A2 기존 `MERGE_READY/PASS` receipt 보존
 - [ ] closeout PR train 전체 merge 및 terminal CI
 - [ ] Epic #792 본문 최종 증거 반영과 issue close
 
