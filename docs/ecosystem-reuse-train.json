@@ -257,7 +257,7 @@
       "scope_id": "epic-792-final-closeout",
       "scope_kind": "child",
       "parent_track": "P0",
-      "expected_head_ref": "chore/epic-792-final-closeout-terminal",
+      "expected_head_ref": "chore/epic-792-final-closeout-final",
       "expected_base_ref": "develop",
       "base_ref_policy": "stacked-parent-head",
       "oid_policy": "rebase-aware",
@@ -273,8 +273,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260829T-epic-792-final-closeout-stage7-rebase-repair",
-    "checksum": "57fa5f9bdd2ab83b03864556edbc5445c8d5a9c76185b6f81da934ad2c37bdda"
+    "receipt_id": "20260829T-epic-792-final-closeout-stage8-rebase-repair",
+    "checksum": "021dd23509a87dc8df9200201eef3eb37a5a54bff0a21fbdca4ec31cfe5f604c"
   },
   "planned_scope_replan_receipts": {
   },
@@ -290,7 +290,7 @@
       "parent_oid": null,
       "merge_base_oid": null,
       "reviewed_implementation_oid": "85aa60c1b525c7b0df693d897207221288fad25e",
-      "state": "MERGE_READY",
+      "state": "MERGED",
       "issue_numbers": [792],
       "allowed_paths": [
         "docs/superpowers/specs/2026-08-25-ecosystem-reuse-epic-design.md",
@@ -759,7 +759,7 @@
       "parent_oid": "85aa60c1b525c7b0df693d897207221288fad25e",
       "merge_base_oid": null,
       "reviewed_implementation_oid": "89c4db31470b6033266ec102491b1d4f7883e7ad",
-      "state": "MERGE_READY",
+      "state": "MERGED",
       "issue_numbers": [799, 800, 801, 808],
     "allowed_paths": [
       "leader/job-safety-lab/**",
