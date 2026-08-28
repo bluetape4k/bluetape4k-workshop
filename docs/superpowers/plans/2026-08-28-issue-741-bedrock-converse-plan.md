@@ -170,9 +170,9 @@ rg -n "aws-bedrock-converse" .github/workflows/Examples.yml scripts/smoke-valida
 
 Expected: the new module is absent from the registration surfaces.
 
-- [x] **Step 2: Add anchored registration entries**
+- [x] **Step 2: Add anchored registration entries and stacked scope policy**
 
-Add \`aws/bedrock-converse/**\` to the AWS path filters, \`:aws-bedrock-converse:test\` to the AWS smoke group, and the same credential-free test to the appropriate full/examples group. Preserve existing job \`needs\`, Kover/report artifact behavior, and do not add live AWS credentials.
+Add \`aws/bedrock-converse/**\` to the AWS path filters, \`:aws-bedrock-converse:test\` to the AWS smoke group, and the same credential-free test to the appropriate full/examples group. Preserve existing job \`needs\`, Kover/report artifact behavior, and do not add live AWS credentials. Because this child is based on the unmerged coordinator PR, record the exact base/head relationship with the \`stacked-parent-head\` follow-up policy instead of changing the fixed nine-track inventory.
 
 - [x] **Step 3: Verify all registration surfaces**
 
@@ -221,6 +221,8 @@ git commit -m "Bedrock consumer의 credential-free 수명주기 계약을 남긴
 \`\`\`
 
 The commit body must include \`Constraint\`, \`Rejected\`, \`Confidence\`, \`Scope-risk\`, \`Directive\`, \`Tested\`, and \`Not-tested\` trailers.
+
+The stacked follow-up checker repair, manifest scope, and 7-Tier review artifact must be included before publication so CI validates the exact child base/head rather than rejecting the child as an unmapped path set.
 
 - [ ] **Step 4: Publish the stacked PR**
 

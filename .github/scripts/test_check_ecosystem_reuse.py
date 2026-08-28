@@ -842,6 +842,18 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         errors = CHECKER.validate_manifest(self.root, path)
         self.assertTrue(any("must equal repository base_ref" in error for error in errors))
 
+    def test_manifest_accepts_stacked_parent_head_scope_with_non_parent_base(self):
+        manifest = self.manifest_with_follow_up_scope()
+        scope = self.follow_up_scope(oid_policy="rebase-aware")
+        scope["scope_id"] = "stacked-child"
+        scope["expected_base_ref"] = "branch/coordinator"
+        scope["expected_head_ref"] = "branch/stacked-child"
+        scope["base_ref_policy"] = "stacked-parent-head"
+        manifest["follow_up_scopes"][0] = scope
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        self.assertEqual([], CHECKER.validate_manifest(self.root, path))
+
     def test_manifest_rejects_rebase_aware_child_scope_with_stale_oid(self):
         manifest = self.manifest_with_follow_up_scope()
         manifest["follow_up_scopes"][0] = self.follow_up_scope(
@@ -870,6 +882,17 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         path.write_text(json.dumps(manifest), encoding="utf-8")
         errors = CHECKER.validate_manifest(self.root, path)
         self.assertTrue(any("follow_up_scopes overlap" in error for error in errors))
+
+    def test_manifest_allows_stacked_scope_to_share_coordinator_paths(self):
+        manifest = self.manifest_with_follow_up_scope()
+        stacked = self.follow_up_scope(scope_id="stacked-child", oid_policy="rebase-aware")
+        stacked["base_ref_policy"] = "stacked-parent-head"
+        stacked["expected_base_ref"] = "branch/coordinator"
+        stacked["expected_head_ref"] = "branch/stacked-child"
+        manifest["follow_up_scopes"].append(stacked)
+        path = self.root / "manifest.json"
+        path.write_text(json.dumps(manifest), encoding="utf-8")
+        self.assertEqual([], CHECKER.validate_manifest(self.root, path))
 
     def test_trusted_manifest_allows_follow_up_scope_with_fresh_coordinator_receipt(self):
         trusted = self.manifest()
@@ -1322,6 +1345,23 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
             ["src/F1/Changed.kt", "docs/review/F1-child-7tier.md"],
             base_ref_name="develop",
             head_ref_name="branch/F1-child",
+            base_oid="c" * 40,
+            head_oid="d" * 40,
+        )
+        self.assertEqual([], errors)
+
+    def test_train_scope_accepts_stacked_parent_head_follow_up(self):
+        manifest = self.manifest_with_follow_up_scope()
+        scope = self.follow_up_scope(oid_policy="rebase-aware")
+        scope["expected_base_ref"] = "branch/coordinator"
+        scope["expected_head_ref"] = "branch/stacked-child"
+        scope["base_ref_policy"] = "stacked-parent-head"
+        manifest["follow_up_scopes"][0] = scope
+        errors = CHECKER.validate_train_scope(
+            manifest,
+            ["src/F1/Changed.kt", "docs/review/F1-child-7tier.md"],
+            base_ref_name="branch/coordinator",
+            head_ref_name="branch/stacked-child",
             base_oid="c" * 40,
             head_oid="d" * 40,
         )
