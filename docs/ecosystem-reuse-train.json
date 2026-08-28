@@ -128,11 +128,41 @@
       "docs/review/2026-08-28-A2-followup-7tier.md"
       ],
       "review_artifact": "docs/review/2026-08-28-A2-followup-7tier.md"
+    },
+    {
+      "scope_id": "aws-bedrock-followup",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/aws-bedrock-converse-741",
+      "expected_base_ref": "chore/ecosystem-reuse-manifest-transition-1",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [741],
+      "allowed_paths": [
+        "aws/bedrock-converse/**",
+        "aws/README.md",
+        "aws/README.ko.md",
+        "gradle/libs.versions.toml",
+        "scripts/smoke-validate.sh",
+        ".github/workflows/Examples.yml",
+        ".github/scripts/check-ecosystem-reuse.py",
+        ".github/scripts/test_check_ecosystem_reuse.py",
+        "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-08-28-issue-741-bedrock-converse.md",
+        "docs/superpowers/specs/2026-08-28-issue-741-bedrock-converse-design.md",
+        "docs/superpowers/plans/2026-08-28-issue-741-bedrock-converse-plan.md",
+        "docs/review/2026-08-28-aws-bedrock-followup-7tier.md"
+      ],
+      "review_artifact": "docs/review/2026-08-28-aws-bedrock-followup-7tier.md"
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260828T084028Z-scope-replan-transition-1",
-    "checksum": "6265d1eed2ede0c9e30ebb38fd9ffe60bd0478afae2488dd56c2aaa4ec537a40"
+    "receipt_id": "20260828T-aws-bedrock-stacked-scope",
+    "checksum": "9eb19b35b913befd252226ea97f178d68d428dbb8ab96afc6dd4fb87356e5e7e"
   },
   "planned_scope_replan_receipts": {
     "F2": {

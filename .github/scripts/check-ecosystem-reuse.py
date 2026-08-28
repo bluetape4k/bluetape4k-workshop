@@ -59,7 +59,11 @@ SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 CHECKSUM_RE = re.compile(r"^[0-9a-f]{64}$")
 FOLLOW_UP_SCOPE_KINDS = {"child", "coordinator"}
 OID_POLICIES = {"exact", "rebase-aware"}
-FOLLOW_UP_BASE_REF_POLICIES = {"parent-head", "repository-base-after-parent-merge"}
+FOLLOW_UP_BASE_REF_POLICIES = {
+    "parent-head",
+    "repository-base-after-parent-merge",
+    "stacked-parent-head",
+}
 FIXED_NODE_OID_POLICIES = {"reviewed-ancestor"}
 REVIEWED_MARKER_BINDINGS = {"manifest", "lineage"}
 REVIEWED_MARKER_LABEL_RE = re.compile(r"(?im)\breviewed_implementation_oid\s*:")
@@ -690,6 +694,11 @@ def _validate_follow_up_scopes(
                 errors.append("%s: repository-base-after-parent-merge requires child scope_kind" % prefix)
             if oid_policy != "rebase-aware":
                 errors.append("%s: repository-base-after-parent-merge requires rebase-aware oid_policy" % prefix)
+        elif base_ref_policy == "stacked-parent-head":
+            if scope_kind != "child":
+                errors.append("%s: stacked-parent-head requires child scope_kind" % prefix)
+            if oid_policy != "rebase-aware":
+                errors.append("%s: stacked-parent-head requires rebase-aware oid_policy" % prefix)
         parent_track = scope.get("parent_track")
         if parent_track not in fixed_tracks:
             errors.append("%s: parent_track must name a fixed track" % prefix)
@@ -745,9 +754,18 @@ def _validate_follow_up_scopes(
                     errors.append(
                         "%s: repository-base-after-parent-merge expected_base_ref must equal repository base_ref" % prefix
                     )
+            elif base_ref_policy == "stacked-parent-head":
+                # The parent is another PR branch, so its exact base ref is
+                # recorded on the scope and checked by validate_train_scope.
+                pass
     for index, left in enumerate(scopes):
         left_paths = left.get("allowed_paths", []) if isinstance(left.get("allowed_paths"), list) else []
         for right in scopes[index + 1 :]:
+            # A stacked child may intentionally include shared coordinator
+            # files (manifest, checker, workflow). Exact refs disambiguate
+            # the scope during PR validation; keep legacy scopes disjoint.
+            if "stacked-parent-head" in {left.get("base_ref_policy"), right.get("base_ref_policy")}:
+                continue
             right_paths = right.get("allowed_paths", []) if isinstance(right.get("allowed_paths"), list) else []
             if any(
                 _scope_path_prefix(left_path) == _scope_path_prefix(right_path)
