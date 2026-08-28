@@ -257,8 +257,8 @@
       "scope_id": "epic-792-final-closeout",
       "scope_kind": "child",
       "parent_track": "P0",
-      "expected_head_ref": "chore/epic-792-final-closeout",
-      "expected_base_ref": "develop",
+      "expected_head_ref": "chore/epic-792-final-closeout-ready",
+      "expected_base_ref": "chore/epic-792-final-closeout",
       "base_ref_policy": "stacked-parent-head",
       "oid_policy": "rebase-aware",
       "head_oid": null,
@@ -273,17 +273,13 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260829T-epic-792-final-closeout-stage1",
-    "checksum": "4f790aede4491cb00ac0989c11bc93f321858a702936474d45d6a1855e0cf9cf"
+    "receipt_id": "20260829T-epic-792-final-closeout-stage2",
+    "checksum": "2d31bdbc0e75b73c20f7c69a24bfce8b76c67725e0dd1578b275e65cd762fd60"
   },
   "planned_scope_replan_receipts": {
     "I1": {
       "receipt_id": "20260828T-i1-allowlist-replan",
       "checksum": "bfeafc53f939be8f2f2d3e0af9a1f3c19921c3b99e1dc1fd653a325730fd2b41"
-    },
-    "R1": {
-      "receipt_id": "20260828T-r1-cumulative-stack-scope",
-      "checksum": "7f5a5d5c1ab7a03e90e9d3b24f4b7b9de6a7f6b7c4b0e0c2e4a3e6f8c9d0a1b2"
     },
     "R2": {
       "receipt_id": "20260828T-r2-allowlist-replan",
@@ -395,7 +391,7 @@
       "parent_oid": "85aa60c1b525c7b0df693d897207221288fad25e",
       "merge_base_oid": null,
       "reviewed_implementation_oid": "0912ee52467ed9eb83c918090d5eda40f8f1e8d0",
-      "state": "MERGE_READY",
+      "state": "MERGED",
       "issue_numbers": [785, 786, 787, 788, 789, 790, 791],
       "allowed_paths": [
         "aws/kinesis-coroutines/src/test/kotlin/io/bluetape4k/workshop/aws/kinesis/KinesisStreamServiceTest.kt",
@@ -509,7 +505,7 @@
       "parent_oid": "27085b3ff6ab87a24e4fb08dbc4c14c0704378cf",
       "merge_base_oid": null,
       "reviewed_implementation_oid": "352f84fa66c83e2e2006353222f2f658eca02c44",
-      "state": "READY",
+      "state": "MERGE_READY",
       "issue_numbers": [804, 805, 806, 807],
       "allowed_paths": [
         "optimization/field-service-dispatch/src/main/kotlin/**",
@@ -552,10 +548,10 @@
       "oid_policy": "reviewed-ancestor",
       "head_oid": null,
       "base_oid": null,
-      "parent_oid": null,
+      "parent_oid": "85aa60c1b525c7b0df693d897207221288fad25e",
       "merge_base_oid": null,
-      "reviewed_implementation_oid": null,
-      "state": "PLANNED",
+      "reviewed_implementation_oid": "38cb1843eef7a34cc0c522fc3f936488c43dbd24",
+      "state": "READY",
       "issue_numbers": [793, 796, 798],
       "allowed_paths": [
         "commerce/usage-metering-billing-event-sourcing/src/main/kotlin/**",
@@ -635,9 +631,9 @@
         "./gradlew :shared:dependencyInsight --dependency io.github.bluetape4k:bluetape4k-spring-boot-core --configuration testRuntimeClasspath"
       ],
       "review_artifact": "docs/review/2026-08-25-R1-7tier.md",
-      "receipt_id": null,
-      "receipt_status": "PENDING",
-      "checksum": null
+      "receipt_id": "20260829T-epic-792-stage2-r1-ready",
+      "receipt_status": "PASS",
+      "checksum": "d32661cadc291908d4e177fb492ea4387691973dc25d2641b71d7d2196b68fb3"
     },
     {
       "track": "R2",
