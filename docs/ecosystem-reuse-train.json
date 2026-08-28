@@ -144,8 +144,8 @@
       "checksum": "bfeafc53f939be8f2f2d3e0af9a1f3c19921c3b99e1dc1fd653a325730fd2b41"
     },
     "R1": {
-      "receipt_id": "20260828T-r1-acceptance-scope",
-      "checksum": "1d706f3b1e651bec424a09a9e69b15a04f446d4df0566c1839a45570f9d39c37"
+      "receipt_id": "20260828T-r1-cumulative-stack-scope",
+      "checksum": "7f5a5d5c1ab7a03e90e9d3b24f4b7b9de6a7f6b7c4b0e0c2e4a3e6f8c9d0a1b2"
     },
     "R2": {
       "receipt_id": "20260828T-r2-allowlist-replan",
@@ -464,8 +464,14 @@
         "spring-data/r2dbc-webflux-exposed/src/test/kotlin/**",
         "spring-security/webflux/hello-security/src/test/kotlin/**",
         "spring-security/webflux/jwt/src/test/kotlin/**",
+        "commerce/pre-generated-voucher-pool/src/main/kotlin/**",
+        "commerce/pre-generated-voucher-pool/src/test/kotlin/**",
+        "commerce/concert-ticket-flash-sale/src/main/kotlin/**",
+        "commerce/concert-ticket-flash-sale/src/test/kotlin/**",
         "docs/review/2026-08-25-R1-7tier.md",
-        "docs/review/2026-08-28-R1-7tier.md"
+        "docs/review/2026-08-28-R1-7tier.md",
+        "docs/review/2026-08-25-R2-7tier.md",
+        "docs/review/2026-08-28-R2-7tier.md"
       ],
       "gradle_tasks": [
         ":commerce-usage-metering-billing-event-sourcing:test",
