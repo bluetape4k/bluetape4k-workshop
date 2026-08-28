@@ -222,11 +222,41 @@
         "scripts/smoke-validate.sh"
       ],
       "review_artifact": "docs/review/2026-08-28-assertion-governance-followup-7tier.md"
+    },
+    {
+      "scope_id": "epic-792-train-promotion",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/epic-792-train-promotion",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [792],
+      "allowed_paths": [
+        ".github/scripts/**",
+        ".github/workflows/**",
+        "aws/**",
+        "commerce/concert-ticket-flash-sale/src/test/kotlin/**",
+        "commerce/event-sourced-promotion-voucher-campaign/src/test/kotlin/**",
+        "docs/**",
+        "gradle/libs.versions.toml",
+        "operations/job-console-core/src/test/kotlin/**",
+        "operations/job-console-core/src/testFixtures/kotlin/**",
+        "optimization/clinic-appointment-solver/src/test/kotlin/**",
+        "optimization/field-service-dispatch/src/test/kotlin/**",
+        "optimization/shift-coverage/src/test/kotlin/**",
+        "scripts/smoke-validate.sh",
+        "shared/src/test/kotlin/**",
+        "docs/review/2026-08-29-epic-792-train-promotion-7tier.md"
+      ],
+      "review_artifact": "docs/review/2026-08-29-epic-792-train-promotion-7tier.md"
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260828T-assertion-governance-stacked-scope",
-    "checksum": "ee6a9932cfe894e3fd14804d96f5a42e51817d829085a4247bdcedf49b23f1ba"
+    "receipt_id": "20260829T-epic-792-train-promotion-scope",
+    "checksum": "86849f4ea718f85b8a28ea9cc5245e109f0cb930520b7fce742694a3e8add6a9"
   },
   "planned_scope_replan_receipts": {
     "F2": {
