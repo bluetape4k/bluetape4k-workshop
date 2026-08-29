@@ -24,7 +24,8 @@ class KinesisAutoConfigurationTest {
         contextRunner.run { context ->
             context.getBeansOfType(KinesisOperations::class.java).size shouldBeEqualTo 1
             context.getBean(KinesisOperations::class.java)::class shouldBeEqualTo LocalKinesisOperations::class
-            context.getBeansOfType(KinesisAsyncClient::class.java).size shouldBeEqualTo 0
+            context.getBeansOfType(KinesisAsyncClient::class.java).size shouldBeEqualTo 1
+            context.getBean(KinesisAsyncClient::class.java)::class shouldBeEqualTo LocalKinesisConsumerClient::class
             context.containsBean("kinesisDemoScope") shouldBeEqualTo true
             context.containsBean("kinesisStreamService") shouldBeEqualTo true
         }
@@ -41,7 +42,8 @@ class KinesisAutoConfigurationTest {
             )
             .run { context ->
                 context.getBean(KinesisOperations::class.java)::class shouldBeEqualTo LocalKinesisOperations::class
-                context.getBeansOfType(KinesisAsyncClient::class.java).size shouldBeEqualTo 0
+                context.getBeansOfType(KinesisAsyncClient::class.java).size shouldBeEqualTo 1
+                context.getBean(KinesisAsyncClient::class.java)::class shouldBeEqualTo LocalKinesisConsumerClient::class
             }
     }
 

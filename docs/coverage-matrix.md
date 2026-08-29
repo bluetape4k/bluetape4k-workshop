@@ -3,7 +3,7 @@
 각 bluetape4k library를 기존 workshop 예제와 연결하고, Basic/Advanced 제안 시나리오와
 함께 coverage gap을 식별합니다.
 
-> 마지막 갱신: 2026-08-28
+> 마지막 갱신: 2026-08-30
 
 ## 2026-08-25 ecosystem 재사용 2차 gate
 
@@ -124,6 +124,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | `bluetape4k-aws` | `aws-s3-spring-cloud` | ⚠️ Partial | BT AWS Kotlin SDK wrapper 미노출 | — | AWS Kotlin SDK + coroutine suspend wrapper | — |
 | Bedrock Converse | `aws/bedrock-converse` | ✅ Good | 실제 AWS 호출은 기본 경로에서 제외 | credential-free fake로 request mapping과 cold Flow | 명시적 `real-aws` opt-in과 client lifecycle | #741 |
 | AWS settings boundary | `aws/settings-boundary` | ✅ Good | provider-neutral startup/refresh와 redaction 경계가 없었음 | Secrets Manager/secure Parameter Store fake lookup과 fallback | full-replacement refresh 및 명시적 live AWS factory | #742 |
+| `bluetape4k-aws-java` Kinesis consumer | `aws/kinesis-coroutines` | ✅ Good | multi-shard discovery, bounded concurrency, checkpoint/lease fencing 미노출 | credential-free 2-shard `consumerFlow`와 emit 후 checkpoint | real AWS consumer group과 durable checkpoint/lease adapter | #864 |
 | `bluetape4k-images` / `bluetape4k-images-spring-boot` | `image-processing/advanced-workflow`, `image-processing/ocr-api`, `image-processing/profile-image-moderation` | ✅ Good | — | — | private original, blurred pending image, default fallback을 포함한 profile upload moderation | — |
 | `bluetape4k-images-barcode-api` / `bluetape4k-images-barcode-zxing` | `image-processing/barcode-api` | ✅ Good | provider-neutral reader와 bounded upload API를 새로 노출 | — | provider capability matrix와 운영 provider 교체 계약 | — |
 

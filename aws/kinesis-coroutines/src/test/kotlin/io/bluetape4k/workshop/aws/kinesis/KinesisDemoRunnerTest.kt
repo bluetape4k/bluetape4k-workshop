@@ -15,7 +15,12 @@ class KinesisDemoRunnerTest {
 
     @Test
     fun `local runner publishes and consumes three records with redacted summary`() = runSuspendIO {
-        val fixture = fixture()
+        val fixture = fixture(
+            consumerClient = LocalKinesisConsumerClient(
+                configuredStreamName = "orders",
+                configuredShardId = KinesisWorkshopProperties.DEFAULT_SHARD_ID,
+            )
+        )
 
         fixture.runner.run(DefaultApplicationArguments())
 
@@ -66,6 +71,7 @@ class KinesisDemoRunnerTest {
             readinessPollInterval = Duration.ofMillis(1),
         ),
         operations: LocalKinesisOperations = LocalKinesisOperations(properties.streamName),
+        consumerClient: LocalKinesisConsumerClient? = null,
     ): Fixture {
         val scope = KinesisDemoScope()
         val service = KinesisStreamService(
@@ -74,6 +80,7 @@ class KinesisDemoRunnerTest {
             objectMapper = Jackson.defaultJsonMapper,
             flowOptions = KinesisRecordFlowOptions(batchLimit = properties.batchLimit),
             demoScope = scope,
+            consumerClient = consumerClient,
         )
         val metrics = KinesisWorkshopMetrics(SimpleMeterRegistry())
         val runner = KinesisDemoRunner(

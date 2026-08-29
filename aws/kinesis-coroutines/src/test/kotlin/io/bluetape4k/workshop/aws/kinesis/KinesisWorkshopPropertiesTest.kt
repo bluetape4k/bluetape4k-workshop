@@ -26,6 +26,10 @@ class KinesisWorkshopPropertiesTest {
         properties.pollInterval shouldBeEqualTo Duration.ofMillis(200)
         properties.emptyBackoff shouldBeEqualTo Duration.ofSeconds(1)
         properties.maxAggregatePayloadBytes shouldBeEqualTo 1L * 1024 * 1024
+        properties.consumerGroup shouldBeEqualTo KinesisWorkshopProperties.DEFAULT_CONSUMER_GROUP
+        properties.streamIdentity shouldBeEqualTo KinesisWorkshopProperties.DEFAULT_STREAM_IDENTITY
+        properties.ownerId shouldBeEqualTo KinesisWorkshopProperties.DEFAULT_OWNER_ID
+        properties.maxShardConcurrency shouldBeEqualTo KinesisWorkshopProperties.DEFAULT_MAX_SHARD_CONCURRENCY
     }
 
     @Test
@@ -59,6 +63,13 @@ class KinesisWorkshopPropertiesTest {
         }
         assertFailsWith<IllegalArgumentException> {
             KinesisWorkshopProperties(maxThrottleRetries = 0)
+        }
+    }
+
+    @Test
+    fun `requires positive shard concurrency for consumer flow`() {
+        assertFailsWith<IllegalArgumentException> {
+            KinesisWorkshopProperties(maxShardConcurrency = 0)
         }
     }
 
