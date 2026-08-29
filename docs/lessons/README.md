@@ -16,6 +16,7 @@ directory unless they have been deliberately promoted.
 
 Recent delivery lessons:
 
+- [Issue #863 graph-io checkpoint/resume 소비자 경계](2026-08-29-issue-863-graphio-checkpoint.md)
 - [Issue #776 assertion matcher governance](2026-08-28-issue-776-assertion-governance.md)
 - [Issue #742 AWS settings boundary](2026-08-28-issue-742-settings-boundary.md)
 - [Issue #741 Bedrock Converse consumer 경계](2026-08-28-issue-741-bedrock-converse.md)
