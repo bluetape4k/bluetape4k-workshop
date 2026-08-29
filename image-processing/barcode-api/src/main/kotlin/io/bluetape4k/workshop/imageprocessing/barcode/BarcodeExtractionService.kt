@@ -1,13 +1,14 @@
 package io.bluetape4k.workshop.imageprocessing.barcode
 
 import io.bluetape4k.images.ImageDimensions
+import io.bluetape4k.images.ImageDecodeLimits
 import io.bluetape4k.images.analysis.ImageMetadataReadOptions
 import io.bluetape4k.images.analysis.readImageMetadataReport
 import io.bluetape4k.images.barcode.BarcodeException
 import io.bluetape4k.images.barcode.BarcodeFailureReason
 import io.bluetape4k.images.barcode.BarcodeReader
 import io.bluetape4k.images.barcode.extractBarcodes
-import io.bluetape4k.images.immutableImageOf
+import io.bluetape4k.images.immutableExternalImageOf
 import io.bluetape4k.images.probeImageDimensions
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -21,7 +22,9 @@ import java.util.Locale
  * multipart 입력을 안전하게 읽고 provider-neutral barcode 결과로 변환합니다.
  *
  * 입력 크기 검증은 provider를 호출하기 전에 수행하고, 이미지 차원 probe가
- * 실패한 WebP는 bounded metadata reader로 한 번 더 확인합니다.
+ * 실패한 WebP는 bounded metadata reader로 한 번 더 확인합니다. 마지막 decode는
+ * [ImageDecodeLimits]를 적용한 [immutableExternalImageOf]로 수행해 decoder 내부
+ * 경계도 동일하게 보호합니다.
  */
 internal class BarcodeExtractionService(
     private val reader: BarcodeReader,
@@ -82,13 +85,15 @@ internal class BarcodeExtractionService(
                 )
             requireDecodedSize(dimensions)
 
-            val results = immutableImageOf(bytes).extractBarcodes(reader).map { result ->
-                BarcodeResultResponse(
-                    text = result.text,
-                    format = result.format,
-                    provider = result.provider.name,
-                )
-            }
+            val results = immutableExternalImageOf(bytes, properties.toDecodeLimits())
+                .extractBarcodes(reader)
+                .map { result ->
+                    BarcodeResultResponse(
+                        text = result.text,
+                        format = result.format,
+                        provider = result.provider.name,
+                    )
+                }
             BarcodeExtractionResponse(count = results.size, results = results)
         } catch (e: CancellationException) {
             throw e
@@ -131,6 +136,13 @@ internal class BarcodeExtractionService(
             )
         }
     }
+
+    private fun BarcodeExampleProperties.toDecodeLimits(): ImageDecodeLimits =
+        ImageDecodeLimits(
+            maxEncodedBytes = maxInputBytes,
+            maxDecodedPixels = maxInputPixels,
+            maxDecodedSide = maxInputSide,
+        )
 
     private fun requestError(status: HttpStatus, error: String, message: String): BarcodeRequestException =
         BarcodeRequestException(status, error, message)
