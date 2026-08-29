@@ -38,6 +38,18 @@ val rootLibs = libs
 
 allprojects {
     repositories {
+        // 2.0.0-SNAPSHOT 소비자 열차가 이 저장소에 배포된다. 안정 의존성은
+        // 기존 저장소에서 계속 해석되도록 Bluetape 좌표로 범위를 제한한다.
+        maven {
+            name = "SonatypeSnapshots"
+            url = uri("https://central.sonatype.com/repository/maven-snapshots")
+            mavenContent {
+                snapshotsOnly()
+            }
+            content {
+                includeGroupByRegex("io\\.github\\.bluetape4k(\\..*)?")
+            }
+        }
         mavenCentral()
         google()
     }
@@ -252,13 +264,6 @@ subprojects {
             // spring-boot BOM 의 logback 버전을 catalog 정의(1.5.32)로 override
             dependency(rootLibs.logback.lib.get().toString())
             dependency(rootLibs.logback.core.get().toString())
-            // bluetape4k-images 0.4.0 publishes these transitive Scrimage modules
-            // without versions in its regular dependency section.  The 1.4.0 root
-            // BOM does not yet manage them, so keep the 4.6.7 compatibility line
-            // explicit in this consumer until the next central BOM repair.
-            dependency(rootLibs.scrimage.filters.get().toString())
-            dependency(rootLibs.scrimage.webp.get().toString())
-
             val protobufVersion = rootLibs.versions.protobuf.asProvider().get()
             dependency("com.google.protobuf:protobuf-java:$protobufVersion")
             dependency("com.google.protobuf:protobuf-java-util:$protobufVersion")
