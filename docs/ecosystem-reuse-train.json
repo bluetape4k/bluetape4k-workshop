@@ -258,7 +258,7 @@
       "scope_kind": "child",
       "parent_track": "P0",
       "expected_head_ref": "chore/epic-792-final-closeout-ready",
-      "expected_base_ref": "chore/epic-792-final-closeout",
+      "expected_base_ref": "develop",
       "base_ref_policy": "stacked-parent-head",
       "oid_policy": "rebase-aware",
       "head_oid": null,
@@ -273,8 +273,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260829T-epic-792-final-closeout-stage2",
-    "checksum": "2d31bdbc0e75b73c20f7c69a24bfce8b76c67725e0dd1578b275e65cd762fd60"
+    "receipt_id": "20260829T-epic-792-final-closeout-stage2-rebase-repair",
+    "checksum": "9cb0465c646a37f6460272896f8391db553746da8ec232d77b81b8e63fe8cf9e"
   },
   "planned_scope_replan_receipts": {
     "I1": {
