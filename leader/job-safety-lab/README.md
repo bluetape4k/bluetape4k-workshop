@@ -240,6 +240,53 @@ observation auto-configuration after removing or overriding this lab's manual
 observation beans. This lab keeps the recorder and listener manual so the Redis
 leader and PostgreSQL fencing boundary remains explicit.
 
+### Lease-extension observations
+
+This example also consumes the `2.0.0-SNAPSHOT` terminal lease-extension
+contract. `JobSafetyConfiguration` registers one
+`MicrometerObservationLeaderLeaseExtensionObserver` for the process-local
+`LeaderLeaseExtensionObservers` registry. The registration is closed with the
+Spring context, is safe to close more than once, and is absent when the
+registry is `ObservationRegistry.NOOP` or the feature is disabled.
+
+Enable it explicitly when the application provides a real observation registry:
+
+```yaml
+bluetape4k:
+  leader:
+    observation:
+      enabled: true
+      include-lock-name: false
+      include-leader-id: false
+      include-exception-details: false
+```
+
+The adapter keeps the `LockExtender` call on the Redis owner executor instead
+of copying a thread-bound lock handle. A job that needs a user-controlled
+extension can opt into the request lease callback:
+
+```kotlin
+coordinator.runWithLease(request) { leader, fence ->
+    val outcome = leader.extendViaLockExtender(30.seconds)
+    require(outcome is ExtendOutcome.Extended)
+    executeWithFence(fence)
+}
+```
+
+The observation name is `bluetape4k.leader.lease.extension` and its bounded
+low-cardinality tags are `source=user|watchdog`,
+`execution=blocking|suspend`, `outcome=extended|rejected|not_held|wrong_thread|backend_error`,
+and `result=success|skipped|error`. Lock and leader identifiers remain
+high-cardinality sanitized values only when explicitly enabled; raw job,
+tenant, operation, and owner identifiers are never exported. Cancellation and
+`Error` paths do not publish a terminal event, and elapsed time is intentionally
+not a tag.
+
+The released snapshot used by this workshop exposes the global
+`addObserver` API. Upstream scoped registration is kept out of this consumer
+until a released BOM artifact contains that ABI, so multiple contexts in one
+JVM must share the process-local registration boundary.
+
 ## Leader audit export
 
 This lab also connects bluetape4k-leader 2.0.0-SNAPSHOT's public

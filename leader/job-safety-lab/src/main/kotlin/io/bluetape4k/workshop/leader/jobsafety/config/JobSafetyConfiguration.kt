@@ -44,7 +44,7 @@ import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.leader.withListeners
 
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(JobSafetyProperties::class)
+@EnableConfigurationProperties(JobSafetyProperties::class, JobSafetyLeaderObservationProperties::class)
 class JobSafetyConfiguration {
     @Bean
     @ConditionalOnMissingBean(ObservationRegistry::class)
@@ -53,7 +53,22 @@ class JobSafetyConfiguration {
     /** Redis owner ID와 job lock을 12자리 hash로 제한하는 수동 observation wiring입니다. */
     @Bean
     @ConditionalOnMissingBean(LeaderObservationOptions::class)
-    fun jobSafetyLeaderObservationOptions(): LeaderObservationOptions = defaultLeaderObservationOptions()
+    fun jobSafetyLeaderObservationOptions(
+        properties: JobSafetyLeaderObservationProperties,
+    ): LeaderObservationOptions = defaultLeaderObservationOptions(properties)
+
+    @Bean(destroyMethod = "close")
+    @ConditionalOnMissingBean(JobSafetyLeaseExtensionObservation::class)
+    fun jobSafetyLeaseExtensionObservation(
+        registry: ObservationRegistry,
+        options: LeaderObservationOptions,
+        properties: JobSafetyLeaderObservationProperties,
+    ): JobSafetyLeaseExtensionObservation =
+        JobSafetyLeaseExtensionObservation(
+            registry = registry,
+            options = options,
+            enabled = properties.enabled,
+        )
 
     @Bean
     @ConditionalOnMissingBean(MicrometerObservationLeaderAopMetricsRecorder::class)
@@ -175,10 +190,13 @@ class JobSafetyConfiguration {
         }
 }
 
-private fun defaultLeaderObservationOptions(): LeaderObservationOptions =
+private fun defaultLeaderObservationOptions(
+    properties: JobSafetyLeaderObservationProperties,
+): LeaderObservationOptions =
     LeaderObservationOptions(
-        includeLockName = true,
-        includeLeaderId = true,
+        includeLockName = properties.includeLockName,
+        includeLeaderId = properties.includeLeaderId,
+        includeExceptionDetails = properties.includeExceptionDetails,
         tagOptions = LeaderMetricTagOptions(
             lockName = LeaderMetricTagRule(mode = LeaderMetricTagMode.HASH, hashLength = 12),
             leaderId = LeaderMetricTagRule(mode = LeaderMetricTagMode.HASH, hashLength = 12),
