@@ -3,7 +3,7 @@
 각 bluetape4k library를 기존 workshop 예제와 연결하고, Basic/Advanced 제안 시나리오와
 함께 coverage gap을 식별합니다.
 
-> 마지막 갱신: 2026-08-28
+> 마지막 갱신: 2026-08-30
 
 ## 2026-08-25 ecosystem 재사용 2차 gate
 
@@ -56,6 +56,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | `bluetape4k-junit5` | All test modules | ✅ Good | `SuspendedJobTester` / `MultithreadingTester` 미노출 | concurrency test harness demo | — | — |
 | `bluetape4k-assertions` | All test modules | ⚠️ Partial | module별 matcher 적용 편차; #776 guard는 consumer generic Boolean/null을 0건으로 유지 | assertion migration + raw fallback inventory | exact-head matcher migration with failure-message parity | #776, #792 |
 | `bluetape4k-testcontainers` | `exposed-*`, `spring-data-*`, `redis-*`, `messaging-*` | ✅ Good | — | — | — | — |
+| `bluetape4k-graph-io` | `graph/io-pipeline` | ✅ Good | 운영용 durable store와 graph+store atomic exactly-once는 범위 밖 | `InMemoryGraphImportCheckpointStore`를 사용한 CSV 실패·재개 | 공유 CAS/lease store와 backend transaction을 포함한 운영 연동 | #863 |
 
 ---
 
@@ -124,6 +125,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | `bluetape4k-aws` | `aws-s3-spring-cloud` | ⚠️ Partial | BT AWS Kotlin SDK wrapper 미노출 | — | AWS Kotlin SDK + coroutine suspend wrapper | — |
 | Bedrock Converse | `aws/bedrock-converse` | ✅ Good | 실제 AWS 호출은 기본 경로에서 제외 | credential-free fake로 request mapping과 cold Flow | 명시적 `real-aws` opt-in과 client lifecycle | #741 |
 | AWS settings boundary | `aws/settings-boundary` | ✅ Good | provider-neutral startup/refresh와 redaction 경계가 없었음 | Secrets Manager/secure Parameter Store fake lookup과 fallback | full-replacement refresh 및 명시적 live AWS factory | #742 |
+| `bluetape4k-aws-java` Kinesis consumer | `aws/kinesis-coroutines` | ✅ Good | multi-shard discovery, bounded concurrency, checkpoint/lease fencing 미노출 | credential-free 2-shard `consumerFlow`와 emit 후 checkpoint | real AWS consumer group과 durable checkpoint/lease adapter | #864 |
 | `bluetape4k-images` / `bluetape4k-images-spring-boot` | `image-processing/advanced-workflow`, `image-processing/ocr-api`, `image-processing/profile-image-moderation` | ✅ Good | — | — | private original, blurred pending image, default fallback을 포함한 profile upload moderation | — |
 | `bluetape4k-images-barcode-api` / `bluetape4k-images-barcode-zxing` | `image-processing/barcode-api` | ✅ Good | provider-neutral reader와 strict external image decode 경계를 함께 검증 | — | provider capability matrix와 운영 provider 교체 계약 | #865 |
 
@@ -156,11 +158,11 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 
 | Domain | Total libs tracked | ✅ Good | ⚠️ Partial | ❌ Missing |
 |--------|-------------------|---------|-----------|----------|
-| Core | 6 | 5 | 1 | 0 |
+| Core | 7 | 6 | 1 | 0 |
 | Data Access | 7 | 4 | 2 | 1 |
 | Spring Boot | 3 | 1 | 2 | 0 |
 | Messaging | 2 | 1 | 1 | 0 |
 | Async/Reactive | 3 | 2 | 1 | 0 |
 | Observability | 2 | 2 | 0 | 0 |
 | Architecture/Infra | 7 | 2 | 5 | 0 |
-| **Total** | **30** | **17 (57%)** | **12 (40%)** | **1 (3%)** |
+| **Total** | **31** | **18 (58%)** | **12 (39%)** | **1 (3%)** |

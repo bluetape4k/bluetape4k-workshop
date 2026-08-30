@@ -140,6 +140,60 @@ TinkerGraphOperations().use { targetOps ->
 }
 ```
 
+### Checkpoint를 사용한 import와 재개
+
+`bluetape4k-graph` 2.0.0-SNAPSHOT은 CSV, Jackson 3 NDJSON, GraphML importer에
+opt-in checkpoint lifecycle을 추가했습니다. `GraphIoPipeline`은
+`GraphImportOptions`를 그대로 전달하므로, 중단된 import를 이미 commit한
+vertex를 다시 만들지 않고 재개할 수 있습니다.
+
+```kotlin
+import io.bluetape4k.graph.io.checkpoint.InMemoryGraphImportCheckpointStore
+import io.bluetape4k.graph.io.options.GraphImportOptions
+import io.bluetape4k.graph.io.options.copyWithCheckpointSourceIdentity
+import io.bluetape4k.graph.io.report.GraphIoStatus
+import io.bluetape4k.graph.tinkerpop.TinkerGraphOperations
+import io.bluetape4k.workshop.graph.io.GraphIoPipeline
+import java.nio.file.Path
+import kotlin.io.path.writeText
+
+val vertices = Path.of("build/graph-io-pipeline/vertices.csv")
+val edges = Path.of("build/graph-io-pipeline/edges.csv")
+val checkpointStore = InMemoryGraphImportCheckpointStore()
+val options = GraphImportOptions(
+    batchSize = 2,
+    checkpointStore = checkpointStore,
+    checkpointKey = "graph-io-pipeline",
+    // 실패한 source를 수정하는 동안 이 identity는 안정적으로 유지합니다.
+    checkpointSourceIdentity = "fixture-v1",
+)
+
+TinkerGraphOperations().use { operations ->
+    val pipeline = GraphIoPipeline(operations)
+    val first = pipeline.importCsv(vertices, edges, options)
+    check(first.status == GraphIoStatus.FAILED)
+
+    // 실패한 edge를 수정한 뒤 저장된 vertex/id-map checkpoint에서 재개합니다.
+    edges.writeText("id,label,from,to\ne1,CONTRIBUTES_TO,v1,v2\n")
+    val resumed = pipeline.importCsv(
+        vertices,
+        edges,
+        options.copyWithCheckpointSourceIdentity(resumeFromCheckpoint = true),
+    )
+
+    check(resumed.status == GraphIoStatus.COMPLETED)
+    check(resumed.verticesCreated == 0L)
+    check(checkpointStore.load("graph-io-pipeline") == null)
+}
+```
+
+Checkpoint mode는 복원된 external-id map이 같은 backend vertex를 가리키도록
+CSV를 대상 graph에 직접 import합니다. 따라서 실패하면 대상 graph에 partial
+state가 남을 수 있습니다. graph와 checkpoint store가 atomic transaction을
+공유하지 않는 한 재개는 at-least-once로 취급하고, 안정적인 external ID 또는
+unique constraint를 적용해야 합니다. 기본 `GraphIoPipeline` 호출은 위에서
+설명한 scratch graph import/copy 경로를 그대로 유지합니다.
+
 ## Manual TinkerGraph seed에서 이동하기
 
 기존 graph workshop module은 여전히 domain traversal 예제입니다. schema, repository
@@ -172,8 +226,9 @@ dependencies {
 }
 ```
 
-bluetape4k 버전은 repository 수준의 `bluetape4k-dependencies` platform이 관리합니다.
-이 consumer workshop module은 version 없는 alias만 선언하며, 개별 graph BOM을 import하지 않습니다.
+bluetape4k 버전은 repository 수준의 `bluetape4k-dependencies` platform이 관리하며,
+root build에서 `platform(libs.bluetape4k.dependencies)`로 적용합니다. 이 consumer
+workshop module은 version 없는 alias만 선언하며, 개별 graph BOM을 import하지 않습니다.
 
 ## 관련 문서
 

@@ -7,11 +7,19 @@ import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.graph.io.checkpoint.GraphImportCheckpointConflictException
+import io.bluetape4k.graph.io.checkpoint.GraphImportCheckpointSession
+import io.bluetape4k.graph.io.checkpoint.GraphImportCheckpointPhase
+import io.bluetape4k.graph.io.checkpoint.InMemoryGraphImportCheckpointStore
+import io.bluetape4k.graph.io.options.GraphImportOptions
+import io.bluetape4k.graph.io.options.MissingEndpointPolicy
+import io.bluetape4k.graph.io.options.copyWithCheckpointSourceIdentity
 import io.bluetape4k.graph.io.report.GraphIoFailureSeverity
 import io.bluetape4k.graph.io.report.GraphIoFileRole
 import io.bluetape4k.graph.io.report.GraphIoFormat
 import io.bluetape4k.graph.io.report.GraphIoPhase
 import io.bluetape4k.graph.io.report.GraphIoStatus
+import io.bluetape4k.graph.io.support.GraphIoExternalIdMap
 import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.graph.tinkerpop.TinkerGraphOperations
 import io.bluetape4k.support.requireNotNull
@@ -48,6 +56,194 @@ class GraphIoPipelineTest {
             report.edgesCreated shouldBeEqualTo 2L
             assertGraphState(ops, expectOriginalExternalIds = true)
         }
+    }
+
+    @Test
+    fun `resumes CSV checkpoint after edge failure without duplicating target vertices`(@TempDir tempDir: Path) {
+        val vertices = tempDir.resolve("vertices.csv").also {
+            it.writeText("id,label\nv1,Person\nv2,Person\n")
+        }
+        val edges = tempDir.resolve("edges.csv").also {
+            it.writeText("id,label,from,to\ne1,CONTRIBUTES_TO,v1,missing\n")
+        }
+        val store = InMemoryGraphImportCheckpointStore()
+        val options = GraphImportOptions(
+            batchSize = 2,
+            checkpointStore = store,
+            checkpointKey = "graph-io-pipeline-csv",
+            checkpointSourceIdentity = "fixture-v1",
+        )
+
+        TinkerGraphOperations().use { operations ->
+            val pipeline = GraphIoPipeline(operations)
+            val failed = pipeline.importCsv(vertices, edges, options)
+
+            failed.status shouldBeEqualTo GraphIoStatus.FAILED
+            store.load("graph-io-pipeline-csv")?.phase shouldBeEqualTo GraphImportCheckpointPhase.FAILED
+            store.load("graph-io-pipeline-csv")?.verticesProcessed shouldBeEqualTo 2L
+            totalVertices(operations) shouldBeEqualTo 2
+            totalEdges(operations) shouldBeEqualTo 0
+
+            assertFailsWith<GraphImportCheckpointConflictException> {
+                pipeline.importCsv(
+                    vertices,
+                    edges,
+                    options.copyWithCheckpointSourceIdentity(
+                        checkpointSourceIdentity = "different-fixture",
+                        resumeFromCheckpoint = true,
+                    ),
+                )
+            }
+
+            assertFailsWith<GraphImportCheckpointConflictException> {
+                pipeline.importCsv(
+                    vertices,
+                    edges,
+                    options.copyWithCheckpointSourceIdentity(
+                        onMissingEdgeEndpoint = MissingEndpointPolicy.SKIP_EDGE,
+                        resumeFromCheckpoint = true,
+                    ),
+                )
+            }
+
+            edges.writeText("id,label,from,to\ne1,CONTRIBUTES_TO,v1,v2\n")
+            val resumed = pipeline.importCsv(
+                vertices,
+                edges,
+                options.copyWithCheckpointSourceIdentity(resumeFromCheckpoint = true),
+            )
+
+            resumed.status shouldBeEqualTo GraphIoStatus.COMPLETED
+            resumed.verticesCreated shouldBeEqualTo 0L
+            resumed.edgesCreated shouldBeEqualTo 1L
+            store.load("graph-io-pipeline-csv") shouldBeEqualTo null
+            totalVertices(operations) shouldBeEqualTo 2
+            totalEdges(operations) shouldBeEqualTo 1
+        }
+    }
+
+    @Test
+    fun `resumes Jackson3 checkpoint after edge failure without duplicating target vertices`(@TempDir tempDir: Path) {
+        val source = tempDir.resolve("graph.ndjson").also {
+            it.writeText(
+                """
+                {"type":"vertex","id":"v1","label":"Person","properties":{}}
+                {"type":"vertex","id":"v2","label":"Person","properties":{}}
+                {"type":"edge","id":"e1","label":"CONTRIBUTES_TO","from":"v1","to":"missing","properties":{}}
+                """.trimIndent(),
+            )
+        }
+        val store = InMemoryGraphImportCheckpointStore()
+        val options = GraphImportOptions(
+            batchSize = 2,
+            checkpointStore = store,
+            checkpointKey = "graph-io-pipeline-jackson3",
+            checkpointSourceIdentity = "ndjson-v1",
+        )
+
+        TinkerGraphOperations().use { operations ->
+            val pipeline = GraphIoPipeline(operations)
+            pipeline.importJackson3NdJson(source, options).status shouldBeEqualTo GraphIoStatus.FAILED
+            store.load("graph-io-pipeline-jackson3")?.phase shouldBeEqualTo GraphImportCheckpointPhase.FAILED
+            totalVertices(operations) shouldBeEqualTo 2
+
+            source.writeText(
+                """
+                {"type":"vertex","id":"v1","label":"Person","properties":{}}
+                {"type":"vertex","id":"v2","label":"Person","properties":{}}
+                {"type":"edge","id":"e1","label":"CONTRIBUTES_TO","from":"v1","to":"v2","properties":{}}
+                """.trimIndent(),
+            )
+            val resumed = pipeline.importJackson3NdJson(
+                source,
+                options.copyWithCheckpointSourceIdentity(resumeFromCheckpoint = true),
+            )
+
+            resumed.status shouldBeEqualTo GraphIoStatus.COMPLETED
+            resumed.verticesCreated shouldBeEqualTo 0L
+            resumed.edgesCreated shouldBeEqualTo 1L
+            store.load("graph-io-pipeline-jackson3") shouldBeEqualTo null
+            totalVertices(operations) shouldBeEqualTo 2
+            totalEdges(operations) shouldBeEqualTo 1
+        }
+    }
+
+    @Test
+    fun `resumes GraphML checkpoint after edge failure without duplicating target vertices`(@TempDir tempDir: Path) {
+        val source = tempDir.resolve("graph.graphml").also {
+            it.writeText(graphMlWithEdgeTarget("missing"))
+        }
+        val store = InMemoryGraphImportCheckpointStore()
+        val options = GraphImportOptions(
+            batchSize = 2,
+            checkpointStore = store,
+            checkpointKey = "graph-io-pipeline-graphml",
+            checkpointSourceIdentity = "graphml-v1",
+        )
+
+        TinkerGraphOperations().use { operations ->
+            val pipeline = GraphIoPipeline(operations)
+            pipeline.importGraphMl(source, options).status shouldBeEqualTo GraphIoStatus.FAILED
+            store.load("graph-io-pipeline-graphml")?.phase shouldBeEqualTo GraphImportCheckpointPhase.FAILED
+            totalVertices(operations) shouldBeEqualTo 2
+
+            source.writeText(graphMlWithEdgeTarget("v2"))
+            val resumed = pipeline.importGraphMl(
+                source,
+                options.copyWithCheckpointSourceIdentity(resumeFromCheckpoint = true),
+            )
+
+            resumed.status shouldBeEqualTo GraphIoStatus.COMPLETED
+            resumed.verticesCreated shouldBeEqualTo 0L
+            resumed.edgesCreated shouldBeEqualTo 1L
+            store.load("graph-io-pipeline-graphml") shouldBeEqualTo null
+            totalVertices(operations) shouldBeEqualTo 2
+            totalEdges(operations) shouldBeEqualTo 1
+        }
+    }
+
+    @Test
+    fun `checkpoint fencing rejects a concurrent owner and releases after close`() {
+        val store = InMemoryGraphImportCheckpointStore()
+        val options = GraphImportOptions(
+            checkpointStore = store,
+            checkpointKey = "graph-io-pipeline-claim",
+        )
+        val idMap = GraphIoExternalIdMap(options.onDuplicateVertexId)
+        val owner = GraphImportCheckpointSession(
+            format = GraphIoFormat.CSV,
+            sourceIdentity = "claim-source-v1",
+            options = options,
+            idMap = idMap,
+        )
+
+        assertFailsWith<GraphImportCheckpointConflictException> {
+            GraphImportCheckpointSession(
+                format = GraphIoFormat.CSV,
+                sourceIdentity = "claim-source-v1",
+                options = options.copyWithCheckpointSourceIdentity(resumeFromCheckpoint = true),
+                idMap = GraphIoExternalIdMap(options.onDuplicateVertexId),
+            )
+        }
+
+        val checkpoint = requireNotNull(store.load("graph-io-pipeline-claim"))
+        store.save(
+            "graph-io-pipeline-claim",
+            checkpoint.withMetadata(checkpoint.importOptionsIdentity, "stale-owner"),
+        )
+        assertFailsWith<GraphImportCheckpointConflictException> {
+            owner.verticesCommitted(1)
+        }
+
+        owner.close()
+        val resumed = GraphImportCheckpointSession(
+            format = GraphIoFormat.CSV,
+            sourceIdentity = "claim-source-v1",
+            options = options.copyWithCheckpointSourceIdentity(resumeFromCheckpoint = true),
+            idMap = GraphIoExternalIdMap(options.onDuplicateVertexId),
+        )
+        resumed.completed()
+        store.load("graph-io-pipeline-claim") shouldBeEqualTo null
     }
 
     @Test
@@ -330,6 +526,19 @@ class GraphIoPipelineTest {
 
     private fun totalEdges(ops: GraphOperations): Int =
         ops.findEdgesByLabel("CONTRIBUTES_TO").size + ops.findEdgesByLabel("REVIEWS").size
+
+    private fun graphMlWithEdgeTarget(target: String): String =
+        """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+          <key id="label" for="all" attr.name="label" attr.type="string"/>
+          <graph id="G" edgedefault="directed">
+            <node id="v1"><data key="label">Person</data></node>
+            <node id="v2"><data key="label">Person</data></node>
+            <edge id="e1" source="v1" target="$target"><data key="label">CONTRIBUTES_TO</data></edge>
+          </graph>
+        </graphml>
+        """.trimIndent()
 
     private fun inside(tempDir: Path, relative: String): Path {
         val root = tempDir.normalize().toAbsolutePath()

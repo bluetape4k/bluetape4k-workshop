@@ -76,21 +76,39 @@ class GraphIoPipeline(
      * `_graphIoExternalId`에 보존합니다. CSV 행은 먼저 scratch TinkerGraph로
      * 가져온 뒤, 어댑터가 `COMPLETED`를 반환한 경우에만 대상 그래프로 복사합니다.
      *
-     * @return scratch graph-io 어댑터의 import report입니다. 호출자는 계속하기 전에
+     * [options]에 checkpoint 저장소를 지정하면 scratch graph를 거치지 않고 대상 graph에
+     * 직접 import합니다. 이 opt-in 경로는 실패 시 partial target state를 남길 수 있지만,
+     * 같은 checkpoint로 재개할 때 이미 저장된 외부 ID 매핑을 보존합니다. 기본 옵션은
+     * 기존 scratch import/copy 동작을 유지합니다.
+     *
+     * @return graph-io 어댑터의 import report입니다. 호출자는 계속하기 전에
      * `GraphIoStatus.COMPLETED`와 빈 `failures`를 확인해야 합니다.
      */
-    fun importCsv(vertices: Path, edges: Path): GraphImportReport {
+    fun importCsv(
+        vertices: Path,
+        edges: Path,
+        options: GraphImportOptions = importOptions,
+    ): GraphImportReport {
         val readableVertices = requireReadableFile(vertices, "vertices")
         val readableEdges = requireReadableFile(edges, "edges")
+        val source = CsvGraphImportSource(
+            vertices = GraphImportSource.PathSource(readableVertices),
+            edges = GraphImportSource.PathSource(readableEdges),
+        )
+
+        if (options.checkpointStore != null) {
+            return CsvGraphBulkImporter().importGraph(
+                source = source,
+                operations = operations,
+                options = options,
+            )
+        }
 
         TinkerGraphOperations().use { scratch ->
             val report = CsvGraphBulkImporter().importGraph(
-                source = CsvGraphImportSource(
-                    vertices = GraphImportSource.PathSource(readableVertices),
-                    edges = GraphImportSource.PathSource(readableEdges),
-                ),
+                source = source,
                 operations = scratch,
-                options = importOptions,
+                options = options,
             )
             if (report.status == GraphIoStatus.COMPLETED) {
                 copyScratchGraphToTarget(scratch)
@@ -120,16 +138,20 @@ class GraphIoPipeline(
      *
      * CSV import 경로와 같은 중복 조기 실패 및 누락 endpoint 정책을 사용하므로
      * 학습자는 일관된 import 계약 하나를 확인할 수 있습니다. 소스 경로는 정규화되며
-     * 일반 파일로 존재해야 합니다.
+     * 일반 파일로 존재해야 합니다. [options]에 checkpoint 저장소를 지정하면
+     * importer lifecycle에 checkpoint/resume이 활성화됩니다.
      *
      * @return import report입니다. 호출자는 대상 그래프에서 읽기 전에
      * `GraphIoStatus.COMPLETED`와 빈 `failures`를 확인해야 합니다.
      */
-    fun importJackson3NdJson(source: Path): GraphImportReport =
+    fun importJackson3NdJson(
+        source: Path,
+        options: GraphImportOptions = importOptions,
+    ): GraphImportReport =
         Jackson3NdJsonBulkImporter().importGraph(
             source = GraphImportSource.PathSource(requireReadableFile(source, "source")),
             operations = operations,
-            options = importOptions,
+            options = options,
         )
 
     /**
@@ -154,16 +176,20 @@ class GraphIoPipeline(
      *
      * `port` 같은 지원하지 않는 GraphML 구조는 건너뛰지 않고 실패로 보고하므로
      * 워크숍 smoke test가 결정적으로 유지됩니다. 소스 경로는 정규화되며 일반 파일로
-     * 존재해야 합니다.
+     * 존재해야 합니다. [options]에 checkpoint 저장소를 지정하면 importer lifecycle에
+     * checkpoint/resume이 활성화됩니다.
      *
      * @return import report입니다. 호출자는 대상 그래프에서 읽기 전에
      * `GraphIoStatus.COMPLETED`와 빈 `failures`를 확인해야 합니다.
      */
-    fun importGraphMl(source: Path): GraphImportReport =
+    fun importGraphMl(
+        source: Path,
+        options: GraphImportOptions = importOptions,
+    ): GraphImportReport =
         GraphMlBulkImporter().importGraph(
             source = GraphImportSource.PathSource(requireReadableFile(source, "source")),
             operations = operations,
-            options = importOptions,
+            options = options,
             graphMlOptions = graphMlImportOptions,
         )
 

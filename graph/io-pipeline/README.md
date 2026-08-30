@@ -145,6 +145,60 @@ TinkerGraphOperations().use { targetOps ->
 }
 ```
 
+### Checkpointed import and resume
+
+`bluetape4k-graph` 2.0.0-SNAPSHOT adds an opt-in checkpoint lifecycle to the
+CSV, Jackson 3 NDJSON, and GraphML importers. `GraphIoPipeline` forwards
+`GraphImportOptions`, so an interrupted import can be resumed without creating
+the already committed vertices again:
+
+```kotlin
+import io.bluetape4k.graph.io.checkpoint.InMemoryGraphImportCheckpointStore
+import io.bluetape4k.graph.io.options.GraphImportOptions
+import io.bluetape4k.graph.io.options.copyWithCheckpointSourceIdentity
+import io.bluetape4k.graph.io.report.GraphIoStatus
+import io.bluetape4k.graph.tinkerpop.TinkerGraphOperations
+import io.bluetape4k.workshop.graph.io.GraphIoPipeline
+import java.nio.file.Path
+import kotlin.io.path.writeText
+
+val vertices = Path.of("build/graph-io-pipeline/vertices.csv")
+val edges = Path.of("build/graph-io-pipeline/edges.csv")
+val checkpointStore = InMemoryGraphImportCheckpointStore()
+val options = GraphImportOptions(
+    batchSize = 2,
+    checkpointStore = checkpointStore,
+    checkpointKey = "graph-io-pipeline",
+    // Keep this identity stable when the failed source is corrected.
+    checkpointSourceIdentity = "fixture-v1",
+)
+
+TinkerGraphOperations().use { operations ->
+    val pipeline = GraphIoPipeline(operations)
+    val first = pipeline.importCsv(vertices, edges, options)
+    check(first.status == GraphIoStatus.FAILED)
+
+    // Fix the failed edge, then resume from the saved vertex/id-map checkpoint.
+    edges.writeText("id,label,from,to\ne1,CONTRIBUTES_TO,v1,v2\n")
+    val resumed = pipeline.importCsv(
+        vertices,
+        edges,
+        options.copyWithCheckpointSourceIdentity(resumeFromCheckpoint = true),
+    )
+
+    check(resumed.status == GraphIoStatus.COMPLETED)
+    check(resumed.verticesCreated == 0L)
+    check(checkpointStore.load("graph-io-pipeline") == null)
+}
+```
+
+Checkpoint mode imports CSV directly into the target graph so the restored
+external-id map points at the same backend vertices. A failure can therefore
+leave partial target state. Unless the graph and checkpoint store share an
+atomic transaction, treat resume as at-least-once and enforce stable external
+IDs or unique constraints. The default `GraphIoPipeline` calls remain the
+scratch-graph import/copy path shown above.
+
 ## Migration From Manual TinkerGraph Seeds
 
 Existing graph workshop modules remain domain traversal examples: they teach
@@ -179,8 +233,9 @@ dependencies {
 ```
 
 bluetape4k versions are governed by the repository-level
-`bluetape4k-dependencies` platform. This consumer workshop module declares
-versionless aliases only and does not import an individual graph BOM.
+`bluetape4k-dependencies` platform, applied from the root build with
+`platform(libs.bluetape4k.dependencies)`. This consumer workshop module
+declares versionless aliases only and does not import an individual graph BOM.
 
 ## See Also
 
