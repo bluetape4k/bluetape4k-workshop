@@ -17,6 +17,10 @@ data class KinesisWorkshopProperties(
     val streamName: String = "kinesis-coroutines-workshop",
     val partitionKey: String = "workshop-partition",
     val shardId: String = DEFAULT_SHARD_ID,
+    val consumerGroup: String = DEFAULT_CONSUMER_GROUP,
+    val streamIdentity: String = DEFAULT_STREAM_IDENTITY,
+    val ownerId: String = DEFAULT_OWNER_ID,
+    val maxShardConcurrency: Int = DEFAULT_MAX_SHARD_CONCURRENCY,
     val runDemo: Boolean = true,
     val batchLimit: Int = 100,
     val pollInterval: Duration = Duration.ofMillis(200),
@@ -36,6 +40,10 @@ data class KinesisWorkshopProperties(
         require(streamName.isNotBlank()) { "streamName must not be blank." }
         require(partitionKey.isNotBlank()) { "partitionKey must not be blank." }
         require(shardId.isNotBlank()) { "shardId must not be blank." }
+        require(consumerGroup.isNotBlank()) { "consumerGroup must not be blank." }
+        require(streamIdentity.isNotBlank()) { "streamIdentity must not be blank." }
+        require(ownerId.isNotBlank()) { "ownerId must not be blank." }
+        require(maxShardConcurrency >= 1) { "maxShardConcurrency must be greater than zero." }
         require(batchLimit in 1..MAX_BATCH_LIMIT) {
             "batchLimit must be between 1 and $MAX_BATCH_LIMIT."
         }
@@ -72,6 +80,10 @@ data class KinesisWorkshopProperties(
         const val LOCAL_PROFILE: String = "local"
         const val REAL_AWS_PROFILE: String = "real-aws"
         const val DEFAULT_SHARD_ID: String = "shardId-000000000000"
+        const val DEFAULT_CONSUMER_GROUP: String = "kinesis-coroutines-consumer"
+        const val DEFAULT_STREAM_IDENTITY: String = "kinesis-coroutines-workshop-v1"
+        const val DEFAULT_OWNER_ID: String = "kinesis-coroutines-worker-1"
+        const val DEFAULT_MAX_SHARD_CONCURRENCY: Int = 2
         const val MAX_BATCH_LIMIT: Int = 1_000
         const val MAX_AGGREGATE_PAYLOAD_BYTES: Long = 1L * 1024 * 1024
         val MIN_POLL_INTERVAL: Duration = Duration.ofMillis(200)

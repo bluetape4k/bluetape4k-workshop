@@ -20,6 +20,7 @@ Recent delivery lessons:
 - [Issue #776 assertion matcher governance](2026-08-28-issue-776-assertion-governance.md)
 - [Issue #742 AWS settings boundary](2026-08-28-issue-742-settings-boundary.md)
 - [Issue #741 Bedrock Converse consumer 경계](2026-08-28-issue-741-bedrock-converse.md)
+- [Issue #864 Kinesis consumerFlow checkpoint/lease 경계](2026-08-30-issue-864-kinesis-consumer.md)
 - [Issue #528 Clinic Appointment Solver 독립 예제 경계](2026-08-25-issue-528-clinic-appointment-solver.md)
 - [Issue #525 Field Service Dispatch 독립 예제의 경계](2026-08-20-issue-525-field-service.md)
 - [Issue #743 Kinesis 코루틴 워크숍 경계](2026-08-17-issue-743-kinesis-coroutines.md)

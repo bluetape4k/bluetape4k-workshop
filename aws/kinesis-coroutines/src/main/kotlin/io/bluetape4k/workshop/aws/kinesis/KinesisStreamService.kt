@@ -1,5 +1,15 @@
 package io.bluetape4k.workshop.aws.kinesis
 
+import io.bluetape4k.aws.kinesis.InMemoryKinesisCheckpointStore
+import io.bluetape4k.aws.kinesis.InMemoryKinesisLeaseStore
+import io.bluetape4k.aws.kinesis.KinesisCheckpointStore
+import io.bluetape4k.aws.kinesis.KinesisConsumerOptions
+import io.bluetape4k.aws.kinesis.KinesisLease
+import io.bluetape4k.aws.kinesis.KinesisLeaseStore
+import io.bluetape4k.aws.kinesis.KinesisShardKey
+import io.bluetape4k.aws.kinesis.KinesisRecordFlowOptions as ConsumerRecordFlowOptions
+import io.bluetape4k.aws.kinesis.KinesisStartingPosition as ConsumerStartingPosition
+import io.bluetape4k.aws.kinesis.consumerFlow
 import io.bluetape4k.aws.spring.kinesis.KinesisOperations
 import io.bluetape4k.aws.spring.kinesis.KinesisPutRecordRequest
 import io.bluetape4k.aws.spring.kinesis.KinesisRecordFlowOptions
@@ -7,17 +17,24 @@ import io.bluetape4k.aws.spring.kinesis.KinesisRecordFlowRequest
 import io.bluetape4k.aws.spring.kinesis.KinesisStartingPosition
 import io.bluetape4k.jackson3.Jackson
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlin.time.Duration.Companion.milliseconds
 import software.amazon.awssdk.core.SdkBytes
+import software.amazon.awssdk.services.kinesis.KinesisAsyncClient
 import software.amazon.awssdk.services.kinesis.model.ResourceNotFoundException
 import software.amazon.awssdk.services.kinesis.model.ResourceInUseException
 import software.amazon.awssdk.services.kinesis.model.StreamStatus
@@ -30,6 +47,9 @@ class KinesisStreamService(
     private val objectMapper: JsonMapper = Jackson.defaultJsonMapper,
     private val flowOptions: KinesisRecordFlowOptions = properties.toFlowOptions(),
     private val demoScope: KinesisDemoScope? = null,
+    private val consumerClient: KinesisAsyncClient? = null,
+    private val checkpointStore: KinesisCheckpointStore = InMemoryKinesisCheckpointStore(),
+    private val leaseStore: KinesisLeaseStore = InMemoryKinesisLeaseStore(),
 ) {
 
     private val activeCollectors = AtomicInteger()
@@ -78,6 +98,12 @@ class KinesisStreamService(
                 data = SdkBytes.fromUtf8String(payload),
             )
         )
+        (consumerClient as? LocalKinesisConsumerClient)?.append(
+            sequenceNumber = response.sequenceNumber(),
+            partitionKey = event.partitionKey,
+            data = SdkBytes.fromUtf8String(payload),
+            shardId = response.shardId(),
+        )
         return KinesisPublishReport(
             ordinal = event.ordinal,
             sequenceNumber = response.sequenceNumber(),
@@ -87,14 +113,33 @@ class KinesisStreamService(
 
     /** caller가 collection할 때만 upstream cold Flow를 구독합니다. */
     fun consume(position: KinesisStartingPosition = KinesisStartingPosition.TrimHorizon): Flow<KinesisConsumedRecord> {
-        val request = KinesisRecordFlowRequest(
-            streamName = properties.streamName,
-            shardId = properties.shardId,
-            position = position,
-            options = flowOptions,
+        val source = consumerClient?.let { client ->
+            flow {
+                val trackedLeaseStore = TrackingKinesisLeaseStore(leaseStore)
+                try {
+                    client.consumerFlow(
+                        streamName = properties.streamName,
+                        consumerGroup = properties.consumerGroup,
+                        streamIdentity = properties.streamIdentity,
+                        position = position.toConsumerPosition(),
+                        options = properties.toConsumerOptions(),
+                        checkpointStore = checkpointStore,
+                        leaseStore = trackedLeaseStore,
+                    ).collect { emit(it.record) }
+                } finally {
+                    withContext(NonCancellable) { trackedLeaseStore.releaseAll() }
+                }
+            }
+        } ?: operations.recordFlow(
+            KinesisRecordFlowRequest(
+                streamName = properties.streamName,
+                shardId = properties.shardId,
+                position = position,
+                options = flowOptions,
+            )
         )
         var collectorJob: Job? = null
-        return operations.recordFlow(request)
+        return source
             .onStart {
                 activeCollectors.incrementAndGet()
                 collectorJob = currentCoroutineContext()[Job]
@@ -119,6 +164,42 @@ class KinesisStreamService(
             }
     }
 
+    /** upstream cancellation 경계에서도 이 collection이 획득한 lease를 회수합니다. */
+    private class TrackingKinesisLeaseStore(
+        private val delegate: KinesisLeaseStore,
+    ) : KinesisLeaseStore {
+        private val activeLeases = ConcurrentHashMap<KinesisShardKey, KinesisLease>()
+
+        override suspend fun acquire(
+            key: KinesisShardKey,
+            ownerId: String,
+            leaseDuration: kotlin.time.Duration,
+        ): KinesisLease? = delegate.acquire(key, ownerId, leaseDuration)?.also { lease ->
+            activeLeases[key] = lease
+        }
+
+        override suspend fun renew(
+            lease: KinesisLease,
+            leaseDuration: kotlin.time.Duration,
+        ): KinesisLease? = delegate.renew(lease, leaseDuration)?.also { renewed ->
+            activeLeases[renewed.key] = renewed
+        } ?: run {
+            activeLeases.remove(lease.key, lease)
+            null
+        }
+
+        override suspend fun release(lease: KinesisLease) {
+            activeLeases.remove(lease.key, lease)
+            delegate.release(lease)
+        }
+
+        suspend fun releaseAll() {
+            activeLeases.values.toList().forEach { lease ->
+                if (activeLeases.remove(lease.key, lease)) delegate.release(lease)
+            }
+        }
+    }
+
     private companion object {
         fun KinesisWorkshopProperties.toFlowOptions(): KinesisRecordFlowOptions = KinesisRecordFlowOptions(
             batchLimit = batchLimit,
@@ -127,5 +208,28 @@ class KinesisStreamService(
             maxIteratorRetries = maxIteratorRetries,
             maxThrottleRetries = maxThrottleRetries,
         )
+
+        fun KinesisWorkshopProperties.toConsumerOptions(): KinesisConsumerOptions = KinesisConsumerOptions(
+            ownerId = ownerId,
+            recordOptions = ConsumerRecordFlowOptions(
+                batchLimit = batchLimit,
+                pollInterval = pollInterval.toMillis().milliseconds,
+                emptyBackoff = emptyBackoff.toMillis().milliseconds,
+                maxIteratorRetries = maxIteratorRetries,
+                maxThrottleRetries = maxThrottleRetries,
+            ),
+            maxShardConcurrency = maxShardConcurrency,
+            discoveryInterval = 100.milliseconds,
+        )
+
+        fun KinesisStartingPosition.toConsumerPosition(): ConsumerStartingPosition = when (this) {
+            KinesisStartingPosition.TrimHorizon -> ConsumerStartingPosition.TrimHorizon
+            KinesisStartingPosition.Latest -> ConsumerStartingPosition.Latest
+            is KinesisStartingPosition.AtSequenceNumber ->
+                ConsumerStartingPosition.AtSequenceNumber(sequenceNumber)
+            is KinesisStartingPosition.AfterSequenceNumber ->
+                ConsumerStartingPosition.AfterSequenceNumber(sequenceNumber)
+            is KinesisStartingPosition.AtTimestamp -> ConsumerStartingPosition.AtTimestamp(timestamp)
+        }
     }
 }
