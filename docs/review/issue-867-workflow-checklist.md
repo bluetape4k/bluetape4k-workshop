@@ -132,6 +132,9 @@ worktree와 현재 head에서 다시 읽는다.
   - **Evidence:** `.github/workflows/Examples.yml`의 leader path filter/test/artifact,
     `scripts/smoke-validate.sh`의 `leader-full`/`all-smoke`, stale-check 및 README validator
     를 read-back했고 helper 실행 결과가 PASS했다. workflow 등록 변경은 불필요했다.
+    초기 PR #899의 ecosystem gate가 기존 manifest track 부재로 `found 0`을 반환한 뒤,
+    fixed track을 건드리지 않는 `issue-867-leader-audit` follow-up scope와 fresh
+    `coordinator_scope_receipt`를 추가해 exact PR 경로를 등록했다.
   - **Failure:** registration을 보완하고 workflow를 재검증한다.
 
 ## Step 3-P risk prediction

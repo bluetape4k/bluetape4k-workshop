@@ -363,11 +363,36 @@
         "docs/review/2026-08-30-2.0.0-ci-compatibility-7tier.md"
       ],
       "review_artifact": "docs/review/2026-08-30-2.0.0-ci-compatibility-7tier.md"
+    },
+    {
+      "scope_id": "issue-867-leader-audit",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-867-leader-audit-export",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [867],
+      "allowed_paths": [
+        "leader/job-safety-lab/**",
+        "docs/coverage-matrix.md",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-08-30-issue-867-leader-audit-export.md",
+        "docs/review/**",
+        "docs/review/2026-08-30-issue-867-pre-pr.md",
+        "docs/superpowers/specs/2026-08-30-issue-867-leader-audit-export-design.md",
+        "docs/superpowers/plans/2026-08-30-issue-867-leader-audit-export-plan.md",
+        "docs/ecosystem-reuse-train.json",
+        "scripts/validate-job-safety-lab-readme.mjs"
+      ],
+      "review_artifact": "docs/review/2026-08-30-issue-867-pre-pr.md"
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260830T-2.0.0-ci-compatibility-followup",
-    "checksum": "08693d669fe3d8461c839012dbe28dc0a652891daac43cec185940159f687cd7"
+    "receipt_id": "20260830T-issue-867-leader-audit-scope",
+    "checksum": "97c11b9235113e5fa8d21155f42a7aa5cc79ec5d3375a410089ab35375008923"
   },
   "planned_scope_replan_receipts": {
   },
