@@ -5,7 +5,7 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.codec.Base58
-import io.bluetape4k.concurrent.virtualthread.VirtualThreads
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.testcontainers.storage.RedisServer
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await

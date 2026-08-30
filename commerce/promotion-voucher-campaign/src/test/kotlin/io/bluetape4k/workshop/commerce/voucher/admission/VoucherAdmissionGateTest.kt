@@ -5,7 +5,7 @@ import io.bluetape4k.bucket4j.ratelimit.RateLimitDiagnostics
 import io.bluetape4k.bucket4j.ratelimit.RateLimitRejectionReason
 import io.bluetape4k.bucket4j.ratelimit.RateLimitResult
 import io.bluetape4k.bucket4j.ratelimit.RateLimiter
-import io.bluetape4k.concurrent.virtualthread.VirtualThreads
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import org.junit.jupiter.api.Test
 import java.time.Clock
 import java.time.Duration

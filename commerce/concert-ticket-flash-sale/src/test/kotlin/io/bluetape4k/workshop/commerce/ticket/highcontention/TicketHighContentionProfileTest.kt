@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.commerce.ticket.highcontention
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.concurrent.virtualthread.VirtualThreads
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.commerce.ticket.domain.PaymentOutcome

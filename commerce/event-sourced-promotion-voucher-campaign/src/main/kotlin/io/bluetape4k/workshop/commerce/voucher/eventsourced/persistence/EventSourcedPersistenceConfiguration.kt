@@ -9,6 +9,7 @@ import io.bluetape4k.workshop.commerce.voucher.eventsourced.web.CampaignProjecti
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.web.CampaignProjectionSnapshotReader
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.web.ExposedCampaignProjectionSnapshotReader
 import io.bluetape4k.workshop.commerce.voucher.eventsourced.web.WaitingCampaignProjectionQuery
+import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
@@ -34,8 +35,11 @@ internal class EventSourcedPersistenceConfiguration {
      * `@ConditionalOnBean(DataSource::class)`를 평가합니다.
      */
     @Bean("springTransactionManager")
-    fun springTransactionManager(dataSource: DataSource): PlatformTransactionManager =
-        ExposedSpringDataAutoConfiguration().springTransactionManager(dataSource)
+    fun springTransactionManager(
+        dataSource: DataSource,
+        databaseConfig: DatabaseConfig,
+    ): PlatformTransactionManager =
+        ExposedSpringDataAutoConfiguration().springTransactionManager(dataSource, databaseConfig)
 
     @Bean
     fun eventSourcedExposedDatabaseRegistration(

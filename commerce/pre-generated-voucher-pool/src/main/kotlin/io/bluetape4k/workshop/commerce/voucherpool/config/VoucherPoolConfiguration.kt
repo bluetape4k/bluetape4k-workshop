@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.commerce.voucherpool.config
 
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.codec.Base58
-import io.bluetape4k.concurrent.virtualthread.VirtualThreads
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.commerce.voucherpool.admission.DatabasePermitGate
