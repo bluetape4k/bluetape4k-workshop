@@ -474,8 +474,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260831T-issue-867-868-parent-stack-scope",
-    "checksum": "f398d2165df3dc6b824574e7b3ac1ed8025c71ce4eb0230efb72646d6aed24d3"
+    "receipt_id": "20260830T-2.0.0-ci-compatibility-followup-issue-866",
+    "checksum": "afad7a01701f9e8fc3aa33ebe6803a3527f5b208cf12fb4ae68d502781266607"
   },
   "planned_scope_replan_receipts": {
   },
