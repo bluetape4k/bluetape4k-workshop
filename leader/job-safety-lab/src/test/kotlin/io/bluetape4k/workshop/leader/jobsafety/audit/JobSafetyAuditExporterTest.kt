@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.leader.jobsafety.audit
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeLessThan
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.leader.LockIdentity
 import io.bluetape4k.leader.audit.LeaderAuditExportEvent
@@ -24,8 +25,10 @@ import java.net.http.HttpResponse
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
 
 internal class JobSafetyAuditExporterTest {
@@ -108,6 +111,65 @@ internal class JobSafetyAuditExporterTest {
             }
         fake.requestCount shouldBeEqualTo 1
         fixture.exporter.close()
+    }
+
+    @Test
+    fun `concurrent submit admission remains bounded and non blocking`() {
+        val fake = InMemoryAuditHttpClient()
+        val exportExecutor = Executors.newFixedThreadPool(4)
+        val exportScheduler = Executors.newSingleThreadScheduledExecutor()
+        val exporter = HttpLeaderAuditExporter(
+            client = fake,
+            endpoint = LeaderAuditTrustedHttpsEndpoint.trusted(URI("https://audit.example.test/hook")),
+            headers = emptyMap(),
+            encoder = io.bluetape4k.leader.audit.http.LeaderAuditPayloadEncoder {
+                LeaderAuditHttpPayload.of("application/json", "{}".toByteArray())
+            },
+            exportOptions = LeaderAuditExportOptions(
+                queueCapacity = 64,
+                maxInFlight = 4,
+                maxAttempts = 1,
+                attemptTimeout = Duration.ofSeconds(1),
+                initialBackoff = Duration.ofMillis(1),
+                maxBackoff = Duration.ofSeconds(1),
+                executor = exportExecutor,
+                scheduler = exportScheduler,
+            ),
+            httpOptions = io.bluetape4k.leader.audit.http.LeaderAuditHttpOptions.defaults(),
+        )
+        val callers = Executors.newFixedThreadPool(32)
+        val start = CountDownLatch(1)
+        val done = CountDownLatch(32)
+        val durations = LongArray(32)
+        val results = arrayOfNulls<LeaderAuditSubmitResult>(32)
+
+        try {
+            repeat(32) { index ->
+                callers.submit {
+                    start.await()
+                    val startedAt = System.nanoTime()
+                    results[index] = exporter.submit(event())
+                    durations[index] = System.nanoTime() - startedAt
+                    done.countDown()
+                }
+            }
+            start.countDown()
+            done.await(5, TimeUnit.SECONDS).shouldBeTrue()
+            results.filterNotNull().forEach {
+                check(it == LeaderAuditSubmitResult.ACCEPTED || it == LeaderAuditSubmitResult.DROPPED_QUEUE_FULL) {
+                    "unexpected concurrent admission result: $it"
+                }
+            }
+            results.filterNotNull().count { it == LeaderAuditSubmitResult.ACCEPTED }
+                .let { check(it > 0) { "at least one concurrent submission must be admitted" } }
+            durations.maxOrNull()!! shouldBeLessThan Duration.ofMillis(500).toNanos()
+        } finally {
+            exporter.close()
+            fake.close()
+            callers.shutdownNow()
+            exportScheduler.shutdownNow()
+            exportExecutor.shutdownNow()
+        }
     }
 
     private fun exporter(

@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.leader.jobsafety.config
 
 import io.bluetape4k.leader.audit.LeaderAuditExporter
+import org.slf4j.LoggerFactory
 import java.time.Duration
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.ScheduledThreadPoolExecutor
@@ -26,6 +27,7 @@ class JobSafetyAuditShutdownCoordinator(
 ) : AutoCloseable {
 
     private val closed = AtomicBoolean(false)
+    private val logger = LoggerFactory.getLogger(JobSafetyAuditShutdownCoordinator::class.java)
 
     init {
         require(!shutdownTimeout.isNegative && !shutdownTimeout.isZero) {
@@ -77,20 +79,39 @@ class JobSafetyAuditShutdownCoordinator(
             action()
         } catch (interrupted: InterruptedException) {
             Thread.currentThread().interrupt()
-        } catch (_: Exception) {
+            logFailure(step, "interrupted", interrupted)
+        } catch (error: Exception) {
             // 종료 경로에서는 후속 resource 정리를 계속 수행합니다.
+            logFailure(step, "exception", error)
         }
     }
 
     private fun awaitQuietly(step: String, deadline: Long, action: () -> Unit) {
         onStep(step)
-        if (nanoTime() >= deadline) return
+        if (nanoTime() >= deadline) {
+            logger.warn(
+                "job_safety_audit_shutdown_timeout resource_step={} outcome=deadline_exceeded",
+                step,
+            )
+            return
+        }
         try {
             action()
         } catch (interrupted: InterruptedException) {
             Thread.currentThread().interrupt()
-        } catch (_: Exception) {
+            logFailure(step, "interrupted", interrupted)
+        } catch (error: Exception) {
             // 종료 경로에서는 후속 resource 정리를 계속 수행합니다.
+            logFailure(step, "exception", error)
         }
+    }
+
+    private fun logFailure(step: String, outcome: String, error: Exception) {
+        logger.warn(
+            "job_safety_audit_shutdown_failed resource_step={} outcome={} error_type={}",
+            step,
+            outcome,
+            error::class.qualifiedName ?: "unknown",
+        )
     }
 }

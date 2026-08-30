@@ -261,8 +261,10 @@ operator 전용 endpoint는 다음과 같습니다.
 curl -u operator:change-me http://localhost:8080/api/job-safety/audit
 ```
 
-응답에는 transport, bounded recent event, retained byte counter, exporter
-snapshot, 고정 meter 이름만 포함됩니다. endpoint, `Authorization`, token,
+응답에는 transport, bounded recent event, retained byte counter,
+`malformedPayloadCount`, exporter snapshot, 고정 meter 이름이 포함됩니다.
+decode할 수 없는 retained byte는 count로 남기고 payload index, size, exception
+type만 구조화 경고로 기록합니다. endpoint, `Authorization`, token,
 raw lock/node/slot/leader/customer/tenant 식별자, raw exception text는 반환하지
 않습니다. `ACCEPTED`는 exporter가 bounded queue에 event를 admission했다는
 뜻이며 원격 audit system이 받았다는 뜻이 아닙니다. `DROPPED_QUEUE_FULL`,
@@ -286,7 +288,9 @@ allow-list 밖의 host를 거부합니다. DNS rebinding과 private-address egre
 합니다. Export는 best-effort이며 PostgreSQL history, exactly-once delivery,
 business outbox를 대체하지 않습니다. context가 닫힐 때 하나의 bounded
 shutdown coordinator가 subscription, exporter, HTTP client, scheduler,
-executor, coroutine scope를 순서대로 종료합니다.
+executor, coroutine scope를 순서대로 종료합니다. shutdown 실패가 있어도
+cleanup은 계속하지만 resource step, outcome, exception type만 구조화 경고로
+남깁니다.
 
 ## 테스트
 

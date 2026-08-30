@@ -53,6 +53,7 @@ internal class JobSafetyAuditReportServiceTest {
             report.enabled.shouldBeTrue()
             report.retainedPayloadCount shouldBeEqualTo 2
             report.retainedPayloadBytes shouldBeEqualTo store.retainedBytes
+            report.malformedPayloadCount shouldBeEqualTo 1
             report.recentEvents.size shouldBeEqualTo 1
             report.recentEvents.single().path("status").asText() shouldBeEqualTo "COMPLETED"
             report.meters shouldBeEqualTo report.meters.sorted()

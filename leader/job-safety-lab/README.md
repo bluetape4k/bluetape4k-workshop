@@ -256,7 +256,9 @@ curl -u operator:change-me http://localhost:8080/api/job-safety/audit
 ```
 
 The response contains the transport, bounded recent events, retained byte
-counters, exporter snapshot, and stable meter names. It never contains the
+counters, `malformedPayloadCount`, exporter snapshot, and stable meter names.
+Malformed retained bytes are counted and logged with only the payload index,
+size, and exception type. It never contains the
 endpoint, `Authorization`, token, raw lock/node/slot/leader/customer/tenant
 identifiers, or raw exception text. `ACCEPTED` means that the exporter admitted
 an event to its bounded queue; it is not proof that the remote audit system
@@ -282,7 +284,9 @@ egress still require a controlled resolver, proxy, or network policy outside
 this workshop. Export is best-effort and does not replace PostgreSQL history,
 exactly-once delivery, or the business outbox. A single bounded shutdown
 coordinator closes the subscription, exporter, HTTP client, scheduler,
-executor, and coroutine scope on context close.
+executor, and coroutine scope on context close. Shutdown failures continue
+cleanup but emit a structured warning containing only the resource step,
+outcome, and exception type.
 
 ## Tests
 

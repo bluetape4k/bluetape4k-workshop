@@ -12,6 +12,7 @@ internal fun testAuditReportPort(): JobSafetyAuditReportPort = JobSafetyAuditRep
         recentEvents = listOf(Jackson.defaultJsonMapper.readTree("{\"status\":\"COMPLETED\"}")),
         retainedPayloadCount = 1,
         retainedPayloadBytes = 31,
+        malformedPayloadCount = 0,
         snapshot = JobSafetyAuditSnapshot(
             queued = 0,
             inFlight = 0,

@@ -45,11 +45,12 @@ worktree와 현재 head에서 다시 읽는다.
     `scripts/smoke-validate.sh stale-check`(131 modules, stale 0, registration missing 0,
     broken image 0) PASS. root task graph에 `detekt` task가 없어 detekt는 N/A로 기록했다.
   - **Failure:** 실패 원인을 진단하고 Step 4로 되돌아간다.
-- [x] **A-08 — pre-PR review 수렴**
+- [ ] **A-08 — pre-PR review 수렴**
   - **Action:** 최종 Kotlin checklist와 여섯 code-review 관점을 실행하고 P0/P1을 제거한다.
-  - **Evidence:** `docs/review/2026-08-30-issue-867-pre-pr.md`의 API/Ops/Stability/Performance/Security/User
-    여섯 관점과 현재 diff read-back, SPW-01~05, P0=0/P1=0/P2=0/P3=0. 기준 head는
-    다음 Lore commit으로 고정한다.
+  - **Evidence:** 초기 통합 review는 P0/P1/P2/P3=0이었으나, 후속 최종 review가
+    shutdown failure observability P1과 parity/concurrency/report evidence P2를
+    발견했다. 구조화 warning, malformed counter, parity/concurrency test를 보완했고
+    후속 최종 review가 새 diff에서 P0/P1=0임을 확인할 때까지 이 gate를 보류한다.
   - **Failure:** PR 생성과 push를 막고 수정·재검증한다.
 - [x] **A-09 — lesson commit**
   - **Action:** 재발 방지 lesson을 작성하고 Lore 형식으로 commit한다.

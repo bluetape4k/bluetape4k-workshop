@@ -55,6 +55,24 @@
 - SPW-01~SPW-05: PASS (spec/plan/review/checklist에 기록).
 - targeted placeholder scan for unfinished-work markers: clean.
 
+## 최종 리뷰 후 재검증
+
+초기 최종 review가 shutdown 실패 무음 처리(P1), malformed payload 관찰 부재와
+MEMORY/HTTPS parity 및 32개 동시 admission latency 증거 부족(P2)을 지적했다.
+다음 보완을 적용했다.
+
+- shutdown coordinator가 resource step, outcome, exception type만 구조화 warning으로
+  기록하며 후속 cleanup을 유지한다. 실패 경로 테스트가 raw exception message 부재를
+  검증한다.
+- report에 `malformedPayloadCount`를 추가하고 payload index, size, exception type만
+  decode warning으로 기록한다.
+- MEMORY/HTTPS exporter가 동일한 redacted encoder와 byte budget을 사용하는 parity
+  테스트를 추가했다.
+- 32개 동시 `submit`의 admission 결과와 500ms 상한을 검증하는 회귀 테스트를 추가했다.
+
+보완 후 targeted audit suite는 12 tests, 0 failed, 0 skipped로 `BUILD SUCCESSFUL`이다.
+후속 최종 review와 PR 새 exact head의 live CI는 아래 보류 항목과 함께 다시 읽는다.
+
 ## 미검증/보류
 
 - 실제 외부 audit 시스템과의 network delivery는 의도적으로 실행하지 않았다.

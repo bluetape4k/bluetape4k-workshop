@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.leader.jobsafety.audit
 import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.leader.audit.LeaderAuditExportSnapshot
 import io.bluetape4k.leader.audit.LeaderAuditExporter
+import org.slf4j.LoggerFactory
 import tools.jackson.databind.JsonNode
 
 /**
@@ -21,21 +22,39 @@ class JobSafetyAuditReportService(
     private val meterNames: List<String> = JobSafetyAuditMeterCatalog.names,
 ) : JobSafetyAuditReportPort {
 
+    private val logger = LoggerFactory.getLogger(JobSafetyAuditReportService::class.java)
+
     override fun report(): JobSafetyAuditReport {
         val payloads = payloadStore.snapshot()
+        var malformedPayloadCount = 0
+        val recentEvents = buildList {
+            payloads.forEachIndexed { index, payload ->
+                decodeSafely(payload, index)?.let(::add) ?: run { malformedPayloadCount++ }
+            }
+        }
         return JobSafetyAuditReport(
             transport = transport,
             enabled = enabled,
-            recentEvents = payloads.mapNotNull(::decodeSafely),
+            recentEvents = recentEvents,
             retainedPayloadCount = payloads.size,
             retainedPayloadBytes = payloads.sumOf { it.size.toLong() },
+            malformedPayloadCount = malformedPayloadCount,
             snapshot = JobSafetyAuditSnapshot.from(exporter.snapshot()),
             meters = meterNames.toList(),
         )
     }
 
-    private fun decodeSafely(payload: ByteArray): JsonNode? =
-        runCatching { Jackson.defaultJsonMapper.readTree(payload) }.getOrNull()
+    private fun decodeSafely(payload: ByteArray, index: Int): JsonNode? = try {
+        Jackson.defaultJsonMapper.readTree(payload)
+    } catch (error: Exception) {
+        logger.warn(
+            "job_safety_audit_report_decode_failed payload_index={} payload_bytes={} error_type={}",
+            index,
+            payload.size,
+            error::class.qualifiedName ?: "unknown",
+        )
+        null
+    }
 }
 
 /** report endpoint가 의존하는 최소 관찰 port입니다. */
@@ -50,6 +69,7 @@ data class JobSafetyAuditReport(
     val recentEvents: List<JsonNode>,
     val retainedPayloadCount: Int,
     val retainedPayloadBytes: Long,
+    val malformedPayloadCount: Int,
     val snapshot: JobSafetyAuditSnapshot,
     val meters: List<String>,
 )
