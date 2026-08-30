@@ -295,6 +295,7 @@
         "graph/knowledge-graph/src/test/kotlin/**",
         "graph/io-pipeline/**",
         "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
         "docs/lessons/README.md",
         "docs/lessons/2026-08-29-issue-863-graphio-checkpoint.md",
         "docs/review/2026-08-30-2.0.0-ci-compatibility-7tier.md"
@@ -325,6 +326,7 @@
         "graph/knowledge-graph/src/test/kotlin/**",
         "aws/kinesis-coroutines/**",
         "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
         "docs/lessons/README.md",
         "docs/lessons/2026-08-30-issue-864-kinesis-consumer.md",
         "docs/review/2026-08-30-2.0.0-ci-compatibility-7tier.md"
@@ -355,6 +357,7 @@
         "graph/knowledge-graph/src/test/kotlin/**",
         "image-processing/barcode-api/**",
         "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
         "docs/lessons/README.md",
         "docs/lessons/2026-08-30-issue-865-strict-image-decode.md",
         "docs/review/2026-08-30-2.0.0-ci-compatibility-7tier.md"
