@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.commerce.voucher.reconciliation
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.concurrent.virtualthread.VirtualThreads
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.commerce.voucher.application.VoucherCommandTestSupport
 import io.bluetape4k.workshop.commerce.voucher.persistence.EventInboxRecord

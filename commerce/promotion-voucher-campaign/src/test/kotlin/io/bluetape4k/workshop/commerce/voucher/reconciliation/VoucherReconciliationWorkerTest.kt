@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.commerce.voucher.reconciliation
 
 import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.concurrent.virtualthread.VirtualThreads
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.leader.LeaderRunResult
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.workshop.commerce.voucher.config.VoucherRedisProperties

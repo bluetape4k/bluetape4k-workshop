@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.optimization.planning.config
 
 import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.concurrent.virtualthread.VirtualThreads
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import org.junit.jupiter.api.Test
 import java.time.Duration
 

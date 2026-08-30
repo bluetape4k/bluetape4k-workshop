@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.optimization.planning.config
 
-import io.bluetape4k.concurrent.virtualthread.VirtualThreads
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.workshop.optimization.planning.adapter.fake.DeterministicPlanningEngine
 import io.bluetape4k.workshop.optimization.planning.adapter.http.CallbackSignatureVerifier
 import io.bluetape4k.workshop.optimization.planning.adapter.http.FakeCallbackSignatureVerifier

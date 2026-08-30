@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.optimization.fieldservice.application
 
-import io.bluetape4k.concurrent.virtualthread.VirtualThreads
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.optimization.fieldservice.domain.AggregateId
