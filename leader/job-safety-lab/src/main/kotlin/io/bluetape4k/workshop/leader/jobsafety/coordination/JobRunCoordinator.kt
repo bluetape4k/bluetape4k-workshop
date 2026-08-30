@@ -24,7 +24,19 @@ class JobRunCoordinator(
     private val observationListener: LeaderElectionListener = NoOpLeaderElectionListener,
     private val leaderOptions: LeaderElectionOptions = LeaderElectionOptions.Default,
 ) {
-    fun run(request: JobRunRequest, execute: (FencingLease) -> JobMutation): JobRunResult {
+    fun run(request: JobRunRequest, execute: (FencingLease) -> JobMutation): JobRunResult =
+        runWithLease(request) { _, fencingLease -> execute(fencingLease) }
+
+    /** user lease extension을 실행 callback에 명시적으로 노출하는 새 예제 경계입니다. */
+    fun runWithLease(
+        request: JobRunRequest,
+        execute: (LeaderLease, FencingLease) -> JobMutation,
+    ): JobRunResult = runInternal(request, execute)
+
+    private fun runInternal(
+        request: JobRunRequest,
+        execute: (LeaderLease, FencingLease) -> JobMutation,
+    ): JobRunResult {
         val lockName = "job-safety:${request.jobName.value}"
         val acquireStarted = TimeSource.Monotonic.markNow()
         observe { observationRecorder.onLockAttempt(lockName, leaderOptions) }
@@ -52,12 +64,12 @@ class JobRunCoordinator(
                 is FenceAcquireResult.Acquired -> {
                     observe { observationRecorder.onTaskStarted(lockName, context) }
                     taskStarted = true
-                    executeWithFence(acquired.lease, execute)
+                    executeWithFence(leader, acquired.lease, execute)
                 }
                 is FenceAcquireResult.AlreadyOwned -> {
                     observe { observationRecorder.onTaskStarted(lockName, context) }
                     taskStarted = true
-                    executeWithFence(acquired.lease, execute)
+                    executeWithFence(leader, acquired.lease, execute)
                 }
                 FenceAcquireResult.Contended -> skipped(JobRejectionReason.FENCE_CONTENDED)
                 is FenceAcquireResult.BackendFailure -> {
@@ -114,12 +126,13 @@ class JobRunCoordinator(
     }
 
     private fun executeWithFence(
+        leader: LeaderLease,
         lease: FencingLease,
-        execute: (FencingLease) -> JobMutation,
+        execute: (LeaderLease, FencingLease) -> JobMutation,
     ): JobRunResult =
         try {
             try {
-                when (val mutation = execute(lease)) {
+                when (val mutation = execute(leader, lease)) {
                     JobMutation.Committed ->
                         JobRunResult(JobExecutionState.COMMITTED, fencingToken = lease.token)
 

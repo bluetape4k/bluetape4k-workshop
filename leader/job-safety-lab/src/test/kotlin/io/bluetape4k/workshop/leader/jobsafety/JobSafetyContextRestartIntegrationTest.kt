@@ -8,6 +8,7 @@ import io.bluetape4k.leader.audit.LeaderAuditExporter
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.workshop.leader.jobsafety.config.JobSafetyAuditScope
+import io.bluetape4k.workshop.leader.jobsafety.config.JobSafetyLeaseExtensionObservation
 import io.bluetape4k.workshop.leader.jobsafety.domain.EffectDeliveryState
 import io.bluetape4k.workshop.leader.jobsafety.domain.OperationId
 import io.bluetape4k.workshop.leader.jobsafety.effect.DeterministicEffect
@@ -48,6 +49,7 @@ internal class JobSafetyContextRestartIntegrationTest {
         lateinit var auditExecutor: ExecutorService
         lateinit var auditScheduler: ScheduledThreadPoolExecutor
         lateinit var auditHttpClient: HttpClient
+        lateinit var leaseExtensionObservation: JobSafetyLeaseExtensionObservation
 
         startContext().use { first ->
             auditExporter = first.getBean(LeaderAuditExporter::class.java)
@@ -55,6 +57,8 @@ internal class JobSafetyContextRestartIntegrationTest {
             auditExecutor = first.getBean("jobSafetyAuditExecutor", ExecutorService::class.java)
             auditScheduler = first.getBean("jobSafetyAuditScheduler", ScheduledThreadPoolExecutor::class.java)
             auditHttpClient = first.getBean("jobSafetyAuditHttpClient", HttpClient::class.java)
+            first.getBeansOfType(JobSafetyLeaseExtensionObservation::class.java).size shouldBeEqualTo 1
+            leaseExtensionObservation = first.getBean(JobSafetyLeaseExtensionObservation::class.java)
             resetSchema(first)
             seedOutbox(first, operationId)
 
@@ -71,6 +75,7 @@ internal class JobSafetyContextRestartIntegrationTest {
         auditScheduler.isTerminated.shouldBeTrue()
         auditScheduler.queue.shouldBeEmpty()
         auditHttpClient.isTerminated.shouldBeTrue()
+        leaseExtensionObservation.isClosed.shouldBeTrue()
 
         startContext().use { restarted ->
             val worker = restarted.getBean(EffectOperations::class.java)

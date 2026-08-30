@@ -246,6 +246,55 @@ observation bean을 제거하거나 override한 뒤 observation auto-configurati
 사용할 수 있습니다. 이 lab은 Redis leader와 PostgreSQL fencing 경계를 명확히
 보여주기 위해 recorder와 listener를 수동으로 연결합니다.
 
+### Lease-extension observation
+
+이 예제는 `2.0.0-SNAPSHOT`의 terminal lease-extension 계약도 소비합니다.
+`JobSafetyConfiguration`은 process-local
+`LeaderLeaseExtensionObservers` registry에
+`MicrometerObservationLeaderLeaseExtensionObserver`를 하나 등록합니다.
+등록은 Spring context가 닫힐 때 함께 닫히며, 같은 등록을 여러 번 닫아도
+안전합니다. `ObservationRegistry.NOOP`이거나 기능을 끄면 등록하지 않습니다.
+
+애플리케이션이 실제 observation registry를 제공할 때 다음처럼 명시적으로
+활성화할 수 있습니다.
+
+```yaml
+bluetape4k:
+  leader:
+    observation:
+      enabled: true
+      include-lock-name: false
+      include-leader-id: false
+      include-exception-details: false
+```
+
+adapter는 thread에 귀속된 lock handle을 복사하지 않고 `LockExtender` 호출을
+Redis owner executor에서 수행합니다. 사용자가 lease를 연장해야 하는 job은
+request lease callback을 명시적으로 선택합니다.
+
+```kotlin
+coordinator.runWithLease(request) { leader, fence ->
+    val outcome = leader.extendViaLockExtender(30.seconds)
+    require(outcome is ExtendOutcome.Extended)
+    executeWithFence(fence)
+}
+```
+
+observation 이름은 `bluetape4k.leader.lease.extension`이며 bounded
+low-cardinality tag는 `source=user|watchdog`,
+`execution=blocking|suspend`, `outcome=extended|rejected|not_held|wrong_thread|backend_error`,
+`result=success|skipped|error`입니다. lock과 leader 식별자는 명시적으로
+활성화한 경우에도 high-cardinality sanitized 값으로만 남습니다. raw job,
+tenant, operation, owner 식별자는 export하지 않습니다. cancellation과
+`Error` 경로는 terminal event를 publish하지 않으며 elapsed time도 tag로
+기록하지 않습니다.
+
+이 workshop이 사용하는 released snapshot에는 global `addObserver` API만
+포함되어 있습니다. upstream scoped registration은 해당 ABI를 포함한
+released BOM artifact가 제공될 때까지 이 consumer에서 사용하지 않습니다.
+따라서 하나의 JVM 안 여러 context는 process-local registration 경계를
+공유해야 합니다.
+
 ## Leader audit export
 
 이 lab은 bluetape4k-leader 2.0.0-SNAPSHOT의 공개

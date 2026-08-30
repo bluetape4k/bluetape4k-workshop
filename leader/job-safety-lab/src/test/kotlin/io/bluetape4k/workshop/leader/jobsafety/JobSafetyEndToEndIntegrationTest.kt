@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.leader.jobsafety
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.leader.ExtendOutcome
 import io.bluetape4k.workshop.leader.jobsafety.coordination.FenceAcquireResult
 import io.bluetape4k.workshop.leader.jobsafety.coordination.FencingLease
 import io.bluetape4k.workshop.leader.jobsafety.coordination.FencingLeasePort
@@ -29,15 +30,23 @@ import io.bluetape4k.workshop.leader.jobsafety.persistence.JobRolloutMarkerEntit
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobRolloutMarkerRepository
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobSafetyRepositories
 import io.bluetape4k.workshop.leader.jobsafety.support.AbstractJobSafetyIntegrationTest
+import io.micrometer.observation.Observation
+import io.micrometer.observation.ObservationHandler
+import io.micrometer.observation.ObservationRegistry
+import java.util.concurrent.CopyOnWriteArrayList
 import org.junit.jupiter.api.Test
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
+import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
 import java.time.Duration
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
+@Import(JobSafetyEndToEndIntegrationTest.ObservationTestConfiguration::class)
 internal class JobSafetyEndToEndIntegrationTest : AbstractJobSafetyIntegrationTest() {
     @Autowired
     private lateinit var fences: FencingLeasePort
@@ -53,6 +62,9 @@ internal class JobSafetyEndToEndIntegrationTest : AbstractJobSafetyIntegrationTe
 
     @Autowired
     private lateinit var auditReport: JobSafetyAuditReportPort
+
+    @Autowired
+    private lateinit var observationRegistry: ObservationRegistry
 
     @Test
     fun `takeover commits the newer fence and rejects a resumed stale worker`() {
@@ -96,6 +108,57 @@ internal class JobSafetyEndToEndIntegrationTest : AbstractJobSafetyIntegrationTe
 
         repositories.resource.find(CONFLICT_KEY)?.lastAcceptedFence shouldBeEqualTo null
         repositories.resource.find(CONFLICT_KEY)?.summaryValue shouldBeEqualTo 0L
+    }
+
+    @Test
+    fun `real redis lease extension emits user and watchdog observations`() {
+        val handler = CollectingObservationHandler()
+        observationRegistry.observationConfig().observationHandler(handler)
+        val lease = requireNotNull(leaderElection.tryAcquire(JobName("lease-observation")))
+
+        try {
+            val userOutcome = lease.extendViaLockExtender(1.seconds)
+
+            (userOutcome is ExtendOutcome.Extended).shouldBeTrue()
+            await.atMost(5.seconds).untilAsserted {
+                val userObservation = handler.stopped.first { it.low["source"] == "user" }
+                userObservation.name shouldBeEqualTo "bluetape4k.leader.lease.extension"
+                userObservation.low["outcome"] shouldBeEqualTo "extended"
+                userObservation.low["result"] shouldBeEqualTo "success"
+            }
+            await.atMost(7.seconds).untilAsserted {
+                handler.stopped.any {
+                    it.name == "bluetape4k.leader.lease.extension" &&
+                        it.low["source"] == "watchdog"
+                }.shouldBeTrue()
+            }
+        } finally {
+            lease.release()
+        }
+    }
+
+    private class CollectingObservationHandler : ObservationHandler<Observation.Context> {
+        val stopped = CopyOnWriteArrayList<Snapshot>()
+
+        override fun supportsContext(context: Observation.Context): Boolean = true
+
+        override fun onStop(context: Observation.Context) {
+            stopped += Snapshot(
+                name = context.name.orEmpty(),
+                low = context.lowCardinalityKeyValues.associate { it.key to it.value },
+            )
+        }
+    }
+
+    private data class Snapshot(
+        val name: String,
+        val low: Map<String, String>,
+    )
+
+    @TestConfiguration(proxyBeanMethods = false)
+    private class ObservationTestConfiguration {
+        @Bean
+        fun observationRegistry(): ObservationRegistry = ObservationRegistry.create()
     }
 
     private fun seedAuthorityAndResource() {

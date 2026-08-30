@@ -10,12 +10,14 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.FencingOwnerId
 import io.bluetape4k.workshop.leader.jobsafety.domain.FencingToken
 import io.bluetape4k.workshop.leader.jobsafety.domain.JobName
 import io.bluetape4k.workshop.leader.jobsafety.domain.LeaderOwnerId
+import io.bluetape4k.leader.ExtendOutcome
 import java.time.Duration
 
 internal class RecordingLeaderElection(
     private val events: MutableList<String>,
     private val acquired: Boolean = true,
     private val releaseFailure: Boolean = false,
+    private val extensionOutcome: ExtendOutcome = ExtendOutcome.Rejected,
 ) : LeaderElectionPort {
     override fun tryAcquire(jobName: JobName): LeaderLease? {
         events += "leader.acquire"
@@ -23,6 +25,11 @@ internal class RecordingLeaderElection(
 
         return object : LeaderLease {
             override val ownerId: LeaderOwnerId = LeaderOwnerId("leader-owner")
+
+            override fun extendViaLockExtender(lockAtMostFor: kotlin.time.Duration): ExtendOutcome {
+                events += "leader.extend"
+                return extensionOutcome
+            }
 
             override fun release() {
                 events += "leader.release"
