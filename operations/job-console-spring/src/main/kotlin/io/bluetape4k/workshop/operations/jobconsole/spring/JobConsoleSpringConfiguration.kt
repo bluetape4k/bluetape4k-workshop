@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.operations.jobconsole.spring
 
-import io.bluetape4k.concurrent.virtualthread.VirtualThreads
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.workshop.operations.jobconsole.application.BoundedJobEventFanout
 import io.bluetape4k.workshop.operations.jobconsole.application.JobConsoleService
 import io.bluetape4k.workshop.operations.jobconsole.application.JobOutboxPoller

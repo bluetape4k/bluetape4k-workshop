@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.optimization.shiftcoverage.config
 
-import io.bluetape4k.concurrent.virtualthread.VirtualThreads
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageExecutorLifecycle
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageIdempotencyPort
 import io.bluetape4k.workshop.optimization.shiftcoverage.application.ShiftCoverageIdempotencyStore

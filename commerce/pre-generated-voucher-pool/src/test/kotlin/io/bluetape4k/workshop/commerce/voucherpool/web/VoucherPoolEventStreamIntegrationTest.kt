@@ -24,7 +24,7 @@ import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolProperties
 import io.bluetape4k.workshop.commerce.voucherpool.config.VoucherPoolSseProperties
 import io.bluetape4k.workshop.commerce.voucherpool.domain.VoucherPoolPolicy
 import io.bluetape4k.workshop.commerce.voucherpool.persistence.DigestValue
-import io.bluetape4k.concurrent.virtualthread.VirtualThreads
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.jackson3.Jackson
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.awaitility.kotlin.atMost
