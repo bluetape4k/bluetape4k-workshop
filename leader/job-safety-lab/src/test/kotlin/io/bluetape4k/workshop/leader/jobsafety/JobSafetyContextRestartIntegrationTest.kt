@@ -1,8 +1,13 @@
 package io.bluetape4k.workshop.leader.jobsafety
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.leader.audit.LeaderAuditExporter
 import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.testcontainers.storage.RedisServer
+import io.bluetape4k.workshop.leader.jobsafety.config.JobSafetyAuditScope
 import io.bluetape4k.workshop.leader.jobsafety.domain.EffectDeliveryState
 import io.bluetape4k.workshop.leader.jobsafety.domain.OperationId
 import io.bluetape4k.workshop.leader.jobsafety.effect.DeterministicEffect
@@ -27,6 +32,9 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Primary
 import java.time.Instant
+import java.net.http.HttpClient
+import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.ExecutorService
 
 @Tag("integration")
 internal class JobSafetyContextRestartIntegrationTest {
@@ -35,13 +43,34 @@ internal class JobSafetyContextRestartIntegrationTest {
         val operationId = OperationId("restart-operation")
         provider.script(operationId, DeterministicEffect.APPLIED_BUT_TIMEOUT)
 
+        lateinit var auditExporter: LeaderAuditExporter
+        lateinit var auditScope: JobSafetyAuditScope
+        lateinit var auditExecutor: ExecutorService
+        lateinit var auditScheduler: ScheduledThreadPoolExecutor
+        lateinit var auditHttpClient: HttpClient
+
         startContext().use { first ->
+            auditExporter = first.getBean(LeaderAuditExporter::class.java)
+            auditScope = first.getBean("jobSafetyAuditScope", JobSafetyAuditScope::class.java)
+            auditExecutor = first.getBean("jobSafetyAuditExecutor", ExecutorService::class.java)
+            auditScheduler = first.getBean("jobSafetyAuditScheduler", ScheduledThreadPoolExecutor::class.java)
+            auditHttpClient = first.getBean("jobSafetyAuditHttpClient", HttpClient::class.java)
             resetSchema(first)
             seedOutbox(first, operationId)
 
             first.getBean(EffectOperations::class.java).deliverNext() shouldBeEqualTo
                 EffectWorkResult.RECONCILIATION_REQUIRED
         }
+
+        auditExporter.snapshot().closed.shouldBeTrue()
+        auditExporter.snapshot().queued shouldBeEqualTo 0
+        auditExporter.snapshot().inFlight shouldBeEqualTo 0
+        auditExporter.snapshot().scheduledRetries shouldBeEqualTo 0
+        auditScope.isActive.shouldBeFalse()
+        auditExecutor.isTerminated.shouldBeTrue()
+        auditScheduler.isTerminated.shouldBeTrue()
+        auditScheduler.queue.shouldBeEmpty()
+        auditHttpClient.isTerminated.shouldBeTrue()
 
         startContext().use { restarted ->
             val worker = restarted.getBean(EffectOperations::class.java)

@@ -15,6 +15,11 @@ management:
     metrics:
       export:
         enabled: false
+  endpoint:
+    configprops:
+      show-values: never
+    env:
+      show-values: never
 
 workshop:
   job-safety:
@@ -31,3 +36,16 @@ workshop:
       claim-timeout: 30s
     lab:
       unsafe-enabled: false
+    audit:
+      transport: MEMORY
+      queue-capacity: 32
+      max-in-flight: 4
+      max-attempts: 3
+      attempt-timeout: 2s
+      initial-backoff: 100ms
+      max-backoff: 1s
+      max-payload-bytes: 65536
+      recent-history-limit: 32
+      recent-history-byte-budget: 524288
+      max-buffered-bytes: 75497472
+      shutdown-timeout: 2s

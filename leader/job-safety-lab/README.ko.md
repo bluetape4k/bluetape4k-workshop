@@ -246,6 +246,48 @@ observation bean을 제거하거나 override한 뒤 observation auto-configurati
 사용할 수 있습니다. 이 lab은 Redis leader와 PostgreSQL fencing 경계를 명확히
 보여주기 위해 recorder와 listener를 수동으로 연결합니다.
 
+## Leader audit export
+
+이 lab은 bluetape4k-leader 2.0.0-SNAPSHOT의 공개
+`LeaderAuditExporter`를 실제 Redis acquire/release lifecycle에 연결합니다. 기본
+`MEMORY` transport는 startup 시 외부 DNS 조회, socket 연결, credential 사용을
+하지 않습니다. operator report에는 bounded redacted JSON만 남기며,
+`MicrometerLeaderAuditExporter`로 queue, retry, drop, failure, cancellation을
+고정된 low-cardinality 신호로 확인합니다.
+
+operator 전용 endpoint는 다음과 같습니다.
+
+```bash
+curl -u operator:change-me http://localhost:8080/api/job-safety/audit
+```
+
+응답에는 transport, bounded recent event, retained byte counter, exporter
+snapshot, 고정 meter 이름만 포함됩니다. endpoint, `Authorization`, token,
+raw lock/node/slot/leader/customer/tenant 식별자, raw exception text는 반환하지
+않습니다. `ACCEPTED`는 exporter가 bounded queue에 event를 admission했다는
+뜻이며 원격 audit system이 받았다는 뜻이 아닙니다. `DROPPED_QUEUE_FULL`,
+retry, terminal failure, cancellation은 snapshot에서 확인할 수 있습니다.
+
+외부 전송은 명시적인 trusted HTTPS opt-in입니다. endpoint host가 exact
+allow-list에 있어야 하며 허용하는 header는 `Authorization` 하나입니다.
+
+```bash
+export AUDIT_TOKEN='replace-me'
+WORKSHOP_JOB_SAFETY_AUDIT_TRANSPORT=HTTPS \
+WORKSHOP_JOB_SAFETY_AUDIT_ENDPOINT=https://audit.example.test/hook \
+WORKSHOP_JOB_SAFETY_AUDIT_ALLOWED_HOSTS=audit.example.test \
+WORKSHOP_JOB_SAFETY_AUDIT_HEADERS_AUTHORIZATION="Bearer ${AUDIT_TOKEN}" \
+./gradlew :leader-job-safety-lab:bootRun
+```
+
+adapter는 HTTP, user-info, query/fragment, localhost, IP literal, exact
+allow-list 밖의 host를 거부합니다. DNS rebinding과 private-address egress는
+이 workshop 바깥의 controlled resolver, proxy, network policy가 책임져야
+합니다. Export는 best-effort이며 PostgreSQL history, exactly-once delivery,
+business outbox를 대체하지 않습니다. context가 닫힐 때 하나의 bounded
+shutdown coordinator가 subscription, exporter, HTTP client, scheduler,
+executor, coroutine scope를 순서대로 종료합니다.
+
 ## 테스트
 
 ```bash
@@ -260,6 +302,9 @@ observation bean을 제거하거나 override한 뒤 observation auto-configurati
 | --- | --- |
 | Leader 0.5.0 lifecycle observation과 sanitized identifier | `JobRunCoordinatorTest` |
 | Java 25 virtual thread와 안전 기본값 | `JobSafetyRuntimeContractTest`, `JobSafetyPropertiesTest` |
+| 2.0.0-SNAPSHOT audit export, redaction, bounds, trusted HTTPS | `JobSafetyAuditPropertiesTest`, `JobSafetyAuditPayloadEncoderTest`, `JobSafetyAuditExporterTest`, `JobSafetyAuditReportServiceTest` |
+| single-owner bounded shutdown과 cancellation | `JobSafetyAuditShutdownCoordinatorTest`, `JobSafetyContextRestartIntegrationTest` |
+| PostgreSQL authority를 유지하는 실제 Redis lifecycle export | `JobSafetyEndToEndIntegrationTest` |
 | opaque leader token 분리 | `RedisLeaderElectionAdapterTest` |
 | Lua token 단조 증가, renew/release owner binding, script flush | `RedisJobFencingLeaseIntegrationTest` |
 | fence 42 commit 후 fence 41 reject | `FencedMutationPostgresIntegrationTest`, `JobSafetyEndToEndIntegrationTest` |
@@ -275,6 +320,9 @@ observation bean을 제거하거나 override한 뒤 observation auto-configurati
 - 이 모듈은 single Redis deployment를 사용합니다. multi-region에서 하나의 global fencing history가 필요하면 Redis topology와 PostgreSQL write-home 설계를 함께 검증해야 합니다.
 - 예제의 `SchemaUtils`는 개발용입니다. production migration, backup, namespace epoch 변경 runbook은 별도로 운영해야 합니다.
 - in-memory scenario reset은 상태를 지울 필요가 없습니다. 실제 운영 reset endpoint는 승인, 감사, scope 제한, dry-run을 추가해야 합니다.
+- audit report는 authoritative history나 delivery receipt가 아닌 bounded observation view입니다. `MEMORY`는 의도적으로 local이며 `HTTPS`는 opt-in입니다.
+- HTTPS adapter는 DNS rebinding이나 private-network egress를 직접 차단하지 않으므로 allow-listed resolver 또는 egress proxy 뒤에 배치해야 합니다.
+- payload의 식별자와 exception message는 redaction하지만 upstream history recorder의 warning log는 이 adapter 범위 밖입니다.
 
 관련 자료:
 

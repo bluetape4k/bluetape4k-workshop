@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.leader.jobsafety
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.workshop.leader.jobsafety.coordination.FenceAcquireResult
 import io.bluetape4k.workshop.leader.jobsafety.coordination.FencingLease
 import io.bluetape4k.workshop.leader.jobsafety.coordination.FencingLeasePort
@@ -20,6 +21,8 @@ import io.bluetape4k.workshop.leader.jobsafety.domain.RegionId
 import io.bluetape4k.workshop.leader.jobsafety.domain.TenantId
 import io.bluetape4k.workshop.leader.jobsafety.execution.FencedJobExecutionService
 import io.bluetape4k.workshop.leader.jobsafety.execution.FencedJobRequest
+import io.bluetape4k.workshop.leader.jobsafety.audit.JobSafetyAuditReportPort
+import io.bluetape4k.workshop.leader.jobsafety.coordination.LeaderElectionPort
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobAssignmentEntity
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobResourceEntity
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobRolloutMarkerEntity
@@ -27,9 +30,13 @@ import io.bluetape4k.workshop.leader.jobsafety.persistence.JobRolloutMarkerRepos
 import io.bluetape4k.workshop.leader.jobsafety.persistence.JobSafetyRepositories
 import io.bluetape4k.workshop.leader.jobsafety.support.AbstractJobSafetyIntegrationTest
 import org.junit.jupiter.api.Test
+import org.awaitility.kotlin.atMost
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.untilAsserted
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.Duration
 import java.time.Instant
+import kotlin.time.Duration.Companion.seconds
 
 internal class JobSafetyEndToEndIntegrationTest : AbstractJobSafetyIntegrationTest() {
     @Autowired
@@ -40,6 +47,12 @@ internal class JobSafetyEndToEndIntegrationTest : AbstractJobSafetyIntegrationTe
 
     @Autowired
     private lateinit var repositories: JobSafetyRepositories
+
+    @Autowired
+    private lateinit var leaderElection: LeaderElectionPort
+
+    @Autowired
+    private lateinit var auditReport: JobSafetyAuditReportPort
 
     @Test
     fun `takeover commits the newer fence and rejects a resumed stale worker`() {
@@ -58,6 +71,31 @@ internal class JobSafetyEndToEndIntegrationTest : AbstractJobSafetyIntegrationTe
         staleResult.rejection shouldBeEqualTo JobRejectionReason.STALE_FENCE
         repositories.resource.find(CONFLICT_KEY)?.lastAcceptedFence shouldBeEqualTo current.token
         repositories.resource.find(CONFLICT_KEY)?.summaryValue shouldBeEqualTo 42L
+    }
+
+    @Test
+    fun `real redis leader lifecycle is exported while postgres remains authoritative`() {
+        seedAuthorityAndResource()
+
+        val lease = leaderElection.tryAcquire(JobName("audit-report"))
+            ?: error("expected audit-report leader lease")
+        lease.release()
+
+        await
+            .atMost(5.seconds)
+            .untilAsserted {
+                val report = auditReport.report()
+                report.transport shouldBeEqualTo "MEMORY"
+                (report.snapshot.accepted >= 4L).shouldBeTrue()
+                report.recentEvents.any { it.path("kind").asText() == "SINGLE" }.shouldBeTrue()
+                report.recentEvents.none { event ->
+                    event.toString().contains("job-safety:audit-report") ||
+                        event.toString().contains("audit-report")
+                }.shouldBeTrue()
+            }
+
+        repositories.resource.find(CONFLICT_KEY)?.lastAcceptedFence shouldBeEqualTo null
+        repositories.resource.find(CONFLICT_KEY)?.summaryValue shouldBeEqualTo 0L
     }
 
     private fun seedAuthorityAndResource() {

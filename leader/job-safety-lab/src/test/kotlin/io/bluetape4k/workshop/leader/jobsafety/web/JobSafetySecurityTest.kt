@@ -13,6 +13,7 @@ import org.springframework.mock.web.MockServletContext
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
@@ -78,6 +79,26 @@ internal class JobSafetySecurityTest {
         }
     }
 
+    @Test
+    fun `viewer cannot read audit report`() {
+        mvc.get("/api/job-safety/audit") {
+            with(user("viewer").roles("JOB_SAFETY_VIEWER"))
+        }.andExpect {
+            status { isForbidden() }
+        }
+    }
+
+    @Test
+    fun `operator can read audit report`() {
+        mvc.get("/api/job-safety/audit") {
+            with(user("operator").roles(JobSafetySecurityConfiguration.OPERATOR_ROLE))
+        }.andExpect {
+            status { isOk() }
+            jsonPath("$.transport") { value("MEMORY") }
+            jsonPath("$.endpoint") { doesNotExist() }
+        }
+    }
+
     @Configuration(proxyBeanMethods = false)
     @EnableWebMvc
     @Import(JobSafetyController::class, JobSafetySecurityConfiguration::class)
@@ -92,5 +113,8 @@ internal class JobSafetySecurityTest {
 
                 override fun reconcileNext(): EffectWorkResult = EffectWorkResult.NO_WORK
             }
+
+        @Bean
+        fun auditReportPort() = testAuditReportPort()
     }
 }

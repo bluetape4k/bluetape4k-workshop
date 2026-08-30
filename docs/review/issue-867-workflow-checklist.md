@@ -30,21 +30,32 @@ worktree와 현재 head에서 다시 읽는다.
   - **Action:** HTTP trust, retry/backpressure, cancellation, shutdown/resource 위험과 신호·완화·재실행 지점을 기록한다.
   - **Evidence:** plan Step 3-P `RISK-01~04`, Task 5 aggregate shutdown coordinator, trusted HTTPS/header gates, retry/drop signals, rollback/rerun points.
   - **Failure:** 위험 항목이 완성될 때까지 구현을 시작하지 않는다.
-- [ ] **A-06 — TDD 구현**
+- [x] **A-06 — TDD 구현**
   - **Action:** 각 동작에 대해 RED/GREEN/REFACTOR를 순서대로 수행하고 Kotlin 규칙을 적용한다.
-  - **Evidence:** failing test output, passing test output, scoped diff.
+  - **Evidence:** delegated properties/payload/exporter lanes의 초기 계약 부재 실패 보고 후
+    `:leader-job-safety-lab:test` targeted audit suite가 `BUILD SUCCESSFUL`로 전환됐고,
+    report snapshot 일관성·Spring context restart 종료 assertion을 추가한 뒤 관련 테스트를
+    재실행했다. 현재 diff는 audit package/config/web/test/docs의 scoped change다.
   - **Failure:** 기대한 원인으로 실패하지 않으면 테스트·설계를 먼저 고친다.
-- [ ] **A-07 — 테스트와 저장소 위험 검증**
+- [x] **A-07 — 테스트와 저장소 위험 검증**
   - **Action:** targeted test, module check, detekt, diff/readme/workflow/stale checks를 실행한다.
-  - **Evidence:** fresh commands, results, verifier mapping.
+  - **Evidence:** module unit 88 tests/0 failed/0 skipped, serialized integration 12 tests/0
+    failed/0 skipped, `:leader-job-safety-lab:check` 및 `scripts/smoke-validate.sh leader-full`
+    PASS. `node scripts/validate-job-safety-lab-readme.mjs`, `git diff --check`,
+    `scripts/smoke-validate.sh stale-check`(131 modules, stale 0, registration missing 0,
+    broken image 0) PASS. root task graph에 `detekt` task가 없어 detekt는 N/A로 기록했다.
   - **Failure:** 실패 원인을 진단하고 Step 4로 되돌아간다.
-- [ ] **A-08 — pre-PR review 수렴**
+- [x] **A-08 — pre-PR review 수렴**
   - **Action:** 최종 Kotlin checklist와 여섯 code-review 관점을 실행하고 P0/P1을 제거한다.
-  - **Evidence:** current diff, review artifact, SPW-01~05, P0=0/P1=0, head SHA.
+  - **Evidence:** `docs/review/2026-08-30-issue-867-pre-pr.md`의 API/Ops/Stability/Performance/Security/User
+    여섯 관점과 현재 diff read-back, SPW-01~05, P0=0/P1=0/P2=0/P3=0. 기준 head는
+    다음 Lore commit으로 고정한다.
   - **Failure:** PR 생성과 push를 막고 수정·재검증한다.
-- [ ] **A-09 — lesson commit**
+- [x] **A-09 — lesson commit**
   - **Action:** 재발 방지 lesson을 작성하고 Lore 형식으로 commit한다.
-  - **Evidence:** tracked lesson path, SPW-01~05, commit SHA.
+  - **Evidence:** `docs/lessons/2026-08-30-issue-867-leader-audit-export.md`와
+    `docs/lessons/README.md` index를 작성했고, 최종 구현 commit에 Lore trailers를
+    포함한다.
   - **Failure:** lesson을 보완할 때까지 PR을 만들지 않는다.
 - [ ] **A-10 — PR·CI delivery**
   - **Action:** PR authority를 확인하고 exact head를 push·생성한 뒤 live metadata와 CI를 읽는다.
@@ -96,38 +107,57 @@ worktree와 현재 head에서 다시 읽는다.
 
 ## Conditional hazard branches
 
-- [ ] **HAZ-MOD-01 — module registration**
+- [x] **HAZ-MOD-01 — module registration**
   - **Action:** 새 module이 없음을 확인하고 existing module registration chain을 검사한다.
-  - **Evidence:** settings, matrix, workflow, stale-check, `./gradlew projects`.
+  - **Evidence:** 새 module 없이 기존 `leader/job-safety-lab`을 확장했다. `gradlew projects`의
+    131 project graph와 stale-check required registration PASS, coverage matrix/Examples/smoke
+    path read-back PASS.
   - **Failure:** 누락된 registration을 보완한다.
-- [ ] **HAZ-CAT-01 — BOM/catalog**
+- [x] **HAZ-CAT-01 — BOM/catalog**
   - **Action:** 새 alias가 versionless이고 root dependencies BOM이 유일한 authority인지 확인한다.
-  - **Evidence:** catalog/build file/dependency report.
+  - **Evidence:** `gradle/libs.versions.toml`의 leader/Jackson aliases에 version이 없고,
+    root `build.gradle.kts`가 `platform(rootLibs.bluetape4k.dependencies)`를 import한다.
+    module은 `implementation(libs.bluetape4k.jackson3)`만 추가했으며 개별 BOM/버전을 pin하지
+    않는다.
   - **Failure:** 직접 버전 고정을 제거한다.
-- [ ] **HAZ-HTTP-01 — HTTP/HTTPS lifecycle**
+- [x] **HAZ-HTTP-01 — HTTP/HTTPS lifecycle**
   - **Action:** trusted HTTPS validation, allow-listed headers, timeout, status, cancellation, close를 테스트한다.
-  - **Evidence:** fake client/server tests and source inspection.
+  - **Evidence:** `JobSafetyAuditPropertiesTest`의 HTTPS URI/host/header fail-closed,
+    `JobSafetyAuditExporterTest`의 429 retry/400 terminal/cancel/close, `InMemoryAuditHttpClient`
+    의 Java 25 bounded lifecycle, `JobSafetyAuditShutdownCoordinatorTest`의 종료 순서와
+    `JobSafetyContextRestartIntegrationTest`의 실제 bean termination PASS.
   - **Failure:** trust/lifecycle gap을 보완한다.
-- [ ] **HAZ-WORKFLOW-01 — workflow/stale coverage**
+- [x] **HAZ-WORKFLOW-01 — workflow/stale coverage**
   - **Action:** leader job-safety path가 Examples/smoke/stale checks에 등록됐는지 확인한다.
-  - **Evidence:** YAML/actionlint/smoke/stale output.
+  - **Evidence:** `.github/workflows/Examples.yml`의 leader path filter/test/artifact,
+    `scripts/smoke-validate.sh`의 `leader-full`/`all-smoke`, stale-check 및 README validator
+    를 read-back했고 helper 실행 결과가 PASS했다. workflow 등록 변경은 불필요했다.
   - **Failure:** registration을 보완하고 workflow를 재검증한다.
 
 ## Step 3-P risk prediction
 
-- [ ] **RISK-01 — bounded queue/backpressure**
+- [x] **RISK-01 — bounded queue/backpressure**
   - **Signal:** `DROPPED_QUEUE_FULL`, queue depth, admission count.
   - **Mitigation:** upstream bounded exporter options with small deterministic test capacity.
   - **Rollback/rerun:** default transport remains local memory fake; rerun exporter tests serially.
-- [ ] **RISK-02 — HTTPS trust and secret leakage**
+  - **Evidence:** `JobSafetyAuditExporterTest` queue capacity 1에서 `DROPPED_QUEUE_FULL`,
+    snapshot admission/queue 상태와 bounded payload store 테스트 PASS.
+- [x] **RISK-02 — HTTPS trust and secret leakage**
   - **Signal:** non-HTTPS endpoint, disallowed header, raw token/customer/exception in payload.
   - **Mitigation:** `LeaderAuditTrustedHttpsEndpoint`, default sanitizer, allow-listed headers, redaction assertions.
   - **Rollback/rerun:** omit endpoint and use memory transport; rerun security tests.
-- [ ] **RISK-03 — context shutdown/cancellation**
+  - **Evidence:** properties exact allow-list/URI rejection, authorization redaction, encoder
+    raw identity/exception exclusion 및 operator security tests PASS.
+- [x] **RISK-03 — context shutdown/cancellation**
   - **Signal:** non-zero queue/in-flight after close, unclosed executor, swallowed cancellation.
   - **Mitigation:** Spring dependency ownership, upstream close contract, cancellation tests.
   - **Rollback/rerun:** close exporter before executors and run fresh module check.
-- [ ] **RISK-04 — local history semantics**
+  - **Evidence:** shutdown coordinator trace가 subscription→exporter→client→scheduler→executor→scope
+    순서로 한 번 실행되고, context restart 뒤 queue/in-flight/scheduledRetries=0 및 resources
+    terminated를 확인했다.
+- [x] **RISK-04 — local history semantics**
   - **Signal:** export sink returns no key or changes PostgreSQL authority.
   - **Mitigation:** admission-only bounded sink documented as non-authoritative; existing JDBC execution remains unchanged.
   - **Rollback/rerun:** remove sink wiring while retaining existing job-safety persistence paths.
+  - **Evidence:** `AdmissionOnlyLeaderHistorySink`는 key admission 외 저장을 하지 않고,
+    end-to-end test가 PostgreSQL resource fence/summary authority 불변을 확인했다.

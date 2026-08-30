@@ -118,6 +118,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | bluetape4k lib | Existing example | Coverage | Gap | Proposed Basic | Proposed Advanced | Issue |
 |----------------|-----------------|----------|-----|----------------|-------------------|-------|
 | `bluetape4k-leader` (Redis) | `leader-leader-election` | ✅ Good | virtual thread variant가 덜 두드러짐 | — | health endpoint가 있는 leader election | — |
+| `bluetape4k-leader` audit exporter | `leader/job-safety-lab` | ✅ Good | Redis acquire/release lifecycle과 bounded audit export 경계가 없었음 | `MEMORY` redacted report와 queue/drop/retry snapshot | trusted HTTPS endpoint, allow-list/header 검증, bounded shutdown | #867 |
 | Rate limiting | `ratelimit-*` | ✅ Good | adaptive rate limit 미노출 | — | sliding window를 쓰는 Adaptive Bucket4j + Redis | — |
 | Spring Cloud Gateway | `gateway-api-gateway` | ⚠️ Partial | circuit breaker filter 미노출 | — | Gateway + Resilience4j circuit breaker filter | — |
 | Spring Modulith | `spring-modulith-*` | ⚠️ Partial | module testing isolation 미노출 | — | bounded context별 Modulith ApplicationModuleTest | — |

@@ -44,6 +44,7 @@ const commands = [
   "./gradlew :leader-job-safety-lab:test",
   "./gradlew :leader-job-safety-lab:integrationTest --max-workers=1",
   "/api/job-safety/scenarios/LEASE_OVERRUN/run",
+  "/api/job-safety/audit",
   "/api/job-safety/effects/deliver",
   "/api/job-safety/effects/reconcile",
   "/api/job-safety/scenarios/LEASE_OVERRUN/reset",

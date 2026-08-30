@@ -16,6 +16,7 @@ directory unless they have been deliberately promoted.
 
 Recent delivery lessons:
 
+- [Issue #867 leader audit export 경계](2026-08-30-issue-867-leader-audit-export.md)
 - [Issue #865 strict external image decode](2026-08-30-issue-865-strict-image-decode.md)
 - [Issue #863 graph-io checkpoint/resume 소비자 경계](2026-08-29-issue-863-graphio-checkpoint.md)
 - [Issue #864 Kinesis consumerFlow checkpoint/lease 경계](2026-08-30-issue-864-kinesis-consumer.md)

@@ -46,7 +46,20 @@ internal class JobSafetyReadmeContractTest {
         private val GUARANTEES =
             listOf("mutual exclusion", "failover", "replay safety", "fencing", "durable completion")
         private val REQUIRED_TERMS =
-            listOf("Java 25", "Spring Boot", "ExposedJdbcRepository", "PostgreSQL", "Redis", "operator")
+            listOf(
+                "Java 25",
+                "Spring Boot",
+                "ExposedJdbcRepository",
+                "PostgreSQL",
+                "Redis",
+                "operator",
+                "LeaderAuditExporter",
+                "MicrometerLeaderAuditExporter",
+                "MEMORY",
+                "HTTPS",
+                "/api/job-safety/audit",
+                "DROPPED_QUEUE_FULL",
+            )
         private val DIAGRAMS =
             listOf(
                 "leader-job-safety-lab-architecture-01.png",

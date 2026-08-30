@@ -32,5 +32,9 @@ internal class JobSafetyRuntimeContractTest {
         properties.getProperty("spring.datasource.hikari.maximum-pool-size") shouldBeEqualTo "12"
         properties.getProperty("workshop.job-safety.fencing.lease-ttl") shouldBeEqualTo "5s"
         properties.getProperty("workshop.job-safety.timeline-limit") shouldBeEqualTo "128"
+        properties.getProperty("workshop.job-safety.audit.transport") shouldBeEqualTo "MEMORY"
+        properties.getProperty("workshop.job-safety.audit.max-payload-bytes") shouldBeEqualTo "65536"
+        properties.getProperty("workshop.job-safety.audit.recent-history-byte-budget") shouldBeEqualTo "524288"
+        properties.getProperty("workshop.job-safety.audit.shutdown-timeout") shouldBeEqualTo "2s"
     }
 }
