@@ -8,4 +8,27 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,leaderBackendDiagnostics
+  endpoint:
+    leaderBackendDiagnostics:
+      enabled: true
+    health:
+      show-details: always
+
+workshop:
+  leader:
+    backend-id: redis-lettuce
+    probe-outcome: UNKNOWN
+
+bluetape4k:
+  leader:
+    observability:
+      tracing:
+        # 이 lab은 명시적인 leader-micrometer decorator에 집중하며 tracing은 opt-in입니다.
+        enabled: false
+      backend-health:
+        # 실제 probe는 예제 실행 시 명시적으로 켭니다. 기본 smoke는 passive입니다.
+        enabled: false
+        timeout: 250ms
+      # blocking/suspend local fallback이 함께 있어도 이 lab elector를 관찰 대상으로 고정합니다.
+      state-provider-bean: workshopLeaderElector

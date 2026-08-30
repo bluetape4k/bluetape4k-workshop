@@ -85,7 +85,9 @@ upstream `bluetape4k-leader`의 현재 `develop`에는 다음 계약이 있습�
 `leader-spring-boot` auto-configuration은 위 elector를 non-local
 `LeaderElectionState` 후보로 선택한다. 따라서 local suspend fallback이 함께
 생겨도 diagnostics endpoint와 health indicator는 명시적으로 만든 profile
-provider를 사용한다.
+provider를 사용한다. 샘플은
+`bluetape4k.leader.observability.state-provider-bean=workshopLeaderElector`를
+명시해 selector의 backend-name heuristic에 의존하지 않는다.
 
 ### Descriptor 매핑
 
@@ -110,6 +112,8 @@ catalog의 기존 display name, capability 설명, practice module 링크는 그
   indicator가 bounded probe를 실행한다. timeout은
   `bluetape4k.leader.observability.backend-health.timeout`으로 설정한다.
 - web exposure에는 `health,info,leaderBackendDiagnostics`를 명시한다.
+- `state-provider-bean`은 blocking diagnostics provider bean을 명시해 local
+  suspend fallback과 공존하는 selector가 모호해지지 않도록 한다.
 - 기본 endpoint 호출은 probe를 실행하지 않으므로 network I/O가 없다.
 - response와 health detail에는 backend id, status, bounded reason, checkedAt,
   latency만 남긴다. exception message, endpoint, token, credential은 저장하거나

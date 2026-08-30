@@ -225,6 +225,7 @@ bluetape4k-kafka = { module = "io.github.bluetape4k:bluetape4k-kafka" }
 bluetape4k-kafka4 = { module = "io.github.bluetape4k:bluetape4k-kafka4" }
 bluetape4k-lettuce = { module = "io.github.bluetape4k:bluetape4k-lettuce" }
 bluetape4k-leader-core = { module = "io.github.bluetape4k.leader:bluetape4k-leader-core" }
+bluetape4k-leader-spring-boot = { module = "io.github.bluetape4k.leader:bluetape4k-leader-spring-boot" }
 bluetape4k-leader-k8s = { module = "io.github.bluetape4k.leader:bluetape4k-leader-k8s" }
 bluetape4k-leader-micrometer = { module = "io.github.bluetape4k.leader:bluetape4k-leader-micrometer" }
 bluetape4k-leader-redis-lettuce = { module = "io.github.bluetape4k.leader:bluetape4k-leader-redis-lettuce" }
@@ -555,6 +556,7 @@ lz4-java = { module = "at.yawk.lz4:lz4-java", version.ref = "lz4" }
 zstd-jni = { module = "com.github.luben:zstd-jni", version = "1.5.7-11" }  # https://mvnrepository.com/artifact/com.github.luben/zstd-jni
 
 # Reactor
+reactive-streams = { module = "org.reactivestreams:reactive-streams" }
 reactor-core = { module = "io.projectreactor:reactor-core" }
 reactor-netty = { module = "io.projectreactor.netty:reactor-netty" }
 reactor-test = { module = "io.projectreactor:reactor-test" }

@@ -24,6 +24,48 @@ action failure, backend-loss handoff를 결정론적인 report로 만듭니다. 
 테스트는 Redis, ZooKeeper, Kubernetes, LocalStack이나 다른 인프라를 시작하지
 않습니다.
 
+이 lab은 `bluetape4k-leader` 2.0.0-SNAPSHOT의 diagnostics SPI도 연결합니다.
+`ProfiledLeaderElector`가 선택한 profile을 Spring Boot Actuator endpoint에
+제공하고 `leader-micrometer` instrumentation으로 감쌉니다. leader operation은
+local elector에 위임하므로 client를 만들거나 네트워크 연결을 열지 않고 새
+observability 표면을 확인할 수 있습니다. 이 예제는 명시적인 backend
+diagnostics decorator에 집중하므로 Micrometer Observation tracing은 기본
+비활성화되어 있으며, diagnostics endpoint와 health probe는 그대로 사용할 수
+있습니다.
+
+## Diagnostics, Health, Metrics
+
+passive diagnostics endpoint는 기본 활성화되지만 백엔드 호출을 실행하지
+않습니다.
+
+```bash
+./gradlew :leader-backend-comparison-lab:bootRun
+curl http://localhost:8080/actuator/leaderBackendDiagnostics
+```
+
+응답에는 선택한 backend descriptor와 `connectivity.status=NOT_CHECKED`가
+포함됩니다. 이 기본값은 smoke test와 startup inspection에 안전합니다. 예제는
+`bluetape4k.leader.observability.state-provider-bean=workshopLeaderElector`를
+명시해 함께 존재하는 local suspend fallback보다 blocking diagnostics
+provider를 우선 선택합니다. active connectivity probe는 명시적으로 켜야 하며,
+예제 설정에서는 `250ms` bounded timeout을 사용합니다.
+
+```bash
+./gradlew :leader-backend-comparison-lab:bootRun \
+  --args='--bluetape4k.leader.observability.backend-health.enabled=true --workshop.leader.probe-outcome=UP'
+curl http://localhost:8080/actuator/health
+```
+
+자격 증명 없이 bounded probe와 health mapping을 확인하려면
+`workshop.leader.probe-outcome`을 `DOWN`, `UNKNOWN`, `UNSUPPORTED`, `EXCEPTION`,
+`CANCELLED`로 바꿔 실행합니다. health indicator는 `UP`/`DOWN`을 Spring status로
+매핑하고, unsupported·uncertain·failed·cancelled 결과는 `UNKNOWN`으로
+유지합니다. Micrometer decorator는 low-cardinality
+`leader.backend.connectivity` counter에 `backend.name`, `status`, `reason` tag를
+기록합니다. 이 예제는 credential, raw endpoint, write/action operation을
+의도적으로 다루지 않으므로 실제 connectivity와 failover 검증은 백엔드별
+practice module에서 수행합니다.
+
 ## Scenario Flow
 
 ![Leader backend comparison lab sequence](../../docs/images/readme-diagrams/leader-backend-comparison-lab-readme-sequence-01.png)
@@ -87,6 +129,9 @@ service-account credential, 네트워크 백엔드 서비스 없이 smoke valida
 |------------|------------------|
 | `LeaderBackendCatalogTest` | backend ID, status, failover trigger, metrics/events, practice-module link, unknown-ID validation을 보호합니다. |
 | `LeaderFailoverLabTest` | scenario ordering, follower skip report, action-failure recovery, backend-specific handoff summary를 보호합니다. |
+| `LeaderBackendDiagnosticsProviderTest` | descriptor capability, passive `NOT_CHECKED`, bounded probe status/reason mapping, timeout validation, cancellation propagation을 보호합니다. |
+| `LeaderBackendDiagnosticsPropertiesTest` | credential-free 기본값과 unknown backend fail-closed 선택을 보호합니다. |
+| `LeaderBackendDiagnosticsContextTest` | Actuator opt-out, passive endpoint, opt-in health mapping, cancellation safety, low-cardinality Micrometer tag를 보호합니다. |
 
 ## Production Boundaries
 
@@ -100,8 +145,17 @@ exercise가 필요합니다.
 ```kotlin
 implementation(libs.bluetape4k.core)
 implementation(libs.bluetape4k.leader.core)
+implementation(libs.bluetape4k.leader.spring.boot)
+implementation(libs.bluetape4k.leader.micrometer)
 implementation(libs.bluetape4k.logging)
 implementation(libs.spring.boot.starter.actuator)
+implementation(libs.spring.boot.starter.webmvc.lib)
+runtimeOnly(libs.reactive.streams)
+runtimeOnly(libs.reactor.core)
 testImplementation(libs.bluetape4k.assertions)
 testImplementation(libs.bluetape4k.junit5)
 ```
+
+`reactive-streams`와 `reactor-core`는 현재 2.0.0-SNAPSHOT 조건부
+auto-configuration classpath를 만족하기 위한 versionless BOM 관리 runtime
+bridge입니다. 이 MVC lab에서 WebFlux 서버를 활성화하지는 않습니다.

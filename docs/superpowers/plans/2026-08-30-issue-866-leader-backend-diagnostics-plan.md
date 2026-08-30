@@ -128,7 +128,10 @@ descriptive backtick 이름을 사용한다. `assertThrows`나 `!!`는 사용하
 5. configuration은 `ProfiledLeaderElector`를 `InstrumentedLeaderElector`로
    감싸고 `MeterRegistry`를 주입한다. bean return type은 `LeaderElector`로
    선언해 `LocalLeaderConfiguration`의 local blocking fallback을 대체한다.
-6. `BackendComparisonLabApp`가 configuration을 import한다. public KDoc은
+6. `bluetape4k.leader.observability.state-provider-bean`을
+   `workshopLeaderElector`로 고정해 local suspend fallback과 공존할 때도
+   selector가 명시적으로 같은 provider를 선택하게 한다.
+7. `BackendComparisonLabApp`가 configuration을 import한다. public KDoc은
    한국어로 작성하고 기존 package prefix를 유지한다.
 
 구현 중 각 red 테스트만 통과시키는 최소 수정으로 진행하고, broad catch에서
@@ -178,7 +181,8 @@ descriptive backtick 이름을 사용한다. `assertThrows`나 `!!`는 사용하
 1. dependencies 예제에 두 alias를 추가한다.
 2. `/actuator/leaderBackendDiagnostics`, `/actuator/health` 호출 예제와
    `workshop.leader.backend-id`, `workshop.leader.probe-outcome`,
-   `bluetape4k.leader.observability.backend-health.timeout` 설정을 두 locale에
+   `bluetape4k.leader.observability.backend-health.timeout`과
+   `bluetape4k.leader.observability.state-provider-bean` 설정을 두 locale에
    같은 순서로 설명한다.
 3. passive `NOT_CHECKED`와 active 상태 표, bounded reason, metric tag,
    민감정보 비노출, 실제 backend로 이동하는 경계를 명시한다.
