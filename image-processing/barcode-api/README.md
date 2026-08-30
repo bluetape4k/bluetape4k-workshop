@@ -2,15 +2,21 @@
 
 [한국어](README.ko.md) | English
 
-This Spring Boot example consumes the released `bluetape4k-images` 0.4.0 barcode API through the
-`bluetape4k-dependencies` 1.4.0 BOM. It keeps the application code provider-neutral and wires the
-ZXing implementation only at the configuration boundary.
+This Spring Boot example consumes the `bluetape4k-images` barcode API through the
+`bluetape4k-dependencies` `2.0.0-SNAPSHOT` BOM. Individual Bluetape module versions remain
+versionless in the catalog. The application code stays provider-neutral and wires the ZXing
+implementation only at the configuration boundary.
 
 ## What it demonstrates
 
 - `ImmutableImage.extractBarcodes(reader)` with `BarcodeReader` and `BarcodeResult`.
-- Encoded byte, decoded side, and decoded pixel limits before provider invocation.
-- PNG, JPEG, and WebP content-type validation with cancellation-safe multipart reads.
+- `immutableExternalImageOf(bytes, ImageDecodeLimits)` as the final bounded decode boundary before
+  a provider can inspect pixels. The helper rejects oversized encoded input and unknown or
+  oversized dimensions before an unrestricted decoder call.
+- A bounded dimension/metadata preflight that preserves the example's stable HTTP `413` response;
+  the strict helper remains the final defense after that preflight.
+- PNG, JPEG, and WebP decoding, malformed/unknown-dimension rejection, and cancellation-safe
+  multipart reads.
 - Deterministic `/sample`, `/no-result`, and `/malformed` routes for smoke tests.
 
 ## Run
@@ -22,3 +28,5 @@ ZXing implementation only at the configuration boundary.
 
 The HTTP surface is `POST /api/barcodes/extract` with a multipart `file` part. The fixture routes
 are intentionally deterministic and are for learning and contract tests, not production uploads.
+The service maps its own size preflight failures to HTTP `413`, while preserving provider-neutral
+`BarcodeException` failures and coroutine cancellation.

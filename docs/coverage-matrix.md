@@ -127,7 +127,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | AWS settings boundary | `aws/settings-boundary` | ✅ Good | provider-neutral startup/refresh와 redaction 경계가 없었음 | Secrets Manager/secure Parameter Store fake lookup과 fallback | full-replacement refresh 및 명시적 live AWS factory | #742 |
 | `bluetape4k-aws-java` Kinesis consumer | `aws/kinesis-coroutines` | ✅ Good | multi-shard discovery, bounded concurrency, checkpoint/lease fencing 미노출 | credential-free 2-shard `consumerFlow`와 emit 후 checkpoint | real AWS consumer group과 durable checkpoint/lease adapter | #864 |
 | `bluetape4k-images` / `bluetape4k-images-spring-boot` | `image-processing/advanced-workflow`, `image-processing/ocr-api`, `image-processing/profile-image-moderation` | ✅ Good | — | — | private original, blurred pending image, default fallback을 포함한 profile upload moderation | — |
-| `bluetape4k-images-barcode-api` / `bluetape4k-images-barcode-zxing` | `image-processing/barcode-api` | ✅ Good | provider-neutral reader와 bounded upload API를 새로 노출 | — | provider capability matrix와 운영 provider 교체 계약 | — |
+| `bluetape4k-images-barcode-api` / `bluetape4k-images-barcode-zxing` | `image-processing/barcode-api` | ✅ Good | provider-neutral reader와 strict external image decode 경계를 함께 검증 | — | provider capability matrix와 운영 provider 교체 계약 | #865 |
 
 ---
 
