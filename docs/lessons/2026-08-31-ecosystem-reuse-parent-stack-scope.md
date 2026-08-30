@@ -42,7 +42,13 @@ parent diff의 leader 경로와 #867/#868 lesson을 함께 넣는 회귀 테스�
   inventory and train contract`.
 - `python3 -m json.tool docs/ecosystem-reuse-train.json`, `git diff --check`와
   `audit-korean-terms.mjs`(3 files, findings 0) — PASS.
-- hosted CI는 repair push 후 새 exact head에서 확인할 외부 검증으로 남겼다.
+- repair push의 첫 hosted smoke run은 released `bluetape4k-leader`의
+  `BoundedLeaderAuditExporter.close()` concurrent iteration에서
+  `NoSuchElementException`을 보고했지만, `gh run rerun 33342152535 --failed`
+  후 smoke/container/Examples Status가 모두 PASS했다. 이번 변경에서는
+  upstream source를 수정하지 않고 재현 여부만 기록했다.
+- 최종 PR checks: ecosystem, CI, build, examples, smoke/container, diagram,
+  wrapper PASS; high-contention은 조건상 SKIPPED.
 
 ## Future Guidance
 

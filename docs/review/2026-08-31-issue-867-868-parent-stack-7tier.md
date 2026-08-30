@@ -86,7 +86,17 @@ parent diff와 회귀 검증에 필요한 경로만 열었다.
 - `python3 -m json.tool docs/ecosystem-reuse-train.json` — PASS.
 - `git diff --check` — PASS.
 - `audit-korean-terms.mjs` — 3 files, findings 0.
-- hosted GitHub Actions는 repair push 뒤 새 exact head에서 재실행해야 한다.
+- repair push의 첫 hosted run `33342152535`에서 scope gate, build, container와
+  smoke를 실행했다. smoke는 released `bluetape4k-leader`의
+  `BoundedLeaderAuditExporter.close()` concurrent iteration에서
+  `NoSuchElementException`을 한 번 보고했다.
+- `gh run rerun 33342152535 --failed` 후 동일 run의 smoke job
+  `99340573634`, container job `99340574410`, Examples Status job
+  `99340859275`가 모두 PASS했다. 최종 PR checks도 ecosystem, CI, build,
+  examples, smoke/container, diagram, wrapper가 PASS이고
+  `High-contention CI correctness`는 조건상 SKIPPED다.
+- 이 단일 재현은 upstream 경계의 후속 관찰 항목으로 남기며, 이번 scope repair에서는
+  released library source를 수정하지 않았다.
 
 ## 남은 위험과 비대상
 
@@ -118,8 +128,8 @@ parent diff와 회귀 검증에 필요한 경로만 열었다.
 - [x] aggregate `stacked-parent-head` scope와 fresh receipt를 manifest에 추가
 - [x] RED/GREEN 회귀 테스트 추가
 - [x] parent 전체 diff 허용 경계와 child scope 독립성 기록
-- [ ] repair commit 이후 hosted GitHub Actions 새 run PASS
+- [x] repair commit 이후 hosted GitHub Actions 새 run과 failed-job rerun PASS
 - [ ] fresh exact-head 승인 후 PR #899 merge
 
-최종 상태: `PENDING` — 로컬 계약 repair는 완료했지만, push 후 새 hosted CI와
-parent PR merge gate가 남아 있다.
+최종 상태: `PENDING` — scope repair와 hosted checks는 완료했지만, fresh
+exact-head 승인과 parent PR merge gate가 남아 있다.
