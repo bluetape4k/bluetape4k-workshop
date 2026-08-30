@@ -145,7 +145,7 @@ jobs:
       high_contention: ${{ steps.paths.outputs.high_contention }}
       gradle: ${{ steps.paths.outputs.gradle }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
 
@@ -230,7 +230,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.gradle == 'true'
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
       - uses: gradle/actions/wrapper-validation@v6.3.0
 
   smoke-examples:
@@ -245,9 +245,9 @@ jobs:
       needs.changes.outputs.examples == 'true' &&
       needs.validate-wrapper.result == 'success'
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -323,7 +323,7 @@ jobs:
 
       - name: Upload smoke example test results
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: smoke-example-test-results
           path: |
@@ -402,7 +402,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.diagram == 'true'
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
 
@@ -432,9 +432,9 @@ jobs:
       needs.changes.outputs.examples == 'true' &&
       needs.validate-wrapper.result == 'success'
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -584,7 +584,7 @@ jobs:
 
       - name: Upload container example test results
         if: ${{ always() && steps.kafka_failover_sanitize.outcome == 'success' }}
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: container-example-test-results
           if-no-files-found: error
@@ -689,8 +689,8 @@ jobs:
       needs.validate-wrapper.result == 'success'
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-java@v6
         with:
           java-version: '25'
           distribution: ${{ env.JAVA_DISTRIBUTION }}
@@ -727,7 +727,7 @@ jobs:
             ${{ github.run_id }}-${{ github.run_attempt }}
       - name: Upload bounded high-contention evidence
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: high-contention-ci-correctness-examples-${{ github.run_id }}-${{ github.run_attempt }}
           path: build/high-contention-upload-stage/examples-${{ github.run_id }}-${{ github.run_attempt }}
