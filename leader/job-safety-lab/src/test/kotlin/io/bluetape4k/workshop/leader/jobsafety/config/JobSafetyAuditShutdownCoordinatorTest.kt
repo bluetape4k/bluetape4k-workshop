@@ -22,6 +22,7 @@ import org.junit.jupiter.api.assertTimeoutPreemptively
 import java.time.Duration
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 internal class JobSafetyAuditShutdownCoordinatorTest {
 
@@ -116,6 +117,46 @@ internal class JobSafetyAuditShutdownCoordinatorTest {
         }
     }
 
+    @Test
+    fun `close logs timeout when an owned resource does not terminate before deadline`() {
+        val logger = LoggerFactory.getLogger(JobSafetyAuditShutdownCoordinator::class.java) as Logger
+        val appender = ListAppender<ILoggingEvent>().also { it.start() }
+        val previousLevel = logger.level
+        logger.level = Level.WARN
+        logger.addAppender(appender)
+
+        val client = InMemoryAuditHttpClient()
+        val scheduler = TimeoutScheduledExecutor()
+        val executor = TimeoutExecutorService()
+        val scope = JobSafetyAuditScope()
+        val coordinator = JobSafetyAuditShutdownCoordinator(
+            shutdownTimeout = Duration.ofSeconds(1),
+            subscription = AutoCloseable { },
+            exporter = TracedExporter { },
+            clientLifecycle = JobSafetyAuditHttpClientLifecycle(client),
+            scheduler = scheduler,
+            executor = executor,
+            scope = scope,
+        )
+
+        try {
+            coordinator.close()
+            val messages = appender.list.map { it.formattedMessage }.joinToString("\n")
+            messages shouldContain "job_safety_audit_shutdown_timeout"
+            messages shouldContain "resource_step=scheduler.awaitTermination"
+            messages shouldContain "resource_step=executor.awaitTermination"
+            messages shouldContain "outcome=timeout"
+        } finally {
+            logger.detachAppender(appender)
+            logger.level = previousLevel
+            appender.stop()
+            client.close()
+            scheduler.shutdownNow()
+            executor.shutdownNow()
+            scope.close()
+        }
+    }
+
     private class TracedExporter(private val onClose: () -> Unit) : LeaderAuditExporter {
         var closes: Int = 0
 
@@ -130,5 +171,31 @@ internal class JobSafetyAuditShutdownCoordinatorTest {
             closes++
             onClose()
         }
+    }
+
+    private class TimeoutScheduledExecutor : ScheduledThreadPoolExecutor(1) {
+        override fun awaitTermination(timeout: Long, unit: TimeUnit): Boolean = false
+    }
+
+    private class TimeoutExecutorService : java.util.concurrent.AbstractExecutorService() {
+        @Volatile
+        private var shutdown = false
+
+        override fun shutdown() {
+            shutdown = true
+        }
+
+        override fun shutdownNow(): MutableList<Runnable> {
+            shutdown = true
+            return mutableListOf()
+        }
+
+        override fun isShutdown(): Boolean = shutdown
+
+        override fun isTerminated(): Boolean = false
+
+        override fun awaitTermination(timeout: Long, unit: TimeUnit): Boolean = false
+
+        override fun execute(command: Runnable) = Unit
     }
 }

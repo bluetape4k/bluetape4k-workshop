@@ -86,7 +86,7 @@ class JobSafetyAuditShutdownCoordinator(
         }
     }
 
-    private fun awaitQuietly(step: String, deadline: Long, action: () -> Unit) {
+    private fun awaitQuietly(step: String, deadline: Long, action: () -> Boolean) {
         onStep(step)
         if (nanoTime() >= deadline) {
             logger.warn(
@@ -96,7 +96,12 @@ class JobSafetyAuditShutdownCoordinator(
             return
         }
         try {
-            action()
+            if (!action()) {
+                logger.warn(
+                    "job_safety_audit_shutdown_timeout resource_step={} outcome=timeout",
+                    step,
+                )
+            }
         } catch (interrupted: InterruptedException) {
             Thread.currentThread().interrupt()
             logFailure(step, "interrupted", interrupted)
