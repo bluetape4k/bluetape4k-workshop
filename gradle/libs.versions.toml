@@ -31,7 +31,7 @@ protobuf = "4.35.1"  # https://mvnrepository.com/artifact/com.google.protobuf/pr
 grpc-google-common-protos = "2.71.0"  # https://mvnrepository.com/artifact/com.google.api.grpc/grpc-google-common-protos
 avro = "1.12.1"  # https://mvnrepository.com/artifact/org.apache.avro/avro
 
-feign = "13.13"  # https://mvnrepository.com/artifact/io.github.openfeign/feign-bom
+feign = "13.14"  # https://mvnrepository.com/artifact/io.github.openfeign/feign-bom
 httpclient5 = "5.6.4"  # https://mvnrepository.com/artifact/org.apache.httpcomponents.client5/httpclient5
 httpcore5 = "5.4.3"  # https://mvnrepository.com/artifact/org.apache.httpcomponents.core5/httpcore5
 retrofit2 = "3.0.0"  # https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit
