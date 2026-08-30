@@ -38,7 +38,7 @@ import org.springframework.context.annotation.Configuration
 import java.util.concurrent.ExecutorService
 import javax.sql.DataSource
 import kotlin.time.toKotlinDuration
-import io.bluetape4k.concurrent.virtualthread.VirtualThreads
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(JobSafetyProperties::class)

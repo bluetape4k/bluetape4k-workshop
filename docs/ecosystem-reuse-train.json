@@ -270,11 +270,101 @@
         "docs/review/2026-08-29-epic-792-final-closeout-7tier.md"
       ],
       "review_artifact": "docs/review/2026-08-29-epic-792-final-closeout-7tier.md"
+    },
+    {
+      "scope_id": "issue-863-ci-compatibility",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-863-graphio-checkpoint",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [863],
+      "allowed_paths": [
+        "build.gradle.kts",
+        "gradle/libs.versions.toml",
+        "aws/s3-spring-cloud/src/main/resources/application.yml",
+        "commerce/**",
+        "leader/**",
+        "operations/**",
+        "optimization/**",
+        "graph/event-lineage/src/test/kotlin/**",
+        "graph/recommendation/src/test/kotlin/**",
+        "graph/knowledge-graph/src/test/kotlin/**",
+        "graph/io-pipeline/**",
+        "docs/coverage-matrix.md",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-08-29-issue-863-graphio-checkpoint.md",
+        "docs/review/2026-08-30-2.0.0-ci-compatibility-7tier.md"
+      ],
+      "review_artifact": "docs/review/2026-08-30-2.0.0-ci-compatibility-7tier.md"
+    },
+    {
+      "scope_id": "issue-864-ci-compatibility",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-864-kinesis-consumer",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [864],
+      "allowed_paths": [
+        "build.gradle.kts",
+        "gradle/libs.versions.toml",
+        "aws/s3-spring-cloud/src/main/resources/application.yml",
+        "commerce/**",
+        "leader/**",
+        "operations/**",
+        "optimization/**",
+        "graph/event-lineage/src/test/kotlin/**",
+        "graph/recommendation/src/test/kotlin/**",
+        "graph/knowledge-graph/src/test/kotlin/**",
+        "aws/kinesis-coroutines/**",
+        "docs/coverage-matrix.md",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-08-30-issue-864-kinesis-consumer.md",
+        "docs/review/2026-08-30-2.0.0-ci-compatibility-7tier.md"
+      ],
+      "review_artifact": "docs/review/2026-08-30-2.0.0-ci-compatibility-7tier.md"
+    },
+    {
+      "scope_id": "issue-865-ci-compatibility",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-865-strict-image-decode",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [865],
+      "allowed_paths": [
+        "build.gradle.kts",
+        "gradle/libs.versions.toml",
+        "aws/s3-spring-cloud/src/main/resources/application.yml",
+        "commerce/**",
+        "leader/**",
+        "operations/**",
+        "optimization/**",
+        "graph/event-lineage/src/test/kotlin/**",
+        "graph/recommendation/src/test/kotlin/**",
+        "graph/knowledge-graph/src/test/kotlin/**",
+        "image-processing/barcode-api/**",
+        "docs/coverage-matrix.md",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-08-30-issue-865-strict-image-decode.md",
+        "docs/review/2026-08-30-2.0.0-ci-compatibility-7tier.md"
+      ],
+      "review_artifact": "docs/review/2026-08-30-2.0.0-ci-compatibility-7tier.md"
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260829T-epic-792-final-closeout-stage8-rebase-repair",
-    "checksum": "021dd23509a87dc8df9200201eef3eb37a5a54bff0a21fbdca4ec31cfe5f604c"
+    "receipt_id": "20260830T-2.0.0-ci-compatibility-followup",
+    "checksum": "08693d669fe3d8461c839012dbe28dc0a652891daac43cec185940159f687cd7"
   },
   "planned_scope_replan_receipts": {
   },

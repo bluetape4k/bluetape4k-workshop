@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.commerce.voucher.admission
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
-import io.bluetape4k.concurrent.virtualthread.VirtualThreads
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import org.junit.jupiter.api.Test
 import java.time.Duration
 import java.util.concurrent.CancellationException

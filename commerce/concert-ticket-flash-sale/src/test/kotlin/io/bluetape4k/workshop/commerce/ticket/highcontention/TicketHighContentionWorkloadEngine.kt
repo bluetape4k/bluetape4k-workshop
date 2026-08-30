@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.commerce.ticket.highcontention
 
-import io.bluetape4k.concurrent.virtualthread.VirtualThreads
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.support.requireEndsWith
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank

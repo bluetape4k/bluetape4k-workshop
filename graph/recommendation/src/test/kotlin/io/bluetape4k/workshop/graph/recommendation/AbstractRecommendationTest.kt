@@ -225,7 +225,7 @@ abstract class AbstractRecommendationTest {
         val alice = service.addUser(USER_ALICE, "Alice")
 
         assertFailsWith<IllegalArgumentException> {
-            service.purchase(alice.id, GraphElementId("missing-product-id"), rating = 5)
+            service.purchase(alice.id, GraphElementId.of("99999999"), rating = 5)
         }
     }
 

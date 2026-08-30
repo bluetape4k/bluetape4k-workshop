@@ -183,7 +183,7 @@ abstract class AbstractEventLineageTest {
 
     @Test
     fun `direct graph element lookup returns empty result for unknown vertex id`() {
-        service.findEvent(GraphElementId("missing-vertex")).shouldBeEmpty()
+        service.findEvent(GraphElementId.of("99999999")).shouldBeEmpty()
     }
 
     @Test

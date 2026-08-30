@@ -243,7 +243,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     @Test
     fun `mention rejects missing document endpoint`() = runSuspendIO {
         assertFailsWith<IllegalArgumentException> {
-            service.mention(GraphElementId("missing-document-id"), seed.entityKotlin.id, confidence = 90)
+            service.mention(GraphElementId.of("99999999"), seed.entityKotlin.id, confidence = 90)
         }
     }
 

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.optimization.lastmile.config
 
-import io.bluetape4k.concurrent.virtualthread.VirtualThreads
+import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
 import io.bluetape4k.workshop.optimization.lastmile.application.LastMileLifecycle
 import io.bluetape4k.workshop.optimization.lastmile.provider.DeterministicRoutingProvider
 import io.bluetape4k.workshop.optimization.lastmile.provider.RoutingProvider
