@@ -415,11 +415,41 @@
         "scripts/validate-job-safety-lab-readme.mjs"
       ],
       "review_artifact": "docs/review/2026-08-31-issue-868-pre-pr.md"
+    },
+    {
+      "scope_id": "issue-867-868-leader-stack",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-867-leader-audit-export",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [867, 868],
+      "allowed_paths": [
+        ".github/scripts/test_check_ecosystem_reuse.py",
+        "leader/job-safety-lab/**",
+        "docs/coverage-matrix.md",
+        "docs/lessons/README.md",
+        "docs/lessons/2026-08-30-issue-867-leader-audit-export.md",
+        "docs/lessons/2026-08-31-issue-868-lease-extension-observation.md",
+        "docs/lessons/2026-08-31-ecosystem-reuse-parent-stack-scope.md",
+        "docs/review/**",
+        "docs/review/2026-08-31-issue-867-868-parent-stack-7tier.md",
+        "docs/superpowers/specs/2026-08-30-issue-867-leader-audit-export-design.md",
+        "docs/superpowers/specs/2026-08-31-issue-868-lease-extension-observation-design.md",
+        "docs/superpowers/plans/2026-08-30-issue-867-leader-audit-export-plan.md",
+        "docs/superpowers/plans/2026-08-31-issue-868-lease-extension-observation-plan.md",
+        "docs/ecosystem-reuse-train.json",
+        "scripts/validate-job-safety-lab-readme.mjs"
+      ],
+      "review_artifact": "docs/review/2026-08-31-issue-867-868-parent-stack-7tier.md"
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260831T-issue-868-leader-observation-scope",
-    "checksum": "4d9d7cfb6a5cf6a4ed336a0952d8e56a4ae5ac9d98a541a7a2b5bfbe1d1a0e7d"
+    "receipt_id": "20260831T-issue-867-868-parent-stack-scope",
+    "checksum": "f398d2165df3dc6b824574e7b3ac1ed8025c71ce4eb0230efb72646d6aed24d3"
   },
   "planned_scope_replan_receipts": {
   },

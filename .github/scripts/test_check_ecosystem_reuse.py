@@ -1367,6 +1367,25 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         )
         self.assertEqual([], errors)
 
+    def test_real_manifest_accepts_parent_diff_after_stacked_child_merge(self):
+        repository_root = Path(__file__).resolve().parents[2]
+        manifest_path = repository_root / "docs/ecosystem-reuse-train.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        changed_paths = [
+            "leader/job-safety-lab/src/main/kotlin/io/bluetape4k/workshop/leader/jobsafety/config/JobSafetyConfiguration.kt",
+            "docs/lessons/2026-08-30-issue-867-leader-audit-export.md",
+            "docs/lessons/2026-08-31-issue-868-lease-extension-observation.md",
+        ]
+        errors = CHECKER.validate_train_scope(
+            manifest,
+            changed_paths,
+            base_ref_name="develop",
+            head_ref_name="feat/issue-867-leader-audit-export",
+            base_oid="9" * 40,
+            head_oid="c" * 40,
+        )
+        self.assertEqual([], errors)
+
     def test_train_scope_rejects_repository_base_follow_up_with_parent_ref(self):
         manifest = self.manifest_with_follow_up_scope()
         scope = self.follow_up_scope(oid_policy="rebase-aware")
