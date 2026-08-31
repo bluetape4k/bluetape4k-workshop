@@ -14,7 +14,7 @@
   설계·계획·lesson.
 
 최종 판정은 `PASS`다. 현재 diff에서 미해결 `P0=0`, `P1=0`, `P2=0`, `P3=0`이며,
-이전 review에서 발견된 P2/P3는 구현·문서·guard·테스트로 처분했다. 최신 exact head
+이전 review에서 발견된 P2/P3는 구현·문서·guard·테스트로 처분했다. 구현 기준 exact head
 `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19`의 hosted CI/Examples와 live
 review/thread readback도 완료했으며, merge는 이 review 범위가 아니다.
 
@@ -63,8 +63,8 @@ review/thread readback도 완료했으며, merge는 이 review 범위가 아니�
 | upstream CTW 실행 결함 | Freefair plugin을 제거하고 runtime proxy를 최종 결정으로 고정했다. |
 | hosted assertion governance가 legacy import를 거부한 문제 | `kotlin.test.assertNull` 사용을 Bluetape assertion의 `shouldBeNull()`로 치환한 `8f8ec52833dbba77e9546532e1decb47d294448b` 커밋을 만들고 assertion governance 및 39개 테스트를 재실행했다. |
 | hosted ecosystem reuse gate가 Issue #869 변경 경로를 찾지 못한 문제 | `docs/ecosystem-reuse-train.json`에 branch/base와 모든 PR 변경 경로를 담은 `issue-869-leader-scheduled-policy` follow-up scope를 추가하고, 새 `coordinator_scope_receipt`(`20260901T-issue-869-scheduled-policy-scope`, scope canonical SHA-256 `85cd0f5b18ae3cb28e064e0c390f48ff4202238e3638461c5887b6d71462fb08`)를 발행했다. exact `--pr-scope` checker를 로컬에서 통과시켰다. |
-| hosted Examples stale guard가 `rg` 미설치 runner에서 실패한 문제 | `smoke-validate.sh`의 파일·디렉터리 검색과 이미지 링크 추출을 `grep`/`find` helper로 전환했다. `rg`를 숨긴 임시 `PATH`에서도 stale-check 전체가 통과했고, exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19`의 Examples run `33418781209`도 통과했다. |
-| hosted Smoke scheduler callback이 body latch 직후 execution observation을 놓친 경합 | callback body 진입과 observation stop을 분리하고 handler에 기대 stop 수 bounded latch를 추가했다. context targeted 16개 테스트와 exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19`의 Smoke job이 통과했다. |
+| hosted Examples stale guard가 `rg` 미설치 runner에서 실패한 문제 | `smoke-validate.sh`의 파일·디렉터리 검색과 이미지 링크 추출을 `grep`/`find` helper로 전환했다. `rg`를 숨긴 임시 `PATH`에서도 stale-check 전체가 통과했고, 구현 기준 exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19`의 Examples run `33418781209`도 통과했다. |
+| hosted Smoke scheduler callback이 body latch 직후 execution observation을 놓친 경합 | callback body 진입과 observation stop을 분리하고 handler에 기대 stop 수 bounded latch를 추가했다. context targeted 16개 테스트와 구현 기준 exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19`의 Smoke job이 통과했다. |
 
 ## 검증 증거
 
@@ -83,9 +83,9 @@ review/thread readback도 완료했으며, merge는 이 review 범위가 아니�
 | `bash scripts/smoke-validate.sh stale-check` | project/stale/module/tenant scheduled-policy/diagnostics/image guards 통과 |
 | `rg`를 제외한 임시 `PATH`에서 `bash scripts/smoke-validate.sh stale-check` 실행 | `rg` 없이도 같은 모든 stale-check guard 통과 |
 | hosted Smoke 수정 후 context targeted test 재실행 | `SUCCESS: Executed 16 tests in 11.8s`, `BUILD SUCCESSFUL`; callback observation completion race 해소 |
-| exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19`의 hosted CI run `33418781214` | wrapper validation, compile-only build, CI Status 모두 성공 |
-| exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19`의 hosted Ecosystem Reuse Gate run `33418781147` | `Validate ecosystem reuse contract` 성공 |
-| exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19`의 hosted Examples run `33418781209` | Diagram QA, README/stale guards, Smoke, Container, High-contention, Examples Status 모두 성공 |
+| 구현 기준 exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19`의 hosted CI run `33418781214` | wrapper validation, compile-only build, CI Status 모두 성공 |
+| 구현 기준 exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19`의 hosted Ecosystem Reuse Gate run `33418781147` | `Validate ecosystem reuse contract` 성공 |
+| 구현 기준 exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19`의 hosted Examples run `33418781209` | Diagram QA, README/stale guards, Smoke, Container, High-contention, Examples Status 모두 성공 |
 | `python3 .github/scripts/check-assertion-governance.py` | `PASS assertion governance: scanned=1168, allowlisted_build_logic_legacy_imports=16` |
 | `python3 .github/scripts/check-ecosystem-reuse.py --pr-scope ...` | manifest에 `issue-869-leader-scheduled-policy` scope 추가 후 `PASS ecosystem-reuse inventory and train contract` |
 | `actionlint .github/workflows/Examples.yml` | exit 0 |
@@ -102,7 +102,7 @@ review/thread readback도 완료했으며, merge는 이 review 범위가 아니�
 - architecture/sequence diagram은 기존 reducer 경계를 섞지 않으므로 수정하지 않았다.
 - PR #911은 `develop`을 base로 생성되었고, hosted assertion·ecosystem scope·runner
   `rg` 의존성·scheduler observation completion race 실패를 각각 수정했다. exact
-  head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19`에서 CI `33418781214`,
+  구현 기준 head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19`에서 CI `33418781214`,
   Ecosystem Reuse Gate `33418781147`, Examples `33418781209` 및 live
   review/thread readback을 통과했다. merge는 fresh `승인` 없이는 실행하지 않는다.
 

@@ -66,9 +66,9 @@
 | `./gradlew :leader-tenant-scheduler:cleanTest :leader-tenant-scheduler:test --tests '*TenantScheduledPolicyDefaultProfileTest*' --no-build-cache --no-daemon --console=plain` | `SUCCESS: Executed 1 tests in 1.3s`, `BUILD SUCCESSFUL` |
 | `./gradlew :leader-tenant-scheduler:cleanTest :leader-tenant-scheduler:test --tests '*TenantScheduledPolicyLifecycleTest*' --no-build-cache --no-daemon --console=plain` | `SUCCESS: Executed 3 tests in 703ms`, `BUILD SUCCESSFUL` |
 | hosted Smoke 실패 후 context targeted test 재실행 (`./gradlew :leader-tenant-scheduler:cleanTest :leader-tenant-scheduler:test --tests '*TenantScheduledPolicyContextTest*' --no-build-cache --no-daemon --console=plain`) | `SUCCESS: Executed 16 tests in 11.8s`, `BUILD SUCCESSFUL`; callback observation stop race 보정 확인 |
-| exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19` hosted `CI` run `33418781214` | wrapper validation, compile-only build, CI Status 모두 PASS |
-| exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19` hosted `Ecosystem Reuse Gate` run `33418781147` | ecosystem reuse contract PASS |
-| exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19` hosted `Examples` run `33418781209` | Diagram QA, README/stale guards, Smoke, Container, High-contention, Examples Status 모두 PASS |
+| 구현 기준 exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19` hosted `CI` run `33418781214` | wrapper validation, compile-only build, CI Status 모두 PASS |
+| 구현 기준 exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19` hosted `Ecosystem Reuse Gate` run `33418781147` | ecosystem reuse contract PASS |
+| 구현 기준 exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19` hosted `Examples` run `33418781209` | Diagram QA, README/stale guards, Smoke, Container, High-contention, Examples Status 모두 PASS |
 | `./gradlew :leader-tenant-scheduler:dependencies --configuration runtimeClasspath --no-daemon --console=plain` | `bluetape4k-dependencies:2.0.0-SNAPSHOT`와 core 계열, `bluetape4k-leader-spring-boot:1.0.0-SNAPSHOT`, `bluetape4k-leader-micrometer:1.0.0-SNAPSHOT`, Spring AOP 7.0.8 확인; module catalog에는 개별 버전/BOM 없음 |
 | `./gradlew :leader-tenant-scheduler:buildEnvironment --no-daemon --console=plain` | `BUILD SUCCESSFUL`; 별도 AspectJ plugin 없음 |
 | `./gradlew projects --no-daemon --console=plain` | `:leader-tenant-scheduler` 실제 project path 확인 |
@@ -129,7 +129,7 @@
     경합을 드러냈다. observation handler에 기대 stop 수를 세는 bounded latch를
     추가하고, callback body 신호와 observation 완료 신호를 모두 기다리도록
     고정했다.
-12. 최신 exact head에서 hosted `CI`, `Ecosystem Reuse Gate`, `Examples`가 모두
+12. 구현 기준 exact head에서 hosted `CI`, `Ecosystem Reuse Gate`, `Examples`가 모두
     통과했다. 특히 Examples high-contention matrix도 성공해, 다섯 차례의
     실패 원인 처분이 실제 runner 조합에서 재검증되었다.
 
