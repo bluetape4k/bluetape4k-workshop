@@ -65,6 +65,7 @@
 | `./gradlew :leader-tenant-scheduler:cleanTest :leader-tenant-scheduler:test --tests '*TenantScheduledPolicyContextTest*' --no-build-cache --no-daemon --console=plain` | `SUCCESS: Executed 16 tests in 11.8s`, `BUILD SUCCESSFUL` |
 | `./gradlew :leader-tenant-scheduler:cleanTest :leader-tenant-scheduler:test --tests '*TenantScheduledPolicyDefaultProfileTest*' --no-build-cache --no-daemon --console=plain` | `SUCCESS: Executed 1 tests in 1.3s`, `BUILD SUCCESSFUL` |
 | `./gradlew :leader-tenant-scheduler:cleanTest :leader-tenant-scheduler:test --tests '*TenantScheduledPolicyLifecycleTest*' --no-build-cache --no-daemon --console=plain` | `SUCCESS: Executed 3 tests in 703ms`, `BUILD SUCCESSFUL` |
+| hosted Smoke 실패 후 context targeted test 재실행 (`./gradlew :leader-tenant-scheduler:cleanTest :leader-tenant-scheduler:test --tests '*TenantScheduledPolicyContextTest*' --no-build-cache --no-daemon --console=plain`) | `SUCCESS: Executed 16 tests in 11.8s`, `BUILD SUCCESSFUL`; callback observation stop race 보정 확인 |
 | `./gradlew :leader-tenant-scheduler:dependencies --configuration runtimeClasspath --no-daemon --console=plain` | `bluetape4k-dependencies:2.0.0-SNAPSHOT`와 core 계열, `bluetape4k-leader-spring-boot:1.0.0-SNAPSHOT`, `bluetape4k-leader-micrometer:1.0.0-SNAPSHOT`, Spring AOP 7.0.8 확인; module catalog에는 개별 버전/BOM 없음 |
 | `./gradlew :leader-tenant-scheduler:buildEnvironment --no-daemon --console=plain` | `BUILD SUCCESSFUL`; 별도 AspectJ plugin 없음 |
 | `./gradlew projects --no-daemon --console=plain` | `:leader-tenant-scheduler` 실제 project path 확인 |
@@ -120,6 +121,11 @@
     실패했다. 로컬에서 `rg`를 숨긴 PATH로 같은 stale-check를 재현한 뒤,
     파일·디렉터리 검색과 이미지 링크 추출을 `grep` 기반 helper로 바꾸어
     runner 도구 설치에 의존하지 않도록 고정했다.
+11. 다섯 번째 hosted Smoke 실행은 scheduler fixture가 body 안에서 시작 latch를
+    먼저 해제한 뒤 execution observation이 stop되기 전에 assertion을 수행하는
+    경합을 드러냈다. observation handler에 기대 stop 수를 세는 bounded latch를
+    추가하고, callback body 신호와 observation 완료 신호를 모두 기다리도록
+    고정했다.
 
 ## Future guard
 
@@ -137,6 +143,9 @@
 - stale-check는 GitHub runner에 선택적으로 설치된 도구를 전제하지 않는다. 검색은
   `grep` helper와 표준 `find`를 사용하고, 새 명령을 추가할 때는 `rg`가 없는
   `PATH`에서도 `bash scripts/smoke-validate.sh stale-check`를 재실행한다.
+- scheduler callback 테스트는 body 진입 latch만으로 observation 완료를 단정하지
+  않는다. leader acquire/execution stop 신호를 별도 bounded latch로 기다린 뒤
+  outcome과 redaction을 검사한다.
 - 새 workshop PR은 생성 전에 `docs/ecosystem-reuse-train.json`에 정확한
   `expected_head_ref`/`expected_base_ref`와 changed-path `allowed_paths`를 하나의
   follow-up scope로 등록하고, scope canonical JSON SHA-256과 새

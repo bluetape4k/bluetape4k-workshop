@@ -175,10 +175,11 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
                     LeaderScheduledTriggerFixture::class.java,
                 )
                 val handler = context.getBean(RecordingObservationHandler::class.java)
-                handler.clear()
+                handler.clear(expectedStops = 2)
 
                 assertTimeout(Duration.ofSeconds(5)) {
                     fixture.awaitStarted(Duration.ofSeconds(5)).shouldBeTrue()
+                    handler.awaitStops(Duration.ofSeconds(5)).shouldBeTrue()
                 }
 
                 (fixture.invocationCount() >= 1).shouldBeTrue()
@@ -637,6 +638,9 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
     class RecordingObservationHandler : ObservationHandler<Observation.Context> {
         val stopped = CopyOnWriteArrayList<ObservationSnapshot>()
 
+        @Volatile
+        private var stopSignal = CountDownLatch(0)
+
         override fun onStop(context: Observation.Context) {
             stopped += ObservationSnapshot(
                 name = context.name.orEmpty(),
@@ -644,11 +648,18 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
                 high = context.highCardinalityKeyValues.associate { it.key to it.value },
                 error = context.error,
             )
+            stopSignal.countDown()
         }
 
         override fun supportsContext(context: Observation.Context): Boolean = true
 
-        fun clear() = stopped.clear()
+        fun clear(expectedStops: Int = 0) {
+            stopped.clear()
+            stopSignal = CountDownLatch(expectedStops)
+        }
+
+        fun awaitStops(timeout: Duration): Boolean =
+            stopSignal.await(timeout.toMillis(), TimeUnit.MILLISECONDS)
     }
 
     data class ObservationSnapshot(

@@ -247,6 +247,7 @@ red 실행 명령:
 - [x] leader-aspect observation은 context bean 직접 호출로 확인할 수 있는 upstream observation contract만 사용하고 scheduler wrapper observation 주장은 분리했다.
 - [x] lifecycle의 immediate-trigger fixture는 Spring scheduler wrapper callback만 확인하고, production policy의 leader-aspect/cache 증거는 main-source direct-call smoke가 담당하도록 분리했다.
 - [x] lifecycle test에서 context close 전후 task 수와 pending cancellation을 증명했으며 custom executor/thread를 만들지 않음을 확인했다.
+- [x] hosted Smoke에서 scheduler body latch 직후 execution observation을 검사하는 경합이 발견되어, `RecordingObservationHandler`에 기대 stop 수 bounded latch를 추가하고 callback body·observation 완료 신호를 순서대로 기다리도록 보정했다. context targeted 16개 테스트를 재실행해 통과시켰다.
 - [x] 기본 profile을 대상으로 기존 reducer와 `TenantSchedulerReadmeSnippetTest`를 포함한 module 전체 39개 테스트를 변경 없이 실행했다.
 
 검증 명령:
@@ -353,6 +354,7 @@ bash scripts/smoke-validate.sh stale-check
 - [x] placeholder/temporary marker 검사에서 미완료 표식이 없음을 확인했다.
 - [x] hosted CI 첫 실패의 legacy assertion import를 `shouldBeNull()`로 치환하고 assertion governance 및 39개 테스트를 재실행했다. 두 번째 실패의 missing ecosystem scope는 manifest follow-up scope와 local exact checker로 처분했다.
 - [x] hosted Examples stale guard의 `rg` 미설치 실패를 `grep`/`find` 기반 portable helper로 처분하고, `rg` 없는 PATH의 local stale-check 증거를 lesson/review에 기록했다.
+- [x] hosted Smoke의 callback observation completion race를 bounded stop latch로 처분하고 context targeted test를 재실행했다. 새 head의 hosted Smoke/Examples 결과는 push 후 다시 확인한다.
 - [x] `docs/lessons/2026-08-31-issue-869-scheduled-policy.md`를 한국어로 작성했고 Context, Decision, Outcome, Verification, Miss/Surprise, Future guard를 포함했다.
 - [x] lesson은 구현·검증 증거 후 추가했고, 실제 명령 결과와 surprise 중심으로 작성했다.
 
@@ -413,4 +415,4 @@ bash scripts/smoke-validate.sh stale-check
 - [x] 계획과 plan review가 Lore commit으로 고정되고, helper required-checks에는 `spec`과 `plan` 증거가 등록된다. `tests`, `docs`, `pr`와 main verification은 구현 후에만 pending에서 해소된다.
 - [x] 이 문서와 review artifact를 사용자가 검토할 수 있도록 구현 commit SHA `dfff002cf43f1322eda04806be52303299cde220`와 파일 링크를 handoff에 제시한다.
 
-계획 승인은 확인되었고 작업 1~7의 구현·검증 및 PR #911 생성까지 완료되었다. hosted CI의 세 실패(assertion governance, missing ecosystem scope, Ubuntu `rg` 의존성)는 각각 커밋·manifest follow-up scope·portable stale-check helper로 처분했으며, 새 head의 hosted CI/live review 확인이 남아 있다. merge·auto-merge·tag·release는 이 작업에서 실행하지 않는다.
+계획 승인은 확인되었고 작업 1~7의 구현·검증 및 PR #911 생성까지 완료되었다. hosted CI의 다섯 실패(assertion governance, missing ecosystem scope, coordinator receipt 재사용, Ubuntu `rg` 의존성, scheduler observation completion race)는 각각 커밋·manifest/receipt 보정·portable stale-check helper·bounded stop latch로 처분했으며, 새 head의 hosted CI/live review 확인이 남아 있다. merge·auto-merge·tag·release는 이 작업에서 실행하지 않는다.
