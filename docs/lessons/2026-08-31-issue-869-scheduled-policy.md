@@ -71,6 +71,7 @@
 | `./gradlew :leader-tenant-scheduler:bootRun --args='--spring.profiles.active=scheduled-policy' --no-daemon --console=plain` (18초 bounded smoke) | `Started TenantSchedulerLabAppKt in 0.664 seconds`; 첫 callback은 `initialDelay=60s` 뒤라 이 smoke에서는 기다리지 않음 |
 | `node scripts/validate-readme-parity.mjs leader/tenant-scheduler` | `failures: 0` |
 | `bash scripts/smoke-validate.sh stale-check` | required modules, scheduled-policy contract, diagnostics, image links 모두 통과 |
+| `rg`를 제외한 임시 `PATH`에서 `bash scripts/smoke-validate.sh stale-check` 실행 | `rg` 없이도 project/stale/module/tenant scheduled-policy/diagnostics/image guards 모두 통과 |
 | `actionlint .github/workflows/Examples.yml` | exit 0 |
 | `git diff --check` | exit 0 |
 | `python3 .github/scripts/check-ecosystem-reuse.py --pr-scope --base-ref-name develop --head-ref-name feat/issue-869-scheduled-policy --base-ref 4b21288bbfbfddb5438baf763027149766919bc5 --head-ref 8f8ec52833dbba77e9546532e1decb47d294448b` | manifest 보정 전에는 `found 0`으로 실패했으나, `issue-869-leader-scheduled-policy` follow-up scope 추가 후 `PASS ecosystem-reuse inventory and train contract` |
@@ -114,6 +115,11 @@
    재사용한 것을 거부했다. 새 `coordinator_scope_receipt`를 발행하고 scope
    canonical JSON SHA-256 `85cd0f5b18ae3cb28e064e0c390f48ff4202238e3638461c5887b6d71462fb08`
    를 연결해야 trusted manifest 비교까지 통과한다.
+10. 네 번째 hosted Examples 실행은 Ubuntu runner에 `rg`가 없어서 기존
+    `smoke-validate.sh`의 stale-check가 scheduled-policy 계약을 검사하기 전에
+    실패했다. 로컬에서 `rg`를 숨긴 PATH로 같은 stale-check를 재현한 뒤,
+    파일·디렉터리 검색과 이미지 링크 추출을 `grep` 기반 helper로 바꾸어
+    runner 도구 설치에 의존하지 않도록 고정했다.
 
 ## Future guard
 
@@ -128,6 +134,9 @@
 - README parity와 stale-check를 workflow job에서 계속 실행하고, YAML selector,
   redaction sentinel, profile 명령이 바뀌면 양국어 README와 테스트를 같은 변경으로
   갱신한다.
+- stale-check는 GitHub runner에 선택적으로 설치된 도구를 전제하지 않는다. 검색은
+  `grep` helper와 표준 `find`를 사용하고, 새 명령을 추가할 때는 `rg`가 없는
+  `PATH`에서도 `bash scripts/smoke-validate.sh stale-check`를 재실행한다.
 - 새 workshop PR은 생성 전에 `docs/ecosystem-reuse-train.json`에 정확한
   `expected_head_ref`/`expected_base_ref`와 changed-path `allowed_paths`를 하나의
   follow-up scope로 등록하고, scope canonical JSON SHA-256과 새

@@ -62,6 +62,7 @@
 | upstream CTW 실행 결함 | Freefair plugin을 제거하고 runtime proxy를 최종 결정으로 고정했다. |
 | hosted assertion governance가 legacy import를 거부한 문제 | `kotlin.test.assertNull` 사용을 Bluetape assertion의 `shouldBeNull()`로 치환한 `8f8ec52833dbba77e9546532e1decb47d294448b` 커밋을 만들고 assertion governance 및 39개 테스트를 재실행했다. |
 | hosted ecosystem reuse gate가 Issue #869 변경 경로를 찾지 못한 문제 | `docs/ecosystem-reuse-train.json`에 branch/base와 모든 PR 변경 경로를 담은 `issue-869-leader-scheduled-policy` follow-up scope를 추가하고, 새 `coordinator_scope_receipt`(`20260901T-issue-869-scheduled-policy-scope`, scope canonical SHA-256 `85cd0f5b18ae3cb28e064e0c390f48ff4202238e3638461c5887b6d71462fb08`)를 발행했다. exact `--pr-scope` checker를 로컬에서 통과시켰다. |
+| hosted Examples stale guard가 `rg` 미설치 runner에서 실패한 문제 | `smoke-validate.sh`의 파일·디렉터리 검색과 이미지 링크 추출을 `grep`/`find` helper로 전환했다. `rg`를 숨긴 임시 `PATH`에서도 stale-check 전체가 통과했으며, 새 exact head의 hosted Examples 재실행을 pending으로 둔다. |
 
 ## 검증 증거
 
@@ -78,6 +79,7 @@
 | `./gradlew projects --no-daemon --console=plain` | `:leader-tenant-scheduler` 및 active modules 131 확인 |
 | `node scripts/validate-readme-parity.mjs leader/tenant-scheduler` | `failures: 0` |
 | `bash scripts/smoke-validate.sh stale-check` | project/stale/module/tenant scheduled-policy/diagnostics/image guards 통과 |
+| `rg`를 제외한 임시 `PATH`에서 `bash scripts/smoke-validate.sh stale-check` 실행 | `rg` 없이도 같은 모든 stale-check guard 통과 |
 | `python3 .github/scripts/check-assertion-governance.py` | `PASS assertion governance: scanned=1168, allowlisted_build_logic_legacy_imports=16` |
 | `python3 .github/scripts/check-ecosystem-reuse.py --pr-scope ...` | manifest에 `issue-869-leader-scheduled-policy` scope 추가 후 `PASS ecosystem-reuse inventory and train contract` |
 | `actionlint .github/workflows/Examples.yml` | exit 0 |
@@ -92,10 +94,10 @@
   scheduler, Exposed boundary, JDK preview, custom scheduler/executor는 이 consumer
   예제의 목표가 아니며 upstream/별도 issue로 남긴다.
 - architecture/sequence diagram은 기존 reducer 경계를 섞지 않으므로 수정하지 않았다.
-- PR #911은 `develop`을 base로 생성되었고, 첫 hosted assertion 실패와 두 번째
-  ecosystem scope 실패를 각각 수정했다. 현재 exact head에서 CI를 재실행 중이며,
-  live review/thread 확인과 merge는 아직 남아 있다. merge는 fresh `승인` 없이는
-  실행하지 않는다.
+- PR #911은 `develop`을 base로 생성되었고, hosted assertion·ecosystem scope·runner
+  `rg` 의존성 실패를 각각 수정했다. 새 exact head에서 CI를 재실행 중이며, live
+  review/thread 확인과 merge는 아직 남아 있다. merge는 fresh `승인` 없이는 실행하지
+  않는다.
 
 ## SPW 및 Kotlin DoD
 
