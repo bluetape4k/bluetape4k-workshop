@@ -354,7 +354,7 @@ bash scripts/smoke-validate.sh stale-check
 - [x] placeholder/temporary marker 검사에서 미완료 표식이 없음을 확인했다.
 - [x] hosted CI 첫 실패의 legacy assertion import를 `shouldBeNull()`로 치환하고 assertion governance 및 39개 테스트를 재실행했다. 두 번째 실패의 missing ecosystem scope는 manifest follow-up scope와 local exact checker로 처분했다.
 - [x] hosted Examples stale guard의 `rg` 미설치 실패를 `grep`/`find` 기반 portable helper로 처분하고, `rg` 없는 PATH의 local stale-check 증거를 lesson/review에 기록했다.
-- [x] hosted Smoke의 callback observation completion race를 bounded stop latch로 처분하고 context targeted test를 재실행했다. 새 head의 hosted Smoke/Examples 결과는 push 후 다시 확인한다.
+- [x] hosted Smoke의 callback observation completion race를 bounded stop latch로 처분하고 context targeted test를 재실행했다. 최신 exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19`의 hosted `CI` `33418781214`, `Ecosystem Reuse Gate` `33418781147`, `Examples` `33418781209`가 모두 통과했다.
 - [x] `docs/lessons/2026-08-31-issue-869-scheduled-policy.md`를 한국어로 작성했고 Context, Decision, Outcome, Verification, Miss/Surprise, Future guard를 포함했다.
 - [x] lesson은 구현·검증 증거 후 추가했고, 실제 명령 결과와 surprise 중심으로 작성했다.
 
@@ -374,8 +374,8 @@ bash scripts/smoke-validate.sh stale-check
   ```
 
 - [x] 구현 완료 후 `docs/lessons/...`와 tracked review artifact를 포함해 feature branch가 clean인지 확인했다. `dfff002cf43f1322eda04806be52303299cde220` 이후 worktree는 clean이다.
-- [x] PR #911을 base `develop`, head `feat/issue-869-scheduled-policy`, title `[2.0.0] Issue #869 ...`, Korean body, `Closes #869`, DoD Status, 테스트/CI 증거로 생성하고 live metadata를 재확인했다. 현재 head는 assertion fix, manifest scope fix, Ubuntu stale-check portability fix를 포함한다.
-- [ ] PR 생성 후 live CI/checks와 review thread를 확인한다. merge는 exact live head, CI green, review 상태를 다시 읽고 새 `승인`이 들어온 뒤에만 수행한다. 이 계획 단계에서는 merge/auto-merge/tag/release를 실행하지 않는다.
+- [x] PR #911을 base `develop`, head `feat/issue-869-scheduled-policy`, title `[2.0.0] Issue #869 ...`, Korean body, `Closes #869`, DoD Status, 테스트/CI 증거로 생성하고 live metadata를 재확인했다. 현재 head는 assertion fix, manifest scope fix, Ubuntu stale-check portability fix, scheduler observation completion race fix를 포함한다.
+- [x] PR 생성 후 live CI/checks와 review thread를 확인했다. exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19`에서 `CI` `33418781214`, `Ecosystem Reuse Gate` `33418781147`, `Examples` `33418781209` 및 Examples Status가 모두 PASS이고 review/comment blocker는 없다. merge는 exact live head와 fresh `승인`을 다시 확인한 뒤 별도로 수행하며, 이 계획에서는 merge/auto-merge/tag/release를 실행하지 않는다.
 
 ## 의존성 순서와 재실행 규칙
 
@@ -412,7 +412,7 @@ bash scripts/smoke-validate.sh stale-check
 - [x] 한국어 문서 품질 검토 `KO-01`~`KO-07`와 six-perspective Step 3-R plan review가 기록된다.
 - [x] Step 3-R conditional 항목 중 coroutine/suspend, 새 module settings 등록, Exposed import/receiver, JDK preview, external backend capability는 이 issue 범위에 해당하지 않음을 review artifact에 `N/A`로 남기고, 해당하는 auto-configuration ordering, resource ownership/close, blocking lease-floor, stale guard, rollback 항목은 작업 1~7의 구체적인 assertion/명령으로 덮는다.
 - [x] six lanes와 main integration의 최신 결과가 `P0=0`, `P1=0`이다. P2/P3는 disposition과 구현 task가 추적된다.
-- [x] 계획과 plan review가 Lore commit으로 고정되고, helper required-checks에는 `spec`과 `plan` 증거가 등록된다. `tests`, `docs`, `pr`와 main verification은 구현 후에만 pending에서 해소된다.
+- [x] 계획과 plan review가 Lore commit으로 고정되고, helper required-checks에는 `spec`, `plan`, `tests`, `docs`, `pr` 증거와 main verification까지 등록·해소했다.
 - [x] 이 문서와 review artifact를 사용자가 검토할 수 있도록 구현 commit SHA `dfff002cf43f1322eda04806be52303299cde220`와 파일 링크를 handoff에 제시한다.
 
-계획 승인은 확인되었고 작업 1~7의 구현·검증 및 PR #911 생성까지 완료되었다. hosted CI의 다섯 실패(assertion governance, missing ecosystem scope, coordinator receipt 재사용, Ubuntu `rg` 의존성, scheduler observation completion race)는 각각 커밋·manifest/receipt 보정·portable stale-check helper·bounded stop latch로 처분했으며, 새 head의 hosted CI/live review 확인이 남아 있다. merge·auto-merge·tag·release는 이 작업에서 실행하지 않는다.
+계획 승인은 확인되었고 작업 1~7의 구현·검증 및 PR #911 생성까지 완료되었다. hosted CI의 다섯 실패(assertion governance, missing ecosystem scope, coordinator receipt 재사용, Ubuntu `rg` 의존성, scheduler observation completion race)는 각각 커밋·manifest/receipt 보정·portable stale-check helper·bounded stop latch로 처분했다. 최신 exact head `8231322c22d7c3e59188cb50d4ea9bb6c30ffa19`의 hosted CI/Examples와 live review/thread 확인도 완료되었으며, merge·auto-merge·tag·release는 이 작업에서 실행하지 않는다.
