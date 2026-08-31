@@ -502,8 +502,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260830T-2.0.0-ci-compatibility-followup-issue-866",
-    "checksum": "afad7a01701f9e8fc3aa33ebe6803a3527f5b208cf12fb4ae68d502781266607"
+    "receipt_id": "20260901T-issue-869-scheduled-policy-scope",
+    "checksum": "85cd0f5b18ae3cb28e064e0c390f48ff4202238e3638461c5887b6d71462fb08"
   },
   "planned_scope_replan_receipts": {
   },

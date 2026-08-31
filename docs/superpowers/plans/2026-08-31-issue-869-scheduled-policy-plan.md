@@ -316,7 +316,7 @@ red 실행 명령:
   - 두 README의 dependency snippet에 `bluetape4k.leader.spring.boot`, `bluetape4k.leader.micrometer`가 있다.
 - [x] stale guard는 실패 시 관련 계약 누락을 한 줄로 보여 주며 기존 project count/stale ref/required module/leader diagnostics/image link guard를 유지한다.
 - [x] `.github/workflows/Examples.yml`의 기존 module registration은 중복하지 않고 `README and stale contract guards` job을 추가했다. 이 job은 `timeout-minutes: 10`, checkout 후 Node/Bash parity·stale guard를 실행하며 `changes` output 조건과 `needs: changes`로 실패를 전파한다. Gradle/Java는 이 job에서 사용하지 않으므로 별도 setup을 두지 않았다.
-- [x] PR changed-path가 ecosystem reuse train의 정확히 하나의 track에 매핑되도록 `issue-869-leader-scheduled-policy` follow-up scope를 `docs/ecosystem-reuse-train.json`에 등록했다. exact base/head와 이번 PR의 allowed paths를 고정하고 `check-ecosystem-reuse.py --pr-scope`를 로컬에서 통과시켰다.
+- [x] PR changed-path가 ecosystem reuse train의 정확히 하나의 track에 매핑되도록 `issue-869-leader-scheduled-policy` follow-up scope를 `docs/ecosystem-reuse-train.json`에 등록했다. exact base/head와 이번 PR의 allowed paths를 고정하고 scope canonical SHA-256 `85cd0f5b18ae3cb28e064e0c390f48ff4202238e3638461c5887b6d71462fb08` 및 fresh `coordinator_scope_receipt`를 발행한 뒤 `check-ecosystem-reuse.py --pr-scope`를 로컬에서 통과시켰다.
 - [x] architecture/sequence diagram은 reducer와 Spring integration을 혼합하지 않으므로 수정하지 않았고, diagram은 `N/A`로 review에 기록한다.
 
 검증 명령:

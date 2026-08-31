@@ -61,7 +61,7 @@
 | default context의 unrelated retention task를 전체 task 부재로 오해할 위험 | fixture 선언 task만 부재인지 확인하고 README/plan/spec에 unrelated task 경계를 명시했다. |
 | upstream CTW 실행 결함 | Freefair plugin을 제거하고 runtime proxy를 최종 결정으로 고정했다. |
 | hosted assertion governance가 legacy import를 거부한 문제 | `kotlin.test.assertNull` 사용을 Bluetape assertion의 `shouldBeNull()`로 치환한 `8f8ec52833dbba77e9546532e1decb47d294448b` 커밋을 만들고 assertion governance 및 39개 테스트를 재실행했다. |
-| hosted ecosystem reuse gate가 Issue #869 변경 경로를 찾지 못한 문제 | `docs/ecosystem-reuse-train.json`에 branch/base와 모든 PR 변경 경로를 담은 `issue-869-leader-scheduled-policy` follow-up scope를 추가하고 exact `--pr-scope` checker를 로컬에서 통과시켰다. |
+| hosted ecosystem reuse gate가 Issue #869 변경 경로를 찾지 못한 문제 | `docs/ecosystem-reuse-train.json`에 branch/base와 모든 PR 변경 경로를 담은 `issue-869-leader-scheduled-policy` follow-up scope를 추가하고, 새 `coordinator_scope_receipt`(`20260901T-issue-869-scheduled-policy-scope`, scope canonical SHA-256 `85cd0f5b18ae3cb28e064e0c390f48ff4202238e3638461c5887b6d71462fb08`)를 발행했다. exact `--pr-scope` checker를 로컬에서 통과시켰다. |
 
 ## 검증 증거
 

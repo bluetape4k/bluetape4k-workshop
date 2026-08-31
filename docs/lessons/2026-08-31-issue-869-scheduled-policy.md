@@ -110,6 +110,10 @@
    scope에 매핑되지 않아 실패했다. `issue-869-leader-scheduled-policy`에 정확한
    branch/base와 이번 PR의 모든 변경 경로를 등록했고, 같은 `--pr-scope` 명령으로
    로컬에서 재현·통과를 확인했다.
+9. 세 번째 hosted CI는 follow-up scope를 추가하면서 기존 coordinator receipt를
+   재사용한 것을 거부했다. 새 `coordinator_scope_receipt`를 발행하고 scope
+   canonical JSON SHA-256 `85cd0f5b18ae3cb28e064e0c390f48ff4202238e3638461c5887b6d71462fb08`
+   를 연결해야 trusted manifest 비교까지 통과한다.
 
 ## Future guard
 
@@ -126,4 +130,6 @@
   갱신한다.
 - 새 workshop PR은 생성 전에 `docs/ecosystem-reuse-train.json`에 정확한
   `expected_head_ref`/`expected_base_ref`와 changed-path `allowed_paths`를 하나의
-  follow-up scope로 등록하고, `check-ecosystem-reuse.py --pr-scope`를 실행한다.
+  follow-up scope로 등록하고, scope canonical JSON SHA-256과 새
+  `coordinator_scope_receipt`를 함께 발행한 뒤 `check-ecosystem-reuse.py --pr-scope`를
+  실행한다. 기존 receipt ID/checksum 재사용은 금지한다.
