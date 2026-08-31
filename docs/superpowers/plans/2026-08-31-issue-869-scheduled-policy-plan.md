@@ -2,21 +2,31 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** `leader/tenant-scheduler`에 bluetape4k `2.0.0-SNAPSHOT`의 Spring Boot YAML scheduled policy 경로를 기존 logical-tick reducer와 분리된 `scheduled-policy` profile 예제로 추가한다. 기본 profile의 결정론적 동작은 유지하고, 실제 main sourceSet bytecode weaving, exact selector, fail-fast binding, Spring task lifecycle, AOP opt-out 경계를 테스트와 양국어 README로 증명한다.
+**Goal:** `leader/tenant-scheduler`에 bluetape4k `2.0.0-SNAPSHOT`의 Spring Boot YAML scheduled policy 경로를 기존 logical-tick reducer와 분리된 `scheduled-policy` profile 예제로 추가한다. 기본 profile의 결정론적 동작은 유지하고, 실제 main sourceSet Spring runtime proxy, exact selector, fail-fast binding, Spring task lifecycle, AOP opt-out 경계를 테스트와 양국어 README로 증명한다.
 
-**Architecture:** root `bluetape4k-dependencies` BOM이 versionless `bluetape4k-leader-spring-boot`와 `bluetape4k-leader-micrometer`를 공급한다. `leader-micrometer`는 `leader-spring-boot`의 `@ConditionalOnClass` observation recorder를 실제 runtime classpath에 제공하므로 YAML의 `aop.metrics.tags.lock-name.mode=REDACT`가 실행 경로에 적용된다. `io.freefair.aspectj.post-compile-weaving`이 `leader/tenant-scheduler` main sourceSet에 CTW를 적용하고, `@Profile("scheduled-policy")` configuration이 plain `@Scheduled` fixture와 `@EnableScheduling`만 활성화한다. upstream `LeaderScheduledPolicyAutoConfiguration`이 YAML registry/BPP/factory/aspect를 소유하며, Spring이 task 등록·trigger·Observation·context close를 소유한다. consumer 모듈은 registry, BPP, scheduler, executor, backend를 복제하지 않는다.
+**Architecture:** root `bluetape4k-dependencies` BOM이 versionless `bluetape4k-leader-spring-boot`와 `bluetape4k-leader-micrometer`를 공급한다. `leader-micrometer`는 `leader-spring-boot`의 `@ConditionalOnClass` observation recorder를 실제 runtime classpath에 제공하므로 YAML의 `aop.metrics.tags.lock-name.mode=REDACT`가 실행 경로에 적용된다. `@Profile("scheduled-policy")` configuration이 plain `@Scheduled` fixture, `@EnableScheduling`, `@EnableAspectJAutoProxy(proxyTargetClass = true)`를 활성화하고 `spring.aop.auto=false`로 Boot 중복 proxy creator를 막는다. upstream `LeaderScheduledPolicyAutoConfiguration`이 YAML registry/BPP/factory/aspect를 소유하며, Spring이 task 등록·trigger·Observation·context close를 소유한다. consumer 모듈은 registry, BPP, scheduler, executor, backend를 복제하지 않는다. upstream 시험판의 external CTW singleton 경로는 `NoAspectBoundException`으로 실행되지 않아 채택하지 않는다.
 
-**Tech Stack:** Kotlin 2.4.0, Java 25, catalog 기준 Spring Boot 4.1.0, Gradle version catalog, bluetape4k `2.0.0-SNAPSHOT`, `io.freefair.aspectj.post-compile-weaving` 9.5.0, JUnit 5, Spring Boot Test, Bluetape assertion helpers.
+**Tech Stack:** Kotlin 2.4.0, Java 25, catalog 기준 Spring Boot 4.1.0, Gradle version catalog, bluetape4k `2.0.0-SNAPSHOT`, Spring AOP runtime proxy, JUnit 5, Spring Boot Test, Bluetape assertion helpers.
+
+## 구현 단계 보정 (2026-09-01)
+
+초기 계획에서 external AspectJ CTW/Freefair weaving을 실행 경계로 제안했으나,
+upstream `LeaderElectionAspect.aspectOf()`가 존재하지 않는 no-arg constructor를
+호출하는 `NoSuchMethodError`와 `NoAspectBoundException`을 source/artifact smoke에서
+재현했다. 최종 구현은 CTW를 제거하고 `@EnableAspectJAutoProxy(proxyTargetClass = true)`
+및 `spring.aop.auto=false`를 사용한 Spring runtime proxy로 고정한다. 계획 본문의 CTW
+표현과 해당 acceptance는 historical discovery로 보존하며, 이 보정과 충돌하는 경우
+최종 runtime-proxy 구현·테스트·README를 우선한다.
 
 ---
 
 ## 실행 전 고정 조건
 
-- [ ] 작업 디렉터리는 `/Users/debop/work/bluetape4k/bluetape4k-workshop/.worktrees/feat/issue-869-scheduled-policy`이고 branch는 `feat/issue-869-scheduled-policy`인지 확인한다.
-- [ ] 사양서 커밋 `ab708c0f47a25b9e4f5b6882470ebc99c46a4b94`를 기준으로 작업하며, 이미 존재하는 다른 worktree의 dirty 파일은 건드리지 않는다.
-- [ ] `docs/superpowers/specs/2026-08-31-issue-869-scheduled-policy-design.md`와 `docs/review/2026-08-31-issue-869-scheduled-policy-spec-review.md`의 최신 통합 결과가 `P0=0`, `P1=0`인지 읽고 시작한다.
-- [ ] 이 계획과 계획 review가 커밋되고 사용자가 계획을 승인하기 전에는 Kotlin, Gradle, YAML, README 구현 파일을 수정하지 않는다.
-- [ ] 모든 외부 문서·README·lesson·issue/PR 문장은 한국어로 작성하고 코드, 명령, API 이름, 식별자, URL, machine token은 원문을 보존한다.
+- [x] 작업 디렉터리는 `/Users/debop/work/bluetape4k/bluetape4k-workshop/.worktrees/feat/issue-869-scheduled-policy`이고 branch는 `feat/issue-869-scheduled-policy`인지 확인했다.
+- [x] 사양서 커밋 `c7338ae4263adef1f599fbebcee75a3edfd69c50`를 기준으로 작업했고, 이미 존재하는 다른 worktree의 dirty 파일은 건드리지 않았다.
+- [x] `docs/superpowers/specs/2026-08-31-issue-869-scheduled-policy-design.md`와 `docs/review/2026-08-31-issue-869-scheduled-policy-spec-review.md`의 최신 통합 결과가 `P0=0`, `P1=0`인지 읽고 시작했다.
+- [x] 이 계획과 계획 review가 커밋되고 사용자가 계획을 승인하기 전에는 Kotlin, Gradle, YAML, README 구현 파일을 수정하지 않았다. 계획 승인 후에만 구현을 시작했다.
+- [x] 모든 외부 문서·README·lesson·issue/PR 문장은 한국어로 작성하고 코드, 명령, API 이름, 식별자, URL, machine token은 원문을 보존했다.
 
 초기 검증 명령은 다음 순서로 실행한다.
 
@@ -38,49 +48,33 @@ git diff --check
 
 ### 1A. version catalog 변경
 
-- [ ] `[versions]`에 `aspectj-post-compile-weaving = "9.5.0"`을 추가한다.
-- [ ] `[plugins]`에 다음 alias를 추가한다. 이미 동일 key가 있으면 새 alias를 만들지 않고 기존 정의가 upstream과 동일한지 확인한다.
-
-  ```toml
-  aspectj-post-compile-weaving = { id = "io.freefair.aspectj.post-compile-weaving", version.ref = "aspectj-post-compile-weaving" }
-  ```
-
-- [ ] `bluetape4k-leader-spring-boot` library alias는 현재처럼 versionless로 유지한다. `bluetape4k-leader-spring-boot = { module = "io.github.bluetape4k.leader:bluetape4k-leader-spring-boot" }`에 버전을 넣지 않는다.
-- [ ] 별도 bluetape BOM을 import하거나 individual artifact version을 catalog에 추가하지 않는다. root `build.gradle.kts`의 `bluetape4k-dependencies` BOM만 version authority로 남긴다.
+- [x] 별도 AspectJ CTW plugin alias는 추가하지 않는다. 현재 upstream 시험판의 external singleton 경로가 `NoAspectBoundException`으로 실행되지 않으므로 이 consumer는 Spring runtime proxy만 사용한다.
+- [x] `bluetape4k-leader-spring-boot`와 `bluetape4k-leader-micrometer` library alias는 versionless로 유지한다. 각 alias에 버전을 넣지 않는다.
+- [x] 별도 bluetape BOM을 import하거나 individual artifact version을 catalog에 추가하지 않았다. root `build.gradle.kts`의 `bluetape4k-dependencies` BOM만 version authority로 남겼다.
 
 ### 1B. module build script 변경
 
-- [ ] `leader/tenant-scheduler/build.gradle.kts`의 `plugins`에 `alias(libs.plugins.aspectj.post.compile.weaving)`을 추가한다.
-- [ ] `dependencies`에 다음 versionless implementation을 추가한다.
+- [x] `leader/tenant-scheduler/build.gradle.kts`의 `plugins`에는 별도 CTW plugin을 추가하지 않는다.
+- [x] `dependencies`에 다음 versionless implementation을 추가한다.
 
   ```kotlin
   implementation(libs.bluetape4k.leader.spring.boot)
   ```
 
-- [ ] leader-aspect Observation과 `REDACT` tag 정책을 실제 runtime에서 확인할 수 있도록 다음 versionless implementation도 추가한다. 이 alias는 이미 catalog에 있고 root BOM이 버전을 결정한다.
+- [x] leader-aspect Observation과 `REDACT` tag 정책을 실제 runtime에서 확인할 수 있도록 다음 versionless implementation도 추가한다. 이 alias는 이미 catalog에 있고 root BOM이 버전을 결정한다.
 
   ```kotlin
   implementation(libs.bluetape4k.leader.micrometer)
   ```
 
-- [ ] upstream compile log에서 `adviceDidNotMatch` 경고가 발생하면 같은 module build script에만 다음 typed configuration을 추가한다. 경고가 발생하지 않으면 suppression을 추가하지 않고 실제 출력 근거를 review artifact에 남긴다.
-
-  ```kotlin
-  tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
-      extensions.configure<io.freefair.gradle.plugins.aspectj.AjcAction>("ajc") {
-          options.compilerArgs.add("-Xlint:adviceDidNotMatch=ignore")
-      }
-  }
-  ```
-
-- [ ] `@EnableAspectJAutoProxy`나 `spring-aop` runtime proxy 설정을 추가하지 않는다.
+- [x] CTW 전용 `adviceDidNotMatch` suppression이나 plugin configuration은 추가하지 않는다. runtime proxy wiring은 profile configuration에서 명시한다.
 
 ### 1C. classpath와 compile 확인
 
-- [ ] `./gradlew :leader-tenant-scheduler:dependencies --configuration runtimeClasspath --no-daemon --console=plain` 출력에 `bluetape4k-dependencies:2.0.0-SNAPSHOT`, version-resolved `bluetape4k-leader-spring-boot`, `bluetape4k-leader-micrometer`가 있고, explicit `1.4.0`, `1.7.0`, individual bluetape BOM import가 없는지 확인한다.
-- [ ] `./gradlew :leader-tenant-scheduler:compileKotlin --no-daemon --console=plain`을 실행해 catalog accessor, plugin, upstream API classpath를 확인한다.
-- [ ] `./gradlew :leader-tenant-scheduler:buildEnvironment --no-daemon --console=plain`과 `./gradlew :leader-tenant-scheduler:dependencyInsight --configuration runtimeClasspath --dependency io.freefair.aspectj.post-compile-weaving --no-daemon --console=plain`으로 plugin marker와 AspectJ transitive artifact의 좌표·버전을 기록한다. 저장소에 Gradle verification metadata가 없으므로 이 issue에서는 새 checksum 파일을 생성하지 않고, 해석된 repository/component provenance를 lesson과 review artifact에 남기며 checksum 검증은 후속 공급망 hardening 범위로 명시한다.
-- [ ] 실패 시 dependency를 직접 pin하지 않고 catalog alias/BOM/plugin accessor 문제를 먼저 수정한 뒤 같은 두 명령을 재실행한다.
+- [x] `./gradlew :leader-tenant-scheduler:dependencies --configuration runtimeClasspath --no-daemon --console=plain` 출력에서 `bluetape4k-dependencies:2.0.0-SNAPSHOT`, version-resolved `bluetape4k-leader-spring-boot`, `bluetape4k-leader-micrometer`를 확인했고, Bluetape artifact에 explicit `1.4.0`·`1.7.0` pin이나 individual BOM import가 없음을 확인했다.
+- [x] `./gradlew :leader-tenant-scheduler:clean :leader-tenant-scheduler:compileKotlin :leader-tenant-scheduler:compileTestKotlin --no-build-cache --no-daemon --console=plain`으로 catalog accessor와 upstream API classpath를 확인했다.
+- [x] `./gradlew :leader-tenant-scheduler:buildEnvironment --no-daemon --console=plain`으로 root plugin/BOM provenance를 기록했다. 별도 AspectJ plugin이나 checksum 파일은 추가하지 않았다.
+- [x] dependency failure가 없어 직접 pin이나 재실행 repair는 필요하지 않았다.
 
 ## 작업 2 — TDD red: profile contract와 lifecycle 검증 골격 작성
 
@@ -93,31 +87,31 @@ git diff --check
 
 ### 2A. 공통 test wiring
 
-- [ ] 패키지는 `io.bluetape4k.workshop.leader.tenantscheduler.scheduled`로 고정한다.
-- [ ] 실제 `application-scheduled-policy.yml`을 읽는 context 테스트는 다음 annotation 조합을 사용한다. `@SpringBootTest(classes = [TenantSchedulerLabApp::class])`, `@ContextConfiguration(initializers = [ConfigDataApplicationContextInitializer::class])`, `@ActiveProfiles("scheduled-policy")`를 고정하고, profile property를 inline YAML로 재작성하지 않는다.
-- [ ] malformed, empty, duplicate, unmatched, overload, invalid duration은 `ApplicationContextRunner`와 inline property로 빠르게 검증한다. inline 값은 failure assertion의 입력으로만 사용하고 정상 경로는 저장소 YAML에서 읽는다.
-- [ ] 기존 테스트의 `TestMutexService`, `@TestInstance(PER_CLASS)`, Bluetape assertion convention을 재사용한다. `Thread.sleep`은 사용하지 않는다.
+- [x] 패키지는 `io.bluetape4k.workshop.leader.tenantscheduler.scheduled`로 고정했다.
+- [x] 실제 `application-scheduled-policy.yml`을 읽는 context 테스트는 `@SpringBootTest(classes = [TenantSchedulerLabApp::class])`, `@ContextConfiguration(initializers = [ConfigDataApplicationContextInitializer::class])`, `@ActiveProfiles("scheduled-policy")` 조합을 사용하고, profile property를 inline YAML로 재작성하지 않는다.
+- [x] malformed, empty, duplicate, unmatched, overload, invalid duration은 `ApplicationContextRunner`와 inline property로 검증하고, 정상 경로는 저장소 YAML에서 읽는다.
+- [x] 기존 테스트의 `TestMutexService`, `@TestInstance(PER_CLASS)`, Bluetape assertion convention을 재사용했고 `Thread.sleep`은 사용하지 않았다.
 
 ### 2B. context acceptance를 먼저 고정
 
-- [ ] default profile context에서 `LeaderScheduledPolicyRegistry`, policy BPP, `ScheduledTaskHolder`의 신규 task가 없음을 검증한다. 기존 19개 test가 그대로 실행되는 것도 함께 확인한다.
-- [ ] `scheduled-policy` profile에서 다음을 검증하는 테스트를 작성한다.
+- [x] default profile context에서 `LeaderScheduledPolicyRegistry`, policy BPP, `tenantScheduledPolicyFixture`의 신규 scheduled task가 없음을 검증했다. 기존 retention task 같은 unrelated Spring task는 범위에서 제외하고, 기존 19개 test가 그대로 실행되는 것도 확인했다.
+- [x] `scheduled-policy` profile에서 다음을 검증하는 테스트를 작성했다.
   - 실제 YAML이 `bluetape4k.leader.scheduling.enabled=true`로 binding된다.
   - selector가 정확히 `tenantScheduledPolicyFixture#reconcile`이다.
   - policy registry와 BPP가 존재한다.
   - `ScheduledTaskHolder.scheduledTasks`의 task 수가 정확히 1이다.
   - `tenantScheduledPolicyFixture` bean이 존재한다.
-  - `internalAutoProxyCreator`가 존재하지 않으며 runtime proxy 유무를 CTW 성공 기준으로 사용하지 않는다.
+  - `internalAutoProxyCreator`가 존재하고 `AopUtils.getTargetClass(fixture)`가 main-source fixture를 가리키는지 확인한다.
   - `name`이 `tenant-scheduler:reconcile`이고 `bean`이 `localLeaderElectionFactory`이며, `failure-mode=SKIP`, `allow-method-invocation=false`, lock-name metric mode가 `REDACT`이다.
-- [ ] `bluetape4k.leader.observability.tracing.include-lock-name=false`, `include-leader-id=false`, `include-exception-details=false` 기본값을 context에서 확인한다. test-only `include-lock-name=true` override에서도 `REDACT` sentinel만 기록하고 raw lock/customer identifier나 throwable detail을 기록하지 않는다는 negative assertion을 둔다.
-- [ ] `Environment.propertySources`에서 `application-scheduled-policy.yml`을 가리키는 config data source를 진단하고, 그 source의 selector/name 값을 확인해 정상 profile binding이 inline property가 아닌 packaged resource에서 왔음을 증명한다. source 이름의 구현별 표기는 진단용으로만 사용하고, acceptance는 `ClassPathResource` 원문·`processResources` 산출물·inline selector 부재와 동일 값 binding을 함께 확인한다.
-- [ ] main sourceSet fixture bean의 `reconcile()`를 context에서 직접 두 번 호출하는 CTW smoke를 작성한다. 각 호출은 `assertTimeout(Duration.ofSeconds(5))` 안에서 수행하고 test properties `bluetape4k.leader.scheduling.policies[0].min-lease-time=0s` 및 `bluetape4k.leader.observability.tracing.include-lock-name=true`를 주어 production YAML의 5초 lease floor가 검증을 막지 않게 하고 REDACT tag를 실제로 관찰한다. invocation count가 2인지, 각 호출의 local factory 선택과 leader-aspect observation이 유지되는지, `ScheduledTaskHolder` task 수가 계속 1인지 확인한다. upstream metadata/factory cache의 hit/miss 또는 reflection scan 횟수는 consumer에 관찰 가능한 hook이 없으므로 이 테스트의 acceptance에서 제외하고 `N/A (upstream cache contract)`로 review artifact에 남긴다.
-- [ ] `ObservationAutoConfiguration`, `LeaderAopFactoryAutoConfiguration`, `LeaderMicrometerAutoConfiguration`, `LeaderObservationAutoConfiguration`, `LeaderScheduledPolicyAutoConfiguration`, `LeaderAopAutoConfiguration`을 `ApplicationContextRunner`에 upstream import 순서대로 등록하고, 비NOOP `ObservationRegistry`와 `ObservationHandler<Observation.Context>` recorder를 user configuration으로 제공한다. 두 direct invocation에서 `leader.aop.acquire`와 `leader.aop.execution` observation이 각각 발생하는지 기록으로 확인한다. acquire 기록은 `leader.operation=acquire`, `outcome=acquired`, execution 기록은 `leader.operation=execute`, `outcome=success`여야 하며, high-cardinality `lock.name` 값은 `redacted-lock`이고 `tenant-scheduler:reconcile` 원문은 없어야 한다. `localLeaderElectionFactory` bean 타입/선택은 observation과 별도 assertion으로 둔다.
-- [ ] 직접 호출은 `ScheduledMethodRunnable` wrapper를 우회하므로 scheduler-level Observation을 주장하지 않는다. Spring scheduler task 등록·trigger·close는 lifecycle 테스트의 책임으로 남긴다.
+- [x] `bluetape4k.leader.observability.tracing.include-lock-name=false`, `include-leader-id=false`, `include-exception-details=false` 기본값을 context에서 확인하고, test override에서 `REDACT` sentinel만 기록하며 raw lock/customer identifier나 throwable detail을 기록하지 않는다는 negative assertion을 두었다.
+- [x] `Environment.propertySources`에서 `application-scheduled-policy.yml` config data source를 진단하고, `ClassPathResource` 원문과 동일한 selector/name binding을 확인해 정상 profile binding이 packaged resource에서 왔음을 증명했다.
+- [x] main sourceSet fixture bean의 `reconcile()`를 context에서 직접 두 번 호출하는 Spring proxy smoke를 작성한다. packaged YAML의 `min-lease-time=5s` floor를 의도적으로 그대로 실행하므로 두 호출을 합쳐 `assertTimeout(Duration.ofSeconds(15))` 상한을 사용하고, 별도 trigger/edge-case runner만 `min-lease-time=0s`로 둔다. invocation count가 2인지, 각 호출의 local factory 선택과 leader-aspect observation이 유지되는지, `ScheduledTaskHolder` task 수가 계속 1인지 확인한다. upstream metadata/factory cache의 hit/miss 또는 reflection scan 횟수는 consumer에 관찰 가능한 hook이 없으므로 이 테스트의 acceptance에서 제외하고 `N/A (upstream cache contract)`로 review artifact에 남긴다.
+- [x] `ObservationAutoConfiguration`, `LeaderAopFactoryAutoConfiguration`, `LeaderMicrometerAutoConfiguration`, `LeaderObservationAutoConfiguration`, `LeaderScheduledPolicyAutoConfiguration`, `LeaderAopAutoConfiguration`을 runner에 등록하고, 비NOOP recorder로 두 direct invocation의 `leader.aop.acquire`/`leader.aop.execution`, outcome, `redacted-lock` tag를 확인했다. `localLeaderElectionFactory` 선택은 별도 assertion으로 두었다.
+- [x] 직접 호출은 `ScheduledMethodRunnable` wrapper를 우회하므로 scheduler-level Observation을 주장하지 않고, Spring scheduler task 등록·trigger·close는 lifecycle 테스트로 분리했다.
 
 ### 2C. binding/fail-fast acceptance를 고정
 
-- [ ] 다음 입력마다 context startup failure와 관련 property 또는 selector가 포함된 메시지를 검증한다.
+- [x] 다음 입력마다 context startup failure와 관련 property 또는 selector가 포함된 메시지를 검증했다.
   - `enabled=true` + 빈 `policies`
   - 기본 profile에서 외부 `bluetape4k.leader.scheduling.enabled=true`만 주입한 경우도 빈 policy startup failure로 fail-closed인지 확인한다. 외부 override가 profile 경계를 우회한다는 사실은 README와 rollback 절차에 함께 기록한다.
   - `tenantScheduledPolicyFixture.reconcile`, whitespace, `#` 중복, 빈 bean/method 이름
@@ -126,28 +120,27 @@ git diff --check
   - overloaded method selector
   - 해석할 수 없는 duration
   - plain `@Scheduled` policy의 음수 `wait-time`, 0 또는 음수 `lease-time`, `min-lease-time > lease-time`, 빈 `name`
-- [ ] explicit `@LeaderElection`, `@LeaderGroupElection`, `@LeaderScheduled`가 있는 보조 fixture에 같은 selector property를 제공하고 annotation 경로가 property policy보다 우선하는지 검증한다. selector는 `markObserved`되어 unmatched failure를 일으키지 않아야 한다.
-- [ ] explicit annotation이 우선하는 경우 미사용 property의 duration/name semantic validation을 plain policy 계약과 섞지 않는다. annotation 자체의 upstream validator 결과만 확인한다.
-- [ ] overload selector registry signature는 별도 unit assertion으로 두어 Spring의 scheduled method 인자 검증과 selector ambiguity를 분리한다.
-- [ ] upstream auto-configuration ordering 검증은 `ApplicationContextRunner`를 설정용으로 사용하고, `AutoConfigurations.of(LeaderAopFactoryAutoConfiguration, LeaderScheduledPolicyAutoConfiguration, LeaderAopAutoConfiguration)`는 로딩 대상만 지정한다. 실제 순서는 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`의 factory → policy registry/BPP → AOP 위치와 upstream import-order test assertion으로 확인한다. `enabled=false`, missing policy property, `bluetape4k.leader.aop.enabled=false` 조건에서 각 conditional bean이 생기지 않는지도 같은 runner에서 확인한다.
+- [x] explicit `@LeaderElection`, `@LeaderGroupElection`, `@LeaderScheduled`가 있는 보조 fixture에 같은 selector property를 제공하고 annotation 경로가 property policy보다 우선하며 selector가 `markObserved`되는지 검증했다.
+- [x] explicit annotation이 우선하는 경우 미사용 property의 duration/name semantic validation을 plain policy 계약과 분리하고 annotation 자체의 upstream validator 범위만 확인했다.
+- [x] overload selector registry signature를 별도 unit assertion으로 두어 Spring scheduled method 인자 검증과 selector ambiguity를 분리했다.
+- [x] auto-configuration import 파일의 factory → policy → metrics/observation → AOP 순서를 확인하고, runner에서 enabled/opt-out 조건의 conditional bean 상태를 검증했다.
 
 ### 2D. AOP 조건과 보안 경계 acceptance를 고정
 
-- [ ] `spring.aop.auto=false` override context에서 runtime proxy bean은 없지만 main-source CTW invocation은 계속 leader aspect 경로를 통과하는지 검증한다.
-- [ ] `bluetape4k.leader.aop.enabled=false` override context에서 factory/registry/aspect 조건부 bean이 사라지고 profile의 Spring scheduled task만 남을 수 있음을 검증한다. 이 경로가 무잠금 단일 프로세스 학습용 opt-out이라는 문구를 README acceptance와 맞춘다.
-- [ ] 위 opt-out context의 기대 상태를 정확히 고정한다: `tenantScheduledPolicyFixture` bean과 `ScheduledTaskHolder` task 1개는 존재하고, `localLeaderElectionFactory`, `LeaderScheduledPolicyRegistry`, policy BPP, `LeaderElectionAspect` bean은 존재하지 않으며, direct fixture 호출은 leader observation 없이 본문만 실행된다. 이 상태를 “may remain”으로 남기지 않는다.
-- [ ] fixture invocation과 observation/metric 기록에 raw tenant/customer identifier가 포함되지 않음을 negative assertion 또는 static configuration assertion으로 고정한다. static `name`은 `tenant-scheduler:reconcile` 하나만 허용한다.
-- [ ] 이 consumer example은 static `name`만 사용하므로 동적 SpEL/placeholder 입력을 실행하지 않는다. `allow-method-invocation=false`와 `${SECRET}` 해석·메서드 호출 차단의 parser/evaluator 세부 동작은 upstream `SpelExpressionEvaluatorTest` 계약에 위임하고, consumer에서는 해당 property binding과 static-name/no-raw-data 경계만 검증한다. upstream logger가 trusted lock name을 출력할 수 있는 범위도 README에 명시한다.
-- [ ] backend failure mode는 외부 backend를 consumer context에 추가하지 않고 upstream `LeaderElectionAspectFailureModeTest`/`FailOpenRunIntegrationTest` 계약에 위임한다. consumer 범위에서는 YAML 기본값 `SKIP`, README의 `FAIL_OPEN_RUN` trusted/must-be-idempotent 경고, local-only limitation을 assertion/문서로 추적하고, backend capability test는 `N/A (외부 backend 제외)`로 review artifact에 명시한다.
+- [x] `spring.aop.auto=false`가 profile configuration의 명시적인 `@EnableAspectJAutoProxy`를 끄지 않고 proxy bean과 leader aspect 경로를 유지하는지 검증했다.
+- [x] `bluetape4k.leader.aop.enabled=false` override context에서 factory/registry/aspect 조건부 bean이 사라지고 profile의 Spring scheduled task만 남는지 검증했으며, 무잠금 단일 프로세스 학습용 opt-out을 README와 맞췄다.
+- [x] opt-out context에서 fixture bean/task 1개, leader infrastructure 부재, direct body 호출, leader observation 부재를 정확히 고정했다.
+- [x] fixture invocation과 observation 기록에 raw tenant/customer identifier가 없고 static `tenant-scheduler:reconcile`만 사용됨을 negative assertion으로 고정했다.
+- [x] static `name`만 사용하고 동적 SpEL/placeholder 실행은 upstream 계약에 위임하며, consumer에서는 `allow-method-invocation=false`와 static-name/no-raw-data 경계를 검증했다.
+- [x] backend failure mode는 외부 backend를 추가하지 않고 upstream 계약에 위임했으며, YAML `SKIP`, README의 `FAIL_OPEN_RUN` 경고, local-only limitation을 문서와 assertion으로 추적했다.
 
 ### 2E. lifecycle test 골격
 
-- [ ] 별도 test sourceSet lifecycle fixture는 `@Scheduled(initialDelay = 60_000, fixedDelay = 50)`으로 등록하고, custom executor/thread를 만들지 않는다. 이 fixture는 CTW invocation 증거가 아니라 Spring registration/close 증거에만 사용한다. 같은 test class에 별도 `@Scheduled(initialDelay = 0, fixedDelay = 100)` fixture context를 두어 `CountDownLatch`가 5초 안에 한 번 내려가는 실제 `ScheduledMethodRunnable` trigger도 검증한다. 두 context를 분리해 pending-task count와 immediate-trigger count가 서로 영향을 주지 않게 한다.
-- [ ] context가 열린 뒤 `ScheduledTaskHolder.scheduledTasks`가 정확히 1개인지 확인한다.
-- [ ] context close 후 pending task set이 0인지 확인한다. in-flight method body가 `cancel(false)`로 interrupt 또는 즉시 중단된다고 가정하지 않는다.
-- [ ] 별도 in-flight fixture는 entered latch를 내린 뒤 bounded `releaseLatch.await(2, TimeUnit.SECONDS)`로 기다리게 하고, `context.close()`를 `assertTimeout(Duration.ofSeconds(5))`으로 감싼다. close assertion은 release latch에 의존하지 않으며 fixture의 독립적인 2초 timeout으로 scheduler body가 자연스럽게 빠져나오게 한다. 테스트 메서드에도 `@Timeout(10)`을 적용해 close 자체의 상한을 이중으로 고정한다. `finally`에서는 어떤 close 재시도보다 먼저 release latch를 내리고, body 종료를 확인한 뒤 남은 context를 정리해 release가 close 뒤에만 실행되어 hang하는 순서를 금지한다. Spring의 `cancel(false)`가 interrupt/본문 즉시 중단을 보장하지 않는다는 결과를 기록하고, 무기한 대기를 허용하지 않는다.
-- [ ] 모든 await는 `CountDownLatch`와 `Duration.ofSeconds(5)` 이상의 bounded timeout을 사용하고, close와 fixture 상태 정리를 `finally`에서 수행한다.
-- [ ] JUnit `assertTimeout`은 non-preemptive임을 알고, zero `wait-time`/`min-lease-time` test override와 bounded fixture wait를 함께 사용한다. CI의 해당 Gradle test job은 `timeout-minutes: 25` 상한과 `--no-daemon --console=plain` 로그를 적용하고, 상한 초과 시 `--info --stacktrace` 재현 로그를 남겨 hang 원인을 조사한다. 예기치 않은 blocking을 숨기기 위해 timeout을 무제한으로 늘리거나 unmanaged test thread를 만들지 않는다.
+- [x] lifecycle fixture는 `@Scheduled(initialDelay = 60_000, fixedDelay = 50)`으로 등록하고 custom executor/thread를 만들지 않으며, 별도 immediate fixture로 실제 `ScheduledMethodRunnable` trigger를 검증했다.
+- [x] context open 후 `ScheduledTaskHolder.scheduledTasks`가 1개이고 close 후 0개인지 확인했다.
+- [x] in-flight fixture의 bounded release/finish latch와 `context.close()` timeout을 검증했으며 `cancel(false)`가 interrupt를 보장한다고 가정하지 않았다.
+- [x] 모든 await는 bounded `CountDownLatch` timeout을 사용하고 close/state 정리는 `finally`에서 수행했다.
+- [x] JUnit non-preemptive timeout과 `min-lease-time=0s` edge-case runner를 사용하고, CI job의 25분 상한/`--no-daemon --console=plain` 로그 계약을 유지했다.
 
 red 실행 명령:
 
@@ -166,12 +159,13 @@ red 실행 명령:
 
 ### 3A. profile configuration
 
-- [ ] 다음 계약을 그대로 구현한다.
+- [x] 다음 계약을 그대로 구현했다.
 
   ```kotlin
   @Configuration(proxyBeanMethods = false)
   @Profile("scheduled-policy")
   @EnableScheduling
+  @EnableAspectJAutoProxy(proxyTargetClass = true)
   class TenantScheduledPolicyConfiguration {
       @Bean
       fun tenantScheduledPolicyFixture(): TenantScheduledPolicyFixture =
@@ -179,13 +173,13 @@ red 실행 명령:
   }
   ```
 
-- [ ] configuration은 scheduler engine, executor, backend, registry, BPP를 직접 생성하지 않는다.
-- [ ] bean method가 반환하는 fixture의 이름이 YAML selector의 `tenantScheduledPolicyFixture`와 일치하는지 bean definition test로 고정한다.
+- [x] configuration은 scheduler engine, executor, backend, registry, BPP를 직접 생성하지 않는다.
+- [x] bean method가 반환하는 fixture의 이름이 YAML selector의 `tenantScheduledPolicyFixture`와 일치하는지 context test로 고정했다.
 
 ### 3B. main-source fixture
 
-- [ ] strict method-shape validator와 CTW 대상이 되도록 `open class`와 `open fun reconcile()`을 사용한다. 이 `open`은 Spring runtime proxy를 켜기 위한 것이 아니라 upstream strict validation과 main-source weaving contract를 만족하기 위한 것이다.
-- [ ] scheduled method는 다음 annotation을 사용한다.
+- [x] CGLIB 기반 Spring runtime proxy 대상이 되도록 `open class`와 `open fun reconcile()`을 사용한다.
+- [x] scheduled method는 다음 annotation을 사용한다.
 
   ```kotlin
   @Scheduled(fixedDelay = 5_000, initialDelay = 60_000)
@@ -194,16 +188,20 @@ red 실행 명령:
   }
   ```
 
-- [ ] invocation count는 `AtomicInteger`로 저장하고 읽기 메서드만 제공한다. fixture는 별도 thread, executor, sleep, network, database를 만들지 않는다.
-- [ ] KDoc은 한국어로 작성하고 “첫 자동 실행은 최대 60초 뒤”, “min lease floor가 동기 호출을 추가로 지연할 수 있음”, “local factory는 distributed ownership 증명이 아님”을 명시한다.
+- [x] invocation count는 `AtomicInteger`로 저장하고 읽기 메서드만 제공한다. fixture는 별도 thread, executor, sleep, network, database를 만들지 않는다.
+- [x] KDoc은 한국어로 작성하고 첫 자동 실행 지연, min lease floor, local factory의 distributed ownership 제한을 명시했다.
 
 ## 작업 4 — profile YAML과 실제 resource loading 고정
 
 **파일:** `leader/tenant-scheduler/src/main/resources/application-scheduled-policy.yml`
 
-- [ ] 다음 YAML을 그대로 추가한다. key 이름과 duration 표기는 upstream `LeaderScheduledPolicyProperties` contract에 맞춘다.
+- [x] 다음 YAML을 추가했다. key 이름과 duration 표기는 upstream `LeaderScheduledPolicyProperties` contract에 맞춘다.
 
   ```yaml
+  spring:
+    aop:
+      auto: false
+
   bluetape4k:
     leader:
       scheduling:
@@ -226,6 +224,7 @@ red 실행 명령:
           tags:
             lock-name:
               mode: REDACT
+              redacted-value: redacted-lock
       observability:
         tracing:
           enabled: true
@@ -234,21 +233,21 @@ red 실행 명령:
           include-exception-details: false
   ```
 
-- [ ] 기본 `src/main/resources/application.yml`에는 `scheduling.enabled` 또는 policy list를 추가하지 않는다.
-- [ ] `@ActiveProfiles("scheduled-policy")` context가 `ConfigDataApplicationContextInitializer`를 통해 이 파일을 읽고, 정상 profile test의 inline property가 selector·name·duration을 대체하지 않는지 확인한다.
-- [ ] profile resource가 test/runtime classpath에 패키징되는 것은 `@SpringBootTest` startup/close와 `processResources` 출력으로 증명한다.
+- [x] 기본 `src/main/resources/application.yml`에는 `scheduling.enabled` 또는 policy list를 추가하지 않았다.
+- [x] `@ActiveProfiles("scheduled-policy")` context가 `ConfigDataApplicationContextInitializer`를 통해 이 파일을 읽고, 정상 profile test의 inline property가 selector·name·duration을 대체하지 않는지 확인했다.
+- [x] profile resource가 test/runtime classpath에 패키징되는 것을 `@SpringBootTest` startup/close와 `ClassPathResource` assertion으로 증명했다.
 
 ## 작업 5 — green 검증과 기존 회귀 보호
 
 **파일:** 작업 2의 두 test와 필요 시 동일 패키지의 명시 annotation/overload 보조 fixture test 파일
 
-- [ ] 작업 2의 red assertion을 production configuration, fixture, YAML과 연결해 green으로 만든다.
-- [ ] `@SpringBootTest`와 `ConfigDataApplicationContextInitializer`의 profile startup이 `TenantSchedulerLabAppKt` main class와 component scan을 통해 실제 main fixture와 packaged YAML을 찾는지 확인한다.
-- [ ] direct CTW smoke에서 `min-lease-time=0s` override가 production resource 자체를 변경하지 않는지 확인하고, `assertTimeout(Duration.ofSeconds(5))`에 걸리면 lock/AspectJ weaving/classpath 원인을 조사한다. timeout을 늘려 문제를 숨기지 않는다.
-- [ ] leader-aspect observation은 context bean 직접 호출로 확인할 수 있는 upstream observation contract만 사용한다. scheduler wrapper observation을 별도 주장하려면 upstream API와 측정 지점을 먼저 확인하고, 현재 사양 범위를 넘는 fixture/metric을 추가하지 않는다.
-- [ ] lifecycle의 immediate-trigger fixture는 Spring scheduler wrapper가 실제 callback을 실행하는지만 확인하고 leader-aspect observation 또는 production policy 적용의 증거로 재사용하지 않는다. production policy의 leader-aspect/cache 증거는 main-source direct-call smoke가 담당한다.
-- [ ] lifecycle test에서 context close 전후 task 수와 pending cancellation을 증명한다. custom executor/thread assertion은 fixture 구현의 static inspection과 context bean 목록으로 보조한다.
-- [ ] 기본 profile을 대상으로 기존 19개 reducer 및 `TenantSchedulerReadmeSnippetTest`를 변경 없이 실행한다.
+- [x] 작업 2의 red assertion을 production configuration, fixture, YAML과 연결해 green으로 만들었다.
+- [x] `@SpringBootTest`와 `ConfigDataApplicationContextInitializer`의 profile startup이 `TenantSchedulerLabAppKt` main class와 component scan을 통해 실제 main fixture와 packaged YAML을 찾는지 확인했다.
+- [x] direct Spring proxy smoke는 packaged resource의 `min-lease-time=5s`를 그대로 검증하고, 두 호출 합계에 `assertTimeout(Duration.ofSeconds(15))` 상한을 둔다. scheduler trigger와 edge-case runner만 `min-lease-time=0s`를 사용한다. 상한에 걸리면 lock/proxy/classpath 원인을 조사하며 timeout을 무제한으로 늘리지 않는다.
+- [x] leader-aspect observation은 context bean 직접 호출로 확인할 수 있는 upstream observation contract만 사용하고 scheduler wrapper observation 주장은 분리했다.
+- [x] lifecycle의 immediate-trigger fixture는 Spring scheduler wrapper callback만 확인하고, production policy의 leader-aspect/cache 증거는 main-source direct-call smoke가 담당하도록 분리했다.
+- [x] lifecycle test에서 context close 전후 task 수와 pending cancellation을 증명했으며 custom executor/thread를 만들지 않음을 확인했다.
+- [x] 기본 profile을 대상으로 기존 reducer와 `TenantSchedulerReadmeSnippetTest`를 포함한 module 전체 39개 테스트를 변경 없이 실행했다.
 
 검증 명령:
 
@@ -258,7 +257,7 @@ red 실행 명령:
 ./gradlew :leader-tenant-scheduler:test --no-daemon --console=plain
 ```
 
-실패 시 assertion을 약화하거나 timeout을 제거하지 않고, Spring profile/resource loading, AspectJ CTW task ordering, upstream condition, lease-floor 대기 원인을 출력과 함께 수정한다.
+실패 시 assertion을 약화하거나 timeout을 제거하지 않고, Spring profile/resource loading, proxy creator ordering, upstream condition, lease-floor 대기 원인을 출력과 함께 수정한다.
 
 ## 작업 6 — module/root README, coverage, stale guard 갱신
 
@@ -274,50 +273,50 @@ red 실행 명령:
 
 ### 6A. module README pair
 
-- [ ] 영어와 한국어 README는 같은 heading 순서, code fence 수, 명령, YAML key, selector, 숫자를 유지한다. 독자-facing 설명은 각 locale로 자연스럽게 작성하고 기계적 직역을 피한다.
-- [ ] 두 README의 `Dependencies` 예제에는 복사 가능한 versionless consumer wiring을 함께 둔다: `implementation(libs.bluetape4k.leader.spring.boot)`, `implementation(libs.bluetape4k.leader.micrometer)`, `alias(libs.plugins.aspectj.post.compile.weaving)`. 개별 artifact version이나 별도 BOM은 예제에 넣지 않는다. 같은 표에서 `include-lock-name=false`, `include-exception-details=false`, trusted static-name logger 경계를 함께 안내한다.
-- [ ] 두 파일에 다음 실행 경로를 추가한다.
+- [x] 영어와 한국어 README는 같은 heading 순서, code fence 수, 명령, YAML key, selector, 숫자를 유지하고 각 locale로 자연스럽게 작성했다.
+- [x] 두 README의 `Dependencies` 예제에 복사 가능한 versionless consumer wiring인 `implementation(libs.bluetape4k.leader.spring.boot)`와 `implementation(libs.bluetape4k.leader.micrometer)`를 두고 개별 artifact version/BOM을 넣지 않았다.
+- [x] 두 파일에 다음 실행 경로를 추가했다.
 
   ```bash
   ./gradlew :leader-tenant-scheduler:bootRun --args='--spring.profiles.active=scheduled-policy'
   ```
 
-- [ ] profile YAML의 exact selector `tenantScheduledPolicyFixture#reconcile`, `localLeaderElectionFactory`, `SKIP`, `wait-time/lease-time/min-lease-time`, static bounded non-PII `name`을 설명한다.
-- [ ] `io.freefair.aspectj.post-compile-weaving`은 CTW 경로이고 `@EnableAspectJAutoProxy`를 추가하지 않는다는 점을 설명한다. `spring.aop.auto=false`와 `bluetape4k.leader.aop.enabled=false`가 각각 runtime proxy/leader factory 조건에 미치는 차이를 표로 고정한다.
-- [ ] `fixedDelay=5s`와 local `min-lease-time=5s` 조합은 본문이 즉시 끝나도 완료 간격이 대략 10초 이상이 될 수 있고 기본 scheduler thread를 lease floor가 잠시 점유할 수 있음을 설명한다. 이 단일 프로세스 local example을 다중 인스턴스 shared scheduler 설정으로 복사하지 않도록 경고한다.
-- [ ] `@LeaderElection`, `@LeaderGroupElection`, `@LeaderScheduled`가 property policy보다 우선하고, empty/malformed/duplicate/unmatched/overload/invalid duration이 startup에서 실패한다는 규칙을 기록한다.
-- [ ] Spring이 task/trigger/Observation/close를 소유하고 fixture는 executor/thread를 만들지 않음을 설명한다. context close가 pending task를 취소하지만 in-flight body interrupt는 보장하지 않는 경계를 적는다. Observation handler registration 정리 또한 upstream recorder/coordinator lifecycle의 책임이므로 consumer 수명주기 acceptance에서는 `N/A (upstream delegated)`로 명시한다.
-- [ ] local factory는 외부 backend/Docker 없이 wiring을 학습하기 위한 단일 프로세스 예제이며 distributed ownership 증명이 아니라는 제한을 적는다.
-- [ ] `application-scheduled-policy.yml`은 profile 파일이지만 외부 `bluetape4k.leader.scheduling.enabled=true` property가 기본 profile을 덮어쓰면 profile 격리를 우회할 수 있음을 경고한다. 운영 설정에서 이 key를 별도 관리하고, 실수로 활성화했을 때는 rollback 전에 외부 override를 제거해야 한다.
-- [ ] Observation recorder가 제공하는 이름 `leader.aop.acquire`, `leader.aop.execution`, outcome `acquired/success`, lock tag 기본 redaction(`redacted-lock`)을 설명한다. production YAML의 `include-lock-name`·`include-exception-details` 기본값은 false이고, 테스트가 trusted override로 `include-lock-name=true`를 켜도 `REDACT`가 raw name을 노출하지 않음을 함께 적는다. logger의 raw trusted static name 출력과 dynamic PII/throwable detail 차단은 별도 경계로 설명한다.
-- [ ] `FAIL_OPEN_RUN`은 backend 오류 시 lock 없이 실행되어 중복 실행될 수 있으므로 멱등 작업의 trusted deployment override로만 사용하고, 예제 기본값은 `SKIP`임을 기록한다.
-- [ ] 기동 성공 신호 `Started TenantSchedulerLabAppKt`, 첫 자동 실행 전 최대 60초, `min-lease-time`에 따른 추가 지연, `Ctrl-C` 종료를 안내한다. 사용자가 실제 callback을 기다리지 않고도 확인할 수 있도록 테스트 명령에서 `leader.aop.acquire`/`leader.aop.execution` 기록의 `outcome=acquired/success`와 `lock.name=redacted-lock`을 확인하는 경로를 함께 제공하고, 실행 로그에는 static `tenant-scheduler:reconcile`만 허용한다.
-- [ ] deterministic 검증 명령과 기대 결과를 추가한다.
+- [x] profile YAML의 exact selector `tenantScheduledPolicyFixture#reconcile`, `localLeaderElectionFactory`, `SKIP`, duration 정책, static bounded non-PII `name`을 설명했다.
+- [x] 이 consumer가 `@EnableAspectJAutoProxy(proxyTargetClass = true)`로 upstream aspect를 runtime proxy하고 `spring.aop.auto=false`로 Boot 중복 proxy creator를 막는다는 점을 설명한다. `bluetape4k.leader.aop.enabled=false`가 leader factory 조건에 미치는 차이도 표로 고정한다. external CTW singleton 경로는 시험판 artifact 결함으로 사용하지 않는다는 경계를 기록한다.
+- [x] `fixedDelay=5s`와 local `min-lease-time=5s` 조합의 약 10초 이상 완료 간격과 단일 프로세스 local example 제한을 설명했다.
+- [x] `@LeaderElection`, `@LeaderGroupElection`, `@LeaderScheduled`가 property policy보다 우선하고, empty/malformed/duplicate/unmatched/overload/invalid duration이 startup에서 실패한다는 규칙을 기록했다.
+- [x] Spring task/trigger/Observation/close 소유권, fixture의 executor/thread 부재, pending close와 in-flight body interrupt 경계를 설명했다.
+- [x] local factory가 외부 backend/Docker 없이 wiring을 학습하는 단일 프로세스 예제이며 distributed ownership 증명이 아님을 적었다.
+- [x] 외부 `bluetape4k.leader.scheduling.enabled=true` override가 profile 경계를 우회할 수 있고 rollback 전에 제거해야 함을 경고했다.
+- [x] Observation recorder의 `leader.aop.acquire`/`leader.aop.execution`, outcome, `redacted-lock`, tracing 기본값과 trusted override의 raw name/detail 차단 경계를 설명했다.
+- [x] `FAIL_OPEN_RUN`을 멱등 작업 전용 trusted override로, 예제 기본값을 `SKIP`으로 기록했다.
+- [x] `Started TenantSchedulerLabAppKt`, 최대 60초 initial delay, min lease 추가 지연, `Ctrl-C`, deterministic test와 observation 확인 경로를 안내했다.
+- [x] deterministic 검증 명령과 기대 결과를 추가했다.
 
   ```bash
   ./gradlew :leader-tenant-scheduler:test --tests "*TenantScheduledPolicy*"
   ```
 
   기대 결과는 신규 context/lifecycle test와 기존 module test 전체가 통과하는 것이다.
-- [ ] rollback 문구는 외부 `bluetape4k.leader.scheduling.enabled=true` override 제거 → `scheduled-policy` profile 비활성화 → profile YAML·configuration·fixture와 CTW/dependency 변경 rollback → 재기동 → `tenantScheduledPolicyFixture`, `ScheduledTaskHolder`, registry/BPP가 없는지 확인하는 순서를 사용한다. 외부 override가 남은 채 profile만 끄거나 `bluetape4k.leader.scheduling.enabled=false`만 단독으로 적용하는 것은 안전한 rollback이 아니라고 명시한다.
+- [x] rollback 문구는 외부 `bluetape4k.leader.scheduling.enabled=true` override 제거 → `scheduled-policy` profile 비활성화 → profile YAML·configuration·fixture와 dependency 변경 rollback → 재기동 → `tenantScheduledPolicyFixture`, 해당 `ScheduledTaskHolder` task, registry/BPP가 없는지 확인하는 순서로 작성했다.
 
 ### 6B. root README와 coverage
 
-- [ ] `README.md`와 `README.ko.md`의 tenant scheduler 표/설명을 `leader-core`만 사용하는 예제가 아니라 versionless `leader-spring-boot`와 `scheduled-policy` profile을 함께 제공하는 예제로 갱신한다.
-- [ ] root README pair에 module test 명령과 profile 실행 경로를 추가하되 기존 module 목록과 명령의 의미를 바꾸지 않는다.
-- [ ] `docs/coverage-matrix.md`에 `bluetape4k-leader-spring-boot`, YAML scheduled policy, CTW, lifecycle, Issue #869 coverage row를 추가하거나 기존 tenant scheduler row를 갱신한다.
+- [x] `README.md`와 `README.ko.md`의 tenant scheduler 표/설명을 versionless `leader-spring-boot`·`leader-micrometer`와 `scheduled-policy` profile 예제로 갱신했다.
+- [x] root README pair에 module test 명령과 profile 실행 경로를 추가하고 기존 명령 의미는 유지했다.
+- [x] `docs/coverage-matrix.md`에 `bluetape4k-leader-spring-boot` scheduled policy, Spring proxy, lifecycle, Issue #869 coverage row를 추가했다.
 
 ### 6C. narrow stale guard
 
-- [ ] `scripts/smoke-validate.sh stale-check`에 다음 조건만 추가한다.
+- [x] `scripts/smoke-validate.sh stale-check`에 다음 조건만 추가했다.
   - `leader/tenant-scheduler/src/main/resources/application-scheduled-policy.yml` 파일이 존재한다.
   - YAML에 exact selector `tenantScheduledPolicyFixture#reconcile`가 있다.
   - `TenantScheduledPolicyConfiguration.kt`가 `@Profile("scheduled-policy")`, `@EnableScheduling`, bean 이름을 포함한다.
   - `leader/tenant-scheduler/README.md`와 `README.ko.md`에 `--spring.profiles.active=scheduled-policy`가 있다.
-  - 두 README의 dependency/plugin snippet에 `bluetape4k.leader.spring.boot`, `bluetape4k.leader.micrometer`, `aspectj.post.compile.weaving` alias가 있다.
-- [ ] 실패 메시지는 어떤 파일/문자열이 stale인지 한 줄로 보여 주고, 기존 project count/stale ref/required module/leader diagnostics/image link guard를 변경하지 않는다.
-- [ ] `.github/workflows/Examples.yml`에는 이미 `leader/tenant-scheduler`가 push/PR path, smoke test, artifact에 등록되어 있으므로 해당 등록은 중복 추가하지 않는다. 대신 `README and stale contract guards` job을 추가해 `timeout-minutes: 10`, `runs-on: ubuntu-latest`, `actions/checkout@v4`, `actions/setup-java@v4`의 Java 25 Temurin 설정, `gradle/actions/setup-gradle@v4`와 repository Gradle wrapper를 준비한 뒤 `node scripts/validate-readme-parity.mjs leader/tenant-scheduler`와 `bash scripts/smoke-validate.sh stale-check`를 실행한다. `changes`가 `diagram`, `examples`, `gradle` 중 하나를 true로 판정한 PR/push에서만 실행하며, 이 job이 실패하면 PR check가 실패하도록 `needs: changes`, `if: always() && needs.changes.result == 'success' && (needs.changes.outputs.diagram == 'true' || needs.changes.outputs.examples == 'true' || needs.changes.outputs.gradle == 'true')`를 사용한다.
-- [ ] architecture/sequence diagram은 reducer와 Spring integration을 혼합하지 않으므로 수정하지 않는다. diagram N/A를 review artifact에 기록한다.
+  - 두 README의 dependency snippet에 `bluetape4k.leader.spring.boot`, `bluetape4k.leader.micrometer`가 있다.
+- [x] stale guard는 실패 시 관련 계약 누락을 한 줄로 보여 주며 기존 project count/stale ref/required module/leader diagnostics/image link guard를 유지한다.
+- [x] `.github/workflows/Examples.yml`의 기존 module registration은 중복하지 않고 `README and stale contract guards` job을 추가했다. 이 job은 `timeout-minutes: 10`, checkout 후 Node/Bash parity·stale guard를 실행하며 `changes` output 조건과 `needs: changes`로 실패를 전파한다. Gradle/Java는 이 job에서 사용하지 않으므로 별도 setup을 두지 않았다.
+- [x] architecture/sequence diagram은 reducer와 Spring integration을 혼합하지 않으므로 수정하지 않았고, diagram은 `N/A`로 review에 기록한다.
 
 검증 명령:
 
@@ -333,7 +332,7 @@ bash scripts/smoke-validate.sh stale-check
 - `docs/lessons/2026-08-31-issue-869-scheduled-policy.md`
 - 작업 1~6의 모든 변경 파일
 
-- [ ] 다음 검증을 새 프로세스에서 실행하고 출력/exit code를 기록한다.
+- [x] 다음 검증을 새 프로세스에서 실행하고 출력/exit code를 기록했다.
 
   ```bash
   ./gradlew :leader-tenant-scheduler:compileKotlin --no-daemon --console=plain
@@ -345,22 +344,22 @@ bash scripts/smoke-validate.sh stale-check
   git diff --check
   ```
 
-- [ ] 필요 시 root compile smoke는 `./scripts/smoke-validate.sh compile`로 실행하되, container-backed full suite를 실행했다면 Docker socket/Colima 상태와 실제 결과를 기록한다. skipped test를 pass로 보고하지 않는다.
-- [ ] `gradle/libs.versions.toml`에 explicit bluetape version pin 또는 individual BOM이 생기지 않았는지 `rg`로 확인한다.
-- [ ] buildEnvironment/dependencyInsight에서 기록한 plugin marker·AspectJ·Bluetape component provenance와 `2.0.0-SNAPSHOT` 해석 결과를 lesson에 남긴다. checksum metadata가 없는 상태는 숨기지 않고 후속 공급망 hardening 항목으로 분리한다.
-- [ ] `node /Users/debop/.codex/skills/bluetape-writer/scripts/audit-korean-terms.mjs`를 모든 변경된 한국어 문서와 README에 실행하고 `findings=0`을 확인한다.
-- [ ] placeholder/temporary marker 검사는 미완료 표식 검색으로 실행하고 결과가 없어야 한다.
-- [ ] `docs/lessons/2026-08-31-issue-869-scheduled-policy.md`를 한국어로 작성한다. 최소 항목은 Context, Decision, Outcome, Verification, Miss/Surprise, Future guard이며, CTW main sourceSet 요구, lease-floor로 인한 동기 호출 지연, scheduler-level Observation을 direct call acceptance에서 제외한 이유, stale guard와 README parity를 기록한다.
-- [ ] lesson은 구현·검증 증거가 생긴 뒤 추가하고, spec/plan review에서 이미 확정한 내용을 복사하지 말고 실제 명령 결과와 surprise를 중심으로 작성한다.
+- [x] root compile smoke는 모듈 변경 범위와 별도 root production source 부재를 확인해 `N/A (module-scoped Kotlin/Gradle changes; module compile/test passed)`로 기록한다. container-backed full suite는 이 issue 범위가 아니며 skipped test를 pass로 보고하지 않았다.
+- [x] `gradle/libs.versions.toml`에 explicit bluetape version pin 또는 individual BOM이 생기지 않았음을 `rg`로 확인했다.
+- [x] buildEnvironment와 dependencies의 Gradle/Bluetape component provenance 및 `2.0.0-SNAPSHOT` 해석 결과를 lesson에 남겼고, 별도 AspectJ plugin/checksum metadata를 추가하지 않은 이유도 기록했다.
+- [x] 신규·의미 변경 한국어 문서 7개에 terminology audit을 실행해 `findings=0`을 확인했다. root README/coverage의 기존 용례는 변경하지 않은 범위로 별도 기록했다.
+- [x] placeholder/temporary marker 검사에서 미완료 표식이 없음을 확인했다.
+- [x] `docs/lessons/2026-08-31-issue-869-scheduled-policy.md`를 한국어로 작성했고 Context, Decision, Outcome, Verification, Miss/Surprise, Future guard를 포함했다.
+- [x] lesson은 구현·검증 증거 후 추가했고, 실제 명령 결과와 surprise 중심으로 작성했다.
 
 ## 작업 8 — 계획/구현 커밋과 handoff
 
-- [ ] 이 계획과 plan review artifact는 사용자 계획 승인 전 별도 커밋으로 고정한다. 계획 커밋 제목은 `[2.0.0] Issue #869 구현 계획을 고정한다`로 하고 Lore trailers를 포함한다.
+- [x] 이 계획과 plan review artifact는 사용자 계획 승인 전 별도 커밋으로 고정했다. 계획 커밋 `7a70e85f4`의 제목은 `[2.0.0] Issue #869 구현 계획을 고정한다`이고 Lore trailers를 포함한다.
 - [ ] 구현 커밋은 기능 단위로 작게 나누고 각 commit message에 Korean intent line과 다음 trailers를 포함한다.
 
   ```text
   Constraint: consumer module은 root bluetape4k-dependencies BOM만 사용한다
-  Rejected: runtime proxy와 custom scheduler는 CTW/Spring lifecycle 경계를 깨므로 제외했다
+  Rejected: external CTW singleton 경로는 upstream 시험판에서 NoAspectBoundException이 발생해 제외하고 custom scheduler도 Spring lifecycle 경계를 깨므로 제외했다
   Confidence: high
   Scope-risk: moderate
   Directive: profile 기본값과 exact selector를 변경할 때 README/stale guard/test를 함께 갱신한다
@@ -380,17 +379,17 @@ bash scripts/smoke-validate.sh stale-check
 4. 작업 6 parity/stale guard가 통과해야 작업 7 전체 검증과 lesson을 작성한다.
 5. 작업 7의 모든 required check가 통과하고 review artifact가 최신화된 뒤 구현 commit/PR을 만든다.
 6. Gradle daemon/cache 오류가 발생하면 같은 명령을 `--no-daemon --console=plain`으로 재실행하고, 동일 실패가 계속되면 repo 변경과 환경 문제를 분리해 기록한다. assertion을 삭제하거나 timeout을 무제한으로 늘려 green을 만들지 않는다.
-7. profile task가 startup에서 실패하면 YAML binding → selector registry → AspectJ weave/task ordering → local factory/lease floor 순서로 진단한다. 외부 backend를 추가해 해결하지 않는다.
+7. profile task가 startup에서 실패하면 YAML binding → selector registry → Spring proxy creator ordering → local factory/lease floor 순서로 진단한다. 외부 backend를 추가해 해결하지 않는다.
 
 ## 수용 기준 추적표
 
 | 수용 기준 | 구현 task | 검증 증거 |
 |---|---|---|
 | BOM 기반 versionless `leader-spring-boot` classpath | 1 | dependencies/compileKotlin 출력 |
-| Freefair CTW와 runtime proxy 비사용 | 1, 3, 5 | compile output, `internalAutoProxyCreator` 부재, direct main-source invocation |
+| Spring runtime proxy와 external CTW 경계 | 1, 3, 5 | compile/test output, `internalAutoProxyCreator` 존재, direct main-source invocation 및 CTW 실패 기록 |
 | 기본 profile 비활성 | 2, 3, 5 | default context bean/task assertions, 기존 19개 test |
 | exact selector와 task 1개 | 2, 4, 5 | YAML binding, registry lookup, `ScheduledTaskHolder` count |
-| open main fixture와 local factory/leader-aspect observation | 3, 5 | `@SpringBootTest`, `assertTimeout(5s)`, observation/factory assertions |
+| open main fixture와 local factory/leader-aspect observation | 3, 5 | `@SpringBootTest`, packaged `min-lease-time=5s`, two-call `assertTimeout(15s)`, observation/factory assertions |
 | explicit annotation precedence | 2, 5 | 보조 fixture와 registry `markObserved`/binding assertions |
 | fail-fast invalid configurations | 2, 5 | ApplicationContextRunner failure assertions |
 | context close cancellation/no custom thread | 2, 5 | lifecycle holder count 1→0, static/context inspection |
@@ -402,12 +401,12 @@ bash scripts/smoke-validate.sh stale-check
 
 ## 계획 단계 DoD 및 승인 게이트
 
-- [ ] 계획 문서가 실제 path, exact code/YAML/property, command, expected result, rollback, failure recovery를 포함한다.
-- [ ] `SPW-01` 문제/독자/목표, `SPW-02` current-state/evidence, `SPW-03` implementation detail, `SPW-04` tests/verification, `SPW-05` DoD/rollback을 모두 계획에 매핑한다.
-- [ ] 한국어 문서 품질 검토 `KO-01`~`KO-07`와 six-perspective Step 3-R plan review가 기록된다.
-- [ ] Step 3-R conditional 항목 중 coroutine/suspend, 새 module settings 등록, Exposed import/receiver, JDK preview, external backend capability는 이 issue 범위에 해당하지 않음을 review artifact에 `N/A`로 남기고, 해당하는 auto-configuration ordering, resource ownership/close, blocking lease-floor, stale guard, rollback 항목은 작업 1~7의 구체적인 assertion/명령으로 덮는다.
-- [ ] six lanes와 main integration의 최신 결과가 `P0=0`, `P1=0`이다. P2/P3는 disposition과 구현 task가 추적된다.
-- [ ] 계획과 plan review가 Lore commit으로 고정되고, helper required-checks에는 `spec`과 `plan` 증거가 등록된다. `tests`, `docs`, `pr`와 main verification은 구현 후에만 pending에서 해소된다.
-- [ ] 이 문서와 review artifact를 사용자가 검토할 수 있도록 commit SHA와 파일 링크를 handoff에 제시한다.
+- [x] 계획 문서가 실제 path, exact code/YAML/property, command, expected result, rollback, failure recovery를 포함한다.
+- [x] `SPW-01` 문제/독자/목표, `SPW-02` current-state/evidence, `SPW-03` implementation detail, `SPW-04` tests/verification, `SPW-05` DoD/rollback을 모두 계획에 매핑한다.
+- [x] 한국어 문서 품질 검토 `KO-01`~`KO-07`와 six-perspective Step 3-R plan review가 기록된다.
+- [x] Step 3-R conditional 항목 중 coroutine/suspend, 새 module settings 등록, Exposed import/receiver, JDK preview, external backend capability는 이 issue 범위에 해당하지 않음을 review artifact에 `N/A`로 남기고, 해당하는 auto-configuration ordering, resource ownership/close, blocking lease-floor, stale guard, rollback 항목은 작업 1~7의 구체적인 assertion/명령으로 덮는다.
+- [x] six lanes와 main integration의 최신 결과가 `P0=0`, `P1=0`이다. P2/P3는 disposition과 구현 task가 추적된다.
+- [x] 계획과 plan review가 Lore commit으로 고정되고, helper required-checks에는 `spec`과 `plan` 증거가 등록된다. `tests`, `docs`, `pr`와 main verification은 구현 후에만 pending에서 해소된다.
+- [ ] 이 문서와 review artifact를 사용자가 검토할 수 있도록 구현 commit SHA와 파일 링크를 handoff에 제시한다.
 
-이 계획 단계의 최종 상태는 사용자의 계획 승인 전까지 `PENDING (plan approval required)`이다. 계획 승인이 확인되면 작업 1부터 순서대로 TDD 구현을 시작한다.
+계획 승인은 확인되었고 작업 1~7의 구현·검증까지 완료되었다. 남은 상태 전이는 구현 Lore commit, PR 생성과 hosted CI/live review 확인이며, merge·auto-merge·tag·release는 이 작업에서 실행하지 않는다.

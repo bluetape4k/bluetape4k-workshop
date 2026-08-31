@@ -1,5 +1,15 @@
 # Issue #869 구현 계획 Step 3-R 통합 검토
 
+## 구현 후 판정 보정 (2026-09-01)
+
+이 문서는 계획 단계의 기록이다. 당시 제안한 external AspectJ CTW/Freefair
+weaving은 구현 전후 source/artifact smoke에서 upstream
+`LeaderElectionAspect.aspectOf()`의 `NoAspectBoundException` 및 no-arg
+constructor `NoSuchMethodError`로 실행 불가함을 확인했다. 따라서 계획의 CTW 관련
+문장과 acceptance는 historical discovery로 격하하고, 최종 구현·검증·README의
+`@EnableAspectJAutoProxy(proxyTargetClass = true)` + `spring.aop.auto=false`
+Spring runtime proxy 경계를 우선한다.
+
 ## 검토 범위와 기준
 
 - 대상 계획: `docs/superpowers/plans/2026-08-31-issue-869-scheduled-policy-plan.md`

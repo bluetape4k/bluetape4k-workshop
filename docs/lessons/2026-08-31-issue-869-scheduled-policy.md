@@ -1,0 +1,118 @@
+# Issue #869 scheduled-policy 구현 lesson
+
+## Context
+
+`leader/tenant-scheduler`는 기존 logical-tick reducer만 검증하고 있었으므로,
+`bluetape4k-dependencies:2.0.0-SNAPSHOT`에서 제공하는
+`bluetape4k-leader-spring-boot`의 YAML scheduled policy 경로를 별도
+`scheduled-policy` profile로 추가했다. 기본 profile의 결정론적 reducer와 기존
+테스트를 바꾸지 않고, Spring이 소유하는 task 등록·trigger·context close 경계를
+실제 main source fixture로 확인하는 것이 목표였다.
+
+## Decision
+
+- 버전은 root `bluetape4k-dependencies` BOM이 관리하고, module에는 versionless
+  `leader-spring-boot`와 `leader-micrometer` alias만 추가했다.
+- upstream README가 안내하는 external AspectJ CTW 경로를 먼저 source build와
+  consumer fixture로 시도했지만, `LeaderElectionAspect.aspectOf()`가 존재하지 않는
+  no-arg constructor를 호출해 다음 오류가 재현됐다.
+  `NoAspectBoundException: Exception while initializing ... LeaderElectionAspect`와
+  `NoSuchMethodError: ... method 'void <init>()' not found`.
+- 따라서 이 consumer는 Freefair/AspectJ CTW plugin을 추가하지 않고,
+  `@EnableAspectJAutoProxy(proxyTargetClass = true)`와 `spring.aop.auto=false`를
+  조합한 Spring runtime proxy를 사용한다. fixture는 CGLIB 대상인 `open class`와
+  `open fun`으로 유지한다.
+- YAML은 exact selector
+  `tenantScheduledPolicyFixture#reconcile`, static bounded name,
+  `localLeaderElectionFactory`, `SKIP`, `wait-time=0s`, `lease-time=30s`,
+  `min-lease-time=5s`, `REDACT/redacted-lock`을 고정한다. 프로파일 YAML의
+  unrelated strict startup validator가 기본 retention job을 해석하지 않도록
+  `history.retention.enabled=false`를 함께 둔다.
+- `ApplicationContextRunner`는 empty/malformed/duplicate/unmatched/invalid
+  policy와 AOP opt-out을 fail-fast로 검증하고, `@SpringBootTest`는 packaged YAML,
+  main fixture proxy, leader observation을 검증한다. `@LeaderElection`,
+  `@LeaderGroupElection`, `@LeaderScheduled` precedence와 overloaded selector도
+  fixture/registry test로 고정했다. scheduler wrapper의 Observation은 direct bean
+  호출이 우회하므로 acceptance에서 주장하지 않고, 실제 `initialDelay=0` Spring
+  scheduler callback과 task lifecycle은 별도 bounded test로 분리했다.
+
+## Outcome
+
+- `scheduled-policy` profile에서 Spring task가 정확히 하나 등록되고, main fixture
+  direct call 두 번이 `leader.aop.acquire`와 `leader.aop.execution` observation을
+  각각 남긴다.
+- 실제 scheduler callback fixture도 첫 실행을 bounded latch로 확인하고 같은 leader
+  observation과 REDACT lock tag를 남긴다. 기본 profile에는 task와 policy
+  infrastructure가 없다.
+- lock-name observation은 `redacted-lock`만 노출하며
+  `tenant-scheduler:reconcile` 원문은 high-cardinality 기록에 나타나지 않는다.
+- `@LeaderScheduled` 명시 annotation은 property policy보다 우선하고,
+  `bluetape4k.leader.aop.enabled=false`에서는 leader infrastructure가 빠진
+  plain scheduler task 경계가 고정됐다.
+- pending task close, 즉시 trigger, in-flight callback close를 별도 context에서
+  검증하며 예제가 executor/thread를 직접 만들지 않는다.
+- 양국어 module README는 같은 profile 명령·selector·policy·lifecycle 제한을
+  설명하고 root README/coverage matrix/stale guard/workflow에 등록했다.
+
+## Verification
+
+실제 실행 증거는 다음과 같다.
+
+| 검증 | 결과 |
+|---|---|
+| `./gradlew :leader-tenant-scheduler:clean :leader-tenant-scheduler:compileKotlin :leader-tenant-scheduler:compileTestKotlin --no-build-cache --no-daemon --console=plain` | `BUILD SUCCESSFUL` (fresh compile) |
+| `./gradlew :leader-tenant-scheduler:clean :leader-tenant-scheduler:test --no-build-cache --no-daemon --console=plain` | `SUCCESS: Executed 39 tests in 12.1s`, `BUILD SUCCESSFUL` |
+| `./gradlew :leader-tenant-scheduler:cleanTest :leader-tenant-scheduler:test --tests '*TenantScheduledPolicyContextTest*' --no-build-cache --no-daemon --console=plain` | `SUCCESS: Executed 16 tests in 11.8s`, `BUILD SUCCESSFUL` |
+| `./gradlew :leader-tenant-scheduler:cleanTest :leader-tenant-scheduler:test --tests '*TenantScheduledPolicyDefaultProfileTest*' --no-build-cache --no-daemon --console=plain` | `SUCCESS: Executed 1 tests in 1.3s`, `BUILD SUCCESSFUL` |
+| `./gradlew :leader-tenant-scheduler:cleanTest :leader-tenant-scheduler:test --tests '*TenantScheduledPolicyLifecycleTest*' --no-build-cache --no-daemon --console=plain` | `SUCCESS: Executed 3 tests in 703ms`, `BUILD SUCCESSFUL` |
+| `./gradlew :leader-tenant-scheduler:dependencies --configuration runtimeClasspath --no-daemon --console=plain` | `bluetape4k-dependencies:2.0.0-SNAPSHOT`와 core 계열, `bluetape4k-leader-spring-boot:1.0.0-SNAPSHOT`, `bluetape4k-leader-micrometer:1.0.0-SNAPSHOT`, Spring AOP 7.0.8 확인; module catalog에는 개별 버전/BOM 없음 |
+| `./gradlew :leader-tenant-scheduler:buildEnvironment --no-daemon --console=plain` | `BUILD SUCCESSFUL`; 별도 AspectJ plugin 없음 |
+| `./gradlew projects --no-daemon --console=plain` | `:leader-tenant-scheduler` 실제 project path 확인 |
+| `./gradlew :leader-tenant-scheduler:bootRun --args='--spring.profiles.active=scheduled-policy' --no-daemon --console=plain` (18초 bounded smoke) | `Started TenantSchedulerLabAppKt in 0.664 seconds`; 첫 callback은 `initialDelay=60s` 뒤라 이 smoke에서는 기다리지 않음 |
+| `node scripts/validate-readme-parity.mjs leader/tenant-scheduler` | `failures: 0` |
+| `bash scripts/smoke-validate.sh stale-check` | required modules, scheduled-policy contract, diagnostics, image links 모두 통과 |
+| `actionlint .github/workflows/Examples.yml` | exit 0 |
+| `git diff --check` | exit 0 |
+| `node .../audit-korean-terms.mjs` (신규·변경 의미 문서 7개) | `findings=0`; root README/coverage의 기존 `snapshot` 용례는 변경하지 않음 |
+| added-line placeholder scan | `TODO/FIXME/TBD/XXX/TEMP/PLACEHOLDER/WIP` 없음 |
+
+전체 root README/coverage 파일을 대상으로 한 terminology audit은 기존 표에
+남아 있던 `snapshot` 용례 10건을 보고했지만, 이번 변경에서 그 문장을
+수정하지 않았다. 신규·의미 변경 문서 7개를 별도로 다시 검사한 결과는
+`findings=0`이며, `2.0.0-SNAPSHOT` 같은 버전 token은 그대로 보존했다.
+
+## Miss/Surprise
+
+1. Gradle의 `:leader:tenant-scheduler` 축약 경로는 여러 `leader-*` project와
+   충돌했다. 이후 모든 검증에서 실제 평면 project 이름
+   `:leader-tenant-scheduler`를 사용했다.
+2. CTW compile/weave 성공만으로 runtime singleton 경로가 유효하다고 판단할 수
+   없었다. upstream artifact의 `NoAspectBoundException`을 직접 확인한 뒤에야
+   proxy 경계를 선택했다.
+3. `TagRule`의 부분 nested binding은 redaction sentinel을 기본값 `redacted`로
+   만들었다. profile YAML에 `redacted-value: redacted-lock`을 명시하고 테스트에서
+   값을 고정해야 했다.
+4. 테스트 전용 Observation handler를 수동 등록하면 Boot post-processor와 중복되어
+   observation이 두 번 기록됐다. `ObservationRegistry`만 primary bean으로 제공하고
+   handler lifecycle은 Boot/upstream에 맡겨 중복을 제거했다.
+5. profile list를 외부 indexed property로 일부 override하면 packaged policy list가
+   통째로 대체된다. 정상 profile test는 selector부터 모든 policy index를 명시해
+   실제 YAML binding 계약을 흐리지 않도록 했다.
+6. `@SpringBootTest` direct call은 packaged YAML의 5초 `min-lease-time` floor를
+   의도적으로 포함하므로 두 번 호출에 약 10초가 걸릴 수 있다. 반면 scheduler
+   callback/edge-case runner는 `min-lease-time=0s`를 사용해 trigger 신호만 bounded하게
+   확인한다. 따라서 README의 fixed delay와 effective period를 분리해 설명해야 한다.
+
+## Future guard
+
+- upstream `LeaderElectionAspect`가 정상적인 external CTW singleton 초기화를 제공할
+  때만 CTW 경로를 재검토한다. 그 전에는 consumer에 weaving plugin을 추가하지 않는다.
+- scheduled-policy profile은 local factory를 사용하는 단일 프로세스 학습 경로다.
+  실제 backend failover, distributed ownership, hot reload, coroutine/suspend
+  scheduler는 별도 issue와 upstream 계약으로 다룬다.
+- Spring proxy fixture에는 `open` 요구를 유지하고, `spring.aop.auto=false`와
+  explicit `@EnableAspectJAutoProxy`의 단일 proxy 조합을 stale guard와 context
+  test에서 함께 검사한다.
+- README parity와 stale-check를 workflow job에서 계속 실행하고, YAML selector,
+  redaction sentinel, profile 명령이 바뀌면 양국어 README와 테스트를 같은 변경으로
+  갱신한다.

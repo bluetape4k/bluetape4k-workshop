@@ -1,5 +1,15 @@
 # Issue #869 설계 spec 통합 리뷰
 
+## 구현 후 판정 보정 (2026-09-01)
+
+이 문서는 계획 단계의 기록이다. 당시 제안한 external AspectJ CTW/Freefair
+weaving은 구현 전후 source/artifact smoke에서 upstream
+`LeaderElectionAspect.aspectOf()`의 `NoAspectBoundException` 및 no-arg
+constructor `NoSuchMethodError`로 실행 불가함을 확인했다. 따라서 CTW 관련
+acceptance와 실행 모델은 historical discovery로 격하하고, 최종 구현·검증·README의
+`@EnableAspectJAutoProxy(proxyTargetClass = true)` + `spring.aop.auto=false`
+Spring runtime proxy 경계를 우선한다.
+
 ## 검토 시점과 범위
 
 - 검토일: 2026-08-31

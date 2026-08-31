@@ -421,6 +421,26 @@ jobs:
       - name: Run README diagram QA
         run: ./scripts/smoke-validate.sh diagram-qa
 
+  readme-stale-guards:
+    name: README and stale contract guards
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: changes
+    if: >-
+      always() &&
+      needs.changes.result == 'success' &&
+      (needs.changes.outputs.diagram == 'true' ||
+      needs.changes.outputs.examples == 'true' ||
+      needs.changes.outputs.gradle == 'true')
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - name: Validate tenant scheduler README parity
+        run: node scripts/validate-readme-parity.mjs leader/tenant-scheduler
+
+      - name: Validate stale module and scheduled-policy contracts
+        run: bash scripts/smoke-validate.sh stale-check
+
   container-examples:
     name: Container Examples (sequential)
     runs-on: ubuntu-latest
@@ -742,6 +762,7 @@ jobs:
       - changes
       - validate-wrapper
       - diagram-qa
+      - readme-stale-guards
       - smoke-examples
       - container-examples
       - high-contention-correctness

@@ -43,6 +43,100 @@ logical-tick reducer입니다. Redis, ZooKeeper, Kubernetes, background schedule
 7. report는 event row를 bounded history 안에 보관하고 dropped row를 셉니다.
 8. metric tag는 cardinality가 안전할 때만 per-tenant로 유지됩니다.
 
+## Spring Boot YAML Policy Profile
+
+`scheduled-policy` profile은 plain Spring `@Scheduled` 메서드를
+`bluetape4k.leader.scheduling.policies` registry에 연결합니다. 이 profile은
+opt-in이므로 결정론적인 reducer가 기본 경로로 유지됩니다.
+
+```bash
+./gradlew :leader-tenant-scheduler:test --tests "*TenantScheduledPolicy*"
+./gradlew :leader-tenant-scheduler:bootRun --args='--spring.profiles.active=scheduled-policy'
+```
+
+profile 기동 시 `Started TenantSchedulerLabAppKt`를 확인하세요. 첫 자동 callback은
+최대 60초 뒤에 시작할 수 있습니다. fixture는 `fixedDelay=5s`와
+`min-lease-time=5s`를 사용하므로 실제 local period는 최소 약 10초입니다. 각
+callback은 bounded smoke 신호로
+`tenant-scheduler callback completed invocationCount=...` 로그를 남깁니다. 결정론적
+테스트는 `leader.aop.acquire`와 `leader.aop.execution` observation도 기록합니다.
+upstream `LeaderElectionAspect`가 runtime Spring proxy로 적용될 수 있도록 fixture는
+`open` Spring bean입니다. `spring.aop.auto=false`는 Boot의 두 번째 proxy creator를
+막습니다. 이 예제는 외부 backend ownership이나 distributed failover를 증명하지
+않습니다.
+
+`@LeaderElection`, `@LeaderGroupElection`, `@LeaderScheduled`를 명시 annotation으로
+사용하는 경로를 검증합니다. 하나라도 있으면 같은 메서드의 property policy보다
+annotation이 우선하고, 충돌하는 property는 observed로만 처리되어 적용되지
+않습니다. 비어 있거나 malformed, duplicate, unmatched, overload,
+invalid-duration인 policy는 startup에서 실패합니다. plain policy도 음수
+`wait-time`, 0 이하 `lease-time`, `lease-time`보다 큰 `min-lease-time`을 거부합니다.
+이 local lab의 안전한 기본 failure mode는 `SKIP`입니다. `RETHROW`는 job error를
+호출자에게 전달하고, `FAIL_OPEN_RUN`은 명시적인 availability 판단을 거친
+idempotent 작업에만 사용해야 합니다. task 등록과 취소는 Spring이 소유하며 예제는
+executor나 thread를 만들지 않습니다.
+
+```yaml
+spring:
+  aop:
+    auto: false
+
+bluetape4k:
+  leader:
+    history:
+      retention:
+        enabled: false
+    scheduling:
+      enabled: true
+      policies:
+        - selector: "tenantScheduledPolicyFixture#reconcile"
+          name: "tenant-scheduler:reconcile"
+          wait-time: 0s
+          lease-time: 30s
+          min-lease-time: 5s
+          bean: "localLeaderElectionFactory"
+          auto-extend: false
+          stream-bounded: false
+          failure-mode: SKIP
+    aop:
+      strict: true
+      spel:
+        allow-method-invocation: false
+      metrics:
+        tags:
+          lock-name:
+            mode: REDACT
+            redacted-value: redacted-lock
+    observability:
+      tracing:
+        enabled: true
+        include-lock-name: false
+        include-leader-id: false
+        include-exception-details: false
+```
+
+`history.retention.enabled=false`는 unrelated retention job 대신 이 local
+profile의 scheduled policy에 집중하도록 합니다. tracing과 metric 설정은
+기본적으로 lock name과 exception detail을 observation에서 숨깁니다. 테스트 전용
+`redacted-lock` sentinel로 raw policy name을 노출하지 않는 경계를 확인합니다.
+
+## Rollback / Runbook
+
+1. profile을 끄기 전에 외부 설정의
+   `bluetape4k.leader.scheduling.enabled=true` override를 먼저 제거합니다. 실제
+   opt-in gate는 profile 이름이 아니라 이 property입니다.
+2. `Ctrl-C`로 프로세스를 멈추고 active profile에서 `scheduled-policy`를 제거한
+   다음 profile YAML, configuration/fixture, 두 leader dependency alias를 함께
+   되돌립니다.
+3. 기본 application을 재기동하고 `tenantScheduledPolicyFixture`,
+   `LeaderScheduledPolicyRegistry`, policy BPP가 없으며 해당 fixture의 scheduled task도
+   `ScheduledTaskHolder`에 남지 않는지 확인합니다. unrelated Spring task는 남을 수
+   있습니다. 정상 기동 시에는 여전히 `Started TenantSchedulerLabAppKt`가 출력되어야
+   합니다.
+
+callback 로그나 observation 확인이 사라졌을 때 외부 backend를 임시로 켜지 마세요.
+exact selector, local factory, profile, proxy 설정을 먼저 원래대로 복구합니다.
+
 ## Executable Snippet
 
 이 README snippet은 `TenantSchedulerReadmeSnippetTest`가 그대로 실행합니다.
@@ -103,6 +197,7 @@ tags.metricRows.map { it.tags } shouldBeEqualTo listOf(
 ```bash
 ./gradlew :leader-tenant-scheduler:test
 ./gradlew :leader-tenant-scheduler:bootRun
+./gradlew :leader-tenant-scheduler:bootRun --args='--spring.profiles.active=scheduled-policy'
 ```
 
 기본 테스트 경로는 결정론적이고 인프라가 필요 없습니다. Docker, kubeconfig,
@@ -118,6 +213,8 @@ Redis, ZooKeeper, Kubernetes credential 없이 smoke validation에서 안전하�
 | `TenantMetricTagPolicyTest` | per-tenant tag, `tenant=bounded` degradation, local cardinality cap. |
 | `TenantSchedulerLabTest` | 독립 tenant 실행, active lease skip, stale handoff, fairness rotation, deterministic report, bounded history. |
 | `TenantSchedulerReadmeSnippetTest` | README code path가 실제로 실행되는지 확인합니다. |
+| `TenantScheduledPolicyContextTest` | profile binding, exact selector, annotation precedence, fail-fast 검증, proxy observation, opt-out 경계를 확인합니다. |
+| `TenantScheduledPolicyLifecycleTest` | Spring task 등록, 즉시 trigger, bounded context-close 동작을 확인합니다. |
 
 ## Production Boundaries
 
@@ -136,6 +233,8 @@ tenant alias에는 PII, email address, account ID, raw customer identifier를 �
 ```kotlin
 implementation(libs.bluetape4k.core)
 implementation(libs.bluetape4k.leader.core)
+implementation(libs.bluetape4k.leader.spring.boot)
+implementation(libs.bluetape4k.leader.micrometer)
 implementation(libs.bluetape4k.logging)
 implementation(libs.spring.boot.autoconfigure.lib)
 implementation(libs.spring.boot.starter.actuator)

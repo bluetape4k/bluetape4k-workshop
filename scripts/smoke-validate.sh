@@ -348,6 +348,56 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== Tenant scheduled-policy example guard ==="
+    scheduled_policy_config="leader/tenant-scheduler/src/main/kotlin/io/bluetape4k/workshop/leader/tenantscheduler/scheduled/TenantScheduledPolicyConfiguration.kt"
+    scheduled_policy_fixture="leader/tenant-scheduler/src/main/kotlin/io/bluetape4k/workshop/leader/tenantscheduler/scheduled/TenantScheduledPolicyFixture.kt"
+    scheduled_policy_yaml="leader/tenant-scheduler/src/main/resources/application-scheduled-policy.yml"
+    scheduled_policy_build="leader/tenant-scheduler/build.gradle.kts"
+    scheduled_policy_tests="leader/tenant-scheduler/src/test/kotlin/io/bluetape4k/workshop/leader/tenantscheduler/scheduled"
+    scheduled_policy_readme="leader/tenant-scheduler/README.md"
+    scheduled_policy_readme_ko="leader/tenant-scheduler/README.ko.md"
+    if rg -q '@Profile\("scheduled-policy"\)' "$scheduled_policy_config" && \
+       rg -q '@EnableAspectJAutoProxy\(proxyTargetClass = true\)' "$scheduled_policy_config" && \
+       rg -q '@Scheduled\(fixedDelay = 5_000, initialDelay = 60_000\)' "$scheduled_policy_fixture" && \
+       rg -q 'libs\.bluetape4k\.leader\.spring\.boot' "$scheduled_policy_build" && \
+       rg -q 'libs\.bluetape4k\.leader\.micrometer' "$scheduled_policy_build" && \
+       rg -q 'selector: "tenantScheduledPolicyFixture#reconcile"' "$scheduled_policy_yaml" && \
+       rg -q 'name: "tenant-scheduler:reconcile"' "$scheduled_policy_yaml" && \
+       rg -q 'min-lease-time: 5s' "$scheduled_policy_yaml" && \
+       rg -q 'failure-mode: SKIP' "$scheduled_policy_yaml" && \
+       rg -q 'redacted-value: redacted-lock' "$scheduled_policy_yaml" && \
+       rg -q 'strict: true' "$scheduled_policy_yaml" && \
+       rg -q 'allow-method-invocation: false' "$scheduled_policy_yaml" && \
+       rg -q 'TenantScheduledPolicyContextTest' "$scheduled_policy_tests" && \
+       rg -q 'TenantScheduledPolicyLifecycleTest' "$scheduled_policy_tests" && \
+       rg -q 'TenantScheduledPolicyDefaultProfileTest' "$scheduled_policy_tests" && \
+       rg -q -- '--spring.profiles.active=scheduled-policy' "$scheduled_policy_readme" && \
+       rg -q -- '--spring.profiles.active=scheduled-policy' "$scheduled_policy_readme_ko" && \
+       rg -q 'libs\.bluetape4k\.leader\.spring\.boot' "$scheduled_policy_readme" && \
+       rg -q 'libs\.bluetape4k\.leader\.micrometer' "$scheduled_policy_readme" && \
+       rg -q 'libs\.bluetape4k\.leader\.spring\.boot' "$scheduled_policy_readme_ko" && \
+       rg -q 'libs\.bluetape4k\.leader\.micrometer' "$scheduled_policy_readme_ko" && \
+       rg -q 'Started TenantSchedulerLabAppKt' "$scheduled_policy_readme" && \
+       rg -q 'Started TenantSchedulerLabAppKt' "$scheduled_policy_readme_ko" && \
+       rg -q 'tenant-scheduler callback completed invocationCount=' "$scheduled_policy_readme" && \
+       rg -q 'tenant-scheduler callback completed invocationCount=' "$scheduled_policy_readme_ko" && \
+       rg -q 'bluetape4k\.leader\.scheduling\.enabled=true' "$scheduled_policy_readme" && \
+       rg -q 'bluetape4k\.leader\.scheduling\.enabled=true' "$scheduled_policy_readme_ko" && \
+       rg -q 'ScheduledTaskHolder' "$scheduled_policy_readme" && \
+       rg -q 'ScheduledTaskHolder' "$scheduled_policy_readme_ko" && \
+       rg -q 'FAIL_OPEN_RUN' "$scheduled_policy_readme" && \
+       rg -q 'FAIL_OPEN_RUN' "$scheduled_policy_readme_ko" && \
+       rg -q 'leader\.aop\.acquire' "$scheduled_policy_readme" && \
+       rg -q 'leader\.aop\.acquire' "$scheduled_policy_readme_ko" && \
+       rg -q 'leader-tenant-scheduler:bootRun' README.md && \
+       rg -q 'leader-tenant-scheduler:bootRun' README.ko.md; then
+      echo "Tenant scheduled-policy example and README contract are registered."
+    else
+      echo "ERROR: tenant scheduled-policy example contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== Leader diagnostics example guard ==="
     diagnostics_config="leader/backend-comparison-lab/src/main/resources/application.yml"
     diagnostics_tests="leader/backend-comparison-lab/src/test/kotlin/io/bluetape4k/workshop/leader/backendcomparison/observability"
