@@ -24,7 +24,7 @@
 | 성능 | packaged YAML의 `min-lease-time=5s`를 direct smoke가 실제로 사용하고 두 호출 합계에 `assertTimeout(Duration.ofSeconds(15))`를 적용한다. scheduler trigger/edge-case runner는 `min-lease-time=0s`로 bounded 신호만 확인한다. 단일 local task 예제이므로 별도 benchmark는 범위가 아니다. | `P0/P1=0`; effective period가 최소 약 10초가 될 수 있다는 README/lesson 설명으로 P2를 처분했다. |
 | 안정성·lifecycle | immediate `@Scheduled` callback이 `CountDownLatch`로 실제 실행되고 leader acquire/execution observation을 남긴다. pending task close, in-flight close, `ScheduledTaskHolder` 1→0, fixture의 custom executor/thread 부재를 별도 context에서 확인한다. | `P0/P1=0`; callback·close 경로를 추가해 기존 P1을 해소했다. 외부 backend failover는 local-only 예제 범위 밖이다. |
 | 보안·데이터 경계 | YAML은 `allow-method-invocation=false`, static bounded name, lock tag `REDACT/redacted-lock`, tracing exception detail false를 사용한다. 성공·실패 observation 모두 raw policy/customer identifier와 throwable detail이 없음을 검사한다. `FAIL_OPEN_RUN`은 README에서 idempotent trusted override로 제한한다. | `P0/P1=0`; exception redaction negative assertion과 운영 경고로 P2를 처분했다. 외부 secret/SpEL parser 전체는 upstream 계약에 위임한다. |
-| 운영·복구 | `bootRun`은 `Started TenantSchedulerLabAppKt`를 출력하고 fixture callback은 bounded `invocationCount` 로그를 남긴다. 양국어 README에 initial delay, min lease 추가 지연, `Ctrl-C`, 외부 enable override 제거 선행 rollback, default profile 확인 절차를 기록했다. stale guard와 workflow job이 실행 명령·dependency alias·핵심 YAML 계약을 검사한다. | `P0/P1=0`; runbook·callback signal·stale guard 누락 P1/P2를 해소했다. hosted CI는 PR 후 pending이다. |
+| 운영·복구 | `bootRun`은 `Started TenantSchedulerLabAppKt`를 출력하고 fixture callback은 bounded `invocationCount` 로그를 남긴다. 양국어 README에 initial delay, min lease 추가 지연, `Ctrl-C`, 외부 enable override 제거 선행 rollback, default profile 확인 절차를 기록했다. stale guard와 workflow job이 실행 명령·dependency alias·핵심 YAML 계약을 검사한다. | `P0/P1=0`; runbook·callback signal·stale guard 누락 P1/P2를 해소했다. hosted ecosystem scope 누락은 manifest 보정으로 처분했고 exact-head CI 재실행을 pending으로 둔다. |
 | API·개발자 경험 | module은 root `bluetape4k-dependencies` BOM만 사용하고 `leader-spring-boot`/`leader-micrometer` alias는 versionless다. plain `@Scheduled`와 `@LeaderElection`/`@LeaderGroupElection`/`@LeaderScheduled` precedence, exact selector, duplicate/unmatched/overload, semantic duration failure를 테스트로 고정했다. | `P0/P1=0`; annotation 범위·overload 회귀와 dependency contract를 증명했다. |
 | 사용자·호출자 | profile은 opt-in이고 default reducer 동작은 유지된다. root와 module의 영어/한국어 README가 같은 실행 명령·selector·YAML·task 수·failure mode·local-only 제한을 제공하며 parity가 통과했다. | `P0/P1=0`; locale/예제 설명 drift 없음. |
 
@@ -60,6 +60,8 @@
 | direct smoke의 lease floor/timeout 문서 불일치 | production `5s` floor를 그대로 검증하고 15초 상한을 사용하도록 spec/plan/lesson을 정정했다. |
 | default context의 unrelated retention task를 전체 task 부재로 오해할 위험 | fixture 선언 task만 부재인지 확인하고 README/plan/spec에 unrelated task 경계를 명시했다. |
 | upstream CTW 실행 결함 | Freefair plugin을 제거하고 runtime proxy를 최종 결정으로 고정했다. |
+| hosted assertion governance가 legacy import를 거부한 문제 | `kotlin.test.assertNull` 사용을 Bluetape assertion의 `shouldBeNull()`로 치환한 `8f8ec52833dbba77e9546532e1decb47d294448b` 커밋을 만들고 assertion governance 및 39개 테스트를 재실행했다. |
+| hosted ecosystem reuse gate가 Issue #869 변경 경로를 찾지 못한 문제 | `docs/ecosystem-reuse-train.json`에 branch/base와 모든 PR 변경 경로를 담은 `issue-869-leader-scheduled-policy` follow-up scope를 추가하고 exact `--pr-scope` checker를 로컬에서 통과시켰다. |
 
 ## 검증 증거
 
@@ -76,6 +78,8 @@
 | `./gradlew projects --no-daemon --console=plain` | `:leader-tenant-scheduler` 및 active modules 131 확인 |
 | `node scripts/validate-readme-parity.mjs leader/tenant-scheduler` | `failures: 0` |
 | `bash scripts/smoke-validate.sh stale-check` | project/stale/module/tenant scheduled-policy/diagnostics/image guards 통과 |
+| `python3 .github/scripts/check-assertion-governance.py` | `PASS assertion governance: scanned=1168, allowlisted_build_logic_legacy_imports=16` |
+| `python3 .github/scripts/check-ecosystem-reuse.py --pr-scope ...` | manifest에 `issue-869-leader-scheduled-policy` scope 추가 후 `PASS ecosystem-reuse inventory and train contract` |
 | `actionlint .github/workflows/Examples.yml` | exit 0 |
 | `git diff --check` | exit 0 |
 | 신규·의미 변경 한국어 문서 7개 terminology audit | `findings=0` |
@@ -88,8 +92,10 @@
   scheduler, Exposed boundary, JDK preview, custom scheduler/executor는 이 consumer
   예제의 목표가 아니며 upstream/별도 issue로 남긴다.
 - architecture/sequence diagram은 기존 reducer 경계를 섞지 않으므로 수정하지 않았다.
-- PR 생성 전이므로 hosted CI와 live review/thread 결과는 아직 없다. PR 생성 후 exact
-  head에서 확인하며, merge는 fresh `승인` 없이는 실행하지 않는다.
+- PR #911은 `develop`을 base로 생성되었고, 첫 hosted assertion 실패와 두 번째
+  ecosystem scope 실패를 각각 수정했다. 현재 exact head에서 CI를 재실행 중이며,
+  live review/thread 확인과 merge는 아직 남아 있다. merge는 fresh `승인` 없이는
+  실행하지 않는다.
 
 ## SPW 및 Kotlin DoD
 
@@ -108,4 +114,4 @@
 
 ## DoD Status
 
-`PASS (P0=0, P1=0, P2=0, P3=0; local verification complete; hosted CI pending until PR)`
+`PASS (P0=0, P1=0, P2=0, P3=0; local verification complete; PR #911 exact-head hosted CI/review pending)`

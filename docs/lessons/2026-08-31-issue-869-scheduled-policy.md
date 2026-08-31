@@ -73,6 +73,7 @@
 | `bash scripts/smoke-validate.sh stale-check` | required modules, scheduled-policy contract, diagnostics, image links 모두 통과 |
 | `actionlint .github/workflows/Examples.yml` | exit 0 |
 | `git diff --check` | exit 0 |
+| `python3 .github/scripts/check-ecosystem-reuse.py --pr-scope --base-ref-name develop --head-ref-name feat/issue-869-scheduled-policy --base-ref 4b21288bbfbfddb5438baf763027149766919bc5 --head-ref 8f8ec52833dbba77e9546532e1decb47d294448b` | manifest 보정 전에는 `found 0`으로 실패했으나, `issue-869-leader-scheduled-policy` follow-up scope 추가 후 `PASS ecosystem-reuse inventory and train contract` |
 | `node .../audit-korean-terms.mjs` (신규·변경 의미 문서 7개) | `findings=0`; root README/coverage의 기존 `snapshot` 용례는 변경하지 않음 |
 | added-line placeholder scan | `TODO/FIXME/TBD/XXX/TEMP/PLACEHOLDER/WIP` 없음 |
 
@@ -102,6 +103,13 @@
    의도적으로 포함하므로 두 번 호출에 약 10초가 걸릴 수 있다. 반면 scheduler
    callback/edge-case runner는 `min-lease-time=0s`를 사용해 trigger 신호만 bounded하게
    확인한다. 따라서 README의 fixed delay와 effective period를 분리해 설명해야 한다.
+7. 첫 hosted CI는 `kotlin.test.assertNull` legacy assertion import를 발견했다.
+   `shouldBeNull()`로 치환한 `8f8ec52833dbba77e9546532e1decb47d294448b` 커밋 후
+   assertion governance와 39개 테스트를 다시 통과시켰다.
+8. 두 번째 hosted CI는 Issue #869 변경 경로가 ecosystem reuse train의 follow-up
+   scope에 매핑되지 않아 실패했다. `issue-869-leader-scheduled-policy`에 정확한
+   branch/base와 이번 PR의 모든 변경 경로를 등록했고, 같은 `--pr-scope` 명령으로
+   로컬에서 재현·통과를 확인했다.
 
 ## Future guard
 
@@ -116,3 +124,6 @@
 - README parity와 stale-check를 workflow job에서 계속 실행하고, YAML selector,
   redaction sentinel, profile 명령이 바뀌면 양국어 README와 테스트를 같은 변경으로
   갱신한다.
+- 새 workshop PR은 생성 전에 `docs/ecosystem-reuse-train.json`에 정확한
+  `expected_head_ref`/`expected_base_ref`와 changed-path `allowed_paths`를 하나의
+  follow-up scope로 등록하고, `check-ecosystem-reuse.py --pr-scope`를 실행한다.
