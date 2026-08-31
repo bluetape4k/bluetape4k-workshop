@@ -1,9 +1,12 @@
 import importlib.util
+import io
 import json
 import subprocess
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
+from unittest.mock import patch
 
 
 SCRIPT = Path(__file__).with_name("check-ecosystem-reuse.py")
@@ -185,6 +188,23 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
             capture_output=True,
             text=True,
         ).stdout.strip()
+
+    def _dependency_diff_history(self, relative_path, base_text, head_text):
+        self._git("init")
+        self._git("config", "user.email", "test@example.com")
+        self._git("config", "user.name", "Ecosystem Reuse Test")
+        path = self.root / relative_path
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(base_text, encoding="utf-8")
+        self._git("add", ".")
+        self._git("commit", "-m", "base")
+        base_oid = self._git("rev-parse", "HEAD")
+
+        path.write_text(head_text, encoding="utf-8")
+        self._git("add", ".")
+        self._git("commit", "-m", "dependency update")
+        head_oid = self._git("rev-parse", "HEAD")
+        return base_oid, head_oid
 
     def _reviewed_ancestor_history(self, *, marker_text=None, code_after_marker=False):
         self._git("init")
@@ -1095,6 +1115,129 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         build.write_text("dependencies { implementation(platform(libs.bluetape4k.graph.bom)) }\n", encoding="utf-8")
         errors = CHECKER.validate_changed_files(self.root, ["sample.gradle.kts"])
         self.assertTrue(any("individual Bluetape BOM" in error for error in errors))
+
+    def test_external_dependency_only_diff_is_maintenance(self):
+        base_oid, head_oid = self._dependency_diff_history(
+            "gradle/libs.versions.toml",
+            'hibernate = "7.4.5.Final"\n',
+            'hibernate = "7.4.6.Final"\n',
+        )
+        self.assertTrue(
+            CHECKER.is_dependency_maintenance_change(
+                self.root,
+                base_oid,
+                head_oid,
+                ["gradle/libs.versions.toml"],
+            )
+        )
+
+    def test_bluetape_dependency_diff_is_not_maintenance(self):
+        base_oid, head_oid = self._dependency_diff_history(
+            "gradle/libs.versions.toml",
+            'bluetape4k-dependencies = "1.7.0"\n',
+            'bluetape4k-dependencies = "1.7.1"\n',
+        )
+        self.assertFalse(
+            CHECKER.is_dependency_maintenance_change(
+                self.root,
+                base_oid,
+                head_oid,
+                ["gradle/libs.versions.toml"],
+            )
+        )
+
+    def test_external_build_dependency_only_diff_is_maintenance(self):
+        base_oid, head_oid = self._dependency_diff_history(
+            "sample/build.gradle.kts",
+            'dependencies { implementation("org.example:library:1.0") }\n',
+            'dependencies { implementation("org.example:library:1.1") }\n',
+        )
+        self.assertTrue(
+            CHECKER.is_dependency_maintenance_change(
+                self.root,
+                base_oid,
+                head_oid,
+                ["sample/build.gradle.kts"],
+            )
+        )
+
+    def test_build_logic_change_is_not_maintenance(self):
+        base_oid, head_oid = self._dependency_diff_history(
+            "sample/build.gradle.kts",
+            'tasks.withType<KotlinCompile> { compilerOptions.jvmTarget.set(JvmTarget.JVM_25) }\n',
+            'tasks.withType<KotlinCompile> { compilerOptions.jvmTarget.set(JvmTarget.JVM_24) }\n',
+        )
+        self.assertFalse(
+            CHECKER.is_dependency_maintenance_change(
+                self.root,
+                base_oid,
+                head_oid,
+                ["sample/build.gradle.kts"],
+            )
+        )
+
+    def test_dependency_maintenance_requires_declaration_only_paths(self):
+        base_oid, head_oid = self._dependency_diff_history(
+            "gradle/libs.versions.toml",
+            'hibernate = "7.4.5.Final"\n',
+            'hibernate = "7.4.6.Final"\n',
+        )
+        self.assertFalse(
+            CHECKER.is_dependency_maintenance_change(
+                self.root,
+                base_oid,
+                head_oid,
+                ["gradle/libs.versions.toml", "src/source.kt"],
+            )
+        )
+
+    def test_dependency_maintenance_fails_closed_when_diff_cannot_be_resolved(self):
+        self.assertFalse(
+            CHECKER.is_dependency_maintenance_change(
+                self.root,
+                "0" * 40,
+                "1" * 40,
+                ["gradle/libs.versions.toml"],
+            )
+        )
+
+    def test_pr_scope_uses_dependency_maintenance_exemption(self):
+        (self.root / "manifest.json").write_text("{}", encoding="utf-8")
+        self.inventory([self.row()])
+        output = io.StringIO()
+        with (
+            patch.object(CHECKER, "repo_root", return_value=self.root),
+            patch.object(CHECKER, "validate_inventory", return_value=[]),
+            patch.object(CHECKER, "validate_manifest", return_value=[]),
+            patch.object(
+                CHECKER,
+                "changed_files_between_refs",
+                return_value=(["gradle/libs.versions.toml"], []),
+            ),
+            patch.object(CHECKER, "is_dependency_maintenance_change", return_value=True),
+            patch.object(CHECKER, "validate_train_scope") as train_scope,
+            redirect_stdout(output),
+        ):
+            result = CHECKER.main(
+                [
+                    "--inventory",
+                    "inventory.md",
+                    "--manifest",
+                    "manifest.json",
+                    "--base-ref",
+                    "a" * 40,
+                    "--head-ref",
+                    "b" * 40,
+                    "--pr-scope",
+                    "--base-ref-name",
+                    "develop",
+                    "--head-ref-name",
+                    "dependabot/gradle/develop/hibernate-7.4.6.Final",
+                ]
+            )
+        self.assertEqual(0, result)
+        train_scope.assert_not_called()
+        self.assertIn("dependency-maintenance diff", output.getvalue())
 
     def test_train_scope_accepts_exact_node_and_refs(self):
         manifest = self.manifest()

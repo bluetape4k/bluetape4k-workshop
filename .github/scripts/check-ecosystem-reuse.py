@@ -73,6 +73,15 @@ FOLLOW_UP_SCOPE_FIELDS = {
     "base_ref_policy", "oid_policy", "head_oid", "base_oid", "issue_numbers", "allowed_paths", "review_artifact",
 }
 DEPENDENCY_DECLARATION_NAMES = {"build.gradle", "build.gradle.kts", "libs.versions.toml"}
+BLUETAPE_MARKER_RE = re.compile(r"(?i)bluetape4k")
+TOML_DECLARATION_RE = re.compile(r"^\s*[A-Za-z0-9_.-]+\s*=")
+GRADLE_DEPENDENCY_DECLARATION_RE = re.compile(
+    r"(?ix)"
+    r"\b(?:api|implementation|compileOnly|runtimeOnly|testImplementation|"
+    r"testCompileOnly|testRuntimeOnly|kapt|ksp|annotationProcessor|detektPlugins|"
+    r"classpath|platform|enforcedPlatform|mavenBom)\s*(?:\(|\{)"
+    r"|\b(?:id|kotlin)\s*\([^)]*\)\s+version\b"
+)
 SOURCE_IMPORT_EXTENSIONS = {".java", ".kt", ".kts"}
 BLUETAPE_IMPORT_PREFIXES = ("io.bluetape4k.", "io.github.bluetape4k.")
 IMPORT_DECLARATION_RE = re.compile(
@@ -1310,6 +1319,75 @@ def changed_files_between_refs(root: Path, base_ref: str, head_ref: str) -> Tupl
     return [line for line in result.stdout.splitlines() if line.strip()], []
 
 
+def _changed_lines_between_refs(
+    root: Path,
+    base_ref: str,
+    head_ref: str,
+    paths: Sequence[str],
+) -> tuple[list[tuple[str, str]], list[str]]:
+    """Return added/deleted lines for a bounded diff, excluding file headers."""
+    try:
+        result = subprocess.run(
+            [
+                "git",
+                "diff",
+                "--no-ext-diff",
+                "--unified=0",
+                base_ref,
+                head_ref,
+                "--",
+                *paths,
+            ],
+            cwd=root,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError) as exc:
+        return [], [f"changed-line diff could not be resolved: {escaped(exc)}"]
+
+    changed_lines = []
+    current_path = ""
+    for line in result.stdout.splitlines():
+        if line.startswith("+++ "):
+            current_path = line[4:].removeprefix("b/")
+            continue
+        if line.startswith("--- "):
+            continue
+        if line.startswith(("+", "-")):
+            changed_lines.append((current_path, line[1:]))
+    return changed_lines, []
+
+
+def _is_dependency_declaration_line(path: str, line: str) -> bool:
+    """Return whether a changed line is a dependency/catalog declaration."""
+    if Path(clean_cell(path)).name == "libs.versions.toml":
+        return bool(TOML_DECLARATION_RE.match(line))
+    return bool(GRADLE_DEPENDENCY_DECLARATION_RE.search(line))
+
+
+def is_dependency_maintenance_change(
+    root: Path,
+    base_ref: str,
+    head_ref: str,
+    changed_paths: Sequence[str],
+) -> bool:
+    """Identify external-only Gradle/catalog edits that are outside train scope.
+
+    The PR train contract remains required for Bluetape-related or source/test
+    changes.  This exemption is deliberately fail-closed when the bounded git
+    diff cannot be resolved or contains a Bluetape marker.
+    """
+    if not changed_paths or any(not _is_dependency_declaration_path(path) for path in changed_paths):
+        return False
+    changed_lines, diff_errors = _changed_lines_between_refs(root, base_ref, head_ref, changed_paths)
+    if diff_errors or not changed_lines:
+        return False
+    if any(not path or not _is_dependency_declaration_line(path, line) for path, line in changed_lines):
+        return False
+    return not any(BLUETAPE_MARKER_RE.search(line) for _, line in changed_lines)
+
+
 def _git_is_ancestor(root: Path, ancestor: str, descendant: str) -> bool:
     try:
         result = subprocess.run(
@@ -1542,6 +1620,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             errors.append("--pr-scope requires a readable --manifest")
         elif not all(scope_args):
             errors.append("--pr-scope requires base/head ref names and OIDs")
+        elif is_dependency_maintenance_change(root, args.base_ref, args.head_ref, changed_files):
+            print("INFO dependency-maintenance diff: train scope checks not applicable")
         else:
             errors.extend(validate_train_scope(
                 manifest_data,
