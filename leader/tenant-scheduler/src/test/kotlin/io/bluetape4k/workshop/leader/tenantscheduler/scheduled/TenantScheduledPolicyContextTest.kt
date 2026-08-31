@@ -31,7 +31,6 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.test.assertNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertTimeout
@@ -170,7 +169,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
                 "bluetape4k.leader.aop.metrics.tags.lock-name.redacted-value=redacted-lock",
             )
             .run { context ->
-                assertNull(context.startupFailure)
+                context.startupFailure.shouldBeNull()
                 val fixture = context.getBean(
                     "leaderScheduledTriggerFixture",
                     LeaderScheduledTriggerFixture::class.java,
@@ -222,7 +221,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
                 "bluetape4k.leader.aop.metrics.tags.lock-name.redacted-value=redacted-lock",
             )
             .run { context ->
-                assertNull(context.startupFailure)
+                context.startupFailure.shouldBeNull()
                 val fixture = context.getBean(
                     "leaderScheduledFailureFixture",
                     LeaderScheduledFailureFixture::class.java,
@@ -239,7 +238,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
                     it.name == "leader.aop.execution" && it.low["outcome"] == "error"
                 }
                 failureObservation.low["exception"] shouldBeEqualTo "IllegalStateException"
-                assertNull(failureObservation.error)
+                failureObservation.error.shouldBeNull()
                 failureObservation.high["lock.name"] shouldBeEqualTo "redacted-lock"
                 failureObservation.high.values.none { value -> value.contains("sensitive-customer-id") }
                     .shouldBeTrue()
@@ -251,7 +250,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
         runner
             .withUserConfiguration(ScheduledFixtureConfiguration::class.java)
             .run { context ->
-                assertNull(context.startupFailure)
+                context.startupFailure.shouldBeNull()
                 context.containsBean("leaderScheduledPolicyRegistry").shouldBeFalse()
                 context.containsBean("leaderScheduledPolicyBeanPostProcessor").shouldBeFalse()
             }
@@ -364,7 +363,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
                 "bluetape4k.leader.scheduling.policies[0].lease-time=0s",
             )
             .run { context ->
-                assertNull(context.startupFailure)
+                context.startupFailure.shouldBeNull()
                 context.containsBean("leaderScheduledPolicyRegistry").shouldBeTrue()
             }
     }
@@ -385,7 +384,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
                 "bluetape4k.leader.scheduling.policies[1].lease-time=0s",
             )
             .run { context ->
-                assertNull(context.startupFailure)
+                context.startupFailure.shouldBeNull()
                 val registry = context.getBean(LeaderScheduledPolicyRegistry::class.java)
                 val single = context.getBean("leaderAnnotationFixture", AnnotationPrecedenceFixture::class.java)
                 val singleMethod = AnnotationPrecedenceFixture::class.java.getDeclaredMethod("single")
@@ -486,7 +485,7 @@ class TenantScheduledPolicyContextTest @Autowired constructor(
                 "spring.aop.auto=false",
             )
             .run { context ->
-                assertNull(context.startupFailure)
+                context.startupFailure.shouldBeNull()
                 context.containsBean("scheduledFixture").shouldBeTrue()
                 context.containsBean("localLeaderElectionFactory").shouldBeFalse()
                 context.containsBean("leaderScheduledPolicyRegistry").shouldBeFalse()
