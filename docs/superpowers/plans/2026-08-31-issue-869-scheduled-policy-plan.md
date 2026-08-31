@@ -355,7 +355,7 @@ bash scripts/smoke-validate.sh stale-check
 ## 작업 8 — 계획/구현 커밋과 handoff
 
 - [x] 이 계획과 plan review artifact는 사용자 계획 승인 전 별도 커밋으로 고정했다. 계획 커밋 `7a70e85f4`의 제목은 `[2.0.0] Issue #869 구현 계획을 고정한다`이고 Lore trailers를 포함한다.
-- [ ] 구현 커밋은 기능 단위로 작게 나누고 각 commit message에 Korean intent line과 다음 trailers를 포함한다.
+- [x] 구현 커밋은 기능 단위로 작게 나누고 각 commit message에 Korean intent line과 다음 trailers를 포함한다. 구현 커밋은 `dfff002cf43f1322eda04806be52303299cde220`이다.
 
   ```text
   Constraint: consumer module은 root bluetape4k-dependencies BOM만 사용한다
@@ -367,7 +367,7 @@ bash scripts/smoke-validate.sh stale-check
   Not-tested: <실행하지 못한 항목과 사유 또는 none>
   ```
 
-- [ ] 구현 완료 후 `docs/lessons/...`와 tracked review artifact를 포함해 feature branch가 clean인지 확인한다.
+- [x] 구현 완료 후 `docs/lessons/...`와 tracked review artifact를 포함해 feature branch가 clean인지 확인했다. `dfff002cf43f1322eda04806be52303299cde220` 이후 worktree는 clean이다.
 - [ ] PR 생성 시 base `develop`, head `feat/issue-869-scheduled-policy`, title `[2.0.0] Issue #869 ...`, body Korean, `Closes #869`, DoD Status, 테스트/CI 증거를 사용한다. PR 생성은 이 task의 구현 검증이 끝난 뒤 실행한다.
 - [ ] PR 생성 후 live CI/checks와 review thread를 확인한다. merge는 exact live head, CI green, review 상태를 다시 읽고 새 `승인`이 들어온 뒤에만 수행한다. 이 계획 단계에서는 merge/auto-merge/tag/release를 실행하지 않는다.
 
@@ -407,6 +407,6 @@ bash scripts/smoke-validate.sh stale-check
 - [x] Step 3-R conditional 항목 중 coroutine/suspend, 새 module settings 등록, Exposed import/receiver, JDK preview, external backend capability는 이 issue 범위에 해당하지 않음을 review artifact에 `N/A`로 남기고, 해당하는 auto-configuration ordering, resource ownership/close, blocking lease-floor, stale guard, rollback 항목은 작업 1~7의 구체적인 assertion/명령으로 덮는다.
 - [x] six lanes와 main integration의 최신 결과가 `P0=0`, `P1=0`이다. P2/P3는 disposition과 구현 task가 추적된다.
 - [x] 계획과 plan review가 Lore commit으로 고정되고, helper required-checks에는 `spec`과 `plan` 증거가 등록된다. `tests`, `docs`, `pr`와 main verification은 구현 후에만 pending에서 해소된다.
-- [ ] 이 문서와 review artifact를 사용자가 검토할 수 있도록 구현 commit SHA와 파일 링크를 handoff에 제시한다.
+- [x] 이 문서와 review artifact를 사용자가 검토할 수 있도록 구현 commit SHA `dfff002cf43f1322eda04806be52303299cde220`와 파일 링크를 handoff에 제시한다.
 
 계획 승인은 확인되었고 작업 1~7의 구현·검증까지 완료되었다. 남은 상태 전이는 구현 Lore commit, PR 생성과 hosted CI/live review 확인이며, merge·auto-merge·tag·release는 이 작업에서 실행하지 않는다.
