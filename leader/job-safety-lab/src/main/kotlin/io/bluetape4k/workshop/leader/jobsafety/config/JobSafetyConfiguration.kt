@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.leader.jobsafety.config
 
 import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.leader.LeaderElector
+import io.bluetape4k.leader.ListeningLeaderElector
 import io.bluetape4k.leader.lettuce.LettuceLeaderElector
 import io.bluetape4k.leader.micrometer.LeaderMetricTagMode
 import io.bluetape4k.leader.micrometer.LeaderMetricTagOptions
@@ -9,6 +10,7 @@ import io.bluetape4k.leader.micrometer.LeaderMetricTagRule
 import io.bluetape4k.leader.micrometer.LeaderObservationOptions
 import io.bluetape4k.leader.micrometer.MicrometerObservationLeaderAopMetricsRecorder
 import io.bluetape4k.leader.micrometer.MicrometerObservationLeaderElectionListener
+import io.bluetape4k.leader.history.SafeLeaderHistoryRecorder
 import io.bluetape4k.workshop.leader.jobsafety.coordination.FencingLeasePort
 import io.bluetape4k.workshop.leader.jobsafety.coordination.JobRunCoordinator
 import io.bluetape4k.workshop.leader.jobsafety.coordination.LeaderElectionPort
@@ -39,9 +41,10 @@ import java.util.concurrent.ExecutorService
 import javax.sql.DataSource
 import kotlin.time.toKotlinDuration
 import io.bluetape4k.concurrent.virtualthread.api.VirtualThreads
+import io.bluetape4k.leader.withListeners
 
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(JobSafetyProperties::class)
+@EnableConfigurationProperties(JobSafetyProperties::class, JobSafetyLeaderObservationProperties::class)
 class JobSafetyConfiguration {
     @Bean
     @ConditionalOnMissingBean(ObservationRegistry::class)
@@ -50,7 +53,22 @@ class JobSafetyConfiguration {
     /** Redis owner ID와 job lock을 12자리 hash로 제한하는 수동 observation wiring입니다. */
     @Bean
     @ConditionalOnMissingBean(LeaderObservationOptions::class)
-    fun jobSafetyLeaderObservationOptions(): LeaderObservationOptions = defaultLeaderObservationOptions()
+    fun jobSafetyLeaderObservationOptions(
+        properties: JobSafetyLeaderObservationProperties,
+    ): LeaderObservationOptions = defaultLeaderObservationOptions(properties)
+
+    @Bean(destroyMethod = "close")
+    @ConditionalOnMissingBean(JobSafetyLeaseExtensionObservation::class)
+    fun jobSafetyLeaseExtensionObservation(
+        registry: ObservationRegistry,
+        options: LeaderObservationOptions,
+        properties: JobSafetyLeaderObservationProperties,
+    ): JobSafetyLeaseExtensionObservation =
+        JobSafetyLeaseExtensionObservation(
+            registry = registry,
+            options = options,
+            enabled = properties.enabled,
+        )
 
     @Bean
     @ConditionalOnMissingBean(MicrometerObservationLeaderAopMetricsRecorder::class)
@@ -83,7 +101,8 @@ class JobSafetyConfiguration {
     fun jobSafetyLeaderElector(
         @Qualifier("jobSafetyRedisConnection") connection: StatefulRedisConnection<String, String>,
         properties: JobSafetyProperties,
-    ): LeaderElector =
+        @Qualifier("jobSafetyAuditHistoryRecorder") historyRecorder: SafeLeaderHistoryRecorder,
+    ): ListeningLeaderElector =
         LettuceLeaderElector(
             connection = connection,
             options =
@@ -92,7 +111,8 @@ class JobSafetyConfiguration {
                     leaseTime = properties.fencing.leaseTtl.toKotlinDuration(),
                     autoExtend = true,
                 ),
-        )
+            historyRecorder = historyRecorder,
+        ).withListeners()
 
     @Bean(destroyMethod = "close")
     fun jobSafetyLeaderExecutor(): ExecutorService = VirtualThreads.executorService()
@@ -170,10 +190,13 @@ class JobSafetyConfiguration {
         }
 }
 
-private fun defaultLeaderObservationOptions(): LeaderObservationOptions =
+private fun defaultLeaderObservationOptions(
+    properties: JobSafetyLeaderObservationProperties,
+): LeaderObservationOptions =
     LeaderObservationOptions(
-        includeLockName = true,
-        includeLeaderId = true,
+        includeLockName = properties.includeLockName,
+        includeLeaderId = properties.includeLeaderId,
+        includeExceptionDetails = properties.includeExceptionDetails,
         tagOptions = LeaderMetricTagOptions(
             lockName = LeaderMetricTagRule(mode = LeaderMetricTagMode.HASH, hashLength = 12),
             leaderId = LeaderMetricTagRule(mode = LeaderMetricTagMode.HASH, hashLength = 12),

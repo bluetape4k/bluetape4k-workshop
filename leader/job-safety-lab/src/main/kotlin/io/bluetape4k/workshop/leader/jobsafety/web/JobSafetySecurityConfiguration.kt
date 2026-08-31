@@ -22,6 +22,7 @@ class JobSafetySecurityConfiguration {
                 it.requestMatchers("/actuator/health/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/job-safety/scenarios").authenticated()
                     .requestMatchers(HttpMethod.POST, "/api/job-safety/scenarios/*/run").authenticated()
+                    .requestMatchers(HttpMethod.GET, "/api/job-safety/audit").hasRole(OPERATOR_ROLE)
                     .requestMatchers(
                         "/api/job-safety/scenarios/*/reset",
                         "/api/job-safety/effects/**",

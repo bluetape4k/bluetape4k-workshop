@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.leader.jobsafety.web
 
+import io.bluetape4k.workshop.leader.jobsafety.audit.JobSafetyAuditReport
+import io.bluetape4k.workshop.leader.jobsafety.audit.JobSafetyAuditReportPort
 import io.bluetape4k.workshop.leader.jobsafety.effect.EffectOperations
 import io.bluetape4k.workshop.leader.jobsafety.scenario.JobSafetyScenario
 import io.bluetape4k.workshop.leader.jobsafety.scenario.JobSafetyScenarioService
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController
 class JobSafetyController(
     private val scenarios: JobSafetyScenarioService,
     private val effects: EffectOperations,
+    private val audit: JobSafetyAuditReportPort,
 ) {
     @GetMapping("/scenarios")
     fun catalog(): List<JobSafetyScenario> = JobSafetyScenario.entries
@@ -32,4 +35,7 @@ class JobSafetyController(
 
     @PostMapping("/effects/reconcile")
     fun reconcile(): EffectOperationResponse = EffectOperationResponse(effects.reconcileNext())
+
+    @GetMapping("/audit")
+    fun audit(): JobSafetyAuditReport = audit.report()
 }

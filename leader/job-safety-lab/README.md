@@ -203,7 +203,7 @@ Commands must preserve `OperationId`, `ConflictKey`, membership revision, region
 
 ## Observation and tag policy
 
-The Redis leader and fenced execution path is wired to Leader 0.5.0's
+The Redis leader and fencing-protected execution path is wired to Leader 0.5.0's
 `MicrometerObservationLeaderAopMetricsRecorder` and
 `MicrometerObservationLeaderElectionListener`. The coordinator records the
 leader acquire boundary, fence-protected execution, and release event without
@@ -240,6 +240,101 @@ observation auto-configuration after removing or overriding this lab's manual
 observation beans. This lab keeps the recorder and listener manual so the Redis
 leader and PostgreSQL fencing boundary remains explicit.
 
+### Lease-extension observations
+
+This example also consumes the `2.0.0-SNAPSHOT` terminal lease-extension
+contract. `JobSafetyConfiguration` registers one
+`MicrometerObservationLeaderLeaseExtensionObserver` for the process-local
+`LeaderLeaseExtensionObservers` registry. The registration is closed with the
+Spring context, is safe to close more than once, and is absent when the
+registry is `ObservationRegistry.NOOP` or the feature is disabled.
+
+Enable it explicitly when the application provides a real observation registry:
+
+```yaml
+bluetape4k:
+  leader:
+    observation:
+      enabled: true
+      include-lock-name: false
+      include-leader-id: false
+      include-exception-details: false
+```
+
+The adapter keeps the `LockExtender` call on the Redis owner executor instead
+of copying a thread-bound lock handle. A job that needs a user-controlled
+extension can opt into the request lease callback:
+
+```kotlin
+coordinator.runWithLease(request) { leader, fence ->
+    val outcome = leader.extendViaLockExtender(30.seconds)
+    require(outcome is ExtendOutcome.Extended)
+    executeWithFence(fence)
+}
+```
+
+The observation name is `bluetape4k.leader.lease.extension` and its bounded
+low-cardinality tags are `source=user|watchdog`,
+`execution=blocking|suspend`, `outcome=extended|rejected|not_held|wrong_thread|backend_error`,
+and `result=success|skipped|error`. Lock and leader identifiers remain
+high-cardinality sanitized values only when explicitly enabled; raw job,
+tenant, operation, and owner identifiers are never exported. Cancellation and
+`Error` paths do not publish a terminal event, and elapsed time is intentionally
+not a tag.
+
+The released snapshot used by this workshop exposes the global
+`addObserver` API. Upstream scoped registration is kept out of this consumer
+until a released BOM artifact contains that ABI, so multiple contexts in one
+JVM must share the process-local registration boundary.
+
+## Leader audit export
+
+This lab also connects bluetape4k-leader 2.0.0-SNAPSHOT's public
+`LeaderAuditExporter` to the real Redis acquire/release lifecycle. The default
+`MEMORY` transport performs no external DNS lookup, socket connection, or
+credential use at startup. It keeps only bounded, redacted JSON for the
+operator report and uses `MicrometerLeaderAuditExporter` to expose fixed
+low-cardinality queue, retry, drop, failure, and cancellation signals.
+
+The operator-only endpoint is:
+
+```bash
+curl -u operator:change-me http://localhost:8080/api/job-safety/audit
+```
+
+The response contains the transport, bounded recent events, retained byte
+counters, `malformedPayloadCount`, exporter snapshot, and stable meter names.
+Malformed retained bytes are counted and logged with only the payload index,
+size, and exception type. It never contains the
+endpoint, `Authorization`, token, raw lock/node/slot/leader/customer/tenant
+identifiers, or raw exception text. `ACCEPTED` means that the exporter admitted
+an event to its bounded queue; it is not proof that the remote audit system
+received it. `DROPPED_QUEUE_FULL`, retries, terminal failures, and
+cancellations remain visible in the snapshot.
+
+An external delivery is an explicit trusted HTTPS opt-in. The endpoint host
+must be present in the exact allow-list and only the `Authorization` header is
+accepted:
+
+```bash
+export AUDIT_TOKEN='replace-me'
+WORKSHOP_JOB_SAFETY_AUDIT_TRANSPORT=HTTPS \
+WORKSHOP_JOB_SAFETY_AUDIT_ENDPOINT=https://audit.example.test/hook \
+WORKSHOP_JOB_SAFETY_AUDIT_ALLOWED_HOSTS=audit.example.test \
+WORKSHOP_JOB_SAFETY_AUDIT_HEADERS_AUTHORIZATION="Bearer ${AUDIT_TOKEN}" \
+./gradlew :leader-job-safety-lab:bootRun
+```
+
+The adapter rejects HTTP, user-info, query/fragment, localhost, IP literals,
+and hosts outside the exact allow-list. DNS rebinding and private-address
+egress still require a controlled resolver, proxy, or network policy outside
+this workshop. Export is best-effort and does not replace PostgreSQL history,
+exactly-once delivery, or the business outbox. A single bounded shutdown
+coordinator closes the subscription, exporter, HTTP client, scheduler,
+executor, and coroutine scope on context close. Shutdown failures continue
+cleanup but emit a structured warning containing only the resource step,
+outcome, and exception type.
+
 ## Tests
 
 ```bash
@@ -254,6 +349,9 @@ leader and PostgreSQL fencing boundary remains explicit.
 | --- | --- |
 | Leader 0.5.0 lifecycle observations and sanitized identifiers | `JobRunCoordinatorTest` |
 | Java 25 virtual threads and safe defaults | `JobSafetyRuntimeContractTest`, `JobSafetyPropertiesTest` |
+| 2.0.0-SNAPSHOT audit export, redaction, bounds, and trusted HTTPS | `JobSafetyAuditPropertiesTest`, `JobSafetyAuditPayloadEncoderTest`, `JobSafetyAuditExporterTest`, `JobSafetyAuditReportServiceTest` |
+| Single-owner bounded shutdown and cancellation | `JobSafetyAuditShutdownCoordinatorTest`, `JobSafetyContextRestartIntegrationTest` |
+| Real Redis lifecycle export while PostgreSQL remains authoritative | `JobSafetyEndToEndIntegrationTest` |
 | Opaque leader token separation | `RedisLeaderElectionAdapterTest` |
 | Monotonic Lua tokens, owner-bound renew/release, script flush | `RedisJobFencingLeaseIntegrationTest` |
 | Fence 42 commits and resumed fence 41 rejects | `FencedMutationPostgresIntegrationTest`, `JobSafetyEndToEndIntegrationTest` |
@@ -269,6 +367,9 @@ leader and PostgreSQL fencing boundary remains explicit.
 - This module uses one Redis deployment. Multi-region global fencing requires joint validation of Redis topology and PostgreSQL write-home authority.
 - `SchemaUtils` is development-only; production needs migrations, backups, and a namespace-epoch runbook.
 - Scenario reset is stateless here. A real reset endpoint needs approval, audit, bounded scope, and dry-run support.
+- The audit report is a bounded observation view, not an authoritative history or delivery receipt. `MEMORY` is intentionally local and `HTTPS` is opt-in.
+- The HTTPS adapter does not perform DNS-rebinding or private-network egress enforcement; deploy it behind an allow-listed resolver or egress proxy.
+- Export payloads redact identities and exception messages, but upstream history recorder warning logs remain outside this adapter's control.
 
 Related material:
 

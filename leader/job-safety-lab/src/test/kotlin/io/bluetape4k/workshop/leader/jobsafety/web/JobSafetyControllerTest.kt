@@ -17,7 +17,7 @@ internal class JobSafetyControllerTest {
         }
     private val mvc =
         MockMvcBuilders
-            .standaloneSetup(JobSafetyController(JobSafetyScenarioService(), effects))
+            .standaloneSetup(JobSafetyController(JobSafetyScenarioService(), effects, testAuditReportPort()))
             .build()
 
     @Test
@@ -57,6 +57,20 @@ internal class JobSafetyControllerTest {
         mvc.post("/api/job-safety/effects/reconcile").andExpect {
             status { isOk() }
             jsonPath("$.result") { value("NO_WORK") }
+        }
+    }
+
+    @Test
+    fun `audit report exposes bounded observation without endpoint or credentials`() {
+        mvc.get("/api/job-safety/audit").andExpect {
+            status { isOk() }
+            jsonPath("$.transport") { value("MEMORY") }
+            jsonPath("$.enabled") { value(true) }
+            jsonPath("$.recentEvents[0].status") { value("COMPLETED") }
+            jsonPath("$.snapshot.accepted") { value(1) }
+            jsonPath("$.meters[0]") { value("leader.audit.export.accepted") }
+            jsonPath("$.endpoint") { doesNotExist() }
+            jsonPath("$.authorization") { doesNotExist() }
         }
     }
 }

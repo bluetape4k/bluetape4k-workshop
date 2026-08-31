@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.leader.jobsafety.coordination
 
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.leader.ExtendOutcome
 import io.bluetape4k.leader.LeaderElectionListener
 import io.bluetape4k.leader.metrics.LeaderAopMetricsRecorder
 import io.bluetape4k.leader.micrometer.LeaderObservationOptions
@@ -29,9 +30,11 @@ import io.micrometer.observation.ObservationHandler
 import io.micrometer.observation.ObservationRegistry
 import org.junit.jupiter.api.Test
 import java.time.Duration
+import java.time.Instant
 import java.time.YearMonth
 import java.util.concurrent.CancellationException
 import java.util.concurrent.CopyOnWriteArrayList
+import kotlin.time.Duration.Companion.seconds
 
 internal class JobRunCoordinatorTest {
     @Test
@@ -48,6 +51,23 @@ internal class JobRunCoordinatorTest {
         result.fencingToken?.value shouldBeEqualTo 42L
         events shouldBeEqualTo
             listOf("leader.acquire", "fence.acquire", "execute", "fence.release", "leader.release")
+    }
+
+    @Test
+    fun `runWithLease exposes the request lease for an explicit user extension`() {
+        val events = mutableListOf<String>()
+        val expected = ExtendOutcome.Extended(Instant.parse("2026-08-31T00:00:05Z"))
+        val coordinator = coordinator(events, leaderExtensionOutcome = expected)
+
+        val result = coordinator.runWithLease(request()) { leader, _ ->
+            leader.extendViaLockExtender(1.seconds) shouldBeEqualTo expected
+            events += "execute"
+            JobMutation.Committed
+        }
+
+        result.state shouldBeEqualTo JobExecutionState.COMMITTED
+        events shouldBeEqualTo
+            listOf("leader.acquire", "fence.acquire", "leader.extend", "execute", "fence.release", "leader.release")
     }
 
     @Test
@@ -182,11 +202,17 @@ internal class JobRunCoordinatorTest {
         leaderReleaseFailure: Boolean = false,
         fenceOutcome: RecordingFencingLease.Outcome = RecordingFencingLease.Outcome.ACQUIRED,
         fenceReleaseFailure: Boolean = false,
+        leaderExtensionOutcome: ExtendOutcome = ExtendOutcome.Rejected,
         recorder: LeaderAopMetricsRecorder = LeaderAopMetricsRecorder.NoOp,
         listener: LeaderElectionListener = NoOpLeaderElectionListener,
     ): JobRunCoordinator =
         JobRunCoordinator(
-            leaderElection = RecordingLeaderElection(events, leaderAcquired, leaderReleaseFailure),
+            leaderElection = RecordingLeaderElection(
+                events,
+                leaderAcquired,
+                leaderReleaseFailure,
+                leaderExtensionOutcome,
+            ),
             fencingLease = RecordingFencingLease(events, fenceOutcome, fenceReleaseFailure),
             fencingTtl = Duration.ofSeconds(5),
             observationRecorder = recorder,
