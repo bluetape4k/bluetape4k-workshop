@@ -73,6 +73,12 @@ FOLLOW_UP_SCOPE_FIELDS = {
     "base_ref_policy", "oid_policy", "head_oid", "base_oid", "issue_numbers", "allowed_paths", "review_artifact",
 }
 DEPENDENCY_DECLARATION_NAMES = {"build.gradle", "build.gradle.kts", "libs.versions.toml"}
+ECOSYSTEM_POLICY_MAINTENANCE_PATHS = {
+    ".github/scripts/check-ecosystem-reuse.py",
+    ".github/scripts/test_check_ecosystem_reuse.py",
+    "docs/governance/github-action-pins.json",
+}
+ECOSYSTEM_POLICY_LESSON_NAME = "ecosystem-dependency-maintenance-scope.md"
 BLUETAPE_MARKER_RE = re.compile(r"(?i)bluetape4k")
 TOML_DECLARATION_RE = re.compile(r"^\s*[A-Za-z0-9_.-]+\s*=")
 GRADLE_DEPENDENCY_DECLARATION_RE = re.compile(
@@ -1388,6 +1394,34 @@ def is_dependency_maintenance_change(
     return not any(BLUETAPE_MARKER_RE.search(line) for _, line in changed_lines)
 
 
+def is_ecosystem_policy_maintenance_change(changed_paths: Sequence[str]) -> bool:
+    """Identify control-plane-only edits that do not belong to a feature train."""
+    if not changed_paths:
+        return False
+    return all(
+        clean_cell(path) in ECOSYSTEM_POLICY_MAINTENANCE_PATHS
+        or (
+            clean_cell(path).startswith("docs/lessons/")
+            and Path(clean_cell(path)).name.endswith(ECOSYSTEM_POLICY_LESSON_NAME)
+        )
+        for path in changed_paths
+    )
+
+
+def is_train_scope_exempt_change(
+    root: Path,
+    base_ref: str,
+    head_ref: str,
+    changed_paths: Sequence[str],
+) -> Optional[str]:
+    """Return the narrow exemption reason, or ``None`` when train scope applies."""
+    if is_dependency_maintenance_change(root, base_ref, head_ref, changed_paths):
+        return "dependency-maintenance"
+    if is_ecosystem_policy_maintenance_change(changed_paths):
+        return "ecosystem-policy-maintenance"
+    return None
+
+
 def _git_is_ancestor(root: Path, ancestor: str, descendant: str) -> bool:
     try:
         result = subprocess.run(
@@ -1620,8 +1654,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             errors.append("--pr-scope requires a readable --manifest")
         elif not all(scope_args):
             errors.append("--pr-scope requires base/head ref names and OIDs")
-        elif is_dependency_maintenance_change(root, args.base_ref, args.head_ref, changed_files):
-            print("INFO dependency-maintenance diff: train scope checks not applicable")
+        elif (exemption_reason := is_train_scope_exempt_change(
+            root,
+            args.base_ref,
+            args.head_ref,
+            changed_files,
+        )):
+            print("INFO %s diff: train scope checks not applicable" % exemption_reason)
         else:
             errors.extend(validate_train_scope(
                 manifest_data,

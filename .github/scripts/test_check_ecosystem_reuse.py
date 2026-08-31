@@ -1239,6 +1239,74 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
         train_scope.assert_not_called()
         self.assertIn("dependency-maintenance diff", output.getvalue())
 
+    def test_ecosystem_policy_maintenance_is_train_scope_exempt(self):
+        self.assertTrue(
+            CHECKER.is_ecosystem_policy_maintenance_change(
+                [
+                    ".github/scripts/check-ecosystem-reuse.py",
+                    ".github/scripts/test_check_ecosystem_reuse.py",
+                    "docs/governance/github-action-pins.json",
+                    "docs/lessons/2026-08-31-ecosystem-dependency-maintenance-scope.md",
+                ]
+            )
+        )
+
+    def test_ecosystem_policy_maintenance_rejects_product_paths(self):
+        self.assertFalse(
+            CHECKER.is_ecosystem_policy_maintenance_change(
+                [
+                    ".github/scripts/check-ecosystem-reuse.py",
+                    "src/main/kotlin/example/Feature.kt",
+                ]
+            )
+        )
+
+    def test_pr_scope_uses_ecosystem_policy_maintenance_exemption(self):
+        (self.root / "manifest.json").write_text("{}", encoding="utf-8")
+        self.inventory([self.row()])
+        output = io.StringIO()
+        with (
+            patch.object(CHECKER, "repo_root", return_value=self.root),
+            patch.object(CHECKER, "validate_inventory", return_value=[]),
+            patch.object(CHECKER, "validate_manifest", return_value=[]),
+            patch.object(
+                CHECKER,
+                "changed_files_between_refs",
+                return_value=(
+                    [
+                        ".github/scripts/check-ecosystem-reuse.py",
+                        ".github/scripts/test_check_ecosystem_reuse.py",
+                        "docs/governance/github-action-pins.json",
+                        "docs/lessons/2026-08-31-ecosystem-dependency-maintenance-scope.md",
+                    ],
+                    [],
+                ),
+            ),
+            patch.object(CHECKER, "is_dependency_maintenance_change", return_value=False),
+            patch.object(CHECKER, "validate_train_scope") as train_scope,
+            redirect_stdout(output),
+        ):
+            result = CHECKER.main(
+                [
+                    "--inventory",
+                    "inventory.md",
+                    "--manifest",
+                    "manifest.json",
+                    "--base-ref",
+                    "a" * 40,
+                    "--head-ref",
+                    "b" * 40,
+                    "--pr-scope",
+                    "--base-ref-name",
+                    "develop",
+                    "--head-ref-name",
+                    "fix/ecosystem-gate-dependency-maintenance",
+                ]
+            )
+        self.assertEqual(0, result)
+        train_scope.assert_not_called()
+        self.assertIn("ecosystem-policy-maintenance diff", output.getvalue())
+
     def test_train_scope_accepts_exact_node_and_refs(self):
         manifest = self.manifest()
         manifest["nodes"][1].update({

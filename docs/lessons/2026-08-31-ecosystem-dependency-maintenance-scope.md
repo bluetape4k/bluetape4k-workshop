@@ -25,6 +25,11 @@ Action pin, 일반 Build/CI 검사는 유지하고 ecosystem train scope/ref/OID
 적용하지 않는다. 경로가 섞이거나 diff를 해석할 수 없으면 기존 train 검사를
 그대로 적용해 fail closed 한다.
 
+checker 자체와 회귀 테스트, Action pin 원장, 이 정책 lesson만 바꾸는 control-plane
+유지보수도 별도 명시 경로로 분류해 train scope를 요구하지 않는다. 제품 소스나
+다른 문서가 섞이면 이 예외를 받지 않는다. 현재 workflow가 사용하는
+`actions/checkout`·`actions/upload-artifact` v7.0.1 SHA도 원장과 동기화한다.
+
 ## 검증
 
 - 외부 catalog와 module build dependency 변경은 maintenance로 분류된다.
