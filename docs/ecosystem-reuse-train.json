@@ -365,6 +365,32 @@
       "review_artifact": "docs/review/2026-08-30-2.0.0-ci-compatibility-7tier.md"
     },
     {
+      "scope_id": "issue-866-ci-compatibility",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-866-leader-diagnostics",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [866],
+      "allowed_paths": [
+        ".github/workflows/Examples.yml",
+        "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/2026-08-30-issue-866-leader-backend-diagnostics.md",
+        "docs/review/2026-08-30-issue-866-leader-diagnostics-code-review.md",
+        "docs/review/2026-08-30-issue-866-spec-plan-review.md",
+        "docs/superpowers/plans/2026-08-30-issue-866-leader-backend-diagnostics-plan.md",
+        "docs/superpowers/specs/2026-08-30-leader-backend-diagnostics-design.md",
+        "gradle/libs.versions.toml",
+        "leader/backend-comparison-lab/**",
+        "scripts/smoke-validate.sh"
+      ],
+      "review_artifact": "docs/review/2026-08-30-issue-866-leader-diagnostics-code-review.md"
+    },
+    {
       "scope_id": "issue-867-leader-audit",
       "scope_kind": "child",
       "parent_track": "P0",
@@ -448,8 +474,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260831T-issue-867-868-parent-stack-scope",
-    "checksum": "f398d2165df3dc6b824574e7b3ac1ed8025c71ce4eb0230efb72646d6aed24d3"
+    "receipt_id": "20260830T-2.0.0-ci-compatibility-followup-issue-866",
+    "checksum": "afad7a01701f9e8fc3aa33ebe6803a3527f5b208cf12fb4ae68d502781266607"
   },
   "planned_scope_replan_receipts": {
   },

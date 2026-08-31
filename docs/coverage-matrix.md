@@ -120,6 +120,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | `bluetape4k-leader` (Redis) | `leader-leader-election` | ✅ Good | virtual thread variant가 덜 두드러짐 | — | health endpoint가 있는 leader election | — |
 | `bluetape4k-leader` audit exporter | `leader/job-safety-lab` | ✅ Good | Redis acquire/release lifecycle과 bounded audit export 경계가 없었음 | `MEMORY` redacted report와 queue/drop/retry snapshot | trusted HTTPS endpoint, allow-list/header 검증, bounded shutdown | #867 |
 | `bluetape4k-leader` lease-extension observation | `leader/job-safety-lab` | ✅ Good | watchdog와 사용자 extension terminal outcome을 Micrometer에서 확인할 수 없었음 | global observer 등록/해제, `source`·`outcome` bounded tag, owner-thread proxy | released scoped-registration ABI와 context별 isolation | #868 |
+| `bluetape4k-leader-spring-boot` / `bluetape4k-leader-micrometer` | `leader/backend-comparison-lab` | ✅ Good | 정적 descriptor, bounded connectivity probe, Actuator health, low-cardinality metric 계약을 credential-free로 검증 | — | 실제 backend practice module에서 client lifecycle·failover 및 credential 경계 검증 | #866 |
 | Rate limiting | `ratelimit-*` | ✅ Good | adaptive rate limit 미노출 | — | sliding window를 쓰는 Adaptive Bucket4j + Redis | — |
 | Spring Cloud Gateway | `gateway-api-gateway` | ⚠️ Partial | circuit breaker filter 미노출 | — | Gateway + Resilience4j circuit breaker filter | — |
 | Spring Modulith | `spring-modulith-*` | ⚠️ Partial | module testing isolation 미노출 | — | bounded context별 Modulith ApplicationModuleTest | — |
@@ -166,5 +167,5 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | Messaging | 2 | 1 | 1 | 0 |
 | Async/Reactive | 3 | 2 | 1 | 0 |
 | Observability | 2 | 2 | 0 | 0 |
-| Architecture/Infra | 7 | 2 | 5 | 0 |
-| **Total** | **31** | **18 (58%)** | **12 (39%)** | **1 (3%)** |
+| Architecture/Infra | 8 | 3 | 5 | 0 |
+| **Total** | **32** | **19 (59%)** | **12 (38%)** | **1 (3%)** |

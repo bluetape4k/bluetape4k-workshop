@@ -332,7 +332,7 @@ case "${1:-help}" in
     echo ""
     echo "=== Required workshop module registration ==="
     missing_modules=0
-    for module in image-processing/barcode-api commerce/shared aws/kinesis-coroutines aws/bedrock-converse aws/settings-boundary optimization/field-service-dispatch optimization/last-mile-routing optimization/warehouse-allocation optimization/shift-coverage optimization/clinic-appointment-solver messaging/kafka-multi-broker-failover; do
+    for module in image-processing/barcode-api commerce/shared aws/kinesis-coroutines aws/bedrock-converse aws/settings-boundary leader/backend-comparison-lab optimization/field-service-dispatch optimization/last-mile-routing optimization/warehouse-allocation optimization/shift-coverage optimization/clinic-appointment-solver messaging/kafka-multi-broker-failover; do
       for required_file in build.gradle.kts README.md README.ko.md; do
         if [ ! -f "$module/$required_file" ]; then
           echo "MISSING: $module/$required_file"
@@ -344,6 +344,24 @@ case "${1:-help}" in
       echo "Required workshop modules are registered."
     else
       echo "ERROR: $missing_modules required module file(s) missing."
+      exit 1
+    fi
+
+    echo ""
+    echo "=== Leader diagnostics example guard ==="
+    diagnostics_config="leader/backend-comparison-lab/src/main/resources/application.yml"
+    diagnostics_tests="leader/backend-comparison-lab/src/test/kotlin/io/bluetape4k/workshop/leader/backendcomparison/observability"
+    diagnostics_app="leader/backend-comparison-lab/src/main/kotlin/io/bluetape4k/workshop/leader/backendcomparison/BackendComparisonLabApp.kt"
+    if rg -q '^    leaderBackendDiagnostics:$' "$diagnostics_config" && \
+       rg -q '^      tracing:$' "$diagnostics_config" && \
+       rg -q '^      backend-health:$' "$diagnostics_config" && \
+       rg -q '^      state-provider-bean: workshopLeaderElector$' "$diagnostics_config" && \
+       rg -q '@Import\(BackendComparisonLabApp::class\)' "$diagnostics_tests/LeaderBackendDiagnosticsContextTest.kt" && \
+       rg -q 'LeaderBackendDiagnosticsContextTest' "$diagnostics_tests" && \
+       rg -q 'LeaderBackendDiagnosticsConfiguration' "$diagnostics_app"; then
+      echo "Leader diagnostics endpoint and context coverage are registered."
+    else
+      echo "ERROR: leader diagnostics endpoint/context coverage is missing."
       exit 1
     fi
 

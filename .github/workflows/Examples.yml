@@ -265,6 +265,7 @@ jobs:
       # - aws-eventbridge-scheduler: local EventBridge + Scheduler boundary path
       # - aws-bedrock-converse: credential-free Bedrock Converse/ConverseStream Flow contract
       # - aws-settings-boundary: credential-free Secrets Manager/secure SSM settings contract
+      # - leader-backend-comparison-lab: passive diagnostics plus opt-in health/Micrometer contract without external backends
       # - jackson/jsonview examples: serialization path
       # - operations-job-console-core: framework-neutral state machine and queue projections
       # - leader-job-safety-lab: deterministic safety scenarios without container-backed integration tags
@@ -272,7 +273,7 @@ jobs:
       # - commerce-usage-metering-billing-ledger: container-free domain and architecture contracts
       # - commerce-usage-metering-billing-event-sourcing: container-free reducer, hash, upcast, and architecture contracts
       # - commerce-usage-billing-*: five independently deployable service contracts and Kafka/PostgreSQL composition proof
-      - name: Run H2/default examples
+      - name: Run H2/default and credential-free observability examples
         run: >-
           ./gradlew
           -x detekt

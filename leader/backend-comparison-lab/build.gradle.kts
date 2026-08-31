@@ -20,10 +20,15 @@ tasks.test {
 dependencies {
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.leader.core)
+    implementation(libs.bluetape4k.leader.spring.boot)
+    implementation(libs.bluetape4k.leader.micrometer)
     implementation(libs.bluetape4k.logging)
 
     implementation(libs.spring.boot.autoconfigure.lib)
     implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.spring.boot.starter.webmvc.lib)
+    runtimeOnly(libs.reactive.streams)
+    runtimeOnly(libs.reactor.core)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)
     annotationProcessor(libs.spring.boot.configuration.processor)
     runtimeOnly(libs.spring.boot.devtools)
