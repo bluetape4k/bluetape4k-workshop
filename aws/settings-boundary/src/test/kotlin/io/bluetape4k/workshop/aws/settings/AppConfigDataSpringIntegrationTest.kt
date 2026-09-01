@@ -2,14 +2,14 @@ package io.bluetape4k.workshop.aws.settings
 
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpServer
-import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.aws.spring.AwsClientCustomizationContext
 import io.bluetape4k.aws.spring.AwsSyncClientCustomizer
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.ExtendWith
@@ -141,16 +141,12 @@ class AppConfigDataSpringIntegrationTest {
                 properties = listOf("bluetape4k.aws.app-config.refresh-interval=15s"),
             ).run("--bluetape4k.aws.app-config.enabled=true")
 
-            assertTrue(
-                server.awaitDelayedLatest(20, TimeUnit.SECONDS),
-                "delayed latest request did not start: count=${server.requestCount.get()}, " +
-                    "tokens=${server.tokenOrdinals}, active=${server.activeRequests.get()}",
-            )
-            assertTrue(server.activeRequests.get() > 0)
+            server.awaitDelayedLatest(20, TimeUnit.SECONDS).shouldBeTrue()
+            (server.activeRequests.get() > 0).shouldBeTrue()
             requestCountBeforeClose = server.requestCount.get()
             val startedAt = Instant.now()
             context.close()
-            assertTrue(Duration.between(startedAt, Instant.now()).toMillis() <= 6_000)
+            (Duration.between(startedAt, Instant.now()).toMillis() <= 6_000).shouldBeTrue()
             context.close()
         } finally {
             context?.close()
@@ -350,7 +346,7 @@ class AppConfigDataSpringIntegrationTest {
                 SpringApplication(SettingsBoundarySpringApplication::class.java),
             )
         }
-        assertTrue(failure.message.orEmpty().contains("bluetape4k.aws.endpoint-override"))
+        failure.message.orEmpty().contains("bluetape4k.aws.endpoint-override").shouldBeTrue()
     }
 
     @Test
@@ -420,7 +416,7 @@ class AppConfigDataSpringIntegrationTest {
         }
         failure.message shouldBeEqualTo
             "bluetape4k.aws.app-config.endpoint-override must be a valid URI."
-        assertTrue(malformedEndpoint !in failure.toString())
+        (malformedEndpoint !in failure.toString()).shouldBeTrue()
     }
 
     @Test
@@ -447,7 +443,7 @@ class AppConfigDataSpringIntegrationTest {
             val messages = generateSequence(failure as Throwable?) { it.cause }
                 .mapNotNull { it.message }
                 .joinToString(" ")
-            assertTrue(messages.contains("regional AWS HTTPS host"))
+            messages.contains("regional AWS HTTPS host").shouldBeTrue()
         } finally {
             context?.close()
         }
@@ -477,8 +473,8 @@ class AppConfigDataSpringIntegrationTest {
             val messages = generateSequence(failure as Throwable?) { it.cause }
                 .mapNotNull { it.message }
                 .joinToString(" ")
-            assertTrue(messages.contains("regional AWS HTTPS host"))
-            assertTrue(messages.contains("bluetape4k.aws.endpoint-override"))
+            messages.contains("regional AWS HTTPS host").shouldBeTrue()
+            messages.contains("bluetape4k.aws.endpoint-override").shouldBeTrue()
         } finally {
             context?.close()
         }
@@ -508,10 +504,10 @@ class AppConfigDataSpringIntegrationTest {
                 "sentinel-payload",
                 "Authorization",
             ).forEach { sentinel ->
-                assertTrue(sentinel !in messages, "failure leaked sentinel: $sentinel")
-                assertTrue(sentinel !in output.all, "log output leaked sentinel: $sentinel")
+                (sentinel !in messages).shouldBeTrue()
+                (sentinel !in output.all).shouldBeTrue()
             }
-            assertTrue(Duration.between(startedAt, Instant.now()).toMillis() < 2_000)
+            (Duration.between(startedAt, Instant.now()).toMillis() < 2_000).shouldBeTrue()
         } finally {
             server.close()
         }
@@ -562,7 +558,7 @@ class AppConfigDataSpringIntegrationTest {
             val startedAt = Instant.now()
             val configuredClient = checkNotNull(client)
             assertFailsWith<RuntimeException> { configuredClient.startConfigurationSession(request) }
-            assertTrue(Duration.between(startedAt, Instant.now()).toMillis() < 2_000)
+            (Duration.between(startedAt, Instant.now()).toMillis() < 2_000).shouldBeTrue()
 
             val otherBuilder = AppConfigDataClient.builder()
                 .region(software.amazon.awssdk.regions.Region.US_EAST_1)
