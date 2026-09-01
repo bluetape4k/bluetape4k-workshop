@@ -12,8 +12,8 @@
 | Lens | P0 | P1 | P2 | 결과 |
 | --- | ---: | ---: | ---: | --- |
 | 코드/API 경계 | 0 | 0 | 0 | `ConfigData` bootstrap과 runtime customizer가 `appconfigdata`만 처리하고 기존 SDK override를 보존한다. |
-| 테스트/회귀 | 0 | 0 | 0 | 13개 AppConfig integration test와 기존 모듈 테스트를 모두 실행했다. caller rebinding 차이와 실패/redaction 경계를 assertion으로 고정했다. |
-| 보안/신뢰 경계 | 0 | 0 | 0 | synthetic credential, loopback ephemeral fake, exact method/path, regional HTTPS allow-list, prefix isolation을 확인했다. |
+| 테스트/회귀 | 0 | 0 | 0 | 16개 AppConfig integration test와 기존 모듈 테스트(전체 25개)를 모두 실행했다. caller rebinding 차이와 실패/redaction 경계를 assertion으로 고정했다. |
+| 보안/신뢰 경계 | 0 | 0 | 0 | synthetic credential, loopback ephemeral fake, exact method/path, app-specific 우선·공통 endpoint fallback guard, regional HTTPS allow-list, prefix isolation을 확인했다. |
 | 성능/안정성 | 0 | 0 | 0 | 15초 poll, 8초 in-flight delay, 6초 close upper bound, executor termination, request quiescence와 idempotent close를 확인했다. |
 | 문서/사용성 | 0 | 0 | 0 | `README.md`/`README.ko.md` parity, profile opt-in, optional/fail-fast, IAM/비용, `Environment`·`@Value`·`@ConfigurationProperties` 계약을 확인했다. |
 | 빌드/운영 | 0 | 0 | 0 | root BOM 단일 authority, versionless SDK alias, workflow comment, stale-check, coverage matrix와 lesson을 갱신했다. |
@@ -27,6 +27,9 @@
 - 기본 `application.yml`은 `enabled=false`이고, `appconfig` profile에서만
   import를 명시한다. 실제 AWS credential/endpoint를 저장소나 기본 smoke에
   넣지 않는다.
+- pre-ConfigData guard는 AppConfig 전용 endpoint를 우선하고 공통
+  `bluetape4k.aws.endpoint-override`를 fallback으로 검증하며, AppConfig가
+  비활성화된 경우에는 공통 AWS 예제의 endpoint를 차단하지 않는다.
 - `refresh-interval`은 명시적 opt-in이며 upstream 15초 minimum을 따른다.
   reload 뒤 `Environment#getProperty`만 최신 atomic map을 보며
   `@Value`/`@ConfigurationProperties`는 자동 rebind하지 않는다.
@@ -36,13 +39,15 @@
 - empty/malformed last-good, transport 후 새 session, duplicate scheduler,
   atomic property replacement은 upstream named lifecycle/property-source test를
   링크해 추적하며 consumer에서 내부 구현을 복제하지 않는다.
+- transport retry는 upstream 계약의 delay당 5분 full-jitter 상한과 무제한
+  횟수를 README/lesson에 명시한다.
 
 ## fresh verification evidence
 
 | 명령 | 결과 |
 | --- | --- |
-| `./gradlew :aws-settings-boundary:test --tests '*AppConfigDataSpringIntegrationTest' --no-build-cache --no-daemon --console=plain` | 13 tests, `SUCCESS: Executed 13 tests in 40.7s`, `BUILD SUCCESSFUL` |
-| `./gradlew :aws-settings-boundary:build --no-build-cache --no-daemon --console=plain` | 기존 9개 + AppConfig 13개 = 22 tests, `BUILD SUCCESSFUL` |
+| `./gradlew :aws-settings-boundary:test --tests '*AppConfigDataSpringIntegrationTest' --no-build-cache --no-daemon --console=plain` | 16 tests, `SUCCESS: Executed 16 tests in 40.6s`, `BUILD SUCCESSFUL` |
+| `./gradlew :aws-settings-boundary:build --no-build-cache --no-daemon --console=plain` | 기존 9개 + AppConfig 16개 = 25 tests, `BUILD SUCCESSFUL` |
 | `./gradlew detekt --no-daemon --console=plain` | `BUILD SUCCESSFUL` |
 | `bash scripts/smoke-validate.sh stale-check` | active modules 131, required modules/tenant/leader/AWS AppConfig guards PASS, broken image links 없음 |
 | `node scripts/validate-readme-parity.mjs aws/settings-boundary` | `{"failures":0}` |
@@ -71,6 +76,8 @@ token, `Authorization`, payload 또는 synthetic credential을 기록하지 않�
 
 ## 최종 판정
 
-**READY — 구현 및 pre-PR 검토 통과.** 아직 commit/PR/CI/merge는 이 문서 작성
-시점의 후속 게이트다. upstream retry 횟수 무제한, 8-worker source cap,
-application/profile endpoint 배포 allow-list는 잔여 P3로 추적한다.
+**READY FOR CI/APPROVAL — P0=0, P1=0, P2=0.** 후속 보안 fallback 수정과
+문서 갱신은 로컬 검증을 통과했다. PR #912는 이 작업본의 exact head와
+CI/review를 다시 확인한 뒤 사용자의 새 `승인` 후에만 merge한다. upstream retry
+횟수 무제한, 8-worker source cap, application/profile endpoint 배포 allow-list는
+잔여 P3로 추적한다.

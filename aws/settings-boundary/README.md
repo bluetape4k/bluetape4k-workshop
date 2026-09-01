@@ -68,6 +68,13 @@ trusted HTTPS host constrained by a deployment allow-list; never inject an
 endpoint or credential from remote AppConfig data, environment data, or
 unreviewed command-line input.
 
+For pre-ConfigData inputs, the guard resolves
+`bluetape4k.aws.app-config.endpoint-override` first and then the shared
+`bluetape4k.aws.endpoint-override`, matching the upstream client fallback. It
+validates that effective endpoint only when AppConfig is enabled. When AppConfig
+is disabled, the shared override remains available to other AWS examples and
+this AppConfig guard stays inactive.
+
 Live AWS access needs `appconfig:StartConfigurationSession` and
 `appconfig:GetLatestConfiguration`. Polling creates provider traffic and may
 incur charges, so it runs for the context lifetime only when `refresh-interval`
@@ -90,7 +97,10 @@ session, duplicate-source scheduler ownership, and atomic map replacement are
 owned by the lifecycle tests in upstream
 [AppConfig PR #537](https://github.com/bluetape4k/bluetape4k-aws/pull/537). This
 consumer verifies successful initial load/first update and bounded context/fake
-shutdown behavior.
+shutdown behavior. On transport failure, the upstream lifecycle retries with
+full-jitter backoff capped at five minutes per delay; the retry count is
+unbounded, so operators must still control timeout, shutdown, and provider
+traffic.
 
 This module does not pin a bluetape4k module version. The root
 `bluetape4k-dependencies` BOM is the `2.0.0-SNAPSHOT` authority; its currently

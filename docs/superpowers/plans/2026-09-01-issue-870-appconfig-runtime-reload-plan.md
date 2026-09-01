@@ -346,8 +346,9 @@ bash scripts/smoke-validate.sh stale-check
 git diff --check
 ```
 
-Expected: all tasks succeed; existing nine boundary tests plus thirteen AppConfig
-tests pass; each runtime test remains within its 30-second JUnit bound; no raw
+Expected: all tasks succeed; existing nine boundary tests plus sixteen AppConfig
+tests (25 module tests total) pass; each runtime test remains within its 30-second
+JUnit bound; no raw
 credential, token, payload, or Authorization value appears in reports/logs.
 
 - [ ] **Step 2: Run the Type A performance/stability scan.** Record blocking I/O,

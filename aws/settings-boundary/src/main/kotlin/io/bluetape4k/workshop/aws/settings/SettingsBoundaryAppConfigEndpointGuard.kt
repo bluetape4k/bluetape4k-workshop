@@ -22,7 +22,11 @@ class SettingsBoundaryAppConfigEndpointGuard : EnvironmentPostProcessor, Ordered
         environment: ConfigurableEnvironment,
         application: SpringApplication,
     ) {
-        val rawEndpoint = environment.getProperty(ENDPOINT_PROPERTY) ?: return
+        if (!isAppConfigEnabled(environment)) return
+        val endpointProperty = listOf(APP_CONFIG_ENDPOINT_PROPERTY, GLOBAL_ENDPOINT_PROPERTY)
+            .firstOrNull(environment::containsProperty)
+            ?: return
+        val rawEndpoint = environment.getProperty(endpointProperty) ?: return
         val region = environment.getProperty(APP_CONFIG_REGION_PROPERTY)
             ?: environment.getProperty(REGION_PROPERTY)
             ?: environment.getProperty("AWS_REGION")
@@ -30,28 +34,44 @@ class SettingsBoundaryAppConfigEndpointGuard : EnvironmentPostProcessor, Ordered
         val endpoint = try {
             URI(rawEndpoint)
         } catch (_: IllegalArgumentException) {
-            throw IllegalArgumentException("$ENDPOINT_PROPERTY must be a valid URI.")
+            throw IllegalArgumentException("$endpointProperty must be a valid URI.")
         } catch (_: URISyntaxException) {
-            throw IllegalArgumentException("$ENDPOINT_PROPERTY must be a valid URI.")
+            throw IllegalArgumentException("$endpointProperty must be a valid URI.")
         }
-        validateAppConfigEndpoint(endpoint, region)
+        validateAppConfigEndpoint(endpoint, region, endpointProperty)
     }
 
     private companion object {
-        const val ENDPOINT_PROPERTY = "bluetape4k.aws.app-config.endpoint-override"
+        const val APP_CONFIG_ENDPOINT_PROPERTY = "bluetape4k.aws.app-config.endpoint-override"
+        const val GLOBAL_ENDPOINT_PROPERTY = "bluetape4k.aws.endpoint-override"
+        const val APP_CONFIG_ENABLED_PROPERTY = "bluetape4k.aws.app-config.enabled"
+        const val AWS_ENABLED_PROPERTY = "bluetape4k.aws.enabled"
         const val REGION_PROPERTY = "bluetape4k.aws.region"
         const val APP_CONFIG_REGION_PROPERTY = "bluetape4k.aws.app-config.region"
         const val DEFAULT_SAMPLE_REGION = "ap-northeast-2"
+
+        fun isAppConfigEnabled(environment: ConfigurableEnvironment): Boolean {
+            val appConfigEnabled = environment.getProperty(APP_CONFIG_ENABLED_PROPERTY)
+                ?.toBooleanStrictOrNull()
+            if (appConfigEnabled != null) return appConfigEnabled
+            return environment.getProperty(AWS_ENABLED_PROPERTY)
+                ?.toBooleanStrictOrNull()
+                ?: true
+        }
     }
 }
 
-internal fun validateAppConfigEndpoint(endpoint: URI, region: String?) {
+internal fun validateAppConfigEndpoint(
+    endpoint: URI,
+    region: String?,
+    propertyName: String = "bluetape4k.aws.app-config.endpoint-override",
+) {
     require(endpoint.userInfo == null && endpoint.query == null && endpoint.fragment == null) {
-        "bluetape4k.aws.app-config.endpoint-override must not contain user info, query, or fragment."
+        "$propertyName must not contain user info, query, or fragment."
     }
     val host = endpoint.host?.lowercase()?.trimEnd('.')
     require(!host.isNullOrBlank()) {
-        "bluetape4k.aws.app-config.endpoint-override must contain a host."
+        "$propertyName must contain a host."
     }
 
     val normalizedRegion = region?.trim()?.lowercase()
@@ -63,7 +83,7 @@ internal fun validateAppConfigEndpoint(endpoint: URI, region: String?) {
         (endpoint.port == -1 || endpoint.port == 443) &&
         (endpoint.path.isEmpty() || endpoint.path == "/")
     require(isLoopbackTestEndpoint || isTrustedAwsEndpoint) {
-        "bluetape4k.aws.app-config.endpoint-override must use a regional AWS HTTPS host; " +
+        "$propertyName must use a regional AWS HTTPS host; " +
             "HTTP is restricted to loopback tests."
     }
 }

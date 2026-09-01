@@ -25,9 +25,12 @@ AWS SDK v2 `appconfigdata`만 versionless catalog alias로 추가했다.
 - production AppConfig SDK client에는 API timeout 10초와 attempt timeout
   5초를 적용한다. 500ms timeout은 direct SDK delayed loopback 테스트 전용이다.
 - endpoint guard는 ConfigData보다 먼저 보이는 command-line·system·environment
-  source의 값을 client 생성 전에 검사해 region별 AWS AppConfig Data HTTPS
-  host만 허용하고, HTTP는 literal loopback fake로 제한한다. application/profile
-  ConfigData endpoint는 배포 정책으로 별도 제한한다.
+  source의 값을 client 생성 전에 검사한다. AppConfig 전용 endpoint를 먼저,
+  공통 `bluetape4k.aws.endpoint-override`를 fallback으로 적용하고, AppConfig가
+  활성화된 경우에만 region별 AWS AppConfig Data HTTPS host를 허용한다. HTTP는
+  literal loopback fake로 제한하며, AppConfig가 비활성화된 경우 공통 endpoint는
+  다른 AWS 예제의 설정으로 남긴다. application/profile ConfigData endpoint는
+  배포 정책으로 별도 제한한다.
 - `prefix=appconfig`으로 원격 `spring.*`·`management.*` key의 top-level 주입을
   차단한다. endpoint override는 신뢰할 수 있는 HTTPS host와 배포 allow-list를
   통해서만 명시해야 한다.
@@ -70,8 +73,9 @@ server를 `finally`에서 중지한 뒤 active handler 0, executor terminated,
 
 성능 검토에서 in-flight poll 종료가 실제 취소 경계를 통과하는지 확인하도록
 8초 지연 응답을 추가하고, close 직전에 request count를 캡처하도록 보강했다.
-endpoint guard는 IMDS·임의 외부 host·region 불일치 host를 거부하는 negative
-테스트로 고정했다.
+endpoint guard는 IMDS·임의 외부 host·region 불일치 host와 공통 endpoint
+fallback 우회를 거부하는 negative 테스트로 고정했다. AppConfig 비활성화 시
+guard가 동작하지 않는 조건도 함께 확인한다.
 
 실행한 핵심 명령:
 
@@ -81,8 +85,9 @@ endpoint guard는 IMDS·임의 외부 host·region 불일치 host를 거부하�
   --no-build-cache --no-daemon --console=plain
 ```
 
-AppConfig consumer 통합 테스트 13개가 통과했으며 두 runtime 경계 테스트를
-포함한 suite는 약 40.7초에 30초 개별 테스트 제한을 지킨다. 이 비용은 upstream
+AppConfig consumer 통합 테스트 16개가 통과했으며 두 runtime 경계 테스트를
+포함한 suite는 약 40.6초에 30초 개별 테스트 제한을 지킨다. 전체 모듈의
+기존 9개 테스트를 포함해 25개 테스트가 통과했다. 이 비용은 upstream
 lifecycle을 복제하지 않고 실제 15초 poll과 in-flight 종료를 검증하는 CI 비용으로
 수용한다. 전체 모듈 테스트,
 `build`, `detekt`, stale-check, README parity/diff-check는 PR 직전에 다시
@@ -90,8 +95,8 @@ lifecycle을 복제하지 않고 실제 15초 poll과 in-flight 종료를 검증
 
 ## 남은 위험
 
-upstream lifecycle의 transport failure 재시도는 현재 설계상 횟수 제한이 없는
-backoff loop이다. 이 consumer는 이를 재구현하거나 완화하지 않고 upstream
-테스트와 운영 timeout/종료 계약을 문서화한다. 실제 AWS endpoint allow-list와
-IAM 정책은 consumer guard와 배포 조합에서 함께 관리하며, 예제는 실제 AWS
-credential을 자동으로 활성화하지 않는다.
+upstream lifecycle의 transport failure 재시도는 delay당 최대 5분의 full-jitter
+backoff를 사용하지만 횟수 제한은 없다. 이 consumer는 이를 재구현하거나
+완화하지 않고 upstream 테스트와 운영 timeout/종료 계약을 문서화한다. 실제
+AWS endpoint allow-list와 IAM 정책은 consumer guard와 배포 조합에서 함께
+관리하며, 예제는 실제 AWS credential을 자동으로 활성화하지 않는다.

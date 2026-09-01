@@ -196,7 +196,10 @@ application-appconfig.yml
   허용되지 않은 method/path를 negative contract로 거부한다. 소비자
   `EnvironmentPostProcessor`는 ConfigData보다 먼저 보이는 command-line·system·
   environment source의 운영 endpoint override에 region별 AWS AppConfig Data
-  HTTPS host allowlist를 적용하고, HTTP는 loopback 테스트로 한정한다.
+  HTTPS host allowlist를 적용하고, HTTP는 loopback 테스트로 한정한다. effective
+  endpoint는 AppConfig 전용 override를 먼저 사용하고 공통
+  `bluetape4k.aws.endpoint-override`를 fallback으로 사용한다. AppConfig가
+  명시적으로 비활성화되면 이 guard는 공통 AWS 예제의 endpoint를 차단하지 않는다.
   application/profile ConfigData endpoint는 배포 정책에 맡긴다. import의
   `prefix=appconfig`로 `spring.*` 등 민감한 unprefixed key가 top-level에
   노출되지 않음을 확인한다. `optional`/`fail-fast=false`는 비보안 feature

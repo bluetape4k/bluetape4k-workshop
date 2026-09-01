@@ -67,6 +67,13 @@ bluetape4k:
 HTTPS host만 배포 allow-list로 허용해야 하며, 원격 AppConfig 데이터·환경변수·
 검토하지 않은 command line에서 endpoint나 credential을 주입하지 않습니다.
 
+ConfigData 이전에 보이는 입력에서 guard는 upstream client fallback과 같은
+순서로 `bluetape4k.aws.app-config.endpoint-override`를 먼저 보고 공통
+`bluetape4k.aws.endpoint-override`를 fallback으로 사용합니다. AppConfig가
+활성화된 경우에만 effective endpoint를 검증하며, AppConfig가 비활성화되면
+공통 override는 다른 AWS 예제에서 사용할 수 있고 이 AppConfig guard는
+동작하지 않습니다.
+
 실제 AWS에는 `appconfig:StartConfigurationSession`과
 `appconfig:GetLatestConfiguration` 권한이 필요합니다. polling은 provider
 traffic과 비용을 만들 수 있으므로 `refresh-interval`을 명시했을 때만
@@ -88,7 +95,10 @@ payload와 malformed payload의 last-good 보존, transport failure 뒤 새
 session 재시도, 중복 source scheduler와 atomic map 교체는 upstream
 [AppConfig PR #537](https://github.com/bluetape4k/bluetape4k-aws/pull/537)의
 lifecycle 테스트가 소유하며, 이 consumer는 성공적인 초기 로드·첫 갱신과
-context/fake 종료 경계를 검증합니다.
+context/fake 종료 경계를 검증합니다. transport failure가 발생하면 upstream
+lifecycle은 delay당 최대 5분의 full-jitter backoff로 재시도하며 횟수는
+무제한입니다. 따라서 운영자는 timeout, shutdown과 provider traffic을 함께
+제어해야 합니다.
 
 bluetape4k module version은 이 모듈에서 직접 지정하지 않습니다. root
 `bluetape4k-dependencies` BOM이 `2.0.0-SNAPSHOT` authority이며, 현재 공개된

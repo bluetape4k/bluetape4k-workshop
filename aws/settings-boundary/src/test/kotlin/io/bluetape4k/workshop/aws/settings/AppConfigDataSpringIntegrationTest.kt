@@ -329,6 +329,53 @@ class AppConfigDataSpringIntegrationTest {
     }
 
     @Test
+    fun `endpoint guard validates the shared endpoint fallback when AppConfig is enabled`() {
+        val environment = StandardEnvironment().apply {
+            propertySources.addFirst(
+                MapPropertySource(
+                    "shared-endpoint",
+                    mapOf(
+                        "bluetape4k.aws.enabled" to "true",
+                        "bluetape4k.aws.app-config.enabled" to "true",
+                        "bluetape4k.aws.region" to "us-east-1",
+                        "bluetape4k.aws.endpoint-override" to "http://169.254.169.254",
+                    ),
+                ),
+            )
+        }
+
+        val failure = assertFailsWith<IllegalArgumentException> {
+            SettingsBoundaryAppConfigEndpointGuard().postProcessEnvironment(
+                environment,
+                SpringApplication(SettingsBoundarySpringApplication::class.java),
+            )
+        }
+        assertTrue(failure.message.orEmpty().contains("bluetape4k.aws.endpoint-override"))
+    }
+
+    @Test
+    fun `endpoint guard remains inactive when AppConfig is disabled`() {
+        val environment = StandardEnvironment().apply {
+            propertySources.addFirst(
+                MapPropertySource(
+                    "disabled-appconfig",
+                    mapOf(
+                        "bluetape4k.aws.enabled" to "true",
+                        "bluetape4k.aws.app-config.enabled" to "false",
+                        "bluetape4k.aws.region" to "us-east-1",
+                        "bluetape4k.aws.endpoint-override" to "http://169.254.169.254",
+                    ),
+                ),
+            )
+        }
+
+        SettingsBoundaryAppConfigEndpointGuard().postProcessEnvironment(
+            environment,
+            SpringApplication(SettingsBoundarySpringApplication::class.java),
+        )
+    }
+
+    @Test
     fun `endpoint guard rejects an untrusted override before ConfigData`() {
         val environment = StandardEnvironment().apply {
             propertySources.addFirst(
@@ -401,6 +448,37 @@ class AppConfigDataSpringIntegrationTest {
                 .mapNotNull { it.message }
                 .joinToString(" ")
             assertTrue(messages.contains("regional AWS HTTPS host"))
+        } finally {
+            context?.close()
+        }
+    }
+
+    @Test
+    fun `registered endpoint guard rejects a shared command line endpoint before ConfigData`() {
+        var context: ConfigurableApplicationContext? = null
+        val application = SpringApplicationBuilder(SettingsBoundarySpringApplication::class.java)
+            .web(WebApplicationType.NONE)
+            .properties(
+                "spring.config.import=optional:aws-app-config:application#profile#environment?format=properties&prefix=appconfig",
+                "bluetape4k.aws.enabled=true",
+                "bluetape4k.aws.region=us-east-1",
+                "bluetape4k.aws.app-config.region=us-east-1",
+                "bluetape4k.aws.app-config.fail-fast=false",
+                "spring.main.banner-mode=off",
+            )
+            .build()
+        try {
+            val failure = assertFailsWith<Exception> {
+                context = application.run(
+                    "--bluetape4k.aws.app-config.enabled=true",
+                    "--bluetape4k.aws.endpoint-override=http://169.254.169.254",
+                )
+            }
+            val messages = generateSequence(failure as Throwable?) { it.cause }
+                .mapNotNull { it.message }
+                .joinToString(" ")
+            assertTrue(messages.contains("regional AWS HTTPS host"))
+            assertTrue(messages.contains("bluetape4k.aws.endpoint-override"))
         } finally {
             context?.close()
         }
