@@ -17,8 +17,10 @@ credential 없이 신규 소비자 계약을 학습할 수 있게 한다.
 
 기존 Spring Cloud AWS `S3Template` 업로드·AWS SDK 목록 조회·exact
 `ResourceLoader` 흐름은 유지한다. `bluetape4k.aws.s3.enabled=false`로 전체
-bluetape4k S3 자동 구성을 끄던 로컬 설정은 제거하고, 사용자 소유 `S3Client`가
-자동 구성의 client 조건을 만족하게 한다. 그러면 자동 구성된 protocol resolver와
+bluetape4k S3 자동 구성을 끄던 로컬 설정은 `bluetape4k.aws.s3.transfer.enabled=false`로
+좁힌다. transfer 자동 구성의 `s3ObjectConverter` bean 이름 충돌은 피하면서
+resource 자동 구성은 활성화하고, 사용자 소유 `S3Client`가 자동 구성의 client
+조건을 만족하게 한다. 그러면 자동 구성된 protocol resolver와
 `s3ResourcePatternResolver` bean이 같은 client provider를 사용하며, Spring Cloud
 AWS의 `S3Template`과도 역할이 겹치지 않는다.
 
@@ -29,7 +31,7 @@ AWS의 `S3Template`과도 역할이 겹치지 않는다.
 | [Issue #871](https://github.com/bluetape4k/bluetape4k-workshop/issues/871) | exact/pattern fixture, pagination, deterministic ordering, empty match, metadata·stream lifecycle, unsupported boundary와 등록 파일 요구 | 기존 `aws/s3-spring-cloud` 안에서 소비자 예제와 Floci 통합 테스트를 확장 |
 | [bluetape4k-aws Issue #463](https://github.com/bluetape4k/bluetape4k-aws/issues/463) | Spring `Resource` exact protocol과 single-bucket pattern resolver 요구 | protocol 경로와 pattern 경로를 테스트에서 각각 관찰 |
 | [bluetape4k-aws PR #538](https://github.com/bluetape4k/bluetape4k-aws/pull/538) | `S3ResourcePatternResolver`, strict URI parser, 모든 `ListObjectsV2` paginator page 소비, 중복 제거·정렬, Floci 우선 | upstream API를 재구현하지 않고 qualifier bean을 직접 주입해 실제 소비자 사용법을 문서화 |
-| upstream `S3ResourceAutoConfiguration` | `bluetape4k.aws.s3.enabled=true`(기본값), `S3Client` 존재, 기본 bean 이름 `s3ResourcePatternResolver` | 기존 disabled override를 삭제하고 수동 `S3Client`를 보존 |
+| upstream `S3ResourceAutoConfiguration`·`S3TransferAutoConfiguration` | resource는 `bluetape4k.aws.s3.enabled=true`(기본값)와 `S3Client`를 요구하고, transfer는 별도 `transfer.enabled`와 `s3ObjectConverter`를 제공 | 전체 S3 switch는 켜고 `transfer.enabled=false`만 유지해 bean 이름 충돌 없이 resolver를 활성화 |
 | 현재 `SpringCloudAwsS3Sample`·`SpringCloudAwsS3Test` | Floci endpoint와 `S3Template`이 이미 local-first로 구성됨 | 별도 credential·client·container를 만들지 않고 기존 fixture를 재사용 |
 | `gradle/libs.versions.toml` | `bluetape4k-dependencies`가 `2.0.0-SNAPSHOT`을 관리하며 module alias는 versionless | 새 bluetape4k 버전 pin이나 개별 BOM을 추가하지 않음 |
 
@@ -147,7 +149,7 @@ TDD 순서로 먼저 다음 실패 테스트를 작성하고, 각 테스트가 �
 
 | 실패 모드 | 관찰 가능한 계약 | 대응 |
 | --- | --- | --- |
-| `bluetape4k.aws.s3.enabled=false` 유지 | pattern resolver bean과 exact protocol resolver가 함께 사라짐 | 설정 override를 제거하고 `S3Client` 수동 bean이 auto-config 조건을 만족하는지 context test로 고정 |
+| `bluetape4k.aws.s3.enabled=false` 유지 | pattern resolver bean과 exact protocol resolver가 함께 사라짐 | 전체 switch를 제거하고 `transfer.enabled=false`만 남겨 resource auto-config 조건을 만족하는지 context test로 고정 |
 | wildcard 결과가 page 순서에 종속됨 | 키 순서가 실행마다 달라질 수 있음 | resolver의 sorted 결과를 assert하고 prefix 밖의 key를 포함하지 않음 |
 | match가 없음 | `null`이나 예외 대신 빈 배열이어야 함 | empty suffix fixture를 별도 assert하고 per-key HEAD/GET이 없음을 검증 |
 | object가 존재하지 않음 | `Resource.exists()`가 false, listing 자체는 실패하지 않음 | metadata/stream assert는 실제 fixture에만 적용하고 exact missing은 upstream 계약으로 추적 |
@@ -159,6 +161,9 @@ TDD 순서로 먼저 다음 실패 테스트를 작성하고, 각 테스트가 �
 
 - [ ] `bluetape4k-dependencies`가 관리하는 `2.0.0-SNAPSHOT`을 그대로 사용하고
   개별 Bluetape 버전 pin/BOM을 추가하지 않는다.
+- [ ] Spring Cloud AWS의 `s3ObjectConverter` 이름 충돌을 피하기 위해
+  `bluetape4k.aws.s3.transfer.enabled=false`만 유지하고, `bluetape4k.aws.s3.enabled`
+  전체를 비활성화하지 않는다.
 - [ ] 기존 exact `ResourceLoader` 예제와 신규 qualifier pattern resolver
   예제가 같은 Floci `S3Client`로 실행된다.
 - [ ] multiple-object fixture가 `config/` prefix, `**` nested match, deterministic
