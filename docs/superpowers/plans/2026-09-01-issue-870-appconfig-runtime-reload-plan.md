@@ -351,7 +351,7 @@ tests (25 module tests total) pass; each runtime test remains within its 30-seco
 JUnit bound; no raw
 credential, token, payload, or Authorization value appears in reports/logs.
 
-- [ ] **Step 2: Run the Type A performance/stability scan.** Record blocking I/O,
+- [x] **Step 2: Run the Type A performance/stability scan.** Record blocking I/O,
   timeout, retry/backoff, context close,
   fake server cleanup, and direct SDK client close evidence. The in-flight delayed
   request case must prove a measurable context-close upper bound compatible with
@@ -377,16 +377,16 @@ credential, token, payload, or Authorization value appears in reports/logs.
   Environment-vs-bean limitation, 15-second/30-second test budget, exact commands,
   failures and fixes, and remaining risk that upstream retry count is unbounded.
 
-- [ ] **Step 4: Run six-lens pre-PR review.** Check code, tests, docs, workflow,
+- [x] **Step 4: Run six-lens pre-PR review.** Check code, tests, docs, workflow,
   BOM, timeout ownership, endpoint/credential trust, public caller ergonomics,
   and exact issue/PR metadata. Require P0=0, P1=0; fix P2 or record a linked
   follow-up with evidence.
 
-- [ ] **Step 5: Commit and push with Lore trailers.** Use a Korean intent line and
+- [x] **Step 5: Commit and push with Lore trailers.** Use a Korean intent line and
   include `Constraint`, `Rejected`, `Confidence`, `Scope-risk`, `Directive`,
   `Tested`, and `Not-tested` trailers. Push `feat/issue-870-appconfig-runtime-reload`.
 
-- [ ] **Step 6: Create and verify the PR.** Title:
+- [x] **Step 6: Create and verify the PR.** Title:
   `[2.0.0] Issue #870 settings-boundary에 AppConfig ConfigData·runtime reload 예제를 추가한다`
   Body must be Korean, link Issue #870, list exact tests/CI, and end with
   `## DoD Status`. Set milestone `2.0.0`, preserve issue labels/assignee, and

@@ -77,6 +77,17 @@ endpoint guard는 IMDS·임의 외부 host·region 불일치 host와 공통 endp
 fallback 우회를 거부하는 negative 테스트로 고정했다. AppConfig 비활성화 시
 guard가 동작하지 않는 조건도 함께 확인한다.
 
+첫 hosted CI에서는 consumer test의 legacy JUnit assertion import가 assertion
+governance에 걸려 `shouldBeTrue`로 치환했다. 다음 실행에서는 변경 경로가 기존
+`epic-792-train-promotion` scope를 선택해 `expected_head_ref`가
+`feat/issue-870-appconfig-runtime-reload`와 불일치했다. 이번 PR의 20개 경로만
+포괄하는 `issue-870-aws-appconfig-runtime-reload` stacked-parent-head scope를
+manifest에 추가하고, 기존 receipt를 재사용하지 않은 새
+`coordinator_scope_receipt`를 발행했다. scope canonical JSON SHA-256은
+`6a3192f4ca72c3f6773861f95a7f6e535d7d0765c40158005aec2c0b8b0e16e8`이며, trusted
+manifest 기반 exact `--pr-scope` checker와 ecosystem checker 106개 테스트가
+통과했다.
+
 실행한 핵심 명령:
 
 ```bash

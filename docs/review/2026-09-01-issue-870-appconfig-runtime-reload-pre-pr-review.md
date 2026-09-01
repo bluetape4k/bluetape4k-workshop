@@ -55,6 +55,13 @@
 | Korean terminology audit | 5 files, findings 0 |
 | `git diff --check` | PASS |
 
+Hosted CI 보정 기록: assertion governance의 legacy JUnit import는
+`shouldBeTrue`로 치환한 뒤 통과했다. 이어서 ecosystem reuse가
+`epic-792-train-promotion`의 `feat/epic-792-train-promotion` head를 잘못
+선택한 문제는 Issue #870 전용 scope와 fresh coordinator receipt로 수정했다.
+trusted manifest 기반 exact `--pr-scope`는 PASS이며, scope canonical SHA-256은
+`6a3192f4ca72c3f6773861f95a7f6e535d7d0765c40158005aec2c0b8b0e16e8`이다.
+
 실패한 stale Gradle result-store 출력은 이후 `clean` 실행에서 재현되지 않았으며,
 최종 targeted/module 실행은 모두 성공했다. test report와 fake 구현에는 raw
 token, `Authorization`, payload 또는 synthetic credential을 기록하지 않는다.
@@ -76,8 +83,8 @@ token, `Authorization`, payload 또는 synthetic credential을 기록하지 않�
 
 ## 최종 판정
 
-**READY FOR CI/APPROVAL — P0=0, P1=0, P2=0.** 후속 보안 fallback 수정과
-문서 갱신은 로컬 검증을 통과했다. PR #912는 이 작업본의 exact head와
-CI/review를 다시 확인한 뒤 사용자의 새 `승인` 후에만 merge한다. upstream retry
-횟수 무제한, 8-worker source cap, application/profile endpoint 배포 allow-list는
-잔여 P3로 추적한다.
+**READY FOR CI/APPROVAL — P0=0, P1=0, P2=0.** 후속 보안 fallback,
+assertion governance, ecosystem scope 보정과 문서 갱신은 로컬 검증을 통과했다.
+PR #912는 이 작업본의 exact head에서 hosted CI/review를 다시 확인한 뒤 사용자의
+새 `승인` 후에만 merge한다. upstream retry 횟수 무제한, 8-worker source cap,
+application/profile endpoint 배포 allow-list는 잔여 P3로 추적한다.

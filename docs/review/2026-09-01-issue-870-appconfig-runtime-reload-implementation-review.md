@@ -40,6 +40,7 @@ guard, loopback fake, bilingual README와 저장소 validation guard를 함께
 | P2 | endpoint guard의 외부 host/URI 오류 경계가 약함 | IMDS, 임의 host, region 불일치, 잘못된 port/path/userinfo와 malformed URI를 거부하고 오류에 원문 URI를 echo하지 않는 test를 추가했다. |
 | P2 | lesson/validation 수치와 실제 suite가 불일치 | lesson을 16개 AppConfig test, 약 40.6초 suite, 전체 모듈 25개 test와 test별 30초 timeout으로 갱신하고 stale-check에 AppConfig contract를 등록했다. |
 | P1 | 공통 `bluetape4k.aws.endpoint-override`가 AppConfig 전용 guard를 우회할 수 있음 | upstream fallback과 같은 effective endpoint precedence를 계산하고 AppConfig 활성 조건을 확인한다. 공통 IMDS command-line 회귀 및 비활성 guard test를 추가했다. |
+| CI | hosted ecosystem reuse가 기존 epic scope의 head ref를 선택함 | Issue #870의 변경 경로 20개를 전용 `issue-870-aws-appconfig-runtime-reload` stacked-parent-head scope로 고정하고 fresh coordinator receipt와 canonical SHA-256 `6a3192f4ca72c3f6773861f95a7f6e535d7d0765c40158005aec2c0b8b0e16e8`를 발행했다. trusted exact `--pr-scope` 검증과 checker 106개 테스트가 통과했다. |
 
 ## 남은 위험
 
