@@ -1,0 +1,2 @@
+org.springframework.boot.EnvironmentPostProcessor=\
+io.bluetape4k.workshop.aws.settings.SettingsBoundaryAppConfigEndpointGuard

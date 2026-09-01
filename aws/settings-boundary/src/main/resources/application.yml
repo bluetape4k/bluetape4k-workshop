@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: aws-settings-boundary
+
+bluetape4k:
+  aws:
+    app-config:
+      enabled: false

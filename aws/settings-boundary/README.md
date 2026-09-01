@@ -33,6 +33,71 @@ implementation(libs.bluetape4k.aws.kotlin)
 The wrapper source is maintained in the
 [bluetape4k AWS Kotlin module](https://github.com/bluetape4k/bluetape4k-aws/tree/main/aws-kotlin).
 
+## Spring Boot AWS AppConfig Data
+
+`SettingsBoundarySpringApplication` is a Spring Boot 4 consumer example for
+the ConfigData URI
+`aws-app-config:application#profile#environment`. The default
+`application.yml` disables AppConfig auto-configuration, so the ordinary run
+and smoke/CI paths finish without credentials or remote calls. The import is
+enabled only when the explicit `appconfig` profile is selected:
+
+```yaml
+spring:
+  config:
+    import: optional:aws-app-config:application#profile#environment?format=properties&prefix=appconfig
+bluetape4k:
+  aws:
+    app-config:
+      enabled: true
+      fail-fast: false
+      # refresh-interval: 15s
+```
+
+```bash
+./gradlew :aws-settings-boundary:test
+./gradlew :aws-settings-boundary:bootRun --args='--spring.profiles.active=appconfig'
+```
+
+Use `optional:` and `fail-fast=false` only for non-security values such as
+feature flags that may be absent at startup. Security settings should keep
+`fail-fast=true` and explicit validation. `prefix=appconfig` flattens remote
+keys such as `spring.*` and `management.*` below `appconfig.*`, preventing
+operational properties from being overwritten. An endpoint override must be a
+trusted HTTPS host constrained by a deployment allow-list; never inject an
+endpoint or credential from remote AppConfig data, environment data, or
+unreviewed command-line input.
+
+Live AWS access needs `appconfig:StartConfigurationSession` and
+`appconfig:GetLatestConfiguration`. Polling creates provider traffic and may
+incur charges, so it runs for the context lifetime only when `refresh-interval`
+is configured. Production SDK clients use a 10-second API timeout and a
+5-second attempt timeout; the 500ms timeout is test-only for the loopback fake.
+Real credentials and endpoints stay out of the repository and are supplied
+only by explicit production composition code.
+
+Reload behavior depends on the caller:
+
+| Caller | After AppConfig reload |
+| --- | --- |
+| `Environment#getProperty` | Latest AppConfig values, replaced atomically |
+| `@Value` field | Initial binding only |
+| `@ConfigurationProperties` bean | Initial binding only; no automatic rebind |
+
+Spring Cloud Context refresh/rebinding is intentionally out of scope. Empty or
+malformed payload last-good retention, transport failure followed by a new
+session, duplicate-source scheduler ownership, and atomic map replacement are
+owned by the lifecycle tests in upstream
+[AppConfig PR #537](https://github.com/bluetape4k/bluetape4k-aws/pull/537). This
+consumer verifies successful initial load/first update and bounded context/fake
+shutdown behavior.
+
+This module does not pin a bluetape4k module version. The root
+`bluetape4k-dependencies` BOM is the `2.0.0-SNAPSHOT` authority; its currently
+published AWS BOM may resolve the AWS Spring Boot coordinate to
+`1.0.0-SNAPSHOT`. The AWS SDK `appconfigdata` alias is versionless under the AWS
+SDK BOM.
+
 ## Startup and refresh
 
 ```kotlin
@@ -60,10 +125,16 @@ val source = ParameterStoreSettingsSource {
 ```
 
 Use an explicit factory and a controlled HTTPS or literal-loopback endpoint for
-live AWS or an emulator. Do not resolve credentials from the sample application
-or put secret payloads, credentials, endpoints, or raw SDK responses in logs,
-metrics, test reports, or error responses. Live AWS execution is outside the
-default smoke and CI path and may incur provider charges.
+live AWS or an emulator. The sample's highest-precedence endpoint guard checks
+values supplied by command-line, system, or environment property sources before
+ConfigData resolution. It rejects non-loopback HTTP, non-regional HTTPS, URI user
+info, query, and fragment; the loopback exception exists only for the
+credential-isolated fake. Values originating in application/profile ConfigData
+must still be constrained by deployment policy; checked-in profiles contain no
+endpoint override. Do not resolve credentials from the sample application or put
+secret payloads, credentials, endpoints, or raw SDK responses in logs, metrics,
+test reports, or error responses. Live AWS execution is outside the default
+smoke and CI path and may incur provider charges.
 
 ## Local verification
 
