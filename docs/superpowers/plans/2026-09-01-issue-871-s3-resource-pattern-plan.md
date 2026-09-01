@@ -535,7 +535,7 @@ Docs/UX, Build/Operations, Scope/Ownership 각 lens에 P0/P1/P2 수와 근거를
 기록한다. `P0=0, P1=0`이 아니면 PR 생성 전에 수정한다. review는 upstream
 resolver의 pagination/parser/client ownership을 재구현하지 않았는지 확인한다.
 
-- [ ] **Step 4: docs/review commit을 만든다**
+- [x] **Step 4: docs/review commit을 만든다**
 
 ```bash
 node /Users/debop/.codex/skills/bluetape-writer/scripts/audit-korean-terms.mjs \
