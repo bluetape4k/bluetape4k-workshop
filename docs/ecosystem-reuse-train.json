@@ -471,11 +471,39 @@
         "scripts/validate-job-safety-lab-readme.mjs"
       ],
       "review_artifact": "docs/review/2026-08-31-issue-867-868-parent-stack-7tier.md"
+    },
+    {
+      "scope_id": "issue-869-leader-scheduled-policy",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-869-scheduled-policy",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [869],
+      "allowed_paths": [
+        ".github/workflows/Examples.yml",
+        "README.md",
+        "README.ko.md",
+        "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/2026-08-31-issue-869-scheduled-policy.md",
+        "docs/review/2026-08-31-issue-869-scheduled-policy-implementation-review.md",
+        "docs/review/2026-08-31-issue-869-scheduled-policy-plan-review.md",
+        "docs/review/2026-08-31-issue-869-scheduled-policy-spec-review.md",
+        "docs/superpowers/plans/2026-08-31-issue-869-scheduled-policy-plan.md",
+        "docs/superpowers/specs/2026-08-31-issue-869-scheduled-policy-design.md",
+        "leader/tenant-scheduler/**",
+        "scripts/smoke-validate.sh"
+      ],
+      "review_artifact": "docs/review/2026-08-31-issue-869-scheduled-policy-implementation-review.md"
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260830T-2.0.0-ci-compatibility-followup-issue-866",
-    "checksum": "afad7a01701f9e8fc3aa33ebe6803a3527f5b208cf12fb4ae68d502781266607"
+    "receipt_id": "20260901T-issue-869-scheduled-policy-scope",
+    "checksum": "85cd0f5b18ae3cb28e064e0c390f48ff4202238e3638461c5887b6d71462fb08"
   },
   "planned_scope_replan_receipts": {
   },

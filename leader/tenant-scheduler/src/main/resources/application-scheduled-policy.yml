@@ -1,0 +1,36 @@
+spring:
+  aop:
+    auto: false
+
+bluetape4k:
+  leader:
+    history:
+      retention:
+        enabled: false
+    scheduling:
+      enabled: true
+      policies:
+        - selector: "tenantScheduledPolicyFixture#reconcile"
+          name: "tenant-scheduler:reconcile"
+          wait-time: 0s
+          lease-time: 30s
+          min-lease-time: 5s
+          bean: "localLeaderElectionFactory"
+          auto-extend: false
+          stream-bounded: false
+          failure-mode: SKIP
+    aop:
+      strict: true
+      spel:
+        allow-method-invocation: false
+      metrics:
+        tags:
+          lock-name:
+            mode: REDACT
+            redacted-value: redacted-lock
+    observability:
+      tracing:
+        enabled: true
+        include-lock-name: false
+        include-leader-id: false
+        include-exception-details: false

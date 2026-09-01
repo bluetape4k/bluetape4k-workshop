@@ -41,6 +41,101 @@ it does not start Redis, ZooKeeper, Kubernetes, or a background scheduler.
 7. The report keeps event rows bounded and records dropped rows.
 8. Metric tags stay per-tenant only while the tenant cardinality is safe.
 
+## Spring Boot YAML Policy Profile
+
+The `scheduled-policy` profile connects a plain Spring `@Scheduled` method to
+the `bluetape4k.leader.scheduling.policies` registry. It is opt-in so the
+deterministic reducer remains the default path.
+
+```bash
+./gradlew :leader-tenant-scheduler:test --tests "*TenantScheduledPolicy*"
+./gradlew :leader-tenant-scheduler:bootRun --args='--spring.profiles.active=scheduled-policy'
+```
+
+When the profile starts, confirm `Started TenantSchedulerLabAppKt`. The first
+automatic callback may wait up to 60 seconds. The fixture uses `fixedDelay=5s`
+and `min-lease-time=5s`, so the effective local period is at least about 10
+seconds; each callback logs
+`tenant-scheduler callback completed invocationCount=...` as a bounded smoke
+signal. The deterministic test also records `leader.aop.acquire` and
+`leader.aop.execution` observations. The fixture is an `open` Spring bean so
+the upstream `LeaderElectionAspect` can be applied by a runtime Spring proxy.
+`spring.aop.auto=false` avoids a second Boot proxy creator. This example does
+not claim external-backend ownership or distributed failover.
+
+`@LeaderElection`, `@LeaderGroupElection`, and `@LeaderScheduled` are covered as
+explicit-annotation paths. When one is present, the annotation wins over a
+matching property policy; a conflicting property is observed but not applied.
+Empty, malformed, duplicate, unmatched, overloaded, or invalid-duration
+policies fail during startup. Plain policies also reject negative `wait-time`,
+non-positive `lease-time`, and `min-lease-time` greater than `lease-time`.
+`SKIP` is the safe default for this local lab; `RETHROW` surfaces the job error,
+while `FAIL_OPEN_RUN` must be reserved for idempotent work after an explicit
+availability decision. Spring owns task registration and cancellation; the
+example does not create an executor or thread.
+
+```yaml
+spring:
+  aop:
+    auto: false
+
+bluetape4k:
+  leader:
+    history:
+      retention:
+        enabled: false
+    scheduling:
+      enabled: true
+      policies:
+        - selector: "tenantScheduledPolicyFixture#reconcile"
+          name: "tenant-scheduler:reconcile"
+          wait-time: 0s
+          lease-time: 30s
+          min-lease-time: 5s
+          bean: "localLeaderElectionFactory"
+          auto-extend: false
+          stream-bounded: false
+          failure-mode: SKIP
+    aop:
+      strict: true
+      spel:
+        allow-method-invocation: false
+      metrics:
+        tags:
+          lock-name:
+            mode: REDACT
+            redacted-value: redacted-lock
+    observability:
+      tracing:
+        enabled: true
+        include-lock-name: false
+        include-leader-id: false
+        include-exception-details: false
+```
+
+The `history.retention.enabled=false` line keeps this local profile focused on
+the scheduled policy instead of the unrelated retention job. The tracing and
+metric settings keep lock names and exception details out of observations by
+default; the test-only lock-name override demonstrates the `redacted-lock`
+sentinel without exposing the raw policy name.
+
+## Rollback / Runbook
+
+1. Remove any external `bluetape4k.leader.scheduling.enabled=true` override
+   before disabling the profile; that property is the real opt-in gate.
+2. Stop the process with `Ctrl-C`, remove `scheduled-policy` from the active
+   profiles, and roll back the profile YAML, configuration/fixture, and two
+   leader dependency aliases together.
+3. Restart the default application and verify there is no
+   `tenantScheduledPolicyFixture`, no `LeaderScheduledPolicyRegistry` or policy
+   BPP, and no `ScheduledTaskHolder` task for that fixture. Unrelated Spring
+   tasks may remain. A normal startup should still report
+   `Started TenantSchedulerLabAppKt`.
+
+If the callback log or observation checks are missing after a change, do not
+enable an external backend as a workaround; restore the exact selector, local
+factory, profile, and proxy settings first.
+
 ## Executable Snippet
 
 The README snippet is covered by `TenantSchedulerReadmeSnippetTest`.
@@ -101,6 +196,7 @@ tags.metricRows.map { it.tags } shouldBeEqualTo listOf(
 ```bash
 ./gradlew :leader-tenant-scheduler:test
 ./gradlew :leader-tenant-scheduler:bootRun
+./gradlew :leader-tenant-scheduler:bootRun --args='--spring.profiles.active=scheduled-policy'
 ```
 
 The default test path is deterministic and infrastructure-free. It is safe for
@@ -116,6 +212,8 @@ Kubernetes credentials.
 | `TenantMetricTagPolicyTest` | Per-tenant tags, `tenant=bounded` degradation, and local cardinality caps. |
 | `TenantSchedulerLabTest` | Independent tenant execution, active lease skip, stale handoff, fairness rotation, deterministic reports, and bounded history. |
 | `TenantSchedulerReadmeSnippetTest` | The README code path remains executable. |
+| `TenantScheduledPolicyContextTest` | Profile binding, exact selector, annotation precedence, fail-fast validation, proxy observations, and opt-out boundaries. |
+| `TenantScheduledPolicyLifecycleTest` | Spring task registration, immediate trigger, and bounded context-close behavior. |
 
 ## Production Boundaries
 
@@ -135,6 +233,8 @@ tenant aliases. Use a stable internal alias and let the metric policy degrade to
 ```kotlin
 implementation(libs.bluetape4k.core)
 implementation(libs.bluetape4k.leader.core)
+implementation(libs.bluetape4k.leader.spring.boot)
+implementation(libs.bluetape4k.leader.micrometer)
 implementation(libs.bluetape4k.logging)
 implementation(libs.spring.boot.autoconfigure.lib)
 implementation(libs.spring.boot.starter.actuator)

@@ -26,6 +26,45 @@ run() {
   eval "$*"
 }
 
+# GitHub 호스티드 Ubuntu runner는 ripgrep를 보장하지 않으므로 파일·디렉터리
+# 검색은 POSIX/GNU grep으로 수행해 stale-check 계약을 이식 가능하게 유지한다.
+contains_pattern() {
+  local pattern="$1"
+  shift
+  local path
+  for path in "$@"; do
+    if [ -d "$path" ]; then
+      grep -REq -- "$pattern" "$path" || return 1
+    else
+      grep -Eq -- "$pattern" "$path" || return 1
+    fi
+  done
+}
+
+contains_markdown_ref() {
+  local needle="$1"
+  local path
+  while IFS= read -r -d '' path; do
+    if grep -Iq -- "$needle" "$path"; then
+      return 0
+    fi
+  done < <(
+    find . \
+      -type f \
+      -name '*.md' \
+      ! -path '*/.worktrees/*' \
+      ! -path './docs/lessons/*' \
+      ! -path './docs/superpowers/*' \
+      -print0
+  )
+  return 1
+}
+
+extract_image_links() {
+  local readme="$1"
+  grep -oE '!\[[^]]*\]\([^ ")]+' "$readme" | sed -E 's/^!\[[^]]*\]\(//'
+}
+
 case "${1:-help}" in
 
   compile)
@@ -317,7 +356,7 @@ case "${1:-help}" in
     echo "=== Stale module refs in READMEs ==="
     stale=0
     for m in async-logging kotlin/workshop reactive/mutiny gatling/gradle-plugin-demo mapping/mapstruct; do
-      if rg -l "$m" --include="*.md" . 2>/dev/null | grep -qv "\.worktrees\|docs/lessons\|docs/superpowers"; then
+      if contains_markdown_ref "$m"; then
         echo "STALE REF: $m"
         stale=$((stale + 1))
       fi
@@ -348,17 +387,67 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== Tenant scheduled-policy example guard ==="
+    scheduled_policy_config="leader/tenant-scheduler/src/main/kotlin/io/bluetape4k/workshop/leader/tenantscheduler/scheduled/TenantScheduledPolicyConfiguration.kt"
+    scheduled_policy_fixture="leader/tenant-scheduler/src/main/kotlin/io/bluetape4k/workshop/leader/tenantscheduler/scheduled/TenantScheduledPolicyFixture.kt"
+    scheduled_policy_yaml="leader/tenant-scheduler/src/main/resources/application-scheduled-policy.yml"
+    scheduled_policy_build="leader/tenant-scheduler/build.gradle.kts"
+    scheduled_policy_tests="leader/tenant-scheduler/src/test/kotlin/io/bluetape4k/workshop/leader/tenantscheduler/scheduled"
+    scheduled_policy_readme="leader/tenant-scheduler/README.md"
+    scheduled_policy_readme_ko="leader/tenant-scheduler/README.ko.md"
+    if contains_pattern '@Profile\("scheduled-policy"\)' "$scheduled_policy_config" && \
+       contains_pattern '@EnableAspectJAutoProxy\(proxyTargetClass = true\)' "$scheduled_policy_config" && \
+       contains_pattern '@Scheduled\(fixedDelay = 5_000, initialDelay = 60_000\)' "$scheduled_policy_fixture" && \
+       contains_pattern 'libs\.bluetape4k\.leader\.spring\.boot' "$scheduled_policy_build" && \
+       contains_pattern 'libs\.bluetape4k\.leader\.micrometer' "$scheduled_policy_build" && \
+       contains_pattern 'selector: "tenantScheduledPolicyFixture#reconcile"' "$scheduled_policy_yaml" && \
+       contains_pattern 'name: "tenant-scheduler:reconcile"' "$scheduled_policy_yaml" && \
+       contains_pattern 'min-lease-time: 5s' "$scheduled_policy_yaml" && \
+       contains_pattern 'failure-mode: SKIP' "$scheduled_policy_yaml" && \
+       contains_pattern 'redacted-value: redacted-lock' "$scheduled_policy_yaml" && \
+       contains_pattern 'strict: true' "$scheduled_policy_yaml" && \
+       contains_pattern 'allow-method-invocation: false' "$scheduled_policy_yaml" && \
+       contains_pattern 'TenantScheduledPolicyContextTest' "$scheduled_policy_tests" && \
+       contains_pattern 'TenantScheduledPolicyLifecycleTest' "$scheduled_policy_tests" && \
+       contains_pattern 'TenantScheduledPolicyDefaultProfileTest' "$scheduled_policy_tests" && \
+       contains_pattern '--spring.profiles.active=scheduled-policy' "$scheduled_policy_readme" && \
+       contains_pattern '--spring.profiles.active=scheduled-policy' "$scheduled_policy_readme_ko" && \
+       contains_pattern 'libs\.bluetape4k\.leader\.spring\.boot' "$scheduled_policy_readme" && \
+       contains_pattern 'libs\.bluetape4k\.leader\.micrometer' "$scheduled_policy_readme" && \
+       contains_pattern 'libs\.bluetape4k\.leader\.spring\.boot' "$scheduled_policy_readme_ko" && \
+       contains_pattern 'libs\.bluetape4k\.leader\.micrometer' "$scheduled_policy_readme_ko" && \
+       contains_pattern 'Started TenantSchedulerLabAppKt' "$scheduled_policy_readme" && \
+       contains_pattern 'Started TenantSchedulerLabAppKt' "$scheduled_policy_readme_ko" && \
+       contains_pattern 'tenant-scheduler callback completed invocationCount=' "$scheduled_policy_readme" && \
+       contains_pattern 'tenant-scheduler callback completed invocationCount=' "$scheduled_policy_readme_ko" && \
+       contains_pattern 'bluetape4k\.leader\.scheduling\.enabled=true' "$scheduled_policy_readme" && \
+       contains_pattern 'bluetape4k\.leader\.scheduling\.enabled=true' "$scheduled_policy_readme_ko" && \
+       contains_pattern 'ScheduledTaskHolder' "$scheduled_policy_readme" && \
+       contains_pattern 'ScheduledTaskHolder' "$scheduled_policy_readme_ko" && \
+       contains_pattern 'FAIL_OPEN_RUN' "$scheduled_policy_readme" && \
+       contains_pattern 'FAIL_OPEN_RUN' "$scheduled_policy_readme_ko" && \
+       contains_pattern 'leader\.aop\.acquire' "$scheduled_policy_readme" && \
+       contains_pattern 'leader\.aop\.acquire' "$scheduled_policy_readme_ko" && \
+       contains_pattern 'leader-tenant-scheduler:bootRun' README.md && \
+       contains_pattern 'leader-tenant-scheduler:bootRun' README.ko.md; then
+      echo "Tenant scheduled-policy example and README contract are registered."
+    else
+      echo "ERROR: tenant scheduled-policy example contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== Leader diagnostics example guard ==="
     diagnostics_config="leader/backend-comparison-lab/src/main/resources/application.yml"
     diagnostics_tests="leader/backend-comparison-lab/src/test/kotlin/io/bluetape4k/workshop/leader/backendcomparison/observability"
     diagnostics_app="leader/backend-comparison-lab/src/main/kotlin/io/bluetape4k/workshop/leader/backendcomparison/BackendComparisonLabApp.kt"
-    if rg -q '^    leaderBackendDiagnostics:$' "$diagnostics_config" && \
-       rg -q '^      tracing:$' "$diagnostics_config" && \
-       rg -q '^      backend-health:$' "$diagnostics_config" && \
-       rg -q '^      state-provider-bean: workshopLeaderElector$' "$diagnostics_config" && \
-       rg -q '@Import\(BackendComparisonLabApp::class\)' "$diagnostics_tests/LeaderBackendDiagnosticsContextTest.kt" && \
-       rg -q 'LeaderBackendDiagnosticsContextTest' "$diagnostics_tests" && \
-       rg -q 'LeaderBackendDiagnosticsConfiguration' "$diagnostics_app"; then
+    if contains_pattern '^    leaderBackendDiagnostics:$' "$diagnostics_config" && \
+       contains_pattern '^      tracing:$' "$diagnostics_config" && \
+       contains_pattern '^      backend-health:$' "$diagnostics_config" && \
+       contains_pattern '^      state-provider-bean: workshopLeaderElector$' "$diagnostics_config" && \
+       contains_pattern '@Import\(BackendComparisonLabApp::class\)' "$diagnostics_tests/LeaderBackendDiagnosticsContextTest.kt" && \
+       contains_pattern 'LeaderBackendDiagnosticsContextTest' "$diagnostics_tests" && \
+       contains_pattern 'LeaderBackendDiagnosticsConfiguration' "$diagnostics_app"; then
       echo "Leader diagnostics endpoint and context coverage are registered."
     else
       echo "ERROR: leader diagnostics endpoint/context coverage is missing."
@@ -376,7 +465,7 @@ case "${1:-help}" in
           echo "BROKEN: $readme → $link"
           broken=$((broken + 1))
         fi
-      done < <(rg '!\[.*\]\(([^ ")\t]+)' "$readme" -o -r '$1' 2>/dev/null || true)
+      done < <(extract_image_links "$readme" 2>/dev/null || true)
     done < <(fd README.md . --exclude .worktrees --exclude build)
     if [ "$broken" -eq 0 ]; then
       echo "No broken image links found."
