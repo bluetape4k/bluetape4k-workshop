@@ -34,6 +34,77 @@ wrapper 원본은
 [bluetape4k AWS Kotlin module](https://github.com/bluetape4k/bluetape4k-aws/tree/main/aws-kotlin)에서
 관리합니다.
 
+## Spring Boot AWS AppConfig Data
+
+`SettingsBoundarySpringApplication`은 Spring Boot 4 ConfigData URI
+`aws-app-config:application#profile#environment`를 사용하는 소비자 예제입니다.
+기본 `application.yml`은 AppConfig 자동 구성을 끄므로 일반 실행과 smoke/CI는
+credential과 원격 호출 없이 끝납니다. 명시적으로 `appconfig` profile을 켠
+경우에만 다음 import가 활성화됩니다.
+
+```yaml
+spring:
+  config:
+    import: optional:aws-app-config:application#profile#environment?format=properties&prefix=appconfig
+bluetape4k:
+  aws:
+    app-config:
+      enabled: true
+      fail-fast: false
+      # refresh-interval: 15s
+```
+
+```bash
+./gradlew :aws-settings-boundary:test
+./gradlew :aws-settings-boundary:bootRun --args='--spring.profiles.active=appconfig'
+```
+
+`optional:`과 `fail-fast=false`는 보안에 민감하지 않은 feature flag처럼
+원격 source가 없어도 시작할 수 있는 값에만 사용합니다. 보안 설정은
+`fail-fast=true`와 명시적인 검증을 유지해야 합니다. `prefix=appconfig`은
+원격의 `spring.*`, `management.*` 같은 key를 `appconfig.*` 아래로 평탄화해
+운영 property를 덮어쓰지 못하게 합니다. endpoint override는 신뢰할 수 있는
+HTTPS host만 배포 allow-list로 허용해야 하며, 원격 AppConfig 데이터·환경변수·
+검토하지 않은 command line에서 endpoint나 credential을 주입하지 않습니다.
+
+ConfigData 이전에 보이는 입력에서 guard는 upstream client fallback과 같은
+순서로 `bluetape4k.aws.app-config.endpoint-override`를 먼저 보고 공통
+`bluetape4k.aws.endpoint-override`를 fallback으로 사용합니다. AppConfig가
+활성화된 경우에만 effective endpoint를 검증하며, AppConfig가 비활성화되면
+공통 override는 다른 AWS 예제에서 사용할 수 있고 이 AppConfig guard는
+동작하지 않습니다.
+
+실제 AWS에는 `appconfig:StartConfigurationSession`과
+`appconfig:GetLatestConfiguration` 권한이 필요합니다. polling은 provider
+traffic과 비용을 만들 수 있으므로 `refresh-interval`을 명시했을 때만
+context 수명 동안 동작합니다. 운영 SDK client에는 API timeout 10초와
+attempt timeout 5초를 적용하고, 테스트의 loopback fake에서만 500ms timeout을
+사용합니다. 실제 credential과 endpoint는 저장소에 넣지 않고 명시적인 운영
+조합 코드에서만 전달합니다.
+
+runtime reload 결과는 caller 종류에 따라 다릅니다.
+
+| Caller | AppConfig reload 후 |
+| --- | --- |
+| `Environment#getProperty` | 최신 AppConfig 값으로 원자적 교체 |
+| `@Value` field | 초기 binding 값만 유지 |
+| `@ConfigurationProperties` bean | 초기 binding 값만 유지하며 자동 rebind하지 않음 |
+
+Spring Cloud Context refresh/rebinding은 이 예제의 범위가 아닙니다. 빈
+payload와 malformed payload의 last-good 보존, transport failure 뒤 새
+session 재시도, 중복 source scheduler와 atomic map 교체는 upstream
+[AppConfig PR #537](https://github.com/bluetape4k/bluetape4k-aws/pull/537)의
+lifecycle 테스트가 소유하며, 이 consumer는 성공적인 초기 로드·첫 갱신과
+context/fake 종료 경계를 검증합니다. transport failure가 발생하면 upstream
+lifecycle은 delay당 최대 5분의 full-jitter backoff로 재시도하며 횟수는
+무제한입니다. 따라서 운영자는 timeout, shutdown과 provider traffic을 함께
+제어해야 합니다.
+
+bluetape4k module version은 이 모듈에서 직접 지정하지 않습니다. root
+`bluetape4k-dependencies` BOM이 `2.0.0-SNAPSHOT` authority이며, 현재 공개된
+AWS BOM에서 AWS Spring Boot 좌표가 `1.0.0-SNAPSHOT`으로 해석될 수 있습니다.
+AWS SDK `appconfigdata`는 AWS SDK BOM에서 versionless alias로 해석합니다.
+
 ## Startup과 refresh
 
 ```kotlin
@@ -61,10 +132,16 @@ val source = ParameterStoreSettingsSource {
 ```
 
 실제 AWS 또는 emulator를 사용할 때는 명시적인 factory와 통제된 HTTPS 또는
-literal-loopback endpoint를 전달합니다. sample application에서 credential을
-해석하지 않으며 secret payload, credential, endpoint, raw SDK response를 log,
-metric, test report, error response에 넣지 않습니다. 실제 AWS 실행은 기본
-smoke와 CI 경로 밖에 있으며 provider 비용이 발생할 수 있습니다.
+literal-loopback endpoint를 전달합니다. sample의 highest-precedence endpoint
+guard는 command line·system·environment property source에서 온 값을
+ConfigData 해석 전에 검사합니다. loopback 외 HTTP, region별 AWS가 아닌
+HTTPS, URI user info·query·fragment를 거부하며 loopback 예외는
+credential-isolated fake 전용입니다. application/profile ConfigData에서 온
+endpoint는 배포 정책으로 별도 제한해야 하고 저장소 profile에는 endpoint
+override가 없습니다. sample application에서 credential을 해석하지 않으며
+secret payload, credential, endpoint, raw SDK response를 log, metric, test
+report, error response에 넣지 않습니다. 실제 AWS 실행은 기본 smoke와 CI
+경로 밖에 있으며 provider 비용이 발생할 수 있습니다.
 
 ## 로컬 검증
 

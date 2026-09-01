@@ -1,0 +1,11 @@
+spring:
+  config:
+    import: optional:aws-app-config:application#profile#environment?format=properties&prefix=appconfig
+
+bluetape4k:
+  aws:
+    app-config:
+      enabled: true
+      region: ${AWS_REGION:ap-northeast-2}
+      fail-fast: false
+      # refresh-interval: 15s

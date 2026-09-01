@@ -455,6 +455,28 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== AWS AppConfig settings-boundary example guard ==="
+    appconfig_tests="aws/settings-boundary/src/test/kotlin/io/bluetape4k/workshop/aws/settings/AppConfigDataSpringIntegrationTest.kt"
+    appconfig_readme="aws/settings-boundary/README.md"
+    appconfig_readme_ko="aws/settings-boundary/README.ko.md"
+    appconfig_lesson="docs/lessons/2026-09-01-issue-870-appconfig-runtime-reload.md"
+    if contains_pattern 'aws-app-config:' "$appconfig_readme" && \
+       contains_pattern 'aws-app-config:' "$appconfig_readme_ko" && \
+       contains_pattern 'bootRun --args=' "$appconfig_readme" && \
+       contains_pattern 'bootRun --args=' "$appconfig_readme_ko" && \
+       contains_pattern 'Environment#getProperty' "$appconfig_readme" && \
+       contains_pattern 'Environment#getProperty' "$appconfig_readme_ko" && \
+       contains_pattern 'JSON format' "$appconfig_tests" && \
+       contains_pattern 'default profile' "$appconfig_tests" && \
+       contains_pattern 'test timeout' "$appconfig_tests" && \
+       [ -f "$appconfig_lesson" ]; then
+      echo "AWS AppConfig ConfigData/runtime-reload example and lesson are registered."
+    else
+      echo "ERROR: AWS AppConfig settings-boundary example contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== README broken image links ==="
     broken=0
     while IFS= read -r readme; do

@@ -695,6 +695,7 @@ jsonassert = { module = "org.skyscreamer:jsonassert", version = "2.0-rc1" }  # h
 
 # AWS SDK v2
 aws2-bom = { module = "software.amazon.awssdk:bom", version.ref = "aws2" }
+aws2-appconfigdata-lib = { module = "software.amazon.awssdk:appconfigdata" }
 aws2-cloudwatch-lib = { module = "software.amazon.awssdk:cloudwatch" }
 aws2-cloudwatchlogs-lib = { module = "software.amazon.awssdk:cloudwatchlogs" }
 aws2-eventbridge-lib = { module = "software.amazon.awssdk:eventbridge" }
