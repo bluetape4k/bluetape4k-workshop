@@ -526,11 +526,35 @@
         "scripts/smoke-validate.sh"
       ],
       "review_artifact": "docs/review/2026-09-01-issue-870-appconfig-runtime-reload-implementation-review.md"
+    },
+    {
+      "scope_id": "issue-871-aws-s3-resource-pattern",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-871-s3-resource-pattern-resolver",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [871],
+      "allowed_paths": [
+        ".github/workflows/Examples.yml",
+        "aws/s3-spring-cloud/**",
+        "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/2026-09-01-issue-871-s3-resource-pattern-resolver.md",
+        "docs/review/2026-09-01-issue-871-s3-resource-pattern-resolver-review.md",
+        "docs/superpowers/plans/2026-09-01-issue-871-s3-resource-pattern-plan.md",
+        "docs/superpowers/specs/2026-09-01-issue-871-s3-resource-pattern-design.md",
+        "scripts/smoke-validate.sh"
+      ],
+      "review_artifact": "docs/review/2026-09-01-issue-871-s3-resource-pattern-resolver-review.md"
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260901T-issue-870-appconfig-runtime-reload-scope",
-    "checksum": "6a3192f4ca72c3f6773861f95a7f6e535d7d0765c40158005aec2c0b8b0e16e8"
+    "receipt_id": "20260901T-issue-871-aws-s3-resource-pattern-scope",
+    "checksum": "28274493cad95e925c9bba1be0244f8025ad0ee427a6e5a9a97e37965f78c120"
   },
   "planned_scope_replan_receipts": {
   },

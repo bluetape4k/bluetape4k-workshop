@@ -125,7 +125,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | Rate limiting | `ratelimit-*` | ✅ Good | adaptive rate limit 미노출 | — | sliding window를 쓰는 Adaptive Bucket4j + Redis | — |
 | Spring Cloud Gateway | `gateway-api-gateway` | ⚠️ Partial | circuit breaker filter 미노출 | — | Gateway + Resilience4j circuit breaker filter | — |
 | Spring Modulith | `spring-modulith-*` | ⚠️ Partial | module testing isolation 미노출 | — | bounded context별 Modulith ApplicationModuleTest | — |
-| AWS S3 | `aws-s3-spring-cloud` | ⚠️ Partial | multipart upload 미노출 | — | LocalStack 기반 S3 multipart upload | — |
+| AWS S3 | `aws-s3-spring-cloud` | ⚠️ Partial | multipart upload 미노출 | exact `S3Resource`, literal 단일 bucket wildcard `ResourcePatternResolver`, Floci 1,001+ object pagination·정렬·empty match·metadata·stream lifecycle | LocalStack 기반 S3 multipart upload | #871 |
 | `bluetape4k-aws` | `aws-s3-spring-cloud` | ⚠️ Partial | BT AWS Kotlin SDK wrapper 미노출 | — | AWS Kotlin SDK + coroutine suspend wrapper | — |
 | Bedrock Converse | `aws/bedrock-converse` | ✅ Good | 실제 AWS 호출은 기본 경로에서 제외 | credential-free fake로 request mapping과 cold Flow | 명시적 `real-aws` opt-in과 client lifecycle | #741 |
 | AWS settings boundary | `aws/settings-boundary` | ✅ Good | provider-neutral settings와 Spring Boot ConfigData/runtime reload caller 경계가 없었음 | Secrets Manager/secure Parameter Store fake lookup과 fallback, AppConfig ConfigData prefix/optional contract | full-replacement refresh, atomic Environment reload, timeout/lifecycle cleanup 및 명시적 live AWS factory | #742, #870 |

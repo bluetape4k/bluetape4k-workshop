@@ -41,6 +41,52 @@ contains_pattern() {
   done
 }
 
+contains_disabled_bluetape_s3_switch() {
+  awk '
+    function indent(line) {
+      match(line, /^[[:space:]]*/)
+      return RLENGTH
+    }
+    {
+      level = indent($0)
+      line = $0
+      sub(/^[[:space:]]*/, "", line)
+
+      if (line ~ /^bluetape4k:[[:space:]]*$/) {
+        bluetape_level = level
+        aws_level = -1
+        s3_level = -1
+        next
+      }
+      if (bluetape_level >= 0 && level <= bluetape_level && line !~ /^bluetape4k:/) {
+        bluetape_level = -1
+        aws_level = -1
+        s3_level = -1
+      }
+      if (bluetape_level >= 0 && line ~ /^aws:[[:space:]]*$/ && level > bluetape_level) {
+        aws_level = level
+        s3_level = -1
+        next
+      }
+      if (aws_level >= 0 && level <= aws_level && line !~ /^aws:/) {
+        aws_level = -1
+        s3_level = -1
+      }
+      if (aws_level >= 0 && line ~ /^s3:[[:space:]]*$/ && level > aws_level) {
+        s3_level = level
+        next
+      }
+      if (s3_level >= 0 && level <= s3_level && line !~ /^s3:/) {
+        s3_level = -1
+      }
+      if (s3_level >= 0 && line ~ /^enabled:[[:space:]]*false[[:space:]]*$/ && level > s3_level) {
+        found = 1
+      }
+    }
+    END { exit(found ? 0 : 1) }
+  ' "$1"
+}
+
 contains_markdown_ref() {
   local needle="$1"
   local path
@@ -473,6 +519,30 @@ case "${1:-help}" in
       echo "AWS AppConfig ConfigData/runtime-reload example and lesson are registered."
     else
       echo "ERROR: AWS AppConfig settings-boundary example contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
+    echo "=== AWS S3 Resource pattern example guard ==="
+    s3_pattern_main="aws/s3-spring-cloud/src/main/kotlin/io/bluetape4k/workshop/aws/s3/SpringCloudAwsS3Sample.kt"
+    s3_pattern_test="aws/s3-spring-cloud/src/test/kotlin/io/bluetape4k/workshop/aws/s3/SpringCloudAwsS3Test.kt"
+    s3_pattern_config="aws/s3-spring-cloud/src/main/resources/application.yml"
+    s3_pattern_readme="aws/s3-spring-cloud/README.md"
+    s3_pattern_readme_ko="aws/s3-spring-cloud/README.ko.md"
+    s3_pattern_lesson="docs/lessons/2026-09-01-issue-871-s3-resource-pattern-resolver.md"
+    if contains_disabled_bluetape_s3_switch "$s3_pattern_config"; then
+      echo "ERROR: AWS S3 Resource pattern example still disables the global bluetape4k S3 auto-configuration."
+      exit 1
+    fi
+    if contains_pattern 's3ResourcePatternResolver' "$s3_pattern_main" "$s3_pattern_test" "$s3_pattern_readme" "$s3_pattern_readme_ko" && \
+       contains_pattern 'config/\*\*/\*\.yml' "$s3_pattern_main" "$s3_pattern_test" "$s3_pattern_readme" "$s3_pattern_readme_ko" && \
+       contains_pattern 'autoconfigure:' "$s3_pattern_config" && \
+       contains_pattern 'S3TransferAutoConfiguration' "$s3_pattern_config" && \
+       contains_pattern 'PAGINATION_FIXTURE_COUNT' "$s3_pattern_test" && \
+       [ -f "$s3_pattern_lesson" ]; then
+      echo "AWS S3 Resource pattern example and lesson are registered."
+    else
+      echo "ERROR: AWS S3 Resource pattern example contract is missing or stale."
       exit 1
     fi
 
