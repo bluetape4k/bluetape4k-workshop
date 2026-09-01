@@ -45,6 +45,7 @@ stale-check, ecosystem child scope와 lesson의 등록도 함께 검토했다.
 | `bash scripts/smoke-validate.sh aws` | AWS smoke test `BUILD SUCCESSFUL` |
 | `bash scripts/smoke-validate.sh stale-check` | active module count, required registration, S3 resolver guard와 broken image 검사 PASS |
 | `./gradlew projects --no-daemon --console=plain` | `:aws-s3-spring-cloud` 단일 등록 확인, `BUILD SUCCESSFUL` |
+| ecosystem reuse scope canonical JSON SHA-256 | `28274493cad95e925c9bba1be0244f8025ad0ee427a6e5a9a97e37965f78c120`; fresh coordinator receipt `20260901T-issue-871-aws-s3-resource-pattern-scope` |
 | `node scripts/validate-readme-parity.mjs aws/s3-spring-cloud` | `{"failures":0}` |
 | `node scripts/validate-readme-language.mjs aws/s3-spring-cloud/README.md aws/s3-spring-cloud/README.ko.md` | `offenders: 0`, `totalHits: 0` |
 | Korean terminology audit (설계·계획·lesson·review) | findings 0 |

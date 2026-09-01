@@ -553,8 +553,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260901T-issue-870-appconfig-runtime-reload-scope",
-    "checksum": "6a3192f4ca72c3f6773861f95a7f6e535d7d0765c40158005aec2c0b8b0e16e8"
+    "receipt_id": "20260901T-issue-871-aws-s3-resource-pattern-scope",
+    "checksum": "28274493cad95e925c9bba1be0244f8025ad0ee427a6e5a9a97e37965f78c120"
   },
   "planned_scope_replan_receipts": {
   },

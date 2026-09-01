@@ -41,6 +41,7 @@ consumer에서 재구현하지 않고 주입해 사용했다.
 | `bash scripts/smoke-validate.sh aws` | `BUILD SUCCESSFUL` |
 | `bash scripts/smoke-validate.sh stale-check` | active module count, required registration, S3 resolver guard와 broken image 검사 PASS |
 | `./gradlew projects --no-build-cache --no-daemon --console=plain` | `:aws-s3-spring-cloud` 단일 등록, `BUILD SUCCESSFUL` |
+| ecosystem reuse scope canonical JSON SHA-256 | `28274493cad95e925c9bba1be0244f8025ad0ee427a6e5a9a97e37965f78c120`; fresh coordinator receipt `20260901T-issue-871-aws-s3-resource-pattern-scope` |
 | `./gradlew :aws-s3-spring-cloud:dependencyInsight --dependency bluetape4k-dependencies --configuration testRuntimeClasspath --console=plain` | `io.github.bluetape4k:bluetape4k-dependencies:2.0.0-SNAPSHOT` 선택 확인. module alias는 versionless이며 개별 BOM/pin을 추가하지 않았다. |
 | `node scripts/validate-readme-parity.mjs aws/s3-spring-cloud` | `failures: 0` |
 | `node scripts/validate-readme-language.mjs aws/s3-spring-cloud/README.md aws/s3-spring-cloud/README.ko.md` | `offenders: 0`, `totalHits: 0` |
