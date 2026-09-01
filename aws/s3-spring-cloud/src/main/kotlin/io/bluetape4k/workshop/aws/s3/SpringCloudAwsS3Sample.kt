@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.aws.s3
 
 import io.awspring.cloud.s3.S3Template
+import io.awspring.cloud.s3.ObjectMetadata
 import io.bluetape4k.aws.auth.staticCredentialsProviderOf
 import io.bluetape4k.aws.s3.createBucket
 import io.bluetape4k.logging.KLogging
@@ -11,8 +12,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.core.io.Resource
-import org.springframework.core.io.ResourceLoader
-import org.springframework.core.io.WritableResource
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.core.io.support.ResourcePatternResolver
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import software.amazon.awssdk.services.s3.model.S3Exception
@@ -29,6 +30,7 @@ class SpringCloudAwsS3Sample {
 
     companion object : KLogging() {
         private const val TEST_FILE_URL = "s3://spring-cloud-aws-sample-bucket1/test-file.txt"
+        private const val CONFIG_PATTERN = "s3://spring-cloud-aws-sample-bucket1/config/**/*.yml"
 
         private val s3Server = FlociServer.Launcher.floci.withServices("s3")
     }
@@ -48,14 +50,20 @@ class SpringCloudAwsS3Sample {
     @Bean
     fun applicationRunner(
         s3Client: S3Client,
-        resourceLoader: ResourceLoader,
         s3Template: S3Template,
+        @Qualifier("s3ResourcePatternResolver")
+        resourcePatternResolver: ResourcePatternResolver,
     ): ApplicationRunner {
         return ApplicationRunner {
             s3Client.ensureBucketExists("spring-cloud-aws-sample-bucket1")
             s3Client.ensureBucketExists("spring-cloud-aws-sample-bucket2")
-            s3Template.store("spring-cloud-aws-sample-bucket1", "test-file.txt", "test file content")
-            s3Template.store("spring-cloud-aws-sample-bucket1", "my-file.txt", "my file content")
+            s3Template.uploadText("spring-cloud-aws-sample-bucket1", "test-file.txt", "test file content")
+            s3Template.uploadText("spring-cloud-aws-sample-bucket1", "my-file.txt", "my file content")
+            s3Template.uploadText("spring-cloud-aws-sample-bucket1", "config/application.yml", "name: sample\n")
+            s3Template.uploadText("spring-cloud-aws-sample-bucket1", "config/nested/application.yml", "name: nested\n")
+            s3Template.uploadText("spring-cloud-aws-sample-bucket1", "config/z.yml", "name: z\n")
+            s3Template.uploadText("spring-cloud-aws-sample-bucket1", "config/readme.txt", "not yaml\n")
+            s3Template.uploadText("spring-cloud-aws-sample-bucket1", "other/application.yml", "outside prefix\n")
 
             // 자동 설정된 교차 리전 클라이언트를 사용합니다.
             s3Client
@@ -64,9 +72,17 @@ class SpringCloudAwsS3Sample {
                     log.info { "Object in bucket: ${it.key()}" }
                 }
 
-            // ResourceLoader로 리소스를 로드합니다.
-            val resource = resourceLoader.getResource(TEST_FILE_URL) as WritableResource
+            // 고정 qualifier의 ResourcePatternResolver로 exact 리소스를 로드합니다.
+            val resource = resourcePatternResolver.getResource(TEST_FILE_URL)
             log.info { "File content: ${resource.readContent()}" }
+
+            resourcePatternResolver.getResources(CONFIG_PATTERN).forEach { configResource ->
+                configResource.inputStream.use { input ->
+                    log.info {
+                        "Config match: ${configResource.filename}, content=${input.bufferedReader().readText()}"
+                    }
+                }
+            }
         }
     }
 }
@@ -85,4 +101,17 @@ private fun S3Client.ensureBucketExists(bucketName: String) {
         }
         createBucket(bucketName) {}
     }
+}
+
+private fun S3Template.uploadText(bucketName: String, key: String, content: String) {
+    val bytes = content.toByteArray(Charsets.UTF_8)
+    upload(
+        bucketName,
+        key,
+        bytes.inputStream(),
+        ObjectMetadata.builder()
+            .contentLength(bytes.size.toLong())
+            .contentType("text/plain")
+            .build(),
+    )
 }

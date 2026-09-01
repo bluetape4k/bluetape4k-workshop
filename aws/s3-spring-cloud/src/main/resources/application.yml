@@ -7,10 +7,9 @@ spring:
             credentials:
                 access-key: noop
                 secret-key: noop
+    autoconfigure:
+        exclude:
+            - io.bluetape4k.aws.spring.s3.S3TransferAutoConfiguration
 
-# Spring Cloud AWS가 S3Client/S3Template을 소유하는 예제이므로
-# bluetape4k S3 자동 설정의 converter 빈과 충돌하지 않도록 비활성화합니다.
-bluetape4k:
-    aws:
-        s3:
-            enabled: false
+# Spring Cloud AWS가 S3Client/S3Template을 소유합니다. transfer 자동 설정의
+# s3ObjectConverter bean 이름 충돌만 제외하고, S3 Resource 자동 구성은 활성화합니다.
