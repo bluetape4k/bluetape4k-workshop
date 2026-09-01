@@ -39,7 +39,7 @@ workflow에 등록하고 있으므로 dependency/CI drift를 먼저 검증한다
 - Modify: `aws/s3-spring-cloud/src/main/resources/application.yml`
 - Test: `aws/s3-spring-cloud/src/test/kotlin/io/bluetape4k/workshop/aws/s3/SpringCloudAwsS3Test.kt`
 
-- [ ] **Step 1: qualifier와 read-only 기대를 먼저 테스트에 선언한다**
+- [x] **Step 1: qualifier와 read-only 기대를 먼저 테스트에 선언한다**
 
 기존 테스트 constructor에 다음 parameter를 추가하고, exact resource가
 `S3Resource` 읽기 전용 resource여도 본문을 읽을 수 있음을
@@ -73,7 +73,7 @@ class SpringCloudAwsS3Test @Autowired constructor(
 
 `S3Resource` 타입 assertion으로 읽기 전용 구현과 기존 fixture 재사용을 고정한다.
 
-- [ ] **Step 2: test를 실행해 기능 부재의 실패를 확인한다**
+- [x] **Step 2: test를 실행해 기능 부재의 실패를 확인한다**
 
 Run:
 
@@ -87,7 +87,7 @@ Expected: 현재 `application.yml`의 `bluetape4k.aws.s3.enabled=false` 때문�
 아닌 다른 오류면 fixture/context 설정을 먼저 수정하고 같은 테스트가 resolver
 부재를 가리키도록 다시 실행한다.
 
-- [ ] **Step 3: 충돌하는 transfer auto-configuration만 제외한다**
+- [x] **Step 3: 충돌하는 transfer auto-configuration만 제외한다**
 
 `application.yml`의 기존 전체 switch를 다음으로 교체한다.
 
@@ -104,7 +104,7 @@ spring:
 upstream `S3ResourceAutoConfiguration`의 `@ConditionalOnBean(S3Client::class)`를
 만족해야 한다.
 
-- [ ] **Step 4: exact RED를 GREEN으로 확인한다**
+- [x] **Step 4: exact RED를 GREEN으로 확인한다**
 
 Run the same targeted test. Expected: Spring context가 시작되고
 `s3ResourcePatternResolver` 주입, exact body read, `S3Resource` read-only 확인이
@@ -118,7 +118,7 @@ PASS한다. 이 단계에서 실패하면 converter bean name collision과 S3 cl
 - Modify: `aws/s3-spring-cloud/src/main/kotlin/io/bluetape4k/workshop/aws/s3/SpringCloudAwsS3Sample.kt`
 - Test: `aws/s3-spring-cloud/src/test/kotlin/io/bluetape4k/workshop/aws/s3/SpringCloudAwsS3Test.kt`
 
-- [ ] **Step 1: wildcard 결과를 요구하는 RED 테스트를 추가한다**
+- [x] **Step 1: wildcard 결과를 요구하는 RED 테스트를 추가한다**
 
 test class에 다음 상수와 테스트를 추가한다. `ResourcePatternResolver`는
 qualifier로 이미 주입된 실제 bean이며, 테스트는 pattern API가 없으면 컴파일
@@ -146,7 +146,7 @@ fun `lists matching config resources in deterministic order`() {
 목록을 얻지 못해야 한다. 테스트 fixture가 다른 test와 공유되면 bucket/key를
 먼저 확인해 이름 충돌을 제거한다.
 
-- [ ] **Step 2: sample runner에 resolver와 최소 fixture를 연결한다**
+- [x] **Step 2: sample runner에 resolver와 최소 fixture를 연결한다**
 
 `SpringCloudAwsS3Sample.applicationRunner` signature에 다음 parameter를
 추가하고 exact cast를 제거한다.
@@ -194,7 +194,7 @@ fun applicationRunner(
 콘텐츠 길이 계약은 test의 `contentLength()`로 검증한다. `readContent()` helper는
 기존처럼 `use`를 내부에서 수행해도 된다.
 
-- [ ] **Step 3: sample fixture RED를 GREEN으로 확인한다**
+- [x] **Step 3: sample fixture RED를 GREEN으로 확인한다**
 
 Run:
 
@@ -205,7 +205,7 @@ Run:
 Expected: 기존 회귀와 new deterministic wildcard test가 모두 PASS하고,
 resolver는 exact key에 대해 `ListObjectsV2`를 호출하지 않는다.
 
-- [ ] **Step 4: implementation commit을 만든다**
+- [x] **Step 4: implementation commit을 만든다**
 
 ```bash
 git add aws/s3-spring-cloud/src/main/kotlin/io/bluetape4k/workshop/aws/s3/SpringCloudAwsS3Sample.kt \
@@ -214,7 +214,7 @@ git add aws/s3-spring-cloud/src/main/kotlin/io/bluetape4k/workshop/aws/s3/Spring
 git commit -m "Issue #871 S3 pattern resolver 소비자 예제를 연결한다" \
   -m "기존 exact 흐름을 보존하면서 qualifier 기반 wildcard 읽기와 transfer 경계를 추가한다." \
   -m "Constraint: Floci local-first와 Spring Cloud AWS S3Template 소유권을 유지한다." \
-  -m "Rejected: 전체 bluetape4k S3 자동 구성 비활성화와 transfer.enabled 토글은 resolver 비활성화 또는 converter 충돌을 남기므로 채택하지 않았다." \
+  -m "Rejected: 전체 bluetape4k S3 자동 구성 비활성화와 S3TransferAutoConfiguration 유지(transfer.enabled 토글만 사용)는 resolver 비활성화 또는 converter 충돌을 남기므로 채택하지 않았다." \
   -m "Confidence: high" -m "Scope-risk: narrow" \
   -m "Directive: wildcard write와 cross-bucket pattern을 추가하지 않는다." \
   -m "Tested: targeted SpringCloudAwsS3Test PASS." \
@@ -225,7 +225,7 @@ git commit -m "Issue #871 S3 pattern resolver 소비자 예제를 연결한다" 
 
 **File:** `aws/s3-spring-cloud/src/test/kotlin/io/bluetape4k/workshop/aws/s3/SpringCloudAwsS3Test.kt`
 
-- [ ] **Step 1: 1,001개 object fixture를 만드는 RED 테스트를 작성한다**
+- [x] **Step 1: 1,001개 object fixture를 만드는 RED 테스트를 작성한다**
 
 테스트는 unique bucket을 만들고 `config/pagination-0000.yml`부터
 `config/pagination-1000.yml`까지 1,001개의 zero/short-byte object와 고정
@@ -297,7 +297,7 @@ and the existing Bluetape assertions. The
 `lastModified` check uses the existing `(value > 0).shouldBeTrue()` assertion and
 does not introduce a test-only helper.
 
-- [ ] **Step 2: run the test and inspect the first failure**
+- [x] **Step 2: run the test and inspect the first failure**
 
 ```bash
 ./gradlew :aws-s3-spring-cloud:test --tests '*consumes Floci pagination sorts matches and closes returned streams' --no-build-cache --no-daemon --max-workers=1 --console=plain
@@ -307,7 +307,7 @@ Expected RED before fixture implementation: missing `RequestBody`/fixture code o
 resolver bean failure. After compilation is corrected, the test must fail only on
 the new behavior assertion, never because cleanup leaked the bucket.
 
-- [ ] **Step 3: add parser boundary assertions**
+- [x] **Step 3: add parser boundary assertions**
 
 In the same test class, add a separate test with the existing injected resolver:
 
@@ -332,7 +332,7 @@ fun `rejects unsupported S3 patterns before any network access`() {
 각 parser failure는 provider 조회 전에 발생해야 하므로 Floci endpoint 요청이
 추가되지 않는 것이 성공 조건이다.
 
-- [ ] **Step 4: pagination·metadata·empty/parser test를 GREEN으로 확인한다**
+- [x] **Step 4: pagination·metadata·empty/parser test를 GREEN으로 확인한다**
 
 ```bash
 ./gradlew :aws-s3-spring-cloud:cleanTest :aws-s3-spring-cloud:test --no-build-cache --no-daemon --max-workers=1 --console=plain
@@ -353,7 +353,7 @@ chunk(최대 1,000)를 먼저 확인한다.
 - Modify: `scripts/smoke-validate.sh`
 - Modify: `docs/ecosystem-reuse-train.json`
 
-- [ ] **Step 1: 두 README에 동등한 pattern 섹션을 작성한다**
+- [x] **Step 1: 두 README에 동등한 pattern 섹션을 작성한다**
 
 각 README의 feature/usage section에 다음 의미를 같은 순서로 추가한다.
 
@@ -388,14 +388,14 @@ class ConfigReader(
 `use`로 감싼다. `README.md`와 `README.ko.md`의 코드/API/명령은 동일하게
 유지하고 설명만 언어별로 번역한다.
 
-- [ ] **Step 2: coverage matrix를 실제 gap에 맞게 갱신한다**
+- [x] **Step 2: coverage matrix를 실제 gap에 맞게 갱신한다**
 
 AWS S3 row의 current coverage에 exact qualifier resolver와 single-bucket wildcard
 resolver, Floci pagination/ordering을 기록하고, multipart upload와 writable
 resource는 남은 gap으로 유지한다. 마지막 column에 `#871`을 추가한다. 기존
 `bluetape4k-aws` row는 coroutine wrapper gap을 실제 상태대로 유지한다.
 
-- [ ] **Step 3: stale-check에 좁은 Issue #871 guard를 추가한다**
+- [x] **Step 3: stale-check에 좁은 Issue #871 guard를 추가한다**
 
 `stale-check` case의 AppConfig guard 다음에 다음 변수를 검사한다.
 
@@ -408,6 +408,10 @@ s3_pattern_config="aws/s3-spring-cloud/src/main/resources/application.yml"
 s3_pattern_readme="aws/s3-spring-cloud/README.md"
 s3_pattern_readme_ko="aws/s3-spring-cloud/README.ko.md"
 s3_pattern_lesson="docs/lessons/2026-09-01-issue-871-s3-resource-pattern-resolver.md"
+if contains_disabled_bluetape_s3_switch "$s3_pattern_config"; then
+  echo "ERROR: AWS S3 Resource pattern example still disables the global bluetape4k S3 auto-configuration."
+  exit 1
+fi
 if contains_pattern 's3ResourcePatternResolver' "$s3_pattern_main" "$s3_pattern_test" "$s3_pattern_readme" "$s3_pattern_readme_ko" && \
    contains_pattern 'config/\*\*/\*\.yml' "$s3_pattern_main" "$s3_pattern_test" "$s3_pattern_readme" "$s3_pattern_readme_ko" && \
    contains_pattern 'autoconfigure:' "$s3_pattern_config" && \
@@ -424,7 +428,7 @@ fi
 The guard must not accept the old global `bluetape4k.aws.s3.enabled: false` as a
 substitute for excluding `S3TransferAutoConfiguration`.
 
-- [ ] **Step 4: ecosystem reuse child scope를 등록한다**
+- [x] **Step 4: ecosystem reuse child scope를 등록한다**
 
 `docs/ecosystem-reuse-train.json`의 `follow_up_scopes` 또는 현재 child scope
 목록에 다음 JSON object를 추가한다. JSON formatter로 trailing comma와 key order를
@@ -481,7 +485,7 @@ git commit -m "Issue #871 S3 pattern resolver 문서·검증 등록을 동기화
 - Create: `docs/lessons/2026-09-01-issue-871-s3-resource-pattern-resolver.md`
 - Create: `docs/review/2026-09-01-issue-871-s3-resource-pattern-resolver-review.md`
 
-- [ ] **Step 1: fresh validation을 실행한다**
+- [x] **Step 1: fresh validation을 실행한다**
 
 순서와 기대 결과는 다음과 같다.
 
@@ -507,11 +511,12 @@ Dependency authority evidence:
   --configuration testRuntimeClasspath --console=plain
 ```
 
-Expected: resolved version is `2.0.0-SNAPSHOT` through
-`bluetape4k-dependencies`, with no individual bluetape4k BOM or explicit module
-version in the module/catalog.
+Expected: `io.github.bluetape4k:bluetape4k-dependencies:2.0.0-SNAPSHOT` is
+selected and supplies the versionless Bluetape4k aliases (the AWS module may
+report its own 버전 메타데이터), with no individual bluetape4k BOM or
+explicit module version in the module/catalog.
 
-- [ ] **Step 2: lesson에 실행 증거를 기록한다**
+- [x] **Step 2: lesson에 실행 증거를 기록한다**
 
 lesson은 Korean으로 작성하고 다음을 포함한다.
 
@@ -523,7 +528,7 @@ lesson은 Korean으로 작성하고 다음을 포함한다.
 - 남은 multipart/writable/cross-bucket gap
 - `audit-korean-terms.mjs` 결과와 재발 방지 규칙
 
-- [ ] **Step 3: 독립 7-Tier review artifact를 작성한다**
+- [x] **Step 3: 독립 7-Tier review artifact를 작성한다**
 
 review table은 Code/API, Tests/Regression, Security/Trust, Performance/Stability,
 Docs/UX, Build/Operations, Scope/Ownership 각 lens에 P0/P1/P2 수와 근거를

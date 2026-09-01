@@ -90,6 +90,7 @@ class SpringCloudAwsS3Test @Autowired constructor(
         val allKeys = generatedKeys + fixedKeys
         val exactBody = "key=config/application.yml\n"
 
+        var primaryFailure: Throwable? = null
         try {
             s3Client.createBucket { it.bucket(bucket) }
             allKeys.forEach { key ->
@@ -123,8 +124,11 @@ class SpringCloudAwsS3Test @Autowired constructor(
 
             resourcePatternResolver.getResources("s3://$bucket/config/**/*.json")
                 .size shouldBeEqualTo 0
+        } catch (cause: Throwable) {
+            primaryFailure = cause
+            throw cause
         } finally {
-            runCatching {
+            val cleanupFailure = runCatching {
                 allKeys.chunked(1_000).forEach { chunk ->
                     s3Client.deleteObjects { request ->
                         request.bucket(bucket)
@@ -138,6 +142,9 @@ class SpringCloudAwsS3Test @Autowired constructor(
                     }
                 }
                 s3Client.deleteBucket { it.bucket(bucket) }
+            }.exceptionOrNull()
+            if (cleanupFailure != null) {
+                primaryFailure?.addSuppressed(cleanupFailure) ?: throw cleanupFailure
             }
         }
     }
