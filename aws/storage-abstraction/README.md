@@ -163,6 +163,8 @@ Tests run all five profiles/capabilities in a single Gradle task:
 - `EncryptedS3StorageServiceRsaTest` — 2048-bit RSA byte round trip, metadata, provider isolation, and wrong-key rejection
 - `S3EncryptedOutputStreamTest` — threshold ciphertext spill, one-time completion, write failure, cancellation, and temporary-file cleanup
 
+Total: 43 tests.
+
 ## Notes
 
 - `S3AutoConfiguration` from `bluetape4k-aws-spring-boot` is excluded in `application.yml`

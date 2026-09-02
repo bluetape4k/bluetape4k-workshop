@@ -5,8 +5,10 @@ import io.bluetape4k.aws.s3.existsBucket
 import io.bluetape4k.aws.spring.s3.S3BoundedEncryptedReadOperations
 import io.bluetape4k.aws.spring.s3.S3ClientSideEncryptionProviderTemplate
 import io.bluetape4k.aws.spring.s3.S3ClientSideEncryptionTransferOperations
+import io.bluetape4k.aws.spring.s3.S3ClientSideEncryptionTransferTemplate
 import io.bluetape4k.aws.spring.s3.S3EncryptedOutputStream
 import io.bluetape4k.support.requireNotBlank
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.currentCoroutineContext
@@ -24,9 +26,10 @@ import java.nio.file.Path
 /**
  * `s3-encrypted-aes`와 `s3-encrypted-rsa` profile용 client-side encryption 저장소입니다.
  *
- * byte API는 upstream bounded read를 사용하고, file API는 ciphertext 전송 stream과
- * 인증 후 destination commit을 사용합니다. 암호화 key는 이 workshop 예제의 JVM
- * 메모리에만 존재하므로 프로세스 재시작 후 기존 object를 읽을 수 없습니다.
+ * byte API는 upstream bounded read를 사용하고, file API는
+ * [S3ClientSideEncryptionTransferTemplate]의 ciphertext 전송 stream과 인증 후
+ * destination commit을 사용합니다. 암호화 key는 이 workshop 예제의 JVM 메모리에만
+ * 존재하므로 프로세스 재시작 후 기존 object를 읽을 수 없습니다.
  */
 @Service
 @Profile("s3-encrypted-aes | s3-encrypted-rsa")
@@ -107,9 +110,10 @@ class EncryptedS3StorageService(
                 encryptedStream.complete()
                 encryptedStream.close()
                 storageObjectUri(bucket, objectKey)
+            } catch (error: CancellationException) {
+                rethrowAfterCleanup(encryptedStream, bucket, objectKey, error)
             } catch (error: Throwable) {
-                cleanupFailedUpload(encryptedStream, bucket, objectKey)
-                throw error
+                rethrowAfterCleanup(encryptedStream, bucket, objectKey, error)
             }
         }
 
@@ -171,6 +175,16 @@ class EncryptedS3StorageService(
                 // Preserve the original upload/cancellation failure.
             }
         }
+    }
+
+    private suspend fun rethrowAfterCleanup(
+        encryptedStream: S3EncryptedOutputStream,
+        bucket: String,
+        objectKey: String,
+        error: Throwable,
+    ): Nothing {
+        cleanupFailedUpload(encryptedStream, bucket, objectKey)
+        throw error
     }
 
     private fun ensureBucketExists(bucket: String) {

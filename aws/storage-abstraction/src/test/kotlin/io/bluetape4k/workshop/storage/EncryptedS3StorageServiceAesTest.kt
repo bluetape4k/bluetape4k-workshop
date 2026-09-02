@@ -11,6 +11,7 @@ import io.bluetape4k.aws.spring.s3.S3ClientSideEncryptionException
 import io.bluetape4k.aws.spring.s3.S3ClientSideEncryptionProviderTemplate
 import io.bluetape4k.aws.spring.s3.S3ClientSideEncryptionTransferOperations
 import io.bluetape4k.aws.spring.s3.ClientSideEncryptionProvider
+import io.bluetape4k.aws.spring.sqs.SqsExtendedPayloadReadException
 import io.bluetape4k.aws.spring.s3.S3Properties.ClientSideEncryption
 import io.bluetape4k.aws.spring.s3.S3Properties
 import io.bluetape4k.aws.spring.s3.S3RsaProvider
@@ -99,7 +100,7 @@ class EncryptedS3StorageServiceAesTest @Autowired constructor(
                 maxCiphertextBytes = 64,
             )
 
-            assertFailsWith<Exception> {
+            assertFailsWith<SqsExtendedPayloadReadException> {
                 boundedService.download(key)
             }
         } finally {
@@ -138,6 +139,29 @@ class EncryptedS3StorageServiceAesTest @Autowired constructor(
                 Files.readAllBytes(destination) shouldBeEqualTo sentinel
             } finally {
                 tampered.fill(0)
+            }
+        } finally {
+            storageService.delete(key)
+        }
+    }
+
+    @Test
+    fun `AES reserved algorithm metadata mismatch is rejected`() = runSuspendIO {
+        val key = "encrypted/${Base58.randomString(8)}.bin"
+        val payload = ByteArray(128) { (it % 227).toByte() }
+        try {
+            storageService.upload(key, payload, "application/octet-stream")
+            val stored = s3Client.getObjectAsBytes { it.bucket(BUCKET).key(key) }
+            val metadata = stored.response().metadata().toMutableMap().apply {
+                this["bt4k-cek-alg"] = "AES/CBC/PKCS5Padding"
+            }
+            s3Client.putObject(
+                { request -> request.bucket(BUCKET).key(key).metadata(metadata) },
+                software.amazon.awssdk.core.sync.RequestBody.fromBytes(stored.asByteArray()),
+            )
+
+            assertFailsWith<IllegalArgumentException> {
+                storageService.download(key)
             }
         } finally {
             storageService.delete(key)

@@ -157,6 +157,8 @@ implementation(libs.kotlinx.coroutines.reactive) // upstream async response adap
 - `EncryptedS3StorageServiceRsaTest` — 2048-bit RSA byte 왕복, metadata, provider isolation, wrong-key 거부
 - `S3EncryptedOutputStreamTest` — threshold ciphertext spill, 1회 completion, write failure, cancellation, 임시 파일 정리
 
+총 43개 테스트입니다.
+
 ## 참고 사항
 
 - `bluetape4k-aws-spring-boot`의 `S3AutoConfiguration`은 이 모듈이 `S3Config`로 자체 S3 bean을 관리하므로 `application.yml`에서 제외합니다.

@@ -1,3 +1,4 @@
+# Spring profile: s3-encrypted-rsa
 bluetape4k:
   aws:
     s3:
