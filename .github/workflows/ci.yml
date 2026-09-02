@@ -71,7 +71,11 @@ jobs:
         run: node --test scripts/graalvm-metadata-cache.test.mjs
       - name: Build (compile only)
         # Keep native metadata extraction deterministic: shared services use one cache path across projects.
-        run: ./gradlew build -x detekt -x test -x integrationTest -x stressTest -x migrationCompatibilityTest --no-parallel --max-workers=1 --continue
+        run: >-
+          ./gradlew build
+          -x :spring-boot-cache-benchmark:build
+          -x detekt -x test -x integrationTest -x stressTest -x migrationCompatibilityTest
+          --no-parallel --max-workers=1 --continue
         env:
           JAVA_HOME: ${{ env.JAVA_HOME_25_X64 }}
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
