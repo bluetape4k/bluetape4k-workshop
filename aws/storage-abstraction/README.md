@@ -58,10 +58,17 @@ consumer-side bean graph and does not reimplement the encryption envelope.
 `EncryptedS3StorageService` keeps the byte API and also exposes
 `uploadFile(key, source, contentType)` and `downloadFile(key, destination)`.
 Byte reads use the bounded ciphertext reader. File uploads cross the configured
-threshold through an encrypted transfer stream; file downloads use an encrypted
-ciphertext temporary file and write the destination only after authentication,
-with rollback of an existing destination on write failure. This is a bounded
-write contract, not an atomic rename guarantee.
+threshold through an encrypted transfer stream written to a unique staging key;
+only after completion does the service promote the ciphertext with an S3
+server-side copy to the canonical key, then delete the staging key. Failed or
+cancelled uploads clean up only the staging key, so an existing canonical object
+is not deleted. Promotion and staging cleanup are not an atomic rename guarantee.
+After canonical promotion, staging deletion is best-effort and records only the
+failure type; a bounded reaper is required for durable orphan cleanup.
+Byte downloads use the configured `max-ciphertext-bytes`; file downloads use the
+upstream transfer template's single global ciphertext bound because its public
+API owns the authoritative HEAD/ETag check. A per-call file bound is intentionally
+left for an upstream API extension rather than adding a racy consumer preflight.
 
 The AES key or RSA key pair is generated in JVM memory for each profile context.
 Restarting the process makes previously written objects unreadable, so these
@@ -159,11 +166,12 @@ Tests run all five profiles/capabilities in a single Gradle task:
 - `LocalStorageServiceTest` — 8 tests, `local` profile, no Docker
 - `S3StorageServiceTest` — 9 tests, `s3` profile, Floci container (shared JVM singleton)
 - `S3PresignedStorageServiceTest` — 10 tests, `s3-presigned` profile, Floci + presigned URL assertions
-- `EncryptedS3StorageServiceAesTest` — AES-256 byte/file round trips, metadata, bounded read, key/version mismatch, and destination rollback
+- `EncryptedS3StorageServiceAesTest` — AES-256 byte/file round trips, metadata, bounded read, key/version mismatch, invalid envelope metadata, and destination rollback
 - `EncryptedS3StorageServiceRsaTest` — 2048-bit RSA byte round trip, metadata, provider isolation, and wrong-key rejection
 - `S3EncryptedOutputStreamTest` — threshold ciphertext spill, one-time completion, write failure, cancellation, and temporary-file cleanup
+- `EncryptedS3StorageServiceFailureCleanupTest` — upload cancellation, primary failure preservation, cleanup-failure suppression, staging promotion, and best-effort cleanup
 
-Total: 44 tests.
+Total: 50 tests.
 
 ## Notes
 

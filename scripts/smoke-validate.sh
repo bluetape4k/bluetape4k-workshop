@@ -564,6 +564,12 @@ case "${1:-help}" in
        contains_pattern 's3-encrypted-aes' "$cse_aes" "$cse_readme" "$cse_readme_ko" "$cse_tests" && \
        contains_pattern 's3-encrypted-rsa' "$cse_rsa" "$cse_readme" "$cse_readme_ko" "$cse_tests" && \
        contains_pattern 'MAX_CIPHERTEXT_BYTES' "$cse_service" "$cse_tests" && \
+       contains_pattern 'STAGING_KEY_PREFIX' "$cse_service" && \
+       contains_pattern 'promoteStagingObject' "$cse_service" && \
+       contains_pattern 'downloadEncryptedFile' "$cse_service" && \
+       contains_pattern 'max-ciphertext-bytes' "$cse_readme" "$cse_readme_ko" && \
+       contains_pattern 'per-call file' "$cse_readme" "$cse_readme_ko" && \
+       contains_pattern 'successful file upload promotes staging' "$cse_tests" && \
        contains_pattern 'CancellationException' "$cse_service" "$cse_tests" && \
        [ -f "$cse_lesson" ]; then
       echo "AWS S3 client-side encryption transfer example and lesson are registered."

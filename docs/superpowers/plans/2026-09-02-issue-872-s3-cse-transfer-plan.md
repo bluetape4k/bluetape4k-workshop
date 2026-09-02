@@ -37,7 +37,7 @@ envelope parser는 upstream public API에 위임한다.
 | `aws/storage-abstraction/src/main/resources/application-s3-encrypted-aes.yml` | AES profile 속성, 낮은 test threshold, key identity |
 | `aws/storage-abstraction/src/main/resources/application-s3-encrypted-rsa.yml` | RSA profile 속성, 낮은 test threshold, key identity |
 | `aws/storage-abstraction/src/main/kotlin/io/bluetape4k/workshop/storage/EncryptedS3Config.kt` | encrypted profile client/manager/provider/template bean과 close lifecycle |
-| `aws/storage-abstraction/src/main/kotlin/io/bluetape4k/workshop/storage/EncryptedS3StorageService.kt` | byte/file 암호화 경계, bounded read, cancellation cleanup |
+| `aws/storage-abstraction/src/main/kotlin/io/bluetape4k/workshop/storage/EncryptedS3StorageService.kt` | byte/file 암호화 경계, bounded read, staging 승격, cancellation cleanup |
 | `aws/storage-abstraction/src/main/kotlin/io/bluetape4k/workshop/storage/StorageService.kt` | 다섯 profile과 encrypted file capability KDoc |
 | `aws/storage-abstraction/src/main/resources/application.yml` | auto-configuration exclusion 이유 주석 |
 | `aws/storage-abstraction/src/test/kotlin/io/bluetape4k/workshop/storage/EncryptedS3StorageServiceAesTest.kt` | AES wiring, byte/file round-trip, metadata/key/algorithm negative, rollback |
@@ -277,17 +277,24 @@ property를 받고, max가 `1..S3BoundedEncryptedReadOperations.MAX_CIPHERTEXT_B
 `uploadFile`은 regular source만 허용하고 source `InputStream`을 8 KiB buffer로
 읽어 `transferOperations.encryptedOutputStream(...)`에 chunk 단위로 쓴다.
 각 loop에서 `currentCoroutineContext().ensureActive()`를 호출한다. 정상 경로는
-`complete()` 후 URI를 반환하며 `complete`/`close` 중복 호출은 upstream
+`complete()`/`close()` 후 staging object를 canonical key로 server-side copy하고
+staging을 삭제한 뒤 URI를 반환하며 `complete`/`close` 중복 호출은 upstream
 idempotency에 맡긴다. 예외 또는 cancellation에서는 원래 예외를 보존하면서
 `withContext(NonCancellable + Dispatchers.IO)`에서 upstream
-`S3EncryptedOutputStream.close()`를 호출하고 최종 `s3Client.deleteObject`로
-미완료 object를 제거한다. upstream stream 내부 discard를 직접 호출하지 않는다.
+`S3EncryptedOutputStream.close()`를 호출하고 고유 staging key만
+`s3Client.deleteObject`로 제거한다. 정상 완료 뒤에는 S3 server-side copy로
+canonical key에 승격하므로 실패/취소 cleanup이 기존 canonical object를 삭제하지
+않는다. canonical 승격 뒤 staging 삭제는 best-effort로 오류 유형만 기록하고
+bounded reaper에 맡긴다. upstream stream 내부 discard를 직접 호출하지 않는다.
 평문 임시 파일은 만들지 않는다.
 
 - [x] **Step 4: encrypted file download의 destination safety를 위임한다**
 
 `downloadFile`은 `transferOperations.downloadEncryptedFile(bucket, key,
-destination, emptyMap())`을 호출한다. upstream이 ciphertext temporary에
+destination, emptyMap())`을 호출한다. upstream public API가 authoritative
+HEAD/ETag와 전역 ciphertext bound를 소유하므로 consumer에서 별도 HEAD를
+추가하지 않는다. per-call file bound는 두 HEAD 사이 교체로 우회될 수 있어
+upstream API 확장 후 별도 범위로 남긴다. upstream이 ciphertext temporary에
 다운로드하고 authentication/decrypt 성공 뒤 bounded write와 rollback을
 수행하므로, service는 destination을 먼저 만들거나 별도 평문 buffer로
 우회하지 않는다. 원자적 rename 보장은 문서화하지 않는다.
@@ -340,8 +347,10 @@ metadata 변조는 새 ciphertext를 만들지 않고 existing object에 metadat
 - [x] **Step 3: bounded, metadata, destination negative tests를 추가한다**
 
 AES test property override `storage.s3.encrypted.max-ciphertext-bytes=64`로
-64 bytes보다 큰 encrypted object를 저장하고 `download`가 실패하며 plaintext
-배열을 반환하지 않는지 확인한다. 별도 fixtures에서 provider/key-version,
+64 bytes보다 큰 encrypted object를 저장하고 byte `download`가 실패하며
+plaintext 배열을 반환하지 않는지 확인한다. file path는 upstream 전역 상한과
+destination safety 위임을 문서화하고, per-call file bound는 upstream 확장
+issue로 추적한다. 별도 fixtures에서 provider/key-version,
 algorithm, truncated/invalid base64 metadata와 reserved metadata 충돌도
 upstream non-retryable 오류로 관찰한다. file 경로는 destination이 새로
 생성되거나 부분 plaintext를 남기지 않아야 한다.
@@ -369,9 +378,13 @@ count는 주장하지 않는다.
 
 fake upload가 `awaitCancellation()`이면 `complete()` job을 cancel하고 원래
 `CancellationException`이 재전파되며 temporary directory가 비어 있는지
-확인한다. fake upload가 `IOException("upload failed")`를 던지면 같은 예외가
-반환되고 `coVerify(exactly = 1)` 및 temp cleanup이 성립해야 한다. log/exception
-text에 key material/plaintext/ciphertext literal이 없는지도 capture한다.
+확인한다. service-level upload cancellation/failure는 `close()`와 staging
+`deleteObject`를 한 번만 수행하고 canonical key를 삭제하지 않는지 검증한다.
+성공 경로는 staging object를 S3 server-side copy로 canonical key에 승격한 뒤
+staging만 삭제하는지 확인한다. fake upload가 `IOException("upload failed")`를
+던지면 같은 예외가 반환되고 cleanup 실패가 suppressed로 관찰되어야 한다.
+log/exception text에 key material/plaintext/ciphertext literal이 없는지도
+capture한다.
 
 - [x] **Step 6: 기존 회귀와 신규 suite를 함께 GREEN으로 확인한다**
 
@@ -380,7 +393,7 @@ text에 key material/plaintext/ciphertext literal이 없는지도 capture한다.
   --no-build-cache --no-daemon --max-workers=1 --console=plain
 ```
 
-27개 baseline과 신규 AES/RSA/stream tests가 모두 통과하고 Floci resource leak,
+27개 baseline과 신규 AES/RSA/stream/service-cleanup tests가 모두 통과하고 Floci resource leak,
 실패 report의 secret literal이 없어야 한다.
 
 ---
@@ -404,7 +417,9 @@ text에 key material/plaintext/ciphertext literal이 없는지도 capture한다.
 - `s3-encrypted-aes`는 AES-256, `s3-encrypted-rsa`는 2048-bit RSA이고 두 profile이
   upstream `S3ClientSideEncryptionProviderTemplate`/`S3ClientSideEncryptionTransferTemplate`을 재사용한다.
 - 실행 명령은 `./gradlew :aws-storage-abstraction:bootRun --args='--spring.profiles.active=s3-encrypted-aes'`와 RSA 변형이다.
-- byte API는 bounded read, file API는 ciphertext temporary와 인증 후 bounded destination write/rollback이며 atomic rename이 아니다.
+- byte API는 configured bounded read, file API는 upstream authoritative
+  global ciphertext bound와 ciphertext temporary, 인증 후 bounded destination
+  write/rollback이며 atomic rename이 아니다.
 - key는 JVM memory에만 있고 재시작 후 기존 object가 unreadable하므로 local learning/test 전용이다. KMS/HSM, rotation, encrypted presigned download은 제외한다.
 - dependency 예제에는 `implementation(libs.aws2.s3.transfer.manager)`를 넣고 test 수는 실제 실행 결과로만 갱신한다.
 

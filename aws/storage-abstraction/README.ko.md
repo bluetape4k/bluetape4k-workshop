@@ -55,10 +55,17 @@ consumer bean graph만 조립하며 암호화 envelope을 다시 구현하지 �
 `EncryptedS3StorageService`는 byte API를 유지하면서
 `uploadFile(key, source, contentType)`과 `downloadFile(key, destination)`도 제공합니다.
 Byte read는 ciphertext bounded reader를 사용합니다. File upload는 설정한
-threshold를 넘으면 암호화 transfer stream으로 전환하고, file download는
-ciphertext 임시 파일을 사용해 인증이 끝난 뒤에만 destination에 씁니다. 기존
-destination에 쓰기 실패가 발생하면 rollback하지만 atomic rename을 보장하는
-계약은 아닙니다.
+threshold를 넘으면 고유 staging key에 암호화 transfer stream으로 먼저 쓴 뒤,
+완료된 경우에만 S3 server-side copy로 canonical key에 승격하고 staging key만
+삭제합니다. 실패나 취소 시에도 staging key만 정리하므로 기존 canonical object를
+삭제하지 않습니다. 승격과 staging 정리는 atomic rename을 보장하는 계약이 아닙니다.
+canonical 승격 뒤 staging 삭제는 best-effort이며 오류 유형만 기록하므로,
+고아 staging object의 최종 정리에는 bounded reaper가 필요합니다.
+Byte download는 설정한 `max-ciphertext-bytes`를 사용하고, file download는
+upstream transfer template의 단일 전역 ciphertext 상한을 사용합니다. upstream
+public API가 authoritative HEAD/ETag 검사를 소유하므로 consumer에서 경쟁 조건이
+있는 per-call file preflight를 추가하지 않았습니다. per-call file 상한은 upstream
+API 확장 후 별도 범위로 남깁니다.
 
 AES key와 RSA key pair는 각 profile context에서 JVM memory에 생성합니다. 프로세스를
 재시작하면 기존 object를 읽을 수 없으므로 이 profile은 로컬 학습과 테스트 전용입니다.
@@ -153,11 +160,12 @@ implementation(libs.kotlinx.coroutines.reactive) // upstream async response adap
 - `LocalStorageServiceTest` — 8 tests, `local` profile, no Docker
 - `S3StorageServiceTest` — 9 tests, `s3` profile, Floci container (shared JVM singleton)
 - `S3PresignedStorageServiceTest` — 10 tests, `s3-presigned` profile, Floci + presigned URL assertions
-- `EncryptedS3StorageServiceAesTest` — AES-256 byte/file 왕복, metadata, bounded read, key/version mismatch, destination rollback
+- `EncryptedS3StorageServiceAesTest` — AES-256 byte/file 왕복, metadata, bounded read, key/version mismatch, 잘못된 envelope metadata, destination rollback
 - `EncryptedS3StorageServiceRsaTest` — 2048-bit RSA byte 왕복, metadata, provider isolation, wrong-key 거부
 - `S3EncryptedOutputStreamTest` — threshold ciphertext spill, 1회 completion, write failure, cancellation, 임시 파일 정리
+- `EncryptedS3StorageServiceFailureCleanupTest` — 업로드 cancellation, 원래 예외 보존, cleanup 실패 suppression, staging 승격과 best-effort 정리
 
-총 44개 테스트입니다.
+총 50개 테스트입니다.
 
 ## 참고 사항
 

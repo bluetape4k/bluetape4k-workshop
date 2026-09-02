@@ -87,7 +87,7 @@ class EncryptedS3StorageServiceAesTest @Autowired constructor(
     }
 
     @Test
-    fun `AES bounded download rejects oversized ciphertext before returning plaintext`() = runSuspendIO {
+    fun `AES bounded byte download rejects oversized ciphertext before returning plaintext`() = runSuspendIO {
         val key = "encrypted/${Base58.randomString(8)}.bin"
         val payload = ByteArray(256) { (it % 251).toByte() }
         try {
@@ -146,6 +146,38 @@ class EncryptedS3StorageServiceAesTest @Autowired constructor(
     }
 
     @Test
+    fun `AES authentication failure does not create a new destination`(
+        @TempDir
+        tempDirectory: Path,
+    ) = runSuspendIO {
+        val key = "encrypted/${Base58.randomString(8)}.bin"
+        val payload = ByteArray(512) { (it % 241).toByte() }
+        val destination = tempDirectory.resolve("new-destination.bin")
+        try {
+            storageService.upload(key, payload, "application/octet-stream")
+            val stored = s3Client.getObjectAsBytes { it.bucket(BUCKET).key(key) }
+            val tampered = stored.asByteArray().copyOf().also { ciphertext ->
+                ciphertext[ciphertext.lastIndex] = (ciphertext.last().toInt() xor 1).toByte()
+            }
+            try {
+                s3Client.putObject(
+                    { request -> request.bucket(BUCKET).key(key).metadata(stored.response().metadata()) },
+                    software.amazon.awssdk.core.sync.RequestBody.fromBytes(tampered),
+                )
+
+                assertFailsWith<S3ClientSideEncryptionException> {
+                    storageService.downloadFile(key, destination)
+                }
+                Files.exists(destination).shouldBeFalse()
+            } finally {
+                tampered.fill(0)
+            }
+        } finally {
+            storageService.delete(key)
+        }
+    }
+
+    @Test
     fun `AES reserved algorithm metadata mismatch is rejected`() = runSuspendIO {
         val key = "encrypted/${Base58.randomString(8)}.bin"
         val payload = ByteArray(128) { (it % 227).toByte() }
@@ -177,6 +209,29 @@ class EncryptedS3StorageServiceAesTest @Autowired constructor(
             val stored = s3Client.getObjectAsBytes { it.bucket(BUCKET).key(key) }
             val metadata = stored.response().metadata().toMutableMap().apply {
                 this["bt4k-cek-nonce"] = "AQ"
+            }
+            s3Client.putObject(
+                { request -> request.bucket(BUCKET).key(key).metadata(metadata) },
+                software.amazon.awssdk.core.sync.RequestBody.fromBytes(stored.asByteArray()),
+            )
+
+            assertFailsWith<IllegalArgumentException> {
+                storageService.download(key)
+            }
+        } finally {
+            storageService.delete(key)
+        }
+    }
+
+    @Test
+    fun `AES invalid base64 envelope metadata is rejected before decrypt`() = runSuspendIO {
+        val key = "encrypted/${Base58.randomString(8)}.bin"
+        val payload = ByteArray(128) { (it % 223).toByte() }
+        try {
+            storageService.upload(key, payload, "application/octet-stream")
+            val stored = s3Client.getObjectAsBytes { it.bucket(BUCKET).key(key) }
+            val metadata = stored.response().metadata().toMutableMap().apply {
+                this["bt4k-cek-nonce"] = "%%%not-base64%%%"
             }
             s3Client.putObject(
                 { request -> request.bucket(BUCKET).key(key).metadata(metadata) },

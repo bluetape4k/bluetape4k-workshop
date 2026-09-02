@@ -22,9 +22,15 @@ AWS SDK v2 TransferManager 경계를 기존 storage consumer가 실제로 사용
   에 위임했다. consumer service는 기존 byte 계약과 `uploadFile`/
   `downloadFile` concrete capability만 조립한다.
 - byte download에는 `downloadEncryptedBytesBounded`와
-  `MAX_CIPHERTEXT_BYTES`를 사용하고, upload cancellation/실패에서는
-  `NonCancellable + Dispatchers.IO` cleanup과 최종 object delete로 원래
-  예외를 보존한다. plaintext temporary는 만들지 않는다.
+  `MAX_CIPHERTEXT_BYTES`를 사용한다. file download는 upstream transfer
+  template의 authoritative HEAD/ETag와 전역 ciphertext 상한에 위임한다.
+  consumer가 별도 HEAD preflight를 추가하면 두 HEAD 사이 교체로 설정 상한이
+  우회될 수 있으므로 per-call file 상한은 upstream API 확장 후로 남겼다. file upload는 고유 staging key에 먼저 쓴 뒤
+  성공한 경우만 canonical key로 server-side copy하며, cancellation/실패에서는
+  staging key만 `NonCancellable + Dispatchers.IO`로 cleanup한다. 따라서 기존
+  canonical object를 삭제하지 않고 원래 예외와 cleanup 실패 suppression을
+  보존한다. canonical 승격 뒤 staging 삭제는 best-effort로 오류 유형만 기록하며
+  bounded reaper가 고아 object를 최종 정리해야 한다. plaintext temporary는 만들지 않는다.
 - `s3-transfer-manager`는 versionless catalog alias로 소비하고, upstream
   reactive response adapter가 요구하는 `kotlinx-coroutines-reactive`만
   명시적 runtime dependency로 추가했다. KMS/HSM, key rotation, 실제 AWS
@@ -34,8 +40,8 @@ AWS SDK v2 TransferManager 경계를 기존 storage consumer가 실제로 사용
 
 | 검증 | 결과 |
 | --- | --- |
-| 신규 AES/RSA/stream targeted tests | 17개 PASS: byte/file 왕복, provider metadata/isolation, bounded read, algorithm/key/version/truncated-metadata mismatch, destination rollback, threshold ciphertext, completion/cancellation/failure cleanup |
-| `./gradlew :aws-storage-abstraction:test --no-build-cache --no-daemon --max-workers=1 --console=plain` | 총 44개 PASS: 기존 27개 회귀 + 신규 17개 |
+| 신규 AES/RSA/stream/cleanup targeted tests | 23개 PASS: byte/file 왕복, provider metadata/isolation, bounded read, algorithm/key/version/truncated·invalid-base64 metadata mismatch, 신규·기존 destination rollback, threshold ciphertext, stream/service completion·cancellation/failure cleanup 및 cleanup 실패 suppression |
+| `./gradlew :aws-storage-abstraction:test --no-build-cache --no-daemon --max-workers=1 --console=plain` | 총 50개 PASS: 기존 27개 회귀 + 신규 23개 |
 | `./gradlew :aws-storage-abstraction:build --no-build-cache --no-daemon --max-workers=1 --console=plain` | `BUILD SUCCESSFUL` |
 | `./gradlew detekt --no-daemon --max-workers=1 --console=plain` | `BUILD SUCCESSFUL` |
 | `MAX_WORKERS=1 bash scripts/smoke-validate.sh aws` | AWS group `BUILD SUCCESSFUL`; S3 storage 43개, S3 resource 5개, Kinesis 53개, SQS/SNS 11개, S3 Vectors 9개, settings 25개 등 통과 |

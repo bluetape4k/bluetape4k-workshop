@@ -12,8 +12,9 @@ package io.bluetape4k.workshop.storage
  * - 구현은 Spring Profile `local`, `s3`, `s3-presigned`, `s3-encrypted-aes`,
  *   `s3-encrypted-rsa`로 선택됩니다.
  * - encrypted profile의 [EncryptedS3StorageService]는 `uploadFile`/`downloadFile`
- *   concrete API도 제공하며, key material은 JVM memory에만 있으므로 프로세스 재시작
- *   뒤 기존 객체를 복호화할 수 없습니다.
+ *   concrete API도 제공한다. file upload는 고유 staging object를 성공 시 canonical
+ *   key로 복사한 뒤 staging만 정리하며, key material은 JVM memory에만 있으므로
+ *   프로세스 재시작 뒤 기존 객체를 복호화할 수 없습니다.
  *
  * ```kotlin
  * val url = storageService.upload("docs/readme.txt", content, "text/plain")

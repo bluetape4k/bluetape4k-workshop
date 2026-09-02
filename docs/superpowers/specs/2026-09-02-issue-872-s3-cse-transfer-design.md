@@ -26,7 +26,7 @@ Issue #872는 기존 unencrypted 계약을 깨지 않고 AES·RSA provider 기�
   byte round-trip과 file/stream transfer를 실행할 수 있다.
 - ciphertext metadata와 provider/key identity를 검증하고, 인증·algorithm·key
   불일치가 발생하면 plaintext destination에 쓰지 않는다.
-- cancellation, output stream 실패, 임시 ciphertext 파일 정리와 no-key/plaintext
+- cancellation, output stream 실패, 고유 staging 승격/정리, 임시 ciphertext 파일 정리와 no-key/plaintext
   log 경계를 Floci 및 local fake 테스트로 관찰한다.
 - versionless module alias, 양국 README, coverage/CI/stale 등록과 lesson을
   같은 변경으로 갱신한다.
@@ -95,9 +95,9 @@ Spring profile
        ├─ S3ClientSideEncryptionTransferTemplate
        └─ EncryptedS3StorageService : StorageService
             ├─ upload/download bytes → provider template
-            ├─ uploadFile → encryptedOutputStream → ciphertext multipart stream
-            ├─ downloadFile → ciphertext temporary file → authenticate/decrypt
-            │                 → destination commit
+            ├─ uploadFile → staging encryptedOutputStream → server-side copy → canonical key
+            ├─ downloadFile → upstream authoritative HEAD/ETag/global bound
+            │              → ciphertext temporary → authenticate/decrypt → destination commit
             ├─ getUrl → endpoint-neutral s3:// URI
             └─ delete → S3Client
 ```
@@ -134,7 +134,10 @@ client-side encryption을 모두 `true`로 고정한다.
 ### 서비스 계약
 
 `EncryptedS3StorageService`는 key validation과 endpoint-neutral URI 규칙을
-기존 `StorageService`와 동일하게 적용한다.
+기존 `StorageService`와 동일하게 적용한다. file upload는 staging key에 암호화한
+뒤 canonical key로 server-side copy하고 staging만 정리한다. file download의
+authoritative HEAD/ETag와 전역 ciphertext 상한은 upstream transfer template이
+소유하며 consumer는 별도 preflight를 추가하지 않는다.
 
 ```kotlin
 interface StorageService {
@@ -156,7 +159,11 @@ byte API는 `S3ClientSideEncryptionProviderTemplate`의
 `maxCiphertextBytes`를 받아 `1..S3BoundedEncryptedReadOperations.MAX_CIPHERTEXT_BYTES`
 범위로 검증하며 기본값은 upstream 상한이다. `uploadFile`은 평문
 source를 chunk 단위로 encrypted output stream에 전달하며 평문 임시 파일을
-만들지 않는다. `downloadFile`은 ciphertext 임시 파일을 먼저 받고,
+만들지 않는다. file upload는 고유 staging key에 기록한 뒤 성공 시
+server-side copy로 canonical key에 승격하고 실패/취소 cleanup은 staging key만
+삭제한다. canonical 승격 뒤 staging 삭제는 best-effort로 오류 유형만 기록하고
+bounded reaper가 최종 정리한다. `downloadFile`은 upstream public API의
+authoritative HEAD/ETag와 전역 ciphertext bound에 위임하며 ciphertext 임시 파일을 먼저 받고,
 authentication/decrypt가 성공한 뒤에만 destination을 변경한다. 기존 destination이
 있으면 upstream bounded write + rollback 계약을 보존한다(원자적 rename을
 제공한다는 뜻은 아니다).
@@ -172,9 +179,9 @@ authentication/decrypt가 성공한 뒤에만 destination을 변경한다. 기�
 | provider 또는 key identity 불일치 | metadata provider/key id/version 검증이 조기에 실패하고 plaintext가 반환되지 않음 | AES/RSA profile 교차-read와 key-version mismatch를 assert |
 | algorithm/encoding 또는 base64 metadata 손상 | authenticated decrypt 전에 bounded metadata 오류가 발생 | Floci object metadata를 변조한 fixture로 algorithm mismatch와 truncated metadata 검증 |
 | GCM authentication 실패 | `S3ClientSideEncryptionException` 계열 오류가 발생하고 destination은 기존 상태 유지 | ciphertext byte 변조와 existing destination rollback을 assert |
-| ciphertext 크기 초과 | bounded read가 max+1 probe에서 실패하고 plaintext를 만들지 않음 | `MAX_CIPHERTEXT_BYTES + 1` 응답 fixture와 bounded byte/file read 검증 |
+| ciphertext 크기 초과 | byte bounded reader는 configured max+1 probe에서 실패하고, file bound는 upstream의 단일 global contract로 검사됨 | `MAX_CIPHERTEXT_BYTES + 1` 응답 fixture로 byte read를 검증하고 file 경로는 upstream authoritative HEAD/ETag·global bound 위임을 검토 |
 | threshold 초과 stream | delegate에는 ciphertext만 전달되고 multipart completion은 한 번만 수행 | 낮은 threshold와 큰 fixture로 output stream/ETag/round-trip 검증 |
-| upload cancellation 또는 write failure | encrypted stream delegate가 discard되고 ciphertext 임시 파일/미완료 transfer가 정리됨 | cancelled coroutine, throwing delegate fake, `complete`/`close` 중복 호출 테스트 |
+| upload cancellation 또는 write failure | encrypted stream delegate가 discard되고 고유 staging object만 정리되며 기존 canonical object는 보존됨 | cancelled coroutine, throwing delegate fake, staging 승격/삭제와 `complete`/`close` 중복 호출 테스트 |
 | download cancellation/transfer failure | ciphertext temporary path가 `NonCancellable` cleanup되고 destination에 평문 partial write가 없음 | transfer fake와 Floci cancellation 후 파일 존재/내용 assert |
 | metadata/log에 secret 노출 | key material·plaintext·ciphertext가 log와 예외 메시지에 포함되지 않음 | captured log/exception text에 payload와 key literal이 없는지 검사 |
 | 기존 profile 회귀 | local/S3/presigned 27 baseline test와 URL 계약이 동일 | encrypted profile을 별도 context로 실행하고 기존 suite를 먼저/후에 반복 |
