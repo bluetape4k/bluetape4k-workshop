@@ -1,0 +1,21 @@
+bluetape4k:
+  aws:
+    s3:
+      enabled: true
+      transfer:
+        enabled: true
+        output-stream-threshold-bytes: 1024
+        output-stream-part-size-bytes: 5242880
+      client-side-encryption:
+        enabled: true
+        provider: RSA
+        key-id: workshop-rsa
+        key-version: v1
+        encryption-context:
+          workshop: storage-abstraction
+          profile: rsa
+
+storage:
+  s3:
+    encrypted:
+      max-ciphertext-bytes: 67108880

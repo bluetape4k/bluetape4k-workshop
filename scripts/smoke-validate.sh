@@ -547,6 +547,32 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== AWS S3 client-side encryption storage example guard ==="
+    cse_build="aws/storage-abstraction/build.gradle.kts"
+    cse_config="aws/storage-abstraction/src/main/kotlin/io/bluetape4k/workshop/storage/EncryptedS3Config.kt"
+    cse_service="aws/storage-abstraction/src/main/kotlin/io/bluetape4k/workshop/storage/EncryptedS3StorageService.kt"
+    cse_tests="aws/storage-abstraction/src/test/kotlin/io/bluetape4k/workshop/storage"
+    cse_readme="aws/storage-abstraction/README.md"
+    cse_readme_ko="aws/storage-abstraction/README.ko.md"
+    cse_aes="aws/storage-abstraction/src/main/resources/application-s3-encrypted-aes.yml"
+    cse_rsa="aws/storage-abstraction/src/main/resources/application-s3-encrypted-rsa.yml"
+    cse_lesson="docs/lessons/2026-09-02-issue-872-s3-cse-transfer.md"
+    if contains_pattern 'libs\.aws2\.s3\.transfer\.manager' "$cse_build" && \
+       contains_pattern 'S3ClientSideEncryptionProviderTemplate' "$cse_config" "$cse_service" "$cse_tests" && \
+       contains_pattern 'S3ClientSideEncryptionTransferTemplate' "$cse_config" "$cse_service" "$cse_tests" && \
+       contains_pattern 'downloadEncryptedBytesBounded' "$cse_service" "$cse_tests" && \
+       contains_pattern 's3-encrypted-aes' "$cse_aes" "$cse_readme" "$cse_readme_ko" "$cse_tests" && \
+       contains_pattern 's3-encrypted-rsa' "$cse_rsa" "$cse_readme" "$cse_readme_ko" "$cse_tests" && \
+       contains_pattern 'MAX_CIPHERTEXT_BYTES' "$cse_service" "$cse_tests" && \
+       contains_pattern 'CancellationException' "$cse_service" "$cse_tests" && \
+       [ -f "$cse_lesson" ]; then
+      echo "AWS S3 client-side encryption transfer example and lesson are registered."
+    else
+      echo "ERROR: AWS S3 client-side encryption transfer example contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== README broken image links ==="
     broken=0
     while IFS= read -r readme; do

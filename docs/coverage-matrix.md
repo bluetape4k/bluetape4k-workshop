@@ -3,7 +3,7 @@
 각 bluetape4k library를 기존 workshop 예제와 연결하고, Basic/Advanced 제안 시나리오와
 함께 coverage gap을 식별합니다.
 
-> 마지막 갱신: 2026-08-30
+> 마지막 갱신: 2026-09-02
 
 ## 2026-08-25 ecosystem 재사용 2차 gate
 
@@ -125,8 +125,8 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | Rate limiting | `ratelimit-*` | ✅ Good | adaptive rate limit 미노출 | — | sliding window를 쓰는 Adaptive Bucket4j + Redis | — |
 | Spring Cloud Gateway | `gateway-api-gateway` | ⚠️ Partial | circuit breaker filter 미노출 | — | Gateway + Resilience4j circuit breaker filter | — |
 | Spring Modulith | `spring-modulith-*` | ⚠️ Partial | module testing isolation 미노출 | — | bounded context별 Modulith ApplicationModuleTest | — |
-| AWS S3 | `aws-s3-spring-cloud` | ⚠️ Partial | multipart upload 미노출 | exact `S3Resource`, literal 단일 bucket wildcard `ResourcePatternResolver`, Floci 1,001+ object pagination·정렬·empty match·metadata·stream lifecycle | LocalStack 기반 S3 multipart upload | #871 |
-| `bluetape4k-aws` | `aws-s3-spring-cloud` | ⚠️ Partial | BT AWS Kotlin SDK wrapper 미노출 | — | AWS Kotlin SDK + coroutine suspend wrapper | — |
+| AWS S3 | `aws-s3-spring-cloud`, `aws/storage-abstraction` | ⚠️ Partial | 실제 AWS multipart 운영과 managed key lifecycle 미검증 | exact `S3Resource`, literal 단일 bucket wildcard `ResourcePatternResolver`, Floci 1,001+ object pagination·정렬·empty match·metadata·stream lifecycle, AES/RSA client-side encrypted byte/stream/file transfer와 bounded destination rollback | 실제 AWS multipart와 KMS/HSM·key rotation 운영 검증 | #871, #872 |
+| `bluetape4k-aws` | `aws-s3-spring-cloud`, `aws/storage-abstraction` | ⚠️ Partial | AWS Kotlin SDK wrapper와 managed key lifecycle 운영 경계 미노출 | `S3ClientSideEncryptionProviderTemplate`/`S3ClientSideEncryptionTransferTemplate` consumer 조립, AES/RSA provider metadata와 bounded read | AWS Kotlin SDK + coroutine suspend wrapper, KMS/HSM·rotation | #872 |
 | Bedrock Converse | `aws/bedrock-converse` | ✅ Good | 실제 AWS 호출은 기본 경로에서 제외 | credential-free fake로 request mapping과 cold Flow | 명시적 `real-aws` opt-in과 client lifecycle | #741 |
 | AWS settings boundary | `aws/settings-boundary` | ✅ Good | provider-neutral settings와 Spring Boot ConfigData/runtime reload caller 경계가 없었음 | Secrets Manager/secure Parameter Store fake lookup과 fallback, AppConfig ConfigData prefix/optional contract | full-replacement refresh, atomic Environment reload, timeout/lifecycle cleanup 및 명시적 live AWS factory | #742, #870 |
 | `bluetape4k-aws-java` Kinesis consumer | `aws/kinesis-coroutines` | ✅ Good | multi-shard discovery, bounded concurrency, checkpoint/lease fencing 미노출 | credential-free 2-shard `consumerFlow`와 emit 후 checkpoint | real AWS consumer group과 durable checkpoint/lease adapter | #864 |
@@ -151,7 +151,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | Gap | Proposed improvement |
 |-----|---------------------|
 | Redisson reactive data structures | `redis-redisson-examples`에 추가 |
-| S3 multipart upload | `aws-s3-spring-cloud` 확장 |
+| 실제 AWS S3 multipart 운영 검증 | `aws-s3-spring-cloud`와 `aws/storage-abstraction` 확장 |
 | Modulith `ApplicationModuleTest` | `spring-modulith-jpa-demo`에 추가 |
 | Gateway Resilience4j filter | `gateway-api-gateway`에 추가 |
 | Flow backpressure / SharedFlow | `kotlin/coroutines`에 추가 |

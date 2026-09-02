@@ -550,6 +550,33 @@
         "scripts/smoke-validate.sh"
       ],
       "review_artifact": "docs/review/2026-09-01-issue-871-s3-resource-pattern-resolver-review.md"
+    },
+    {
+      "scope_id": "issue-872-aws-s3-cse-transfer",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-872-s3-cse-transfer",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [872],
+      "allowed_paths": [
+        ".github/workflows/Examples.yml",
+        "aws/storage-abstraction/**",
+        "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/2026-09-02-issue-872-s3-cse-transfer.md",
+        "docs/review/issue-872-plan-review.md",
+        "docs/review/issue-872-s3-cse-transfer-implementation-review.md",
+        "docs/review/issue-872-s3-cse-transfer-pre-pr-review.md",
+        "docs/superpowers/plans/2026-09-02-issue-872-s3-cse-transfer-plan.md",
+        "docs/superpowers/specs/2026-09-02-issue-872-s3-cse-transfer-design.md",
+        "gradle/libs.versions.toml",
+        "scripts/smoke-validate.sh"
+      ],
+      "review_artifact": "docs/review/issue-872-s3-cse-transfer-implementation-review.md"
     }
   ],
   "coordinator_scope_receipt": {

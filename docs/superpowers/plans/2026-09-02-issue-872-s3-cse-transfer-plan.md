@@ -78,15 +78,17 @@ envelope parser는 upstream public API에 위임한다.
 - Create: `aws/storage-abstraction/src/main/resources/application-s3-encrypted-rsa.yml`
 - Modify: `aws/storage-abstraction/src/main/resources/application.yml:4-8`
 
-- [ ] **Step 1: versionless transfer alias를 추가한다**
+- [x] **Step 1: versionless transfer alias를 추가한다**
 
 AWS SDK block을 다음처럼 만들고 `gradle/libs.versions.toml`의 기존 alias는
-그대로 둔다.
+그대로 둔다. upstream async response adapter가 사용하는
+`kotlinx-coroutines-reactive`도 명시적으로 runtime classpath에 둔다.
 
 ```kotlin
 // AWS SDK v2 의존성
 implementation(libs.aws2.s3.lib)
 implementation(libs.aws2.s3.transfer.manager)
+implementation(libs.kotlinx.coroutines.reactive)
 ```
 
 `gradle/libs.versions.toml`의 alias는 다음 한 줄이어야 하며 module build
@@ -96,7 +98,7 @@ script에 버전 문자열을 쓰지 않는다.
 aws2-s3-transfer-manager = { module = "software.amazon.awssdk:s3-transfer-manager" }
 ```
 
-- [ ] **Step 2: AES profile YAML을 추가한다**
+- [x] **Step 2: AES profile YAML을 추가한다**
 
 다음 속성을 정확히 추가한다.
 
@@ -124,18 +126,18 @@ storage:
       max-ciphertext-bytes: 67108880
 ```
 
-- [ ] **Step 3: RSA profile YAML을 추가한다**
+- [x] **Step 3: RSA profile YAML을 추가한다**
 
 AES와 같은 transfer/limit 경계를 유지하고 `provider: RSA`, `key-id:
 workshop-rsa`, `profile: rsa`만 바꾼다. RSA key pair는 config에서 2048 bit로
 생성한다.
 
-- [ ] **Step 4: 전역 exclusion의 이유를 보강한다**
+- [x] **Step 4: 전역 exclusion의 이유를 보강한다**
 
 `application.yml`의 두 exclusion key는 유지하고, 기존 세 profile과 encrypted
 profile이 필요한 S3 bean을 custom config가 소유한다는 주석만 갱신한다.
 
-- [ ] **Step 5: dependency resolution을 확인한다**
+- [x] **Step 5: dependency resolution을 확인한다**
 
 ```bash
 ./gradlew :aws-storage-abstraction:dependencies \
@@ -155,7 +157,7 @@ build script에 직접 버전이 없는지 확인한다.
 - Create: `aws/storage-abstraction/src/test/kotlin/io/bluetape4k/workshop/storage/EncryptedS3StorageServiceAesTest.kt` (wiring RED scaffold)
 - Create: `aws/storage-abstraction/src/test/kotlin/io/bluetape4k/workshop/storage/EncryptedS3StorageServiceRsaTest.kt` (wiring RED scaffold)
 
-- [ ] **Step 1: profile wiring RED test를 먼저 작성한다**
+- [x] **Step 1: profile wiring RED test를 먼저 작성한다**
 
 AES/RSA 통합 test가 각 context에서 `S3Client`, `S3AsyncClient`,
 `S3TransferManager`, `S3ClientSideEncryptionProviderTemplate`,
@@ -165,7 +167,7 @@ encrypted bean이 없어야 하며 `S3Properties`의 transfer/CSE enabled 값도
 `true`여야 한다. config를 만들기 전에 이 두 test 파일을 생성해 RED를
 관찰한다.
 
-- [ ] **Step 2: Floci client와 manager를 소유하는 config를 구현한다**
+- [x] **Step 2: Floci client와 manager를 소유하는 config를 구현한다**
 
 `S3Config.floci`를 재사용하고 아래 순서와 lifecycle을 지킨다.
 
@@ -245,7 +247,7 @@ created in encrypted profiles.
 - Create: `aws/storage-abstraction/src/main/kotlin/io/bluetape4k/workshop/storage/EncryptedS3StorageService.kt`
 - Modify: `aws/storage-abstraction/src/main/kotlin/io/bluetape4k/workshop/storage/StorageService.kt`
 
-- [ ] **Step 1: public contract과 validation을 고정한다**
+- [x] **Step 1: public contract과 validation을 고정한다**
 
 `EncryptedS3StorageService : StorageService`는 기존 네 메서드를 유지하고 다음
 concrete API만 추가한다.
@@ -261,7 +263,7 @@ property를 받고, max가 `1..S3BoundedEncryptedReadOperations.MAX_CIPHERTEXT_B
 범위인지 `init`에서 검증한다. 모든 key/content type/path는 기존
 `storageObjectKey`, `storageBucketName` 규칙을 사용한다.
 
-- [ ] **Step 2: byte upload/download를 upstream template에 위임한다**
+- [x] **Step 2: byte upload/download를 upstream template에 위임한다**
 
 `upload`는 `ensureBucketExists` 후
 `providerTemplate.uploadEncrypted(bucket, objectKey, content, type, emptyMap(), emptyMap())`
@@ -270,7 +272,7 @@ property를 받고, max가 `1..S3BoundedEncryptedReadOperations.MAX_CIPHERTEXT_B
 사용하여 bounded read를 보장한다. plaintext·key·ciphertext를 로그나 예외에
 넣지 않는다.
 
-- [ ] **Step 3: encrypted stream upload의 terminal/cleanup 경계를 구현한다**
+- [x] **Step 3: encrypted stream upload의 terminal/cleanup 경계를 구현한다**
 
 `uploadFile`은 regular source만 허용하고 source `InputStream`을 8 KiB buffer로
 읽어 `transferOperations.encryptedOutputStream(...)`에 chunk 단위로 쓴다.
@@ -282,7 +284,7 @@ idempotency에 맡긴다. 예외 또는 cancellation에서는 원래 예외를 �
 미완료 object를 제거한다. upstream stream 내부 discard를 직접 호출하지 않는다.
 평문 임시 파일은 만들지 않는다.
 
-- [ ] **Step 4: encrypted file download의 destination safety를 위임한다**
+- [x] **Step 4: encrypted file download의 destination safety를 위임한다**
 
 `downloadFile`은 `transferOperations.downloadEncryptedFile(bucket, key,
 destination, emptyMap())`을 호출한다. upstream이 ciphertext temporary에
@@ -290,7 +292,7 @@ destination, emptyMap())`을 호출한다. upstream이 ciphertext temporary에
 수행하므로, service는 destination을 먼저 만들거나 별도 평문 buffer로
 우회하지 않는다. 원자적 rename 보장은 문서화하지 않는다.
 
-- [ ] **Step 5: getUrl/delete와 KDoc를 정리한다**
+- [x] **Step 5: getUrl/delete와 KDoc를 정리한다**
 
 `getUrl`은 key를 검증한 뒤 endpoint-neutral `s3://bucket/key`를 반환한다.
 encrypted presigned URL은 제공하지 않는다. `delete`는 IO dispatcher의 sync
@@ -308,7 +310,7 @@ restart 경계를 명시한다.
 - Modify: `aws/storage-abstraction/src/test/kotlin/io/bluetape4k/workshop/storage/EncryptedS3StorageServiceRsaTest.kt`
 - Create: `aws/storage-abstraction/src/test/kotlin/io/bluetape4k/workshop/storage/S3EncryptedOutputStreamTest.kt`
 
-- [ ] **Step 1: AES profile 성공·실패 경로를 작성한다**
+- [x] **Step 1: AES profile 성공·실패 경로를 작성한다**
 
 `@SpringBootTest @ActiveProfiles("s3-encrypted-aes")` context에서 다음을
 검증한다.
@@ -327,7 +329,7 @@ restart 경계를 명시한다.
 metadata 변조는 새 ciphertext를 만들지 않고 existing object에 metadata만
 교체한다. 모든 object와 temp path는 `finally`에서 정리한다.
 
-- [ ] **Step 2: RSA profile metadata와 provider isolation을 작성한다**
+- [x] **Step 2: RSA profile metadata와 provider isolation을 작성한다**
 
 `@ActiveProfiles("s3-encrypted-rsa")`에서 byte round-trip, `provider=rsa`,
 `bt4k-cek-wrap-alg=RSA/ECB/OAEPWithSHA-1AndMGF1Padding`,
@@ -335,7 +337,7 @@ metadata 변조는 새 ciphertext를 만들지 않고 existing object에 metadat
 검증한다. key pair는 2048 bit 이상이며 context close가 template/client를
 정리한다.
 
-- [ ] **Step 3: bounded, metadata, destination negative tests를 추가한다**
+- [x] **Step 3: bounded, metadata, destination negative tests를 추가한다**
 
 AES test property override `storage.s3.encrypted.max-ciphertext-bytes=64`로
 64 bytes보다 큰 encrypted object를 저장하고 `download`가 실패하며 plaintext
@@ -344,7 +346,7 @@ algorithm, truncated/invalid base64 metadata와 reserved metadata 충돌도
 upstream non-retryable 오류로 관찰한다. file 경로는 destination이 새로
 생성되거나 부분 plaintext를 남기지 않아야 한다.
 
-- [ ] **Step 4: `S3EncryptedOutputStream` fake lifecycle을 작성한다**
+- [x] **Step 4: `S3EncryptedOutputStream` fake lifecycle을 작성한다**
 
 MockK `S3TransferOperations`와 threshold 64 bytes의 `S3OutputStream`을
 구성하고 JDK `AES/GCM/NoPadding` cipher를 주입한다. 4 KiB plaintext 후
@@ -352,9 +354,9 @@ MockK `S3TransferOperations`와 threshold 64 bytes의 `S3OutputStream`을
 
 ```kotlin
 coVerify(exactly = 1) { operations.uploadFile(any(), any(), any(), any()) }
-assertFalse(capturedUploadBytes.contentEquals(plaintext))
-assertTrue(capturedUploadBytes.size > plaintext.size)
-assertTrue(Files.list(temporaryDirectory).use { it.noneMatch(Files::isRegularFile) })
+capturedUploadBytes.contentEquals(plaintext) shouldBeEqualTo false
+capturedUploadBytes.size shouldBeGreaterThan plaintext.size
+Files.list(temporaryDirectory).use { it.noneMatch(Files::isRegularFile) }.shouldBeTrue()
 ```
 
 fake delegate에는 plaintext가 아닌 ciphertext path가 전달되고 completion은
@@ -363,7 +365,7 @@ fake delegate에는 plaintext가 아닌 ciphertext path가 전달되고 completi
 `uploadFile`/`downloadFile`로 왕복시켜 복호화만 확인하며 AWS multipart part
 count는 주장하지 않는다.
 
-- [ ] **Step 5: cancellation/write failure cleanup을 고정한다**
+- [x] **Step 5: cancellation/write failure cleanup을 고정한다**
 
 fake upload가 `awaitCancellation()`이면 `complete()` job을 cancel하고 원래
 `CancellationException`이 재전파되며 temporary directory가 비어 있는지
@@ -371,7 +373,7 @@ fake upload가 `awaitCancellation()`이면 `complete()` job을 cancel하고 원�
 반환되고 `coVerify(exactly = 1)` 및 temp cleanup이 성립해야 한다. log/exception
 text에 key material/plaintext/ciphertext literal이 없는지도 capture한다.
 
-- [ ] **Step 6: 기존 회귀와 신규 suite를 함께 GREEN으로 확인한다**
+- [x] **Step 6: 기존 회귀와 신규 suite를 함께 GREEN으로 확인한다**
 
 ```bash
 ./gradlew :aws-storage-abstraction:test \
@@ -394,7 +396,7 @@ text에 key material/plaintext/ciphertext literal이 없는지도 capture한다.
 - Modify: `scripts/smoke-validate.sh`
 - Modify: `docs/ecosystem-reuse-train.json`
 
-- [ ] **Step 1: 양국 README를 source-equivalent로 갱신한다**
+- [x] **Step 1: 양국 README를 source-equivalent로 갱신한다**
 
 기존 세 profile 설명 뒤에 양국 모두 같은 heading, command code fence, 표/목록
 순서로 encrypted section을 추가한다. 포함할 사실은 다음과 같다.
@@ -408,7 +410,7 @@ text에 key material/plaintext/ciphertext literal이 없는지도 capture한다.
 
 기존 다이어그램은 baseline 범위라는 설명을 두 README에 남긴다.
 
-- [ ] **Step 2: README/link/terminology를 검증한다**
+- [x] **Step 2: README/link/terminology를 검증한다**
 
 ```bash
 node scripts/validate-readme-parity.mjs aws/storage-abstraction
@@ -419,7 +421,7 @@ node /Users/debop/.codex/skills/bluetape-writer/scripts/audit-korean-terms.mjs \
 parity `failures=0`, terminology `findings=0`, 내부 링크/image link가 모두
 유효해야 한다.
 
-- [ ] **Step 3: coverage matrix를 현재 coverage와 gap으로 갱신한다**
+- [x] **Step 3: coverage matrix를 현재 coverage와 gap으로 갱신한다**
 
 AWS S3 행의 Existing example에 `aws-s3-spring-cloud`,
 `aws/storage-abstraction`을 함께 기록하고 AES/RSA byte/stream/file,
@@ -428,7 +430,7 @@ ciphertext metadata, bounded rollback을 current coverage로 적는다. Gap은
 남기고 Issue 열에 `#871, #872`를 기록한다. `S3 multipart upload` summary는
 transfer 경계를 보완하지만 real AWS 운영 검증은 제외한다고 명시한다.
 
-- [ ] **Step 4: workflow는 주석만 갱신한다**
+- [x] **Step 4: workflow는 주석만 갱신한다**
 
 기존 `aws-storage-abstraction` 주석을 `Floci-backed S3 storage abstraction
 plus AES/RSA client-side encryption transfer` 의미로 바꾼다. path filter,
@@ -465,7 +467,7 @@ else
 fi
 ```
 
-- [ ] **Step 6: ecosystem manifest child scope를 등록한다**
+- [x] **Step 6: ecosystem manifest child scope를 등록한다**
 
 `docs/ecosystem-reuse-train.json`의 child 배열에 `scope_id:
 issue-872-aws-s3-cse-transfer`, `expected_head_ref:
@@ -481,7 +483,7 @@ lesson, workflow만 포함하고 `review_artifact`는
 
 **Files:** Task 1–5에서 이미 열거한 파일만 test-backed repair 대상으로 한다.
 
-- [ ] **Step 1: module test와 build를 순서대로 실행한다**
+- [x] **Step 1: module test와 build를 순서대로 실행한다**
 
 ```bash
 ./gradlew :aws-storage-abstraction:test \
@@ -494,7 +496,7 @@ lesson, workflow만 포함하고 `review_artifact`는
 RED behavior로 돌아가 수정하고 재시도 PASS만으로 lifecycle failure를 지우지
 않는다.
 
-- [ ] **Step 2: project/metadata/parity를 검증한다**
+- [x] **Step 2: project/metadata/parity를 검증한다**
 
 ```bash
 ./gradlew projects --no-daemon --max-workers=1 --console=plain
@@ -516,7 +518,7 @@ bash scripts/smoke-validate.sh stale-check
 기존 AWS group과 새 CSE guard가 성공하고 Floci/Testcontainers Gradle lane은
 동시에 다른 container-backed module을 시작하지 않아야 한다.
 
-- [ ] **Step 4: workflow/static/language 검증을 실행한다**
+- [x] **Step 4: workflow/static/language 검증을 실행한다**
 
 ```bash
 actionlint .github/workflows/Examples.yml

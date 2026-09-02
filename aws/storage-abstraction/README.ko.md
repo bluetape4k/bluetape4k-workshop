@@ -5,7 +5,7 @@
 ## 스토리지 경계
 
 이 예제는 coroutine 기반 `StorageService` 경계 뒤에 로컬 파일, S3 객체
-저장소, S3 pre-signed GET URL 선택지를 둡니다. 애플리케이션 코드는 같은
+저장소, S3 pre-signed GET URL, client-side encrypted S3 transfer profile 선택지를 둡니다. 애플리케이션 코드는 같은
 인터페이스를 사용하고, Spring profile이 구현체를 선택합니다.
 
 ## 아키텍처
@@ -13,8 +13,8 @@
 ![Storage Abstraction Workshop architecture diagram](../../docs/images/readme-diagrams/aws-storage-abstraction-architecture-01.png)
 
 핵심 경계는 `StorageService`입니다. `local`, `s3`, `s3-presigned` profile은
-서로 다른 bean을 선택하지만 호출자는 계속 같은 `upload`, `download`,
-`getUrl`, `delete` 메서드를 사용합니다.
+서로 다른 bean을 선택하고, `s3-encrypted-aes`와 `s3-encrypted-rsa`는 같은
+byte 계약 위에 concrete `EncryptedS3StorageService` capability를 추가합니다.
 
 ## 요청 흐름
 
@@ -38,6 +38,35 @@ forward-slash key로 trim/검증됩니다. `getUrl`은 `local` profile에서는 
 | Key guard | blank, absolute, backslash, `.` / `..` traversal key는 filesystem 또는 S3 접근 전에 실패 |
 | 코루틴 | 모든 메서드가 `suspend`; 블로킹 I/O는 `Dispatchers.IO`에서 실행 |
 | 로컬 AWS 에뮬레이터 | `FlociServer`(Testcontainers)가 LocalStack Community edition을 대체 |
+
+## Client-side Encrypted S3 Transfer
+
+`s3-encrypted-aes` profile은 AES-256 provider를 사용하고
+`s3-encrypted-rsa` profile은 2048-bit RSA provider를 사용합니다. 두 profile은
+upstream `S3ClientSideEncryptionProviderTemplate`과
+`S3ClientSideEncryptionTransferTemplate`을 재사용합니다. 이 workshop은
+consumer bean graph만 조립하며 암호화 envelope을 다시 구현하지 않습니다.
+
+```bash
+./gradlew :aws-storage-abstraction:bootRun --args='--spring.profiles.active=s3-encrypted-aes'
+./gradlew :aws-storage-abstraction:bootRun --args='--spring.profiles.active=s3-encrypted-rsa'
+```
+
+`EncryptedS3StorageService`는 byte API를 유지하면서
+`uploadFile(key, source, contentType)`과 `downloadFile(key, destination)`도 제공합니다.
+Byte read는 ciphertext bounded reader를 사용합니다. File upload는 설정한
+threshold를 넘으면 암호화 transfer stream으로 전환하고, file download는
+ciphertext 임시 파일을 사용해 인증이 끝난 뒤에만 destination에 씁니다. 기존
+destination에 쓰기 실패가 발생하면 rollback하지만 atomic rename을 보장하는
+계약은 아닙니다.
+
+AES key와 RSA key pair는 각 profile context에서 JVM memory에 생성합니다. 프로세스를
+재시작하면 기존 object를 읽을 수 없으므로 이 profile은 로컬 학습과 테스트 전용입니다.
+KMS/HSM 연동, key rotation, production multipart 검증, encrypted pre-signed
+download는 이 예제의 범위에 포함하지 않습니다.
+
+기존 아키텍처와 요청 흐름 다이어그램은 원래 `local`/`s3`/`s3-presigned`
+baseline을 설명하므로 의도적으로 변경하지 않았습니다.
 
 ## 프로파일 전환
 
@@ -107,8 +136,10 @@ storage:
 implementation(libs.bluetape4k.aws)           // bluetape4k-aws-spring-boot
 implementation(libs.bluetape4k.coroutines)
 implementation(libs.aws2.s3.lib)              // AWS SDK v2 S3
+implementation(libs.aws2.s3.transfer.manager) // AWS SDK v2 TransferManager
 implementation(libs.bluetape4k.testcontainers)
 implementation(libs.testcontainers.localstack) // Floci uses LocalStack-compatible API
+implementation(libs.kotlinx.coroutines.reactive) // upstream async response adapter
 ```
 
 ## 테스트 실행
@@ -117,11 +148,14 @@ implementation(libs.testcontainers.localstack) // Floci uses LocalStack-compatib
 ./gradlew :aws-storage-abstraction:test
 ```
 
-테스트는 하나의 Gradle task에서 세 profile을 모두 실행합니다.
+테스트는 하나의 Gradle task에서 다섯 profile/capability를 모두 실행합니다.
 
 - `LocalStorageServiceTest` — 8 tests, `local` profile, no Docker
 - `S3StorageServiceTest` — 9 tests, `s3` profile, Floci container (shared JVM singleton)
 - `S3PresignedStorageServiceTest` — 10 tests, `s3-presigned` profile, Floci + presigned URL assertions
+- `EncryptedS3StorageServiceAesTest` — AES-256 byte/file 왕복, metadata, bounded read, key/version mismatch, destination rollback
+- `EncryptedS3StorageServiceRsaTest` — 2048-bit RSA byte 왕복, metadata, provider isolation, wrong-key 거부
+- `S3EncryptedOutputStreamTest` — threshold ciphertext spill, 1회 completion, write failure, cancellation, 임시 파일 정리
 
 ## 참고 사항
 

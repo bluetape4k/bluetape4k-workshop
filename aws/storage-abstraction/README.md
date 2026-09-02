@@ -5,7 +5,8 @@
 ## Storage Boundary
 
 This example puts a small coroutine `StorageService` boundary in front of three
-runtime choices: local files, S3 object storage, and S3 pre-signed GET URLs.
+runtime choices: local files, S3 object storage, S3 pre-signed GET URLs, and
+client-side encrypted S3 transfer profiles.
 Application code keeps the same interface while Spring profiles choose the
 implementation.
 
@@ -14,8 +15,9 @@ implementation.
 ![Storage Abstraction Workshop architecture diagram](../../docs/images/readme-diagrams/aws-storage-abstraction-architecture-01.png)
 
 The important boundary is `StorageService`. The `local`, `s3`, and
-`s3-presigned` profiles select different beans, but callers still use the same
-`upload`, `download`, `getUrl`, and `delete` methods.
+`s3-presigned` profiles select different beans, while `s3-encrypted-aes` and
+`s3-encrypted-rsa` add a concrete `EncryptedS3StorageService` capability on top
+of the same byte contract.
 
 ## Request Flow
 
@@ -39,6 +41,36 @@ and a time-limited pre-signed GET URL for `s3-presigned`.
 | Key guard | Blank, absolute, backslash, and `.` / `..` traversal keys fail before filesystem or S3 access |
 | Coroutines | All `suspend` methods; blocking I/O dispatched on `Dispatchers.IO` |
 | Local AWS emulator | `FlociServer` (Testcontainers) replaces LocalStack Community edition |
+
+## Client-side Encrypted S3 Transfer
+
+The `s3-encrypted-aes` profile uses an AES-256 provider and
+`s3-encrypted-rsa` uses a 2048-bit RSA provider. Both profiles reuse the
+upstream `S3ClientSideEncryptionProviderTemplate` and
+`S3ClientSideEncryptionTransferTemplate`; this workshop only assembles the
+consumer-side bean graph and does not reimplement the encryption envelope.
+
+```bash
+./gradlew :aws-storage-abstraction:bootRun --args='--spring.profiles.active=s3-encrypted-aes'
+./gradlew :aws-storage-abstraction:bootRun --args='--spring.profiles.active=s3-encrypted-rsa'
+```
+
+`EncryptedS3StorageService` keeps the byte API and also exposes
+`uploadFile(key, source, contentType)` and `downloadFile(key, destination)`.
+Byte reads use the bounded ciphertext reader. File uploads cross the configured
+threshold through an encrypted transfer stream; file downloads use an encrypted
+ciphertext temporary file and write the destination only after authentication,
+with rollback of an existing destination on write failure. This is a bounded
+write contract, not an atomic rename guarantee.
+
+The AES key or RSA key pair is generated in JVM memory for each profile context.
+Restarting the process makes previously written objects unreadable, so these
+profiles are for local learning and tests only. KMS/HSM integration, key
+rotation, production multipart validation, and encrypted pre-signed downloads
+are intentionally outside this example.
+
+The existing architecture and request-flow diagrams describe the original
+`local`/`s3`/`s3-presigned` baseline and are intentionally unchanged.
 
 ## Profile Switching
 
@@ -110,8 +142,10 @@ storage:
 implementation(libs.bluetape4k.aws)           // bluetape4k-aws-spring-boot
 implementation(libs.bluetape4k.coroutines)
 implementation(libs.aws2.s3.lib)              // AWS SDK v2 S3
+implementation(libs.aws2.s3.transfer.manager) // AWS SDK v2 TransferManager
 implementation(libs.bluetape4k.testcontainers)
 implementation(libs.testcontainers.localstack) // Floci uses LocalStack-compatible API
+implementation(libs.kotlinx.coroutines.reactive) // upstream async response adapter
 ```
 
 ## Running Tests
@@ -120,11 +154,14 @@ implementation(libs.testcontainers.localstack) // Floci uses LocalStack-compatib
 ./gradlew :aws-storage-abstraction:test
 ```
 
-Tests run all three profiles in a single Gradle task:
+Tests run all five profiles/capabilities in a single Gradle task:
 
 - `LocalStorageServiceTest` — 8 tests, `local` profile, no Docker
 - `S3StorageServiceTest` — 9 tests, `s3` profile, Floci container (shared JVM singleton)
 - `S3PresignedStorageServiceTest` — 10 tests, `s3-presigned` profile, Floci + presigned URL assertions
+- `EncryptedS3StorageServiceAesTest` — AES-256 byte/file round trips, metadata, bounded read, key/version mismatch, and destination rollback
+- `EncryptedS3StorageServiceRsaTest` — 2048-bit RSA byte round trip, metadata, provider isolation, and wrong-key rejection
+- `S3EncryptedOutputStreamTest` — threshold ciphertext spill, one-time completion, write failure, cancellation, and temporary-file cleanup
 
 ## Notes
 

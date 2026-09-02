@@ -21,6 +21,7 @@ dependencies {
 
     // AWS SDK v2 의존성
     implementation(libs.aws2.s3.lib)
+    implementation(libs.aws2.s3.transfer.manager)
 
     // LocalStack용 Testcontainers 의존성이다. embedded test config가 런타임에도 필요로 한다.
     implementation(libs.bluetape4k.testcontainers)
@@ -43,6 +44,7 @@ dependencies {
 
     // 코루틴 의존성
     implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.reactive)
     testImplementation(libs.kotlinx.coroutines.test.lib)
 
     // Jackson 직렬화 의존성
