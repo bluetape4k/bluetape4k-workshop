@@ -1131,11 +1131,26 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
             )
         )
 
-    def test_bluetape_dependency_diff_is_not_maintenance(self):
+    def test_central_bluetape_platform_version_diff_is_maintenance(self):
         base_oid, head_oid = self._dependency_diff_history(
             "gradle/libs.versions.toml",
-            'bluetape4k-dependencies = "1.7.0"\n',
-            'bluetape4k-dependencies = "1.7.1"\n',
+            'bluetape4k-dependencies-version = "2.0.0"\n',
+            'bluetape4k-dependencies-version = "2.1.0-SNAPSHOT"\n',
+        )
+        self.assertTrue(
+            CHECKER.is_dependency_maintenance_change(
+                self.root,
+                base_oid,
+                head_oid,
+                ["gradle/libs.versions.toml"],
+            )
+        )
+
+    def test_individual_bluetape_dependency_diff_is_not_maintenance(self):
+        base_oid, head_oid = self._dependency_diff_history(
+            "gradle/libs.versions.toml",
+            'bluetape4k-graph = "1.0.0"\n',
+            'bluetape4k-graph = "1.1.0-SNAPSHOT"\n',
         )
         self.assertFalse(
             CHECKER.is_dependency_maintenance_change(
@@ -1158,6 +1173,36 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
                 base_oid,
                 head_oid,
                 ["sample/build.gradle.kts"],
+            )
+        )
+
+    def test_central_snapshot_repository_diff_is_maintenance(self):
+        base_oid, head_oid = self._dependency_diff_history(
+            "build.gradle.kts",
+            "repositories {\n    mavenCentral()\n}\n",
+            'repositories {\n    mavenCentral()\n    maven("https://central.sonatype.com/repository/maven-snapshots/")\n}\n',
+        )
+        self.assertTrue(
+            CHECKER.is_dependency_maintenance_change(
+                self.root,
+                base_oid,
+                head_oid,
+                ["build.gradle.kts"],
+            )
+        )
+
+    def test_untrusted_snapshot_repository_diff_is_not_maintenance(self):
+        base_oid, head_oid = self._dependency_diff_history(
+            "build.gradle.kts",
+            "repositories {\n    mavenCentral()\n}\n",
+            'repositories {\n    mavenCentral()\n    maven("https://example.com/snapshots/")\n}\n',
+        )
+        self.assertFalse(
+            CHECKER.is_dependency_maintenance_change(
+                self.root,
+                base_oid,
+                head_oid,
+                ["build.gradle.kts"],
             )
         )
 
@@ -1259,6 +1304,30 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
                     "src/main/kotlin/example/Feature.kt",
                 ]
             )
+        )
+
+    def test_dependency_and_ecosystem_policy_maintenance_can_be_combined(self):
+        with patch.object(
+            CHECKER,
+            "is_dependency_maintenance_change",
+            side_effect=lambda _root, _base, _head, paths: paths
+            == ["gradle/libs.versions.toml"],
+        ) as dependency_maintenance:
+            reason = CHECKER.is_train_scope_exempt_change(
+                self.root,
+                "a" * 40,
+                "b" * 40,
+                [
+                    "gradle/libs.versions.toml",
+                    ".github/scripts/check-ecosystem-reuse.py",
+                    ".github/scripts/test_check_ecosystem_reuse.py",
+                ],
+            )
+
+        self.assertEqual("dependency-and-ecosystem-policy-maintenance", reason)
+        self.assertEqual(
+            ["gradle/libs.versions.toml"],
+            dependency_maintenance.call_args_list[-1].args[3],
         )
 
     def test_pr_scope_uses_ecosystem_policy_maintenance_exemption(self):

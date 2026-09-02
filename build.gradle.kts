@@ -38,6 +38,7 @@ val rootLibs = libs
 
 allprojects {
     repositories {
+        maven("https://central.sonatype.com/repository/maven-snapshots/")
         mavenCentral()
         google()
     }

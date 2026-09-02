@@ -80,6 +80,9 @@ ECOSYSTEM_POLICY_MAINTENANCE_PATHS = {
 }
 ECOSYSTEM_POLICY_LESSON_NAME = "ecosystem-dependency-maintenance-scope.md"
 BLUETAPE_MARKER_RE = re.compile(r"(?i)bluetape4k")
+BLUETAPE_PLATFORM_VERSION_RE = re.compile(
+    r"^\s*bluetape4k-dependencies-version\s*="
+)
 TOML_DECLARATION_RE = re.compile(r"^\s*[A-Za-z0-9_.-]+\s*=")
 GRADLE_DEPENDENCY_DECLARATION_RE = re.compile(
     r"(?ix)"
@@ -87,6 +90,10 @@ GRADLE_DEPENDENCY_DECLARATION_RE = re.compile(
     r"testCompileOnly|testRuntimeOnly|kapt|ksp|annotationProcessor|detektPlugins|"
     r"classpath|platform|enforcedPlatform|mavenBom)\s*(?:\(|\{)"
     r"|\b(?:id|kotlin)\s*\([^)]*\)\s+version\b"
+)
+CENTRAL_SNAPSHOT_REPOSITORY_RE = re.compile(
+    r'^\s*maven\(\s*["\']https://central\.sonatype\.com/'
+    r'repository/maven-snapshots/?["\']\s*\)\s*$'
 )
 SOURCE_IMPORT_EXTENSIONS = {".java", ".kt", ".kts"}
 BLUETAPE_IMPORT_PREFIXES = ("io.bluetape4k.", "io.github.bluetape4k.")
@@ -1369,7 +1376,10 @@ def _is_dependency_declaration_line(path: str, line: str) -> bool:
     """Return whether a changed line is a dependency/catalog declaration."""
     if Path(clean_cell(path)).name == "libs.versions.toml":
         return bool(TOML_DECLARATION_RE.match(line))
-    return bool(GRADLE_DEPENDENCY_DECLARATION_RE.search(line))
+    return bool(
+        GRADLE_DEPENDENCY_DECLARATION_RE.search(line)
+        or CENTRAL_SNAPSHOT_REPOSITORY_RE.match(line)
+    )
 
 
 def is_dependency_maintenance_change(
@@ -1380,9 +1390,11 @@ def is_dependency_maintenance_change(
 ) -> bool:
     """Identify external-only Gradle/catalog edits that are outside train scope.
 
-    The PR train contract remains required for Bluetape-related or source/test
-    changes.  This exemption is deliberately fail-closed when the bounded git
-    diff cannot be resolved or contains a Bluetape marker.
+    The PR train contract remains required for individual Bluetape module or
+    source/test changes.  A declaration-only promotion of the central
+    ``bluetape4k-dependencies`` platform is maintenance because it changes no
+    workshop capability track.  This exemption remains fail-closed when the
+    bounded git diff cannot be resolved.
     """
     if not changed_paths or any(not _is_dependency_declaration_path(path) for path in changed_paths):
         return False
@@ -1391,19 +1403,31 @@ def is_dependency_maintenance_change(
         return False
     if any(not path or not _is_dependency_declaration_line(path, line) for path, line in changed_lines):
         return False
-    return not any(BLUETAPE_MARKER_RE.search(line) for _, line in changed_lines)
-
-
-def is_ecosystem_policy_maintenance_change(changed_paths: Sequence[str]) -> bool:
-    """Identify control-plane-only edits that do not belong to a feature train."""
-    if not changed_paths:
-        return False
     return all(
+        not BLUETAPE_MARKER_RE.search(line)
+        or (
+            Path(clean_cell(path)).name == "libs.versions.toml"
+            and BLUETAPE_PLATFORM_VERSION_RE.match(line)
+        )
+        for path, line in changed_lines
+    )
+
+
+def _is_ecosystem_policy_maintenance_path(path: str) -> bool:
+    """Return whether one path is a bounded ecosystem policy surface."""
+    return (
         clean_cell(path) in ECOSYSTEM_POLICY_MAINTENANCE_PATHS
         or (
             clean_cell(path).startswith("docs/lessons/")
             and Path(clean_cell(path)).name.endswith(ECOSYSTEM_POLICY_LESSON_NAME)
         )
+    )
+
+
+def is_ecosystem_policy_maintenance_change(changed_paths: Sequence[str]) -> bool:
+    """Identify control-plane-only edits that do not belong to a feature train."""
+    return bool(changed_paths) and all(
+        _is_ecosystem_policy_maintenance_path(path)
         for path in changed_paths
     )
 
@@ -1419,6 +1443,26 @@ def is_train_scope_exempt_change(
         return "dependency-maintenance"
     if is_ecosystem_policy_maintenance_change(changed_paths):
         return "ecosystem-policy-maintenance"
+    dependency_paths = [
+        path for path in changed_paths
+        if _is_dependency_declaration_path(path)
+    ]
+    policy_paths = [
+        path for path in changed_paths
+        if _is_ecosystem_policy_maintenance_path(path)
+    ]
+    if (
+        dependency_paths
+        and policy_paths
+        and len(dependency_paths) + len(policy_paths) == len(changed_paths)
+        and is_dependency_maintenance_change(
+            root,
+            base_ref,
+            head_ref,
+            dependency_paths,
+        )
+    ):
+        return "dependency-and-ecosystem-policy-maintenance"
     return None
 
 
