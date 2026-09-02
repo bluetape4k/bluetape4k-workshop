@@ -31,7 +31,7 @@ forward-slash key로 trim/검증됩니다. `getUrl`은 `local` profile에서는 
 | 기능 | 설명 |
 |---------|-------------|
 | 스토리지 추상화 | `upload`, `download`, `getUrl`, `delete`를 제공하는 단일 `StorageService` 인터페이스 |
-| 프로파일 전환 | `local` / `s3` / `s3-presigned` Spring profile이 구현체를 선택 |
+| 프로파일 전환 | `local` / `s3` / `s3-presigned` / `s3-encrypted-aes` / `s3-encrypted-rsa` Spring profile이 구현체를 선택 |
 | 로컬 백엔드 | `java.nio.file.Files` — 외부 의존성 없이 테스트를 즉시 시작 |
 | S3 백엔드 | AWS SDK v2 `S3Client`를 `withContext(Dispatchers.IO)`로 감싸고 bluetape4k S3 bucket helper를 사용 |
 | Pre-signed URL | `S3Presigner`가 제한 시간 GET URL을 생성(기본 15분, 900초) |
@@ -157,7 +157,7 @@ implementation(libs.kotlinx.coroutines.reactive) // upstream async response adap
 - `EncryptedS3StorageServiceRsaTest` — 2048-bit RSA byte 왕복, metadata, provider isolation, wrong-key 거부
 - `S3EncryptedOutputStreamTest` — threshold ciphertext spill, 1회 completion, write failure, cancellation, 임시 파일 정리
 
-총 43개 테스트입니다.
+총 44개 테스트입니다.
 
 ## 참고 사항
 

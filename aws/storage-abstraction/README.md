@@ -4,7 +4,7 @@
 
 ## Storage Boundary
 
-This example puts a small coroutine `StorageService` boundary in front of three
+This example puts a small coroutine `StorageService` boundary in front of four
 runtime choices: local files, S3 object storage, S3 pre-signed GET URLs, and
 client-side encrypted S3 transfer profiles.
 Application code keeps the same interface while Spring profiles choose the
@@ -34,7 +34,7 @@ and a time-limited pre-signed GET URL for `s3-presigned`.
 | Feature | Description |
 |---------|-------------|
 | Storage abstraction | Single `StorageService` interface with `upload`, `download`, `getUrl`, `delete` |
-| Profile switching | `local` / `s3` / `s3-presigned` Spring profiles select the implementation |
+| Profile switching | `local` / `s3` / `s3-presigned` / `s3-encrypted-aes` / `s3-encrypted-rsa` Spring profiles select the implementation |
 | Local backend | `java.nio.file.Files` — zero external dependencies, instant test startup |
 | S3 backend | AWS SDK v2 `S3Client` wrapped in `withContext(Dispatchers.IO)` plus bluetape4k S3 bucket helpers |
 | Pre-signed URLs | `S3Presigner` generates time-limited GET URLs (default 15 min, 900 s) |
@@ -163,7 +163,7 @@ Tests run all five profiles/capabilities in a single Gradle task:
 - `EncryptedS3StorageServiceRsaTest` — 2048-bit RSA byte round trip, metadata, provider isolation, and wrong-key rejection
 - `S3EncryptedOutputStreamTest` — threshold ciphertext spill, one-time completion, write failure, cancellation, and temporary-file cleanup
 
-Total: 43 tests.
+Total: 44 tests.
 
 ## Notes
 

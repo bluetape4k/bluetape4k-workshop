@@ -169,6 +169,29 @@ class EncryptedS3StorageServiceAesTest @Autowired constructor(
     }
 
     @Test
+    fun `AES invalid envelope metadata is rejected before decrypt`() = runSuspendIO {
+        val key = "encrypted/${Base58.randomString(8)}.bin"
+        val payload = ByteArray(128) { (it % 223).toByte() }
+        try {
+            storageService.upload(key, payload, "application/octet-stream")
+            val stored = s3Client.getObjectAsBytes { it.bucket(BUCKET).key(key) }
+            val metadata = stored.response().metadata().toMutableMap().apply {
+                this["bt4k-cek-nonce"] = "AQ"
+            }
+            s3Client.putObject(
+                { request -> request.bucket(BUCKET).key(key).metadata(metadata) },
+                software.amazon.awssdk.core.sync.RequestBody.fromBytes(stored.asByteArray()),
+            )
+
+            assertFailsWith<IllegalArgumentException> {
+                storageService.download(key)
+            }
+        } finally {
+            storageService.delete(key)
+        }
+    }
+
+    @Test
     fun `AES wrong key cannot decrypt existing object`() = runSuspendIO {
         val key = "encrypted/${Base58.randomString(8)}.bin"
         val payload = ByteArray(128) { (it % 233).toByte() }

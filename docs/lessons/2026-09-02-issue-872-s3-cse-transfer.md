@@ -34,8 +34,8 @@ AWS SDK v2 TransferManager 경계를 기존 storage consumer가 실제로 사용
 
 | 검증 | 결과 |
 | --- | --- |
-| 신규 AES/RSA/stream targeted tests | 16개 PASS: byte/file 왕복, provider metadata/isolation, bounded read, algorithm/key/version mismatch, destination rollback, threshold ciphertext, completion/cancellation/failure cleanup |
-| `./gradlew :aws-storage-abstraction:test --no-build-cache --no-daemon --max-workers=1 --console=plain` | 총 43개 PASS: 기존 27개 회귀 + 신규 16개 |
+| 신규 AES/RSA/stream targeted tests | 17개 PASS: byte/file 왕복, provider metadata/isolation, bounded read, algorithm/key/version/truncated-metadata mismatch, destination rollback, threshold ciphertext, completion/cancellation/failure cleanup |
+| `./gradlew :aws-storage-abstraction:test --no-build-cache --no-daemon --max-workers=1 --console=plain` | 총 44개 PASS: 기존 27개 회귀 + 신규 17개 |
 | `./gradlew :aws-storage-abstraction:build --no-build-cache --no-daemon --max-workers=1 --console=plain` | `BUILD SUCCESSFUL` |
 | `./gradlew detekt --no-daemon --max-workers=1 --console=plain` | `BUILD SUCCESSFUL` |
 | `MAX_WORKERS=1 bash scripts/smoke-validate.sh aws` | AWS group `BUILD SUCCESSFUL`; S3 storage 43개, S3 resource 5개, Kinesis 53개, SQS/SNS 11개, S3 Vectors 9개, settings 25개 등 통과 |
