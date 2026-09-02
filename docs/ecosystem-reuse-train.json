@@ -578,11 +578,43 @@
         "scripts/smoke-validate.sh"
       ],
       "review_artifact": "docs/review/issue-872-s3-cse-transfer-implementation-review.md"
+    },
+    {
+      "scope_id": "issue-915-dependencies-2.0.0",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "chore/issue-915-dependencies-2.0.0",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [915],
+      "allowed_paths": [
+        "AGENTS.md",
+        "README.md",
+        "README.ko.md",
+        "aws/eventbridge-scheduler/**",
+        "aws/settings-boundary/**",
+        "build.gradle.kts",
+        "commerce/reservation-control-plane/**",
+        "docs/ecosystem-reuse-train.json",
+        "docs/review/issue-915-dependencies-2.0.0-review.md",
+        "gradle/libs.versions.toml",
+        "graph/io-pipeline/**",
+        "image-processing/barcode-api/**",
+        "leader/backend-comparison-lab/**",
+        "leader/job-safety-lab/**",
+        "optimization/README.md",
+        "optimization/README.ko.md",
+        "optimization/planning-contracts/**"
+      ],
+      "review_artifact": "docs/review/issue-915-dependencies-2.0.0-review.md"
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260902T-issue-872-aws-s3-cse-transfer-scope",
-    "checksum": "4db1090d6e8e7385c03514cf94df89a11054a0c5ead2dca9b82400f3fe74c193"
+    "receipt_id": "20260902T-issue-915-dependencies-2.0.0-scope",
+    "checksum": "43e2900a05105156fac3206d10c2785ac2c8880bf934ff289dbb15addf20fc71"
   },
   "planned_scope_replan_receipts": {
   },
