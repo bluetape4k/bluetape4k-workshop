@@ -1276,6 +1276,30 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
             )
         )
 
+    def test_dependency_and_ecosystem_policy_maintenance_can_be_combined(self):
+        with patch.object(
+            CHECKER,
+            "is_dependency_maintenance_change",
+            side_effect=lambda _root, _base, _head, paths: paths
+            == ["gradle/libs.versions.toml"],
+        ) as dependency_maintenance:
+            reason = CHECKER.is_train_scope_exempt_change(
+                self.root,
+                "a" * 40,
+                "b" * 40,
+                [
+                    "gradle/libs.versions.toml",
+                    ".github/scripts/check-ecosystem-reuse.py",
+                    ".github/scripts/test_check_ecosystem_reuse.py",
+                ],
+            )
+
+        self.assertEqual("dependency-and-ecosystem-policy-maintenance", reason)
+        self.assertEqual(
+            ["gradle/libs.versions.toml"],
+            dependency_maintenance.call_args_list[-1].args[3],
+        )
+
     def test_pr_scope_uses_ecosystem_policy_maintenance_exemption(self):
         (self.root / "manifest.json").write_text("{}", encoding="utf-8")
         self.inventory([self.row()])

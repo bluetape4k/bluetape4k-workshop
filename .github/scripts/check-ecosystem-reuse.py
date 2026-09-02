@@ -1406,16 +1406,21 @@ def is_dependency_maintenance_change(
     )
 
 
-def is_ecosystem_policy_maintenance_change(changed_paths: Sequence[str]) -> bool:
-    """Identify control-plane-only edits that do not belong to a feature train."""
-    if not changed_paths:
-        return False
-    return all(
+def _is_ecosystem_policy_maintenance_path(path: str) -> bool:
+    """Return whether one path is a bounded ecosystem policy surface."""
+    return (
         clean_cell(path) in ECOSYSTEM_POLICY_MAINTENANCE_PATHS
         or (
             clean_cell(path).startswith("docs/lessons/")
             and Path(clean_cell(path)).name.endswith(ECOSYSTEM_POLICY_LESSON_NAME)
         )
+    )
+
+
+def is_ecosystem_policy_maintenance_change(changed_paths: Sequence[str]) -> bool:
+    """Identify control-plane-only edits that do not belong to a feature train."""
+    return bool(changed_paths) and all(
+        _is_ecosystem_policy_maintenance_path(path)
         for path in changed_paths
     )
 
@@ -1431,6 +1436,26 @@ def is_train_scope_exempt_change(
         return "dependency-maintenance"
     if is_ecosystem_policy_maintenance_change(changed_paths):
         return "ecosystem-policy-maintenance"
+    dependency_paths = [
+        path for path in changed_paths
+        if _is_dependency_declaration_path(path)
+    ]
+    policy_paths = [
+        path for path in changed_paths
+        if _is_ecosystem_policy_maintenance_path(path)
+    ]
+    if (
+        dependency_paths
+        and policy_paths
+        and len(dependency_paths) + len(policy_paths) == len(changed_paths)
+        and is_dependency_maintenance_change(
+            root,
+            base_ref,
+            head_ref,
+            dependency_paths,
+        )
+    ):
+        return "dependency-and-ecosystem-policy-maintenance"
     return None
 
 
