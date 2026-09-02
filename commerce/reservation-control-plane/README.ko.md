@@ -41,7 +41,7 @@
 | Test database | `bluetape4k-testcontainers`의 `PostgreSQLServer` |
 | Advisory coordination | Lettuce 기반 Redis, `bluetape4k-leader` |
 | Observability | `bluetape4k-logging`, Actuator health, Prometheus registry |
-| Dependency authority | `bluetape4k-dependencies:1.4.0`만 사용 |
+| Dependency authority | `bluetape4k-dependencies:2.0.0`만 사용 |
 
 이 모듈은 root dependency platform을 통해 `bluetape4k-exposed-jdbc`, `bluetape4k-exposed-jdbc-tests`, `bluetape4k-virtualthread-api`, `bluetape4k-virtualthread-jdk25`를 사용합니다. 개별 Bluetape BOM을 import하거나 Bluetape 모듈 버전을 직접 고정하지 않습니다.
 

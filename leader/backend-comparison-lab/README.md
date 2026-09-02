@@ -24,7 +24,7 @@ leader execution, follower skip, action failure, and backend-loss handoff. The
 default tests do not start Redis, ZooKeeper, Kubernetes, LocalStack, or any
 other infrastructure.
 
-The lab also adapts the `bluetape4k-leader` 2.0.0-SNAPSHOT diagnostics SPI. A
+The lab also adapts the `bluetape4k-leader` 1.0.0 diagnostics SPI. A
 `ProfiledLeaderElector` supplies the selected profile to the Spring Boot
 Actuator endpoint and wraps it with `leader-micrometer` instrumentation. The
 adapter delegates leader operations to a local elector, so the example can
@@ -158,5 +158,5 @@ testImplementation(libs.bluetape4k.junit5)
 ```
 
 `reactive-streams` and `reactor-core` are versionless BOM-managed runtime
-bridges for the current 2.0.0-SNAPSHOT conditional auto-configuration classpath;
+bridges for the current 1.0.0 conditional auto-configuration classpath;
 they do not enable a WebFlux server in this MVC lab.

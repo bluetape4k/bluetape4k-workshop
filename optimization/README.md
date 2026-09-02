@@ -22,6 +22,6 @@ Run the group validation with:
 ./scripts/smoke-validate.sh optimization
 ```
 
-`bluetape4k-dependencies:1.4.0` remains the sole version authority for all
+`bluetape4k-dependencies:2.0.0` remains the sole version authority for all
 published Bluetape modules. Optimization examples do not import an individual
 library BOM or pin a Bluetape module version.

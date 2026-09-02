@@ -147,7 +147,7 @@ TinkerGraphOperations().use { targetOps ->
 
 ### Checkpointed import and resume
 
-`bluetape4k-graph` 2.0.0-SNAPSHOT adds an opt-in checkpoint lifecycle to the
+`bluetape4k-graph` 1.0.0 adds an opt-in checkpoint lifecycle to the
 CSV, Jackson 3 NDJSON, and GraphML importers. `GraphIoPipeline` forwards
 `GraphImportOptions`, so an interrupted import can be resumed without creating
 the already committed vertices again:

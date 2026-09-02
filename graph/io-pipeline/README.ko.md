@@ -142,7 +142,7 @@ TinkerGraphOperations().use { targetOps ->
 
 ### Checkpoint를 사용한 import와 재개
 
-`bluetape4k-graph` 2.0.0-SNAPSHOT은 CSV, Jackson 3 NDJSON, GraphML importer에
+`bluetape4k-graph` 1.0.0은 CSV, Jackson 3 NDJSON, GraphML importer에
 opt-in checkpoint lifecycle을 추가했습니다. `GraphIoPipeline`은
 `GraphImportOptions`를 그대로 전달하므로, 중단된 import를 이미 commit한
 vertex를 다시 만들지 않고 재개할 수 있습니다.

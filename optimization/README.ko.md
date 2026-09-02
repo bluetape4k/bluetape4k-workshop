@@ -22,6 +22,6 @@ provider HTTP 호출과 JDBC 작업은 Bluetape JDK 25 virtual-thread runtime에
 ./scripts/smoke-validate.sh optimization
 ```
 
-공개된 모든 Bluetape 모듈의 버전은 `bluetape4k-dependencies:1.4.0`만 관리합니다.
+공개된 모든 Bluetape 모듈의 버전은 `bluetape4k-dependencies:2.0.0`만 관리합니다.
 Optimization 예제는 개별 library BOM을 import하거나 Bluetape 모듈 버전을
 직접 고정하지 않습니다.

@@ -50,7 +50,7 @@ is rethrown before broad exception handling so coroutine cancellation remains co
 
 ## Notes
 
-`bluetape4k-dependencies` 1.4.0 resolves `bluetape4k-aws` 0.5.0. Its Spring Boot artifact exposes
+`bluetape4k-dependencies` 2.0.0 resolves `bluetape4k-aws` 1.0.0. Its Spring Boot artifact exposes
 EventBridge operations when the AWS SDK module is present, while Scheduler remains a direct AWS SDK
 concern. This workshop keeps the AWS SDK v2 EventBridge/Scheduler models plus local boundary
 interfaces to make the scheduler contract explicit.

@@ -9,7 +9,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 /**
  * job-safety가 소유하는 lease-extension observation 수명입니다.
  *
- * 현재 `2.0.0-SNAPSHOT` consumer artifact가 공개한 global observer만 사용합니다.
+ * `bluetape4k-dependencies` `2.0.0`이 관리하는 `bluetape4k-leader` `1.0.0`
+ * consumer artifact가 공개한 global observer만 사용합니다.
  * disabled/NOOP에서는 observer registration이 없습니다.
  */
 class JobSafetyLeaseExtensionObservation(

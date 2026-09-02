@@ -101,8 +101,8 @@ lifecycle은 delay당 최대 5분의 full-jitter backoff로 재시도하며 횟�
 제어해야 합니다.
 
 bluetape4k module version은 이 모듈에서 직접 지정하지 않습니다. root
-`bluetape4k-dependencies` BOM이 `2.0.0-SNAPSHOT` authority이며, 현재 공개된
-AWS BOM에서 AWS Spring Boot 좌표가 `1.0.0-SNAPSHOT`으로 해석될 수 있습니다.
+`bluetape4k-dependencies` BOM이 안정 `2.0.0` authority이며, 공개된 AWS BOM은
+AWS Spring Boot 좌표를 `1.0.0`으로 해석합니다.
 AWS SDK `appconfigdata`는 AWS SDK BOM에서 versionless alias로 해석합니다.
 
 ## Startup과 refresh

@@ -52,7 +52,7 @@ AWS 자격 증명이 필요하지 않습니다.
 
 ## 참고
 
-`bluetape4k-dependencies` 1.4.0은 `bluetape4k-aws` 0.5.0을 해석합니다. AWS SDK 모듈이
+`bluetape4k-dependencies` 2.0.0은 `bluetape4k-aws` 1.0.0을 해석합니다. AWS SDK 모듈이
 classpath에 있으면 Spring Boot artifact에서 EventBridge operation을 사용할 수 있지만,
 Scheduler는 여전히 AWS SDK를 직접 사용하는 영역입니다. 이 워크숍은 scheduler 계약을
 명확히 보여주기 위해 AWS SDK v2 EventBridge/Scheduler 모델과 로컬 boundary interface를

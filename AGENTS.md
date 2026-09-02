@@ -20,7 +20,7 @@ Backend examples using bluetape4k libraries.
 - Kotlin 2.4.0
 - Java 25
 - Spring Boot 4.0.6
-- bluetape4k 1.7.0
+- bluetape4k 2.0.0
 
 ## Commands
 

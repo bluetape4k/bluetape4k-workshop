@@ -282,7 +282,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Kotlin | 2.3.21 |
 | JVM | 21 |
 | Spring Boot | 4.0.6 |
-| bluetape4k | 1.7.0 |
+| bluetape4k | 2.0.0 |
 | Gradle | 8.x (Kotlin DSL, multi-module) |
 
 ---
