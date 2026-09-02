@@ -91,6 +91,10 @@ GRADLE_DEPENDENCY_DECLARATION_RE = re.compile(
     r"classpath|platform|enforcedPlatform|mavenBom)\s*(?:\(|\{)"
     r"|\b(?:id|kotlin)\s*\([^)]*\)\s+version\b"
 )
+CENTRAL_SNAPSHOT_REPOSITORY_RE = re.compile(
+    r'^\s*maven\(\s*["\']https://central\.sonatype\.com/'
+    r'repository/maven-snapshots/?["\']\s*\)\s*$'
+)
 SOURCE_IMPORT_EXTENSIONS = {".java", ".kt", ".kts"}
 BLUETAPE_IMPORT_PREFIXES = ("io.bluetape4k.", "io.github.bluetape4k.")
 IMPORT_DECLARATION_RE = re.compile(
@@ -1372,7 +1376,10 @@ def _is_dependency_declaration_line(path: str, line: str) -> bool:
     """Return whether a changed line is a dependency/catalog declaration."""
     if Path(clean_cell(path)).name == "libs.versions.toml":
         return bool(TOML_DECLARATION_RE.match(line))
-    return bool(GRADLE_DEPENDENCY_DECLARATION_RE.search(line))
+    return bool(
+        GRADLE_DEPENDENCY_DECLARATION_RE.search(line)
+        or CENTRAL_SNAPSHOT_REPOSITORY_RE.match(line)
+    )
 
 
 def is_dependency_maintenance_change(

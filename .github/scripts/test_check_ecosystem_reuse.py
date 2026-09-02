@@ -1176,6 +1176,36 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
             )
         )
 
+    def test_central_snapshot_repository_diff_is_maintenance(self):
+        base_oid, head_oid = self._dependency_diff_history(
+            "build.gradle.kts",
+            "repositories {\n    mavenCentral()\n}\n",
+            'repositories {\n    mavenCentral()\n    maven("https://central.sonatype.com/repository/maven-snapshots/")\n}\n',
+        )
+        self.assertTrue(
+            CHECKER.is_dependency_maintenance_change(
+                self.root,
+                base_oid,
+                head_oid,
+                ["build.gradle.kts"],
+            )
+        )
+
+    def test_untrusted_snapshot_repository_diff_is_not_maintenance(self):
+        base_oid, head_oid = self._dependency_diff_history(
+            "build.gradle.kts",
+            "repositories {\n    mavenCentral()\n}\n",
+            'repositories {\n    mavenCentral()\n    maven("https://example.com/snapshots/")\n}\n',
+        )
+        self.assertFalse(
+            CHECKER.is_dependency_maintenance_change(
+                self.root,
+                base_oid,
+                head_oid,
+                ["build.gradle.kts"],
+            )
+        )
+
     def test_build_logic_change_is_not_maintenance(self):
         base_oid, head_oid = self._dependency_diff_history(
             "sample/build.gradle.kts",
