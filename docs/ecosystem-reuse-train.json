@@ -610,11 +610,30 @@
         "optimization/planning-contracts/**"
       ],
       "review_artifact": "docs/review/issue-915-dependencies-2.0.0-review.md"
+    },
+    {
+      "scope_id": "issue-860-graph-io-micrometer",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-860-graph-io-micrometer",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [860],
+      "allowed_paths": [
+        "docs/ecosystem-reuse-train.json",
+        "docs/review/issue-860-graph-io-micrometer-review.md",
+        "gradle/libs.versions.toml",
+        "graph/io-pipeline/**"
+      ],
+      "review_artifact": "docs/review/issue-860-graph-io-micrometer-review.md"
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260902T-issue-915-dependencies-2.0.0-scope",
-    "checksum": "43e2900a05105156fac3206d10c2785ac2c8880bf934ff289dbb15addf20fc71"
+    "receipt_id": "20260902T-issue-860-graph-io-micrometer-scope",
+    "checksum": "3a2af1dd2677a48d09bb86c72caded61dff25d63d89d34542a38dc052cca2f4b"
   },
   "planned_scope_replan_receipts": {
   },

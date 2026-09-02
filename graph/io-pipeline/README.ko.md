@@ -10,7 +10,7 @@ import/export adapter를 학습하는 예제입니다. smoke 경로는 의도적
 Jackson 3 NDJSON과 GraphML로 export하고, 각 파일을 새 TinkerGraph에 다시 import하여
 report를 확인합니다.
 
-> **관련 이슈:** [bluetape4k-workshop #287](https://github.com/bluetape4k/bluetape4k-workshop/issues/287)
+> **관련 이슈:** [bluetape4k-workshop #287](https://github.com/bluetape4k/bluetape4k-workshop/issues/287), [#860](https://github.com/bluetape4k/bluetape4k-workshop/issues/860)
 
 ![Graph IO Pipeline Architecture](../../docs/images/readme-diagrams/graph-io-pipeline-readme-architecture-01.png)
 
@@ -57,6 +57,39 @@ directory export target은 대상 graph를 변경하지 않고 즉시 실패합�
 이 모듈이 export한 NDJSON과 GraphML에는 의도적으로 보존한 `_graphIoExternalId`를
 포함한 graph property가 들어갑니다. backend가 생성한 graph id는 round trip마다
 안정적이지 않으므로, test는 label, `code` 값, count, edge topology를 비교합니다.
+
+## 진행 지표
+
+선택 기능인 `bluetape4k-graph-io-micrometer` bridge는 동일한 graph-io lifecycle
+이벤트를 cardinality가 낮은 Micrometer meter로 변환합니다. 애플리케이션 callback과
+metric이 같은 import 또는 export 실행을 관찰해야 하면 composite listener를
+`GraphIoPipeline`에 전달합니다.
+
+```kotlin
+import io.bluetape4k.graph.io.micrometer.GraphIoMicrometerProgressListener
+import io.bluetape4k.graph.io.report.GraphIoCompositeProgressListener
+import io.bluetape4k.graph.io.report.GraphIoProgressListener
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
+
+val registry = SimpleMeterRegistry()
+val userListener = GraphIoProgressListener { event ->
+    check(event.runId > 0L)
+}
+val listener = GraphIoCompositeProgressListener.of(
+    userListener,
+    GraphIoMicrometerProgressListener(registry),
+)
+val pipeline = GraphIoPipeline(operations, progressListener = listener)
+val report = pipeline.importCsv(vertices, edges)
+check(report.status == GraphIoStatus.COMPLETED)
+```
+
+bridge는 `graph.io.runs`, `graph.io.records`, `graph.io.bytes`,
+`graph.io.duration`, `graph.io.phase.duration`, `graph.io.active`를 기록합니다.
+tag는 `operation`, `format`, `status`, `kind`, `phase`의 소문자 enum 값만
+사용합니다. dataset 경로, record ID, run ID, exception message를 metric tag에
+추가하면 안 됩니다. terminal event가 발생하면 `graph.io.active`는 0으로
+돌아가며, 실패한 실행도 `status=failed` counter와 timer로 확인할 수 있습니다.
 
 ## 사용 예
 
@@ -223,6 +256,7 @@ dependencies {
     implementation(libs.bluetape4k.graph.io.csv)
     implementation(libs.bluetape4k.graph.io.graphml)
     implementation(libs.bluetape4k.graph.io.jackson3)
+    implementation(libs.bluetape4k.graph.io.micrometer)
 }
 ```
 

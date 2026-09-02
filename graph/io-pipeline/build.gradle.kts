@@ -16,6 +16,7 @@ dependencies {
     implementation(libs.bluetape4k.graph.io.csv)
     implementation(libs.bluetape4k.graph.io.graphml)
     implementation(libs.bluetape4k.graph.io.jackson3)
+    implementation(libs.bluetape4k.graph.io.micrometer)
 
     // Bluetape4k 공통 기능
     implementation(libs.bluetape4k.logging)

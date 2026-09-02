@@ -175,6 +175,7 @@ bluetape4k-graph-io-core   = { module = "io.github.bluetape4k.graph:bluetape4k-g
 bluetape4k-graph-io-csv    = { module = "io.github.bluetape4k.graph:bluetape4k-graph-io-csv" }
 bluetape4k-graph-io-graphml = { module = "io.github.bluetape4k.graph:bluetape4k-graph-io-graphml" }
 bluetape4k-graph-io-jackson3 = { module = "io.github.bluetape4k.graph:bluetape4k-graph-io-jackson3" }
+bluetape4k-graph-io-micrometer = { module = "io.github.bluetape4k.graph:bluetape4k-graph-io-micrometer" }
 
 # bluetape4k
 bluetape4k-dependencies = { module = "io.github.bluetape4k:bluetape4k-dependencies", version.ref = "bluetape4k-dependencies-version" }

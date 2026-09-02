@@ -10,7 +10,7 @@ free: the smoke path reads local CSV fixtures, writes a TinkerGraph through
 `GraphOperations`, exports Jackson 3 NDJSON and GraphML, then imports each file
 into a fresh TinkerGraph and checks the resulting reports.
 
-> **Related issue:** [bluetape4k-workshop #287](https://github.com/bluetape4k/bluetape4k-workshop/issues/287)
+> **Related issues:** [bluetape4k-workshop #287](https://github.com/bluetape4k/bluetape4k-workshop/issues/287), [#860](https://github.com/bluetape4k/bluetape4k-workshop/issues/860)
 
 ![Graph IO Pipeline Architecture](../../docs/images/readme-diagrams/graph-io-pipeline-readme-architecture-01.png)
 
@@ -62,6 +62,39 @@ The NDJSON and GraphML files exported by this module include graph properties,
 including the intentional `_graphIoExternalId` property. Backend-generated graph
 ids are not stable across round trips, so tests compare labels, `code` values,
 counts, and edge topology instead.
+
+## Progress Metrics
+
+The optional `bluetape4k-graph-io-micrometer` bridge turns the same graph-io
+lifecycle events into low-cardinality Micrometer meters. Pass a composite
+listener to `GraphIoPipeline` when application callbacks and metrics should see
+the same import or export run:
+
+```kotlin
+import io.bluetape4k.graph.io.micrometer.GraphIoMicrometerProgressListener
+import io.bluetape4k.graph.io.report.GraphIoCompositeProgressListener
+import io.bluetape4k.graph.io.report.GraphIoProgressListener
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
+
+val registry = SimpleMeterRegistry()
+val userListener = GraphIoProgressListener { event ->
+    check(event.runId > 0L)
+}
+val listener = GraphIoCompositeProgressListener.of(
+    userListener,
+    GraphIoMicrometerProgressListener(registry),
+)
+val pipeline = GraphIoPipeline(operations, progressListener = listener)
+val report = pipeline.importCsv(vertices, edges)
+check(report.status == GraphIoStatus.COMPLETED)
+```
+
+The bridge records `graph.io.runs`, `graph.io.records`, `graph.io.bytes`,
+`graph.io.duration`, `graph.io.phase.duration`, and `graph.io.active`. Tags are
+limited to lowercased enum values for `operation`, `format`, `status`, `kind`,
+and `phase`; never add dataset paths, record IDs, run IDs, or exception messages
+to metric tags. `graph.io.active` returns to zero after a terminal event, while
+failed runs remain visible through the `status=failed` counter and timer.
 
 ## Usage
 
@@ -229,6 +262,7 @@ dependencies {
     implementation(libs.bluetape4k.graph.io.csv)
     implementation(libs.bluetape4k.graph.io.graphml)
     implementation(libs.bluetape4k.graph.io.jackson3)
+    implementation(libs.bluetape4k.graph.io.micrometer)
 }
 ```
 
