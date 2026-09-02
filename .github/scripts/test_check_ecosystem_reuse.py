@@ -1131,11 +1131,26 @@ class EcosystemReuseCheckerTest(unittest.TestCase):
             )
         )
 
-    def test_bluetape_dependency_diff_is_not_maintenance(self):
+    def test_central_bluetape_platform_version_diff_is_maintenance(self):
         base_oid, head_oid = self._dependency_diff_history(
             "gradle/libs.versions.toml",
-            'bluetape4k-dependencies = "1.7.0"\n',
-            'bluetape4k-dependencies = "1.7.1"\n',
+            'bluetape4k-dependencies-version = "2.0.0"\n',
+            'bluetape4k-dependencies-version = "2.1.0-SNAPSHOT"\n',
+        )
+        self.assertTrue(
+            CHECKER.is_dependency_maintenance_change(
+                self.root,
+                base_oid,
+                head_oid,
+                ["gradle/libs.versions.toml"],
+            )
+        )
+
+    def test_individual_bluetape_dependency_diff_is_not_maintenance(self):
+        base_oid, head_oid = self._dependency_diff_history(
+            "gradle/libs.versions.toml",
+            'bluetape4k-graph = "1.0.0"\n',
+            'bluetape4k-graph = "1.1.0-SNAPSHOT"\n',
         )
         self.assertFalse(
             CHECKER.is_dependency_maintenance_change(

@@ -80,6 +80,9 @@ ECOSYSTEM_POLICY_MAINTENANCE_PATHS = {
 }
 ECOSYSTEM_POLICY_LESSON_NAME = "ecosystem-dependency-maintenance-scope.md"
 BLUETAPE_MARKER_RE = re.compile(r"(?i)bluetape4k")
+BLUETAPE_PLATFORM_VERSION_RE = re.compile(
+    r"^\s*bluetape4k-dependencies-version\s*="
+)
 TOML_DECLARATION_RE = re.compile(r"^\s*[A-Za-z0-9_.-]+\s*=")
 GRADLE_DEPENDENCY_DECLARATION_RE = re.compile(
     r"(?ix)"
@@ -1380,9 +1383,11 @@ def is_dependency_maintenance_change(
 ) -> bool:
     """Identify external-only Gradle/catalog edits that are outside train scope.
 
-    The PR train contract remains required for Bluetape-related or source/test
-    changes.  This exemption is deliberately fail-closed when the bounded git
-    diff cannot be resolved or contains a Bluetape marker.
+    The PR train contract remains required for individual Bluetape module or
+    source/test changes.  A declaration-only promotion of the central
+    ``bluetape4k-dependencies`` platform is maintenance because it changes no
+    workshop capability track.  This exemption remains fail-closed when the
+    bounded git diff cannot be resolved.
     """
     if not changed_paths or any(not _is_dependency_declaration_path(path) for path in changed_paths):
         return False
@@ -1391,7 +1396,14 @@ def is_dependency_maintenance_change(
         return False
     if any(not path or not _is_dependency_declaration_line(path, line) for path, line in changed_lines):
         return False
-    return not any(BLUETAPE_MARKER_RE.search(line) for _, line in changed_lines)
+    return all(
+        not BLUETAPE_MARKER_RE.search(line)
+        or (
+            Path(clean_cell(path)).name == "libs.versions.toml"
+            and BLUETAPE_PLATFORM_VERSION_RE.match(line)
+        )
+        for path, line in changed_lines
+    )
 
 
 def is_ecosystem_policy_maintenance_change(changed_paths: Sequence[str]) -> bool:
