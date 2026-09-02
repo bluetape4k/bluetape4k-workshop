@@ -14,6 +14,7 @@ import io.bluetape4k.graph.io.options.GraphImportOptions
 import io.bluetape4k.graph.io.options.MissingEndpointPolicy
 import io.bluetape4k.graph.io.report.GraphExportReport
 import io.bluetape4k.graph.io.report.GraphImportReport
+import io.bluetape4k.graph.io.report.GraphIoProgressListener
 import io.bluetape4k.graph.io.report.GraphIoStatus
 import io.bluetape4k.graph.io.source.GraphExportSink
 import io.bluetape4k.graph.io.source.GraphImportSource
@@ -43,6 +44,8 @@ import kotlin.io.path.isRegularFile
  * [exportChunkSize]는 Graph 0.6.0 chunk-aware exporter가 repository에서 한 번에
  * 읽을 최대 레코드 수입니다. 작은 값으로 설정하면 bounded export 동작을 로컬에서
  * 확인할 수 있고, 기본값은 library의 [DEFAULT_GRAPH_EXPORT_CHUNK_SIZE]입니다.
+ * [progressListener]를 지정하면 각 import/export의 lifecycle과 phase 이벤트를
+ * 사용자 listener와 선택적 Micrometer bridge에 함께 전달할 수 있습니다.
  *
  * 예:
  *
@@ -55,6 +58,7 @@ import kotlin.io.path.isRegularFile
 class GraphIoPipeline(
     private val operations: GraphOperations,
     private val exportChunkSize: Int = DEFAULT_GRAPH_EXPORT_CHUNK_SIZE,
+    private val progressListener: GraphIoProgressListener? = null,
 ) {
 
     init {
@@ -96,8 +100,16 @@ class GraphIoPipeline(
             edges = GraphImportSource.PathSource(readableEdges),
         )
 
+        val importer = CsvGraphBulkImporter()
         if (options.checkpointStore != null) {
-            return CsvGraphBulkImporter().importGraph(
+            return progressListener?.let { listener ->
+                importer.importGraph(
+                    source = source,
+                    operations = operations,
+                    options = options,
+                    listener = listener,
+                )
+            } ?: importer.importGraph(
                 source = source,
                 operations = operations,
                 options = options,
@@ -105,7 +117,14 @@ class GraphIoPipeline(
         }
 
         TinkerGraphOperations().use { scratch ->
-            val report = CsvGraphBulkImporter().importGraph(
+            val report = progressListener?.let { listener ->
+                importer.importGraph(
+                    source = source,
+                    operations = scratch,
+                    options = options,
+                    listener = listener,
+                )
+            } ?: importer.importGraph(
                 source = source,
                 operations = scratch,
                 options = options,
@@ -126,12 +145,13 @@ class GraphIoPipeline(
      * @return export report입니다. 호출자는 생성된 NDJSON 파일을 사용하기 전에
      * `GraphIoStatus.COMPLETED`와 빈 `failures`를 확인해야 합니다.
      */
-    fun exportJackson3NdJson(target: Path): GraphExportReport =
-        Jackson3NdJsonBulkExporter().exportGraph(
-            sink = GraphExportSink.PathSink(requireWritableTarget(target, "target")),
-            operations = operations,
-            options = exportOptions,
-        )
+    fun exportJackson3NdJson(target: Path): GraphExportReport {
+        val exporter = Jackson3NdJsonBulkExporter()
+        val sink = GraphExportSink.PathSink(requireWritableTarget(target, "target"))
+        return progressListener?.let { listener ->
+            exporter.exportGraph(sink = sink, operations = operations, options = exportOptions, listener = listener)
+        } ?: exporter.exportGraph(sink = sink, operations = operations, options = exportOptions)
+    }
 
     /**
      * Jackson 3 NDJSON export를 다시 그래프로 가져옵니다.
@@ -147,12 +167,13 @@ class GraphIoPipeline(
     fun importJackson3NdJson(
         source: Path,
         options: GraphImportOptions = importOptions,
-    ): GraphImportReport =
-        Jackson3NdJsonBulkImporter().importGraph(
-            source = GraphImportSource.PathSource(requireReadableFile(source, "source")),
-            operations = operations,
-            options = options,
-        )
+    ): GraphImportReport {
+        val importer = Jackson3NdJsonBulkImporter()
+        val importSource = GraphImportSource.PathSource(requireReadableFile(source, "source"))
+        return progressListener?.let { listener ->
+            importer.importGraph(source = importSource, operations = operations, options = options, listener = listener)
+        } ?: importer.importGraph(source = importSource, operations = operations, options = options)
+    }
 
     /**
      * 현재 워크숍 그래프를 GraphML로 내보냅니다.
@@ -164,12 +185,13 @@ class GraphIoPipeline(
      * @return export report입니다. 호출자는 생성된 GraphML 파일을 공유하기 전에
      * `GraphIoStatus.COMPLETED`와 빈 `failures`를 확인해야 합니다.
      */
-    fun exportGraphMl(target: Path): GraphExportReport =
-        GraphMlBulkExporter().exportGraph(
-            sink = GraphExportSink.PathSink(requireWritableTarget(target, "target")),
-            operations = operations,
-            options = exportOptions,
-        )
+    fun exportGraphMl(target: Path): GraphExportReport {
+        val exporter = GraphMlBulkExporter()
+        val sink = GraphExportSink.PathSink(requireWritableTarget(target, "target"))
+        return progressListener?.let { listener ->
+            exporter.exportGraph(sink = sink, operations = operations, options = exportOptions, listener = listener)
+        } ?: exporter.exportGraph(sink = sink, operations = operations, options = exportOptions)
+    }
 
     /**
      * 지원하지 않는 요소를 엄격히 처리하며 GraphML을 가져옵니다.
@@ -185,13 +207,24 @@ class GraphIoPipeline(
     fun importGraphMl(
         source: Path,
         options: GraphImportOptions = importOptions,
-    ): GraphImportReport =
-        GraphMlBulkImporter().importGraph(
-            source = GraphImportSource.PathSource(requireReadableFile(source, "source")),
+    ): GraphImportReport {
+        val importer = GraphMlBulkImporter()
+        val importSource = GraphImportSource.PathSource(requireReadableFile(source, "source"))
+        return progressListener?.let { listener ->
+            importer.importGraph(
+                source = importSource,
+                operations = operations,
+                options = options,
+                graphMlOptions = graphMlImportOptions,
+                listener = listener,
+            )
+        } ?: importer.importGraph(
+            source = importSource,
             operations = operations,
             options = options,
             graphMlOptions = graphMlImportOptions,
         )
+    }
 
     private fun requireReadableFile(path: Path, role: String): Path {
         val normalized = path.normalize().toAbsolutePath()

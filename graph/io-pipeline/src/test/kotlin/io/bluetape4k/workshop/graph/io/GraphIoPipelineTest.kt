@@ -11,18 +11,23 @@ import io.bluetape4k.graph.io.checkpoint.GraphImportCheckpointConflictException
 import io.bluetape4k.graph.io.checkpoint.GraphImportCheckpointSession
 import io.bluetape4k.graph.io.checkpoint.GraphImportCheckpointPhase
 import io.bluetape4k.graph.io.checkpoint.InMemoryGraphImportCheckpointStore
+import io.bluetape4k.graph.io.micrometer.GraphIoMicrometerProgressListener
 import io.bluetape4k.graph.io.options.GraphImportOptions
 import io.bluetape4k.graph.io.options.MissingEndpointPolicy
 import io.bluetape4k.graph.io.options.copyWithCheckpointSourceIdentity
+import io.bluetape4k.graph.io.report.GraphIoCompositeProgressListener
 import io.bluetape4k.graph.io.report.GraphIoFailureSeverity
 import io.bluetape4k.graph.io.report.GraphIoFileRole
 import io.bluetape4k.graph.io.report.GraphIoFormat
 import io.bluetape4k.graph.io.report.GraphIoPhase
+import io.bluetape4k.graph.io.report.GraphIoProgressEventType
+import io.bluetape4k.graph.io.report.GraphIoProgressListener
 import io.bluetape4k.graph.io.report.GraphIoStatus
 import io.bluetape4k.graph.io.support.GraphIoExternalIdMap
 import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.graph.tinkerpop.TinkerGraphOperations
 import io.bluetape4k.support.requireNotNull
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
@@ -39,6 +44,139 @@ import kotlin.io.path.walk
 import kotlin.io.path.writeText
 
 class GraphIoPipelineTest {
+
+    @Test
+    fun `forwards CSV lifecycle to user and Micrometer listeners`() {
+        val registry = SimpleMeterRegistry()
+        val observed = mutableListOf<GraphIoProgressEventType>()
+        val listener = GraphIoCompositeProgressListener.of(
+            GraphIoProgressListener { observed += it.type },
+            GraphIoMicrometerProgressListener(registry),
+        )
+
+        TinkerGraphOperations().use { ops ->
+            val report = GraphIoPipeline(ops, progressListener = listener)
+                .importCsv(fixture("vertices.csv"), fixture("edges.csv"))
+
+            report.status shouldBeEqualTo GraphIoStatus.COMPLETED
+            observed shouldContain GraphIoProgressEventType.STARTED
+            observed shouldContain GraphIoProgressEventType.PHASE_COMPLETED
+            observed shouldContain GraphIoProgressEventType.COMPLETED
+        }
+
+        registry.get(GraphIoMicrometerProgressListener.METER_RUNS)
+            .tag("operation", "import")
+            .tag("format", "csv")
+            .tag("status", "completed")
+            .counter().count() shouldBeEqualTo 1.0
+        registry.get(GraphIoMicrometerProgressListener.METER_RECORDS)
+            .tag("operation", "import")
+            .tag("format", "csv")
+            .tag("kind", "vertices")
+            .counter().count() shouldBeEqualTo 3.0
+        registry.get(GraphIoMicrometerProgressListener.METER_RECORDS)
+            .tag("operation", "import")
+            .tag("format", "csv")
+            .tag("kind", "edges")
+            .counter().count() shouldBeEqualTo 2.0
+        registry.get(GraphIoMicrometerProgressListener.METER_BYTES)
+            .tag("operation", "import")
+            .tag("format", "csv")
+            .counter().count() shouldBeGreaterThan 0.0
+        registry.get(GraphIoMicrometerProgressListener.METER_DURATION)
+            .tag("operation", "import")
+            .tag("format", "csv")
+            .tag("status", "completed")
+            .timer().count() shouldBeEqualTo 1L
+        registry.get(GraphIoMicrometerProgressListener.METER_PHASE_DURATION)
+            .tag("operation", "import")
+            .tag("format", "csv")
+            .tag("phase", "create_vertex")
+            .timer().count() shouldBeEqualTo 1L
+        registry.get(GraphIoMicrometerProgressListener.METER_ACTIVE)
+            .tag("operation", "import")
+            .tag("format", "csv")
+            .gauge().value() shouldBeEqualTo 0.0
+
+        registry.meters.flatMap { it.id.tags }.map { it.key }.toSet()
+            .all { it in setOf("operation", "format", "status", "kind", "phase") }
+            .shouldBeTrue()
+    }
+
+    @Test
+    fun `records failed CSV lifecycle and clears active gauge`(@TempDir tempDir: Path) {
+        val vertices = tempDir.resolve("vertices.csv").also {
+            it.writeText("id,label\nv1,Person\n")
+        }
+        val edges = tempDir.resolve("edges.csv").also {
+            it.writeText("id,label,from,to\ne1,CONTRIBUTES_TO,v1,missing\n")
+        }
+        val registry = SimpleMeterRegistry()
+        val listener = GraphIoMicrometerProgressListener(registry)
+
+        TinkerGraphOperations().use { ops ->
+            val report = GraphIoPipeline(ops, progressListener = listener).importCsv(vertices, edges)
+
+            report.status shouldBeEqualTo GraphIoStatus.FAILED
+            report.failures shouldHaveSize 1
+        }
+
+        registry.get(GraphIoMicrometerProgressListener.METER_RUNS)
+            .tag("operation", "import")
+            .tag("format", "csv")
+            .tag("status", "failed")
+            .counter().count() shouldBeEqualTo 1.0
+        registry.get(GraphIoMicrometerProgressListener.METER_RECORDS)
+            .tag("operation", "import")
+            .tag("format", "csv")
+            .tag("kind", "failures")
+            .counter().count() shouldBeEqualTo 1.0
+        registry.get(GraphIoMicrometerProgressListener.METER_ACTIVE)
+            .tag("operation", "import")
+            .tag("format", "csv")
+            .gauge().value() shouldBeEqualTo 0.0
+    }
+
+    @Test
+    fun `forwards NDJSON export lifecycle to Micrometer listener`(@TempDir tempDir: Path) {
+        val registry = SimpleMeterRegistry()
+        val listener = GraphIoMicrometerProgressListener(registry)
+
+        TinkerGraphOperations().use { ops ->
+            val pipeline = GraphIoPipeline(ops, progressListener = listener)
+            pipeline.importCsv(fixture("vertices.csv"), fixture("edges.csv"))
+
+            val report = pipeline.exportJackson3NdJson(tempDir.resolve("graph.ndjson"))
+
+            report.status shouldBeEqualTo GraphIoStatus.COMPLETED
+            report.verticesWritten shouldBeEqualTo 3L
+            report.edgesWritten shouldBeEqualTo 2L
+        }
+
+        registry.get(GraphIoMicrometerProgressListener.METER_RUNS)
+            .tag("operation", "export")
+            .tag("format", "ndjson_jackson3")
+            .tag("status", "completed")
+            .counter().count() shouldBeEqualTo 1.0
+        registry.get(GraphIoMicrometerProgressListener.METER_RECORDS)
+            .tag("operation", "export")
+            .tag("format", "ndjson_jackson3")
+            .tag("kind", "vertices")
+            .counter().count() shouldBeEqualTo 3.0
+        registry.get(GraphIoMicrometerProgressListener.METER_RECORDS)
+            .tag("operation", "export")
+            .tag("format", "ndjson_jackson3")
+            .tag("kind", "edges")
+            .counter().count() shouldBeEqualTo 2.0
+        registry.get(GraphIoMicrometerProgressListener.METER_BYTES)
+            .tag("operation", "export")
+            .tag("format", "ndjson_jackson3")
+            .counter().count() shouldBeGreaterThan 0.0
+        registry.get(GraphIoMicrometerProgressListener.METER_ACTIVE)
+            .tag("operation", "export")
+            .tag("format", "ndjson_jackson3")
+            .gauge().value() shouldBeEqualTo 0.0
+    }
 
     @Test
     fun `imports deterministic CSV fixture into TinkerGraph`() {
