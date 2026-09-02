@@ -1,7 +1,8 @@
 spring:
   application:
     name: storage-abstraction
-  # Disable bluetape4k-aws S3 auto-configuration — we manage S3 beans ourselves via S3Config
+  # 기존 세 profile과 encrypted profile 모두 필요한 S3 bean을 각 custom config에서
+  # 소유하므로 upstream auto-configuration을 전역 제외한다.
   autoconfigure:
     exclude:
       - io.bluetape4k.aws.spring.s3.S3AutoConfiguration

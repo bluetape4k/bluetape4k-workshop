@@ -550,11 +550,39 @@
         "scripts/smoke-validate.sh"
       ],
       "review_artifact": "docs/review/2026-09-01-issue-871-s3-resource-pattern-resolver-review.md"
+    },
+    {
+      "scope_id": "issue-872-aws-s3-cse-transfer",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-872-s3-cse-transfer",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [872],
+      "allowed_paths": [
+        ".github/workflows/Examples.yml",
+        "aws/storage-abstraction/**",
+        "docs/coverage-matrix.md",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/2026-09-02-issue-872-s3-cse-transfer.md",
+        "docs/review/issue-872-plan-review.md",
+        "docs/review/issue-872-spec-review.md",
+        "docs/review/issue-872-s3-cse-transfer-implementation-review.md",
+        "docs/review/issue-872-s3-cse-transfer-pre-pr-review.md",
+        "docs/superpowers/plans/2026-09-02-issue-872-s3-cse-transfer-plan.md",
+        "docs/superpowers/specs/2026-09-02-issue-872-s3-cse-transfer-design.md",
+        "gradle/libs.versions.toml",
+        "scripts/smoke-validate.sh"
+      ],
+      "review_artifact": "docs/review/issue-872-s3-cse-transfer-implementation-review.md"
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260901T-issue-871-aws-s3-resource-pattern-scope",
-    "checksum": "28274493cad95e925c9bba1be0244f8025ad0ee427a6e5a9a97e37965f78c120"
+    "receipt_id": "20260902T-issue-872-aws-s3-cse-transfer-scope",
+    "checksum": "4db1090d6e8e7385c03514cf94df89a11054a0c5ead2dca9b82400f3fe74c193"
   },
   "planned_scope_replan_receipts": {
   },

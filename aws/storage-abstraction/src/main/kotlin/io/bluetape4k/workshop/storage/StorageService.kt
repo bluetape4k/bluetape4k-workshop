@@ -9,7 +9,12 @@ package io.bluetape4k.workshop.storage
  * - `getUrl`은 로컬 파일 URL, 엔드포인트 중립 S3 객체 URI, 또는 pre-signed URL을 반환합니다.
  * - `delete`는 객체를 삭제하며, 구현은 키가 없어도 오류가 나지 않도록 멱등이어야 합니다.
  * - 객체 키는 상대 슬래시 키여야 하며, 공백/절대 경로/백슬래시/경로 순회 키는 조기 실패합니다.
- * - 구현은 Spring Profile `local`, `s3`, `s3-presigned`로 선택됩니다.
+ * - 구현은 Spring Profile `local`, `s3`, `s3-presigned`, `s3-encrypted-aes`,
+ *   `s3-encrypted-rsa`로 선택됩니다.
+ * - encrypted profile의 [EncryptedS3StorageService]는 `uploadFile`/`downloadFile`
+ *   concrete API도 제공한다. file upload는 고유 staging object를 성공 시 canonical
+ *   key로 복사한 뒤 staging만 정리하며, key material은 JVM memory에만 있으므로
+ *   프로세스 재시작 뒤 기존 객체를 복호화할 수 없습니다.
  *
  * ```kotlin
  * val url = storageService.upload("docs/readme.txt", content, "text/plain")
