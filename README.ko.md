@@ -281,7 +281,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Kotlin | 2.3.21 |
 | JVM | 21 |
 | Spring Boot | 4.0.6 |
-| bluetape4k | 1.7.0 |
+| bluetape4k | 2.0.0 |
 | Gradle | 8.x (Kotlin DSL, 멀티모듈) |
 
 ---

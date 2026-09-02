@@ -248,7 +248,8 @@ observation bean을 제거하거나 override한 뒤 observation auto-configurati
 
 ### Lease-extension observation
 
-이 예제는 `2.0.0-SNAPSHOT`의 terminal lease-extension 계약도 소비합니다.
+이 예제는 `bluetape4k-leader` 1.0.0의 terminal lease-extension 계약도
+소비합니다.
 `JobSafetyConfiguration`은 process-local
 `LeaderLeaseExtensionObservers` registry에
 `MicrometerObservationLeaderLeaseExtensionObserver`를 하나 등록합니다.
@@ -297,7 +298,7 @@ released BOM artifact가 제공될 때까지 이 consumer에서 사용하지 않
 
 ## Leader audit export
 
-이 lab은 bluetape4k-leader 2.0.0-SNAPSHOT의 공개
+이 lab은 `bluetape4k-leader` 1.0.0의 공개
 `LeaderAuditExporter`를 실제 Redis acquire/release lifecycle에 연결합니다. 기본
 `MEMORY` transport는 startup 시 외부 DNS 조회, socket 연결, credential 사용을
 하지 않습니다. operator report에는 bounded redacted JSON만 남기며,
@@ -355,7 +356,7 @@ cleanup은 계속하지만 resource step, outcome, exception type만 구조화 �
 | --- | --- |
 | Leader 0.5.0 lifecycle observation과 sanitized identifier | `JobRunCoordinatorTest` |
 | Java 25 virtual thread와 안전 기본값 | `JobSafetyRuntimeContractTest`, `JobSafetyPropertiesTest` |
-| 2.0.0-SNAPSHOT audit export, redaction, bounds, trusted HTTPS | `JobSafetyAuditPropertiesTest`, `JobSafetyAuditPayloadEncoderTest`, `JobSafetyAuditExporterTest`, `JobSafetyAuditReportServiceTest` |
+| Leader 1.0.0 audit export, redaction, bounds, trusted HTTPS | `JobSafetyAuditPropertiesTest`, `JobSafetyAuditPayloadEncoderTest`, `JobSafetyAuditExporterTest`, `JobSafetyAuditReportServiceTest` |
 | single-owner bounded shutdown과 cancellation | `JobSafetyAuditShutdownCoordinatorTest`, `JobSafetyContextRestartIntegrationTest` |
 | PostgreSQL authority를 유지하는 실제 Redis lifecycle export | `JobSafetyEndToEndIntegrationTest` |
 | opaque leader token 분리 | `RedisLeaderElectionAdapterTest` |

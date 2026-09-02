@@ -2,8 +2,8 @@
 # Gradle Version Catalog — migrated from buildSrc/src/main/kotlin/Libs.kt
 
 [versions]
-bluetape4k-dependencies-version = "2.0.0-SNAPSHOT"  # Central Sonatype snapshot 소비자 열차; 안정 승격 전에 메타데이터를 검증한다.
-# bluetape4k-graph and other bluetape4k modules are managed by the bluetape4k-dependencies BOM (currently 2.0.0-SNAPSHOT)
+bluetape4k-dependencies-version = "2.0.0"  # Maven Central 정식 릴리스 기준
+# bluetape4k modules are managed by the bluetape4k-dependencies BOM; module aliases remain versionless
 
 kotlin = "2.4.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-bom
 kotlinx-coroutines = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-bom

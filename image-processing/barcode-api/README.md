@@ -3,7 +3,7 @@
 [한국어](README.ko.md) | English
 
 This Spring Boot example consumes the `bluetape4k-images` barcode API through the
-`bluetape4k-dependencies` `2.0.0-SNAPSHOT` BOM. Individual Bluetape module versions remain
+`bluetape4k-dependencies` `2.0.0` BOM. Individual Bluetape module versions remain
 versionless in the catalog. The application code stays provider-neutral and wires the ZXing
 implementation only at the configuration boundary.
 

@@ -38,26 +38,9 @@ val rootLibs = libs
 
 allprojects {
     repositories {
-        // 2.0.0-SNAPSHOT 소비자 열차가 이 저장소에 배포된다. 안정 의존성은
-        // 기존 저장소에서 계속 해석되도록 Bluetape 좌표로 범위를 제한한다.
-        maven {
-            name = "SonatypeSnapshots"
-            url = uri("https://central.sonatype.com/repository/maven-snapshots")
-            mavenContent {
-                snapshotsOnly()
-            }
-            content {
-                includeGroupByRegex("io\\.github\\.bluetape4k(\\..*)?")
-            }
-        }
         mavenCentral()
         google()
     }
-
-    // bluetape4k snapshot 버전 사용 시만 사용하세요.
-    // configurations.all {
-    //     resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.SECONDS)
-    // }
 }
 
 subprojects {
