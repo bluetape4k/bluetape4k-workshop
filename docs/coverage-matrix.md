@@ -3,7 +3,7 @@
 각 bluetape4k library를 기존 workshop 예제와 연결하고, Basic/Advanced 제안 시나리오와
 함께 coverage gap을 식별합니다.
 
-> 마지막 갱신: 2026-09-02
+> 마지막 갱신: 2026-09-04
 
 ## 2026-08-25 ecosystem 재사용 2차 gate
 
@@ -82,6 +82,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | `bluetape4k-spring-boot4-core` | `spring-boot-webflux-coroutines`, `spring-security-*` | ⚠️ Partial | WebClient BT extension 미노출 | BT helper가 있는 WebFlux controller + suspend handler | BT auto-config를 포함한 full CRUD API | #82 |
 | `bluetape4k-resilience4j` | `spring-boot-resilience4j-coroutines` | ✅ Good | bulkhead 미노출 | — | bulkhead + circuit breaker + fallback pipeline | — |
 | `bluetape4k-micrometer` | `observability-basic`, `observability-advanced`, `micrometer-*` | ✅ Good | custom meter registry 미노출 | — | Custom MeterRegistry + Prometheus endpoint | — |
+| `bluetape4k-tenant` / `bluetape4k-tenant-reactor` | `spring-boot-multi-tenant-data-isolation` | ✅ Good | 기존 예제에 실행 경계별 context 전파·정리와 원문 tenant redaction이 없었음 | ThreadLocal 중첩/예외 정리, ScopedValue virtual thread, Reactor scheduler hop·취소 | 실제 MVC/WebFlux filter와 인증 경계 연동 | #877 |
 
 ---
 

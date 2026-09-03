@@ -158,6 +158,7 @@ case "${1:-help}" in
       :operations-job-console-core:test \
       :spring-boot-application-event-demo:test \
       :spring-boot-cache-caffeine:test \
+      :spring-boot-multi-tenant-data-isolation:test \
       :spring-boot-cbor-mvc:test \
       :spring-boot-chaos-monkey:test \
       :spring-boot-problem:test \
@@ -217,6 +218,7 @@ case "${1:-help}" in
     run "$GRADLEW \
       :spring-boot-application-event-demo:test \
       :spring-boot-cache-caffeine:test \
+      :spring-boot-multi-tenant-data-isolation:test \
       :spring-boot-problem:test \
       :spring-boot-resilience4j-coroutines:test \
       :spring-boot-webflux-coroutines:test \
@@ -654,6 +656,33 @@ case "${1:-help}" in
       echo "AWS Spring Modulith SNS/SQS externalization example and lesson are registered."
     else
       echo "ERROR: AWS Spring Modulith SNS/SQS externalization example contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
+    echo "=== TenantContext carrier example guard ==="
+    tenant_context_build="spring-boot/multi-tenant-data-isolation/build.gradle.kts"
+    tenant_context_service="spring-boot/multi-tenant-data-isolation/src/main/kotlin/io/bluetape4k/workshop/multitenant/service/TenantContextCarrierService.kt"
+    tenant_context_metrics="spring-boot/multi-tenant-data-isolation/src/main/kotlin/io/bluetape4k/workshop/multitenant/service/TenantMetrics.kt"
+    tenant_context_tests="spring-boot/multi-tenant-data-isolation/src/test/kotlin/io/bluetape4k/workshop/multitenant/TenantContextCarrierExampleTest.kt"
+    tenant_context_readme="spring-boot/multi-tenant-data-isolation/README.md"
+    tenant_context_readme_ko="spring-boot/multi-tenant-data-isolation/README.ko.md"
+    tenant_context_lesson="docs/lessons/2026-09-04-issue-877-tenant-context.md"
+    if contains_pattern 'libs\.bluetape4k\.tenant' "$tenant_context_build" && \
+       contains_pattern 'libs\.bluetape4k\.tenant\.reactor' "$tenant_context_build" && \
+       contains_pattern 'TenantContextCarrierService' "$tenant_context_service" "$tenant_context_tests" "$tenant_context_readme" "$tenant_context_readme_ko" && \
+       contains_pattern 'withMvcTenant' "$tenant_context_service" "$tenant_context_tests" "$tenant_context_readme" "$tenant_context_readme_ko" && \
+       contains_pattern 'withVirtualThreadTenant' "$tenant_context_service" "$tenant_context_tests" "$tenant_context_readme" "$tenant_context_readme_ko" && \
+       contains_pattern 'withReactorTenant' "$tenant_context_service" "$tenant_context_tests" "$tenant_context_readme" "$tenant_context_readme_ko" && \
+       contains_pattern 'MissingTenantContextException' "$tenant_context_service" "$tenant_context_tests" "$tenant_context_readme" "$tenant_context_readme_ko" && \
+       contains_pattern 'tenant_fingerprint' "$tenant_context_metrics" "$tenant_context_tests" "$tenant_context_readme" "$tenant_context_readme_ko" && \
+       contains_pattern 'TenantContextCarrierExampleTest' "$tenant_context_tests" && \
+       contains_pattern 'spring-boot-multi-tenant-data-isolation:test' README.md README.ko.md && \
+       ! contains_pattern '2\.1\.0(-SNAPSHOT)?' "$tenant_context_build" "$tenant_context_service" "$tenant_context_tests" "$tenant_context_readme" "$tenant_context_readme_ko" && \
+       [ -f "$tenant_context_lesson" ]; then
+      echo "TenantContext carrier example and lesson are registered."
+    else
+      echo "ERROR: TenantContext carrier example contract is missing or stale."
       exit 1
     fi
 

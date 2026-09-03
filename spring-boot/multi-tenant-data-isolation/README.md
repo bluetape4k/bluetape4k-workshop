@@ -3,9 +3,9 @@
 [한국어](README.ko.md) | English
 
 This module demonstrates tenant-safe reads, writes, cache keys, lock keys,
-rate-limit buckets, and Micrometer tags. It deliberately keeps runtime storage
-simple with H2 and in-memory helpers so the isolation contract is easy to inspect
-in tests.
+rate-limit buckets, Micrometer tags, and the `2.0.0` tenant context carriers.
+It deliberately keeps runtime storage simple with H2 and in-memory helpers so
+the isolation contract is easy to inspect in tests.
 
 ## Architecture Diagram
 
@@ -31,6 +31,7 @@ Tenant isolation fails when a repository query, cache key, lock key, or rate-lim
 | `UnsafeInvoiceRepository` | Baseline path that omits tenant predicates |
 | `TenantKeyFactory` | Tenant-prefixed cache, lock, and rate-limit keys |
 | `TenantInvoiceService` | Composes repository, cache, lock, rate-limit, and metrics behavior |
+| `TenantContextCarrierService` | Connects ThreadLocal, ScopedValue, and Reactor context to the safe service |
 
 ## Used Bluetape4k Features
 
@@ -39,7 +40,9 @@ Tenant isolation fails when a repository query, cache key, lock key, or rate-lim
 | Exposed JDBC repository helper | `bluetape4k-exposed-jdbc` | `TenantInvoiceRepository : LongJdbcRepository` | Reuses Bluetape4k repository defaults while keeping tenant predicates explicit |
 | Spring Boot support | `bluetape4k-spring-boot4-core` | `build.gradle.kts` | Aligns with Spring Boot 4 workshop modules |
 | Logging | `bluetape4k-logging` | `KLogging` companions | Uses the common Bluetape4k logging convention |
-| Metrics bridge | `bluetape4k-micrometer` | `TenantMetrics` | Keeps tenant-tagged Micrometer counters in the Bluetape4k dependency set |
+| Metrics bridge | `bluetape4k-micrometer` | `TenantMetrics` | Keeps bounded tenant-fingerprint Micrometer counters in the Bluetape4k dependency set |
+| Tenant context | `bluetape4k-tenant` | `TenantContextCarrierService` | Supplies a lexical ThreadLocal or ScopedValue tenant at blocking and virtual-thread boundaries |
+| Reactor tenant context | `bluetape4k-tenant-reactor` | `TenantContextCarrierService` | Keeps tenant state immutable and subscription-local across scheduler hops |
 | JUnit support and assertions | `bluetape4k-junit5`, `bluetape4k-assertions` | `TenantIsolationTest` | Uses repository-standard test lifecycle and matchers |
 
 ## Before / After
@@ -72,6 +75,54 @@ tenant:tenant-alpha:lock:invoice:42
 tenant:tenant-alpha:rate-limit:reader
 ```
 
+## TenantContext carriers (2.0.0)
+
+`TenantContextCarrierService` keeps the existing explicit `TenantId` repository
+predicates and adds a safe source for that value at each execution boundary.
+The module uses only the root `platform(libs.bluetape4k.dependencies)` BOM;
+the `bluetape4k-tenant` and `bluetape4k-tenant-reactor` aliases are versionless.
+
+### Spring MVC / blocking request
+
+```kotlin
+carrier.withMvcTenant(tenantId) {
+    carrier.findInvoiceWithMvcTenant(invoiceId)
+}
+```
+
+`ThreadLocalTenantContext` restores the previous nested value and removes the
+binding after normal completion or an exception. A missing binding propagates
+`MissingTenantContextException`; it is never replaced with a default tenant.
+
+### Virtual thread
+
+```kotlin
+carrier.withVirtualThreadTenant(tenantId) {
+    carrier.findInvoiceWithVirtualThreadTenant(invoiceId)
+}
+```
+
+`ScopedValueTenantContext` is lexical and safe to use inside a JDK 25 virtual
+thread. The next task starts unbound, so a pooled executor cannot inherit a
+stale tenant accidentally.
+
+### Reactor
+
+```kotlin
+carrier.findInvoiceWithReactorTenant(tenantId, invoiceId)
+    .publishOn(Schedulers.parallel())
+```
+
+The `withReactorTenant` helper stores the value with `ReactorTenantContext.withTenant`. Reactor's
+immutable `ContextView` survives the scheduler hop and keeps concurrent
+subscriptions isolated. Cancellation ends only that subscription scope.
+If a downstream operator also needs to read the tenant, compose that operator
+inside the publisher passed to `withReactorTenant`; `contextWrite` scopes upstream operators.
+
+Operational metrics use an eight-byte SHA-256 `tenant_fingerprint` tag instead
+of the tenant value itself. The fingerprint is stable for aggregation but does
+not expose the tenant string in logs or metrics.
+
 ## Run
 
 ```bash
@@ -83,8 +134,14 @@ tenant:tenant-alpha:rate-limit:reader
 - Baseline ID-only repository and cache paths leak tenant data.
 - Tenant-scoped reads return `null` for another tenant's invoice ID.
 - Tenant-scoped writes do not update another tenant's invoice.
-- Cache keys, lock keys, rate-limit keys, and metrics use tenant scope.
+- Cache keys, lock keys, and rate-limit buckets use tenant scope.
+- ThreadLocal and ScopedValue nesting restores the previous binding and cleans up after failure.
+- Reactor context survives a scheduler hop, isolates concurrent subscriptions, and is safe on cancellation.
+- Metrics expose only a bounded `tenant_fingerprint`, never the raw tenant value.
 
 ## Gap Notes
 
-This module demonstrates lock and rate-limit isolation with in-memory state. Real Redis/Redisson locks and Bucket4j backends are deliberately out of scope so the workshop focuses on tenant key design.
+This module demonstrates lock and rate-limit isolation with in-memory state.
+Real Redis/Redisson locks, Bucket4j backends, distributed transactions,
+tenant-specific authentication, and schema changes are deliberately out of
+scope. The carrier example focuses on request-boundary propagation and cleanup.

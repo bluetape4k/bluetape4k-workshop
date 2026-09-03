@@ -30,6 +30,8 @@ dependencies {
     // Bluetape4k 의존성
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.logging)
+    implementation(libs.bluetape4k.tenant)
+    implementation(libs.bluetape4k.tenant.reactor)
     implementation(libs.bluetape4k.spring.boot4.core)
     implementation(libs.bluetape4k.micrometer)
 
@@ -61,4 +63,5 @@ dependencies {
 
     // Observability 의존성
     implementation(libs.micrometer.core)
+    testImplementation(libs.reactor.test)
 }
