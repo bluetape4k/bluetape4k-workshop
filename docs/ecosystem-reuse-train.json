@@ -739,8 +739,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260904T-issue-873-aws-sns-publish-batch-scope",
-    "checksum": "0d928c3a0434a143f0104200ed42fdca64b07730d78d7f89ab23ce808d6cc117"
+    "receipt_id": "20260904T-issue-874-aws-sqs-observation-scope",
+    "checksum": "90c568648432c2614300eafcec2119cf0a9544dc74c1ae8b27206970b258bb8a"
   },
   "planned_scope_replan_receipts": {
   },
