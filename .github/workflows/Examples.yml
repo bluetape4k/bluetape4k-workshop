@@ -43,6 +43,7 @@ on:
       - 'kotlin/flow-extensions-event-aggregation/**'
       - 'kotlin/flow-extensions-metrics-sampling/**'
       - 'kotlin/flow-extensions-search-pipeline/**'
+      - 'kotlin/text-processing/**'
       - 'leader/backend-comparison-lab/**'
       - 'leader/k8s-lease-micrometer/**'
       - 'leader/job-safety-lab/**'
@@ -102,6 +103,7 @@ on:
       - 'kotlin/flow-extensions-event-aggregation/**'
       - 'kotlin/flow-extensions-metrics-sampling/**'
       - 'kotlin/flow-extensions-search-pipeline/**'
+      - 'kotlin/text-processing/**'
       - 'leader/backend-comparison-lab/**'
       - 'leader/k8s-lease-micrometer/**'
       - 'leader/job-safety-lab/**'
@@ -302,6 +304,7 @@ jobs:
           :kotlin-flow-extensions-event-aggregation:test
           :kotlin-flow-extensions-metrics-sampling:test
           :kotlin-flow-extensions-search-pipeline:test
+          :kotlin-text-processing:test
           :leader-backend-comparison-lab:test
           :leader-k8s-lease-micrometer:test
           :leader-job-safety-lab:test
@@ -378,6 +381,8 @@ jobs:
             kotlin/flow-extensions-metrics-sampling/build/reports/tests/test/
             kotlin/flow-extensions-search-pipeline/build/test-results/test/*.xml
             kotlin/flow-extensions-search-pipeline/build/reports/tests/test/
+            kotlin/text-processing/build/test-results/test/*.xml
+            kotlin/text-processing/build/reports/tests/test/
             leader/backend-comparison-lab/build/test-results/test/*.xml
             leader/backend-comparison-lab/build/reports/tests/test/
             leader/k8s-lease-micrometer/build/test-results/test/*.xml

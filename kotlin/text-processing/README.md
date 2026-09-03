@@ -3,7 +3,7 @@
 [한국어](README.ko.md) | English
 
 This module demonstrates in-process text utilities built on `bluetape4k-text` and small Kotlin
-helpers. It covers five reader-visible tasks: abuse-word filtering, language detection, text
+helpers. It covers six reader-visible tasks: abuse-word filtering, language detection, text
 normalization before indexing, sync/coroutine multilingual search indexes with highlighted results,
 and a small sensitive-text redaction pipeline with audit-safe span metadata.
 
@@ -155,6 +155,41 @@ small for single-threaded examples, while `CoroutineMultilingualSearchIndex` add
 wrapper, an immutable index snapshot, and suspend APIs that run CPU-bound text work on
 `Dispatchers.Default`.
 
+### Japanese tokenizer backend comparison
+
+Compare the existing Kuromoji IPADic path with Sudachi JVM using one dictionary session and the
+approved corpus (`選挙管理委員会`, `東京都へ行く`, and `外国人参政権`):
+
+```kotlin
+val reports = runJapaneseBackendComparisons()
+val oneReport = runJapaneseBackendComparison("選挙管理委員会")
+```
+
+Both helpers retain surface and broad POS observations for Kuromoji and Sudachi. Sudachi also
+records `Tokenizer.SplitMode.A/B/C` surfaces so a migration review can see mode-specific
+segmentation changes without claiming accuracy or latency superiority. The multi-input helper
+opens one dictionary/tokenizer session for the whole corpus; use the single-input helper only when
+one fixture is needed.
+
+The default `test` task does not download a dictionary. Without the
+`bluetape4k.sudachi.system-dictionary` system property, the candidate is reported as
+`UNAVAILABLE` with a `prepareSudachiDictionary` recovery hint. Run the dictionary-backed examples
+explicitly when the local environment permits the download:
+
+```bash
+./gradlew :kotlin-text-processing:test
+./gradlew :kotlin-text-processing:sudachiTest
+```
+
+`sudachiTest` is a local/manual-only check because it downloads a 72,238,136-byte official
+`SudachiDict v20260428 core` archive and extracts a 217,374,303-byte `system_core.dic`. The archive
+URL is `https://github.com/WorksApplications/SudachiDict/releases/download/v20260428/sudachi-dictionary-20260428-core.zip`,
+licensed Apache-2.0, and pinned to archive SHA-256
+`40c8ffc095283f07aa06cae922e7b8147bf2919ec8830567b0b3f7a7efa3239f`; the extracted dictionary is
+pinned to SHA-256 `6c1d5adc8a2389875713056e7b39bbcd0073d6122ffd509866e1d3a196f8608e`. Both files
+remain build-only outputs under `kotlin/text-processing/build/sudachi-dictionary/v20260428` and
+are never committed.
+
 ## Dependencies
 
 The module uses the repository version catalog:
@@ -165,6 +200,7 @@ dependencies {
     implementation(libs.bluetape4k.text.lingua)
     implementation(libs.bluetape4k.text.korean)
     implementation(libs.bluetape4k.text.japanese)
+    implementation(libs.sudachi)
     implementation(libs.kotlinx.coroutines.core.lib)
 }
 ```

@@ -3,7 +3,7 @@
 [English](README.md) | 한국어
 
 이 모듈은 `bluetape4k-text`와 작은 Kotlin helper로 애플리케이션 내부에서 실행하는
-텍스트 처리 유틸리티를 보여줍니다. 예제에서 바로 확인할 수 있는 작업은 다섯 가지입니다.
+텍스트 처리 유틸리티를 보여줍니다. 예제에서 바로 확인할 수 있는 작업은 여섯 가지입니다.
 금칙어 필터링, 언어 감지, 검색/색인 전 텍스트 정규화, highlight 결과를 반환하는
 동기/코루틴 다국어 검색 인덱스, 그리고 audit-safe span metadata를 반환하는 작은
 sensitive text redaction pipeline입니다.
@@ -29,7 +29,7 @@ sensitive text redaction pipeline입니다.
 | `CoroutineLanguageDetectionService` | `LanguageDetectionService`, `Mutex`, `Dispatchers.Default` | 여러 coroutine caller가 공유해도 detector 접근을 직렬화 |
 | `TextNormalizer` | pure Kotlin object | 소문자 변환, 공백 정리, 중복 제거 keyword extraction |
 | `MultilingualSearchIndex` | `LanguageDetectionService`, `KoreanProcessor`, `JapaneseProcessor`, `TextNormalizer`, `AhoCorasickAutomaton` | 문서와 query의 언어를 감지하고, inverted term index를 만든 뒤, match 점수와 source-span highlight를 반환 |
-| `CoroutineMultilingualSearchIndex` | `CoroutineLanguageDetectionService`, immutable index snapshot, `AhoCorasickAutomaton` | coroutine service에서 사용할 suspend `indexOf`/`search` API 제공 |
+| `CoroutineMultilingualSearchIndex` | `CoroutineLanguageDetectionService`, immutable index 기준 상태, `AhoCorasickAutomaton` | coroutine service에서 사용할 suspend `indexOf`/`search` API 제공 |
 | `SensitiveTextRedactionPipeline` | `LanguageDetectionService`, `TextNormalizer`, regex rules, `AhoCorasickAutomaton` | 작은 policy를 검증하고 email/phone/token/keyword span을 찾은 뒤, overlap merge, same-length masking, safe metadata 반환 |
 
 ## 사용 예
@@ -147,7 +147,42 @@ val hits = index.search("서울 카페")
 
 Coroutine index는 동기 API와 일부러 분리했습니다. `MultilingualSearchIndex`는 단일 thread
 예제를 이해하기 쉽게 유지하고, `CoroutineMultilingualSearchIndex`는 guarded detector wrapper,
-immutable index snapshot, `Dispatchers.Default` 기반 suspend API를 추가합니다.
+immutable index 기준 상태, `Dispatchers.Default` 기반 suspend API를 추가합니다.
+
+### 일본어 tokenizer backend 비교
+
+승인된 corpus(`選挙管理委員会`, `東京都へ行く`, `外国人参政権`)를 하나의 dictionary session에서
+처리해 기존 Kuromoji IPADic 경로와 Sudachi JVM을 비교합니다.
+
+```kotlin
+val reports = runJapaneseBackendComparisons()
+val oneReport = runJapaneseBackendComparison("選挙管理委員会")
+```
+
+두 helper는 Kuromoji와 Sudachi의 surface 및 broad POS observation을 남깁니다. Sudachi는
+`Tokenizer.SplitMode.A/B/C`별 surface도 기록하므로 정확도나 latency 우위를 주장하지 않고,
+마이그레이션 검토에서 mode별 segmentation 차이를 확인할 수 있습니다. 여러 입력을 받는
+helper는 corpus 전체에서 dictionary/tokenizer session을 하나만 열며, 단일 fixture가 필요할 때만
+단일 입력 helper를 사용합니다.
+
+기본 `test` task는 dictionary를 다운로드하지 않습니다. `bluetape4k.sudachi.system-dictionary`
+system property가 없으면 candidate를 `UNAVAILABLE`로 기록하고
+`prepareSudachiDictionary` 복구 안내를 반환합니다. 로컬에서 다운로드가 허용될 때 실제
+dictionary-backed 예제를 명시적으로 실행합니다.
+
+```bash
+./gradlew :kotlin-text-processing:test
+./gradlew :kotlin-text-processing:sudachiTest
+```
+
+`sudachiTest`는 공식 72,238,136-byte `SudachiDict v20260428 core` archive를 다운로드하고
+217,374,303-byte `system_core.dic`를 추출하므로 local/manual-only 검증입니다. archive URL은
+`https://github.com/WorksApplications/SudachiDict/releases/download/v20260428/sudachi-dictionary-20260428-core.zip`이며
+라이선스는 Apache-2.0입니다. archive SHA-256은
+`40c8ffc095283f07aa06cae922e7b8147bf2919ec8830567b0b3f7a7efa3239f`, 추출 dictionary SHA-256은
+`6c1d5adc8a2389875713056e7b39bbcd0073d6122ffd509866e1d3a196f8608e`로 고정합니다. 두 파일은
+`kotlin/text-processing/build/sudachi-dictionary/v20260428` 아래의 build-only output으로만 유지하며
+commit하지 않습니다.
 
 ## 의존성
 
@@ -159,6 +194,7 @@ dependencies {
     implementation(libs.bluetape4k.text.lingua)
     implementation(libs.bluetape4k.text.korean)
     implementation(libs.bluetape4k.text.japanese)
+    implementation(libs.sudachi)
     implementation(libs.kotlinx.coroutines.core.lib)
 }
 ```

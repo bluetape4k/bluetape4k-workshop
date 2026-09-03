@@ -135,6 +135,7 @@ case "${1:-help}" in
       :kotlin-flow-extensions-event-aggregation:test \
       :kotlin-flow-extensions-metrics-sampling:test \
       :kotlin-flow-extensions-search-pipeline:test \
+      :kotlin-text-processing:test \
       :leader-backend-comparison-lab:test \
       :leader-k8s-lease-micrometer:test \
       :leader-job-safety-lab:test \
