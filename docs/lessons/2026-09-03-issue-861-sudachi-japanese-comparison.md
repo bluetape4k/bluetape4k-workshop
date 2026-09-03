@@ -16,7 +16,7 @@ workshop에는 consumer 관점의 metadata와 안전한 dictionary preparation�
 ## 결정
 
 - 외부 artifact `com.worksap.nlp:sudachi:0.8.0`만 version catalog에 명시하고,
-  Bluetape 모듈은 기존 `bluetape4k-dependencies` BOM 경계를 유지했다.
+  Bluetape 모듈은 `bluetape4k-dependencies:2.0.0` stable BOM 경계를 유지했다.
 - `runJapaneseBackendComparisons()`는 세 입력을 하나의 dictionary/tokenizer
   session에서 처리한다. Kuromoji와 Sudachi의 surface/broad POS observation을
   같은 report shape으로 기록하고, Sudachi는 A/B/C split surface를 함께 남긴다.
@@ -71,3 +71,10 @@ lesson을 함께 갱신하고, `build/` binary를 저장소에 추가하지 않�
 또한 새 workshop PR의 변경 경로는 구현 전에 `ecosystem-reuse-train.json`의
 단일 child scope와 fresh coordinator receipt에 등록해야 hosted reuse gate가
 기존 fixed track을 오인하지 않는다.
+
+사용자 교정으로 확인한 추가 규칙은 workshop의 실행 예제와 열린 GitHub 작업
+항목을 모두 stable `2.0.0` 기준으로 유지하는 것이다. `2.1.0-SNAPSHOT`을
+실제 catalog나 신규 예제의 기준으로 사용하지 않으며, milestone과 제목 prefix도
+`2.0.0`으로 맞춘다. 과거 lesson·review의 snapshot 표기는 당시 검증 결과를
+보존하는 역사 기록으로 남기고, 현재 활성 문서·이슈·PR과 catalog를 별도로
+재검증한다.

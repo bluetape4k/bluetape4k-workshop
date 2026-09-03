@@ -2,7 +2,7 @@
 # Gradle Version Catalog — migrated from buildSrc/src/main/kotlin/Libs.kt
 
 [versions]
-bluetape4k-dependencies-version = "2.1.0-SNAPSHOT"  # 다음 minor 개발선 기준
+bluetape4k-dependencies-version = "2.0.0"  # workshop 소비자 안정 release 기준
 # bluetape4k modules are managed by the bluetape4k-dependencies BOM; module aliases remain versionless
 
 kotlin = "2.4.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-bom

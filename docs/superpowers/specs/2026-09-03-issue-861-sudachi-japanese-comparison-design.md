@@ -18,9 +18,9 @@ backend 선택 또는 migration 전에 확인해야 할 관찰값을 같은 repo
 
 | 구분 | 확인 결과 |
 | --- | --- |
-| 대상 이슈 | [bluetape4k-workshop #861](https://github.com/bluetape4k/bluetape4k-workshop/issues/861), live 상태 `OPEN`, milestone `2.1.0` |
-| 현재 checkout | `develop`과 `origin/develop`이 `28413f3a25ca70f0e5e9a839be57ca47c937a3b7`에서 일치 |
-| 현재 BOM | `gradle/libs.versions.toml`의 `bluetape4k-dependencies-version = "2.1.0-SNAPSHOT"`; Issue 본문의 이전 `2.0.0-SNAPSHOT` 표현보다 live checkout을 기준으로 함 |
+| 대상 이슈 | [bluetape4k-workshop #861](https://github.com/bluetape4k/bluetape4k-workshop/issues/861), live 상태 `OPEN`, milestone `2.0.0` |
+| 현재 checkout | `develop`과 `origin/develop`의 기준 commit은 `19c542caf66b342220a4b2de8a6557f93ac50ff5`이다. |
+| 현재 BOM | `gradle/libs.versions.toml`의 `bluetape4k-dependencies-version = "2.0.0"`; workshop 소비자 예제는 정식 배포된 stable BOM을 기준으로 하며 snapshot 개발선을 사용하지 않는다. |
 | 중앙 catalog/BOM 상태 | 중앙 catalog에는 `sudachi = "0.8.0"` alias가 있으나 현재 published `bluetape4k-dependencies` BOM의 `api(...)` constraint에는 포함되지 않음. workshop은 외부 artifact를 local catalog `0.8.0`으로 고정하고 Bluetape 모듈만 root BOM으로 관리 |
 | 기존 예제 | `kotlin/text-processing/src/main/kotlin/io/bluetape4k/workshop/text/search/MultilingualSearchIndex.kt`의 `JapaneseProcessor` 경로와 관련 fixture |
 | upstream 설계 | [`bluetape4k-text` Issue #284](https://github.com/bluetape4k/bluetape4k-text/issues/284), [`PR #286`](https://github.com/bluetape4k/bluetape4k-text/pull/286)의 dictionary-backed Sudachi 예제 |

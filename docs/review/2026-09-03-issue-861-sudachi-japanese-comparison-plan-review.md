@@ -15,6 +15,11 @@ P2/P3는 성능 주장 없이 dictionary 비용과 local/manual 경계를 문서
 아래 로컬 검증 결과를 fresh evidence로 반영했다. hosted CI와 exact-head
 merge 승인은 별도 delivery gate다.
 
+사용자 교정에 따라 현재 소비자 기준을 `bluetape4k-dependencies:2.0.0`으로
+확정했다. 이전 `2.1.0-SNAPSHOT` catalog와 `2.1.0` issue/PR metadata는
+활성 기준에서 제거하고, 과거 snapshot을 인용한 lesson·review는 당시의
+검증 사실을 보존하는 역사 기록으로 한정한다.
+
 ## 여섯 관점 검토
 
 | 관점 | 근거와 초기 finding | 현재 처분 | 잔여 우선순위 |
