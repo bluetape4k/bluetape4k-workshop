@@ -654,11 +654,43 @@
         "scripts/smoke-validate.sh"
       ],
       "review_artifact": "docs/review/2026-09-03-issue-861-sudachi-japanese-comparison-plan-review.md"
+    },
+    {
+      "scope_id": "issue-862-testcontainers-spring-bridge",
+      "scope_kind": "child",
+      "parent_track": "P0",
+      "expected_head_ref": "feat/issue-862-testcontainers-spring-bridge",
+      "expected_base_ref": "develop",
+      "base_ref_policy": "stacked-parent-head",
+      "oid_policy": "rebase-aware",
+      "head_oid": null,
+      "base_oid": null,
+      "issue_numbers": [862],
+      "allowed_paths": [
+        ".github/workflows/Examples.yml",
+        "docs/ecosystem-reuse-train.json",
+        "docs/lessons/2026-09-03-issue-862-testcontainers-spring-bridge.md",
+        "docs/review/2026-09-03-issue-862-testcontainers-spring-bridge-implementation-review.md",
+        "docs/superpowers/plans/2026-09-03-issue-862-testcontainers-spring-bridge-plan.md",
+        "docs/superpowers/specs/2026-09-03-issue-862-testcontainers-spring-bridge-design.md",
+        "gradle/libs.versions.toml",
+        "scripts/smoke-validate.sh",
+        "shared/README.ko.md",
+        "shared/README.md",
+        "shared/build.gradle.kts",
+        "shared/src/main/kotlin/io/bluetape4k/workshop/shared/testcontainers/RedisTestSupport.kt",
+        "shared/src/test/kotlin/io/bluetape4k/workshop/shared/testcontainers/PropertyExportingServerDynamicPropertyRegistryContextTest.kt",
+        "shared/src/test/kotlin/io/bluetape4k/workshop/shared/testcontainers/PropertyExportingServerDynamicPropertyRegistryTest.kt",
+        "shared/src/test/kotlin/io/bluetape4k/workshop/shared/testcontainers/RedisTestSupportBridgeContractTest.kt",
+        "shared/src/test/kotlin/io/bluetape4k/workshop/shared/testcontainers/RedisTestSupportTest.kt",
+        "spring-data/redis-examples/build.gradle.kts"
+      ],
+      "review_artifact": "docs/review/2026-09-03-issue-862-testcontainers-spring-bridge-implementation-review.md"
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260903T-issue-861-sudachi-japanese-comparison-scope",
-    "checksum": "3df5a78c9c90b2103203c40f8a5cf71f21758bec3c3cffc56958564a0befe386"
+    "receipt_id": "20260903T-issue-862-testcontainers-spring-bridge-scope",
+    "checksum": "938c8b9ab1d9029f9ff7e166ac8972b7269a1f170d4c60f31b1c2a5a8bbd8587"
   },
   "planned_scope_replan_receipts": {
   },
