@@ -4,8 +4,8 @@
 
 - 대상: 승인된 설계 `docs/superpowers/specs/2026-09-03-issue-861-sudachi-japanese-comparison-design.md`와 구현 계획 `docs/superpowers/plans/2026-09-03-issue-861-sudachi-japanese-comparison-plan.md`
 - 계획 hash: `a2b459e5ad7e57c3dd1ce1d4a5a9c89ec09ff0acb38b90b1b8c374f3c962f0c9`
-- 설계 hash: `9d48c72cb48d91abfdcb989e1934b44284c5b0c66a386317ad21d596f45d7ccb`
-- 구현 commit: `4ccc7f12` (Sudachi 비교 API·Gradle preparation·단위/통합 테스트)
+- 설계 hash: `40c4bfdee45833e96a28132406a1241da8f6b655bf036d7c5a591b13fb662acf`
+- 구현 commit: `8b0ab567` (stable 2.0.0 BOM 기준과 Sudachi 비교 API·Gradle preparation·단위/통합 테스트)
 - 검토일: 2026-09-03
 - 최종 판정: **P0=0, P1=0. 구현·로컬 검증 완료; PR delivery gate 대기**
 
@@ -53,7 +53,7 @@ child scope를 추가해 PR의 branch/base와 13개 변경 경로를 하나의 �
 canonical SHA-256
 `4693182117c2c92f951599841254e3445f586152be0137fdf010a66e2f2e57c3`를
 기록했다. trusted `origin/develop` manifest를 사용한 로컬 checker 재검증은
-새 head에서 PASS를 확인한 뒤 hosted CI를 재실행한다.
+새 stable 2.0.0 head에서 PASS를 확인한 뒤 hosted CI를 재실행한다.
 
 ## 구현 완료 및 delivery 조건
 
