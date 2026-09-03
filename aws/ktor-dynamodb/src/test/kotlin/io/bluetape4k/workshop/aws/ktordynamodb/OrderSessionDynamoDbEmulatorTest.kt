@@ -7,6 +7,8 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.aws.kotlin.dynamodb.deleteTableIfExists
 import io.bluetape4k.aws.kotlin.dynamodb.dynamoDbClientOf
+import io.bluetape4k.aws.kotlin.dynamodbstreams.DynamoDbStreamsRecordFlowOptions
+import io.bluetape4k.aws.kotlin.dynamodbstreams.DynamoDbStreamsStartingPosition
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.testcontainers.aws.AwsEmulatorServer
@@ -24,6 +26,7 @@ import io.ktor.server.testing.testApplication
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OrderSessionDynamoDbEmulatorTest {
@@ -105,6 +108,46 @@ class OrderSessionDynamoDbEmulatorTest {
         }
     }
 
+    @Test
+    fun `Ktor Streams route resumes inclusively and reports at least once duplicate`() = runSuspendIO {
+        val tableName = tableName("streams")
+
+        try {
+            testApplication {
+                application {
+                    ktorDynamoDbApplication(
+                        config = config(tableName),
+                        streamsConfig = streamsConfig(),
+                    )
+                }
+
+                startApplication()
+
+                val created = client.post("/dynamodb/order-sessions") {
+                    contentType(ContentType.Application.Json)
+                    setBody("""{"id":"stream-order-1001","customerId":"customer-42"}""")
+                }
+                created.status shouldBeEqualTo HttpStatusCode.Created
+
+                val first = client.post(
+                    "/dynamodb/order-sessions/streams/consume?maxRecords=1&startingPosition=trim_horizon",
+                )
+                first.status shouldBeEqualTo HttpStatusCode.OK
+                first.bodyAsText() shouldContain "\"duplicate\": false"
+                first.bodyAsText() shouldContain "\"checkpointByShard\""
+
+                val resumed = client.post(
+                    "/dynamodb/order-sessions/streams/consume?maxRecords=1&startingPosition=trim_horizon",
+                )
+                resumed.status shouldBeEqualTo HttpStatusCode.OK
+                resumed.bodyAsText() shouldContain "\"duplicate\": true"
+                resumed.bodyAsText() shouldContain "stream-order-1001"
+            }
+        } finally {
+            cleanupClient.deleteTableIfExists(tableName)
+        }
+    }
+
     private fun config(tableName: String): DynamoDbLocalConfig =
         DynamoDbLocalConfig(
             mode = AwsWorkshopMode.LOCAL,
@@ -115,6 +158,18 @@ class OrderSessionDynamoDbEmulatorTest {
             accessKeyId = awsEmulator.awsAccessKey,
             secretAccessKey = awsEmulator.awsSecretKey,
             tableReadyTimeout = 30.seconds,
+        )
+
+    private fun streamsConfig(): DynamoDbStreamsWorkshopConfig =
+        DynamoDbStreamsWorkshopConfig(
+            enabled = true,
+            startingPosition = DynamoDbStreamsStartingPosition.TrimHorizon,
+            maxRecords = 10,
+            flowOptions = DynamoDbStreamsRecordFlowOptions(
+                pollInterval = 200.milliseconds,
+                emptyBackoff = 200.milliseconds,
+                maxShardConcurrency = 1,
+            ),
         )
 
     private fun tableName(prefix: String): String =

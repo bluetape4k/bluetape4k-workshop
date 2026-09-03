@@ -233,7 +233,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Advanced | [`redis-cluster-demo`](redis/cluster-demo/) | `redis`, `lettuce`, `redisson` | Redis Cluster (TC) | Redis 클러스터 토폴로지, 장애 조치 및 typed Lettuce codec |
 | Basic | [`redis-redisson-examples`](redis/redisson-examples/) | `redis`, `redisson` | Redis (TC) | Redisson 데이터 구조와 Pub/Sub |
 | Advanced | [`aws-s3-spring-cloud`](aws/s3-spring-cloud/) | `aws`, `testcontainers` | LocalStack (TC) | Spring Cloud AWS + LocalStack으로 AWS S3 사용 |
-| Advanced | [`aws-ktor-dynamodb`](aws/ktor-dynamodb/) | `aws`, `ktor`, `coroutines`, `testcontainers` | Floci/LocalStack (TC) | fail-closed local mode에서 배우는 Ktor REST + DynamoDB conditional write |
+| Advanced | [`aws-ktor-dynamodb`](aws/ktor-dynamodb/) | `aws`, `ktor`, `coroutines`, `testcontainers` | Floci/LocalStack (TC) | fail-closed local mode의 Ktor REST + DynamoDB conditional write와 opt-in Streams coroutine Flow checkpoint resume |
 | Advanced | [`aws-eventbridge-scheduler`](aws/eventbridge-scheduler/) | `aws`, `coroutines` | Local adapters | EventBridge event envelope와 지연 Scheduler request mapping |
 | Advanced | [`aws-cloudwatch-imds-observability`](aws/cloudwatch-imds-observability/) | `aws`, `micrometer`, `coroutines` | Local adapters | CloudWatch metric/log publish intent, Micrometer snapshot, 명시적 IMDS metadata opt-in |
 | Advanced | [`aws-sqs-sns-coroutines`](aws/sqs-sns-coroutines/) | `aws`, `micrometer`, `coroutines`, `testcontainers` | Local adapters + Floci | SNS publish/PublishBatch, SQS consume, opt-in SQS Observation listener를 통한 entry별 결과, parented process/ack, heartbeat, retry, dead-letter report 및 cancellation-safe coroutine 학습 |

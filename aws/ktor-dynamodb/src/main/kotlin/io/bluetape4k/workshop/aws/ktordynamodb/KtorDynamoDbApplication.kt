@@ -2,8 +2,11 @@ package io.bluetape4k.workshop.aws.ktordynamodb
 
 import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import aws.sdk.kotlin.services.dynamodb.model.BillingMode
+import aws.sdk.kotlin.services.dynamodb.model.StreamSpecification
+import aws.sdk.kotlin.services.dynamodb.model.StreamViewType
 import io.bluetape4k.aws.kotlin.dynamodb.model.partitionKeyOf
 import io.bluetape4k.aws.kotlin.dynamodb.model.stringAttrDefinitionOf
+import io.bluetape4k.aws.kotlin.dynamodbstreams.dynamoDbStreamsClientOf
 import io.bluetape4k.aws.ktor.dynamodb.DynamoDbKtorPlugin
 import io.bluetape4k.aws.ktor.dynamodb.dynamoDb
 import io.bluetape4k.logging.KLogging
@@ -13,6 +16,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCallPipeline
+import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
@@ -35,7 +39,10 @@ fun main() {
     }.start(wait = true)
 }
 
-internal fun Application.ktorDynamoDbApplication(config: DynamoDbLocalConfig) {
+internal fun Application.ktorDynamoDbApplication(
+    config: DynamoDbLocalConfig,
+    streamsConfig: DynamoDbStreamsWorkshopConfig = DynamoDbStreamsWorkshopConfig.fromSystemProperties(),
+) {
     installOrderSessionHttpPlugins()
 
     install(DynamoDbKtorPlugin) {
@@ -50,7 +57,28 @@ internal fun Application.ktorDynamoDbApplication(config: DynamoDbLocalConfig) {
             attributeDefinitions = listOf(stringAttrDefinitionOf("id")),
         ) {
             billingMode = BillingMode.PayPerRequest
+            streamSpecification = StreamSpecification {
+                streamEnabled = true
+                streamViewType = StreamViewType.NewAndOldImages
+            }
         }
+    }
+
+    val streamsService = if (streamsConfig.enabled) {
+        DynamoDbStreamsOrderSessionService(
+            dynamoDbClient = dynamoDb().dynamoDbClient,
+            streamsClient = dynamoDbStreamsClientOf(
+                endpointUrl = config.endpointUrl,
+                region = config.region,
+                credentialsProvider = config.credentialsProvider(),
+            ),
+            tableName = config.tableName,
+            config = streamsConfig,
+        ).also { service ->
+            monitor.subscribe(ApplicationStopped) { service.close() }
+        }
+    } else {
+        null
     }
 
     val repository = OrderSessionDynamoRepository(
@@ -58,7 +86,7 @@ internal fun Application.ktorDynamoDbApplication(config: DynamoDbLocalConfig) {
         tableName = config.tableName,
     )
     val service = DynamoDbOrderSessionService(repository = repository, config = config)
-    orderSessionRoutes(service)
+    orderSessionRoutes(service, streamsService)
 }
 
 internal fun Application.installOrderSessionHttpPlugins() {
@@ -126,7 +154,7 @@ internal fun Application.installOrderSessionHttpPlugins() {
     }
 }
 
-private fun DynamoDbLocalConfig.credentialsProvider(): StaticCredentialsProvider? {
+internal fun DynamoDbLocalConfig.credentialsProvider(): StaticCredentialsProvider? {
     val accessKey = accessKeyId ?: return null
     val secretKey = secretAccessKey ?: return null
     return StaticCredentialsProvider {

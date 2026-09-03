@@ -34,6 +34,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.aws.kotlin.dynamodb)
+    implementation(libs.aws.kotlin.dynamodbstreams)
 
     implementation(libs.bluetape4k.aws.ktor)
     implementation(libs.bluetape4k.aws.kotlin)
