@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.aws.sqssns
 
 import io.bluetape4k.aws.spring.sns.SnsOperations
+import io.bluetape4k.aws.spring.sns.SnsBatchTransportException
+import io.bluetape4k.aws.spring.sns.SnsPublishBatchEntry
+import io.bluetape4k.aws.spring.sns.SnsPublishBatchRequest
 import io.bluetape4k.aws.spring.sns.SnsPublishRequest
 import io.bluetape4k.aws.spring.sqs.SqsOperations
 import io.bluetape4k.aws.spring.sqs.SqsReceivedMessage
@@ -54,6 +57,51 @@ class OrderNotificationMessagingService(
             throw e
         } catch (e: Exception) {
             OrderNotificationPublishReport.failed(properties.topicArn, event, e)
+        }
+    }
+
+    /**
+     * 최대 10개의 주문 알림을 SNS PublishBatch로 발행합니다.
+     *
+     * AWS의 entry별 성공·실패를 하나의 성공으로 축약하지 않습니다. 전송 또는
+     * 응답 protocol 오류가 발생하면 자동 재시도하지 않고, 이미 완료된 entry와
+     * 응답을 받지 못한 entry를 별도로 남겨 호출자가 idempotency 정책을 결정하게 합니다.
+     */
+    suspend fun publishBatch(
+        requests: List<OrderNotificationRequest>,
+    ): OrderNotificationBatchPublishReport {
+        validateProperties()
+        require(requests.isNotEmpty()) { "requests must not be empty." }
+        require(requests.size <= SNS_BATCH_SIZE) {
+            "requests must contain at most $SNS_BATCH_SIZE entries."
+        }
+
+        requests.forEach(::validate)
+        val events = requests.map(::eventFrom)
+        val eventsById = events.associateBy { it.idempotencyKey }
+        val batchRequest = SnsPublishBatchRequest(
+            topicArn = properties.topicArn,
+            entries = events.map { event ->
+                SnsPublishBatchEntry(
+                    id = event.idempotencyKey,
+                    message = objectMapper.writeValueAsString(event),
+                    subject = properties.subject,
+                    messageAttributes = messageAttributes(event),
+                )
+            },
+        )
+
+        return try {
+            val result = metrics.recordPublish {
+                sns.publishBatch(batchRequest)
+            }
+            batchReport(result, eventsById)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: SnsBatchTransportException) {
+            transportFailureReport(events, e)
+        } catch (e: Exception) {
+            transportFailureReport(events, e)
         }
     }
 
@@ -137,6 +185,66 @@ class OrderNotificationMessagingService(
         request.message.requireNotBlank("message")
         request.idempotencyKey.requireNotBlank("idempotencyKey")
         request.correlationId.requireNotBlank("correlationId")
+    }
+
+    private fun batchReport(
+        result: io.bluetape4k.aws.spring.sns.SnsPublishBatchResult,
+        eventsById: Map<String, OrderNotificationEvent>,
+    ): OrderNotificationBatchPublishReport {
+        val successful = result.successful.map { success ->
+            val event = requireNotNull(eventsById[success.entryId])
+            OrderNotificationBatchEntryReport(
+                orderId = event.orderId,
+                idempotencyKey = event.idempotencyKey,
+                correlationId = event.correlationId,
+                messageId = success.messageId,
+                message = "published",
+            )
+        }
+        val failed = result.failed.map { failure ->
+            val event = requireNotNull(eventsById[failure.entryId])
+            OrderNotificationBatchEntryReport(
+                orderId = event.orderId,
+                idempotencyKey = event.idempotencyKey,
+                correlationId = event.correlationId,
+                code = failure.code,
+                senderFault = failure.senderFault,
+                message = failure.message ?: "publish failed",
+            )
+        }
+        val state = when {
+            failed.isEmpty() -> BatchPublishState.PUBLISHED
+            successful.isEmpty() -> BatchPublishState.FAILED
+            else -> BatchPublishState.PARTIAL_FAILURE
+        }
+        return OrderNotificationBatchPublishReport(
+            state = state,
+            topicArn = properties.topicArn,
+            successful = successful,
+            failed = failed,
+            message = when (state) {
+                BatchPublishState.PUBLISHED -> "published"
+                BatchPublishState.PARTIAL_FAILURE -> "partial failure"
+                BatchPublishState.FAILED -> "all entries failed"
+            },
+        )
+    }
+
+    private fun transportFailureReport(
+        events: List<OrderNotificationEvent>,
+        error: Throwable,
+    ): OrderNotificationBatchPublishReport {
+        val completedEntryIds = (error as? SnsBatchTransportException)?.completedEntryIds.orEmpty()
+        val allEntryIds = events.map { it.idempotencyKey }
+        return OrderNotificationBatchPublishReport(
+            state = BatchPublishState.FAILED,
+            topicArn = properties.topicArn,
+            successful = emptyList(),
+            failed = emptyList(),
+            completedEntryIds = completedEntryIds,
+            unresolvedEntryIds = allEntryIds.filterNot(completedEntryIds::contains),
+            message = error.message ?: error::class.java.simpleName,
+        )
     }
 
     private fun validateProperties() {
@@ -230,3 +338,5 @@ class OrderNotificationMessagingService(
             message = statusMessage,
         )
 }
+
+private const val SNS_BATCH_SIZE: Int = 10

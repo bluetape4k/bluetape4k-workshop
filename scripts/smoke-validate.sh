@@ -560,6 +560,28 @@ case "${1:-help}" in
     fi
 
     echo ""
+    echo "=== AWS SNS PublishBatch example guard ==="
+    sns_batch_service="aws/sqs-sns-coroutines/src/main/kotlin/io/bluetape4k/workshop/aws/sqssns/OrderNotificationMessagingService.kt"
+    sns_batch_models="aws/sqs-sns-coroutines/src/main/kotlin/io/bluetape4k/workshop/aws/sqssns/OrderNotificationModels.kt"
+    sns_batch_tests="aws/sqs-sns-coroutines/src/test/kotlin/io/bluetape4k/workshop/aws/sqssns"
+    sns_batch_readme="aws/sqs-sns-coroutines/README.md"
+    sns_batch_readme_ko="aws/sqs-sns-coroutines/README.ko.md"
+    sns_batch_lesson="docs/lessons/2026-09-04-issue-873-sns-publish-batch.md"
+    if contains_pattern 'suspend fun publishBatch' "$sns_batch_service" && \
+       contains_pattern 'SnsPublishBatchRequest' "$sns_batch_service" && \
+       contains_pattern 'SnsPublishBatchEntry' "$sns_batch_service" && \
+       contains_pattern 'BatchPublishState' "$sns_batch_models" && \
+       contains_pattern 'PublishBatch' "$sns_batch_tests" && \
+       contains_pattern 'PublishBatch' "$sns_batch_readme" "$sns_batch_readme_ko" README.md README.ko.md && \
+       contains_pattern 'unresolvedEntryIds' "$sns_batch_service" "$sns_batch_models" "$sns_batch_readme" "$sns_batch_readme_ko" && \
+       [ -f "$sns_batch_lesson" ]; then
+      echo "AWS SNS PublishBatch example and lesson are registered."
+    else
+      echo "ERROR: AWS SNS PublishBatch example contract is missing or stale."
+      exit 1
+    fi
+
+    echo ""
     echo "=== AWS S3 client-side encryption storage example guard ==="
     cse_build="aws/storage-abstraction/build.gradle.kts"
     cse_config="aws/storage-abstraction/src/main/kotlin/io/bluetape4k/workshop/storage/EncryptedS3Config.kt"
