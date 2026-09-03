@@ -44,7 +44,7 @@ readiness 대기, JVM system property 변경을 수행하지 않는다. 다만
 | review correction | Gradle `projectDir` 고정 source guard와 key별 최신 map 재평가 assertion 추가 후 동일 selector — 11 tests passed |
 | dependency | `shared`와 `spring-data-redis-examples` `testRuntimeClasspath` dependencyInsight 모두 `io.github.bluetape4k:bluetape4k-testcontainers-spring:2.0.0` 선택 |
 | post-refactor targeted | `:shared:test --tests '*RedisTestSupportTest'` — 1 passed |
-| shared full | `:shared:test --rerun-tasks --no-build-cache --no-daemon --max-workers=1 --console=plain` — 53 passed |
+| shared full | `:shared:test --rerun-tasks --no-build-cache --no-daemon --max-workers=1 --console=plain` — 54 passed |
 | Redis consumer full | `:spring-data-redis-examples:test --rerun-tasks --no-build-cache --no-daemon --max-workers=1 --console=plain` — 39 passed, 1 skipped |
 | workflow/script | `actionlint .github/workflows/Examples.yml`, `bash -n scripts/smoke-validate.sh`, `git diff --check` — 통과 |
 
