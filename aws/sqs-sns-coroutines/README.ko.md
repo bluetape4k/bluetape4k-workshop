@@ -38,6 +38,7 @@ source deletion 전에 명시적 DLQ publish 경계를 추가해야 합니다.
 | SNS publish boundary | JSON body, subject, correlation id, idempotency key, event type attribute를 가진 `SnsPublishRequest`를 만듭니다. |
 | SNS PublishBatch boundary | 최대 10개의 order event를 `SnsPublishBatchRequest`로 매핑하고 successful, entry별 failed, transport 미확정 항목을 숨기지 않습니다. |
 | SQS consume boundary | 학습자가 볼 수 있는 queue 설정으로 한 번 poll하고, 전달된 메시지마다 report를 반환합니다. |
+| SQS Observation listener | opt-in `@SqsListener` fixture가 coroutine suspension 사이의 receive/process/ack observation parentage를 유지하고, 수동 ack와 visibility heartbeat를 보여 줍니다. |
 | Retry classification | Handler 실패 시 `changeVisibility(..., timeoutSeconds = 0)`을 호출하고 `RETRY_REQUESTED`를 반환합니다. |
 | Dead-letter classification | `maxReceiveCount` 이상인 메시지는 삭제하고 local `DEAD_LETTER` discard report로 반환합니다. Durable DLQ handoff는 의도적으로 범위 밖입니다. |
 | Metrics | `OrderNotificationMetrics`가 publish timer와 consume counter를 기록하고 success, retry, failure, cancellation을 구분해 취소된 작업을 성공으로 계수하지 않습니다. |
@@ -110,6 +111,52 @@ Floci 통합 테스트는 AWS 자격 증명 없이 실제 `SnsCoroutinesTemplate
 mapping을 실행합니다. 단위 테스트는 1~10개 경계, 중복 ID, 빈 payload, partial
 response mapping, cancellation 전파, 자동 재시도하지 않는 transport 경계를
 검증합니다.
+
+## SQS Observation listener walkthrough
+
+`SqsObservationExampleConfiguration`은 bluetape4k 2.0.0 SQS listener observation
+lifecycle을 확인하는 opt-in consumer fixture입니다. 기본값은 disabled이므로 기존
+one-shot `consumeOnce` 경로와 retry/redelivery 동작은 바뀌지 않습니다. Listener
+lifecycle telemetry가 필요할 때만 다음 설정을 켜세요.
+
+```yaml
+bluetape4k:
+  aws:
+    sqs:
+      observation:
+        enabled: true
+```
+
+동일한 flat property 표기는 `bluetape4k.aws.sqs.observation.enabled=true`입니다.
+
+예제 listener는 의도적으로 `autoStartup = false`입니다. 애플리케이션 wiring이
+끝난 뒤 명시적으로 시작합니다.
+
+```kotlin
+val listeners = context.getBean(SqsMessageListenerContainerRegistry::class.java)
+listeners.start(OrderNotificationObservationListener.LISTENER_ID)
+```
+
+`OrderNotificationObservationListener`는 `SqsReceivedMessage`를 받고 SQS process
+observation이 current인 동안 작은 child `Observation`을 만든 뒤 기존
+`OrderNotificationHandler`를 호출하고 handler가 반환된 후에만 acknowledge합니다.
+Listener container가 receive/process/ack observation을 소유하고 Micrometer context를
+coroutine suspension 사이에 전파하며, handler 실행 중에는 1초 간격으로 visibility
+heartbeat를 보냅니다. `CancellationException`은 다시 던지므로 성공으로 기록되거나
+acknowledge되지 않습니다. 제한된 `OrderNotificationObservationRecorder`는 stage,
+outcome, attempt, delivery, acknowledgement action만 저장하며 message body, receipt
+handle, 전체 queue URL은 보관하지 않습니다.
+
+실행 가능한 테스트는 네 가지 경계를 검증합니다.
+
+```bash
+./gradlew :aws-sqs-sns-coroutines:test \
+  --tests '*SqsObservationExampleTest'
+```
+
+기본 disabled 경로, 활성 process parentage와 heartbeat/ack, `ObservationRegistry.NOOP`
+호환성, ack 없이 cancellation되는 경로를 검증합니다. Durable DLQ, exactly-once
+delivery, global tracing backend, 실제 AWS credential은 필요하지 않습니다.
 
 ## 테스트 범위
 

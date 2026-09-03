@@ -24,6 +24,7 @@ dependencies {
 
     implementation(libs.jackson3.module.kotlin)
     implementation(libs.micrometer.core)
+    implementation(libs.micrometer.observation.lib)
 
     implementation(libs.spring.boot.autoconfigure.lib)
     annotationProcessor(libs.spring.boot.autoconfigure.processor)

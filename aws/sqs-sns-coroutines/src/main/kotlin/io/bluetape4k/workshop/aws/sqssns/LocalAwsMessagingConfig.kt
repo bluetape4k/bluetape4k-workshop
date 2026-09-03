@@ -120,7 +120,9 @@ class LocalSnsOperations: SnsOperations {
  */
 class LocalSqsOperations: SqsOperations {
     private val messagesByQueue: MutableMap<String, CopyOnWriteArrayList<Message>> = ConcurrentHashMap()
+    private val invisibleUntil: MutableMap<String, Long> = ConcurrentHashMap()
     private val ids = AtomicInteger()
+    val visibilityChanges: MutableList<VisibilityChange> = CopyOnWriteArrayList()
 
     override suspend fun getQueueUrl(queueName: String): String =
         queueUrl(queueName)
@@ -165,13 +167,27 @@ class LocalSqsOperations: SqsOperations {
         visibilityTimeoutSeconds: Int?,
     ): List<SqsReceivedMessage> {
         val queue = messagesByQueue.computeIfAbsent(queueUrl) { CopyOnWriteArrayList() }
-        return queue.take(maxMessages).map { message ->
-            val nextCount = ((message.attributes()[MessageSystemAttributeName.APPROXIMATE_RECEIVE_COUNT]?.toIntOrNull() ?: 0) + 1)
-            val updated = message.toBuilder()
-                .attributes(message.attributes() + (MessageSystemAttributeName.APPROXIMATE_RECEIVE_COUNT to nextCount.toString()))
-                .build()
-            queue[queue.indexOf(message)] = updated
-            SqsReceivedMessage(queueUrl, updated)
+        val now = System.currentTimeMillis()
+        invisibleUntil.entries.removeIf { it.value <= now }
+        return synchronized(queue) {
+            queue.asSequence()
+                .filter { message -> (invisibleUntil[message.receiptHandle()] ?: 0L) <= now }
+                .take(maxMessages)
+                .map { message ->
+                    val nextCount = ((message.attributes()[MessageSystemAttributeName.APPROXIMATE_RECEIVE_COUNT]
+                        ?.toIntOrNull() ?: 0) + 1)
+                    val updated = message.toBuilder()
+                        .attributes(
+                            message.attributes() +
+                                (MessageSystemAttributeName.APPROXIMATE_RECEIVE_COUNT to nextCount.toString()),
+                        )
+                        .build()
+                    queue[queue.indexOf(message)] = updated
+                    invisibleUntil[updated.receiptHandle()] =
+                        now + (visibilityTimeoutSeconds ?: 30).coerceAtLeast(0) * 1_000L
+                    SqsReceivedMessage(queueUrl, updated)
+                }
+                .toList()
         }
     }
 
@@ -180,6 +196,7 @@ class LocalSqsOperations: SqsOperations {
         receiptHandle: String,
     ): DeleteMessageResponse {
         messagesByQueue[queueUrl]?.removeIf { it.receiptHandle() == receiptHandle }
+        invisibleUntil.remove(receiptHandle)
         return DeleteMessageResponse.builder().build()
     }
 
@@ -187,8 +204,11 @@ class LocalSqsOperations: SqsOperations {
         queueUrl: String,
         receiptHandle: String,
         timeoutSeconds: Int,
-    ): ChangeMessageVisibilityResponse =
-        ChangeMessageVisibilityResponse.builder().build()
+    ): ChangeMessageVisibilityResponse {
+        visibilityChanges += VisibilityChange(queueUrl, receiptHandle, timeoutSeconds)
+        invisibleUntil[receiptHandle] = System.currentTimeMillis() + timeoutSeconds.coerceAtLeast(0) * 1_000L
+        return ChangeMessageVisibilityResponse.builder().build()
+    }
 
     override fun receiveFlow(
         queueUrl: String,
@@ -206,3 +226,10 @@ class LocalSqsOperations: SqsOperations {
             "https://sqs.local/000000000000/$queueNameOrUrl"
         }
 }
+
+/** 로컬 listener fixture가 수행한 visibility 변경을 학습자와 테스트에 노출합니다. */
+data class VisibilityChange(
+    val queueUrl: String,
+    val receiptHandle: String,
+    val timeoutSeconds: Int,
+)
