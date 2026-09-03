@@ -842,8 +842,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260904T-issue-876-aws-modulith-externalization-scope",
-    "checksum": "c1e78395e0463b48055d65ff3992324144cfdd5ff15c2c430e337f60fc046f74"
+    "receipt_id": "20260904T-issue-877-tenant-context-scope",
+    "checksum": "80d36a10e741cd8cd0b0543fd16abbe27ac1d483d674459238e08d7c915b13f7"
   },
   "planned_scope_replan_receipts": {
   },
