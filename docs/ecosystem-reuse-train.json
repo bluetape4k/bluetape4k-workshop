@@ -713,8 +713,8 @@
     }
   ],
   "coordinator_scope_receipt": {
-    "receipt_id": "20260903T-issue-862-testcontainers-spring-bridge-scope",
-    "checksum": "938c8b9ab1d9029f9ff7e166ac8972b7269a1f170d4c60f31b1c2a5a8bbd8587"
+    "receipt_id": "20260904T-issue-873-aws-sns-publish-batch-scope",
+    "checksum": "0d928c3a0434a143f0104200ed42fdca64b07730d78d7f89ab23ce808d6cc117"
   },
   "planned_scope_replan_receipts": {
   },
