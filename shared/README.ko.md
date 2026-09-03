@@ -66,7 +66,19 @@ Spring `DynamicPropertyRegistry` 키를 등록합니다.
 
 Redis 예제 테스트에서 사용하려면 소비 모듈에
 `testImplementation(project(":shared"))`를 선언하세요. 소비 모듈은
-Spring Test와 Testcontainers 실행 의존성도 계속 자체 선언해야 합니다.
+Spring Test와 Testcontainers 실행 의존성도 계속 자체 선언하고, 선택적인
+Spring bridge도 추가해야 합니다.
+
+```kotlin
+testImplementation(libs.bluetape4k.testcontainers.spring)
+```
+
+`registerRedisProperties`는 `bluetape4k-testcontainers-spring`의
+`PropertyExportingServer.registerDynamicProperties`에 위임합니다. bridge는
+세 key에 lazy supplier만 등록하며 container 시작·중지, readiness 대기, JVM
+system property 기록을 수행하지 않습니다. `RedisTestSupport.redis`에
+접근하면 기존과 동일하게 공유 `RedisServer.Launcher.redis` singleton으로
+Redis가 시작될 수 있으므로 helper endpoint 테스트에는 Docker가 필요합니다.
 
 ~~~kotlin
 import io.bluetape4k.workshop.shared.testcontainers.RedisTestSupport
@@ -79,6 +91,21 @@ fun redisProperties(registry: DynamicPropertyRegistry) {
     RedisTestSupport.registerRedisProperties(registry)
 }
 ~~~
+
+Docker가 필요 없는 bridge 계약은 다음과 같이 하나의 독립된 test
+invocation으로 검증합니다.
+
+```bash
+./gradlew :shared:test \
+  --tests '*PropertyExportingServerDynamicPropertyRegistryTest' \
+  --tests '*PropertyExportingServerDynamicPropertyRegistryContextTest' \
+  --tests '*RedisTestSupportBridgeContractTest'
+```
+
+`*RedisTestSupportTest`와 Redis consumer 전체 suite는 Docker가 가능한
+환경에서 별도 실행하세요. `propertyKeys()`는 `Set`이므로 등록 순서는
+계약이 아니며, 각 supplier는 Spring이 평가할 때 최신 `properties()` map을
+조회합니다.
 
 ## 사용법
 

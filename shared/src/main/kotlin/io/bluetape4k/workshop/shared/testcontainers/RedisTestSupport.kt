@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.shared.testcontainers
 
 import io.bluetape4k.testcontainers.storage.RedisServer
+import io.bluetape4k.testcontainers.spring.registerDynamicProperties
 import org.springframework.test.context.DynamicPropertyRegistry
 
 /**
@@ -12,7 +13,9 @@ import org.springframework.test.context.DynamicPropertyRegistry
  * - testcontainers.redis.url
  *
  * Redis를 사용하는 소비 모듈은 이 객체를 테스트 코드에서 사용하고,
- * Spring Test와 Testcontainers 실행 의존성은 각 모듈이 선언해야 합니다.
+ * Spring Test, Testcontainers, 선택적 `bluetape4k-testcontainers-spring` 실행
+ * 의존성은 각 모듈이 선언해야 합니다. [redis] singleton에 접근하면 기존과
+ * 동일하게 Redis container가 시작될 수 있습니다.
  */
 object RedisTestSupport {
 
@@ -24,11 +27,12 @@ object RedisTestSupport {
     /**
      * Redis 연결 정보를 Spring의 동적 프로퍼티 레지스트리에 등록합니다.
      *
-     * 기존 Redis 예제의 프로퍼티 키와 supplier 평가 시점을 유지합니다.
+     * upstream `registerDynamicProperties` bridge에 등록을 위임합니다. bridge는
+     * supplier만 등록하며 container start/stop, readiness 대기, JVM system
+     * property 변경을 수행하지 않습니다. 기존 Redis 예제의 프로퍼티 키와
+     * singleton lifecycle은 유지됩니다.
      */
     fun registerRedisProperties(registry: DynamicPropertyRegistry) {
-        registry.add("testcontainers.redis.host") { redis.host }
-        registry.add("testcontainers.redis.port") { redis.port }
-        registry.add("testcontainers.redis.url") { redis.url }
+        redis.registerDynamicProperties(registry)
     }
 }

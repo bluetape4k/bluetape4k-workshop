@@ -325,12 +325,31 @@ jobs:
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
 
+      - name: Run shared Testcontainers Spring bridge contract tests
+        run: >-
+          ./gradlew
+          -x detekt
+          -x collectReachabilityMetadata
+          :shared:test
+          --tests '*PropertyExportingServerDynamicPropertyRegistryTest'
+          --tests '*PropertyExportingServerDynamicPropertyRegistryContextTest'
+          --tests '*RedisTestSupportBridgeContractTest'
+          --rerun-tasks
+          --no-build-cache
+          --no-daemon
+          --max-workers=1
+          --console=plain
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
+
       - name: Upload smoke example test results
         if: always()
         uses: actions/upload-artifact@v7.0.1
         with:
           name: smoke-example-test-results
           path: |
+            shared/build/test-results/test/*.xml
+            shared/build/reports/tests/test/
             exposed/javers-approval-workflow/build/test-results/test/*.xml
             exposed/javers-approval-workflow/build/reports/tests/test/
             spring-data/r2dbc-webflux-exposed/build/test-results/test/*.xml
@@ -558,6 +577,58 @@ jobs:
           TESTCONTAINERS_RYUK_DISABLED: "true"
           DOCKER_HOST: "unix:///var/run/docker.sock"
 
+      - name: Run shared Redis helper targeted regression
+        if: always()
+        run: >-
+          ./gradlew
+          -x detekt
+          -x collectReachabilityMetadata
+          :shared:test
+          --tests '*RedisTestSupportTest'
+          --rerun-tasks
+          --no-build-cache
+          --no-daemon
+          --max-workers=1
+          --console=plain
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
+          TESTCONTAINERS_RYUK_DISABLED: "true"
+          DOCKER_HOST: "unix:///var/run/docker.sock"
+
+      - name: Run shared full test suite
+        if: always()
+        run: >-
+          ./gradlew
+          -x detekt
+          -x collectReachabilityMetadata
+          :shared:test
+          --rerun-tasks
+          --no-build-cache
+          --no-daemon
+          --max-workers=1
+          --console=plain
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
+          TESTCONTAINERS_RYUK_DISABLED: "true"
+          DOCKER_HOST: "unix:///var/run/docker.sock"
+
+      - name: Run Redis consumer full test suite
+        if: always()
+        run: >-
+          ./gradlew
+          -x detekt
+          -x collectReachabilityMetadata
+          :spring-data-redis-examples:test
+          --rerun-tasks
+          --no-build-cache
+          --no-daemon
+          --max-workers=1
+          --console=plain
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
+          TESTCONTAINERS_RYUK_DISABLED: "true"
+          DOCKER_HOST: "unix:///var/run/docker.sock"
+
       - name: Run Kafka multi-broker failover reference
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
@@ -615,6 +686,10 @@ jobs:
           name: container-example-test-results
           if-no-files-found: error
           path: |
+            shared/build/test-results/test/*.xml
+            shared/build/reports/tests/test/
+            spring-data/redis-examples/build/test-results/test/*.xml
+            spring-data/redis-examples/build/reports/tests/test/
             exposed/webflux-r2dbc/build/test-results/test/*.xml
             exposed/webflux-r2dbc/build/reports/tests/test/
             exposed/javers-persistence-audit/build/test-results/test/*.xml

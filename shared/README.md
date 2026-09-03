@@ -66,7 +66,20 @@ following Spring `DynamicPropertyRegistry` keys:
 
 Use it from a Redis example test and connect the consumer module to `shared`
 with `testImplementation(project(":shared"))`. The consumer must continue to
-declare its own Spring Test and Testcontainers runtime dependencies.
+declare its own Spring Test and Testcontainers runtime dependencies, plus the
+optional Spring bridge:
+
+```kotlin
+testImplementation(libs.bluetape4k.testcontainers.spring)
+```
+
+`registerRedisProperties` delegates to
+`PropertyExportingServer.registerDynamicProperties` from
+`bluetape4k-testcontainers-spring`. The bridge registers lazy suppliers for the
+three keys; it does not start or stop a container, wait for readiness, or write
+JVM system properties. Accessing `RedisTestSupport.redis` still uses the shared
+`RedisServer.Launcher.redis` singleton and can start Redis, so helper-based
+endpoint tests require Docker.
 
 ~~~kotlin
 import io.bluetape4k.workshop.shared.testcontainers.RedisTestSupport
@@ -79,6 +92,20 @@ fun redisProperties(registry: DynamicPropertyRegistry) {
     RedisTestSupport.registerRedisProperties(registry)
 }
 ~~~
+
+The Docker-free bridge contract is exercised as one isolated test invocation:
+
+```bash
+./gradlew :shared:test \
+  --tests '*PropertyExportingServerDynamicPropertyRegistryTest' \
+  --tests '*PropertyExportingServerDynamicPropertyRegistryContextTest' \
+  --tests '*RedisTestSupportBridgeContractTest'
+```
+
+Run `*RedisTestSupportTest` and the full Redis consumer suite separately with a
+Docker-capable environment. `propertyKeys()` is a `Set`, so registration order
+is not part of the contract; each supplier resolves the current
+`properties()` map when Spring evaluates it.
 
 ## Usage
 

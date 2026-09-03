@@ -20,6 +20,7 @@ dependencies {
     implementation(libs.bluetape4k.idgenerators)
     testImplementation(project(":shared"))
     testImplementation(libs.bluetape4k.junit5)
+    testImplementation(libs.bluetape4k.testcontainers.spring)
     implementation(libs.bluetape4k.testcontainers)
 
     // spring-data-redis에서는 기본적으로 lettuce를 사용합니다.
