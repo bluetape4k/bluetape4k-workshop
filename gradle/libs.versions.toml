@@ -6,6 +6,7 @@ bluetape4k-dependencies-version = "2.1.0-SNAPSHOT"  # 다음 minor 개발선 기
 # bluetape4k modules are managed by the bluetape4k-dependencies BOM; module aliases remain versionless
 
 kotlin = "2.4.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-bom
+sudachi = "0.8.0"  # https://mvnrepository.com/artifact/com.worksap.nlp/sudachi
 kotlinx-coroutines = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-bom
 kotlinx-serialization = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-bom
 kotlinx-atomicfu = "0.32.1"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/atomicfu
@@ -239,6 +240,8 @@ bluetape4k-text-korean = { module = "io.github.bluetape4k.text:tokenizer-korean"
 bluetape4k-text-japanese = { module = "io.github.bluetape4k.text:tokenizer-japanese" }
 bluetape4k-text-lingua = { module = "io.github.bluetape4k.text:lingua" }
 bluetape4k-text-search = { module = "io.github.bluetape4k.text:text-search" }
+# External tokenizer artifact; its version is not governed by the Bluetape BOM.
+sudachi = { module = "com.worksap.nlp:sudachi", version.ref = "sudachi" }
 bluetape4k-micrometer = { module = "io.github.bluetape4k:bluetape4k-micrometer" }
 bluetape4k-redis = { module = "io.github.bluetape4k:bluetape4k-redis" }
 bluetape4k-redisson = { module = "io.github.bluetape4k:bluetape4k-redisson" }
