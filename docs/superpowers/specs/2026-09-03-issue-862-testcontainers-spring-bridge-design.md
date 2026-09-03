@@ -102,21 +102,38 @@ container 테스트로 남긴다.
 3. `PropertyExportingServerDynamicPropertyRegistryContextTest`를 추가해 fake
    server를 `@DynamicPropertySource`로 연결한 최소 Spring context에서
    `testcontainers.<namespace>.*` 값이 실제 Environment/property binding에
-   노출되는지 Docker 없이 검증한다. 이 테스트는 helper singleton을 참조하지
-   않는다.
+   노출되는지 Docker 없이 검증한다. `@SpringJUnitConfig(classes =
+   [TestConfig::class])`와 `@Configuration(proxyBeanMethods = false)`인
+   nested `TestConfig`를 사용하고, fake server와
+   `@ConfigurationProperties(prefix = "testcontainers.redis")` bound endpoint를
+   `@Bean`으로 명시한다. companion object의 `@JvmStatic
+   @DynamicPropertySource`는 동일 fake server를 bridge에 위임하며 component
+   scan이나 application context auto-configuration은 사용하지 않는다. 이
+   테스트는 helper singleton을 참조하지 않는다.
 4. 기존 `RedisTestSupportTest`는 실제 Redis endpoint와 singleton lifecycle을
    검증하는 container 경로로 유지한다. `RedisServer.Launcher.redis` 접근으로
    singleton을 확보하는 동작은 유지하되, helper 접근 시 container가 시작될
    수 있다는 사실을 문서화한다. container start/stop을 bridge가 호출하지
    않는다는 경계는 fake contract/context 테스트로 분리해 확인한다.
-5. smoke workflow에는 다음 Docker 없는 테스트만 별도 invocation으로
-   선택 실행한다.
+5. smoke workflow에는 다음 세 Docker 없는 selector를 하나의 독립
+   invocation으로 선택 실행한다.
    `./gradlew :shared:test --tests '*PropertyExportingServerDynamicPropertyRegistryTest'`
-   및 `./gradlew :shared:test --tests '*PropertyExportingServerDynamicPropertyRegistryContextTest'`.
-   container workflow에는 `./gradlew :shared:test --tests '*RedisTestSupportTest'`
-   및 기존 `:spring-data-redis-examples:test` 경로를 실행한다. 두 경로를 한
-   Gradle test invocation으로 섞지 않는다. 동일 selector를
-   `scripts/smoke-validate.sh`의 smoke/data-access-full 명령에도 반영한다.
+   `--tests '*PropertyExportingServerDynamicPropertyRegistryContextTest'`
+   `--tests '*RedisTestSupportBridgeContractTest'`. source guard는
+   `shared/src/main/kotlin/.../RedisTestSupport.kt`의 고정 상대 경로를
+   `projectDir` 기준으로 해석하고, 해석된 경로를 assertion failure에
+   포함한다. container workflow에는 `./gradlew :shared:test --tests
+   '*RedisTestSupportTest'` 및 기존 `:spring-data-redis-examples:test`
+   경로를 실행한다. 두 경로를 한 Gradle test invocation으로 섞지 않는다.
+   동일 selector를 `scripts/smoke-validate.sh`의 smoke/data-access-full
+   명령에도 반영한다.
+
+6. production delegation을 바꾸기 전에 기존
+   `./gradlew :shared:test --tests '*RedisTestSupportTest' --rerun-tasks
+   --no-build-cache --no-daemon --max-workers=1 --console=plain`을 실행해
+   baseline 명령·exit code·요약을 lesson에 기록한다. 위임과 dependency 변경
+   뒤 동일 명령을 다시 실행해 post-refactor 결과를 기록한다. 이 두 결과만
+   helper 회귀의 비교 근거로 사용한다.
 
 ### README/KDoc
 
