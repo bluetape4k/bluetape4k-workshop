@@ -33,7 +33,8 @@
 HTTP 404로 실패했다. 같은 3개 초기화 실패는 이전 PR head에서도 재현되어
 Issue #862 bridge 구현과 무관한 CI fixture 준비 누락으로 분류했다.
 
-Nightly workflow가 사용하는 upstream `bluetape4k-projects` checkout과 Jib
+Nightly workflow가 사용하는 upstream `bluetape4k-projects` checkout 방식을
+stable `2.0.0` release tag로 고정하고 Jib
 `bluetape4k-mock-web-server`/`bluetape4k-mock-webflux-server` local image build를
 Container lane 앞에 추가했다. 두 image 모두 `baseVersion=2.0.0` tag를 생성하므로
 consumer test가 요구하는 stable image를 별도 registry 인증 없이 사용한다.

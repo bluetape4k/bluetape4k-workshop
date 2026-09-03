@@ -493,7 +493,7 @@ jobs:
         uses: actions/checkout@v7.0.1
         with:
           repository: bluetape4k/bluetape4k-projects
-          ref: develop
+          ref: 2.0.0
           path: .bluetape4k-projects
           fetch-depth: 1
 

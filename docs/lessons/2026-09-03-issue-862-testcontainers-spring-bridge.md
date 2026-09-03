@@ -69,6 +69,7 @@ runner용 `DOCKER_HOST=unix:///var/run/docker.sock`를 step-level로 명시했�
 첫 hosted Container lane은 기존 `shared/web` 테스트의
 `bluetape4k/mock-web-server:2.0.0` pull access denied(404)로 실패했다. 이전
 head에서도 같은 초기화 실패가 발생해 bridge 구현 결함이 아닌 runner image
-준비 누락으로 확인했다. Nightly와 동일하게 upstream `bluetape4k-projects`를
-checkout하고 두 mock server Jib image를 local Docker에 먼저 build하도록
-`Examples.yml`을 보정했다. 이후 새 head에서 Container lane을 재실행한다.
+준비 누락으로 확인했다. Nightly와 동일하게 upstream `bluetape4k-projects`의
+stable `2.0.0` release tag를 checkout하고 두 mock server Jib image를 local
+Docker에 먼저 build하도록 `Examples.yml`을 보정했다. 이후 새 head에서
+Container lane을 재실행한다.
