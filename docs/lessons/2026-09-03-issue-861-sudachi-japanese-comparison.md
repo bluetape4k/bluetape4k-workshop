@@ -68,3 +68,6 @@ N/A로 남겼으며, build/compile과 targeted runtime 검증으로 대체했다
 유지한다. 이후 dictionary URL, archive hash/size, extracted hash/size, ZIP
 entry 또는 fixture를 바꿀 때는 설계·구현 task·두 README·integration test·이
 lesson을 함께 갱신하고, `build/` binary를 저장소에 추가하지 않는다.
+또한 새 workshop PR의 변경 경로는 구현 전에 `ecosystem-reuse-train.json`의
+단일 child scope와 fresh coordinator receipt에 등록해야 hosted reuse gate가
+기존 fixed track을 오인하지 않는다.
