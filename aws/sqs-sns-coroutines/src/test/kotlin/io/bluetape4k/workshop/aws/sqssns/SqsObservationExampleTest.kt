@@ -11,6 +11,9 @@ import io.bluetape4k.aws.spring.sqs.SqsOperations
 import io.bluetape4k.aws.spring.sqs.SqsMessageListenerContainerRegistry
 import io.bluetape4k.aws.spring.sqs.SqsSendRequest
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
 import io.micrometer.observation.ObservationRegistry
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
@@ -18,10 +21,6 @@ import kotlinx.coroutines.runBlocking
 import org.awaitility.kotlin.await
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertDoesNotThrow
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.context.annotation.Bean
@@ -39,11 +38,11 @@ class SqsObservationExampleTest {
             .withUserConfiguration(SuccessfulHandlerConfiguration::class.java)
             .withPropertyValues("bluetape4k.aws.sqs.observation.enabled=false")
             .run { context ->
-                assertTrue(context.startupFailure == null)
-                assertEquals(0, context.getBeansOfType(OrderNotificationObservationListener::class.java).size)
-                assertEquals(0, context.getBeansOfType(OrderNotificationObservationRecorder::class.java).size)
-                assertFalse(context.containsBean("sqsObservationRuntime"))
-                assertTrue(operations.visibilityChanges.isEmpty())
+                (context.startupFailure == null).shouldBeTrue()
+                context.getBeansOfType(OrderNotificationObservationListener::class.java).size shouldBeEqualTo 0
+                context.getBeansOfType(OrderNotificationObservationRecorder::class.java).size shouldBeEqualTo 0
+                context.containsBean("sqsObservationRuntime").shouldBeFalse()
+                operations.visibilityChanges.isEmpty().shouldBeTrue()
             }
     }
 
@@ -66,36 +65,29 @@ class SqsObservationExampleTest {
                 listenerRegistry.start(OrderNotificationObservationListener.LISTENER_ID)
 
                 await.atMost(Duration.ofSeconds(10)).untilAsserted {
-                    assertEquals(1, listener.handledEvents.size)
-                    assertTrue(listener.lastParentObservationMatched)
-                    assertEquals("order-100", handler.events.single().orderId)
+                    listener.handledEvents.size shouldBeEqualTo 1
+                    listener.lastParentObservationMatched.shouldBeTrue()
+                    handler.events.single().orderId shouldBeEqualTo "order-100"
                 }
                 listenerRegistry.stop(OrderNotificationObservationListener.LISTENER_ID)
 
                 val records = recorder.snapshots
-                assertTrue(records.any { it.stage == SqsObservationStage.RECEIVE })
-                assertEquals(1, records.count { it.stage == SqsObservationStage.PROCESS })
-                assertTrue(
-                    records.any {
-                        it.stage == SqsObservationStage.PROCESS &&
-                            it.outcome == SqsObservationOutcome.SUCCESS
-                    },
-                )
-                assertTrue(
-                    records.any {
-                        it.stage == SqsObservationStage.ACKNOWLEDGEMENT &&
-                            it.acknowledgementAction == SqsAcknowledgementAction.CHANGE_VISIBILITY
-                    },
-                )
-                assertEquals(
-                    1,
-                    records.count {
-                        it.stage == SqsObservationStage.ACKNOWLEDGEMENT &&
-                            it.acknowledgementAction == SqsAcknowledgementAction.ACK
-                    },
-                )
-                assertTrue(operations.visibilityChanges.isNotEmpty())
-                assertTrue(registry.currentObservation == null)
+                records.any { it.stage == SqsObservationStage.RECEIVE }.shouldBeTrue()
+                records.count { it.stage == SqsObservationStage.PROCESS } shouldBeEqualTo 1
+                records.any {
+                    it.stage == SqsObservationStage.PROCESS &&
+                        it.outcome == SqsObservationOutcome.SUCCESS
+                }.shouldBeTrue()
+                records.any {
+                    it.stage == SqsObservationStage.ACKNOWLEDGEMENT &&
+                        it.acknowledgementAction == SqsAcknowledgementAction.CHANGE_VISIBILITY
+                }.shouldBeTrue()
+                records.count {
+                    it.stage == SqsObservationStage.ACKNOWLEDGEMENT &&
+                        it.acknowledgementAction == SqsAcknowledgementAction.ACK
+                } shouldBeEqualTo 1
+                operations.visibilityChanges.isNotEmpty().shouldBeTrue()
+                (registry.currentObservation == null).shouldBeTrue()
             }
     }
 
@@ -110,20 +102,20 @@ class SqsObservationExampleTest {
                 val listener = context.getBean(OrderNotificationObservationListener::class.java)
                 val recorder = context.getBean(OrderNotificationObservationRecorder::class.java)
                 val listenerRegistry = context.getBean(SqsMessageListenerContainerRegistry::class.java)
-                assertFalse(context.containsBean("sqsObservationRuntime"))
+                context.containsBean("sqsObservationRuntime").shouldBeFalse()
 
                 runBlocking {
                     operations.send(SqsSendRequest(QUEUE_URL, eventJson()))
                 }
                 listenerRegistry.start(OrderNotificationObservationListener.LISTENER_ID)
                 await.atMost(Duration.ofSeconds(10)).untilAsserted {
-                    assertEquals(1, listener.handledEvents.size)
+                    listener.handledEvents.size shouldBeEqualTo 1
                 }
                 listenerRegistry.stop(OrderNotificationObservationListener.LISTENER_ID)
 
-                assertTrue(recorder.snapshots.isEmpty())
-                assertFalse(listener.lastParentObservationMatched)
-                assertTrue(registry.currentObservation == null)
+                recorder.snapshots.isEmpty().shouldBeTrue()
+                listener.lastParentObservationMatched.shouldBeFalse()
+                (registry.currentObservation == null).shouldBeTrue()
             }
     }
 
@@ -143,18 +135,16 @@ class SqsObservationExampleTest {
                 listenerRegistry.start(OrderNotificationObservationListener.LISTENER_ID)
 
                 await.atMost(Duration.ofSeconds(10)).untilAsserted {
-                    assertTrue(
-                        recorder.snapshots.any {
-                            it.stage == SqsObservationStage.PROCESS &&
-                                it.outcome == SqsObservationOutcome.CANCELLED
-                        },
-                    )
+                    recorder.snapshots.any {
+                        it.stage == SqsObservationStage.PROCESS &&
+                            it.outcome == SqsObservationOutcome.CANCELLED
+                    }.shouldBeTrue()
                 }
                 assertDoesNotThrow {
                     listenerRegistry.stop(OrderNotificationObservationListener.LISTENER_ID)
                 }
-                assertTrue(operations.visibilityChanges.isEmpty())
-                assertTrue(registry.currentObservation == null)
+                operations.visibilityChanges.isEmpty().shouldBeTrue()
+                (registry.currentObservation == null).shouldBeTrue()
             }
     }
 
