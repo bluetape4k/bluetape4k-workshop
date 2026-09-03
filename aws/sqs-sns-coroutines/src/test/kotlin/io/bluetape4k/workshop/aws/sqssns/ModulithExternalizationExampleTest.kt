@@ -6,11 +6,11 @@ import io.bluetape4k.aws.spring.modulith.AwsModulithEventsAutoConfiguration
 import io.bluetape4k.aws.spring.sqs.SqsOperations
 import io.bluetape4k.aws.spring.sqs.SqsSendRequest
 import io.bluetape4k.jackson3.Jackson
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
@@ -30,8 +30,8 @@ class ModulithExternalizationExampleTest {
                 "bluetape4k.aws.modulith.example.enabled=false",
             )
             .run { context ->
-                assertTrue(context.startupFailure == null)
-                assertFalse(context.containsBean("modulithExternalizationService"))
+                (context.startupFailure == null).shouldBeTrue()
+                context.containsBean("modulithExternalizationService").shouldBeFalse()
             }
     }
 
@@ -44,7 +44,7 @@ class ModulithExternalizationExampleTest {
                 "bluetape4k.aws.modulith.events.targets.order-notifications.destination=order-notifications",
             )
             .run { context ->
-                assertTrue(context.startupFailure == null)
+                (context.startupFailure == null).shouldBeTrue()
                 val service = context.getBean(ModulithExternalizationService::class.java)
                 val handler = context.getBean(CapturingEventHandler::class.java)
 
@@ -59,7 +59,7 @@ class ModulithExternalizationExampleTest {
                         ),
                     )
 
-                    assertEquals(ModulithPublishState.PUBLISHED, report.state)
+                    report.state shouldBeEqualTo ModulithPublishState.PUBLISHED
                     val queueUrl = operations.getQueueUrl("order-notifications")
                     val message = operations.receive(
                         queueUrl,
@@ -67,15 +67,15 @@ class ModulithExternalizationExampleTest {
                         waitTimeSeconds = 0,
                         visibilityTimeoutSeconds = 0,
                     ).single()
-                    assertFalse(message.body.contains("never-send-this-secret"))
-                    assertFalse(message.body.contains("customer@example.test"))
-                    assertEquals("order.placed", message.messageAttributes.entries
-                        .single { it.key == "bt4k-event-type" }.value.stringValue())
+                    message.body.contains("never-send-this-secret").shouldBeFalse()
+                    message.body.contains("customer@example.test").shouldBeFalse()
+                    message.messageAttributes.entries
+                        .single { it.key == "bt4k-event-type" }.value.stringValue() shouldBeEqualTo "order.placed"
 
                     val consume = service.consumeOnce()
-                    assertEquals(ModulithConsumeState.ACKED, consume.state)
-                    assertEquals("order-100", handler.events.single().orderId)
-                    assertEquals(0, operations.receive(queueUrl, maxMessages = 1, waitTimeSeconds = 0).size)
+                    consume.state shouldBeEqualTo ModulithConsumeState.ACKED
+                    handler.events.single().orderId shouldBeEqualTo "order-100"
+                    operations.receive(queueUrl, maxMessages = 1, waitTimeSeconds = 0).size shouldBeEqualTo 0
                 }
             }
     }
@@ -89,17 +89,17 @@ class ModulithExternalizationExampleTest {
                 "bluetape4k.aws.modulith.events.targets.order-notifications.destination=order-notifications",
             )
             .run { context ->
-                assertTrue(context.startupFailure == null)
+                (context.startupFailure == null).shouldBeTrue()
                 val service = context.getBean(ModulithExternalizationService::class.java)
 
                 runBlocking {
                     service.publish(sampleEvent()).also {
-                        assertEquals(ModulithPublishState.PUBLISHED, it.state)
+                        it.state shouldBeEqualTo ModulithPublishState.PUBLISHED
                     }
                     val report = service.consumeOnce()
-                    assertEquals(ModulithConsumeState.RETRY_REQUESTED, report.state)
-                    assertEquals(1, operations.visibilityChanges.size)
-                    assertEquals(0, report.acknowledgementCalls)
+                    report.state shouldBeEqualTo ModulithConsumeState.RETRY_REQUESTED
+                    operations.visibilityChanges.size shouldBeEqualTo 1
+                    report.acknowledgementCalls shouldBeEqualTo 0
                 }
             }
     }
@@ -113,18 +113,18 @@ class ModulithExternalizationExampleTest {
                 "bluetape4k.aws.modulith.events.consumer.queue=order-notifications.fifo",
             )
             .run { context ->
-                assertTrue(context.startupFailure == null)
+                (context.startupFailure == null).shouldBeTrue()
                 val service = context.getBean(ModulithExternalizationService::class.java)
 
                 runBlocking {
-                    assertEquals(ModulithPublishState.PUBLISHED, service.publish(sampleEvent()).state)
+                    service.publish(sampleEvent()).state shouldBeEqualTo ModulithPublishState.PUBLISHED
                     val message = operations.receive(
                         operations.getQueueUrl("order-notifications.fifo"),
                         maxMessages = 1,
                         waitTimeSeconds = 0,
                     ).single()
-                    assertEquals("order-100", message.messageGroupId)
-                    assertNotNull(message.messageDeduplicationId)
+                    message.messageGroupId shouldBeEqualTo "order-100"
+                    message.messageDeduplicationId.shouldNotBeNull()
                 }
             }
     }
