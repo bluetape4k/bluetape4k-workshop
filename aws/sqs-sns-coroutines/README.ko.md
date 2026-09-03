@@ -158,6 +158,58 @@ handle, 전체 queue URL은 보관하지 않습니다.
 호환성, ack 없이 cancellation되는 경로를 검증합니다. Durable DLQ, exactly-once
 delivery, global tracing backend, 실제 AWS credential은 필요하지 않습니다.
 
+## Spring Modulith SNS/SQS externalization walkthrough
+
+`AwsModulithMessagingExampleConfiguration`은 기존 SNS/SQS 예제 위에 Spring
+Modulith externalization을 선택적으로 연결하는 fixture입니다. Domain
+`ModulithOrderPlacedEvent`를 versioned allow-list integration envelope로
+변환하고, correlation identifier는 길이가 제한된 hash header로 바꾸며,
+destination이 `.fifo`로 끝나면 SQS FIFO message-group key를 선택합니다.
+
+기본 `bootRun`에서는 fixture가 disabled입니다. local 또는 Floci profile에서
+logical target과 consumer queue를 함께 설정할 때만 다음 세 switch를 켜세요.
+
+```yaml
+bluetape4k:
+  aws:
+    modulith:
+      example:
+        enabled: true
+      events:
+        enabled: true
+        producer:
+          enabled: true
+        consumer:
+          enabled: true
+          source-mode: direct
+          queue: order-notifications
+          redrive-required: false
+        targets:
+          order-notifications:
+            service: sqs
+            destination: order-notifications
+```
+
+`ModulithExternalizationService.publish`는 Spring Modulith transport future가
+완료된 뒤에만 성공을 반환합니다. `consumeOnce`는 public bluetape4k SQS
+consumer로 event를 dispatch하고 정상 처리된 뒤에만 source message를 삭제합니다.
+Handler, unknown type/version, malformed envelope, partial failure 경로는 visibility를
+리셋하고 `RETRY_REQUESTED`를 반환합니다. 중복 delivery는 library idempotency store로
+안전하게 유지하며, private payload field와 raw correlation 값은 external envelope에
+들어가지 않습니다. Cancellation은 다시 던져 publication 성공이나 acknowledgement로
+잘못 기록되지 않게 합니다.
+
+실행 가능한 fixture 테스트는 disabled startup, redaction과 dispatch, 성공 후 ack,
+handler 실패 시 visibility retry, FIFO routing을 검증합니다.
+
+```bash
+./gradlew :aws-sqs-sns-coroutines:test \
+  --tests '*ModulithExternalizationExampleTest'
+```
+
+기본 adapter는 local이고 통합 경로는 Floci를 사용합니다. 이 예제는 기본값으로
+durable exactly-once 처리, cross-region FIFO, 실제 AWS 접근을 주장하지 않습니다.
+
 ## 테스트 범위
 
 ```bash

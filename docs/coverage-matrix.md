@@ -94,6 +94,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 | `bluetape4k-aws` SNS Spring batch | `aws/sqs-sns-coroutines` | ✅ Good | SNS PublishBatch entry 결과를 기존 주문 알림 경계에서 소비하지 않았음 | 최대 10개 local batch와 validation | Floci-backed partial response·transport reconciliation | #873 |
 | `bluetape4k-aws` SQS listener observation | `aws/sqs-sns-coroutines` | ✅ Good | receive/process/ack observation parentage와 coroutine context 전파를 기존 one-shot 경계에서 확인하지 않았음 | opt-in local `@SqsListener`, NOOP/disabled guard, cancellation | Floci-backed listener heartbeat·redelivery·ack failure와 trace backend 연동 | #874 |
 | `bluetape4k-aws` DynamoDB Streams Flow | `aws/ktor-dynamodb` | ✅ Good | 기존 Ktor DynamoDB 예제에 stream shard Flow와 checkpoint/resume 경계가 없었음 | stream-enabled local table, `TRIM_HORIZON`/`LATEST`, bounded consume | Floci multi-shard/backpressure와 durable checkpoint store 연동 | #875 |
+| `bluetape4k-aws` Spring Modulith SNS/SQS externalization | `aws/sqs-sns-coroutines` | ✅ Good | 기존 주문 알림 예제에 versioned event envelope, target routing, publication completion, consumer idempotency/ack 경계가 없었음 | local-first opt-in externalizer, redacted correlation header, direct SQS consume, FIFO key, retry/ack reports | Floci partial publish·unknown version·redrive/DLQ 및 trace correlation 검증 | #876 |
 
 ---
 

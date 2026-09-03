@@ -515,7 +515,7 @@ jobs:
       # - ktor-exposed-rest: PostgreSQL-backed Ktor + Exposed transaction path
       # - aws-ktor-dynamodb: local AWS emulator-backed Ktor + DynamoDB/Streams Flow path
       # - aws-s3-spring-cloud: Floci-backed Spring Cloud AWS S3 path
-      # - aws-sqs-sns-coroutines: Floci-backed SQS/SNS coroutine + PublishBatch + opt-in Observation listener path
+      # - aws-sqs-sns-coroutines: Floci-backed SQS/SNS coroutine + PublishBatch + opt-in Observation/Modulith externalization path
       # - aws-storage-abstraction: Floci-backed S3 storage abstraction plus AES/RSA client-side encryption transfer path
       # - graph-event-lineage: Neo4j-backed graph lineage audit path
       # - graph-recommendation: Neo4j/Memgraph-backed recommendation path

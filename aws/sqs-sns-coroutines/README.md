@@ -165,6 +165,60 @@ ack, `ObservationRegistry.NOOP` compatibility, and cancellation without an ack.
 No durable DLQ, exactly-once delivery, global tracing backend, or real AWS
 credentials are required.
 
+## Spring Modulith SNS/SQS externalization walkthrough
+
+`AwsModulithMessagingExampleConfiguration` is an opt-in Spring Modulith
+externalization fixture built on the existing SNS/SQS example. It maps a domain
+`ModulithOrderPlacedEvent` to a versioned, allow-listed integration envelope,
+hashes the correlation identifier into a bounded header, and chooses an SQS
+FIFO message-group key when the configured destination ends in `.fifo`.
+
+The fixture remains disabled in the default `bootRun` path. Enable all three
+switches only in a local or Floci profile where the logical target and consumer
+queue are configured:
+
+```yaml
+bluetape4k:
+  aws:
+    modulith:
+      example:
+        enabled: true
+      events:
+        enabled: true
+        producer:
+          enabled: true
+        consumer:
+          enabled: true
+          source-mode: direct
+          queue: order-notifications
+          redrive-required: false
+        targets:
+          order-notifications:
+            service: sqs
+            destination: order-notifications
+```
+
+`ModulithExternalizationService.publish` reports success only after the
+Spring Modulith transport future completes. `consumeOnce` invokes the public
+bluetape4k SQS consumer and deletes the source message only after normal event
+dispatch; handler, unknown-type/version, malformed-envelope, and partial
+failure paths reset visibility and return `RETRY_REQUESTED`. Duplicate delivery
+is kept safe by the library idempotency store, while private payload fields and
+raw correlation values never enter the external envelope. Cancellation is
+re-thrown so it cannot be mistaken for publication success or an acknowledgement.
+
+The executable fixture tests cover disabled startup, redaction and dispatch,
+ack-after-success, visibility retry on handler failure, and FIFO routing:
+
+```bash
+./gradlew :aws-sqs-sns-coroutines:test \
+  --tests '*ModulithExternalizationExampleTest'
+```
+
+The default adapters are local and the integration path uses Floci; this
+example does not claim durable exactly-once processing, cross-region FIFO, or
+real AWS access by default.
+
 ## Test Coverage
 
 ```bash
