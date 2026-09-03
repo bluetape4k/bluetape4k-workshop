@@ -6,7 +6,7 @@
 
 **Architecture:** 기존 `JapaneseProcessor` 색인 경로는 그대로 두고 새 `text.tokenizer` package에 내부 observation report를 추가한다. 기본 `test`는 dictionary 없이 Kuromoji와 `UNAVAILABLE` candidate를 검증하며, `sudachiTest`만 `prepareSudachiDictionary`를 먼저 실행해 실제 Sudachi A/B/C 결과를 검증한다. 사전은 공식 archive의 URL·크기·SHA-256·ZIP entry를 확인한 뒤 `build/` 아래에만 추출한다.
 
-**Tech Stack:** Kotlin 2.4.0, Java 25, Gradle Kotlin DSL, JUnit 5, `com.worksap.nlp:sudachi:0.8.0`, `bluetape4k-text` `JapaneseProcessor`, 공식 SudachiDict `v20260428` core.
+**Tech Stack:** Kotlin 2.4.0, Java 25, Gradle Kotlin DSL, JUnit 5, stable `bluetape4k-dependencies:2.0.0` BOM, `com.worksap.nlp:sudachi:0.8.0`, `bluetape4k-text` `JapaneseProcessor`, 공식 SudachiDict `v20260428` core.
 
 ---
 

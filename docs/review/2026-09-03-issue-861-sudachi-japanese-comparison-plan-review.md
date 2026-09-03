@@ -3,7 +3,7 @@
 ## 검토 범위와 판정
 
 - 대상: 승인된 설계 `docs/superpowers/specs/2026-09-03-issue-861-sudachi-japanese-comparison-design.md`와 구현 계획 `docs/superpowers/plans/2026-09-03-issue-861-sudachi-japanese-comparison-plan.md`
-- 계획 hash: `a2b459e5ad7e57c3dd1ce1d4a5a9c89ec09ff0acb38b90b1b8c374f3c962f0c9`
+- 계획 hash: `6fd634d2fbacbb9757fd8b1f82100112082e6f486cb0ba7fdf91de78f5a8ecb1`
 - 설계 hash: `40c4bfdee45833e96a28132406a1241da8f6b655bf036d7c5a591b13fb662acf`
 - 구현 commit: `8b0ab567` (stable 2.0.0 BOM 기준과 Sudachi 비교 API·Gradle preparation·단위/통합 테스트)
 - 검토일: 2026-09-03
@@ -47,11 +47,11 @@ merge 승인은 별도 delivery gate다.
 초기 PR head에서 hosted `Validate ecosystem reuse contract`가 신규 변경
 경로를 기존 고정 track에서 찾지 못해 fail-closed했다. 구현 범위를 넓히지
 않고 `docs/ecosystem-reuse-train.json`에 `issue-861-sudachi-japanese-comparison`
-child scope를 추가해 PR의 branch/base와 13개 변경 경로를 하나의 허용 범위에
+child scope를 추가해 PR의 branch/base와 현재 변경 경로를 하나의 허용 범위에
 결속했다. coordinator receipt도
 `20260903T-issue-861-sudachi-japanese-comparison-scope`로 갱신하고 scope
 canonical SHA-256
-`4693182117c2c92f951599841254e3445f586152be0137fdf010a66e2f2e57c3`를
+`3df5a78c9c90b2103203c40f8a5cf71f21758bec3c3cffc56958564a0befe386`를
 기록했다. trusted `origin/develop` manifest를 사용한 로컬 checker 재검증은
 새 stable 2.0.0 head에서 PASS를 확인한 뒤 hosted CI를 재실행한다.
 
