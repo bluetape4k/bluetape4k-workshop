@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.shared.testcontainers
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.testcontainers.storage.RedisServer
 import org.junit.jupiter.api.Test
 import org.springframework.test.context.DynamicPropertyRegistry
 import java.util.function.Supplier
@@ -24,8 +26,9 @@ class RedisTestSupportTest {
             "testcontainers.redis.url",
         )
         registry.values["testcontainers.redis.host"] shouldBeEqualTo RedisTestSupport.redis.host
-        registry.values["testcontainers.redis.port"] shouldBeEqualTo RedisTestSupport.redis.port
+        registry.values["testcontainers.redis.port"] shouldBeEqualTo RedisTestSupport.redis.port.toString()
         registry.values["testcontainers.redis.url"] shouldBeEqualTo RedisTestSupport.redis.url
+        (RedisTestSupport.redis === RedisServer.Launcher.redis).shouldBeTrue()
     }
 
     private class RecordingRegistry : DynamicPropertyRegistry {

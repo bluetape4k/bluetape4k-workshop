@@ -118,6 +118,13 @@ case "${1:-help}" in
     ;;
 
   all-smoke)
+    # Docker-free Testcontainers Spring bridge contract boundary.
+    run "$GRADLEW \
+      :shared:test \
+      --tests '*PropertyExportingServerDynamicPropertyRegistryTest' \
+      --tests '*PropertyExportingServerDynamicPropertyRegistryContextTest' \
+      --tests '*RedisTestSupportBridgeContractTest' \
+      --rerun-tasks --no-build-cache --no-daemon --max-workers=$MAX_WORKERS --console=plain"
     run "$GRADLEW \
       :jackson-examples:test \
       :jsonview-examples:test \
@@ -185,6 +192,12 @@ case "${1:-help}" in
   data-access-full)
     # Testcontainers required
     run "$GRADLEW \
+      :shared:test \
+      --rerun-tasks --no-build-cache --no-daemon --max-workers=1 --console=plain"
+    run "$GRADLEW \
+      :spring-data-redis-examples:test \
+      --rerun-tasks --no-build-cache --no-daemon --max-workers=1 --console=plain"
+    run "$GRADLEW \
       :exposed-javers-audit:test \
       :exposed-javers-persistence-audit:test \
       :exposed-mvc-jdbc:test \
@@ -197,7 +210,6 @@ case "${1:-help}" in
       :spring-data-mongodb-transactions:test \
       :spring-data-elasticsearch:test \
       :spring-data-elasticsearch-webflux:test \
-      :spring-data-redis-examples:test \
       --continue --max-workers=1"
     ;;
 
