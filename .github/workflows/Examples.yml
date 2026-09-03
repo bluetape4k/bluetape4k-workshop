@@ -489,6 +489,26 @@ jobs:
           gradle-version: wrapper
           cache-read-only: ${{ github.event_name == 'pull_request' }}
 
+      - name: Checkout bluetape4k projects mock server sources
+        uses: actions/checkout@v7.0.1
+        with:
+          repository: bluetape4k/bluetape4k-projects
+          ref: develop
+          path: .bluetape4k-projects
+          fetch-depth: 1
+
+      - name: Build bluetape4k mock server images
+        working-directory: .bluetape4k-projects
+        run: >-
+          ./gradlew
+          -x detekt
+          :bluetape4k-mock-web-server:jibDockerBuild
+          :bluetape4k-mock-webflux-server:jibDockerBuild
+          --no-configuration-cache
+          --max-workers=1
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
+
       # Representative Testcontainers examples run in one sequential lane:
       # - exposed-webflux-r2dbc: PostgreSQL-backed Exposed R2DBC consumer path
       # - exposed-javers-persistence-audit: Redis-backed JaVers audit history

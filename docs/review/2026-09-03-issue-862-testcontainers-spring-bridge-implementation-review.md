@@ -26,3 +26,14 @@
 - 이 문서는 구현 범위의 독립 검토 증거이며, merge 전에는 현재 PR head의 hosted
   CI, review, mergeability를 다시 확인해야 한다.
 
+## Hosted CI 실패와 보정
+
+초기 hosted `Container Examples (sequential)` 실행은 기존 `shared/web` 테스트가
+요구하는 `bluetape4k/mock-web-server:2.0.0` 이미지를 runner에서 찾지 못해
+HTTP 404로 실패했다. 같은 3개 초기화 실패는 이전 PR head에서도 재현되어
+Issue #862 bridge 구현과 무관한 CI fixture 준비 누락으로 분류했다.
+
+Nightly workflow가 사용하는 upstream `bluetape4k-projects` checkout과 Jib
+`bluetape4k-mock-web-server`/`bluetape4k-mock-webflux-server` local image build를
+Container lane 앞에 추가했다. 두 image 모두 `baseVersion=2.0.0` tag를 생성하므로
+consumer test가 요구하는 stable image를 별도 registry 인증 없이 사용한다.
