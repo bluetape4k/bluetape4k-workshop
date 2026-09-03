@@ -642,6 +642,7 @@
       "base_oid": null,
       "issue_numbers": [861],
       "allowed_paths": [
+        ".github/scripts/test_check_ecosystem_reuse.py",
         ".github/workflows/Examples.yml",
         "docs/ecosystem-reuse-train.json",
         "docs/lessons/2026-09-03-issue-861-sudachi-japanese-comparison.md",
@@ -657,7 +658,7 @@
   ],
   "coordinator_scope_receipt": {
     "receipt_id": "20260903T-issue-861-sudachi-japanese-comparison-scope",
-    "checksum": "4693182117c2c92f951599841254e3445f586152be0137fdf010a66e2f2e57c3"
+    "checksum": "3df5a78c9c90b2103203c40f8a5cf71f21758bec3c3cffc56958564a0befe386"
   },
   "planned_scope_replan_receipts": {
   },
