@@ -121,11 +121,13 @@ Baseline 경계:
 
 Source guard 경계:
 
-- `RedisTestSupportBridgeContractTest`는 `shared/src/main/kotlin` 기준의
-  고정된 상대 경로를 사용하고, `Paths.get("shared/src/main/kotlin/.../
-  RedisTestSupport.kt")`가 없으면 `projectDir`/현재 working directory를
-  기준으로 한 번만 보정한다. 해석된 경로와 `exists()`를 assertion failure에
-  포함해 subproject 실행 위치 변화가 조기에 드러나도록 한다.
+- `shared/build.gradle.kts`가 Gradle의 현재 `projectDir`을
+  `bluetape4k.workshop.shared.projectDir` test system property로 주입한다.
+  `RedisTestSupportBridgeContractTest`는 그 디렉터리의
+  `src/main/kotlin/.../RedisTestSupport.kt`만 검사한다. IDE 등 Gradle 밖의
+  실행에서는 현재 working directory가 `shared`이면 그대로, 아니면 그
+  `shared` 자식 한 단계만 보정한다. 해석된 경로와 `exists()`를 assertion
+  failure에 포함해 checkout 간 오탐과 실행 위치 변화를 조기에 드러낸다.
 
 GREEN 단계:
 

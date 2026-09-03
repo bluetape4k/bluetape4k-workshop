@@ -24,7 +24,8 @@ readiness 대기, JVM system property 변경을 수행하지 않는다. 다만
 - 실제 helper 전환 전후의 동일한 `RedisTestSupportTest` 결과를 baseline과
   post-refactor로 비교했다.
 - Docker-free 검증은 세 selector를 하나의 `:shared:test` invocation으로
-  실행하고, helper source delegation guard를 별도 테스트로 두었다.
+  실행하고, helper source delegation guard를 별도 테스트로 두었다. 최종
+  보정 후에는 key별 최신 supplier 검증까지 포함해 11개 테스트를 통과했다.
 - 최소 `@SpringJUnitConfig(classes = [TestConfig::class])`와 nested
   `@Configuration(proxyBeanMethods = false)`, `@Bean` fake server,
   `@EnableConfigurationProperties` binding으로 실제 Environment 경계를
@@ -40,6 +41,7 @@ readiness 대기, JVM system property 변경을 수행하지 않는다. 다만
 | baseline | `:shared:test --tests '*RedisTestSupportTest' --rerun-tasks --no-build-cache --no-daemon --max-workers=1 --console=plain` — 1 passed |
 | Docker-free RED | 위임 전 3 selector 실행 — 10 tests 중 source guard 1 failure(수동 `registry.add` 확인) |
 | Docker-free GREEN | 위임 후 동일 3 selector — 10 tests passed |
+| review correction | Gradle `projectDir` 고정 source guard와 key별 최신 map 재평가 assertion 추가 후 동일 selector — 11 tests passed |
 | dependency | `shared`와 `spring-data-redis-examples` `testRuntimeClasspath` dependencyInsight 모두 `io.github.bluetape4k:bluetape4k-testcontainers-spring:2.0.0` 선택 |
 | post-refactor targeted | `:shared:test --tests '*RedisTestSupportTest'` — 1 passed |
 | shared full | `:shared:test --rerun-tasks --no-build-cache --no-daemon --max-workers=1 --console=plain` — 53 passed |
@@ -55,8 +57,9 @@ runner용 `DOCKER_HOST=unix:///var/run/docker.sock`를 step-level로 명시했�
 - `PropertyExportingServer.properties()`의 `port` 값은 upstream 계약상
   문자열이다. 기존 helper 테스트는 Spring dynamic property 경계에 맞춰
   `redis.port.toString()`을 비교한다.
-- source guard는 repository checkout의 `shared/src/main/kotlin` 상대 경로를
-  검사한다. 경로가 바뀌면 assertion에 확인한 후보 경로를 포함해 즉시
-  실패한다.
+- source guard는 Gradle이 주입한 현재 `shared` `projectDir`의
+  `src/main/kotlin` 경로만 검사한다. IDE 실행 fallback도 현재 working
+  directory와 그 `shared` 자식 한 단계로 제한하며, 경로와 `exists()`를
+  assertion에 포함해 checkout 간 오탐을 막는다.
 - 이번 이슈는 bridge 자체 구현이나 모든 Testcontainers 소비자 migration을
   포함하지 않는다.

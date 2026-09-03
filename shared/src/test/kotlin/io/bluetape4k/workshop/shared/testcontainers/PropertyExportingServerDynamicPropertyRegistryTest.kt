@@ -50,6 +50,45 @@ class PropertyExportingServerDynamicPropertyRegistryTest {
         registry.value("testcontainers.redis.host") shouldBeEqualTo "localhost"
         registry.value("testcontainers.redis.port") shouldBeEqualTo "6379"
         registry.value("testcontainers.redis.url") shouldBeEqualTo "redis://localhost:6379"
+        server.propertiesCalls shouldBeEqualTo 3
+    }
+
+    @Test
+    fun `각 supplier 는 평가 시점의 key별 최신 properties 를 조회한다`() {
+        val server = FakeServer(
+            keys = setOf("host", "port", "url"),
+            values = mapOf(
+                "host" to "initial-host",
+                "port" to "initial-port",
+                "url" to "redis://initial",
+            ),
+        )
+        val registry = RecordingRegistry()
+
+        server.registerDynamicProperties(registry)
+
+        server.values = mapOf(
+            "host" to "first-host",
+            "port" to "first-port",
+            "url" to "redis://first",
+        )
+        registry.value("testcontainers.bridge-contract.host") shouldBeEqualTo "first-host"
+
+        server.values = mapOf(
+            "host" to "second-host",
+            "port" to "second-port",
+            "url" to "redis://second",
+        )
+        registry.value("testcontainers.bridge-contract.port") shouldBeEqualTo "second-port"
+
+        server.values = mapOf(
+            "host" to "third-host",
+            "port" to "third-port",
+            "url" to "redis://third",
+        )
+        registry.value("testcontainers.bridge-contract.url") shouldBeEqualTo "redis://third"
+
+        server.propertiesCalls shouldBeEqualTo 3
     }
 
     @Test
