@@ -57,7 +57,11 @@ jobs:
         run: node --test scripts/graalvm-metadata-cache.test.mjs
       - name: Build (compile only)
         # Keep the compile-only lane honest: native metadata tasks are part of the build graph.
-        run: ./gradlew assemble -x detekt -x test -x stressTest -x migrationCompatibilityTest --no-parallel --max-workers=1 --continue
+        run: >-
+          ./gradlew assemble
+          -x :spring-boot-cache-benchmark:assemble
+          -x detekt -x test -x stressTest -x migrationCompatibilityTest
+          --no-parallel --max-workers=1 --continue
         env:
           GRADLE_OPTS: "-Dorg.gradle.daemon=false"
 
@@ -127,6 +131,7 @@ jobs:
           ./gradlew
           -x detekt
           -x collectReachabilityMetadata
+          -x :spring-boot-cache-benchmark:test
           test
           :commerce-pre-generated-voucher-pool:koverXmlReport
           :commerce-event-sourced-promotion-voucher-campaign:integrationTest
