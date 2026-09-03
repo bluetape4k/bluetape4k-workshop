@@ -106,6 +106,46 @@ data class OrderNotificationPublishReport(
     }
 }
 
+/** SNS 배치 발행 전체 결과의 상태입니다. */
+enum class BatchPublishState {
+    PUBLISHED,
+    PARTIAL_FAILURE,
+    FAILED,
+}
+
+/** SNS 배치 응답에서 한 entry를 호출자에게 전달하는 bounded 결과입니다. */
+data class OrderNotificationBatchEntryReport(
+    val orderId: String,
+    val idempotencyKey: String,
+    val correlationId: String,
+    val messageId: String? = null,
+    val code: String? = null,
+    val senderFault: Boolean? = null,
+    val message: String,
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
+
+/** SNS PublishBatch의 성공·부분 실패·전송 실패 경계입니다. */
+data class OrderNotificationBatchPublishReport(
+    val state: BatchPublishState,
+    val topicArn: String,
+    val successful: List<OrderNotificationBatchEntryReport>,
+    val failed: List<OrderNotificationBatchEntryReport>,
+    val completedEntryIds: List<String> = emptyList(),
+    val unresolvedEntryIds: List<String> = emptyList(),
+    val message: String,
+) : Serializable {
+    val isFullySuccessful: Boolean
+        get() = state == BatchPublishState.PUBLISHED
+
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
+
 /**
  * SQS 메시지 하나를 처리한 뒤 반환하는 보고서입니다.
  */

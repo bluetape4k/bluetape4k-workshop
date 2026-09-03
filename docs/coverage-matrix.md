@@ -91,6 +91,7 @@ consumer가 아닌 assertion은 이 Epic의 자동 migration 범위 밖이며 in
 |----------------|-----------------|----------|-----|----------------|-------------------|-------|
 | `bluetape4k-jackson3` | `json/jackson-examples`, `messaging-kafka` | ✅ Good | schema evolution / compatibility 미노출 | Jackson 3 schema migration demo | Kafka + Avro schema registry | #83 |
 | Kafka (via Spring Kafka) | `messaging-kafka`, `messaging-kafka-reply` | ✅ Good | dead letter queue 미노출 | — | Kafka DLQ + retry topic pattern | #83 |
+| `bluetape4k-aws` SNS Spring batch | `aws/sqs-sns-coroutines` | ✅ Good | SNS PublishBatch entry 결과를 기존 주문 알림 경계에서 소비하지 않았음 | 최대 10개 local batch와 validation | Floci-backed partial response·transport reconciliation | #873 |
 
 ---
 

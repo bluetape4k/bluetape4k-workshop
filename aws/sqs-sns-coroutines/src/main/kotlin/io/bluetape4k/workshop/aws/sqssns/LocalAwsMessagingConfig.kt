@@ -1,8 +1,12 @@
 package io.bluetape4k.workshop.aws.sqssns
 
 import io.bluetape4k.aws.spring.sns.SnsFifoThroughputScope
+import io.bluetape4k.aws.spring.sns.SnsBatchExecutionOptions
 import io.bluetape4k.aws.spring.sns.SnsHttpMessage
 import io.bluetape4k.aws.spring.sns.SnsOperations
+import io.bluetape4k.aws.spring.sns.SnsPublishBatchRequest
+import io.bluetape4k.aws.spring.sns.SnsPublishBatchResult
+import io.bluetape4k.aws.spring.sns.SnsPublishBatchSuccess
 import io.bluetape4k.aws.spring.sns.SnsPublishRequest
 import io.bluetape4k.aws.spring.sns.SnsSmsRequest
 import io.bluetape4k.aws.spring.sqs.SqsOperations
@@ -47,6 +51,7 @@ class LocalAwsMessagingConfig {
  */
 class LocalSnsOperations: SnsOperations {
     val publishedRequests: MutableList<SnsPublishRequest> = CopyOnWriteArrayList()
+    val publishedBatchRequests: MutableList<SnsPublishBatchRequest> = CopyOnWriteArrayList()
     private val ids = AtomicInteger()
 
     override suspend fun createTopic(topicName: String, attributes: Map<String, String>): String =
@@ -71,6 +76,22 @@ class LocalSnsOperations: SnsOperations {
         return PublishResponse.builder()
             .messageId("local-sns-${ids.incrementAndGet()}")
             .build()
+    }
+
+    override suspend fun publishBatch(
+        request: SnsPublishBatchRequest,
+        options: SnsBatchExecutionOptions,
+    ): SnsPublishBatchResult {
+        publishedBatchRequests += request
+        return SnsPublishBatchResult(
+            successful = request.entries.map { entry ->
+                SnsPublishBatchSuccess(
+                    entryId = entry.id,
+                    messageId = "local-sns-${ids.incrementAndGet()}",
+                )
+            },
+            failed = emptyList(),
+        )
     }
 
     override suspend fun publishSms(request: SnsSmsRequest): PublishResponse =

@@ -37,6 +37,7 @@ cancellation is not converted into a report.
 | Topic | Workshop behavior |
 | --- | --- |
 | SNS publish boundary | Builds `SnsPublishRequest` with JSON body, subject, correlation id, idempotency key, and event type attributes. |
+| SNS PublishBatch boundary | Maps up to 10 order events to `SnsPublishBatchRequest` and keeps successful, per-entry failed, and unresolved transport entries visible. |
 | SQS consume boundary | Polls once with learner-visible queue settings and returns one report per delivered message. |
 | Retry classification | Handler failures call `changeVisibility(..., timeoutSeconds = 0)` and return `RETRY_REQUESTED`. |
 | Dead-letter classification | Messages at or above `maxReceiveCount` are deleted and returned as local `DEAD_LETTER` discard reports; durable DLQ handoff is intentionally out of scope. |
@@ -84,6 +85,35 @@ AWS beans only in a manual environment where IAM permissions, cleanup, region,
 cost, retry policy, queue/topic subscription wiring, and SQS redrive/DLQ policy
 are understood. The local adapters keep publish and consume as separate
 boundaries; they do not simulate SNS-to-SQS fanout or delayed visibility.
+
+## PublishBatch walkthrough
+
+`OrderNotificationMessagingService.publishBatch` is the consumer example for the
+new bluetape4k 2.0.0 SNS batch contract. It validates a non-empty list of at most
+10 requests, uses each trimmed `idempotencyKey` as the AWS entry ID, and preserves
+the `SnsPublishBatchResult` split between `successful` and `failed` entries. A
+duplicate entry ID or blank payload fails before the SNS call. A transport or
+protocol failure is returned as `FAILED` with bounded `completedEntryIds` and
+`unresolvedEntryIds`; the example deliberately does not retry an ambiguous
+publish automatically.
+
+```kotlin
+val report = service.publishBatch(
+    listOf(orderPlaced, paymentCaptured),
+)
+
+report.successful.forEach { entry ->
+    println("published ${entry.idempotencyKey}: ${entry.messageId}")
+}
+report.failed.forEach { entry ->
+    println("failed ${entry.idempotencyKey}: ${entry.code}")
+}
+```
+
+The Floci integration test exercises the real `SnsCoroutinesTemplate.publishBatch`
+mapping without AWS credentials. The unit tests cover the 1–10 boundary, duplicate
+IDs, blank payload, partial response mapping, cancellation propagation, and the
+no-automatic-retry transport boundary.
 
 ## Test Coverage
 

@@ -131,14 +131,57 @@ class OrderNotificationFlociIntegrationTest {
         }
     }
 
-    private fun sampleRequest(): OrderNotificationRequest =
+    @Test
+    fun `publishes SNS PublishBatch through Floci backed bluetape4k operations`() = runSuspendIO {
+        val topicName = awsName("order-notification-batch")
+        val queueName = awsName("order-notification-batch-queue")
+        var topicArn: String? = null
+        var queueUrl: String? = null
+
+        try {
+            val createdTopicArn = sns.createTopic(topicName)
+            val createdQueueUrl = sqs.createQueue(queueName)
+            topicArn = createdTopicArn
+            queueUrl = createdQueueUrl
+            val service = OrderNotificationMessagingService(
+                properties = SqsSnsMessagingProperties(
+                    topicArn = createdTopicArn,
+                    queueUrl = createdQueueUrl,
+                    maxMessages = 1,
+                ),
+                sns = sns,
+                sqs = sqs,
+                handler = CapturingHandler(),
+                objectMapper = objectMapper,
+                metrics = OrderNotificationMetrics(SimpleMeterRegistry()),
+                clock = Clock.fixed(Instant.parse("2026-07-02T01:02:03Z"), ZoneOffset.UTC),
+            )
+
+            val report = service.publishBatch(listOf(sampleRequest(), sampleRequest(2)))
+
+            report.state shouldBeEqualTo BatchPublishState.PUBLISHED
+            report.successful.map { it.idempotencyKey } shouldBeEqualTo
+                listOf("order-100-notification", "order-200-notification")
+            report.failed shouldBeEqualTo emptyList()
+            report.successful.all { it.messageId.orEmpty().isNotBlank() } shouldBeEqualTo true
+        } finally {
+            topicArn?.let { arn ->
+                snsAsyncClient.deleteTopic { it.topicArn(arn) }.await()
+            }
+            queueUrl?.let { url ->
+                sqsAsyncClient.deleteQueue { it.queueUrl(url) }.await()
+            }
+        }
+    }
+
+    private fun sampleRequest(index: Int = 1): OrderNotificationRequest =
         OrderNotificationRequest(
-            orderId = "order-100",
+            orderId = "order-${index * 100}",
             customerId = "customer-200",
             eventType = OrderNotificationType.ORDER_PLACED,
             message = "Order was accepted",
-            idempotencyKey = "order-100-notification",
-            correlationId = "corr-100",
+            idempotencyKey = "order-${index * 100}-notification",
+            correlationId = "corr-${index * 100}",
         )
 
     private fun eventJson(): String =

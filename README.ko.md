@@ -236,7 +236,7 @@ Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티
 | Advanced | [`aws-ktor-dynamodb`](aws/ktor-dynamodb/) | `aws`, `ktor`, `coroutines`, `testcontainers` | Floci/LocalStack (TC) | fail-closed local mode에서 배우는 Ktor REST + DynamoDB conditional write |
 | Advanced | [`aws-eventbridge-scheduler`](aws/eventbridge-scheduler/) | `aws`, `coroutines` | Local adapters | EventBridge event envelope와 지연 Scheduler request mapping |
 | Advanced | [`aws-cloudwatch-imds-observability`](aws/cloudwatch-imds-observability/) | `aws`, `micrometer`, `coroutines` | Local adapters | CloudWatch metric/log publish intent, Micrometer snapshot, 명시적 IMDS metadata opt-in |
-| Advanced | [`aws-sqs-sns-coroutines`](aws/sqs-sns-coroutines/) | `aws`, `micrometer`, `coroutines`, `testcontainers` | Local adapters + Floci | SNS publish와 SQS consume을 ack, retry, dead-letter report 및 cancellation-safe coroutine으로 학습 |
+| Advanced | [`aws-sqs-sns-coroutines`](aws/sqs-sns-coroutines/) | `aws`, `micrometer`, `coroutines`, `testcontainers` | Local adapters + Floci | SNS publish/PublishBatch와 SQS consume의 entry별 결과, ack, retry, dead-letter report 및 cancellation-safe coroutine 학습 |
 | Advanced | [`aws-storage-abstraction`](aws/storage-abstraction/) | `aws`, `coroutines`, `testcontainers` | Local files + Floci | object key 검증, S3 object URI, pre-signed GET URL을 갖춘 StorageService 경계 |
 | Advanced | [`aws-s3-vectors-access-grants`](aws/s3-vectors-access-grants/) | `aws`, `coroutines` | Local adapters | S3 Vectors upsert/query와 S3 Access Grants read-decision 경계 |
 | Advanced | [`image-processing-advanced-workflow`](image-processing/advanced-workflow/) | `images-vips-java25`, `images-spring-boot`, `micrometer` | S3 또는 local storage | 업로드 → 원본 저장 → WebP 파생 이미지 → unsigned public URL |

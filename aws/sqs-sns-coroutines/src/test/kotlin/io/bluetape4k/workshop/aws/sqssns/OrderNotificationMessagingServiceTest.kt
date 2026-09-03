@@ -7,6 +7,12 @@ import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.aws.spring.sns.SnsFifoThroughputScope
 import io.bluetape4k.aws.spring.sns.SnsHttpMessage
 import io.bluetape4k.aws.spring.sns.SnsOperations
+import io.bluetape4k.aws.spring.sns.SnsBatchExecutionOptions
+import io.bluetape4k.aws.spring.sns.SnsBatchTransportException
+import io.bluetape4k.aws.spring.sns.SnsPublishBatchFailure
+import io.bluetape4k.aws.spring.sns.SnsPublishBatchRequest
+import io.bluetape4k.aws.spring.sns.SnsPublishBatchResult
+import io.bluetape4k.aws.spring.sns.SnsPublishBatchSuccess
 import io.bluetape4k.aws.spring.sns.SnsPublishRequest
 import io.bluetape4k.aws.spring.sns.SnsSmsRequest
 import io.bluetape4k.aws.spring.sqs.SqsOperations
@@ -63,6 +69,88 @@ class OrderNotificationMessagingServiceTest {
             .tag("result", "success")
             .timer()
             .count() shouldBeEqualTo 1L
+    }
+
+    @Test
+    fun `maps PublishBatch successful and failed entries without hiding partial failure`() = runSuspendIO {
+        val fixture = serviceFixture()
+        fixture.sns.batchResult = SnsPublishBatchResult(
+            successful = listOf(
+                SnsPublishBatchSuccess(
+                    entryId = "order-100-notification",
+                    messageId = "batch-message-1",
+                )
+            ),
+            failed = listOf(
+                SnsPublishBatchFailure(
+                    entryId = "order-200-notification",
+                    code = "InvalidParameter",
+                    message = "payload rejected",
+                    senderFault = true,
+                )
+            ),
+        )
+
+        val report = fixture.service.publishBatch(listOf(sampleRequest(), sampleRequest(2)))
+
+        report.state shouldBeEqualTo BatchPublishState.PARTIAL_FAILURE
+        report.successful.single().messageId shouldBeEqualTo "batch-message-1"
+        report.successful.single().idempotencyKey shouldBeEqualTo "order-100-notification"
+        report.failed.single().idempotencyKey shouldBeEqualTo "order-200-notification"
+        report.failed.single().code shouldBeEqualTo "InvalidParameter"
+        report.failed.single().senderFault shouldBeEqualTo true
+        fixture.sns.batchRequests.single().entries.map { it.id } shouldBeEqualTo
+            listOf("order-100-notification", "order-200-notification")
+        fixture.sns.requests.size shouldBeEqualTo 0
+    }
+
+    @Test
+    fun `rejects empty oversized duplicate and blank batch entries before SNS call`() = runSuspendIO {
+        val fixture = serviceFixture()
+
+        assertFailsWith<IllegalArgumentException> { fixture.service.publishBatch(emptyList()) }
+        assertFailsWith<IllegalArgumentException> {
+            fixture.service.publishBatch(List(11) { index -> sampleRequest(index + 1) })
+        }
+        assertFailsWith<IllegalArgumentException> {
+            fixture.service.publishBatch(listOf(sampleRequest(), sampleRequest().copy(orderId = "order-duplicate")))
+        }
+        assertFailsWith<IllegalArgumentException> {
+            fixture.service.publishBatch(listOf(sampleRequest().copy(message = " ")))
+        }
+
+        fixture.sns.batchRequests.size shouldBeEqualTo 0
+        fixture.sns.requests.size shouldBeEqualTo 0
+    }
+
+    @Test
+    fun `returns bounded transport failure metadata without automatic retry`() = runSuspendIO {
+        val fixture = serviceFixture()
+        fixture.sns.batchFailure = SnsBatchTransportException.from(
+            IllegalStateException("transport unavailable"),
+            completedEntryIds = listOf("order-100-notification"),
+        )
+
+        val report = fixture.service.publishBatch(listOf(sampleRequest(), sampleRequest(2)))
+
+        report.state shouldBeEqualTo BatchPublishState.FAILED
+        report.completedEntryIds shouldBeEqualTo listOf("order-100-notification")
+        report.unresolvedEntryIds shouldBeEqualTo listOf("order-200-notification")
+        report.successful.size shouldBeEqualTo 0
+        report.failed.size shouldBeEqualTo 0
+        fixture.sns.batchRequests.size shouldBeEqualTo 0
+    }
+
+    @Test
+    fun `rethrows cancellation from SNS PublishBatch boundary`() = runSuspendIO {
+        val fixture = serviceFixture()
+        fixture.sns.batchFailure = CancellationException("batch publish cancelled")
+
+        assertFailsWith<CancellationException> {
+            fixture.service.publishBatch(listOf(sampleRequest(), sampleRequest(2)))
+        }
+        fixture.meterRegistry.counter(OrderNotificationMetrics.PUBLISH_ATTEMPTS, "result", "cancelled").count()
+            .shouldBeEqualTo(1.0)
     }
 
     @Test
@@ -232,14 +320,14 @@ class OrderNotificationMessagingServiceTest {
         return ServiceFixture(service, sns, sqs, handler, meterRegistry, objectMapper)
     }
 
-    private fun sampleRequest(): OrderNotificationRequest =
+    private fun sampleRequest(index: Int = 1): OrderNotificationRequest =
         OrderNotificationRequest(
-            orderId = "order-100",
+            orderId = "order-${index * 100}",
             customerId = "customer-200",
             eventType = OrderNotificationType.ORDER_PLACED,
             message = "Order was accepted",
-            idempotencyKey = "order-100-notification",
-            correlationId = "corr-100",
+            idempotencyKey = "order-${index * 100}-notification",
+            correlationId = "corr-${index * 100}",
         )
 
     private fun sqsMessage(body: String, receiveCount: Int): SqsReceivedMessage =
@@ -291,7 +379,10 @@ class OrderNotificationMessagingServiceTest {
 
     private class CapturingSnsOperations: SnsOperations {
         val requests = mutableListOf<SnsPublishRequest>()
+        val batchRequests = mutableListOf<SnsPublishBatchRequest>()
         var failure: Throwable? = null
+        var batchFailure: Throwable? = null
+        var batchResult: SnsPublishBatchResult? = null
 
         override suspend fun createTopic(topicName: String, attributes: Map<String, String>): String = TOPIC_ARN
 
@@ -310,6 +401,20 @@ class OrderNotificationMessagingServiceTest {
             failure?.let { throw it }
             requests += request
             return PublishResponse.builder().messageId("sns-message-${requests.size}").build()
+        }
+
+        override suspend fun publishBatch(
+            request: SnsPublishBatchRequest,
+            options: SnsBatchExecutionOptions,
+        ): SnsPublishBatchResult {
+            batchFailure?.let { throw it }
+            batchRequests += request
+            return batchResult ?: SnsPublishBatchResult(
+                successful = request.entries.map { entry ->
+                    SnsPublishBatchSuccess(entry.id, "batch-message-${entry.id}")
+                },
+                failed = emptyList(),
+            )
         }
 
         override suspend fun publishSms(request: SnsSmsRequest): PublishResponse =
